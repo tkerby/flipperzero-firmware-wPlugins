@@ -6,6 +6,7 @@
 
 #include "helpers/ublox_types.h"
 
+#include <datetime/datetime.h>
 #include <furi.h>
 #include <furi_hal.h>
 
@@ -29,6 +30,7 @@
 #include "views/data_display_view.h"
 #include "helpers/ublox_custom_event.h"
 #include "helpers/kml.h"
+#include "helpers/gpx.h"
 
 extern const NotificationSequence sequence_new_reading;
 
@@ -49,10 +51,13 @@ struct Ublox {
     UbloxWorker* worker;
 
     // file stuff
+    // these structs are small so it's easiest to just have both
     KMLFile kmlfile;
+    GPXFile gpxfile;
     UbloxLogState log_state;
     FuriString* logfile_folder;
     char text_store[100];
+
     Ublox_NAV_PVT_Message nav_pvt;
     Ublox_NAV_ODO_Message nav_odo;
     Ublox_NAV_TIMEUTC_Message nav_timeutc;

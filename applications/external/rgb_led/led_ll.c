@@ -13,17 +13,17 @@
 #define TAG "LED_LL"
 
 #define LED_BPP 24
-#define ARR_TX 59
+#define ARR_TX  59
 
-#define CCR_US_PERIOD 125
-#define CCR_US_0 40
-#define CCR_US_1 80
-#define CCR_0 (ARR_TX * CCR_US_0 / CCR_US_PERIOD)
-#define CCR_1 (ARR_TX * CCR_US_1 / CCR_US_PERIOD)
-#define CCR_RESET 0
+#define CCR_US_PERIOD        125
+#define CCR_US_0             40
+#define CCR_US_1             80
+#define CCR_0                (ARR_TX * CCR_US_0 / CCR_US_PERIOD)
+#define CCR_1                (ARR_TX * CCR_US_1 / CCR_US_PERIOD)
+#define CCR_RESET            0
 #define CCR_BUFFER_LEDS_HALF 8
-#define CCR_BUFFER_LEDS (CCR_BUFFER_LEDS_HALF * 2)
-#define CCR_BUFFER_LEN (CCR_BUFFER_LEDS * LED_BPP)
+#define CCR_BUFFER_LEDS      (CCR_BUFFER_LEDS_HALF * 2)
+#define CCR_BUFFER_LEN       (CCR_BUFFER_LEDS * LED_BPP)
 
 static uint32_t rgb_buf[LED_COUNT];
 static uint32_t* rgb = rgb_buf;
@@ -71,7 +71,7 @@ void led_init() {
 
     furi_hal_gpio_init_ex(
         &gpio_led, GpioModeAltFunctionPushPull, GpioPullNo, GpioSpeedLow, GpioAltFn1TIM1);
-    furi_hal_interrupt_set_isr_ex(FuriHalInterruptIdDma1Ch1, 4, handle_dma, NULL);
+    furi_hal_interrupt_set_isr_ex(FuriHalInterruptIdDma1Ch1, 4, (void (*)(void*))handle_dma, NULL);
 
     FURI_CRITICAL_ENTER();
     LL_TIM_DeInit(TIM1);

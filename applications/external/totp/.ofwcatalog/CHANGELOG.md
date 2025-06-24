@@ -1,5 +1,101 @@
 # Changelog
 
+## v5.19.0 - May 7 2025
+
+* feat: space between groups of digits ([#259](https://github.com/akopachov/flipper-zero_authenticator/issues/259))
+
+## v5.18.0 - Apr 29 2025
+
+* fix: tokens longer than 64 bytes are leading to incorrect codes ([#260](https://github.com/akopachov/flipper-zero_authenticator/issues/260))
+
+## v5.17.3 - Apr 11 2025
+
+* fix: compatibility with SDK version 1.3 f7 ([#256](https://github.com/akopachov/flipper-zero_authenticator/issues/256))
+
+## v5.17.1 - 26 Mar 2025
+
+* fix: HOTP counter is not increasing when "OK" button long-pressed ([#253](https://github.com/akopachov/flipper-zero_authenticator/issues/253))
+
+## v5.17.0 - 27 Feb 2025
+
+* feat: Extended valid UTC offset range to be from -12 to +14 ([#249](https://github.com/akopachov/flipper-zero_authenticator/issues/249))
+
+## v5.16.1 - 22 Oct 2024
+
+* Fixed compatibility with latest FW changes ([#243](https://github.com/akopachov/flipper-zero_authenticator/issues/243))
+
+## v5.16.0 - 29 Aug 2024
+
+* feat: confirm totp export on the device ([#240](https://github.com/akopachov/flipper-zero_authenticator/issues/240))
+
+## v5.15.1 - 21 Aug 2024
+
+* refactor: removed all the references to Xtreme FW as it is dead
+* fix: BT key files name format is wrong
+
+## v5.15.0 - 10 Jul 2024
+
+* feat: added support of multiple BT profiles ([#237](https://github.com/akopachov/flipper-zero_authenticator/issues/237))
+
+## v5.14.1 - 29 May 2024
+
+* fix: totp export command uses the wrong format to print url-encoded symbol.
+
+## v5.14.0 - 23 Apr 2024
+
+* fix: unable to add new token if type token secret for a longer than a minute ([#231](https://github.com/akopachov/flipper-zero_authenticator/issues/231))
+
+## v5.13.0 - 11 Mar 2024
+
+* fix: HOTP counter increment is not working ([#226](https://github.com/akopachov/flipper-zero_authenticator/issues/226))
+* feat: updated wolfSSL library to the latest version [5.6.6](https://github.com/wolfSSL/wolfssl/releases/tag/v5.6.6-stable)
+* feat: updated code to make it compatible with latest FW changes (BT refactoring)
+
+## v5.11.0 - 5 Feb 2024
+
+* feat: implemented standard navigation patterns ([#223](https://github.com/akopachov/flipper-zero_authenticator/issues/223))
+
+## v5.10.0 - 8 Jan 2024
+
+* Implemented export functionality ([#219](https://github.com/akopachov/flipper-zero_authenticator/issues/219))
+
+## v5.9.1 - 23 Nov 2023
+
+* Added checks for unsupported crypto methods
+* Added release artifacts supporting old crypto methods
+
+## v5.9.0 - 22 Nov 2023
+
+* Implemented [#217](https://github.com/akopachov/flipper-zero_authenticator/issues/217)
+
+## v5.8.0 - 20 Nov 2023
+
+* Implemented [#215](https://github.com/akopachov/flipper-zero_authenticator/issues/215)
+
+## v5.7.0 - 3 Nov 2023
+
+* Updated WolfSSL to [v5.6.4](https://github.com/wolfSSL/wolfssl/releases/tag/v5.6.4-stable)
+* Cosmetic fix to "totp help" CLI command output text
+
+## v5.6.0 - 30 Oct 2023
+
+* Fixed [#212](https://github.com/akopachov/flipper-zero_authenticator/issues/212)
+
+## v5.5.0 - 26 Sep 2023
+
+* Implemented counter-based tokens (HOTP) ([#205](https://github.com/akopachov/flipper-zero_authenticator/issues/205))
+* Migrated build pipelines to uFBT ([#203](https://github.com/akopachov/flipper-zero_authenticator/issues/203))
+
+## v5.0.0 - 13 Sep 2023
+
+* Implemented [#198](https://github.com/akopachov/flipper-zero_authenticator/issues/198)
+* Implemented [#200](https://github.com/akopachov/flipper-zero_authenticator/issues/200)
+
+## v4.1.0 - 28 Aug 2023
+
+* Implemented [#195](https://github.com/akopachov/flipper-zero_authenticator/issues/195)
+* Added "totp version" CLI command
+
 ## v4.0.0 - 9 Aug 2023
 
 * Dropped homebrew hashing algo implementations and replaced them with [WolfSSL](https://github.com/wolfSSL/wolfssl/) library ([#185](https://github.com/akopachov/flipper-zero_authenticator/issues/185))
@@ -125,7 +221,7 @@
 
 ## v1.8.8 - 11 Apr 2023
 
-* Xtreme: fixed BT name length according to latest XFW changes (by [@Willy-JL](https://github.com/Willy-JL))
+* Xtreme: fixed BT name length according to latest XFW changes (by [@WillyJL](https://github.com/WillyJL))
 * Updated firmware submodules
 
 

@@ -1,6 +1,7 @@
 #include <furi.h>
 #include <furi_hal.h>
 #include <input/input.h>
+#include <core/string.h>
 #include <stdlib.h>
 
 #include <gui/gui.h>
@@ -12,18 +13,18 @@
 
 #include "gui_extensions.h"
 
-#define BPM_STEP_SIZE_FINE 0.5d
+#define BPM_STEP_SIZE_FINE   0.5d
 #define BPM_STEP_SIZE_COARSE 10.0d
-#define BPM_BOUNDARY_LOW 10.0d
-#define BPM_BOUNDARY_HIGH 300.0d
-#define BEEP_DELAY_MS 50
+#define BPM_BOUNDARY_LOW     10.0d
+#define BPM_BOUNDARY_HIGH    300.0d
+#define BEEP_DELAY_MS        50
 
-#define wave_bitmap_left_width 4
+#define wave_bitmap_left_width  4
 #define wave_bitmap_left_height 14
 static uint8_t wave_bitmap_left_bits[] =
     {0x08, 0x0C, 0x06, 0x06, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x06, 0x06, 0x0C, 0x08};
 
-#define wave_bitmap_right_width 4
+#define wave_bitmap_right_width  4
 #define wave_bitmap_right_height 14
 static uint8_t wave_bitmap_right_bits[] =
     {0x01, 0x03, 0x06, 0x06, 0x0C, 0x0C, 0x0C, 0x0C, 0x0C, 0x0C, 0x06, 0x06, 0x03, 0x01};
@@ -38,7 +39,11 @@ typedef struct {
     InputEvent input;
 } PluginEvent;
 
-enum OutputMode { Loud, Vibro, Silent };
+enum OutputMode {
+    Loud,
+    Vibro,
+    Silent
+};
 
 typedef struct {
     double bpm;
@@ -123,16 +128,21 @@ static void render_callback(Canvas* const canvas, void* ctx) {
     elements_button_top_right(canvas, "Hold");
 
     // draw progress bar
-    elements_progress_bar(
-        canvas, 8, 36, 112, (float)metronome_state->current_beat / metronome_state->beats_per_bar);
+    float current_progress = (float)metronome_state->current_beat / metronome_state->beats_per_bar;
+    if(!((current_progress >= 0.0f) && (current_progress <= 1.0f))) {
+        current_progress = 0.1f;
+    }
+
+    elements_progress_bar(canvas, 8, 36, 112, current_progress);
 
     // cleanup
     furi_string_free(tempStr);
     furi_mutex_release(metronome_state->mutex);
 }
 
-static void input_callback(InputEvent* input_event, FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void input_callback(InputEvent* input_event, void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
 
     PluginEvent event = {.type = EventTypeKey, .input = *input_event};
     furi_message_queue_put(event_queue, &event, FuriWaitForever);
@@ -269,6 +279,7 @@ static void metronome_state_init(MetronomeState* const metronome_state) {
     metronome_state->current_beat = 0;
     metronome_state->output_mode = Loud;
     metronome_state->notifications = furi_record_open(RECORD_NOTIFICATION);
+    metronome_state->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
 }
 
 int32_t metronome_app() {
@@ -277,7 +288,6 @@ int32_t metronome_app() {
     MetronomeState* metronome_state = malloc(sizeof(MetronomeState));
     metronome_state_init(metronome_state);
 
-    metronome_state->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
     if(!metronome_state->mutex) {
         FURI_LOG_E("Metronome", "cannot create mutex\r\n");
         free(metronome_state);
@@ -300,7 +310,6 @@ int32_t metronome_app() {
         FuriStatus event_status = furi_message_queue_get(event_queue, &event, 100);
 
         furi_mutex_acquire(metronome_state->mutex, FuriWaitForever);
-
         if(event_status == FuriStatusOk) {
             if(event.type == EventTypeKey) {
                 if(event.input.type == InputTypeShort) {
@@ -330,7 +339,7 @@ int32_t metronome_app() {
                     case InputKeyBack:
                         processing = false;
                         break;
-                    case InputKeyMAX:
+                    default:
                         break;
                     }
                 } else if(event.input.type == InputTypeLong) {
@@ -352,7 +361,7 @@ int32_t metronome_app() {
                     case InputKeyBack:
                         processing = false;
                         break;
-                    case InputKeyMAX:
+                    default:
                         break;
                     }
                 } else if(event.input.type == InputTypeRepeat) {
@@ -373,15 +382,14 @@ int32_t metronome_app() {
                     case InputKeyBack:
                         processing = false;
                         break;
-                    case InputKeyMAX:
+                    default:
                         break;
                     }
                 }
             }
         }
-
-        view_port_update(view_port);
         furi_mutex_release(metronome_state->mutex);
+        view_port_update(view_port);
     }
 
     view_port_enabled_set(view_port, false);
@@ -389,9 +397,9 @@ int32_t metronome_app() {
     furi_record_close(RECORD_GUI);
     view_port_free(view_port);
     furi_message_queue_free(event_queue);
-    furi_mutex_free(metronome_state->mutex);
     furi_timer_free(metronome_state->timer);
     furi_record_close(RECORD_NOTIFICATION);
+    furi_mutex_free(metronome_state->mutex);
     free(metronome_state);
 
     return 0;

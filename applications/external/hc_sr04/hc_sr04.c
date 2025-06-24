@@ -5,13 +5,13 @@
 #include <furi.h>
 #include <furi_hal.h>
 #include <furi_hal_power.h>
-#include <furi_hal_console.h>
 #include <gui/gui.h>
 #include <input/input.h>
 #include <stdlib.h>
 #include <gui/elements.h>
 #include <notification/notification.h>
 #include <notification/notification_messages.h>
+#include <expansion/expansion.h>
 
 typedef enum {
     EventTypeTick,
@@ -89,8 +89,9 @@ static void render_callback(Canvas* const canvas, void* ctx) {
     furi_mutex_release(plugin_state->mutex);
 }
 
-static void input_callback(InputEvent* input_event, FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void input_callback(InputEvent* input_event, void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
 
     PluginEvent event = {.type = EventTypeKey, .input = *input_event};
     furi_message_queue_put(event_queue, &event, FuriWaitForever);
@@ -177,13 +178,17 @@ static void hc_sr04_measure(PluginState* const plugin_state) {
 }
 
 int32_t hc_sr04_app() {
+    // Disable expansion protocol to avoid interference with UART Handle
+    Expansion* expansion = furi_record_open(RECORD_EXPANSION);
+    expansion_disable(expansion);
+
     FuriMessageQueue* event_queue = furi_message_queue_alloc(8, sizeof(PluginEvent));
 
     PluginState* plugin_state = malloc(sizeof(PluginState));
 
     hc_sr04_state_init(plugin_state);
 
-    furi_hal_console_disable();
+    FuriHalSerialHandle* serial_handle = furi_hal_serial_control_acquire(FuriHalSerialIdUsart);
 
     plugin_state->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
     if(!plugin_state->mutex) {
@@ -191,10 +196,13 @@ int32_t hc_sr04_app() {
         if(furi_hal_power_is_otg_enabled()) {
             furi_hal_power_disable_otg();
         }
-        furi_hal_console_enable();
+        furi_hal_serial_control_release(serial_handle);
         furi_hal_power_suppress_charge_exit();
         furi_message_queue_free(event_queue);
         free(plugin_state);
+        // Return previous state of expansion
+        expansion_enable(expansion);
+        furi_record_close(RECORD_EXPANSION);
         return 255;
     }
 
@@ -238,8 +246,8 @@ int32_t hc_sr04_app() {
             }
         }
 
-        view_port_update(view_port);
         furi_mutex_release(plugin_state->mutex);
+        view_port_update(view_port);
     }
 
     if(furi_hal_power_is_otg_enabled()) {
@@ -260,7 +268,7 @@ int32_t hc_sr04_app() {
         GpioPullUp,
         GpioSpeedVeryHigh,
         GpioAltFn7USART1);
-    furi_hal_console_enable();
+    furi_hal_serial_control_release(serial_handle);
 
     view_port_enabled_set(view_port, false);
     gui_remove_view_port(gui, view_port);
@@ -270,6 +278,10 @@ int32_t hc_sr04_app() {
     furi_message_queue_free(event_queue);
     furi_mutex_free(plugin_state->mutex);
     free(plugin_state);
+
+    // Return previous state of expansion
+    expansion_enable(expansion);
+    furi_record_close(RECORD_EXPANSION);
 
     return 0;
 }

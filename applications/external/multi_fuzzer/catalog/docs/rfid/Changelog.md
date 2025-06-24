@@ -13,6 +13,17 @@
 - HIDProx
 - PAC/Stanley
 - H10301
+- IoProxXSF
+- Paradox
+- Indala26
+- Viking
+- Pyramid
+- Keri
+- Jablotron
+- Electra
+- Idteck
+- Gallagher
+- Nexwatch
 
 **Suported attack**
 - Default Values

@@ -54,13 +54,36 @@ struct Cli {
     size_t cursor_position;
 };
 
-Cli* cli_alloc();
+Cli* cli_alloc(void);
 
 void cli_reset(Cli* cli);
 
 void cli_putc(Cli* cli, char c);
 
 void cli_stdout_callback(void* _cookie, const char* data, size_t size);
+
+// CLI command wrapping to load from plugin file on SD card
+// Just need to:
+// - Use CLI_PLUGIN_WRAPPER("name", cmd_callback)
+// - Replace callback usages with cmd_callback_wrapper
+// - Add "name_cli" entry in app manifest to build as plugin
+void cli_plugin_wrapper(const char* name, Cli* cli, FuriString* args, void* context);
+#include <flipper_application/flipper_application.h>
+#define CLI_PLUGIN_APP_ID      "cli"
+#define CLI_PLUGIN_API_VERSION 1
+#define CLI_PLUGIN_WRAPPER(plugin_name_without_cli_suffix, cli_command_callback)         \
+    void cli_command_callback##_wrapper(Cli* cli, FuriString* args, void* context) {     \
+        cli_plugin_wrapper(plugin_name_without_cli_suffix, cli, args, context);          \
+    }                                                                                    \
+    static const FlipperAppPluginDescriptor cli_command_callback##_plugin_descriptor = { \
+        .appid = CLI_PLUGIN_APP_ID,                                                      \
+        .ep_api_version = CLI_PLUGIN_API_VERSION,                                        \
+        .entry_point = &cli_command_callback,                                            \
+    };                                                                                   \
+    const FlipperAppPluginDescriptor* cli_command_callback##_plugin_ep(void) {           \
+        UNUSED(cli_command_callback##_wrapper);                                          \
+        return &cli_command_callback##_plugin_descriptor;                                \
+    }
 
 #ifdef __cplusplus
 }

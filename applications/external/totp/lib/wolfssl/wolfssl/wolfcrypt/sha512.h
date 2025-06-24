@@ -119,6 +119,10 @@ enum {
 
 #if defined(WOLFSSL_IMX6_CAAM) && !defined(WOLFSSL_QNX_CAAM)
     #include "wolfssl/wolfcrypt/port/caam/wolfcaam_sha.h"
+#elif defined(WOLFSSL_RENESAS_RSIP) && \
+     !defined(NO_WOLFSSL_RENESAS_FSPSM_HASH)
+    #include "wolfssl/wolfcrypt/port/Renesas/renesas-fspsm-crypt.h"
+
 #else
 #if defined(WOLFSSL_SE050) && defined(WOLFSSL_SE050_HASH)
     #include "wolfssl/wolfcrypt/port/nxp/se050_port.h"
@@ -150,7 +154,8 @@ struct wc_Sha512 {
     word64* W;
 #endif
 #if defined(WOLFSSL_ESP32_CRYPT) && \
-   !defined(NO_WOLFSSL_ESP32_CRYPT_HASH)
+   !defined(NO_WOLFSSL_ESP32_CRYPT_HASH) && \
+   !defined(NO_WOLFSSL_ESP32_CRYPT_HASH_SHA512)
     WC_ESP32SHA ctx;
 #endif
 #if defined(WOLFSSL_SILABS_SE_ACCEL)
@@ -197,6 +202,23 @@ struct wc_Sha512 {
 #endif /* HAVE_FIPS */
 
 #ifdef WOLFSSL_SHA512
+
+#ifdef WOLFSSL_ARMASM
+#ifdef __aarch64__
+#ifndef WOLFSSL_ARMASM_CRYPTO_SHA512
+    void Transform_Sha512_Len_neon(wc_Sha512* sha512, const byte* data,
+        word32 len);
+    #define Transform_Sha512_Len    Transform_Sha512_Len_neon
+#else
+    void Transform_Sha512_Len_crypto(wc_Sha512* sha512, const byte* data,
+        word32 len);
+    #define Transform_Sha512_Len    Transform_Sha512_Len_crypto
+#endif
+#else
+extern void Transform_Sha512_Len(wc_Sha512* sha512, const byte* data,
+    word32 len);
+#endif
+#endif
 
 WOLFSSL_API int wc_InitSha512(wc_Sha512* sha);
 WOLFSSL_API int wc_InitSha512_ex(wc_Sha512* sha, void* heap, int devId);

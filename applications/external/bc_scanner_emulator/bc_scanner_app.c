@@ -3,7 +3,9 @@
 #include <furi_hal.h>
 #include <storage/storage.h>
 #include <lib/toolbox/path.h>
-#define TAG "BarCodeScanner"
+#include <expansion/expansion.h>
+
+#define TAG        "BarCodeScanner"
 #define WORKER_TAG TAG "App"
 
 static bool bc_scanner_app_custom_event_callback(void* context, uint32_t event) {
@@ -106,10 +108,19 @@ void bc_scanner_app_free(BarCodeApp* app) {
 
 int32_t bc_scanner_app(void* p) {
     FURI_LOG_D(WORKER_TAG, "Start App");
+    // Disable expansion protocol to avoid interference with UART Handle
+    Expansion* expansion = furi_record_open(RECORD_EXPANSION);
+    expansion_disable(expansion);
+
     BarCodeApp* bar_code_app = bc_scanner_app_alloc((char*)p);
 
     view_dispatcher_run(bar_code_app->view_dispatcher);
 
     bc_scanner_app_free(bar_code_app);
+
+    // Return previous state of expansion
+    expansion_enable(expansion);
+    furi_record_close(RECORD_EXPANSION);
+
     return 0;
 }

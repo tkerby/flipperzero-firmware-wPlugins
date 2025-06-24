@@ -6,6 +6,7 @@ extern "C" {
 
 #include <furi.h>
 #include <furi_hal.h>
+#include "bad_usb_hid.h"
 
 typedef enum {
     BadUsbStateInit,
@@ -24,16 +25,21 @@ typedef enum {
 
 typedef struct {
     BadUsbWorkerState state;
-    uint16_t line_cur;
-    uint16_t line_nb;
+    size_t line_cur;
+    size_t line_nb;
     uint32_t delay_remain;
-    uint16_t error_line;
+    size_t error_line;
     char error[64];
+    uint32_t elapsed;
 } BadUsbState;
 
 typedef struct BadUsbScript BadUsbScript;
 
-BadUsbScript* bad_usb_script_open(FuriString* file_path);
+BadUsbScript* bad_usb_script_open(
+    FuriString* file_path,
+    BadUsbHidInterface* interface,
+    BadUsbHidConfig* hid_cfg,
+    bool load_id_cfg);
 
 void bad_usb_script_close(BadUsbScript* bad_usb);
 

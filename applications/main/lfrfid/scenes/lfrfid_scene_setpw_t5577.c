@@ -1,12 +1,13 @@
 #include "../lfrfid_i.h"
 #include "../helpers/lfrfid_dialog.h"
+#include <lfrfid_icons.h>
 
-#define LFRFID_T5577_BITRATE_RF_64 0x00140000
+#define LFRFID_T5577_BITRATE_RF_64         0x00140000
 #define LFRFID_T5577_MODULATION_MANCHESTER 0x00008000
-#define LFRFID_T5577_PWD 0x00000010
-#define LFRFID_T5577_MAXBLOCK_SHIFT 5
-#define LFRFID_T5577_TESTMODE_DISABLED 0x60000000
-#define LFRFID_T5577_PASSWORD_BLOCK_NO 7
+#define LFRFID_T5577_PWD                   0x00000010
+#define LFRFID_T5577_MAXBLOCK_SHIFT        5
+#define LFRFID_T5577_TESTMODE_DISABLED     0x60000000
+#define LFRFID_T5577_PASSWORD_BLOCK_NO     7
 
 static void lfrfid_setpw_t5577_password_and_config_to_EM(LfRfid* app) {
     Popup* popup = app->popup;
@@ -25,7 +26,7 @@ static void lfrfid_setpw_t5577_password_and_config_to_EM(LfRfid* app) {
     if(app->extra_options & LfRfidSetMasterKeyDisableTestMode)
         em_config_block_data |= LFRFID_T5577_TESTMODE_DISABLED;
 
-    uint8_t* pass_p = app->password;
+    uint8_t* pass_p = app->password2;
     uint32_t current_password = pass_p[0] << 24 | pass_p[1] << 16 | pass_p[2] << 8 | pass_p[3];
     //uint32_t current_password = app->password;
     //const uint32_t em_pw_block_data = 1976;

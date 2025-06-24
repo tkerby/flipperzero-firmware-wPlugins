@@ -1,7 +1,6 @@
 #pragma once
 
 #include "picopass.h"
-#include "picopass_worker.h"
 #include "picopass_device.h"
 
 #include "rfal_picopass.h"
@@ -17,6 +16,7 @@
 #include <gui/modules/loading.h>
 #include <gui/modules/text_input.h>
 #include <gui/modules/byte_input.h>
+#include <gui/modules/text_box.h>
 #include <gui/modules/widget.h>
 
 #include <input/input.h>
@@ -29,11 +29,21 @@
 #include <lib/toolbox/path.h>
 #include <picopass_icons.h>
 
-#define PICOPASS_TEXT_STORE_SIZE 128
+#include <nfc/nfc.h>
+#include <toolbox/keys_dict.h>
+#include "protocol/picopass_poller.h"
+#include "protocol/picopass_listener.h"
 
-#define LOCLASS_NUM_CSNS 9
-// Collect 2 MACs per CSN to account for keyroll modes
-#define LOCLASS_MACS_TO_COLLECT (LOCLASS_NUM_CSNS * 2)
+#include "plugin/interface.h"
+#include <flipper_application/flipper_application.h>
+#include <flipper_application/plugins/plugin_manager.h>
+#include <loader/firmware_api/firmware_api.h>
+
+#define PICOPASS_TEXT_STORE_SIZE 129
+
+#define PICOPASS_ICLASS_ELITE_DICT_FLIPPER_NAME    APP_ASSETS_PATH("iclass_elite_dict.txt")
+#define PICOPASS_ICLASS_STANDARD_DICT_FLIPPER_NAME APP_ASSETS_PATH("iclass_standard_dict.txt")
+#define PICOPASS_ICLASS_ELITE_DICT_USER_NAME       APP_DATA_PATH("assets/iclass_elite_dict_user.txt")
 
 enum PicopassCustomEvent {
     // Reserve first 100 events for button types and indexes, starting from 0
@@ -44,6 +54,13 @@ enum PicopassCustomEvent {
     PicopassCustomEventByteInputDone,
     PicopassCustomEventTextInputDone,
     PicopassCustomEventDictAttackSkip,
+    PicopassCustomEventDictAttackUpdateView,
+    PicopassCustomEventLoclassGotMac,
+    PicopassCustomEventLoclassGotStandardKey,
+    PicopassCustomEventNrMacSaved,
+
+    PicopassCustomEventPollerSuccess,
+    PicopassCustomEventPollerFail,
 };
 
 typedef enum {
@@ -51,17 +68,43 @@ typedef enum {
     EventTypeKey,
 } EventType;
 
+typedef struct {
+    const char* name;
+    uint16_t total_keys;
+    uint16_t current_key;
+    bool card_detected;
+} PicopassDictAttackContext;
+
+typedef struct {
+    uint8_t key_to_write[PICOPASS_BLOCK_LEN];
+    bool is_elite;
+} PicopassWriteKeyContext;
+
+typedef struct {
+    size_t macs_collected;
+} PicopassLoclassContext;
+
+typedef enum {
+    ManualNRMAC,
+    AutoNRMAC
+} NRMACType;
+
 struct Picopass {
-    PicopassWorker* worker;
     ViewDispatcher* view_dispatcher;
     Gui* gui;
     NotificationApp* notifications;
     SceneManager* scene_manager;
     PicopassDevice* dev;
 
-    char text_store[PICOPASS_TEXT_STORE_SIZE + 1];
+    Nfc* nfc;
+    PicopassPoller* poller;
+    PicopassListener* listener;
+    KeysDict* dict;
+    uint32_t last_error_notify_ticks;
+
+    char text_store[PICOPASS_TEXT_STORE_SIZE];
     FuriString* text_box_store;
-    uint8_t byte_input_store[RFAL_PICOPASS_BLOCK_LEN];
+    uint8_t byte_input_store[PICOPASS_BLOCK_LEN];
 
     // Common Views
     Submenu* submenu;
@@ -69,9 +112,19 @@ struct Picopass {
     Loading* loading;
     TextInput* text_input;
     ByteInput* byte_input;
+    TextBox* text_box;
     Widget* widget;
     DictAttack* dict_attack;
     Loclass* loclass;
+
+    PluginManager* plugin_wiegand_manager;
+    PluginWiegand* plugin_wiegand;
+
+    PicopassDictAttackContext dict_attack_ctx;
+    PicopassWriteKeyContext write_key_context;
+    PicopassLoclassContext loclass_context;
+
+    NRMACType nr_mac_type;
 };
 
 typedef enum {
@@ -80,6 +133,7 @@ typedef enum {
     PicopassViewLoading,
     PicopassViewTextInput,
     PicopassViewByteInput,
+    PicopassViewTextBox,
     PicopassViewWidget,
     PicopassViewDictAttack,
     PicopassViewLoclass,

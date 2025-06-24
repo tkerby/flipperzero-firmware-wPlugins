@@ -4,6 +4,11 @@
 #include <flipper_format/flipper_format.h>
 #include <picopass_icons.h>
 
+#include <toolbox/protocols/protocol_dict.h>
+#include <toolbox/hex.h>
+#include <lfrfid/protocols/lfrfid_protocols.h>
+#include <lfrfid/lfrfid_dict_file.h>
+
 #define TAG "PicopassDevice"
 
 static const char* picopass_file_header = "Flipper Picopass device";
@@ -11,13 +16,11 @@ static const uint32_t picopass_file_version = 1;
 
 const uint8_t picopass_iclass_decryptionkey[] =
     {0xb4, 0x21, 0x2c, 0xca, 0xb7, 0xed, 0x21, 0x0f, 0x7b, 0x93, 0xd4, 0x59, 0x39, 0xc7, 0xdd, 0x36};
+const char unknown_block[] = "?? ?? ?? ?? ?? ?? ?? ??";
 
 PicopassDevice* picopass_device_alloc() {
     PicopassDevice* picopass_dev = malloc(sizeof(PicopassDevice));
-    picopass_dev->dev_data.pacs.legacy = false;
-    picopass_dev->dev_data.pacs.se_enabled = false;
-    picopass_dev->dev_data.pacs.elite_kdf = false;
-    picopass_dev->dev_data.pacs.pin_length = 0;
+    memset(picopass_dev, 0, sizeof(PicopassDevice));
     picopass_dev->storage = furi_record_open(RECORD_STORAGE);
     picopass_dev->dialogs = furi_record_open(RECORD_DIALOGS);
     picopass_dev->load_path = furi_string_alloc();
@@ -27,7 +30,129 @@ PicopassDevice* picopass_device_alloc() {
 void picopass_device_set_name(PicopassDevice* dev, const char* name) {
     furi_assert(dev);
 
-    strlcpy(dev->dev_name, name, PICOPASS_DEV_NAME_MAX_LEN);
+    strlcpy(dev->dev_name, name, sizeof(dev->dev_name));
+}
+
+// For use with Seader's virtual card processing.
+static bool picopass_device_save_file_seader(
+    PicopassDevice* dev,
+    FlipperFormat* file,
+    FuriString* file_path) {
+    furi_assert(dev);
+    PicopassPacs* pacs = &dev->dev_data.pacs;
+    PicopassBlock* card_data = dev->dev_data.card_data;
+    bool result = false;
+
+    const char* seader_file_header = "Flipper Seader Credential";
+    const uint32_t seader_file_version = 1;
+
+    do {
+        FURI_LOG_D(
+            TAG,
+            "Save %s %ld to %s",
+            seader_file_header,
+            seader_file_version,
+            furi_string_get_cstr(file_path));
+        storage_simply_mkdir(dev->storage, EXT_PATH("apps_data/seader"));
+        if(!flipper_format_file_open_always(file, furi_string_get_cstr(file_path))) break;
+        if(!flipper_format_write_header_cstr(file, seader_file_header, seader_file_version)) break;
+        if(!flipper_format_write_uint32(file, "Bits", (uint32_t*)&pacs->bitLength, 1)) break;
+        if(!flipper_format_write_hex(file, "Credential", pacs->credential, PICOPASS_BLOCK_LEN))
+            break;
+
+        uint8_t start_block = 0;
+
+        // TODO: save SR vs SE more properly
+        if(pacs->sio) { // SR
+            start_block = 10;
+        } else if(pacs->se_enabled) { //SE
+            start_block = 6;
+        }
+
+        uint8_t sio[128];
+        size_t sio_length = card_data[start_block].data[1];
+        size_t block_count = (sio_length + PICOPASS_BLOCK_LEN - 1) / PICOPASS_BLOCK_LEN;
+        for(uint8_t i = 0; i < block_count; i++) {
+            memcpy(
+                sio + (i * PICOPASS_BLOCK_LEN),
+                card_data[start_block + i].data,
+                PICOPASS_BLOCK_LEN);
+        }
+        if(!flipper_format_write_hex(file, "SIO", sio, block_count * PICOPASS_BLOCK_LEN)) break;
+
+        if(!flipper_format_write_hex(
+               file, "Diversifier", card_data[PICOPASS_CSN_BLOCK_INDEX].data, PICOPASS_BLOCK_LEN))
+            break;
+
+        result = true;
+    } while(false);
+
+    return result;
+}
+
+static bool picopass_device_save_file_lfrfid(PicopassDevice* dev, FuriString* file_path) {
+    furi_assert(dev);
+    PicopassPacs* pacs = &dev->dev_data.pacs;
+    ProtocolDict* dict = protocol_dict_alloc(lfrfid_protocols, LFRFIDProtocolMax);
+    ProtocolId protocol = LFRFIDProtocolHidGeneric;
+
+    bool result = false;
+    uint64_t target = 0;
+    uint64_t sentinel = 1ULL << pacs->bitLength;
+    memcpy(&target, pacs->credential, PICOPASS_BLOCK_LEN);
+    target = __builtin_bswap64(target);
+    FURI_LOG_D(TAG, "Original (%d): %016llx", pacs->bitLength, target);
+
+    if(pacs->bitLength == 26) {
+        //3 bytes
+        protocol = LFRFIDProtocolH10301;
+        // Remove parity
+        target = (target >> 1) & 0xFFFFFF;
+        // Reverse order since it'll get reversed again
+        target = __builtin_bswap64(target) >> (64 - 24);
+    } else if(pacs->bitLength < 44) {
+        // https://gist.github.com/blark/e8f125e402f576bdb7e2d7b3428bdba6
+        protocol = LFRFIDProtocolHidGeneric;
+        if(pacs->bitLength <= 36) {
+            uint64_t header = 1ULL << 37;
+            target = __builtin_bswap64((target | sentinel | header) << 4) >> (64 - 48);
+        } else {
+            target = __builtin_bswap64((target | sentinel) << 4) >> (64 - 48);
+        }
+    } else {
+        //8 bytes
+        protocol = LFRFIDProtocolHidExGeneric;
+        target = __builtin_bswap64(target);
+    }
+
+    size_t data_size = protocol_dict_get_data_size(dict, protocol);
+    uint8_t* data = malloc(data_size);
+    if(data_size < 8) {
+        memcpy(data, (void*)&target, data_size);
+    } else {
+        // data_size 12 for LFRFIDProtocolHidExGeneric
+        memcpy(data + 4, (void*)&target, 8);
+    }
+
+    protocol_dict_set_data(dict, protocol, data, data_size);
+    free(data);
+
+    FuriString* briefStr;
+    briefStr = furi_string_alloc();
+    protocol_dict_render_brief_data(dict, briefStr, protocol);
+    FURI_LOG_D(TAG, "LFRFID Brief: %s", furi_string_get_cstr(briefStr));
+    furi_string_free(briefStr);
+
+    storage_simply_mkdir(dev->storage, EXT_PATH("lfrfid"));
+    result = lfrfid_dict_file_save(dict, protocol, furi_string_get_cstr(file_path));
+    if(result) {
+        FURI_LOG_D(TAG, "Written: %d", result);
+    } else {
+        FURI_LOG_D(TAG, "Failed to write");
+    }
+
+    protocol_dict_free(dict);
+    return result;
 }
 
 static bool picopass_device_save_file(
@@ -37,11 +162,12 @@ static bool picopass_device_save_file(
     const char* extension,
     bool use_load_path) {
     furi_assert(dev);
+    FURI_LOG_D(TAG, "Save File %s %s %s", folder, dev_name, extension);
 
     bool saved = false;
     FlipperFormat* file = flipper_format_file_alloc(dev->storage);
     PicopassPacs* pacs = &dev->dev_data.pacs;
-    PicopassBlock* AA1 = dev->dev_data.AA1;
+    PicopassBlock* card_data = dev->dev_data.card_data;
     FuriString* temp_str;
     temp_str = furi_string_alloc();
 
@@ -55,67 +181,60 @@ static bool picopass_device_save_file(
             // First remove picopass device file if it was saved
             furi_string_printf(temp_str, "%s/%s%s", folder, dev_name, extension);
         }
-        // Open file
-        if(!flipper_format_file_open_always(file, furi_string_get_cstr(temp_str))) break;
 
-        if(dev->format == PicopassDeviceSaveFormatHF) {
-            uint32_t fc = pacs->record.FacilityCode;
-            uint32_t cn = pacs->record.CardNumber;
+        if(dev->format == PicopassDeviceSaveFormatOriginal ||
+           dev->format == PicopassDeviceSaveFormatLegacy ||
+           dev->format == PicopassDeviceSaveFormatPartial) {
+            // Open file
+            if(!flipper_format_file_open_always(file, furi_string_get_cstr(temp_str))) break;
+
             // Write header
             if(!flipper_format_write_header_cstr(file, picopass_file_header, picopass_file_version))
                 break;
-            if(pacs->record.valid) {
-                if(!flipper_format_write_uint32(file, "Facility Code", &fc, 1)) break;
-                if(!flipper_format_write_uint32(file, "Card Number", &cn, 1)) break;
-                if(!flipper_format_write_hex(
-                       file, "Credential", pacs->credential, RFAL_PICOPASS_BLOCK_LEN))
-                    break;
-                if(pacs->pin_length > 0) {
-                    if(!flipper_format_write_hex(
-                           file, "PIN\t\t", pacs->pin0, RFAL_PICOPASS_BLOCK_LEN))
-                        break;
-                    if(!flipper_format_write_hex(
-                           file, "PIN(cont.)\t", pacs->pin1, RFAL_PICOPASS_BLOCK_LEN))
-                        break;
-                }
-            }
+            if(!flipper_format_write_hex(file, "Credential", pacs->credential, PICOPASS_BLOCK_LEN))
+                break;
+
             // TODO: Add elite
             if(!flipper_format_write_comment_cstr(file, "Picopass blocks")) break;
             bool block_saved = true;
 
-            size_t app_limit = AA1[PICOPASS_CONFIG_BLOCK_INDEX].data[0] < PICOPASS_MAX_APP_LIMIT ?
-                                   AA1[PICOPASS_CONFIG_BLOCK_INDEX].data[0] :
+            size_t app_limit = card_data[PICOPASS_CONFIG_BLOCK_INDEX].data[0] <
+                                       PICOPASS_MAX_APP_LIMIT ?
+                                   card_data[PICOPASS_CONFIG_BLOCK_INDEX].data[0] :
                                    PICOPASS_MAX_APP_LIMIT;
             for(size_t i = 0; i < app_limit; i++) {
                 furi_string_printf(temp_str, "Block %d", i);
-                if(!flipper_format_write_hex(
-                       file,
-                       furi_string_get_cstr(temp_str),
-                       AA1[i].data,
-                       RFAL_PICOPASS_BLOCK_LEN)) {
-                    block_saved = false;
-                    break;
+                if(card_data[i].valid) {
+                    if(dev->format == PicopassDeviceSaveFormatLegacy) {
+                        if(i == PICOPASS_ICLASS_PACS_CFG_BLOCK_INDEX) {
+                            card_data[i].data[0] = 0x03;
+                        }
+                    }
+
+                    if(!flipper_format_write_hex(
+                           file,
+                           furi_string_get_cstr(temp_str),
+                           card_data[i].data,
+                           PICOPASS_BLOCK_LEN)) {
+                        block_saved = false;
+                        break;
+                    }
+                } else {
+                    if(!flipper_format_write_string_cstr(
+                           file, furi_string_get_cstr(temp_str), unknown_block)) {
+                        block_saved = false;
+                        break;
+                    }
                 }
             }
             if(!block_saved) break;
+            saved = true;
         } else if(dev->format == PicopassDeviceSaveFormatLF) {
-            const char* lf_header = "Flipper RFID key";
-            // Write header
-            if(!flipper_format_write_header_cstr(file, lf_header, 1)) break;
-            if(!flipper_format_write_comment_cstr(
-                   file,
-                   "This was generated from the Picopass plugin and may not match current lfrfid"))
-                break;
-            // When lfrfid supports more formats, update this
-            if(!flipper_format_write_string_cstr(file, "Key type", "H10301")) break;
-            uint8_t H10301[3] = {0};
-            H10301[0] = pacs->record.FacilityCode;
-            H10301[1] = pacs->record.CardNumber >> 8;
-            H10301[2] = pacs->record.CardNumber & 0x00FF;
-            if(!flipper_format_write_hex(file, "Data", H10301, 3)) break;
+            saved = picopass_device_save_file_lfrfid(dev, temp_str);
+        } else if(dev->format == PicopassDeviceSaveFormatSeader) {
+            saved = picopass_device_save_file_seader(dev, file, temp_str);
         }
-        saved = true;
-    } while(0);
+    } while(false);
 
     if(!saved) {
         dialog_message_show_storage_error(dev->dialogs, "Can not save\nfile");
@@ -126,20 +245,49 @@ static bool picopass_device_save_file(
 }
 
 bool picopass_device_save(PicopassDevice* dev, const char* dev_name) {
-    if(dev->format == PicopassDeviceSaveFormatHF) {
+    if(dev->format == PicopassDeviceSaveFormatOriginal) {
         return picopass_device_save_file(
             dev, dev_name, STORAGE_APP_DATA_PATH_PREFIX, PICOPASS_APP_EXTENSION, true);
     } else if(dev->format == PicopassDeviceSaveFormatLF) {
-        return picopass_device_save_file(dev, dev_name, ANY_PATH("lfrfid"), ".rfid", true);
+        return picopass_device_save_file(dev, dev_name, ANY_PATH("lfrfid"), ".rfid", false);
+    } else if(dev->format == PicopassDeviceSaveFormatSeader) {
+        return picopass_device_save_file(
+            dev, dev_name, EXT_PATH("apps_data/seader"), ".credential", false);
+    } else if(dev->format == PicopassDeviceSaveFormatPartial) {
+        return picopass_device_save_file(
+            dev, dev_name, STORAGE_APP_DATA_PATH_PREFIX, PICOPASS_APP_EXTENSION, true);
+    } else if(dev->format == PicopassDeviceSaveFormatLegacy) {
+        return picopass_device_save_file(
+            dev, dev_name, STORAGE_APP_DATA_PATH_PREFIX, PICOPASS_APP_EXTENSION, true);
+    } else {
+        FURI_LOG_E(TAG, "Unknown format");
     }
 
     return false;
 }
 
+bool picopass_hex_str_to_uint8(const char* value_str, size_t max, uint8_t* value) {
+    furi_check(value_str);
+    furi_check(value);
+
+    bool parse_success = false;
+    size_t count = 0;
+    while(value_str[0] && value_str[1]) {
+        if(count++ >= max) {
+            parse_success = true;
+            break;
+        }
+        parse_success = hex_char_to_uint8(value_str[0], value_str[1], value++);
+        if(!parse_success) break;
+        value_str += 3;
+    }
+    return parse_success;
+}
+
 static bool picopass_device_load_data(PicopassDevice* dev, FuriString* path, bool show_dialog) {
     bool parsed = false;
     FlipperFormat* file = flipper_format_file_alloc(dev->storage);
-    PicopassBlock* AA1 = dev->dev_data.AA1;
+    PicopassBlock* card_data = dev->dev_data.card_data;
     PicopassPacs* pacs = &dev->dev_data.pacs;
     FuriString* temp_str;
     temp_str = furi_string_alloc();
@@ -150,43 +298,90 @@ static bool picopass_device_load_data(PicopassDevice* dev, FuriString* path, boo
     }
 
     do {
+        picopass_device_data_clear(&dev->dev_data);
         if(!flipper_format_file_open_existing(file, furi_string_get_cstr(path))) break;
 
         // Read and verify file header
         uint32_t version = 0;
         if(!flipper_format_read_header(file, temp_str, &version)) break;
-        if(furi_string_cmp_str(temp_str, picopass_file_header) ||
+        if(!furi_string_equal_str(temp_str, picopass_file_header) ||
            (version != picopass_file_version)) {
             deprecated_version = true;
             break;
         }
 
+        FuriString* block_str = furi_string_alloc();
         // Parse header blocks
         bool block_read = true;
         for(size_t i = 0; i < 6; i++) {
             furi_string_printf(temp_str, "Block %d", i);
-            if(!flipper_format_read_hex(
-                   file, furi_string_get_cstr(temp_str), AA1[i].data, RFAL_PICOPASS_BLOCK_LEN)) {
+            if(!flipper_format_read_string(file, furi_string_get_cstr(temp_str), block_str)) {
                 block_read = false;
                 break;
             }
+            if(furi_string_equal_str(block_str, unknown_block)) {
+                FURI_LOG_D(TAG, "Block %i: %s (unknown)", i, furi_string_get_cstr(block_str));
+                card_data[i].valid = false;
+                memset(card_data[i].data, 0, PICOPASS_BLOCK_LEN);
+            } else {
+                FURI_LOG_D(TAG, "Block %i: %s (hex)", i, furi_string_get_cstr(block_str));
+                if(!picopass_hex_str_to_uint8(
+                       furi_string_get_cstr(block_str), PICOPASS_BLOCK_LEN, card_data[i].data)) {
+                    block_read = false;
+                    break;
+                }
+                card_data[i].valid = true;
+            }
         }
 
-        size_t app_limit = AA1[PICOPASS_CONFIG_BLOCK_INDEX].data[0];
+        // Check if legacy or SE
+        PicopassBlock temp_block = {};
+        memset(temp_block.data, 0xff, PICOPASS_BLOCK_LEN);
+        pacs->legacy =
+            (memcmp(
+                 card_data[PICOPASS_SECURE_AIA_BLOCK_INDEX].data,
+                 temp_block.data,
+                 PICOPASS_BLOCK_LEN) == 0);
+
+        temp_block.data[3] = 0x00;
+        temp_block.data[4] = 0x06;
+        pacs->se_enabled =
+            (memcmp(
+                 card_data[PICOPASS_SECURE_AIA_BLOCK_INDEX].data,
+                 temp_block.data,
+                 PICOPASS_BLOCK_LEN) == 0);
+
+        size_t app_limit = card_data[PICOPASS_CONFIG_BLOCK_INDEX].data[0];
         // Fix for unpersonalized cards that have app_limit set to 0xFF
         if(app_limit > PICOPASS_MAX_APP_LIMIT) app_limit = PICOPASS_MAX_APP_LIMIT;
         for(size_t i = 6; i < app_limit; i++) {
             furi_string_printf(temp_str, "Block %d", i);
-            if(!flipper_format_read_hex(
-                   file, furi_string_get_cstr(temp_str), AA1[i].data, RFAL_PICOPASS_BLOCK_LEN)) {
+            if(!flipper_format_read_string(file, furi_string_get_cstr(temp_str), block_str)) {
                 block_read = false;
                 break;
+            }
+            if(furi_string_equal_str(block_str, unknown_block)) {
+                FURI_LOG_D(TAG, "Block %i: %s (unknown)", i, furi_string_get_cstr(block_str));
+                card_data[i].valid = false;
+                memset(card_data[i].data, 0, PICOPASS_BLOCK_LEN);
+            } else {
+                FURI_LOG_D(TAG, "Block %i: %s (hex)", i, furi_string_get_cstr(block_str));
+                if(!picopass_hex_str_to_uint8(
+                       furi_string_get_cstr(block_str), PICOPASS_BLOCK_LEN, card_data[i].data)) {
+                    block_read = false;
+                    break;
+                }
+                card_data[i].valid = true;
             }
         }
         if(!block_read) break;
 
-        if(picopass_device_parse_credential(AA1, pacs) != ERR_NONE) break;
-        if(picopass_device_parse_wiegand(pacs->credential, &pacs->record) != ERR_NONE) break;
+        if(pacs->se_enabled) {
+            FURI_LOG_D(TAG, "Skipping parsing: SE enabled");
+        } else if(card_data[PICOPASS_ICLASS_PACS_CFG_BLOCK_INDEX].valid) {
+            picopass_device_parse_credential(card_data, pacs);
+            picopass_device_parse_wiegand(pacs);
+        }
 
         parsed = true;
     } while(false);
@@ -214,7 +409,7 @@ void picopass_device_clear(PicopassDevice* dev) {
 
     picopass_device_data_clear(&dev->dev_data);
     memset(&dev->dev_data, 0, sizeof(dev->dev_data));
-    dev->format = PicopassDeviceSaveFormatHF;
+    dev->format = PicopassDeviceSaveFormatOriginal;
     furi_string_reset(dev->load_path);
 }
 
@@ -245,7 +440,7 @@ bool picopass_file_select(PicopassDevice* dev) {
         FuriString* filename;
         filename = furi_string_alloc();
         path_extract_filename(dev->load_path, filename, true);
-        strncpy(dev->dev_name, furi_string_get_cstr(filename), PICOPASS_DEV_NAME_MAX_LEN);
+        strlcpy(dev->dev_name, furi_string_get_cstr(filename), sizeof(dev->dev_name));
         res = picopass_device_load_data(dev, dev->load_path, true);
         if(res) {
             picopass_device_set_name(dev, dev->dev_name);
@@ -258,16 +453,25 @@ bool picopass_file_select(PicopassDevice* dev) {
 
 void picopass_device_data_clear(PicopassDeviceData* dev_data) {
     for(size_t i = 0; i < PICOPASS_MAX_APP_LIMIT; i++) {
-        memset(dev_data->AA1[i].data, 0, sizeof(dev_data->AA1[i].data));
+        memset(dev_data->card_data[i].data, 0, sizeof(dev_data->card_data[i].data));
+        dev_data->card_data[i].valid = false;
     }
+    memset(dev_data->pacs.credential, 0, sizeof(dev_data->pacs.credential));
+    dev_data->auth = PicopassDeviceAuthMethodUnset;
     dev_data->pacs.legacy = false;
     dev_data->pacs.se_enabled = false;
     dev_data->pacs.elite_kdf = false;
+    dev_data->pacs.sio = false;
     dev_data->pacs.pin_length = 0;
+    dev_data->pacs.bitLength = 0;
 }
 
 bool picopass_device_delete(PicopassDevice* dev, bool use_load_path) {
     furi_assert(dev);
+    if(dev->format != PicopassDeviceSaveFormatOriginal) {
+        // Never delete other formats (LF, Seader, etc)
+        return false;
+    }
 
     bool deleted = false;
     FuriString* file_path;
@@ -303,82 +507,66 @@ void picopass_device_set_loading_callback(
     dev->loading_cb_ctx = context;
 }
 
-ReturnCode picopass_device_decrypt(uint8_t* enc_data, uint8_t* dec_data) {
-    uint8_t key[32] = {0};
-    memcpy(key, picopass_iclass_decryptionkey, sizeof(picopass_iclass_decryptionkey));
+void picopass_device_decrypt(uint8_t* enc_data, uint8_t* dec_data) {
     mbedtls_des3_context ctx;
     mbedtls_des3_init(&ctx);
-    mbedtls_des3_set2key_dec(&ctx, key);
+    mbedtls_des3_set2key_dec(&ctx, picopass_iclass_decryptionkey);
     mbedtls_des3_crypt_ecb(&ctx, enc_data, dec_data);
     mbedtls_des3_free(&ctx);
-    return ERR_NONE;
 }
 
-ReturnCode picopass_device_parse_credential(PicopassBlock* AA1, PicopassPacs* pacs) {
-    ReturnCode err;
-
-    pacs->biometrics = AA1[6].data[4];
-    pacs->pin_length = AA1[6].data[6] & 0x0F;
-    pacs->encryption = AA1[6].data[7];
+void picopass_device_parse_credential(PicopassBlock* card_data, PicopassPacs* pacs) {
+    pacs->biometrics = card_data[6].data[4];
+    pacs->pin_length = card_data[6].data[6] & 0x0F;
+    pacs->encryption = card_data[6].data[7];
 
     if(pacs->encryption == PicopassDeviceEncryption3DES) {
         FURI_LOG_D(TAG, "3DES Encrypted");
-        err = picopass_device_decrypt(AA1[7].data, pacs->credential);
-        if(err != ERR_NONE) {
-            FURI_LOG_E(TAG, "decrypt error %d", err);
-            return err;
-        }
+        picopass_device_decrypt(card_data[7].data, pacs->credential);
 
-        err = picopass_device_decrypt(AA1[8].data, pacs->pin0);
-        if(err != ERR_NONE) {
-            FURI_LOG_E(TAG, "decrypt error %d", err);
-            return err;
-        }
+        picopass_device_decrypt(card_data[8].data, pacs->pin0);
 
-        err = picopass_device_decrypt(AA1[9].data, pacs->pin1);
-        if(err != ERR_NONE) {
-            FURI_LOG_E(TAG, "decrypt error %d", err);
-            return err;
-        }
+        picopass_device_decrypt(card_data[9].data, pacs->pin1);
     } else if(pacs->encryption == PicopassDeviceEncryptionNone) {
         FURI_LOG_D(TAG, "No Encryption");
-        memcpy(pacs->credential, AA1[7].data, RFAL_PICOPASS_BLOCK_LEN);
-        memcpy(pacs->pin0, AA1[8].data, RFAL_PICOPASS_BLOCK_LEN);
-        memcpy(pacs->pin1, AA1[9].data, RFAL_PICOPASS_BLOCK_LEN);
+        memcpy(pacs->credential, card_data[7].data, PICOPASS_BLOCK_LEN);
+        memcpy(pacs->pin0, card_data[8].data, PICOPASS_BLOCK_LEN);
+        memcpy(pacs->pin1, card_data[9].data, PICOPASS_BLOCK_LEN);
     } else if(pacs->encryption == PicopassDeviceEncryptionDES) {
         FURI_LOG_D(TAG, "DES Encrypted");
     } else {
         FURI_LOG_D(TAG, "Unknown encryption");
     }
 
-    pacs->sio = (AA1[10].data[0] == 0x30); // rough check
-
-    return ERR_NONE;
+    pacs->sio = (card_data[10].data[0] == 0x30); // rough check
 }
 
-ReturnCode picopass_device_parse_wiegand(uint8_t* data, PicopassWiegandRecord* record) {
-    uint32_t* halves = (uint32_t*)data;
+void picopass_device_parse_wiegand(PicopassPacs* pacs) {
+    uint8_t* credential = pacs->credential;
+    uint32_t* halves = (uint32_t*)credential;
     if(halves[0] == 0) {
         uint8_t leading0s = __builtin_clz(REVERSE_BYTES_U32(halves[1]));
-        record->bitLength = 31 - leading0s;
+        pacs->bitLength = 31 - leading0s;
     } else {
         uint8_t leading0s = __builtin_clz(REVERSE_BYTES_U32(halves[0]));
-        record->bitLength = 63 - leading0s;
+        pacs->bitLength = 63 - leading0s;
     }
-    FURI_LOG_D(TAG, "bitLength: %d", record->bitLength);
 
-    if(record->bitLength == 26) {
-        uint8_t* v4 = data + 4;
-        uint32_t bot = v4[3] | (v4[2] << 8) | (v4[1] << 16) | (v4[0] << 24);
+    // Remove sentinel bit from credential.  Byteswapping to handle array of bytes vs 64bit value
+    uint64_t sentinel = __builtin_bswap64(1ULL << pacs->bitLength);
+    uint64_t swapped = 0;
+    memcpy(&swapped, credential, sizeof(uint64_t));
+    swapped = swapped ^ sentinel;
+    memcpy(credential, &swapped, sizeof(uint64_t));
+    FURI_LOG_D(TAG, "PACS: (%d) %016llx", pacs->bitLength, swapped);
+}
 
-        record->CardNumber = (bot >> 1) & 0xFFFF;
-        record->FacilityCode = (bot >> 17) & 0xFF;
-        FURI_LOG_D(TAG, "FC: %u CN: %u", record->FacilityCode, record->CardNumber);
-        record->valid = true;
-    } else {
-        record->CardNumber = 0;
-        record->FacilityCode = 0;
-        record->valid = false;
-    }
-    return ERR_NONE;
+bool picopass_device_hid_csn(PicopassDevice* dev) {
+    furi_assert(dev);
+    PicopassBlock* card_data = dev->dev_data.card_data;
+    uint8_t* csn = card_data[PICOPASS_CSN_BLOCK_INDEX].data;
+    // From Proxmark3 RRG sourcecode
+    bool isHidRange = (memcmp(csn + 5, "\xFF\x12\xE0", 3) == 0) && ((csn[4] & 0xF0) == 0xF0);
+
+    return isHidRange;
 }

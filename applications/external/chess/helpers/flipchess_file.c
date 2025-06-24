@@ -3,23 +3,23 @@
 #include <loader/loader.h>
 
 // #define FLIPCHESS_APP_BASE_FOLDER APP_BOARDA_PATH("flipchess")
-#define FLIPCHESS_APP_BASE_FOLDER EXT_PATH("apps_data/flipchess")
+#define FLIPCHESS_APP_BASE_FOLDER            EXT_PATH("apps_data/flipchess")
 #define FLIPCHESS_APP_BASE_FOLDER_PATH(path) FLIPCHESS_APP_BASE_FOLDER "/" path
-#define FLIPCHESS_BOARD_FILE_NAME "board_fen.txt"
-#define FLIPCHESS_BOARD_FILE_NAME_BAK "board_fen.bak"
-#define FLIPCHESS_BOARD_PATH FLIPCHESS_APP_BASE_FOLDER_PATH(FLIPCHESS_BOARD_FILE_NAME)
-#define FLIPCHESS_BOARD_PATH_BAK FLIPCHESS_APP_BASE_FOLDER_PATH(FLIPCHESS_BOARD_FILE_NAME_BAK)
+#define FLIPCHESS_BOARD_FILE_NAME            "board_fen.txt"
+#define FLIPCHESS_BOARD_FILE_NAME_BAK        "board_fen.bak"
+#define FLIPCHESS_BOARD_PATH                 FLIPCHESS_APP_BASE_FOLDER_PATH(FLIPCHESS_BOARD_FILE_NAME)
+#define FLIPCHESS_BOARD_PATH_BAK             FLIPCHESS_APP_BASE_FOLDER_PATH(FLIPCHESS_BOARD_FILE_NAME_BAK)
 
 #define FILE_MAX_PATH_LEN 48
-#define FILE_MAX_CHARS 94
+#define FILE_MAX_CHARS    94
 
 bool flipchess_has_file(const FlipChessFile file_type, const char* file_name, const bool remove) {
     bool ret = false;
     const char* path;
+    char path_buf[FILE_MAX_PATH_LEN] = {0};
     if(file_type == FlipChessFileBoard) {
         path = FLIPCHESS_BOARD_PATH;
     } else {
-        char path_buf[FILE_MAX_PATH_LEN] = {0};
         strcpy(path_buf, FLIPCHESS_APP_BASE_FOLDER); // 22
         strcpy(path_buf + strlen(path_buf), "/");
         strcpy(path_buf + strlen(path_buf), file_name);
@@ -40,10 +40,10 @@ bool flipchess_has_file(const FlipChessFile file_type, const char* file_name, co
 bool flipchess_load_file(char* contents, const FlipChessFile file_type, const char* file_name) {
     bool ret = false;
     const char* path;
+    char path_buf[FILE_MAX_PATH_LEN] = {0};
     if(file_type == FlipChessFileBoard) {
         path = FLIPCHESS_BOARD_PATH;
     } else {
-        char path_buf[FILE_MAX_PATH_LEN] = {0};
         strcpy(path_buf, FLIPCHESS_APP_BASE_FOLDER); // 22
         strcpy(path_buf + strlen(path_buf), "/");
         strcpy(path_buf + strlen(path_buf), file_name);
@@ -99,11 +99,11 @@ bool flipchess_save_file(
     bool ret = false;
     const char* path;
     const char* path_bak;
+    char path_buf[FILE_MAX_PATH_LEN] = {0};
     if(file_type == FlipChessFileBoard) {
         path = FLIPCHESS_BOARD_PATH;
         path_bak = FLIPCHESS_BOARD_PATH_BAK;
     } else {
-        char path_buf[FILE_MAX_PATH_LEN] = {0};
         strcpy(path_buf, FLIPCHESS_APP_BASE_FOLDER); // 22
         strcpy(path_buf + strlen(path_buf), "/");
         strcpy(path_buf + strlen(path_buf), file_name);

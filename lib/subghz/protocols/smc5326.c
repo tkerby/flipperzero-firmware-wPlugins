@@ -12,7 +12,7 @@
  *
  */
 
-#define TAG "SubGhzProtocolSMC5326"
+#define TAG "SubGhzProtocolSmc5326"
 
 #define DIP_P 0b11 //(+)
 #define DIP_O 0b10 //(0)
@@ -68,10 +68,12 @@ const SubGhzProtocolDecoder subghz_protocol_smc5326_decoder = {
     .feed = subghz_protocol_decoder_smc5326_feed,
     .reset = subghz_protocol_decoder_smc5326_reset,
 
-    .get_hash_data = subghz_protocol_decoder_smc5326_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = subghz_protocol_decoder_smc5326_get_hash_data,
     .serialize = subghz_protocol_decoder_smc5326_serialize,
     .deserialize = subghz_protocol_decoder_smc5326_deserialize,
     .get_string = subghz_protocol_decoder_smc5326_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder subghz_protocol_smc5326_encoder = {
@@ -308,10 +310,10 @@ void subghz_protocol_decoder_smc5326_feed(void* context, bool level, uint32_t du
     }
 }
 
-uint8_t subghz_protocol_decoder_smc5326_get_hash_data(void* context) {
+uint32_t subghz_protocol_decoder_smc5326_get_hash_data(void* context) {
     furi_assert(context);
     SubGhzProtocolDecoderSMC5326* instance = context;
-    return subghz_protocol_blocks_get_hash_data(
+    return subghz_protocol_blocks_get_hash_data_long(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 

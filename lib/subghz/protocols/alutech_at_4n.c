@@ -54,10 +54,12 @@ const SubGhzProtocolDecoder subghz_protocol_alutech_at_4n_decoder = {
     .feed = subghz_protocol_decoder_alutech_at_4n_feed,
     .reset = subghz_protocol_decoder_alutech_at_4n_reset,
 
-    .get_hash_data = subghz_protocol_decoder_alutech_at_4n_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = subghz_protocol_decoder_alutech_at_4n_get_hash_data,
     .serialize = subghz_protocol_decoder_alutech_at_4n_serialize,
     .deserialize = subghz_protocol_decoder_alutech_at_4n_deserialize,
     .get_string = subghz_protocol_decoder_alutech_at_4n_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder subghz_protocol_alutech_at_4n_encoder = {
@@ -274,12 +276,12 @@ static bool subghz_protocol_alutech_at_4n_gen_data(
     }
 
     if(instance->generic.cnt < 0xFFFF) {
-        if((instance->generic.cnt + furi_hal_subghz_get_rolling_counter_mult()) >= 0xFFFF) {
+        if((instance->generic.cnt + furi_hal_subghz_get_rolling_counter_mult()) > 0xFFFF) {
             instance->generic.cnt = 0;
         } else {
             instance->generic.cnt += furi_hal_subghz_get_rolling_counter_mult();
         }
-    } else if(instance->generic.cnt >= 0xFFFF) {
+    } else if((instance->generic.cnt >= 0xFFFF) && (furi_hal_subghz_get_rolling_counter_mult() != 0)) {
         instance->generic.cnt = 0;
     }
     crc = subghz_protocol_alutech_at_4n_decrypt_data_crc((uint8_t)(instance->generic.cnt & 0xFF));
@@ -306,16 +308,22 @@ bool subghz_protocol_alutech_at_4n_create_data(
     instance->generic.serial = serial;
     instance->generic.cnt = cnt;
     instance->generic.data_count_bit = 72;
-    bool res = subghz_protocol_alutech_at_4n_gen_data(instance, btn);
-    if(res) {
+    if(subghz_protocol_alutech_at_4n_gen_data(instance, btn)) {
         if((subghz_block_generic_serialize(&instance->generic, flipper_format, preset) !=
-            SubGhzProtocolStatusOk) ||
-           !flipper_format_write_uint32(flipper_format, "CRC", &instance->crc, 1)) {
+            SubGhzProtocolStatusOk)) {
+            FURI_LOG_E(TAG, "Serialize error");
+            return false;
+        }
+        if(!flipper_format_rewind(flipper_format)) {
+            FURI_LOG_E(TAG, "Rewind error");
+            return false;
+        }
+        if(!flipper_format_insert_or_update_uint32(flipper_format, "CRC", &instance->crc, 1)) {
             FURI_LOG_E(TAG, "Unable to add CRC");
-            res = false;
+            return false;
         }
     }
-    return res;
+    return true;
 }
 
 /**
@@ -323,7 +331,7 @@ bool subghz_protocol_alutech_at_4n_create_data(
  * Basic set | 0x11 | 0x22 | 0xFF | 0x44 | 0x33 |
  * @return Button code
  */
-static uint8_t subghz_protocol_alutech_at_4n_get_btn_code();
+static uint8_t subghz_protocol_alutech_at_4n_get_btn_code(void);
 
 /**
  * Generating an upload from data.
@@ -651,10 +659,10 @@ static void subghz_protocol_alutech_at_4n_remote_controller(
     subghz_custom_btn_set_max(4);
 }
 
-uint8_t subghz_protocol_decoder_alutech_at_4n_get_hash_data(void* context) {
+uint32_t subghz_protocol_decoder_alutech_at_4n_get_hash_data(void* context) {
     furi_assert(context);
     SubGhzProtocolDecoderAlutech_at_4n* instance = context;
-    return (uint8_t)instance->crc;
+    return instance->crc;
 }
 
 SubGhzProtocolStatus subghz_protocol_decoder_alutech_at_4n_serialize(
@@ -665,8 +673,12 @@ SubGhzProtocolStatus subghz_protocol_decoder_alutech_at_4n_serialize(
     SubGhzProtocolDecoderAlutech_at_4n* instance = context;
     SubGhzProtocolStatus res =
         subghz_block_generic_serialize(&instance->generic, flipper_format, preset);
+    if(!flipper_format_rewind(flipper_format)) {
+        FURI_LOG_E(TAG, "Rewind error");
+        res = SubGhzProtocolStatusErrorParserOthers;
+    }
     if((res == SubGhzProtocolStatusOk) &&
-       !flipper_format_write_uint32(flipper_format, "CRC", &instance->crc, 1)) {
+       !flipper_format_insert_or_update_uint32(flipper_format, "CRC", &instance->crc, 1)) {
         FURI_LOG_E(TAG, "Unable to add CRC");
         res = SubGhzProtocolStatusErrorParserOthers;
     }
@@ -701,7 +713,7 @@ SubGhzProtocolStatus subghz_protocol_decoder_alutech_at_4n_deserialize(
     return ret;
 }
 
-static uint8_t subghz_protocol_alutech_at_4n_get_btn_code() {
+static uint8_t subghz_protocol_alutech_at_4n_get_btn_code(void) {
     uint8_t custom_btn_id = subghz_custom_btn_get();
     uint8_t original_btn_code = subghz_custom_btn_get_original();
     uint8_t btn = original_btn_code;

@@ -16,7 +16,7 @@
 #include <gui/modules/variable_item_list.h>
 #include <gui/modules/widget.h>
 
-#include "esp_flasher_icons.h"
+#include <esp_flasher_icons.h>
 #include <storage/storage.h>
 #include <lib/toolbox/path.h>
 #include <dialogs/dialogs.h>
@@ -25,7 +25,7 @@
 #define ESP_FLASHER_TEXT_BOX_STORE_SIZE (4096)
 
 #define ESP_APP_FOLDER_USER "apps_data/esp_flasher"
-#define ESP_APP_FOLDER EXT_PATH(ESP_APP_FOLDER_USER)
+#define ESP_APP_FOLDER      EXT_PATH(ESP_APP_FOLDER_USER)
 
 typedef enum SelectedFlashOptions {
     SelectedFlashS3Mode,
@@ -62,9 +62,11 @@ struct EspFlasherApp {
     Submenu* submenu;
 
     EspFlasherUart* uart;
+    bool turbospeed;
 
     bool reset;
     bool boot;
+    bool quickflash;
 
     SwitchFirmware switch_fw;
 

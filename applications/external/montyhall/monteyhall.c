@@ -6,7 +6,7 @@
 #include <input/input.h>
 #include <stdlib.h>
 
-#define SCREEN_WIDTH 128
+#define SCREEN_WIDTH  128
 #define SCREEN_HEIGHT 64
 
 //AUTHOR: https://github.com/DevMilanIan
@@ -301,8 +301,9 @@ static void montyhall_render_callback(Canvas* const canvas, void* ctx) {
     furi_mutex_release(monty_state->mutex);
 }
 
-static void montyhall_input_callback(InputEvent* input_event, FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void montyhall_input_callback(InputEvent* input_event, void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
 
     furi_message_queue_put(event_queue, input_event, FuriWaitForever);
 }
@@ -432,8 +433,8 @@ int32_t montyhall_game_app(void* p) {
             }
         }
 
-        view_port_update(view_port);
         furi_mutex_release(monty_state->mutex);
+        view_port_update(view_port);
     }
 
     view_port_enabled_set(view_port, false);

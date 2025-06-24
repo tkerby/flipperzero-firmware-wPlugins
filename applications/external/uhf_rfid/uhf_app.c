@@ -1,4 +1,5 @@
 #include "uhf_app_i.h"
+#include "expansion/expansion.h"
 
 char* convertToHexString(uint8_t* array, size_t length) {
     if(array == NULL || length == 0) {
@@ -54,6 +55,9 @@ UHFApp* uhf_alloc() {
     view_dispatcher_attach_to_gui(
         uhf_app->view_dispatcher, uhf_app->gui, ViewDispatcherTypeFullscreen);
 
+    // Variable Item List
+    uhf_app->variable_item_list = variable_item_list_alloc();
+
     //worker
     uhf_app->worker = uhf_worker_alloc();
 
@@ -68,6 +72,13 @@ UHFApp* uhf_alloc() {
 
     // Open Notification record
     uhf_app->notifications = furi_record_open(RECORD_NOTIFICATION);
+
+    // Variable Item List
+    uhf_app->variable_item_list = variable_item_list_alloc();
+    view_dispatcher_add_view(
+        uhf_app->view_dispatcher,
+        UHFViewVariableItemList,
+        variable_item_list_get_view(uhf_app->variable_item_list));
 
     // Submenu
     uhf_app->submenu = submenu_alloc();
@@ -120,6 +131,10 @@ void uhf_free(UHFApp* uhf_app) {
     view_dispatcher_remove_view(uhf_app->view_dispatcher, UHFViewWidget);
     widget_free(uhf_app->widget);
 
+    // Variable Item List
+    view_dispatcher_remove_view(uhf_app->view_dispatcher, UHFViewVariableItemList);
+    variable_item_list_free(uhf_app->variable_item_list);
+
     // Tag
     uhf_tag_wrapper_free(uhf_app->worker->uhf_tag_wrapper);
 
@@ -169,32 +184,37 @@ void uhf_blink_stop(UHFApp* uhf_app) {
 
 void uhf_show_loading_popup(void* ctx, bool show) {
     UHFApp* uhf_app = ctx;
-    TaskHandle_t timer_task = xTaskGetHandle(configTIMER_SERVICE_TASK_NAME);
-
     if(show) {
         // Raise timer priority so that animations can play
-        vTaskPrioritySet(timer_task, configMAX_PRIORITIES - 1);
+        furi_timer_set_thread_priority(FuriTimerThreadPriorityElevated);
         view_dispatcher_switch_to_view(uhf_app->view_dispatcher, UHFViewLoading);
     } else {
         // Restore default timer priority
-        vTaskPrioritySet(timer_task, configTIMER_TASK_PRIORITY);
+        furi_timer_set_thread_priority(FuriTimerThreadPriorityNormal);
     }
 }
 
 int32_t uhf_app_main(void* ctx) {
     UNUSED(ctx);
+    Expansion* expansion = furi_record_open(RECORD_EXPANSION);
+    expansion_disable(expansion);
+    bool is_5v_enabled_by_app = false;
+    // enable 5v pin if not enabled
+    if(!furi_hal_power_is_otg_enabled()) {
+        furi_hal_power_enable_otg();
+        is_5v_enabled_by_app = true;
+    }
     UHFApp* uhf_app = uhf_alloc();
-
-    // enable 5v pin
-    furi_hal_power_enable_otg();
-
-    scene_manager_next_scene(uhf_app->scene_manager, UHFSceneVerify);
+    // enter app
+    scene_manager_next_scene(uhf_app->scene_manager, UHFSceneModuleInfo);
     view_dispatcher_run(uhf_app->view_dispatcher);
-
-    // disable 5v pin
-    furi_hal_power_disable_otg();
-
+    // disable 5v pin if enabled by app
+    if(is_5v_enabled_by_app) {
+        furi_hal_power_disable_otg();
+    }
     // exit app
     uhf_free(uhf_app);
+    expansion_enable(expansion);
+    furi_record_close(RECORD_EXPANSION);
     return 0;
 }

@@ -22,15 +22,13 @@ static void mass_storage_app_tick_event_callback(void* context) {
 }
 
 void mass_storage_app_show_loading_popup(MassStorageApp* app, bool show) {
-    TaskHandle_t timer_task = xTaskGetHandle(configTIMER_SERVICE_TASK_NAME);
-
     if(show) {
         // Raise timer priority so that animations can play
-        vTaskPrioritySet(timer_task, configMAX_PRIORITIES - 1);
+        furi_timer_set_thread_priority(FuriTimerThreadPriorityElevated);
         view_dispatcher_switch_to_view(app->view_dispatcher, MassStorageAppViewLoading);
     } else {
         // Restore default timer priority
-        vTaskPrioritySet(timer_task, configTIMER_TASK_PRIORITY);
+        furi_timer_set_thread_priority(FuriTimerThreadPriorityNormal);
     }
 }
 
@@ -47,6 +45,25 @@ MassStorageApp* mass_storage_app_alloc(char* arg) {
     app->gui = furi_record_open(RECORD_GUI);
     app->fs_api = furi_record_open(RECORD_STORAGE);
     app->dialogs = furi_record_open(RECORD_DIALOGS);
+
+    app->create_image_size = (uint8_t)-1;
+    SDInfo sd_info;
+    if(storage_sd_info(app->fs_api, &sd_info) == FSE_OK) {
+        switch(sd_info.fs_type) {
+        case FST_FAT12:
+            app->create_image_max = 16LL * 1024 * 1024;
+            break;
+        case FST_FAT16:
+            app->create_image_max = 2LL * 1024 * 1024 * 1024;
+            break;
+        case FST_FAT32:
+            app->create_image_max = 4LL * 1024 * 1024 * 1024;
+            break;
+        default:
+            app->create_image_max = 0;
+            break;
+        }
+    }
 
     app->view_dispatcher = view_dispatcher_alloc();
     view_dispatcher_enable_queue(app->view_dispatcher);
@@ -85,14 +102,14 @@ MassStorageApp* mass_storage_app_alloc(char* arg) {
     view_dispatcher_add_view(
         app->view_dispatcher, MassStorageAppViewWidget, widget_get_view(app->widget));
 
+    app->popup = popup_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher, MassStorageAppViewPopup, popup_get_view(app->popup));
+
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
 
     if(storage_file_exists(app->fs_api, furi_string_get_cstr(app->file_path))) {
-        if(!furi_hal_usb_is_locked()) {
-            scene_manager_next_scene(app->scene_manager, MassStorageSceneWork);
-        } else {
-            scene_manager_next_scene(app->scene_manager, MassStorageSceneUsbLocked);
-        }
+        scene_manager_next_scene(app->scene_manager, MassStorageSceneWork);
     } else {
         scene_manager_next_scene(app->scene_manager, MassStorageSceneStart);
     }
@@ -109,12 +126,14 @@ void mass_storage_app_free(MassStorageApp* app) {
     view_dispatcher_remove_view(app->view_dispatcher, MassStorageAppViewStart);
     view_dispatcher_remove_view(app->view_dispatcher, MassStorageAppViewLoading);
     view_dispatcher_remove_view(app->view_dispatcher, MassStorageAppViewWidget);
+    view_dispatcher_remove_view(app->view_dispatcher, MassStorageAppViewPopup);
 
     mass_storage_free(app->mass_storage_view);
     text_input_free(app->text_input);
     variable_item_list_free(app->variable_item_list);
     loading_free(app->loading);
     widget_free(app->widget);
+    popup_free(app->popup);
 
     // View dispatcher
     view_dispatcher_free(app->view_dispatcher);

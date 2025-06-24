@@ -3,7 +3,7 @@
 #include "jep106.h"
 #include "adi.h"
 
-#define SWD_PATH EXT_PATH("apps_data/swd")
+#define SWD_PATH APP_ASSETS_PATH("")
 
 static void render_callback(Canvas* const canvas, void* cb_ctx);
 static bool swd_message_process(AppFSM* ctx);
@@ -961,6 +961,7 @@ static bool swd_scriptfunc_call(ScriptContext* ctx) {
             swd_script_log(ctx, FuriLogLevelError, "failed to parse filename");
             break;
         }
+        furi_string_cat_printf(filepath, "/%s", filename);
 
         swd_script_seek_newline(ctx);
         /* append extension */
@@ -2208,7 +2209,7 @@ static bool swd_execute_script(AppFSM* const ctx, const char* filename) {
 
 /************************** UI functions **************************/
 
-#define CANVAS_WIDTH 128
+#define CANVAS_WIDTH  128
 #define CANVAS_HEIGHT 64
 
 #define COERCE(d, min, max) \

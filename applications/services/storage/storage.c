@@ -9,10 +9,10 @@
 
 #define STORAGE_TICK 1000
 
-//#define ICON_SD_MOUNTED &I_SDcardMounted_11x8
-//#define ICON_SD_ERROR &I_SDcardFail_11x8
+// #define ICON_SD_MOUNTED &I_SDcardMounted_11x8
+// #define ICON_SD_ERROR &I_SDcardFail_11x8
 
-#define TAG RECORD_STORAGE
+#define TAG "Storage"
 
 /*
 static void storage_app_sd_icon_draw_callback(Canvas* canvas, void* context) {
@@ -34,7 +34,7 @@ static void storage_app_sd_icon_draw_callback(Canvas* canvas, void* context) {
 }
 */
 
-Storage* storage_app_alloc() {
+Storage* storage_app_alloc(void) {
     Storage* app = malloc(sizeof(Storage));
     app->message_queue = furi_message_queue_alloc(8, sizeof(StorageMessage));
     app->pubsub = furi_pubsub_alloc();
@@ -48,6 +48,9 @@ Storage* storage_app_alloc() {
     storage_int_init(&app->storage[ST_INT]);
 #endif
     storage_ext_init(&app->storage[ST_EXT]);
+#ifndef FURI_RAM_EXEC
+    storage_mnt_init(&app->storage[ST_MNT]);
+#endif
 
     // sd icon gui
     app->sd_gui.enabled = false;
@@ -72,7 +75,7 @@ void storage_tick(Storage* app) {
     // storage not enabled but was enabled (sd card unmount)
     if(app->storage[ST_EXT].status == StorageStatusNotReady && app->sd_gui.enabled == true) {
         app->sd_gui.enabled = false;
-        //view_port_enabled_set(app->sd_gui.view_port, false);
+        // view_port_enabled_set(app->sd_gui.view_port, false);
 
         FURI_LOG_I(TAG, "SD card unmount");
         StorageEvent event = {.type = StorageEventTypeCardUnmount};
@@ -87,7 +90,7 @@ void storage_tick(Storage* app) {
         app->storage[ST_EXT].status == StorageStatusErrorInternal) &&
        app->sd_gui.enabled == false) {
         app->sd_gui.enabled = true;
-        //view_port_enabled_set(app->sd_gui.view_port, app->sd_gui.iconshow);
+        // view_port_enabled_set(app->sd_gui.view_port, true);
 
         if(app->storage[ST_EXT].status == StorageStatusOK) {
             FURI_LOG_I(TAG, "SD card mount");

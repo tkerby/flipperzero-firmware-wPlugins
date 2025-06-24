@@ -18,17 +18,14 @@ void cfw_app_scene_interface_mainmenu_var_item_list_callback(void* context, uint
 const char* const menu_style_names[MenuStyleCount] = {
     "List",
     "Wii",
-    "DSi",
-    "PS4",
-    "Vertical",
-    "C64",
-    "Eurocorp",
+    "Compact",
 };
+
 static void cfw_app_scene_interface_mainmenu_menu_style_changed(VariableItem* item) {
     CfwApp* app = variable_item_get_context(item);
-    uint8_t index = variable_item_get_current_value_index(item);
-    variable_item_set_current_value_text(item, menu_style_names[index]);
-    CFW_SETTINGS()->menu_style = index;
+    app->main_style_index = variable_item_get_current_value_index(item);
+    variable_item_set_current_value_text(item, menu_style_names[app->main_style_index]);
+    cfw_settings.menu_style = app->main_style_index;
     app->save_settings = true;
 }
 
@@ -37,7 +34,7 @@ static void cfw_app_scene_interface_mainmenu_start_point_changed(VariableItem* i
     app->start_point_index = variable_item_get_current_value_index(item);
     variable_item_set_current_value_text(
         item, *CharList_get(app->mainmenu_app_names, app->start_point_index));
-    CFW_SETTINGS()->start_point = app->start_point_index;
+    cfw_settings.start_point = app->start_point_index;
     app->save_settings = true;
     app->require_reboot = true;
 }
@@ -81,7 +78,6 @@ static void cfw_app_scene_interface_mainmenu_move_app_changed(VariableItem* item
 
 void cfw_app_scene_interface_mainmenu_on_enter(void* context) {
     CfwApp* app = context;
-    CfwSettings* cfw_settings = CFW_SETTINGS();
     VariableItemList* var_item_list = app->var_item_list;
     VariableItem* item;
 
@@ -91,8 +87,8 @@ void cfw_app_scene_interface_mainmenu_on_enter(void* context) {
         MenuStyleCount,
         cfw_app_scene_interface_mainmenu_menu_style_changed,
         app);
-    variable_item_set_current_value_index(item, cfw_settings->menu_style);
-    variable_item_set_current_value_text(item, menu_style_names[cfw_settings->menu_style]);
+    variable_item_set_current_value_index(item, cfw_settings.menu_style);
+    variable_item_set_current_value_text(item, menu_style_names[cfw_settings.menu_style]);
 
     item = variable_item_list_add(
         var_item_list,
@@ -100,9 +96,9 @@ void cfw_app_scene_interface_mainmenu_on_enter(void* context) {
         CharList_size(app->mainmenu_app_names),
         cfw_app_scene_interface_mainmenu_start_point_changed,
         app);
-    if((cfw_settings->start_point) &&
-       (cfw_settings->start_point < CharList_size(app->mainmenu_app_names))) {
-        app->start_point_index = cfw_settings->start_point;
+    if((cfw_settings.start_point) &&
+       (cfw_settings.start_point < CharList_size(app->mainmenu_app_names))) {
+        app->start_point_index = cfw_settings.start_point;
     } else {
         app->start_point_index = 0;
     }
@@ -183,7 +179,7 @@ bool cfw_app_scene_interface_mainmenu_on_event(void* context, SceneManagerEvent 
                 app->scene_manager, CfwAppSceneInterfaceMainmenu, VarItemListIndexRemoveApp);
             scene_manager_next_scene(app->scene_manager, CfwAppSceneInterfaceMainmenu);
             break;
-        case VarItemListIndexMoveApp:
+        case VarItemListIndexMoveApp: {
             app->save_mainmenu_apps = true;
             app->require_reboot = true;
             scene_manager_previous_scene(app->scene_manager);
@@ -191,6 +187,7 @@ bool cfw_app_scene_interface_mainmenu_on_event(void* context, SceneManagerEvent 
                 app->scene_manager, CfwAppSceneInterfaceMainmenu, VarItemListIndexMoveApp);
             scene_manager_next_scene(app->scene_manager, CfwAppSceneInterfaceMainmenu);
             break;
+        }
         case VarItemListIndexAddApp:
             scene_manager_set_scene_state(app->scene_manager, CfwAppSceneInterfaceMainmenuAdd, 0);
             scene_manager_next_scene(app->scene_manager, CfwAppSceneInterfaceMainmenuAdd);

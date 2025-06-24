@@ -9,7 +9,7 @@
 #include <toolbox/api_lock.h>
 #include "cli/cli.h"
 
-#define USB_CDC_PKT_LEN CDC_DATA_SZ
+#define USB_CDC_PKT_LEN      CDC_DATA_SZ
 #define USB_UART_RX_BUF_SIZE (USB_CDC_PKT_LEN * 5)
 
 #define USB_CDC_BIT_DTR (1 << 0)
@@ -48,7 +48,9 @@ static const CdcCallbacks cdc_cb = {
     .rx_ep_callback = &vcp_on_cdc_rx,
     .state_callback = &vcp_state_callback,
     .ctrl_line_callback = &vcp_on_cdc_control_line,
-    .config_callback = &vcp_on_line_config};
+    .config_callback = &vcp_on_line_config,
+    .break_callback = NULL,
+};
 
 static void usb_uart_vcp_init(UsbUart* usb_uart, uint8_t vcp_ch) {
     furi_hal_usb_unlock();

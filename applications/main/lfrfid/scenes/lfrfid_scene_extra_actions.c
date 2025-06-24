@@ -7,7 +7,6 @@ typedef enum {
     SubmenuIndexPSK,
     SubmenuIndexClearT5577,
     SubmenuIndexSetPwT5577,
-    //SubmenuIndexReadBlockT5577,   //FIX
     SubmenuIndexWriteBlockT5577,
     SubmenuIndexWipeT5577,
     SubmenuIndexHitag,
@@ -55,12 +54,6 @@ void lfrfid_scene_extra_actions_on_enter(void* context) {
         SubmenuIndexWriteBlockT5577,
         lfrfid_scene_extra_actions_submenu_callback,
         app);
-    // submenu_add_item(
-    //	submenu,
-    //	"Read T5577 Block",
-    //	SubmenuIndexReadBlockT5577,
-    //	lfrfid_scene_extra_actions_submenu_callback,
-    //	app);
     submenu_add_item(
         submenu,
         "Wipe T5577",
@@ -99,7 +92,6 @@ void lfrfid_scene_extra_actions_on_enter(void* context) {
 
 bool lfrfid_scene_extra_actions_on_event(void* context, SceneManagerEvent event) {
     LfRfid* app = context;
-    SceneManager* scene_manager = app->scene_manager;
     bool consumed = false;
 
     if(event.type == SceneManagerEventTypeCustom) {
@@ -114,9 +106,10 @@ bool lfrfid_scene_extra_actions_on_event(void* context, SceneManagerEvent event)
             dolphin_deed(DolphinDeedRfidRead);
             consumed = true;
         } else if(event.event == SubmenuIndexClearT5577) {
-            scene_manager_next_scene(app->scene_manager, LfRfidSceneClearT5577Confirm);
+            scene_manager_set_scene_state(
+                app->scene_manager, LfRfidSceneEnterPassword, LfRfidSceneClearT5577Confirm);
+            scene_manager_next_scene(app->scene_manager, LfRfidSceneEnterPassword);
             consumed = true;
-
         } else if(event.event == SubmenuIndexSetPwT5577) {
             app->extra_options = 0;
             DialogMessage* message = dialog_message_alloc();
@@ -136,11 +129,11 @@ bool lfrfid_scene_extra_actions_on_event(void* context, SceneManagerEvent event)
                 app->extra_options |= LfRfidUsePassword;
                 app->extra_options |= LfRfidDisablePasswordMode;
                 app->setting_hex = LfRfidSettingCurrentPassword;
-                scene_manager_next_scene(scene_manager, LfRfidSceneEnterHex);
+                scene_manager_next_scene(app->scene_manager, LfRfidSceneEnterHex);
             } else { // set password
-                memset(app->password, 0, 4);
+                memset(app->password2, 0, 4);
                 app->setting_hex = LfRfidSettingNewPassword;
-                scene_manager_next_scene(scene_manager, LfRfidSceneEnterHex);
+                scene_manager_next_scene(app->scene_manager, LfRfidSceneEnterHex);
             }
             consumed = true;
         } else if(event.event == SubmenuIndexWriteBlockT5577) {
@@ -161,33 +154,13 @@ bool lfrfid_scene_extra_actions_on_event(void* context, SceneManagerEvent event)
             if(dialog_result == DialogMessageButtonRight) {
                 app->extra_options |= LfRfidUsePassword;
                 app->setting_hex = LfRfidSettingCurrentPassword;
-                scene_manager_next_scene(scene_manager, LfRfidSceneEnterHex);
+                scene_manager_next_scene(app->scene_manager, LfRfidSceneEnterHex);
             } else {
-                memset(app->password, 0, 4);
+                memset(app->password2, 0, 4);
                 app->setting_hex = LfRfidSettingHexGeneric;
-                scene_manager_next_scene(scene_manager, LfRfidSceneEnterHex);
+                scene_manager_next_scene(app->scene_manager, LfRfidSceneEnterHex);
             }
             consumed = true;
-            //} else if(event.event == SubmenuIndexReadBlockT5577) {
-            // FIX, doesn't work, needs at lest new generic protocol
-            //    app->extra_options = 0;
-            //    app->extra_options |= LfRfidReadBlockMode;
-            //    DialogMessage* message = dialog_message_alloc();
-            //    dialog_message_set_header(message, "T5577 access", 0, 0, AlignLeft,
-            //	AlignTop);
-            //    dialog_message_set_buttons(message, "No", NULL, "Yes");
-            //    dialog_message_set_text(message, "Is tag password protected?",
-            //	SCREEN_WIDTH_CENTER, SCREEN_HEIGHT_CENTER, AlignCenter, AlignCenter);
-            //    DialogMessageButton dialog_result = dialog_message_show(app->dialogs, message);
-            //    dialog_message_free(message);
-            //    if (dialog_result == DialogMessageButtonRight) {
-            //	app->extra_options |= LfRfidUsePassword;
-            //	app->setting_hex = LfRfidSettingCurrentPassword;
-            //	scene_manager_next_scene(scene_manager, LfRfidSceneEnterHex);
-            //    } else {
-            //	scene_manager_next_scene(app->scene_manager, LfRfidSceneReadBlockT5577Confirm);
-            //    }
-            //    consumed = true;
         } else if(event.event == SubmenuIndexWipeT5577) {
             app->extra_options = 0;
             //app->extra_options |= LfRfidWipeMode;
@@ -204,7 +177,7 @@ bool lfrfid_scene_extra_actions_on_event(void* context, SceneManagerEvent event)
             DialogMessageButton dialog_result = dialog_message_show(app->dialogs, message);
             dialog_message_free(message);
             if(dialog_result == DialogMessageButtonRight) {
-                scene_manager_next_scene(scene_manager, LfRfidSceneWipeT5577Confirm);
+                scene_manager_next_scene(app->scene_manager, LfRfidSceneWipeT5577Confirm);
             }
             consumed = true;
         } else if(event.event == SubmenuIndexHitag) {
@@ -220,6 +193,9 @@ bool lfrfid_scene_extra_actions_on_event(void* context, SceneManagerEvent event)
             consumed = true;
         }
         scene_manager_set_scene_state(app->scene_manager, LfRfidSceneExtraActions, event.event);
+
+    } else if(event.type == SceneManagerEventTypeBack) {
+        scene_manager_set_scene_state(app->scene_manager, LfRfidSceneExtraActions, 0);
     }
 
     return consumed;

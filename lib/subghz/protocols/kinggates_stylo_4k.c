@@ -8,7 +8,7 @@
 #include "../blocks/generic.h"
 #include "../blocks/math.h"
 
-#define TAG "SubGhzProtocoKingGates_stylo_4k"
+#define TAG "SubGhzProtocoKingGatesStylo4k"
 
 static const SubGhzBlockConst subghz_protocol_kinggates_stylo_4k_const = {
     .te_short = 400,
@@ -50,10 +50,12 @@ const SubGhzProtocolDecoder subghz_protocol_kinggates_stylo_4k_decoder = {
     .feed = subghz_protocol_decoder_kinggates_stylo_4k_feed,
     .reset = subghz_protocol_decoder_kinggates_stylo_4k_reset,
 
-    .get_hash_data = subghz_protocol_decoder_kinggates_stylo_4k_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = subghz_protocol_decoder_kinggates_stylo_4k_get_hash_data,
     .serialize = subghz_protocol_decoder_kinggates_stylo_4k_serialize,
     .deserialize = subghz_protocol_decoder_kinggates_stylo_4k_deserialize,
     .get_string = subghz_protocol_decoder_kinggates_stylo_4k_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder subghz_protocol_kinggates_stylo_4k_encoder = {
@@ -156,12 +158,12 @@ static bool subghz_protocol_kinggates_stylo_4k_gen_data(
     instance->generic.cnt = decrypt & 0xFFFF;
 
     if(instance->generic.cnt < 0xFFFF) {
-        if((instance->generic.cnt + furi_hal_subghz_get_rolling_counter_mult()) >= 0xFFFF) {
+        if((instance->generic.cnt + furi_hal_subghz_get_rolling_counter_mult()) > 0xFFFF) {
             instance->generic.cnt = 0;
         } else {
             instance->generic.cnt += furi_hal_subghz_get_rolling_counter_mult();
         }
-    } else if(instance->generic.cnt >= 0xFFFF) {
+    } else if((instance->generic.cnt >= 0xFFFF) && (furi_hal_subghz_get_rolling_counter_mult() != 0)) {
         instance->generic.cnt = 0;
     }
 
@@ -307,7 +309,7 @@ SubGhzProtocolStatus subghz_protocol_encoder_kinggates_stylo_4k_deserialize(
             key_data[sizeof(uint64_t) - i - 1] = (instance->generic.data_2 >> i * 8) & 0xFF;
         }
         if(!flipper_format_update_hex(flipper_format, "Data", key_data, sizeof(uint64_t))) {
-            FURI_LOG_E(TAG, "Unable to add Key");
+            FURI_LOG_E(TAG, "Unable to update Data");
             break;
         }
 
@@ -501,10 +503,10 @@ static void subghz_protocol_kinggates_stylo_4k_remote_controller(
     }
 }
 
-uint8_t subghz_protocol_decoder_kinggates_stylo_4k_get_hash_data(void* context) {
+uint32_t subghz_protocol_decoder_kinggates_stylo_4k_get_hash_data(void* context) {
     furi_assert(context);
     SubGhzProtocolDecoderKingGates_stylo_4k* instance = context;
-    return subghz_protocol_blocks_get_hash_data(
+    return subghz_protocol_blocks_get_hash_data_long(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 
@@ -522,8 +524,13 @@ SubGhzProtocolStatus subghz_protocol_decoder_kinggates_stylo_4k_serialize(
         key_data[sizeof(uint64_t) - i - 1] = (instance->generic.data_2 >> (i * 8)) & 0xFF;
     }
 
+    if(!flipper_format_rewind(flipper_format)) {
+        FURI_LOG_E(TAG, "Rewind error");
+        ret = SubGhzProtocolStatusErrorParserOthers;
+    }
+
     if((ret == SubGhzProtocolStatusOk) &&
-       !flipper_format_write_hex(flipper_format, "Data", key_data, sizeof(uint64_t))) {
+       !flipper_format_insert_or_update_hex(flipper_format, "Data", key_data, sizeof(uint64_t))) {
         FURI_LOG_E(TAG, "Unable to add Data");
         ret = SubGhzProtocolStatusErrorParserOthers;
     }

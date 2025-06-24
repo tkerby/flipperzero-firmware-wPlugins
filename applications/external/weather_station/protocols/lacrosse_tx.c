@@ -35,12 +35,12 @@
  * - Temperature and Humidity are sent in different messages bursts.
 */
 
-#define LACROSSE_TX_GAP 1000
-#define LACROSSE_TX_BIT_SIZE 44
-#define LACROSSE_TX_SUNC_PATTERN 0x0A000000000
-#define LACROSSE_TX_SUNC_MASK 0x0F000000000
+#define LACROSSE_TX_GAP           1000
+#define LACROSSE_TX_BIT_SIZE      44
+#define LACROSSE_TX_SUNC_PATTERN  0x0A000000000
+#define LACROSSE_TX_SUNC_MASK     0x0F000000000
 #define LACROSSE_TX_MSG_TYPE_TEMP 0x00
-#define LACROSSE_TX_MSG_TYPE_HUM 0x0E
+#define LACROSSE_TX_MSG_TYPE_HUM  0x0E
 
 static const SubGhzBlockConst ws_protocol_lacrosse_tx_const = {
     .te_short = 550,
@@ -79,10 +79,12 @@ const SubGhzProtocolDecoder ws_protocol_lacrosse_tx_decoder = {
     .feed = ws_protocol_decoder_lacrosse_tx_feed,
     .reset = ws_protocol_decoder_lacrosse_tx_reset,
 
-    .get_hash_data = ws_protocol_decoder_lacrosse_tx_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = ws_protocol_decoder_lacrosse_tx_get_hash_data,
     .serialize = ws_protocol_decoder_lacrosse_tx_serialize,
     .deserialize = ws_protocol_decoder_lacrosse_tx_deserialize,
     .get_string = ws_protocol_decoder_lacrosse_tx_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder ws_protocol_lacrosse_tx_encoder = {
@@ -274,10 +276,10 @@ void ws_protocol_decoder_lacrosse_tx_feed(void* context, bool level, uint32_t du
     }
 }
 
-uint8_t ws_protocol_decoder_lacrosse_tx_get_hash_data(void* context) {
+uint32_t ws_protocol_decoder_lacrosse_tx_get_hash_data(void* context) {
     furi_assert(context);
     WSProtocolDecoderLaCrosse_TX* instance = context;
-    return subghz_protocol_blocks_get_hash_data(
+    return subghz_protocol_blocks_get_hash_data_long(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 

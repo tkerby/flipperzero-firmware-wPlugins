@@ -1352,7 +1352,7 @@ static int GeneratePublicDh(DhKey* key, byte* priv, word32 privSz,
         *pubSz = (word32)mp_unsigned_bin_size(y);
 
     mp_clear(y);
-    mp_clear(x);
+    mp_forcezero(x);
 #if defined(WOLFSSL_SMALL_STACK) && !defined(WOLFSSL_NO_MALLOC)
     XFREE(y, key->heap, DYNAMIC_TYPE_DH);
     XFREE(x, key->heap, DYNAMIC_TYPE_DH);
@@ -1433,7 +1433,7 @@ static int wc_DhGenerateKeyPair_Async(DhKey* key, WC_RNG* rng,
 #elif defined(HAVE_CAVIUM)
     /* TODO: Not implemented - use software for now */
 
-#else /* WOLFSSL_ASYNC_CRYPT_SW */
+#elif defined(WOLFSSL_ASYNC_CRYPT_SW)
     if (wc_AsyncSwInit(&key->asyncDev, ASYNC_SW_DH_GEN)) {
         WC_ASYNC_SW* sw = &key->asyncDev.sw;
         sw->dhGen.key = key;
@@ -2207,7 +2207,7 @@ static int wc_DhAgree_Async(DhKey* key, byte* agree, word32* agreeSz,
 #elif defined(HAVE_CAVIUM)
     /* TODO: Not implemented - use software for now */
 
-#else /* WOLFSSL_ASYNC_CRYPT_SW */
+#elif defined(WOLFSSL_ASYNC_CRYPT_SW)
     if (wc_AsyncSwInit(&key->asyncDev, ASYNC_SW_DH_AGREE)) {
         WC_ASYNC_SW* sw = &key->asyncDev.sw;
         sw->dhAgree.key = key;

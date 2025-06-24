@@ -1,10 +1,12 @@
+#include "loader.h"
 #include <furi.h>
 #include <cli/cli.h>
 #include <applications.h>
 #include <lib/toolbox/args.h>
-#include "loader.h"
+#include <lib/toolbox/strint.h>
+#include <notification/notification_messages.h>
 
-static void loader_cli_print_usage() {
+static void loader_cli_print_usage(void) {
     printf("Usage:\r\n");
     printf("loader <cmd> <args>\r\n");
     printf("Cmd list:\r\n");
@@ -12,9 +14,11 @@ static void loader_cli_print_usage() {
     printf(
         "\topen \"<Application Name:string>\" \"<parameter:string>\"\t - Open application by name with (optional) parameter\r\n");
     printf("\tinfo\t - Show loader state\r\n");
+    printf("\tclose\t - Close the current application\r\n");
+    printf("\tsignal <signal:number> [arg:hex]\t - Send a signal with an optional argument\r\n");
 }
 
-static void loader_cli_list() {
+static void loader_cli_list(void) {
     printf("Apps:\r\n");
     for(size_t i = 0; i < FLIPPER_APPS_COUNT; i++) {
         printf("\t%s\r\n", FLIPPER_APPS[i].name);
@@ -26,17 +30,23 @@ static void loader_cli_list() {
     for(size_t i = 0; i < FLIPPER_SETTINGS_APPS_COUNT; i++) {
         printf("\t%s\r\n", FLIPPER_SETTINGS_APPS[i].name);
     }
+    for(size_t i = 0; i < FLIPPER_EXTSETTINGS_APPS_COUNT; i++) {
+        printf("\t%s\r\n", FLIPPER_EXTSETTINGS_APPS[i].name);
+    }
     printf(
         "For external applications, specify full path to '.fap' file.\r\nExample: \"/ext/apps/Main/clock.fap\"");
 }
 
 static void loader_cli_info(Loader* loader) {
-    if(!loader_is_locked(loader)) {
+    FuriString* app_name = furi_string_alloc();
+
+    if(!loader_get_application_name(loader, app_name)) {
         printf("No application is running\r\n");
     } else {
-        // TODO: print application name ???
-        printf("Application is running\r\n");
+        printf("Application \"%s\" is running\r\n", furi_string_get_cstr(app_name));
     }
+
+    furi_string_free(app_name);
 }
 
 static void loader_cli_open(FuriString* args, Loader* loader) {
@@ -62,12 +72,53 @@ static void loader_cli_open(FuriString* args, Loader* loader) {
         FuriString* error_message = furi_string_alloc();
         if(loader_start(loader, app_name_str, args_str, error_message) != LoaderStatusOk) {
             printf("%s\r\n", furi_string_get_cstr(error_message));
+        } else {
+#ifdef SRV_NOTIFICATION
+            NotificationApp* notification_srv = furi_record_open(RECORD_NOTIFICATION);
+            notification_message(notification_srv, &sequence_display_backlight_on);
+            furi_record_close(RECORD_NOTIFICATION);
+#endif
         }
         furi_string_free(error_message);
-
     } while(false);
 
     furi_string_free(app_name);
+}
+
+static void loader_cli_close(Loader* loader) {
+    FuriString* app_name = furi_string_alloc();
+
+    if(!loader_get_application_name(loader, app_name)) {
+        printf("No application is running\r\n");
+    } else if(!loader_signal(loader, FuriSignalExit, NULL)) {
+        printf("Application \"%s\" has to be closed manually\r\n", furi_string_get_cstr(app_name));
+    } else {
+        printf("Application \"%s\" was closed\r\n", furi_string_get_cstr(app_name));
+    }
+
+    furi_string_free(app_name);
+}
+
+static void loader_cli_signal(FuriString* args, Loader* loader) {
+    uint32_t signal;
+    uint32_t arg = 0;
+    StrintParseError parse_err = 0;
+    char* args_cstr = (char*)furi_string_get_cstr(args);
+    parse_err |= strint_to_uint32(args_cstr, &args_cstr, &signal, 10);
+    parse_err |= strint_to_uint32(args_cstr, &args_cstr, &arg, 16);
+
+    if(parse_err) {
+        printf("Signal must be a decimal number\r\n");
+    } else if(!loader_is_locked(loader)) {
+        printf("No application is running\r\n");
+    } else {
+        const bool is_handled = loader_signal(loader, signal, (void*)arg);
+        printf(
+            "Signal %lu with argument 0x%p was %s\r\n",
+            signal,
+            (void*)arg,
+            is_handled ? "handled" : "ignored");
+    }
 }
 
 static void loader_cli(Cli* cli, FuriString* args, void* context) {
@@ -99,6 +150,16 @@ static void loader_cli(Cli* cli, FuriString* args, void* context) {
             break;
         }
 
+        if(furi_string_cmp_str(cmd, "close") == 0) {
+            loader_cli_close(loader);
+            break;
+        }
+
+        if(furi_string_cmp_str(cmd, "signal") == 0) {
+            loader_cli_signal(args, loader);
+            break;
+        }
+
         loader_cli_print_usage();
     } while(false);
 
@@ -106,10 +167,13 @@ static void loader_cli(Cli* cli, FuriString* args, void* context) {
     furi_record_close(RECORD_LOADER);
 }
 
-void loader_on_system_start() {
+#include <cli/cli_i.h>
+CLI_PLUGIN_WRAPPER("loader", loader_cli)
+
+void loader_on_system_start(void) {
 #ifdef SRV_CLI
     Cli* cli = furi_record_open(RECORD_CLI);
-    cli_add_command(cli, RECORD_LOADER, CliCommandFlagParallelSafe, loader_cli, NULL);
+    cli_add_command(cli, RECORD_LOADER, CliCommandFlagParallelSafe, loader_cli_wrapper, NULL);
     furi_record_close(RECORD_CLI);
 #else
     UNUSED(loader_cli);

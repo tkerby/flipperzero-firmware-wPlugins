@@ -75,7 +75,7 @@ static void _onewire_scan(void) {
     } while(_onewire_id_exist(id));
 
     if(id == NULL) {
-        unitemp_onewire_bus_enum_init();
+        unitemp_onewire_bus_enum_init(ow_sensor->bus);
         id = unitemp_onewire_bus_enum_next(ow_sensor->bus);
         if(_onewire_id_exist(id)) {
             do {
@@ -373,11 +373,9 @@ void unitemp_SensorEdit_switch(Sensor* sensor) {
 }
 
 void unitemp_SensorEdit_free(void) {
-    //Очистка списка элементов
-    variable_item_list_free(variable_item_list);
-    //Очистка вида
-    view_free(view);
     //Удаление вида после обработки
     view_dispatcher_remove_view(app->view_dispatcher, VIEW_ID);
+    //Очистка списка элементов
+    variable_item_list_free(variable_item_list);
     free(offset_buff);
 }

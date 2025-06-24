@@ -4,7 +4,7 @@
 #include <notification/notification_messages.h>
 #include <totp_icons.h>
 #include <roll_value.h>
-#include <available_fonts.h>
+#include "../../../services/fonts/font_provider.h"
 #include "../../canvas_extensions.h"
 #include "../../../types/token_info.h"
 #include "../../../types/common.h"
@@ -20,6 +20,7 @@
 
 #define PROGRESS_BAR_MARGIN (3)
 #define PROGRESS_BAR_HEIGHT (4)
+#define DIV_CEIL(a, b)      (((a) + (b) - 1) / (b))
 
 typedef struct {
     uint8_t progress_bar_x;
@@ -27,6 +28,7 @@ typedef struct {
     uint8_t code_total_length;
     uint8_t code_offset_x;
     uint8_t code_offset_y;
+    uint8_t group_space_width;
 } UiPrecalculatedDimensions;
 
 typedef struct {
@@ -37,7 +39,7 @@ typedef struct {
     FuriMutex* last_code_update_sync;
     TotpGenerateCodeWorkerContext* generate_code_worker_context;
     UiPrecalculatedDimensions ui_precalculated_dimensions;
-    const FONT_INFO* active_font;
+    FontInfo* active_font;
     NotificationApp* notification_app;
 } SceneState;
 
@@ -121,13 +123,31 @@ static void draw_totp_code(Canvas* const canvas, const PluginState* const plugin
         totp_config_get_token_iterator_context(plugin_state);
     uint8_t code_length = totp_token_info_iterator_get_current_token(iterator_context)->digits;
 
-    canvas_draw_str_ex(
-        canvas,
-        scene_state->ui_precalculated_dimensions.code_offset_x,
-        scene_state->ui_precalculated_dimensions.code_offset_y,
-        scene_state->last_code,
-        code_length,
-        scene_state->active_font);
+    if(plugin_state->split_token_into_groups > 0) {
+        uint8_t offset_x = scene_state->ui_precalculated_dimensions.code_offset_x;
+        uint8_t char_width = scene_state->active_font->char_info[0].width;
+        uint8_t group_length = DIV_CEIL(code_length, plugin_state->split_token_into_groups);
+        for(uint8_t i = 0; i < code_length; i += group_length) {
+            canvas_draw_str_ex(
+                canvas,
+                offset_x,
+                scene_state->ui_precalculated_dimensions.code_offset_y,
+                &scene_state->last_code[i],
+                MIN(group_length, code_length - i),
+                scene_state->active_font);
+            offset_x +=
+                (group_length * (char_width + scene_state->active_font->space_width) +
+                 scene_state->ui_precalculated_dimensions.group_space_width);
+        }
+    } else {
+        canvas_draw_str_ex(
+            canvas,
+            scene_state->ui_precalculated_dimensions.code_offset_x,
+            scene_state->ui_precalculated_dimensions.code_offset_y,
+            scene_state->last_code,
+            code_length,
+            scene_state->active_font);
+    }
 }
 
 static void on_new_token_code_generated(bool time_left, void* context) {
@@ -140,15 +160,27 @@ static void on_new_token_code_generated(bool time_left, void* context) {
 
     SceneState* scene_state = plugin_state->current_scene_state;
     const TokenInfo* current_token = totp_token_info_iterator_get_current_token(iterator_context);
-    const FONT_INFO* const font = scene_state->active_font;
 
-    uint8_t char_width = font->charInfo[0].width;
+    uint8_t char_width = scene_state->active_font->char_info[0].width;
+    uint8_t group_spaces =
+        plugin_state->split_token_into_groups > 0 ? plugin_state->split_token_into_groups - 1 : 0;
+    uint8_t group_space_width = char_width;
     scene_state->ui_precalculated_dimensions.code_total_length =
-        current_token->digits * (char_width + font->spacePixels);
+        current_token->digits * (char_width + scene_state->active_font->space_width);
+    uint8_t rest_available_width =
+        SCREEN_WIDTH -
+        MIN(SCREEN_WIDTH, scene_state->ui_precalculated_dimensions.code_total_length);
+    if(group_space_width * group_spaces > rest_available_width) {
+        group_space_width = rest_available_width / group_spaces;
+    }
+    scene_state->ui_precalculated_dimensions.code_total_length += group_space_width * group_spaces;
+    scene_state->ui_precalculated_dimensions.group_space_width = group_space_width;
     scene_state->ui_precalculated_dimensions.code_offset_x =
-        (SCREEN_WIDTH - scene_state->ui_precalculated_dimensions.code_total_length) >> 1;
+        (SCREEN_WIDTH -
+         MIN(SCREEN_WIDTH, scene_state->ui_precalculated_dimensions.code_total_length)) >>
+        1;
     scene_state->ui_precalculated_dimensions.code_offset_y =
-        SCREEN_HEIGHT_CENTER - (font->height >> 1);
+        SCREEN_HEIGHT_CENTER - (scene_state->active_font->height >> 1);
 
     if(time_left) {
         notification_message(
@@ -185,10 +217,15 @@ void totp_scene_generate_token_activate(PluginState* plugin_state) {
             scene_state->last_code,
             TokenDigitsCountMax + 1,
             scene_state->last_code_update_sync,
-            plugin_state->automation_kb_layout);
+            plugin_state->automation_kb_layout,
+            plugin_state->automation_initial_delay);
     }
 
-    scene_state->active_font = available_fonts[plugin_state->active_font_index];
+    scene_state->active_font = totp_font_info_alloc();
+
+    if(!totp_font_provider_get_font(plugin_state->active_font_index, scene_state->active_font)) {
+        totp_font_provider_get_font(0, scene_state->active_font);
+    }
     scene_state->notification_app = furi_record_open(RECORD_NOTIFICATION);
     scene_state->notification_sequence_automation[0] = NULL;
     scene_state->notification_sequence_new_token[0] = NULL;
@@ -197,14 +234,17 @@ void totp_scene_generate_token_activate(PluginState* plugin_state) {
 
     if(plugin_state->automation_method & AutomationMethodBadBt) {
         if(plugin_state->bt_type_code_worker_context == NULL) {
-            plugin_state->bt_type_code_worker_context = totp_bt_type_code_worker_init();
+            plugin_state->bt_type_code_worker_context = totp_bt_type_code_worker_init(
+                *((uint16_t*)plugin_state->crypto_settings.crypto_verify_data),
+                plugin_state->bt_type_code_worker_profile_index);
         }
         totp_bt_type_code_worker_start(
             plugin_state->bt_type_code_worker_context,
             scene_state->last_code,
             TokenDigitsCountMax + 1,
             scene_state->last_code_update_sync,
-            plugin_state->automation_kb_layout);
+            plugin_state->automation_kb_layout,
+            plugin_state->automation_initial_delay);
     }
 #endif
     const TokenInfoIteratorContext* iterator_context =
@@ -245,15 +285,15 @@ void totp_scene_generate_token_render(Canvas* const canvas, PluginState* plugin_
             SCREEN_HEIGHT_CENTER + 10,
             AlignCenter,
             AlignCenter,
-            "Press OK button to access menu");
+            "Press OK button to open menu");
         return;
     }
 
     const SceneState* scene_state = (SceneState*)plugin_state->current_scene_state;
 
     canvas_set_font(canvas, FontPrimary);
-    const char* token_name_cstr =
-        furi_string_get_cstr(totp_token_info_iterator_get_current_token(iterator_context)->name);
+    const TokenInfo* token_info = totp_token_info_iterator_get_current_token(iterator_context);
+    const char* token_name_cstr = furi_string_get_cstr(token_info->name);
     uint16_t token_name_width = canvas_string_width(canvas, token_name_cstr);
     if(SCREEN_WIDTH - token_name_width > 18) {
         canvas_draw_str_aligned(
@@ -274,12 +314,21 @@ void totp_scene_generate_token_render(Canvas* const canvas, PluginState* plugin_
 
     draw_totp_code(canvas, plugin_state);
 
-    canvas_draw_box(
-        canvas,
-        scene_state->ui_precalculated_dimensions.progress_bar_x,
-        SCREEN_HEIGHT - PROGRESS_BAR_MARGIN - PROGRESS_BAR_HEIGHT,
-        scene_state->ui_precalculated_dimensions.progress_bar_width,
-        PROGRESS_BAR_HEIGHT);
+    if(token_info->type == TokenTypeTOTP) {
+        canvas_draw_box(
+            canvas,
+            scene_state->ui_precalculated_dimensions.progress_bar_x,
+            SCREEN_HEIGHT - PROGRESS_BAR_MARGIN - PROGRESS_BAR_HEIGHT,
+            scene_state->ui_precalculated_dimensions.progress_bar_width,
+            PROGRESS_BAR_HEIGHT);
+    } else {
+        char buffer[21];
+        snprintf(&buffer[0], sizeof(buffer), "%" PRIu64, token_info->counter);
+        canvas_set_font(canvas, FontSecondary);
+        canvas_draw_str_aligned(
+            canvas, SCREEN_WIDTH_CENTER, SCREEN_HEIGHT - 5, AlignCenter, AlignCenter, buffer);
+    }
+
     if(totp_token_info_iterator_get_total_count(iterator_context) > 1) {
         canvas_draw_icon(canvas, 0, SCREEN_HEIGHT_CENTER - 24, &I_totp_arrow_left_8x9);
         canvas_draw_icon(
@@ -321,7 +370,7 @@ bool totp_scene_generate_token_handle_event(
         return true;
     }
 
-    if(event->input.type == InputTypeLong && event->input.key == InputKeyBack) {
+    if(event->input.type == InputTypePress && event->input.key == InputKeyBack) {
         return false;
     }
 
@@ -358,6 +407,22 @@ bool totp_scene_generate_token_handle_event(
             return true;
         }
 #endif
+        else if(event->input.key == InputKeyOk) {
+            TokenInfoIteratorContext* iterator_context =
+                totp_config_get_token_iterator_context(plugin_state);
+            const TokenInfo* token_info =
+                totp_token_info_iterator_get_current_token(iterator_context);
+            if(token_info->type == TokenTypeHOTP) {
+                scene_state = (SceneState*)plugin_state->current_scene_state;
+                totp_token_info_iterator_current_token_inc_counter(iterator_context);
+                totp_generate_code_worker_notify(
+                    scene_state->generate_code_worker_context,
+                    TotpGenerateCodeWorkerEventForceUpdate);
+                notification_message(
+                    scene_state->notification_app,
+                    get_notification_sequence_new_token(plugin_state, scene_state));
+            }
+        }
     } else if(event->input.type == InputTypePress || event->input.type == InputTypeRepeat) {
         switch(event->input.key) {
         case InputKeyUp:
@@ -401,7 +466,7 @@ bool totp_scene_generate_token_handle_event(
         default:
             break;
         }
-    } else if(event->input.type == InputTypeRelease && event->input.key == InputKeyOk) {
+    } else if(event->input.type == InputTypeShort && event->input.key == InputKeyOk) {
         totp_scene_director_activate_scene(plugin_state, TotpSceneTokenMenu);
     }
 
@@ -426,6 +491,8 @@ void totp_scene_generate_token_deactivate(PluginState* plugin_state) {
 #endif
 
     furi_mutex_free(scene_state->last_code_update_sync);
+
+    totp_font_info_free(scene_state->active_font);
 
     free(scene_state);
     plugin_state->current_scene_state = NULL;

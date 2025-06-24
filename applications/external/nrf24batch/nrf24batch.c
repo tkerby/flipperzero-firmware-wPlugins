@@ -13,16 +13,16 @@
 #include <nrf24.h>
 #include <u8g2.h>
 
-#define TAG "nrf24batch"
+#define TAG     "nrf24batch"
 #define VERSION "1.9"
 
-#define SCAN_APP_PATH_FOLDER "/ext/apps_data/nrf24batch"
-#define LOG_FILEEXT ".txt"
-#define NRF_READ_TIMEOUT 300UL // ms
-#define WORK_PERIOD 2 // ms, Timer period
-#define MAX_CHANNEL 125
+#define SCAN_APP_PATH_FOLDER  APP_ASSETS_PATH("")
+#define LOG_FILEEXT           ".txt"
+#define NRF_READ_TIMEOUT      300UL // ms
+#define WORK_PERIOD           2 // ms, Timer period
+#define MAX_CHANNEL           125
 #define FONT_5x7_SCREEN_WIDTH 25
-#define NRF_EN_DYN_ACK 0 // does not work on some nrf24l01+ chips, (0/1)
+#define NRF_EN_DYN_ACK        0 // does not work on some nrf24l01+ chips, (0/1)
 
 const char SettingsFld_Info[] = "Info:";
 const char SettingsFld_Ch[] = "Ch:";
@@ -48,7 +48,7 @@ const char SettingsFld_ReadCmdRepeatPeriod[] = "ReadCmd repeat:";
 const char AskQuestion_Save[] = "SAVE BATCH?";
 #define Settings_i 'i'
 #define Settings_n 'n'
-#define VAR_EMPTY ((int32_t)0x80000000)
+#define VAR_EMPTY  ((int32_t)0x80000000)
 
 nRF24Batch* APP;
 uint8_t what_doing = 0; // 0 - setup, 1 - cmd list, 2 - read/write/listen cmd
@@ -61,7 +61,14 @@ enum {
     rwt_max
 };
 uint8_t rw_type = rwt_read_batch; // What to do: rwt_*
-enum { sst_none = 0, sst_sending, sst_receiving, sst_ok, sst_error, sst_timeout };
+enum {
+    sst_none = 0,
+    sst_sending,
+    sst_receiving,
+    sst_ok,
+    sst_error,
+    sst_timeout
+};
 uint8_t send_status = sst_none; // sst_*
 bool cmd_array = false;
 uint8_t cmd_array_idx;
@@ -117,7 +124,7 @@ uint8_t listen_addr[5];
 uint8_t listen_addr_len = 0;
 char* ListenFields = NULL; // ptr to string: field1,field2,... max 5 field now
 bool ListenNew;
-FuriHalRtcDateTime ListenLastTime = {0};
+DateTime ListenLastTime = {0};
 uint32_t ListenPrev = 0;
 uint32_t ListenLast = 0;
 FuriString** Read_cmd = NULL; // Names of read cmd
@@ -139,7 +146,13 @@ uint16_t pwr_read_timer = 0;
 int Current = 0;
 int CurrentStart = 0;
 
-enum { ask_write_batch = 1, ask_save_batch, ask_skip_cmd, ask_return, ask_exit };
+enum {
+    ask_write_batch = 1,
+    ask_save_batch,
+    ask_skip_cmd,
+    ask_return,
+    ask_exit
+};
 uint8_t ask_question = 0; // 1 - Ask now - ask_*
 uint8_t ask_question_answer = 0; // 0 - no, 1 - yes
 
@@ -302,7 +315,8 @@ void free_store(void) {
         ListenFields = NULL;
     }
     if(Read_cmd_Total) {
-        for(uint16_t i = 0; i < Read_cmd_Total; i++) furi_string_free(Read_cmd[i]);
+        for(uint16_t i = 0; i < Read_cmd_Total; i++)
+            furi_string_free(Read_cmd[i]);
         Read_cmd_Total = 0;
     }
     if(Read_cmd) {
@@ -310,7 +324,8 @@ void free_store(void) {
         Read_cmd = NULL;
     }
     if(ReadBatch_cmd_Total) {
-        for(uint16_t i = 0; i < ReadBatch_cmd_Total; i++) furi_string_free(ReadBatch_cmd[i]);
+        for(uint16_t i = 0; i < ReadBatch_cmd_Total; i++)
+            furi_string_free(ReadBatch_cmd[i]);
         ReadBatch_cmd_Total = 0;
     }
     if(ReadBatch_cmd) {
@@ -318,7 +333,8 @@ void free_store(void) {
         ReadBatch_cmd = NULL;
     }
     if(WriteBatch_cmd_Total) {
-        for(uint16_t i = 0; i < WriteBatch_cmd_Total; i++) furi_string_free(WriteBatch_cmd[i]);
+        for(uint16_t i = 0; i < WriteBatch_cmd_Total; i++)
+            furi_string_free(WriteBatch_cmd[i]);
         WriteBatch_cmd_Total = 0;
     }
     if(WriteBatch_cmd) {
@@ -326,7 +342,8 @@ void free_store(void) {
         WriteBatch_cmd = NULL;
     }
     if(SetBatch_cmd_Total) {
-        for(uint16_t i = 0; i < SetBatch_cmd_Total; i++) furi_string_free(SetBatch_cmd[i]);
+        for(uint16_t i = 0; i < SetBatch_cmd_Total; i++)
+            furi_string_free(SetBatch_cmd[i]);
         SetBatch_cmd_Total = 0;
     }
     if(SetBatch_cmd) {
@@ -1039,7 +1056,7 @@ static void save_batch(void) {
     FURI_LOG_D(TAG, "Save Batch");
     char *p, *p2;
     stream_seek(file_stream, 0, StreamOffsetFromEnd);
-    FuriHalRtcDateTime dt;
+    DateTime dt;
     furi_hal_rtc_get_datetime(&dt);
     stream_write_format(file_stream, "\n%s ", SettingsFld_WriteBatch);
     p = (char*)furi_string_get_cstr(ReadBatch_cmd[view_cmd[rwt_read_batch]]);
@@ -1065,7 +1082,8 @@ static void save_batch(void) {
                     stream_write_cstring(file_stream, "={");
                     p = (p2 += 2);
                     do {
-                        while(is_digit(p2, true) || *p2 == 'x') p2++;
+                        while(is_digit(p2, true) || *p2 == 'x')
+                            p2++;
                         stream_write(file_stream, (uint8_t*)p, p2 - p);
                         char c = *p2;
                         if(c == '\0') break;
@@ -1091,8 +1109,9 @@ static void save_batch(void) {
     }
 }
 
-static void input_callback(InputEvent* input_event, FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void input_callback(InputEvent* input_event, void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
     PluginEvent event = {.type = EventTypeKey, .input = *input_event};
     furi_message_queue_put(event_queue, &event, FuriWaitForever);
 }
@@ -1445,9 +1464,7 @@ void work_timer_callback(void* ctx) {
             for(uint8_t i = 0; i < 3; i++) {
                 if(nrf24_read_newpacket()) {
                     if(rw_type == rwt_listen) {
-                        ListenPrev = ListenLast;
-                        furi_hal_rtc_get_datetime(&ListenLastTime);
-                        ListenLast = furi_hal_rtc_datetime_to_timestamp(&ListenLastTime);
+                        ListenLast = furi_hal_rtc_get_timestamp();
                         ListenNew = true;
                     } else if(send_status != sst_receiving)
                         break;
@@ -1525,6 +1542,7 @@ int32_t nrf24batch_app(void* p) {
     gui_add_view_port(APP->gui, view_port, GuiLayerFullscreen);
     APP->notification = furi_record_open(RECORD_NOTIFICATION);
     APP->storage = furi_record_open(RECORD_STORAGE);
+    storage_common_migrate(APP->storage, EXT_PATH("nrf24batch"), SCAN_APP_PATH_FOLDER);
     storage_common_mkdir(APP->storage, SCAN_APP_PATH_FOLDER);
     file_stream = file_stream_alloc(APP->storage);
     FuriTimer* work_timer =
@@ -1538,12 +1556,12 @@ int32_t nrf24batch_app(void* p) {
         FuriStatus event_status = furi_message_queue_get(event_queue, &event, 100);
         furi_mutex_acquire(APP->plugin_state->mutex, FuriWaitForever);
 
-        static FuriLogLevel FuriLogLevel = FuriLogLevelDefault;
-        if(furi_log_get_level() != FuriLogLevel) {
-            FuriLogLevel = furi_log_get_level();
-            if(FuriLogLevel == FuriLogLevelDebug)
-                furi_hal_uart_set_br(FuriHalUartIdUSART1, 1843200);
-        }
+        // static FuriLogLevel FuriLogLevel = FuriLogLevelDefault;
+        // if(furi_log_get_level() != FuriLogLevel) {
+        //     FuriLogLevel = furi_log_get_level();
+        //     if(FuriLogLevel == FuriLogLevelDebug)
+        //         furi_hal_uart_set_br(FuriHalUartIdUSART1, 1843200);
+        // }
         if(what_doing == 2 && rw_type == rwt_read_cmd && ReadRepeat &&
            furi_get_tick() - NRF_time > (uint32_t)(ReadCmdRepeatPeriod * 1000)) {
             ERR = 0;
@@ -1886,7 +1904,8 @@ int32_t nrf24batch_app(void* p) {
                                             }
                                             if(is_digit(p, Edit_hex)) {
                                                 Edit_start = p;
-                                                while(is_digit(p, Edit_hex)) p++;
+                                                while(is_digit(p, Edit_hex))
+                                                    p++;
                                                 Edit_pos = p - 1;
                                                 Edited = true;
                                                 Edit = 1;

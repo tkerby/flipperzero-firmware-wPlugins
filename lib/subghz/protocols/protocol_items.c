@@ -1,4 +1,4 @@
-#include "protocol_items.h"
+#include "protocol_items.h" // IWYU pragma: keep
 
 const SubGhzProtocol* subghz_protocol_registry_items[] = {
     &subghz_protocol_gate_tx,
@@ -31,6 +31,7 @@ const SubGhzProtocol* subghz_protocol_registry_items[] = {
     &subghz_protocol_bett,
     &subghz_protocol_doitrand,
     &subghz_protocol_phoenix_v2,
+    &subghz_protocol_honeywell, // Should be before honeywell_wdb
     &subghz_protocol_honeywell_wdb,
     &subghz_protocol_magellan,
     &subghz_protocol_intertechno_v3,
@@ -43,7 +44,17 @@ const SubGhzProtocol* subghz_protocol_registry_items[] = {
     &subghz_protocol_alutech_at_4n,
     &subghz_protocol_kinggates_stylo_4k,
     &subghz_protocol_bin_raw,
+    &subghz_protocol_mastercode,
     &subghz_protocol_x10,
+    &subghz_protocol_hormann_bisecur,
+    &subghz_protocol_legrand,
+    &subghz_protocol_dickert_mahs,
+    &subghz_protocol_gangqi,
+    &subghz_protocol_marantec24,
+    &subghz_protocol_hollarm,
+    &subghz_protocol_hay21,
+    &subghz_protocol_revers_rb2,
+    &subghz_protocol_feron,
 };
 
 const SubGhzProtocolRegistry subghz_protocol_registry = {

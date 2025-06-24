@@ -3,10 +3,12 @@
 #include <furi_hal.h>
 
 #include <gui/gui.h>
+#include <gui/elements.h>
 #include <input/input.h>
 #include <dialogs/dialogs.h>
 #include <gui/view_dispatcher.h>
 #include <gui/modules/submenu.h>
+#include <gui/modules/widget.h>
 #include <gui/modules/text_input.h>
 #include <gui/modules/text_input.h>
 
@@ -14,13 +16,13 @@
 
 #include "barcode_utils.h"
 
-#define TAG "BARCODE"
-#define VERSION "1.1"
+#define TAG          "BARCODE"
+#define VERSION      FAP_VERSION
 #define FILE_VERSION "1"
 
 #define TEXT_BUFFER_SIZE 128
 
-#define BARCODE_HEIGHT 50
+#define BARCODE_HEIGHT  50
 #define BARCODE_Y_START 3
 
 //the folder where the codabar encoding table is located
@@ -39,7 +41,7 @@
 #define DEFAULT_USER_BARCODES EXT_PATH("apps_data/barcodes")
 
 //The extension barcode files use
-#define BARCODE_EXTENSION ".txt"
+#define BARCODE_EXTENSION        ".txt"
 #define BARCODE_EXTENSION_LENGTH 4
 
 #include "views/barcode_view.h"
@@ -59,6 +61,8 @@ struct BarcodeApp {
     CreateView* create_view;
     Barcode* barcode_view;
 
+    Widget* about_widget;
+    Widget* error_codes_widget;
     MessageView* message_view;
     TextInput* text_input;
 };
@@ -66,16 +70,18 @@ struct BarcodeApp {
 enum SubmenuItems {
     SelectBarcodeItem,
     EditBarcodeItem,
-
-    CreateBarcodeItem
+    CreateBarcodeItem,
+    ErrorCodesWidgetItem,
+    AboutWidgetItem
 };
 
 enum Views {
     TextInputView,
+    AboutWidgetView,
+    ErrorCodesWidgetView,
     MessageErrorView,
     MainMenuView,
     CreateBarcodeView,
-
     BarcodeView
 };
 

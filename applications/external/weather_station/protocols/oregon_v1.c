@@ -76,10 +76,12 @@ const SubGhzProtocolDecoder ws_protocol_oregon_v1_decoder = {
     .feed = ws_protocol_decoder_oregon_v1_feed,
     .reset = ws_protocol_decoder_oregon_v1_reset,
 
-    .get_hash_data = ws_protocol_decoder_oregon_v1_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = ws_protocol_decoder_oregon_v1_get_hash_data,
     .serialize = ws_protocol_decoder_oregon_v1_serialize,
     .deserialize = ws_protocol_decoder_oregon_v1_deserialize,
     .get_string = ws_protocol_decoder_oregon_v1_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder ws_protocol_oregon_v1_encoder = {
@@ -276,10 +278,10 @@ void ws_protocol_decoder_oregon_v1_feed(void* context, bool level, uint32_t dura
     }
 }
 
-uint8_t ws_protocol_decoder_oregon_v1_get_hash_data(void* context) {
+uint32_t ws_protocol_decoder_oregon_v1_get_hash_data(void* context) {
     furi_assert(context);
     WSProtocolDecoderOregon_V1* instance = context;
-    return subghz_protocol_blocks_get_hash_data(
+    return subghz_protocol_blocks_get_hash_data_long(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 

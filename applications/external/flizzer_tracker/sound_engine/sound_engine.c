@@ -14,10 +14,6 @@ void sound_engine_init(
         free(sound_engine->audio_buffer);
     }
 
-    if(sound_engine->sine_lut) {
-        free(sound_engine->sine_lut);
-    }
-
     memset(sound_engine, 0, sizeof(SoundEngine));
 
     sound_engine->audio_buffer = malloc(audio_buffer_size * sizeof(sound_engine->audio_buffer[0]));
@@ -37,7 +33,10 @@ void sound_engine_init(
     furi_hal_interrupt_set_isr(FuriHalInterruptIdDma1Ch1, NULL, NULL);
 
     furi_hal_interrupt_set_isr_ex(
-        FuriHalInterruptIdDma1Ch1, 15, sound_engine_dma_isr, sound_engine);
+        FuriHalInterruptIdDma1Ch1,
+        FuriHalInterruptPriorityHighest,
+        sound_engine_dma_isr,
+        sound_engine);
 
     sound_engine_init_hardware(
         sample_rate, external_audio_output, sound_engine->audio_buffer, audio_buffer_size);
@@ -110,16 +109,17 @@ void sound_engine_fill_buffer(
             SoundEngineChannel* channel = &sound_engine->channel[chan];
 
             if(channel->frequency > 0) {
+                channel->sync_bit = 0;
                 uint32_t prev_acc = channel->accumulator;
 
                 channel->accumulator += channel->frequency;
 
-                channel->sync_bit |= (channel->accumulator & ACC_LENGTH);
+                channel->sync_bit |= (channel->accumulator > ACC_LENGTH ? 1 : 0);
 
                 channel->accumulator &= ACC_LENGTH - 1;
 
                 if(channel->flags & SE_ENABLE_HARD_SYNC) {
-                    uint8_t hard_sync_src = channel->hard_sync == 0xff ? i : channel->hard_sync;
+                    uint8_t hard_sync_src = channel->hard_sync == 0xff ? chan : channel->hard_sync;
 
                     if(sound_engine->channel[hard_sync_src].sync_bit) {
                         channel->accumulator = 0;
@@ -130,7 +130,7 @@ void sound_engine_fill_buffer(
                     sound_engine_osc(sound_engine, channel, prev_acc) - WAVE_AMP / 2;
 
                 if(channel->flags & SE_ENABLE_RING_MOD) {
-                    uint8_t ring_mod_src = channel->ring_mod == 0xff ? i : channel->ring_mod;
+                    uint8_t ring_mod_src = channel->ring_mod == 0xff ? chan : channel->ring_mod;
                     channel_output[chan] =
                         channel_output[chan] * channel_output[ring_mod_src] / WAVE_AMP;
                 }

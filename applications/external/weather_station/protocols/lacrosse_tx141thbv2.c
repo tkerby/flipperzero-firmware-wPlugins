@@ -57,10 +57,12 @@ const SubGhzProtocolDecoder ws_protocol_lacrosse_tx141thbv2_decoder = {
     .feed = ws_protocol_decoder_lacrosse_tx141thbv2_feed,
     .reset = ws_protocol_decoder_lacrosse_tx141thbv2_reset,
 
-    .get_hash_data = ws_protocol_decoder_lacrosse_tx141thbv2_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = ws_protocol_decoder_lacrosse_tx141thbv2_get_hash_data,
     .serialize = ws_protocol_decoder_lacrosse_tx141thbv2_serialize,
     .deserialize = ws_protocol_decoder_lacrosse_tx141thbv2_deserialize,
     .get_string = ws_protocol_decoder_lacrosse_tx141thbv2_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder ws_protocol_lacrosse_tx141thbv2_encoder = {
@@ -246,10 +248,10 @@ void ws_protocol_decoder_lacrosse_tx141thbv2_feed(void* context, bool level, uin
     }
 }
 
-uint8_t ws_protocol_decoder_lacrosse_tx141thbv2_get_hash_data(void* context) {
+uint32_t ws_protocol_decoder_lacrosse_tx141thbv2_get_hash_data(void* context) {
     furi_assert(context);
     WSProtocolDecoderLaCrosse_TX141THBv2* instance = context;
-    return subghz_protocol_blocks_get_hash_data(
+    return subghz_protocol_blocks_get_hash_data_long(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 

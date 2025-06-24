@@ -12,15 +12,16 @@
 
 #include <gui/view_dispatcher.h>
 
-#define APPSDATA_FOLDER "/ext/apps_data"
+#define APPSDATA_FOLDER     "/ext/apps_data"
 #define VIDEO_PLAYER_FOLDER "/ext/apps_data/video_player"
 //#define VIDEO_PLAYER_FOLDER STORAGE_APP_DATA_PATH_PREFIX
-#define FILE_NAME_LEN 64
+#define FILE_NAME_LEN       64
 
 typedef enum {
     EventTypeInput,
     EventType1stHalf,
     EventType2ndHalf,
+    EventTypeJustRedraw,
 } EventType;
 
 typedef struct {
@@ -55,6 +56,8 @@ typedef struct {
     uint8_t* audio_buffer;
     uint8_t* image_buffer;
 
+    uint8_t* fake_audio_buffer; //actually not connected to any sound routine
+
     uint8_t* buffer;
 
     uint32_t num_frames;
@@ -69,9 +72,21 @@ typedef struct {
 
     uint32_t frames_played;
 
+    int32_t frame_size;
+    int32_t header_size; //for seeking
+    int32_t frames_per_turn; //frames / 126, how many frames to wind forwards/backwards when seeking
+
+    uint8_t progress;
+    uint8_t volume;
+
     bool playing;
 
     bool quit;
+
+    bool seeking; //to display progress bar
+    bool changing_volume;
+
+    bool silent;
 } VideoPlayerApp;
 
 typedef struct {

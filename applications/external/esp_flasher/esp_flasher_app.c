@@ -2,6 +2,7 @@
 
 #include <furi.h>
 #include <furi_hal.h>
+#include <expansion/expansion.h>
 
 static bool esp_flasher_app_custom_event_callback(void* context, uint32_t event) {
     furi_assert(context);
@@ -68,6 +69,9 @@ EspFlasherApp* esp_flasher_app_alloc() {
 
     app->reset = false;
     app->boot = false;
+    app->quickflash = false;
+
+    app->turbospeed = false;
 
     scene_manager_next_scene(app->scene_manager, EspFlasherSceneStart);
 
@@ -115,6 +119,10 @@ void esp_flasher_app_free(EspFlasherApp* app) {
 int32_t esp_flasher_app(void* p) {
     UNUSED(p);
 
+    // Disable expansion protocol to avoid interference with UART Handle
+    Expansion* expansion = furi_record_open(RECORD_EXPANSION);
+    expansion_disable(expansion);
+
     uint8_t attempts = 0;
     bool otg_was_enabled = furi_hal_power_is_otg_enabled();
     while(!furi_hal_power_is_otg_enabled() && attempts++ < 5) {
@@ -136,6 +144,10 @@ int32_t esp_flasher_app(void* p) {
     if(furi_hal_power_is_otg_enabled() && !otg_was_enabled) {
         furi_hal_power_disable_otg();
     }
+
+    // Return previous state of expansion
+    expansion_enable(expansion);
+    furi_record_close(RECORD_EXPANSION);
 
     return 0;
 }

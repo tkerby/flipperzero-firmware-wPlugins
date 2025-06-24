@@ -50,10 +50,12 @@ const SubGhzProtocolDecoder subghz_protocol_doitrand_decoder = {
     .feed = subghz_protocol_decoder_doitrand_feed,
     .reset = subghz_protocol_decoder_doitrand_reset,
 
-    .get_hash_data = subghz_protocol_decoder_doitrand_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = subghz_protocol_decoder_doitrand_get_hash_data,
     .serialize = subghz_protocol_decoder_doitrand_serialize,
     .deserialize = subghz_protocol_decoder_doitrand_deserialize,
     .get_string = subghz_protocol_decoder_doitrand_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder subghz_protocol_doitrand_encoder = {
@@ -219,8 +221,8 @@ void subghz_protocol_decoder_doitrand_feed(void* context, bool level, uint32_t d
         }
         break;
     case DoitrandDecoderStepFoundStartBit:
-        if(level && ((DURATION_DIFF(duration, (subghz_protocol_doitrand_const.te_short * 2)) <
-                      subghz_protocol_doitrand_const.te_delta * 3))) {
+        if(level && (DURATION_DIFF(duration, (subghz_protocol_doitrand_const.te_short * 2)) <
+                     subghz_protocol_doitrand_const.te_delta * 3)) {
             //Found start bit
             instance->decoder.parser_step = DoitrandDecoderStepSaveDuration;
             instance->decoder.decode_data = 0;
@@ -303,10 +305,10 @@ static void subghz_protocol_doitrand_check_remote_controller(SubGhzBlockGeneric*
     instance->btn = ((instance->data >> 18) & 0x3);
 }
 
-uint8_t subghz_protocol_decoder_doitrand_get_hash_data(void* context) {
+uint32_t subghz_protocol_decoder_doitrand_get_hash_data(void* context) {
     furi_assert(context);
     SubGhzProtocolDecoderDoitrand* instance = context;
-    return subghz_protocol_blocks_get_hash_data(
+    return subghz_protocol_blocks_get_hash_data_long(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 

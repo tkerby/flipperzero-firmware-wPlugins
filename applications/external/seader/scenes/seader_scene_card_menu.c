@@ -16,8 +16,7 @@ void seader_scene_card_menu_submenu_callback(void* context, uint32_t index) {
 
 void seader_scene_card_menu_on_enter(void* context) {
     Seader* seader = context;
-    SeaderWorker* seader_worker = seader->worker;
-    SeaderCredential* credential = seader_worker->credential;
+    SeaderCredential* credential = seader->credential;
     Submenu* submenu = seader->submenu;
 
     submenu_add_item(
@@ -34,7 +33,7 @@ void seader_scene_card_menu_on_enter(void* context) {
         SubmenuIndexSaveRFID,
         seader_scene_card_menu_submenu_callback,
         seader);
-    if(credential->sio[0] == 0x30) {
+    if(credential->sio[0] == 0x30 && credential->diversifier_len == RFAL_PICOPASS_UID_LEN) {
         submenu_add_item(
             submenu,
             "Save SR",
@@ -60,6 +59,7 @@ bool seader_scene_card_menu_on_event(void* context, SceneManagerEvent event) {
         if(event.event == SubmenuIndexSave) {
             scene_manager_set_scene_state(
                 seader->scene_manager, SeaderSceneCardMenu, SubmenuIndexSave);
+            seader->credential->save_format = SeaderCredentialSaveFormatAgnostic;
             scene_manager_next_scene(seader->scene_manager, SeaderSceneSaveName);
             consumed = true;
         } else if(event.event == SubmenuIndexSavePicopass) {

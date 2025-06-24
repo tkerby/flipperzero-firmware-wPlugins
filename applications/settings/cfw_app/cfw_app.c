@@ -28,6 +28,20 @@ bool cfw_app_apply(CfwApp* app) {
         stream_free(stream);
     }
 
+    if(app->save_gamemenu_apps) {
+        Stream* stream = file_stream_alloc(storage);
+        if(file_stream_open(stream, CFW_MENU_GAMESMODE_PATH, FSAM_READ_WRITE, FSOM_CREATE_ALWAYS)) {
+            stream_write_format(stream, "GamesMenuList Version %u\n", 0);
+            CharList_it_t it;
+            CharList_it(it, app->gamemenu_app_paths);
+            for(size_t i = 0; i < CharList_size(app->gamemenu_app_paths); i++) {
+                stream_write_format(stream, "%s\n", *CharList_get(app->gamemenu_app_paths, i));
+            }
+        }
+        file_stream_close(stream);
+        stream_free(stream);
+    }
+
     if(app->save_subghz_frequencies) {
         FlipperFormat* file = flipper_format_file_alloc(storage);
         do {
@@ -48,7 +62,7 @@ bool cfw_app_apply(CfwApp* app) {
             while(flipper_format_delete_key(file, "Frequency"))
                 ;
             FrequencyList_it(it, app->subghz_static_freqs);
-            for(uint i = 0; i < FrequencyList_size(app->subghz_static_freqs); i++) {
+            for(size_t i = 0; i < FrequencyList_size(app->subghz_static_freqs); i++) {
                 flipper_format_write_uint32(
                     file, "Frequency", FrequencyList_get(app->subghz_static_freqs, i), 1);
             }
@@ -56,7 +70,7 @@ bool cfw_app_apply(CfwApp* app) {
             if(!flipper_format_rewind(file)) break;
             while(flipper_format_delete_key(file, "Hopper_frequency"))
                 ;
-            for(uint i = 0; i < FrequencyList_size(app->subghz_hopper_freqs); i++) {
+            for(size_t i = 0; i < FrequencyList_size(app->subghz_hopper_freqs); i++) {
                 flipper_format_write_uint32(
                     file, "Hopper_frequency", FrequencyList_get(app->subghz_hopper_freqs, i), 1);
             }
@@ -65,7 +79,24 @@ bool cfw_app_apply(CfwApp* app) {
     }
 
     if(app->save_subghz) {
-        furi_hal_subghz_set_extend_settings(app->subghz_extend, app->subghz_bypass);
+        FlipperFormat* file = flipper_format_file_alloc(storage);
+        do {
+            if(!flipper_format_file_open_always(file, "/ext/subghz/assets/extend_range.txt"))
+                break;
+            if(!flipper_format_write_header_cstr(file, "Flipper SubGhz Setting File", 1)) break;
+            if(!flipper_format_write_comment_cstr(
+                   file, "Whether to allow extended ranges that can break your flipper"))
+                break;
+            if(!flipper_format_write_bool(
+                   file, "use_ext_range_at_own_risk", &app->subghz_extend, 1))
+                break;
+            if(!flipper_format_write_comment_cstr(
+                   file, "Whether to ignore the default TX region settings"))
+                break;
+            if(!flipper_format_write_bool(file, "ignore_default_tx_region", &app->subghz_bypass, 1))
+                break;
+        } while(0);
+        flipper_format_free(file);
     }
 
     if(app->save_name) {
@@ -104,7 +135,7 @@ bool cfw_app_apply(CfwApp* app) {
     }
 
     if(app->save_settings) {
-        CFW_SETTINGS_SAVE();
+        cfw_settings_save();
     }
 
     if(app->require_reboot) {
@@ -139,6 +170,7 @@ CfwApp* cfw_app_alloc() {
     CfwApp* app = malloc(sizeof(CfwApp));
     app->gui = furi_record_open(RECORD_GUI);
     app->dialogs = furi_record_open(RECORD_DIALOGS);
+    app->expansion = furi_record_open(RECORD_EXPANSION);
     app->notification = furi_record_open(RECORD_NOTIFICATION);
 
     // View Dispatcher and Scene Manager
@@ -179,8 +211,6 @@ CfwApp* cfw_app_alloc() {
     view_dispatcher_add_view(
         app->view_dispatcher, CfwAppViewDialogEx, dialog_ex_get_view(app->dialog_ex));
 
-    CFW_SETTINGS();
-
     //Main Menu Add/Remove list + Start Point
 
     CharList_init(app->mainmenu_app_names);
@@ -188,12 +218,25 @@ CfwApp* cfw_app_alloc() {
 
     Loader* loader = furi_record_open(RECORD_LOADER);
     MainMenuList_t* mainmenu_apps = loader_get_mainmenu_apps(loader);
-    furi_record_close(RECORD_LOADER);
 
     for(size_t i = 0; i < MainMenuList_size(*mainmenu_apps); i++) {
         const MainMenuApp* menu_item = MainMenuList_get(*mainmenu_apps, i);
         CharList_push_back(app->mainmenu_app_names, strdup(menu_item->name));
         CharList_push_back(app->mainmenu_app_paths, strdup(menu_item->path));
+    }
+
+    //Game Menu Add/Remove list + Start Point
+
+    CharList_init(app->gamemenu_app_names);
+    CharList_init(app->gamemenu_app_paths);
+
+    GamesMenuList_t* gamemenu_apps = loader_get_gamesmenu_apps(loader);
+    furi_record_close(RECORD_LOADER);
+
+    for(size_t i = 0; i < GamesMenuList_size(*gamemenu_apps); i++) {
+        const GamesMenuApp* game_menu_item = GamesMenuList_get(*gamemenu_apps, i);
+        CharList_push_back(app->gamemenu_app_names, strdup(game_menu_item->name));
+        CharList_push_back(app->gamemenu_app_paths, strdup(game_menu_item->path));
     }
 
     Storage* storage = furi_record_open(RECORD_STORAGE);
@@ -223,9 +266,14 @@ CfwApp* cfw_app_alloc() {
         }
     } while(false);
     flipper_format_free(file);
-    furi_record_close(RECORD_STORAGE);
 
-    furi_hal_subghz_get_extend_settings(&app->subghz_extend, &app->subghz_bypass);
+    file = flipper_format_file_alloc(storage);
+    if(flipper_format_file_open_existing(file, "/ext/subghz/assets/extend_range.txt")) {
+        flipper_format_read_bool(file, "use_ext_range_at_own_risk", &app->subghz_extend, 1);
+        flipper_format_read_bool(file, "ignore_default_tx_region", &app->subghz_bypass, 1);
+    }
+    flipper_format_free(file);
+    furi_record_close(RECORD_STORAGE);
 
     strlcpy(app->device_name, furi_hal_version_get_name_ptr(), FURI_HAL_VERSION_ARRAY_NAME_LENGTH);
 
@@ -269,6 +317,17 @@ void cfw_app_free(CfwApp* app) {
     }
     CharList_clear(app->mainmenu_app_paths);
 
+    CharList_it_t it2;
+
+    for(CharList_it(it2, app->gamemenu_app_names); !CharList_end_p(it2); CharList_next(it2)) {
+        free(*CharList_cref(it2));
+    }
+    CharList_clear(app->gamemenu_app_names);
+    for(CharList_it(it2, app->gamemenu_app_paths); !CharList_end_p(it2); CharList_next(it2)) {
+        free(*CharList_cref(it2));
+    }
+    CharList_clear(app->gamemenu_app_paths);
+
     FrequencyList_clear(app->subghz_static_freqs);
     FrequencyList_clear(app->subghz_hopper_freqs);
 
@@ -276,6 +335,7 @@ void cfw_app_free(CfwApp* app) {
 
     // Records
     furi_record_close(RECORD_NOTIFICATION);
+    furi_record_close(RECORD_EXPANSION);
     furi_record_close(RECORD_DIALOGS);
     furi_record_close(RECORD_GUI);
     free(app);

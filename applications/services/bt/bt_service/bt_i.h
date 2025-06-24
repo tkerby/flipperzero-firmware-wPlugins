@@ -4,6 +4,7 @@
 
 #include <furi.h>
 #include <furi_hal.h>
+#include <api_lock.h>
 
 #include <gui/gui.h>
 #include <gui/view_port.h>
@@ -19,9 +20,7 @@
 #include <bt/bt_service/bt_keys_storage.h>
 
 #define BT_KEYS_STORAGE_OLD_PATH INT_PATH(".bt.keys")
-#define BT_KEYS_STORAGE_PATH CFG_PATH("bt.keys")
-
-#define BT_API_UNLOCK_EVENT (1UL << 0)
+#define BT_KEYS_STORAGE_PATH     CFG_PATH("bt.keys")
 
 typedef enum {
     BtMessageTypeUpdateStatus,
@@ -42,14 +41,21 @@ typedef struct {
 typedef union {
     uint32_t pin_code;
     uint8_t battery_level;
-    BtProfile profile;
+    bool power_state_charging;
+    struct {
+        const FuriHalBleProfileTemplate* template;
+        FuriHalBleProfileParams params;
+    } profile;
+    FuriHalBleProfileParams profile_params;
     BtKeyStorageUpdateData key_storage_data;
 } BtMessageData;
 
 typedef struct {
+    FuriApiLock lock;
     BtMessageType type;
     BtMessageData data;
     bool* result;
+    FuriHalBleProfileBase** profile_instance;
 } BtMessage;
 
 struct Bt {
@@ -59,7 +65,8 @@ struct Bt {
     BtSettings bt_settings;
     BtKeysStorage* keys_storage;
     BtStatus status;
-    BtProfile profile;
+    bool beacon_active;
+    FuriHalBleProfileBase* current_profile;
     FuriMessageQueue* message_queue;
     NotificationApp* notification;
     Gui* gui;
@@ -78,3 +85,15 @@ struct Bt {
     uint32_t pin;
     bool suppress_pin_screen;
 };
+
+/** Open a new RPC connection
+  *
+  * @param bt                    Bt instance
+  */
+void bt_open_rpc_connection(Bt* bt);
+
+/** Close the active RPC connection
+  *
+  * @param bt                    Bt instance
+  */
+void bt_close_rpc_connection(Bt* bt);

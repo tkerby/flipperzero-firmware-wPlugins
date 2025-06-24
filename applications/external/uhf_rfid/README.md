@@ -1,21 +1,69 @@
 # [UHF]RFID App for FlipperZero
 
-![FlipperZero](assets/img/uhf_demo_app.jpg)
+<div style="
+display: grid;
+grid-template-columns: repeat(2, 1fr);
+grid-template-rows: repeat(2, 1fr);
+gap: 2px;
+justify-items: center;
+align-items: center;
+width: 100vw;
+">
+  <img style="
+    width: 280px;
+    height: auto;"
+    src="assets/img/uhf_demo_app2.jpg">
+  <img style="
+    width: 280px;
+    height: auto;"
+    src="assets/img/uhf_demo_app.jpg">
+  <img style="
+    width: 280px;
+    height: auto;"
+  src="assets/img/P_20231205_154700.jpg">
+  <img style="
+    width: 280px;
+    height: auto;"
+  src="assets/img/P_20231205_154717.jpg">
+</div>
 
 ## Overview
 
 This repository contains a UHF RFID application developed for FlipperZero, a versatile multi-tool device. The app leverages the YRM100 module to enable UHF RFID functionality.
 
+## What's Ongoing
+
+Adding features to the app to make it more usable and stable. Currently, also addressing the issue page to fix bugs and improve the app. And also add the planned and requested features. For example, UI Change to show all info from initial scan; feature to identify the tag type and show the info accordingly; and more.
+
+## What's Changed
+
+- Added a settings page to allow for changing of the module's settings.
+- Added options like baud rate, rf power, region; more to come.
+- Tx communication is much more stable and faster now; more improvements to come.
+- Bug fixes and improvements.
+
 ## Features
 
-- [x] Read Single UHF RFID tag.
-- [x] View saved UHF RFID tag.
-- [ ] Write Single UHF RFID tag. __(in progress)__
-- [ ] Change Module setting parameters.
-- [ ] Easy-to-use interface on FlipperZero's display.
-    - Extras
-        - [ ] Read multiple tags at once
-        - [ ] View multiple on a list view
+- [x] Read Single UHF RFID tag
+  - [x] EPC Bank
+  - [x] TID Bank
+  - [x] USER Bank
+- [x] View saved UHF RFID tags
+- [x] Write Single UHF RFID tag
+  - [x] EPC Bank
+  - [ ] TID Bank (Not Supported if locked)
+  - [x] USER Bank
+- [ ] Change Module setting parameters **(In Progress)**
+  - [x] Set Baudrates
+  - [x] Set RF Power
+  - [x] Set Region
+  - [ ] Set/Reset Access Password
+  - [ ] Set Kill Password
+  - [ ] Kill Tag
+- [ ] Edit/Create new data to write.
+- Extras
+  - [ ] Read multiple tags at once
+  - [ ] View multiple on a list view
 
 ## Requirements
 
@@ -42,88 +90,12 @@ To run this application on FlipperZero, you will need:
 1. Power on your FlipperZero device.
 2. Connect the uhf module to the flipper via gpio.
 3. Navigate to the UHF RFID app on FlipperZero's menu.
-4. Currently Reading the EPC tag is the only usable option
-... will further update this page as it development goes
+4. Currently Read for EPC, TID, USER Banks are supported, as well as saving and Writing EPC, USER Banks
+   ... will further update this page as it development goes
 
 ## Contributions
 
 As this app is still in the development stage, I welcome contributions to this project. If you find any issues or want to enhance the application, feel free to create a pull request.
-
-<!-- ## License
-
-This project is licensed under the [MIT License](link_to_license_file). -->
-
-## Future Plans
-- Code cleanup
-- Build a framework around the chip communication commands
-- Build a proper tag class
-```c
-// Ideal concept
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-
-typedef struct {
-    int uart_fd; // UART file descriptor or other identifier
-} YRM100_RFID;
-
-void sendCommand(YRM100_RFID *rfid, const uint8_t *command, size_t length) {
-    // Implementation to send the command through UART
-    // Write the command to the UART interface using rfid->uart_fd
-}
-
-// Configuration functions:
-
-void setCommunicationBaudRate(YRM100_RFID *rfid) {
-    uint8_t command[] = {0xBB, 0x00, 0x11, 0x00, 0x02, 0x00, 0xC0, 0xD3, 0x7E};
-    sendCommand(rfid, command, sizeof(command));
-}
-
-void setWorkingArea(YRM100_RFID *rfid, uint8_t area) {
-    uint8_t command[] = {0xBB, 0x00, 0x07, 0x00, 0x01, area, 0x09, 0x7E}; 
-    sendCommand(rfid, command, sizeof(command));
-}
-
-// other method etc ... 
-```
-
-```c
-// Ideal concept
-#include <stdint.h>
-#include <stdlib.h>
-
-typedef struct {
-    uint8_t *killPassword;
-    uint8_t *accessPassword;
-    size_t size;
-} ReservedMemory;
-
-typedef struct {
-    uint8_t *header;
-    uint8_t *filter;
-    uint8_t *partition;
-    uint8_t *companyPrefix;
-    uint8_t *itemReference;
-    size_t size;
-} EPCMemory;
-
-typedef struct {
-    uint8_t *tid;
-    size_t size;
-} TIDMemory;
-
-typedef struct {
-    uint8_t *userMemory;
-    size_t size;
-} UserMemory;
-
-typedef struct {
-    ReservedMemory reserved;
-    EPCMemory epc;
-    TIDMemory tid;
-    UserMemory user;
-} ISO18000_6C_Tag;
-```
 
 ## Disclaimer
 
@@ -134,6 +106,9 @@ typedef struct {
 ## Extra Resources
 
 - [MagicRF M100&QM100_Firmware_manual_en.pdf](assets/res/MagicRF_M100&QM100_Firmware_manual_en.pdf)
+- [TDS_1_9_Standard.pdf](assets/res/TDS_1_9_Standard.pdf)
+- [M5Stack Docs](https://docs.m5stack.com/en/unit/uhf_rfid)
+- [MagicRF Chip DS](http://www.magicrf.com/product_en.htm)
 
 ## Contact
 

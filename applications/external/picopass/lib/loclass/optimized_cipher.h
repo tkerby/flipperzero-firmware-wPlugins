@@ -60,7 +60,7 @@ void loclass_opt_doReaderMAC(uint8_t* cc_nr_p, uint8_t* div_key_p, uint8_t mac[4
 
 void loclass_opt_doReaderMAC_2(
     LoclassState_t _init,
-    uint8_t* nr,
+    const uint8_t* nr,
     uint8_t mac[4],
     const uint8_t* div_key_p);
 
@@ -89,7 +89,7 @@ LoclassState_t loclass_opt_doTagMAC_1(uint8_t* cc_p, const uint8_t* div_key_p);
  */
 void loclass_opt_doTagMAC_2(
     LoclassState_t _init,
-    uint8_t* nr,
+    const uint8_t* nr,
     uint8_t mac[4],
     const uint8_t* div_key_p);
 
@@ -103,11 +103,15 @@ void loclass_opt_doTagMAC_2(
  */
 void loclass_opt_doBothMAC_2(
     LoclassState_t _init,
-    uint8_t* nr,
+    const uint8_t* nr,
     uint8_t rmac[4],
     uint8_t tmac[4],
     const uint8_t* div_key_p);
 
 void loclass_doMAC_N(uint8_t* in_p, uint8_t in_size, uint8_t* div_key_p, uint8_t mac[4]);
-void loclass_iclass_calc_div_key(uint8_t* csn, const uint8_t* key, uint8_t* div_key, bool elite);
+void loclass_iclass_calc_div_key(
+    const uint8_t* csn,
+    const uint8_t* key,
+    uint8_t* div_key,
+    bool elite);
 #endif // OPTIMIZED_CIPHER_H

@@ -166,7 +166,9 @@ static bool totp_plugin_state_init(PluginState* const plugin_state) {
 
 #ifdef TOTP_BADBT_AUTOMATION_ENABLED
     if(plugin_state->automation_method & AutomationMethodBadBt) {
-        plugin_state->bt_type_code_worker_context = totp_bt_type_code_worker_init();
+        plugin_state->bt_type_code_worker_context = totp_bt_type_code_worker_init(
+            *((uint16_t*)plugin_state->crypto_settings.crypto_verify_data),
+            plugin_state->bt_type_code_worker_profile_index);
     } else {
         plugin_state->bt_type_code_worker_context = NULL;
     }
@@ -230,16 +232,13 @@ int32_t totp_app() {
         return 254;
     }
 
-    TotpCliContext* cli_context = totp_cli_register_command_handler(plugin_state);
-
     if(!totp_activate_initial_scene(plugin_state)) {
         FURI_LOG_E(LOGGING_TAG, "An error ocurred during activating initial scene\r\n");
         totp_plugin_state_free(plugin_state);
         return 253;
     }
 
-    // Affecting dolphin level
-    dolphin_deed(DolphinDeedPluginStart);
+    TotpCliContext* cli_context = totp_cli_register_command_handler(plugin_state);
 
     FuriMutex* main_loop_mutex = furi_mutex_alloc(FuriMutexTypeNormal);
     struct TotpRenderCallbackContext render_context = {

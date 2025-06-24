@@ -1,7 +1,7 @@
 #include "common_migration.h"
 #include "../constants.h"
 #include "../../../types/token_info.h"
-#include "../../../types/automation_kb_layout.h"
+#include "../../kb_layouts/kb_layout_provider.h"
 #include <flipper_format/flipper_format_i.h>
 
 #define TOTP_OLD_CONFIG_KEY_BASE_IV "BaseIV"
@@ -98,16 +98,43 @@ bool totp_config_migrate_to_latest(
 
         flipper_format_rewind(fff_backup_data_file);
 
+        uint32_t kb_layout;
+        if(!flipper_format_read_uint32(
+               fff_backup_data_file, TOTP_CONFIG_KEY_AUTOMATION_KB_LAYOUT, &kb_layout, 1)) {
+            kb_layout = TOTP_DEFAULT_KB_LAYOUT;
+        }
+
+        flipper_format_write_uint32(
+            fff_data_file, TOTP_CONFIG_KEY_AUTOMATION_KB_LAYOUT, &kb_layout, 1);
+
+        flipper_format_rewind(fff_backup_data_file);
+
+#ifdef TOTP_BADBT_AUTOMATION_ENABLED
+        uint32_t bt_profile_index;
+        if(!flipper_format_read_uint32(
+               fff_backup_data_file,
+               TOTP_CONFIG_KEY_AUTOMATION_BADBT_PROFILE,
+               &bt_profile_index,
+               1)) {
+            bt_profile_index = 0;
+        }
+
+        flipper_format_write_uint32(
+            fff_data_file, TOTP_CONFIG_KEY_AUTOMATION_BADBT_PROFILE, &bt_profile_index, 1);
+
+        flipper_format_rewind(fff_backup_data_file);
+#endif
+
         if(flipper_format_read_string(
-               fff_backup_data_file, TOTP_CONFIG_KEY_AUTOMATION_KB_LAYOUT, temp_str)) {
+               fff_backup_data_file, TOTP_CONFIG_KEY_AUTOMATION_INITIAL_DELAY, temp_str)) {
             flipper_format_write_string(
-                fff_data_file, TOTP_CONFIG_KEY_AUTOMATION_KB_LAYOUT, temp_str);
+                fff_data_file, TOTP_CONFIG_KEY_AUTOMATION_INITIAL_DELAY, temp_str);
         } else {
-            uint32_t default_automation_kb_layout = AutomationKeyboardLayoutQWERTY;
+            uint32_t default_automation_initial_delay = 500;
             flipper_format_write_uint32(
                 fff_data_file,
-                TOTP_CONFIG_KEY_AUTOMATION_KB_LAYOUT,
-                &default_automation_kb_layout,
+                TOTP_CONFIG_KEY_AUTOMATION_INITIAL_DELAY,
+                &default_automation_initial_delay,
                 1);
         }
 
@@ -124,6 +151,17 @@ bool totp_config_migrate_to_latest(
             flipper_format_read_string(
                 fff_backup_data_file, TOTP_CONFIG_KEY_TOKEN_SECRET, temp_str);
             flipper_format_write_string(fff_data_file, TOTP_CONFIG_KEY_TOKEN_SECRET, temp_str);
+
+            if(current_version > 13) {
+                flipper_format_read_string(
+                    fff_backup_data_file, TOTP_CONFIG_KEY_TOKEN_SECRET_LENGTH, temp_str);
+                flipper_format_write_string(
+                    fff_data_file, TOTP_CONFIG_KEY_TOKEN_SECRET_LENGTH, temp_str);
+            } else {
+                const uint32_t default_secret_length = 0;
+                flipper_format_write_uint32(
+                    fff_data_file, TOTP_CONFIG_KEY_TOKEN_SECRET_LENGTH, &default_secret_length, 1);
+            }
 
             if(current_version > 1) {
                 flipper_format_read_string(
@@ -181,6 +219,26 @@ bool totp_config_migrate_to_latest(
                     TOTP_CONFIG_KEY_TOKEN_AUTOMATION_FEATURES,
                     &default_automation_features,
                     1);
+            }
+
+            if(current_version > 9) {
+                flipper_format_read_string(
+                    fff_backup_data_file, TOTP_CONFIG_KEY_TOKEN_TYPE, temp_str);
+                flipper_format_write_string(fff_data_file, TOTP_CONFIG_KEY_TOKEN_TYPE, temp_str);
+                flipper_format_read_string(
+                    fff_backup_data_file, TOTP_CONFIG_KEY_TOKEN_COUNTER, temp_str);
+                flipper_format_write_string(
+                    fff_data_file, TOTP_CONFIG_KEY_TOKEN_COUNTER, temp_str);
+            } else {
+                const uint32_t default_token_type = TokenTypeTOTP;
+                flipper_format_write_uint32(
+                    fff_data_file, TOTP_CONFIG_KEY_TOKEN_TYPE, &default_token_type, 1);
+                const uint64_t default_counter = 0;
+                flipper_format_write_hex(
+                    fff_data_file,
+                    TOTP_CONFIG_KEY_TOKEN_COUNTER,
+                    (const uint8_t*)&default_counter,
+                    sizeof(default_counter));
             }
         }
 

@@ -5,7 +5,7 @@
 #include <storage/storage.h>
 
 #define BT_SETTINGS_VERSION (0)
-#define BT_SETTINGS_MAGIC (0x19)
+#define BT_SETTINGS_MAGIC   (0x19)
 
 bool bt_settings_load(BtSettings* bt_settings) {
     furi_assert(bt_settings);
@@ -14,7 +14,7 @@ bool bt_settings_load(BtSettings* bt_settings) {
         BT_SETTINGS_PATH, bt_settings, sizeof(BtSettings), BT_SETTINGS_MAGIC, BT_SETTINGS_VERSION);
 }
 
-bool bt_settings_save(BtSettings* bt_settings) {
+bool bt_settings_save(const BtSettings* bt_settings) {
     furi_assert(bt_settings);
 
     return saved_struct_save(

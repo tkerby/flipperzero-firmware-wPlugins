@@ -8,14 +8,14 @@
 
 #include "zombiez.h"
 
-#define ZOMBIES_MAX 3
-#define ZOMBIES_WIDTH 5
-#define ZOMBIES_HEIGHT 8
+#define ZOMBIES_MAX     3
+#define ZOMBIES_WIDTH   5
+#define ZOMBIES_HEIGHT  8
 #define PROJECTILES_MAX 10
 
-#define MIN_Y 5
-#define MAX_Y 58
-#define WALL_X 16
+#define MIN_Y          5
+#define MAX_Y          58
+#define WALL_X         16
 #define PLAYER_START_X 8
 #define PLAYER_START_Y (MAX_Y - MIN_Y) / 2
 
@@ -29,7 +29,10 @@ typedef struct {
     InputEvent input;
 } PluginEvent;
 
-typedef enum { GameStatePlaying, GameStateGameOver } GameState;
+typedef enum {
+    GameStatePlaying,
+    GameStateGameOver
+} GameState;
 
 typedef struct {
     int x;
@@ -183,8 +186,9 @@ static void render_callback(Canvas* const canvas, void* ctx) {
     furi_mutex_release(plugin_state->mutex);
 }
 
-static void input_callback(InputEvent* input_event, FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void input_callback(InputEvent* input_event, void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
     PluginEvent event = {.type = EventTypeKey, .input = *input_event};
     furi_message_queue_put(event_queue, &event, FuriWaitForever);
 }
@@ -378,8 +382,8 @@ int32_t zombiez_game_app(void* p) {
             }
         }
 
-        view_port_update(view_port);
         furi_mutex_release(plugin_state->mutex);
+        view_port_update(view_port);
     }
 
     furi_timer_free(timer);

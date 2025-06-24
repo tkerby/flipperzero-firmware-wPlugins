@@ -1,7 +1,7 @@
 #pragma once
 
 #include "uart_terminal_app.h"
-#include "./scenes/uart_terminal_scene.h"
+#include "scenes/uart_terminal_scene.h"
 #include "uart_terminal_custom_event.h"
 #include "uart_terminal_uart.h"
 
@@ -14,9 +14,9 @@
 
 #define NUM_MENU_ITEMS (4)
 
-#define UART_TERMINAL_TEXT_BOX_STORE_SIZE (4096)
+#define UART_TERMINAL_TEXT_BOX_STORE_SIZE   (4096)
 #define UART_TERMINAL_TEXT_INPUT_STORE_SIZE (512)
-#define UART_CH (FuriHalUartIdUSART1)
+#define UART_CH                             (FuriHalSerialIdUsart)
 
 struct UART_TerminalApp {
     Gui* gui;

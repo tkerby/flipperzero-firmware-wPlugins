@@ -5,7 +5,7 @@
 #include "../blocks/generic.h"
 #include "../blocks/math.h"
 
-#define TAG "SubGhzProtocolNiceFLO"
+#define TAG "SubGhzProtocolNiceFlo"
 
 static const SubGhzBlockConst subghz_protocol_nice_flo_const = {
     .te_short = 700,
@@ -42,10 +42,12 @@ const SubGhzProtocolDecoder subghz_protocol_nice_flo_decoder = {
     .feed = subghz_protocol_decoder_nice_flo_feed,
     .reset = subghz_protocol_decoder_nice_flo_reset,
 
-    .get_hash_data = subghz_protocol_decoder_nice_flo_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = subghz_protocol_decoder_nice_flo_get_hash_data,
     .serialize = subghz_protocol_decoder_nice_flo_serialize,
     .deserialize = subghz_protocol_decoder_nice_flo_deserialize,
     .get_string = subghz_protocol_decoder_nice_flo_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder subghz_protocol_nice_flo_encoder = {
@@ -276,10 +278,10 @@ void subghz_protocol_decoder_nice_flo_feed(void* context, bool level, uint32_t d
     }
 }
 
-uint8_t subghz_protocol_decoder_nice_flo_get_hash_data(void* context) {
+uint32_t subghz_protocol_decoder_nice_flo_get_hash_data(void* context) {
     furi_assert(context);
     SubGhzProtocolDecoderNiceFlo* instance = context;
-    return subghz_protocol_blocks_get_hash_data(
+    return subghz_protocol_blocks_get_hash_data_long(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 

@@ -313,6 +313,7 @@ MP_API int  mp_unsigned_bin_size(const mp_int * a);
 MP_API int  mp_read_unsigned_bin (mp_int * a, const unsigned char *b, int c);
 MP_API int  mp_to_unsigned_bin_at_pos(int x, mp_int *t, unsigned char *b);
 MP_API int  mp_to_unsigned_bin (mp_int * a, unsigned char *b);
+#define mp_to_unsigned_bin_len_ct mp_to_unsigned_bin_len
 MP_API int  mp_to_unsigned_bin_len(mp_int * a, unsigned char *b, int c);
 MP_API int  mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y);
 MP_API int  mp_exptmod_ex (mp_int * G, mp_int * X, int digits, mp_int * P,
@@ -343,6 +344,7 @@ int  fast_mp_invmod (mp_int * a, mp_int * b, mp_int * c);
 MP_API int  mp_invmod_slow (mp_int * a, mp_int * b, mp_int * c);
 MP_API int  mp_cmp_mag (mp_int * a, mp_int * b);
 MP_API int  mp_cmp (mp_int * a, mp_int * b);
+#define mp_cmp_ct(a, b, n) mp_cmp(a, b)
 MP_API int  mp_cmp_d(mp_int * a, mp_digit b);
 MP_API int  mp_set (mp_int * a, mp_digit b);
 MP_API int  mp_is_bit_set (mp_int * a, mp_digit b);
@@ -365,6 +367,7 @@ MP_API int  mp_montgomery_setup (mp_int * n, mp_digit * rho);
 int  fast_mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho);
 MP_API int  mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho);
 #define mp_montgomery_reduce_ex(x, n, rho, ct) mp_montgomery_reduce (x, n, rho)
+#define mp_montgomery_reduce_ct(x, n, rho)     mp_montgomery_reduce (x, n, rho)
 MP_API void mp_dr_setup(mp_int *a, mp_digit *d);
 MP_API int  mp_dr_reduce (mp_int * x, mp_int * n, mp_digit k);
 MP_API int  mp_reduce_2k(mp_int *a, mp_int *n, mp_digit d);

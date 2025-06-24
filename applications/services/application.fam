@@ -5,16 +5,12 @@ App(
     provides=[
         "crypto_start",
         "rpc_start",
+        "expansion_start",
         "bt",
         "desktop",
         "loader",
         "power",
-        "ibutton_srv",
-        "infrared_srv",
-        "lfrfid_srv",
-        "nfc_srv",
         "namechanger_srv",
-        "onewire_srv",
-        "subghz_srv",
     ],
+    sdk_headers=["applications.h"],
 )

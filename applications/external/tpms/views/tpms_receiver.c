@@ -10,9 +10,9 @@
 #define TAG "TPMSReceiver"
 
 #define FRAME_HEIGHT 12
-#define MAX_LEN_PX 112
-#define MENU_ITEMS 4u
-#define UNLOCK_CNT 3
+#define MAX_LEN_PX   112
+#define MENU_ITEMS   4u
+#define UNLOCK_CNT   3
 
 #define SUBGHZ_RAW_THRESHOLD_MIN -90.0f
 typedef struct {
@@ -93,7 +93,7 @@ void tpms_view_receiver_set_lock(TPMSReceiver* tpms_receiver, TPMSLock lock) {
             TPMSReceiverModel * model,
             { model->bar_show = TPMSReceiverBarShowLock; },
             true);
-        furi_timer_start(tpms_receiver->lock_timer, pdMS_TO_TICKS(1000));
+        furi_timer_start(tpms_receiver->lock_timer, 1000);
     } else {
         with_view_model(
             tpms_receiver->view,
@@ -312,7 +312,7 @@ static void tpms_relearn_start(void* context) {
     if(tpms_receiver->relearn_active) tpms_relearn_stop(context);
     tpms_receiver->relearn_active = true;
     furi_hal_rfid_tim_read_start(125000, 0.5);
-    furi_timer_start(tpms_receiver->relearn_timer, pdMS_TO_TICKS(3000));
+    furi_timer_start(tpms_receiver->relearn_timer, 3000);
 }
 
 static void tpms_view_receiver_relearn_timer_callback(void* context) {
@@ -331,7 +331,7 @@ bool tpms_view_receiver_input(InputEvent* event, void* context) {
             { model->bar_show = TPMSReceiverBarShowToUnlockPress; },
             true);
         if(tpms_receiver->lock_count == 0) {
-            furi_timer_start(tpms_receiver->lock_timer, pdMS_TO_TICKS(1000));
+            furi_timer_start(tpms_receiver->lock_timer, 1000);
         }
         if(event->key == InputKeyBack && event->type == InputTypeShort) {
             tpms_receiver->lock_count++;
@@ -344,7 +344,7 @@ bool tpms_view_receiver_input(InputEvent* event, void* context) {
                 { model->bar_show = TPMSReceiverBarShowUnlock; },
                 true);
             tpms_receiver->lock = TPMSLockOff;
-            furi_timer_start(tpms_receiver->lock_timer, pdMS_TO_TICKS(650));
+            furi_timer_start(tpms_receiver->lock_timer, 650);
         }
 
         return true;
@@ -490,8 +490,7 @@ View* tpms_view_receiver_get_view(TPMSReceiver* tpms_receiver) {
 uint16_t tpms_view_receiver_get_idx_menu(TPMSReceiver* tpms_receiver) {
     furi_assert(tpms_receiver);
     uint32_t idx = 0;
-    with_view_model(
-        tpms_receiver->view, TPMSReceiverModel * model, { idx = model->idx; }, false);
+    with_view_model(tpms_receiver->view, TPMSReceiverModel * model, { idx = model->idx; }, false);
     return idx;
 }
 

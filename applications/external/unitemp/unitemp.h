@@ -38,15 +38,15 @@
 
 /* Объявление макроподстановок */
 //Имя приложения
-#define APP_NAME "Unitemp"
+#define APP_NAME              "Unitemp"
 //Версия приложения
-#define UNITEMP_APP_VER "1.4"
+#define UNITEMP_APP_VER       FAP_VERSION
 //Путь хранения файлов плагина
-#define APP_PATH_FOLDER EXT_PATH("apps_data/unitemp")
+#define APP_PATH_FOLDER       "/ext/apps_data/unitemp"
 //Имя файла с настройками
 #define APP_FILENAME_SETTINGS "settings.cfg"
 //Имя файла с датчиками
-#define APP_FILENAME_SENSORS "sensors.cfg"
+#define APP_FILENAME_SENSORS  "sensors.cfg"
 
 //Размер буффера текста
 #define BUFF_SIZE 32
@@ -61,15 +61,26 @@
 
 /* Объявление перечислений */
 //Единицы измерения температуры
-typedef enum { UT_TEMP_CELSIUS, UT_TEMP_FAHRENHEIT, UT_TEMP_COUNT } tempMeasureUnit;
+typedef enum {
+    UT_TEMP_CELSIUS,
+    UT_TEMP_FAHRENHEIT,
+    UT_TEMP_COUNT
+} tempMeasureUnit;
 //Единицы измерения давления
 typedef enum {
     UT_PRESSURE_MM_HG,
     UT_PRESSURE_IN_HG,
     UT_PRESSURE_KPA,
+    UT_PRESSURE_HPA,
 
     UT_PRESSURE_COUNT
 } pressureMeasureUnit;
+// Humidity units
+typedef enum {
+    UT_HUMIDITY_RELATIVE, // Relative humidity
+    UT_HUMIDITY_DEWPOINT, // Dewpoint
+    UT_HUMIDITY_COUNT // Number of humidity modes
+} humidityUnit;
 /* Объявление структур */
 //Настройки плагина
 typedef struct {
@@ -77,6 +88,8 @@ typedef struct {
     bool infinityBacklight;
     //Единица измерения температуры
     tempMeasureUnit temp_unit;
+    // Humidity units
+    humidityUnit humidity_unit;
     //Единица измерения давления
     pressureMeasureUnit pressure_unit;
     // Do calculate and show heat index
@@ -90,6 +103,7 @@ typedef struct {
     //Система
     bool processing; //Флаг работы приложения. При ложном значении приложение закрывается
     bool sensors_ready; //Флаг готовности датчиков к опросу
+    bool sensors_update; // Флаг допустимости опроса датчиков
     //Основные настройки
     UnitempSettings settings;
     //Массив указателей на датчики
@@ -102,6 +116,7 @@ typedef struct {
 
     //Экран
     Gui* gui;
+    ViewPort* view_port;
     ViewDispatcher* view_dispatcher;
     NotificationApp* notifications;
     Widget* widget;
@@ -124,7 +139,21 @@ void unitemp_calculate_heat_index(Sensor* sensor);
  * 
  * @param sensor Указатель на датчик
  */
-void uintemp_celsiumToFarengate(Sensor* sensor);
+void unitemp_celsiusToFahrenheit(Sensor* sensor);
+
+/**
+ * @brief Calculate dewpoint in C from relative humidity
+ * 
+ * @param sensor Pointer to sensor
+ */
+void unitemp_rhToDewpointC(Sensor* sensor);
+
+/**
+ * @brief Calculate dewpoint in F from relative humidity
+ * 
+ * @param sensor Pointer to sensor
+ */
+void unitemp_rhToDewpointF(Sensor* sensor);
 
 /**
  * @brief Конвертация давления из паскалей в мм рт.ст.
@@ -140,6 +169,14 @@ void unitemp_pascalToMmHg(Sensor* sensor);
  */
 void unitemp_pascalToKPa(Sensor* sensor);
 /**
+ * @brief Convert pressure from Pa to hPa
+ * 
+ * @param sensor Pointer to sensor
+ */
+void unitemp_pascalToHPa(Sensor* sensor);
+/**
+ * 
+ * Mod BySepa - linktr.ee/BySepa
  * @brief Конвертация давления из паскалей в дюйм рт.ст.
  * 
  * @param sensor Указатель на датчик

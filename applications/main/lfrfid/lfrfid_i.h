@@ -1,22 +1,30 @@
 #pragma once
 
-#include <dialogs/dialogs.h>
-#include <flipper_format/flipper_format.h>
 #include <furi.h>
 #include <furi_hal.h>
+
 #include <gui/gui.h>
 #include <gui/view.h>
 #include <gui/view_dispatcher.h>
 #include <gui/scene_manager.h>
+#include <cli/cli.h>
+#include <notification/notification_messages.h>
+
 #include <gui/modules/submenu.h>
 #include <gui/modules/dialog_ex.h>
 #include <gui/modules/popup.h>
 #include <gui/modules/text_input.h>
 #include <gui/modules/byte_input.h>
 #include <gui/modules/widget.h>
+
+#include <lfrfid/views/lfrfid_view_read.h>
+
 #include <notification/notification_messages.h>
-#include <rpc/rpc_app.h>
+#include <dialogs/dialogs.h>
 #include <storage/storage.h>
+#include <flipper_format/flipper_format.h>
+
+#include <rpc/rpc_app.h>
 
 #include <toolbox/protocols/protocol_dict.h>
 #include <toolbox/path.h>
@@ -24,25 +32,23 @@
 #include <lfrfid/protocols/lfrfid_protocols.h>
 #include <lfrfid/lfrfid_worker.h>
 
-#include "views/lfrfid_view_read.h"
-#include "scenes/lfrfid_scene.h"
+#include <lfrfid/scenes/lfrfid_scene.h>
 
-#include "lfrfid_icons.h"
-
-#define LFRFID_KEY_NAME_SIZE 22
+#define LFRFID_KEY_NAME_SIZE   22
 #define LFRFID_TEXT_STORE_SIZE 40
 
-#define LFRFID_APP_FOLDER ANY_PATH("lfrfid")
-#define LFRFID_SD_FOLDER EXT_PATH("lfrfid")
-#define LFRFID_APP_EXTENSION ".rfid"
-#define LFRFID_APP_SHADOW_EXTENSION ".shd"
+#define LFRFID_APP_FOLDER                    EXT_PATH("lfrfid")
+#define LFRFID_SD_FOLDER                     EXT_PATH("lfrfid")
+#define LFRFID_APP_FILENAME_PREFIX           "RFID"
+#define LFRFID_APP_FILENAME_EXTENSION        ".rfid"
+#define LFRFID_APP_SHADOW_FILENAME_EXTENSION ".shd"
 
 #define LFRFID_APP_RAW_ASK_EXTENSION ".ask.raw"
 #define LFRFID_APP_RAW_PSK_EXTENSION ".psk.raw"
 
-#define SCREEN_WIDTH (128)
-#define SCREEN_HEIGHT (64)
-#define SCREEN_WIDTH_CENTER (SCREEN_WIDTH >> 1)
+#define SCREEN_WIDTH         (128)
+#define SCREEN_HEIGHT        (64)
+#define SCREEN_WIDTH_CENTER  (SCREEN_WIDTH >> 1)
 #define SCREEN_HEIGHT_CENTER (SCREEN_HEIGHT >> 1)
 
 enum LfRfidCustomEvent {
@@ -66,12 +72,8 @@ enum LfRfidCustomEvent {
     LfRfidEventWriteTooLongToWrite,
     LfRfidEventRpcLoadFile,
     LfRfidEventRpcSessionClose,
+    LfRfidEventEmulationTimeExpired,
 };
-
-typedef enum {
-    LfRfidRpcStateIdle,
-    LfRfidRpcStateEmulating,
-} LfRfidRpcState;
 
 typedef enum {
     LfRfidUsePassword = 1 << 0,
@@ -90,6 +92,11 @@ typedef enum {
     LfRfidSettingCurrentPassword = 1 << 1,
     LfRfidSettingNewPassword = 1 << 2,
 } LfRfidSettingHex;
+
+typedef enum {
+    LfRfidRpcStateIdle,
+    LfRfidRpcStateEmulating,
+} LfRfidRpcState;
 
 typedef struct LfRfid LfRfid;
 
@@ -116,6 +123,8 @@ struct LfRfid {
     uint8_t* old_key_data;
     uint8_t* new_key_data;
 
+    uint8_t password[4];
+
     RpcAppSystem* rpc_ctx;
     LfRfidRpcState rpc_state;
 
@@ -129,14 +138,14 @@ struct LfRfid {
     // Custom views
     LfRfidReadView* read_view;
 
+    bool fav_timeout;
+
     LfRfidExtraOptions extra_options;
-    uint8_t* password;
+    uint8_t* password2;
     uint8_t* new_password;
     LfRfidSettingHex setting_hex;
     uint8_t write_page;
     uint8_t write_block;
-    //uint8_t read_page;
-    //uint8_t read_block;
 };
 
 typedef enum {
@@ -148,6 +157,13 @@ typedef enum {
     LfRfidViewByteInput,
     LfRfidViewRead,
 } LfRfidView;
+
+typedef enum {
+    LfRfidMenuIndexRead,
+    LfRfidMenuIndexSaved,
+    LfRfidMenuIndexAddManually,
+    LfRfidMenuIndexExtraActions,
+} LfRfidMenuIndex;
 
 bool lfrfid_save_key(LfRfid* app);
 
@@ -172,3 +188,5 @@ void lfrfid_popup_timeout_callback(void* context);
 void lfrfid_widget_callback(GuiButtonType result, InputType type, void* context);
 
 void lfrfid_text_input_callback(void* context);
+
+const uint32_t* lfrfid_get_t5577_default_passwords(uint8_t* len);

@@ -49,10 +49,12 @@ const SubGhzProtocolDecoder subghz_protocol_somfy_keytis_decoder = {
     .feed = subghz_protocol_decoder_somfy_keytis_feed,
     .reset = subghz_protocol_decoder_somfy_keytis_reset,
 
-    .get_hash_data = subghz_protocol_decoder_somfy_keytis_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = subghz_protocol_decoder_somfy_keytis_get_hash_data,
     .serialize = subghz_protocol_decoder_somfy_keytis_serialize,
     .deserialize = subghz_protocol_decoder_somfy_keytis_deserialize,
     .get_string = subghz_protocol_decoder_somfy_keytis_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocol subghz_protocol_somfy_keytis = {
@@ -131,12 +133,12 @@ static bool
     instance->generic.serial = data & 0xFFFFFF;
 
     if(instance->generic.cnt < 0xFFFF) {
-        if((instance->generic.cnt + furi_hal_subghz_get_rolling_counter_mult()) >= 0xFFFF) {
+        if((instance->generic.cnt + furi_hal_subghz_get_rolling_counter_mult()) > 0xFFFF) {
             instance->generic.cnt = 0;
         } else {
             instance->generic.cnt += furi_hal_subghz_get_rolling_counter_mult();
         }
-    } else if(instance->generic.cnt >= 0xFFFF) {
+    } else if((instance->generic.cnt >= 0xFFFF) && (furi_hal_subghz_get_rolling_counter_mult() != 0)) {
         instance->generic.cnt = 0;
     }
 
@@ -200,7 +202,7 @@ bool subghz_protocol_somfy_keytis_create_data(
 
 /**
  * Generating an upload from data.
- * @param instance Pointer to a SubGhzProtocolEncoderKeeloq instance
+ * @param instance Pointer to a SubGhzProtocolEncoderSomfyKeytis instance
  * @return true On success
  */
 static bool subghz_protocol_encoder_somfy_keytis_get_upload(
@@ -723,10 +725,10 @@ static const char* subghz_protocol_somfy_keytis_get_name_button(uint8_t btn) {
     return btn <= 0xf ? name_btn[btn] : name_btn[0];
 }
 
-uint8_t subghz_protocol_decoder_somfy_keytis_get_hash_data(void* context) {
+uint32_t subghz_protocol_decoder_somfy_keytis_get_hash_data(void* context) {
     furi_assert(context);
     SubGhzProtocolDecoderSomfyKeytis* instance = context;
-    return subghz_protocol_blocks_get_hash_data(
+    return subghz_protocol_blocks_get_hash_data_long(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 

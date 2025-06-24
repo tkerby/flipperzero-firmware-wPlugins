@@ -39,8 +39,8 @@ struct AvrIspWorker {
 #include <cli/cli.h>
 #include <furi_hal_usb_cdc.h>
 
-#define AVR_ISP_VCP_CDC_CH 1
-#define AVR_ISP_VCP_CDC_PKT_LEN CDC_DATA_SZ
+#define AVR_ISP_VCP_CDC_CH           1
+#define AVR_ISP_VCP_CDC_PKT_LEN      CDC_DATA_SZ
 #define AVR_ISP_VCP_UART_RX_BUF_SIZE (AVR_ISP_VCP_CDC_PKT_LEN * 5)
 
 static void vcp_on_cdc_tx_complete(void* context);
@@ -55,6 +55,7 @@ static const CdcCallbacks cdc_cb = {
     vcp_state_callback,
     vcp_on_cdc_control_line,
     vcp_on_line_config,
+    NULL,
 };
 
 /* VCP callbacks */

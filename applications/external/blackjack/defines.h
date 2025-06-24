@@ -12,10 +12,10 @@
 #define APP_NAME "Blackjack"
 
 #define CONF_ANIMATION_DURATION "AnimationDuration"
-#define CONF_MESSAGE_DURATION "MessageDuration"
-#define CONF_STARTING_MONEY "StartingMoney"
-#define CONF_ROUND_PRICE "RoundPrice"
-#define CONF_SOUND_EFFECTS "SoundEffects"
+#define CONF_MESSAGE_DURATION   "MessageDuration"
+#define CONF_STARTING_MONEY     "StartingMoney"
+#define CONF_ROUND_PRICE        "RoundPrice"
+#define CONF_SOUND_EFFECTS      "SoundEffects"
 
 typedef enum {
     EventTypeTick,
@@ -54,7 +54,6 @@ typedef enum {
 } Direction;
 
 typedef struct {
-    FuriMutex* mutex;
     Card player_cards[21];
     Card dealer_cards[21];
     uint8_t player_card_count;
@@ -74,4 +73,5 @@ typedef struct {
     QueueState queue_state;
     Menu* menu;
     unsigned int last_tick;
+    FuriMutex* mutex;
 } GameState;

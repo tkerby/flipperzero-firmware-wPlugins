@@ -31,8 +31,8 @@
  * and on decoding also 0xffd45
  */
 
-#define AMBIENT_WEATHER_PACKET_HEADER_1 0xFFD440000000000 //0xffd45 .. 0xffd46
-#define AMBIENT_WEATHER_PACKET_HEADER_2 0x001440000000000 //0x00145 .. 0x00146
+#define AMBIENT_WEATHER_PACKET_HEADER_1    0xFFD440000000000 //0xffd45 .. 0xffd46
+#define AMBIENT_WEATHER_PACKET_HEADER_2    0x001440000000000 //0x00145 .. 0x00146
 #define AMBIENT_WEATHER_PACKET_HEADER_MASK 0xFFFFC0000000000
 
 static const SubGhzBlockConst ws_protocol_ambient_weather_const = {
@@ -65,10 +65,12 @@ const SubGhzProtocolDecoder ws_protocol_ambient_weather_decoder = {
     .feed = ws_protocol_decoder_ambient_weather_feed,
     .reset = ws_protocol_decoder_ambient_weather_reset,
 
-    .get_hash_data = ws_protocol_decoder_ambient_weather_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = ws_protocol_decoder_ambient_weather_get_hash_data,
     .serialize = ws_protocol_decoder_ambient_weather_serialize,
     .deserialize = ws_protocol_decoder_ambient_weather_deserialize,
     .get_string = ws_protocol_decoder_ambient_weather_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder ws_protocol_ambient_weather_encoder = {
@@ -221,10 +223,10 @@ void ws_protocol_decoder_ambient_weather_feed(void* context, bool level, uint32_
     }
 }
 
-uint8_t ws_protocol_decoder_ambient_weather_get_hash_data(void* context) {
+uint32_t ws_protocol_decoder_ambient_weather_get_hash_data(void* context) {
     furi_assert(context);
     WSProtocolDecoderAmbient_Weather* instance = context;
-    return subghz_protocol_blocks_get_hash_data(
+    return subghz_protocol_blocks_get_hash_data_long(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 

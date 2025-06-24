@@ -5,6 +5,7 @@
 #include <storage/storage.h>
 #include <stream/stream.h>
 #include <stream/buffered_file_stream.h>
+#include <datetime/datetime.h>
 
 struct LoclassWriter {
     Stream* file_stream;
@@ -16,6 +17,7 @@ LoclassWriter* loclass_writer_alloc() {
     LoclassWriter* instance = malloc(sizeof(LoclassWriter));
     Storage* storage = furi_record_open(RECORD_STORAGE);
     instance->file_stream = buffered_file_stream_alloc(storage);
+    storage_simply_mkdir(storage, STORAGE_APP_DATA_PATH_PREFIX);
     if(!buffered_file_stream_open(
            instance->file_stream, LOCLASS_LOGS_PATH, FSAM_WRITE, FSOM_OPEN_APPEND)) {
         buffered_file_stream_close(instance->file_stream);
@@ -38,9 +40,11 @@ void loclass_writer_free(LoclassWriter* instance) {
 }
 
 bool loclass_writer_write_start_stop(LoclassWriter* instance, bool start) {
-    FuriHalRtcDateTime curr_dt;
+    furi_assert(instance != NULL);
+
+    DateTime curr_dt;
     furi_hal_rtc_get_datetime(&curr_dt);
-    uint32_t curr_ts = furi_hal_rtc_datetime_to_timestamp(&curr_dt);
+    uint32_t curr_ts = datetime_datetime_to_timestamp(&curr_dt);
 
     FuriString* str = furi_string_alloc_printf(
         "loclass-v1-info ts %lu %s\n", curr_ts, start ? "started" : "finished");
@@ -58,9 +62,9 @@ bool loclass_writer_write_params(
     const uint8_t mac[4]) {
     furi_assert(instance != NULL);
 
-    FuriHalRtcDateTime curr_dt;
+    DateTime curr_dt;
     furi_hal_rtc_get_datetime(&curr_dt);
-    uint32_t curr_ts = furi_hal_rtc_datetime_to_timestamp(&curr_dt);
+    uint32_t curr_ts = datetime_datetime_to_timestamp(&curr_dt);
 
     FuriString* str = furi_string_alloc_printf(
         "loclass-v1-mac ts %lu no %u "

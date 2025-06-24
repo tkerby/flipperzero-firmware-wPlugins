@@ -6,12 +6,12 @@
 #include <gui/view.h>
 #include <gui/elements.h>
 
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
+#define SCREEN_WIDTH    128
+#define SCREEN_HEIGHT   64
 #define SCREEN_CENTER_X (SCREEN_WIDTH / 2)
 #define SCREEN_CENTER_Y (SCREEN_HEIGHT / 2)
 
-#define INIT_COUNT 10
+#define INIT_COUNT 60
 
 typedef enum {
     CountDownTimerMinuteUp,

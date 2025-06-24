@@ -33,21 +33,16 @@ typedef enum {
 } RGBBacklightRainbowMode;
 
 /**
- * @brief Reconfigure rgb backlight with new settings
+ * @brief Load backlight settings from SD card. Needs to be run at boot
  *
  * @param enabled Whether the rgb backlight is enabled
  */
-void rgb_backlight_reconfigure(bool enabled);
-
-/**
- * @brief Load backlight settings from SD card
- */
-void rgb_backlight_load_settings();
+void rgb_backlight_load_settings(bool enabled);
 
 /**
  * @brief Save Current RGB Lighting Settings
  */
-void rgb_backlight_save_settings();
+void rgb_backlight_save_settings(void);
 
 /**
  * @brief Change the color of the backlight
@@ -55,9 +50,9 @@ void rgb_backlight_save_settings();
  * @param index What led to set the color to (0 - SK6805_LED_COUNT-1)
  * @param color RGB color to use
  */
-void rgb_backlight_set_color(uint8_t index, RgbColor color);
+void rgb_backlight_set_color(uint8_t index, const RgbColor* color);
 
-RgbColor rgb_backlight_get_color(uint8_t index);
+void rgb_backlight_get_color(uint8_t index, RgbColor* color);
 
 /**
  * @brief Change rainbow mode
@@ -66,7 +61,7 @@ RgbColor rgb_backlight_get_color(uint8_t index);
  */
 void rgb_backlight_set_rainbow_mode(RGBBacklightRainbowMode rainbow_mode);
 
-RGBBacklightRainbowMode rgb_backlight_get_rainbow_mode();
+RGBBacklightRainbowMode rgb_backlight_get_rainbow_mode(void);
 
 /**
  * @brief Change rainbow speed
@@ -75,7 +70,7 @@ RGBBacklightRainbowMode rgb_backlight_get_rainbow_mode();
  */
 void rgb_backlight_set_rainbow_speed(uint8_t rainbow_speed);
 
-uint8_t rgb_backlight_get_rainbow_speed();
+uint8_t rgb_backlight_get_rainbow_speed(void);
 
 /**
  * @brief Change rainbow interval
@@ -84,7 +79,7 @@ uint8_t rgb_backlight_get_rainbow_speed();
  */
 void rgb_backlight_set_rainbow_interval(uint32_t rainbow_interval);
 
-uint32_t rgb_backlight_get_rainbow_interval();
+uint32_t rgb_backlight_get_rainbow_interval(void);
 
 /**
  * @brief Change rainbow saturation
@@ -93,15 +88,22 @@ uint32_t rgb_backlight_get_rainbow_interval();
  */
 void rgb_backlight_set_rainbow_saturation(uint8_t rainbow_saturation);
 
-uint8_t rgb_backlight_get_rainbow_saturation();
+uint8_t rgb_backlight_get_rainbow_saturation(void);
+
+/**
+ * @brief Reconfigure rgb backlight with new settings
+ *
+ * @param enabled Whether the rgb backlight is enabled
+ */
+void rgb_backlight_reconfigure(bool enabled);
 
 /**
  * @brief Apply current RGB lighting settings
  *
  * @param brightness Backlight intensity (0-255)
- * @param tick       Whether this update was a tick (for rainbow)
+ * @param forced force a update even brightness doesnt changed
  */
-void rgb_backlight_update(uint8_t brightness, bool tick);
+void rgb_backlight_update(uint8_t brightness, bool forced);
 
 #ifdef __cplusplus
 }

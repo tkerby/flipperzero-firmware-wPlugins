@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import math
+import gzip
 import os
 import shutil
 import tarfile
@@ -73,6 +74,9 @@ class Main(App):
         self.parser_generate.add_argument(
             "--I-understand-what-I-am-doing", dest="disclaimer", required=False
         )
+        self.parser_generate.add_argument(
+            "--stackversion", dest="stack_version", required=False, default=""
+        )
 
         self.parser_generate.set_defaults(func=self.generate)
 
@@ -93,6 +97,13 @@ class Main(App):
             if not self.args.radiotype:
                 raise ValueError("Missing --radiotype")
             radio_meta = CoproBinary(self.args.radiobin)
+            if self.args.stack_version:
+                actual_stack_version_str = f"{radio_meta.img_sig.version_major}.{radio_meta.img_sig.version_minor}.{radio_meta.img_sig.version_sub}"
+                if actual_stack_version_str != self.args.stack_version:
+                    self.logger.error(
+                        f"Stack version mismatch: expected {self.args.stack_version}, actual {actual_stack_version_str}"
+                    )
+                    return 1
             radio_version = self.copro_version_as_int(radio_meta, self.args.radiotype)
             if (
                 get_stack_type(self.args.radiotype) not in self.WHITELISTED_STACK_TYPES
@@ -114,6 +125,13 @@ class Main(App):
         if not exists(self.args.directory):
             os.makedirs(self.args.directory)
 
+        stage_size = os.stat(self.args.stage).st_size
+        max_stage_size = 131072  # 2 * MAX_READ in src/update.c
+        if stage_size > max_stage_size:
+            self.logger.warning(
+                f"RAM {stage_basename} size too big ({stage_size} > {max_stage_size} bytes)"
+            )
+            return 2
         shutil.copyfile(self.args.stage, join(self.args.directory, stage_basename))
         dfu_size = 0
         if self.args.dfu:
@@ -129,9 +147,17 @@ class Main(App):
                 self.args.resources, join(self.args.directory, resources_basename)
             ):
                 return 3
+            resources_path = join(self.args.directory, resources_basename)
+            with open(resources_path, "rb") as f_raw:
+                resources_raw = f_raw.read()
+            os.unlink(resources_path)
+            resources_basename += ".gz"
+            resources_path += ".gz"
+            with gzip.open(resources_path, "wb", compresslevel=9) as f_zip:
+                f_zip.write(resources_raw)
 
         if not self.layout_check(dfu_size, radio_addr):
-            self.logger.warn("Memory layout looks suspicious")
+            self.logger.warning("Memory layout looks suspicious")
             if not self.args.disclaimer == "yes":
                 self.disclaimer()
                 return 2
@@ -191,7 +217,7 @@ class Main(App):
         self.logger.debug(f"Expected LFS size: {lfs_span}")
         lfs_span_pages = lfs_span / (4 * 1024)
         if lfs_span_pages < self.MIN_LFS_PAGES:
-            self.logger.warn(
+            self.logger.warning(
                 f"Expected LFS size is too small (~{int(lfs_span_pages)} pages)"
             )
             return False

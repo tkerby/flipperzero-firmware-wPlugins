@@ -1,11 +1,14 @@
 #include "ifttt_virtual_button.h"
+#include <expansion/expansion.h>
 
-#define IFTTT_FOLDER "/ext/apps_data/ifttt"
+#define IFTTT_FOLDER        "/ext/apps_data/ifttt"
 #define IFTTT_CONFIG_FOLDER "/ext/apps_data/ifttt/config"
 const char* CONFIG_FILE_PATH = "/ext/apps_data/ifttt/config/config.settings";
 
 #define FLIPPERZERO_SERIAL_BAUD 115200
-typedef enum ESerialCommand { ESerialCommand_Config } ESerialCommand;
+typedef enum ESerialCommand {
+    ESerialCommand_Config
+} ESerialCommand;
 
 Settings save_settings(Settings settings) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
@@ -35,9 +38,7 @@ void save_settings_file(FlipperFormat* file, Settings* settings) {
     flipper_format_write_string_cstr(file, CONF_EVENT, settings->save_event);
 }
 
-Settings* load_settings() {
-    Settings* settings = malloc(sizeof(Settings));
-
+Settings* load_settings(Settings* settings) {
     settings->save_ssid = "";
     settings->save_password = "";
     settings->save_key = "";
@@ -55,32 +56,34 @@ Settings* load_settings() {
     if(storage_common_stat(storage, CONFIG_FILE_PATH, NULL) != FSE_OK) {
         if(flipper_format_file_open_new(file, CONFIG_FILE_PATH)) {
             save_settings_file(file, settings);
+            flipper_format_file_close(file);
         }
-        flipper_format_file_close(file);
     } else {
         if(flipper_format_file_open_existing(file, CONFIG_FILE_PATH)) {
             uint32_t value;
             if(flipper_format_read_header(file, string_value, &value)) {
                 if(flipper_format_read_string(file, CONF_SSID, text_ssid_value)) {
-                    settings->save_ssid = malloc(furi_string_size(text_ssid_value) + 1);
-                    strcpy(settings->save_ssid, furi_string_get_cstr(text_ssid_value));
+                    settings->save_ssid = (char*)furi_string_get_cstr(text_ssid_value);
                 }
                 if(flipper_format_read_string(file, CONF_PASSWORD, text_password_value)) {
-                    settings->save_password = malloc(furi_string_size(text_password_value) + 1);
-                    strcpy(settings->save_password, furi_string_get_cstr(text_password_value));
+                    settings->save_password = (char*)furi_string_get_cstr(text_password_value);
                 }
                 if(flipper_format_read_string(file, CONF_KEY, text_key_value)) {
-                    settings->save_key = malloc(furi_string_size(text_key_value) + 1);
-                    strcpy(settings->save_key, furi_string_get_cstr(text_key_value));
+                    settings->save_key = (char*)furi_string_get_cstr(text_key_value);
                 }
                 if(flipper_format_read_string(file, CONF_EVENT, text_event_value)) {
-                    settings->save_event = malloc(furi_string_size(text_event_value) + 1);
-                    strcpy(settings->save_event, furi_string_get_cstr(text_event_value));
+                    settings->save_event = (char*)furi_string_get_cstr(text_event_value);
                 }
             }
+            flipper_format_file_close(file);
         }
-        flipper_format_file_close(file);
     }
+
+    // We assigned some constant / internal buffer of furi string, so duplicate it and free at exit
+    settings->save_ssid = strdup(settings->save_ssid);
+    settings->save_password = strdup(settings->save_password);
+    settings->save_key = strdup(settings->save_key);
+    settings->save_event = strdup(settings->save_event);
 
     furi_string_free(text_ssid_value);
     furi_string_free(text_password_value);
@@ -91,7 +94,10 @@ Settings* load_settings() {
     return settings;
 }
 
-void send_serial_command_config(ESerialCommand command, Settings* settings) {
+void send_serial_command_config(
+    FuriHalSerialHandle* serial_handle,
+    ESerialCommand command,
+    Settings* settings) {
     uint8_t data[1] = {0};
 
     char config_tmp[100];
@@ -126,7 +132,7 @@ void send_serial_command_config(ESerialCommand command, Settings* settings) {
             return;
         }
 
-        furi_hal_uart_tx(FuriHalUartIdUSART1, data, 1);
+        furi_hal_serial_tx(serial_handle, data, 1);
     }
 }
 
@@ -155,6 +161,10 @@ VirtualButtonApp* ifttt_virtual_button_app_alloc(uint32_t first_scene) {
     app->gui = furi_record_open(RECORD_GUI);
     app->power = furi_record_open(RECORD_POWER);
 
+    app->serial_handle = furi_hal_serial_control_acquire(FuriHalSerialIdUsart);
+    furi_check(app->serial_handle);
+    furi_hal_serial_init(app->serial_handle, FLIPPERZERO_SERIAL_BAUD);
+
     // View dispatcher
     app->view_dispatcher = view_dispatcher_alloc();
     app->scene_manager = scene_manager_alloc(&virtual_button_scene_handlers, app);
@@ -169,7 +179,7 @@ VirtualButtonApp* ifttt_virtual_button_app_alloc(uint32_t first_scene) {
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
 
     // Views
-    app->sen_view = send_view_alloc();
+    app->sen_view = send_view_alloc(app->serial_handle);
     view_dispatcher_add_view(
         app->view_dispatcher, VirtualButtonAppViewSendView, send_view_get_view(app->sen_view));
 
@@ -195,6 +205,7 @@ void ifttt_virtual_button_app_free(VirtualButtonApp* app) {
     free(app->settings.save_ssid);
     free(app->settings.save_password);
     free(app->settings.save_key);
+    free(app->settings.save_event);
 
     // Views
     view_dispatcher_remove_view(app->view_dispatcher, VirtualButtonAppViewSendView);
@@ -212,11 +223,18 @@ void ifttt_virtual_button_app_free(VirtualButtonApp* app) {
     furi_record_close(RECORD_POWER);
     furi_record_close(RECORD_GUI);
 
+    furi_hal_serial_deinit(app->serial_handle);
+    furi_hal_serial_control_release(app->serial_handle);
+
     free(app);
 }
 
 int32_t ifttt_virtual_button_app(void* p) {
     UNUSED(p);
+
+    // Disable expansion protocol to avoid interference with UART Handle
+    Expansion* expansion = furi_record_open(RECORD_EXPANSION);
+    expansion_disable(expansion);
 
     Storage* storage = furi_record_open(RECORD_STORAGE);
     if(!storage_simply_mkdir(storage, IFTTT_FOLDER)) {
@@ -227,10 +245,15 @@ int32_t ifttt_virtual_button_app(void* p) {
 
     uint32_t first_scene = VirtualButtonAppSceneStart;
     VirtualButtonApp* app = ifttt_virtual_button_app_alloc(first_scene);
-    memcpy(&app->settings, load_settings(), sizeof(Settings));
-    send_serial_command_config(ESerialCommand_Config, &(app->settings));
+    load_settings(&app->settings);
+    send_serial_command_config(app->serial_handle, ESerialCommand_Config, &(app->settings));
 
     view_dispatcher_run(app->view_dispatcher);
     ifttt_virtual_button_app_free(app);
+
+    // Return previous state of expansion
+    expansion_enable(expansion);
+    furi_record_close(RECORD_EXPANSION);
+
     return 0;
 }

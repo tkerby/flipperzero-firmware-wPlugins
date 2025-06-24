@@ -1,6 +1,4 @@
 #include "../bad_usb_app_i.h"
-#include <furi_hal_power.h>
-#include <furi_hal_usb.h>
 #include <storage/storage.h>
 
 static bool bad_usb_file_select(BadUsbApp* bad_usb) {
@@ -28,9 +26,7 @@ void bad_usb_scene_file_select_on_enter(void* context) {
     }
 
     if(bad_usb_file_select(bad_usb)) {
-        bad_usb->bad_usb_script = bad_usb_script_open(bad_usb->file_path);
-        bad_usb_script_set_keyboard_layout(bad_usb->bad_usb_script, bad_usb->keyboard_layout);
-
+        scene_manager_set_scene_state(bad_usb->scene_manager, BadUsbSceneWork, true);
         scene_manager_next_scene(bad_usb->scene_manager, BadUsbSceneWork);
     } else {
         view_dispatcher_stop(bad_usb->view_dispatcher);
@@ -40,11 +36,9 @@ void bad_usb_scene_file_select_on_enter(void* context) {
 bool bad_usb_scene_file_select_on_event(void* context, SceneManagerEvent event) {
     UNUSED(context);
     UNUSED(event);
-    // BadUsbApp* bad_usb = context;
     return false;
 }
 
 void bad_usb_scene_file_select_on_exit(void* context) {
     UNUSED(context);
-    // BadUsbApp* bad_usb = context;
 }

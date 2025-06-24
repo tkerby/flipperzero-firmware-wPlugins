@@ -6,7 +6,7 @@
 #include "../blocks/generic.h"
 #include "../blocks/math.h"
 
-#define TAG "SubGhzProtocol_iDo_117/111"
+#define TAG "SubGhzProtocolIdo117/111"
 
 static const SubGhzBlockConst subghz_protocol_ido_const = {
     .te_short = 450,
@@ -43,10 +43,12 @@ const SubGhzProtocolDecoder subghz_protocol_ido_decoder = {
     .feed = subghz_protocol_decoder_ido_feed,
     .reset = subghz_protocol_decoder_ido_reset,
 
-    .get_hash_data = subghz_protocol_decoder_ido_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = subghz_protocol_decoder_ido_get_hash_data,
     .deserialize = subghz_protocol_decoder_ido_deserialize,
     .serialize = subghz_protocol_decoder_ido_serialize,
     .get_string = subghz_protocol_decoder_ido_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder subghz_protocol_ido_encoder = {
@@ -173,10 +175,10 @@ static void subghz_protocol_ido_check_remote_controller(SubGhzBlockGeneric* inst
     instance->btn = (code_fix >> 20) & 0x0F;
 }
 
-uint8_t subghz_protocol_decoder_ido_get_hash_data(void* context) {
+uint32_t subghz_protocol_decoder_ido_get_hash_data(void* context) {
     furi_assert(context);
     SubGhzProtocolDecoderIDo* instance = context;
-    return subghz_protocol_blocks_get_hash_data(
+    return subghz_protocol_blocks_get_hash_data_long(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 

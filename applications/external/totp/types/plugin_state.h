@@ -64,11 +64,21 @@ typedef struct {
      */
     AutomationKeyboardLayout automation_kb_layout;
 
+    /**
+     * @brief Automation initial delay between "user initiated automation" and "code sending key-press events" events
+     */
+    uint16_t automation_initial_delay;
+
 #ifdef TOTP_BADBT_AUTOMATION_ENABLED
     /**
      * @brief Bad-Bluetooth worker context
      */
     TotpBtTypeCodeWorkerContext* bt_type_code_worker_context;
+
+    /**
+     * @brief Bad-Bluetooth profile index.
+     */
+    uint8_t bt_type_code_worker_profile_index;
 #endif
 
     /**
@@ -90,4 +100,9 @@ typedef struct {
      * @brief Crypto settings
      */
     CryptoSettings crypto_settings;
+
+    /**
+     * @brief Indicates the amount of groups to split the token into in UI. 0 if no grouping is needed.
+     */
+    uint8_t split_token_into_groups;
 } PluginState;

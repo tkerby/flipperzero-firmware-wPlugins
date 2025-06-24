@@ -1,7 +1,7 @@
 #include "hid_media.h"
 #include <furi.h>
-#include <furi_hal_bt_hid.h>
 #include <furi_hal_usb_hid.h>
+#include <extra_profiles/hid_profile.h>
 #include <gui/elements.h>
 #include "../hid.h"
 
@@ -22,7 +22,6 @@ typedef struct {
     bool ok_pressed;
     bool connected;
     bool back_pressed;
-    HidTransport transport;
 } HidMediaModel;
 
 static void hid_media_draw_arrow(Canvas* canvas, uint8_t x, uint8_t y, CanvasDirection dir) {
@@ -43,13 +42,13 @@ static void hid_media_draw_callback(Canvas* canvas, void* context) {
     HidMediaModel* model = context;
 
     // Header
-    if(model->transport == HidTransportBle) {
-        if(model->connected) {
-            canvas_draw_icon(canvas, 0, 0, &I_Ble_connected_15x15);
-        } else {
-            canvas_draw_icon(canvas, 0, 0, &I_Ble_disconnected_15x15);
-        }
+#ifdef HID_TRANSPORT_BLE
+    if(model->connected) {
+        canvas_draw_icon(canvas, 0, 0, &I_Ble_connected_15x15);
+    } else {
+        canvas_draw_icon(canvas, 0, 0, &I_Ble_disconnected_15x15);
     }
+#endif
 
     canvas_set_font(canvas, FontPrimary);
     elements_multiline_text_aligned(canvas, 17, 3, AlignLeft, AlignTop, "Media");
@@ -60,9 +59,9 @@ static void hid_media_draw_callback(Canvas* canvas, void* context) {
 
     // Up
     if(model->up_pressed) {
-        canvas_set_bitmap_mode(canvas, 1);
+        canvas_set_bitmap_mode(canvas, true);
         canvas_draw_icon(canvas, 68, 6, &I_S_UP_31x15);
-        canvas_set_bitmap_mode(canvas, 0);
+        canvas_set_bitmap_mode(canvas, false);
         canvas_set_color(canvas, ColorWhite);
     }
     canvas_draw_icon(canvas, 79, 9, &I_Volup_8x6);
@@ -70,9 +69,9 @@ static void hid_media_draw_callback(Canvas* canvas, void* context) {
 
     // Down
     if(model->down_pressed) {
-        canvas_set_bitmap_mode(canvas, 1);
+        canvas_set_bitmap_mode(canvas, true);
         canvas_draw_icon(canvas, 68, 36, &I_S_DOWN_31x15);
-        canvas_set_bitmap_mode(canvas, 0);
+        canvas_set_bitmap_mode(canvas, false);
         canvas_set_color(canvas, ColorWhite);
     }
     canvas_draw_icon(canvas, 80, 41, &I_Voldwn_6x6);
@@ -80,31 +79,33 @@ static void hid_media_draw_callback(Canvas* canvas, void* context) {
 
     // Left
     if(model->left_pressed) {
-        canvas_set_bitmap_mode(canvas, 1);
+        canvas_set_bitmap_mode(canvas, true);
         canvas_draw_icon(canvas, 61, 13, &I_S_LEFT_15x31);
-        canvas_set_bitmap_mode(canvas, 0);
+        canvas_set_bitmap_mode(canvas, false);
         canvas_set_color(canvas, ColorWhite);
     }
-    hid_media_draw_arrow(canvas, 65, 28, CanvasDirectionRightToLeft);
+    hid_media_draw_arrow(canvas, 67, 28, CanvasDirectionRightToLeft);
     hid_media_draw_arrow(canvas, 70, 28, CanvasDirectionRightToLeft);
+    canvas_draw_line(canvas, 64, 26, 64, 30);
     canvas_set_color(canvas, ColorBlack);
 
     // Right
     if(model->right_pressed) {
-        canvas_set_bitmap_mode(canvas, 1);
+        canvas_set_bitmap_mode(canvas, true);
         canvas_draw_icon(canvas, 91, 13, &I_S_RIGHT_15x31);
-        canvas_set_bitmap_mode(canvas, 0);
+        canvas_set_bitmap_mode(canvas, false);
         canvas_set_color(canvas, ColorWhite);
     }
     hid_media_draw_arrow(canvas, 96, 28, CanvasDirectionLeftToRight);
-    hid_media_draw_arrow(canvas, 101, 28, CanvasDirectionLeftToRight);
+    hid_media_draw_arrow(canvas, 99, 28, CanvasDirectionLeftToRight);
+    canvas_draw_line(canvas, 102, 26, 102, 30);
     canvas_set_color(canvas, ColorBlack);
 
     // Ok
     if(model->ok_pressed) {
-        canvas_set_bitmap_mode(canvas, 1);
+        canvas_set_bitmap_mode(canvas, true);
         canvas_draw_icon(canvas, 74, 19, &I_Pressed_Button_19x19);
-        canvas_set_bitmap_mode(canvas, 0);
+        canvas_set_bitmap_mode(canvas, false);
         canvas_set_color(canvas, ColorWhite);
     }
     hid_media_draw_arrow(canvas, 80, 28, CanvasDirectionLeftToRight);
@@ -114,9 +115,9 @@ static void hid_media_draw_callback(Canvas* canvas, void* context) {
 
     // Exit
     if(model->back_pressed) {
-        canvas_set_bitmap_mode(canvas, 1);
+        canvas_set_bitmap_mode(canvas, true);
         canvas_draw_icon(canvas, 107, 33, &I_Pressed_Button_19x19);
-        canvas_set_bitmap_mode(canvas, 0);
+        canvas_set_bitmap_mode(canvas, false);
         canvas_set_color(canvas, ColorWhite);
     }
     canvas_draw_icon(canvas, 111, 38, &I_Pin_back_arrow_10x10);
@@ -186,13 +187,17 @@ static bool hid_media_input_callback(InputEvent* event, void* context) {
     HidMedia* hid_media = context;
     bool consumed = false;
 
-    if(event->type == InputTypePress) {
-        hid_media_process_press(hid_media, event);
+    if(event->type == InputTypeLong && event->key == InputKeyBack) {
+        hid_hal_keyboard_release_all(hid_media->hid);
+    } else {
         consumed = true;
-    } else if(event->type == InputTypeRelease) {
-        hid_media_process_release(hid_media, event);
-        consumed = true;
+        if(event->type == InputTypePress) {
+            hid_media_process_press(hid_media, event);
+        } else if(event->type == InputTypeRelease) {
+            hid_media_process_release(hid_media, event);
+        }
     }
+
     return consumed;
 }
 
@@ -204,10 +209,6 @@ HidMedia* hid_media_alloc(Hid* hid) {
     view_allocate_model(hid_media->view, ViewModelTypeLocking, sizeof(HidMediaModel));
     view_set_draw_callback(hid_media->view, hid_media_draw_callback);
     view_set_input_callback(hid_media->view, hid_media_input_callback);
-
-    with_view_model(
-        hid_media->view, HidMediaModel * model, { model->transport = hid->transport; }, true);
-
     return hid_media;
 }
 

@@ -1,8 +1,8 @@
 #include "../subghz_i.h"
-#include <assets_icons.h>
-#include "../helpers/subghz_custom_event.h"
 
 #include <lib/subghz/blocks/custom_btn.h>
+
+#define TAG "SubGhzSceneReceiverInfo"
 
 void subghz_scene_receiver_info_callback(GuiButtonType result, InputType type, void* context) {
     furi_assert(context);
@@ -17,6 +17,9 @@ void subghz_scene_receiver_info_callback(GuiButtonType result, InputType type, v
     } else if((result == GuiButtonTypeRight) && (type == InputTypeShort)) {
         view_dispatcher_send_custom_event(
             subghz->view_dispatcher, SubGhzCustomEventSceneReceiverInfoSave);
+    } else if((result == GuiButtonTypeLeft) && (type == InputTypeShort) && subghz->gps) {
+        view_dispatcher_send_custom_event(
+            subghz->view_dispatcher, SubGhzCustomEventSceneReceiverInfoSats);
     }
 }
 
@@ -26,7 +29,7 @@ static bool subghz_scene_receiver_info_update_parser(void* context) {
     if(subghz_txrx_load_decoder_by_name_protocol(
            subghz->txrx,
            subghz_history_get_protocol_name(subghz->history, subghz->idx_menu_chosen))) {
-        //todo we are trying to deserialize without checking for errors, since it is assumed that we just received this signal
+        // we are trying to deserialize without checking for errors, since it is assumed that we just received this chignal
         subghz_protocol_decoder_base_deserialize(
             subghz_txrx_get_decoder(subghz->txrx),
             subghz_history_get_raw_data(subghz->history, subghz->idx_menu_chosen));
@@ -37,6 +40,8 @@ static bool subghz_scene_receiver_info_update_parser(void* context) {
             subghz->txrx,
             furi_string_get_cstr(preset->name),
             preset->frequency,
+            NAN,
+            NAN,
             preset->data,
             preset->data_size);
 
@@ -74,6 +79,15 @@ void subghz_scene_receiver_info_draw_widget(SubGhz* subghz) {
         widget_add_string_multiline_element(
             subghz->widget, 0, 0, AlignLeft, AlignTop, FontSecondary, furi_string_get_cstr(text));
 
+        if(subghz->gps) {
+            widget_add_button_element(
+                subghz->widget,
+                GuiButtonTypeLeft,
+                "Geo",
+                subghz_scene_receiver_info_callback,
+                subghz);
+        }
+
         furi_string_free(frequency_str);
         furi_string_free(modulation_str);
         furi_string_free(text);
@@ -96,7 +110,7 @@ void subghz_scene_receiver_info_draw_widget(SubGhz* subghz) {
                 subghz);
         }
     } else {
-        widget_add_icon_element(subghz->widget, 37, 15, &I_DolphinCommon_56x48);
+        widget_add_icon_element(subghz->widget, 83, 22, &I_WarningDolphinFlip_45x42);
         widget_add_string_element(
             subghz->widget, 13, 8, AlignLeft, AlignBottom, FontSecondary, "Error history parse.");
     }
@@ -111,7 +125,8 @@ void subghz_scene_receiver_info_on_enter(void* context) {
 
     subghz_scene_receiver_info_draw_widget(subghz);
 
-    if(!subghz_history_get_text_space_left(subghz->history, NULL)) {
+    if(!subghz_history_full(subghz->history) &&
+       !scene_manager_has_previous_scene(subghz->scene_manager, SubGhzSceneDecodeRAW)) {
         subghz->state_notifications = SubGhzNotificationStateRx;
     }
 }
@@ -147,7 +162,7 @@ bool subghz_scene_receiver_info_on_event(void* context, SceneManagerEvent event)
                 subghz_txrx_rx_start(subghz->txrx);
 
                 subghz_txrx_hopper_unpause(subghz->txrx);
-                if(!subghz_history_get_text_space_left(subghz->history, NULL)) {
+                if(!subghz_history_full(subghz->history)) {
                     subghz->state_notifications = SubGhzNotificationStateRx;
                 }
             }
@@ -165,20 +180,39 @@ bool subghz_scene_receiver_info_on_event(void* context, SceneManagerEvent event)
             if(subghz_txrx_protocol_is_serializable(subghz->txrx)) {
                 subghz_file_name_clear(subghz);
 
+                subghz->save_datetime =
+                    subghz_history_get_datetime(subghz->history, subghz->idx_menu_chosen);
+                subghz->save_datetime_set = true;
                 scene_manager_next_scene(subghz->scene_manager, SubGhzSceneSaveName);
             }
             return true;
+        } else if(event.event == SubGhzCustomEventSceneReceiverInfoSats) {
+            if(subghz->gps) {
+                scene_manager_set_scene_state(subghz->scene_manager, SubGhzSceneShowGps, false);
+                scene_manager_next_scene(subghz->scene_manager, SubGhzSceneShowGps);
+                return true;
+            } else {
+                return false;
+            }
         }
     } else if(event.type == SceneManagerEventTypeTick) {
         if(subghz_txrx_hopper_get_state(subghz->txrx) != SubGhzHopperStateOFF) {
-            subghz_txrx_hopper_update(subghz->txrx);
+            subghz_txrx_hopper_update(subghz->txrx, subghz->last_settings->hopping_threshold);
         }
         switch(subghz->state_notifications) {
         case SubGhzNotificationStateTx:
             notification_message(subghz->notifications, &sequence_blink_magenta_10);
             break;
         case SubGhzNotificationStateRx:
-            notification_message(subghz->notifications, &sequence_blink_cyan_10);
+            if(subghz->gps) {
+                if(subghz->gps->satellites > 0) {
+                    notification_message(subghz->notifications, &sequence_blink_green_10);
+                } else {
+                    notification_message(subghz->notifications, &sequence_blink_red_10);
+                }
+            } else {
+                notification_message(subghz->notifications, &sequence_blink_cyan_10);
+            }
             break;
         case SubGhzNotificationStateRxDone:
             notification_message(subghz->notifications, &sequence_blink_green_100);

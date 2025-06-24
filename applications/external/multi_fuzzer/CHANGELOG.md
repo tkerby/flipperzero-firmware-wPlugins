@@ -1,3 +1,17 @@
+## v1.4
+- Fix worker being not in LFRFIDWorkerIdle before next key (limit TD to 0.1)
+## v1.3
+- New systems in RFID Fuzzer:
+    - IoProxXSF
+    - Paradox
+    - Indala26
+    - Viking
+    - Pyramid
+    - Keri
+    - Jablotron
+- Fixes for new API
+## v1.2
+- Fixes for new auto-naming system
 ## v1.1
 - Improved pause during attack
     - Added the ability to switch UID

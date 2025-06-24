@@ -1,12 +1,6 @@
 #include "../seader_i.h"
 #include <dolphin/dolphin.h>
 
-void seader_read_picopass_worker_callback(SeaderWorkerEvent event, void* context) {
-    UNUSED(event);
-    Seader* seader = context;
-    view_dispatcher_send_custom_event(seader->view_dispatcher, SeaderCustomEventWorkerExit);
-}
-
 void seader_scene_read_picopass_on_enter(void* context) {
     Seader* seader = context;
     dolphin_deed(DolphinDeedNfcRead);
@@ -18,13 +12,12 @@ void seader_scene_read_picopass_on_enter(void* context) {
 
     // Start worker
     view_dispatcher_switch_to_view(seader->view_dispatcher, SeaderViewPopup);
-    seader_worker_start(
-        seader->worker,
-        SeaderWorkerStateReadPicopass,
-        seader->uart,
-        seader->credential,
-        seader_read_picopass_worker_callback,
-        seader);
+
+    seader->worker->stage = SeaderPollerEventTypeCardDetect;
+    seader_credential_clear(seader->credential);
+    seader->credential->type = SeaderCredentialTypePicopass;
+    seader->picopass_poller = picopass_poller_alloc(seader->nfc);
+    picopass_poller_start(seader->picopass_poller, seader_worker_poller_callback_picopass, seader);
 
     seader_blink_start(seader);
 }
@@ -35,10 +28,21 @@ bool seader_scene_read_picopass_on_event(void* context, SceneManagerEvent event)
 
     if(event.type == SceneManagerEventTypeCustom) {
         if(event.event == SeaderCustomEventWorkerExit) {
-            seader->credential->type = SeaderCredentialTypePicopass;
+            scene_manager_next_scene(seader->scene_manager, SeaderSceneReadCardSuccess);
+            consumed = true;
+        } else if(event.event == SeaderCustomEventPollerDetect) {
+            Popup* popup = seader->popup;
+            popup_set_header(popup, "DON'T\nMOVE", 68, 30, AlignLeft, AlignTop);
+            consumed = true;
+        } else if(event.event == SeaderCustomEventPollerSuccess) {
             scene_manager_next_scene(seader->scene_manager, SeaderSceneReadCardSuccess);
             consumed = true;
         }
+
+    } else if(event.type == SceneManagerEventTypeBack) {
+        scene_manager_search_and_switch_to_previous_scene(
+            seader->scene_manager, SeaderSceneSamPresent);
+        consumed = true;
     }
     return consumed;
 }
@@ -46,8 +50,12 @@ bool seader_scene_read_picopass_on_event(void* context, SceneManagerEvent event)
 void seader_scene_read_picopass_on_exit(void* context) {
     Seader* seader = context;
 
-    // Stop worker
-    seader_worker_stop(seader->worker);
+    if(seader->picopass_poller) {
+        picopass_poller_stop(seader->picopass_poller);
+        picopass_poller_free(seader->picopass_poller);
+        seader->picopass_poller = NULL;
+    }
+
     // Clear view
     popup_reset(seader->popup);
 

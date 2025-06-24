@@ -19,16 +19,10 @@
 
 // Some information may be seen on https://github.com/sparkfun/SparkFun_SCD30_Arduino_Library
 
-#include "SCD30.h"
+#include "SCD40.h"
 #include "../interfaces/I2CSensor.h"
 #include "../interfaces/endianness.h"
 //#include <3rdparty/everest/include/everest/kremlin/c_endianness.h>
-
-bool unitemp_SCD40_alloc(Sensor* sensor, char* args);
-bool unitemp_SCD40_init(Sensor* sensor);
-bool unitemp_SCD40_deinit(Sensor* sensor);
-UnitempStatus unitemp_SCD40_update(Sensor* sensor);
-bool unitemp_SCD40_free(Sensor* sensor);
 
 const SensorType SCD40 = {
     .typename = "SCD40",
@@ -44,21 +38,21 @@ const SensorType SCD40 = {
 #define SCD40_ID 0x62
 
 #define COMMAND_START_PERIODIC_MEASUREMENT 0X21B1
-#define COMMAND_READ_MEASUREMENT 0XEC05
-#define COMMAND_STOP_PERIODIC_MEASUREMENT 0X3F86
+#define COMMAND_READ_MEASUREMENT           0XEC05
+#define COMMAND_STOP_PERIODIC_MEASUREMENT  0X3F86
 
-#define COMMAND_PERSIST_SETTINGS 0X3615
-#define COMMAND_GET_SERIAL_NUMBER 0X3682
-#define COMMAND_PERFORM_SELF_TEST 0X3639
+#define COMMAND_PERSIST_SETTINGS      0X3615
+#define COMMAND_GET_SERIAL_NUMBER     0X3682
+#define COMMAND_PERFORM_SELF_TEST     0X3639
 #define COMMAND_PERFORM_FACTORY_RESET 0X3632
-#define COMMAND_REINIT 0X3646
+#define COMMAND_REINIT                0X3646
 
-#define COMMAND_SET_TEMPERATURE_OFFSET 0X241D
-#define COMMAND_GET_TEMPERATURE_OFFSET 0X2318
-#define COMMAND_SET_SENSOR_ALTITUDE 0X2427
-#define COMMAND_GET_SENSOR_ALTITUDE 0X2322
-#define COMMAND_SET_AMBIENT_PRESSURE 0XE000
-#define COMMAND_PERFORM_FORCED_RECALIBRATION 0X362F
+#define COMMAND_SET_TEMPERATURE_OFFSET                 0X241D
+#define COMMAND_GET_TEMPERATURE_OFFSET                 0X2318
+#define COMMAND_SET_SENSOR_ALTITUDE                    0X2427
+#define COMMAND_GET_SENSOR_ALTITUDE                    0X2322
+#define COMMAND_SET_AMBIENT_PRESSURE                   0XE000
+#define COMMAND_PERFORM_FORCED_RECALIBRATION           0X362F
 #define COMMAND_SET_AUTOMATIC_SELF_CALIBRATION_ENABLED 0X2416
 #define COMMAND_GET_AUTOMATIC_SELF_CALIBRATION_ENABLED 0X2313
 
@@ -105,7 +99,7 @@ UnitempStatus unitemp_SCD40_update(Sensor* sensor) {
 }
 
 #define CRC8_POLYNOMIAL 0x31
-#define CRC8_INIT 0xFF
+#define CRC8_INIT       0xFF
 
 static uint8_t computeCRC8(uint8_t* message, uint8_t len) {
     uint8_t crc = CRC8_INIT; // Init with 0xFF
@@ -185,7 +179,7 @@ static bool getSettingValue(Sensor* sensor, uint16_t registerAddress, uint16_t* 
     return loadWord(bytes, val);
 }
 
-// Get 18 bytes from SCD30
+// Get 18 bytes from SCD40
 // Updates global variables with floats
 // Returns true if success
 static bool readMeasurement(Sensor* sensor) {

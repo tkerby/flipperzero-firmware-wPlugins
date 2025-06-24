@@ -2,7 +2,9 @@
 enum SubmenuIndex {
     SubmenuIndexReadPicopass,
     SubmenuIndexRead14a,
+    SubmenuIndexReadMfc,
     SubmenuIndexSaved,
+    SubmenuIndexAPDURunner,
     SubmenuIndexSamInfo,
     SubmenuIndexFwVersion,
 };
@@ -34,8 +36,22 @@ void seader_scene_sam_present_on_update(void* context) {
         seader_scene_sam_present_submenu_callback,
         seader);
     submenu_add_item(
-        submenu, "Load", SubmenuIndexSaved, seader_scene_sam_present_submenu_callback, seader);
+        submenu,
+        "Read MFC",
+        SubmenuIndexReadMfc,
+        seader_scene_sam_present_submenu_callback,
+        seader);
+    submenu_add_item(
+        submenu, "Saved", SubmenuIndexSaved, seader_scene_sam_present_submenu_callback, seader);
 
+    if(apdu_log_check_presence(SEADER_APDU_RUNNER_FILE_NAME)) {
+        submenu_add_item(
+            submenu,
+            "Run APDUs",
+            SubmenuIndexAPDURunner,
+            seader_scene_sam_present_submenu_callback,
+            seader);
+    }
     if(seader_worker->sam_version[0] != 0 && seader_worker->sam_version[1] != 0) {
         FuriString* fw_str = furi_string_alloc();
         furi_string_cat_printf(
@@ -65,39 +81,30 @@ bool seader_scene_sam_present_on_event(void* context, SceneManagerEvent event) {
     bool consumed = false;
 
     if(event.type == SceneManagerEventTypeCustom) {
+        scene_manager_set_scene_state(seader->scene_manager, SeaderSceneSamPresent, event.event);
+
         if(event.event == SubmenuIndexReadPicopass) {
-            if(seader->is_debug_enabled) {
-                seader->credential->type = SeaderCredentialTypePicopass;
-                scene_manager_set_scene_state(
-                    seader->scene_manager, SeaderSceneSamPresent, SubmenuIndexReadPicopass);
-                scene_manager_next_scene(seader->scene_manager, SeaderSceneUart);
-            } else {
-                scene_manager_set_scene_state(
-                    seader->scene_manager, SeaderSceneSamPresent, SubmenuIndexReadPicopass);
-                scene_manager_next_scene(seader->scene_manager, SeaderSceneReadPicopass);
-            }
+            scene_manager_next_scene(seader->scene_manager, SeaderSceneReadPicopass);
             consumed = true;
         } else if(event.event == SubmenuIndexRead14a) {
-            if(seader->is_debug_enabled) {
-                seader->credential->type = SeaderCredentialType14A;
-                scene_manager_set_scene_state(
-                    seader->scene_manager, SeaderSceneSamPresent, SubmenuIndexRead14a);
-                scene_manager_next_scene(seader->scene_manager, SeaderSceneUart);
-            } else {
-                scene_manager_set_scene_state(
-                    seader->scene_manager, SeaderSceneSamPresent, SubmenuIndexRead14a);
-                scene_manager_next_scene(seader->scene_manager, SeaderSceneRead14a);
-            }
+            scene_manager_next_scene(seader->scene_manager, SeaderSceneRead14a);
+            consumed = true;
+        } else if(event.event == SubmenuIndexReadMfc) {
+            scene_manager_next_scene(seader->scene_manager, SeaderSceneReadMfc);
             consumed = true;
         } else if(event.event == SubmenuIndexSamInfo) {
-            scene_manager_set_scene_state(
-                seader->scene_manager, SeaderSceneSamPresent, SubmenuIndexSamInfo);
             scene_manager_next_scene(seader->scene_manager, SeaderSceneSamInfo);
             consumed = true;
         } else if(event.event == SubmenuIndexSaved) {
             scene_manager_next_scene(seader->scene_manager, SeaderSceneFileSelect);
             consumed = true;
         } else if(event.event == SubmenuIndexFwVersion) {
+            consumed = true;
+        } else if(event.event == SeaderWorkerEventSamMissing) {
+            scene_manager_next_scene(seader->scene_manager, SeaderSceneSamMissing);
+            consumed = true;
+        } else if(event.event == SubmenuIndexAPDURunner) {
+            scene_manager_next_scene(seader->scene_manager, SeaderSceneAPDURunner);
             consumed = true;
         }
     } else if(event.type == SceneManagerEventTypeBack) {

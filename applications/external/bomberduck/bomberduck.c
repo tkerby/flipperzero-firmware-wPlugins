@@ -18,7 +18,7 @@ int min(int a, int b) {
 
 #define WorldSizeX 12
 #define WorldSizeY 6
-#define BombRange 1
+#define BombRange  1
 
 typedef struct {
     FuriMutex* mutex;
@@ -624,8 +624,8 @@ int32_t bomberduck_app(void* p) {
             }
         }
 
-        view_port_update(view_port);
         furi_mutex_release(bomber_state->mutex);
+        view_port_update(view_port);
     }
 
     // Return to normal backlight settings

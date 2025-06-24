@@ -785,8 +785,10 @@ static int wc_HpkeEncap(Hpke* hpke, void* ephemeralKey, void* receiverKey,
 #ifdef ECC_TIMING_RESISTANT
             rng = wc_rng_new(NULL, 0, hpke->heap);
 
-            if (rng == NULL)
-                return RNG_FAILURE_E;
+            if (rng == NULL) {
+                ret = RNG_FAILURE_E;
+                break;
+            }
 
             wc_ecc_set_rng((ecc_key*)ephemeralKey, rng);
 #endif
@@ -1125,6 +1127,7 @@ static int wc_HpkeContextOpenBase(Hpke* hpke, HpkeBaseContext* context,
         return BAD_FUNC_ARG;
     }
 
+    XMEMSET(nonce, 0, sizeof(nonce));
 #ifdef WOLFSSL_SMALL_STACK
     aes_key = (Aes*)XMALLOC(sizeof(Aes), hpke->heap, DYNAMIC_TYPE_AES);
     if (aes_key == NULL) {

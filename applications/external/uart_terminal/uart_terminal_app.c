@@ -2,6 +2,7 @@
 
 #include <furi.h>
 #include <furi_hal.h>
+#include <expansion/expansion.h>
 
 static bool uart_terminal_app_custom_event_callback(void* context, uint32_t event) {
     furi_assert(context);
@@ -46,9 +47,23 @@ UART_TerminalApp* uart_terminal_app_alloc() {
         UART_TerminalAppViewVarItemList,
         variable_item_list_get_view(app->var_item_list));
 
-    for(int i = 0; i < NUM_MENU_ITEMS; ++i) {
+    for(int i = 0; i < START_MENU_ITEMS; ++i) {
         app->selected_option_index[i] = 0;
     }
+
+    app->setup_var_item_list = variable_item_list_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher,
+        UART_TerminalAppViewSetup,
+        variable_item_list_get_view(app->setup_var_item_list));
+
+    for(int i = 0; i < SETUP_MENU_ITEMS; ++i) {
+        app->setup_selected_option_index[i] = 0;
+    }
+
+    app->widget = widget_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher, UART_TerminalAppViewHelp, widget_get_view(app->widget));
 
     app->text_box = text_box_alloc();
     view_dispatcher_add_view(
@@ -62,6 +77,14 @@ UART_TerminalApp* uart_terminal_app_alloc() {
         UART_TerminalAppViewTextInput,
         uart_text_input_get_view(app->text_input));
 
+    app->hex_input = uart_hex_input_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher,
+        UART_TerminalAppViewHexInput,
+        uart_text_input_get_view(app->hex_input));
+
+    app->setup_selected_option_index[BAUDRATE_ITEM_IDX] = DEFAULT_BAUDRATE_OPT_IDX;
+
     scene_manager_next_scene(app->scene_manager, UART_TerminalSceneStart);
 
     return app;
@@ -72,8 +95,12 @@ void uart_terminal_app_free(UART_TerminalApp* app) {
 
     // Views
     view_dispatcher_remove_view(app->view_dispatcher, UART_TerminalAppViewVarItemList);
+    view_dispatcher_remove_view(app->view_dispatcher, UART_TerminalAppViewSetup);
+    view_dispatcher_remove_view(app->view_dispatcher, UART_TerminalAppViewHelp);
     view_dispatcher_remove_view(app->view_dispatcher, UART_TerminalAppViewConsoleOutput);
     view_dispatcher_remove_view(app->view_dispatcher, UART_TerminalAppViewTextInput);
+    view_dispatcher_remove_view(app->view_dispatcher, UART_TerminalAppViewHexInput);
+
     text_box_free(app->text_box);
     furi_string_free(app->text_box_store);
     uart_text_input_free(app->text_input);
@@ -92,6 +119,10 @@ void uart_terminal_app_free(UART_TerminalApp* app) {
 
 int32_t uart_terminal_app(void* p) {
     UNUSED(p);
+    // Disable expansion protocol to avoid interference with UART Handle
+    Expansion* expansion = furi_record_open(RECORD_EXPANSION);
+    expansion_disable(expansion);
+
     UART_TerminalApp* uart_terminal_app = uart_terminal_app_alloc();
 
     uart_terminal_app->uart = uart_terminal_uart_init(uart_terminal_app);
@@ -99,6 +130,10 @@ int32_t uart_terminal_app(void* p) {
     view_dispatcher_run(uart_terminal_app->view_dispatcher);
 
     uart_terminal_app_free(uart_terminal_app);
+
+    // Return previous state of expansion
+    expansion_enable(expansion);
+    furi_record_close(RECORD_EXPANSION);
 
     return 0;
 }

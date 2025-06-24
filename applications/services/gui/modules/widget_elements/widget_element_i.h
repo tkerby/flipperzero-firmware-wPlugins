@@ -4,10 +4,12 @@
  */
 
 #pragma once
+
+#include "../widget.h"
+#include "widget_element.h"
 #include <furi.h>
 #include <gui/view.h>
 #include <input/input.h>
-#include "widget_element.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,6 +62,9 @@ WidgetElement* widget_element_text_box_create(
     Align vertical,
     const char* text,
     bool strip_to_dots);
+
+/** Update text box element */
+void widget_element_text_box_set_text(WidgetElement* gui_string, const char* text);
 
 /** Create button element */
 WidgetElement* widget_element_button_create(

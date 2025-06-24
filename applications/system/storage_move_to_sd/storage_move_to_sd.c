@@ -1,8 +1,8 @@
 #include "storage_move_to_sd.h"
+
 #include <core/common_defines.h>
 #include <core/log.h>
-#include "loader/loader.h"
-#include <stdint.h>
+#include <loader/loader.h>
 #include <toolbox/dir_walk.h>
 #include <toolbox/path.h>
 #include <furi_hal.h>
@@ -18,7 +18,7 @@ static bool storage_move_to_sd_check_entry(const char* name, FileInfo* fileinfo,
         return true;
     }
 
-    return (name && (*name != '.'));
+    return name && (*name != '.');
 }
 
 void flipper_migrate_files() {
@@ -59,18 +59,15 @@ static void storage_move_to_sd_remove_region() {
     if(!furi_hal_is_normal_boot()) return;
     Storage* storage = furi_record_open(RECORD_STORAGE);
 
-    if(storage_common_exists(storage, INT_PATH(".region_data"))) {
-        storage_common_remove(storage, INT_PATH(".region_data"));
+    // CLEAR GARBAGE / INTERNAL SPACE
+    if(storage_common_exists(storage, INT_PATH(".momentum_firstboot.flag"))) {
+        storage_common_remove(storage, INT_PATH(".momentum_firstboot.flag"));
     }
-    if(storage_common_exists(storage, EXT_PATH("apps/Misc/totp.conf"))) {
-        storage_common_rename(
-            storage,
-            EXT_PATH("apps/Misc/totp.conf"),
-            EXT_PATH("apps_data/authenticator/totp.conf"));
+    if(storage_common_exists(storage, INT_PATH(".momentum_settings.txt"))) {
+        storage_common_remove(storage, INT_PATH(".momentum_settings.txt"));
     }
-    if(storage_common_exists(storage, EXT_PATH("apps/Misc/barcodegen.save"))) {
-        storage_common_remove(storage, EXT_PATH("apps/Misc/barcodegen.save"));
-        storage_common_remove(storage, EXT_PATH("apps/Misc"));
+    if(storage_common_exists(storage, EXT_PATH("dolphin/firstboot.bin"))) {
+        storage_common_remove(storage, EXT_PATH("dolphin/firstboot.bin"));
     }
 
     furi_record_close(RECORD_STORAGE);
@@ -157,7 +154,7 @@ static void storage_move_to_sd_unmount_callback(const void* message, void* conte
     }
 }
 
-static StorageMoveToSd* storage_move_to_sd_alloc() {
+static StorageMoveToSd* storage_move_to_sd_alloc(void) {
     StorageMoveToSd* app = malloc(sizeof(StorageMoveToSd));
 
     app->gui = furi_record_open(RECORD_GUI);

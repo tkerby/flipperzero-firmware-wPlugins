@@ -1,0 +1,20 @@
+App(
+    appid="flipboard_simon_rm",
+    name="FlipBoard Simon",
+    apptype=FlipperAppType.EXTERNAL,
+    sources=[
+        "*.c",
+    ],
+    entry_point="flipboard_simon_app",
+    stack_size=4 * 1024,
+    resources="resources",
+    fap_libs=["ble_profile"],
+    fap_icon="flipsimon.png",
+    #  fap_icon_assets_symbol="flipboard_simon",
+    fap_icon_assets="assets",
+    fap_category="GPIO/FlipBoard",
+    fap_author="codeallnight",
+    fap_weburl="https://youtube.com/@MrDerekJamison",
+    fap_version=(1, 10),
+    fap_description="Simon memory game for the FlipBoard.",
+)

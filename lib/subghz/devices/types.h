@@ -8,11 +8,12 @@
 #include <furi_hal.h>
 
 #include "preset.h"
+#include "tx.h"
 
 #include <flipper_application/flipper_application.h>
 
-#define SUBGHZ_RADIO_DEVICE_PLUGIN_APP_ID "subghz_radio_device"
-#define SUBGHZ_RADIO_DEVICE_PLUGIN_API_VERSION 2
+#define SUBGHZ_RADIO_DEVICE_PLUGIN_APP_ID      "subghz_radio_device"
+#define SUBGHZ_RADIO_DEVICE_PLUGIN_API_VERSION 1
 
 typedef struct SubGhzDeviceRegistry SubGhzDeviceRegistry;
 typedef struct SubGhzDevice SubGhzDevice;
@@ -50,6 +51,8 @@ typedef bool (*SubGhzRxIsDataCrcValid)(void);
 typedef void (*SubGhzReadPacket)(uint8_t* data, uint8_t* size);
 typedef void (*SubGhzWritePacket)(const uint8_t* data, uint8_t size);
 
+typedef SubGhzTx (*SubGhzCheckTx)(uint32_t frequency);
+
 typedef struct {
     SubGhzBegin begin;
     SubGhzEnd end;
@@ -84,6 +87,7 @@ typedef struct {
     SubGhzReadPacket read_packet;
     SubGhzWritePacket write_packet;
 
+    SubGhzCheckTx check_tx;
 } SubGhzDeviceInterconnect;
 
 struct SubGhzDevice {
@@ -94,5 +98,7 @@ struct SubGhzDevice {
 struct SubGhzDeviceConf {
     uint8_t ver;
     bool extended_range;
+    bool bypass_region;
     bool power_amp;
+    bool amp_and_leds;
 };

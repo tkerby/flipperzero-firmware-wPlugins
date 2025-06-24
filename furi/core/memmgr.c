@@ -1,5 +1,4 @@
 #include "memmgr.h"
-#include "common_defines.h"
 #include <string.h>
 #include <furi_hal_memory.h>
 
@@ -107,5 +106,7 @@ void* aligned_malloc(size_t size, size_t alignment) {
 }
 
 void aligned_free(void* p) {
-    free(((void**)p)[-1]);
+    if(p) {
+        free(((void**)p)[-1]);
+    }
 }

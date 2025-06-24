@@ -13,14 +13,8 @@
 
 #define TAG "DesktopSrv"
 
-#define CLOCK_APP EXT_PATH("apps/Main/dab_timer.fap")
-#define DOOM_APP EXT_PATH("apps/Games/doom.fap")
-#define IMPROVED_2048_APP EXT_PATH("apps/Games/2048_improved.fap")
+#define CLOCK_APP    EXT_PATH("apps/Main/dab_timer.fap")
 #define PASSPORT_APP EXT_PATH("apps/Settings/passport.fap")
-#define SNAKE_APP EXT_PATH("apps/Games/snake.fap")
-#define TETRIS_APP EXT_PATH("apps/Games/tetris.fap")
-#define ZOMBIEZ_APP EXT_PATH("apps/Games/zombiez.fap")
-#define JETPACK_APP EXT_PATH("apps/Games/jetpack.fap")
 
 static void desktop_scene_main_new_idle_animation_callback(void* context) {
     furi_assert(context);
@@ -41,6 +35,12 @@ static void desktop_scene_main_interact_animation_callback(void* context) {
     Desktop* desktop = context;
     view_dispatcher_send_custom_event(
         desktop->view_dispatcher, DesktopAnimationEventInteractAnimation);
+}
+
+static void launch_games_menu() {
+    Loader* loader = furi_record_open(RECORD_LOADER);
+    loader_show_gamesmenu(loader);
+    furi_record_close(RECORD_LOADER);
 }
 
 #ifdef APP_ARCHIVE
@@ -76,35 +76,44 @@ static inline bool desktop_scene_main_check_none(const char* str) {
 }
 
 static void desktop_scene_main_open_app_or_profile(Desktop* desktop, const char* path) {
-    if(loader_start_with_gui_error(desktop->loader, path, NULL) != LoaderStatusOk) {
-        loader_start(desktop->loader, PASSPORT_APP, NULL, NULL);
+    if(strlen(path) > 0) {
+        loader_start_detached_with_gui_error(desktop->loader, path, NULL);
+    } else {
+        loader_start_detached_with_gui_error(desktop->loader, "Passport", NULL);
     }
 }
 
 static void desktop_scene_main_open_fav_or_profile(Desktop* desktop, FavoriteApp* application) {
     bool load_ok = false;
     if(strlen(application->name_or_path) > 0) {
-        if(desktop_scene_main_check_none(application->name_or_path)) {
-            // skip loading
-            load_ok = true;
-        } else if(
-            loader_start(desktop->loader, application->name_or_path, NULL, NULL) ==
-            LoaderStatusOk) {
-            load_ok = true;
+        if(!desktop_scene_main_check_none(application->name_or_path)) {
+            // Load app
+            loader_start_detached_with_gui_error(desktop->loader, application->name_or_path, NULL);
         }
+        load_ok = true;
     }
+    // In case of "default" setting
     if(!load_ok) {
-        loader_start(desktop->loader, PASSPORT_APP, NULL, NULL);
+        loader_start_detached_with_gui_error(desktop->loader, PASSPORT_APP, NULL);
     }
 }
 
 static void desktop_scene_main_start_favorite(Desktop* desktop, FavoriteApp* application) {
-    if(strlen(application->name_or_path) > 0) {
-        if(!desktop_scene_main_check_none(application->name_or_path)) {
-            loader_start_with_gui_error(desktop->loader, application->name_or_path, NULL);
+    if(!desktop_scene_main_check_none(application->name_or_path)) {
+        if(!strcmp(application->name_or_path, "!L")) {
+            scene_manager_set_scene_state(desktop->scene_manager, DesktopSceneLockMenu, 0);
+            desktop_lock(desktop);
+        } else if(!strcmp(application->name_or_path, "!G")) {
+            launch_games_menu();
+        } else {
+            if(strlen(application->name_or_path) > 0) {
+                loader_start_detached_with_gui_error(
+                    desktop->loader, application->name_or_path, NULL);
+            } else {
+                loader_start_detached_with_gui_error(
+                    desktop->loader, LOADER_APPLICATIONS_NAME, NULL);
+            }
         }
-    } else {
-        loader_start(desktop->loader, LOADER_APPLICATIONS_NAME, NULL, NULL);
     }
 }
 
@@ -162,11 +171,6 @@ bool desktop_scene_main_on_event(void* context, SceneManagerEvent event) {
             consumed = true;
             break;
 
-        case DesktopMainEventOpenDebug:
-            scene_manager_next_scene(desktop->scene_manager, DesktopSceneDebug);
-            consumed = true;
-            break;
-
         case DesktopMainEventOpenArchive:
 #ifdef APP_ARCHIVE
             desktop_switch_to_app(desktop, &FLIPPER_ARCHIVE);
@@ -175,7 +179,7 @@ bool desktop_scene_main_on_event(void* context, SceneManagerEvent event) {
             break;
 
         case DesktopMainEventOpenPowerOff: {
-            loader_start(desktop->loader, "Power", "off", NULL);
+            loader_start_detached_with_gui_error(desktop->loader, "Power", "off");
             consumed = true;
             break;
         }
@@ -212,8 +216,14 @@ bool desktop_scene_main_on_event(void* context, SceneManagerEvent event) {
             break;
         case DesktopMainEventOpenFavoriteUpLong:
             DESKTOP_SETTINGS_LOAD(&desktop->settings);
-            desktop_scene_main_start_favorite(
-                desktop, &desktop->settings.favorite_apps[FavoriteAppUpLong]);
+            if(!desktop_scene_main_check_none(
+                   desktop->settings.favorite_apps[FavoriteAppUpLong].name_or_path)) {
+                desktop_scene_main_start_favorite(
+                    desktop, &desktop->settings.favorite_apps[FavoriteAppUpLong]);
+            } else {
+                scene_manager_set_scene_state(desktop->scene_manager, DesktopSceneLockMenu, 0);
+                desktop_lock(desktop);
+            }
             consumed = true;
             break;
 
@@ -242,30 +252,6 @@ bool desktop_scene_main_on_event(void* context, SceneManagerEvent event) {
             desktop_scene_main_open_app_or_profile(desktop, PASSPORT_APP);
             break;
         }
-        case DesktopMainEventOpenSnake: {
-            desktop_scene_main_open_app_or_profile(desktop, SNAKE_APP);
-            break;
-        }
-        case DesktopMainEventOpen2048: {
-            desktop_scene_main_open_app_or_profile(desktop, IMPROVED_2048_APP);
-            break;
-        }
-        case DesktopMainEventOpenZombiez: {
-            desktop_scene_main_open_app_or_profile(desktop, ZOMBIEZ_APP);
-            break;
-        }
-        case DesktopMainEventOpenTetris: {
-            desktop_scene_main_open_app_or_profile(desktop, TETRIS_APP);
-            break;
-        }
-        case DesktopMainEventOpenDOOM: {
-            desktop_scene_main_open_app_or_profile(desktop, DOOM_APP);
-            break;
-        }
-        case DesktopMainEventOpenJetPack: {
-            desktop_scene_main_open_app_or_profile(desktop, JETPACK_APP);
-            break;
-        }
         case DesktopMainEventOpenClock: {
             Storage* storage = furi_record_open(RECORD_STORAGE);
             if(storage_file_exists(storage, CLOCK_APP)) {
@@ -273,9 +259,10 @@ bool desktop_scene_main_on_event(void* context, SceneManagerEvent event) {
                 desktop_scene_main_open_app_or_profile(desktop, CLOCK_APP);
             } else {
                 furi_record_close(RECORD_STORAGE);
-                scene_manager_next_scene(desktop->scene_manager, DesktopSceneDebug);
+                animation_manager_new_idle_process(desktop->animation_manager);
                 consumed = true;
             }
+            break;
         }
         case DesktopDummyEventOpenLeft:
             desktop_scene_main_open_fav_or_profile(

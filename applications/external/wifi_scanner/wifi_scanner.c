@@ -1,8 +1,8 @@
 #include <furi.h>
-#include <furi_hal_console.h>
 #include <furi_hal_gpio.h>
 #include <furi_hal_power.h>
-#include <furi_hal_uart.h>
+#include <furi_hal_serial_control.h>
+#include <furi_hal_serial.h>
 #include <gui/canvas_i.h>
 #include <gui/gui.h>
 #include <input/input.h>
@@ -10,13 +10,14 @@
 #include <notification/notification.h>
 #include <notification/notification_messages.h>
 #include <stdlib.h>
+#include <expansion/expansion.h>
 
 #include "FlipperZeroWiFiModuleDefines.h"
 
 #define WIFI_APP_DEBUG 0
 
 #if WIFI_APP_DEBUG
-#define APP_NAME_TAG "WiFi_Scanner"
+#define APP_NAME_TAG                "WiFi_Scanner"
 #define WIFI_APP_LOG_I(format, ...) FURI_LOG_I(APP_NAME_TAG, format, ##__VA_ARGS__)
 #define WIFI_APP_LOG_D(format, ...) FURI_LOG_D(APP_NAME_TAG, format, ##__VA_ARGS__)
 #define WIFI_APP_LOG_E(format, ...) FURI_LOG_E(APP_NAME_TAG, format, ##__VA_ARGS__)
@@ -26,9 +27,7 @@
 #define WIFI_APP_LOG_E(format, ...)
 #endif // WIFI_APP_DEBUG
 
-#define DISABLE_CONSOLE !WIFI_APP_DEBUG
-
-#define ENABLE_MODULE_POWER 1
+#define ENABLE_MODULE_POWER     1
 #define ENABLE_MODULE_DETECTION 1
 
 #define ANIMATION_TIME 350
@@ -47,7 +46,8 @@ typedef enum EChunkArrayData {
 } EChunkArrayData;
 
 typedef enum EEventType // app internally defined event types
-{ EventTypeKey // flipper input.h type
+{
+    EventTypeKey // flipper input.h type
 } EEventType;
 
 typedef struct SPluginEvent {
@@ -86,6 +86,7 @@ typedef struct SWiFiScannerApp {
     FuriThread* m_worker_thread;
     NotificationApp* m_notification;
     FuriStreamBuffer* m_rx_stream;
+    FuriHalSerialHandle* serial_handle;
 
     bool m_wifiModuleInitialized;
     bool m_wifiModuleAttached;
@@ -636,21 +637,24 @@ static void wifi_module_render_callback(Canvas* const canvas, void* ctx) {
     furi_mutex_release(app->mutex);
 }
 
-static void wifi_module_input_callback(InputEvent* input_event, FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void wifi_module_input_callback(InputEvent* input_event, void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
 
     SPluginEvent event = {.m_type = EventTypeKey, .m_input = *input_event};
     furi_message_queue_put(event_queue, &event, FuriWaitForever);
 }
 
-static void uart_on_irq_cb(UartIrqEvent ev, uint8_t data, void* context) {
+static void
+    uart_on_irq_cb(FuriHalSerialHandle* handle, FuriHalSerialRxEvent event, void* context) {
     furi_assert(context);
 
     SWiFiScannerApp* app = context;
 
     WIFI_APP_LOG_I("uart_echo_on_irq_cb");
 
-    if(ev == UartIrqEventRXNE) {
+    if(event == FuriHalSerialRxEventData) {
+        uint8_t data = furi_hal_serial_async_rx(handle);
         WIFI_APP_LOG_I("ev == UartIrqEventRXNE");
         furi_stream_buffer_send(app->m_rx_stream, &data, 1, 0);
         furi_thread_flags_set(furi_thread_get_id(app->m_worker_thread), WorkerEventRx);
@@ -808,11 +812,7 @@ typedef enum ESerialCommand {
     ESerialCommand_Restart
 } ESerialCommand;
 
-void send_serial_command(ESerialCommand command) {
-#if !DISABLE_CONSOLE
-    return;
-#endif
-
+void send_serial_command(SWiFiScannerApp* app, ESerialCommand command) {
     uint8_t data[1] = {0};
 
     switch(command) {
@@ -835,11 +835,15 @@ void send_serial_command(ESerialCommand command) {
         return;
     };
 
-    furi_hal_uart_tx(UART_CH, data, 1);
+    furi_hal_serial_tx(app->serial_handle, data, 1);
 }
 
 int32_t wifi_scanner_app(void* p) {
     UNUSED(p);
+
+    // Disable expansion protocol to avoid interference with UART Handle
+    Expansion* expansion = furi_record_open(RECORD_EXPANSION);
+    expansion_disable(expansion);
 
     WIFI_APP_LOG_I("Init");
 
@@ -877,6 +881,9 @@ int32_t wifi_scanner_app(void* p) {
     if(!app->mutex) {
         WIFI_APP_LOG_E("cannot create mutex\r\n");
         free(app);
+        // Return previous state of expansion
+        expansion_enable(expansion);
+        furi_record_close(RECORD_EXPANSION);
         return 255;
     }
 
@@ -905,18 +912,14 @@ int32_t wifi_scanner_app(void* p) {
     WIFI_APP_LOG_I("UART thread allocated");
 
     // Enable uart listener
-    if(UART_CH == FuriHalUartIdUSART1) {
-        furi_hal_console_disable();
-    } else if(UART_CH == FuriHalUartIdLPUART1) {
-        furi_hal_uart_init(UART_CH, FLIPPERZERO_SERIAL_BAUD);
-    }
-
-    furi_hal_uart_set_br(UART_CH, FLIPPERZERO_SERIAL_BAUD);
-    furi_hal_uart_set_irq_cb(UART_CH, uart_on_irq_cb, app);
+    app->serial_handle = furi_hal_serial_control_acquire(UART_CH);
+    furi_check(app->serial_handle);
+    furi_hal_serial_init(app->serial_handle, FLIPPERZERO_SERIAL_BAUD);
+    furi_hal_serial_async_rx_start(app->serial_handle, uart_on_irq_cb, app, false);
     WIFI_APP_LOG_I("UART Listener created");
 
     // Because we assume that module was on before we launched the app. We need to ensure that module will be in initial state on app start
-    send_serial_command(ESerialCommand_Restart);
+    send_serial_command(app, ESerialCommand_Restart);
 
     SPluginEvent event;
     for(bool processing = true; processing;) {
@@ -950,20 +953,20 @@ int32_t wifi_scanner_app(void* p) {
                         case InputKeyLeft:
                             if(event.m_input.type == InputTypeShort) {
                                 WIFI_APP_LOG_I("Previous");
-                                send_serial_command(ESerialCommand_Previous);
+                                send_serial_command(app, ESerialCommand_Previous);
                             } else if(event.m_input.type == InputTypeRepeat) {
                                 WIFI_APP_LOG_I("Previous Repeat");
-                                send_serial_command(ESerialCommand_Previous);
+                                send_serial_command(app, ESerialCommand_Previous);
                             }
                             break;
                         case InputKeyDown:
                         case InputKeyRight:
                             if(event.m_input.type == InputTypeShort) {
                                 WIFI_APP_LOG_I("Next");
-                                send_serial_command(ESerialCommand_Next);
+                                send_serial_command(app, ESerialCommand_Next);
                             } else if(event.m_input.type == InputTypeRepeat) {
                                 WIFI_APP_LOG_I("Next Repeat");
-                                send_serial_command(ESerialCommand_Next);
+                                send_serial_command(app, ESerialCommand_Next);
                             }
                             break;
                         default:
@@ -976,18 +979,18 @@ int32_t wifi_scanner_app(void* p) {
                         if(event.m_input.type == InputTypeShort) {
                             if(app->m_context == ScanMode) {
                                 WIFI_APP_LOG_I("Monitor Mode");
-                                send_serial_command(ESerialCommand_MonitorMode);
+                                send_serial_command(app, ESerialCommand_MonitorMode);
                             }
                         } else if(event.m_input.type == InputTypeLong) {
                             WIFI_APP_LOG_I("Scan");
-                            send_serial_command(ESerialCommand_Scan);
+                            send_serial_command(app, ESerialCommand_Scan);
                         }
                         break;
                     case InputKeyBack:
                         if(event.m_input.type == InputTypeShort) {
                             switch(app->m_context) {
                             case MonitorMode:
-                                send_serial_command(ESerialCommand_Scan);
+                                send_serial_command(app, ESerialCommand_Scan);
                                 break;
                             case ScanMode:
                                 processing = false;
@@ -1022,11 +1025,14 @@ int32_t wifi_scanner_app(void* p) {
         }
 #endif
 
-        view_port_update(view_port);
         furi_mutex_release(app->mutex);
+        view_port_update(view_port);
     }
 
     WIFI_APP_LOG_I("Start exit app");
+    furi_hal_serial_async_rx_stop(app->serial_handle);
+    furi_hal_serial_deinit(app->serial_handle);
+    furi_hal_serial_control_release(app->serial_handle);
 
     furi_thread_flags_set(furi_thread_get_id(app->m_worker_thread), WorkerEventStop);
     furi_thread_join(app->m_worker_thread);
@@ -1036,12 +1042,6 @@ int32_t wifi_scanner_app(void* p) {
 
     // Reset GPIO pins to default state
     furi_hal_gpio_init(&gpio_ext_pc0, GpioModeAnalog, GpioPullNo, GpioSpeedLow);
-
-    if(UART_CH == FuriHalUartIdLPUART1) {
-        furi_hal_uart_deinit(UART_CH);
-    } else {
-        furi_hal_console_enable();
-    }
 
     view_port_enabled_set(view_port, false);
 
@@ -1070,6 +1070,10 @@ int32_t wifi_scanner_app(void* p) {
         furi_hal_power_disable_otg();
     }
 #endif
+
+    // Return previous state of expansion
+    expansion_enable(expansion);
+    furi_record_close(RECORD_EXPANSION);
 
     return 0;
 }

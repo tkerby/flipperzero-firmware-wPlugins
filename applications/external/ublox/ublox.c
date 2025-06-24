@@ -1,11 +1,9 @@
 #include "ublox_i.h"
 
 const NotificationSequence sequence_new_reading = {
-    //&message_vibro_on,
     &message_green_255,
     &message_delay_100,
     &message_green_0,
-    //&message_vibro_off,
     NULL,
 };
 
@@ -64,15 +62,17 @@ Ublox* ublox_alloc() {
     ublox->storage = furi_record_open(RECORD_STORAGE);
 
     ublox->log_state = UbloxLogStateNone;
-    // default to "/data", which maps to "/ext/apps_data/ublox"
+    // files do actually belong here
     ublox->logfile_folder = furi_string_alloc_set(STORAGE_APP_DATA_PATH_PREFIX);
 
     // Establish default data display state
     (ublox->data_display_state).view_mode = UbloxDataDisplayViewModeHandheld;
     (ublox->data_display_state).refresh_rate = 2;
     (ublox->data_display_state).notify_mode = UbloxDataDisplayNotifyOn;
-
+    (ublox->data_display_state).backlight_mode = UbloxDataDisplayBacklightDefault;
+    (ublox->data_display_state).log_format = UbloxLogFormatKML;
     (ublox->device_state).odometer_mode = UbloxOdometerModeRunning;
+
     // "suitable for most applications" according to u-blox.
     (ublox->device_state).platform_model = UbloxPlatformModelPortable;
     ublox->gps_initted = false;
@@ -80,18 +80,12 @@ Ublox* ublox_alloc() {
     return ublox;
 }
 
-#define TAG "ublox"
-//#include "ublox_worker_i.h"
 void ublox_free(Ublox* ublox) {
     furi_assert(ublox);
 
     // no need to stop the worker, plus it causes the app to crash by NULL
     // pointer dereference from context in the worker struct
 
-    //FURI_LOG_I(TAG, "stop worker");
-    //ublox_worker_stop(ublox->worker);
-    //FURI_LOG_I(TAG, "%p", ublox->worker->context);
-    FURI_LOG_I(TAG, "free worker");
     ublox_worker_free(ublox->worker);
 
     view_dispatcher_remove_view(ublox->view_dispatcher, UbloxViewMenu);
@@ -140,7 +134,9 @@ int32_t ublox_app(void* p) {
     // TODO: this is breaking the backlight timeout for everything
     // else: test by opening ublox, then leaving and opening DAP
     // Link. DAP Link should force the backlight on but doesn't.
-    notification_message_block(ublox->notifications, &sequence_display_backlight_enforce_auto);
+    if((ublox->data_display_state).backlight_mode == UbloxDataDisplayBacklightOn) {
+        notification_message_block(ublox->notifications, &sequence_display_backlight_enforce_auto);
+    }
 
     ublox_free(ublox);
 

@@ -17,7 +17,7 @@
 #define TAG "SubGhzProtocolNiceFlorS"
 
 #define NICE_ONE_COUNT_BIT 72
-#define NICE_ONE_NAME "Nice One"
+#define NICE_ONE_NAME      "Nice One"
 
 static const SubGhzBlockConst subghz_protocol_nice_flor_s_const = {
     .te_short = 500,
@@ -60,10 +60,12 @@ const SubGhzProtocolDecoder subghz_protocol_nice_flor_s_decoder = {
     .feed = subghz_protocol_decoder_nice_flor_s_feed,
     .reset = subghz_protocol_decoder_nice_flor_s_reset,
 
-    .get_hash_data = subghz_protocol_decoder_nice_flor_s_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = subghz_protocol_decoder_nice_flor_s_get_hash_data,
     .serialize = subghz_protocol_decoder_nice_flor_s_serialize,
     .deserialize = subghz_protocol_decoder_nice_flor_s_deserialize,
     .get_string = subghz_protocol_decoder_nice_flor_s_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder subghz_protocol_nice_flor_s_encoder = {
@@ -84,6 +86,8 @@ const SubGhzProtocol subghz_protocol_nice_flor_s = {
 
     .decoder = &subghz_protocol_nice_flor_s_decoder,
     .encoder = &subghz_protocol_nice_flor_s_encoder,
+
+    .filter = SubGhzProtocolFilter_NiceFlorS,
 };
 
 static void subghz_protocol_nice_flor_s_remote_controller(
@@ -122,7 +126,7 @@ static void subghz_protocol_nice_one_get_data(uint8_t* p, uint8_t num_parcel, ui
  * Basic set | 0x1 | 0x2 | 0x4 | 0x8 |
  * @return Button code
  */
-static uint8_t subghz_protocol_nice_flor_s_get_btn_code();
+static uint8_t subghz_protocol_nice_flor_s_get_btn_code(void);
 
 /**
  * Generating an upload from data.
@@ -152,12 +156,12 @@ static void subghz_protocol_encoder_nice_flor_s_get_upload(
     }
 
     if(instance->generic.cnt < 0xFFFF) {
-        if((instance->generic.cnt + furi_hal_subghz_get_rolling_counter_mult()) >= 0xFFFF) {
+        if((instance->generic.cnt + furi_hal_subghz_get_rolling_counter_mult()) > 0xFFFF) {
             instance->generic.cnt = 0;
         } else {
             instance->generic.cnt += furi_hal_subghz_get_rolling_counter_mult();
         }
-    } else if(instance->generic.cnt >= 0xFFFF) {
+    } else if((instance->generic.cnt >= 0xFFFF) && (furi_hal_subghz_get_rolling_counter_mult() != 0)) {
         instance->generic.cnt = 0;
     }
     uint64_t decrypt = ((uint64_t)instance->generic.serial << 16) | instance->generic.cnt;
@@ -267,7 +271,7 @@ SubGhzProtocolStatus
             key_data[sizeof(uint64_t) - i - 1] = (instance->generic.data >> i * 8) & 0xFF;
         }
         if(!flipper_format_update_hex(flipper_format, "Key", key_data, sizeof(uint64_t))) {
-            FURI_LOG_E(TAG, "Unable to add Key");
+            FURI_LOG_E(TAG, "Unable to update Key");
             break;
         }
 
@@ -278,7 +282,7 @@ SubGhzProtocolStatus
             }
             uint32_t temp = (instance->generic.data_2 >> 4) & 0xFFFFF;
             if(!flipper_format_update_uint32(flipper_format, "Data", &temp, 1)) {
-                FURI_LOG_E(TAG, "Unable to add Data");
+                FURI_LOG_E(TAG, "Unable to update Data");
             }
         }
 
@@ -688,13 +692,13 @@ static void subghz_protocol_nice_flor_s_remote_controller(
     if(subghz_custom_btn_get_original() == 0) {
         subghz_custom_btn_set_original(instance->btn);
     }
-    subghz_custom_btn_set_max(3);
+    subghz_custom_btn_set_max(4);
 }
 
-uint8_t subghz_protocol_decoder_nice_flor_s_get_hash_data(void* context) {
+uint32_t subghz_protocol_decoder_nice_flor_s_get_hash_data(void* context) {
     furi_assert(context);
     SubGhzProtocolDecoderNiceFlorS* instance = context;
-    return subghz_protocol_blocks_get_hash_data(
+    return subghz_protocol_blocks_get_hash_data_long(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 
@@ -707,8 +711,13 @@ SubGhzProtocolStatus subghz_protocol_decoder_nice_flor_s_serialize(
     SubGhzProtocolStatus ret =
         subghz_block_generic_serialize(&instance->generic, flipper_format, preset);
     if(instance->generic.data_count_bit == NICE_ONE_COUNT_BIT) {
+        if(!flipper_format_rewind(flipper_format)) {
+            FURI_LOG_E(TAG, "Rewind error");
+            ret = SubGhzProtocolStatusErrorParserOthers;
+        }
         if((ret == SubGhzProtocolStatusOk) &&
-           !flipper_format_write_uint32(flipper_format, "Data", (uint32_t*)&instance->data, 1)) {
+           !flipper_format_insert_or_update_uint32(
+               flipper_format, "Data", (uint32_t*)&instance->data, 1)) {
             FURI_LOG_E(TAG, "Unable to add Data");
             ret = SubGhzProtocolStatusErrorParserOthers;
         }
@@ -751,7 +760,7 @@ SubGhzProtocolStatus
     return ret;
 }
 
-static uint8_t subghz_protocol_nice_flor_s_get_btn_code() {
+static uint8_t subghz_protocol_nice_flor_s_get_btn_code(void) {
     uint8_t custom_btn_id = subghz_custom_btn_get();
     uint8_t original_btn_code = subghz_custom_btn_get_original();
     uint8_t btn = original_btn_code;
@@ -774,6 +783,9 @@ static uint8_t subghz_protocol_nice_flor_s_get_btn_code() {
         case 0x8:
             btn = 0x1;
             break;
+        case 0x3:
+            btn = 0x1;
+            break;
 
         default:
             break;
@@ -792,6 +804,9 @@ static uint8_t subghz_protocol_nice_flor_s_get_btn_code() {
         case 0x8:
             btn = 0x4;
             break;
+        case 0x3:
+            btn = 0x4;
+            break;
 
         default:
             break;
@@ -808,6 +823,30 @@ static uint8_t subghz_protocol_nice_flor_s_get_btn_code() {
             btn = 0x8;
             break;
         case 0x8:
+            btn = 0x2;
+            break;
+        case 0x3:
+            btn = 0x8;
+            break;
+
+        default:
+            break;
+        }
+    } else if(custom_btn_id == SUBGHZ_CUSTOM_BTN_RIGHT) {
+        switch(original_btn_code) {
+        case 0x1:
+            btn = 0x3;
+            break;
+        case 0x2:
+            btn = 0x3;
+            break;
+        case 0x4:
+            btn = 0x3;
+            break;
+        case 0x8:
+            btn = 0x3;
+            break;
+        case 0x3:
             btn = 0x2;
             break;
 
@@ -830,7 +869,7 @@ void subghz_protocol_decoder_nice_flor_s_get_string(void* context, FuriString* o
         furi_string_cat_printf(
             output,
             "%s %dbit\r\n"
-            "Key:0x%013llX%llX\r\n"
+            "Key:%013llX%llX\r\n"
             "Sn:%05lX\r\n"
             "Cnt:%04lX Btn:%02X\r\n",
             NICE_ONE_NAME,

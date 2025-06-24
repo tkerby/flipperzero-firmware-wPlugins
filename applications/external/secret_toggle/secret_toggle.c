@@ -14,10 +14,10 @@
 #include <stdlib.h>
 #include "util.h"
 
-#define BOARD_HEIGHT 7
-#define BOARD_WIDTH 7
+#define BOARD_HEIGHT      7
+#define BOARD_WIDTH       7
 #define BOARD_NUM_SQUARES (BOARD_HEIGHT * BOARD_WIDTH)
-#define MAX_LEVELS 10
+#define MAX_LEVELS        10
 
 typedef enum {
     EventTypeTick,
@@ -29,7 +29,10 @@ typedef struct {
     InputEvent input;
 } PluginEvent;
 
-typedef enum { SquareActiveOff, SquareActiveOn } SquareActive;
+typedef enum {
+    SquareActiveOff,
+    SquareActiveOn
+} SquareActive;
 
 typedef struct {
     SquareActive mySquareActive;
@@ -232,8 +235,9 @@ static void render_callback(Canvas* const canvas, void* ctx) {
     furi_string_free(tempStatusStr);
 }
 
-static void input_callback(InputEvent* input_event, FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void input_callback(InputEvent* input_event, void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
     PluginEvent event = {.type = EventTypeKey, .input = *input_event};
     furi_message_queue_put(event_queue, &event, FuriWaitForever);
 }

@@ -75,6 +75,13 @@ typedef struct {
 } SADataCResolvePath;
 
 typedef struct {
+    const char* path1;
+    const char* path2;
+    bool check_subdir;
+    FuriThreadId thread_id;
+} SADataCEquivPath;
+
+typedef struct {
     uint32_t id;
 } SADataError;
 
@@ -84,12 +91,22 @@ typedef struct {
 } SADataPath;
 
 typedef struct {
+    const char* old;
+    const char* new;
+    FuriThreadId thread_id;
+} SADataRename;
+
+typedef struct {
     File* file;
 } SADataFile;
 
 typedef struct {
     SDInfo* info;
 } SAInfo;
+
+typedef struct {
+    File* image;
+} SAVirtualInit;
 
 typedef union {
     SADataFOpen fopen;
@@ -105,13 +122,17 @@ typedef union {
     SADataCStat cstat;
     SADataCFSInfo cfsinfo;
     SADataCResolvePath cresolvepath;
+    SADataCEquivPath cequivpath;
 
     SADataError error;
 
     SADataFile file;
     SADataPath path;
+    SADataRename rename;
 
     SAInfo sdinfo;
+
+    SAVirtualInit virtualinit;
 } SAData;
 
 typedef union {
@@ -129,7 +150,6 @@ typedef enum {
     StorageCommandFileWrite,
     StorageCommandFileSeek,
     StorageCommandFileTell,
-    StorageCommandFileExpand,
     StorageCommandFileTruncate,
     StorageCommandFileSize,
     StorageCommandFileSync,
@@ -148,6 +168,15 @@ typedef enum {
     StorageCommandSDInfo,
     StorageCommandSDStatus,
     StorageCommandCommonResolvePath,
+    StorageCommandSDMount,
+    StorageCommandCommonEquivalentPath,
+
+    StorageCommandFileExpand,
+    StorageCommandVirtualInit,
+    StorageCommandVirtualFormat,
+    StorageCommandVirtualMount,
+    StorageCommandVirtualUnmount,
+    StorageCommandVirtualQuit,
 } StorageCommand;
 
 typedef struct {

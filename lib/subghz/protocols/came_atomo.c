@@ -46,10 +46,12 @@ const SubGhzProtocolDecoder subghz_protocol_came_atomo_decoder = {
     .feed = subghz_protocol_decoder_came_atomo_feed,
     .reset = subghz_protocol_decoder_came_atomo_reset,
 
-    .get_hash_data = subghz_protocol_decoder_came_atomo_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = subghz_protocol_decoder_came_atomo_get_hash_data,
     .serialize = subghz_protocol_decoder_came_atomo_serialize,
     .deserialize = subghz_protocol_decoder_came_atomo_deserialize,
     .get_string = subghz_protocol_decoder_came_atomo_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder subghz_protocol_came_atomo_encoder = {
@@ -78,7 +80,7 @@ static void subghz_protocol_came_atomo_remote_controller(SubGhzBlockGeneric* ins
  * Basic set | 0x0 | 0x2 | 0x4 | 0x6 |
  * @return Button code
  */
-static uint8_t subghz_protocol_came_atomo_get_btn_code();
+static uint8_t subghz_protocol_came_atomo_get_btn_code(void);
 
 void* subghz_protocol_encoder_came_atomo_alloc(SubGhzEnvironment* environment) {
     UNUSED(environment);
@@ -186,12 +188,12 @@ static void subghz_protocol_encoder_came_atomo_get_upload(
     uint8_t pack[8] = {};
 
     if(instance->generic.cnt < 0xFFFF) {
-        if((instance->generic.cnt + furi_hal_subghz_get_rolling_counter_mult()) >= 0xFFFF) {
+        if((instance->generic.cnt + furi_hal_subghz_get_rolling_counter_mult()) > 0xFFFF) {
             instance->generic.cnt = 0;
         } else {
             instance->generic.cnt += furi_hal_subghz_get_rolling_counter_mult();
         }
-    } else if(instance->generic.cnt >= 0xFFFF) {
+    } else if((instance->generic.cnt >= 0xFFFF) && (furi_hal_subghz_get_rolling_counter_mult() != 0)) {
         instance->generic.cnt = 0;
     }
 
@@ -218,8 +220,10 @@ static void subghz_protocol_encoder_came_atomo_get_upload(
     instance->encoder.upload[index++] =
         level_duration_make(false, (uint32_t)subghz_protocol_came_atomo_const.te_long * 60);
 
+    // Btn counter 0x0 - 0x7F
+    pack[0] = 0;
     for(uint8_t i = 0; i < 8; i++) {
-        pack[0] = (instance->generic.data_2 >> 56);
+        //pack[0] = (instance->generic.data_2 >> 56);
         pack[1] = (instance->generic.cnt >> 8);
         pack[2] = (instance->generic.cnt & 0xFF);
         pack[3] = ((instance->generic.data_2 >> 32) & 0xFF);
@@ -228,11 +232,42 @@ static void subghz_protocol_encoder_came_atomo_get_upload(
         pack[6] = ((instance->generic.data_2 >> 8) & 0xFF);
         pack[7] = (btn << 4);
 
-        if(pack[0] == 0x7F) {
+        /* if(pack[0] == 0x7F) {
             pack[0] = 0;
         } else {
             pack[0] += (i + 1);
         }
+        */
+        switch(i) {
+        case 0:
+            pack[0] = 10; // 0A
+            break;
+        case 1:
+            pack[0] = 30;
+            break;
+        case 2:
+            pack[0] = 125; // 7D
+            break;
+        case 3:
+            pack[0] = 126; // 7E
+            break;
+        case 4:
+            pack[0] = 127; // 7F
+            break;
+        case 5:
+            pack[0] = 0; // 00
+            break;
+        case 6:
+            pack[0] = 1; // 01
+            break;
+        case 7:
+            pack[0] = 3;
+            break;
+
+        default:
+            break;
+        }
+        // 10 50 125 126 127 0 1 2
 
         atomo_encrypt(pack);
         uint32_t hi = pack[0] << 24 | pack[1] << 16 | pack[2] << 8 | pack[3];
@@ -521,7 +556,8 @@ static void subghz_protocol_came_atomo_remote_controller(SubGhzBlockGeneric* ins
     * 0x931dfb16c0b1 ^ 0xXXXXXXXXXXXXXXXX =  0xEF3ED0F7D9EF
     * 0xEF3 ED0F7D9E F  => 0xEF3 - CNT, 0xED0F7D9E - SN, 0xF - key
     * 
-    *  ***Eng1n33r ver. (actual)***
+    *  ***Actual***
+    * Button hold-cycle counter (8-bit, from 0 to 0x7F) should DO full cycle or half cycle keeping values like zero
     * 0x1FF08D9924984115 - received data
     * 0x00F7266DB67BEEA0 - inverted data
     * 0x0501FD0000A08300 - decrypted data, 
@@ -614,7 +650,7 @@ void atomo_decrypt(uint8_t* buff) {
     }
 }
 
-static uint8_t subghz_protocol_came_atomo_get_btn_code() {
+static uint8_t subghz_protocol_came_atomo_get_btn_code(void) {
     uint8_t custom_btn_id = subghz_custom_btn_get();
     uint8_t original_btn_code = subghz_custom_btn_get_original();
     uint8_t btn = original_btn_code;
@@ -682,10 +718,10 @@ static uint8_t subghz_protocol_came_atomo_get_btn_code() {
     return btn;
 }
 
-uint8_t subghz_protocol_decoder_came_atomo_get_hash_data(void* context) {
+uint32_t subghz_protocol_decoder_came_atomo_get_hash_data(void* context) {
     furi_assert(context);
     SubGhzProtocolDecoderCameAtomo* instance = context;
-    return subghz_protocol_blocks_get_hash_data(
+    return subghz_protocol_blocks_get_hash_data_long(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 
@@ -718,9 +754,9 @@ void subghz_protocol_decoder_came_atomo_get_string(void* context, FuriString* ou
     furi_string_cat_printf(
         output,
         "%s %db\r\n"
-        "Key:0x%08lX%08lX\r\n"
+        "Key:%08lX%08lX\r\n"
         "Sn:0x%08lX       Btn:%01X\r\n"
-        "Pcl_Cnt:0x%04lX\r\n"
+        "Cnt:0x%04lX\r\n"
         "Btn_Cnt:0x%02X",
 
         instance->generic.protocol_name,

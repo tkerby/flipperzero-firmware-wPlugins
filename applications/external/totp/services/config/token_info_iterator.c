@@ -7,7 +7,7 @@
 #include "../../types/crypto_settings.h"
 
 #define CONFIG_FILE_PART_FILE_PATH CONFIG_FILE_DIRECTORY_PATH "/totp.conf.part"
-#define STREAM_COPY_BUFFER_SIZE (128)
+#define STREAM_COPY_BUFFER_SIZE    (128)
 
 struct TokenInfoIteratorContext {
     size_t total_count;
@@ -178,7 +178,13 @@ static bool
             break;
         }
 
-        uint32_t tmp_uint32 = token_info->algo;
+        uint32_t tmp_uint32 = token_info->token_plain_length;
+        if(!flipper_format_write_uint32(
+               temp_ff, TOTP_CONFIG_KEY_TOKEN_SECRET_LENGTH, &tmp_uint32, 1)) {
+            break;
+        }
+
+        tmp_uint32 = token_info->algo;
         if(!flipper_format_write_uint32(temp_ff, TOTP_CONFIG_KEY_TOKEN_ALGO, &tmp_uint32, 1)) {
             break;
         }
@@ -196,6 +202,19 @@ static bool
         tmp_uint32 = token_info->automation_features;
         if(!flipper_format_write_uint32(
                temp_ff, TOTP_CONFIG_KEY_TOKEN_AUTOMATION_FEATURES, &tmp_uint32, 1)) {
+            break;
+        }
+
+        tmp_uint32 = token_info->type;
+        if(!flipper_format_write_uint32(temp_ff, TOTP_CONFIG_KEY_TOKEN_TYPE, &tmp_uint32, 1)) {
+            break;
+        }
+
+        if(!flipper_format_write_hex(
+               temp_ff,
+               TOTP_CONFIG_KEY_TOKEN_COUNTER,
+               (uint8_t*)&token_info->counter,
+               sizeof(token_info->counter))) {
             break;
         }
 
@@ -398,6 +417,54 @@ TotpIteratorUpdateTokenResult totp_token_info_iterator_update_current_token(
     return result;
 }
 
+TotpIteratorUpdateTokenResult
+    totp_token_info_iterator_current_token_inc_counter(TokenInfoIteratorContext* context) {
+    if(!seek_to_token(context->current_index, context)) {
+        return TotpIteratorUpdateTokenResultFileUpdateFailed;
+    }
+
+    Stream* stream = flipper_format_get_raw_stream(context->config_file);
+
+    size_t offset_start = stream_tell(stream);
+
+    TokenInfo* token_info = context->current_token;
+    token_info->counter++;
+
+    char buffer[sizeof(TOTP_CONFIG_KEY_TOKEN_COUNTER) + 1];
+    bool found = false;
+    while(!found) {
+        if(!stream_seek_to_char(stream, '\n', StreamDirectionForward)) {
+            break;
+        }
+
+        size_t buffer_read_size;
+        if((buffer_read_size = stream_read(stream, (uint8_t*)&buffer[0], sizeof(buffer))) == 0) {
+            break;
+        }
+
+        if(!stream_seek(stream, -(int32_t)buffer_read_size, StreamOffsetFromCurrent)) {
+            break;
+        }
+
+        if(strncmp(buffer, "\n" TOTP_CONFIG_KEY_TOKEN_COUNTER ":", sizeof(buffer)) == 0) {
+            found = true;
+        }
+    }
+
+    TotpIteratorUpdateTokenResult result = TotpIteratorUpdateTokenResultFileUpdateFailed;
+    if(found && stream_seek(stream, 1, StreamOffsetFromCurrent) &&
+       flipper_format_write_hex(
+           context->config_file,
+           TOTP_CONFIG_KEY_TOKEN_COUNTER,
+           (uint8_t*)&token_info->counter,
+           sizeof(token_info->counter))) {
+        result = TotpIteratorUpdateTokenResultSuccess;
+    }
+
+    stream_seek(stream, offset_start, StreamOffsetFromStart);
+    return result;
+}
+
 TotpIteratorUpdateTokenResult totp_token_info_iterator_add_new_token(
     TokenInfoIteratorContext* context,
     TOTP_ITERATOR_UPDATE_TOKEN_ACTION update,
@@ -446,6 +513,7 @@ bool totp_token_info_iterator_go_to(TokenInfoIteratorContext* context, size_t to
         tokenInfo->token_length = 0;
     }
 
+    uint32_t temp_data32;
     if(secret_bytes_count == 1) { // Plain secret key
         FuriString* temp_str = furi_string_alloc();
 
@@ -465,6 +533,7 @@ bool totp_token_info_iterator_go_to(TokenInfoIteratorContext* context, size_t to
             } else {
                 tokenInfo->token = NULL;
                 tokenInfo->token_length = 0;
+                tokenInfo->token_plain_length = 0;
                 FURI_LOG_W(
                     LOGGING_TAG,
                     "Token \"%s\" has invalid secret",
@@ -473,6 +542,7 @@ bool totp_token_info_iterator_go_to(TokenInfoIteratorContext* context, size_t to
         } else {
             tokenInfo->token = NULL;
             tokenInfo->token_length = 0;
+            tokenInfo->token_plain_length = 0;
         }
 
         furi_string_free(temp_str);
@@ -493,9 +563,15 @@ bool totp_token_info_iterator_go_to(TokenInfoIteratorContext* context, size_t to
         } else {
             tokenInfo->token = NULL;
         }
+
+        if(flipper_format_read_uint32(
+               context->config_file, TOTP_CONFIG_KEY_TOKEN_SECRET_LENGTH, &temp_data32, 1)) {
+            tokenInfo->token_plain_length = temp_data32;
+        } else {
+            tokenInfo->token_plain_length = tokenInfo->token_length;
+        }
     }
 
-    uint32_t temp_data32;
     if(!flipper_format_read_uint32(
            context->config_file, TOTP_CONFIG_KEY_TOKEN_ALGO, &temp_data32, 1) ||
        !token_info_set_algo_from_int(tokenInfo, temp_data32)) {
@@ -519,6 +595,21 @@ bool totp_token_info_iterator_go_to(TokenInfoIteratorContext* context, size_t to
         tokenInfo->automation_features = temp_data32;
     } else {
         tokenInfo->automation_features = TokenAutomationFeatureNone;
+    }
+
+    if(flipper_format_read_uint32(
+           context->config_file, TOTP_CONFIG_KEY_TOKEN_TYPE, &temp_data32, 1)) {
+        tokenInfo->type = temp_data32;
+    } else {
+        tokenInfo->type = TokenTypeTOTP;
+    }
+
+    if(!flipper_format_read_hex(
+           context->config_file,
+           TOTP_CONFIG_KEY_TOKEN_COUNTER,
+           (uint8_t*)&tokenInfo->counter,
+           sizeof(tokenInfo->counter))) {
+        tokenInfo->counter = 0;
     }
 
     stream_seek(stream, original_offset, StreamOffsetFromStart);

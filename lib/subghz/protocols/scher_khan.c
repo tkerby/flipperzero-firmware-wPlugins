@@ -51,10 +51,12 @@ const SubGhzProtocolDecoder subghz_protocol_scher_khan_decoder = {
     .feed = subghz_protocol_decoder_scher_khan_feed,
     .reset = subghz_protocol_decoder_scher_khan_reset,
 
-    .get_hash_data = subghz_protocol_decoder_scher_khan_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = subghz_protocol_decoder_scher_khan_get_hash_data,
     .serialize = subghz_protocol_decoder_scher_khan_serialize,
     .deserialize = subghz_protocol_decoder_scher_khan_deserialize,
     .get_string = subghz_protocol_decoder_scher_khan_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder subghz_protocol_scher_khan_encoder = {
@@ -70,10 +72,12 @@ const SubGhzProtocol subghz_protocol_scher_khan = {
     .name = SUBGHZ_PROTOCOL_SCHER_KHAN_NAME,
     .type = SubGhzProtocolTypeDynamic,
     .flag = SubGhzProtocolFlag_433 | SubGhzProtocolFlag_FM | SubGhzProtocolFlag_Decodable |
-            SubGhzProtocolFlag_Save | SubGhzProtocolFlag_AutoAlarms,
+            SubGhzProtocolFlag_Save,
 
     .decoder = &subghz_protocol_scher_khan_decoder,
     .encoder = &subghz_protocol_scher_khan_encoder,
+
+    .filter = SubGhzProtocolFilter_Alarms,
 };
 
 void* subghz_protocol_decoder_scher_khan_alloc(SubGhzEnvironment* environment) {
@@ -272,10 +276,10 @@ static void subghz_protocol_scher_khan_check_remote_controller(
     }
 }
 
-uint8_t subghz_protocol_decoder_scher_khan_get_hash_data(void* context) {
+uint32_t subghz_protocol_decoder_scher_khan_get_hash_data(void* context) {
     furi_assert(context);
     SubGhzProtocolDecoderScherKhan* instance = context;
-    return subghz_protocol_blocks_get_hash_data(
+    return subghz_protocol_blocks_get_hash_data_long(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 

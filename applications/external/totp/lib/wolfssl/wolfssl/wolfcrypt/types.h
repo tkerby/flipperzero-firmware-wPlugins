@@ -426,6 +426,8 @@ typedef struct w64wrapper {
 
     #define XSTR_SIZEOF(x) (sizeof(x) - 1) /* -1 to not count the null char */
 
+    #define XELEM_CNT(x) (sizeof((x))/sizeof(*(x)))
+
     /* idea to add global alloc override by Moises Guimaraes  */
     /* default to libc stuff */
     /* XREALLOC is used once in normal math lib, not in fast math lib */
@@ -486,7 +488,7 @@ typedef struct w64wrapper {
     #elif defined(WOLFSSL_TELIT_M2MB)
         /* Telit M2MB SDK requires use m2mb_os API's, not std malloc/free */
         /* Use of malloc/free will cause CPU reboot */
-        #define XMALLOC(s, h, t)     ((void)h, (void)t, m2mb_os_malloc((s)))
+        #define XMALLOC(s, h, t)     ((void)(h), (void)(t), m2mb_os_malloc((s)))
         #ifdef WOLFSSL_XFREE_NO_NULLNESS_CHECK
             #define XFREE(p, h, t)       m2mb_os_free(xp)
         #else
@@ -503,25 +505,25 @@ typedef struct w64wrapper {
                     fprintf(stderr, "wolfSSL_malloc failed");
                     return NULL;
                 };
-                #define XMALLOC(s, h, t)     malloc_check((s))
-                #define XFREE(p, h, t)       WC_DO_NOTHING
-                #define XREALLOC(p, n, h, t) (NULL)
+                #define XMALLOC(s, h, t)     ((void)(h), (void)(t), malloc_check((s)))
+                #define XFREE(p, h, t)       (void)(h); (void)(t)
+                #define XREALLOC(p, n, h, t) ((void)(h), (void)(t), NULL)
             #else
-                #define XMALLOC(s, h, t)     (NULL)
-                #define XFREE(p, h, t)       WC_DO_NOTHING
-                #define XREALLOC(p, n, h, t) (NULL)
+                #define XMALLOC(s, h, t)     ((void)(s), (void)(h), (void)(t), NULL)
+                #define XFREE(p, h, t)       (void)(p); (void)(h); (void)(t)
+                #define XREALLOC(p, n, h, t) ((void)(p), (void)(n), (void)(h), (void)(t), NULL)
             #endif
         #else
-        /* just use plain C stdlib stuff if desired */
-        #include <stdlib.h>
-        #define XMALLOC(s, h, t)     ((void)(h), (void)(t), malloc((size_t)(s)))
-        #ifdef WOLFSSL_XFREE_NO_NULLNESS_CHECK
-            #define XFREE(p, h, t)       ((void)(h), (void)(t), free(p))
-        #else
-            #define XFREE(p, h, t)       {void* xp = (p); if (xp) free(xp);}
-        #endif
-        #define XREALLOC(p, n, h, t) \
-            ((void)(h), (void)(t), realloc((p), (size_t)(n)))
+            /* just use plain C stdlib stuff if desired */
+            #include <stdlib.h>
+            #define XMALLOC(s, h, t)     ((void)(h), (void)(t), malloc((size_t)(s)))
+            #ifdef WOLFSSL_XFREE_NO_NULLNESS_CHECK
+                #define XFREE(p, h, t)       ((void)(h), (void)(t), free(p))
+            #else
+                #define XFREE(p, h, t)       {void* xp = (p); (void)(h); if (xp) free(xp);}
+            #endif
+            #define XREALLOC(p, n, h, t) \
+                ((void)(h), (void)(t), realloc((p), (size_t)(n)))
         #endif
 
     #elif defined(WOLFSSL_LINUXKM)
@@ -558,19 +560,19 @@ typedef struct w64wrapper {
             #ifdef WOLFSSL_DEBUG_MEMORY
                 #define XMALLOC(s, h, t)     ((void)(h), (void)(t), wolfSSL_Malloc((s), __func__, __LINE__))
                 #ifdef WOLFSSL_XFREE_NO_NULLNESS_CHECK
-                    #define XFREE(p, h, t)       wolfSSL_Free(xp, __func__, __LINE__)
+                    #define XFREE(p, h, t)       ((void)(h), (void)(t), wolfSSL_Free(xp, __func__, __LINE__))
                 #else
-                    #define XFREE(p, h, t)       {void* xp = (p); if (xp) wolfSSL_Free(xp, __func__, __LINE__);}
+                    #define XFREE(p, h, t)       {void* xp = (p); (void)(h); (void)(t); if (xp) wolfSSL_Free(xp, __func__, __LINE__);}
                 #endif
-                #define XREALLOC(p, n, h, t) wolfSSL_Realloc((p), (n), __func__, __LINE__)
+                #define XREALLOC(p, n, h, t) ((void)(h), (void)(t), wolfSSL_Realloc((p), (n), __func__, __LINE__))
             #else
                 #define XMALLOC(s, h, t)     ((void)(h), (void)(t), wolfSSL_Malloc((s)))
                 #ifdef WOLFSSL_XFREE_NO_NULLNESS_CHECK
-                    #define XFREE(p, h, t)       wolfSSL_Free(p)
+                    #define XFREE(p, h, t)       ((void)(h), (void)(t), wolfSSL_Free(p))
                 #else
-                    #define XFREE(p, h, t)       {void* xp = (p); if (xp) wolfSSL_Free(xp);}
+                    #define XFREE(p, h, t)       {void* xp = (p); (void)(h); (void)(t); if (xp) wolfSSL_Free(xp);}
                 #endif
-                #define XREALLOC(p, n, h, t) wolfSSL_Realloc((p), (n))
+                #define XREALLOC(p, n, h, t) ((void)(h), (void)(t), wolfSSL_Realloc((p), (n)))
             #endif /* WOLFSSL_DEBUG_MEMORY */
         #endif /* WOLFSSL_STATIC_MEMORY */
     #endif
@@ -759,15 +761,8 @@ typedef struct w64wrapper {
 
         /* snprintf is used in asn.c for GetTimeString, PKCS7 test, and when
            debugging is turned on */
+        #ifndef XSNPRINTF
         #ifndef USE_WINDOWS_API
-            #ifndef XSNPRINTF
-            #if defined(NO_FILESYSTEM) && !defined(NO_STDIO_FILESYSTEM) && \
-                (defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL) || \
-                 defined(WOLFSSL_CERT_EXT) || defined(HAVE_PKCS7))
-                /* case where stdio is not included else where but is needed
-                   for snprintf */
-                #include <stdio.h>
-            #endif
             #if defined(WOLFSSL_ESPIDF) && \
                 (!defined(NO_ASN_TIME) && defined(HAVE_PKCS7))
                     #include<stdarg.h>
@@ -797,10 +792,11 @@ typedef struct w64wrapper {
                     }
                 #define XSNPRINTF _xsnprintf_
             #elif defined(WOLF_C89)
+                #include <stdio.h>
                 #define XSPRINTF sprintf
             #else
+                #include <stdio.h>
                 #define XSNPRINTF snprintf
-            #endif
             #endif
         #else
             #if defined(_MSC_VER) || defined(__CYGWIN__) || defined(__MINGW32__)
@@ -837,6 +833,7 @@ typedef struct w64wrapper {
                 #define XSNPRINTF snprintf
             #endif /* _MSC_VER */
         #endif /* USE_WINDOWS_API */
+        #endif /* !XSNPRINTF */
 
         #if defined(WOLFSSL_CERT_EXT) || defined(OPENSSL_EXTRA) || \
             defined(HAVE_ALPN) || defined(WOLFSSL_SNIFFER)
@@ -1017,13 +1014,16 @@ typedef struct w64wrapper {
         DYNAMIC_TYPE_DILITHIUM    = 97,
         DYNAMIC_TYPE_SPHINCS      = 98,
         DYNAMIC_TYPE_SM4_BUFFER   = 99,
-        DYNAMIC_TYPE_SNIFFER_SERVER     = 1000,
-        DYNAMIC_TYPE_SNIFFER_SESSION    = 1001,
-        DYNAMIC_TYPE_SNIFFER_PB         = 1002,
-        DYNAMIC_TYPE_SNIFFER_PB_BUFFER  = 1003,
-        DYNAMIC_TYPE_SNIFFER_TICKET_ID  = 1004,
-        DYNAMIC_TYPE_SNIFFER_NAMED_KEY  = 1005,
-        DYNAMIC_TYPE_SNIFFER_KEY        = 1006
+        DYNAMIC_TYPE_DEBUG_TAG    = 100,
+        DYNAMIC_TYPE_SNIFFER_SERVER      = 1000,
+        DYNAMIC_TYPE_SNIFFER_SESSION     = 1001,
+        DYNAMIC_TYPE_SNIFFER_PB          = 1002,
+        DYNAMIC_TYPE_SNIFFER_PB_BUFFER   = 1003,
+        DYNAMIC_TYPE_SNIFFER_TICKET_ID   = 1004,
+        DYNAMIC_TYPE_SNIFFER_NAMED_KEY   = 1005,
+        DYNAMIC_TYPE_SNIFFER_KEY         = 1006,
+        DYNAMIC_TYPE_SNIFFER_KEYLOG_NODE = 1007,
+        DYNAMIC_TYPE_AES_EAX = 1008,
     };
 
     /* max error buffer string size */
@@ -1378,8 +1378,7 @@ typedef struct w64wrapper {
         typedef unsigned int  THREAD_RETURN;
         typedef size_t        THREAD_TYPE;
         #define WOLFSSL_THREAD
-    #elif (defined(_POSIX_THREADS) || defined(HAVE_PTHREAD)) && \
-        !defined(__MINGW32__)
+    #elif defined(WOLFSSL_PTHREADS)
         #ifndef __MACH__
             #include <pthread.h>
             typedef struct COND_TYPE {
@@ -1388,7 +1387,10 @@ typedef struct w64wrapper {
             } COND_TYPE;
         #else
             #include <dispatch/dispatch.h>
-            typedef dispatch_semaphore_t COND_TYPE;
+            typedef struct COND_TYPE {
+                wolfSSL_Mutex mutex;
+                dispatch_semaphore_t cond;
+            } COND_TYPE;
         #endif
         typedef void*         THREAD_RETURN;
         typedef pthread_t     THREAD_TYPE;
@@ -1401,14 +1403,19 @@ typedef struct w64wrapper {
         typedef unsigned int   THREAD_RETURN;
         typedef TaskHandle_t   THREAD_TYPE;
         #define WOLFSSL_THREAD
-    #elif defined(_MSC_VER)
+    #elif defined(USE_WINDOWS_API)
         typedef unsigned      THREAD_RETURN;
         typedef uintptr_t     THREAD_TYPE;
-        typedef HANDLE        COND_TYPE;
+        typedef struct COND_TYPE {
+            wolfSSL_Mutex mutex;
+            HANDLE cond;
+        } COND_TYPE;
         #define WOLFSSL_COND
         #define INVALID_THREAD_VAL ((THREAD_TYPE)(INVALID_HANDLE_VALUE))
         #define WOLFSSL_THREAD __stdcall
-        #define WOLFSSL_THREAD_NO_JOIN __cdecl
+        #if !defined(__MINGW32__)
+            #define WOLFSSL_THREAD_NO_JOIN __cdecl
+        #endif
     #else
         typedef unsigned int  THREAD_RETURN;
         typedef size_t        THREAD_TYPE;
@@ -1439,7 +1446,7 @@ typedef struct w64wrapper {
          *                  callbacks
          * WOLFSSL_THREAD_NO_JOIN - attribute that should be used to declare
          *                          thread callbacks that don't require cleanup
-         * WOLFSSL_COND - defined if this system suports signaling
+         * WOLFSSL_COND - defined if this system supports signaling
          * COND_TYPE - type that should be passed into the signaling API
          * WOLFSSL_THREAD_VOID_RETURN - defined if the thread callback has a
          *                              void return
@@ -1482,6 +1489,8 @@ typedef struct w64wrapper {
             WOLFSSL_API int wolfSSL_CondFree(COND_TYPE* cond);
             WOLFSSL_API int wolfSSL_CondSignal(COND_TYPE* cond);
             WOLFSSL_API int wolfSSL_CondWait(COND_TYPE* cond);
+            WOLFSSL_API int wolfSSL_CondStart(COND_TYPE* cond);
+            WOLFSSL_API int wolfSSL_CondEnd(COND_TYPE* cond);
         #endif
     #else
         #define WOLFSSL_RETURN_FROM_THREAD(x) return (THREAD_RETURN)(x)
@@ -1560,90 +1569,24 @@ typedef struct w64wrapper {
         #define PRAGMA_DIAG_POP /* null expansion */
     #endif
 
-    #ifdef DEBUG_VECTOR_REGISTER_ACCESS
-        WOLFSSL_API extern THREAD_LS_T int wc_svr_count;
-        WOLFSSL_API extern THREAD_LS_T const char *wc_svr_last_file;
-        WOLFSSL_API extern THREAD_LS_T int wc_svr_last_line;
-
-        #ifdef DEBUG_VECTOR_REGISTERS_ABORT_ON_FAIL
-            #define DEBUG_VECTOR_REGISTERS_EXTRA_FAIL_CLAUSE abort();
-        #elif defined(DEBUG_VECTOR_REGISTERS_EXIT_ON_FAIL)
-            #define DEBUG_VECTOR_REGISTERS_EXTRA_FAIL_CLAUSE exit(1);
-        #else
-            #define DEBUG_VECTOR_REGISTERS_EXTRA_FAIL_CLAUSE
-        #endif
-
-        #define SAVE_VECTOR_REGISTERS(...) {                            \
-            ++wc_svr_count;                                             \
-            if (wc_svr_count > 5) {                                     \
-                fprintf(stderr,                                         \
-                        "%s @ L%d : incr : wc_svr_count %d (last op %s L%d)\n", \
-                        __FILE__,                                       \
-                        __LINE__,                                       \
-                        wc_svr_count,                                   \
-                        wc_svr_last_file,                               \
-                        wc_svr_last_line);                              \
-                DEBUG_VECTOR_REGISTERS_EXTRA_FAIL_CLAUSE                \
-            }                                                           \
-            wc_svr_last_file = __FILE__;                                \
-            wc_svr_last_line = __LINE__;                                \
-        }
-        #define ASSERT_SAVED_VECTOR_REGISTERS(fail_clause) {            \
-            if (wc_svr_count <= 0) {                                    \
-                fprintf(stderr,                                         \
-                        "ASSERT_SAVED_VECTOR_REGISTERS : %s @ L%d : wc_svr_count %d (last op %s L%d)\n", \
-                        __FILE__,                                       \
-                        __LINE__,                                       \
-                        wc_svr_count,                                   \
-                        wc_svr_last_file,                               \
-                        wc_svr_last_line);                              \
-                DEBUG_VECTOR_REGISTERS_EXTRA_FAIL_CLAUSE                \
-                { fail_clause }                                         \
-            }                                                           \
-        }
-        #define ASSERT_RESTORED_VECTOR_REGISTERS(fail_clause) {         \
-            if (wc_svr_count != 0) {                                    \
-                fprintf(stderr,                                         \
-                        "ASSERT_RESTORED_VECTOR_REGISTERS : %s @ L%d : wc_svr_count %d (last op %s L%d)\n", \
-                        __FILE__,                                       \
-                        __LINE__,                                       \
-                        wc_svr_count,                                   \
-                        wc_svr_last_file,                               \
-                        wc_svr_last_line);                              \
-                DEBUG_VECTOR_REGISTERS_EXTRA_FAIL_CLAUSE                \
-                { fail_clause }                                         \
-            }                                                           \
-        }
-        #define RESTORE_VECTOR_REGISTERS(...) {                         \
-            --wc_svr_count;                                             \
-            if ((wc_svr_count > 4) || (wc_svr_count < 0)) {             \
-                fprintf(stderr,                                         \
-                        "%s @ L%d : decr : wc_svr_count %d (last op %s L%d)\n", \
-                        __FILE__,                                       \
-                        __LINE__,                                       \
-                        wc_svr_count,                                   \
-                        wc_svr_last_file,                               \
-                        wc_svr_last_line);                              \
-                DEBUG_VECTOR_REGISTERS_EXTRA_FAIL_CLAUSE                \
-            }                                                           \
-            wc_svr_last_file = __FILE__;                                \
-            wc_svr_last_line = __LINE__;                                \
-        }
-    #else
-        #ifndef SAVE_VECTOR_REGISTERS
-            #define SAVE_VECTOR_REGISTERS(...) WC_DO_NOTHING
-        #endif
-        #ifndef ASSERT_SAVED_VECTOR_REGISTERS
-            #define ASSERT_SAVED_VECTOR_REGISTERS(...) WC_DO_NOTHING
-        #endif
-        #ifndef ASSERT_RESTORED_VECTOR_REGISTERS
-            #define ASSERT_RESTORED_VECTOR_REGISTERS(...) WC_DO_NOTHING
-        #endif
-        #ifndef RESTORE_VECTOR_REGISTERS
-            #define RESTORE_VECTOR_REGISTERS() WC_DO_NOTHING
-        #endif
+    #ifndef SAVE_VECTOR_REGISTERS
+        #define SAVE_VECTOR_REGISTERS(...) WC_DO_NOTHING
     #endif
-
+    #ifndef SAVE_VECTOR_REGISTERS2
+        #define SAVE_VECTOR_REGISTERS2() 0
+    #endif
+    #ifndef WC_DEBUG_SET_VECTOR_REGISTERS_RETVAL
+        #define WC_DEBUG_SET_VECTOR_REGISTERS_RETVAL(x) WC_DO_NOTHING
+    #endif
+    #ifndef ASSERT_SAVED_VECTOR_REGISTERS
+        #define ASSERT_SAVED_VECTOR_REGISTERS(...) WC_DO_NOTHING
+    #endif
+    #ifndef ASSERT_RESTORED_VECTOR_REGISTERS
+        #define ASSERT_RESTORED_VECTOR_REGISTERS(...) WC_DO_NOTHING
+    #endif
+    #ifndef RESTORE_VECTOR_REGISTERS
+        #define RESTORE_VECTOR_REGISTERS() WC_DO_NOTHING
+    #endif
 
     #if FIPS_VERSION_GE(5,1)
         #define WC_SPKRE_F(x,y) wolfCrypt_SetPrivateKeyReadEnable_fips((x),(y))

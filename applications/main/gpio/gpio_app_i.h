@@ -13,16 +13,22 @@
 #include <notification/notification_messages.h>
 #include <gui/modules/variable_item_list.h>
 #include <gui/modules/widget.h>
+#include <gui/modules/dialog_ex.h>
 #include "views/gpio_test.h"
 #include "views/gpio_usb_uart.h"
+#include "views/gpio_i2c_scanner.h"
+#include "views/gpio_i2c_sfp.h"
 #include "gpio_icons.h"
+#include <expansion/expansion.h>
 
 struct GpioApp {
+    Expansion* expansion;
     Gui* gui;
     NotificationApp* notifications;
     ViewDispatcher* view_dispatcher;
     SceneManager* scene_manager;
     Widget* widget;
+    DialogEx* dialog;
 
     VariableItemList* var_item_list;
     VariableItem* var_item_flow;
@@ -30,6 +36,8 @@ struct GpioApp {
     GpioUsbUart* gpio_usb_uart;
     GPIOItems* gpio_items;
     UsbUartBridge* usb_uart_bridge;
+    GpioI2CScanner* gpio_i2c_scanner;
+    GpioI2CSfp* gpio_i2c_sfp;
     UsbUartConfig* usb_uart_cfg;
 };
 
@@ -39,4 +47,7 @@ typedef enum {
     GpioAppViewUsbUart,
     GpioAppViewUsbUartCfg,
     GpioAppViewUsbUartCloseRpc,
+    GpioAppViewExitConfirm,
+    GpioAppViewI2CScanner,
+    GpioAppViewI2CSfp
 } GpioAppView;

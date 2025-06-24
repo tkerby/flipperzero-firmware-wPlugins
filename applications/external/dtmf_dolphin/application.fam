@@ -3,16 +3,13 @@ App(
     name="DTMF Dolphin",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="dtmf_dolphin_app",
-    requires=[
-        "storage",
-        "gui",
-        "dialogs",
-    ],
     fap_icon="phone.png",
     stack_size=8 * 1024,
-    order=20,
     fap_category="Tools",
-    fap_author="@litui & @xMasterX",
-    fap_version=(1, 1),
+    fap_author="litui & xMasterX",
+    fap_weburl="https://github.com/xMasterX/all-the-plugins/tree/dev/base_pack/dtmf_dolphin",
+    fap_version="1.5",
     fap_description="DTMF (Dual-Tone Multi-Frequency) dialer, Bluebox, and Redbox.",
+    #  [Add EAS tone #1086 (By JendrBendr)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1086)
+    #  [gpio output (By Dmitry422)](https://github.com/xMasterX/all-the-plugins/commit/b09aa5a3bb7b04ae2f44ed047f8dfebefbef9307)
 )

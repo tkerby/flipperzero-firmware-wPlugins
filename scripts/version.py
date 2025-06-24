@@ -35,11 +35,7 @@ class GitVersion:
             or "unknown"
         )
 
-        version = os.environ.get("DIST_SUFFIX", None) or "0.89.1"
-
-        force_no_dirty = os.environ.get("FORCE_NO_DIRTY", None) or ""
-        if force_no_dirty != "":
-            dirty = False
+        version = os.environ.get("DIST_SUFFIX", None) or "0.420.0"
 
         if "SOURCE_DATE_EPOCH" in os.environ:
             commit_date = datetime.utcfromtimestamp(
@@ -47,7 +43,7 @@ class GitVersion:
             )
         else:
             commit_date = datetime.strptime(
-                self._exec_git("log -1 --format=%cd").strip(),
+                self._exec_git("log -1 --format=%cd --date=default").strip(),
                 "%a %b %d %H:%M:%S %Y %z",
             )
 
@@ -104,7 +100,7 @@ class Main(App):
             required=True,
         )
         self.parser_generate.add_argument(
-            "-fw-origin",
+            "--fw-origin",
             dest="firmware_origin",
             type=str,
             help="firmware origin",

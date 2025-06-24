@@ -5,6 +5,7 @@
 #include <core/log.h>
 #include <core/log.h>
 #include <furi_hal_rtc.h>
+#include <datetime/datetime.h>
 
 static bool calendar_app_custom_event_callback(void* context, uint32_t event) {
     furi_assert(context);
@@ -19,7 +20,7 @@ static bool calendar_app_back_event_callback(void* context) {
 }
 
 VariableSharedContext* calendar_app_variable_shared_context_alloc() {
-    FuriHalRtcDateTime datetime;
+    DateTime datetime;
     furi_hal_rtc_get_datetime(&datetime);
     VariableSharedContext* variable_shared_context = malloc(sizeof(VariableSharedContext));
     variable_shared_context->year_selected = datetime.year;

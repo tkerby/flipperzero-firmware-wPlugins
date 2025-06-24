@@ -15,7 +15,6 @@ typedef struct TotpGenerateCodeWorkerContext TotpGenerateCodeWorkerContext;
  * @brief Generate token worker events
  */
 enum TotGenerateCodeWorkerEvents {
-
     /**
      * @brief Reserved, should not be used anywhere
      */
@@ -27,7 +26,7 @@ enum TotGenerateCodeWorkerEvents {
     TotpGenerateCodeWorkerEventStop = 0b01,
 
     /**
-     * @brief Trigger token input automation
+     * @brief Triggers OTP code generation
      */
     TotpGenerateCodeWorkerEventForceUpdate = 0b10
 };

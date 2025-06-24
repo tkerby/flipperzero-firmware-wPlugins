@@ -1,6 +1,7 @@
 #pragma once
 #include <toolbox/protocols/protocol.h>
 #include "../tools/t5577.h"
+#include "../tools/em4305.h"
 
 typedef enum {
     LFRFIDFeatureASK = 1 << 0, /** ASK Demodulation */
@@ -10,9 +11,13 @@ typedef enum {
 
 typedef enum {
     LFRFIDProtocolEM4100,
+    LFRFIDProtocolEM410032,
+    LFRFIDProtocolEM410016,
+    LFRFIDProtocolElectra,
     LFRFIDProtocolH10301,
     LFRFIDProtocolIdteck,
     LFRFIDProtocolIndala26,
+    LFRFIDProtocolIndala224,
     LFRFIDProtocolIOProxXSF,
     LFRFIDProtocolAwid,
     LFRFIDProtocolFDXA,
@@ -28,6 +33,10 @@ typedef enum {
     LFRFIDProtocolGallagher,
     LFRFIDProtocolHitag1,
     LFRFIDProtocolNexwatch,
+    LFRFIDProtocolInstafob,
+    LFRFIDProtocolSecurakey,
+    LFRFIDProtocolGProxII,
+
     LFRFIDProtocolMax,
 } LFRFIDProtocol;
 
@@ -35,11 +44,15 @@ extern const ProtocolBase* lfrfid_protocols[];
 
 typedef enum {
     LFRFIDWriteTypeT5577,
+    LFRFIDWriteTypeEM4305,
+
+    LFRFIDWriteTypeMax,
 } LFRFIDWriteType;
 
 typedef struct {
     LFRFIDWriteType write_type;
     union {
         LFRFIDT5577 t5577;
+        LFRFIDEM4305 em4305;
     };
 } LFRFIDWriteRequest;

@@ -1,8 +1,5 @@
 #pragma once
 
-typedef uint8_t AutomationKeyboardLayout;
+#include <stdint.h>
 
-enum AutomationKeyboardLayouts {
-    AutomationKeyboardLayoutQWERTY = 0,
-    AutomationKeyboardLayoutAZERTY = 1
-};
+typedef uint8_t AutomationKeyboardLayout;

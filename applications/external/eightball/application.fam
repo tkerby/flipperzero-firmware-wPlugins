@@ -1,0 +1,13 @@
+App(
+    appid="eightball",
+    name="Magic 8-ball",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="eight_ball_app",
+    stack_size=2 * 1024,
+    fap_category="Games",
+    fap_icon="icon.png",
+    fap_author="Steven Quinn",
+    fap_weburl="https://github.com/stevenquinn/flipper-8-ball",
+    fap_version="0.1",
+    fap_description="A simple Magic 8-ball",
+)

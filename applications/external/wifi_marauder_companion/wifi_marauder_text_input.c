@@ -1,6 +1,5 @@
 #include "wifi_marauder_text_input.h"
 #include <gui/elements.h>
-#include "esp32_wifi_marauder_icons.h"
 #include "wifi_marauder_app_i.h"
 #include <furi.h>
 
@@ -48,8 +47,8 @@ static const uint8_t keyboard_origin_y = 29;
 static const uint8_t keyboard_row_count = 3;
 static const uint8_t keyboard_count = 2;
 
-#define ENTER_KEY '\r'
-#define BACKSPACE_KEY '\b'
+#define ENTER_KEY           '\r'
+#define BACKSPACE_KEY       '\b'
 #define SWITCH_KEYBOARD_KEY 0xfe
 
 static const WIFI_TextInputKey keyboard_keys_row_1[] = {
@@ -306,7 +305,7 @@ static void wifi_text_input_view_draw_callback(Canvas* canvas, void* _model) {
         while(len && canvas_string_width(canvas, str) > needed_string_width) {
             str[len--] = '\0';
         }
-        strcat(str, "...");
+        //strcat(str, "..."); // TODO - find replacement
     }
 
     canvas_draw_str(canvas, start_pos, 22, str);

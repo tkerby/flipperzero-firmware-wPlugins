@@ -60,6 +60,9 @@
 
 /* THREADING/MUTEX SECTION */
 #ifdef USE_WINDOWS_API
+    #if defined(WOLFSSL_PTHREADS)
+        #include <pthread.h>
+    #endif
     #ifdef WOLFSSL_GAME_BUILD
         #include "system/xtl.h"
     #else
@@ -227,7 +230,7 @@
             signed char mutexBuffer[portQUEUE_OVERHEAD_BYTES];
             xSemaphoreHandle mutex;
         } wolfSSL_Mutex;
-    #elif defined(USE_WINDOWS_API)
+    #elif defined(USE_WINDOWS_API) && !defined(WOLFSSL_PTHREADS)
         typedef CRITICAL_SECTION wolfSSL_Mutex;
     #elif defined(MAXQ10XX_MUTEX)
         #include <sys/mman.h>
@@ -240,6 +243,7 @@
             typedef pthread_rwlock_t wolfSSL_RwLock;
         #endif
         typedef pthread_mutex_t wolfSSL_Mutex;
+        #define WOLFSSL_MUTEX_INITIALIZER PTHREAD_MUTEX_INITIALIZER
     #elif defined(THREADX)
         typedef TX_MUTEX wolfSSL_Mutex;
     #elif defined(WOLFSSL_DEOS)
@@ -739,10 +743,10 @@ WOLFSSL_ABI WOLFSSL_API int wolfCrypt_Cleanup(void);
 #endif
 
     #ifndef MAX_FILENAME_SZ
-        #define MAX_FILENAME_SZ  256 /* max file name length */
+        #define MAX_FILENAME_SZ (260 + 1) /* max file name length */
     #endif
     #ifndef MAX_PATH
-        #define MAX_PATH 256
+        #define MAX_PATH (260 + 1)
     #endif
 
     WOLFSSL_LOCAL int wc_FileLoad(const char* fname, unsigned char** buf,
@@ -978,7 +982,15 @@ WOLFSSL_ABI WOLFSSL_API int wolfCrypt_Cleanup(void);
     #ifndef _POSIX_C_SOURCE
         #include <zephyr/posix/time.h>
     #else
-        #include <sys/time.h>
+        #include <time.h>
+    #endif
+
+    #if defined(CONFIG_RTC)
+        #if defined(CONFIG_PICOLIBC) || defined(CONFIG_NEWLIB_LIBC)
+            #include <zephyr/drivers/rtc.h>
+        #else
+            #warning "RTC support needs picolibc or newlib (nano)"
+        #endif
     #endif
 
     time_t z_time(time_t *timer);
@@ -1051,6 +1063,11 @@ WOLFSSL_ABI WOLFSSL_API int wolfCrypt_Cleanup(void);
     #define XTIME(tl)       time((tl))
     #endif
 #endif
+
+#if defined(WOLFSSL_GMTIME) && !defined(HAVE_GMTIME_R)
+    #define HAVE_GMTIME_R
+#endif
+
 #if !defined(XGMTIME) && !defined(TIME_OVERRIDES)
     /* Always use gmtime_r if available. */
     #if defined(HAVE_GMTIME_S)
@@ -1116,8 +1133,9 @@ WOLFSSL_ABI WOLFSSL_API int wolfCrypt_Cleanup(void);
     extern struct tm* XGMTIME(const time_t* timer, struct tm* tmp);
 #elif defined(WOLFSSL_GMTIME)
     struct tm* gmtime(const time_t* timer);
+    struct tm* gmtime_r(const time_t* timer, struct tm *ret);
 #endif
-#endif /* NO_ASN_TIME */
+#endif /* !NO_ASN_TIME */
 
 
 #ifndef WOLFSSL_LEANPSK

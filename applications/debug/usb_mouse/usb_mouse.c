@@ -4,7 +4,7 @@
 #include <input/input.h>
 
 #define MOUSE_MOVE_SHORT 5
-#define MOUSE_MOVE_LONG 20
+#define MOUSE_MOVE_LONG  20
 
 typedef enum {
     EventTypeInput,
@@ -40,7 +40,6 @@ static void usb_mouse_input_callback(InputEvent* input_event, void* ctx) {
 int32_t usb_mouse_app(void* p) {
     UNUSED(p);
     FuriMessageQueue* event_queue = furi_message_queue_alloc(8, sizeof(UsbMouseEvent));
-    furi_check(event_queue);
     ViewPort* view_port = view_port_alloc();
 
     FuriHalUsbInterface* usb_mode_prev = furi_hal_usb_get_config();
@@ -55,11 +54,23 @@ int32_t usb_mouse_app(void* p) {
     gui_add_view_port(gui, view_port, GuiLayerFullscreen);
 
     UsbMouseEvent event;
+    uint8_t button_press_repeat_count = 0;
     while(1) {
         FuriStatus event_status = furi_message_queue_get(event_queue, &event, FuriWaitForever);
 
         if(event_status == FuriStatusOk) {
             if(event.type == EventTypeInput) {
+                /*  Jump Size = 5px
+                ONE JUMP 1st 5 repeats
+                2xJUMP acceleration thereafter (10px)
+                MAX speed 100px                                 */
+                button_press_repeat_count =
+                    (event.type == InputTypePress)   ? 0 :
+                    (event.type == InputTypeRelease) ? 0 :
+                    (button_press_repeat_count < 5)  ? button_press_repeat_count + 1 :
+                    (button_press_repeat_count > 17) ? 20 :
+                                                       button_press_repeat_count + 2;
+
                 if(event.input.type == InputTypeLong && event.input.key == InputKeyBack) {
                     break;
                 }
@@ -81,7 +92,10 @@ int32_t usb_mouse_app(void* p) {
                     if(event.input.type == InputTypePress) {
                         furi_hal_hid_mouse_move(MOUSE_MOVE_SHORT, 0);
                     } else if(event.input.type == InputTypeRepeat) {
-                        furi_hal_hid_mouse_move(MOUSE_MOVE_LONG, 0);
+                        for(uint8_t i = 0; i < button_press_repeat_count; i++) {
+                            furi_hal_hid_mouse_move(MOUSE_MOVE_SHORT, 0);
+                            furi_thread_yield(); //Let events fire, so button up can stop mouse.
+                        }
                     }
                 }
 
@@ -89,7 +103,10 @@ int32_t usb_mouse_app(void* p) {
                     if(event.input.type == InputTypePress) {
                         furi_hal_hid_mouse_move(-MOUSE_MOVE_SHORT, 0);
                     } else if(event.input.type == InputTypeRepeat) {
-                        furi_hal_hid_mouse_move(-MOUSE_MOVE_LONG, 0);
+                        for(uint8_t i = 0; i < button_press_repeat_count; i++) {
+                            furi_hal_hid_mouse_move(-MOUSE_MOVE_SHORT, 0);
+                            furi_thread_yield(); //Let events fire, so button up can stop mouse.
+                        }
                     }
                 }
 
@@ -97,7 +114,10 @@ int32_t usb_mouse_app(void* p) {
                     if(event.input.type == InputTypePress) {
                         furi_hal_hid_mouse_move(0, MOUSE_MOVE_SHORT);
                     } else if(event.input.type == InputTypeRepeat) {
-                        furi_hal_hid_mouse_move(0, MOUSE_MOVE_LONG);
+                        for(uint8_t i = 0; i < button_press_repeat_count; i++) {
+                            furi_hal_hid_mouse_move(0, MOUSE_MOVE_SHORT);
+                            furi_thread_yield(); //Let events fire, so button up can stop mouse.
+                        }
                     }
                 }
 
@@ -105,7 +125,10 @@ int32_t usb_mouse_app(void* p) {
                     if(event.input.type == InputTypePress) {
                         furi_hal_hid_mouse_move(0, -MOUSE_MOVE_SHORT);
                     } else if(event.input.type == InputTypeRepeat) {
-                        furi_hal_hid_mouse_move(0, -MOUSE_MOVE_LONG);
+                        for(uint8_t i = 0; i < button_press_repeat_count; i++) {
+                            furi_hal_hid_mouse_move(0, -MOUSE_MOVE_SHORT);
+                            furi_thread_yield(); //Let events fire, so button up can stop mouse.
+                        }
                     }
                 }
             }

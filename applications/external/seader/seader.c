@@ -1,4 +1,5 @@
 #include "seader_i.h"
+#include <expansion/expansion.h>
 
 #define TAG "Seader"
 
@@ -28,6 +29,7 @@ Seader* seader_alloc() {
         furi_hal_power_enable_otg();
     }
     seader->is_debug_enabled = furi_hal_rtc_is_flag_set(FuriHalRtcFlagDebug);
+    seader->samCommand = SamCommand_PR_NOTHING;
 
     seader->worker = seader_worker_alloc();
     seader->view_dispatcher = view_dispatcher_alloc();
@@ -44,6 +46,12 @@ Seader* seader_alloc() {
     seader->uart = seader_uart_alloc(seader);
 
     seader->credential = seader_credential_alloc();
+
+    seader->nfc = nfc_alloc();
+
+    // Nfc device
+    seader->nfc_device = nfc_device_alloc();
+    nfc_device_set_loading_callback(seader->nfc_device, seader_show_loading_popup, seader);
 
     // Open GUI record
     seader->gui = furi_record_open(RECORD_GUI);
@@ -73,16 +81,37 @@ Seader* seader_alloc() {
     view_dispatcher_add_view(
         seader->view_dispatcher, SeaderViewTextInput, text_input_get_view(seader->text_input));
 
+    // TextBox
+    seader->text_box = text_box_alloc();
+    view_dispatcher_add_view(
+        seader->view_dispatcher, SeaderViewTextBox, text_box_get_view(seader->text_box));
+    seader->text_box_store = furi_string_alloc();
+
     // Custom Widget
     seader->widget = widget_alloc();
     view_dispatcher_add_view(
         seader->view_dispatcher, SeaderViewWidget, widget_get_view(seader->widget));
 
-    seader->seader_uart_view = seader_uart_view_alloc();
-    view_dispatcher_add_view(
-        seader->view_dispatcher,
-        SeaderViewUart,
-        seader_uart_view_get_view(seader->seader_uart_view));
+    seader->plugin_manager =
+        plugin_manager_alloc(PLUGIN_APP_ID, PLUGIN_API_VERSION, firmware_api_interface);
+
+    seader->plugin_wiegand = NULL;
+    if(plugin_manager_load_all(seader->plugin_manager, APP_ASSETS_PATH("plugins")) !=
+       PluginManagerErrorNone) {
+        FURI_LOG_E(TAG, "Failed to load all libs");
+    } else {
+        uint32_t plugin_count = plugin_manager_get_count(seader->plugin_manager);
+        FURI_LOG_I(TAG, "Loaded %lu plugin(s)", plugin_count);
+
+        for(uint32_t i = 0; i < plugin_count; i++) {
+            const PluginWiegand* plugin = plugin_manager_get_ep(seader->plugin_manager, i);
+            FURI_LOG_I(TAG, "plugin name: %s", plugin->name);
+            if(strcmp(plugin->name, "Plugin Wiegand") == 0) {
+                // Have to cast to drop "const" qualifier
+                seader->plugin_wiegand = (PluginWiegand*)plugin;
+            }
+        }
+    }
 
     return seader;
 }
@@ -100,6 +129,11 @@ void seader_free(Seader* seader) {
     seader_credential_free(seader->credential);
     seader->credential = NULL;
 
+    nfc_free(seader->nfc);
+
+    // Nfc device
+    nfc_device_free(seader->nfc_device);
+
     // Submenu
     view_dispatcher_remove_view(seader->view_dispatcher, SeaderViewMenu);
     submenu_free(seader->submenu);
@@ -116,12 +150,14 @@ void seader_free(Seader* seader) {
     view_dispatcher_remove_view(seader->view_dispatcher, SeaderViewTextInput);
     text_input_free(seader->text_input);
 
+    // TextBox
+    view_dispatcher_remove_view(seader->view_dispatcher, SeaderViewTextBox);
+    text_box_free(seader->text_box);
+    furi_string_free(seader->text_box_store);
+
     // Custom Widget
     view_dispatcher_remove_view(seader->view_dispatcher, SeaderViewWidget);
     widget_free(seader->widget);
-
-    view_dispatcher_remove_view(seader->view_dispatcher, SeaderViewUart);
-    seader_uart_view_free(seader->seader_uart_view);
 
     // Worker
     seader_worker_stop(seader->worker);
@@ -140,6 +176,8 @@ void seader_free(Seader* seader) {
     // Notifications
     furi_record_close(RECORD_NOTIFICATION);
     seader->notifications = NULL;
+
+    plugin_manager_free(seader->plugin_manager);
 
     free(seader);
 }
@@ -179,20 +217,24 @@ void seader_blink_stop(Seader* seader) {
 
 void seader_show_loading_popup(void* context, bool show) {
     Seader* seader = context;
-    TaskHandle_t timer_task = xTaskGetHandle(configTIMER_SERVICE_TASK_NAME);
 
     if(show) {
         // Raise timer priority so that animations can play
-        vTaskPrioritySet(timer_task, configMAX_PRIORITIES - 1);
+        furi_timer_set_thread_priority(FuriTimerThreadPriorityElevated);
         view_dispatcher_switch_to_view(seader->view_dispatcher, SeaderViewLoading);
     } else {
         // Restore default timer priority
-        vTaskPrioritySet(timer_task, configTIMER_TASK_PRIORITY);
+        furi_timer_set_thread_priority(FuriTimerThreadPriorityNormal);
     }
 }
 
 int32_t seader_app(void* p) {
     UNUSED(p);
+
+    // Disable expansion protocol to avoid interference with UART Handle
+    Expansion* expansion = furi_record_open(RECORD_EXPANSION);
+    expansion_disable(expansion);
+
     Seader* seader = seader_alloc();
 
     scene_manager_next_scene(seader->scene_manager, SeaderSceneStart);
@@ -200,6 +242,10 @@ int32_t seader_app(void* p) {
     view_dispatcher_run(seader->view_dispatcher);
 
     seader_free(seader);
+
+    // Return previous state of expansion
+    expansion_enable(expansion);
+    furi_record_close(RECORD_EXPANSION);
 
     return 0;
 }

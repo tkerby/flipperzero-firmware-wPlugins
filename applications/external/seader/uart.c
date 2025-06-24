@@ -2,10 +2,22 @@
 
 #define TAG "SeaderUART"
 
-void seader_uart_on_irq_cb(UartIrqEvent ev, uint8_t data, void* context) {
+static void seader_uart_on_irq_rx_dma_cb(
+    FuriHalSerialHandle* handle,
+    FuriHalSerialRxEvent ev,
+    size_t size,
+    void* context) {
     SeaderUartBridge* seader_uart = (SeaderUartBridge*)context;
-    if(ev == UartIrqEventRXNE) {
-        furi_stream_buffer_send(seader_uart->rx_stream, &data, 1, 0);
+    if(ev & (FuriHalSerialRxEventData | FuriHalSerialRxEventIdle)) {
+        uint8_t data[FURI_HAL_SERIAL_DMA_BUFFER_SIZE] = {0};
+        while(size) {
+            size_t ret = furi_hal_serial_dma_rx(
+                handle,
+                data,
+                (size > FURI_HAL_SERIAL_DMA_BUFFER_SIZE) ? FURI_HAL_SERIAL_DMA_BUFFER_SIZE : size);
+            furi_stream_buffer_send(seader_uart->rx_stream, data, ret, 0);
+            size -= ret;
+        };
         furi_thread_flags_set(furi_thread_get_id(seader_uart->thread), WorkerEvtRxDone);
     }
 }
@@ -19,27 +31,32 @@ void seader_uart_disable(SeaderUartBridge* seader_uart) {
 }
 
 void seader_uart_serial_init(SeaderUartBridge* seader_uart, uint8_t uart_ch) {
-    UNUSED(seader_uart);
-    furi_hal_uart_init(uart_ch, 115200);
-    furi_hal_uart_set_irq_cb(uart_ch, seader_uart_on_irq_cb, seader_uart);
+    furi_assert(!seader_uart->serial_handle);
+
+    seader_uart->serial_handle = furi_hal_serial_control_acquire(uart_ch);
+    furi_assert(seader_uart->serial_handle);
+
+    furi_hal_serial_init(seader_uart->serial_handle, 115200);
+    furi_hal_serial_dma_rx_start(
+        seader_uart->serial_handle, seader_uart_on_irq_rx_dma_cb, seader_uart, false);
 }
 
-void seader_uart_serial_deinit(SeaderUartBridge* seader_uart, uint8_t uart_ch) {
-    UNUSED(seader_uart);
-    furi_hal_uart_set_irq_cb(uart_ch, NULL, NULL);
-    furi_hal_uart_deinit(uart_ch);
+void seader_uart_serial_deinit(SeaderUartBridge* seader_uart) {
+    furi_assert(seader_uart->serial_handle);
+    furi_hal_serial_deinit(seader_uart->serial_handle);
+    furi_hal_serial_control_release(seader_uart->serial_handle);
+    seader_uart->serial_handle = NULL;
 }
 
 void seader_uart_set_baudrate(SeaderUartBridge* seader_uart, uint32_t baudrate) {
     if(baudrate != 0) {
-        furi_hal_uart_set_br(seader_uart->cfg.uart_ch, baudrate);
+        furi_hal_serial_set_br(seader_uart->serial_handle, baudrate);
     } else {
         FURI_LOG_I(TAG, "No baudrate specified");
     }
 }
 
 size_t seader_uart_process_buffer(Seader* seader, uint8_t* cmd, size_t cmd_len) {
-    SeaderWorker* seader_worker = seader->worker;
     SeaderUartBridge* seader_uart = seader->uart;
     if(cmd_len < 2) {
         return cmd_len;
@@ -47,7 +64,7 @@ size_t seader_uart_process_buffer(Seader* seader, uint8_t* cmd, size_t cmd_len) 
 
     size_t consumed = 0;
     do {
-        consumed = seader_ccid_process(seader_worker, cmd, cmd_len);
+        consumed = seader_ccid_process(seader, cmd, cmd_len);
 
         if(consumed > 0) {
             memset(cmd, 0, consumed);
@@ -72,6 +89,7 @@ size_t seader_uart_process_buffer(Seader* seader, uint8_t* cmd, size_t cmd_len) 
 int32_t seader_uart_worker(void* context) {
     Seader* seader = (Seader*)context;
     SeaderUartBridge* seader_uart = seader->uart;
+    furi_thread_set_current_priority(FuriThreadPriorityHighest);
 
     memcpy(&seader_uart->cfg, &seader_uart->cfg_new, sizeof(SeaderUartConfig));
 
@@ -80,7 +98,7 @@ int32_t seader_uart_worker(void* context) {
     seader_uart->tx_sem = furi_semaphore_alloc(1, 1);
 
     seader_uart->tx_thread =
-        furi_thread_alloc_ex("SeaderUartTxWorker", 2 * 1024, seader_uart_tx_thread, seader);
+        furi_thread_alloc_ex("SeaderUartTxWorker", 1.5 * 1024, seader_uart_tx_thread, seader);
 
     seader_uart_serial_init(seader_uart, seader_uart->cfg.uart_ch);
     seader_uart_set_baudrate(seader_uart, seader_uart->cfg.baudrate);
@@ -101,7 +119,7 @@ int32_t seader_uart_worker(void* context) {
             cmd_len = 0;
             break;
         }
-        if(events & WorkerEvtRxDone) {
+        if(events & (WorkerEvtRxDone | WorkerEvtSamTxComplete)) {
             size_t len = furi_stream_buffer_receive(
                 seader_uart->rx_stream, seader_uart->rx_buf, SEADER_UART_RX_BUF_SIZE, 0);
             if(len > 0) {
@@ -127,7 +145,7 @@ int32_t seader_uart_worker(void* context) {
             }
         }
     }
-    seader_uart_serial_deinit(seader_uart, seader_uart->cfg.uart_ch);
+    seader_uart_serial_deinit(seader_uart);
 
     furi_thread_flags_set(furi_thread_get_id(seader_uart->tx_thread), WorkerEvtTxStop);
     furi_thread_join(seader_uart->tx_thread);
@@ -140,6 +158,8 @@ int32_t seader_uart_worker(void* context) {
 
 SeaderUartBridge* seader_uart_enable(SeaderUartConfig* cfg, Seader* seader) {
     SeaderUartBridge* seader_uart = malloc(sizeof(SeaderUartBridge));
+
+    seader_uart->T = 1;
 
     memcpy(&(seader_uart->cfg_new), cfg, sizeof(SeaderUartConfig));
 
@@ -154,6 +174,7 @@ int32_t seader_uart_tx_thread(void* context) {
     Seader* seader = (Seader*)context;
     SeaderUartBridge* seader_uart = seader->uart;
 
+    furi_thread_set_current_priority(FuriThreadPriorityHighest);
     while(1) {
         uint32_t events =
             furi_thread_flags_wait(WORKER_ALL_TX_EVENTS, FuriFlagWaitAny, FuriWaitForever);
@@ -161,16 +182,14 @@ int32_t seader_uart_tx_thread(void* context) {
         if(events & WorkerEvtTxStop) break;
         if(events & WorkerEvtSamRx) {
             if(seader_uart->tx_len > 0) {
-                /*
                 char display[SEADER_UART_RX_BUF_SIZE * 2 + 1] = {0};
                 for(uint8_t i = 0; i < seader_uart->tx_len; i++) {
                     snprintf(display + (i * 2), sizeof(display), "%02x", seader_uart->tx_buf[i]);
                 }
-                FURI_LOG_I(TAG, "SEND %d bytes: %s", seader_uart->tx_len, display);
-                */
+                // FURI_LOG_I(TAG, "SEND %d bytes: %s", seader_uart->tx_len, display);
                 seader_uart->st.tx_cnt += seader_uart->tx_len;
-                furi_hal_uart_tx(
-                    seader_uart->cfg.uart_ch, seader_uart->tx_buf, seader_uart->tx_len);
+                furi_hal_serial_tx(
+                    seader_uart->serial_handle, seader_uart->tx_buf, seader_uart->tx_len);
             }
         }
     }
@@ -190,7 +209,7 @@ void seader_uart_get_state(SeaderUartBridge* seader_uart, SeaderUartState* st) {
 }
 
 SeaderUartBridge* seader_uart_alloc(Seader* seader) {
-    SeaderUartConfig cfg = {.uart_ch = FuriHalUartIdLPUART1, .baudrate = 115200};
+    SeaderUartConfig cfg = {.uart_ch = FuriHalSerialIdLpuart, .baudrate = 115200};
     SeaderUartState uart_state;
     SeaderUartBridge* seader_uart;
 

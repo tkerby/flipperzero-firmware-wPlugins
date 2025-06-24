@@ -47,8 +47,8 @@ static const uint8_t keyboard_origin_y = 29;
 static const uint8_t keyboard_row_count = 3;
 static const uint8_t keyboard_count = 2;
 
-#define ENTER_KEY '\r'
-#define BACKSPACE_KEY '\b'
+#define ENTER_KEY           '\r'
+#define BACKSPACE_KEY       '\b'
 #define SWITCH_KEYBOARD_KEY 0xfe
 
 static const TextInputKey keyboard_keys_row_1[] = {
@@ -201,7 +201,7 @@ static uint8_t get_row_size(const Keyboard* keyboard, uint8_t row_index) {
             row_size = COUNT_OF(keyboard_keys_row_3);
             break;
         default:
-            furi_crash(NULL);
+            furi_crash();
         }
     }
 
@@ -213,7 +213,7 @@ static const TextInputKey* get_row(const Keyboard* keyboard, uint8_t row_index) 
     if(row_index < 3) {
         row = keyboard->rows[row_index];
     } else {
-        furi_crash(NULL);
+        furi_crash();
     }
 
     return row;
@@ -226,14 +226,14 @@ static char get_selected_char(TextInputModel* model) {
 }
 
 static bool char_is_lowercase(char letter) {
-    return (letter >= 0x61 && letter <= 0x7A);
+    return letter >= 0x61 && letter <= 0x7A;
 }
 
 static char char_to_uppercase(const char letter) {
     if(letter == '_') {
         return 0x20;
     } else if(char_is_lowercase(letter)) {
-        return (letter - 0x20);
+        return letter - 0x20;
     } else {
         return letter;
     }
@@ -299,7 +299,7 @@ static void text_input_view_draw_callback(Canvas* canvas, void* _model) {
         while(len && canvas_string_width(canvas, str) > needed_string_width) {
             str[len--] = '\0';
         }
-        strcat(str, "...");
+        strlcat(str, "...", sizeof(buf) - (str - buf));
     }
 
     canvas_draw_str(canvas, start_pos, 22, str);
@@ -414,6 +414,7 @@ static void text_input_handle_down(TextInput* text_input, TextInputModel* model)
 static void text_input_handle_left(TextInput* text_input, TextInputModel* model) {
     UNUSED(text_input);
     if(model->cursor_select) {
+        model->clear_default_text = false;
         if(model->cursor_pos > 0) {
             model->cursor_pos = CLAMP(model->cursor_pos - 1, strlen(model->text_buffer), 0u);
         }
@@ -428,6 +429,7 @@ static void text_input_handle_left(TextInput* text_input, TextInputModel* model)
 static void text_input_handle_right(TextInput* text_input, TextInputModel* model) {
     UNUSED(text_input);
     if(model->cursor_select) {
+        model->clear_default_text = false;
         model->cursor_pos = CLAMP(model->cursor_pos + 1, strlen(model->text_buffer), 0u);
     } else if(
         model->selected_column <
@@ -439,7 +441,10 @@ static void text_input_handle_right(TextInput* text_input, TextInputModel* model
 }
 
 static void text_input_handle_ok(TextInput* text_input, TextInputModel* model, InputType type) {
-    if(model->cursor_select) return;
+    if(model->cursor_select) {
+        model->clear_default_text = !model->clear_default_text;
+        return;
+    }
     bool shift = type == InputTypeLong;
     bool repeat = type == InputTypeRepeat;
     char selected = get_selected_char(model);
@@ -587,7 +592,7 @@ void text_input_timer_callback(void* context) {
         true);
 }
 
-TextInput* text_input_alloc() {
+TextInput* text_input_alloc(void) {
     TextInput* text_input = malloc(sizeof(TextInput));
     text_input->view = view_alloc();
     view_set_context(text_input->view, text_input);
@@ -614,7 +619,7 @@ TextInput* text_input_alloc() {
 }
 
 void text_input_free(TextInput* text_input) {
-    furi_assert(text_input);
+    furi_check(text_input);
     with_view_model(
         text_input->view,
         TextInputModel * model,
@@ -632,7 +637,7 @@ void text_input_free(TextInput* text_input) {
 }
 
 void text_input_reset(TextInput* text_input) {
-    furi_assert(text_input);
+    furi_check(text_input);
     with_view_model(
         text_input->view,
         TextInputModel * model,
@@ -658,7 +663,7 @@ void text_input_reset(TextInput* text_input) {
 }
 
 View* text_input_get_view(TextInput* text_input) {
-    furi_assert(text_input);
+    furi_check(text_input);
     return text_input->view;
 }
 
@@ -669,6 +674,7 @@ void text_input_set_result_callback(
     char* text_buffer,
     size_t text_buffer_size,
     bool clear_default_text) {
+    furi_check(text_input);
     with_view_model(
         text_input->view,
         TextInputModel * model,
@@ -704,6 +710,7 @@ void text_input_set_validator(
     TextInput* text_input,
     TextInputValidatorCallback callback,
     void* callback_context) {
+    furi_check(text_input);
     with_view_model(
         text_input->view,
         TextInputModel * model,
@@ -715,6 +722,7 @@ void text_input_set_validator(
 }
 
 TextInputValidatorCallback text_input_get_validator_callback(TextInput* text_input) {
+    furi_check(text_input);
     TextInputValidatorCallback validator_callback = NULL;
     with_view_model(
         text_input->view,
@@ -725,6 +733,7 @@ TextInputValidatorCallback text_input_get_validator_callback(TextInput* text_inp
 }
 
 void* text_input_get_validator_callback_context(TextInput* text_input) {
+    furi_check(text_input);
     void* validator_callback_context = NULL;
     with_view_model(
         text_input->view,
@@ -735,6 +744,6 @@ void* text_input_get_validator_callback_context(TextInput* text_input) {
 }
 
 void text_input_set_header_text(TextInput* text_input, const char* text) {
-    with_view_model(
-        text_input->view, TextInputModel * model, { model->header = text; }, true);
+    furi_check(text_input);
+    with_view_model(text_input->view, TextInputModel * model, { model->header = text; }, true);
 }

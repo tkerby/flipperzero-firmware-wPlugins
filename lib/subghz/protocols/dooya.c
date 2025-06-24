@@ -44,10 +44,12 @@ const SubGhzProtocolDecoder subghz_protocol_dooya_decoder = {
     .feed = subghz_protocol_decoder_dooya_feed,
     .reset = subghz_protocol_decoder_dooya_reset,
 
-    .get_hash_data = subghz_protocol_decoder_dooya_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = subghz_protocol_decoder_dooya_get_hash_data,
     .serialize = subghz_protocol_decoder_dooya_serialize,
     .deserialize = subghz_protocol_decoder_dooya_deserialize,
     .get_string = subghz_protocol_decoder_dooya_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder subghz_protocol_dooya_encoder = {
@@ -347,10 +349,10 @@ static void subghz_protocol_dooya_check_remote_controller(SubGhzBlockGeneric* in
     instance->btn = instance->data & 0xFF;
 }
 
-uint8_t subghz_protocol_decoder_dooya_get_hash_data(void* context) {
+uint32_t subghz_protocol_decoder_dooya_get_hash_data(void* context) {
     furi_assert(context);
     SubGhzProtocolDecoderDooya* instance = context;
-    return subghz_protocol_blocks_get_hash_data(
+    return subghz_protocol_blocks_get_hash_data_long(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 

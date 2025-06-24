@@ -79,12 +79,18 @@ bool totp_scene_authenticate_handle_event(
         return true;
     }
 
-    if(event->input.type == InputTypeLong && event->input.key == InputKeyBack) {
+    if(event->input.type == InputTypeShort && event->input.key == InputKeyBack) {
         return false;
     }
 
     SceneState* scene_state = plugin_state->current_scene_state;
-    if(event->input.type == InputTypePress) {
+    if((event->input.type == InputTypeLong || event->input.type == InputTypeRepeat) &&
+       event->input.key == InputKeyBack) {
+        if(scene_state->code_length > 0) {
+            scene_state->code_input[scene_state->code_length - 1] = 0;
+            scene_state->code_length--;
+        }
+    } else if(event->input.type == InputTypePress) {
         switch(event->input.key) {
         case InputKeyUp:
             if(scene_state->code_length < MAX_CODE_LENGTH) {
@@ -110,13 +116,10 @@ bool totp_scene_authenticate_handle_event(
                 scene_state->code_length++;
             }
             break;
-        case InputKeyOk:
+        case InputKeyOk: {
             break;
+        }
         case InputKeyBack:
-            if(scene_state->code_length > 0) {
-                scene_state->code_input[scene_state->code_length - 1] = 0;
-                scene_state->code_length--;
-            }
             break;
         default:
             break;
@@ -131,12 +134,10 @@ bool totp_scene_authenticate_handle_event(
         }
 
         if(totp_crypto_verify_key(&plugin_state->crypto_settings)) {
-            FURI_LOG_D(LOGGING_TAG, "PIN is valid");
             totp_config_file_ensure_latest_encryption(
                 plugin_state, &scene_state->code_input[0], scene_state->code_length);
             totp_scene_director_activate_scene(plugin_state, TotpSceneGenerateToken);
         } else {
-            FURI_LOG_D(LOGGING_TAG, "PIN is NOT valid");
             memset(&scene_state->code_input[0], 0, MAX_CODE_LENGTH);
             memset(&plugin_state->crypto_settings.iv[0], 0, CRYPTO_IV_LENGTH);
             scene_state->code_length = 0;

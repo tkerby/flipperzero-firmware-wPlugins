@@ -4,6 +4,7 @@
 #include <furi_hal.h>
 #include "sd_notify.h"
 #include <furi_hal_sd.h>
+#include <toolbox/path.h>
 
 typedef FIL SDFile;
 typedef DIR SDDir;
@@ -24,13 +25,13 @@ static FS_Error storage_ext_parse_error(SDError error);
 
 /******************* Core Functions *******************/
 
-static bool sd_mount_card(StorageData* storage, bool notify) {
+static bool sd_mount_card_internal(StorageData* storage, bool notify) {
     bool result = false;
-    uint8_t counter = sd_max_mount_retry_count();
+    uint8_t counter = furi_hal_sd_max_mount_retry_count();
     uint8_t bsp_result;
     SDData* sd_data = storage->data;
 
-    while(result == false && counter > 0 && hal_sd_detect()) {
+    while(result == false && counter > 0 && furi_hal_sd_is_present()) {
         if(notify) {
             NotificationApp* notification = furi_record_open(RECORD_NOTIFICATION);
             sd_notify_wait(notification);
@@ -39,9 +40,9 @@ static bool sd_mount_card(StorageData* storage, bool notify) {
 
         if((counter % 2) == 0) {
             // power reset sd card
-            bsp_result = sd_init(true);
+            bsp_result = furi_hal_sd_init(true);
         } else {
-            bsp_result = sd_init(false);
+            bsp_result = furi_hal_sd_init(false);
         }
 
         if(bsp_result) {
@@ -100,10 +101,36 @@ FS_Error sd_unmount_card(StorageData* storage) {
     storage->status = StorageStatusNotReady;
     error = FR_DISK_ERR;
 
-    // TODO do i need to close the files?
+    // TODO FL-3522: do i need to close the files?
     f_mount(0, sd_data->path, 0);
 
     return storage_ext_parse_error(error);
+}
+
+FS_Error sd_mount_card(StorageData* storage, bool notify) {
+    sd_mount_card_internal(storage, notify);
+    FS_Error error;
+
+    if(storage->status != StorageStatusOK) {
+        FURI_LOG_E(TAG, "sd init error: %s", storage_data_status_text(storage));
+        if(notify) {
+            NotificationApp* notification = furi_record_open(RECORD_NOTIFICATION);
+            sd_notify_error(notification);
+            furi_record_close(RECORD_NOTIFICATION);
+        }
+        error = FSE_INTERNAL;
+    } else {
+        FURI_LOG_I(TAG, "card mounted");
+        if(notify) {
+            NotificationApp* notification = furi_record_open(RECORD_NOTIFICATION);
+            sd_notify_success(notification);
+            furi_record_close(RECORD_NOTIFICATION);
+        }
+
+        error = FSE_OK;
+    }
+
+    return error;
 }
 
 FS_Error sd_format_card(StorageData* storage) {
@@ -123,7 +150,9 @@ FS_Error sd_format_card(StorageData* storage) {
         storage->status = StorageStatusNotAccessible;
         if(error != FR_OK) break;
         storage->status = StorageStatusNoFS;
-        error = f_setlabel("Flipper SD");
+        char label[] = "X:Flipper SD";
+        label[0] = sd_data->path[0]; // Drive number
+        error = f_setlabel(label);
         if(error != FR_OK) break;
         storage->status = StorageStatusNotMounted;
         error = f_mount(sd_data->fs, sd_data->path, 1);
@@ -199,18 +228,18 @@ FS_Error sd_card_info(StorageData* storage, SDInfo* sd_info) {
 #endif
     }
 
-    SD_CID cid;
-    SdSpiStatus status = sd_get_cid(&cid);
+    FuriHalSdInfo info;
+    FuriStatus status = furi_hal_sd_info(&info);
 
-    if(status == SdSpiStatusOK) {
-        sd_info->manufacturer_id = cid.ManufacturerID;
-        memcpy(sd_info->oem_id, cid.OEM_AppliID, sizeof(cid.OEM_AppliID));
-        memcpy(sd_info->product_name, cid.ProdName, sizeof(cid.ProdName));
-        sd_info->product_revision_major = cid.ProdRev >> 4;
-        sd_info->product_revision_minor = cid.ProdRev & 0x0F;
-        sd_info->product_serial_number = cid.ProdSN;
-        sd_info->manufacturing_year = 2000 + cid.ManufactYear;
-        sd_info->manufacturing_month = cid.ManufactMonth;
+    if(status == FuriStatusOk) {
+        sd_info->manufacturer_id = info.manufacturer_id;
+        memcpy(sd_info->oem_id, info.oem_id, sizeof(info.oem_id));
+        memcpy(sd_info->product_name, info.product_name, sizeof(info.product_name));
+        sd_info->product_revision_major = info.product_revision_major;
+        sd_info->product_revision_minor = info.product_revision_minor;
+        sd_info->product_serial_number = info.product_serial_number;
+        sd_info->manufacturing_year = info.manufacturing_year;
+        sd_info->manufacturing_month = info.manufacturing_month;
     }
 
     return storage_ext_parse_error(error);
@@ -220,36 +249,19 @@ static void storage_ext_tick_internal(StorageData* storage, bool notify) {
     SDData* sd_data = storage->data;
 
     if(sd_data->sd_was_present) {
-        if(hal_sd_detect()) {
+        if(furi_hal_sd_is_present()) {
             FURI_LOG_I(TAG, "card detected");
+            sd_data->sd_was_present = false;
             sd_mount_card(storage, notify);
 
-            if(storage->status != StorageStatusOK) {
-                FURI_LOG_E(TAG, "sd init error: %s", storage_data_status_text(storage));
-                if(notify) {
-                    NotificationApp* notification = furi_record_open(RECORD_NOTIFICATION);
-                    sd_notify_error(notification);
-                    furi_record_close(RECORD_NOTIFICATION);
-                }
-            } else {
-                FURI_LOG_I(TAG, "card mounted");
-                if(notify) {
-                    NotificationApp* notification = furi_record_open(RECORD_NOTIFICATION);
-                    sd_notify_success(notification);
-                    furi_record_close(RECORD_NOTIFICATION);
-                }
-            }
-
-            sd_data->sd_was_present = false;
-
-            if(!hal_sd_detect()) {
+            if(!furi_hal_sd_is_present()) {
                 FURI_LOG_I(TAG, "card removed while mounting");
                 sd_unmount_card(storage);
                 sd_data->sd_was_present = true;
             }
         }
     } else {
-        if(!hal_sd_detect()) {
+        if(!furi_hal_sd_is_present()) {
             FURI_LOG_I(TAG, "card removed");
             sd_data->sd_was_present = true;
 
@@ -304,6 +316,16 @@ static FS_Error storage_ext_parse_error(SDError error) {
     return result;
 }
 
+static char* storage_ext_drive_path(StorageData* storage, const char* path) {
+    SDData* sd_data = storage->data;
+    size_t path_len = strlen(path) + 3;
+    char* path_drv = malloc(path_len);
+    path_drv[0] = sd_data->path[0];
+    path_drv[1] = ':';
+    strlcpy(path_drv + 2, path, path_len - 2);
+    return path_drv;
+}
+
 /******************* File Functions *******************/
 
 static bool storage_ext_file_open(
@@ -326,9 +348,11 @@ static bool storage_ext_file_open(
     SDFile* file_data = malloc(sizeof(SDFile));
     storage_set_storage_file_data(file, file_data, storage);
 
-    file->internal_error_id = f_open(file_data, path, _mode);
+    char* drive_path = storage_ext_drive_path(storage, path);
+    file->internal_error_id = f_open(file_data, drive_path, _mode);
+    free(drive_path);
     file->error_id = storage_ext_parse_error(file->internal_error_id);
-    return (file->error_id == FSE_OK);
+    return file->error_id == FSE_OK;
 }
 
 static bool storage_ext_file_close(void* ctx, File* file) {
@@ -338,7 +362,7 @@ static bool storage_ext_file_close(void* ctx, File* file) {
     file->error_id = storage_ext_parse_error(file->internal_error_id);
     free(file_data);
     storage_set_storage_file_data(file, NULL, storage);
-    return (file->error_id == FSE_OK);
+    return file->error_id == FSE_OK;
 }
 
 static uint16_t
@@ -383,7 +407,7 @@ static bool
     }
 
     file->error_id = storage_ext_parse_error(file->internal_error_id);
-    return (file->error_id == FSE_OK);
+    return file->error_id == FSE_OK;
 }
 
 static uint64_t storage_ext_file_tell(void* ctx, File* file) {
@@ -424,7 +448,7 @@ static bool storage_ext_file_truncate(void* ctx, File* file) {
     file->internal_error_id = f_truncate(file_data);
     file->error_id = storage_ext_parse_error(file->internal_error_id);
 #endif
-    return (file->error_id == FSE_OK);
+    return file->error_id == FSE_OK;
 }
 
 static bool storage_ext_file_sync(void* ctx, File* file) {
@@ -439,7 +463,7 @@ static bool storage_ext_file_sync(void* ctx, File* file) {
     file->internal_error_id = f_sync(file_data);
     file->error_id = storage_ext_parse_error(file->internal_error_id);
 #endif
-    return (file->error_id == FSE_OK);
+    return file->error_id == FSE_OK;
 }
 
 static uint64_t storage_ext_file_size(void* ctx, File* file) {
@@ -469,9 +493,11 @@ static bool storage_ext_dir_open(void* ctx, File* file, const char* path) {
 
     SDDir* file_data = malloc(sizeof(SDDir));
     storage_set_storage_file_data(file, file_data, storage);
-    file->internal_error_id = f_opendir(file_data, path);
+    char* drive_path = storage_ext_drive_path(storage, path);
+    file->internal_error_id = f_opendir(file_data, drive_path);
+    free(drive_path);
     file->error_id = storage_ext_parse_error(file->internal_error_id);
-    return (file->error_id == FSE_OK);
+    return file->error_id == FSE_OK;
 }
 
 static bool storage_ext_dir_close(void* ctx, File* file) {
@@ -481,7 +507,7 @@ static bool storage_ext_dir_close(void* ctx, File* file) {
     file->internal_error_id = f_closedir(file_data);
     file->error_id = storage_ext_parse_error(file->internal_error_id);
     free(file_data);
-    return (file->error_id == FSE_OK);
+    return file->error_id == FSE_OK;
 }
 
 static bool storage_ext_dir_read(
@@ -512,7 +538,7 @@ static bool storage_ext_dir_read(
         file->error_id = FSE_NOT_EXIST;
     }
 
-    return (file->error_id == FSE_OK);
+    return file->error_id == FSE_OK;
 }
 
 static bool storage_ext_dir_rewind(void* ctx, File* file) {
@@ -521,14 +547,16 @@ static bool storage_ext_dir_rewind(void* ctx, File* file) {
 
     file->internal_error_id = f_readdir(file_data, NULL);
     file->error_id = storage_ext_parse_error(file->internal_error_id);
-    return (file->error_id == FSE_OK);
+    return file->error_id == FSE_OK;
 }
 /******************* Common FS Functions *******************/
 
 static FS_Error storage_ext_common_stat(void* ctx, const char* path, FileInfo* fileinfo) {
-    UNUSED(ctx);
+    StorageData* storage = ctx;
     SDFileInfo _fileinfo;
-    SDError result = f_stat(path, &_fileinfo);
+    char* drive_path = storage_ext_drive_path(storage, path);
+    SDError result = f_stat(drive_path, &_fileinfo);
+    free(drive_path);
 
     if(fileinfo != NULL) {
         fileinfo->size = _fileinfo.fsize;
@@ -541,23 +569,29 @@ static FS_Error storage_ext_common_stat(void* ctx, const char* path, FileInfo* f
 }
 
 static FS_Error storage_ext_common_remove(void* ctx, const char* path) {
-    UNUSED(ctx);
+    StorageData* storage = ctx;
 #ifdef FURI_RAM_EXEC
+    UNUSED(storage);
     UNUSED(path);
     return FSE_NOT_READY;
 #else
-    SDError result = f_unlink(path);
+    char* drive_path = storage_ext_drive_path(storage, path);
+    SDError result = f_unlink(drive_path);
+    free(drive_path);
     return storage_ext_parse_error(result);
 #endif
 }
 
 static FS_Error storage_ext_common_mkdir(void* ctx, const char* path) {
-    UNUSED(ctx);
+    StorageData* storage = ctx;
 #ifdef FURI_RAM_EXEC
+    UNUSED(storage);
     UNUSED(path);
     return FSE_NOT_READY;
 #else
-    SDError result = f_mkdir(path);
+    char* drive_path = storage_ext_drive_path(storage, path);
+    SDError result = f_mkdir(drive_path);
+    free(drive_path);
     return storage_ext_parse_error(result);
 #endif
 }
@@ -603,6 +637,16 @@ static FS_Error storage_ext_common_fs_info(
 #endif
 }
 
+static bool storage_ext_common_equivalent_path(const char* path1, const char* path2) {
+#ifdef FURI_RAM_EXEC
+    UNUSED(path1);
+    UNUSED(path2);
+    return false;
+#else
+    return strcasecmp(path1, path2) == 0;
+#endif
+}
+
 /******************* Init Storage *******************/
 static const FS_Api fs_api = {
     .file =
@@ -632,6 +676,7 @@ static const FS_Api fs_api = {
             .mkdir = storage_ext_common_mkdir,
             .remove = storage_ext_common_remove,
             .fs_info = storage_ext_common_fs_info,
+            .equivalent_path = storage_ext_common_equivalent_path,
         },
 };
 
@@ -640,15 +685,207 @@ void storage_ext_init(StorageData* storage) {
 
     SDData* sd_data = malloc(sizeof(SDData));
     sd_data->fs = &fatfs_object;
-    sd_data->path = "0:/";
+    sd_data->path = fatfs_path;
     sd_data->sd_was_present = true;
 
     storage->data = sd_data;
     storage->api.tick = storage_ext_tick;
     storage->fs_api = &fs_api;
 
-    hal_sd_detect_init();
+    furi_hal_sd_presence_init();
 
     // do not notify on first launch, notifications app is waiting for our thread to read settings
     storage_ext_tick_internal(storage, false);
+}
+
+#include "fatfs/ff_gen_drv.h"
+
+#define SCSI_BLOCK_SIZE (0x200UL)
+static File* mnt_image = NULL;
+static StorageData* mnt_image_storage = NULL;
+bool mnt_mounted = false;
+;
+
+FS_Error storage_process_virtual_init(StorageData* image_storage, File* image) {
+    if(mnt_image) return FSE_ALREADY_OPEN;
+    mnt_image = image;
+    mnt_image_storage = image_storage;
+    return FSE_OK;
+}
+
+FS_Error storage_process_virtual_format(StorageData* storage) {
+#ifdef FURI_RAM_EXEC
+    UNUSED(storage);
+    return FSE_NOT_READY;
+#else
+    if(!mnt_image) return FSE_NOT_READY;
+    SDData* sd_data = storage->data;
+    uint8_t* work = malloc(_MAX_SS);
+    SDError error = f_mkfs(sd_data->path, FM_ANY, 0, work, _MAX_SS);
+    free(work);
+    if(error != FR_OK) return FSE_INTERNAL;
+
+    if(storage_process_virtual_mount(storage) == FSE_OK) {
+        // Image file path
+        const char* img_path = storage_file_get_path(mnt_image, mnt_image_storage);
+        // Image file name
+        FuriString* img_name = furi_string_alloc();
+        path_extract_filename_no_ext(img_path, img_name);
+        // Label with drive id prefix
+        char* label = storage_ext_drive_path(storage, furi_string_get_cstr(img_name));
+        furi_string_free(img_name);
+        f_setlabel(label);
+        free(label);
+        storage_process_virtual_unmount(storage);
+    }
+    return FSE_OK;
+#endif
+}
+
+FS_Error storage_process_virtual_mount(StorageData* storage) {
+    if(!mnt_image) return FSE_NOT_READY;
+    SDData* sd_data = storage->data;
+    SDError error = f_mount(sd_data->fs, sd_data->path, 1);
+    if(error == FR_NO_FILESYSTEM) return FSE_INVALID_PARAMETER;
+    if(error != FR_OK) return FSE_INTERNAL;
+    mnt_mounted = true;
+    return FSE_OK;
+}
+
+FS_Error storage_process_virtual_unmount(StorageData* storage) {
+    if(!mnt_image) return FSE_NOT_READY;
+    SDData* sd_data = storage->data;
+    SDError error = f_mount(0, sd_data->path, 0);
+    if(error != FR_OK) return FSE_INTERNAL;
+    mnt_mounted = false;
+    return FSE_OK;
+}
+
+FS_Error storage_process_virtual_quit(StorageData* storage) {
+    if(!mnt_image) return FSE_NOT_READY;
+    if(mnt_mounted) storage_process_virtual_unmount(storage);
+    mnt_image = NULL;
+    mnt_image_storage = NULL;
+    return FSE_OK;
+}
+
+/**
+  * @brief  Initializes a Drive
+  * @param  pdrv: Physical drive number (0..)
+  * @retval DSTATUS: Operation status
+  */
+static DSTATUS mnt_driver_initialize(BYTE pdrv) {
+    UNUSED(pdrv);
+    return RES_OK;
+}
+
+/**
+  * @brief  Gets Disk Status
+  * @param  pdrv: Physical drive number (0..)
+  * @retval DSTATUS: Operation status
+  */
+static DSTATUS mnt_driver_status(BYTE pdrv) {
+    UNUSED(pdrv);
+    if(!mnt_image) return STA_NOINIT;
+    return RES_OK;
+}
+
+/**
+  * @brief  Reads Sector(s)
+  * @param  pdrv: Physical drive number (0..)
+  * @param  *buff: Data buffer to store read data
+  * @param  sector: Sector address (LBA)
+  * @param  count: Number of sectors to read (1..128)
+  * @retval DRESULT: Operation result
+  */
+static DRESULT mnt_driver_read(BYTE pdrv, BYTE* buff, DWORD sector, UINT count) {
+    UNUSED(pdrv);
+    if(!storage_ext_file_seek(mnt_image_storage, mnt_image, sector * SCSI_BLOCK_SIZE, true)) {
+        return RES_ERROR;
+    }
+    size_t size = count * SCSI_BLOCK_SIZE;
+    size_t read = storage_ext_file_read(mnt_image_storage, mnt_image, buff, size);
+    return read == size ? RES_OK : RES_ERROR;
+}
+
+/**
+  * @brief  Writes Sector(s)
+  * @param  pdrv: Physical drive number (0..)
+  * @param  *buff: Data to be written
+  * @param  sector: Sector address (LBA)
+  * @param  count: Number of sectors to write (1..128)
+  * @retval DRESULT: Operation result
+  */
+static DRESULT mnt_driver_write(BYTE pdrv, const BYTE* buff, DWORD sector, UINT count) {
+    UNUSED(pdrv);
+    if(!storage_ext_file_seek(mnt_image_storage, mnt_image, sector * SCSI_BLOCK_SIZE, true)) {
+        return RES_ERROR;
+    }
+    size_t size = count * SCSI_BLOCK_SIZE;
+    size_t wrote = storage_ext_file_write(mnt_image_storage, mnt_image, buff, size);
+    return wrote == size ? RES_OK : RES_ERROR;
+}
+
+/**
+  * @brief  I/O control operation
+  * @param  pdrv: Physical drive number (0..)
+  * @param  cmd: Control code
+  * @param  *buff: Buffer to send/receive control data
+  * @retval DRESULT: Operation result
+  */
+static DRESULT mnt_driver_ioctl(BYTE pdrv, BYTE cmd, void* buff) {
+    DRESULT res = RES_ERROR;
+
+    DSTATUS status = mnt_driver_status(pdrv);
+    if(status & STA_NOINIT) return RES_NOTRDY;
+
+    switch(cmd) {
+    /* Make sure that no pending write process */
+    case CTRL_SYNC:
+        res = RES_OK;
+        break;
+
+    /* Get number of sectors on the disk (DWORD) */
+    case GET_SECTOR_COUNT:
+        *(DWORD*)buff = storage_ext_file_size(mnt_image_storage, mnt_image) / SCSI_BLOCK_SIZE;
+        res = RES_OK;
+        break;
+
+    /* Get R/W sector size (WORD) */
+    case GET_SECTOR_SIZE:
+        *(WORD*)buff = SCSI_BLOCK_SIZE;
+        res = RES_OK;
+        break;
+
+    /* Get erase block size in unit of sector (DWORD) */
+    case GET_BLOCK_SIZE:
+        *(DWORD*)buff = SCSI_BLOCK_SIZE;
+        res = RES_OK;
+        break;
+
+    default:
+        res = RES_PARERR;
+    }
+
+    return res;
+}
+
+static Diskio_drvTypeDef mnt_driver = {
+    mnt_driver_initialize,
+    mnt_driver_status,
+    mnt_driver_read,
+    mnt_driver_write,
+    mnt_driver_ioctl,
+};
+
+void storage_mnt_init(StorageData* storage) {
+    char path[4] = {0};
+    FATFS_LinkDriver(&mnt_driver, path);
+
+    SDData* sd_data = malloc(sizeof(SDData));
+    sd_data->fs = malloc(sizeof(FATFS));
+    sd_data->path = strdup(path);
+
+    storage->data = sd_data;
+    storage->fs_api = &fs_api;
 }

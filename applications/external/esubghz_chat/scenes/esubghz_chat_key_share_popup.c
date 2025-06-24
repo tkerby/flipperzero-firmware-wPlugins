@@ -1,5 +1,6 @@
 #include "../esubghz_chat_i.h"
 #include "../helpers/nfc_helpers.h"
+#include <machine/endian.h>
 
 struct ReplayDictNfcWriterContext {
     uint8_t* cur;
@@ -106,6 +107,12 @@ bool scene_on_event_key_share_popup(void* context, SceneManagerEvent event) {
     return false;
 }
 
+static bool temp_read_worker_cb(NfcWorkerEvent event, void* context) {
+    UNUSED(event);
+    UNUSED(context);
+    return true;
+}
+
 /* Cleans up the key share popup scene. */
 void scene_on_exit_key_share_popup(void* context) {
     FURI_LOG_T(APPLICATION_NAME, "scene_on_exit_key_share_popup");
@@ -116,6 +123,11 @@ void scene_on_exit_key_share_popup(void* context) {
     popup_reset(state->nfc_popup);
 
     notification_message(state->notification, &sequence_blink_stop);
+
+    nfc_worker_stop(state->nfc_worker);
+
+    nfc_worker_start(
+        state->nfc_worker, NfcWorkerStateRead, state->nfc_dev_data, temp_read_worker_cb, state);
 
     nfc_worker_stop(state->nfc_worker);
 

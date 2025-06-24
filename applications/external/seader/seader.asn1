@@ -6,6 +6,7 @@ RfStatus ::= OCTET STRING
 SamResponse ::= OCTET STRING
 -- omnikey_5326_dfr_softwaredeveloperguide 4.2
 PAC ::= BIT STRING
+NoArguments ::= NULL
 
 -- omnikey_5326_dfr_softwaredeveloperguide 3.3
 Payload ::= CHOICE {
@@ -23,7 +24,8 @@ ErrorResponse ::= SEQUENCE {
 SamCommand ::= CHOICE {
   requestPacs [1] IMPLICIT RequestPacs,
   version [2] IMPLICIT NULL,
-  cardDetected [13] IMPLICIT CardDetected
+  cardDetected [13] IMPLICIT CardDetected,
+  serialNumber [22] IMPLICIT NoArguments
 }
 
 CardDetected ::= SEQUENCE {
@@ -84,6 +86,26 @@ SamVersion ::= SEQUENCE {
   version [0] IMPLICIT OCTET STRING,
   firmware [1] IMPLICIT OCTET STRING,
   type [2] IMPLICIT OCTET STRING
+}
+
+-- Black Hate Asia 25: Dismantling-the-seos-protocol.
+
+Key ::= SEQUENCE {
+  referenceId [1] IMPLICIT OCTET STRING,
+  crypto OCTET STRING
+}
+
+PACS ::= SEQUENCE {
+  payload [5] IMPLICIT OCTET STRING
+}
+
+SIO ::= SEQUENCE {
+  rid [1] IMPLICIT OCTET STRING,
+  unknown3 [3] IMPLICIT OCTET STRING OPTIONAL,
+  unknown5 [5] NULL,
+  key [6] IMPLICIT Key,
+  pacs [7] IMPLICIT PACS,
+  unknown9 [9] NULL
 }
 
 END

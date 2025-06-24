@@ -2,7 +2,7 @@
 #include <gui/elements.h>
 #include <dolphin/dolphin.h>
 #include <assets_icons.h>
-#include <cfw.h>
+#include <cfw/cfw.h>
 #include <furi_hal_rtc.h>
 
 #include "../desktop_i.h"
@@ -15,6 +15,7 @@ static void desktop_view_lock_menu_dumbmode_changed(bool isThisGameMode) {
     DesktopSettingsApp* app = malloc(sizeof(DesktopSettingsApp));
     DESKTOP_SETTINGS_LOAD(&app->settings);
     app->settings.is_dumbmode = isThisGameMode;
+    app->settings.dummy_mode = isThisGameMode;
     DESKTOP_SETTINGS_SAVE(&app->settings);
 }
 
@@ -84,15 +85,15 @@ void desktop_lock_menu_set_idx(DesktopLockMenuView* lock_menu, uint8_t idx) {
 void desktop_lock_menu_draw_callback(Canvas* canvas, void* model) {
     DesktopLockMenuViewModel* m = model;
 
-    if(CFW_SETTINGS()->lock_menu_type) {
+    if(cfw_settings.lock_menu_type) {
         canvas_set_color(canvas, ColorBlack);
         canvas_set_font(canvas, FontBatteryPercent);
 
-        int x, y, w, h;
+        int8_t x, y, w, h;
         bool selected, toggle;
         bool enabled = false;
-        uint value = 0;
-        int total = 58;
+        uint8_t value = 0;
+        int8_t total = 58;
         const Icon* icon = NULL;
         for(size_t i = 0; i < DesktopLockMenuIndexTotalCount; ++i) {
             selected = m->idx == i;
@@ -122,7 +123,7 @@ void desktop_lock_menu_draw_callback(Canvas* canvas, void* model) {
                 break;
             case DesktopLockMenuIndexDarkMode:
                 icon = &I_CC_DarkMode_16x16;
-                enabled = CFW_SETTINGS()->dark_mode;
+                enabled = cfw_settings.dark_mode;
                 break;
             case DesktopLockMenuIndexLock:
                 icon = &I_CC_Lock_16x16;
@@ -222,14 +223,14 @@ void desktop_lock_menu_draw_callback(Canvas* canvas, void* model) {
                 break;
             case DesktopLockMenuIndexBasicStealth:
                 if(m->stealth_mode) {
-                    str = "Sound Mode";
+                    str = "Unmute";
                 } else {
-                    str = "Stealth Mode";
+                    str = "Mute";
                 }
                 break;
             case DesktopLockMenuIndexBasicDummy:
                 if(m->dummy_mode) {
-                    str = "Brainiac Mode";
+                    str = "Default Mode";
                 } else {
                     str = "Dummy Mode";
                 }
@@ -264,7 +265,7 @@ bool desktop_lock_menu_input_callback(InputEvent* event, void* context) {
     furi_assert(event);
     furi_assert(context);
 
-    if(CFW_SETTINGS()->lock_menu_type) {
+    if(cfw_settings.lock_menu_type) {
         DesktopLockMenuView* lock_menu = context;
         uint8_t idx = 0;
         int pin_lock = 0;
@@ -377,7 +378,7 @@ bool desktop_lock_menu_input_callback(InputEvent* event, void* context) {
                                                    DesktopLockMenuEventStealthModeOn;
                     break;
                 case DesktopLockMenuIndexDarkMode:
-                    CFW_SETTINGS()->dark_mode = !CFW_SETTINGS()->dark_mode;
+                    cfw_settings.dark_mode = !cfw_settings.dark_mode;
                     lock_menu->save_cfw = true;
                     break;
                 case DesktopLockMenuIndexDummy:
@@ -514,7 +515,7 @@ bool desktop_lock_menu_input_callback(InputEvent* event, void* context) {
     }
 }
 
-DesktopLockMenuView* desktop_lock_menu_alloc() {
+DesktopLockMenuView* desktop_lock_menu_alloc(void) {
     DesktopLockMenuView* lock_menu = malloc(sizeof(DesktopLockMenuView));
     lock_menu->bt = furi_record_open(RECORD_BT);
     lock_menu->notification = furi_record_open(RECORD_NOTIFICATION);

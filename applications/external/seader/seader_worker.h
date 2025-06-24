@@ -1,10 +1,16 @@
 #pragma once
 
+#include <lib/nfc/protocols/iso14443_4a/iso14443_4a_poller.h>
+#include <lib/nfc/protocols/mf_classic/mf_classic_poller.h>
+
+#include "sam_api.h"
 #include "seader_credential.h"
 #include "seader_bridge.h"
+#include "apdu_runner.h"
 
 typedef struct SeaderWorker SeaderWorker;
 typedef struct CCID_Message CCID_Message;
+typedef struct SeaderAPDU SeaderAPDU;
 
 typedef enum {
     // Init states
@@ -13,8 +19,8 @@ typedef enum {
     SeaderWorkerStateReady,
     // Main worker states
     SeaderWorkerStateCheckSam,
-    SeaderWorkerStateReadPicopass,
-    SeaderWorkerStateRead14a,
+    SeaderWorkerStateVirtualCredential,
+    SeaderWorkerStateAPDURunner,
     // Transition
     SeaderWorkerStateStop,
 } SeaderWorkerState;
@@ -31,7 +37,19 @@ typedef enum {
     SeaderWorkerEventSamMissing,
     SeaderWorkerEventNoCardDetected,
     SeaderWorkerEventStartReading,
+    SeaderWorkerEventAPDURunnerUpdate,
+    SeaderWorkerEventAPDURunnerSuccess,
+    SeaderWorkerEventAPDURunnerError,
 } SeaderWorkerEvent;
+
+typedef enum {
+    SeaderPollerEventTypeCardDetect,
+    SeaderPollerEventTypeConversation,
+    SeaderPollerEventTypeComplete,
+
+    SeaderPollerEventTypeSuccess,
+    SeaderPollerEventTypeFail,
+} SeaderPollerEventType;
 
 typedef void (*SeaderWorkerCallback)(SeaderWorkerEvent event, void* context);
 
@@ -45,10 +63,13 @@ void seader_worker_start(
     SeaderWorker* seader_worker,
     SeaderWorkerState state,
     SeaderUartBridge* uart,
-    SeaderCredential* credential,
     SeaderWorkerCallback callback,
     void* context);
 
 void seader_worker_stop(SeaderWorker* seader_worker);
-void seader_worker_process_sam_message(SeaderWorker* seader_worker, CCID_Message* message);
-void seader_worker_send_version(SeaderWorker* seader_worker);
+bool seader_worker_process_sam_message(Seader* seader, uint8_t* apdu, uint32_t len);
+void seader_worker_send_version(Seader* seader);
+
+NfcCommand seader_worker_poller_callback_iso14443_4a(NfcGenericEvent event, void* context);
+NfcCommand seader_worker_poller_callback_mfc(NfcGenericEvent event, void* context);
+NfcCommand seader_worker_poller_callback_picopass(PicopassPollerEvent event, void* context);

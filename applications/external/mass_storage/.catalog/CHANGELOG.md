@@ -1,3 +1,10 @@
+## v.1.4
+Removed call to legacy SDK API
+
+## v.1.3
+
+Minimal changes for recent API updates
+
 ## v.1.2
 
  * Fix deadlock on disk eject

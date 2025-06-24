@@ -1,10 +1,5 @@
 #pragma once
 
-#include "helpers/camera_suite_storage.h"
-#include "scenes/camera_suite_scene.h"
-#include "views/camera_suite_view_guide.h"
-#include "views/camera_suite_view_start.h"
-#include "views/camera_suite_view_camera.h"
 #include <furi.h>
 #include <furi_hal.h>
 #include <gui/gui.h>
@@ -16,6 +11,12 @@
 #include <input/input.h>
 #include <notification/notification_messages.h>
 #include <stdlib.h>
+
+#include "scenes/camera_suite_scene.h"
+#include "views/camera_suite_view_guide.h"
+#include "views/camera_suite_view_start.h"
+#include "views/camera_suite_view_camera.h"
+#include "helpers/camera_suite_storage.h"
 
 #define TAG "Camera Suite"
 
@@ -33,6 +34,7 @@ typedef struct {
     uint32_t dither;
     uint32_t flash;
     uint32_t haptic;
+    uint32_t jpeg;
     uint32_t speaker;
     uint32_t led;
     ButtonMenu* button_menu;
@@ -43,7 +45,8 @@ typedef enum {
     CameraSuiteViewIdMenu,
     CameraSuiteViewIdCamera,
     CameraSuiteViewIdGuide,
-    CameraSuiteViewIdSettings,
+    CameraSuiteViewIdAppSettings,
+    CameraSuiteViewIdCamSettings,
 } CameraSuiteViewId;
 
 typedef enum {
@@ -63,6 +66,11 @@ typedef enum {
     CameraSuiteFlashOff,
     CameraSuiteFlashOn,
 } CameraSuiteFlashState;
+
+typedef enum {
+    CameraSuiteJpegOff,
+    CameraSuiteJpegOn,
+} CameraSuiteJpegState;
 
 typedef enum {
     CameraSuiteHapticOff,

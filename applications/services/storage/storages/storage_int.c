@@ -4,7 +4,8 @@
 #include <toolbox/path.h>
 
 #define TAG "StorageInt"
-#define STORAGE_PATH STORAGE_INT_PATH_PREFIX
+
+#define STORAGE_PATH          STORAGE_INT_PATH_PREFIX
 #define LFS_CLEAN_FINGERPRINT 0
 
 /* When less than LFS_RESERVED_PAGES_COUNT are left free, creation & 
@@ -23,13 +24,13 @@ typedef struct {
     bool open;
 } LFSHandle;
 
-static LFSHandle* lfs_handle_alloc_file() {
+static LFSHandle* lfs_handle_alloc_file(void) {
     LFSHandle* handle = malloc(sizeof(LFSHandle));
     handle->data = malloc(sizeof(lfs_file_t));
     return handle;
 }
 
-static LFSHandle* lfs_handle_alloc_dir() {
+static LFSHandle* lfs_handle_alloc_dir(void) {
     LFSHandle* handle = malloc(sizeof(LFSHandle));
     handle->data = malloc(sizeof(lfs_dir_t));
     return handle;
@@ -134,7 +135,7 @@ static int storage_int_device_sync(const struct lfs_config* c) {
     return 0;
 }
 
-static LFSData* storage_int_lfs_data_alloc() {
+static LFSData* storage_int_lfs_data_alloc(void) {
     LFSData* lfs_data = malloc(sizeof(LFSData));
 
     // Internal storage start address
@@ -189,7 +190,7 @@ static void storage_int_lfs_mount(LFSData* lfs_data, StorageData* storage) {
     lfs_t* lfs = &lfs_data->lfs;
 
     bool was_fingerprint_outdated = storage_int_check_and_set_fingerprint(lfs_data);
-    bool need_format = furi_hal_rtc_is_flag_set(FuriHalRtcFlagFactoryReset) ||
+    bool need_format = furi_hal_rtc_is_flag_set(FuriHalRtcFlagStorageFormatInternal) ||
                        was_fingerprint_outdated;
 
     if(need_format) {
@@ -197,7 +198,7 @@ static void storage_int_lfs_mount(LFSData* lfs_data, StorageData* storage) {
         err = lfs_format(lfs, &lfs_data->config);
         if(err == 0) {
             FURI_LOG_I(TAG, "Factory reset: Format successful, trying to mount");
-            furi_hal_rtc_reset_flag(FuriHalRtcFlagFactoryReset);
+            furi_hal_rtc_reset_flag(FuriHalRtcFlagStorageFormatInternal);
             err = lfs_mount(lfs, &lfs_data->config);
             if(err == 0) {
                 FURI_LOG_I(TAG, "Factory reset: Mounted");
@@ -287,7 +288,7 @@ static bool storage_int_check_for_free_space(StorageData* storage) {
         lfs_size_t free_space =
             (lfs_data->config.block_count - result) * lfs_data->config.block_size;
 
-        return (free_space > LFS_RESERVED_PAGES_COUNT * furi_hal_flash_get_page_size());
+        return free_space > LFS_RESERVED_PAGES_COUNT * furi_hal_flash_get_page_size();
     }
 
     return false;
@@ -344,7 +345,7 @@ static bool storage_int_file_open(
 
     file->error_id = storage_int_parse_error(file->internal_error_id);
 
-    return (file->error_id == FSE_OK);
+    return file->error_id == FSE_OK;
 }
 
 static bool storage_int_file_close(void* ctx, File* file) {
@@ -360,7 +361,7 @@ static bool storage_int_file_close(void* ctx, File* file) {
 
     file->error_id = storage_int_parse_error(file->internal_error_id);
     lfs_handle_free(handle);
-    return (file->error_id == FSE_OK);
+    return file->error_id == FSE_OK;
 }
 
 static uint16_t
@@ -430,7 +431,7 @@ static bool
     }
 
     file->error_id = storage_int_parse_error(file->internal_error_id);
-    return (file->error_id == FSE_OK);
+    return file->error_id == FSE_OK;
 }
 
 static uint64_t storage_int_file_tell(void* ctx, File* file) {
@@ -483,7 +484,7 @@ static bool storage_int_file_truncate(void* ctx, File* file) {
         file->error_id = storage_int_parse_error(file->internal_error_id);
     }
 
-    return (file->error_id == FSE_OK);
+    return file->error_id == FSE_OK;
 }
 
 static bool storage_int_file_sync(void* ctx, File* file) {
@@ -498,7 +499,7 @@ static bool storage_int_file_sync(void* ctx, File* file) {
     }
 
     file->error_id = storage_int_parse_error(file->internal_error_id);
-    return (file->error_id == FSE_OK);
+    return file->error_id == FSE_OK;
 }
 
 static uint64_t storage_int_file_size(void* ctx, File* file) {
@@ -565,7 +566,7 @@ static bool storage_int_dir_open(void* ctx, File* file, const char* path) {
     }
 
     file->error_id = storage_int_parse_error(file->internal_error_id);
-    return (file->error_id == FSE_OK);
+    return file->error_id == FSE_OK;
 }
 
 static bool storage_int_dir_close(void* ctx, File* file) {
@@ -581,7 +582,7 @@ static bool storage_int_dir_close(void* ctx, File* file) {
 
     file->error_id = storage_int_parse_error(file->internal_error_id);
     lfs_handle_free(handle);
-    return (file->error_id == FSE_OK);
+    return file->error_id == FSE_OK;
 }
 
 static bool storage_int_dir_read(
@@ -622,7 +623,7 @@ static bool storage_int_dir_read(
         file->error_id = storage_int_parse_error(file->internal_error_id);
     }
 
-    return (file->error_id == FSE_OK);
+    return file->error_id == FSE_OK;
 }
 
 static bool storage_int_dir_rewind(void* ctx, File* file) {
@@ -637,7 +638,7 @@ static bool storage_int_dir_rewind(void* ctx, File* file) {
     }
 
     file->error_id = storage_int_parse_error(file->internal_error_id);
-    return (file->error_id == FSE_OK);
+    return file->error_id == FSE_OK;
 }
 
 /******************* Common FS Functions *******************/
@@ -694,6 +695,10 @@ static FS_Error storage_int_common_fs_info(
     return storage_int_parse_error(result);
 }
 
+static bool storage_int_common_equivalent_path(const char* path1, const char* path2) {
+    return strcmp(path1, path2) == 0;
+}
+
 /******************* Init Storage *******************/
 static const FS_Api fs_api = {
     .file =
@@ -723,6 +728,7 @@ static const FS_Api fs_api = {
             .mkdir = storage_int_common_mkdir,
             .remove = storage_int_common_remove,
             .fs_info = storage_int_common_fs_info,
+            .equivalent_path = storage_int_common_equivalent_path,
         },
 };
 

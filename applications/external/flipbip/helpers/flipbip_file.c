@@ -7,26 +7,26 @@
 #include <rand.h>
 
 // #define FLIPBIP_APP_BASE_FOLDER APP_DATA_PATH("flipbip")
-#define FLIPBIP_APP_BASE_FOLDER EXT_PATH("apps_data/flipbip")
+#define FLIPBIP_APP_BASE_FOLDER            EXT_PATH("apps_data/flipbip")
 #define FLIPBIP_APP_BASE_FOLDER_PATH(path) FLIPBIP_APP_BASE_FOLDER "/" path
-#define FLIPBIP_DAT_FILE_NAME ".flipbip.dat"
+#define FLIPBIP_DAT_FILE_NAME              ".flipbip.dat"
 // #define FLIPBIP_DAT_FILE_NAME ".flipbip.dat.txt"
-#define FLIPBIP_DAT_FILE_NAME_BAK ".flipbip.dat.bak"
-#define FLIPBIP_KEY_FILE_NAME ".flipbip.key"
+#define FLIPBIP_DAT_FILE_NAME_BAK          ".flipbip.dat.bak"
+#define FLIPBIP_KEY_FILE_NAME              ".flipbip.key"
 // #define FLIPBIP_KEY_FILE_NAME ".flipbip.key.txt"
-#define FLIPBIP_KEY_FILE_NAME_BAK ".flipbip.key.bak"
-#define FLIPBIP_DAT_PATH FLIPBIP_APP_BASE_FOLDER_PATH(FLIPBIP_DAT_FILE_NAME)
-#define FLIPBIP_DAT_PATH_BAK FLIPBIP_APP_BASE_FOLDER_PATH(FLIPBIP_DAT_FILE_NAME_BAK)
-#define FLIPBIP_KEY_PATH FLIPBIP_APP_BASE_FOLDER_PATH(FLIPBIP_KEY_FILE_NAME)
-#define FLIPBIP_KEY_PATH_BAK FLIPBIP_APP_BASE_FOLDER_PATH(FLIPBIP_KEY_FILE_NAME_BAK)
+#define FLIPBIP_KEY_FILE_NAME_BAK          ".flipbip.key.bak"
+#define FLIPBIP_DAT_PATH                   FLIPBIP_APP_BASE_FOLDER_PATH(FLIPBIP_DAT_FILE_NAME)
+#define FLIPBIP_DAT_PATH_BAK               FLIPBIP_APP_BASE_FOLDER_PATH(FLIPBIP_DAT_FILE_NAME_BAK)
+#define FLIPBIP_KEY_PATH                   FLIPBIP_APP_BASE_FOLDER_PATH(FLIPBIP_KEY_FILE_NAME)
+#define FLIPBIP_KEY_PATH_BAK               FLIPBIP_APP_BASE_FOLDER_PATH(FLIPBIP_KEY_FILE_NAME_BAK)
 
 const char* TEXT_QRFILE = "Filetype: QRCode\n"
                           "Version: 0\n"
                           "Message: "; // 37 chars + 1 null
-#define FILE_HLEN 4
-#define FILE_KLEN 256
-#define FILE_SLEN 512
-#define FILE_MAX_PATH_LEN 48
+#define FILE_HLEN               4
+#define FILE_KLEN               256
+#define FILE_SLEN               512
+#define FILE_MAX_PATH_LEN       48
 #define FILE_MAX_QRFILE_CONTENT 90
 const char* FILE_HSTR = "fb01";
 const char* FILE_K1 = "fb0131d5cf688221c109163908ebe51debb46227c6cc8b37641910833222772a"
@@ -39,12 +39,12 @@ bool flipbip_load_file(
     const char* file_name) {
     bool ret = false;
     const char* path;
+    char path_buf[FILE_MAX_PATH_LEN] = {0};
     if(file_type == FlipBipFileKey) {
         path = FLIPBIP_KEY_PATH;
     } else if(file_type == FlipBipFileDat) {
         path = FLIPBIP_DAT_PATH;
     } else {
-        char path_buf[FILE_MAX_PATH_LEN] = {0};
         strcpy(path_buf, FLIPBIP_APP_BASE_FOLDER); // 22
         strcpy(path_buf + strlen(path_buf), "/");
         strcpy(path_buf + strlen(path_buf), file_name);
@@ -96,12 +96,12 @@ bool flipbip_load_file(
 bool flipbip_has_file(const FlipBipFile file_type, const char* file_name, const bool remove) {
     bool ret = false;
     const char* path;
+    char path_buf[FILE_MAX_PATH_LEN] = {0};
     if(file_type == FlipBipFileKey) {
         path = FLIPBIP_KEY_PATH;
     } else if(file_type == FlipBipFileDat) {
         path = FLIPBIP_DAT_PATH;
     } else {
-        char path_buf[FILE_MAX_PATH_LEN] = {0};
         strcpy(path_buf, FLIPBIP_APP_BASE_FOLDER); // 22
         strcpy(path_buf + strlen(path_buf), "/");
         strcpy(path_buf + strlen(path_buf), file_name);
@@ -127,6 +127,7 @@ bool flipbip_save_file(
     bool ret = false;
     const char* path;
     const char* path_bak;
+    char path_buf[FILE_MAX_PATH_LEN] = {0};
     if(file_type == FlipBipFileKey) {
         path = FLIPBIP_KEY_PATH;
         path_bak = FLIPBIP_KEY_PATH_BAK;
@@ -134,7 +135,6 @@ bool flipbip_save_file(
         path = FLIPBIP_DAT_PATH;
         path_bak = FLIPBIP_DAT_PATH_BAK;
     } else {
-        char path_buf[FILE_MAX_PATH_LEN] = {0};
         strcpy(path_buf, FLIPBIP_APP_BASE_FOLDER); // 22
         strcpy(path_buf + strlen(path_buf), "/");
         strcpy(path_buf + strlen(path_buf), file_name);

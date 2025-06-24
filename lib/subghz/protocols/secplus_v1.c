@@ -11,19 +11,19 @@
 * https://github.com/merbanan/rtl_433/blob/master/src/devices/secplus_v1.c
 */
 
-#define TAG "SubGhzProtocoSecPlus_v1"
+#define TAG "SubGhzProtocoSecPlusV1"
 
 #define SECPLUS_V1_BIT_ERR -1 //0b0000
-#define SECPLUS_V1_BIT_0 0 //0b0001
-#define SECPLUS_V1_BIT_1 1 //0b0011
-#define SECPLUS_V1_BIT_2 2 //0b0111
+#define SECPLUS_V1_BIT_0   0 //0b0001
+#define SECPLUS_V1_BIT_1   1 //0b0011
+#define SECPLUS_V1_BIT_2   2 //0b0111
 
-#define SECPLUS_V1_PACKET_1_HEADER 0x00
-#define SECPLUS_V1_PACKET_2_HEADER 0x02
+#define SECPLUS_V1_PACKET_1_HEADER     0x00
+#define SECPLUS_V1_PACKET_2_HEADER     0x02
 #define SECPLUS_V1_PACKET_1_INDEX_BASE 0
 #define SECPLUS_V1_PACKET_2_INDEX_BASE 21
-#define SECPLUS_V1_PACKET_1_ACCEPTED (1 << 0)
-#define SECPLUS_V1_PACKET_2_ACCEPTED (1 << 1)
+#define SECPLUS_V1_PACKET_1_ACCEPTED   (1 << 0)
+#define SECPLUS_V1_PACKET_2_ACCEPTED   (1 << 1)
 
 static const SubGhzBlockConst subghz_protocol_secplus_v1_const = {
     .te_short = 500,
@@ -66,10 +66,12 @@ const SubGhzProtocolDecoder subghz_protocol_secplus_v1_decoder = {
     .feed = subghz_protocol_decoder_secplus_v1_feed,
     .reset = subghz_protocol_decoder_secplus_v1_reset,
 
-    .get_hash_data = subghz_protocol_decoder_secplus_v1_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = subghz_protocol_decoder_secplus_v1_get_hash_data,
     .serialize = subghz_protocol_decoder_secplus_v1_serialize,
     .deserialize = subghz_protocol_decoder_secplus_v1_deserialize,
     .get_string = subghz_protocol_decoder_secplus_v1_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder subghz_protocol_secplus_v1_encoder = {
@@ -228,7 +230,7 @@ static bool subghz_protocol_secplus_v1_encode(SubGhzProtocolEncoderSecPlus_v1* i
         rolling = 0xE6000000;
     }
     if(fixed > 0xCFD41B90) {
-        FURI_LOG_E("TAG", "Encode wrong fixed data");
+        FURI_LOG_E(TAG, "Encode wrong fixed data");
         return false;
     }
 
@@ -510,10 +512,10 @@ void subghz_protocol_decoder_secplus_v1_feed(void* context, bool level, uint32_t
     }
 }
 
-uint8_t subghz_protocol_decoder_secplus_v1_get_hash_data(void* context) {
+uint32_t subghz_protocol_decoder_secplus_v1_get_hash_data(void* context) {
     furi_assert(context);
     SubGhzProtocolDecoderSecPlus_v1* instance = context;
-    return subghz_protocol_blocks_get_hash_data(
+    return subghz_protocol_blocks_get_hash_data_long(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 
@@ -563,7 +565,7 @@ void subghz_protocol_decoder_secplus_v1_get_string(void* context, FuriString* ou
     furi_string_cat_printf(
         output,
         "%s %db\r\n"
-        "Key:0x%lX%08lX\r\n"
+        "Key:%lX%08lX\r\n"
         "id1:%d id0:%d",
         instance->generic.protocol_name,
         instance->generic.data_count_bit,
@@ -600,7 +602,7 @@ void subghz_protocol_decoder_secplus_v1_get_string(void* context, FuriString* ou
             output,
             "Sn:0x%08lX\r\n"
             "Cnt:0x%03lX "
-            "Sw_id:0x%X\r\n",
+            "SwID:0x%X\r\n",
             instance->generic.serial,
             instance->generic.cnt,
             instance->generic.btn);
@@ -619,7 +621,7 @@ void subghz_protocol_decoder_secplus_v1_get_string(void* context, FuriString* ou
             output,
             "Sn:0x%08lX\r\n"
             "Cnt:0x%03lX "
-            "Sw_id:0x%X\r\n",
+            "SwID:0x%X\r\n",
             instance->generic.serial,
             instance->generic.cnt,
             instance->generic.btn);

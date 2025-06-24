@@ -1,16 +1,18 @@
 #include "../cfw_app.h"
 #include "cfw_app_scene.h"
 
-#define CFW_DESKTOP_SELECT_ICON_STYLE 0
+#define CFW_DESKTOP_SELECT_ICON_STYLE      0
 #define CFW_DESKTOP_SELECT_BATTERY_DISPLAY 1
-#define CFW_DESKTOP_SELECT_BT_ICON 3
-#define CFW_DESKTOP_SELECT_CLOCK_DISPLAY 4
-#define CFW_DESKTOP_SELECT_DUMBMODE_ICON 5
-#define CFW_DESKTOP_SELECT_LOCK_ICON 6
-#define CFW_DESKTOP_SELECT_RPC_ICON 7
-#define CFW_DESKTOP_SELECT_SDCARD_ICON 8
-#define CFW_DESKTOP_SELECT_STEALTH_ICON 9
-#define CFW_DESKTOP_SELECT_TOP_BAR 10
+#define CFW_DESKTOP_SELECT_BT_ICON         3
+#define CFW_DESKTOP_SELECT_CLOCK_DISPLAY   4
+#define CFW_DESKTOP_SELECT_DUMBMODE_ICON   5
+#define CFW_DESKTOP_SELECT_LOCK_ICON       6
+#define CFW_DESKTOP_SELECT_RPC_ICON        7
+#define CFW_DESKTOP_SELECT_SDCARD_ICON     8
+#define CFW_DESKTOP_SELECT_STEALTH_ICON    9
+#define CFW_DESKTOP_SELECT_TOP_BAR         10
+
+#define FILE_NAME_LEN_MAX 256
 
 #define BATTERY_VIEW_COUNT 7
 const char* const battery_view_count_text[BATTERY_VIEW_COUNT] =
@@ -26,6 +28,14 @@ const uint32_t displayBatteryPercentage_value[BATTERY_VIEW_COUNT] = {
     DISPLAY_BATTERY_NONE};
 
 uint8_t origBattDisp_value = 0;
+
+//Dolphin Manifest Switcher menu.
+struct ManifestInfo {
+    char* FileName;
+    char* MenuName;
+};
+uint8_t ManifestFileCount; //Anymore than 255 manifests and kaboom!
+ManifestFilesArray_t ManifestFiles;
 
 #define CFW_DESKTOP_ICON_STYLE_COUNT 2
 
@@ -60,6 +70,15 @@ const uint32_t dumbmode_icon_value[CFW_DESKTOP_ON_OFF_COUNT] = {false, true};
 static void cfw_app_scene_interface_desktop_var_item_list_callback(void* context, uint32_t index) {
     CfwApp* app = context;
     view_dispatcher_send_custom_event(app->view_dispatcher, index);
+}
+
+static void cfw_app_scene_interface_desktop_anim_style_changed(VariableItem* item) {
+    CfwApp* app = variable_item_get_context(item);
+    uint8_t index = variable_item_get_current_value_index(item);
+    ManifestInfo* CurrentManifest = *ManifestFilesArray_get(ManifestFiles, index);
+    variable_item_set_current_value_text(item, CurrentManifest->MenuName);
+    cfw_settings.manifest_name = CurrentManifest->FileName;
+    app->save_settings = true;
 }
 
 static void cfw_app_scene_interface_desktop_clock_enable_changed(VariableItem* item) {
@@ -144,7 +163,6 @@ static void cfw_app_scene_interface_desktop_dumbmode_icon_changed(VariableItem* 
 
 void cfw_app_scene_interface_desktop_on_enter(void* context) {
     CfwApp* app = context;
-    // CfwSettings* cfw_settings = CFW_SETTINGS();
     VariableItemList* var_item_list = app->var_item_list;
 
     VariableItem* item;
@@ -152,6 +170,76 @@ void cfw_app_scene_interface_desktop_on_enter(void* context) {
 
     origIconStyle_value = app->desktop.icon_style;
     origBattDisp_value = app->desktop.displayBatteryPercentage;
+
+    //Initialization.
+    ManifestFileCount = 0;
+    ManifestFilesArray_init(ManifestFiles);
+
+    //Open up Storage.
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    File* folder = storage_file_alloc(storage);
+    FileInfo info;
+    char* name = malloc(FILE_NAME_LEN_MAX);
+    uint8_t current_manifest = 0;
+
+    //Lets walk the dolphin folder and get the filenamess.
+    if(storage_dir_open(folder, EXT_PATH("dolphin"))) {
+        while(storage_dir_read(folder, &info, name, FILE_NAME_LEN_MAX)) {
+            if(!(info.flags & FSF_DIRECTORY)) {
+                //Create the struct to add to the array of Manifests.
+                ManifestInfo* NewManifestInfo = malloc(sizeof(ManifestInfo));
+                NewManifestInfo->FileName = strdup(name);
+
+                //Are we on a manifest>
+                if(strncasecmp(NewManifestInfo->FileName, "manifest", 8) == 0) {
+                    if(strlen(NewManifestInfo->FileName) == 12) {
+                        //Default Manifest on every Flipper (You'd Hope!)
+                        NewManifestInfo->MenuName = "Default";
+
+                        //Add to the list of names.
+                        ManifestFilesArray_push_back(ManifestFiles, NewManifestInfo);
+                        ManifestFileCount++;
+                    } else {
+                        //Allocate memory for the menuname
+                        NewManifestInfo->MenuName = malloc(strlen(NewManifestInfo->FileName) - 12);
+                        snprintf(
+                            NewManifestInfo->MenuName,
+                            strlen(NewManifestInfo->FileName) - 12,
+                            "%s",
+                            NewManifestInfo->FileName + 9);
+
+                        //Sanity Check.
+                        if(strcmp(NewManifestInfo->MenuName, "") != 0) {
+                            //Add to the list of Manifests.
+                            ManifestFilesArray_push_back(ManifestFiles, NewManifestInfo);
+
+                            //Select in menu if its our manifest.
+                            if(strcmp(NewManifestInfo->FileName, cfw_settings.manifest_name) == 0)
+                                current_manifest = ManifestFileCount;
+
+                            //Count the added Files.
+                            ManifestFileCount++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    //Close up and free.
+    free(name);
+    storage_file_free(folder);
+
+    //Add items to list.
+    item = variable_item_list_add(
+        var_item_list,
+        "Animations",
+        ManifestFileCount,
+        cfw_app_scene_interface_desktop_anim_style_changed,
+        app);
+    variable_item_set_current_value_index(item, current_manifest);
+    ManifestInfo* CurrentManifest = *ManifestFilesArray_get(ManifestFiles, current_manifest);
+    variable_item_set_current_value_text(item, CurrentManifest->MenuName);
 
     item = variable_item_list_add(
         var_item_list,
@@ -327,6 +415,14 @@ void cfw_app_scene_interface_desktop_on_exit(void* context) {
     CfwApp* app = context;
     variable_item_list_reset(app->var_item_list);
     DESKTOP_SETTINGS_SAVE(&app->desktop);
+
+    //Free the Manifest List.
+    ManifestFilesArray_it_t ManifestFiles_it;
+    for(ManifestFilesArray_it(ManifestFiles_it, ManifestFiles);
+        !ManifestFilesArray_end_p(ManifestFiles_it);
+        ManifestFilesArray_next(ManifestFiles_it)) {
+        free(*ManifestFilesArray_cref(ManifestFiles_it));
+    }
 
     if((app->desktop.icon_style != origIconStyle_value) ||
        (app->desktop.displayBatteryPercentage != origBattDisp_value)) {

@@ -40,7 +40,7 @@ Data layout:
 - C: 8 bit Checksum (CRC8, Poly 0x7, Init 0x0)
 */
 
-#define PREAMBLE 0b000
+#define PREAMBLE          0b000
 #define PREAMBLE_BITS_LEN 3
 
 static const SubGhzBlockConst tpms_protocol_schrader_gg4_const = {
@@ -82,10 +82,12 @@ const SubGhzProtocolDecoder tpms_protocol_schrader_gg4_decoder = {
     .feed = tpms_protocol_decoder_schrader_gg4_feed,
     .reset = tpms_protocol_decoder_schrader_gg4_reset,
 
-    .get_hash_data = tpms_protocol_decoder_schrader_gg4_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = tpms_protocol_decoder_schrader_gg4_get_hash_data,
     .serialize = tpms_protocol_decoder_schrader_gg4_serialize,
     .deserialize = tpms_protocol_decoder_schrader_gg4_deserialize,
     .get_string = tpms_protocol_decoder_schrader_gg4_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder tpms_protocol_schrader_gg4_encoder = {
@@ -252,10 +254,10 @@ void tpms_protocol_decoder_schrader_gg4_feed(void* context, bool level, uint32_t
     }
 }
 
-uint8_t tpms_protocol_decoder_schrader_gg4_get_hash_data(void* context) {
+uint32_t tpms_protocol_decoder_schrader_gg4_get_hash_data(void* context) {
     furi_assert(context);
     TPMSProtocolDecoderSchraderGG4* instance = context;
-    return subghz_protocol_blocks_get_hash_data(
+    return subghz_protocol_blocks_get_hash_data_long(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 

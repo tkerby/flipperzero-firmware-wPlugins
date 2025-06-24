@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 // VB Lab Migration Assistant for Flipper Zero
-// Copyright (C) 2022  cyanic
+// Copyright (C) 2022-2024  cyanic
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -52,20 +52,29 @@ static void
     }
 }
 
-static bool vb_migrate_scene_to_app_worker_callback(NfcWorkerEvent event, void* context) {
+static NfcCommand vb_migrate_scene_to_app_worker_callback(NfcGenericEvent event, void* context) {
     VbMigrate* inst = context;
-    bool result = false;
+    NfcCommand result = NfcCommandContinue;
 
-    if(event == NfcWorkerEventSuccess) {
-        view_dispatcher_send_custom_event(inst->view_dispatcher, ToAppEventTypeTagWrite);
-        result = true;
+    if(event.protocol == NfcProtocolInvalid) {
+        NfcEvent* nfc_event = event.event_data;
+        if(nfc_event->type == NfcEventTypeRxEnd) {
+            const MfUltralightData* data =
+                nfc_listener_get_data(inst->listener, NfcProtocolMfUltralight);
+            const BantBlock* bant = vb_tag_get_bant_block_const(data);
+            if(vb_tag_get_operation(bant) == VbTagOperationTransferToApp) {
+                nfc_device_set_data(inst->nfc_dev, NfcProtocolMfUltralight, data);
+                view_dispatcher_send_custom_event(inst->view_dispatcher, ToAppEventTypeTagWrite);
+            }
+        }
     }
 
     return result;
 }
 
 static void vb_migrate_scene_to_app_set_nfc_state(VbMigrate* inst, ToAppState state) {
-    BantBlock* bant = vb_tag_get_bant_block(&inst->nfc_dev->dev_data);
+    nfc_device_copy_data(inst->nfc_dev, NfcProtocolMfUltralight, inst->data_work);
+    BantBlock* bant = vb_tag_get_bant_block(inst->data_work);
     if(state == ToAppStateEmulateReady) {
         vb_tag_set_random_nonce(bant);
         vb_tag_set_status(bant, VbTagStatusReady);
@@ -80,10 +89,12 @@ static void vb_migrate_scene_to_app_set_nfc_state(VbMigrate* inst, ToAppState st
     if(inst->clear_account_id) {
         vb_tag_set_app_flag(bant, false);
     }
+    nfc_device_set_data(inst->nfc_dev, NfcProtocolMfUltralight, inst->data_work);
 }
 
 static bool vb_migrate_scene_to_app_is_state_changed(VbMigrate* inst, ToAppState state) {
-    BantBlock* bant = vb_tag_get_bant_block(&inst->nfc_dev->dev_data);
+    const MfUltralightData* data = nfc_device_get_data(inst->nfc_dev, NfcProtocolMfUltralight);
+    const BantBlock* bant = vb_tag_get_bant_block_const(data);
     VbTagOperation operation = vb_tag_get_operation(bant);
 
     if(state == ToAppStateEmulateReady) {
@@ -183,7 +194,9 @@ static void vb_migrate_scene_to_app_set_state(VbMigrate* inst, ToAppState state)
 
 static void vb_migrate_scene_to_app_load_capture(VbMigrate* inst, bool go_next) {
     if(go_next) {
-        nfc_worker_stop(inst->worker);
+        nfc_listener_stop(inst->listener);
+        nfc_listener_free(inst->listener);
+        inst->listener = NULL;
         vb_migrate_blink_stop(inst);
         ++inst->next_id;
         ++inst->num_sent;
@@ -222,12 +235,11 @@ static void vb_migrate_scene_to_app_load_capture(VbMigrate* inst, bool go_next) 
             view_dispatcher_switch_to_view(inst->view_dispatcher, VbMigrateViewWidget);
 
             vb_migrate_scene_to_app_set_nfc_state(inst, state);
-            nfc_worker_start(
-                inst->worker,
-                NfcWorkerStateMfUltralightEmulate,
-                &inst->nfc_dev->dev_data,
-                vb_migrate_scene_to_app_worker_callback,
-                inst);
+
+            const NfcDeviceData* data =
+                nfc_device_get_data(inst->nfc_dev, NfcProtocolMfUltralight);
+            inst->listener = nfc_listener_alloc(inst->nfc, NfcProtocolMfUltralight, data);
+            nfc_listener_start(inst->listener, vb_migrate_scene_to_app_worker_callback, inst);
             vb_migrate_blink_emulate(inst);
         } else {
             view_dispatcher_send_custom_event(
@@ -291,7 +303,11 @@ void vb_migrate_scene_to_app_on_exit(void* context) {
 
     // Perform your cleanup here
     widget_reset(inst->widget);
-    nfc_worker_stop(inst->worker);
+    if(inst->listener) {
+        nfc_listener_stop(inst->listener);
+        nfc_listener_free(inst->listener);
+        inst->listener = NULL;
+    }
     vb_migrate_blink_stop(inst);
     notification_message_block(inst->notifications, &sequence_reset_red);
 }

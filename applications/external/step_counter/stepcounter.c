@@ -7,8 +7,9 @@
 #include <locale/locale.h>
 #include <notification/notification.h>
 #include <notification/notification_messages.h>
+#include <expansion/expansion.h>
 
-#define TAG_MEMSIC "memsic_2125_app"
+#define TAG_MEMSIC  "memsic_2125_app"
 #define TAG_COUNTER "step_counter_app"
 
 typedef struct {
@@ -46,7 +47,6 @@ void step_callback(void* ctx) {
     uint32_t now = timer.start;
 
     if(furi_hal_gpio_read(stepData->pin)) {
-        // Transition to HIGH.
         if(stepData->time_of_last_high_pulse != 0) {
             stepData->time_of_high_to_high = now - stepData->time_of_last_high_pulse;
         }
@@ -65,7 +65,10 @@ void step_callback(void* ctx) {
     }
 }
 
-static void input_callback(InputEvent* input_event, FuriMessageQueue* queue) {
+static void input_callback(InputEvent* input_event, void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* queue = ctx;
+
     StepCounterEvent event = {
         .type = StepCounterEventTypeKey,
         .input_event.key = input_event->key,
@@ -95,6 +98,9 @@ static void render_callback(Canvas* canvas, void* ctx) {
 
 int32_t step_counter_app(void* p) {
     UNUSED(p);
+
+    Expansion* expansion = furi_record_open(RECORD_EXPANSION);
+    expansion_disable(expansion);
 
     StepCounterContext* stepContext = malloc(sizeof(StepCounterContext));
     stepContext->data = malloc(sizeof(StepCounterData));
@@ -129,12 +135,10 @@ int32_t step_counter_app(void* p) {
                     event.input_event.type == InputTypeShort &&
                     event.input_event.key == InputKeyOk) {
                     stepContext->data->counting = !stepContext->data->counting;
-                    // Aggiorna l'interfaccia utente per riflettere il cambio di stato.
                     view_port_update(view_port);
                 }
                 break;
             case StepCounterEventTypeStep:
-                // Aggiorna l'interfaccia utente per riflettere il cambio di stato.
                 view_port_update(view_port);
                 break;
             default:
@@ -154,6 +158,9 @@ int32_t step_counter_app(void* p) {
     furi_message_queue_free(stepContext->queue);
     free(stepContext->data);
     free(stepContext);
+
+    expansion_enable(expansion);
+    furi_record_close(RECORD_EXPANSION);
 
     return 0;
 }

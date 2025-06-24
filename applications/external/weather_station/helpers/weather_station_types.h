@@ -3,12 +3,12 @@
 #include <furi.h>
 #include <furi_hal.h>
 
-#define WS_VERSION_APP "1.1"
-#define WS_DEVELOPED "SkorP"
-#define WS_GITHUB "https://github.com/flipperdevices/flipperzero-firmware"
+#define WS_VERSION_APP FAP_VERSION
+#define WS_DEVELOPED   "SkorP"
+#define WS_GITHUB      "https://github.com/flipperdevices/flipperzero-good-faps"
 
 #define WS_KEY_FILE_VERSION 1
-#define WS_KEY_FILE_TYPE "Flipper Weather Station Key File"
+#define WS_KEY_FILE_TYPE    "Flipper Weather Station Key File"
 
 /** WSRxKeyState state */
 typedef enum {

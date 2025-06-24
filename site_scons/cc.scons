@@ -3,10 +3,10 @@ Import("ENV")
 
 ENV.AppendUnique(
     CFLAGS=[
-        "-std=gnu17",
+        "-std=gnu2x",
     ],
     CXXFLAGS=[
-        "-std=c++17",
+        "-std=c++20",
         "-fno-rtti",
         "-fno-use-cxa-atexit",
         "-fno-exceptions",
@@ -21,13 +21,16 @@ ENV.AppendUnique(
         # "-MMD",
         # "-MP",
         "-Wall",
-        # "-Wextra",
-        # "-Werror",
+        "-Wextra",
+        "-Werror",
+        "-Wno-error=deprecated-declarations",
         "-Wno-address-of-packed-member",
         "-Wredundant-decls",
         "-Wdouble-promotion",
+        "-Wundef",
         "-fdata-sections",
         "-ffunction-sections",
+        "-Wa,-gdwarf-sections",
         "-fsingle-precision-constant",
         "-fno-math-errno",
         # Generates .su files with stack usage information
@@ -44,5 +47,6 @@ ENV.AppendUnique(
         "-mfpu=fpv4-sp-d16",
         "-mlittle-endian",
         "-mthumb",
+        "-Wl,--no-warn-rwx-segment",
     ],
 )

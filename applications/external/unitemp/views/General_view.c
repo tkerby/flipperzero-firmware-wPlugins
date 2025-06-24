@@ -16,11 +16,6 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include "UnitempViews.h"
-#include "unitemp_icons.h"
-
-extern const Icon I_ButtonRight_4x7;
-extern const Icon I_ButtonLeft_4x7;
-extern const Icon I_Ok_btn_9x9;
 
 static View* view;
 
@@ -96,21 +91,36 @@ static void _draw_temperature(Canvas* canvas, Sensor* sensor, uint8_t x, uint8_t
 }
 
 static void _draw_humidity(Canvas* canvas, Sensor* sensor, const uint8_t pos[2]) {
-    //Рисование рамки
+    // Drawing the frame
     canvas_draw_rframe(canvas, pos[0], pos[1], 54, 20, 3);
     canvas_draw_rframe(canvas, pos[0], pos[1], 54, 19, 3);
 
-    //Рисование иконки
+    // Drawing the icon
     canvas_draw_icon(canvas, pos[0] + 3, pos[1] + 2, &I_hum_9x15);
 
-    //Целая часть влажности
-    snprintf(app->buff, BUFF_SIZE, "%d", (uint8_t)sensor->hum);
-    canvas_set_font(canvas, FontBigNumbers);
-    canvas_draw_str_aligned(canvas, pos[0] + 27, pos[1] + 10, AlignCenter, AlignCenter, app->buff);
-    uint8_t int_len = canvas_string_width(canvas, app->buff);
-    //Единица измерения
-    canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str(canvas, pos[0] + 27 + int_len / 2 + 4, pos[1] + 10 + 7, "%");
+    if(app->settings.humidity_unit == UT_HUMIDITY_RELATIVE) {
+        // Relative humidity
+        snprintf(app->buff, BUFF_SIZE, "%d", (uint8_t)sensor->hum);
+        canvas_set_font(canvas, FontBigNumbers);
+        canvas_draw_str_aligned(
+            canvas, pos[0] + 27, pos[1] + 10, AlignCenter, AlignCenter, app->buff);
+        uint8_t int_len = canvas_string_width(canvas, app->buff);
+        // Adding '%' for relative humidity
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str(canvas, pos[0] + 27 + int_len / 2 + 4, pos[1] + 10 + 7, "%");
+    } else if(app->settings.humidity_unit == UT_HUMIDITY_DEWPOINT) {
+        // Dewpoint with a decimal
+        int humidity_dec = abs((int16_t)(sensor->hum * 10) % 10);
+        snprintf(app->buff, BUFF_SIZE, "%d", (int16_t)sensor->hum);
+        canvas_set_font(canvas, FontBigNumbers);
+        canvas_draw_str_aligned(
+            canvas, pos[0] + 27, pos[1] + 10, AlignCenter, AlignCenter, app->buff);
+        uint8_t int_len = canvas_string_width(canvas, app->buff);
+        // Printing the decimal part similar to temperature display
+        snprintf(app->buff, BUFF_SIZE, ".%d", humidity_dec);
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str(canvas, pos[0] + 27 + int_len / 2 + 2, pos[1] + 10 + 7, app->buff);
+    }
 }
 
 static void _draw_heat_index(Canvas* canvas, Sensor* sensor, const uint8_t pos[2]) {
@@ -141,37 +151,52 @@ static void _draw_heat_index(Canvas* canvas, Sensor* sensor, const uint8_t pos[2
 }
 
 static void _draw_pressure(Canvas* canvas, Sensor* sensor) {
-    const uint8_t x = 29, y = 39;
+    uint8_t x = 29, y = 39;
+    //Slide the canvas over slightly to account for the larger hPa values
+    if(app->settings.pressure_unit == UT_PRESSURE_HPA) {
+        x = 21;
+    } else {
+        x = 29;
+    }
     //Рисование рамки
-    canvas_draw_rframe(canvas, x, y, 69, 20, 3);
-    canvas_draw_rframe(canvas, x, y, 69, 19, 3);
+    canvas_draw_rframe(canvas, x, y, 76, 20, 3);
+    canvas_draw_rframe(canvas, x, y, 76, 19, 3);
 
     //Рисование иконки
     canvas_draw_icon(canvas, x + 3, y + 4, &I_pressure_7x13);
 
     int16_t press_int = sensor->pressure;
+    // Change Temp for Pressure
     int8_t press_dec = (int16_t)(sensor->pressure * 10) % 10;
 
     //Целая часть давления
     snprintf(app->buff, BUFF_SIZE, "%d", press_int);
     canvas_set_font(canvas, FontBigNumbers);
     canvas_draw_str_aligned(
-        canvas, x + 27 + ((press_int > 99) ? 5 : 0), y + 10, AlignCenter, AlignCenter, app->buff);
+        canvas, x + 28 + ((press_int > 99) ? 5 : 0), y + 10, AlignCenter, AlignCenter, app->buff);
     //Печать дробной части давления в диапазоне от 0 до 99 (когда два знака в числе)
     if(press_int <= 99) {
         uint8_t int_len = canvas_string_width(canvas, app->buff);
         snprintf(app->buff, BUFF_SIZE, ".%d", press_dec);
         canvas_set_font(canvas, FontPrimary);
         canvas_draw_str(canvas, x + 27 + int_len / 2 + 2, y + 10 + 7, app->buff);
+    } else if(app->settings.pressure_unit == UT_PRESSURE_HPA) {
+        uint8_t int_len = canvas_string_width(canvas, app->buff);
+        snprintf(app->buff, BUFF_SIZE, ".%d", press_dec);
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str(canvas, x + 32 + int_len / 2 + 2, y + 10 + 7, app->buff);
     }
     canvas_set_font(canvas, FontSecondary);
     //Единица измерения
+
     if(app->settings.pressure_unit == UT_PRESSURE_MM_HG) {
-        canvas_draw_icon(canvas, x + 50, y + 2, &I_mm_hg_15x15);
+        canvas_draw_icon(canvas, x + 56, y + 3, &I_mm_hg_15x15);
     } else if(app->settings.pressure_unit == UT_PRESSURE_IN_HG) {
-        canvas_draw_icon(canvas, x + 50, y + 2, &I_in_hg_15x15);
+        canvas_draw_icon(canvas, x + 56, y + 3, &I_in_hg_15x15);
     } else if(app->settings.pressure_unit == UT_PRESSURE_KPA) {
-        canvas_draw_str(canvas, x + 52, y + 13, "kPa");
+        canvas_draw_str(canvas, x + 57, y + 13, "kPa");
+    } else if(app->settings.pressure_unit == UT_PRESSURE_HPA) {
+        canvas_draw_str(canvas, x + 58, y + 13, "hPa");
     }
 }
 
@@ -516,11 +541,11 @@ static void _draw_view_sensorsCarousel(Canvas* canvas) {
 static void _draw_callback(Canvas* canvas, void* _model) {
     UNUSED(_model);
 
-    app->sensors_ready = true;
+    app->sensors_update = true;
 
     uint8_t sensors_count = unitemp_sensors_getActiveCount();
 
-    if(generalview_sensor_index + 1 > sensors_count) generalview_sensor_index = 0;
+    if(generalview_sensor_index >= sensors_count) generalview_sensor_index = 0;
 
     if(sensors_count == 0) {
         current_view = G_NO_SENSORS_VIEW;
@@ -540,14 +565,14 @@ static bool _input_callback(InputEvent* event, void* context) {
     if(event->key == InputKeyOk && event->type == InputTypeShort) {
         //Меню добавления датчика при их отсутствии
         if(current_view == G_NO_SENSORS_VIEW) {
-            app->sensors_ready = false;
+            app->sensors_update = false;
             unitemp_SensorsList_switch();
         } else if(current_view == G_LIST_VIEW) {
             //Переход в главное меню при выключенном селекторе
-            app->sensors_ready = false;
+            app->sensors_update = false;
             unitemp_MainMenu_switch();
         } else if(current_view == G_CAROUSEL_VIEW) {
-            app->sensors_ready = false;
+            app->sensors_update = false;
             unitemp_SensorActions_switch(unitemp_sensor_getActive(generalview_sensor_index));
         }
     }
@@ -632,6 +657,7 @@ static bool _input_callback(InputEvent* event, void* context) {
         if(current_view == G_NO_SENSORS_VIEW ||
            ((current_view == G_CAROUSEL_VIEW) && (carousel_info_selector == CAROUSEL_VALUES))) {
             app->processing = false;
+            view_dispatcher_stop(app->view_dispatcher);
             return true;
         }
         //Переключение селектора вида карусели
@@ -663,7 +689,6 @@ void unitemp_General_alloc(void) {
 }
 
 void unitemp_General_switch(void) {
-    app->sensors_ready = true;
     view_dispatcher_switch_to_view(app->view_dispatcher, UnitempViewGeneral);
 }
 

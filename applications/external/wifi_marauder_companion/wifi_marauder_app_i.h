@@ -6,6 +6,7 @@
 #include "scenes/wifi_marauder_scene.h"
 #include "wifi_marauder_custom_event.h"
 #include "wifi_marauder_uart.h"
+#include "wifi_marauder_ep.h"
 #include "file/sequential_file.h"
 #include "script/wifi_marauder_script.h"
 #include "script/wifi_marauder_script_worker.h"
@@ -21,34 +22,29 @@
 #include <gui/modules/widget.h>
 #include "wifi_marauder_text_input.h"
 
-#include "esp32_wifi_marauder_icons.h"
+#include <esp32_wifi_marauder_icons.h>
 #include <storage/storage.h>
 #include <lib/toolbox/path.h>
 #include <dialogs/dialogs.h>
-#include <cfw.h>
 
-#define CFW_UART_CH \
-    (CFW_SETTINGS()->uart_esp_channel == UARTDefault ? FuriHalUartIdUSART1 : FuriHalUartIdLPUART1)
+#define NUM_MENU_ITEMS (27)
 
-#define US_ART_CH (FuriHalUartIdUSART1)
-#define LP_UART_CH (FuriHalUartIdLPUART1)
-#define BAUDRATE (115200)
-
-#define NUM_MENU_ITEMS (20)
-
-#define WIFI_MARAUDER_TEXT_BOX_STORE_SIZE (4096)
+#define WIFI_MARAUDER_TEXT_BOX_STORE_SIZE   (4096)
 #define WIFI_MARAUDER_TEXT_INPUT_STORE_SIZE (512)
 
-#define MARAUDER_APP_FOLDER_USER "apps_data/marauder"
-#define MARAUDER_APP_FOLDER EXT_PATH(MARAUDER_APP_FOLDER_USER)
-#define MARAUDER_APP_FOLDER_PCAPS MARAUDER_APP_FOLDER "/pcaps"
-#define MARAUDER_APP_FOLDER_LOGS MARAUDER_APP_FOLDER "/logs"
-#define MARAUDER_APP_FOLDER_USER_PCAPS MARAUDER_APP_FOLDER_USER "/pcaps"
-#define MARAUDER_APP_FOLDER_USER_LOGS MARAUDER_APP_FOLDER_USER "/logs"
-#define MARAUDER_APP_FOLDER_SCRIPTS MARAUDER_APP_FOLDER "/scripts"
+#define MARAUDER_APP_FOLDER_USER            APP_ASSETS_PATH("")
+#define MARAUDER_APP_FOLDER                 APP_ASSETS_PATH("")
+#define MARAUDER_APP_FOLDER_EVILPORTAL      EXT_PATH("apps_assets/evil_portal")
+#define MARAUDER_APP_FOLDER_HTML            EXT_PATH("apps_assets/evil_portal/html")
+#define MARAUDER_APP_FOLDER_PCAPS           MARAUDER_APP_FOLDER "/pcaps"
+#define MARAUDER_APP_FOLDER_DUMPS           MARAUDER_APP_FOLDER "/dumps"
+#define MARAUDER_APP_FOLDER_LOGS            MARAUDER_APP_FOLDER "/logs"
+#define MARAUDER_APP_FOLDER_USER_PCAPS      MARAUDER_APP_FOLDER_USER "/pcaps"
+#define MARAUDER_APP_FOLDER_USER_LOGS       MARAUDER_APP_FOLDER_USER "/logs"
+#define MARAUDER_APP_FOLDER_SCRIPTS         MARAUDER_APP_FOLDER "/scripts"
 #define MARAUDER_APP_SCRIPT_PATH(file_name) MARAUDER_APP_FOLDER_SCRIPTS "/" file_name ".json"
-#define SAVE_PCAP_SETTING_FILEPATH MARAUDER_APP_FOLDER "/save_pcaps_here.setting"
-#define SAVE_LOGS_SETTING_FILEPATH MARAUDER_APP_FOLDER "/save_logs_here.setting"
+#define SAVE_PCAP_SETTING_FILEPATH          MARAUDER_APP_FOLDER "/save_pcaps_here.setting"
+#define SAVE_LOGS_SETTING_FILEPATH          MARAUDER_APP_FOLDER "/save_logs_here.setting"
 
 typedef enum WifiMarauderUserInputType {
     WifiMarauderUserInputTypeString,
@@ -86,7 +82,6 @@ struct WifiMarauderApp {
     int open_log_file_num_pages;
 
     WifiMarauderUart* uart;
-    WifiMarauderUart* pcap_uart;
     int selected_menu_index;
     int selected_option_index[NUM_MENU_ITEMS];
     const char* selected_tx_string;

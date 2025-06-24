@@ -8,9 +8,9 @@
 #include <m-array.h>
 
 #define FRAME_HEIGHT 12
-#define MAX_LEN_PX 112
-#define MENU_ITEMS 4u
-#define UNLOCK_CNT 3
+#define MAX_LEN_PX   112
+#define MENU_ITEMS   4u
+#define UNLOCK_CNT   3
 
 #define SUBGHZ_RAW_THRESHOLD_MIN -90.0f
 
@@ -89,7 +89,7 @@ void pcsg_view_receiver_set_lock(PCSGReceiver* pcsg_receiver, PCSGLock lock) {
             PCSGReceiverModel * model,
             { model->bar_show = PCSGReceiverBarShowLock; },
             true);
-        furi_timer_start(pcsg_receiver->timer, pdMS_TO_TICKS(1000));
+        furi_timer_start(pcsg_receiver->timer, 1000);
     } else {
         with_view_model(
             pcsg_receiver->view,
@@ -307,7 +307,7 @@ bool pcsg_view_receiver_input(InputEvent* event, void* context) {
             { model->bar_show = PCSGReceiverBarShowToUnlockPress; },
             true);
         if(pcsg_receiver->lock_count == 0) {
-            furi_timer_start(pcsg_receiver->timer, pdMS_TO_TICKS(1000));
+            furi_timer_start(pcsg_receiver->timer, 1000);
         }
         if(event->key == InputKeyBack && event->type == InputTypeShort) {
             pcsg_receiver->lock_count++;
@@ -320,7 +320,7 @@ bool pcsg_view_receiver_input(InputEvent* event, void* context) {
                 { model->bar_show = PCSGReceiverBarShowUnlock; },
                 true);
             pcsg_receiver->lock = PCSGLockOff;
-            furi_timer_start(pcsg_receiver->timer, pdMS_TO_TICKS(650));
+            furi_timer_start(pcsg_receiver->timer, 650);
         }
 
         return true;
@@ -459,8 +459,7 @@ View* pcsg_view_receiver_get_view(PCSGReceiver* pcsg_receiver) {
 uint16_t pcsg_view_receiver_get_idx_menu(PCSGReceiver* pcsg_receiver) {
     furi_assert(pcsg_receiver);
     uint32_t idx = 0;
-    with_view_model(
-        pcsg_receiver->view, PCSGReceiverModel * model, { idx = model->idx; }, false);
+    with_view_model(pcsg_receiver->view, PCSGReceiverModel * model, { idx = model->idx; }, false);
     return idx;
 }
 

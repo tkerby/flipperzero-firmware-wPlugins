@@ -10,11 +10,12 @@
 
 #include <gui/gui.h>
 #include <input/input.h>
+#include <power/power_service/power.h>
 
 #include <flipper_format/flipper_format.h>
 
-#define PATH_SUBGHZ EXT_PATH("subghz") "/assets/extend_range.txt"
-#define KEY_EXTEND_RANGE "use_ext_range_at_own_risk"
+#define PATH_SUBGHZ        EXT_PATH("subghz") "/assets/extend_range.txt"
+#define KEY_EXTEND_RANGE   "use_ext_range_at_own_risk"
 #define KEY_IGNORE_DEFAULT "ignore_default_tx_region"
 
 struct UserSelection {
@@ -225,6 +226,10 @@ int32_t extend_range_app(void* p) {
     while(furi_message_queue_get(event_queue, &event, FuriWaitForever) == FuriStatusOk) {
         if(event.type == InputTypeShort && event.key == InputKeyBack) break;
         handle_key(&event);
+        if(global_ret_val == 0) {
+            furi_delay_ms(1000);
+            power_reboot(PowerBootModeNormal);
+        }
     }
 
     gui_remove_view_port(gui, view_port);

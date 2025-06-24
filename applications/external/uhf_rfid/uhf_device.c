@@ -7,8 +7,6 @@
 
 static const char* uhf_file_header = "Flipper UHF RFID device";
 static const uint32_t uhf_file_version = 1;
-// static const uint8_t bank_data_start = 20;
-// static const uint8_t bank_data_length = 16;
 
 UHFDevice* uhf_device_alloc() {
     UHFDevice* uhf_device = malloc(sizeof(UHFDevice));
@@ -55,23 +53,35 @@ static bool uhf_device_save_file(
         // Reserved bank might be added
         // todo : maybe
         uint32_t temp_arr[1];
+        uint8_t temp_arr2[2];
+        // write pc
+        temp_arr2[0] = (uint8_t)(uhf_tag_get_epc_pc(uhf_tag) >> 8) & 0xFF;
+        temp_arr2[1] = (uint8_t)(uhf_tag_get_epc_pc(uhf_tag) & 0xFF);
+        if(!flipper_format_write_hex(file, UHF_EPC_PC_LABEL, temp_arr2, 2)) break;
+        // write crc
+        temp_arr2[0] = (uint8_t)(uhf_tag_get_epc_crc(uhf_tag) >> 8) & 0xFF;
+        temp_arr2[1] = (uint8_t)(uhf_tag_get_epc_crc(uhf_tag) & 0xFF);
+        if(!flipper_format_write_hex(file, UHF_EPC_CRC_LABEL, temp_arr2, 2)) break;
         // write epc
-        temp_arr[0] = uhf_tag->epc->size;
+        temp_arr[0] = uhf_tag_get_epc_size(uhf_tag);
         if(!flipper_format_write_uint32(file, UHF_EPC_BANK_LENGTH_LABEL, temp_arr, 1)) break;
         if(!flipper_format_write_hex(
-               file, UHF_EPC_BANK_LABEL, uhf_tag->epc->data, uhf_tag->epc->size))
+               file, UHF_EPC_BANK_LABEL, uhf_tag_get_epc(uhf_tag), uhf_tag_get_epc_size(uhf_tag)))
             break;
         // write tid
-        temp_arr[0] = uhf_tag->tid->size;
+        temp_arr[0] = uhf_tag_get_tid_size(uhf_tag);
         if(!flipper_format_write_uint32(file, UHF_TID_BANK_LENGTH_LABEL, temp_arr, 1)) break;
         if(!flipper_format_write_hex(
-               file, UHF_TID_BANK_LABEL, uhf_tag->tid->data, uhf_tag->tid->size))
+               file, UHF_TID_BANK_LABEL, uhf_tag_get_tid(uhf_tag), uhf_tag_get_tid_size(uhf_tag)))
             break;
         // write user
-        temp_arr[0] = uhf_tag->user->size;
+        temp_arr[0] = uhf_tag_get_user_size(uhf_tag);
         if(!flipper_format_write_uint32(file, UHF_USER_BANK_LENGTH_LABEL, temp_arr, 1)) break;
         if(!flipper_format_write_hex(
-               file, UHF_USER_BANK_LABEL, uhf_tag->user->data, uhf_tag->user->size))
+               file,
+               UHF_USER_BANK_LABEL,
+               uhf_tag_get_user(uhf_tag),
+               uhf_tag_get_user_size(uhf_tag)))
             break;
         saved = true;
     } while(0);
@@ -99,7 +109,7 @@ static bool uhf_device_load_data(UHFDevice* dev, FuriString* path, bool show_dia
     FuriString* temp_str;
     temp_str = furi_string_alloc();
     bool deprecated_version = false;
-    UHFTag* uhf_tag = dev->uhf_tag_wrapper->uhf_tag;
+    UHFTag* uhf_tag = uhf_tag_alloc();
     uhf_tag_reset(uhf_tag);
     uint32_t temp_arr[1];
     if(dev->loading_cb) {
@@ -116,25 +126,34 @@ static bool uhf_device_load_data(UHFDevice* dev, FuriString* path, bool show_dia
             deprecated_version = true;
             break;
         }
+        // read pc
+        uint8_t temp_arr2[2];
+        if(!flipper_format_read_hex(file, UHF_EPC_PC_LABEL, temp_arr2, 2)) break;
+        uhf_tag_set_epc_pc(uhf_tag, (temp_arr2[0] << 8) + temp_arr2[1]);
+        // read crc
+        if(!flipper_format_read_hex(file, UHF_EPC_CRC_LABEL, temp_arr2, 2)) break;
+        uhf_tag_set_epc_crc(uhf_tag, (temp_arr2[0] << 8) + temp_arr2[1]);
         // read epc
         if(!flipper_format_read_uint32(file, UHF_EPC_BANK_LENGTH_LABEL, temp_arr, 1)) break;
-        uhf_tag->epc->size = temp_arr[0];
+        uhf_tag_set_epc_size(uhf_tag, temp_arr[0]);
         if(!flipper_format_read_hex(
-               file, UHF_EPC_BANK_LABEL, uhf_tag->epc->data, uhf_tag->epc->size))
+               file, UHF_EPC_BANK_LABEL, uhf_tag_get_epc(uhf_tag), uhf_tag_get_epc_size(uhf_tag)))
             break;
 
         // read tid
         if(!flipper_format_read_uint32(file, UHF_TID_BANK_LENGTH_LABEL, temp_arr, 1)) break;
-        uhf_tag->tid->size = temp_arr[0];
+        uhf_tag_set_tid_size(uhf_tag, temp_arr[0]);
         if(!flipper_format_read_hex(
-               file, UHF_TID_BANK_LABEL, uhf_tag->tid->data, uhf_tag->tid->size))
+               file, UHF_TID_BANK_LABEL, uhf_tag_get_tid(uhf_tag), uhf_tag_get_tid_size(uhf_tag)))
             break;
-
         // read user
         if(!flipper_format_read_uint32(file, UHF_USER_BANK_LENGTH_LABEL, temp_arr, 1)) break;
-        uhf_tag->user->size = temp_arr[0];
+        uhf_tag_set_user_size(uhf_tag, temp_arr[0]);
         if(!flipper_format_read_hex(
-               file, UHF_USER_BANK_LABEL, uhf_tag->user->data, uhf_tag->user->size))
+               file,
+               UHF_USER_BANK_LABEL,
+               uhf_tag_get_user(uhf_tag),
+               uhf_tag_get_user_size(uhf_tag)))
             break;
 
         parsed = true;
@@ -151,21 +170,11 @@ static bool uhf_device_load_data(UHFDevice* dev, FuriString* path, bool show_dia
             dialog_message_show_storage_error(dev->dialogs, "Can not parse\nfile");
         }
     }
-
+    uhf_tag_wrapper_set_tag(dev->uhf_tag_wrapper, uhf_tag);
     furi_string_free(temp_str);
     flipper_format_free(file);
-
     return parsed;
 }
-
-// void picopass_device_clear(UHFDevice* dev) {
-//     furi_assert(dev);
-
-//     picopass_device_data_clear(&dev->dev_data);
-//     memset(&dev->dev_data, 0, sizeof(dev->dev_data));
-//     dev->format = PicopassDeviceSaveFormatHF;
-//     furi_string_reset(dev->load_path);
-// }
 
 void uhf_device_free(UHFDevice* uhf_dev) {
     furi_assert(uhf_dev);
@@ -204,16 +213,6 @@ bool uhf_file_select(UHFDevice* dev) {
     return res;
 }
 
-// void uhf_device_data_clear(UHFDevice* dev_data) {
-//     for(size_t i = 0; i < PICOPASS_MAX_APP_LIMIT; i++) {
-//         memset(dev_data->AA1[i].data, 0, sizeof(dev_data->AA1[i].data));
-//     }
-//     dev_data->pacs.legacy = false;
-//     dev_data->pacs.se_enabled = false;
-//     dev_data->pacs.elite_kdf = false;
-//     dev_data->pacs.pin_length = 0;
-// }
-
 bool uhf_device_delete(UHFDevice* dev, bool use_load_path) {
     furi_assert(dev);
 
@@ -246,83 +245,3 @@ void uhf_device_set_loading_callback(UHFDevice* dev, UHFLoadingCallback callback
     dev->loading_cb = callback;
     dev->loading_cb_ctx = context;
 }
-
-// ReturnCode picopass_device_decrypt(uint8_t* enc_data, uint8_t* dec_data) {
-//     uint8_t key[32] = {0};
-//     memcpy(key, picopass_iclass_decryptionkey, sizeof(picopass_iclass_decryptionkey));
-//     mbedtls_des3_context ctx;
-//     mbedtls_des3_init(&ctx);
-//     mbedtls_des3_set2key_dec(&ctx, key);
-//     mbedtls_des3_crypt_ecb(&ctx, enc_data, dec_data);
-//     mbedtls_des3_free(&ctx);
-//     return ERR_NONE;
-// }
-
-// ReturnCode picopass_device_parse_credential(PicopassBlock* AA1, PicopassPacs* pacs) {
-//     ReturnCode err;
-
-//     pacs->biometrics = AA1[6].data[4];
-//     pacs->pin_length = AA1[6].data[6] & 0x0F;
-//     pacs->encryption = AA1[6].data[7];
-
-//     if(pacs->encryption == PicopassDeviceEncryption3DES) {
-//         FURI_LOG_D(TAG, "3DES Encrypted");
-//         err = picopass_device_decrypt(AA1[7].data, pacs->credential);
-//         if(err != ERR_NONE) {
-//             FURI_LOG_E(TAG, "decrypt error %d", err);
-//             return err;
-//         }
-
-//         err = picopass_device_decrypt(AA1[8].data, pacs->pin0);
-//         if(err != ERR_NONE) {
-//             FURI_LOG_E(TAG, "decrypt error %d", err);
-//             return err;
-//         }
-
-//         err = picopass_device_decrypt(AA1[9].data, pacs->pin1);
-//         if(err != ERR_NONE) {
-//             FURI_LOG_E(TAG, "decrypt error %d", err);
-//             return err;
-//         }
-//     } else if(pacs->encryption == PicopassDeviceEncryptionNone) {
-//         FURI_LOG_D(TAG, "No Encryption");
-//         memcpy(pacs->credential, AA1[7].data, PICOPASS_BLOCK_LEN);
-//         memcpy(pacs->pin0, AA1[8].data, PICOPASS_BLOCK_LEN);
-//         memcpy(pacs->pin1, AA1[9].data, PICOPASS_BLOCK_LEN);
-//     } else if(pacs->encryption == PicopassDeviceEncryptionDES) {
-//         FURI_LOG_D(TAG, "DES Encrypted");
-//     } else {
-//         FURI_LOG_D(TAG, "Unknown encryption");
-//     }
-
-//     pacs->sio = (AA1[10].data[0] == 0x30); // rough check
-
-//     return ERR_NONE;
-// }
-
-// ReturnCode picopass_device_parse_wiegand(uint8_t* data, PicopassWiegandRecord* record) {
-//     uint32_t* halves = (uint32_t*)data;
-//     if(halves[0] == 0) {
-//         uint8_t leading0s = __builtin_clz(REVERSE_BYTES_U32(halves[1]));
-//         record->bitLength = 31 - leading0s;
-//     } else {
-//         uint8_t leading0s = __builtin_clz(REVERSE_BYTES_U32(halves[0]));
-//         record->bitLength = 63 - leading0s;
-//     }
-//     FURI_LOG_D(TAG, "bitLength: %d", record->bitLength);
-
-//     if(record->bitLength == 26) {
-//         uint8_t* v4 = data + 4;
-//         uint32_t bot = v4[3] | (v4[2] << 8) | (v4[1] << 16) | (v4[0] << 24);
-
-//         record->CardNumber = (bot >> 1) & 0xFFFF;
-//         record->FacilityCode = (bot >> 17) & 0xFF;
-//         FURI_LOG_D(TAG, "FC: %u CN: %u", record->FacilityCode, record->CardNumber);
-//         record->valid = true;
-//     } else {
-//         record->CardNumber = 0;
-//         record->FacilityCode = 0;
-//         record->valid = false;
-//     }
-//     return ERR_NONE;
-// }

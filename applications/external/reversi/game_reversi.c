@@ -8,14 +8,16 @@
 #include <storage/storage.h>
 #include "reversi.h"
 
-#define FRAME_LEFT 3
-#define FRAME_TOP 3
+#define FRAME_LEFT      3
+#define FRAME_TOP       3
 #define FRAME_CELL_SIZE 7
 
-#define SAVING_DIRECTORY EXT_PATH("apps_data/reversi")
-#define SAVING_FILENAME SAVING_DIRECTORY "/game_reversi.save"
+#define SAVING_FILENAME APP_DATA_PATH("reversi.save")
 
-typedef enum { AppScreenGame, AppScreenMenu } AppScreen;
+typedef enum {
+    AppScreenGame,
+    AppScreenMenu
+} AppScreen;
 
 typedef struct {
     GameState game;
@@ -38,7 +40,6 @@ static void input_callback(InputEvent* input_event, void* ctx) {
 
 static void draw_callback(Canvas* const canvas, void* ctx) {
     furi_assert(ctx);
-
     const AppState* app_state = ctx;
     furi_mutex_acquire(app_state->mutex, FuriWaitForever);
     if(app_state == NULL) return;
@@ -189,12 +190,6 @@ bool load_game(GameState* game_state) {
 void save_game(const GameState* game_state) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
 
-    if(storage_common_stat(storage, SAVING_DIRECTORY, NULL) == FSE_NOT_EXIST) {
-        if(!storage_simply_mkdir(storage, SAVING_DIRECTORY)) {
-            return;
-        }
-    }
-
     File* file = storage_file_alloc(storage);
     if(storage_file_open(file, SAVING_FILENAME, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
         storage_file_write(file, game_state, sizeof(GameState));
@@ -331,16 +326,18 @@ int32_t game_reversi_app() {
                 furi_mutex_acquire(app_state.mutex, FuriWaitForever);
                 app_state.selected_menu_item = 0;
                 app_state.screen = AppScreenMenu;
-                view_port_update(view_port);
+
                 furi_mutex_release(app_state.mutex);
+                view_port_update(view_port);
                 continue;
             }
             if(input.type != InputTypePress) continue;
 
             furi_mutex_acquire(app_state.mutex, FuriWaitForever);
             is_finished = !handle_key(&app_state, input.key);
-            view_port_update(view_port);
+
             furi_mutex_release(app_state.mutex);
+            view_port_update(view_port);
         }
         view_port_update(view_port);
     }

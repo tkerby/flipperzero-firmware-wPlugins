@@ -23,7 +23,7 @@
         a = b;              \
         b = temp;           \
     } while(0)
-#define sign(a, b) (double)(a > b ? 1 : (b > a ? -1 : 0))
+#define sign(a, b)          (double)(a > b ? 1 : (b > a ? -1 : 0))
 #define pgm_read_byte(addr) (*(const unsigned char*)(addr))
 
 typedef enum {
@@ -799,8 +799,9 @@ static void render_callback(Canvas* const canvas, void* ctx) {
     furi_mutex_release(plugin_state->mutex);
 }
 
-static void input_callback(InputEvent* input_event, FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void input_callback(InputEvent* input_event, void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
 
     PluginEvent event = {.type = EventTypeKey, .input = *input_event};
     furi_message_queue_put(event_queue, &event, 0);
@@ -849,8 +850,9 @@ static void doom_state_init(PluginState* const plugin_state) {
 #endif
 }
 
-static void doom_game_update_timer_callback(FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void doom_game_update_timer_callback(void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
 
     PluginEvent event = {.type = EventTypeTick};
     furi_message_queue_put(event_queue, &event, 0);
@@ -1085,8 +1087,8 @@ int32_t doom_app() {
 #ifdef SOUND
         furi_mutex_release(plugin_state->music_instance->model_mutex);
 #endif
-        view_port_update(view_port);
         furi_mutex_release(plugin_state->mutex);
+        view_port_update(view_port);
     }
 #ifdef SOUND
     music_player_worker_free(plugin_state->music_instance->worker);

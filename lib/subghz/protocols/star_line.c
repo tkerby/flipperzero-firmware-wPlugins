@@ -60,10 +60,12 @@ const SubGhzProtocolDecoder subghz_protocol_star_line_decoder = {
     .feed = subghz_protocol_decoder_star_line_feed,
     .reset = subghz_protocol_decoder_star_line_reset,
 
-    .get_hash_data = subghz_protocol_decoder_star_line_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = subghz_protocol_decoder_star_line_get_hash_data,
     .serialize = subghz_protocol_decoder_star_line_serialize,
     .deserialize = subghz_protocol_decoder_star_line_deserialize,
     .get_string = subghz_protocol_decoder_star_line_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder subghz_protocol_star_line_encoder = {
@@ -79,11 +81,12 @@ const SubGhzProtocol subghz_protocol_star_line = {
     .name = SUBGHZ_PROTOCOL_STAR_LINE_NAME,
     .type = SubGhzProtocolTypeDynamic,
     .flag = SubGhzProtocolFlag_433 | SubGhzProtocolFlag_AM | SubGhzProtocolFlag_Decodable |
-            SubGhzProtocolFlag_Load | SubGhzProtocolFlag_Save | SubGhzProtocolFlag_Send |
-            SubGhzProtocolFlag_StarLine,
+            SubGhzProtocolFlag_Load | SubGhzProtocolFlag_Save | SubGhzProtocolFlag_Send,
 
     .decoder = &subghz_protocol_star_line_decoder,
     .encoder = &subghz_protocol_star_line_encoder,
+
+    .filter = SubGhzProtocolFilter_StarLine,
 };
 
 /** 
@@ -130,12 +133,12 @@ void subghz_protocol_encoder_star_line_free(void* context) {
 static bool
     subghz_protocol_star_line_gen_data(SubGhzProtocolEncoderStarLine* instance, uint8_t btn) {
     if(instance->generic.cnt < 0xFFFF) {
-        if((instance->generic.cnt + furi_hal_subghz_get_rolling_counter_mult()) >= 0xFFFF) {
+        if((instance->generic.cnt + furi_hal_subghz_get_rolling_counter_mult()) > 0xFFFF) {
             instance->generic.cnt = 0;
         } else {
             instance->generic.cnt += furi_hal_subghz_get_rolling_counter_mult();
         }
-    } else if(instance->generic.cnt >= 0xFFFF) {
+    } else if((instance->generic.cnt >= 0xFFFF) && (furi_hal_subghz_get_rolling_counter_mult() != 0)) {
         instance->generic.cnt = 0;
     }
     uint32_t fix = btn << 24 | instance->generic.serial;
@@ -637,10 +640,10 @@ static void subghz_protocol_star_line_check_remote_controller(
     instance->btn = key_fix >> 24;
 }
 
-uint8_t subghz_protocol_decoder_star_line_get_hash_data(void* context) {
+uint32_t subghz_protocol_decoder_star_line_get_hash_data(void* context) {
     furi_assert(context);
     SubGhzProtocolDecoderStarLine* instance = context;
-    return subghz_protocol_blocks_get_hash_data(
+    return subghz_protocol_blocks_get_hash_data_long(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 

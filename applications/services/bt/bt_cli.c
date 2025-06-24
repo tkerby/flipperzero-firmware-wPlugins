@@ -5,7 +5,8 @@
 
 #include <ble/ble.h>
 #include "bt_settings.h"
-#include "bt_service/bt.h"
+#include "bt_service/bt_i.h"
+#include <profiles/serial_profile.h>
 
 static void bt_cli_command_hci_info(Cli* cli, FuriString* args, void* context) {
     UNUSED(cli);
@@ -45,7 +46,7 @@ static void bt_cli_command_carrier_tx(Cli* cli, FuriString* args, void* context)
         }
         furi_hal_bt_stop_tone_tx();
 
-        bt_set_profile(bt, BtProfileSerial);
+        bt_profile_restore_default(bt);
         furi_record_close(RECORD_BT);
     } while(false);
 }
@@ -76,7 +77,7 @@ static void bt_cli_command_carrier_rx(Cli* cli, FuriString* args, void* context)
 
         furi_hal_bt_stop_packet_test();
 
-        bt_set_profile(bt, BtProfileSerial);
+        bt_profile_restore_default(bt);
         furi_record_close(RECORD_BT);
     } while(false);
 }
@@ -124,7 +125,7 @@ static void bt_cli_command_packet_tx(Cli* cli, FuriString* args, void* context) 
         furi_hal_bt_stop_packet_test();
         printf("Transmitted %lu packets", furi_hal_bt_get_transmitted_packets());
 
-        bt_set_profile(bt, BtProfileSerial);
+        bt_profile_restore_default(bt);
         furi_record_close(RECORD_BT);
     } while(false);
 }
@@ -159,12 +160,12 @@ static void bt_cli_command_packet_rx(Cli* cli, FuriString* args, void* context) 
         uint16_t packets_received = furi_hal_bt_stop_packet_test();
         printf("Received %hu packets", packets_received);
 
-        bt_set_profile(bt, BtProfileSerial);
+        bt_profile_restore_default(bt);
         furi_record_close(RECORD_BT);
     } while(false);
 }
 
-static void bt_cli_print_usage() {
+static void bt_cli_print_usage(void) {
     printf("Usage:\r\n");
     printf("bt <cmd> <args>\r\n");
     printf("Cmd list:\r\n");
@@ -180,12 +181,10 @@ static void bt_cli_print_usage() {
 
 static void bt_cli(Cli* cli, FuriString* args, void* context) {
     UNUSED(context);
-    furi_record_open(RECORD_BT);
+    Bt* bt = furi_record_open(RECORD_BT);
 
     FuriString* cmd;
     cmd = furi_string_alloc();
-    BtSettings bt_settings;
-    bt_settings_load(&bt_settings);
 
     do {
         if(!args_read_string_and_trim(args, cmd)) {
@@ -218,7 +217,7 @@ static void bt_cli(Cli* cli, FuriString* args, void* context) {
         bt_cli_print_usage();
     } while(false);
 
-    if(bt_settings.enabled) {
+    if(bt->bt_settings.enabled) {
         furi_hal_bt_start_advertising();
     }
 
@@ -226,10 +225,13 @@ static void bt_cli(Cli* cli, FuriString* args, void* context) {
     furi_record_close(RECORD_BT);
 }
 
-void bt_on_system_start() {
+#include <cli/cli_i.h>
+CLI_PLUGIN_WRAPPER("bt", bt_cli)
+
+void bt_on_system_start(void) {
 #ifdef SRV_CLI
     Cli* cli = furi_record_open(RECORD_CLI);
-    cli_add_command(cli, RECORD_BT, CliCommandFlagDefault, bt_cli, NULL);
+    cli_add_command(cli, RECORD_BT, CliCommandFlagDefault, bt_cli_wrapper, NULL);
     furi_record_close(RECORD_CLI);
 #else
     UNUSED(bt_cli);

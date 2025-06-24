@@ -1,6 +1,6 @@
-#include <lib/toolbox/random_name.h>
 #include "../lfrfid_i.h"
 #include <dolphin/dolphin.h>
+#include <toolbox/name_generator.h>
 
 void lfrfid_scene_save_name_on_enter(void* context) {
     LfRfid* app = context;
@@ -11,7 +11,10 @@ void lfrfid_scene_save_name_on_enter(void* context) {
     bool key_name_is_empty = furi_string_empty(app->file_name);
     if(key_name_is_empty) {
         furi_string_set(app->file_path, LFRFID_APP_FOLDER);
-        set_random_name(app->text_store, LFRFID_TEXT_STORE_SIZE);
+
+        name_generator_make_auto_basic(
+            app->text_store, LFRFID_TEXT_STORE_SIZE, LFRFID_APP_FILENAME_PREFIX);
+
         furi_string_set(folder_path, LFRFID_APP_FOLDER);
     } else {
         lfrfid_text_store_set(app, "%s", furi_string_get_cstr(app->file_name));
@@ -27,11 +30,11 @@ void lfrfid_scene_save_name_on_enter(void* context) {
         LFRFID_KEY_NAME_SIZE,
         key_name_is_empty);
 
-    FURI_LOG_I("", "%s %s", furi_string_get_cstr(folder_path), app->text_store);
+    FURI_LOG_D("", "%s %s", furi_string_get_cstr(folder_path), app->text_store);
 
     ValidatorIsFile* validator_is_file = validator_is_file_alloc_init(
         furi_string_get_cstr(folder_path),
-        LFRFID_APP_EXTENSION,
+        LFRFID_APP_FILENAME_EXTENSION,
         furi_string_get_cstr(app->file_name));
     text_input_set_validator(text_input, validator_is_file_callback, validator_is_file);
 

@@ -4,19 +4,21 @@ App(
     apptype=FlipperAppType.EXTERNAL,
     targets=["f7"],
     entry_point="nfc_magic_app",
-    requires=[
-        "storage",
-        "gui",
-    ],
     stack_size=4 * 1024,
-    order=30,
-    fap_icon="Nfc_10px.png",
+    fap_icon="assets/Nfc_10px.png",
     fap_category="NFC",
-    fap_private_libs=[
-        Lib(
-            name="magic",
-        ),
-    ],
     fap_icon_assets="assets",
-    fap_icon_assets_symbol="nfc_magic",
+    fap_version="1.15",
+    fap_description="Application for writing to NFC tags with modifiable sector 0",
+    #  [NFC Magic Gen4 Support #2238 (By nullableVoidPtr)](https://github.com/flipperdevices/flipperzero-firmware/pull/2238)
+    #  [rework #67 (By gornekich)](https://github.com/flipperdevices/flipperzero-good-faps/pull/67)
+    #  [fix gen4 detection #71 (By gornekich)](https://github.com/flipperdevices/flipperzero-good-faps/pull/71)
+    #  [Specify in error scene that only Gen1 magic and Gen4 UMCs are supported #75 (By kitsunehunter)](https://github.com/flipperdevices/flipperzero-good-faps/pull/75)
+    #  [UI / Scenes (By xMasterX) & Poller functions, minor UI fixes (By Leptopt1los)](https://github.com/xMasterX/all-the-plugins/commit/d70f146f15a6bab2272d4ebfe37001d7d5f0f556)
+    #  [New options for gen4 cards #82 (By Leptopt1los)](https://github.com/flipperdevices/flipperzero-good-faps/pull/82)
+    #  [Gen4 shadow mode management support #98 (By Leptopt1los)](https://github.com/flipperdevices/flipperzero-good-faps/pull/98)
+    #  Removed due to card corruption: [Magic Gen2 support #143 (By Astrrra)](https://github.com/flipperdevices/flipperzero-good-faps/pull/143)
+    #  [NFC Magic: New functions for Gen4 cards (DW to block 0/shadow mode) #98 (By Leptopt1los)](https://github.com/flipperdevices/flipperzero-good-faps/pull/98)
+    #  [Gen1 backdoor read support #228 (By Astrrra)](https://github.com/flipperdevices/flipperzero-good-faps/pull/228)
+    #  [Update nfc_magic_scene_not_magic.c #232 (By equipter)](https://github.com/flipperdevices/flipperzero-good-faps/pull/232)
 )

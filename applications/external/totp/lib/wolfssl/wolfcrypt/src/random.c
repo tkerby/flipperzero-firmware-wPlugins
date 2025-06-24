@@ -1866,9 +1866,13 @@ int wc_RNG_GenerateBlock(WC_RNG* rng, byte* output, word32 sz)
             if (ret == DRBG_SUCCESS)
                 ret = Hash_DRBG_Generate((DRBG_internal *)rng->drbg, output, sz);
 
-            ForceZero(newSeed, sizeof(newSeed));
         #ifdef WOLFSSL_SMALL_STACK
+            if (newSeed != NULL) {
+                ForceZero(newSeed, SEED_SZ + SEED_BLOCK_SZ);
+            }
             XFREE(newSeed, rng->heap, DYNAMIC_TYPE_SEED);
+        #else
+            ForceZero(newSeed, sizeof(newSeed));
         #endif
         }
         else {
@@ -3390,7 +3394,8 @@ int wc_GenerateSeed(OS_Seed* os, byte* output, word32 sz)
 
         /* Espressif ESP32 */
         #include <esp_system.h>
-        #if defined(CONFIG_IDF_TARGET_ESP32S3)
+        #if defined(CONFIG_IDF_TARGET_ESP32S2) || \
+            defined(CONFIG_IDF_TARGET_ESP32S3)
             #include <esp_random.h>
         #endif
 
@@ -3445,61 +3450,6 @@ int wc_GenerateSeed(OS_Seed* os, byte* output, word32 sz)
         return 0;
     }
 
-#elif defined(WOLFSSL_RENESAS_TSIP)
-#if defined(WOLFSSL_RENESA_TSIP_IAREWRX)
-   #include "r_bsp/mcu/all/r_rx_compiler.h"
-#endif
-   #include "r_bsp/platform.h"
-    #include "r_tsip_rx_if.h"
-
-    int wc_GenerateSeed(OS_Seed* os, byte* output, word32 sz)
-    {
-        int ret = 0;
-        word32 buffer[4];
-
-        while (sz > 0) {
-            word32 len = sizeof(buffer);
-
-            if (sz < len) {
-                len = sz;
-            }
-            /* return 4 words random number*/
-            ret = R_TSIP_GenerateRandomNumber((uint32_t*)buffer);
-            if(ret == TSIP_SUCCESS) {
-                XMEMCPY(output, &buffer, len);
-                output += len;
-                sz -= len;
-            } else
-                return ret;
-        }
-        return ret;
-    }
-#elif defined(WOLFSSL_RENESAS_SCEPROTECT) || \
-          defined(WOLFSSL_RENESAS_SCEPROTECT_CRYPTONLY)
-    #include "r_sce.h"
-
-    int wc_GenerateSeed(OS_Seed* os, byte* output, word32 sz)
-    {
-        int ret = 0;
-        word32 buffer[4];
-
-        while (sz > 0) {
-            word32 len = sizeof(buffer);
-
-            if (sz < len) {
-                len = sz;
-            }
-            /* return 4 words random number*/
-            ret = R_SCE_RandomNumberGenerate(buffer);
-            if(ret == FSP_SUCCESS) {
-                XMEMCPY(output, &buffer, len);
-                output += len;
-                sz -= len;
-            } else
-                return ret;
-        }
-        return ret;
-    }
 
 #elif defined(WOLFSSL_SCE) && !defined(WOLFSSL_SCE_NO_TRNG)
     #include "hal_data.h"
@@ -3557,23 +3507,16 @@ int wc_GenerateSeed(OS_Seed* os, byte* output, word32 sz)
      * extern int myRngFunc(byte* output, word32 sz);
      */
 
-#elif defined(WOLFSSL_SAFERTOS) || defined(WOLFSSL_LEANPSK) || \
-      defined(WOLFSSL_IAR_ARM)  || defined(WOLFSSL_MDK_ARM) || \
-      defined(WOLFSSL_uITRON4)  || defined(WOLFSSL_uTKERNEL2) || \
-      defined(WOLFSSL_LPC43xx)  || defined(NO_STM32_RNG) || \
-      defined(MBED)             || defined(WOLFSSL_EMBOS) || \
-      defined(WOLFSSL_GENSEED_FORTEST) || defined(WOLFSSL_CHIBIOS) || \
-      defined(WOLFSSL_CONTIKI)  || defined(WOLFSSL_AZSPHERE)
-
-    /* these platforms do not have a default random seed and
-       you'll need to implement your own wc_GenerateSeed or define via
-       CUSTOM_RAND_GENERATE_BLOCK */
-
-    #define USE_TEST_GENSEED
-
 #elif defined(WOLFSSL_ZEPHYR)
 
+        #include <version.h>
+
+    #if KERNEL_VERSION_NUMBER >= 0x30500
+        #include <zephyr/random/random.h>
+    #else
         #include <zephyr/random/rand32.h>
+    #endif
+
     #ifndef _POSIX_C_SOURCE
         #include <zephyr/posix/time.h>
     #else
@@ -3673,6 +3616,20 @@ int wc_GenerateSeed(OS_Seed* os, byte* output, word32 sz)
         }
         return ret;
     }
+
+#elif defined(WOLFSSL_SAFERTOS) || defined(WOLFSSL_LEANPSK) || \
+      defined(WOLFSSL_IAR_ARM)  || defined(WOLFSSL_MDK_ARM) || \
+      defined(WOLFSSL_uITRON4)  || defined(WOLFSSL_uTKERNEL2) || \
+      defined(WOLFSSL_LPC43xx)  || defined(NO_STM32_RNG) || \
+      defined(MBED)             || defined(WOLFSSL_EMBOS) || \
+      defined(WOLFSSL_GENSEED_FORTEST) || defined(WOLFSSL_CHIBIOS) || \
+      defined(WOLFSSL_CONTIKI)  || defined(WOLFSSL_AZSPHERE)
+
+    /* these platforms do not have a default random seed and
+       you'll need to implement your own wc_GenerateSeed or define via
+       CUSTOM_RAND_GENERATE_BLOCK */
+
+    #define USE_TEST_GENSEED
 
 #elif defined(NO_DEV_RANDOM)
 

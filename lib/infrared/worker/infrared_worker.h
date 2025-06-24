@@ -37,7 +37,7 @@ typedef void (
  *
  * @return just created instance of InfraredWorker
  */
-InfraredWorker* infrared_worker_alloc();
+InfraredWorker* infrared_worker_alloc(void);
 
 /** Free InfraredWorker
  *
@@ -83,6 +83,14 @@ void infrared_worker_rx_enable_blink_on_receiving(InfraredWorker* instance, bool
  *                       false otherwise
  */
 void infrared_worker_rx_enable_signal_decoding(InfraredWorker* instance, bool enable);
+
+/** Force decoding of received infrared signals, will ignore RAW signals.
+ *
+ * @param[in]   instance - instance of InfraredWorker
+ * @param[in]   enable - true if you want to force decoding
+ *                       false otherwise
+ */
+void infrared_worker_rx_force_signal_decoding(InfraredWorker* instance, bool force);
 
 /** Clarify is received signal either decoded or raw
  *

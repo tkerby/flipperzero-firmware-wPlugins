@@ -75,6 +75,10 @@ void passport_alloc(Passport* passport) {
         passport->tmpLvl = 0;
         if(stats->level > 10) passport->tmpLvl = 1;
         if(stats->level > 20) passport->tmpLvl = 2;
+    } else if(passport->settings.image == PIMG_WRENCH) {
+        passport->tmpMood = 2;
+        if(stats->butthurt <= 9) passport->tmpMood = 1;
+        if(stats->butthurt <= 4) passport->tmpMood = 0;
     } else if(passport->settings.image == PIMG_DOLPHINMOODY) {
         passport->tmpLvl = 0;
         if(stats->level > 10) passport->tmpLvl = 1;
@@ -153,8 +157,6 @@ void passport_alloc(Passport* passport) {
 
     //set first page shown
     passport->page = Main;
-
-    free(stats);
 }
 
 static void render_callback(Canvas* const canvas, void* ctx) {
@@ -171,20 +173,32 @@ static void render_callback(Canvas* const canvas, void* ctx) {
         switch(passport->settings.background) {
         case BG_NONE:
             break;
+        case BG_ADPOLICE:
+            canvas_draw_icon(canvas, 0, 0, &I_passport_ADPolice);
+            break;
         case BG_DB:
             canvas_draw_icon(canvas, 0, 0, &I_passport_dragonball);
+            break;
+        case BG_DEDSEC:
+            canvas_draw_icon(canvas, 0, 0, &I_passport_dedsec);
             break;
         case BG_CIRCUIT:
             canvas_draw_icon(canvas, 0, 0, &I_passport_Circuit_v1);
             break;
-        case BG_STOCK:
-            canvas_draw_icon(canvas, 0, 0, &I_passport_FlipperClassic);
-            break;
         case BG_FURI:
             canvas_draw_icon(canvas, 0, 0, &I_passport_Furipass);
             break;
+        case BG_GITS:
+            canvas_draw_icon(canvas, 0, 0, &I_passport_GITS);
+            break;
         case BG_MARIO:
             canvas_draw_icon(canvas, 0, 0, &I_passport_mario);
+            break;
+        case BG_MEDIEVAL:
+            canvas_draw_icon(canvas, 0, 0, &I_passport_Medieval);
+            break;
+        case BG_MEMCHIP:
+            canvas_draw_icon(canvas, 0, 0, &I_passport_MemChip);
             break;
         case BG_MOUNTAINS:
             canvas_draw_icon(canvas, 0, 0, &I_passport_Mountains);
@@ -198,26 +212,65 @@ static void render_callback(Canvas* const canvas, void* ctx) {
         case BG_SLUT:
             canvas_draw_icon(canvas, 0, 0, &I_passport_SlutPass);
             break;
+        case BG_STOCK:
+            canvas_draw_icon(canvas, 0, 0, &I_passport_FlipperClassic);
+            break;
         }
 
         // draw portrait
         switch(passport->settings.image) {
         case PIMG_NONE:
             break;
+        case PIMG_ADPOLICE:
+            canvas_draw_icon(canvas, 11, 2, &I_AD_Police);
+            break;
+        case PIMG_AKKAN:
+            canvas_draw_icon(canvas, 11, 2, &I_Akira_Kaneda);
+            break;
+        case PIMG_AKKEI:
+            canvas_draw_icon(canvas, 11, 2, &I_Akira_Kei);
+            break;
+        case PIMG_AKTET:
+            canvas_draw_icon(canvas, 11, 2, &I_Akira_Tetsuo);
+            break;
+        case PIMG_ANDROID:
+            canvas_draw_icon(canvas, 11, 2, &I_Android);
+            break;
+        case PIMG_BLBalalaika:
+            canvas_draw_icon(canvas, 11, 2, &I_Black_Lagoon_Balalaika);
+            break;
+        case PIMG_BLBenny:
+            canvas_draw_icon(canvas, 11, 2, &I_Black_Lagoon_Benny);
+            break;
+        case PIMG_BLDutch:
+            canvas_draw_icon(canvas, 11, 2, &I_Black_Lagoon_Dutch);
+            break;
+        case PIMG_BLRevy:
+            canvas_draw_icon(canvas, 11, 2, &I_Black_Lagoon_Revy);
+            break;
+        case PIMG_BLRoberta:
+            canvas_draw_icon(canvas, 11, 2, &I_Black_Lagoon_Roberta);
+            break;
+        case PIMG_BLRock:
+            canvas_draw_icon(canvas, 11, 2, &I_Black_Lagoon_Rock);
+            break;
         case PIMG_BRIAREOS:
             canvas_draw_icon(canvas, 11, 2, &I_Briareos_Hecatonchires);
-            break;
-        case PIMG_COBRA:
-            canvas_draw_icon(canvas, 11, 2, &I_Cobra);
             break;
         case PIMG_DALI:
             canvas_draw_icon(canvas, 11, 2, &I_Dali_Mask);
             break;
+        case PIMG_DEDSEC:
+            canvas_draw_icon(canvas, 11, 2, &I_Dedsec_Mask);
+            break;
         case PIMG_DEER:
             canvas_draw_icon(canvas, 11, 2, &I_Deer);
             break;
+        case PIMG_DOKKAEBI:
+            canvas_draw_icon(canvas, 11, 2, &I_Dokkaebi);
+            break;
         case PIMG_DOLPHIN:
-            canvas_draw_icon(canvas, 11, 2, portrait[passport->tmpLvl]);
+            canvas_draw_icon(canvas, 11, 2, portrait_happy[passport->tmpLvl]);
             break;
         case PIMG_DOLPHINMOODY:
             canvas_draw_icon(canvas, 11, 2, portraitsMoody[passport->tmpMood][passport->tmpLvl]);
@@ -225,11 +278,41 @@ static void render_callback(Canvas* const canvas, void* ctx) {
         case PIMG_ED209:
             canvas_draw_icon(canvas, 11, 2, &I_ED209);
             break;
+        case PIMG_FALLOUT:
+            canvas_draw_icon(canvas, 11, 2, &I_Fallout);
+            break;
         case PIMG_FSOCIETY:
             canvas_draw_icon(canvas, 11, 2, &I_FSociety_Mask);
             break;
         case PIMG_FSOCIETY2:
             canvas_draw_icon(canvas, 11, 2, &I_fsoc_pass);
+            break;
+        case PIMG_GITSAOI:
+            canvas_draw_icon(canvas, 11, 2, &I_GITS_Aoi);
+            break;
+        case PIMG_GITSARA:
+            canvas_draw_icon(canvas, 11, 2, &I_GITS_Aramaki);
+            break;
+        case PIMG_GITSBAT:
+            canvas_draw_icon(canvas, 11, 2, &I_GITS_Batou);
+            break;
+        case PIMG_GITSHID:
+            canvas_draw_icon(canvas, 11, 2, &I_GITS_Hideo_Kuze);
+            break;
+        case PIMG_GITSISH:
+            canvas_draw_icon(canvas, 11, 2, &I_GITS_Ishikawa);
+            break;
+        case PIMG_GITSKUS:
+            canvas_draw_icon(canvas, 11, 2, &I_GITS_Kusanagi);
+            break;
+        case PIMG_GITSPRO:
+            canvas_draw_icon(canvas, 11, 2, &I_GITS_Project_2501);
+            break;
+        case PIMG_GITSSAI:
+            canvas_draw_icon(canvas, 11, 2, &I_GITS_Saito);
+            break;
+        case PIMG_GITSTOG:
+            canvas_draw_icon(canvas, 11, 2, &I_GITS_Togusa);
             break;
         case PIMG_GOKUSET:
             canvas_draw_icon(canvas, 11, 2, portrait[passport->tmpLvl]);
@@ -246,11 +329,29 @@ static void render_callback(Canvas* const canvas, void* ctx) {
         case PIMG_GOKUSSJ3:
             canvas_draw_icon(canvas, 11, 2, &I_g0ku_3);
             break;
+        case PIMG_GTAVFRANKLIN:
+            canvas_draw_icon(canvas, 11, 2, &I_GTAV_Franklin);
+            break;
+        case PIMG_GTAVMICHAEL:
+            canvas_draw_icon(canvas, 11, 2, &I_GTAV_Michael);
+            break;
+        case PIMG_GTAVTREVOR:
+            canvas_draw_icon(canvas, 11, 2, &I_GTAV_Trevor);
+            break;
+        case PIMG_GUNNMGALLY:
+            canvas_draw_icon(canvas, 11, 2, &I_GUNNM_Gally);
+            break;
         case PIMG_GUYFAWKES:
             canvas_draw_icon(canvas, 11, 2, &I_Guy_Fawkes_Mask);
             break;
+        case PIMG_HAUNTER:
+            canvas_draw_icon(canvas, 11, 2, &I_Haunter);
+            break;
         case PIMG_LAIN:
             canvas_draw_icon(canvas, 11, 2, &I_Lain);
+            break;
+        case PIMG_LEEROY:
+            canvas_draw_icon(canvas, 11, 2, &I_Leeroy_Jenkins);
             break;
         case PIMG_MARIO:
             canvas_draw_icon(canvas, 11, 2, &I_Pixel_Mario);
@@ -264,14 +365,53 @@ static void render_callback(Canvas* const canvas, void* ctx) {
         case PIMG_NEUROMANCER:
             canvas_draw_icon(canvas, 11, 2, &I_Neuromancer);
             break;
+        case PIMG_O808Benten:
+            canvas_draw_icon(canvas, 11, 2, &I_Oedo808_Benten);
+            break;
+        case PIMG_O808Gogul:
+            canvas_draw_icon(canvas, 11, 2, &I_Oedo808_Gogul);
+            break;
+        case PIMG_O808Sengoku:
+            canvas_draw_icon(canvas, 11, 2, &I_Oedo808_Sengoku);
+            break;
         case PIMG_PIKASLEEPY:
             canvas_draw_icon(canvas, 11, 2, &I_PikaSleepy);
+            break;
+        case PIMG_PIRATE:
+            canvas_draw_icon(canvas, 11, 2, &I_pirate);
+            break;
+        case PIMG_PKMNTR:
+            canvas_draw_icon(canvas, 11, 2, &I_PkmnTrainer);
+            break;
+        case PIMG_PSYDUCK:
+            canvas_draw_icon(canvas, 11, 2, &I_Psyduck);
             break;
         case PIMG_RABBIT:
             canvas_draw_icon_animation(canvas, 11, 2, animations[AniRabbit]);
             break;
+        case PIMG_SCARMLA:
+            canvas_draw_icon(canvas, 11, 2, &I_SC_Armaroid_Lady);
+            break;
+        case PIMG_SCCOBRA:
+            canvas_draw_icon(canvas, 11, 2, &I_SC_Cobra);
+            break;
+        case PIMG_SCCRYBO:
+            canvas_draw_icon(canvas, 11, 2, &I_SC_Crystal_Bowie);
+            break;
+        case PIMG_SCDOMRO:
+            canvas_draw_icon(canvas, 11, 2, &I_SC_Dominique_Royal);
+            break;
+        case PIMG_SCSANDRA:
+            canvas_draw_icon(canvas, 11, 2, &I_SC_Sandra);
+            break;
+        case PIMG_SCTARBEIGE:
+            canvas_draw_icon(canvas, 11, 2, &I_SC_Tarbeige);
+            break;
         case PIMG_SHINKAI:
             canvas_draw_icon(canvas, 11, 2, &I_Shinkai);
+            break;
+        case PIMG_SKULL:
+            canvas_draw_icon(canvas, 11, 2, &I_Skull);
             break;
         case PIMG_SLIME:
             canvas_draw_icon_animation(canvas, 11, 2, animations[AniSlime]);
@@ -297,28 +437,31 @@ static void render_callback(Canvas* const canvas, void* ctx) {
         case PIMG_WAIFU3:
             canvas_draw_icon(canvas, 11, 2, &I_Waifu3);
             break;
+        case PIMG_WRENCH:
+            canvas_draw_icon(canvas, 11, 2, portrait_wrench[passport->tmpMood]);
+            break;
         }
 
         //draw flipper info
         canvas_set_font(canvas, FontSecondary);
         //name
         if(passport->settings.name) {
-            canvas_draw_str(canvas, 58, 10, passport->my_name);
+            canvas_draw_str(canvas, 59, 10, passport->my_name);
         }
         //mood
         if(passport->settings.mood_set != 0) {
-            canvas_draw_str(canvas, 58, 22, passport->mood_str);
+            canvas_draw_str(canvas, 59, 22, passport->mood_str);
         }
         //level
         if(passport->settings.level) {
-            canvas_draw_str(canvas, 58, 34, passport->level_str);
+            canvas_draw_str(canvas, 59, 34, passport->level_str);
         }
 
         canvas_set_font(canvas, FontBatteryPercent);
 
         //xp stats
         if(passport->settings.xp_text) {
-            canvas_draw_str(canvas, 58, 42, passport->xp_str);
+            canvas_draw_str(canvas, 59, 42, passport->xp_str);
         }
 
         canvas_set_font(canvas, FontSecondary);
@@ -705,8 +848,9 @@ static void render_callback(Canvas* const canvas, void* ctx) {
     furi_mutex_release(passport->mutex);
 }
 
-static void input_callback(InputEvent* input_event, FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void input_callback(InputEvent* input_event, void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
     PassportEvent event = {.type = EventKeyPress, .input = *input_event};
     furi_message_queue_put(event_queue, &event, FuriWaitForever);
 }

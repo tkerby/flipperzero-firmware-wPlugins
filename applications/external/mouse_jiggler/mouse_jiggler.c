@@ -4,7 +4,7 @@
 #include <input/input.h>
 
 #define MOUSE_MOVE_SHORT 5
-#define MOUSE_MOVE_LONG 20
+#define MOUSE_MOVE_LONG  20
 
 typedef enum {
     EventTypeInput,
@@ -46,8 +46,8 @@ static void mouse_jiggler_render_callback(Canvas* canvas, void* ctx) {
 }
 
 static void mouse_jiggler_input_callback(InputEvent* input_event, void* ctx) {
+    furi_assert(ctx);
     FuriMessageQueue* event_queue = ctx;
-    furi_assert(event_queue);
 
     UsbMouseEvent event = {.type = EventTypeKey, .input = *input_event};
     furi_message_queue_put(event_queue, &event, FuriWaitForever);
@@ -124,8 +124,8 @@ int32_t mouse_jiggler_app(void* p) {
             furi_delay_ms(500);
         }
 
-        view_port_update(view_port);
         furi_mutex_release(plugin_state->mutex);
+        view_port_update(view_port);
     }
     furi_hal_usb_set_config(usb_mode_prev, NULL);
     // remove & free all stuff created by app

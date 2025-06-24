@@ -1,8 +1,8 @@
 #pragma once
 
 #include <furi.h>
-#include <gui/view_dispatcher_i.h>
-#include <gui/view_port_i.h>
+#include "ui_hacks_for_no_reason/view_dispatcher_i.h"
+#include "ui_hacks_for_no_reason/view_port_i.h"
 #include <gui/scene_manager.h>
 #include <gui/modules/byte_input.h>
 #include <gui/modules/dialog_ex.h>
@@ -11,14 +11,15 @@
 #include <gui/modules/text_box.h>
 #include <gui/modules/text_input.h>
 #include <notification/notification_messages.h>
-#include <lib/nfc/nfc_worker.h>
 #include <lib/subghz/subghz_tx_rx_worker.h>
-#include <toolbox/sha256.h>
+#include <mbedtls/sha256.h>
 
 #include "crypto_wrapper.h"
 #include "scenes/esubghz_chat_scene.h"
 
 #include "esubghz_chat_icons.h"
+
+#include <lib/nfclegacy/nfc_worker.h>
 
 #define APPLICATION_NAME "ESubGhzChat"
 
@@ -28,9 +29,9 @@
 
 #define RX_TX_BUFFER_SIZE 1024
 
-#define CHAT_BOX_STORE_SIZE 4096
+#define CHAT_BOX_STORE_SIZE   4096
 #define TEXT_INPUT_STORE_SIZE 256
-#define MSG_PREVIEW_SIZE 32
+#define MSG_PREVIEW_SIZE      32
 
 #define KEY_HEX_STR_SIZE ((KEY_BITS / 8) * 3)
 
@@ -88,6 +89,9 @@ typedef struct {
     bool kbd_ok_input_ongoing;
     bool kbd_left_input_ongoing;
     bool kbd_right_input_ongoing;
+
+    // for background support
+    bool exit_for_real;
 } ESubGhzChatState;
 
 typedef enum {

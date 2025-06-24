@@ -2,7 +2,6 @@
 #include <furi.h>
 #include <furi_hal.h>
 #include <storage/storage.h>
-#include <toolbox/saved_struct.h>
 #include <input/input.h>
 #include <gui/gui_i.h>
 #include <u8g2_glue.h>
@@ -25,9 +24,9 @@ static const uint8_t reset_display_mask = 1 << 5;
 static const uint8_t reset_blink_mask = 1 << 6;
 
 static void notification_vibro_on(bool force);
-static void notification_vibro_off();
+static void notification_vibro_off(void);
 static void notification_sound_on(float freq, float volume, bool force);
-static void notification_sound_off();
+static void notification_sound_off(void);
 
 static uint8_t notification_settings_get_display_brightness(NotificationApp* app, uint8_t value);
 static uint8_t notification_settings_get_rgb_led_brightness(NotificationApp* app, uint8_t value);
@@ -164,7 +163,7 @@ static void notification_vibro_on(bool force) {
     }
 }
 
-static void notification_vibro_off() {
+static void notification_vibro_off(void) {
     furi_hal_vibro_on(false);
 }
 
@@ -176,7 +175,7 @@ static void notification_sound_on(float freq, float volume, bool force) {
     }
 }
 
-static void notification_sound_off() {
+static void notification_sound_off(void) {
     if(furi_hal_speaker_is_mine()) {
         furi_hal_speaker_stop();
         furi_hal_speaker_release();
@@ -229,7 +228,7 @@ static void notification_process_notification_message(
             }
             break;
         case NotificationMessageTypeLedDisplayBacklightEnforceOn:
-            furi_assert(app->display_led_lock < UINT8_MAX);
+            furi_check(app->display_led_lock < UINT8_MAX);
             app->display_led_lock++;
             if(app->display_led_lock == 1) {
                 notification_apply_internal_led_layer(
@@ -238,51 +237,64 @@ static void notification_process_notification_message(
             }
             break;
         case NotificationMessageTypeLedDisplayBacklightEnforceAuto:
-            furi_assert(app->display_led_lock > 0);
-            app->display_led_lock--;
-            if(app->display_led_lock == 0) {
-                notification_apply_internal_led_layer(
-                    &app->display,
-                    notification_message->data.led.value * display_brightness_setting);
+            if(app->display_led_lock > 0) {
+                app->display_led_lock--;
+                if(app->display_led_lock == 0) {
+                    notification_apply_internal_led_layer(
+                        &app->display,
+                        notification_message->data.led.value * display_brightness_setting);
+                }
+            } else {
+                FURI_LOG_E(TAG, "Incorrect BacklightEnforce use");
             }
             break;
         case NotificationMessageTypeLedRed:
             // store and send on delay or after seq
-            led_active = true;
-            led_values[0] = notification_message->data.led.value;
-            app->led[0].value_last[LayerNotification] = led_values[0];
-            reset_mask |= reset_red_mask;
+            if(!furi_hal_rtc_is_flag_set(FuriHalRtcFlagStealthMode)) {
+                led_active = true;
+                led_values[0] = notification_message->data.led.value;
+                app->led[0].value_last[LayerNotification] = led_values[0];
+                reset_mask |= reset_red_mask;
+            }
             break;
         case NotificationMessageTypeLedGreen:
             // store and send on delay or after seq
-            led_active = true;
-            led_values[1] = notification_message->data.led.value;
-            app->led[1].value_last[LayerNotification] = led_values[1];
-            reset_mask |= reset_green_mask;
+            if(!furi_hal_rtc_is_flag_set(FuriHalRtcFlagStealthMode)) {
+                led_active = true;
+                led_values[1] = notification_message->data.led.value;
+                app->led[1].value_last[LayerNotification] = led_values[1];
+                reset_mask |= reset_green_mask;
+            }
             break;
         case NotificationMessageTypeLedBlue:
             // store and send on delay or after seq
-            led_active = true;
-            led_values[2] = notification_message->data.led.value;
-            app->led[2].value_last[LayerNotification] = led_values[2];
-            reset_mask |= reset_blue_mask;
+            if(!furi_hal_rtc_is_flag_set(FuriHalRtcFlagStealthMode)) {
+                led_active = true;
+                led_values[2] = notification_message->data.led.value;
+                app->led[2].value_last[LayerNotification] = led_values[2];
+                reset_mask |= reset_blue_mask;
+            }
             break;
         case NotificationMessageTypeLedBlinkStart:
             // store and send on delay or after seq
-            led_active = true;
-            furi_hal_light_blink_start(
-                notification_message->data.led_blink.color,
-                app->settings.led_brightness * 255,
-                notification_message->data.led_blink.on_time,
-                notification_message->data.led_blink.period);
-            reset_mask |= reset_blink_mask;
-            reset_mask |= reset_red_mask;
-            reset_mask |= reset_green_mask;
-            reset_mask |= reset_blue_mask;
+            if(!furi_hal_rtc_is_flag_set(FuriHalRtcFlagStealthMode)) {
+                led_active = true;
+                furi_hal_light_blink_start(
+                    notification_message->data.led_blink.color,
+                    app->settings.led_brightness * 255,
+                    notification_message->data.led_blink.on_time,
+                    notification_message->data.led_blink.period);
+                reset_mask |= reset_blink_mask;
+                reset_mask |= reset_red_mask;
+                reset_mask |= reset_green_mask;
+                reset_mask |= reset_blue_mask;
+            }
             break;
         case NotificationMessageTypeLedBlinkColor:
-            led_active = true;
-            furi_hal_light_blink_set_color(notification_message->data.led_blink.color);
+            if(!furi_hal_rtc_is_flag_set(FuriHalRtcFlagStealthMode)) {
+                led_active = true;
+                furi_hal_light_blink_set_color(notification_message->data.led_blink.color);
+            }
             break;
         case NotificationMessageTypeLedBlinkStop:
             furi_hal_light_blink_stop();
@@ -432,22 +444,78 @@ static void
     }
 }
 
-static bool notification_save_settings(NotificationApp* app) {
-    return saved_struct_save(
-        NOTIFICATION_SETTINGS_PATH,
-        &app->settings,
-        sizeof(NotificationSettings),
-        NOTIFICATION_SETTINGS_MAGIC,
-        NOTIFICATION_SETTINGS_VERSION);
+static bool notification_load_settings(NotificationApp* app) {
+    NotificationSettings settings;
+    File* file = storage_file_alloc(furi_record_open(RECORD_STORAGE));
+    const size_t settings_size = sizeof(NotificationSettings);
+
+    FURI_LOG_I(TAG, "loading settings from \"%s\"", NOTIFICATION_SETTINGS_PATH);
+    bool fs_result =
+        storage_file_open(file, NOTIFICATION_SETTINGS_PATH, FSAM_READ, FSOM_OPEN_EXISTING);
+
+    if(fs_result) {
+        size_t bytes_count = storage_file_read(file, &settings, settings_size);
+
+        if(bytes_count != settings_size) {
+            fs_result = false;
+        }
+    }
+
+    if(fs_result) {
+        FURI_LOG_I(TAG, "load success");
+
+        if(settings.version != NOTIFICATION_SETTINGS_VERSION) {
+            FURI_LOG_E(
+                TAG, "version(%d != %d) mismatch", settings.version, NOTIFICATION_SETTINGS_VERSION);
+        } else {
+            furi_kernel_lock();
+            memcpy(&app->settings, &settings, settings_size);
+            furi_kernel_unlock();
+        }
+    } else {
+        FURI_LOG_E(TAG, "load failed, %s", storage_file_get_error_desc(file));
+    }
+
+    storage_file_close(file);
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
+
+    return fs_result;
 }
 
-static bool notification_load_settings(NotificationApp* app) {
-    return saved_struct_load(
-        NOTIFICATION_SETTINGS_PATH,
-        &app->settings,
-        sizeof(NotificationSettings),
-        NOTIFICATION_SETTINGS_MAGIC,
-        NOTIFICATION_SETTINGS_VERSION);
+static bool notification_save_settings(NotificationApp* app) {
+    NotificationSettings settings;
+    File* file = storage_file_alloc(furi_record_open(RECORD_STORAGE));
+    const size_t settings_size = sizeof(NotificationSettings);
+
+    FURI_LOG_I(TAG, "saving settings to \"%s\"", NOTIFICATION_SETTINGS_PATH);
+
+    furi_kernel_lock();
+    memcpy(&settings, &app->settings, settings_size);
+    furi_kernel_unlock();
+
+    bool fs_result =
+        storage_file_open(file, NOTIFICATION_SETTINGS_PATH, FSAM_WRITE, FSOM_CREATE_ALWAYS);
+
+    if(fs_result) {
+        size_t bytes_count = storage_file_write(file, &settings, settings_size);
+
+        if(bytes_count != settings_size) {
+            fs_result = false;
+        }
+    }
+
+    if(fs_result) {
+        FURI_LOG_I(TAG, "save success");
+    } else {
+        FURI_LOG_E(TAG, "save failed, %s", storage_file_get_error_desc(file));
+    }
+
+    storage_file_close(file);
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
+
+    return fs_result;
 }
 
 static void input_event_callback(const void* value, void* context) {
@@ -458,7 +526,7 @@ static void input_event_callback(const void* value, void* context) {
 }
 
 // App alloc
-static NotificationApp* notification_app_alloc() {
+static NotificationApp* notification_app_alloc(void) {
     NotificationApp* app = malloc(sizeof(NotificationApp));
     app->queue = furi_message_queue_alloc(8, sizeof(NotificationAppMessage));
     app->display_timer = furi_timer_alloc(notification_display_timer, FuriTimerTypeOnce, app);
@@ -504,10 +572,8 @@ int32_t notification_srv(void* p) {
     UNUSED(p);
     NotificationApp* app = notification_app_alloc();
 
-    if(furi_hal_is_normal_boot()) {
-        if(!notification_load_settings(app)) {
-            notification_save_settings(app);
-        }
+    if(!notification_load_settings(app)) {
+        notification_save_settings(app);
     }
 
     notification_vibro_off();
@@ -542,4 +608,4 @@ int32_t notification_srv(void* p) {
     }
 
     return 0;
-};
+}

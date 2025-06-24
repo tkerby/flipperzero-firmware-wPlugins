@@ -1,0 +1,23 @@
+App(
+    appid="nfc_playlist",
+    name="NFC Playlist",
+    apptype=FlipperAppType.EXTERNAL,
+    targets=["f7"],
+    entry_point="nfc_playlist_main",
+    stack_size=4 * 1024,
+    fap_category="NFC",
+    fap_private_libs=[
+        Lib(
+            name="emulation_worker",
+        ),
+        Lib(
+            name="led_worker",
+        ),
+    ],
+    fap_icon="icons/playlist_10px.png",
+    fap_icon_assets="icons",
+    fap_author="acegoal07",
+    fap_weburl="https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main",
+    fap_version="3.0",
+    fap_description="The idea behind this app is to allow for you to test multiple copies of NFC's at once as a bulk test. At the moment this project is very basic and just reads the cards from the txt file and emulates the NFC's but this is very early days of development and i wanted to make a basic version of my idea first",
+)

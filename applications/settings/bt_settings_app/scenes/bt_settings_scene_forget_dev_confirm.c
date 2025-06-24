@@ -11,10 +11,10 @@ void bt_settings_scene_forget_dev_confirm_dialog_callback(DialogExResult result,
 void bt_settings_scene_forget_dev_confirm_on_enter(void* context) {
     BtSettingsApp* app = context;
     DialogEx* dialog = app->dialog;
-    dialog_ex_set_header(dialog, "Unpair All Devices?", 64, 3, AlignCenter, AlignTop);
+    dialog_ex_set_header(dialog, "Unpair All Devices?", 64, 0, AlignCenter, AlignTop);
     dialog_ex_set_text(
-        dialog, "All previous pairings\nwill be lost!", 64, 22, AlignCenter, AlignTop);
-    dialog_ex_set_left_button_text(dialog, "Back");
+        dialog, "All previous pairings\nwill be lost!", 64, 14, AlignCenter, AlignTop);
+    dialog_ex_set_left_button_text(dialog, "Cancel");
     dialog_ex_set_right_button_text(dialog, "Unpair");
     dialog_ex_set_context(dialog, app);
     dialog_ex_set_result_callback(dialog, bt_settings_scene_forget_dev_confirm_dialog_callback);
@@ -35,11 +35,14 @@ bool bt_settings_scene_forget_dev_confirm_on_event(void* context, SceneManagerEv
 
             // Also remove keys of BadBT, Bluetooth Remote, TOTP Authenticator
             Storage* storage = furi_record_open(RECORD_STORAGE);
-            storage_simply_remove(storage, EXT_PATH("apps_data/badbt/.badbt.keys"));
-            storage_simply_remove(storage, EXT_PATH("apps_data/hid_ble/.bt_hid.keys"));
+            // EXTRA CLEANUP LINES HAVE BEEN ADDED HERE THAT CAN PROBABLY BE REMOVED
             storage_simply_remove(storage, EXT_PATH("apps_data/authenticator/.bt_hid.keys"));
+            storage_simply_remove(storage, EXT_PATH("apps_data/badbt/.badbt.keys"));
+            storage_simply_remove(storage, EXT_PATH("apps_data/badkb/.badkb.keys"));
+            storage_simply_remove(storage, EXT_PATH("apps_data/hid_ble/.bt_hid.keys"));
             storage_simply_remove(storage, EXT_PATH("authenticator/.bt_hid.keys"));
             storage_simply_remove(storage, EXT_PATH("badbt/.badbt.keys"));
+            storage_simply_remove(storage, EXT_PATH("badkb/.badkb.keys"));
             furi_record_close(RECORD_STORAGE);
 
             scene_manager_next_scene(app->scene_manager, BtSettingsAppSceneForgetDevSuccess);

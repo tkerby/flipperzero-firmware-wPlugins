@@ -25,7 +25,7 @@ void ensure_dir_exists(Storage* storage) {
 
 void wiegand_save(void* context) {
     App* app = context;
-    FuriString* buffer = furi_string_alloc(1024);
+    FuriString* buffer = furi_string_alloc();
     FuriString* file_path = furi_string_alloc();
     furi_string_printf(
         file_path, "%s/%s%s", WIEGAND_SAVE_FOLDER, app->file_name, WIEGAND_SAVE_EXTENSION);
@@ -52,7 +52,25 @@ void wiegand_save(void* context) {
                 data_fall[i] - data_fall[0],
                 data_rise[i] - data_fall[0]);
         }
+
         furi_string_push_back(buffer, '\n');
+        storage_file_write(data_file, furi_string_get_cstr(buffer), furi_string_size(buffer));
+
+        furi_string_printf(buffer, "PACS_Binary: ");
+        for(int i = 0; i < bit_count; i++) {
+            furi_string_cat_printf(buffer, "%d", data[i] ? 1 : 0);
+        }
+
+        furi_string_push_back(buffer, '\n');
+        storage_file_write(data_file, furi_string_get_cstr(buffer), furi_string_size(buffer));
+
+        furi_string_printf(buffer, "PM3_Command: hf ic encode --bin ");
+
+        for(int i = 0; i < bit_count; i++) {
+            furi_string_cat_printf(buffer, "%d", data[i] ? 1 : 0);
+        }
+
+        furi_string_cat_printf(buffer, " --ki 0\n");
         storage_file_write(data_file, furi_string_get_cstr(buffer), furi_string_size(buffer));
         storage_file_close(data_file);
     }
@@ -66,7 +84,20 @@ void wiegand_save(void* context) {
 void wiegand_save_scene_on_enter(void* context) {
     App* app = context;
     text_input_reset(app->text_input);
-    set_random_name(app->file_name, WIEGAND_KEY_NAME_SIZE);
+
+    DateTime datetime;
+    furi_hal_rtc_get_datetime(&datetime);
+    snprintf(
+        app->file_name,
+        50,
+        "%02d_%02d_%02d_%02d_%02d_%02d",
+        datetime.year,
+        datetime.month,
+        datetime.day,
+        datetime.hour,
+        datetime.minute,
+        datetime.second);
+    //    set_random_name(app->file_name, WIEGAND_KEY_NAME_SIZE);
 
     text_input_set_header_text(app->text_input, "Name the key");
     text_input_set_result_callback(

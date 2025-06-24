@@ -267,10 +267,6 @@ static void draw_callback(Canvas* canvas, void* ctx) {
     const State* state = ctx;
     furi_mutex_acquire(state->mutex, FuriWaitForever);
 
-    if(state == NULL) {
-        return;
-    }
-
     canvas_clear(canvas);
 
     if(state->app_state == HistoryState) {
@@ -288,15 +284,17 @@ static void draw_callback(Canvas* canvas, void* ctx) {
     furi_mutex_release(state->mutex);
 }
 
-static void input_callback(InputEvent* input_event, FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void input_callback(InputEvent* input_event, void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
 
     AppEvent event = {.type = EventTypeKey, .input = *input_event};
     furi_message_queue_put(event_queue, &event, FuriWaitForever);
 }
 
-static void timer_callback(FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void timer_callback(void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
 
     AppEvent event = {.type = EventTypeTick};
     furi_message_queue_put(event_queue, &event, 0);
@@ -312,12 +310,6 @@ int32_t dice_dnd_app(void* p) {
 
     state->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
 
-    if(!state->mutex) {
-        FURI_LOG_E(TAG, "cannot create mutex\r\n");
-        free(state);
-        return 255;
-    }
-
     // Set callbacks
     ViewPort* view_port = view_port_alloc();
     view_port_draw_callback_set(view_port, draw_callback, state);
@@ -332,7 +324,7 @@ int32_t dice_dnd_app(void* p) {
 
     AppEvent event;
     for(bool processing = true; processing;) {
-        FuriStatus event_status = furi_message_queue_get(event_queue, &event, 100);
+        FuriStatus event_status = furi_message_queue_get(event_queue, &event, FuriWaitForever);
         furi_mutex_acquire(state->mutex, FuriWaitForever);
 
         if(event_status == FuriStatusOk) {
@@ -341,7 +333,7 @@ int32_t dice_dnd_app(void* p) {
                 update(state);
             }
             // button events
-            if(event.type == EventTypeKey) {
+            else if(event.type == EventTypeKey) {
                 if(event.input.type == InputTypePress) {
                     // dice type
                     if(isDiceButtonsVisible(state->app_state)) {
@@ -381,9 +373,8 @@ int32_t dice_dnd_app(void* p) {
                         roll(state);
                     }
                 }
-
                 // back button handlers
-                if(event.input.key == InputKeyBack) {
+                else if(event.input.key == InputKeyBack) {
                     // switch states
                     if(event.input.type == InputTypeShort) {
                         if(state->app_state == SelectState) {
@@ -403,8 +394,6 @@ int32_t dice_dnd_app(void* p) {
                     }
                 }
             }
-        } else {
-            FURI_LOG_D(TAG, "osMessageQueue: event timeout");
         }
 
         view_port_update(view_port);

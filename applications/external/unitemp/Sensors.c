@@ -23,14 +23,13 @@ const GpioPin SWC_10 = {.pin = LL_GPIO_PIN_14, .port = GPIOA};
 const GpioPin SIO_12 = {.pin = LL_GPIO_PIN_13, .port = GPIOA};
 const GpioPin TX_13 = {.pin = LL_GPIO_PIN_6, .port = GPIOB};
 const GpioPin RX_14 = {.pin = LL_GPIO_PIN_7, .port = GPIOB};
-const GpioPin ibutton_gpio = {.pin = LL_GPIO_PIN_14, .port = GPIOB};
 
 //Количество доступных портов ввода/вывода
-#define GPIO_ITEMS (sizeof(GPIOList) / sizeof(GPIO))
+#define GPIO_ITEMS             (sizeof(GPIOList) / sizeof(GPIO))
 //Количество интерфейсов
 #define INTERFACES_TYPES_COUNT (int)(sizeof(interfaces) / sizeof(const Interface*))
 //Количество типов датчиков
-#define SENSOR_TYPES_COUNT (int)(sizeof(sensorTypes) / sizeof(const SensorType*))
+#define SENSOR_TYPES_COUNT     (int)(sizeof(sensorTypes) / sizeof(const SensorType*))
 
 //Перечень достуных портов ввода/вывода
 static const GPIO GPIOList[] = {
@@ -151,8 +150,7 @@ uint8_t unitemp_gpio_getAviablePortsCount(const Interface* interface, const GPIO
     for(uint8_t i = 0; i < GPIO_ITEMS; i++) {
         //Проверка для one wire
         if(interface == &ONE_WIRE) {
-            if(((gpio_interfaces_list[i] == NULL || gpio_interfaces_list[i] == &ONE_WIRE) &&
-                (i != 12)) || //Почему-то не работает на 17 порте
+            if(((gpio_interfaces_list[i] == NULL || gpio_interfaces_list[i] == &ONE_WIRE)) ||
                (unitemp_gpio_getFromIndex(i) == extraport)) {
                 aviable_ports_count++;
             }
@@ -198,21 +196,21 @@ const GPIO*
             return NULL;
         }
     }
-    if(interface == &SPI) {
+
+    // This check is incorrect and not working anymore
+    /*if(interface == &SPI) {
         if(!((gpio_interfaces_list[0] == NULL || gpio_interfaces_list[0] == &SPI) &&
              (gpio_interfaces_list[1] == NULL || gpio_interfaces_list[1] == &SPI) &&
              (gpio_interfaces_list[3] == NULL || gpio_interfaces_list[3] == &SPI))) {
             return NULL;
         }
-    }
+    }*/
 
     uint8_t aviable_index = 0;
     for(uint8_t i = 0; i < GPIO_ITEMS; i++) {
         //Проверка для one wire
         if(interface == &ONE_WIRE) {
-            //Почему-то не работает на 17 порте
-            if(((gpio_interfaces_list[i] == NULL || gpio_interfaces_list[i] == &ONE_WIRE) &&
-                (i != 12)) || //Почему-то не работает на 17 порте
+            if(((gpio_interfaces_list[i] == NULL || gpio_interfaces_list[i] == &ONE_WIRE)) ||
                (unitemp_gpio_getFromIndex(i) == extraport)) {
                 if(aviable_index == index) {
                     return unitemp_gpio_getFromIndex(i);
@@ -296,6 +294,8 @@ bool unitemp_sensors_load(void) {
     //Открытие потока к файлу с датчиками
     if(!file_stream_open(
            app->file_stream, furi_string_get_cstr(filepath), FSAM_READ_WRITE, FSOM_OPEN_EXISTING)) {
+        // Free file path string if we got an error
+        furi_string_free(filepath);
         if(file_stream_get_error(app->file_stream) == FSE_NOT_EXIST) {
             FURI_LOG_W(APP_NAME, "Missing sensors file");
             //Закрытие потока и освобождение памяти
@@ -313,6 +313,8 @@ bool unitemp_sensors_load(void) {
             return false;
         }
     }
+    // Free file path string if we successfully opened the file
+    furi_string_free(filepath);
 
     //Вычисление размера файла
     uint16_t file_size = stream_size(app->file_stream);
@@ -406,6 +408,8 @@ bool unitemp_sensors_save(void) {
     //Открытие потока
     if(!file_stream_open(
            app->file_stream, furi_string_get_cstr(filepath), FSAM_READ_WRITE, FSOM_CREATE_ALWAYS)) {
+        // Free file path string if we got an error
+        furi_string_free(filepath);
         FURI_LOG_E(
             APP_NAME,
             "An error occurred while saving the sensors file: %d",
@@ -415,6 +419,8 @@ bool unitemp_sensors_save(void) {
         stream_free(app->file_stream);
         return false;
     }
+    // Free file path string if we successfully opened the file
+    furi_string_free(filepath);
 
     //Сохранение датчиков
     for(uint8_t i = 0; i < unitemp_sensors_getActiveCount(); i++) {
@@ -489,14 +495,14 @@ Sensor* unitemp_sensor_alloc(char* name, const SensorType* type, char* args) {
     Sensor* sensor = malloc(sizeof(Sensor));
     if(sensor == NULL) {
         FURI_LOG_E(APP_NAME, "Sensor %s allocation error", name);
-        return false;
+        return NULL;
     }
 
     //Выделение памяти под имя
     sensor->name = malloc(11);
     if(sensor->name == NULL) {
         FURI_LOG_E(APP_NAME, "Sensor %s name allocation error", name);
-        return false;
+        return NULL;
     }
     //Запись имени датчка
     strcpy(sensor->name, name);
@@ -562,6 +568,8 @@ void unitemp_sensors_free(void) {
 bool unitemp_sensors_init(void) {
     bool result = true;
 
+    app->sensors_ready = false;
+
     //Перебор датчиков из списка
     for(uint8_t i = 0; i < unitemp_sensors_getCount(); i++) {
         //Включение 5V если на порту 1 FZ его нет
@@ -579,12 +587,15 @@ bool unitemp_sensors_init(void) {
         }
         FURI_LOG_I(APP_NAME, "Sensor %s successfully initialized", app->sensors[i]->name);
     }
+
     app->sensors_ready = true;
+
     return result;
 }
 
 bool unitemp_sensors_deInit(void) {
     bool result = true;
+
     //Выключение 5 В если до этого оно не было включено
     if(app->settings.lastOTGState != true) {
         furi_hal_power_disable_otg();
@@ -601,11 +612,14 @@ bool unitemp_sensors_deInit(void) {
             result = false;
         }
     }
+
     return result;
 }
 
 UnitempStatus unitemp_sensor_updateData(Sensor* sensor) {
-    if(sensor == NULL) return UT_SENSORSTATUS_ERROR;
+    if(sensor == NULL) {
+        return UT_SENSORSTATUS_ERROR;
+    }
 
     //Проверка на допустимость опроса датчика
     if(furi_get_tick() - sensor->lastPollingTime < sensor->type->pollingInterval) {
@@ -628,6 +642,16 @@ UnitempStatus unitemp_sensor_updateData(Sensor* sensor) {
         UNITEMP_DEBUG("Sensor %s update status %d", sensor->name, sensor->status);
     }
 
+    if(app->settings.humidity_unit == UT_HUMIDITY_DEWPOINT &&
+       app->settings.temp_unit == UT_TEMP_CELSIUS && sensor->status == UT_SENSORSTATUS_OK) {
+        unitemp_rhToDewpointC(sensor);
+    }
+
+    if(app->settings.humidity_unit == UT_HUMIDITY_DEWPOINT &&
+       app->settings.temp_unit == UT_TEMP_FAHRENHEIT && sensor->status == UT_SENSORSTATUS_OK) {
+        unitemp_rhToDewpointF(sensor);
+    }
+
     if(sensor->status == UT_SENSORSTATUS_OK) {
         if(app->settings.heat_index &&
            ((sensor->type->datatype & (UT_TEMPERATURE | UT_HUMIDITY)) ==
@@ -635,7 +659,7 @@ UnitempStatus unitemp_sensor_updateData(Sensor* sensor) {
             unitemp_calculate_heat_index(sensor);
         }
         if(app->settings.temp_unit == UT_TEMP_FAHRENHEIT) {
-            uintemp_celsiumToFarengate(sensor);
+            unitemp_celsiusToFahrenheit(sensor);
         }
 
         sensor->temp += sensor->temp_offset / 10.f;
@@ -645,8 +669,11 @@ UnitempStatus unitemp_sensor_updateData(Sensor* sensor) {
             unitemp_pascalToInHg(sensor);
         } else if(app->settings.pressure_unit == UT_PRESSURE_KPA) {
             unitemp_pascalToKPa(sensor);
+        } else if(app->settings.pressure_unit == UT_PRESSURE_HPA) {
+            unitemp_pascalToHPa(sensor);
         }
     }
+
     return sensor->status;
 }
 

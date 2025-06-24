@@ -38,7 +38,7 @@ typedef struct {
 } PokerPlayer_card;
 
 typedef struct {
-    FuriMutex** model_mutex;
+    FuriMutex* model_mutex;
     FuriMessageQueue* event_queue;
     ViewPort* view_port;
     Gui* gui;
@@ -335,10 +335,12 @@ static void playcard(PokerPlayer* app) {
     c++;
     c = hold[5]; /* FIX for unused-but-set-variable */
     /* initialize deck */
-    for(i = 0; i < 52; i++) deck[i].gone = 0;
+    for(i = 0; i < 52; i++)
+        deck[i].gone = 0;
 
     /* initialize hold[] */
-    for(i = 0; i < 5; i++) hold[i] = 1;
+    for(i = 0; i < 5; i++)
+        hold[i] = 1;
 
     /* app->score -= bet; */
     if(app->score > app->highscore) {
@@ -347,7 +349,8 @@ static void playcard(PokerPlayer* app) {
 
     for(i = 0; i < 5; i++) {
         /* find a card not already dealt */
-        do crd = random() % 52;
+        do
+            crd = random() % 52;
         while(deck[crd].gone);
         hold[i] = 1;
         deck[crd].gone = 1;
@@ -525,7 +528,8 @@ static int recognize(PokerPlayer* app) {
     /* Sort hand into sorted hand (app->shand) */
 
     /* make copy of hand */
-    for(i = 0; i < 5; i++) tmp[i] = app->hand[i];
+    for(i = 0; i < 5; i++)
+        tmp[i] = app->hand[i];
 
     for(i = 0; i < 5; i++) {
         /* put lowest card in hand into next place in app->shand */
@@ -717,6 +721,9 @@ int32_t video_poker_app(void* p) {
             if(event.type == InputTypePress) {
                 switch(event.key) {
                 case InputKeyUp:
+                    if(poker_player->GameState == 1) {
+                        poker_player->bet = poker_player->score;
+                    }
                     Shake();
                     break;
                 case InputKeyDown:
@@ -733,6 +740,8 @@ int32_t video_poker_app(void* p) {
                     if(poker_player->GameState == 1) {
                         if(poker_player->bet >= poker_player->minbet + 10) {
                             poker_player->bet -= 10;
+                        } else {
+                            poker_player->bet = poker_player->score;
                         }
                     } else if(poker_player->selected > 0 && poker_player->GameState == 2) {
                         poker_player->selected--;
@@ -743,8 +752,10 @@ int32_t video_poker_app(void* p) {
                     break;
                 case InputKeyRight:
                     if(poker_player->GameState == 1) {
-                        if(poker_player->bet < poker_player->score + 10) {
+                        if(poker_player->bet < poker_player->score) {
                             poker_player->bet += 10;
+                        } else {
+                            poker_player->bet = poker_player->minbet;
                         }
                     }
                     if(poker_player->selected < 4 && poker_player->GameState == 2) {

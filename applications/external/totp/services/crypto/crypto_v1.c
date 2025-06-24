@@ -7,12 +7,11 @@
 #include <furi_hal_version.h>
 #include "../../types/common.h"
 #include "memset_s.h"
-#include "polyfills.h"
 
-#define CRYPTO_KEY_SLOT (2)
+#define CRYPTO_KEY_SLOT          (2)
 #define CRYPTO_VERIFY_KEY_LENGTH (16)
-#define CRYPTO_ALIGNMENT_FACTOR (16)
-#define TOTP_IV_SIZE (16)
+#define CRYPTO_ALIGNMENT_FACTOR  (16)
+#define TOTP_IV_SIZE             (16)
 
 static const char* CRYPTO_VERIFY_KEY = "FFF_Crypto_pass";
 

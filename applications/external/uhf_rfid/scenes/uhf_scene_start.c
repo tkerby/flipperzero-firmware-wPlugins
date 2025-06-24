@@ -1,6 +1,10 @@
 #include "../uhf_app_i.h"
 
-enum SubmenuIndex { SubmenuIndexRead, SubmenuIndexSaved, SubmenuIndexSettings };
+enum SubmenuIndex {
+    SubmenuIndexRead,
+    SubmenuIndexSaved,
+    SubmenuIndexSettings
+};
 
 void uhf_scene_start_submenu_callback(void* ctx, uint32_t index) {
     UHFApp* uhf_app = ctx;
@@ -38,14 +42,12 @@ bool uhf_scene_start_on_event(void* ctx, SceneManagerEvent event) {
                 uhf_app->scene_manager, UHFSceneStart, SubmenuIndexSaved);
             scene_manager_next_scene(uhf_app->scene_manager, UHFSceneFileSelect);
             consumed = true;
+        } else if(event.event == SubmenuIndexSettings) {
+            scene_manager_set_scene_state(
+                uhf_app->scene_manager, UHFSceneStart, SubmenuIndexSettings);
+            scene_manager_next_scene(uhf_app->scene_manager, UHFSceneSettings);
+            consumed = true;
         }
-        // } else if(event.event == SubmenuIndexEliteDictAttack) {
-        //     scene_manager_set_scene_state(
-        //         uhf_app->scene_manager, UHFSceneStart, SubmenuIndexEliteDictAttack);
-        //     scene_manager_next_scene(uhf_app->scene_manager, UHFSceneEliteDictAttack);
-        //     consumed = true;
-        // }
-        // consumed = true;
     }
     return consumed;
 }

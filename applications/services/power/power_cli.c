@@ -48,7 +48,7 @@ void power_cli_3v3(Cli* cli, FuriString* args) {
     }
 }
 
-static void power_cli_command_print_usage() {
+static void power_cli_command_print_usage(void) {
     printf("Usage:\r\n");
     printf("power <cmd> <args>\r\n");
     printf("Cmd list:\r\n");
@@ -106,11 +106,14 @@ void power_cli(Cli* cli, FuriString* args, void* context) {
     furi_string_free(cmd);
 }
 
-void power_on_system_start() {
+#include <cli/cli_i.h>
+CLI_PLUGIN_WRAPPER("power", power_cli)
+
+void power_on_system_start(void) {
 #ifdef SRV_CLI
     Cli* cli = furi_record_open(RECORD_CLI);
 
-    cli_add_command(cli, "power", CliCommandFlagParallelSafe, power_cli, NULL);
+    cli_add_command(cli, "power", CliCommandFlagParallelSafe, power_cli_wrapper, NULL);
 
     furi_record_close(RECORD_CLI);
 #else

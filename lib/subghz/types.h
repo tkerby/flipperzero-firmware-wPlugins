@@ -11,20 +11,21 @@
 #include <furi.h>
 #include <furi_hal.h>
 
-#define SUBGHZ_APP_FOLDER ANY_PATH("subghz")
-#define SUBGHZ_RAW_FOLDER EXT_PATH("subghz")
-#define SUBGHZ_APP_EXTENSION ".sub"
+#define SUBGHZ_APP_FOLDER             EXT_PATH("subghz")
+#define SUBGHZ_RAW_FOLDER             EXT_PATH("subghz")
+#define SUBGHZ_APP_FILENAME_PREFIX    "SubGHz"
+#define SUBGHZ_APP_FILENAME_EXTENSION ".sub"
 
 #define SUBGHZ_KEY_FILE_VERSION 1
-#define SUBGHZ_KEY_FILE_TYPE "Flipper SubGhz Key File"
+#define SUBGHZ_KEY_FILE_TYPE    "Flipper SubGhz Key File"
 
 #define SUBGHZ_RAW_FILE_VERSION 1
-#define SUBGHZ_RAW_FILE_TYPE "Flipper SubGhz RAW File"
+#define SUBGHZ_RAW_FILE_TYPE    "Flipper SubGhz RAW File"
 
-#define SUBGHZ_KEYSTORE_DIR_NAME EXT_PATH("subghz/assets/keeloq_mfcodes")
+#define SUBGHZ_KEYSTORE_DIR_NAME      EXT_PATH("subghz/assets/keeloq_mfcodes")
 #define SUBGHZ_KEYSTORE_DIR_USER_NAME EXT_PATH("subghz/assets/keeloq_mfcodes_user")
-#define SUBGHZ_CAME_ATOMO_DIR_NAME EXT_PATH("subghz/assets/came_atomo")
-#define SUBGHZ_NICE_FLOR_S_DIR_NAME EXT_PATH("subghz/assets/nice_flor_s")
+#define SUBGHZ_CAME_ATOMO_DIR_NAME    EXT_PATH("subghz/assets/came_atomo")
+#define SUBGHZ_NICE_FLOR_S_DIR_NAME   EXT_PATH("subghz/assets/nice_flor_s")
 #define SUBGHZ_ALUTECH_AT_4N_DIR_NAME EXT_PATH("subghz/assets/alutech_at_4n")
 
 typedef struct SubGhzProtocolRegistry SubGhzProtocolRegistry;
@@ -36,6 +37,8 @@ typedef struct {
     uint32_t frequency;
     uint8_t* data;
     size_t data_size;
+    float latitude;
+    float longitude;
 } SubGhzRadioPreset;
 
 typedef enum {
@@ -58,6 +61,8 @@ typedef enum {
     SubGhzProtocolStatusErrorEncoderGetUpload = (-12), ///< Payload encoder failure
     // Special Values
     SubGhzProtocolStatusErrorProtocolNotFound = (-13), ///< Protocol not found
+    SubGhzProtocolStatusErrorParserLatitude = (-14), ///< Missing `Latitude`
+    SubGhzProtocolStatusErrorParserLongitude = (-15), ///< Missing `Longitude`
     SubGhzProtocolStatusReserved = 0x7FFFFFFF, ///< Prevents enum down-size compiler optimization.
 } SubGhzProtocolStatus;
 
@@ -74,7 +79,9 @@ typedef SubGhzProtocolStatus (*SubGhzDeserialize)(void* context, FlipperFormat* 
 typedef void (*SubGhzDecoderFeed)(void* decoder, bool level, uint32_t duration);
 typedef void (*SubGhzDecoderReset)(void* decoder);
 typedef uint8_t (*SubGhzGetHashData)(void* decoder);
+typedef uint32_t (*SubGhzGetHashDataLong)(void* decoder);
 typedef void (*SubGhzGetString)(void* decoder, FuriString* output);
+typedef void (*SubGhzGetStringBrief)(void* decoder, FuriString* output);
 
 // Encoder specific
 typedef void (*SubGhzEncoderStop)(void* encoder);
@@ -91,6 +98,9 @@ typedef struct {
     SubGhzGetString get_string;
     SubGhzSerialize serialize;
     SubGhzDeserialize deserialize;
+
+    SubGhzGetHashDataLong get_hash_data_long;
+    SubGhzGetStringBrief get_string_brief;
 } SubGhzProtocolDecoder;
 
 typedef struct {
@@ -107,7 +117,7 @@ typedef enum {
     SubGhzProtocolTypeStatic,
     SubGhzProtocolTypeDynamic,
     SubGhzProtocolTypeRAW,
-    SubGhzProtocolWeatherStation,
+    SubGhzProtocolWeatherStation, // Unused, kept for compatibility
     SubGhzProtocolCustom,
     SubGhzProtocolTypeBinRAW,
 } SubGhzProtocolType;
@@ -124,10 +134,17 @@ typedef enum {
     SubGhzProtocolFlag_Load = (1 << 8),
     SubGhzProtocolFlag_Send = (1 << 9),
     SubGhzProtocolFlag_BinRAW = (1 << 10),
-    SubGhzProtocolFlag_StarLine = (1 << 11),
-    SubGhzProtocolFlag_AutoAlarms = (1 << 12),
-    SubGhzProtocolFlag_Magelan = (1 << 13),
 } SubGhzProtocolFlag;
+
+typedef enum {
+    SubGhzProtocolFilter_StarLine = (1 << 0),
+    SubGhzProtocolFilter_Alarms = (1 << 1),
+    SubGhzProtocolFilter_Magellan = (1 << 2),
+    SubGhzProtocolFilter_Princeton = (1 << 3),
+    SubGhzProtocolFilter_NiceFlorS = (1 << 4),
+    SubGhzProtocolFilter_Weather = (1 << 5),
+    SubGhzProtocolFilter_TPMS = (1 << 6),
+} SubGhzProtocolFilter;
 
 struct SubGhzProtocol {
     const char* name;
@@ -136,4 +153,6 @@ struct SubGhzProtocol {
 
     const SubGhzProtocolEncoder* encoder;
     const SubGhzProtocolDecoder* decoder;
+
+    SubGhzProtocolFilter filter;
 };

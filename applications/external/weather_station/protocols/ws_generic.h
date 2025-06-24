@@ -14,11 +14,11 @@
 extern "C" {
 #endif
 
-#define WS_NO_ID 0xFFFFFFFF
-#define WS_NO_BATT 0xFF
-#define WS_NO_HUMIDITY 0xFF
-#define WS_NO_CHANNEL 0xFF
-#define WS_NO_BTN 0xFF
+#define WS_NO_ID          0xFFFFFFFF
+#define WS_NO_BATT        0xFF
+#define WS_NO_HUMIDITY    0xFF
+#define WS_NO_CHANNEL     0xFF
+#define WS_NO_BTN         0xFF
 #define WS_NO_TEMPERATURE -273.0f
 
 typedef struct WSBlockGeneric WSBlockGeneric;
@@ -75,6 +75,13 @@ SubGhzProtocolStatus ws_block_generic_deserialize_check_count_bit(
     WSBlockGeneric* instance,
     FlipperFormat* flipper_format,
     uint16_t count_bit);
+
+/**
+ * Get string WSBlockGeneric.
+ * @param instance Pointer to a WSBlockGeneric instance
+ * @param output Pointer to a FuriString instance
+ */
+void ws_block_generic_get_string(WSBlockGeneric* instance, FuriString* output);
 
 #ifdef __cplusplus
 }

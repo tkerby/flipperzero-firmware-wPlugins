@@ -11,21 +11,26 @@
 
 #define BORDER_OFFSET 1
 #define MARGIN_OFFSET 3
-#define BLOCK_HEIGHT 6
-#define BLOCK_WIDTH 6
+#define BLOCK_HEIGHT  6
+#define BLOCK_WIDTH   6
 
-#define FIELD_WIDTH 11
-#define FIELD_HEIGHT 24
+#define FIELD_WIDTH        11
+#define FIELD_HEIGHT       24
 #define PARALLEL_OBSTACLES 3
 
-typedef enum { GameStatePlaying, GameStateGameOver } GameState;
+typedef enum {
+    GameStatePlaying,
+    GameStateGameOver
+} GameState;
 
 typedef struct Point {
     // Also used for offset data, which is sometimes negative
     int8_t x, y;
 } Point;
 
-typedef enum { CarObstacle } ObstacleType;
+typedef enum {
+    CarObstacle
+} ObstacleType;
 
 typedef struct Obstacle {
     ObstacleType type;
@@ -160,8 +165,9 @@ static void input_callback(InputEvent* input_event, void* ctx) {
     furi_message_queue_put(event_queue, &event, FuriWaitForever);
 }
 
-static void timer_callback(FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void timer_callback(void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
     RaceGameEvent event = {.type = EventTypeTick};
     furi_message_queue_put(event_queue, &event, 0);
 }
@@ -342,8 +348,8 @@ int32_t race_app(void* p) {
             moveRoad = true;
         }
         race_game_process_step(race_state, moveRoad);
-        view_port_update(view_port);
         furi_mutex_release(state_mutex);
+        view_port_update(view_port);
     }
     // clearing everything on game exit
 

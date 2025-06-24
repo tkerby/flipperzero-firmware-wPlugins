@@ -71,10 +71,12 @@ const SubGhzProtocolDecoder subghz_protocol_x10_decoder = {
     .free = subghz_protocol_decoder_x10_free,
     .feed = subghz_protocol_decoder_x10_feed,
     .reset = subghz_protocol_decoder_x10_reset,
-    .get_hash_data = subghz_protocol_decoder_x10_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = subghz_protocol_decoder_x10_get_hash_data,
     .serialize = subghz_protocol_decoder_x10_serialize,
     .deserialize = subghz_protocol_decoder_x10_deserialize,
     .get_string = subghz_protocol_decoder_x10_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder subghz_protocol_x10_encoder = {
@@ -210,10 +212,10 @@ static void subghz_protocol_x10_check_remote_controller(SubGhzBlockGeneric* inst
     instance->btn = (((instance->data & 0x07000000) >> 24) | ((instance->data & 0xF800) >> 8));
 }
 
-uint8_t subghz_protocol_decoder_x10_get_hash_data(void* context) {
+uint32_t subghz_protocol_decoder_x10_get_hash_data(void* context) {
     furi_assert(context);
     SubGhzProtocolDecoderX10* instance = context;
-    return subghz_protocol_blocks_get_hash_data(
+    return subghz_protocol_blocks_get_hash_data_long(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 

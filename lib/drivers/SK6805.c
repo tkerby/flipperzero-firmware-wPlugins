@@ -24,12 +24,12 @@
 /* Настройки */
 #define SK6805_LED_PIN &led_pin // LED connection port
 
-#ifdef FURI_DEBUG
+#if false
 #define DEBUG_PIN &gpio_ext_pa7
 #define DEBUG_INIT() \
     furi_hal_gpio_init(DEBUG_PIN, GpioModeOutputPushPull, GpioPullNo, GpioSpeedVeryHigh)
 #define DEBUG_SET_HIGH() furi_hal_gpio_write(DEBUG_PIN, true)
-#define DEBUG_SET_LOW() furi_hal_gpio_write(DEBUG_PIN, false)
+#define DEBUG_SET_LOW()  furi_hal_gpio_write(DEBUG_PIN, false)
 #else
 #define DEBUG_INIT()
 #define DEBUG_SET_HIGH()
@@ -49,17 +49,18 @@ uint8_t SK6805_get_led_count(void) {
     return (const uint8_t)SK6805_LED_COUNT;
 }
 void SK6805_set_led_color(uint8_t led_index, uint8_t r, uint8_t g, uint8_t b) {
+    FURI_LOG_T(TAG, "led: %d, r: %d, g: %d, b: %d", led_index, r, g, b);
     furi_check(led_index < SK6805_LED_COUNT);
 
     led_buffer[led_index][0] = g;
     led_buffer[led_index][1] = r;
     led_buffer[led_index][2] = b;
-    FURI_LOG_T(TAG, "led: %d, r: %d, g: %d, b: %d", led_index, r, g, b);
 }
 
 void SK6805_update(void) {
+    FURI_LOG_T(TAG, "update");
     SK6805_init();
-    furi_kernel_lock();
+    FURI_CRITICAL_ENTER();
     uint32_t end;
     // Sequential sending LEDs
     for(uint8_t lednumber = 0; lednumber < SK6805_LED_COUNT; lednumber++) {
@@ -99,5 +100,5 @@ void SK6805_update(void) {
             }
         }
     }
-    furi_kernel_unlock();
+    FURI_CRITICAL_EXIT();
 }

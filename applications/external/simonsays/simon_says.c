@@ -13,34 +13,52 @@
 
 #include "simon_says_icons.h"
 
-#define TAG "Simon" // Used for logging
-#define DEBUG_MSG 1
-#define SCREEN_XRES 128
-#define SCREEN_YRES 64
-#define BOARD_X 72 // Used for board placement
-#define BOARD_Y 8
+#define TAG              "Simon" // Used for logging
+#define DEBUG_MSG        1
+#define SCREEN_XRES      128
+#define SCREEN_YRES      64
+#define BOARD_X          72 // Used for board placement
+#define BOARD_Y          8
 #define GAME_START_LIVES 3
 #define SAVING_DIRECTORY EXT_PATH("apps_data/simonsays")
-#define SAVING_FILENAME SAVING_DIRECTORY "/game_simon_says.save"
+#define SAVING_FILENAME  SAVING_DIRECTORY "/game_simon_says.save"
 
 // Define Notes
 // Shamelessly stolen from Ocarina application
 // https://github.com/invalidna-me/flipperzero-ocarina
-#define NOTE_UP 587.33f
-#define NOTE_LEFT 493.88f
+#define NOTE_UP    587.33f
+#define NOTE_LEFT  493.88f
 #define NOTE_RIGHT 440.00f
-#define NOTE_DOWN 349.23
-#define NOTE_OK 293.66f
+#define NOTE_DOWN  349.23
+#define NOTE_OK    293.66f
 
 /* ============================ Data structures ============================= */
 
-typedef enum game_state { preloading, mainMenu, inGame, gameOver, gameVictory } game_state;
+typedef enum game_state {
+    preloading,
+    mainMenu,
+    inGame,
+    gameOver,
+    gameVictory
+} game_state;
 
-typedef enum difficulty_mode { normal, hard } difficulty_mode;
+typedef enum difficulty_mode {
+    normal,
+    hard
+} difficulty_mode;
 
-typedef enum shape_names { up, down, left, right, number_of_shapes } Direction;
+typedef enum shape_names {
+    up,
+    down,
+    left,
+    right,
+    number_of_shapes
+} Direction;
 
-typedef enum currently_playing { simon, player } currently_playing;
+typedef enum currently_playing {
+    simon,
+    player
+} currently_playing;
 
 typedef struct {
     /* Game state. */
@@ -649,8 +667,8 @@ int32_t simon_says_app_entry(void* p) {
         //     simon_state->set_board_neutral = !simon_state->set_board_neutral;
         // }
 
-        view_port_update(view_port);
         furi_mutex_release(simon_state->mutex);
+        view_port_update(view_port);
     }
 
     stop_sound();

@@ -12,6 +12,9 @@ compile_commands.json
 # JetBrains IDEs
 .idea/
 
+# Sublime Text
+.sublime-project.sublime-workspace
+
 # Python VirtEnvironments
 .env
 .venv
@@ -41,9 +44,6 @@ null.d
 # SCons
 .sconsign.dblite
 
-
-# Visual Studio Code
-/.vscode
 
 # bundle output
 /dist
@@ -75,3 +75,4 @@ RM*-*.zip
 RM*-*.txt
 RM*-*-*/
 RM-*.sh
+/%SystemDrive%

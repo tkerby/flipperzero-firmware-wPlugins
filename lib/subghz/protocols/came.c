@@ -12,13 +12,15 @@
  *
  */
 
-#define TAG "SubGhzProtocolCAME"
-#define CAME_12_COUNT_BIT 12
-#define CAME_24_COUNT_BIT 24
-#define PRASTEL_COUNT_BIT 25
-#define PRASTEL_NAME "Prastel"
-#define AIRFORCE_COUNT_BIT 18
-#define AIRFORCE_NAME "Airforce"
+#define TAG "SubGhzProtocolCame"
+
+#define CAME_12_COUNT_BIT    12
+#define CAME_24_COUNT_BIT    24
+#define PRASTEL_25_COUNT_BIT 25
+#define PRASTEL_42_COUNT_BIT 42
+#define PRASTEL_NAME         "Prastel"
+#define AIRFORCE_COUNT_BIT   18
+#define AIRFORCE_NAME        "Airforce"
 
 static const SubGhzBlockConst subghz_protocol_came_const = {
     .te_short = 320,
@@ -55,10 +57,12 @@ const SubGhzProtocolDecoder subghz_protocol_came_decoder = {
     .feed = subghz_protocol_decoder_came_feed,
     .reset = subghz_protocol_decoder_came_reset,
 
-    .get_hash_data = subghz_protocol_decoder_came_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = subghz_protocol_decoder_came_get_hash_data,
     .serialize = subghz_protocol_decoder_came_serialize,
     .deserialize = subghz_protocol_decoder_came_deserialize,
     .get_string = subghz_protocol_decoder_came_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder subghz_protocol_came_encoder = {
@@ -122,6 +126,7 @@ static bool subghz_protocol_encoder_came_get_upload(SubGhzProtocolEncoderCame* i
 
     switch(instance->generic.data_count_bit) {
     case CAME_24_COUNT_BIT:
+    case PRASTEL_42_COUNT_BIT:
         // CAME 24 Bit = 24320 us
         header_te = 76;
         break;
@@ -130,7 +135,7 @@ static bool subghz_protocol_encoder_came_get_upload(SubGhzProtocolEncoderCame* i
         // CAME 12 Bit Original only! and Airforce protocol = 15040 us
         header_te = 47;
         break;
-    case PRASTEL_COUNT_BIT:
+    case PRASTEL_25_COUNT_BIT:
         // PRASTEL = 11520 us
         header_te = 36;
         break;
@@ -173,7 +178,7 @@ SubGhzProtocolStatus
         if(ret != SubGhzProtocolStatusOk) {
             break;
         }
-        if((instance->generic.data_count_bit > PRASTEL_COUNT_BIT)) {
+        if(instance->generic.data_count_bit > PRASTEL_42_COUNT_BIT) {
             FURI_LOG_E(TAG, "Wrong number of bits in key");
             ret = SubGhzProtocolStatusErrorValueBitCount;
             break;
@@ -241,8 +246,11 @@ void subghz_protocol_decoder_came_feed(void* context, bool level, uint32_t durat
     switch(instance->decoder.parser_step) {
     case CameDecoderStepReset:
         if((!level) && (DURATION_DIFF(duration, subghz_protocol_came_const.te_short * 56) <
-                        subghz_protocol_came_const.te_delta * 47)) {
-            //Found header CAME
+                        subghz_protocol_came_const.te_delta * 63)) {
+            // 17920 us + 7050 us = 24970 us max possible value old one
+            // delta = 150 us x 63 = 9450 us + 17920 us = 27370 us max possible value
+            // Found header CAME
+            // 26700 us or 24000 us max possible values
             instance->decoder.parser_step = CameDecoderStepFoundStartBit;
         }
         break;
@@ -267,7 +275,8 @@ void subghz_protocol_decoder_came_feed(void* context, bool level, uint32_t durat
                 if((instance->decoder.decode_count_bit ==
                     subghz_protocol_came_const.min_count_bit_for_found) ||
                    (instance->decoder.decode_count_bit == AIRFORCE_COUNT_BIT) ||
-                   (instance->decoder.decode_count_bit == PRASTEL_COUNT_BIT) ||
+                   (instance->decoder.decode_count_bit == PRASTEL_25_COUNT_BIT) ||
+                   (instance->decoder.decode_count_bit == PRASTEL_42_COUNT_BIT) ||
                    (instance->decoder.decode_count_bit == CAME_24_COUNT_BIT)) {
                     instance->generic.serial = 0x0;
                     instance->generic.btn = 0x0;
@@ -310,10 +319,10 @@ void subghz_protocol_decoder_came_feed(void* context, bool level, uint32_t durat
     }
 }
 
-uint8_t subghz_protocol_decoder_came_get_hash_data(void* context) {
+uint32_t subghz_protocol_decoder_came_get_hash_data(void* context) {
     furi_assert(context);
     SubGhzProtocolDecoderCame* instance = context;
-    return subghz_protocol_blocks_get_hash_data(
+    return subghz_protocol_blocks_get_hash_data_long(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 
@@ -336,7 +345,7 @@ SubGhzProtocolStatus
         if(ret != SubGhzProtocolStatusOk) {
             break;
         }
-        if((instance->generic.data_count_bit > PRASTEL_COUNT_BIT)) {
+        if(instance->generic.data_count_bit > PRASTEL_42_COUNT_BIT) {
             FURI_LOG_E(TAG, "Wrong number of bits in key");
             ret = SubGhzProtocolStatusErrorValueBitCount;
             break;
@@ -349,23 +358,30 @@ void subghz_protocol_decoder_came_get_string(void* context, FuriString* output) 
     furi_assert(context);
     SubGhzProtocolDecoderCame* instance = context;
 
-    uint32_t code_found_lo = instance->generic.data & 0x00000000ffffffff;
+    uint32_t code_found_lo = instance->generic.data & 0x000003ffffffffff;
 
     uint64_t code_found_reverse = subghz_protocol_blocks_reverse_key(
         instance->generic.data, instance->generic.data_count_bit);
 
-    uint32_t code_found_reverse_lo = code_found_reverse & 0x00000000ffffffff;
+    uint32_t code_found_reverse_lo = code_found_reverse & 0x000003ffffffffff;
+
+    const char* name = instance->generic.protocol_name;
+    switch(instance->generic.data_count_bit) {
+    case PRASTEL_25_COUNT_BIT:
+    case PRASTEL_42_COUNT_BIT:
+        name = PRASTEL_NAME;
+        break;
+    case AIRFORCE_COUNT_BIT:
+        name = AIRFORCE_NAME;
+        break;
+    }
 
     furi_string_cat_printf(
         output,
         "%s %dbit\r\n"
         "Key:0x%08lX\r\n"
         "Yek:0x%08lX\r\n",
-        (instance->generic.data_count_bit == PRASTEL_COUNT_BIT ?
-             PRASTEL_NAME :
-             (instance->generic.data_count_bit == AIRFORCE_COUNT_BIT ?
-                  AIRFORCE_NAME :
-                  instance->generic.protocol_name)),
+        name,
         instance->generic.data_count_bit,
         code_found_lo,
         code_found_reverse_lo);

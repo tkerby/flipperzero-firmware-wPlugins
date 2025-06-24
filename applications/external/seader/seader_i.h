@@ -1,4 +1,5 @@
 #pragma once
+#define ASN_EMIT_DEBUG 0
 
 #include <stdlib.h> // malloc
 #include <stdint.h> // uint32_t
@@ -12,15 +13,21 @@
 #include <gui/view_dispatcher.h>
 #include <gui/scene_manager.h>
 #include <notification/notification_messages.h>
-#include "seader_icons.h"
+#include <seader_icons.h>
 
 #include <gui/modules/submenu.h>
 #include <gui/modules/popup.h>
 #include <gui/modules/loading.h>
 #include <gui/modules/text_input.h>
+#include <gui/modules/text_box.h>
 #include <gui/modules/widget.h>
 
 #include <input/input.h>
+
+#include <lib/nfc/nfc.h>
+#include <nfc/nfc_poller.h>
+#include <nfc/nfc_device.h>
+#include <nfc/helpers/nfc_data_generator.h>
 
 // ASN1
 #include <asn_system.h>
@@ -32,20 +39,27 @@
 #include <Payload.h>
 #include <FrameProtocol.h>
 
+#include "plugin/interface.h"
+#include <flipper_application/flipper_application.h>
+#include <flipper_application/plugins/plugin_manager.h>
+#include <loader/firmware_api/firmware_api.h>
+
+#include "protocol/picopass_poller.h"
 #include "scenes/seader_scene.h"
-#include "views/seader_uart_view.h"
 
 #include "seader_bridge.h"
 #include "seader.h"
 #include "ccid.h"
 #include "uart.h"
-#include "rfal_picopass.h"
+#include "lrc.h"
+#include "t_1.h"
 #include "seader_worker.h"
 #include "seader_credential.h"
+#include "apdu_log.h"
 
 #define WORKER_ALL_RX_EVENTS                                                      \
     (WorkerEvtStop | WorkerEvtRxDone | WorkerEvtCfgChange | WorkerEvtLineCfgSet | \
-     WorkerEvtCtrlLineSet)
+     WorkerEvtCtrlLineSet | WorkerEvtSamTxComplete)
 #define WORKER_ALL_TX_EVENTS (WorkerEvtTxStop | WorkerEvtSamRx)
 
 #define SEADER_TEXT_STORE_SIZE 128
@@ -58,6 +72,9 @@ enum SeaderCustomEvent {
     SeaderCustomEventWorkerExit,
     SeaderCustomEventByteInputDone,
     SeaderCustomEventTextInputDone,
+
+    SeaderCustomEventPollerDetect,
+    SeaderCustomEventPollerSuccess,
 };
 
 typedef enum {
@@ -66,13 +83,18 @@ typedef enum {
 
     WorkerEvtTxStop = (1 << 2),
     WorkerEvtSamRx = (1 << 3),
+    WorkerEvtSamTxComplete = (1 << 4),
 
-    WorkerEvtCfgChange = (1 << 4),
+    WorkerEvtCfgChange = (1 << 5),
 
-    WorkerEvtLineCfgSet = (1 << 5),
-    WorkerEvtCtrlLineSet = (1 << 6),
-
+    WorkerEvtLineCfgSet = (1 << 6),
+    WorkerEvtCtrlLineSet = (1 << 7),
 } WorkerEvtFlags;
+
+typedef struct {
+    uint16_t total_lines;
+    uint16_t current_line;
+} SeaderAPDURunnerContext;
 
 struct Seader {
     bool revert_power;
@@ -84,6 +106,7 @@ struct Seader {
     SceneManager* scene_manager;
     SeaderUartBridge* uart;
     SeaderCredential* credential;
+    SamCommand_PR samCommand;
 
     char text_store[SEADER_TEXT_STORE_SIZE + 1];
     FuriString* text_box_store;
@@ -93,10 +116,26 @@ struct Seader {
     Popup* popup;
     Loading* loading;
     TextInput* text_input;
+    TextBox* text_box;
     Widget* widget;
 
-    //Custom views
-    SeaderUartView* seader_uart_view;
+    Nfc* nfc;
+    NfcPoller* poller;
+    PicopassPoller* picopass_poller;
+
+    NfcDevice* nfc_device;
+
+    PluginManager* plugin_manager;
+    PluginWiegand* plugin_wiegand;
+
+    APDULog* apdu_log;
+    SeaderAPDURunnerContext apdu_runner_ctx;
+};
+
+struct SeaderPollerContainer {
+    Iso14443_4aPoller* iso14443_4a_poller;
+    MfClassicPoller* mfc_poller;
+    PicopassPoller* picopass_poller;
 };
 
 typedef enum {
@@ -104,6 +143,7 @@ typedef enum {
     SeaderViewPopup,
     SeaderViewLoading,
     SeaderViewTextInput,
+    SeaderViewTextBox,
     SeaderViewWidget,
     SeaderViewUart,
 } SeaderView;

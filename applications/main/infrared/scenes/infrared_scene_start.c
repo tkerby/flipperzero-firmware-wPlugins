@@ -1,21 +1,20 @@
-#include "../infrared_i.h"
+#include "../infrared_app_i.h"
 
 enum SubmenuIndex {
     SubmenuIndexUniversalRemotes,
     SubmenuIndexLearnNewRemote,
     SubmenuIndexSavedRemotes,
-    SubmenuIndexDebugSettings,
-    SubmenuIndexLearnNewRemoteRaw,
+    SubmenuIndexGpioSettings,
     SubmenuIndexDebug
 };
 
 static void infrared_scene_start_submenu_callback(void* context, uint32_t index) {
-    Infrared* infrared = context;
+    InfraredApp* infrared = context;
     view_dispatcher_send_custom_event(infrared->view_dispatcher, index);
 }
 
 void infrared_scene_start_on_enter(void* context) {
-    Infrared* infrared = context;
+    InfraredApp* infrared = context;
     Submenu* submenu = infrared->submenu;
     SceneManager* scene_manager = infrared->scene_manager;
 
@@ -40,17 +39,18 @@ void infrared_scene_start_on_enter(void* context) {
     submenu_add_item(
         submenu,
         "GPIO Settings",
-        SubmenuIndexDebugSettings,
+        SubmenuIndexGpioSettings,
         infrared_scene_start_submenu_callback,
         infrared);
-    submenu_add_item(
+
+    submenu_add_lockable_item(
         submenu,
-        "Learn New Remote RAW",
-        SubmenuIndexLearnNewRemoteRaw,
+        "Debug RX",
+        SubmenuIndexDebug,
         infrared_scene_start_submenu_callback,
-        infrared);
-    submenu_add_item(
-        submenu, "Debug RX", SubmenuIndexDebug, infrared_scene_start_submenu_callback, infrared);
+        infrared,
+        !infrared->app_state.is_debug_enabled,
+        "Enable\nDebug!");
 
     const uint32_t submenu_index =
         scene_manager_get_scene_state(scene_manager, InfraredSceneStart);
@@ -61,7 +61,7 @@ void infrared_scene_start_on_enter(void* context) {
 }
 
 bool infrared_scene_start_on_event(void* context, SceneManagerEvent event) {
-    Infrared* infrared = context;
+    InfraredApp* infrared = context;
     SceneManager* scene_manager = infrared->scene_manager;
 
     bool consumed = false;
@@ -70,36 +70,31 @@ bool infrared_scene_start_on_event(void* context, SceneManagerEvent event) {
         const uint32_t submenu_index = event.event;
         scene_manager_set_scene_state(scene_manager, InfraredSceneStart, submenu_index);
         if(submenu_index == SubmenuIndexUniversalRemotes) {
+            // Set file_path only once here so repeated usages of
+            // "Load from Library File" have file browser focused on
+            // last selected file, feels more intuitive
+            furi_string_set(infrared->file_path, INFRARED_APP_FOLDER);
             scene_manager_next_scene(scene_manager, InfraredSceneUniversal);
-            consumed = true;
-        } else if(
-            submenu_index == SubmenuIndexLearnNewRemote ||
-            submenu_index == SubmenuIndexLearnNewRemoteRaw) {
-            // enable automatic signal decoding if "Learn New Remote"
-            // disable automatic signal decoding if "Learn New Remote (RAW)"
-            infrared_worker_rx_enable_signal_decoding(
-                infrared->worker, submenu_index == SubmenuIndexLearnNewRemote);
-
+        } else if(submenu_index == SubmenuIndexLearnNewRemote) {
             infrared->app_state.is_learning_new_remote = true;
+            infrared->app_state.current_button_index = 0; // Reset index when starting new remote
             scene_manager_next_scene(scene_manager, InfraredSceneLearn);
-            consumed = true;
         } else if(submenu_index == SubmenuIndexSavedRemotes) {
             furi_string_set(infrared->file_path, INFRARED_APP_FOLDER);
             scene_manager_next_scene(scene_manager, InfraredSceneRemoteList);
-            consumed = true;
+        } else if(submenu_index == SubmenuIndexGpioSettings) {
+            scene_manager_next_scene(scene_manager, InfraredSceneGpioSettings);
         } else if(submenu_index == SubmenuIndexDebug) {
             scene_manager_next_scene(scene_manager, InfraredSceneDebug);
-            consumed = true;
-        } else if(submenu_index == SubmenuIndexDebugSettings) {
-            scene_manager_next_scene(scene_manager, InfraredSceneDebugSettings);
-            consumed = true;
         }
+
+        consumed = true;
     }
 
     return consumed;
 }
 
 void infrared_scene_start_on_exit(void* context) {
-    Infrared* infrared = context;
+    InfraredApp* infrared = context;
     submenu_reset(infrared->submenu);
 }

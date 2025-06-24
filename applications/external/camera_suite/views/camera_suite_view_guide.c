@@ -30,7 +30,7 @@ void camera_suite_view_guide_draw(Canvas* canvas, CameraSuiteViewGuideModel* mod
     canvas_clear(canvas);
     canvas_set_color(canvas, ColorBlack);
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str_aligned(canvas, 0, 0, AlignLeft, AlignTop, "Guide");
+    canvas_draw_str_aligned(canvas, 0, 0, AlignLeft, AlignTop, "Camera Suite Guide");
     canvas_set_font(canvas, FontSecondary);
     canvas_draw_str_aligned(canvas, 0, 12, AlignLeft, AlignTop, "Left = Toggle invert");
     canvas_draw_str_aligned(canvas, 0, 22, AlignLeft, AlignTop, "Right = Toggle dithering");
@@ -54,6 +54,7 @@ bool camera_suite_view_guide_input(InputEvent* event, void* context) {
                 CameraSuiteViewGuideModel * model,
                 {
                     UNUSED(model);
+                    // Go back to the main menu.
                     instance->callback(CameraSuiteCustomEventSceneGuideBack, instance->context);
                 },
                 true);
@@ -107,8 +108,7 @@ CameraSuiteViewGuide* camera_suite_view_guide_alloc() {
 void camera_suite_view_guide_free(CameraSuiteViewGuide* instance) {
     furi_assert(instance);
 
-    with_view_model(
-        instance->view, CameraSuiteViewGuideModel * model, { UNUSED(model); }, true);
+    with_view_model(instance->view, CameraSuiteViewGuideModel * model, { UNUSED(model); }, true);
     view_free(instance->view);
     free(instance);
 }

@@ -16,7 +16,7 @@
 #include "passport_settings/passport_settings.h"
 #include "passport_icons.h"
 
-#define MOODS_TOTAL 1
+#define MOODS_TOTAL  1
 #define BUTTHURT_MAX 14
 
 typedef enum {
@@ -31,7 +31,10 @@ typedef enum {
 
 static IconAnimation* animations[AniMaxNum];
 
-typedef enum { EventGameTick, EventKeyPress } EventType;
+typedef enum {
+    EventGameTick,
+    EventKeyPress
+} EventType;
 
 typedef struct {
     EventType type;
@@ -51,6 +54,10 @@ static const Icon* const portrait[7] = {
     &I_g0ku_1,
     &I_g0ku_2,
     &I_g0ku_3};
+static const Icon* const portrait_wrench[3] = {
+    &I_Wrench_bad1_46x49,
+    &I_Wrench_okay1_46x49,
+    &I_Wrench_happy1_46x49};
 static const Icon* const portrait_happy[3] = {
     &I_passport_happy1_46x49,
     &I_passport_happy2_46x49,

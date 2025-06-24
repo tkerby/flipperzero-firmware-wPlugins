@@ -20,7 +20,7 @@ struct ViewHolder {
 static void view_holder_draw_callback(Canvas* canvas, void* context);
 static void view_holder_input_callback(InputEvent* event, void* context);
 
-ViewHolder* view_holder_alloc() {
+ViewHolder* view_holder_alloc(void) {
     ViewHolder* view_holder = malloc(sizeof(ViewHolder));
 
     view_holder->view_port = view_port_alloc();
@@ -104,7 +104,8 @@ void view_holder_start(ViewHolder* view_holder) {
 }
 
 void view_holder_stop(ViewHolder* view_holder) {
-    while(view_holder->ongoing_input) furi_delay_tick(1);
+    while(view_holder->ongoing_input)
+        furi_delay_tick(1);
     view_port_enabled_set(view_holder->view_port, false);
 }
 

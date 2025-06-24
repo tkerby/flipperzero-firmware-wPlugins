@@ -4,7 +4,7 @@ import json
 import shutil
 import tarfile
 import zipfile
-from os import makedirs, walk, environ
+from os import makedirs, walk
 from os.path import exists, join, relpath, basename, split
 
 from ansi.color import fg
@@ -63,7 +63,13 @@ class Main(App):
         return dist_target_path
 
     def note_dist_component(self, component: str, extension: str, srcpath: str) -> None:
-        self._dist_components[f"{component}.{extension}"] = srcpath
+        component_key = f"{component}.{extension}"
+        if component_key in self._dist_components:
+            self.logger.debug(
+                f"Skipping duplicate component {component_key} in {srcpath}"
+            )
+            return
+        self._dist_components[component_key] = srcpath
 
     def get_dist_file_name(self, dist_artifact_type: str, filetype: str) -> str:
         return f"{self.DIST_FILE_PREFIX}{self.target}-{dist_artifact_type}-{self.args.suffix}.{filetype}"
@@ -114,7 +120,7 @@ class Main(App):
             try:
                 shutil.rmtree(self.output_dir_path)
             except Exception as ex:
-                self.logger.warn(f"Failed to clean output directory: {ex}")
+                self.logger.warning(f"Failed to clean output directory: {ex}")
 
         if not exists(self.output_dir_path):
             self.logger.debug(f"Creating output directory {self.output_dir_path}")
@@ -162,8 +168,9 @@ class Main(App):
             "scripts.dir",
         )
 
+        sdk_bundle_path = self.get_dist_path(self.get_dist_file_name("sdk", "zip"))
         with zipfile.ZipFile(
-            self.get_dist_path(self.get_dist_file_name("sdk", "zip")),
+            sdk_bundle_path,
             "w",
             zipfile.ZIP_DEFLATED,
         ) as zf:
@@ -204,6 +211,10 @@ class Main(App):
                     }
                 ),
             )
+
+        self.logger.info(
+            fg.boldgreen(f"SDK bundle can be found at:\n\t{sdk_bundle_path}")
+        )
 
     def bundle_update_package(self):
         self.logger.debug(

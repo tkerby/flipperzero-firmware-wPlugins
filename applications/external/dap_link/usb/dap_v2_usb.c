@@ -3,35 +3,35 @@
 #include <usb_std.h>
 #include <usb_hid.h>
 #include <usb_cdc.h>
-#include <furi_hal_console.h>
+#include <core/log.h>
 
 #include "dap_v2_usb.h"
 
 // #define DAP_USB_LOG
 
-#define HID_EP_IN 0x80
+#define HID_EP_IN  0x80
 #define HID_EP_OUT 0x00
 
-#define DAP_HID_EP_SEND 1
-#define DAP_HID_EP_RECV 2
+#define DAP_HID_EP_SEND      1
+#define DAP_HID_EP_RECV      2
 #define DAP_HID_EP_BULK_RECV 3
 #define DAP_HID_EP_BULK_SEND 4
-#define DAP_CDC_EP_COMM 5
-#define DAP_CDC_EP_SEND 6
-#define DAP_CDC_EP_RECV 7
+#define DAP_CDC_EP_COMM      5
+#define DAP_CDC_EP_SEND      6
+#define DAP_CDC_EP_RECV      7
 
-#define DAP_HID_EP_IN (HID_EP_IN | DAP_HID_EP_SEND)
-#define DAP_HID_EP_OUT (HID_EP_OUT | DAP_HID_EP_RECV)
-#define DAP_HID_EP_BULK_IN (HID_EP_IN | DAP_HID_EP_BULK_SEND)
+#define DAP_HID_EP_IN       (HID_EP_IN | DAP_HID_EP_SEND)
+#define DAP_HID_EP_OUT      (HID_EP_OUT | DAP_HID_EP_RECV)
+#define DAP_HID_EP_BULK_IN  (HID_EP_IN | DAP_HID_EP_BULK_SEND)
 #define DAP_HID_EP_BULK_OUT (HID_EP_OUT | DAP_HID_EP_BULK_RECV)
 
-#define DAP_HID_EP_SIZE 64
+#define DAP_HID_EP_SIZE      64
 #define DAP_CDC_COMM_EP_SIZE 8
-#define DAP_CDC_EP_SIZE 64
+#define DAP_CDC_EP_SIZE      64
 
-#define DAP_BULK_INTERVAL 0
-#define DAP_HID_INTERVAL 1
-#define DAP_CDC_INTERVAL 0
+#define DAP_BULK_INTERVAL     0
+#define DAP_HID_INTERVAL      1
+#define DAP_CDC_INTERVAL      0
 #define DAP_CDC_COMM_INTERVAL 1
 
 #define DAP_HID_VID 0x0483
@@ -40,7 +40,7 @@
 #define DAP_USB_EP0_SIZE 8
 
 #define EP_CFG_DECONFIGURE 0
-#define EP_CFG_CONFIGURE 1
+#define EP_CFG_CONFIGURE   1
 
 enum {
     USB_INTF_HID,
@@ -363,9 +363,9 @@ typedef struct USB_PACK {
     usb_msos_descriptor_subset_t subset;
 } usb_msos_descriptor_set_t;
 
-#define USB_DTYPE_BINARY_OBJECT_STORE 15
+#define USB_DTYPE_BINARY_OBJECT_STORE          15
 #define USB_DTYPE_DEVICE_CAPABILITY_DESCRIPTOR 16
-#define USB_DC_TYPE_PLATFORM 5
+#define USB_DC_TYPE_PLATFORM                   5
 
 const usb_bos_hierarchy_t usb_bos_hierarchy = {
     .bos =
@@ -449,6 +449,7 @@ typedef struct {
     DapRxCallback rx_callback_v1;
     DapRxCallback rx_callback_v2;
     DapRxCallback rx_callback_cdc;
+    DapRxCallback tx_complete_cdc;
     DapCDCControlLineCallback control_line_callback_cdc;
     DapCDCConfigCallback config_callback_cdc;
     void* context;
@@ -483,8 +484,8 @@ void furi_console_log_printf(const char* format, ...) {
     va_start(args, format);
     vsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
-    furi_hal_console_puts(buffer);
-    furi_hal_console_puts("\r\n");
+    furi_log_puts(buffer);
+    furi_log_puts("\r\n");
     UNUSED(format);
 }
 #else
@@ -522,15 +523,15 @@ int32_t dap_v2_usb_tx(uint8_t* buffer, uint8_t size) {
 int32_t dap_cdc_usb_tx(uint8_t* buffer, uint8_t size) {
     if((dap_state.semaphore_cdc == NULL) || (dap_state.connected == false)) return 0;
 
-    furi_check(furi_semaphore_acquire(dap_state.semaphore_cdc, FuriWaitForever) == FuriStatusOk);
-
-    if(dap_state.connected) {
-        int32_t len = usbd_ep_write(dap_state.usb_dev, HID_EP_IN | DAP_CDC_EP_SEND, buffer, size);
-        furi_console_log_printf("cdc tx %ld", len);
-        return len;
-    } else {
-        return 0;
+    if(furi_semaphore_acquire(dap_state.semaphore_cdc, 100) == FuriStatusOk) {
+        if(dap_state.connected) {
+            int32_t len =
+                usbd_ep_write(dap_state.usb_dev, HID_EP_IN | DAP_CDC_EP_SEND, buffer, size);
+            furi_console_log_printf("cdc tx %ld", len);
+            return len;
+        }
     }
+    return 0;
 }
 
 void dap_v1_usb_set_rx_callback(DapRxCallback callback) {
@@ -543,6 +544,10 @@ void dap_v2_usb_set_rx_callback(DapRxCallback callback) {
 
 void dap_cdc_usb_set_rx_callback(DapRxCallback callback) {
     dap_state.rx_callback_cdc = callback;
+}
+
+void dap_cdc_usb_set_tx_complete_callback(DapRxCallback callback) {
+    dap_state.tx_complete_cdc = callback;
 }
 
 void dap_cdc_usb_set_control_line_callback(DapCDCControlLineCallback callback) {
@@ -735,6 +740,9 @@ static void cdc_txrx_ep_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
     switch(event) {
     case usbd_evt_eptx:
         furi_semaphore_release(dap_state.semaphore_cdc);
+        if(dap_state.tx_complete_cdc != NULL) {
+            dap_state.tx_complete_cdc(dap_state.context_cdc);
+        }
         furi_console_log_printf("cdc tx complete");
         break;
     case usbd_evt_eprx:
@@ -792,41 +800,41 @@ static usbd_respond hid_ep_config(usbd_device* dev, uint8_t cfg) {
 static void dump_request_type(uint8_t type) {
     switch(type & USB_REQ_DIRECTION) {
     case USB_REQ_HOSTTODEV:
-        furi_hal_console_puts("host to dev, ");
+        furi_log_puts("host to dev, ");
         break;
     case USB_REQ_DEVTOHOST:
-        furi_hal_console_puts("dev to host, ");
+        furi_log_puts("dev to host, ");
         break;
     }
 
     switch(type & USB_REQ_TYPE) {
     case USB_REQ_STANDARD:
-        furi_hal_console_puts("standard, ");
+        furi_log_puts("standard, ");
         break;
     case USB_REQ_CLASS:
-        furi_hal_console_puts("class, ");
+        furi_log_puts("class, ");
         break;
     case USB_REQ_VENDOR:
-        furi_hal_console_puts("vendor, ");
+        furi_log_puts("vendor, ");
         break;
     }
 
     switch(type & USB_REQ_RECIPIENT) {
     case USB_REQ_DEVICE:
-        furi_hal_console_puts("device");
+        furi_log_puts("device");
         break;
     case USB_REQ_INTERFACE:
-        furi_hal_console_puts("interface");
+        furi_log_puts("interface");
         break;
     case USB_REQ_ENDPOINT:
-        furi_hal_console_puts("endpoint");
+        furi_log_puts("endpoint");
         break;
     case USB_REQ_OTHER:
-        furi_hal_console_puts("other");
+        furi_log_puts("other");
         break;
     }
 
-    furi_hal_console_puts("\r\n");
+    furi_log_puts("\r\n");
 }
 #else
 #define dump_request_type(...)

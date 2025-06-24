@@ -21,7 +21,7 @@ static const SubGhzBlockConst ws_oregon3_const = {
 #define OREGON3_PREAMBLE_BITS 28
 #define OREGON3_PREAMBLE_MASK 0b1111111111111111111111111111
 // 24 ones + 0101 (inverted A)
-#define OREGON3_PREAMBLE 0b1111111111111111111111110101
+#define OREGON3_PREAMBLE      0b1111111111111111111111110101
 
 // Fixed part contains:
 // - Sensor type: 16 bits
@@ -29,8 +29,8 @@ static const SubGhzBlockConst ws_oregon3_const = {
 // - ID (changes when batteries are changed): 8 bits
 // - Battery status: 4 bits
 #define OREGON3_FIXED_PART_BITS (16 + 4 + 8 + 4)
-#define OREGON3_SENSOR_ID(d) (((d) >> 16) & 0xFFFF)
-#define OREGON3_CHECKSUM_BITS 8
+#define OREGON3_SENSOR_ID(d)    (((d) >> 16) & 0xFFFF)
+#define OREGON3_CHECKSUM_BITS   8
 
 // bit indicating the low battery
 #define OREGON3_FLAG_BAT_LOW 0x4
@@ -231,10 +231,10 @@ void ws_protocol_decoder_oregon3_feed(void* context, bool level, uint32_t durati
     }
 }
 
-uint8_t ws_protocol_decoder_oregon3_get_hash_data(void* context) {
+uint32_t ws_protocol_decoder_oregon3_get_hash_data(void* context) {
     furi_assert(context);
     WSProtocolDecoderOregon3* instance = context;
-    return subghz_protocol_blocks_get_hash_data(
+    return subghz_protocol_blocks_get_hash_data_long(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 
@@ -350,10 +350,12 @@ const SubGhzProtocolDecoder ws_protocol_oregon3_decoder = {
     .feed = ws_protocol_decoder_oregon3_feed,
     .reset = ws_protocol_decoder_oregon3_reset,
 
-    .get_hash_data = ws_protocol_decoder_oregon3_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = ws_protocol_decoder_oregon3_get_hash_data,
     .serialize = ws_protocol_decoder_oregon3_serialize,
     .deserialize = ws_protocol_decoder_oregon3_deserialize,
     .get_string = ws_protocol_decoder_oregon3_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocol ws_protocol_oregon3 = {

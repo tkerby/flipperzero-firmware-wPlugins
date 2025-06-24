@@ -24,7 +24,7 @@ typedef void (*ByteChangedCallback)(void* context);
  *
  * @return     ByteInput instance pointer
  */
-ByteInput* byte_input_alloc();
+ByteInput* byte_input_alloc(void);
 
 /** Deinitialize and free byte input
  *
@@ -55,7 +55,7 @@ void byte_input_set_result_callback(
     ByteChangedCallback changed_callback,
     void* callback_context,
     uint8_t* bytes,
-    uint16_t bytes_count);
+    uint8_t bytes_count);
 
 /** Set byte input header text
  *

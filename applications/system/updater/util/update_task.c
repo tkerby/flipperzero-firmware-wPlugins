@@ -137,7 +137,7 @@ static const struct {
         .stage = UpdateTaskStageRadioBusy,
         .percent_min = 11,
         .percent_max = 20,
-        .descr = "C2 FUS swich failed",
+        .descr = "C2 FUS switch failed",
     },
     {
         .stage = UpdateTaskStageRadioBusy,
@@ -221,7 +221,10 @@ typedef struct {
 } UpdateTaskStageGroupMap;
 
 #define STAGE_DEF(GROUP, WEIGHT) \
-    { .group = (GROUP), .weight = (WEIGHT), }
+    {                            \
+        .group = (GROUP),        \
+        .weight = (WEIGHT),      \
+    }
 
 static const UpdateTaskStageGroupMap update_task_stage_progress[] = {
     [UpdateTaskStageProgress] = STAGE_DEF(UpdateTaskStageGroupMisc, 0),
@@ -238,7 +241,7 @@ static const UpdateTaskStageGroupMap update_task_stage_progress[] = {
     [UpdateTaskStageOBValidation] = STAGE_DEF(UpdateTaskStageGroupOptionBytes, 2),
 
     [UpdateTaskStageValidateDFUImage] = STAGE_DEF(UpdateTaskStageGroupFirmware, 30),
-    [UpdateTaskStageFlashWrite] = STAGE_DEF(UpdateTaskStageGroupFirmware, 150),
+    [UpdateTaskStageFlashWrite] = STAGE_DEF(UpdateTaskStageGroupFirmware, 75),
     [UpdateTaskStageFlashValidate] = STAGE_DEF(UpdateTaskStageGroupFirmware, 15),
 
     [UpdateTaskStageLfsRestore] = STAGE_DEF(UpdateTaskStageGroupPostUpdate, 5),
@@ -334,11 +337,23 @@ void update_task_set_progress(UpdateTask* update_task, UpdateTaskStage stage, ui
     update_task->state.overall_progress = adapted_progress;
 
     if(update_task->status_change_cb) {
-        (update_task->status_change_cb)(
-            furi_string_get_cstr(update_task->state.status),
-            adapted_progress,
-            update_stage_is_error(update_task->state.stage),
-            update_task->status_change_cb_state);
+        if(update_stage_is_error(update_task->state.stage)) {
+            (update_task->status_change_cb)(
+                furi_string_get_cstr(update_task->state.status),
+                adapted_progress,
+                update_stage_is_error(update_task->state.stage),
+                update_task->status_change_cb_state);
+        } else {
+            size_t len = furi_string_size(update_task->state.status) + strlen(" 100%") + 1;
+            char* s = malloc(len);
+            snprintf(s, len, "%s %d%%", furi_string_get_cstr(update_task->state.status), progress);
+            (update_task->status_change_cb)(
+                s,
+                adapted_progress,
+                update_stage_is_error(update_task->state.stage),
+                update_task->status_change_cb_state);
+            free(s);
+        }
     }
 }
 
@@ -387,7 +402,7 @@ static void update_task_worker_thread_cb(FuriThreadState state, void* context) {
     }
 }
 
-UpdateTask* update_task_alloc() {
+UpdateTask* update_task_alloc(void) {
     UpdateTask* update_task = malloc(sizeof(UpdateTask));
 
     update_task->state.stage = UpdateTaskStageProgress;

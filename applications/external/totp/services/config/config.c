@@ -1,4 +1,5 @@
 #include "config.h"
+#include <datetime/datetime.h>
 #include <stdlib.h>
 #include <string.h>
 #include <flipper_format/flipper_format.h>
@@ -9,12 +10,13 @@
 #include "../../types/common.h"
 #include "../../types/token_info.h"
 #include "../../config/app/config.h"
+#include "../kb_layouts/kb_layout_provider.h"
 #include "../crypto/crypto_facade.h"
 #include "../crypto/constants.h"
 #include "migrations/common_migration.h"
 
-#define CONFIG_FILE_PATH CONFIG_FILE_DIRECTORY_PATH "/totp.conf"
-#define CONFIG_FILE_BACKUP_DIR CONFIG_FILE_DIRECTORY_PATH "/backups"
+#define CONFIG_FILE_PATH             CONFIG_FILE_DIRECTORY_PATH "/totp.conf"
+#define CONFIG_FILE_BACKUP_DIR       CONFIG_FILE_DIRECTORY_PATH "/backups"
 #define CONFIG_FILE_BACKUP_BASE_PATH CONFIG_FILE_BACKUP_DIR "/totp.conf"
 
 struct ConfigFileContext {
@@ -70,7 +72,7 @@ static char* totp_config_file_backup_i(Storage* storage) {
         return NULL;
     }
 
-    FuriHalRtcDateTime current_datetime;
+    DateTime current_datetime;
     furi_hal_rtc_get_datetime(&current_datetime);
 
     uint8_t backup_path_size = sizeof(CONFIG_FILE_BACKUP_BASE_PATH) + 14;
@@ -173,12 +175,24 @@ static bool totp_open_config_file(Storage* storage, FlipperFormat** file) {
         flipper_format_write_uint32(
             fff_data_file, TOTP_CONFIG_KEY_AUTOMATION_METHOD, &tmp_uint32, 1);
 
-        tmp_uint32 = AutomationKeyboardLayoutQWERTY;
+        tmp_uint32 = TOTP_DEFAULT_KB_LAYOUT;
         flipper_format_write_uint32(
             fff_data_file, TOTP_CONFIG_KEY_AUTOMATION_KB_LAYOUT, &tmp_uint32, 1);
 
+#ifdef TOTP_BADBT_AUTOMATION_ENABLED
+        tmp_uint32 = 0; //-V1048
+        flipper_format_write_uint32(
+            fff_data_file, TOTP_CONFIG_KEY_AUTOMATION_BADBT_PROFILE, &tmp_uint32, 1);
+#endif
+
+        tmp_uint32 = 500;
+        flipper_format_write_uint32(
+            fff_data_file, TOTP_CONFIG_KEY_AUTOMATION_INITIAL_DELAY, &tmp_uint32, 1);
+
         tmp_uint32 = 0; //-V1048
         flipper_format_write_uint32(fff_data_file, TOTP_CONFIG_KEY_FONT, &tmp_uint32, 1);
+        flipper_format_write_uint32(
+            fff_data_file, TOTP_CONFIG_KEY_UI_TOKEN_DIGIT_GROUPING, &tmp_uint32, 1);
 
         if(!flipper_format_rewind(fff_data_file)) {
             totp_close_config_file(fff_data_file);
@@ -262,6 +276,20 @@ bool totp_config_file_update_automation_method(const PluginState* plugin_state) 
             break;
         }
 
+#ifdef TOTP_BADBT_AUTOMATION_ENABLED
+        tmp_uint32 = plugin_state->bt_type_code_worker_profile_index;
+        if(!flipper_format_insert_or_update_uint32(
+               file, TOTP_CONFIG_KEY_AUTOMATION_BADBT_PROFILE, &tmp_uint32, 1)) {
+            break;
+        }
+#endif
+
+        tmp_uint32 = plugin_state->automation_initial_delay;
+        if(!flipper_format_insert_or_update_uint32(
+               file, TOTP_CONFIG_KEY_AUTOMATION_INITIAL_DELAY, &tmp_uint32, 1)) {
+            break;
+        }
+
         update_result = true;
     } while(false);
 
@@ -297,6 +325,26 @@ bool totp_config_file_update_user_settings(const PluginState* plugin_state) {
         tmp_uint32 = plugin_state->automation_kb_layout;
         if(!flipper_format_insert_or_update_uint32(
                file, TOTP_CONFIG_KEY_AUTOMATION_KB_LAYOUT, &tmp_uint32, 1)) {
+            break;
+        }
+
+#ifdef TOTP_BADBT_AUTOMATION_ENABLED
+        tmp_uint32 = plugin_state->bt_type_code_worker_profile_index;
+        if(!flipper_format_insert_or_update_uint32(
+               file, TOTP_CONFIG_KEY_AUTOMATION_BADBT_PROFILE, &tmp_uint32, 1)) {
+            break;
+        }
+#endif
+
+        tmp_uint32 = plugin_state->automation_initial_delay;
+        if(!flipper_format_insert_or_update_uint32(
+               file, TOTP_CONFIG_KEY_AUTOMATION_INITIAL_DELAY, &tmp_uint32, 1)) {
+            break;
+        }
+
+        tmp_uint32 = plugin_state->split_token_into_groups;
+        if(!flipper_format_insert_or_update_uint32(
+               file, TOTP_CONFIG_KEY_UI_TOKEN_DIGIT_GROUPING, &tmp_uint32, 1)) {
             break;
         }
 
@@ -491,10 +539,34 @@ bool totp_config_file_load(PluginState* const plugin_state) {
 
         if(!flipper_format_read_uint32(
                fff_data_file, TOTP_CONFIG_KEY_AUTOMATION_KB_LAYOUT, &tmp_uint32, 1)) {
-            tmp_uint32 = AutomationKeyboardLayoutQWERTY;
+            tmp_uint32 = TOTP_DEFAULT_KB_LAYOUT;
         }
 
         plugin_state->automation_kb_layout = tmp_uint32;
+
+        if(!flipper_format_rewind(fff_data_file)) {
+            break;
+        }
+
+#ifdef TOTP_BADBT_AUTOMATION_ENABLED
+        if(!flipper_format_read_uint32(
+               fff_data_file, TOTP_CONFIG_KEY_AUTOMATION_BADBT_PROFILE, &tmp_uint32, 1)) {
+            tmp_uint32 = 0;
+        }
+
+        plugin_state->bt_type_code_worker_profile_index = tmp_uint32;
+
+        if(!flipper_format_rewind(fff_data_file)) {
+            break;
+        }
+#endif
+
+        if(!flipper_format_read_uint32(
+               fff_data_file, TOTP_CONFIG_KEY_AUTOMATION_INITIAL_DELAY, &tmp_uint32, 1)) {
+            tmp_uint32 = 500;
+        }
+
+        plugin_state->automation_initial_delay = tmp_uint32;
 
         if(!flipper_format_rewind(fff_data_file)) {
             break;
@@ -505,6 +577,17 @@ bool totp_config_file_load(PluginState* const plugin_state) {
         }
 
         plugin_state->active_font_index = tmp_uint32;
+
+        if(!flipper_format_rewind(fff_data_file)) {
+            break;
+        }
+
+        if(!flipper_format_read_uint32(
+               fff_data_file, TOTP_CONFIG_KEY_UI_TOKEN_DIGIT_GROUPING, &tmp_uint32, 1)) {
+            tmp_uint32 = 0;
+        }
+
+        plugin_state->split_token_into_groups = tmp_uint32;
 
         plugin_state->config_file_context = malloc(sizeof(ConfigFileContext));
         furi_check(plugin_state->config_file_context != NULL);
@@ -710,7 +793,22 @@ bool totp_config_file_ensure_latest_encryption(
     uint8_t pin_length) {
     bool result = true;
     if(plugin_state->crypto_settings.crypto_version < CRYPTO_LATEST_VERSION) {
-        FURI_LOG_I(LOGGING_TAG, "Migration to crypto v%d is needed", CRYPTO_LATEST_VERSION);
+        FURI_LOG_I(
+            LOGGING_TAG,
+            "Migration crypto from v%" PRIu8 " to v%" PRIu8 " is needed",
+            plugin_state->crypto_settings.crypto_version,
+            CRYPTO_LATEST_VERSION);
+
+#ifndef TOTP_OBSOLETE_CRYPTO_V1_COMPATIBILITY_ENABLED
+        if(plugin_state->crypto_settings.crypto_version == 1) {
+            furi_crash("Authenticator: Crypto v1 is not supported");
+        }
+#endif
+#ifndef TOTP_OBSOLETE_CRYPTO_V2_COMPATIBILITY_ENABLED
+        if(plugin_state->crypto_settings.crypto_version == 2) {
+            furi_crash("Authenticator: Crypto v2 is not supported");
+        }
+#endif
         char* backup_path = totp_config_file_backup(plugin_state);
         if(backup_path != NULL) {
             free(backup_path);

@@ -135,9 +135,9 @@ enum {
    !defined(NO_WOLFSSL_RENESAS_TSIP_CRYPT_HASH)
     #include "wolfssl/wolfcrypt/port/Renesas/renesas_tsip_types.h"
 #elif (defined(WOLFSSL_RENESAS_SCEPROTECT) || \
-        defined(WOLFSSL_RENESAS_SCEPROTECT_CRYPTONLY)) && \
-   !defined(NO_WOLFSSL_RENESAS_SCEPROTECT_HASH)
-    #include "wolfssl/wolfcrypt/port/Renesas/renesas-sce-crypt.h"
+       defined(WOLFSSL_RENESAS_RSIP))    && \
+     !defined(NO_WOLFSSL_RENESAS_FSPSM_HASH)
+    #include "wolfssl/wolfcrypt/port/Renesas/renesas-fspsm-crypt.h"
 #elif defined(WOLFSSL_RENESAS_RX64_HASH)
     #include "wolfssl/wolfcrypt/port/Renesas/renesas-rx64-hw-crypt.h"
 #else
@@ -201,7 +201,9 @@ struct wc_Sha256 {
     word32 len;
 #endif
 #if defined(WOLFSSL_ESP32_CRYPT) && \
-   !defined(NO_WOLFSSL_ESP32_CRYPT_HASH)
+   !defined(NO_WOLFSSL_ESP32_CRYPT_HASH) && \
+  (!defined(NO_WOLFSSL_ESP32_CRYPT_HASH_SHA256) || \
+   !defined(NO_WOLFSSL_ESP32_CRYPT_HASH_SHA224))
     WC_ESP32SHA ctx;
 #endif
 #ifdef WOLFSSL_MAXQ10XX_CRYPTO

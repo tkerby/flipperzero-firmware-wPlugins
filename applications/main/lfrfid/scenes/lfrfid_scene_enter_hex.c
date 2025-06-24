@@ -15,7 +15,7 @@ void lfrfid_scene_enter_hex_on_enter(void* context) {
 
     uint8_t* bytes;
     if(app->setting_hex == LfRfidSettingCurrentPassword)
-        bytes = app->password;
+        bytes = app->password2;
     else if(app->setting_hex == LfRfidSettingNewPassword)
         bytes = app->new_password;
     else // LfRfidSettingHexGeneric

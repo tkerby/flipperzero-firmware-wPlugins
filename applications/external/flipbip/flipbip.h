@@ -9,18 +9,14 @@
 #include <gui/view_dispatcher.h>
 #include <gui/modules/submenu.h>
 #include <gui/scene_manager.h>
+#include <gui/modules/dialog_ex.h>
 #include <gui/modules/variable_item_list.h>
 #include <gui/modules/text_input.h>
 #include "scenes/flipbip_scene.h"
 #include "views/flipbip_scene_1.h"
+#include "flipbip_coins.h"
 
-#define FLIPBIP_VERSION "v1.13"
-
-#define COIN_BTC 0
-#define COIN_DOGE 3
-#define COIN_ETH 60
-#define COIN_ZEC 133
-
+#define FLIPBIP_VERSION  FAP_VERSION
 #define TEXT_BUFFER_SIZE 256
 
 typedef struct {
@@ -31,13 +27,14 @@ typedef struct {
     SceneManager* scene_manager;
     VariableItemList* variable_item_list;
     TextInput* text_input;
+    DialogEx* renew_dialog;
     FlipBipScene1* flipbip_scene_1;
     char* mnemonic_menu_text;
     // Settings options
     int bip39_strength;
     int passphrase;
     // Main menu options
-    int bip44_coin;
+    int coin_type;
     int overwrite_saved_seed;
     int import_from_mnemonic;
     // Text input
@@ -45,6 +42,8 @@ typedef struct {
     char passphrase_text[TEXT_BUFFER_SIZE];
     char import_mnemonic_text[TEXT_BUFFER_SIZE];
     char input_text[TEXT_BUFFER_SIZE];
+
+    void (*wallet_create)(void* context);
 } FlipBip;
 
 typedef enum {
@@ -53,6 +52,7 @@ typedef enum {
     FlipBipViewIdScene1,
     FlipBipViewIdSettings,
     FlipBipViewIdTextInput,
+    FlipBipViewRenewConfirm,
 } FlipBipViewId;
 
 typedef enum {
@@ -67,13 +67,6 @@ typedef enum {
 } FlipBipPassphraseState;
 
 typedef enum {
-    FlipBipCoinBTC0,
-    FlipBipCoinETH60,
-    FlipBipCoinDOGE3,
-    FlipBipCoinZEC133,
-} FlipBipCoin;
-
-typedef enum {
     FlipBipTextInputDefault,
     FlipBipTextInputPassphrase,
     FlipBipTextInputMnemonic
@@ -86,3 +79,12 @@ typedef enum {
     FlipBipStatusSaveError = 12,
     FlipBipStatusMnemonicCheckError = 13,
 } FlipBipStatus;
+
+// There's a scene ID for each coin, then these scenes are after so need to offset the first entry by at least NUM_COINS
+typedef enum {
+    SubmenuIndexScene1New = NUM_COINS + 1,
+    SubmenuIndexScene1Renew,
+    SubmenuIndexScene1Import,
+    SubmenuIndexSettings,
+    SubmenuIndexNOP,
+} SubmenuIndex;

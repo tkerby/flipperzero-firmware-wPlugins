@@ -3,10 +3,10 @@
 
 #include <furi.h>
 #include <furi_hal.h>
-#include <cfw.h>
+#include <cfw/cfw.h>
 
 #define POWER_OFF_TIMEOUT 90
-#define TAG "Power"
+#define TAG               "Power"
 
 void power_draw_battery_callback(Canvas* canvas, void* context) {
     furi_assert(context);
@@ -286,9 +286,11 @@ static void power_loader_callback(const void* message, void* context) {
     Power* power = context;
     const LoaderEvent* event = message;
 
-    if(event->type == LoaderEventTypeApplicationStarted) {
+    if(event->type == LoaderEventTypeApplicationBeforeLoad) {
         power_auto_shutdown_inhibit(power);
-    } else if(event->type == LoaderEventTypeApplicationStopped) {
+    } else if(
+        event->type == LoaderEventTypeApplicationLoadFailed ||
+        event->type == LoaderEventTypeApplicationStopped) {
         power_auto_shutdown_arm(power);
     }
 }
@@ -296,8 +298,15 @@ static void power_loader_callback(const void* message, void* context) {
 static void power_auto_shutdown_timer_callback(void* context) {
     furi_assert(context);
     Power* power = context;
-    power_auto_shutdown_inhibit(power);
-    power_off(power);
+
+    // Suppress shutdown on idle while charging to avoid the battery from not charging fully. Then restart timer back to original timeout.
+    if(power->state != PowerStateNotCharging) {
+        FURI_LOG_D(TAG, "Plugged in, reset idle timer");
+        power_auto_shutdown_arm(power);
+    } else {
+        power_auto_shutdown_inhibit(power);
+        power_off(power);
+    }
 }
 
 static void power_shutdown_time_changed_callback(const void* event, void* context) {
@@ -312,7 +321,7 @@ static void power_shutdown_time_changed_callback(const void* event, void* contex
     }
 }
 
-Power* power_alloc() {
+Power* power_alloc(void) {
     Power* power = malloc(sizeof(Power));
 
     // Records
@@ -348,8 +357,7 @@ Power* power_alloc() {
         power->view_dispatcher,
         PowerViewUnplugUsb,
         power_unplug_usb_get_view(power->power_unplug_usb));
-    view_dispatcher_attach_to_gui(
-        power->view_dispatcher, power->gui, ViewDispatcherTypeFullscreen);
+    view_dispatcher_attach_to_gui(power->view_dispatcher, power->gui, ViewDispatcherTypeDesktop);
 
     // Battery view port
     power->battery_view_port = power_battery_view_port_alloc(power);
@@ -520,7 +528,7 @@ static void power_check_battery_level_change(Power* power) {
 }
 
 static void power_check_charge_cap(Power* power) {
-    if(power->info.charge >= CFW_SETTINGS()->charge_cap) {
+    if(power->info.charge >= cfw_settings.charge_cap) {
         if(!power->info.is_charge_capped) { // Suppress charging if charge reaches custom cap
             power->info.is_charge_capped = true;
             furi_hal_power_suppress_charge_enter();
@@ -538,6 +546,8 @@ int32_t power_srv(void* p) {
 
     if(!furi_hal_is_normal_boot()) {
         FURI_LOG_W(TAG, "Skipping start in special boot mode");
+
+        furi_thread_suspend(furi_thread_get_current_id());
         return 0;
     }
 

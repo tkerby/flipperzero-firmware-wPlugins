@@ -5,6 +5,7 @@ enum SubmenuIndex {
     SubmenuIndexClassic1k,
     SubmenuIndexClassic4k,
     SubmenuIndexUltralight,
+    SubmenuIndexFile,
 };
 
 /// @brief mifare_fuzzer_scene_start_submenu_callback()
@@ -23,6 +24,9 @@ void mifare_fuzzer_scene_start_submenu_callback(void* context, uint32_t index) {
         break;
     case SubmenuIndexUltralight:
         custom_event = MifareFuzzerEventUltralight;
+        break;
+    case SubmenuIndexFile:
+        custom_event = MifareFuzzerEventFile;
         break;
     default:
         return;
@@ -57,6 +61,12 @@ void mifare_fuzzer_scene_start_on_enter(void* context) {
         SubmenuIndexUltralight,
         mifare_fuzzer_scene_start_submenu_callback,
         app);
+    submenu_add_item(
+        submenu_card,
+        "From file",
+        SubmenuIndexFile,
+        mifare_fuzzer_scene_start_submenu_callback,
+        app);
 
     // set selected menu
     submenu_set_selected_item(
@@ -69,6 +79,9 @@ void mifare_fuzzer_scene_start_on_enter(void* context) {
 /// @param context
 /// @param event
 /// @return
+/// @param context
+/// @param event
+/// @return
 bool mifare_fuzzer_scene_start_on_event(void* context, SceneManagerEvent event) {
     //FURI_LOG_D(TAG, "mifare_fuzzer_scene_start_on_event()");
     MifareFuzzerApp* app = context;
@@ -76,13 +89,15 @@ bool mifare_fuzzer_scene_start_on_event(void* context, SceneManagerEvent event) 
 
     if(event.type == SceneManagerEventTypeCustom) {
         //FURI_LOG_D(TAG, "mifare_fuzzer_scene_start_on_event() :: event.event = %ld", event.event);
+        app->card_file_path = NULL;
+        app->nfc_device_parsed = false;
         if(event.event == MifareFuzzerEventClassic1k) {
             // save selected item
             scene_manager_set_scene_state(
                 app->scene_manager, MifareFuzzerSceneStart, SubmenuIndexClassic1k);
             // set emulator card
             app->card = MifareCardClassic1k;
-            mifare_fuzzer_emulator_set_card(app->emulator_view, app->card);
+            mifare_fuzzer_emulator_set_card(app->emulator_view, app->card, NULL);
             // open next scene
             scene_manager_next_scene(app->scene_manager, MifareFuzzerSceneAttack);
             consumed = true;
@@ -92,7 +107,7 @@ bool mifare_fuzzer_scene_start_on_event(void* context, SceneManagerEvent event) 
                 app->scene_manager, MifareFuzzerSceneStart, SubmenuIndexClassic4k);
             // set emulator card
             app->card = MifareCardClassic4k;
-            mifare_fuzzer_emulator_set_card(app->emulator_view, app->card);
+            mifare_fuzzer_emulator_set_card(app->emulator_view, app->card, NULL);
             // open next scene
             scene_manager_next_scene(app->scene_manager, MifareFuzzerSceneAttack);
             consumed = true;
@@ -102,10 +117,56 @@ bool mifare_fuzzer_scene_start_on_event(void* context, SceneManagerEvent event) 
                 app->scene_manager, MifareFuzzerSceneStart, SubmenuIndexUltralight);
             // set emulator card
             app->card = MifareCardUltralight;
-            mifare_fuzzer_emulator_set_card(app->emulator_view, app->card);
+            mifare_fuzzer_emulator_set_card(app->emulator_view, app->card, NULL);
             // open next scene
             scene_manager_next_scene(app->scene_manager, MifareFuzzerSceneAttack);
             consumed = true;
+        } else if(event.event == MifareFuzzerEventFile) {
+            // save selected item
+            scene_manager_set_scene_state(
+                app->scene_manager, MifareFuzzerSceneStart, SubmenuIndexFile);
+            // Don't set emulator card (yet), read file instead
+            DialogsFileBrowserOptions browser_options;
+            FuriString* initial_path = furi_string_alloc_set("/ext/nfc");
+            dialog_file_browser_set_basic_options(
+                &browser_options, MIFARE_FUZZER_CARD_FILE_EXT, NULL);
+            browser_options.hide_ext = false;
+            app->card_file_path = furi_string_alloc();
+            bool wasFileSelected = dialog_file_browser_show(
+                app->dialogs, app->card_file_path, initial_path, &browser_options);
+            furi_string_free(initial_path);
+            if(wasFileSelected) {
+                MifareFuzzerEmulator* emulator = app->emulator_view;
+                NfcDevice* nfc_device = app->worker->nfc_device;
+                const char* path = furi_string_get_cstr(app->card_file_path);
+                if(nfc_device_load(nfc_device, path)) {
+                    app->nfc_device_parsed = true;
+                    NfcProtocol protocol = nfc_device_get_protocol(nfc_device);
+                    if(protocol == NfcProtocolMfClassic) {
+                        const MfClassicData* mfc_data = nfc_device_get_data(nfc_device, protocol);
+                        if(mfc_data->type == MfClassicType1k) {
+                            app->card = MifareCardClassic1k;
+                        } else if(mfc_data->type == MfClassicType4k) {
+                            app->card = MifareCardClassic4k;
+                        } else {
+                            app->nfc_device_parsed = false;
+                        }
+                    } else if(protocol == NfcProtocolMfUltralight) {
+                        app->card = MifareCardUltralight;
+                    } else {
+                        app->nfc_device_parsed = false;
+                    }
+                    if(app->nfc_device_parsed) {
+                        mifare_fuzzer_emulator_set_card(emulator, app->card, app->card_file_path);
+                        scene_manager_next_scene(app->scene_manager, MifareFuzzerSceneAttack);
+                    } else {
+                        app->card = MifareCardUnsupported;
+                        mifare_fuzzer_emulator_set_card(emulator, MifareCardUnsupported, NULL);
+                        scene_manager_next_scene(app->scene_manager, MifareFuzzerSceneEmulator);
+                    }
+                }
+                consumed = true;
+            }
         }
     } else if(event.type == SceneManagerEventTypeTick) {
         //FURI_LOG_D(TAG, "mifare_fuzzer_scene_start_on_event() :: SceneManagerEventTypeTick");

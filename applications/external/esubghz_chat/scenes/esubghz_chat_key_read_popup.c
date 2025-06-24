@@ -1,5 +1,6 @@
 #include "../esubghz_chat_i.h"
 #include "../helpers/nfc_helpers.h"
+#include <machine/endian.h>
 
 typedef enum {
     KeyReadPopupState_Idle,
@@ -175,12 +176,6 @@ void scene_on_enter_key_read_popup(void* context) {
 
     key_read_popup_set_state(state, KeyReadPopupState_Detecting);
 
-    state->nfc_dev_data->parsed_data = furi_string_alloc();
-    if(state->nfc_dev_data->parsed_data == NULL) {
-        /* can't do anything here, crash */
-        furi_check(0);
-    }
-
     nfc_worker_start(
         state->nfc_worker, NfcWorkerStateRead, state->nfc_dev_data, read_worker_cb, state);
 }
@@ -266,8 +261,8 @@ void scene_on_exit_key_read_popup(void* context) {
     nfc_worker_stop(state->nfc_worker);
 
     crypto_explicit_bzero(state->nfc_dev_data->mf_ul_data.data, KEY_BITS / 8);
-    if(state->nfc_dev_data->parsed_data != NULL) {
+    /*if(state->nfc_dev_data->parsed_data != NULL) {
         furi_string_free(state->nfc_dev_data->parsed_data);
-    }
-    memset(state->nfc_dev_data, 0, sizeof(NfcDeviceData));
+    }*/
+    //memset(state->nfc_dev_data, 0, sizeof(NfcDeviceData));
 }

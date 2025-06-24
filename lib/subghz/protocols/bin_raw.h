@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base.h"
+#include "public_api.h"
 
 #define SUBGHZ_PROTOCOL_BIN_RAW_NAME "BinRAW"
 
@@ -78,11 +79,7 @@ void subghz_protocol_decoder_bin_raw_feed(void* context, bool level, uint32_t du
  * @param context Pointer to a SubGhzProtocolDecoderBinRAW instance
  * @return hash Hash sum
  */
-uint8_t subghz_protocol_decoder_bin_raw_get_hash_data(void* context);
-
-void subghz_protocol_decoder_bin_raw_data_input_rssi(
-    SubGhzProtocolDecoderBinRAW* instance,
-    float rssi);
+uint32_t subghz_protocol_decoder_bin_raw_get_hash_data(void* context);
 
 /**
  * Serialize data SubGhzProtocolDecoderBinRAW.

@@ -458,15 +458,17 @@ static void tama_p1_draw_callback(Canvas* const canvas, void* cb_ctx) {
     furi_mutex_release(mutex);
 }
 
-static void tama_p1_input_callback(InputEvent* input_event, FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void tama_p1_input_callback(InputEvent* input_event, void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
 
     TamaEvent event = {.type = EventTypeInput, .input = *input_event};
     furi_message_queue_put(event_queue, &event, FuriWaitForever);
 }
 
-static void tama_p1_update_timer_callback(FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void tama_p1_update_timer_callback(void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
 
     TamaEvent event = {.type = EventTypeTick};
     furi_message_queue_put(event_queue, &event, 0);
@@ -692,7 +694,8 @@ static void tama_p1_save_state() {
 static int32_t tama_p1_worker(void* context) {
     bool running = true;
     FuriMutex* mutex = context;
-    while(furi_mutex_acquire(mutex, FuriWaitForever) != FuriStatusOk) furi_delay_tick(1);
+    while(furi_mutex_acquire(mutex, FuriWaitForever) != FuriStatusOk)
+        furi_delay_tick(1);
 
     cpu_sync_ref_timestamp();
     LL_TIM_EnableCounter(TIM2);
@@ -837,7 +840,7 @@ int32_t tama_p1_app(void* p) {
                 btn_state_t tama_btn_state = 0; // BTN_STATE_RELEASED is 0
 
                 if(in_menu) {
-                    // if(menu_cursor == 2 &&
+                    // if(menu_cursor >= 2 &&
                     // (event.input.key == InputKeyUp || event.input.key == InputKeyDown)) {
                     // tama_btn_state = BTN_STATE_RELEASED;
                     // }
@@ -1135,7 +1138,7 @@ int32_t tama_p1_app(void* p) {
                             break;
                         }
                     }
-                } else { // out of menu // TODO: clean up code -.-
+                } else { // out of menu
                     if(event.input.key == InputKeyBack && event.input.type == InputTypeLong) {
                         if(speed != 1) {
                             speed = 1;

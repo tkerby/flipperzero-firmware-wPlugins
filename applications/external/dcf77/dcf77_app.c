@@ -25,7 +25,7 @@ uint8_t get_dcf_message_bit(uint8_t* message, uint8_t bit) {
 
 // should it still be const?
 static void update_dcf77_message_from_rtc(AppFSM* app_fsm) {
-    FuriHalRtcDateTime dt;
+    DateTime dt;
     furi_hal_rtc_get_datetime(&dt);
     app_fsm->bit_number = dt.second;
     app_fsm->next_message = malloc(8);
@@ -164,7 +164,7 @@ static void render_callback(Canvas* const canvas, void* ctx) {
     canvas_draw_frame(canvas, 0, 0, 128, 64);
     canvas_set_font(canvas, FontPrimary);
     snprintf(buffer, 64, "%1x.%1x=%01x", bit_number / 8, (bit_number % 8), bit_value);
-    FuriHalRtcDateTime dt;
+    DateTime dt;
     furi_hal_rtc_get_datetime(&dt);
     //canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignBottom, "DCF77 emulator");
     snprintf(
@@ -222,21 +222,25 @@ static void render_callback(Canvas* const canvas, void* ctx) {
     furi_mutex_release(app_fsm->mutex);
 }
 
-static void input_callback(InputEvent* input_event, FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void input_callback(InputEvent* input_event, void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
 
     AppEvent event = {.type = EventKeyPress, .input = *input_event};
     furi_message_queue_put(event_queue, &event, FuriWaitForever);
 }
 
-static void timer_tick_callback(FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void timer_tick_callback(void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
 
     AppEvent event = {.type = EventTimerTick};
     furi_message_queue_put(event_queue, &event, 0);
 }
 
-static void app_init(AppFSM* const app_fsm, FuriMessageQueue* event_queue) {
+static void app_init(AppFSM* const app_fsm, void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
     app_fsm->counter = 0;
     app_fsm->dcf77_message = &dcf77_message_buffer[0];
     app_fsm->next_message = &dcf77_next_buffer[0];
@@ -269,7 +273,7 @@ static void on_timer_tick(AppFSM* app_fsm) {
     static bool last_output = false;
     bool output = true;
 
-    FuriHalRtcDateTime dt;
+    DateTime dt;
     furi_hal_rtc_get_datetime(&dt);
     app_fsm->bit_number = dt.second;
     app_fsm->bit_value = get_dcf_message_bit(app_fsm->dcf77_message, app_fsm->bit_number);
@@ -391,8 +395,8 @@ int32_t dcf77_app_main(void* p) {
             }
         }
 
-        view_port_update(view_port);
         furi_mutex_release(app_fsm->mutex);
+        view_port_update(view_port);
     }
     furi_hal_speaker_release();
     notification_message_block(notification, &seq_c_minor);

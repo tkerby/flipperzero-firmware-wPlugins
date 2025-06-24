@@ -23,7 +23,6 @@ void picopass_tick_event_callback(void* context) {
 Picopass* picopass_alloc() {
     Picopass* picopass = malloc(sizeof(Picopass));
 
-    picopass->worker = picopass_worker_alloc();
     picopass->view_dispatcher = view_dispatcher_alloc();
     picopass->scene_manager = scene_manager_alloc(&picopass_scene_handlers, picopass);
     view_dispatcher_enable_queue(picopass->view_dispatcher);
@@ -34,6 +33,8 @@ Picopass* picopass_alloc() {
         picopass->view_dispatcher, picopass_back_event_callback);
     view_dispatcher_set_tick_event_callback(
         picopass->view_dispatcher, picopass_tick_event_callback, 100);
+
+    picopass->nfc = nfc_alloc();
 
     // Picopass device
     picopass->dev = picopass_device_alloc();
@@ -75,6 +76,12 @@ Picopass* picopass_alloc() {
         PicopassViewByteInput,
         byte_input_get_view(picopass->byte_input));
 
+    // TextBox
+    picopass->text_box = text_box_alloc();
+    view_dispatcher_add_view(
+        picopass->view_dispatcher, PicopassViewTextBox, text_box_get_view(picopass->text_box));
+    picopass->text_box_store = furi_string_alloc();
+
     // Custom Widget
     picopass->widget = widget_alloc();
     view_dispatcher_add_view(
@@ -90,6 +97,26 @@ Picopass* picopass_alloc() {
     view_dispatcher_add_view(
         picopass->view_dispatcher, PicopassViewLoclass, loclass_get_view(picopass->loclass));
 
+    picopass->plugin_wiegand_manager =
+        plugin_manager_alloc(PLUGIN_APP_ID, PLUGIN_API_VERSION, firmware_api_interface);
+    picopass->plugin_wiegand = NULL;
+    if(plugin_manager_load_single(
+           picopass->plugin_wiegand_manager,
+           APP_ASSETS_PATH("plugins/picopass_plugin_wiegand.fal")) != PluginManagerErrorNone) {
+        FURI_LOG_E(TAG, "Failed to load Wiegand plugin");
+    } else if(plugin_manager_get_count(picopass->plugin_wiegand_manager)) {
+        picopass->plugin_wiegand =
+            (PluginWiegand*)plugin_manager_get_ep(picopass->plugin_wiegand_manager, 0);
+        if(strcmp(picopass->plugin_wiegand->name, "Plugin Wiegand") != 0) {
+            FURI_LOG_E(TAG, "Tried to load invalid Wiegand plugin");
+            picopass->plugin_wiegand = NULL;
+        } else {
+            FURI_LOG_I(TAG, "Loaded Wiegand plugin");
+        }
+    }
+
+    picopass->nr_mac_type = ManualNRMAC;
+
     return picopass;
 }
 
@@ -99,6 +126,8 @@ void picopass_free(Picopass* picopass) {
     // Picopass device
     picopass_device_free(picopass->dev);
     picopass->dev = NULL;
+
+    nfc_free(picopass->nfc);
 
     // Submenu
     view_dispatcher_remove_view(picopass->view_dispatcher, PicopassViewMenu);
@@ -120,6 +149,11 @@ void picopass_free(Picopass* picopass) {
     view_dispatcher_remove_view(picopass->view_dispatcher, PicopassViewByteInput);
     byte_input_free(picopass->byte_input);
 
+    // TextBox
+    view_dispatcher_remove_view(picopass->view_dispatcher, PicopassViewTextBox);
+    text_box_free(picopass->text_box);
+    furi_string_free(picopass->text_box_store);
+
     // Custom Widget
     view_dispatcher_remove_view(picopass->view_dispatcher, PicopassViewWidget);
     widget_free(picopass->widget);
@@ -129,10 +163,6 @@ void picopass_free(Picopass* picopass) {
 
     view_dispatcher_remove_view(picopass->view_dispatcher, PicopassViewLoclass);
     loclass_free(picopass->loclass);
-
-    // Worker
-    picopass_worker_stop(picopass->worker);
-    picopass_worker_free(picopass->worker);
 
     // View Dispatcher
     view_dispatcher_free(picopass->view_dispatcher);
@@ -147,6 +177,8 @@ void picopass_free(Picopass* picopass) {
     // Notifications
     furi_record_close(RECORD_NOTIFICATION);
     picopass->notifications = NULL;
+
+    plugin_manager_free(picopass->plugin_wiegand_manager);
 
     free(picopass);
 }
@@ -197,15 +229,13 @@ void picopass_blink_stop(Picopass* picopass) {
 
 void picopass_show_loading_popup(void* context, bool show) {
     Picopass* picopass = context;
-    TaskHandle_t timer_task = xTaskGetHandle(configTIMER_SERVICE_TASK_NAME);
-
     if(show) {
         // Raise timer priority so that animations can play
-        vTaskPrioritySet(timer_task, configMAX_PRIORITIES - 1);
+        furi_timer_set_thread_priority(FuriTimerThreadPriorityElevated);
         view_dispatcher_switch_to_view(picopass->view_dispatcher, PicopassViewLoading);
     } else {
         // Restore default timer priority
-        vTaskPrioritySet(timer_task, configTIMER_TASK_PRIORITY);
+        furi_timer_set_thread_priority(FuriTimerThreadPriorityNormal);
     }
 }
 

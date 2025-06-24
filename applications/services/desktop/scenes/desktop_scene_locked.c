@@ -3,7 +3,6 @@
 #include <gui/scene_manager.h>
 #include <gui/view_stack.h>
 #include <stdint.h>
-#include <portmacro.h>
 
 #include "../desktop.h"
 #include "../desktop_i.h"
@@ -18,7 +17,7 @@
 #define TAG "DesktopSrv"
 
 #define WRONG_PIN_HEADER_TIMEOUT 3000
-#define INPUT_PIN_VIEW_TIMEOUT 15000
+#define INPUT_PIN_VIEW_TIMEOUT   15000
 
 static void desktop_scene_locked_callback(DesktopEvent event, void* context) {
     Desktop* desktop = (Desktop*)context;
@@ -96,11 +95,12 @@ bool desktop_scene_locked_on_event(void* context, SceneManagerEvent event) {
     if(event.type == SceneManagerEventTypeCustom) {
         switch(event.event) {
         case DesktopLockedEventOpenPowerOff: {
-            loader_start(desktop->loader, "Power", "off", NULL);
+            loader_start_detached_with_gui_error(desktop->loader, "Power", "off");
             consumed = true;
             break;
         }
         case DesktopLockedEventUnlocked:
+        case DesktopGlobalApiUnlock:
             desktop_unlock(desktop);
             consumed = true;
             break;

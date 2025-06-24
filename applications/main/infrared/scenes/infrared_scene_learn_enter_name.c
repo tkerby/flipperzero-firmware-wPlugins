@@ -1,16 +1,33 @@
-#include "../infrared_i.h"
+#include "../infrared_app_i.h"
 #include <dolphin/dolphin.h>
 
 void infrared_scene_learn_enter_name_on_enter(void* context) {
-    Infrared* infrared = context;
+    InfraredApp* infrared = context;
     TextInput* text_input = infrared->text_input;
-    InfraredSignal* signal = infrared->received_signal;
+    InfraredSignal* signal = infrared->current_signal;
 
-    if(infrared_signal_is_raw(signal)) {
-        InfraredRawSignal* raw = infrared_signal_get_raw_signal(signal);
-        infrared_text_store_set(infrared, 0, "RAW_%d", raw->timings_size);
+    if(infrared->app_state.is_easy_mode) {
+        // In easy mode, use predefined names based on button index
+        int32_t button_index;
+        if(infrared->app_state.is_learning_new_remote) {
+            button_index = infrared->app_state.current_button_index;
+        } else {
+            button_index = infrared->app_state.existing_remote_button_index;
+        }
+
+        // Ensure button_index is valid
+        if(button_index < 0) button_index = 0;
+        if(button_index >= (int32_t)easy_mode_button_count) {
+            button_index = (int32_t)easy_mode_button_count - 1;
+        }
+
+        // Always use predefined names in easy mode
+        infrared_text_store_set(infrared, 0, "%s", easy_mode_button_names[button_index]);
+    } else if(infrared_signal_is_raw(signal)) {
+        const InfraredRawSignal* raw = infrared_signal_get_raw_signal(signal);
+        infrared_text_store_set(infrared, 0, "RAW_%zu", raw->timings_size);
     } else {
-        InfraredMessage* message = infrared_signal_get_message(signal);
+        const InfraredMessage* message = infrared_signal_get_message(signal);
         infrared_text_store_set(
             infrared,
             0,
@@ -28,31 +45,32 @@ void infrared_scene_learn_enter_name_on_enter(void* context) {
         infrared->text_store[0],
         INFRARED_MAX_BUTTON_NAME_LENGTH,
         true);
+
     view_dispatcher_switch_to_view(infrared->view_dispatcher, InfraredViewTextInput);
 }
 
 bool infrared_scene_learn_enter_name_on_event(void* context, SceneManagerEvent event) {
-    Infrared* infrared = context;
-    InfraredSignal* signal = infrared->received_signal;
+    InfraredApp* infrared = context;
+    InfraredSignal* signal = infrared->current_signal;
     SceneManager* scene_manager = infrared->scene_manager;
     bool consumed = false;
 
     if(event.type == SceneManagerEventTypeCustom) {
         if(event.event == InfraredCustomEventTypeTextEditDone) {
-            bool success = false;
-            if(infrared->app_state.is_learning_new_remote) {
-                success =
-                    infrared_add_remote_with_button(infrared, infrared->text_store[0], signal);
-            } else {
-                success =
-                    infrared_remote_add_button(infrared->remote, infrared->text_store[0], signal);
-            }
+            const char* signal_name = infrared->text_store[0];
+            const InfraredErrorCode error =
+                infrared->app_state.is_learning_new_remote ?
+                    infrared_add_remote_with_button(infrared, signal_name, signal) :
+                    infrared_remote_append_signal(infrared->remote, signal, signal_name);
 
-            if(success) {
+            if(!INFRARED_ERROR_PRESENT(error)) {
                 scene_manager_next_scene(scene_manager, InfraredSceneLearnDone);
                 dolphin_deed(DolphinDeedIrSave);
             } else {
-                dialog_message_show_storage_error(infrared->dialogs, "Failed to save file");
+                infrared_show_error_message(
+                    infrared,
+                    "Failed to\n%s",
+                    infrared->app_state.is_learning_new_remote ? "create file" : "add signal");
                 const uint32_t possible_scenes[] = {InfraredSceneRemoteList, InfraredSceneStart};
                 scene_manager_search_and_switch_to_previous_scene_one_of(
                     scene_manager, possible_scenes, COUNT_OF(possible_scenes));
@@ -65,6 +83,6 @@ bool infrared_scene_learn_enter_name_on_event(void* context, SceneManagerEvent e
 }
 
 void infrared_scene_learn_enter_name_on_exit(void* context) {
-    Infrared* infrared = context;
+    InfraredApp* infrared = context;
     UNUSED(infrared);
 }

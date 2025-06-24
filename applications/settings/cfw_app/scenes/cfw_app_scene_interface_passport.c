@@ -4,13 +4,13 @@
 #include "../helpers/passport_settings.h"
 
 #define CFW_PASSPORT_SELECT_BACKGROUND 0
-#define CFW_PASSPORT_SELECT_IMAGE 1
-#define CFW_PASSPORT_SELECT_NAME 2
-#define CFW_PASSPORT_SELECT_MOOD_SET 3
-#define CFW_PASSPORT_SELECT_LEVEL 4
-#define CFW_PASSPORT_SELECT_XP_TEXT 5
-#define CFW_PASSPORT_SELECT_XP_MODE 6
-#define CFW_PASSPORT_SELECT_MULTIPAGE 7
+#define CFW_PASSPORT_SELECT_IMAGE      1
+#define CFW_PASSPORT_SELECT_NAME       2
+#define CFW_PASSPORT_SELECT_MOOD_SET   3
+#define CFW_PASSPORT_SELECT_LEVEL      4
+#define CFW_PASSPORT_SELECT_XP_TEXT    5
+#define CFW_PASSPORT_SELECT_XP_MODE    6
+#define CFW_PASSPORT_SELECT_MULTIPAGE  7
 
 const char* const xp_mode_count_text[XP_MODE_COUNT] =
     {"Bar", "%", "Inv. %", "Retro 3", "Retro 5", "Bar %", "None"};
@@ -31,11 +31,16 @@ const char* const passport_on_off_text[PASSPORT_ON_OFF_COUNT] = {
 
 const char* const background_text[PASSPORT_BG_COUNT] = {
     "None",
-    "DB",
+    "AD Police",
     "Circuit",
+    "DB",
+    "DedSec",
     "Flipper",
     "Furipass",
+    "GITS",
     "Mario",
+    "Medieval",
+    "Memory Chip",
     "Mountains",
     "Multipass",
     "Scroll",
@@ -43,11 +48,16 @@ const char* const background_text[PASSPORT_BG_COUNT] = {
 
 const uint32_t background_value[PASSPORT_BG_COUNT] = {
     BG_NONE,
-    BG_DB,
+    BG_ADPOLICE,
     BG_CIRCUIT,
+    BG_DB,
+    BG_DEDSEC,
     BG_STOCK,
     BG_FURI,
+    BG_GITS,
     BG_MARIO,
+    BG_MEDIEVAL,
+    BG_MEMCHIP,
     BG_MOUNTAINS,
     BG_MULTI,
     BG_SCROLL,
@@ -55,29 +65,70 @@ const uint32_t background_value[PASSPORT_BG_COUNT] = {
 
 const char* const image_text[PROFILE_IMG_COUNT] = {
     "None",
+    "AD Police",
+    "Akira Kaneda",
+    "Akira Kei",
+    "Akira Tetsuo",
+    "Android",
+    "Black Lagoon Balalaika",
+    "Black Lagoon Benny",
+    "Black Lagoon Dutch",
+    "Black Lagoon Revy",
+    "Black Lagoon Roberta",
+    "Black Lagoon Rock",
     "Briareos",
-    "Cobra",
     "Dali Mask",
+    "DEDSEC",
     "Deer",
+    "Dokkaebi",
     "Dolphin (Happy)",
     "Dolphin (Moody)",
     "ED-209",
+    "Fallout",
     "FSociety",
     "FSociety 2",
+    "GITS Aoi",
+    "GITS Aramaki",
+    "GITS Batou",
+    "GITS Hideo Kuze",
+    "GITS Ishikawa",
+    "GITS Kusanagi",
+    "GITS Project 2501",
+    "GITS Saito",
+    "GITS Togusa",
     "Goku (Set)",
     "Goku (Kid)",
     "Goku (Adult)",
     "Goku (SSJ)",
     "Goku (SSJ3)",
+    "GTAV Franklin",
+    "GTAV Michael",
+    "GTAV Trevor",
+    "GUNNM Gally",
     "Guy Fawkes",
+    "Haunter",
     "Lain",
+    "Leeroy Jenkins",
     "Mario",
     "Marvin",
     "Moreleeloo",
     "Neuromancer",
+    "Oedo 808 Benten",
+    "Oedo 808 Gogul",
+    "Oedo 808 Sengoku",
     "Pikachu (Sleepy)",
+    "Pirate",
+    "Pokemon Trainer",
+    "Psyduck",
     "Rabbit",
+    "SC Armaroid Lady",
+    "SC Cobra",
+    "SC Crystal Bowie",
+    "SC Dominique Royal",
+    "SC Sandra",
+    "SC Tarbeige",
     "Shinkai",
+    "Skull",
     "Slime",
     "Sonic",
     "Spider Jerusalem",
@@ -85,16 +136,25 @@ const char* const image_text[PROFILE_IMG_COUNT] = {
     "Totoro",
     "Waifu 1",
     "Waifu 2",
-    "Waifu 3"};
+    "Waifu 3",
+    "Wrench"};
 
 const uint32_t image_value[PROFILE_IMG_COUNT] = {
-    PIMG_NONE,        PIMG_BRIAREOS,     PIMG_COBRA,     PIMG_DALI,     PIMG_DEER,
-    PIMG_DOLPHIN,     PIMG_DOLPHINMOODY, PIMG_ED209,     PIMG_FSOCIETY, PIMG_FSOCIETY2,
-    PIMG_GOKUSET,     PIMG_GOKUKID,      PIMG_GOKUADULT, PIMG_GOKUSSJ,  PIMG_GOKUSSJ3,
-    PIMG_GUYFAWKES,   PIMG_LAIN,         PIMG_MARIO,     PIMG_MARVIN,   PIMG_MORELEELLOO,
-    PIMG_NEUROMANCER, PIMG_PIKASLEEPY,   PIMG_RABBIT,    PIMG_SHINKAI,  PIMG_SLIME,
-    PIMG_SONIC,       PIMG_SPIDER,       PIMG_TANKGIRL,  PIMG_TOTORO,   PIMG_WAIFU1,
-    PIMG_WAIFU2,      PIMG_WAIFU3};
+    PIMG_NONE,       PIMG_ADPOLICE,    PIMG_AKKAN,        PIMG_AKKEI,        PIMG_AKTET,
+    PIMG_ANDROID,    PIMG_BLBalalaika, PIMG_BLBenny,      PIMG_BLDutch,      PIMG_BLRevy,
+    PIMG_BLRoberta,  PIMG_BLRock,      PIMG_BRIAREOS,     PIMG_DALI,         PIMG_DEDSEC,
+    PIMG_DEER,       PIMG_DOKKAEBI,    PIMG_DOLPHIN,      PIMG_DOLPHINMOODY, PIMG_ED209,
+    PIMG_FALLOUT,    PIMG_FSOCIETY,    PIMG_FSOCIETY2,    PIMG_GITSAOI,      PIMG_GITSARA,
+    PIMG_GITSBAT,    PIMG_GITSHID,     PIMG_GITSISH,      PIMG_GITSKUS,      PIMG_GITSPRO,
+    PIMG_GITSSAI,    PIMG_GITSTOG,     PIMG_GOKUSET,      PIMG_GOKUKID,      PIMG_GOKUADULT,
+    PIMG_GOKUSSJ,    PIMG_GOKUSSJ3,    PIMG_GTAVFRANKLIN, PIMG_GTAVMICHAEL,  PIMG_GTAVTREVOR,
+    PIMG_GUNNMGALLY, PIMG_GUYFAWKES,   PIMG_HAUNTER,      PIMG_LAIN,         PIMG_LEEROY,
+    PIMG_MARIO,      PIMG_MARVIN,      PIMG_MORELEELLOO,  PIMG_NEUROMANCER,  PIMG_O808Benten,
+    PIMG_O808Gogul,  PIMG_O808Sengoku, PIMG_PIKASLEEPY,   PIMG_PIRATE,       PIMG_PKMNTR,
+    PIMG_PSYDUCK,    PIMG_RABBIT,      PIMG_SCARMLA,      PIMG_SCCOBRA,      PIMG_SCCRYBO,
+    PIMG_SCDOMRO,    PIMG_SCSANDRA,    PIMG_SCTARBEIGE,   PIMG_SHINKAI,      PIMG_SKULL,
+    PIMG_SLIME,      PIMG_SONIC,       PIMG_SPIDER,       PIMG_TANKGIRL,     PIMG_TOTORO,
+    PIMG_WAIFU1,     PIMG_WAIFU2,      PIMG_WAIFU3,       PIMG_WRENCH};
 
 const uint32_t name_value[PASSPORT_ON_OFF_COUNT] = {false, true};
 

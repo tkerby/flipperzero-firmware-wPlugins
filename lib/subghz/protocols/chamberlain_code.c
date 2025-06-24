@@ -6,11 +6,11 @@
 #include "../blocks/generic.h"
 #include "../blocks/math.h"
 
-#define TAG "SubGhzProtocolChamb_Code"
+#define TAG "SubGhzProtocolChambCode"
 
 #define CHAMBERLAIN_CODE_BIT_STOP 0b0001
-#define CHAMBERLAIN_CODE_BIT_1 0b0011
-#define CHAMBERLAIN_CODE_BIT_0 0b0111
+#define CHAMBERLAIN_CODE_BIT_1    0b0011
+#define CHAMBERLAIN_CODE_BIT_0    0b0111
 
 #define CHAMBERLAIN_7_CODE_MASK 0xF000000FF0F
 #define CHAMBERLAIN_8_CODE_MASK 0xF00000F00F
@@ -73,10 +73,12 @@ const SubGhzProtocolDecoder subghz_protocol_chamb_code_decoder = {
     .feed = subghz_protocol_decoder_chamb_code_feed,
     .reset = subghz_protocol_decoder_chamb_code_reset,
 
-    .get_hash_data = subghz_protocol_decoder_chamb_code_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = subghz_protocol_decoder_chamb_code_get_hash_data,
     .serialize = subghz_protocol_decoder_chamb_code_serialize,
     .deserialize = subghz_protocol_decoder_chamb_code_deserialize,
     .get_string = subghz_protocol_decoder_chamb_code_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder subghz_protocol_chamb_code_encoder = {
@@ -422,10 +424,10 @@ void subghz_protocol_decoder_chamb_code_feed(void* context, bool level, uint32_t
     }
 }
 
-uint8_t subghz_protocol_decoder_chamb_code_get_hash_data(void* context) {
+uint32_t subghz_protocol_decoder_chamb_code_get_hash_data(void* context) {
     furi_assert(context);
     SubGhzProtocolDecoderChamb_Code* instance = context;
-    return subghz_protocol_blocks_get_hash_data(
+    return subghz_protocol_blocks_get_hash_data_long(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 

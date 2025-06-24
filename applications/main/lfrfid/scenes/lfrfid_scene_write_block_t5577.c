@@ -1,4 +1,5 @@
 #include "../lfrfid_i.h"
+#include <lfrfid_icons.h>
 
 static void lfrfid_write_block_t5577_password_and_config_to_EM(LfRfid* app) {
     Popup* popup = app->popup;
@@ -6,7 +7,7 @@ static void lfrfid_write_block_t5577_password_and_config_to_EM(LfRfid* app) {
     //char curr_buf[32] = {};
     //TODO: use .txt file in resources for passwords.
 
-    uint8_t* pass_p = app->password;
+    uint8_t* pass_p = app->password2;
     uint32_t current_password = pass_p[0] << 24 | pass_p[1] << 16 | pass_p[2] << 8 | pass_p[3];
     //const uint32_t em_pw_block_data = 1976;
     //uint32_t new_password = app->new_password;

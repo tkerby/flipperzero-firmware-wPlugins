@@ -6,7 +6,7 @@
 #include "../blocks/generic.h"
 #include "../blocks/math.h"
 
-#define TAG "SubGhzProtocolPhoenix_V2"
+#define TAG "SubGhzProtocolPhoenixV2"
 
 //transmission only static mode
 
@@ -45,10 +45,12 @@ const SubGhzProtocolDecoder subghz_protocol_phoenix_v2_decoder = {
     .feed = subghz_protocol_decoder_phoenix_v2_feed,
     .reset = subghz_protocol_decoder_phoenix_v2_reset,
 
-    .get_hash_data = subghz_protocol_decoder_phoenix_v2_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = subghz_protocol_decoder_phoenix_v2_get_hash_data,
     .serialize = subghz_protocol_decoder_phoenix_v2_serialize,
     .deserialize = subghz_protocol_decoder_phoenix_v2_deserialize,
     .get_string = subghz_protocol_decoder_phoenix_v2_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder subghz_protocol_phoenix_v2_encoder = {
@@ -215,8 +217,8 @@ void subghz_protocol_decoder_phoenix_v2_feed(void* context, bool level, uint32_t
         }
         break;
     case Phoenix_V2DecoderStepFoundStartBit:
-        if(level && ((DURATION_DIFF(duration, (subghz_protocol_phoenix_v2_const.te_short * 6)) <
-                      subghz_protocol_phoenix_v2_const.te_delta * 4))) {
+        if(level && (DURATION_DIFF(duration, (subghz_protocol_phoenix_v2_const.te_short * 6)) <
+                     subghz_protocol_phoenix_v2_const.te_delta * 4)) {
             //Found start bit
             instance->decoder.parser_step = Phoenix_V2DecoderStepSaveDuration;
             instance->decoder.decode_data = 0;
@@ -286,10 +288,10 @@ static void subghz_protocol_phoenix_v2_check_remote_controller(SubGhzBlockGeneri
     instance->btn = (data_rev >> 32) & 0xF;
 }
 
-uint8_t subghz_protocol_decoder_phoenix_v2_get_hash_data(void* context) {
+uint32_t subghz_protocol_decoder_phoenix_v2_get_hash_data(void* context) {
     furi_assert(context);
     SubGhzProtocolDecoderPhoenix_V2* instance = context;
-    return subghz_protocol_blocks_get_hash_data(
+    return subghz_protocol_blocks_get_hash_data_long(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 
@@ -319,13 +321,14 @@ void subghz_protocol_decoder_phoenix_v2_get_string(void* context, FuriString* ou
     furi_string_cat_printf(
         output,
         "%s %dbit\r\n"
-        "Key:%02lX%08lX\r\n"
+        "Key:%05lX%08lX\r\n"
         "Sn:0x%07lX \r\n"
-        "Btn:%X\r\n",
+        "Btn:%X  Cnt: 0x%04lX\r\n",
         instance->generic.protocol_name,
         instance->generic.data_count_bit,
         (uint32_t)(instance->generic.data >> 32) & 0xFFFFFFFF,
         (uint32_t)(instance->generic.data & 0xFFFFFFFF),
         instance->generic.serial,
-        instance->generic.btn);
+        instance->generic.btn,
+        instance->generic.cnt);
 }

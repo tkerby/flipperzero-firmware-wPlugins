@@ -1,7 +1,6 @@
 #pragma once
 
 #include "helpers/subghz_types.h"
-#include "helpers/subghz_error_type.h"
 #include <lib/subghz/types.h>
 #include "subghz.h"
 #include "views/receiver.h"
@@ -10,6 +9,7 @@
 #include "views/subghz_read_raw.h"
 
 #include <gui/gui.h>
+#include <assets_icons.h>
 #include <dialogs/dialogs.h>
 #include <gui/scene_manager.h>
 #include <notification/notification_messages.h>
@@ -38,13 +38,16 @@
 #include "helpers/subghz_threshold_rssi.h"
 
 #include "helpers/subghz_txrx.h"
+#include "helpers/subghz_gps.h"
 
-#define SUBGHZ_MAX_LEN_NAME 64
-#define SUBGHZ_EXT_PRESET_NAME true
+#define SUBGHZ_MAX_LEN_NAME      64
+#define SUBGHZ_EXT_PRESET_NAME   true
+#define SUBGHZ_RAW_THRESHOLD_MIN (-90.0f)
+#define SUBGHZ_MEASURE_LOADING   false
 
 typedef struct {
     uint8_t fix[4];
-    uint8_t cnt[3];
+    uint8_t cnt[4];
     uint8_t seed[4];
 } SecureData;
 
@@ -76,10 +79,14 @@ struct SubGhz {
     SubGhzReadRAW* subghz_read_raw;
     bool raw_send_only;
 
+    bool save_datetime_set;
+    DateTime save_datetime;
+
     SubGhzLastSettings* last_settings;
 
     SubGhzProtocolFlag filter;
-    SubGhzProtocolFlag ignore_filter;
+    SubGhzProtocolFilter ignore_filter;
+    bool remove_duplicates;
     FuriString* error_str;
     SubGhzLock lock;
 
@@ -90,19 +97,24 @@ struct SubGhz {
     SubGhzThresholdRssi* threshold_rssi;
     SubGhzRxKeyState rx_key_state;
     SubGhzHistory* history;
+    SubGhzGPS* gps;
+    SubGhzRepeaterState repeater;
+    bool repeater_bin_raw_was_off;
 
     uint16_t idx_menu_chosen;
     SubGhzLoadTypeFile load_type_file;
 
+    bool fav_timeout;
+    FuriTimer* timer;
+
     void* rpc_ctx;
 };
 
-void subghz_set_default_preset(SubGhz* subghz);
 void subghz_blink_start(SubGhz* subghz);
 void subghz_blink_stop(SubGhz* subghz);
 
 bool subghz_tx_start(SubGhz* subghz, FlipperFormat* flipper_format);
-void subghz_dialog_message_freq_error(SubGhz* subghz, bool only_rx);
+void subghz_dialog_message_freq_error(SubGhz* subghz, SubGhzTx can_tx);
 
 bool subghz_key_load(SubGhz* subghz, const char* file_path, bool show_dialog);
 bool subghz_get_next_name_file(SubGhz* subghz, uint8_t max_len);
@@ -122,6 +134,7 @@ SubGhzLoadTypeFile subghz_get_load_type_file(SubGhz* subghz);
 void subghz_lock(SubGhz* subghz);
 void subghz_unlock(SubGhz* subghz);
 bool subghz_is_locked(SubGhz* subghz);
+bool subghz_is_legal(FuriString* val_str);
 
 void subghz_rx_key_state_set(SubGhz* subghz, SubGhzRxKeyState state);
 SubGhzRxKeyState subghz_rx_key_state_get(SubGhz* subghz);

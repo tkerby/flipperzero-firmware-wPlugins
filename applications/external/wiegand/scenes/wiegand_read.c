@@ -38,6 +38,9 @@ void wiegand_start_read(void* context) {
     App* app = context;
     data_saved = false;
     bit_count = 0;
+    if(!furi_hal_power_is_otg_enabled()) {
+        furi_hal_power_enable_otg();
+    }
     furi_hal_gpio_init_simple(pinD0, GpioModeInterruptRiseFall);
     furi_hal_gpio_init_simple(pinD1, GpioModeInterruptRiseFall);
     furi_hal_gpio_add_int_callback(pinD0, wiegand_isr_d0, NULL);
@@ -68,7 +71,8 @@ void wiegand_timer_callback(void* context) {
     FURI_CRITICAL_ENTER();
     if(duration > 25 * one_millisecond) {
         if(bit_count == 4 || bit_count == 8 || bit_count == 24 || bit_count == 26 ||
-           bit_count == 32 || bit_count == 34 || bit_count == 37 || bit_count == 40) {
+           bit_count == 32 || bit_count == 34 || bit_count == 35 || bit_count == 36 ||
+           bit_count == 37 || bit_count == 40 || bit_count == 48) {
             wiegand_stop_read(app);
             scene_manager_next_scene(app->scene_manager, WiegandDataScene);
         } else {

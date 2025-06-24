@@ -1,7 +1,7 @@
 #include "air_mouse.h"
+#include <storage/storage.h>
 
 #include <furi.h>
-
 #include "tracking/imu/imu.h"
 
 #define TAG "AirMouseApp"
@@ -10,6 +10,7 @@ enum AirMouseSubmenuIndex {
     AirMouseSubmenuIndexBtMouse,
     AirMouseSubmenuIndexUsbMouse,
     AirMouseSubmenuIndexCalibration,
+    AirMouseSubmenuIndexRemovePairing,
 };
 
 void air_mouse_submenu_callback(void* context, uint32_t index) {
@@ -24,6 +25,8 @@ void air_mouse_submenu_callback(void* context, uint32_t index) {
     } else if(index == AirMouseSubmenuIndexCalibration) {
         app->view_id = AirMouseViewCalibration;
         view_dispatcher_switch_to_view(app->view_dispatcher, AirMouseViewCalibration);
+    } else if(index == AirMouseSubmenuIndexRemovePairing) {
+        bt_mouse_remove_pairing();
     }
 }
 
@@ -53,8 +56,9 @@ AirMouse* air_mouse_app_alloc() {
     AirMouse* app = malloc(sizeof(AirMouse));
 
     Storage* storage = furi_record_open(RECORD_STORAGE);
-    storage_common_copy(storage, CALIBRATION_OLD_DATA_PATH, CALIBRATION_DATA_PATH);
-    storage_common_remove(storage, CALIBRATION_OLD_DATA_PATH);
+    storage_simply_mkdir(storage, EXT_PATH("apps_data/air_mouse"));
+    storage_common_migrate(
+        storage, EXT_PATH(".calibration.data"), EXT_PATH("apps_data/air_mouse/calibration.data"));
     furi_record_close(RECORD_STORAGE);
 
     // Gui
@@ -77,11 +81,17 @@ AirMouse* air_mouse_app_alloc() {
         AirMouseSubmenuIndexCalibration,
         air_mouse_submenu_callback,
         app);
+    submenu_add_item(
+        app->submenu,
+        "Clear Bluetooth Pairings",
+        AirMouseSubmenuIndexRemovePairing,
+        air_mouse_submenu_callback,
+        app);
     view_set_previous_callback(submenu_get_view(app->submenu), air_mouse_exit);
     view_dispatcher_add_view(
         app->view_dispatcher, AirMouseViewSubmenu, submenu_get_view(app->submenu));
 
-    // Dialog view
+    // Dialog views
     app->dialog = dialog_ex_alloc();
     dialog_ex_set_result_callback(app->dialog, air_mouse_dialog_callback);
     dialog_ex_set_context(app->dialog, app);
@@ -91,6 +101,14 @@ AirMouse* air_mouse_app_alloc() {
     dialog_ex_set_header(app->dialog, "Close Current App?", 16, 12, AlignLeft, AlignTop);
     view_dispatcher_add_view(
         app->view_dispatcher, AirMouseViewExitConfirm, dialog_ex_get_view(app->dialog));
+
+    app->error_dialog = dialog_ex_alloc();
+    dialog_ex_set_header(app->error_dialog, "Failed to init IMU", 63, 0, AlignCenter, AlignTop);
+    dialog_ex_set_text(
+        app->error_dialog, "Please connect sensor module", 63, 30, AlignCenter, AlignTop);
+    view_set_previous_callback(dialog_ex_get_view(app->error_dialog), air_mouse_exit);
+    view_dispatcher_add_view(
+        app->view_dispatcher, AirMouseViewError, dialog_ex_get_view(app->error_dialog));
 
     // Bluetooth view
     app->bt_mouse = bt_mouse_alloc(app->view_dispatcher);
@@ -125,6 +143,8 @@ void air_mouse_app_free(AirMouse* app) {
     submenu_free(app->submenu);
     view_dispatcher_remove_view(app->view_dispatcher, AirMouseViewExitConfirm);
     dialog_ex_free(app->dialog);
+    view_dispatcher_remove_view(app->view_dispatcher, AirMouseViewError);
+    dialog_ex_free(app->error_dialog);
     view_dispatcher_remove_view(app->view_dispatcher, AirMouseViewBtMouse);
     bt_mouse_free(app->bt_mouse);
     view_dispatcher_remove_view(app->view_dispatcher, AirMouseViewUsbMouse);
@@ -146,8 +166,7 @@ int32_t air_mouse_app(void* p) {
 
     AirMouse* app = air_mouse_app_alloc();
     if(!imu_begin()) {
-        air_mouse_app_free(app);
-        return -1;
+        view_dispatcher_switch_to_view(app->view_dispatcher, AirMouseViewError);
     }
 
     view_dispatcher_run(app->view_dispatcher);

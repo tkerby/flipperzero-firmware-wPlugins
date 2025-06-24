@@ -53,6 +53,7 @@ void camera_suite_save_settings(void* context) {
         fff_file, BOILERPLATE_SETTINGS_KEY_ORIENTATION, &app->orientation, 1);
     flipper_format_write_uint32(fff_file, BOILERPLATE_SETTINGS_KEY_DITHER, &app->dither, 1);
     flipper_format_write_uint32(fff_file, BOILERPLATE_SETTINGS_KEY_FLASH, &app->flash, 1);
+    flipper_format_write_uint32(fff_file, BOILERPLATE_SETTINGS_KEY_JPEG, &app->jpeg, 1);
     flipper_format_write_uint32(fff_file, BOILERPLATE_SETTINGS_KEY_HAPTIC, &app->haptic, 1);
     flipper_format_write_uint32(fff_file, BOILERPLATE_SETTINGS_KEY_SPEAKER, &app->speaker, 1);
     flipper_format_write_uint32(fff_file, BOILERPLATE_SETTINGS_KEY_LED, &app->led, 1);
@@ -92,8 +93,10 @@ void camera_suite_read_settings(void* context) {
         FURI_LOG_E(TAG, "Missing Header Data");
         camera_suite_close_config_file(fff_file);
         camera_suite_close_storage();
+        furi_string_free(temp_str);
         return;
     }
+    furi_string_free(temp_str);
 
     if(file_version < BOILERPLATE_SETTINGS_FILE_VERSION) {
         FURI_LOG_I(TAG, "old config version, will be removed.");
@@ -107,6 +110,7 @@ void camera_suite_read_settings(void* context) {
         fff_file, BOILERPLATE_SETTINGS_KEY_ORIENTATION, &app->orientation, 1);
     flipper_format_read_uint32(fff_file, BOILERPLATE_SETTINGS_KEY_DITHER, &app->dither, 1);
     flipper_format_read_uint32(fff_file, BOILERPLATE_SETTINGS_KEY_FLASH, &app->flash, 1);
+    flipper_format_read_uint32(fff_file, BOILERPLATE_SETTINGS_KEY_JPEG, &app->jpeg, 1);
     flipper_format_read_uint32(fff_file, BOILERPLATE_SETTINGS_KEY_HAPTIC, &app->haptic, 1);
     flipper_format_read_uint32(fff_file, BOILERPLATE_SETTINGS_KEY_SPEAKER, &app->speaker, 1);
     flipper_format_read_uint32(fff_file, BOILERPLATE_SETTINGS_KEY_LED, &app->led, 1);

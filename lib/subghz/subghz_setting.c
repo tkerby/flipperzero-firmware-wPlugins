@@ -1,15 +1,13 @@
 #include "subghz_setting.h"
-#include "types.h"
-//#include "subghz_i.h"
+#include "types.h" // IWYU pragma: keep
 
 #include <furi.h>
-#include <m-list.h>
 #include <lib/subghz/devices/cc1101_configs.h>
 
 #define TAG "SubGhzSetting"
 
 #define FREQUENCY_FLAG_DEFAULT (1 << 31)
-#define FREQUENCY_MASK (0xFFFFFFFF ^ FREQUENCY_FLAG_DEFAULT)
+#define FREQUENCY_MASK         (0xFFFFFFFF ^ FREQUENCY_FLAG_DEFAULT)
 
 /* Default */
 static const uint32_t subghz_frequency_list[] = {
@@ -17,6 +15,7 @@ static const uint32_t subghz_frequency_list[] = {
     300000000,
     302757000,
     303875000,
+    303900000,
     304250000,
     307000000,
     307500000,
@@ -33,6 +32,8 @@ static const uint32_t subghz_frequency_list[] = {
     314980000,
     315000000,
     318000000,
+    320000000,
+    320150000,
     330000000,
     345000000,
     348000000,
@@ -43,6 +44,7 @@ static const uint32_t subghz_frequency_list[] = {
     390000000,
     418000000,
     430000000,
+    430500000,
     431000000,
     431500000,
     433075000, /* LPD433 first */
@@ -60,6 +62,7 @@ static const uint32_t subghz_frequency_list[] = {
     434775000, /* LPD433 last channels */
     438900000,
     440175000,
+    462750000,
     464000000,
     467750000,
 
@@ -126,7 +129,7 @@ static void subghz_setting_preset_reset(SubGhzSetting* instance) {
 }
 
 void subghz_setting_free(SubGhzSetting* instance) {
-    furi_assert(instance);
+    furi_check(instance);
     FrequencyList_clear(instance->frequencies);
     FrequencyList_clear(instance->hopper_frequencies);
     for
@@ -162,25 +165,19 @@ static void subghz_setting_load_default_preset(
     memcpy(&item->custom_preset_data[0], &preset_data[0], item->custom_preset_data_size);
 }
 
-static void subghz_setting_load_default_region(
-    SubGhzSetting* instance,
-    const uint32_t frequencies[],
-    const uint32_t hopper_frequencies[]) {
+static void subghz_setting_load_frequencies(FrequencyList_t list, const uint32_t* frequencies) {
+    while(*frequencies) {
+        FrequencyList_push_back(list, *frequencies);
+        frequencies++;
+    }
+}
+
+static void subghz_setting_load_default_region(SubGhzSetting* instance) {
     furi_assert(instance);
 
     FrequencyList_reset(instance->frequencies);
     FrequencyList_reset(instance->hopper_frequencies);
     subghz_setting_preset_reset(instance);
-
-    while(*frequencies) {
-        FrequencyList_push_back(instance->frequencies, *frequencies);
-        frequencies++;
-    }
-
-    while(*hopper_frequencies) {
-        FrequencyList_push_back(instance->hopper_frequencies, *hopper_frequencies);
-        hopper_frequencies++;
-    }
 
     subghz_setting_load_default_preset(
         instance, "AM270", subghz_device_cc1101_preset_ook_270khz_async_regs);
@@ -194,12 +191,11 @@ static void subghz_setting_load_default_region(
 
 // Region check removed
 void subghz_setting_load_default(SubGhzSetting* instance) {
-    subghz_setting_load_default_region(
-        instance, subghz_frequency_list, subghz_hopper_frequency_list);
+    subghz_setting_load_default_region(instance);
 }
 
 void subghz_setting_load(SubGhzSetting* instance, const char* file_path) {
-    furi_assert(instance);
+    furi_check(instance);
 
     Storage* storage = furi_record_open(RECORD_STORAGE);
     FlipperFormat* fff_data_file = flipper_format_file_alloc(storage);
@@ -234,11 +230,12 @@ void subghz_setting_load(SubGhzSetting* instance, const char* file_path) {
             temp_bool = true;
             flipper_format_read_bool(fff_data_file, "Add_standard_frequencies", &temp_bool, 1);
             if(!temp_bool) {
-                FURI_LOG_I(TAG, "Removing standard frequencies");
-                FrequencyList_reset(instance->frequencies);
-                FrequencyList_reset(instance->hopper_frequencies);
+                FURI_LOG_I(TAG, "Skipping standard frequencies");
             } else {
-                FURI_LOG_I(TAG, "Keeping standard frequencies");
+                FURI_LOG_I(TAG, "Adding standard frequencies");
+                subghz_setting_load_frequencies(instance->frequencies, subghz_frequency_list);
+                subghz_setting_load_frequencies(
+                    instance->hopper_frequencies, subghz_hopper_frequency_list);
             }
 
             // Load frequencies
@@ -248,7 +245,7 @@ void subghz_setting_load(SubGhzSetting* instance, const char* file_path) {
             }
             while(flipper_format_read_uint32(
                 fff_data_file, "Frequency", (uint32_t*)&temp_data32, 1)) {
-                //Todo: add a frequency support check depending on the selected radio device
+                //Todo FL-3535: add a frequency support check depending on the selected radio device
                 if(furi_hal_subghz_is_frequency_valid(temp_data32)) {
                     FURI_LOG_I(TAG, "Frequency loaded %lu", temp_data32);
                     FrequencyList_push_back(instance->frequencies, temp_data32);
@@ -286,6 +283,7 @@ void subghz_setting_load(SubGhzSetting* instance, const char* file_path) {
                 FURI_LOG_E(TAG, "Rewind error");
                 break;
             }
+            furi_string_reset(temp_str);
             while(flipper_format_read_string(fff_data_file, "Custom_preset_name", temp_str)) {
                 FURI_LOG_I(TAG, "Custom preset loaded %s", furi_string_get_cstr(temp_str));
                 subghz_setting_load_custom_preset(
@@ -299,10 +297,14 @@ void subghz_setting_load(SubGhzSetting* instance, const char* file_path) {
     flipper_format_free(fff_data_file);
     furi_record_close(RECORD_STORAGE);
 
-    if(!FrequencyList_size(instance->frequencies) ||
-       !FrequencyList_size(instance->hopper_frequencies)) {
-        FURI_LOG_E(TAG, "Error loading user settings, loading default settings");
-        subghz_setting_load_default(instance);
+    if(!FrequencyList_size(instance->frequencies)) {
+        FURI_LOG_E(TAG, "Empty static frequency list, loading default ones");
+        subghz_setting_load_frequencies(instance->frequencies, subghz_frequency_list);
+    }
+    if(!FrequencyList_size(instance->hopper_frequencies)) {
+        FURI_LOG_E(TAG, "Empty hopper frequency list, loading default ones");
+        subghz_setting_load_frequencies(
+            instance->hopper_frequencies, subghz_hopper_frequency_list);
     }
 }
 
@@ -317,22 +319,22 @@ void subghz_setting_set_default_frequency(SubGhzSetting* instance, uint32_t freq
 }
 
 size_t subghz_setting_get_frequency_count(SubGhzSetting* instance) {
-    furi_assert(instance);
+    furi_check(instance);
     return FrequencyList_size(instance->frequencies);
 }
 
 size_t subghz_setting_get_hopper_frequency_count(SubGhzSetting* instance) {
-    furi_assert(instance);
+    furi_check(instance);
     return FrequencyList_size(instance->hopper_frequencies);
 }
 
 size_t subghz_setting_get_preset_count(SubGhzSetting* instance) {
-    furi_assert(instance);
+    furi_check(instance);
     return SubGhzSettingCustomPresetItemArray_size(instance->preset->data);
 }
 
 const char* subghz_setting_get_preset_name(SubGhzSetting* instance, size_t idx) {
-    furi_assert(instance);
+    furi_check(instance);
     if(idx >= SubGhzSettingCustomPresetItemArray_size(instance->preset->data)) {
         idx = 0;
     }
@@ -342,7 +344,7 @@ const char* subghz_setting_get_preset_name(SubGhzSetting* instance, size_t idx) 
 }
 
 int subghz_setting_get_inx_preset_by_name(SubGhzSetting* instance, const char* preset_name) {
-    furi_assert(instance);
+    furi_check(instance);
     size_t idx = 0;
     for
         M_EACH(item, instance->preset->data, SubGhzSettingCustomPresetItemArray_t) {
@@ -359,8 +361,8 @@ bool subghz_setting_load_custom_preset(
     SubGhzSetting* instance,
     const char* preset_name,
     FlipperFormat* fff_data_file) {
-    furi_assert(instance);
-    furi_assert(preset_name);
+    furi_check(instance);
+    furi_check(preset_name);
     uint32_t temp_data32;
     SubGhzSettingCustomPresetItem* item =
         SubGhzSettingCustomPresetItemArray_push_raw(instance->preset->data);
@@ -389,8 +391,8 @@ bool subghz_setting_load_custom_preset(
 }
 
 bool subghz_setting_delete_custom_preset(SubGhzSetting* instance, const char* preset_name) {
-    furi_assert(instance);
-    furi_assert(preset_name);
+    furi_check(instance);
+    furi_check(preset_name);
     SubGhzSettingCustomPresetItemArray_it_t it;
     SubGhzSettingCustomPresetItemArray_it_last(it, instance->preset->data);
     while(!SubGhzSettingCustomPresetItemArray_end_p(it)) {
@@ -407,28 +409,28 @@ bool subghz_setting_delete_custom_preset(SubGhzSetting* instance, const char* pr
 }
 
 uint8_t* subghz_setting_get_preset_data(SubGhzSetting* instance, size_t idx) {
-    furi_assert(instance);
+    furi_check(instance);
     SubGhzSettingCustomPresetItem* item =
         SubGhzSettingCustomPresetItemArray_get(instance->preset->data, idx);
     return item->custom_preset_data;
 }
 
 size_t subghz_setting_get_preset_data_size(SubGhzSetting* instance, size_t idx) {
-    furi_assert(instance);
+    furi_check(instance);
     SubGhzSettingCustomPresetItem* item =
         SubGhzSettingCustomPresetItemArray_get(instance->preset->data, idx);
     return item->custom_preset_data_size;
 }
 
 uint8_t* subghz_setting_get_preset_data_by_name(SubGhzSetting* instance, const char* preset_name) {
-    furi_assert(instance);
+    furi_check(instance);
     SubGhzSettingCustomPresetItem* item = SubGhzSettingCustomPresetItemArray_get(
         instance->preset->data, subghz_setting_get_inx_preset_by_name(instance, preset_name));
     return item->custom_preset_data;
 }
 
 uint32_t subghz_setting_get_frequency(SubGhzSetting* instance, size_t idx) {
-    furi_assert(instance);
+    furi_check(instance);
     if(idx < FrequencyList_size(instance->frequencies)) {
         return (*FrequencyList_get(instance->frequencies, idx)) & FREQUENCY_MASK;
     } else {
@@ -437,7 +439,7 @@ uint32_t subghz_setting_get_frequency(SubGhzSetting* instance, size_t idx) {
 }
 
 uint32_t subghz_setting_get_hopper_frequency(SubGhzSetting* instance, size_t idx) {
-    furi_assert(instance);
+    furi_check(instance);
     if(idx < FrequencyList_size(instance->hopper_frequencies)) {
         return *FrequencyList_get(instance->hopper_frequencies, idx);
     } else {
@@ -446,7 +448,7 @@ uint32_t subghz_setting_get_hopper_frequency(SubGhzSetting* instance, size_t idx
 }
 
 uint32_t subghz_setting_get_frequency_default_index(SubGhzSetting* instance) {
-    furi_assert(instance);
+    furi_check(instance);
     for(size_t i = 0; i < FrequencyList_size(instance->frequencies); i++) {
         uint32_t frequency = *FrequencyList_get(instance->frequencies, i);
         if(frequency & FREQUENCY_FLAG_DEFAULT) {
@@ -457,7 +459,7 @@ uint32_t subghz_setting_get_frequency_default_index(SubGhzSetting* instance) {
 }
 
 uint32_t subghz_setting_get_default_frequency(SubGhzSetting* instance) {
-    furi_assert(instance);
+    furi_check(instance);
     return subghz_setting_get_frequency(
         instance, subghz_setting_get_frequency_default_index(instance));
 }

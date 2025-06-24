@@ -4,7 +4,7 @@
 #include <furi.h>
 #include <furi_hal_bt.h>
 #include <furi_hal_usb_hid.h>
-#include <furi_hal_bt_hid.h>
+#include <extra_profiles/hid_profile.h>
 #include <gui/gui.h>
 #include <input/input.h>
 #include <notification/notification_messages.h>
@@ -15,7 +15,7 @@
 #include "bt_trigger_icons.h"
 
 #define HID_BT_KEYS_STORAGE_PATH EXT_PATH("apps_data/hid_ble/.bt_hid.keys")
-#define TAG "bt_trigger"
+#define TAG                      "bt_trigger"
 
 // Enum of allowed event types
 typedef enum {
@@ -32,6 +32,7 @@ typedef struct {
 
 typedef struct {
     Bt* bt;
+    FuriHalBleProfileBase* ble_hid_profile;
     Gui* gui;
     NotificationApp* notifications;
     ViewPort* view_port;
@@ -44,7 +45,7 @@ typedef struct {
 
 static void draw_callback(Canvas* canvas, void* ctx);
 static void input_callback(InputEvent* input_event, void* ctx);
-static void timer_callback(FuriMessageQueue* event_queue);
+static void timer_callback(void* ctx);
 static void bt_hid_connection_status_changed_callback(BtStatus status, void* context);
 AppStruct* appStructAlloc();
 void cleanUpBeforeYouLeave(AppStruct* app);
