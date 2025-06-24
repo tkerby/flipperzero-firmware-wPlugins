@@ -431,21 +431,34 @@ int cmd_deauth() {
     } else {
         // Support up to two digits: <d0>, <d9>, <d10>, <d99>
         int idx = 0;
+        int idy = 0; // New variable for YY
+
+        // Parse idx (up to two digits)
         if(dataArray[1] >= '0' && dataArray[1] <= '9') {
-            // Two digits
             idx = (dataArray[0] - '0') * 10 + (dataArray[1] - '0');
-        } else {
-            // One digit
+        } else if(dataArray[0] >= '0' && dataArray[0] <= '9') {
             idx = dataArray[0] - '0';
         }
+
+        // Parse idy (up to two digits after dash at index 2)
+        if(dataArray[2] == '-') {
+            if(dataArray[4] >= '0' && dataArray[4] <= '9') {
+                idy = (dataArray[3] - '0') * 10 + (dataArray[4] - '0');
+            } else if(dataArray[3] >= '0' && dataArray[3] <= '9') {
+                idy = dataArray[3] - '0';
+            }
+        }
+
         DEBUG_SER_PRINT("Deauthing... ");
         DEBUG_SER_PRINT(idx);
+        DEBUG_SER_PRINT(" idy: ");
+        DEBUG_SER_PRINT(idy);
         DEBUG_SER_PRINTLN();
         for (uint32_t i = 0; i < scan_results.size(); i++) {
             if((unsigned)idx == i){
                 DEBUG_SER_PRINTLN("Success");
                 DEBUG_SER_PRINTLN(scan_results[i].ssid);
-                createNewDeauthTask(i,0);
+                createNewDeauthTask(i, idy);
             }
         }
     }
@@ -641,6 +654,7 @@ void setup() {
   pinMode(LED_B, OUTPUT);
 
   Serial.begin(115200);
+  //Serial1.begin(115200);
   WiFi.status();
 
   if (scanInProcess == NULL) {
@@ -656,6 +670,7 @@ void setup() {
   }
   **/
 #ifdef DEBUG
+  //Serial.begin(115200);
   for (uint i = 0; i < scan_results.size(); i++) {
     DEBUG_SER_PRINT(scan_results[i].ssid + " ");
     for (int j = 0; j < 6; j++) {

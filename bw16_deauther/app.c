@@ -421,8 +421,8 @@ static void deauth_submenu_callback(void* context, uint32_t index) {
             if(app->select_selected && app->select_labels) {
                 for(size_t i = 0; i < app->select_capacity; ++i) {
                     if(app->select_selected[i]) {
-                        char uart_cmd[16];
-                        snprintf(uart_cmd, sizeof(uart_cmd), "<d%zu>", i);
+                        char uart_cmd[17];
+                        snprintf(uart_cmd, sizeof(uart_cmd), "<d%02zu-00>", i);
                         uart_helper_send(app->uart_helper, uart_cmd, strlen(uart_cmd));
                         furi_delay_ms(1000); // Add 1 second delay between each send
                     }
