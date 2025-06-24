@@ -47,5 +47,9 @@ https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/ui/skeleton_app
 
 https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/gpio/uart_demo
 
+
 For the serial interface I used this:
 https://forum.arduino.cc/t/serial-input-basics-updated/382007/
+
+## Licence
+This project is licensed under the GNU License. Feel free to modify and contribute.
