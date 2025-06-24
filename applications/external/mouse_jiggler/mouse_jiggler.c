@@ -3,12 +3,17 @@
 #include <gui/gui.h>
 #include <input/input.h>
 
-#define MOUSE_MOVE_SHORT 5
-#define MOUSE_MOVE_LONG  20
+#define MOUSE_JIGGLER_MOUSE_MOVE_DX 5
+#define MOUSE_JIGGLER_DELAY_MS  50
 
-const uint32_t mouse_jiggler_interval_values[] = {500, 1000, 2000, 5000, 10000, 15000, 30000, 60000, 90000, 120000};
-const char* mouse_jiggler_interval_strings[] = {"500m", "1", "2", "5", "10", "15", "30", "60", "90", "120"};
-const uint8_t mouse_jiggler_interval_count = 10;
+const uint32_t mouse_jiggler_interval_values[] = {250, 500, 1000, 2000, 5000, 7500, 15000, 30000, 45000, 60000, 150000, 300000};
+const char* mouse_jiggler_interval_strings[] = {"500 ms", "1 s", "2 s", "5 s", "10 s", "15 s", "30 s", "1 min", "1.5 min", "2 min", "5 min", "10 min"};
+const uint8_t mouse_jiggler_interval_count = 12;
+
+static const uint8_t image_back_btn_0_bits[] = {0x04,0x00,0x06,0x00,0xff,0x00,0x06,0x01,0x04,0x02,0x00,0x02,0x00,0x01,0xf8,0x00};
+static const uint8_t image_ButtonCenter_0_bits[] = {0x1c,0x22,0x5d,0x5d,0x5d,0x22,0x1c};
+static const uint8_t image_ButtonDown_0_bits[] = {0x7f,0x3e,0x1c,0x08};
+static const uint8_t image_ButtonUp_0_bits[] = {0x08,0x1c,0x3e,0x7f};
 
 typedef enum {
     EventTypeInput,
@@ -31,8 +36,6 @@ typedef struct {
     FuriMutex* mutex;
 } MouseJigglerState;
 
-static void update_interval_value(Canvas* canvas, const MouseJigglerState* plugin_state);
-
 static void mouse_jiggler_render_callback(Canvas* canvas, void* ctx) {
     furi_assert(ctx);
     const MouseJigglerState* plugin_state = ctx;
@@ -42,31 +45,34 @@ static void mouse_jiggler_render_callback(Canvas* canvas, void* ctx) {
     }
 
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str(canvas, 2, 12, "USB Mouse Jiggler");
+    canvas_draw_str(canvas, 5, 13, "USB Mouse Jiggler");
+    canvas_draw_str(canvas, 5, 41, "interval");
+    canvas_draw_str(canvas, 5, 28, "status");
+
     if(!plugin_state->running) {
+        canvas_set_font(canvas, FontKeyboard);
+        canvas_draw_str(canvas, 60, 28, "stopped");
+        canvas_draw_str(canvas, 60, 41, mouse_jiggler_interval_strings[plugin_state->interval]);
+        
         canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str(canvas, 2, 27, " -> STOPPED");
-        canvas_draw_str(canvas, 2, 51, "[ok] start / [back] exit");
-        canvas_draw_str(canvas, 2, 63, "[up/down] adjust interval");
+        canvas_draw_str(canvas, 14, 60, "start");
+        canvas_draw_str(canvas, 108, 60, "exit");
+
+        canvas_draw_xbm(canvas, 5, 53, 7, 7, image_ButtonCenter_0_bits);
+        canvas_draw_xbm(canvas, 107, 32, 7, 4, image_ButtonUp_0_bits);
+        canvas_draw_xbm(canvas, 107, 38, 7, 4, image_ButtonDown_0_bits);
     } else {
+        canvas_set_font(canvas, FontKeyboard);
+        canvas_draw_str(canvas, 60, 28, "RUNNING");
+        canvas_draw_str(canvas, 60, 41, mouse_jiggler_interval_strings[plugin_state->interval]);
+        
         canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str(canvas, 2, 27, " -> RUNNING");
-        canvas_draw_str(canvas, 2, 51, "[back] stop");
+        canvas_draw_str(canvas, 108, 60, "stop");
     }
-    update_interval_value(canvas, plugin_state);
+
+    canvas_draw_xbm(canvas, 95, 52, 10, 8, image_back_btn_0_bits);
 
     furi_mutex_release(plugin_state->mutex);
-}
-
-void update_interval_value(Canvas* canvas, const MouseJigglerState* plugin_state) {
-    canvas_set_font(canvas, FontSecondary);
-    char interval_string[20];
-    snprintf(
-        interval_string,
-        20,
-        "Interval: %ss",
-        mouse_jiggler_interval_strings[plugin_state->interval]);
-    canvas_draw_str(canvas, 2, 39, interval_string);
 }
 
 static void mouse_jiggler_input_callback(InputEvent* input_event, void* ctx) {
@@ -82,8 +88,12 @@ static void mouse_jiggler_state_init(MouseJigglerState* const plugin_state) {
     plugin_state->processing = true;
     plugin_state->update_viewport = false;
     plugin_state->interval = 0;
-    plugin_state->delay_value = 500;
-    plugin_state->mouse_move_dx = MOUSE_MOVE_SHORT;
+    plugin_state->delay_value = mouse_jiggler_interval_values[plugin_state->interval];
+    plugin_state->mouse_move_dx = MOUSE_JIGGLER_MOUSE_MOVE_DX;
+}
+
+bool mouse_jiggler_is_active(MouseJigglerState* const plugin_state) {
+    return plugin_state->running && plugin_state->processing;
 }
 
 void set_interval(MouseJigglerState* const plugin_state, bool increase) {
@@ -113,11 +123,10 @@ void check_key_events(MouseJigglerState* const plugin_state) {
                 case InputKeyBack:
                     if(!plugin_state->running) {
                         plugin_state->processing = false;
-                        plugin_state->update_viewport = true;
                     } else {
                         plugin_state->running = false;
-                        plugin_state->update_viewport = true;
                     }
+                    plugin_state->update_viewport = true;
                     break;
                 case InputKeyUp:
                     if(!plugin_state->running) {
@@ -149,18 +158,21 @@ int32_t mouse_jiggler_app(void* p) {
     mouse_jiggler_state_init(plugin_state);
 
     plugin_state->event_queue = furi_message_queue_alloc(8, sizeof(UsbMouseEvent));
-    FuriMessageQueue* event_queue = plugin_state->event_queue;
+    if (!plugin_state->event_queue) {
+        free(plugin_state);
+        return 255;
+    }
 
     plugin_state->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
     if(!plugin_state->mutex) {
-        furi_message_queue_free(event_queue);
+        furi_message_queue_free(plugin_state->event_queue);
         free(plugin_state);
         return 255;
     }
 
     ViewPort* view_port = view_port_alloc();
     view_port_draw_callback_set(view_port, mouse_jiggler_render_callback, plugin_state);
-    view_port_input_callback_set(view_port, mouse_jiggler_input_callback, event_queue);
+    view_port_input_callback_set(view_port, mouse_jiggler_input_callback, plugin_state->event_queue);
 
     FuriHalUsbInterface* usb_mode_prev = furi_hal_usb_get_config();
     furi_hal_usb_set_config(&usb_hid, NULL);
@@ -174,16 +186,16 @@ int32_t mouse_jiggler_app(void* p) {
         if(plugin_state->running) {
             furi_hal_hid_mouse_move(plugin_state->mouse_move_dx, 0);
             plugin_state->mouse_move_dx = -(plugin_state->mouse_move_dx);
-            for(uint32_t i = 0; i < plugin_state->delay_value / 2 && plugin_state->processing; i += 50) {
+            for(uint32_t i = 0; i < plugin_state->delay_value && mouse_jiggler_is_active(plugin_state); i += MOUSE_JIGGLER_DELAY_MS) {
                 check_key_events(plugin_state);
-                furi_delay_ms(50);
+                furi_delay_ms(MOUSE_JIGGLER_DELAY_MS);
             }
         }
         if (plugin_state->update_viewport) {
             view_port_update(view_port);
             plugin_state->update_viewport = false;
         }
-        furi_delay_ms(50);
+        furi_delay_ms(MOUSE_JIGGLER_DELAY_MS);
     }
     furi_hal_usb_set_config(usb_mode_prev, NULL);
     // remove & free all stuff created by app
@@ -191,7 +203,7 @@ int32_t mouse_jiggler_app(void* p) {
     gui_remove_view_port(gui, view_port);
     furi_record_close(RECORD_GUI);
     view_port_free(view_port);
-    furi_message_queue_free(event_queue);
+    furi_message_queue_free(plugin_state->event_queue);
     furi_mutex_free(plugin_state->mutex);
     free(plugin_state);
     return 0;
