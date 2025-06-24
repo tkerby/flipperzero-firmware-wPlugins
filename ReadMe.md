@@ -47,6 +47,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Rubiks Cube Timer v0.0.1 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
 - Added: [Eye Saver v0.1 (By paul-sopin)](https://github.com/paul-sopin/flipper-eye-saver)
 - Updated: [Seos compatible v1.2 (By bettse)](https://gitlab.com/bettse/flipper_seos) (Version Only)
+- SubGHz: [Remove SubGHz settings for WeatherStation/TPMS (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/9671c878bc92ff4fbe7dd0838ec75abf1978cdca)
+- SubGHz: [Fix frequency analyzer deadlock when holding Ok (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/45cf599281840b1918821ce6d29253f0bc1a2844)
+- ESP Flasher: [Fix multiboardS3 builds, fix BLE spam not stopping (By WillyJL)](https://github.com/justcallmekoko/ESP32Marauder/pull/809)
 
 <a name="release">
 

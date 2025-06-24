@@ -321,11 +321,13 @@ def _validate_app_imports(target, source, env):
             "myki_plugin",
             "opal_plugin",
             "smartrider_plugin",
+            "suica_plugin",
             "troika_plugin",
         ): (
             "metroflip_",
             "bit_slice_to_dec",
             "byte_to_binary",
+            "read_calypso_data",
             "read_file",
             "apdu_success",
             "select_app",
@@ -346,6 +348,7 @@ def _validate_app_imports(target, source, env):
             "show_ravkav_",
             "mosgortrans_parse_transport_block",
             "render_section_header",
+            "I_Suica_",
         ),
         # nfc_app_api_table
         (
