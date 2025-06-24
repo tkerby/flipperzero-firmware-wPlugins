@@ -17,7 +17,7 @@ And more features coming soon...
 ## Requirements
 
 - Flipper Zero
-- 5 Jumper Wires
+- 4 Jumper Wires
 - RTL8720dn Black version
 
 ## Hardware Connections:
