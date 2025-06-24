@@ -1,7 +1,7 @@
 # Flipper Zero 5GHz Deauther (WIP)
 Flipper Zero 5GHz Deauther using the BW16 (RTL8720dn)
 
-I made this project for the [Summer Hackclub](https://summer.hackclub.com) and because I have not seen any 5Ghz deauther projects for the Flipper Zero.
+I made this project for the [Summer Hackclub](https://summer.hackclub.com/bc1) and because I have not seen any 5Ghz deauther projects for the Flipper Zero.
 
 I am still working on this so don't complain if there are any issues.
 
