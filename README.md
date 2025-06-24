@@ -7,7 +7,7 @@ I am still working on this so don't complain if there are any issues.
 
 ### Connection from the BW16 to the Flipper Zero:
 
-![alt text](https://www.amebaiot.com/wp-content/uploads/2022/07/bw16_typec/P2.png)
+![pinout](https://www.amebaiot.com/wp-content/uploads/2022/07/bw16_typec/P2.png)
 
 ### DO NOT CONNECT THE BW16 TO POWER WHILE STILL CONNECTED TO THE 5V FROM THE FLIPPER
 Make sure to turn on 5V on GPIO on the Flipper Zero
@@ -17,6 +17,17 @@ Make sure to turn on 5V on GPIO on the Flipper Zero
 | TX | LOG_RX | 
 | RX | LOG_TX | 
 | GND | GND | 
+
+## Screenshots
+
+Main Screen
+
+![main_screen](https://github.com/KinimodD/Flipper-Zero-5GHz-Deauther/blob/main/Screenshots/Main.png)
+
+Deauth Screen
+
+![deauth_screen](https://github.com/KinimodD/Flipper-Zero-5GHz-Deauther/blob/main/Screenshots/Deauth.png)
+
 
 ## DISCLAIMER
 This project is for educational purposes only. Do not misuse or do illegal activities with this tool. All things done with this tool are done at your own risk
