@@ -3,7 +3,7 @@
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://lh3.googleusercontent.com/d/1iYQlRQXM7nA4IAdcPwvcKRSTCMoi8tug' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0616-0053-0.420.0-efb2b08.tgz&channel=RM0616-0053-0.420.0-efb2b08&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0624-1810-0.420.0-4e78be6.tgz&channel=RM0624-1810-0.420.0-4e78be6&version=0.420.0&target=f7)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -30,27 +30,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-06-24 17:45 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-06-24 17:45 EST`
-- Updated: [1D Pacman v0.1 (By easiwork)](https://github.com/easiwork/1dpacman)
-- Updated: [FlipCrypt v0.2 (By TAxelAnderson)](https://github.com/TAxelAnderson/FlipCrypt)
-- Updated: [DeadZone v0.2 (By retrooper)](https://github.com/retrooper/deadzone)
-- Updated: [FlipWorld v0.8.3 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32`
-- Updated: [Quadrastic v1.0.2 (By ivanbarsukov)](https://github.com/ivanbarsukov/flipperzero-quadrastic)
-- Updated: [Flipper Blackhat v0.4 (By o7-machinehum)](https://github.com/o7-machinehum/flipper-blackhat-app) `Req: Blackhat Board`
-- Updated: [Free Roam v0.2 (By jblanked)](https://github.com/jblanked/Free-Roam) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [IR Xbox Controller v1.4 (By gebeto)](https://github.com/gebeto/flipper-xbox-controller)
-- Added: [FZ nRF24 Jammer v1.0 (By W0rthlessS0ul)](https://github.com/W0rthlessS0ul/FZ_nRF24_jammer)
-- Added: [Mind Probe v0.1 (By Miksang)](https://github.com/Miksang/flipper_guessing_game)
-- Updated: [NRF24 Jammer v1.0 (By huuck)](https://github.com/huuck/FlipperZeroNRFJammer) (Exercise Caution and Follow Your Local Laws)
-- Updated: [Tarot v0.2 (By pionaiki & tihyltew)](https://github.com/pionaiki/fz-tarot)
-- Updated: [FZ nRF24 Jammer v1.0 (By W0rthlessS0ul)](https://github.com/W0rthlessS0ul/FZ_nRF24_jammer)
-- Updated: [Metroflip v0.8 (By luu176)](https://github.com/luu176/Metroflip) (Version Only)
-- Added: [Eye Saver v0.1 (By paul-sopin)](https://github.com/paul-sopin/flipper-eye-saver)
-- Updated: [Seos compatible v1.2 (By bettse)](https://gitlab.com/bettse/flipper_seos) (Version Only)
-- SubGHz: [Remove SubGHz settings for WeatherStation/TPMS (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/9671c878bc92ff4fbe7dd0838ec75abf1978cdca)
-- SubGHz: [Fix frequency analyzer deadlock when holding Ok (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/45cf599281840b1918821ce6d29253f0bc1a2844)
-- ESP Flasher: [Fix multiboardS3 builds, fix BLE spam not stopping (By WillyJL)](https://github.com/justcallmekoko/ESP32Marauder/pull/809)
-- Added: [LoRadar v0.1 (By baptleduc)](https://github.com/baptleduc/flipper-loradar-app)
-- Updated: [Rubiks Cube Timer v0.0.1 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
 
 <a name="release">
 
@@ -764,4 +743,4 @@ $ ./fbt dolphin_ext
 - Have a new app? Submit GitHub link to me on Discord for a special reward (if I add it to RM Firmware).
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0616-0053-0.420.0-efb2b08.tgz&channel=RM0616-0053-0.420.0-efb2b08&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0624-1810-0.420.0-4e78be6.tgz&channel=RM0624-1810-0.420.0-4e78be6&version=0.420.0&target=f7)
