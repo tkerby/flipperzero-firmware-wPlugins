@@ -4,11 +4,14 @@
 #include "map"
 #include "wifi_cust_tx.h"
 #include "wifi_util.h"
+#include "wifi_drv.h"
 #include "wifi_structures.h"
 #include "debug.h"
 #include "WiFi.h"
 #include "WiFiServer.h"
 #include "WiFiClient.h"
+
+#include "dns.h"
 
 // LEDs:
 //  Red: System usable, Web server active etc.
@@ -17,7 +20,6 @@
 
 TaskHandle_t scanInProcess = NULL;
 TaskHandle_t wifiRunning = NULL;
-
 
 #define MAX_TASKS 5
 
@@ -47,6 +49,7 @@ typedef struct {
   uint8_t bssid[6];
   short rssi;
   uint8_t channel;
+  int security;
 } WiFiScanResult;
 
 
@@ -63,6 +66,49 @@ uint16_t deauth_reason = 2;
 #define FRAMES_PER_DEAUTH 5
 
 
+String printEncryptionTypeEx(uint32_t thisType) {
+  /*  Arduino wifi api use encryption type to mapping to security type.
+   *  This function demonstrate how to get more richful information of security type.
+   */
+  switch (thisType) {
+    case SECURITY_OPEN:
+      return "Open";
+      break;
+    case SECURITY_WEP_PSK:
+      return "WEP";
+      break;
+    case SECURITY_WPA_TKIP_PSK:
+      return "WPA TKIP";
+      break;
+    case SECURITY_WPA_AES_PSK:
+      return "WPA AES";
+      break;
+    case SECURITY_WPA2_AES_PSK:
+      return "WPA2 AES";
+      break;
+    case SECURITY_WPA2_TKIP_PSK:
+      return "WPA2 TKIP";
+      break;
+    case SECURITY_WPA2_MIXED_PSK:
+      return "WPA2 Mixed";
+      break;
+    case SECURITY_WPA_WPA2_MIXED:
+      return "WPA/WPA2 AES";
+      break;
+    case 6291462:
+      return "Auto";
+      break;
+    case 8388612:
+      return "WPA3";
+      break;
+  }
+
+  return "Unknown";
+}
+
+
+
+
 rtw_result_t scanResultHandler(rtw_scan_handler_result_t *scan_result) {
   rtw_scan_result_t *record;
   if (scan_result->scan_complete == 0) {
@@ -76,20 +122,27 @@ rtw_result_t scanResultHandler(rtw_scan_handler_result_t *scan_result) {
     char bssid_str[] = "XX:XX:XX:XX:XX:XX";
     snprintf(bssid_str, sizeof(bssid_str), "%02X:%02X:%02X:%02X:%02X:%02X", result.bssid[0], result.bssid[1], result.bssid[2], result.bssid[3], result.bssid[4], result.bssid[5]);
     result.bssid_str = bssid_str;
+    result.security = record->security;
     scan_results.push_back(result);
   }
   return RTW_SUCCESS;
 }
 
 void scanNetworks(void *pvParameters) {
-  (void)pvParameters;
+  int time_ms = 5000; // default
+
+  if (pvParameters) {
+      time_ms = *((int*)pvParameters);
+      delete (int*)pvParameters; // free memory after use
+  }
+
   DEBUG_SER_PRINT("Scanning WiFi networks (5s)...");
   //prevTime = currentTime;
   digitalWrite(LED_R, LOW);
   digitalWrite(LED_G, HIGH);
   scan_results.clear();
   if (wifi_scan_networks(scanResultHandler, NULL) == RTW_SUCCESS) {
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    vTaskDelay(time_ms / portTICK_PERIOD_MS);
     DEBUG_SER_PRINT(" done!\n");
     digitalWrite(LED_G, LOW);
     digitalWrite(LED_R, HIGH);
@@ -315,37 +368,97 @@ void handle404(WiFiClient &client) {
 
 
 int cmd_scan(){
+  int time;
+  // Copy the number part to a buffer and null-terminate it
+  char numbuf[8] = {0}; // Enough for 7 digits + null
+  memcpy(numbuf, &receivedBytes[1], numReceived - 1);
+  numbuf[numReceived - 1] = '\0';
+  time = atoi(numbuf);
+
+  if (time == 0){
+    time = 5000;
+  }
+
+  //DEBUG_SER_PRINTLN(time);
+
   if (scanInProcess == NULL) {
-    xTaskCreate(scanNetworks, "networkScan", 1024, NULL, 1, &scanInProcess);
+    int* scan_time = new int(time);
+    xTaskCreate(scanNetworks, "networkScan", 1024, (void*)scan_time, 1, &scanInProcess);
   } else {
     DEBUG_SER_PRINTLN("Scan already running!");
   }
   return 0;
 }
 
+/*
+void printFreeHeap() {
+    size_t freeHeap = xPortGetFreeHeapSize();
+    Serial.print("Free heap: ");
+    Serial.print(freeHeap);
+    Serial.println(" bytes");
+}
+*/
+
 int cmd_wifi(){
   //DEBUG_SER_PRINTLN((int)dataArray[0]);
   if((int)dataArray[0] == 49){
       DEBUG_SER_PRINTLN("Turning on wifi...");
-      WiFi.apbegin(ssid, pass, (char *)String(current_channel).c_str());
-      DEBUG_SER_PRINTLN("Wifi on!");
+      if (wifiRunning == NULL){
+        xTaskCreate(clientHandler, "clientConnected", 1024, NULL, 1, &wifiRunning);
+
+        start_DNS_Server(); // This function is from dns.cpp
+
+        WiFi.apbegin(ssid, pass, (char *)String(current_channel).c_str());
+        DEBUG_SER_PRINTLN("Wifi on!");
+
+      } else{
+        DEBUG_SER_PRINTLN("WiFi server is already on.");
+      }
 
   }
   else if((int)dataArray[0] == 48){
       DEBUG_SER_PRINTLN("Turning off wifi server...");
       if (wifiRunning != NULL) {
+        
         vTaskDelete(wifiRunning);
         wifiRunning = NULL;
+
+        WiFiClient client = server.available();
+        while(client.connected()){
+          DEBUG_SER_PRINT(client);
+          client.flush();
+          client.stop();
+          client = server.available();
+        }
+
+        unbind_dns();
+
+
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+        wifi_off();
+
+        digitalWrite(LED_G, LOW);
+        
+        WiFiDrv::wifiDriverInit();
+
+        wifi_on(RTW_MODE_AP); //Memory leak somewhere here
+
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+        WiFi.status();
+        
+      } else{
+        DEBUG_SER_PRINTLN("WiFi server is already off.");
+        return 0;
       }
   }
   else{
-      DEBUG_SER_PRINTLN("Invalid command. Type \"help wifi\" to see how to use the wifi command.");
+      DEBUG_SER_PRINTLN("Invalid command.");
   }
   return 0;
 }
 
-int cmd_list(){
-  DEBUG_SER_PRINTLN("Listing...");
+int cmd_get(){
+  DEBUG_SER_PRINTLN("Getting...");
 
   #ifdef DEBUG
   for (uint32_t i = 0; i < scan_results.size(); i++) {
@@ -356,6 +469,7 @@ int cmd_list(){
     DEBUG_SER_PRINT("\t" + String(scan_results[i].channel));
     DEBUG_SER_PRINT("\t" + String(scan_results[i].rssi));
     DEBUG_SER_PRINT("\t" + (String)((scan_results[i].channel >= 36) ? "5GHz" : "2.4GHz"));
+    DEBUG_SER_PRINT("\t" + printEncryptionTypeEx(scan_results[i].security));
   }
   #endif
 
@@ -521,7 +635,7 @@ void read_line(){
         break;
       case 'g':
         DEBUG_SER_PRINTLN("Get");
-        cmd_list();
+        cmd_get();
         break;
       case 'd':
         DEBUG_SER_PRINTLN("Deauth");
@@ -573,7 +687,8 @@ void clientHandler(void *pvParameters){
         String path = parseRequest(request);
         DEBUG_SER_PRINT("\nRequested path: " + path + "\n");
 
-        if (path == "/") {
+
+        if (path == "/" || path.startsWith("/generate_204") || path.startsWith("/hotspot-detect.html") || path.startsWith("/connecttest.txt") || path.startsWith("/gen_204")) {
           handleRoot(client);
         } else if (path == "/rescan") {
           client.write(makeRedirect("/").c_str());
@@ -593,7 +708,8 @@ void clientHandler(void *pvParameters){
             }
           }
         } else {
-          handle404(client);
+          handleRoot(client);
+          //handle404(client);
         }
       } else {
         DEBUG_SER_PRINTLN("⚠️ No request received.");
@@ -686,7 +802,9 @@ void setup() {
 
   xTaskCreate(mainProgram, "main", 1024, NULL, 1, NULL);
 
-  xTaskCreate(clientHandler, "clientConnected", 1024, NULL, 1, &wifiRunning);
+  //xTaskCreate(clientHandler, "clientConnected", 1024, NULL, 1, &wifiRunning);
+
+
   
   digitalWrite(LED_R, LOW);
 }
