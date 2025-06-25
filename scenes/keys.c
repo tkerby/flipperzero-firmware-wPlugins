@@ -32,6 +32,14 @@ const MfClassicKeyPair bip_1k_verify_key[] = {
 const MfClassicKeyPair metromoney_1k_verify_key[] = {
     {.a = 0x9C616585E26D},
 };
+const MfClassicKeyPair renfe_suma10_1k_keys[] = {
+    {.a = 0xA8844B0BCA06}, // Sector 0 - RENFE specific key from dumps
+    {.a = 0xCB5ED0E57B08}, // Sector 1 - RENFE specific key from dumps  
+    {.a = 0xffffffffffff}, // Default key for other sectors
+    {.a = 0xa0a1a2a3a4a5}, // Alternative common key
+    {.a = 0xC0C1C2C3C4C5}, // Key for sectors 10-15 from dumps
+};
+
 
 const uint8_t gocard_verify_data[1][14] = {
     {0x16, 0x18, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x5A, 0x5B, 0x20, 0x21, 0x22, 0x23}};
