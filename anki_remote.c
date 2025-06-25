@@ -99,7 +99,7 @@ const HidKeyboardKey hid_keyboard_keyset[KEYBOARD_ROW_COUNT][KEYBOARD_COLUMN_COU
     // ZXCV row
     {{.width = 1, .key = 'z', .shift_key = 'Z', .value = HID_KEYBOARD_Z}, {.width = 1, .key = 'x', .shift_key = 'X', .value = HID_KEYBOARD_X}, {.width = 1, .key = 'c', .shift_key = 'C', .value = HID_KEYBOARD_C}, {.width = 1, .key = 'v', .shift_key = 'V', .value = HID_KEYBOARD_V}, {.width = 1, .key = 'b', .shift_key = 'B', .value = HID_KEYBOARD_B}, {.width = 1, .key = 'n', .shift_key = 'N', .value = HID_KEYBOARD_N}, {.width = 1, .key = 'm', .shift_key = 'M', .value = HID_KEYBOARD_M}, {.width = 1, .icon = &I_slash_button_9x11, .shift_key = '?', .value = HID_KEYBOARD_SLASH}, {.width = 1, .icon = &I_backslash_button_9x11, .shift_key = '|', .value = HID_KEYBOARD_BACKSLASH}, {.width = 1, .icon = &I_backtick_button_9x11, .shift_key = '~', .value = HID_KEYBOARD_GRAVE_ACCENT}, {.width = 1, .icon = &I_ButtonUp_7x4, .value = HID_KEYBOARD_UP_ARROW}, {.width = 1, .icon_shift = &I_underscore_button_9x11, .key = '-', .shift_key = '_', .value = HID_KEYBOARD_MINUS}},
     // Bottom symbol row
-    {{.width = 1, .icon = &I_Shift_inactive_7x9, .icon_toggled = &I_Shift_active_7x9, .value = HID_KEYBOARD_L_SHIFT}, {.width = 1, .key = ',', .shift_key = '<', .value = HID_KEYBOARD_COMMA}, {.width = 1, .key = '.', .shift_key = '>', .value = HID_KEYBOARD_DOT}, {.width = 4, .key = ' ', .value = HID_KEYBOARD_SPACEBAR}, {.width = 0}, {.width = 0}, {.width = 0},
+    {{.width = 1, .icon = &I_Shift_inactive_7x9, .icon_toggled = &I_Shift_active_7x9, .value = HID_KEYBOARD_L_SHIFT}, {.width = 1, .key = ',', .shift_key = '<', .value = HID_KEYBOARD_COMMA}, {.width = 1, .key = '.', .shift_key = '>', .value = HID_KEYBOARD_DOT}, {.width = 4, .value = HID_KEYBOARD_SPACEBAR}, {.width = 0}, {.width = 0}, {.width = 0},
     {.width = 1, .key = '\'', .shift_key = '"', .icon = &I_apostrophe_button_9x11, .icon_shift = &I_quote_button_9x11, .value = HID_KEYBOARD_APOSTROPHE},
     {.width = 1, .icon = &I_equals_button_9x11, .shift_key = '+', .value = HID_KEYBOARD_EQUAL_SIGN}, {.width = 1, .icon = &I_ButtonLeft_4x7, .value = HID_KEYBOARD_LEFT_ARROW}, {.width = 1, .icon = &I_ButtonDown_7x4, .value = HID_KEYBOARD_DOWN_ARROW}, {.width = 1, .icon = &I_ButtonRight_4x7, .value = HID_KEYBOARD_RIGHT_ARROW}},
     // Modifier keys row
@@ -130,6 +130,7 @@ struct AnkiRemoteApp {
     // Scene specific states
     struct {
         uint8_t selected_item;
+        uint8_t scroll_offset;
     } settings_menu_state;
     struct {
         bool up_pressed;
@@ -165,14 +166,11 @@ static void get_key_combo_name(KeyMapping mapping, char* buffer, size_t buffer_s
 // - - - Section 4: Keymap Saving - - -
 
 
-// Default keymappings
+// v1.1: No longer a set of default keymappings (unmaps all keys)
 static void anki_remote_set_default_keymap(AnkiRemoteApp* app) {
-    app->keymap[FlipperButtonUp] = (KeyMapping){.keycode = HID_KEYBOARD_UP_ARROW, .modifiers = 0};
-    app->keymap[FlipperButtonDown] = (KeyMapping){.keycode = HID_KEYBOARD_DOWN_ARROW, .modifiers = 0};
-    app->keymap[FlipperButtonLeft] = (KeyMapping){.keycode = HID_KEYBOARD_1, .modifiers = 0};
-    app->keymap[FlipperButtonRight] = (KeyMapping){.keycode = HID_KEYBOARD_3, .modifiers = 0};
-    app->keymap[FlipperButtonOk] = (KeyMapping){.keycode = HID_KEYBOARD_SPACEBAR, .modifiers = 0};
-    app->keymap[FlipperButtonBack] = (KeyMapping){.keycode = HID_KEYBOARD_U, .modifiers = 0};
+    for(uint8_t i = 0; i < NUM_FLIPPER_BUTTONS; ++i) {
+        app->keymap[i] = (KeyMapping){.keycode = 0, .modifiers = 0};
+    }
 }
 
 // Try to load button settings from SD card; if it fails, use defaults
@@ -404,6 +402,13 @@ static const char* get_button_name(FlipperButton button) {
 // Builds a string name for a key combination (e.g., "Ctrl+Shift+A")
 void get_key_combo_name(KeyMapping mapping, char* buffer, size_t buffer_size) {
     buffer[0] = '\0';
+
+    // v1.1
+    if(mapping.keycode == 0) {
+        strlcpy(buffer, "Not mapped", buffer_size);
+        return;
+    }
+
     if(mapping.modifiers & MOD_CTRL_BIT) strlcat(buffer, "Ctrl+", buffer_size);
     if(mapping.modifiers & MOD_ALT_BIT) strlcat(buffer, "Alt+", buffer_size);
     if(mapping.modifiers & MOD_GUI_BIT) strlcat(buffer, "Cmd+", buffer_size);
@@ -552,22 +557,38 @@ static void anki_remote_scene_settings_menu_draw_callback(Canvas* canvas, void* 
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str(canvas, 2, 10, "Button Settings");
     canvas_set_font(canvas, FontSecondary);
-    char label[32];
+    
+    const uint8_t total_items = NUM_FLIPPER_BUTTONS + 1; // +1 for Reset
+    const uint8_t visible_items = 5;
     uint8_t y_start = 19;
-    uint8_t y_spacing = 8;
-    for(uint8_t i = 0; i < NUM_FLIPPER_BUTTONS; ++i) {
+    uint8_t y_spacing = 10; // v1.1: for better visibility
+
+    for(uint8_t i = 0; i < visible_items; ++i) {
+        uint8_t item_index = app->settings_menu_state.scroll_offset + i;
+        if(item_index >= total_items) break;
+
         uint8_t y_pos = y_start + (i * y_spacing);
-        char key_name_buffer[24];
-        get_key_combo_name(app->keymap[i], key_name_buffer, sizeof(key_name_buffer));
-        snprintf(label, sizeof(label), "%s: %s", get_button_name(i), key_name_buffer);
-        if(i == app->settings_menu_state.selected_item) {
+        char label[32];
+
+        if(item_index < NUM_FLIPPER_BUTTONS) {
+            char key_name_buffer[24];
+            get_key_combo_name(app->keymap[item_index], key_name_buffer, sizeof(key_name_buffer));
+            snprintf(label, sizeof(label), "%s: %s", get_button_name(item_index), key_name_buffer);
+        } else {
+            strlcpy(label, "Reset Mappings", sizeof(label));
+        }
+
+        if(item_index == app->settings_menu_state.selected_item) { // Check if reset is selected
             elements_slightly_rounded_box(canvas, 2, y_pos - 7, 124, 9);
             canvas_set_color(canvas, ColorWhite);
         }
         canvas_draw_str(canvas, 5, y_pos, label);
         canvas_set_color(canvas, ColorBlack);
     }
+
+    elements_scrollbar(canvas, app->settings_menu_state.selected_item, total_items);
 }
+
 
 // Settings menu inputs (not in the keyboard)
 static void anki_remote_scene_settings_menu_input_handler(AnkiRemoteApp* app, InputEvent* event) {
@@ -577,19 +598,35 @@ static void anki_remote_scene_settings_menu_input_handler(AnkiRemoteApp* app, In
         return;
     }
     if(event->type != InputTypeShort && event->type != InputTypeRepeat) return;
+
+    const uint8_t settings_menu_item_count = NUM_FLIPPER_BUTTONS + 1; // v1v1: +1 for Reset
+    uint8_t selected_item = app->settings_menu_state.selected_item;
+
     if(event->key == InputKeyUp) {
-        app->settings_menu_state.selected_item =
-            (app->settings_menu_state.selected_item + NUM_FLIPPER_BUTTONS - 1) %
-            NUM_FLIPPER_BUTTONS;
+        selected_item = (selected_item + settings_menu_item_count - 1) % settings_menu_item_count;
     } else if(event->key == InputKeyDown) {
-        app->settings_menu_state.selected_item =
-            (app->settings_menu_state.selected_item + 1) % NUM_FLIPPER_BUTTONS;
+        selected_item = (selected_item + 1) % settings_menu_item_count;
     } else if(event->key == InputKeyOk) {
-        app->settings_state.configuring_button = app->settings_menu_state.selected_item;
-        anki_remote_set_scene(app, SceneSettings);
+        if(selected_item < NUM_FLIPPER_BUTTONS) {
+            app->settings_state.configuring_button = selected_item;
+            anki_remote_set_scene(app, SceneSettings);
+        } else { // Reset button is pressed
+            anki_remote_set_default_keymap(app);
+            anki_remote_save_keymap(app);
+        }
     } else if(event->key == InputKeyBack) {
         anki_remote_set_scene(app, SceneMenu);
     }
+
+    // Scrolling Logic
+    const uint8_t visible_items = 5;
+    if(selected_item < app->settings_menu_state.scroll_offset) {
+        app->settings_menu_state.scroll_offset = selected_item;
+    } else if(selected_item >= app->settings_menu_state.scroll_offset + visible_items) {
+        app->settings_menu_state.scroll_offset = selected_item - visible_items + 1;
+    }
+
+    app->settings_menu_state.selected_item = selected_item;
 }
 
 
@@ -925,15 +962,30 @@ static void anki_remote_set_scene(AnkiRemoteApp* app, AppScene new_scene) {
         furi_check(bt_profile_restore_default(app->bt));
     }
     if(new_scene == SceneController) {
+        // bt_disconnect(app->bt);
+        // furi_delay_ms(200);
+        
         // BUG FIX: This prevents buttons from appearing "stuck" as pressed if you left the scene
         // while holding a button down.
         memset(&app->controller_state, 0, sizeof(app->controller_state));
         bt_set_status_changed_callback(app->bt, anki_remote_connection_status_callback, app);
+
+        /*
+        // v1.1: Set custom device name prefix (scrapped change)
+        // won't work unless you remove cross compatibility
+        BleProfileHidParams params = {
+            .device_name_prefix = "Control", 
+            .mac_xor = 0x0001,
+        };
+        app->ble_hid_profile = bt_profile_start(app->bt, ble_profile_hid, &params);
+        */
+
         app->ble_hid_profile = bt_profile_start(app->bt, ble_profile_hid, NULL);
         furi_check(app->ble_hid_profile);
         furi_hal_bt_start_advertising();
     } else if(new_scene == SceneSettingsMenu) {
         app->settings_menu_state.selected_item = 0; // select first item
+        app->settings_menu_state.scroll_offset = 0; // v1.1 for "reset keymappings"
     } else if(new_scene == SceneSettings) {
         app->settings_state.x = 0;
         app->settings_state.y = 1;
