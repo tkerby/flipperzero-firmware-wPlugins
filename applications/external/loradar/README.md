@@ -1,9 +1,9 @@
-# LoRadar - The Flipper Application to localize stratospheric ballon via LoRa
+# LoRadar - The Flipper Application to localize stratospheric ballons via LoRa
 
 LoRadar is an app that allows users to localize stratospheric balloons using their Flipper Zero and LoRa modules.
 
-This Flipper app works in tandem with a [companion mobile app](https://github.com/nahel-b/flipperApp) via Bluetooth. The mobile app records detected balloon locations, displays them on a map, and can optionally forward the data to a backend server.
-
+The Flipper receives LoRa APRS-IS frames directly from the balloons and forwards it to a [companion mobile app](https://github.com/nahel-b/flipperApp) via Bluetooth.
+The mobile app then records the balloon positions, displays them on a map, and can optionally forward the data to a backend server.
 
 
 > ⚠️ Currently tested on Flipper Zero Firmware SDK **v1.2.0**  
@@ -55,9 +55,6 @@ To connect the Grove-Wio-E5 module to the Flipper zero, simply connect the pins 
 **Default baudrate**: 9600
 
 ## Build Instructions
-
-** For the moment, the app has been tested on SDK 1.2.0 version of the FlipperZero Firmware**
-
 
 There are two build modes: **Debug** (default) and **Release**.
 
