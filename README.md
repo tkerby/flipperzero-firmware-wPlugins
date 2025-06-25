@@ -14,7 +14,7 @@ I made this project for the [Summer Hackclub](https://summer.hack.club/bc1)
 - Hidden Network Selector
 - 5 Networks Max Simultaneous Deauth
 ### Web Interface
-- Made by tesa-klebeband
+- Captive Portal Support
 
 And more features coming soon...
 
