@@ -53,8 +53,10 @@ Instead, we use [GNU `indent`](https://www.gnu.org/software/indent/) to format t
 
 To automatically format your C files, run:
 ```
-#TODO put command
+indent -kr -ts1
 ```
+
+> Tip: You can set up a Git pre-commit hook to automatically format your code each time you commit. This ensures consistent style across your project
 
 ## Naming
 
