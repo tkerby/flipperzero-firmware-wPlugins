@@ -70,42 +70,6 @@ void SceneTimerTick(const PCUBERZERO instance) {
 	if(instance->scene.timer.state == TIMER_STATE_TIMING) {
 		view_port_update(instance->scene.timer.viewport);
 	}
-
-	/*if(instance->scene.timer.waitForReady && furi_get_tick() - instance->scene.timer.pressedTime >= 500) {
-		instance->scene.timer.ready = 1;
-		furi_hal_light_set(LightRed, 0);
-		furi_hal_light_set(LightGreen, 255);
-		furi_hal_light_set(LightBlue, 0);
-	}
-
-	if(instance->scene.timer.timing) {
-		view_port_update(instance->scene.timer.viewport);
-	}*/
-
-	/*furi_mutex_acquire(instance->scene.timer.mutex, FuriWaitForever);
-	furi_hal_light_set(LightBlue, 0);
-
-	switch(instance->scene.timer.state) {
-	case TIMER_STATE_WAIT_FOR_READY:
-		furi_hal_light_set(LightRed, 255);
-		furi_hal_light_set(LightGreen, 0);
-		break;
-	case TIMER_STATE_READY:
-		furi_hal_light_set(LightRed, 0);
-		furi_hal_light_set(LightGreen, 255);
-		break;
-	default:
-		furi_hal_light_set(LightRed, 0);
-		furi_hal_light_set(LightGreen, 0);
-		break;
-	}
-
-	if(instance->scene.timer.state == TIMER_STATE_WAIT_FOR_READY && furi_get_tick() - instance->scene.timer.pressedTime >= 500) {
-		instance->scene.timer.state = TIMER_STATE_READY;
-	}
-
-	furi_mutex_release(instance->scene.timer.mutex);*/
-	//view_port_update(instance->scene.timer.viewport);
 }
 
 void SceneTimerEnter(const PCUBERZERO instance) {
@@ -156,42 +120,6 @@ void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
 		return;
 	}
 
-	/*if(event->key == InputKeyBack && event->type == InputTypeShort && instance->scene.timer.state == TIMER_STATE_DEFAULT) {
-		furi_message_queue_put(instance->scene.timer.queue, event, FuriWaitForever);
-	}*/
-
-	/*furi_mutex_acquire(instance->scene.timer.mutex, FuriWaitForever);
-
-	if(instance->scene.timer.state == TIMER_STATE_TIMING && event->type == InputTypePress) {
-		instance->scene.timer.state = TIMER_STATE_DEFAULT;
-		instance->scene.timer.stopTime = tick;
-		goto functionExit;
-	}
-
-	if(event->key != InputKeyOk) {
-		goto functionExit;
-	}
-
-	switch(event->type) {
-	case InputTypePress:
-		if(instance->scene.timer.state == TIMER_STATE_DEFAULT) {
-			instance->scene.timer.state = TIMER_STATE_WAIT_FOR_READY;
-			instance->scene.timer.pressedTime = tick;
-		}
-
-		break;
-	case InputTypeRelease:
-		if(instance->scene.timer.state == TIMER_STATE_READY) {
-			instance->scene.timer.state = TIMER_STATE_TIMING;
-		}
-
-		break;
-	default:
-		break;
-	}
-functionExit:
-	furi_mutex_release(instance->scene.timer.mutex);*/
-
 	if(event->type == InputTypePress) {
 		if(instance->scene.timer.state == TIMER_STATE_TIMING) {
 			instance->scene.timer.state = TIMER_STATE_HALT;
@@ -237,46 +165,6 @@ functionExit:
 			}
 		}
 	}
-
-	/*if(instance->scene.timer.timing) {
-		if(event->type == InputTypePress) {
-			instance->scene.timer.timing = 0;
-			instance->scene.timer.waitForReady = 0;
-			instance->scene.timer.ready = 0;
-			instance->scene.timer.stopTimer = tick;
-			furi_hal_light_blink_stop();
-			furi_hal_light_set(LightRed, 255);
-			furi_hal_light_set(LightGreen, 0);
-			furi_hal_light_set(LightBlue, 0);
-		}
-	} else {
-		if(event->key == InputKeyOk) {
-			if(!instance->scene.timer.ready) {
-				if(event->type == InputTypePress) {
-					instance->scene.timer.pressedTime = tick;
-					instance->scene.timer.waitForReady = 1;
-					furi_hal_light_set(LightRed, 255);
-					furi_hal_light_set(LightGreen, 0);
-					furi_hal_light_set(LightBlue, 0);
-				} else if(event->type == InputTypeRelease) {
-					instance->scene.timer.waitForReady = 0;
-					furi_hal_light_set(LightRed, 0);
-					furi_hal_light_set(LightGreen, 0);
-					furi_hal_light_set(LightBlue, 0);
-				}
-			} else {
-				if(event->type == InputTypeRelease) {
-					instance->scene.timer.ready = 0;
-					instance->scene.timer.timing = 1;
-					instance->scene.timer.startTimer = tick;
-					furi_hal_light_set(LightRed, 0);
-					furi_hal_light_set(LightGreen, 0);
-					furi_hal_light_set(LightBlue, 0);
-					furi_hal_light_blink_start(LightRed | LightGreen, 255, 25, 50);
-				}
-			}
-		}
-	}*/
 
 	updateLight(instance);
 
