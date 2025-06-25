@@ -166,11 +166,6 @@ void Player::drawGameOnlineView(Draw *canvas)
 
 void Player::drawLobbyMenuView(Draw *canvas)
 {
-    canvas->fillScreen(ColorWhite);
-
-    // rain effect
-    drawRainEffect(canvas);
-
     // draw lobby text
     drawMenuType1(canvas, currentLobbyMenuIndex, "Local", "Online");
 }
@@ -531,11 +526,6 @@ void Player::drawSystemMenuView(Draw *canvas)
 
 void Player::drawTitleView(Draw *canvas)
 {
-    canvas->fillScreen(ColorWhite);
-
-    // rain effect
-    drawRainEffect(canvas);
-
     // draw title text
     drawMenuType1(canvas, currentTitleIndex, "Start", "Menu");
 }
