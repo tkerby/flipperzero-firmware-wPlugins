@@ -3,9 +3,11 @@
 #include <stdlib.h>
 #include <furi.h>
 #include <string.h>
-#include "pocket_battle_icons.h"
+// #include "pocket_battle_icons.h"  // Comment out for now
 
-static const Icon* const pkmn_sprites[152] = {
+// Commented out sprite array for now - will be replaced with enhanced system
+/*
+static const Icon *const pkmn_sprites[152] = {
     &I_000, &I_001, &I_002, &I_003, &I_004, &I_005, &I_006, &I_007, &I_008, &I_009, &I_010, &I_011,
     &I_012, &I_013, &I_014, &I_015, &I_016, &I_017, &I_018, &I_019, &I_020, &I_021, &I_022, &I_023,
     &I_024, &I_025, &I_026, &I_027, &I_028, &I_029, &I_030, &I_031, &I_032, &I_033, &I_034, &I_035,
@@ -19,6 +21,7 @@ static const Icon* const pkmn_sprites[152] = {
     &I_120, &I_121, &I_122, &I_123, &I_124, &I_125, &I_126, &I_127, &I_128, &I_129, &I_130, &I_131,
     &I_132, &I_133, &I_134, &I_135, &I_136, &I_137, &I_138, &I_139, &I_140, &I_141, &I_142, &I_143,
     &I_144, &I_145, &I_146, &I_147, &I_148, &I_149, &I_150, &I_151};
+*/
 
 // Private battle structure
 struct Battle {
@@ -129,9 +132,13 @@ void battle_draw(Battle* battle, Canvas* canvas) {
     // Always update battle state
     battle_update(battle);
 
-    // DRAW MONSTERS
-    canvas_draw_icon(canvas, 2, 20, pkmn_sprites[battle->enemy_pokemon->pokedexId]);
-    canvas_draw_icon(canvas, 74, -22, pkmn_sprites[battle->player_pokemon->pokedexId]);
+    // DRAW MONSTERS - commented out for now
+    // canvas_draw_icon(canvas, 2, 20, pkmn_sprites[battle->enemy_pokemon->pokedexId]);
+    // canvas_draw_icon(canvas, 74, -22, pkmn_sprites[battle->player_pokemon->pokedexId]);
+
+    // Draw placeholder rectangles instead
+    canvas_draw_frame(canvas, 2, 20, 32, 32);
+    canvas_draw_frame(canvas, 74, 20, 32, 32);
 
     // Draw enemy Pokemon info (top of screen)
     canvas_draw_str(canvas, 2, 8, battle->enemy_pokemon->name);

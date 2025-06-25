@@ -25,9 +25,14 @@ typedef struct {
 } ShowdownApp;
 
 // This function is called by Flipper to draw the screen
-static void pocket_battle_draw_callback(Canvas* canvas, void* ctx) {
-    ShowdownApp* app = (ShowdownApp*)ctx;
-    switch(app->state) {
+// Commented out unused functions
+/*
+static void pocket_battle_draw_callback(Canvas *canvas, void *ctx)
+{
+    ShowdownApp *app = (ShowdownApp *)ctx;
+
+    switch (app->state)
+    {
     case APP_STATE_MENU:
         menu_draw(app->menu, canvas);
         break;
@@ -41,19 +46,26 @@ static void pocket_battle_draw_callback(Canvas* canvas, void* ctx) {
         break;
     }
 }
+*/
 
 // This function is called by Flipper when buttons are pressed
-static void pocket_battle_input_callback(InputEvent* input_event, void* ctx) {
-    ShowdownApp* app = (ShowdownApp*)ctx;
+/*
+static void pocket_battle_input_callback(InputEvent *input_event, void *ctx)
+{
+    ShowdownApp *app = (ShowdownApp *)ctx;
     furi_message_queue_put(app->event_queue, input_event, FuriWaitForever);
 }
+*/
 
-// Main entry point - THIS IS WHERE THE APP STARTS
-int32_t pocket_battle_main(void* p) {
+// Main entry point - COMMENTED OUT TO AVOID CONFLICTS
+// Use pokemon_main_enhanced.c instead
+/*
+int32_t pocket_battle_main(void *p)
+{
     UNUSED(p);
 
     // Create our app
-    ShowdownApp* app = malloc(sizeof(ShowdownApp));
+    ShowdownApp *app = malloc(sizeof(ShowdownApp));
 
     // Set up the screen
     app->gui = furi_record_open(RECORD_GUI);
@@ -77,25 +89,38 @@ int32_t pocket_battle_main(void* p) {
     InputEvent event;
     bool running = true;
 
-    while(running) {
+    while (running)
+    {
         // Check for button presses
-        if(furi_message_queue_get(app->event_queue, &event, 100) == FuriStatusOk) {
-            if(event.type == InputTypePress) {
-                if(event.key == InputKeyBack) {
+        if (furi_message_queue_get(app->event_queue, &event, 100) == FuriStatusOk)
+        {
+            if (event.type == InputTypePress)
+            {
+                if (event.key == InputKeyBack)
+                {
                     running = false; // Exit on Back button
-                } else {
+                }
+                else
+                {
                     // Handle input based on current state
-                    if(app->state == APP_STATE_MENU) {
+                    if (app->state == APP_STATE_MENU)
+                    {
                         MenuItem selected = menu_handle_input(app->menu, event.key);
-                        if(selected == MENU_BATTLE_1V1) {
+                        if (selected == MENU_BATTLE_1V1)
+                        {
                             app->state = APP_STATE_SELECT; // Go to select screen
-                        } else if(selected == MENU_QUIT) {
+                        }
+                        else if (selected == MENU_QUIT)
+                        {
                             running = false; // Exit on Quit
                         }
-                    } else if(app->state == APP_STATE_SELECT) {
+                    }
+                    else if (app->state == APP_STATE_SELECT)
+                    {
                         SelectionResult result =
                             select_screen_handle_input(app->select_screen, event.key);
-                        if(result.confirmed) {
+                        if (result.confirmed)
+                        {
                             // Store selections
                             app->player_selection = result.player_index;
                             app->enemy_selection = result.enemy_index;
@@ -106,11 +131,14 @@ int32_t pocket_battle_main(void* p) {
                                 app->player_selection, app->enemy_selection);
                             app->state = APP_STATE_BATTLE;
                         }
-                    } else if(app->state == APP_STATE_BATTLE) {
+                    }
+                    else if (app->state == APP_STATE_BATTLE)
+                    {
                         battle_handle_input(app->battle, event.key);
 
                         // Check if battle is over
-                        if(battle_is_over(app->battle)) {
+                        if (battle_is_over(app->battle))
+                        {
                             // Return to menu
                             battle_free(app->battle);
                             app->battle = NULL;
@@ -138,3 +166,4 @@ int32_t pocket_battle_main(void* p) {
 
     return 0;
 }
+*/

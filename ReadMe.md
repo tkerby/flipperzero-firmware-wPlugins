@@ -30,6 +30,7 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-06-24 17:45 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-06-24 17:45 EST`
+- Updated: [Pocket Battle+ v2.0 (By HermeticCode)](https://github.com/HermeticCode/showdown-current)
 
 <a name="release">
 
@@ -323,7 +324,7 @@ $ ./fbt dolphin_ext
 - [Paper Plane v1.3 (By Larry-the-Pig)](https://github.com/Larry-the-Pig/flipper-plane)
 - [Paint v1.2 (By n-o-T-I-n-s-a-n-e)](https://github.com/n-o-T-I-n-s-a-n-e)
 - [Pinball0 v0.5.2 (By rdefeo)](https://github.com/rdefeo/pinball0)
-- [Pocket Battle v0.1 (By HermeticCode)](https://github.com/HermeticCode/showdown-current)
+- [Pocket Battle+ v2.0 (By HermeticCode)](https://github.com/HermeticCode/showdown-current)
 - [Pong v1.3 (By nmrr)](https://github.com/nmrr/flipperzero-pong)
 - [Quadrastic v1.0.2 (By ivanbarsukov)](https://github.com/ivanbarsukov/flipperzero-quadrastic)
 - [Questions v1.1 (By nikilark)](https://github.com/nikilark/flipper_questions)
