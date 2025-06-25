@@ -172,26 +172,7 @@ void Player::drawLobbyMenuView(Draw *canvas)
     drawRainEffect(canvas);
 
     // draw lobby text
-    if (currentLobbyMenuIndex == LobbyMenuLocal)
-    {
-        canvas->fillRect(Vector(36, 16), Vector(56, 16), ColorBlack);
-        canvas->color(ColorWhite);
-        canvas->text(Vector(54, 27), "Local");
-        canvas->fillRect(Vector(36, 32), Vector(56, 16), ColorWhite);
-        canvas->color(ColorBlack);
-        canvas->text(Vector(54, 42), "Online");
-    }
-    else if (currentLobbyMenuIndex == LobbyMenuOnline)
-    {
-        canvas->color(ColorWhite);
-        canvas->fillRect(Vector(36, 16), Vector(56, 16), ColorWhite);
-        canvas->color(ColorBlack);
-        canvas->text(Vector(54, 27), "Local");
-        canvas->fillRect(Vector(36, 32), Vector(56, 16), ColorBlack);
-        canvas->color(ColorWhite);
-        canvas->text(Vector(54, 42), "Online");
-        canvas->color(ColorBlack);
-    }
+    drawMenuType1(canvas, currentLobbyMenuIndex, "Local", "Online");
 }
 
 void Player::drawLoginView(Draw *canvas)
@@ -273,6 +254,163 @@ void Player::drawLoginView(Draw *canvas)
         canvas->text(Vector(0, 10), "Logging in...", ColorBlack);
         break;
     }
+}
+
+void Player::drawMenuType1(Draw *canvas, uint8_t selectedIndex, const char *option1, const char *option2)
+{
+    canvas->fillScreen(ColorWhite);
+
+    // rain effect
+    drawRainEffect(canvas);
+
+    // draw lobby text
+    if (selectedIndex == 0)
+    {
+        canvas->fillRect(Vector(36, 16), Vector(56, 16), ColorBlack);
+        canvas->color(ColorWhite);
+        canvas->text(Vector(54, 27), option1);
+        canvas->fillRect(Vector(36, 32), Vector(56, 16), ColorWhite);
+        canvas->color(ColorBlack);
+        canvas->text(Vector(54, 42), option2);
+    }
+    else if (selectedIndex == 1)
+    {
+        canvas->color(ColorWhite);
+        canvas->fillRect(Vector(36, 16), Vector(56, 16), ColorWhite);
+        canvas->color(ColorBlack);
+        canvas->text(Vector(54, 27), option1);
+        canvas->fillRect(Vector(36, 32), Vector(56, 16), ColorBlack);
+        canvas->color(ColorWhite);
+        canvas->text(Vector(54, 42), option2);
+        canvas->color(ColorBlack);
+    }
+}
+
+void Player::drawMenuType2(Draw *canvas, uint8_t selectedIndexMain, uint8_t selectedIndexSettings)
+{
+    canvas->fillScreen(ColorWhite);
+    canvas->color(ColorBlack);
+    canvas->icon(Vector(0, 0), &I_icon_menu_128x64px);
+
+    switch (selectedIndexMain)
+    {
+    case 0: // profile
+    {
+        // draw info
+        char health[32];
+        char xp[32];
+        char level[32];
+        char strength[32];
+
+        snprintf(level, sizeof(level), "Level   : %d", (int)this->level);
+        snprintf(health, sizeof(health), "Health  : %d", (int)this->health);
+        snprintf(xp, sizeof(xp), "XP      : %d", (int)this->xp);
+        snprintf(strength, sizeof(strength), "Strength: %d", (int)this->strength);
+
+        canvas->setFont(FontPrimary);
+        if (this->name == nullptr || strlen(this->name) == 0)
+        {
+            canvas->text(Vector(6, 16), "Unknown");
+        }
+        else
+        {
+            canvas->text(Vector(6, 16), this->name);
+        }
+
+        canvas->setFontCustom(FONT_SIZE_SMALL);
+        canvas->text(Vector(6, 30), level);
+        canvas->text(Vector(6, 37), health);
+        canvas->text(Vector(6, 44), xp);
+        canvas->text(Vector(6, 51), strength);
+
+        // draw a box around the selected option
+        canvas->drawRect(Vector(76, 6), Vector(46, 46), ColorBlack);
+        canvas->setFont(FontPrimary);
+        canvas->text(Vector(80, 18), "Profile");
+        canvas->setFont(FontSecondary);
+        canvas->text(Vector(80, 32), "Settings");
+        canvas->text(Vector(80, 46), "About");
+    }
+    break;
+    case 1: // settings (sound on/off, vibration on/off, and leave game)
+    {
+        char soundStatus[16];
+        char vibrationStatus[16];
+        snprintf(soundStatus, sizeof(soundStatus), "Sound: %s", toggleToString(soundToggle));
+        snprintf(vibrationStatus, sizeof(vibrationStatus), "Vibrate: %s", toggleToString(vibrationToggle));
+        // draw settings info
+        switch (selectedIndexSettings)
+        {
+        case 0: // none/default
+            canvas->setFont(FontPrimary);
+            canvas->text(Vector(6, 16), "Settings");
+            canvas->setFontCustom(FONT_SIZE_SMALL);
+            canvas->text(Vector(6, 30), soundStatus);
+            canvas->text(Vector(6, 40), vibrationStatus);
+            canvas->text(Vector(6, 50), "Leave Game");
+            break;
+        case 1: // sound
+            canvas->setFont(FontPrimary);
+            canvas->text(Vector(6, 16), "Settings");
+            canvas->setFontCustom(FONT_SIZE_LARGE);
+            canvas->text(Vector(6, 30), soundStatus);
+            canvas->setFontCustom(FONT_SIZE_SMALL);
+            canvas->text(Vector(6, 40), vibrationStatus);
+            canvas->text(Vector(6, 50), "Leave Game");
+            break;
+        case 2: // vibration
+            canvas->setFont(FontPrimary);
+            canvas->text(Vector(6, 16), "Settings");
+            canvas->setFontCustom(FONT_SIZE_SMALL);
+            canvas->text(Vector(6, 30), soundStatus);
+            canvas->setFontCustom(FONT_SIZE_LARGE);
+            canvas->text(Vector(6, 40), vibrationStatus);
+            canvas->setFontCustom(FONT_SIZE_SMALL);
+            canvas->text(Vector(6, 50), "Leave Game");
+            break;
+        case 3: // leave game
+            canvas->setFont(FontPrimary);
+            canvas->text(Vector(6, 16), "Settings");
+            canvas->setFontCustom(FONT_SIZE_SMALL);
+            canvas->text(Vector(6, 30), soundStatus);
+            canvas->text(Vector(6, 40), vibrationStatus);
+            canvas->setFontCustom(FONT_SIZE_LARGE);
+            canvas->text(Vector(6, 50), "Leave Game");
+            break;
+        default:
+            break;
+        };
+        canvas->drawRect(Vector(76, 6), Vector(46, 46), ColorBlack);
+        canvas->setFont(FontSecondary);
+        canvas->text(Vector(80, 18), "Profile");
+        canvas->setFont(FontPrimary);
+        canvas->text(Vector(79, 32), "Settings");
+        canvas->setFont(FontSecondary);
+        canvas->text(Vector(80, 46), "About");
+    }
+    break;
+    case 2: // about
+    {
+        canvas->setFont(FontPrimary);
+        canvas->text(Vector(6, 16), "Free Roam");
+        canvas->setFontCustom(FONT_SIZE_SMALL);
+        canvas->text(Vector(6, 25), "Creator: JBlanked");
+        canvas->text(Vector(6, 59), "www.github.com/jblanked");
+
+        // draw a box around the selected option
+        canvas->drawRect(Vector(76, 6), Vector(46, 46), ColorBlack);
+        canvas->setFont(FontSecondary);
+        canvas->text(Vector(80, 18), "Profile");
+        canvas->text(Vector(80, 32), "Settings");
+        canvas->setFont(FontPrimary);
+        canvas->text(Vector(80, 46), "About");
+    }
+    break;
+    default:
+        canvas->fillScreen(ColorWhite);
+        canvas->text(Vector(0, 10), "Unknown Menu", ColorBlack);
+        break;
+    };
 }
 
 void Player::drawRainEffect(Draw *canvas)
@@ -388,125 +526,7 @@ void Player::drawSystemMenuView(Draw *canvas)
     canvas->color(ColorBlack);
     canvas->icon(Vector(0, 0), &I_icon_menu_128x64px);
 
-    switch (currentMenuIndex)
-    {
-    case MenuIndexProfile:
-    {
-        // draw info
-        char health[32];
-        char xp[32];
-        char level[32];
-        char strength[32];
-
-        snprintf(level, sizeof(level), "Level   : %d", (int)this->level);
-        snprintf(health, sizeof(health), "Health  : %d", (int)this->health);
-        snprintf(xp, sizeof(xp), "XP      : %d", (int)this->xp);
-        snprintf(strength, sizeof(strength), "Strength: %d", (int)this->strength);
-
-        canvas->setFont(FontPrimary);
-        if (this->name == nullptr || strlen(this->name) == 0)
-        {
-            canvas->text(Vector(6, 16), "Unknown");
-        }
-        else
-        {
-            canvas->text(Vector(6, 16), this->name);
-        }
-
-        canvas->setFontCustom(FONT_SIZE_SMALL);
-        canvas->text(Vector(6, 30), level);
-        canvas->text(Vector(6, 37), health);
-        canvas->text(Vector(6, 44), xp);
-        canvas->text(Vector(6, 51), strength);
-
-        // draw a box around the selected option
-        canvas->drawRect(Vector(76, 6), Vector(46, 46), ColorBlack);
-        canvas->setFont(FontPrimary);
-        canvas->text(Vector(80, 18), "Profile");
-        canvas->setFont(FontSecondary);
-        canvas->text(Vector(80, 32), "Settings");
-        canvas->text(Vector(80, 46), "About");
-    }
-    break;
-    case MenuIndexSettings: // sound on/off, vibration on/off, and leave game
-    {
-        char soundStatus[16];
-        char vibrationStatus[16];
-        snprintf(soundStatus, sizeof(soundStatus), "Sound: %s", toggleToString(soundToggle));
-        snprintf(vibrationStatus, sizeof(vibrationStatus), "Vibrate: %s", toggleToString(vibrationToggle));
-        // draw settings info
-        switch (currentSettingsIndex)
-        {
-        case MenuSettingsMain:
-            canvas->setFont(FontPrimary);
-            canvas->text(Vector(6, 16), "Settings");
-            canvas->setFontCustom(FONT_SIZE_SMALL);
-            canvas->text(Vector(6, 30), soundStatus);
-            canvas->text(Vector(6, 40), vibrationStatus);
-            canvas->text(Vector(6, 50), "Leave Game");
-            break;
-        case MenuSettingsSound:
-            canvas->setFont(FontPrimary);
-            canvas->text(Vector(6, 16), "Settings");
-            canvas->setFontCustom(FONT_SIZE_LARGE);
-            canvas->text(Vector(6, 30), soundStatus);
-            canvas->setFontCustom(FONT_SIZE_SMALL);
-            canvas->text(Vector(6, 40), vibrationStatus);
-            canvas->text(Vector(6, 50), "Leave Game");
-            break;
-        case MenuSettingsVibration:
-            canvas->setFont(FontPrimary);
-            canvas->text(Vector(6, 16), "Settings");
-            canvas->setFontCustom(FONT_SIZE_SMALL);
-            canvas->text(Vector(6, 30), soundStatus);
-            canvas->setFontCustom(FONT_SIZE_LARGE);
-            canvas->text(Vector(6, 40), vibrationStatus);
-            canvas->setFontCustom(FONT_SIZE_SMALL);
-            canvas->text(Vector(6, 50), "Leave Game");
-            break;
-        case MenuSettingsLeave:
-            canvas->setFont(FontPrimary);
-            canvas->text(Vector(6, 16), "Settings");
-            canvas->setFontCustom(FONT_SIZE_SMALL);
-            canvas->text(Vector(6, 30), soundStatus);
-            canvas->text(Vector(6, 40), vibrationStatus);
-            canvas->setFontCustom(FONT_SIZE_LARGE);
-            canvas->text(Vector(6, 50), "Leave Game");
-            break;
-        default:
-            break;
-        };
-        canvas->drawRect(Vector(76, 6), Vector(46, 46), ColorBlack);
-        canvas->setFont(FontSecondary);
-        canvas->text(Vector(80, 18), "Profile");
-        canvas->setFont(FontPrimary);
-        canvas->text(Vector(79, 32), "Settings");
-        canvas->setFont(FontSecondary);
-        canvas->text(Vector(80, 46), "About");
-    }
-    break;
-    case MenuIndexAbout:
-    {
-        canvas->setFont(FontPrimary);
-        canvas->text(Vector(6, 16), "Free Roam");
-        canvas->setFontCustom(FONT_SIZE_SMALL);
-        canvas->text(Vector(6, 25), "Creator: JBlanked");
-        canvas->text(Vector(6, 59), "www.github.com/jblanked");
-
-        // draw a box around the selected option
-        canvas->drawRect(Vector(76, 6), Vector(46, 46), ColorBlack);
-        canvas->setFont(FontSecondary);
-        canvas->text(Vector(80, 18), "Profile");
-        canvas->text(Vector(80, 32), "Settings");
-        canvas->setFont(FontPrimary);
-        canvas->text(Vector(80, 46), "About");
-    }
-    break;
-    default:
-        canvas->fillScreen(ColorWhite);
-        canvas->text(Vector(0, 10), "Unknown Menu", ColorBlack);
-        break;
-    };
+    drawMenuType2(canvas, currentMenuIndex, currentSettingsIndex);
 }
 
 void Player::drawTitleView(Draw *canvas)
@@ -517,26 +537,7 @@ void Player::drawTitleView(Draw *canvas)
     drawRainEffect(canvas);
 
     // draw title text
-    if (currentTitleIndex == TitleIndexStart)
-    {
-        canvas->fillRect(Vector(36, 16), Vector(56, 16), ColorBlack);
-        canvas->color(ColorWhite);
-        canvas->text(Vector(54, 27), "Start");
-        canvas->fillRect(Vector(36, 32), Vector(56, 16), ColorWhite);
-        canvas->color(ColorBlack);
-        canvas->text(Vector(54, 42), "Menu");
-    }
-    else if (currentTitleIndex == TitleIndexMenu)
-    {
-        canvas->color(ColorWhite);
-        canvas->fillRect(Vector(36, 16), Vector(56, 16), ColorWhite);
-        canvas->color(ColorBlack);
-        canvas->text(Vector(54, 27), "Start");
-        canvas->fillRect(Vector(36, 32), Vector(56, 16), ColorBlack);
-        canvas->color(ColorWhite);
-        canvas->text(Vector(54, 42), "Menu");
-        canvas->color(ColorBlack);
-    }
+    drawMenuType1(canvas, currentTitleIndex, "Start", "Menu");
 }
 
 void Player::drawUserInfoView(Draw *canvas)
@@ -957,125 +958,7 @@ void Player::handleMenu(Draw *draw, Game *game)
     draw->color(ColorBlack);
     draw->icon(Vector(0, 0), &I_icon_menu_128x64px);
 
-    switch (currentMenuIndex)
-    {
-    case MenuIndexProfile:
-    {
-        // draw info
-        char health[32];
-        char xp[32];
-        char level[32];
-        char strength[32];
-
-        snprintf(level, sizeof(level), "Level   : %d", (int)this->level);
-        snprintf(health, sizeof(health), "Health  : %d", (int)this->health);
-        snprintf(xp, sizeof(xp), "XP      : %d", (int)this->xp);
-        snprintf(strength, sizeof(strength), "Strength: %d", (int)this->strength);
-
-        draw->setFont(FontPrimary);
-        if (this->name == nullptr || strlen(this->name) == 0)
-        {
-            draw->text(Vector(6, 16), "Unknown");
-        }
-        else
-        {
-            draw->text(Vector(6, 16), this->name);
-        }
-
-        draw->setFontCustom(FONT_SIZE_SMALL);
-        draw->text(Vector(6, 30), level);
-        draw->text(Vector(6, 37), health);
-        draw->text(Vector(6, 44), xp);
-        draw->text(Vector(6, 51), strength);
-
-        // draw a box around the selected option
-        draw->drawRect(Vector(76, 6), Vector(46, 46), ColorBlack);
-        draw->setFont(FontPrimary);
-        draw->text(Vector(80, 18), "Profile");
-        draw->setFont(FontSecondary);
-        draw->text(Vector(80, 32), "Settings");
-        draw->text(Vector(80, 46), "About");
-    }
-    break;
-    case MenuIndexSettings: // sound on/off, vibration on/off, and leave game
-    {
-        char soundStatus[16];
-        char vibrationStatus[16];
-        snprintf(soundStatus, sizeof(soundStatus), "Sound: %s", toggleToString(soundToggle));
-        snprintf(vibrationStatus, sizeof(vibrationStatus), "Vibrate: %s", toggleToString(vibrationToggle));
-        // draw settings info
-        switch (currentSettingsIndex)
-        {
-        case MenuSettingsMain:
-            draw->setFont(FontPrimary);
-            draw->text(Vector(6, 16), "Settings");
-            draw->setFontCustom(FONT_SIZE_SMALL);
-            draw->text(Vector(6, 30), soundStatus);
-            draw->text(Vector(6, 40), vibrationStatus);
-            draw->text(Vector(6, 50), "Leave Game");
-            break;
-        case MenuSettingsSound:
-            draw->setFont(FontPrimary);
-            draw->text(Vector(6, 16), "Settings");
-            draw->setFontCustom(FONT_SIZE_LARGE);
-            draw->text(Vector(6, 30), soundStatus);
-            draw->setFontCustom(FONT_SIZE_SMALL);
-            draw->text(Vector(6, 40), vibrationStatus);
-            draw->text(Vector(6, 50), "Leave Game");
-            break;
-        case MenuSettingsVibration:
-            draw->setFont(FontPrimary);
-            draw->text(Vector(6, 16), "Settings");
-            draw->setFontCustom(FONT_SIZE_SMALL);
-            draw->text(Vector(6, 30), soundStatus);
-            draw->setFontCustom(FONT_SIZE_LARGE);
-            draw->text(Vector(6, 40), vibrationStatus);
-            draw->setFontCustom(FONT_SIZE_SMALL);
-            draw->text(Vector(6, 50), "Leave Game");
-            break;
-        case MenuSettingsLeave:
-            draw->setFont(FontPrimary);
-            draw->text(Vector(6, 16), "Settings");
-            draw->setFontCustom(FONT_SIZE_SMALL);
-            draw->text(Vector(6, 30), soundStatus);
-            draw->text(Vector(6, 40), vibrationStatus);
-            draw->setFontCustom(FONT_SIZE_LARGE);
-            draw->text(Vector(6, 50), "Leave Game");
-            break;
-        default:
-            break;
-        };
-        draw->drawRect(Vector(76, 6), Vector(46, 46), ColorBlack);
-        draw->setFont(FontSecondary);
-        draw->text(Vector(80, 18), "Profile");
-        draw->setFont(FontPrimary);
-        draw->text(Vector(79, 32), "Settings");
-        draw->setFont(FontSecondary);
-        draw->text(Vector(80, 46), "About");
-    }
-    break;
-    case MenuIndexAbout:
-    {
-        draw->setFont(FontPrimary);
-        draw->text(Vector(6, 16), "Free Roam");
-        draw->setFontCustom(FONT_SIZE_SMALL);
-        draw->text(Vector(6, 25), "Creator: JBlanked");
-        draw->text(Vector(6, 59), "www.github.com/jblanked");
-
-        // draw a box around the selected option
-        draw->drawRect(Vector(76, 6), Vector(46, 46), ColorBlack);
-        draw->setFont(FontSecondary);
-        draw->text(Vector(80, 18), "Profile");
-        draw->text(Vector(80, 32), "Settings");
-        draw->setFont(FontPrimary);
-        draw->text(Vector(80, 46), "About");
-    }
-    break;
-    default:
-        draw->fillScreen(ColorWhite);
-        draw->text(Vector(0, 10), "Unknown Menu");
-        break;
-    };
+    drawMenuType2(draw, currentMenuIndex, currentSettingsIndex);
 }
 
 bool Player::isPositionSafe(Vector pos)

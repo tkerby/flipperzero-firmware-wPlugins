@@ -128,17 +128,19 @@ private:
     uint8_t welcomeFrame = 0;                                       // frame counter for welcome animation
     //
     void debounceInput(Game *game);
-    void drawGameLocalView(Draw *canvas);                // draw the local game view
-    void drawGameOnlineView(Draw *canvas);               // draw the online game view
-    void drawLobbyMenuView(Draw *canvas);                // draw the lobby menu view
-    void drawLoginView(Draw *canvas);                    // draw the login view
-    void drawRainEffect(Draw *canvas);                   // draw rain effect on the canvas
-    void drawRegistrationView(Draw *canvas);             // draw the registration view
-    void drawSystemMenuView(Draw *canvas);               // draw the system menu view
-    void drawTitleView(Draw *canvas);                    // draw the title view
-    void drawUserInfoView(Draw *canvas);                 // draw the user info view
-    void drawWelcomeView(Draw *canvas);                  // draw the welcome view
-    Vector findSafeSpawnPosition(const char *levelName); // find a safe spawn position for a level
-    bool isPositionSafe(Vector pos);                     // check if a position is safe (not in a wall)
-    void switchLevels(Game *game);                       // switch levels based on the current dynamic map and level name
+    void drawGameLocalView(Draw *canvas);                                                              // draw the local game view
+    void drawGameOnlineView(Draw *canvas);                                                             // draw the online game view
+    void drawLobbyMenuView(Draw *canvas);                                                              // draw the lobby menu view
+    void drawLoginView(Draw *canvas);                                                                  // draw the login view
+    void drawMenuType1(Draw *canvas, uint8_t selectedIndex, const char *option1, const char *option2); // draw the menu type 1 (used is out-game title, and lobby menu views)
+    void drawMenuType2(Draw *canvas, uint8_t selectedIndexMain, uint8_t selectedIndexSettings);        // draw the menu type 2 (used in in-game and out-game system menu views)
+    void drawRainEffect(Draw *canvas);                                                                 // draw rain effect on the canvas
+    void drawRegistrationView(Draw *canvas);                                                           // draw the registration view
+    void drawSystemMenuView(Draw *canvas);                                                             // draw the system menu view
+    void drawTitleView(Draw *canvas);                                                                  // draw the title view
+    void drawUserInfoView(Draw *canvas);                                                               // draw the user info view
+    void drawWelcomeView(Draw *canvas);                                                                // draw the welcome view
+    Vector findSafeSpawnPosition(const char *levelName);                                               // find a safe spawn position for a level
+    bool isPositionSafe(Vector pos);                                                                   // check if a position is safe (not in a wall)
+    void switchLevels(Game *game);                                                                     // switch levels based on the current dynamic map and level name
 };
