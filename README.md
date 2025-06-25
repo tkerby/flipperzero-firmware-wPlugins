@@ -1,7 +1,11 @@
+![stats](https://hackatime-badge.hackclub.com/U092FFBRR0Q/flipperzero-bw16-deauther)
+![stats1](https://hackatime-badge.hackclub.com/U092FFBRR0Q/RTL8720dn-DeautherWithRTOS)
+
 # Flipper Zero 5GHz Deauther
 Flipper Zero 5GHz Deauther using the BW16 (RTL8720dn)
 
 I made this project for the [Summer Hackclub](https://summer.hack.club/bc1) and because I have not seen any 5Ghz deauther projects for the Flipper Zero.
+
 
 ## Features
 ### Deauthentication
