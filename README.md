@@ -1,27 +1,18 @@
 # What does Anki-Remote do?
 
-This app lets you assign any keyboard key to each button on your Flipper Zero and use it as a BLE (Bluetooth Low Energy) remote. Key mappings are saved to the SD card inside the apps_data folder.
+It lets you assign any keyboard key to each button on your Flipper Zero and use it as a BLE (Bluetooth Low Energy) remote. Key mappings are saved to the SD card inside the apps_data folder.
 
 ## How to Use
 
-To use the app, simply open it, select **Settings**, and change the key mappings to whatever you want. These settings will be saved to the SD card and will remain the same the next time you open the app.
+To use the app, simply open it, select **Settings**, and set the key mappings to whatever you want. These settings will be saved to the SD card and will remain the same the next time you open the app.
 
-Then, go back to the main menu, press **Start**, and connect to Bluetooth. Once youre successfully connected, you'll see the controller screen.
-
-## Default Keymaps
-
-- **Up:** Up arrow
-- **Down:** Down arrow
-- **Left:** 1 
-- **Right:** 3 
-- **OK:** Space
-- **Back:** u
+Then, go back to the main menu, press **Start**, and connect to Bluetooth. Once you're successfully connected, you'll see the controller screen.
 
 ## Purpose
 
 The purpose I originally had in mind for this app was to be used as a remote for [Anki](https://apps.ankiweb.net/), a popular spaced repetition flashcard app for med school students. However, this app's usability is not limited to Anki and it **can be used for any other purpose or program**.
 
-The current HID keyboard in the BT remote app is limited for this use case because it takes a long time to get to a different button, and you have to keep looking at the Flipper's screen at all times.
+The current HID keyboard in the BT remote app is limited for this use case because it takes a long time to navigate to a different button, and you have to be looking at the Flipper's screen at all times to see which key you have selected.
 
 ## Credits & References
 
