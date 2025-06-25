@@ -4,6 +4,7 @@ App(
     apptype=FlipperAppType.EXTERNAL,
     entry_point="lora_app_main",
     requires=["bt", "gui"],
+    sources=["*.c", "!doc"],
     stack_size=1 * 1024,
     fap_icon="lora_10px.png",
     fap_category="GPIO",
