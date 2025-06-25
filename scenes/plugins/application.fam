@@ -1,0 +1,11 @@
+App(
+    appid="renfe_sum10_plugin",
+    name="RENFE Suma 10 Plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="renfe_sum10_plugin_ep",
+    provides=["renfe_sum10_plugin"],
+    requires=["gui"],
+    stack_size=4 * 1024,
+    order=20,
+    sources=["renfe_sum10.c"],
+)
