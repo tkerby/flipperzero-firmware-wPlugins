@@ -27,6 +27,8 @@ typedef struct
 } ShowdownApp;
 
 // This function is called by Flipper to draw the screen
+// Commented out unused functions
+/*
 static void pocket_battle_draw_callback(Canvas *canvas, void *ctx)
 {
     ShowdownApp *app = (ShowdownApp *)ctx;
@@ -46,15 +48,20 @@ static void pocket_battle_draw_callback(Canvas *canvas, void *ctx)
         break;
     }
 }
+*/
 
 // This function is called by Flipper when buttons are pressed
+/*
 static void pocket_battle_input_callback(InputEvent *input_event, void *ctx)
 {
     ShowdownApp *app = (ShowdownApp *)ctx;
     furi_message_queue_put(app->event_queue, input_event, FuriWaitForever);
 }
+*/
 
-// Main entry point - THIS IS WHERE THE APP STARTS
+// Main entry point - COMMENTED OUT TO AVOID CONFLICTS
+// Use pokemon_main_enhanced.c instead
+/*
 int32_t pocket_battle_main(void *p)
 {
     UNUSED(p);
@@ -161,3 +168,4 @@ int32_t pocket_battle_main(void *p)
 
     return 0;
 }
+*/
