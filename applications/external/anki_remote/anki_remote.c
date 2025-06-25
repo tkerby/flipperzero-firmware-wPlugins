@@ -16,16 +16,14 @@
 #include "anki_remote_icons.h"
 
 // Defines
-#define TAG "AnkiRemoteApp"
-#define KEYMAP_PATH APP_DATA_PATH("keymaps.dat")
-#define NUM_FLIPPER_BUTTONS 6
-#define MENU_OPTIONS_COUNT 2
+#define TAG                      "AnkiRemoteApp"
+#define KEYMAP_PATH              APP_DATA_PATH("keymaps.dat")
+#define NUM_FLIPPER_BUTTONS      6
+#define MENU_OPTIONS_COUNT       2
 // Bug fix (this is so it can use the same bluetooth keys as other HID apps)
 #define HID_BT_KEYS_STORAGE_PATH EXT_PATH("apps_data/hid_ble/.bt_hid.keys")
 
-
 // - - - Section 1: Enums and Structs - - -
-
 
 // Bitmask for modifier keys
 #define MOD_CTRL_BIT  (1 << 0)
@@ -71,9 +69,7 @@ typedef struct {
 
 typedef struct AnkiRemoteApp AnkiRemoteApp;
 
-
 // - - - Section 2: Keyboard Settings UI Data (from the pre-installed BLE Remote app) - - -
-
 
 typedef struct {
     uint8_t width;
@@ -85,29 +81,143 @@ typedef struct {
     uint8_t value;
 } HidKeyboardKey;
 
-#define KEYBOARD_ROW_COUNT 7
+#define KEYBOARD_ROW_COUNT    7
 #define KEYBOARD_COLUMN_COUNT 12
 const HidKeyboardKey hid_keyboard_keyset[KEYBOARD_ROW_COUNT][KEYBOARD_COLUMN_COUNT] = {
     // F-keys
-    {{.width = 1, .icon = &I_ButtonF1_5x8, .value = HID_KEYBOARD_F1}, {.width = 1, .icon = &I_ButtonF2_5x8, .value = HID_KEYBOARD_F2}, {.width = 1, .icon = &I_ButtonF3_5x8, .value = HID_KEYBOARD_F3}, {.width = 1, .icon = &I_ButtonF4_5x8, .value = HID_KEYBOARD_F4}, {.width = 1, .icon = &I_ButtonF5_5x8, .value = HID_KEYBOARD_F5}, {.width = 1, .icon = &I_ButtonF6_5x8, .value = HID_KEYBOARD_F6}, {.width = 1, .icon = &I_ButtonF7_5x8, .value = HID_KEYBOARD_F7}, {.width = 1, .icon = &I_ButtonF8_5x8, .value = HID_KEYBOARD_F8}, {.width = 1, .icon = &I_ButtonF9_5x8, .value = HID_KEYBOARD_F9}, {.width = 1, .icon = &I_ButtonF10_5x8, .value = HID_KEYBOARD_F10}, {.width = 1, .icon = &I_ButtonF11_5x8, .value = HID_KEYBOARD_F11}, {.width = 1, .icon = &I_ButtonF12_5x8, .value = HID_KEYBOARD_F12}},
+    {{.width = 1, .icon = &I_ButtonF1_5x8, .value = HID_KEYBOARD_F1},
+     {.width = 1, .icon = &I_ButtonF2_5x8, .value = HID_KEYBOARD_F2},
+     {.width = 1, .icon = &I_ButtonF3_5x8, .value = HID_KEYBOARD_F3},
+     {.width = 1, .icon = &I_ButtonF4_5x8, .value = HID_KEYBOARD_F4},
+     {.width = 1, .icon = &I_ButtonF5_5x8, .value = HID_KEYBOARD_F5},
+     {.width = 1, .icon = &I_ButtonF6_5x8, .value = HID_KEYBOARD_F6},
+     {.width = 1, .icon = &I_ButtonF7_5x8, .value = HID_KEYBOARD_F7},
+     {.width = 1, .icon = &I_ButtonF8_5x8, .value = HID_KEYBOARD_F8},
+     {.width = 1, .icon = &I_ButtonF9_5x8, .value = HID_KEYBOARD_F9},
+     {.width = 1, .icon = &I_ButtonF10_5x8, .value = HID_KEYBOARD_F10},
+     {.width = 1, .icon = &I_ButtonF11_5x8, .value = HID_KEYBOARD_F11},
+     {.width = 1, .icon = &I_ButtonF12_5x8, .value = HID_KEYBOARD_F12}},
     // Numbers row
-    {{.width = 1, .key = '1', .shift_key = '!', .value = HID_KEYBOARD_1}, {.width = 1, .key = '2', .shift_key = '@', .value = HID_KEYBOARD_2}, {.width = 1, .icon_shift = &I_hash_button_9x11, .key = '3', .shift_key = '#', .value = HID_KEYBOARD_3}, {.width = 1, .key = '4', .shift_key = '$', .value = HID_KEYBOARD_4}, {.width = 1, .icon_shift = &I_percent_button_9x11, .key = '5', .shift_key = '%', .value = HID_KEYBOARD_5}, {.width = 1, .key = '6', .shift_key = '^', .value = HID_KEYBOARD_6}, {.width = 1, .key = '7', .shift_key = '&', .value = HID_KEYBOARD_7}, {.width = 1, .key = '8', .shift_key = '*', .value = HID_KEYBOARD_8}, {.width = 1, .key = '9', .shift_key = '(', .value = HID_KEYBOARD_9}, {.width = 1, .key = '0', .shift_key = ')', .value = HID_KEYBOARD_0}, {.width = 2, .icon = &I_backspace_19x11, .value = HID_KEYBOARD_DELETE}},
+    {{.width = 1, .key = '1', .shift_key = '!', .value = HID_KEYBOARD_1},
+     {.width = 1, .key = '2', .shift_key = '@', .value = HID_KEYBOARD_2},
+     {.width = 1,
+      .icon_shift = &I_hash_button_9x11,
+      .key = '3',
+      .shift_key = '#',
+      .value = HID_KEYBOARD_3},
+     {.width = 1, .key = '4', .shift_key = '$', .value = HID_KEYBOARD_4},
+     {.width = 1,
+      .icon_shift = &I_percent_button_9x11,
+      .key = '5',
+      .shift_key = '%',
+      .value = HID_KEYBOARD_5},
+     {.width = 1, .key = '6', .shift_key = '^', .value = HID_KEYBOARD_6},
+     {.width = 1, .key = '7', .shift_key = '&', .value = HID_KEYBOARD_7},
+     {.width = 1, .key = '8', .shift_key = '*', .value = HID_KEYBOARD_8},
+     {.width = 1, .key = '9', .shift_key = '(', .value = HID_KEYBOARD_9},
+     {.width = 1, .key = '0', .shift_key = ')', .value = HID_KEYBOARD_0},
+     {.width = 2, .icon = &I_backspace_19x11, .value = HID_KEYBOARD_DELETE}},
     // QWERTY row
-    {{.width = 1, .key = 'q', .shift_key = 'Q', .value = HID_KEYBOARD_Q}, {.width = 1, .key = 'w', .shift_key = 'W', .value = HID_KEYBOARD_W}, {.width = 1, .key = 'e', .shift_key = 'E', .value = HID_KEYBOARD_E}, {.width = 1, .key = 'r', .shift_key = 'R', .value = HID_KEYBOARD_R}, {.width = 1, .key = 't', .shift_key = 'T', .value = HID_KEYBOARD_T}, {.width = 1, .key = 'y', .shift_key = 'Y', .value = HID_KEYBOARD_Y}, {.width = 1, .key = 'u', .shift_key = 'U', .value = HID_KEYBOARD_U}, {.width = 1, .key = 'i', .shift_key = 'I', .value = HID_KEYBOARD_I}, {.width = 1, .key = 'o', .shift_key = 'O', .value = HID_KEYBOARD_O}, {.width = 1, .key = 'p', .shift_key = 'P', .value = HID_KEYBOARD_P}, {.width = 1, .icon = &I_sq_bracket_left_button_9x11, .icon_shift = &I_brace_left_button_9x11, .value = HID_KEYBOARD_OPEN_BRACKET}, {.width = 1, .icon = &I_sq_bracket_right_button_9x11, .icon_shift = &I_brace_right_button_9x11, .value = HID_KEYBOARD_CLOSE_BRACKET}},
+    {{.width = 1, .key = 'q', .shift_key = 'Q', .value = HID_KEYBOARD_Q},
+     {.width = 1, .key = 'w', .shift_key = 'W', .value = HID_KEYBOARD_W},
+     {.width = 1, .key = 'e', .shift_key = 'E', .value = HID_KEYBOARD_E},
+     {.width = 1, .key = 'r', .shift_key = 'R', .value = HID_KEYBOARD_R},
+     {.width = 1, .key = 't', .shift_key = 'T', .value = HID_KEYBOARD_T},
+     {.width = 1, .key = 'y', .shift_key = 'Y', .value = HID_KEYBOARD_Y},
+     {.width = 1, .key = 'u', .shift_key = 'U', .value = HID_KEYBOARD_U},
+     {.width = 1, .key = 'i', .shift_key = 'I', .value = HID_KEYBOARD_I},
+     {.width = 1, .key = 'o', .shift_key = 'O', .value = HID_KEYBOARD_O},
+     {.width = 1, .key = 'p', .shift_key = 'P', .value = HID_KEYBOARD_P},
+     {.width = 1,
+      .icon = &I_sq_bracket_left_button_9x11,
+      .icon_shift = &I_brace_left_button_9x11,
+      .value = HID_KEYBOARD_OPEN_BRACKET},
+     {.width = 1,
+      .icon = &I_sq_bracket_right_button_9x11,
+      .icon_shift = &I_brace_right_button_9x11,
+      .value = HID_KEYBOARD_CLOSE_BRACKET}},
     // ASDF row
-    {{.width = 1, .key = 'a', .shift_key = 'A', .value = HID_KEYBOARD_A}, {.width = 1, .key = 's', .shift_key = 'S', .value = HID_KEYBOARD_S}, {.width = 1, .key = 'd', .shift_key = 'D', .value = HID_KEYBOARD_D}, {.width = 1, .key = 'f', .shift_key = 'F', .value = HID_KEYBOARD_F}, {.width = 1, .key = 'g', .shift_key = 'G', .value = HID_KEYBOARD_G}, {.width = 1, .key = 'h', .shift_key = 'H', .value = HID_KEYBOARD_H}, {.width = 1, .key = 'j', .shift_key = 'J', .value = HID_KEYBOARD_J}, {.width = 1, .key = 'k', .shift_key = 'K', .value = HID_KEYBOARD_K}, {.width = 1, .key = 'l', .shift_key = 'L', .value = HID_KEYBOARD_L}, {.width = 1, .key = ';', .shift_key = ':', .value = HID_KEYBOARD_SEMICOLON}, {.width = 2, .icon = &I_Return_10x7, .value = HID_KEYBOARD_RETURN}},
+    {{.width = 1, .key = 'a', .shift_key = 'A', .value = HID_KEYBOARD_A},
+     {.width = 1, .key = 's', .shift_key = 'S', .value = HID_KEYBOARD_S},
+     {.width = 1, .key = 'd', .shift_key = 'D', .value = HID_KEYBOARD_D},
+     {.width = 1, .key = 'f', .shift_key = 'F', .value = HID_KEYBOARD_F},
+     {.width = 1, .key = 'g', .shift_key = 'G', .value = HID_KEYBOARD_G},
+     {.width = 1, .key = 'h', .shift_key = 'H', .value = HID_KEYBOARD_H},
+     {.width = 1, .key = 'j', .shift_key = 'J', .value = HID_KEYBOARD_J},
+     {.width = 1, .key = 'k', .shift_key = 'K', .value = HID_KEYBOARD_K},
+     {.width = 1, .key = 'l', .shift_key = 'L', .value = HID_KEYBOARD_L},
+     {.width = 1, .key = ';', .shift_key = ':', .value = HID_KEYBOARD_SEMICOLON},
+     {.width = 2, .icon = &I_Return_10x7, .value = HID_KEYBOARD_RETURN}},
     // ZXCV row
-    {{.width = 1, .key = 'z', .shift_key = 'Z', .value = HID_KEYBOARD_Z}, {.width = 1, .key = 'x', .shift_key = 'X', .value = HID_KEYBOARD_X}, {.width = 1, .key = 'c', .shift_key = 'C', .value = HID_KEYBOARD_C}, {.width = 1, .key = 'v', .shift_key = 'V', .value = HID_KEYBOARD_V}, {.width = 1, .key = 'b', .shift_key = 'B', .value = HID_KEYBOARD_B}, {.width = 1, .key = 'n', .shift_key = 'N', .value = HID_KEYBOARD_N}, {.width = 1, .key = 'm', .shift_key = 'M', .value = HID_KEYBOARD_M}, {.width = 1, .icon = &I_slash_button_9x11, .shift_key = '?', .value = HID_KEYBOARD_SLASH}, {.width = 1, .icon = &I_backslash_button_9x11, .shift_key = '|', .value = HID_KEYBOARD_BACKSLASH}, {.width = 1, .icon = &I_backtick_button_9x11, .shift_key = '~', .value = HID_KEYBOARD_GRAVE_ACCENT}, {.width = 1, .icon = &I_ButtonUp_7x4, .value = HID_KEYBOARD_UP_ARROW}, {.width = 1, .icon_shift = &I_underscore_button_9x11, .key = '-', .shift_key = '_', .value = HID_KEYBOARD_MINUS}},
+    {{.width = 1, .key = 'z', .shift_key = 'Z', .value = HID_KEYBOARD_Z},
+     {.width = 1, .key = 'x', .shift_key = 'X', .value = HID_KEYBOARD_X},
+     {.width = 1, .key = 'c', .shift_key = 'C', .value = HID_KEYBOARD_C},
+     {.width = 1, .key = 'v', .shift_key = 'V', .value = HID_KEYBOARD_V},
+     {.width = 1, .key = 'b', .shift_key = 'B', .value = HID_KEYBOARD_B},
+     {.width = 1, .key = 'n', .shift_key = 'N', .value = HID_KEYBOARD_N},
+     {.width = 1, .key = 'm', .shift_key = 'M', .value = HID_KEYBOARD_M},
+     {.width = 1, .icon = &I_slash_button_9x11, .shift_key = '?', .value = HID_KEYBOARD_SLASH},
+     {.width = 1,
+      .icon = &I_backslash_button_9x11,
+      .shift_key = '|',
+      .value = HID_KEYBOARD_BACKSLASH},
+     {.width = 1,
+      .icon = &I_backtick_button_9x11,
+      .shift_key = '~',
+      .value = HID_KEYBOARD_GRAVE_ACCENT},
+     {.width = 1, .icon = &I_ButtonUp_7x4, .value = HID_KEYBOARD_UP_ARROW},
+     {.width = 1,
+      .icon_shift = &I_underscore_button_9x11,
+      .key = '-',
+      .shift_key = '_',
+      .value = HID_KEYBOARD_MINUS}},
     // Bottom symbol row
-    {{.width = 1, .icon = &I_Shift_inactive_7x9, .icon_toggled = &I_Shift_active_7x9, .value = HID_KEYBOARD_L_SHIFT}, {.width = 1, .key = ',', .shift_key = '<', .value = HID_KEYBOARD_COMMA}, {.width = 1, .key = '.', .shift_key = '>', .value = HID_KEYBOARD_DOT}, {.width = 4, .value = HID_KEYBOARD_SPACEBAR}, {.width = 0}, {.width = 0}, {.width = 0},
-    {.width = 1, .key = '\'', .shift_key = '"', .icon = &I_apostrophe_button_9x11, .icon_shift = &I_quote_button_9x11, .value = HID_KEYBOARD_APOSTROPHE},
-    {.width = 1, .icon = &I_equals_button_9x11, .shift_key = '+', .value = HID_KEYBOARD_EQUAL_SIGN}, {.width = 1, .icon = &I_ButtonLeft_4x7, .value = HID_KEYBOARD_LEFT_ARROW}, {.width = 1, .icon = &I_ButtonDown_7x4, .value = HID_KEYBOARD_DOWN_ARROW}, {.width = 1, .icon = &I_ButtonRight_4x7, .value = HID_KEYBOARD_RIGHT_ARROW}},
+    {{.width = 1,
+      .icon = &I_Shift_inactive_7x9,
+      .icon_toggled = &I_Shift_active_7x9,
+      .value = HID_KEYBOARD_L_SHIFT},
+     {.width = 1, .key = ',', .shift_key = '<', .value = HID_KEYBOARD_COMMA},
+     {.width = 1, .key = '.', .shift_key = '>', .value = HID_KEYBOARD_DOT},
+     {.width = 4, .value = HID_KEYBOARD_SPACEBAR},
+     {.width = 0},
+     {.width = 0},
+     {.width = 0},
+     {.width = 1,
+      .key = '\'',
+      .shift_key = '"',
+      .icon = &I_apostrophe_button_9x11,
+      .icon_shift = &I_quote_button_9x11,
+      .value = HID_KEYBOARD_APOSTROPHE},
+     {.width = 1,
+      .icon = &I_equals_button_9x11,
+      .shift_key = '+',
+      .value = HID_KEYBOARD_EQUAL_SIGN},
+     {.width = 1, .icon = &I_ButtonLeft_4x7, .value = HID_KEYBOARD_LEFT_ARROW},
+     {.width = 1, .icon = &I_ButtonDown_7x4, .value = HID_KEYBOARD_DOWN_ARROW},
+     {.width = 1, .icon = &I_ButtonRight_4x7, .value = HID_KEYBOARD_RIGHT_ARROW}},
     // Modifier keys row
-    {{.width = 2, .icon = &I_Ctrl_17x10, .icon_toggled = &I_Ctrl_active_17x9, .value = HID_KEYBOARD_L_CTRL}, {.width = 0}, {.width = 2, .icon = &I_Alt_17x10, .icon_toggled = &I_Alt_active_17x9, .value = HID_KEYBOARD_L_ALT}, {.width = 0}, {.width = 2, .icon = &I_Cmd_17x10, .icon_toggled = &I_Cmd_active_17x9, .value = HID_KEYBOARD_L_GUI}, {.width = 0}, {.width = 2, .icon = &I_Tab_17x10, .value = HID_KEYBOARD_TAB}, {.width = 0}, {.width = 2, .icon = &I_Esc_17x10, .value = HID_KEYBOARD_ESCAPE}, {.width = 0}, {.width = 2, .icon = &I_Del_17x10, .value = HID_KEYBOARD_DELETE_FORWARD}}};
-
+    {{.width = 2,
+      .icon = &I_Ctrl_17x10,
+      .icon_toggled = &I_Ctrl_active_17x9,
+      .value = HID_KEYBOARD_L_CTRL},
+     {.width = 0},
+     {.width = 2,
+      .icon = &I_Alt_17x10,
+      .icon_toggled = &I_Alt_active_17x9,
+      .value = HID_KEYBOARD_L_ALT},
+     {.width = 0},
+     {.width = 2,
+      .icon = &I_Cmd_17x10,
+      .icon_toggled = &I_Cmd_active_17x9,
+      .value = HID_KEYBOARD_L_GUI},
+     {.width = 0},
+     {.width = 2, .icon = &I_Tab_17x10, .value = HID_KEYBOARD_TAB},
+     {.width = 0},
+     {.width = 2, .icon = &I_Esc_17x10, .value = HID_KEYBOARD_ESCAPE},
+     {.width = 0},
+     {.width = 2, .icon = &I_Del_17x10, .value = HID_KEYBOARD_DELETE_FORWARD}}};
 
 // - - - Section 3: Main Application State Struct - - -
-
 
 struct AnkiRemoteApp {
     // Flipper os stuff
@@ -117,7 +227,7 @@ struct AnkiRemoteApp {
     NotificationApp* notifications;
     Bt* bt;
     FuriHalBleProfileBase* ble_hid_profile;
-    
+
     // App state
     AppScene current_scene;
     bool running;
@@ -126,7 +236,7 @@ struct AnkiRemoteApp {
     struct {
         uint8_t selected_item;
     } menu_state;
-    
+
     // Scene specific states
     struct {
         uint8_t selected_item;
@@ -148,7 +258,7 @@ struct AnkiRemoteApp {
         bool gui_pressed;
         FlipperButton configuring_button;
     } settings_state;
-    
+
     // BUG FIX: Flag to prevent the OK button release from being processed by the next screen
     bool ignore_next_ok_release;
 };
@@ -162,9 +272,7 @@ static void anki_remote_send_key_combo(AnkiRemoteApp* app, KeyMapping mapping, b
 static const char* get_button_name(FlipperButton button);
 static void get_key_combo_name(KeyMapping mapping, char* buffer, size_t buffer_size);
 
-
 // - - - Section 4: Keymap Saving - - -
-
 
 // v1.1: No longer a set of default keymappings (unmaps all keys)
 static void anki_remote_set_default_keymap(AnkiRemoteApp* app) {
@@ -201,9 +309,7 @@ static void anki_remote_save_keymap(AnkiRemoteApp* app) {
     furi_record_close(RECORD_STORAGE);
 }
 
-
 // - - - Section 5a: Menu Scene - - -
-
 
 static void anki_remote_scene_menu_draw_callback(Canvas* canvas, void* context) {
     AnkiRemoteApp* app = context;
@@ -232,24 +338,28 @@ static void anki_remote_scene_menu_input_handler(AnkiRemoteApp* app, InputEvent*
     } else if(event->key == InputKeyDown) {
         app->menu_state.selected_item = (app->menu_state.selected_item + 1) % MENU_OPTIONS_COUNT;
     } else if(event->key == InputKeyOk) {
-        if(app->menu_state.selected_item == 0) anki_remote_set_scene(app, SceneController); // Start
-        else if(app->menu_state.selected_item == 1) anki_remote_set_scene(app, SceneSettingsMenu); // Settings
+        if(app->menu_state.selected_item == 0)
+            anki_remote_set_scene(app, SceneController); // Start
+        else if(app->menu_state.selected_item == 1)
+            anki_remote_set_scene(app, SceneSettingsMenu); // Settings
     } else if(event->key == InputKeyBack && event->type == InputTypeShort) {
         app->running = false; // Bug fix (Only exit the app on a short press from the menu)
         // so the whole app doesn't accidently close
     }
 }
 
-
 // - - - Section 5b: Controller Scene - - -
-
 
 static void hid_keynote_draw_arrow(Canvas* canvas, uint8_t x, uint8_t y, CanvasDirection dir) {
     canvas_draw_triangle(canvas, x, y, 5, 3, dir);
-    if(dir == CanvasDirectionBottomToTop) canvas_draw_line(canvas, x, y + 6, x, y - 1);
-    else if(dir == CanvasDirectionTopToBottom) canvas_draw_line(canvas, x, y - 6, x, y + 1);
-    else if(dir == CanvasDirectionRightToLeft) canvas_draw_line(canvas, x + 6, y, x - 1, y);
-    else if(dir == CanvasDirectionLeftToRight) canvas_draw_line(canvas, x - 6, y, x + 1, y);
+    if(dir == CanvasDirectionBottomToTop)
+        canvas_draw_line(canvas, x, y + 6, x, y - 1);
+    else if(dir == CanvasDirectionTopToBottom)
+        canvas_draw_line(canvas, x, y - 6, x, y + 1);
+    else if(dir == CanvasDirectionRightToLeft)
+        canvas_draw_line(canvas, x + 6, y, x - 1, y);
+    else if(dir == CanvasDirectionLeftToRight)
+        canvas_draw_line(canvas, x - 6, y, x + 1, y);
 }
 
 static void anki_remote_scene_controller_draw_callback(Canvas* canvas, void* context) {
@@ -272,7 +382,7 @@ static void anki_remote_scene_controller_draw_callback(Canvas* canvas, void* con
         canvas_draw_icon(canvas, 68, 2, &I_Pin_back_arrow_10x8);
         canvas_set_font(canvas, FontSecondary);
         elements_multiline_text_aligned(canvas, 127, 3, AlignRight, AlignTop, "Hold to exit");
-        
+
         // D-Pad buttons
         canvas_draw_icon(canvas, 21, 24, &I_Button_18x18); // Up
         if(app->controller_state.up_pressed) {
@@ -281,7 +391,7 @@ static void anki_remote_scene_controller_draw_callback(Canvas* canvas, void* con
         }
         hid_keynote_draw_arrow(canvas, 30, 30, CanvasDirectionBottomToTop);
         canvas_set_color(canvas, ColorBlack);
-       
+
         canvas_draw_icon(canvas, 21, 45, &I_Button_18x18); // Down
         if(app->controller_state.down_pressed) {
             elements_slightly_rounded_box(canvas, 24, 47, 13, 13);
@@ -289,7 +399,7 @@ static void anki_remote_scene_controller_draw_callback(Canvas* canvas, void* con
         }
         hid_keynote_draw_arrow(canvas, 30, 55, CanvasDirectionTopToBottom);
         canvas_set_color(canvas, ColorBlack);
-       
+
         canvas_draw_icon(canvas, 0, 45, &I_Button_18x18); // Left
         if(app->controller_state.left_pressed) {
             elements_slightly_rounded_box(canvas, 3, 47, 13, 13);
@@ -297,7 +407,7 @@ static void anki_remote_scene_controller_draw_callback(Canvas* canvas, void* con
         }
         hid_keynote_draw_arrow(canvas, 7, 53, CanvasDirectionRightToLeft);
         canvas_set_color(canvas, ColorBlack);
-        
+
         canvas_draw_icon(canvas, 42, 45, &I_Button_18x18); // Right
         if(app->controller_state.right_pressed) {
             elements_slightly_rounded_box(canvas, 45, 47, 13, 13);
@@ -305,7 +415,7 @@ static void anki_remote_scene_controller_draw_callback(Canvas* canvas, void* con
         }
         hid_keynote_draw_arrow(canvas, 53, 53, CanvasDirectionLeftToRight);
         canvas_set_color(canvas, ColorBlack);
-      
+
         canvas_draw_icon(canvas, 63, 24, &I_Space_65x18); // OK
         if(app->controller_state.ok_pressed) {
             elements_slightly_rounded_box(canvas, 66, 26, 60, 13);
@@ -314,7 +424,7 @@ static void anki_remote_scene_controller_draw_callback(Canvas* canvas, void* con
         canvas_draw_icon(canvas, 74, 28, &I_Ok_btn_9x9);
         elements_multiline_text_aligned(canvas, 91, 36, AlignLeft, AlignBottom, "OK");
         canvas_set_color(canvas, ColorBlack);
-        
+
         canvas_draw_icon(canvas, 63, 45, &I_Space_65x18); // Back
         if(app->controller_state.back_pressed) {
             elements_slightly_rounded_box(canvas, 66, 47, 60, 13);
@@ -375,9 +485,7 @@ static void anki_remote_scene_controller_input_handler(AnkiRemoteApp* app, Input
     }
 }
 
-
 // - - - Secton 5c: Settings Scene - - -
-
 
 // Gets name of the button being configured
 static const char* get_button_name(FlipperButton button) {
@@ -414,7 +522,7 @@ void get_key_combo_name(KeyMapping mapping, char* buffer, size_t buffer_size) {
     if(mapping.modifiers & MOD_GUI_BIT) strlcat(buffer, "Cmd+", buffer_size);
     const char* base_key_name = "???";
     bool found = false;
-    
+
     // Loop through virtual keyboard layout to find the keycode.
     for(uint8_t y = 0; y < KEYBOARD_ROW_COUNT && !found; ++y) {
         for(uint8_t x = 0; x < KEYBOARD_COLUMN_COUNT && !found; ++x) {
@@ -557,7 +665,7 @@ static void anki_remote_scene_settings_menu_draw_callback(Canvas* canvas, void* 
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str(canvas, 2, 10, "Button Settings");
     canvas_set_font(canvas, FontSecondary);
-    
+
     const uint8_t total_items = NUM_FLIPPER_BUTTONS + 1; // +1 for Reset
     const uint8_t visible_items = 5;
     uint8_t y_start = 19;
@@ -588,7 +696,6 @@ static void anki_remote_scene_settings_menu_draw_callback(Canvas* canvas, void* 
 
     elements_scrollbar(canvas, app->settings_menu_state.selected_item, total_items);
 }
-
 
 // Settings menu inputs (not in the keyboard)
 static void anki_remote_scene_settings_menu_input_handler(AnkiRemoteApp* app, InputEvent* event) {
@@ -629,9 +736,7 @@ static void anki_remote_scene_settings_menu_input_handler(AnkiRemoteApp* app, In
     app->settings_menu_state.selected_item = selected_item;
 }
 
-
 // - - - Section 5d: Keyboard Selection Scene - - -
-
 
 // Goofy ahh key drawing algorithm from BT remote
 static void hid_keyboard_draw_key(
@@ -642,10 +747,10 @@ static void hid_keyboard_draw_key(
     bool selected,
     const struct AnkiRemoteApp* app) {
     if(!key->width) return;
-#define MARGIN_TOP 12
+#define MARGIN_TOP  12
 #define MARGIN_LEFT 3
-#define KEY_WIDTH 11
-#define KEY_HEIGHT 13
+#define KEY_WIDTH   11
+#define KEY_HEIGHT  13
 #define KEY_PADDING -1
     canvas_set_color(canvas, ColorBlack);
     uint8_t key_width = KEY_WIDTH * key->width + KEY_PADDING * (key->width - 1);
@@ -666,11 +771,10 @@ static void hid_keyboard_draw_key(
             KEY_HEIGHT);
     }
     bool shift = app->settings_state.shift_pressed;
-    bool is_toggled =
-        (key->value == HID_KEYBOARD_L_SHIFT && app->settings_state.shift_pressed) ||
-        (key->value == HID_KEYBOARD_L_CTRL && app->settings_state.ctrl_pressed) ||
-        (key->value == HID_KEYBOARD_L_ALT && app->settings_state.alt_pressed) ||
-        (key->value == HID_KEYBOARD_L_GUI && app->settings_state.gui_pressed);
+    bool is_toggled = (key->value == HID_KEYBOARD_L_SHIFT && app->settings_state.shift_pressed) ||
+                      (key->value == HID_KEYBOARD_L_CTRL && app->settings_state.ctrl_pressed) ||
+                      (key->value == HID_KEYBOARD_L_ALT && app->settings_state.alt_pressed) ||
+                      (key->value == HID_KEYBOARD_L_GUI && app->settings_state.gui_pressed);
     if(is_toggled && key->icon_toggled) {
         const Icon* icon = key->icon_toggled;
         canvas_draw_icon(
@@ -691,7 +795,7 @@ static void hid_keyboard_draw_key(
                 icon);
             return;
         }
-        
+
         // If Shift is active and the key has a special character for Shift...
         if(key->shift_key != 0) {
             char text[2] = {key->shift_key, '\0'};
@@ -716,7 +820,7 @@ static void hid_keyboard_draw_key(
             icon);
         return;
     }
-    
+
     // If no icon, try to draw the regular character
     if(key->key != 0) {
         char text[2] = {key->key, '\0'};
@@ -777,7 +881,7 @@ static void settings_move_cursor(AnkiRemoteApp* app, int8_t dx, int8_t dy) {
         }
     }
 
-     // BUG FIX: find nearest valid key if you land on empty key slot
+    // BUG FIX: find nearest valid key if you land on empty key slot
     if(hid_keyboard_keyset[current_y][current_x].width == 0) {
         int temp_x = current_x;
         while(hid_keyboard_keyset[current_y][temp_x].width == 0) {
@@ -816,13 +920,17 @@ static void anki_remote_scene_settings_input_handler(AnkiRemoteApp* app, InputEv
     } else {
         if(event->type != InputTypePress && event->type != InputTypeRepeat) return;
     }
-    
+
     // Arrow key presses
-    if(event->key == InputKeyUp) settings_move_cursor(app, 0, -1);
-    else if(event->key == InputKeyDown) settings_move_cursor(app, 0, 1);
-    else if(event->key == InputKeyLeft) settings_move_cursor(app, -1, 0);
-    else if(event->key == InputKeyRight) settings_move_cursor(app, 1, 0);
-    
+    if(event->key == InputKeyUp)
+        settings_move_cursor(app, 0, -1);
+    else if(event->key == InputKeyDown)
+        settings_move_cursor(app, 0, 1);
+    else if(event->key == InputKeyLeft)
+        settings_move_cursor(app, -1, 0);
+    else if(event->key == InputKeyRight)
+        settings_move_cursor(app, 1, 0);
+
     // Select and get HID keycode if OK is pressed
     else if(event->key == InputKeyOk) {
         uint8_t selected_keycode =
@@ -845,7 +953,7 @@ static void anki_remote_scene_settings_input_handler(AnkiRemoteApp* app, InputEv
             KeyMapping new_mapping;
             new_mapping.keycode = selected_keycode;
             new_mapping.modifiers = 0;
-            
+
             // Add modifiers to keycode if they are toggled
             if(app->settings_state.shift_pressed) new_mapping.modifiers |= MOD_SHIFT_BIT;
             if(app->settings_state.ctrl_pressed) new_mapping.modifiers |= MOD_CTRL_BIT;
@@ -853,7 +961,7 @@ static void anki_remote_scene_settings_input_handler(AnkiRemoteApp* app, InputEv
             if(app->settings_state.gui_pressed) new_mapping.modifiers |= MOD_GUI_BIT;
             app->keymap[app->settings_state.configuring_button] = new_mapping;
             anki_remote_save_keymap(app);
-            
+
             // BUG FIX: Set the flag to ignore the upcoming OK button release.
             app->ignore_next_ok_release = true;
             anki_remote_set_scene(app, SceneSettingsMenu);
@@ -862,9 +970,7 @@ static void anki_remote_scene_settings_input_handler(AnkiRemoteApp* app, InputEv
     }
 }
 
-
 // - - - Section 6: Main Application Logic - - -
-
 
 // Decides which screen to draw
 static void anki_remote_draw_callback(Canvas* canvas, void* context) {
@@ -957,14 +1063,14 @@ static void anki_remote_set_scene(AnkiRemoteApp* app, AppScene new_scene) {
         bt_disconnect(app->bt);
         furi_delay_ms(200);
         bt_set_status_changed_callback(app->bt, NULL, NULL);
-        
+
         // BUG FIX: Very important so you can use other BLE apps normally
         furi_check(bt_profile_restore_default(app->bt));
     }
     if(new_scene == SceneController) {
         // bt_disconnect(app->bt);
         // furi_delay_ms(200);
-        
+
         // BUG FIX: This prevents buttons from appearing "stuck" as pressed if you left the scene
         // while holding a button down.
         memset(&app->controller_state, 0, sizeof(app->controller_state));
@@ -1042,15 +1148,13 @@ static void anki_remote_app_free(AnkiRemoteApp* app) {
     free(app);
 }
 
-
 // - - - Final Section: Main Entry Point - - -
-
 
 int32_t anki_remote_app(void* p) {
     UNUSED(p);
     AnkiRemoteApp* app = anki_remote_app_alloc();
     AnkiRemoteEvent event;
-    
+
     // Main loop
     while(app->running) {
         if(furi_message_queue_get(app->event_queue, &event, FuriWaitForever) == FuriStatusOk) {
@@ -1060,7 +1164,7 @@ int32_t anki_remote_app(void* p) {
         }
         view_port_update(app->view_port);
     }
-    
+
     // Reset LED and clean up
     notification_internal_message(app->notifications, &sequence_reset_blue);
     anki_remote_app_free(app);
