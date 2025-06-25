@@ -1,0 +1,18 @@
+# For details & more options, see documentation/AppManifests.md in firmware repo
+
+App(
+    appid="anki_remote",  # Must be unique
+    name="Anki Remote",  # Displayed in menus
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="anki_remote_app",
+    stack_size=2 * 1024,
+    fap_category="Bluetooth",
+    # Optional values
+    fap_libs=["ble_profile"],
+    fap_version="1.1",
+    fap_icon="anki_remote.png",  # 10x10 1-bit PNG
+    fap_description="A customizable BLE keyboard remote",
+    fap_author="Blue5GD",
+    fap_weburl="https://github.com/Blue5GD/Anki-Remote",
+    fap_icon_assets="images",  # Image assets to compile for this application
+)
