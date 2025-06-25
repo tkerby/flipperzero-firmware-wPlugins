@@ -58,7 +58,12 @@ void SceneTimerTick(const PCUBERZERO instance) {
 		return;
 	}
 
-	uint8_t lightUpdate = 0;
+	struct {
+		uint8_t light	 : 1;
+		uint8_t viewport : 1;
+	} update;
+
+	*((uint8_t*) &update) = 0;
 
 	switch(instance->scene.timer.state) {
 	case TIMER_STATE_WAIT_FOR_READY:
@@ -66,18 +71,23 @@ void SceneTimerTick(const PCUBERZERO instance) {
 
 		if(instance->scene.timer.state == TIMER_STATE_WAIT_FOR_READY && tick - instance->scene.timer.pressedTime >= 500) {
 			instance->scene.timer.state = TIMER_STATE_READY;
-			lightUpdate = 1;
+			update.light = 1;
+			update.viewport = 1;
 		}
 
 		furi_mutex_release(instance->scene.timer.mutex);
 		break;
 	case TIMER_STATE_TIMING:
-		view_port_update(instance->scene.timer.viewport);
+		update.viewport = 1;
 		break;
 	}
 
-	if(lightUpdate) {
+	if(update.light) {
 		updateLight(instance);
+	}
+
+	if(update.viewport) {
+		view_port_update(instance->scene.timer.viewport);
 	}
 }
 
@@ -114,6 +124,13 @@ void SceneTimerDraw(Canvas* const canvas, const PCUBERZERO instance) {
 	}
 
 	canvas_clear(canvas);
+
+	if(instance->scene.timer.state == TIMER_STATE_READY) {
+		canvas_set_font(canvas, FontPrimary);
+		canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, "Ready");
+		return;
+	}
+
 	canvas_set_font(canvas, FontBigNumbers);
 	uint32_t tick = (instance->scene.timer.state == TIMER_STATE_TIMING ? furi_get_tick() : instance->scene.timer.stopTimer) - instance->scene.timer.startTimer;
 	uint32_t seconds = tick / 1000;
