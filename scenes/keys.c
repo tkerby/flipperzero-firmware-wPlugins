@@ -427,6 +427,8 @@ CardType determine_card_type(Nfc* nfc, MfClassicData* mfc_data, bool data_loaded
         return CARD_TYPE_METROMONEY;
     } else if(smartrider_verify(nfc, mfc_data, data_loaded)) {
         return CARD_TYPE_SMARTRIDER;
+    } else if(renfe_suma10_verify(nfc, mfc_data, data_loaded)) {
+        return CARD_TYPE_RENFE_SUM10;
     } else if(troika_verify(nfc, mfc_data, data_loaded)) {
         return CARD_TYPE_TROIKA;
     } else if(charliecard_verify(nfc, mfc_data, data_loaded)) {
