@@ -1,7 +1,7 @@
 # Who owns all the fish by default
 * @baptleduc
 
-./uart_helper.c @jamisonderek @baptleduc
-./uart_helper.h @jamisonderek @baptleduc
-./helper/ble_serial.c @Willy-JL @TheSainEyereg
-./helper/ble_serial.h @Willy-JL @TheSainEyereg
+./helpers/uart_helper.c @jamisonderek @baptleduc
+./helpers/uart_helper.h @jamisonderek @baptleduc
+./helpers/ble_serial.c @Willy-JL @TheSainEyereg
+./helpers/ble_serial.h @Willy-JL @TheSainEyereg
