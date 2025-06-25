@@ -1,4 +1,4 @@
-# LoRadar - The Flipper Application to localize stratospheric ballon via LoRa
+# LoRadar - The Flipper Application to localize stratospheric ballons via LoRa
 
 LoRadar is an app that allows users to localize stratospheric balloons using their Flipper Zero and LoRa modules.
 
