@@ -12,7 +12,7 @@
 #include <input/input.h>
 
 #include "lora_state_manager.h"
-#include "uart_helper.h"
+#include "helpers/uart_helper.h"
 #include "lora_receiver.h"
 #include "lora_transmitter.h"
 #include "bt_transmitter.h"
