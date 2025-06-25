@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Présentation</title>
+    <link rel="stylesheet" href="node_modules/reveal.js/dist/reveal.css" />
+    <link rel="stylesheet" href="node_modules/reveal.js/dist/theme/white.css" />
+    <link rel="stylesheet" href="node_modules/reveal.js/plugin/highlight/monokai.css" />
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <!-- <section data-markdown="./slides.md"
+                 data-separator="^---"
+                 data-separator-vertical="^--"
+                 data-charset="utf-8">
+        </section> -->
+
+        <section>
+          <h2>Testeurs de réseaux IoT satellitaires à base de Flipper Zero 🐬</h2>
+          <p style="text-align: center;">
+            Baptiste Le Duc - Nahel Belmadani
+          </p>
+          <img src="./asset/ensimag.png" alt="Ensimag" style="width: 200px; height: auto;">
+        </section>
+
+        <section>
+          <h2>Sommaire</h2>
+          <div style="text-align: left; padding: 0 50px; margin-top: 30px;">
+            <ul style="display: flex; flex-direction: column; gap: 25px; font-size: 30px;">
+              <li>Contexte</li>
+              <li>Cahier des Charges</li>
+              <li>Application Firmware Flipper</li>
+              <li>Application compagnon</li>
+              <li>Application ballons</li>
+              <li>Méthodologie</li>
+              <li>Démonstration</li>
+              <li>Conclusion</li>
+            </ul>
+          </div>
+        </section>
+
+        <style type="text/css">
+        .reveal p {
+          text-align: left;
+        }
+        .reveal h4 {
+          text-align: left;
+          text-transform: none;
+        }
+        .reveal ul {
+          display: block;
+        }
+        .reveal ol {
+          display: block;
+        }
+        ul ul {
+          font-size: 0.9em;
+        }
+        ul ul ul {
+          font-size: 0.8em;
+        }
+        figcaption {
+          font-size: 0.8em;
+          font-style: italic;
+          text-decoration: underline;
+          text-align: center;
+          color: #666;
+        }
+        .codeObject {
+          background-color: #ecf0f1;
+          padding: 2px 5px;
+          border-radius: 3px;
+        }
+      </style>
+
+      <section>
+        <h2>Contexte</h2>
+        <ul>
+          <li><strong>2 ballons météo/jour</strong> lancés par Météo-France</li>
+          <li>Les sondes retombent au sol après usage.</li>
+          <li><strong>Problème :</strong> peu sont récupérées.</li>
+          <li><strong>Enjeu :</strong> pollution (électronique + piles lithium).</li>
+        </ul>
+        <p><em>Comment localiser facilement ces sondes avec un dispositif léger et portable?</em></p>
+      </section>
+
+      <section> 
+        <h2>État des lieux des solutions actuelles</h2>
+        <ul>
+          <li><strong>RadioAmateurs</strong>: traquent le signal radio des sondes (modulation FSK)</li>
+          <li><strong>APRS-IS</strong>: réseau de stations radio qui transmettent des données de positionnement</li>
+          <li><strong>Réseau LoRa :</strong> peu déployée pour la localisation des sondes.</li>
+        </ul>
+      </section>
+
+      <section>
+        <section>
+          <h4>LoRa & LoRaWan</h4>
+          <ul>
+            <li><strong>LoRa :</strong> technologie radio au niveau physique (PHY) qui convertit les données en signaux radio.</li>
+            <li><strong>LoRaWAN :</strong> protocole au niveau MAC qui permet d’étendre l’utilisation des signaux LoRa à de larges réseaux et applications.</li>
+          </ul>
+          <p>➔ Très utilisé dans l'IoT</p>
+          <img src="./asset/lorawan_layer.png" alt="LoRa" style="width: 65%; height: auto;">
+        </section>
+        <section>
+          <h4>LoRa Peer-to-Peer (P2P)</h4>
+          <div style="display: flex; justify-content: center; align-items: center; gap: 70px; flex-wrap: wrap;">
+            <figure style="text-align: center; max-width: 350px;">
+              <img src="./asset/lorawan.png" alt="Antenne LoRa-E5" style="width: 100%; height: auto; display: block; margin: 0 auto;" />
+              <figcaption style="margin-top: 8px; font-style: italic;">Fonctionnement LoRaWAN</figcaption>
+            </figure>
+            <figure style="text-align: center; max-width: 350px;">
+              <img src="./asset/lora_p2p.png" alt="LoRa P2P" style="width: 100%; height: auto; display: block; margin: 0 auto;" />
+              <figcaption style="margin-top: 8px; font-style: italic;">LoRa P2P</figcaption>
+            </figure>
+          </div>
+        </section>
+        <section>
+          <h4>Avantages du LoRa P2P</h4>
+          <ul>
+            <li><strong>Extension de couverture :</strong> Chaînage des nœuds pour augmenter la portée sans infrastructure complète</li>
+            <li><strong>Réduction des coûts :</strong> Éviter les passerelles pour des projets petits ou expérimentaux</li>
+            <li><strong>Flexibilité :</strong> Les nœuds P2P peuvent aussi communiquer avec les passerelles</li>
+          </ul>
+        </section>
+      </section>
+
+      <section>
+        <h2>Flipper Zero</h2>
+        <img src="./asset/flipper_zero.jpg" alt="Flipper Zero" style="width: 300px; height: auto;">
+      </section>
+
+      </section>
+
+        <section>
+          <h2>Cahier des charges</h2>
+          <div style="text-align: left; padding: 0 50px;"></div>
+            <ul style="display: flex; flex-direction: column; gap: 20px; margin-top: 20px;">
+              <li>Une application pour <strong>Flipper Zero</strong></li>
+              <li>Une application compagnon pour <strong>smartphone</strong> 
+              </li>
+              <li>Une application compagnon pour <strong>suivre les ballons stratosphériques</strong> (Sondehub)</li>
+            </ul>
+          <div style="margin-top: 40px; background-color: #f9f9f9; padding: 15px 20px; border-left: 5px solid #e67e22; font-style: italic; color: #7f8c8d; font-size: 0.95em;">
+            <p>Aucune antenne n’émet actuellement de paquets APRS-IS en LoRa.</p>
+          </div>
+          <p>➔ Nécessité de créer une antenne simulée pour générer des paquets de test.</p>
+
+        </section>
+
+        <section>
+          <h2>Cas d'utilisation</h2>
+          <div style="text-align: center;">
+            <img src="./asset/diag_cas_utilisation.svg" alt="Diagramme cas d'utilisation" style="max-width: 70%; height: auto;">
+          </div>
+        </section>
+
+        <section>
+          <h2>Diagramme Système</h2>
+          <div style="text-align: center;">
+            <img src="./asset/diagramme_sequence_principal.png" alt="Description of image" style="max-width: 70%; height: auto;">
+          </div>
+        </section>
+
+
+        <section><h2>Antenne</h2></section>
+        
+        <section>
+          <section>
+            <h4>Conception de l'antenne</h4>
+            <ul>
+            <li><strong>Objectif :</strong> Générer des paquets APRS-IS fictifs à intervalles réguliers</li>
+            <li><strong>Matériel :</strong> Carte de développement <code class="codeObject">LoRa-E5 Dev Board</code></li>
+            <li><strong>Implémentation :</strong> Script Python <code class="codeObject">LoraSerialInterface</code></li>
+            <p> ➔Lecture et envoi de commandes AT depuis un fichier <code class="codeObject">.txt</code></p>
+          </ul>
+          </section>
+
+          
+
+
+          <section>
+            <figure>
+              <img src="./asset/lora_devboard.jpg" alt="Antenne LoRa-E5" style="max-width: 70%; height: auto;" />
+              <figcaption>Carte de développement LoRa-E5</figcaption>
+            </figure>
+          </section>
+
+          <section>
+            <h4>Exemple fichier .txt de commandes</h4>
+            <pre style="border-radius: 10px; overflow-x: auto; max-width: 100%; font-size: 0.4em;">
+  <code style="border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.1); display: block; white-space: pre;" class="language-bash" data-line-numbers="1-6">
+# Sample APRS trame extract from http://www.manuel.la-radio.eu/RM14/RM14T03.html
+AT+TEST=RFCFG,868.1,SF8,125,8,8,14,ON,OFF,OFF
+AT+TEST=TXLRSTR, "F4ABC-11>APRS,WIDE2-1:!4852.45N/00220.32E>000/000/A=035000 Balloon launch test"
+AT+TEST=TXLRSTR, "F4ABC>APRS,TCPIP,qAC,T2FRANCE:;BALLOON1112345z4802.45N/00220.33E-Test payload"
+AT+TEST=TXLRSTR, "F4ABC>APRS,WIDE1-1:_092300z4852.45N/00260.31E_000/000g005t017r000p000P000h55b10130"
+  </code>
+</pre>
+          </section>
+        
+        </section>
+
+        
+
+        <section><h2>Application Firmware Flipper</h2> </section>
+
+        <section>
+        <h4>Modes de l'application</h4>
+        <ul style="font-size: 0.9em;">
+          <li><strong>OTAA Join</strong> : rejoint un réseau LoRaWAN via OTAA <em>(hors scope)</em></li>
+          <li><strong>Receive Mode</strong> : mode LoRa P2P pour recevoir des trames</li>
+          <li><strong>Send CMsg</strong> : envoie un message à un serveur LoRaWAN <em>(hors scope)</em></li>
+        </ul>
+        <figure>
+          <img src="./asset/app_start_scene.svg" alt="Menu à l'entrée de l'application" style="max-width: 100%; max-height: 16vh;height: auto;" />
+          <figcaption style="font-size: 0.6em; font-style: italic; text-decoration: underline;">
+            Menu principal de l'application
+          </figcaption>
+        </figure>
+      </section>
+
+        <section>
+            <h4>Communication AT entre le Flipper Zero et le module Wio-E5 via UART</h4>
+
+            <figure>
+              <img src="./asset/uart.svg" alt="Diagramme de communication UART avec Wio-E5" style="max-width: 100%; height: auto;" />
+              <figcaption>Diagramme de la communication AT via UART</figcaption>
+            </figure>
+        </section>
+
+
+        <section>
+          <section>
+            <h4>Architecture Globale</h4>
+            <p> Projet développé dans un style <strong> C objet</strong></p>
+            <ul style="list-style-type: disc; padding-left: 20px; line-height: 1.6; font-size: 0.9em;">
+              <li><code class="codeObject">UartHelper</code>: Interface avec le driver UART</li>
+              <li><code class="codeObject">LoraReceiver</code>: Responsable du parsing des données reçues via sur l'UART</li>
+              <li><code class="codeObject">LoraTransmitter</code>: Responsable de l'envoi de données via l'UART</li>
+              <li><code class="codeObject">StateManager</code>: State-Machine maintenant l'état courant de l'application</li>
+              <li><code class="codeObject">BtTransmitter</code>: Responsable de l'envoi de data à l'application mobile par Bluetooth</li>
+            </ul>
+          </section>
+
+          <section>
+            <figure>
+              <img src="./asset/class_diagram.svg" alt="Architecture de l'application" style="max-width: 100%; height: auto;" />
+              <figcaption>Architecture de l'application</figcaption>
+            </figure>
+          </section>  
+        </section>
+
+        <section>
+          <section>
+            <h4>Entrée dans le mode de réception</h4>
+            <p><code class="codeObject">LoraTransmitter</code> envoie 2 commandes : </p>
+            <ul>
+              <li><code>AT+MODE=TEST</code> <em>(mode Lora P2P)</em></li>
+              <li><code>AT+TEST=RFCFG,868.1...</code> <em>(configuration)</em></li>
+            </ul>
+            <figure>
+              <img src="./asset/enter_receive_mode.svg" alt="Entrée dans le mode de réception" style="max-width: 100%; height: auto;" />
+              <figcaption>Entrée dans le mode de réception</figcaption>
+            </figure>
+          </section>
+
+          <section>
+            <figure>
+              <img src="./asset/transmitter_at_command.svg" alt="Diagramme de séquence d'envoi de commandes AT" style="max-width: 100%; height: auto;" />
+              <figcaption>Diagramme de séquence d'envoi de commandes AT</figcaption>
+            </figure>
+          </section>
+
+          <section>
+            <figure>
+              <img src="./asset/aprs_is_receive_sequence.svg" alt="Diagramme de séquence de réception de trames ARPS-IS" style="max-width: 100%; height: auto;" />
+              <figcaption>Diagramme de séquence de réception de trames ARPS-IS</figcaption>
+            </figure>
+          </section>
+
+        </section>
+
+
+        <section>
+          <section>
+            <h4>Configuration des paramètres de reception</h4>
+            <ul>
+              <li>Fréquence, Spread Factor, Band Width, TX, RX, Power, CRC etc...</li>
+              <li>Envoi de la configuration au module Wio-E5 via l'UART</li>
+            </ul>
+
+            <figure>
+              <img src="./asset/receiver_cfg_scene.svg" alt="Entrée dans le menu de configuration" style="max-width: 100%; height: auto;" />
+              <figcaption>Entrée dans le menu de configuration</figcaption>
+            </figure>
+          </section>
+          
+          <section>
+            <figure style="text-align: center;">
+              <img 
+                src="./asset/receiver_cfg_sequence.svg" 
+                alt="Diagramme de séquence de configuration des paramètres de réception" 
+                style="max-width: 100%; max-height: 68vh; height: auto; display: block; margin: 0 auto;" 
+              />
+            </figure>
+          </section>
+        </section>
+
+
+
+
+        
+        <section>
+          <h2 style="margin-bottom: 0px;">Application mobile</h2>
+          <p style="font-size: 25px;" >Application mobile développée avec :</p>
+          
+          <ul style=" display: flex; flex-direction: column; align-items: flex-start; gap: 30px; margin-bottom: 30px;margin-top: 30px;">
+           <li style="align-items: center; flex-direction: row; display: flex;margin-left: 100px;">
+              <img src="./asset/react_native.png" alt="React Native" style="width: 100px; height: auto;">
+              <p>React Native</p>
+            </li>
+           
+            <li style="align-items: center; flex-direction: row; display: flex;margin-left: 100px;;">
+              <img src="./asset/expo.png" alt="Expo" style="width: 100px; height: auto;">
+              <p>Expo</p>
+             
+              <p style="margin-left: 10px;" > →</p>
+              <img src="./asset/no_BLE.png" alt="React" style="width: 70px; height: auto;">
+            </li>
+            
+          </ul>
+        </section>
+
+        <section>
+          <h2>BLE</h2>
+            <pre style="border-radius: 10px;" ><code style="border-radius: 10px;  box-shadow: 0 0 15px rgba(0,0,0,0.1);"  data-line-numbers="2,10|3,9|4-8">
+manager.startDeviceScan(null, null, async (error, device) => { 
+  if (device?.name?.includes('Lora')) {
+    manager.stopDeviceScan();
+    try {
+      const connectedDevice = await device.connect();
+      await connectedDevice.discoverAllServicesAndCharacteristics();
+    }
+  }
+});
+</code></pre>
+
+      </section>
+
+      <section>
+        <h2>Architecture BLE du Flipper</h2>
+        <div style="text-align: center; margin-top: 30px;">
+          <div style="display: flex; flex-direction: column; align-items: center;">
+            <div style="border: 2px solid #333; border-radius: 8px; padding: 15px; margin-bottom: 10px; width: 250px;">
+              <strong>Flipper</strong>
+            </div>
+            <div style="height: 30px; border-left: 2px solid #333; width: 0;"></div>
+            <div style="border: 2px solid #333; border-radius: 8px; padding: 15px; margin-bottom: 10px; width: 250px;">
+              <strong>Service</strong>
+            </div>
+            <div style="height: 30px; border-left: 2px solid #333; width: 0;"></div>
+            <div style="border: 2px solid #333; border-radius: 8px; padding: 15px; width: 400px; display: flex; justify-content: space-between;">
+              <strong>Characteristic (message)</strong>
+              <em style="color: #666;">[read]</em>
+            </div>
+          </div>
+        </div>
+        
+        <div style="margin-top: 40px; text-align: left; padding: 0 50px; font-size: 0.7em;">
+          <ul>
+            <li>Le périphérique Flipper expose un service BLE principal</li>
+            <li>Ce service contient une caractéristique "message" qui permet de:</li>
+            <li style="margin-left: 30px;"> Lire les données (read)</li>
+          </ul>
+        </div>
+      </section>
+
+      
+      <section>
+        <h2>Traitement des Données BLE</h2>
+        <pre style="border-radius: 10px;" ><code style="border-radius: 10px;  box-shadow: 0 0 15px rgba(0,0,0,0.1);" class="language-javascript" data-line-numbers="1|3-5">setMessages((prev) => [...prev, decoded]);
+
+const parsedMessages = listMessages.map((message) => {
+  const parsedMessage = parseAprs(message);
+});</code></pre>
+        
+        <div style="margin-top: 30px; text-align: left; padding: 0 50px;">
+          <ul>
+            <li>Chaque paquet BLE reçu est décodé (base64)</li>
+            <li>Les messages sont ajoutés à une liste en attente d’être parsés</li>
+          </ul>
+        </div>
+      </section>
+
+      <section>
+        <h2>Fonction de Parsing APRS</h2>
+        <ul style="font-size:large;">
+          <li><strong>Messages</strong> : Extraction des informations comme l'émetteur, le destinataire et le contenu du message.</li>
+          <li><strong>Objets</strong> : Extraction des coordonnées géographiques et des détails associés.</li>
+          <li><strong>Météo</strong> : Extraction des données météorologiques comme la température et l'humidité.</li>
+          <li><strong>Positions</strong> : Extraction des coordonnées GPS et de l'altitude.</li>
+          <li >Plusieurs trames à la suite</li>
+        </ul>
+
+        <p style="font-size: large;font-style: italic;">
+        "F4ABC-11>APRS,WIDE2-1:!4852.45N/00220.32E>000/000/A=035000 Balloon launch test"
+
+</p>
+<pre style="border-radius: 10px;" ><code style="border-radius: 10px;  box-shadow: 0 0 15px rgba(0,0,0,0.1);" style="font-size: large;" class="language-javascript" >{
+    type: 'position',
+    callsign: F4ABC,
+    ssid: -11
+    latitude: 48.8742° N
+    longitude: 2.3387° E
+    Altitude 35 000 ft
+    commentaire: 'Balloon launch test'
+ }</code></pre>
+      </section>
+
+    
+      <section>
+        <h2>Envoi des Données au Backend</h2>
+        <pre style="border-radius: 10px;"><code style="font-size: large;border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.1);" class="language-javascript" data-line-numbers="1-7">const response = await fetch('https://pocfablab.osc-fr1.scalingo.io/api/position', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });</code></pre>
+        
+        <div style="font-size: 30px;margin-top: 30px; text-align: left; padding: 0 50px;">
+          <ul>
+            <li>Format JSON pour faciliter le traitement côté serveur</li>
+            <li>API REST pour une architecture simple et robuste</li>
+            <li><a href="https://pocfablab.osc-fr1.scalingo.io/">Hébergement sur Scalingo</a></li>
+          </ul>
+        </div>
+      </section>
+
+      <section>
+        <div style="text-align: center; align-items: center; display: flex; justify-content: center; gap: 50px;">
+          <img src="./asset/app_map.jpg" alt="Description of image" style="height: 600px;">
+          <img src="./asset/app_map_send_back_end.jpg" alt="Description of image" style="height: 600px;">
+        </div>
+      </section>
+
+
+      <section>
+        <h2>Onglet sonde</h2>
+        <div style="text-align: center; align-items: center; display: flex; justify-content: center; gap: 30px;">
+          <img src="./asset/ecran_sonde.jpeg" alt="Description of image" style="height: 600px;">
+          <img src="./asset/sondehub.png" alt="Description of image" style="height: 200px;">
+        </div>
+      </section>  
+
+      <section>
+      <section><h2>Méthodologie</h2></section>
+
+        <section>
+            <h4>Pratiques Git dans notre projet</h4>
+            <div style="text-align: left; padding: 0 50px; margin-top: 20px;">
+              <ul style="display: flex; flex-direction: column; gap: 0px;">
+                <li>Repos git séparés</li>
+                <li>Issues, Pull Request</li>
+                <li>Règles sur les noms de commits</li>
+                <li>Formatage du code C avec <code>indent</code></li>
+              </ul>
+            </div>
+              <div style="text-align: center; margin-top: 20px; display: flex; justify-content: center; gap: 30px;">
+              <img src="./asset/pull.jpg" alt="Git workflow" style="width: 500px;height: 300px; ">
+              <img src="./asset/issues.png" alt="Git issues" style="max-width: 300px; height: auto;">
+              </div>
+        </section>
+
+        <section>
+          <h4>Outils Utilisés</h4>
+          <ul>
+            <li><strong>GitHub</strong></li>
+            <li><strong>Discord</strong>: entraide avec la communauté Flipper via un serveur dédié</li>
+            <li><strong>Reveal.js</strong>: slides de présentation</li>
+            <li><strong>PlantUml</strong>: diagrammes UML</li>
+          </ul>
+        </section>
+
+      <section>
+        <h4>Répartition du travail</h4>
+        <ul>
+          <li><strong>Baptiste Le Duc</strong>: </li>
+            <ul>
+              <li>Développement de l'antenne LoRa</li>
+              <li>Développement de l'application firmware Flipper</li>
+            </ul>
+          <li><strong>Nahel Belmadani</strong>:</li>
+            <ul>
+              <li>Développement de l'application compagnon</li>
+              <li>Développement de l'application pour le suivi des ballons stratosphériques</li>
+            </ul>
+        </ul>
+      </section>
+
+      <section>
+          <h4>Diagramme de Gantt</h4>
+        </section>
+
+      </section>
+
+      <section>
+        <h2>Démonstration</h2>
+      </section>
+
+      <section>
+        <h2>Conclusion</h2>
+        <p style="margin-bottom: 4px;"><strong>Difficultés :</strong></p>
+        <ul style="margin-top: 0;">
+          <li>Compréhension du sujet</li>
+          <li>Développement firmware (debug et programmation concurrente)</li>
+          <li>Connexion Bluetooth Flipper / app mobile</li>
+          <li>Coordination en équipe</li>
+        </ul>
+        <p style="margin-bottom: 4px; margin-top: 20px;"><strong>Points positifs :</strong></p>
+        <ul style="margin-top: 0;">
+          <li>Découverte de l’IoT et de la radio</li>
+          <li>Communauté Flipper très active</li>
+        </ul>
+      </section>
+ 
+      </div>
+    </div>
+    
+    <script src="plugin/highlight/highlight.js"></script>
+    <script type="module">
+      import Reveal from 'reveal.js';
+      import Markdown from 'reveal.js/plugin/markdown/markdown.esm.js';
+      import RevealHighlight from 'reveal.js/plugin/highlight/highlight.esm.js';
+      const deck = new Reveal({
+        plugins: [ Markdown ]
+      });
+
+      deck.initialize({ hash: true,plugins: [RevealHighlight], slideNumber: 'c/t' });
+    </script>
+    
+  </body>
+</html>
