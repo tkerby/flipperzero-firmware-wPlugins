@@ -11,18 +11,16 @@
 #include <notification/notification.h>
 #include <notification/notification_messages.h>
 
-
 #include <gui/canvas.h>
 #include <input/input.h>
 
 #include "bw16_deauther_app_icons.h"
 #include "uart_helper.h"
 
-#define DEVICE_BAUDRATE 115200
+#define DEVICE_BAUDRATE  115200
 #define UART_BUFFER_SIZE 256
 
-
-#define TAG "Deauther"
+#define TAG            "Deauther"
 // Change this to BACKLIGHT_AUTO if you don't want the backlight to be continuously on.
 // If you set it to BACKLIGHT_ON, the backlight will be always on.
 #define BACKLIGHT_AUTO 1
@@ -34,14 +32,11 @@ typedef enum {
     DeautherSubmenuIndexAbout,
 } DeautherSubmenuIndex;
 
-
-
 typedef enum {
     DeautherSubmenuDeauthScan,
     DeautherSubmenuDeauthSelect,
     DeautherSubmenuDeauthAttack,
 } DeautherSubmenuDeauth;
-
 
 // Each view is a screen we show the user.
 typedef enum {
@@ -56,11 +51,10 @@ typedef enum {
     DeautherViewNetwork, // Grouped network submenu
 } DeautherView;
 
-
 #define MAX_LABEL_LEN 64
-#define MAX_SELECTED 5
-#define MAX_GROUPED 8
-#define MAX_MAC_LEN 20
+#define MAX_SELECTED  5
+#define MAX_GROUPED   8
+#define MAX_MAC_LEN   20
 
 typedef struct {
     ViewDispatcher* view_dispatcher; // Switches between our views
@@ -207,7 +201,8 @@ static void deauther_network_mac_callback(void* context, uint32_t index) {
     NetworkGroup* group = current_network_group;
     if(group && index < group->count) {
         int real_idx = group->indexes[index];
-        if(app->select_labels && app->select_selected && app->select_macs && app->select_bands && (size_t)real_idx < app->select_capacity) {
+        if(app->select_labels && app->select_selected && app->select_macs && app->select_bands &&
+           (size_t)real_idx < app->select_capacity) {
             char label[MAX_MAC_LEN + 8];
             const char* mac_label = app->select_macs[real_idx];
             uint8_t band = app->select_bands[real_idx];
@@ -264,9 +259,6 @@ static void deauther_network_mac_callback(void* context, uint32_t index) {
     }
 }
 
-
-
-
 static void deauther_select_item_callback(void* context, uint32_t index) {
     DeautherApp* app = (DeautherApp*)context;
     if(app->select_labels && app->select_selected && index < app->select_capacity) {
@@ -286,9 +278,11 @@ static void deauther_select_item_callback(void* context, uint32_t index) {
             if(groups[gidx].count < MAX_GROUPED) {
                 groups[gidx].indexes[groups[gidx].count] = (int)i;
                 if(app->select_macs && app->select_macs[i]) {
-                    strncpy(groups[gidx].macs[groups[gidx].count], app->select_macs[i], MAX_MAC_LEN);
+                    strncpy(
+                        groups[gidx].macs[groups[gidx].count], app->select_macs[i], MAX_MAC_LEN);
                 } else {
-                    strncpy(groups[gidx].macs[groups[gidx].count], "XX:XX:XX:XX:XX:XX", MAX_MAC_LEN);
+                    strncpy(
+                        groups[gidx].macs[groups[gidx].count], "XX:XX:XX:XX:XX:XX", MAX_MAC_LEN);
                 }
                 groups[gidx].count++;
             }
@@ -311,27 +305,15 @@ static void deauther_select_item_callback(void* context, uint32_t index) {
                         snprintf(label, sizeof(label), "*%s", mac_label);
                     }
                     submenu_add_item(
-                        app->submenu_network,
-                        label,
-                        i,
-                        deauther_network_mac_callback,
-                        app);
+                        app->submenu_network, label, i, deauther_network_mac_callback, app);
                 } else {
                     if(band == 1) {
                         snprintf(label, sizeof(label), "%s (5)", mac_label);
                         submenu_add_item(
-                            app->submenu_network,
-                            label,
-                            i,
-                            deauther_network_mac_callback,
-                            app);
+                            app->submenu_network, label, i, deauther_network_mac_callback, app);
                     } else {
                         submenu_add_item(
-                            app->submenu_network,
-                            mac_label,
-                            i,
-                            deauther_network_mac_callback,
-                            app);
+                            app->submenu_network, mac_label, i, deauther_network_mac_callback, app);
                     }
                 }
             }
@@ -368,7 +350,6 @@ static void deauther_select_item_callback(void* context, uint32_t index) {
     }
 }
 
-
 /**
  * @brief      Handle submenu item selection.
  * @details    This function is called when user selects an item from the submenu.
@@ -381,7 +362,8 @@ static void deauth_submenu_callback(void* context, uint32_t index) {
     case DeautherSubmenuDeauthScan: {
         // Reset select submenu selection state
         if(app->select_labels) {
-            for(size_t i = 0; i < app->select_capacity; ++i) free(app->select_labels[i]);
+            for(size_t i = 0; i < app->select_capacity; ++i)
+                free(app->select_labels[i]);
             free(app->select_labels);
             app->select_labels = NULL;
         }
@@ -429,7 +411,7 @@ static void deauth_submenu_callback(void* context, uint32_t index) {
                 }
             }
             FURI_LOG_I(TAG, "attack started");
-        } else if (g_attack_active) {
+        } else if(g_attack_active) {
             // Stop attack
             uart_helper_send(app->uart_helper, "<ds>", 4);
             g_attack_active = false;
@@ -456,7 +438,8 @@ static void deauther_build_select_submenu(DeautherApp* app) {
         // Build groups
         for(size_t i = 0; i < app->select_capacity; ++i) {
             if(app->select_labels[i][0] == '\0') continue;
-            if(!app->show_hidden_networks && strcmp(app->select_labels[i], "Hidden") == 0) continue;
+            if(!app->show_hidden_networks && strcmp(app->select_labels[i], "Hidden") == 0)
+                continue;
             const char* name = app->select_labels[i];
             int gidx = find_group(groups, group_count, name);
             if(gidx == -1) {
@@ -467,9 +450,11 @@ static void deauther_build_select_submenu(DeautherApp* app) {
             if(groups[gidx].count < MAX_GROUPED) {
                 groups[gidx].indexes[groups[gidx].count] = (int)i;
                 if(app->select_macs && app->select_macs[i]) {
-                    strncpy(groups[gidx].macs[groups[gidx].count], app->select_macs[i], MAX_MAC_LEN);
+                    strncpy(
+                        groups[gidx].macs[groups[gidx].count], app->select_macs[i], MAX_MAC_LEN);
                 } else {
-                    strncpy(groups[gidx].macs[groups[gidx].count], "XX:XX:XX:XX:XX:XX", MAX_MAC_LEN);
+                    strncpy(
+                        groups[gidx].macs[groups[gidx].count], "XX:XX:XX:XX:XX:XX", MAX_MAC_LEN);
                 }
                 groups[gidx].count++;
             }
@@ -506,12 +491,7 @@ static void deauther_build_select_submenu(DeautherApp* app) {
                     snprintf(label, sizeof(label), "%s", name);
                 }
             }
-            submenu_add_item(
-                app->submenu_select,
-                label,
-                idx,
-                deauther_select_item_callback,
-                app);
+            submenu_add_item(app->submenu_select, label, idx, deauther_select_item_callback, app);
         }
     }
     // Switch to the select view
@@ -528,7 +508,8 @@ static void deauther_select_process_uart(FuriString* line, void* context) {
         app->select_index = 0;
         // Free previous arrays
         if(app->select_labels) {
-            for(size_t i = 0; i < app->select_capacity; ++i) free(app->select_labels[i]);
+            for(size_t i = 0; i < app->select_capacity; ++i)
+                free(app->select_labels[i]);
             free(app->select_labels);
             app->select_labels = NULL;
         }
@@ -537,7 +518,8 @@ static void deauther_select_process_uart(FuriString* line, void* context) {
             app->select_selected = NULL;
         }
         if(app->select_macs) {
-            for(size_t i = 0; i < app->select_capacity; ++i) free(app->select_macs[i]);
+            for(size_t i = 0; i < app->select_capacity; ++i)
+                free(app->select_macs[i]);
             free(app->select_macs);
             app->select_macs = NULL;
         }
@@ -598,10 +580,13 @@ static void deauther_select_process_uart(FuriString* line, void* context) {
             // Dynamically grow arrays if needed
             if(idx >= 0 && (size_t)(idx + 1) > app->select_capacity) {
                 size_t new_capacity = idx + 1;
-                char** new_labels = (char**)realloc(app->select_labels, new_capacity * sizeof(char*));
-                uint8_t* new_selected = (uint8_t*)realloc(app->select_selected, new_capacity * sizeof(uint8_t));
+                char** new_labels =
+                    (char**)realloc(app->select_labels, new_capacity * sizeof(char*));
+                uint8_t* new_selected =
+                    (uint8_t*)realloc(app->select_selected, new_capacity * sizeof(uint8_t));
                 char** new_macs = (char**)realloc(app->select_macs, new_capacity * sizeof(char*));
-                uint8_t* new_bands = (uint8_t*)realloc(app->select_bands, new_capacity * sizeof(uint8_t));
+                uint8_t* new_bands =
+                    (uint8_t*)realloc(app->select_bands, new_capacity * sizeof(uint8_t));
                 if(new_labels && new_selected && new_macs && new_bands) {
                     for(size_t i = app->select_capacity; i < new_capacity; ++i) {
                         new_labels[i] = (char*)calloc(MAX_LABEL_LEN, sizeof(char));
@@ -619,7 +604,8 @@ static void deauther_select_process_uart(FuriString* line, void* context) {
                     return;
                 }
             }
-            if(app->select_labels && app->select_selected && app->select_macs && app->select_bands && idx >= 0 && (size_t)idx < app->select_capacity) {
+            if(app->select_labels && app->select_selected && app->select_macs &&
+               app->select_bands && idx >= 0 && (size_t)idx < app->select_capacity) {
                 strncpy(app->select_labels[idx], name, MAX_LABEL_LEN);
                 app->select_labels[idx][MAX_LABEL_LEN - 1] = '\0';
                 strncpy(app->select_macs[idx], mac, MAX_MAC_LEN);
@@ -684,11 +670,9 @@ static void deauther_select_process_uart(FuriString* line, void* context) {
     }
 }
 
-
 /**
  * Wifi Configuration
 */
-
 
 static const char* setting_1_config_label = "Wifi Status";
 static uint8_t setting_1_values[] = {0, 1};
@@ -716,7 +700,6 @@ static void deauther_setting_show_hidden_change(VariableItem* item) {
     app->show_hidden_networks = (index == 1);
 }
 
-
 /**
  * @brief      Allocate the skeleton application.
  * @details    This function allocates the skeleton application resources.
@@ -728,11 +711,11 @@ static DeautherApp* deauther_app_alloc() {
     Gui* gui = furi_record_open(RECORD_GUI);
 
     app->view_dispatcher = view_dispatcher_alloc();
+    view_dispatcher_enable_queue(app->view_dispatcher);
     view_dispatcher_attach_to_gui(app->view_dispatcher, gui, ViewDispatcherTypeFullscreen);
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
 
     FURI_LOG_I(TAG, "init");
-
 
     //main screen
     app->submenu = submenu_alloc();
@@ -757,12 +740,16 @@ static DeautherApp* deauther_app_alloc() {
     char attack_label[16];
     snprintf(attack_label, sizeof(attack_label), "Attack 0/%d", MAX_SELECTED);
     submenu_add_item(
-        app->deauth_submenu, attack_label, DeautherSubmenuDeauthAttack, deauth_submenu_callback, app);
-    view_set_previous_callback(submenu_get_view(app->deauth_submenu), deauther_navigation_submenu_callback);
+        app->deauth_submenu,
+        attack_label,
+        DeautherSubmenuDeauthAttack,
+        deauth_submenu_callback,
+        app);
+    view_set_previous_callback(
+        submenu_get_view(app->deauth_submenu), deauther_navigation_submenu_callback);
     view_dispatcher_add_view(
         app->view_dispatcher, DeautherViewDeauth, submenu_get_view(app->deauth_submenu));
     /////////////////
-
 
     // Scan screen
     app->widget_scan = widget_alloc();
@@ -778,14 +765,12 @@ static DeautherApp* deauther_app_alloc() {
     view_dispatcher_add_view(
         app->view_dispatcher, DeautherViewScan, widget_get_view(app->widget_scan));
 
-
     // Select screen
     app->submenu_select = submenu_alloc();
     view_set_previous_callback(
         submenu_get_view(app->submenu_select), deauther_navigation_deauth_callback);
     view_dispatcher_add_view(
         app->view_dispatcher, DeautherViewSelect, submenu_get_view(app->submenu_select));
-    
 
     // Grouped network screen
     app->submenu_network = submenu_alloc();
@@ -808,9 +793,6 @@ static DeautherApp* deauther_app_alloc() {
     view_dispatcher_add_view(
         app->view_dispatcher, DeautherViewAttack, widget_get_view(app->widget_attack));
 
-
-
-
     //Text input screen
     app->text_input = text_input_alloc();
     view_dispatcher_add_view(
@@ -819,7 +801,7 @@ static DeautherApp* deauther_app_alloc() {
     app->temp_buffer = (char*)malloc(app->temp_buffer_size);
 
     // Setup screen
-    
+
     app->wifi_server_status = variable_item_list_alloc();
     variable_item_list_reset(app->wifi_server_status);
     VariableItem* item = variable_item_list_add(
@@ -841,7 +823,6 @@ static DeautherApp* deauther_app_alloc() {
     variable_item_set_current_value_index(hidden_item, 0); // Default to hide hidden
     variable_item_set_current_value_text(hidden_item, setting_show_hidden_names[0]);
     app->show_hidden_networks = false;
-
 
     view_set_previous_callback(
         variable_item_list_get_view(app->wifi_server_status),
@@ -933,19 +914,19 @@ static void deauther_app_free(DeautherApp* app) {
     furi_string_free(app->uart_message);
     free(app->uart_buffer);
     if(app->select_labels) {
-        for(size_t i = 0; i < app->select_capacity; ++i) free(app->select_labels[i]);
+        for(size_t i = 0; i < app->select_capacity; ++i)
+            free(app->select_labels[i]);
         free(app->select_labels);
     }
     if(app->select_selected) free(app->select_selected);
     if(app->select_macs) {
-        for(size_t i = 0; i < app->select_capacity; ++i) free(app->select_macs[i]);
+        for(size_t i = 0; i < app->select_capacity; ++i)
+            free(app->select_macs[i]);
         free(app->select_macs);
     }
     if(app->select_bands) free(app->select_bands);
     free(app);
 }
-
-
 
 /**
  * @brief      Main function for skeleton application.
@@ -963,7 +944,3 @@ int32_t main_bw16_deauther_app(void* _p) {
     deauther_app_free(app);
     return 0;
 }
-
-
-
-

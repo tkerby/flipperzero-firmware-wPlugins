@@ -1,15 +1,14 @@
 App(
     appid="bw16_deauther_app",
-    name="[WIP] BW16 Deauther",
+    name="BW16 Deauther [WIP]",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="main_bw16_deauther_app",
     stack_size=4 * 1024,
-    requires=[
-        "gui",
-    ],
-    order=10,
     fap_icon="app.png",
-    fap_category="GPIO",
     fap_icon_assets="assets",
+    fap_category="GPIO",
+    fap_author="alxcrt",
+    fap_weburl="https://github.com/alxcrt/flipper-zero-thermal-printer",
+    fap_version="0.1",
     fap_description="Deauther for the BW16",
 )
