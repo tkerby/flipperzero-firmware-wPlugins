@@ -20,12 +20,12 @@ static void bunnyconnect_view_draw_callback(Canvas* canvas, void* model) {
     UNUSED(view_model);
 
     canvas_clear(canvas);
-    
+
     // Draw a simple interface
     canvas_set_color(canvas, ColorBlack);
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str(canvas, 10, 20, "BunnyConnect Custom View");
-    
+
     canvas_set_font(canvas, FontSecondary);
     canvas_draw_str(canvas, 10, 35, "Press OK to continue");
 }
@@ -33,28 +33,28 @@ static void bunnyconnect_view_draw_callback(Canvas* canvas, void* model) {
 static bool bunnyconnect_view_input_callback(InputEvent* event, void* context) {
     BunnyConnectCustomView* custom_view = context;
     furi_assert(custom_view);
-    
+
     bool consumed = false;
-    
+
     if(event->type == InputTypeShort && event->key == InputKeyOk) {
         if(custom_view->callback) {
             custom_view->callback(custom_view->context);
         }
         consumed = true;
     }
-    
+
     return consumed;
 }
 
 BunnyConnectCustomView* bunnyconnect_view_alloc(void) {
     BunnyConnectCustomView* custom_view = malloc(sizeof(BunnyConnectCustomView));
     custom_view->view = view_alloc();
-    
+
     view_allocate_model(custom_view->view, ViewModelTypeLocking, sizeof(BunnyConnectViewModel));
     view_set_context(custom_view->view, custom_view);
     view_set_draw_callback(custom_view->view, bunnyconnect_view_draw_callback);
     view_set_input_callback(custom_view->view, bunnyconnect_view_input_callback);
-    
+
     return custom_view;
 }
 
