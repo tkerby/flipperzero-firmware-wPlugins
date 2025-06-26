@@ -7,5 +7,5 @@ App(
     stack_size=2 * 1024,
     fap_icon="HHBirapp.png",
     fap_icon_assets="assets",    
-    fap_category="Misc",
+    fap_category="Infrared",
 )

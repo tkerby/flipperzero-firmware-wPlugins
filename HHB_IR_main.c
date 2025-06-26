@@ -7,6 +7,7 @@
 #include <infrared.h>
 #include <infrared_worker.h>
 #include <infrared_transmit.h>
+#include <notification/notification_messages.h>
 
 typedef enum {
     BasicScenesGreetingInputScene,
@@ -42,6 +43,8 @@ typedef enum {
 } BasicScenesGreetingInputEvent;
 
 void send_message_ir(App* app) {
+    NotificationApp* notifications = furi_record_open(RECORD_NOTIFICATION);
+    notification_message(notifications, &sequence_single_vibro);
     for(uint8_t i = 0; i < strlen(app->user_name); i++) {
         uint8_t c = app->user_name[i];
 
@@ -59,6 +62,8 @@ void send_message_ir(App* app) {
             .command = 0x4,
         };
         infrared_send(&end, 1);
+    notification_message(notifications, &sequence_success);
+    furi_record_close(RECORD_NOTIFICATION);
 }
 
 void basic_scenes_menu_callback(void* context, uint32_t index) {
@@ -117,7 +122,7 @@ void basic_scenes_greeting_message_scene_on_enter(void* context) {
     furi_string_printf(message, "Message sent: \n%s", app->user_name);
     widget_add_string_multiline_element(
         app->widget, 5, 15, AlignLeft, AlignCenter, FontPrimary, furi_string_get_cstr(message));
-        send_message_ir(app);
+    send_message_ir(app);
     furi_string_free(message);
     view_dispatcher_switch_to_view(app->view_dispatcher, BasicScenesWidgetView);
 }
