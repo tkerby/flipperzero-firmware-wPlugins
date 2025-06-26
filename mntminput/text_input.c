@@ -346,7 +346,7 @@ static void text_input_view_draw_callback(Canvas* canvas, void* _model) {
                             model->selected_column == column;
             const Icon* icon = NULL;
             if(keys[column].text == ENTER_KEY) {
-                icon = selected ? &I_KeySaveSelected_22x11 : &I_KeySave_22x11;
+                icon = selected ? &I_KeySendSelected_22x11 : &I_KeySend_22x11;
             } else if(keys[column].text == SWITCH_KEYBOARD_KEY) {
                 icon = selected ? &I_KeyKeyboardSelected_10x11 : &I_KeyKeyboard_10x11;
             } else if(keys[column].text == BACKSPACE_KEY) {
