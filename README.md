@@ -24,7 +24,7 @@ This application uses documented APIs, so you can use uFBT tool to build and lau
 
 ### Technical details
 
-Infrared signals are sent from the Fliper Zero to the hardhat.
+Infrared signals are sent from the Flipper Zero to the hardhat.
 
 - The protocol used is the NECext protocol: 
   - 38 kHz carrier, 33% duty cycle.
