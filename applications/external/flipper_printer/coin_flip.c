@@ -26,25 +26,24 @@ static void coin_flip_view_draw_callback(Canvas* canvas, void* context) {
         FURI_LOG_E(TAG, "Canvas is NULL in draw callback");
         return;
     }
-    
+
     canvas_clear(canvas);
     canvas_set_font(canvas, FontPrimary);
-    
+
     FURI_LOG_I(TAG, "Draw callback called with context: %p, g_app: %p", context, g_app);
-    
+
     // Use global app reference if context is null
     FlipperPrinterApp* app = context ? (FlipperPrinterApp*)context : g_app;
-    
+
     if(!app) {
         FURI_LOG_E(TAG, "Both context and g_app are NULL in draw callback");
         canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, "No App Available");
         return;
     }
-    
+
     // Title
     canvas_draw_str_aligned(canvas, 64, 2, AlignCenter, AlignTop, "Coin Flip Game");
-    
-    
+
     if(app->total_flips == 0) {
         // Initial state - show instructions
         canvas_set_font(canvas, FontPrimary);
@@ -52,18 +51,23 @@ static void coin_flip_view_draw_callback(Canvas* canvas, void* context) {
     } else {
         // Show last result - big and centered
         canvas_set_font(canvas, FontBigNumbers);
-        canvas_draw_str_aligned(canvas, 64, 18, AlignCenter, AlignTop, 
-                              app->last_flip_was_heads ? "HEADS" : "TAILS");
-        
+        canvas_draw_str_aligned(
+            canvas, 64, 18, AlignCenter, AlignTop, app->last_flip_was_heads ? "HEADS" : "TAILS");
+
         // Simple stats - centered
         canvas_set_font(canvas, FontSecondary);
         char stats_line[64];
-        
-        snprintf(stats_line, sizeof(stats_line), "Total: %ld   H: %ld   T: %ld", 
-                 app->total_flips, app->heads_count, app->tails_count);
+
+        snprintf(
+            stats_line,
+            sizeof(stats_line),
+            "Total: %ld   H: %ld   T: %ld",
+            app->total_flips,
+            app->heads_count,
+            app->tails_count);
         canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignTop, stats_line);
     }
-    
+
     // Button hints
     elements_button_center(canvas, "Flip");
     elements_button_left(canvas, "Back");
@@ -73,80 +77,84 @@ static void coin_flip_view_draw_callback(Canvas* canvas, void* context) {
 static bool coin_flip_view_input_callback(InputEvent* event, void* context) {
     FURI_LOG_I(TAG, "Input callback called with context: %p, g_app: %p", context, g_app);
     if(!event) return false;
-    
+
     // Use global app reference if context is null
     FlipperPrinterApp* app = context ? (FlipperPrinterApp*)context : g_app;
     if(!app) return false;
     if(!app->view_dispatcher) return false;
-    
+
     bool consumed = false;
-    
+
     if(event->type == InputTypePress) {
         switch(event->key) {
-            case InputKeyOk:
-                // Perform coin flip
-                app->last_flip_was_heads = coin_flip_random();
-                app->total_flips++;
-                
-                if(app->last_flip_was_heads) {
-                    app->heads_count++;
+        case InputKeyOk:
+            // Perform coin flip
+            app->last_flip_was_heads = coin_flip_random();
+            app->total_flips++;
+
+            if(app->last_flip_was_heads) {
+                app->heads_count++;
+            } else {
+                app->tails_count++;
+            }
+
+            // Update streak tracking
+            if(app->total_flips == 1) {
+                // First flip - start streak
+                app->current_streak = 1;
+                app->streak_is_heads = app->last_flip_was_heads;
+                app->longest_streak = 1;
+            } else {
+                // Check if streak continues
+                if(app->last_flip_was_heads == app->streak_is_heads) {
+                    // Streak continues
+                    app->current_streak++;
+                    if(app->current_streak > app->longest_streak) {
+                        app->longest_streak = app->current_streak;
+                    }
                 } else {
-                    app->tails_count++;
-                }
-                
-                // Update streak tracking
-                if(app->total_flips == 1) {
-                    // First flip - start streak
+                    // Streak broken, start new streak
                     app->current_streak = 1;
                     app->streak_is_heads = app->last_flip_was_heads;
-                    app->longest_streak = 1;
-                } else {
-                    // Check if streak continues
-                    if(app->last_flip_was_heads == app->streak_is_heads) {
-                        // Streak continues
-                        app->current_streak++;
-                        if(app->current_streak > app->longest_streak) {
-                            app->longest_streak = app->current_streak;
-                        }
-                    } else {
-                        // Streak broken, start new streak
-                        app->current_streak = 1;
-                        app->streak_is_heads = app->last_flip_was_heads;
-                    }
                 }
-                
-                // Print result
-                printer_print_coin_flip(app->total_flips, app->last_flip_was_heads);
-                
-                // Notify user (with safety check)
-                if(app->notification) {
-                    notification_message(app->notification, &sequence_coin_flip);
-                }
-                
-                FURI_LOG_I(TAG, "Coin flip completed: total=%ld, heads=%ld, tails=%ld", 
-                          app->total_flips, app->heads_count, app->tails_count);
-                
-                // Force view redraw using the standard Flipper pattern
-                if(app->coin_flip_view) {
-                    // This is the proper way to trigger a redraw in Flipper apps
-                    view_commit_model(app->coin_flip_view, true);
-                }
-                
-                consumed = true;
-                break;
-                
-            case InputKeyLeft:
-            case InputKeyBack:
-                // Return to menu
-                view_dispatcher_switch_to_view(app->view_dispatcher, ViewIdMenu);
-                consumed = true;
-                break;
-                
-            default:
-                break;
+            }
+
+            // Print result
+            printer_print_coin_flip(app->total_flips, app->last_flip_was_heads);
+
+            // Notify user (with safety check)
+            if(app->notification) {
+                notification_message(app->notification, &sequence_coin_flip);
+            }
+
+            FURI_LOG_I(
+                TAG,
+                "Coin flip completed: total=%ld, heads=%ld, tails=%ld",
+                app->total_flips,
+                app->heads_count,
+                app->tails_count);
+
+            // Force view redraw using the standard Flipper pattern
+            if(app->coin_flip_view) {
+                // This is the proper way to trigger a redraw in Flipper apps
+                view_commit_model(app->coin_flip_view, true);
+            }
+
+            consumed = true;
+            break;
+
+        case InputKeyLeft:
+        case InputKeyBack:
+            // Return to menu
+            view_dispatcher_switch_to_view(app->view_dispatcher, ViewIdMenu);
+            consumed = true;
+            break;
+
+        default:
+            break;
         }
     }
-    
+
     return consumed;
 }
 
@@ -167,17 +175,17 @@ View* coin_flip_view_alloc(FlipperPrinterApp* app) {
         FURI_LOG_E(TAG, "App is NULL in coin_flip_view_alloc");
         return NULL;
     }
-    
+
     // Set global app reference as workaround
     g_app = app;
     FURI_LOG_I(TAG, "Set global app reference: %p", g_app);
-    
+
     View* view = view_alloc();
     if(!view) {
         FURI_LOG_E(TAG, "Failed to allocate view");
         return NULL;
     }
-    
+
     FURI_LOG_I(TAG, "Setting context for coin flip view: %p", app);
     view_set_context(view, app);
     view_set_draw_callback(view, coin_flip_view_draw_callback);

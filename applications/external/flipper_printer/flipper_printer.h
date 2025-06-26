@@ -11,13 +11,13 @@
 #include <notification/notification_messages.h>
 
 #define TEXT_BUFFER_SIZE 256
-#define TAG "FlipperPrinter"
+#define TAG              "FlipperPrinter"
 
 // View identifiers
 typedef enum {
-    ViewIdMenu,         // Main menu
-    ViewIdCoinFlip,     // Coin flip game view
-    ViewIdTextInput,    // Text input keyboard
+    ViewIdMenu, // Main menu
+    ViewIdCoinFlip, // Coin flip game view
+    ViewIdTextInput, // Text input keyboard
     ViewIdPrinterSetup, // Printer setup info view
 } ViewId;
 
@@ -35,22 +35,22 @@ typedef struct {
     ViewDispatcher* view_dispatcher;
     Gui* gui;
     NotificationApp* notification;
-    
+
     // Views
     Submenu* menu;
     View* coin_flip_view;
     TextInput* text_input;
     View* printer_setup_view;
-    
+
     // Data
     char text_buffer[TEXT_BUFFER_SIZE];
-    
+
     // Coin flip statistics
     int32_t total_flips;
     int32_t heads_count;
     int32_t tails_count;
     bool last_flip_was_heads;
-    
+
     // Streak tracking
     int32_t current_streak;
     int32_t longest_streak;
