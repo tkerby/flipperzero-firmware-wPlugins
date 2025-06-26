@@ -18,7 +18,7 @@ This application uses documented APIs, so you can use uFBT tool to build and lau
 1. Install uFBT tool.
 2. If using custom firmware, switch to target firmware.
 3. Change to the proper channel/branch.
-4. Connect Flipper Zero to your computer and exit any application on the Fliper Zero.
+4. Connect Flipper Zero to your computer and exit any application on the Flipper Zero.
 5. Make sure qFlipper and lab.flipper.net are not running on your computer.
 6. run "ufbt launch"
 
