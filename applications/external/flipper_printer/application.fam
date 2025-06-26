@@ -12,7 +12,6 @@ App(
         "printer_setup.c",
     ],
     fap_icon="flipper_printer_icon.png",
-    fap_icon_assets="images",
     fap_category="Tools",
     fap_author="alxcrt",
     fap_weburl="https://github.com/alxcrt/flipper-zero-thermal-printer",
