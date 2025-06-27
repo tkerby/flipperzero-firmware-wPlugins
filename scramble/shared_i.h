@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "puzzle.h"
 
 #define MULTIPLIER 0x00000005DEECE66DLL
