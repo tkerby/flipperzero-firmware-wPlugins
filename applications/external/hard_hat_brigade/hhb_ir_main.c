@@ -3,10 +3,11 @@
 #include <gui/view_dispatcher.h>
 #include <gui/scene_manager.h>
 #include <gui/modules/widget.h>
-#include <gui/modules/text_input.h>
+#include "mntminput/text_input.h"
 #include <infrared.h>
 #include <infrared_worker.h>
 #include <infrared_transmit.h>
+#include <notification/notification_messages.h>
 
 typedef enum {
     BasicScenesGreetingInputScene,
@@ -42,6 +43,8 @@ typedef enum {
 } BasicScenesGreetingInputEvent;
 
 void send_message_ir(App* app) {
+    NotificationApp* notifications = furi_record_open(RECORD_NOTIFICATION);
+    notification_message(notifications, &sequence_single_vibro);
     for(uint8_t i = 0; i < strlen(app->user_name); i++) {
         uint8_t c = app->user_name[i];
 
@@ -59,6 +62,8 @@ void send_message_ir(App* app) {
         .command = 0x4,
     };
     infrared_send(&end, 1);
+    notification_message(notifications, &sequence_success);
+    furi_record_close(RECORD_NOTIFICATION);
 }
 
 void basic_scenes_menu_callback(void* context, uint32_t index) {
@@ -81,6 +86,7 @@ void basic_scenes_greeting_input_scene_on_enter(void* context) {
 
     bool clear_text = true;
     text_input_reset(app->text_input);
+    text_input_show_illegal_symbols(app->text_input, true); // Adds the following...  _<>:"/\|?*
     text_input_set_header_text(app->text_input, "Enter your message");
     text_input_set_result_callback(
         app->text_input,

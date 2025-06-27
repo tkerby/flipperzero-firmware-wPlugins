@@ -4,6 +4,7 @@ App(
     apptype=FlipperAppType.EXTERNAL,
     entry_point="basic_scenes_app",
     stack_size=2 * 1024,
+    fap_icon_assets="assets",
     fap_icon="hhbirapp.png",
     fap_category="Infrared",
     fap_author="Anomalous68",
