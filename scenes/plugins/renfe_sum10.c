@@ -16,7 +16,9 @@
 #include "../../metroflip_plugins.h"
 
 #define TAG "Metroflip:Scene:RenfeSum10"
-
+static bool renfe_sum10_is_history_entry(const uint8_t* block_data);
+static void renfe_sum10_parse_history_entry(FuriString* parsed_data, const uint8_t* block_data, int entry_num);
+static void renfe_sum10_parse_travel_history(FuriString* parsed_data, const MfClassicData* data);
 // Keys for RENFE Suma 10 cards - specific keys found in real dumps
 const MfClassicKeyPair renfe_sum10_keys[16] = {
     {.a = 0xA8844B0BCA06, .b = 0xffffffffffff}, // Sector 0 - RENFE specific key
