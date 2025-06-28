@@ -380,6 +380,16 @@ static void renfe_sum10_parse_history_entry(FuriString* parsed_data, const uint8
         }
     }
     
+     // Add timestamp info (raw format for now)
+    furi_string_cat_printf(parsed_data, " [%02X%02X%02X]", timestamp_1, timestamp_2, timestamp_3);
+    
+    // Add additional details if available
+    if(detail1 != 0x00 || detail2 != 0x00) {
+        furi_string_cat_printf(parsed_data, " (%02X%02X)", detail1, detail2);
+    }
+    
+    furi_string_cat_printf(parsed_data, "\n");
+}
 static bool renfe_sum10_get_card_config(RenfeSum10CardConfig* config, MfClassicType type) {
     bool success = true;
 
