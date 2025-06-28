@@ -86,6 +86,17 @@ static bool renfe_sum10_is_history_entry(const uint8_t* block_data) {
     
     return false;
 }
+// Extract timestamp from block data for sorting purposes
+static uint32_t renfe_sum10_extract_timestamp(const uint8_t* block_data) {
+    if(!block_data) return 0;
+    
+    // Extract timestamp from bytes 2-4 and combine into a single value for comparison
+    uint32_t timestamp = ((uint32_t)block_data[2] << 16) | 
+                        ((uint32_t)block_data[3] << 8) | 
+                        (uint32_t)block_data[4];
+    
+    return timestamp;
+}
 static bool renfe_sum10_get_card_config(RenfeSum10CardConfig* config, MfClassicType type) {
     bool success = true;
 
