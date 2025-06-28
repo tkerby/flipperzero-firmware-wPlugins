@@ -97,6 +97,35 @@ static uint32_t renfe_sum10_extract_timestamp(const uint8_t* block_data) {
     
     return timestamp;
 }
+// Sort history entries manually (newest first) - using bubble sort since qsort is not available
+static void renfe_sum10_sort_history_entries(HistoryEntry* entries, int count) {
+    if(!entries || count <= 1) return;
+    
+    // Simple bubble sort by timestamp (descending - newest first)
+    for(int i = 0; i < count - 1; i++) {
+        for(int j = 0; j < count - 1 - i; j++) {
+            bool should_swap = false;
+            
+            // Primary sort: by timestamp (newest first)
+            if(entries[j].timestamp < entries[j + 1].timestamp) {
+                should_swap = true;
+            } else if(entries[j].timestamp == entries[j + 1].timestamp) {
+                // Secondary sort: by block number (higher first if timestamps are equal)
+                if(entries[j].block_number < entries[j + 1].block_number) {
+                    should_swap = true;
+                }
+            }
+            
+            if(should_swap) {
+                // Swap entries
+                HistoryEntry temp = entries[j];
+                entries[j] = entries[j + 1];
+                entries[j + 1] = temp;
+            }
+        }
+    }
+}
+
 static bool renfe_sum10_get_card_config(RenfeSum10CardConfig* config, MfClassicType type) {
     bool success = true;
 
