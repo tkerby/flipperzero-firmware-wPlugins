@@ -30,13 +30,6 @@ static bool callbackNavigationEvent(const PCUBERZERO instance) {
 int32_t cuberzeroMain(const void* const pointer) {
 	UNUSED(pointer);
 	FURI_LOG_I(CUBERZERO_TAG, "Initializing");
-	char* scramble = PuzzleScrambleTwoByTwo(2553);
-
-	if(scramble) {
-		FURI_LOG_I(CUBERZERO_TAG, "Scramble: %s", scramble);
-		free(scramble);
-	}
-
 	const char* messageError = NULL;
 	const PCUBERZERO instance = malloc(sizeof(CUBERZERO));
 
