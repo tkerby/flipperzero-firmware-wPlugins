@@ -1143,8 +1143,7 @@ void show_wifi_menu(AppState* state) {
     submenu_add_item(state->wifi_menu, "Attacks", 2, submenu_callback, state);
     submenu_add_item(state->wifi_menu, "Evil Portal & Network", 3, submenu_callback, state);
     submenu_add_item(state->wifi_menu, "Settings & Hardware", 4, submenu_callback, state);
-    submenu_add_item(
-        state->wifi_menu, wifi_stop_command.label, 5, submenu_callback, state);
+    submenu_add_item(state->wifi_menu, wifi_stop_command.label, 5, submenu_callback, state);
     // Restore last selected WiFi category
     submenu_set_selected_item(state->wifi_menu, state->last_wifi_category_index);
 
