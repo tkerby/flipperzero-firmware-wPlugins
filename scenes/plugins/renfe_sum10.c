@@ -279,7 +279,94 @@ static const char* renfe_sum10_get_station_name(uint16_t station_code) {
 }
 
 // Parse a single history entry
-
+// Parse a single history entry
+static void renfe_sum10_parse_history_entry(FuriString* parsed_data, const uint8_t* block_data, int entry_num) {
+    // Check for null pointers
+    if(!parsed_data || !block_data) {
+        FURI_LOG_E(TAG, "renfe_sum10_parse_history_entry: NULL pointer - parsed_data=%p, block_data=%p", 
+                   (void*)parsed_data, (void*)block_data);
+        return;
+    }
+    
+    // Extract transaction type from first byte
+    uint8_t transaction_type = block_data[0];
+    
+    /* TRANSACTION TYPES MAPPING (based on analysis):
+     * CONFIRMED TYPES:
+     * 0x13 = ENTRY     - Entrada al sistema
+     * 0x1A = EXIT      - Salida del sistema  
+     * 0x1E = TRANSFER  - Transbordo entre lineas
+     * 0x16 = VALIDATION- Validacion de titulo
+     * 0x33 = TOP-UP    - Recarga de saldo
+     * 0x3A = CHARGE    - Carga/cargo adicional
+     * 0x18 = CHECK     - Verificacion
+     * 0x2B = SPECIAL   - Operacion especial
+     * 
+     * DEDUCED TYPES (found in real cards):
+     * 0x17 = INSPECTION- Posible control/revision de inspector
+     * 0x23 = DISCOUNT  - Posible aplicacion de descuento
+     * 0x2A = PENALTY   - Posible sancion o multa
+     */
+    
+    // Extract timestamp data (bytes 2-4)
+    uint8_t timestamp_1 = block_data[2];
+    uint8_t timestamp_2 = block_data[3];
+    uint8_t timestamp_3 = block_data[4];
+    
+    // Extract station codes (bytes 9-10) - Read as big-endian
+    uint16_t station_code = (block_data[9] << 8) | block_data[10];
+    
+    // Log the station code for debugging
+    FURI_LOG_I(TAG, "Station code bytes: [%d][%d] = 0x%02X 0x%02X -> 0x%04X", 
+               9, 10, block_data[9], block_data[10], station_code);
+    
+    // Extract transaction details
+    uint8_t detail1 = block_data[5];
+    uint8_t detail2 = block_data[6];
+    
+    // Format the entry
+    furi_string_cat_printf(parsed_data, "%d. ", entry_num);
+    
+    // Interpret transaction type
+    switch(transaction_type) {
+        case 0x13:
+            furi_string_cat_printf(parsed_data, "ENTRY");
+            break;
+        case 0x1A:
+            furi_string_cat_printf(parsed_data, "EXIT");
+            break;
+        case 0x1E:
+            furi_string_cat_printf(parsed_data, "TRANSFER");
+            break;
+        case 0x16:
+            furi_string_cat_printf(parsed_data, "VALIDATION");
+            break;
+        case 0x17:
+            furi_string_cat_printf(parsed_data, "INSPECTION");  // Posible control/revision
+            break;
+        case 0x23:
+            furi_string_cat_printf(parsed_data, "DISCOUNT");    // Posible descuento aplicado
+            break;
+        case 0x2A:
+            furi_string_cat_printf(parsed_data, "PENALTY");     // Posible sancion/multa
+            break;
+        case 0x33:
+            furi_string_cat_printf(parsed_data, "TOP-UP");
+            break;
+        case 0x3A:
+            furi_string_cat_printf(parsed_data, "CHARGE");
+            break;
+        case 0x18:
+            furi_string_cat_printf(parsed_data, "CHECK");
+            break;
+        case 0x2B:
+            furi_string_cat_printf(parsed_data, "SPECIAL");
+            break;
+        default:
+            furi_string_cat_printf(parsed_data, "TYPE_%02X", transaction_type);
+            break;
+    }
+    
 static bool renfe_sum10_get_card_config(RenfeSum10CardConfig* config, MfClassicType type) {
     bool success = true;
 
