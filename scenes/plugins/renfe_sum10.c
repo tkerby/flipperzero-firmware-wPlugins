@@ -390,6 +390,121 @@ static void renfe_sum10_parse_history_entry(FuriString* parsed_data, const uint8
     
     furi_string_cat_printf(parsed_data, "\n");
 }
+// Parse travel history from the card data (with sorting)
+static void renfe_sum10_parse_travel_history(FuriString* parsed_data, const MfClassicData* data) {
+    // Check for null pointers
+    if(!parsed_data || !data) {
+        FURI_LOG_E(TAG, "renfe_sum10_parse_travel_history: NULL pointer - parsed_data=%p, data=%p", 
+                   (void*)parsed_data, (void*)data);
+        return;
+    }
+    
+    FURI_LOG_I(TAG, "Searching for travel history in RENFE Sum 10 card...");
+    
+ 
+    // These are the confirmed history blocks from the original analysis
+    int history_blocks[] = {18, 22, 28, 29, 30, 44, 45, 46};
+    int num_blocks = sizeof(history_blocks) / sizeof(history_blocks[0]);
+    
+    // Array to store found history entries for sorting
+    HistoryEntry* history_entries = malloc(sizeof(HistoryEntry) * num_blocks);
+    if(!history_entries) {
+        FURI_LOG_E(TAG, "Failed to allocate memory for history entries");
+        furi_string_cat_printf(parsed_data, "Memory allocation error\n");
+        return;
+    }
+    
+    int history_count = 0;
+    
+    // First, let's check which blocks are available and readable
+    int max_blocks = (data->type == MfClassicType1k) ? 64 : 256;
+    FURI_LOG_I(TAG, "Card type allows up to %d blocks", max_blocks);
+    
+    // Collect all valid history entries
+    for(int i = 0; i < num_blocks; i++) {
+        int block = history_blocks[i];
+        
+        // Check if block number is within valid range for this card type
+        if(block >= max_blocks) {
+            FURI_LOG_D(TAG, "Block %d is out of range for this card type", block);
+            continue;
+        }
+        
+        const uint8_t* block_data = data->block[block].data;
+        
+        // Log block content for debugging (show all 16 bytes)
+        FURI_LOG_I(TAG, "Block %02d: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
+                   block, 
+                   block_data[0], block_data[1], block_data[2], block_data[3],
+                   block_data[4], block_data[5], block_data[6], block_data[7],
+                   block_data[8], block_data[9], block_data[10], block_data[11],
+                   block_data[12], block_data[13], block_data[14], block_data[15]);
+        
+        // Check if this looks like a history entry
+        if(renfe_sum10_is_history_entry(block_data)) {
+            FURI_LOG_I(TAG, "Found history entry in block %d", block);
+            
+            // Store the entry for sorting
+            memcpy(history_entries[history_count].block_data, block_data, 16);
+            history_entries[history_count].timestamp = renfe_sum10_extract_timestamp(block_data);
+            history_entries[history_count].block_number = block;
+            
+            FURI_LOG_I(TAG, "Entry %d: timestamp=0x%06lX, block=%d", 
+                       history_count, history_entries[history_count].timestamp, block);
+            
+            history_count++;
+        } else {
+            FURI_LOG_D(TAG, "Block %d does not match history pattern", block);
+        }
+    }
+    
+    FURI_LOG_I(TAG, "Total history entries found: %d", history_count);
+    
+    if(history_count == 0) {
+        furi_string_cat_printf(parsed_data, "No travel history found\n");
+        furi_string_cat_printf(parsed_data, "(Check logs for block analysis)\n");
+        
+        
+        FURI_LOG_I(TAG, "No history found in standard blocks, scanning additional blocks...");
+        int additional_blocks[] = {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 20, 21};
+        int num_additional = sizeof(additional_blocks) / sizeof(additional_blocks[0]);
+        
+        for(int i = 0; i < num_additional; i++) {
+            int block = additional_blocks[i];
+            if(block >= max_blocks) continue;
+            
+            const uint8_t* block_data = data->block[block].data;
+            
+            // Check for any interesting patterns
+            bool has_pattern = false;
+            if(block_data[1] == 0x98 && block_data[0] != 0x00) has_pattern = true;
+            if((block_data[0] >= 0x10 && block_data[0] <= 0x3F) && 
+               (block_data[2] != 0x00 || block_data[3] != 0x00)) has_pattern = true;
+            
+            if(has_pattern) {
+                FURI_LOG_W(TAG, "Potential history pattern in block %d: %02X %02X %02X %02X", 
+                          block, block_data[0], block_data[1], block_data[2], block_data[3]);
+            }
+        }
+    } else {
+        // Sort the history entries by timestamp (newest first)
+        renfe_sum10_sort_history_entries(history_entries, history_count);
+        
+        FURI_LOG_I(TAG, "History entries sorted by timestamp (newest first)");
+        
+        // Display the sorted history
+        furi_string_cat_printf(parsed_data, "Found %d travel entries (sorted by date):\n\n", history_count);
+        
+        for(int i = 0; i < history_count; i++) {
+            FURI_LOG_I(TAG, "Displaying entry %d: timestamp=0x%06lX, block=%d", 
+                       i + 1, history_entries[i].timestamp, history_entries[i].block_number);
+            
+            renfe_sum10_parse_history_entry(parsed_data, history_entries[i].block_data, i + 1);
+        }
+    }
+    
+    // Free allocated memory
+    free(history_entries);
 static bool renfe_sum10_get_card_config(RenfeSum10CardConfig* config, MfClassicType type) {
     bool success = true;
 
