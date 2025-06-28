@@ -16,6 +16,10 @@
 #include "../../metroflip_plugins.h"
 
 #define TAG "Metroflip:Scene:RenfeSum10"
+typedef struct {
+    uint8_t data_sector;
+    const MfClassicKeyPair* keys;
+} RenfeSum10CardConfig;
 static bool renfe_sum10_is_history_entry(const uint8_t* block_data);
 static void renfe_sum10_parse_history_entry(FuriString* parsed_data, const uint8_t* block_data, int entry_num);
 static void renfe_sum10_parse_travel_history(FuriString* parsed_data, const MfClassicData* data);
@@ -34,7 +38,7 @@ const MfClassicKeyPair renfe_sum10_keys[16] = {
     {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 8
     {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 9
     {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 10
-    {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 11
+    {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 11 - Travel history, Contains blocks 44,45,46
     {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 12
     {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 13
     {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 14
@@ -61,11 +65,27 @@ const MfClassicKeyPair renfe_sum10_alt_keys[16] = {
     {.a = 0xa0a1a2a3a4a5, .b = 0xa0a1a2a3a4a5}, // Sector 15
 };
 
-typedef struct {
-    uint8_t data_sector;
-    const MfClassicKeyPair* keys;
-} RenfeSum10CardConfig;
 
+// Check if a block contains a valid history entry
+static bool renfe_sum10_is_history_entry(const uint8_t* block_data) {
+    // Check for null pointer
+    if(!block_data) {
+        FURI_LOG_E(TAG, "renfe_sum10_is_history_entry: block_data is NULL");
+        return false;
+    }
+    
+    // Very simple check - if byte 1 is 0x98 and byte 0 is not 0x00, consider it a history entry
+    // This should catch all the patterns we've seen: 13 98, 1A 98, 1E 98, 16 98, 33 98, 3A 98, 2B 98, 18 98
+    
+    FURI_LOG_I(TAG, "Checking block pattern: %02X %02X", block_data[0], block_data[1]);
+    
+    if(block_data[1] == 0x98 && block_data[0] != 0x00) {
+        FURI_LOG_I(TAG, "FOUND HISTORY ENTRY: %02X 98", block_data[0]);
+        return true;
+    }
+    
+    return false;
+}
 static bool renfe_sum10_get_card_config(RenfeSum10CardConfig* config, MfClassicType type) {
     bool success = true;
 
