@@ -24,7 +24,6 @@ private:
     ToggleState vibrationToggle = ToggleOn;                      // vibration toggle state
     //
     int atoi(const char *nptr) { return (int)strtol(nptr, NULL, 10); } // convert string to integer
-    static uint32_t callbackToSubmenu(void *context);                  // callback to send the user back to the submenu
     void debounceInput();                                              // debounce input to prevent multiple actions from a single press
     void inputManager();                                               // manage input for the game, called from updateInput
     void switchToNextLevel();                                          // switch to the next level in the game

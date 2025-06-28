@@ -17,12 +17,6 @@ FreeRoamGame::~FreeRoamGame()
     // also nothing to do anymore since I moved the view/timer to the app
 }
 
-uint32_t FreeRoamGame::callbackToSubmenu(void *context)
-{
-    UNUSED(context);
-    return FreeRoamViewSubmenu;
-}
-
 void FreeRoamGame::debounceInput()
 {
     static uint8_t debounceCounter = 0;
