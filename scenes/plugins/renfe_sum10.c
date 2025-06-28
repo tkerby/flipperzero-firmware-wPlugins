@@ -17,9 +17,12 @@
 
 #define TAG "Metroflip:Scene:RenfeSum10"
 typedef struct {
-    uint8_t data_sector;
-    const MfClassicKeyPair* keys;
-} RenfeSum10CardConfig;
+    uint8_t block_data[16];  
+    uint32_t timestamp;     
+    int block_number;       
+} HistoryEntry;
+
+// Forward declarations for helper functions
 static bool renfe_sum10_is_history_entry(const uint8_t* block_data);
 static void renfe_sum10_parse_history_entry(FuriString* parsed_data, const uint8_t* block_data, int entry_num);
 static void renfe_sum10_parse_travel_history(FuriString* parsed_data, const MfClassicData* data);
@@ -29,16 +32,16 @@ static void renfe_sum10_sort_history_entries(HistoryEntry* entries, int count);
 const MfClassicKeyPair renfe_sum10_keys[16] = {
     {.a = 0xA8844B0BCA06, .b = 0xffffffffffff}, // Sector 0 - RENFE specific key
     {.a = 0xCB5ED0E57B08, .b = 0xffffffffffff}, // Sector 1 - RENFE specific key 
-    {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 2
-    {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 3
-    {.a = 0xC0C1C2C3C4C5, .b = 0xffffffffffff}, // Sector 4 - Alternative RENFE key
-    {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 5 - Value blocks
-    {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 6 - Value blocks
-    {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 7
-    {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 8
-    {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 9
-    {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 10
-    {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 11 - Travel history, Contains blocks 44,45,46
+    {.a = 0x749934CC8ED3, .b = 0xffffffffffff}, // Sector 2
+    {.a = 0xAE381EA0811B, .b = 0xffffffffffff}, // Sector 3
+    {.a = 0x40454EE64229, .b = 0xffffffffffff}, // Sector 4 - Contains block 18 (history)
+    {.a = 0x66A4932816D3, .b = 0xffffffffffff}, // Sector 5 - Contains block 22 (history)
+    {.a = 0xB54D99618ADC, .b = 0xffffffffffff}, // Sector 6
+    {.a = 0x08D6A7765640, .b = 0xffffffffffff}, // Sector 7 - Contains blocks 28,29,30 (history)
+    {.a = 0x3E0557273982, .b = 0xffffffffffff}, // Sector 8
+    {.a = 0xC0C1C2C3C4C5, .b = 0xffffffffffff}, // Sector 9
+    {.a = 0xC0C1C2C3C4C5, .b = 0xffffffffffff}, // Sector 10
+    {.a = 0xC0C1C2C3C4C5, .b = 0xffffffffffff}, // Sector 11 - Contains blocks 44,45,46 (history)
     {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 12
     {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 13
     {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 14
@@ -65,7 +68,6 @@ const MfClassicKeyPair renfe_sum10_alt_keys[16] = {
     {.a = 0xa0a1a2a3a4a5, .b = 0xa0a1a2a3a4a5}, // Sector 15
 };
 
-
 // Check if a block contains a valid history entry
 static bool renfe_sum10_is_history_entry(const uint8_t* block_data) {
     // Check for null pointer
@@ -74,8 +76,7 @@ static bool renfe_sum10_is_history_entry(const uint8_t* block_data) {
         return false;
     }
     
-    // Very simple check - if byte 1 is 0x98 and byte 0 is not 0x00, consider it a history entry
-    // This should catch all the patterns we've seen: 13 98, 1A 98, 1E 98, 16 98, 33 98, 3A 98, 2B 98, 18 98
+   
     
     FURI_LOG_I(TAG, "Checking block pattern: %02X %02X", block_data[0], block_data[1]);
     
@@ -101,16 +102,13 @@ static uint32_t renfe_sum10_extract_timestamp(const uint8_t* block_data) {
 static void renfe_sum10_sort_history_entries(HistoryEntry* entries, int count) {
     if(!entries || count <= 1) return;
     
-    // Simple bubble sort by timestamp (descending - newest first)
     for(int i = 0; i < count - 1; i++) {
         for(int j = 0; j < count - 1 - i; j++) {
             bool should_swap = false;
             
-            // Primary sort: by timestamp (newest first)
             if(entries[j].timestamp < entries[j + 1].timestamp) {
                 should_swap = true;
             } else if(entries[j].timestamp == entries[j + 1].timestamp) {
-                // Secondary sort: by block number (higher first if timestamps are equal)
                 if(entries[j].block_number < entries[j + 1].block_number) {
                     should_swap = true;
                 }
@@ -130,7 +128,7 @@ static const char* renfe_sum10_get_station_name(uint16_t station_code) {
     switch(station_code) {
         // CODIGOS REALES ENCONTRADOS EN LA TARJETA
         case 0x7069: return "Valencia-Nord";
-        case 0x0080: return "Xativa";           
+        case 0x0080: return "Xativa";          
         case 0x9400: return "Jesus";
         case 0x6900: return "Turia";
         case 0x6F00: return "Pont de Fusta";
@@ -279,7 +277,6 @@ static const char* renfe_sum10_get_station_name(uint16_t station_code) {
 }
 
 // Parse a single history entry
-// Parse a single history entry
 static void renfe_sum10_parse_history_entry(FuriString* parsed_data, const uint8_t* block_data, int entry_num) {
     // Check for null pointers
     if(!parsed_data || !block_data) {
@@ -380,7 +377,7 @@ static void renfe_sum10_parse_history_entry(FuriString* parsed_data, const uint8
         }
     }
     
-     // Add timestamp info (raw format for now)
+    // Add timestamp info 
     furi_string_cat_printf(parsed_data, " [%02X%02X%02X]", timestamp_1, timestamp_2, timestamp_3);
     
     // Add additional details if available
@@ -401,7 +398,7 @@ static void renfe_sum10_parse_travel_history(FuriString* parsed_data, const MfCl
     
     FURI_LOG_I(TAG, "Searching for travel history in RENFE Sum 10 card...");
     
- 
+    // Define specific blocks that contain history based on manual analysis
     // These are the confirmed history blocks from the original analysis
     int history_blocks[] = {18, 22, 28, 29, 30, 44, 45, 46};
     int num_blocks = sizeof(history_blocks) / sizeof(history_blocks[0]);
@@ -416,7 +413,6 @@ static void renfe_sum10_parse_travel_history(FuriString* parsed_data, const MfCl
     
     int history_count = 0;
     
-    // First, let's check which blocks are available and readable
     int max_blocks = (data->type == MfClassicType1k) ? 64 : 256;
     FURI_LOG_I(TAG, "Card type allows up to %d blocks", max_blocks);
     
@@ -464,7 +460,7 @@ static void renfe_sum10_parse_travel_history(FuriString* parsed_data, const MfCl
         furi_string_cat_printf(parsed_data, "No travel history found\n");
         furi_string_cat_printf(parsed_data, "(Check logs for block analysis)\n");
         
-        
+  
         FURI_LOG_I(TAG, "No history found in standard blocks, scanning additional blocks...");
         int additional_blocks[] = {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 20, 21};
         int num_additional = sizeof(additional_blocks) / sizeof(additional_blocks[0]);
@@ -505,6 +501,13 @@ static void renfe_sum10_parse_travel_history(FuriString* parsed_data, const MfCl
     
     // Free allocated memory
     free(history_entries);
+}
+
+typedef struct {
+    uint8_t data_sector;
+    const MfClassicKeyPair* keys;
+} RenfeSum10CardConfig;
+
 static bool renfe_sum10_get_card_config(RenfeSum10CardConfig* config, MfClassicType type) {
     bool success = true;
 
@@ -525,6 +528,17 @@ static bool renfe_sum10_get_card_config(RenfeSum10CardConfig* config, MfClassicT
 }
 
 static bool renfe_sum10_parse(FuriString* parsed_data, const MfClassicData* data) {
+    // Check for null pointers
+    if(!parsed_data) {
+        FURI_LOG_E(TAG, "renfe_sum10_parse: parsed_data is NULL");
+        return false;
+    }
+    
+    if(!data) {
+        FURI_LOG_E(TAG, "renfe_sum10_parse: data is NULL");
+        return false;
+    }
+    
     bool parsed = false;
 
     do {
@@ -568,6 +582,10 @@ static bool renfe_sum10_parse(FuriString* parsed_data, const MfClassicData* data
             furi_string_cat_printf(parsed_data, "Trips: Not available\n");
         }
         
+        // Add travel history parsing
+        furi_string_cat_printf(parsed_data, "\n\e#Travel History\n");
+        renfe_sum10_parse_travel_history(parsed_data, data);
+        
         parsed = true;
         
     } while(false);
@@ -575,12 +593,22 @@ static bool renfe_sum10_parse(FuriString* parsed_data, const MfClassicData* data
     return parsed;
 }
 
-static bool renfe_sum10_checked = false;
-
 static NfcCommand renfe_sum10_poller_callback(NfcGenericEvent event, void* context) {
-    furi_assert(context);
-    furi_assert(event.event_data);
-    furi_assert(event.protocol == NfcProtocolMfClassic);
+    // Check for null pointers instead of asserting
+    if(!context) {
+        FURI_LOG_E(TAG, "renfe_sum10_poller_callback: context is NULL");
+        return NfcCommandStop;
+    }
+    
+    if(!event.event_data) {
+        FURI_LOG_E(TAG, "renfe_sum10_poller_callback: event_data is NULL");
+        return NfcCommandStop;
+    }
+    
+    if(event.protocol != NfcProtocolMfClassic) {
+        FURI_LOG_E(TAG, "renfe_sum10_poller_callback: Wrong protocol %d", event.protocol);
+        return NfcCommandStop;
+    }
 
     NfcCommand command = NfcCommandContinue;
     const MfClassicPollerEvent* mfc_event = event.event_data;
@@ -597,38 +625,67 @@ static NfcCommand renfe_sum10_poller_callback(NfcGenericEvent event, void* conte
         mfc_event->data->poller_mode.mode = MfClassicPollerModeRead;
 
     } else if(mfc_event->type == MfClassicPollerEventTypeRequestReadSector) {
-        MfClassicKey key = {0};
-        MfClassicKeyType key_type = MfClassicKeyTypeA;
-        bit_lib_num_to_bytes_be(renfe_sum10_keys[app->sec_num].a, COUNT_OF(key.data), key.data);
-          if(!renfe_sum10_checked) {
-            mfc_event->data->read_sector_request_data.sector_num = app->sec_num;
-            mfc_event->data->read_sector_request_data.key = key;
-            mfc_event->data->read_sector_request_data.key_type = key_type;
-            mfc_event->data->read_sector_request_data.key_provided = true;
-            app->sec_num++;
-            renfe_sum10_checked = true;
-        }
-        
+        // Get the card data to determine card type
         nfc_device_set_data(app->nfc_device, NfcProtocolMfClassic, nfc_poller_get_data(app->poller));
         const MfClassicData* mfc_data = nfc_device_get_data(app->nfc_device, NfcProtocolMfClassic);
         
-        if(mfc_data->type == MfClassicType1k) {
+        // Determine maximum sectors based on card type
+        uint8_t max_sectors = 16; // Default for 1K
+        if(mfc_data->type == MfClassicType4k) {
+            max_sectors = 16; // RENFE Suma 10 only uses first 16 sectors even on 4K cards
+        }
+        
+        // Check if we have more sectors to read
+        if(app->sec_num < max_sectors) {
+            MfClassicKey key = {0};
+            MfClassicKeyType key_type = MfClassicKeyTypeA;
+            
+            // Verify sector number is within key array bounds
+            if(app->sec_num >= sizeof(renfe_sum10_keys) / sizeof(renfe_sum10_keys[0])) {
+                FURI_LOG_E(TAG, "Sector %d exceeds key array bounds", app->sec_num);
+                return NfcCommandStop;
+            }
+            
+            // Use the correct key for this sector
             bit_lib_num_to_bytes_be(renfe_sum10_keys[app->sec_num].a, COUNT_OF(key.data), key.data);
-
+            
             mfc_event->data->read_sector_request_data.sector_num = app->sec_num;
             mfc_event->data->read_sector_request_data.key = key;
             mfc_event->data->read_sector_request_data.key_type = key_type;
             mfc_event->data->read_sector_request_data.key_provided = true;
-            if(app->sec_num == 16) {
-                mfc_event->data->read_sector_request_data.key_provided = false;
-                app->sec_num = 0;
-            }
+            
+            FURI_LOG_I(TAG, "RENFE Sum 10: Authenticating sector %d with key A: %012llX", app->sec_num, renfe_sum10_keys[app->sec_num].a);
+            
             app->sec_num++;
+        } else {
+            // No more sectors to read
+            mfc_event->data->read_sector_request_data.key_provided = false;
+            app->sec_num = 0;
         }
     } else if(mfc_event->type == MfClassicPollerEventTypeSuccess) {
+        if(!app->nfc_device) {
+            FURI_LOG_E(TAG, "renfe_sum10_poller_callback: nfc_device is NULL");
+            return NfcCommandStop;
+        }
+        
         const MfClassicData* mfc_data = nfc_device_get_data(app->nfc_device, NfcProtocolMfClassic);
+        if(!mfc_data) {
+            FURI_LOG_E(TAG, "renfe_sum10_poller_callback: Failed to get MfClassic data");
+            return NfcCommandStop;
+        }
+        
         FuriString* parsed_data = furi_string_alloc();
+        if(!parsed_data) {
+            FURI_LOG_E(TAG, "renfe_sum10_poller_callback: Failed to allocate FuriString");
+            return NfcCommandStop;
+        }
+        
         Widget* widget = app->widget;
+        if(!widget) {
+            FURI_LOG_E(TAG, "renfe_sum10_poller_callback: widget is NULL");
+            furi_string_free(parsed_data);
+            return NfcCommandStop;
+        }
         
         if(!renfe_sum10_parse(parsed_data, mfc_data)) {
             furi_string_reset(app->text_box_store);
@@ -641,7 +698,10 @@ static NfcCommand renfe_sum10_poller_callback(NfcGenericEvent event, void* conte
         widget_add_button_element(widget, GuiButtonTypeCenter, "Save", metroflip_save_widget_callback, app);
 
         furi_string_free(parsed_data);
-        view_dispatcher_switch_to_view(app->view_dispatcher, MetroflipViewWidget);
+        
+        if(app->view_dispatcher) {
+            view_dispatcher_switch_to_view(app->view_dispatcher, MetroflipViewWidget);
+        }
         metroflip_app_blink_stop(app);
         command = NfcCommandStop;
     } else if(mfc_event->type == MfClassicPollerEventTypeFail) {
@@ -739,7 +799,6 @@ static void renfe_sum10_on_exit(Metroflip* app) {
     metroflip_app_blink_stop(app);
 }
 
-/* Actual implementation of app<>plugin interface */
 static const MetroflipPlugin renfe_sum10_plugin = {
     .card_name = "RENFE Suma 10",
     .plugin_on_enter = renfe_sum10_on_enter,
@@ -747,14 +806,12 @@ static const MetroflipPlugin renfe_sum10_plugin = {
     .plugin_on_exit = renfe_sum10_on_exit,
 };
 
-/* Plugin descriptor to comply with basic plugin specification */
 static const FlipperAppPluginDescriptor renfe_sum10_plugin_descriptor = {
     .appid = METROFLIP_SUPPORTED_CARD_PLUGIN_APP_ID,
     .ep_api_version = METROFLIP_SUPPORTED_CARD_PLUGIN_API_VERSION,
     .entry_point = &renfe_sum10_plugin,
 };
 
-/* Plugin entry point - must return a pointer to const descriptor  */
 const FlipperAppPluginDescriptor* renfe_sum10_plugin_ep(void) {
     return &renfe_sum10_plugin_descriptor;
 }
