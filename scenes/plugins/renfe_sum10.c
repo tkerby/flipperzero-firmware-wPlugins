@@ -366,6 +366,19 @@ static void renfe_sum10_parse_history_entry(FuriString* parsed_data, const uint8
             furi_string_cat_printf(parsed_data, "TYPE_%02X", transaction_type);
             break;
     }
+    // Add station information
+    const char* station_name = renfe_sum10_get_station_name(station_code);
+    if(station_code != 0x0000 && strlen(station_name) > 0) {
+        furi_string_cat_printf(parsed_data, " at %s", station_name);
+        if(strcmp(station_name, "Unknown") == 0) {
+            furi_string_cat_printf(parsed_data, " (0x%04X)", station_code);
+            // Log unknown station codes for mapping
+            FURI_LOG_W(TAG, "UNKNOWN STATION CODE: 0x%04X (bytes: 0x%02X 0x%02X)", 
+                       station_code, block_data[9], block_data[10]);
+        } else {
+            FURI_LOG_I(TAG, "Station mapped: %s (0x%04X)", station_name, station_code);
+        }
+    }
     
 static bool renfe_sum10_get_card_config(RenfeSum10CardConfig* config, MfClassicType type) {
     bool success = true;
