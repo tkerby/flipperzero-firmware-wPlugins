@@ -151,8 +151,6 @@ void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
 		if(instance->scene.timer.state == TIMER_STATE_TIMING) {
 			instance->scene.timer.state = TIMER_STATE_HALT;
 			instance->scene.timer.stopTimer = tick;
-		} else if(instance->scene.timer.state == TIMER_STATE_DEFAULT) {
-			instance->scene.timer.state = TIMER_STATE_HALT;
 		} else {
 			if(event->key == InputKeyOk) {
 				switch(instance->scene.timer.state) {
