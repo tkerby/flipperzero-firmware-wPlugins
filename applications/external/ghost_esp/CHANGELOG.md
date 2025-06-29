@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.3
+
+- Add WiFi menu subcategories
+- Remember menu position after command execution
+- Add Listen/Stop Probes and Stop Scan to WiFi Scanning menu
+- Add EAPOL Logoff, SAE Flood, DHCP Starve, and Beacon List management to WiFi Attacks menu
+- Add Stop Evil Portal and TP-Link control to Network menu
+- Add Timezone, Web Auth, and WiFi Country settings
+- Add AirTag and Flipper commands to BLE menu
+
 ## v1.2.6
 
 - Fix connect command syntax (#2 @tototo31)

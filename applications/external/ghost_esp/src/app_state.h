@@ -26,6 +26,11 @@ struct AppState {
     ViewDispatcher* view_dispatcher;
     MainMenu* main_menu;
     Submenu* wifi_menu;
+    Submenu* wifi_scanning_menu;
+    Submenu* wifi_capture_menu;
+    Submenu* wifi_attack_menu;
+    Submenu* wifi_network_menu;
+    Submenu* wifi_settings_menu;
     Submenu* ble_menu;
     Submenu* gps_menu;
     VariableItemList* settings_menu;
@@ -46,6 +51,7 @@ struct AppState {
     uint32_t current_index;
     uint8_t current_view;
     uint8_t previous_view;
+    uint32_t last_wifi_category_index;
     uint32_t last_wifi_index;
     uint32_t last_ble_index;
     uint32_t last_gps_index;
