@@ -1,5 +1,6 @@
 #include "cuberzero.h"
 #include <furi_hal_light.h>
+#include "scramble/puzzle.h"
 
 struct ViewDispatcher {
 	bool eventLoopOwned;
@@ -124,6 +125,12 @@ void SceneTimerDraw(Canvas* const canvas, const PCUBERZERO instance) {
 	}
 
 	canvas_clear(canvas);
+
+	if(instance->scene.timer.state == TIMER_STATE_DEFAULT) {
+		canvas_set_font(canvas, FontPrimary);
+		canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, PuzzleScrambleThreeByThree(furi_get_tick()));
+		return;
+	}
 
 	if(instance->scene.timer.state == TIMER_STATE_READY) {
 		canvas_set_font(canvas, FontPrimary);
