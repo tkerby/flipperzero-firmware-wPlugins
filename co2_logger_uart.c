@@ -304,7 +304,7 @@ static void co2_logger_uart_draw_main_view(Canvas* canvas, co2_loggerUart* app) 
         // Draw "ppm" right after the dashes (hugging the reading)
         canvas_set_font(canvas, FontPrimary);
         size_t dash_width = canvas_string_width(canvas, disconnected_text)*2;
-        canvas_draw_str(canvas, 2 + dash_width + 5, 18, "ppm");
+        canvas_draw_str(canvas, 2 + dash_width + 10, 18, "ppm");
         
         canvas_set_font(canvas, FontSecondary);
         canvas_draw_str(canvas, 2, 37, "Disconnected");
