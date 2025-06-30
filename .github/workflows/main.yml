@@ -39,12 +39,28 @@ jobs:
           
       - name: Debug Show Build Output
         run: |
-          echo "Build folder structure:"
-          find build -type f
+          echo "Current directory contents:"
+          ls -la
+          echo "Looking for build directories:"
+          find . -name "build" -type d 2>/dev/null || echo "No build directory found"
+          echo "Looking for any .fap files:"
+          find . -name "*.fap" 2>/dev/null || echo "No .fap files found"
           
       - name: Zip Build Output
         run: |
-          zip -r build-output.zip build/
+          if [ -d "build" ]; then
+            zip -r build-output.zip build/
+            echo "Build output zipped successfully"
+          else
+            echo "No build directory found, checking for .fap files in current directory"
+            if find . -name "*.fap" -print -quit | grep -q .; then
+              zip -r build-output.zip . -i "*.fap"
+              echo "FAP files zipped successfully"
+            else
+              echo "No build output or .fap files found to zip"
+              exit 1
+            fi
+          fi
           
       - name: Upload Build ZIP Artifact
         if: success() && hashFiles('build-output.zip') != ''
