@@ -36,5 +36,6 @@ The CSV file includes:
 # TO DO
 
 There are a few features that I am hoping to add, if you can make any contributions I would greatly appreciate it.
-- Toggle the 'AUTO DIM' functionality of the screen. I have added the option to settings but it doesn't work.
-- Make a website that can detect if the flipper is connected via USB, read the csv file, and display a line chart. I have built a prototype with Loveable that can detect and connect to the flipper's cli, but I'm having issues reading the csv from the flipper zero. The link to the website is (here)[https://preview--zero-data-explorer.lovable.app/], and the link to the repo is (here)[https://github.com/harryob2/zero-data-explorer]. 
+- Toggle the ‘AUTO DIM’ functionality of the screen. I have added the option to settings but it doesn’t work.  
+- Make a website that can detect if the Flipper is connected via USB, read the CSV file, and display a line chart. I have built a prototype with Loveable that can detect and connect to the Flipper’s CLI, but I’m having issues reading the CSV from the Flipper Zero. The link to the website is [here](https://preview--zero-data-explorer.lovable.app/), and the link to the repo is [here](https://github.com/harryob2/zero-data-explorer).
+
