@@ -1,5 +1,5 @@
-#include "cuberzero.h"
 #include <furi_hal_light.h>
+#include "cuberzero.h"
 #include "scramble/puzzle.h"
 
 struct ViewDispatcher {
@@ -16,6 +16,7 @@ enum TimerState {
     TIMER_STATE_WAIT_FOR_READY,
     TIMER_STATE_READY,
     TIMER_STATE_TIMING,
+    TIMER_STATE_STOP,
     TIMER_STATE_HALT
 };
 
@@ -24,32 +25,30 @@ static void updateLight(const PCUBERZERO instance) {
         return;
     }
 
-    instance->scene.timer.previousState = instance->scene.timer.state;
-
-    switch(instance->scene.timer.state) {
+    switch(instance->scene.timer.previousState = instance->scene.timer.state) {
     case TIMER_STATE_DEFAULT:
-        furi_hal_light_blink_stop();
+    case TIMER_STATE_HALT:
         furi_hal_light_set(LightRed, 0);
         furi_hal_light_set(LightGreen, 0);
         furi_hal_light_set(LightBlue, 0);
         break;
     case TIMER_STATE_WAIT_FOR_READY:
-    case TIMER_STATE_HALT:
-        furi_hal_light_blink_stop();
+    case TIMER_STATE_STOP:
         furi_hal_light_set(LightRed, 255);
         furi_hal_light_set(LightGreen, 0);
         furi_hal_light_set(LightBlue, 0);
         break;
     case TIMER_STATE_READY:
-        furi_hal_light_blink_stop();
         furi_hal_light_set(LightRed, 0);
         furi_hal_light_set(LightGreen, 255);
         furi_hal_light_set(LightBlue, 0);
         break;
     case TIMER_STATE_TIMING:
         furi_hal_light_blink_start(LightRed | LightGreen, 255, 25, 50);
-        break;
+        return;
     }
+
+    furi_hal_light_blink_stop();
 }
 
 void SceneTimerTick(const PCUBERZERO instance) {
@@ -59,12 +58,7 @@ void SceneTimerTick(const PCUBERZERO instance) {
         return;
     }
 
-    struct {
-        uint8_t light    : 1;
-        uint8_t viewport : 1;
-    } update;
-
-    *((uint8_t*)&update) = 0;
+    uint8_t update = 0;
 
     switch(instance->scene.timer.state) {
     case TIMER_STATE_WAIT_FOR_READY:
@@ -73,23 +67,20 @@ void SceneTimerTick(const PCUBERZERO instance) {
         if(instance->scene.timer.state == TIMER_STATE_WAIT_FOR_READY &&
            tick - instance->scene.timer.pressedTime >= 500) {
             instance->scene.timer.state = TIMER_STATE_READY;
-            update.light = 1;
-            update.viewport = 1;
+            update = 1;
         }
 
         furi_mutex_release(instance->scene.timer.mutex);
+
+        if(update) {
+            updateLight(instance);
+            view_port_update(instance->scene.timer.viewport);
+        }
+
         break;
     case TIMER_STATE_TIMING:
-        update.viewport = 1;
-        break;
-    }
-
-    if(update.light) {
-        updateLight(instance);
-    }
-
-    if(update.viewport) {
         view_port_update(instance->scene.timer.viewport);
+        break;
     }
 }
 
@@ -100,9 +91,9 @@ void SceneTimerEnter(const PCUBERZERO instance) {
 
     furi_mutex_acquire(instance->scene.timer.mutex, FuriWaitForever);
     furi_mutex_release(instance->scene.timer.mutex);
+    furi_message_queue_reset(instance->scene.timer.queue);
     view_dispatcher_stop(instance->dispatcher);
     gui_remove_view_port(instance->interface, instance->dispatcher->viewport);
-    furi_message_queue_reset(instance->scene.timer.queue);
     gui_add_view_port(instance->interface, instance->scene.timer.viewport, GuiLayerFullscreen);
     furi_timer_start(instance->scene.timer.timer, 1);
     const InputEvent* event;
@@ -127,35 +118,44 @@ void SceneTimerDraw(Canvas* const canvas, const PCUBERZERO instance) {
     }
 
     canvas_clear(canvas);
+    uint32_t tick;
+    uint32_t seconds;
 
-    if(instance->scene.timer.state == TIMER_STATE_DEFAULT) {
-        canvas_set_font(canvas, FontPrimary);
+    switch(instance->scene.timer.state) {
+    case TIMER_STATE_DEFAULT:
+    case TIMER_STATE_WAIT_FOR_READY:
+        canvas_set_font(canvas, FontSecondary);
         canvas_draw_str_aligned(
-            canvas, 64, 32, AlignCenter, AlignCenter, PuzzleScrambleThreeByThree(furi_get_tick()));
-        return;
-    }
-
-    if(instance->scene.timer.state == TIMER_STATE_READY) {
+            canvas, 64, 32, AlignCenter, AlignCenter, "F2 R2 F R' F' R U' F U2");
+        break;
+    case TIMER_STATE_READY:
         canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, "Ready");
-        return;
+        canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, "READY!");
+        break;
+    case TIMER_STATE_TIMING:
+    case TIMER_STATE_STOP:
+    case TIMER_STATE_HALT:
+        tick = (instance->scene.timer.state == TIMER_STATE_TIMING ?
+                    furi_get_tick() :
+                    instance->scene.timer.stopTimer) -
+               instance->scene.timer.startTimer;
+        seconds = tick / 1000;
+        furi_string_printf(
+            instance->scene.timer.string,
+            "%lu:%02lu.%03lu",
+            seconds / 60,
+            seconds % 60,
+            tick % 1000);
+        canvas_set_font(canvas, FontBigNumbers);
+        canvas_draw_str_aligned(
+            canvas,
+            64,
+            32,
+            AlignCenter,
+            AlignCenter,
+            furi_string_get_cstr(instance->scene.timer.string));
+        break;
     }
-
-    canvas_set_font(canvas, FontBigNumbers);
-    uint32_t tick = (instance->scene.timer.state == TIMER_STATE_TIMING ?
-                         furi_get_tick() :
-                         instance->scene.timer.stopTimer) -
-                    instance->scene.timer.startTimer;
-    uint32_t seconds = tick / 1000;
-    furi_string_printf(
-        instance->scene.timer.string, "%lu:%02lu.%03lu", seconds / 60, seconds % 60, tick % 1000);
-    canvas_draw_str_aligned(
-        canvas,
-        64,
-        32,
-        AlignCenter,
-        AlignCenter,
-        furi_string_get_cstr(instance->scene.timer.string));
 }
 
 void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
@@ -167,56 +167,53 @@ void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
 
     furi_mutex_acquire(instance->scene.timer.mutex, FuriWaitForever);
 
-    if(event->type == InputTypePress) {
-        if(instance->scene.timer.state == TIMER_STATE_TIMING) {
-            instance->scene.timer.state = TIMER_STATE_HALT;
-            instance->scene.timer.stopTimer = tick;
-        } else {
-            if(event->key == InputKeyOk) {
-                switch(instance->scene.timer.state) {
-                case TIMER_STATE_DEFAULT:
-                    instance->scene.timer.state = TIMER_STATE_WAIT_FOR_READY;
-                    instance->scene.timer.pressedTime = tick;
-                    break;
-                case TIMER_STATE_WAIT_FOR_READY:
-                    break;
-                case TIMER_STATE_READY:
-                    break;
-                case TIMER_STATE_TIMING:
-                    break;
-                case TIMER_STATE_HALT:
-                    break;
-                }
-            }
+    switch(instance->scene.timer.state) {
+    case TIMER_STATE_DEFAULT:
+        if(event->type == InputTypePress && event->key == InputKeyOk) {
+            instance->scene.timer.state = TIMER_STATE_WAIT_FOR_READY;
+            instance->scene.timer.pressedTime = tick;
+        } else if(event->type == InputTypeShort && event->key == InputKeyBack) {
+            furi_message_queue_put(instance->scene.timer.queue, event, FuriWaitForever);
         }
-    } else if(event->type == InputTypeRelease) {
-        if(instance->scene.timer.state == TIMER_STATE_HALT) {
+
+        break;
+    case TIMER_STATE_WAIT_FOR_READY:
+        if(event->type == InputTypeRelease && event->key == InputKeyOk) {
             instance->scene.timer.state = TIMER_STATE_DEFAULT;
-        } else {
-            if(event->key == InputKeyOk) {
-                switch(instance->scene.timer.state) {
-                case TIMER_STATE_DEFAULT:
-                    break;
-                case TIMER_STATE_WAIT_FOR_READY:
-                    instance->scene.timer.state = TIMER_STATE_DEFAULT;
-                    break;
-                case TIMER_STATE_READY:
-                    instance->scene.timer.state = TIMER_STATE_TIMING;
-                    instance->scene.timer.startTimer = tick;
-                    break;
-                case TIMER_STATE_TIMING:
-                    break;
-                case TIMER_STATE_HALT:
-                    break;
-                }
-            }
         }
+
+        break;
+    case TIMER_STATE_READY:
+        if(event->type == InputTypeRelease && event->key == InputKeyOk) {
+            instance->scene.timer.state = TIMER_STATE_TIMING;
+            instance->scene.timer.startTimer = tick;
+        }
+
+        break;
+    case TIMER_STATE_TIMING:
+        if(event->type == InputTypePress) {
+            instance->scene.timer.state = TIMER_STATE_STOP;
+            instance->scene.timer.stopTimer = tick;
+        }
+
+        break;
+    case TIMER_STATE_STOP:
+        if(event->type == InputTypeRelease) {
+            instance->scene.timer.state = TIMER_STATE_HALT;
+        }
+
+        break;
+    case TIMER_STATE_HALT:
+        if(event->type == InputTypePress && event->key != InputKeyBack) {
+            instance->scene.timer.state = TIMER_STATE_STOP;
+        } else if(event->type == InputTypeShort && event->key == InputKeyBack) {
+            instance->scene.timer.state = TIMER_STATE_DEFAULT;
+        }
+
+        break;
     }
 
     furi_mutex_release(instance->scene.timer.mutex);
     updateLight(instance);
-
-    if(event->key == InputKeyBack) {
-        furi_message_queue_put(instance->scene.timer.queue, event, FuriWaitForever);
-    }
+    view_port_update(instance->scene.timer.viewport);
 }
