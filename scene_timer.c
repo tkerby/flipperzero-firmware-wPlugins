@@ -1,5 +1,5 @@
-#include "cuberzero.h"
 #include <furi_hal_light.h>
+#include "cuberzero.h"
 #include "scramble/puzzle.h"
 
 struct ViewDispatcher {
@@ -16,6 +16,7 @@ enum TimerState {
 	TIMER_STATE_WAIT_FOR_READY,
 	TIMER_STATE_READY,
 	TIMER_STATE_TIMING,
+	TIMER_STATE_STOP,
 	TIMER_STATE_HALT
 };
 
@@ -24,32 +25,30 @@ static void updateLight(const PCUBERZERO instance) {
 		return;
 	}
 
-	instance->scene.timer.previousState = instance->scene.timer.state;
-
-	switch(instance->scene.timer.state) {
+	switch(instance->scene.timer.previousState = instance->scene.timer.state) {
 	case TIMER_STATE_DEFAULT:
-		furi_hal_light_blink_stop();
+	case TIMER_STATE_HALT:
 		furi_hal_light_set(LightRed, 0);
 		furi_hal_light_set(LightGreen, 0);
 		furi_hal_light_set(LightBlue, 0);
 		break;
 	case TIMER_STATE_WAIT_FOR_READY:
-	case TIMER_STATE_HALT:
-		furi_hal_light_blink_stop();
+	case TIMER_STATE_STOP:
 		furi_hal_light_set(LightRed, 255);
 		furi_hal_light_set(LightGreen, 0);
 		furi_hal_light_set(LightBlue, 0);
 		break;
 	case TIMER_STATE_READY:
-		furi_hal_light_blink_stop();
 		furi_hal_light_set(LightRed, 0);
 		furi_hal_light_set(LightGreen, 255);
 		furi_hal_light_set(LightBlue, 0);
 		break;
 	case TIMER_STATE_TIMING:
 		furi_hal_light_blink_start(LightRed | LightGreen, 255, 25, 50);
-		break;
+		return;
 	}
+
+	furi_hal_light_blink_stop();
 }
 
 void SceneTimerTick(const PCUBERZERO instance) {
@@ -119,34 +118,18 @@ void SceneTimerEnter(const PCUBERZERO instance) {
 	view_dispatcher_run(instance->dispatcher);
 }
 
+static void renderScramble(Canvas* const canvas) {
+	canvas_set_font(canvas, FontSecondary);
+	canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, "F2 R2 F R' F' R U' F U2");
+}
+
 void SceneTimerDraw(Canvas* const canvas, const PCUBERZERO instance) {
 	if(!canvas || !instance) {
 		return;
 	}
 
 	canvas_clear(canvas);
-
-	if(instance->scene.timer.state == TIMER_STATE_DEFAULT) {
-		canvas_set_font(canvas, FontPrimary);
-		canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, PuzzleScrambleThreeByThree(furi_get_tick()));
-		return;
-	}
-
-	if(instance->scene.timer.state == TIMER_STATE_READY) {
-		canvas_set_font(canvas, FontPrimary);
-		canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, "Ready");
-		return;
-	}
-
-	canvas_set_font(canvas, FontSecondary);
-	FURI_LOG_I(CUBERZERO_TAG, "L2: %u", canvas_string_width(canvas, "L2"));
-	FURI_LOG_I(CUBERZERO_TAG, "F' D2: %u", canvas_string_width(canvas, "F' D2"));
-	canvas_draw_str(canvas, 0, 7, "Text L2 F' D2 B2 F2 D R2 D B2 F2 U' F2 U' B' D L D' U F D2");
-	canvas_set_font(canvas, FontBigNumbers);
-	uint32_t tick = (instance->scene.timer.state == TIMER_STATE_TIMING ? furi_get_tick() : instance->scene.timer.stopTimer) - instance->scene.timer.startTimer;
-	uint32_t seconds = tick / 1000;
-	furi_string_printf(instance->scene.timer.string, "%lu:%02lu.%03lu", seconds / 60, seconds % 60, tick % 1000);
-	canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, furi_string_get_cstr(instance->scene.timer.string));
+	renderScramble(canvas);
 }
 
 void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
@@ -160,7 +143,7 @@ void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
 
 	if(event->type == InputTypePress) {
 		if(instance->scene.timer.state == TIMER_STATE_TIMING) {
-			instance->scene.timer.state = TIMER_STATE_HALT;
+			instance->scene.timer.state = TIMER_STATE_STOP;
 			instance->scene.timer.stopTimer = tick;
 		} else {
 			if(event->key == InputKeyOk) {
@@ -175,13 +158,13 @@ void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
 					break;
 				case TIMER_STATE_TIMING:
 					break;
-				case TIMER_STATE_HALT:
+				case TIMER_STATE_STOP:
 					break;
 				}
 			}
 		}
 	} else if(event->type == InputTypeRelease) {
-		if(instance->scene.timer.state == TIMER_STATE_HALT) {
+		if(instance->scene.timer.state == TIMER_STATE_STOP) {
 			instance->scene.timer.state = TIMER_STATE_DEFAULT;
 		} else {
 			if(event->key == InputKeyOk) {
@@ -197,7 +180,7 @@ void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
 					break;
 				case TIMER_STATE_TIMING:
 					break;
-				case TIMER_STATE_HALT:
+				case TIMER_STATE_STOP:
 					break;
 				}
 			}

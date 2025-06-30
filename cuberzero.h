@@ -39,6 +39,7 @@ typedef struct {
 
 			uint8_t state;
 			uint8_t previousState;
+			char* scramble;
 		} timer;
 	} scene;
 
