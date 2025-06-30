@@ -4,7 +4,7 @@ App for reading CO2 ppm from MH-Z19 sensor and saving to a local csv file.
 
 ## Credits
 
-This project is based on the original [MH-Z19 UART app](https://github.com/skotopes/flipperzero_co2_logger_uart) by [Aku](https://github.com/skotopes). Enhanced with CSV logging functionality for data collection and analysis.
+This project is based on the original [MH-Z19 UART app](https://github.com/skotopes/flipperzero_mhz19_uart) by [Aku](https://github.com/skotopes). Enhanced with CSV logging functionality for data collection and analysis.
 
 # Pinout
 
