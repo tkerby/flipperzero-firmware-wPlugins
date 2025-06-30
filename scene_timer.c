@@ -138,6 +138,10 @@ void SceneTimerDraw(Canvas* const canvas, const PCUBERZERO instance) {
 		return;
 	}
 
+	canvas_set_font(canvas, FontSecondary);
+	FURI_LOG_I(CUBERZERO_TAG, "L2: %u", canvas_string_width(canvas, "L2"));
+	FURI_LOG_I(CUBERZERO_TAG, "F' D2: %u", canvas_string_width(canvas, "F' D2"));
+	canvas_draw_str(canvas, 0, 7, "Text L2 F' D2 B2 F2 D R2 D B2 F2 U' F2 U' B' D L D' U F D2");
 	canvas_set_font(canvas, FontBigNumbers);
 	uint32_t tick = (instance->scene.timer.state == TIMER_STATE_TIMING ? furi_get_tick() : instance->scene.timer.stopTimer) - instance->scene.timer.startTimer;
 	uint32_t seconds = tick / 1000;
