@@ -98,9 +98,9 @@ void SceneTimerEnter(const PCUBERZERO instance) {
 
 	furi_mutex_acquire(instance->scene.timer.mutex, FuriWaitForever);
 	furi_mutex_release(instance->scene.timer.mutex);
+	furi_message_queue_reset(instance->scene.timer.queue);
 	view_dispatcher_stop(instance->dispatcher);
 	gui_remove_view_port(instance->interface, instance->dispatcher->viewport);
-	furi_message_queue_reset(instance->scene.timer.queue);
 	gui_add_view_port(instance->interface, instance->scene.timer.viewport, GuiLayerFullscreen);
 	furi_timer_start(instance->scene.timer.timer, 1);
 	const InputEvent* event;
@@ -141,7 +141,53 @@ void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
 
 	furi_mutex_acquire(instance->scene.timer.mutex, FuriWaitForever);
 
-	if(event->type == InputTypePress) {
+	switch(instance->scene.timer.state) {
+	case TIMER_STATE_DEFAULT:
+		if(event->type == InputTypePress && event->key == InputKeyOk) {
+			instance->scene.timer.state = TIMER_STATE_WAIT_FOR_READY;
+			instance->scene.timer.pressedTime = tick;
+		} else if(event->type == InputTypeShort && event->key == InputKeyBack) {
+			furi_message_queue_put(instance->scene.timer.queue, event, FuriWaitForever);
+		}
+
+		break;
+	case TIMER_STATE_WAIT_FOR_READY:
+		if(event->type == InputTypeRelease && event->key == InputKeyOk) {
+			instance->scene.timer.state = TIMER_STATE_DEFAULT;
+		}
+
+		break;
+	case TIMER_STATE_READY:
+		if(event->type == InputTypeRelease && event->key == InputKeyOk) {
+			instance->scene.timer.state = TIMER_STATE_TIMING;
+			instance->scene.timer.startTimer = tick;
+		}
+
+		break;
+	case TIMER_STATE_TIMING:
+		if(event->type == InputTypePress) {
+			instance->scene.timer.state = TIMER_STATE_STOP;
+			instance->scene.timer.stopTimer = tick;
+		}
+
+		break;
+	case TIMER_STATE_STOP:
+		if(event->type == InputTypeRelease) {
+			instance->scene.timer.state = TIMER_STATE_HALT;
+		}
+
+		break;
+	case TIMER_STATE_HALT:
+		if(event->type == InputTypePress && event->key != InputKeyBack) {
+			instance->scene.timer.state = TIMER_STATE_STOP;
+		} else if(event->type == InputTypeShort && event->key == InputKeyBack) {
+			instance->scene.timer.state = TIMER_STATE_DEFAULT;
+		}
+
+		break;
+	}
+
+	/*if(event->type == InputTypePress) {
 		if(instance->scene.timer.state == TIMER_STATE_TIMING) {
 			instance->scene.timer.state = TIMER_STATE_STOP;
 			instance->scene.timer.stopTimer = tick;
@@ -185,12 +231,8 @@ void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
 				}
 			}
 		}
-	}
+	}*/
 
 	furi_mutex_release(instance->scene.timer.mutex);
 	updateLight(instance);
-
-	if(event->key == InputKeyBack) {
-		furi_message_queue_put(instance->scene.timer.queue, event, FuriWaitForever);
-	}
 }
