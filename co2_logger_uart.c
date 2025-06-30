@@ -40,6 +40,8 @@ typedef struct {
     bool csv_enabled;
     Co2LoggerView current_view;
     LogIntervalOption log_interval_option;
+    bool auto_dim_enabled;
+    int settings_selection; // 0 = interval, 1 = auto_dim
 } co2_loggerUart;
 
 static uint32_t co2_logger_uart_get_log_interval_ms(LogIntervalOption option) {
@@ -66,6 +68,38 @@ static const char* co2_logger_uart_get_log_interval_text(LogIntervalOption optio
         default:
             return "30s";
     }
+}
+
+static void co2_logger_uart_format_time(uint32_t seconds, char* buffer, size_t buffer_size) {
+    if(seconds < 60) {
+        // Less than 1 minute: show seconds
+        snprintf(buffer, buffer_size, "%lus", seconds);
+    } else if(seconds < 3600) {
+        // 1 minute to 59 minutes: show mm:ss
+        uint32_t minutes = seconds / 60;
+        uint32_t secs = seconds % 60;
+        snprintf(buffer, buffer_size, "%lu:%02lu", minutes, secs);
+    } else if(seconds < 86400) {
+        // 1 hour to 23 hours: show hh:mm:ss
+        uint32_t hours = seconds / 3600;
+        uint32_t minutes = (seconds % 3600) / 60;
+        uint32_t secs = seconds % 60;
+        snprintf(buffer, buffer_size, "%lu:%02lu:%02lu", hours, minutes, secs);
+    } else {
+        // 24 hours and above: show dd:hh:mm:ss
+        uint32_t days = seconds / 86400;
+        uint32_t hours = (seconds % 86400) / 3600;
+        uint32_t minutes = (seconds % 3600) / 60;
+        uint32_t secs = seconds % 60;
+        snprintf(buffer, buffer_size, "%lu:%02lu:%02lu:%02lu", days, hours, minutes, secs);
+    }
+}
+
+static void co2_logger_uart_apply_auto_dim(co2_loggerUart* state) {
+    // Just log the setting - let system handle auto-dim completely naturally
+    FURI_LOG_D("AutoDim", "Auto-dim setting: %s (system handles all dimming)", 
+               state->auto_dim_enabled ? "ON" : "OFF");
+    // No backlight control at all - system works naturally like before
 }
 
 static bool co2_logger_uart_check_sd_card(co2_loggerUart* state) {
@@ -230,32 +264,42 @@ static void co2_logger_uart_log_to_csv(co2_loggerUart* state, uint32_t co2_value
 }
 
 static void co2_logger_uart_draw_main_view(Canvas* canvas, co2_loggerUart* app) {
-    canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str(canvas, 2, 12, "CO2 Logger");
-
-    canvas_set_font(canvas, FontBigNumbers);
     if(app->connected) {
+        // Draw CO2 value in biggest font with bold effect
+        canvas_set_font(canvas, FontBigNumbers);
         char co2_buffer[16];
         snprintf(co2_buffer, sizeof(co2_buffer), "%lu", app->co2_value);
-        canvas_draw_str(canvas, 2, 35, co2_buffer);
+        // Draw multiple times with slight offset for bolder/bigger appearance
+        canvas_draw_str(canvas, 2, 25, co2_buffer);
+        canvas_draw_str(canvas, 3, 25, co2_buffer); // Slight offset for bold effect
         
-        canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str(canvas, 2, 45, "ppm");
+        // Draw "ppm" in bigger font right after the number
+        canvas_set_font(canvas, FontPrimary);
+        // Use fixed position that works well for most CO2 values
+        canvas_draw_str(canvas, 60, 25, "ppm");
         
-        // Show connection time
+        // Show connection time below, using available space efficiently
         uint32_t current_time = furi_get_tick();
         uint32_t connected_seconds = (current_time - app->connection_start_time) / 1000;
+        char formatted_time[16];
         char time_buffer[32];
-        snprintf(time_buffer, sizeof(time_buffer), "Connected: %lus", connected_seconds);
-        canvas_draw_str(canvas, 2, 58, time_buffer);
+        co2_logger_uart_format_time(connected_seconds, formatted_time, sizeof(formatted_time));
+        snprintf(time_buffer, sizeof(time_buffer), "Connected: %s", formatted_time);
+        canvas_draw_str(canvas, 2, 42, time_buffer);
     } else {
-        canvas_draw_str(canvas, 2, 35, "---");
+        // Show disconnected state
+        canvas_set_font(canvas, FontBigNumbers);
+        canvas_draw_str(canvas, 2, 25, "---");
+        canvas_draw_str(canvas, 3, 25, "---"); // Bold effect
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str(canvas, 50, 25, "ppm");
         canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str(canvas, 2, 45, "ppm");
-        canvas_draw_str(canvas, 2, 58, "Disconnected");
+        canvas_draw_str(canvas, 2, 42, "Disconnected");
     }
     
-    canvas_draw_str(canvas, 2, 70, "RIGHT: Settings");
+    // Right arrow for settings - positioned slightly more to the right
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str(canvas, 75, 58, "Settings >");
 }
 
 static void co2_logger_uart_draw_settings_view(Canvas* canvas, co2_loggerUart* app) {
@@ -263,25 +307,26 @@ static void co2_logger_uart_draw_settings_view(Canvas* canvas, co2_loggerUart* a
     canvas_draw_str(canvas, 2, 12, "Settings");
 
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str(canvas, 2, 25, "Logging Interval:");
     
-    // Show all options with current selection highlighted
-    LogIntervalOption options[] = {LogInterval15s, LogInterval30s, LogInterval60s};
-    
-    for(int i = 0; i < 3; i++) {
-        int y_pos = 38 + (i * 12);
-        const char* interval_text = co2_logger_uart_get_log_interval_text(options[i]);
-        
-        if(app->log_interval_option == options[i]) {
-            canvas_draw_str(canvas, 10, y_pos, ">");
-            canvas_draw_str(canvas, 20, y_pos, interval_text);
-        } else {
-            canvas_draw_str(canvas, 20, y_pos, interval_text);
-        }
+    // Draw "Logging Interval:" with selection indicator
+    if(app->settings_selection == 0) {
+        canvas_draw_str(canvas, 2, 28, "> Logging Interval:");
+    } else {
+        canvas_draw_str(canvas, 10, 28, "Logging Interval:");
     }
     
-    canvas_draw_str(canvas, 2, 85, "UP/DOWN: Change");
-    canvas_draw_str(canvas, 2, 97, "LEFT: Back");
+    // Show current selection on same line as label (no dropdown)
+    const char* current_interval = co2_logger_uart_get_log_interval_text(app->log_interval_option);
+    canvas_draw_str(canvas, 100, 28, current_interval);
+    
+    // Auto-dim setting - show value on same line as label
+    int auto_dim_y = 40;
+    if(app->settings_selection == 1) {
+        canvas_draw_str(canvas, 2, auto_dim_y, "> Auto Dim:");
+    } else {
+        canvas_draw_str(canvas, 10, auto_dim_y, "Auto Dim:");
+    }
+    canvas_draw_str(canvas, 100, auto_dim_y, app->auto_dim_enabled ? "ON" : "OFF");
 }
 
 static void co2_logger_uart_draw_callback(Canvas* canvas, void* ctx) {
@@ -308,7 +353,7 @@ int32_t co2_logger_app(void* p) {
     UNUSED(p);
     
     // Log immediately at start
-    FURI_LOG_E("App", "=== CO2 LOGGER APP STARTING ===");
+    FURI_LOG_D("App", "=== CO2 LOGGER APP STARTING ===");
     
     // Allocate state on heap instead of stack to prevent stack overflow
     co2_loggerUart* state = malloc(sizeof(co2_loggerUart));
@@ -318,7 +363,7 @@ int32_t co2_logger_app(void* p) {
     }
     memset(state, 0, sizeof(co2_loggerUart));
     
-    FURI_LOG_I("App", "Opening GUI record...");
+    FURI_LOG_D("App", "Opening GUI record...");
     state->gui = furi_record_open(RECORD_GUI);
     if(!state->gui) {
         FURI_LOG_E("App", "Failed to open GUI record");
@@ -326,7 +371,7 @@ int32_t co2_logger_app(void* p) {
         return -1;
     }
     
-    FURI_LOG_I("App", "Opening notification record...");
+    FURI_LOG_D("App", "Opening notification record...");
     state->notification = furi_record_open(RECORD_NOTIFICATION);
     if(!state->notification) {
         FURI_LOG_E("App", "Failed to open notification record");
@@ -335,7 +380,7 @@ int32_t co2_logger_app(void* p) {
         return -1;
     }
     
-    FURI_LOG_I("App", "Opening storage record...");
+    FURI_LOG_D("App", "Opening storage record...");
     state->storage = furi_record_open(RECORD_STORAGE);
     if(!state->storage) {
         FURI_LOG_E("App", "Failed to open storage record");
@@ -345,7 +390,7 @@ int32_t co2_logger_app(void* p) {
         return -1;
     }
     
-    FURI_LOG_I("App", "Allocating view port...");
+    FURI_LOG_D("App", "Allocating view port...");
     state->view_port = view_port_alloc();
     if(!state->view_port) {
         FURI_LOG_E("App", "Failed to allocate view port");
@@ -356,7 +401,7 @@ int32_t co2_logger_app(void* p) {
         return -1;
     }
     
-    FURI_LOG_I("App", "Allocating event queue...");
+    FURI_LOG_D("App", "Allocating event queue...");
     state->event_queue = furi_message_queue_alloc(32, sizeof(InputEvent));
     if(!state->event_queue) {
         FURI_LOG_E("App", "Failed to allocate event queue");
@@ -368,7 +413,7 @@ int32_t co2_logger_app(void* p) {
         return -1;
     }
     
-    FURI_LOG_I("App", "Allocating mutex...");
+    FURI_LOG_D("App", "Allocating mutex...");
     state->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
     if(!state->mutex) {
         FURI_LOG_E("App", "Failed to allocate mutex");
@@ -381,7 +426,7 @@ int32_t co2_logger_app(void* p) {
         return -1;
     }
     
-    FURI_LOG_I("App", "Allocating CO2 logger...");
+    FURI_LOG_D("App", "Allocating CO2 logger...");
     state->co2_logger = co2_logger_alloc();
     if(!state->co2_logger) {
         FURI_LOG_E("App", "Failed to allocate CO2 logger");
@@ -395,26 +440,26 @@ int32_t co2_logger_app(void* p) {
         return -1;
     }
     
-    FURI_LOG_I("App", "Setting up CSV logging...");
+    FURI_LOG_D("App", "Setting up CSV logging...");
     
     // Try to set up CSV logging with robust error handling
     if(co2_logger_uart_create_csv_file(state)) {
         state->csv_enabled = true;
-        FURI_LOG_I("App", "CSV logging enabled successfully");
+        FURI_LOG_D("App", "CSV logging enabled successfully");
     } else {
         state->csv_enabled = false;
         state->csv_file = NULL;
         FURI_LOG_W("App", "CSV logging disabled - continuing without CSV");
     }
 
-    FURI_LOG_I("App", "Setting up view port callbacks...");
+    FURI_LOG_D("App", "Setting up view port callbacks...");
     view_port_draw_callback_set(state->view_port, co2_logger_uart_draw_callback, state);
     view_port_input_callback_set(state->view_port, co2_logger_uart_input_callback, state);
 
-    FURI_LOG_I("App", "Adding view port to GUI...");
+    FURI_LOG_D("App", "Adding view port to GUI...");
     gui_add_view_port(state->gui, state->view_port, GuiLayerFullscreen);
 
-    FURI_LOG_I("App", "Opening CO2 logger connection...");
+    FURI_LOG_D("App", "Opening CO2 logger connection...");
     co2_logger_open(state->co2_logger);
 
     // Record startup time for sensor warmup period
@@ -424,17 +469,26 @@ int32_t co2_logger_app(void* p) {
     state->current_view = Co2LoggerViewMain;
     state->log_interval_option = LogInterval30s; // Default to 30s
     state->connection_start_time = furi_get_tick();
+    state->auto_dim_enabled = true; // Auto-dim ON by default (natural Flipper behavior)
+    state->settings_selection = 0; // Start with interval selection
+    
+    // Apply initial auto-dim setting
+    co2_logger_uart_apply_auto_dim(state);
 
-    FURI_LOG_I("App", "=== APP SETUP COMPLETE - ENTERING MAIN LOOP ===");
+    FURI_LOG_D("App", "=== APP SETUP COMPLETE - ENTERING MAIN LOOP ===");
 
     InputEvent event;
     bool running = true;
     uint32_t last_measurement_time = 0;
+    uint32_t previous_co2_value = 0;
+    bool previous_connected = false;
 
     while(running) {
         FuriStatus status = furi_message_queue_get(state->event_queue, &event, 100);
         
         uint32_t current_time = furi_get_tick();
+        
+        // No backlight control - let system handle auto-dim completely naturally
         
         // Check for input events
         if(status == FuriStatusOk) {
@@ -445,9 +499,10 @@ int32_t co2_logger_app(void* p) {
                 
                 if(state->current_view == Co2LoggerViewMain) {
                     if(event.key == InputKeyBack) {
-                        FURI_LOG_I("App", "Back button pressed, exiting");
+                        FURI_LOG_D("App", "Back button pressed, exiting");
                         running = false;
                     } else if(event.key == InputKeyRight) {
+                        FURI_LOG_D("App", "Entering settings view");
                         state->current_view = Co2LoggerViewSettings;
                         view_updated = true;
                     }
@@ -455,14 +510,33 @@ int32_t co2_logger_app(void* p) {
                     if(event.key == InputKeyLeft || event.key == InputKeyBack) {
                         state->current_view = Co2LoggerViewMain;
                         view_updated = true;
+                    } else if(event.key == InputKeyOk) {
+                        if(state->settings_selection == 0) {
+                            // Cycle through interval options: 15s -> 30s -> 60s -> 15s
+                            if(state->log_interval_option == LogInterval15s) {
+                                state->log_interval_option = LogInterval30s;
+                            } else if(state->log_interval_option == LogInterval30s) {
+                                state->log_interval_option = LogInterval60s;
+                            } else {
+                                state->log_interval_option = LogInterval15s;
+                            }
+                            view_updated = true;
+                        } else if(state->settings_selection == 1) {
+                            // Toggle auto-dim setting (display only - system handles all dimming)
+                            state->auto_dim_enabled = !state->auto_dim_enabled;
+                            co2_logger_uart_apply_auto_dim(state);
+                            view_updated = true;
+                        }
                     } else if(event.key == InputKeyUp) {
-                        if(state->log_interval_option > LogInterval15s) {
-                            state->log_interval_option--;
+                        // Navigate between settings
+                        if(state->settings_selection > 0) {
+                            state->settings_selection--;
                             view_updated = true;
                         }
                     } else if(event.key == InputKeyDown) {
-                        if(state->log_interval_option < LogInterval60s) {
-                            state->log_interval_option++;
+                        // Navigate between settings
+                        if(state->settings_selection < 1) { // 0 = interval, 1 = auto_dim
+                            state->settings_selection++;
                             view_updated = true;
                         }
                     }
@@ -488,9 +562,9 @@ int32_t co2_logger_app(void* p) {
             }
             
             if(state->connected) {
-                FURI_LOG_I("Measure", "CO2 reading: %lu ppm", state->co2_value);
+                FURI_LOG_D("Measure", "CO2 reading: %lu ppm", state->co2_value);
             } else {
-                FURI_LOG_W("Measure", "Failed to read CO2 sensor");
+                FURI_LOG_D("Measure", "Failed to read CO2 sensor");
             }
             
             furi_mutex_release(state->mutex);
@@ -507,11 +581,19 @@ int32_t co2_logger_app(void* p) {
                 state->last_log_time = current_time;
             }
             
-            view_port_update(state->view_port);
+            // Only update display if something actually changed, or every 10 seconds for time updates (main view only)
+            bool needs_update = (state->co2_value != previous_co2_value || state->connected != previous_connected);
+            bool time_update = (state->current_view == Co2LoggerViewMain && (current_time % 10000) < 1000);
+            
+            if(needs_update || time_update) {
+                view_port_update(state->view_port);
+                previous_co2_value = state->co2_value;
+                previous_connected = state->connected;
+            }
         }
     }
 
-    FURI_LOG_I("App", "=== CLEANING UP AND EXITING ===");
+    FURI_LOG_D("App", "=== CLEANING UP AND EXITING ===");
 
     // Cleanup
     gui_remove_view_port(state->gui, state->view_port);
@@ -519,7 +601,7 @@ int32_t co2_logger_app(void* p) {
     co2_logger_free(state->co2_logger);
     
     if(state->csv_file) {
-        FURI_LOG_I("CSV", "Closing CSV file");
+        FURI_LOG_D("CSV", "Closing CSV file");
         storage_file_close(state->csv_file);
         storage_file_free(state->csv_file);
     }
@@ -532,6 +614,6 @@ int32_t co2_logger_app(void* p) {
     furi_record_close(RECORD_GUI);
     free(state);
 
-    FURI_LOG_I("App", "=== CO2 LOGGER APP EXITED SUCCESSFULLY ===");
+    FURI_LOG_D("App", "=== CO2 LOGGER APP EXITED SUCCESSFULLY ===");
     return 0;
 }
