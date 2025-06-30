@@ -129,7 +129,28 @@ void SceneTimerDraw(Canvas* const canvas, const PCUBERZERO instance) {
 	}
 
 	canvas_clear(canvas);
-	renderScramble(canvas);
+	uint32_t tick;
+	uint32_t seconds;
+
+	switch(instance->scene.timer.state) {
+	case TIMER_STATE_DEFAULT:
+	case TIMER_STATE_WAIT_FOR_READY:
+		renderScramble(canvas);
+		break;
+	case TIMER_STATE_READY:
+		canvas_set_font(canvas, FontPrimary);
+		canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, "READY!");
+		break;
+	case TIMER_STATE_TIMING:
+	case TIMER_STATE_STOP:
+	case TIMER_STATE_HALT:
+		tick = (instance->scene.timer.state == TIMER_STATE_TIMING ? furi_get_tick() : instance->scene.timer.stopTimer) - instance->scene.timer.startTimer;
+		seconds = tick / 1000;
+		furi_string_printf(instance->scene.timer.string, "%lu:%02lu.%03lu", seconds / 60, seconds % 60, tick % 1000);
+		canvas_set_font(canvas, FontBigNumbers);
+		canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, furi_string_get_cstr(instance->scene.timer.string));
+		break;
+	}
 }
 
 void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
@@ -235,4 +256,5 @@ void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
 
 	furi_mutex_release(instance->scene.timer.mutex);
 	updateLight(instance);
+	view_port_update(instance->scene.timer.viewport);
 }
