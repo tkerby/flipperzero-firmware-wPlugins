@@ -1,4 +1,5 @@
 name: "UFBT Build and Test App"
+
 on:
   push:
     branches:
@@ -7,6 +8,7 @@ on:
     branches:
       - main
   workflow_dispatch:
+
 jobs:
   build:
     name: Build and Test Application
@@ -14,31 +16,38 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+        
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
+          
       - name: Install UFBT
         run: |
           python3 -m pip install --upgrade pip
           pip install ufbt
+          
       - name: Initialize UFBT Environment
         run: |
           ufbt update --index-url=https://update.flipperzero.one/firmware/directory.json --channel=release
           ufbt vscode_dist
+          
       - name: Build FAP Applications
         run: |
           set -e
           ufbt faps
-      - name: Debug: Show Build Output
+          
+      - name: Debug Show Build Output
         run: |
           echo "Build folder structure:"
           find build -type f
+          
       - name: Zip Build Output
         run: |
           zip -r build-output.zip build/
+          
       - name: Upload Build ZIP Artifact
-        if: ${{ success() && hashFiles('build-output.zip') != '' }}
+        if: success() && hashFiles('build-output.zip') != ''
         uses: actions/upload-artifact@v4
         with:
           name: compiled-build
