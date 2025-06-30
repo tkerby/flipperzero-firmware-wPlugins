@@ -33,9 +33,13 @@ The CSV file includes:
 **Data Quality Features:**
 - Configurable logging intervals: 15s, 30s, or 60s (default: 30s)
 
+# Features
+
+- **Auto-Dim Control**: Toggle the automatic screen dimming functionality in settings. When disabled, the screen will stay bright during use.
+- **Configurable Logging**: Set logging intervals of 15s, 30s, or 60s to match your monitoring needs.
+
 # TO DO
 
 There are a few features that I am hoping to add, if you can make any contributions I would greatly appreciate it.
-- Toggle the ‘AUTO DIM’ functionality of the screen. I have added the option to settings but it doesn’t work.  
-- Make a website that can detect if the Flipper is connected via USB, read the CSV file, and display a line chart. I have built a prototype with Loveable that can detect and connect to the Flipper’s CLI, but I’m having issues reading the CSV from the Flipper Zero. The link to the website is [here](https://preview--zero-data-explorer.lovable.app/), and the link to the repo is [here](https://github.com/harryob2/zero-data-explorer).
+- Make a website that can detect if the Flipper is connected via USB, read the CSV file, and display a line chart. I have built a prototype with Loveable that can detect and connect to the Flipper's CLI, but I'm having issues reading the CSV from the Flipper Zero. The link to the website is [here](https://preview--zero-data-explorer.lovable.app/), and the link to the repo is [here](https://github.com/harryob2/zero-data-explorer).
 

@@ -96,10 +96,18 @@ static void co2_logger_uart_format_time(uint32_t seconds, char* buffer, size_t b
 }
 
 static void co2_logger_uart_apply_auto_dim(co2_loggerUart* state) {
-    // Just log the setting - let system handle auto-dim completely naturally
-    FURI_LOG_D("AutoDim", "Auto-dim setting: %s (system handles all dimming)", 
+    FURI_LOG_D("AutoDim", "Applying auto-dim setting: %s", 
                state->auto_dim_enabled ? "ON" : "OFF");
-    // No backlight control at all - system works naturally like before
+    
+    if(state->auto_dim_enabled) {
+        // Enable auto-dim: let system handle dimming naturally
+        notification_message(state->notification, &sequence_display_backlight_enforce_auto);
+        FURI_LOG_D("AutoDim", "Auto-dim enabled - system will handle backlight dimming");
+    } else {
+        // Disable auto-dim: force backlight to stay on
+        notification_message(state->notification, &sequence_display_backlight_enforce_on);
+        FURI_LOG_D("AutoDim", "Auto-dim disabled - backlight will stay on");
+    }
 }
 
 static bool co2_logger_uart_check_sd_card(co2_loggerUart* state) {
@@ -488,11 +496,18 @@ int32_t co2_logger_app(void* p) {
         
         uint32_t current_time = furi_get_tick();
         
-        // No backlight control - let system handle auto-dim completely naturally
+        // Handle backlight control based on auto-dim setting
+        // When auto-dim is disabled and there's input, ensure backlight stays on
         
         // Check for input events
         if(status == FuriStatusOk) {
             FURI_LOG_D("Input", "Received input: type=%d key=%d", event.type, event.key);
+            
+            // If auto-dim is disabled, turn on backlight when user interacts
+            if(!state->auto_dim_enabled) {
+                notification_message(state->notification, &sequence_display_backlight_on);
+                FURI_LOG_D("AutoDim", "User input detected - turning on backlight (auto-dim disabled)");
+            }
             
             if(event.type == InputTypePress) {
                 bool view_updated = false;
@@ -522,7 +537,7 @@ int32_t co2_logger_app(void* p) {
                             }
                             view_updated = true;
                         } else if(state->settings_selection == 1) {
-                            // Toggle auto-dim setting (display only - system handles all dimming)
+                            // Toggle auto-dim setting
                             state->auto_dim_enabled = !state->auto_dim_enabled;
                             co2_logger_uart_apply_auto_dim(state);
                             view_updated = true;
