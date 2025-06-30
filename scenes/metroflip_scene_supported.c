@@ -15,6 +15,8 @@ void metroflip_scene_supported_on_enter(void* context) {
 
     furi_string_printf(str, "\e#Supported Cards:\n\n");
     furi_string_cat_printf(
+        str, " - Andalucía:\nAndalucía, Spain\nProtocol: MIFARE Classic\n\n");
+    furi_string_cat_printf(
         str, " - Bip!:\nSantiago de Chile, Chile\nProtocol: MIFARE Classic\n\n");
     furi_string_cat_printf(str, " - Charliecard:\nBoston, MA, USA\nProtocol: MIFARE Classic\n\n");
     furi_string_cat_printf(

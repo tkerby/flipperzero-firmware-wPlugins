@@ -76,6 +76,10 @@ void metroflip_scene_load_on_enter(void* context) {
                         app->card_type = "gocard";
                         FURI_LOG_I(TAG, "Detected: GoCard");
                         break;
+                    case CARD_TYPE_ANDALUCIA:
+                        app->card_type = "andalucia";
+                        FURI_LOG_I(TAG, "Detected: Consorcio Andalucía");
+                        break;
                     case CARD_TYPE_UNKNOWN:
                     default:
                         app->card_type = "unknown";

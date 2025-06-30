@@ -39,6 +39,9 @@ const MfClassicKeyPair renfe_suma10_1k_keys[] = {
     {.a = 0xa0a1a2a3a4a5}, // Alternative common key
     {.a = 0xC0C1C2C3C4C5}, // Key for sectors 10-15 from dumps
 };
+const MfClassicKeyPair andalucia_1k_verify_key[] = {
+    {.a = 0xffffffffffff}, // Default key - will need to be updated with actual keys from dumps
+};
 
 
 const uint8_t gocard_verify_data[1][14] = {
@@ -417,6 +420,51 @@ static bool renfe_suma10_verify(Nfc* nfc, MfClassicData* mfc_data, bool data_loa
     return verified;
 }
 
+static bool andalucia_verify(Nfc* nfc, MfClassicData* mfc_data, bool data_loaded) {
+    bool verified = false;
+
+    do {
+        if(!data_loaded) {
+            const uint8_t block_number = mf_classic_get_first_block_num_of_sector(0) + 1;
+            FURI_LOG_D(TAG, "Verifying Andalucia sector 0");
+
+            MfClassicKey key = {0};
+            bit_lib_num_to_bytes_be(andalucia_1k_verify_key[0].a, COUNT_OF(key.data), key.data);
+
+            MfClassicAuthContext auth_context;
+            MfClassicError error = mf_classic_poller_sync_auth(
+                nfc, block_number, &key, MfClassicKeyTypeA, &auth_context);
+            if(error != MfClassicErrorNone) {
+                FURI_LOG_D(TAG, "Failed to read block %u: %d", block_number, error);
+                break;
+            }
+
+            verified = true;
+        } else {
+            // For now, we'll check if it looks like an Andalucia card by examining the data structure
+            // This is a basic check - in a real implementation, you'd want to check specific patterns
+            MfClassicSectorTrailer* sec_tr = mf_classic_get_sector_trailer_by_sector(mfc_data, 0);
+            
+            uint64_t key = bit_lib_bytes_to_num_be(sec_tr->key_a.data, 6);
+            // Check for common transport card keys or patterns
+            if(key == andalucia_1k_verify_key[0].a || key == 0xffffffffffff) {
+                // Additional verification: check if sector 9 contains value block pattern
+                // Based on the dump, block 37 (sector 9, block 1) contains: D7 50 00 00 28 AF FF FF
+                if(mfc_data->type == MfClassicType1k) {
+                    const uint8_t balance_block_num = mf_classic_get_first_block_num_of_sector(9) + 1;
+                    if(balance_block_num < 64 && mf_classic_is_block_read(mfc_data, balance_block_num)) {
+                        // Look for value block pattern or specific Andalucia signatures
+                        // This needs to be refined based on more card dumps
+                        verified = true;
+                    }
+                }
+            }
+        }
+    } while(false);
+
+    return verified;
+}
+
 CardType determine_card_type(Nfc* nfc, MfClassicData* mfc_data, bool data_loaded) {
     FURI_LOG_I(TAG, "checking keys..");
     UNUSED(bip_verify);
@@ -435,6 +483,8 @@ CardType determine_card_type(Nfc* nfc, MfClassicData* mfc_data, bool data_loaded
         return CARD_TYPE_CHARLIECARD;
     } else if(gocard_verify(mfc_data, data_loaded)) {
         return CARD_TYPE_GOCARD;
+    } else if(andalucia_verify(nfc, mfc_data, data_loaded)) {
+        return CARD_TYPE_ANDALUCIA;
     } else {
         FURI_LOG_I(TAG, "its unknown");
         return CARD_TYPE_UNKNOWN;

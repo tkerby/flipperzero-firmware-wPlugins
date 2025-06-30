@@ -129,3 +129,12 @@ App(
     sources=["scenes/plugins/renfe_sum10.c"],
     fal_embedded=True,
 )
+
+App(
+    appid="andalucia_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="andalucia_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/andalucia.c"],
+    fal_embedded=True,
+)
