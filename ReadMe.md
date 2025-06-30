@@ -37,7 +37,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Flipper Printer v1.0 (By alxcrt)](https://github.com/alxcrt/flipper-zero-thermal-printer) `Req: T7-US thermal printer module`
 - Added: [Hard Hat Brigade IR v0.1 (By Anomalous68)](https://github.com/Anomalous68/HHB-Flipper-App) `Req: Hard Hat Brigade Hat`
 - Updated: [Hard Hat Brigade IR v0.1 (By Anomalous68)](https://github.com/Anomalous68/HHB-Flipper-App) `Req: Hard Hat Brigade Hat`
-- Updated: [Rubiks Cube Timer v0.0.1 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
 - Updated: [FZ nRF24 Jammer v1.2 (By W0rthlessS0ul)](https://github.com/W0rthlessS0ul/FZ_nRF24_jammer)
 - Updated: [Ghost ESP v1.3 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
 - UL: RFID: Fix strange bug with LCD backlight going off after doing Write (By xMasterX)
@@ -45,6 +44,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - SubGHz: Fix possible frequency analyzer deadlock when holding Ok (By WillyJL)
 - ESP Flasher: [Bump Marauder v1.7.1 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.7.1)
 - Updated: [NFC Magic v1.15.1 (By gornekich)](https://github.com/flipperdevices/flipperzero-firmware/pull/1966) [Ultimate Magic Gen4 Max Block Number Set Incorrectly for the NTAG Protocol (By alfie65536)](https://github.com/flipperdevices/flipperzero-good-faps/pull/284)
+- Updated: [Rubiks Cube Timer v0.0.1 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
 
 <a name="release">
 
