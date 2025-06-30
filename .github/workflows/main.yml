@@ -9,12 +9,13 @@ on:
     branches:
       - main
       - dev
-  workflow_dispatch:  # Permite ejecución manual desde la UI de GitHub
+  workflow_dispatch:  # Permite ejecución manual
 
 jobs:
   build:
     name: Build and Test Application
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -42,9 +43,19 @@ jobs:
           ufbt vscode_dist
 
       - name: Build FAP Applications
-        run: ufbt faps
+        run: |
+          set -e
+          ufbt faps
+
+      - name: Show Build Output
+        run: |
+          echo "Listing build/ directory..."
+          ls -la build || echo "No build directory found."
+          echo "Listing full file tree..."
+          find . -type f
 
       - name: Upload Build Artifacts
+        if: success() && hashFiles('build/**') != ''
         uses: actions/upload-artifact@v4
         with:
           name: build-output
