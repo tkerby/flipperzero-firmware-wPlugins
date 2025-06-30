@@ -18,13 +18,11 @@ Flipper | Sensor
 
 # CSV Logging
 
-The app automatically creates a CSV file at `/ext/apps_data/co2_logger/co2_log.csv` on the SD card and logs valid CO2 readings at the configured interval with the following format:
+The app automatically creates a CSV file at /ext/apps_data/co2_logger/co2_log.csv on the SD card and logs valid CO2 readings at the configured interval with the following format:
 
-```
-Timestamp,CO2_PPM
-2024-01-15 14:30:25,420
-2024-01-15 14:30:55,425
-```
+    Timestamp,CO2_PPM
+    2024-01-15 14:30:25,420
+    2024-01-15 14:30:55,425
 
 The CSV file includes:
 - Timestamp in YYYY-MM-DD HH:MM:SS format
