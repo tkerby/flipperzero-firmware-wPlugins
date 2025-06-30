@@ -125,3 +125,12 @@ App(
     sources=["scenes/plugins/suica.c"],
     fal_embedded=True,
 )
+
+App(
+    appid="renfe_sum10_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="renfe_sum10_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/renfe_sum10.c"],
+    fal_embedded=True,
+)
