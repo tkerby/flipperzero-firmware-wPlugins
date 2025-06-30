@@ -9,7 +9,7 @@ on:
     branches:
       - main
       - dev
-  workflow_dispatch:  # Permite ejecución manual
+  workflow_dispatch:  # Permite ejecución manual desde GitHub
 
 jobs:
   build:
@@ -47,16 +47,18 @@ jobs:
           set -e
           ufbt faps
 
-      - name: Show Build Output
+      - name: Debug: Show Build Output
         run: |
-          echo "Listing build/ directory..."
-          ls -la build || echo "No build directory found."
-          echo "Listing full file tree..."
-          find . -type f
+          echo "Build folder structure:"
+          find build -type f
 
-      - name: Upload Build Artifacts
-        if: success() && hashFiles('build/**') != ''
+      - name: Zip Build Output
+        run: |
+          zip -r build-output.zip build/
+
+      - name: Upload Build ZIP Artifact
+        if: success() && hashFiles('build-output.zip') != ''
         uses: actions/upload-artifact@v4
         with:
-          name: build-output
-          path: build/
+          name: compiled-build
+          path: build-output.zip
