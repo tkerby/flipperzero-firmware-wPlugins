@@ -41,7 +41,8 @@ typedef struct {
     Co2LoggerView current_view;
     LogIntervalOption log_interval_option;
     bool auto_dim_enabled;
-    int settings_selection; // 0 = interval, 1 = auto_dim
+    bool csv_logging_enabled;
+    int settings_selection; // 0 = interval, 1 = auto_dim, 2 = csv_logging
 } co2_loggerUart;
 
 static uint32_t co2_logger_uart_get_log_interval_ms(LogIntervalOption option) {
@@ -273,41 +274,70 @@ static void co2_logger_uart_log_to_csv(co2_loggerUart* state, uint32_t co2_value
 
 static void co2_logger_uart_draw_main_view(Canvas* canvas, co2_loggerUart* app) {
     if(app->connected) {
-        // Draw CO2 value in biggest font with bold effect
-        canvas_set_font(canvas, FontBigNumbers);
-        char co2_buffer[16];
-        snprintf(co2_buffer, sizeof(co2_buffer), "%lu", app->co2_value);
-        // Draw multiple times with slight offset for bolder/bigger appearance
-        canvas_draw_str(canvas, 2, 25, co2_buffer);
-        canvas_draw_str(canvas, 3, 25, co2_buffer); // Slight offset for bold effect
-        
-        // Draw "ppm" in bigger font right after the number
-        canvas_set_font(canvas, FontPrimary);
-        // Use fixed position that works well for most CO2 values
-        canvas_draw_str(canvas, 60, 25, "ppm");
-        
-        // Show connection time below, using available space efficiently
+        // Show connection time in top right corner (small font)
         uint32_t current_time = furi_get_tick();
         uint32_t connected_seconds = (current_time - app->connection_start_time) / 1000;
         char formatted_time[16];
-        char time_buffer[32];
         co2_logger_uart_format_time(connected_seconds, formatted_time, sizeof(formatted_time));
-        snprintf(time_buffer, sizeof(time_buffer), "Connected: %s", formatted_time);
-        canvas_draw_str(canvas, 2, 42, time_buffer);
+        
+        canvas_set_font(canvas, FontSecondary);
+        // Measure text width to right-align it
+        size_t time_width = canvas_string_width(canvas, formatted_time);
+        canvas_draw_str(canvas, 128 - time_width - 2, 10, formatted_time);
+        
+        // Draw CO2 value in biggest font (clean, single draw, positioned higher)
+        canvas_set_font(canvas, FontBigNumbers);
+        char co2_buffer[16];
+        snprintf(co2_buffer, sizeof(co2_buffer), "%lu", app->co2_value);
+        canvas_draw_str(canvas, 2, 18, co2_buffer);
+        
+        // Draw "ppm" right after the number (hugging the reading)
+        canvas_set_font(canvas, FontPrimary);
+        size_t co2_width = canvas_string_width(canvas, co2_buffer)*2;
+        canvas_draw_str(canvas, 2 + co2_width + 5, 18, "ppm");
     } else {
         // Show disconnected state
         canvas_set_font(canvas, FontBigNumbers);
-        canvas_draw_str(canvas, 2, 25, "---");
-        canvas_draw_str(canvas, 3, 25, "---"); // Bold effect
+        char disconnected_text[] = "---";
+        canvas_draw_str(canvas, 2, 18, disconnected_text);
+        
+        // Draw "ppm" right after the dashes (hugging the reading)
         canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 50, 25, "ppm");
+        size_t dash_width = canvas_string_width(canvas, disconnected_text)*2;
+        canvas_draw_str(canvas, 2 + dash_width + 5, 18, "ppm");
+        
         canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str(canvas, 2, 42, "Disconnected");
+        canvas_draw_str(canvas, 2, 37, "Disconnected");
     }
     
-    // Right arrow for settings - positioned slightly more to the right
+    // Show logging status at bottom left
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str(canvas, 75, 58, "Settings >");
+    if(app->csv_logging_enabled && app->csv_enabled) {
+        char logging_status[32];
+        const char* interval_text = co2_logger_uart_get_log_interval_text(app->log_interval_option);
+        snprintf(logging_status, sizeof(logging_status), "Logging every %s", interval_text);
+        canvas_draw_str(canvas, 2, 58, logging_status);
+    } else {
+        canvas_draw_str(canvas, 2, 58, "Not logging");
+    }
+    
+    // Settings button with inverted background (white text on black)
+    canvas_set_font(canvas, FontSecondary);
+    const char* settings_text = "Settings >";
+    size_t settings_width = canvas_string_width(canvas, settings_text);
+    uint8_t settings_x = 85;
+    uint8_t settings_y = 58;
+    
+    // Draw black background rectangle
+    canvas_set_color(canvas, ColorBlack);
+    canvas_draw_rbox(canvas, settings_x - 2, settings_y - 8, settings_width + 4, 10, 2);
+    
+    // Draw white text on black background
+    canvas_set_color(canvas, ColorWhite);
+    canvas_draw_str(canvas, settings_x, settings_y, settings_text);
+    
+    // Reset color to black for future draws
+    canvas_set_color(canvas, ColorBlack);
 }
 
 static void co2_logger_uart_draw_settings_view(Canvas* canvas, co2_loggerUart* app) {
@@ -335,6 +365,15 @@ static void co2_logger_uart_draw_settings_view(Canvas* canvas, co2_loggerUart* a
         canvas_draw_str(canvas, 10, auto_dim_y, "Auto Dim:");
     }
     canvas_draw_str(canvas, 100, auto_dim_y, app->auto_dim_enabled ? "ON" : "OFF");
+    
+    // CSV Logging setting - show value on same line as label
+    int csv_logging_y = 52;
+    if(app->settings_selection == 2) {
+        canvas_draw_str(canvas, 2, csv_logging_y, "> CSV Logging:");
+    } else {
+        canvas_draw_str(canvas, 10, csv_logging_y, "CSV Logging:");
+    }
+    canvas_draw_str(canvas, 100, csv_logging_y, app->csv_logging_enabled ? "ON" : "OFF");
 }
 
 static void co2_logger_uart_draw_callback(Canvas* canvas, void* ctx) {
@@ -478,6 +517,7 @@ int32_t co2_logger_app(void* p) {
     state->log_interval_option = LogInterval30s; // Default to 30s
     state->connection_start_time = furi_get_tick();
     state->auto_dim_enabled = true; // Auto-dim ON by default (natural Flipper behavior)
+    state->csv_logging_enabled = true; // CSV logging ON by default
     state->settings_selection = 0; // Start with interval selection
     
     // Apply initial auto-dim setting
@@ -541,6 +581,10 @@ int32_t co2_logger_app(void* p) {
                             state->auto_dim_enabled = !state->auto_dim_enabled;
                             co2_logger_uart_apply_auto_dim(state);
                             view_updated = true;
+                        } else if(state->settings_selection == 2) {
+                            // Toggle csv_logging setting
+                            state->csv_logging_enabled = !state->csv_logging_enabled;
+                            view_updated = true;
                         }
                     } else if(event.key == InputKeyUp) {
                         // Navigate between settings
@@ -550,7 +594,7 @@ int32_t co2_logger_app(void* p) {
                         }
                     } else if(event.key == InputKeyDown) {
                         // Navigate between settings
-                        if(state->settings_selection < 1) { // 0 = interval, 1 = auto_dim
+                        if(state->settings_selection < 2) { // 0 = interval, 1 = auto_dim, 2 = csv_logging
                             state->settings_selection++;
                             view_updated = true;
                         }
@@ -588,10 +632,14 @@ int32_t co2_logger_app(void* p) {
             // Log to CSV at configurable interval
             uint32_t log_interval_ms = co2_logger_uart_get_log_interval_ms(state->log_interval_option);
             if(current_time - state->last_log_time > log_interval_ms) {
-                if(state->csv_enabled) {
+                if(state->csv_enabled && state->csv_logging_enabled) {
                     co2_logger_uart_log_to_csv(state, state->co2_value, state->connected);
                 } else {
-                    FURI_LOG_D("CSV", "CSV logging disabled - skipping log entry");
+                    if(!state->csv_enabled) {
+                        FURI_LOG_D("CSV", "CSV file not available - skipping log entry");
+                    } else {
+                        FURI_LOG_D("CSV", "CSV logging disabled by user - skipping log entry");
+                    }
                 }
                 state->last_log_time = current_time;
             }

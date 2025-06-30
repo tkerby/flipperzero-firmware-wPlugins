@@ -8,6 +8,6 @@ App(
     fap_version="0.3",
     fap_icon="co2_logger.png",
     fap_description="CO2 Logger with CSV export",
-    fap_author="Aku",
+    fap_author="Harry O'Brien",
     fap_weburl="https://github.com/harryob2/co2_logger",
 )

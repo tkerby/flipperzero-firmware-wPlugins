@@ -37,6 +37,7 @@ The CSV file includes:
 
 - **Auto-Dim Control**: Toggle the automatic screen dimming functionality in settings. When disabled, the screen will stay bright during use.
 - **Configurable Logging**: Set logging intervals of 15s, 30s, or 60s to match your monitoring needs.
+- **CSV Logging Toggle**: Enable or disable CSV file logging in settings. When enabled, CO2 readings are saved to the SD card.
 
 # TO DO
 
