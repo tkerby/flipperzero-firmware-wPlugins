@@ -1,6 +1,6 @@
 # About
 
-CO2 Logger app for Flipper Zero using MH-Z19 sensor. Uses UART protocol to receive data and logs CO2 readings to CSV file with configurable intervals (15s, 30s, or 60s) and timestamps.
+App for reading CO2 ppm from MH-Z19 sensor and saving to a local csv file. 
 
 ## Credits
 
@@ -15,18 +15,6 @@ Flipper | Sensor
 15      | RX
 16      | TX
 
-
-# User Interface
-
-## Main Screen
-- **Large CO2 reading** display in PPM
-- **Connection timer** showing how long the sensor has been connected
-- **RIGHT button**: Enter settings
-
-## Settings Screen  
-- **Logging interval configuration**: Choose between 15s, 30s, or 60s
-- **UP/DOWN buttons**: Change interval
-- **LEFT button**: Return to main screen
 
 # CSV Logging
 
@@ -43,6 +31,10 @@ The CSV file includes:
 - CO2 concentration in PPM
 
 **Data Quality Features:**
-- Sensor warmup period: No logging for the first 60 seconds to avoid initialization values
-- Only logs when sensor is connected and providing valid data
 - Configurable logging intervals: 15s, 30s, or 60s (default: 30s)
+
+# TO DO
+
+There are a few features that I am hoping to add, if you can make any contributions I would greatly appreciate it.
+- Toggle the 'AUTO DIM' functionality of the screen. I have added the option to settings but it doesn't work.
+- Make a website that can detect if the flipper is connected via USB, read the csv file, and display a line chart. I have built a prototype with Loveable that can detect and connect to the flipper's cli, but I'm having issues reading the csv from the flipper zero. The link to the website is (here)[https://preview--zero-data-explorer.lovable.app/], and the link to the repo is (here)[https://github.com/harryob2/zero-data-explorer]. 
