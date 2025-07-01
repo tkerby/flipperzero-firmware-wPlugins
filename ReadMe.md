@@ -47,6 +47,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Metroflip v0.8 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [Rubiks Cube Timer v0.0.1 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
 - Updated: [FlipDownloader v1.2 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- Added: [CO2 Logger v0.3 (By harryob2)](https://github.com/harryob2/co2_logger) `Req: MH-Z19`
 
 <a name="release">
 
@@ -430,6 +431,7 @@ $ ./fbt dolphin_ext
 - [CLI Bridge v1.6 (By ranchordo)](https://github.com/ranchordo/flipperzero-cli-bridge)
 - [Clippy v0.1 (By mtormento)](https://github.com/mtormento/clippy)
 - [Clock v1.2 (By kowalski7cc)](https://github.com/kowalski7cc/flipperzero-firmware/tree/clock-v1)
+- [CO2 Logger v0.3 (By harryob2)](https://github.com/harryob2/co2_logger) `Req: MH-Z19`
 - [Coffee-EEPROM (By wh00hw)](https://github.com/wh00hw/Coffee-EEPROM-FAP) For ethical pentest only.
 - [Combo Cracker v0.1 (By CharlesTheGreat77)](https://github.com/CharlesTheGreat77/ComboCracker-FZ)
 - [Continuity Tester (By benallen-dev)](https://github.com/benallen-dev/flipper-zero-apps/tree/main/continuity)
