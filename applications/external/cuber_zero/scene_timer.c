@@ -1,6 +1,7 @@
 #include <furi_hal_light.h>
 #include "cuberzero.h"
 #include "scramble/puzzle.h"
+#include <gui/elements.h>
 
 struct ViewDispatcher {
     bool eventLoopOwned;
@@ -108,7 +109,13 @@ void SceneTimerEnter(const PCUBERZERO instance) {
     furi_mutex_release(instance->scene.timer.mutex);
     gui_remove_view_port(instance->interface, instance->scene.timer.viewport);
     gui_add_view_port(instance->interface, instance->dispatcher->viewport, GuiLayerFullscreen);
-    scene_manager_handle_back_event(instance->manager);
+
+    if(instance->scene.timer.nextScene) {
+        scene_manager_next_scene(instance->manager, instance->scene.timer.nextSceneIdentifier);
+    } else {
+        scene_manager_handle_back_event(instance->manager);
+    }
+
     view_dispatcher_run(instance->dispatcher);
 }
 
@@ -127,6 +134,15 @@ void SceneTimerDraw(Canvas* const canvas, const PCUBERZERO instance) {
         canvas_set_font(canvas, FontSecondary);
         canvas_draw_str_aligned(
             canvas, 64, 32, AlignCenter, AlignCenter, "F2 R2 F R' F' R U' F U2");
+        canvas_set_color(canvas, ColorBlack);
+        canvas_draw_box(canvas, 0, 55, canvas_string_width(canvas, "3x3 MB") + 2, 9);
+        canvas_set_color(canvas, ColorWhite);
+        canvas_draw_str(canvas, 1, 63, "3x3 MB");
+        tick = canvas_string_width(canvas, "3x3 MB") + 4;
+        canvas_set_font(canvas, FontKeyboard);
+        canvas_set_color(canvas, ColorBlack);
+        canvas_draw_str(canvas, tick, 64, "Mean: 10:20.223");
+        elements_button_up(canvas, "Options");
         break;
     case TIMER_STATE_READY:
         canvas_set_font(canvas, FontPrimary);
@@ -173,6 +189,11 @@ void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
             instance->scene.timer.state = TIMER_STATE_WAIT_FOR_READY;
             instance->scene.timer.pressedTime = tick;
         } else if(event->type == InputTypeShort && event->key == InputKeyBack) {
+            instance->scene.timer.nextScene = 0;
+            furi_message_queue_put(instance->scene.timer.queue, event, FuriWaitForever);
+        } else if(event->type == InputTypePress && event->key == InputKeyLeft) {
+            instance->scene.timer.nextScene = 1;
+            instance->scene.timer.nextSceneIdentifier = CUBERZERO_SCENE_ABOUT;
             furi_message_queue_put(instance->scene.timer.queue, event, FuriWaitForever);
         }
 

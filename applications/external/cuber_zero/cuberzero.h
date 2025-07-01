@@ -33,6 +33,8 @@ typedef struct {
             uint32_t stopTimer;
             uint8_t state;
             uint8_t previousState;
+            uint8_t nextScene;
+            uint32_t nextSceneIdentifier;
         } timer;
     } scene;
 
