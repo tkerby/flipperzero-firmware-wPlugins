@@ -2,7 +2,7 @@
 // all credits to xMasterX for the code
 #include "uart_text_input.h"
 #include <gui/elements.h>
-#include <flip_downloader_icons.h>
+#include "flip_downloader_icons.h"
 #include <furi.h>
 
 struct UART_TextInput {
