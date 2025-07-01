@@ -131,6 +131,15 @@ void SceneTimerDraw(Canvas* const canvas, const PCUBERZERO instance) {
 	case TIMER_STATE_WAIT_FOR_READY:
 		canvas_set_font(canvas, FontSecondary);
 		canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, "F2 R2 F R' F' R U' F U2");
+		canvas_set_color(canvas, ColorBlack);
+		canvas_draw_box(canvas, 0, 55, canvas_string_width(canvas, "3x3 MB") + 2, 9);
+		canvas_set_color(canvas, ColorWhite);
+		canvas_draw_str(canvas, 1, 63, "3x3 MB");
+		tick = canvas_string_width(canvas, "3x3 MB") + 4;
+		canvas_set_font(canvas, FontKeyboard);
+		canvas_set_color(canvas, ColorBlack);
+		canvas_draw_str(canvas, tick, 64, "Mean: 10:20.223");
+		elements_button_up(canvas, "Options");
 		break;
 	case TIMER_STATE_READY:
 		canvas_set_font(canvas, FontPrimary);
