@@ -1,6 +1,7 @@
 #include <furi_hal_light.h>
 #include "cuberzero.h"
 #include "scramble/puzzle.h"
+#include <gui/elements.h>
 
 struct ViewDispatcher {
 	bool eventLoopOwned;
@@ -106,7 +107,13 @@ void SceneTimerEnter(const PCUBERZERO instance) {
 	furi_mutex_release(instance->scene.timer.mutex);
 	gui_remove_view_port(instance->interface, instance->scene.timer.viewport);
 	gui_add_view_port(instance->interface, instance->dispatcher->viewport, GuiLayerFullscreen);
-	scene_manager_handle_back_event(instance->manager);
+
+	if(instance->scene.timer.nextScene) {
+		scene_manager_next_scene(instance->manager, instance->scene.timer.nextSceneIdentifier);
+	} else {
+		scene_manager_handle_back_event(instance->manager);
+	}
+
 	view_dispatcher_run(instance->dispatcher);
 }
 
@@ -156,6 +163,11 @@ void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
 			instance->scene.timer.state = TIMER_STATE_WAIT_FOR_READY;
 			instance->scene.timer.pressedTime = tick;
 		} else if(event->type == InputTypeShort && event->key == InputKeyBack) {
+			instance->scene.timer.nextScene = 0;
+			furi_message_queue_put(instance->scene.timer.queue, event, FuriWaitForever);
+		} else if(event->type == InputTypePress && event->key == InputKeyLeft) {
+			instance->scene.timer.nextScene = 1;
+			instance->scene.timer.nextSceneIdentifier = CUBERZERO_SCENE_ABOUT;
 			furi_message_queue_put(instance->scene.timer.queue, event, FuriWaitForever);
 		}
 
