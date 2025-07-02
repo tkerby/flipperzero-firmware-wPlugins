@@ -11,6 +11,8 @@
 #include "utils.h"
 #include "callbacks.h"
 
+
+
 typedef struct {
     SettingsUIContext* settings_ui_context;
     SettingKey key;
@@ -402,6 +404,16 @@ static void settings_action_callback(void* context, uint32_t index) {
     settings_set(settings_context->settings, index, 0, settings_context);
 }
 
+// submenu callback to open wifi hardware settings menu from settings actions
+#define WIFI_SETTINGS_MENU_ID  200
+static void wifi_settings_menu_callback(void* context, uint32_t index) {
+    UNUSED(index);
+    AppState* state = (AppState*)context;
+    if(!state) return;
+    show_wifi_settings_menu(state);
+    state->came_from_settings = true;
+}
+
 void settings_setup_gui(VariableItemList* list, SettingsUIContext* context) {
     FURI_LOG_D("SettingsSetup", "Entering settings_setup_gui");
     AppState* app_state = (AppState*)context->context;
@@ -412,6 +424,14 @@ void settings_setup_gui(VariableItemList* list, SettingsUIContext* context) {
         "Configuration  >",
         SETTINGS_COUNT,
         settings_menu_callback,
+        app_state);
+
+    // add hardware submenu item in settings actions menu
+    submenu_add_item(
+        app_state->settings_actions_menu,
+        "Hardware  >",
+        WIFI_SETTINGS_MENU_ID,
+        wifi_settings_menu_callback,
         app_state);
 
     // Iterate over all settings
