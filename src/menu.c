@@ -669,8 +669,6 @@ static const MenuCommand ble_attack_commands[] = {
     },
 };
 
-
-
 static const MenuCommand ble_stop_command = {
     .label = "Stop All BLE",
     .command = "stop\n",
@@ -1215,8 +1213,6 @@ void show_ble_attack_menu(AppState* state) {
         22);
 }
 
-
-
 void show_wifi_menu(AppState* state) {
     submenu_reset(state->wifi_menu);
     submenu_set_header(state->wifi_menu, "WiFi Commands");
@@ -1491,11 +1487,13 @@ bool back_event_callback(void* context) {
                 break;
             case 10:
                 show_wifi_scanning_menu(state);
-                submenu_set_selected_item(state->wifi_scanning_menu, state->last_wifi_scanning_index);
+                submenu_set_selected_item(
+                    state->wifi_scanning_menu, state->last_wifi_scanning_index);
                 break;
             case 11:
                 show_wifi_capture_menu(state);
-                submenu_set_selected_item(state->wifi_capture_menu, state->last_wifi_capture_index);
+                submenu_set_selected_item(
+                    state->wifi_capture_menu, state->last_wifi_capture_index);
                 break;
             case 12:
                 show_wifi_attack_menu(state);
@@ -1503,11 +1501,13 @@ bool back_event_callback(void* context) {
                 break;
             case 13:
                 show_wifi_network_menu(state);
-                submenu_set_selected_item(state->wifi_network_menu, state->last_wifi_network_index);
+                submenu_set_selected_item(
+                    state->wifi_network_menu, state->last_wifi_network_index);
                 break;
             case 14:
                 show_wifi_settings_menu(state);
-                submenu_set_selected_item(state->wifi_settings_menu, state->last_wifi_settings_index);
+                submenu_set_selected_item(
+                    state->wifi_settings_menu, state->last_wifi_settings_index);
                 break;
             case 2:
                 show_ble_menu(state);
@@ -1515,7 +1515,8 @@ bool back_event_callback(void* context) {
                 break;
             case 20:
                 show_ble_scanning_menu(state);
-                submenu_set_selected_item(state->ble_scanning_menu, state->last_ble_scanning_index);
+                submenu_set_selected_item(
+                    state->ble_scanning_menu, state->last_ble_scanning_index);
                 break;
             case 21:
                 show_ble_capture_menu(state);
@@ -1863,11 +1864,12 @@ static bool menu_input_handler(InputEvent* event, void* context) {
             // Handle BLE spam command cycling
             else if(state->current_view == 22 && current_index == 0) {
                 if(event->key == InputKeyRight) {
-                    current_ble_spam_index = (current_ble_spam_index + 1) % COUNT_OF(ble_spam_commands);
+                    current_ble_spam_index =
+                        (current_ble_spam_index + 1) % COUNT_OF(ble_spam_commands);
                 } else {
                     current_ble_spam_index = (current_ble_spam_index == 0) ?
-                                                (COUNT_OF(ble_spam_commands) - 1) :
-                                                (current_ble_spam_index - 1);
+                                                 (COUNT_OF(ble_spam_commands) - 1) :
+                                                 (current_ble_spam_index - 1);
                 }
                 submenu_change_item_label(
                     current_menu, current_index, ble_spam_commands[current_ble_spam_index].label);

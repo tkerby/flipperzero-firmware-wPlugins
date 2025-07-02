@@ -11,8 +11,6 @@
 #include "utils.h"
 #include "callbacks.h"
 
-
-
 typedef struct {
     SettingsUIContext* settings_ui_context;
     SettingKey key;
@@ -405,7 +403,7 @@ static void settings_action_callback(void* context, uint32_t index) {
 }
 
 // submenu callback to open wifi hardware settings menu from settings actions
-#define WIFI_SETTINGS_MENU_ID  200
+#define WIFI_SETTINGS_MENU_ID 200
 static void wifi_settings_menu_callback(void* context, uint32_t index) {
     UNUSED(index);
     AppState* state = (AppState*)context;
