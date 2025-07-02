@@ -1384,7 +1384,7 @@ bool back_event_callback(void* context) {
             show_main_menu(state);
             break;
         }
-        state->current_view = state->previous_view;
+        state->previous_view = current_view;
     }
     // Handle settings menu (view 8)
     else if(current_view == 8) {
@@ -1455,7 +1455,7 @@ bool back_event_callback(void* context) {
             break;
         }
 
-        state->current_view = state->previous_view;
+        state->previous_view = current_view;
     }
     // Handle main menu (view 0)
     else if(current_view == 0) {
