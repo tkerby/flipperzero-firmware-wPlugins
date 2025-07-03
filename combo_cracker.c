@@ -258,7 +258,7 @@ static void combo_view_cracker_draw_callback(Canvas* canvas, void* model) {
 
 /**
  * @brief      callback for cracker screen input.
- * @details    this function is called when the user presses a button while on the cracker screen.
+ * @details    this function is called when the user presses or holds a button while on the cracker screen.
  * @param      event    the event - InputEvent object.
  * @param      context  the context - ComboLockCrackerApp object.
  * @return     true if the event was handled, false otherwise.
@@ -266,8 +266,8 @@ static void combo_view_cracker_draw_callback(Canvas* canvas, void* model) {
 static bool combo_view_cracker_input_callback(InputEvent* event, void* context) {
     ComboLockCrackerApp* app = (ComboLockCrackerApp*)context;
 
+    bool redraw = true;
     if(event->type == InputTypeShort) {
-        bool redraw = true;
         switch(event->key) {
         case InputKeyUp:
             with_view_model(
@@ -309,6 +309,34 @@ static bool combo_view_cracker_input_callback(InputEvent* event, void* context) 
         case InputKeyOk:
             view_dispatcher_send_custom_event(app->view_dispatcher, ComboEventIdCalculateCombo);
             return true;
+        default:
+            break;
+        }
+    } else if (event->type == InputTypeRepeat) {
+        switch(event->key) {
+        case InputKeyLeft:
+            with_view_model(
+                app->view_cracker,
+                ComboLockCrackerModel * model,
+                {
+                    if(model->selected == 0 && model->first_lock > 0) model->first_lock--;
+                    if(model->selected == 1 && model->second_lock > 0) model->second_lock--;
+                    if(model->selected == 2 && model->resistance > 0) model->resistance -= 0.5f;
+                },
+                redraw);
+            break;
+        case InputKeyRight:
+            with_view_model(
+                app->view_cracker,
+                ComboLockCrackerModel * model,
+                {
+                    if(model->selected == 0 && model->first_lock < 39) model->first_lock++;
+                    if(model->selected == 1 && model->second_lock < 39) model->second_lock++;
+                    if(model->selected == 2 && model->resistance < 39.5f)
+                        model->resistance += 0.5f;
+                },
+                redraw);
+            break;
         default:
             break;
         }
