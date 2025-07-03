@@ -32,6 +32,9 @@ struct AppState {
     Submenu* wifi_network_menu;
     Submenu* wifi_settings_menu;
     Submenu* ble_menu;
+    Submenu* ble_scanning_menu;
+    Submenu* ble_capture_menu;
+    Submenu* ble_attack_menu;
     Submenu* gps_menu;
     VariableItemList* settings_menu;
     TextBox* text_box;
@@ -52,8 +55,15 @@ struct AppState {
     uint8_t current_view;
     uint8_t previous_view;
     uint32_t last_wifi_category_index;
-    uint32_t last_wifi_index;
-    uint32_t last_ble_index;
+    uint32_t last_wifi_scanning_index;
+    uint32_t last_wifi_capture_index;
+    uint32_t last_wifi_attack_index;
+    uint32_t last_wifi_network_index;
+    uint32_t last_wifi_settings_index;
+    uint32_t last_ble_category_index;
+    uint32_t last_ble_scanning_index;
+    uint32_t last_ble_capture_index;
+    uint32_t last_ble_attack_index;
     uint32_t last_gps_index;
     char* input_buffer;
     const char* uart_command;
@@ -63,4 +73,5 @@ struct AppState {
     size_t buffer_size;
     uint8_t connect_input_stage;
     char connect_ssid[128];
+    bool came_from_settings;
 };
