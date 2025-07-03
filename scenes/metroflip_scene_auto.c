@@ -152,10 +152,6 @@ bool metroflip_scene_auto_on_event(void* context, SceneManagerEvent event) {
                     app->card_type = "renfe_sum10";
                     FURI_LOG_I(TAG, "Detected: RENFE Suma 10\n");
                     break;
-                case CARD_TYPE_ANDALUCIA:
-                    app->card_type = "andalucia";
-                    FURI_LOG_I(TAG, "Detected: Consorcio Andalucía\n");
-                    break;
                 case CARD_TYPE_UNKNOWN:
                     app->card_type = "Unknown Card";
                     popup_set_header(popup, "Unsupported\n card", 58, 31, AlignLeft, AlignTop);
