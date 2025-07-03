@@ -185,16 +185,32 @@ void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
 
     switch(instance->scene.timer.state) {
     case TIMER_STATE_DEFAULT:
-        if(event->type == InputTypePress && event->key == InputKeyOk) {
-            instance->scene.timer.state = TIMER_STATE_WAIT_FOR_READY;
-            instance->scene.timer.pressedTime = tick;
-        } else if(event->type == InputTypeShort && event->key == InputKeyBack) {
-            instance->scene.timer.nextScene = 0;
-            furi_message_queue_put(instance->scene.timer.queue, event, FuriWaitForever);
-        } else if(event->type == InputTypePress && event->key == InputKeyLeft) {
-            instance->scene.timer.nextScene = 1;
-            instance->scene.timer.nextSceneIdentifier = CUBERZERO_SCENE_ABOUT;
-            furi_message_queue_put(instance->scene.timer.queue, event, FuriWaitForever);
+        switch(event->type) {
+        case InputTypePress:
+            if(event->key == InputKeyOk) {
+                instance->scene.timer.state = TIMER_STATE_WAIT_FOR_READY;
+                instance->scene.timer.pressedTime = tick;
+            }
+
+            break;
+        case InputTypeShort:
+            switch(event->key) {
+            case InputKeyUp:
+                instance->scene.timer.nextScene = 1;
+                instance->scene.timer.nextSceneIdentifier = CUBERZERO_SCENE_ABOUT;
+                furi_message_queue_put(instance->scene.timer.queue, event, FuriWaitForever);
+                break;
+            case InputKeyBack:
+                instance->scene.timer.nextScene = 0;
+                furi_message_queue_put(instance->scene.timer.queue, event, FuriWaitForever);
+                break;
+            default:
+                break;
+            }
+
+            break;
+        default:
+            break;
         }
 
         break;

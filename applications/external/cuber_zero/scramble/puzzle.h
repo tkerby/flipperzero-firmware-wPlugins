@@ -6,7 +6,6 @@
 extern "C" {
 #endif
 char* PuzzleScrambleClock(const int64_t seed);
-char* PuzzleScrambleTwoByTwo(const int64_t seed);
 char* PuzzleScrambleThreeByThree(const int64_t seed);
 #ifdef __cplusplus
 }
