@@ -4,7 +4,7 @@ If you are unfamiliar with ProtoView, please click through to the [original vers
 
 ## Disclaimer
 
-I am not a C developer, and I don't know Flipper development. I managed to patch this together by a lot of googling, because I desperately wanted this functionality. With searches showing years worth of people requesting similar functionality, there seemed to be no option other than trying to figure it out. I have only tested it on the Momentum firmware (as of this writing, version 009).
+I am not a C developer, and I don't know Flipper development. I managed to patch this together by a lot of googling, because I desperately wanted this functionality. With searches showing years worth of people requesting similar functionality, there seemed to be no option other than trying to figure it out. I have only tested it on the Momentum firmware (latest verified version: 011).
 
 I have made no changes to the signal logic or other ProtoView features (well, unless inadvertently). I do not have the competency to add support for TPMS transmitters that are not already supported by ProtoView, so please don't ask.
 
