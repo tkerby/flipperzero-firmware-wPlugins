@@ -23,5 +23,6 @@
 #include "auriol_ahfl.h"
 #include "kedsum_th.h"
 #include "emos_e601x.h"
+#include "solight_te44.h"
 
 extern const SubGhzProtocolRegistry weather_station_protocol_registry;
