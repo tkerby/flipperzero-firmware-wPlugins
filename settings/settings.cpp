@@ -11,22 +11,44 @@ FlipDownloaderSettings::~FlipDownloaderSettings()
     free();
 }
 
-void FlipDownloaderSettings::settings_item_selected_callback(void *context, uint32_t index)
-{
-    FlipDownloaderSettings *settings = (FlipDownloaderSettings *)context;
-    settings->settingsItemSelected(index);
-}
-
 uint32_t FlipDownloaderSettings::callbackToSubmenu(void *context)
 {
     UNUSED(context);
     return FlipDownloaderViewSubmenu;
 }
 
-uint32_t FlipDownloaderSettings::callback_to_settings(void *context)
+uint32_t FlipDownloaderSettings::callbackToSettings(void *context)
 {
     UNUSED(context);
     return FlipDownloaderViewSettings;
+}
+
+void FlipDownloaderSettings::free()
+{
+    // Free text input first
+    freeTextInput();
+
+    if (variable_item_list && view_dispatcher_ref && *view_dispatcher_ref)
+    {
+        view_dispatcher_remove_view(*view_dispatcher_ref, FlipDownloaderViewSettings);
+        variable_item_list_free(variable_item_list);
+        variable_item_list = nullptr;
+        variable_item_connect = nullptr;
+        variable_item_wifi_ssid = nullptr;
+        variable_item_wifi_pass = nullptr;
+    }
+}
+
+void FlipDownloaderSettings::freeTextInput()
+{
+    if (text_input && view_dispatcher_ref && *view_dispatcher_ref)
+    {
+        view_dispatcher_remove_view(*view_dispatcher_ref, FlipDownloaderViewTextInput);
+        uart_text_input_free(text_input);
+        text_input = nullptr;
+    }
+    text_input_buffer.reset();
+    text_input_temp_buffer.reset();
 }
 
 bool FlipDownloaderSettings::init(ViewDispatcher **view_dispatcher, void *appContext)
@@ -35,92 +57,46 @@ bool FlipDownloaderSettings::init(ViewDispatcher **view_dispatcher, void *appCon
     this->appContext = appContext;
 
     if (!easy_flipper_set_variable_item_list(&variable_item_list, FlipDownloaderViewSettings,
-                                             settings_item_selected_callback, callbackToSubmenu, view_dispatcher, this))
+                                             settingsItemSelectedCallback, callbackToSubmenu, view_dispatcher, this))
     {
         return false;
     }
 
     variable_item_wifi_ssid = variable_item_list_add(variable_item_list, "WiFi SSID", 1, nullptr, nullptr);
     variable_item_wifi_pass = variable_item_list_add(variable_item_list, "WiFi Password", 1, nullptr, nullptr);
+    variable_item_connect = variable_item_list_add(variable_item_list, "Connect", 1, nullptr, nullptr);
 
-    variable_item_set_current_value_text(variable_item_wifi_ssid, "");
-    variable_item_set_current_value_text(variable_item_wifi_pass, "");
+    char loaded_ssid[64];
+    char loaded_pass[64];
+    FlipDownloaderApp *app = static_cast<FlipDownloaderApp *>(appContext);
+    if (app->load_char("wifi_ssid", loaded_ssid, sizeof(loaded_ssid)))
+    {
+        variable_item_set_current_value_text(variable_item_wifi_ssid, loaded_ssid);
+    }
+    else
+    {
+        variable_item_set_current_value_text(variable_item_wifi_ssid, "");
+    }
+    if (app->load_char("wifi_pass", loaded_pass, sizeof(loaded_pass)))
+    {
+        variable_item_set_current_value_text(variable_item_wifi_pass, "*****");
+    }
+    else
+    {
+        variable_item_set_current_value_text(variable_item_wifi_pass, "");
+    }
+
+    variable_item_set_current_value_text(variable_item_connect, "");
 
     return true;
 }
 
-void FlipDownloaderSettings::free()
-{
-    // Free text input first
-    free_text_input();
-
-    if (variable_item_list && view_dispatcher_ref && *view_dispatcher_ref)
-    {
-        view_dispatcher_remove_view(*view_dispatcher_ref, FlipDownloaderViewSettings);
-        variable_item_list_free(variable_item_list);
-        variable_item_list = nullptr;
-        variable_item_wifi_ssid = nullptr;
-        variable_item_wifi_pass = nullptr;
-    }
-}
-
-// Text input callback wrappers
-void FlipDownloaderSettings::text_updated_ssid_callback(void *context)
-{
-    FlipDownloaderSettings *settings = (FlipDownloaderSettings *)context;
-    settings->text_updated(TextInputWiFiSSID);
-}
-
-void FlipDownloaderSettings::text_updated_pass_callback(void *context)
-{
-    FlipDownloaderSettings *settings = (FlipDownloaderSettings *)context;
-    settings->text_updated(TextInputWiFiPassword);
-}
-
-void FlipDownloaderSettings::text_updated(uint32_t view)
-{
-    // store the entered text
-    strncpy(text_input_buffer.get(), text_input_temp_buffer.get(), text_input_buffer_size);
-
-    // Ensure null-termination
-    text_input_buffer[text_input_buffer_size - 1] = '\0';
-
-    // app context
-    FlipDownloaderApp *app = static_cast<FlipDownloaderApp *>(appContext);
-
-    switch (view)
-    {
-    case TextInputWiFiSSID:
-        if (variable_item_wifi_ssid)
-        {
-            variable_item_set_current_value_text(variable_item_wifi_ssid, text_input_buffer.get());
-        }
-        app->save_char("wifi_ssid", text_input_buffer.get());
-        break;
-    case TextInputWiFiPassword:
-        if (variable_item_wifi_pass)
-        {
-            variable_item_set_current_value_text(variable_item_wifi_pass, text_input_buffer.get());
-        }
-        app->save_char("wifi_pass", text_input_buffer.get());
-        break;
-    default:
-        break;
-    }
-
-    // switch to the settings view
-    if (view_dispatcher_ref && *view_dispatcher_ref)
-    {
-        view_dispatcher_switch_to_view(*view_dispatcher_ref, FlipDownloaderViewSettings);
-    }
-}
-
-bool FlipDownloaderSettings::init_text_input(uint32_t view)
+bool FlipDownloaderSettings::initTextInput(uint32_t view)
 {
     // check if already initialized
     if (text_input_buffer || text_input_temp_buffer)
     {
-        FURI_LOG_E(TAG, "init_text_input: already initialized");
+        FURI_LOG_E(TAG, "initTextInput: already initialized");
         return false;
     }
 
@@ -139,7 +115,7 @@ bool FlipDownloaderSettings::init_text_input(uint32_t view)
     FlipDownloaderApp *app = static_cast<FlipDownloaderApp *>(appContext);
     char loaded[256];
 
-    if (view == TextInputWiFiSSID)
+    if (view == SettingsViewSSID)
     {
         if (app->load_char("wifi_ssid", loaded, sizeof(loaded)))
         {
@@ -150,11 +126,11 @@ bool FlipDownloaderSettings::init_text_input(uint32_t view)
             text_input_temp_buffer[0] = '\0'; // Ensure empty if not loaded
         }
         text_input_temp_buffer[text_input_buffer_size - 1] = '\0'; // Ensure null-termination
-        return easy_flipper_set_text_input(&text_input, FlipDownloaderViewTextInput,
-                                           "Enter SSID", text_input_temp_buffer.get(), text_input_buffer_size,
-                                           text_updated_ssid_callback, callback_to_settings, view_dispatcher_ref, this);
+        return easy_flipper_set_uart_text_input(&text_input, FlipDownloaderViewTextInput,
+                                                "Enter SSID", text_input_temp_buffer.get(), text_input_buffer_size,
+                                                textUpdatedSsidCallback, callbackToSettings, view_dispatcher_ref, this);
     }
-    else if (view == TextInputWiFiPassword)
+    else if (view == SettingsViewPassword)
     {
         if (app->load_char("wifi_pass", loaded, sizeof(loaded)))
         {
@@ -165,29 +141,53 @@ bool FlipDownloaderSettings::init_text_input(uint32_t view)
             text_input_temp_buffer[0] = '\0'; // Ensure empty if not loaded
         }
         text_input_temp_buffer[text_input_buffer_size - 1] = '\0'; // Ensure null-termination
-        return easy_flipper_set_text_input(&text_input, FlipDownloaderViewTextInput,
-                                           "Enter Password", text_input_temp_buffer.get(), text_input_buffer_size,
-                                           text_updated_pass_callback, callback_to_settings, view_dispatcher_ref, this);
+        return easy_flipper_set_uart_text_input(&text_input, FlipDownloaderViewTextInput,
+                                                "Enter Password", text_input_temp_buffer.get(), text_input_buffer_size,
+                                                textUpdatedPassCallback, callbackToSettings, view_dispatcher_ref, this);
     }
     return false;
 }
 
-void FlipDownloaderSettings::free_text_input()
+void FlipDownloaderSettings::settingsItemSelectedCallback(void *context, uint32_t index)
 {
-    if (text_input && view_dispatcher_ref && *view_dispatcher_ref)
-    {
-        view_dispatcher_remove_view(*view_dispatcher_ref, FlipDownloaderViewTextInput);
-        text_input_free(text_input);
-        text_input = nullptr;
-    }
-    text_input_buffer.reset();
-    text_input_temp_buffer.reset();
+    FlipDownloaderSettings *settings = (FlipDownloaderSettings *)context;
+    settings->settingsItemSelected(index);
 }
 
-bool FlipDownloaderSettings::start_text_input(uint32_t view)
+void FlipDownloaderSettings::settingsItemSelected(uint32_t index)
 {
-    free_text_input();
-    if (!init_text_input(view))
+    switch (index)
+    {
+    case SettingsViewSSID:
+    case SettingsViewPassword:
+        startTextInput(index);
+        break;
+    case SettingsViewConnect:
+    {
+        FlipDownloaderApp *app = static_cast<FlipDownloaderApp *>(appContext);
+        char loaded_ssid[64];
+        char loaded_pass[64];
+        if (!app->load_char("wifi_ssid", loaded_ssid, sizeof(loaded_ssid)) ||
+            !app->load_char("wifi_pass", loaded_pass, sizeof(loaded_pass)))
+        {
+            FURI_LOG_E(TAG, "WiFi credentials not set");
+            easy_flipper_dialog("No WiFi Credentials", "Please set your WiFi SSID\nand Password in Settings.");
+        }
+        else
+        {
+            app->sendWiFiCredentials(loaded_ssid, loaded_pass);
+        }
+    }
+    break;
+    default:
+        break;
+    };
+}
+
+bool FlipDownloaderSettings::startTextInput(uint32_t view)
+{
+    freeTextInput();
+    if (!initTextInput(view))
     {
         FURI_LOG_E(TAG, "Failed to initialize text input for view %lu", view);
         return false;
@@ -204,7 +204,53 @@ bool FlipDownloaderSettings::start_text_input(uint32_t view)
     }
 }
 
-void FlipDownloaderSettings::settingsItemSelected(uint32_t index)
+// Text input callback wrappers
+void FlipDownloaderSettings::textUpdatedSsidCallback(void *context)
 {
-    start_text_input(index);
+    FlipDownloaderSettings *settings = (FlipDownloaderSettings *)context;
+    settings->textUpdated(SettingsViewSSID);
+}
+
+void FlipDownloaderSettings::textUpdatedPassCallback(void *context)
+{
+    FlipDownloaderSettings *settings = (FlipDownloaderSettings *)context;
+    settings->textUpdated(SettingsViewPassword);
+}
+
+void FlipDownloaderSettings::textUpdated(uint32_t view)
+{
+    // store the entered text
+    strncpy(text_input_buffer.get(), text_input_temp_buffer.get(), text_input_buffer_size);
+
+    // Ensure null-termination
+    text_input_buffer[text_input_buffer_size - 1] = '\0';
+
+    // app context
+    FlipDownloaderApp *app = static_cast<FlipDownloaderApp *>(appContext);
+
+    switch (view)
+    {
+    case SettingsViewSSID:
+        if (variable_item_wifi_ssid)
+        {
+            variable_item_set_current_value_text(variable_item_wifi_ssid, text_input_buffer.get());
+        }
+        app->save_char("wifi_ssid", text_input_buffer.get());
+        break;
+    case SettingsViewPassword:
+        if (variable_item_wifi_pass)
+        {
+            variable_item_set_current_value_text(variable_item_wifi_pass, text_input_buffer.get());
+        }
+        app->save_char("wifi_pass", text_input_buffer.get());
+        break;
+    default:
+        break;
+    }
+
+    // switch to the settings view
+    if (view_dispatcher_ref && *view_dispatcher_ref)
+    {
+        view_dispatcher_switch_to_view(*view_dispatcher_ref, FlipDownloaderViewSettings);
+    }
 }

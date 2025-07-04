@@ -5,9 +5,17 @@ void FlipDownloaderApp::callbackSubmenuChoices(uint32_t index)
     switch (index)
     {
     case FlipDownloaderSubmenuRun:
+        // if the board is not connected, we can't use WiFi
         if (!isBoardConnected())
         {
             easy_flipper_dialog("FlipperHTTP Error", "Ensure your WiFi Developer\nBoard or Pico W is connected\nand the latest FlipperHTTP\nfirmware is installed.");
+            return;
+        }
+        // if we don't have WiFi credentials, we can't connect to WiFi in case
+        // we are not connected to WiFi yet
+        if (!hasWiFiCredentials())
+        {
+            easy_flipper_dialog("No WiFi Credentials", "Please set your WiFi SSID\nand Password in Settings.");
             return;
         }
         run = std::make_unique<FlipDownloaderRun>();
@@ -17,19 +25,12 @@ void FlipDownloaderApp::callbackSubmenuChoices(uint32_t index)
             run.reset();
             return;
         }
-        viewPort = view_port_alloc();
-        view_port_draw_callback_set(viewPort, viewPortDraw, this);
-        view_port_input_callback_set(viewPort, viewPortInput, this);
-        gui_add_view_port(gui, viewPort, GuiLayerFullscreen);
-
-        // Start the timer for game updates
-        if (!timer)
+        freeRunView(); // Free any previous run view resources
+        if (!initRunView())
         {
-            timer = furi_timer_alloc(timerCallback, FuriTimerTypePeriodic, this);
-        }
-        if (timer)
-        {
-            furi_timer_start(timer, 100); // Update every 100ms
+            FURI_LOG_E(TAG, "Failed to initialize run view");
+            run.reset();
+            return;
         }
         break;
     case FlipDownloaderSubmenuAbout:
@@ -72,6 +73,25 @@ void FlipDownloaderApp::createAppDataPath()
     snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data", APP_ID);
     storage_common_mkdir(storage, directory_path);
     furi_record_close(RECORD_STORAGE);
+}
+
+void FlipDownloaderApp::freeRunView()
+{
+    // Stop and free timer first
+    if (timer)
+    {
+        furi_timer_stop(timer);
+        furi_timer_free(timer);
+        timer = nullptr;
+    }
+
+    // Clean up viewport if it exists
+    if (gui && viewPort)
+    {
+        gui_remove_view_port(gui, viewPort);
+        view_port_free(viewPort);
+        viewPort = nullptr;
+    }
 }
 
 bool FlipDownloaderApp::httpDownloadFile(
@@ -139,6 +159,45 @@ bool FlipDownloaderApp::httpRequestAsync(
         return false;
     }
     flipperHttp->state = RECEIVING;
+    return true;
+}
+
+bool FlipDownloaderApp::hasWiFiCredentials()
+{
+    char ssid[64] = {0};
+    char password[64] = {0};
+    return load_char("wifi_ssid", ssid, sizeof(ssid)) &&
+           load_char("wifi_pass", password, sizeof(password)) &&
+           strlen(ssid) > 0 &&
+           strlen(password) > 0;
+}
+
+bool FlipDownloaderApp::initRunView()
+{
+    if (!gui)
+    {
+        FURI_LOG_E(TAG, "GUI is not initialized");
+        return false;
+    }
+    if (viewPort)
+    {
+        FURI_LOG_E(TAG, "ViewPort is already initialized");
+        return false;
+    }
+    viewPort = view_port_alloc();
+    view_port_draw_callback_set(viewPort, viewPortDraw, this);
+    view_port_input_callback_set(viewPort, viewPortInput, this);
+    gui_add_view_port(gui, viewPort, GuiLayerFullscreen);
+
+    // Start the timer for game updates
+    if (!timer)
+    {
+        timer = furi_timer_alloc(timerCallback, FuriTimerTypePeriodic, this);
+    }
+    if (timer)
+    {
+        furi_timer_start(timer, 100); // Update every 100ms
+    }
     return true;
 }
 
@@ -214,6 +273,21 @@ bool FlipDownloaderApp::save_char(const char *path_name, const char *value)
     storage_file_free(file);
     furi_record_close(RECORD_STORAGE);
     return true;
+}
+
+bool FlipDownloaderApp::sendWiFiCredentials(const char *ssid, const char *password)
+{
+    if (!flipperHttp)
+    {
+        FURI_LOG_E(TAG, "FlipperHTTP is not initialized");
+        return false;
+    }
+    if (!ssid || !password)
+    {
+        FURI_LOG_E(TAG, "SSID or Password is NULL");
+        return false;
+    }
+    return flipper_http_save_wifi(flipperHttp, ssid, password);
 }
 
 void FlipDownloaderApp::settings_item_selected_callback(void *context, uint32_t index)
@@ -331,21 +405,7 @@ FlipDownloaderApp::FlipDownloaderApp()
 
 FlipDownloaderApp::~FlipDownloaderApp()
 {
-    // Stop and free timer first
-    if (timer)
-    {
-        furi_timer_stop(timer);
-        furi_timer_free(timer);
-        timer = nullptr;
-    }
-
-    // Clean up viewport if it exists
-    if (gui && viewPort)
-    {
-        gui_remove_view_port(gui, viewPort);
-        view_port_free(viewPort);
-        viewPort = nullptr;
-    }
+    freeRunView();
 
     // Clean up run
     if (run)
