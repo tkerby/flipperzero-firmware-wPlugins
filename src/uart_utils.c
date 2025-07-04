@@ -266,15 +266,13 @@ void handle_uart_rx_data(uint8_t* buf, size_t len, void* context) {
 
 static int32_t uart_worker(void* context) {
     UartContext* uart = (UartContext*)context;
-    if (!uart) return -1;
+    if(!uart) return -1;
 
     FURI_LOG_I("Worker", "UART worker thread started");
 
     while(1) {
-        uint32_t events = furi_thread_flags_wait(
-            WORKER_ALL_RX_EVENTS, 
-            FuriFlagWaitAny, 
-            FuriWaitForever);
+        uint32_t events =
+            furi_thread_flags_wait(WORKER_ALL_RX_EVENTS, FuriFlagWaitAny, FuriWaitForever);
 
         FURI_LOG_D("Worker", "Received events: 0x%08lX", (unsigned long)events);
 
@@ -296,7 +294,8 @@ static int32_t uart_worker(void* context) {
 
         // Process PCAP data if stream is still valid
         if((events & WorkerEvtPcapDone) && uart->pcap_stream) {
-            size_t len = furi_stream_buffer_receive(uart->pcap_stream, uart->rx_buf, RX_BUF_SIZE, 0);
+            size_t len =
+                furi_stream_buffer_receive(uart->pcap_stream, uart->rx_buf, RX_BUF_SIZE, 0);
             FURI_LOG_D("Worker", "Processing pcap_stream data: %zu bytes", len);
 
             if(len > 0 && uart->handle_rx_pcap_cb) {
@@ -446,13 +445,13 @@ void uart_free(UartContext* uart) {
 
     // Now it's safe to free resources
     FURI_LOG_I("UART", "Freeing resources...");
-    
+
     // Free streams
     if(uart->rx_stream) {
         furi_stream_buffer_free(uart->rx_stream);
         uart->rx_stream = NULL;
     }
-    
+
     if(uart->pcap_stream) {
         furi_stream_buffer_free(uart->pcap_stream);
         uart->pcap_stream = NULL;
