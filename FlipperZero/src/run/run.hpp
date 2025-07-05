@@ -1,6 +1,8 @@
 #pragma once
 #include "easy_flipper/easy_flipper.h"
 #include "engine/engine.hpp"
+#include "run/general.hpp"
+#include "run/player.hpp"
 
 class FlipWorldApp;
 
@@ -12,6 +14,7 @@ private:
     bool inputHeld = false;             // Flag to check if input is held
     bool isGameRunning = false;         // Flag to check if the game is running
     InputKey lastInput = InputKeyMAX;   // Last input key pressed
+    std::unique_ptr<Player> player;     // Player instance
     bool shouldReturnToMenu = false;    // Flag to signal return to menu
     //
     int atoi(const char *nptr) { return (int)strtol(nptr, NULL, 10); } // convert string to integer
