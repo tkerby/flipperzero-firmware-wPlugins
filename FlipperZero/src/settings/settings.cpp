@@ -63,7 +63,9 @@ bool FlipWorldSettings::init(ViewDispatcher **view_dispatcher, void *appContext)
 
     variable_item_wifi_ssid = variable_item_list_add(variable_item_list, "WiFi SSID", 1, nullptr, nullptr);
     variable_item_wifi_pass = variable_item_list_add(variable_item_list, "WiFi Password", 1, nullptr, nullptr);
-    variable_item_connect = variable_item_list_add(variable_item_list, "Connect", 1, nullptr, nullptr);
+    variable_item_connect = variable_item_list_add(variable_item_list, "[Connect To WiFi]", 1, nullptr, nullptr);
+    variable_item_user_name = variable_item_list_add(variable_item_list, "User Name", 1, nullptr, nullptr);
+    variable_item_user_pass = variable_item_list_add(variable_item_list, "User Password", 1, nullptr, nullptr);
 
     char loaded_ssid[64];
     char loaded_pass[64];
@@ -85,6 +87,22 @@ bool FlipWorldSettings::init(ViewDispatcher **view_dispatcher, void *appContext)
         variable_item_set_current_value_text(variable_item_wifi_pass, "");
     }
     variable_item_set_current_value_text(variable_item_connect, "");
+    if (app->loadChar("user_name", loaded_ssid, sizeof(loaded_ssid)))
+    {
+        variable_item_set_current_value_text(variable_item_user_name, loaded_ssid);
+    }
+    else
+    {
+        variable_item_set_current_value_text(variable_item_user_name, "");
+    }
+    if (app->loadChar("user_pass", loaded_pass, sizeof(loaded_pass)))
+    {
+        variable_item_set_current_value_text(variable_item_user_pass, "*****");
+    }
+    else
+    {
+        variable_item_set_current_value_text(variable_item_user_pass, "");
+    }
 
     return true;
 }
@@ -143,6 +161,36 @@ bool FlipWorldSettings::initTextInput(uint32_t view)
                                                 "Enter Password", text_input_temp_buffer.get(), text_input_buffer_size,
                                                 textUpdatedPassCallback, callbackToSettings, view_dispatcher_ref, this);
     }
+    else if (view == SettingsViewUserName)
+    {
+        if (app->loadChar("user_name", loaded, sizeof(loaded)))
+        {
+            strncpy(text_input_temp_buffer.get(), loaded, text_input_buffer_size);
+        }
+        else
+        {
+            text_input_temp_buffer[0] = '\0'; // Ensure empty if not loaded
+        }
+        text_input_temp_buffer[text_input_buffer_size - 1] = '\0'; // Ensure null-termination
+        return easy_flipper_set_uart_text_input(&text_input, FlipWorldViewTextInput,
+                                                "Enter User Name", text_input_temp_buffer.get(), text_input_buffer_size,
+                                                textUpdatedUserNameCallback, callbackToSettings, view_dispatcher_ref, this);
+    }
+    else if (view == SettingsViewUserPass)
+    {
+        if (app->loadChar("user_pass", loaded, sizeof(loaded)))
+        {
+            strncpy(text_input_temp_buffer.get(), loaded, text_input_buffer_size);
+        }
+        else
+        {
+            text_input_temp_buffer[0] = '\0'; // Ensure empty if not loaded
+        }
+        text_input_temp_buffer[text_input_buffer_size - 1] = '\0'; // Ensure null-termination
+        return easy_flipper_set_uart_text_input(&text_input, FlipWorldViewTextInput,
+                                                "Enter User Password", text_input_temp_buffer.get(), text_input_buffer_size,
+                                                textUpdatedUserPassCallback, callbackToSettings, view_dispatcher_ref, this);
+    }
     return false;
 }
 
@@ -152,6 +200,8 @@ void FlipWorldSettings::settingsItemSelected(uint32_t index)
     {
     case SettingsViewSSID:
     case SettingsViewPassword:
+    case SettingsViewUserName:
+    case SettingsViewUserPass:
         startTextInput(index);
         break;
     case SettingsViewConnect:
@@ -229,6 +279,20 @@ void FlipWorldSettings::textUpdated(uint32_t view)
         }
         app->saveChar("wifi_pass", text_input_buffer.get());
         break;
+    case SettingsViewUserName:
+        if (variable_item_user_name)
+        {
+            variable_item_set_current_value_text(variable_item_user_name, text_input_buffer.get());
+        }
+        app->saveChar("user_name", text_input_buffer.get());
+        break;
+    case SettingsViewUserPass:
+        if (variable_item_user_pass)
+        {
+            variable_item_set_current_value_text(variable_item_user_pass, text_input_buffer.get());
+        }
+        app->saveChar("user_pass", text_input_buffer.get());
+        break;
     default:
         break;
     }
@@ -250,4 +314,16 @@ void FlipWorldSettings::textUpdatedPassCallback(void *context)
 {
     FlipWorldSettings *settings = (FlipWorldSettings *)context;
     settings->textUpdated(SettingsViewPassword);
+}
+
+void FlipWorldSettings::textUpdatedUserNameCallback(void *context)
+{
+    FlipWorldSettings *settings = (FlipWorldSettings *)context;
+    settings->textUpdated(SettingsViewUserName);
+}
+
+void FlipWorldSettings::textUpdatedUserPassCallback(void *context)
+{
+    FlipWorldSettings *settings = (FlipWorldSettings *)context;
+    settings->textUpdated(SettingsViewUserPass);
 }
