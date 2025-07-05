@@ -1,5 +1,6 @@
 #pragma once
 #include "easy_flipper/easy_flipper.h"
+#include "engine/engine.hpp"
 
 class FlipWorldApp;
 
