@@ -79,6 +79,7 @@ This is a list of metro cards and transit systems that need support or have part
 | **Opal**           | 🇦🇺 Sydney (and surrounds), NSW, Australia    | MIFARE DESFire    |
 | **Opus**           | 🇨🇦 Montreal, QC, Canada                      | Calypso           |
 | **Rav-Kav**        | 🇮🇱 Israel                                    | Calypso           |
+| **RENFE**          | 🇪🇸 Spain                                      | MIFARE Classic   |
 | **SmartRider**     | 🇦🇺 Perth, WA, Australia                      | MIFARE Classic    |
 | **Suica**          | 🇯🇵 Japan                                     | FeliCa            |
 | **Troika**         | 🇷🇺 Moscow, Russia                            | MIFARE Classic    |
@@ -99,6 +100,7 @@ This is a list of metro cards and transit systems that need support or have part
 - **Opal Parser:** [@gornekich](https://github.com/gornekich)
 - **Opus Parser:** [@DocSystem](https://github.com/docsystem)
 - **Rav-Kav Parser:** [@luu176](https://github.com/luu176)
+- **RENFE Parser:** [@BocamoCM](https://github.com/BocamoCM)
 - **Suica Parser:** [@ZinongLi](https://github.com/zinongli)
 - **Troika Parser:** [@gornekich](https://github.com/gornekich)
 
