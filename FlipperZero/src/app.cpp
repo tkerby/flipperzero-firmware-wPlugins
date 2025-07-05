@@ -109,6 +109,25 @@ void FlipWorldApp::callbackSubmenuChoices(uint32_t index)
     switch (index)
     {
     case FlipWorldSubmenuRun:
+        // if the board is not connected, we can't use WiFi
+        if (!isBoardConnected())
+        {
+            easy_flipper_dialog("FlipperHTTP Error", "Ensure your WiFi Developer\nBoard or Pico W is connected\nand the latest FlipperHTTP\nfirmware is installed.");
+            return;
+        }
+        // if we don't have WiFi credentials, we can't connect to WiFi in case
+        // we are not connected to WiFi yet
+        if (!hasWiFiCredentials())
+        {
+            easy_flipper_dialog("No WiFi Credentials", "Please set your WiFi SSID\nand Password in Settings.");
+            return;
+        }
+        // if we don't have user credentials, we can't get their user data
+        if (!hasUserCredentials())
+        {
+            easy_flipper_dialog("No User Credentials", "Please set your User Name\nand Password in Settings.");
+            return;
+        }
         run = std::make_unique<FlipWorldRun>();
         viewPort = view_port_alloc();
         view_port_draw_callback_set(viewPort, viewPortDraw, this);
@@ -159,6 +178,26 @@ void FlipWorldApp::createAppDataPath()
     snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data", APP_ID);
     storage_common_mkdir(storage, directory_path);
     furi_record_close(RECORD_STORAGE);
+}
+
+bool FlipWorldApp::hasWiFiCredentials()
+{
+    char ssid[64] = {0};
+    char password[64] = {0};
+    return loadChar("wifi_ssid", ssid, sizeof(ssid)) &&
+           loadChar("wifi_pass", password, sizeof(password)) &&
+           strlen(ssid) > 0 &&
+           strlen(password) > 0;
+}
+
+bool FlipWorldApp::hasUserCredentials()
+{
+    char userName[64] = {0};
+    char userPass[64] = {0};
+    return loadChar("user_name", userName, sizeof(userName)) &&
+           loadChar("user_pass", userPass, sizeof(userPass)) &&
+           strlen(userName) > 0 &&
+           strlen(userPass) > 0;
 }
 
 FuriString *FlipWorldApp::httpRequest(
