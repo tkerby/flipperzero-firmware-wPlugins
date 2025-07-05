@@ -1,6 +1,6 @@
 #include "app.hpp"
 
-HelloWorldApp::HelloWorldApp()
+FlipWorldApp::FlipWorldApp()
 {
     gui = static_cast<Gui *>(furi_record_open(RECORD_GUI));
 
@@ -12,16 +12,16 @@ HelloWorldApp::HelloWorldApp()
     }
 
     // Submenu
-    if (!easy_flipper_set_submenu(&submenu, HelloWorldViewSubmenu,
+    if (!easy_flipper_set_submenu(&submenu, FlipWorldViewSubmenu,
                                   VERSION_TAG, callbackExitApp, &viewDispatcher))
     {
         FURI_LOG_E(TAG, "Failed to allocate submenu");
         return;
     }
 
-    submenu_add_item(submenu, "Run", HelloWorldSubmenuRun, submenuChoicesCallback, this);
-    submenu_add_item(submenu, "About", HelloWorldSubmenuAbout, submenuChoicesCallback, this);
-    submenu_add_item(submenu, "Settings", HelloWorldSubmenuSettings, submenuChoicesCallback, this);
+    submenu_add_item(submenu, "Run", FlipWorldSubmenuRun, submenuChoicesCallback, this);
+    submenu_add_item(submenu, "About", FlipWorldSubmenuAbout, submenuChoicesCallback, this);
+    submenu_add_item(submenu, "Settings", FlipWorldSubmenuSettings, submenuChoicesCallback, this);
 
     flipperHttp = flipper_http_alloc();
     if (!flipperHttp)
@@ -33,10 +33,10 @@ HelloWorldApp::HelloWorldApp()
     createAppDataPath();
 
     // Switch to the submenu view
-    view_dispatcher_switch_to_view(viewDispatcher, HelloWorldViewSubmenu);
+    view_dispatcher_switch_to_view(viewDispatcher, FlipWorldViewSubmenu);
 }
 
-HelloWorldApp::~HelloWorldApp()
+FlipWorldApp::~FlipWorldApp()
 {
     // Stop and free timer first
     if (timer)
@@ -75,7 +75,7 @@ HelloWorldApp::~HelloWorldApp()
     // Free submenu
     if (submenu)
     {
-        view_dispatcher_remove_view(viewDispatcher, HelloWorldViewSubmenu);
+        view_dispatcher_remove_view(viewDispatcher, FlipWorldViewSubmenu);
         submenu_free(submenu);
     }
 
@@ -98,18 +98,18 @@ HelloWorldApp::~HelloWorldApp()
     }
 }
 
-uint32_t HelloWorldApp::callbackExitApp(void *context)
+uint32_t FlipWorldApp::callbackExitApp(void *context)
 {
     UNUSED(context);
     return VIEW_NONE;
 }
 
-void HelloWorldApp::callbackSubmenuChoices(uint32_t index)
+void FlipWorldApp::callbackSubmenuChoices(uint32_t index)
 {
     switch (index)
     {
-    case HelloWorldSubmenuRun:
-        run = std::make_unique<HelloWorldRun>();
+    case FlipWorldSubmenuRun:
+        run = std::make_unique<FlipWorldRun>();
         viewPort = view_port_alloc();
         view_port_draw_callback_set(viewPort, viewPortDraw, this);
         view_port_input_callback_set(viewPort, viewPortInput, this);
@@ -125,32 +125,32 @@ void HelloWorldApp::callbackSubmenuChoices(uint32_t index)
             furi_timer_start(timer, 100); // Update every 100ms
         }
         break;
-    case HelloWorldSubmenuAbout:
-        about = std::make_unique<HelloWorldAbout>();
+    case FlipWorldSubmenuAbout:
+        about = std::make_unique<FlipWorldAbout>();
         if (!about->init(&viewDispatcher, this))
         {
             FURI_LOG_E(TAG, "Failed to initialize about");
             about.reset();
             return;
         }
-        view_dispatcher_switch_to_view(viewDispatcher, HelloWorldViewAbout);
+        view_dispatcher_switch_to_view(viewDispatcher, FlipWorldViewAbout);
         break;
-    case HelloWorldSubmenuSettings:
-        settings = std::make_unique<HelloWorldSettings>();
+    case FlipWorldSubmenuSettings:
+        settings = std::make_unique<FlipWorldSettings>();
         if (!settings->init(&viewDispatcher, this))
         {
             FURI_LOG_E(TAG, "Failed to initialize settings");
             settings.reset();
             return;
         }
-        view_dispatcher_switch_to_view(viewDispatcher, HelloWorldViewSettings);
+        view_dispatcher_switch_to_view(viewDispatcher, FlipWorldViewSettings);
         break;
     default:
         break;
     }
 }
 
-void HelloWorldApp::createAppDataPath()
+void FlipWorldApp::createAppDataPath()
 {
     Storage *storage = static_cast<Storage *>(furi_record_open(RECORD_STORAGE));
     char directory_path[256];
@@ -161,7 +161,7 @@ void HelloWorldApp::createAppDataPath()
     furi_record_close(RECORD_STORAGE);
 }
 
-FuriString *HelloWorldApp::httpRequest(
+FuriString *FlipWorldApp::httpRequest(
     const char *url,
     HTTPMethod method,
     const char *headers,
@@ -169,7 +169,7 @@ FuriString *HelloWorldApp::httpRequest(
 {
     if (!flipperHttp)
     {
-        FURI_LOG_E(TAG, "HelloWorldApp::httpRequest: FlipperHTTP is NULL");
+        FURI_LOG_E(TAG, "FlipWorldApp::httpRequest: FlipperHTTP is NULL");
         return NULL;
     }
     snprintf(flipperHttp->file_path, sizeof(flipperHttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/temp.json", APP_ID);
@@ -177,7 +177,7 @@ FuriString *HelloWorldApp::httpRequest(
     flipperHttp->state = IDLE;
     if (!flipper_http_request(flipperHttp, method, url, headers, payload))
     {
-        FURI_LOG_E(TAG, "HelloWorldApp::httpRequest: Failed to send HTTP request");
+        FURI_LOG_E(TAG, "FlipWorldApp::httpRequest: Failed to send HTTP request");
         return NULL;
     }
     flipperHttp->state = RECEIVING;
@@ -188,7 +188,7 @@ FuriString *HelloWorldApp::httpRequest(
     return flipper_http_load_from_file(flipperHttp->file_path);
 }
 
-bool HelloWorldApp::httpRequestAsync(
+bool FlipWorldApp::httpRequestAsync(
     const char *saveLocation,
     const char *url,
     HTTPMethod method,
@@ -197,7 +197,7 @@ bool HelloWorldApp::httpRequestAsync(
 {
     if (!flipperHttp)
     {
-        FURI_LOG_E(TAG, "HelloWorldApp::httpRequestAsync: FlipperHTTP is NULL");
+        FURI_LOG_E(TAG, "FlipWorldApp::httpRequestAsync: FlipperHTTP is NULL");
         return false;
     }
     snprintf(flipperHttp->file_path, sizeof(flipperHttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/%s", APP_ID, saveLocation);
@@ -205,14 +205,14 @@ bool HelloWorldApp::httpRequestAsync(
     flipperHttp->state = IDLE;
     if (!flipper_http_request(flipperHttp, method, url, headers, payload))
     {
-        FURI_LOG_E(TAG, "HelloWorldApp::httpRequestAsync: Failed to send HTTP request");
+        FURI_LOG_E(TAG, "FlipWorldApp::httpRequestAsync: Failed to send HTTP request");
         return false;
     }
     flipperHttp->state = RECEIVING;
     return true;
 }
 
-bool HelloWorldApp::isBoardConnected()
+bool FlipWorldApp::isBoardConnected()
 {
     if (!flipperHttp)
     {
@@ -239,7 +239,7 @@ bool HelloWorldApp::isBoardConnected()
     return flipperHttp->last_response && strcmp(flipperHttp->last_response, "[PONG]") == 0;
 }
 
-bool HelloWorldApp::loadChar(const char *path_name, char *value, size_t value_size)
+bool FlipWorldApp::loadChar(const char *path_name, char *value, size_t value_size)
 {
     Storage *storage = static_cast<Storage *>(furi_record_open(RECORD_STORAGE));
     File *file = storage_file_alloc(storage);
@@ -271,7 +271,7 @@ bool HelloWorldApp::loadChar(const char *path_name, char *value, size_t value_si
     return strlen(value) > 0;
 }
 
-bool HelloWorldApp::loadFileChunk(const char *filePath, char *buffer, size_t sizeOfChunk, uint8_t iteration)
+bool FlipWorldApp::loadFileChunk(const char *filePath, char *buffer, size_t sizeOfChunk, uint8_t iteration)
 {
     if (!filePath || !buffer || sizeOfChunk == 0)
     {
@@ -351,12 +351,12 @@ bool HelloWorldApp::loadFileChunk(const char *filePath, char *buffer, size_t siz
     return read_count > 0;
 }
 
-void HelloWorldApp::runDispatcher()
+void FlipWorldApp::runDispatcher()
 {
     view_dispatcher_run(viewDispatcher);
 }
 
-bool HelloWorldApp::saveChar(const char *path_name, const char *value)
+bool FlipWorldApp::saveChar(const char *path_name, const char *value)
 {
     Storage *storage = static_cast<Storage *>(furi_record_open(RECORD_STORAGE));
     File *file = storage_file_alloc(storage);
@@ -371,7 +371,7 @@ bool HelloWorldApp::saveChar(const char *path_name, const char *value)
     return true;
 }
 
-bool HelloWorldApp::sendWiFiCredentials(const char *ssid, const char *password)
+bool FlipWorldApp::sendWiFiCredentials(const char *ssid, const char *password)
 {
     if (!flipperHttp)
     {
@@ -386,7 +386,7 @@ bool HelloWorldApp::sendWiFiCredentials(const char *ssid, const char *password)
     return flipper_http_save_wifi(flipperHttp, ssid, password);
 }
 
-bool HelloWorldApp::setHttpState(HTTPState state) noexcept
+bool FlipWorldApp::setHttpState(HTTPState state) noexcept
 {
     if (flipperHttp)
     {
@@ -396,7 +396,7 @@ bool HelloWorldApp::setHttpState(HTTPState state) noexcept
     return false;
 }
 
-void HelloWorldApp::settingsItemSelected(uint32_t index)
+void FlipWorldApp::settingsItemSelected(uint32_t index)
 {
     if (settings)
     {
@@ -404,15 +404,15 @@ void HelloWorldApp::settingsItemSelected(uint32_t index)
     }
 }
 
-void HelloWorldApp::submenuChoicesCallback(void *context, uint32_t index)
+void FlipWorldApp::submenuChoicesCallback(void *context, uint32_t index)
 {
-    HelloWorldApp *app = (HelloWorldApp *)context;
+    FlipWorldApp *app = (FlipWorldApp *)context;
     app->callbackSubmenuChoices(index);
 }
 
-void HelloWorldApp::timerCallback(void *context)
+void FlipWorldApp::timerCallback(void *context)
 {
-    HelloWorldApp *app = static_cast<HelloWorldApp *>(context);
+    FlipWorldApp *app = static_cast<FlipWorldApp *>(context);
     furi_check(app);
     auto run = app->run.get();
     if (run)
@@ -444,9 +444,9 @@ void HelloWorldApp::timerCallback(void *context)
     }
 }
 
-void HelloWorldApp::viewPortDraw(Canvas *canvas, void *context)
+void FlipWorldApp::viewPortDraw(Canvas *canvas, void *context)
 {
-    HelloWorldApp *app = static_cast<HelloWorldApp *>(context);
+    FlipWorldApp *app = static_cast<FlipWorldApp *>(context);
     furi_check(app);
     auto run = app->run.get();
     if (run)
@@ -473,9 +473,9 @@ void HelloWorldApp::viewPortDraw(Canvas *canvas, void *context)
         }
     }
 }
-void HelloWorldApp::viewPortInput(InputEvent *event, void *context)
+void FlipWorldApp::viewPortInput(InputEvent *event, void *context)
 {
-    HelloWorldApp *app = static_cast<HelloWorldApp *>(context);
+    FlipWorldApp *app = static_cast<FlipWorldApp *>(context);
     furi_check(app);
     auto run = app->run.get();
     if (run && run->isActive())
@@ -492,7 +492,7 @@ extern "C"
         UNUSED(p);
 
         // Create the app
-        HelloWorldApp app;
+        FlipWorldApp app;
 
         // Run the app
         app.runDispatcher();

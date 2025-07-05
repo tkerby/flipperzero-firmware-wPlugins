@@ -6,36 +6,36 @@
 #include "settings/settings.hpp"
 #include "about/about.hpp"
 
-#define TAG "Hello World"
+#define TAG "FlipWorld"
 #define VERSION "1.0"
 #define VERSION_TAG TAG " " VERSION
-#define APP_ID "hello_world"
+#define APP_ID "flip_world"
 
 typedef enum
 {
-    HelloWorldSubmenuRun = 0,
-    HelloWorldSubmenuAbout = 1,
-    HelloWorldSubmenuSettings = 2,
-} HelloWorldSubmenuIndex;
+    FlipWorldSubmenuRun = 0,
+    FlipWorldSubmenuAbout = 1,
+    FlipWorldSubmenuSettings = 2,
+} FlipWorldSubmenuIndex;
 
 typedef enum
 {
-    HelloWorldViewMain = 0,
-    HelloWorldViewSubmenu = 1,
-    HelloWorldViewAbout = 2,
-    HelloWorldViewSettings = 3,
-    HelloWorldViewTextInput = 4,
-} HelloWorldView;
+    FlipWorldViewMain = 0,
+    FlipWorldViewSubmenu = 1,
+    FlipWorldViewAbout = 2,
+    FlipWorldViewSettings = 3,
+    FlipWorldViewTextInput = 4,
+} FlipWorldView;
 
-class HelloWorldApp
+class FlipWorldApp
 {
 private:
-    std::unique_ptr<HelloWorldAbout> about;       // About class instance
-    FlipperHTTP *flipperHttp = nullptr;           // FlipperHTTP instance for HTTP requests
-    std::unique_ptr<HelloWorldRun> run;           // Run class instance
-    std::unique_ptr<HelloWorldSettings> settings; // Settings class instance
-    Submenu *submenu = nullptr;                   // Submenu for the app
-    FuriTimer *timer = nullptr;                   // Timer for run updates
+    std::unique_ptr<FlipWorldAbout> about;       // About class instance
+    FlipperHTTP *flipperHttp = nullptr;          // FlipperHTTP instance for HTTP requests
+    std::unique_ptr<FlipWorldRun> run;           // Run class instance
+    std::unique_ptr<FlipWorldSettings> settings; // Settings class instance
+    Submenu *submenu = nullptr;                  // Submenu for the app
+    FuriTimer *timer = nullptr;                  // Timer for run updates
     //
     static uint32_t callbackExitApp(void *context);                    // Callback to exit the app
     void callbackSubmenuChoices(uint32_t index);                       // Callback for submenu choices
@@ -45,8 +45,8 @@ private:
     static void timerCallback(void *context);                          // Timer callback for run updates
 
 public:
-    HelloWorldApp();
-    ~HelloWorldApp();
+    FlipWorldApp();
+    ~FlipWorldApp();
     //
     Gui *gui = nullptr;                       // GUI instance for the app
     ViewDispatcher *viewDispatcher = nullptr; // ViewDispatcher for managing views

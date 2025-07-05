@@ -1,7 +1,7 @@
 #pragma once
 #include "easy_flipper/easy_flipper.h"
 
-class HelloWorldApp;
+class FlipWorldApp;
 
 typedef enum
 {
@@ -10,7 +10,7 @@ typedef enum
     SettingsViewConnect = 2,
 } SettingsViewChoice;
 
-class HelloWorldSettings
+class FlipWorldSettings
 {
 private:
     void *appContext = nullptr;                      // reference to the app context
@@ -35,8 +35,8 @@ private:
     static void textUpdatedPassCallback(void *context);                      // callback for WiFi Password text update
 
 public:
-    HelloWorldSettings();
-    ~HelloWorldSettings();
+    FlipWorldSettings();
+    ~FlipWorldSettings();
 
     void free();                                                   // free the settings resources
     bool init(ViewDispatcher **view_dispatcher, void *appContext); // initialize the settings

@@ -1,23 +1,23 @@
 #include "run/run.hpp"
 #include "app.hpp"
 
-HelloWorldRun::HelloWorldRun()
+FlipWorldRun::FlipWorldRun()
 {
     // nothing to do
 }
 
-HelloWorldRun::~HelloWorldRun()
+FlipWorldRun::~FlipWorldRun()
 {
     // nothing to do
 }
 
-void HelloWorldRun::updateDraw(Canvas *canvas)
+void FlipWorldRun::updateDraw(Canvas *canvas)
 {
     canvas_clear(canvas);
     canvas_draw_str(canvas, 0, 10, "Hello World Run!");
 }
 
-void HelloWorldRun::updateInput(InputEvent *event)
+void FlipWorldRun::updateInput(InputEvent *event)
 {
     if (event->key == InputKeyBack)
     {
