@@ -28,6 +28,22 @@ void FlipWorldRun::debounceInput()
     }
 }
 
+void FlipWorldRun::endGame()
+{
+    shouldReturnToMenu = true;
+    isGameRunning = false;
+
+    if (engine)
+    {
+        engine->stop();
+    }
+
+    if (draw)
+    {
+        draw.reset();
+    }
+}
+
 void FlipWorldRun::inputManager()
 {
     static int inputHeldCounter = 0;

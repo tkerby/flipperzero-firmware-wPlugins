@@ -23,8 +23,11 @@ private:
 public:
     FlipWorldRun();
     ~FlipWorldRun();
+    //
+    void *appContext = nullptr;  // Pointer to the application context for accessing app-specific functionality
     bool shouldDebounce = false; // public for Player access
     //
+    void endGame();                                               // end the game and return to the submenu
     InputKey getCurrentInput() const { return lastInput; }        // Get the last input key pressed
     GameEngine *getEngine() const { return engine.get(); }        // Get the game engine instance
     Draw *getDraw() const { return draw.get(); }                  // Get the Draw instance

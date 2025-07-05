@@ -22,3 +22,55 @@ Player::~Player()
 {
     // nothing to clean up for now
 }
+
+bool Player::httpRequestIsFinished()
+{
+    if (!flipWorldRun)
+    {
+        return true; // Default to finished if no game context
+    }
+
+    // Get app context to check HTTP state
+    FlipWorldApp *app = static_cast<FlipWorldApp *>(flipWorldRun->appContext);
+    if (!app)
+    {
+        return true; // Default to finished if no app context
+    }
+
+    // Check if HTTP request is finished (state is IDLE)
+    return app->getHttpState() == IDLE;
+}
+
+HTTPState Player::getHttpState()
+{
+    if (!flipWorldRun)
+    {
+        return INACTIVE;
+    }
+
+    // Get app context to check HTTP state
+    FlipWorldApp *app = static_cast<FlipWorldApp *>(flipWorldRun->appContext);
+    if (!app)
+    {
+        return INACTIVE;
+    }
+
+    return app->getHttpState();
+}
+
+bool Player::setHttpState(HTTPState state)
+{
+    if (!flipWorldRun)
+    {
+        return false;
+    }
+
+    // Get app context to set HTTP state
+    FlipWorldApp *app = static_cast<FlipWorldApp *>(flipWorldRun->appContext);
+    if (!app)
+    {
+        return false;
+    }
+
+    return app->setHttpState(state);
+}

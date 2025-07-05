@@ -30,6 +30,17 @@ public:
     ~Player();
 
     char player_name[64] = {0};
+    //
+    uint8_t getCurrentGameState() const noexcept { return gameState; }
+    GameMainView getCurrentMainView() const { return currentMainView; }
+    HTTPState getHttpState();
+    bool httpRequestIsFinished();
+    void render(Draw *canvas, Game *game) override;
+    void setFlipWorldRun(FlipWorldRun *run) { flipWorldRun = run; }
+    void setGameState(GameState state) { gameState = state; }
+    bool setHttpState(HTTPState state);
+    void setInputKey(InputKey key) { lastInput = key; }
+    void update(Game *game) override;
 
 private:
     TitleIndex currentTitleIndex = TitleIndexStory; // current title index (must be in the GameViewTitle)
@@ -41,5 +52,5 @@ private:
     bool inputHeld = false;                         // whether input is held
     bool justStarted = true;                        // whether the player just started the game
     bool justSwitchedLevels = false;                // whether the player just switched levels
-    InputKey lastInput = InputKeyMAX;               // Last input key
+    InputKey lastInput = InputKeyMAX;               // Last input key pressed
 };
