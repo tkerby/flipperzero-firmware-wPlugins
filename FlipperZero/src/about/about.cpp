@@ -30,5 +30,5 @@ bool FlipWorldAbout::init(ViewDispatcher **viewDispatcher, void *appContext)
 {
     viewDispatcherRef = viewDispatcher;
     this->appContext = appContext;
-    return easy_flipper_set_widget(&widget, FlipWorldViewAbout, "Simple C++ Flipper app\n\n\n\n\nwww.github.com/jblanked", callbackToSubmenu, viewDispatcherRef);
+    return easy_flipper_set_widget(&widget, FlipWorldViewAbout, "The first open world\nmultiplayer game on the\nFlipper Zero.\n\n\nwww.github.com/jblanked", callbackToSubmenu, viewDispatcherRef);
 }
