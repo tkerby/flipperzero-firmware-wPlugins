@@ -920,40 +920,40 @@ static void renfe_sum10_parse_history_entry(FuriString* parsed_data, const uint8
     // Interpret transaction type
     switch(transaction_type) {
         case 0x13:
-            furi_string_cat_printf(parsed_data, "🟢 Entry");
+            furi_string_cat_printf(parsed_data, "Entry");
             break;
         case 0x1A:
-            furi_string_cat_printf(parsed_data, "🔴 Exit");
+            furi_string_cat_printf(parsed_data, "Exit");
             break;
         case 0x1E:
-            furi_string_cat_printf(parsed_data, "🔄 Transfer");
+            furi_string_cat_printf(parsed_data, "Transfer");
             break;
         case 0x16:
-            furi_string_cat_printf(parsed_data, "✅ Validation");
+            furi_string_cat_printf(parsed_data, "Validation");
             break;
         case 0x17:
-            furi_string_cat_printf(parsed_data, "👮 Inspection");
+            furi_string_cat_printf(parsed_data, "Inspection");
             break;
         case 0x23:
-            furi_string_cat_printf(parsed_data, "💰 Discount");
+            furi_string_cat_printf(parsed_data, "Discount");
             break;
         case 0x2A:
-            furi_string_cat_printf(parsed_data, "⚠️ Penalty");
+            furi_string_cat_printf(parsed_data, "Penalty");
             break;
         case 0x33:
-            furi_string_cat_printf(parsed_data, "💳 Top-up");
+            furi_string_cat_printf(parsed_data, "Top-up");
             break;
         case 0x3A:
-            furi_string_cat_printf(parsed_data, "💸 Charge");
+            furi_string_cat_printf(parsed_data, "Charge");
             break;
         case 0x18:
-            furi_string_cat_printf(parsed_data, "🔍 Check");
+            furi_string_cat_printf(parsed_data, "Check");
             break;
         case 0x2B:
-            furi_string_cat_printf(parsed_data, "⭐ Special");
+            furi_string_cat_printf(parsed_data, "Special");
             break;
         default:
-            furi_string_cat_printf(parsed_data, "❓ Unknown (0x%02X)", transaction_type);
+            furi_string_cat_printf(parsed_data, "Unknown (0x%02X)", transaction_type);
             break;
     }
     // Add station information
