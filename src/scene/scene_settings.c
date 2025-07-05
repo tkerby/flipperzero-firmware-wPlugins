@@ -1,4 +1,4 @@
-#include "cuberzero.h"
+#include "src/cuberzero.h"
 
 typedef enum {
 	CUBERZERO_SCENE_SETTINGS_CUBE

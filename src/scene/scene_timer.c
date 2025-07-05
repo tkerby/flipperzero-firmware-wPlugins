@@ -1,6 +1,6 @@
 #include <furi_hal_light.h>
-#include "cuberzero.h"
-#include "scramble/puzzle.h"
+#include "src/cuberzero.h"
+#include "src/scramble/puzzle.h"
 #include <gui/elements.h>
 
 struct ViewDispatcher {
