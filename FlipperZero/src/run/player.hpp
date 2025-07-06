@@ -13,11 +13,8 @@ typedef enum
 {
     GameViewTitle = 0,        // story, pvp, and pve (menu)
     GameViewSystemMenu = 1,   // profile, settings (menu)
-    GameViewStory = 2,        // story mode
-    GameViewPvP = 3,          // pvp mode
-    GameViewPvE = 4,          // pve mode
-    GameViewWelcome = 5,      // welcome view
-    GameViewLogin = 6,        // login view
+    GameViewGame = 2,         // story mode
+    GameViewLogin = 3,        // login view
     GameViewRegistration = 7, // registration view
     GameViewUserInfo = 8      // user info view
 } GameMainView;
@@ -38,6 +35,7 @@ public:
     TitleIndex getCurrentTitleIndex() const noexcept { return currentTitleIndex; }
     HTTPState getHttpState();
     bool httpRequestIsFinished();
+    void processInput();
     void render(Draw *canvas, Game *game) override;
     void setFlipWorldRun(FlipWorldRun *run) { flipWorldRun = run; }
     void setGameState(GameState state) { gameState = state; }
@@ -47,17 +45,23 @@ public:
     void update(Game *game) override;
 
 private:
-    TitleIndex currentTitleIndex = TitleIndexStory; // current title index (must be in the GameViewTitle)
-    FlipWorldRun *flipWorldRun = nullptr;           // Reference to the main run instance
-    MenuIndex currentMenuIndex = MenuIndexProfile;  // current menu index (must be in the GameViewSystemMenu)
-    GameMainView currentMainView = GameViewWelcome; // current main view of the game
-    GameState gameState = GameStatePlaying;         // current game state
-    bool hasBeenPositioned = false;                 // Track if player has been positioned to prevent repeated resets
-    bool inputHeld = false;                         // whether input is held
-    bool justStarted = true;                        // whether the player just started the game
-    bool justSwitchedLevels = false;                // whether the player just switched levels
-    InputKey lastInput = InputKeyMAX;               // Last input key pressed
-    ToggleState leaveGame = ToggleOff;              // leave game toggle state
+    TitleIndex currentTitleIndex = TitleIndexStory;      // current title index (must be in the GameViewTitle)
+    FlipWorldRun *flipWorldRun = nullptr;                // Reference to the main run instance
+    MenuIndex currentSystemMenuIndex = MenuIndexProfile; // current menu index (must be in the GameViewSystemMenu)
+    GameMainView currentMainView = GameViewTitle;        // current main view of the game
+    GameState gameState = GameStatePlaying;              // current game state
+    bool hasBeenPositioned = false;                      // Track if player has been positioned to prevent repeated resets
+    bool inputHeld = false;                              // whether input is held
+    bool justStarted = true;                             // whether the player just started the game
+    bool justSwitchedLevels = false;                     // whether the player just switched levels
+    InputKey lastInput = InputKeyMAX;                    // Last input key pressed
+    ToggleState leaveGame = ToggleOff;                   // leave game toggle state
+    uint8_t rainFrame = 0;                               // frame counter for rain effect
 
-    void drawTitleView(Draw *canvas); // draw the title view
+    void drawRainEffect(Draw *canvas);            // draw the rain effect
+    void drawSystemMenuView(Draw *canvas);        // draw the system menu view
+    void drawTitleView(Draw *canvas);             // draw the title view
+    void drawUsername(Vector pos, Game *game);    // draw the username at the specified position
+    void drawUserStats(Vector pos, Draw *canvas); // draw the user stats at the specified position
+    void updateStats();                           // update player stats
 };
