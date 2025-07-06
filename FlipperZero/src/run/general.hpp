@@ -1,11 +1,12 @@
 #pragma once
 #include <furi.h>
 
+#define constrain(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
+
 typedef enum
 {
     TitleIndexStory = 0, // switch to story mode
-    TitleIndexPvP = 1,   // switch to PvP mode
-    TitleIndexPvE = 2,   // switch to PvE mode
+    TitleIndexPvE = 1,   // switch to PvE mode
 } TitleIndex;
 
 typedef enum
@@ -30,6 +31,7 @@ typedef enum
 
 typedef enum
 {
+    LevelUnknown = -1,    // Unknown level
     LevelHomeWoods = 0,   // Home Woods level
     LevelRockWorld = 1,   // Rock World level
     LevelForestWorld = 2, // Forest World level
