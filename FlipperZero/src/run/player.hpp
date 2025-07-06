@@ -5,16 +5,17 @@
 #include "engine/level.hpp"
 #include "flipper_http/flipper_http.h"
 #include <furi.h>
+#include "run/assets.hpp"
 #include "run/general.hpp"
 #include "run/loading.hpp"
 
 typedef enum
 {
-    GameViewTitle = 0,        // title, start, and menu (menu)
-    GameViewSystemMenu = 1,   // profile, settings, about (menu)
-    GameViewLobbyMenu = 2,    // local or online (menu)
-    GameViewGameLocal = 3,    // game view local (gameplay)
-    GameViewGameOnline = 4,   // game view online (gameplay)
+    GameViewTitle = 0,        // story, pvp, and pve (menu)
+    GameViewSystemMenu = 1,   // profile, settings (menu)
+    GameViewStory = 2,        // story mode
+    GameViewPvP = 3,          // pvp mode
+    GameViewPvE = 4,          // pve mode
     GameViewWelcome = 5,      // welcome view
     GameViewLogin = 6,        // login view
     GameViewRegistration = 7, // registration view
@@ -31,8 +32,10 @@ public:
 
     char player_name[64] = {0};
     //
-    uint8_t getCurrentGameState() const noexcept { return gameState; }
+    void drawCurrentView(Draw *canvas);
+    GameState getCurrentGameState() const noexcept { return gameState; }
     GameMainView getCurrentMainView() const { return currentMainView; }
+    TitleIndex getCurrentTitleIndex() const noexcept { return currentTitleIndex; }
     HTTPState getHttpState();
     bool httpRequestIsFinished();
     void render(Draw *canvas, Game *game) override;
@@ -40,6 +43,7 @@ public:
     void setGameState(GameState state) { gameState = state; }
     bool setHttpState(HTTPState state);
     void setInputKey(InputKey key) { lastInput = key; }
+    bool shouldLeaveGame() const noexcept { return leaveGame == ToggleOn; }
     void update(Game *game) override;
 
 private:
@@ -53,4 +57,7 @@ private:
     bool justStarted = true;                        // whether the player just started the game
     bool justSwitchedLevels = false;                // whether the player just switched levels
     InputKey lastInput = InputKeyMAX;               // Last input key pressed
+    ToggleState leaveGame = ToggleOff;              // leave game toggle state
+
+    void drawTitleView(Draw *canvas); // draw the title view
 };
