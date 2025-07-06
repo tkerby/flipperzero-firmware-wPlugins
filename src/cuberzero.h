@@ -75,8 +75,8 @@ typedef enum {
 	CUBERZERO_SCENE_CUBE_SELECT,
 	CUBERZERO_SCENE_HOME,
 	CUBERZERO_SCENE_SETTINGS,
-	CUBERZERO_SCENE_TIMER,
 	CUBERZERO_SCENE_TIMER_OPTIONS,
+	CUBERZERO_SCENE_TIMER,
 	COUNT_CUBERZEROSCENE
 } CUBERZEROSCENE;
 
@@ -99,10 +99,10 @@ bool SceneHomeEvent(const PCUBERZERO instance, const SceneManagerEvent event);
 void SceneSettingsEnter(const PCUBERZERO instance);
 void SceneSettingsExit(const PCUBERZERO instance);
 void SceneTimerTick(const PCUBERZERO instance);
+void SceneTimerOptionsEnter(const PCUBERZERO instance);
 void SceneTimerEnter(const PCUBERZERO instance);
 void SceneTimerDraw(Canvas* const canvas, const PCUBERZERO instance);
 void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance);
-void SceneTimerOptionsEnter(const PCUBERZERO instance);
 #ifdef __cplusplus
 }
 #endif

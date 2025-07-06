@@ -180,7 +180,7 @@ void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
 			switch(event->key) {
 			case InputKeyUp:
 				instance->scene.timer.nextScene = 1;
-				instance->scene.timer.nextSceneIdentifier = CUBERZERO_SCENE_ABOUT;
+				instance->scene.timer.nextSceneIdentifier = CUBERZERO_SCENE_TIMER_OPTIONS;
 				furi_message_queue_put(instance->scene.timer.queue, event, FuriWaitForever);
 				break;
 			case InputKeyBack:

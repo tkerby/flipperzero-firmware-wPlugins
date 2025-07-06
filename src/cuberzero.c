@@ -91,7 +91,7 @@ int32_t cuberzeroMain(const void* const pointer) {
 		goto freeWidget;
 	}
 
-	const AppSceneOnEnterCallback onEnter[] = {(AppSceneOnEnterCallback) SceneAboutEnter, (AppSceneOnEnterCallback) SceneCubeSelectEnter, (AppSceneOnEnterCallback) SceneHomeEnter, (AppSceneOnEnterCallback) SceneSettingsEnter, (AppSceneOnEnterCallback) SceneTimerEnter, (AppSceneOnEnterCallback) SceneTimerOptionsEnter};
+	const AppSceneOnEnterCallback onEnter[] = {(AppSceneOnEnterCallback) SceneAboutEnter, (AppSceneOnEnterCallback) SceneCubeSelectEnter, (AppSceneOnEnterCallback) SceneHomeEnter, (AppSceneOnEnterCallback) SceneSettingsEnter, (AppSceneOnEnterCallback) SceneTimerOptionsEnter, (AppSceneOnEnterCallback) SceneTimerEnter};
 	const AppSceneOnEventCallback onEvent[] = {callbackEmptyEvent, (AppSceneOnEventCallback) SceneCubeSelectEvent, (AppSceneOnEventCallback) SceneHomeEvent, callbackEmptyEvent, callbackEmptyEvent, callbackEmptyEvent};
 	const AppSceneOnExitCallback onExit[] = {callbackEmptyExit, callbackEmptyExit, callbackEmptyExit, (AppSceneOnExitCallback) SceneSettingsExit, callbackEmptyExit, callbackEmptyExit};
 	const SceneManagerHandlers handlers = {onEnter, onEvent, onExit, COUNT_CUBERZEROSCENE};
