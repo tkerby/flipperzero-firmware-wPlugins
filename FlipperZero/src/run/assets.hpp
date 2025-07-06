@@ -1,4 +1,5 @@
 #pragma once
+#include <furi.h>
 
 /*
     Player sprites
