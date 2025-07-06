@@ -29,6 +29,35 @@ void FlipWorldRun::debounceInput()
     }
 }
 
+LevelIndex FlipWorldRun::getCurrentLevelIndex() const
+{
+    if (!engine)
+    {
+        FURI_LOG_E("FlipWorldRun", "Engine is not initialized");
+        return LevelUnknown;
+    }
+    auto currentLevel = engine->getGame()->current_level;
+    if (!currentLevel)
+    {
+        FURI_LOG_E("FlipWorldRun", "Current level is not set");
+        return LevelUnknown;
+    }
+    if (strcmp(currentLevel->name, "Home Woods") == 0)
+    {
+        return LevelHomeWoods;
+    }
+    if (strcmp(currentLevel->name, "Rock World") == 0)
+    {
+        return LevelRockWorld;
+    }
+    if (strcmp(currentLevel->name, "Forest World") == 0)
+    {
+        return LevelForestWorld;
+    }
+    FURI_LOG_E("FlipWorldRun", "Unknown level name: %s", currentLevel->name);
+    return LevelUnknown;
+}
+
 std::unique_ptr<Level> FlipWorldRun::getLevel(LevelIndex index) const
 {
     std::unique_ptr<Level> level = std::make_unique<Level>(getLevelName(index), Vector(768, 384), engine->getGame());
@@ -52,8 +81,20 @@ std::unique_ptr<Level> FlipWorldRun::getLevel(LevelIndex index) const
         level->entity_add(std::make_unique<Sprite>("Funny NPC", ENTITY_NPC, Vector(350, 180), Vector(350, 180), Vector(1.0f, 2.0f), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f).release());
         break;
     case LevelRockWorld:
+        level->entity_add(std::make_unique<Sprite>("Ghost", ENTITY_ENEMY, Vector(180, 80), Vector(160, 80), Vector(1.0f, 2.0f), 1.0f, 32.0f, 0.5f, 10.0f, 100.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Ogre", ENTITY_ENEMY, Vector(220, 140), Vector(200, 140), Vector(1.0f, 2.0f), 1.5f, 20.0f, 1.0f, 10.0f, 100.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Cyclops", ENTITY_ENEMY, Vector(400, 200), Vector(450, 200), Vector(1.0f, 2.0f), 2.0f, 15.0f, 1.2f, 20.0f, 200.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Ogre", ENTITY_ENEMY, Vector(600, 150), Vector(580, 150), Vector(1.0f, 2.0f), 1.8f, 28.0f, 1.0f, 40.0f, 400.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Ghost", ENTITY_ENEMY, Vector(500, 250), Vector(480, 250), Vector(1.0f, 2.0f), 1.2f, 30.0f, 0.6f, 10.0f, 100.0f).release());
         break;
     case LevelForestWorld:
+        level->entity_add(std::make_unique<Sprite>("Ghost", ENTITY_ENEMY, Vector(50, 120), Vector(100, 120), Vector(1.0f, 2.0f), 1.0f, 30.0f, 0.5f, 10.0f, 100.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Cyclops", ENTITY_ENEMY, Vector(300, 60), Vector(250, 60), Vector(1.0f, 2.0f), 1.5f, 20.0f, 0.8f, 30.0f, 300.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Ogre", ENTITY_ENEMY, Vector(400, 200), Vector(450, 200), Vector(1.0f, 2.0f), 1.7f, 15.0f, 1.0f, 10.0f, 100.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Ghost", ENTITY_ENEMY, Vector(700, 150), Vector(650, 150), Vector(1.0f, 2.0f), 1.2f, 25.0f, 0.6f, 10.0f, 100.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Cyclops", ENTITY_ENEMY, Vector(200, 300), Vector(250, 300), Vector(1.0f, 2.0f), 2.0f, 18.0f, 0.9f, 20.0f, 200.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Ogre", ENTITY_ENEMY, Vector(300, 300), Vector(350, 300), Vector(1.0f, 2.0f), 1.5f, 15.0f, 1.2f, 50.0f, 500.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Ghost", ENTITY_ENEMY, Vector(500, 200), Vector(550, 200), Vector(1.0f, 2.0f), 1.3f, 20.0f, 0.7f, 40.0f, 400.0f).release());
         break;
     default:
         break;
@@ -80,16 +121,6 @@ std::unique_ptr<Level> FlipWorldRun::getLevel(LevelIndex index) const
         {"i": "tree", "x": 735, "y": 37, "a": 18, "h": false},
         {"i": "tree", "x": 752, "y": 37, "a": 18, "h": false}
   ],
-  "enemy_data": [
-    {"id": "cyclops", "index": 0, "start_position": {"x": 350, "y": 210}, "end_position": {"x": 390, "y": 210}, "move_timer": 2, "speed": 30, "attack_timer": 0.4, "strength": 10, "health": 100},
-     {"id": "ogre", "index": 1, "start_position": {"x": 200, "y": 320}, "end_position": {"x": 220, "y": 320}, "move_timer": 0.5, "speed": 45, "attack_timer": 0.6, "strength": 20, "health": 200},
-    {"id": "ghost", "index": 2, "start_position": {"x": 100, "y": 80}, "end_position": {"x": 180, "y": 85}, "move_timer": 2.2, "speed": 55, "attack_timer": 0.5, "strength": 30, "health": 300},
-    {"id": "ogre", "index": 3, "start_position": {"x": 400, "y": 50}, "end_position": {"x": 490, "y": 50}, "move_timer": 1.7, "speed": 35, "attack_timer": 1.0, "strength": 20, "health": 200}
-  ],
-"npc_data": [
-    {"id": "funny", "index": 0, "start_position": {"x": 350, "y": 180}, "end_position": {"x": 350, "y": 180}, "move_timer": 0, "speed": 0, "message": "Hello there!"}
- ]
-}
     */
     /*
     {
@@ -113,14 +144,6 @@ std::unique_ptr<Level> FlipWorldRun::getLevel(LevelIndex index) const
      {"i": "tree", "x": 50, "y": 300, "a": 10, "h": true},
      {"i": "flower", "x": 350, "y": 100, "a": 7, "h": true}
    ],
-   "enemy_data": [
-     {"id": "ghost", "index": 0, "start_position": {"x": 180, "y": 80}, "end_position": {"x": 160, "y": 80}, "move_timer": 1, "speed": 32, "attack_timer": 0.5, "strength": 10, "health": 100},
-     {"id": "ogre", "index": 1, "start_position": {"x": 220, "y": 140}, "end_position": {"x": 200, "y": 140}, "move_timer": 1.5, "speed": 20, "attack_timer": 1, "strength": 10, "health": 100},
-     {"id": "cyclops", "index": 2, "start_position": {"x": 400, "y": 200}, "end_position": {"x": 450, "y": 200}, "move_timer": 2, "speed": 15, "attack_timer": 1.2, "strength": 20, "health": 200},
-     {"id": "ogre", "index": 3, "start_position": {"x": 600, "y": 150}, "end_position": {"x": 580, "y": 150}, "move_timer": 1.8, "speed": 28, "attack_timer": 1, "strength": 40, "health": 400},
-     {"id": "ghost", "index": 4, "start_position": {"x": 500, "y": 250}, "end_position": {"x": 480, "y": 250}, "move_timer": 1.2, "speed": 30, "attack_timer": 0.6, "strength": 10, "health": 100}
-   ]
- }
     */
 
     /*
@@ -146,15 +169,6 @@ std::unique_ptr<Level> FlipWorldRun::getLevel(LevelIndex index) const
          {"i": "tree", "x": 735, "y": 37, "a": 18, "h": false},
          {"i": "tree", "x": 752, "y": 37, "a": 18, "h": false}
    ],
-   "enemy_data": [
-     {"id": "ghost", "index": 0, "start_position": {"x": 50, "y": 120}, "end_position": {"x": 100, "y": 120}, "move_timer": 1, "speed": 30, "attack_timer": 0.5, "strength": 10, "health": 100},
-     {"id": "cyclops", "index": 1, "start_position": {"x": 300, "y": 60}, "end_position": {"x": 250, "y": 60}, "move_timer": 1.5, "speed": 20, "attack_timer": 0.8, "strength": 30, "health": 300},
-     {"id": "ogre", "index": 2, "start_position": {"x": 400, "y": 200}, "end_position": {"x": 450, "y": 200}, "move_timer": 1.7, "speed": 15, "attack_timer": 1, "strength": 10, "health": 100},
-     {"id": "ghost", "index": 3, "start_position": {"x": 700, "y": 150}, "end_position": {"x": 650, "y": 150}, "move_timer": 1.2, "speed": 25, "attack_timer": 0.6, "strength": 10, "health": 100},
-     {"id": "cyclops", "index": 4, "start_position": {"x": 200, "y": 300}, "end_position": {"x": 250, "y": 300}, "move_timer": 2, "speed": 18, "attack_timer": 0.9, "strength": 20, "health": 200},
-     {"id": "ogre", "index": 5, "start_position": {"x": 300, "y": 300}, "end_position": {"x": 350, "y": 300}, "move_timer": 1.5, "speed": 15, "attack_timer": 1.2, "strength": 50, "health": 500},
-     {"id": "ghost", "index": 6, "start_position": {"x": 500, "y": 200}, "end_position": {"x": 550, "y": 200}, "move_timer": 1.3, "speed": 20, "attack_timer": 0.7, "strength": 40, "health": 400}
-   ]
  }
     */
     return level;
@@ -214,10 +228,18 @@ void FlipWorldRun::inputManager()
     {
         debounceInput();
     }
+
+    // Pass input to player for processing
+    if (player)
+    {
+        player->setInputKey(lastInput);
+        player->processInput();
+    }
 }
 
-bool FlipWorldRun::startGame()
+bool FlipWorldRun::startGame(TitleIndex titleIndex)
 {
+    UNUSED(titleIndex); // Currently not used, will be used for different game modes
     draw->fillScreen(ColorWhite);
     draw->text(Vector(0, 10), "Initializing game...", ColorBlack);
 
@@ -277,6 +299,7 @@ bool FlipWorldRun::startGame()
     draw->text(Vector(0, 10), "Starting game engine...", ColorBlack);
 
     isGameRunning = true; // Set the flag to indicate game is running
+    FURI_LOG_I("FlipWorldRun", "Game started successfully");
     return true;
 }
 

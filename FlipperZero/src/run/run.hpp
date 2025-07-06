@@ -31,12 +31,13 @@ public:
     InputKey getCurrentInput() const { return lastInput; }        // Get the last input key pressed
     GameEngine *getEngine() const { return engine.get(); }        // Get the game engine instance
     Draw *getDraw() const { return draw.get(); }                  // Get the Draw instance
+    LevelIndex getCurrentLevelIndex() const;                      // Get the current level index
     std::unique_ptr<Level> getLevel(LevelIndex index) const;      // Get a level by index
     const char *getLevelName(LevelIndex index) const;             // Get the name of a level by index
     bool isActive() const { return shouldReturnToMenu == false; } // Check if the game is active
     bool isRunning() const { return isGameRunning; }              // Check if the game engine is running
     void resetInput() { lastInput = InputKeyMAX; }                // Reset input after processing
-    bool startGame();                                             // start the actual game
+    bool startGame(TitleIndex titleIndex);                        // start the actual game
     void updateDraw(Canvas *canvas);                              // update and draw the run
     void updateInput(InputEvent *event);                          // update input for the run
 };
