@@ -1276,6 +1276,8 @@ const char *FlipDownloaderRun::getAppCategory(FlipperAppCategory category)
     case CategoryRFID:
         return "RFID";
     case CategorySubGHz:
+        return "Sub-GHz";
+    case CategoryTools:
         return "Tools";
     case CategoryUSB:
         return "USB";
