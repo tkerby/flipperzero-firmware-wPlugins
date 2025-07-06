@@ -6,7 +6,7 @@
 #include "jsmn/jsmn.h"
 #include <math.h>
 
-Player::Player() : Entity("Player", ENTITY_PLAYER, Vector(384, 192), Vector(15, 11), player_left_axe_15x11px, player_left_axe_15x11px, player_right_axe_15x11px)
+Player::Player() : Entity("Player", ENTITY_PLAYER, Vector(384, 192), Vector(15, 11), player_left_sword_15x11px, player_left_sword_15x11px, player_right_sword_15x11px)
 {
     is_player = true;                                        // Mark this entity as a player (so level doesn't delete it)
     end_position = Vector(384, 192);                         // Initialize end position
@@ -42,8 +42,6 @@ void Player::drawCurrentView(Draw *canvas)
         // In-game view, render the game engine
         if (flipWorldRun->isRunning())
         {
-            FURI_LOG_I("Player", "Running game engine...");
-            canvas->fillScreen(ColorBlack);
             if (flipWorldRun->getEngine())
             {
                 if (shouldLeaveGame())
@@ -54,7 +52,7 @@ void Player::drawCurrentView(Draw *canvas)
                 flipWorldRun->getEngine()->updateGameInput(flipWorldRun->getCurrentInput());
                 // Reset the input after processing to prevent it from being continuously pressed
                 flipWorldRun->resetInput();
-                flipWorldRun->getEngine()->runAsync(false);
+                flipWorldRun->getEngine()->runAsync(true);
             }
             return;
         }
@@ -66,7 +64,7 @@ void Player::drawCurrentView(Draw *canvas)
             bool gameStarted = flipWorldRun->startGame(currentTitleIndex);
             if (gameStarted && flipWorldRun->getEngine())
             {
-                flipWorldRun->getEngine()->runAsync(false); // Run the game engine immediately
+                flipWorldRun->getEngine()->runAsync(true); // Run the game engine immediately
             }
         }
         break;
@@ -383,7 +381,6 @@ void Player::processInput()
 
 void Player::render(Draw *canvas, Game *game)
 {
-    FURI_LOG_I("Player", "Rendering player...");
     drawUsername(position, game);
     drawUserStats(Vector(5, 210), canvas);
 }
@@ -407,7 +404,6 @@ bool Player::setHttpState(HTTPState state)
 
 void Player::update(Game *game)
 {
-    FURI_LOG_I("Player", "Updating player...");
     // Apply health regeneration
     elapsed_health_regen += 1.0 / 30; // 30 frames per second
     if (elapsed_health_regen >= 1 && health < max_health)
