@@ -2148,7 +2148,7 @@ std::unique_ptr<FlipperAppInfo> FlipDownloaderRun::getAppInfo(FlipperAppCategory
     // Find current_version object using manual search
     const char *currentVersionStart = nullptr;
     const char *searchTarget = "\"current_version\":";
-    const size_t targetLen = 19; // Manual count of "current_version":
+    const size_t targetLen = 18; // Manual count of "current_version": (18 chars not 19 lol)
     const char *searchPos = objectText;
 
     while (*searchPos != '\0')

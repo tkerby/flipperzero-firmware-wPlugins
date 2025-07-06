@@ -7,7 +7,7 @@
 #include "about/about.hpp"
 
 #define TAG "FlipDownloader"
-#define VERSION "1.3"
+#define VERSION "1.3.1"
 #define VERSION_TAG TAG " " VERSION
 #define APP_ID "flip_downloader"
 
