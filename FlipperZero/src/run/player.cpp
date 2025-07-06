@@ -194,16 +194,16 @@ void Player::drawUsername(Vector pos, Game *game)
     }
 
     // draw box around the name
-    game->draw->fillRect(Vector(screen_x - (strlen(name) * 2), screen_y - 10), Vector(strlen(name) * 5 + 4, 10), ColorWhite);
+    game->draw->fillRect(Vector(screen_x - (strlen(name) * 2) - 1, screen_y - 14), Vector(strlen(name) * 4 + 1, 8), ColorWhite);
 
     // draw name over player's head
-    game->draw->text(Vector(screen_x - (strlen(name) * 2), screen_y - 10), name, ColorBlack);
+    game->draw->text(Vector(screen_x - (strlen(name) * 2), screen_y - 7), name, ColorBlack);
 }
 
 void Player::drawUserStats(Vector pos, Draw *canvas)
 {
     // first draw a white rectangle to make the text more readable
-    canvas->fillRect(Vector(pos.x - 2, pos.y - 5), Vector(48, 32), ColorWhite);
+    canvas->fillRect(Vector(pos.x - 1, pos.y - 7), Vector(34, 21), ColorWhite);
 
     char health_str[32];
     char xp_str[32];
@@ -218,9 +218,10 @@ void Player::drawUserStats(Vector pos, Draw *canvas)
         snprintf(xp_str, sizeof(xp_str), "XP : %.0fK", (double)xp / 1000);
 
     // draw items
+    canvas->setFontCustom(FONT_SIZE_SMALL);
     canvas->text(Vector(pos.x, pos.y), health_str, ColorBlack);
-    canvas->text(Vector(pos.x, pos.y + 9), xp_str, ColorBlack);
-    canvas->text(Vector(pos.x, pos.y + 18), level_str, ColorBlack);
+    canvas->text(Vector(pos.x, pos.y + 7), xp_str, ColorBlack);
+    canvas->text(Vector(pos.x, pos.y + 14), level_str, ColorBlack);
 }
 
 bool Player::httpRequestIsFinished()
@@ -382,7 +383,7 @@ void Player::processInput()
 void Player::render(Draw *canvas, Game *game)
 {
     drawUsername(position, game);
-    drawUserStats(Vector(5, 210), canvas);
+    drawUserStats(Vector(0, 50), canvas);
 }
 
 bool Player::setHttpState(HTTPState state)

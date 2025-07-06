@@ -143,10 +143,10 @@ void Sprite::drawUsername(Vector pos, Game *game)
     }
 
     // draw box around the name
-    game->draw->fillRect(Vector(pos.x - game->pos.x - (strlen(name) * 2), pos.y - game->pos.y - 10), Vector(strlen(name) * 5 + 4, 10), ColorWhite);
+    game->draw->fillRect(Vector(pos.x - game->pos.x - (strlen(name) * 2), pos.y - game->pos.y - 14), Vector(strlen(name) * 4 + 1, 8), ColorWhite);
 
     // draw name over player's head
-    game->draw->text(Vector(pos.x - game->pos.x - (strlen(name) * 2), pos.y - game->pos.y - 10), name, ColorBlack);
+    game->draw->text(Vector(pos.x - game->pos.x - (strlen(name) * 2), pos.y - game->pos.y - 7), name, ColorBlack);
 }
 
 void Sprite::render(Draw *canvas, Game *game)
