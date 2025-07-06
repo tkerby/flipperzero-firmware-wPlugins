@@ -167,7 +167,7 @@ void Game::stop()
     }
 
     // Clear the screen.
-    this->draw->clear(Vector(0, 0), size, bg_color);
+    this->draw->clear(Vector(0, 0), Vector(128, 64), bg_color);
 }
 
 void Game::update()

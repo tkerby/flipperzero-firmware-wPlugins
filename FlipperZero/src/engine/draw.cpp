@@ -86,7 +86,7 @@ void Draw::image(Vector position, const uint8_t *bitmap, Vector size)
         return;
     }
     canvas_draw_bitmap(display, position.x, position.y, size.x, size.y, bitmap);
-    // might try canvas_draw_xbm if that doesnt look as expected
+    //  might try canvas_draw_xbm if that doesnt look as expected
 }
 
 void Draw::setFontCustom(FontSize fontSize)

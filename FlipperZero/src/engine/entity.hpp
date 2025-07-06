@@ -8,6 +8,11 @@ class Sprite3D;
 struct Vertex3D;
 struct Triangle3D;
 
+#define ENTITY_LEFT Vector(-1, 0)
+#define ENTITY_RIGHT Vector(1, 0)
+#define ENTITY_UP Vector(0, -1)
+#define ENTITY_DOWN Vector(0, 1)
+
 typedef enum
 {
     ENTITY_IDLE,
