@@ -1,4 +1,4 @@
-#include "cuberzero.h"
+#include "src/cuberzero.h"
 
 void SceneAboutEnter(const PCUBERZERO instance) {
     if(instance) {

@@ -1,4 +1,4 @@
-#include "cuberzero.h"
+#include "src/cuberzero.h"
 
 static const char* const Cubes[] = {
     "3x3x3 Cube",

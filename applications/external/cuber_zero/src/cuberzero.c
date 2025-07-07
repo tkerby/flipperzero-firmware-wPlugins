@@ -26,9 +26,12 @@ static bool callbackNavigationEvent(const PCUBERZERO instance) {
     return scene_manager_handle_back_event(instance->manager);
 }
 
+void filesInitialize();
+
 int32_t cuberzeroMain(const void* const pointer) {
     UNUSED(pointer);
     FURI_LOG_I(CUBERZERO_TAG, "Initializing");
+    filesInitialize();
     const char* messageError = NULL;
     const PCUBERZERO instance = malloc(sizeof(CUBERZERO));
 
@@ -98,11 +101,13 @@ int32_t cuberzeroMain(const void* const pointer) {
         (AppSceneOnEnterCallback)SceneCubeSelectEnter,
         (AppSceneOnEnterCallback)SceneHomeEnter,
         (AppSceneOnEnterCallback)SceneSettingsEnter,
+        (AppSceneOnEnterCallback)SceneTimerOptionsEnter,
         (AppSceneOnEnterCallback)SceneTimerEnter};
     const AppSceneOnEventCallback onEvent[] = {
         callbackEmptyEvent,
         (AppSceneOnEventCallback)SceneCubeSelectEvent,
         (AppSceneOnEventCallback)SceneHomeEvent,
+        callbackEmptyEvent,
         callbackEmptyEvent,
         callbackEmptyEvent};
     const AppSceneOnExitCallback onExit[] = {
@@ -110,6 +115,7 @@ int32_t cuberzeroMain(const void* const pointer) {
         callbackEmptyExit,
         callbackEmptyExit,
         (AppSceneOnExitCallback)SceneSettingsExit,
+        callbackEmptyExit,
         callbackEmptyExit};
     const SceneManagerHandlers handlers = {onEnter, onEvent, onExit, COUNT_CUBERZEROSCENE};
 
