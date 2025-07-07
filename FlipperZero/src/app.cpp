@@ -524,6 +524,46 @@ void FlipWorldApp::viewPortInput(InputEvent *event, void *context)
     }
 }
 
+bool FlipWorldApp::websocketSend(const char *message)
+{
+    if (!flipperHttp)
+    {
+        FURI_LOG_E(TAG, "FlipperHTTP is not initialized");
+        return false;
+    }
+    if (!message || strlen(message) == 0)
+    {
+        FURI_LOG_E(TAG, "WebSocket message is NULL or empty");
+        return false;
+    }
+    return flipper_http_send_data(flipperHttp, message);
+}
+
+bool FlipWorldApp::websocketStart(const char *url)
+{
+    if (!flipperHttp)
+    {
+        FURI_LOG_E(TAG, "FlipperHTTP is not initialized");
+        return false;
+    }
+    if (!url || strlen(url) == 0)
+    {
+        FURI_LOG_E(TAG, "WebSocket URL is NULL or empty");
+        return false;
+    }
+    return flipper_http_websocket_start(flipperHttp, url, 80, "{\"Content-Type\":\"application/json\"}");
+}
+
+bool FlipWorldApp::websocketStop()
+{
+    if (!flipperHttp)
+    {
+        FURI_LOG_E(TAG, "FlipperHTTP is not initialized");
+        return false;
+    }
+    return flipper_http_websocket_stop(flipperHttp);
+}
+
 extern "C"
 {
     int32_t flip_world_main(void *p)
