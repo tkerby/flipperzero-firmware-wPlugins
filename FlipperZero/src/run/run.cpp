@@ -1,6 +1,7 @@
 #include "run/run.hpp"
 #include "run/sprites.hpp"
 #include "app.hpp"
+#include "jsmn/jsmn.h"
 
 FlipWorldRun::FlipWorldRun()
 {
@@ -9,7 +10,16 @@ FlipWorldRun::FlipWorldRun()
 
 FlipWorldRun::~FlipWorldRun()
 {
-    // nothing to do
+    // Clean up currentIconGroup if allocated
+    if (currentIconGroup)
+    {
+        if (currentIconGroup->icons)
+        {
+            free(currentIconGroup->icons);
+        }
+        free(currentIconGroup);
+        currentIconGroup = nullptr;
+    }
 }
 
 void FlipWorldRun::debounceInput()
@@ -58,119 +68,122 @@ LevelIndex FlipWorldRun::getCurrentLevelIndex() const
     return LevelUnknown;
 }
 
-std::unique_ptr<Level> FlipWorldRun::getLevel(LevelIndex index) const
+const char *FlipWorldRun::getLevelJson(LevelIndex index) const
 {
-    std::unique_ptr<Level> level = std::make_unique<Level>(getLevelName(index), Vector(768, 384), engine->getGame());
+    switch (index)
+    {
+    case LevelHomeWoods:
+        return "{"
+               "\"name\" : \"home_woods_v8\","
+               "\"author\" : \"ChatGPT\","
+               "\"json_data\" : ["
+               "{\"i\" : \"rock_medium\", \"x\" : 100, \"y\" : 100, \"a\" : 10, \"h\" : true},"
+               "{\"i\" : \"rock_medium\", \"x\" : 400, \"y\" : 300, \"a\" : 6, \"h\" : true},"
+               "{\"i\" : \"rock_small\", \"x\" : 600, \"y\" : 200, \"a\" : 8, \"h\" : true},"
+               "{\"i\" : \"fence\", \"x\" : 50, \"y\" : 50, \"a\" : 10, \"h\" : true},"
+               "{\"i\" : \"fence\", \"x\" : 250, \"y\" : 150, \"a\" : 12, \"h\" : true},"
+               "{\"i\" : \"fence\", \"x\" : 550, \"y\" : 350, \"a\" : 12, \"h\" : true},"
+               "{\"i\" : \"rock_large\", \"x\" : 400, \"y\" : 70, \"a\" : 12, \"h\" : true},"
+               "{\"i\" : \"rock_large\", \"x\" : 200, \"y\" : 200, \"a\" : 6, \"h\" : false},"
+               "{\"i\" : \"tree\", \"x\" : 5, \"y\" : 5, \"a\" : 45, \"h\" : true},"
+               "{\"i\" : \"tree\", \"x\" : 5, \"y\" : 5, \"a\" : 20, \"h\" : false},"
+               "{\"i\" : \"tree\", \"x\" : 22, \"y\" : 22, \"a\" : 44, \"h\" : true},"
+               "{\"i\" : \"tree\", \"x\" : 22, \"y\" : 22, \"a\" : 20, \"h\" : false},"
+               "{\"i\" : \"tree\", \"x\" : 5, \"y\" : 347, \"a\" : 45, \"h\" : true},"
+               "{\"i\" : \"tree\", \"x\" : 5, \"y\" : 364, \"a\" : 45, \"h\" : true},"
+               "{\"i\" : \"tree\", \"x\" : 735, \"y\" : 37, \"a\" : 18, \"h\" : false},"
+               "{\"i\" : \"tree\", \"x\" : 752, \"y\" : 37, \"a\" : 18, \"h\" : false}"
+               "]"
+               "}";
+    case LevelRockWorld:
+        return "{"
+               "\"name\" : \"rock_world_v8\","
+               "\"author\" : \"ChatGPT\","
+               "\"json_data\" : ["
+               "{\"i\" : \"house\", \"x\" : 100, \"y\" : 50, \"a\" : 1, \"h\" : true},"
+               "{\"i\" : \"tree\", \"x\" : 650, \"y\" : 420, \"a\" : 5, \"h\" : true},"
+               "{\"i\" : \"rock_large\", \"x\" : 150, \"y\" : 150, \"a\" : 2, \"h\" : true},"
+               "{\"i\" : \"rock_medium\", \"x\" : 210, \"y\" : 80, \"a\" : 3, \"h\" : true},"
+               "{\"i\" : \"rock_small\", \"x\" : 480, \"y\" : 110, \"a\" : 4, \"h\" : false},"
+               "{\"i\" : \"flower\", \"x\" : 280, \"y\" : 140, \"a\" : 3, \"h\" : true},"
+               "{\"i\" : \"plant\", \"x\" : 120, \"y\" : 130, \"a\" : 2, \"h\" : true},"
+               "{\"i\" : \"rock_large\", \"x\" : 400, \"y\" : 200, \"a\" : 3, \"h\" : true},"
+               "{\"i\" : \"rock_medium\", \"x\" : 600, \"y\" : 50, \"a\" : 5, \"h\" : false},"
+               "{\"i\" : \"rock_small\", \"x\" : 500, \"y\" : 100, \"a\" : 6, \"h\" : true},"
+               "{\"i\" : \"tree\", \"x\" : 650, \"y\" : 20, \"a\" : 4, \"h\" : true},"
+               "{\"i\" : \"flower\", \"x\" : 550, \"y\" : 250, \"a\" : 8, \"h\" : true},"
+               "{\"i\" : \"plant\", \"x\" : 300, \"y\" : 300, \"a\" : 5, \"h\" : true},"
+               "{\"i\" : \"rock_large\", \"x\" : 700, \"y\" : 180, \"a\" : 2, \"h\" : true},"
+               "{\"i\" : \"tree\", \"x\" : 50, \"y\" : 300, \"a\" : 10, \"h\" : true},"
+               "{\"i\" : \"flower\", \"x\" : 350, \"y\" : 100, \"a\" : 7, \"h\" : true}"
+               "]"
+               "}";
+    case LevelForestWorld:
+        return "{"
+               "\"name\": \"forest_world_v8\","
+               "\"author\": \"ChatGPT\","
+               "\"json_data\": ["
+               "{\"i\": \"rock_small\", \"x\": 120, \"y\": 20, \"a\": 10, \"h\": false},"
+               "{\"i\": \"tree\", \"x\": 50, \"y\": 50, \"a\": 10, \"h\": true},"
+               "{\"i\": \"flower\", \"x\": 200, \"y\": 70, \"a\": 8, \"h\": false},"
+               "{\"i\": \"rock_small\", \"x\": 250, \"y\": 100, \"a\": 8, \"h\": true},"
+               "{\"i\": \"rock_medium\", \"x\": 300, \"y\": 140, \"a\": 2, \"h\": true},"
+               "{\"i\": \"plant\", \"x\": 50, \"y\": 300, \"a\": 10, \"h\": true},"
+               "{\"i\": \"rock_large\", \"x\": 650, \"y\": 250, \"a\": 3, \"h\": true},"
+               "{\"i\": \"flower\", \"x\": 300, \"y\": 350, \"a\": 5, \"h\": true},"
+               "{\"i\": \"tree\", \"x\": 20, \"y\": 150, \"a\": 10, \"h\": false},"
+               "{\"i\": \"tree\", \"x\": 5, \"y\": 5, \"a\": 45, \"h\": true},"
+               "{\"i\": \"tree\", \"x\": 5, \"y\": 5, \"a\": 20, \"h\": false},"
+               "{\"i\": \"tree\", \"x\": 22, \"y\": 22, \"a\": 44, \"h\": true},"
+               "{\"i\": \"tree\", \"x\": 22, \"y\": 22, \"a\": 20, \"h\": false},"
+               "{\"i\": \"tree\", \"x\": 5, \"y\": 347, \"a\": 45, \"h\": true},"
+               "{\"i\": \"tree\", \"x\": 5, \"y\": 364, \"a\": 45, \"h\": true},"
+               "{\"i\": \"tree\", \"x\": 735, \"y\": 37, \"a\": 18, \"h\": false},"
+               "{\"i\": \"tree\", \"x\": 752, \"y\": 37, \"a\": 18, \"h\": false}"
+               "]"
+               "}";
+    default:
+        FURI_LOG_E("FlipWorldRun", "Unknown level index: %d", index);
+        return nullptr;
+    }
+}
+
+std::unique_ptr<Level> FlipWorldRun::getLevel(LevelIndex index, Game *game) const
+{
+    std::unique_ptr<Level> level = std::make_unique<Level>(getLevelName(index), Vector(768, 384), game ? game : engine->getGame());
     if (!level)
     {
         FURI_LOG_E("FlipWorldRun", "Failed to create Level object");
         return nullptr;
     }
-    // then we just simply add the sprites to the
-    // appropriate level and return the level
-    // the player doesnt change levels and will
-    // be added to this level
-
     switch (index)
     {
     case LevelHomeWoods:
-        level->entity_add(std::make_unique<Sprite>("Cyclops", ENTITY_ENEMY, Vector(350, 210), Vector(390, 210), Vector(1.0f, 2.0f), 2.0f, 30.0f, 0.4f, 10.0f, 100.0f).release());
-        level->entity_add(std::make_unique<Sprite>("Ogre", ENTITY_ENEMY, Vector(200, 320), Vector(220, 320), Vector(1.0f, 2.0f), 0.5f, 45.0f, 0.6f, 20.0f, 200.0f).release());
-        level->entity_add(std::make_unique<Sprite>("Ghost", ENTITY_ENEMY, Vector(100, 80), Vector(180, 85), Vector(1.0f, 2.0f), 2.2f, 55.0f, 0.5f, 30.0f, 300.0f).release());
-        level->entity_add(std::make_unique<Sprite>("Ogre", ENTITY_ENEMY, Vector(400, 50), Vector(490, 50), Vector(1.0f, 2.0f), 1.7f, 35.0f, 1.0f, 20.0f, 200.0f).release());
-        level->entity_add(std::make_unique<Sprite>("Funny NPC", ENTITY_NPC, Vector(350, 180), Vector(350, 180), Vector(1.0f, 2.0f), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Cyclops", ENTITY_ENEMY, Vector(350, 210), Vector(390, 210), 2.0f, 30.0f, 0.4f, 10.0f, 100.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Ogre", ENTITY_ENEMY, Vector(200, 320), Vector(220, 320), 0.5f, 45.0f, 0.6f, 20.0f, 200.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Ghost", ENTITY_ENEMY, Vector(100, 80), Vector(180, 85), 2.2f, 55.0f, 0.5f, 30.0f, 300.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Ogre", ENTITY_ENEMY, Vector(400, 50), Vector(490, 50), 1.7f, 35.0f, 1.0f, 20.0f, 200.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Funny NPC", ENTITY_NPC, Vector(350, 180), Vector(350, 180), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f).release());
         break;
     case LevelRockWorld:
-        level->entity_add(std::make_unique<Sprite>("Ghost", ENTITY_ENEMY, Vector(180, 80), Vector(160, 80), Vector(1.0f, 2.0f), 1.0f, 32.0f, 0.5f, 10.0f, 100.0f).release());
-        level->entity_add(std::make_unique<Sprite>("Ogre", ENTITY_ENEMY, Vector(220, 140), Vector(200, 140), Vector(1.0f, 2.0f), 1.5f, 20.0f, 1.0f, 10.0f, 100.0f).release());
-        level->entity_add(std::make_unique<Sprite>("Cyclops", ENTITY_ENEMY, Vector(400, 200), Vector(450, 200), Vector(1.0f, 2.0f), 2.0f, 15.0f, 1.2f, 20.0f, 200.0f).release());
-        level->entity_add(std::make_unique<Sprite>("Ogre", ENTITY_ENEMY, Vector(600, 150), Vector(580, 150), Vector(1.0f, 2.0f), 1.8f, 28.0f, 1.0f, 40.0f, 400.0f).release());
-        level->entity_add(std::make_unique<Sprite>("Ghost", ENTITY_ENEMY, Vector(500, 250), Vector(480, 250), Vector(1.0f, 2.0f), 1.2f, 30.0f, 0.6f, 10.0f, 100.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Ghost", ENTITY_ENEMY, Vector(180, 80), Vector(160, 80), 1.0f, 32.0f, 0.5f, 10.0f, 100.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Ogre", ENTITY_ENEMY, Vector(220, 140), Vector(200, 140), 1.5f, 20.0f, 1.0f, 10.0f, 100.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Cyclops", ENTITY_ENEMY, Vector(400, 200), Vector(450, 200), 2.0f, 15.0f, 1.2f, 20.0f, 200.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Ogre", ENTITY_ENEMY, Vector(600, 150), Vector(580, 150), 1.8f, 28.0f, 1.0f, 40.0f, 400.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Ghost", ENTITY_ENEMY, Vector(500, 250), Vector(480, 250), 1.2f, 30.0f, 0.6f, 10.0f, 100.0f).release());
         break;
     case LevelForestWorld:
-        level->entity_add(std::make_unique<Sprite>("Ghost", ENTITY_ENEMY, Vector(50, 120), Vector(100, 120), Vector(1.0f, 2.0f), 1.0f, 30.0f, 0.5f, 10.0f, 100.0f).release());
-        level->entity_add(std::make_unique<Sprite>("Cyclops", ENTITY_ENEMY, Vector(300, 60), Vector(250, 60), Vector(1.0f, 2.0f), 1.5f, 20.0f, 0.8f, 30.0f, 300.0f).release());
-        level->entity_add(std::make_unique<Sprite>("Ogre", ENTITY_ENEMY, Vector(400, 200), Vector(450, 200), Vector(1.0f, 2.0f), 1.7f, 15.0f, 1.0f, 10.0f, 100.0f).release());
-        level->entity_add(std::make_unique<Sprite>("Ghost", ENTITY_ENEMY, Vector(700, 150), Vector(650, 150), Vector(1.0f, 2.0f), 1.2f, 25.0f, 0.6f, 10.0f, 100.0f).release());
-        level->entity_add(std::make_unique<Sprite>("Cyclops", ENTITY_ENEMY, Vector(200, 300), Vector(250, 300), Vector(1.0f, 2.0f), 2.0f, 18.0f, 0.9f, 20.0f, 200.0f).release());
-        level->entity_add(std::make_unique<Sprite>("Ogre", ENTITY_ENEMY, Vector(300, 300), Vector(350, 300), Vector(1.0f, 2.0f), 1.5f, 15.0f, 1.2f, 50.0f, 500.0f).release());
-        level->entity_add(std::make_unique<Sprite>("Ghost", ENTITY_ENEMY, Vector(500, 200), Vector(550, 200), Vector(1.0f, 2.0f), 1.3f, 20.0f, 0.7f, 40.0f, 400.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Ghost", ENTITY_ENEMY, Vector(50, 120), Vector(100, 120), 1.0f, 30.0f, 0.5f, 10.0f, 100.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Cyclops", ENTITY_ENEMY, Vector(300, 60), Vector(250, 60), 1.5f, 20.0f, 0.8f, 30.0f, 300.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Ogre", ENTITY_ENEMY, Vector(400, 200), Vector(450, 200), 1.7f, 15.0f, 1.0f, 10.0f, 100.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Ghost", ENTITY_ENEMY, Vector(700, 150), Vector(650, 150), 1.2f, 25.0f, 0.6f, 10.0f, 100.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Cyclops", ENTITY_ENEMY, Vector(200, 300), Vector(250, 300), 2.0f, 18.0f, 0.9f, 20.0f, 200.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Ogre", ENTITY_ENEMY, Vector(300, 300), Vector(350, 300), 1.5f, 15.0f, 1.2f, 50.0f, 500.0f).release());
+        level->entity_add(std::make_unique<Sprite>("Ghost", ENTITY_ENEMY, Vector(500, 200), Vector(550, 200), 1.3f, 20.0f, 0.7f, 40.0f, 400.0f).release());
         break;
     default:
         break;
     };
-    /*
-    {
-  "name": "home_woods_v8",
-  "author": "ChatGPT",
-  "json_data": [
-    {"i": "rock_medium", "x": 100, "y": 100, "a": 10, "h": true},
-        {"i": "rock_medium", "x": 400, "y": 300, "a": 6, "h": true},
-        {"i": "rock_small", "x": 600, "y": 200, "a": 8, "h": true},
-        {"i": "fence", "x": 50, "y": 50, "a": 10, "h": true},
-        {"i": "fence", "x": 250, "y": 150, "a": 12, "h": true},
-        {"i": "fence", "x": 550, "y": 350, "a": 12, "h": true},
-        {"i": "rock_large", "x": 400, "y": 70, "a": 12, "h": true},
-        {"i": "rock_large", "x": 200, "y": 200, "a": 6, "h": false},
-        {"i": "tree", "x": 5, "y": 5, "a": 45, "h": true},
-        {"i": "tree", "x": 5, "y": 5, "a": 20, "h": false},
-        {"i": "tree", "x": 22, "y": 22, "a": 44, "h": true},
-        {"i": "tree", "x": 22, "y": 22, "a": 20, "h": false},
-        {"i": "tree", "x": 5, "y": 347, "a": 45, "h": true},
-        {"i": "tree", "x": 5, "y": 364, "a": 45, "h": true},
-        {"i": "tree", "x": 735, "y": 37, "a": 18, "h": false},
-        {"i": "tree", "x": 752, "y": 37, "a": 18, "h": false}
-  ],
-    */
-    /*
-    {
-   "name": "rock_world_v8",
-   "author": "ChatGPT",
-   "json_data": [
-     {"i": "house", "x": 100, "y": 50, "a": 1, "h": true},
-     {"i": "tree", "x": 650, "y": 420, "a": 5, "h": true},
-     {"i": "rock_large", "x": 150, "y": 150, "a": 2, "h": true},
-     {"i": "rock_medium", "x": 210, "y": 80, "a": 3, "h": true},
-     {"i": "rock_small", "x": 480, "y": 110, "a": 4, "h": false},
-     {"i": "flower", "x": 280, "y": 140, "a": 3, "h": true},
-     {"i": "plant", "x": 120, "y": 130, "a": 2, "h": true},
-     {"i": "rock_large", "x": 400, "y": 200, "a": 3, "h": true},
-     {"i": "rock_medium", "x": 600, "y": 50, "a": 5, "h": false},
-     {"i": "rock_small", "x": 500, "y": 100, "a": 6, "h": true},
-     {"i": "tree", "x": 650, "y": 20, "a": 4, "h": true},
-     {"i": "flower", "x": 550, "y": 250, "a": 8, "h": true},
-     {"i": "plant", "x": 300, "y": 300, "a": 5, "h": true},
-     {"i": "rock_large", "x": 700, "y": 180, "a": 2, "h": true},
-     {"i": "tree", "x": 50, "y": 300, "a": 10, "h": true},
-     {"i": "flower", "x": 350, "y": 100, "a": 7, "h": true}
-   ],
-    */
-
-    /*
-    {
-   "name": "forest_world_v8",
-   "author": "ChatGPT",
-   "json_data": [
-     {"i": "rock_small", "x": 120, "y": 20, "a": 10, "h": false},
-     {"i": "tree", "x": 50, "y": 50, "a": 10, "h": true},
-     {"i": "flower", "x": 200, "y": 70, "a": 8, "h": false},
-     {"i": "rock_small", "x": 250, "y": 100, "a": 8, "h": true},
-     {"i": "rock_medium", "x": 300, "y": 140, "a": 2, "h": true},
-     {"i": "plant", "x": 50, "y": 300, "a": 10, "h": true},
-     {"i": "rock_large", "x": 650, "y": 250, "a": 3, "h": true},
-     {"i": "flower", "x": 300, "y": 350, "a": 5, "h": true},
-     {"i": "tree", "x": 20, "y": 150, "a": 10, "h": false},
-     {"i": "tree", "x": 5, "y": 5, "a": 45, "h": true},
-         {"i": "tree", "x": 5, "y": 5, "a": 20, "h": false},
-         {"i": "tree", "x": 22, "y": 22, "a": 44, "h": true},
-         {"i": "tree", "x": 22, "y": 22, "a": 20, "h": false},
-         {"i": "tree", "x": 5, "y": 347, "a": 45, "h": true},
-         {"i": "tree", "x": 5, "y": 364, "a": 45, "h": true},
-         {"i": "tree", "x": 735, "y": 37, "a": 18, "h": false},
-         {"i": "tree", "x": 752, "y": 37, "a": 18, "h": false}
-   ],
- }
-    */
     return level;
 }
 
@@ -205,6 +218,28 @@ void FlipWorldRun::endGame()
     }
 }
 
+IconSpec FlipWorldRun::getIconSpec(const char *name) const
+{
+    if (strcmp(name, "house") == 0)
+        return (IconSpec){.id = ICON_ID_HOUSE, .icon = icon_house_48x32px, .pos = Vector(0, 0), .size = (Vector){48, 32}};
+    if (strcmp(name, "plant") == 0)
+        return (IconSpec){.id = ICON_ID_PLANT, .icon = icon_plant_16x16, .pos = Vector(0, 0), .size = (Vector){16, 16}};
+    if (strcmp(name, "tree") == 0)
+        return (IconSpec){.id = ICON_ID_TREE, .icon = icon_tree_16x16, .pos = Vector(0, 0), .size = (Vector){16, 16}};
+    if (strcmp(name, "fence") == 0)
+        return (IconSpec){.id = ICON_ID_FENCE, .icon = icon_fence_16x8px, .pos = Vector(0, 0), .size = (Vector){16, 8}};
+    if (strcmp(name, "flower") == 0)
+        return (IconSpec){.id = ICON_ID_FLOWER, .icon = icon_flower_16x16, .pos = Vector(0, 0), .size = (Vector){16, 16}};
+    if (strcmp(name, "rock_large") == 0)
+        return (IconSpec){.id = ICON_ID_ROCK_LARGE, .icon = icon_rock_large_18x19px, .pos = Vector(0, 0), .size = (Vector){18, 19}};
+    if (strcmp(name, "rock_medium") == 0)
+        return (IconSpec){.id = ICON_ID_ROCK_MEDIUM, .icon = icon_rock_medium_16x14px, .pos = Vector(0, 0), .size = (Vector){16, 14}};
+    if (strcmp(name, "rock_small") == 0)
+        return (IconSpec){.id = ICON_ID_ROCK_SMALL, .icon = icon_rock_small_10x8px, .pos = Vector(0, 0), .size = (Vector){10, 8}};
+
+    return (IconSpec){.id = ICON_ID_INVALID, .icon = NULL, .pos = Vector(0, 0), .size = (Vector){0, 0}};
+}
+
 void FlipWorldRun::inputManager()
 {
     static int inputHeldCounter = 0;
@@ -235,6 +270,142 @@ void FlipWorldRun::inputManager()
         player->setInputKey(lastInput);
         player->processInput();
     }
+}
+
+bool FlipWorldRun::setIconGroup(LevelIndex index)
+{
+    const char *json_data = getLevelJson(index);
+    if (!json_data)
+    {
+        FURI_LOG_E("Game", "JSON data is NULL");
+        return false;
+    }
+
+    // Ensure currentIconGroup is allocated
+    if (!currentIconGroup)
+    {
+        currentIconGroup = (IconGroupContext *)malloc(sizeof(IconGroupContext));
+        if (!currentIconGroup)
+        {
+            FURI_LOG_E("Game", "Failed to allocate currentIconGroup");
+            return false;
+        }
+        currentIconGroup->count = 0;
+        currentIconGroup->icons = nullptr;
+    }
+
+    // Free any existing icons before reallocating
+    if (currentIconGroup->icons)
+    {
+        free(currentIconGroup->icons);
+        currentIconGroup->icons = nullptr;
+        currentIconGroup->count = 0;
+    }
+
+    // Pass 1: Count the total number of icons.
+    int total_icons = 0;
+    for (int i = 0; i < MAX_WORLD_OBJECTS; i++)
+    {
+        char *data = get_json_array_value("json_data", i, json_data);
+        if (!data)
+            break;
+        char *amount = get_json_value("a", data);
+        if (amount)
+        {
+            int count = atoi(amount);
+            if (count < 1)
+                count = 1;
+            total_icons += count;
+            free(amount);
+        }
+        free(data);
+    }
+
+    currentIconGroup->count = total_icons;
+    currentIconGroup->icons = (IconSpec *)malloc(total_icons * sizeof(IconSpec));
+    if (!currentIconGroup->icons)
+    {
+        FURI_LOG_E("Game", "Failed to allocate icon group array for %d icons", total_icons);
+        return false;
+    }
+
+    // Pass 2: Parse the JSON to fill the icon specs.
+    int spec_index = 0;
+    for (int i = 0; i < MAX_WORLD_OBJECTS; i++)
+    {
+        char *data = get_json_array_value("json_data", i, json_data);
+        if (!data)
+            break;
+
+        /*
+        i - icon name
+        x - x position
+        y - y position
+        a - amount
+        h - horizontal (true/false)
+        */
+
+        char *icon_str = get_json_value("i", data);
+        char *x_str = get_json_value("x", data);
+        char *y_str = get_json_value("y", data);
+        char *amount_str = get_json_value("a", data);
+        char *horizontal_str = get_json_value("h", data);
+
+        if (!icon_str || !x_str || !y_str || !amount_str || !horizontal_str)
+        {
+            FURI_LOG_E("Game", "Incomplete icon data");
+            if (icon_str)
+                free(icon_str);
+            if (x_str)
+                free(x_str);
+            if (y_str)
+                free(y_str);
+            if (amount_str)
+                free(amount_str);
+            if (horizontal_str)
+                free(horizontal_str);
+            free(data);
+            continue;
+        }
+
+        int count = atoi(amount_str);
+        if (count < 1)
+            count = 1;
+        float base_x = atof_(x_str);
+        float base_y = atof_(y_str);
+        bool is_horizontal = (strcmp(horizontal_str, "true") == 0);
+        int spacing = 17;
+
+        for (int j = 0; j < count; j++)
+        {
+            IconSpec spec = getIconSpec(icon_str);
+            if (!spec.icon)
+            {
+                FURI_LOG_E("Game", "Icon name not recognized");
+                continue;
+            }
+            if (is_horizontal)
+            {
+                spec.pos.x = base_x + (j * spacing);
+                spec.pos.y = base_y;
+            }
+            else
+            {
+                spec.pos.x = base_x;
+                spec.pos.y = base_y + (j * spacing);
+            }
+            currentIconGroup->icons[spec_index++] = spec;
+        }
+
+        free(icon_str);
+        free(x_str);
+        free(y_str);
+        free(amount_str);
+        free(horizontal_str);
+        free(data);
+    }
+
+    return true;
 }
 
 bool FlipWorldRun::startGame(TitleIndex titleIndex)
@@ -272,15 +443,16 @@ bool FlipWorldRun::startGame(TitleIndex titleIndex)
     draw->text(Vector(0, 10), "Adding levels and player...", ColorBlack);
 
     // add levels and player to the game
-    std::unique_ptr<Level> level1 = std::make_unique<Level>("Level 1", Vector(768, 384), game.get());
+    std::unique_ptr<Level> level1 = getLevel(LevelHomeWoods, game.get());
+    if (!level1)
+    {
+        FURI_LOG_E("FlipWorldRun", "Failed to create Level object for Home Woods");
+        return false;
+    }
+
+    setIconGroup(LevelHomeWoods);
 
     level1->entity_add(player.get());
-
-    // // add some 3D sprites
-    // std::unique_ptr<Entity> tutorialGuard1 = std::make_unique<Sprite>("Tutorial Guard 1", Vector(3, 7), SPRITE_3D_HUMANOID, 1.7f, M_PI / 4, 0.f, Vector(9, 7));
-    // std::unique_ptr<Entity> tutorialGuard2 = std::make_unique<Sprite>("Tutorial Guard 2", Vector(6, 2), SPRITE_3D_HUMANOID, 1.7f, M_PI / 4, 0.f, Vector(1, 2));
-    // level1->entity_add(tutorialGuard1.release());
-    // level1->entity_add(tutorialGuard2.release());
 
     game->level_add(level1.release());
 
@@ -288,7 +460,7 @@ bool FlipWorldRun::startGame(TitleIndex titleIndex)
     game->pos = Vector(384, 192);
     game->old_pos = game->pos;
 
-    this->engine = std::make_unique<GameEngine>(game.release(), 30);
+    this->engine = std::make_unique<GameEngine>(game.release(), 60);
     if (!this->engine)
     {
         FURI_LOG_E("FlipWorldRun", "Failed to create GameEngine");
@@ -299,7 +471,6 @@ bool FlipWorldRun::startGame(TitleIndex titleIndex)
     draw->text(Vector(0, 10), "Starting game engine...", ColorBlack);
 
     isGameRunning = true; // Set the flag to indicate game is running
-    FURI_LOG_I("FlipWorldRun", "Game started successfully");
     return true;
 }
 

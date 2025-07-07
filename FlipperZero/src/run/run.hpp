@@ -20,24 +20,28 @@ private:
     int atoi(const char *nptr) { return (int)strtol(nptr, NULL, 10); } // convert string to integer
     void debounceInput();                                              // debounce input to prevent multiple actions from a single press
     void inputManager();                                               // manage input for the game, called from updateInput
+    bool setIconGroup(LevelIndex index);                               // Set the current icon group based on the level index
 public:
     FlipWorldRun();
     ~FlipWorldRun();
     //
-    void *appContext = nullptr;  // Pointer to the application context for accessing app-specific functionality
-    bool shouldDebounce = false; // public for Player access
+    void *appContext = nullptr;                   // Pointer to the application context for accessing app-specific functionality
+    IconGroupContext *currentIconGroup = nullptr; // Pointer to the current icon group context
+    bool shouldDebounce = false;                  // public for Player access
     //
-    void endGame();                                               // end the game and return to the submenu
-    InputKey getCurrentInput() const { return lastInput; }        // Get the last input key pressed
-    GameEngine *getEngine() const { return engine.get(); }        // Get the game engine instance
-    Draw *getDraw() const { return draw.get(); }                  // Get the Draw instance
-    LevelIndex getCurrentLevelIndex() const;                      // Get the current level index
-    std::unique_ptr<Level> getLevel(LevelIndex index) const;      // Get a level by index
-    const char *getLevelName(LevelIndex index) const;             // Get the name of a level by index
-    bool isActive() const { return shouldReturnToMenu == false; } // Check if the game is active
-    bool isRunning() const { return isGameRunning; }              // Check if the game engine is running
-    void resetInput() { lastInput = InputKeyMAX; }                // Reset input after processing
-    bool startGame(TitleIndex titleIndex);                        // start the actual game
-    void updateDraw(Canvas *canvas);                              // update and draw the run
-    void updateInput(InputEvent *event);                          // update input for the run
+    void endGame();                                                                // end the game and return to the submenu
+    InputKey getCurrentInput() const { return lastInput; }                         // Get the last input key pressed
+    const char *getLevelJson(LevelIndex index) const;                              // Get the JSON data for a level by index
+    GameEngine *getEngine() const { return engine.get(); }                         // Get the game engine instance
+    Draw *getDraw() const { return draw.get(); }                                   // Get the Draw instance
+    LevelIndex getCurrentLevelIndex() const;                                       // Get the current level index
+    IconSpec getIconSpec(const char *name) const;                                  // Get the icon specification by name
+    std::unique_ptr<Level> getLevel(LevelIndex index, Game *game = nullptr) const; // Get a level by index
+    const char *getLevelName(LevelIndex index) const;                              // Get the name of a level by index
+    bool isActive() const { return shouldReturnToMenu == false; }                  // Check if the game is active
+    bool isRunning() const { return isGameRunning; }                               // Check if the game engine is running
+    void resetInput() { lastInput = InputKeyMAX; }                                 // Reset input after processing
+    bool startGame(TitleIndex titleIndex);                                         // start the actual game
+    void updateDraw(Canvas *canvas);                                               // update and draw the run
+    void updateInput(InputEvent *event);                                           // update input for the run
 };

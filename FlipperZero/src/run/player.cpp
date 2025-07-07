@@ -186,7 +186,7 @@ void Player::drawUsername(Vector pos, Game *game)
     float screen_y = pos.y - game->pos.y;
 
     // Check if the username would be visible on the 128x64 screen
-    float text_width = strlen(name) * 5 + 4; // Approximate text width
+    float text_width = strlen(name) * 4 + 1; // Approximate text width
     if (screen_x - text_width / 2 < 0 || screen_x + text_width / 2 > 128 ||
         screen_y - 10 < 0 || screen_y > 64)
     {
@@ -259,6 +259,36 @@ HTTPState Player::getHttpState()
     return app->getHttpState();
 }
 
+IconGroupContext *Player::getIconGroupContext() const
+{
+    if (!flipWorldRun)
+    {
+        return nullptr;
+    }
+    return flipWorldRun->currentIconGroup;
+}
+
+void Player::iconGroupRender(Game *game)
+{
+    if (!flipWorldRun || !game || !game->draw)
+    {
+        return; // Ensure we have a valid game and draw context
+    }
+    auto iconGroupContext = getIconGroupContext();
+    for (int i = 0; i < iconGroupContext->count; i++)
+    {
+        auto spec = &iconGroupContext->icons[i];
+        int x_pos = spec->pos.x - game->pos.x - (spec->size.x / 2);
+        int y_pos = spec->pos.y - game->pos.y - (spec->size.y / 2);
+        if (x_pos + spec->size.x < 0 || x_pos > 128 ||
+            y_pos + spec->size.y < 0 || y_pos > 64)
+        {
+            continue;
+        }
+        game->draw->image(Vector(x_pos, y_pos), spec->icon, spec->size);
+    }
+}
+
 void Player::processInput()
 {
     if (!flipWorldRun)
@@ -270,7 +300,7 @@ void Player::processInput()
 
     if (currentInput == InputKeyMAX)
     {
-        return; // No input to process
+        return;
     }
 
     switch (currentMainView)
@@ -382,6 +412,7 @@ void Player::processInput()
 
 void Player::render(Draw *canvas, Game *game)
 {
+    iconGroupRender(game);
     drawUsername(position, game);
     drawUserStats(Vector(0, 50), canvas);
 }
@@ -425,6 +456,7 @@ void Player::update(Game *game)
 
     Vector oldPos = position;
     Vector newPos = oldPos;
+    bool shouldSetPosition = false;
 
     // Move according to input
     if (game->input == InputKeyUp)
@@ -432,24 +464,28 @@ void Player::update(Game *game)
         newPos.y -= 5;
         direction = ENTITY_UP;
         lastInput = InputKeyUp;
+        shouldSetPosition = true;
     }
     else if (game->input == InputKeyDown)
     {
         newPos.y += 5;
         direction = ENTITY_DOWN;
         lastInput = InputKeyDown;
+        shouldSetPosition = true;
     }
     else if (game->input == InputKeyLeft)
     {
         newPos.x -= 5;
         direction = ENTITY_LEFT;
         lastInput = InputKeyLeft;
+        shouldSetPosition = true;
     }
     else if (game->input == InputKeyRight)
     {
         newPos.x += 5;
         direction = ENTITY_RIGHT;
         lastInput = InputKeyRight;
+        shouldSetPosition = true;
     }
     else if (game->input == InputKeyOk)
     {
@@ -459,15 +495,12 @@ void Player::update(Game *game)
     // reset input
     game->input = InputKeyMAX;
 
-    // Tentatively set new position
-    position_set(newPos);
-
     // check if new position is within the level boundaries
     if (newPos.x < 0 || newPos.x + size.x > game->size.x ||
         newPos.y < 0 || newPos.y + size.y > game->size.y)
     {
         // restore old position
-        position_set(oldPos);
+        shouldSetPosition = false;
     }
 
     // Store the current camera position before updating
@@ -497,6 +530,39 @@ void Player::update(Game *game)
     else if (direction == ENTITY_RIGHT)
     {
         sprite = sprite_right;
+    }
+
+    // Only check for collisions if we're actually trying to move
+    if (shouldSetPosition)
+    {
+        bool hasCollision = false;
+
+        // Loop over all icon specifications in the current icon group.
+        for (int i = 0; i < getIconGroupContext()->count; i++)
+        {
+            IconSpec *spec = &getIconGroupContext()->icons[i];
+
+            // Calculate the difference between the NEW position and the icon's center.
+            float dx = newPos.x - spec->pos.x;
+            float dy = newPos.y - spec->pos.y;
+
+            // approximate collision radius:
+            float radius = (spec->size.x + spec->size.y) / 4.0f;
+
+            // Collision: if player's distance to the icon center is less than the collision radius.
+            if ((dx * dx + dy * dy) < (radius * radius))
+            {
+                hasCollision = true;
+                break;
+            }
+        }
+
+        // Only update position if there's no collision
+        if (!hasCollision)
+        {
+            position_set(newPos);
+        }
+        // If there's a collision, we simply don't move (stay at current position)
     }
 }
 

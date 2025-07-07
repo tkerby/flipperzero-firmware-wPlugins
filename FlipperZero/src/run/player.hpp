@@ -34,7 +34,9 @@ public:
     GameMainView getCurrentMainView() const { return currentMainView; }
     TitleIndex getCurrentTitleIndex() const noexcept { return currentTitleIndex; }
     HTTPState getHttpState();
+    IconGroupContext *getIconGroupContext() const; // get the current icon group context from FlipWorldRun
     bool httpRequestIsFinished();
+    void iconGroupRender(Game *game);
     void processInput();
     void render(Draw *canvas, Game *game) override;
     void setFlipWorldRun(FlipWorldRun *run) { flipWorldRun = run; }
