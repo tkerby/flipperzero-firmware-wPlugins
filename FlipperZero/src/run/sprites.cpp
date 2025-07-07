@@ -60,7 +60,6 @@ Sprite::Sprite(const char *name, EntityType type, Vector position, Vector endPos
 
 void Sprite::collision(Entity *other, Game *game)
 {
-    UNUSED(game);
     if (strcmp(other->name, "Player") == 0)
     {
         // Get positions of the enemy and the player
@@ -88,10 +87,10 @@ void Sprite::collision(Entity *other, Game *game)
 
         // Handle Player Attacking Enemy (Press OK, facing enemy, and enemy not facing player)
         // we need to store the last button pressed to prevent multiple attacks
-        if (player_is_facing_enemy && lastButton == InputKeyOk && !enemy_is_facing_player)
+        if (player_is_facing_enemy && game->input == InputKeyOk && !enemy_is_facing_player)
         {
             // Reset last button
-            lastButton = -1;
+            game->input = InputKeyMAX;
 
             // check if enough time has passed since the last attack
             if (other->elapsed_attack_timer >= other->attack_timer)

@@ -13,7 +13,4 @@ public:
     void drawUsername(Vector pos, Game *game);
     void render(Draw *canvas, Game *game) override;
     void update(Game *game) override;
-
-private:
-    int lastButton = -1;
 };
