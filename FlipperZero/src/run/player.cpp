@@ -61,7 +61,7 @@ void Player::drawCurrentView(Draw *canvas)
             canvas->fillScreen(ColorWhite);
             canvas->setFont(FontPrimary);
             canvas->text(Vector(25, 32), "Starting Game...", ColorBlack);
-            bool gameStarted = flipWorldRun->startGame(currentTitleIndex);
+            bool gameStarted = flipWorldRun->startGame();
             if (gameStarted && flipWorldRun->getEngine())
             {
                 flipWorldRun->getEngine()->runAsync(true); // Run the game engine immediately
@@ -319,7 +319,7 @@ void Player::processInput()
             break;
         case InputKeyOk:
             flipWorldRun->shouldDebounce = true;
-            flipWorldRun->startGame(currentTitleIndex);
+            flipWorldRun->startGame();
             currentMainView = GameViewGame; // Switch to game view after starting the game
             break;
         case InputKeyBack:
@@ -454,6 +454,9 @@ void Player::update(Game *game)
     // update plyer traits
     updateStats();
 
+    // Check if all enemies are dead and switch to next level if needed
+    checkForLevelCompletion(game);
+
     Vector oldPos = position;
     Vector newPos = oldPos;
     bool shouldSetPosition = false;
@@ -507,7 +510,7 @@ void Player::update(Game *game)
     game->old_pos = game->pos;
 
     // Update camera position to center the player
-    // The viewport is 128x64, so we want the player at the center of this viewport
+    // The viewport is 128x64, so we want the player to be at the center of this viewport
     float viewport_width = 128.0f;
     float viewport_height = 64.0f;
 
@@ -581,4 +584,135 @@ void Player::updateStats()
     // Update strength and max health based on the new level
     strength = 10 + (level * 1);           // 1 strength per level
     max_health = 100 + ((level - 1) * 10); // 10 health per level
+}
+
+void Player::checkForLevelCompletion(Game *game)
+{
+    // Only check for level completion if we're in the game view and the game is running
+    if (!flipWorldRun || !flipWorldRun->isRunning() || currentMainView != GameViewGame)
+    {
+        return;
+    }
+
+    // Update cooldown timer
+    levelCompletionCooldown -= 1.0 / 30; // 30 fps
+    if (levelCompletionCooldown > 0)
+    {
+        return; // Still in cooldown, don't check yet
+    }
+
+    // Don't check immediately after switching levels
+    if (justSwitchedLevels)
+    {
+        justSwitchedLevels = false;    // Reset the flag
+        levelCompletionCooldown = 1.0; // Set a 1 second cooldown
+        return;
+    }
+
+    // Check if all enemies are dead
+    if (areAllEnemiesDead(game))
+    {
+        // Get current level index
+        LevelIndex currentLevelIndex = flipWorldRun->getCurrentLevelIndex();
+
+        // Determine next level
+        LevelIndex nextLevelIndex = LevelUnknown;
+        switch (currentLevelIndex)
+        {
+        case LevelHomeWoods:
+            nextLevelIndex = LevelRockWorld;
+            break;
+        case LevelRockWorld:
+            nextLevelIndex = LevelForestWorld;
+            break;
+        case LevelForestWorld:
+            // End of available levels - could reset to first level or show completion
+            nextLevelIndex = LevelHomeWoods;
+            break;
+        default:
+            // Unknown level, start from the beginning
+            nextLevelIndex = LevelHomeWoods;
+            break;
+        }
+
+        // Switch to the next level if valid
+        if (nextLevelIndex != LevelUnknown && flipWorldRun->getEngine() && flipWorldRun->getEngine()->getGame())
+        {
+            // Set game state to switching levels
+            setGameState(GameStateSwitchingLevels);
+
+            // Switch to the next level
+            flipWorldRun->getEngine()->getGame()->level_switch((int)nextLevelIndex);
+
+            // Set the icon group for the new level
+            flipWorldRun->setIconGroup(nextLevelIndex);
+
+            // Reset player position to start position
+            position = start_position;
+            position_set(start_position);
+
+            // Mark that we just switched levels
+            justSwitchedLevels = true;
+
+            // Reset player health to full for new level
+            health = max_health;
+
+            // Set cooldown to prevent immediate re-checking (2 seconds)
+            levelCompletionCooldown = 2.0;
+
+            // Return to playing state
+            setGameState(GameStatePlaying);
+        }
+    }
+}
+
+bool Player::areAllEnemiesDead(Game *game)
+{
+    // Ensure we have a valid game and current level
+    if (!game || !game->current_level)
+    {
+        FURI_LOG_E("Player", "areAllEnemiesDead: Invalid game or current level");
+        return false;
+    }
+
+    // Get the current level
+    Level *currentLevel = game->current_level;
+    int totalEnemies = 0;
+    int deadEnemies = 0;
+
+    // Check all entities in the current level
+    for (int i = 0; i < currentLevel->getEntityCount(); i++)
+    {
+        Entity *entity = currentLevel->getEntity(i);
+
+        // Skip null entities
+        if (!entity)
+        {
+            continue;
+        }
+
+        // Check if this is an enemy entity
+        if (entity->type == ENTITY_ENEMY)
+        {
+            totalEnemies++;
+
+            if (entity->state == ENTITY_DEAD)
+            {
+                deadEnemies++;
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+
+    // Only return true if there were enemies to begin with and they're all dead
+    if (totalEnemies == 0)
+    {
+        FURI_LOG_E("Player", "No enemies found in current level!");
+        return false; // Don't switch levels if there are no enemies
+    }
+
+    return deadEnemies == totalEnemies;
 }

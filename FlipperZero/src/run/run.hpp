@@ -20,7 +20,6 @@ private:
     int atoi(const char *nptr) { return (int)strtol(nptr, NULL, 10); } // convert string to integer
     void debounceInput();                                              // debounce input to prevent multiple actions from a single press
     void inputManager();                                               // manage input for the game, called from updateInput
-    bool setIconGroup(LevelIndex index);                               // Set the current icon group based on the level index
 public:
     FlipWorldRun();
     ~FlipWorldRun();
@@ -41,7 +40,8 @@ public:
     bool isActive() const { return shouldReturnToMenu == false; }                  // Check if the game is active
     bool isRunning() const { return isGameRunning; }                               // Check if the game engine is running
     void resetInput() { lastInput = InputKeyMAX; }                                 // Reset input after processing
-    bool startGame(TitleIndex titleIndex);                                         // start the actual game
+    bool setIconGroup(LevelIndex index);                                           // Set the current icon group based on the level index
+    bool startGame();                                                              // start the actual game
     void updateDraw(Canvas *canvas);                                               // update and draw the run
     void updateInput(InputEvent *event);                                           // update input for the run
 };

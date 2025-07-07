@@ -408,9 +408,8 @@ bool FlipWorldRun::setIconGroup(LevelIndex index)
     return true;
 }
 
-bool FlipWorldRun::startGame(TitleIndex titleIndex)
+bool FlipWorldRun::startGame()
 {
-    UNUSED(titleIndex); // Currently not used, will be used for different game modes
     draw->fillScreen(ColorWhite);
     draw->text(Vector(0, 10), "Initializing game...", ColorBlack);
 
@@ -444,17 +443,22 @@ bool FlipWorldRun::startGame(TitleIndex titleIndex)
 
     // add levels and player to the game
     std::unique_ptr<Level> level1 = getLevel(LevelHomeWoods, game.get());
-    if (!level1)
-    {
-        FURI_LOG_E("FlipWorldRun", "Failed to create Level object for Home Woods");
-        return false;
-    }
+    std::unique_ptr<Level> level2 = getLevel(LevelRockWorld, game.get());
+    std::unique_ptr<Level> level3 = getLevel(LevelForestWorld, game.get());
 
-    setIconGroup(LevelHomeWoods);
+    setIconGroup(LevelHomeWoods); // once we switch levels, we need to set the icon group again
 
     level1->entity_add(player.get());
+    level2->entity_add(player.get());
+    level3->entity_add(player.get());
 
+    // Add all levels to the game engine
     game->level_add(level1.release());
+    game->level_add(level2.release());
+    game->level_add(level3.release());
+
+    // Start with the first level
+    game->level_switch(0); // Switch to LevelHomeWoods (index 0)
 
     // set game position to center of player
     game->pos = Vector(384, 192);

@@ -56,6 +56,7 @@ private:
     bool inputHeld = false;                              // whether input is held
     bool justStarted = true;                             // whether the player just started the game
     bool justSwitchedLevels = false;                     // whether the player just switched levels
+    float levelCompletionCooldown = 0;                   // cooldown timer for level completion checks
     InputKey lastInput = InputKeyMAX;                    // Last input key pressed
     ToggleState leaveGame = ToggleOff;                   // leave game toggle state
     uint8_t rainFrame = 0;                               // frame counter for rain effect
@@ -66,4 +67,6 @@ private:
     void drawUsername(Vector pos, Game *game);    // draw the username at the specified position
     void drawUserStats(Vector pos, Draw *canvas); // draw the user stats at the specified position
     void updateStats();                           // update player stats
+    void checkForLevelCompletion(Game *game);     // Check if all enemies are dead and switch to next level
+    bool areAllEnemiesDead(Game *game);           // Check if all enemies in the current level are dead
 };
