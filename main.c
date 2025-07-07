@@ -39,6 +39,7 @@
 #include "ciphers/polybius.h"
 #include "ciphers/railfence.h"
 #include "ciphers/rc4.h"
+#include "ciphers/rot13.h"
 #include "ciphers/scytale.h"
 #include "ciphers/vigenere.h"
 
@@ -153,6 +154,13 @@ typedef enum {
     FlipCryptRC4DecryptInputScene,
     FlipCryptRC4DecryptOutputScene,
     FlipCryptRC4LearnScene,
+    // ROT13 scenes
+    FlipCryptROT13SubmenuScene,
+    FlipCryptROT13InputScene,
+    FlipCryptROT13OutputScene,
+    FlipCryptROT13DecryptInputScene,
+    FlipCryptROT13DecryptOutputScene,
+    FlipCryptROT13LearnScene,
     // Scytale Cipher
     FlipCryptScytaleSubmenuScene,
     FlipCryptScytaleInputScene,
@@ -308,6 +316,8 @@ typedef struct App {
     char* rc4_input;
     char* rc4_keyword_input;
     char* rc4_decrypt_input;
+    char* rot13_input;
+    char* rot13_decrypt_input;
     char* scytale_input;
     int32_t scytale_keyword_input;
     char* scytale_decrypt_input;
@@ -358,6 +368,8 @@ typedef struct App {
     uint8_t rc4_input_size;
     uint8_t rc4_keyword_input_size;
     uint8_t rc4_decrypt_input_size;
+    uint8_t rot13_input_size;
+    uint8_t rot13_decrypt_input_size;
     uint8_t scytale_input_size;
     uint8_t scytale_decrypt_input_size;
     uint8_t vigenere_input_size;
@@ -401,6 +413,7 @@ typedef enum {
     MenuIndexPolybius,
     MenuIndexRailfence,
     MenuIndexRC4,
+    MenuIndexROT13,
     MenuIndexScytale,
     MenuIndexVigenere,
     MenuIndexBlake2,
@@ -435,6 +448,7 @@ typedef enum {
     EventPolybius,
     EventRailfence,
     EventRC4,
+    EventROT13,
     EventScytale,
     EventVigenere,
     EventBlake2,
@@ -504,6 +518,9 @@ void flip_crypt_menu_callback(void* context, uint32_t index) {
             break;
         case MenuIndexRC4:
             scene_manager_handle_custom_event(app->scene_manager, EventRC4);
+            break;
+        case MenuIndexROT13:
+            scene_manager_handle_custom_event(app->scene_manager, EventROT13);
             break;
         case MenuIndexScytale:
             scene_manager_handle_custom_event(app->scene_manager, EventScytale);
@@ -582,6 +599,7 @@ void flip_crypt_cipher_submenu_scene_on_enter(void* context) {
     submenu_add_item(app->submenu, "Polybius Square", MenuIndexPolybius, flip_crypt_menu_callback, app);
     submenu_add_item(app->submenu, "Railfence Cipher", MenuIndexRailfence, flip_crypt_menu_callback, app);
     submenu_add_item(app->submenu, "RC4 Cipher", MenuIndexRC4, flip_crypt_menu_callback, app);
+    submenu_add_item(app->submenu, "ROT-13 Cipher", MenuIndexROT13, flip_crypt_menu_callback, app);
     submenu_add_item(app->submenu, "Scytale Cipher", MenuIndexScytale, flip_crypt_menu_callback, app);
     submenu_add_item(app->submenu, "Vigenere Cipher", MenuIndexVigenere, flip_crypt_menu_callback, app);
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptSubmenuView);
@@ -675,6 +693,10 @@ bool flip_crypt_main_menu_scene_on_event(void* context, SceneManagerEvent event)
                 break;
             case EventRC4:
                 scene_manager_next_scene(app->scene_manager, FlipCryptRC4SubmenuScene);
+                consumed = true;
+                break;
+            case EventROT13:
+                scene_manager_next_scene(app->scene_manager, FlipCryptROT13SubmenuScene);
                 consumed = true;
                 break;
             case EventScytale:
@@ -788,6 +810,9 @@ void cipher_encrypt_submenu_callback(void* context, uint32_t index) {
         case FlipCryptRC4SubmenuScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptRC4KeywordInputScene);
             break;
+        case FlipCryptROT13SubmenuScene:
+            scene_manager_next_scene(app->scene_manager, FlipCryptROT13InputScene);
+            break;
         case FlipCryptScytaleSubmenuScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptScytaleKeywordInputScene);
             break;
@@ -878,6 +903,9 @@ void cipher_decrypt_submenu_callback(void* context, uint32_t index) {
         case FlipCryptRC4SubmenuScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptRC4DecryptKeywordInputScene);
             break;
+        case FlipCryptROT13SubmenuScene:
+            scene_manager_next_scene(app->scene_manager, FlipCryptROT13DecryptInputScene);
+            break;
         case FlipCryptScytaleSubmenuScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptScytaleDecryptKeywordInputScene);
             break;
@@ -935,6 +963,9 @@ void cipher_learn_submenu_callback(void* context, uint32_t index) {
             break;
         case FlipCryptRC4SubmenuScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptRC4LearnScene);
+            break;
+        case FlipCryptROT13SubmenuScene:
+            scene_manager_next_scene(app->scene_manager, FlipCryptROT13LearnScene);
             break;
         case FlipCryptScytaleSubmenuScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptScytaleLearnScene);
@@ -1177,6 +1208,12 @@ void cipher_submenu_scene_on_enter(void* context) {
             submenu_add_item(app->submenu, "Decode Text", 1, cipher_decrypt_submenu_callback, app);
             submenu_add_item(app->submenu, "Learn", 2, cipher_learn_submenu_callback, app);
             break;
+        case FlipCryptROT13SubmenuScene:
+            submenu_set_header(app->submenu, "ROT-13 Cipher");
+            submenu_add_item(app->submenu, "Encode Text", 0, cipher_encrypt_submenu_callback, app);
+            submenu_add_item(app->submenu, "Decode Text", 1, cipher_decrypt_submenu_callback, app);
+            submenu_add_item(app->submenu, "Learn", 2, cipher_learn_submenu_callback, app);
+            break;
         case FlipCryptScytaleSubmenuScene:
             submenu_set_header(app->submenu, "Scytale Cipher");
             submenu_add_item(app->submenu, "Encode Text", 0, cipher_encrypt_submenu_callback, app);
@@ -1367,6 +1404,12 @@ void flip_crypt_text_input_callback(void* context) {
         case FlipCryptRC4DecryptInputScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptRC4DecryptOutputScene);
             break;
+        case FlipCryptROT13InputScene:
+            scene_manager_next_scene(app->scene_manager, FlipCryptROT13OutputScene);
+            break;
+        case FlipCryptROT13DecryptInputScene:
+            scene_manager_next_scene(app->scene_manager, FlipCryptROT13DecryptOutputScene);
+            break;
         case FlipCryptScytaleInputScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptScytaleOutputScene);
             break;
@@ -1556,6 +1599,12 @@ void cipher_input_scene_on_enter(void* context) {
             break;
         case FlipCryptRC4DecryptInputScene:
             text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback, app, app->rc4_decrypt_input, app->rc4_decrypt_input_size, true);
+            break;
+        case FlipCryptROT13InputScene:
+            text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback, app, app->rot13_input, app->rot13_input_size, true);
+            break;
+        case FlipCryptROT13DecryptInputScene:
+            text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback, app, app->rot13_decrypt_input, app->rot13_decrypt_input_size, true);
             break;
         case FlipCryptScytaleInputScene:
             text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback, app, app->scytale_input, app->scytale_input_size, true);
@@ -1916,6 +1965,22 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             free(rc4_encrypted_bytes);
             free(rc4_decrypted);
             break;
+        case FlipCryptROT13OutputScene:
+            dialog_ex_set_text(app->dialog_ex, encrypt_rot13(app->rot13_input), 64, 18, AlignCenter, AlignCenter);
+            save_rot13_result(encrypt_rot13(app->rot13_input));
+            app->last_output_scene = "ROT13";
+            dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+            dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+            dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+            break;
+        case FlipCryptROT13DecryptOutputScene:
+            dialog_ex_set_text(app->dialog_ex, decrypt_rot13(app->rot13_decrypt_input), 64, 18, AlignCenter, AlignCenter);
+            save_rot13_decrypt_result(decrypt_rot13(app->rot13_decrypt_input));
+            app->last_output_scene = "ROT13Decrypt";
+            dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+            dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+            dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+            break;
         case FlipCryptScytaleOutputScene:
             dialog_ex_set_text(app->dialog_ex, scytale_encrypt(app->scytale_input, app->scytale_keyword_input), 64, 18, AlignCenter, AlignCenter);
             save_scytale_result(scytale_encrypt(app->scytale_input, app->scytale_keyword_input));
@@ -2204,6 +2269,10 @@ void cipher_learn_scene_on_enter(void* context) {
             widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "RC4 is a stream cipher designed by Ron Rivest in 1987 and widely used for its speed and simplicity. It generates a pseudorandom keystream that is XORed with the plaintext to produce ciphertext. RC4\'s internal state consists of a 256-byte array and a pair of index pointers, updated in a key-dependent manner. While once popular in protocols like SSL and WEP, RC4 has been found to have significant vulnerabilities, especially related to key scheduling, and is now considered insecure for modern uses.");
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
+        case FlipCryptROT13LearnScene:
+            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "ROT13 learn");
+            view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
+            break;
         case FlipCryptScytaleLearnScene:
             widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "The Scytale cipher is an ancient transposition cipher used by the Spartans. It involves wrapping a strip of parchment around a rod (scytale) of a fixed diameter and writing the message along the rod's surface. When unwrapped, the text appears scrambled unless it is rewrapped around a rod of the same size. The security relies on the secrecy of the rod's diameter. Although simple and easy to use, the Scytale cipher offers almost no security by modern standards and just of historical interest.");
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
@@ -2370,6 +2439,10 @@ void flip_crypt_nfc_scene_on_enter(void* context) {
         create_nfc_tag(context, load_rc4());
     } else if (strcmp(app->last_output_scene, "RC4Decrypt") == 0) {
         create_nfc_tag(context, load_rc4_decrypt());
+    } else if (strcmp(app->last_output_scene, "ROT13") == 0) {
+        create_nfc_tag(context, load_rot13());
+    } else if (strcmp(app->last_output_scene, "ROT13Decrypt") == 0) {
+        create_nfc_tag(context, load_rot13_decrypt());
     } else if (strcmp(app->last_output_scene, "Scytale") == 0) {
         create_nfc_tag(context, load_scytale());
     } else if (strcmp(app->last_output_scene, "ScytaleDecrypt") == 0) {
@@ -2478,6 +2551,10 @@ void flip_crypt_qr_scene_on_enter(void* context) {
         qrcodegen_encodeText(load_rc4(), app->qr_buffer, app->qrcode, qrcodegen_Ecc_LOW, qrcodegen_VERSION_MIN, 5, qrcodegen_Mask_AUTO, true);
     } else if (strcmp(app->last_output_scene, "RC4Decrypt") == 0) {
         qrcodegen_encodeText(load_rc4_decrypt(), app->qr_buffer, app->qrcode, qrcodegen_Ecc_LOW, qrcodegen_VERSION_MIN, 5, qrcodegen_Mask_AUTO, true);
+    } else if (strcmp(app->last_output_scene, "ROT13") == 0) {
+        qrcodegen_encodeText(load_rot13(), app->qr_buffer, app->qrcode, qrcodegen_Ecc_LOW, qrcodegen_VERSION_MIN, 5, qrcodegen_Mask_AUTO, true);
+    } else if (strcmp(app->last_output_scene, "ROT13Decrypt") == 0) {
+        qrcodegen_encodeText(load_rot13_decrypt(), app->qr_buffer, app->qrcode, qrcodegen_Ecc_LOW, qrcodegen_VERSION_MIN, 5, qrcodegen_Mask_AUTO, true);
     } else if (strcmp(app->last_output_scene, "Scytale") == 0) {
         qrcodegen_encodeText(load_scytale(), app->qr_buffer, app->qrcode, qrcodegen_Ecc_LOW, qrcodegen_VERSION_MIN, 5, qrcodegen_Mask_AUTO, true);
     } else if (strcmp(app->last_output_scene, "ScytaleDecrypt") == 0) {
@@ -2590,6 +2667,10 @@ void flip_crypt_save_scene_on_enter(void* context) {
         save_result(load_rc4(), app->save_name_input);
     } else if (strcmp(app->last_output_scene, "RC4Decrypt") == 0) {
         save_result(load_rc4_decrypt(), app->save_name_input);
+    } else if (strcmp(app->last_output_scene, "ROT13") == 0) {
+        save_result(load_rot13(), app->save_name_input);
+    } else if (strcmp(app->last_output_scene, "ROT13Decrypt") == 0) {
+        save_result(load_rot13_decrypt(), app->save_name_input);
     } else if (strcmp(app->last_output_scene, "Scytale") == 0) {
         save_result(load_scytale(), app->save_name_input);
     } else if (strcmp(app->last_output_scene, "ScytaleDecrypt") == 0) {
@@ -2778,6 +2859,12 @@ void (*const flip_crypt_scene_on_enter_handlers[])(void*) = {
     cipher_input_scene_on_enter,   // RC4DecryptInput
     dialog_cipher_output_scene_on_enter,  // RC4DecryptOutput
     cipher_learn_scene_on_enter,   // RC4Learn
+    cipher_submenu_scene_on_enter, // ROT13Submenu
+    cipher_input_scene_on_enter,   // ROT13Input
+    dialog_cipher_output_scene_on_enter,  // ROT13Output
+    cipher_input_scene_on_enter,   // ROT13DecryptInput
+    dialog_cipher_output_scene_on_enter,  // ROT13DecryptOutput
+    cipher_learn_scene_on_enter,   // ROT13Learn
     cipher_submenu_scene_on_enter, // ScytaleSubmenu
     cipher_input_scene_on_enter,   // ScytaleInput
     number_input_scene_on_enter,   // ScytaleKeywordInput
@@ -2945,6 +3032,12 @@ bool (*const flip_crypt_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     flip_crypt_generic_event_handler, // RC4DecryptInput
     flip_crypt_generic_event_handler, // RC4DecryptOutput
     flip_crypt_generic_event_handler, // RC4Learn
+    flip_crypt_generic_event_handler, // ROT13Submenu
+    flip_crypt_generic_event_handler, // ROT13Input
+    flip_crypt_generic_event_handler, // ROT13Output
+    flip_crypt_generic_event_handler, // ROT13DecryptInput
+    flip_crypt_generic_event_handler, // ROT13DecryptOutput
+    flip_crypt_generic_event_handler, // ROT13Learn
     flip_crypt_generic_event_handler, // ScytaleSubmenu
     flip_crypt_generic_event_handler, // ScytaleInput
     flip_crypt_generic_event_handler, // ScytaleKeywordInput
@@ -3112,6 +3205,12 @@ void (*const flip_crypt_scene_on_exit_handlers[])(void*) = {
     flip_crypt_generic_on_exit, // RC4DecryptInput
     flip_crypt_generic_on_exit, // RC4DecryptOutput
     flip_crypt_generic_on_exit, // RC4Learn
+    flip_crypt_generic_on_exit, // ROT13Submenu
+    flip_crypt_generic_on_exit, // ROT13Input
+    flip_crypt_generic_on_exit, // ROT13Output
+    flip_crypt_generic_on_exit, // ROT13DecryptInput
+    flip_crypt_generic_on_exit, // ROT13DecryptOutput
+    flip_crypt_generic_on_exit, // ROT13Learn
     flip_crypt_generic_on_exit, // ScytaleSubmenu
     flip_crypt_generic_on_exit, // ScytaleInput
     flip_crypt_generic_on_exit, // ScytaleKeywordInput
@@ -3248,6 +3347,8 @@ static App* app_alloc() {
     app->rc4_input_size = 64;
     app->rc4_keyword_input_size = 64;
     app->rc4_decrypt_input_size = 64;
+    app->rot13_input_size = 64;
+    app->rot13_decrypt_input_size = 64;
     app->scytale_input_size = 64;
     app->scytale_decrypt_input_size = 64;
     app->vigenere_input_size = 64;
@@ -3301,6 +3402,8 @@ static App* app_alloc() {
     app->rc4_input = malloc(app->rc4_input_size);
     app->rc4_keyword_input = malloc(app->rc4_keyword_input_size);
     app->rc4_decrypt_input = malloc(app->rc4_decrypt_input_size);
+    app->rot13_input = malloc(app->rot13_input_size);
+    app->rot13_decrypt_input = malloc(app->rot13_decrypt_input_size);
     app->scytale_input = malloc(app->scytale_input_size);
     app->scytale_keyword_input = 0;
     app->scytale_decrypt_input = malloc(app->scytale_decrypt_input_size);
@@ -3395,6 +3498,8 @@ static void app_free(App* app) {
     free(app->rc4_input);
     free(app->rc4_keyword_input);
     free(app->rc4_decrypt_input);
+    free(app->rot13_input);
+    free(app->rot13_decrypt_input);
     free(app->scytale_input);
     free(app->scytale_decrypt_input);
     free(app->vigenere_input);

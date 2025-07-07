@@ -1,3 +1,6 @@
+## V0.3
+- Added ROT-13 cipher.
+
 ## V0.2
 - Fixed typos.
 - Added menu to select between tool categories on main menu.

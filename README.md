@@ -13,6 +13,7 @@ FlipCrypt is a Flipper Zero app that provides a collection of classic cipher alg
 - Polybius Square
 - Rail Fence
 - RC4
+- ROT-13
 - Scytale
 - Vigenère
 

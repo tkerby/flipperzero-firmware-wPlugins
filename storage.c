@@ -216,6 +216,26 @@ void save_rc4_decrypt_result(const char* text) {
     furi_record_close(RECORD_STORAGE);
 }
 
+void save_rot13_result(const char* text) {
+    File* file = storage_file_alloc(furi_record_open(RECORD_STORAGE));
+    if(storage_file_open(file, APP_DATA_PATH("rot13.txt"), FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+        storage_file_write(file, text, strlen(text));
+    }
+    storage_file_close(file);
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
+}
+
+void save_rot13_decrypt_result(const char* text) {
+    File* file = storage_file_alloc(furi_record_open(RECORD_STORAGE));
+    if(storage_file_open(file, APP_DATA_PATH("rot13_decrypt.txt"), FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+        storage_file_write(file, text, strlen(text));
+    }
+    storage_file_close(file);
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
+}
+
 void save_scytale_result(const char* text) {
     File* file = storage_file_alloc(furi_record_open(RECORD_STORAGE));
     if(storage_file_open(file, APP_DATA_PATH("scytale.txt"), FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
@@ -791,6 +811,44 @@ char* load_rc4_decrypt() {
     File* file = storage_file_alloc(furi_record_open(RECORD_STORAGE));
     char* result = NULL;
     if(storage_file_open(file, APP_DATA_PATH("rc4_decrypt.txt"), FSAM_READ, FSOM_OPEN_EXISTING)) {
+        size_t file_size = storage_file_size(file);
+        if(file_size > 0) {
+            result = malloc(file_size + 1);
+            storage_file_read(file, result, file_size);
+            result[file_size] = '\0';
+        } else {
+            return "FAILURE";
+        }
+        storage_file_close(file);
+    }
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
+    return result;
+}
+
+char* load_rot13() {
+    File* file = storage_file_alloc(furi_record_open(RECORD_STORAGE));
+    char* result = NULL;
+    if(storage_file_open(file, APP_DATA_PATH("rot13.txt"), FSAM_READ, FSOM_OPEN_EXISTING)) {
+        size_t file_size = storage_file_size(file);
+        if(file_size > 0) {
+            result = malloc(file_size + 1);
+            storage_file_read(file, result, file_size);
+            result[file_size] = '\0';
+        } else {
+            return "FAILURE";
+        }
+        storage_file_close(file);
+    }
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
+    return result;
+}
+
+char* load_rot13_decrypt() {
+    File* file = storage_file_alloc(furi_record_open(RECORD_STORAGE));
+    char* result = NULL;
+    if(storage_file_open(file, APP_DATA_PATH("rot13_decrypt.txt"), FSAM_READ, FSOM_OPEN_EXISTING)) {
         size_t file_size = storage_file_size(file);
         if(file_size > 0) {
             result = malloc(file_size + 1);
