@@ -7,7 +7,7 @@
 class Sprite : public Entity
 {
 public:
-    Sprite(const char *name, EntityType type, Vector position, Vector endPosition, Vector size, float move_timer, float speed, float attack_timer, float strength, float health);
+    Sprite(const char *name, EntityType type, Vector position, Vector endPosition, float move_timer, float speed, float attack_timer, float strength, float health);
     ~Sprite() = default;
     void collision(Entity *other, Game *game) override;
     void drawUsername(Vector pos, Game *game);

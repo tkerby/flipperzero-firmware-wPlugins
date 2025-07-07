@@ -1,8 +1,16 @@
 #include "run/sprites.hpp"
+#include "run/assets.hpp"
 #include <math.h>
 
-Sprite::Sprite(const char *name, EntityType type, Vector position, Vector endPosition, Vector size, float move_timer, float speed, float attack_timer, float strength, float health)
-    : Entity(name, type, position, size, nullptr, nullptr, nullptr)
+Sprite::Sprite(const char *name, EntityType type, Vector position, Vector endPosition, float move_timer, float speed, float attack_timer, float strength, float health)
+    : Entity(
+          name,
+          type,
+          position,
+          Vector(0, 0),
+          nullptr,
+          nullptr,
+          nullptr)
 {
     this->start_position = position;
     this->end_position = endPosition == Vector(-1, -1) ? position : endPosition;
@@ -12,6 +20,42 @@ Sprite::Sprite(const char *name, EntityType type, Vector position, Vector endPos
     this->attack_timer = attack_timer;
     this->strength = strength;
     this->health = health;
+
+    if (strcmp(name, "Cyclops") == 0)
+    {
+        sprite = enemy_left_cyclops_10x11px;
+        sprite_left = enemy_left_cyclops_10x11px;
+        sprite_right = enemy_right_cyclops_10x11px;
+        size = Vector(10, 11);
+    }
+    else if (strcmp(name, "Ogre") == 0)
+    {
+        sprite = enemy_left_ogre_10x13px;
+        sprite_left = enemy_left_ogre_10x13px;
+        sprite_right = enemy_right_ogre_10x13px;
+        size = Vector(10, 13);
+    }
+    else if (strcmp(name, "Ghost") == 0)
+    {
+        sprite = enemy_left_ghost_15x15px;
+        sprite_left = enemy_left_ghost_15x15px;
+        sprite_right = enemy_right_ghost_15x15px;
+        size = Vector(15, 15);
+    }
+    else if (strcmp(name, "Funny NPC") == 0)
+    {
+        sprite = npc_left_funny_15x21px;
+        sprite_left = npc_left_funny_15x21px;
+        sprite_right = npc_right_funny_15x21px;
+        size = Vector(15, 21);
+    }
+    else
+    {
+        // Default sprite
+        sprite = nullptr;
+        sprite_left = nullptr;
+        sprite_right = nullptr;
+    }
 }
 
 void Sprite::collision(Entity *other, Game *game)
