@@ -208,9 +208,296 @@ void Player::drawCurrentView(Draw *canvas)
     case GameViewUserInfo:
         drawUserInfoView(canvas);
         break;
+    case GameViewLobbies:
+        drawLobbiesView(canvas);
+        break;
+    case GameViewJoinLobby:
+        drawJoinLobbyView(canvas);
+        break;
     default:
         canvas->fillScreen(ColorWhite);
         canvas->text(Vector(0, 10), "Unknown View", ColorBlack);
+        break;
+    }
+}
+
+void Player::drawJoinLobbyView(Draw *canvas)
+{
+    static bool loadingStarted = false;
+    switch (joinLobbyStatus)
+    {
+    case JoinLobbyWaiting:
+        if (!loadingStarted)
+        {
+            if (!loading)
+            {
+                loading = std::make_unique<Loading>(canvas);
+            }
+            loadingStarted = true;
+            if (loading)
+            {
+                loading->setText("Joining...");
+            }
+        }
+        if (!this->httpRequestIsFinished())
+        {
+            if (loading)
+            {
+                loading->animate();
+            }
+        }
+        else
+        {
+            char response[512];
+            FlipWorldApp *app = static_cast<FlipWorldApp *>(flipWorldRun->appContext);
+            if (app && app->loadChar("join_lobby", response, sizeof(response)))
+            {
+                // no need to check response this time, just join the game if a response is received
+                joinLobbyStatus = JoinLobbySuccess;
+
+                if (loading)
+                {
+                    loading->stop();
+                }
+                loadingStarted = false;
+                currentMainView = GameViewGame; // switch to game view
+                flipWorldRun->startGame();
+            }
+            else
+            {
+                joinLobbyStatus = JoinLobbyRequestError;
+            }
+        }
+        break;
+    case JoinLobbySuccess:
+        canvas->fillScreen(ColorWhite);
+        canvas->setFont(FontPrimary);
+        canvas->text(Vector(0, 10), "User info loaded successfully!", ColorBlack);
+        canvas->text(Vector(0, 20), "Press OK to continue.", ColorBlack);
+        break;
+    case JoinLobbyCredentialsMissing:
+        canvas->fillScreen(ColorWhite);
+        canvas->setFont(FontPrimary);
+        canvas->text(Vector(0, 10), "Missing credentials!", ColorBlack);
+        canvas->text(Vector(0, 20), "Please update your username", ColorBlack);
+        canvas->text(Vector(0, 30), "and password in the settings.", ColorBlack);
+        break;
+    case JoinLobbyRequestError:
+        canvas->fillScreen(ColorWhite);
+        canvas->setFont(FontPrimary);
+        canvas->text(Vector(0, 10), "User info request failed!", ColorBlack);
+        canvas->text(Vector(0, 20), "Check your network and", ColorBlack);
+        canvas->text(Vector(0, 30), "try again later.", ColorBlack);
+        break;
+    case JoinLobbyParseError:
+        canvas->fillScreen(ColorWhite);
+        canvas->setFont(FontPrimary);
+        canvas->text(Vector(0, 10), "Failed to parse user info!", ColorBlack);
+        canvas->text(Vector(0, 20), "Try again...", ColorBlack);
+        break;
+    default:
+        canvas->fillScreen(ColorWhite);
+        canvas->setFont(FontPrimary);
+        canvas->text(Vector(0, 10), "Loading user info...", ColorBlack);
+        break;
+    }
+}
+
+void Player::drawLobbiesView(Draw *canvas)
+{
+    static bool loadingStarted = false;
+    switch (lobbiesStatus)
+    {
+    case LobbiesWaiting:
+        if (!loadingStarted)
+        {
+            if (!loading)
+            {
+                loading = std::make_unique<Loading>(canvas);
+            }
+            loadingStarted = true;
+            if (loading)
+            {
+                loading->setText("Fetching...");
+            }
+            userRequest(RequestTypeLobbies);
+            return;
+        }
+        if (!this->httpRequestIsFinished())
+        {
+            if (loading)
+            {
+                loading->animate();
+            }
+        }
+        else
+        {
+            char *response = (char *)malloc(512);
+            FlipWorldApp *app = static_cast<FlipWorldApp *>(flipWorldRun->appContext);
+            if (app && app->loadChar("lobbies", response, 512))
+            {
+                lobbiesStatus = LobbiesSuccess;
+                lobbyCount = 0;
+                currentLobbyIndex = 0; // Reset selection to first lobby
+
+                // parse the lobbies and store them
+                for (uint32_t i = 0; i < 10; i++)
+                {
+                    char *lobby = get_json_array_value("lobbies", i, response);
+                    if (!lobby)
+                    {
+                        FURI_LOG_I(TAG, "No more lobbies found (total: %d)", lobbyCount);
+                        break;
+                    }
+
+                    char *lobby_id = get_json_value("id", lobby);
+                    char *lobby_name = get_json_value("name", lobby);
+                    char *player_count = get_json_value("player_count", lobby);
+                    char *max_players = get_json_value("max_players", lobby);
+
+                    if (lobby_id && strlen(lobby_id) > 0)
+                    {
+                        // Store lobby ID
+                        strncpy(lobbies[lobbyCount].id, lobby_id, sizeof(lobbies[lobbyCount].id) - 1);
+                        lobbies[lobbyCount].id[sizeof(lobbies[lobbyCount].id) - 1] = '\0';
+
+                        // Store lobby name (use ID if name is not available)
+                        if (lobby_name && strlen(lobby_name) > 0)
+                        {
+                            strncpy(lobbies[lobbyCount].name, lobby_name, sizeof(lobbies[lobbyCount].name) - 1);
+                            lobbies[lobbyCount].name[sizeof(lobbies[lobbyCount].name) - 1] = '\0';
+                        }
+                        else
+                        {
+                            snprintf(lobbies[lobbyCount].name, sizeof(lobbies[lobbyCount].name), "Lobby %s", lobby_id);
+                        }
+
+                        // Store player counts
+                        lobbies[lobbyCount].playerCount = player_count ? atoi(player_count) : 0;
+                        lobbies[lobbyCount].maxPlayers = max_players ? atoi(max_players) : 10;
+
+                        lobbyCount++;
+                    }
+                    else
+                    {
+                        FURI_LOG_E(TAG, "Failed to get lobby ID for lobby %lu", (unsigned long)i);
+                    }
+
+                    // Free the parsed strings
+                    free(lobby);
+                    if (lobby_id)
+                        free(lobby_id);
+                    if (lobby_name)
+                        free(lobby_name);
+                    if (player_count)
+                        free(player_count);
+                    if (max_players)
+                        free(max_players);
+                }
+
+                if (lobbyCount == 0)
+                {
+                    FURI_LOG_E(TAG, "No valid lobbies found in response");
+                }
+
+                ::free(response);
+            }
+            else
+            {
+                lobbiesStatus = LobbiesRequestError;
+                ::free(response);
+            }
+        }
+        break;
+    case LobbiesSuccess:
+        canvas->fillScreen(ColorWhite);
+        canvas->setFont(FontPrimary);
+        canvas->text(Vector(5, 10), "Select a Lobby:", ColorBlack);
+
+        if (lobbyCount == 0)
+        {
+            canvas->text(Vector(5, 25), "No lobbies available", ColorBlack);
+            canvas->setFont(FontSecondary);
+            canvas->text(Vector(5, 40), "Press Back to return", ColorBlack);
+        }
+        else
+        {
+            // Display lobbies in a selectable menu format
+            int startY = 20;
+            int itemHeight = 12;
+            int maxDisplayItems = 4; // Maximum items to display at once
+
+            // Calculate which lobbies to display (scrolling if needed)
+            int displayStart = 0;
+            if (lobbyCount > maxDisplayItems)
+            {
+                displayStart = currentLobbyIndex - maxDisplayItems / 2;
+                if (displayStart < 0)
+                    displayStart = 0;
+                if (displayStart + maxDisplayItems > lobbyCount)
+                    displayStart = lobbyCount - maxDisplayItems;
+            }
+
+            for (int i = 0; i < maxDisplayItems && (displayStart + i) < lobbyCount; i++)
+            {
+                int lobbyIndex = displayStart + i;
+                int y = startY + i * itemHeight;
+
+                // Highlight the selected lobby
+                if (lobbyIndex == currentLobbyIndex)
+                {
+                    canvas->fillRect(Vector(3, y - 2), Vector(122, itemHeight), ColorBlack);
+                    canvas->color(ColorWhite);
+                }
+                else
+                {
+                    canvas->color(ColorBlack);
+                }
+
+                // Display lobby name and player count
+                char lobbyText[80];
+                // Truncate lobby name if it's too long
+                char truncatedName[32];
+                strncpy(truncatedName, lobbies[lobbyIndex].name, sizeof(truncatedName) - 1);
+                truncatedName[sizeof(truncatedName) - 1] = '\0';
+
+                snprintf(lobbyText, sizeof(lobbyText), "%s (%d/%d)",
+                         truncatedName,
+                         lobbies[lobbyIndex].playerCount,
+                         lobbies[lobbyIndex].maxPlayers);
+
+                canvas->setFont(FontSecondary);
+                canvas->text(Vector(5, y + 7), lobbyText, lobbyIndex == currentLobbyIndex ? ColorWhite : ColorBlack);
+
+                // Reset color
+                canvas->color(ColorBlack);
+            }
+        }
+        break;
+    case LobbiesCredentialsMissing:
+        canvas->fillScreen(ColorWhite);
+        canvas->setFont(FontPrimary);
+        canvas->text(Vector(0, 10), "Missing credentials!", ColorBlack);
+        canvas->text(Vector(0, 20), "Please update your username", ColorBlack);
+        canvas->text(Vector(0, 30), "and password in the settings.", ColorBlack);
+        break;
+    case LobbiesRequestError:
+        canvas->fillScreen(ColorWhite);
+        canvas->setFont(FontPrimary);
+        canvas->text(Vector(0, 10), "User info request failed!", ColorBlack);
+        canvas->text(Vector(0, 20), "Check your network and", ColorBlack);
+        canvas->text(Vector(0, 30), "try again later.", ColorBlack);
+        break;
+    case LobbiesParseError:
+        canvas->fillScreen(ColorWhite);
+        canvas->setFont(FontPrimary);
+        canvas->text(Vector(0, 10), "Failed to parse user info!", ColorBlack);
+        canvas->text(Vector(0, 20), "Try again...", ColorBlack);
+        break;
+    default:
+        canvas->fillScreen(ColorWhite);
+        canvas->setFont(FontPrimary);
+        canvas->text(Vector(0, 10), "Loading user info...", ColorBlack);
         break;
     }
 }
@@ -522,7 +809,7 @@ void Player::drawUserInfoView(Draw *canvas)
             loadingStarted = true;
             if (loading)
             {
-                loading->setText("Fetching...");
+                loading->setText("Syncing...");
             }
         }
         if (!this->httpRequestIsFinished())
@@ -612,24 +899,23 @@ void Player::drawUserInfoView(Draw *canvas)
                 ::free(max_health);
                 ::free(game_stats);
 
-                canvas->fillScreen(ColorWhite);
-                canvas->text(Vector(0, 10), "Memory freed!", ColorBlack);
-
-                currentMainView = GameViewGame; // switch to game view
-
                 if (loading)
                 {
                     loading->stop();
                 }
                 loadingStarted = false;
 
-                canvas->fillScreen(ColorWhite);
-                canvas->text(Vector(0, 10), "User info loaded successfully!", ColorBlack);
-                canvas->text(Vector(0, 20), "Please wait...", ColorBlack);
-                canvas->text(Vector(0, 30), "Starting game...", ColorBlack);
-                canvas->text(Vector(0, 40), "It may take up to 15 seconds.", ColorBlack);
-
-                flipWorldRun->startGame();
+                // if story, start immediately, otherwise load the lobbies
+                if (currentTitleIndex == TitleIndexStory)
+                {
+                    currentMainView = GameViewGame; // switch to game view
+                    flipWorldRun->startGame();
+                }
+                else
+                {
+                    currentMainView = GameViewLobbies; // switch to lobbies view
+                    lobbiesStatus = LobbiesWaiting;    // set lobbies status to waiting
+                }
                 return;
             }
             else
@@ -882,6 +1168,53 @@ void Player::processInput()
             break;
         }
         break;
+
+    case GameViewGame:
+        // Game view input is handled by the game engine itself
+        // No additional input processing needed here
+        break;
+
+    case GameViewLobbies:
+        switch (currentInput)
+        {
+        case InputKeyBack:
+            currentMainView = GameViewTitle;
+            flipWorldRun->shouldDebounce = true;
+            break;
+        case InputKeyUp:
+            if (lobbiesStatus == LobbiesSuccess && lobbyCount > 0)
+            {
+                currentLobbyIndex = (currentLobbyIndex - 1 + lobbyCount) % lobbyCount;
+                flipWorldRun->shouldDebounce = true;
+            }
+            break;
+        case InputKeyDown:
+            if (lobbiesStatus == LobbiesSuccess && lobbyCount > 0)
+            {
+                currentLobbyIndex = (currentLobbyIndex + 1) % lobbyCount;
+                flipWorldRun->shouldDebounce = true;
+            }
+            break;
+        case InputKeyOk:
+            if (lobbiesStatus == LobbiesSuccess && lobbyCount > 0 && currentLobbyIndex < lobbyCount)
+            {
+                currentMainView = GameViewJoinLobby;
+                flipWorldRun->shouldDebounce = true;
+                joinLobbyStatus = JoinLobbyWaiting;
+                userRequest(RequestTypeJoinLobby);
+            }
+            else if (lobbiesStatus != LobbiesSuccess)
+            {
+                // If lobbies failed to load, go back to title
+                currentMainView = GameViewTitle;
+                flipWorldRun->shouldDebounce = true;
+            }
+            break;
+        default:
+            break;
+        }
+        break;
+
     default:
         break;
     }
@@ -1118,6 +1451,16 @@ void Player::userRequest(RequestType requestType)
         case RequestTypeUserInfo:
             userInfoStatus = UserInfoCredentialsMissing;
             break;
+        case RequestTypeLobbies:
+            lobbiesStatus = LobbiesCredentialsMissing;
+            break;
+        default:
+            FURI_LOG_E("Player", "Unknown request type: %d", requestType);
+            loginStatus = LoginRequestError;
+            registrationStatus = RegistrationRequestError;
+            userInfoStatus = UserInfoRequestError;
+            lobbiesStatus = LobbiesRequestError;
+            break;
         }
         free(username);
         free(password);
@@ -1173,11 +1516,44 @@ void Player::userRequest(RequestType requestType)
         free(url);
     }
     break;
+    case RequestTypeLobbies:
+    {
+        // 10 max players, 4 max lobbies
+        if (!app->httpRequestAsync("lobbies.txt",
+                                   "https://www.jblanked.com/flipper/api/world/pve/lobbies/10/4/",
+                                   GET, "{\"Content-Type\":\"application/json\"}"))
+        {
+            lobbiesStatus = LobbiesRequestError;
+        }
+    }
+    break;
+    case RequestTypeJoinLobby:
+    {
+        char *payload2 = (char *)malloc(256);
+        if (!payload2)
+        {
+            FURI_LOG_E("Player", "userRequest: Failed to allocate memory for payload2");
+            joinLobbyStatus = JoinLobbyRequestError;
+            free(username);
+            free(password);
+            free(payload);
+            return;
+        }
+        snprintf(payload2, 256, "{\"username\":\"%s\", \"game_id\":\"%s\"}", username, lobbies[currentLobbyIndex].id);
+        if (!app->httpRequestAsync("join_lobby.txt",
+                                   "https://www.jblanked.com/flipper/api/world/pve/lobby/join/",
+                                   POST, "{\"Content-Type\":\"application/json\"}", payload2))
+        {
+            joinLobbyStatus = JoinLobbyRequestError;
+        }
+    }
+    break;
     default:
         FURI_LOG_E("Player", "Unknown request type: %d", requestType);
         loginStatus = LoginRequestError;
         registrationStatus = RegistrationRequestError;
         userInfoStatus = UserInfoRequestError;
+        lobbiesStatus = LobbiesRequestError;
         free(username);
         free(password);
         free(payload);

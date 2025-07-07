@@ -15,8 +15,10 @@ typedef enum
     GameViewSystemMenu = 1,   // profile, settings (menu)
     GameViewGame = 2,         // story mode
     GameViewLogin = 3,        // login view
-    GameViewRegistration = 7, // registration view
-    GameViewUserInfo = 8      // user info view
+    GameViewRegistration = 4, // registration view
+    GameViewUserInfo = 5,     // user info view
+    GameViewLobbies = 6,      // lobbies view
+    GameViewJoinLobby = 7     // join lobby view
 } GameMainView;
 
 typedef enum
@@ -52,9 +54,46 @@ typedef enum
 
 typedef enum
 {
-    RequestTypeLogin = 0,        // Request login
-    RequestTypeRegistration = 1, // Request registration
-    RequestTypeUserInfo = 2,     // Request user info
+    LobbiesCredentialsMissing = -1, // Credentials missing
+    LobbiesSuccess = 0,             // Lobbies fetched successfully
+    LobbiesRequestError = 1,        // Request error
+    LobbiesNotStarted = 2,          // Lobbies request not started
+    LobbiesWaiting = 3,             // Waiting for response
+    LobbiesParseError = 4,          // Error parsing lobbies
+} LobbiesStatus;
+
+typedef enum
+{
+    JoinLobbyCredentialsMissing = -1, // Credentials missing
+    JoinLobbySuccess = 0,             // Successfully joined lobby
+    JoinLobbyRequestError = 1,        // Request error
+    JoinLobbyNotStarted = 2,          // Join lobby request not started
+    JoinLobbyWaiting = 3,             // Waiting for response
+    JoinLobbyParseError = 4,          // Error parsing join lobby response
+} JoinLobbyStatus;
+
+// Structure to store lobby information
+struct LobbyInfo
+{
+    char id[32];
+    char name[64];
+    int playerCount;
+    int maxPlayers;
+
+    LobbyInfo() : playerCount(0), maxPlayers(0)
+    {
+        id[0] = '\0';
+        name[0] = '\0';
+    }
+};
+
+typedef enum
+{
+    RequestTypeLogin = 0,        // Request login (login the user)
+    RequestTypeRegistration = 1, // Request registration (register the user)
+    RequestTypeUserInfo = 2,     // Request user infon (fetch user info)
+    RequestTypeLobbies = 3,      // Request lobbies (fetch lobbies/servers available)
+    RequestTypeJoinLobby = 4,    // Request to join a lobby (join a specific lobby)
 } RequestType;
 
 class FlipWorldRun;
@@ -93,20 +132,29 @@ private:
     GameState gameState = GameStatePlaying;                         // current game state
     bool hasBeenPositioned = false;                                 // Track if player has been positioned to prevent repeated resets
     bool inputHeld = false;                                         // whether input is held
+    JoinLobbyStatus joinLobbyStatus = JoinLobbyNotStarted;          // current join lobby status
     bool justStarted = true;                                        // whether the player just started the game
     bool justSwitchedLevels = false;                                // whether the player just switched levels
     float levelCompletionCooldown = 0;                              // cooldown timer for level completion checks
     InputKey lastInput = InputKeyMAX;                               // Last input key pressed
     ToggleState leaveGame = ToggleOff;                              // leave game toggle state
     std::unique_ptr<Loading> loading;                               // loading animation instance
+    LobbiesStatus lobbiesStatus = LobbiesNotStarted;                // Current lobbies status
     LoginStatus loginStatus = LoginNotStarted;                      // Current login status
     uint8_t rainFrame = 0;                                          // frame counter for rain effect
     RegistrationStatus registrationStatus = RegistrationNotStarted; // Current registration status
     UserInfoStatus userInfoStatus = UserInfoNotStarted;             // Current user info status
 
+    // Lobby-related variables
+    LobbyInfo lobbies[10];     // Array to store lobby information (max 10 lobbies)
+    int currentLobbyIndex = 0; // Current selected lobby index
+    int lobbyCount = 0;        // Number of lobbies loaded
+
     bool areAllEnemiesDead(Game *game);           // Check if all enemies in the current level are dead
     void checkForLevelCompletion(Game *game);     // Check if all enemies are dead and switch to next level
+    void drawLobbiesView(Draw *canvas);           // draw the lobbies view
     void drawLoginView(Draw *canvas);             // draw the login view
+    void drawJoinLobbyView(Draw *canvas);         // draw the join lobby view
     void drawRainEffect(Draw *canvas);            // draw the rain effect
     void drawRegistrationView(Draw *canvas);      // draw the registration view
     void drawSystemMenuView(Draw *canvas);        // draw the system menu view

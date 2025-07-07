@@ -1,4 +1,5 @@
 #pragma once
+#include "engine/vector.hpp"
 #include <stdint.h>
 #include <memory>
 

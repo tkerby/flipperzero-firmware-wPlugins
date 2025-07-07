@@ -4,6 +4,16 @@
 #include "run/general.hpp"
 #include "run/player.hpp"
 
+/* Last thing to do is Multiplayer Implementation (PVE mode)
+
+Steps:
+1. Login/Fetch User Info as usual (done)
+2. Fetch and display the list of available lobbies/servers (done)
+3. Start a websocket session to the selected lobby (app->websocketStart())
+4. Handle incoming messages from the websocket to update the game state/draw other users/set other users as enemies
+
+*/
+
 class FlipWorldApp;
 
 class FlipWorldRun
