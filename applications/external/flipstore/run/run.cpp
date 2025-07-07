@@ -1,12 +1,43 @@
 #include "run/run.hpp"
 #include "app.hpp"
 
-FlipDownloaderRun::FlipDownloaderRun() {
-    // nothing to do
+// keyboard layouts
+static const char keyboard_lowercase[3][11] = {
+    {'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '\0'},
+    {'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', '-', '\0'},
+    {'z', 'x', 'c', 'v', 'b', 'n', 'm', '.', '_', '/', '\0'}};
+
+static const char keyboard_uppercase[3][11] = {
+    {'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '\0'},
+    {'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', '-', '\0'},
+    {'Z', 'X', 'C', 'V', 'B', 'N', 'M', '.', '_', '/', '\0'}};
+
+static const char keyboard_numbers[3][11] = {
+    {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\0'},
+    {'@', '#', '$', '%', '&', '*', '+', '=', '?', '!', '\0'},
+    {'(', ')', '[', ']', '{', '}', '<', '>', '|', '\\', '\0'}};
+
+FlipDownloaderRun::FlipDownloaderRun()
+    : isLoadingNextApps{false} {
+    // Initialize download queue
+    downloadQueueSize = 0;
+    currentDownloadIndex = 0;
+    isProcessingQueue = false;
+
+    // Initialize GitHub download state
+    isGitHubDownloading = false;
+    isGitHubDownloadComplete = false;
+    github_download_delay_counter = 0;
 }
 
 FlipDownloaderRun::~FlipDownloaderRun() {
     // nothing to do
+}
+
+void FlipDownloaderRun::clearDownloadQueue() {
+    downloadQueueSize = 0;
+    currentDownloadIndex = 0;
+    isProcessingQueue = false;
 }
 
 uint8_t FlipDownloaderRun::countAppsInCategory(FlipperAppCategory category) {
@@ -25,67 +56,105 @@ uint8_t FlipDownloaderRun::countAppsInCategory(FlipperAppCategory category) {
     const char* jsonText = furi_string_get_cstr(appInfo);
     uint8_t count = 0;
 
-    // Find the opening bracket of the array
-    const char* arrayStart = strchr(jsonText, '[');
+    // Find the opening bracket of the array using manual search
+    const char* arrayStart = nullptr;
+    const char* pos = jsonText;
+    while(*pos != '\0') {
+        if(*pos == '[') {
+            arrayStart = pos;
+            break;
+        }
+        pos++;
+    }
     if(!arrayStart) {
         furi_string_free(appInfo);
         return 0;
     }
 
-    const char* pos = arrayStart + 1;
+    const char* current = arrayStart + 1;
 
     // Count objects in the array
-    while(*pos) {
+    while(*current) {
         // Skip whitespace
-        while(*pos &&
-              (*pos == ' ' || *pos == '\t' || *pos == '\n' || *pos == '\r' || *pos == ',')) {
-            pos++;
+        while(*current && (*current == ' ' || *current == '\t' || *current == '\n' ||
+                           *current == '\r' || *current == ',')) {
+            current++;
         }
 
         // Check if we've reached the end of the array
-        if(*pos == ']') {
+        if(*current == ']') {
             break;
         }
 
         // Look for opening brace
-        if(*pos == '{') {
+        if(*current == '{') {
             count++;
 
             // Skip this entire object
             int braceCount = 1;
-            pos++; // Move past the opening brace
+            current++; // Move past the opening brace
 
-            while(*pos && braceCount > 0) {
-                if(*pos == '"') {
+            while(*current && braceCount > 0) {
+                if(*current == '"') {
                     // Skip string content completely
-                    pos++;
-                    while(*pos && *pos != '"') {
-                        if(*pos == '\\' && *(pos + 1)) {
-                            pos += 2; // Skip escaped character
+                    current++;
+                    while(*current && *current != '"') {
+                        if(*current == '\\' && *(current + 1)) {
+                            current += 2; // Skip escaped character
                         } else {
-                            pos++;
+                            current++;
                         }
                     }
-                    if(*pos == '"') {
-                        pos++; // Skip closing quote
+                    if(*current == '"') {
+                        current++; // Skip closing quote
                     }
-                } else if(*pos == '{') {
+                } else if(*current == '{') {
                     braceCount++;
-                    pos++;
-                } else if(*pos == '}') {
+                    current++;
+                } else if(*current == '}') {
                     braceCount--;
-                    pos++;
+                    current++;
                 } else {
-                    pos++;
+                    current++;
                 }
             }
         } else {
-            pos++;
+            current++;
         }
     }
 
     furi_string_free(appInfo);
     return count;
+}
+
+int FlipDownloaderRun::countChar(const char* s, char c) {
+    int count = 0;
+    for(; *s; s++) {
+        if(*s == c) {
+            count++;
+        }
+    }
+    return count;
+}
+
+bool FlipDownloaderRun::createDirectory(const char* dirPath) {
+    if(!dirPath || dirPath[0] == '\0') {
+        return false;
+    }
+
+    Storage* storage = static_cast<Storage*>(furi_record_open(RECORD_STORAGE));
+    if(!storage) {
+        return false;
+    }
+
+    if(!storage_common_exists(storage, dirPath) &&
+       storage_common_mkdir(storage, dirPath) != FSE_OK) {
+        FURI_LOG_E(TAG, "Failed to create directory %s", dirPath);
+        furi_record_close(RECORD_STORAGE);
+        return false;
+    }
+    furi_record_close(RECORD_STORAGE);
+    return true;
 }
 
 void FlipDownloaderRun::deleteFile(const char* filePath) {
@@ -358,7 +427,25 @@ void FlipDownloaderRun::drawDownloadProgress(Canvas* canvas) {
             // if we get here that means download is done
             // since the state is IDLE
             isDownloading = false;
-            isDownloadComplete = true;
+
+            // Check if we're processing a queue
+            if(isProcessingQueue) {
+                currentDownloadIndex++;
+                idleCheckCounter = 0; // Reset counter
+
+                // Check if there are more downloads in the queue
+                if(currentDownloadIndex < downloadQueueSize) {
+                    // Process next download
+                    processDownloadQueue();
+                } else {
+                    // Queue is complete
+                    isDownloadComplete = true;
+                    isProcessingQueue = false;
+                }
+            } else {
+                isDownloadComplete = true;
+            }
+
             idleCheckCounter = 0; // Reset counter
         }
         break;
@@ -386,6 +473,19 @@ void FlipDownloaderRun::drawDownloadProgress(Canvas* canvas) {
             loading = std::make_unique<Loading>(canvas);
         }
         loading->animate();
+
+        // Show current file progress if processing queue
+        if(isProcessingQueue) {
+            canvas_set_font_custom(canvas, FONT_SIZE_MEDIUM);
+            char fileProgressText[64];
+            snprintf(
+                fileProgressText,
+                sizeof(fileProgressText),
+                "File %d/%d",
+                currentDownloadIndex + 1,
+                downloadQueueSize);
+            canvas_draw_str(canvas, 5, 15, fileProgressText);
+        }
 
         // Show download progress (bytes received / total bytes)
         size_t bytesReceived = app->getBytesReceived();
@@ -433,6 +533,378 @@ void FlipDownloaderRun::drawDownloadProgress(Canvas* canvas) {
     default:
         break;
     };
+}
+
+void FlipDownloaderRun::drawGitHubInput(Canvas* canvas) {
+    canvas_clear(canvas);
+
+    // Get current keyboard layout
+    const char(*keyboard)[11];
+    const char* mode_name;
+    switch(text_input_keyboard_mode) {
+    case 1:
+        keyboard = keyboard_uppercase;
+        mode_name = text_input_caps_lock ? "CAPS" : "ABC";
+        break;
+    case 2:
+        keyboard = keyboard_numbers;
+        mode_name = "123";
+        break;
+    default:
+        keyboard = keyboard_lowercase;
+        mode_name = "abc";
+        break;
+    }
+
+    // Draw title and current input
+    canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
+    if(currentView == RunViewGitHubAuthor) {
+        canvas_draw_str(canvas, 0, 8, "Author:");
+        canvas_draw_str(canvas, 42, 8, github_author);
+    } else if(currentView == RunViewGitHubRepo) {
+        canvas_draw_str(canvas, 0, 8, "Repo:");
+        canvas_draw_str(canvas, 32, 8, github_repo);
+    }
+
+    // Draw mode indicator in top right
+    canvas_draw_str(canvas, 100, 8, mode_name);
+
+    // Draw compact 3x10 virtual keyboard
+    for(int row = 0; row < 3; row++) {
+        for(int col = 0; col < 10; col++) {
+            char ch = keyboard[row][col];
+            if(ch == '\0') break;
+
+            int x = 3 + col * 12;
+            int y = 22 + row * 10;
+
+            // Highlight current cursor position
+            if(row == text_input_cursor_y && col == text_input_cursor_x) {
+                canvas_draw_rbox(canvas, x - 1, y - 7, 11, 9, 1);
+                canvas_set_color(canvas, ColorWhite);
+            }
+
+            // Draw character
+            char str[2] = {ch, '\0'};
+            canvas_draw_str(canvas, x + 1, y, str);
+            canvas_set_color(canvas, ColorBlack);
+        }
+    }
+
+    // Draw function keys below the main keyboard
+    int func_y = 55;
+
+    // Space bar (wide button)
+    bool space_selected = (text_input_cursor_y == 3 && text_input_cursor_x == 0);
+    if(space_selected) {
+        canvas_draw_rbox(canvas, 3, func_y - 7, 30, 9, 1);
+        canvas_set_color(canvas, ColorWhite);
+    }
+    canvas_draw_str(canvas, 10, func_y, "SPACE");
+    canvas_set_color(canvas, ColorBlack);
+
+    // Backspace
+    bool backspace_selected = (text_input_cursor_y == 3 && text_input_cursor_x == 1);
+    if(backspace_selected) {
+        canvas_draw_rbox(canvas, 35, func_y - 7, 20, 9, 1);
+        canvas_set_color(canvas, ColorWhite);
+    }
+    canvas_draw_str(canvas, 38, func_y, "DEL");
+    canvas_set_color(canvas, ColorBlack);
+
+    // Shift/Mode
+    bool shift_selected = (text_input_cursor_y == 3 && text_input_cursor_x == 2);
+    if(shift_selected) {
+        canvas_draw_rbox(canvas, 57, func_y - 7, 20, 9, 1);
+        canvas_set_color(canvas, ColorWhite);
+    }
+    if(text_input_keyboard_mode == 2) {
+        canvas_draw_str(canvas, 60, func_y, "ABC");
+    } else {
+        canvas_draw_str(canvas, 60, func_y, "123");
+    }
+    canvas_set_color(canvas, ColorBlack);
+
+    // Caps Lock (only show in letter modes)
+    if(text_input_keyboard_mode != 2) {
+        bool caps_selected = (text_input_cursor_y == 3 && text_input_cursor_x == 3);
+        if(caps_selected) {
+            canvas_draw_rbox(canvas, 79, func_y - 7, 20, 9, 1);
+            canvas_set_color(canvas, ColorWhite);
+        }
+        if(text_input_caps_lock) {
+            canvas_draw_box(canvas, 81, func_y - 5, 16, 5); // Filled when caps lock is on
+            canvas_set_color(canvas, ColorWhite);
+        }
+        canvas_draw_str(canvas, 82, func_y, "CAPS");
+        canvas_set_color(canvas, ColorBlack);
+    }
+
+    // Done/Enter
+    bool done_selected = (text_input_cursor_y == 3 && text_input_cursor_x == 4);
+    if(done_selected) {
+        canvas_draw_rbox(canvas, 101, func_y - 7, 25, 9, 1);
+        canvas_set_color(canvas, ColorWhite);
+    }
+    canvas_draw_str(canvas, 105, func_y, "DONE");
+    canvas_set_color(canvas, ColorBlack);
+
+    canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
+    canvas_draw_str(canvas, 0, 64, "↑↓←→ OK=Select");
+}
+
+void FlipDownloaderRun::drawGitHubProgress(Canvas* canvas) {
+    FlipDownloaderApp* app = static_cast<FlipDownloaderApp*>(appContext);
+    furi_check(app);
+    canvas_clear(canvas);
+
+    switch(app->getHttpState()) {
+    case IDLE:
+        if(!isGitHubDownloadComplete && !isGitHubDownloading) {
+            // Check if we're in the repository info fetching phase
+            if(github_total_files == 0) {
+                // Give it some time before checking if file exists
+                idleCheckCounter++;
+                if(idleCheckCounter > 10) {
+                    char checkPath[256];
+                    snprintf(
+                        checkPath,
+                        sizeof(checkPath),
+                        STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/%s-%s-info.json",
+                        APP_ID,
+                        github_author,
+                        github_repo);
+                    Storage* storage = static_cast<Storage*>(furi_record_open(RECORD_STORAGE));
+                    if(storage_file_exists(storage, checkPath)) {
+                        if(githubParseRepositoryInfo(github_author, github_repo)) {
+                            furi_delay_ms(10);
+
+                            // Load the file count
+                            char* fileCountPath = (char*)malloc(256); // Use heap allocation
+                            if(!fileCountPath) {
+                                FURI_LOG_E(TAG, "Failed to allocate memory for fileCountPath");
+                                return;
+                            }
+                            snprintf(
+                                fileCountPath,
+                                256,
+                                STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/%s/%s/file_count.txt",
+                                APP_ID,
+                                github_author,
+                                github_repo);
+                            FuriString* fileCountStr = flipper_http_load_from_file(fileCountPath);
+                            free(fileCountPath); // Free immediately after use
+                            if(fileCountStr) {
+                                github_total_files = atoi(furi_string_get_cstr(fileCountStr));
+                                furi_string_free(fileCountStr);
+                                github_current_file = 0;
+                                idleCheckCounter = 0;
+                                // Download will be started on the next frame in the main IDLE case logic (helps with overflow)
+
+                                // If no files found, immediately mark as complete
+                                if(github_total_files == 0) {
+                                    isGitHubDownloadComplete = true;
+                                    FURI_LOG_E(
+                                        TAG,
+                                        "No files to download, marking as complete immediately");
+                                }
+                            } else {
+                                FURI_LOG_E(
+                                    TAG, "Failed to load file count after successful parsing");
+                                // Set to error state to avoid infinite "Fetching repo info..."
+                                github_total_files = -1;
+                            }
+                        } else {
+                            FURI_LOG_E(TAG, "Repository parsing failed");
+                            github_total_files = -1;
+                        }
+                    }
+                    furi_record_close(RECORD_STORAGE);
+                }
+            } else if(github_current_file < github_total_files && !isGitHubDownloading) {
+                // delay before starting next download
+                if(github_download_delay_counter < 10) {
+                    github_download_delay_counter++;
+                } else {
+                    // Start next file download
+                    if(!githubDownloadRepositoryFile(
+                           github_author, github_repo, github_current_file)) {
+                        // If download failed to start, move to next file
+                        github_current_file++;
+                        FURI_LOG_E(
+                            TAG,
+                            "Failed to start download of file %d, moving to next (now at %d)",
+                            github_current_file,
+                            github_current_file + 1);
+                        github_download_delay_counter = 0; // Reset delay for retry
+                    }
+                }
+            } else if(github_current_file >= github_total_files) {
+                // All files downloaded (or no files to download)
+                isGitHubDownloadComplete = true;
+            }
+
+            canvas_set_font_custom(canvas, FONT_SIZE_MEDIUM);
+            if(github_total_files == -1) {
+                canvas_draw_str(canvas, 0, 10, "Parsing failed!");
+                canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
+                canvas_draw_str(canvas, 0, 25, "Check repository URL");
+                canvas_draw_str(canvas, 0, 60, "Press Back to return");
+            } else if(github_total_files == 0) {
+                // Check if parsing was completed by looking for file count file
+                Storage* storage = static_cast<Storage*>(furi_record_open(RECORD_STORAGE));
+                char* fileCountPath = (char*)malloc(256); // Use heap allocation
+                bool parsingComplete = false;
+
+                if(fileCountPath) {
+                    snprintf(
+                        fileCountPath,
+                        256,
+                        STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/%s/%s/file_count.txt",
+                        APP_ID,
+                        github_author,
+                        github_repo);
+                    parsingComplete = storage_file_exists(storage, fileCountPath);
+                    free(fileCountPath);
+                }
+                furi_record_close(RECORD_STORAGE);
+
+                // Still fetching
+                canvas_draw_str(canvas, 0, 10, "Fetching repo info...");
+                canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
+                // exit if it's been too long
+                if(parsingComplete && idleCheckCounter > 500) {
+                    canvas_draw_str(canvas, 0, 25, "Timeout! Press Back");
+                    canvas_draw_str(canvas, 0, 60, "to return to menu");
+                    isGitHubDownloadComplete = true; // Mark as complete to exit
+                }
+            } else {
+                canvas_draw_str(canvas, 0, 10, "Starting downloads...");
+                canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
+                char statusText[64];
+                snprintf(
+                    statusText,
+                    sizeof(statusText),
+                    "File %d/%d",
+                    github_current_file + 1,
+                    github_total_files);
+                canvas_draw_str(canvas, 0, 25, statusText);
+            }
+        } else if(isGitHubDownloadComplete) {
+            canvas_set_font_custom(canvas, FONT_SIZE_MEDIUM);
+            canvas_draw_str(canvas, 0, 10, "Download complete!");
+            canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
+            char statusText[64];
+            snprintf(statusText, sizeof(statusText), "Downloaded %d files", github_current_file);
+            canvas_draw_str(canvas, 0, 25, statusText);
+            canvas_draw_str(canvas, 0, 60, "Press Back to return");
+        } else if(isGitHubDownloading) {
+            // Download just completed (transitioned from RECEIVING to IDLE)
+            isGitHubDownloading = false;
+            idleCheckCounter = 0;
+
+            // Check if this was the repo info download (github_total_files == 0)
+            if(github_total_files != 0) {
+                // This was an individual file download
+                github_current_file++;
+
+                // If we've downloaded all files, mark as complete
+                if(github_current_file >= github_total_files) {
+                    isGitHubDownloadComplete = true;
+                    FURI_LOG_I(
+                        TAG,
+                        "All GitHub files downloaded successfully! Final count: %d",
+                        github_current_file);
+                } else {
+                    FURI_LOG_I(
+                        TAG,
+                        "More files to download: %d remaining",
+                        github_total_files - github_current_file);
+                    github_download_delay_counter = 0;
+                }
+            }
+        }
+        break;
+
+    case INACTIVE:
+        canvas_set_font_custom(canvas, FONT_SIZE_MEDIUM);
+        canvas_draw_str(canvas, 0, 10, "Board not connected...");
+        break;
+
+    case ISSUE:
+        canvas_set_font_custom(canvas, FONT_SIZE_MEDIUM);
+        canvas_draw_str(canvas, 0, 10, "An issue occurred...");
+        break;
+
+    case RECEIVING:
+    case SENDING: {
+        isGitHubDownloading = true;
+        isGitHubDownloadComplete = false;
+        if(!loading) {
+            loading = std::make_unique<Loading>(canvas);
+        }
+        loading->animate();
+
+        canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
+        if(github_total_files > 0) {
+            char progressText[64];
+            snprintf(
+                progressText,
+                sizeof(progressText),
+                "File %d/%d",
+                github_current_file + 1,
+                github_total_files);
+            canvas_draw_str(canvas, 5, 15, progressText);
+        } else {
+            canvas_draw_str(canvas, 5, 15, "Fetching repo...");
+        }
+
+        // Show download progress (bytes received / total bytes)
+        size_t bytesReceived = app->getBytesReceived();
+        size_t contentLength = app->getContentLength();
+
+        canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
+
+        if(contentLength > 0) {
+            char progressText[64];
+            snprintf(
+                progressText, sizeof(progressText), "%zu/%zu bytes", bytesReceived, contentLength);
+            canvas_draw_str(canvas, 5, 57, progressText);
+
+            // Draw progress bar
+            int progressBarWidth = 118;
+            int progressBarHeight = 4;
+            int progressBarX = 5;
+            int progressBarY = 59;
+
+            // Draw progress bar background
+            canvas_draw_frame(
+                canvas, progressBarX, progressBarY, progressBarWidth, progressBarHeight);
+
+            // Draw progress bar fill
+            if(contentLength > 0) {
+                int fillWidth =
+                    (int)((float)bytesReceived / (float)contentLength * (progressBarWidth - 2));
+                if(fillWidth > 0) {
+                    canvas_draw_box(
+                        canvas,
+                        progressBarX + 1,
+                        progressBarY + 1,
+                        fillWidth,
+                        progressBarHeight - 2);
+                }
+            }
+        } else if(bytesReceived > 0) {
+            char progressText[32];
+            snprintf(progressText, sizeof(progressText), "%zu bytes", bytesReceived);
+            canvas_draw_str(canvas, 5, 57, progressText);
+        }
+
+        break;
+    }
+    default:
+        break;
+    }
 }
 
 void FlipDownloaderRun::drawMainMenu(Canvas* canvas) {
@@ -533,8 +1005,16 @@ const char* FlipDownloaderRun::findNthArrayObject(const char* text, uint8_t inde
     const char* pos = text;
     uint8_t objectCount = 0;
 
-    // Find the opening bracket of the array
-    const char* arrayStart = strchr(pos, '[');
+    // Find the opening bracket of the array using manual search
+    const char* arrayStart = nullptr;
+    const char* searchPos = pos;
+    while(*searchPos != '\0') {
+        if(*searchPos == '[') {
+            arrayStart = searchPos;
+            break;
+        }
+        searchPos++;
+    }
     if(!arrayStart) {
         FURI_LOG_E(TAG, "No array found in JSON");
         return nullptr;
@@ -606,32 +1086,78 @@ const char* FlipDownloaderRun::findStringValue(
     const char* key,
     char* buffer,
     size_t bufferSize) {
-    char searchKey[64];
-    snprintf(searchKey, sizeof(searchKey), "\"%s\":", key);
+    // Input validation
+    if(!text || !key || !buffer || bufferSize <= 1) {
+        FURI_LOG_E(TAG, "Invalid parameters to findStringValue");
+        return nullptr;
+    }
 
-    const char* keyPos = strstr(text, searchKey);
+    // Manual key length check
+    size_t keyLen = 0;
+    while(keyLen < 60 && key[keyLen] != '\0')
+        keyLen++;
+    if(keyLen == 0 || keyLen >= 60) {
+        FURI_LOG_E(TAG, "Invalid key length in findStringValue");
+        return nullptr;
+    }
+
+    // Manual search for key pattern
+    char searchKey[64];
+    int ret = snprintf(searchKey, sizeof(searchKey), "\"%s\":", key);
+    if(ret <= 0 || ret >= (int)sizeof(searchKey)) {
+        FURI_LOG_E(TAG, "Failed to format search key");
+        return nullptr;
+    }
+
+    size_t searchKeyLen = keyLen + 3; // "key": pattern
+    const char* keyPos = nullptr;
+    const char* searchPos = text;
+
+    while(*searchPos) {
+        bool found = true;
+        for(size_t i = 0; i < searchKeyLen && searchPos[i] != '\0'; i++) {
+            if(searchPos[i] != searchKey[i]) {
+                found = false;
+                break;
+            }
+        }
+        if(found) {
+            keyPos = searchPos;
+            break;
+        }
+        searchPos++;
+    }
+
     if(!keyPos) {
         return nullptr;
     }
 
     // Move past the key and find the opening quote
-    const char* valueStart = keyPos + strlen(searchKey);
-    while(*valueStart && (*valueStart == ' ' || *valueStart == '\t')) {
+    const char* valueStart = keyPos + searchKeyLen;
+
+    // Manual bounds checking without strlen
+    size_t remaining = 1000; // Conservative estimate for remaining text
+
+    while(*valueStart && (*valueStart == ' ' || *valueStart == '\t') && remaining > 0) {
         valueStart++;
+        remaining--;
     }
 
-    if(*valueStart != '"') {
+    if(*valueStart != '"' || remaining == 0) {
         return nullptr;
     }
     valueStart++; // Skip opening quote
+    remaining--;
 
     // Find the closing quote
     const char* valueEnd = valueStart;
-    while(*valueEnd && *valueEnd != '"') {
-        if(*valueEnd == '\\' && *(valueEnd + 1)) {
+    while(*valueEnd && *valueEnd != '"' && remaining > 0) {
+        if(*valueEnd == '\\' && *(valueEnd + 1) && remaining > 1) {
             valueEnd += 2; // Skip escaped characters
+            remaining -= 2;
         } else {
             valueEnd++;
+            remaining--;
         }
     }
 
@@ -645,7 +1171,9 @@ const char* FlipDownloaderRun::findStringValue(
         valueLen = bufferSize - 1;
     }
 
-    strncpy(buffer, valueStart, valueLen);
+    if(valueLen > 0) {
+        memcpy(buffer, valueStart, valueLen);
+    }
     buffer[valueLen] = '\0';
 
     return buffer;
@@ -695,21 +1223,6 @@ FlipperAppCategory FlipDownloaderRun::getAppCategory(const char* category) {
     return CategoryUnknown;
 }
 
-FlipperAppCategory FlipDownloaderRun::getAppCategoryFromId(const char* categoryId) {
-    if(strcmp(categoryId, "64a69817effe1f448a4053b4") == 0) return CategoryBluetooth;
-    if(strcmp(categoryId, "64971d11be1a76c06747de2f") == 0) return CategoryGames;
-    if(strcmp(categoryId, "64971d106617ba37a4bc79b9") == 0) return CategoryGPIO;
-    if(strcmp(categoryId, "64971d106617ba37a4bc79b6") == 0) return CategoryInfrared;
-    if(strcmp(categoryId, "64971d11be1a76c06747de29") == 0) return CategoryIButton;
-    if(strcmp(categoryId, "64971d116617ba37a4bc79bc") == 0) return CategoryMedia;
-    if(strcmp(categoryId, "64971d10be1a76c06747de26") == 0) return CategoryNFC;
-    if(strcmp(categoryId, "64971d10577d519190ede5c2") == 0) return CategoryRFID;
-    if(strcmp(categoryId, "64971d0f6617ba37a4bc79b3") == 0) return CategorySubGHz;
-    if(strcmp(categoryId, "64971d11577d519190ede5c5") == 0) return CategoryTools;
-    if(strcmp(categoryId, "64971d11be1a76c06747de2c") == 0) return CategoryUSB;
-    return CategoryUnknown;
-}
-
 const char* FlipDownloaderRun::getAppCategoryId(const char* category) {
     if(strcmp(category, "Bluetooth") == 0) return "64a69817effe1f448a4053b4";
     if(strcmp(category, "Games") == 0) return "64971d11be1a76c06747de2f";
@@ -754,39 +1267,676 @@ const char* FlipDownloaderRun::getAppCategoryId(FlipperAppCategory category) {
     }
 }
 
-// Helper function to check if any apps are available in a category
-bool FlipDownloaderRun::hasAppsAvailable(FlipperAppCategory category) {
-    char savePath[128];
+bool FlipDownloaderRun::githubDownloadRepositoryFile(
+    const char* author,
+    const char* repo,
+    int fileIndex) {
+    FlipDownloaderApp* app = static_cast<FlipDownloaderApp*>(appContext);
+    if(!app || !author || !repo || fileIndex < 0) {
+        return false;
+    }
+
+    // Helper function to find character manually
+    auto findChar = [](const char* str, char target, size_t maxLen) -> const char* {
+        for(size_t i = 0; i < maxLen && str[i] != '\0'; i++) {
+            if(str[i] == target) {
+                return &str[i];
+            }
+        }
+        return nullptr;
+    };
+
+    // Helper function to find substring manually
+    auto findSubstring = [](const char* haystack,
+                            const char* needle,
+                            size_t haystackLen,
+                            size_t needleLen) -> const char* {
+        if(needleLen == 0 || needleLen > haystackLen) return nullptr;
+
+        for(size_t i = 0; i <= haystackLen - needleLen; i++) {
+            bool match = true;
+            for(size_t j = 0; j < needleLen; j++) {
+                if(haystack[i + j] != needle[j]) {
+                    match = false;
+                    break;
+                }
+            }
+            if(match) {
+                return &haystack[i];
+            }
+        }
+        return nullptr;
+    };
+
+    // Use heap allocation to prevent stack overflow
+    char* s_filePath = (char*)malloc(256);
+    char* s_chunkBuffer = (char*)malloc(512);
+    char* s_url = (char*)malloc(96);
+    char* s_name = (char*)malloc(48);
+    char* s_path = (char*)malloc(128);
+
+    if(!s_filePath || !s_chunkBuffer || !s_url || !s_name || !s_path) {
+        FURI_LOG_E(TAG, "Failed to allocate heap buffers");
+        if(s_filePath) free(s_filePath);
+        if(s_chunkBuffer) free(s_chunkBuffer);
+        if(s_url) free(s_url);
+        if(s_name) free(s_name);
+        if(s_path) free(s_path);
+        return false;
+    }
+
+    // Build file path with length check
+    int pathLen = snprintf(
+        s_filePath,
+        256,
+        STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/%s/%s/all_files.txt",
+        APP_ID,
+        author,
+        repo);
+    if(pathLen >= 256) {
+        FURI_LOG_E(TAG, "Path too long");
+        free(s_filePath);
+        free(s_chunkBuffer);
+        free(s_url);
+        free(s_name);
+        free(s_path);
+        return false;
+    }
+
+    // Search patterns
+    const char* urlPattern = "\"url\":\"";
+    const char* namePattern = "\"name\":\"";
+    const size_t urlPatternLen = 7; // Manual count: "url":"
+    const size_t namePatternLen = 8; // Manual count: "name":"
+
+    int foundInstances = 0;
+    uint8_t iteration = 0;
+    const uint8_t MAX_ITERATIONS = 100;
+    size_t currentOffset = 0;
+    size_t nextChunkOffset = 0;
+    const size_t CHUNK_SIZE = 511;
+    const size_t OVERLAP_SIZE = 64; // Overlap to prevent object splitting
+
+    // Load chunks and search for the fileIndex-th instance
+    while(iteration < MAX_ITERATIONS) {
+        memset(s_chunkBuffer, 0, 512);
+
+        // Use nextChunkOffset if set from previous object, otherwise use currentOffset
+        size_t readOffset = (nextChunkOffset > 0) ? nextChunkOffset : currentOffset;
+
+        if(!loadFileChunk(s_filePath, s_chunkBuffer, CHUNK_SIZE, readOffset / CHUNK_SIZE)) {
+            FURI_LOG_E(
+                TAG,
+                "End of file or read error at iteration %d, offset %zu",
+                iteration,
+                readOffset);
+            break;
+        }
+
+        currentOffset = readOffset;
+
+        // Search for url/name pairs in this chunk
+        const char* searchPos = s_chunkBuffer;
+        bool foundObjectInChunk = false;
+
+        while(searchPos && (searchPos - s_chunkBuffer) < 512) {
+            // Find URL pattern using manual search
+            const char* urlStart = findSubstring(
+                searchPos, urlPattern, 512 - (searchPos - s_chunkBuffer), urlPatternLen);
+            if(!urlStart) {
+                break; // No more URL patterns in this chunk
+            }
+
+            // Find corresponding name pattern after URL using manual search
+            const char* nameStart = findSubstring(
+                urlStart, namePattern, 512 - (urlStart - s_chunkBuffer), namePatternLen);
+            if(!nameStart) {
+                // Name might be in next chunk, try next iteration
+                break;
+            }
+
+            // Calculate absolute position for this object in the file
+            size_t objectEndPos = currentOffset + (nameStart - s_chunkBuffer) + namePatternLen;
+
+            // Find the end of the name value to get complete object size
+            const char* nameValueStart = nameStart + namePatternLen;
+            const char* nameEnd =
+                findChar(nameValueStart, '"', 512 - (nameValueStart - s_chunkBuffer));
+            if(nameEnd) {
+                objectEndPos = currentOffset + (nameEnd - s_chunkBuffer) + 1;
+            }
+
+            foundObjectInChunk = true;
+
+            // Check if this is the instance we want
+            if(foundInstances == fileIndex) {
+                // Extract URL
+                const char* urlValueStart = urlStart + urlPatternLen;
+                const char* urlEnd =
+                    findChar(urlValueStart, '"', 512 - (urlValueStart - s_chunkBuffer));
+                if(!urlEnd) {
+                    FURI_LOG_E(TAG, "URL end not found");
+                    free(s_filePath);
+                    free(s_chunkBuffer);
+                    free(s_url);
+                    free(s_name);
+                    free(s_path);
+                    return false;
+                }
+
+                size_t urlLen = urlEnd - urlValueStart;
+                if(urlLen >= 96) {
+                    FURI_LOG_E(TAG, "URL too long: %zu", urlLen);
+                    free(s_filePath);
+                    free(s_chunkBuffer);
+                    free(s_url);
+                    free(s_name);
+                    free(s_path);
+                    return false;
+                }
+                memcpy(s_url, urlValueStart, urlLen);
+                s_url[urlLen] = '\0';
+
+                // Extract name
+                const char* nameValueStart = nameStart + namePatternLen;
+                const char* nameEnd =
+                    findChar(nameValueStart, '"', 512 - (nameValueStart - s_chunkBuffer));
+                if(!nameEnd) {
+                    FURI_LOG_E(TAG, "Name end not found");
+                    free(s_filePath);
+                    free(s_chunkBuffer);
+                    free(s_url);
+                    free(s_name);
+                    free(s_path);
+                    return false;
+                }
+
+                size_t nameLen = nameEnd - nameValueStart;
+                if(nameLen >= 48) {
+                    FURI_LOG_E(TAG, "Name too long: %zu", nameLen);
+                    free(s_filePath);
+                    free(s_chunkBuffer);
+                    free(s_url);
+                    free(s_name);
+                    free(s_path);
+                    return false;
+                }
+                memcpy(s_name, nameValueStart, nameLen);
+                s_name[nameLen] = '\0';
+
+                // Build download path
+                int pathLen = snprintf(
+                    s_path,
+                    128,
+                    STORAGE_EXT_PATH_PREFIX "/apps_data/%s/%s/%s/%s",
+                    APP_ID,
+                    author,
+                    repo,
+                    s_name);
+                if(pathLen >= 128) {
+                    FURI_LOG_E(TAG, "Download path too long");
+                    free(s_filePath);
+                    free(s_chunkBuffer);
+                    free(s_url);
+                    free(s_name);
+                    free(s_path);
+                    return false;
+                }
+
+                // Create directory structure for the file if it contains subdirectories
+                char* dirPath = (char*)malloc(128);
+                if(dirPath) {
+                    // Safely copy path
+                    size_t pathLen = 0;
+                    bool copySuccess = true;
+
+                    while(pathLen < 127 && s_path[pathLen] != '\0') {
+                        dirPath[pathLen] = s_path[pathLen];
+                        pathLen++;
+                    }
+
+                    // Check if we hit the limit (potential overflow)
+                    if(pathLen >= 127 || s_path[pathLen] != '\0') {
+                        copySuccess = false; // Path too long, skip directory creation
+                    }
+
+                    if(copySuccess && pathLen > 0) {
+                        dirPath[pathLen] = '\0'; // Null terminate
+
+                        // Find the last slash using a simple backwards loop
+                        int lastSlashIndex = -1;
+                        for(int i = pathLen - 1; i >= 0; i--) {
+                            if(dirPath[i] == '/') {
+                                lastSlashIndex = i;
+                                break;
+                            }
+                        }
+
+                        if(lastSlashIndex >= 0) {
+                            dirPath[lastSlashIndex] =
+                                '\0'; // Remove filename, keeping only directory path
+                            createDirectory(dirPath);
+                        }
+                    }
+                    free(dirPath);
+                }
+
+                // Set state and download
+                isGitHubDownloading = true;
+                isGitHubDownloadComplete = false;
+                idleCheckCounter = 0;
+
+                // Simple cleanup and download
+                deleteFile(s_path);
+                bool result = app->httpDownloadFile(s_path, s_url);
+
+                if(!result) {
+                    isGitHubDownloading = false;
+                }
+
+                // Clean up heap allocations before returning
+                free(s_filePath);
+                free(s_chunkBuffer);
+                free(s_url);
+                free(s_name);
+                free(s_path);
+
+                return result;
+            }
+
+            // Move to next potential match and set next chunk offset
+            foundInstances++;
+            searchPos = nameStart + namePatternLen;
+
+            // Set next chunk offset to continue from end of this object
+            nextChunkOffset = objectEndPos;
+        }
+
+        // Smart chunk advancement
+        if(!foundObjectInChunk) {
+            // No complete objects found, advance with overlap to avoid splitting
+            if(nextChunkOffset > 0) {
+                currentOffset = nextChunkOffset;
+                nextChunkOffset = 0; // Reset for next iteration
+            } else {
+                // Advance by chunk size minus overlap to prevent object splitting
+                currentOffset += (CHUNK_SIZE - OVERLAP_SIZE);
+            }
+        } else {
+            // Objects found, nextChunkOffset already set by the loop above
+            currentOffset = nextChunkOffset;
+            nextChunkOffset = 0; // Reset for next iteration
+        }
+
+        iteration++;
+    }
+
+    FURI_LOG_E(TAG, "File index %d not found after %d iterations", fileIndex, iteration);
+
+    // Clean up heap allocations before returning
+    free(s_filePath);
+    free(s_chunkBuffer);
+    free(s_url);
+    free(s_name);
+    free(s_path);
+
+    return false;
+}
+
+bool FlipDownloaderRun::githubFetchRepositoryInfo(const char* author, const char* repo) {
+    // Verify parameters before use
+    if(!author || !repo) {
+        FURI_LOG_E(TAG, "NULL parameters in githubFetchRepositoryInfo");
+        return false;
+    }
+
+    FlipDownloaderApp* app = static_cast<FlipDownloaderApp*>(appContext);
+    furi_check(app);
+    char* dir = (char*)malloc(256); // Move to heap to reduce stack usage
+    if(!dir) {
+        FURI_LOG_E(TAG, "Failed to allocate directory buffer");
+        return false;
+    }
+
+    // info path: /ext/apps_data/flip_downloader/data/author-repo-info.json (dev info)
     snprintf(
         savePath,
         sizeof(savePath),
-        STORAGE_EXT_PATH_PREFIX "/apps_data/%s/%s.json",
+        STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/%s-%s-info.json",
         APP_ID,
-        getAppCategory(category));
-    FuriString* appInfo = flipper_http_load_from_file(savePath);
-    if(!appInfo || furi_string_size(appInfo) == 0) {
+        author,
+        repo);
+
+    // create a data directory for the author: /ext/apps_data/flip_downloader/data/author (dev info)
+    snprintf(dir, 256, STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/%s", APP_ID, author);
+    createDirectory(dir);
+
+    // create a directory for the actual repo info: /ext/apps_data/flip_downloader/data/author/repo (dev info)
+    snprintf(dir, 256, STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/%s/%s", APP_ID, author, repo);
+    createDirectory(dir);
+
+    // create a directory for the actual repo info: /ext/apps_data/flip_downloader/author (user info)
+    snprintf(dir, 256, STORAGE_EXT_PATH_PREFIX "/apps_data/%s/%s", APP_ID, author);
+    createDirectory(dir);
+
+    // create a directory for the actual repo info: /ext/apps_data/flip_downloader/author/repo (user info)
+    snprintf(dir, 256, STORAGE_EXT_PATH_PREFIX "/apps_data/%s/%s/%s", APP_ID, author, repo);
+    createDirectory(dir);
+
+    // get the contents of the repo (let's use the same dir char from above)
+    snprintf(
+        dir, 256, "https://api.github.com/repos/%s/%s/git/trees/HEAD?recursive=1", author, repo);
+    deleteFile(savePath); // Ensure we start with a clean slate
+    bool result = app->httpDownloadFile(savePath, dir);
+    free(dir);
+    return result;
+}
+
+bool FlipDownloaderRun::githubParseRepositoryInfo(const char* author, const char* repo) {
+    // Basic parameter validation
+    if(!author || !repo || !appContext) {
+        FURI_LOG_E(TAG, "Invalid parameters or appContext");
         return false;
     }
 
-    const char* jsonText = furi_string_get_cstr(appInfo);
-
-    // Find the opening bracket of the array
-    const char* arrayStart = strchr(jsonText, '[');
-    if(!arrayStart) {
-        furi_string_free(appInfo);
+    if(savePath[0] == '\0') // Check if first char is null instead of using strlen
+    {
+        FURI_LOG_E(TAG, "savePath not initialized");
         return false;
     }
 
-    // Check if there's at least one object in the array
-    const char* pos = arrayStart + 1;
-    while(*pos && (*pos == ' ' || *pos == '\t' || *pos == '\n' || *pos == '\r')) {
-        pos++;
+    int fileCount = 0;
+
+    // Use heap-allocated buffers to avoid stack overflow
+    char* fileSavePath = (char*)malloc(128);
+    char* fileJson = (char*)malloc(512);
+    char* pathBuffer = (char*)malloc(128);
+    char* chunkBuffer = (char*)malloc(128);
+
+    if(!fileSavePath || !fileJson || !pathBuffer || !chunkBuffer) {
+        FURI_LOG_E(TAG, "Failed to allocate heap buffers");
+        if(fileSavePath) free(fileSavePath);
+        if(fileJson) free(fileJson);
+        if(pathBuffer) free(pathBuffer);
+        if(chunkBuffer) free(chunkBuffer);
+        return false;
     }
 
-    bool hasApps = (*pos == '{'); // If we find an opening brace, there's at least one app
+    const size_t CHUNK_SIZE = 127;
+    uint8_t iteration = 0;
+    const char* searchPattern = "\"path\":\"";
+    const size_t patternLen = 8; // Manual count: "path":"
+    size_t currentOffset = 0;
+    const size_t OVERLAP_SIZE = 32; // Overlap to prevent object splitting
 
-    furi_string_free(appInfo);
-    return hasApps;
+    // Helper function to find character manually
+    auto findChar = [](const char* str, char target, size_t maxLen) -> const char* {
+        for(size_t i = 0; i < maxLen && str[i] != '\0'; i++) {
+            if(str[i] == target) {
+                return &str[i];
+            }
+        }
+        return nullptr;
+    };
+
+    // Helper function to find substring manually
+    auto findSubstring = [](const char* haystack,
+                            const char* needle,
+                            size_t haystackLen,
+                            size_t needleLen) -> const char* {
+        if(needleLen == 0 || needleLen > haystackLen) return nullptr;
+
+        for(size_t i = 0; i <= haystackLen - needleLen; i++) {
+            bool match = true;
+            for(size_t j = 0; j < needleLen; j++) {
+                if(haystack[i + j] != needle[j]) {
+                    match = false;
+                    break;
+                }
+            }
+            if(match) {
+                return &haystack[i];
+            }
+        }
+        return nullptr;
+    };
+
+    // Helper function to get string length manually
+    auto getStringLen = [](const char* str, size_t maxLen) -> size_t {
+        for(size_t i = 0; i < maxLen; i++) {
+            if(str[i] == '\0') {
+                return i;
+            }
+        }
+        return maxLen;
+    };
+
+    // Use a single buffer to collect all file info, then save once at the end
+    // Allocate a smaller initial size and expand as needed to reduce memory usage
+    FuriString* allFilesInfo = furi_string_alloc_set_str("");
+    if(!allFilesInfo) {
+        FURI_LOG_E(TAG, "Failed to allocate file collection string");
+        free(fileSavePath);
+        free(fileJson);
+        free(pathBuffer);
+        free(chunkBuffer);
+        return false;
+    }
+
+    // Store processed file paths to avoid duplicates
+    FuriString* processedPaths = furi_string_alloc_set_str("");
+    if(!processedPaths) {
+        FURI_LOG_E(TAG, "Failed to allocate processed paths string");
+        furi_string_free(allFilesInfo);
+        free(fileSavePath);
+        free(fileJson);
+        free(pathBuffer);
+        free(chunkBuffer);
+        return false;
+    }
+
+    // Search for "path":"value" patterns throughout the file using chunked reading
+    while(fileCount < MAX_GITHUB_REPO_FILES) {
+        if(!loadFileChunk(savePath, chunkBuffer, CHUNK_SIZE, currentOffset / CHUNK_SIZE)) {
+            FURI_LOG_E(
+                TAG,
+                "End of file or read error at iteration %d, offset %zu",
+                iteration,
+                currentOffset);
+            break;
+        }
+
+        // Ensure buffer is null-terminated and doesn't exceed allocated size
+        chunkBuffer[127] =
+            '\0'; // chunkBuffer is 128 bytes, so index 127 is the last valid position
+        size_t chunkLen = getStringLen(chunkBuffer, 127);
+
+        if(chunkLen == 0) {
+            FURI_LOG_E(TAG, "Empty chunk at iteration %d, breaking", iteration);
+            break;
+        }
+
+        // Search for all "path":" patterns in this chunk
+        const char* searchPos = chunkBuffer;
+        const char* lastProcessedPos =
+            chunkBuffer; // Track last processed position for chunk advancement
+        const char* patternMatch = NULL;
+        bool foundObjectInChunk = false;
+
+        while(fileCount < MAX_GITHUB_REPO_FILES) {
+            patternMatch = findSubstring(
+                searchPos, searchPattern, chunkLen - (searchPos - chunkBuffer), patternLen);
+            if(!patternMatch) break;
+
+            // Move past the pattern to the start of the value
+            const char* valueStart = patternMatch + patternLen;
+
+            // Find the end of the path value (closing quote) using manual search
+            const char* valueEnd = findChar(valueStart, '"', 127 - (valueStart - chunkBuffer));
+            if(!valueEnd) {
+                FURI_LOG_E(TAG, "No closing quote found for path value, continuing");
+                searchPos = patternMatch + patternLen; // Continue searching
+                lastProcessedPos = searchPos; // Update last processed position
+                continue;
+            }
+
+            // Calculate path length first
+            size_t pathLen = valueEnd - valueStart;
+            if(pathLen == 0 || pathLen >= 127) // pathBuffer is 128 bytes
+            {
+                FURI_LOG_E(TAG, "Invalid path length %zu, skipping", pathLen);
+                searchPos = valueEnd + 1;
+                lastProcessedPos = searchPos; // Update last processed position
+                continue;
+            }
+
+            // Extract the path
+            memcpy(pathBuffer, valueStart, pathLen);
+            pathBuffer[pathLen] = '\0';
+
+            // Check if this is a file (blob) and not a directory (tree)
+            // GitHub API structure: {"path":"somefile.txt","mode":"100644","type":"blob","sha":"...","size":123,"url":"..."}
+            // Look for "type":"blob" AFTER the current "path" pattern
+            const char* typeSearchStart = valueEnd + 1; // Start searching after the path value
+            const char* typeSearchEnd = chunkBuffer + 127; // End of current chunk
+
+            // Find the next "type": pattern after this path
+            const char* typePattern = "\"type\":\"";
+            const size_t typePatternLen = 8; // Manual count: "type":"
+
+            bool isFile = false;
+            const char* typeMatch = findSubstring(
+                typeSearchStart, typePattern, typeSearchEnd - typeSearchStart, typePatternLen);
+
+            if(typeMatch) {
+                // Check if the type value is "blob" (file) or "tree" (directory)
+                const char* typeValueStart = typeMatch + typePatternLen;
+
+                // Check if we have "blob" at this position
+                if((typeValueStart + 4) <= typeSearchEnd && typeValueStart[0] == 'b' &&
+                   typeValueStart[1] == 'l' && typeValueStart[2] == 'o' &&
+                   typeValueStart[3] == 'b') {
+                    isFile = true;
+                }
+            } else {
+                // If we can't find the type in this chunk, try to look in a wider context
+                // This handles cases where the type might be split across chunks
+                FURI_LOG_E(
+                    TAG, "Type pattern not found in current chunk for path: %s", pathBuffer);
+
+                // For now, assume it's a file if the path has a file extension
+                // This is a fallback for chunk boundary issues
+                const char* lastDot = findChar(pathBuffer, '.', pathLen);
+                if(lastDot &&
+                   (pathLen - (lastDot - pathBuffer)) <= 5) // Reasonable extension length
+                {
+                    isFile = true;
+                    FURI_LOG_I(TAG, "Using extension-based detection for file: %s", pathBuffer);
+                }
+            }
+
+            // Mark that we found an object in this chunk
+            foundObjectInChunk = true;
+
+            if(!isFile) {
+                searchPos = valueEnd + 1;
+                lastProcessedPos = searchPos; // Update last processed position
+                continue;
+            }
+
+            // Check for duplicates
+            char* searchPath = (char*)malloc(140); // Buffer for search pattern: |pathBuffer|
+            if(!searchPath) {
+                FURI_LOG_E(TAG, "Failed to allocate searchPath buffer");
+                searchPos = valueEnd + 1;
+                lastProcessedPos = searchPos; // Update last processed position
+                continue;
+            }
+            snprintf(searchPath, 140, "|%s|", pathBuffer);
+
+            if(furi_string_search_str(processedPaths, searchPath) != FURI_STRING_FAILURE) {
+                FURI_LOG_E(TAG, "Skipping duplicate file: %s", pathBuffer);
+                free(searchPath);
+                searchPos = valueEnd + 1;
+                lastProcessedPos = searchPos; // Update last processed position
+                continue;
+            }
+
+            // Add to processed paths
+            furi_string_cat_str(processedPaths, searchPath);
+            free(searchPath);
+
+            // Create the file info JSON and add to collection
+            snprintf(
+                fileJson,
+                512,
+                "{\"url\":\"https://raw.githubusercontent.com/%s/%s/HEAD/%s\",\"name\":\"%s\"}\n",
+                author,
+                repo,
+                pathBuffer,
+                pathBuffer);
+
+            furi_string_cat_str(allFilesInfo, fileJson);
+
+            fileCount++;
+
+            // Continue searching from after this match
+            searchPos = valueEnd + 1;
+            lastProcessedPos = searchPos; // Update last processed position
+        }
+
+        // Smart chunk advancement
+        if(!foundObjectInChunk) {
+            // No complete objects found, advance by chunk size minus overlap to prevent object splitting
+            currentOffset += (CHUNK_SIZE - OVERLAP_SIZE);
+        } else {
+            // Objects found, advance to continue from where we left off in this chunk
+            // Use the absolute position of the last processed match
+            currentOffset = currentOffset + (lastProcessedPos - chunkBuffer);
+        }
+
+        iteration++;
+
+        // Safety check to prevent infinite loop
+        if(iteration > 200) {
+            FURI_LOG_W(TAG, "File too large, stopping search at iteration %d", iteration);
+            break;
+        }
+    }
+
+    // Now save all files at once
+    snprintf(
+        fileSavePath,
+        128,
+        STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/%s/%s/all_files.txt",
+        APP_ID,
+        author,
+        repo);
+    saveCharWithPath(fileSavePath, furi_string_get_cstr(allFilesInfo));
+
+    // Clean up collection string
+    furi_string_free(allFilesInfo);
+    furi_string_free(processedPaths);
+
+    // Save the file count
+    snprintf(
+        fileSavePath,
+        128,
+        STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/%s/%s/file_count.txt",
+        APP_ID,
+        author,
+        repo);
+    char fileCountStr[16];
+    snprintf(fileCountStr, sizeof(fileCountStr), "%d", fileCount);
+    saveCharWithPath(fileSavePath, fileCountStr);
+
+    // Clean up heap-allocated buffers
+    free(fileSavePath);
+    free(fileJson);
+    free(pathBuffer);
+    free(chunkBuffer);
+
+    return true;
 }
 
 std::unique_ptr<FlipperAppInfo>
@@ -859,8 +2009,27 @@ std::unique_ptr<FlipperAppInfo>
     strncpy(appInfoPtr->app_id, valueBuffer, MAX_ID_LENGTH - 1);
     appInfoPtr->app_id[MAX_ID_LENGTH - 1] = '\0';
 
-    // Find current_version object
-    const char* currentVersionStart = strstr(objectText, "\"current_version\":");
+    // Find current_version object using manual search
+    const char* currentVersionStart = nullptr;
+    const char* searchTarget = "\"current_version\":";
+    const size_t targetLen = 18; // Manual count of "current_version": (18 chars not 19 lol)
+    const char* searchPos = objectText;
+
+    while(*searchPos != '\0') {
+        bool match = true;
+        for(size_t i = 0; i < targetLen; i++) {
+            if(searchPos[i] != searchTarget[i]) {
+                match = false;
+                break;
+            }
+        }
+        if(match) {
+            currentVersionStart = searchPos;
+            break;
+        }
+        searchPos++;
+    }
+
     if(!currentVersionStart) {
         FURI_LOG_E(TAG, "Failed to find current_version for index %d.", index);
         free(objectText);
@@ -868,9 +2037,17 @@ std::unique_ptr<FlipperAppInfo>
         return nullptr;
     }
 
-    // Move to the opening brace of current_version object
-    currentVersionStart = strchr(currentVersionStart, '{');
-    if(!currentVersionStart) {
+    // Move to the opening brace of current_version object using manual search
+    const char* braceSearchPos = currentVersionStart;
+    while(*braceSearchPos != '\0') {
+        if(*braceSearchPos == '{') {
+            currentVersionStart = braceSearchPos;
+            break;
+        }
+        braceSearchPos++;
+    }
+    if(*braceSearchPos == '\0') // Didn't find opening brace
+    {
         FURI_LOG_E(TAG, "Failed to find current_version object for index %d.", index);
         free(objectText);
         furi_string_free(appInfo);
@@ -923,32 +2100,538 @@ std::unique_ptr<FlipperAppInfo>
     return appInfoPtr;
 }
 
-bool FlipDownloaderRun::init(void* appContext) {
-    if(!appContext) {
-        FURI_LOG_E("FlipDownloaderRun", "App context is null");
-        return false;
+void FlipDownloaderRun::handleGitHubKeyboardInput(InputEvent* event) {
+    // Get current keyboard layout
+    const char(*keyboard)[11];
+    switch(text_input_keyboard_mode) {
+    case 1:
+        keyboard = keyboard_uppercase;
+        break;
+    case 2:
+        keyboard = keyboard_numbers;
+        break;
+    default:
+        keyboard = keyboard_lowercase;
+        break;
     }
-    this->appContext = appContext;
-    return true;
+
+    switch(event->key) {
+    case InputKeyLeft:
+        if(text_input_cursor_y < 3) // Main keyboard area
+        {
+            if(text_input_cursor_x > 0) {
+                text_input_cursor_x--;
+            } else {
+                // Wrap to end of row
+                text_input_cursor_x = 9; // Last column in 3x10 grid
+                while(text_input_cursor_x > 0 &&
+                      keyboard[text_input_cursor_y][text_input_cursor_x] == '\0') {
+                    text_input_cursor_x--;
+                }
+            }
+        } else // Function key row
+        {
+            if(text_input_cursor_x > 0) {
+                text_input_cursor_x--;
+            } else {
+                // Wrap to last function key
+                text_input_cursor_x =
+                    (text_input_keyboard_mode == 2) ? 3 : 4; // No caps in number mode
+            }
+        }
+        break;
+
+    case InputKeyRight:
+        if(text_input_cursor_y < 3) // Main keyboard area
+        {
+            if(text_input_cursor_x < 9 &&
+               keyboard[text_input_cursor_y][text_input_cursor_x + 1] != '\0') {
+                text_input_cursor_x++;
+            } else {
+                // Wrap to beginning of row
+                text_input_cursor_x = 0;
+            }
+        } else // Function key row
+        {
+            int max_func_key = (text_input_keyboard_mode == 2) ? 3 : 4; // No caps in number mode
+            if(text_input_cursor_x < max_func_key) {
+                text_input_cursor_x++;
+            } else {
+                text_input_cursor_x = 0;
+            }
+        }
+        break;
+
+    case InputKeyUp:
+        if(text_input_cursor_y > 0) {
+            text_input_cursor_y--;
+
+            if(text_input_cursor_y < 3) // Moving to main keyboard
+            {
+                // Clamp cursor to valid position in keyboard grid
+                if(text_input_cursor_x > 9) text_input_cursor_x = 9;
+                while(text_input_cursor_x > 0 &&
+                      keyboard[text_input_cursor_y][text_input_cursor_x] == '\0') {
+                    text_input_cursor_x--;
+                }
+            }
+        } else {
+            // Wrap to function key row
+            text_input_cursor_y = 3;
+            if(text_input_cursor_x > 4) text_input_cursor_x = 4;
+        }
+        break;
+
+    case InputKeyDown:
+        if(text_input_cursor_y < 3) {
+            if(text_input_cursor_y < 2) // Can move down within keyboard
+            {
+                text_input_cursor_y++;
+                // Make sure cursor position is valid for this row
+                while(text_input_cursor_x > 0 &&
+                      keyboard[text_input_cursor_y][text_input_cursor_x] == '\0') {
+                    text_input_cursor_x--;
+                }
+            } else // Move to function keys
+            {
+                text_input_cursor_y = 3;
+                if(text_input_cursor_x > 4) text_input_cursor_x = 4;
+            }
+        } else {
+            // Wrap to top row
+            text_input_cursor_y = 0;
+            if(text_input_cursor_x > 9) text_input_cursor_x = 9;
+        }
+        break;
+
+    case InputKeyOk: {
+        char* target_buffer = (currentView == RunViewGitHubAuthor) ? github_author : github_repo;
+        size_t target_size = (currentView == RunViewGitHubAuthor) ? sizeof(github_author) :
+                                                                    sizeof(github_repo);
+
+        if(text_input_cursor_y == 3) // Function key row
+        {
+            switch(text_input_cursor_x) {
+            case 0: // Space
+            {
+                size_t len = 0;
+                while(len < target_size - 1 && target_buffer[len] != '\0')
+                    len++; // Manual length
+                if(len < target_size - 1) {
+                    target_buffer[len] = ' ';
+                    target_buffer[len + 1] = '\0';
+                }
+            } break;
+
+            case 1: // Backspace
+            {
+                size_t len = 0;
+                while(len < target_size - 1 && target_buffer[len] != '\0')
+                    len++; // Manual length
+                if(len > 0) {
+                    target_buffer[len - 1] = '\0';
+                }
+            } break;
+
+            case 2: // Mode switch (ABC/123)
+                if(text_input_keyboard_mode == 2) {
+                    text_input_keyboard_mode = text_input_caps_lock ? 1 : 0;
+                } else {
+                    text_input_keyboard_mode = 2;
+                }
+                break;
+
+            case 3: // Caps Lock (only in letter modes)
+                if(text_input_keyboard_mode != 2) {
+                    text_input_caps_lock = !text_input_caps_lock;
+                    text_input_keyboard_mode = text_input_caps_lock ? 1 : 0;
+                }
+                break;
+
+            case 4: // Done
+                if(currentView == RunViewGitHubAuthor) {
+                    // Move to repo input
+                    currentView = RunViewGitHubRepo;
+                    startTextInput(RunViewGitHubRepo);
+                } else if(currentView == RunViewGitHubRepo) {
+                    // Start download
+                    startGitHubDownload();
+                }
+                break;
+            }
+        } else // Main keyboard area
+        {
+            char ch = keyboard[text_input_cursor_y][text_input_cursor_x];
+            if(ch != '\0') {
+                size_t len = 0;
+                while(len < target_size - 1 && target_buffer[len] != '\0')
+                    len++; // Manual length
+                if(len < target_size - 1) {
+                    target_buffer[len] = ch;
+                    target_buffer[len + 1] = '\0';
+
+                    // Auto-switch to lowercase after typing a letter in caps mode (not caps lock)
+                    if(text_input_keyboard_mode == 1 && !text_input_caps_lock &&
+                       ((ch >= 'A' && ch <= 'Z'))) {
+                        text_input_keyboard_mode = 0;
+                    }
+                }
+            }
+        }
+    } break;
+
+    case InputKeyBack:
+        if(currentView == RunViewGitHubRepo) {
+            currentView = RunViewGitHubAuthor;
+        } else if(currentView == RunViewGitHubAuthor) {
+            currentView = RunViewMainMenu;
+        }
+        break;
+
+    default:
+        break;
+    }
 }
 
-void FlipDownloaderRun::setCategorySavePath(FlipperAppCategory category) {
-    Storage* storage = static_cast<Storage*>(furi_record_open(RECORD_STORAGE));
-    char directory_path[128];
-    snprintf(
-        directory_path,
-        sizeof(directory_path),
-        STORAGE_EXT_PATH_PREFIX "/apps_data/%s/%s",
-        APP_ID,
-        getAppCategory(category));
-    storage_common_mkdir(storage, directory_path);
+bool FlipDownloaderRun::hasAppsAvailable(FlipperAppCategory category) {
+    char savePath[128];
     snprintf(
         savePath,
         sizeof(savePath),
         STORAGE_EXT_PATH_PREFIX "/apps_data/%s/%s.json",
         APP_ID,
         getAppCategory(category));
+    FuriString* appInfo = flipper_http_load_from_file(savePath);
+    if(!appInfo || furi_string_size(appInfo) == 0) {
+        return false;
+    }
+
+    const char* jsonText = furi_string_get_cstr(appInfo);
+
+    // Find the opening bracket of the array using manual search
+    const char* arrayStart = nullptr;
+    const char* searchPos = jsonText;
+    while(*searchPos != '\0') {
+        if(*searchPos == '[') {
+            arrayStart = searchPos;
+            break;
+        }
+        searchPos++;
+    }
+    if(!arrayStart) {
+        furi_string_free(appInfo);
+        return false;
+    }
+
+    // Check if there's at least one object in the array
+    const char* pos = arrayStart + 1;
+    while(*pos && (*pos == ' ' || *pos == '\t' || *pos == '\n' || *pos == '\r')) {
+        pos++;
+    }
+
+    bool hasApps = (*pos == '{'); // If we find an opening brace, there's at least one app
+
+    furi_string_free(appInfo);
+    return hasApps;
+}
+
+bool FlipDownloaderRun::init(void* appContext) {
+    if(!appContext) {
+        FURI_LOG_E("FlipDownloaderRun", "App context is null");
+        return false;
+    }
+    this->appContext = appContext;
+    savePath[0] = '\0';
+    github_author[0] = '\0';
+    github_repo[0] = '\0';
+    github_current_file = 0;
+    github_total_files = 0;
+
+    // Initialize download queue
+    clearDownloadQueue();
+
+    return true;
+}
+
+bool FlipDownloaderRun::loadFileChunk(
+    const char* filePath,
+    char* buffer,
+    size_t sizeOfChunk,
+    uint8_t iteration) {
+    if(!filePath || !buffer || sizeOfChunk == 0) {
+        FURI_LOG_E(TAG, "Invalid parameters for loadFileChunk");
+        return false;
+    }
+
+    Storage* storage = static_cast<Storage*>(furi_record_open(RECORD_STORAGE));
+    if(!storage) {
+        FURI_LOG_E(TAG, "Failed to open storage record");
+        return false;
+    }
+
+    File* file = storage_file_alloc(storage);
+    if(!file) {
+        FURI_LOG_E(TAG, "Failed to allocate file");
+        furi_record_close(RECORD_STORAGE);
+        return false;
+    }
+
+    // Open the file for reading
+    if(!storage_file_open(file, filePath, FSAM_READ, FSOM_OPEN_EXISTING)) {
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        FURI_LOG_E(TAG, "Failed to open file for reading: %s", filePath);
+        return false;
+    }
+
+    // Change the current access position in a file.
+    if(!storage_file_seek(file, iteration * sizeOfChunk, true)) {
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        FURI_LOG_E(TAG, "Failed to seek file: %s", filePath);
+        return false;
+    }
+
+    // Check whether the current access position is at the end of the file.
+    if(storage_file_eof(file)) {
+        FURI_LOG_E(TAG, "End of file reached: %s", filePath);
+        return false;
+    }
+
+    // Read data into the buffer
+    size_t read_count = storage_file_read(file, buffer, sizeOfChunk);
+    if(storage_file_get_error(file) != FSE_OK) {
+        FURI_LOG_E(TAG, "Error reading from file.");
+        storage_file_close(file);
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return false;
+    }
+
+    // ensure we don't go out of bounds
+    if(read_count > 0 && read_count < sizeOfChunk) {
+        buffer[read_count] = '\0'; // Null-terminate after the last read character
+    } else if(read_count >= sizeOfChunk && sizeOfChunk > 0) {
+        buffer[sizeOfChunk - 1] = '\0'; // Use last byte for null terminator
+    } else {
+        buffer[0] = '\0'; // Empty buffer
+    }
+
+    storage_file_close(file);
+    storage_file_free(file);
     furi_record_close(RECORD_STORAGE);
+
+    return read_count > 0;
+}
+
+bool FlipDownloaderRun::loadFileChunkFromOffset(
+    const char* filePath,
+    char* buffer,
+    size_t bufferSize,
+    size_t offset) {
+    if(!filePath || !buffer || bufferSize == 0) {
+        FURI_LOG_E(TAG, "Invalid parameters for loadFileChunkFromOffset");
+        return false;
+    }
+
+    // Additional safety checks
+    if(filePath[0] == '\0' || bufferSize > 8192) // Reasonable size limit
+    {
+        FURI_LOG_E(TAG, "Invalid file path or buffer size");
+        return false;
+    }
+
+    // Open the storage record
+    Storage* storage = static_cast<Storage*>(furi_record_open(RECORD_STORAGE));
+    if(!storage) {
+        FURI_LOG_E(TAG, "Failed to open storage record");
+        return false;
+    }
+
+    File* file = storage_file_alloc(storage);
+    if(!file) {
+        FURI_LOG_E(TAG, "Failed to allocate file");
+        furi_record_close(RECORD_STORAGE);
+        return false;
+    }
+
+    // Open the file for reading
+    if(!storage_file_open(file, filePath, FSAM_READ, FSOM_OPEN_EXISTING)) {
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        FURI_LOG_E(TAG, "Failed to open file for reading: %s", filePath);
+        return false;
+    }
+
+    // Seek to the specified offset
+    if(!storage_file_seek(file, offset, true)) {
+        FURI_LOG_E(TAG, "Failed to seek to offset %zu in file: %s", offset, filePath);
+        storage_file_close(file);
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return false;
+    }
+
+    // Check if we're at end of file
+    if(storage_file_eof(file)) {
+        storage_file_close(file);
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return false;
+    }
+
+    // Read data into the buffer
+    size_t read_count = storage_file_read(file, buffer, bufferSize - 1); // -1 for null terminator
+    if(storage_file_get_error(file) != FSE_OK) {
+        FURI_LOG_E(TAG, "Error reading from file at offset %zu", offset);
+        storage_file_close(file);
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return false;
+    }
+
+    // Null-terminate the buffer and add safety check
+    if(read_count < bufferSize) {
+        buffer[read_count] = '\0';
+    } else {
+        buffer[bufferSize - 1] = '\0';
+    }
+
+    storage_file_close(file);
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
+
+    return read_count > 0;
+}
+
+void FlipDownloaderRun::processDownloadQueue() {
+    if(!isProcessingQueue || currentDownloadIndex >= downloadQueueSize) {
+        // Queue is complete
+        isProcessingQueue = false;
+        isDownloadComplete = true;
+        return;
+    }
+
+    FlipDownloaderDownloadLink currentLink = downloadQueue[currentDownloadIndex];
+
+    // Download the current file
+    downloadFile(currentLink);
+}
+
+void FlipDownloaderRun::queueDownload(FlipDownloaderDownloadLink link) {
+    if(downloadQueueSize < 10) // Prevent overflow
+    {
+        downloadQueue[downloadQueueSize] = link;
+        downloadQueueSize++;
+    }
+}
+
+bool FlipDownloaderRun::saveCharWithPath(const char* fullPath, const char* value) {
+    if(!value) {
+        return false;
+    }
+
+    Storage* storage = static_cast<Storage*>(furi_record_open(RECORD_STORAGE));
+    File* file = storage_file_alloc(storage);
+
+    // Open the file in write mode
+    if(!storage_file_open(file, fullPath, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+        FURI_LOG_E(HTTP_TAG, "Failed to open file for writing: %s", fullPath);
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return false;
+    }
+
+    // Write the data to the file
+    size_t data_size = 0;
+    while(value[data_size] != '\0')
+        data_size++; // Manual length calculation
+    data_size += 1; // Include null terminator
+    if(storage_file_write(file, value, data_size) != data_size) {
+        FURI_LOG_E(HTTP_TAG, "Failed to append data to file");
+        storage_file_close(file);
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return false;
+    }
+
+    storage_file_close(file);
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
+
+    return true;
+}
+
+void FlipDownloaderRun::startDownloadQueue() {
+    if(downloadQueueSize > 0) {
+        currentDownloadIndex = 0;
+        isProcessingQueue = true;
+        isDownloading = false;
+        isDownloadComplete = false;
+        processDownloadQueue();
+    }
+}
+
+bool FlipDownloaderRun::startTextInput(uint32_t view) {
+    // Initialize text input state
+    text_input_cursor_x = 0;
+    text_input_cursor_y = 0;
+    text_input_keyboard_mode = 0; // 0=lowercase, 1=uppercase, 2=numbers
+    text_input_caps_lock = false; // Start with caps lock off
+
+    if(view == RunViewGitHubAuthor) {
+        // Clear the author buffer for fresh input
+        github_author[0] = '\0';
+        currentView = RunViewGitHubAuthor;
+    } else if(view == RunViewGitHubRepo) {
+        // Clear the repo buffer for fresh input
+        github_repo[0] = '\0';
+        currentView = RunViewGitHubRepo;
+    }
+
+    return true;
+}
+
+void FlipDownloaderRun::startGitHubDownload() {
+    // Initialize GitHub download state
+    isGitHubDownloading = false;
+    isGitHubDownloadComplete = false;
+    github_current_file = 0;
+    github_total_files = 0;
+    github_download_delay_counter = 0;
+
+    // Manual length calculation
+    size_t author_len = 0;
+    while(author_len < sizeof(github_author) && github_author[author_len] != '\0')
+        author_len++;
+    size_t repo_len = 0;
+    while(repo_len < sizeof(github_repo) && github_repo[repo_len] != '\0')
+        repo_len++;
+
+    if(author_len == 0 || repo_len == 0) {
+        FURI_LOG_E(APP_ID, "GitHub author or repo is empty");
+        currentView = RunViewMainMenu;
+        return;
+    }
+
+    currentView = RunViewGitHubProgress;
+    github_current_file = 0;
+    github_total_files = 0;
+    isDownloading = false;
+    isDownloadComplete = false;
+    idleCheckCounter = 0;
+
+    // Start by fetching repository info
+    githubFetchRepositoryInfo(github_author, github_repo);
+}
+
+void FlipDownloaderRun::setCategorySavePath(FlipperAppCategory category) {
+    snprintf(
+        savePath,
+        sizeof(savePath),
+        STORAGE_EXT_PATH_PREFIX "/apps_data/%s/%s.json",
+        APP_ID,
+        getAppCategory(category));
 }
 
 void FlipDownloaderRun::setSavePath(FlipDownloaderDownloadLink link) {
@@ -1124,6 +2807,13 @@ void FlipDownloaderRun::updateDraw(Canvas* canvas) {
     case RunViewVGM:
         drawMenuVGM(canvas);
         break;
+    case RunViewGitHubAuthor:
+    case RunViewGitHubRepo:
+        drawGitHubInput(canvas);
+        break;
+    case RunViewGitHubProgress:
+        drawGitHubProgress(canvas);
+        break;
     case RunViewDownloadProgress:
         drawDownloadProgress(canvas);
         break;
@@ -1137,10 +2827,13 @@ void FlipDownloaderRun::updateDraw(Canvas* canvas) {
 
 void FlipDownloaderRun::updateInput(InputEvent* event) {
     if(event->type == InputTypePress) {
-        // Special handling for download progress view - only allow back button
+        //  download progress view - only allow back button
         if(currentView == RunViewDownloadProgress) {
             switch(event->key) {
             case InputKeyBack:
+                // Clear the download queue when going back
+                clearDownloadQueue();
+
                 // Return to appropriate view based on what was being downloaded
                 if(isLoadingNextApps) {
                     isLoadingNextApps = false;
@@ -1185,6 +2878,11 @@ void FlipDownloaderRun::updateInput(InputEvent* event) {
             currentSelectedIndex = &selectedIndexVGM;
             menuCount = 2;
             break;
+        case RunViewGitHubAuthor:
+        case RunViewGitHubRepo:
+        case RunViewGitHubProgress:
+            // Special handling for GitHub views
+            break;
         case RunViewApps:
             currentSelectedIndex = &selectedIndexApps;
             menuCount = MAX_RECEIVED_APPS;
@@ -1193,11 +2891,34 @@ void FlipDownloaderRun::updateInput(InputEvent* event) {
             return; // Invalid view
         }
 
+        //  GitHub views
+        if(currentView == RunViewGitHubAuthor || currentView == RunViewGitHubRepo ||
+           currentView == RunViewGitHubProgress) {
+            if(currentView == RunViewGitHubAuthor || currentView == RunViewGitHubRepo) {
+                // Virtual keyboard input handling
+                handleGitHubKeyboardInput(event);
+            } else if(currentView == RunViewGitHubProgress) {
+                switch(event->key) {
+                case InputKeyBack:
+                    currentView = RunViewMainMenu;
+                    github_current_file = 0;
+                    github_total_files = 0;
+                    isGitHubDownloading = false;
+                    isGitHubDownloadComplete = false;
+                    break;
+                default:
+                    break;
+                }
+            }
+            return;
+        }
+
         switch(event->key) {
         case InputKeyLeft:
         case InputKeyRight:
             // Only handle left/right for horizontal menu views (not Apps view)
-            if(currentView != RunViewApps) {
+            if(currentView != RunViewApps && currentView != RunViewGitHubAuthor &&
+               currentView != RunViewGitHubRepo && currentView != RunViewGitHubProgress) {
                 if(event->key == InputKeyLeft) {
                     if(*currentSelectedIndex > 0) {
                         (*currentSelectedIndex)--;
@@ -1223,7 +2944,6 @@ void FlipDownloaderRun::updateInput(InputEvent* event) {
                     if(selectedIndexApps > 0) {
                         selectedIndexApps--;
                     }
-                    // If we're at the beginning and there's a previous page, we could implement loading previous page here
                 } else // InputKeyDown
                 {
                     if(selectedIndexApps < (MAX_RECEIVED_APPS - 1)) {
@@ -1271,7 +2991,8 @@ void FlipDownloaderRun::updateInput(InputEvent* event) {
                     currentView = RunViewVGM;
                     break;
                 case 3: // GitHub Repo
-                    // TODO: Handle GitHub repo action
+                    currentView = RunViewGitHubAuthor;
+                    startTextInput(RunViewGitHubAuthor);
                     break;
                 }
                 break;
@@ -1279,21 +3000,27 @@ void FlipDownloaderRun::updateInput(InputEvent* event) {
                 switch(selectedIndexESP32) {
                 case 0: // Black Magic - download 3 files
                     currentView = RunViewDownloadProgress; // Switch to download view
-                    downloadFile(DownloadLinkFirmwareBlackMagicLink1);
-                    downloadFile(DownloadLinkFirmwareBlackMagicLink2);
-                    downloadFile(DownloadLinkFirmwareBlackMagicLink3);
+                    clearDownloadQueue();
+                    queueDownload(DownloadLinkFirmwareBlackMagicLink1);
+                    queueDownload(DownloadLinkFirmwareBlackMagicLink2);
+                    queueDownload(DownloadLinkFirmwareBlackMagicLink3);
+                    startDownloadQueue();
                     break;
                 case 1: // Marauder - download 3 files
                     currentView = RunViewDownloadProgress; // Switch to download view
-                    downloadFile(DownloadLinkFirmwareMarauderLink1);
-                    downloadFile(DownloadLinkFirmwareMarauderLink2);
-                    downloadFile(DownloadLinkFirmwareMarauderLink3);
+                    clearDownloadQueue();
+                    queueDownload(DownloadLinkFirmwareMarauderLink1);
+                    queueDownload(DownloadLinkFirmwareMarauderLink2);
+                    queueDownload(DownloadLinkFirmwareMarauderLink3);
+                    startDownloadQueue();
                     break;
                 case 2: // FlipperHTTP - download 3 files
                     currentView = RunViewDownloadProgress; // Switch to download view
-                    downloadFile(DownloadLinkFirmwareFlipperHTTPLink1);
-                    downloadFile(DownloadLinkFirmwareFlipperHTTPLink2);
-                    downloadFile(DownloadLinkFirmwareFlipperHTTPLink3);
+                    clearDownloadQueue();
+                    queueDownload(DownloadLinkFirmwareFlipperHTTPLink1);
+                    queueDownload(DownloadLinkFirmwareFlipperHTTPLink2);
+                    queueDownload(DownloadLinkFirmwareFlipperHTTPLink3);
+                    startDownloadQueue();
                     break;
                 }
                 break;

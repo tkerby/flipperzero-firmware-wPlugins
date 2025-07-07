@@ -6,7 +6,7 @@ Download apps and assets directly to your Flipper Zero using WiFi. This app is n
 - Delete Apps 
 - Install WiFi Developer Board Firmware (installs in /apps_data/esp_flasher/)
 - Install Video Game Module Firmware (installs in /apps_data/vgm/)
-- Install GitHub Repositories (coming soon)
+- Install GitHub Repositories (Beta)
 - Install Flipper Firmware (coming soon)
 
 ## Installation
