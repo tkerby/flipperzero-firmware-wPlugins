@@ -28,6 +28,137 @@ Player::~Player()
     // nothing to clean up for now
 }
 
+bool Player::areAllEnemiesDead(Game *game)
+{
+    // Ensure we have a valid game and current level
+    if (!game || !game->current_level)
+    {
+        FURI_LOG_E("Player", "areAllEnemiesDead: Invalid game or current level");
+        return false;
+    }
+
+    // Get the current level
+    Level *currentLevel = game->current_level;
+    int totalEnemies = 0;
+    int deadEnemies = 0;
+
+    // Check all entities in the current level
+    for (int i = 0; i < currentLevel->getEntityCount(); i++)
+    {
+        Entity *entity = currentLevel->getEntity(i);
+
+        // Skip null entities
+        if (!entity)
+        {
+            continue;
+        }
+
+        // Check if this is an enemy entity
+        if (entity->type == ENTITY_ENEMY)
+        {
+            totalEnemies++;
+
+            if (entity->state == ENTITY_DEAD)
+            {
+                deadEnemies++;
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+
+    // Only return true if there were enemies to begin with and they're all dead
+    if (totalEnemies == 0)
+    {
+        FURI_LOG_E("Player", "No enemies found in current level!");
+        return false; // Don't switch levels if there are no enemies
+    }
+
+    return deadEnemies == totalEnemies;
+}
+
+void Player::checkForLevelCompletion(Game *game)
+{
+    // Only check for level completion if we're in the game view and the game is running
+    if (!flipWorldRun || !flipWorldRun->isRunning() || currentMainView != GameViewGame)
+    {
+        return;
+    }
+
+    // Update cooldown timer
+    levelCompletionCooldown -= 1.0 / 30; // 30 fps
+    if (levelCompletionCooldown > 0)
+    {
+        return; // Still in cooldown, don't check yet
+    }
+
+    // Don't check immediately after switching levels
+    if (justSwitchedLevels)
+    {
+        justSwitchedLevels = false;    // Reset the flag
+        levelCompletionCooldown = 1.0; // Set a 1 second cooldown
+        return;
+    }
+
+    // Check if all enemies are dead
+    if (areAllEnemiesDead(game))
+    {
+        // Get current level index
+        LevelIndex currentLevelIndex = flipWorldRun->getCurrentLevelIndex();
+
+        // Determine next level
+        LevelIndex nextLevelIndex = LevelUnknown;
+        switch (currentLevelIndex)
+        {
+        case LevelHomeWoods:
+            nextLevelIndex = LevelRockWorld;
+            break;
+        case LevelRockWorld:
+            nextLevelIndex = LevelForestWorld;
+            break;
+        case LevelForestWorld:
+            // End of available levels - could reset to first level or show completion
+            nextLevelIndex = LevelHomeWoods;
+            break;
+        default:
+            // Unknown level, start from the beginning
+            nextLevelIndex = LevelHomeWoods;
+            break;
+        }
+
+        // Switch to the next level if valid
+        if (nextLevelIndex != LevelUnknown && flipWorldRun->getEngine() && flipWorldRun->getEngine()->getGame())
+        {
+            // Set game state to switching levels
+            setGameState(GameStateSwitchingLevels);
+
+            // Switch to the next level
+            flipWorldRun->getEngine()->getGame()->level_switch((int)nextLevelIndex);
+
+            // Set the icon group for the new level
+            flipWorldRun->setIconGroup(nextLevelIndex);
+
+            // Reset player position to start position
+            position = start_position;
+            position_set(start_position);
+
+            // Mark that we just switched levels
+            justSwitchedLevels = true;
+
+            // Reset player health to full for new level
+            health = max_health;
+
+            // Set cooldown to prevent immediate re-checking (2 seconds)
+            levelCompletionCooldown = 2.0;
+
+            // Return to playing state
+            setGameState(GameStatePlaying);
+        }
+    }
+}
+
 void Player::drawCurrentView(Draw *canvas)
 {
     if (!canvas)
@@ -68,9 +199,101 @@ void Player::drawCurrentView(Draw *canvas)
             }
         }
         break;
+    case GameViewLogin:
+        drawLoginView(canvas);
+        break;
+    case GameViewRegistration:
+        drawRegistrationView(canvas);
+        break;
+    case GameViewUserInfo:
+        drawUserInfoView(canvas);
+        break;
     default:
         canvas->fillScreen(ColorWhite);
         canvas->text(Vector(0, 10), "Unknown View", ColorBlack);
+        break;
+    }
+}
+
+void Player::drawLoginView(Draw *canvas)
+{
+    canvas->fillScreen(ColorWhite);
+    canvas->setFont(FontPrimary);
+    static bool loadingStarted = false;
+    switch (loginStatus)
+    {
+    case LoginWaiting:
+        if (!loadingStarted)
+        {
+            if (!loading)
+            {
+                loading = std::make_unique<Loading>(canvas);
+            }
+            loadingStarted = true;
+            if (loading)
+            {
+                loading->setText("Logging in...");
+            }
+        }
+        if (!this->httpRequestIsFinished())
+        {
+            if (loading)
+            {
+                loading->animate();
+            }
+        }
+        else
+        {
+            if (loading)
+            {
+                loading->stop();
+            }
+            loadingStarted = false;
+            char response[256];
+            FlipWorldApp *app = static_cast<FlipWorldApp *>(flipWorldRun->appContext);
+            if (app && app->loadChar("login", response, sizeof(response)))
+            {
+                if (strstr(response, "[SUCCESS]") != NULL)
+                {
+                    loginStatus = LoginSuccess;
+                    currentMainView = GameViewUserInfo; // switch to user info view
+                    userRequest(RequestTypeUserInfo);
+                    userInfoStatus = UserInfoWaiting; // set user info status to waiting
+                }
+                else if (strstr(response, "User not found") != NULL)
+                {
+                    loginStatus = LoginNotStarted;
+                    currentMainView = GameViewRegistration;
+                    userRequest(RequestTypeRegistration);
+                    registrationStatus = RegistrationWaiting;
+                }
+                else
+                {
+                    loginStatus = LoginRequestError;
+                }
+            }
+            else
+            {
+                loginStatus = LoginRequestError;
+            }
+        }
+        break;
+    case LoginSuccess:
+        canvas->text(Vector(0, 10), "Login successful!", ColorBlack);
+        canvas->text(Vector(0, 20), "Press OK to continue.", ColorBlack);
+        break;
+    case LoginCredentialsMissing:
+        canvas->text(Vector(0, 10), "Missing credentials!", ColorBlack);
+        canvas->text(Vector(0, 20), "Please set your username", ColorBlack);
+        canvas->text(Vector(0, 30), "and password in the app.", ColorBlack);
+        break;
+    case LoginRequestError:
+        canvas->text(Vector(0, 10), "Login request failed!", ColorBlack);
+        canvas->text(Vector(0, 20), "Check your network and", ColorBlack);
+        canvas->text(Vector(0, 30), "try again later.", ColorBlack);
+        break;
+    default:
+        canvas->text(Vector(0, 10), "Logging in...", ColorBlack);
         break;
     }
 }
@@ -97,6 +320,90 @@ void Player::drawRainEffect(Draw *canvas)
     if (rainFrame > 128)
     {
         rainFrame = 0;
+    }
+}
+
+void Player::drawRegistrationView(Draw *canvas)
+{
+    canvas->fillScreen(ColorWhite);
+    canvas->setFont(FontPrimary);
+    static bool loadingStarted = false;
+    switch (registrationStatus)
+    {
+    case RegistrationWaiting:
+        if (!loadingStarted)
+        {
+            if (!loading)
+            {
+                loading = std::make_unique<Loading>(canvas);
+            }
+            loadingStarted = true;
+            if (loading)
+            {
+                loading->setText("Registering...");
+            }
+        }
+        if (!this->httpRequestIsFinished())
+        {
+            if (loading)
+            {
+                loading->animate();
+            }
+        }
+        else
+        {
+            if (loading)
+            {
+                loading->stop();
+            }
+            loadingStarted = false;
+            char response[256];
+            FlipWorldApp *app = static_cast<FlipWorldApp *>(flipWorldRun->appContext);
+            if (app && app->loadChar("register", response, sizeof(response)))
+            {
+                if (strstr(response, "[SUCCESS]") != NULL)
+                {
+                    registrationStatus = RegistrationSuccess;
+                    currentMainView = GameViewUserInfo; // switch to user info view
+                    userRequest(RequestTypeUserInfo);
+                    userInfoStatus = UserInfoWaiting; // set user info status to waiting
+                }
+                else if (strstr(response, "Username or password not provided") != NULL)
+                {
+                    registrationStatus = RegistrationCredentialsMissing;
+                }
+                else if (strstr(response, "User already exists") != NULL)
+                {
+                    registrationStatus = RegistrationUserExists;
+                }
+                else
+                {
+                    registrationStatus = RegistrationRequestError;
+                }
+            }
+            else
+            {
+                registrationStatus = RegistrationRequestError;
+            }
+        }
+        break;
+    case RegistrationSuccess:
+        canvas->text(Vector(0, 10), "Registration successful!", ColorBlack);
+        canvas->text(Vector(0, 20), "Press OK to continue.", ColorBlack);
+        break;
+    case RegistrationCredentialsMissing:
+        canvas->text(Vector(0, 10), "Missing credentials!", ColorBlack);
+        canvas->text(Vector(0, 20), "Please update your username", ColorBlack);
+        canvas->text(Vector(0, 30), "and password in the settings.", ColorBlack);
+        break;
+    case RegistrationRequestError:
+        canvas->text(Vector(0, 10), "Registration request failed!", ColorBlack);
+        canvas->text(Vector(0, 20), "Check your network and", ColorBlack);
+        canvas->text(Vector(0, 30), "try again later.", ColorBlack);
+        break;
+    default:
+        canvas->text(Vector(0, 10), "Registering...", ColorBlack);
+        break;
     }
 }
 
@@ -198,6 +505,171 @@ void Player::drawUsername(Vector pos, Game *game)
 
     // draw name over player's head
     game->draw->text(Vector(screen_x - (strlen(name) * 2), screen_y - 7), name, ColorBlack);
+}
+
+void Player::drawUserInfoView(Draw *canvas)
+{
+    static bool loadingStarted = false;
+    switch (userInfoStatus)
+    {
+    case UserInfoWaiting:
+        if (!loadingStarted)
+        {
+            if (!loading)
+            {
+                loading = std::make_unique<Loading>(canvas);
+            }
+            loadingStarted = true;
+            if (loading)
+            {
+                loading->setText("Fetching...");
+            }
+        }
+        if (!this->httpRequestIsFinished())
+        {
+            if (loading)
+            {
+                loading->animate();
+            }
+        }
+        else
+        {
+            canvas->text(Vector(0, 10), "Loading user info...", ColorBlack);
+            canvas->text(Vector(0, 20), "Please wait...", ColorBlack);
+            canvas->text(Vector(0, 30), "It may take up to 15 seconds.", ColorBlack);
+            char response[512];
+            FlipWorldApp *app = static_cast<FlipWorldApp *>(flipWorldRun->appContext);
+            if (app && app->loadChar("user_info", response, sizeof(response)))
+            {
+                userInfoStatus = UserInfoSuccess;
+                // they're in! let's go
+                char *game_stats = get_json_value("game_stats", response);
+                if (!game_stats)
+                {
+                    FURI_LOG_E("Player", "Failed to parse game_stats");
+                    userInfoStatus = UserInfoParseError;
+                    if (loading)
+                    {
+                        loading->stop();
+                    }
+                    loadingStarted = false;
+                    return;
+                }
+                canvas->fillScreen(ColorWhite);
+                canvas->text(Vector(0, 10), "User info loaded!", ColorBlack);
+                char *username = get_json_value("username", game_stats);
+                char *level = get_json_value("level", game_stats);
+                char *xp = get_json_value("xp", game_stats);
+                char *health = get_json_value("health", game_stats);
+                char *strength = get_json_value("strength", game_stats);
+                char *max_health = get_json_value("max_health", game_stats);
+                if (!username || !level || !xp || !health || !strength || !max_health)
+                {
+                    FURI_LOG_E("Player", "Failed to parse user info");
+                    userInfoStatus = UserInfoParseError;
+                    if (username)
+                        ::free(username);
+                    if (level)
+                        ::free(level);
+                    if (xp)
+                        ::free(xp);
+                    if (health)
+                        ::free(health);
+                    if (strength)
+                        ::free(strength);
+                    if (max_health)
+                        ::free(max_health);
+                    ::free(game_stats);
+                    if (loading)
+                    {
+                        loading->stop();
+                    }
+                    loadingStarted = false;
+                    return;
+                }
+
+                canvas->fillScreen(ColorWhite);
+                canvas->text(Vector(0, 10), "User data found!", ColorBlack);
+
+                // Update player info
+                snprintf(player_name, sizeof(player_name), "%s", username);
+                name = player_name;
+                this->level = atoi(level);
+                this->xp = atoi(xp);
+                this->health = atoi(health);
+                this->strength = atoi(strength);
+                this->max_health = atoi(max_health);
+
+                canvas->fillScreen(ColorWhite);
+                canvas->text(Vector(0, 10), "Player info updated!", ColorBlack);
+
+                // clean em up gang
+                ::free(username);
+                ::free(level);
+                ::free(xp);
+                ::free(health);
+                ::free(strength);
+                ::free(max_health);
+                ::free(game_stats);
+
+                canvas->fillScreen(ColorWhite);
+                canvas->text(Vector(0, 10), "Memory freed!", ColorBlack);
+
+                currentMainView = GameViewGame; // switch to game view
+
+                if (loading)
+                {
+                    loading->stop();
+                }
+                loadingStarted = false;
+
+                canvas->fillScreen(ColorWhite);
+                canvas->text(Vector(0, 10), "User info loaded successfully!", ColorBlack);
+                canvas->text(Vector(0, 20), "Please wait...", ColorBlack);
+                canvas->text(Vector(0, 30), "Starting game...", ColorBlack);
+                canvas->text(Vector(0, 40), "It may take up to 15 seconds.", ColorBlack);
+
+                flipWorldRun->startGame();
+                return;
+            }
+            else
+            {
+                userInfoStatus = UserInfoRequestError;
+            }
+        }
+        break;
+    case UserInfoSuccess:
+        canvas->fillScreen(ColorWhite);
+        canvas->setFont(FontPrimary);
+        canvas->text(Vector(0, 10), "User info loaded successfully!", ColorBlack);
+        canvas->text(Vector(0, 20), "Press OK to continue.", ColorBlack);
+        break;
+    case UserInfoCredentialsMissing:
+        canvas->fillScreen(ColorWhite);
+        canvas->setFont(FontPrimary);
+        canvas->text(Vector(0, 10), "Missing credentials!", ColorBlack);
+        canvas->text(Vector(0, 20), "Please update your username", ColorBlack);
+        canvas->text(Vector(0, 30), "and password in the settings.", ColorBlack);
+        break;
+    case UserInfoRequestError:
+        canvas->fillScreen(ColorWhite);
+        canvas->setFont(FontPrimary);
+        canvas->text(Vector(0, 10), "User info request failed!", ColorBlack);
+        canvas->text(Vector(0, 20), "Check your network and", ColorBlack);
+        canvas->text(Vector(0, 30), "try again later.", ColorBlack);
+        break;
+    case UserInfoParseError:
+        canvas->fillScreen(ColorWhite);
+        canvas->setFont(FontPrimary);
+        canvas->text(Vector(0, 10), "Failed to parse user info!", ColorBlack);
+        canvas->text(Vector(0, 20), "Try again...", ColorBlack);
+        break;
+    default:
+        canvas->fillScreen(ColorWhite);
+        canvas->setFont(FontPrimary);
+        canvas->text(Vector(0, 10), "Loading user info...", ColorBlack);
+        break;
+    }
 }
 
 void Player::drawUserStats(Vector pos, Draw *canvas)
@@ -319,8 +791,9 @@ void Player::processInput()
             break;
         case InputKeyOk:
             flipWorldRun->shouldDebounce = true;
-            flipWorldRun->startGame();
-            currentMainView = GameViewGame; // Switch to game view after starting the game
+            currentMainView = GameViewLogin; // Switch to login view
+            userRequest(RequestTypeLogin);
+            loginStatus = LoginWaiting;
             break;
         case InputKeyBack:
             flipWorldRun->endGame();
@@ -356,55 +829,59 @@ void Player::processInput()
         }
         break;
 
-    // case GameViewLogin:
-    //     switch (currentInput)
-    //     {
-    //     case InputKeyBack:
-    //         currentMainView = GameViewWelcome;
-    //         flipWorldRun->shouldDebounce = true;
-    //         break;
-    //     case InputKeyOk:
-    //         if (loginStatus == LoginSuccess)
-    //         {
-    //             currentMainView = GameViewTitle;
-    //             flipWorldRun->shouldDebounce = true;
-    //         }
-    //         break;
-    //     default:
-    //         break;
-    //     }
-    //     break;
+    case GameViewLogin:
+        switch (currentInput)
+        {
+        case InputKeyBack:
+            currentMainView = GameViewTitle;
+            flipWorldRun->shouldDebounce = true;
+            break;
+        case InputKeyOk:
+            if (loginStatus == LoginSuccess)
+            {
+                currentMainView = GameViewUserInfo;
+                userRequest(RequestTypeUserInfo);
+                userInfoStatus = UserInfoWaiting;
+                flipWorldRun->shouldDebounce = true;
+            }
+            break;
+        default:
+            break;
+        }
+        break;
 
-    // case GameViewRegistration:
-    //     switch (currentInput)
-    //     {
-    //     case InputKeyBack:
-    //         currentMainView = GameViewWelcome;
-    //         flipWorldRun->shouldDebounce = true;
-    //         break;
-    //     case InputKeyOk:
-    //         if (registrationStatus == RegistrationSuccess)
-    //         {
-    //             currentMainView = GameViewTitle;
-    //             flipWorldRun->shouldDebounce = true;
-    //         }
-    //         break;
-    //     default:
-    //         break;
-    //     }
-    //     break;
+    case GameViewRegistration:
+        switch (currentInput)
+        {
+        case InputKeyBack:
+            currentMainView = GameViewTitle;
+            flipWorldRun->shouldDebounce = true;
+            break;
+        case InputKeyOk:
+            if (registrationStatus == RegistrationSuccess)
+            {
+                currentMainView = GameViewUserInfo;
+                userRequest(RequestTypeUserInfo);
+                userInfoStatus = UserInfoWaiting;
+                flipWorldRun->shouldDebounce = true;
+            }
+            break;
+        default:
+            break;
+        }
+        break;
 
-    // case GameViewUserInfo:
-    //     switch (currentInput)
-    //     {
-    //     case InputKeyBack:
-    //         currentMainView = GameViewTitle;
-    //         flipWorldRun->shouldDebounce = true;
-    //         break;
-    //     default:
-    //         break;
-    //     }
-    //     break;
+    case GameViewUserInfo:
+        switch (currentInput)
+        {
+        case InputKeyBack:
+            currentMainView = GameViewTitle;
+            flipWorldRun->shouldDebounce = true;
+            break;
+        default:
+            break;
+        }
+        break;
     default:
         break;
     }
@@ -586,133 +1063,128 @@ void Player::updateStats()
     max_health = 100 + ((level - 1) * 10); // 10 health per level
 }
 
-void Player::checkForLevelCompletion(Game *game)
+void Player::userRequest(RequestType requestType)
 {
-    // Only check for level completion if we're in the game view and the game is running
-    if (!flipWorldRun || !flipWorldRun->isRunning() || currentMainView != GameViewGame)
+    if (!flipWorldRun)
     {
+        FURI_LOG_E("Player", "userRequest: FlipWorldRun instance is null");
         return;
     }
 
-    // Update cooldown timer
-    levelCompletionCooldown -= 1.0 / 30; // 30 fps
-    if (levelCompletionCooldown > 0)
+    // Get app context to access HTTP functionality
+    FlipWorldApp *app = static_cast<FlipWorldApp *>(flipWorldRun->appContext);
+    if (!app)
     {
-        return; // Still in cooldown, don't check yet
-    }
-
-    // Don't check immediately after switching levels
-    if (justSwitchedLevels)
-    {
-        justSwitchedLevels = false;    // Reset the flag
-        levelCompletionCooldown = 1.0; // Set a 1 second cooldown
+        FURI_LOG_E("Player", "userRequest: App context is null");
         return;
     }
 
-    // Check if all enemies are dead
-    if (areAllEnemiesDead(game))
+    // Allocate memory for credentials
+    char *username = (char *)malloc(64);
+    char *password = (char *)malloc(64);
+    if (!username || !password)
     {
-        // Get current level index
-        LevelIndex currentLevelIndex = flipWorldRun->getCurrentLevelIndex();
-
-        // Determine next level
-        LevelIndex nextLevelIndex = LevelUnknown;
-        switch (currentLevelIndex)
-        {
-        case LevelHomeWoods:
-            nextLevelIndex = LevelRockWorld;
-            break;
-        case LevelRockWorld:
-            nextLevelIndex = LevelForestWorld;
-            break;
-        case LevelForestWorld:
-            // End of available levels - could reset to first level or show completion
-            nextLevelIndex = LevelHomeWoods;
-            break;
-        default:
-            // Unknown level, start from the beginning
-            nextLevelIndex = LevelHomeWoods;
-            break;
-        }
-
-        // Switch to the next level if valid
-        if (nextLevelIndex != LevelUnknown && flipWorldRun->getEngine() && flipWorldRun->getEngine()->getGame())
-        {
-            // Set game state to switching levels
-            setGameState(GameStateSwitchingLevels);
-
-            // Switch to the next level
-            flipWorldRun->getEngine()->getGame()->level_switch((int)nextLevelIndex);
-
-            // Set the icon group for the new level
-            flipWorldRun->setIconGroup(nextLevelIndex);
-
-            // Reset player position to start position
-            position = start_position;
-            position_set(start_position);
-
-            // Mark that we just switched levels
-            justSwitchedLevels = true;
-
-            // Reset player health to full for new level
-            health = max_health;
-
-            // Set cooldown to prevent immediate re-checking (2 seconds)
-            levelCompletionCooldown = 2.0;
-
-            // Return to playing state
-            setGameState(GameStatePlaying);
-        }
-    }
-}
-
-bool Player::areAllEnemiesDead(Game *game)
-{
-    // Ensure we have a valid game and current level
-    if (!game || !game->current_level)
-    {
-        FURI_LOG_E("Player", "areAllEnemiesDead: Invalid game or current level");
-        return false;
+        FURI_LOG_E("Player", "userRequest: Failed to allocate memory for credentials");
+        if (username)
+            free(username);
+        if (password)
+            free(password);
+        return;
     }
 
-    // Get the current level
-    Level *currentLevel = game->current_level;
-    int totalEnemies = 0;
-    int deadEnemies = 0;
-
-    // Check all entities in the current level
-    for (int i = 0; i < currentLevel->getEntityCount(); i++)
+    // Load credentials from storage
+    bool credentialsLoaded = true;
+    if (!app->loadChar("user_name", username, 64))
     {
-        Entity *entity = currentLevel->getEntity(i);
-
-        // Skip null entities
-        if (!entity)
-        {
-            continue;
-        }
-
-        // Check if this is an enemy entity
-        if (entity->type == ENTITY_ENEMY)
-        {
-            totalEnemies++;
-
-            if (entity->state == ENTITY_DEAD)
-            {
-                deadEnemies++;
-            }
-            else
-            {
-                return false;
-            }
-        }
+        FURI_LOG_E("Player", "Failed to load user_name");
+        credentialsLoaded = false;
+    }
+    if (!app->loadChar("user_pass", password, 64))
+    {
+        FURI_LOG_E("Player", "Failed to load user_pass");
+        credentialsLoaded = false;
     }
 
-    // Only return true if there were enemies to begin with and they're all dead
-    if (totalEnemies == 0)
+    if (!credentialsLoaded)
     {
-        FURI_LOG_E("Player", "No enemies found in current level!");
-        return false; // Don't switch levels if there are no enemies
+        switch (requestType)
+        {
+        case RequestTypeLogin:
+            loginStatus = LoginCredentialsMissing;
+            break;
+        case RequestTypeRegistration:
+            registrationStatus = RegistrationCredentialsMissing;
+            break;
+        case RequestTypeUserInfo:
+            userInfoStatus = UserInfoCredentialsMissing;
+            break;
+        }
+        free(username);
+        free(password);
+        return;
     }
 
-    return deadEnemies == totalEnemies;
+    // Create JSON payload for login/registration
+    char *payload = (char *)malloc(256);
+    if (!payload)
+    {
+        FURI_LOG_E("Player", "userRequest: Failed to allocate memory for payload");
+        free(username);
+        free(password);
+        return;
+    }
+    snprintf(payload, 256, "{\"username\":\"%s\",\"password\":\"%s\"}", username, password);
+
+    switch (requestType)
+    {
+    case RequestTypeLogin:
+        if (!app->httpRequestAsync("login.txt",
+                                   "https://www.jblanked.com/flipper/api/user/login/",
+                                   POST, "{\"Content-Type\":\"application/json\"}", payload))
+        {
+            loginStatus = LoginRequestError;
+        }
+        break;
+    case RequestTypeRegistration:
+        if (!app->httpRequestAsync("register.txt",
+                                   "https://www.jblanked.com/flipper/api/user/register/",
+                                   POST, "{\"Content-Type\":\"application/json\"}", payload))
+        {
+            registrationStatus = RegistrationRequestError;
+        }
+        break;
+    case RequestTypeUserInfo:
+    {
+        char *url = (char *)malloc(128);
+        if (!url)
+        {
+            FURI_LOG_E("Player", "userRequest: Failed to allocate memory for url");
+            userInfoStatus = UserInfoRequestError;
+            free(username);
+            free(password);
+            free(payload);
+            return;
+        }
+        snprintf(url, 128, "https://www.jblanked.com/flipper/api/user/game-stats/%s/", username);
+        if (!app->httpRequestAsync("user_info.txt", url, GET, "{\"Content-Type\":\"application/json\"}"))
+        {
+            userInfoStatus = UserInfoRequestError;
+        }
+        free(url);
+    }
+    break;
+    default:
+        FURI_LOG_E("Player", "Unknown request type: %d", requestType);
+        loginStatus = LoginRequestError;
+        registrationStatus = RegistrationRequestError;
+        userInfoStatus = UserInfoRequestError;
+        free(username);
+        free(password);
+        free(payload);
+        return;
+    }
+
+    free(username);
+    free(password);
+    free(payload);
 }

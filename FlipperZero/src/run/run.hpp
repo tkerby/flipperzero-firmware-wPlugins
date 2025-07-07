@@ -40,6 +40,7 @@ public:
     bool isActive() const { return shouldReturnToMenu == false; }                  // Check if the game is active
     bool isRunning() const { return isGameRunning; }                               // Check if the game engine is running
     void resetInput() { lastInput = InputKeyMAX; }                                 // Reset input after processing
+    bool setAppContext(void *context);                                             // Set the application context for accessing app-specific functionality
     bool setIconGroup(LevelIndex index);                                           // Set the current icon group based on the level index
     bool startGame();                                                              // start the actual game
     void updateDraw(Canvas *canvas);                                               // update and draw the run

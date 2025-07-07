@@ -129,6 +129,7 @@ void FlipWorldApp::callbackSubmenuChoices(uint32_t index)
             return;
         }
         run = std::make_unique<FlipWorldRun>();
+        run->setAppContext(this);
         viewPort = view_port_alloc();
         view_port_draw_callback_set(viewPort, viewPortDraw, this);
         view_port_input_callback_set(viewPort, viewPortInput, this);

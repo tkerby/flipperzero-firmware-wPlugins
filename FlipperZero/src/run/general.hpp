@@ -1,5 +1,6 @@
 #pragma once
-#include <furi.h>
+#include <stdint.h>
+#include <memory>
 
 #define constrain(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
 #define MAX_WORLD_OBJECTS 25

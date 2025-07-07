@@ -272,6 +272,17 @@ void FlipWorldRun::inputManager()
     }
 }
 
+bool FlipWorldRun::setAppContext(void *context)
+{
+    if (!context)
+    {
+        FURI_LOG_E("Game", "Context is NULL");
+        return false;
+    }
+    appContext = context;
+    return true;
+}
+
 bool FlipWorldRun::setIconGroup(LevelIndex index)
 {
     const char *json_data = getLevelJson(index);
