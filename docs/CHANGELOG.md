@@ -1,5 +1,6 @@
 ## V0.3
 - Added ROT-13 cipher.
+- Large under the hood improvements regarding storage.
 
 ## V0.2
 - Fixed typos.

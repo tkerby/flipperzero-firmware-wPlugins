@@ -5,7 +5,7 @@
 
 #include "beaufort.h"
 
-char* beaufort_cipher_enrypt_and_decrypt(const char* text, const char* key) {
+char* beaufort_cipher_encrypt_and_decrypt(const char* text, const char* key) {
     int len = strlen(text);
     int key_len = strlen(key);
     int key_index = 0;
