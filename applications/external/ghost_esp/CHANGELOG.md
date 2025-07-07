@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.3.1
+- Might fix crash when closing app without a board connected
+
 ## v1.3
 
 - Add WiFi and BLE menu subcategories
