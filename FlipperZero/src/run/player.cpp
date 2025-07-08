@@ -119,7 +119,7 @@ void Player::checkForLevelCompletion(Game *game)
             nextLevelIndex = LevelForestWorld;
             break;
         case LevelForestWorld:
-            // End of available levels - could reset to first level or show completion
+            // End of available levels
             nextLevelIndex = LevelHomeWoods;
             break;
         default:
@@ -320,9 +320,9 @@ void Player::drawJoinLobbyView(Draw *canvas)
         }
         else
         {
-            char response[512];
+            char *response = (char *)malloc(512);
             FlipWorldApp *app = static_cast<FlipWorldApp *>(flipWorldRun->appContext);
-            if (app && app->loadChar("join_lobby", response, sizeof(response)))
+            if (app && app->loadChar("join_lobby", response, 512))
             {
                 // no need to check response this time, just join the game if a response is received
                 joinLobbyStatus = JoinLobbySuccess;
@@ -334,12 +334,14 @@ void Player::drawJoinLobbyView(Draw *canvas)
                 loadingStarted = false;
                 currentMainView = GameViewGame;         // switch to game view
                 userRequest(RequestTypeStartWebsocket); // Start websocket connection for real-time updates
+                flipWorldRun->setPvEMode(true);         // we're in pve mode now!
                 flipWorldRun->startGame();
             }
             else
             {
                 joinLobbyStatus = JoinLobbyRequestError;
             }
+            ::free(response);
         }
         break;
     case JoinLobbySuccess:
@@ -1270,6 +1272,8 @@ void Player::processInput()
                 currentMainView = GameViewJoinLobby;
                 flipWorldRun->shouldDebounce = true;
                 joinLobbyStatus = JoinLobbyWaiting;
+                // if no one is in lobby, then we are the host
+                flipWorldRun->setIsLobbyHost(lobbies[currentLobbyIndex].playerCount == 0);
                 userRequest(RequestTypeJoinLobby);
             }
             else if (lobbiesStatus != LobbiesSuccess)
@@ -1385,10 +1389,6 @@ void Player::update(Game *game)
         newPos.x += 5;
         direction = ENTITY_RIGHT;
         shouldSetPosition = true;
-    }
-    else if (game->input == InputKeyOk)
-    {
-        // Handle OK input
     }
 
     // reset input
