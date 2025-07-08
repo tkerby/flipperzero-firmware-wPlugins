@@ -52,6 +52,8 @@ public:
     ViewDispatcher *viewDispatcher = nullptr; // ViewDispatcher for managing views
     ViewPort *viewPort = nullptr;             // ViewPort for drawing and input handling (run instance)
     //
+    void clearLastResponse();                                                                                   // clear the last response from the HTTP request
+    bool fileExists(const char *path_name) const noexcept;                                                      // check if a file exists in the app's data directory
     size_t getBytesReceived() const noexcept { return flipperHttp ? flipperHttp->bytes_received : 0; }          // get the number of bytes received
     size_t getContentLength() const noexcept { return flipperHttp ? flipperHttp->content_length : 0; }          // get the content length of the last response
     HTTPState getHttpState() const noexcept { return flipperHttp ? flipperHttp->state : INACTIVE; }             // get the HTTP state

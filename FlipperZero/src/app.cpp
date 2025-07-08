@@ -170,6 +170,12 @@ void FlipWorldApp::callbackSubmenuChoices(uint32_t index)
     }
 }
 
+void FlipWorldApp::clearLastResponse() noexcept
+{
+    if (flipperHttp)
+        flipperHttp->last_response[0] = '\0';
+}
+
 void FlipWorldApp::createAppDataPath()
 {
     Storage *storage = static_cast<Storage *>(furi_record_open(RECORD_STORAGE));
@@ -179,6 +185,14 @@ void FlipWorldApp::createAppDataPath()
     snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data", APP_ID);
     storage_common_mkdir(storage, directory_path);
     furi_record_close(RECORD_STORAGE);
+}
+
+bool FlipWorldApp::fileExists(const char *path_name) const noexcept
+{
+    Storage *storage = static_cast<Storage *>(furi_record_open(RECORD_STORAGE));
+    bool exists = storage_file_exists(storage, path_name);
+    furi_record_close(RECORD_STORAGE);
+    return exists;
 }
 
 bool FlipWorldApp::hasWiFiCredentials()
