@@ -68,7 +68,7 @@ static void suica_draw_train_page_1(
     Canvas* canvas,
     SuicaHistory history,
     SuicaHistoryViewModel* model,
-    bool is_birthday) {
+    SuicaHistoryType history_type) {
     // Entry logo
     switch(history.entry_line.type) {
     case SuicaKeikyu:
@@ -114,8 +114,9 @@ static void suica_draw_train_page_1(
         canvas_draw_str(canvas, 2, 34, furi_string_get_cstr(history.entry_station.name));
     }
 
-    if(!is_birthday) {
-        // Exit logo
+    switch(history_type) {
+    case SuicaHistoryTrain:
+        // Exit Train
         switch(history.exit_line.type) {
         case SuicaKeikyu:
             canvas_draw_icon(canvas, 2, 39, &I_Suica_KeikyuLogo);
@@ -151,11 +152,23 @@ static void suica_draw_train_page_1(
 
         canvas_set_font(canvas, FontSecondary);
         canvas_draw_str(canvas, 2, 62, furi_string_get_cstr(history.exit_station.name));
-    } else {
+        break;
+
+    case SuicaHistoryHappyBirthday:
         // Birthday
         canvas_draw_icon(canvas, 5, 42, &I_Suica_CrackingEgg);
         canvas_set_font(canvas, FontPrimary);
         canvas_draw_str(canvas, 28, 56, "Suica issued");
+        break;
+    case SuicaHistoryTopUp:
+        // Top Up
+        canvas_draw_icon(canvas, 5, 42, &I_Suica_PlusSign1);
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str(canvas, 28, 56, "Top Up");
+        break;
+    default:
+        canvas_draw_str(canvas, 5, 56, "Error: draw train incorrectly called");
+        break;
     }
 
     // Separator
@@ -872,10 +885,10 @@ static void suica_history_draw_callback(Canvas* canvas, void* model) {
     case 0:
         switch(my_model->history.history_type) {
         case SuicaHistoryTrain:
-            suica_draw_train_page_1(canvas, my_model->history, my_model, false);
+            suica_draw_train_page_1(canvas, my_model->history, my_model, SuicaHistoryTrain);
             break;
         case SuicaHistoryHappyBirthday:
-            suica_draw_train_page_1(canvas, my_model->history, my_model, true);
+            suica_draw_train_page_1(canvas, my_model->history, my_model, SuicaHistoryHappyBirthday);
             break;
         case SuicaHistoryVendingMachine:
             suica_draw_vending_machine_page_1(canvas, my_model->history, my_model);
@@ -884,7 +897,7 @@ static void suica_history_draw_callback(Canvas* canvas, void* model) {
             suica_draw_store_page_1(canvas, my_model->history, my_model);
             break;
         case SuicaHistoryTopUp:
-            suica_draw_top_up_page_1_and_2(canvas, my_model->history, my_model);
+            suica_draw_train_page_1(canvas, my_model->history, my_model, SuicaHistoryTopUp);
             break;
         default:
             break;

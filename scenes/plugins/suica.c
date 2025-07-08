@@ -141,7 +141,8 @@ static void suica_parse_train_code(
             }
         }
     } else {
-        FURI_LOG_E(TAG, "Failed to open stations.txt");
+        FURI_LOG_E(TAG, "Failed to open stations list text file: %s",
+                   furi_string_get_cstr(file_name));
     }
 
     furi_string_set(station_num_candidate, line_copy); // Keikyu Main,Shinagawa,1,0
@@ -226,7 +227,7 @@ static void suica_parse(SuicaHistoryViewModel* my_model) {
     }
     my_model->history.balance = ((uint16_t)current_block[11] << 8) | (uint16_t)current_block[10];
     my_model->history.area_code = current_block[15];
-    if((uint8_t)current_block[0] >= TERMINAL_CARD_VENDING_MACHINE_1 &&
+    if((uint8_t)current_block[0] >= TERMINAL_FARE_ADJUST_MACHINE &&
        (uint8_t)current_block[0] <= TERMINAL_IN_CAR_MACHINE) {
         // Train rides
         // Will be overwritton is is ticket sale (TERMINAL_TICKET_VENDING_MACHINE)
