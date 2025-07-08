@@ -9,7 +9,7 @@
 #include <lib/nfc/protocols/felica/felica_poller.h>
 #include <lib/bit_lib/bit_lib.h>
 
-#define SUICA_STATION_LIST_PATH     APP_ASSETS_PATH("suica/line_")
+#define SUICA_STATION_LIST_PATH     APP_ASSETS_PATH("suica/")
 #define SUICA_IC_TYPE_CODE          0x31
 #define SERVICE_CODE_HISTORY_IN_LE  (0x090FU)
 #define SERVICE_CODE_TAPS_LOG_IN_LE (0x108FU)
@@ -33,7 +33,7 @@
 #define TERMINAL_GREEN_WINDOW             0x19
 #define TERMINAL_TICKET_OFFICE            0x1A
 #define TERMINAL_MOBILE_PHONE             0x1B
-#define TERMINAL_SHINKANSEN_MACHINE       0x1C
+#define TERMINAL_CONNECT_ADJUST_MACHINE   0x1C
 #define TERMINAL_TRANSFER_ADJUST_MACHINE  0x1D
 #define TERMINAL_KANSAI_DEPOSIT_MACHINE   0x1F
 #define TERMINAL_WINDOW_TERMINAL_MEITETSU 0x20
@@ -731,15 +731,16 @@ static void
     furi_string_free(buffer);
 }
 
-static void
-    suica_draw_top_up_page_1_and_2(Canvas* canvas, SuicaHistory history, SuicaHistoryViewModel* model) {
+static void suica_draw_top_up_page_1_and_2(
+    Canvas* canvas,
+    SuicaHistory history,
+    SuicaHistoryViewModel* model) {
     UNUSED(history);
     UNUSED(model);
     // Balance
     canvas_set_font(canvas, FontPrimary);
 
     canvas_draw_str(canvas, 30, 28, "place holder for top up page 1 and 2");
-
 }
 
 static void

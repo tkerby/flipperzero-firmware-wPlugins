@@ -87,6 +87,7 @@ static void suica_add_entry(SuicaHistoryViewModel* model, const uint8_t* entry) 
 static void suica_parse_train_code(
     uint8_t line_code,
     uint8_t station_code,
+    uint8_t area_code,
     SuicaTrainRideType ride_type,
     SuicaHistoryViewModel* model) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
@@ -111,7 +112,7 @@ static void suica_parse_train_code(
 
     bool station_found = false;
     FuriString* file_name = furi_string_alloc();
-    furi_string_printf(file_name, "%s0x%02X.txt", SUICA_STATION_LIST_PATH, line_code);
+    furi_string_printf(file_name, "%sArea%01X/line_0x%02X.txt", SUICA_STATION_LIST_PATH, area_code, line_code);
     if(file_stream_open(stream, furi_string_get_cstr(file_name), FSAM_READ, FSOM_OPEN_EXISTING)) {
         while(stream_read_line(stream, line) && !station_found) {
             // file is in csv format: station_group_id,station_id,station_sub_id,station_name
@@ -232,13 +233,15 @@ static void suica_parse(SuicaHistoryViewModel* my_model) {
         my_model->history.history_type = SuicaHistoryTrain;
         uint8_t entry_line = current_block[6];
         uint8_t entry_station = current_block[7];
+        uint8_t entry_area = (current_block[15] & 0xC0) >> 6; // 0xC0 = 11000000
         uint8_t exit_line = current_block[8];
         uint8_t exit_station = current_block[9];
+        uint8_t exit_area = (current_block[15] & 0x30) >> 4; // 0x30 = 00110000
 
-        suica_parse_train_code(entry_line, entry_station, SuicaTrainRideEntry, my_model);
+        suica_parse_train_code(entry_line, entry_station, entry_area, SuicaTrainRideEntry, my_model);
 
         if((uint8_t)current_block[14] != 0x01) {
-            suica_parse_train_code(exit_line, exit_station, SuicaTrainRideExit, my_model);
+            suica_parse_train_code(exit_line, exit_station, exit_area, SuicaTrainRideExit, my_model);
         }
 
         if(((uint8_t)current_block[4] + (uint8_t)current_block[5]) != 0) {
