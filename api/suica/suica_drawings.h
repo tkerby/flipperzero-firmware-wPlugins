@@ -9,22 +9,51 @@
 #include <lib/nfc/protocols/felica/felica_poller.h>
 #include <lib/bit_lib/bit_lib.h>
 
-#define SUICA_STATION_LIST_PATH         APP_ASSETS_PATH("suica/line_")
-#define SUICA_IC_TYPE_CODE              0x31
-#define SERVICE_CODE_HISTORY_IN_LE      (0x090FU)
-#define SERVICE_CODE_TAPS_LOG_IN_LE     (0x108FU)
-#define BLOCK_COUNT                     1
-#define HISTORY_VIEW_PAGE_NUM           3
-#define TERMINAL_NULL                   0x02
-#define TERMINAL_BUS                    0x05
-#define TERMINAL_TICKET_VENDING_MACHINE 0x12
-#define TERMINAL_TURNSTILE              0x16
-#define TERMINAL_MOBILE_PHONE           0x1B
-#define TERMINAL_IN_CAR_SUPP_MACHINE    0x24
-#define TERMINAL_POS_AND_TAXI           0xC7
-#define TERMINAL_VENDING_MACHINE        0xC8
-#define PROCESSING_CODE_RECHARGE        0x02
-#define ARROW_ANIMATION_FRAME_MS        350
+#define SUICA_STATION_LIST_PATH     APP_ASSETS_PATH("suica/line_")
+#define SUICA_IC_TYPE_CODE          0x31
+#define SERVICE_CODE_HISTORY_IN_LE  (0x090FU)
+#define SERVICE_CODE_TAPS_LOG_IN_LE (0x108FU)
+#define BLOCK_COUNT                 1
+#define HISTORY_VIEW_PAGE_NUM       3
+
+#define TERMINAL_NULL                     0x02
+#define TERMINAL_FARE_ADJUST_MACHINE      0x03
+#define TERMINAL_PORTABLE                 0x04
+#define TERMINAL_BUS                      0x05
+#define TERMINAL_CARD_VENDING_MACHINE_1   0x07
+#define TERMINAL_TICKET_VENDING_MACHINE   0x08
+#define TERMINAL_QUICK_REFILL_MACHINE     0x09
+#define TERMINAL_CARD_VENDING_MACHINE_2   0x12
+#define TERMINAL_TICKET_MACHINE_TYPE_1    0x13
+#define TERMINAL_PASMO_ISSUE_MACHINE      0x14
+#define TERMINAL_COMMUTER_PASS_VENDING    0x15
+#define TERMINAL_AUTO_TICKET_GATE         0x16
+#define TERMINAL_SIMPLE_TICKET_GATE       0x17
+#define TERMINAL_STATION_EQUIPMENT        0x18
+#define TERMINAL_GREEN_WINDOW             0x19
+#define TERMINAL_TICKET_OFFICE            0x1A
+#define TERMINAL_MOBILE_PHONE             0x1B
+#define TERMINAL_SHINKANSEN_MACHINE       0x1C
+#define TERMINAL_TRANSFER_ADJUST_MACHINE  0x1D
+#define TERMINAL_KANSAI_DEPOSIT_MACHINE   0x1F
+#define TERMINAL_WINDOW_TERMINAL_MEITETSU 0x20
+#define TERMINAL_CHECKOUT_MACHINE         0x21
+#define TERMINAL_KOTODEN_TICKET_GATE      0x22
+#define TERMINAL_IN_CAR_SUPP_MACHINE      0x24
+#define TERMINAL_SETAMARU_VENDING         0x34
+#define TERMINAL_SETAMARU_IN_CAR_MACHINE  0x35
+#define TERMINAL_IN_CAR_MACHINE           0x36
+#define TERMINAL_VIEW_ALTTE_ATM_TYPE_1    0x46
+#define TERMINAL_VIEW_ALTTE_ATM_TYPE_2    0x48
+#define TERMINAL_POS                      0xC7
+#define TERMINAL_VENDING_MACHINE          0xC8
+
+#define PROCESSING_CODE_FARE_PAYMENT    0x01
+#define PROCESSING_CODE_TOP_UP          0x02
+#define PROCESSING_CODE_TICKET_PURCHASE 0x03
+#define PROCESSING_CODE_NEW_ISSUE       0x07
+
+#define ARROW_ANIMATION_FRAME_MS 350
 
 typedef enum {
     SuicaTrainRideEntry,
@@ -703,6 +732,17 @@ static void
 }
 
 static void
+    suica_draw_top_up_page_1_and_2(Canvas* canvas, SuicaHistory history, SuicaHistoryViewModel* model) {
+    UNUSED(history);
+    UNUSED(model);
+    // Balance
+    canvas_set_font(canvas, FontPrimary);
+
+    canvas_draw_str(canvas, 30, 28, "place holder for top up page 1 and 2");
+
+}
+
+static void
     suica_draw_balance_page(Canvas* canvas, SuicaHistory history, SuicaHistoryViewModel* model) {
     FuriString* buffer = furi_string_alloc();
 
@@ -792,6 +832,7 @@ static void
     } else {
         canvas_draw_str(canvas, 30, 28, "=");
     }
+    furi_string_free(buffer);
 }
 
 static void suica_history_draw_callback(Canvas* canvas, void* model) {
@@ -841,6 +882,9 @@ static void suica_history_draw_callback(Canvas* canvas, void* model) {
         case SuicaHistoryPosAndTaxi:
             suica_draw_store_page_1(canvas, my_model->history, my_model);
             break;
+        case SuicaHistoryTopUp:
+            suica_draw_top_up_page_1_and_2(canvas, my_model->history, my_model);
+            break;
         default:
             break;
         }
@@ -858,6 +902,9 @@ static void suica_history_draw_callback(Canvas* canvas, void* model) {
             break;
         case SuicaHistoryPosAndTaxi:
             suica_draw_store_page_2(canvas, my_model->history, my_model);
+            break;
+        case SuicaHistoryTopUp:
+            suica_draw_top_up_page_1_and_2(canvas, my_model->history, my_model);
             break;
         default:
             break;

@@ -225,8 +225,8 @@ static void suica_parse(SuicaHistoryViewModel* my_model) {
     }
     my_model->history.balance = ((uint16_t)current_block[11] << 8) | (uint16_t)current_block[10];
     my_model->history.area_code = current_block[15];
-    if((uint8_t)current_block[0] >= TERMINAL_TICKET_VENDING_MACHINE &&
-       (uint8_t)current_block[0] <= TERMINAL_IN_CAR_SUPP_MACHINE) {
+    if((uint8_t)current_block[0] >= TERMINAL_CARD_VENDING_MACHINE_1 &&
+       (uint8_t)current_block[0] <= TERMINAL_IN_CAR_MACHINE) {
         // Train rides
         // Will be overwritton is is ticket sale (TERMINAL_TICKET_VENDING_MACHINE)
         my_model->history.history_type = SuicaHistoryTrain;
@@ -248,38 +248,42 @@ static void suica_parse(SuicaHistoryViewModel* my_model) {
             my_model->history.day = (uint8_t)current_block[5] & 0x1F;
         }
     }
-    switch((uint8_t)current_block[0]) {
-    case TERMINAL_BUS:
-        // 6 & 7 bus line code
-        // 8 & 9 bus stop code
-        my_model->history.history_type = SuicaHistoryBus;
-        break;
-    case TERMINAL_POS_AND_TAXI:
-    case TERMINAL_VENDING_MACHINE:
-        // 6 & 7 are hour and minute
-        my_model->history.history_type = ((uint8_t)current_block[0] == TERMINAL_POS_AND_TAXI) ?
-                                             SuicaHistoryPosAndTaxi :
-                                             SuicaHistoryVendingMachine;
-        my_model->history.hour = ((uint8_t)current_block[6] & 0xF8) >> 3;
-        my_model->history.minute = (((uint8_t)current_block[6] & 0x07) << 3) |
-                                   (((uint8_t)current_block[7] & 0xE0) >> 5);
-        my_model->history.shop_code = (uint8_t*)malloc(2);
-        my_model->history.shop_code[0] = current_block[8];
-        my_model->history.shop_code[1] = current_block[9];
-        break;
-    case TERMINAL_MOBILE_PHONE:
-        break;
-    case TERMINAL_TICKET_VENDING_MACHINE:
+    switch((uint8_t)current_block[1]) {
+    case PROCESSING_CODE_NEW_ISSUE:
         my_model->history.history_type = SuicaHistoryHappyBirthday;
+        break;
+    case PROCESSING_CODE_TOP_UP: // is this necessary?
+        my_model->history.history_type = SuicaHistoryTopUp;
+        // switch case the type of terminals here if necessary
         break;
     default:
-        if((uint8_t)current_block[0] <= TERMINAL_NULL) {
-            my_model->history.history_type = SuicaHistoryNull;
+        switch((uint8_t)current_block[0]) {
+        case TERMINAL_BUS:
+            // 6 & 7 bus line code
+            // 8 & 9 bus stop code
+            my_model->history.history_type = SuicaHistoryBus;
+            break;
+        case TERMINAL_POS:
+        case TERMINAL_VENDING_MACHINE:
+            // 6 & 7 are hour and minute
+            my_model->history.history_type = ((uint8_t)current_block[0] == TERMINAL_POS) ?
+                                                 SuicaHistoryPosAndTaxi :
+                                                 SuicaHistoryVendingMachine;
+            my_model->history.hour = ((uint8_t)current_block[6] & 0xF8) >> 3;
+            my_model->history.minute = (((uint8_t)current_block[6] & 0x07) << 3) |
+                                       (((uint8_t)current_block[7] & 0xE0) >> 5);
+            my_model->history.shop_code = (uint8_t*)malloc(2);
+            my_model->history.shop_code[0] = current_block[8];
+            my_model->history.shop_code[1] = current_block[9];
+            break;
+        case TERMINAL_MOBILE_PHONE:
+            break;
+        default:
+            if((uint8_t)current_block[0] <= TERMINAL_NULL) {
+                my_model->history.history_type = SuicaHistoryNull;
+            }
+            break;
         }
-        break;
-    }
-    if((uint8_t)current_block[14] == 0x01) {
-        my_model->history.history_type = SuicaHistoryHappyBirthday;
     }
 }
 
@@ -406,7 +410,7 @@ static bool suica_history_input_callback(InputEvent* event, void* context) {
                 {
                     if(model->entry > 1) {
                         model->entry--;
-                    } 
+                    }
                     suica_parse(model);
                     FURI_LOG_I(TAG, "Viewing entry %d", model->entry);
                 },

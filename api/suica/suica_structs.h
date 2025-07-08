@@ -5,6 +5,7 @@
 #define SUICA_MAX_HISTORY_ENTRIES 0x15
 typedef enum {
     SuicaHistoryNull,
+    SuicaHistoryTopUp,
     SuicaHistoryBus,
     SuicaHistoryPosAndTaxi,
     SuicaHistoryVendingMachine,
