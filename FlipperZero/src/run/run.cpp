@@ -5,7 +5,18 @@
 
 FlipWorldRun::FlipWorldRun()
 {
-    // nothing to do
+    // Initialize chunked messages array
+    for (size_t i = 0; i < MAX_CHUNKED_MESSAGES; i++)
+    {
+        chunkedMessages[i].id = 0;
+        chunkedMessages[i].totalChunks = 0;
+        chunkedMessages[i].receivedChunks = 0;
+        chunkedMessages[i].data = nullptr;
+        chunkedMessages[i].dataSize = 0;
+        chunkedMessages[i].dataCapacity = 0;
+        chunkedMessages[i].lastUpdateTime = 0;
+    }
+    chunkedMessageCount = 0;
 }
 
 FlipWorldRun::~FlipWorldRun()
@@ -20,6 +31,71 @@ FlipWorldRun::~FlipWorldRun()
         free(currentIconGroup);
         currentIconGroup = nullptr;
     }
+
+    // Clean up chunked messages
+    for (size_t i = 0; i < MAX_CHUNKED_MESSAGES; i++)
+    {
+        if (chunkedMessages[i].data)
+        {
+            free(chunkedMessages[i].data);
+            chunkedMessages[i].data = nullptr;
+        }
+    }
+}
+
+bool FlipWorldRun::addRemotePlayer(const char *username)
+{
+    // Only add remote players in PvE mode
+    if (!isPvEMode || !username)
+    {
+        return false;
+    }
+
+    if (!engine || !engine->getGame() || !engine->getGame()->current_level)
+    {
+        return false;
+    }
+
+    auto currentLevel = engine->getGame()->current_level;
+
+    // Check if player already exists
+    for (int i = 0; i < currentLevel->getEntityCount(); i++)
+    {
+        Entity *entity = currentLevel->getEntity(i);
+        if (entity && entity->type == ENTITY_PLAYER &&
+            strcmp(entity->name, username) == 0)
+        {
+            // Player already exists
+            return true;
+        }
+    }
+
+    // Add new remote player entity
+    // Create a basic remote player entity
+    Entity *remotePlayer = new Entity(
+        username,                  // name
+        ENTITY_PLAYER,             // type
+        Vector(384, 192),          // position
+        Vector(15, 11),            // size
+        player_left_sword_15x11px, // sprite_data
+        player_left_sword_15x11px, // sprite_left_data
+        player_right_sword_15x11px // sprite_right_data
+    );
+
+    if (remotePlayer)
+    {
+        // Set some default stats for remote players
+        remotePlayer->health = 100.0f;
+        remotePlayer->max_health = 100.0f;
+        remotePlayer->strength = 10.0f;
+        remotePlayer->xp = 0.0f;
+        remotePlayer->level = 1.0f;
+
+        currentLevel->entity_add(remotePlayer);
+        return true;
+    }
+
+    return false;
 }
 
 void FlipWorldRun::debounceInput()
@@ -52,6 +128,18 @@ void FlipWorldRun::endGame()
     if (draw)
     {
         draw.reset();
+    }
+
+    // Clean up multiplayer resources if in PvE mode
+    if (isPvEMode)
+    {
+        // Let the Player class handle websocket cleanup
+        if (player)
+        {
+            player->userRequest(RequestTypeStopWebsocket);
+        }
+        isPvEMode = false;
+        isLobbyHost = false;
     }
 }
 
@@ -197,6 +285,454 @@ bool FlipWorldRun::entityJsonUpdate(Entity *entity)
     free(xp);
 
     return true;
+}
+
+bool FlipWorldRun::parseEntityDataFromJson(Entity *entity, const char *jsonData)
+{
+    if (!entity || !jsonData || strlen(jsonData) == 0)
+    {
+        return false;
+    }
+
+    // Parse username and verify it matches
+    char *u = get_json_value("u", jsonData);
+    if (!u)
+    {
+        FURI_LOG_E("FlipWorldRun", "Failed to get username from JSON");
+        return false;
+    }
+
+    // Check if the username matches
+    if (strcmp(u, entity->name) != 0)
+    {
+        FURI_LOG_E("FlipWorldRun", "Username mismatch: expected %s, got %s", entity->name, u);
+        free(u);
+        return false;
+    }
+    free(u);
+
+    // Parse entity data
+    char *h = get_json_value("h", jsonData);
+    char *eat = get_json_value("eat", jsonData);
+    char *d = get_json_value("d", jsonData);
+    char *xp = get_json_value("xp", jsonData);
+    char *sp = get_json_value("sp", jsonData);
+    char *x = get_json_value("x", sp);
+    char *y = get_json_value("y", sp);
+
+    if (!h || !eat || !d || !sp || !x || !y || !xp)
+    {
+        FURI_LOG_E("FlipWorldRun", "Failed to parse entity data fields");
+        if (h)
+            free(h);
+        if (eat)
+            free(eat);
+        if (d)
+            free(d);
+        if (sp)
+            free(sp);
+        if (x)
+            free(x);
+        if (y)
+            free(y);
+        if (xp)
+            free(xp);
+        return false;
+    }
+
+    // Update entity with parsed data
+    entity->health = (float)atoi(h);
+    if (entity->health <= 0)
+    {
+        entity->health = 0;
+        entity->state = ENTITY_DEAD;
+        entity->position_set((Vector){-100, -100});
+        free(h);
+        free(eat);
+        free(d);
+        free(sp);
+        free(x);
+        free(y);
+        free(xp);
+        return true;
+    }
+
+    entity->elapsed_attack_timer = atof_(eat);
+
+    switch (atoi(d))
+    {
+    case 0:
+        entity->direction = ENTITY_LEFT;
+        break;
+    case 1:
+        entity->direction = ENTITY_RIGHT;
+        break;
+    case 2:
+        entity->direction = ENTITY_UP;
+        break;
+    case 3:
+        entity->direction = ENTITY_DOWN;
+        break;
+    default:
+        entity->direction = ENTITY_RIGHT;
+        break;
+    }
+
+    entity->xp = (atoi)(xp);
+    entity->level = 1;
+    uint32_t xp_required = 100;
+    while (entity->level < 100 && entity->xp >= xp_required)
+    {
+        entity->level++;
+        xp_required = (uint32_t)(xp_required * 1.5);
+    }
+
+    // Set position
+    entity->position_set(Vector(atof_(x), atof_(y)));
+
+    // Free the strings
+    free(h);
+    free(eat);
+    free(d);
+    free(sp);
+    free(x);
+    free(y);
+    free(xp);
+    return true;
+}
+
+const char *FlipWorldRun::entityToJson(Entity *entity, bool websocketParsing) const
+{
+    // "safely" append string to dynamically allocated buffer
+    auto append_to_buffer = [](char **buffer, size_t *size, size_t *capacity, const char *str)
+    {
+        size_t str_len = strlen(str);
+        size_t new_size = *size + str_len;
+
+        if (new_size >= *capacity)
+        {
+            size_t new_capacity = *capacity * 2;
+            while (new_capacity <= new_size)
+            {
+                new_capacity *= 2;
+            }
+            char *new_buffer = (char *)realloc(*buffer, new_capacity);
+            if (!new_buffer)
+            {
+                return false;
+            }
+            *buffer = new_buffer;
+            *capacity = new_capacity;
+        }
+
+        memcpy(*buffer + *size, str, str_len);
+        (*buffer)[new_size] = '\0'; // Null terminate
+        *size = new_size;
+        return true;
+    };
+
+    // Helper function to convert direction Vector to numeric code
+    auto direction_to_code = [](Vector dir) -> int
+    {
+        if (dir.x == -1 && dir.y == 0)
+            return 0; // ENTITY_LEFT
+        if (dir.x == 1 && dir.y == 0)
+            return 1; // ENTITY_RIGHT
+        if (dir.x == 0 && dir.y == -1)
+            return 2; // ENTITY_UP
+        if (dir.x == 0 && dir.y == 1)
+            return 3; // ENTITY_DOWN
+        return 1;     // default to right
+    };
+
+    // Initial capacity for the JSON buffer
+    size_t json_capacity = 512;
+    size_t json_size = 0;
+    char *json = (char *)malloc(json_capacity);
+    if (!json)
+    {
+        FURI_LOG_E(TAG, "Failed to allocate JSON string");
+        return NULL;
+    }
+    json[0] = '\0'; // Initialize empty string
+
+    if (!append_to_buffer(&json, &json_size, &json_capacity, "{"))
+    {
+        free(json);
+        return NULL;
+    }
+
+    if (websocketParsing)
+    {
+        // Minimal JSON for WebSocket (abbreviated, <128 characters)
+        // "u": username
+        if (!append_to_buffer(&json, &json_size, &json_capacity, "\"u\":\"") ||
+            !append_to_buffer(&json, &json_size, &json_capacity, entity->name) ||
+            !append_to_buffer(&json, &json_size, &json_capacity, "\","))
+        {
+            free(json);
+            return NULL;
+        }
+
+        // "xp": experience
+        char buffer[32];
+        snprintf(buffer, sizeof(buffer), "\"xp\":%.0f,", (double)entity->xp);
+        if (!append_to_buffer(&json, &json_size, &json_capacity, buffer))
+        {
+            free(json);
+            return NULL;
+        }
+
+        // "h": health
+        snprintf(buffer, sizeof(buffer), "\"h\":%.0f,", (double)entity->health);
+        if (!append_to_buffer(&json, &json_size, &json_capacity, buffer))
+        {
+            free(json);
+            return NULL;
+        }
+
+        // "ehr": elapsed health regen (1 decimal)
+        snprintf(buffer, sizeof(buffer), "\"ehr\":%.1f,", (double)entity->elapsed_health_regen);
+        if (!append_to_buffer(&json, &json_size, &json_capacity, buffer))
+        {
+            free(json);
+            return NULL;
+        }
+
+        // "eat": elapsed attack timer (1 decimal)
+        snprintf(buffer, sizeof(buffer), "\"eat\":%.1f,", (double)entity->elapsed_attack_timer);
+        if (!append_to_buffer(&json, &json_size, &json_capacity, buffer))
+        {
+            free(json);
+            return NULL;
+        }
+
+        // "d": direction (numeric code)
+        snprintf(buffer, sizeof(buffer), "\"d\":%d,", direction_to_code(entity->direction));
+        if (!append_to_buffer(&json, &json_size, &json_capacity, buffer))
+        {
+            free(json);
+            return NULL;
+        }
+
+        // "s": state (numeric code)
+        snprintf(buffer, sizeof(buffer), "\"s\":%d,", entity->state);
+        if (!append_to_buffer(&json, &json_size, &json_capacity, buffer))
+        {
+            free(json);
+            return NULL;
+        }
+
+        // instead of start position, send the current
+        // "sp": start position object with x and y (1 decimal)
+        snprintf(buffer, sizeof(buffer), "\"sp\":{\"x\":%.1f,\"y\":%.1f}",
+                 (double)entity->position.x, (double)entity->position.y);
+        if (!append_to_buffer(&json, &json_size, &json_capacity, buffer))
+        {
+            free(json);
+            return NULL;
+        }
+    }
+    else
+    {
+        // Full JSON output (unchanged)
+        // 1. Username
+        if (!append_to_buffer(&json, &json_size, &json_capacity, "\"username\":\"") ||
+            !append_to_buffer(&json, &json_size, &json_capacity, entity->name) ||
+            !append_to_buffer(&json, &json_size, &json_capacity, "\","))
+        {
+            free(json);
+            return NULL;
+        }
+
+        // 2. Level
+        char buffer[64];
+        snprintf(buffer, sizeof(buffer), "\"level\":%.0f,", (double)entity->level);
+        if (!append_to_buffer(&json, &json_size, &json_capacity, buffer))
+        {
+            free(json);
+            return NULL;
+        }
+
+        // 3. XP
+        snprintf(buffer, sizeof(buffer), "\"xp\":%.0f,", (double)entity->xp);
+        if (!append_to_buffer(&json, &json_size, &json_capacity, buffer))
+        {
+            free(json);
+            return NULL;
+        }
+
+        // 4. Health
+        snprintf(buffer, sizeof(buffer), "\"health\":%.0f,", (double)entity->health);
+        if (!append_to_buffer(&json, &json_size, &json_capacity, buffer))
+        {
+            free(json);
+            return NULL;
+        }
+
+        // 5. Strength
+        snprintf(buffer, sizeof(buffer), "\"strength\":%.0f,", (double)entity->strength);
+        if (!append_to_buffer(&json, &json_size, &json_capacity, buffer))
+        {
+            free(json);
+            return NULL;
+        }
+
+        // 6. Max Health
+        snprintf(buffer, sizeof(buffer), "\"max_health\":%.0f,", (double)entity->max_health);
+        if (!append_to_buffer(&json, &json_size, &json_capacity, buffer))
+        {
+            free(json);
+            return NULL;
+        }
+
+        // 7. Health Regen
+        snprintf(buffer, sizeof(buffer), "\"health_regen\":%.0f,", (double)entity->health_regen);
+        if (!append_to_buffer(&json, &json_size, &json_capacity, buffer))
+        {
+            free(json);
+            return NULL;
+        }
+
+        // 8. Elapsed Health Regen
+        snprintf(buffer, sizeof(buffer), "\"elapsed_health_regen\":%.6f,", (double)entity->elapsed_health_regen);
+        if (!append_to_buffer(&json, &json_size, &json_capacity, buffer))
+        {
+            free(json);
+            return NULL;
+        }
+
+        // 9. Attack Timer
+        snprintf(buffer, sizeof(buffer), "\"attack_timer\":%.6f,", (double)entity->attack_timer);
+        if (!append_to_buffer(&json, &json_size, &json_capacity, buffer))
+        {
+            free(json);
+            return NULL;
+        }
+
+        // 10. Elapsed Attack Timer
+        snprintf(buffer, sizeof(buffer), "\"elapsed_attack_timer\":%.6f,", (double)entity->elapsed_attack_timer);
+        if (!append_to_buffer(&json, &json_size, &json_capacity, buffer))
+        {
+            free(json);
+            return NULL;
+        }
+
+        // 11. Direction (string representation)
+        const char *direction_str;
+        Vector dir = entity->direction;
+        if (dir.x == 0 && dir.y == -1)
+        {
+            direction_str = "\"direction\":\"up\",";
+        }
+        else if (dir.x == 0 && dir.y == 1)
+        {
+            direction_str = "\"direction\":\"down\",";
+        }
+        else if (dir.x == -1 && dir.y == 0)
+        {
+            direction_str = "\"direction\":\"left\",";
+        }
+        else
+        {
+            direction_str = "\"direction\":\"right\",";
+        }
+        if (!append_to_buffer(&json, &json_size, &json_capacity, direction_str))
+        {
+            free(json);
+            return NULL;
+        }
+
+        // 12. State (string representation)
+        const char *state_str;
+        switch (entity->state)
+        {
+        case ENTITY_IDLE:
+            state_str = "\"state\":\"idle\",";
+            break;
+        case ENTITY_MOVING:
+            state_str = "\"state\":\"moving\",";
+            break;
+        case ENTITY_ATTACKING:
+            state_str = "\"state\":\"attacking\",";
+            break;
+        case ENTITY_ATTACKED:
+            state_str = "\"state\":\"attacked\",";
+            break;
+        case ENTITY_DEAD:
+            state_str = "\"state\":\"dead\",";
+            break;
+        default:
+            state_str = "\"state\":\"unknown\",";
+            break;
+        }
+        if (!append_to_buffer(&json, &json_size, &json_capacity, state_str))
+        {
+            free(json);
+            return NULL;
+        }
+
+        // 13. Start Position X
+        snprintf(buffer, sizeof(buffer), "\"start_position_x\":%.6f,", (double)entity->start_position.x);
+        if (!append_to_buffer(&json, &json_size, &json_capacity, buffer))
+        {
+            free(json);
+            return NULL;
+        }
+
+        // 14. Start Position Y
+        snprintf(buffer, sizeof(buffer), "\"start_position_y\":%.6f,", (double)entity->start_position.y);
+        if (!append_to_buffer(&json, &json_size, &json_capacity, buffer))
+        {
+            free(json);
+            return NULL;
+        }
+
+        // 15. dx (direction x component)
+        snprintf(buffer, sizeof(buffer), "\"dx\":%.0f,", (double)entity->direction.x);
+        if (!append_to_buffer(&json, &json_size, &json_capacity, buffer))
+        {
+            free(json);
+            return NULL;
+        }
+
+        // 16. dy (direction y component)
+        snprintf(buffer, sizeof(buffer), "\"dy\":%.0f", (double)entity->direction.y);
+        if (!append_to_buffer(&json, &json_size, &json_capacity, buffer))
+        {
+            free(json);
+            return NULL;
+        }
+    }
+
+    if (!append_to_buffer(&json, &json_size, &json_capacity, "}"))
+    {
+        free(json);
+        return NULL;
+    }
+
+    // For websocket, output only the minimal JSON
+    if (websocketParsing)
+    {
+        return json;
+    }
+    else
+    {
+        // Allocate buffer for the wrapped JSON
+        size_t wrapped_capacity = json_size + 256; // Extra space for wrapper
+        char *json_data = (char *)malloc(wrapped_capacity);
+        if (!json_data)
+        {
+            FURI_LOG_E(TAG, "Failed to allocate wrapped JSON string");
+            free(json);
+            return NULL;
+        }
+
+        snprintf(json_data, wrapped_capacity, "{\"username\":\"%s\",\"game_stats\":%s}",
+                 entity->name, json);
+        free(json);
+        return json_data;
+    }
 }
 
 LevelIndex FlipWorldRun::getCurrentLevelIndex() const
@@ -384,6 +920,148 @@ IconSpec FlipWorldRun::getIconSpec(const char *name) const
     return (IconSpec){.id = ICON_ID_INVALID, .icon = NULL, .pos = Vector(0, 0), .size = (Vector){0, 0}};
 }
 
+void FlipWorldRun::handleIncomingMultiplayerData(const char *message)
+{
+    // Only handle in PvE mode
+    if (!isPvEMode || !message)
+    {
+        return;
+    }
+
+    // Check if message is empty or too short
+    if (strlen(message) < 10)
+    {
+        FURI_LOG_E("FlipWorldRun", "Received very short message: '%s'", message);
+        return;
+    }
+
+    // First check if this is a chunked message
+    if (handleChunkedMessage(message))
+    {
+        return; // Message was handled as a chunk (or completed chunk assembly)
+    }
+
+    // If not a chunk, process as complete message
+    processCompleteMultiplayerMessage(message);
+}
+
+void FlipWorldRun::processCompleteMultiplayerMessage(const char *message)
+{
+    if (!engine || !engine->getGame() || !engine->getGame()->current_level)
+    {
+        return;
+    }
+
+    auto currentLevel = engine->getGame()->current_level;
+
+    // Parse message type (we already validated it exists in processMultiplayerUpdate)
+    char *messageType = get_json_value("type", message);
+    if (!messageType)
+    {
+        FURI_LOG_E("FlipWorldRun", "Unexpected: no 'type' field in validated message");
+        return;
+    }
+
+    if (strcmp(messageType, "player") == 0)
+    {
+        // Handle player update
+        char *playerData = get_json_value("data", message);
+        if (playerData)
+        {
+            // Find the player entity by username
+            char *username = get_json_value("u", playerData);
+            if (username)
+            {
+                Entity *playerEntity = nullptr;
+                for (int i = 0; i < currentLevel->getEntityCount(); i++)
+                {
+                    Entity *entity = currentLevel->getEntity(i);
+                    if (entity && entity->type == ENTITY_PLAYER &&
+                        strcmp(entity->name, username) == 0)
+                    {
+                        playerEntity = entity;
+                        break;
+                    }
+                }
+
+                // If player doesn't exist, add them as a remote player
+                if (!playerEntity)
+                {
+                    if (addRemotePlayer(username))
+                    {
+                        // Try to find the newly added player
+                        for (int i = 0; i < currentLevel->getEntityCount(); i++)
+                        {
+                            Entity *entity = currentLevel->getEntity(i);
+                            if (entity && entity->type == ENTITY_PLAYER &&
+                                strcmp(entity->name, username) == 0)
+                            {
+                                playerEntity = entity;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // Update the player entity with received data
+                if (playerEntity)
+                {
+                    parseEntityDataFromJson(playerEntity, playerData);
+                }
+
+                free(username);
+            }
+            free(playerData);
+        }
+    }
+    else if (strcmp(messageType, "enemy") == 0 && !isLobbyHost)
+    {
+        // Followers receive enemy updates from host
+        char *enemyData = get_json_value("data", message);
+        if (enemyData)
+        {
+            char *enemyName = get_json_value("u", enemyData);
+            if (enemyName)
+            {
+                for (int i = 0; i < currentLevel->getEntityCount(); i++)
+                {
+                    Entity *entity = currentLevel->getEntity(i);
+                    if (entity && entity->type == ENTITY_ENEMY &&
+                        strcmp(entity->name, enemyName) == 0)
+                    {
+                        // Update the enemy entity with received data
+                        parseEntityDataFromJson(entity, enemyData);
+                        break;
+                    }
+                }
+                free(enemyName);
+            }
+            free(enemyData);
+        }
+    }
+    else if (strcmp(messageType, "level") == 0 && !isLobbyHost)
+    {
+        // Followers receive level change commands from host
+        char *levelIndex = get_json_value("level_index", message);
+        if (levelIndex)
+        {
+            int newLevelIndex = atoi(levelIndex);
+            if (newLevelIndex >= 0 && newLevelIndex < 3) // Valid level indices
+            {
+                // Switch to the new level
+                if (engine && engine->getGame())
+                {
+                    engine->getGame()->level_switch(newLevelIndex);
+                    setIconGroup(static_cast<LevelIndex>(newLevelIndex));
+                }
+            }
+            free(levelIndex);
+        }
+    }
+
+    free(messageType);
+}
+
 void FlipWorldRun::inputManager()
 {
     static int inputHeldCounter = 0;
@@ -414,6 +1092,90 @@ void FlipWorldRun::inputManager()
         player->setInputKey(lastInput);
         player->processInput();
     }
+}
+void FlipWorldRun::processMultiplayerUpdate()
+{
+    // Only process in PvE mode
+    if (!isPvEMode)
+    {
+        return;
+    }
+
+    // Clean up expired chunked messages periodically
+    static uint32_t lastCleanupTime = 0;
+    uint32_t currentTime = furi_get_tick();
+    if (currentTime - lastCleanupTime > 5000) // Clean up every 5 seconds
+    {
+        cleanupExpiredChunkedMessages();
+        lastCleanupTime = currentTime;
+    }
+
+    // Send our state to other players
+    syncMultiplayerState();
+
+    // Check for incoming messages
+    FlipWorldApp *app = static_cast<FlipWorldApp *>(appContext);
+    if (app)
+    {
+        const char *incomingMessage = app->getLastResponse();
+        if (incomingMessage && strlen(incomingMessage) > 0)
+        {
+            // Only process messages that look like websocket messages (have "type" field or chunk metadata)
+            // Check if this is a websocket message by looking for "type" field or chunk metadata
+            char *messageType = get_json_value("type", incomingMessage);
+            char *chunkId = get_json_value("id", incomingMessage);
+
+            if (messageType || chunkId)
+            {
+                // This is a proper websocket message or chunk, process it
+                handleIncomingMultiplayerData(incomingMessage);
+            }
+
+            if (messageType)
+                free(messageType);
+            if (chunkId)
+                free(chunkId);
+
+            app->clearLastResponse(); // Clear after processing
+        }
+    }
+}
+
+bool FlipWorldRun::removeRemotePlayer(const char *username)
+{
+    // Only remove remote players in PvE mode
+    if (!isPvEMode || !username)
+    {
+        return false;
+    }
+
+    if (!engine || !engine->getGame() || !engine->getGame()->current_level)
+    {
+        return false;
+    }
+
+    auto currentLevel = engine->getGame()->current_level;
+
+    // Find and remove the player entity
+    for (int i = 0; i < currentLevel->getEntityCount(); i++)
+    {
+        Entity *entity = currentLevel->getEntity(i);
+        if (entity && entity->type == ENTITY_PLAYER &&
+            strcmp(entity->name, username) == 0)
+        {
+            // Don't remove our own player
+            if (entity == player.get())
+            {
+                continue;
+            }
+
+            // Remove the remote player
+            currentLevel->entity_remove(entity);
+            return true;
+        }
+    }
+
+    return false;
 }
 
 bool FlipWorldRun::setAppContext(void *context)
@@ -563,6 +1325,32 @@ bool FlipWorldRun::setIconGroup(LevelIndex index)
     return true;
 }
 
+bool FlipWorldRun::shouldProcessEnemyAI() const
+{
+    // In PvE mode, only the host processes enemy AI
+    if (isPvEMode)
+    {
+        return isLobbyHost;
+    }
+    return true;
+}
+
+bool FlipWorldRun::shouldUpdateEntity(Entity *entity) const
+{
+    if (!entity)
+    {
+        return false;
+    }
+
+    // In PvE mode, only the host processes enemy AI
+    if (isPvEMode && entity->type == ENTITY_ENEMY)
+    {
+        return isLobbyHost;
+    }
+
+    return true;
+}
+
 bool FlipWorldRun::startGame()
 {
     draw->fillScreen(ColorWhite);
@@ -627,10 +1415,273 @@ bool FlipWorldRun::startGame()
     }
 
     draw->fillScreen(ColorWhite);
-    draw->text(Vector(0, 10), "Starting game engine...", ColorBlack);
+    if (isPvEMode)
+    {
+        draw->text(Vector(0, 10), "Starting multiplayer game...", ColorBlack);
+    }
+    else
+    {
+        draw->text(Vector(0, 10), "Starting single player game...", ColorBlack);
+    }
 
     isGameRunning = true; // Set the flag to indicate game is running
     return true;
+}
+
+void FlipWorldRun::sendMessageWithChunking(FlipWorldApp *app, const char *message)
+{
+    if (!app || !message)
+    {
+        return;
+    }
+
+    const size_t MAX_WEBSOCKET_SIZE = 80;
+    size_t messageLen = strlen(message);
+
+    // If message fits within limit, send as-is
+    if (messageLen <= MAX_WEBSOCKET_SIZE)
+    {
+        app->websocketSend(message);
+        return;
+    }
+
+    // unique message ID for this chunked message
+    static uint16_t messageId = 0;
+    messageId++;
+
+    // Conservative chunk size - account for metadata overhead and JSON escaping
+    // Format: {"id":65535,"seq":255,"total":255,"data":"..."}
+    const size_t METADATA_OVERHEAD = 55;
+    const size_t CHUNK_DATA_SIZE = MAX_WEBSOCKET_SIZE - METADATA_OVERHEAD;
+
+    size_t totalChunks = (messageLen + CHUNK_DATA_SIZE - 1) / CHUNK_DATA_SIZE; // Ceiling division
+
+    for (size_t chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++)
+    {
+        size_t chunkStart = chunkIndex * CHUNK_DATA_SIZE;
+        size_t remainingData = messageLen - chunkStart;
+        size_t chunkDataLen = (remainingData < CHUNK_DATA_SIZE) ? remainingData : CHUNK_DATA_SIZE;
+
+        // Create the chunk data (copy from original message)
+        char *chunkData = (char *)malloc(chunkDataLen + 1);
+        if (!chunkData)
+        {
+            FURI_LOG_E("FlipWorldRun", "Failed to allocate chunk data buffer");
+            return;
+        }
+        memcpy(chunkData, message + chunkStart, chunkDataLen);
+        chunkData[chunkDataLen] = '\0';
+
+        // Allocate buffer for the final chunk message
+        // Need space for metadata + escaped data (worst case: all chars need escaping)
+        size_t chunkMessageSize = METADATA_OVERHEAD + (chunkDataLen * 2) + 10;
+        char *chunkMessage = (char *)malloc(chunkMessageSize);
+        if (!chunkMessage)
+        {
+            FURI_LOG_E("FlipWorldRun", "Failed to allocate chunk message buffer");
+            free(chunkData);
+            return;
+        }
+
+        // Start building the chunk message
+        int written = snprintf(chunkMessage, chunkMessageSize,
+                               "{\"id\":%d,\"seq\":%d,\"total\":%d,\"data\":\"",
+                               messageId, (int)(chunkIndex + 1), (int)totalChunks);
+
+        if (written < 0 || (size_t)written >= chunkMessageSize)
+        {
+            FURI_LOG_E("FlipWorldRun", "Failed to write chunk metadata");
+            free(chunkData);
+            free(chunkMessage);
+            return;
+        }
+
+        // Escape and append the chunk data
+        size_t currentLen = (size_t)written;
+        for (size_t i = 0; i < chunkDataLen && currentLen < chunkMessageSize - 3; i++)
+        {
+            char c = chunkData[i];
+            if (c == '"')
+            {
+                if (currentLen < chunkMessageSize - 4)
+                {
+                    chunkMessage[currentLen++] = '\\';
+                    chunkMessage[currentLen++] = '"';
+                }
+                else
+                {
+                    break; // Not enough space
+                }
+            }
+            else if (c == '\\')
+            {
+                if (currentLen < chunkMessageSize - 4)
+                {
+                    chunkMessage[currentLen++] = '\\';
+                    chunkMessage[currentLen++] = '\\';
+                }
+                else
+                {
+                    break; // Not enough space
+                }
+            }
+            else
+            {
+                chunkMessage[currentLen++] = c;
+            }
+        }
+
+        // Close the JSON
+        if (currentLen < chunkMessageSize - 2)
+        {
+            chunkMessage[currentLen++] = '"';
+            chunkMessage[currentLen++] = '}';
+            chunkMessage[currentLen] = '\0';
+        }
+        else
+        {
+            FURI_LOG_E("FlipWorldRun", "Chunk message buffer overflow");
+            free(chunkData);
+            free(chunkMessage);
+            return;
+        }
+
+        app->websocketSend(chunkMessage);
+
+        free(chunkData);
+        free(chunkMessage);
+    }
+}
+
+void FlipWorldRun::syncMultiplayerState()
+{
+    // Only sync in PvE mode
+    if (!isPvEMode)
+    {
+        return;
+    }
+
+    FlipWorldApp *app = static_cast<FlipWorldApp *>(appContext);
+    if (!app)
+    {
+        return;
+    }
+
+    // Check if enough time has passed since last sync
+    uint32_t currentTime = furi_get_tick();
+    if (currentTime - lastSyncTime < syncInterval)
+    {
+        return;
+    }
+    lastSyncTime = currentTime;
+
+    if (!engine || !engine->getGame() || !engine->getGame()->current_level)
+    {
+        return;
+    }
+
+    auto currentLevel = engine->getGame()->current_level;
+
+    if (isLobbyHost)
+    {
+        // Host sends all entity states (player + enemies)
+        for (int i = 0; i < currentLevel->getEntityCount(); i++)
+        {
+            Entity *entity = currentLevel->getEntity(i);
+            if (!entity)
+                continue;
+
+            const char *entityJson = entityToJson(entity, true); // websocket format
+            if (entityJson)
+            {
+                // Calculate required buffer size and allocate dynamically
+                size_t entityJsonLen = strlen(entityJson);
+                size_t messageSize = entityJsonLen + 64; // Extra space for wrapper JSON
+                char *message = (char *)malloc(messageSize);
+
+                if (!message)
+                {
+                    FURI_LOG_E("FlipWorldRun", "Failed to allocate message buffer");
+                    free((void *)entityJson);
+                    continue;
+                }
+
+                // Create message with type and data
+                if (entity->type == ENTITY_PLAYER)
+                {
+                    snprintf(message, messageSize, "{\"type\":\"player\",\"data\":%s}", entityJson);
+                }
+                else if (entity->type == ENTITY_ENEMY)
+                {
+                    snprintf(message, messageSize, "{\"type\":\"enemy\",\"data\":%s}", entityJson);
+                }
+                else
+                {
+                    free((void *)entityJson); // Free allocated memory
+                    free(message);
+                    continue; // Skip NPCs and other entity types
+                }
+
+                // Send message with chunking support
+                sendMessageWithChunking(app, message);
+
+                free((void *)entityJson); // Free allocated memory after use
+                free(message);            // Free message buffer
+            }
+        }
+
+        // Send current level info
+        char levelMessage[128];
+        snprintf(levelMessage, sizeof(levelMessage),
+                 "{\"type\":\"level\",\"level_index\":%d}",
+                 getCurrentLevelIndex());
+        app->websocketSend(levelMessage);
+    }
+    else
+    {
+        // Follower sends only their player state
+        if (player)
+        {
+            // Find the player entity in the current level
+            Entity *playerEntity = nullptr;
+            for (int i = 0; i < currentLevel->getEntityCount(); i++)
+            {
+                Entity *entity = currentLevel->getEntity(i);
+                if (entity && entity->type == ENTITY_PLAYER)
+                {
+                    playerEntity = entity;
+                    break;
+                }
+            }
+
+            if (playerEntity)
+            {
+                const char *entityJson = entityToJson(playerEntity, true); // websocket format
+                if (entityJson)
+                {
+                    // Calculate required buffer size and allocate dynamically
+                    size_t entityJsonLen = strlen(entityJson);
+                    size_t messageSize = entityJsonLen + 64; // Extra space for wrapper JSON
+                    char *message = (char *)malloc(messageSize);
+
+                    if (!message)
+                    {
+                        FURI_LOG_E("FlipWorldRun", "Failed to allocate message buffer");
+                        free((void *)entityJson);
+                        return;
+                    }
+
+                    snprintf(message, messageSize, "{\"type\":\"player\",\"data\":%s}", entityJson);
+
+                    // Send message with chunking support
+                    sendMessageWithChunking(app, message);
+
+                    free((void *)entityJson); // Free allocated memory after use
+                    free(message);            // Free message buffer
+                }
+            }
+        }
+    }
 }
 
 void FlipWorldRun::updateDraw(Canvas *canvas)
@@ -649,6 +1700,12 @@ void FlipWorldRun::updateDraw(Canvas *canvas)
         {
             player->setFlipWorldRun(this);
         }
+    }
+
+    // Process multiplayer updates if in PvE mode
+    if (isPvEMode && isGameRunning)
+    {
+        processMultiplayerUpdate();
     }
 
     // Let the player handle all drawing
@@ -678,4 +1735,170 @@ void FlipWorldRun::updateInput(InputEvent *event)
     {
         this->inputManager();
     }
+}
+
+void FlipWorldRun::cleanupExpiredChunkedMessages()
+{
+    uint32_t currentTime = furi_get_tick();
+    const uint32_t CHUNK_TIMEOUT = 10000; // 10 seconds timeout
+
+    for (size_t i = 0; i < MAX_CHUNKED_MESSAGES; i++)
+    {
+        if (chunkedMessages[i].data &&
+            (currentTime - chunkedMessages[i].lastUpdateTime) > CHUNK_TIMEOUT)
+        {
+            free(chunkedMessages[i].data);
+            chunkedMessages[i].data = nullptr;
+            chunkedMessages[i].id = 0;
+            chunkedMessages[i].totalChunks = 0;
+            chunkedMessages[i].receivedChunks = 0;
+            chunkedMessages[i].dataSize = 0;
+            chunkedMessages[i].dataCapacity = 0;
+            chunkedMessages[i].lastUpdateTime = 0;
+            if (chunkedMessageCount > 0)
+            {
+                chunkedMessageCount--;
+            }
+        }
+    }
+}
+
+bool FlipWorldRun::handleChunkedMessage(const char *message)
+{
+    // Check if this is a chunked message by looking for chunk metadata
+    char *idStr = get_json_value("id", message);
+    if (!idStr)
+    {
+        return false; // Not a chunked message
+    }
+
+    char *seqStr = get_json_value("seq", message);
+    char *totalStr = get_json_value("total", message);
+    char *dataStr = get_json_value("data", message);
+
+    if (!seqStr || !totalStr || !dataStr)
+    {
+        FURI_LOG_E("FlipWorldRun", "Invalid chunked message format");
+        free(idStr);
+        if (seqStr)
+            free(seqStr);
+        if (totalStr)
+            free(totalStr);
+        if (dataStr)
+            free(dataStr);
+        return true; // Consumed but invalid
+    }
+
+    uint16_t messageId = (uint16_t)atoi(idStr);
+    uint16_t totalChunks = (uint16_t)atoi(totalStr);
+
+    // Clean up expired messages first
+    cleanupExpiredChunkedMessages();
+
+    // Find existing chunked message or create new one
+    ChunkedMessage *chunkedMsg = nullptr;
+    for (size_t i = 0; i < MAX_CHUNKED_MESSAGES; i++)
+    {
+        if (chunkedMessages[i].id == messageId && chunkedMessages[i].data)
+        {
+            chunkedMsg = &chunkedMessages[i];
+            break;
+        }
+    }
+
+    // If not found, create new one
+    if (!chunkedMsg)
+    {
+        for (size_t i = 0; i < MAX_CHUNKED_MESSAGES; i++)
+        {
+            if (!chunkedMessages[i].data)
+            {
+                chunkedMsg = &chunkedMessages[i];
+                chunkedMsg->id = messageId;
+                chunkedMsg->totalChunks = totalChunks;
+                chunkedMsg->receivedChunks = 0;
+                chunkedMsg->dataSize = 0;
+                chunkedMsg->dataCapacity = totalChunks * 128; // Estimate capacity
+                chunkedMsg->data = (char *)malloc(chunkedMsg->dataCapacity);
+                if (!chunkedMsg->data)
+                {
+                    FURI_LOG_E("FlipWorldRun", "Failed to allocate chunked message buffer");
+                    free(idStr);
+                    free(seqStr);
+                    free(totalStr);
+                    free(dataStr);
+                    return true;
+                }
+                chunkedMsg->data[0] = '\0';
+                chunkedMessageCount++;
+                break;
+            }
+        }
+    }
+
+    if (!chunkedMsg)
+    {
+        FURI_LOG_E("FlipWorldRun", "No available slots for chunked message");
+        free(idStr);
+        free(seqStr);
+        free(totalStr);
+        free(dataStr);
+        return true;
+    }
+
+    // Update last update time
+    chunkedMsg->lastUpdateTime = furi_get_tick();
+
+    // Append data to the chunked message
+    size_t dataLen = strlen(dataStr);
+    if (chunkedMsg->dataSize + dataLen >= chunkedMsg->dataCapacity)
+    {
+        // Expand buffer if needed
+        size_t newCapacity = chunkedMsg->dataCapacity * 2;
+        char *newData = (char *)realloc(chunkedMsg->data, newCapacity);
+        if (!newData)
+        {
+            FURI_LOG_E("FlipWorldRun", "Failed to expand chunked message buffer");
+            free(idStr);
+            free(seqStr);
+            free(totalStr);
+            free(dataStr);
+            return true;
+        }
+        chunkedMsg->data = newData;
+        chunkedMsg->dataCapacity = newCapacity;
+    }
+
+    // Append the chunk data
+    memcpy(chunkedMsg->data + chunkedMsg->dataSize, dataStr, dataLen);
+    chunkedMsg->dataSize += dataLen;
+    chunkedMsg->data[chunkedMsg->dataSize] = '\0'; // Null terminate
+    chunkedMsg->receivedChunks++;
+
+    // Check if we have all chunks
+    if (chunkedMsg->receivedChunks >= chunkedMsg->totalChunks)
+    {
+        // Process the complete message
+        processCompleteMultiplayerMessage(chunkedMsg->data);
+
+        // Clean up this chunked message
+        free(chunkedMsg->data);
+        chunkedMsg->data = nullptr;
+        chunkedMsg->id = 0;
+        chunkedMsg->totalChunks = 0;
+        chunkedMsg->receivedChunks = 0;
+        chunkedMsg->dataSize = 0;
+        chunkedMsg->dataCapacity = 0;
+        chunkedMsg->lastUpdateTime = 0;
+        if (chunkedMessageCount > 0)
+        {
+            chunkedMessageCount--;
+        }
+    }
+
+    free(idStr);
+    free(seqStr);
+    free(totalStr);
+    free(dataStr);
+    return true; // Consumed
 }
