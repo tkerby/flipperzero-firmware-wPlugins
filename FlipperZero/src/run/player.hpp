@@ -11,18 +11,6 @@
 
 typedef enum
 {
-    GameViewTitle = 0,        // story, pvp, and pve (menu)
-    GameViewSystemMenu = 1,   // profile, settings (menu)
-    GameViewGame = 2,         // story mode
-    GameViewLogin = 3,        // login view
-    GameViewRegistration = 4, // registration view
-    GameViewUserInfo = 5,     // user info view
-    GameViewLobbies = 6,      // lobbies view
-    GameViewJoinLobby = 7     // join lobby view
-} GameMainView;
-
-typedef enum
-{
     LoginCredentialsMissing = -1, // Credentials missing
     LoginSuccess = 0,             // Login successful
     LoginUserNotFound = 1,        // User not found
@@ -146,6 +134,7 @@ private:
     uint8_t rainFrame = 0;                                          // frame counter for rain effect
     RegistrationStatus registrationStatus = RegistrationNotStarted; // Current registration status
     UserInfoStatus userInfoStatus = UserInfoNotStarted;             // Current user info status
+    float systemMenuDebounceTimer = 0.0f;                           // debounce timer for system menu input
 
     // Lobby-related variables
     LobbyInfo lobbies[4];      // Array to store lobby information (max 4 lobbies)

@@ -164,6 +164,16 @@ void Player::drawCurrentView(Draw *canvas)
     if (!canvas)
         return;
 
+    // Update debounce timer
+    if (systemMenuDebounceTimer > 0.0f)
+    {
+        systemMenuDebounceTimer -= 1.0f / 60.0f; // Subtract 1/60th of a second (60 FPS)
+        if (systemMenuDebounceTimer < 0.0f)
+        {
+            systemMenuDebounceTimer = 0.0f;
+        }
+    }
+
     switch (currentMainView)
     {
     case GameViewTitle:
@@ -181,7 +191,19 @@ void Player::drawCurrentView(Draw *canvas)
                     flipWorldRun->endGame();
                     return;
                 }
-                flipWorldRun->getEngine()->updateGameInput(flipWorldRun->getCurrentInput());
+
+                // Handle system menu input first, before the game engine processes input
+                InputKey currentInput = flipWorldRun->getCurrentInput();
+                if (currentInput == InputKeyBack && systemMenuDebounceTimer <= 0.0f)
+                {
+                    // Switch to system menu
+                    currentMainView = GameViewSystemMenu;
+                    systemMenuDebounceTimer = 0.05f; // 50ms debounce
+                    flipWorldRun->resetInput();      // Reset input after handling
+                    return;                          // Don't process game input this frame
+                }
+
+                flipWorldRun->getEngine()->updateGameInput(currentInput);
                 // Reset the input after processing to prevent it from being continuously pressed
                 flipWorldRun->resetInput();
                 flipWorldRun->getEngine()->runAsync(true);
@@ -214,6 +236,55 @@ void Player::drawCurrentView(Draw *canvas)
         break;
     case GameViewJoinLobby:
         drawJoinLobbyView(canvas);
+        break;
+    case GameViewSystemMenu:
+        // Handle system menu input
+        {
+            InputKey currentInput = flipWorldRun->getCurrentInput();
+            if (currentInput == InputKeyBack && systemMenuDebounceTimer <= 0.0f)
+            {
+                currentMainView = GameViewGame;  // Switch back to game
+                systemMenuDebounceTimer = 0.05f; // 50ms debounce
+                flipWorldRun->resetInput();      // Reset input after handling
+                return;                          // Don't draw this frame
+            }
+            else if (currentInput == InputKeyUp && systemMenuDebounceTimer <= 0.0f)
+            {
+                if (currentSystemMenuIndex > MenuIndexProfile)
+                {
+                    currentSystemMenuIndex = static_cast<MenuIndex>(currentSystemMenuIndex - 1);
+                }
+                systemMenuDebounceTimer = 0.05f; // 50ms debounce
+                flipWorldRun->resetInput();      // Reset input after handling
+            }
+            else if (currentInput == InputKeyDown && systemMenuDebounceTimer <= 0.0f)
+            {
+                if (currentSystemMenuIndex < MenuIndexLeaveGame)
+                {
+                    currentSystemMenuIndex = static_cast<MenuIndex>(currentSystemMenuIndex + 1);
+                }
+                systemMenuDebounceTimer = 0.05f; // 50ms debounce
+                flipWorldRun->resetInput();      // Reset input after handling
+            }
+            else if (currentInput == InputKeyOk && systemMenuDebounceTimer <= 0.0f)
+            {
+                if (currentSystemMenuIndex == MenuIndexLeaveGame)
+                {
+                    // Handle Leave Game option
+                    userRequest(RequestTypeStopWebsocket); // Stop websocket connection
+                    flipWorldRun->endGame();
+                    return;
+                }
+                systemMenuDebounceTimer = 0.3f; // 300ms debounce
+                flipWorldRun->resetInput();     // Reset input after handling
+            }
+            else if (currentInput != InputKeyMAX)
+            {
+                // Reset input for any other input that wasn't handled
+                flipWorldRun->resetInput();
+            }
+        }
+        drawSystemMenuView(canvas);
         break;
     default:
         canvas->fillScreen(ColorWhite);
@@ -708,10 +779,10 @@ void Player::drawSystemMenuView(Draw *canvas)
         char level_str[32];
         char strength_str[32];
 
-        snprintf(level_str, sizeof(level_str), "Level   : %f", (double)level);
-        snprintf(health_str, sizeof(health_str), "Health  : %f", (double)health);
-        snprintf(xp_str, sizeof(xp_str), "XP      : %f", (double)xp);
-        snprintf(strength_str, sizeof(strength_str), "Strength: %f", (double)strength);
+        snprintf(level_str, sizeof(level_str), "Level   : %.0f", (double)level);
+        snprintf(health_str, sizeof(health_str), "Health  : %.0f", (double)health);
+        snprintf(xp_str, sizeof(xp_str), "XP      : %.0f", (double)xp);
+        snprintf(strength_str, sizeof(strength_str), "Strength: %.0f", (double)strength);
 
         canvas->setFont(FontPrimary);
         canvas->text(Vector(7, 16), name);
@@ -721,24 +792,47 @@ void Player::drawSystemMenuView(Draw *canvas)
         canvas->text(Vector(7, 44), xp_str);
         canvas->text(Vector(7, 51), strength_str);
 
-        canvas->drawRect(Vector(80, 18), Vector(36, 30), ColorBlack);
+        canvas->drawRect(Vector(80, 12), Vector(36, 42), ColorBlack);
         canvas->setFont(FontPrimary);
-        canvas->text(Vector(86, 30), "Info");
+        canvas->text(Vector(86, 22), "Info");
         canvas->setFont(FontSecondary);
-        canvas->text(Vector(86, 42), "More");
+        canvas->text(Vector(86, 32), "More");
+        canvas->text(Vector(86, 42), "Quit");
         break;
     case MenuIndexAbout:
         canvas->setFont(FontPrimary);
         canvas->text(Vector(7, 16), VERSION_TAG);
         canvas->setFontCustom(FONT_SIZE_SMALL);
-        canvas->text(Vector(7, 25), "Developed by\nJBlanked and Derek \nJamison. Graphics\nfrom Pr3!\n\nwww.github.com/jblanked");
+        canvas->text(Vector(7, 25), "Developed by");
+        canvas->text(Vector(7, 32), "JBlanked and Derek");
+        canvas->text(Vector(7, 39), "Jamison. Graphics");
+        canvas->text(Vector(7, 46), "from Pr3!");
+        canvas->text(Vector(7, 60), "www.github.com/jblanked");
 
         // draw a box around the selected option
-        canvas->drawRect(Vector(80, 18), Vector(36, 30), ColorBlack);
+        canvas->drawRect(Vector(80, 12), Vector(36, 42), ColorBlack);
         canvas->setFont(FontSecondary);
-        canvas->text(Vector(86, 30), "Info");
+        canvas->text(Vector(86, 22), "Info");
         canvas->setFont(FontPrimary);
-        canvas->text(Vector(86, 42), "More");
+        canvas->text(Vector(86, 32), "More");
+        canvas->setFont(FontSecondary);
+        canvas->text(Vector(86, 42), "Quit");
+        break;
+    case MenuIndexLeaveGame:
+        canvas->setFont(FontPrimary);
+        canvas->text(Vector(7, 16), "Leave Game");
+        canvas->setFontCustom(FONT_SIZE_SMALL);
+        canvas->text(Vector(7, 32), "Are you sure you");
+        canvas->text(Vector(7, 39), "want to leave");
+        canvas->text(Vector(7, 46), "the game?");
+
+        // draw a box around the selected option
+        canvas->drawRect(Vector(80, 12), Vector(36, 42), ColorBlack);
+        canvas->setFont(FontSecondary);
+        canvas->text(Vector(86, 22), "Info");
+        canvas->text(Vector(86, 32), "More");
+        canvas->setFont(FontPrimary);
+        canvas->text(Vector(86, 42), "Quit");
         break;
     default:
         break;
@@ -1091,32 +1185,6 @@ void Player::processInput()
             break;
         }
         break;
-    case GameViewSystemMenu:
-        switch (currentInput)
-        {
-        case InputKeyBack:
-            currentMainView = GameViewGame;
-            flipWorldRun->shouldDebounce = true;
-            break;
-        case InputKeyUp:
-            if (currentSystemMenuIndex > MenuIndexProfile)
-            {
-                currentSystemMenuIndex = static_cast<MenuIndex>(currentSystemMenuIndex - 1);
-            }
-            flipWorldRun->shouldDebounce = true;
-            break;
-        case InputKeyDown:
-            if (currentSystemMenuIndex < MenuIndexAbout)
-            {
-                currentSystemMenuIndex = static_cast<MenuIndex>(currentSystemMenuIndex + 1);
-            }
-            flipWorldRun->shouldDebounce = true;
-            break;
-        default:
-            break;
-        }
-        break;
-
     case GameViewLogin:
         switch (currentInput)
         {
@@ -1172,8 +1240,7 @@ void Player::processInput()
         break;
 
     case GameViewGame:
-        // Game view input is handled by the game engine itself
-        // No additional input processing needed here
+        // Input handling for GameViewGame is done in update() when the game is running
         break;
 
     case GameViewLobbies:
@@ -1224,6 +1291,11 @@ void Player::processInput()
 
 void Player::render(Draw *canvas, Game *game)
 {
+    if (currentMainView != GameViewGame)
+    {
+        // If not in game view, skip player rendering
+        return;
+    }
     iconGroupRender(game);
     drawUsername(position, game);
     drawUserStats(Vector(0, 50), canvas);
@@ -1248,6 +1320,22 @@ bool Player::setHttpState(HTTPState state)
 
 void Player::update(Game *game)
 {
+    // Update debounce timer
+    if (systemMenuDebounceTimer > 0.0f)
+    {
+        systemMenuDebounceTimer -= 1.0f / 60.0f; // Subtract 1/60th of a second (60 FPS)
+        if (systemMenuDebounceTimer < 0.0f)
+        {
+            systemMenuDebounceTimer = 0.0f;
+        }
+    }
+
+    if (currentMainView != GameViewGame)
+    {
+        // If not in game view, skip player updates
+        return;
+    }
+
     // Apply health regeneration
     elapsed_health_regen += 1.0 / 60; // 60 frames per second
     if (elapsed_health_regen >= 1 && health < max_health)
@@ -1273,38 +1361,34 @@ void Player::update(Game *game)
     Vector newPos = oldPos;
     bool shouldSetPosition = false;
 
-    // Move according to input
+    // Handle input based on current view
     if (game->input == InputKeyUp)
     {
         newPos.y -= 5;
         direction = ENTITY_UP;
-        lastInput = InputKeyUp;
         shouldSetPosition = true;
     }
     else if (game->input == InputKeyDown)
     {
         newPos.y += 5;
         direction = ENTITY_DOWN;
-        lastInput = InputKeyDown;
         shouldSetPosition = true;
     }
     else if (game->input == InputKeyLeft)
     {
         newPos.x -= 5;
         direction = ENTITY_LEFT;
-        lastInput = InputKeyLeft;
         shouldSetPosition = true;
     }
     else if (game->input == InputKeyRight)
     {
         newPos.x += 5;
         direction = ENTITY_RIGHT;
-        lastInput = InputKeyRight;
         shouldSetPosition = true;
     }
     else if (game->input == InputKeyOk)
     {
-        lastInput = InputKeyOk;
+        // Handle OK input
     }
 
     // reset input

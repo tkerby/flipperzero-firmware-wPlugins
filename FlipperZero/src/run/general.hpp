@@ -8,14 +8,27 @@
 
 typedef enum
 {
+    GameViewTitle = 0,        // story, pvp, and pve (menu)
+    GameViewSystemMenu = 1,   // profile, settings (menu)
+    GameViewGame = 2,         // story mode
+    GameViewLogin = 3,        // login view
+    GameViewRegistration = 4, // registration view
+    GameViewUserInfo = 5,     // user info view
+    GameViewLobbies = 6,      // lobbies view
+    GameViewJoinLobby = 7     // join lobby view
+} GameMainView;
+
+typedef enum
+{
     TitleIndexStory = 0, // switch to story mode
     TitleIndexPvE = 1,   // switch to PvE mode
 } TitleIndex;
 
 typedef enum
 {
-    MenuIndexProfile = 0, // profile
-    MenuIndexAbout = 1,   // about
+    MenuIndexProfile = 0,   // profile
+    MenuIndexAbout = 1,     // about
+    MenuIndexLeaveGame = 2, // leave game
 } MenuIndex;
 
 typedef enum

@@ -674,7 +674,7 @@ void FlipWorldRun::updateInput(InputEvent *event)
     this->lastInput = event->key;
 
     // Only run inputManager when not in an active game to avoid input conflicts
-    if (!(player && this->isGameRunning)) // player->getCurrentMainView() == GameViewGameLocal))
+    if (!(player && this->isGameRunning))
     {
         this->inputManager();
     }
