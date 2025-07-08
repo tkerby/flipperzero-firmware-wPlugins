@@ -21,6 +21,7 @@ typedef enum {
     ComboViewSubmenu,
     ComboViewCracker,
     ComboViewResults,
+    ComboViewTutorial,
     ComboViewAbout,
 } ComboView;
 
@@ -31,6 +32,7 @@ typedef enum {
 
 typedef enum {
     ComboSubmenuIndexCracker,
+    ComboSubmenuIndexTutorial,
     ComboSubmenuIndexAbout,
 } ComboSubmenuIndex;
 
@@ -40,6 +42,7 @@ typedef struct {
     Submenu* submenu;
     View* view_cracker;
     Widget* widget_results;
+    Widget* widget_tutorial;
     Widget* widget_about;
 
     FuriTimer* timer;
@@ -196,6 +199,9 @@ static void combo_submenu_callback(void* context, uint32_t index) {
     switch(index) {
     case ComboSubmenuIndexCracker:
         view_dispatcher_switch_to_view(app->view_dispatcher, ComboViewCracker);
+        break;
+    case ComboSubmenuIndexTutorial:
+        view_dispatcher_switch_to_view(app->view_dispatcher, ComboViewTutorial);
         break;
     case ComboSubmenuIndexAbout:
         view_dispatcher_switch_to_view(app->view_dispatcher, ComboViewAbout);
@@ -391,8 +397,8 @@ static ComboLockCrackerApp* combo_app_alloc() {
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
 
     app->submenu = submenu_alloc();
-    submenu_add_item(
-        app->submenu, "Crack Lock", ComboSubmenuIndexCracker, combo_submenu_callback, app);
+    submenu_add_item(app->submenu, "Crack Lock", ComboSubmenuIndexCracker, combo_submenu_callback, app);
+    submenu_add_item(app->submenu, "Tutorial", ComboSubmenuIndexTutorial, combo_submenu_callback, app);
     submenu_add_item(app->submenu, "About", ComboSubmenuIndexAbout, combo_submenu_callback, app);
     view_set_previous_callback(submenu_get_view(app->submenu), combo_navigation_exit_callback);
     view_dispatcher_add_view(
@@ -421,6 +427,28 @@ static ComboLockCrackerApp* combo_app_alloc() {
         widget_get_view(app->widget_results), combo_navigation_submenu_callback);
     view_dispatcher_add_view(
         app->view_dispatcher, ComboViewResults, widget_get_view(app->widget_results));
+
+    app->widget_tutorial = widget_alloc();
+    widget_add_text_scroll_element(
+        app->widget_tutorial,
+        0,
+        0,
+        128,
+        64,
+        "How to use:\n"
+        "---\n"
+        "First lock value:\n"
+        "Set the lock's position to 0, then pull up firmly on the shackle and slowly rotate the dial counter-clockwise until it catches between two numbers. If the two locations where the lock gets caught between are whole numbers, reduce the tension on the shackle slightly so you can move out of the groove and find the next one. Once you find a groove between two half numbers, enter the number in the middle of that groove as the first lock position.\n\n"
+        "Second lock value:\n"
+        "Use the same process to find the next groove(s) after the first position. Remember that the locations where the lock gets caught between should be half numbers, so the middle location will be a whole number.\n\n"
+        "Resistance value:\n"
+        "Now apply about half as much tension on the shackle and rotate the dial clockwise until you feel resistance. You can repeat this step several times to make sure you have the correct position. Then enter this value as the resistance position. This can be a whole or half number.\n\n"
+        "This is a brief summary of the technique developed by Samy Kamkar. For full details and his original write-up, see:\n"
+        "https://samy.pl/master/master.html\n");
+    view_set_previous_callback(
+        widget_get_view(app->widget_tutorial), combo_navigation_submenu_callback);
+    view_dispatcher_add_view(
+        app->view_dispatcher, ComboViewTutorial, widget_get_view(app->widget_tutorial));
 
     app->widget_about = widget_alloc();
     widget_add_text_scroll_element(
@@ -460,6 +488,8 @@ static void combo_app_free(ComboLockCrackerApp* app) {
 
     view_dispatcher_remove_view(app->view_dispatcher, ComboViewAbout);
     widget_free(app->widget_about);
+    view_dispatcher_remove_view(app->view_dispatcher, ComboViewTutorial);
+    widget_free(app->widget_tutorial);
     view_dispatcher_remove_view(app->view_dispatcher, ComboViewResults);
     widget_free(app->widget_results);
     view_dispatcher_remove_view(app->view_dispatcher, ComboViewCracker);
