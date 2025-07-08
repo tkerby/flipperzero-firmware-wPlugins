@@ -89,11 +89,13 @@ struct LobbyInfo
 
 typedef enum
 {
-    RequestTypeLogin = 0,        // Request login (login the user)
-    RequestTypeRegistration = 1, // Request registration (register the user)
-    RequestTypeUserInfo = 2,     // Request user infon (fetch user info)
-    RequestTypeLobbies = 3,      // Request lobbies (fetch lobbies/servers available)
-    RequestTypeJoinLobby = 4,    // Request to join a lobby (join a specific lobby)
+    RequestTypeLogin = 0,          // Request login (login the user)
+    RequestTypeRegistration = 1,   // Request registration (register the user)
+    RequestTypeUserInfo = 2,       // Request user infon (fetch user info)
+    RequestTypeLobbies = 3,        // Request lobbies (fetch lobbies/servers available)
+    RequestTypeJoinLobby = 4,      // Request to join a lobby (join a specific lobby)
+    RequestTypeStartWebsocket = 5, // Request to start a websocket connection (for real-time updates)
+    RequestTypeStopWebsocket = 6,  // Request to stop the websocket connection
 } RequestType;
 
 class FlipWorldRun;
@@ -146,7 +148,7 @@ private:
     UserInfoStatus userInfoStatus = UserInfoNotStarted;             // Current user info status
 
     // Lobby-related variables
-    LobbyInfo lobbies[10];     // Array to store lobby information (max 10 lobbies)
+    LobbyInfo lobbies[4];      // Array to store lobby information (max 4 lobbies)
     int currentLobbyIndex = 0; // Current selected lobby index
     int lobbyCount = 0;        // Number of lobbies loaded
 

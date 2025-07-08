@@ -88,7 +88,7 @@ void Player::checkForLevelCompletion(Game *game)
     }
 
     // Update cooldown timer
-    levelCompletionCooldown -= 1.0 / 30; // 30 fps
+    levelCompletionCooldown -= 1.0 / 60; // 60 fps
     if (levelCompletionCooldown > 0)
     {
         return; // Still in cooldown, don't check yet
@@ -177,6 +177,7 @@ void Player::drawCurrentView(Draw *canvas)
             {
                 if (shouldLeaveGame())
                 {
+                    userRequest(RequestTypeStopWebsocket); // Stop websocket connection
                     flipWorldRun->endGame();
                     return;
                 }
@@ -260,7 +261,8 @@ void Player::drawJoinLobbyView(Draw *canvas)
                     loading->stop();
                 }
                 loadingStarted = false;
-                currentMainView = GameViewGame; // switch to game view
+                currentMainView = GameViewGame;         // switch to game view
+                userRequest(RequestTypeStartWebsocket); // Start websocket connection for real-time updates
                 flipWorldRun->startGame();
             }
             else
@@ -341,7 +343,7 @@ void Player::drawLobbiesView(Draw *canvas)
                 currentLobbyIndex = 0; // Reset selection to first lobby
 
                 // parse the lobbies and store them
-                for (uint32_t i = 0; i < 10; i++)
+                for (uint32_t i = 0; i < 4; i++)
                 {
                     char *lobby = get_json_array_value("lobbies", i, response);
                     if (!lobby)
@@ -1247,7 +1249,7 @@ bool Player::setHttpState(HTTPState state)
 void Player::update(Game *game)
 {
     // Apply health regeneration
-    elapsed_health_regen += 1.0 / 30; // 30 frames per second
+    elapsed_health_regen += 1.0 / 60; // 60 frames per second
     if (elapsed_health_regen >= 1 && health < max_health)
     {
         health += health_regen;
@@ -1259,9 +1261,9 @@ void Player::update(Game *game)
     }
 
     // Increment the elapsed_attack_timer for the player
-    elapsed_attack_timer += 1.0 / 30; // 30 frames per second
+    elapsed_attack_timer += 1.0 / 60; // 60 frames per second
 
-    // update plyer traits
+    // update player traits
     updateStats();
 
     // Check if all enemies are dead and switch to next level if needed
@@ -1548,6 +1550,25 @@ void Player::userRequest(RequestType requestType)
         }
     }
     break;
+    case RequestTypeStartWebsocket:
+    {
+        char *websocket_url = (char *)malloc(128);
+        snprintf(websocket_url, 128, "ws://www.jblanked.com/ws/game/%s/", lobbies[currentLobbyIndex].id);
+        // Start the WebSocket connection for the lobby
+        if (!app->websocketStart(websocket_url))
+        {
+            joinLobbyStatus = JoinLobbyRequestError;
+        }
+        free(websocket_url);
+    }
+    break;
+    case RequestTypeStopWebsocket:
+        // Stop the WebSocket connection
+        if (!app->websocketStop())
+        {
+            FURI_LOG_E("Player", "Failed to stop WebSocket connection");
+        }
+        break;
     default:
         FURI_LOG_E("Player", "Unknown request type: %d", requestType);
         loginStatus = LoginRequestError;

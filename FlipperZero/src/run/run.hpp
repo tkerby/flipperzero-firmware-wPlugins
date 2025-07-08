@@ -39,6 +39,7 @@ public:
     bool shouldDebounce = false;                  // public for Player access
     //
     void endGame();                                                                // end the game and return to the submenu
+    bool entityJsonUpdate(Entity *entity);                                         // Update entity properties from JSON data
     InputKey getCurrentInput() const { return lastInput; }                         // Get the last input key pressed
     const char *getLevelJson(LevelIndex index) const;                              // Get the JSON data for a level by index
     GameEngine *getEngine() const { return engine.get(); }                         // Get the game engine instance

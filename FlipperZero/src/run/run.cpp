@@ -39,6 +39,166 @@ void FlipWorldRun::debounceInput()
     }
 }
 
+void FlipWorldRun::endGame()
+{
+    shouldReturnToMenu = true;
+    isGameRunning = false;
+
+    if (engine)
+    {
+        engine->stop();
+    }
+
+    if (draw)
+    {
+        draw.reset();
+    }
+}
+
+bool FlipWorldRun::entityJsonUpdate(Entity *entity)
+{
+    FlipWorldApp *app = static_cast<FlipWorldApp *>(appContext);
+    if (!app)
+    {
+        FURI_LOG_E("Game", "entityJsonUpdate: App context is not set");
+        return false;
+    }
+    auto response = app->getLastResponse();
+    if (!response)
+    {
+        FURI_LOG_E("Game", "entityJsonUpdate: Response is null");
+        return false;
+    }
+    if (strlen(response) == 0)
+    {
+        // no need for error log here, just return false
+        return false;
+    }
+
+    // parse the response and set the position
+    /* expected response:
+    {
+        "u": "JBlanked",
+        "xp": 37743,
+        "h": 207,
+        "ehr": 0.7,
+        "eat": 127.5,
+        "d": 2,
+        "s": 1,
+        "sp": {
+            "x": 381.0,
+            "y": 192.0
+        }
+    }
+    */
+
+    char *u = get_json_value("u", response);
+    if (!u)
+    {
+        FURI_LOG_E("Game", "entityJsonUpdate: Failed to get username");
+        return false;
+    }
+
+    // check if the username matches
+    if (strcmp(u, entity->name) != 0)
+    {
+        free(u);
+        return false;
+    }
+
+    free(u); // free username
+
+    // we need the health, elapsed attack timer, direction, xp, and position
+    char *h = get_json_value("h", response);
+    char *eat = get_json_value("eat", response);
+    char *d = get_json_value("d", response);
+    char *xp = get_json_value("xp", response);
+    char *sp = get_json_value("sp", response);
+    char *x = get_json_value("x", sp);
+    char *y = get_json_value("y", sp);
+
+    if (!h || !eat || !d || !sp || !x || !y || !xp)
+    {
+        if (h)
+            free(h);
+        if (eat)
+            free(eat);
+        if (d)
+            free(d);
+        if (sp)
+            free(sp);
+        if (x)
+            free(x);
+        if (y)
+            free(y);
+        if (xp)
+            free(xp);
+        return false;
+    }
+
+    // set enemy info
+    entity->health = (float)atoi(h); // h is an int
+    if (entity->health <= 0)
+    {
+        entity->health = 0;
+        entity->state = ENTITY_DEAD;
+        entity->position_set((Vector){-100, -100});
+        free(h);
+        free(eat);
+        free(d);
+        free(sp);
+        free(x);
+        free(y);
+        free(xp);
+        return true;
+    }
+
+    entity->elapsed_attack_timer = atof_(eat);
+
+    switch (atoi(d))
+    {
+    case 0:
+        entity->direction = ENTITY_LEFT;
+        break;
+    case 1:
+        entity->direction = ENTITY_RIGHT;
+        break;
+    case 2:
+        entity->direction = ENTITY_UP;
+        break;
+    case 3:
+        entity->direction = ENTITY_DOWN;
+        break;
+    default:
+        entity->direction = ENTITY_RIGHT;
+        break;
+    }
+
+    entity->xp = (atoi)(xp); // xp is an int
+    entity->level = 1;
+    uint32_t xp_required = 100; // Base XP for level 2
+
+    while (entity->level < 100 && entity->xp >= xp_required) // Maximum level supported
+    {
+        entity->level++;
+        xp_required = (uint32_t)(xp_required * 1.5); // 1.5 growth factor per level
+    }
+
+    // set position
+    entity->position_set(Vector(atof_(x), atof_(y)));
+
+    // free the strings
+    free(h);
+    free(eat);
+    free(d);
+    free(sp);
+    free(x);
+    free(y);
+    free(xp);
+
+    return true;
+}
+
 LevelIndex FlipWorldRun::getCurrentLevelIndex() const
 {
     if (!engine)
@@ -199,22 +359,6 @@ const char *FlipWorldRun::getLevelName(LevelIndex index) const
         return "Forest World";
     default:
         return "Unknown Level";
-    }
-}
-
-void FlipWorldRun::endGame()
-{
-    shouldReturnToMenu = true;
-    isGameRunning = false;
-
-    if (engine)
-    {
-        engine->stop();
-    }
-
-    if (draw)
-    {
-        draw.reset();
     }
 }
 

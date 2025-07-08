@@ -225,7 +225,7 @@ void Sprite::update(Game *game)
     }
 
     // float delta_time = 1.0 / game->fps;
-    float delta_time = 1.0 / 30; // 30 frames per second
+    float delta_time = 1.0 / 60; // 60 frames per second
 
     // Increment the elapsed_attack_timer for the enemy
     elapsed_attack_timer += delta_time;
