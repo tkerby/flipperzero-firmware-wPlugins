@@ -60,6 +60,11 @@ Sprite::Sprite(const char *name, EntityType type, Vector position, Vector endPos
 
 void Sprite::collision(Entity *other, Game *game)
 {
+    if (type != ENTITY_ENEMY || other->type != ENTITY_PLAYER)
+    {
+        return; // Only handle collisions between enemies and players
+    }
+
     if (strcmp(other->name, "Player") == 0)
     {
         // Get positions of the enemy and the player
@@ -169,7 +174,14 @@ void Sprite::collision(Entity *other, Game *game)
 void Sprite::drawUsername(Vector pos, Game *game)
 {
     char name[32];
-    snprintf(name, sizeof(name), "%.0f", (double)health);
+    if (type == ENTITY_ENEMY)
+    {
+        snprintf(name, sizeof(name), "%.0f", (double)health);
+    }
+    else if (type == ENTITY_NPC)
+    {
+        snprintf(name, sizeof(name), "NPC");
+    }
 
     // skip if enemy is out of the screen
     if (position.x + size.x < game->pos.x || position.x > game->pos.x + game->size.x ||
@@ -185,11 +197,13 @@ void Sprite::drawUsername(Vector pos, Game *game)
         return;
     }
 
+    game->draw->setFontCustom(FONT_SIZE_SMALL);
+
     // draw box around the name
-    game->draw->fillRect(Vector(pos.x - game->pos.x - (strlen(name) * 2), pos.y - game->pos.y - 14), Vector(strlen(name) * 4 + 1, 8), ColorWhite);
+    game->draw->fillRect(Vector(pos.x - game->pos.x - (strlen(name) * 2 - 5), pos.y - game->pos.y - 7), Vector(strlen(name) * 4 + 1, 8), ColorWhite);
 
     // draw name over player's head
-    game->draw->text(Vector(pos.x - game->pos.x - (strlen(name) * 2), pos.y - game->pos.y - 7), name, ColorBlack);
+    game->draw->text(Vector(pos.x - game->pos.x - (strlen(name) * 2 - 4), pos.y - game->pos.y - 2), name, ColorBlack);
 }
 
 void Sprite::render(Draw *canvas, Game *game)
