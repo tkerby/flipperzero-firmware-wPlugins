@@ -47,15 +47,11 @@ void load_suica_data(void* context, FlipperFormat* format) {
                furi_string_get_cstr(entry_preamble),
                byte_array_buffer,
                FELICA_DATA_BLOCK_SIZE))
-        {
-            FURI_LOG_E("Suica Load", "Failed to read entry %d", i);
             break;
-        }
         uint8_t block_data[16] = {0};
         for(size_t j = 0; j < FELICA_DATA_BLOCK_SIZE; j++) {
             block_data[j] = byte_array_buffer[j];
         }
-        FURI_LOG_E("Suica Load", "Works as of here, entry %d", i);
         suica_add_entry(model, block_data);
     }
     furi_string_free(entry_preamble);

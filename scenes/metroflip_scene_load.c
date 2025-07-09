@@ -99,7 +99,6 @@ void metroflip_scene_load_on_enter(void* context) {
 
             } else {
                 const char* card_str = furi_string_get_cstr(card_type_str);
-                FURI_LOG_I(TAG, "Card Type: %s", card_str);
                 if(strcmp(card_str, "Japan IC") == 0) {
                     app->card_type = "suica";
                     app->is_desfire = false;
