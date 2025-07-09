@@ -65,109 +65,106 @@ void Sprite::collision(Entity *other, Game *game)
         return; // Only handle collisions between enemies and players
     }
 
-    if (strcmp(other->name, "Player") == 0)
+    // Get positions of the enemy and the player
+    Vector enemy_pos = position;
+    Vector player_pos = other->position;
+
+    // Determine if the enemy is facing the player or player is facing the enemy
+    bool enemy_is_facing_player = false;
+    bool player_is_facing_enemy = false;
+
+    if ((direction == ENTITY_LEFT && player_pos.x < enemy_pos.x) ||
+        (direction == ENTITY_RIGHT && player_pos.x > enemy_pos.x) ||
+        (direction == ENTITY_UP && player_pos.y < enemy_pos.y) ||
+        (direction == ENTITY_DOWN && player_pos.y > enemy_pos.y))
     {
-        // Get positions of the enemy and the player
-        Vector enemy_pos = position;
-        Vector player_pos = other->position;
+        enemy_is_facing_player = true;
+    }
+    if ((other->direction == ENTITY_LEFT && enemy_pos.x < player_pos.x) ||
+        (other->direction == ENTITY_RIGHT && enemy_pos.x > player_pos.x) ||
+        (other->direction == ENTITY_UP && enemy_pos.y < player_pos.y) ||
+        (other->direction == ENTITY_DOWN && enemy_pos.y > player_pos.y))
+    {
+        player_is_facing_enemy = true;
+    }
 
-        // Determine if the enemy is facing the player or player is facing the enemy
-        bool enemy_is_facing_player = false;
-        bool player_is_facing_enemy = false;
+    // Handle Player Attacking Enemy (Press OK, facing enemy, and enemy not facing player)
+    // we need to store the last button pressed to prevent multiple attacks
+    if (player_is_facing_enemy && game->input == InputKeyOk && !enemy_is_facing_player)
+    {
+        // Reset last button
+        game->input = InputKeyMAX;
 
-        if ((direction == ENTITY_LEFT && player_pos.x < enemy_pos.x) ||
-            (direction == ENTITY_RIGHT && player_pos.x > enemy_pos.x) ||
-            (direction == ENTITY_UP && player_pos.y < enemy_pos.y) ||
-            (direction == ENTITY_DOWN && player_pos.y > enemy_pos.y))
+        // check if enough time has passed since the last attack
+        if (other->elapsed_attack_timer >= other->attack_timer)
         {
-            enemy_is_facing_player = true;
-        }
-        if ((other->direction == ENTITY_LEFT && enemy_pos.x < player_pos.x) ||
-            (other->direction == ENTITY_RIGHT && enemy_pos.x > player_pos.x) ||
-            (other->direction == ENTITY_UP && enemy_pos.y < player_pos.y) ||
-            (other->direction == ENTITY_DOWN && enemy_pos.y > player_pos.y))
-        {
-            player_is_facing_enemy = true;
-        }
+            // Reset player's elapsed attack timer
+            other->elapsed_attack_timer = 0;
+            elapsed_attack_timer = 0; // Reset enemy's attack timer to block enemy attack
 
-        // Handle Player Attacking Enemy (Press OK, facing enemy, and enemy not facing player)
-        // we need to store the last button pressed to prevent multiple attacks
-        if (player_is_facing_enemy && game->input == InputKeyOk && !enemy_is_facing_player)
-        {
-            // Reset last button
-            game->input = InputKeyMAX;
+            // Increase XP by the enemy's strength
+            other->xp += strength;
 
-            // check if enough time has passed since the last attack
-            if (other->elapsed_attack_timer >= other->attack_timer)
+            // Increase health by 10% of the enemy's strength
+            other->health += strength * 0.1;
+
+            // check max health
+            if (other->health > 100)
             {
-                // Reset player's elapsed attack timer
-                other->elapsed_attack_timer = 0;
-                elapsed_attack_timer = 0; // Reset enemy's attack timer to block enemy attack
+                other->health = 100;
+            }
 
-                // Increase XP by the enemy's strength
-                other->xp += strength;
+            // Decrease enemy health by player strength
+            health -= other->strength;
 
-                // Increase health by 10% of the enemy's strength
-                other->health += strength * 0.1;
-
-                // check max health
-                if (other->health > 100)
-                {
-                    other->health = 100;
-                }
-
-                // Decrease enemy health by player strength
-                health -= other->strength;
-
-                // check if enemy is dead
-                if (health > 0)
-                {
-                    state = ENTITY_ATTACKED;
-                    elapsed_move_timer = 0;
-                    position_changed = true;
-                    position_set(old_position);
-                }
+            // check if enemy is dead
+            if (health > 0)
+            {
+                state = ENTITY_ATTACKED;
+                elapsed_move_timer = 0;
+                position_changed = true;
+                position_set(old_position);
             }
         }
-        // Handle Enemy Attacking Player (enemy facing player)
-        else if (enemy_is_facing_player)
+    }
+    // Handle Enemy Attacking Player (enemy facing player)
+    else if (enemy_is_facing_player)
+    {
+        // check if enough time has passed since the last attack
+        if (elapsed_attack_timer >= attack_timer)
         {
-            // check if enough time has passed since the last attack
-            if (elapsed_attack_timer >= attack_timer)
+            // Reset enemy's elapsed attack timer
+            elapsed_attack_timer = 0;
+
+            // Decrease player health by enemy strength
+            other->health -= strength;
+
+            // check if player is dead
+            if (other->health > 0)
             {
-                // Reset enemy's elapsed attack timer
-                elapsed_attack_timer = 0;
-
-                // Decrease player health by enemy strength
-                other->health -= strength;
-
-                // check if player is dead
-                if (other->health > 0)
-                {
-                    other->state = ENTITY_ATTACKED;
-                    other->position_set(other->old_position);
-                }
+                other->state = ENTITY_ATTACKED;
+                other->position_set(other->old_position);
             }
         }
+    }
 
-        // check if player is dead
-        if (other->health <= 0)
-        {
-            other->state = ENTITY_DEAD;
-            other->position = other->start_position;
-            other->health = other->max_health;
-            other->position_set(other->start_position);
-        }
+    // check if player is dead
+    if (other->health <= 0)
+    {
+        other->state = ENTITY_DEAD;
+        other->position = other->start_position;
+        other->health = other->max_health;
+        other->position_set(other->start_position);
+    }
 
-        // check if enemy is dead
-        if (health <= 0)
-        {
-            state = ENTITY_DEAD;
-            position = Vector(-100, -100);
-            health = 0;
-            elapsed_move_timer = 0;
-            position_set(position);
-        }
+    // check if enemy is dead
+    if (health <= 0)
+    {
+        state = ENTITY_DEAD;
+        position = Vector(-100, -100);
+        health = 0;
+        elapsed_move_timer = 0;
+        position_set(position);
     }
 }
 
