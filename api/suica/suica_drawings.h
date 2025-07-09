@@ -48,10 +48,30 @@
 #define TERMINAL_POS                      0xC7
 #define TERMINAL_VENDING_MACHINE          0xC8
 
-#define PROCESSING_CODE_FARE_PAYMENT    0x01
-#define PROCESSING_CODE_TOP_UP          0x02
-#define PROCESSING_CODE_TICKET_PURCHASE 0x03
-#define PROCESSING_CODE_NEW_ISSUE       0x07
+#define PROCESSING_AUTO_GATE_FARE               0x01
+#define PROCESSING_TOP_UP                       0x02
+#define PROCESSING_TICKET_PURCHASE              0x03
+#define PROCESSING_TICKET_SETTLEMENT            0x04
+#define PROCESSING_OVER_TRAVEL_ADJUST           0x05
+#define PROCESSING_MANNED_GATE_EXIT             0x06
+#define PROCESSING_NEW_ISSUE                    0x07
+#define PROCESSING_MANNED_GATE_DEDUCT           0x08
+#define PROCESSING_BUS_PITAPA_FLAT              0x0D
+#define PROCESSING_BUS_IRUCA_GENERAL            0x0F
+#define PROCESSING_REISSUE                      0x11
+#define PROCESSING_EXIT_PAYMENT                 0x13
+#define PROCESSING_AUTO_TOP_UP                  0x14
+#define PROCESSING_BUS_TOP_UP                   0x1F
+#define PROCESSING_SPECIAL_BUS_TICKET           0x23
+#define PROCESSING_MERCHANDISE_POS              0x46
+#define PROCESSING_BONUS_TOP_UP                 0x48
+#define PROCESSING_REGISTER_TOP_UP              0x49
+#define PROCESSING_CANCEL_POS                   0x4A
+#define PROCESSING_ENTRY_AND_POS                0x4B
+#define PROCESSING_THIRD_PARTY_PAYMENT          0x84
+#define PROCESSING_THIRD_PARTY_ADMISSION        0x85
+#define PROCESSING_POS_WITH_PART_CASH           0xC6
+#define PROCESSING_ENTRY_AND_POS_WITH_PART_CASH 0xCB
 
 #define ARROW_ANIMATION_FRAME_MS 350
 
@@ -888,7 +908,8 @@ static void suica_history_draw_callback(Canvas* canvas, void* model) {
             suica_draw_train_page_1(canvas, my_model->history, my_model, SuicaHistoryTrain);
             break;
         case SuicaHistoryHappyBirthday:
-            suica_draw_train_page_1(canvas, my_model->history, my_model, SuicaHistoryHappyBirthday);
+            suica_draw_train_page_1(
+                canvas, my_model->history, my_model, SuicaHistoryHappyBirthday);
             break;
         case SuicaHistoryVendingMachine:
             suica_draw_vending_machine_page_1(canvas, my_model->history, my_model);

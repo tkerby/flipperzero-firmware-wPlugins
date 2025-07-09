@@ -256,10 +256,10 @@ static void suica_parse(SuicaHistoryViewModel* my_model) {
         }
     }
     switch((uint8_t)current_block[1]) {
-    case PROCESSING_CODE_NEW_ISSUE:
+    case PROCESSING_NEW_ISSUE:
         my_model->history.history_type = SuicaHistoryHappyBirthday;
         break;
-    case PROCESSING_CODE_TOP_UP: // is this necessary?
+    case PROCESSING_TOP_UP: // is this necessary?
         my_model->history.history_type = SuicaHistoryTopUp;
         // switch case the type of terminals here if necessary
         break;
