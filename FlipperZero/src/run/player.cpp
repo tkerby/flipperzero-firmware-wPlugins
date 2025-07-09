@@ -919,10 +919,10 @@ void Player::drawUsername(Vector pos, Game *game)
     }
 
     // draw box around the name
-    game->draw->fillRect(Vector(screen_x - (strlen(name) * 2) - 1, screen_y - 14), Vector(strlen(name) * 4 + 1, 8), ColorWhite);
+    game->draw->fillRect(Vector(screen_x - (strlen(name) * 2) - 1, screen_y - 7), Vector(strlen(name) * 4 + 1, 8), ColorWhite);
 
     // draw name over player's head
-    game->draw->text(Vector(screen_x - (strlen(name) * 2), screen_y - 7), name, ColorBlack);
+    game->draw->text(Vector(screen_x - (strlen(name) * 2), screen_y - 2), name, ColorBlack);
 }
 
 void Player::drawUserInfoView(Draw *canvas)
