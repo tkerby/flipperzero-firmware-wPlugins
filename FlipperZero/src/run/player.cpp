@@ -648,6 +648,14 @@ void Player::drawLoginView(Draw *canvas)
                     userRequest(RequestTypeRegistration);
                     registrationStatus = RegistrationWaiting;
                 }
+                else if (strstr(response, "Incorrect password") != NULL)
+                {
+                    loginStatus = LoginWrongPassword;
+                }
+                else if (strstr(response, "Username or password is empty.") != NULL)
+                {
+                    loginStatus = LoginCredentialsMissing;
+                }
                 else
                 {
                     loginStatus = LoginRequestError;
@@ -672,6 +680,11 @@ void Player::drawLoginView(Draw *canvas)
         canvas->text(Vector(0, 10), "Login request failed!", ColorBlack);
         canvas->text(Vector(0, 20), "Check your network and", ColorBlack);
         canvas->text(Vector(0, 30), "try again later.", ColorBlack);
+        break;
+    case LoginWrongPassword:
+        canvas->text(Vector(0, 10), "Wrong password!", ColorBlack);
+        canvas->text(Vector(0, 20), "Please check your password", ColorBlack);
+        canvas->text(Vector(0, 30), "and try again.", ColorBlack);
         break;
     default:
         canvas->text(Vector(0, 10), "Logging in...", ColorBlack);
