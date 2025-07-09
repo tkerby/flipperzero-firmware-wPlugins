@@ -45,6 +45,7 @@
 
 #include "hashes/blake2.h"
 #include "hashes/fnv.h"
+#include "hashes/md2.h"
 #include "hashes/md5.h"
 #include "hashes/murmur3.h"
 #include "hashes/sha1.h"
@@ -189,6 +190,11 @@ typedef enum {
     FlipCryptFNV1AInputScene,
     FlipCryptFNV1AOutputScene,
     FlipCryptFNV1ALearnScene,
+    // MD2 Hash
+    FlipCryptMD2SubmenuScene,
+    FlipCryptMD2InputScene,
+    FlipCryptMD2OutputScene,
+    FlipCryptMD2LearnScene,
     // MD5 Hash
     FlipCryptMD5SubmenuScene,
     FlipCryptMD5InputScene,
@@ -326,6 +332,7 @@ typedef struct App {
     char* vigenere_decrypt_input;
     char* blake2_input;
     char* fnv1a_input;
+    char* md2_input;
     char* md5_input;
     char* murmur3_input;
     char* sip_input;
@@ -377,6 +384,7 @@ typedef struct App {
     uint8_t vigenere_decrypt_input_size;
     uint8_t blake2_input_size;
     uint8_t fnv1a_input_size;
+    uint8_t md2_input_size;
     uint8_t md5_input_size;
     uint8_t murmur3_input_size;
     uint8_t sip_input_size;
@@ -418,6 +426,7 @@ typedef enum {
     MenuIndexVigenere,
     MenuIndexBlake2,
     MenuIndexFNV1A,
+    MenuIndexMD2,
     MenuIndexMD5,
     MenuIndexMurmur3,
     MenuIndexSHA1,
@@ -453,6 +462,7 @@ typedef enum {
     EventVigenere,
     EventBlake2,
     EventFNV1A,
+    EventMD2,
     EventMD5,
     EventMurmur3,
     EventSHA1,
@@ -534,6 +544,9 @@ void flip_crypt_menu_callback(void* context, uint32_t index) {
         case MenuIndexFNV1A:
             scene_manager_handle_custom_event(app->scene_manager, EventFNV1A);
             break;
+        case MenuIndexMD2:
+            scene_manager_handle_custom_event(app->scene_manager, EventMD2);
+            break;
         case MenuIndexMD5:
             scene_manager_handle_custom_event(app->scene_manager, EventMD5);
             break;
@@ -611,6 +624,7 @@ void flip_crypt_hash_submenu_scene_on_enter(void* context) {
     submenu_set_header(app->submenu, "Hashes");
     submenu_add_item(app->submenu, "BLAKE-2s Hash", MenuIndexBlake2, flip_crypt_menu_callback, app);
     submenu_add_item(app->submenu, "FNV-1A Hash", MenuIndexFNV1A, flip_crypt_menu_callback, app);
+    submenu_add_item(app->submenu, "MD2 Hash", MenuIndexMD2, flip_crypt_menu_callback, app);
     submenu_add_item(app->submenu, "MD5 Hash", MenuIndexMD5, flip_crypt_menu_callback, app);
     submenu_add_item(app->submenu, "MurmurHash3", MenuIndexMurmur3, flip_crypt_menu_callback, app);
     submenu_add_item(app->submenu, "SHA-1 Hash", MenuIndexSHA1, flip_crypt_menu_callback, app);
@@ -713,6 +727,10 @@ bool flip_crypt_main_menu_scene_on_event(void* context, SceneManagerEvent event)
                 break;
             case EventFNV1A:
                 scene_manager_next_scene(app->scene_manager, FlipCryptFNV1ASubmenuScene);
+                consumed = true;
+                break;
+            case EventMD2:
+                scene_manager_next_scene(app->scene_manager, FlipCryptMD2SubmenuScene);
                 consumed = true;
                 break;
             case EventMD5:
@@ -824,6 +842,9 @@ void cipher_encrypt_submenu_callback(void* context, uint32_t index) {
             break;
         case FlipCryptFNV1ASubmenuScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptFNV1AInputScene);
+            break;
+        case FlipCryptMD2SubmenuScene:
+            scene_manager_next_scene(app->scene_manager, FlipCryptMD2InputScene);
             break;
         case FlipCryptMD5SubmenuScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptMD5InputScene);
@@ -978,6 +999,9 @@ void cipher_learn_submenu_callback(void* context, uint32_t index) {
             break;
         case FlipCryptFNV1ASubmenuScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptFNV1ALearnScene);
+            break;
+        case FlipCryptMD2SubmenuScene:
+            scene_manager_next_scene(app->scene_manager, FlipCryptMD2LearnScene);
             break;
         case FlipCryptMD5SubmenuScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptMD5LearnScene);
@@ -1236,6 +1260,11 @@ void cipher_submenu_scene_on_enter(void* context) {
             submenu_add_item(app->submenu, "Hash Text", 0, cipher_encrypt_submenu_callback, app);
             submenu_add_item(app->submenu, "Learn", 1, cipher_learn_submenu_callback, app);
             break;
+        case FlipCryptMD2SubmenuScene:
+            submenu_set_header(app->submenu, "MD2 Hash");
+            submenu_add_item(app->submenu, "Hash Text", 0, cipher_encrypt_submenu_callback, app);
+            submenu_add_item(app->submenu, "Learn", 1, cipher_learn_submenu_callback, app);
+            break;
         case FlipCryptMD5SubmenuScene:
             submenu_set_header(app->submenu, "MD5 Hash");
             submenu_add_item(app->submenu, "Hash Text", 0, cipher_encrypt_submenu_callback, app);
@@ -1433,6 +1462,9 @@ void flip_crypt_text_input_callback(void* context) {
             break;
         case FlipCryptFNV1AInputScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptFNV1AOutputScene);
+            break;
+        case FlipCryptMD2InputScene:
+            scene_manager_next_scene(app->scene_manager, FlipCryptMD2OutputScene);
             break;
         case FlipCryptMD5InputScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptMD5OutputScene);
@@ -1633,6 +1665,9 @@ void cipher_input_scene_on_enter(void* context) {
             break;
         case FlipCryptFNV1AInputScene:
             text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback, app, app->fnv1a_input, app->fnv1a_input_size, true);
+            break;
+        case FlipCryptMD2InputScene:
+            text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback, app, app->md2_input, app->md2_input_size, true);
             break;
         case FlipCryptMD5InputScene:
             text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback, app, app->md5_input, app->md5_input_size, true);
@@ -2024,6 +2059,14 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_center_button_text(app->dialog_ex, "Save");
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
+        case FlipCryptMD2OutputScene:
+            dialog_ex_set_text(app->dialog_ex, "MD2 output", 64, 18, AlignCenter, AlignCenter);
+            save_result_generic(APP_DATA_PATH("md2.txt"), "MD2 output");
+            app->last_output_scene = "MD2";
+            dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+            dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+            dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+            break;
         case FlipCryptMD5OutputScene:
             uint8_t md5_hash[16];
             char md5_hex_output[33] = {0};
@@ -2274,6 +2317,10 @@ void cipher_learn_scene_on_enter(void* context) {
             widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "FNV-1a (Fowler-Noll-Vo hash, variant 1a) is a simple, fast, and widely used non-cryptographic hash function designed for use in hash tables and data indexing. It works by starting with a fixed offset basis, then for each byte of input, it XORs the byte with the hash and multiplies the result by a prime number (commonly 16777619 for 32-bit or 1099511628211 for 64-bit). FNV-1a is known for its good distribution and performance on small inputs, but it's not cryptographically secure and should not be used for security-sensitive applications. Its simplicity and efficiency make it a favorite in performance-critical systems and embedded environments.");
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
+        case FlipCryptMD2LearnScene:
+            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "MD2 learn");
+            view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
+            break;
         case FlipCryptMD5LearnScene:
             widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "MD5 (Message Digest Algorithm 5) is a widely used cryptographic hash function that produces a 128-bit (16 byte) hash value, typically rendered as a 32-character hexadecimal number. Originally designed for digital signatures and file integrity verification, MD5 is now considered cryptographically broken due to known collision vulnerabilities. While still used in some non-security-critical contexts, it is not recommended for new cryptographic applications.");
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
@@ -2440,6 +2487,8 @@ void flip_crypt_nfc_scene_on_enter(void* context) {
         create_nfc_tag(context, load_result_generic(APP_DATA_PATH("blake2.txt")));
     } else if (strcmp(app->last_output_scene, "FNV1A") == 0) {
         create_nfc_tag(context, load_result_generic(APP_DATA_PATH("fnv1a.txt")));
+    } else if (strcmp(app->last_output_scene, "MD2") == 0) {
+        create_nfc_tag(context, load_result_generic(APP_DATA_PATH("md2.txt")));
     } else if (strcmp(app->last_output_scene, "MD5") == 0) {
         create_nfc_tag(context, load_result_generic(APP_DATA_PATH("md5.txt")));
     } else if (strcmp(app->last_output_scene, "Murmur3") == 0) {
@@ -2552,6 +2601,8 @@ void flip_crypt_qr_scene_on_enter(void* context) {
         qrcodegen_encodeText(load_result_generic(APP_DATA_PATH("blake2.txt")), app->qr_buffer, app->qrcode, qrcodegen_Ecc_LOW, qrcodegen_VERSION_MIN, 5, qrcodegen_Mask_AUTO, true);
     } else if (strcmp(app->last_output_scene, "FNV1A") == 0) {
         qrcodegen_encodeText(load_result_generic(APP_DATA_PATH("fnv1a.txt")), app->qr_buffer, app->qrcode, qrcodegen_Ecc_LOW, qrcodegen_VERSION_MIN, 5, qrcodegen_Mask_AUTO, true);
+    } else if (strcmp(app->last_output_scene, "MD2") == 0) {
+        qrcodegen_encodeText(load_result_generic(APP_DATA_PATH("md2.txt")), app->qr_buffer, app->qrcode, qrcodegen_Ecc_LOW, qrcodegen_VERSION_MIN, 5, qrcodegen_Mask_AUTO, true);
     } else if (strcmp(app->last_output_scene, "MD5") == 0) {
         qrcodegen_encodeText(load_result_generic(APP_DATA_PATH("md5.txt")), app->qr_buffer, app->qrcode, qrcodegen_Ecc_LOW, qrcodegen_VERSION_MIN, 5, qrcodegen_Mask_AUTO, true);
     } else if (strcmp(app->last_output_scene, "Murmur3") == 0) {
@@ -2668,6 +2719,8 @@ void flip_crypt_save_scene_on_enter(void* context) {
         save_result(load_result_generic(APP_DATA_PATH("blake2.txt")), app->save_name_input);
     } else if (strcmp(app->last_output_scene, "FNV1A") == 0) {
         save_result(load_result_generic(APP_DATA_PATH("fnv1a.txt")), app->save_name_input);
+    } else if (strcmp(app->last_output_scene, "MD2") == 0) {
+        save_result(load_result_generic(APP_DATA_PATH("md2.txt")), app->save_name_input);
     } else if (strcmp(app->last_output_scene, "MD5") == 0) {
         save_result(load_result_generic(APP_DATA_PATH("md5.txt")), app->save_name_input);
     } else if (strcmp(app->last_output_scene, "Murmur3") == 0) {
@@ -2874,6 +2927,10 @@ void (*const flip_crypt_scene_on_enter_handlers[])(void*) = {
     cipher_input_scene_on_enter,   // FNV1AInput
     dialog_cipher_output_scene_on_enter,  // FNV1AOutput
     cipher_learn_scene_on_enter,   // FNV1ALearn
+    cipher_submenu_scene_on_enter, // MD2Submenu
+    cipher_input_scene_on_enter,   // MD2Input
+    dialog_cipher_output_scene_on_enter,  // MD2Output
+    cipher_learn_scene_on_enter,   // MD2Learn
     cipher_submenu_scene_on_enter, // MD5Submenu
     cipher_input_scene_on_enter,   // MD5Input
     dialog_cipher_output_scene_on_enter,  // MD5Output
@@ -3047,6 +3104,10 @@ bool (*const flip_crypt_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     flip_crypt_generic_event_handler, // FNV1AInput
     flip_crypt_generic_event_handler, // FNV1AOutput
     flip_crypt_generic_event_handler, // FNV1ALearn
+    flip_crypt_generic_event_handler, // MD2Submenu
+    flip_crypt_generic_event_handler, // MD2Input
+    flip_crypt_generic_event_handler, // MD2Output
+    flip_crypt_generic_event_handler, // MD2Learn
     flip_crypt_generic_event_handler, // MD5Submenu
     flip_crypt_generic_event_handler, // MD5Input
     flip_crypt_generic_event_handler, // MD5Output
@@ -3220,6 +3281,10 @@ void (*const flip_crypt_scene_on_exit_handlers[])(void*) = {
     flip_crypt_generic_on_exit, // FNV1AInput
     flip_crypt_generic_on_exit, // FNV1AOutput
     flip_crypt_generic_on_exit, // FNV1ALearn
+    flip_crypt_generic_on_exit, // MD2Submenu
+    flip_crypt_generic_on_exit, // MD2Input
+    flip_crypt_generic_on_exit, // MD2Output
+    flip_crypt_generic_on_exit, // MD2Learn
     flip_crypt_generic_on_exit, // MD5Submenu
     flip_crypt_generic_on_exit, // MD5Input
     flip_crypt_generic_on_exit, // MD5Output
@@ -3341,6 +3406,7 @@ static App* app_alloc() {
     app->vigenere_decrypt_input_size = 64;
     app->blake2_input_size = 64;
     app->fnv1a_input_size = 64;
+    app->md2_input_size = 64;
     app->md5_input_size = 64;
     app->murmur3_input_size = 64;
     app->sip_input_size = 64;
@@ -3397,6 +3463,7 @@ static App* app_alloc() {
     app->vigenere_decrypt_input = malloc(app->vigenere_decrypt_input_size);
     app->blake2_input = malloc(app->blake2_input_size);
     app->fnv1a_input = malloc(app->fnv1a_input_size);
+    app->md2_input = malloc(app->md2_input_size);
     app->md5_input = malloc(app->md5_input_size);
     app->murmur3_input = malloc(app->murmur3_input_size);
     app->sip_input = malloc(app->sip_input_size);
@@ -3492,6 +3559,7 @@ static void app_free(App* app) {
     free(app->vigenere_decrypt_input);
     free(app->blake2_input);
     free(app->fnv1a_input);
+    free(app->md2_input);
     free(app->md5_input);
     free(app->murmur3_input);
     free(app->sip_input);
