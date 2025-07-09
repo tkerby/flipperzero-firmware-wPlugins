@@ -1,6 +1,23 @@
 #include <furi.h>
+#include <applications/services/gui/scene_manager.h>
+#include "scene/scene.h"
 
-int32_t cuberzeroMain(const void* const pointer) {
-	UNUSED(pointer);
+static bool callbackEmptyEvent(void* const context, const SceneManagerEvent event) {
+	UNUSED(context);
+	UNUSED(event);
+	return false;
+}
+
+static void callbackEmptyExit(void* const context) {
+	UNUSED(context);
+}
+
+int32_t cuberzeroMain(const void* const unused) {
+	UNUSED(unused);
+	const AppSceneOnEnterCallback handlerEnter[] = {SceneHomeEnter};
+	const AppSceneOnEventCallback handlerEvent[] = {callbackEmptyEvent};
+	const AppSceneOnExitCallback handlerExit[] = {callbackEmptyExit};
+	const SceneManagerHandlers handlers = {handlerEnter, handlerEvent, handlerExit, COUNT_SCENE};
+	scene_manager_alloc(&handlers, 0);
 	return 0;
 }
