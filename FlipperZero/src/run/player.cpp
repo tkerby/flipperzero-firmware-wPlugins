@@ -320,18 +320,22 @@ void Player::drawJoinLobbyView(Draw *canvas)
         }
         else
         {
-            char *response = (char *)malloc(512);
+            if (loading)
+            {
+                loading->stop();
+            }
+            loadingStarted = false;
             FlipWorldApp *app = static_cast<FlipWorldApp *>(flipWorldRun->appContext);
+            if (app->getHttpState() == ISSUE)
+            {
+                joinLobbyStatus = JoinLobbyRequestError;
+                return;
+            }
+            char *response = (char *)malloc(512);
             if (app && app->loadChar("join_lobby", response, 512))
             {
                 // no need to check response this time, just join the game if a response is received
                 joinLobbyStatus = JoinLobbySuccess;
-
-                if (loading)
-                {
-                    loading->stop();
-                }
-                loadingStarted = false;
                 currentMainView = GameViewGame;         // switch to game view
                 userRequest(RequestTypeStartWebsocket); // Start websocket connection for real-time updates
                 flipWorldRun->setPvEMode(true);         // we're in pve mode now!
@@ -407,8 +411,18 @@ void Player::drawLobbiesView(Draw *canvas)
         }
         else
         {
-            char *response = (char *)malloc(512);
+            if (loading)
+            {
+                loading->stop();
+            }
+            loadingStarted = false;
             FlipWorldApp *app = static_cast<FlipWorldApp *>(flipWorldRun->appContext);
+            if (app->getHttpState() == ISSUE)
+            {
+                lobbiesStatus = LobbiesRequestError;
+                return;
+            }
+            char *response = (char *)malloc(512);
             if (app && app->loadChar("lobbies", response, 512))
             {
                 lobbiesStatus = LobbiesSuccess;
@@ -611,8 +625,13 @@ void Player::drawLoginView(Draw *canvas)
                 loading->stop();
             }
             loadingStarted = false;
-            char response[256];
             FlipWorldApp *app = static_cast<FlipWorldApp *>(flipWorldRun->appContext);
+            if (app->getHttpState() == ISSUE)
+            {
+                loginStatus = LoginRequestError;
+                return;
+            }
+            char response[256];
             if (app && app->loadChar("login", response, sizeof(response)))
             {
                 if (strstr(response, "[SUCCESS]") != NULL)
@@ -719,8 +738,13 @@ void Player::drawRegistrationView(Draw *canvas)
                 loading->stop();
             }
             loadingStarted = false;
-            char response[256];
             FlipWorldApp *app = static_cast<FlipWorldApp *>(flipWorldRun->appContext);
+            if (app->getHttpState() == ISSUE)
+            {
+                registrationStatus = RegistrationRequestError;
+                return;
+            }
+            char response[256];
             if (app && app->loadChar("register", response, sizeof(response)))
             {
                 if (strstr(response, "[SUCCESS]") != NULL)
@@ -922,8 +946,18 @@ void Player::drawUserInfoView(Draw *canvas)
             canvas->text(Vector(0, 10), "Loading user info...", ColorBlack);
             canvas->text(Vector(0, 20), "Please wait...", ColorBlack);
             canvas->text(Vector(0, 30), "It may take up to 15 seconds.", ColorBlack);
-            char response[512];
             FlipWorldApp *app = static_cast<FlipWorldApp *>(flipWorldRun->appContext);
+            if (app->getHttpState() == ISSUE)
+            {
+                userInfoStatus = UserInfoRequestError;
+                if (loading)
+                {
+                    loading->stop();
+                }
+                loadingStarted = false;
+                return;
+            }
+            char response[512];
             if (app && app->loadChar("user_info", response, sizeof(response)))
             {
                 userInfoStatus = UserInfoSuccess;
@@ -1094,8 +1128,9 @@ bool Player::httpRequestIsFinished()
         return true; // Default to finished if no app context
     }
 
-    // Check if HTTP request is finished (state is IDLE)
-    return app->getHttpState() == IDLE;
+    // Check if HTTP request is finished
+    auto state = app->getHttpState();
+    return state == IDLE || state == ISSUE || state == INACTIVE;
 }
 
 HTTPState Player::getHttpState()
