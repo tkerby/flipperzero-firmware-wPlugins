@@ -169,6 +169,7 @@ void FlipWorldRun::endGame()
     if (engine)
     {
         engine->stop();
+        engine.reset();
     }
 
     if (draw)
@@ -2033,11 +2034,13 @@ void FlipWorldRun::updateDraw(Canvas *canvas)
     // Let the player handle all drawing
     if (player)
     {
-        player->drawCurrentView(draw.get());
-
         if (player->shouldLeaveGame())
         {
             this->endGame(); // End the game if the player wants to leave
+        }
+        else
+        {
+            player->drawCurrentView(draw.get());
         }
     }
 }
