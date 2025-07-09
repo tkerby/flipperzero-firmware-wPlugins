@@ -185,13 +185,6 @@ void Player::drawCurrentView(Draw *canvas)
         {
             if (flipWorldRun->getEngine())
             {
-                if (shouldLeaveGame())
-                {
-                    userRequest(RequestTypeStopWebsocket); // Stop websocket connection
-                    flipWorldRun->endGame();
-                    return;
-                }
-
                 // Handle system menu input first, before the game engine processes input
                 InputKey currentInput = flipWorldRun->getCurrentInput();
                 if (currentInput == InputKeyBack && systemMenuDebounceTimer <= 0.0f)
@@ -271,8 +264,11 @@ void Player::drawCurrentView(Draw *canvas)
                 if (currentSystemMenuIndex == MenuIndexLeaveGame)
                 {
                     // Handle Leave Game option
-                    userRequest(RequestTypeStopWebsocket); // Stop websocket connection
-                    flipWorldRun->endGame();
+                    if (currentTitleIndex == TitleIndexPvE)
+                    {
+                        userRequest(RequestTypeStopWebsocket); // Stop websocket connection
+                    }
+                    leaveGame = ToggleOn;
                     return;
                 }
                 systemMenuDebounceTimer = 0.3f; // 300ms debounce
@@ -1228,7 +1224,7 @@ void Player::processInput()
             loginStatus = LoginWaiting;
             break;
         case InputKeyBack:
-            flipWorldRun->endGame();
+            leaveGame = ToggleOn;
             flipWorldRun->shouldDebounce = true;
             break;
         default:

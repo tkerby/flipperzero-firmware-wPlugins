@@ -130,17 +130,8 @@ void FlipWorldRun::endGame()
         draw.reset();
     }
 
-    // Clean up multiplayer resources if in PvE mode
-    if (isPvEMode)
-    {
-        // Let the Player class handle websocket cleanup
-        if (player)
-        {
-            player->userRequest(RequestTypeStopWebsocket);
-        }
-        isPvEMode = false;
-        isLobbyHost = false;
-    }
+    isPvEMode = false;
+    isLobbyHost = false;
 }
 
 bool FlipWorldRun::entityJsonUpdate(Entity *entity)
