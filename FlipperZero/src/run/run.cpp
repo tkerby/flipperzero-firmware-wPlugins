@@ -1256,9 +1256,8 @@ void FlipWorldRun::processCompleteMultiplayerMessage(const char *message)
         if (levelIndex)
         {
             int newLevelIndex = atoi(levelIndex);
-            if (newLevelIndex >= 0 && newLevelIndex < 3) // Valid level indices
+            if (newLevelIndex >= 0 && newLevelIndex < 3 && getCurrentLevelIndex() != newLevelIndex) // Valid level indices
             {
-                // Switch to the new level
                 if (engine && engine->getGame())
                 {
                     engine->getGame()->level_switch(newLevelIndex);
