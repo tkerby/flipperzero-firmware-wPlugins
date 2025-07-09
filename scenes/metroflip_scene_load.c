@@ -99,11 +99,12 @@ void metroflip_scene_load_on_enter(void* context) {
 
             } else {
                 const char* card_str = furi_string_get_cstr(card_type_str);
-                if(strcmp(card_str, "suica") == 0) {
+                FURI_LOG_I(TAG, "Card Type: %s", card_str);
+                if(strcmp(card_str, "Japan IC") == 0) {
                     app->card_type = "suica";
                     app->is_desfire = false;
                     app->data_loaded = true;
-                    FURI_LOG_I(TAG, "Detected: Suica");
+                    FURI_LOG_I(TAG, "Detected: Suica / Japan IC");
                     load_suica_data(app, format);
                 } else if(strcmp(card_str, "calypso") == 0) {
                     app->card_type = "calypso";
@@ -111,6 +112,7 @@ void metroflip_scene_load_on_enter(void* context) {
                     app->data_loaded = true;
                     FURI_LOG_I(TAG, "Detected: Calypso");
                 }
+                FURI_LOG_E(TAG, "Card Type Unrecognized: %s", card_str);
             }
 
             // Set file path

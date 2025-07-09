@@ -16,4 +16,5 @@ typedef enum {
 typedef struct {
     View* view_history;
     FuriTimer* timer;
+    FuriString* suica_file_data;
 } SuicaContext;

@@ -36,10 +36,10 @@ void load_suica_data(void* context, FlipperFormat* format) {
     SuicaHistoryViewModel* model = view_get_model(app->suica_context->view_history);
 
     uint8_t* byte_array_buffer = (uint8_t*)malloc(FELICA_DATA_BLOCK_SIZE);
-            FuriString* entry_preamble = furi_string_alloc();
+    FuriString* entry_preamble = furi_string_alloc();
     // Read the travel history entries
     for(uint8_t i = 0; i < SUICA_MAX_HISTORY_ENTRIES; i++) {
-        furi_string_printf(entry_preamble, "Travel %02X", i);
+        furi_string_printf(entry_preamble, "Log %02X", i);
         // For every line in the flipper format file
         // We read the entire line's hex and store it in the byte_array_buffer
         if(!flipper_format_read_hex(
@@ -47,11 +47,15 @@ void load_suica_data(void* context, FlipperFormat* format) {
                furi_string_get_cstr(entry_preamble),
                byte_array_buffer,
                FELICA_DATA_BLOCK_SIZE))
+        {
+            FURI_LOG_E("Suica Load", "Failed to read entry %d", i);
             break;
+        }
         uint8_t block_data[16] = {0};
         for(size_t j = 0; j < FELICA_DATA_BLOCK_SIZE; j++) {
             block_data[j] = byte_array_buffer[j];
         }
+        FURI_LOG_E("Suica Load", "Works as of here, entry %d", i);
         suica_add_entry(model, block_data);
     }
     furi_string_free(entry_preamble);
