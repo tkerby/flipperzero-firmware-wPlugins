@@ -18,11 +18,19 @@ struct ChunkedMessage
     uint32_t lastUpdateTime;
 };
 
+// Structure to hold queued websocket messages
+struct QueuedMessage
+{
+    char *message;
+    size_t messageLen;
+};
+
 class FlipWorldRun
 {
 private:
-    static const size_t MAX_CHUNKED_MESSAGES = 5;         // Maximum concurrent chunked messages
-                                                          //
+    static const size_t MAX_CHUNKED_MESSAGES = 3; // Maximum concurrent chunked messages
+    static const size_t MAX_QUEUED_MESSAGES = 50; // Maximum queued websocket messages (I saw 44 in my testing)
+    //
     size_t chunkedMessageCount = 0;                       // Current number of chunked messages being processed
     ChunkedMessage chunkedMessages[MAX_CHUNKED_MESSAGES]; // Array to hold chunked messages
     std::unique_ptr<Draw> draw;                           // Draw instance
@@ -33,19 +41,27 @@ private:
     bool isPvEMode = false;                               // Flag to determine if we're in PvE (multiplayer) mode
     InputKey lastInput = InputKeyMAX;                     // Last input key pressed
     uint32_t lastSyncTime = 0;                            // Last time we sent a multiplayer sync message
+    uint32_t lastWebsocketSendTime = 0;                   // Last time any websocket message was sent (for 100ms throttling)
+    QueuedMessage messageQueue[MAX_QUEUED_MESSAGES];      // Queue for websocket messages
     std::unique_ptr<Player> player;                       // Player instance
+    size_t queueHead = 0;                                 // Head of the message queue
+    size_t queueTail = 0;                                 // Tail of the message queue
+    size_t queueSize = 0;                                 // Current size of the message queue
     bool shouldReturnToMenu = false;                      // Flag to signal return to menu
     uint32_t syncInterval = 1000;                         // Sync interval in milliseconds (1 time per second)
     //
     int atoi(const char *nptr) { return (int)strtol(nptr, NULL, 10); }    // convert string to integer
+    void cleanupExpiredChunkedMessages();                                 // Clean up expired chunked messages
     void debounceInput();                                                 // debounce input to prevent multiple actions from a single press
+    bool handleChunkedMessage(const char *message);                       // Handle chunked message assembly
+    void handleIncomingMultiplayerData(const char *message);              // Handle incoming websocket messages (PvE mode only)
     void inputManager();                                                  // manage input for the game, called from updateInput
+    void processCompleteMultiplayerMessage(const char *message);          // Process a complete multiplayer message (after chunk assembly)
+    void processWebsocketQueue(FlipWorldApp *app);                        // Process queued websocket messages with 100ms throttling
+    bool queueWebsocketMessage(const char *message);                      // Queue a websocket message for sending
+    bool safeWebsocketSend(FlipWorldApp *app, const char *message);       // Send websocket message with 100ms throttling
     void sendMessageWithChunking(FlipWorldApp *app, const char *message); // Send websocket message with chunking support for large messages
     void syncMultiplayerState();                                          // Send multiplayer state updates (PvE mode only)
-    void handleIncomingMultiplayerData(const char *message);              // Handle incoming websocket messages (PvE mode only)
-    void processCompleteMultiplayerMessage(const char *message);          // Process a complete multiplayer message (after chunk assembly)
-    bool handleChunkedMessage(const char *message);                       // Handle chunked message assembly
-    void cleanupExpiredChunkedMessages();                                 // Clean up expired chunked messages
 public:
     FlipWorldRun();
     ~FlipWorldRun();
@@ -70,7 +86,9 @@ public:
     bool isHost() const { return isLobbyHost; }                                    // Check if this player is the lobby host
     bool isInPvEMode() const { return isPvEMode; }                                 // Check if in PvE mode
     bool isRunning() const { return isGameRunning; }                               // Check if the game engine is running
+    bool parseEntityDataFromJson(Entity *entity, const char *jsonData);            // Parse entity data directly from JSON string
     void processMultiplayerUpdate();                                               // Process multiplayer updates each frame (PvE mode only)
+    void processWebsocketMessageQueue();                                           // Process the websocket message queue (call this regularly)
     bool removeRemotePlayer(const char *username);                                 // Remove a remote player from the current level (PvE mode only)
     void resetInput() { lastInput = InputKeyMAX; }                                 // Reset input after processing
     bool setAppContext(void *context);                                             // Set the application context for accessing app-specific functionality
@@ -83,5 +101,4 @@ public:
     bool startGame();                                                              // start the actual game
     void updateDraw(Canvas *canvas);                                               // update and draw the run
     void updateInput(InputEvent *event);                                           // update input for the run
-    bool parseEntityDataFromJson(Entity *entity, const char *jsonData);            // Parse entity data directly from JSON string
 };
