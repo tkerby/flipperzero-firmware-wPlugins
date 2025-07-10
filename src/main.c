@@ -38,6 +38,8 @@ int32_t cuberzeroMain(const void* const unused) {
 		goto functionExit;
 	}
 
+	memset(instance, 0, sizeof(CUBERZERO));
+
 	if(!(instance->view.submenu = submenu_alloc())) {
 		message = "submenu_alloc() failed";
 		goto freeInstance;
