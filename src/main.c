@@ -14,11 +14,28 @@ static void callbackEmptyExit(void* const context) {
 int32_t cuberzeroMain(const void* const unused) {
 	UNUSED(unused);
 	CUBERZERO_INFO("Initializing");
-	const AppSceneOnEnterCallback handlerEnter[] = {SceneHomeEnter};
+	char* message = 0;
+	PCUBERZERO instance = malloc(sizeof(CUBERZERO));
+
+	if(!instance) {
+		message = "malloc() failed";
+		goto functionExit;
+	}
+
+	/*const AppSceneOnEnterCallback handlerEnter[] = {SceneHomeEnter};
 	const AppSceneOnEventCallback handlerEvent[] = {callbackEmptyEvent};
 	const AppSceneOnExitCallback handlerExit[] = {callbackEmptyExit};
 	const SceneManagerHandlers handlers = {handlerEnter, handlerEvent, handlerExit, COUNT_SCENE};
-	scene_manager_alloc(&handlers, 0);
+	scene_manager_alloc(&handlers, 0);*/
+	free(instance);
+functionExit:
 	CUBERZERO_INFO("Exiting");
-	return 0;
+
+	if(!message) {
+		return 0;
+	}
+
+	CUBERZERO_ERROR("Error: %s", message);
+	__furi_crash(message);
+	return 1;
 }

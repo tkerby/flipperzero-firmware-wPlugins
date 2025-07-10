@@ -7,7 +7,8 @@
 #define CUBERZERO_TAG	  "CuberZero"
 #define CUBERZERO_VERSION "0.0.1"
 
-#define CUBERZERO_INFO(text, ...) furi_log_print_format(FuriLogLevelInfo, CUBERZERO_TAG, text, ##__VA_ARGS__)
+#define CUBERZERO_INFO(text, ...)  furi_log_print_format(FuriLogLevelInfo, CUBERZERO_TAG, text, ##__VA_ARGS__)
+#define CUBERZERO_ERROR(text, ...) furi_log_print_format(FuriLogLevelError, CUBERZERO_TAG, text, ##__VA_ARGS__)
 
 typedef struct {
 	SceneManager* manager;
