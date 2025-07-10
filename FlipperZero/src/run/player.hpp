@@ -96,28 +96,29 @@ public:
 
     char player_name[64] = {0};
     //
-    void drawCurrentView(Draw *canvas);
-    GameState getCurrentGameState() const noexcept { return gameState; }
-    GameMainView getCurrentMainView() const { return currentMainView; }
-    TitleIndex getCurrentTitleIndex() const noexcept { return currentTitleIndex; }
-    HTTPState getHttpState();
-    IconGroupContext *getIconGroupContext() const; // get the current icon group context from FlipWorldRun
-    bool httpRequestIsFinished();
-    void iconGroupRender(Game *game);
-    void processInput();
-    void render(Draw *canvas, Game *game) override;
-    void setFlipWorldRun(FlipWorldRun *run) { flipWorldRun = run; }
-    void setGameState(GameState state) { gameState = state; }
-    bool setHttpState(HTTPState state);
-    void setInputKey(InputKey key) { lastInput = key; }
-    bool shouldLeaveGame() const noexcept { return leaveGame == ToggleOn; }
-    void update(Game *game) override;
-    void userRequest(RequestType requestType);
+    void drawCurrentView(Draw *canvas);                                            // Draw the current view based on the game state
+    GameState getCurrentGameState() const noexcept { return gameState; }           // Get the current game state
+    GameMainView getCurrentMainView() const { return currentMainView; }            // Get the current main view of the game
+    TitleIndex getCurrentTitleIndex() const noexcept { return currentTitleIndex; } // Get the current title index
+    HTTPState getHttpState();                                                      // Get the current HTTP state
+    IconGroupContext *getIconGroupContext() const;                                 // get the current icon group context from FlipWorldRun
+    bool httpRequestIsFinished();                                                  // Check if the HTTP request is finished
+    void iconGroupRender(Game *game);                                              // Render the icon group for the current level
+    void processInput();                                                           // Process input for all of the views
+    void render(Draw *canvas, Game *game) override;                                // render callback for the player
+    void setFlipWorldRun(FlipWorldRun *run) { flipWorldRun = run; }                // Set the FlipWorldRun instance
+    void setGameState(GameState state) { gameState = state; }                      // Set the current game state
+    bool setHttpState(HTTPState state);                                            // Set the HTTP state
+    void setInputKey(InputKey key) { lastInput = key; }                            // Set the last input key pressed
+    bool shouldLeaveGame() const noexcept { return leaveGame == ToggleOn; }        // Check if the player wants to leave the game
+    void update(Game *game) override;                                              // update callback for the player
+    void userRequest(RequestType requestType);                                     // Send a user request to the server based on the request type
 
 private:
     TitleIndex currentTitleIndex = TitleIndexStory;                 // current title index (must be in the GameViewTitle)
-    MenuIndex currentSystemMenuIndex = MenuIndexProfile;            // current menu index (must be in the GameViewSystemMenu)
+    int currentLobbyIndex = 0;                                      // Current selected lobby index
     GameMainView currentMainView = GameViewTitle;                   // current main view of the game
+    MenuIndex currentSystemMenuIndex = MenuIndexProfile;            // current menu index (must be in the GameViewSystemMenu)
     FlipWorldRun *flipWorldRun = nullptr;                           // Reference to the main run instance
     GameState gameState = GameStatePlaying;                         // current game state
     bool hasBeenPositioned = false;                                 // Track if player has been positioned to prevent repeated resets
@@ -129,17 +130,14 @@ private:
     InputKey lastInput = InputKeyMAX;                               // Last input key pressed
     ToggleState leaveGame = ToggleOff;                              // leave game toggle state
     std::unique_ptr<Loading> loading;                               // loading animation instance
+    LobbyInfo lobbies[4];                                           // Array to store lobby information (max 4 lobbies)
     LobbiesStatus lobbiesStatus = LobbiesNotStarted;                // Current lobbies status
+    int lobbyCount = 0;                                             // Number of lobbies loaded
     LoginStatus loginStatus = LoginNotStarted;                      // Current login status
     uint8_t rainFrame = 0;                                          // frame counter for rain effect
     RegistrationStatus registrationStatus = RegistrationNotStarted; // Current registration status
-    UserInfoStatus userInfoStatus = UserInfoNotStarted;             // Current user info status
     float systemMenuDebounceTimer = 0.0f;                           // debounce timer for system menu input
-
-    // Lobby-related variables
-    LobbyInfo lobbies[4];      // Array to store lobby information (max 4 lobbies)
-    int currentLobbyIndex = 0; // Current selected lobby index
-    int lobbyCount = 0;        // Number of lobbies loaded
+    UserInfoStatus userInfoStatus = UserInfoNotStarted;             // Current user info status
 
     bool areAllEnemiesDead(Game *game);           // Check if all enemies in the current level are dead
     void checkForLevelCompletion(Game *game);     // Check if all enemies are dead and switch to next level

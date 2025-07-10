@@ -331,6 +331,7 @@ void Player::drawJoinLobbyView(Draw *canvas)
             if (app && app->loadChar("join_lobby", response, 512))
             {
                 // no need to check response this time, just join the game if a response is received
+                // no issues in testing, but if needed, it does return [SUCCESS] in the message if successful
                 joinLobbyStatus = JoinLobbySuccess;
                 currentMainView = GameViewGame;         // switch to game view
                 userRequest(RequestTypeStartWebsocket); // Start websocket connection for real-time updates
@@ -1123,25 +1124,6 @@ void Player::drawUserStats(Vector pos, Draw *canvas)
     canvas->text(Vector(pos.x, pos.y + 14), level_str, ColorBlack);
 }
 
-bool Player::httpRequestIsFinished()
-{
-    if (!flipWorldRun)
-    {
-        return true; // Default to finished if no game context
-    }
-
-    // Get app context to check HTTP state
-    FlipWorldApp *app = static_cast<FlipWorldApp *>(flipWorldRun->appContext);
-    if (!app)
-    {
-        return true; // Default to finished if no app context
-    }
-
-    // Check if HTTP request is finished
-    auto state = app->getHttpState();
-    return state == IDLE || state == ISSUE || state == INACTIVE;
-}
-
 HTTPState Player::getHttpState()
 {
     if (!flipWorldRun)
@@ -1166,6 +1148,25 @@ IconGroupContext *Player::getIconGroupContext() const
         return nullptr;
     }
     return flipWorldRun->currentIconGroup;
+}
+
+bool Player::httpRequestIsFinished()
+{
+    if (!flipWorldRun)
+    {
+        return true; // Default to finished if no game context
+    }
+
+    // Get app context to check HTTP state
+    FlipWorldApp *app = static_cast<FlipWorldApp *>(flipWorldRun->appContext);
+    if (!app)
+    {
+        return true; // Default to finished if no app context
+    }
+
+    // Check if HTTP request is finished
+    auto state = app->getHttpState();
+    return state == IDLE || state == ISSUE || state == INACTIVE;
 }
 
 void Player::iconGroupRender(Game *game)
