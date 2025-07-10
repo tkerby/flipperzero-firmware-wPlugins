@@ -601,7 +601,29 @@ static void suica_draw_vending_machine_page_2(
     canvas_draw_line(canvas, 62, 12, 59, 9);
 
     // Vending Machine
-    canvas_draw_icon(canvas, 4, 12, &I_Suica_VendingMachine);
+    switch(model->animator_tick % 6) {
+    case 0:
+        canvas_draw_icon(canvas, 4, 12, &I_Suica_VendingMachine1);
+        break;
+    case 1:
+        canvas_draw_icon(canvas, 4, 12, &I_Suica_VendingMachine2);
+        break;
+    case 2:
+        canvas_draw_icon(canvas, 4, 12, &I_Suica_VendingMachine3);
+        break;
+    case 3:
+        canvas_draw_icon(canvas, 4, 12, &I_Suica_VendingMachine4);
+        break;
+    case 4:
+        canvas_draw_icon(canvas, 4, 12, &I_Suica_VendingMachine5);
+        break;
+    case 5:
+        canvas_draw_icon(canvas, 4, 12, &I_Suica_VendingMachine6);
+        break;
+    default:
+        canvas_draw_icon(canvas, 4, 12, &I_Suica_VendingMachine1);
+        break;
+    }
 
     // Machine Code
     canvas_set_font(canvas, FontPrimary);

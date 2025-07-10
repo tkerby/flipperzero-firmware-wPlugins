@@ -36,7 +36,7 @@ void metroflip_scene_save_result_on_enter(void* context) {
         FlipperFormat* ff = flipper_format_file_alloc(storage);
         success = flipper_format_file_open_new(ff, path);
         success &= flipper_format_write_header_cstr(ff, "Flipper Metroflip File", 1);
-        success &= flipper_format_write_string_cstr(ff, "Device type", "Felica");
+        success &= flipper_format_write_string_cstr(ff, "Device Type", "Felica");
         success &= flipper_format_write_string_cstr(ff, "Card Type", "Japan IC");
         success &= flipper_format_write_string(ff, "Travel Logs:", app->suica_file_data);
         flipper_format_file_close(ff);

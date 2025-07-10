@@ -33,7 +33,7 @@ void metroflip_scene_load_on_enter(void* context) {
 
         do {
             if(!flipper_format_file_open_existing(format, furi_string_get_cstr(file_path))) break;
-            if(!flipper_format_read_string(format, "Device type", device_type)) break;
+            if(!flipper_format_read_string(format, "Device Type", device_type)) break;
 
             const char* protocol_name = furi_string_get_cstr(device_type);
 
