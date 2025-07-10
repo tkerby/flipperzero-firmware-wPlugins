@@ -91,20 +91,25 @@ bool FlipWorldRun::addRemotePlayer(const char *username)
     }
 
     // Add new remote player entity
-    // Create a basic remote player entity
     Entity *remotePlayer = new Entity(
-        username,                  // name
-        ENTITY_PLAYER,             // type
-        Vector(384, 192),          // position
-        Vector(15, 11),            // size
-        player_left_sword_15x11px, // sprite_data
-        player_left_sword_15x11px, // sprite_left_data
-        player_right_sword_15x11px // sprite_right_data
+        username,                   // name
+        ENTITY_PLAYER,              // type
+        Vector(384, 192),           // position
+        Vector(15, 11),             // size
+        player_left_sword_15x11px,  // sprite_data
+        player_left_sword_15x11px,  // sprite_left_data
+        player_right_sword_15x11px, // sprite_right_data
+        nullptr,                    // start
+        nullptr,                    // stop
+        nullptr,                    // update
+        pveRender,                  // render callback for PvE mode
+        nullptr,                    // collision callback
+        SPRITE_3D_NONE              // no 3D sprite for remote players
     );
 
     if (remotePlayer)
     {
-        // Set some default stats for remote players
+        // Set some default stats for now (should be updated later)
         remotePlayer->health = 100.0f;
         remotePlayer->max_health = 100.0f;
         remotePlayer->strength = 10.0f;
@@ -121,13 +126,15 @@ bool FlipWorldRun::addRemotePlayer(const char *username)
 void FlipWorldRun::cleanupExpiredChunkedMessages()
 {
     uint32_t currentTime = furi_get_tick();
-    const uint32_t CHUNK_TIMEOUT = 10000; // 10 seconds timeout
+    const uint32_t CHUNK_TIMEOUT = 3000;
 
     for (size_t i = 0; i < MAX_CHUNKED_MESSAGES; i++)
     {
         if (chunkedMessages[i].data &&
             (currentTime - chunkedMessages[i].lastUpdateTime) > CHUNK_TIMEOUT)
         {
+            FURI_LOG_W("FlipWorldRun", "Cleaning up expired chunked message ID %d (%zu bytes)",
+                       chunkedMessages[i].id, chunkedMessages[i].dataCapacity);
             free(chunkedMessages[i].data);
             chunkedMessages[i].data = nullptr;
             chunkedMessages[i].id = 0;
@@ -136,6 +143,41 @@ void FlipWorldRun::cleanupExpiredChunkedMessages()
             chunkedMessages[i].dataSize = 0;
             chunkedMessages[i].dataCapacity = 0;
             chunkedMessages[i].lastUpdateTime = 0;
+            if (chunkedMessageCount > 0)
+            {
+                chunkedMessageCount--;
+            }
+        }
+    }
+
+    // Clean up - if we have more than 50% full, clean up the oldest ones
+    if (chunkedMessageCount > MAX_CHUNKED_MESSAGES * 0.5)
+    {
+        FURI_LOG_W("FlipWorldRun", "Too many concurrent chunked messages (%zu), cleaning oldest", chunkedMessageCount);
+        uint32_t oldestTime = currentTime;
+        size_t oldestIndex = SIZE_MAX;
+
+        for (size_t i = 0; i < MAX_CHUNKED_MESSAGES; i++)
+        {
+            if (chunkedMessages[i].data && chunkedMessages[i].lastUpdateTime < oldestTime)
+            {
+                oldestTime = chunkedMessages[i].lastUpdateTime;
+                oldestIndex = i;
+            }
+        }
+
+        if (oldestIndex != SIZE_MAX)
+        {
+            FURI_LOG_W("FlipWorldRun", "Force cleaning oldest chunked message ID %d",
+                       chunkedMessages[oldestIndex].id);
+            free(chunkedMessages[oldestIndex].data);
+            chunkedMessages[oldestIndex].data = nullptr;
+            chunkedMessages[oldestIndex].id = 0;
+            chunkedMessages[oldestIndex].totalChunks = 0;
+            chunkedMessages[oldestIndex].receivedChunks = 0;
+            chunkedMessages[oldestIndex].dataSize = 0;
+            chunkedMessages[oldestIndex].dataCapacity = 0;
+            chunkedMessages[oldestIndex].lastUpdateTime = 0;
             if (chunkedMessageCount > 0)
             {
                 chunkedMessageCount--;
@@ -688,6 +730,28 @@ LevelIndex FlipWorldRun::getCurrentLevelIndex() const
     return LevelUnknown;
 }
 
+IconSpec FlipWorldRun::getIconSpec(const char *name) const
+{
+    if (strcmp(name, "house") == 0)
+        return (IconSpec){.id = ICON_ID_HOUSE, .icon = icon_house_48x32px, .pos = Vector(0, 0), .size = (Vector){48, 32}};
+    if (strcmp(name, "plant") == 0)
+        return (IconSpec){.id = ICON_ID_PLANT, .icon = icon_plant_16x16, .pos = Vector(0, 0), .size = (Vector){16, 16}};
+    if (strcmp(name, "tree") == 0)
+        return (IconSpec){.id = ICON_ID_TREE, .icon = icon_tree_16x16, .pos = Vector(0, 0), .size = (Vector){16, 16}};
+    if (strcmp(name, "fence") == 0)
+        return (IconSpec){.id = ICON_ID_FENCE, .icon = icon_fence_16x8px, .pos = Vector(0, 0), .size = (Vector){16, 8}};
+    if (strcmp(name, "flower") == 0)
+        return (IconSpec){.id = ICON_ID_FLOWER, .icon = icon_flower_16x16, .pos = Vector(0, 0), .size = (Vector){16, 16}};
+    if (strcmp(name, "rock_large") == 0)
+        return (IconSpec){.id = ICON_ID_ROCK_LARGE, .icon = icon_rock_large_18x19px, .pos = Vector(0, 0), .size = (Vector){18, 19}};
+    if (strcmp(name, "rock_medium") == 0)
+        return (IconSpec){.id = ICON_ID_ROCK_MEDIUM, .icon = icon_rock_medium_16x14px, .pos = Vector(0, 0), .size = (Vector){16, 14}};
+    if (strcmp(name, "rock_small") == 0)
+        return (IconSpec){.id = ICON_ID_ROCK_SMALL, .icon = icon_rock_small_10x8px, .pos = Vector(0, 0), .size = (Vector){10, 8}};
+
+    return (IconSpec){.id = ICON_ID_INVALID, .icon = NULL, .pos = Vector(0, 0), .size = (Vector){0, 0}};
+}
+
 const char *FlipWorldRun::getLevelJson(LevelIndex index) const
 {
     switch (index)
@@ -822,56 +886,177 @@ const char *FlipWorldRun::getLevelName(LevelIndex index) const
     }
 }
 
-IconSpec FlipWorldRun::getIconSpec(const char *name) const
+size_t FlipWorldRun::getMemoryUsage() const
 {
-    if (strcmp(name, "house") == 0)
-        return (IconSpec){.id = ICON_ID_HOUSE, .icon = icon_house_48x32px, .pos = Vector(0, 0), .size = (Vector){48, 32}};
-    if (strcmp(name, "plant") == 0)
-        return (IconSpec){.id = ICON_ID_PLANT, .icon = icon_plant_16x16, .pos = Vector(0, 0), .size = (Vector){16, 16}};
-    if (strcmp(name, "tree") == 0)
-        return (IconSpec){.id = ICON_ID_TREE, .icon = icon_tree_16x16, .pos = Vector(0, 0), .size = (Vector){16, 16}};
-    if (strcmp(name, "fence") == 0)
-        return (IconSpec){.id = ICON_ID_FENCE, .icon = icon_fence_16x8px, .pos = Vector(0, 0), .size = (Vector){16, 8}};
-    if (strcmp(name, "flower") == 0)
-        return (IconSpec){.id = ICON_ID_FLOWER, .icon = icon_flower_16x16, .pos = Vector(0, 0), .size = (Vector){16, 16}};
-    if (strcmp(name, "rock_large") == 0)
-        return (IconSpec){.id = ICON_ID_ROCK_LARGE, .icon = icon_rock_large_18x19px, .pos = Vector(0, 0), .size = (Vector){18, 19}};
-    if (strcmp(name, "rock_medium") == 0)
-        return (IconSpec){.id = ICON_ID_ROCK_MEDIUM, .icon = icon_rock_medium_16x14px, .pos = Vector(0, 0), .size = (Vector){16, 14}};
-    if (strcmp(name, "rock_small") == 0)
-        return (IconSpec){.id = ICON_ID_ROCK_SMALL, .icon = icon_rock_small_10x8px, .pos = Vector(0, 0), .size = (Vector){10, 8}};
+    size_t totalMemory = 0;
 
-    return (IconSpec){.id = ICON_ID_INVALID, .icon = NULL, .pos = Vector(0, 0), .size = (Vector){0, 0}};
+    // Count chunked message memory
+    for (size_t i = 0; i < MAX_CHUNKED_MESSAGES; i++)
+    {
+        if (chunkedMessages[i].data)
+        {
+            totalMemory += chunkedMessages[i].dataCapacity;
+        }
+    }
+
+    // Count queued message memory
+    for (size_t i = 0; i < MAX_QUEUED_MESSAGES; i++)
+    {
+        if (messageQueue[i].message)
+        {
+            totalMemory += messageQueue[i].messageLen + 1; // +1 for null terminator
+        }
+    }
+
+    // Count icon group memory if allocated
+    if (currentIconGroup && currentIconGroup->icons)
+    {
+        totalMemory += currentIconGroup->count * sizeof(IconSpec);
+    }
+
+    return totalMemory;
 }
 
 bool FlipWorldRun::handleChunkedMessage(const char *message)
 {
-    // Check if this is a chunked message by looking for chunk metadata
-    char *idStr = get_json_value("id", message);
-    if (!idStr)
+    if (!message || strlen(message) == 0)
+    {
+        return false;
+    }
+
+    // Look for "id": pattern
+    const char *idPos = strstr(message, "\"id\":");
+    if (!idPos)
     {
         return false; // Not a chunked message
     }
 
-    char *seqStr = get_json_value("seq", message);
-    char *totalStr = get_json_value("total", message);
-    char *dataStr = get_json_value("data", message);
+    // Extract id value (skip "id": and any whitespace)
+    idPos += 5; // skip "id":
+    while (*idPos == ' ' || *idPos == '\t')
+        idPos++; // skip whitespace
 
-    if (!seqStr || !totalStr || !dataStr)
+    int messageId = 0;
+    if (sscanf(idPos, "%d", &messageId) != 1)
     {
-        FURI_LOG_E("FlipWorldRun", "Invalid chunked message format");
-        free(idStr);
-        if (seqStr)
-            free(seqStr);
-        if (totalStr)
-            free(totalStr);
-        if (dataStr)
-            free(dataStr);
-        return true; // Consumed but invalid
+        FURI_LOG_E("FlipWorldRun", "Failed to parse id value");
+        return true;
     }
 
-    uint16_t messageId = (uint16_t)atoi(idStr);
-    uint16_t totalChunks = (uint16_t)atoi(totalStr);
+    // Look for "seq": pattern
+    const char *seqPos = strstr(message, "\"seq\":");
+    if (!seqPos)
+    {
+        FURI_LOG_E("FlipWorldRun", "No seq field found");
+        return true;
+    }
+
+    seqPos += 6; // skip "seq":
+    while (*seqPos == ' ' || *seqPos == '\t')
+        seqPos++; // skip whitespace
+
+    int seqVal = 0;
+    if (sscanf(seqPos, "%d", &seqVal) != 1)
+    {
+        FURI_LOG_E("FlipWorldRun", "Failed to parse seq value");
+        return true;
+    }
+
+    // Look for "total": pattern
+    const char *totalPos = strstr(message, "\"total\":");
+    if (!totalPos)
+    {
+        FURI_LOG_E("FlipWorldRun", "No total field found");
+        return true;
+    }
+
+    totalPos += 8; // skip "total":
+    while (*totalPos == ' ' || *totalPos == '\t')
+        totalPos++; // skip whitespace
+
+    int totalChunks = 0;
+    if (sscanf(totalPos, "%d", &totalChunks) != 1)
+    {
+        FURI_LOG_E("FlipWorldRun", "Failed to parse total value");
+        return true;
+    }
+
+    // Look for "data": pattern and extract the string value
+    const char *dataPos = strstr(message, "\"data\":");
+    if (!dataPos)
+    {
+        FURI_LOG_E("FlipWorldRun", "No data field found");
+        return true;
+    }
+
+    dataPos += 7; // skip "data":
+    while (*dataPos == ' ' || *dataPos == '\t')
+        dataPos++; // skip whitespace
+
+    if (*dataPos != '"')
+    {
+        FURI_LOG_E("FlipWorldRun", "Data field is not a string");
+        return true;
+    }
+
+    dataPos++; // skip opening quote
+
+    // The data field contains unescaped JSON, so we need to find the end carefully
+    // Look for the last quote in the message, which should be the closing quote of the data field
+    const char *messageEnd = message + strlen(message);
+    const char *dataEnd = messageEnd - 1; // start from the end
+
+    // Move backwards to find the last quote, skipping the final }
+    while (dataEnd > dataPos && *dataEnd != '"')
+    {
+        dataEnd--;
+    }
+
+    if (dataEnd <= dataPos || *dataEnd != '"')
+    {
+        FURI_LOG_E("FlipWorldRun", "Could not find end quote for data field");
+        return true;
+    }
+
+    size_t dataLen = dataEnd - dataPos;
+    char *dataStr = (char *)malloc(dataLen + 1);
+    if (!dataStr)
+    {
+        FURI_LOG_E("FlipWorldRun", "Failed to allocate memory for data string");
+        return true;
+    }
+
+    memcpy(dataStr, dataPos, dataLen);
+    dataStr[dataLen] = '\0';
+
+    FURI_LOG_I("FlipWorldRun", "Extracted chunk: id=%d, seq=%d, total=%d, data_len=%zu",
+               messageId, seqVal, totalChunks, dataLen);
+    FURI_LOG_I("FlipWorldRun", "Chunk data: %.100s%s", dataStr, dataLen > 100 ? "..." : "");
+
+    // if we're already using too much memory, reject new chunked messages
+    size_t currentMemoryUsage = getMemoryUsage();
+    size_t freeHeap = memmgr_get_free_heap();
+    const size_t MEMORY_PRESSURE_THRESHOLD = 12288;
+    const size_t CRITICAL_HEAP_THRESHOLD = 8192;
+
+    if (currentMemoryUsage > MEMORY_PRESSURE_THRESHOLD || freeHeap < CRITICAL_HEAP_THRESHOLD)
+    {
+        FURI_LOG_E("FlipWorldRun", "Memory pressure (used: %zu bytes, free heap: %zu bytes), rejecting chunked message",
+                   currentMemoryUsage, freeHeap);
+        free(dataStr);
+        return true; // Consumed but rejected
+    }
+
+    // Validate chunk parameters
+    const uint16_t MAX_REASONABLE_CHUNKS = 6;
+    const size_t MAX_CHUNK_DATA_SIZE = 50;
+
+    if (totalChunks == 0 || totalChunks > MAX_REASONABLE_CHUNKS)
+    {
+        FURI_LOG_E("FlipWorldRun", "Invalid totalChunks: %d (max: %d)", totalChunks, MAX_REASONABLE_CHUNKS);
+        free(dataStr);
+        return true;
+    }
 
     // Clean up expired messages first
     cleanupExpiredChunkedMessages();
@@ -890,6 +1075,27 @@ bool FlipWorldRun::handleChunkedMessage(const char *message)
     // If not found, create new one
     if (!chunkedMsg)
     {
+        // Check total memory usage before creating new chunked message
+        size_t totalMemoryUsed = 0;
+        for (size_t j = 0; j < MAX_CHUNKED_MESSAGES; j++)
+        {
+            if (chunkedMessages[j].data)
+            {
+                totalMemoryUsed += chunkedMessages[j].dataCapacity;
+            }
+        }
+
+        const size_t MAX_TOTAL_CHUNK_MEMORY = 6144;
+        size_t estimatedNewSize = totalChunks * MAX_CHUNK_DATA_SIZE;
+
+        if (totalMemoryUsed + estimatedNewSize > MAX_TOTAL_CHUNK_MEMORY)
+        {
+            FURI_LOG_E("FlipWorldRun", "Would exceed total chunk memory limit (%zu + %zu > %zu)",
+                       totalMemoryUsed, estimatedNewSize, MAX_TOTAL_CHUNK_MEMORY);
+            free(dataStr);
+            return true;
+        }
+
         for (size_t i = 0; i < MAX_CHUNKED_MESSAGES; i++)
         {
             if (!chunkedMessages[i].data)
@@ -899,14 +1105,11 @@ bool FlipWorldRun::handleChunkedMessage(const char *message)
                 chunkedMsg->totalChunks = totalChunks;
                 chunkedMsg->receivedChunks = 0;
                 chunkedMsg->dataSize = 0;
-                chunkedMsg->dataCapacity = totalChunks * 128; // Estimate capacity
+                chunkedMsg->dataCapacity = (totalChunks * MAX_CHUNK_DATA_SIZE < 512) ? 512 : totalChunks * MAX_CHUNK_DATA_SIZE;
                 chunkedMsg->data = (char *)malloc(chunkedMsg->dataCapacity);
                 if (!chunkedMsg->data)
                 {
                     FURI_LOG_E("FlipWorldRun", "Failed to allocate chunked message buffer");
-                    free(idStr);
-                    free(seqStr);
-                    free(totalStr);
                     free(dataStr);
                     return true;
                 }
@@ -920,9 +1123,6 @@ bool FlipWorldRun::handleChunkedMessage(const char *message)
     if (!chunkedMsg)
     {
         FURI_LOG_E("FlipWorldRun", "No available slots for chunked message");
-        free(idStr);
-        free(seqStr);
-        free(totalStr);
         free(dataStr);
         return true;
     }
@@ -931,18 +1131,50 @@ bool FlipWorldRun::handleChunkedMessage(const char *message)
     chunkedMsg->lastUpdateTime = furi_get_tick();
 
     // Append data to the chunked message
-    size_t dataLen = strlen(dataStr);
+    if (dataLen > 120)
+    {
+        FURI_LOG_E("FlipWorldRun", "Chunk data too large: %zu bytes (max: 120)", dataLen);
+        free(dataStr);
+        return true;
+    }
+
+    // ensure we have enough heap memory for the operation
+    size_t chunkProcessHeap = memmgr_get_free_heap();
+    if (chunkProcessHeap < 8192) // Need at least 8KB free heap for safe chunk processing
+    {
+        FURI_LOG_E("FlipWorldRun", "Insufficient heap memory for chunk processing: %zu bytes free", chunkProcessHeap);
+        free(dataStr);
+        return true;
+    }
+
+    // Check if buffer expansion is needed
     if (chunkedMsg->dataSize + dataLen >= chunkedMsg->dataCapacity)
     {
-        // Expand buffer if needed
-        size_t newCapacity = chunkedMsg->dataCapacity * 2;
+        const size_t MAX_MESSAGE_SIZE = 2048;
+        size_t newCapacity = chunkedMsg->dataCapacity + 512;
+
+        // Cap the maximum size to prevent runaway growth
+        if (newCapacity > MAX_MESSAGE_SIZE)
+        {
+            FURI_LOG_E("FlipWorldRun", "Message too large, would exceed %zu bytes", MAX_MESSAGE_SIZE);
+            free(dataStr);
+            return true;
+        }
+
+        // Additional safety check before realloc
+        size_t reallocHeap = memmgr_get_free_heap();
+        if (reallocHeap < newCapacity + 4096) // Need buffer capacity + 4KB safety margin
+        {
+            FURI_LOG_E("FlipWorldRun", "Insufficient heap for buffer expansion: need %zu, have %zu",
+                       newCapacity + 4096, reallocHeap);
+            free(dataStr);
+            return true;
+        }
+
         char *newData = (char *)realloc(chunkedMsg->data, newCapacity);
         if (!newData)
         {
-            FURI_LOG_E("FlipWorldRun", "Failed to expand chunked message buffer");
-            free(idStr);
-            free(seqStr);
-            free(totalStr);
+            FURI_LOG_E("FlipWorldRun", "Failed to expand chunked message buffer to %zu bytes", newCapacity);
             free(dataStr);
             return true;
         }
@@ -950,17 +1182,61 @@ bool FlipWorldRun::handleChunkedMessage(const char *message)
         chunkedMsg->dataCapacity = newCapacity;
     }
 
-    // Append the chunk data
+    // Additional bounds checking before memcpy
+    if (chunkedMsg->dataSize + dataLen >= chunkedMsg->dataCapacity)
+    {
+        FURI_LOG_E("FlipWorldRun", "Buffer overflow prevention: dataSize %zu + dataLen %zu >= capacity %zu",
+                   chunkedMsg->dataSize, dataLen, chunkedMsg->dataCapacity);
+        free(dataStr);
+        return true;
+    }
+
+    // Append the chunk data safely
     memcpy(chunkedMsg->data + chunkedMsg->dataSize, dataStr, dataLen);
     chunkedMsg->dataSize += dataLen;
-    chunkedMsg->data[chunkedMsg->dataSize] = '\0'; // Null terminate
+
+    // Ensure we don't write past buffer end
+    if (chunkedMsg->dataSize < chunkedMsg->dataCapacity)
+    {
+        chunkedMsg->data[chunkedMsg->dataSize] = '\0'; // Null terminate
+    }
+    else
+    {
+        FURI_LOG_E("FlipWorldRun", "Cannot null-terminate: dataSize %zu >= capacity %zu",
+                   chunkedMsg->dataSize, chunkedMsg->dataCapacity);
+        free(dataStr);
+        return true;
+    }
+
     chunkedMsg->receivedChunks++;
+
+    // Free the dataStr since we've copied it to the chunked message buffer
+    free(dataStr);
 
     // Check if we have all chunks
     if (chunkedMsg->receivedChunks >= chunkedMsg->totalChunks)
     {
-        // Process the complete message
-        processCompleteMultiplayerMessage(chunkedMsg->data);
+        // Validate the complete message before processing
+        if (chunkedMsg->data && chunkedMsg->dataSize > 0)
+        {
+            // Ensure null termination
+            chunkedMsg->data[chunkedMsg->dataSize] = '\0';
+
+            // Basic JSON validation - must start with { and end with }
+            if (chunkedMsg->data[0] == '{' && chunkedMsg->data[chunkedMsg->dataSize - 1] == '}')
+            {
+                // Check memory before processing to prevent crashes
+                size_t freeHeap = memmgr_get_free_heap();
+                if (freeHeap > 8192) // Only process if we have at least 8KB free heap
+                {
+                    processCompleteMultiplayerMessage(chunkedMsg->data);
+                }
+                else
+                {
+                    FURI_LOG_W("FlipWorldRun", "Skipping chunked message processing due to low memory: %zu bytes free", freeHeap);
+                }
+            }
+        }
 
         // Clean up this chunked message
         free(chunkedMsg->data);
@@ -977,10 +1253,6 @@ bool FlipWorldRun::handleChunkedMessage(const char *message)
         }
     }
 
-    free(idStr);
-    free(seqStr);
-    free(totalStr);
-    free(dataStr);
     return true;
 }
 
@@ -1045,6 +1317,21 @@ bool FlipWorldRun::parseEntityDataFromJson(Entity *entity, const char *jsonData)
 {
     if (!entity || !jsonData || strlen(jsonData) == 0)
     {
+        return false;
+    }
+
+    // Basic JSON validation first
+    if (jsonData[0] != '{' || jsonData[strlen(jsonData) - 1] != '}')
+    {
+        FURI_LOG_E("FlipWorldRun", "Invalid JSON format for entity data");
+        return false;
+    }
+
+    // Memory safety check before parsing
+    size_t freeHeap = memmgr_get_free_heap();
+    if (freeHeap < 4096) // Need at least 4KB free for JSON parsing
+    {
+        FURI_LOG_W("FlipWorldRun", "Skipping entity JSON parsing due to low memory: %zu bytes free", freeHeap);
         return false;
     }
 
@@ -1162,13 +1449,28 @@ void FlipWorldRun::processCompleteMultiplayerMessage(const char *message)
         return;
     }
 
+    // ensure message looks like valid JSON
+    if (!message || strlen(message) < 10 || message[0] != '{' || message[strlen(message) - 1] != '}')
+    {
+        FURI_LOG_E("FlipWorldRun", "Invalid message format: not proper JSON structure");
+        return;
+    }
+
+    // ensure this is not a chunked message fragment
+    if (strstr(message, "\"seq\"") != NULL && strstr(message, "\"total\"") != NULL && strstr(message, "\"data\"") != NULL)
+    {
+        FURI_LOG_E("FlipWorldRun", "Attempted to process chunked message fragment as complete message");
+        return;
+    }
+
     auto currentLevel = engine->getGame()->current_level;
 
     // Parse message type (we already validated it exists in processMultiplayerUpdate)
     char *messageType = get_json_value("type", message);
     if (!messageType)
     {
-        FURI_LOG_E("FlipWorldRun", "Unexpected: no 'type' field in validated message");
+        FURI_LOG_E("FlipWorldRun", "No 'type' field in message - may be malformed JSON");
+        FURI_LOG_E("FlipWorldRun", "Message content: %.200s%s", message, strlen(message) > 200 ? "..." : "");
         return;
     }
 
@@ -1182,6 +1484,14 @@ void FlipWorldRun::processCompleteMultiplayerMessage(const char *message)
             char *username = get_json_value("u", playerData);
             if (username)
             {
+                if (strcmp(username, player->name) == 0) // don't update self
+                {
+                    FURI_LOG_W("FlipWorldRun", "Skipping self update for player: %s", username);
+                    free(username);
+                    free(playerData);
+                    return;
+                }
+
                 Entity *playerEntity = nullptr;
                 for (int i = 0; i < currentLevel->getEntityCount(); i++)
                 {
@@ -1282,39 +1592,246 @@ void FlipWorldRun::processMultiplayerUpdate()
         return;
     }
 
-    // Clean up expired chunked messages periodically
     static uint32_t lastCleanupTime = 0;
+    static uint32_t lastMemoryMaintenance = 0;
     uint32_t currentTime = furi_get_tick();
-    if (currentTime - lastCleanupTime > 5000) // Clean up every 5 seconds
+
+    // cleanup every 500ms
+    if (currentTime - lastCleanupTime > 500)
     {
         cleanupExpiredChunkedMessages();
         lastCleanupTime = currentTime;
+
+        // Log memory usage periodically for debugging
+        size_t memUsage = getMemoryUsage();
+        size_t availableHeap = memmgr_get_free_heap();
+
+        // detailed memory tracking
+        static uint32_t lastMemoryLog = 0;
+        if (memUsage > 10240 && (currentTime - lastMemoryLog > 2000)) // Log at most every 2 seconds
+        {
+            FURI_LOG_W("FlipWorldRun", "High memory usage: %zu bytes (chunks: %zu, queue: %zu), free heap: %zu",
+                       memUsage, chunkedMessageCount, queueSize, availableHeap);
+            lastMemoryLog = currentTime;
+        }
+
+        // Force garbage collection if available heap is getting dangerously low
+        if (availableHeap < 8192) // If less than 8KB free heap remaining
+        {
+            FURI_LOG_W("FlipWorldRun", "Critical memory situation: only %zu bytes free heap", availableHeap);
+
+            // Emergency cleanup
+            // Clear ALL chunked messages immediately
+            for (size_t i = 0; i < MAX_CHUNKED_MESSAGES; i++)
+            {
+                if (chunkedMessages[i].data)
+                {
+                    FURI_LOG_W("FlipWorldRun", "Emergency clearing chunked message ID %d (%zu bytes)",
+                               chunkedMessages[i].id, chunkedMessages[i].dataCapacity);
+                    free(chunkedMessages[i].data);
+                    chunkedMessages[i].data = nullptr;
+                    chunkedMessages[i].id = 0;
+                    chunkedMessages[i].totalChunks = 0;
+                    chunkedMessages[i].receivedChunks = 0;
+                    chunkedMessages[i].dataSize = 0;
+                    chunkedMessages[i].dataCapacity = 0;
+                    chunkedMessages[i].lastUpdateTime = 0;
+                }
+            }
+            chunkedMessageCount = 0;
+
+            // Clear most of the message queue, keep only the most recent 5 messages
+            while (queueSize > 5)
+            {
+                QueuedMessage *oldMsg = &messageQueue[queueHead];
+                if (oldMsg->message)
+                {
+                    free(oldMsg->message);
+                    oldMsg->message = nullptr;
+                    oldMsg->messageLen = 0;
+                }
+                queueHead = (queueHead + 1) % MAX_QUEUED_MESSAGES;
+                queueSize--;
+            }
+
+            FURI_LOG_I("FlipWorldRun", "Emergency cleanup complete, free heap now: %zu", memmgr_get_free_heap());
+        }
+        else if (memUsage > 12288) // If using more than 12KB, force aggressive cleanup
+        {
+            FURI_LOG_W("FlipWorldRun", "Emergency memory cleanup triggered at %zu bytes", memUsage);
+
+            // Force cleanup of all but the most recent chunked messages
+            for (size_t i = 0; i < MAX_CHUNKED_MESSAGES; i++)
+            {
+                if (chunkedMessages[i].data && chunkedMessageCount > 2) // Keep only 2 most recent
+                {
+                    // Find oldest message to clean
+                    uint32_t oldestTime = currentTime;
+                    size_t oldestIndex = SIZE_MAX;
+
+                    for (size_t j = 0; j < MAX_CHUNKED_MESSAGES; j++)
+                    {
+                        if (chunkedMessages[j].data && chunkedMessages[j].lastUpdateTime < oldestTime)
+                        {
+                            oldestTime = chunkedMessages[j].lastUpdateTime;
+                            oldestIndex = j;
+                        }
+                    }
+
+                    if (oldestIndex != SIZE_MAX)
+                    {
+                        FURI_LOG_W("FlipWorldRun", "Emergency cleanup of chunked message ID %d",
+                                   chunkedMessages[oldestIndex].id);
+                        free(chunkedMessages[oldestIndex].data);
+                        chunkedMessages[oldestIndex].data = nullptr;
+                        chunkedMessages[oldestIndex].id = 0;
+                        chunkedMessages[oldestIndex].totalChunks = 0;
+                        chunkedMessages[oldestIndex].receivedChunks = 0;
+                        chunkedMessages[oldestIndex].dataSize = 0;
+                        chunkedMessages[oldestIndex].dataCapacity = 0;
+                        chunkedMessages[oldestIndex].lastUpdateTime = 0;
+                        if (chunkedMessageCount > 0)
+                        {
+                            chunkedMessageCount--;
+                        }
+                    }
+                }
+            }
+
+            // trim the queue if it's large
+            while (queueSize > MAX_QUEUED_MESSAGES * 0.7)
+            {
+                QueuedMessage *oldMsg = &messageQueue[queueHead];
+                if (oldMsg->message)
+                {
+                    free(oldMsg->message);
+                    oldMsg->message = nullptr;
+                    oldMsg->messageLen = 0;
+                }
+                queueHead = (queueHead + 1) % MAX_QUEUED_MESSAGES;
+                queueSize--;
+            }
+        }
+    }
+
+    //  periodic memory maintenance every 2 seconds
+    if (currentTime - lastMemoryMaintenance > 2000)
+    {
+        lastMemoryMaintenance = currentTime;
+        size_t freeHeap = memmgr_get_free_heap();
+
+        // If free heap is getting low, clean it up gang
+        if (freeHeap < 15360)
+        {
+            FURI_LOG_W("FlipWorldRun", "Preventive memory cleanup: free heap %zu bytes", freeHeap);
+
+            // Trim queue if it's getting large
+            while (queueSize > MAX_QUEUED_MESSAGES * 0.5) // Keep queue at 50% max
+            {
+                QueuedMessage *oldMsg = &messageQueue[queueHead];
+                if (oldMsg->message)
+                {
+                    free(oldMsg->message);
+                    oldMsg->message = nullptr;
+                    oldMsg->messageLen = 0;
+                }
+                queueHead = (queueHead + 1) % MAX_QUEUED_MESSAGES;
+                queueSize--;
+            }
+
+            // Force cleanup of any chunked messages older than 2 seconds
+            for (size_t i = 0; i < MAX_CHUNKED_MESSAGES; i++)
+            {
+                if (chunkedMessages[i].data &&
+                    (currentTime - chunkedMessages[i].lastUpdateTime) > 2000)
+                {
+                    FURI_LOG_W("FlipWorldRun", "Preventive cleanup of chunked message ID %d", chunkedMessages[i].id);
+                    free(chunkedMessages[i].data);
+                    chunkedMessages[i].data = nullptr;
+                    chunkedMessages[i].id = 0;
+                    chunkedMessages[i].totalChunks = 0;
+                    chunkedMessages[i].receivedChunks = 0;
+                    chunkedMessages[i].dataSize = 0;
+                    chunkedMessages[i].dataCapacity = 0;
+                    chunkedMessages[i].lastUpdateTime = 0;
+                    if (chunkedMessageCount > 0)
+                    {
+                        chunkedMessageCount--;
+                    }
+                }
+            }
+        }
     }
 
     // Send our state to other players
-    syncMultiplayerState();
+    static uint32_t lastSyncAttempt = 0;
+    size_t currentMemUsage = getMemoryUsage();
+    size_t freeHeap = memmgr_get_free_heap();
 
-    // Check for incoming messages
+    // Adaptive sync frequency based on memory situation
+    uint32_t adaptiveSyncInterval = syncInterval;
+    if (freeHeap < 12288) // If less than 12KB free heap
+    {
+        adaptiveSyncInterval = syncInterval * 4; //  reduce sync frequency
+    }
+    else if (currentMemUsage > 12288 || queueSize > MAX_QUEUED_MESSAGES * 0.6) // If high memory usage or large queue
+    {
+        adaptiveSyncInterval = syncInterval * 2; // Double the sync interval
+    }
+
+    if (currentTime - lastSyncAttempt >= adaptiveSyncInterval)
+    {
+        syncMultiplayerState();
+        lastSyncAttempt = currentTime;
+    }
+
+    // Check for incoming messages (with reduced frequency under memory pressure)
     FlipWorldApp *app = static_cast<FlipWorldApp *>(appContext);
     if (app)
     {
         const char *incomingMessage = app->getLastResponse();
         if (incomingMessage && strlen(incomingMessage) > 0)
         {
-            // Only process messages that look like websocket messages (have "type" field or chunk metadata)
-            // Check if this is a websocket message by looking for "type" field or chunk metadata
-            char *messageType = get_json_value("type", incomingMessage);
-            char *chunkId = get_json_value("id", incomingMessage);
+            // Skip processing if we're under severe memory pressure
+            size_t freeHeap = memmgr_get_free_heap();
+            if (freeHeap < 6144)
+            {
+                FURI_LOG_W("FlipWorldRun", "Skipping message processing due to low memory: %zu bytes free", freeHeap);
+                app->clearLastResponse(); // Still clear to prevent buildup
+                return;
+            }
 
-            if (messageType || chunkId)
+            // Only process messages that look like websocket messages (have "type" field or chunk metadata)
+            bool isWebsocketMessage = false;
+
+            //  check for proper JSON structure
+            if (incomingMessage[0] == '{' && incomingMessage[strlen(incomingMessage) - 1] == '}')
+            {
+                // Check for chunked message first (has id, seq, total at top level)
+                if (strstr(incomingMessage, "\"id\"") != NULL &&
+                    strstr(incomingMessage, "\"seq\"") != NULL &&
+                    strstr(incomingMessage, "\"total\"") != NULL)
+                {
+                    isWebsocketMessage = true;
+                }
+                // Check for complete message with top-level "type" field
+                // Look for "type" near the beginning to avoid matching "type" in nested data
+                else if (strstr(incomingMessage, "\"type\"") != NULL)
+                {
+                    // ensure "type" appears early in the message (within first 50 chars)
+                    // to avoid matching "type" that appears in chunked data payload
+                    const char *typePos = strstr(incomingMessage, "\"type\"");
+                    if (typePos && (typePos - incomingMessage) < 50)
+                    {
+                        isWebsocketMessage = true;
+                    }
+                }
+            }
+
+            if (isWebsocketMessage)
             {
                 handleIncomingMultiplayerData(incomingMessage);
             }
-
-            if (messageType)
-                free(messageType);
-            if (chunkId)
-                free(chunkId);
 
             app->clearLastResponse(); // Clear after processing
         }
@@ -1330,10 +1847,21 @@ void FlipWorldRun::processWebsocketQueue(FlipWorldApp *app)
 
     uint32_t currentTime = furi_get_tick();
 
+    // throttling based on memory pressure
+    size_t memUsage = getMemoryUsage();
+    uint32_t throttleDelay = 300; // Base delay of 300ms
+
+    if (memUsage > 12288) // If using more than 12KB
+    {
+        throttleDelay = 500; // Slow down to 500ms when memory pressure detected
+    }
+    if (queueSize > 35) // If queue is very large
+    {
+        throttleDelay = 400; // Moderate slowdown for large queue
+    }
+
     // Check if enough time has passed since last send
-    // we could try faster but in my testing 100ms was enough to let the server
-    // receive everything without some chunks being dropped
-    if (lastWebsocketSendTime != 0 && (currentTime - lastWebsocketSendTime < 100))
+    if (lastWebsocketSendTime != 0 && (currentTime - lastWebsocketSendTime < throttleDelay))
     {
         return; // Not enough time has passed
     }
@@ -1379,6 +1907,30 @@ void FlipWorldRun::processWebsocketMessageQueue()
     }
 }
 
+void FlipWorldRun::pveRender(Entity *entity, Draw *canvas, Game *game)
+{
+    // Calculate screen position after applying camera offset
+    float screen_x = entity->position.x - game->pos.x;
+    float screen_y = entity->position.y - game->pos.y;
+
+    // Check if the username would be visible on the 128x64 screen
+    float text_width = strlen(entity->name) * 4 + 1; // Approximate text width
+    if (screen_x - text_width / 2 < 0 || screen_x + text_width / 2 > 128 ||
+        screen_y - 10 < 0 || screen_y > 64)
+    {
+        return;
+    }
+
+    FURI_LOG_I("FlipWorldRun", "Rendering PvE name: %s at (%f, %f)",
+               entity->name, (double)screen_x, (double)screen_y);
+
+    // draw box around the name
+    canvas->fillRect(Vector(screen_x - (strlen(entity->name) * 2) - 1, screen_y - 7), Vector(strlen(entity->name) * 4 + 1, 8), ColorWhite);
+
+    // draw name over player's head
+    canvas->text(Vector(screen_x - (strlen(entity->name) * 2), screen_y - 2), entity->name, ColorBlack);
+}
+
 bool FlipWorldRun::queueWebsocketMessage(const char *message)
 {
     if (!message)
@@ -1386,15 +1938,48 @@ bool FlipWorldRun::queueWebsocketMessage(const char *message)
         return false;
     }
 
+    // If queue is getting very full, drop oldest messages to make room
+    if (queueSize >= MAX_QUEUED_MESSAGES * 0.85)
+    {
+        // Drop messages until we're back to 70% to prevent oscillation
+        while (queueSize > MAX_QUEUED_MESSAGES * 0.7)
+        {
+            FURI_LOG_W("FlipWorldRun", "Queue very full (%zu/%zu), dropping oldest message to prevent overflow",
+                       queueSize, MAX_QUEUED_MESSAGES);
+
+            // Drop the oldest message
+            QueuedMessage *oldMsg = &messageQueue[queueHead];
+            if (oldMsg->message)
+            {
+                free(oldMsg->message);
+                oldMsg->message = nullptr;
+                oldMsg->messageLen = 0;
+            }
+            queueHead = (queueHead + 1) % MAX_QUEUED_MESSAGES;
+            queueSize--;
+        }
+    }
+
     if (queueSize >= MAX_QUEUED_MESSAGES)
     {
-        FURI_LOG_E("FlipWorldRun", "Message queue full (%zu/%zu), dropping message to prevent memory leak: %.50s...",
+        FURI_LOG_W("FlipWorldRun", "Message queue full (%zu/%zu), dropping message to prevent memory leak: %.50s...",
                    queueSize, MAX_QUEUED_MESSAGES, message);
         return false;
     }
 
-    // Allocate and copy the message
+    // Check total memory usage before allocating
+    size_t currentMemoryUsage = getMemoryUsage();
     size_t messageLen = strlen(message);
+    const size_t MAX_TOTAL_MEMORY = 12288;
+
+    if (currentMemoryUsage + messageLen + 1 > MAX_TOTAL_MEMORY)
+    {
+        FURI_LOG_E("FlipWorldRun", "Would exceed total memory limit (%zu + %zu > %zu), dropping message",
+                   currentMemoryUsage, messageLen + 1, MAX_TOTAL_MEMORY);
+        return false;
+    }
+
+    // Allocate and copy the message
     char *messageCopy = (char *)malloc(messageLen + 1);
     if (!messageCopy)
     {
@@ -1409,10 +1994,10 @@ bool FlipWorldRun::queueWebsocketMessage(const char *message)
     queueTail = (queueTail + 1) % MAX_QUEUED_MESSAGES;
     queueSize++;
 
-    // Log error if queue is getting large
-    if (queueSize > MAX_QUEUED_MESSAGES * 0.8)
+    // Log warning if queue is getting large
+    if (queueSize > MAX_QUEUED_MESSAGES * 0.6 && queueSize % 5 == 0) // Warn at 60% and only every 5th message
     {
-        FURI_LOG_E("FlipWorldRun", "Queue getting large (%zu/%zu), potential memory pressure",
+        FURI_LOG_W("FlipWorldRun", "Queue getting large (%zu/%zu), potential memory pressure",
                    queueSize, MAX_QUEUED_MESSAGES);
     }
 
@@ -1507,10 +2092,10 @@ void FlipWorldRun::sendMessageWithChunking(FlipWorldApp *app, const char *messag
         size_t start;
         size_t length;
     };
-    ChunkBoundary boundaries[10]; // Support up to 10 chunks
+    ChunkBoundary boundaries[6];
     size_t boundaryCount = 0;
 
-    while (messagePos < messageLen && boundaryCount < 10)
+    while (messagePos < messageLen && boundaryCount < 6)
     {
         size_t chunkStart = messagePos;
         size_t maxChunkSize = (messageLen - messagePos > MAX_DATA_SIZE) ? MAX_DATA_SIZE : (messageLen - messagePos);
@@ -1565,8 +2150,20 @@ void FlipWorldRun::sendMessageWithChunking(FlipWorldApp *app, const char *messag
     // First, check if we have enough queue space for all chunks
     if (queueSize + boundaryCount > MAX_QUEUED_MESSAGES)
     {
-        FURI_LOG_W("FlipWorldRun", "Not enough queue space for %zu chunks (need %zu, have %zu free), skipping entire message",
+        FURI_LOG_E("FlipWorldRun", "Not enough queue space for %zu chunks (need %zu, have %zu free), skipping entire message",
                    boundaryCount, boundaryCount, MAX_QUEUED_MESSAGES - queueSize);
+        return; // Skip this entire message to avoid partial sends
+    }
+
+    // Check if memory pressure would prevent queueing all chunks
+    size_t currentMemoryUsage = getMemoryUsage();
+    size_t estimatedChunkMemory = boundaryCount * 60;
+    const size_t MAX_TOTAL_MEMORY = 12288;
+
+    if (currentMemoryUsage + estimatedChunkMemory > MAX_TOTAL_MEMORY)
+    {
+        FURI_LOG_E("FlipWorldRun", "Would exceed memory limit with %zu chunks (%zu + %zu > %zu), skipping message",
+                   boundaryCount, currentMemoryUsage, estimatedChunkMemory, MAX_TOTAL_MEMORY);
         return; // Skip this entire message to avoid partial sends
     }
 
@@ -1597,8 +2194,6 @@ void FlipWorldRun::sendMessageWithChunking(FlipWorldApp *app, const char *messag
         chunk[pos++] = '}';
         chunk[pos] = '\0';
 
-        // Use safe websocket send with throttling and queueing
-        // Since we pre-checked queue space, this should always succeed
         if (!safeWebsocketSend(app, chunk))
         {
             FURI_LOG_E("FlipWorldRun", "Unexpected failure to send/queue chunk %zu", i + 1);
@@ -1787,7 +2382,7 @@ bool FlipWorldRun::startGame()
 
     if (isGameRunning || engine)
     {
-        FURI_LOG_E("FlipWorldRun", "Game already running, skipping start");
+        FURI_LOG_W("FlipWorldRun", "Game already running, skipping start");
         return true;
     }
 
@@ -1952,7 +2547,7 @@ void FlipWorldRun::syncMultiplayerState()
             }
         }
 
-        // Send current level info with throttling
+        // Send current level info
         char levelMessage[128];
         snprintf(levelMessage, sizeof(levelMessage),
                  "{\"type\":\"level\",\"level_index\":%d}",

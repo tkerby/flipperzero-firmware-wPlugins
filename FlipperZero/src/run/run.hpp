@@ -28,8 +28,8 @@ struct QueuedMessage
 class FlipWorldRun
 {
 private:
-    static const size_t MAX_CHUNKED_MESSAGES = 3; // Maximum concurrent chunked messages
-    static const size_t MAX_QUEUED_MESSAGES = 50; // Maximum queued websocket messages (I saw 44 in my testing)
+    static const size_t MAX_CHUNKED_MESSAGES = 6; // Maximum number of concurrent chunked messages
+    static const size_t MAX_QUEUED_MESSAGES = 35; // Maximum number of queued websocket messages
     //
     size_t chunkedMessageCount = 0;                       // Current number of chunked messages being processed
     ChunkedMessage chunkedMessages[MAX_CHUNKED_MESSAGES]; // Array to hold chunked messages
@@ -41,7 +41,7 @@ private:
     bool isPvEMode = false;                               // Flag to determine if we're in PvE (multiplayer) mode
     InputKey lastInput = InputKeyMAX;                     // Last input key pressed
     uint32_t lastSyncTime = 0;                            // Last time we sent a multiplayer sync message
-    uint32_t lastWebsocketSendTime = 0;                   // Last time any websocket message was sent (for 100ms throttling)
+    uint32_t lastWebsocketSendTime = 0;                   // Last time any websocket message was sent (for throttling)
     QueuedMessage messageQueue[MAX_QUEUED_MESSAGES];      // Queue for websocket messages
     std::unique_ptr<Player> player;                       // Player instance
     size_t queueHead = 0;                                 // Head of the message queue
@@ -62,6 +62,7 @@ private:
     bool safeWebsocketSend(FlipWorldApp *app, const char *message);       // Send websocket message with 100ms throttling
     void sendMessageWithChunking(FlipWorldApp *app, const char *message); // Send websocket message with chunking support for large messages
     void syncMultiplayerState();                                          // Send multiplayer state updates (PvE mode only)
+    static void pveRender(Entity *entity, Draw *canvas, Game *game);      // Callback for PvE entity
 public:
     FlipWorldRun();
     ~FlipWorldRun();
@@ -82,6 +83,7 @@ public:
     IconSpec getIconSpec(const char *name) const;                                  // Get the icon specification by name
     std::unique_ptr<Level> getLevel(LevelIndex index, Game *game = nullptr) const; // Get a level by index
     const char *getLevelName(LevelIndex index) const;                              // Get the name of a level by index
+    size_t getMemoryUsage() const;                                                 // Get current memory usage in bytes
     bool isActive() const { return shouldReturnToMenu == false; }                  // Check if the game is active
     bool isHost() const { return isLobbyHost; }                                    // Check if this player is the lobby host
     bool isInPvEMode() const { return isPvEMode; }                                 // Check if in PvE mode
