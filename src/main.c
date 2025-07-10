@@ -1,5 +1,4 @@
 #include "cuberzero.h"
-#include "scene/scene.h"
 
 static bool callbackEmptyEvent(void* const context, const SceneManagerEvent event) {
 	UNUSED(context);

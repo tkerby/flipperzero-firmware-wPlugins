@@ -24,7 +24,20 @@ typedef struct {
 } CUBERZERO, *PCUBERZERO;
 
 typedef enum {
-	VIEW_SUBMENU
+	VIEW_SUBMENU,
+	COUNT_VIEW
 } VIEW;
 
+typedef enum {
+	SCENE_HOME,
+	COUNT_SCENE
+} SCENE;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+void SceneHomeEnter(void* const context);
+#ifdef __cplusplus
+}
+#endif
 #endif

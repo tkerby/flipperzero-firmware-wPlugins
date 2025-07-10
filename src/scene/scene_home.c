@@ -1,5 +1,4 @@
 #include "src/cuberzero.h"
-#include "scene.h"
 
 void SceneHomeEnter(void* const context) {
 	if(!context) {
