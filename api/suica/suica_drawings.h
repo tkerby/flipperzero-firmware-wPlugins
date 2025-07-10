@@ -511,60 +511,62 @@ static void suica_draw_vending_machine_page_1(
     SuicaHistory history,
     SuicaHistoryViewModel* model) {
     FuriString* buffer = furi_string_alloc();
-    canvas_draw_icon(canvas, 0, 10, &I_Suica_VendingPage2Full);
-    furi_string_printf(buffer, "%d", history.balance_change);
-    canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str_aligned(canvas, 98, 39, AlignRight, AlignBottom, furi_string_get_cstr(buffer));
-
     // Animate Bubbles and LCD Refresh
-    if(model->animator_tick > 14) {
+    if(model->animator_tick > 13) {
         // 14 steps of animation
         model->animator_tick = 0;
     }
-    canvas_set_color(canvas, ColorWhite);
-    canvas_draw_line(canvas, 88, 51 + model->animator_tick, 128, 51 + model->animator_tick);
-    switch(model->animator_tick % 7) {
+    switch(model->animator_tick) {
     case 0:
-        canvas_draw_circle(canvas, 12, 48, 1);
-        canvas_draw_circle(canvas, 23, 39, 2);
+        canvas_draw_icon(canvas, 0, 10, &I_Suica_VendingPage2Full1);
         break;
     case 1:
-        canvas_draw_circle(canvas, 11, 46, 1);
-        canvas_draw_circle(canvas, 23, 39, 2);
-        canvas_set_color(canvas, ColorBlack);
-        canvas_draw_line(canvas, 24, 37, 22, 37);
-        canvas_draw_line(canvas, 25, 40, 25, 38);
-        canvas_set_color(canvas, ColorWhite);
+        canvas_draw_icon(canvas, 0, 10, &I_Suica_VendingPage2Full2);
         break;
     case 2:
-        canvas_draw_circle(canvas, 12, 44, 1);
-        canvas_draw_circle(canvas, 24, 50, 1);
+        canvas_draw_icon(canvas, 0, 10, &I_Suica_VendingPage2Full3);
         break;
     case 3:
-        canvas_draw_icon(canvas, 12, 41, &I_Suica_SmallStar);
-        canvas_draw_circle(canvas, 25, 48, 1);
+        canvas_draw_icon(canvas, 0, 10, &I_Suica_VendingPage2Full4);
         break;
     case 4:
-        canvas_draw_icon(canvas, 14, 39, &I_Suica_SmallStar);
-        canvas_draw_circle(canvas, 26, 46, 1);
+        canvas_draw_icon(canvas, 0, 10, &I_Suica_VendingPage2Full5);
         break;
     case 5:
-        canvas_draw_icon(canvas, 24, 43, &I_Suica_SmallStar);
-        canvas_draw_circle(canvas, 16, 38, 2);
+        canvas_draw_icon(canvas, 0, 10, &I_Suica_VendingPage2Full6);
         break;
     case 6:
-        canvas_draw_icon(canvas, 23, 41, &I_Suica_SmallStar);
-        canvas_draw_circle(canvas, 16, 38, 2);
-        canvas_set_color(canvas, ColorBlack);
-        canvas_draw_line(canvas, 15, 36, 17, 36);
-        canvas_draw_line(canvas, 18, 39, 18, 37);
-        canvas_set_color(canvas, ColorWhite);
+        canvas_draw_icon(canvas, 0, 10, &I_Suica_VendingPage2Full7);
+        break;
+    case 7:
+        canvas_draw_icon(canvas, 0, 10, &I_Suica_VendingPage2Full8);
+        break;
+    case 8:
+        canvas_draw_icon(canvas, 0, 10, &I_Suica_VendingPage2Full9);
+        break;
+    case 9:
+        canvas_draw_icon(canvas, 0, 10, &I_Suica_VendingPage2Full10);
+        break;
+    case 10:
+        canvas_draw_icon(canvas, 0, 10, &I_Suica_VendingPage2Full11);
+        break;
+    case 11:
+        canvas_draw_icon(canvas, 0, 10, &I_Suica_VendingPage2Full12);
+        break;
+    case 12:
+        canvas_draw_icon(canvas, 0, 10, &I_Suica_VendingPage2Full13);
+        break;
+    case 13:
+        canvas_draw_icon(canvas, 0, 10, &I_Suica_VendingPage2Full14);
         break;
     default:
         break;
     }
+
+    furi_string_printf(buffer, "%d", history.balance_change);
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str_aligned(canvas, 98, 39, AlignRight, AlignBottom, furi_string_get_cstr(buffer));
     furi_string_free(buffer);
-    canvas_set_color(canvas, ColorBlack);
 }
 
 static void suica_draw_vending_machine_page_2(
@@ -573,7 +575,7 @@ static void suica_draw_vending_machine_page_2(
     SuicaHistoryViewModel* model) {
     FuriString* buffer = furi_string_alloc();
 
-    if(model->animator_tick > 42) {
+    if(model->animator_tick > 41) {
         // 6 steps of animation
         model->animator_tick = 0;
     }
