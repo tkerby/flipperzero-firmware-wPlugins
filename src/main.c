@@ -54,9 +54,9 @@ int32_t cuberzeroMain(const void* const unused) {
 		goto freeInterface;
 	}
 
-	const AppSceneOnEnterCallback handlerEnter[] = {SceneHomeEnter};
-	const AppSceneOnEventCallback handlerEvent[] = {callbackEmptyEvent};
-	const AppSceneOnExitCallback handlerExit[] = {callbackEmptyExit};
+	const AppSceneOnEnterCallback handlerEnter[] = {SceneHomeEnter, SceneTimerEnter};
+	const AppSceneOnEventCallback handlerEvent[] = {SceneHomeEvent, callbackEmptyEvent};
+	const AppSceneOnExitCallback handlerExit[] = {callbackEmptyExit, callbackEmptyExit};
 	const SceneManagerHandlers handlers = {handlerEnter, handlerEvent, handlerExit, COUNT_SCENE};
 
 	if(scene_manager_alloc(&handlers, 0)) {

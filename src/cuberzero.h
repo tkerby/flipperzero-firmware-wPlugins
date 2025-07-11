@@ -21,6 +21,11 @@ typedef struct {
 	Gui* interface;
 	ViewDispatcher* dispatcher;
 	SceneManager* manager;
+	struct {
+		struct {
+			uint32_t index;
+		} home;
+	} scene;
 } CUBERZERO, *PCUBERZERO;
 
 typedef enum {
@@ -30,6 +35,7 @@ typedef enum {
 
 typedef enum {
 	SCENE_HOME,
+	SCENE_TIMER,
 	COUNT_SCENE
 } SCENE;
 
@@ -37,6 +43,14 @@ typedef enum {
 extern "C" {
 #endif
 void SceneHomeEnter(void* const context);
+void SceneTimerEnter(void* const context);
+#ifdef __cplusplus
+}
+#endif
+#ifdef __cplusplus
+extern "C" {
+#endif
+bool SceneHomeEvent(void* const context, const SceneManagerEvent event);
 #ifdef __cplusplus
 }
 #endif
