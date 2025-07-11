@@ -199,7 +199,7 @@ void Player::drawCurrentView(Draw *canvas)
                 flipWorldRun->getEngine()->updateGameInput(currentInput);
                 // Reset the input after processing to prevent it from being continuously pressed
                 flipWorldRun->resetInput();
-                flipWorldRun->getEngine()->runAsync(true);
+                flipWorldRun->getEngine()->runAsync(false);
             }
             return;
         }
@@ -211,7 +211,7 @@ void Player::drawCurrentView(Draw *canvas)
             bool gameStarted = flipWorldRun->startGame();
             if (gameStarted && flipWorldRun->getEngine())
             {
-                flipWorldRun->getEngine()->runAsync(true); // Run the game engine immediately
+                flipWorldRun->getEngine()->runAsync(false); // Run the game engine immediately
             }
         }
         break;
@@ -1447,25 +1447,6 @@ void Player::update(Game *game)
         shouldSetPosition = false;
     }
 
-    // Store the current camera position before updating
-    game->old_pos = game->pos;
-
-    // Update camera position to center the player
-    // The viewport is 128x64, so we want the player to be at the center of this viewport
-    float viewport_width = 128.0f;
-    float viewport_height = 64.0f;
-
-    float camera_x = position.x - (viewport_width / 2);
-    float camera_y = position.y - (viewport_height / 2);
-
-    // Clamp camera position to ensure we don't show areas outside the world
-    // Camera position represents the top-left corner of what we see
-    camera_x = constrain(camera_x, 0, game->size.x - viewport_width);
-    camera_y = constrain(camera_y, 0, game->size.y - viewport_height);
-
-    // Set the new camera position
-    game->pos = Vector(camera_x, camera_y);
-
     // update player sprite based on direction
     if (direction == ENTITY_LEFT)
     {
@@ -1508,6 +1489,25 @@ void Player::update(Game *game)
         }
         // If there's a collision, we simply don't move (stay at current position)
     }
+
+    // Store the current camera position before updating
+    game->old_pos = game->pos;
+
+    // Update camera position to center the player
+    // The viewport is 128x64, so we want the player to be at the center of this viewport
+    float viewport_width = 128.0f;
+    float viewport_height = 64.0f;
+
+    float camera_x = position.x - (viewport_width / 2);
+    float camera_y = position.y - (viewport_height / 2);
+
+    // Clamp camera position to ensure we don't show areas outside the world
+    // Camera position represents the top-left corner of what we see
+    camera_x = constrain(camera_x, 0, game->size.x - viewport_width);
+    camera_y = constrain(camera_y, 0, game->size.y - viewport_height);
+
+    // Set the new camera position
+    game->pos = Vector(camera_x, camera_y);
 }
 
 void Player::updateStats()
