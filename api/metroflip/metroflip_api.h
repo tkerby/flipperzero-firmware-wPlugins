@@ -217,6 +217,7 @@ extern const Icon I_Suica_TWRLogo;
 extern const Icon I_Suica_ToeiLogo;
 extern const Icon I_Suica_TokyoMetroLogo;
 extern const Icon I_Suica_TokyoMonorailLogo;
+extern const Icon I_Suica_TokyuLogo;
 extern const Icon I_Suica_TozaiT;
 extern const Icon I_Suica_VendingCan1;
 extern const Icon I_Suica_VendingCan2;
