@@ -225,6 +225,11 @@ void FlipWorldRun::endGame()
     shouldReturnToMenu = true;
     isGameRunning = false;
 
+    if (player)
+    {
+        player->userRequest(RequestTypeSaveStats); // Save player stats before ending the game
+    }
+
     if (engine)
     {
         engine->stop();

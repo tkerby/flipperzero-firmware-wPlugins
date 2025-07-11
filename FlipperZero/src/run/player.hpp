@@ -84,6 +84,7 @@ typedef enum
     RequestTypeJoinLobby = 4,      // Request to join a lobby (join a specific lobby)
     RequestTypeStartWebsocket = 5, // Request to start a websocket connection (for real-time updates)
     RequestTypeStopWebsocket = 6,  // Request to stop the websocket connection
+    RequestTypeSaveStats = 7,      // Request to save player stats (save the player's stats to the server)
 } RequestType;
 
 class FlipWorldRun;

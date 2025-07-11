@@ -167,7 +167,7 @@ void Player::drawCurrentView(Draw *canvas)
     // Update debounce timer
     if (systemMenuDebounceTimer > 0.0f)
     {
-        systemMenuDebounceTimer -= 1.0f / 60.0f; // Subtract 1/60th of a second (60 FPS)
+        systemMenuDebounceTimer -= 1.0f / 120.f;
         if (systemMenuDebounceTimer < 0.0f)
         {
             systemMenuDebounceTimer = 0.0f;
@@ -1372,7 +1372,7 @@ void Player::update(Game *game)
     // Update debounce timer
     if (systemMenuDebounceTimer > 0.0f)
     {
-        systemMenuDebounceTimer -= 1.0f / 60.0f; // Subtract 1/60th of a second (60 FPS)
+        systemMenuDebounceTimer -= 1.0f / 120.f;
         if (systemMenuDebounceTimer < 0.0f)
         {
             systemMenuDebounceTimer = 0.0f;
@@ -1386,7 +1386,7 @@ void Player::update(Game *game)
     }
 
     // Apply health regeneration
-    elapsed_health_regen += 1.0 / 60; // 60 frames per second
+    elapsed_health_regen += 0.05f;
     if (elapsed_health_regen >= 1 && health < max_health)
     {
         health += health_regen;
@@ -1398,7 +1398,7 @@ void Player::update(Game *game)
     }
 
     // Increment the elapsed_attack_timer for the player
-    elapsed_attack_timer += 1.0 / 60; // 60 frames per second
+    elapsed_attack_timer += 0.05f;
 
     // update player traits
     updateStats();
@@ -1698,6 +1698,18 @@ void Player::userRequest(RequestType requestType)
             FURI_LOG_E("Player", "Failed to stop WebSocket connection");
         }
         break;
+    case RequestTypeSaveStats:
+    {
+        const char *playerJson = flipWorldRun->entityToJson(this);
+        if (!app->httpRequestAsync("save_stats.txt",
+                                   "https://www.jblanked.com/flipper/api/user/update-game-stats/",
+                                   POST, "{\"Content-Type\":\"application/json\"}", playerJson))
+        {
+            FURI_LOG_E("Player", "Failed to save player stats");
+        }
+        free((void *)playerJson);
+    }
+    break;
     default:
         FURI_LOG_E("Player", "Unknown request type: %d", requestType);
         loginStatus = LoginRequestError;
