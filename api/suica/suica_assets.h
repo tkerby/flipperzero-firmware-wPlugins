@@ -5,21 +5,24 @@
 #include "suica_structs_i.h"
 
 
-#define SUICA_RAILWAY_NUM 27 // Don't count Unknown
+#define SUICA_RAILWAY_NUM 28 // Don't count Unknown
 
 #define SUICA_RAILWAY_UNKNOWN_NAME "Unknown"
 // Railway
 
 static const Railway RailwaysList[] = {
-    // Japan Railway East JRE
-    {0x01, {0, 0}, "Keihin Tohoku", 14, SuicaJR, "JK", 0},
-    {0x01, {0, 0}, "Tokaido Main", 21, SuicaJR, "JT", 0},
-    {0x02, {0, 0}, "Keihin Tohoku", 22, SuicaJR, "JK", 0},
-    {0x02, {0, 0}, "Utsunomiya", 33, SuicaJR, "JU", 0},
+    // Japan Railway East JREast
+    {0x01, {0, 0}, "Keihin Tohoku", 14, SuicaJREast, "JK", 0},
+    {0x01, {0, 0}, "East Tokaido", 21, SuicaJREast, "JT", 0},
+    {0x02, {0, 0}, "Keihin Tohoku", 22, SuicaJREast, "JK", 0},
+    {0x02, {0, 0}, "Utsunomiya", 33, SuicaJREast, "JU", 0},
     {0x02, {0, 0}, "Mobile Suica", 1, SuicaMobile, "", 0},
-    {0x05, {0, 0}, "Joban", 71, SuicaJR, "JJ", 0},
-    {0x05, {0, 0}, "Joban Local", 14, SuicaJR, "JL", 0},
-    {0x1D, {0, 0}, "Negishi", 10, SuicaJR, "JK", 0},
+    {0x05, {0, 0}, "Joban", 71, SuicaJREast, "JJ", 0},
+    {0x05, {0, 0}, "Joban Local", 14, SuicaJREast, "JL", 0},
+    {0x1D, {0, 0}, "Negishi", 10, SuicaJREast, "JK", 0},
+
+    // Japan Railway Central JRCentral
+    {0x01, {0, 0}, "Central Tokaido", 83, SuicaJRCentral, "CA", 0},
 
     // Tokyo Waterfront Area Rapid Transit TWR
     {0x82, {0, 0}, "Rinkai", 8, SuicaTWR, "R", &I_Suica_RinkaiR},

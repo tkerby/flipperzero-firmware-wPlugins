@@ -94,7 +94,10 @@ static void suica_draw_train_page_1(
     case SuicaKeikyu:
         canvas_draw_icon(canvas, 2, 11, &I_Suica_KeikyuLogo);
         break;
-    case SuicaJR:
+    case SuicaJREast:
+    case SuicaJRCentral:
+    case SuicaJRWest:
+    case SuicaJRKyushu:
         canvas_draw_icon(canvas, 1, 12, &I_Suica_JRLogo);
         break;
     case SuicaMobile:
@@ -141,7 +144,10 @@ static void suica_draw_train_page_1(
         case SuicaKeikyu:
             canvas_draw_icon(canvas, 2, 39, &I_Suica_KeikyuLogo);
             break;
-        case SuicaJR:
+        case SuicaJREast:
+        case SuicaJRCentral:
+        case SuicaJRWest:
+        case SuicaJRKyushu:
             canvas_draw_icon(canvas, 1, 40, &I_Suica_JRLogo);
             break;
         case SuicaTokyoMetro:
@@ -254,7 +260,7 @@ static void
         furi_string_printf(buffer, "%02d", history.entry_station.station_number);
         canvas_draw_str(canvas, 14, 51, furi_string_get_cstr(buffer));
         break;
-    case SuicaJR:
+    case SuicaJREast:
         if(!furi_string_equal_str(history.entry_station.jr_header, "0")) {
             canvas_draw_rbox(canvas, 4, 13, 42, 51, 10);
             canvas_set_color(canvas, ColorWhite);
@@ -285,6 +291,18 @@ static void
             furi_string_printf(buffer, "%02d", history.entry_station.station_number);
             canvas_draw_str(canvas, 14, 50, furi_string_get_cstr(buffer));
         }
+        break;
+    case SuicaJRCentral:
+        canvas_set_color(canvas, ColorBlack);
+        canvas_draw_box(canvas, 8, 23, 34, 33);
+        canvas_set_color(canvas, ColorWhite);
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str_aligned(canvas, 24, 33, AlignCenter, AlignBottom, history.entry_line.short_name);
+        canvas_draw_box(canvas, 11, 35, 28, 18);
+        canvas_set_color(canvas, ColorBlack);
+        canvas_set_font(canvas, FontBigNumbers);
+        furi_string_printf(buffer, "%02d", history.entry_station.station_number);
+        canvas_draw_str(canvas, 14, 51, furi_string_get_cstr(buffer));
         break;
     case SuicaTokyoMetro:
     case SuicaToei:
@@ -363,7 +381,7 @@ static void
         furi_string_printf(buffer, "%02d", history.exit_station.station_number);
         canvas_draw_str(canvas, 91, 51, furi_string_get_cstr(buffer));
         break;
-    case SuicaJR:
+    case SuicaJREast:
         if(!furi_string_equal_str(history.exit_station.jr_header, "0")) {
             canvas_draw_rbox(canvas, 81, 13, 42, 51, 10);
             canvas_set_color(canvas, ColorWhite);
@@ -394,6 +412,18 @@ static void
             furi_string_printf(buffer, "%02d", history.exit_station.station_number);
             canvas_draw_str(canvas, 91, 50, furi_string_get_cstr(buffer));
         }
+        break;
+    case SuicaJRCentral:
+        canvas_set_color(canvas, ColorBlack);
+        canvas_draw_box(canvas, 86, 23, 34, 33);
+        canvas_set_color(canvas, ColorWhite);
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str_aligned(canvas, 102, 33, AlignCenter, AlignBottom, history.exit_line.short_name);
+        canvas_draw_box(canvas, 89, 35, 28, 18);
+        canvas_set_color(canvas, ColorBlack);
+        canvas_set_font(canvas, FontBigNumbers);
+        furi_string_printf(buffer, "%02d", history.exit_station.station_number);
+        canvas_draw_str(canvas, 92, 51, furi_string_get_cstr(buffer));
         break;
     case SuicaTokyoMetro:
     case SuicaToei:
