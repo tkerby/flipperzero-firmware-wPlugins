@@ -68,11 +68,14 @@ bool FlipWorldRun::addRemotePlayer(const char *username)
     // Only add remote players in PvE mode
     if (!isPvEMode || !username)
     {
+        FURI_LOG_W("FlipWorldRun", "Cannot add remote player: isPvEMode=%s, username=%s",
+                   isPvEMode ? "true" : "false", username ? username : "null");
         return false;
     }
 
     if (!engine || !engine->getGame() || !engine->getGame()->current_level)
     {
+        FURI_LOG_E("FlipWorldRun", "Cannot add remote player: game engine not ready");
         return false;
     }
 
@@ -83,16 +86,24 @@ bool FlipWorldRun::addRemotePlayer(const char *username)
     {
         Entity *entity = currentLevel->getEntity(i);
         if (entity && entity->type == ENTITY_PLAYER &&
-            strcmp(entity->name, username) == 0)
+            entity->name && strcmp(entity->name, username) == 0)
         {
             // Player already exists
             return true;
         }
     }
 
+    char *persistentUsername = (char *)malloc(strlen(username) + 1);
+    if (!persistentUsername)
+    {
+        FURI_LOG_E("FlipWorldRun", "Failed to allocate memory for remote player username");
+        return false;
+    }
+    strcpy(persistentUsername, username);
+
     // Add new remote player entity
     Entity *remotePlayer = new Entity(
-        username,                   // name
+        persistentUsername,         // name
         ENTITY_PLAYER,              // type
         Vector(384, 192),           // position
         Vector(15, 11),             // size
@@ -109,6 +120,7 @@ bool FlipWorldRun::addRemotePlayer(const char *username)
 
     if (remotePlayer)
     {
+        remotePlayer->name = persistentUsername;
         // Set some default stats for now (should be updated later)
         remotePlayer->health = 100.0f;
         remotePlayer->max_health = 100.0f;
@@ -118,6 +130,11 @@ bool FlipWorldRun::addRemotePlayer(const char *username)
 
         currentLevel->entity_add(remotePlayer);
         return true;
+    }
+    else
+    {
+        FURI_LOG_E("FlipWorldRun", "Failed to create remote player entity for '%s'", username);
+        free(persistentUsername);
     }
 
     return false;
@@ -1029,10 +1046,6 @@ bool FlipWorldRun::handleChunkedMessage(const char *message)
     memcpy(dataStr, dataPos, dataLen);
     dataStr[dataLen] = '\0';
 
-    FURI_LOG_I("FlipWorldRun", "Extracted chunk: id=%d, seq=%d, total=%d, data_len=%zu",
-               messageId, seqVal, totalChunks, dataLen);
-    FURI_LOG_I("FlipWorldRun", "Chunk data: %.100s%s", dataStr, dataLen > 100 ? "..." : "");
-
     // if we're already using too much memory, reject new chunked messages
     size_t currentMemoryUsage = getMemoryUsage();
     size_t freeHeap = memmgr_get_free_heap();
@@ -1456,10 +1469,19 @@ void FlipWorldRun::processCompleteMultiplayerMessage(const char *message)
         return;
     }
 
-    // ensure this is not a chunked message fragment
+    // check for malformed JSON fragments
     if (strstr(message, "\"seq\"") != NULL && strstr(message, "\"total\"") != NULL && strstr(message, "\"data\"") != NULL)
     {
         FURI_LOG_E("FlipWorldRun", "Attempted to process chunked message fragment as complete message");
+        return;
+    }
+
+    // Reject messages that contain chunked message fragments or malformed data
+    if (strstr(message, "Rend") != NULL || strstr(message, "total\":") != NULL ||
+        strstr(message, "seq\":") != NULL || strstr(message, "},\"") == message ||
+        strncmp(message, "\"", 1) == 0)
+    {
+        FURI_LOG_E("FlipWorldRun", "Rejecting malformed message fragment: %.100s...", message);
         return;
     }
 
@@ -1474,21 +1496,53 @@ void FlipWorldRun::processCompleteMultiplayerMessage(const char *message)
         return;
     }
 
+    // Additional validation for message type
+    if (strlen(messageType) == 0 || strlen(messageType) > 20 ||
+        strstr(messageType, "\"") != NULL || strstr(messageType, "}") != NULL)
+    {
+        FURI_LOG_E("FlipWorldRun", "Invalid message type: '%s'", messageType);
+        free(messageType);
+        return;
+    }
+
     if (strcmp(messageType, "player") == 0)
     {
         // Handle player update
         char *playerData = get_json_value("data", message);
         if (playerData)
         {
+
             // Find the player entity by username
             char *username = get_json_value("u", playerData);
             if (username)
             {
-                if (strcmp(username, player->name) == 0) // don't update self
+
+                // Validate username before processing - reject invalid/malformed usernames
+                if (strlen(username) == 0 || strlen(username) > 50 ||
+                    strstr(username, "\"") != NULL || strstr(username, "}") != NULL ||
+                    strstr(username, "{") != NULL || strstr(username, "total") != NULL ||
+                    strstr(username, "data") != NULL || strstr(username, "seq") != NULL ||
+                    strstr(username, "Rend") != NULL || strstr(username, ",") != NULL ||
+                    strstr(username, ":") != NULL || strstr(username, "[") != NULL ||
+                    strstr(username, "]") != NULL || username[0] == ' ' ||
+                    username[strlen(username) - 1] == ' ' || isdigit(username[0]) ||
+                    strlen(username) < 3 || // Require at least 3 characters for valid username
+                    strstr(username, "type") != NULL || strstr(username, "player") != NULL ||
+                    strstr(username, "chunk") != NULL || strstr(username, "id") != NULL)
                 {
-                    FURI_LOG_W("FlipWorldRun", "Skipping self update for player: %s", username);
+                    FURI_LOG_W("FlipWorldRun", "Rejecting invalid username: '%s' (len: %zu)", username, strlen(username));
                     free(username);
                     free(playerData);
+                    free(messageType);
+                    return;
+                }
+
+                // Don't update self
+                if (strcmp(username, player->name) == 0 && strcmp(username, "Player") != 0)
+                {
+                    free(username);
+                    free(playerData);
+                    free(messageType);
                     return;
                 }
 
@@ -1909,6 +1963,12 @@ void FlipWorldRun::processWebsocketMessageQueue()
 
 void FlipWorldRun::pveRender(Entity *entity, Draw *canvas, Game *game)
 {
+    // Safety check for entity and name
+    if (!entity || !entity->name || strlen(entity->name) == 0)
+    {
+        return;
+    }
+
     // Calculate screen position after applying camera offset
     float screen_x = entity->position.x - game->pos.x;
     float screen_y = entity->position.y - game->pos.y;
@@ -1920,9 +1980,6 @@ void FlipWorldRun::pveRender(Entity *entity, Draw *canvas, Game *game)
     {
         return;
     }
-
-    FURI_LOG_I("FlipWorldRun", "Rendering PvE name: %s at (%f, %f)",
-               entity->name, (double)screen_x, (double)screen_y);
 
     // draw box around the name
     canvas->fillRect(Vector(screen_x - (strlen(entity->name) * 2) - 1, screen_y - 7), Vector(strlen(entity->name) * 4 + 1, 8), ColorWhite);
@@ -2024,12 +2081,19 @@ bool FlipWorldRun::removeRemotePlayer(const char *username)
     {
         Entity *entity = currentLevel->getEntity(i);
         if (entity && entity->type == ENTITY_PLAYER &&
-            strcmp(entity->name, username) == 0)
+            entity->name && strcmp(entity->name, username) == 0)
         {
             // Don't remove our own player
             if (entity == player.get())
             {
                 continue;
+            }
+
+            // Free the allocated username memory before removing the entity
+            if (entity->name)
+            {
+                free((char *)entity->name);
+                entity->name = nullptr;
             }
 
             // Remove the remote player
