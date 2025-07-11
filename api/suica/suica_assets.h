@@ -4,7 +4,7 @@
 
 #include "suica_structs_i.h"
 
-#define SUICA_RAILWAY_NUM 32 // Don't count Unknown
+#define SUICA_RAILWAY_NUM 40 // Don't count Unknown
 
 #define SUICA_RAILWAY_UNKNOWN_NAME "Unknown"
 // Railway
@@ -31,8 +31,16 @@ static const Railway RailwaysList[] = {
     {0x82, {0, 0}, "Rinkai", 8, SuicaTWR, "R", &I_Suica_RinkaiR},
     {0x82, {0, 0}, "Yurikamome", 16, SuicaYurikamome, "U", &I_Suica_YurikamomeU},
 
-    // Tokyo Monorail
-    {0xFA, {0, 0}, "Tokyo Monorail", 11, SuicaTokyoMonorail, "MO", 0},
+    // Tokyu
+    {0xCE, {0, 0}, "Toyoko", 23, SuicaTokyu, "TY", 0},
+    {0xCF, {0, 0}, "Tamagawa", 7, SuicaTokyu, "TM", 0},
+    {0xCF, {0, 0}, "Meguro", 8, SuicaTokyu, "MG", 0},
+    {0xD0, {0, 0}, "Oimachi", 15, SuicaTokyu, "OM", 0},
+    {0xD0, {0, 0}, "Den-en-toshi", 20, SuicaTokyu, "DT", 0},
+    {0xD1, {0, 0}, "Ikegami", 15, SuicaTokyu, "IK", 0},
+    {0xD2, {0, 0}, "Den-en-toshi", 7, SuicaTokyu, "DT", 0},
+    {0xD3, {0, 0}, "Setagaya", 10, SuicaTokyu, "SG", 0},
+
 
     // Keikyu
     {0xD5, {0, 0}, "Keikyu Main", 50, SuicaKeikyu, "KK", &I_Suica_KeikyuKK},
@@ -55,6 +63,10 @@ static const Railway RailwaysList[] = {
     {0xF1, {2, 0}, "Shinjuku", 21, SuicaToei, "S", &I_Suica_ShinjukuS},
     {0xF2, {3, 0}, "Oedo", 26, SuicaToei, "E", &I_Suica_OedoE},
     {0xF3, {3, 0}, "Oedo", 14, SuicaToei, "E", &I_Suica_OedoE},
+
+    // Tokyo Monorail
+    {0xFA, {0, 0}, "Tokyo Monorail", 11, SuicaTokyoMonorail, "MO", 0},
+
     // Unknown
     {0x00,
      {0, 0},
