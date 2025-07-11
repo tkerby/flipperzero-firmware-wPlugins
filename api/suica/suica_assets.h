@@ -4,7 +4,6 @@
 
 #include "suica_structs_i.h"
 
-
 #define SUICA_RAILWAY_NUM 32 // Don't count Unknown
 
 #define SUICA_RAILWAY_UNKNOWN_NAME "Unknown"
@@ -19,7 +18,6 @@ static const Railway RailwaysList[] = {
     {0x02, {0, 0}, "Mobile Suica", 1, SuicaMobile, "", 0},
     {0x03, {0, 0}, "Chuo Rapid", 32, SuicaJREast, "JC", 0},
     {0x03, {0, 0}, "Chuo Main", 29, SuicaJREast, "CO", 0},
-    {0x03, {0, 0}, "Chuo West", 37, SuicaJRCentral, "CF", 0},
     {0x03, {0, 0}, "Chuo-Sobu", 18, SuicaJREast, "JB", 0},
     {0x05, {0, 0}, "Joban", 71, SuicaJREast, "JJ", 0},
     {0x05, {0, 0}, "Joban Local", 14, SuicaJREast, "JL", 0},
@@ -27,6 +25,7 @@ static const Railway RailwaysList[] = {
 
     // Japan Railway Central JRCentral
     {0x01, {0, 0}, "Central Tokaido", 83, SuicaJRCentral, "CA", 0},
+    {0x03, {0, 0}, "Chuo West", 37, SuicaJRCentral, "CF", 0},
 
     // Tokyo Waterfront Area Rapid Transit TWR
     {0x82, {0, 0}, "Rinkai", 8, SuicaTWR, "R", &I_Suica_RinkaiR},
@@ -49,7 +48,7 @@ static const Railway RailwaysList[] = {
     {0xE5, {-5, 1}, "M Honancho", 4, SuicaTokyoMetro, "Mb", &I_Suica_MarunouchiHonanchoMb},
     {0xE6, {2, 1}, "Hanzomon", 14, SuicaTokyoMetro, "Z", &I_Suica_HanzomonZ},
     {0xE7, {0, 1}, "Namboku", 19, SuicaTokyoMetro, "N", &I_Suica_NambokuN},
-    
+
     // Toei
     {0xEF, {0, 0}, "Asakusa", 20, SuicaToei, "A", &I_Suica_AsakusaA},
     {0xF0, {4, 0}, "Mita", 27, SuicaToei, "I", &I_Suica_MitaI},
@@ -57,5 +56,10 @@ static const Railway RailwaysList[] = {
     {0xF2, {3, 0}, "Oedo", 26, SuicaToei, "E", &I_Suica_OedoE},
     {0xF3, {3, 0}, "Oedo", 14, SuicaToei, "E", &I_Suica_OedoE},
     // Unknown
-    {0x00, {0, 0}, SUICA_RAILWAY_UNKNOWN_NAME, 1, SuicaRailwayTypeMax, "??", &I_Suica_QuestionMarkBig}
-};
+    {0x00,
+     {0, 0},
+     SUICA_RAILWAY_UNKNOWN_NAME,
+     1,
+     SuicaRailwayTypeMax,
+     "??",
+     &I_Suica_QuestionMarkBig}};
