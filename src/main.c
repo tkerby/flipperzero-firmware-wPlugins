@@ -59,7 +59,7 @@ int32_t cuberzeroMain(const void* const unused) {
 	const AppSceneOnExitCallback handlerExit[] = {callbackEmptyExit, callbackEmptyExit};
 	const SceneManagerHandlers handlers = {handlerEnter, handlerEvent, handlerExit, COUNT_SCENE};
 
-	if(scene_manager_alloc(&handlers, 0)) {
+	if(!(instance->manager = scene_manager_alloc(&handlers, instance))) {
 		message = "scene_manager_alloc() failed";
 		goto freeDispatcher;
 	}
