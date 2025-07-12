@@ -40,6 +40,15 @@ typedef enum {
 	COUNT_SCENE
 } SCENE;
 
+struct ViewDispatcher {
+	bool eventLoopOwned;
+	FuriEventLoop* eventLoop;
+	FuriMessageQueue* queueInput;
+	FuriMessageQueue* queueEvent;
+	Gui* interface;
+	ViewPort* viewport;
+};
+
 #ifdef __cplusplus
 extern "C" {
 #endif

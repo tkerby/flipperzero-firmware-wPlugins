@@ -5,15 +5,6 @@ typedef struct {
 	FuriMessageQueue* queue;
 } TIMERSCENE, *PTIMERSCENE;
 
-struct ViewDispatcher {
-	bool eventLoopOwned;
-	FuriEventLoop* eventLoop;
-	FuriMessageQueue* queueInput;
-	FuriMessageQueue* queueEvent;
-	Gui* interface;
-	ViewPort* viewport;
-};
-
 static void callbackTimer(void* const context) {
 	UNUSED(context);
 }
