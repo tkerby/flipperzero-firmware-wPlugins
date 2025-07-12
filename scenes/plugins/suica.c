@@ -312,7 +312,6 @@ static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
 
     Metroflip* app = context;
     FuriString* parsed_data = furi_string_alloc();
-    FuriString* debug_log_entry = furi_string_alloc();
     SuicaHistoryViewModel* model = view_get_model(app->suica_context->view_history);
 
     Widget* widget = app->widget;
@@ -362,33 +361,21 @@ static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
                         furi_string_cat_printf(app->suica_file_data, "Log %02X: ", blocks[0]);
                     }
                     blocks[0]++;
-
-                    furi_string_reset(debug_log_entry);
-                    furi_string_cat_printf(debug_log_entry, "Service code %04X entry %02X",
-                                           service_code[service_code_index], blocks[0]);
                     for(size_t i = 0; i < FELICA_DATA_BLOCK_SIZE; i++) {
                         furi_string_cat_printf(parsed_data, "%02X ", rx_resp->data[i]);
-                        furi_string_cat_printf(debug_log_entry, "%02X ", rx_resp->data[i]);
                         if(service_code_index == 0) {
                             furi_string_cat_printf(
                                 app->suica_file_data, "%02X ", rx_resp->data[i]);
                         }
                         block_data[i] = rx_resp->data[i];
                     }
-                    FURI_LOG_D(
-                        TAG,
-                        "Felica Poller Read Data: %s",
-                        furi_string_get_cstr(debug_log_entry));
                     furi_string_cat_printf(parsed_data, "\n");
                     if(service_code_index == 0) {
-                        FURI_LOG_I(
-                            TAG,
-                            "Service code %d, adding entry %x",
-                            service_code_index,
-                            model->size);
                         suica_add_entry(model, block_data);
                         furi_string_cat_printf(app->suica_file_data, "\n");
                     }
+                    FURI_LOG_I(
+                        TAG, "Service code %d, adding entry %x", service_code_index, model->size);
                 }
                 service_code_index++;
             }
@@ -421,7 +408,6 @@ static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
         }
     }
     furi_string_free(parsed_data);
-    furi_string_free(debug_log_entry);
     command = NfcCommandStop;
     return command;
 }
