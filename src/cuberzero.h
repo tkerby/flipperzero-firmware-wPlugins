@@ -35,6 +35,7 @@ typedef enum {
 
 typedef enum {
 	SCENE_HOME,
+	SCENE_SESSION_SELECT,
 	SCENE_TIMER,
 	COUNT_SCENE
 } SCENE;
@@ -43,6 +44,7 @@ typedef enum {
 extern "C" {
 #endif
 void SceneHomeEnter(void* const context);
+void SceneSessionSelectEnter(void* const context);
 void SceneTimerEnter(void* const context);
 #ifdef __cplusplus
 }
