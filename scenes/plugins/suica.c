@@ -357,14 +357,13 @@ static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
                         break;
                     }
                     furi_string_cat_printf(parsed_data, "Log %02X: ", blocks[0]);
-                    if (service_code_index == 0) {
-                        furi_string_cat_printf(
-                            app->suica_file_data, "Log %02X: ", blocks[0]);
+                    if(service_code_index == 0) {
+                        furi_string_cat_printf(app->suica_file_data, "Log %02X: ", blocks[0]);
                     }
                     blocks[0]++;
                     for(size_t i = 0; i < FELICA_DATA_BLOCK_SIZE; i++) {
                         furi_string_cat_printf(parsed_data, "%02X ", rx_resp->data[i]);
-                        if (service_code_index == 0) {
+                        if(service_code_index == 0) {
                             furi_string_cat_printf(
                                 app->suica_file_data, "%02X ", rx_resp->data[i]);
                         }
@@ -372,15 +371,11 @@ static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
                     }
                     furi_string_cat_printf(parsed_data, "\n");
                     if(service_code_index == 0) {
-                        FURI_LOG_I(
-                            TAG,
-                            "Service code %d, adding entry %x",
-                            service_code_index,
-                            model->size);
                         suica_add_entry(model, block_data);
-                        furi_string_cat_printf(
-                            app->suica_file_data, "\n");
+                        furi_string_cat_printf(app->suica_file_data, "\n");
                     }
+                    FURI_LOG_I(
+                        TAG, "Service code %d, adding entry %x", service_code_index, model->size);
                 }
                 service_code_index++;
             }
@@ -500,7 +495,6 @@ static void suica_on_enter(Metroflip* app) {
             app->suica_context->view_history,
             ViewModelTypeLockFree,
             sizeof(SuicaHistoryViewModel));
-            
     }
 
     view_set_input_callback(app->suica_context->view_history, suica_history_input_callback);
@@ -531,11 +525,12 @@ static void suica_on_enter(Metroflip* app) {
         Widget* widget = app->widget;
         FuriString* parsed_data = furi_string_alloc();
         furi_string_printf(parsed_data, "\e#Japan Rail IC\n");
-        
+
         for(uint8_t i = 0; i < model->size; i++) {
             furi_string_cat_printf(app->suica_file_data, "Log %02X: ", i);
             for(size_t j = 0; j < FELICA_DATA_BLOCK_SIZE; j++) {
-                furi_string_cat_printf(app->suica_file_data, "%02X ", model->travel_history[i * 16 + j]);
+                furi_string_cat_printf(
+                    app->suica_file_data, "%02X ", model->travel_history[i * 16 + j]);
             }
             furi_string_cat_printf(app->suica_file_data, "\n");
         }
