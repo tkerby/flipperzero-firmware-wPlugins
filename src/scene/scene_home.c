@@ -14,6 +14,9 @@ void SceneHomeEnter(void* const context) {
 	submenu_reset(((PCUBERZERO) context)->view.submenu);
 	submenu_set_header(((PCUBERZERO) context)->view.submenu, "Cuber Zero");
 	submenu_add_item(((PCUBERZERO) context)->view.submenu, "Timer", SCENE_TIMER, callbackItem, context);
+	// ----- Test Only -----
+	submenu_add_item(((PCUBERZERO) context)->view.submenu, "Session Select", SCENE_SESSION_SELECT, callbackItem, context);
+	// ---------------------
 	submenu_set_selected_item(((PCUBERZERO) context)->view.submenu, ((PCUBERZERO) context)->scene.home.index);
 	view_dispatcher_switch_to_view(((PCUBERZERO) context)->dispatcher, VIEW_SUBMENU);
 }
