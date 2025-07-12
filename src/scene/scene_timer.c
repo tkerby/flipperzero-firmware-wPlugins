@@ -28,6 +28,10 @@ static void callbackDraw(Canvas* const canvas, void* const context) {
 	canvas_set_font(canvas, FontPrimary);
 	canvas_set_color(canvas, ColorBlack);
 	canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, "Test String");
+	canvas_draw_dot(canvas, 4, 1);
+	canvas_draw_line(canvas, 3, 2, 5, 2);
+	canvas_draw_line(canvas, 2, 3, 6, 3);
+	canvas_draw_line(canvas, 1, 4, 7, 4);
 }
 
 static void callbackInput(InputEvent* const event, void* const context) {
