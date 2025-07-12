@@ -123,6 +123,7 @@ struct AnkiRemoteApp {
     bool running;
     bool connected;
     KeyMapping keymap[NUM_FLIPPER_BUTTONS];
+    uint8_t led_brightness; // v1.2 NEW
     struct {
         uint8_t selected_item;
     } menu_state;
@@ -171,6 +172,7 @@ static void anki_remote_set_default_keymap(AnkiRemoteApp* app) {
     for(uint8_t i = 0; i < NUM_FLIPPER_BUTTONS; ++i) {
         app->keymap[i] = (KeyMapping){.keycode = 0, .modifiers = 0};
     }
+    app->led_brightness = 255; // v1.2: Max brightness is default and will be used if missing in file
 }
 
 // Try to load button settings from SD card; if it fails, use defaults
@@ -180,6 +182,10 @@ static void anki_remote_load_keymap(AnkiRemoteApp* app) {
     if(storage_file_open(file, KEYMAP_PATH, FSAM_READ, FSOM_OPEN_EXISTING)) {
         if(storage_file_read(file, app->keymap, sizeof(app->keymap)) != sizeof(app->keymap)) {
             anki_remote_set_default_keymap(app);
+        } else {
+            if(storage_file_read(file, &app->led_brightness, sizeof(uint8_t)) != sizeof(uint8_t)) {
+                app->led_brightness = 255;
+            }
         }
     } else {
         anki_remote_set_default_keymap(app);
@@ -195,6 +201,7 @@ static void anki_remote_save_keymap(AnkiRemoteApp* app) {
     File* file = storage_file_alloc(storage);
     if(storage_file_open(file, KEYMAP_PATH, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
         storage_file_write(file, app->keymap, sizeof(app->keymap));
+        storage_file_write(file, &app->led_brightness, sizeof(uint8_t)); // v1.2: Append brightness
     }
     storage_file_close(file);
     storage_file_free(file);
@@ -550,15 +557,24 @@ void get_key_combo_name(KeyMapping mapping, char* buffer, size_t buffer_size) {
     }
 }
 
+// Gets brightness label
+static const char* get_led_brightness_label(uint8_t brightness) {
+    if(brightness == 0) return "0%";
+    else if(brightness <= 64) return "25%";
+    else if(brightness <= 128) return "50%";
+    else if(brightness <= 192) return "75%";
+    else return "100%";
+}
+
 // Draws the sub menu
 static void anki_remote_scene_settings_menu_draw_callback(Canvas* canvas, void* context) {
     AnkiRemoteApp* app = context;
     canvas_clear(canvas);
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str(canvas, 2, 10, "Button Settings");
+    canvas_draw_str(canvas, 2, 10, "Remote Settings"); // v1.2: changed from "Button Settings"
     canvas_set_font(canvas, FontSecondary);
     
-    const uint8_t total_items = NUM_FLIPPER_BUTTONS + 1; // +1 for Reset
+    const uint8_t total_items = NUM_FLIPPER_BUTTONS + 2; // v1.2: +2 now for Reset + LED
     const uint8_t visible_items = 5;
     uint8_t y_start = 19;
     uint8_t y_spacing = 10; // v1.1: for better visibility
@@ -569,26 +585,55 @@ static void anki_remote_scene_settings_menu_draw_callback(Canvas* canvas, void* 
 
         uint8_t y_pos = y_start + (i * y_spacing);
         char label[32];
+        bool is_led_item = (item_index == NUM_FLIPPER_BUTTONS + 1);
+        bool is_selected = (item_index == app->settings_menu_state.selected_item);
 
         if(item_index < NUM_FLIPPER_BUTTONS) {
             char key_name_buffer[24];
             get_key_combo_name(app->keymap[item_index], key_name_buffer, sizeof(key_name_buffer));
             snprintf(label, sizeof(label), "%s: %s", get_button_name(item_index), key_name_buffer);
-        } else {
+        } else if(item_index == NUM_FLIPPER_BUTTONS) {
             strlcpy(label, "Reset Mappings", sizeof(label));
+        } else {
+            strlcpy(label, "LED Brightness:", sizeof(label));
         }
 
-        if(item_index == app->settings_menu_state.selected_item) { // Check if reset is selected
+        if(is_selected) {
             elements_slightly_rounded_box(canvas, 2, y_pos - 7, 124, 9);
             canvas_set_color(canvas, ColorWhite);
         }
-        canvas_draw_str(canvas, 5, y_pos, label);
+
+        // Draw the label or prefix
+        uint8_t label_x = 5;
+        canvas_draw_str(canvas, label_x, y_pos, label);
+        
+        // v1.2: draw percentage with arrows around if selected
+        if(is_led_item) {
+            const char* percent_str = get_led_brightness_label(app->led_brightness);
+            uint8_t char_width = 5;
+            uint8_t label_width = strlen(label) * char_width;
+            uint8_t end_of_label = label_x + label_width;
+            uint8_t right_edge = 123;
+            uint8_t available = right_edge - end_of_label;
+            uint8_t percent_len = strlen(percent_str);
+            uint8_t percent_width = percent_len * char_width;
+
+            if(is_selected) {
+                uint8_t arrow_width = char_width;
+                uint8_t total_width = arrow_width + 1 + percent_width + 6 + arrow_width;
+                uint8_t start_x = end_of_label + (available - total_width) / 2 + 1;
+                canvas_draw_str(canvas, start_x, y_pos, "<");
+                canvas_draw_str(canvas, start_x + arrow_width + 1, y_pos, percent_str);
+                canvas_draw_str(canvas, start_x + arrow_width + 1 + percent_width + 6, y_pos, ">");
+            } else {
+                uint8_t start_x = end_of_label + (available - percent_width) / 2 + 1;
+                canvas_draw_str(canvas, start_x, y_pos, percent_str);
+            }
+        }
         canvas_set_color(canvas, ColorBlack);
     }
-
     elements_scrollbar(canvas, app->settings_menu_state.selected_item, total_items);
 }
-
 
 // Settings menu inputs (not in the keyboard)
 static void anki_remote_scene_settings_menu_input_handler(AnkiRemoteApp* app, InputEvent* event) {
@@ -599,7 +644,7 @@ static void anki_remote_scene_settings_menu_input_handler(AnkiRemoteApp* app, In
     }
     if(event->type != InputTypeShort && event->type != InputTypeRepeat) return;
 
-    const uint8_t settings_menu_item_count = NUM_FLIPPER_BUTTONS + 1; // v1v1: +1 for Reset
+    const uint8_t settings_menu_item_count = NUM_FLIPPER_BUTTONS + 2; // v1.2: +2 (Reset + LED)
     uint8_t selected_item = app->settings_menu_state.selected_item;
 
     if(event->key == InputKeyUp) {
@@ -610,12 +655,30 @@ static void anki_remote_scene_settings_menu_input_handler(AnkiRemoteApp* app, In
         if(selected_item < NUM_FLIPPER_BUTTONS) {
             app->settings_state.configuring_button = selected_item;
             anki_remote_set_scene(app, SceneSettings);
-        } else { // Reset button is pressed
+        } else if(selected_item == NUM_FLIPPER_BUTTONS) { // Reset button is pressed
             anki_remote_set_default_keymap(app);
             anki_remote_save_keymap(app);
-        }
+        } // v1.2: LED is changed via left and right, not by OK
     } else if(event->key == InputKeyBack) {
         anki_remote_set_scene(app, SceneMenu);
+    } else if(selected_item == (NUM_FLIPPER_BUTTONS + 1)) {
+        if(event->key == InputKeyLeft) {
+            // Cycle down
+            if(app->led_brightness == 0) app->led_brightness = 255;
+            else if(app->led_brightness == 64) app->led_brightness = 0;
+            else if(app->led_brightness == 128) app->led_brightness = 64;
+            else if(app->led_brightness == 192) app->led_brightness = 128;
+            else app->led_brightness = 192;
+            anki_remote_save_keymap(app);
+        } else if(event->key == InputKeyRight) {
+            // Cycle up
+            if(app->led_brightness == 0) app->led_brightness = 64;
+            else if(app->led_brightness == 64) app->led_brightness = 128;
+            else if(app->led_brightness == 128) app->led_brightness = 192;
+            else if(app->led_brightness == 192) app->led_brightness = 255;
+            else app->led_brightness = 0;
+            anki_remote_save_keymap(app);
+        }
     }
 
     // Scrolling Logic
@@ -865,7 +928,6 @@ static void anki_remote_scene_settings_input_handler(AnkiRemoteApp* app, InputEv
 
 // - - - Section 6: Main Application Logic - - -
 
-
 // Decides which screen to draw
 static void anki_remote_draw_callback(Canvas* canvas, void* context) {
     AnkiRemoteApp* app = (AnkiRemoteApp*)context;
@@ -918,9 +980,9 @@ static void anki_remote_connection_status_callback(BtStatus status, void* contex
     AnkiRemoteApp* app = context;
     app->connected = (status == BtStatusConnected);
     if(app->connected) {
-        notification_internal_message(app->notifications, &sequence_set_blue_255);
+        furi_hal_light_set(LightBlue, app->led_brightness);
     } else {
-        notification_internal_message(app->notifications, &sequence_reset_blue);
+        furi_hal_light_set(LightBlue, 0); // Off
     }
     view_port_update(app->view_port);
 }
@@ -1014,6 +1076,7 @@ static AnkiRemoteApp* anki_remote_app_alloc() {
     app->current_scene = SceneMenu;
     app->menu_state.selected_item = 0;
     app->ignore_next_ok_release = false;
+    app->led_brightness = 255;
     anki_remote_load_keymap(app);
     return app;
 }
