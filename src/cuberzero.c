@@ -1,6 +1,6 @@
 #include "cuberzero.h"
 
-static bool callbackEmptyEvent(void* const context, const SceneManagerEvent event) {
+/*static bool callbackEmptyEvent(void* const context, const SceneManagerEvent event) {
 	UNUSED(context);
 	UNUSED(event);
 	return 0;
@@ -24,11 +24,14 @@ static bool callbackNavigationEvent(void* const context) {
 	}
 
 	return scene_manager_handle_back_event(((PCUBERZERO) context)->manager);
-}
+}*/
 
 int32_t cuberzeroMain(const void* const unused) {
 	UNUSED(unused);
-	CUBERZERO_INFO("Initializing");
+	SESSION session;
+	EnsureLoadedSession(&session);
+	return 0;
+	/*CUBERZERO_INFO("Initializing");
 	const char* message = 0;
 	const PCUBERZERO instance = malloc(sizeof(CUBERZERO));
 
@@ -90,5 +93,5 @@ functionExit:
 
 	CUBERZERO_ERROR("Error: %s", message);
 	__furi_crash(message);
-	return 1;
+	return 1;*/
 }
