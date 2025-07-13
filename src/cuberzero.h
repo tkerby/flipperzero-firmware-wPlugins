@@ -6,6 +6,7 @@
 #include <gui/gui.h>
 #include <gui/view_dispatcher.h>
 #include <gui/scene_manager.h>
+#include "session.h"
 
 #define CUBERZERO_TAG	  "CuberZero"
 #define CUBERZERO_VERSION "0.0.1"
@@ -26,6 +27,8 @@ typedef struct {
 			uint32_t index;
 		} home;
 	} scene;
+
+	SESSION session;
 } CUBERZERO, *PCUBERZERO;
 
 typedef enum {
