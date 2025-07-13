@@ -40,10 +40,7 @@ void SceneTimerEnter(void* const context) {
 		return;
 	}
 
-	if(!EnsureLoadedSession(&((PCUBERZERO) context)->session)) {
-		goto functionExit;
-	}
-
+	EnsureLoadedSession(&((PCUBERZERO) context)->session);
 	const PTIMERSCENE instance = malloc(sizeof(TIMERSCENE));
 
 	if(!instance) {
