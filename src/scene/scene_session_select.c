@@ -1,43 +1,55 @@
 #include "src/cuberzero.h"
-#include <storage/storage.h>
-#include <gui/modules/widget.h>
 
-#define MAX_NAME_LENGTH 256
+typedef struct {
+	PCUBERZERO instance;
+	FuriMessageQueue* queue;
+} SESSIONSELECTSCENE, *PSESSIONSELECTSCENE;
 
-/*static void callbackItem(void* const context, const uint32_t index) {
+static void callbackDraw(Canvas* const canvas, void* const context) {
+	furi_check(canvas);
 	UNUSED(context);
-	UNUSED(index);
-}*/
+	canvas_clear(canvas);
+	canvas_set_font(canvas, FontPrimary);
+	canvas_set_color(canvas, ColorBlack);
+	canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, "Test String");
+	canvas_draw_dot(canvas, 4, 1);
+	canvas_draw_line(canvas, 3, 2, 5, 2);
+	canvas_draw_line(canvas, 2, 3, 6, 3);
+	canvas_draw_line(canvas, 1, 4, 7, 4);
+}
 
-void SceneSessionSelectEnter(void* const context) {
-	furi_check(context);
-	Widget* widget = widget_alloc();
-	widget_add_text_box_element(widget, 10, 10, 50, 50, AlignCenter, AlignCenter, "Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of \" de Finibus Bonorum et Malorum \" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, very popular during the Renaissance. The first line of Lorem Ipsum, \" Lorem ipsum dolor sit amet..\", comes from a line in section 1.10.32.", 1);
-	view_dispatcher_add_view(((PCUBERZERO) context)->dispatcher, 10, widget_get_view(widget));
-	view_dispatcher_switch_to_view(((PCUBERZERO) context)->dispatcher, 10);
-
-	while(1);
-
-	view_dispatcher_remove_view(((PCUBERZERO) context)->dispatcher, 10);
-	widget_free(widget);
-	/*if(!context) {
+static void callbackInput(InputEvent* const event, void* const context) {
+	if(!event || !context) {
 		return;
 	}
 
-	Storage* storage = furi_record_open(RECORD_STORAGE);
-	furi_check(storage);
-	File* file = storage_file_alloc(storage);
-	storage_dir_open(file, APP_DATA_PATH("sessions"));
-	FileInfo info;
-	char name[MAX_NAME_LENGTH + 1];
-	submenu_reset(((PCUBERZERO) context)->view.submenu);
+	if(event->type == InputTypeShort && event->key == InputKeyBack) {
+		furi_message_queue_put(((PSESSIONSELECTSCENE) context)->queue, event, FuriWaitForever);
+	}
+}
 
-	while(storage_dir_read(file, &info, name, MAX_NAME_LENGTH)) {
-		submenu_add_item(((PCUBERZERO) context)->view.submenu, name, SCENE_TIMER, callbackItem, context);
+void SceneSessionSelectEnter(void* const context) {
+	furi_check(context);
+	const PSESSIONSELECTSCENE instance = malloc(sizeof(SESSIONSELECTSCENE));
+	instance->instance = context;
+	ViewPort* const viewport = view_port_alloc();
+	instance->queue = furi_message_queue_alloc(1, sizeof(InputEvent));
+	view_port_draw_callback_set(viewport, callbackDraw, instance);
+	view_port_input_callback_set(viewport, callbackInput, instance);
+	view_dispatcher_stop(((PCUBERZERO) context)->dispatcher);
+	gui_remove_view_port(((PCUBERZERO) context)->interface, ((PCUBERZERO) context)->dispatcher->viewport);
+	gui_add_view_port(((PCUBERZERO) context)->interface, viewport, GuiLayerFullscreen);
+	const InputEvent* event;
+
+	while(furi_message_queue_get(instance->queue, &event, FuriWaitForever) == FuriStatusOk) {
+		break;
 	}
 
-	view_dispatcher_switch_to_view(((PCUBERZERO) context)->dispatcher, VIEW_SUBMENU);
-	storage_dir_close(file);
-	storage_file_free(file);
-	furi_record_close(RECORD_STORAGE);*/
+	gui_remove_view_port(((PCUBERZERO) context)->interface, viewport);
+	gui_add_view_port(((PCUBERZERO) context)->interface, ((PCUBERZERO) context)->dispatcher->viewport, GuiLayerFullscreen);
+	furi_message_queue_free(instance->queue);
+	view_port_free(viewport);
+	free(instance);
+	scene_manager_handle_back_event(((PCUBERZERO) context)->manager);
+	view_dispatcher_run(((PCUBERZERO) context)->dispatcher);
 }
