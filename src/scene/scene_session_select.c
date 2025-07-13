@@ -5,8 +5,7 @@
 #define TEXT_NEW	"New"
 #define TEXT_DELETE "Delete"
 
-#define VERTICAL_SPACING   2
-#define HORIZONTAL_SPACING 2
+#define SPACING 2
 
 typedef struct {
 	PCUBERZERO instance;
@@ -15,13 +14,14 @@ typedef struct {
 
 static uint8_t drawButton(Canvas* const canvas, const uint8_t x, const uint8_t y, const char* const text) {
 	canvas_set_font(canvas, FontSecondary);
-	const uint16_t width = canvas_string_width(canvas, text) + HORIZONTAL_SPACING * 2;
+	const uint16_t width = canvas_string_width(canvas, text) + SPACING * 2;
 	canvas_set_color(canvas, ColorBlack);
-	canvas_draw_str(canvas, x + HORIZONTAL_SPACING + 1, y + VERTICAL_SPACING + 8, text);
+	canvas_draw_str(canvas, x + SPACING + 1, y + SPACING + 8, text);
 	canvas_draw_line(canvas, x + 1, y, x + width + 1 - 1, y);
-	canvas_draw_line(canvas, x + 1, y + VERTICAL_SPACING * 2 + 8, x + width + 1 - 1, y + VERTICAL_SPACING * 2 + 8);
-	canvas_draw_line(canvas, x, y + 1, x, y + VERTICAL_SPACING * 2 + 7);
-	canvas_draw_line(canvas, x + width + 1, y + 1, x + width + 1, y + VERTICAL_SPACING * 2 + 7);
+	canvas_draw_line(canvas, x + 1, y + SPACING * 2 + 8, x + width + 1 - 1, y + SPACING * 2 + 8);
+	canvas_draw_line(canvas, x, y + 1, x, y + SPACING * 2 + 7);
+	canvas_draw_line(canvas, x + width + 1, y + 1, x + width + 1, y + SPACING * 2 + 7);
+	canvas_draw_box(canvas, x + 1, y + 1, width, 11);
 	return (uint8_t) width;
 }
 
