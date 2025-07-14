@@ -47,24 +47,22 @@ static void callbackDraw(Canvas* const canvas, void* const context) {
 }
 
 static void callbackInput(InputEvent* const event, void* const context) {
-	if(!event || !context) {
+	if(!event || !context || event->type != InputTypeShort) {
 		return;
 	}
 
-	if(event->type == InputTypeShort) {
-		switch(event->key) {
-		case InputKeyUp:
-		case InputKeyLeft:
-			break;
-		case InputKeyDown:
-		case InputKeyRight:
-			break;
-		case InputKeyOk:
-			break;
-		default:
-			furi_message_queue_put(((PSESSIONSELECTSCENE) context)->queue, event, FuriWaitForever);
-			break;
-		}
+	switch(event->key) {
+	case InputKeyUp:
+	case InputKeyLeft:
+		break;
+	case InputKeyDown:
+	case InputKeyRight:
+		break;
+	case InputKeyOk:
+		break;
+	default:
+		furi_message_queue_put(((PSESSIONSELECTSCENE) context)->queue, event, FuriWaitForever);
+		break;
 	}
 }
 
