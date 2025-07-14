@@ -630,6 +630,24 @@ static const MenuCommand ble_scanning_commands[] = {
         .details_header = "Select Flipper",
         .details_text = "Select a Flipper by number.",
     },
+    {
+        .label = "Detect BLE Spam",
+        .command = "blescan -ds\n",
+        .details_header = "BLE Spam Detection",
+        .details_text = "Detects Bluetooth spam devices\nin the area.",
+    },
+    {
+        .label = "View All BLE Traffic",
+        .command = "blescan -r\n",
+        .details_header = "BLE Raw Traffic",
+        .details_text = "View all Bluetooth Low Energy\ntraffic in range.",
+    },
+    {
+        .label = "Stop BLE Scanning",
+        .command = "blescan -s\n",
+        .details_header = "Stop BLE Scan",
+        .details_text = "Stops any active BLE scanning.",
+    },
 };
 
 static const MenuCommand ble_capture_commands[] = {
