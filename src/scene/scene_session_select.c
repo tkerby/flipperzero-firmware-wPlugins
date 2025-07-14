@@ -1,19 +1,18 @@
 #include "src/cuberzero.h"
 #include <gui/elements.h>
 
-#define TEXT_SELECT "Select"
-#define TEXT_NEW	"New"
-#define TEXT_DELETE "Delete"
-
 typedef struct {
 	PCUBERZERO instance;
+	ViewPort* viewport;
 	FuriMessageQueue* queue;
+	uint8_t selectedButton;
 } SESSIONSELECTSCENE, *PSESSIONSELECTSCENE;
 
 enum SESSIONSELECTBUTTON {
 	BUTTON_SELECT,
 	BUTTON_NEW,
-	BUTTPN_DELETE
+	BUTTON_DELETE,
+	COUNT_BUTTON
 };
 
 static inline void drawButton(Canvas* const canvas, const uint8_t x, const uint8_t y, const uint8_t pressed, const char* const text) {
@@ -34,16 +33,15 @@ static inline void drawButton(Canvas* const canvas, const uint8_t x, const uint8
 
 static void callbackDraw(Canvas* const canvas, void* const context) {
 	furi_check(canvas);
-	UNUSED(context);
 	canvas_clear(canvas);
 	canvas_set_color(canvas, ColorBlack);
 	canvas_set_font(canvas, FontPrimary);
 	canvas_draw_str(canvas, 0, 8, "Current Session:");
 	elements_text_box(canvas, 0, 11, 128, 39, AlignLeft, AlignTop, "3x3 Blindfolded Test 2025 at my home, this is a very long session name", 1);
 	canvas_set_font(canvas, FontSecondary);
-	drawButton(canvas, 10, 51, 1, "Select");
-	drawButton(canvas, 52, 51, 0, "New");
-	drawButton(canvas, 86, 51, 0, "Delete");
+	drawButton(canvas, 10, 51, ((PSESSIONSELECTSCENE) context)->selectedButton == BUTTON_SELECT, "Select");
+	drawButton(canvas, 52, 51, ((PSESSIONSELECTSCENE) context)->selectedButton == BUTTON_NEW, "New");
+	drawButton(canvas, 86, 51, ((PSESSIONSELECTSCENE) context)->selectedButton == BUTTON_DELETE, "Delete");
 }
 
 static void callbackInput(InputEvent* const event, void* const context) {
@@ -53,10 +51,14 @@ static void callbackInput(InputEvent* const event, void* const context) {
 
 	switch(event->key) {
 	case InputKeyUp:
-	case InputKeyLeft:
+	case InputKeyRight:
+		((PSESSIONSELECTSCENE) context)->selectedButton = (((PSESSIONSELECTSCENE) context)->selectedButton + 1) % COUNT_BUTTON;
+		view_port_update(((PSESSIONSELECTSCENE) context)->viewport);
 		break;
 	case InputKeyDown:
-	case InputKeyRight:
+	case InputKeyLeft:
+		((PSESSIONSELECTSCENE) context)->selectedButton = (((PSESSIONSELECTSCENE) context)->selectedButton ? ((PSESSIONSELECTSCENE) context)->selectedButton : COUNT_BUTTON) - 1;
+		view_port_update(((PSESSIONSELECTSCENE) context)->viewport);
 		break;
 	case InputKeyOk:
 		break;
@@ -70,23 +72,23 @@ void SceneSessionSelectEnter(void* const context) {
 	furi_check(context);
 	const PSESSIONSELECTSCENE instance = malloc(sizeof(SESSIONSELECTSCENE));
 	instance->instance = context;
-	ViewPort* const viewport = view_port_alloc();
+	instance->viewport = view_port_alloc();
 	instance->queue = furi_message_queue_alloc(1, sizeof(InputEvent));
-	view_port_draw_callback_set(viewport, callbackDraw, instance);
-	view_port_input_callback_set(viewport, callbackInput, instance);
+	view_port_draw_callback_set(instance->viewport, callbackDraw, instance);
+	view_port_input_callback_set(instance->viewport, callbackInput, instance);
 	view_dispatcher_stop(((PCUBERZERO) context)->dispatcher);
 	gui_remove_view_port(((PCUBERZERO) context)->interface, ((PCUBERZERO) context)->dispatcher->viewport);
-	gui_add_view_port(((PCUBERZERO) context)->interface, viewport, GuiLayerFullscreen);
+	gui_add_view_port(((PCUBERZERO) context)->interface, instance->viewport, GuiLayerFullscreen);
 	const InputEvent* event;
 
 	while(furi_message_queue_get(instance->queue, &event, FuriWaitForever) == FuriStatusOk) {
 		break;
 	}
 
-	gui_remove_view_port(((PCUBERZERO) context)->interface, viewport);
+	gui_remove_view_port(((PCUBERZERO) context)->interface, instance->viewport);
 	gui_add_view_port(((PCUBERZERO) context)->interface, ((PCUBERZERO) context)->dispatcher->viewport, GuiLayerFullscreen);
 	furi_message_queue_free(instance->queue);
-	view_port_free(viewport);
+	view_port_free(instance->viewport);
 	free(instance);
 	scene_manager_handle_back_event(((PCUBERZERO) context)->manager);
 	view_dispatcher_run(((PCUBERZERO) context)->dispatcher);
