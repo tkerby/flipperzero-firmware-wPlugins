@@ -37,6 +37,15 @@ typedef struct {
     const MenuCommand* command;
 } MenuCommandContext;
 
+typedef struct {
+    const char* label;
+    const char* command;
+    const char* details_header;
+    const char* details_text;
+    bool needs_input;
+    const char* input_text;
+} CyclingMenuDef;
+
 // Forward declarations of static functions
 static void show_menu(
     AppState* state,
@@ -66,45 +75,58 @@ static const SniffCommandDef sniff_commands[] = {
 };
 
 // Beacon spam command definitions
-static const BeaconSpamDef beacon_spam_commands[] = {
-    {"< Beacon Spam (List) >", "beaconspam -l\n"},
-    {"< Beacon Spam (Random) >", "beaconspam -r\n"},
-    {"< Beacon Spam (Rickroll) >", "beaconspam -rr\n"},
-    {"< Beacon Spam (Custom) >", "beaconspam"},
+static const CyclingMenuDef beacon_spam_commands[] = {
+    {"< Beacon Spam (List) >", "beaconspam -l\n", "Beacon Spam (List)", "Spam SSIDs from list.", false, NULL},
+    {"< Beacon Spam (Random) >", "beaconspam -r\n", "Beacon Spam (Random)", "Spam random SSIDs.", false, NULL},
+    {"< Beacon Spam (Rickroll) >", "beaconspam -rr\n", "Beacon Spam (Rickroll)", "Spam Rickroll SSIDs.", false, NULL},
+    {"< Beacon Spam (Custom) >", "beaconspam", "Beacon Spam (Custom)", "Spam custom SSID.", true, "SSID Name"},
 };
 
 // BLE spam command definitions
-static const BeaconSpamDef ble_spam_commands[] = {
-    {"< BLE Spam (Apple) >", "blespam -apple\n"},
-    {"< BLE Spam (Microsoft) >", "blespam -ms\n"},
-    {"< BLE Spam (Samsung) >", "blespam -samsung\n"},
-    {"< BLE Spam (Google) >", "blespam -google\n"},
-    {"< BLE Spam (Random) >", "blespam -random\n"},
+static const CyclingMenuDef ble_spam_commands[] = {
+    {"< BLE Spam (Apple) >", "blespam -apple\n", "BLE Spam (Apple)", "Spam Apple BLE devices.", false, NULL},
+    {"< BLE Spam (Microsoft) >", "blespam -ms\n", "BLE Spam (Microsoft)", "Spam Microsoft BLE devices.", false, NULL},
+    {"< BLE Spam (Samsung) >", "blespam -samsung\n", "BLE Spam (Samsung)", "Spam Samsung BLE devices.", false, NULL},
+    {"< BLE Spam (Google) >", "blespam -google\n", "BLE Spam (Google)", "Spam Google BLE devices.", false, NULL},
+    {"< BLE Spam (Random) >", "blespam -random\n", "BLE Spam (Random)", "Spam random BLE devices.", false, NULL},
 };
 
 static size_t current_rgb_index = 0;
 
-static const BeaconSpamDef rgbmode_commands[] = {
-    {"< LED: Rainbow >", "rgbmode rainbow\n"},
-    {"< LED: Police >", "rgbmode police\n"},
-    {"< LED: Strobe >", "rgbmode strobe\n"},
-    {"< LED: Off >", "rgbmode off\n"},
-    {"< LED: Red >", "rgbmode red\n"},
-    {"< LED: Green >", "rgbmode green\n"},
-    {"< LED: Blue >", "rgbmode blue\n"},
-    {"< LED: Yellow >", "rgbmode yellow\n"},
-    {"< LED: Purple >", "rgbmode purple\n"},
-    {"< LED: Cyan >", "rgbmode cyan\n"},
-    {"< LED: Orange >", "rgbmode orange\n"},
-    {"< LED: White >", "rgbmode white\n"},
-    {"< LED: Pink >", "rgbmode pink\n"}};
+static const CyclingMenuDef rgbmode_commands[] = {
+    {"< LED: Rainbow >", "rgbmode rainbow\n", "LED: Rainbow", "Cycle rainbow colors.", false, NULL},
+    {"< LED: Police >", "rgbmode police\n", "LED: Police", "Police light effect.", false, NULL},
+    {"< LED: Strobe >", "rgbmode strobe\n", "LED: Strobe", "Strobe light effect.", false, NULL},
+    {"< LED: Off >", "rgbmode off\n", "LED: Off", "Turn off LED.", false, NULL},
+    {"< LED: Red >", "rgbmode red\n", "LED: Red", "Set LED to red.", false, NULL},
+    {"< LED: Green >", "rgbmode green\n", "LED: Green", "Set LED to green.", false, NULL},
+    {"< LED: Blue >", "rgbmode blue\n", "LED: Blue", "Set LED to blue.", false, NULL},
+    {"< LED: Yellow >", "rgbmode yellow\n", "LED: Yellow", "Set LED to yellow.", false, NULL},
+    {"< LED: Purple >", "rgbmode purple\n", "LED: Purple", "Set LED to purple.", false, NULL},
+    {"< LED: Cyan >", "rgbmode cyan\n", "LED: Cyan", "Set LED to cyan.", false, NULL},
+    {"< LED: Orange >", "rgbmode orange\n", "LED: Orange", "Set LED to orange.", false, NULL},
+    {"< LED: White >", "rgbmode white\n", "LED: White", "Set LED to white.", false, NULL},
+    {"< LED: Pink >", "rgbmode pink\n", "LED: Pink", "Set LED to pink.", false, NULL},
+};
 
+static const CyclingMenuDef wifi_scan_modes[] = {
+    {"< Scan (APs) >", "scanap\n", "WiFi AP Scanner", "Scans for WiFi APs...", false, NULL},
+    {"< Scan (Stations) >", "scansta\n", "Station Scanner", "Scans for clients...", false, NULL},
+    {"< Scan (AP+STA) >", "scanall\n", "Scan All", "Combined AP/Station scan...", false, NULL},
+};
 static size_t current_sniff_index = 0;
 static size_t current_beacon_index = 0;
 static size_t current_ble_spam_index = 0;
+static size_t current_wifi_scan_index = 0;
 
 // WiFi menu command definitions
 static const MenuCommand wifi_scanning_commands[] = {
+    {
+        .label = "< Scan Mode: APs >", // Initial label
+        .command = wifi_scan_modes[0].command,
+        .details_header = wifi_scan_modes[0].details_header,
+        .details_text = wifi_scan_modes[0].details_text,
+    },
     {
         .label = "Scan WiFi APs",
         .command = "scanap\n",
@@ -1038,7 +1060,7 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
 
     // Handle variable beacon spam command
     if(state->current_view == 12 && state->current_index == 0) {
-        const BeaconSpamDef* current_beacon = &beacon_spam_commands[current_beacon_index];
+        const CyclingMenuDef* current_beacon = &beacon_spam_commands[current_beacon_index];
 
         // If it's custom mode (last index), handle text input
         if(current_beacon_index == COUNT_OF(beacon_spam_commands) - 1) {
@@ -1070,7 +1092,7 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
 
     // Handle variable rgbmode command (new branch for index 17)
     if(state->current_view == 14 && state->current_index == 0) {
-        const BeaconSpamDef* current_rgb = &rgbmode_commands[current_rgb_index];
+        const CyclingMenuDef* current_rgb = &rgbmode_commands[current_rgb_index];
         // Save view and show terminal log
         state->previous_view = state->current_view;
         uart_receive_data(state->uart_context, state->view_dispatcher, state, "", "", "");
@@ -1082,7 +1104,7 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
 
     // Handle variable BLE spam command
     if(state->current_view == 22 && state->current_index == 0) {
-        const BeaconSpamDef* current_ble_spam = &ble_spam_commands[current_ble_spam_index];
+        const CyclingMenuDef* current_ble_spam = &ble_spam_commands[current_ble_spam_index];
         // Save view and show terminal log
         state->previous_view = state->current_view;
         uart_receive_data(state->uart_context, state->view_dispatcher, state, "", "", "");
@@ -1121,7 +1143,6 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
 
     furi_delay_ms(5);
     send_uart_command(command->command, state);
-    state->current_view = 5;
 }
 
 // Menu display function implementation
@@ -1931,6 +1952,27 @@ static bool menu_input_handler(InputEvent* event, void* context) {
                 }
                 submenu_change_item_label(
                     current_menu, current_index, ble_spam_commands[current_ble_spam_index].label);
+                consumed = true;
+            }
+            // Handle WiFi scan mode cycling
+            else if(state->current_view == 10 && current_index == 0) { // Assuming it's the first item
+                if(event->key == InputKeyRight) {
+                    current_wifi_scan_index =
+                        (current_wifi_scan_index + 1) % COUNT_OF(wifi_scan_modes);
+                } else {
+                    current_wifi_scan_index = (current_wifi_scan_index == 0) ?
+                                              (COUNT_OF(wifi_scan_modes) - 1) :
+                                              (current_wifi_scan_index - 1);
+                }
+                submenu_change_item_label(
+                    current_menu, current_index, wifi_scan_modes[current_wifi_scan_index].label);
+
+                // Update the cycling menu item fields
+                MenuCommand* scan_cmd = (MenuCommand*)&wifi_scanning_commands[0];
+                scan_cmd->command = wifi_scan_modes[current_wifi_scan_index].command;
+                scan_cmd->details_header = wifi_scan_modes[current_wifi_scan_index].details_header;
+                scan_cmd->details_text = wifi_scan_modes[current_wifi_scan_index].details_text;
+
                 consumed = true;
             }
             break;
