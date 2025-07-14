@@ -551,6 +551,35 @@ static const MenuCommand wifi_settings_commands[] = {
         .details_text = "Set the WiFi country code.\n"
                         "May require ESP32-C5.",
     },
+    {
+        .label = "Show Help",
+        .command = "help\n",
+        .details_header = "Help",
+        .details_text = "Show complete command list.",
+    },
+    {
+        .label = "Reboot Device",
+        .command = "reboot\n",
+        .needs_confirmation = true,
+        .confirm_header = "Reboot Device",
+        .confirm_text = "Are you sure you want to reboot?",
+        .details_header = "Reboot",
+        .details_text = "Restart the ESP device.",
+    },
+    {
+        .label = "Enable/Disable AP",
+        .command = "apenable",
+        .needs_input = true,
+        .input_text = "on | off",
+        .details_header = "AP Enable/Disable",
+        .details_text = "Enable or disable the Access Point\nacross reboots.",
+    },
+    {
+        .label = "Show Chip Info",
+        .command = "chipinfo\n",
+        .details_header = "Chip Info",
+        .details_text = "Show chip and memory info.",
+    },
 };
 
 static const MenuCommand wifi_stop_command = {
