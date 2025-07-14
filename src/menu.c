@@ -76,19 +76,64 @@ static const SniffCommandDef sniff_commands[] = {
 
 // Beacon spam command definitions
 static const CyclingMenuDef beacon_spam_commands[] = {
-    {"< Beacon Spam (List) >", "beaconspam -l\n", "Beacon Spam (List)", "Spam SSIDs from list.", false, NULL},
-    {"< Beacon Spam (Random) >", "beaconspam -r\n", "Beacon Spam (Random)", "Spam random SSIDs.", false, NULL},
-    {"< Beacon Spam (Rickroll) >", "beaconspam -rr\n", "Beacon Spam (Rickroll)", "Spam Rickroll SSIDs.", false, NULL},
-    {"< Beacon Spam (Custom) >", "beaconspam", "Beacon Spam (Custom)", "Spam custom SSID.", true, "SSID Name"},
+    {"< Beacon Spam (List) >",
+     "beaconspam -l\n",
+     "Beacon Spam (List)",
+     "Spam SSIDs from list.",
+     false,
+     NULL},
+    {"< Beacon Spam (Random) >",
+     "beaconspam -r\n",
+     "Beacon Spam (Random)",
+     "Spam random SSIDs.",
+     false,
+     NULL},
+    {"< Beacon Spam (Rickroll) >",
+     "beaconspam -rr\n",
+     "Beacon Spam (Rickroll)",
+     "Spam Rickroll SSIDs.",
+     false,
+     NULL},
+    {"< Beacon Spam (Custom) >",
+     "beaconspam",
+     "Beacon Spam (Custom)",
+     "Spam custom SSID.",
+     true,
+     "SSID Name"},
 };
 
 // BLE spam command definitions
 static const CyclingMenuDef ble_spam_commands[] = {
-    {"< BLE Spam (Apple) >", "blespam -apple\n", "BLE Spam (Apple)", "Spam Apple BLE devices.", false, NULL},
-    {"< BLE Spam (Microsoft) >", "blespam -ms\n", "BLE Spam (Microsoft)", "Spam Microsoft BLE devices.", false, NULL},
-    {"< BLE Spam (Samsung) >", "blespam -samsung\n", "BLE Spam (Samsung)", "Spam Samsung BLE devices.", false, NULL},
-    {"< BLE Spam (Google) >", "blespam -google\n", "BLE Spam (Google)", "Spam Google BLE devices.", false, NULL},
-    {"< BLE Spam (Random) >", "blespam -random\n", "BLE Spam (Random)", "Spam random BLE devices.", false, NULL},
+    {"< BLE Spam (Apple) >",
+     "blespam -apple\n",
+     "BLE Spam (Apple)",
+     "Spam Apple BLE devices.",
+     false,
+     NULL},
+    {"< BLE Spam (Microsoft) >",
+     "blespam -ms\n",
+     "BLE Spam (Microsoft)",
+     "Spam Microsoft BLE devices.",
+     false,
+     NULL},
+    {"< BLE Spam (Samsung) >",
+     "blespam -samsung\n",
+     "BLE Spam (Samsung)",
+     "Spam Samsung BLE devices.",
+     false,
+     NULL},
+    {"< BLE Spam (Google) >",
+     "blespam -google\n",
+     "BLE Spam (Google)",
+     "Spam Google BLE devices.",
+     false,
+     NULL},
+    {"< BLE Spam (Random) >",
+     "blespam -random\n",
+     "BLE Spam (Random)",
+     "Spam random BLE devices.",
+     false,
+     NULL},
 };
 
 static size_t current_rgb_index = 0;
@@ -110,88 +155,93 @@ static const CyclingMenuDef rgbmode_commands[] = {
 };
 
 static const CyclingMenuDef wifi_scan_modes[] = {
-    {"< Scan (APs) >", "scanap\n", "WiFi AP Scanner", "Scans for WiFi APs...", false, NULL},
-    {"< Scan (Stations) >", "scansta\n", "Station Scanner", "Scans for clients...", false, NULL},
-    {"< Scan (AP+STA) >", "scanall\n", "Scan All", "Combined AP/Station scan...", false, NULL},
+    {"< Scan: (APs) >", "scanap\n", "WiFi AP Scanner", "Scans for WiFi APs...", false, NULL},
+    {"< Scan: (Stations) >", "scansta\n", "Station Scanner", "Scans for clients...", false, NULL},
+    {"< Scan: (AP+STA) >", "scanall\n", "Scan All", "Combined AP/Station scan...", false, NULL},
 };
+
+static const CyclingMenuDef wifi_list_modes[] = {
+    {"< List: (APs) >",
+     "list -a\n",
+     "List Access Points",
+     "Shows list of APs found during last scan.",
+     false,
+     NULL},
+    {"< List: (Stations) >",
+     "list -s\n",
+     "List Stations",
+     "Shows list of clients found during last scan.",
+     false,
+     NULL},
+};
+
+static const CyclingMenuDef wifi_select_modes[] = {
+    {"< Select: (AP) >",
+     "select -a",
+     "Select Access Point",
+     "Select an AP by number from the scanned list.",
+     true,
+     "AP Number"},
+    {"< Select: (Station) >",
+     "select -s",
+     "Select Station",
+     "Target a station by number from the scan list for attacks.",
+     true,
+     "Station Number"},
+};
+
+static const CyclingMenuDef wifi_listen_modes[] = {
+    {"< Listen Probes (Hop) >",
+     "listenprobes\n",
+     "Listen for Probes",
+     "Listen for and log probe requests\nwhile hopping channels.",
+     false,
+     NULL},
+    {"< Listen Probes (Chan) >",
+     "listenprobes",
+     "Listen on Channel",
+     "Listen for probe requests on a\nspecific channel.",
+     true,
+     "Channel (1-165)"},
+};
+
 static size_t current_sniff_index = 0;
 static size_t current_beacon_index = 0;
 static size_t current_ble_spam_index = 0;
 static size_t current_wifi_scan_index = 0;
+static size_t current_wifi_list_index = 0;
+static size_t current_wifi_select_index = 0;
+static size_t current_wifi_listen_index = 0;
 
 // WiFi menu command definitions
 static const MenuCommand wifi_scanning_commands[] = {
     {
-        .label = "< Scan Mode: APs >", // Initial label
+        .label = "< Scan: (APs) >", // Initial label
         .command = wifi_scan_modes[0].command,
         .details_header = wifi_scan_modes[0].details_header,
         .details_text = wifi_scan_modes[0].details_text,
     },
     {
-        .label = "Scan WiFi APs",
-        .command = "scanap\n",
-        .details_header = "WiFi AP Scanner",
-        .details_text = "Scans for WiFi APs:\n"
-                        "- SSID names\n"
-                        "- Signal levels\n"
-                        "- Security type\n"
-                        "- Channel info\n",
+        .label = "< List: (APs) >", // Initial label
+        .command = wifi_list_modes[0].command,
+        .details_header = wifi_list_modes[0].details_header,
+        .details_text = wifi_list_modes[0].details_text,
     },
     {
-        .label = "Scan WiFi Stations",
-        .command = "scansta\n",
-        .details_header = "Station Scanner",
-        .details_text = "Scans for clients:\n"
-                        "- MAC addresses\n"
-                        "- Network SSID\n"
-                        "- Signal level\n"
-                        "Range: ~50-100m\n",
+        .label = "< Select: (AP) >", // Initial label
+        .command = wifi_select_modes[0].command,
+        .needs_input = wifi_select_modes[0].needs_input,
+        .input_text = wifi_select_modes[0].input_text,
+        .details_header = wifi_select_modes[0].details_header,
+        .details_text = wifi_select_modes[0].details_text,
     },
     {
-        .label = "Scan All (AP+STA)",
-        .command = "scanall\n",
-        .details_header = "Scan All",
-        .details_text = "Combined AP/Station scan\n"
-                        "and display results.\n",
-    },
-    {
-        .label = "List APs",
-        .command = "list -a\n",
-        .details_header = "List Access Points",
-        .details_text = "Shows list of APs found\n"
-                        "during last scan with:\n"
-                        "- Network details\n"
-                        "- Channel info\n"
-                        "- Security type\n",
-    },
-    {
-        .label = "List Stations",
-        .command = "list -s\n",
-        .details_header = "List Stations",
-        .details_text = "Shows list of clients\n"
-                        "found during last scan:\n"
-                        "- Device MAC address\n"
-                        "- Connected network\n"
-                        "- Signal strength\n",
-    },
-    {
-        .label = "Select AP",
-        .command = "select -a",
-        .needs_input = true,
-        .input_text = "AP Number",
-        .details_header = "Select Access Point",
-        .details_text = "Select an AP by number\n"
-                        "from the scanned list\n"
-                        "for targeting with\n"
-                        "other commands.\n",
-    },
-    {
-        .label = "Select Station",
-        .command = "select -s",
-        .needs_input = true,
-        .input_text = "Station Number",
-        .details_header = "Select Station",
-        .details_text = "Target a station by number\nfrom the scan list for attacks.",
+        .label = "< Listen Probes (Hop) >", // Initial label
+        .command = wifi_listen_modes[0].command,
+        .needs_input = wifi_listen_modes[0].needs_input,
+        .input_text = wifi_listen_modes[0].input_text,
+        .details_header = wifi_listen_modes[0].details_header,
+        .details_text = wifi_listen_modes[0].details_text,
     },
     {
         .label = "Pineapple Detect",
@@ -217,22 +267,6 @@ static const MenuCommand wifi_scanning_commands[] = {
                         "Options: -C, -A, range\n"
                         "Ex: local -C\n"
                         "Ex: 192.168.1.1 80-1000",
-    },
-    {
-        .label = "Listen Probes (Hop)",
-        .command = "listenprobes\n",
-        .details_header = "Listen for Probes",
-        .details_text = "Listen for and log probe requests\n"
-                        "while hopping channels.",
-    },
-    {
-        .label = "Listen Probes (Chan)",
-        .command = "listenprobes",
-        .needs_input = true,
-        .input_text = "Channel (1-165)",
-        .details_header = "Listen on Channel",
-        .details_text = "Listen for probe requests on a\n"
-                        "specific channel.",
     },
     {
         .label = "Stop Listen Probes",
@@ -1961,8 +1995,8 @@ static bool menu_input_handler(InputEvent* event, void* context) {
                         (current_wifi_scan_index + 1) % COUNT_OF(wifi_scan_modes);
                 } else {
                     current_wifi_scan_index = (current_wifi_scan_index == 0) ?
-                                              (COUNT_OF(wifi_scan_modes) - 1) :
-                                              (current_wifi_scan_index - 1);
+                                                  (COUNT_OF(wifi_scan_modes) - 1) :
+                                                  (current_wifi_scan_index - 1);
                 }
                 submenu_change_item_label(
                     current_menu, current_index, wifi_scan_modes[current_wifi_scan_index].label);
@@ -1973,6 +2007,77 @@ static bool menu_input_handler(InputEvent* event, void* context) {
                 scan_cmd->details_header = wifi_scan_modes[current_wifi_scan_index].details_header;
                 scan_cmd->details_text = wifi_scan_modes[current_wifi_scan_index].details_text;
 
+                consumed = true;
+            }
+            // List mode cycling
+            else if(state->current_view == 10 && current_index == 1) {
+                if(event->key == InputKeyRight) {
+                    current_wifi_list_index =
+                        (current_wifi_list_index + 1) % COUNT_OF(wifi_list_modes);
+                } else {
+                    current_wifi_list_index = (current_wifi_list_index == 0) ?
+                                                  (COUNT_OF(wifi_list_modes) - 1) :
+                                                  (current_wifi_list_index - 1);
+                }
+                submenu_change_item_label(
+                    current_menu, current_index, wifi_list_modes[current_wifi_list_index].label);
+                // Update cycling menu item fields
+                MenuCommand* list_cmd = (MenuCommand*)&wifi_scanning_commands[1];
+                list_cmd->command = wifi_list_modes[current_wifi_list_index].command;
+                list_cmd->details_header = wifi_list_modes[current_wifi_list_index].details_header;
+                list_cmd->details_text = wifi_list_modes[current_wifi_list_index].details_text;
+                consumed = true;
+            }
+            // Select mode cycling
+            else if(state->current_view == 10 && current_index == 2) {
+                if(event->key == InputKeyRight) {
+                    current_wifi_select_index =
+                        (current_wifi_select_index + 1) % COUNT_OF(wifi_select_modes);
+                } else {
+                    current_wifi_select_index = (current_wifi_select_index == 0) ?
+
+                                                    (COUNT_OF(wifi_select_modes) - 1) :
+                                                    (current_wifi_select_index - 1);
+                }
+                submenu_change_item_label(
+                    current_menu,
+                    current_index,
+                    wifi_select_modes[current_wifi_select_index].label);
+                // Update cycling menu item fields
+                MenuCommand* select_cmd = (MenuCommand*)&wifi_scanning_commands[2];
+                select_cmd->command = wifi_select_modes[current_wifi_select_index].command;
+                select_cmd->needs_input = wifi_select_modes[current_wifi_select_index].needs_input;
+                select_cmd->input_text = wifi_select_modes[current_wifi_select_index].input_text;
+                select_cmd->details_header =
+                    wifi_select_modes[current_wifi_select_index].details_header;
+                select_cmd->details_text =
+                    wifi_select_modes[current_wifi_select_index].details_text;
+                consumed = true;
+            }
+            // Handle listen mode cycling
+            else if(state->current_view == 10 && current_index == 3) { // Adjust index as needed
+                if(event->key == InputKeyRight) {
+                    current_wifi_listen_index =
+                        (current_wifi_listen_index + 1) % COUNT_OF(wifi_listen_modes);
+                } else {
+                    current_wifi_listen_index = (current_wifi_listen_index == 0) ?
+                                                    (COUNT_OF(wifi_listen_modes) - 1) :
+                                                    (current_wifi_listen_index - 1);
+                }
+                submenu_change_item_label(
+                    current_menu,
+                    current_index,
+                    wifi_listen_modes[current_wifi_listen_index].label);
+                // Update cycling menu item fields
+                MenuCommand* listen_cmd =
+                    (MenuCommand*)&wifi_scanning_commands[3]; // Adjust index as needed
+                listen_cmd->command = wifi_listen_modes[current_wifi_listen_index].command;
+                listen_cmd->needs_input = wifi_listen_modes[current_wifi_listen_index].needs_input;
+                listen_cmd->input_text = wifi_listen_modes[current_wifi_listen_index].input_text;
+                listen_cmd->details_header =
+                    wifi_listen_modes[current_wifi_listen_index].details_header;
+                listen_cmd->details_text =
+                    wifi_listen_modes[current_wifi_listen_index].details_text;
                 consumed = true;
             }
             break;
