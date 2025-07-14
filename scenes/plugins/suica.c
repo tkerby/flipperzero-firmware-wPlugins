@@ -351,6 +351,7 @@ static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
                 FelicaError error = FelicaErrorNone;
                 FelicaPollerReadCommandResponse* rx_resp;
                 uint8_t blocks[1] = {0x00}; // firmware api requires this to be a list
+
                 do {
                     uint8_t block_data[16] = {0};
                     error = felica_poller_read_blocks(
@@ -387,6 +388,7 @@ static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
                 } while((rx_resp->SF1 + rx_resp->SF2) == 0 &&
                         blocks[0] < SUICA_MAX_HISTORY_ENTRIES && error == FelicaErrorNone);
                 if(error != FelicaErrorNone) {
+
                     break;
                 }
             }
