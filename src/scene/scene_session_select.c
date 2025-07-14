@@ -12,6 +12,12 @@ typedef struct {
 	FuriMessageQueue* queue;
 } SESSIONSELECTSCENE, *PSESSIONSELECTSCENE;
 
+enum SESSIONSELECTBUTTON {
+	BUTTON_SELECT,
+	BUTTON_NEW,
+	BUTTPN_DELETE
+};
+
 static uint8_t drawButton(Canvas* const canvas, const uint8_t x, const uint8_t y, const char* const text) {
 	canvas_set_font(canvas, FontSecondary);
 	const uint16_t width = canvas_string_width(canvas, text) + SPACING * 2;
