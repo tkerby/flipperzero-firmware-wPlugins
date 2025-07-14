@@ -5,8 +5,6 @@
 #define TEXT_NEW	"New"
 #define TEXT_DELETE "Delete"
 
-#define SPACING 2
-
 typedef struct {
 	PCUBERZERO instance;
 	FuriMessageQueue* queue;
@@ -18,16 +16,21 @@ enum SESSIONSELECTBUTTON {
 	BUTTPN_DELETE
 };
 
-static uint8_t drawButton(Canvas* const canvas, const uint8_t x, const uint8_t y, const char* const text) {
+static uint8_t drawButton(Canvas* const canvas, const uint8_t x, const uint8_t y, const uint8_t pressed, const char* const text) {
 	canvas_set_font(canvas, FontSecondary);
-	const uint16_t width = canvas_string_width(canvas, text) + SPACING * 2;
+	const uint16_t width = canvas_string_width(canvas, text);
 	canvas_set_color(canvas, ColorBlack);
-	canvas_draw_str(canvas, x + SPACING + 1, y + SPACING + 8, text);
-	canvas_draw_line(canvas, x + 1, y, x + width + 1 - 1, y);
-	canvas_draw_line(canvas, x + 1, y + SPACING * 2 + 8, x + width + 1 - 1, y + SPACING * 2 + 8);
-	canvas_draw_line(canvas, x, y + 1, x, y + SPACING * 2 + 7);
-	canvas_draw_line(canvas, x + width + 1, y + 1, x + width + 1, y + SPACING * 2 + 7);
-	canvas_draw_box(canvas, x + 1, y + 1, width, 11);
+	canvas_draw_line(canvas, x + 1, y, x + width + 4, y);
+	canvas_draw_line(canvas, x + 1, y + 12, x + width + 4, y + 12);
+	canvas_draw_line(canvas, x, y + 1, x, y + 11);
+	canvas_draw_line(canvas, x + width + 5, y + 1, x + width + 5, y + 11);
+
+	if(pressed) {
+		canvas_draw_box(canvas, x + 1, y + 1, width + 4, 11);
+		canvas_set_color(canvas, ColorWhite);
+	}
+
+	canvas_draw_str(canvas, x + 3, y + 10, text);
 	return (uint8_t) width;
 }
 
@@ -35,7 +38,7 @@ static void callbackDraw(Canvas* const canvas, void* const context) {
 	furi_check(canvas);
 	UNUSED(context);
 	canvas_clear(canvas);
-	drawButton(canvas, 20, 20, "Delete");
+	drawButton(canvas, 20, 20, 0, "Delete");
 	canvas_set_font(canvas, FontSecondary);
 	canvas_set_color(canvas, ColorBlack);
 	//canvas_draw_str(canvas, 1, 9, "Current Session:");
@@ -44,9 +47,9 @@ static void callbackDraw(Canvas* const canvas, void* const context) {
 	//elements_frame(canvas, 10, 10, 50, 50);
 	canvas_draw_str(canvas, 0, 8, "Test Text, Hello, world!");
 	const double_t cellWidth = ((double_t) (110.0 - canvas_string_width(canvas, TEXT_SELECT) - canvas_string_width(canvas, TEXT_NEW) - canvas_string_width(canvas, TEXT_DELETE))) / ((double_t) 4.0);
-	uint8_t width = drawButton(canvas, (uint8_t) cellWidth, 51, "Select");
-	width += drawButton(canvas, ((uint8_t) (cellWidth * ((double_t) 2.0))) + width, 51, "New");
-	drawButton(canvas, ((uint8_t) (cellWidth * ((double_t) 3.0))) + width, 51, "Delete");
+	uint8_t width = drawButton(canvas, (uint8_t) cellWidth, 51, 1, "Select");
+	width += drawButton(canvas, ((uint8_t) (cellWidth * ((double_t) 2.0))) + width, 51, 0, "New");
+	drawButton(canvas, ((uint8_t) (cellWidth * ((double_t) 3.0))) + width, 51, 1, "Delete");
 }
 
 static void callbackInput(InputEvent* const event, void* const context) {
