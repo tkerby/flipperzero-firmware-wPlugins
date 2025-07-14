@@ -1,5 +1,6 @@
 v0.5
 - Added new high-speed options (up to 127K)
+- Improve XEX file loading (RUNAD is executed only after entire load process)
 
 v0.4
 - Added disk swapping feature accessible via the FDD menu

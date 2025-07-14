@@ -212,9 +212,7 @@ static SIOStatus xex_loader_data_callback(void* context, SIORequest* request) {
 
         XexBlock block;
 
-        if(!xex_file_get_block(loader->xex, block_idx, &block)) {
-            return SIO_ERROR;
-        }
+        xex_file_get_block(loader->xex, block_idx, &block);
 
         FURI_LOG_D(TAG, "Block header: addr %04X size %04X", block.addr, block.size);
 
