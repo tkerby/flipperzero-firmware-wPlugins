@@ -39,10 +39,6 @@ JSMN_API int jsmn_parse_furi(
 /* Implementation in jsmn_furi.c */
 #endif /* JSMN_HEADER */
 
-#ifdef __cplusplus
-}
-#endif
-
 #endif /* JSMN_FURI_H */
 
 #ifndef JB_JSMN_FURI_EDIT
@@ -76,3 +72,7 @@ if (value)
 furi_string_free(json_data);
 */
 #endif /* JB_JSMN_EDIT */
+
+#ifdef __cplusplus
+}
+#endif

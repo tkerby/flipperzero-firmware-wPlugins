@@ -4,13 +4,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-// added by Derek Jamison to lower memory usage
-#undef FURI_LOG_E
-#define FURI_LOG_E(tag, msg, ...)
 
-#undef FURI_LOG_I
-#define FURI_LOG_I(tag, msg, ...)
-// //
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef enum {
     JSMN_UNDEFINED = 0,
@@ -56,3 +53,7 @@ FuriString* char_to_furi_string(const char* str);
 
 // check memory
 bool jsmn_memory_check(size_t heap_size);
+
+#ifdef __cplusplus
+}
+#endif
