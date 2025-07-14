@@ -164,6 +164,14 @@ static const MenuCommand wifi_scanning_commands[] = {
                         "other commands.\n",
     },
     {
+        .label = "Select Station",
+        .command = "select -s",
+        .needs_input = true,
+        .input_text = "Station Number",
+        .details_header = "Select Station",
+        .details_text = "Target a station by number\nfrom the scan list for attacks.",
+    },
+    {
         .label = "Pineapple Detect",
         .command = "pineap\n",
         .details_header = "Pineapple Detection",
@@ -597,12 +605,11 @@ static const MenuCommand ble_scanning_commands[] = {
     },
     {
         .label = "Select AirTag",
-        .command = "selectairtag",
+        .command = "select -airtag",
         .needs_input = true,
         .input_text = "AirTag Number",
         .details_header = "Select AirTag",
-        .details_text = "Select an AirTag by number\n"
-                        "for spoofing.",
+        .details_text = "Target an AirTag by number\nfrom the scan list.",
     },
     {
         .label = "List Flippers",
@@ -1119,7 +1126,7 @@ static void show_menu(
     case 22: // BLE Attack
         last_index = state->last_ble_attack_index;
         break;
-    case 3:
+    case 3: // GPS
         last_index = state->last_gps_index;
         break;
     }
