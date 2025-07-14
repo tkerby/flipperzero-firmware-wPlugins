@@ -101,26 +101,28 @@ static void suica_parse_train_code(
     SuicaHistoryViewModel* model) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     Stream* stream = file_stream_alloc(storage);
-    FuriString* line = furi_string_alloc();
 
+    FuriString* line = furi_string_alloc();
     FuriString* line_code_str = furi_string_alloc();
     FuriString* line_and_station_code_str = furi_string_alloc();
-
-    furi_string_printf(line_code_str, "0x%02X", line_code);
-    furi_string_printf(line_and_station_code_str, "0x%02X,0x%02X", line_code, station_code);
-
     FuriString* line_candidate = furi_string_alloc_set(SUICA_RAILWAY_UNKNOWN_NAME);
     FuriString* station_candidate = furi_string_alloc_set(SUICA_RAILWAY_UNKNOWN_NAME);
     FuriString* station_num_candidate = furi_string_alloc_set("0");
     FuriString* station_JR_header_candidate = furi_string_alloc_set("0");
     FuriString* line_copy = furi_string_alloc();
+    FuriString* file_name = furi_string_alloc();    
+
+    furi_string_printf(line_code_str, "0x%02X", line_code);
+    furi_string_printf(line_and_station_code_str, "0x%02X,0x%02X", line_code, station_code);
+
+
     size_t line_comma_ind = 0;
     size_t station_comma_ind = 0;
     size_t station_num_comma_ind = 0;
     size_t station_JR_header_comma_ind = 0;
 
     bool station_found = false;
-    FuriString* file_name = furi_string_alloc();
+
     furi_string_printf(
         file_name, "%sArea%01X/line_0x%02X.txt", SUICA_STATION_LIST_PATH, area_code, line_code);
     if(file_stream_open(stream, furi_string_get_cstr(file_name), FSAM_READ, FSOM_OPEN_EXISTING)) {
@@ -213,6 +215,8 @@ static void suica_parse_train_code(
     furi_string_free(station_candidate);
     furi_string_free(station_num_candidate);
     furi_string_free(station_JR_header_candidate);
+    furi_string_free(file_name);
+    
     file_stream_close(stream);
     stream_free(stream);
     furi_record_close(RECORD_STORAGE);
