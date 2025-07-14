@@ -51,8 +51,20 @@ static void callbackInput(InputEvent* const event, void* const context) {
 		return;
 	}
 
-	if(event->type == InputTypeShort && event->key == InputKeyBack) {
-		furi_message_queue_put(((PSESSIONSELECTSCENE) context)->queue, event, FuriWaitForever);
+	if(event->type == InputTypeShort) {
+		switch(event->key) {
+		case InputKeyUp:
+		case InputKeyLeft:
+			break;
+		case InputKeyDown:
+		case InputKeyRight:
+			break;
+		case InputKeyOk:
+			break;
+		default:
+			furi_message_queue_put(((PSESSIONSELECTSCENE) context)->queue, event, FuriWaitForever);
+			break;
+		}
 	}
 }
 
