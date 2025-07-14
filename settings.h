@@ -43,6 +43,8 @@ static void settings_load() {
                &settings.debri_count);
         storage_file_close(file);
     }
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
 }
 
 void settings_clear() {
@@ -51,8 +53,6 @@ void settings_clear() {
 
 void settings_init() {
     settings_clear();
-
-    settings = DEFAULT_SETTINGS;
     settings_load();
 }
 
@@ -62,7 +62,7 @@ void settings_save() {
     File* file = storage_file_alloc(storage);
     if(storage_file_open(file, "/ext/fzspground.cfg", FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
         char buf[128];
-        snprintf(buf, sizeof(buf), "%.1f %zu %.1f %.1f %zu %zu %zu",
+        int n = snprintf(buf, sizeof(buf), "%.1f %zu %.1f %.1f %zu %zu %zu",
                  settings.gravity_force,
                  settings.num_planets,
                  settings.launch_interval,
@@ -70,7 +70,7 @@ void settings_save() {
                  settings.grid_spacing,
                  settings.trail_duration,
                  settings.debri_count);
-        storage_file_write(file, buf, strlen(buf));
+        storage_file_write(file, buf, n);
         storage_file_close(file);
     }
     storage_file_free(file);

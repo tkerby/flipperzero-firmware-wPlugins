@@ -19,7 +19,7 @@
 static void tick_cb(void* ctx) {
     View* view = (View*)ctx;
 
-    double dt = (double)1.0 / (double)60.0; // Assuming 30 FPS for simplicity
+    double dt = (double)1.0 / (double)60.0;
 
     background_update(dt);
     planet_update_planets(dt);
@@ -50,6 +50,7 @@ void fzspground_draw_callback(Canvas* canvas, void* ctx) {
 
 bool fzspground_input_callback(InputEvent* e, void* ctx) {
     UNUSED(ctx);
+
     if(e->type == InputTypeShort && e->key == InputKeyBack) {
         view_dispatcher_stop(view_dispatcher);
         return true;
@@ -98,12 +99,17 @@ int32_t fzspground_app(void* p) {
     view_dispatcher_switch_to_view(view_dispatcher, MAIN_VIEW_ID);
     view_dispatcher_run(view_dispatcher);
 
+    view_dispatcher_set_tick_event_callback(view_dispatcher, NULL, 0);
+    view_dispatcher_set_event_callback_context(view_dispatcher, NULL);
+    view_dispatcher_stop(view_dispatcher);
+
     view_dispatcher_remove_view(view_dispatcher, MAIN_VIEW_ID);
     view_dispatcher_remove_view(view_dispatcher, SETTINGS_VIEW_ID);
 
     view_free(main_view);
-    view_dispatcher_free(view_dispatcher);
     settings_ui_clear();
+
+    view_dispatcher_free(view_dispatcher);
 
     furi_record_close("gui");
 

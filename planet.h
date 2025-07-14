@@ -35,7 +35,7 @@ Vec2 planet_get_acceleration(const Planet* planet, const Vec2* pos) {
 
     if(dist_sq > 0) {
         double dist = sqrt(dist_sq);
-        double force = settings.gravity_force * ((double)planet->r * (double)planet->r) /
+        double force = settings.gravity_force * 100 * ((double)planet->r * (double)planet->r) /
                        dist_sq; // Simplified gravitational force
         acc.x = force * (dx / dist);
         acc.y = force * (dy / dist);
