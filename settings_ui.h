@@ -68,10 +68,10 @@ void settings_ui_clear() {
         if(value <= (cast)(minv)) value = (cast)(minv);       \
         if(value >= (cast)(maxv)) value = (cast)(maxv);       \
         settings.fld = value;                                 \
+        settings_save();                                      \
         char buf[12];                                         \
         snprintf(buf, sizeof(buf), fmt, settings.fld);        \
         variable_item_set_current_value_text(i, buf);         \
-        settings_save();                                      \
     }
 
 #define MAKE_CB(name, fld, minv, maxv, fmt, cast, steps)                   \
@@ -91,6 +91,7 @@ void settings_ui_clear() {
         if(value >= (cast)(maxv)) value = (cast)(maxv);                    \
                                                                            \
         settings.fld = value;                                              \
+        settings_save();                                                   \
                                                                            \
         char buf[12];                                                      \
         snprintf(buf, sizeof(buf), fmt, settings.fld);                     \
@@ -122,13 +123,15 @@ void create_items() {
     /* Helper macro to calculate and set the initial index so that the
        slider/selector starts at the *actual* saved value rather than at either
        extreme. */
-#define INIT_INDEX(it, val, minv, maxv, steps)                                               \
-    do {                                                                                     \
-        double ratio = ((double)(val) - (double)(minv)) / ((double)(maxv) - (double)(minv)); \
-        if(ratio <= (double)0.0) ratio = 0.0;                                                \
-        if(ratio >= (double)1.0) ratio = 1.0;                                                \
-        size_t idx = (size_t)(ratio * ((steps) - 1) + (double)0.5);                          \
-        variable_item_set_current_value_index((it), idx);                                    \
+#define INIT_INDEX(it, val, minv, maxv, steps)                    \
+    do {                                                          \
+        int clamped_val = (int)(val);                             \
+        if(clamped_val <= (int)(minv)) clamped_val = (int)(minv); \
+        if(clamped_val >= (int)(maxv)) clamped_val = (int)(maxv); \
+        double num = (double)(clamped_val - (double)(minv));      \
+        double denom = (double)((maxv) - (minv));                 \
+        int idx = (int)(num / denom * (double)((steps) - 1));     \
+        variable_item_set_current_value_index(it, idx);           \
     } while(0)
 
     it = variable_item_list_add(
