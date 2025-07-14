@@ -308,10 +308,6 @@ static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
     const uint16_t service_code[2] = {SERVICE_CODE_HISTORY_IN_LE, SERVICE_CODE_TAPS_LOG_IN_LE};
 
     const FelicaPollerEvent* felica_event = event.event_data;
-    FelicaPollerReadCommandResponse* rx_resp;
-    rx_resp->SF1 = 0;
-    rx_resp->SF2 = 0;
-    uint8_t blocks[1] = {0x00};
     FelicaPoller* felica_poller = event.instance;
     const FelicaData* felica_data = nfc_poller_get_data(app->poller);
     FURI_LOG_I(TAG, "Poller set");
@@ -324,18 +320,16 @@ static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
                 app->nfc_device, NfcProtocolFelica, nfc_poller_get_data(app->poller));
             furi_string_printf(parsed_data, "\e#Suica\n");
 
-            FelicaError error = FelicaErrorNone;
-            int service_code_index = 0;
             // Authenticate with the card
             // Iterate through the two services
-            while(service_code_index < 2 && error == FelicaErrorNone) {
+            for (int service_code_index = 0; service_code_index < 2; service_code_index++) {
                 furi_string_cat_printf(
                     parsed_data, "%s: \n", suica_service_names[service_code_index]);
-                rx_resp->SF1 = 0;
-                rx_resp->SF2 = 0;
-                blocks[0] = 0; // firmware api requires this to be a list
-                while((rx_resp->SF1 + rx_resp->SF2) == 0 &&
-                      blocks[0] < SUICA_MAX_HISTORY_ENTRIES && error == FelicaErrorNone) {
+
+                FelicaError error = FelicaErrorNone;
+                FelicaPollerReadCommandResponse* rx_resp;
+                uint8_t blocks[1] = {0x00};
+                do {
                     uint8_t block_data[16] = {0};
                     error = felica_poller_read_blocks(
                         felica_poller, 1, blocks, service_code[service_code_index], &rx_resp);
@@ -360,8 +354,12 @@ static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
                             model->size);
                         suica_add_entry(model, block_data);
                     }
+                } while((rx_resp->SF1 + rx_resp->SF2) == 0 &&
+                      blocks[0] < SUICA_MAX_HISTORY_ENTRIES && error == FelicaErrorNone);
+
+                if (error != FelicaErrorNone) {
+                    break;
                 }
-                service_code_index++;
             }
             metroflip_app_blink_stop(app);
 
