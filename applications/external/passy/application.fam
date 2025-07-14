@@ -7,6 +7,7 @@ App(
     fap_icon="passy.png",
     fap_icon_assets="images",
     fap_libs=["mbedtls"],
+    sources=["*.c*", "!*.css"],
     fap_private_libs=[
         Lib(
             name="asn1",

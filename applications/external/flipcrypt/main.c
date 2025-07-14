@@ -3779,8 +3779,8 @@ void flip_crypt_qr_scene_on_enter(void* context) {
             for(int x = 0; x < size; x++) {
                 if(qrcodegen_getModule(app->qrcode, x, y)) {
                     // widget_add_rect_element(app->widget, offset_x + x * scale, offset_y + y * scale, scale, scale, 0, true);
-                    widget_add_rect_element(
-                        app->widget, offset_x + x, offset_y + y, scale, scale, 0, true);
+                    widget_add_frame_element(
+                        app->widget, offset_x + x, offset_y + y, scale, scale, 0);
                 }
             }
         }
