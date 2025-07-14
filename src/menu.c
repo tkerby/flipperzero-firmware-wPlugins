@@ -276,11 +276,9 @@ static const MenuCommand wifi_attack_commands[] = {
     },
     {
         .label = "SAE Handshake Flood",
-        .command = "saeflood\n",
+        .command = "attack -s\n",
         .details_header = "SAE Flood Attack",
-        .details_text = "Floods a WPA3 network with\n"
-                        "SAE handshakes. Select a\n"
-                        "WPA3 AP first.",
+        .details_text = "Floods WPA3 networks with\nSAE handshakes. Select a WPA3 AP first.",
     },
     {
         .label = "DHCP Starve Start",
@@ -364,6 +362,12 @@ static const MenuCommand wifi_network_commands[] = {
                         "Configure in WebUI:\n"
                         "- Portal settings\n"
                         "- Landing page\n",
+    },
+    {
+    .label = "List Portals",
+    .command = "listportals\n",
+    .details_header = "List Portals",
+    .details_text = "Show all available HTML portals\non the SD card.",
     },
     {
         .label = "Connect To WiFi",
