@@ -1,3 +1,8 @@
+## V0.3
+- Added Blowfish, DES, and ROT-13 ciphers.
+- Added MD2 hash.
+- Large under the hood improvements regarding storage.
+
 ## V0.2
 - Fixed typos.
 - Added menu to select between tool categories on main menu.
