@@ -45,12 +45,14 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [CO2 Logger v0.3 (By harryob2)](https://github.com/harryob2/co2_logger) `Req: MH-Z19`
 - Updated: [Ghost ESP v1.3 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
 - Updated: [Combo Cracker v0.1 (By CharlesTheGreat77)](https://github.com/CharlesTheGreat77/ComboCracker-FZ)
-- Updated: [Rubiks Cube Timer v0.0.1 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
 - Updated: [FZ nRF24 Jammer v1.3 (By W0rthlessS0ul)](https://github.com/W0rthlessS0ul/FZ_nRF24_jammer)
 - Updated: [Key Copier v1.4 (By zinongli)](https://github.com/zinongli/KeyCopier)
 - Updated: [Ghost ESP v1.3.1 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32`
 - Updated: [Metroflip v0.8 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [FlipDownloader v1.3.2 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- Updated: [Rubiks Cube Timer v0.0.1 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
+- Updated: [FlipWorld v1.0 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32`
+- Updated: [Anki Remote v1.2 (By Blue5GD)](https://github.com/Blue5GD/Anki-Remote)
 
 <a name="release">
 
@@ -398,7 +400,7 @@ $ ./fbt dolphin_ext
 - [Amusement IC v0.1 (By object-Object)](https://github.com/object-Object/flip_aic)
 - [Analog Clock v1.2 (By scrolltex)](https://github.com/scrolltex/flipper_analog_clock)
 - [Analog Output v0.1 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/gpio/dac)
-- [Anki Remote v1.1 (By Blue5GD)](https://github.com/Blue5GD/Anki-Remote)
+- [Anki Remote v1.2 (By Blue5GD)](https://github.com/Blue5GD/Anki-Remote)
 - [ASCII Table v1.0 (By x10102)](https://github.com/x10102/flipper_ascii)
 - [Atari SIO Emulator v0.4 (By cepetr)](https://github.com/cepetr/sio2flip)
 - [Atomic Dice Roller v1.1 (By nmrr)](https://github.com/nmrr/flipperzero-atomicdiceroller)
@@ -495,7 +497,7 @@ $ ./fbt dolphin_ext
 - [FlipTrader v1.1.2 (By jblanked)](https://github.com/jblanked/FlipTrader) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - [FlipWeather v1.2 (By jblanked)](https://github.com/jblanked/FlipWeather) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - [FlipWifi v1.6.1 (By jblanked)](https://github.com/jblanked/FlipWiFi) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- [FlipWorld v0.8.3 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- [FlipWorld v1.0 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - [Flipagotchi v2.1.1 (By Matt-London)](https://github.com/Matt-London/pwnagotchi-flipper)
 - [FlipBoard Blinky v3.6 (By jamisonderek)](https://github.com/jamisonderek/flipboard)
 - [FlipBoard Keyboard v3.9 (By jamisonderek)](https://github.com/jamisonderek/flipboard)
