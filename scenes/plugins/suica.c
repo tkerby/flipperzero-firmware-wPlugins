@@ -63,6 +63,15 @@ static void suica_model_initialize_after_load(SuicaHistoryViewModel* model) {
     model->history.exit_line = RailwaysList[SUICA_RAILWAY_NUM];
 }
 
+static void suica_model_free(SuicaHistoryViewModel* model) {
+    if(model->travel_history) free(model->travel_history);
+    furi_string_free(model->history.entry_station.name);
+    furi_string_free(model->history.entry_station.jr_header);
+    furi_string_free(model->history.exit_station.name);
+    furi_string_free(model->history.exit_station.jr_header);
+    // no need to free RailwaysList — static
+}
+
 static void suica_add_entry(SuicaHistoryViewModel* model, const uint8_t* entry) {
     if(model->size <= 0) {
         suica_model_initialize(model, 3);
@@ -160,8 +169,8 @@ static void suica_parse_train_code(
 
     switch(ride_type) {
     case SuicaTrainRideEntry:
-        model->history.entry_station.name = furi_string_alloc_set("Unknown");
-        model->history.entry_station.jr_header = furi_string_alloc_set("0");
+        furi_string_set(model->history.entry_station.name, "Unknown");
+        furi_string_set(model->history.entry_station.jr_header, "0");
         model->history.entry_line = RailwaysList[SUICA_RAILWAY_NUM];
         for(size_t i = 0; i < SUICA_RAILWAY_NUM; i++) {
             if(furi_string_equal_str(line_candidate, RailwaysList[i].long_name)) {
@@ -176,8 +185,8 @@ static void suica_parse_train_code(
         }
         break;
     case SuicaTrainRideExit:
-        model->history.exit_station.name = furi_string_alloc_set("Unknown");
-        model->history.exit_station.jr_header = furi_string_alloc_set("0");
+        furi_string_set(model->history.exit_station.name, "Unknown");
+        furi_string_set(model->history.exit_station.jr_header, "0");
         model->history.exit_line = RailwaysList[SUICA_RAILWAY_NUM];
         for(size_t i = 0; i < SUICA_RAILWAY_NUM; i++) {
             if(furi_string_equal_str(line_candidate, RailwaysList[i].long_name)) {
@@ -279,7 +288,6 @@ static void suica_parse(SuicaHistoryViewModel* my_model) {
             my_model->history.hour = ((uint8_t)current_block[6] & 0xF8) >> 3;
             my_model->history.minute = (((uint8_t)current_block[6] & 0x07) << 3) |
                                        (((uint8_t)current_block[7] & 0xE0) >> 5);
-            my_model->history.shop_code = (uint8_t*)malloc(2);
             my_model->history.shop_code[0] = current_block[8];
             my_model->history.shop_code[1] = current_block[9];
             break;
@@ -597,12 +605,7 @@ static void suica_on_exit(Metroflip* app) {
     with_view_model(
         app->suica_context->view_history,
         SuicaHistoryViewModel * model,
-        {
-            if(model->travel_history) { // Check if memory was allocated
-                free(model->travel_history);
-                model->travel_history = NULL; // Set pointer to NULL to prevent dangling references
-            }
-        },
+        { suica_model_free(model); },
         false);
     view_free_model(app->suica_context->view_history);
     view_dispatcher_remove_view(app->view_dispatcher, MetroflipViewCanvas);

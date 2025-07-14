@@ -671,7 +671,7 @@ static void suica_draw_vending_machine_page_2(
     furi_string_printf(buffer, "%02d:%02d", history.hour, history.minute);
     canvas_draw_line(canvas, 65, 21, 62, 18);
     canvas_set_font(canvas, FontKeyboard);
-    canvas_draw_str(canvas, 66, 19, furi_string_get_cstr(buffer));
+    canvas_draw_str(canvas, 65, 19, furi_string_get_cstr(buffer));
     canvas_draw_line(canvas, 93, 21, 96, 18);
     canvas_draw_line(canvas, 66, 21, 93, 21);
     canvas_draw_line(canvas, 96, 6, 96, 17);
@@ -813,7 +813,7 @@ static void
     furi_string_printf(buffer, "%02d:%02d", history.hour, history.minute);
     canvas_draw_line(canvas, 65, 21, 62, 18);
     canvas_set_font(canvas, FontKeyboard);
-    canvas_draw_str(canvas, 66, 19, furi_string_get_cstr(buffer));
+    canvas_draw_str(canvas, 65, 19, furi_string_get_cstr(buffer));
     canvas_draw_line(canvas, 93, 21, 96, 18);
     canvas_draw_line(canvas, 66, 21, 93, 21);
     canvas_draw_line(canvas, 96, 6, 96, 17);
