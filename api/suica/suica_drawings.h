@@ -864,16 +864,104 @@ static void
     furi_string_free(buffer);
 }
 
-static void suica_draw_top_up_page_2(
-    Canvas* canvas,
-    SuicaHistory history,
-    SuicaHistoryViewModel* model) {
-    UNUSED(history);
-    UNUSED(model);
-    // Balance
+static void
+    suica_draw_top_up_page_2(Canvas* canvas, SuicaHistory history, SuicaHistoryViewModel* model) {
+    FuriString* buffer = furi_string_alloc();
+    furi_string_printf(buffer, "%d", history.balance_change);
     canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str_aligned(canvas, 98, 40, AlignRight, AlignBottom, furi_string_get_cstr(buffer));
+    furi_string_free(buffer);
 
-    canvas_draw_str(canvas, 30, 28, "place holder for top up page 1 and 2");
+    if(model->animator_tick > 26) {
+        // 14 steps of animation
+        model->animator_tick = 0;
+    }
+    switch(model->animator_tick) {
+    case 0:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0001);
+        break;
+    case 1:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0002);
+        break;
+    case 2:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0003);
+        break;
+    case 3:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0004);
+        break;
+    case 4:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0005);
+        break;
+    case 5:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0006);
+        break;
+    case 6:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0007);
+        break;
+    case 7:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0008);
+        break;
+    case 8:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0009);
+        break;
+    case 9:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0010);
+        break;
+    case 10:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0011);
+        break;
+    case 11:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0012);
+        break;
+    case 12:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0013);
+        break;
+    case 13:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0014);
+        break;
+    case 14:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0015);
+        break;
+    case 15:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0016);
+        break;
+    case 16:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0017);
+        break;
+    case 17:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0018);
+        break;
+    case 18:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0019);
+        break;
+    case 19:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0020);
+        break;
+    case 20:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0021);
+        break;
+    case 21:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0022);
+        break;
+    case 22:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0023);
+        break;
+    case 23:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0024);
+        break;
+    case 24:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0025);
+        break;
+    case 25:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0026);
+        break;
+    case 26:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0027);
+        break;
+    default:
+        canvas_draw_icon(canvas, 0, 0, &I_Suica_TopUpPage2_0001);
+        break;
+    }
 }
 
 static void
@@ -903,7 +991,7 @@ static void
 
     if(history.balance_sign == SuicaBalanceAdd) {
         // Animate plus sign
-        if(model->animator_tick > 2) {
+        if(model->animator_tick > 3) {
             // 9 steps of animation
             model->animator_tick = 0;
         }
@@ -912,6 +1000,7 @@ static void
             canvas_draw_icon(canvas, 28, 28, &I_Suica_PlusSign1);
             break;
         case 1:
+        case 3:
             canvas_draw_icon(canvas, 27, 27, &I_Suica_PlusSign2);
             break;
         case 2:
@@ -1033,6 +1122,7 @@ static void suica_history_draw_callback(Canvas* canvas, void* model) {
             suica_draw_birthday_page_2(canvas, my_model->history, my_model);
             break;
         case SuicaHistoryVendingMachine:
+
             suica_draw_vending_machine_page_2(canvas, my_model->history, my_model);
             break;
         case SuicaHistoryPosAndTaxi:

@@ -481,6 +481,15 @@ static bool suica_history_input_callback(InputEvent* event, void* context) {
             // Handle other keys or do nothing
             break;
         }
+        with_view_model(
+            app->suica_context->view_history,
+            SuicaHistoryViewModel * model,
+            {
+                if((model->history.history_type == SuicaHistoryTopUp) && model->page == 1) {
+                    model->animator_tick = 0;
+                }
+            },
+            false);
     }
 
     return false;
