@@ -364,10 +364,10 @@ static const MenuCommand wifi_network_commands[] = {
                         "- Landing page\n",
     },
     {
-    .label = "List Portals",
-    .command = "listportals\n",
-    .details_header = "List Portals",
-    .details_text = "Show all available HTML portals\non the SD card.",
+        .label = "List Portals",
+        .command = "listportals\n",
+        .details_header = "List Portals",
+        .details_text = "Show all available HTML portals\non the SD card.",
     },
     {
         .label = "Connect To WiFi",
