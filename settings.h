@@ -4,7 +4,7 @@
 #include "storage/storage.h"
 #include <stddef.h>
 
-typedef struct Settings {
+typedef struct {
     double gravity_force;
     size_t num_planets;
     double launch_interval;
@@ -32,19 +32,28 @@ static void settings_load() {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* file = storage_file_alloc(storage);
     if(storage_file_open(file, "/ext/spground.cfg", FSAM_READ, FSOM_OPEN_EXISTING)) {
+        int gravity_force = 0;
+        int launch_interval = 0;
+        int grid_speed = 0;
+
         char buf[256] = {0};
         storage_file_read(file, buf, sizeof(buf) - 1);
         sscanf(
             buf,
-            "%lf %zu %lf %lf %zu %zu %zu %zu",
-            &settings.gravity_force,
+            "%d %d %d %d %d %d %d %d",
+            &gravity_force,
             &settings.num_planets,
-            &settings.launch_interval,
-            &settings.grid_speed,
+            &launch_interval,
+            &grid_speed,
             &settings.grid_spacing,
             &settings.trail_duration,
             &settings.asteroid_speed,
             &settings.debri_count);
+
+        settings.gravity_force = (double)gravity_force / (double)1000.0;
+        settings.launch_interval = (double)launch_interval / (double)1000.0;
+        settings.grid_speed = (double)grid_speed / (double)1000.0;
+
         storage_file_close(file);
     }
     storage_file_free(file);
@@ -75,11 +84,11 @@ void settings_save() {
         int n = snprintf(
             buf,
             sizeof(buf),
-            "%.1f %zu %.1f %.1f %zu %zu %zu %zu",
-            settings.gravity_force,
+            "%d %d %d %d %d %d %d %d",
+            (int)(settings.gravity_force * (int)1000),
             settings.num_planets,
-            settings.launch_interval,
-            settings.grid_speed,
+            (int)(settings.launch_interval * (int)1000),
+            (int)(settings.grid_speed * (int)1000),
             settings.grid_spacing,
             settings.trail_duration,
             settings.asteroid_speed,

@@ -48,6 +48,12 @@ void fzspground_draw_callback(Canvas* canvas, void* ctx) {
     snprintf(debri_count_str, sizeof(debri_count_str), "Debris: %d", num_debri);
 }
 
+void fzspground_enter_callback(void* ctx) {
+    UNUSED(ctx);
+
+    planet_init();
+}
+
 bool fzspground_input_callback(InputEvent* e, void* ctx) {
     UNUSED(ctx);
 
@@ -86,6 +92,7 @@ int32_t fzspground_app(void* p) {
     view_set_draw_callback(main_view, fzspground_draw_callback);
     view_set_update_callback(main_view, fzspground_update_callback);
     view_set_input_callback(main_view, fzspground_input_callback);
+    view_set_enter_callback(main_view, fzspground_enter_callback);
 
     View* settings_ui_view = variable_item_list_get_view(settings_list);
     view_set_previous_callback(settings_ui_view, settings_ui_previous_callback);

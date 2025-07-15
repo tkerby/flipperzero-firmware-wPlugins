@@ -12,13 +12,13 @@
 #include "vec2.h"
 
 static const u_int8_t PLANET_MIN_RADIUS = 2;
-static const u_int8_t PLANET_MAX_RADIUS = 6;
+static const u_int8_t PLANET_MAX_RADIUS = 3;
 
-static const u_int8_t PLANET_MIN_X = PLANET_MIN_RADIUS;
-static const u_int8_t PLANET_MIN_Y = PLANET_MIN_RADIUS;
+static const u_int8_t PLANET_MIN_X = 3 * PLANET_MIN_RADIUS;
+static const u_int8_t PLANET_MIN_Y = 3 * PLANET_MIN_RADIUS;
 
-static const u_int8_t PLANET_MAX_X = 128 - PLANET_MIN_RADIUS;
-static const u_int8_t PLANET_MAX_Y = 64 - PLANET_MIN_RADIUS;
+static const u_int8_t PLANET_MAX_X = 128 - 3 * PLANET_MIN_RADIUS;
+static const u_int8_t PLANET_MAX_Y = 64 - 3 * PLANET_MIN_RADIUS;
 
 typedef struct Planet {
     Vec2 pos;
@@ -80,10 +80,12 @@ void planet_clear() {
 void planet_init() {
     planet_clear();
 
+    double section_width = (double)128.0 / (double)settings.num_planets;
     for(size_t i = 0; i < settings.num_planets; i++) {
         double r =
             (double)(rand() % (PLANET_MAX_RADIUS - PLANET_MIN_RADIUS + 1) + PLANET_MIN_RADIUS);
-        double x = (double)(rand() % (PLANET_MAX_X - PLANET_MIN_X + 1) + PLANET_MIN_X);
+
+        double x = (double)(i * section_width + (section_width / (double)2.0));
         double y = (double)(rand() % (PLANET_MAX_Y - PLANET_MIN_Y + 1) + PLANET_MIN_Y);
 
         Planet* planet = (Planet*)malloc(sizeof(Planet));
