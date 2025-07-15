@@ -1,3 +1,6 @@
+v0.6:
+- Fixed deadlock when closing datalog file
+
 v0.5:
 - Fixed build with the SDK version 1.3.0-rc
 
