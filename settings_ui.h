@@ -123,34 +123,35 @@ void create_items() {
     /* Helper macro to calculate and set the initial index so that the
        slider/selector starts at the *actual* saved value rather than at either
        extreme. */
-#define INIT_INDEX(it, val, minv, maxv, steps)                    \
+#define INIT_INDEX(it, val, minv, maxv)                           \
     do {                                                          \
         int clamped_val = (int)(val);                             \
         if(clamped_val <= (int)(minv)) clamped_val = (int)(minv); \
         if(clamped_val >= (int)(maxv)) clamped_val = (int)(maxv); \
         double num = (double)(clamped_val - (double)(minv));      \
         double denom = (double)((maxv) - (minv));                 \
-        int idx = (int)(num / denom * (double)((steps) - 1));     \
+        double ratio = num / denom;                               \
+        int idx = (ratio) * (double)(maxv - minv + 1);            \
         variable_item_set_current_value_index(it, idx);           \
     } while(0)
 
     it = variable_item_list_add(
         settings_list, "Gravity", (GRAVITY_MAX - GRAVITY_MIN + 1), gravity_cb, NULL);
-    INIT_INDEX(it, settings.gravity_force, GRAVITY_MIN, GRAVITY_MAX, 40);
+    INIT_INDEX(it, settings.gravity_force, GRAVITY_MIN, GRAVITY_MAX);
     gravity_cb(it);
 
     it = variable_item_list_add(
         settings_list, "Planets", (PLANETS_MAX - PLANETS_MIN + 1), planets_cb, NULL);
-    INIT_INDEX(it, settings.num_planets, PLANETS_MIN, PLANETS_MAX, 8);
+    INIT_INDEX(it, settings.num_planets, PLANETS_MIN, PLANETS_MAX);
     planets_cb(it);
 
     it = variable_item_list_add(settings_list, "Asteroid Interval", 40, launch_cb, NULL);
-    INIT_INDEX(it, settings.launch_interval, LAUNCH_MIN, LAUNCH_MAX, 40);
+    INIT_INDEX(it, settings.launch_interval, LAUNCH_MIN, LAUNCH_MAX);
     launch_cb(it);
 
     it = variable_item_list_add(
         settings_list, "Grid speed", (GRID_SPEED_MAX - GRID_SPEED_MIN + 1), grid_speed_cb, NULL);
-    INIT_INDEX(it, settings.grid_speed, GRID_SPEED_MIN, GRID_SPEED_MAX, 40);
+    INIT_INDEX(it, settings.grid_speed, GRID_SPEED_MIN, GRID_SPEED_MAX);
     grid_speed_cb(it);
 
     it = variable_item_list_add(
@@ -159,12 +160,12 @@ void create_items() {
         (GRID_SPACING_MAX - GRID_SPACING_MIN + 1),
         grid_space_cb,
         NULL);
-    INIT_INDEX(it, settings.grid_spacing, GRID_SPACING_MIN, GRID_SPACING_MAX, 40);
+    INIT_INDEX(it, settings.grid_spacing, GRID_SPACING_MIN, GRID_SPACING_MAX);
     grid_space_cb(it);
 
     it = variable_item_list_add(
         settings_list, "Trail duration", (TRAIL_MAX - TRAIL_MIN + 1), trail_cb, NULL);
-    INIT_INDEX(it, settings.trail_duration, TRAIL_MIN, TRAIL_MAX, 40);
+    INIT_INDEX(it, settings.trail_duration, TRAIL_MIN, TRAIL_MAX);
     trail_cb(it);
 
     it = variable_item_list_add(
@@ -173,12 +174,12 @@ void create_items() {
         (ASTEROID_SPEED_MAX - ASTEROID_SPEED_MIN + 1),
         asteroid_cb,
         NULL);
-    INIT_INDEX(it, settings.asteroid_speed, ASTEROID_SPEED_MIN, ASTEROID_SPEED_MAX, 5);
+    INIT_INDEX(it, settings.asteroid_speed, ASTEROID_SPEED_MIN, ASTEROID_SPEED_MAX);
     asteroid_cb(it);
 
     it = variable_item_list_add(
         settings_list, "Debri count", (DEBRI_MAX - DEBRI_MIN + 1), debri_cb, NULL);
-    INIT_INDEX(it, settings.debri_count, DEBRI_MIN, DEBRI_MAX, 40);
+    INIT_INDEX(it, settings.debri_count, DEBRI_MIN, DEBRI_MAX);
     debri_cb(it);
 #undef INIT_INDEX
 }
