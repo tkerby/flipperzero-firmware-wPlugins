@@ -82,7 +82,7 @@ void SceneSessionSelectEnter(void* const context) {
 	instance->queue = furi_message_queue_alloc(1, sizeof(InputEvent));
 	view_port_draw_callback_set(instance->viewport, callbackRender, instance);
 	view_port_input_callback_set(instance->viewport, callbackInput, instance);
-	view_dispatcher_stop(instance->instance->dispatcher);
+	//view_dispatcher_stop(instance->instance->dispatcher);
 	gui_remove_view_port(instance->instance->interface, instance->instance->dispatcher->viewport);
 	gui_add_view_port(instance->instance->interface, instance->viewport, GuiLayerFullscreen);
 	const InputEvent* event;
@@ -96,6 +96,6 @@ void SceneSessionSelectEnter(void* const context) {
 	furi_message_queue_free(instance->queue);
 	view_port_free(instance->viewport);
 	scene_manager_handle_back_event(instance->instance->manager);
-	view_dispatcher_run(instance->instance->dispatcher);
+	//view_dispatcher_run(instance->instance->dispatcher);
 	free(instance);
 }
