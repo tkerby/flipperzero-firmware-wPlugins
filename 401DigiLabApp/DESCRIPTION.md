@@ -1,4 +1,3 @@
-Companion app for Lab401's Light Messenger accessory. The Light Messenger is hardware module that allows you to draw, write and lightpaint in the air using a 16 RGB Led array and an accelerometer.
-Multiple colour sequences, and animations, built-in bitmap editor, completely hackable (..and you can even use it as a flashlight).
+Companion app for Lab401's Digilab accessory. The Digilab is hardware module that allows you to explore electronic circuits with a strong emphasis on sensory feedback. It allows you to quickly probe and understand signals, and get a feel about what it looks like.
 Requires a hardware component, which can be purchased at Lab401.com
 Built with <3 by Lab401 and tixlegeek.
