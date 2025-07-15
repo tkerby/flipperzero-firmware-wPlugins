@@ -3,7 +3,7 @@
 BlackhatItem items[] = {
     {"Shell", {""}, 1, NULL, SHELL_CMD, false},
     {"Scan for Scripts", {""}, 1, NULL, SCAN_CMD, false},
-    {"Run Script", {""}, 1, NULL, RUN_CMD, false},
+    {"Run Script", {""}, 1, NULL, CHG_RUN_CMD_SCREEN, false},
     {"Connect WiFi",
      {"wlan0", "wlan1", "wlan2", "stop"},
      4,

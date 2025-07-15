@@ -28,6 +28,7 @@
 
 #define SHELL_CMD "whoami"
 #define SCAN_CMD "bh script scan"
+#define CHG_RUN_CMD_SCREEN "bh rcs"
 #define RUN_CMD "bh script run"
 #define WIFI_CON_CMD "bh wifi connect"
 #define SET_INET_SSID_CMD "bh set SSID"
