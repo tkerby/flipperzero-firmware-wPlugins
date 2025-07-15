@@ -42,7 +42,6 @@ static const Railway RailwaysList[] = {
     {0xD2, {0, 0}, "Den-en-toshi", 7, SuicaTokyu, "DT", 0},
     {0xD3, {0, 0}, "Setagaya", 10, SuicaTokyu, "SG", 0},
 
-
     // Keikyu
     {0xD5, {0, 0}, "Keikyu Main", 50, SuicaKeikyu, "KK", &I_Suica_KeikyuKK},
     {0xD6, {0, 0}, "Keikyu Airport", 6, SuicaKeikyu, "KK", &I_Suica_KeikyuKK},

@@ -218,7 +218,7 @@ extern const Icon I_Suica_TokyuLogo;
 extern const Icon I_Suica_TopUpIcon;
 extern const Icon I_Suica_TopUpPage2_0001;
 extern const Icon I_Suica_TopUpPage2_0002;
-extern const Icon I_Suica_TopUpPage2_0003;  
+extern const Icon I_Suica_TopUpPage2_0003;
 extern const Icon I_Suica_TopUpPage2_0004;
 extern const Icon I_Suica_TopUpPage2_0005;
 extern const Icon I_Suica_TopUpPage2_0006;
