@@ -18,6 +18,7 @@ Any feedback is welcome and would be very much appreciated as it helps me to imp
 - Delay time (How long the gap between the cards will be)
 - LED indicator (Whether or not the LED's will be on)
 - Skip errors (Makes it so you can make the emulation screen hide errors and skip delays between errors and emulation)
+- Loop (Makes it so the playlist will loop back to the start when it reaches the end)
 - Reset settings (Puts all the settings back to the defaults)
 ## Playlist editor:
 - Create PLaylist (Creates a new playlist with the given name)
