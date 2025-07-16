@@ -207,13 +207,19 @@ static int32_t mj_worker_thread(void* ctx) {
 
     NotificationApp* notification = furi_record_open(RECORD_NOTIFICATION);
     notification_message(notification, &sequence_blink_red_100);
-
-    nrf24_set_tx_mode(nrf24_HANDLE);
-
-    if(plugin_state->jam_type != 3) nrf24_startConstCarrier(nrf24_HANDLE, 3, hopping_channels[0]);
+    
+    
+    if(plugin_state->jam_type != 3) {
+        nrf24_deinit();
+        nrf24_init();
+        nrf24_set_tx_mode(nrf24_HANDLE);
+        nrf24_startConstCarrier(nrf24_HANDLE, 3, 45);
+    }
 
     uint8_t current_channel = 0;
     uint8_t limit = hopping_channels_len[plugin_state->jam_type];
+    
+    nrf24_set_tx_mode(nrf24_HANDLE);
 
     while(!plugin_state->close_thread_please) {
         for(int ch = 0; ch < limit && !plugin_state->close_thread_please; ch++) {
@@ -274,8 +280,7 @@ int32_t jammer_app(void* p) {
     nrf24_init();
     FURI_LOG_D(TAG, "nrf24 init done!");
     PluginEvent event;
-    for(int i = 0; i < 128; i++)
-        hopping_channels_2[i] = i * 2;
+    for(int i = 0; i < 128; i++) hopping_channels_2[i] = i * 2;
     hopping_channels = hopping_channels_0;
     plugin_state->is_nrf24_connected = true;
     if(!nrf24_check_connected(nrf24_HANDLE)) {

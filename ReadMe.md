@@ -44,7 +44,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [NFC Magic v1.15.1 (By gornekich)](https://github.com/flipperdevices/flipperzero-firmware/pull/1966) [Ultimate Magic Gen4 Max Block Number Set Incorrectly for the NTAG Protocol (By alfie65536)](https://github.com/flipperdevices/flipperzero-good-faps/pull/284)
 - Added: [CO2 Logger v0.3 (By harryob2)](https://github.com/harryob2/co2_logger) `Req: MH-Z19`
 - Updated: [Ghost ESP v1.3 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
-- Updated: [FZ nRF24 Jammer v1.3 (By W0rthlessS0ul)](https://github.com/W0rthlessS0ul/FZ_nRF24_jammer)
 - Updated: [Key Copier v1.4 (By zinongli)](https://github.com/zinongli/KeyCopier)
 - Updated: [Ghost ESP v1.3.1 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32`
 - Updated: [FlipDownloader v1.3.2 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
@@ -56,6 +55,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [NFC Playlist v3.1 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
 - Updated: [Metroflip v0.8 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [Atari SIO Emulator v0.5 (By cepetr)](https://github.com/cepetr/sio2flip)
+- Updated: [FZ nRF24 Jammer v1.3 (By W0rthlessS0ul)](https://github.com/W0rthlessS0ul/FZ_nRF24_jammer)
 
 <a name="release">
 
