@@ -1,4 +1,5 @@
 #include "../wendigo_app_i.h"
+#include "../wendigo_scan.h"
 
 static const WendigoItem items[SETUP_MENU_ITEMS] = {
     {"BLE", {"On", "Off", "MAC"}, 3, LIST_DEVICES, OFF},
@@ -12,6 +13,7 @@ static const WendigoItem items[SETUP_MENU_ITEMS] = {
 #define CH_SELECTED (1)
 
 static void wendigo_scene_setup_var_list_enter_callback(void* context, uint32_t index) {
+    FURI_LOG_T(WENDIGO_TAG, "Start wendigo_scene_setup_var_list_enter_callback()");
     furi_assert(context);
     WendigoApp* app = context;
 
@@ -31,9 +33,9 @@ static void wendigo_scene_setup_var_list_enter_callback(void* context, uint32_t 
         break;
     default:
         /* Note: Additional check required here if additional menu items are added with 3 or more options.
-               At the moment we can assume that if selected option is RADIO_MAC we're displaying a MAC,
-               that may not always be the case
-            */
+             *  At the moment we can assume that if selected option is RADIO_MAC we're displaying a MAC,
+             *  that may not always be the case
+             */
         if(selected_option_index == RADIO_MAC) {
             // Configure byte_input's value based on item->item_string
             if(!strncmp(item->item_string, "BLE", 3)) {
@@ -43,15 +45,26 @@ static void wendigo_scene_setup_var_list_enter_callback(void* context, uint32_t 
             } else if(!strncmp(item->item_string, "WiFi", 4)) {
                 app->active_interface = IF_WIFI;
             } else {
-                // TODO: Panic
+                char* msg = malloc(sizeof(char) * 83);
+                if(msg != NULL) {
+                    snprintf(
+                        msg,
+                        sizeof(char) * 83,
+                        "wendigo_scene_setup_var_list_enter_callback(): Invalid selected_option_index: %d.",
+                        selected_option_index);
+                    wendigo_log(MSG_ERROR, msg);
+                    free(msg);
+                }
             }
             view_dispatcher_send_custom_event(app->view_dispatcher, Wendigo_EventMAC);
         }
         break;
     }
+    FURI_LOG_T(WENDIGO_TAG, "End wendigo_scene_setup_var_list_enter_callback()");
 }
 
 static void wendigo_scene_setup_var_list_change_callback(VariableItem* item) {
+    FURI_LOG_T(WENDIGO_TAG, "Start wendigo_scene_setup_var_list_change_callback()");
     furi_assert(item);
 
     WendigoApp* app = variable_item_get_context(item);
@@ -77,7 +90,16 @@ static void wendigo_scene_setup_var_list_change_callback(VariableItem* item) {
             }
             break;
         default:
-            // TODO: Panic
+            char* msg = malloc(sizeof(char) * 72);
+            if(msg != NULL) {
+                snprintf(
+                    msg,
+                    sizeof(char) * 72,
+                    "wendigo_scene_setup_var_list_change_callback(): Invalid item_index %d.",
+                    item_index);
+                wendigo_log(MSG_ERROR, msg);
+                free(msg);
+            }
             break;
         }
         break;
@@ -90,7 +112,16 @@ static void wendigo_scene_setup_var_list_change_callback(VariableItem* item) {
         } else if(!strncmp(menu_item->item_string, "WiFi", 4)) {
             app->active_interface = IF_WIFI;
         } else {
-            // TODO: Panic
+            char* msg = malloc(sizeof(char) * 81);
+            if(msg != NULL) {
+                snprintf(
+                    msg,
+                    sizeof(char) * 81,
+                    "wendigo_scene_setup_var_list_change_callback(): Unknown interface selected %s.",
+                    menu_item->item_string);
+                wendigo_log(MSG_ERROR, msg);
+                free(msg);
+            }
         }
         /* Mark the interface as active or inactive if "On" or "Off" is selected */
         if(item_index == RADIO_ON || item_index == RADIO_OFF) {
@@ -101,9 +132,11 @@ static void wendigo_scene_setup_var_list_change_callback(VariableItem* item) {
         /* Do nothing */
         break;
     }
+    FURI_LOG_T(WENDIGO_TAG, "End wendigo_scene_setup_var_list_change_callback()");
 }
 
 void wendigo_scene_setup_on_enter(void* context) {
+    FURI_LOG_T(WENDIGO_TAG, "Start wendigo_scene_setup_on_enter()");
     WendigoApp* app = context;
     app->current_view = WendigoAppViewSetup;
 
@@ -112,7 +145,7 @@ void wendigo_scene_setup_on_enter(void* context) {
 
     variable_item_list_reset(app->var_item_list);
     VariableItem* item;
-    for(int i = 0; i < SETUP_MENU_ITEMS; ++i) {
+    for(uint8_t i = 0; i < SETUP_MENU_ITEMS; ++i) {
         item = variable_item_list_add(
             app->var_item_list,
             items[i].item_string,
@@ -129,7 +162,16 @@ void wendigo_scene_setup_on_enter(void* context) {
             } else if(!strncmp(items[i].item_string, "WiFi", 4)) {
                 if_type = IF_WIFI;
             } else {
-                // TODO: Panic
+                char* msg = malloc(sizeof(char) * 65);
+                if(msg != NULL) {
+                    snprintf(
+                        msg,
+                        sizeof(char) * 65,
+                        "wendigo_scene_setup_on_enter(): Unknown interface selected %s.",
+                        items[i].item_string);
+                    wendigo_log(MSG_ERROR, msg);
+                    free(msg);
+                }
             }
             app->setup_selected_option_index[i] = (app->interfaces[if_type].active) ? RADIO_ON :
                                                                                       RADIO_OFF;
@@ -142,9 +184,11 @@ void wendigo_scene_setup_on_enter(void* context) {
     variable_item_list_set_selected_item(
         app->var_item_list, scene_manager_get_scene_state(app->scene_manager, WendigoSceneSetup));
     view_dispatcher_switch_to_view(app->view_dispatcher, WendigoAppViewVarItemList);
+    FURI_LOG_T(WENDIGO_TAG, "End wendigo_scene_setup_on_enter()");
 }
 
 bool wendigo_scene_setup_on_event(void* context, SceneManagerEvent event) {
+    FURI_LOG_T(WENDIGO_TAG, "Start wendigo_scene_setup_on_event()");
     WendigoApp* app = context;
     bool consumed = false;
 
@@ -165,10 +209,13 @@ bool wendigo_scene_setup_on_event(void* context, SceneManagerEvent event) {
             variable_item_list_get_selected_item_index(app->var_item_list);
         consumed = true;
     }
+    FURI_LOG_T(WENDIGO_TAG, "End wendigo_scene_setup_on_event()");
     return consumed;
 }
 
 void wendigo_scene_setup_on_exit(void* context) {
+    FURI_LOG_T(WENDIGO_TAG, "Start wendigo_scene_setup_on_exit()");
     WendigoApp* app = context;
     variable_item_list_reset(app->var_item_list);
+    FURI_LOG_T(WENDIGO_TAG, "End wendigo_scene_setup_on_exit()");
 }

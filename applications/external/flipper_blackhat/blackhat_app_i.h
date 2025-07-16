@@ -25,7 +25,7 @@
 #define NUM_MENU_ITEMS (19)
 
 #define BLACKHAT_TEXT_BOX_STORE_SIZE (4096)
-#define UART_CH                      cfw_settings.uart_esp_channels
+#define UART_CH                      cfw_settings.uart_esp_channel
 
 #define SHELL_CMD          "whoami"
 #define SCAN_CMD           "bh script scan"
