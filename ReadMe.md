@@ -56,6 +56,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Atari SIO Emulator v0.5 (By cepetr)](https://github.com/cepetr/sio2flip)
 - Updated: [FZ nRF24 Jammer v1.3 (By W0rthlessS0ul)](https://github.com/W0rthlessS0ul/FZ_nRF24_jammer)
 - Updated: [Sentry Safe v2.0 (By H4ckd4ddy)](https://github.com/H4ckd4ddy/flipperzero-sentry-safe-plugin)
+- Updated: [Flipper Blackhat v0.4 (By o7-machinehum)](https://github.com/o7-machinehum/flipper-blackhat-app)
 
 <a name="release">
 
