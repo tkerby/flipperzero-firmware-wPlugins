@@ -1,5 +1,6 @@
 #include "src/cuberzero.h"
 #include <gui/elements.h>
+#include <furi_hal_gpio.h>
 
 typedef struct {
 	PCUBERZERO instance;
@@ -66,8 +67,75 @@ static void callbackInput(InputEvent* const event, void* const context) {
 		instance->selectedButton = (instance->selectedButton ? instance->selectedButton : COUNT_BUTTON) - 1;
 		view_port_update(instance->viewport);
 		break;
-	case InputKeyOk:
+	case InputKeyOk: {
+#define CLK(x) furi_hal_gpio_write(&gpio_ext_pb3, x)
+#define DIO(x) furi_hal_gpio_write(&gpio_ext_pb2, x)
+		DIO(0);
+		uint8_t data = 0b01000000;
+
+		for(uint8_t i = 0; i < 8; i++) {
+			CLK(0);
+			DIO((data << (7 - i)) & 1);
+			CLK(1);
+		}
+
+		CLK(0);
+		DIO(0);
+
+		CLK(1);
+		CLK(0);
+
+		CLK(1);
+		DIO(1);
+
+		DIO(0);
+		CLK(0);
+		data = 0b11000001;
+
+		for(uint8_t i = 0; i < 8; i++) {
+			CLK(1);
+			DIO((data << (7 - i)) & 1);
+			CLK(0);
+		}
+
+		DIO(0);
+
+		CLK(1);
+		CLK(0);
+		data = 0b10011010;
+
+		for(uint8_t i = 0; i < 8; i++) {
+			CLK(1);
+			DIO((data << (7 - i)) & 1);
+			CLK(0);
+		}
+
+		DIO(0);
+
+		CLK(1);
+		CLK(0);
+		CLK(1);
+
+		DIO(1);
+		DIO(0);
+		data = 0b10001000;
+
+		for(uint8_t i = 0; i < 8; i++) {
+			CLK(0);
+			DIO((data << (7 - i)) & 1);
+			CLK(1);
+		}
+
+		CLK(0);
+		DIO(0);
+
+		CLK(1);
+		CLK(0);
+		CLK(1);
+
+		DIO(1);
 		break;
+	}
 	default:
 		furi_message_queue_put(instance->queue, event, FuriWaitForever);
 		break;
@@ -76,6 +144,12 @@ static void callbackInput(InputEvent* const event, void* const context) {
 
 void SceneSessionSelectEnter(void* const context) {
 	furi_check(context);
+	furi_hal_gpio_init(&gpio_ext_pc3, GpioModeOutputPushPull, GpioPullNo, GpioSpeedLow);
+	furi_hal_gpio_init(&gpio_ext_pb3, GpioModeOutputPushPull, GpioPullUp, GpioSpeedVeryHigh);
+	furi_hal_gpio_init(&gpio_ext_pb2, GpioModeOutputPushPull, GpioPullUp, GpioSpeedVeryHigh);
+	furi_hal_gpio_write(&gpio_ext_pc3, 1);
+	CLK(1);
+	DIO(1);
 	const PSESSIONSELECTSCENE instance = malloc(sizeof(SESSIONSELECTSCENE));
 	instance->instance = context;
 	instance->viewport = view_port_alloc();
