@@ -1,0 +1,346 @@
+Archive member included to satisfy reference by file (symbol)
+
+c:/users/3dpihl/.ufbt/toolchain/x86_64-windows/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard\libgcc.a(_arm_addsubdf3.o)
+                              C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o (__aeabi_f2d)
+c:/users/3dpihl/.ufbt/toolchain/x86_64-windows/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard\libgcc.a(_arm_addsubsf3.o)
+                              C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o (__aeabi_ul2f)
+
+Discarded input sections
+
+ .text          0x00000000        0x0 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven_icons.o
+ .data          0x00000000        0x0 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven_icons.o
+ .bss           0x00000000        0x0 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven_icons.o
+ .debug_info    0x00000000       0x6c C:/Users/3DPihl/.ufbt/build/grokadven/grokadven_icons.o
+ .debug_abbrev  0x00000000       0x26 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven_icons.o
+ .debug_aranges
+                0x00000000       0x18 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven_icons.o
+ .debug_line    0x00000000       0x58 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven_icons.o
+ .debug_str     0x00000000      0x1d6 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven_icons.o
+ .comment       0x00000000       0x1c C:/Users/3DPihl/.ufbt/build/grokadven/grokadven_icons.o
+ .debug_line_end
+                0x00000000        0x0 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven_icons.o
+ .text          0x00000000        0x0 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .data          0x00000000        0x0 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .bss           0x00000000        0x0 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .comment       0x00000000       0x1c C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .data          0x00000000        0x0 c:/users/3dpihl/.ufbt/toolchain/x86_64-windows/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard\libgcc.a(_arm_addsubdf3.o)
+ .bss           0x00000000        0x0 c:/users/3dpihl/.ufbt/toolchain/x86_64-windows/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard\libgcc.a(_arm_addsubdf3.o)
+ .data          0x00000000        0x0 c:/users/3dpihl/.ufbt/toolchain/x86_64-windows/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard\libgcc.a(_arm_addsubsf3.o)
+ .bss           0x00000000        0x0 c:/users/3dpihl/.ufbt/toolchain/x86_64-windows/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard\libgcc.a(_arm_addsubsf3.o)
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+LOAD C:/Users/3DPihl/.ufbt/build/grokadven/grokadven_icons.o
+LOAD C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+LOAD c:/users/3dpihl/.ufbt/toolchain/x86_64-windows/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libm.a
+LOAD c:/users/3dpihl/.ufbt/toolchain/x86_64-windows/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard\libgcc.a
+LOAD c:/users/3dpihl/.ufbt/toolchain/x86_64-windows/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libstdc++_nano.a
+LOAD c:/users/3dpihl/.ufbt/toolchain/x86_64-windows/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libsupc++_nano.a
+
+.text           0x00000000     0x2650
+ *(.text)
+ .text          0x00000000      0x378 c:/users/3dpihl/.ufbt/toolchain/x86_64-windows/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard\libgcc.a(_arm_addsubdf3.o)
+                0x00000000                __aeabi_drsub
+                0x00000008                __aeabi_dsub
+                0x00000008                __subdf3
+                0x0000000c                __aeabi_dadd
+                0x0000000c                __adddf3
+                0x00000284                __floatunsidf
+                0x00000284                __aeabi_ui2d
+                0x000002a4                __floatsidf
+                0x000002a4                __aeabi_i2d
+                0x000002c8                __aeabi_f2d
+                0x000002c8                __extendsfdf2
+                0x0000030c                __floatundidf
+                0x0000030c                __aeabi_ul2d
+                0x0000031c                __floatdidf
+                0x0000031c                __aeabi_l2d
+ .text          0x00000378      0x21c c:/users/3dpihl/.ufbt/toolchain/x86_64-windows/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard\libgcc.a(_arm_addsubsf3.o)
+                0x00000378                __aeabi_frsub
+                0x00000380                __subsf3
+                0x00000380                __aeabi_fsub
+                0x00000384                __aeabi_fadd
+                0x00000384                __addsf3
+                0x000004e4                __aeabi_ui2f
+                0x000004e4                __floatunsisf
+                0x000004ec                __aeabi_i2f
+                0x000004ec                __floatsisf
+                0x00000508                __aeabi_ul2f
+                0x00000508                __floatundisf
+                0x00000518                __aeabi_l2f
+                0x00000518                __floatdisf
+ *(.stub)
+ *(.text*)
+ *fill*         0x00000594        0x4 
+ .text.generate_world
+                0x00000598      0x2e8 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .text.draw_game
+                0x00000880      0x628 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .text.render_callback
+                0x00000ea8      0x1e0 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .text.init_arrays
+                0x00001088       0x50 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+                0x00001088                init_arrays
+ .text.save_array
+                0x000010d8       0x74 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+                0x000010d8                save_array
+ .text.load_array
+                0x0000114c       0x74 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+                0x0000114c                load_array
+ .text.save_settings
+                0x000011c0       0x70 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+                0x000011c0                save_settings
+ .text.load_settings
+                0x00001230       0x70 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+                0x00001230                load_settings
+ .text.save_player_data
+                0x000012a0       0x98 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+                0x000012a0                save_player_data
+ .text.load_player_data
+                0x00001338       0x98 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+                0x00001338                load_player_data
+ .text.check_level_up
+                0x000013d0       0x4a C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+                0x000013d0                check_level_up
+ .text.collides_with_platform
+                0x0000141a       0x2e C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+                0x0000141a                collides_with_platform
+ .text.can_move_down
+                0x00001448       0x54 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+                0x00001448                can_move_down
+ .text.collides_with_wall
+                0x0000149c       0x40 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+                0x0000149c                collides_with_wall
+ .text.collides_with_furniture
+                0x000014dc       0x44 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+                0x000014dc                collides_with_furniture
+ .text.input_callback
+                0x00001520      0x558 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .text.grokadven_app
+                0x00001a78      0xbd8 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+                0x00001a78                grokadven_app
+ *(.text.*)
+ *(.text._*)
+ *(.init)
+ *(.fini)
+
+.rodata         0x00002650       0xc3
+ *(.rodata)
+ *(.rodata1)
+ *(.rodata.*)
+ .rodata.draw_game.str1.1
+                0x00002650       0x14 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .rodata.render_callback.str1.1
+                0x00002664       0x21 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .rodata.init_arrays.str1.1
+                0x00002685        0x5 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .rodata.save_array.str1.1
+                0x0000268a        0x8 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .rodata.save_settings.str1.1
+                0x00002692       0x1f C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .rodata.save_player_data.str1.1
+                0x000026b1       0x22 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .rodata.input_callback.str1.1
+                0x000026d3       0x40 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+
+.data
+ *(.data)
+ *(.data1)
+ *(.data.*)
+
+.bss
+ *(.bss)
+ *(.bss*)
+ *(.sbss)
+ *(.sbss*)
+ *(COMMON)
+
+.stab
+ *(.stab)
+
+.stabstr
+ *(.stabstr)
+
+.stab.excl
+ *(.stab.excl)
+
+.stab.exclstr
+ *(.stab.exclstr)
+
+.stab.index
+ *(.stab.index)
+
+.stab.indexstr
+ *(.stab.indexstr)
+
+.gnu.build.attributes
+ *(.gnu.build.attributes .gnu.build.attributes.*)
+
+.debug
+ *(.debug)
+
+.line
+ *(.line)
+
+.debug_srcinfo
+ *(.debug_srcinfo)
+
+.debug_sfnames
+ *(.debug_sfnames)
+
+.debug_aranges  0x00000000       0xa0
+ *(.debug_aranges)
+ .debug_aranges
+                0x00000000       0xa0 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+
+.debug_pubnames
+ *(.debug_pubnames)
+
+.debug_info     0x00000000     0x3409
+ *(.debug_info .gnu.linkonce.wi.*)
+ .debug_info    0x00000000     0x3409 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+
+.debug_abbrev   0x00000000      0x4aa
+ *(.debug_abbrev)
+ .debug_abbrev  0x00000000      0x4aa C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+
+.debug_line     0x00000000     0x23d0
+ *(.debug_line .debug_line.* .debug_line_end)
+ .debug_line    0x00000000      0x3e9 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .debug_line.text.generate_world
+                0x000003e9      0x412 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .debug_line.text.draw_game
+                0x000007fb      0x523 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .debug_line.text.render_callback
+                0x00000d1e      0x15e C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .debug_line.text.init_arrays
+                0x00000e7c       0x45 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .debug_line.text.save_array
+                0x00000ec1       0x6e C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .debug_line.text.load_array
+                0x00000f2f       0x6e C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .debug_line.text.save_settings
+                0x00000f9d       0x68 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .debug_line.text.load_settings
+                0x00001005       0x68 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .debug_line.text.save_player_data
+                0x0000106d       0x6b C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .debug_line.text.load_player_data
+                0x000010d8       0x6b C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .debug_line.text.check_level_up
+                0x00001143       0x8b C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .debug_line.text.collides_with_platform
+                0x000011ce       0x55 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .debug_line.text.can_move_down
+                0x00001223       0x75 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .debug_line.text.collides_with_wall
+                0x00001298       0x81 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .debug_line.text.collides_with_furniture
+                0x00001319       0x8c C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .debug_line.text.input_callback
+                0x000013a5      0x543 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .debug_line.text.grokadven_app
+                0x000018e8      0xae8 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .debug_line_end
+                0x000023d0        0x0 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+
+.debug_frame    0x00000000      0x2c8
+ *(.debug_frame)
+ .debug_frame   0x00000000      0x2c8 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+
+.debug_str      0x00000000      0xdc7
+ *(.debug_str)
+ .debug_str     0x00000000      0xdc7 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+
+.debug_loc
+ *(.debug_loc)
+
+.debug_macinfo
+ *(.debug_macinfo)
+
+.debug_weaknames
+ *(.debug_weaknames)
+
+.debug_funcnames
+ *(.debug_funcnames)
+
+.debug_typenames
+ *(.debug_typenames)
+
+.debug_varnames
+ *(.debug_varnames)
+
+.debug_pubtypes
+ *(.debug_pubtypes)
+
+.debug_ranges
+ *(.debug_ranges)
+
+.debug_addr
+ *(.debug_addr)
+
+.debug_line_str
+                0x00000000      0x154
+ *(.debug_line_str)
+ .debug_line_str
+                0x00000000       0xaa c:/users/3dpihl/.ufbt/toolchain/x86_64-windows/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard\libgcc.a(_arm_addsubdf3.o)
+ .debug_line_str
+                0x000000aa       0xaa c:/users/3dpihl/.ufbt/toolchain/x86_64-windows/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard\libgcc.a(_arm_addsubsf3.o)
+
+.debug_loclists
+                0x00000000     0x129c
+ *(.debug_loclists)
+ .debug_loclists
+                0x00000000     0x129c C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+
+.debug_macro
+ *(.debug_macro)
+
+.debug_names
+ *(.debug_names)
+
+.debug_rnglists
+                0x00000000      0x3bb
+ *(.debug_rnglists)
+ .debug_rnglists
+                0x00000000      0x3bb C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+
+.debug_str_offsets
+ *(.debug_str_offsets)
+
+.debug_sup
+ *(.debug_sup)
+
+.ARM.attributes
+                0x00000000       0x34
+ *(.ARM.attributes)
+ .ARM.attributes
+                0x00000000       0x34 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven_icons.o
+ .ARM.attributes
+                0x00000034       0x34 C:/Users/3DPihl/.ufbt/build/grokadven/grokadven.o
+ .ARM.attributes
+                0x00000068       0x22 c:/users/3dpihl/.ufbt/toolchain/x86_64-windows/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard\libgcc.a(_arm_addsubdf3.o)
+ .ARM.attributes
+                0x0000008a       0x22 c:/users/3dpihl/.ufbt/toolchain/x86_64-windows/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard\libgcc.a(_arm_addsubsf3.o)
+ *(.gnu.attributes)
+
+.note.gnu.arm.ident
+ *(.note.gnu.arm.ident)
+
+/DISCARD/
+ *(.note.GNU-stack)
+ *(.gnu_debuglink)
+ *(.gnu.lto_*)
+
+/DISCARD/
+ *(.comment)
+ *(.comment.*)
+ *(.llvmbc)
+ *(.llvmcmd)
+OUTPUT(C:/Users/3DPihl/.ufbt/build/grokadven_d.elf elf32-littlearm)
+LOAD linker stubs
