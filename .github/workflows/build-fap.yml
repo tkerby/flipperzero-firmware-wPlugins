@@ -6,12 +6,53 @@ on:
     tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
+  schedule:
+    # Check for new Flipper Zero firmware releases daily at 12:00 UTC
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+    # Allow manual triggering for testing
 
 jobs:
+  check-firmware:
+    runs-on: ubuntu-latest
+    name: Check for New Flipper Zero Firmware
+    outputs:
+      new-release: ${{ steps.check.outputs.new-release }}
+      firmware-version: ${{ steps.check.outputs.firmware-version }}
+      release-tag: ${{ steps.check.outputs.release-tag }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Check for new Flipper Zero firmware release
+      id: check
+      run: |
+        # Get the latest Flipper Zero firmware release
+        LATEST_FW=$(curl -s https://api.github.com/repos/flipperdevices/flipperzero-firmware/releases/latest | jq -r '.tag_name')
+        echo "Latest firmware version: $LATEST_FW"
+
+        # Check if we already have a release for this firmware version
+        EXISTING_RELEASE=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases | jq -r --arg fw "$LATEST_FW" '.[] | select(.tag_name | contains($fw)) | .tag_name' | head -1)
+
+        if [ -z "$EXISTING_RELEASE" ]; then
+          echo "New firmware version detected: $LATEST_FW"
+          echo "new-release=true" >> $GITHUB_OUTPUT
+          echo "firmware-version=$LATEST_FW" >> $GITHUB_OUTPUT
+          echo "release-tag=asteroids-$LATEST_FW" >> $GITHUB_OUTPUT
+        else
+          echo "Release already exists for firmware $LATEST_FW: $EXISTING_RELEASE"
+          echo "new-release=false" >> $GITHUB_OUTPUT
+        fi
+
   build:
     runs-on: ubuntu-latest
     name: Build Asteroids FAP
-    
+    needs: check-firmware
+    if: always() && (github.event_name != 'schedule' || needs.check-firmware.outputs.new-release == 'true')
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -28,19 +69,55 @@ jobs:
     - name: Upload FAP artifact
       uses: actions/upload-artifact@v4
       with:
-        name: asteroids-fap
+        name: asteroids-fap-${{ needs.check-firmware.outputs.firmware-version || 'manual' }}
         path: |
           dist/*.fap
           dist/*.fap.debug
         retention-days: 30
 
-    - name: Create Release
-      if: startsWith(github.ref, 'refs/tags/')
+    - name: Create Release for Manual Tags
+      if: startsWith(github.ref, 'refs/tags/') && github.event_name != 'schedule'
       uses: softprops/action-gh-release@v1
       with:
         files: |
           dist/*.fap
         generate_release_notes: true
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create Automatic Release for New Firmware
+      if: needs.check-firmware.outputs.new-release == 'true' && github.event_name == 'schedule'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ needs.check-firmware.outputs.release-tag }}
+        name: "Asteroids for Flipper Zero ${{ needs.check-firmware.outputs.firmware-version }}"
+        body: |
+          🎮 **Asteroids Game for Flipper Zero**
+
+          This release is automatically built and tested for compatibility with **Flipper Zero firmware ${{ needs.check-firmware.outputs.firmware-version }}**.
+
+          ## 📦 Installation
+          1. Download the `asteroids.fap` file from the assets below
+          2. Copy it to your Flipper Zero's `apps/Games/` folder via qFlipper or SD card
+          3. Launch the game from Apps → Games → Asteroids
+
+          ## 🔧 Compatibility
+          - **Firmware Version**: ${{ needs.check-firmware.outputs.firmware-version }}
+          - **Build Date**: ${{ github.run_id }}
+          - **App Version**: Built from commit ${{ github.sha }}
+
+          ## 🎯 Game Features
+          - Classic Asteroids gameplay
+          - Power-ups and special weapons
+          - High score tracking
+          - Optimized for Flipper Zero controls
+
+          ---
+          *This release was automatically generated when Flipper Zero firmware ${{ needs.check-firmware.outputs.firmware-version }} was detected.*
+        files: |
+          dist/*.fap
         draft: false
         prerelease: false
       env:
