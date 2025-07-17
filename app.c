@@ -27,6 +27,9 @@
 #define MAXAST 32 /* Max asteroids on the screen. */
 #define MAXPOWERUPS 3 /* Max powerups allowed on screen */
 #define POWERUPSTTL 400 /* Max powerup time to live, in ticks. */
+#define MAXDRONES 1 /* Max drone buddies allowed */
+#define DRONE_TTL 300 /* Drone time to live, in ticks. */
+#define DRONE_FIRE_RATE 20 /* Drone fire rate in ticks. */
 #define SHIP_HIT_ANIMATION_LEN 15
 #define SAVING_DIRECTORY "/ext/apps/Games"
 #define SAVING_FILENAME SAVING_DIRECTORY "/game_asteroids.save"
@@ -41,6 +44,7 @@ typedef enum PowerUpType {
     PowerUpTypeFirePower, // Burst Fire power
     // PowerUpTypeRadialFire, // Radial Fire power
     PowerUpTypeNuke, // Nuke power
+    PowerUpTypeDroneBuddy, // Drone assistant
     // PowerUpTypeClone, // Clone ship
     // PowerUpTypeAssist, // Secondary ship
     Number_of_PowerUps // Used to count the number of powerups
@@ -79,6 +83,13 @@ typedef struct Asteroid {
     uint8_t shape_seed; /* Seed to give random shape. */
 } Asteroid;
 
+typedef struct Drone {
+    float x, y, vx, vy, rot; /* Fields like ship. */
+    uint32_t ttl; /* Time to live, in ticks. */
+    uint32_t last_fire_tick; /* Last time drone fired. */
+    bool active; /* Is the drone active? */
+} Drone;
+
 // @todo AsteroidsApp
 typedef struct AsteroidsApp {
     /* GUI */
@@ -115,6 +126,10 @@ typedef struct AsteroidsApp {
     /* Asteroids state. */
     Asteroid asteroids[MAXAST]; /* Each asteroid state. */
     int asteroids_num; /* Active asteroids. */
+
+    /* Drone state. */
+    Drone drones[MAXDRONES]; /* Each drone state. */
+    int drones_num; /* Active drones. */
 
     uint32_t pressed[InputKeyMAX]; /* pressed[id] is true if pressed.
                                       Each array item contains the time
@@ -227,6 +242,7 @@ bool load_game(AsteroidsApp* app);
 void save_game(AsteroidsApp* app);
 void restart_game_after_gameover(AsteroidsApp* app);
 uint32_t key_pressed_time(AsteroidsApp* app, InputKey key);
+void spawn_drone_buddy(AsteroidsApp* app);
 
 /* ============================ 2D drawing ================================== */
 
@@ -244,6 +260,9 @@ typedef struct Poly {
 Poly ShipPoly = {{-3, 0, 3}, {-3, 6, -3}, 3};
 
 Poly ShipFirePoly = {{-1.5, 0, 1.5}, {-3, -6, -3}, 3};
+
+/* Smaller drone polygon - triangular shape */
+Poly DronePoly = {{-2, 0, 2}, {-2, 4, -2}, 3};
 
 /* Rotate the point of the poligon 'poly' and store the new rotated
  * polygon in 'rot'. The polygon is rotated by an angle 'a', with
@@ -476,6 +495,10 @@ void draw_powerUps(Canvas* const canvas, PowerUp* const p) {
         // canvas_draw_str(canvas, p->x, p->y, "N");
         canvas_draw_icon(canvas, p->x, p->y, &I_nuke_10x10);
         break;
+    case PowerUpTypeDroneBuddy:
+        // Draw box with letter D inside for drone buddy
+        canvas_draw_str(canvas, p->x, p->y, "D");
+        break;
     // case PowerUpTypeRadialFire:
     //     // Draw box with letter R inside
     //     canvas_draw_str(canvas, p->x, p->y, "R");
@@ -510,6 +533,24 @@ void draw_shield(Canvas* const canvas, AsteroidsApp* app) {
     int y = clamp_coordinate(app->ship.y, 8, SCREEN_YRES - 8);
     // canvas_draw_disc(canvas, x, y, 4);
     canvas_draw_circle(canvas, x, y, 8);
+}
+
+/* Draw a drone buddy */
+void draw_drone(Canvas* const canvas, Drone* drone) {
+    /* Safety check for drone coordinates */
+    if(!is_coordinate_safe(drone->x, drone->y)) {
+        FURI_LOG_W(TAG, "Unsafe drone coordinates: x=%.2f, y=%.2f", (double)drone->x, (double)drone->y);
+        return;
+    }
+
+    /* Draw drone with a different color/style to distinguish from main ship */
+    canvas_set_color(canvas, ColorBlack);
+    draw_poly(canvas, &DronePoly, drone->x, drone->y, drone->rot);
+
+    /* Draw a small dot in the center to make it more visible */
+    int x = clamp_coordinate(drone->x, 0, SCREEN_XRES - 1);
+    int y = clamp_coordinate(drone->y, 0, SCREEN_YRES - 1);
+    canvas_draw_dot(canvas, x, y);
 }
 
 /* Render the current game screen. */
@@ -554,6 +595,13 @@ void render_callback(Canvas* const canvas, void* ctx) {
     for(int j = 0; j < app->bullets_num; j++) draw_bullet(canvas, &app->bullets[j]);
 
     for(int j = 0; j < app->asteroids_num; j++) draw_asteroid(canvas, &app->asteroids[j]);
+
+    /* Draw active drones */
+    for(int j = 0; j < app->drones_num; j++) {
+        if(app->drones[j].active) {
+            draw_drone(canvas, &app->drones[j]);
+        }
+    }
 
     for(int j = 0; j < app->powerUps_num; j++) {
         draw_powerUps(canvas, &app->powerUps[j]);
@@ -932,11 +980,159 @@ void powerUp_was_hit(AsteroidsApp* app, int id) {
         // Simulate nuke explosion
         remove_all_astroids_and_bullets(app);
         break;
+    case PowerUpTypeDroneBuddy:
+        // Spawn a drone buddy
+        spawn_drone_buddy(app);
+        remove_powerUp(app, id);
+        break;
     default:
         break;
     }
     p->display_ttl = 0;
     p->isPowerUpActive = true;
+}
+
+/* ================================ Drone Buddy ================================ */
+/* Spawn a drone buddy near the ship */
+void spawn_drone_buddy(AsteroidsApp* app) {
+    if(app->drones_num >= MAXDRONES) return; // Max drones reached
+
+    Drone* drone = &app->drones[app->drones_num++];
+
+    /* Position drone near the ship but not too close */
+    drone->x = app->ship.x + 15;
+    drone->y = app->ship.y + 10;
+    drone->vx = 0;
+    drone->vy = 0;
+    drone->rot = app->ship.rot;
+    drone->ttl = DRONE_TTL;
+    drone->last_fire_tick = 0;
+    drone->active = true;
+
+    FURI_LOG_I(TAG, "Drone buddy spawned at x=%.2f, y=%.2f", (double)drone->x, (double)drone->y);
+}
+
+/* Remove a drone */
+void remove_drone(AsteroidsApp* app, int id) {
+    if(id < 0 || id >= app->drones_num) return;
+
+    FURI_LOG_I(TAG, "Removing drone %d", id);
+
+    /* Replace with last drone to keep array dense */
+    int n = --app->drones_num;
+    if(n && id != n) app->drones[id] = app->drones[n];
+}
+
+/* Find the nearest asteroid to a drone */
+int find_nearest_asteroid(AsteroidsApp* app, Drone* drone) {
+    int nearest = -1;
+    float min_distance = 50.0f; /* Maximum targeting range */
+
+    for(int i = 0; i < app->asteroids_num; i++) {
+        float dist = distance(drone->x, drone->y, app->asteroids[i].x, app->asteroids[i].y);
+        if(dist < min_distance) {
+            min_distance = dist;
+            nearest = i;
+        }
+    }
+
+    return nearest;
+}
+
+/* Make drone fire at nearest asteroid */
+void drone_fire_bullet(AsteroidsApp* app, Drone* drone) {
+    if(app->bullets_num >= MAXBUL) return; /* No space for more bullets */
+
+    int target = find_nearest_asteroid(app, drone);
+    if(target == -1) return; /* No target in range */
+
+    Asteroid* ast = &app->asteroids[target];
+
+    /* Calculate direction to target */
+    float dx = ast->x - drone->x;
+    float dy = ast->y - drone->y;
+    float dist = sqrt(dx * dx + dy * dy);
+
+    if(dist > 0) {
+        Bullet* b = &app->bullets[app->bullets_num++];
+        b->x = drone->x;
+        b->y = drone->y;
+        b->vx = (dx / dist) * 3.0f; /* Bullet speed */
+        b->vy = (dy / dist) * 3.0f;
+        b->ttl = TTLBUL;
+
+        /* Update drone rotation to face target */
+        drone->rot = atan2(-dx, dy);
+
+        notification_message(furi_record_open(RECORD_NOTIFICATION), &sequence_bullet_fired);
+    }
+}
+
+/* Update drone positions and behavior */
+void update_drones(AsteroidsApp* app) {
+    for(int i = 0; i < app->drones_num; i++) {
+        Drone* drone = &app->drones[i];
+
+        if(!drone->active) continue;
+
+        /* Decrease TTL */
+        if(drone->ttl > 0) {
+            drone->ttl--;
+        } else {
+            /* Drone expired */
+            remove_drone(app, i);
+            i--; /* Process this index again */
+            continue;
+        }
+
+        /* Follow the ship at a distance */
+        float target_x = app->ship.x - 20;
+        float target_y = app->ship.y - 15;
+
+        /* Simple following behavior */
+        float dx = target_x - drone->x;
+        float dy = target_y - drone->y;
+        float dist = sqrt(dx * dx + dy * dy);
+
+        if(dist > 5.0f) {
+            /* Move towards target position */
+            drone->vx = (dx / dist) * 1.5f;
+            drone->vy = (dy / dist) * 1.5f;
+        } else {
+            /* Close enough, reduce velocity */
+            drone->vx *= 0.8f;
+            drone->vy *= 0.8f;
+        }
+
+        /* Update position */
+        update_pos_by_velocity(&drone->x, &drone->y, drone->vx, drone->vy);
+
+        /* Fire at asteroids */
+        uint32_t now = furi_get_tick();
+        if(now - drone->last_fire_tick >= DRONE_FIRE_RATE) {
+            drone_fire_bullet(app, drone);
+            drone->last_fire_tick = now;
+        }
+    }
+}
+
+/* Check drone collisions with asteroids */
+void check_drone_collisions(AsteroidsApp* app) {
+    for(int i = 0; i < app->drones_num; i++) {
+        Drone* drone = &app->drones[i];
+        if(!drone->active) continue;
+
+        for(int j = 0; j < app->asteroids_num; j++) {
+            Asteroid* ast = &app->asteroids[j];
+            if(objects_are_colliding(drone->x, drone->y, 3, ast->x, ast->y, ast->size, 1)) {
+                /* Drone was hit by asteroid */
+                FURI_LOG_I(TAG, "Drone destroyed by asteroid");
+                remove_drone(app, i);
+                i--; /* Process this index again */
+                break;
+            }
+        }
+    }
 }
 
 /* ================================ Game States ================================ */
@@ -972,6 +1168,7 @@ void restart_game(AsteroidsApp* app) {
     app->last_bullet_tick = 0;
     app->bullet_min_period = 200;
     app->asteroids_num = 0;
+    app->drones_num = 0;
     app->ship_hit = 0;
 }
 
@@ -1206,7 +1403,9 @@ void game_tick(void* ctx) {
     update_asteroids_position(app);
     update_powerUp_status(app); //@todo update_powerUp_status
     update_powerUps_position(app);
+    update_drones(app);
     detect_collisions(app);
+    check_drone_collisions(app);
 
     /* From time to time, create a new asteroid. The more asteroids
      * already on the screen, the smaller probability of creating
