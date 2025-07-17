@@ -77,6 +77,7 @@ jobs:
 
     - name: Create Release for Manual Tags
       if: startsWith(github.ref, 'refs/tags/') && github.event_name != 'schedule'
+      id: manual-release
       uses: softprops/action-gh-release@v1
       with:
         files: |
@@ -89,6 +90,7 @@ jobs:
 
     - name: Create Automatic Release for New Firmware
       if: needs.check-firmware.outputs.new-release == 'true' && github.event_name == 'schedule'
+      id: auto-release
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ needs.check-firmware.outputs.release-tag }}
@@ -120,5 +122,81 @@ jobs:
           dist/*.fap
         draft: false
         prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Update README with Latest Release Info
+      if: steps.manual-release.conclusion == 'success' || steps.auto-release.conclusion == 'success'
+      run: |
+        # Set release information based on which type of release was created
+        if [ "${{ steps.auto-release.conclusion }}" == "success" ]; then
+          RELEASE_TAG="${{ needs.check-firmware.outputs.release-tag }}"
+          RELEASE_NAME="Asteroids for Flipper Zero ${{ needs.check-firmware.outputs.firmware-version }}"
+          FIRMWARE_VERSION="${{ needs.check-firmware.outputs.firmware-version }}"
+        else
+          RELEASE_TAG="${{ github.ref_name }}"
+          RELEASE_NAME="Asteroids ${{ github.ref_name }}"
+          FIRMWARE_VERSION="Latest"
+        fi
+
+        # Get current date
+        CURRENT_DATE=$(date -u +"%Y-%m-%d %H:%M UTC")
+
+        # Create the latest release section
+        cat > latest_release_section.md << EOF
+        <!-- LATEST_RELEASE_START -->
+        ## 🚀 Latest Release
+
+        [![Latest Release](https://img.shields.io/github/v/release/SimplyMinimal/FlipperZero-Asteroids?style=for-the-badge&logo=github&color=success)](https://github.com/SimplyMinimal/FlipperZero-Asteroids/releases/latest)
+        [![Download FAP](https://img.shields.io/badge/Download-asteroids.fap-blue?style=for-the-badge&logo=download)](https://github.com/SimplyMinimal/FlipperZero-Asteroids/releases/latest/download/asteroids.fap)
+        [![Firmware Compatibility](https://img.shields.io/badge/Firmware-${FIRMWARE_VERSION}-orange?style=for-the-badge&logo=flipboard)](https://github.com/flipperdevices/flipperzero-firmware)
+
+        **${RELEASE_NAME}** | *Last updated: ${CURRENT_DATE}*
+
+        ### 📥 Quick Install
+        1. **[Download asteroids.fap](https://github.com/SimplyMinimal/FlipperZero-Asteroids/releases/latest/download/asteroids.fap)** ⬅️ *Click here for direct download*
+        2. Copy to your Flipper Zero: `/ext/apps/Games/asteroids.fap`
+        3. Launch from: Apps → Games → Asteroids
+
+        ---
+        <!-- LATEST_RELEASE_END -->
+
+        EOF
+
+        # Check if the latest release section already exists
+        if grep -q "<!-- LATEST_RELEASE_START -->" README.md; then
+          # Replace existing section
+          sed -i '/<!-- LATEST_RELEASE_START -->/,/<!-- LATEST_RELEASE_END -->/c\' README.md
+          sed -i '1r latest_release_section.md' README.md
+        else
+          # Add new section at the top
+          cat latest_release_section.md README.md > temp_readme.md
+          mv temp_readme.md README.md
+        fi
+
+        # Clean up
+        rm latest_release_section.md
+      continue-on-error: true
+
+    - name: Commit README Updates
+      if: steps.manual-release.conclusion == 'success' || steps.auto-release.conclusion == 'success'
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+
+        if git diff --quiet README.md; then
+          echo "No changes to README.md"
+        else
+          git add README.md
+          git commit -m "docs: Update README with latest release information
+
+          - Add latest release badges and download links
+          - Update firmware compatibility information
+          - Add quick install instructions
+          - Auto-generated from workflow run ${{ github.run_id }}"
+
+          git push origin main
+        fi
+      continue-on-error: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
