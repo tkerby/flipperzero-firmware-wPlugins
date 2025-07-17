@@ -272,8 +272,15 @@ void lfsr_next(unsigned char* prev) {
 
 /* ================================ Render ================================ */
 
+/* Safely clamp coordinate to valid canvas bounds */
+static inline int clamp_coordinate(float coord, int min_val, int max_val) {
+    if(coord < min_val) return min_val;
+    if(coord > max_val) return max_val;
+    return (int)coord;
+}
+
 /* Render the polygon 'poly' at x,y, rotated by the specified angle. */
-void draw_poly(Canvas* const canvas, Poly* poly, uint8_t x, uint8_t y, float a) {
+void draw_poly(Canvas* const canvas, Poly* poly, int x, int y, float a) {
     Poly rot;
     rotate_poly(&rot, poly, a);
     canvas_set_color(canvas, ColorBlack);
@@ -281,18 +288,43 @@ void draw_poly(Canvas* const canvas, Poly* poly, uint8_t x, uint8_t y, float a) 
         uint32_t a = j;
         uint32_t b = j + 1;
         if(b == rot.points) b = 0;
-        canvas_draw_line(canvas, x + rot.x[a], y + rot.y[a], x + rot.x[b], y + rot.y[b]);
+
+        /* Calculate final coordinates with bounds checking */
+        int x1 = clamp_coordinate(x + rot.x[a], 0, SCREEN_XRES - 1);
+        int y1 = clamp_coordinate(y + rot.y[a], 0, SCREEN_YRES - 1);
+        int x2 = clamp_coordinate(x + rot.x[b], 0, SCREEN_XRES - 1);
+        int y2 = clamp_coordinate(y + rot.y[b], 0, SCREEN_YRES - 1);
+
+        /* Only draw if coordinates are reasonable (prevent extreme off-screen rendering) */
+        if(abs(x - SCREEN_XRES/2) < SCREEN_XRES * 2 && abs(y - SCREEN_YRES/2) < SCREEN_YRES * 2) {
+            canvas_draw_line(canvas, x1, y1, x2, y2);
+        }
     }
+}
+
+/* Validate that coordinates are safe for drawing */
+static inline bool is_coordinate_safe(float x, float y) {
+    return (x >= -10 && x <= SCREEN_XRES + 10 && y >= -10 && y <= SCREEN_YRES + 10);
 }
 
 /* A bullet is just a + pixels pattern. A single pixel is not
  * visible enough. */
 void draw_bullet(Canvas* const canvas, Bullet* b) {
-    canvas_draw_dot(canvas, b->x - 1, b->y);
-    canvas_draw_dot(canvas, b->x + 1, b->y);
-    canvas_draw_dot(canvas, b->x, b->y);
-    canvas_draw_dot(canvas, b->x, b->y - 1);
-    canvas_draw_dot(canvas, b->x, b->y + 1);
+    /* Safety check to prevent drawing at invalid coordinates */
+    if(!is_coordinate_safe(b->x, b->y)) {
+        FURI_LOG_W(TAG, "Unsafe bullet coordinates: x=%.2f, y=%.2f", (double)b->x, (double)b->y);
+        return;
+    }
+
+    int x = clamp_coordinate(b->x, 0, SCREEN_XRES - 1);
+    int y = clamp_coordinate(b->y, 0, SCREEN_YRES - 1);
+
+    /* Draw bullet with bounds checking for each dot */
+    if(x > 0) canvas_draw_dot(canvas, x - 1, y);
+    if(x < SCREEN_XRES - 1) canvas_draw_dot(canvas, x + 1, y);
+    canvas_draw_dot(canvas, x, y);
+    if(y > 0) canvas_draw_dot(canvas, x, y - 1);
+    if(y < SCREEN_YRES - 1) canvas_draw_dot(canvas, x, y + 1);
 }
 
 /* Draw an asteroid. The asteroid shapes is computed on the fly and
@@ -301,6 +333,18 @@ void draw_bullet(Canvas* const canvas, Bullet* b) {
  * to the asteroid size, perturbate according to the asteroid shape
  * seed, and finally draw it rotated of the right amount. */
 void draw_asteroid(Canvas* const canvas, Asteroid* ast) {
+    /* Safety check for asteroid coordinates */
+    if(!is_coordinate_safe(ast->x, ast->y)) {
+        FURI_LOG_W(TAG, "Unsafe asteroid coordinates: x=%.2f, y=%.2f", (double)ast->x, (double)ast->y);
+        return;
+    }
+
+    /* Validate asteroid size to prevent extreme shapes */
+    if(ast->size < 1 || ast->size > 50) {
+        FURI_LOG_W(TAG, "Invalid asteroid size: %.2f", (double)ast->size);
+        return;
+    }
+
     Poly ap;
 
     /* Start with what is kinda of a circle. Note that this could be
@@ -456,9 +500,16 @@ void draw_powerUps(Canvas* const canvas, PowerUp* const p) {
 void draw_shield(Canvas* const canvas, AsteroidsApp* app) {
     if(isPowerUpActive(app, PowerUpTypeShield) == false) return;
 
+    /* Safety check for shield coordinates */
+    if(!is_coordinate_safe(app->ship.x, app->ship.y)) {
+        return; /* Skip drawing shield if ship coordinates are invalid */
+    }
+
     canvas_set_color(canvas, ColorXOR);
-    // canvas_draw_disc(canvas, app->ship.x, app->ship.y, 4);
-    canvas_draw_circle(canvas, app->ship.x, app->ship.y, 8);
+    int x = clamp_coordinate(app->ship.x, 8, SCREEN_XRES - 8);
+    int y = clamp_coordinate(app->ship.y, 8, SCREEN_YRES - 8);
+    // canvas_draw_disc(canvas, x, y, 4);
+    canvas_draw_circle(canvas, x, y, 8);
 }
 
 /* Render the current game screen. */
@@ -480,6 +531,16 @@ void render_callback(Canvas* const canvas, void* ctx) {
     draw_left_lives(canvas, app);
 
     /* Draw ship, asteroids, bullets. */
+    /* Safety check for ship coordinates before rendering */
+    if(!is_coordinate_safe(app->ship.x, app->ship.y)) {
+        FURI_LOG_E(TAG, "Ship coordinate corruption detected: x=%.2f, y=%.2f", (double)app->ship.x, (double)app->ship.y);
+        /* Emergency reset ship to center */
+        app->ship.x = SCREEN_XRES / 2;
+        app->ship.y = SCREEN_YRES / 2;
+        app->ship.vx = 0;
+        app->ship.vy = 0;
+    }
+
     draw_poly(canvas, &ShipPoly, app->ship.x, app->ship.y, app->ship.rot);
 
     /* Draw shield if active. */
@@ -544,20 +605,43 @@ void render_callback(Canvas* const canvas, void* ctx) {
 
 /* ============================ Game logic ================================== */
 
+/* Safely wrap coordinate to screen bounds with proper modulo arithmetic */
+static inline float safe_wrap_coordinate(float coord, float max_val) {
+    /* Handle extreme negative values */
+    while(coord < 0) {
+        coord += max_val;
+    }
+    /* Handle extreme positive values */
+    while(coord >= max_val) {
+        coord -= max_val;
+    }
+    return coord;
+}
+
 /* Given the current position, update it according to the velocity and
  * wrap it back to the other side if the object went over the screen. */
 void update_pos_by_velocity(float* x, float* y, float vx, float vy) {
-    /* Return back from one side to the other of the screen. */
+    /* Update position */
     *x += vx;
     *y += vy;
-    if(*x >= SCREEN_XRES)
-        *x = 0;
-    else if(*x < 0)
-        *x = SCREEN_XRES - 1;
-    if(*y >= SCREEN_YRES)
-        *y = 0;
-    else if(*y < 0)
-        *y = SCREEN_YRES - 1;
+
+    /* Clamp velocity to prevent extreme jumps that could cause coordinate corruption */
+    const float MAX_VELOCITY = 10.0f;
+    if(vx > MAX_VELOCITY || vx < -MAX_VELOCITY || vy > MAX_VELOCITY || vy < -MAX_VELOCITY) {
+        FURI_LOG_W(TAG, "Extreme velocity detected: vx=%.2f, vy=%.2f", (double)vx, (double)vy);
+    }
+
+    /* Safely wrap coordinates using proper modulo arithmetic */
+    *x = safe_wrap_coordinate(*x, SCREEN_XRES);
+    *y = safe_wrap_coordinate(*y, SCREEN_YRES);
+
+    /* Additional safety check - ensure coordinates are within reasonable bounds */
+    if(*x < 0 || *x >= SCREEN_XRES || *y < 0 || *y >= SCREEN_YRES) {
+        FURI_LOG_E(TAG, "Coordinate corruption detected: x=%.2f, y=%.2f", (double)*x, (double)*y);
+        /* Emergency reset to center of screen */
+        *x = SCREEN_XRES / 2;
+        *y = SCREEN_YRES / 2;
+    }
 }
 
 float distance(float x1, float y1, float x2, float y2) {
