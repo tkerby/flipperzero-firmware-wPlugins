@@ -2060,8 +2060,17 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptMD2OutputScene:
-            dialog_ex_set_text(app->dialog_ex, "MD2 output", 64, 18, AlignCenter, AlignCenter);
-            save_result_generic(APP_DATA_PATH("md2.txt"), "MD2 output");
+            BYTE hash[MD2_BLOCK_SIZE];
+            MD2_CTX ctx;
+            md2_init(&ctx);
+            md2_update(&ctx, (const BYTE*)app->md2_input, strlen(app->md2_input));
+            md2_final(&ctx, hash);
+            char md2_hash_str[MD2_BLOCK_SIZE * 2 + 1];
+            for (int i = 0; i < MD2_BLOCK_SIZE; ++i) {
+                snprintf(&md2_hash_str[i * 2], 3, "%02x", hash[i]);
+            }
+            dialog_ex_set_text(app->dialog_ex, md2_hash_str, 64, 18, AlignCenter, AlignCenter);
+            save_result_generic(APP_DATA_PATH("md2.txt"), md2_hash_str);
             app->last_output_scene = "MD2";
             dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
             dialog_ex_set_center_button_text(app->dialog_ex, "Save");
