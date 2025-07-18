@@ -95,6 +95,16 @@ A long time ago in a galaxy far, far away... The evil Flipper Zero, Sith Lord, h
 2. Compile `lofz.c` using the Flipper Zero firmware SDK.
 3. Deploy to your Flipper Zero and launch from the apps menu.
 
+## Screenshots
+![LOFZ Loading Screen](https://raw.githubusercontent.com/DigiMancer3D/LOFZ/refs/heads/main/Screenshots/Screenshot-20250718-172625.png)
+![LOFZ Agreement Screen](https://raw.githubusercontent.com/DigiMancer3D/LOFZ/refs/heads/main/Screenshots/Screenshot-20250718-172632.png)
+![LOFZ Intro Crawl Screen](https://raw.githubusercontent.com/DigiMancer3D/LOFZ/refs/heads/main/Screenshots/Screenshot-20250718-172639.png)
+![LOFZ Inital Game Screen](https://raw.githubusercontent.com/DigiMancer3D/LOFZ/refs/heads/main/Screenshots/Screenshot-20250718-172646.png)
+![LOFZ Gameplay (User Turn)](https://raw.githubusercontent.com/DigiMancer3D/LOFZ/refs/heads/main/Screenshots/Screenshot-20250718-172651.png)
+![LOFZ Gameplay (Flipper Turn)](https://raw.githubusercontent.com/DigiMancer3D/LOFZ/refs/heads/main/Screenshots/Screenshot-20250718-172714.png)
+![LOFZ Credit Crawl Screen](https://raw.githubusercontent.com/DigiMancer3D/LOFZ/refs/heads/main/Screenshots/Screenshot-20250718-172724.png)
+![LOFZ Away-Message](https://raw.githubusercontent.com/DigiMancer3D/LOFZ/refs/heads/main/Screenshots/Screenshot-20250718-172750.png)
+
 ## Notes
 - First Flipper Zero game by 3DPihl, transmuted from JavaScript using Copilot, with UI enhancements and bug fixes by Grok 3 (xAI).
 - Optimized for Flipper Zero’s 128x64 display and 5-button input.
