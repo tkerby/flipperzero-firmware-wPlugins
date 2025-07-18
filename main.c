@@ -2773,7 +2773,7 @@ void flip_crypt_about_scene_on_enter(void* context) {
     App* app = context;
     widget_reset(app->widget);
     widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "FlipCrypt\n"
-    "v0.2\n"
+    "v0.3\n"
     "Explore and learn about various cryptograpic and text encoding methods.\n\n"
     "Usage:\n"
     "Select the method you want to use for encoding / decoding text and fill in the necessary inputs.\n"
