@@ -30,6 +30,7 @@
 #define SHIP_HIT_ANIMATION_LEN 15
 #define SAVING_DIRECTORY "/ext/apps/Games"
 #define SAVING_FILENAME SAVING_DIRECTORY "/game_asteroids.save"
+#define SPLASH_SCREEN_DURATION 3000 /* Splash screen duration in milliseconds */
 #ifndef PI
 #define PI 3.14159265358979f
 #endif
@@ -91,6 +92,8 @@ typedef struct AsteroidsApp {
     int running; /* Once false exists the app. */
     bool gameover; /* Gameover status. */
     bool paused; /* Game paused status. */
+    bool splash_screen; /* Splash screen status. */
+    uint32_t splash_start_time; /* When splash screen started. */
     uint32_t ticks; /* Game ticks. Increments at each refresh. */
     uint32_t score; /* Game score. */
     uint32_t highscore; /* Highscore. Shown on Game Over Screen */
@@ -512,9 +515,44 @@ void draw_shield(Canvas* const canvas, AsteroidsApp* app) {
     canvas_draw_circle(canvas, x, y, 8);
 }
 
+/* Render the splash screen with credits */
+void render_splash_screen(Canvas* const canvas, AsteroidsApp* app) {
+    UNUSED(app);
+
+    /* Clear screen */
+    canvas_set_color(canvas, ColorWhite);
+    canvas_draw_box(canvas, 0, 0, SCREEN_XRES - 1, SCREEN_YRES - 1);
+
+    /* Set black color for text */
+    canvas_set_color(canvas, ColorBlack);
+
+    /* Draw main title */
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str_aligned(canvas, SCREEN_XRES / 2, 12, AlignCenter, AlignCenter, "ASTEROIDS++");
+
+    /* Draw credits section */
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str_aligned(canvas, SCREEN_XRES / 2, 26, AlignCenter, AlignCenter, "Designed and Developed by");
+
+    /* Draw developer credits */
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str_aligned(canvas, SCREEN_XRES / 2, 38, AlignCenter, AlignCenter, "SimplyMinimal");
+    canvas_draw_str_aligned(canvas, SCREEN_XRES / 2, 48, AlignCenter, AlignCenter, "& AntiRez");
+
+    /* Draw skip instruction */
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str_aligned(canvas, SCREEN_XRES / 2, 60, AlignCenter, AlignCenter, "Press any key to skip");
+}
+
 /* Render the current game screen. */
 void render_callback(Canvas* const canvas, void* ctx) {
     AsteroidsApp* app = ctx;
+
+    /* Handle splash screen rendering */
+    if(app->splash_screen) {
+        render_splash_screen(canvas, app);
+        return;
+    }
 
     /* Clear screen. */
     canvas_set_color(canvas, ColorWhite);
@@ -1132,7 +1170,17 @@ void detect_collisions(AsteroidsApp* app) {
 void game_tick(void* ctx) {
     AsteroidsApp* app = ctx;
 
-    /* There are two special screens:
+    /* Handle splash screen timing */
+    if(app->splash_screen) {
+        uint32_t elapsed = furi_get_tick() - app->splash_start_time;
+        if(elapsed >= SPLASH_SCREEN_DURATION) {
+            app->splash_screen = false;
+        }
+        view_port_update(app->view_port);
+        return;
+    }
+
+    /* There are three special screens:
      *
      * 1. Ship was hit, we frozen the game as long as ship_hit isn't zero
      * again, and show an animation of a rotating ship. */
@@ -1286,6 +1334,10 @@ AsteroidsApp* asteroids_app_alloc() {
 
     app->running = 1; /* Turns 0 when back is pressed. */
 
+    /* Initialize splash screen */
+    app->splash_screen = true;
+    app->splash_start_time = furi_get_tick();
+
     restart_game_after_gameover(app);
     memset(app->pressed, 0, sizeof(app->pressed));
     return app;
@@ -1345,6 +1397,13 @@ int32_t asteroids_app_entry(void* p) {
         if(qstat == FuriStatusOk) {
             // if(DEBUG_MSG)
             // FURI_LOG_E(TAG, "Main Loop - Input: type %d key %u", input.type, input.key);
+
+            /* Handle splash screen skip */
+            if(app->splash_screen && input.type == InputTypePress) {
+                app->splash_screen = false;
+                continue;
+            }
+
             /* Handle Pause */
             if(input.type == InputTypeShort && input.key == InputKeyBack) {
                 app->paused = !app->paused;
