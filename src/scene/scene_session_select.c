@@ -67,6 +67,15 @@ static void callbackInput(InputEvent* const event, void* const context) {
 		view_port_update(instance->viewport);
 		break;
 	case InputKeyOk:
+		switch(instance->selectedButton) {
+		case BUTTON_SELECT:
+			break;
+		case BUTTON_NEW:
+			break;
+		case BUTTON_DELETE:
+			break;
+		}
+
 		break;
 	default:
 		furi_message_queue_put(instance->queue, event, FuriWaitForever);
