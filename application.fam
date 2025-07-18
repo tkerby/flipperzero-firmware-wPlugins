@@ -8,10 +8,10 @@ App(
     stack_size=2 * 1024,
     fap_category="Games",
     # Optional values
-    # fap_version="0.1",
+    fap_version="1.1",
     fap_icon="lofz.png",  # 10x10 1-bit PNG
-    # fap_description="Turn off the lights on the sith lor...*coughs*...",
-    # fap_author="DigiMancer3D",
-    # fap_weburl="https://github.com/user/lofz",
+    fap_description="Turn off the lights on the sith lor...*coughs*...",
+    fap_author="DigiMancer3D",
+    fap_weburl="https://github.com/user/DigiMancer3D",
     fap_icon_assets="images",  # Image assets to compile for this application
 )
