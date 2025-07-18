@@ -1,0 +1,284 @@
+
+Discarded input sections
+
+ .text          0x00000000        0x0 C:/Users/3DPihl/.ufbt/build/lofz/lofz_icons.o
+ .data          0x00000000        0x0 C:/Users/3DPihl/.ufbt/build/lofz/lofz_icons.o
+ .bss           0x00000000        0x0 C:/Users/3DPihl/.ufbt/build/lofz/lofz_icons.o
+ .debug_info    0x00000000       0x6c C:/Users/3DPihl/.ufbt/build/lofz/lofz_icons.o
+ .debug_abbrev  0x00000000       0x26 C:/Users/3DPihl/.ufbt/build/lofz/lofz_icons.o
+ .debug_aranges
+                0x00000000       0x18 C:/Users/3DPihl/.ufbt/build/lofz/lofz_icons.o
+ .debug_line    0x00000000       0x4e C:/Users/3DPihl/.ufbt/build/lofz/lofz_icons.o
+ .debug_str     0x00000000      0x1cc C:/Users/3DPihl/.ufbt/build/lofz/lofz_icons.o
+ .comment       0x00000000       0x1c C:/Users/3DPihl/.ufbt/build/lofz/lofz_icons.o
+ .debug_line_end
+                0x00000000        0x0 C:/Users/3DPihl/.ufbt/build/lofz/lofz_icons.o
+ .text          0x00000000        0x0 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .data          0x00000000        0x0 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .bss           0x00000000        0x0 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .comment       0x00000000       0x1c C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+LOAD C:/Users/3DPihl/.ufbt/build/lofz/lofz_icons.o
+LOAD C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+LOAD c:/users/3dpihl/.ufbt/toolchain/x86_64-windows/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libm.a
+LOAD c:/users/3dpihl/.ufbt/toolchain/x86_64-windows/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard\libgcc.a
+LOAD c:/users/3dpihl/.ufbt/toolchain/x86_64-windows/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libstdc++_nano.a
+LOAD c:/users/3dpihl/.ufbt/toolchain/x86_64-windows/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libsupc++_nano.a
+
+.text           0x00000000     0x1638
+ *(.text)
+ *(.stub)
+ *(.text*)
+ .text.lofz_update
+                0x00000000      0x100 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .text.lofz_flipper_move
+                0x00000100       0x70 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .text.draw_crawl_text
+                0x00000170       0xe0 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .text.draw_3d_board
+                0x00000250      0x2bc C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .text.draw_mascot
+                0x0000050c       0x5c C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .text.save_leaderboard
+                0x00000568       0xfc C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .text.lofz_input
+                0x00000664      0x4b4 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .text.draw_rounded_box.constprop.0
+                0x00000b18       0x3c C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .text.lofz_draw
+                0x00000b54      0x5c0 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .text.lofz_app
+                0x00001114      0x524 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+                0x00001114                lofz_app
+ *(.text.*)
+ *(.text._*)
+ *(.init)
+ *(.fini)
+
+.rodata         0x00001638      0x5fc
+ *(.rodata)
+ *(.rodata1)
+ *(.rodata.*)
+ .rodata.draw_3d_board.str1.1
+                0x00001638        0x4 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .rodata.save_leaderboard.str1.1
+                0x0000163c       0x2f C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .rodata.lofz_draw.str1.1
+                0x0000166b       0xb3 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .rodata.lofz_app.str1.1
+                0x0000171e        0xf C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .rodata.dy.0   0x0000172d        0x4 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .rodata.dx.1   0x00001731        0x4 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .rodata.str1.1
+                0x00001735      0x470 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ *fill*         0x00001ba5        0x3 
+ .rodata.secret_codes
+                0x00001ba8       0x10 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .rodata.mischief_sequence
+                0x00001bb8        0x9 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .rodata.win_sequence
+                0x00001bc1        0x9 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .rodata.dead_sequence
+                0x00001bca        0x9 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ *fill*         0x00001bd3        0x1 
+ .rodata.flipper_phrases
+                0x00001bd4       0x38 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .rodata.sith_flipper_mascot
+                0x00001c0c       0x20 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .rodata.flipper_move_sequence
+                0x00001c2c        0x8 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+
+.data           0x00001c34      0x198
+ *(.data)
+ *(.data1)
+ *(.data.*)
+ .data.secret_code_lines
+                0x00001c34       0x28 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .data.win_lines
+                0x00001c5c       0x24 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .data.dead_lines
+                0x00001c80       0x20 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .data.mischief_lines
+                0x00001ca0       0x28 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .data.credits_lines
+                0x00001cc8       0x64 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .data.intro_lines
+                0x00001d2c       0xa0 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+
+.bss            0x00001dcc       0x50
+ *(.bss)
+ *(.bss*)
+ .bss.leaderboard
+                0x00001dcc       0x50 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ *(.sbss)
+ *(.sbss*)
+ *(COMMON)
+
+.stab
+ *(.stab)
+
+.stabstr
+ *(.stabstr)
+
+.stab.excl
+ *(.stab.excl)
+
+.stab.exclstr
+ *(.stab.exclstr)
+
+.stab.index
+ *(.stab.index)
+
+.stab.indexstr
+ *(.stab.indexstr)
+
+.gnu.build.attributes
+ *(.gnu.build.attributes .gnu.build.attributes.*)
+
+.debug
+ *(.debug)
+
+.line
+ *(.line)
+
+.debug_srcinfo
+ *(.debug_srcinfo)
+
+.debug_sfnames
+ *(.debug_sfnames)
+
+.debug_aranges  0x00000000       0x68
+ *(.debug_aranges)
+ .debug_aranges
+                0x00000000       0x68 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+
+.debug_pubnames
+ *(.debug_pubnames)
+
+.debug_info     0x00000000     0x2f53
+ *(.debug_info .gnu.linkonce.wi.*)
+ .debug_info    0x00000000     0x2f53 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+
+.debug_abbrev   0x00000000      0x46f
+ *(.debug_abbrev)
+ .debug_abbrev  0x00000000      0x46f C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+
+.debug_line     0x00000000     0x19c4
+ *(.debug_line .debug_line.* .debug_line_end)
+ .debug_line    0x00000000      0x418 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .debug_line.text.lofz_update
+                0x00000418      0x119 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .debug_line.text.lofz_flipper_move
+                0x00000531       0x9a C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .debug_line.text.draw_crawl_text
+                0x000005cb       0xca C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .debug_line.text.draw_3d_board
+                0x00000695      0x1ab C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .debug_line.text.draw_mascot
+                0x00000840       0xa2 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .debug_line.text.save_leaderboard
+                0x000008e2      0x112 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .debug_line.text.lofz_input
+                0x000009f4      0x6b3 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .debug_line.text.draw_rounded_box.constprop.0
+                0x000010a7       0x4a C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .debug_line.text.lofz_draw
+                0x000010f1      0x3bb C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .debug_line.text.lofz_app
+                0x000014ac      0x518 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ .debug_line_end
+                0x000019c4        0x0 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+
+.debug_frame    0x00000000      0x210
+ *(.debug_frame)
+ .debug_frame   0x00000000      0x210 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+
+.debug_str      0x00000000     0x11a5
+ *(.debug_str)
+ .debug_str     0x00000000     0x11a5 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+
+.debug_loc
+ *(.debug_loc)
+
+.debug_macinfo
+ *(.debug_macinfo)
+
+.debug_weaknames
+ *(.debug_weaknames)
+
+.debug_funcnames
+ *(.debug_funcnames)
+
+.debug_typenames
+ *(.debug_typenames)
+
+.debug_varnames
+ *(.debug_varnames)
+
+.debug_pubtypes
+ *(.debug_pubtypes)
+
+.debug_ranges
+ *(.debug_ranges)
+
+.debug_addr
+ *(.debug_addr)
+
+.debug_line_str
+ *(.debug_line_str)
+
+.debug_loclists
+                0x00000000      0xe4b
+ *(.debug_loclists)
+ .debug_loclists
+                0x00000000      0xe4b C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+
+.debug_macro
+ *(.debug_macro)
+
+.debug_names
+ *(.debug_names)
+
+.debug_rnglists
+                0x00000000      0x211
+ *(.debug_rnglists)
+ .debug_rnglists
+                0x00000000      0x211 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+
+.debug_str_offsets
+ *(.debug_str_offsets)
+
+.debug_sup
+ *(.debug_sup)
+
+.ARM.attributes
+                0x00000000       0x34
+ *(.ARM.attributes)
+ .ARM.attributes
+                0x00000000       0x34 C:/Users/3DPihl/.ufbt/build/lofz/lofz_icons.o
+ .ARM.attributes
+                0x00000034       0x34 C:/Users/3DPihl/.ufbt/build/lofz/lofz.o
+ *(.gnu.attributes)
+
+.note.gnu.arm.ident
+ *(.note.gnu.arm.ident)
+
+/DISCARD/
+ *(.note.GNU-stack)
+ *(.gnu_debuglink)
+ *(.gnu.lto_*)
+
+/DISCARD/
+ *(.comment)
+ *(.comment.*)
+ *(.llvmbc)
+ *(.llvmcmd)
+OUTPUT(C:/Users/3DPihl/.ufbt/build/lofz_d.elf elf32-littlearm)
+LOAD linker stubs
