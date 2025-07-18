@@ -39,7 +39,7 @@ One day, while the busybody willy-wollies were asking Grok the questions of the 
 - **Paused**: Freezes gameplay with a "Pause" overlay.
 - **Death**: Shows "U DED" for 2s before respawning.
 - **Credits**: Displays "Done Helping our Backrooms? -- Z0M8I3D" (exits after 3.14s).
-- **Exit**: Unused placeholder state.
+- **Exit**: *still having issues getting the cleanup and exit properly exicuting*.
 
 ## Controls
 ### Title
