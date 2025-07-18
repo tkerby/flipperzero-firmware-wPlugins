@@ -6,7 +6,7 @@ App(
     apptype=FlipperAppType.EXTERNAL,
     entry_point="grokadven_app",
     stack_size=2 * 1024,
-    fap_category="Grok's Adventures",
+    fap_category="Games",
     # Optional values
     fap_version="0.15",
     fap_icon="grokadven_icon.png",  # 10x10 1-bit PNG
