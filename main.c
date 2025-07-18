@@ -2307,7 +2307,7 @@ void cipher_learn_scene_on_enter(void* context) {
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptROT13LearnScene:
-            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "ROT13 learn");
+            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "ROT13 (short for 'rotate by 13 places') is a simple letter substitution cipher used primarily to obscure text rather than securely encrypt it. It works by shifting each letter of the alphabet 13 positions forward, wrapping around from Z back to A if necessary. Because the alphabet has 26 letters, applying ROT13 twice returns the original text, making it a symmetric cipher. ROT13 is commonly used in online forums to hide spoilers, puzzles, or offensive content, but it offers no real security and can be easily reversed without a key.");
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptScytaleLearnScene:
@@ -2327,7 +2327,7 @@ void cipher_learn_scene_on_enter(void* context) {
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptMD2LearnScene:
-            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "MD2 learn");
+            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "MD2 (Message Digest 2) is a cryptographic hash function designed by Ronald Rivest in 1989. It produces a 128-bit (16-byte) hash value from an input of any length, typically used to verify data integrity. Although it was once widely used, MD2 is now considered obsolete due to its slow performance and vulnerabilities to collision attacks. As a result, more secure and efficient hash functions like SHA-2 or SHA-3 are recommended for modern applications. Despite its weaknesses, MD2 remains an important part of cryptographic history and legacy systems.");
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptMD5LearnScene:
