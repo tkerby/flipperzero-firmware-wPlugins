@@ -65,6 +65,24 @@ One day, while the busybody willy-wollies were asking Grok the questions of the 
 2. Compile `grokadven.c` using the Flipper Zero firmware SDK.
 3. Deploy to your Flipper Zero and launch from the apps menu.
 
+
+## Screenshots
+![GA3 Title Screen](https://raw.githubusercontent.com/DigiMancer3D/Groks_Adventure/refs/heads/main/screenshots/Screenshot-20250718-172800.png)
+</br>
+![GA3 Wax Draw Screen](https://raw.githubusercontent.com/DigiMancer3D/Groks_Adventure/refs/heads/main/screenshots/Screenshot-20250718-172804.png)</br>
+***This screen sometimes takes time to drop off, use to slide off while revealing allowing time for load while game is paused.** This doesn't fully work as intended*
+</br></br>
+![GA3 Gameplay](https://raw.githubusercontent.com/DigiMancer3D/Groks_Adventure/refs/heads/main/screenshots/Screenshot-20250718-172807.png)
+![GA3 Gameplay](https://raw.githubusercontent.com/DigiMancer3D/Groks_Adventure/refs/heads/main/screenshots/Screenshot-20250718-172840.png)
+![GA3 Gameplay](https://raw.githubusercontent.com/DigiMancer3D/Groks_Adventure/refs/heads/main/screenshots/Screenshot-20250718-172900.png)
+![GA3 Gameplay](https://raw.githubusercontent.com/DigiMancer3D/Groks_Adventure/refs/heads/main/screenshots/Screenshot-20250718-172920.png)
+</br>
+![GA3 Death Screen](https://raw.githubusercontent.com/DigiMancer3D/Groks_Adventure/refs/heads/main/screenshots/Screenshot-20250718-172939.png)</br>
+***This screen sometimes causes game to freeze.** This doesn't fully work as intended*
+</br></br>
+
+
+
 ## Notes
 - Built with AI assistance from Grok 3 (xAI), evolving from non-functional v1 and v2.
 - Optimized for Flipper Zero’s 128x64 display and limited input system.
