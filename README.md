@@ -37,8 +37,7 @@ One day, while the busybody willy-wollies were asking Grok the questions of the 
 - **Title**: Displays "Grok's Adventure v3" with a fade-out effect (2s).
 - **Game**: Main gameplay with exploration, combat, and pickups.
 - **Paused**: Freezes gameplay with a "Pause" overlay.
-- **Death**: Shows "U DED" for 2s before respawning.
-- **Credits**: Displays "Done Helping our Backrooms? -- Z0M8I3D" (exits after 3.14s).
+- **Death**: Shows "U DED", *death crashes game*.
 - **Exit**: *still having issues getting the cleanup and exit properly exicuting*.
 
 ## Controls
@@ -59,9 +58,7 @@ One day, while the busybody willy-wollies were asking Grok the questions of the 
 
 ### Death
 - No inputs (auto-respawns after 2s).
-
-### Credits
-- No inputs (exits after 3.14s).
+  
 
 ## Building and Running
 1. Clone this repository to your Flipper Zero development environment.
