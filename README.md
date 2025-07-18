@@ -73,6 +73,7 @@ One day, while the busybody willy-wollies were asking Grok the questions of the 
 - Optimized for Flipper Zero’s 128x64 display and limited input system.
 - Logs events to `/ext/grokadven_03/grokadven3_loggy.txt` for debugging.
 - Saves game state to `/ext/grokadven_03/` with backup support.
+- Minor bug & errors are still present like the exit failure bug, where exit sometimes causes freeze or load to white screen.
 
 ## Contributing
 Submit pull requests to enhance gameplay, add new features, or refine the Backrooms aesthetic. Let’s keep the liminal adventure alive!
