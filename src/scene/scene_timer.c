@@ -35,7 +35,6 @@ void SceneTimerEnter(void* const context) {
 	furi_check(context);
 	const PTIMERSCENE instance = malloc(sizeof(TIMERSCENE));
 	instance->instance = context;
-	EnsureLoadedSession(&instance->instance->session);
 	ViewPort* const viewport = view_port_alloc();
 	instance->queue = furi_message_queue_alloc(1, sizeof(InputEvent));
 	FuriTimer* const timer = furi_timer_alloc(callbackTimer, FuriTimerTypePeriodic, instance);
