@@ -40,6 +40,7 @@ Your high scores will automatically be saved. Go forth and compete!
 * ![](assets/heart_10x10.png "Lives") - Et tu, Brute? Gives a bonus life up to a maximum of 5 lives
 * ![](assets/nuke_10x10.png "Nuke") - Nuke (work in progress). Destroys everything in sight (but keeps the power ups)
 * ![](assets/split_shield_10x10.png "Shield") - Use the force! Spins up a shield that can be used as a battering ram. Take zero damage while in use.
+* D - A mini drone assist that has your back!
 
 ## More power ups coming soon...
 
