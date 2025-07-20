@@ -90,7 +90,8 @@ void SceneSessionSelectEnter(void* const context) {
 	instance->instance = context;
 	instance->viewport = view_port_alloc();
 	instance->queue = furi_message_queue_alloc(1, sizeof(InputEvent));
-	FileBrowser* browser = file_browser_alloc(0);
+	FuriString* string = furi_string_alloc();
+	FileBrowser* browser = file_browser_alloc(string);
 	view_port_draw_callback_set(instance->viewport, callbackRender, instance);
 	view_port_input_callback_set(instance->viewport, callbackInput, instance);
 	//view_dispatcher_stop(instance->instance->dispatcher);
@@ -105,6 +106,7 @@ void SceneSessionSelectEnter(void* const context) {
 	gui_remove_view_port(instance->instance->interface, instance->viewport);
 	gui_add_view_port(instance->instance->interface, instance->instance->dispatcher->viewport, GuiLayerFullscreen);
 	file_browser_free(browser);
+	furi_string_free(string);
 	furi_message_queue_free(instance->queue);
 	view_port_free(instance->viewport);
 	scene_manager_handle_back_event(instance->instance->manager);
