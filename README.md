@@ -21,7 +21,7 @@ This is a screenshot, but the game looks a lot better in the device itself:
 
 ![Asteroids for Flipper Zero screenshot](/images/Asteroids-PowerUps.png "In game screenshot")
 
-![Pause Screen](images/Pause%20Screen.png "Pause screen")
+![Pause Screen](images/PauseScreen.png "Pause screen")
 
 # Controls:
 * Left/Right: rotate ship in the two directions.
