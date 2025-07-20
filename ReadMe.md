@@ -31,7 +31,18 @@ This software is for experimental purposes only and is not meant for any illegal
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-08-12 23:32 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-08-12 23:32 EST`
 - Updated: [Mouse Jiggler v1.2 (By Jacob-Tate & ozgunawesome)](https://github.com/Jacob-Tate/flipperzero-firmware/blob/dev/applications/mouse_jiggler/mouse_jiggler.c) [GUI & Accuracy Updates (By ozgunawesome)](https://github.com/ozgunawesome/ozzymaster/blob/420/applications/external/mouse_jiggler/mouse_jiggler.c)
-- SubGHz: Protocols Roger (static 28 bit) with add manually support (By xMasterX & mishamyte), V2 Phoenix (Phox) (dynamic 52 bit) (By xMasterX & RocketGod-git) & Marantec (static 49 bit) (add manually support and CRC verify) (By xMasterX & li0ard), Motorline (with add manually support), Rosh, Pecinin, Rossi, Merlin, Steelmate (thanks RocketGod-git)
+- SubGHz: Roger (static 28 bit) with add manually support (By xMasterX & mishamyte)
+- SubGHz: V2 Phoenix full support (button switch, add manually, counter decrypt/encrypt) (By xMasterX & RocketGod-git, original code By Skorpionm)
+- SubGHz: Keeloq: Add support for - Motorline (with add manually support), Rosh, Pecinin, Rossi, Merlin, Steelmate (By xMasterX & RocketGod-git)
+- SubGHz: Reduce less popular freqs in default hopper preset, make it faster
+- SubGHz: Marantec protocol implement crc verification display and add manually support (By xMasterX & li0ard, original code By Skorpionm)
+- SubGHz: Keeloq: Comunello - add manually support
+- SubGHz: Rename and extend Alarms, Sensors, Cars ignore options (Alarms: Hollarm, GangQi | Cars: Kia, Starline, ScherKhan | Sensors: Magellan, Honeywell, Honeywell WDB (doorbells), Legrand (doorbells), Feron (RGB lights))
+- SubGHz: Add keeloq ironlogic (aka il100) smart clone cloners support (thanks to Vitaly for RAWs)
+- SubGHz: Fix CAME 24bit decoder
+- SubGHz: Tune holtek ht12x to decode holtek only and not conflict with came 12bit
+- [NFC: Fix incorrect Saflok year formula (By Eltrick)](https://github.com/Next-Flip/Momentum-Firmware/pull/433)
+- [RFID: Add additional procotols supported by EM4305 chipset (By jamisonderek)](https://github.com/Next-Flip/Momentum-Firmware/pull/434)
 
 <a name="release">
 
