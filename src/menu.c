@@ -1329,10 +1329,10 @@ void show_ble_attack_menu(AppState* state) {
 void show_wifi_menu(AppState* state) {
     submenu_reset(state->wifi_menu);
     submenu_set_header(state->wifi_menu, "WiFi Commands");
-    submenu_add_item(state->wifi_menu, "Scanning & Probing", 0, submenu_callback, state);
-    submenu_add_item(state->wifi_menu, "Packet Capture", 1, submenu_callback, state);
-    submenu_add_item(state->wifi_menu, "Attacks", 2, submenu_callback, state);
-    submenu_add_item(state->wifi_menu, "Evil Portal & Network", 3, submenu_callback, state);
+    submenu_add_item(state->wifi_menu, "Scanning & Probing > ", 0, submenu_callback, state);
+    submenu_add_item(state->wifi_menu, "Packet Capture > ", 1, submenu_callback, state);
+    submenu_add_item(state->wifi_menu, "Attacks > ", 2, submenu_callback, state);
+    submenu_add_item(state->wifi_menu, "Evil Portal & Network >", 3, submenu_callback, state);
     submenu_add_item(state->wifi_menu, wifi_stop_command.label, 4, submenu_callback, state);
     // Restore last selected WiFi category
     submenu_set_selected_item(state->wifi_menu, state->last_wifi_category_index);
@@ -1344,9 +1344,9 @@ void show_wifi_menu(AppState* state) {
 void show_ble_menu(AppState* state) {
     submenu_reset(state->ble_menu);
     submenu_set_header(state->ble_menu, "BLE Commands");
-    submenu_add_item(state->ble_menu, "Scanning & Detection", 0, submenu_callback, state);
-    submenu_add_item(state->ble_menu, "Packet Capture", 1, submenu_callback, state);
-    submenu_add_item(state->ble_menu, "Attacks & Spoofing", 2, submenu_callback, state);
+    submenu_add_item(state->ble_menu, "Scanning & Detection >", 0, submenu_callback, state);
+    submenu_add_item(state->ble_menu, "Packet Capture >", 1, submenu_callback, state);
+    submenu_add_item(state->ble_menu, "Attacks & Spoofing >", 2, submenu_callback, state);
     submenu_add_item(state->ble_menu, ble_stop_command.label, 3, submenu_callback, state);
     // Restore last selected BLE category
     submenu_set_selected_item(state->ble_menu, state->last_ble_category_index);
