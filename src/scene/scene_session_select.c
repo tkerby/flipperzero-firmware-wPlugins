@@ -16,6 +16,12 @@ enum SESSIONSELECTBUTTON {
 	COUNT_BUTTON
 };
 
+enum TYPE {
+	TYPE_HOME,
+	TYPE_SELECT_FILE,
+	TYPE_DIALOG
+};
+
 static inline void drawButton(Canvas* const canvas, const uint8_t x, const uint8_t y, const uint8_t pressed, const char* const text) {
 	const uint16_t width = canvas_string_width(canvas, text);
 	canvas_set_color(canvas, ColorBlack);
