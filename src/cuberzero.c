@@ -25,6 +25,8 @@ int32_t cuberzeroMain(const void* const unused) {
 	CUBERZERO_INFO("Initializing");
 	const PCUBERZERO instance = malloc(sizeof(CUBERZERO));
 	instance->view.submenu = submenu_alloc();
+	FuriString* path = furi_string_alloc();
+	instance->view.browser = file_browser_alloc(path);
 	instance->interface = furi_record_open(RECORD_GUI);
 	instance->dispatcher = view_dispatcher_alloc();
 	const AppSceneOnEnterCallback handlerEnter[] = {SceneHomeEnter, SceneSessionSelectEnter, SceneTimerEnter};
@@ -43,6 +45,8 @@ int32_t cuberzeroMain(const void* const unused) {
 	scene_manager_free(instance->manager);
 	view_dispatcher_free(instance->dispatcher);
 	furi_record_close(RECORD_GUI);
+	file_browser_free(instance->view.browser);
+	furi_string_free(path);
 	submenu_free(instance->view.submenu);
 	free(instance);
 	CUBERZERO_INFO("Exiting");
