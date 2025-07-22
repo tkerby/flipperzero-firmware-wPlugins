@@ -52,6 +52,8 @@ int32_t ghost_esp_app(void* p) {
     AppState* state = malloc(sizeof(AppState));
     if(!state) return -1;
     memset(state, 0, sizeof(AppState)); // Zero all memory first
+    // Open dialogs record for file browser
+    state->dialogs = furi_record_open(RECORD_DIALOGS);
 
     // Initialize menu selection indices
     state->last_wifi_category_index = 0;
