@@ -16,13 +16,7 @@ enum SESSIONSELECTBUTTON {
 	COUNT_BUTTON
 };
 
-enum TYPE {
-	TYPE_HOME,
-	TYPE_SELECT_FILE,
-	TYPE_DIALOG
-};
-
-static inline void drawButton(Canvas* const canvas, const uint8_t x, const uint8_t y, const uint8_t pressed, const char* const text) {
+/*static inline void drawButton(Canvas* const canvas, const uint8_t x, const uint8_t y, const uint8_t pressed, const char* const text) {
 	const uint16_t width = canvas_string_width(canvas, text);
 	canvas_set_color(canvas, ColorBlack);
 	canvas_draw_line(canvas, x + 1, y, x + width + 4, y);
@@ -88,11 +82,11 @@ static void callbackInput(InputEvent* const event, void* const context) {
 		furi_message_queue_put(instance->queue, event, FuriWaitForever);
 		break;
 	}
-}
+}*/
 
 void SceneSessionSelectEnter(void* const context) {
 	furi_check(context);
-	const PSESSIONSELECTSCENE instance = malloc(sizeof(SESSIONSELECTSCENE));
+	/*const PSESSIONSELECTSCENE instance = malloc(sizeof(SESSIONSELECTSCENE));
 	instance->instance = context;
 	instance->viewport = view_port_alloc();
 	instance->queue = furi_message_queue_alloc(1, sizeof(InputEvent));
@@ -117,5 +111,6 @@ void SceneSessionSelectEnter(void* const context) {
 	view_port_free(instance->viewport);
 	scene_manager_handle_back_event(instance->instance->manager);
 	//view_dispatcher_run(instance->instance->dispatcher);
-	free(instance);
+	free(instance);*/
+	view_dispatcher_switch_to_view(((PCUBERZERO) context)->dispatcher, VIEW_FILE_BROWSER);
 }

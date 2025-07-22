@@ -32,6 +32,7 @@ typedef struct {
 
 typedef enum {
 	VIEW_SUBMENU,
+	VIEW_FILE_BROWSER,
 	COUNT_VIEW
 } VIEW;
 
