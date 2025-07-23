@@ -5,6 +5,7 @@
 #include "settings_storage.h"
 #include "settings_def.h"
 #include "confirmation_view.h"
+#include "ghost_esp_ep.h"
 
 typedef struct {
     const char* label; // Display label in menu
@@ -274,6 +275,7 @@ static const MenuCommand wifi_attack_commands[] = {
                         "SAE handshakes. Select a\n"
                         "WPA3 AP first.",
     },
+
     {
         .label = "DHCP Starve Start",
         .command = "dhcpstarve",
@@ -356,6 +358,16 @@ static const MenuCommand wifi_network_commands[] = {
                         "Configure in WebUI:\n"
                         "- Portal settings\n"
                         "- Landing page\n",
+    },
+    {
+        .label = "Set Evil Portal HTML",
+        .command = "set_evil_portal_html",
+        .needs_input = true,
+        .input_text = "HTML File",
+        .details_header = "Set Evil Portal HTML",
+        .details_text = "Select and send an HTML\n"
+                        "file to the ESP32 for\n"
+                        "the evil portal.",
     },
     {
         .label = "Connect To WiFi",
@@ -885,10 +897,33 @@ static void text_input_result_callback(void* context) {
         input_state->uart_context, input_state->view_dispatcher, input_state, "", "", "");
 }
 
+static void send_evil_portal_html(AppState* state) {
+    uint8_t* the_html = NULL;
+    size_t html_size = 0;
+
+    if(ghost_esp_ep_read_html_file(state, &the_html, &html_size)) {
+        if(the_html != NULL) {
+            const char* command_str = "evilportal -c sethtmlstr\n";
+            uart_send(state->uart_context, (const uint8_t*)command_str, strlen(command_str));
+
+            uart_send(state->uart_context, the_html, html_size);
+            uart_send(state->uart_context,
+                (const uint8_t*)"\n", 1);
+            free(the_html);
+        }
+    }
+}
+
 static void execute_menu_command(AppState* state, const MenuCommand* command) {
+    // Special handler for setting the evil portal HTML
+    if(strcmp(command->command, "set_evil_portal_html") == 0) {
+        send_evil_portal_html(state);
+        return;
+    }
     if(!uart_is_esp_connected(state->uart_context)) {
         state->previous_view = state->current_view;
         confirmation_view_set_header(state->confirmation_view, "Connection Error");
+        // ... (rest of the code remains the same)
         confirmation_view_set_text(
             state->confirmation_view,
             "No response from ESP!\nIs a command running?\nRestart the app.\nRestart ESP.\nCheck UART Pins.\nReflash if issues persist.\nYou can disable this check in the settings menu.\n\n");

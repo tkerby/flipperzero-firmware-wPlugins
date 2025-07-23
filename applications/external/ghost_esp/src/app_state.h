@@ -6,6 +6,7 @@
 #include <gui/modules/variable_item_list.h>
 #include <gui/modules/text_box.h>
 #include <gui/modules/text_input.h>
+#include <dialogs/dialogs.h>
 #include "gui_modules/mainmenu.h"
 #include "settings_def.h"
 #include "app_types.h"
@@ -24,6 +25,7 @@ typedef struct {
 struct AppState {
     // Views
     ViewDispatcher* view_dispatcher;
+    DialogsApp* dialogs;
     MainMenu* main_menu;
     Submenu* wifi_menu;
     Submenu* wifi_scanning_menu;
