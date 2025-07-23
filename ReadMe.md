@@ -48,7 +48,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipDownloader v1.3.2 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [FlipWorld v1.0 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32`
 - Updated: [Anki Remote v1.2 (By Blue5GD)](https://github.com/Blue5GD/Anki-Remote)
-- Updated: [Rubiks Cube Timer v0.0.1 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
 - Updated: [FlipCrypt v0.3 (By TAxelAnderson)](https://github.com/TAxelAnderson/FlipCrypt)
 - Updated: [Combo Cracker v0.2 (By CharlesTheGreat77)](https://github.com/CharlesTheGreat77/ComboCracker-FZ)
 - Updated: [Metroflip v0.8 (By luu176)](https://github.com/luu176/Metroflip)
@@ -58,6 +57,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Flipper Blackhat v0.4 (By o7-machinehum)](https://github.com/o7-machinehum/flipper-blackhat-app)
 - Updated: [Wendigo Bluetooth Tracker WIP v0.3 (By chris-bc)](https://github.com/chris-bc/wendigo) `WIP Req: ESP32`
 - Updated: [NFC Playlist v3.1 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
+- Updated: [Rubiks Cube Timer v0.0.1 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
 
 <a name="release">
 
