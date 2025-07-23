@@ -25,8 +25,7 @@ bool SceneHomeEvent(void* const context, const SceneManagerEvent event) {
 		return 0;
 	}
 
-	const PCUBERZERO instance = context;
-	instance->scene.home.index = submenu_get_selected_item(instance->view.submenu);
-	scene_manager_next_scene(instance->manager, event.event);
+	((PCUBERZERO) context)->scene.home.index = submenu_get_selected_item(((PCUBERZERO) context)->view.submenu);
+	scene_manager_next_scene(((PCUBERZERO) context)->manager, event.event);
 	return 1;
 }
