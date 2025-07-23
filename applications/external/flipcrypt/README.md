@@ -20,6 +20,7 @@ FlipCrypt is a Flipper Zero app that provides a collection of classic cipher alg
 ## Hashing Algorithms
 - BLAKE-2s
 - FNV-1a
+- MD2
 - MD5
 - MurmurHash3
 - SHA-1

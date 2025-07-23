@@ -2636,8 +2636,17 @@ void dialog_cipher_output_scene_on_enter(void* context) {
         dialog_ex_set_right_button_text(app->dialog_ex, "QR");
         break;
     case FlipCryptMD2OutputScene:
-        dialog_ex_set_text(app->dialog_ex, "MD2 output", 64, 18, AlignCenter, AlignCenter);
-        save_result_generic(APP_DATA_PATH("md2.txt"), "MD2 output");
+        BYTE hash[MD2_BLOCK_SIZE];
+        MD2_CTX ctx;
+        md2_init(&ctx);
+        md2_update(&ctx, (const BYTE*)app->md2_input, strlen(app->md2_input));
+        md2_final(&ctx, hash);
+        char md2_hash_str[MD2_BLOCK_SIZE * 2 + 1];
+        for(int i = 0; i < MD2_BLOCK_SIZE; ++i) {
+            snprintf(&md2_hash_str[i * 2], 3, "%02x", hash[i]);
+        }
+        dialog_ex_set_text(app->dialog_ex, md2_hash_str, 64, 18, AlignCenter, AlignCenter);
+        save_result_generic(APP_DATA_PATH("md2.txt"), md2_hash_str);
         app->last_output_scene = "MD2";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2982,7 +2991,13 @@ void cipher_learn_scene_on_enter(void* context) {
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
         break;
     case FlipCryptROT13LearnScene:
-        widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "ROT13 learn");
+        widget_add_text_scroll_element(
+            app->widget,
+            0,
+            0,
+            128,
+            64,
+            "ROT13 (short for 'rotate by 13 places') is a simple letter substitution cipher used primarily to obscure text rather than securely encrypt it. It works by shifting each letter of the alphabet 13 positions forward, wrapping around from Z back to A if necessary. Because the alphabet has 26 letters, applying ROT13 twice returns the original text, making it a symmetric cipher. ROT13 is commonly used in online forums to hide spoilers, puzzles, or offensive content, but it offers no real security and can be easily reversed without a key.");
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
         break;
     case FlipCryptScytaleLearnScene:
@@ -3026,7 +3041,13 @@ void cipher_learn_scene_on_enter(void* context) {
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
         break;
     case FlipCryptMD2LearnScene:
-        widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "MD2 learn");
+        widget_add_text_scroll_element(
+            app->widget,
+            0,
+            0,
+            128,
+            64,
+            "MD2 (Message Digest 2) is a cryptographic hash function designed by Ronald Rivest in 1989. It produces a 128-bit (16-byte) hash value from an input of any length, typically used to verify data integrity. Although it was once widely used, MD2 is now considered obsolete due to its slow performance and vulnerabilities to collision attacks. As a result, more secure and efficient hash functions like SHA-2 or SHA-3 are recommended for modern applications. Despite its weaknesses, MD2 remains an important part of cryptographic history and legacy systems.");
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
         break;
     case FlipCryptMD5LearnScene:
@@ -3779,8 +3800,8 @@ void flip_crypt_qr_scene_on_enter(void* context) {
             for(int x = 0; x < size; x++) {
                 if(qrcodegen_getModule(app->qrcode, x, y)) {
                     // widget_add_rect_element(app->widget, offset_x + x * scale, offset_y + y * scale, scale, scale, 0, true);
-                    widget_add_frame_element(
-                        app->widget, offset_x + x, offset_y + y, scale, scale, 0);
+                    widget_add_rect_element(
+                        app->widget, offset_x + x, offset_y + y, scale, scale, 0, true);
                 }
             }
         }
@@ -3919,7 +3940,7 @@ void flip_crypt_about_scene_on_enter(void* context) {
         128,
         64,
         "FlipCrypt\n"
-        "v0.2\n"
+        "v0.3\n"
         "Explore and learn about various cryptograpic and text encoding methods.\n\n"
         "Usage:\n"
         "Select the method you want to use for encoding / decoding text and fill in the necessary inputs.\n"
@@ -4638,7 +4659,6 @@ static App* app_alloc() {
     // Other
     app->scene_manager = scene_manager_alloc(&flip_crypt_scene_manager_handlers, app);
     app->view_dispatcher = view_dispatcher_alloc();
-    view_dispatcher_enable_queue(app->view_dispatcher);
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_custom_event_callback(app->view_dispatcher, basic_scene_custom_callback);
     view_dispatcher_set_navigation_event_callback(

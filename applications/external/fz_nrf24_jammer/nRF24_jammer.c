@@ -7,7 +7,7 @@
 #include <cfw/cfw.h>
 #include "fz_nrf24_jammer_icons.h"
 
-#define TAG           "nRF24_jammer_app"
+#define TAG "nRF24_jammer_app"
 #define nrf24                                                                          \
     (cfw_settings.spi_nrf24_handle == SpiDefault ? &furi_hal_spi_bus_handle_external : \
                                                    &furi_hal_spi_bus_handle_external_extra)

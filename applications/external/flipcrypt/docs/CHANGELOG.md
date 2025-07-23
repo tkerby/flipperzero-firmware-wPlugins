@@ -1,5 +1,5 @@
 ## V0.3
-- Added Blowfish, DES, and ROT-13 ciphers.
+- Added ROT-13 cipher.
 - Added MD2 hash.
 - Large under the hood improvements regarding storage.
 
