@@ -3,7 +3,7 @@
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://lh3.googleusercontent.com/d/1iYQlRQXM7nA4IAdcPwvcKRSTCMoi8tug' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0624-1810-0.420.0-4e78be6.tgz&channel=RM0624-1810-0.420.0-4e78be6&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0723-1435-0.420.0-90cb91c.tgz&channel=RM0723-1435-0.420.0-90cb91c&version=0.420.0&target=f7)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -30,36 +30,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-07-23 14:05 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-07-23 14:05 EST`
-- Updated: [Pocket Battle+ v2.0 (By HermeticCode)](https://github.com/HermeticCode/showdown-current)
-- Added: [Anki Remote v1.1 (By Blue5GD)](https://github.com/Blue5GD/Anki-Remote)
-- Updated: [Noptel LRF Sampler v2.3 (By Giraut)](https://github.com/Giraut/flipper_zero_noptel_lrf_sampler)
-- Added: [BunnyConnect v1.0 (By C0d3-5t3w)](https://github.com/C0d3-5t3w/flipper-bunnyconnect) `Req: BashBunny`
-- Added: [Flipper Printer v1.0 (By alxcrt)](https://github.com/alxcrt/flipper-zero-thermal-printer) `Req: T7-US thermal printer module`
-- Added: [Hard Hat Brigade IR v0.1 (By Anomalous68)](https://github.com/Anomalous68/HHB-Flipper-App) `Req: Hard Hat Brigade Hat`
-- Updated: [Hard Hat Brigade IR v0.1 (By Anomalous68)](https://github.com/Anomalous68/HHB-Flipper-App) `Req: Hard Hat Brigade Hat`
-- UL: RFID: Fix strange bug with LCD backlight going off after doing Write (By xMasterX)
-- UL: Rename and extend Alarms, Sensors, Cars ignore options (By xMasterX)
-- SubGHz: Fix possible frequency analyzer deadlock when holding Ok (By WillyJL)
-- ESP Flasher: [Bump Marauder v1.7.1 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.7.1)
-- Updated: [NFC Magic v1.15.1 (By gornekich)](https://github.com/flipperdevices/flipperzero-firmware/pull/1966) [Ultimate Magic Gen4 Max Block Number Set Incorrectly for the NTAG Protocol (By alfie65536)](https://github.com/flipperdevices/flipperzero-good-faps/pull/284)
-- Added: [CO2 Logger v0.3 (By harryob2)](https://github.com/harryob2/co2_logger) `Req: MH-Z19`
-- Updated: [Key Copier v1.4 (By zinongli)](https://github.com/zinongli/KeyCopier)
-- Updated: [FlipDownloader v1.3.2 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [FlipWorld v1.0 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32`
-- Updated: [Anki Remote v1.2 (By Blue5GD)](https://github.com/Blue5GD/Anki-Remote)
-- Updated: [Combo Cracker v0.2 (By CharlesTheGreat77)](https://github.com/CharlesTheGreat77/ComboCracker-FZ)
-- Updated: [Atari SIO Emulator v0.5 (By cepetr)](https://github.com/cepetr/sio2flip)
-- Updated: [Sentry Safe v2.0 (By H4ckd4ddy)](https://github.com/H4ckd4ddy/flipperzero-sentry-safe-plugin)
-- Updated: [Flipper Blackhat v0.4 (By o7-machinehum)](https://github.com/o7-machinehum/flipper-blackhat-app)
-- Updated: [Rubiks Cube Timer v0.0.1 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
-- Updated: [FZ nRF24 Jammer v1.4 (By W0rthlessS0ul)](https://github.com/W0rthlessS0ul/FZ_nRF24_jammer)
-- Updated: [FlipCrypt v0.3 (By TAxelAnderson)](https://github.com/TAxelAnderson/FlipCrypt)
-- Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip)
-- Updated: [Ghost ESP v1.3.1 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32`
-- Updated: [NFC Playlist v3.2 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
-- Updated: [Asteroids v1.2 (By antirez)](https://github.com/antirez/flipper-asteroids)
-- Updated: [Flipper Hero v1.3 (By mentoster)](https://github.com/mentoster/Flipper-hero)
-- Updated: [Wendigo Bluetooth Tracker WIP v0.3 (By chris-bc)](https://github.com/chris-bc/wendigo) `WIP Req: ESP32`
 
 <a name="release">
 
@@ -778,4 +748,4 @@ $ ./fbt dolphin_ext
 - Have a new app? Submit GitHub link to me on Discord for a special reward (if I add it to RM Firmware).
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0624-1810-0.420.0-4e78be6.tgz&channel=RM0624-1810-0.420.0-4e78be6&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0723-1435-0.420.0-90cb91c.tgz&channel=RM0723-1435-0.420.0-90cb91c&version=0.420.0&target=f7)
