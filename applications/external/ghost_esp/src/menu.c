@@ -907,8 +907,7 @@ static void send_evil_portal_html(AppState* state) {
             uart_send(state->uart_context, (const uint8_t*)command_str, strlen(command_str));
 
             uart_send(state->uart_context, the_html, html_size);
-            uart_send(state->uart_context,
-                (const uint8_t*)"\n", 1);
+            uart_send(state->uart_context, (const uint8_t*)"\n", 1);
             free(the_html);
         }
     }

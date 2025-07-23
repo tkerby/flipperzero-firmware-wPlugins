@@ -44,12 +44,10 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [NFC Magic v1.15.1 (By gornekich)](https://github.com/flipperdevices/flipperzero-firmware/pull/1966) [Ultimate Magic Gen4 Max Block Number Set Incorrectly for the NTAG Protocol (By alfie65536)](https://github.com/flipperdevices/flipperzero-good-faps/pull/284)
 - Added: [CO2 Logger v0.3 (By harryob2)](https://github.com/harryob2/co2_logger) `Req: MH-Z19`
 - Updated: [Key Copier v1.4 (By zinongli)](https://github.com/zinongli/KeyCopier)
-- Updated: [Ghost ESP v1.3.1 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32`
 - Updated: [FlipDownloader v1.3.2 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [FlipWorld v1.0 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32`
 - Updated: [Anki Remote v1.2 (By Blue5GD)](https://github.com/Blue5GD/Anki-Remote)
 - Updated: [Combo Cracker v0.2 (By CharlesTheGreat77)](https://github.com/CharlesTheGreat77/ComboCracker-FZ)
-- Updated: [Metroflip v0.8 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [Atari SIO Emulator v0.5 (By cepetr)](https://github.com/cepetr/sio2flip)
 - Updated: [Sentry Safe v2.0 (By H4ckd4ddy)](https://github.com/H4ckd4ddy/flipperzero-sentry-safe-plugin)
 - Updated: [Flipper Blackhat v0.4 (By o7-machinehum)](https://github.com/o7-machinehum/flipper-blackhat-app)
@@ -58,6 +56,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Rubiks Cube Timer v0.0.1 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
 - Updated: [FZ nRF24 Jammer v1.4 (By W0rthlessS0ul)](https://github.com/W0rthlessS0ul/FZ_nRF24_jammer)
 - Updated: [FlipCrypt v0.3 (By TAxelAnderson)](https://github.com/TAxelAnderson/FlipCrypt)
+- Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip)
+- Updated: [Ghost ESP v1.3.1 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32`
 
 <a name="release">
 
@@ -590,7 +590,7 @@ $ ./fbt dolphin_ext
 - [Marmalade v0.1.1 (By RocketGod)](https://github.com/RocketGod-git/flipper-zero-rf-jammer) (Exercise Caution and Follow Your Local Laws)
 - [Math Wiz v1.1 (By ImPapaGhost)](https://github.com/ImPapaGhost/math_wiz)
 - [MAX31855 (By skotopes)](https://github.com/skotopes/flipperzero_max31855)
-- [Metroflip v0.8 (By luu176)](https://github.com/luu176/Metroflip)
+- [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip)
 - [Metronome v1.3 (By panki27)](https://github.com/panki27/Metronome)
 - [MFC Editor v1.0 (By TollyH)](https://github.com/TollyH/flipper-apps)
 - [Mfkey v3.0 (By noproto)](https://github.com/noproto/FlipperMfkey)
