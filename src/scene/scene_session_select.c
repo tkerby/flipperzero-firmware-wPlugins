@@ -1,6 +1,7 @@
 #include "src/cuberzero.h"
 #include <gui/elements.h>
 #include <gui/modules/file_browser.h>
+#include <storage/storage.h>
 
 typedef struct {
 	PCUBERZERO instance;
@@ -112,5 +113,8 @@ void SceneSessionSelectEnter(void* const context) {
 	scene_manager_handle_back_event(instance->instance->manager);
 	//view_dispatcher_run(instance->instance->dispatcher);
 	free(instance);*/
+	//file_browser_configure(((PCUBERZERO) context)->view.browser, 0, "/", 0, 0, 0, 0);
+	FuriString* string = furi_string_alloc_set_str(APP_DATA_PATH("sessions"));
+	file_browser_start(((PCUBERZERO) context)->view.browser, string);
 	view_dispatcher_switch_to_view(((PCUBERZERO) context)->dispatcher, VIEW_FILE_BROWSER);
 }
