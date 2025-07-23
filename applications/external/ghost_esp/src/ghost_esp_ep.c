@@ -1,4 +1,5 @@
 #include "ghost_esp_ep.h"
+#include <storage/storage.h>
 #include <dialogs/dialogs.h>
 #include <gui/gui.h>
 #include <gui/view_dispatcher.h>
