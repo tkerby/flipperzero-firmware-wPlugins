@@ -49,7 +49,7 @@ static void wendigo_scene_setup_var_list_enter_callback(void* context, uint32_t 
                 if(msg != NULL) {
                     snprintf(
                         msg,
-                        sizeof(char) * 83,
+                        83,
                         "wendigo_scene_setup_var_list_enter_callback(): Invalid selected_option_index: %d.",
                         selected_option_index);
                     wendigo_log(MSG_ERROR, msg);
@@ -94,7 +94,7 @@ static void wendigo_scene_setup_var_list_change_callback(VariableItem* item) {
             if(msg != NULL) {
                 snprintf(
                     msg,
-                    sizeof(char) * 72,
+                    72,
                     "wendigo_scene_setup_var_list_change_callback(): Invalid item_index %d.",
                     item_index);
                 wendigo_log(MSG_ERROR, msg);
@@ -116,7 +116,7 @@ static void wendigo_scene_setup_var_list_change_callback(VariableItem* item) {
             if(msg != NULL) {
                 snprintf(
                     msg,
-                    sizeof(char) * 81,
+                    81,
                     "wendigo_scene_setup_var_list_change_callback(): Unknown interface selected %s.",
                     menu_item->item_string);
                 wendigo_log(MSG_ERROR, msg);
@@ -166,7 +166,7 @@ void wendigo_scene_setup_on_enter(void* context) {
                 if(msg != NULL) {
                     snprintf(
                         msg,
-                        sizeof(char) * 65,
+                        65,
                         "wendigo_scene_setup_on_enter(): Unknown interface selected %s.",
                         items[i].item_string);
                     wendigo_log(MSG_ERROR, msg);
