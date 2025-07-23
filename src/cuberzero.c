@@ -25,8 +25,6 @@ int32_t cuberzeroMain(const void* const unused) {
 	CUBERZERO_INFO("Initializing");
 	const PCUBERZERO instance = malloc(sizeof(CUBERZERO));
 	instance->view.submenu = submenu_alloc();
-	FuriString* path = furi_string_alloc();
-	instance->view.browser = file_browser_alloc(path);
 	instance->interface = furi_record_open(RECORD_GUI);
 	instance->dispatcher = view_dispatcher_alloc();
 	const AppSceneOnEnterCallback handlerEnter[] = {SceneHomeEnter, SceneSessionSelectEnter, SceneTimerEnter};
@@ -38,17 +36,13 @@ int32_t cuberzeroMain(const void* const unused) {
 	view_dispatcher_set_custom_event_callback(instance->dispatcher, callbackCustomEvent);
 	view_dispatcher_set_navigation_event_callback(instance->dispatcher, callbackNavigationEvent);
 	view_dispatcher_add_view(instance->dispatcher, VIEW_SUBMENU, submenu_get_view(instance->view.submenu));
-	view_dispatcher_add_view(instance->dispatcher, VIEW_FILE_BROWSER, file_browser_get_view(instance->view.browser));
 	view_dispatcher_attach_to_gui(instance->dispatcher, instance->interface, ViewDispatcherTypeFullscreen);
 	scene_manager_next_scene(instance->manager, SCENE_HOME);
 	view_dispatcher_run(instance->dispatcher);
 	view_dispatcher_remove_view(instance->dispatcher, VIEW_SUBMENU);
-	view_dispatcher_remove_view(instance->dispatcher, VIEW_FILE_BROWSER);
 	scene_manager_free(instance->manager);
 	view_dispatcher_free(instance->dispatcher);
 	furi_record_close(RECORD_GUI);
-	file_browser_free(instance->view.browser);
-	furi_string_free(path);
 	submenu_free(instance->view.submenu);
 	free(instance);
 	CUBERZERO_INFO("Exiting");

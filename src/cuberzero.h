@@ -3,7 +3,6 @@
 
 #include <furi.h>
 #include <gui/modules/submenu.h>
-#include <gui/modules/file_browser.h>
 #include <gui/gui.h>
 #include <gui/view_dispatcher.h>
 #include <gui/scene_manager.h>
@@ -17,7 +16,6 @@
 typedef struct {
 	struct {
 		Submenu* submenu;
-		FileBrowser* browser;
 	} view;
 
 	Gui* interface;
@@ -32,7 +30,6 @@ typedef struct {
 
 typedef enum {
 	VIEW_SUBMENU,
-	VIEW_FILE_BROWSER,
 	COUNT_VIEW
 } VIEW;
 
