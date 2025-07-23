@@ -26,10 +26,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0716-1928-0.420.0-457b3ac](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0723-1405-0.420.0-fc68a49](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-07-16 19:28 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-07-16 19:28 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-07-23 14:05 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-07-23 14:05 EST`
 - Updated: [Pocket Battle+ v2.0 (By HermeticCode)](https://github.com/HermeticCode/showdown-current)
 - Added: [Anki Remote v1.1 (By Blue5GD)](https://github.com/Blue5GD/Anki-Remote)
 - Updated: [Noptel LRF Sampler v2.3 (By Giraut)](https://github.com/Giraut/flipper_zero_noptel_lrf_sampler)
