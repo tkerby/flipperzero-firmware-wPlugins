@@ -72,6 +72,11 @@ static void callbackInput(InputEvent* const event, void* const context) {
 		view_port_update(instance->viewport);
 		break;
 	case InputKeyOk:
+		gui_remove_view_port(instance->instance->interface, instance->viewport);
+		gui_add_view_port(instance->instance->interface, instance->instance->dispatcher->viewport, GuiLayerFullscreen);
+		submenu_reset(instance->instance->view.submenu);
+		submenu_set_header(instance->instance->view.submenu, "Test Submenu");
+		view_dispatcher_switch_to_view(instance->instance->dispatcher, VIEW_SUBMENU);
 		break;
 	default:
 		furi_message_queue_put(instance->queue, event, FuriWaitForever);
