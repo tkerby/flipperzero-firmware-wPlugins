@@ -1,5 +1,6 @@
 #include "src/cuberzero.h"
 #include <gui/elements.h>
+#include <dialogs/dialogs.h>
 
 typedef struct {
 	PCUBERZERO instance;
@@ -71,13 +72,9 @@ static void callbackInput(InputEvent* const event, void* const context) {
 		instance->selectedButton = (instance->selectedButton ? instance->selectedButton : COUNT_BUTTON) - 1;
 		view_port_update(instance->viewport);
 		break;
-	case InputKeyOk:
-		gui_remove_view_port(instance->instance->interface, instance->viewport);
-		gui_add_view_port(instance->instance->interface, instance->instance->dispatcher->viewport, GuiLayerFullscreen);
-		submenu_reset(instance->instance->view.submenu);
-		submenu_set_header(instance->instance->view.submenu, "Test Submenu");
-		view_dispatcher_switch_to_view(instance->instance->dispatcher, VIEW_SUBMENU);
+	case InputKeyOk: {
 		break;
+	}
 	default:
 		furi_message_queue_put(instance->queue, event, FuriWaitForever);
 		break;
@@ -100,6 +97,12 @@ void SceneSessionSelectEnter(void* const context) {
 		break;
 	}
 
+	DialogsApp* dialogs = furi_record_open(RECORD_DIALOGS);
+	FuriString* path = furi_string_alloc_set_str("");
+	DialogsFileBrowserOptions options = {0};
+	dialog_file_browser_show(dialogs, path, path, &options);
+	furi_string_free(path);
+	furi_record_close(RECORD_DIALOGS);
 	gui_remove_view_port(instance->instance->interface, instance->viewport);
 	gui_add_view_port(instance->instance->interface, instance->instance->dispatcher->viewport, GuiLayerFullscreen);
 	furi_message_queue_free(instance->queue);
