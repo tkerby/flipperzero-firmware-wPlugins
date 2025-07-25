@@ -36,6 +36,7 @@
 #define MIZIP_SECTOR_COUNT       5
 #define MIZIP_KEY_LENGTH         6
 #define MIZIP_KEYA_0_BYTES       {0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5}
+#define MIZIP_KEYB_0_BYTES       {0xB4, 0xC1, 0x32, 0x43, 0x9E, 0xEF}
 #define MIZIP_BALANCE_MIN_VALUE  0
 //Theorical max value is 65535 but it makes the checksum be 00, which prevent some machine to recognize the tag correctly
 #define MIZIP_BALANCE_MAX_VALUE  65534
@@ -71,8 +72,8 @@ enum MiZipBalanceEditorCustomEvent {
 
 // Data source
 typedef enum {
-    FileSource,
-    NfcSource,
+    DataSourceFile,
+    DataSourceNfc,
 } DataSource;
 
 // Main application structure.
@@ -93,7 +94,7 @@ struct MiZipBalanceEditorApp {
 
     SubmenuIndex last_selected_submenu_index;
 
-    DataSource dataSource;
+    DataSource currentDataSource;
 
     //NFC
     Nfc* nfc;
@@ -126,3 +127,5 @@ struct MiZipBalanceEditorApp {
 };
 
 bool mizip_balance_editor_write_new_balance(void* context);
+bool mizip_balance_editor_write_new_balance_to_file(void* context);
+bool mizip_balance_editor_write_new_balance_to_tag(void* context);

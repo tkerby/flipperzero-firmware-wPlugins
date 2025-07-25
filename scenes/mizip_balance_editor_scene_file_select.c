@@ -9,6 +9,10 @@ void mizip_balance_editor_scene_file_select_on_enter(void* context) {
     furi_string_set(app->shadowFilePath, NFC_APP_FOLDER);
     app->is_shadow_file_exists = false;
     mf_classic_reset(app->mf_classic_data);
+    app->uid[0] = 0x00;
+    app->uid[1] = 0x00;
+    app->uid[2] = 0x00;
+    app->uid[3] = 0x00;
 
     DialogsFileBrowserOptions browser_options;
     dialog_file_browser_set_basic_options(&browser_options, NFC_APP_EXTENSION, &I_Nfc_10px);
@@ -56,6 +60,8 @@ void mizip_balance_editor_scene_file_select_on_enter(void* context) {
                 nfc_device_free(app->nfc_device);
                 scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdShowBalance);
             } else {
+                app->is_valid_mizip_data = false;
+                nfc_device_free(app->nfc_device);
                 scene_manager_previous_scene(app->scene_manager);
             }
         }
