@@ -2,11 +2,17 @@
 #include <gui/elements.h>
 #include <dialogs/dialogs.h>
 
+typedef enum {
+	ACTION_SELECT,
+	ACTION_EXIT
+} ACTION;
+
 typedef struct {
 	PCUBERZERO instance;
 	ViewPort* viewport;
 	FuriMessageQueue* queue;
 	uint8_t selectedButton;
+	ACTION action;
 } SESSIONSELECTSCENE, *PSESSIONSELECTSCENE;
 
 enum SESSIONSELECTSCREEN {
@@ -72,10 +78,17 @@ static void callbackInput(InputEvent* const event, void* const context) {
 		instance->selectedButton = (instance->selectedButton ? instance->selectedButton : COUNT_BUTTON) - 1;
 		view_port_update(instance->viewport);
 		break;
-	case InputKeyOk: {
+	case InputKeyOk:
+		switch(instance->selectedButton) {
+		case BUTTON_SELECT:
+			instance->action = ACTION_SELECT;
+			furi_message_queue_put(instance->queue, event, FuriWaitForever);
+			break;
+		}
+
 		break;
-	}
 	default:
+		instance->action = ACTION_EXIT;
 		furi_message_queue_put(instance->queue, event, FuriWaitForever);
 		break;
 	}
@@ -94,15 +107,21 @@ void SceneSessionSelectEnter(void* const context) {
 	const InputEvent* event;
 
 	while(furi_message_queue_get(instance->queue, &event, FuriWaitForever) == FuriStatusOk) {
-		break;
+		switch(instance->action) {
+		case ACTION_SELECT:
+			break;
+		case ACTION_EXIT:
+			goto exit;
+		}
 	}
 
-	DialogsApp* dialogs = furi_record_open(RECORD_DIALOGS);
+exit:
+	/*DialogsApp* dialogs = furi_record_open(RECORD_DIALOGS);
 	FuriString* path = furi_string_alloc_set_str("");
 	DialogsFileBrowserOptions options = {0};
 	dialog_file_browser_show(dialogs, path, path, &options);
 	furi_string_free(path);
-	furi_record_close(RECORD_DIALOGS);
+	furi_record_close(RECORD_DIALOGS);*/
 	gui_remove_view_port(instance->instance->interface, instance->viewport);
 	gui_add_view_port(instance->instance->interface, instance->instance->dispatcher->viewport, GuiLayerFullscreen);
 	furi_message_queue_free(instance->queue);
