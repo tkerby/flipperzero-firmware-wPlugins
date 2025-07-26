@@ -108,20 +108,21 @@ void SceneSessionSelectEnter(void* const context) {
 
 	while(furi_message_queue_get(instance->queue, &event, FuriWaitForever) == FuriStatusOk) {
 		switch(instance->action) {
-		case ACTION_SELECT:
+		case ACTION_SELECT: {
+			DialogsApp* dialogs = furi_record_open(RECORD_DIALOGS);
+			FuriString* path = furi_string_alloc_set_str("");
+			DialogsFileBrowserOptions options = {0};
+			dialog_file_browser_show(dialogs, path, path, &options);
+			furi_string_free(path);
+			furi_record_close(RECORD_DIALOGS);
 			break;
+		}
 		case ACTION_EXIT:
 			goto exit;
 		}
 	}
 
 exit:
-	/*DialogsApp* dialogs = furi_record_open(RECORD_DIALOGS);
-	FuriString* path = furi_string_alloc_set_str("");
-	DialogsFileBrowserOptions options = {0};
-	dialog_file_browser_show(dialogs, path, path, &options);
-	furi_string_free(path);
-	furi_record_close(RECORD_DIALOGS);*/
 	gui_remove_view_port(instance->instance->interface, instance->viewport);
 	gui_add_view_port(instance->instance->interface, instance->instance->dispatcher->viewport, GuiLayerFullscreen);
 	furi_message_queue_free(instance->queue);
