@@ -112,7 +112,10 @@ bool mizip_balance_editor_scene_reader_on_event(void* context, SceneManagerEvent
             if(mf_classic_is_card_read(app->mf_classic_data)) {
                 dolphin_deed(DolphinDeedNfcReadSuccess);
                 FURI_LOG_D("MiZipBalanceEditor", "Card readed");
-                app->is_valid_mizip_data = mizip_parse(context);
+
+                // Assume data is MiZip at this point
+                app->is_valid_mizip_data = true;
+                FURI_LOG_I("MiZipBalanceEditor", "Assume MiZIP data is valid");
             } else {
                 FURI_LOG_D("MiZipBalanceEditor", "Card not readed");
                 app->is_valid_mizip_data = false;
