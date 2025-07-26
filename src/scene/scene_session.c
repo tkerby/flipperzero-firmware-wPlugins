@@ -1,6 +1,7 @@
 #include "src/cuberzero.h"
 #include <gui/elements.h>
 #include <dialogs/dialogs.h>
+#include <storage/storage.h>
 
 typedef enum {
 	ACTION_SELECT,
@@ -110,7 +111,7 @@ void SceneSessionSelectEnter(void* const context) {
 		switch(instance->action) {
 		case ACTION_SELECT: {
 			DialogsApp* dialogs = furi_record_open(RECORD_DIALOGS);
-			FuriString* path = furi_string_alloc_set_str("");
+			FuriString* path = furi_string_alloc_set_str(APP_DATA_PATH("sessions"));
 			DialogsFileBrowserOptions options = {0};
 			dialog_file_browser_show(dialogs, path, path, &options);
 			furi_string_free(path);
@@ -118,11 +119,10 @@ void SceneSessionSelectEnter(void* const context) {
 			break;
 		}
 		case ACTION_EXIT:
-			goto exit;
+			goto functionExit;
 		}
 	}
-
-exit:
+functionExit:
 	gui_remove_view_port(instance->instance->interface, instance->viewport);
 	gui_add_view_port(instance->instance->interface, instance->instance->dispatcher->viewport, GuiLayerFullscreen);
 	furi_message_queue_free(instance->queue);
