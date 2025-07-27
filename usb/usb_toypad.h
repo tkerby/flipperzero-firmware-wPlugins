@@ -33,29 +33,6 @@ typedef struct {
 
 extern ToyPadEmu* emulator;
 
-typedef struct {
-    unsigned char type;
-    unsigned char len;
-    unsigned char payload[HID_EP_SZ - 2];
-} Frame;
-
-// Define a Response structure
-typedef struct {
-    Frame frame;
-    unsigned char cid;
-    unsigned char payload[HID_EP_SZ];
-    int payload_len;
-} Response;
-
-// Define a Request structure
-typedef struct {
-    Frame frame;
-    unsigned char cmd;
-    unsigned char cid;
-    unsigned char payload[HID_EP_SZ - 2];
-    int payload_len;
-} Request;
-
 extern FuriHalUsbInterface usb_hid_ldtoypad;
 
 int32_t hid_toypad_read_IN();
@@ -77,12 +54,10 @@ Token* createCharacter(int id);
 
 Token* createVehicle(int id, uint32_t upgrades[2]);
 
-int build_frame(Frame* frame, unsigned char* buf);
-
-int build_response(Response* response, unsigned char* buf);
-
 int get_connected_status();
 void set_connected_status(int status);
+
+void calculate_checksum(uint8_t* buf, int length, int place);
 
 #ifdef __cplusplus
 }
