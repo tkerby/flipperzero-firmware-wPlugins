@@ -1,31 +1,33 @@
 #include "src/cuberzero.h"
-#include <gui/elements.h>
 #include <dialogs/dialogs.h>
+#include <gui/elements.h>
 #include <storage/storage.h>
-
-typedef enum {
-	ACTION_SELECT,
-	ACTION_EXIT
-} ACTION;
 
 typedef struct {
 	PCUBERZERO instance;
 	ViewPort* viewport;
 	FuriMessageQueue* queue;
-	uint8_t selectedButton;
-	ACTION action;
-} SESSIONSELECTSCENE, *PSESSIONSELECTSCENE;
+	struct {
+		uint8_t action : 1;
+		uint8_t screen : 1;
+		uint8_t button : 2;
+	};
+} SESSIONSCENE, *PSESSIONSCENE;
 
-enum SESSIONSELECTSCREEN {
-	SCREEN_VIEW_SESSION,
-	SCREEN_CONFIRM_DELETE
+enum ACTION {
+	ACTION_EXIT,
+	ACTION_SELECT
 };
 
-enum SESSIONSELECTBUTTON {
-	BUTTON_SELECT,
-	BUTTON_NEW,
-	BUTTON_DELETE,
-	COUNT_BUTTON
+enum SCREEN {
+	SCREEN_SESSION
+};
+
+enum BUTTONSESSION {
+	BUTTON_SESSION_SELECT,
+	BUTTON_SESSION_NEW,
+	BUTTON_SESSION_DELETE,
+	COUNT_BUTTON_SESSION
 };
 
 static inline void drawButton(Canvas* const canvas, const uint8_t x, const uint8_t y, const uint8_t pressed, const char* const text) {
@@ -45,63 +47,80 @@ static inline void drawButton(Canvas* const canvas, const uint8_t x, const uint8
 }
 
 static void callbackRender(Canvas* const canvas, void* const context) {
-	furi_check(canvas);
-	furi_check(context);
-	const PSESSIONSELECTSCENE instance = context;
+	furi_check(canvas && context);
+	const PSESSIONSCENE instance = context;
 	canvas_clear(canvas);
 	canvas_set_font(canvas, FontPrimary);
 	canvas_draw_str(canvas, 0, 8, "Current Session:");
-	elements_text_box(canvas, 0, 11, 128, 39, AlignLeft, AlignTop, "Ahhhhhhhhhhhhhhhhh, long tttttttttteeeeeeeeeexxxxxxxxxxtttttttttt", 1);
-	canvas_set_font(canvas, FontSecondary);
-	drawButton(canvas, 10, 51, instance->selectedButton == BUTTON_SELECT, "Select");
-	drawButton(canvas, 52, 51, instance->selectedButton == BUTTON_NEW, "New");
-	drawButton(canvas, 86, 51, instance->selectedButton == BUTTON_DELETE, "Delete");
+	elements_text_box(canvas, 0, 11, 128, 39, AlignLeft, AlignTop, "Session 8192", 1);
+	drawButton(canvas, 10, 51, instance->button == BUTTON_SESSION_SELECT, "Select");
+	drawButton(canvas, 52, 51, instance->button == BUTTON_SESSION_NEW, "New");
+	drawButton(canvas, 86, 51, instance->button == BUTTON_SESSION_DELETE, "Delete");
 }
 
 static void callbackInput(InputEvent* const event, void* const context) {
-	furi_check(event);
-	furi_check(context);
+	furi_check(event && context);
 
 	if(event->type != InputTypeShort) {
 		return;
 	}
 
-	const PSESSIONSELECTSCENE instance = context;
+	const PSESSIONSCENE instance = context;
 
 	switch(event->key) {
 	case InputKeyUp:
 	case InputKeyRight:
-		instance->selectedButton = (instance->selectedButton + 1) % COUNT_BUTTON;
+		switch(instance->screen) {
+		case SCREEN_SESSION:
+			instance->button = (instance->button + 1) % COUNT_BUTTON_SESSION;
+			break;
+		}
+
 		view_port_update(instance->viewport);
-		break;
+		return;
 	case InputKeyDown:
 	case InputKeyLeft:
-		instance->selectedButton = (instance->selectedButton ? instance->selectedButton : COUNT_BUTTON) - 1;
+		switch(instance->screen) {
+		case SCREEN_SESSION:
+			instance->button = (instance->button ? instance->button : COUNT_BUTTON_SESSION) - 1;
+			break;
+		}
+
 		view_port_update(instance->viewport);
+		return;
+	case InputKeyBack:
+		switch(instance->screen) {
+		case SCREEN_SESSION:
+			instance->action = ACTION_EXIT;
+			furi_message_queue_put(instance->queue, event, FuriWaitForever);
+			break;
+		}
+
+		return;
+	default:
 		break;
-	case InputKeyOk:
-		switch(instance->selectedButton) {
-		case BUTTON_SELECT:
+	}
+
+	switch(instance->screen) {
+	case SCREEN_SESSION:
+		switch(instance->button) {
+		case BUTTON_SESSION_SELECT:
 			instance->action = ACTION_SELECT;
 			furi_message_queue_put(instance->queue, event, FuriWaitForever);
 			break;
 		}
 
-		break;
-	default:
-		instance->action = ACTION_EXIT;
-		furi_message_queue_put(instance->queue, event, FuriWaitForever);
-		break;
+		return;
 	}
 }
 
-void SceneSessionSelectEnter(void* const context) {
+void SceneSessionEnter(void* const context) {
 	furi_check(context);
-	const PSESSIONSELECTSCENE instance = malloc(sizeof(SESSIONSELECTSCENE));
+	const PSESSIONSCENE instance = malloc(sizeof(SESSIONSCENE));
 	instance->instance = context;
-	FuriString* const path = furi_string_alloc();
 	instance->viewport = view_port_alloc();
 	instance->queue = furi_message_queue_alloc(1, sizeof(InputEvent));
+	FuriString* const path = furi_string_alloc();
 	view_port_draw_callback_set(instance->viewport, callbackRender, instance);
 	view_port_input_callback_set(instance->viewport, callbackInput, instance);
 	gui_remove_view_port(instance->instance->interface, instance->instance->dispatcher->viewport);
@@ -111,6 +130,8 @@ void SceneSessionSelectEnter(void* const context) {
 
 	while(furi_message_queue_get(instance->queue, &event, FuriWaitForever) == FuriStatusOk) {
 		switch(instance->action) {
+		case ACTION_EXIT:
+			goto functionExit;
 		case ACTION_SELECT:
 			furi_string_set_str(path, APP_DATA_PATH("sessions"));
 			memset(&options, 0, sizeof(DialogsFileBrowserOptions));
@@ -121,16 +142,14 @@ void SceneSessionSelectEnter(void* const context) {
 
 			furi_record_close(RECORD_DIALOGS);
 			break;
-		case ACTION_EXIT:
-			goto functionExit;
 		}
 	}
 functionExit:
 	gui_remove_view_port(instance->instance->interface, instance->viewport);
 	gui_add_view_port(instance->instance->interface, instance->instance->dispatcher->viewport, GuiLayerFullscreen);
+	furi_string_free(path);
 	furi_message_queue_free(instance->queue);
 	view_port_free(instance->viewport);
-	furi_string_free(path);
-	scene_manager_handle_back_event(instance->instance->manager);
 	free(instance);
+	scene_manager_handle_back_event(((PCUBERZERO) context)->manager);
 }

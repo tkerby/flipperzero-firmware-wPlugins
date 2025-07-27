@@ -12,7 +12,7 @@ void SceneHomeEnter(void* const context) {
 	submenu_set_header(instance->view.submenu, "Cuber Zero");
 	submenu_add_item(instance->view.submenu, "Timer", SCENE_TIMER, callbackItem, context);
 	// ----- Test Only -----
-	submenu_add_item(instance->view.submenu, "Session Select", SCENE_SESSION_SELECT, callbackItem, context);
+	submenu_add_item(instance->view.submenu, "Session", SCENE_SESSION, callbackItem, context);
 	// ---------------------
 	submenu_set_selected_item(instance->view.submenu, instance->scene.home.index);
 	view_dispatcher_switch_to_view(instance->dispatcher, VIEW_SUBMENU);
