@@ -29,7 +29,7 @@ int32_t cuberzeroMain(const void* const unused) {
     instance->dispatcher = view_dispatcher_alloc();
     view_dispatcher_enable_queue(instance->dispatcher);
     const AppSceneOnEnterCallback handlerEnter[] = {
-        SceneHomeEnter, SceneSessionSelectEnter, SceneTimerEnter};
+        SceneHomeEnter, SceneSessionEnter, SceneTimerEnter};
     const AppSceneOnEventCallback handlerEvent[] = {
         SceneHomeEvent, callbackEmptyEvent, callbackEmptyEvent};
     const AppSceneOnExitCallback handlerExit[] = {
