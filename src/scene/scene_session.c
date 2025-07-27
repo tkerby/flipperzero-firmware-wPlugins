@@ -99,6 +99,7 @@ void SceneSessionSelectEnter(void* const context) {
 	furi_check(context);
 	const PSESSIONSELECTSCENE instance = malloc(sizeof(SESSIONSELECTSCENE));
 	instance->instance = context;
+	FuriString* const path = furi_string_alloc();
 	instance->viewport = view_port_alloc();
 	instance->queue = furi_message_queue_alloc(1, sizeof(InputEvent));
 	view_port_draw_callback_set(instance->viewport, callbackRender, instance);
@@ -106,18 +107,20 @@ void SceneSessionSelectEnter(void* const context) {
 	gui_remove_view_port(instance->instance->interface, instance->instance->dispatcher->viewport);
 	gui_add_view_port(instance->instance->interface, instance->viewport, GuiLayerFullscreen);
 	const InputEvent* event;
+	DialogsFileBrowserOptions options;
 
 	while(furi_message_queue_get(instance->queue, &event, FuriWaitForever) == FuriStatusOk) {
 		switch(instance->action) {
-		case ACTION_SELECT: {
-			DialogsApp* dialogs = furi_record_open(RECORD_DIALOGS);
-			FuriString* path = furi_string_alloc_set_str(APP_DATA_PATH("sessions"));
-			DialogsFileBrowserOptions options = {0};
-			dialog_file_browser_show(dialogs, path, path, &options);
-			furi_string_free(path);
+		case ACTION_SELECT:
+			furi_string_set_str(path, APP_DATA_PATH("sessions"));
+			memset(&options, 0, sizeof(DialogsFileBrowserOptions));
+
+			if(dialog_file_browser_show(furi_record_open(RECORD_DIALOGS), path, path, &options)) {
+				CUBERZERO_INFO("Selected: %s", furi_string_get_cstr(path));
+			}
+
 			furi_record_close(RECORD_DIALOGS);
 			break;
-		}
 		case ACTION_EXIT:
 			goto functionExit;
 		}
@@ -127,6 +130,7 @@ functionExit:
 	gui_add_view_port(instance->instance->interface, instance->instance->dispatcher->viewport, GuiLayerFullscreen);
 	furi_message_queue_free(instance->queue);
 	view_port_free(instance->viewport);
+	furi_string_free(path);
 	scene_manager_handle_back_event(instance->instance->manager);
 	free(instance);
 }
