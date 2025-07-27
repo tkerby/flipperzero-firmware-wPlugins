@@ -126,6 +126,8 @@ static int find_free_timer_slot(MultiTimerApp* app);
 
 // Timer storage functions
 static void save_timer_data(MultiTimerApp* app) {
+    if(!app || !app->storage) return;
+
     app->timer_storage.magic = TIMER_STORAGE_MAGIC;
     app->timer_storage.version = TIMER_STORAGE_VERSION;
 
@@ -133,6 +135,8 @@ static void save_timer_data(MultiTimerApp* app) {
     storage_common_mkdir(storage, TIMER_DATA_PATH);
 
     File* file = storage_file_alloc(storage);
+    if(!file) return;
+
     if(storage_file_open(file, TIMER_DATA_FILE, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
         storage_file_write(file, &app->timer_storage, sizeof(TimerStorage));
     }
@@ -141,8 +145,15 @@ static void save_timer_data(MultiTimerApp* app) {
 }
 
 static void load_timer_data(MultiTimerApp* app) {
+    if(!app || !app->storage) return;
+
     Storage* storage = app->storage;
     File* file = storage_file_alloc(storage);
+    if(!file) {
+        // Initialize with empty data if allocation fails
+        memset(&app->timer_storage, 0, sizeof(TimerStorage));
+        return;
+    }
 
     if(storage_file_open(file, TIMER_DATA_FILE, FSAM_READ, FSOM_OPEN_EXISTING)) {
         storage_file_read(file, &app->timer_storage, sizeof(TimerStorage));
@@ -162,8 +173,8 @@ static void load_timer_data(MultiTimerApp* app) {
 }
 
 static uint32_t get_remaining_seconds(TimerData* timer) {
-    if(!timer->active || timer->state != TimerStateRunning) {
-        return timer->duration_seconds;
+    if(!timer || !timer->active || timer->state != TimerStateRunning) {
+        return timer ? timer->duration_seconds : 0;
     }
 
     uint32_t current_timestamp = furi_hal_rtc_get_timestamp();
@@ -177,6 +188,8 @@ static uint32_t get_remaining_seconds(TimerData* timer) {
 }
 
 static void check_expired_timers(MultiTimerApp* app) {
+    if(!app) return;
+
     bool has_expired = false;
 
     for(int i = 0; i < MAX_TIMERS; i++) {
@@ -190,13 +203,15 @@ static void check_expired_timers(MultiTimerApp* app) {
         }
     }
 
-    if(has_expired) {
+    if(has_expired && app->notifications) {
         notification_message(app->notifications, &sequence_audiovisual_alert);
         save_timer_data(app);
     }
 }
 
 static int find_free_timer_slot(MultiTimerApp* app) {
+    if(!app) return -1;
+
     for(int i = 0; i < MAX_TIMERS; i++) {
         if(!app->timer_storage.timers[i].active) {
             return i;
@@ -208,19 +223,26 @@ static int find_free_timer_slot(MultiTimerApp* app) {
 // Timer tick callback
 static void timer_tick_callback(void* context) {
     MultiTimerApp* app = context;
+    if(!app) return;
+
     check_expired_timers(app);
 
     // Update current view if it's timer related
-    ViewDispatcher* view_dispatcher = app->view_dispatcher;
-    if(view_dispatcher) {
+    if(app->view_dispatcher) {
         // Force view update for timer views
-        view_commit_model(app->timer_running_view, false);
-        view_commit_model(app->timer_list_view, false);
+        if(app->timer_running_view) {
+            view_commit_model(app->timer_running_view, false);
+        }
+        if(app->timer_list_view) {
+            view_commit_model(app->timer_list_view, false);
+        }
     }
 }
 
 // Format time as HH:MM:SS
 static void format_time(uint32_t seconds, char* buffer, size_t buffer_size) {
+    if(!buffer || buffer_size == 0) return;
+
     uint32_t hours = seconds / 3600;
     uint32_t minutes = (seconds % 3600) / 60;
     uint32_t secs = seconds % 60;
@@ -230,6 +252,7 @@ static void format_time(uint32_t seconds, char* buffer, size_t buffer_size) {
 // Timer setup view
 static void timer_setup_draw_callback(Canvas* canvas, void* model) {
     MultiTimerApp* app = model;
+    if(!app || !canvas) return;
 
     canvas_clear(canvas);
     canvas_set_font(canvas, FontPrimary);
@@ -288,6 +311,7 @@ static void timer_setup_draw_callback(Canvas* canvas, void* model) {
 
 static bool timer_setup_input_callback(InputEvent* event, void* context) {
     MultiTimerApp* app = context;
+    if(!app || !event) return false;
 
     if(event->type == InputTypePress) {
         switch(event->key) {
@@ -341,15 +365,19 @@ static bool timer_setup_input_callback(InputEvent* event, void* context) {
                     save_timer_data(app);
 
                     app->selected_timer_index = slot;
-                    view_dispatcher_switch_to_view(
-                        app->view_dispatcher, MultiTimerViewTimerRunning);
+                    if(app->view_dispatcher) {
+                        view_dispatcher_switch_to_view(
+                            app->view_dispatcher, MultiTimerViewTimerRunning);
+                    }
                 }
             }
             return true;
         }
 
         case InputKeyBack:
-            view_dispatcher_switch_to_view(app->view_dispatcher, MultiTimerViewSubmenu);
+            if(app->view_dispatcher) {
+                view_dispatcher_switch_to_view(app->view_dispatcher, MultiTimerViewSubmenu);
+            }
             return true;
 
         default:
@@ -363,6 +391,7 @@ static bool timer_setup_input_callback(InputEvent* event, void* context) {
 // Timer running view
 static void timer_running_draw_callback(Canvas* canvas, void* model) {
     MultiTimerApp* app = model;
+    if(!app || !canvas) return;
 
     canvas_clear(canvas);
     canvas_set_font(canvas, FontPrimary);
@@ -415,6 +444,7 @@ static void timer_running_draw_callback(Canvas* canvas, void* model) {
 
 static bool timer_running_input_callback(InputEvent* event, void* context) {
     MultiTimerApp* app = context;
+    if(!app || !event) return false;
 
     if(event->type == InputTypePress) {
         if(app->selected_timer_index >= 0 && app->selected_timer_index < MAX_TIMERS) {
@@ -425,7 +455,9 @@ static bool timer_running_input_callback(InputEvent* event, void* context) {
                 timer->active = false;
                 app->timer_storage.count--;
                 save_timer_data(app);
-                view_dispatcher_switch_to_view(app->view_dispatcher, MultiTimerViewTimerList);
+                if(app->view_dispatcher) {
+                    view_dispatcher_switch_to_view(app->view_dispatcher, MultiTimerViewTimerList);
+                }
                 return true;
             }
 
@@ -449,7 +481,9 @@ static bool timer_running_input_callback(InputEvent* event, void* context) {
                 timer->active = false;
                 app->timer_storage.count--;
                 save_timer_data(app);
-                view_dispatcher_switch_to_view(app->view_dispatcher, MultiTimerViewTimerList);
+                if(app->view_dispatcher) {
+                    view_dispatcher_switch_to_view(app->view_dispatcher, MultiTimerViewTimerList);
+                }
                 return true;
 
             default:
@@ -464,6 +498,7 @@ static bool timer_running_input_callback(InputEvent* event, void* context) {
 // Timer list view
 static void timer_list_draw_callback(Canvas* canvas, void* model) {
     MultiTimerApp* app = model;
+    if(!app || !canvas) return;
 
     canvas_clear(canvas);
     canvas_set_font(canvas, FontPrimary);
@@ -510,11 +545,14 @@ static void timer_list_draw_callback(Canvas* canvas, void* model) {
 
 static bool timer_list_input_callback(InputEvent* event, void* context) {
     MultiTimerApp* app = context;
+    if(!app || !event) return false;
 
     if(event->type == InputTypePress) {
         switch(event->key) {
         case InputKeyBack:
-            view_dispatcher_switch_to_view(app->view_dispatcher, MultiTimerViewSubmenu);
+            if(app->view_dispatcher) {
+                view_dispatcher_switch_to_view(app->view_dispatcher, MultiTimerViewSubmenu);
+            }
             return true;
 
         default:
@@ -528,12 +566,14 @@ static bool timer_list_input_callback(InputEvent* event, void* context) {
 // Welcome popup callback
 static void welcome_popup_callback(void* context) {
     MultiTimerApp* app = context;
+    if(!app || !app->view_dispatcher) return;
     view_dispatcher_switch_to_view(app->view_dispatcher, MultiTimerViewSubmenu);
 }
 
 // Submenu callbacks
 static void submenu_callback(void* context, uint32_t index) {
     MultiTimerApp* app = context;
+    if(!app) return;
 
     if(index < sizeof(preset_times) / sizeof(preset_times[0])) {
         // Preset timer selected - create timer directly
@@ -550,14 +590,20 @@ static void submenu_callback(void* context, uint32_t index) {
             save_timer_data(app);
 
             app->selected_timer_index = slot;
-            view_dispatcher_switch_to_view(app->view_dispatcher, MultiTimerViewTimerRunning);
+            if(app->view_dispatcher) {
+                view_dispatcher_switch_to_view(app->view_dispatcher, MultiTimerViewTimerRunning);
+            }
         }
     } else if(index == sizeof(preset_times) / sizeof(preset_times[0])) {
         // Custom timer selected
-        view_dispatcher_switch_to_view(app->view_dispatcher, MultiTimerViewTimerSetup);
+        if(app->view_dispatcher) {
+            view_dispatcher_switch_to_view(app->view_dispatcher, MultiTimerViewTimerSetup);
+        }
     } else if(index == sizeof(preset_times) / sizeof(preset_times[0]) + 1) {
         // View active timers
-        view_dispatcher_switch_to_view(app->view_dispatcher, MultiTimerViewTimerList);
+        if(app->view_dispatcher) {
+            view_dispatcher_switch_to_view(app->view_dispatcher, MultiTimerViewTimerList);
+        }
     }
 }
 
@@ -576,12 +622,30 @@ static bool multitimer_custom_event_callback(void* context, uint32_t event) {
 // App initialization
 static MultiTimerApp* multitimer_app_alloc() {
     MultiTimerApp* app = malloc(sizeof(MultiTimerApp));
+    if(!app) {
+        return NULL;
+    }
+
+    // Initialize all pointers to NULL first
+    memset(app, 0, sizeof(MultiTimerApp));
 
     app->gui = furi_record_open(RECORD_GUI);
     app->notifications = furi_record_open(RECORD_NOTIFICATION);
     app->storage = furi_record_open(RECORD_STORAGE);
 
+    if(!app->gui || !app->notifications || !app->storage) {
+        FURI_LOG_E(TAG, "Failed to open required records");
+        multitimer_app_free(app);
+        return NULL;
+    }
+
     app->view_dispatcher = view_dispatcher_alloc();
+    if(!app->view_dispatcher) {
+        FURI_LOG_E(TAG, "Failed to allocate view dispatcher");
+        multitimer_app_free(app);
+        return NULL;
+    }
+
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_navigation_event_callback(
         app->view_dispatcher, multitimer_navigation_event_callback);
@@ -591,6 +655,11 @@ static MultiTimerApp* multitimer_app_alloc() {
 
     // Initialize submenu
     app->submenu = submenu_alloc();
+    if(!app->submenu) {
+        FURI_LOG_E(TAG, "Failed to allocate submenu");
+        multitimer_app_free(app);
+        return NULL;
+    }
 
     // Add preset options
     for(size_t i = 0; i < sizeof(preset_times) / sizeof(preset_times[0]); i++) {
@@ -614,6 +683,11 @@ static MultiTimerApp* multitimer_app_alloc() {
 
     // Initialize timer setup view
     app->timer_setup_view = view_alloc();
+    if(!app->timer_setup_view) {
+        FURI_LOG_E(TAG, "Failed to allocate timer setup view");
+        multitimer_app_free(app);
+        return NULL;
+    }
     view_set_context(app->timer_setup_view, app);
     view_set_draw_callback(app->timer_setup_view, timer_setup_draw_callback);
     view_set_input_callback(app->timer_setup_view, timer_setup_input_callback);
@@ -622,6 +696,11 @@ static MultiTimerApp* multitimer_app_alloc() {
 
     // Initialize timer running view
     app->timer_running_view = view_alloc();
+    if(!app->timer_running_view) {
+        FURI_LOG_E(TAG, "Failed to allocate timer running view");
+        multitimer_app_free(app);
+        return NULL;
+    }
     view_set_context(app->timer_running_view, app);
     view_set_draw_callback(app->timer_running_view, timer_running_draw_callback);
     view_set_input_callback(app->timer_running_view, timer_running_input_callback);
@@ -630,6 +709,11 @@ static MultiTimerApp* multitimer_app_alloc() {
 
     // Initialize timer list view
     app->timer_list_view = view_alloc();
+    if(!app->timer_list_view) {
+        FURI_LOG_E(TAG, "Failed to allocate timer list view");
+        multitimer_app_free(app);
+        return NULL;
+    }
     view_set_context(app->timer_list_view, app);
     view_set_draw_callback(app->timer_list_view, timer_list_draw_callback);
     view_set_input_callback(app->timer_list_view, timer_list_input_callback);
@@ -637,6 +721,11 @@ static MultiTimerApp* multitimer_app_alloc() {
 
     // Initialize welcome popup
     app->welcome_popup = popup_alloc();
+    if(!app->welcome_popup) {
+        FURI_LOG_E(TAG, "Failed to allocate welcome popup");
+        multitimer_app_free(app);
+        return NULL;
+    }
     popup_set_context(app->welcome_popup, app);
     popup_set_callback(app->welcome_popup, welcome_popup_callback);
     popup_set_icon(app->welcome_popup, 40, 8, &I_dolphin_welcome_45x45);
@@ -666,36 +755,87 @@ static MultiTimerApp* multitimer_app_alloc() {
 
     // Create timer
     app->tick_timer = furi_timer_alloc(timer_tick_callback, FuriTimerTypePeriodic, app);
+    if(!app->tick_timer) {
+        FURI_LOG_E(TAG, "Failed to allocate tick timer");
+        multitimer_app_free(app);
+        return NULL;
+    }
 
     return app;
 }
 
 static void multitimer_app_free(MultiTimerApp* app) {
-    furi_assert(app);
+    if(!app) return;
 
-    // Stop and free timer
-    furi_timer_stop(app->tick_timer);
-    furi_timer_free(app->tick_timer);
+    // Stop and free timer first to prevent callbacks during cleanup
+    if(app->tick_timer) {
+        furi_timer_stop(app->tick_timer);
+        furi_timer_free(app->tick_timer);
+        app->tick_timer = NULL;
+    }
 
-    // Free views
-    view_dispatcher_remove_view(app->view_dispatcher, MultiTimerViewSubmenu);
-    view_dispatcher_remove_view(app->view_dispatcher, MultiTimerViewTimerSetup);
-    view_dispatcher_remove_view(app->view_dispatcher, MultiTimerViewTimerRunning);
-    view_dispatcher_remove_view(app->view_dispatcher, MultiTimerViewTimerList);
-    view_dispatcher_remove_view(app->view_dispatcher, MultiTimerViewWelcomePopup);
+    // Remove views from dispatcher before freeing them
+    if(app->view_dispatcher) {
+        if(app->submenu) {
+            view_dispatcher_remove_view(app->view_dispatcher, MultiTimerViewSubmenu);
+        }
+        if(app->timer_setup_view) {
+            view_dispatcher_remove_view(app->view_dispatcher, MultiTimerViewTimerSetup);
+        }
+        if(app->timer_running_view) {
+            view_dispatcher_remove_view(app->view_dispatcher, MultiTimerViewTimerRunning);
+        }
+        if(app->timer_list_view) {
+            view_dispatcher_remove_view(app->view_dispatcher, MultiTimerViewTimerList);
+        }
+        if(app->welcome_popup) {
+            view_dispatcher_remove_view(app->view_dispatcher, MultiTimerViewWelcomePopup);
+        }
+    }
 
-    submenu_free(app->submenu);
-    view_free(app->timer_setup_view);
-    view_free(app->timer_running_view);
-    view_free(app->timer_list_view);
-    popup_free(app->welcome_popup);
+    // Free individual views
+    if(app->submenu) {
+        submenu_free(app->submenu);
+        app->submenu = NULL;
+    }
+    if(app->timer_setup_view) {
+        view_free(app->timer_setup_view);
+        app->timer_setup_view = NULL;
+    }
+    if(app->timer_running_view) {
+        view_free(app->timer_running_view);
+        app->timer_running_view = NULL;
+    }
+    if(app->timer_list_view) {
+        view_free(app->timer_list_view);
+        app->timer_list_view = NULL;
+    }
+    if(app->welcome_popup) {
+        popup_free(app->welcome_popup);
+        app->welcome_popup = NULL;
+    }
 
-    view_dispatcher_free(app->view_dispatcher);
+    // Free view dispatcher last
+    if(app->view_dispatcher) {
+        view_dispatcher_free(app->view_dispatcher);
+        app->view_dispatcher = NULL;
+    }
 
-    furi_record_close(RECORD_STORAGE);
-    furi_record_close(RECORD_NOTIFICATION);
-    furi_record_close(RECORD_GUI);
+    // Close records
+    if(app->storage) {
+        furi_record_close(RECORD_STORAGE);
+        app->storage = NULL;
+    }
+    if(app->notifications) {
+        furi_record_close(RECORD_NOTIFICATION);
+        app->notifications = NULL;
+    }
+    if(app->gui) {
+        furi_record_close(RECORD_GUI);
+        app->gui = NULL;
+    }
 
+    // Finally free the app structure itself
     free(app);
 }
 
@@ -703,6 +843,10 @@ int32_t multitimer_app(void* p) {
     UNUSED(p);
 
     MultiTimerApp* app = multitimer_app_alloc();
+    if(!app) {
+        FURI_LOG_E(TAG, "Failed to allocate app");
+        return -1;
+    }
 
     // Start with welcome popup
     view_dispatcher_switch_to_view(app->view_dispatcher, MultiTimerViewWelcomePopup);
