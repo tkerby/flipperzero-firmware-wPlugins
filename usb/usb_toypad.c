@@ -10,6 +10,7 @@
 #include "../burtle.h"
 #include "../minifigures.h"
 #include "save_toypad.h"
+#include "bytes.h"
 
 // Define all the possible commands
 #define CMD_WAKE   0xB0
@@ -74,44 +75,6 @@ char* get_debug_text_ep_out() {
 }
 char* get_debug_text() {
     return debug_text;
-}
-
-uint32_t readUInt32LE(const unsigned char* buffer, int offset) {
-    return (uint32_t)buffer[offset] | ((uint32_t)buffer[offset + 1] << 8) |
-           ((uint32_t)buffer[offset + 2] << 16) | ((uint32_t)buffer[offset + 3] << 24);
-}
-
-uint32_t readUInt32BE(const unsigned char* buffer, int offset) {
-    return ((uint32_t)buffer[offset] << 24) | ((uint32_t)buffer[offset + 1] << 16) |
-           ((uint32_t)buffer[offset + 2] << 8) | (uint32_t)buffer[offset + 3];
-}
-
-// Function to write uint16_t to little-endian
-void writeUInt16LE(uint8_t* buffer, uint16_t value) {
-    buffer[0] = value & 0xFF;
-    buffer[1] = (value >> 8) & 0xFF;
-}
-
-// Function to write uint16_t to big-endian
-void writeUInt16BE(uint8_t* buffer, uint16_t value, int offset) {
-    buffer[offset] = (value >> 8) & 0xFF;
-    buffer[offset + 1] = value & 0xFF;
-}
-
-// Function to write uint32_t to little-endian
-void writeUInt32LE(uint8_t* buffer, uint32_t value) {
-    buffer[0] = value & 0xFF;
-    buffer[1] = (value >> 8) & 0xFF;
-    buffer[2] = (value >> 16) & 0xFF;
-    buffer[3] = (value >> 24) & 0xFF;
-}
-
-// Function to write uint32_t to big-endian
-void writeUInt32BE(uint8_t* buffer, uint32_t value, int offset) {
-    buffer[offset] = (value >> 24) & 0xFF;
-    buffer[offset + 1] = (value >> 16) & 0xFF;
-    buffer[offset + 2] = (value >> 8) & 0xFF;
-    buffer[offset + 3] = value & 0xFF;
 }
 
 // Function to parse a Frame into a Request
@@ -427,10 +390,10 @@ Token* createVehicle(int id, uint32_t upgrades[2]) {
     create_uid(token, id);
 
     // Write the upgrades and ID to the token data
-    writeUInt32LE(&token->token[0x23 * 4], upgrades[0]); // Upgrades[0]
-    writeUInt16LE_NO(&token->token[0x24 * 4], id); // ID
-    writeUInt32LE(&token->token[0x25 * 4], upgrades[1]); // Upgrades[1]
-    writeUInt16BE_NO(&token->token[0x26 * 4], 1); // Constant value 1 (Big Endian)
+    writeUInt32LE(&token->token[0x23 * 4], upgrades[0], 0); // Upgrades[0]
+    writeUInt16LE(&token->token[0x24 * 4], id, 0); // ID
+    writeUInt32LE(&token->token[0x25 * 4], upgrades[1], 0); // Upgrades[1]
+    writeUInt16BE(&token->token[0x26 * 4], 1, 0); // Constant value 1 (Big Endian)
 
     snprintf(token->name, sizeof(token->name), "%s", get_vehicle_name(id));
 
@@ -669,7 +632,7 @@ void hid_out_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
         if(token) {
             if(token->id) {
                 response.payload[0] = 0x00;
-                writeUInt32LE(buf, token->id);
+                writeUInt32LE(buf, token->id, 0);
                 tea_encrypt(buf, emulator->tea_key, response.payload + 1);
                 response.payload_len = 9;
             } else {
@@ -745,7 +708,7 @@ void hid_out_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
         uint32_t rand = burtle_rand(burtle);
 
         // write the rand to the response payload as Int32LE
-        writeUInt32LE(response.payload, rand);
+        writeUInt32LE(response.payload, rand, 0);
 
         // write the conf to the response payload as Int32BE
         writeUInt32BE(response.payload + 4, conf, 0);
