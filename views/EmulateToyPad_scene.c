@@ -550,15 +550,6 @@ static void ldtoypad_scene_emulate_draw_render_callback(Canvas* canvas, void* co
     }
 
     if(model->show_debug_text_index) {
-        if(get_debug_text_ep_in() != NULL && strcmp(get_debug_text_ep_in(), "nothing") != 0) {
-            canvas_set_color(canvas, ColorWhite);
-            canvas_clear(canvas);
-            canvas_set_color(canvas, ColorBlack);
-
-            elements_multiline_text_aligned(
-                canvas, 1, 1, AlignLeft, AlignTop, get_debug_text_ep_in());
-        }
-
         canvas_set_color(canvas, ColorWhite);
         canvas_draw_box(canvas, 0, 16, 120, 20);
         canvas_set_color(canvas, ColorBlack);

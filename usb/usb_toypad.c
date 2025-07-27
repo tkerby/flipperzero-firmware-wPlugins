@@ -51,29 +51,12 @@ void set_connected_status(int status) {
     connected_status = status;
 }
 
-// create a string variablethat contains the text: nothing to debug yet
-char debug_text_ep_in[HID_EP_SZ * 4] = "nothing";
-
-// char debug_text_ep_out[] = "nothing to debug yet";
-char debug_text_ep_out[HID_EP_SZ] = "nothing";
-
 char debug_text[64] = " ";
 
 void set_debug_text(char* text) {
     snprintf(debug_text, sizeof(debug_text), "%s", text);
 }
 
-void set_debug_text_ep_in(char* text) {
-    sprintf(debug_text_ep_in, "%s", text);
-}
-
-// a function that returns a pointer to the string
-char* get_debug_text_ep_in() {
-    return debug_text_ep_in;
-}
-char* get_debug_text_ep_out() {
-    return debug_text_ep_out;
-}
 char* get_debug_text() {
     return debug_text;
 }
@@ -482,9 +465,6 @@ void hid_out_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
 
     // Read data from the OUT endpoint
     int32_t len = usbd_ep_read(dev, HID_EP_OUT, req_buf, HID_EP_SZ);
-
-    // Make from the data a string and save it to the debug_text_ep_out string
-    sprintf(debug_text_ep_out, "%s", req_buf);
 
     if(len <= 0) return;
 
