@@ -339,15 +339,6 @@ const char* get_minifigure_name(int id) {
     return "?";
 }
 
-// int get_minifigure_id(const char* name) {
-//     for(int i = 0; minifigures[i].name != NULL; i++) {
-//         if(strcmp(minifigures[i].name, name) == 0) {
-//             return minifigures[i].id;
-//         }
-//     }
-//     return -1;
-// }
-
 const char* get_vehicle_name(int id) {
     for(int i = 0; i < MAX_VEHICLES && vehicles[i].name != NULL; i++) {
         if(vehicles[i].id == id) {

@@ -39,7 +39,7 @@ This project emulates the behavior of the original USB ToyPad, allowing you to i
 
 - A **Flipper Zero** works with both official and custom firmware (Momentum / RogueMaster)
 - The **Flipper Zero app or site** for downloading from the Flipper App Catalog
-- The **Lego Dimensions** game (Only works on PS5, PS4, PS3, WII U)
+- The **Lego Dimensions** game (Only works on PS5, PS4, PS3, Wii U)
 
 ### How to Download?
 - This app is available for download in the [Flipper App Catalog](https://lab.flipper.net/apps/ldtoypad)
