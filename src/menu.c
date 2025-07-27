@@ -903,12 +903,24 @@ static void send_evil_portal_html(AppState* state) {
 
     if(ghost_esp_ep_read_html_file(state, &the_html, &html_size)) {
         if(the_html != NULL) {
+            // Send HTML begin marker
+            const char* html_begin_marker = "[HTML/BEGIN]";
+            uart_send(state->uart_context, (const uint8_t*)html_begin_marker, 12);
+            
+            // Send the command
             const char* command_str = "evilportal -c sethtmlstr\n";
             uart_send(state->uart_context, (const uint8_t*)command_str, strlen(command_str));
 
+            // Send the HTML content
             uart_send(state->uart_context, the_html, html_size);
-            uart_send(state->uart_context,
-                (const uint8_t*)"\n", 1);
+            
+            // Send newline
+            uart_send(state->uart_context, (const uint8_t*)"\n", 1);
+            
+            // Send HTML close marker
+            const char* html_close_marker = "[HTML/CLOSE]";
+            uart_send(state->uart_context, (const uint8_t*)html_close_marker, 12);
+            
             free(the_html);
         }
     }
