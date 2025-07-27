@@ -16,7 +16,6 @@
 #include "minifigures.h"
 
 #include "usb/save_toypad.h"
-#include "usb/frame.h"
 
 #define numBoxes 7 // the number of boxes (7 boxes always)
 
@@ -27,6 +26,21 @@ LDToyPadApp* app;
 LDToyPadSceneEmulate* toypadscene_instance;
 
 FuriHalUsbInterface* usb_mode_prev = NULL;
+
+// Selection box icon
+const uint8_t I_selectionBox[] = {0xf8, 0xff, 0x00, 0x06, 0x00, 0x01, 0x03, 0x00, 0x02, 0x03, 0x00,
+                                  0x02, 0x03, 0x00, 0x02, 0x03, 0x00, 0x02, 0x03, 0x00, 0x02, 0x03,
+                                  0x00, 0x02, 0x03, 0x00, 0x02, 0x03, 0x00, 0x02, 0x03, 0x00, 0x02,
+                                  0x03, 0x00, 0x02, 0x03, 0x00, 0x02, 0x03, 0x00, 0x02, 0x03, 0x00,
+                                  0x02, 0x07, 0x00, 0x03, 0xfe, 0xff, 0x01, 0xfc, 0xff, 0x00};
+
+//  Selection circle icon
+const uint8_t I_selectionCircle[] = {0x80, 0x7f, 0x00, 0xf0, 0xff, 0x03, 0xf8, 0xc0, 0x07,
+                                     0x3c, 0x00, 0x0f, 0x0c, 0x00, 0x0c, 0x06, 0x00, 0x18,
+                                     0x07, 0x00, 0x38, 0x07, 0x00, 0x38, 0x03, 0x00, 0x30,
+                                     0x03, 0x00, 0x30, 0x07, 0x00, 0x38, 0x06, 0x00, 0x18,
+                                     0x06, 0x00, 0x18, 0x3e, 0x00, 0x1f, 0xf8, 0xc0, 0x07,
+                                     0xf0, 0xff, 0x03, 0x80, 0x7f, 0x00};
 
 // Define box information (coordinates and dimensions) for each box (7 boxes total)
 
@@ -55,6 +69,49 @@ struct LDToyPadSceneEmulate {
 
 // The selected pad on the toypad
 uint8_t selectedBox = 1; // Variable to keep track of which toypad box is selected
+
+// function get uid from index
+// uint8_t* get_uid_from_index(int index) {
+//     if(index < 0 || index >= MAX_TOKENS) {
+//         return NULL; // Invalid index
+//     }
+//     return emulator->tokens[index]->uid;
+// }
+
+// int get_id_from_index(int index) {
+//     if(index < 0 || index >= MAX_TOKENS) {
+//         return 0; // Invalid index
+//     }
+
+//     // when the token is a vehicle get the id from the token payload
+//     if(!emulator->tokens[index]->id) {
+//         int id = emulator->tokens[index]->token[0x24 * 4] |
+//                  (emulator->tokens[index]->token[0x25 * 4] << 8);
+//         // convert the id to little endian
+//         id = (id & 0xFF00) >> 8 | (id & 0x00FF) << 8;
+//         return id;
+//     } else {
+//         return emulator->tokens[index]->id;
+//     }
+
+//     if(emulator->tokens[index]->id) {
+//         return emulator->tokens[index]->id;
+//     } else {
+//         return 0;
+//     }
+// }
+
+// int get_id_from_token(Token* token) {
+//     if(token->id) {
+//         return token->id;
+//     } else {
+//         // when the token is a vehicle get the id from the token payload
+//         int id = token->token[0x24 * 4] | (token->token[0x25 * 4] << 8);
+//         // convert the id to little endian
+//         id = (id & 0xFF00) >> 8 | (id & 0x00FF) << 8;
+//         return id;
+//     }
+// }
 
 Token* get_token_from_index(int index) {
     if(index < 0 || index >= MAX_TOKENS) {
@@ -142,7 +199,7 @@ bool ldtoypad_scene_emulate_input_callback(InputEvent* event, void* context) {
                             if(i >= 0 && ToyPadEmu_remove(i)) {
                                 boxInfo[selectedBox].isFilled = false;
                                 boxInfo[selectedBox].index = -1; // Reset index
-                                set_debug_text("Removing minifig");
+                                set_debug_text("Going to remove minifig from toypad");
                                 consumed = true;
                             }
                             return consumed;
@@ -248,6 +305,17 @@ bool ldtoypad_scene_emulate_input_callback(InputEvent* event, void* context) {
     return consumed;
 }
 
+unsigned char generate_checksum_for_command(const unsigned char* command, size_t len) {
+    unsigned char result = 0;
+
+    // Add bytes, wrapping naturally with unsigned char overflow
+    for(size_t i = 0; i < len; ++i) {
+        result += command[i];
+    }
+
+    return result;
+}
+
 void selectedBox_to_pad(Token* token, int selectedBox) {
     // Convert / map the boxes to pads there are 3 pads and 7 boxes
     // TODO: This needs to be looked at, as I don't know the correct order yet
@@ -334,7 +402,7 @@ bool place_token(Token* token, int selectedBox) {
     buffer[4] = token->index;
     buffer[5] = 0x00;
     memcpy(&buffer[6], token->uid, 7);
-    buffer[13] = generate_checksum(buffer, 13);
+    buffer[13] = generate_checksum_for_command(buffer, 13);
 
     usbd_ep_write(get_usb_device(), HID_EP_IN, buffer, sizeof(buffer));
 
@@ -420,9 +488,9 @@ static void ldtoypad_scene_emulate_draw_render_callback(Canvas* canvas, void* co
 
     // Check if the selectedBox is 1 (circle) and draw the circle, This is hardcoded for now.
     if(selectedBox == 1) {
-        canvas_draw_icon(canvas, x, y, &I_selectionCircle); // Draw highlighted circle
+        canvas_draw_xbm(canvas, x, y, 22, 17, I_selectionCircle); // Draw highlighted circle
     } else {
-        canvas_draw_icon(canvas, x, y, &I_selectionBox); // Draw highlighted box
+        canvas_draw_xbm(canvas, x, y, 18, 18, I_selectionBox); // Draw highlighted box
     }
 
     int token_selected = 0;
@@ -482,6 +550,15 @@ static void ldtoypad_scene_emulate_draw_render_callback(Canvas* canvas, void* co
     }
 
     if(model->show_debug_text_index) {
+        if(get_debug_text_ep_in() != NULL && strcmp(get_debug_text_ep_in(), "nothing") != 0) {
+            canvas_set_color(canvas, ColorWhite);
+            canvas_clear(canvas);
+            canvas_set_color(canvas, ColorBlack);
+
+            elements_multiline_text_aligned(
+                canvas, 1, 1, AlignLeft, AlignTop, get_debug_text_ep_in());
+        }
+
         canvas_set_color(canvas, ColorWhite);
         canvas_draw_box(canvas, 0, 16, 120, 20);
         canvas_set_color(canvas, ColorBlack);
@@ -524,6 +601,12 @@ static void ldtoypad_scene_emulate_draw_render_callback(Canvas* canvas, void* co
 
         // Draw visible menu
         for(int i = 0; i < visible_count; i++) {
+            // if(i == model->mini_option_selected) {
+            //     canvas_set_font(canvas, FontPrimary);
+            // } else {
+            //     canvas_set_font(canvas, FontSecondary);
+            // }
+
             // Currebtly only one label is shown, so no need to change font depending on selection
             canvas_set_font(canvas, FontPrimary);
 

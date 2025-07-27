@@ -63,9 +63,7 @@ void load_favorites(void) {
     }
 
     if(!storage_file_read(file, &num_favorites, sizeof(int))) {
-#ifdef FURI_DEBUG
         FURI_LOG_E(TAG, "Failed to read favorites count");
-#endif
     } else if(num_favorites > MAX_FAVORITES) {
         num_favorites = MAX_FAVORITES;
     } else if(
@@ -171,7 +169,7 @@ bool is_favorite(int id) {
 
 bool make_token_dir(Storage* storage) {
     if(!storage_simply_mkdir(storage, APP_DATA_PATH(TOKENS_DIR))) {
-        set_debug_text("Failed mkdir tokens");
+        set_debug_text("Failed to mkdir tokens");
         return false;
     }
     return true;
@@ -216,7 +214,7 @@ void fill_saved_submenu(LDToyPadApp* app) {
         snprintf(file_path, sizeof(file_path), "%s/%s", APP_DATA_PATH(TOKENS_DIR), file_name);
 
         if(!storage_file_open(file, file_path, FSAM_READ, FSOM_OPEN_EXISTING)) {
-            set_debug_text("Failed open token file for reading");
+            set_debug_text("Failed to open token file for reading");
             storage_file_free(file);
             continue;
         }
@@ -225,7 +223,7 @@ void fill_saved_submenu(LDToyPadApp* app) {
         Token* token = (Token*)malloc(sizeof(Token));
 
         if(!storage_file_read(file, token, sizeof(Token))) {
-            set_debug_text("Failed read token data");
+            set_debug_text("Failed to read token data");
             free(token);
             storage_file_close(file);
             storage_file_free(file);
@@ -321,20 +319,20 @@ bool save_token(Token* token) {
 
     if(!storage_file_open(file, furi_string_get_cstr(temp_str), FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
         furi_string_free(temp_str);
-        set_debug_text("Failed open token file");
+        set_debug_text("Failed to open token to file");
         return false;
     }
     if(!storage_file_write(file, token, sizeof(Token))) {
         furi_string_free(temp_str);
         file_close_and_free(file);
-        set_debug_text("Failed write token file");
+        set_debug_text("Failed to write token to file");
         return false;
     }
 
     furi_string_free(temp_str);
     file_close_and_free(file);
 
-    set_debug_text("Saved token file");
+    set_debug_text("Saved token to file");
 
     return true;
 }
