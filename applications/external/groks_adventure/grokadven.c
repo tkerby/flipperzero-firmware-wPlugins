@@ -9,12 +9,12 @@
 #include <math.h>
 
 // Screen dimensions for Flipper Zero
-#define SCREEN_WIDTH 128
+#define SCREEN_WIDTH  128
 #define SCREEN_HEIGHT 64
-#define WORLD_WIDTH SCREEN_WIDTH
-#define PLAY_HEIGHT (SCREEN_HEIGHT - 7)
-#define ARRAY_SIZE (WORLD_WIDTH * PLAY_HEIGHT + 1)
-#define LOG_FILE STORAGE_PATH "grokadven3_loggy.txt"
+#define WORLD_WIDTH   SCREEN_WIDTH
+#define PLAY_HEIGHT   (SCREEN_HEIGHT - 7)
+#define ARRAY_SIZE    (WORLD_WIDTH * PLAY_HEIGHT + 1)
+#define LOG_FILE      STORAGE_PATH "grokadven3_loggy.txt"
 
 // Game states
 typedef enum {
@@ -129,11 +129,11 @@ typedef struct {
 } GameContext;
 
 // File paths
-#define STORAGE_PATH "/ext/grokadven_03/"
-#define WMA_FILE STORAGE_PATH "WMA_arr.txt"
-#define WSO_FILE STORAGE_PATH "WSO_arr.txt"
-#define SETTINGS_FILE STORAGE_PATH "settings.bin"
-#define PLAYER_DATA_FILE STORAGE_PATH "player_data.bin"
+#define STORAGE_PATH       "/ext/grokadven_03/"
+#define WMA_FILE           STORAGE_PATH "WMA_arr.txt"
+#define WSO_FILE           STORAGE_PATH "WSO_arr.txt"
+#define SETTINGS_FILE      STORAGE_PATH "settings.bin"
+#define PLAYER_DATA_FILE   STORAGE_PATH "player_data.bin"
 #define PLAYER_DATA_BACKUP STORAGE_PATH "player_data_backup.bin"
 
 // Log events to file
@@ -162,7 +162,7 @@ static void init_arrays(GameContext* ctx) {
     if(!ctx) return;
     memset(ctx->world_map, 0, ARRAY_SIZE);
     memset(ctx->world_objects, 0, ARRAY_SIZE);
-    ctx->world_map[(ARRAY_SIZE-1)/2] = '~'; // Respawn point
+    ctx->world_map[(ARRAY_SIZE - 1) / 2] = '~'; // Respawn point
     strcpy(ctx->oset, "000Z");
     ctx->world_seed = furi_get_tick(); // Faux-random seed
 }
@@ -400,7 +400,7 @@ static void generate_world(GameContext* ctx, bool preserve_player_data) {
     // Clear arrays
     memset(ctx->world_map, 0, ARRAY_SIZE);
     memset(ctx->world_objects, 0, ARRAY_SIZE);
-    ctx->world_map[(ARRAY_SIZE-1)/2] = '~';
+    ctx->world_map[(ARRAY_SIZE - 1) / 2] = '~';
     // Generate walls and pickups
     for(int i = 0; i < ARRAY_SIZE - 1; i++) {
         int x = i % WORLD_WIDTH;
@@ -408,7 +408,8 @@ static void generate_world(GameContext* ctx, bool preserve_player_data) {
         if(y < 9) continue; // Avoid top 9 pixels
         if(ctx->world_map[i] == 0) {
             int roll = rand() % 100;
-            if(roll < 5) ctx->world_map[i] = 'W';
+            if(roll < 5)
+                ctx->world_map[i] = 'W';
             else if(roll < 15) {
                 ctx->pickups[ctx->pickup_count].type = PICKUP_ALMOND_WATER;
                 ctx->pickups[ctx->pickup_count].x = x;
@@ -427,7 +428,8 @@ static void generate_world(GameContext* ctx, bool preserve_player_data) {
             ctx->pickups[ctx->pickup_count].type = PICKUP_FURNITURE;
             ctx->pickups[ctx->pickup_count].x = x;
             ctx->pickups[ctx->pickup_count].y = y;
-            ctx->pickups[ctx->pickup_count].symbol = (rand() % 2 == 0) ? 'C' : 'H'; // Chair or hat rack
+            ctx->pickups[ctx->pickup_count].symbol = (rand() % 2 == 0) ? 'C' :
+                                                                         'H'; // Chair or hat rack
             ctx->pickups[ctx->pickup_count].falling = false;
             ctx->pickup_count++;
         }
@@ -534,8 +536,10 @@ static void game_init(GameContext* ctx) {
         ctx->settings.dark_mode = true;
     }
     if(load_player_data(ctx)) {
-        if(ctx->player.x < 0 || ctx->player.x >= WORLD_WIDTH - ctx->player.width) ctx->player.x = SCREEN_WIDTH / 2;
-        if(ctx->player.y < 0 || ctx->player.y >= PLAY_HEIGHT - ctx->player.height) ctx->player.y = PLAY_HEIGHT - 7;
+        if(ctx->player.x < 0 || ctx->player.x >= WORLD_WIDTH - ctx->player.width)
+            ctx->player.x = SCREEN_WIDTH / 2;
+        if(ctx->player.y < 0 || ctx->player.y >= PLAY_HEIGHT - ctx->player.height)
+            ctx->player.y = PLAY_HEIGHT - 7;
         if(ctx->almond_water_count < 0 || ctx->almond_water_count > 3) ctx->almond_water_count = 0;
     }
     load_array(WMA_FILE, ctx->world_map, ARRAY_SIZE);
@@ -546,8 +550,7 @@ static void game_init(GameContext* ctx) {
 
 // Collision check for entity vs platform
 static bool collides_with_platform(int ex, int ey, int ew, int eh, Platform* p) {
-    return ex + ew > p->x + 1 && ex < p->x + p->width - 1 &&
-           ey + eh >= p->y && ey < p->y + 1;
+    return ex + ew > p->x + 1 && ex < p->x + p->width - 1 && ey + eh >= p->y && ey < p->y + 1;
 }
 
 static bool can_move_down(int ex, int ey, int ew, int eh, GameContext* ctx) {
@@ -598,11 +601,20 @@ static void draw_title(GameContext* ctx, Canvas* canvas) {
     uint64_t elapsed = furi_get_tick() - ctx->last_frame_time;
     if(elapsed < 1500) {
         // Display title
-        canvas_draw_str_aligned(canvas, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 3 - 8, AlignCenter, AlignCenter, "Grok's");
-        canvas_draw_str_aligned(canvas, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 3 + 18, AlignCenter, AlignCenter, "Adventure");
-        canvas_draw_str_aligned(canvas, (SCREEN_WIDTH / 2) - 10, SCREEN_HEIGHT / 3 + 33, AlignCenter, AlignCenter, "v");
+        canvas_draw_str_aligned(
+            canvas, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 3 - 8, AlignCenter, AlignCenter, "Grok's");
+        canvas_draw_str_aligned(
+            canvas,
+            SCREEN_WIDTH / 2,
+            SCREEN_HEIGHT / 3 + 18,
+            AlignCenter,
+            AlignCenter,
+            "Adventure");
+        canvas_draw_str_aligned(
+            canvas, (SCREEN_WIDTH / 2) - 10, SCREEN_HEIGHT / 3 + 33, AlignCenter, AlignCenter, "v");
         canvas_set_font(canvas, FontBigNumbers);
-        canvas_draw_str_aligned(canvas, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 3 + 30, AlignCenter, AlignCenter, "3");
+        canvas_draw_str_aligned(
+            canvas, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 3 + 30, AlignCenter, AlignCenter, "3");
     } else if(elapsed < 2000) {
         // Fade out effect
         int fade_level = (int)((2000 - elapsed) / 500.0f * 10); // 0 to 10
@@ -658,7 +670,8 @@ static void draw_hat_rack(Canvas* canvas, int x, int y, Color fg, Color bg) {
 }
 
 // Draw banana sprite (5x5)
-static void draw_banana(GameContext* ctx, Canvas* canvas, int x, int y, Color fg, Color bg, int health) {
+static void
+    draw_banana(GameContext* ctx, Canvas* canvas, int x, int y, Color fg, Color bg, int health) {
     if(!ctx || !canvas) return;
     canvas_set_color(canvas, fg);
     int size = health > 0 ? 5 : (furi_get_tick() - ctx->last_frame_time) / 200 + 1;
@@ -736,10 +749,12 @@ static void draw_game(GameContext* ctx, Canvas* canvas) {
         Platform* p = &ctx->platforms[i];
         int px = p->x;
         if(px + p->width < 0 || px > SCREEN_WIDTH) continue;
-        canvas_draw_line(canvas, px + 1, p->y + p->height - 1, px + p->width - 2, p->y + p->height - 1);
+        canvas_draw_line(
+            canvas, px + 1, p->y + p->height - 1, px + p->width - 2, p->y + p->height - 1);
         canvas_draw_line(canvas, px + 3, p->y, px + p->width - 4, p->y);
         canvas_draw_line(canvas, px + 1, p->y + p->height - 1, px + 3, p->y + 1);
-        canvas_draw_line(canvas, px + p->width - 2, p->y + p->height - 1, px + p->width - 4, p->y + 1);
+        canvas_draw_line(
+            canvas, px + p->width - 2, p->y + p->height - 1, px + p->width - 4, p->y + 1);
         for(int py = p->y + 1; py < p->y + p->height - 1; py += 2) {
             canvas_draw_line(canvas, px + 1, py, px + p->width - 2, py); // Shading
         }
@@ -761,7 +776,8 @@ static void draw_game(GameContext* ctx, Canvas* canvas) {
             canvas_draw_rframe(canvas, px, py, 6, 7, 1);
             canvas_set_color(canvas, !ctx->is_night ? ColorWhite : ColorBlack);
             canvas_draw_frame(canvas, px, py, 6, 7); // Border
-            if(furi_get_tick() / 500 % 2 == 0 && abs(ctx->player.x + ctx->player.width / 2 - (px + 3)) < 3) {
+            if(furi_get_tick() / 500 % 2 == 0 &&
+               abs(ctx->player.x + ctx->player.width / 2 - (px + 3)) < 3) {
                 canvas_draw_frame(canvas, px + 1, py + 1, 4, 5); // Flash
             }
             canvas_set_color(canvas, fg);
@@ -802,8 +818,18 @@ static void draw_game(GameContext* ctx, Canvas* canvas) {
             canvas_set_color(canvas, entity_color);
             canvas_draw_box(canvas, ex, ey, 2, 2);
             int curve_dir = e->facing_right ? 1 : -1;
-            canvas_draw_line(canvas, ex + (e->facing_right ? 0 : 1), ey + 2, ex + (e->facing_right ? 1 : 0), ey + 4);
-            canvas_draw_line(canvas, ex + (e->facing_right ? 1 : 0), ey + 2, ex + (e->facing_right ? 2 : -1), ey + 4);
+            canvas_draw_line(
+                canvas,
+                ex + (e->facing_right ? 0 : 1),
+                ey + 2,
+                ex + (e->facing_right ? 1 : 0),
+                ey + 4);
+            canvas_draw_line(
+                canvas,
+                ex + (e->facing_right ? 1 : 0),
+                ey + 2,
+                ex + (e->facing_right ? 2 : -1),
+                ey + 4);
             canvas_draw_box(canvas, ex + curve_dir, ey + 5, 2, 2);
             canvas_set_color(canvas, ColorWhite);
             canvas_draw_dot(canvas, ex + 1, ey + 1);
@@ -864,7 +890,8 @@ static void draw_pause(GameContext* ctx, Canvas* canvas) {
     for(int ox = -5; ox <= 5; ox++) {
         for(int oy = -5; oy <= 5; oy++) {
             if(abs(ox) + abs(oy) <= 5) {
-                canvas_draw_str(canvas, SCREEN_WIDTH / 2 - 20 + ox, SCREEN_HEIGHT / 2 + oy, "Pause");
+                canvas_draw_str(
+                    canvas, SCREEN_WIDTH / 2 - 20 + ox, SCREEN_HEIGHT / 2 + oy, "Pause");
             }
         }
     }
@@ -932,19 +959,24 @@ static void handle_input(GameContext* ctx, InputEvent* input) {
                         furi_hal_vibro_on(false);
                         hit = true;
                         if(e->health_bars <= 0) {
-                            ctx->player.power_points += (e->type == ENTITY_BOSS || e->type == ENTITY_FINAL_BOSS) ? 25 : 10;
+                            ctx->player.power_points +=
+                                (e->type == ENTITY_BOSS || e->type == ENTITY_FINAL_BOSS) ? 25 : 10;
                             check_level_up(ctx);
                             // Drop chance
                             if(rand() % 100 < 50) {
-                                ctx->pickups[ctx->pickup_count].type = (rand() % 4 == 0) ? PICKUP_ALMOND_WATER : PICKUP_CHEST;
+                                ctx->pickups[ctx->pickup_count].type =
+                                    (rand() % 4 == 0) ? PICKUP_ALMOND_WATER : PICKUP_CHEST;
                                 ctx->pickups[ctx->pickup_count].x = e->x;
                                 ctx->pickups[ctx->pickup_count].y = e->y;
                                 ctx->pickups[ctx->pickup_count].falling = true;
                                 ctx->pickup_count++;
-                            } else if((e->type == ENTITY_BOSS || e->type == ENTITY_FINAL_BOSS) && rand() % 100 < 10) {
+                            } else if(
+                                (e->type == ENTITY_BOSS || e->type == ENTITY_FINAL_BOSS) &&
+                                rand() % 100 < 10) {
                                 ctx->pickups[ctx->pickup_count].type = PICKUP_DOOR;
                                 ctx->pickups[ctx->pickup_count].x = e->x;
-                                ctx->pickups[ctx->pickup_count].y = PLAY_HEIGHT - 7; // Place on ground
+                                ctx->pickups[ctx->pickup_count].y =
+                                    PLAY_HEIGHT - 7; // Place on ground
                                 ctx->pickups[ctx->pickup_count].falling = false;
                                 ctx->pickup_count++;
                             }
@@ -965,7 +997,8 @@ static void handle_input(GameContext* ctx, InputEvent* input) {
                 }
                 if(!hit) {
                     ctx->player_projectile.active = true;
-                    ctx->player_projectile.x = ctx->player.x + (ctx->player.facing_right ? ctx->player.width : -2);
+                    ctx->player_projectile.x =
+                        ctx->player.x + (ctx->player.facing_right ? ctx->player.width : -2);
                     ctx->player_projectile.y = ctx->player.y + ctx->player.height / 2;
                     ctx->player_projectile.dx = ctx->player.facing_right ? 2 : -2;
                     ctx->player_projectile.dy = 0;
@@ -985,15 +1018,21 @@ static void handle_input(GameContext* ctx, InputEvent* input) {
                     int new_x = ctx->player.x + dx;
                     int new_y = ctx->player.y + dy;
                     if(ctx->bypass_collision) {
-                        if(new_x >= 0 && new_x + ctx->player.width <= WORLD_WIDTH) ctx->player.x = new_x;
-                        if(new_y >= 9 && new_y + ctx->player.height <= PLAY_HEIGHT) ctx->player.y = new_y;
+                        if(new_x >= 0 && new_x + ctx->player.width <= WORLD_WIDTH)
+                            ctx->player.x = new_x;
+                        if(new_y >= 9 && new_y + ctx->player.height <= PLAY_HEIGHT)
+                            ctx->player.y = new_y;
                         if(dx != 0) ctx->player.facing_right = (dx > 0);
                     } else {
-                        if(new_x >= 0 && new_x + ctx->player.width <= WORLD_WIDTH &&
-                           new_y >= 9 && new_y + ctx->player.height <= PLAY_HEIGHT &&
-                           !collides_with_wall(new_x, new_y, ctx->player.width, ctx->player.height, ctx) &&
-                           !collides_with_furniture(new_x, new_y, ctx->player.width, ctx->player.height, ctx) &&
-                           (dy <= 0 || can_move_down(new_x, new_y, ctx->player.width, ctx->player.height, ctx))) {
+                        if(new_x >= 0 && new_x + ctx->player.width <= WORLD_WIDTH && new_y >= 9 &&
+                           new_y + ctx->player.height <= PLAY_HEIGHT &&
+                           !collides_with_wall(
+                               new_x, new_y, ctx->player.width, ctx->player.height, ctx) &&
+                           !collides_with_furniture(
+                               new_x, new_y, ctx->player.width, ctx->player.height, ctx) &&
+                           (dy <= 0 ||
+                            can_move_down(
+                                new_x, new_y, ctx->player.width, ctx->player.height, ctx))) {
                             ctx->player.x = new_x;
                             ctx->player.y = new_y;
                             if(dx != 0) ctx->player.facing_right = (dx > 0);
@@ -1005,8 +1044,10 @@ static void handle_input(GameContext* ctx, InputEvent* input) {
             if(input->key == InputKeyUp) {
                 for(int i = 0; i < ctx->pickup_count; i++) {
                     if(ctx->pickups[i].type == PICKUP_DOOR) {
-                        int dx = abs(ctx->player.x + ctx->player.width / 2 - (ctx->pickups[i].x + 3));
-                        if(dx < 3 && abs(ctx->player.y + ctx->player.height - (ctx->pickups[i].y + 7)) < 1) {
+                        int dx =
+                            abs(ctx->player.x + ctx->player.width / 2 - (ctx->pickups[i].x + 3));
+                        if(dx < 3 &&
+                           abs(ctx->player.y + ctx->player.height - (ctx->pickups[i].y + 7)) < 1) {
                             canvas_set_color(ctx->canvas, ColorBlack);
                             canvas_draw_box(ctx->canvas, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
                             view_port_update(furi_record_open(RECORD_GUI));
@@ -1035,8 +1076,7 @@ static void handle_input(GameContext* ctx, InputEvent* input) {
                     log_event("Entering STATE_EXIT");
                     if(save_array(WMA_FILE, ctx->world_map, ARRAY_SIZE) ||
                        save_array(WSO_FILE, ctx->world_objects, ARRAY_SIZE) ||
-                       save_settings(ctx) ||
-                       save_player_data(ctx)) {
+                       save_settings(ctx) || save_player_data(ctx)) {
                         // Save succeeded
                     }
                     ctx->state = STATE_EXIT;
@@ -1048,7 +1088,8 @@ static void handle_input(GameContext* ctx, InputEvent* input) {
             }
         }
     } else if(ctx->state == STATE_PAUSED) {
-        if(input->type == InputTypePress && (input->key == InputKeyOk || input->key == InputKeyBack)) {
+        if(input->type == InputTypePress &&
+           (input->key == InputKeyOk || input->key == InputKeyBack)) {
             ctx->state = STATE_GAME;
         }
     } else if(ctx->state == STATE_DEATH) {
@@ -1105,7 +1146,8 @@ static void update_game(GameContext* ctx) {
             if(ctx->pickups[i].falling) {
                 bool on_platform = false;
                 for(int j = 0; j < ctx->platform_count; j++) {
-                    if(collides_with_platform(ctx->pickups[i].x, ctx->pickups[i].y + 1, 1, 1, &ctx->platforms[j])) {
+                    if(collides_with_platform(
+                           ctx->pickups[i].x, ctx->pickups[i].y + 1, 1, 1, &ctx->platforms[j])) {
                         ctx->pickups[i].y = ctx->platforms[j].y - 1;
                         on_platform = true;
                         break;
@@ -1119,19 +1161,24 @@ static void update_game(GameContext* ctx) {
                         continue;
                     }
                     // Auto-use if hits player or final boss
-                    if(ctx->pickups[i].type == PICKUP_ALMOND_WATER || ctx->pickups[i].type == PICKUP_CHEST) {
+                    if(ctx->pickups[i].type == PICKUP_ALMOND_WATER ||
+                       ctx->pickups[i].type == PICKUP_CHEST) {
                         if(abs(ctx->pickups[i].x - ctx->player.x) < ctx->player.width &&
                            abs(ctx->pickups[i].y - ctx->player.y) < ctx->player.height) {
-                            if(ctx->pickups[i].type == PICKUP_ALMOND_WATER && ctx->almond_water_count < 3) {
+                            if(ctx->pickups[i].type == PICKUP_ALMOND_WATER &&
+                               ctx->almond_water_count < 3) {
                                 ctx->almond_water_count++;
                                 furi_hal_vibro_on(true);
                                 furi_delay_ms(20);
                                 furi_hal_vibro_on(false);
                             } else if(ctx->pickups[i].type == PICKUP_CHEST) {
                                 int roll = rand() % 5;
-                                if(roll == 0 && ctx->almond_water_count < 3) ctx->almond_water_count++;
-                                else if(roll == 1 && ctx->entity_count < 4) ctx->entity_count++;
-                                else if(roll == 2) ctx->entities[2].health_bars = 10 + ctx->player.power_level;
+                                if(roll == 0 && ctx->almond_water_count < 3)
+                                    ctx->almond_water_count++;
+                                else if(roll == 1 && ctx->entity_count < 4)
+                                    ctx->entity_count++;
+                                else if(roll == 2)
+                                    ctx->entities[2].health_bars = 10 + ctx->player.power_level;
                                 else if(roll != 3) {
                                     ctx->player.power_points += 10;
                                     check_level_up(ctx);
@@ -1146,8 +1193,10 @@ static void update_game(GameContext* ctx) {
                         }
                         for(int j = 0; j < ctx->entity_count; j++) {
                             if(ctx->entities[j].type == ENTITY_FINAL_BOSS &&
-                               abs(ctx->pickups[i].x - ctx->entities[j].x) < ctx->entities[j].width &&
-                               abs(ctx->pickups[i].y - ctx->entities[j].y) < ctx->entities[j].height) {
+                               abs(ctx->pickups[i].x - ctx->entities[j].x) <
+                                   ctx->entities[j].width &&
+                               abs(ctx->pickups[i].y - ctx->entities[j].y) <
+                                   ctx->entities[j].height) {
                                 if(ctx->pickups[i].type == PICKUP_ALMOND_WATER) {
                                     ctx->entities[j].health_bars++;
                                 } else if(ctx->pickups[i].type == PICKUP_CHEST) {
@@ -1168,7 +1217,8 @@ static void update_game(GameContext* ctx) {
         // Player pickup interaction
         for(int i = 0; i < ctx->pickup_count; i++) {
             Pickup* pk = &ctx->pickups[i];
-            if(!pk->falling && abs(ctx->player.x - pk->x) < ctx->player.width && abs(ctx->player.y - pk->y) < ctx->player.height) {
+            if(!pk->falling && abs(ctx->player.x - pk->x) < ctx->player.width &&
+               abs(ctx->player.y - pk->y) < ctx->player.height) {
                 if(pk->type == PICKUP_ALMOND_WATER && ctx->almond_water_count < 3) {
                     ctx->almond_water_count++;
                     furi_hal_vibro_on(true);
@@ -1176,9 +1226,12 @@ static void update_game(GameContext* ctx) {
                     furi_hal_vibro_on(false);
                 } else if(pk->type == PICKUP_CHEST) {
                     int roll = rand() % 5;
-                    if(roll == 0 && ctx->almond_water_count < 3) ctx->almond_water_count++;
-                    else if(roll == 1 && ctx->entity_count < 4) ctx->entity_count++;
-                    else if(roll == 2) ctx->entities[2].health_bars = 10 + ctx->player.power_level;
+                    if(roll == 0 && ctx->almond_water_count < 3)
+                        ctx->almond_water_count++;
+                    else if(roll == 1 && ctx->entity_count < 4)
+                        ctx->entity_count++;
+                    else if(roll == 2)
+                        ctx->entities[2].health_bars = 10 + ctx->player.power_level;
                     else if(roll != 3) {
                         ctx->player.power_points += 10;
                         check_level_up(ctx);
@@ -1211,8 +1264,8 @@ static void update_game(GameContext* ctx) {
             }
             int new_x = e->x + dx;
             int new_y = e->y + dy;
-            if(new_x >= 0 && new_x + e->width <= WORLD_WIDTH &&
-               new_y >= 9 && new_y + e->height <= PLAY_HEIGHT &&
+            if(new_x >= 0 && new_x + e->width <= WORLD_WIDTH && new_y >= 9 &&
+               new_y + e->height <= PLAY_HEIGHT &&
                !collides_with_wall(new_x, new_y, e->width, e->height, ctx) &&
                !collides_with_furniture(new_x, new_y, e->width, e->height, ctx) &&
                (dy <= 0 || can_move_down(new_x, new_y, e->width, e->height, ctx))) {
@@ -1220,9 +1273,11 @@ static void update_game(GameContext* ctx) {
                 e->y = new_y;
                 if(dx != 0) e->facing_right = (dx > 0);
             }
-            if((e->type == ENTITY_BOSS || e->type == ENTITY_FINAL_BOSS) && time > e->pickup_cooldown) {
+            if((e->type == ENTITY_BOSS || e->type == ENTITY_FINAL_BOSS) &&
+               time > e->pickup_cooldown) {
                 for(int j = 0; j < ctx->pickup_count; j++) {
-                    if(!ctx->pickups[j].falling && abs(e->x - ctx->pickups[j].x) < e->width && abs(e->y - ctx->pickups[j].y) < e->height) {
+                    if(!ctx->pickups[j].falling && abs(e->x - ctx->pickups[j].x) < e->width &&
+                       abs(e->y - ctx->pickups[j].y) < e->height) {
                         if(ctx->pickups[j].type == PICKUP_ALMOND_WATER) {
                             e->health_bars++;
                         } else if(ctx->pickups[j].type == PICKUP_CHEST) {
@@ -1258,7 +1313,8 @@ static void update_game(GameContext* ctx) {
                     }
                 }
             }
-            if(!ctx->in_iframes && abs(e->x - ctx->player.x) < e->width && abs(e->y - ctx->player.y) < e->height) {
+            if(!ctx->in_iframes && abs(e->x - ctx->player.x) < e->width &&
+               abs(e->y - ctx->player.y) < e->height) {
                 ctx->player.health_bars--;
                 ctx->in_iframes = true;
                 ctx->iframe_timer = time + 230;
@@ -1280,16 +1336,20 @@ static void update_game(GameContext* ctx) {
             }
             // Check for entity death
             if(e->health_bars <= 0) {
-                ctx->player.power_points += (e->type == ENTITY_BOSS || e->type == ENTITY_FINAL_BOSS) ? 25 : 10;
+                ctx->player.power_points +=
+                    (e->type == ENTITY_BOSS || e->type == ENTITY_FINAL_BOSS) ? 25 : 10;
                 check_level_up(ctx);
                 // Drop chance
                 if(rand() % 100 < 50) {
-                    ctx->pickups[ctx->pickup_count].type = (rand() % 4 == 0) ? PICKUP_ALMOND_WATER : PICKUP_CHEST;
+                    ctx->pickups[ctx->pickup_count].type =
+                        (rand() % 4 == 0) ? PICKUP_ALMOND_WATER : PICKUP_CHEST;
                     ctx->pickups[ctx->pickup_count].x = e->x;
                     ctx->pickups[ctx->pickup_count].y = e->y;
                     ctx->pickups[ctx->pickup_count].falling = true;
                     ctx->pickup_count++;
-                } else if((e->type == ENTITY_BOSS || e->type == ENTITY_FINAL_BOSS) && rand() % 100 < 10) {
+                } else if(
+                    (e->type == ENTITY_BOSS || e->type == ENTITY_FINAL_BOSS) &&
+                    rand() % 100 < 10) {
                     ctx->pickups[ctx->pickup_count].type = PICKUP_DOOR;
                     ctx->pickups[ctx->pickup_count].x = e->x;
                     ctx->pickups[ctx->pickup_count].y = PLAY_HEIGHT - 7; // Place on ground
@@ -1300,7 +1360,8 @@ static void update_game(GameContext* ctx) {
                     ctx->final_boss_timer = time;
                     if(e->type == ENTITY_FINAL_BOSS) {
                         log_event("Final boss defeated");
-                        final_boss_health = (int)(final_boss_health * 1.1); // Increase health by 10%
+                        final_boss_health =
+                            (int)(final_boss_health * 1.1); // Increase health by 10%
                     }
                 }
                 // Remove entity
@@ -1321,7 +1382,8 @@ static void update_game(GameContext* ctx) {
                 e->y = rand() % (PLAY_HEIGHT - 15) + 9;
                 e->width = (e->type == ENTITY_BOSS) ? 3 : 4;
                 e->height = (e->type == ENTITY_BOSS) ? 6 : 4;
-                e->health_bars = (e->type == ENTITY_BOSS) ? 10 + ctx->player.power_level : 5 + ctx->player.power_level;
+                e->health_bars = (e->type == ENTITY_BOSS) ? 10 + ctx->player.power_level :
+                                                            5 + ctx->player.power_level;
                 e->power_points = 0;
                 e->power_level = 0;
                 e->facing_right = true;
@@ -1355,14 +1417,20 @@ static void update_game(GameContext* ctx) {
                 ctx->player_projectile.active = false;
             } else {
                 for(int i = 0; i < ctx->platform_count; i++) {
-                    if(collides_with_platform(ctx->player_projectile.x, ctx->player_projectile.y, 2, 2, &ctx->platforms[i])) {
+                    if(collides_with_platform(
+                           ctx->player_projectile.x,
+                           ctx->player_projectile.y,
+                           2,
+                           2,
+                           &ctx->platforms[i])) {
                         ctx->player_projectile.active = false;
                         break;
                     }
                 }
                 for(int i = 0; i < ctx->entity_count; i++) {
                     Entity* e = &ctx->entities[i];
-                    if(abs(ctx->player_projectile.x - e->x) < e->width && abs(ctx->player_projectile.y - e->y) < e->height) {
+                    if(abs(ctx->player_projectile.x - e->x) < e->width &&
+                       abs(ctx->player_projectile.y - e->y) < e->height) {
                         int damage = (ctx->player.double_power_timer > time) ? 2 : 1;
                         e->health_bars -= damage;
                         ctx->player_projectile.active = false;
@@ -1370,19 +1438,24 @@ static void update_game(GameContext* ctx) {
                         furi_delay_ms(20);
                         furi_hal_vibro_on(false);
                         if(e->health_bars <= 0) {
-                            ctx->player.power_points += (e->type == ENTITY_BOSS || e->type == ENTITY_FINAL_BOSS) ? 25 : 10;
+                            ctx->player.power_points +=
+                                (e->type == ENTITY_BOSS || e->type == ENTITY_FINAL_BOSS) ? 25 : 10;
                             check_level_up(ctx);
                             // Drop chance
                             if(rand() % 100 < 50) {
-                                ctx->pickups[ctx->pickup_count].type = (rand() % 4 == 0) ? PICKUP_ALMOND_WATER : PICKUP_CHEST;
+                                ctx->pickups[ctx->pickup_count].type =
+                                    (rand() % 4 == 0) ? PICKUP_ALMOND_WATER : PICKUP_CHEST;
                                 ctx->pickups[ctx->pickup_count].x = e->x;
                                 ctx->pickups[ctx->pickup_count].y = e->y;
                                 ctx->pickups[ctx->pickup_count].falling = true;
                                 ctx->pickup_count++;
-                            } else if((e->type == ENTITY_BOSS || e->type == ENTITY_FINAL_BOSS) && rand() % 100 < 10) {
+                            } else if(
+                                (e->type == ENTITY_BOSS || e->type == ENTITY_FINAL_BOSS) &&
+                                rand() % 100 < 10) {
                                 ctx->pickups[ctx->pickup_count].type = PICKUP_DOOR;
                                 ctx->pickups[ctx->pickup_count].x = e->x;
-                                ctx->pickups[ctx->pickup_count].y = PLAY_HEIGHT - 7; // Place on ground
+                                ctx->pickups[ctx->pickup_count].y =
+                                    PLAY_HEIGHT - 7; // Place on ground
                                 ctx->pickups[ctx->pickup_count].falling = false;
                                 ctx->pickup_count++;
                             }
@@ -1390,7 +1463,8 @@ static void update_game(GameContext* ctx) {
                                 ctx->final_boss_timer = time;
                                 if(e->type == ENTITY_FINAL_BOSS) {
                                     log_event("Final boss defeated");
-                                    final_boss_health = (int)(final_boss_health * 1.1); // Increase health by 10%
+                                    final_boss_health =
+                                        (int)(final_boss_health * 1.1); // Increase health by 10%
                                 }
                             }
                             // Remove entity
@@ -1413,12 +1487,18 @@ static void update_game(GameContext* ctx) {
                     ctx->enemy_projectiles[i].active = false;
                 } else {
                     for(int j = 0; j < ctx->platform_count; j++) {
-                        if(collides_with_platform(ctx->enemy_projectiles[i].x, ctx->enemy_projectiles[i].y, 2, 2, &ctx->platforms[j])) {
+                        if(collides_with_platform(
+                               ctx->enemy_projectiles[i].x,
+                               ctx->enemy_projectiles[i].y,
+                               2,
+                               2,
+                               &ctx->platforms[j])) {
                             ctx->enemy_projectiles[i].active = false;
                             break;
                         }
                     }
-                    if(!ctx->in_iframes && abs(ctx->enemy_projectiles[i].x - ctx->player.x) < ctx->player.width &&
+                    if(!ctx->in_iframes &&
+                       abs(ctx->enemy_projectiles[i].x - ctx->player.x) < ctx->player.width &&
                        abs(ctx->enemy_projectiles[i].y - ctx->player.y) < ctx->player.height) {
                         ctx->player.health_bars--;
                         ctx->enemy_projectiles[i].active = false;
@@ -1444,12 +1524,15 @@ static void update_game(GameContext* ctx) {
             }
         }
         // Door timer
-        if(ctx->pickup_count == 0 && time - ctx->door_timer > 90000 && time - ctx->door_cooldown > 180000) {
+        if(ctx->pickup_count == 0 && time - ctx->door_timer > 90000 &&
+           time - ctx->door_cooldown > 180000) {
             for(int i = 1; i < ctx->platform_count; i++) { // Skip ground platform
                 if(rand() % 100 < 50) {
                     ctx->pickups[ctx->pickup_count].type = PICKUP_DOOR;
-                    ctx->pickups[ctx->pickup_count].x = ctx->platforms[i].x + (ctx->platforms[i].width - 6) / 2;
-                    ctx->pickups[ctx->pickup_count].y = ctx->platforms[i].y - 7; // Place on platform
+                    ctx->pickups[ctx->pickup_count].x =
+                        ctx->platforms[i].x + (ctx->platforms[i].width - 6) / 2;
+                    ctx->pickups[ctx->pickup_count].y =
+                        ctx->platforms[i].y - 7; // Place on platform
                     ctx->pickups[ctx->pickup_count].falling = false;
                     ctx->pickup_count++;
                     ctx->door_timer = time;
