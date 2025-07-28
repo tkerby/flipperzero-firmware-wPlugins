@@ -2395,8 +2395,6 @@ void create_nfc_tag(App* app, const char* message) {
     memcpy(data, data_original, sizeof(MfUltralightData));
 
     // Ensure iso14443_3a_data is also a copy if it's not directly embedded
-    // In MfUltralightData, iso14443_3a_data is typically embedded, so deep copy not needed here unless it's a pointer.
-    // Based on the original code, it seems like a pointer, so we'll keep the deep copy.
     Iso14443_3aData* isodata = malloc(sizeof(Iso14443_3aData));
     furi_assert(isodata); // Check for successful allocation
     memcpy(isodata, data_original->iso14443_3a_data, sizeof(Iso14443_3aData));
@@ -2802,7 +2800,7 @@ void flip_crypt_about_scene_on_enter(void* context) {
     App* app = context;
     widget_reset(app->widget);
     widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "FlipCrypt\n"
-    "v0.3\n"
+    "v0.4\n"
     "Explore and learn about various cryptograpic and text encoding methods.\n\n"
     "Usage:\n"
     "Select the method you want to use for encoding / decoding text and fill in the necessary inputs.\n"
