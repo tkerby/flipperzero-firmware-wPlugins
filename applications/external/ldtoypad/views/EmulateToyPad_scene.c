@@ -382,13 +382,6 @@ bool place_token(Token* token, int selectedBox) {
             break;
         }
     }
-    if(new_index == -1 && emulator->token_count < MAX_TOKENS) {
-        new_index = emulator->token_count++;
-    } else if(new_index == -1) {
-        set_debug_text("Max tokens reached!");
-        free(token);
-        return false;
-    }
 
     token->index = new_index;
     emulator->tokens[new_index] = token;
@@ -550,15 +543,6 @@ static void ldtoypad_scene_emulate_draw_render_callback(Canvas* canvas, void* co
     }
 
     if(model->show_debug_text_index) {
-        if(get_debug_text_ep_in() != NULL && strcmp(get_debug_text_ep_in(), "nothing") != 0) {
-            canvas_set_color(canvas, ColorWhite);
-            canvas_clear(canvas);
-            canvas_set_color(canvas, ColorBlack);
-
-            elements_multiline_text_aligned(
-                canvas, 1, 1, AlignLeft, AlignTop, get_debug_text_ep_in());
-        }
-
         canvas_set_color(canvas, ColorWhite);
         canvas_draw_box(canvas, 0, 16, 120, 20);
         canvas_set_color(canvas, ColorBlack);
@@ -704,7 +688,6 @@ LDToyPadSceneEmulate* ldtoypad_scene_emulate_alloc(LDToyPadApp* new_app) {
     app = new_app;
 
     if(emulator == NULL) emulator = malloc(sizeof(ToyPadEmu));
-    emulator->token_count = 0;
     memset(emulator->tokens, 0, sizeof(emulator->tokens));
 
     LDToyPadSceneEmulate* instance = malloc(sizeof(LDToyPadSceneEmulate));
@@ -860,8 +843,6 @@ int get_token_count_of_specific_id(unsigned int id) {
             if(emulator->tokens[i]->id == id) {
                 count++;
             }
-        } else {
-            break;
         }
     }
     return count;
