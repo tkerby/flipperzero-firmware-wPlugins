@@ -67,6 +67,12 @@ void mizip_balance_editor_scene_show_balance_on_enter(void* context) {
         app->uid[3]);
     dialog_ex_set_header(app->dialog_ex, uid, 64, 0, AlignCenter, AlignTop);
 
+    //Set MiZip data as valid for tag reading testing
+    //TODO proper verification
+    if(app->currentDataSource == DataSourceNfc) {
+        app->is_valid_mizip_data = true;
+    }
+
     if(app->is_valid_mizip_data) {
         //Get balances
         if(!app->is_number_input_active) {
