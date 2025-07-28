@@ -1,3 +1,6 @@
+## V0.4
+- Fixed NFC emulation issue
+
 ## V0.3
 - Added ROT-13 cipher.
 - Added MD2 hash.
