@@ -17,10 +17,6 @@
 
 #include "usb/save_toypad.h"
 
-#define numBoxes 7 // the number of boxes (7 boxes always)
-
-#define TOKEN_DELAY_TIME 400 // delay time for the token to be placed on the pad in ms
-
 LDToyPadApp* app;
 
 LDToyPadSceneEmulate* toypadscene_instance;
@@ -44,14 +40,7 @@ const uint8_t I_selectionCircle[] = {0x80, 0x7f, 0x00, 0xf0, 0xff, 0x03, 0xf8, 0
 
 // Define box information (coordinates and dimensions) for each box (7 boxes total)
 
-struct BoxInfo {
-    const uint8_t x; // X-coordinate
-    const uint8_t y; // Y-coordinate
-    bool isFilled; // Indicates if the box is filled with a Token (minifig / vehicle)
-    int index; // The index of the token in the box
-};
-
-struct BoxInfo boxInfo[] = {
+struct BoxInfo boxInfo[NUM_BOXES] = {
     {18, 26, false, -1}, // Selection 0 (box)
     {50, 20, false, -1}, // Selection 1 (circle)
     {85, 27, false, -1}, // Selection 2 (box)
@@ -242,7 +231,7 @@ bool ldtoypad_scene_emulate_input_callback(InputEvent* event, void* context) {
                     if(event->type == InputTypePress) {
                         model->left_pressed = true;
                         if(selectedBox == 0) {
-                            selectedBox = numBoxes;
+                            selectedBox = NUM_BOXES;
                         }
                         selectedBox--;
                     } else if(event->type == InputTypeRelease) {
@@ -253,7 +242,7 @@ bool ldtoypad_scene_emulate_input_callback(InputEvent* event, void* context) {
                     if(event->type == InputTypePress) {
                         model->right_pressed = true;
                         selectedBox++;
-                        if(selectedBox >= numBoxes) {
+                        if(selectedBox >= NUM_BOXES) {
                             selectedBox = 0;
                         }
                     } else if(event->type == InputTypeRelease) {
@@ -268,9 +257,9 @@ bool ldtoypad_scene_emulate_input_callback(InputEvent* event, void* context) {
                         } else if(selectedBox >= 4) {
                             selectedBox -= 4;
                         } else {
-                            selectedBox = (numBoxes - 3) + selectedBox;
+                            selectedBox = (NUM_BOXES - 3) + selectedBox;
                         }
-                        if(selectedBox >= numBoxes) {
+                        if(selectedBox >= NUM_BOXES) {
                             selectedBox = 0;
                         }
                     } else if(event->type == InputTypeRelease) {
@@ -286,10 +275,10 @@ bool ldtoypad_scene_emulate_input_callback(InputEvent* event, void* context) {
                             selectedBox = 0;
                         } else if(selectedBox == 5) {
                             selectedBox = 2;
-                        } else if(selectedBox < (numBoxes - 3)) {
+                        } else if(selectedBox < (NUM_BOXES - 3)) {
                             selectedBox += 3;
                         } else {
-                            selectedBox = selectedBox - (numBoxes - 3);
+                            selectedBox = selectedBox - (NUM_BOXES - 3);
                         }
                     } else if(event->type == InputTypeRelease) {
                         model->down_pressed = false;
@@ -347,15 +336,15 @@ void selectedBox_to_pad(Token* token, int selectedBox) {
     }
 }
 
-bool place_token(Token* token, int selectedBox) {
-    // check if the selected token is already placed on the toypad check by uid if the token is already placed then remove the old one and place the new one
+void remove_old_token(Token* token) {
+    // Check if the selected token is already placed on the toypad check by uid if the token is already placed then remove the old one and place the new one
     for(int i = 0; i < MAX_TOKENS; i++) {
         if(emulator->tokens[i] != NULL) {
             if(memcmp(emulator->tokens[i]->uid, token->uid, 7) == 0) {
                 // remove the old token
                 if(ToyPadEmu_remove(i)) {
                     // get the box of the old token and set it to not filled
-                    for(int j = 0; j < numBoxes; j++) {
+                    for(int j = 0; j < NUM_BOXES; j++) {
                         if(boxInfo[j].index == i) {
                             boxInfo[j].isFilled = false;
                             boxInfo[j].index = -1; // Reset index
@@ -368,6 +357,10 @@ bool place_token(Token* token, int selectedBox) {
             }
         }
     }
+}
+
+bool place_token(Token* token, int selectedBox) {
+    remove_old_token(token); // Remove old token if it exists by UID
 
     unsigned char buffer[32] = {0};
 
@@ -381,6 +374,9 @@ bool place_token(Token* token, int selectedBox) {
             new_index = i;
             break;
         }
+    }
+    if(new_index == -1) {
+        return false; // No empty slot available
     }
 
     token->index = new_index;
@@ -399,7 +395,9 @@ bool place_token(Token* token, int selectedBox) {
 
     usbd_ep_write(get_usb_device(), HID_EP_IN, buffer, sizeof(buffer));
 
-    // Give dolphin some xp for placing a minifigure, vehicle
+    /* Award some XP to the dolphin after placing a minifigure/vehicle. This needs to
+    * happen outside of the ISR context of the USB, so we place it here.
+    */
     dolphin_deed(DolphinDeedNfcReadSuccess);
 
     return true;
@@ -420,19 +418,21 @@ static void ldtoypad_scene_emulate_draw_render_callback(Canvas* canvas, void* co
         model->usbDevice = get_usb_device();
     }
 
-    if(get_connected_status() == 2) {
+    if(get_connected_status() == ConnectedStatusCleanupWanted) {
+        ToyPadEmu_clear(); // Clear the emulator if the USB is disconnected, this needs to be here because I cannot call this from the USB's ISR context.
+        set_connected_status(
+            ConnectedStatusDisconnected); // Set the connected status to 0 (disconnected)
+    }
+    if(get_connected_status() == ConnectedStatusReconnecting) {
         model->connected = true;
         set_connected_status(
-            1); // Set the connected status to 1 (connected) and not 2 (re-connecting)
+            ConnectedStatusConnected); // Set the connected status to 1 (connected) and not 2 (re-connecting)
         model->connection_status = "USB Awoken";
         model->sub_screen_box_selected =
             SelectionMinifigure; // Set the minifigure box selected as this is the most commonnly used at start of the app.
 
         // reset the filled boxes
-        for(int i = 0; i < numBoxes; i++) {
-            boxInfo[i].isFilled = false;
-            boxInfo[i].index = -1;
-        }
+        ToyPadEmu_clear();
 
         // Give dolphin some xp for connecting the toypad
         dolphin_deed(DolphinDeedPluginStart);
@@ -489,7 +489,7 @@ static void ldtoypad_scene_emulate_draw_render_callback(Canvas* canvas, void* co
     int token_selected = 0;
 
     // when the box is filled, draw the minifigure icon
-    for(int i = 0; i < numBoxes; i++) {
+    for(int i = 0; i < NUM_BOXES; i++) {
         if(boxInfo[i].isFilled) {
             Token* token = emulator->tokens[boxInfo[i].index];
             if(model->show_icons_index) {

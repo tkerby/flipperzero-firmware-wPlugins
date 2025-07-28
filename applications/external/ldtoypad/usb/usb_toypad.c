@@ -40,7 +40,7 @@ PLACE_IN_SECTION("MB_MEM2") static uint32_t ubuf[0x20];
 
 ToyPadEmu* emulator;
 
-int connected_status = 0;
+int connected_status = ConnectedStatusDisconnected;
 int get_connected_status() {
     return connected_status;
 }
@@ -244,7 +244,11 @@ void ToyPadEmu_clear() {
     }
     memset(emulator->tokens, 0, sizeof(emulator->tokens));
 
-    connected_status = 0;
+    // clear all box info
+    for(int i = 0; i < NUM_BOXES; i++) {
+        boxInfo[i].isFilled = false;
+        boxInfo[i].index = -1; // Reset index
+    }
 }
 
 static void hid_init(usbd_device* dev, FuriHalUsbInterface* intf, void* ctx) {
@@ -318,7 +322,8 @@ static void hid_deinit(usbd_device* dev) {
 
     free(burtle);
 
-    ToyPadEmu_clear();
+    connected_status =
+        ConnectedStatusCleanupWanted; // disconnected, needs cleanup outside of the ISR context
 }
 
 static void hid_on_wakeup(usbd_device* dev) {
@@ -338,7 +343,8 @@ static void hid_on_suspend(usbd_device* dev) {
         if(callback != NULL) {
             callback(false, cb_ctx);
         }
-        ToyPadEmu_clear();
+        connected_status =
+            ConnectedStatusCleanupWanted; // disconnected, needs cleanup outside of the ISR context
     }
 }
 
@@ -388,8 +394,6 @@ void hid_out_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
     case CMD_WAKE:
         sprintf(debug_text, "CMD_WAKE");
 
-        ToyPadEmu_clear();
-
         // From: https://github.com/AlinaNova21/node-ld/blob/f54b177d2418432688673aa07c54466d2e6041af/src/lib/ToyPadEmu.js#L139
         uint8_t wake_payload[13] = {
             0x28, 0x63, 0x29, 0x20, 0x4C, 0x45, 0x47, 0x4F, 0x20, 0x32, 0x30, 0x31, 0x34};
@@ -398,7 +402,7 @@ void hid_out_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
 
         response.payload_len = sizeof(wake_payload);
 
-        connected_status = 2; // connected / reconnected
+        connected_status = ConnectedStatusReconnecting; // Connected / Reconnected
 
         break;
     case CMD_READ:
