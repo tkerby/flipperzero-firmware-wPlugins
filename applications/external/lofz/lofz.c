@@ -6,36 +6,36 @@
 #include <storage/storage.h>
 
 // --- Constants and Macros ---
-#define GRID_SIZE 4
-#define GRID_COUNT 16
-#define CELL_W 20
-#define CELL_H 12
-#define PLAYER_CELL_W 16
-#define PLAYER_CELL_H 14
-#define BOARD_TOP 0
-#define BOARD_LEFT 0
-#define BOARD_W (GRID_SIZE * CELL_W)
-#define BOARD_H (GRID_SIZE * CELL_H)
-#define MASCOT_X 92
-#define MASCOT_Y 14
-#define PLAYER_CELL_X 71
-#define PLAYER_CELL_Y 0
-#define LINE_HEIGHT 11
-#define POPUP_WIDTH 100
-#define POPUP_X 14
-#define POPUP_Y 48
-#define SCORE_BOX_X 94
-#define SCORE_BOX_Y 48
-#define SCORE_BOX_W 32
-#define SCORE_BOX_H 14
-#define SCROLL_SPEED 650
-#define CRAWL_SPEED 40
-#define CREDITS_COOLDOWN_MS 180000
+#define GRID_SIZE              4
+#define GRID_COUNT             16
+#define CELL_W                 20
+#define CELL_H                 12
+#define PLAYER_CELL_W          16
+#define PLAYER_CELL_H          14
+#define BOARD_TOP              0
+#define BOARD_LEFT             0
+#define BOARD_W                (GRID_SIZE * CELL_W)
+#define BOARD_H                (GRID_SIZE * CELL_H)
+#define MASCOT_X               92
+#define MASCOT_Y               14
+#define PLAYER_CELL_X          71
+#define PLAYER_CELL_Y          0
+#define LINE_HEIGHT            11
+#define POPUP_WIDTH            100
+#define POPUP_X                14
+#define POPUP_Y                48
+#define SCORE_BOX_X            94
+#define SCORE_BOX_Y            48
+#define SCORE_BOX_W            32
+#define SCORE_BOX_H            14
+#define SCROLL_SPEED           650
+#define CRAWL_SPEED            40
+#define CREDITS_COOLDOWN_MS    180000
 #define CREDITS_MOVE_THRESHOLD 4
-#define AUDIO_TOGGLE_TIMEOUT 1350
-#define LEADERBOARD_ENTRIES 10
-#define LEADERBOARD_FILE "/ext/lofz_leaderboard.txt"
-#define MASCOT_MOVE_INTERVAL 200
+#define AUDIO_TOGGLE_TIMEOUT   1350
+#define LEADERBOARD_ENTRIES    10
+#define LEADERBOARD_FILE       "/ext/lofz_leaderboard.txt"
+#define MASCOT_MOVE_INTERVAL   200
 
 typedef enum {
     GameState_Loading,
@@ -130,8 +130,7 @@ static const char* flipper_phrases[] = {
     "That's a good one",
     "I got this",
     "Please let me move",
-    "My TURN!"
-};
+    "My TURN!"};
 #define FLIPPER_PHRASE_COUNT (sizeof(flipper_phrases) / sizeof(flipper_phrases[0]))
 
 // --- Intro and Credits Lines ---
@@ -269,9 +268,36 @@ typedef struct {
 static LeaderboardEntry leaderboard[LEADERBOARD_ENTRIES];
 
 // --- Secret Code Sequences ---
-static const InputKey dead_sequence[] = {InputKeyUp, InputKeyUp, InputKeyUp, InputKeyDown, InputKeyUp, InputKeyLeft, InputKeyUp, InputKeyDown, InputKeyLeft};
-static const InputKey win_sequence[] = {InputKeyUp, InputKeyUp, InputKeyUp, InputKeyDown, InputKeyUp, InputKeyRight, InputKeyUp, InputKeyDown, InputKeyRight};
-static const InputKey mischief_sequence[] = {InputKeyDown, InputKeyUp, InputKeyDown, InputKeyUp, InputKeyDown, InputKeyUp, InputKeyDown, InputKeyUp, InputKeyOk};
+static const InputKey dead_sequence[] = {
+    InputKeyUp,
+    InputKeyUp,
+    InputKeyUp,
+    InputKeyDown,
+    InputKeyUp,
+    InputKeyLeft,
+    InputKeyUp,
+    InputKeyDown,
+    InputKeyLeft};
+static const InputKey win_sequence[] = {
+    InputKeyUp,
+    InputKeyUp,
+    InputKeyUp,
+    InputKeyDown,
+    InputKeyUp,
+    InputKeyRight,
+    InputKeyUp,
+    InputKeyDown,
+    InputKeyRight};
+static const InputKey mischief_sequence[] = {
+    InputKeyDown,
+    InputKeyUp,
+    InputKeyDown,
+    InputKeyUp,
+    InputKeyDown,
+    InputKeyUp,
+    InputKeyDown,
+    InputKeyUp,
+    InputKeyOk};
 #define SEQUENCE_LENGTH 9
 
 // --- Secret Code Display ---
@@ -316,8 +342,10 @@ static void draw_crawl_text(Canvas* canvas, int y, const char* const* lines, int
             continue;
         }
         float fade = 1.0f;
-        if(y_pos < 10) fade = (float)y_pos / 10.0f;
-        else if(y_pos > 54) fade = (float)(64 - y_pos) / 10.0f;
+        if(y_pos < 10)
+            fade = (float)y_pos / 10.0f;
+        else if(y_pos > 54)
+            fade = (float)(64 - y_pos) / 10.0f;
         canvas_set_color(canvas, ColorBlack);
         canvas_draw_box(canvas, 0, y_pos - 2, 128, LINE_HEIGHT - 1);
         if(fade > 0.0f) {
@@ -329,7 +357,14 @@ static void draw_crawl_text(Canvas* canvas, int y, const char* const* lines, int
     canvas_set_color(canvas, ColorBlack);
 }
 
-static void draw_scrolling_text(Canvas* canvas, int x, int y, const char* text, int width, LOFZGame* game, bool update_scroll) {
+static void draw_scrolling_text(
+    Canvas* canvas,
+    int x,
+    int y,
+    const char* text,
+    int width,
+    LOFZGame* game,
+    bool update_scroll) {
     canvas_set_font(canvas, FontPrimary);
     int text_len = strlen(text);
     int chars_fit = width / 7;
@@ -376,7 +411,8 @@ static void draw_3d_board(Canvas* canvas, LOFZGame* game) {
             int cell_x = x1 + (int)((x2 - x1) * (float)col / GRID_SIZE);
             int cell_x_next = x1 + (int)((x2 - x1) * (float)(col + 1) / GRID_SIZE);
             int cell_y = y;
-            int cell_y_next = top_left_y + (int)((bottom_left_y - top_left_y) * (float)(row + 1) / GRID_SIZE);
+            int cell_y_next =
+                top_left_y + (int)((bottom_left_y - top_left_y) * (float)(row + 1) / GRID_SIZE);
             int cell_w = cell_x_next - cell_x;
             int cell_h = cell_y_next - cell_y;
 
@@ -394,24 +430,35 @@ static void draw_3d_board(Canvas* canvas, LOFZGame* game) {
                 canvas_set_color(canvas, ColorBlack);
                 canvas_draw_rframe(canvas, cell_x, cell_y, cell_w, cell_h, 2);
                 canvas_set_color(canvas, game->grid[idx] ? ColorWhite : ColorBlack);
-                canvas_draw_str(canvas, cell_x + cell_w / 2 - 2, cell_y + cell_h / 2 + 2, game->grid[idx] ? "-" : "+");
+                canvas_draw_str(
+                    canvas,
+                    cell_x + cell_w / 2 - 2,
+                    cell_y + cell_h / 2 + 2,
+                    game->grid[idx] ? "-" : "+");
             }
         }
     }
 
-    bool is_player_cell = (game->player_cursor == GRID_COUNT && game->state == GameState_PlayerTurn);
+    bool is_player_cell =
+        (game->player_cursor == GRID_COUNT && game->state == GameState_PlayerTurn);
     if(game->grid[GRID_COUNT - 1] != 0) {
         canvas_set_color(canvas, ColorBlack);
-        canvas_draw_rbox(canvas, PLAYER_CELL_X + 1, PLAYER_CELL_Y + 1, PLAYER_CELL_W - 2, PLAYER_CELL_H - 2, 2);
+        canvas_draw_rbox(
+            canvas, PLAYER_CELL_X + 1, PLAYER_CELL_Y + 1, PLAYER_CELL_W - 2, PLAYER_CELL_H - 2, 2);
     } else {
         canvas_set_color(canvas, ColorWhite);
-        canvas_draw_rframe(canvas, PLAYER_CELL_X + 1, PLAYER_CELL_Y + 1, PLAYER_CELL_W - 2, PLAYER_CELL_H - 2, 2);
+        canvas_draw_rframe(
+            canvas, PLAYER_CELL_X + 1, PLAYER_CELL_Y + 1, PLAYER_CELL_W - 2, PLAYER_CELL_H - 2, 2);
     }
     if(is_player_cell) {
         canvas_set_color(canvas, ColorBlack);
         canvas_draw_rframe(canvas, PLAYER_CELL_X, PLAYER_CELL_Y, PLAYER_CELL_W, PLAYER_CELL_H, 2);
         canvas_set_color(canvas, game->grid[GRID_COUNT - 1] ? ColorWhite : ColorBlack);
-        canvas_draw_str(canvas, PLAYER_CELL_X + PLAYER_CELL_W / 2 - 2, PLAYER_CELL_Y + PLAYER_CELL_H / 2 + 2, game->grid[GRID_COUNT - 1] ? "-" : "+");
+        canvas_draw_str(
+            canvas,
+            PLAYER_CELL_X + PLAYER_CELL_W / 2 - 2,
+            PLAYER_CELL_Y + PLAYER_CELL_H / 2 + 2,
+            game->grid[GRID_COUNT - 1] ? "-" : "+");
     }
 
     canvas_set_color(canvas, ColorBlack);
@@ -491,8 +538,9 @@ static void save_leaderboard(LOFZGame* game) {
         LeaderboardEntry new_entry = {game->wins, game->total_flips};
         int insert_idx = -1;
         for(int i = 0; i < LEADERBOARD_ENTRIES; i++) {
-            if(leaderboard[i].wins == 0 || (new_entry.wins > leaderboard[i].wins) || 
-               (new_entry.wins == leaderboard[i].wins && new_entry.presses >= leaderboard[i].presses)) {
+            if(leaderboard[i].wins == 0 || (new_entry.wins > leaderboard[i].wins) ||
+               (new_entry.wins == leaderboard[i].wins &&
+                new_entry.presses >= leaderboard[i].presses)) {
                 insert_idx = i;
                 break;
             }
@@ -524,7 +572,8 @@ static void load_leaderboard(void) {
         uint32_t bytes_read;
         int idx = 0;
         FuriString* line = furi_string_alloc();
-        while((bytes_read = storage_file_read(file, buffer, sizeof(buffer) - 1)) > 0 && idx < LEADERBOARD_ENTRIES) {
+        while((bytes_read = storage_file_read(file, buffer, sizeof(buffer) - 1)) > 0 &&
+              idx < LEADERBOARD_ENTRIES) {
             buffer[bytes_read] = '\0';
             furi_string_set(line, buffer);
             if(furi_string_empty(line) || furi_string_cmp_str(line, "  ") == 0) continue;
@@ -545,10 +594,13 @@ static void load_leaderboard(void) {
 // --- Input Handler ---
 static void lofz_input(InputEvent* event, void* ctx) {
     LOFZGame* game = (LOFZGame*)ctx;
-    if(game->state == GameState_Loading || game->state == GameState_IntroFade || game->state == GameState_LostFade || game->state == GameState_WinFade) return;
+    if(game->state == GameState_Loading || game->state == GameState_IntroFade ||
+       game->state == GameState_LostFade || game->state == GameState_WinFade)
+        return;
 
     if(event->type == InputTypePress) {
-        if(game->state == GameState_SecretCode || game->state == GameState_DeadScreen || game->state == GameState_MischiefScreen) {
+        if(game->state == GameState_SecretCode || game->state == GameState_DeadScreen ||
+           game->state == GameState_MischiefScreen) {
             if(event->key == InputKeyOk) {
                 game->state = GameState_IntroCrawl;
                 game->intro_crawl_y = 64;
@@ -558,7 +610,10 @@ static void lofz_input(InputEvent* event, void* ctx) {
             }
         }
 
-        if(event->key == InputKeyUp && (game->state == GameState_PlayerTurn || game->state == GameState_PressToPlay || game->state == GameState_IntroCrawl || game->state == GameState_WinScreen || game->state == GameState_LostMenu || game->state == GameState_WinMenu)) {
+        if(event->key == InputKeyUp &&
+           (game->state == GameState_PlayerTurn || game->state == GameState_PressToPlay ||
+            game->state == GameState_IntroCrawl || game->state == GameState_WinScreen ||
+            game->state == GameState_LostMenu || game->state == GameState_WinMenu)) {
             if(furi_get_tick() - game->last_up_key_tick <= 1800) {
                 game->up_key_count++;
                 if(game->up_key_count >= 10) {
@@ -591,7 +646,11 @@ static void lofz_input(InputEvent* event, void* ctx) {
                 game->left_key_count = 1;
             }
             game->last_left_key_tick = furi_get_tick();
-        } else if(event->key == InputKeyLeft && (game->state == GameState_PlayerTurn || game->state == GameState_PressToPlay || game->state == GameState_IntroCrawl || game->state == GameState_WinScreen || game->state == GameState_LostMenu || game->state == GameState_WinMenu)) {
+        } else if(
+            event->key == InputKeyLeft &&
+            (game->state == GameState_PlayerTurn || game->state == GameState_PressToPlay ||
+             game->state == GameState_IntroCrawl || game->state == GameState_WinScreen ||
+             game->state == GameState_LostMenu || game->state == GameState_WinMenu)) {
             if(furi_get_tick() - game->last_left_key_tick <= 1800) {
                 game->left_key_count++;
                 if(game->left_key_count >= 3) {
@@ -623,7 +682,10 @@ static void lofz_input(InputEvent* event, void* ctx) {
                         game->intro_crawl_y = 64;
                         game->state_tick = furi_get_tick();
                         matched = true;
-                    } else if(memcmp(game->input_sequence, mischief_sequence, sizeof(mischief_sequence)) == 0) {
+                    } else if(
+                        memcmp(
+                            game->input_sequence, mischief_sequence, sizeof(mischief_sequence)) ==
+                        0) {
                         game->state = GameState_MischiefScreen;
                         game->intro_crawl_y = 64;
                         game->state_tick = furi_get_tick();
@@ -730,7 +792,8 @@ static void lofz_input(InputEvent* event, void* ctx) {
                     game->right_key_count++;
                     if(game->right_key_count >= 3) {
                         bool allow_credits = false;
-                        if(furi_get_tick() - game->last_credits_tick >= CREDITS_COOLDOWN_MS || game->user_move_count >= CREDITS_MOVE_THRESHOLD) {
+                        if(furi_get_tick() - game->last_credits_tick >= CREDITS_COOLDOWN_MS ||
+                           game->user_move_count >= CREDITS_MOVE_THRESHOLD) {
                             allow_credits = true;
                             game->credits_access_count = 0;
                             game->user_move_count = 0;
@@ -773,67 +836,67 @@ static void lofz_input(InputEvent* event, void* ctx) {
                 return;
             }
             switch(event->key) {
-                case InputKeyUp:
-                    if(game->player_cursor == GRID_COUNT) {
-                        game->player_cursor = 4; // Move to top row, second column
-                    } else if(game->player_cursor >= GRID_SIZE) {
-                        game->player_cursor -= GRID_SIZE;
-                    }
-                    break;
-                case InputKeyDown:
-                    if(game->player_cursor == GRID_COUNT) {
-                        game->player_cursor = 12; // Move to bottom row, first column
-                    } else if(game->player_cursor < GRID_COUNT - GRID_SIZE) {
-                        game->player_cursor += GRID_SIZE;
-                    }
-                    break;
-                case InputKeyLeft:
-                    if(game->player_cursor == GRID_COUNT) {
-                        game->player_cursor = 3; // Move to top-right corner
-                    } else if(game->player_cursor % GRID_SIZE) {
-                        game->player_cursor--;
-                    }
-                    break;
-                case InputKeyRight:
-                    if(game->player_cursor == GRID_COUNT) {
-                        game->player_cursor = 0; // Move to top-left corner
-                    } else if(game->player_cursor % GRID_SIZE < GRID_SIZE - 1) {
-                        game->player_cursor++;
-                    } else if(game->player_cursor < GRID_COUNT) {
-                        game->player_cursor = GRID_COUNT; // Move to offset block from right edge
-                    }
-                    break;
-                case InputKeyOk:
-                    lofz_update(game, game->player_cursor);
-                    if(lofz_is_solved(game)) {
-                        game->solved = true;
-                        game->wins++;
-                        save_leaderboard(game);
-                        game->state = GameState_WinFade;
-                        game->fade_level = 0;
-                        game->state_tick = furi_get_tick();
-                        memcpy(game->saved_grid, game->grid, sizeof(game->grid));
-                        game->saved_player_cursor = game->player_cursor;
-                        game->saved_flipper_cursor = game->flipper_cursor;
-                        game->saved_solved = game->solved;
-                    } else if(is_lost_nulls(game)) {
-                        game->state = GameState_LostFade;
-                        game->fade_level = 0;
-                        game->state_tick = furi_get_tick();
-                        memcpy(game->saved_grid, game->grid, sizeof(game->grid));
-                        game->saved_player_cursor = game->player_cursor;
-                        game->saved_flipper_cursor = game->flipper_cursor;
-                        game->saved_solved = game->solved;
-                    } else {
-                        game->state = GameState_FlipperPopup;
-                        game->popup_timer = furi_get_tick();
-                        game->popup_phrase = rand() % FLIPPER_PHRASE_COUNT;
-                        game->scroll_offset = 0;
-                        game->scroll_start_tick = furi_get_tick();
-                    }
-                    break;
-                default:
-                    break;
+            case InputKeyUp:
+                if(game->player_cursor == GRID_COUNT) {
+                    game->player_cursor = 4; // Move to top row, second column
+                } else if(game->player_cursor >= GRID_SIZE) {
+                    game->player_cursor -= GRID_SIZE;
+                }
+                break;
+            case InputKeyDown:
+                if(game->player_cursor == GRID_COUNT) {
+                    game->player_cursor = 12; // Move to bottom row, first column
+                } else if(game->player_cursor < GRID_COUNT - GRID_SIZE) {
+                    game->player_cursor += GRID_SIZE;
+                }
+                break;
+            case InputKeyLeft:
+                if(game->player_cursor == GRID_COUNT) {
+                    game->player_cursor = 3; // Move to top-right corner
+                } else if(game->player_cursor % GRID_SIZE) {
+                    game->player_cursor--;
+                }
+                break;
+            case InputKeyRight:
+                if(game->player_cursor == GRID_COUNT) {
+                    game->player_cursor = 0; // Move to top-left corner
+                } else if(game->player_cursor % GRID_SIZE < GRID_SIZE - 1) {
+                    game->player_cursor++;
+                } else if(game->player_cursor < GRID_COUNT) {
+                    game->player_cursor = GRID_COUNT; // Move to offset block from right edge
+                }
+                break;
+            case InputKeyOk:
+                lofz_update(game, game->player_cursor);
+                if(lofz_is_solved(game)) {
+                    game->solved = true;
+                    game->wins++;
+                    save_leaderboard(game);
+                    game->state = GameState_WinFade;
+                    game->fade_level = 0;
+                    game->state_tick = furi_get_tick();
+                    memcpy(game->saved_grid, game->grid, sizeof(game->grid));
+                    game->saved_player_cursor = game->player_cursor;
+                    game->saved_flipper_cursor = game->flipper_cursor;
+                    game->saved_solved = game->solved;
+                } else if(is_lost_nulls(game)) {
+                    game->state = GameState_LostFade;
+                    game->fade_level = 0;
+                    game->state_tick = furi_get_tick();
+                    memcpy(game->saved_grid, game->grid, sizeof(game->grid));
+                    game->saved_player_cursor = game->player_cursor;
+                    game->saved_flipper_cursor = game->flipper_cursor;
+                    game->saved_solved = game->solved;
+                } else {
+                    game->state = GameState_FlipperPopup;
+                    game->popup_timer = furi_get_tick();
+                    game->popup_phrase = rand() % FLIPPER_PHRASE_COUNT;
+                    game->scroll_offset = 0;
+                    game->scroll_start_tick = furi_get_tick();
+                }
+                break;
+            default:
+                break;
             }
         }
     }
@@ -850,14 +913,20 @@ static void lofz_draw(Canvas* canvas, void* ctx) {
     for(uint8_t i = 0; i < GRID_COUNT; i++) {
         if(game->grid[i] == 0) off_count++;
     }
-    bool is_stressed = (off_count < (GRID_COUNT * 20 / 100) || game->score > 981) && game->score != 1;
-    if(is_stressed && game->mascot_bounce_offset > 0 && (furi_get_tick() - game->last_mascot_move_tick > MASCOT_MOVE_INTERVAL)) {
+    bool is_stressed = (off_count < (GRID_COUNT * 20 / 100) || game->score > 981) &&
+                       game->score != 1;
+    if(is_stressed && game->mascot_bounce_offset > 0 &&
+       (furi_get_tick() - game->last_mascot_move_tick > MASCOT_MOVE_INTERVAL)) {
         int move = rand() % 4;
         int new_x = game->mascot_x, new_y = game->mascot_y;
-        if(move == 0 && new_x > 80) new_x -= 2;
-        else if(move == 1 && new_x < 100) new_x += 2;
-        else if(move == 2 && new_y > 10) new_y -= 2;
-        else if(move == 3 && new_y < 20) new_y += 2;
+        if(move == 0 && new_x > 80)
+            new_x -= 2;
+        else if(move == 1 && new_x < 100)
+            new_x += 2;
+        else if(move == 2 && new_y > 10)
+            new_y -= 2;
+        else if(move == 3 && new_y < 20)
+            new_y += 2;
         game->mascot_x = new_x;
         game->mascot_y = new_y;
         game->last_mascot_move_tick = furi_get_tick();
@@ -885,11 +954,18 @@ static void lofz_draw(Canvas* canvas, void* ctx) {
             char leaderboard_lines[LEADERBOARD_ENTRIES * 2][32];
             int line_idx = 0;
             for(int i = 0; i < LEADERBOARD_ENTRIES; i++) {
-                snprintf(leaderboard_lines[line_idx], 32, "%d : %lu :: %lu", i + 1, leaderboard[i].wins, leaderboard[i].presses);
+                snprintf(
+                    leaderboard_lines[line_idx],
+                    32,
+                    "%d : %lu :: %lu",
+                    i + 1,
+                    leaderboard[i].wins,
+                    leaderboard[i].presses);
                 leaderboard_lines[line_idx + 1][0] = '\0';
                 line_idx += 2;
             }
-            draw_crawl_text(canvas, game->intro_crawl_y, (const char* const*)leaderboard_lines, line_idx);
+            draw_crawl_text(
+                canvas, game->intro_crawl_y, (const char* const*)leaderboard_lines, line_idx);
         } else {
             draw_crawl_text(canvas, game->intro_crawl_y, intro_lines, INTRO_LINES_COUNT);
         }
@@ -926,18 +1002,23 @@ static void lofz_draw(Canvas* canvas, void* ctx) {
             canvas_set_color(canvas, ColorBlack);
             canvas_draw_box(canvas, 0, 0, 128, 64);
             canvas_set_color(canvas, ColorWhite);
-            canvas_draw_str_aligned(canvas, 64, 60, AlignCenter, AlignCenter, "Press OK to continue");
+            canvas_draw_str_aligned(
+                canvas, 64, 60, AlignCenter, AlignCenter, "Press OK to continue");
         } else {
-            draw_crawl_text(canvas, game->intro_crawl_y, secret_code_lines, SECRET_CODE_LINES_COUNT);
+            draw_crawl_text(
+                canvas, game->intro_crawl_y, secret_code_lines, SECRET_CODE_LINES_COUNT);
             canvas_set_color(canvas, ColorWhite);
-            canvas_draw_str_aligned(canvas, 64, 60, AlignCenter, AlignCenter, "Press OK to continue");
+            canvas_draw_str_aligned(
+                canvas, 64, 60, AlignCenter, AlignCenter, "Press OK to continue");
         }
         return;
     }
-    if(game->state == GameState_IntroFade || game->state == GameState_LostFade || game->state == GameState_WinFade) {
+    if(game->state == GameState_IntroFade || game->state == GameState_LostFade ||
+       game->state == GameState_WinFade) {
         draw_3d_board(canvas, game);
         int lvl = game->fade_level;
-        for(int i = 0; i < 128; i += 2) canvas_draw_box(canvas, 0, 0, 128, lvl);
+        for(int i = 0; i < 128; i += 2)
+            canvas_draw_box(canvas, 0, 0, 128, lvl);
         return;
     }
     if(game->state == GameState_LostNulls) {
@@ -985,9 +1066,17 @@ static void lofz_draw(Canvas* canvas, void* ctx) {
         canvas_set_font(canvas, FontPrimary);
         canvas_draw_box(canvas, POPUP_X, POPUP_Y, POPUP_WIDTH, 14);
         canvas_set_color(canvas, ColorWhite);
-        draw_scrolling_text(canvas, POPUP_X + 2, POPUP_Y + 11, flipper_phrases[game->popup_phrase], POPUP_WIDTH - 4, game, game->state == GameState_FlipperPopup);
+        draw_scrolling_text(
+            canvas,
+            POPUP_X + 2,
+            POPUP_Y + 11,
+            flipper_phrases[game->popup_phrase],
+            POPUP_WIDTH - 4,
+            game,
+            game->state == GameState_FlipperPopup);
         canvas_set_color(canvas, ColorBlack);
-        draw_mascot(canvas, game->mascot_x, game->mascot_y, game->mascot_bounce_offset, game->bounce_up);
+        draw_mascot(
+            canvas, game->mascot_x, game->mascot_y, game->mascot_bounce_offset, game->bounce_up);
         canvas_draw_str(canvas, 92, 12, "Flipper");
         canvas_set_font(canvas, FontSecondary);
         char wins_str[32];
@@ -997,16 +1086,24 @@ static void lofz_draw(Canvas* canvas, void* ctx) {
         canvas_set_color(canvas, ColorBlack);
         char score_str[32];
         if(game->score >= 100) {
-            snprintf(score_str, sizeof(score_str), "+%lu", game->score % 100 ? game->score % 100 : 100);
+            snprintf(
+                score_str, sizeof(score_str), "+%lu", game->score % 100 ? game->score % 100 : 100);
         } else {
             snprintf(score_str, sizeof(score_str), "%lu", game->score);
         }
-        canvas_draw_str_aligned(canvas, SCORE_BOX_X + SCORE_BOX_W / 2, SCORE_BOX_Y + SCORE_BOX_H / 2 + 2, AlignCenter, AlignCenter, score_str);
+        canvas_draw_str_aligned(
+            canvas,
+            SCORE_BOX_X + SCORE_BOX_W / 2,
+            SCORE_BOX_Y + SCORE_BOX_H / 2 + 2,
+            AlignCenter,
+            AlignCenter,
+            score_str);
         return;
     }
     // Main gameplay
     draw_3d_board(canvas, game);
-    draw_mascot(canvas, game->mascot_x, game->mascot_y, game->mascot_bounce_offset, game->bounce_up);
+    draw_mascot(
+        canvas, game->mascot_x, game->mascot_y, game->mascot_bounce_offset, game->bounce_up);
     canvas_draw_str(canvas, 92, 12, "Flipper");
     canvas_set_font(canvas, FontSecondary);
     char wins_str[32];
@@ -1016,11 +1113,18 @@ static void lofz_draw(Canvas* canvas, void* ctx) {
     canvas_set_color(canvas, ColorBlack);
     char score_str[32];
     if(game->score >= 100) {
-        snprintf(score_str, sizeof(score_str), "+%lu", game->score % 100 ? game->score % 100 : 100);
+        snprintf(
+            score_str, sizeof(score_str), "+%lu", game->score % 100 ? game->score % 100 : 100);
     } else {
         snprintf(score_str, sizeof(score_str), "%lu", game->score);
     }
-    canvas_draw_str_aligned(canvas, SCORE_BOX_X + SCORE_BOX_W / 2, SCORE_BOX_Y + SCORE_BOX_H / 2 + 2, AlignCenter, AlignCenter, score_str);
+    canvas_draw_str_aligned(
+        canvas,
+        SCORE_BOX_X + SCORE_BOX_W / 2,
+        SCORE_BOX_Y + SCORE_BOX_H / 2 + 2,
+        AlignCenter,
+        AlignCenter,
+        score_str);
 }
 
 // --- Main App ---
@@ -1070,7 +1174,10 @@ int32_t lofz_app(void* p) {
                 game.state = GameState_PressToPlay;
                 loading_done = true;
             }
-        } else if(game.state == GameState_IntroCrawl || game.state == GameState_Credits || game.state == GameState_MischiefScreen || game.state == GameState_DeadScreen || game.state == GameState_WinScreen || game.state == GameState_SecretCode) {
+        } else if(
+            game.state == GameState_IntroCrawl || game.state == GameState_Credits ||
+            game.state == GameState_MischiefScreen || game.state == GameState_DeadScreen ||
+            game.state == GameState_WinScreen || game.state == GameState_SecretCode) {
             int valid_lines = 0;
             const char* const* lines = NULL;
             int line_count = 0;
@@ -1091,7 +1198,8 @@ int32_t lofz_app(void* p) {
                 line_count = SECRET_CODE_LINES_COUNT;
             } else {
                 lines = (game.up_key_count >= 10 ? NULL : intro_lines);
-                line_count = (game.up_key_count >= 10 ? LEADERBOARD_ENTRIES * 2 : INTRO_LINES_COUNT);
+                line_count =
+                    (game.up_key_count >= 10 ? LEADERBOARD_ENTRIES * 2 : INTRO_LINES_COUNT);
             }
             if(lines) {
                 for(int i = 0; i < line_count; i++) {
@@ -1132,7 +1240,8 @@ int32_t lofz_app(void* p) {
                 game.fade_level += 8;
                 game.state_tick = furi_get_tick();
             } else {
-                game.state = (game.state == GameState_WinFade ? GameState_WinScreen : GameState_PlayerTurn);
+                game.state =
+                    (game.state == GameState_WinFade ? GameState_WinScreen : GameState_PlayerTurn);
                 game.fade_level = 0;
                 game.intro_crawl_y = 64;
             }
