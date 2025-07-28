@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "flip_crypt_dev_icons.h"
+#include "flip_crypt_icons.h"
 
 #include "ciphers/aes.h"
 #include "ciphers/affine.h"
