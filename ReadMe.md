@@ -34,6 +34,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [MiZip Balance Editor v0.2 (By teohumeau)](https://github.com/teohumeau/MiZipBalanceEditor)
 - Updated: [Ghost ESP v1.4 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
 - Updated: [LEGO Dimensions Toy Pad v0.4 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
+- Updated: [Yatzee v1.2 (By emfleak)](https://github.com/emfleak/flipperzero-yatzee) [Fix Full House calculation, and improve code readability a bit (By zessx)](https://github.com/emfleak/flipperzero-yatzee/pull/2)
 
 <a name="release">
 
