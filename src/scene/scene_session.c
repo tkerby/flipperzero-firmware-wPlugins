@@ -53,6 +53,10 @@ static inline void drawButton(Canvas* const canvas, const uint8_t x, const uint8
 	canvas_draw_str(canvas, x + 3, y + 10, text);
 }
 
+// [Select] [Ok]     No session file was selected.
+// [Select] [Open]   The selected file does not\nappear to be a session file.\nOpen anyway?
+// [Select] [Ok]     The selected file\nis not a session file.\nIt might be corrupted.
+// [Delete] [Cancel] Are you sure you want to\ndelete the current session?
 static void callbackRender(Canvas* const canvas, void* const context) {
 	furi_check(canvas && context);
 	const PSESSIONSCENE instance = context;
@@ -68,9 +72,9 @@ static void callbackRender(Canvas* const canvas, void* const context) {
 		drawButton(canvas, 86, 51, instance->button == BUTTON_SESSION_DELETE, "Delete");
 		break;
 	case SCREEN_TEXT:
-		elements_text_box(canvas, 0, 0, 128, 51, AlignCenter, AlignCenter, "No session file was selected", 1);
-		drawButton(canvas, 10, 51, instance->button == BUTTON_TEXT_SELECT, "Select");
-		drawButton(canvas, 52, 51, instance->button == BUTTON_TEXT_OK, "Ok");
+		elements_text_box(canvas, 0, 0, 128, 51, AlignCenter, AlignCenter, "Are you sure you want to\ndelete the current session?", 1);
+		drawButton(canvas, 10, 51, instance->button == BUTTON_TEXT_SELECT, "Delete");
+		drawButton(canvas, 70, 51, instance->button == BUTTON_TEXT_OK, "Cancel");
 		break;
 	}
 }
