@@ -843,6 +843,8 @@ int get_token_count_of_specific_id(unsigned int id) {
             if(emulator->tokens[i]->id == id) {
                 count++;
             }
+        } else {
+            break;
         }
     }
     return count;

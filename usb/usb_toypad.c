@@ -171,9 +171,7 @@ void create_uid(Token* token, int id) {
 }
 
 Token* createCharacter(int id) {
-    Token* token = malloc(sizeof(Token)); // Allocate memory for the token
-
-    memset(token->token, 0, sizeof(token->token));
+    Token* token = (Token*)malloc(sizeof(Token)); // Allocate memory for the token
 
     token->id = id; // Set the ID
 
@@ -187,12 +185,11 @@ Token* createCharacter(int id) {
 
 Token* createVehicle(int id, uint32_t upgrades[2]) {
     Token* token = (Token*)malloc(sizeof(Token));
-    if(!token) {
-        return NULL;
-    }
 
     // Initialize the token data to zero
     memset(token, 0, sizeof(Token));
+
+    // Dont set an ID for vehicles, it is in the token buffer already, we can use this to see if it is an minfig or vehicle by checking if the ID set or not
 
     // Generate a random UID and store it
     create_uid(token, id);
