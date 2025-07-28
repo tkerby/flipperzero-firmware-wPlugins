@@ -18,6 +18,10 @@ static const char* TAG = "401_DigiLabScope";
 #include <401_config.h>
 #include <drivers/sk6805.h>
 
+#ifndef SK6805_LED_COUNT
+#define SK6805_LED_COUNT 3 // Nombre de LEDs sur la carte de rétroéclairage
+#endif
+
 #ifndef SK6805_LED_PIN
 #define SK6805_LED_PIN &led_pin // Port de connexion des LEDs
 #endif
