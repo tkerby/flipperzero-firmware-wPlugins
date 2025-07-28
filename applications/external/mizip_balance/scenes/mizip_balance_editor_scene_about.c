@@ -5,7 +5,7 @@ void mizip_balance_editor_scene_about_on_enter(void* context) {
     MiZipBalanceEditorApp* app = context;
     text_box_set_text(
         app->text_box,
-        "MiZip balance editor allows you to easily modify your MiZip tags and files.\n\nSource code available at github.com/teohumeau/MiZipBalanceEditor");
+        "MiZip balance editor allows you to easily modify your MiZip tags and files.\n\nSource code available at github.com/teohumeau/MiZipBalanceEditor\n\nHuge thanks to xVergil for his work on tag reading/writing!");
 
     view_dispatcher_switch_to_view(app->view_dispatcher, MiZipBalanceEditorViewIdAbout);
 }
