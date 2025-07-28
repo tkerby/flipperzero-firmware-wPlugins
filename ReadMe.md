@@ -40,6 +40,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Wendigo Bluetooth Tracker WIP v0.3 (By chris-bc)](https://github.com/chris-bc/wendigo) `WIP Req: ESP32`
 - Added: [Sub Analyzer v1.0 (By RocketGod)](https://github.com/RocketGod-git/Flipper-Zero-SUB-Analyzer)
 - Added: [Multi Timer v1.1 (By C0d3-5t3w)](https://github.com/C0d3-5t3w/flipper-multitimer)
+- Added: [Nah 2 da Nah Nah Nah v0.2 (By DigiMancer3D)](https://github.com/DigiMancer3D/nah2nah3)
 
 <a name="release">
 
@@ -326,6 +327,7 @@ $ ./fbt dolphin_ext
 - [Morse Master v1.0 (By w84death)](https://github.com/w84death/flipper-zero-apps)
 - [MTP WIP v1.0 (By Alex4386)](https://github.com/Alex4386/f0-mtp)
 - [Multi Counter v1.1 (By JadePossible)](https://github.com/JadePossible/Flipper-Multi-Counter)
+- [Nah 2 da Nah Nah Nah v0.2 (By DigiMancer3D)](https://github.com/DigiMancer3D/nah2nah3)
 - [Network Defender v1.1 (By w84death)](https://github.com/w84death/flipper-zero-apps)
 - [Nu Pogodi! (Ну, погоди!) v1.3 (By sionyx)](https://github.com/sionyx/flipper_nupogodi)
 - [P1X Adventure v0.1 (By w84death)](https://github.com/w84death/flipper-zero-apps)
