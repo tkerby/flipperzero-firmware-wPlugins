@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.4
+- Set Evil Portal HTML from the Flipper's Filesystem
+
 ## v1.3.1
 - Might fix crash when closing app without a board connected
 

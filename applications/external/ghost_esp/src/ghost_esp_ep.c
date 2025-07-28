@@ -9,6 +9,8 @@
 #include <gui/modules/variable_item_list.h>
 #include <gui/modules/widget.h>
 #include <gui/modules/text_input.h>
+#include <storage/storage.h>
+#include <toolbox/path.h>
 
 #define GHOST_APP_FOLDER_HTML "/ext/apps_data/ghost/html"
 
