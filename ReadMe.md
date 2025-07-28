@@ -38,6 +38,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Lights Out Flipper Zero v1.1 (By DigiMancer3D)](https://github.com/user/DigiMancer3D)
 - Updated: [ESP32CAM Marauder v0.7.4 (By 0xchocolate & eried)](https://github.com/eried/flipperzero-mayhem) `Req: ESP32-CAM (Mayhem)`
 - Updated: [Wendigo Bluetooth Tracker WIP v0.3 (By chris-bc)](https://github.com/chris-bc/wendigo) `WIP Req: ESP32`
+- Added: [Sub Analyzer v1.0 (By RocketGod)](https://github.com/RocketGod-git/Flipper-Zero-SUB-Analyzer)
 
 <a name="release">
 
