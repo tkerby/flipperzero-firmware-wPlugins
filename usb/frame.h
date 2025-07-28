@@ -3,6 +3,7 @@
 #include <furi.h>
 
 #include "usb_toypad.h"
+#include "descriptors.h"
 
 #ifdef __cplusplus
 extern "C" {

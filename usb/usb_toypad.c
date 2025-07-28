@@ -11,7 +11,7 @@
 #include "../minifigures.h"
 #include "save_toypad.h"
 #include "bytes.h"
-#include "frame.h"
+#include "descriptors.h"
 
 // Define all the possible commands
 #define CMD_WAKE   0xB0
@@ -34,9 +34,6 @@
 #define CMD_LEDSQ  0xFF
 
 #define HID_INTERVAL 1
-
-#define HID_VID_DEFAULT 0x0e6f // Logic3
-#define HID_PID_DEFAULT 0x0241
 
 #define USB_EP0_SIZE 64
 PLACE_IN_SECTION("MB_MEM2") static uint32_t ubuf[0x20];
@@ -86,120 +83,6 @@ Token* find_token_by_index(ToyPadEmu* emulator, int index) {
     }
     return NULL;
 }
-
-/* String descriptors */
-enum UsbDevDescStr {
-    UsbDevLang = 0,
-    UsbDevManuf = 1,
-    UsbDevProduct = 2,
-    UsbDevSerial = 3,
-};
-
-struct HidIntfDescriptor {
-    struct usb_interface_descriptor hid;
-    struct usb_hid_descriptor hid_desc;
-    struct usb_endpoint_descriptor hid_ep_in;
-    struct usb_endpoint_descriptor hid_ep_out;
-};
-
-struct HidConfigDescriptor {
-    struct usb_config_descriptor config;
-    struct HidIntfDescriptor intf_0;
-} __attribute__((packed));
-
-/* HID report descriptor */
-static const uint8_t hid_report_desc[] = {
-    0x06, 0x00, 0xFF, // Usage Page (Vendor Defined)
-    0x09, 0x01, // Usage (Vendor Usage 1)
-    0xA1, 0x01, // Collection (Application)
-    0x19, 0x01, //   Usage Minimum (Vendor Usage 1)
-    0x29, 0x20, //   Usage Maximum (Vendor Usage 32)
-    0x15, 0x00, //   Logical Minimum (0)
-    0x26, 0xFF, 0x00, //   Logical Maximum (255)
-    0x75, 0x08, //   Report Size (8 bits)
-    0x95, 0x20, //   Report Count (32 bytes)
-    0x81, 0x00, //   Input (Data, Array, Absolute)
-    0x19, 0x01, //   Usage Minimum (Vendor Usage 1)
-    0x29, 0x20, //   Usage Maximum (Vendor Usage 32)
-    0x91, 0x00, //   Output (Data, Array, Absolute)
-    0xC0 // End Collection
-};
-
-/* Device descriptor */
-static struct usb_device_descriptor hid_device_desc = {
-    .bLength = sizeof(struct usb_device_descriptor),
-    .bDescriptorType = USB_DTYPE_DEVICE,
-    .bcdUSB = VERSION_BCD(2, 0, 0),
-    .bDeviceClass = USB_CLASS_PER_INTERFACE,
-    .bDeviceSubClass = USB_SUBCLASS_NONE,
-    .bDeviceProtocol = USB_PROTO_NONE,
-    .bMaxPacketSize0 = USB_EP0_SIZE,
-    .idVendor = HID_VID_DEFAULT,
-    .idProduct = HID_PID_DEFAULT,
-    .bcdDevice = VERSION_BCD(1, 0, 0),
-    .iManufacturer = 1,
-    .iProduct = 2,
-    .iSerialNumber = 3,
-    .bNumConfigurations = 1,
-};
-
-/* Device configuration descriptor */
-static const struct HidConfigDescriptor hid_cfg_desc = {
-    .config =
-        {
-            .bLength = sizeof(struct usb_config_descriptor),
-            .bDescriptorType = USB_DTYPE_CONFIGURATION,
-            .wTotalLength = sizeof(struct HidConfigDescriptor),
-            .bNumInterfaces = 1,
-            .bConfigurationValue = 1,
-            .iConfiguration = NO_DESCRIPTOR,
-            .bmAttributes = USB_CFG_ATTR_RESERVED,
-            .bMaxPower = USB_CFG_POWER_MA(500),
-        },
-    .intf_0 =
-        {
-            .hid =
-                {
-                    .bLength = sizeof(struct usb_interface_descriptor),
-                    .bDescriptorType = USB_DTYPE_INTERFACE,
-                    .bInterfaceNumber = 0,
-                    .bAlternateSetting = 0,
-                    .bNumEndpoints = 2,
-                    .bInterfaceClass = USB_CLASS_HID,
-                    .bInterfaceSubClass = USB_HID_SUBCLASS_NONBOOT,
-                    .bInterfaceProtocol = USB_HID_PROTO_NONBOOT,
-                    .iInterface = NO_DESCRIPTOR,
-                },
-            .hid_desc =
-                {
-                    .bLength = sizeof(struct usb_hid_descriptor),
-                    .bDescriptorType = USB_DTYPE_HID,
-                    .bcdHID = VERSION_BCD(1, 0, 0),
-                    .bCountryCode = USB_HID_COUNTRY_NONE,
-                    .bNumDescriptors = 1,
-                    .bDescriptorType0 = USB_DTYPE_HID_REPORT,
-                    .wDescriptorLength0 = sizeof(hid_report_desc),
-                },
-            .hid_ep_in =
-                {
-                    .bLength = sizeof(struct usb_endpoint_descriptor),
-                    .bDescriptorType = USB_DTYPE_ENDPOINT,
-                    .bEndpointAddress = HID_EP_IN,
-                    .bmAttributes = USB_EPTYPE_INTERRUPT,
-                    .wMaxPacketSize = HID_EP_SZ,
-                    .bInterval = HID_INTERVAL,
-                },
-            .hid_ep_out =
-                {
-                    .bLength = sizeof(struct usb_endpoint_descriptor),
-                    .bDescriptorType = USB_DTYPE_ENDPOINT,
-                    .bEndpointAddress = HID_EP_OUT,
-                    .bmAttributes = USB_EPTYPE_INTERRUPT,
-                    .wMaxPacketSize = HID_EP_SZ,
-                    .bInterval = HID_INTERVAL,
-                },
-        },
-};
 
 static void hid_init(usbd_device* dev, FuriHalUsbInterface* intf, void* ctx);
 static void hid_deinit(usbd_device* dev);
@@ -302,18 +185,6 @@ Token* createCharacter(int id) {
     return token; // Return the created token
 }
 
-// Helper to write a 16-bit little-endian value, no offset
-void writeUInt16LE_NO(uint8_t* buffer, uint16_t value) {
-    buffer[0] = (value >> 0) & 0xFF;
-    buffer[1] = (value >> 8) & 0xFF;
-}
-
-// Helper to write a 16-bit big-endian value, no offset
-void writeUInt16BE_NO(uint8_t* buffer, uint16_t value) {
-    buffer[0] = (value >> 8) & 0xFF;
-    buffer[1] = (value >> 0) & 0xFF;
-}
-
 Token* createVehicle(int id, uint32_t upgrades[2]) {
     Token* token = (Token*)malloc(sizeof(Token));
     if(!token) {
@@ -363,6 +234,19 @@ bool ToyPadEmu_remove(int index) {
     return true;
 }
 
+void ToyPadEmu_clear() {
+    // clear the tokens on the emulator and free the memory
+    for(int i = 0; i < MAX_TOKENS; i++) {
+        if(emulator->tokens[i] != NULL) {
+            free(emulator->tokens[i]);
+            emulator->tokens[i] = NULL;
+        }
+    }
+    memset(emulator->tokens, 0, sizeof(emulator->tokens));
+
+    connected_status = 0;
+}
+
 static void hid_init(usbd_device* dev, FuriHalUsbInterface* intf, void* ctx) {
     UNUSED(intf);
     FuriHalUsbHidConfig* cfg = (FuriHalUsbHidConfig*)ctx;
@@ -374,8 +258,8 @@ static void hid_init(usbd_device* dev, FuriHalUsbInterface* intf, void* ctx) {
     usb_hid.dev_descr->iProduct = 0;
     usb_hid.str_manuf_descr = NULL;
     usb_hid.str_prod_descr = NULL;
-    usb_hid.dev_descr->idVendor = HID_VID_DEFAULT;
-    usb_hid.dev_descr->idProduct = HID_PID_DEFAULT;
+    usb_hid.dev_descr->idVendor = HID_VID_TOYPAD;
+    usb_hid.dev_descr->idProduct = HID_PID_TOYPAD;
 
     if(cfg != NULL) {
         usb_hid.dev_descr->idVendor = cfg->vid;
@@ -400,6 +284,26 @@ static void hid_init(usbd_device* dev, FuriHalUsbInterface* intf, void* ctx) {
     usbd_init(dev, &usbd_hw, USB_EP0_SIZE, ubuf, sizeof(ubuf));
 
     usbd_connect(dev, true);
+
+    uint8_t default_tea_key[16] = {
+        0x55,
+        0xFE,
+        0xF6,
+        0xB0,
+        0x62,
+        0xBF,
+        0x0B,
+        0x41,
+        0xC9,
+        0xB3,
+        0x7C,
+        0xB4,
+        0x97,
+        0x3E,
+        0x29,
+        0x7B};
+
+    memcpy(emulator->tea_key, default_tea_key, sizeof(emulator->tea_key));
 }
 
 static void hid_deinit(usbd_device* dev) {
@@ -414,17 +318,7 @@ static void hid_deinit(usbd_device* dev) {
 
     free(burtle);
 
-    // clear the tokens on the emulator and free the memory
-    for(int i = 0; i < MAX_TOKENS; i++) {
-        if(emulator->tokens[i] != NULL) {
-            free(emulator->tokens[i]);
-            emulator->tokens[i] = NULL;
-        }
-    }
-    emulator->token_count = 0;
-    memset(emulator->tokens, 0, sizeof(emulator->tokens));
-
-    connected_status = 0;
+    ToyPadEmu_clear();
 }
 
 static void hid_on_wakeup(usbd_device* dev) {
@@ -444,6 +338,7 @@ static void hid_on_suspend(usbd_device* dev) {
         if(callback != NULL) {
             callback(false, cb_ctx);
         }
+        ToyPadEmu_clear();
     }
 }
 
@@ -493,27 +388,7 @@ void hid_out_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
     case CMD_WAKE:
         sprintf(debug_text, "CMD_WAKE");
 
-        emulator->token_count = 0;
-
-        uint8_t default_tea_key[16] = {
-            0x55,
-            0xFE,
-            0xF6,
-            0xB0,
-            0x62,
-            0xBF,
-            0x0B,
-            0x41,
-            0xC9,
-            0xB3,
-            0x7C,
-            0xB4,
-            0x97,
-            0x3E,
-            0x29,
-            0x7B};
-
-        memcpy(emulator->tea_key, default_tea_key, sizeof(emulator->tea_key));
+        ToyPadEmu_clear();
 
         // From: https://github.com/AlinaNova21/node-ld/blob/f54b177d2418432688673aa07c54466d2e6041af/src/lib/ToyPadEmu.js#L139
         uint8_t wake_payload[13] = {

@@ -382,13 +382,6 @@ bool place_token(Token* token, int selectedBox) {
             break;
         }
     }
-    if(new_index == -1 && emulator->token_count < MAX_TOKENS) {
-        new_index = emulator->token_count++;
-    } else if(new_index == -1) {
-        set_debug_text("Max tokens reached!");
-        free(token);
-        return false;
-    }
 
     token->index = new_index;
     emulator->tokens[new_index] = token;
@@ -695,7 +688,6 @@ LDToyPadSceneEmulate* ldtoypad_scene_emulate_alloc(LDToyPadApp* new_app) {
     app = new_app;
 
     if(emulator == NULL) emulator = malloc(sizeof(ToyPadEmu));
-    emulator->token_count = 0;
     memset(emulator->tokens, 0, sizeof(emulator->tokens));
 
     LDToyPadSceneEmulate* instance = malloc(sizeof(LDToyPadSceneEmulate));
@@ -851,8 +843,6 @@ int get_token_count_of_specific_id(unsigned int id) {
             if(emulator->tokens[i]->id == id) {
                 count++;
             }
-        } else {
-            break;
         }
     }
     return count;

@@ -3,6 +3,8 @@
 #include <furi_hal.h>
 #include <pthread.h>
 
+#include "frame.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -27,7 +29,6 @@ typedef struct {
 
 typedef struct {
     Token* tokens[MAX_TOKENS];
-    int token_count;
     uint8_t tea_key[16];
 } ToyPadEmu;
 
