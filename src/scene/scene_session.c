@@ -150,12 +150,14 @@ static void actionSelect(const PSESSIONSCENE instance, FuriString* const path) {
 	DialogsFileBrowserOptions options;
 	furi_string_set_str(path, APP_DATA_PATH("sessions"));
 	memset(&options, 0, sizeof(DialogsFileBrowserOptions));
+	options.skip_assets = dialog_file_browser_show(furi_record_open(RECORD_DIALOGS), path, path, &options);
+	furi_record_close(RECORD_DIALOGS);
 
-	if(dialog_file_browser_show(furi_record_open(RECORD_DIALOGS), path, path, &options)) {
-		CUBERZERO_INFO("Selected: %s", furi_string_get_cstr(path));
+	if(!options.skip_assets) {
+		instance->screen = SCREEN_TEXT;
+		return;
 	}
 
-	furi_record_close(RECORD_DIALOGS);
 	instance->screen = SCREEN_TEXT;
 	instance->button = BUTTON_TEXT_SELECT;
 	view_port_update(instance->viewport);
