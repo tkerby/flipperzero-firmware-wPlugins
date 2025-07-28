@@ -449,8 +449,7 @@ bool app_scene_i2ctoolreader_on_event(void* ctx, SceneManagerEvent event) {
                         model->read_offset,
                         model->data,
                         model->data_len,
-                        I2C_MEM_I2C_TIMEOUT
-                    );
+                        I2C_MEM_I2C_TIMEOUT);
                     furi_hal_i2c_release(I2C_BUS);
                     if(res == false) {
                         FURI_LOG_I(TAG, "Could not read mem");

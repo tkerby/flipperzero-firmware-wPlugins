@@ -21,8 +21,8 @@
 #define OSC_SCALE_MV  100
 #define OSC_SCALE_Vin 100
 
-#define SPI_MEM_SPI_TIMEOUT 10000
-#define I2C_MEM_I2C_TIMEOUT 10000
+#define SPI_MEM_SPI_TIMEOUT      10000
+#define I2C_MEM_I2C_TIMEOUT      10000
 #define CUSTOM_FONT_TINY_BOLD    u8g2_font_courB08_tf
 #define CUSTOM_FONT_TINY_REGULAR u8g2_font_tom_thumb_4x6_mr
 #define CUSTOM_FONT_HUGE_REGULAR u8g2_font_logisoso20_tr

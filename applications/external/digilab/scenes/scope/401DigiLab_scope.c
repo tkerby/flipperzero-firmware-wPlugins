@@ -17,6 +17,31 @@ static const char* TAG = "401_DigiLabScope";
 #define SPEAKER_ACQUIRE_TIMEOUT 100
 #include <401_config.h>
 #include <drivers/sk6805.h>
+
+#ifndef SK6805_LED_PIN
+#define SK6805_LED_PIN &led_pin // Port de connexion des LEDs
+#endif
+
+static const GpioPin led_pin = {.port = GPIOA, .pin = LL_GPIO_PIN_13};
+
+void dl_SK6805_off(void) {
+    // furi_kernel_lock();
+    FURI_CRITICAL_ENTER();
+    uint32_t end;
+    for(uint16_t lednumber = 0; lednumber < SK6805_LED_COUNT * 24; lednumber++) {
+        furi_hal_gpio_write(SK6805_LED_PIN, true);
+        end = DWT->CYCCNT + 11;
+        while(DWT->CYCCNT < end) {
+        }
+        furi_hal_gpio_write(SK6805_LED_PIN, false);
+        end = DWT->CYCCNT + 43;
+        while(DWT->CYCCNT < end) {
+        }
+    }
+    FURI_CRITICAL_EXIT();
+    // furi_kernel_unlock();
+}
+
 uint16_t redraw_cnt = 0;
 
 static void scope_sound_stop() {
@@ -27,7 +52,7 @@ static void scope_sound_stop() {
 }
 
 static void scope_LED_stop() {
-    SK6805_off();
+    dl_SK6805_off();
 }
 
 static void scope_vibro_stop() {

@@ -1,16 +1,16 @@
 App(
     appid="401_digilab",
-    name="401/DigiLab",
+    name="Lab401/DigiLab",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="digilab_app",
-    requires=["gui"],
     fap_libs=["pulse_reader", "u8g2"],
     stack_size=5 * 1024,
     fap_file_assets="resources",
-    fap_description="Lab401's Digilab companion app.",
-    fap_author="Lab401 & tixlegeek",
     fap_icon="images/401_digilab_icon_10px.png",
-    fap_category="GPIO",
     fap_icon_assets="images",
-    fap_version="1.0"
+    fap_category="GPIO",
+    fap_author="Lab401 & tixlegeek",
+    fap_weburl="https://github.com/lab-401/fzDigiLab",
+    fap_version="1.0",
+    fap_description="Lab401's Digilab companion app.",
 )

@@ -19,7 +19,7 @@ This module embeds a sophisticated electronic system that enables hands-on diagn
 Plug the device on the GPIO header of the flipper zero, then download an install the latest firmware's version on your flipper zero. 
 Once everything is installed, navigate to **/Apps/GPIO/401LightDigiLab** to launch the application.
 
-![digilab](./README.assets/digilab.gif)
+![digilab](./READMEassets/digilab.gif)
 
 Press any key to enter the main menu. From here, you can navigate throught every tools.
 
@@ -31,33 +31,33 @@ DigiLab's I2C probe will automatically scan for I2C devices connected throuhgt o
 
 Once the scan is done, you will see every component detected as shown in this illustration:
 
-![i2cScan](./README.assets/i2cScan.gif)
+![i2cScan](./READMEassets/i2cScan.gif)
 
 Loop throught detected components using left and right arrows on your flipper zero's weheel.
 
 #### Detection screen
 
-![scanres](./README.assets/scanres.png)
+![scanres](./READMEassets/scanres.png)
 
 ### Predictions
 
 DigiLab will try to make predictions on the device scanned, based on it's address. By pressing "Info" on a known device, you will access the prediction menu. From here you can loop throught every predictions and see more details about them.
 
-![i2cDetect](./README.assets/i2cDetect.gif)
+![i2cDetect](./READMEassets/i2cDetect.gif)
 
 #### Prediction screen
 
-![predictres](./README.assets/predictres.png)
+![predictres](./READMEassets/predictres.png)
 
 ### Read/Write
 
 DigiLab also embeds a handy hexadecimal editor. You can try to read or write registers by entering the **R/W** tool.
 
-![hexedit](./README.assets/hexedit.gif)
+![hexedit](./READMEassets/hexedit.gif)
 
 #### How to use the hexadecimal editor:
 
-![hexscreen](./README.assets/hexscreen.png)
+![hexscreen](./READMEassets/hexscreen.png)
 
 1. Set the **OFFSET** (Register's address, or address from where you'd wish to start reading)
 2. Set the **DATA LEN** (The number of octets to be red from the device)
@@ -73,7 +73,7 @@ DigiLab also embeds a handy hexadecimal editor. You can try to read or write reg
 
 Digilab's SPI probe allows you to predict devices connected to the external SPI port of the flipper zero. DigiLab will realise a set of tests, trying to identify a device.
 
-![spi](./README.assets/spi.gif)
+![spi](./READMEassets/spi.gif)
 
 ## Probe
 
@@ -81,13 +81,13 @@ Digilab's Probe tool allows to clearly measure voltages and frequencies up to 20
 
 The probe will try to determine if the signal is continuous or not, and will give you a simple feedback
 
-![probe2](./README.assets/probe2.gif)
+![probe2](./READMEassets/probe2.gif)
 
 ## Scope
 
 The DigiLab's Scope tool allows you to (almost magically) get an intuitive sense of all kinds of signals. It's more like a magic wand than a traditional oscilloscope.
 
-![scope](./README.assets/scope.gif)
+![scope](./READMEassets/scope.gif)
 
 At first glance, it might look like an oscilloscope, allowing you to easily check voltages and get an initial view of how a voltage evolves over time. 
 
@@ -99,7 +99,7 @@ The DigiLab allows you to link multiple physical feedback mechanisms to measured
 
 Do do that, press **Left** to enter configuration.
 
-![alerts](./README.assets/alerts.gif)
+![alerts](./READMEassets/alerts.gif)
 
 #### Scope tool config
 
@@ -131,10 +131,10 @@ You need to calibrate the voltage measurement to ensure its accuracy. Note that 
 
 To do that, go to **Configuration** in the main menu.
 
-![cali2](./README.assets/cali2.gif)
+![cali2](./READMEassets/cali2.gif)
 
 Then Probe the 5V Test pad at on the tom left corner of the digilab as shown bellow:
-![probecali](./README.assets/probecali.png)
+![probecali](./READMEassets/probecali.png)
 
 While probing, press the **OK** button. You can then leave the menu by pressing **Return**
 

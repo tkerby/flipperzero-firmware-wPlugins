@@ -138,14 +138,7 @@ l401_err check_hat(AppContext* app) {
     uint8_t data[4] = {0};
     bool res = false;
     // Read the first 5 bytes from the EEPROM
-    res = furi_hal_i2c_read_mem(
-        I2C_BUS,
-        0x57 << 1,
-        0x00,
-        data,
-        4,
-        I2C_MEM_I2C_TIMEOUT
-    );
+    res = furi_hal_i2c_read_mem(I2C_BUS, 0x57 << 1, 0x00, data, 4, I2C_MEM_I2C_TIMEOUT);
     furi_hal_i2c_release(I2C_BUS);
     FURI_LOG_I(
         TAG,
@@ -176,6 +169,7 @@ AppContext* app_alloc() {
     app_ctx->scene_manager = scene_manager_alloc(&app_scene_handlers, app_ctx);
     app_ctx->notifications = furi_record_open(RECORD_NOTIFICATION); // Used for backlight
     app_ctx->view_dispatcher = view_dispatcher_alloc();
+    view_dispatcher_enable_queue(app_ctx->view_dispatcher);
 
     view_dispatcher_attach_to_gui(app_ctx->view_dispatcher, gui, ViewDispatcherTypeFullscreen);
     view_dispatcher_enable_queue(app_ctx->view_dispatcher);
