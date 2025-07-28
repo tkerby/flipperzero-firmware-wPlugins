@@ -1,6 +1,6 @@
 App(
     appid="flip_crypt",
-    name="FlipCrypt Dev",
+    name="FlipCrypt",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="flip_crypt_app",
     stack_size=4 * 1024,
