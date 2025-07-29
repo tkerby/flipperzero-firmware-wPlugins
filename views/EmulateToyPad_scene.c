@@ -313,7 +313,7 @@ bool ldtoypad_scene_emulate_input_callback(InputEvent* event, void* context) {
                     model->show_mini_menu_selected = false;
                 }
 
-                if(event->type == InputTypeLong) {
+                if(event->type == InputTypeLong && model->connected) {
                     switch(event->key) {
                     case InputKeyUp:
                         save_current_state(emulator);
