@@ -8,20 +8,16 @@ typedef struct {
 	ViewPort* viewport;
 	FuriMessageQueue* queue;
 	struct {
-		uint8_t action : 1;
-		uint8_t screen : 1;
-		uint8_t button : 2;
+		uint8_t action	   : 1;
+		uint8_t button	   : 2;
+		uint8_t renderText : 1;
+		uint8_t text	   : 2;
 	};
 } SESSIONSCENE, *PSESSIONSCENE;
 
 enum ACTION {
 	ACTION_EXIT,
 	ACTION_SELECT
-};
-
-enum SCREEN {
-	SCREEN_SESSION,
-	SCREEN_TEXT
 };
 
 enum BUTTONSESSION {
@@ -32,9 +28,16 @@ enum BUTTONSESSION {
 };
 
 enum BUTTONTEXT {
-	BUTTON_TEXT_SELECT,
-	BUTTON_TEXT_OK,
+	BUTTON_TEXT_DELETE_SELECT,
+	BUTTON_TEXT_CANCEL_OK_OPEN,
 	COUNT_BUTTON_TEXT
+};
+
+enum TEXT {
+	TEXT_NO_FILE_SELECTED,
+	TEXT_APPEARS_INCORRECT_TYPE,
+	TEXT_NOT_SESSION_FILE,
+	TEXT_DELETE_CONFIRM
 };
 
 static inline void drawButton(Canvas* const canvas, const uint8_t x, const uint8_t y, const uint8_t pressed, const char* const text) {
@@ -62,21 +65,19 @@ static void callbackRender(Canvas* const canvas, void* const context) {
 	const PSESSIONSCENE instance = context;
 	canvas_clear(canvas);
 
-	switch(instance->screen) {
-	case SCREEN_SESSION:
+	if(!instance->renderText) {
 		canvas_set_font(canvas, FontPrimary);
 		canvas_draw_str(canvas, 0, 8, "Current Session:");
 		elements_text_box(canvas, 0, 11, 128, 39, AlignLeft, AlignTop, "Session 8192", 1);
 		drawButton(canvas, 10, 51, instance->button == BUTTON_SESSION_SELECT, "Select");
 		drawButton(canvas, 52, 51, instance->button == BUTTON_SESSION_NEW, "New");
 		drawButton(canvas, 86, 51, instance->button == BUTTON_SESSION_DELETE, "Delete");
-		break;
-	case SCREEN_TEXT:
-		elements_text_box(canvas, 0, 0, 128, 51, AlignCenter, AlignCenter, "Are you sure you want to\ndelete the current session?", 1);
-		drawButton(canvas, 10, 51, instance->button == BUTTON_TEXT_SELECT, "Delete");
-		drawButton(canvas, 70, 51, instance->button == BUTTON_TEXT_OK, "Cancel");
-		break;
+		return;
 	}
+
+	elements_text_box(canvas, 0, 0, 128, 51, AlignCenter, AlignCenter, "Are you sure you want to\ndelete the current session?", 1);
+	drawButton(canvas, 10, 51, instance->button == 0, "Delete");
+	drawButton(canvas, 70, 51, instance->button == 1, "Cancel");
 }
 
 static void callbackInput(InputEvent* const event, void* const context) {
@@ -91,59 +92,38 @@ static void callbackInput(InputEvent* const event, void* const context) {
 	switch(event->key) {
 	case InputKeyUp:
 	case InputKeyRight:
-		switch(instance->screen) {
-		case SCREEN_SESSION:
-			instance->button = (instance->button + 1) % COUNT_BUTTON_SESSION;
-			break;
-		case SCREEN_TEXT:
-			instance->button = (instance->button + 1) % COUNT_BUTTON_TEXT;
-			break;
-		}
-
-		view_port_update(instance->viewport);
-		return;
+		instance->button = (instance->button + 1) % (instance->renderText ? COUNT_BUTTON_TEXT : COUNT_BUTTON_SESSION);
+		goto updateViewport;
 	case InputKeyDown:
 	case InputKeyLeft:
-		switch(instance->screen) {
-		case SCREEN_SESSION:
-			instance->button = (instance->button ? instance->button : COUNT_BUTTON_SESSION) - 1;
-			break;
-		case SCREEN_TEXT:
-			instance->button = (instance->button ? instance->button : COUNT_BUTTON_TEXT) - 1;
-			break;
-		}
-
-		view_port_update(instance->viewport);
-		return;
+		instance->button = (instance->button ? instance->button : (instance->renderText ? COUNT_BUTTON_TEXT : COUNT_BUTTON_SESSION)) - 1;
+		goto updateViewport;
 	case InputKeyBack:
-		switch(instance->screen) {
-		case SCREEN_SESSION:
-			instance->action = ACTION_EXIT;
-			furi_message_queue_put(instance->queue, event, FuriWaitForever);
-			break;
-		case SCREEN_TEXT:
-			instance->screen = SCREEN_SESSION;
+		if(instance->renderText) {
 			instance->button = BUTTON_SESSION_SELECT;
-			view_port_update(instance->viewport);
-			break;
+			instance->renderText = 0;
+			goto updateViewport;
 		}
 
+		instance->action = ACTION_EXIT;
+		furi_message_queue_put(instance->queue, event, FuriWaitForever);
 		return;
 	default:
 		break;
 	}
 
-	switch(instance->screen) {
-	case SCREEN_SESSION:
-		switch(instance->button) {
-		case BUTTON_SESSION_SELECT:
-			instance->action = ACTION_SELECT;
-			furi_message_queue_put(instance->queue, event, FuriWaitForever);
-			break;
-		}
-
+	if(instance->renderText) {
 		return;
 	}
+
+	switch(instance->button) {
+	case BUTTON_SESSION_SELECT:
+		instance->action = ACTION_SELECT;
+		furi_message_queue_put(instance->queue, event, FuriWaitForever);
+		return;
+	}
+updateViewport:
+	view_port_update(instance->viewport);
 }
 
 static void actionSelect(const PSESSIONSCENE instance, FuriString* const path) {
@@ -154,12 +134,13 @@ static void actionSelect(const PSESSIONSCENE instance, FuriString* const path) {
 	furi_record_close(RECORD_DIALOGS);
 
 	if(!options.skip_assets) {
-		instance->screen = SCREEN_TEXT;
+		instance->renderText = 1;
+		instance->text = TEXT_NO_FILE_SELECTED;
 		return;
 	}
 
-	instance->screen = SCREEN_TEXT;
-	instance->button = BUTTON_TEXT_SELECT;
+	instance->renderText = 1;
+	instance->text = TEXT_APPEARS_INCORRECT_TYPE;
 	view_port_update(instance->viewport);
 }
 
@@ -169,8 +150,6 @@ void SceneSessionEnter(void* const context) {
 	instance->instance = context;
 	instance->viewport = view_port_alloc();
 	instance->queue = furi_message_queue_alloc(1, sizeof(InputEvent));
-	instance->screen = SCREEN_SESSION;
-	instance->button = BUTTON_SESSION_SELECT;
 	FuriString* const path = furi_string_alloc();
 	view_port_draw_callback_set(instance->viewport, callbackRender, instance);
 	view_port_input_callback_set(instance->viewport, callbackInput, instance);
