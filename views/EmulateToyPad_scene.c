@@ -92,11 +92,6 @@ void remove_old_token(Token* token) {
 bool place_token(Token* token, int selectedBox) {
     remove_old_token(token); // Remove old token if it exists by UID
 
-    unsigned char buffer[32] = {0};
-
-    boxInfo[selectedBox].isFilled = true;
-    selectedBox_to_pad(token, selectedBox);
-
     // Find an empty slot or use the next available index
     int new_index = -1;
     for(int i = 0; i < MAX_TOKENS; i++) {
@@ -109,6 +104,11 @@ bool place_token(Token* token, int selectedBox) {
         return false; // No empty slot available
     }
 
+    unsigned char buffer[32] = {0};
+
+    selectedBox_to_pad(token, selectedBox);
+
+    boxInfo[selectedBox].isFilled = true;
     token->index = new_index;
     emulator->tokens[new_index] = token;
     boxInfo[selectedBox].index = new_index;
@@ -121,7 +121,7 @@ bool place_token(Token* token, int selectedBox) {
     buffer[4] = token->index;
     buffer[5] = 0x00;
     memcpy(&buffer[6], token->uid, 7);
-    buffer[13] = generate_checksum_for_command(buffer, 13);
+    buffer[13] = generate_checksum(buffer, 13);
 
     usbd_ep_write(get_usb_device(), HID_EP_IN, buffer, sizeof(buffer));
 
@@ -149,11 +149,8 @@ void ToyPadEmu_place_tokens(Token* tokens[MAX_TOKENS], BoxInfo boxes[NUM_BOXES])
     if(tokens == NULL || boxes == NULL) {
         return; // Invalid input
     }
-    // Clear the current tokens
+    // Clear toypad by removing all tokens
     ToyPadEmu_remove_all_tokens();
-
-    // set boxes to the boxInfo
-    // memcpy(boxInfo, boxes, sizeof(BoxInfo) * NUM_BOXES);
 
     // Place all the tokens on the toypad in the correct boxes from boxinfo and inxexes from tokens
     for(int i = 0; i < MAX_TOKENS; i++) {
@@ -198,9 +195,8 @@ void save_current_state(ToyPadEmu* emulator) {
         }
     }
     if(save_toypad(tokens_copy, boxInfo, "preset1")) {
-        set_debug_text("Saved preset1");
+        set_debug_text("Saved preset");
     }
-    furi_delay_ms(100); // Delay to ensure the save is complete
 }
 
 void load_saved_state() {
@@ -244,20 +240,23 @@ bool ldtoypad_scene_emulate_input_callback(InputEvent* event, void* context) {
                         model->ok_pressed = true;
                     }
                     if(event->type == InputTypeShort && model->show_mini_menu_selected) {
-                        bool isVehicle = get_token_from_index(boxInfo[selectedBox].index)->id == 0;
+                        Token* index_token = get_token_from_index(boxInfo[selectedBox].index);
+                        bool isVehicle = index_token->id == 0;
 
                         switch(model->mini_option_selected) {
                         case MiniSelectionFavorite:
                             // Save the token to favorites
                             if(!isVehicle) {
-                                int id = get_token_from_index(boxInfo[selectedBox].index)->id;
+                                int id = index_token->id;
                                 if(id) {
                                     // check if the minifigure is already a favorite then unfavorite it
                                     if(is_favorite(id)) {
                                         unfavorite(id, app);
+                                        set_debug_text("Minifigure removed from favorites");
                                     } else {
                                         // save the minifigure to favorites
                                         favorite(id, app);
+                                        set_debug_text("Minifigure added to favorites");
                                     }
                                 }
                             }
@@ -266,9 +265,8 @@ bool ldtoypad_scene_emulate_input_callback(InputEvent* event, void* context) {
                             // }
                             break;
                         case MiniSelectionSave:
-                            Token* token = get_token_from_index(boxInfo[selectedBox].index);
-                            if(!token->id) {
-                                save_token(token);
+                            if(isVehicle) {
+                                save_token(index_token);
 
                                 fill_saved_submenu(app);
                             }
@@ -417,7 +415,7 @@ bool ldtoypad_scene_emulate_input_callback(InputEvent* event, void* context) {
     return consumed;
 }
 
-unsigned char generate_checksum_for_command(const unsigned char* command, size_t len) {
+unsigned char generate_checksum(const unsigned char* command, size_t len) {
     unsigned char result = 0;
 
     // Add bytes, wrapping naturally with unsigned char overflow

@@ -18,12 +18,6 @@
 int favorite_ids[MAX_FAVORITES];
 int num_favorites = 0;
 
-// Utility: Error logging
-void log_and_set_text(char* msg) {
-    FURI_LOG_E(TAG, "%s", msg);
-    set_debug_text(msg);
-}
-
 // Utility: Alloc file and storage
 File* alloc_file(Storage** storage) {
     *storage = furi_record_open(RECORD_STORAGE);
@@ -56,7 +50,7 @@ bool save_binary_to_file(const void* data, size_t size, const char* filename) {
     File* file = alloc_file(&storage);
 
     if(!open_file(file, filename, true)) {
-        log_and_set_text("Failed to open file for writing");
+        set_debug_text("Fail open file writing");
         file_close_and_free(file);
         furi_record_close(RECORD_STORAGE);
         return false;
@@ -66,7 +60,7 @@ bool save_binary_to_file(const void* data, size_t size, const char* filename) {
     file_close_and_free(file);
     furi_record_close(RECORD_STORAGE);
 
-    if(!success) log_and_set_text("Failed to write to file");
+    if(!success) set_debug_text("Fail write file");
     return success;
 }
 
@@ -76,7 +70,7 @@ bool load_binary_from_file(void* data, size_t size, const char* filename) {
     File* file = alloc_file(&storage);
 
     if(!open_file(file, filename, false)) {
-        log_and_set_text("Failed to open file for reading");
+        set_debug_text("Fail open file reading");
         file_close_and_free(file);
         furi_record_close(RECORD_STORAGE);
         return false;
@@ -86,8 +80,37 @@ bool load_binary_from_file(void* data, size_t size, const char* filename) {
     file_close_and_free(file);
     furi_record_close(RECORD_STORAGE);
 
-    if(!success) log_and_set_text("Failed to read from file");
+    if(!success) set_debug_text("Fail read file");
     return success;
+}
+
+bool save_favorites(void) {
+    char filename[FILEPATH_SIZE];
+    snprintf(filename, sizeof(filename), "%s", APP_DATA_PATH(FILE_NAME_FAVORITES));
+
+    return save_binary_to_file(&num_favorites, sizeof(int), filename) &&
+           (num_favorites == 0 ||
+            save_binary_to_file(favorite_ids, sizeof(int) * num_favorites, filename));
+}
+
+void cleanup_favorites() {
+    // Remove unkown / favorites from the list / file
+    uint8_t cleaned_favorites = 0;
+    for(uint8_t i = 0; i < num_favorites; i++) {
+        if(favorite_ids[i] <= 0 || favorite_ids[i] > 999 ||
+           strcmp(get_minifigure_name(favorite_ids[i]), "?") == 0) {
+            // Invalid, remove it
+            for(uint8_t j = i; j < num_favorites - 1; j++) {
+                favorite_ids[j] = favorite_ids[j + 1];
+            }
+            num_favorites--;
+            cleaned_favorites++;
+            i--; // Check the new item at this index
+        }
+    }
+    if(cleaned_favorites > 0) {
+        save_favorites(); // Save the cleaned favorites
+    }
 }
 
 // Favorites
@@ -101,16 +124,9 @@ void load_favorites(void) {
 
     if(num_favorites > 0) {
         load_binary_from_file(favorite_ids, sizeof(int) * num_favorites, filename);
+
+        cleanup_favorites(); // Clean up any invalid favorites
     }
-}
-
-bool save_favorites(void) {
-    char filename[FILEPATH_SIZE];
-    snprintf(filename, sizeof(filename), "%s", APP_DATA_PATH(FILE_NAME_FAVORITES));
-
-    return save_binary_to_file(&num_favorites, sizeof(int), filename) &&
-           (num_favorites == 0 ||
-            save_binary_to_file(favorite_ids, sizeof(int) * num_favorites, filename));
 }
 
 void fill_favorites_submenu(LDToyPadApp* app) {
@@ -182,14 +198,14 @@ void fill_saved_submenu(LDToyPadApp* app) {
     make_token_dir(storage);
 
     if(!storage_dir_open(dir, APP_DATA_PATH(TOKENS_DIR))) {
-        log_and_set_text("Failed to open token dir");
+        set_debug_text("Fail open token dir");
         storage_file_free(dir);
         furi_record_close(RECORD_STORAGE);
         return;
     }
 
     FileInfo file_info;
-    char file_name[FILE_NAME_LEN_MAX / 2];
+    char file_name[FILEPATH_SIZE];
 
     while(storage_dir_read(dir, &file_info, file_name, sizeof(file_name))) {
         if(file_info.flags & FSF_DIRECTORY) continue;
@@ -259,7 +275,6 @@ bool save_token(Token* token) {
         path, "%s/%s-%s%s", APP_DATA_PATH(TOKENS_DIR), name, uid, TOKEN_FILE_EXTENSION);
 
     bool result = save_binary_to_file(token, sizeof(Token), furi_string_get_cstr(path));
-    if(result) set_debug_text("Saved token to file");
     furi_string_free(path);
     return result;
 }
@@ -270,11 +285,11 @@ Token* load_saved_token(char* filepath) {
         free(token);
         return NULL;
     }
-    set_debug_text("Loaded token from file");
     return token;
 }
 
-void filename_to_toypads_path(char* filename, char* fullpath) {
+// filename to toypads path
+void fn_to_toypads_fp(char* filename, char* fullpath) {
     snprintf(
         fullpath,
         FILEPATH_SIZE,
@@ -284,7 +299,7 @@ void filename_to_toypads_path(char* filename, char* fullpath) {
         TOYPADS_FILE_EXTENSION);
 }
 
-void ensure_toypad_dir_exists(void) {
+void mkdir_toypads(void) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     storage_simply_mkdir(storage, APP_DATA_PATH(TOYPADS_DIR));
     furi_record_close(RECORD_STORAGE);
@@ -302,10 +317,10 @@ bool save_toypad(Token tokens[MAX_TOKENS], BoxInfo boxes[NUM_BOXES], char* filen
     memcpy(state.boxes, boxes, sizeof(BoxInfo) * NUM_BOXES);
 
     char fullpath[FILEPATH_SIZE];
-    filename_to_toypads_path(filename, fullpath);
+    fn_to_toypads_fp(filename, fullpath);
 
     if(save_binary_to_file(&state, sizeof(ToyPadSaveState), fullpath)) {
-        set_debug_text("Saved toypad state file");
+        furi_delay_ms(100); // Ensure the save is complete
         return true;
     }
     return false;
@@ -314,9 +329,9 @@ bool load_saved_toypad(Token* tokens[MAX_TOKENS], BoxInfo boxes[NUM_BOXES], char
     ToyPadSaveState state;
 
     char fullpath[FILEPATH_SIZE];
-    filename_to_toypads_path(filename, fullpath);
+    fn_to_toypads_fp(filename, fullpath);
 
-    ensure_toypad_dir_exists();
+    mkdir_toypads();
 
     if(load_binary_from_file(&state, sizeof(ToyPadSaveState), fullpath)) {
         // set the tokens to tokens and allocate them with the loaded data
@@ -329,7 +344,6 @@ bool load_saved_toypad(Token* tokens[MAX_TOKENS], BoxInfo boxes[NUM_BOXES], char
             }
         }
         memcpy(boxes, state.boxes, sizeof(BoxInfo) * NUM_BOXES);
-        set_debug_text("Loaded toypad state file");
         return true;
     }
     return false;

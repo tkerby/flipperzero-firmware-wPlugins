@@ -22,7 +22,7 @@ void ldtoypad_scene_emulate_free(LDToyPadSceneEmulate* ldtoypad_emulate);
 
 View* ldtoypad_scene_emulate_get_view(LDToyPadSceneEmulate* ldtoypad_scene_emulate);
 
-unsigned char generate_checksum_for_command(const unsigned char* command, size_t len);
+unsigned char generate_checksum(const unsigned char* command, size_t len);
 
 void selectedBox_to_pad(Token* new_character, int selectedBox);
 
