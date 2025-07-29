@@ -75,9 +75,40 @@ static void callbackRender(Canvas* const canvas, void* const context) {
 		return;
 	}
 
-	elements_text_box(canvas, 0, 0, 128, 51, AlignCenter, AlignCenter, "Are you sure you want to\ndelete the current session?", 1);
-	drawButton(canvas, 10, 51, instance->button == 0, "Delete");
-	drawButton(canvas, 70, 51, instance->button == 1, "Cancel");
+	const char* text;
+
+	switch(instance->text) {
+	case TEXT_NO_FILE_SELECTED:
+		text = "No session file was selected.";
+		break;
+	case TEXT_APPEARS_INCORRECT_TYPE:
+		text = "The selected file does not\nappear to be a session file.\nOpen anyway?";
+		break;
+	case TEXT_NOT_SESSION_FILE:
+		text = "The selected file\nis not a session file.\nIt might be corrupted.";
+		break;
+	case TEXT_DELETE_CONFIRM:
+		text = "Are you sure you want to\ndelete the current session?";
+		break;
+	}
+
+	elements_text_box(canvas, 0, 0, 128, 51, AlignCenter, AlignCenter, text, 1);
+
+	switch(instance->text) {
+	case TEXT_NO_FILE_SELECTED:
+	case TEXT_NOT_SESSION_FILE:
+		drawButton(canvas, 10, 51, instance->button == BUTTON_TEXT_DELETE_SELECT, "Select");
+		drawButton(canvas, 70, 51, instance->button == BUTTON_TEXT_CANCEL_OK_OPEN, "Ok");
+		break;
+	case TEXT_APPEARS_INCORRECT_TYPE:
+		drawButton(canvas, 10, 51, instance->button == BUTTON_TEXT_DELETE_SELECT, "Select");
+		drawButton(canvas, 70, 51, instance->button == BUTTON_TEXT_CANCEL_OK_OPEN, "Open");
+		break;
+	case TEXT_DELETE_CONFIRM:
+		drawButton(canvas, 10, 51, instance->button == BUTTON_TEXT_DELETE_SELECT, "Delete");
+		drawButton(canvas, 70, 51, instance->button == BUTTON_TEXT_CANCEL_OK_OPEN, "Cancel");
+		break;
+	}
 }
 
 static void callbackInput(InputEvent* const event, void* const context) {
