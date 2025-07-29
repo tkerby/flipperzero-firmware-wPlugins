@@ -12,7 +12,7 @@
 
 #define NUM_BOXES 7 // the number of boxes (7 boxes always)
 
-#define TOKEN_DELAY_TIME 400 // delay time for the token to be placed on the pad in ms
+#define TOKEN_DELAY_TIME 150 // delay time for the token to be placed on the pad in ms
 
 typedef struct LDToyPadSceneEmulate LDToyPadSceneEmulate;
 
@@ -38,14 +38,16 @@ struct BoxInfo {
     bool isFilled; // Indicates if the box is filled with a Token (minifig / vehicle)
     int index; // The index of the token in the box
 };
+typedef struct BoxInfo BoxInfo;
 
 typedef struct {
     bool left_pressed;
-    bool up_pressed;
     bool right_pressed;
+    bool up_pressed;
     bool down_pressed;
     bool ok_pressed;
-    bool back_pressed;
+    // bool back_pressed;
+    bool back_long_pressed;
     bool connected;
     char* connection_status;
 

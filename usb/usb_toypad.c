@@ -224,8 +224,11 @@ bool ToyPadEmu_remove(int index) {
 
     usbd_ep_write(get_usb_device(), HID_EP_IN, buffer, sizeof(buffer));
 
-    // Free the token and clear the slot
-    free(emulator->tokens[index]);
+    if(emulator->tokens[index] != NULL) {
+        // Free the token and clear the slot
+        free(emulator->tokens[index]);
+    }
+
     emulator->tokens[index] = NULL;
 
     return true;
