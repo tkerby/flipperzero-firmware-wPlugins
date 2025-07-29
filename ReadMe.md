@@ -43,7 +43,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [MiZip Balance Editor v0.2 (By teohumeau)](https://github.com/teohumeau/MiZipBalanceEditor)
 - Added: [Groks Adventure v0.15 (By DigiMancer3D)](https://github.com/DigiMancer3D/Groks_Adventure)
 - Added: [Lab401/DigiLab v1.0 (By lab-401 & tixlegeek)](https://github.com/lab-401/fzDigiLab)
-- ESP Flasher: [Bump Marauder v1.8.1 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.8.1)
+- Updated: [FlipCrypt v0.4 (By TAxelAnderson)](https://github.com/TAxelAnderson/FlipCrypt)
+- ESP Flasher: [Bump Marauder v1.8.3 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.8.3)
 
 <a name="release">
 
@@ -498,7 +499,7 @@ $ ./fbt dolphin_ext
 - [FlipBoard Signal v3.12 (By jamisonderek)](https://github.com/jamisonderek/flipboard)
 - [FlipBoard Simon v1.10 (By jamisonderek)](https://github.com/jamisonderek/flipboard)
 - [FlipBIP Crypto Wallet v1.18 (By xtruan)](https://github.com/xtruan/FlipBIP)
-- [FlipCrypt v0.3 (By TAxelAnderson)](https://github.com/TAxelAnderson/FlipCrypt)
+- [FlipCrypt v0.4 (By TAxelAnderson)](https://github.com/TAxelAnderson/FlipCrypt)
 - [Flipper Aid v1.0 (By spaghety)](https://github.com/spaghety/flipper-aid)
 - [Flipper Doctor v0.1 (By julandealb)](https://github.com/julandealb/flipperdoc)
 - [Flipper Tag v1.0 (By thejudge156)](https://github.com/thejudge156/flippertag)

@@ -3179,51 +3179,79 @@ void cipher_learn_scene_on_enter(void* context) {
 void create_nfc_tag(App* app, const char* message) {
     app->nfc_device = nfc_device_alloc();
     nfc_data_generator_fill_data(NfcDataGeneratorTypeNTAG215, app->nfc_device);
+
     const MfUltralightData* data_original =
         nfc_device_get_data(app->nfc_device, NfcProtocolMfUltralight);
+    // Create a mutable copy of the data
     MfUltralightData* data = malloc(sizeof(MfUltralightData));
-    Iso14443_3aData* isodata = malloc(sizeof(Iso14443_3aData));
-    memcpy(isodata, data_original->iso14443_3a_data, sizeof(Iso14443_3aData));
+    furi_assert(data); // Check for successful allocation
     memcpy(data, data_original, sizeof(MfUltralightData));
+
+    // Ensure iso14443_3a_data is also a copy if it's not directly embedded
+    Iso14443_3aData* isodata = malloc(sizeof(Iso14443_3aData));
+    furi_assert(isodata); // Check for successful allocation
+    memcpy(isodata, data_original->iso14443_3a_data, sizeof(Iso14443_3aData));
     data->iso14443_3a_data = isodata;
-    // Setup TLV Header
-    data->page[4].data[0] = 0x03; // TLV: NDEF Message
+
     const char* lang = "en";
     uint8_t lang_len = strlen(lang);
     size_t msg_len = strlen(message);
-    uint8_t status_byte = lang_len & 0x3F; // UTF-8, no UTF-16 flag
-    // Total NDEF payload = status + lang + message
-    size_t payload_len = 1 + lang_len + msg_len;
-    // NDEF Header
-    data->page[4].data[1] = payload_len + 3; // length of NDEF record (excluding TLV)
-    data->page[4].data[2] = 0xD1; // MB, ME, SR, TNF=1
-    data->page[4].data[3] = 0x01; // Type Length = 1
-    data->page[5].data[0] = payload_len; // Payload Length
+
+    // NDEF Text Record Payload: Status Byte + Language Code + Message
+    size_t text_payload_len = 1 + lang_len + msg_len;
+
+    // NDEF Record Header: TNF_Flags (1) + Type_Length (1) + Payload_Length (1) + Type (1)
+    size_t ndef_record_header_len = 4; // D1, 01, Payload_Len, T
+
+    // Total NDEF Message Length (excluding TLV 0x03 and its length byte)
+    // This is the length that goes into data->page[4].data[1]
+    size_t ndef_message_total_len = ndef_record_header_len + text_payload_len;
+
+    // Set up TLV Header (starting at Page 4, Byte 0)
+    data->page[4].data[0] = 0x03; // TLV: NDEF Message
+    data->page[4].data[1] =
+        ndef_message_total_len; // Length of NDEF Message (excluding TLV itself)
+
+    // NDEF Record Header (starting at Page 4, Byte 2)
+    data->page[4].data[2] = 0xD1; // MB, ME, SR, TNF=1 (Well-Known Type)
+    data->page[4].data[3] = 0x01; // Type Length = 1 ('T')
+
+    // NDEF Record Payload Start (starting at Page 5, Byte 0)
+    data->page[5].data[0] = text_payload_len; // Payload Length
     data->page[5].data[1] = 'T'; // Type = text
+    uint8_t status_byte = (0 << 7) | (lang_len & 0x3F); // UTF-8 (bit 7 = 0), Language Length
     data->page[5].data[2] = status_byte; // Status byte
-    // Begin writing at data[5].data[3]
-    size_t page_index = 5;
-    size_t data_index = 3;
+
+    // Begin writing language and message
+    size_t current_byte_idx = 3; // Starting at Page 5, Byte 3 for language code
+    size_t current_page_idx = 5;
+
     // Write language code
     for(size_t i = 0; i < lang_len; ++i) {
-        data->page[page_index].data[data_index++] = lang[i];
-        if(data_index > 3) {
-            data_index = 0;
-            ++page_index;
+        data->page[current_page_idx].data[current_byte_idx++] = lang[i];
+        if(current_byte_idx > 3) { // Moved to next byte in page, if overflowed
+            current_byte_idx = 0;
+            current_page_idx++;
         }
     }
+
     // Write actual message
     for(size_t i = 0; i < msg_len; ++i) {
-        data->page[page_index].data[data_index++] = message[i];
-        if(data_index > 3) {
-            data_index = 0;
-            ++page_index;
+        data->page[current_page_idx].data[current_byte_idx++] = message[i];
+        if(current_byte_idx > 3) { // Moved to next byte in page, if overflowed
+            current_byte_idx = 0;
+            current_page_idx++;
         }
     }
-    // Terminator
-    data->page[page_index].data[data_index++] = 0xFE;
+
+    // NDEF TLV Terminator (0xFE) - placed after the entire NDEF message
+    // It should be at the next available byte after the message payload.
+    data->page[current_page_idx].data[current_byte_idx++] = 0xFE;
+
     // Finalize and store
     nfc_device_set_data(app->nfc_device, NfcProtocolMfUltralight, data);
+
+    // Free the allocated memory
     free(data);
     free(isodata);
 }
@@ -3940,7 +3968,7 @@ void flip_crypt_about_scene_on_enter(void* context) {
         128,
         64,
         "FlipCrypt\n"
-        "v0.3\n"
+        "v0.4\n"
         "Explore and learn about various cryptograpic and text encoding methods.\n\n"
         "Usage:\n"
         "Select the method you want to use for encoding / decoding text and fill in the necessary inputs.\n"
