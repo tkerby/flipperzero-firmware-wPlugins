@@ -59,54 +59,153 @@ struct LDToyPadSceneEmulate {
 // The selected pad on the toypad
 uint8_t selectedBox = 1; // Variable to keep track of which toypad box is selected
 
-// function get uid from index
-// uint8_t* get_uid_from_index(int index) {
-//     if(index < 0 || index >= MAX_TOKENS) {
-//         return NULL; // Invalid index
-//     }
-//     return emulator->tokens[index]->uid;
-// }
-
-// int get_id_from_index(int index) {
-//     if(index < 0 || index >= MAX_TOKENS) {
-//         return 0; // Invalid index
-//     }
-
-//     // when the token is a vehicle get the id from the token payload
-//     if(!emulator->tokens[index]->id) {
-//         int id = emulator->tokens[index]->token[0x24 * 4] |
-//                  (emulator->tokens[index]->token[0x25 * 4] << 8);
-//         // convert the id to little endian
-//         id = (id & 0xFF00) >> 8 | (id & 0x00FF) << 8;
-//         return id;
-//     } else {
-//         return emulator->tokens[index]->id;
-//     }
-
-//     if(emulator->tokens[index]->id) {
-//         return emulator->tokens[index]->id;
-//     } else {
-//         return 0;
-//     }
-// }
-
-// int get_id_from_token(Token* token) {
-//     if(token->id) {
-//         return token->id;
-//     } else {
-//         // when the token is a vehicle get the id from the token payload
-//         int id = token->token[0x24 * 4] | (token->token[0x25 * 4] << 8);
-//         // convert the id to little endian
-//         id = (id & 0xFF00) >> 8 | (id & 0x00FF) << 8;
-//         return id;
-//     }
-// }
-
 Token* get_token_from_index(int index) {
     if(index < 0 || index >= MAX_TOKENS) {
         return NULL; // Invalid index
     }
     return emulator->tokens[index];
+}
+
+void remove_old_token(Token* token) {
+    // Check if the selected token is already placed on the toypad check by uid if the token is already placed then remove the old one and place the new one
+    for(int i = 0; i < MAX_TOKENS; i++) {
+        if(emulator->tokens[i] != NULL) {
+            if(memcmp(emulator->tokens[i]->uid, token->uid, 7) == 0) {
+                // remove the old token
+                if(ToyPadEmu_remove(i)) {
+                    // get the box of the old token and set it to not filled
+                    for(int j = 0; j < NUM_BOXES; j++) {
+                        if(boxInfo[j].index == i) {
+                            boxInfo[j].isFilled = false;
+                            boxInfo[j].index = -1; // Reset index
+                            break;
+                        }
+                    }
+                }
+                furi_delay_ms(TOKEN_DELAY_TIME); // wait for the token to be removed
+                break;
+            }
+        }
+    }
+}
+
+bool place_token(Token* token, int selectedBox) {
+    remove_old_token(token); // Remove old token if it exists by UID
+
+    // Find an empty slot or use the next available index
+    int new_index = -1;
+    for(int i = 0; i < MAX_TOKENS; i++) {
+        if(emulator->tokens[i] == NULL) {
+            new_index = i;
+            break;
+        }
+    }
+    if(new_index == -1) {
+        return false; // No empty slot available
+    }
+
+    unsigned char buffer[32] = {0};
+
+    selectedBox_to_pad(token, selectedBox);
+
+    boxInfo[selectedBox].isFilled = true;
+    token->index = new_index;
+    emulator->tokens[new_index] = token;
+    boxInfo[selectedBox].index = new_index;
+
+    // Send placement command
+    buffer[0] = FRAME_TYPE_REQUEST;
+    buffer[1] = 0x0b; // Size always 11
+    buffer[2] = token->pad;
+    buffer[3] = 0x00;
+    buffer[4] = token->index;
+    buffer[5] = 0x00;
+    memcpy(&buffer[6], token->uid, 7);
+    buffer[13] = generate_checksum(buffer, 13);
+
+    usbd_ep_write(get_usb_device(), HID_EP_IN, buffer, sizeof(buffer));
+
+    /* Award some XP to the dolphin after placing a minifigure/vehicle. This needs to
+    * happen outside of the ISR context of the USB, so we place it here.
+    */
+    dolphin_deed(DolphinDeedNfcReadSuccess);
+
+    return true;
+}
+
+void ToyPadEmu_remove_all_tokens() {
+    // Remove all tokens from the toypad by ToyPadEmu_remove with waiting between each removal
+    for(int i = 0; i < MAX_TOKENS; i++) {
+        if(emulator->tokens[i] != NULL) {
+            ToyPadEmu_remove(i);
+            furi_delay_ms(TOKEN_DELAY_TIME); // wait for the token to be removed
+        }
+    }
+    // Clear the box info
+    ToyPadEmu_clear();
+}
+
+void ToyPadEmu_place_tokens(Token* tokens[MAX_TOKENS], BoxInfo boxes[NUM_BOXES]) {
+    if(tokens == NULL || boxes == NULL) {
+        return; // Invalid input
+    }
+    // Clear toypad by removing all tokens
+    ToyPadEmu_remove_all_tokens();
+
+    // Place all the tokens on the toypad in the correct boxes from boxinfo and inxexes from tokens
+    for(int i = 0; i < MAX_TOKENS; i++) {
+        if(tokens[i] != NULL) {
+            // Find the box for this token
+            for(int j = 0; j < NUM_BOXES; j++) {
+                if(boxes[j].index == i) {
+                    if(place_token(tokens[i], j)) {
+                        furi_delay_ms(TOKEN_DELAY_TIME);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+}
+
+uint8_t get_token_count() {
+    // Count the number of tokens currently placed on the toypad
+    uint8_t count = 0;
+    for(int i = 0; i < MAX_TOKENS; i++) {
+        if(emulator->tokens[i] != NULL) {
+            count++;
+        }
+    }
+    return count;
+}
+
+void save_current_state(ToyPadEmu* emulator) {
+    if(emulator == NULL) {
+        return; // Invalid emulator
+    }
+    if(get_token_count() == 0) {
+        set_debug_text("No tokens to save");
+        return;
+    }
+
+    Token tokens_copy[MAX_TOKENS];
+    for(int i = 0; i < MAX_TOKENS; i++) {
+        if(emulator->tokens[i] != NULL) {
+            tokens_copy[i] = *(emulator->tokens[i]);
+        }
+    }
+    if(save_toypad(tokens_copy, boxInfo, "preset1")) {
+        set_debug_text("Saved preset");
+    }
+}
+
+void load_saved_state() {
+    Token* tokens_loaded[MAX_TOKENS];
+    BoxInfo boxes_loaded[NUM_BOXES];
+
+    if(load_saved_toypad(tokens_loaded, boxes_loaded, "preset1")) {
+        ToyPadEmu_place_tokens(tokens_loaded, boxes_loaded);
+    }
 }
 
 bool ldtoypad_scene_emulate_input_callback(InputEvent* event, void* context) {
@@ -141,20 +240,23 @@ bool ldtoypad_scene_emulate_input_callback(InputEvent* event, void* context) {
                         model->ok_pressed = true;
                     }
                     if(event->type == InputTypeShort && model->show_mini_menu_selected) {
-                        bool isVehicle = get_token_from_index(boxInfo[selectedBox].index)->id == 0;
+                        Token* index_token = get_token_from_index(boxInfo[selectedBox].index);
+                        bool isVehicle = index_token->id == 0;
 
                         switch(model->mini_option_selected) {
                         case MiniSelectionFavorite:
                             // Save the token to favorites
                             if(!isVehicle) {
-                                int id = get_token_from_index(boxInfo[selectedBox].index)->id;
+                                int id = index_token->id;
                                 if(id) {
                                     // check if the minifigure is already a favorite then unfavorite it
                                     if(is_favorite(id)) {
                                         unfavorite(id, app);
+                                        set_debug_text("Minifigure removed from favorites");
                                     } else {
                                         // save the minifigure to favorites
                                         favorite(id, app);
+                                        set_debug_text("Minifigure added to favorites");
                                     }
                                 }
                             }
@@ -163,9 +265,8 @@ bool ldtoypad_scene_emulate_input_callback(InputEvent* event, void* context) {
                             // }
                             break;
                         case MiniSelectionSave:
-                            Token* token = get_token_from_index(boxInfo[selectedBox].index);
-                            if(!token->id) {
-                                save_token(token);
+                            if(isVehicle) {
+                                save_token(index_token);
 
                                 fill_saved_submenu(app);
                             }
@@ -210,6 +311,26 @@ bool ldtoypad_scene_emulate_input_callback(InputEvent* event, void* context) {
                 if((event->key == InputKeyLeft || event->key == InputKeyRight) &&
                    model->show_mini_menu_selected) {
                     model->show_mini_menu_selected = false;
+                }
+
+                if(event->type == InputTypeLong && model->connected) {
+                    switch(event->key) {
+                    case InputKeyUp:
+                        save_current_state(emulator);
+                        break;
+                    case InputKeyDown:
+                        load_saved_state();
+                        break;
+                    case InputKeyBack:
+                        model->back_long_pressed = true;
+                        ToyPadEmu_remove_all_tokens();
+                        break;
+                    default:
+                        break;
+                    }
+                }
+                if(event->key == InputKeyBack && event->type == InputTypeRelease) {
+                    model->back_long_pressed = false;
                 }
 
                 if(model->show_mini_menu_selected && event->type == InputTypePress) {
@@ -294,7 +415,7 @@ bool ldtoypad_scene_emulate_input_callback(InputEvent* event, void* context) {
     return consumed;
 }
 
-unsigned char generate_checksum_for_command(const unsigned char* command, size_t len) {
+unsigned char generate_checksum(const unsigned char* command, size_t len) {
     unsigned char result = 0;
 
     // Add bytes, wrapping naturally with unsigned char overflow
@@ -334,73 +455,6 @@ void selectedBox_to_pad(Token* token, int selectedBox) {
         furi_crash("Selected pad is invalid"); // It should never reach this.
         break;
     }
-}
-
-void remove_old_token(Token* token) {
-    // Check if the selected token is already placed on the toypad check by uid if the token is already placed then remove the old one and place the new one
-    for(int i = 0; i < MAX_TOKENS; i++) {
-        if(emulator->tokens[i] != NULL) {
-            if(memcmp(emulator->tokens[i]->uid, token->uid, 7) == 0) {
-                // remove the old token
-                if(ToyPadEmu_remove(i)) {
-                    // get the box of the old token and set it to not filled
-                    for(int j = 0; j < NUM_BOXES; j++) {
-                        if(boxInfo[j].index == i) {
-                            boxInfo[j].isFilled = false;
-                            boxInfo[j].index = -1; // Reset index
-                            break;
-                        }
-                    }
-                }
-                furi_delay_ms(TOKEN_DELAY_TIME); // wait for the token to be removed
-                break;
-            }
-        }
-    }
-}
-
-bool place_token(Token* token, int selectedBox) {
-    remove_old_token(token); // Remove old token if it exists by UID
-
-    unsigned char buffer[32] = {0};
-
-    boxInfo[selectedBox].isFilled = true;
-    selectedBox_to_pad(token, selectedBox);
-
-    // Find an empty slot or use the next available index
-    int new_index = -1;
-    for(int i = 0; i < MAX_TOKENS; i++) {
-        if(emulator->tokens[i] == NULL) {
-            new_index = i;
-            break;
-        }
-    }
-    if(new_index == -1) {
-        return false; // No empty slot available
-    }
-
-    token->index = new_index;
-    emulator->tokens[new_index] = token;
-    boxInfo[selectedBox].index = new_index;
-
-    // Send placement command
-    buffer[0] = FRAME_TYPE_REQUEST;
-    buffer[1] = 0x0b; // Size always 11
-    buffer[2] = token->pad;
-    buffer[3] = 0x00;
-    buffer[4] = token->index;
-    buffer[5] = 0x00;
-    memcpy(&buffer[6], token->uid, 7);
-    buffer[13] = generate_checksum_for_command(buffer, 13);
-
-    usbd_ep_write(get_usb_device(), HID_EP_IN, buffer, sizeof(buffer));
-
-    /* Award some XP to the dolphin after placing a minifigure/vehicle. This needs to
-    * happen outside of the ISR context of the USB, so we place it here.
-    */
-    dolphin_deed(DolphinDeedNfcReadSuccess);
-
-    return true;
 }
 
 static const char* all_mini_menu_labels[] = {"Add favorite", "Save vehicle"};
@@ -637,6 +691,11 @@ static uint32_t ldtoypad_scene_emulate_navigation_submenu_callback(void* context
                 model->show_mini_menu_selected = false;
                 return ViewEmulate;
             }
+
+            if(model->back_long_pressed) {
+                model->back_long_pressed = false;
+                return ViewEmulate;
+            }
         },
         true);
 
@@ -774,7 +833,6 @@ void saved_token_submenu_callback(void* context, uint32_t index) {
                 Token* token = load_saved_token((char*)furi_string_get_cstr(filepath));
                 if(token != NULL) {
                     place_token(token, selectedBox);
-                    set_debug_text(token->name);
                 }
             }
             model->show_placement_selection_screen = false;

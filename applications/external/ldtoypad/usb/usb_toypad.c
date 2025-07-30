@@ -220,12 +220,15 @@ bool ToyPadEmu_remove(int index) {
     buffer[4] = index; // Index of token to remove
     buffer[5] = 0x01; // Tag removed (not placed)
     memcpy(&buffer[6], emulator->tokens[index]->uid, 7); // UID
-    buffer[13] = generate_checksum_for_command(buffer, 13);
+    buffer[13] = generate_checksum(buffer, 13);
 
     usbd_ep_write(get_usb_device(), HID_EP_IN, buffer, sizeof(buffer));
 
-    // Free the token and clear the slot
-    free(emulator->tokens[index]);
+    if(emulator->tokens[index] != NULL) {
+        // Free the token and clear the slot
+        free(emulator->tokens[index]);
+    }
+
     emulator->tokens[index] = NULL;
 
     return true;

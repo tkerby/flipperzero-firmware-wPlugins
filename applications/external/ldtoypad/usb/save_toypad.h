@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../ldtoypad.h"
+#include "../views/EmulateToyPad_scene.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,6 +24,9 @@ bool save_token(Token* token);
 
 void fill_saved_submenu(LDToyPadApp* app);
 Token* load_saved_token(char* filepath);
+
+bool save_toypad(Token tokens[MAX_TOKENS], BoxInfo boxes[NUM_BOXES], char* filename);
+bool load_saved_toypad(Token* tokens[MAX_TOKENS], BoxInfo boxes[NUM_BOXES], char* filename);
 
 #ifdef __cplusplus
 }
