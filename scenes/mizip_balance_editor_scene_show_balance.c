@@ -152,8 +152,12 @@ bool mizip_balance_editor_scene_show_balance_on_event(void* context, SceneManage
         }
     } else if(event.type == SceneManagerEventTypeBack) {
         if(app->new_balance != app->current_balance) {
-            mizip_balance_editor_write_new_balance(context);
-            scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdWriteSuccess);
+            bool write_success = mizip_balance_editor_write_new_balance(context);
+            if(write_success) {
+                scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdWriteSuccess);
+            } else {
+                //TODO Writing fail message
+            }
             consumed = true;
         } else {
             scene_manager_search_and_switch_to_another_scene(
