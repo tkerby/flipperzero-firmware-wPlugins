@@ -167,6 +167,7 @@ static void actionSelect(const PSESSIONSCENE instance, FuriString* const path) {
 	if(!options.skip_assets) {
 		instance->renderText = 1;
 		instance->text = TEXT_NO_FILE_SELECTED;
+		view_port_update(instance->viewport);
 		return;
 	}
 
