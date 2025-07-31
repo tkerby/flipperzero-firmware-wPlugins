@@ -1,0 +1,624 @@
+#include <furi.h>
+#include <furi_hal.h>
+#include <gui/canvas.h>
+#include <gui/gui.h>
+#include <gui/view.h>
+#include <gui/view_dispatcher.h>
+#include <gui/modules/submenu.h>
+#include <gui/modules/widget.h>
+#include <notification/notification.h>
+#include <notification/notification_messages.h>
+#include <input/input.h>
+#include <storage/storage.h>
+#include "engine.h"
+#include "jumping_pawns_icons.h"
+
+typedef enum {
+    JumpingPawnsSubmenu,
+    JumpingPawnsPlayView,
+    JumpingPawnsViewTutorial,
+    JumpingPawnsAbout,
+} JumpingPawnsViews;
+
+typedef enum {
+    JumpingPawnsRedrawEventId = 0
+} JumpingPawnsEventId;
+
+typedef enum {
+    JumpingPawnsPlayPvPIndex,
+    JumpingPawnsPlayPvEIndex,
+    JumpingPawnsTutorialIndex,
+    JumpingPawnsAboutIndex,
+} JumpingPawnsSubmenuIndex;
+
+typedef struct {
+    ViewDispatcher* view_dispatcher;
+    NotificationApp* notifications;
+    Submenu* submenu;
+    View* view;
+    Widget* widget_tutorial;
+    Widget* widget_about;
+
+    FuriTimer* timer;
+} JumpingPawnsApp;
+
+void end_turn(void* context) {
+    JumpingPawnsApp* app = (JumpingPawnsApp*)context;
+    JumpingPawnsModel* model = view_get_model(app->view);
+    if (strcmp(model->ai_or_player, "player") == 0) {
+        if (strcmp(model->whose_turn, "player1") == 0) {
+            model->whose_turn = "player2";
+        } else if (strcmp(model->whose_turn, "player2") == 0) {
+            model->whose_turn = "player1";
+        }
+    }
+}
+
+void find_jumps(int board[11][6], int x, int y) {
+    int dx[] = {0, 0, -1, 1};
+    int dy[] = {-1, 1, 0, 0};
+
+    for (int dir = 0; dir < 4; dir++) {
+        int cx = x;
+        int cy = y;
+
+        bool found_clump = false;
+
+        int mid_x = cx + dx[dir];
+        int mid_y = cy + dy[dir];
+
+        // Traverse the clump in current direction
+        while (mid_x >= 0 && mid_x < 6 && mid_y >= 0 && mid_y < 11 && board[mid_y][mid_x] != 0 && board[mid_y][mid_x] != 3) {
+            cx = mid_x;
+            cy = mid_y;
+            mid_x = cx + dx[dir];
+            mid_y = cy + dy[dir];
+            found_clump = true;
+        }
+
+        // Check for empty tile to land on
+        if (found_clump && mid_x >= 0 && mid_x < 6 && mid_y >= 0 && mid_y < 11 && board[mid_y][mid_x] == 0) {
+            board[mid_y][mid_x] = 3; // Mark as valid move
+            find_jumps(board, mid_x, mid_y); // Recurse
+        }
+    }
+}
+
+void check_for_game_end(void* context) {
+    JumpingPawnsApp* app = (JumpingPawnsApp*)context;
+    JumpingPawnsModel* model = view_get_model(app->view);
+
+    bool player_1_win = true;
+    bool player_2_win = true;
+
+    // Check top 2 rows (y = 0, 1) for all 1s (player pawns)
+    for (int y = 0; y <= 1; y++) {
+        for (int x = 0; x < 6; x++) {
+            if (model->board_state[y][x] != 1) {
+                player_1_win = false;
+                break;
+            }
+        }
+    }
+
+    // Check bottom 2 rows (y = 9, 10) for all 2s (ai / player2 pawns)
+    for (int y = 9; y <= 10; y++) {
+        for (int x = 0; x < 6; x++) {
+            if (model->board_state[y][x] != 2) {
+                player_2_win = false;
+                break;
+            }
+        }
+    }
+
+    if (player_1_win) {
+        model->game_over = true;
+    } else if (player_2_win) {
+        model->game_over = true;
+    }
+}
+
+void player_moving(void* context) {
+    JumpingPawnsApp* app = (JumpingPawnsApp*)context;
+    JumpingPawnsModel* model = view_get_model(app->view);
+    int flipped[11][6];
+
+    // if selected square was a dot, then move a piece there instead of displaying more dots
+    int sx = model->selected_x - 1;
+    int sy = model->selected_y - 1;
+
+    if(strcmp(model->whose_turn, "player2") == 0) {
+        sx = 5 - sx;
+        sy = 10 - sy;
+    }
+
+    if (model->board_state[sy][sx] == 3) {
+        model->board_state[model->last_calculated_piece_y - 1][model->last_calculated_piece_x - 1] = 0;
+        int piece_value = strcmp(model->whose_turn, "player2") == 0 ? 2 : 1;
+        model->board_state[sy][sx] = piece_value;
+
+        // Clear previous move indicators (number 3 in board_state)
+        for (int y = 0; y < 11; y++) {
+            for (int x = 0; x < 6; x++) {
+                if (model->board_state[y][x] == 3) {
+                    model->board_state[y][x] = 0;
+                }
+            }
+        }
+
+        check_for_game_end(context);
+
+        if (strcmp(model->ai_or_player, "ai") == 0) {
+            ai_move(model);
+        } else {
+            end_turn(app);
+        }
+        return;
+    }
+
+    if(strcmp(model->whose_turn, "player2") == 0) {
+        model->last_calculated_piece_x = 6 - model->selected_x;
+        model->last_calculated_piece_y = 12 - model->selected_y;
+    } else {
+        model->last_calculated_piece_x = model->selected_x;
+        model->last_calculated_piece_y = model->selected_y;
+    }
+
+    // Clear previous move indicators
+    for (int y = 0; y < 11; y++) {
+        for (int x = 0; x < 6; x++) {
+            if (model->board_state[y][x] == 3) {
+                model->board_state[y][x] = 0;
+            }
+        }
+    }
+
+    if(strcmp(model->whose_turn, "player2") == 0) {
+        for(int i = 0; i < 11; i++) {
+            for(int j = 0; j < 6; j++) {
+                flipped[i][j] = model->board_state[10 - i][5 - j];
+            }
+        }
+
+        int sx = model->selected_x - 1;
+        int sy = model->selected_y - 1;
+
+        if (flipped[sy][sx] != 2) return;
+
+        find_jumps(flipped, sx, sy);
+
+        for (int i = 0; i < 11; i++) {
+            for (int j = 0; j < 6; j++) {
+                if (flipped[i][j] == 3) {
+                    model->board_state[10 - i][5 - j] = 3;
+                }
+            }
+        }
+    } else {
+        int sx = model->selected_x - 1;
+        int sy = model->selected_y - 1;
+
+        if (model->board_state[sy][sx] != 1) return;
+
+        find_jumps(model->board_state, sx, sy);
+    }
+}
+
+static uint32_t jumping_pawns_navigation_exit_callback(void* _context) {
+    UNUSED(_context);
+    return VIEW_NONE;
+}
+
+static uint32_t navigation_submenu_callback(void* _context) {
+    UNUSED(_context);
+    return JumpingPawnsSubmenu;
+}
+
+static void submenu_callback(void* context, uint32_t index) {
+    JumpingPawnsApp* app = (JumpingPawnsApp*)context;
+    JumpingPawnsModel* model = view_get_model(app->view);
+
+    int temp_board[11][6] = {
+        {2, 2, 2, 2, 2, 2},
+        {2, 2, 2, 2, 2, 2},
+        {0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0},
+        {1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 1, 1}
+    };
+
+    switch(index) {
+    case JumpingPawnsPlayPvPIndex:
+        model->ai_or_player = "player";
+        model->whose_turn = "player1";
+        // reset board
+        memcpy(model->board_state, temp_board, sizeof(temp_board));
+        view_dispatcher_switch_to_view(app->view_dispatcher, JumpingPawnsPlayView);
+        break;
+    case JumpingPawnsPlayPvEIndex:
+        model->ai_or_player = "ai";
+        model->whose_turn = "player";
+        // reset board
+        memcpy(model->board_state, temp_board, sizeof(temp_board));
+        view_dispatcher_switch_to_view(app->view_dispatcher, JumpingPawnsPlayView);
+        break;
+    case JumpingPawnsTutorialIndex:
+        view_dispatcher_switch_to_view(app->view_dispatcher, JumpingPawnsViewTutorial);
+        break;
+    case JumpingPawnsAboutIndex:
+        view_dispatcher_switch_to_view(app->view_dispatcher, JumpingPawnsAbout);
+        break;
+    default:
+        break;
+    }
+}
+
+static void jumping_pawns_draw_callback(Canvas* canvas, void* model) {
+    JumpingPawnsModel* my_model = (JumpingPawnsModel*)model;
+
+    canvas_clear(canvas);
+    canvas_set_font(canvas, FontSecondary);
+
+    if (my_model->game_over) {
+        canvas_draw_str(canvas, 15, 15, "Game over!");
+    }
+
+    // draw gameboard
+    int squares_wide = 6;
+    int squares_tall = 11;
+    int square_size = 10;
+    int x_offset = 2;
+    int y_offset = 2;
+
+    // draw vertical lines
+    for (int i = 0; i <= squares_wide; i++) {
+        int x = x_offset + (square_size * i);
+        canvas_draw_line(canvas, x, y_offset, x, y_offset + (square_size * squares_tall));
+    }
+
+    // draw horizontal lines
+    for (int j = 0; j <= squares_tall; j++) {
+        int y = y_offset + (square_size * j);
+        canvas_draw_line(canvas, x_offset, y, x_offset + (square_size * squares_wide), y);
+    }
+
+    // flip board if player2
+    if (strcmp(my_model->whose_turn, "player2") == 0) {
+        int flipped[11][6];
+
+        for(int i = 0; i < 11; i++) {
+            for(int j = 0; j < 6; j++) {
+                flipped[i][j] = my_model->board_state[10 - i][5 - j];
+            }
+        }
+
+        // draw pieces / dot to move to based on board state var
+        for (int y = 0; y < 11; y++) {
+            for (int x = 0; x < 6; x++) {
+                int draw_x = x_offset + (square_size * x) + 1;
+                int draw_y = y_offset + (square_size * y) + 1;
+
+                if (flipped[y][x] == 1) {
+                    canvas_draw_icon(canvas, draw_x, draw_y, &I_pawn1);
+                } else if (flipped[y][x] == 2) {
+                    canvas_draw_icon(canvas, draw_x, draw_y, &I_pawn2);
+                } else if (flipped[y][x] == 3) {
+                    canvas_draw_icon(canvas, draw_x, draw_y, &I_dot);
+                }
+            }
+        }
+
+
+        if (flipped[my_model->selected_y - 1][my_model->selected_x - 1] == 3) {
+            canvas_draw_icon(canvas, (10 * my_model->selected_x) - 7, (10 * my_model->selected_y) - 7, &I_dot);
+        }
+
+        // draw border around selected square / pawn / dot
+        if (flipped[my_model->selected_y - 1][my_model->selected_x - 1] == 1) {
+            canvas_draw_icon(canvas, (10 * my_model->selected_x) - 7, (10 * my_model->selected_y) - 7, &I_pawn1selected);
+        } else if (flipped[my_model->selected_y - 1][my_model->selected_x - 1] == 2) {
+            canvas_draw_icon(canvas, (10 * my_model->selected_x) - 7, (10 * my_model->selected_y) - 7, &I_pawn2selected);
+        } else if (flipped[my_model->selected_y - 1][my_model->selected_x - 1] == 3) {
+            canvas_draw_icon(canvas, (10 * my_model->selected_x) - 7, (10 * my_model->selected_y) - 7, &I_selecteddot);
+        } else {
+            canvas_draw_icon(canvas, (10 * my_model->selected_x) - 7, (10 * my_model->selected_y) - 7, &I_frame1);
+        }
+
+    } else {
+        // draw pieces / dot to move to based on board state var
+        for (int y = 0; y < 11; y++) {
+            for (int x = 0; x < 6; x++) {
+                int draw_x = x_offset + (square_size * x) + 1;
+                int draw_y = y_offset + (square_size * y) + 1;
+
+                if (my_model->board_state[y][x] == 1) {
+                    canvas_draw_icon(canvas, draw_x, draw_y, &I_pawn1);
+                } else if (my_model->board_state[y][x] == 2) {
+                    canvas_draw_icon(canvas, draw_x, draw_y, &I_pawn2);
+                } else if (my_model->board_state[y][x] == 3) {
+                    canvas_draw_icon(canvas, draw_x, draw_y, &I_dot);
+                }
+            }
+        }
+
+
+        if (my_model->board_state[my_model->selected_y - 1][my_model->selected_x - 1] == 3) {
+            canvas_draw_icon(canvas, (10 * my_model->selected_x) - 7, (10 * my_model->selected_y) - 7, &I_dot);
+        }
+
+        // draw border around selected square / pawn / dot
+        if (my_model->board_state[my_model->selected_y - 1][my_model->selected_x - 1] == 1) {
+            canvas_draw_icon(canvas, (10 * my_model->selected_x) - 7, (10 * my_model->selected_y) - 7, &I_pawn1selected);
+        } else if (my_model->board_state[my_model->selected_y - 1][my_model->selected_x - 1] == 2) {
+            canvas_draw_icon(canvas, (10 * my_model->selected_x) - 7, (10 * my_model->selected_y) - 7, &I_pawn2selected);
+        } else if (my_model->board_state[my_model->selected_y - 1][my_model->selected_x - 1] == 3) {
+            canvas_draw_icon(canvas, (10 * my_model->selected_x) - 7, (10 * my_model->selected_y) - 7, &I_selecteddot);
+        } else {
+            canvas_draw_icon(canvas, (10 * my_model->selected_x) - 7, (10 * my_model->selected_y) - 7, &I_frame1);
+        }
+    }
+
+}
+
+static bool jumping_pawns_input_callback(InputEvent* event, void* context) {
+    JumpingPawnsApp* app = (JumpingPawnsApp*)context;
+    JumpingPawnsModel* model = view_get_model(app->view);
+
+    bool redraw = true;
+    if(event->type == InputTypeShort) {
+        switch(event->key) {
+        case InputKeyUp:
+            with_view_model(
+                app->view,
+                model,
+                { 
+                    if (model->selected_y == 1) {
+                        model->selected_y = 11;
+                    } else {
+                        model->selected_y -= 1;
+                    }
+                },
+                redraw);
+            break;
+        case InputKeyDown:
+            with_view_model(
+                app->view,
+                model,
+                { 
+                    if (model->selected_y == 11) {
+                        model->selected_y = 1;
+                    } else {
+                        model->selected_y += 1;
+                    }
+                },
+                redraw);
+            break;
+        case InputKeyLeft:
+            with_view_model(
+                app->view,
+                model,
+                { 
+                    if (model->selected_x == 1) {
+                        model->selected_x = 6;
+                    } else {
+                        model->selected_x -= 1;
+                    }
+                },
+                redraw);
+            break;
+        case InputKeyRight:
+            with_view_model(
+                app->view,
+                model,
+                { 
+                    if (model->selected_x == 6) {
+                        model->selected_x = 1;
+                    } else {
+                        model->selected_x += 1;
+                    }
+                },
+                redraw);
+            break;
+        case InputKeyOk:
+            with_view_model(
+                app->view,
+                model,
+                { 
+                    player_moving(app);
+                },
+                redraw);
+            return true;
+        default:
+            break;
+        }
+    } else if (event->type == InputTypeRepeat) {
+        switch(event->key) {
+        case InputKeyUp:
+            with_view_model(
+                app->view,
+                model,
+                { 
+                    if (model->selected_y == 1) {
+                        model->selected_y = 11;
+                    } else {
+                        model->selected_y -= 1;
+                    }
+                },
+                redraw);
+            break;
+        case InputKeyDown:
+            with_view_model(
+                app->view,
+                model,
+                { 
+                    if (model->selected_y == 11) {
+                        model->selected_y = 1;
+                    } else {
+                        model->selected_y += 1;
+                    }
+                },
+                redraw);
+            break;
+        case InputKeyLeft:
+            with_view_model(
+                app->view,
+                model,
+                { 
+                    if (model->selected_x == 1) {
+                        model->selected_x = 6;
+                    } else {
+                        model->selected_x -= 1;
+                    }
+                },
+                redraw);
+            break;
+        case InputKeyRight:
+            with_view_model(
+                app->view,
+                model,
+                { 
+                    if (model->selected_x == 6) {
+                        model->selected_x = 1;
+                    } else {
+                        model->selected_x += 1;
+                    }
+                },
+                redraw);
+            break;
+        default:
+            break;
+        }
+    }
+
+    return false;
+}
+
+static bool jumping_pawns_custom_event_callback(uint32_t event, void* context) {
+    JumpingPawnsApp* app = (JumpingPawnsApp*)context;
+
+    switch(event) {
+    case JumpingPawnsRedrawEventId: {
+        bool redraw = true;
+        with_view_model(app->view, JumpingPawnsModel * _model, { UNUSED(_model); }, redraw);
+        return true;
+    }
+    default:
+        return false;
+    }
+}
+
+static JumpingPawnsApp* jumping_pawns_alloc() {
+    JumpingPawnsApp* app = (JumpingPawnsApp*)malloc(sizeof(JumpingPawnsApp));
+
+    Gui* gui = furi_record_open(RECORD_GUI);
+
+    app->view_dispatcher = view_dispatcher_alloc();
+    view_dispatcher_attach_to_gui(app->view_dispatcher, gui, ViewDispatcherTypeFullscreen);
+    view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
+
+    app->submenu = submenu_alloc();
+    submenu_add_item(app->submenu, "Play PvP", JumpingPawnsPlayPvPIndex, submenu_callback, app);
+    submenu_add_item(app->submenu, "Play PvE", JumpingPawnsPlayPvEIndex, submenu_callback, app);
+    submenu_add_item(app->submenu, "Tutorial", JumpingPawnsTutorialIndex, submenu_callback, app);
+    submenu_add_item(app->submenu, "About", JumpingPawnsAboutIndex, submenu_callback, app);
+    view_set_previous_callback(submenu_get_view(app->submenu), jumping_pawns_navigation_exit_callback);
+    view_dispatcher_add_view(app->view_dispatcher, JumpingPawnsSubmenu, submenu_get_view(app->submenu));
+    view_dispatcher_switch_to_view(app->view_dispatcher, JumpingPawnsSubmenu);
+
+    app->view = view_alloc();
+    view_set_draw_callback(app->view, jumping_pawns_draw_callback);
+    view_set_input_callback(app->view, jumping_pawns_input_callback);
+    view_set_previous_callback(app->view, navigation_submenu_callback);
+    view_set_context(app->view, app);
+    view_set_custom_callback(app->view, jumping_pawns_custom_event_callback);
+    view_allocate_model(app->view, ViewModelTypeLockFree, sizeof(JumpingPawnsModel));
+    view_set_orientation(app->view, ViewOrientationVertical);
+
+    JumpingPawnsModel* model = view_get_model(app->view);
+    model->ai_or_player = "";
+    model->whose_turn = "";
+    model->selected_x = 1;
+    model->selected_y = 1;
+    // used to keep track of which piece to move once a move option is selected
+    model->last_calculated_piece_x = 0;
+    model->last_calculated_piece_y = 0;
+    model->game_over = false;
+
+    int temp_board[11][6] = {
+        {2, 2, 2, 2, 2, 2},
+        {2, 2, 2, 2, 2, 2},
+        {0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0},
+        {1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 1, 1}
+    };
+
+    memcpy(model->board_state, temp_board, sizeof(temp_board));
+
+    view_dispatcher_add_view(app->view_dispatcher, JumpingPawnsPlayView, app->view);
+
+    app->widget_tutorial = widget_alloc();
+    widget_add_text_scroll_element(
+        app->widget_tutorial,
+        0,
+        0,
+        128,
+        64,
+        "How to play:\n\n"
+        "You and your opponent have 12 pawns. These pawns can only move by jumping over other groups of pawns. The pawns can jump horizontally and vertically, but not diagonally. Pawns can also jump over multiple pawn groups. Your goal is to get all of your pawns to the two rows opposite your side.");
+    view_set_previous_callback(widget_get_view(app->widget_tutorial), navigation_submenu_callback);
+    view_dispatcher_add_view(app->view_dispatcher, JumpingPawnsViewTutorial, widget_get_view(app->widget_tutorial));
+
+    app->widget_about = widget_alloc();
+    widget_add_text_scroll_element(
+        app->widget_about,
+        0,
+        0,
+        128,
+        64,
+        "Jumping Pawns\n\n"
+        "v0.1\n"
+        "Author: @TAxelAnderson\n"
+        "Repo: https://github.com/TAxelAnderson/FZ-Jumping-Pawns");
+    view_set_previous_callback(
+        widget_get_view(app->widget_about), navigation_submenu_callback);
+    view_dispatcher_add_view(app->view_dispatcher, JumpingPawnsAbout, widget_get_view(app->widget_about));
+
+    app->notifications = furi_record_open(RECORD_NOTIFICATION);
+
+    return app;
+}
+
+static void jumping_pawns_free(JumpingPawnsApp* app) {
+    furi_record_close(RECORD_NOTIFICATION);
+    view_dispatcher_remove_view(app->view_dispatcher, JumpingPawnsAbout);
+    widget_free(app->widget_about);
+    view_dispatcher_remove_view(app->view_dispatcher, JumpingPawnsViewTutorial);
+    widget_free(app->widget_tutorial);
+    view_dispatcher_remove_view(app->view_dispatcher, JumpingPawnsPlayView);
+    view_free(app->view);
+    view_dispatcher_remove_view(app->view_dispatcher, JumpingPawnsSubmenu);
+    submenu_free(app->submenu);
+    view_dispatcher_free(app->view_dispatcher);
+    furi_record_close(RECORD_GUI);
+
+    free(app);
+}
+
+int32_t jumping_pawns_app(void* _p) {
+    UNUSED(_p);
+    JumpingPawnsApp* app = jumping_pawns_alloc();
+    view_dispatcher_run(app->view_dispatcher);
+    jumping_pawns_free(app);
+    return 0;
+}
