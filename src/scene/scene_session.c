@@ -152,6 +152,10 @@ static void callbackInput(InputEvent* const event, void* const context) {
 		instance->action = ACTION_SELECT;
 		furi_message_queue_put(instance->queue, event, FuriWaitForever);
 		return;
+	case BUTTON_SESSION_NEW:
+		return;
+	case BUTTON_SESSION_DELETE:
+		return;
 	}
 updateViewport:
 	view_port_update(instance->viewport);
@@ -171,9 +175,15 @@ static void actionSelect(const PSESSIONSCENE instance, FuriString* const path) {
 		return;
 	}
 
-	instance->renderText = 1;
-	instance->text = TEXT_APPEARS_INCORRECT_TYPE;
-	view_port_update(instance->viewport);
+	Storage* storage = furi_record_open(RECORD_STORAGE);
+	File* file = storage_file_alloc(storage);
+	storage_file_open(file, furi_string_get_cstr(path), FSAM_READ_WRITE, FSOM_OPEN_EXISTING);
+	storage_file_close(file);
+	storage_file_free(file);
+	furi_record_close(RECORD_STORAGE);
+	// instance->renderText = 1;
+	// instance->text = TEXT_APPEARS_INCORRECT_TYPE;
+	// view_port_update(instance->viewport);
 }
 
 void SceneSessionEnter(void* const context) {
