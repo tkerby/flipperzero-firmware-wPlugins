@@ -177,10 +177,17 @@ static void actionSelect(const PSESSIONSCENE instance, FuriString* const path) {
 
 	Storage* storage = furi_record_open(RECORD_STORAGE);
 	File* file = storage_file_alloc(storage);
-	storage_file_open(file, furi_string_get_cstr(path), FSAM_READ_WRITE, FSOM_OPEN_EXISTING);
+	instance->renderText = 1;
+	instance->text = TEXT_APPEARS_INCORRECT_TYPE;
+
+	if(!storage_file_open(file, furi_string_get_cstr(path), FSAM_READ_WRITE, FSOM_OPEN_EXISTING)) {
+		instance->text = TEXT_NOT_SESSION_FILE;
+	}
+
 	storage_file_close(file);
 	storage_file_free(file);
 	furi_record_close(RECORD_STORAGE);
+	view_port_update(instance->viewport);
 	// instance->renderText = 1;
 	// instance->text = TEXT_APPEARS_INCORRECT_TYPE;
 	// view_port_update(instance->viewport);
