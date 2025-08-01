@@ -47,6 +47,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [USB HID Autofire v0.6 (By pbek)](https://github.com/pbek/usb_hid_autofire) Added delay between double clicks (By RogueMaster)
 - Updated: [MiZip Balance Editor v0.2 (By teohumeau)](https://github.com/teohumeau/MiZipBalanceEditor)
 - Updated: [IR Xbox Controller v1.5 (By gebeto)](https://github.com/gebeto/flipper-xbox-controller)
+- Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip) [Renfe suma 10 fix origin /region && add support for load renfe suma 10 saved cards (By BocamoCM)](https://github.com/luu176/Metroflip/pull/69)
 
 <a name="release">
 

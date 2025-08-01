@@ -55,11 +55,11 @@ static bool renfe_sum10_has_history_data(const MfClassicData* data);
 static bool renfe_sum10_load_station_file(const char* region);
 static const char* renfe_sum10_get_station_name_from_cache(uint16_t station_code);
 static void renfe_sum10_clear_station_cache(void);
-static const char* renfe_sum10_get_station_name_dynamic(uint16_t station_code, const char* region);
-static const char* renfe_sum10_map_region_to_file(const char* region_name);
+static const char* renfe_sum10_get_station_name_dynamic(uint16_t station_code);
 static bool renfe_sum10_is_travel_history_block(const uint8_t* block_data, int block_number);
 static bool renfe_sum10_is_default_station_code(uint16_t station_code);
 static bool renfe_sum10_is_valid_timestamp(const uint8_t* block_data);
+static const char* renfe_sum10_get_origin_station(const MfClassicData* data);
 // Keys for RENFE Suma 10 cards - specific keys found in real dumps
 const MfClassicKeyPair renfe_sum10_keys[16] = {
     {.a = 0xA8844B0BCA06, .b = 0xffffffffffff}, // Sector 0 - RENFE specific key
@@ -169,6 +169,89 @@ static bool renfe_sum10_is_history_entry(const uint8_t* block_data) {
 
     return false;
 }
+
+// Get the origin station from the first top-up/recharge found in the card
+static const char* renfe_sum10_get_origin_station(const MfClassicData* data) {
+    if(!data) return "Unknown";
+
+    // History blocks where recharges are typically stored
+    int history_blocks[] = {18, 22, 28, 29, 30, 44, 45, 46};
+    int num_blocks = sizeof(history_blocks) / sizeof(history_blocks[0]);
+
+    // Get max blocks for this card type
+    int max_blocks = (data->type == MfClassicType1k) ? 64 : 256;
+
+    uint32_t earliest_topup_timestamp = 0xFFFFFFFF;
+    uint16_t origin_station_code = 0x0000;
+
+    // First pass: Look specifically for top-up entries
+    for(int i = 0; i < num_blocks; i++) {
+        int block = history_blocks[i];
+
+        if(block >= max_blocks) continue;
+        if(!mf_classic_is_block_read(data, block)) continue;
+
+        const uint8_t* block_data = data->block[block].data;
+
+        // Check if this is a top-up entry (prioritize actual recharges)
+        uint8_t transaction_type = block_data[0];
+        if(transaction_type == 0x33 || transaction_type == 0x3A || transaction_type == 0x31 ||
+           transaction_type == 0x32) {
+            uint32_t timestamp = renfe_sum10_extract_timestamp(block_data);
+            uint16_t station_code = (block_data[9] << 8) | block_data[10];
+
+            // If this is the earliest recharge timestamp we've seen
+            if(timestamp < earliest_topup_timestamp && timestamp > 0 && station_code != 0x0000 &&
+               !renfe_sum10_is_default_station_code(station_code)) {
+                earliest_topup_timestamp = timestamp;
+                origin_station_code = station_code;
+            }
+        }
+    }
+
+    // If we found a recharge station, return it
+    if(origin_station_code != 0x0000) {
+        const char* station_name = renfe_sum10_get_station_name_dynamic(origin_station_code);
+        if(strcmp(station_name, "Unknown") != 0) {
+            return station_name;
+        }
+    }
+
+    // Second pass: Look for the earliest valid travel entry as fallback
+    uint32_t earliest_travel_timestamp = 0xFFFFFFFF;
+    uint16_t earliest_travel_station = 0x0000;
+
+    for(int i = 0; i < num_blocks; i++) {
+        int block = history_blocks[i];
+
+        if(block >= max_blocks) continue;
+        if(!mf_classic_is_block_read(data, block)) continue;
+
+        const uint8_t* block_data = data->block[block].data;
+
+        if(renfe_sum10_is_history_entry(block_data)) {
+            uint32_t timestamp = renfe_sum10_extract_timestamp(block_data);
+            uint16_t station_code = (block_data[9] << 8) | block_data[10];
+
+            if(timestamp < earliest_travel_timestamp && timestamp > 0 && station_code != 0x0000 &&
+               !renfe_sum10_is_default_station_code(station_code)) {
+                earliest_travel_timestamp = timestamp;
+                earliest_travel_station = station_code;
+            }
+        }
+    }
+
+    // Return the earliest travel station if found
+    if(earliest_travel_station != 0x0000) {
+        const char* station_name = renfe_sum10_get_station_name_dynamic(earliest_travel_station);
+        if(strcmp(station_name, "Unknown") != 0) {
+            return station_name;
+        }
+    }
+
+    return "Unknown";
+}
+
 // Extract timestamp from block data for sorting purposes
 static uint32_t renfe_sum10_extract_timestamp(const uint8_t* block_data) {
     if(!block_data) return 0;
@@ -213,13 +296,13 @@ static void renfe_sum10_clear_station_cache(void) {
     memset(station_cache.stations, 0, sizeof(station_cache.stations));
 }
 
-// Load station names from file for a specific region
+// Load station names from file (Valencia-specific files)
 static bool renfe_sum10_load_station_file(const char* region) {
     if(!region) {
         return false;
     }
 
-    // Check if we already have this region loaded
+    // Check if we already have this file loaded
     if(station_cache.loaded && strcmp(station_cache.current_region, region) == 0) {
         return true;
     }
@@ -335,113 +418,27 @@ static const char* renfe_sum10_get_station_name_from_cache(uint16_t station_code
     return "Unknown";
 }
 
-// Map region names to station file names
-static const char* renfe_sum10_map_region_to_file(const char* region_name) {
-    if(!region_name) {
-        return "valencia"; // Default fallback
-    }
-
-    // Convert region name to lowercase for comparison
-    char region_lower[32];
-    strncpy(region_lower, region_name, sizeof(region_lower) - 1);
-    region_lower[sizeof(region_lower) - 1] = '\0';
-
-    for(int i = 0; region_lower[i]; i++) {
-        region_lower[i] = tolower(region_lower[i]);
-    }
-
-    // Map Spanish region names to file names
-    if(strcmp(region_lower, "valencia") == 0 ||
-       strcmp(region_lower, "comunidad valenciana") == 0) {
-        return "valencia";
-    } else if(strcmp(region_lower, "madrid") == 0 || strcmp(region_lower, "comunidad de madrid") == 0) {
-        return "madrid";
-    } else if(
-        strcmp(region_lower, "cataluña") == 0 || strcmp(region_lower, "catalunya") == 0 ||
-        strcmp(region_lower, "catalonia") == 0) {
-        return "cataluna";
-    } else if(strcmp(region_lower, "andalucía") == 0 || strcmp(region_lower, "andalucia") == 0) {
-        return "andalucia";
-    } else if(
-        strcmp(region_lower, "país vasco") == 0 || strcmp(region_lower, "pais vasco") == 0 ||
-        strcmp(region_lower, "euskadi") == 0) {
-        return "pais_vasco";
-    } else if(strcmp(region_lower, "galicia") == 0) {
-        return "galicia";
-    } else if(
-        strcmp(region_lower, "asturias") == 0 ||
-        strcmp(region_lower, "principado de asturias") == 0) {
-        return "asturias";
-    } else if(strcmp(region_lower, "cantabria") == 0) {
-        return "cantabria";
-    } else if(
-        strcmp(region_lower, "castilla y león") == 0 ||
-        strcmp(region_lower, "castilla y leon") == 0) {
-        return "castilla_leon";
-    } else if(
-        strcmp(region_lower, "castilla-la mancha") == 0 ||
-        strcmp(region_lower, "castilla la mancha") == 0) {
-        return "castilla_mancha";
-    } else if(strcmp(region_lower, "extremadura") == 0) {
-        return "extremadura";
-    } else if(strcmp(region_lower, "aragon") == 0 || strcmp(region_lower, "aragon") == 0) {
-        return "aragon";
-    } else if(strcmp(region_lower, "murcia") == 0 || strcmp(region_lower, "región de murcia") == 0) {
-        return "murcia";
-    } else if(
-        strcmp(region_lower, "navarra") == 0 ||
-        strcmp(region_lower, "comunidad foral de navarra") == 0) {
-        return "navarra";
-    } else if(strcmp(region_lower, "la rioja") == 0) {
-        return "la_rioja";
-    } else if(strcmp(region_lower, "islas baleares") == 0 || strcmp(region_lower, "baleares") == 0) {
-        return "baleares";
-    } else if(strcmp(region_lower, "islas canarias") == 0 || strcmp(region_lower, "canarias") == 0) {
-        return "canarias";
-    }
-
-    // Default fallback to Valencia for unknown regions
-    return "valencia";
-}
-
-// Dynamic station name lookup with region-based file loading
-static const char*
-    renfe_sum10_get_station_name_dynamic(uint16_t station_code, const char* region) {
+// Dynamic station name lookup
+static const char* renfe_sum10_get_station_name_dynamic(uint16_t station_code) {
     // Handle special case
     if(station_code == 0x0000) {
         return "";
     }
 
-    // Get primary file for the region
-    const char* primary_file = renfe_sum10_map_region_to_file(region);
-
-    // Try primary file first
-    if(renfe_sum10_load_station_file(primary_file)) {
+    // Always use Valencia since these cards are Valencia-specific
+    if(renfe_sum10_load_station_file("valencia")) {
         const char* station_name = renfe_sum10_get_station_name_from_cache(station_code);
         if(strcmp(station_name, "Unknown") != 0) {
             return station_name;
         }
     }
 
-    // For Valencia, try additional files as fallback
-    if(strcmp(region, "Valencia") == 0 || strcmp(region, "valencia") == 0) {
-        const char* fallback_files[] = {
-            "cercanias_valencia", "metro_valencia", "tranvia_valencia", NULL};
+    // Try Valencia fallback files
+    const char* fallback_files[] = {
+        "cercanias_valencia", "metro_valencia", "tranvia_valencia", NULL};
 
-        for(int i = 0; fallback_files[i] != NULL; i++) {
-            if(renfe_sum10_load_station_file(fallback_files[i])) {
-                const char* station_name = renfe_sum10_get_station_name_from_cache(station_code);
-                if(strcmp(station_name, "Unknown") != 0) {
-                    return station_name;
-                }
-            }
-        }
-    }
-
-    // Try common fallback files for any region
-    const char* common_files[] = {"general", "cercanias", "metro", "tranvia", NULL};
-    for(int i = 0; common_files[i] != NULL; i++) {
-        if(renfe_sum10_load_station_file(common_files[i])) {
+    for(int i = 0; fallback_files[i] != NULL; i++) {
+        if(renfe_sum10_load_station_file(fallback_files[i])) {
             const char* station_name = renfe_sum10_get_station_name_from_cache(station_code);
             if(strcmp(station_name, "Unknown") != 0) {
                 return station_name;
@@ -452,13 +449,9 @@ static const char*
     return "Unknown";
 }
 
-// Global variable to store detected region for station lookup
-static char g_detected_region[32] = "valencia"; // Default to Valencia
-
 // Updated wrapper function to maintain API compatibility
 static const char* renfe_sum10_get_station_name(uint16_t station_code) {
-    // Use the detected region, defaulting to Valencia
-    return renfe_sum10_get_station_name_dynamic(station_code, g_detected_region);
+    return renfe_sum10_get_station_name_dynamic(station_code);
 }
 // Extract zone code from Block 5 data
 static uint16_t renfe_sum10_extract_zone_code(const uint8_t* block5_data) {
@@ -1159,213 +1152,6 @@ static const char* renfe_sum10_get_zone_name(uint16_t zone_code) {
     }
 }
 
-// Get region/autonomous community from card data analysis
-static const char* renfe_sum10_get_region(const MfClassicData* data) {
-    if(!data) {
-        return "Unknown";
-    }
-
-    // Extract key data from blocks (only use blocks we have read)
-    const uint8_t* block4_data = NULL;
-    const uint8_t* block5_data = NULL;
-
-    // Check if blocks are available
-    if(mf_classic_is_block_read(data, 4)) {
-        block4_data = data->block[4].data;
-    }
-
-    if(mf_classic_is_block_read(data, 5)) {
-        block5_data = data->block[5].data;
-    }
-
-    if(!block4_data || !block5_data) {
-        return "Unknown";
-    }
-
-    // Extract zone code for region identification
-    uint16_t zone_code = renfe_sum10_extract_zone_code(block5_data);
-
-    // Extract additional identifiers for region detection (only use block 4, skip block 8)
-    uint16_t block4_pattern = (block4_data[0] << 8) | block4_data[1]; // First 2 bytes of block 4
-
-    // ========== LAS 17 COMUNIDADES AUTÓNOMAS DE ESPAÑA ==========
-
-    // 1. VALENCIA (Comunidad Valenciana) - CONFIRMADO por dumps reales
-    if((zone_code == 0x6C16 || zone_code == 0x627C || zone_code == 0xEC16) ||
-       (block4_pattern == 0x3110 || block4_pattern == 0x1120) ||
-       (zone_code >= 0x6000 && zone_code <= 0x6FFF)) {
-        return "Valencia";
-    }
-
-    // 2. MADRID (Comunidad de Madrid)
-    if((zone_code >= 0x7000 && zone_code <= 0x7FFF) ||
-       (block4_pattern == 0x4110 || block4_pattern == 0x4120) ||
-       (block4_pattern >= 0x7000 && block4_pattern <= 0x7FFF) ||
-       // Patrones específicos de Metro de Madrid
-       (block4_pattern >= 0x7100 && block4_pattern <= 0x72FF) ||
-       (zone_code >= 0x7100 && zone_code <= 0x72FF)) {
-        return "Madrid";
-    }
-
-    // 3. CATALUÑA (Catalunya)
-    if((zone_code >= 0x8000 && zone_code <= 0x8FFF) ||
-       (block4_pattern == 0x5110 || block4_pattern == 0x5120) ||
-       (block4_pattern >= 0x8000 && block4_pattern <= 0x8FFF) ||
-       // Patrones de TMB Barcelona y FGC
-       (block4_pattern >= 0x8100 && block4_pattern <= 0x83FF) ||
-       (zone_code >= 0x8100 && zone_code <= 0x83FF)) {
-        return "Cataluña";
-    }
-
-    // 4. ANDALUCÍA
-    if((zone_code >= 0x9000 && zone_code <= 0x9FFF) ||
-       (block4_pattern == 0x6110 || block4_pattern == 0x6120) ||
-       (block4_pattern >= 0x9000 && block4_pattern <= 0x9FFF) ||
-       // Patrones de Metro de Sevilla, Málaga, Granada
-       (block4_pattern >= 0x9100 && block4_pattern <= 0x94FF) ||
-       (zone_code >= 0x9100 && zone_code <= 0x94FF)) {
-        return "Andalucía";
-    }
-
-    // 5. PAÍS VASCO (Euskadi)
-    if((zone_code >= 0xA000 && zone_code <= 0xAFFF) ||
-       (block4_pattern == 0x7110 || block4_pattern == 0x7120) ||
-       (block4_pattern >= 0xA000 && block4_pattern <= 0xAFFF) ||
-       // Patrones de Metro Bilbao y Euskotren
-       (block4_pattern >= 0xA100 && block4_pattern <= 0xA3FF) ||
-       (zone_code >= 0xA100 && zone_code <= 0xA3FF)) {
-        return "País Vasco";
-    }
-
-    // 6. GALICIA
-    if((zone_code >= 0xB000 && zone_code <= 0xBFFF) ||
-       (block4_pattern == 0x8110 || block4_pattern == 0x8120) ||
-       (block4_pattern >= 0xB000 && block4_pattern <= 0xBFFF) ||
-       // Patrones de transporte gallego
-       (block4_pattern >= 0xB100 && block4_pattern <= 0xB2FF) ||
-       (zone_code >= 0xB100 && zone_code <= 0xB2FF)) {
-        return "Galicia";
-    }
-
-    // 7. ASTURIAS (Principado de Asturias)
-    if((zone_code >= 0xC000 && zone_code <= 0xCFFF) ||
-       (block4_pattern == 0x9110 || block4_pattern == 0x9120) ||
-       (block4_pattern >= 0xC000 && block4_pattern <= 0xCFFF) ||
-       // Patrones de FEVE y Metrotranvía
-       (block4_pattern >= 0xC100 && block4_pattern <= 0xC2FF) ||
-       (zone_code >= 0xC100 && zone_code <= 0xC2FF)) {
-        return "Asturias";
-    }
-
-    // 8. CANTABRIA
-    if((zone_code >= 0xD000 && zone_code <= 0xDFFF) ||
-       (block4_pattern == 0xA110 || block4_pattern == 0xA120) ||
-       (block4_pattern >= 0xD000 && block4_pattern <= 0xDFFF) ||
-       // Patrones de FEVE Cantabria
-       (block4_pattern >= 0xD100 && block4_pattern <= 0xD1FF) ||
-       (zone_code >= 0xD100 && zone_code <= 0xD1FF)) {
-        return "Cantabria";
-    }
-
-    // 9. CASTILLA Y LEÓN
-    if((zone_code >= 0xE000 && zone_code <= 0xEFFF) ||
-       (block4_pattern == 0xB110 || block4_pattern == 0xB120) ||
-       (block4_pattern >= 0xE000 && block4_pattern <= 0xEFFF) ||
-       // Patrones de AVE y líneas de Castilla y León
-       (block4_pattern >= 0xE100 && block4_pattern <= 0xE3FF) ||
-       (zone_code >= 0xE100 && zone_code <= 0xE3FF)) {
-        return "Castilla y León";
-    }
-
-    // 10. CASTILLA-LA MANCHA
-    if((zone_code >= 0x1000 && zone_code <= 0x1FFF) ||
-       (block4_pattern == 0xC110 || block4_pattern == 0xC120) ||
-       (block4_pattern >= 0x1000 && block4_pattern <= 0x1FFF) ||
-       // Patrones de AVE Madrid-Sevilla y líneas regionales
-       (block4_pattern >= 0x1100 && block4_pattern <= 0x13FF) ||
-       (zone_code >= 0x1100 && zone_code <= 0x13FF)) {
-        return "Castilla-La Mancha";
-    }
-
-    // 11. EXTREMADURA
-    if((zone_code >= 0x2000 && zone_code <= 0x2FFF) ||
-       (block4_pattern == 0xD110 || block4_pattern == 0xD120) ||
-       (block4_pattern >= 0x2000 && block4_pattern <= 0x2FFF) ||
-       // Patrones de líneas a Badajoz y Cáceres
-       (block4_pattern >= 0x2100 && block4_pattern <= 0x22FF) ||
-       (zone_code >= 0x2100 && zone_code <= 0x22FF)) {
-        return "Extremadura";
-    }
-
-    // 12. ARAGÓN
-    if((zone_code >= 0x3000 && zone_code <= 0x3FFF) ||
-       (block4_pattern == 0xE110 || block4_pattern == 0xE120) ||
-       (block4_pattern >= 0x3000 && block4_pattern <= 0x3FFF) ||
-       // Patrones de Tranvía de Zaragoza y líneas regionales
-       (block4_pattern >= 0x3100 && block4_pattern <= 0x32FF) ||
-       (zone_code >= 0x3100 && zone_code <= 0x32FF)) {
-        return "Aragón";
-    }
-
-    // 13. MURCIA (Región de Murcia)
-    if((zone_code >= 0x4000 && zone_code <= 0x4FFF) ||
-       (block4_pattern == 0xF110 || block4_pattern == 0xF120) ||
-       (block4_pattern >= 0x4000 && block4_pattern <= 0x4FFF) ||
-       // Patrones de Tranvía de Murcia
-       (block4_pattern >= 0x4100 && block4_pattern <= 0x41FF) ||
-       (zone_code >= 0x4100 && zone_code <= 0x41FF)) {
-        return "Murcia";
-    }
-
-    // 14. NAVARRA (Comunidad Foral de Navarra)
-    if((zone_code >= 0x5000 && zone_code <= 0x5FFF) ||
-       (block4_pattern >= 0x5000 && block4_pattern <= 0x5FFF) ||
-       // Patrones específicos de transporte navarro
-       (block4_pattern >= 0x5100 && block4_pattern <= 0x51FF) ||
-       (zone_code >= 0x5100 && zone_code <= 0x51FF)) {
-        return "Navarra";
-    }
-
-    // 15. LA RIOJA
-    if((zone_code >= 0xF000) || (block4_pattern >= 0xF000) ||
-       // Patrones específicos de La Rioja
-       (block4_pattern >= 0xF100 && block4_pattern <= 0xF1FF) ||
-       (zone_code >= 0xF100 && zone_code <= 0xF1FF)) {
-        return "La Rioja";
-    }
-
-    // 16. ISLAS BALEARES
-    if((zone_code >= 0x0100 && zone_code <= 0x0FFF) ||
-       (block4_pattern >= 0x0100 && block4_pattern <= 0x0FFF) ||
-       // Patrones de Metro de Palma y Tren de Sóller
-       (block4_pattern >= 0x0B00 && block4_pattern <= 0x0BFF) ||
-       (zone_code >= 0x0B00 && zone_code <= 0x0BFF)) {
-        return "Islas Baleares";
-    }
-
-    // 17. ISLAS CANARIAS
-    if((zone_code >= 0x0010 && zone_code <= 0x00FF) ||
-       (block4_pattern >= 0x0010 && block4_pattern <= 0x00FF) ||
-       // Patrones de Metro de Tenerife y Guaguas
-       (block4_pattern >= 0x0C00 && block4_pattern <= 0x0CFF) ||
-       (zone_code >= 0x0C00 && zone_code <= 0x0CFF)) {
-        return "Islas Canarias";
-    }
-
-    // Try to detect region by other patterns before defaulting
-    if(block4_pattern >= 0x1000) {
-        // If we have a valid pattern but couldn't identify the region,
-        // try to guess based on ranges
-        if(block4_pattern >= 0x7000 && block4_pattern <= 0x7FFF) return "Madrid";
-        if(block4_pattern >= 0x8000 && block4_pattern <= 0x8FFF) return "Catalunya";
-        if(block4_pattern >= 0x9000 && block4_pattern <= 0x9FFF) return "Andalucia";
-        if(block4_pattern >= 0xA000 && block4_pattern <= 0xAFFF) return "Pais Vasco";
-        if(block4_pattern >= 0xB000 && block4_pattern <= 0xBFFF) return "Galicia";
-    }
-
-    return "Unknown"; // Fallback when region cannot be identified
-}
-
 // Parse a single history entry
 static void renfe_sum10_parse_history_entry(
     FuriString* parsed_data,
@@ -1716,20 +1502,13 @@ static bool renfe_sum10_parse(FuriString* parsed_data, const MfClassicData* data
             furi_string_cat_printf(parsed_data, "🔢 UID: Not available\n");
         }
 
-        // 3. Extract and show region information
-        const char* region_name = renfe_sum10_get_region(data);
-        if(region_name) {
-            furi_string_cat_printf(parsed_data, "🌍 Region: %s\n", region_name);
+        // 3. Extract and show origin station information (where card was first topped up)
+        const char* origin_station = renfe_sum10_get_origin_station(data);
+        if(origin_station && strcmp(origin_station, "Unknown") != 0) {
+            furi_string_cat_printf(parsed_data, "� Origin: %s\n", origin_station);
 
-            // Set global region for station name lookup
-            strncpy(g_detected_region, region_name, sizeof(g_detected_region) - 1);
-            g_detected_region[sizeof(g_detected_region) - 1] = '\0';
-            // Convert to lowercase for file lookup
-            for(int i = 0; g_detected_region[i]; i++) {
-                g_detected_region[i] = tolower(g_detected_region[i]);
-            }
         } else {
-            furi_string_cat_printf(parsed_data, "🌍 Region: Unknown\n");
+            furi_string_cat_printf(parsed_data, "🏠 Origin: Unknown\n");
         }
 
         // 4. Extract and show zone information from Block 5 (bytes 5-6)
@@ -1923,32 +1702,51 @@ static void renfe_sum10_on_enter(Metroflip* app) {
         return;
     }
 
+    FURI_LOG_I(
+        TAG,
+        "RENFE plugin on_enter called - data_loaded: %s, mfc_data: %s",
+        app->data_loaded ? "true" : "false",
+        app->mfc_data ? "exists" : "NULL");
+
     dolphin_deed(DolphinDeedNfcRead);
 
     app->sec_num = 0;
 
     if(app->data_loaded) {
-        Storage* storage = furi_record_open(RECORD_STORAGE);
-        FlipperFormat* ff = flipper_format_file_alloc(storage);
-        if(flipper_format_file_open_existing(ff, app->file_path)) {
-            MfClassicData* mfc_data = mf_classic_alloc();
-            mf_classic_load(mfc_data, ff, 2);
+        MfClassicData* mfc_data = NULL;
+        bool should_free_mfc_data = false;
+
+        // Check if we already have data loaded in memory (from dump loading)
+        if(app->mfc_data) {
+            mfc_data = app->mfc_data;
+        } else {
+            // Load from file (original behavior)
+            Storage* storage = furi_record_open(RECORD_STORAGE);
+            FlipperFormat* ff = flipper_format_file_alloc(storage);
+            if(flipper_format_file_open_existing(ff, app->file_path)) {
+                mfc_data = mf_classic_alloc();
+                mf_classic_load(mfc_data, ff, 2);
+                should_free_mfc_data = true;
+            }
+            flipper_format_free(ff);
+            furi_record_close(RECORD_STORAGE);
+        }
+
+        if(mfc_data) {
+            FURI_LOG_I(TAG, "RENFE: MFC data available, parsing card information");
             FuriString* parsed_data = furi_string_alloc();
             Widget* widget = app->widget;
 
             if(!widget) {
-                mf_classic_free(mfc_data);
+                FURI_LOG_E(TAG, "RENFE: Widget is NULL!");
+                if(should_free_mfc_data) mf_classic_free(mfc_data);
                 furi_string_free(parsed_data);
-                flipper_format_free(ff);
-                furi_record_close(RECORD_STORAGE);
                 return;
             }
 
             if(!app->text_box_store) {
-                mf_classic_free(mfc_data);
+                if(should_free_mfc_data) mf_classic_free(mfc_data);
                 furi_string_free(parsed_data);
-                flipper_format_free(ff);
-                furi_record_close(RECORD_STORAGE);
                 return;
             }
 
@@ -1969,18 +1767,19 @@ static void renfe_sum10_on_enter(Metroflip* app) {
                 widget, GuiButtonTypeRight, "Exit", metroflip_exit_widget_callback, app);
 
             if(!app->view_dispatcher) {
-                mf_classic_free(mfc_data);
+                if(should_free_mfc_data) mf_classic_free(mfc_data);
                 furi_string_free(parsed_data);
-                flipper_format_free(ff);
-                furi_record_close(RECORD_STORAGE);
                 return;
             }
 
-            mf_classic_free(mfc_data);
+            if(should_free_mfc_data) mf_classic_free(mfc_data);
             furi_string_free(parsed_data);
+
+            FURI_LOG_I(TAG, "RENFE: Switching to widget view");
             view_dispatcher_switch_to_view(app->view_dispatcher, MetroflipViewWidget);
+        } else {
+            FURI_LOG_E(TAG, "RENFE: Failed to load MFC data!");
         }
-        flipper_format_free(ff);
     } else {
         // Setup view
         Popup* popup = app->popup;
@@ -2040,13 +1839,26 @@ static bool renfe_sum10_on_event(Metroflip* app, SceneManagerEvent event) {
         } else if(event.event == GuiButtonTypeLeft) {
             // Handle LEFT button press to show travel history
             if(app->data_loaded) {
-                // Data loaded from file
-                Storage* storage = furi_record_open(RECORD_STORAGE);
-                FlipperFormat* ff = flipper_format_file_alloc(storage);
-                if(flipper_format_file_open_existing(ff, app->file_path)) {
-                    MfClassicData* mfc_data = mf_classic_alloc();
-                    mf_classic_load(mfc_data, ff, 2);
+                MfClassicData* mfc_data = NULL;
+                bool should_free_mfc_data = false;
 
+                // Check if we already have data loaded in memory (from dump loading)
+                if(app->mfc_data) {
+                    mfc_data = app->mfc_data;
+                } else {
+                    // Load from file (original behavior)
+                    Storage* storage = furi_record_open(RECORD_STORAGE);
+                    FlipperFormat* ff = flipper_format_file_alloc(storage);
+                    if(flipper_format_file_open_existing(ff, app->file_path)) {
+                        mfc_data = mf_classic_alloc();
+                        mf_classic_load(mfc_data, ff, 2);
+                        should_free_mfc_data = true;
+                    }
+                    flipper_format_free(ff);
+                    furi_record_close(RECORD_STORAGE);
+                }
+
+                if(mfc_data) {
                     FuriString* parsed_data = furi_string_alloc();
                     Widget* widget = app->widget;
 
@@ -2065,11 +1877,9 @@ static bool renfe_sum10_on_event(Metroflip* app, SceneManagerEvent event) {
                         view_dispatcher_switch_to_view(app->view_dispatcher, MetroflipViewWidget);
                     }
 
-                    mf_classic_free(mfc_data);
+                    if(should_free_mfc_data) mf_classic_free(mfc_data);
                     furi_string_free(parsed_data);
                 }
-                flipper_format_free(ff);
-                furi_record_close(RECORD_STORAGE);
             } else {
                 // Card is connected - use already read data
                 const MfClassicData* mfc_data =
@@ -2097,12 +1907,26 @@ static bool renfe_sum10_on_event(Metroflip* app, SceneManagerEvent event) {
         } else if(event.event == GuiButtonTypeRight) {
             // Handle RIGHT button press - go back to main card view from history
             if(app->data_loaded) {
-                // Data loaded from file - reload main view
-                Storage* storage = furi_record_open(RECORD_STORAGE);
-                FlipperFormat* ff = flipper_format_file_alloc(storage);
-                if(flipper_format_file_open_existing(ff, app->file_path)) {
-                    MfClassicData* mfc_data = mf_classic_alloc();
-                    mf_classic_load(mfc_data, ff, 2);
+                MfClassicData* mfc_data = NULL;
+                bool should_free_mfc_data = false;
+
+                // Check if we already have data loaded in memory (from dump loading)
+                if(app->mfc_data) {
+                    mfc_data = app->mfc_data;
+                } else {
+                    // Load from file (original behavior)
+                    Storage* storage = furi_record_open(RECORD_STORAGE);
+                    FlipperFormat* ff = flipper_format_file_alloc(storage);
+                    if(flipper_format_file_open_existing(ff, app->file_path)) {
+                        mfc_data = mf_classic_alloc();
+                        mf_classic_load(mfc_data, ff, 2);
+                        should_free_mfc_data = true;
+                    }
+                    flipper_format_free(ff);
+                    furi_record_close(RECORD_STORAGE);
+                }
+
+                if(mfc_data) {
                     FuriString* parsed_data = furi_string_alloc();
                     Widget* widget = app->widget;
 
@@ -2132,11 +1956,9 @@ static bool renfe_sum10_on_event(Metroflip* app, SceneManagerEvent event) {
                         view_dispatcher_switch_to_view(app->view_dispatcher, MetroflipViewWidget);
                     }
 
-                    mf_classic_free(mfc_data);
+                    if(should_free_mfc_data) mf_classic_free(mfc_data);
                     furi_string_free(parsed_data);
                 }
-                flipper_format_free(ff);
-                furi_record_close(RECORD_STORAGE);
             } else {
                 // Card is connected - use already read data
                 const MfClassicData* mfc_data =
@@ -2196,10 +2018,6 @@ static void renfe_sum10_on_exit(Metroflip* app) {
 
     // Clear station cache to free memory
     renfe_sum10_clear_station_cache();
-
-    // Reset region to default
-    strncpy(g_detected_region, "valencia", sizeof(g_detected_region) - 1);
-    g_detected_region[sizeof(g_detected_region) - 1] = '\0';
 
     metroflip_app_blink_stop(app);
 }
