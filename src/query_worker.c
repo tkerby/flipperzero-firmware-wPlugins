@@ -36,7 +36,7 @@ static int32_t tum_query_worker_thread_cb(void* ctx) {
     if(!status) {
         furi_string_reset(msg_ext->card_name);
     }
-    status = tum_db_query_city_name(instance->storage, msg->area_id, msg_ext->city_name);
+    status = tum_db_query_city_name(instance->storage, msg->city_id, msg_ext->city_name);
     instance->cb(TUM_QueryWorkerEventProgress, ++progress, instance->ctx);
     if(!status) {
         furi_string_reset(msg_ext->city_name);
@@ -51,7 +51,7 @@ static int32_t tum_query_worker_thread_cb(void* ctx) {
         memcpy(city_id, &travel->institution_id[4], 4);
 
         // 是否漫游
-        if(strcmp(city_id, msg->area_id) != 0) travel_ext->roaming = true;
+        if(strcmp(city_id, msg->city_id) != 0) travel_ext->roaming = true;
 
         // 是否夜间
         if(travel->hour >= 23 || travel->hour < 6) travel_ext->night = true;
@@ -105,7 +105,7 @@ static int32_t tum_query_worker_thread_cb(void* ctx) {
 
             if(furi_string_equal(travel_ext->line_name, travel_ext_fore->line_name)) {
                 // 同名线路跨城市换乘
-                if(strcmp(travel->area_id, travel_fore->area_id) != 0) travel_ext->transfer = true;
+                if(strcmp(travel->city_id, travel_fore->city_id) != 0) travel_ext->transfer = true;
             } else {
                 travel_ext->transfer = true;
             }
