@@ -30,7 +30,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-08-01 12:09 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-08-01 12:09 EST`
-- Updated: [Rubiks Cube Timer v0.0.2 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
 - Updated: [Ghost ESP v1.4 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
 - Updated: [Yatzee v1.2 (By emfleak)](https://github.com/emfleak/flipperzero-yatzee) [Fix Full House calculation, and improve code readability a bit (By zessx)](https://github.com/emfleak/flipperzero-yatzee/pull/2)
 - Added: [Lights Out Flipper Zero v1.1 (By DigiMancer3D)](https://github.com/user/DigiMancer3D)
@@ -49,6 +48,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [IR Xbox Controller v1.5 (By gebeto)](https://github.com/gebeto/flipper-xbox-controller)
 - Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip) [Renfe suma 10 fix origin /region && add support for load renfe suma 10 saved cards (By BocamoCM)](https://github.com/luu176/Metroflip/pull/69)
 - Updated: [WiFi (Marauder) v0.7.4 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion) `Req: ESP32`
+- Updated: [Rubiks Cube Timer v0.0.2 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
 - Updated: [FlipSocial v2.0 (By jblanked)](https://github.com/jblanked/FlipSocial)
 - Updated: [T-Union Master (China) v0.1 (By SocialSisterYi)](https://github.com/SocialSisterYi/T-Union_Master)
 
