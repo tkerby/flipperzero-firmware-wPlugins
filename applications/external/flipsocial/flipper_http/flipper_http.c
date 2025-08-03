@@ -897,7 +897,7 @@ bool flipper_http_save_wifi(FlipperHTTP* fhttp, const char* ssid, const char* pa
  */
 bool flipper_http_send_command(FlipperHTTP* fhttp, HTTPCommand command) {
     if(!fhttp) {
-        FURI_LOG_E(HTTP_TAG, "flipper_http_send_command: Failed to get context.");
+        FURI_LOG_E(HTTP_TAG, "Failed to get context.");
         return false;
     }
     switch(command) {
@@ -910,7 +910,6 @@ bool flipper_http_send_command(FlipperHTTP* fhttp, HTTPCommand command) {
     case HTTP_CMD_IP_WIFI:
         return flipper_http_send_data(fhttp, "[WIFI/IP]");
     case HTTP_CMD_SCAN:
-        fhttp->method = GET;
         return flipper_http_send_data(fhttp, "[WIFI/SCAN]");
     case HTTP_CMD_LIST_COMMANDS:
         return flipper_http_send_data(fhttp, "[LIST]");
@@ -921,8 +920,6 @@ bool flipper_http_send_command(FlipperHTTP* fhttp, HTTPCommand command) {
     case HTTP_CMD_PING:
         fhttp->state = INACTIVE; // set state as INACTIVE to be made IDLE if PONG is received
         return flipper_http_send_data(fhttp, "[PING]");
-    case HTTP_CMD_REBOOT:
-        return flipper_http_send_data(fhttp, "[REBOOT]");
     default:
         FURI_LOG_E(HTTP_TAG, "Invalid command.");
         return false;
@@ -1115,7 +1112,7 @@ static void flipper_http_rx_callback(const char* line, void* context) {
     }
 
     // Uncomment below line to log the data received over UART
-    // FURI_LOG_I(HTTP_TAG, "Received UART line: %s", line);
+    //(HTTP_TAG, "Received UART line: %s", line);
 
     // Check if we've started receiving data from a GET request
     if(fhttp->started_receiving && (fhttp->method == GET || fhttp->method == BYTES)) {
@@ -1123,8 +1120,8 @@ static void flipper_http_rx_callback(const char* line, void* context) {
         furi_timer_restart(fhttp->get_timeout_timer, TIMEOUT_DURATION_TICKS);
 
         if(strstr(line, "[GET/END]") != NULL) {
-            FURI_LOG_I(HTTP_TAG, "GET request completed.");
-            // Stop the timer since we've completed the GET request
+            // FURI_LOG_I(HTTP_TAG, "GET request completed.");
+            //  Stop the timer since we've completed the GET request
             furi_timer_stop(fhttp->get_timeout_timer);
             fhttp->started_receiving = false;
             fhttp->just_started = false;
@@ -1188,8 +1185,8 @@ static void flipper_http_rx_callback(const char* line, void* context) {
         furi_timer_restart(fhttp->get_timeout_timer, TIMEOUT_DURATION_TICKS);
 
         if(strstr(line, "[POST/END]") != NULL) {
-            FURI_LOG_I(HTTP_TAG, "POST request completed.");
-            // Stop the timer since we've completed the POST request
+            // FURI_LOG_I(HTTP_TAG, "POST request completed.");
+            //  Stop the timer since we've completed the POST request
             furi_timer_stop(fhttp->get_timeout_timer);
             fhttp->started_receiving = false;
             fhttp->just_started = false;
@@ -1253,8 +1250,8 @@ static void flipper_http_rx_callback(const char* line, void* context) {
         furi_timer_restart(fhttp->get_timeout_timer, TIMEOUT_DURATION_TICKS);
 
         if(strstr(line, "[PUT/END]") != NULL) {
-            FURI_LOG_I(HTTP_TAG, "PUT request completed.");
-            // Stop the timer since we've completed the PUT request
+            // FURI_LOG_I(HTTP_TAG, "PUT request completed.");
+            //  Stop the timer since we've completed the PUT request
             furi_timer_stop(fhttp->get_timeout_timer);
             fhttp->started_receiving = false;
             fhttp->just_started = false;
@@ -1288,8 +1285,8 @@ static void flipper_http_rx_callback(const char* line, void* context) {
         furi_timer_restart(fhttp->get_timeout_timer, TIMEOUT_DURATION_TICKS);
 
         if(strstr(line, "[DELETE/END]") != NULL) {
-            FURI_LOG_I(HTTP_TAG, "DELETE request completed.");
-            // Stop the timer since we've completed the DELETE request
+            // FURI_LOG_I(HTTP_TAG, "DELETE request completed.");
+            //  Stop the timer since we've completed the DELETE request
             furi_timer_stop(fhttp->get_timeout_timer);
             fhttp->started_receiving = false;
             fhttp->just_started = false;
@@ -1319,15 +1316,15 @@ static void flipper_http_rx_callback(const char* line, void* context) {
 
     // Handle different types of responses
     if(strstr(line, "[SUCCESS]") != NULL || strstr(line, "[CONNECTED]") != NULL) {
-        FURI_LOG_I(HTTP_TAG, "Operation succeeded.");
+        // FURI_LOG_I(HTTP_TAG, "Operation succeeded.");
     } else if(strstr(line, "[INFO]") != NULL) {
-        FURI_LOG_I(HTTP_TAG, "Received info: %s", line);
+        // FURI_LOG_I(HTTP_TAG, "Received info: %s", line);
 
         if(fhttp->state == INACTIVE && strstr(line, "[INFO] Already connected to Wifi.") != NULL) {
             fhttp->state = IDLE;
         }
     } else if(strstr(line, "[GET/SUCCESS]") != NULL) {
-        FURI_LOG_I(HTTP_TAG, "GET request succeeded.");
+        // FURI_LOG_I(HTTP_TAG, "GET request succeeded.");
         furi_timer_start(fhttp->get_timeout_timer, TIMEOUT_DURATION_TICKS);
 
         fhttp->started_receiving = true;
@@ -1342,7 +1339,7 @@ static void flipper_http_rx_callback(const char* line, void* context) {
         set_header(fhttp);
         return;
     } else if(strstr(line, "[POST/SUCCESS]") != NULL) {
-        FURI_LOG_I(HTTP_TAG, "POST request succeeded.");
+        // FURI_LOG_I(HTTP_TAG, "POST request succeeded.");
         furi_timer_start(fhttp->get_timeout_timer, TIMEOUT_DURATION_TICKS);
 
         fhttp->started_receiving = true;
@@ -1357,7 +1354,7 @@ static void flipper_http_rx_callback(const char* line, void* context) {
         set_header(fhttp);
         return;
     } else if(strstr(line, "[PUT/SUCCESS]") != NULL) {
-        FURI_LOG_I(HTTP_TAG, "PUT request succeeded.");
+        // FURI_LOG_I(HTTP_TAG, "PUT request succeeded.");
         furi_timer_start(fhttp->get_timeout_timer, TIMEOUT_DURATION_TICKS);
 
         fhttp->started_receiving = true;
@@ -1367,7 +1364,7 @@ static void flipper_http_rx_callback(const char* line, void* context) {
         set_header(fhttp);
         return;
     } else if(strstr(line, "[DELETE/SUCCESS]") != NULL) {
-        FURI_LOG_I(HTTP_TAG, "DELETE request succeeded.");
+        // FURI_LOG_I(HTTP_TAG, "DELETE request succeeded.");
         furi_timer_start(fhttp->get_timeout_timer, TIMEOUT_DURATION_TICKS);
 
         fhttp->started_receiving = true;
@@ -1377,13 +1374,13 @@ static void flipper_http_rx_callback(const char* line, void* context) {
         set_header(fhttp);
         return;
     } else if(strstr(line, "[DISCONNECTED]") != NULL) {
-        FURI_LOG_I(HTTP_TAG, "WiFi disconnected successfully.");
+        // FURI_LOG_I(HTTP_TAG, "WiFi disconnected successfully.");
     } else if(strstr(line, "[ERROR]") != NULL) {
         FURI_LOG_E(HTTP_TAG, "Received error: %s", line);
         fhttp->state = ISSUE;
         return;
     } else if(strstr(line, "[PONG]") != NULL) {
-        FURI_LOG_I(HTTP_TAG, "Received PONG response: Wifi Dev Board is still alive.");
+        // FURI_LOG_I(HTTP_TAG, "Received PONG response: Wifi Dev Board is still alive.");
 
         // send command to connect to WiFi
         if(fhttp->state == INACTIVE) {

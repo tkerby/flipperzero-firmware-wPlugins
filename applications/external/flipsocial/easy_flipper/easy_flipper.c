@@ -1,6 +1,6 @@
 #include <easy_flipper/easy_flipper.h>
 
-void easy_flipper_dialog(char* header, char* text) {
+void easy_flipper_dialog(const char* header, const char* text) {
     DialogsApp* dialogs = furi_record_open(RECORD_DIALOGS);
     DialogMessage* message = dialog_message_alloc();
     dialog_message_set_header(message, header, 64, 0, AlignCenter, AlignTop);
@@ -126,7 +126,7 @@ bool easy_flipper_set_view_dispatcher(ViewDispatcher** view_dispatcher, Gui* gui
 bool easy_flipper_set_submenu(
     Submenu** submenu,
     int32_t view_id,
-    char* title,
+    const char* title,
     uint32_t(previous_callback)(void*),
     ViewDispatcher** view_dispatcher) {
     if(!submenu) {
@@ -190,7 +190,7 @@ bool easy_flipper_set_menu(
 bool easy_flipper_set_widget(
     Widget** widget,
     int32_t view_id,
-    char* text,
+    const char* text,
     uint32_t(previous_callback)(void*),
     ViewDispatcher** view_dispatcher) {
     if(!widget) {
@@ -262,7 +262,7 @@ bool easy_flipper_set_variable_item_list(
 bool easy_flipper_set_text_input(
     TextInput** text_input,
     int32_t view_id,
-    char* header_text,
+    const char* header_text,
     char* text_input_temp_buffer,
     uint32_t text_input_buffer_size,
     void (*result_callback)(void*),
@@ -308,7 +308,7 @@ bool easy_flipper_set_text_input(
 bool easy_flipper_set_uart_text_input(
     UART_TextInput** uart_text_input,
     int32_t view_id,
-    char* header_text,
+    const char* header_text,
     char* uart_text_input_temp_buffer,
     uint32_t uart_text_input_buffer_size,
     void (*result_callback)(void*),
@@ -366,15 +366,15 @@ bool easy_flipper_set_uart_text_input(
 bool easy_flipper_set_dialog_ex(
     DialogEx** dialog_ex,
     int32_t view_id,
-    char* header,
+    const char* header,
     uint16_t header_x,
     uint16_t header_y,
-    char* text,
+    const char* text,
     uint16_t text_x,
     uint16_t text_y,
-    char* left_button_text,
-    char* right_button_text,
-    char* center_button_text,
+    const char* left_button_text,
+    const char* right_button_text,
+    const char* center_button_text,
     void (*result_callback)(DialogExResult, void*),
     uint32_t(previous_callback)(void*),
     ViewDispatcher** view_dispatcher,
@@ -435,10 +435,10 @@ bool easy_flipper_set_dialog_ex(
 bool easy_flipper_set_popup(
     Popup** popup,
     int32_t view_id,
-    char* header,
+    const char* header,
     uint16_t header_x,
     uint16_t header_y,
-    char* text,
+    const char* text,
     uint16_t text_x,
     uint16_t text_y,
     void (*result_callback)(void*),
@@ -503,12 +503,12 @@ bool easy_flipper_set_loading(
 }
 
 /**
- * @brief Set a char butter to a FuriString
+ * @brief Set a char buffer to a FuriString
  * @param furi_string The FuriString object
  * @param buffer The buffer to copy the string to
  * @return true if successful, false otherwise
  */
-bool easy_flipper_set_char_to_furi_string(FuriString** furi_string, char* buffer) {
+bool easy_flipper_set_char_to_furi_string(FuriString** furi_string, const char* buffer) {
     if(!furi_string) {
         FURI_LOG_E(EASY_TAG, "Invalid arguments provided to set_buffer_to_furi_string");
         return false;
