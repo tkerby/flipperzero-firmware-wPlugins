@@ -89,7 +89,7 @@ static void t_union_decode_app_meta(TUnionMessage* msg, const uint8_t* buff) {
     // 卡类型
     msg->type = bytes_to_num_bcd(&buff[0x00], sizeof(uint8_t));
     // 发卡地
-    bytes_to_str_b16(&buff[0x02], msg->area_id, 2);
+    bytes_to_str_b16(&buff[0x02], msg->city_id, 2);
     // 卡号
     bytes_to_str_b16(&buff[0x0A], msg->card_number, 10);
     for(uint8_t i = 0; i < 20; i++)
@@ -156,7 +156,7 @@ static void t_union_decode_travel(TUnionMessage* msg, const uint8_t* buff, uint8
     travel->minute = bytes_to_num_bcd(&buff[0x19 + 5], sizeof(travel->minute));
     travel->second = bytes_to_num_bcd(&buff[0x19 + 6], sizeof(travel->second));
     // 城市id
-    bytes_to_str_b16(&buff[0x20], travel->area_id, 2);
+    bytes_to_str_b16(&buff[0x20], travel->city_id, 2);
     // 机构id
     bytes_to_str_b16(&buff[0x22], travel->institution_id, 8);
 

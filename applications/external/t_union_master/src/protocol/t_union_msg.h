@@ -43,7 +43,7 @@ typedef struct {
     uint8_t minute; //分
     uint8_t second; //秒
 
-    char area_id[4 + 1]; // 城市id
+    char city_id[4 + 1]; // 城市id
 
     char institution_id[16 + 1]; // 流水id
 } TUnionTravel;
@@ -61,7 +61,7 @@ typedef enum {
 typedef struct {
     uint8_t app_version; // 应用版本
     TunionCardType type; // 卡种
-    char area_id[4 + 1]; // 发卡地城市id
+    char city_id[4 + 1]; // 发卡地城市id
     char card_number[20 + 1]; // 卡号
 
     uint16_t iss_year; // 签发年

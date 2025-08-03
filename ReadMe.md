@@ -50,6 +50,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip) [Renfe suma 10 fix origin /region && add support for load renfe suma 10 saved cards (By BocamoCM)](https://github.com/luu176/Metroflip/pull/69)
 - Updated: [WiFi (Marauder) v0.7.4 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion) `Req: ESP32`
 - Updated: [FlipSocial v2.0 (By jblanked)](https://github.com/jblanked/FlipSocial)
+- Updated: [T-Union Master (China) v0.1 (By SocialSisterYi)](https://github.com/SocialSisterYi/T-Union_Master)
 
 <a name="release">
 

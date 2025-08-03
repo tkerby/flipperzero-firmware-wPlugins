@@ -99,14 +99,14 @@ bool tum_db_query_card_name(Storage* storage, const char* card_number, FuriStrin
 }
 
 // 查询城市码对应城市
-bool tum_db_query_city_name(Storage* storage, const char* area_id, FuriString* city_name) {
+bool tum_db_query_city_name(Storage* storage, const char* city_id, FuriString* city_name) {
     furi_assert(storage);
     bool parsed = false;
     FlipperFormat* file = flipper_format_file_alloc(storage);
 
     do {
         if(!flipper_format_file_open_existing(file, APP_ASSETS_PATH("city_code.txt"))) break;
-        if(!flipper_format_read_string(file, area_id, city_name)) break;
+        if(!flipper_format_read_string(file, city_id, city_name)) break;
         parsed = true;
     } while(false);
 
