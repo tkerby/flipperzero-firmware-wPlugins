@@ -54,7 +54,7 @@ v0.1 can still be accessed through the Releases page.
 
 Any licenses for the cipher / hash function implementations I included is at the top of their respective code files.
 
-## Roadmap
+## Future Ideas
 - Add chain encoding / hashing
 - Auto-detect cipher decoding
 - Add hash bruteforcing
