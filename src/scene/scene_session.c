@@ -178,9 +178,8 @@ static void actionSelect(const PSESSIONSCENE instance, FuriString* const path) {
 	Storage* storage = furi_record_open(RECORD_STORAGE);
 	File* file = storage_file_alloc(storage);
 	instance->renderText = 1;
-	instance->text = TEXT_APPEARS_INCORRECT_TYPE;
 
-	if(!furi_string_end_withi_str(path, "cbzs")) {
+	if(!furi_string_end_withi_str(path, ".cbzs")) {
 		instance->text = TEXT_APPEARS_INCORRECT_TYPE;
 	}
 
