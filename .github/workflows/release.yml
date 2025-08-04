@@ -1,0 +1,80 @@
+name: Release Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag name for release'
+        required: false
+        default: 'manual'
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        path: uid_brute_smarter
+        
+    - name: Checkout Momentum Firmware
+      uses: actions/checkout@v4
+      with:
+        repository: Next-Flip/Momentum-Firmware
+        path: momentum-firmware
+        submodules: recursive
+        
+    - name: Setup build environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          python3 \
+          python3-pip \
+          python3-venv \
+          git \
+          make \
+          gcc-arm-none-eabi \
+          libnewlib-arm-none-eabi \
+          build-essential \
+          protobuf-compiler \
+          ccache
+          
+    - name: Install app to firmware
+      run: |
+        mkdir -p momentum-firmware/applications_user/uid_brute_smarter
+        cp uid_brute_smarter/*.c momentum-firmware/applications_user/uid_brute_smarter/
+        cp uid_brute_smarter/*.h momentum-firmware/applications_user/uid_brute_smarter/
+        cp uid_brute_smarter/*.fam momentum-firmware/applications_user/uid_brute_smarter/
+        cp uid_brute_smarter/*.png momentum-firmware/applications_user/uid_brute_smarter/ 2>/dev/null || true
+        cp -r uid_brute_smarter/assets momentum-firmware/applications_user/uid_brute_smarter/ 2>/dev/null || true
+        cp -r uid_brute_smarter/views momentum-firmware/applications_user/uid_brute_smarter/ 2>/dev/null || true
+        
+    - name: Build application
+      run: |
+        cd momentum-firmware
+        ./fbt fap_uid_brute_smarter
+        
+    - name: Package release files
+      run: |
+        mkdir -p release
+        find momentum-firmware/build -name "*uid_brute_smarter*.fap" -exec cp {} release/ \;
+        cp uid_brute_smarter/README.md release/
+        cd release
+        zip -r uid_brute_smarter_momentum.zip *
+        
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: release/uid_brute_smarter_momentum.zip
+        generate_release_notes: true
+        
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: uid-brute-smarter-release
+        path: release/

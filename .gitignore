@@ -1,0 +1,83 @@
+# Build artifacts
+*.fap
+*.elf
+*.map
+*.lst
+*.bin
+*.hex
+*.dfu
+*.obj
+*.exe
+*.o
+*.a
+*.d
+
+# Build directories
+build/
+dist/
+.fbt/
+
+# Test executables and temporary files
+debug_test
+simple_key_test
+test_*
+*.test
+
+# IDE and OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs and temp files
+*.log
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Coverage and profiling
+coverage/
+*.gcov
+*.gcda
+*.gcno
+*.gcov
+
+# macOS specific
+*.dSYM/
+
+# Firmware specific
+*.fw
+*.tgz
+
+# Local configuration
+local.properties
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Package files
+*.zip
+*.tar.gz
+
+# Generated documentation
+docs/build/
+docs/generated/
+
+# Temporary test files
+tests/build/
+tests/coverage/
+tests/*.o
+tests/*.dSYM/
+tests/debug_*
+tests/simple_*
+tests/test_*
+tests/unit/debug_test
+tests/unit/test_*
