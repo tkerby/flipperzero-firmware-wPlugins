@@ -24,9 +24,9 @@ typedef struct {
     int block_number;       
 } HistoryEntry;
 
-// Station name cache structure - REDUCED for memory optimization
-#define MAX_STATION_NAME_LENGTH 20  // Reduced from 28
-#define MAX_CACHED_STATIONS 50   // Reduced from 150
+// Station name cache structure
+#define MAX_STATION_NAME_LENGTH 20
+#define MAX_CACHED_STATIONS 50
 typedef struct {
     uint16_t code;
     char name[MAX_STATION_NAME_LENGTH];
@@ -58,6 +58,55 @@ static bool renfe_sum10_is_default_station_code(uint16_t station_code);
 static bool renfe_sum10_is_valid_timestamp(const uint8_t* block_data);
 static const char* renfe_sum10_get_origin_station(const MfClassicData* data);
 static const char* renfe_sum10_detect_card_variant(const MfClassicData* data);
+static char renfe_sum10_normalize_accent(uint8_t byte);
+
+// Normalize accented characters to their non-accented equivalents
+static char renfe_sum10_normalize_accent(uint8_t byte) {
+    // Handle common Spanish accented characters
+    switch(byte) {
+        // Uppercase accented vowels
+        case 0xC1: return 'A'; // Á
+        case 0xC9: return 'E'; // É
+        case 0xCD: return 'I'; // Í
+        case 0xD3: return 'O'; // Ó
+        case 0xDA: return 'U'; // Ú
+        case 0xDC: return 'U'; // Ü
+        case 0xD1: return 'N'; // Ñ
+        
+        // Lowercase accented vowels
+        case 0xE1: return 'A'; // á
+        case 0xE9: return 'E'; // é
+        case 0xED: return 'I'; // í
+        case 0xF3: return 'O'; // ó
+        case 0xFA: return 'U'; // ú
+        case 0xFC: return 'U'; // ü
+        case 0xF1: return 'N'; // ñ
+        
+        // Latin-1 supplement characters (common in NFC cards)
+        case 0x80: case 0x81: case 0x82: case 0x83: return 'A'; // Various A accents
+        case 0x88: case 0x89: case 0x8A: case 0x8B: return 'E'; // Various E accents
+        case 0x8C: case 0x8D: case 0x8E: case 0x8F: return 'I'; // Various I accents
+        case 0x92: case 0x93: case 0x94: case 0x95: return 'O'; // Various O accents
+        case 0x96: case 0x97: case 0x98: case 0x99: return 'U'; // Various U accents
+        
+        // Special separators that might indicate word boundaries
+        case 0x20: return ' '; // Standard space
+        case 0x09: return ' '; // Tab -> space
+        case 0x0A: case 0x0D: return 0; // Line breaks = end
+        
+        // Default: if it's a printable ASCII, return as-is, otherwise convert to ?
+        default:
+            if(byte >= 0x20 && byte <= 0x7E) {
+                return (char)byte;
+            } else if(byte >= 0x41 && byte <= 0x5A) {
+                return (char)byte; // A-Z
+            } else if(byte >= 0x61 && byte <= 0x7A) {
+                return (char)byte; // a-z 
+            }
+            return 0; // Invalid character
+    }
+}
+
 // Keys for RENFE Suma 10 cards - specific keys found in real dumps
 const MfClassicKeyPair renfe_sum10_keys[16] = {
     {.a = 0xA8844B0BCA06, .b = 0xffffffffffff}, // Sector 0 - RENFE specific key
@@ -78,26 +127,6 @@ const MfClassicKeyPair renfe_sum10_keys[16] = {
     {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 15
 };
 
-// Alternative common keys for RENFE Suma 10
-const MfClassicKeyPair renfe_sum10_alt_keys[16] = {
-    {.a = 0xa0a1a2a3a4a5, .b = 0xa0a1a2a3a4a5}, // Sector 0
-    {.a = 0xa0a1a2a3a4a5, .b = 0xa0a1a2a3a4a5}, // Sector 1
-    {.a = 0xa0a1a2a3a4a5, .b = 0xa0a1a2a3a4a5}, // Sector 2
-    {.a = 0xa0a1a2a3a4a5, .b = 0xa0a1a2a3a4a5}, // Sector 3
-    {.a = 0xa0a1a2a3a4a5, .b = 0xa0a1a2a3a4a5}, // Sector 4
-    {.a = 0xa0a1a2a3a4a5, .b = 0xa0a1a2a3a4a5}, // Sector 5 - Value blocks
-    {.a = 0xa0a1a2a3a4a5, .b = 0xa0a1a2a3a4a5}, // Sector 6 - Value blocks
-    {.a = 0xa0a1a2a3a4a5, .b = 0xa0a1a2a3a4a5}, // Sector 7
-    {.a = 0xa0a1a2a3a4a5, .b = 0xa0a1a2a3a4a5}, // Sector 8
-    {.a = 0xa0a1a2a3a4a5, .b = 0xa0a1a2a3a4a5}, // Sector 9
-    {.a = 0xa0a1a2a3a4a5, .b = 0xa0a1a2a3a4a5}, // Sector 10
-    {.a = 0xa0a1a2a3a4a5, .b = 0xa0a1a2a3a4a5}, // Sector 11
-    {.a = 0xa0a1a2a3a4a5, .b = 0xa0a1a2a3a4a5}, // Sector 12
-    {.a = 0xa0a1a2a3a4a5, .b = 0xa0a1a2a3a4a5}, // Sector 13
-    {.a = 0xa0a1a2a3a4a5, .b = 0xa0a1a2a3a4a5}, // Sector 14
-    {.a = 0xa0a1a2a3a4a5, .b = 0xa0a1a2a3a4a5}, // Sector 15
-};
-
 // Check if a station code is problematic (appears in empty cards)
 static bool renfe_sum10_is_default_station_code(uint16_t station_code) {
     // Codes that appear in new/empty cards - these should be filtered out
@@ -112,16 +141,42 @@ static const char* renfe_sum10_detect_card_variant(const MfClassicData* data) {
         return "SUMA 10";
     }
     
-    // Check Block 14 for MOBILIS 30 signature
+    // Check Block 9 for cardholder name pattern (indicates MOBILIS 30)
+    if(mf_classic_is_block_read(data, 9)) {
+        const uint8_t* block9 = data->block[9].data;
+        
+        // Check if block 9 contains printable ASCII characters (name pattern)
+        // MOBILIS 30 cards have cardholder names stored in Block 9
+        int printable_chars = 0;
+        for(size_t i = 0; i < 10; i++) {
+            if(block9[i] >= 0x20 && block9[i] <= 0x7E) { // Printable ASCII
+                printable_chars++;
+            } else if(block9[i] == 0x00) {
+                break; // End of string
+            }
+        }
+        
+        // If we have 3 or more printable characters, likely a name
+        if(printable_chars >= 3) {
+            return "MOBILIS 30";
+        }
+    }
+    
+    // Check Block 14 for MOBILIS 30 general patterns
     if(mf_classic_is_block_read(data, 14)) {
         const uint8_t* block14 = data->block[14].data;
         
-        // Look for "CARRERES MOMP" pattern which indicates MOBILIS 30
-        if(block14[0] == 0x43 && block14[1] == 0x41 && block14[2] == 0x52 && 
-           block14[3] == 0x52 && block14[4] == 0x45 && block14[5] == 0x52 &&
-           block14[6] == 0x45 && block14[7] == 0x53 && block14[8] == 0x20 &&
-           block14[9] == 0x4D && block14[10] == 0x4F && block14[11] == 0x4D &&
-           block14[12] == 0x50) {
+        // Look for general MOBILIS patterns (not specific names)
+        // Check for any readable text pattern in the block
+        int text_chars = 0;
+        for(size_t i = 0; i < 16; i++) {
+            if(block14[i] >= 0x41 && block14[i] <= 0x5A) { // A-Z
+                text_chars++;
+            }
+        }
+        
+        // If we have several uppercase letters, likely MOBILIS 30
+        if(text_chars >= 4) {
             return "MOBILIS 30";
         }
     }
@@ -221,7 +276,7 @@ static const char* renfe_sum10_get_origin_station(const MfClassicData* data) {
         return "Valencia";
     }
     
-    // History blocks where recharges are typically stored - REDUCED LIST
+    // History blocks where recharges are typically stored
     int history_blocks[] = {18, 22, 28, 29, 30, 44, 45, 46};
     int num_blocks = sizeof(history_blocks) / sizeof(history_blocks[0]);
     
@@ -378,7 +433,7 @@ static bool renfe_sum10_load_station_file(const char* region) {
     
     bool success = false;
     if(storage_file_open(file, furi_string_get_cstr(file_path), FSAM_READ, FSOM_OPEN_EXISTING)) {
-        char line_buffer[64];  // Reduced buffer size
+        char line_buffer[64];
         station_cache->count = 0;
         
         // Read file line by line using simple character reading
@@ -523,6 +578,48 @@ static uint16_t renfe_sum10_extract_zone_code(const uint8_t* block5_data) {
     return zone_code;
 }
 
+// Extract zone code specifically for MOBILIS 30 cards from different blocks
+static uint16_t renfe_sum10_extract_mobilis_zone_code(const MfClassicData* data) {
+    if(!data) return 0x0000;
+    
+    // Check Block 12 for MOBILIS 30 zone information
+    if(mf_classic_is_block_read(data, 12)) {
+        const uint8_t* block12 = data->block[12].data;
+        // Block 12: 81 F8 01 02 FF 2D 00 00 00 E0 8F 71 30 02 00 93
+        // Byte 3 (02) might be zone indicator
+        if(block12[3] >= 0x01 && block12[3] <= 0x06) {
+            return (uint16_t)(0x8100 + (block12[3] * 0x10));  // Convert to zone format
+        }
+        
+        // Check byte 11-12 for zone pattern: 30 02
+        if(block12[11] == 0x30 && block12[12] == 0x02) {
+            return 0x8200; // Zone 1 pattern
+        }
+    }
+    
+    // Check Block 10 for alternative zone information
+    if(mf_classic_is_block_read(data, 10)) {
+        const uint8_t* block10 = data->block[10].data;
+        // Block 10: 00 00 00 00 00 00 58 00 00 00 81 C4 9B B9 25 3B
+        // Byte 6 (58) could be zone related
+        if(block10[6] >= 0x50 && block10[6] <= 0x5F) {
+            return (uint16_t)(0x6000 + ((block10[6] - 0x50) * 0x200)); // Convert to zone A-F format
+        }
+    }
+    
+    // Check Block 1 for zone information (sometimes stored there in MOBILIS)
+    if(mf_classic_is_block_read(data, 1)) {
+        const uint8_t* block1 = data->block[1].data;
+        // Block 1: 00 00 00 00 00 02 42 20 00 00 00 00 00 00 00 05
+        // Byte 5 (02) might indicate zone
+        if(block1[5] >= 0x01 && block1[5] <= 0x06) {
+            return (uint16_t)(0x6C00 - (block1[5] - 1) * 0x200); // Zone A=6C00, B=6A00, etc.
+        }
+    }
+    
+    return 0x0000; // No zone found
+}
+
 // Get zone name from zone code (simplified for memory efficiency)
 static const char* renfe_sum10_get_zone_name(uint16_t zone_code) {
     // Basic zone detection - most common cases only
@@ -654,7 +751,7 @@ static void renfe_sum10_parse_travel_history(FuriString* parsed_data, const MfCl
         return;
     }
     
-    // Define specific blocks that contain history - REDUCED LIST for memory efficiency
+    // Define specific blocks that contain history
     int history_blocks[] = {18, 22, 28, 29, 30, 44, 45, 46};
     int num_blocks = sizeof(history_blocks) / sizeof(history_blocks[0]);
     
@@ -811,7 +908,7 @@ static bool renfe_sum10_has_history_data(const MfClassicData* data) {
         return false;
     }
     
-    // Use the same reduced block list as the parsing function
+    // Use the same block list as the parsing function
     int history_blocks[] = {18, 22, 28, 29, 30, 44, 45, 46};
     int num_blocks = sizeof(history_blocks) / sizeof(history_blocks[0]);
     
@@ -913,22 +1010,145 @@ static bool renfe_sum10_parse(FuriString* parsed_data, const MfClassicData* data
                 char name_buffer[16] = {0};
                 bool has_valid_name = false;
                 
-                // Extract name (typically in first part of block 9)
+                // Extract name (typically in first part of block 9, handling accents)
                 for(size_t i = 0; i < 6 && i < sizeof(name_buffer) - 1; i++) {
-                    if(block9[i] >= 0x20 && block9[i] <= 0x7E) { // Printable ASCII
-                        name_buffer[i] = block9[i];
+                    char normalized_char = renfe_sum10_normalize_accent(block9[i]);
+                    
+                    if(normalized_char >= 'A' && normalized_char <= 'Z') {
+                        // Keep uppercase letters as-is
+                        name_buffer[i] = normalized_char;
+                        has_valid_name = true;
+                    } else if(normalized_char >= 'a' && normalized_char <= 'z') {
+                        // Convert to proper case (first letter uppercase)
+                        name_buffer[i] = (i == 0) ? (normalized_char - 'a' + 'A') : normalized_char;
+                        has_valid_name = true;
+                    } else if(normalized_char == 0) {
+                        // End of string
+                        break;
+                    } else if(block9[i] >= 0x20 && block9[i] <= 0x7E) {
+                        // Other printable ASCII
+                        name_buffer[i] = (char)block9[i];
                         has_valid_name = true;
                     } else {
+                        // Invalid character, stop processing
                         break;
                     }
                 }
                 
                 if(has_valid_name) {
-                    furi_string_cat_printf(parsed_data, "👤 Holder: %s\n", name_buffer);
+                    furi_string_cat_printf(parsed_data, "👤 Holder: %s", name_buffer);
+                    
+                    // Try to extract surname(s) from Block 14
+                    if(mf_classic_is_block_read(data, 14)) {
+                        const uint8_t* block14 = data->block[14].data;
+                        char surname_buffer[32] = {0}; // Increased buffer for both surnames
+                        bool has_valid_surname = false;
+                        size_t surname_pos = 0;
+                        int words_found = 0;
+                        bool in_word = false;
+                        
+                        // First pass: scan entire block for text patterns
+                        int consecutive_non_letters = 0;
+                        for(size_t i = 0; i < 16 && surname_pos < sizeof(surname_buffer) - 2; i++) {
+                            char normalized_char = renfe_sum10_normalize_accent(block14[i]);
+                            
+                            if(normalized_char >= 'A' && normalized_char <= 'Z') {
+                                // Valid uppercase letter
+                                consecutive_non_letters = 0;
+                                if(!in_word && words_found > 0 && surname_pos > 0 && surname_buffer[surname_pos - 1] != ' ') {
+                                    surname_buffer[surname_pos++] = ' '; // Add space before new word
+                                }
+                                surname_buffer[surname_pos++] = normalized_char;
+                                has_valid_surname = true;
+                                in_word = true;
+                            } else if(normalized_char >= 'a' && normalized_char <= 'z') {
+                                // Convert lowercase to uppercase for surnames
+                                consecutive_non_letters = 0;
+                                if(!in_word && words_found > 0 && surname_pos > 0 && surname_buffer[surname_pos - 1] != ' ') {
+                                    surname_buffer[surname_pos++] = ' '; // Add space before new word
+                                }
+                                surname_buffer[surname_pos++] = normalized_char - 'a' + 'A';
+                                has_valid_surname = true;
+                                in_word = true;
+                            } else if(normalized_char == ' ' && in_word) {
+                                // Space - end of current word
+                                consecutive_non_letters = 0;
+                                if(surname_pos > 0 && surname_buffer[surname_pos - 1] != ' ') {
+                                    surname_buffer[surname_pos++] = ' ';
+                                }
+                                words_found++;
+                                in_word = false;
+                            } else if((normalized_char == 0 || 
+                                     (block14[i] != 0x20 && block14[i] < 0x20) ||
+                                     (block14[i] > 0x7E && normalized_char == 0)) && in_word) {
+                                // End of word due to non-printable character
+                                if(surname_pos > 0 && surname_buffer[surname_pos - 1] != ' ') {
+                                    surname_buffer[surname_pos++] = ' ';
+                                }
+                                words_found++;
+                                in_word = false;
+                                consecutive_non_letters++;
+                            } else if(normalized_char == 0 && !in_word) {
+                                // Skip null bytes between words
+                                consecutive_non_letters++;
+                                continue;
+                            } else {
+                                // Other characters (numbers, symbols, etc.)
+                                consecutive_non_letters++;
+                                if(consecutive_non_letters >= 2 && words_found >= 1) {
+                                    // Stop if we have consecutive non-letter characters and at least one word
+                                    break;
+                                }
+                                if(in_word) {
+                                    // End current word if we encounter non-letter
+                                    if(surname_pos > 0 && surname_buffer[surname_pos - 1] != ' ') {
+                                        surname_buffer[surname_pos++] = ' ';
+                                    }
+                                    words_found++;
+                                    in_word = false;
+                                }
+                            }
+                        }
+                        
+                        // Mark end of last word if we were in one
+                        if(in_word) {
+                            words_found++;
+                        }
+                        
+                        // Clean up trailing spaces and unwanted characters
+                        while(surname_pos > 0 && 
+                              (surname_buffer[surname_pos - 1] == ' ' || 
+                               surname_buffer[surname_pos - 1] == 'U' || 
+                               surname_buffer[surname_pos - 1] == 'u')) {
+                            surname_buffer[--surname_pos] = '\0';
+                        }
+                        
+                        // Additional cleanup: remove any single letter at the end if preceded by space
+                        if(surname_pos >= 3 && surname_buffer[surname_pos - 2] == ' ' && 
+                           ((surname_buffer[surname_pos - 1] >= 'A' && surname_buffer[surname_pos - 1] <= 'Z') ||
+                            (surname_buffer[surname_pos - 1] >= 'a' && surname_buffer[surname_pos - 1] <= 'z'))) {
+                            // Check if it's likely a stray character (single letter after space)
+                            surname_buffer[surname_pos - 2] = '\0';
+                            surname_pos -= 2;
+                        }
+                        
+                        // Final cleanup of trailing spaces again
+                        while(surname_pos > 0 && surname_buffer[surname_pos - 1] == ' ') {
+                            surname_buffer[--surname_pos] = '\0';
+                        }
+                        
+                        // Accept if we have at least 3 characters and at least one word
+                        if(has_valid_surname && surname_pos >= 3) {
+                            furi_string_cat_printf(parsed_data, " %s", surname_buffer);
+                        }
+                    }
+                    
+                    furi_string_cat_printf(parsed_data, "\n");
+                    
                 }
             }
         } else {
-            furi_string_cat_printf(parsed_data, "🎫 Variant: Pay-per-trip\n");
+            furi_string_cat_printf(parsed_data, " Variant: Pay-per-trip\n");
         }
         
         // 4. Extract and show origin station information (where card was first topped up)
@@ -940,43 +1160,53 @@ static bool renfe_sum10_parse(FuriString* parsed_data, const MfClassicData* data
             furi_string_cat_printf(parsed_data, "🏠 Origin: Unknown\n");
         }
         
-        // 5. Extract and show zone information from Block 5 (bytes 5-6)
-        const uint8_t* block5 = data->block[5].data;
-        if(block5) {
-            uint16_t zone_code = renfe_sum10_extract_zone_code(block5);
-            const char* zone_name = renfe_sum10_get_zone_name(zone_code);
-            if(zone_code != 0x0000) {
-                furi_string_cat_printf(parsed_data, "🎯 Zone: %s\n", zone_name);
-                if(strcmp(zone_name, "Unknown") == 0) {
-                    furi_string_cat_printf(parsed_data, "   Code: 0x%04X\n", zone_code);
-                }
-            } else {
-                furi_string_cat_printf(parsed_data, "🎯 Zone: Not available\n");
+        // 5. Extract and show zone information
+        uint16_t zone_code = 0x0000;
+        const char* zone_name = "Not available";
+        
+        // For MOBILIS 30, use specialized zone extraction
+        if(strcmp(card_variant, "MOBILIS 30") == 0) {
+            zone_code = renfe_sum10_extract_mobilis_zone_code(data);
+            zone_name = renfe_sum10_get_zone_name(zone_code);
+        } else {
+            // For SUMA 10, use standard Block 5 extraction
+            const uint8_t* block5 = data->block[5].data;
+            if(block5) {
+                zone_code = renfe_sum10_extract_zone_code(block5);
+                zone_name = renfe_sum10_get_zone_name(zone_code);
+            }
+        }
+        
+        if(zone_code != 0x0000) {
+            furi_string_cat_printf(parsed_data, " Zone: %s\n", zone_name);
+            if(strcmp(zone_name, "Unknown") == 0) {
+                furi_string_cat_printf(parsed_data, "   Code: 0x%04X\n", zone_code);
             }
         } else {
-            furi_string_cat_printf(parsed_data, "🎯 Zone: Block 5 not available\n");
+            furi_string_cat_printf(parsed_data, "Zone: %s\n", zone_name);
         }
         
         // 6. Extract and show trips from Block 5 (based on real dump analysis)
-        if(block5) {
+        if(mf_classic_is_block_read(data, 5)) {
+            const uint8_t* block5 = data->block[5].data;
             if(block5[0] == 0x01 && block5[1] == 0x00 && block5[2] == 0x00 && block5[3] == 0x00) {
                 // Extract trip count from byte 4
                 int viajes = (int)block5[4];
-                furi_string_cat_printf(parsed_data, "🎫 Trips: %d\n", viajes);
+                furi_string_cat_printf(parsed_data, " Trips: %d\n", viajes);
             } else {
-                furi_string_cat_printf(parsed_data, "🎫 Trips: Not available\n");
+                furi_string_cat_printf(parsed_data, " Trips: Not available\n");
             }
         } else {
-            furi_string_cat_printf(parsed_data, "🎫 Trips: Block 5 not available\n");
+            furi_string_cat_printf(parsed_data, " Trips: Block 5 not available\n");
         }
         
         // Add travel history status prominently (visible above buttons)
         furi_string_cat_printf(parsed_data, "\n");
         if(renfe_sum10_has_history_data(data)) {
-            furi_string_cat_printf(parsed_data, "📚 History: Available\n");
-            furi_string_cat_printf(parsed_data, "   ⬅️ Press LEFT to view details\n");
+            furi_string_cat_printf(parsed_data, " History: Available\n");
+            furi_string_cat_printf(parsed_data, "   ⬅ Press LEFT to view details\n");
         } else {
-            furi_string_cat_printf(parsed_data, "📭 History: Empty/Not found\n");
+            furi_string_cat_printf(parsed_data, " History: Empty/Not found\n");
             furi_string_cat_printf(parsed_data, "   (New card or cleared history)\n");
         }
         
@@ -1126,10 +1356,6 @@ static void renfe_sum10_on_enter(Metroflip* app) {
         return;
     }
     
-    FURI_LOG_I(TAG, "RENFE plugin on_enter called - data_loaded: %s, mfc_data: %s",
-               app->data_loaded ? "true" : "false",
-               app->mfc_data ? "exists" : "NULL");
-    
     dolphin_deed(DolphinDeedNfcRead);
 
     app->sec_num = 0;
@@ -1155,7 +1381,6 @@ static void renfe_sum10_on_enter(Metroflip* app) {
         }
         
         if(mfc_data) {
-            FURI_LOG_I(TAG, "RENFE: MFC data available, parsing card information");
             FuriString* parsed_data = furi_string_alloc();
             Widget* widget = app->widget;
 
@@ -1193,10 +1418,8 @@ static void renfe_sum10_on_enter(Metroflip* app) {
             if(should_free_mfc_data) mf_classic_free(mfc_data);
             furi_string_free(parsed_data);
             
-            FURI_LOG_I(TAG, "RENFE: Switching to widget view");
             view_dispatcher_switch_to_view(app->view_dispatcher, MetroflipViewWidget);
         } else {
-            FURI_LOG_E(TAG, "RENFE: Failed to load MFC data!");
         }
     } else {
         // Setup view
@@ -1392,7 +1615,6 @@ static bool renfe_sum10_on_event(Metroflip* app, SceneManagerEvent event) {
 
 static void renfe_sum10_on_exit(Metroflip* app) {
     if(!app) {
-        FURI_LOG_E(TAG, "renfe_sum10_on_exit: app is NULL");
         return;
     }
 
