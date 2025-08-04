@@ -24,9 +24,9 @@ typedef struct {
     int block_number;       
 } HistoryEntry;
 
-// Station name cache structure
-#define MAX_STATION_NAME_LENGTH 28  // Reduced from 32 for memory efficiency
-#define MAX_CACHED_STATIONS 150      // Reduced from 200 for memory efficiency
+// Station name cache structure - REDUCED for memory optimization
+#define MAX_STATION_NAME_LENGTH 20  // Reduced from 28
+#define MAX_CACHED_STATIONS 50   // Reduced from 150
 typedef struct {
     uint16_t code;
     char name[MAX_STATION_NAME_LENGTH];
@@ -36,11 +36,11 @@ typedef struct {
     StationEntry stations[MAX_CACHED_STATIONS];
     size_t count;
     bool loaded;
-    char current_region[32];
+    char current_region[16];  // Reduced from 32
 } StationCache;
 
-// Global station cache
-static StationCache station_cache = {0};
+// Global station cache - will be allocated dynamically
+static StationCache* station_cache = NULL;
 
 // Forward declarations for helper functions
 static bool renfe_sum10_is_history_entry(const uint8_t* block_data);
@@ -57,6 +57,7 @@ static bool renfe_sum10_is_travel_history_block(const uint8_t* block_data, int b
 static bool renfe_sum10_is_default_station_code(uint16_t station_code);
 static bool renfe_sum10_is_valid_timestamp(const uint8_t* block_data);
 static const char* renfe_sum10_get_origin_station(const MfClassicData* data);
+static const char* renfe_sum10_detect_card_variant(const MfClassicData* data);
 // Keys for RENFE Suma 10 cards - specific keys found in real dumps
 const MfClassicKeyPair renfe_sum10_keys[16] = {
     {.a = 0xA8844B0BCA06, .b = 0xffffffffffff}, // Sector 0 - RENFE specific key
@@ -103,6 +104,50 @@ static bool renfe_sum10_is_default_station_code(uint16_t station_code) {
     return (station_code == 0x2000 || // La Fonteta (appears in empty cards)
             station_code == 0x0000 || // Null code
             station_code == 0xFFFF);  // Fill pattern
+}
+
+// Detect RENFE card variant (SUMA 10, MOBILIS 30, etc.)
+static const char* renfe_sum10_detect_card_variant(const MfClassicData* data) {
+    if(!data) {
+        return "SUMA 10";
+    }
+    
+    // Check Block 14 for MOBILIS 30 signature
+    if(mf_classic_is_block_read(data, 14)) {
+        const uint8_t* block14 = data->block[14].data;
+        
+        // Look for "CARRERES MOMP" pattern which indicates MOBILIS 30
+        if(block14[0] == 0x43 && block14[1] == 0x41 && block14[2] == 0x52 && 
+           block14[3] == 0x52 && block14[4] == 0x45 && block14[5] == 0x52 &&
+           block14[6] == 0x45 && block14[7] == 0x53 && block14[8] == 0x20 &&
+           block14[9] == 0x4D && block14[10] == 0x4F && block14[11] == 0x4D &&
+           block14[12] == 0x50) {
+            return "MOBILIS 30";
+        }
+    }
+    
+    // Check Block 9 for other variant signatures
+    if(mf_classic_is_block_read(data, 9)) {
+        const uint8_t* block9 = data->block[9].data;
+        
+        // Check for personal name patterns that might indicate special cards
+        bool has_name_pattern = false;
+        for(int i = 0; i < 10; i++) {
+            if(block9[i] >= 0x41 && block9[i] <= 0x5A) { // A-Z
+                has_name_pattern = true;
+                break;
+            }
+        }
+        
+        if(has_name_pattern) {
+            // Could be MOBILIS or other personalized card
+            // For now, we'll keep it as MOBILIS 30 if Block 14 matches
+            // or check for other specific patterns in the future
+        }
+    }
+    
+    // Default to SUMA 10 for regular cards
+    return "SUMA 10";
 }
 
 // Check if timestamp indicates a real transaction (not initialization data)
@@ -170,7 +215,13 @@ static bool renfe_sum10_is_history_entry(const uint8_t* block_data) {
 static const char* renfe_sum10_get_origin_station(const MfClassicData* data) {
     if(!data) return "Unknown";
     
-    // History blocks where recharges are typically stored
+    // Check if this is a MOBILIS 30 card - these are always from Valencia
+    const char* card_variant = renfe_sum10_detect_card_variant(data);
+    if(strcmp(card_variant, "MOBILIS 30") == 0) {
+        return "Valencia";
+    }
+    
+    // History blocks where recharges are typically stored - REDUCED LIST
     int history_blocks[] = {18, 22, 28, 29, 30, 44, 45, 46};
     int num_blocks = sizeof(history_blocks) / sizeof(history_blocks[0]);
     
@@ -287,10 +338,12 @@ static void renfe_sum10_sort_history_entries(HistoryEntry* entries, int count) {
 
 // Clear the station cache
 static void renfe_sum10_clear_station_cache(void) {
-    station_cache.count = 0;
-    station_cache.loaded = false;
-    memset(station_cache.current_region, 0, sizeof(station_cache.current_region));
-    memset(station_cache.stations, 0, sizeof(station_cache.stations));
+    if(station_cache) {
+        station_cache->count = 0;
+        station_cache->loaded = false;
+        memset(station_cache->current_region, 0, sizeof(station_cache->current_region));
+        memset(station_cache->stations, 0, sizeof(station_cache->stations));
+    }
 }
 
 // Load station names from file (Valencia-specific files)
@@ -299,8 +352,17 @@ static bool renfe_sum10_load_station_file(const char* region) {
         return false;
     }
     
+    // Allocate cache if not already allocated
+    if(!station_cache) {
+        station_cache = malloc(sizeof(StationCache));
+        if(!station_cache) {
+            return false;
+        }
+        memset(station_cache, 0, sizeof(StationCache));
+    }
+    
     // Check if we already have this file loaded
-    if(station_cache.loaded && strcmp(station_cache.current_region, region) == 0) {
+    if(station_cache->loaded && strcmp(station_cache->current_region, region) == 0) {
         return true;
     }
     
@@ -316,11 +378,11 @@ static bool renfe_sum10_load_station_file(const char* region) {
     
     bool success = false;
     if(storage_file_open(file, furi_string_get_cstr(file_path), FSAM_READ, FSOM_OPEN_EXISTING)) {
-        char line_buffer[128];
-        station_cache.count = 0;
+        char line_buffer[64];  // Reduced buffer size
+        station_cache->count = 0;
         
         // Read file line by line using simple character reading
-        while(station_cache.count < MAX_CACHED_STATIONS) {
+        while(station_cache->count < MAX_CACHED_STATIONS) {
             size_t line_pos = 0;
             bool end_of_file = false;
             
@@ -359,7 +421,7 @@ static bool renfe_sum10_load_station_file(const char* region) {
             
             // Parse format: 0xCODE,Station Name
             char* comma = strchr(line_buffer, ',');
-            if(comma && station_cache.count < MAX_CACHED_STATIONS) {
+            if(comma && station_cache->count < MAX_CACHED_STATIONS) {
                 *comma = '\0';
                 char* code_str = line_buffer;
                 char* name_str = comma + 1;
@@ -368,20 +430,20 @@ static bool renfe_sum10_load_station_file(const char* region) {
                 uint16_t code = 0;
                 if(sscanf(code_str, "0x%hX", &code) == 1) {
                     // Store in cache
-                    station_cache.stations[station_cache.count].code = code;
-                    strncpy(station_cache.stations[station_cache.count].name, name_str, MAX_STATION_NAME_LENGTH - 1);
-                    station_cache.stations[station_cache.count].name[MAX_STATION_NAME_LENGTH - 1] = '\0';
-                    station_cache.count++;
+                    station_cache->stations[station_cache->count].code = code;
+                    strncpy(station_cache->stations[station_cache->count].name, name_str, MAX_STATION_NAME_LENGTH - 1);
+                    station_cache->stations[station_cache->count].name[MAX_STATION_NAME_LENGTH - 1] = '\0';
+                    station_cache->count++;
                 }
             }
             
             if(end_of_file) break;
         }
         
-        if(station_cache.count > 0) {
-            strncpy(station_cache.current_region, region, sizeof(station_cache.current_region) - 1);
-            station_cache.current_region[sizeof(station_cache.current_region) - 1] = '\0';
-            station_cache.loaded = true;
+        if(station_cache->count > 0) {
+            strncpy(station_cache->current_region, region, sizeof(station_cache->current_region) - 1);
+            station_cache->current_region[sizeof(station_cache->current_region) - 1] = '\0';
+            station_cache->loaded = true;
             success = true;
         }
         
@@ -397,13 +459,13 @@ static bool renfe_sum10_load_station_file(const char* region) {
 
 // Get station name from cache
 static const char* renfe_sum10_get_station_name_from_cache(uint16_t station_code) {
-    if(!station_cache.loaded) {
+    if(!station_cache || !station_cache->loaded) {
         return "Unknown";
     }
     
-    for(size_t i = 0; i < station_cache.count; i++) {
-        if(station_cache.stations[i].code == station_code) {
-            return station_cache.stations[i].name;
+    for(size_t i = 0; i < station_cache->count; i++) {
+        if(station_cache->stations[i].code == station_code) {
+            return station_cache->stations[i].name;
         }
     }
     
@@ -461,216 +523,27 @@ static uint16_t renfe_sum10_extract_zone_code(const uint8_t* block5_data) {
     return zone_code;
 }
 
-// Get zone name from zone code (based on real RENFE Suma 10 data analysis)
+// Get zone name from zone code (simplified for memory efficiency)
 static const char* renfe_sum10_get_zone_name(uint16_t zone_code) {
-    switch(zone_code) {
-        // ========== ZONA A - TODAS LAS VARIANTES ==========
-        case 0x6C16: case 0x6C17: case 0x6C18: case 0x6C19: case 0x6C1A: case 0x6C1B: case 0x6C1C: case 0x6C1D: case 0x6C1E: case 0x6C1F:
-        case 0x6000: case 0x6001: case 0x6002: case 0x6003: case 0x6004: case 0x6005:
-        case 0x7100: case 0x7101: case 0x7102: case 0x7103: case 0x7104: case 0x7105:
-            return "A";
-            
-        // ========== ZONA B - TODAS LAS VARIANTES ==========
-        case 0x627C: case 0x627D: case 0x627E: case 0x627F:
-        case 0x6010: case 0x6011: case 0x6012: case 0x6013: case 0x6014: case 0x6015:
-            return "B";
-            
-        // ========== ZONA C - TODAS LAS VARIANTES ==========
-        case 0x6A14: case 0x6A15: case 0x6A16: case 0x6A17: case 0x6A18: case 0x6A19: case 0x6A1A: case 0x6A1B: case 0x6A1C: case 0x6A1D:
-        case 0x6020: case 0x6021: case 0x6022: case 0x6023: case 0x6024: case 0x6025:
-            return "C";
-            
-        // ========== ZONA D - TODAS LAS VARIANTES ==========
-        case 0x6815: case 0x6816: case 0x6817: case 0x6818: case 0x6819: case 0x681A: case 0x681B: case 0x681C: case 0x681D: case 0x681E:
-        case 0x6030: case 0x6031: case 0x6032: case 0x6033: case 0x6034: case 0x6035:
-            return "D";
-            
-        // ========== ZONA E ==========
-        case 0x6612: case 0x6613: case 0x6614: case 0x6615: case 0x6616: case 0x6617: case 0x6618: case 0x6619: case 0x661A: case 0x661B:
-            return "E";
-            
-        // ========== ZONA F ==========
-        case 0x6410: case 0x6411: case 0x6412: case 0x6413: case 0x6414: case 0x6415: case 0x6416: case 0x6417: case 0x6418: case 0x6419:
-            return "F";
-            
-        // ========== ZONAS NUMÉRICAS 1-9 - CONSOLIDADAS ==========
-        case 0x6200: case 0x6201: case 0x6202: case 0x6203: case 0x6204: case 0x6205:
-        case 0x8100: case 0x8101: case 0x8102: case 0x8103: case 0x8104: case 0x8105:
-        case 0x8200: case 0x8201: case 0x8202: case 0x8203: case 0x8204: case 0x8205:
-            return "1";
-            
-        case 0x6300: case 0x6301: case 0x6302: case 0x6303: case 0x6304: case 0x6305:
-        case 0x8110: case 0x8111: case 0x8112: case 0x8113: case 0x8114: case 0x8115:
-        case 0x8210: case 0x8211: case 0x8212: case 0x8213: case 0x8214: case 0x8215:
-            return "2";
-            
-        case 0x6400: case 0x6401: case 0x6402: case 0x6403: case 0x6404: case 0x6405:
-        case 0x8120: case 0x8121: case 0x8122: case 0x8123: case 0x8124: case 0x8125:
-        case 0x8220: case 0x8221: case 0x8222: case 0x8223: case 0x8224: case 0x8225:
-            return "3";
-            
-        case 0x6500: case 0x6501: case 0x6502: case 0x6503: case 0x6504: case 0x6505:
-        case 0x8130: case 0x8131: case 0x8132: case 0x8133: case 0x8134: case 0x8135:
-            return "4";
-            
-        case 0x6600: case 0x6601: case 0x6602: case 0x6603: case 0x6604: case 0x6605:
-        case 0x8140: case 0x8141: case 0x8142: case 0x8143: case 0x8144: case 0x8145:
-            return "5";
-            
-        case 0x6700: case 0x6701: case 0x6702: case 0x6703: case 0x6704: case 0x6705:
-        case 0x8150: case 0x8151: case 0x8152: case 0x8153: case 0x8154: case 0x8155:
-            return "6";
-            
-        case 0x6800: case 0x6801: case 0x6802: case 0x6803: case 0x6804: case 0x6805:
-            return "7";
-            
-        case 0x6900: case 0x6901: case 0x6902: case 0x6903: case 0x6904: case 0x6905:
-            return "8";
-            
-        case 0x6A00: case 0x6A01: case 0x6A02: case 0x6A03: case 0x6A04: case 0x6A05:
-            return "9";
-            
-        // ========== SUBZONAS A1-A6 ==========
-        case 0x6C50: case 0x6C51: case 0x6C52: case 0x6C53: case 0x6C54: case 0x6C55:
-            return "A1";
-        case 0x6C80: case 0x6C81: case 0x6C82: case 0x6C83: case 0x6C84: case 0x6C85:
-            return "A2";
-        case 0x6C90: case 0x6C91: case 0x6C92: case 0x6C93: case 0x6C94: case 0x6C95:
-            return "A3";
-        case 0x6CA0: case 0x6CA1: case 0x6CA2: case 0x6CA3: case 0x6CA4: case 0x6CA5:
-            return "A4";
-        case 0x6CB0: case 0x6CB1: case 0x6CB2: case 0x6CB3: case 0x6CB4: case 0x6CB5:
-            return "A5";
-        case 0x6CC0: case 0x6CC1: case 0x6CC2: case 0x6CC3: case 0x6CC4: case 0x6CC5:
-            return "A6";
-            
-        // ========== SUBZONAS B1-B6 - CONSOLIDADAS ==========
-        case 0x6250: case 0xEC16: case 0x6251: case 0x6252: case 0x6253: case 0x6254: case 0x6255: case 0x6256: case 0x6257: case 0x6258:
-        case 0x6259: case 0x625A: case 0x625B: case 0x625C: case 0x625D: case 0x625E: case 0x625F: case 0x6270: case 0x6271: case 0x6272:
-        case 0x6273: case 0x6274: case 0x6275: case 0x6276: case 0x6277: case 0x6278: case 0x6279: case 0x627A: case 0x627B:
-        case 0x7150: case 0x7151: case 0x7152: case 0x7153: case 0x7154: case 0x7155:
-            return "B1";
-            
-        case 0x6280: case 0x6281: case 0x6282: case 0x6283: case 0x6284: case 0x6285:
-        case 0x7180: case 0x7181: case 0x7182: case 0x7183: case 0x7184: case 0x7185:
-            return "B2";
-            
-        case 0x6290: case 0x6291: case 0x6292: case 0x6293: case 0x6294: case 0x6295:
-        case 0x7190: case 0x7191: case 0x7192: case 0x7193: case 0x7194: case 0x7195:
-            return "B3";
-            
-        case 0x62A0: case 0x62A1: case 0x62A2: case 0x62A3: case 0x62A4: case 0x62A5:
-            return "B4";
-        case 0x62B0: case 0x62B1: case 0x62B2: case 0x62B3: case 0x62B4: case 0x62B5:
-            return "B5";
-        case 0x62C0: case 0x62C1: case 0x62C2: case 0x62C3: case 0x62C4: case 0x62C5:
-            return "B6";
-            
-        // ========== SUBZONAS C1-C7 - CONSOLIDADAS ==========
-        case 0x6A50: case 0x6A51: case 0x6A52: case 0x6A53: case 0x6A54: case 0x6A55:
-        case 0x7200: case 0x7201: case 0x7202: case 0x7203: case 0x7204: case 0x7205:
-            return "C1";
-            
-        case 0x6A80: case 0x6A81: case 0x6A82: case 0x6A83: case 0x6A84: case 0x6A85:
-        case 0x7210: case 0x7211: case 0x7212: case 0x7213: case 0x7214: case 0x7215:
-            return "C2";
-            
-        case 0x6A90: case 0x6A91: case 0x6A92: case 0x6A93: case 0x6A94: case 0x6A95:
-        case 0x7220: case 0x7221: case 0x7222: case 0x7223: case 0x7224: case 0x7225:
-            return "C3";
-            
-        case 0x6AA0: case 0x6AA1: case 0x6AA2: case 0x6AA3: case 0x6AA4: case 0x6AA5:
-        case 0x7230: case 0x7231: case 0x7232: case 0x7233: case 0x7234: case 0x7235:
-            return "C4";
-            
-        case 0x6AB0: case 0x6AB1: case 0x6AB2: case 0x6AB3: case 0x6AB4: case 0x6AB5:
-        case 0x7240: case 0x7241: case 0x7242: case 0x7243: case 0x7244: case 0x7245:
-            return "C5";
-            
-        case 0x6AC0: case 0x6AC1: case 0x6AC2: case 0x6AC3: case 0x6AC4: case 0x6AC5:
-        case 0x7250: case 0x7251: case 0x7252: case 0x7253: case 0x7254: case 0x7255:
-            return "C6";
-            
-        case 0x7260: case 0x7261: case 0x7262: case 0x7263: case 0x7264: case 0x7265:
-            return "C7";
-            
-        // ========== ZONAS COMBINADAS ==========
-        case 0x6D00: case 0x6D01: case 0x6D02: case 0x6D03: case 0x6D04: case 0x6D05:
-            return "AB";
-        case 0x6E00: case 0x6E01: case 0x6E02: case 0x6E03: case 0x6E04: case 0x6E05:
-            return "AC";
-        case 0x6F00: case 0x6F01: case 0x6F02: case 0x6F03: case 0x6F04: case 0x6F05:
-            return "BC";
-        case 0x7000: case 0x7001: case 0x7002: case 0x7003: case 0x7004: case 0x7005:
-            return "ABC";
-            
-        // ========== LÍNEAS L1-L9 - CONSOLIDADAS ==========
-        case 0x9200: case 0x9201: case 0x9202: case 0x9203: case 0x9204: case 0x9205:
-        case 0xA100: case 0xA101: case 0xA102: case 0xA103: case 0xA104: case 0xA105:
-        case 0x3100: case 0x3101: case 0x3102: case 0x3103: case 0x3104: case 0x3105:
-        case 0x4100: case 0x4101: case 0x4102: case 0x4103: case 0x4104: case 0x4105:
-        case 0x0C00: case 0x0C01: case 0x0C02: case 0x0C03: case 0x0C04: case 0x0C05:
-            return "L1";
-            
-        case 0x9210: case 0x9211: case 0x9212: case 0x9213: case 0x9214: case 0x9215:
-        case 0xA110: case 0xA111: case 0xA112: case 0xA113: case 0xA114: case 0xA115:
-        case 0x0C10: case 0x0C11: case 0x0C12: case 0x0C13: case 0x0C14: case 0x0C15:
-            return "L2";
-            
-        case 0xA120: case 0xA121: case 0xA122: case 0xA123: case 0xA124: case 0xA125:
-            return "L3";
-            
-        case 0x6040: case 0x6041: case 0x6042: case 0x6043: case 0x6044: case 0x6045:
-            return "L4";
-            
-        case 0x6050: case 0x6051: case 0x6052: case 0x6053: case 0x6054: case 0x6055:
-            return "L6";
-            
-        case 0x6060: case 0x6061: case 0x6062: case 0x6063: case 0x6064: case 0x6065:
-            return "L8";
-            
-        case 0x6070: case 0x6071: case 0x6072: case 0x6073: case 0x6074: case 0x6075:
-            return "L9";
-            
-        // ========== EUSKOTREN ==========
-        case 0xA200: case 0xA201: case 0xA202: case 0xA203: case 0xA204: case 0xA205:
-            return "E1";
-        case 0xA210: case 0xA211: case 0xA212: case 0xA213: case 0xA214: case 0xA215:
-            return "E2";
-        case 0xA220: case 0xA221: case 0xA222: case 0xA223: case 0xA224: case 0xA225:
-            return "E3";
-            
-        // ========== ZONAS ESPECIALES ==========
-        case 0x9100: case 0x9101: case 0x9102: case 0x9103: case 0x9104: case 0x9105:
-        case 0x9300: case 0x9301: case 0x9302: case 0x9303: case 0x9304: case 0x9305:
-            return "Centro";
-            
-        case 0x9110: case 0x9111: case 0x9112: case 0x9113: case 0x9114: case 0x9115:
-            return "Periférico";
-            
-        case 0x9310: case 0x9311: case 0x9312: case 0x9313: case 0x9314: case 0x9315:
-            return "Norte";
-            
-        case 0x0B00: case 0x0B01: case 0x0B02: case 0x0B03: case 0x0B04: case 0x0B05:
-            return "M1";
-        case 0x0B10: case 0x0B11: case 0x0B12: case 0x0B13: case 0x0B14: case 0x0B15:
-            return "M2";
-            
-        // ========== RENFE ESPECIALES ==========
-        case 0xF000: case 0xF001: case 0xF002: case 0xF003: case 0xF004: case 0xF005:
-            return "Cercanías Nacional";
-        case 0xF100: case 0xF101: case 0xF102: case 0xF103: case 0xF104: case 0xF105:
-            return "AVE Nacional";
-        case 0xF200: case 0xF201: case 0xF202: case 0xF203: case 0xF204: case 0xF205:
-            return "Media Distancia";
-        case 0xF300: case 0xF301: case 0xF302: case 0xF303: case 0xF304: case 0xF305:
-            return "Larga Distancia";
-            
-        // ========== CASOS ESPECIALES ==========
-        case 0x0000:
-            return "Not available";
-        default:
-            return "Unknown";
+    // Basic zone detection - most common cases only
+    switch(zone_code & 0xFF00) {
+        case 0x6C00: return "A";
+        case 0x6200: case 0x6250: case 0x6270: return "B";
+        case 0x6A00: case 0x6A10: case 0x6A50: return "C";
+        case 0x6800: case 0x6810: case 0x6850: return "D";
+        case 0x6600: case 0x6610: case 0x6650: return "E";
+        case 0x6400: case 0x6410: case 0x6450: return "F";
+        case 0x8100: case 0x8200: return "1";
+        case 0x8110: case 0x8210: return "2";
+        case 0x8120: case 0x8220: return "3";
+        case 0x8130: return "4";
+        case 0x8140: return "5";
+        case 0x8150: return "6";
+        case 0x9200: case 0xA100: case 0x0C00: return "L1";
+        case 0x9210: case 0xA110: case 0x0C10: return "L2";
+        case 0xEC00: return "B1";  // Added support for zone B1 (0xEC16)
+        case 0x0000: return "Not available";
+        default: return "Unknown";
     }
 }
 
@@ -781,9 +654,8 @@ static void renfe_sum10_parse_travel_history(FuriString* parsed_data, const MfCl
         return;
     }
     
-    // Define specific blocks that contain history based on manual analysis
-    // These are the confirmed history blocks from the original analysis
-    int history_blocks[] = {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 28, 29, 30, 44, 45, 46};
+    // Define specific blocks that contain history - REDUCED LIST for memory efficiency
+    int history_blocks[] = {18, 22, 28, 29, 30, 44, 45, 46};
     int num_blocks = sizeof(history_blocks) / sizeof(history_blocks[0]);
     
     // Array to store found history entries for sorting
@@ -832,7 +704,7 @@ static void renfe_sum10_parse_travel_history(FuriString* parsed_data, const MfCl
         renfe_sum10_sort_history_entries(history_entries, history_count);
         
         // Display the sorted history
-        furi_string_cat_printf(parsed_data, "� Travel History (%d trips):\n", history_count);
+        furi_string_cat_printf(parsed_data, "🎫 Travel History (%d trips):\n", history_count);
         furi_string_cat_printf(parsed_data, "(Most recent first)\n\n");
         
         for(int i = 0; i < history_count; i++) {
@@ -878,9 +750,12 @@ static bool renfe_sum10_parse_history_only(FuriString* parsed_data, const MfClas
         return false;
     }
     
+    // Detect card variant for correct header
+    const char* card_variant = renfe_sum10_detect_card_variant(data);
+    
     // Clear existing data and show only travel history
     furi_string_reset(parsed_data);
-    furi_string_cat_printf(parsed_data, "\e#RENFE SUMA 10\n");
+    furi_string_cat_printf(parsed_data, "\e#RENFE %s\n", card_variant);
     furi_string_cat_printf(parsed_data, "\e#Travel History\n\n");
     
     // Check if we have history data first using strict validation
@@ -936,8 +811,8 @@ static bool renfe_sum10_has_history_data(const MfClassicData* data) {
         return false;
     }
     
-    // Use the same block list as the parsing function to ensure consistency
-    int history_blocks[] = {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 28, 29, 30, 44, 45, 46};
+    // Use the same reduced block list as the parsing function
+    int history_blocks[] = {18, 22, 28, 29, 30, 44, 45, 46};
     int num_blocks = sizeof(history_blocks) / sizeof(history_blocks[0]);
     
     int max_blocks = (data->type == MfClassicType1k) ? 64 : 256;
@@ -995,7 +870,9 @@ static bool renfe_sum10_parse(FuriString* parsed_data, const MfClassicData* data
             break;
         }
 
-        furi_string_cat_printf(parsed_data, "\e#🚆 RENFE SUMA 10\n");
+        // Detect card variant and show appropriate header
+        const char* card_variant = renfe_sum10_detect_card_variant(data);
+        furi_string_cat_printf(parsed_data, "\e#🚆 RENFE %s\n", card_variant);
         
         // 1. Show card type info
         if(data->type == MfClassicType1k) {
@@ -1007,7 +884,8 @@ static bool renfe_sum10_parse(FuriString* parsed_data, const MfClassicData* data
         }
         
         // 2. Extract and show UID
-        if(data->iso14443_3a_data) {
+        if(data->iso14443_3a_data && data->iso14443_3a_data->uid_len > 0) {
+            // Use UID from iso14443_3a_data when available (live reading)
             const uint8_t* uid = data->iso14443_3a_data->uid;
             size_t uid_len = data->iso14443_3a_data->uid_len;
             
@@ -1017,20 +895,52 @@ static bool renfe_sum10_parse(FuriString* parsed_data, const MfClassicData* data
                 if(i < uid_len - 1) furi_string_cat_printf(parsed_data, " ");
             }
             furi_string_cat_printf(parsed_data, "\n");
+        } else if(mf_classic_is_block_read(data, 0)) {
+            // Fallback: Extract UID from Block 0 when loading from saved files
+            const uint8_t* block0 = data->block[0].data;
+            furi_string_cat_printf(parsed_data, "🔢 UID: %02X %02X %02X %02X\n", block0[0], block0[1], block0[2], block0[3]);
         } else {
             furi_string_cat_printf(parsed_data, "🔢 UID: Not available\n");
         }
         
-        // 3. Extract and show origin station information (where card was first topped up)
+        // 3. Show card variant-specific information
+        if(strcmp(card_variant, "MOBILIS 30") == 0) {
+            furi_string_cat_printf(parsed_data, "🎫 Variant: Monthly Pass\n");
+            
+            // Extract cardholder name from Block 9 if available
+            if(mf_classic_is_block_read(data, 9)) {
+                const uint8_t* block9 = data->block[9].data;
+                char name_buffer[16] = {0};
+                bool has_valid_name = false;
+                
+                // Extract name (typically in first part of block 9)
+                for(size_t i = 0; i < 6 && i < sizeof(name_buffer) - 1; i++) {
+                    if(block9[i] >= 0x20 && block9[i] <= 0x7E) { // Printable ASCII
+                        name_buffer[i] = block9[i];
+                        has_valid_name = true;
+                    } else {
+                        break;
+                    }
+                }
+                
+                if(has_valid_name) {
+                    furi_string_cat_printf(parsed_data, "👤 Holder: %s\n", name_buffer);
+                }
+            }
+        } else {
+            furi_string_cat_printf(parsed_data, "🎫 Variant: Pay-per-trip\n");
+        }
+        
+        // 4. Extract and show origin station information (where card was first topped up)
         const char* origin_station = renfe_sum10_get_origin_station(data);
         if(origin_station && strcmp(origin_station, "Unknown") != 0) {
-            furi_string_cat_printf(parsed_data, "� Origin: %s\n", origin_station);
+            furi_string_cat_printf(parsed_data, "🏠 Origin: %s\n", origin_station);
             
         } else {
             furi_string_cat_printf(parsed_data, "🏠 Origin: Unknown\n");
         }
         
-        // 4. Extract and show zone information from Block 5 (bytes 5-6)
+        // 5. Extract and show zone information from Block 5 (bytes 5-6)
         const uint8_t* block5 = data->block[5].data;
         if(block5) {
             uint16_t zone_code = renfe_sum10_extract_zone_code(block5);
@@ -1047,7 +957,7 @@ static bool renfe_sum10_parse(FuriString* parsed_data, const MfClassicData* data
             furi_string_cat_printf(parsed_data, "🎯 Zone: Block 5 not available\n");
         }
         
-        // 5. Extract and show trips from Block 5 (based on real dump analysis)
+        // 6. Extract and show trips from Block 5 (based on real dump analysis)
         if(block5) {
             if(block5[0] == 0x01 && block5[1] == 0x00 && block5[2] == 0x00 && block5[3] == 0x00) {
                 // Extract trip count from byte 4
@@ -1503,6 +1413,12 @@ static void renfe_sum10_on_exit(Metroflip* app) {
 
     // Clear station cache to free memory
     renfe_sum10_clear_station_cache();
+    
+    // Free the dynamically allocated station cache
+    if(station_cache) {
+        free(station_cache);
+        station_cache = NULL;
+    }
 
     metroflip_app_blink_stop(app);
 }
