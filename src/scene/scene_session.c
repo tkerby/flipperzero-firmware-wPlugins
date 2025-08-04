@@ -187,6 +187,12 @@ static void actionSelect(const PSESSIONSCENE instance, FuriString* const path) {
 		instance->text = TEXT_NOT_SESSION_FILE;
 	}
 
+	uint64_t size = storage_file_size(file);
+
+	if(size < 4) {
+		instance->text = TEXT_NOT_SESSION_FILE;
+	}
+
 	storage_file_close(file);
 	storage_file_free(file);
 	furi_record_close(RECORD_STORAGE);
