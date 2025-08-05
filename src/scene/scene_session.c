@@ -161,8 +161,11 @@ updateViewport:
 	view_port_update(instance->viewport);
 }
 
-static void actionSelect(const PSESSIONSCENE instance, FuriString* const path) {
-	DialogsFileBrowserOptions options;
+static void actionSelect(const PSESSIONSCENE instance, FuriString* const path, const uint8_t warning) {
+	UNUSED(instance);
+	UNUSED(path);
+	UNUSED(warning);
+	/*DialogsFileBrowserOptions options;
 	furi_string_set_str(path, APP_DATA_PATH("sessions"));
 	memset(&options, 0, sizeof(DialogsFileBrowserOptions));
 	options.skip_assets = dialog_file_browser_show(furi_record_open(RECORD_DIALOGS), path, path, &options);
@@ -196,7 +199,7 @@ static void actionSelect(const PSESSIONSCENE instance, FuriString* const path) {
 	storage_file_close(file);
 	storage_file_free(file);
 	furi_record_close(RECORD_STORAGE);
-	view_port_update(instance->viewport);
+	view_port_update(instance->viewport);*/
 }
 
 void SceneSessionEnter(void* const context) {
@@ -217,7 +220,7 @@ void SceneSessionEnter(void* const context) {
 		case ACTION_EXIT:
 			goto functionExit;
 		case ACTION_SELECT:
-			actionSelect(instance, path);
+			actionSelect(instance, path, 0);
 			break;
 		}
 	}
