@@ -34,21 +34,87 @@ This jammer is based on the **Flipper Zero** integrated with the **NRF24** modul
 To bring this project to life, you will need the following components:
 1. **NRF24L01+PA+LNA module** 🛠️
 2. **16V capacitor** rated at **100µF** 🔋
+3. **Step Down Module AMS1117 3.3V**
 
 -----
 
 ## 🧑‍🔧 Let's Get Started with Soldering!
 
-| **Pin Name** | **Flipper Zero GPIO** | **Connection**       |
-|--------------|-----------------------|----------------------|
-| VCC          | 3.3V                  | (+) capacitor        |
-| GND          | GND                   | (-) capacitor        |
-| CE           | B2                    |                      |
-| CSN          | A4                    |                      |
-| SCK          | B3                    |                      |
-| MOSI         | A7                    |                      |
-| MISO         | A6                    |                      |
-| IRQ          |                       |                      |
+<details>
+<summary><strong>One nRF24</strong></summary>
+
+<div style="margin-left: 20px;">
+
+### HSPI Connection
+| **nRF24** | **Flipper Zero GPIO** |
+|--------------|-----------------------|
+| CE           | B2                    |
+| CSN          | A4                    |
+| SCK          | B3                    |
+| MOSI         | A7                    |
+| MISO         | A6                    |
+| IRQ          |                       |
+
+### Power Supply Connection
+| **AMS1117** | **Flipper Zero GPIO** |
+|-------------|-----------------------|
+| VIN         | 5V                    |
+| GND         | GND                   |
+
+| **nRF24** | **AMS1117** | **capacitor** |
+|-----------|-------------|---------------|
+| VCC       | OUT         | +             |
+| GND       | GND         | -             |
+
+![One nRF24](schemes/One_nRF24/scheme.png)
+
+</div>
+</details>
+
+<details>
+<summary><strong>Two nRF24</strong></summary>
+
+<div style="margin-left: 20px;">
+
+### HSPI Connection
+| **nRF24** | **Flipper Zero GPIO** |
+|--------------|-----------------------|
+| CE           | B2                    |
+| CSN          | A4                    |
+| SCK          | B3                    |
+| MOSI         | A7                    |
+| MISO         | A6                    |
+| IRQ          |                       |
+
+### VSPI Connection
+| **nRF24** | **Flipper Zero GPIO** |
+|--------------|-----------------------|
+| CE           | C3                    |
+| CSN          | C0                    |
+| SCK          | B3                    |
+| MOSI         | A7                    |
+| MISO         | A6                    |
+| IRQ          |                       |
+
+### Power Supply Connection
+| **AMS1117** | **Flipper Zero GPIO** |
+|-------------|-----------------------|
+| VIN         | 5V                    |
+| GND         | GND                   |
+
+| **nRF24** | **AMS1117** | **capacitor** |
+|-----------|-------------|---------------|
+| VCC       | OUT         | +             |
+| GND       | GND         | -             |
+
+![Two nRF24](schemes/Two_nRF24/scheme.png)
+
+###### In both configurations (HSPI and VSPI), the same SCK, MOSI, and MISO pins are used. This is not a mistake—SPI interfaces can share clock and data lines, while proper operation is ensured by separate control signals (CSN and CE)
+
+</div>
+</details>
+
+##### Anyone who built the device before version 1.4.0, please add the AMS1117 module to your circuit, without it the nrf24 does not work correctly
 
 -----
 
@@ -71,8 +137,12 @@ To bring this project to life, you will need the following components:
 ### 📡 Misc Jammer
 - **Up button** short press → Channel +1
 - **Up button** long press → Continuous channel +1 (every 100ms)
+- **Up button** double press → channel +10
+- **Up button** triple press → channel +100
 - **Down button** short press → Channel -1
 - **Down button** long press → Continuous channel -1 (every 100ms)
+- **Down button** double press → channel -10
+- **Down button** triple press → channel -100
 - **Right button** short press → Switch jamming mode
 - **Left button** short press → Switch jamming mode
 - **OK button** short press → Select channel

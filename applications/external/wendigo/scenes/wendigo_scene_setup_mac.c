@@ -1,23 +1,26 @@
 #include "../wendigo_app_i.h"
 
-/* Maximum length of an interface string ("WiFi", "Bluetooth", etc.) */
+/** Maximum length of an interface string ("WiFi", "Bluetooth", etc.) */
 #define IF_MAX_LEN (10)
 
-/* Local buffer for use of the view */
+/** Local buffer for use of the view */
 uint8_t view_bytes[MAC_BYTES];
 
-/* Strings for popups */
+/** Strings for popups */
 char popup_header_text[IF_MAX_LEN + 11] = "";
 char popup_text[IF_MAX_LEN + 50] = "";
 
 void wendigo_scene_setup_mac_popup_callback(void* context) {
+    FURI_LOG_T(WENDIGO_TAG, "Start wendigo_scene_setup_mac_popup_callback()");
     WendigoApp* app = (WendigoApp*)context;
     scene_manager_previous_scene(app->scene_manager);
+    FURI_LOG_T(WENDIGO_TAG, "End wendigo_scene_setup_mac_popup_callback()");
 }
 
 void wendigo_scene_setup_mac_input_callback(void* context) {
-    // If MAC has changed
-    //     Popup indicating success or failure
+    FURI_LOG_T(WENDIGO_TAG, "Start wendigo_scene_setup_mac_input_callback()");
+    /* If MAC has changed
+     * Popup indicating success or failure */
     WendigoApp* app = context;
 
     /* Did the user change the MAC? */
@@ -60,7 +63,7 @@ void wendigo_scene_setup_mac_input_callback(void* context) {
                 memcpy(app->interfaces[IF_WIFI].mac_bytes, view_bytes, MAC_BYTES);
                 break;
             default:
-                // Do nothing
+                /* Do nothing */
             }
             snprintf(
                 popup_text,
@@ -76,20 +79,24 @@ void wendigo_scene_setup_mac_input_callback(void* context) {
         }
         wendigo_display_popup(app, popup_header_text, popup_text);
     } else {
-        // Should this also be run after the popup?
+        // TODO: Should this also be run after the popup?
         scene_manager_handle_back_event(app->scene_manager);
     }
+    FURI_LOG_T(WENDIGO_TAG, "End wendigo_scene_setup_mac_input_callback()");
 }
 
 void wendigo_scene_setup_mac_changed_callback(void* context) {
+    FURI_LOG_T(WENDIGO_TAG, "Start wendigo_scene_setup_mac_changed_callback()");
     WendigoApp* app = context;
     /* Overwrite the change if the MAC isn't mutable */
     if(!app->interfaces[app->active_interface].mutable) {
         memcpy(view_bytes, app->interfaces[app->active_interface].mac_bytes, MAC_BYTES);
     }
+    FURI_LOG_T(WENDIGO_TAG, "End wendigo_scene_setup_mac_changed_callback()");
 }
 
 void wendigo_scene_setup_mac_on_enter(void* context) {
+    FURI_LOG_T(WENDIGO_TAG, "Start wendigo_scene_setup_mac_on_enter()");
     WendigoApp* app = context;
     ByteInput* mac_input = app->setup_mac;
     app->current_view = WendigoAppViewSetupMAC;
@@ -106,15 +113,20 @@ void wendigo_scene_setup_mac_on_enter(void* context) {
         view_bytes,
         MAC_BYTES);
     view_dispatcher_switch_to_view(app->view_dispatcher, WendigoAppViewSetupMAC);
+    FURI_LOG_T(WENDIGO_TAG, "End wendigo_scene_setup_mac_on_enter()");
 }
 
 bool wendigo_scene_setup_mac_on_event(void* context, SceneManagerEvent event) {
+    FURI_LOG_T(WENDIGO_TAG, "Start wendigo_scene_setup_mac_on_event()");
     //
     UNUSED(context);
     UNUSED(event);
+    FURI_LOG_T(WENDIGO_TAG, "End wendigo_scene_setup_mac_on_event()");
     return false;
 }
 
 void wendigo_scene_setup_mac_on_exit(void* context) {
+    FURI_LOG_T(WENDIGO_TAG, "Start wendigo_scene_setup_mac_on_exit()");
     UNUSED(context);
+    FURI_LOG_T(WENDIGO_TAG, "End wendigo_scene_setup_mac_on_exit()");
 }

@@ -6,7 +6,7 @@ sio2flip is a Flipper Zero application that emulates SIO peripherals for Atari 8
   - Sector reading and writing commands
   - Disk formatting commands
   - Commands for reading and writing PERCOM configuration
-  - US Doubler mode is emulated (up to 73.7 KBd).
+  - US Doubler mode is emulated (up to 127 KBd).
   - XF-551 High Speed mode is emulated
   - Support for 90K, 130K, 180K, 360K, and 720K ATR disk images
   - Support for hard disk images up to 16MB

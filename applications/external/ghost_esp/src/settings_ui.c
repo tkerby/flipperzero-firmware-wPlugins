@@ -402,6 +402,16 @@ static void settings_action_callback(void* context, uint32_t index) {
     settings_set(settings_context->settings, index, 0, settings_context);
 }
 
+// submenu callback to open wifi hardware settings menu from settings actions
+#define WIFI_SETTINGS_MENU_ID 200
+static void wifi_settings_menu_callback(void* context, uint32_t index) {
+    UNUSED(index);
+    AppState* state = (AppState*)context;
+    if(!state) return;
+    show_wifi_settings_menu(state);
+    state->came_from_settings = true;
+}
+
 void settings_setup_gui(VariableItemList* list, SettingsUIContext* context) {
     FURI_LOG_D("SettingsSetup", "Entering settings_setup_gui");
     AppState* app_state = (AppState*)context->context;
@@ -412,6 +422,14 @@ void settings_setup_gui(VariableItemList* list, SettingsUIContext* context) {
         "Configuration  >",
         SETTINGS_COUNT,
         settings_menu_callback,
+        app_state);
+
+    // add hardware submenu item in settings actions menu
+    submenu_add_item(
+        app_state->settings_actions_menu,
+        "Hardware  >",
+        WIFI_SETTINGS_MENU_ID,
+        wifi_settings_menu_callback,
         app_state);
 
     // Iterate over all settings
@@ -531,7 +549,7 @@ bool settings_custom_event_callback(void* context, uint32_t event_id) {
                                 "Updated by: Jay Candel\n"
                                 "Built with <3";
 
-        confirmation_view_set_header(app_state->confirmation_view, "Ghost ESP v1.2.6");
+        confirmation_view_set_header(app_state->confirmation_view, "Ghost ESP v1.3.1");
         confirmation_view_set_text(app_state->confirmation_view, info_text);
 
         // Save current view before switching

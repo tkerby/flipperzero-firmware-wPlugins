@@ -1,3 +1,4 @@
+#include "xbox_controller.h"
 #include "xbox_controller_view.h"
 
 #include <infrared_worker.h>
@@ -96,24 +97,6 @@ static void xbox_controller_view_draw_callback(Canvas* canvas, void* context) {
     // Back
     xbox_controller_draw_wide_button(
         canvas, model->back_pressed, 0, buttons_post + 19, "B", &I_Pin_back_arrow_10x8);
-}
-
-const NotificationSequence sequence_blink_purple_50 = {
-    &message_red_255,
-    &message_blue_255,
-    &message_delay_50,
-    NULL,
-};
-
-void send_xbox_ir(uint32_t command, NotificationApp* notifications, bool repeat) {
-    InfraredMessage* message = malloc(sizeof(InfraredMessage));
-    message->protocol = InfraredProtocolNECext;
-    message->address = 0xD880;
-    message->command = command;
-    message->repeat = repeat;
-    notification_message(notifications, &sequence_blink_purple_50);
-    infrared_send(message, 2);
-    free(message);
 }
 
 static void

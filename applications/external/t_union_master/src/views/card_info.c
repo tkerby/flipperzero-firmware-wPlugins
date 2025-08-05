@@ -49,7 +49,7 @@ static void card_info_view_draw_cb(Canvas* canvas, void* _model) {
             temp_str,
             "%s(%s)",
             furi_string_get_cstr(model->message_ext->city_name),
-            model->message->area_id);
+            model->message->city_id);
         elements_draw_str_utf8(canvas, 42, 46, furi_string_get_cstr(temp_str));
         furi_string_reset(temp_str);
         canvas_draw_line(canvas, 6, 48, 122, 48);

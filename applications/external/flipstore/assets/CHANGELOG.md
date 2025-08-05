@@ -1,3 +1,15 @@
+## v1.3
+- Fixed the ESP32 firmware download functionality to ensure it downloads each file one-by-one (as intended)
+- Switched from "regular" text input to MasterX's (for saving WiFi credentials)
+- Added a new option to download GitHub repositories 
+
+## v1.2
+- Changed from C to C++ (saved about 50k bytes)
+- Created a new downloading screen
+
+## v1.1
+- Updated download links to the latest versions
+
 ## v1.0
 - Changed app name to FlipDownloader (for official firmware)
 - Updated Marauder to 1.4

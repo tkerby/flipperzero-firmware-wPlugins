@@ -25,11 +25,12 @@ static NfcCommand
             view_dispatcher_send_custom_event(
                 app->view_dispatcher, MiZipBalanceEditorCustomEventPollerDone);
         } else {
-            MfClassicKey key_a;
-            memcpy(key_a.data, app->calculated_keyA[app->current_sector], MIZIP_KEY_LENGTH);
+            // ALWAYS use Key B for ALL MiZIP sectors (as specified)
+            MfClassicKey key_b;
+            memcpy(key_b.data, app->calculated_keyB[app->current_sector], MIZIP_KEY_LENGTH);
             mfc_event->data->read_sector_request_data.sector_num = app->current_sector;
-            mfc_event->data->read_sector_request_data.key = key_a;
-            mfc_event->data->read_sector_request_data.key_type = MfClassicKeyTypeA;
+            mfc_event->data->read_sector_request_data.key = key_b;
+            mfc_event->data->read_sector_request_data.key_type = MfClassicKeyTypeB;
             mfc_event->data->read_sector_request_data.key_provided = true;
             app->current_sector++;
         }
@@ -55,23 +56,31 @@ void mizip_balance_editor_scene_reader_on_enter(void* context) {
 
     app->current_sector = 0;
 
+    // Set the keys for sector 0 (MiZIP standard)
     const uint8_t keyA[] = MIZIP_KEYA_0_BYTES;
     memcpy(app->calculated_keyA[0], keyA, MIZIP_KEY_LENGTH);
+    // Key B in sector 0 is standard for MiZIP.
+    const uint8_t keyB_0[] = MIZIP_KEYB_0_BYTES;
+    memcpy(app->calculated_keyB[0], keyB_0, MIZIP_KEY_LENGTH);
+
+    // Generate keys for sectors 1-4 based on the UID
     mizip_generate_key(app->uid, app->calculated_keyA, app->calculated_keyB);
+
+    // Log of keys generated for debugging (focus on sector 2 for credit data)
     for(int i = 0; i < 5; i++) {
-        char key[40];
+        char key_b_str[50];
         snprintf(
-            key,
-            sizeof(key),
-            "Key A %d: %02X %02X %02X %02X %02X %02X",
+            key_b_str,
+            sizeof(key_b_str),
+            "Sector %d Key B: %02X %02X %02X %02X %02X %02X",
             i,
-            app->calculated_keyA[i][0],
-            app->calculated_keyA[i][1],
-            app->calculated_keyA[i][2],
-            app->calculated_keyA[i][3],
-            app->calculated_keyA[i][4],
-            app->calculated_keyA[i][5]);
-        FURI_LOG_I("MiZipBalanceEditor", key);
+            app->calculated_keyB[i][0],
+            app->calculated_keyB[i][1],
+            app->calculated_keyB[i][2],
+            app->calculated_keyB[i][3],
+            app->calculated_keyB[i][4],
+            app->calculated_keyB[i][5]);
+        FURI_LOG_I("MiZipBalanceEditor", key_b_str);
     }
 
     app->poller = nfc_poller_alloc(app->nfc, NfcProtocolMfClassic);
@@ -103,10 +112,15 @@ bool mizip_balance_editor_scene_reader_on_event(void* context, SceneManagerEvent
             if(mf_classic_is_card_read(app->mf_classic_data)) {
                 dolphin_deed(DolphinDeedNfcReadSuccess);
                 FURI_LOG_D("MiZipBalanceEditor", "Card readed");
+
+                // Assume data is MiZip at this point
+                app->is_valid_mizip_data = true;
+                FURI_LOG_I("MiZipBalanceEditor", "Assume MiZIP data is valid");
             } else {
                 FURI_LOG_D("MiZipBalanceEditor", "Card not readed");
+                app->is_valid_mizip_data = false;
             }
-            app->is_valid_mizip_data = mizip_parse(context);
+
             scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdShowBalance);
             consumed = true;
         }

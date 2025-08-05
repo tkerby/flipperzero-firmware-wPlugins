@@ -42,6 +42,7 @@ GamesMenuList Version 0
 /ext/apps/Games/furious_birds.fap
 /ext/apps/Games/game15.fap
 /ext/apps/Games/gameoflife.fap
+/ext/apps/Games/grokadven.fap
 /ext/apps/Games/guess_the_number.fap
 /ext/apps/Games/hangman.fap
 /ext/apps/Games/hanoi_towers.fap
@@ -52,6 +53,7 @@ GamesMenuList Version 0
 /ext/apps/Games/kcline.fap
 /ext/apps/Games/laser_tag.fap
 /ext/apps/Games/lifecounter.fap
+/ext/apps/Games/lofz.fap
 /ext/apps/Games/mandelbrotset.fap
 /ext/apps/Games/matagotchi.fap
 /ext/apps/Games/mind_probe.fap
@@ -62,6 +64,7 @@ GamesMenuList Version 0
 /ext/apps/Games/montyhall.fap
 /ext/apps/Games/morse_master.fap
 /ext/apps/Games/multi_counter.fap
+/ext/apps/Games/nah2nah3.fap
 /ext/apps/Games/nu_pogodi.fap
 /ext/apps/Games/p1x_adventure.fap
 /ext/apps/Games/p1x_network_defender.fap

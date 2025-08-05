@@ -19,7 +19,9 @@
 
 #include "wendigo_hex_input.h"
 
-#define IS_FLIPPER_APP (1)
+#define IS_FLIPPER_APP          (1)
+/* TODO: Find a way to extract fap_version from application.fam */
+#define FLIPPER_WENDIGO_VERSION "0.3.0"
 
 #include "wendigo_common_defs.h"
 
@@ -28,7 +30,7 @@
 #define ESP32_POLL_INTERVAL      (3)
 #define START_MENU_ITEMS         (6)
 #define SETUP_MENU_ITEMS         (4)
-#define SETUP_CHANNEL_MENU_ITEMS (13)
+#define SETUP_CHANNEL_MENU_ITEMS (14)
 
 #define SETUP_RADIO_WIFI_IDX (2)
 #define SETUP_RADIO_BT_IDX   (1)
@@ -37,20 +39,12 @@
 #define RADIO_OFF            (1)
 #define RADIO_MAC            (2)
 
-#define CH_MASK_ALL (8192)
+#define CH_MASK_ALL (16384)
 
-#define MAX_OPTIONS (3)
+#define MAX_OPTIONS (7)
 
 #define WENDIGO_TEXT_BOX_STORE_SIZE   (4096)
 #define WENDIGO_TEXT_INPUT_STORE_SIZE (512)
-
-typedef enum DeviceMask {
-    DEVICE_BT_CLASSIC = 1,
-    DEVICE_BT_LE = 2,
-    DEVICE_WIFI_AP = 4,
-    DEVICE_WIFI_STA = 8,
-    DEVICE_ALL = 15
-} DeviceMask;
 
 // Command action type
 typedef enum {
@@ -63,6 +57,7 @@ typedef enum {
     OPEN_MAC,
     OPEN_HELP
 } ActionType;
+
 // Command availability in different modes
 typedef enum {
     OFF = 0,
@@ -94,12 +89,24 @@ typedef struct {
     ModeMask mode_mask;
 } WendigoItem;
 
+typedef enum msgType {
+    MSG_ERROR = 0,
+    MSG_WARN,
+    MSG_INFO,
+    MSG_DEBUG,
+    MSG_TRACE,
+    MSG_TYPE_COUNT
+} MsgType;
+
 typedef enum {
     WendigoAppViewVarItemList,
     WendigoAppViewDeviceList,
     WendigoAppViewDeviceDetail,
     WendigoAppViewStatus, /* This doesn't have a view but is used as a flag in app->current_view */
-    WendigoAppViewConsoleOutput, // TODO: Consider whether there's a better way to flag the status view
+    WendigoAppViewPNLList, /* As above */
+    WendigoAppViewAPSTAs, /* And this */
+    WendigoAppViewSTAAP, /* Also */
+    WendigoAppViewConsoleOutput, // TODO: Consider whether there's a better way to flag these views
     WendigoAppViewTextInput,
     WendigoAppViewHexInput,
     WendigoAppViewHelp,
@@ -115,7 +122,10 @@ struct WendigoApp {
     SceneManager* scene_manager;
     WendigoAppView current_view;
     bool is_scanning;
-
+    bool leaving_scene; /* Set to true when the back button is pressed to allow device list to be
+                         * used for a variety of purposes - device list, selected device list, and
+                         * navigating from device list to AP list to station list, etc.
+                         */
     Widget* widget;
     VariableItemList* var_item_list;
     VariableItemList* devices_var_item_list;
@@ -125,7 +135,7 @@ struct WendigoApp {
     Popup* popup; // Avoid continual allocation and freeing of Popup by initialising at launch
     WendigoRadio interfaces[IF_COUNT];
     InterfaceType active_interface;
-    int32_t last_packet;
+    uint32_t last_packet;
 
     uint8_t setup_selected_menu_index;
     uint16_t device_list_selected_menu_index;
@@ -142,6 +152,9 @@ struct WendigoApp {
     TextBox* text_box;
     TextInput* text_input;
     Wendigo_TextInput* hex_input;
+    /* Mutexes to manage access to buffer[] and devices[] */
+    FuriMutex* bufferMutex;
+    FuriMutex* devicesMutex;
 
     const char* selected_tx_string;
     bool is_command;

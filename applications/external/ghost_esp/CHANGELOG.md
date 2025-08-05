@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.4
+- Set Evil Portal HTML from the Flipper's Filesystem
+
+## v1.3.1
+- Might fix crash when closing app without a board connected
+
+## v1.3
+
+- Add WiFi and BLE menu subcategories
+- Remember menu position after command execution
+- Add missing and new commands
+- Move settings from WiFi menu to Settings menu
+
 ## v1.2.6
 
 - Fix connect command syntax (#2 @tototo31)

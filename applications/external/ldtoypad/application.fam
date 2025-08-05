@@ -9,6 +9,6 @@ App(
     fap_category="USB",
     fap_author="Seger",
     fap_weburl="https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator",
-    fap_version="0.4",
+    fap_version="0.5",
     fap_description="USB Toy Pad emulator for Lego Dimensions",
 )

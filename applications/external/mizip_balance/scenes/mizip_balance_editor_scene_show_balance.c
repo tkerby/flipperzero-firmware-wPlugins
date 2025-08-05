@@ -67,6 +67,12 @@ void mizip_balance_editor_scene_show_balance_on_enter(void* context) {
         app->uid[3]);
     dialog_ex_set_header(app->dialog_ex, uid, 64, 0, AlignCenter, AlignTop);
 
+    //Set MiZip data as valid for tag reading testing
+    //TODO proper verification
+    if(app->currentDataSource == DataSourceNfc) {
+        app->is_valid_mizip_data = true;
+    }
+
     if(app->is_valid_mizip_data) {
         //Get balances
         if(!app->is_number_input_active) {
@@ -105,12 +111,12 @@ bool mizip_balance_editor_scene_show_balance_on_event(void* context, SceneManage
                 scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdNumberInput);
             } else {
                 //Get back if data isn't valid
-                switch(app->dataSource) {
-                case NfcSource:
+                switch(app->currentDataSource) {
+                case DataSourceNfc:
                     scene_manager_search_and_switch_to_previous_scene(
                         app->scene_manager, MiZipBalanceEditorViewIdScanner);
                     break;
-                case FileSource:
+                case DataSourceFile:
                     scene_manager_previous_scene(app->scene_manager);
                     break;
                 default:
@@ -146,8 +152,12 @@ bool mizip_balance_editor_scene_show_balance_on_event(void* context, SceneManage
         }
     } else if(event.type == SceneManagerEventTypeBack) {
         if(app->new_balance != app->current_balance) {
-            mizip_balance_editor_write_new_balance(context);
-            scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdWriteSuccess);
+            bool write_success = mizip_balance_editor_write_new_balance(context);
+            if(write_success) {
+                scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdWriteSuccess);
+            } else {
+                //TODO Writing fail message
+            }
             consumed = true;
         } else {
             scene_manager_search_and_switch_to_another_scene(
