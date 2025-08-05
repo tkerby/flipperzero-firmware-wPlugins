@@ -1,0 +1,19 @@
+App(
+    appid="subghz_toolkit",
+    name="SubGhz Toolkit",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="subghz_toolkit_app",
+    requires=[
+        "gui",
+        "storage",
+        "notification",
+        "subghz",
+    ],
+    stack_size=8 * 1024,
+    fap_icon="subghz_toolkit.png",
+    fap_category="SubGhz",
+    fap_author="RocketGod",
+    fap_weburl="https://betaskynet.com",
+    fap_version=(1, 0),
+    fap_description="Extract SubGhz protocol implementation details and decrypt KeeLoq keys",
+)
