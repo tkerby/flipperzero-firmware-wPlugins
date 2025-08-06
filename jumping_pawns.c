@@ -54,35 +54,85 @@ void end_turn(void* context) {
     }
 }
 
+// void find_jumps(int board[11][6], int x, int y) {
+//     int dx[] = {0, 0, -1, 1};
+//     int dy[] = {-1, 1, 0, 0};
+
+//     for (int dir = 0; dir < 4; dir++) {
+//         // Check for a pawn in the adjacent square to begin a jump
+//         int first_pawn_x = x + dx[dir];
+//         int first_pawn_y = y + dy[dir];
+
+//         if (first_pawn_x >= 0 && first_pawn_x < 6 && first_pawn_y >= 0 && first_pawn_y < 11 && board[first_pawn_y][first_pawn_x] != 0 && board[first_pawn_y][first_pawn_x] != 3) {
+            
+//             // Traverse from the first pawn to find the end of the clump
+//             int last_pawn_x = first_pawn_x;
+//             int last_pawn_y = first_pawn_y;
+//             int next_x = last_pawn_x + dx[dir];
+//             int next_y = last_pawn_y + dy[dir];
+
+//             while (next_x >= 0 && next_x < 6 && next_y >= 0 && next_y < 11 && board[next_y][next_x] != 0 && board[next_y][next_x] != 3) {
+//                 last_pawn_x = next_x;
+//                 last_pawn_y = next_y;
+//                 next_x = last_pawn_x + dx[dir];
+//                 next_y = last_pawn_y + dy[dir];
+//             }
+
+//             // The square after the last pawn is the landing spot
+//             int landing_x = next_x;
+//             int landing_y = next_y;
+
+//             // Check if the landing spot is a valid, empty tile
+//             if (landing_x >= 0 && landing_x < 6 && landing_y >= 0 && landing_y < 11 && board[landing_y][landing_x] == 0) {
+//                 board[landing_y][landing_x] = 3; // Mark as valid move
+//                 find_jumps(board, landing_x, landing_y); // Recurse
+//             }
+//         }
+//     }
+// }
+
 void find_jumps(int board[11][6], int x, int y) {
-    int dx[] = {0, 0, -1, 1};
+    int dx[] = {0, 0, -1, 1}; // directions: up, down, left, right
     int dy[] = {-1, 1, 0, 0};
 
     for (int dir = 0; dir < 4; dir++) {
-        int cx = x;
-        int cy = y;
+        int first_pawn_x = x + dx[dir];
+        int first_pawn_y = y + dy[dir];
 
-        bool found_clump = false;
-
-        int mid_x = cx + dx[dir];
-        int mid_y = cy + dy[dir];
-
-        // Traverse the clump in current direction
-        while (mid_x >= 0 && mid_x < 6 && mid_y >= 0 && mid_y < 11 && board[mid_y][mid_x] != 0 && board[mid_y][mid_x] != 3) {
-            cx = mid_x;
-            cy = mid_y;
-            mid_x = cx + dx[dir];
-            mid_y = cy + dy[dir];
-            found_clump = true;
+        if (first_pawn_x < 0 || first_pawn_x >= 6 ||
+            first_pawn_y < 0 || first_pawn_y >= 11 ||
+            board[first_pawn_y][first_pawn_x] == 0 ||
+            board[first_pawn_y][first_pawn_x] == 3) {
+            continue;
         }
 
-        // Check for empty tile to land on
-        if (found_clump && mid_x >= 0 && mid_x < 6 && mid_y >= 0 && mid_y < 11 && board[mid_y][mid_x] == 0) {
-            board[mid_y][mid_x] = 3; // Mark as valid move
-            find_jumps(board, mid_x, mid_y); // Recurse
+        int next_x = first_pawn_x + dx[dir];
+        int next_y = first_pawn_y + dy[dir];
+
+        while (next_x >= 0 && next_x < 6 &&
+               next_y >= 0 && next_y < 11 &&
+               board[next_y][next_x] != 0 &&
+               board[next_y][next_x] != 3) {
+            next_x += dx[dir];
+            next_y += dy[dir];
+        }
+
+        int landing_x = next_x;
+        int landing_y = next_y;
+
+        if ((abs(landing_x - x) <= 1) && (abs(landing_y - y) <= 1)) {
+            continue;
+        }
+
+        if (landing_x >= 0 && landing_x < 6 &&
+            landing_y >= 0 && landing_y < 11 &&
+            board[landing_y][landing_x] == 0) {
+            board[landing_y][landing_x] = 3;
+            find_jumps(board, landing_x, landing_y);
         }
     }
 }
+
 
 void check_for_game_end(void* context) {
     JumpingPawnsApp* app = (JumpingPawnsApp*)context;
@@ -118,26 +168,117 @@ void check_for_game_end(void* context) {
     }
 }
 
+// void player_moving(void* context) {
+//     JumpingPawnsApp* app = (JumpingPawnsApp*)context;
+//     JumpingPawnsModel* model = view_get_model(app->view);
+//     int flipped[11][6];
+
+//     // if selected square was a dot, then move a piece there instead of displaying more dots
+//     int sx = model->selected_x - 1;
+//     int sy = model->selected_y - 1;
+
+//     if(strcmp(model->whose_turn, "player2") == 0) {
+//         sx = 5 - sx;
+//         sy = 10 - sy;
+//     }
+
+//     if (model->board_state[sy][sx] == 3) {
+//         model->board_state[model->last_calculated_piece_y - 1][model->last_calculated_piece_x - 1] = 0;
+//         int piece_value = strcmp(model->whose_turn, "player2") == 0 ? 2 : 1;
+//         model->board_state[sy][sx] = piece_value;
+
+//         // Clear previous move indicators (number 3 in board_state)
+//         for (int y = 0; y < 11; y++) {
+//             for (int x = 0; x < 6; x++) {
+//                 if (model->board_state[y][x] == 3) {
+//                     model->board_state[y][x] = 0;
+//                 }
+//             }
+//         }
+
+//         check_for_game_end(context);
+
+//         if (strcmp(model->ai_or_player, "ai") == 0) {
+//             ai_move(model);
+//         } else {
+//             end_turn(app);
+//         }
+//         return;
+//     }
+
+//     if(strcmp(model->whose_turn, "player2") == 0) {
+//         model->last_calculated_piece_x = 6 - model->selected_x;
+//         model->last_calculated_piece_y = 12 - model->selected_y;
+//     } else {
+//         model->last_calculated_piece_x = model->selected_x;
+//         model->last_calculated_piece_y = model->selected_y;
+//     }
+
+//     // Clear previous move indicators
+//     for (int y = 0; y < 11; y++) {
+//         for (int x = 0; x < 6; x++) {
+//             if (model->board_state[y][x] == 3) {
+//                 model->board_state[y][x] = 0;
+//             }
+//         }
+//     }
+
+//     if(strcmp(model->whose_turn, "player2") == 0) {
+//         for(int i = 0; i < 11; i++) {
+//             for(int j = 0; j < 6; j++) {
+//                 flipped[i][j] = model->board_state[10 - i][5 - j];
+//             }
+//         }
+
+//         int sx = model->selected_x - 1;
+//         int sy = model->selected_y - 1;
+
+//         if (flipped[sy][sx] != 2) return;
+
+//         find_jumps(flipped, sx, sy);
+
+//         for (int i = 0; i < 11; i++) {
+//             for (int j = 0; j < 6; j++) {
+//                 if (flipped[i][j] == 3) {
+//                     model->board_state[10 - i][5 - j] = 3;
+//                 }
+//             }
+//         }
+//     } else {
+//         int sx = model->selected_x - 1;
+//         int sy = model->selected_y - 1;
+
+//         if (model->board_state[sy][sx] != 1) return;
+
+//         find_jumps(model->board_state, sx, sy);
+//     }
+// }
+
 void player_moving(void* context) {
     JumpingPawnsApp* app = (JumpingPawnsApp*)context;
     JumpingPawnsModel* model = view_get_model(app->view);
     int flipped[11][6];
 
-    // if selected square was a dot, then move a piece there instead of displaying more dots
+    // Convert from 1-based to 0-based coordinates
     int sx = model->selected_x - 1;
     int sy = model->selected_y - 1;
 
-    if(strcmp(model->whose_turn, "player2") == 0) {
+    // Flip board if player 2
+    if (strcmp(model->whose_turn, "player2") == 0) {
         sx = 5 - sx;
         sy = 10 - sy;
     }
 
+    // Move piece if destination is a jump marker
     if (model->board_state[sy][sx] == 3) {
-        model->board_state[model->last_calculated_piece_y - 1][model->last_calculated_piece_x - 1] = 0;
+        int orig_x = model->last_calculated_piece_x - 1;
+        int orig_y = model->last_calculated_piece_y - 1;
+        model->board_state[orig_y][orig_x] = 0;
+
         int piece_value = strcmp(model->whose_turn, "player2") == 0 ? 2 : 1;
         model->board_state[sy][sx] = piece_value;
 
-        // Clear previous move indicators (number 3 in board_state)
+        // Clear jump markers
         for (int y = 0; y < 11; y++) {
             for (int x = 0; x < 6; x++) {
                 if (model->board_state[y][x] == 3) {
@@ -153,18 +294,11 @@ void player_moving(void* context) {
         } else {
             end_turn(app);
         }
+
         return;
     }
 
-    if(strcmp(model->whose_turn, "player2") == 0) {
-        model->last_calculated_piece_x = 6 - model->selected_x;
-        model->last_calculated_piece_y = 12 - model->selected_y;
-    } else {
-        model->last_calculated_piece_x = model->selected_x;
-        model->last_calculated_piece_y = model->selected_y;
-    }
-
-    // Clear previous move indicators
+    // Clear previous jump markers
     for (int y = 0; y < 11; y++) {
         for (int x = 0; x < 6; x++) {
             if (model->board_state[y][x] == 3) {
@@ -173,20 +307,28 @@ void player_moving(void* context) {
         }
     }
 
-    if(strcmp(model->whose_turn, "player2") == 0) {
-        for(int i = 0; i < 11; i++) {
-            for(int j = 0; j < 6; j++) {
-                flipped[i][j] = model->board_state[10 - i][5 - j];
+    if (strcmp(model->whose_turn, "player2") == 0) {
+        // Build flipped board for Player 2's perspective
+        for (int i = 0; i < 11; i++) {
+            for (int j = 0; j < 6; j++) {
+                int val = model->board_state[10 - i][5 - j];
+                flipped[i][j] = (val == 3) ? 0 : val;
             }
         }
 
-        int sx = model->selected_x - 1;
-        int sy = model->selected_y - 1;
+        // Convert already flipped coordinates back to flipped board
+        int flipped_sx = 5 - sx;
+        int flipped_sy = 10 - sy;
 
-        if (flipped[sy][sx] != 2) return;
+        if (flipped[flipped_sy][flipped_sx] != 2) return;
 
-        find_jumps(flipped, sx, sy);
+        // Set last calculated origin
+        model->last_calculated_piece_x = 7 - model->selected_x;
+        model->last_calculated_piece_y = 12 - model->selected_y;
 
+        find_jumps(flipped, flipped_sx, flipped_sy);
+
+        // Map back jump markers
         for (int i = 0; i < 11; i++) {
             for (int j = 0; j < 6; j++) {
                 if (flipped[i][j] == 3) {
@@ -194,11 +336,13 @@ void player_moving(void* context) {
                 }
             }
         }
-    } else {
-        int sx = model->selected_x - 1;
-        int sy = model->selected_y - 1;
 
+    } else {
+        // Player 1
         if (model->board_state[sy][sx] != 1) return;
+
+        model->last_calculated_piece_x = model->selected_x;
+        model->last_calculated_piece_y = model->selected_y;
 
         find_jumps(model->board_state, sx, sy);
     }
