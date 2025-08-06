@@ -62,7 +62,7 @@ static inline void drawButton(Canvas* const canvas, const uint8_t x, const uint8
 // [Delete] [Cancel] Are you sure you want to\ndelete the current session?
 static void callbackRender(Canvas* const canvas, void* const context) {
 	furi_check(canvas && context);
-	const PSESSIONSCENE instance = context;
+	/*const PSESSIONSCENE instance = context;
 	canvas_clear(canvas);
 
 	if(!instance->renderText) {
@@ -97,18 +97,18 @@ static void callbackRender(Canvas* const canvas, void* const context) {
 	switch(instance->text) {
 	case TEXT_NO_FILE_SELECTED:
 	case TEXT_NOT_SESSION_FILE:
-		drawButton(canvas, 10, 51, instance->button == BUTTON_TEXT_DELETE_SELECT, "Select");
-		drawButton(canvas, 70, 51, instance->button == BUTTON_TEXT_CANCEL_OK_OPEN, "Ok");
+		drawButton(canvas, 27, 51, instance->button == BUTTON_TEXT_DELETE_SELECT, "Select");
+		drawButton(canvas, 85, 51, instance->button == BUTTON_TEXT_CANCEL_OK_OPEN, "Ok");
 		break;
 	case TEXT_APPEARS_INCORRECT_TYPE:
-		drawButton(canvas, 10, 51, instance->button == BUTTON_TEXT_DELETE_SELECT, "Select");
-		drawButton(canvas, 70, 51, instance->button == BUTTON_TEXT_CANCEL_OK_OPEN, "Open");
+		drawButton(canvas, 23, 51, instance->button == BUTTON_TEXT_DELETE_SELECT, "Select");
+		drawButton(canvas, 79, 51, instance->button == BUTTON_TEXT_CANCEL_OK_OPEN, "Open");
 		break;
 	case TEXT_DELETE_CONFIRM:
-		drawButton(canvas, 10, 51, instance->button == BUTTON_TEXT_DELETE_SELECT, "Delete");
-		drawButton(canvas, 70, 51, instance->button == BUTTON_TEXT_CANCEL_OK_OPEN, "Cancel");
+		drawButton(canvas, 21, 51, instance->button == BUTTON_TEXT_DELETE_SELECT, "Delete");
+		drawButton(canvas, 74, 51, instance->button == BUTTON_TEXT_CANCEL_OK_OPEN, "Cancel");
 		break;
-	}
+	}*/
 }
 
 static void callbackInput(InputEvent* const event, void* const context) {
