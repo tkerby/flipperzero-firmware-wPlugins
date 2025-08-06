@@ -133,8 +133,34 @@ void find_jumps(int board[11][6], int x, int y) {
         // Mark as a valid jump destination
         board[landing_y][landing_x] = 3;
 
+        // Temporarily remove the pawn(s) jumped over for this direction
+        int temp_x = first_pawn_x;
+        int temp_y = first_pawn_y;
+        // Save the pawns' values to restore later (for multi-pawn jump)
+        int jumped_pawns[11][6] = {0};
+        while (temp_x >= 0 && temp_x < 6 &&
+               temp_y >= 0 && temp_y < 11 &&
+               board[temp_y][temp_x] != 0 &&
+               board[temp_y][temp_x] != 3) {
+            jumped_pawns[temp_y][temp_x] = board[temp_y][temp_x];
+            board[temp_y][temp_x] = 0;
+            temp_x += dx[dir];
+            temp_y += dy[dir];
+        }
+
         // Recurse from the new position
         find_jumps(board, landing_x, landing_y);
+
+        // Restore the jumped pawns
+        temp_x = first_pawn_x;
+        temp_y = first_pawn_y;
+        while (temp_x >= 0 && temp_x < 6 &&
+               temp_y >= 0 && temp_y < 11 &&
+               jumped_pawns[temp_y][temp_x] != 0) {
+            board[temp_y][temp_x] = jumped_pawns[temp_y][temp_x];
+            temp_x += dx[dir];
+            temp_y += dy[dir];
+        }
     }
 }
 
