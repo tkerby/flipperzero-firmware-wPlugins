@@ -99,6 +99,7 @@ void find_jumps(int board[11][6], int x, int y) {
         int first_pawn_x = x + dx[dir];
         int first_pawn_y = y + dy[dir];
 
+        // Check if the first square in this direction contains a pawn (not empty and not a move marker)
         if (first_pawn_x < 0 || first_pawn_x >= 6 ||
             first_pawn_y < 0 || first_pawn_y >= 11 ||
             board[first_pawn_y][first_pawn_x] == 0 ||
@@ -106,6 +107,7 @@ void find_jumps(int board[11][6], int x, int y) {
             continue;
         }
 
+        // Now look for the first empty space after the contiguous block of pawns
         int next_x = first_pawn_x + dx[dir];
         int next_y = first_pawn_y + dy[dir];
 
@@ -120,16 +122,19 @@ void find_jumps(int board[11][6], int x, int y) {
         int landing_x = next_x;
         int landing_y = next_y;
 
-        if ((abs(landing_x - x) <= 1) && (abs(landing_y - y) <= 1)) {
+        // Must jump at least one pawn, and the landing space must be empty and on the board
+        if ((abs(landing_x - x) <= 1 && abs(landing_y - y) <= 1) ||
+            landing_x < 0 || landing_x >= 6 ||
+            landing_y < 0 || landing_y >= 11 ||
+            board[landing_y][landing_x] != 0) {
             continue;
         }
 
-        if (landing_x >= 0 && landing_x < 6 &&
-            landing_y >= 0 && landing_y < 11 &&
-            board[landing_y][landing_x] == 0) {
-            board[landing_y][landing_x] = 3;
-            find_jumps(board, landing_x, landing_y);
-        }
+        // Mark as a valid jump destination
+        board[landing_y][landing_x] = 3;
+
+        // Recurse from the new position
+        find_jumps(board, landing_x, landing_y);
     }
 }
 
