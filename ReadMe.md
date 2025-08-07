@@ -40,7 +40,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Groks Adventure v0.15 (By DigiMancer3D)](https://github.com/DigiMancer3D/Groks_Adventure)
 - Added: [Lab401/DigiLab v1.0 (By lab-401 & tixlegeek)](https://github.com/lab-401/fzDigiLab)
 - Updated: [FlipCrypt v0.4 (By TAxelAnderson)](https://github.com/TAxelAnderson/FlipCrypt)
-- ESP Flasher: [Bump Marauder v1.8.3 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.8.3)
 - Updated: [LEGO Dimensions Toy Pad v0.5 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
 - Updated: [USB HID Autofire v0.6 (By pbek)](https://github.com/pbek/usb_hid_autofire) Added delay between double clicks (By RogueMaster)
 - Updated: [MiZip Balance Editor v0.2 (By teohumeau)](https://github.com/teohumeau/MiZipBalanceEditor)
@@ -53,6 +52,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Ghost ESP v1.4 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
 - Updated: [Key Copier v1.5 (By zinongli)](https://github.com/zinongli/KeyCopier)
 - Added: [Sub-Ghz Toolkit v1.0 (By RocketGod-git)](https://github.com/RocketGod-git/RocketGods-SubGHz-Toolkit)
+- ESP Flasher: [Bump Marauder v1.8.4 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.8.4)
 
 <a name="release">
 
