@@ -8,7 +8,7 @@ typedef struct {
 	ViewPort* viewport;
 	FuriMessageQueue* queue;
 	struct {
-		uint8_t action	   : 1;
+		uint8_t action	   : 2;
 		uint8_t button	   : 2;
 		uint8_t renderText : 1;
 		uint8_t text	   : 2;
@@ -17,7 +17,9 @@ typedef struct {
 
 enum ACTION {
 	ACTION_EXIT,
-	ACTION_SELECT
+	ACTION_SELECT,
+	ACTION_OPEN_ANYWAY,
+	ACTION_DELETE
 };
 
 enum BUTTONSESSION {
@@ -62,7 +64,7 @@ static inline void drawButton(Canvas* const canvas, const uint8_t x, const uint8
 // [Delete] [Cancel] Are you sure you want to\ndelete the current session?
 static void callbackRender(Canvas* const canvas, void* const context) {
 	furi_check(canvas && context);
-	/*const PSESSIONSCENE instance = context;
+	const PSESSIONSCENE instance = context;
 	canvas_clear(canvas);
 
 	if(!instance->renderText) {
@@ -76,39 +78,47 @@ static void callbackRender(Canvas* const canvas, void* const context) {
 	}
 
 	const char* text;
+	uint8_t firstX;
+	uint8_t secondX;
+	const char* firstText;
+	const char* secondText;
 
 	switch(instance->text) {
 	case TEXT_NO_FILE_SELECTED:
 		text = "No session file was selected.";
+		firstX = 27;
+		secondX = 85;
+		firstText = "Select";
+		secondText = "Ok";
 		break;
 	case TEXT_APPEARS_INCORRECT_TYPE:
 		text = "The selected file does not\nappear to be a session file.\nOpen anyway?";
+		firstX = 23;
+		secondX = 79;
+		firstText = "Select";
+		secondText = "Open";
 		break;
 	case TEXT_NOT_SESSION_FILE:
 		text = "The selected file\nis not a session file.\nIt might be corrupted.";
+		firstX = 27;
+		secondX = 85;
+		firstText = "Select";
+		secondText = "Ok";
 		break;
 	case TEXT_DELETE_CONFIRM:
 		text = "Are you sure you want to\ndelete the current session?";
+		firstX = 21;
+		secondX = 74;
+		firstText = "Delete";
+		secondText = "Cancel";
 		break;
+	default:
+		return;
 	}
 
 	elements_text_box(canvas, 0, 0, 128, 51, AlignCenter, AlignCenter, text, 1);
-
-	switch(instance->text) {
-	case TEXT_NO_FILE_SELECTED:
-	case TEXT_NOT_SESSION_FILE:
-		drawButton(canvas, 27, 51, instance->button == BUTTON_TEXT_DELETE_SELECT, "Select");
-		drawButton(canvas, 85, 51, instance->button == BUTTON_TEXT_CANCEL_OK_OPEN, "Ok");
-		break;
-	case TEXT_APPEARS_INCORRECT_TYPE:
-		drawButton(canvas, 23, 51, instance->button == BUTTON_TEXT_DELETE_SELECT, "Select");
-		drawButton(canvas, 79, 51, instance->button == BUTTON_TEXT_CANCEL_OK_OPEN, "Open");
-		break;
-	case TEXT_DELETE_CONFIRM:
-		drawButton(canvas, 21, 51, instance->button == BUTTON_TEXT_DELETE_SELECT, "Delete");
-		drawButton(canvas, 74, 51, instance->button == BUTTON_TEXT_CANCEL_OK_OPEN, "Cancel");
-		break;
-	}*/
+	drawButton(canvas, firstX, 51, instance->button == BUTTON_TEXT_DELETE_SELECT, firstText);
+	drawButton(canvas, secondX, 51, instance->button == BUTTON_TEXT_CANCEL_OK_OPEN, secondText);
 }
 
 static void callbackInput(InputEvent* const event, void* const context) {
@@ -140,33 +150,77 @@ static void callbackInput(InputEvent* const event, void* const context) {
 		furi_message_queue_put(instance->queue, event, FuriWaitForever);
 		return;
 	default:
+		if(event->key != InputKeyOk) {
+			return;
+		}
+
 		break;
 	}
 
-	if(instance->renderText) {
-		return;
+	if(!instance->renderText) {
+		switch(instance->button) {
+		case BUTTON_SESSION_SELECT:
+			instance->action = ACTION_SELECT;
+			furi_message_queue_put(instance->queue, event, FuriWaitForever);
+			return;
+		case BUTTON_SESSION_NEW:
+			return;
+		case BUTTON_SESSION_DELETE:
+			return;
+		default:
+			return;
+		}
 	}
 
-	switch(instance->button) {
-	case BUTTON_SESSION_SELECT:
-		instance->action = ACTION_SELECT;
-		furi_message_queue_put(instance->queue, event, FuriWaitForever);
-		return;
-	case BUTTON_SESSION_NEW:
-		return;
-	case BUTTON_SESSION_DELETE:
+	switch(instance->text) {
+	case TEXT_NO_FILE_SELECTED:
+	case TEXT_NOT_SESSION_FILE:
+		switch(instance->button) {
+		case BUTTON_TEXT_DELETE_SELECT:
+			goto handleSelect;
+		case BUTTON_TEXT_CANCEL_OK_OPEN:
+			instance->button = BUTTON_SESSION_SELECT;
+			instance->renderText = 0;
+			goto updateViewport;
+		default:
+			return;
+		}
+	case TEXT_APPEARS_INCORRECT_TYPE:
+		switch(instance->button) {
+		case BUTTON_TEXT_DELETE_SELECT:
+			goto handleSelect;
+		case BUTTON_TEXT_CANCEL_OK_OPEN:
+			instance->action = ACTION_OPEN_ANYWAY;
+			furi_message_queue_put(instance->queue, event, FuriWaitForever);
+			return;
+		default:
+			return;
+		}
+	case TEXT_DELETE_CONFIRM:
+		switch(instance->button) {
+		case BUTTON_TEXT_DELETE_SELECT:
+			instance->action = ACTION_DELETE;
+			furi_message_queue_put(instance->queue, event, FuriWaitForever);
+			return;
+		case BUTTON_TEXT_CANCEL_OK_OPEN:
+			goto handleSelect;
+		default:
+			return;
+		}
+	default:
 		return;
 	}
+handleSelect:
+	instance->action = ACTION_SELECT;
+	furi_message_queue_put(instance->queue, event, FuriWaitForever);
+	return;
 updateViewport:
 	view_port_update(instance->viewport);
 }
 
-static void actionSelect(const PSESSIONSCENE instance, FuriString* const path, const uint8_t warning) {
-	UNUSED(instance);
-	UNUSED(path);
-	UNUSED(warning);
-	/*DialogsFileBrowserOptions options;
+static void actionSelect(const PSESSIONSCENE instance, FuriString* const path) {
 	furi_string_set_str(path, APP_DATA_PATH("sessions"));
+	DialogsFileBrowserOptions options;
 	memset(&options, 0, sizeof(DialogsFileBrowserOptions));
 	options.skip_assets = dialog_file_browser_show(furi_record_open(RECORD_DIALOGS), path, path, &options);
 	furi_record_close(RECORD_DIALOGS);
@@ -174,11 +228,10 @@ static void actionSelect(const PSESSIONSCENE instance, FuriString* const path, c
 	if(!options.skip_assets) {
 		instance->renderText = 1;
 		instance->text = TEXT_NO_FILE_SELECTED;
-		view_port_update(instance->viewport);
-		return;
+		goto updateViewport;
 	}
 
-	Storage* storage = furi_record_open(RECORD_STORAGE);
+/*Storage* storage = furi_record_open(RECORD_STORAGE);
 	File* file = storage_file_alloc(storage);
 	instance->renderText = 1;
 
@@ -200,6 +253,8 @@ static void actionSelect(const PSESSIONSCENE instance, FuriString* const path, c
 	storage_file_free(file);
 	furi_record_close(RECORD_STORAGE);
 	view_port_update(instance->viewport);*/
+updateViewport:
+	view_port_update(instance->viewport);
 }
 
 void SceneSessionEnter(void* const context) {
@@ -220,7 +275,11 @@ void SceneSessionEnter(void* const context) {
 		case ACTION_EXIT:
 			goto functionExit;
 		case ACTION_SELECT:
-			actionSelect(instance, path, 0);
+			actionSelect(instance, path);
+			break;
+		case ACTION_OPEN_ANYWAY:
+			break;
+		case ACTION_DELETE:
 			break;
 		}
 	}
