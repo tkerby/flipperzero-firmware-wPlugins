@@ -66,7 +66,7 @@
 
 // UI constants
 #define POPUP_TIMEOUT_MS 2000
-#define BRUTE_THREAD_STACK_SIZE 2048
+#define BRUTE_THREAD_STACK_SIZE 8192
 #define MIN_DELAY_MS 100
 #define MAX_DELAY_MS 1000
 #define DELAY_STEP_MS 100
@@ -121,6 +121,7 @@ typedef struct {
     Gui* gui;
     ViewDispatcher* view_dispatcher;
     Submenu* submenu;
+    Submenu* key_list_submenu;  // Separate submenu for key list
     DialogEx* dialog_ex;
     Popup* popup;
     TextInput* text_input;
@@ -134,6 +135,12 @@ typedef struct {
     KeyInfo loaded_keys[MAX_UIDS];
     uint8_t loaded_keys_count;
     char file_path[256];
+    
+    // Brute force thread
+    FuriThread* brute_thread;
+    FuriTimer* brute_timer;  // Timer to update GUI from main thread
+    FuriMutex* thread_mutex;  // Mutex to protect thread access
+    bool thread_stopping;  // Flag to prevent double-cleanup
 } UidBruteSmarter;
 
 // Forward declarations
@@ -142,6 +149,9 @@ static void uid_brute_smarter_setup_config(UidBruteSmarter* instance);
 static void uid_brute_smarter_start_brute_force(UidBruteSmarter* instance);
 static bool uid_brute_smarter_load_nfc_file(UidBruteSmarter* instance, const char* path);
 static void uid_brute_smarter_show_key_list(UidBruteSmarter* instance);
+static uint32_t uid_brute_smarter_key_list_back_callback(void* context);
+static uint32_t uid_brute_smarter_brute_back_callback(void* context);
+static void uid_brute_smarter_timer_callback(void* context);
 
 static uint32_t uid_brute_smarter_exit_callback(void* context) {
     UNUSED(context);
@@ -174,6 +184,29 @@ static void uid_brute_smarter_show_splash(UidBruteSmarter* instance) {
 static void uid_brute_smarter_free(UidBruteSmarter* instance) {
     furi_assert(instance);
     
+    // Stop and free timer
+    if(instance->brute_timer) {
+        furi_timer_stop(instance->brute_timer);
+        furi_timer_free(instance->brute_timer);
+    }
+    
+    // Stop and free brute force thread if running
+    if(instance->brute_thread) {
+        instance->thread_stopping = true;
+        if(instance->app) {
+            instance->app->should_stop = true;
+        }
+        furi_mutex_acquire(instance->thread_mutex, FuriWaitForever);
+        furi_thread_join(instance->brute_thread);
+        furi_thread_free(instance->brute_thread);
+        furi_mutex_release(instance->thread_mutex);
+    }
+    
+    // Free mutex
+    if(instance->thread_mutex) {
+        furi_mutex_free(instance->thread_mutex);
+    }
+    
     // Free loaded key memory
     for(int i = 0; i < instance->loaded_keys_count; i++) {
         free(instance->loaded_keys[i].name);
@@ -190,6 +223,7 @@ static void uid_brute_smarter_free(UidBruteSmarter* instance) {
     
     // Free GUI components
     submenu_free(instance->submenu);
+    submenu_free(instance->key_list_submenu);  // Free the key list submenu
     dialog_ex_free(instance->dialog_ex);
     popup_free(instance->popup);
     text_input_free(instance->text_input);
@@ -224,6 +258,8 @@ static UidBruteSmarter* uid_brute_smarter_alloc(void) {
     instance->app->delay_ms = DEFAULT_DELAY_MS;
     instance->app->pause_every = DEFAULT_PAUSE_EVERY;
     instance->app->pause_duration_s = DEFAULT_PAUSE_DURATION_S;
+    instance->app->current_uid = 0;
+    instance->app->is_running = false;
     
     // Initialize key storage
     instance->loaded_keys_count = 0;
@@ -234,6 +270,14 @@ static UidBruteSmarter* uid_brute_smarter_alloc(void) {
         instance->loaded_keys[i].loaded_time = 0;
         instance->loaded_keys[i].is_active = false;
     }
+    
+    // Initialize thread pointer and synchronization
+    instance->brute_thread = NULL;
+    instance->thread_stopping = false;
+    instance->thread_mutex = furi_mutex_alloc(FuriMutexTypeNormal);
+    
+    // Initialize timer for GUI updates (100ms interval)
+    instance->brute_timer = furi_timer_alloc(uid_brute_smarter_timer_callback, FuriTimerTypePeriodic, instance);
     
     // Open GUI record
     instance->gui = furi_record_open(RECORD_GUI);
@@ -252,6 +296,7 @@ static UidBruteSmarter* uid_brute_smarter_alloc(void) {
     
     // Initialize views
     instance->submenu = submenu_alloc();
+    instance->key_list_submenu = submenu_alloc();  // Allocate separate submenu for key list
     instance->dialog_ex = dialog_ex_alloc();
     instance->popup = popup_alloc();
     instance->text_input = text_input_alloc();
@@ -269,7 +314,7 @@ static UidBruteSmarter* uid_brute_smarter_alloc(void) {
     view_dispatcher_add_view(
         instance->view_dispatcher, UidBruteSmarterViewCardLoader, text_input_get_view(instance->text_input));
     view_dispatcher_add_view(
-        instance->view_dispatcher, UidBruteSmarterViewKeyList, submenu_get_view(instance->submenu));
+        instance->view_dispatcher, UidBruteSmarterViewKeyList, submenu_get_view(instance->key_list_submenu));
     
     return instance;
 }
@@ -364,42 +409,54 @@ static void uid_brute_smarter_remove_key(UidBruteSmarter* instance, uint8_t inde
 static void uid_brute_smarter_key_list_callback(void* context, uint32_t index) {
     UidBruteSmarter* instance = (UidBruteSmarter*)context;
     
+    DEBUG_LOG("[KEY_LIST] Callback triggered with index: %lu", index);
+    
     if(index == 255) {
         // Unload All
+        DEBUG_LOG("[KEY_LIST] Unload All selected");
         for(int i = instance->loaded_keys_count - 1; i >= 0; i--) {
             uid_brute_smarter_remove_key(instance, i);
         }
-        uid_brute_smarter_setup_menu(instance);
-        view_dispatcher_switch_to_view(instance->view_dispatcher, UidBruteSmarterViewMenu);
-    } else if(index == 254) {
-        // Back button
+        // Return to main menu after unloading all
         uid_brute_smarter_setup_menu(instance);
         view_dispatcher_switch_to_view(instance->view_dispatcher, UidBruteSmarterViewMenu);
     } else if(index < instance->loaded_keys_count) {
         // Remove specific key
+        DEBUG_LOG("[KEY_LIST] Removing key at index: %lu", index);
         uid_brute_smarter_remove_key(instance, index);
         uid_brute_smarter_show_key_list(instance);
     }
 }
 
 static void uid_brute_smarter_show_key_list(UidBruteSmarter* instance) {
-    submenu_reset(instance->submenu);
+    DEBUG_LOG("[KEY_LIST] Showing key list with %d keys", instance->loaded_keys_count);
+    
+    // Use the dedicated key_list_submenu
+    submenu_reset(instance->key_list_submenu);
     char header_text[32];
     snprintf(header_text, sizeof(header_text), "Loaded Keys (%d)", instance->loaded_keys_count);
-    submenu_set_header(instance->submenu, header_text);
+    submenu_set_header(instance->key_list_submenu, header_text);
     
     for(int i = 0; i < instance->loaded_keys_count; i++) {
         char item_text[64];
         snprintf(item_text, sizeof(item_text), "%s (%08lX)", 
                  instance->loaded_keys[i].name, 
                  instance->loaded_keys[i].uid);
-        submenu_add_item(instance->submenu, item_text, i, uid_brute_smarter_key_list_callback, instance);
+        submenu_add_item(instance->key_list_submenu, item_text, i, uid_brute_smarter_key_list_callback, instance);
+        DEBUG_LOG("[KEY_LIST] Added key item: %s", item_text);
     }
     
-    submenu_add_item(instance->submenu, "Unload All", 255, uid_brute_smarter_key_list_callback, instance);
-    submenu_add_item(instance->submenu, "Back", 254, uid_brute_smarter_key_list_callback, instance);
+    // Add action buttons
+    if(instance->loaded_keys_count > 0) {
+        submenu_add_item(instance->key_list_submenu, "Unload All", 255, uid_brute_smarter_key_list_callback, instance);
+        DEBUG_LOG("[KEY_LIST] Added 'Unload All' button");
+    }
+    
+    // Set proper back navigation to return to main menu
+    view_set_previous_callback(submenu_get_view(instance->key_list_submenu), uid_brute_smarter_key_list_back_callback);
     
     view_dispatcher_switch_to_view(instance->view_dispatcher, UidBruteSmarterViewKeyList);
+    DEBUG_LOG("[KEY_LIST] Switched to key list view");
 }
 
 static bool uid_brute_smarter_load_nfc_file(UidBruteSmarter* instance, const char* path) {
@@ -576,8 +633,12 @@ static void uid_brute_smarter_menu_callback(void* context, uint32_t index) {
             view_dispatcher_switch_to_view(instance->view_dispatcher, UidBruteSmarterViewConfig);
             break;
         case 3: // Start Brute Force
-            if(instance->app->uid_count > 0) {
+            DEBUG_LOG("[MENU] Start Brute Force selected");
+            DEBUG_LOG("[MENU] UID count: %d", instance->app ? instance->app->uid_count : -1);
+            if(instance->app && instance->app->uid_count > 0) {
+                DEBUG_LOG("[MENU] Calling uid_brute_smarter_start_brute_force...");
                 uid_brute_smarter_start_brute_force(instance);
+                DEBUG_LOG("[MENU] Returned from uid_brute_smarter_start_brute_force");
             } else {
                 popup_set_header(instance->popup, "Error", 64, 20, AlignCenter, AlignTop);
                 popup_set_text(instance->popup, "No cards loaded!\nLoad .nfc files first", 64, 40, AlignCenter, AlignTop);
@@ -589,105 +650,399 @@ static void uid_brute_smarter_menu_callback(void* context, uint32_t index) {
     }
 }
 
-static int32_t uid_brute_smarter_brute_worker(void* context) {
+static void uid_brute_smarter_timer_callback(void* context) {
+    DEBUG_LOG("[TIMER] === TIMER CALLBACK FIRED ===");
     UidBruteSmarter* instance = (UidBruteSmarter*)context;
     
-    PatternResult result;
-    if(!pattern_engine_detect(instance->app->uids, instance->app->uid_count, &result)) {
+    DEBUG_LOG("[TIMER] Instance: %p, App: %p", instance, instance ? instance->app : NULL);
+    // Safety check
+    if(!instance || !instance->app) {
+        DEBUG_LOG("[TIMER] NULL instance or app, returning");
+        return;
+    }
+    
+    // Check if we're already stopping
+    if(instance->thread_stopping) {
+        DEBUG_LOG("[TIMER] Thread stopping, skipping");
+        return;
+    }
+    
+    DEBUG_LOG("[TIMER] Acquiring mutex...");
+    // Acquire mutex for thread access (wait up to 10ms to avoid blocking too long)
+    if(furi_mutex_acquire(instance->thread_mutex, 10) != FuriStatusOk) {
+        // Mutex is busy, skip this timer tick
+        DEBUG_LOG("[TIMER] Mutex busy, skipping tick");
+        return;
+    }
+    
+    DEBUG_LOG("[TIMER] Thread ptr: %p", instance->brute_thread);
+    if(!instance->brute_thread) {
+        // Thread was cleaned up, stop timer
+        DEBUG_LOG("[TIMER] No thread, stopping timer");
+        furi_timer_stop(instance->brute_timer);
+        furi_mutex_release(instance->thread_mutex);
+        return;
+    }
+    
+    FuriThreadState state = furi_thread_get_state(instance->brute_thread);
+    DEBUG_LOG("[TIMER] Thread state: %d", state);
+    
+    // Check if thread is still starting
+    if(state == FuriThreadStateStarting) {
+        DEBUG_LOG("[TIMER] Thread still starting, skipping update");
+        furi_mutex_release(instance->thread_mutex);
+        return;
+    }
+    
+    if(state == FuriThreadStateStopped) {
+        // Thread finished, show completion message
+        DEBUG_LOG("[TIMER] Brute force thread finished");
+        furi_timer_stop(instance->brute_timer);
+        
+        // Show completion message
+        if(!instance->app->should_stop) {
+            popup_set_header(instance->popup, "Complete", 64, 20, AlignCenter, AlignTop);
+            popup_set_text(instance->popup, "Brute force completed", 64, 40, AlignCenter, AlignTop);
+        } else {
+            popup_set_header(instance->popup, "Stopped", 64, 20, AlignCenter, AlignTop);
+            popup_set_text(instance->popup, "Brute force stopped", 64, 40, AlignCenter, AlignTop);
+        }
+        popup_set_timeout(instance->popup, POPUP_TIMEOUT_MS);
+        popup_enable_timeout(instance->popup);
+        
+        // Mark thread for cleanup but don't free it here - let back callback do it
+        instance->thread_stopping = true;
+    } else if(instance->app && instance->app->is_running) {
+        // Update progress display
+        char progress_text[64];
+        snprintf(progress_text, sizeof(progress_text), "UID: %08lX\nRunning...", 
+                 instance->app->current_uid);
+        DEBUG_LOG("[TIMER] Updating display with UID: %08lX", instance->app->current_uid);
+        popup_set_text(instance->popup, progress_text, 64, 30, AlignCenter, AlignCenter);
+    } else {
+        DEBUG_LOG("[TIMER] Not updating: is_running=%d", instance->app ? instance->app->is_running : -1);
+    }
+    
+    furi_mutex_release(instance->thread_mutex);
+    DEBUG_LOG("[TIMER] === TIMER CALLBACK COMPLETE ===");
+}
+
+static int32_t uid_brute_smarter_brute_worker(void* context) {
+    // VERY FIRST THING - log that we entered the function
+    DEBUG_LOG("[BRUTE_WORKER] === WORKER FUNCTION ENTERED ===");
+    
+    UidBruteSmarter* instance = (UidBruteSmarter*)context;
+    
+    if(!instance || !instance->app) {
+        ERROR_LOG("[BRUTE_WORKER] ERROR: Invalid context");
         return -1;
     }
     
-    instance->app->is_running = true;
-    instance->app->should_stop = false;
+    // Verify NFC resources are available from main instance
+    if(!instance->nfc || !instance->nfc_device) {
+        ERROR_LOG("[BRUTE_WORKER] ERROR: NFC resources not initialized");
+        return -1;
+    }
+    
+    DEBUG_LOG("[BRUTE_WORKER] Starting brute force worker with %d UIDs", instance->app->uid_count);
+    for(int i = 0; i < instance->app->uid_count; i++) {
+        DEBUG_LOG("[BRUTE_WORKER] UID[%d] = %08lX", i, instance->app->uids[i]);
+    }
+    
+    PatternResult result;
+    DEBUG_LOG("[BRUTE_WORKER] Calling pattern_engine_detect...");
+    if(!pattern_engine_detect(instance->app->uids, instance->app->uid_count, &result)) {
+        ERROR_LOG("Pattern detection failed");
+        // DO NOT update GUI from worker thread!
+        return -1;
+    }
+    DEBUG_LOG("[BRUTE_WORKER] Pattern detected: type=%d, start=%08lX, end=%08lX, step=%lu, range_size=%lu", 
+              result.type, result.start_uid, result.end_uid, result.step, result.range_size);
+    
+    // Don't set is_running here - it's already set in main thread
+    // instance->app->is_running = true;  // REMOVED - set in main thread
+    // instance->app->should_stop = false;  // Already set in main thread
     
     uint32_t range[MAX_RANGE_SIZE];
     uint16_t actual_size;
     
+    DEBUG_LOG("[BRUTE_WORKER] Calling pattern_engine_build_range...");
     if(!pattern_engine_build_range(&result, range, MAX_RANGE_SIZE, &actual_size)) {
+        ERROR_LOG("Failed to build valid range for brute force");
+        // DO NOT update GUI from worker thread!
+        return -1;
+    }
+    DEBUG_LOG("[BRUTE_WORKER] Range built successfully: actual_size=%d", actual_size);
+    if(actual_size > 0) {
+        DEBUG_LOG("[BRUTE_WORKER] First UID: %08lX, Last UID: %08lX", range[0], range[actual_size-1]);
+    }
+    
+    // DO NOT update GUI from worker thread!
+    
+    // Allocate ISO14443-3A data on heap to avoid stack overflow
+    Iso14443_3aData* iso_data = malloc(sizeof(Iso14443_3aData));
+    if(!iso_data) {
+        ERROR_LOG("[BRUTE_WORKER] Failed to allocate memory for ISO data");
         return -1;
     }
     
-    popup_set_header(instance->popup, "Brute Force", 64, 10, AlignCenter, AlignTop);
-    
+    DEBUG_LOG("[BRUTE_WORKER] Starting brute force loop with %d UIDs", actual_size);
     for(uint16_t i = 0; i < actual_size && !instance->app->should_stop; i++) {
-        char progress_text[64];
-        snprintf(progress_text, sizeof(progress_text), "UID: %08lX\nProgress: %d/%d", 
-                 range[i], i + 1, actual_size);
-        popup_set_text(instance->popup, progress_text, 64, 30, AlignCenter, AlignCenter);
+        DEBUG_LOG("[BRUTE_WORKER] Processing UID %d/%d: %08lX", i + 1, actual_size, range[i]);
         
-        // Emulate the UID
-        Iso14443_3aData iso_data = {
-            .uid_len = STANDARD_UID_LENGTH,
-            .atqa = {ATQA_DEFAULT_LOW, ATQA_DEFAULT_HIGH},
-            .sak = SAK_DEFAULT
-        };
+        // DO NOT update GUI from worker thread - it causes bus faults!
+        // Update current UID early so timer can display it
+        instance->app->current_uid = range[i];
+        
+        // Safety check: ensure we don't run forever
+        if(i >= MAX_RANGE_SIZE - 1) {
+            ERROR_LOG("Safety check triggered: stopping brute force at MAX_RANGE_SIZE");
+            break;
+        }
+        
+        // Create and configure NFC device with the UID
+        DEBUG_LOG("[BRUTE_WORKER] Creating ISO14443-3a data for UID %08lX", range[i]);
+        
+        // CRITICAL: Zero-initialize the entire structure to avoid garbage in padding
+        memset(iso_data, 0, sizeof(Iso14443_3aData));
+        
+        // Now set the fields
+        iso_data->uid_len = STANDARD_UID_LENGTH;
+        iso_data->atqa[0] = ATQA_DEFAULT_LOW;
+        iso_data->atqa[1] = ATQA_DEFAULT_HIGH;
+        iso_data->sak = SAK_DEFAULT;
         
         // Convert UID to bytes (big-endian to little-endian)
-        iso_data.uid[0] = (range[i] >> 24) & 0xFF;
-        iso_data.uid[1] = (range[i] >> 16) & 0xFF;
-        iso_data.uid[2] = (range[i] >> 8) & 0xFF;
-        iso_data.uid[3] = range[i] & 0xFF;
+        iso_data->uid[0] = (range[i] >> 24) & 0xFF;
+        iso_data->uid[1] = (range[i] >> 16) & 0xFF;
+        iso_data->uid[2] = (range[i] >> 8) & 0xFF;
+        iso_data->uid[3] = range[i] & 0xFF;
+        
+        DEBUG_LOG("[BRUTE_WORKER] UID bytes: %02X %02X %02X %02X", 
+                  iso_data->uid[0], iso_data->uid[1], iso_data->uid[2], iso_data->uid[3]);
+        
+        // Validate NFC device before setting data
+        if(!instance->nfc_device) {
+            ERROR_LOG("[BRUTE_WORKER] NFC device is NULL");
+            free(iso_data);
+            return -1;
+        }
         
         // Set the data in NFC device
-        nfc_device_set_data(instance->nfc_device, NfcProtocolIso14443_3a, &iso_data);
+        DEBUG_LOG("[BRUTE_WORKER] Setting NFC device data...");
+        nfc_device_clear(instance->nfc_device);
         
-        // Start NFC emulation
-        NfcListener* listener = nfc_listener_alloc(instance->nfc, NfcProtocolIso14443_3a, &iso_data);
-        if(listener) {
+        // Set data (returns void, no error checking possible)
+        nfc_device_set_data(instance->nfc_device, NfcProtocolIso14443_3a, iso_data);
+        
+        // Start NFC emulation - simplified approach
+        DEBUG_LOG("[BRUTE_WORKER] Starting NFC emulation for UID %08lX...", range[i]);
+        
+        // Try to start emulation with error handling
+        NfcListener* listener = NULL;
+        bool emulation_success = false;
+        
+        do {
+            DEBUG_LOG("[BRUTE_WORKER] About to call nfc_listener_alloc...");
+            DEBUG_LOG("[BRUTE_WORKER] Instance NFC ptr: %p, Protocol: %d", 
+                      instance->nfc, NfcProtocolIso14443_3a);
+            
+            // Verify NFC handle is valid before allocation
+            if(!instance->nfc) {
+                ERROR_LOG("[BRUTE_WORKER] NFC handle is NULL");
+                break;
+            }
+            
+            // Get the device data for the listener
+            const NfcDeviceData* device_data = nfc_device_get_data(instance->nfc_device, NfcProtocolIso14443_3a);
+            if(!device_data) {
+                ERROR_LOG("[BRUTE_WORKER] Failed to get device data");
+                break;
+            }
+            
+            // Allocate listener with correct API (3 parameters)
+            DEBUG_LOG("[BRUTE_WORKER] Calling nfc_listener_alloc with data: %p...", device_data);
+            listener = nfc_listener_alloc(instance->nfc, NfcProtocolIso14443_3a, device_data);
+            if(!listener) {
+                ERROR_LOG("[BRUTE_WORKER] Failed to allocate NFC listener");
+                break;
+            }
+            
+            DEBUG_LOG("[BRUTE_WORKER] NFC listener allocated: %p, starting emulation...", listener);
+            
+            // Start listener (returns void) - this should not block
+            DEBUG_LOG("[BRUTE_WORKER] Calling nfc_listener_start...");
             nfc_listener_start(listener, NULL, NULL);
+            
+            DEBUG_LOG("[BRUTE_WORKER] NFC emulation started, waiting %lu ms...", instance->app->delay_ms);
+            
+            // Update current UID for display AFTER starting emulation
+            instance->app->current_uid = range[i];
             
             // Emulate for the specified delay
             furi_delay_ms(instance->app->delay_ms);
             
-            // Stop emulation
+            DEBUG_LOG("[BRUTE_WORKER] Delay complete for UID %08lX", range[i]);
+            
+            emulation_success = true;
+            DEBUG_LOG("[BRUTE_WORKER] NFC emulation completed successfully");
+        } while(0);
+        
+        // Cleanup
+        if(listener) {
+            DEBUG_LOG("[BRUTE_WORKER] Stopping and freeing NFC listener...");
             nfc_listener_stop(listener);
             nfc_listener_free(listener);
         }
         
+        if(!emulation_success) {
+            ERROR_LOG("[BRUTE_WORKER] NFC emulation failed for UID %08lX", range[i]);
+            // Continue with next UID instead of crashing
+            furi_delay_ms(100); // Small delay before continuing
+        }
+        
         // Handle pause
         if(instance->app->pause_every > 0 && (i + 1) % instance->app->pause_every == 0) {
-            popup_set_text(instance->popup, "Pausing...", 64, 40, AlignCenter, AlignCenter);
+            // Just pause, don't update GUI from worker thread
             furi_delay_ms(instance->app->pause_duration_s * 1000);
         }
+        
+        // Small delay to prevent overwhelming the system
+        furi_delay_ms(10);
     }
     
     instance->app->is_running = false;
     
-    if(!instance->app->should_stop) {
-        popup_set_header(instance->popup, "Complete", 64, 20, AlignCenter, AlignTop);
-        popup_set_text(instance->popup, "Brute force completed", 64, 40, AlignCenter, AlignTop);
-        popup_set_timeout(instance->popup, POPUP_TIMEOUT_MS);
-        popup_enable_timeout(instance->popup);
-    } else {
-        popup_set_header(instance->popup, "Stopped", 64, 20, AlignCenter, AlignTop);
-        popup_set_text(instance->popup, "Brute force stopped", 64, 40, AlignCenter, AlignTop);
-        popup_set_timeout(instance->popup, POPUP_TIMEOUT_MS);
-        popup_enable_timeout(instance->popup);
-    }
+    DEBUG_LOG("[BRUTE_WORKER] Brute force finished, was_stopped=%d", instance->app->should_stop);
+    
+    // Free allocated memory
+    free(iso_data);
+    
+    // Clear the NFC device for cleanup
+    nfc_device_clear(instance->nfc_device);
+    
+    // DO NOT touch GUI from worker thread! This causes bus faults!
+    // The main thread will handle returning to menu
     
     return 0;
 }
 
 static void uid_brute_smarter_start_brute_force(UidBruteSmarter* instance) {
-    // Reset stop flag
-    instance->app->should_stop = false;
+    DEBUG_LOG("[START_BRUTE] === ENTERING START_BRUTE_FORCE ===");
+    DEBUG_LOG("[START_BRUTE] Instance ptr: %p", instance);
     
+    // Safety checks
+    if(!instance) {
+        ERROR_LOG("[START_BRUTE] ERROR: instance is NULL");
+        return;
+    }
+    
+    DEBUG_LOG("[START_BRUTE] App ptr: %p", instance->app);
+    if(!instance->app) {
+        ERROR_LOG("[START_BRUTE] ERROR: instance->app is NULL");
+        return;
+    }
+    
+    DEBUG_LOG("[START_BRUTE] Loaded keys: %d, App UIDs: %d", instance->loaded_keys_count, instance->app->uid_count);
+    
+    DEBUG_LOG("[START_BRUTE] Checking NFC: nfc=%p, nfc_device=%p", instance->nfc, instance->nfc_device);
+    if(!instance->nfc || !instance->nfc_device) {
+        ERROR_LOG("[START_BRUTE] ERROR: NFC not initialized");
+        popup_set_header(instance->popup, "Error", 64, 20, AlignCenter, AlignTop);
+        popup_set_text(instance->popup, "NFC not initialized", 64, 40, AlignCenter, AlignTop);
+        popup_set_timeout(instance->popup, POPUP_TIMEOUT_MS);
+        popup_enable_timeout(instance->popup);
+        view_dispatcher_switch_to_view(instance->view_dispatcher, UidBruteSmarterViewBrute);
+        return;
+    }
+    
+    DEBUG_LOG("[START_BRUTE] Resetting flags...");
+    // Reset stop flags and current UID
+    instance->app->should_stop = false;
+    instance->app->is_running = true;  // Set to true BEFORE starting worker thread
+    instance->app->current_uid = 0;
+    instance->thread_stopping = false;
+    
+    DEBUG_LOG("[START_BRUTE] Checking mutex: %p", instance->thread_mutex);
+    // Ensure mutex is available
+    if(!instance->thread_mutex) {
+        ERROR_LOG("[START_BRUTE] ERROR: thread_mutex is NULL");
+        return;
+    }
+    
+    DEBUG_LOG("[START_BRUTE] Checking timer: %p", instance->brute_timer);
+    // Ensure timer is available
+    if(!instance->brute_timer) {
+        ERROR_LOG("[START_BRUTE] ERROR: brute_timer is NULL");
+        return;
+    }
+    
+    DEBUG_LOG("[START_BRUTE] Checking popup: %p", instance->popup);
+    // Ensure popup is available
+    if(!instance->popup) {
+        ERROR_LOG("[START_BRUTE] ERROR: popup is NULL");
+        return;
+    }
+    
+    DEBUG_LOG("[START_BRUTE] Acquiring mutex for thread creation...");
+    // Acquire mutex before creating thread to prevent race conditions
+    furi_mutex_acquire(instance->thread_mutex, FuriWaitForever);
+    
+    DEBUG_LOG("[START_BRUTE] Setting up popup UI...");
     // Show brute force screen
-    popup_set_header(instance->popup, "Starting...", 64, 20, AlignCenter, AlignTop);
-    popup_set_text(instance->popup, "Initializing brute force", 64, 40, AlignCenter, AlignTop);
+    popup_set_header(instance->popup, "Brute Force", 64, 10, AlignCenter, AlignTop);
+    popup_set_text(instance->popup, "Starting...", 64, 30, AlignCenter, AlignCenter);
+    
+    DEBUG_LOG("[START_BRUTE] Getting popup view...");
+    // Set back callback for brute force view with context
+    View* popup_view = popup_get_view(instance->popup);
+    DEBUG_LOG("[START_BRUTE] Popup view ptr: %p", popup_view);
+    if(!popup_view) {
+        ERROR_LOG("[START_BRUTE] ERROR: popup_view is NULL");
+        furi_mutex_release(instance->thread_mutex);
+        return;
+    }
+    
+    DEBUG_LOG("[START_BRUTE] Setting view context and callback...");
+    view_set_context(popup_view, instance);
+    view_set_previous_callback(popup_view, uid_brute_smarter_brute_back_callback);
+    
+    DEBUG_LOG("[START_BRUTE] Switching to brute force view...");
     view_dispatcher_switch_to_view(instance->view_dispatcher, UidBruteSmarterViewBrute);
     
-    // Start brute force worker
-    FuriThread* brute_thread = furi_thread_alloc();
-    furi_thread_set_name(brute_thread, "BruteWorker");
-    furi_thread_set_stack_size(brute_thread, BRUTE_THREAD_STACK_SIZE);
-    furi_thread_set_context(brute_thread, instance);
-    furi_thread_set_callback(brute_thread, uid_brute_smarter_brute_worker);
-    furi_thread_start(brute_thread);
+    DEBUG_LOG("[START_BRUTE] Allocating thread...");
+    // Create thread BEFORE starting timer to avoid race condition
+    instance->brute_thread = furi_thread_alloc();
+    if(!instance->brute_thread) {
+        ERROR_LOG("[START_BRUTE] ERROR: Failed to allocate thread");
+        furi_mutex_release(instance->thread_mutex);
+        popup_set_header(instance->popup, "Error", 64, 20, AlignCenter, AlignTop);
+        popup_set_text(instance->popup, "Thread allocation failed", 64, 40, AlignCenter, AlignTop);
+        popup_set_timeout(instance->popup, POPUP_TIMEOUT_MS);
+        popup_enable_timeout(instance->popup);
+        return;
+    }
     
-    // Wait for thread to complete or user to stop
-    furi_thread_join(brute_thread);
-    furi_thread_free(brute_thread);
+    DEBUG_LOG("[START_BRUTE] Thread allocated: %p", instance->brute_thread);
+    DEBUG_LOG("[START_BRUTE] Setting thread properties...");
+    furi_thread_set_name(instance->brute_thread, "BruteWorker");
+    furi_thread_set_stack_size(instance->brute_thread, BRUTE_THREAD_STACK_SIZE);
+    furi_thread_set_context(instance->brute_thread, instance);
+    furi_thread_set_callback(instance->brute_thread, uid_brute_smarter_brute_worker);
+    
+    DEBUG_LOG("[START_BRUTE] Starting timer (100ms interval)...");
+    // Start timer to update GUI from main thread BEFORE starting thread
+    furi_timer_start(instance->brute_timer, 100);
+    DEBUG_LOG("[START_BRUTE] Timer started, result should be FuriStatusOk");
+    
+    DEBUG_LOG("[START_BRUTE] Starting thread execution...");
+    // Start the thread - it will run in background
+    furi_thread_start(instance->brute_thread);
+    
+    // Release mutex now that thread is created and timer is running
+    furi_mutex_release(instance->thread_mutex);
+    
+    DEBUG_LOG("[START_BRUTE] === EXITING START_BRUTE_FORCE SUCCESS ===");
 }
 
 static void uid_brute_smarter_config_delay_change(VariableItem* item) {
@@ -721,6 +1076,75 @@ static void uid_brute_smarter_config_pause_duration_change(VariableItem* item) {
     variable_item_set_current_value_text(item, duration_str);
 }
 
+static uint32_t uid_brute_smarter_config_back_callback(void* context) {
+    UNUSED(context);
+    
+    DEBUG_LOG("[CONFIG] Back button pressed, returning to main menu");
+    return UidBruteSmarterViewMenu;
+}
+
+static uint32_t uid_brute_smarter_key_list_back_callback(void* context) {
+    UNUSED(context);
+    
+    DEBUG_LOG("[KEY_LIST] Back button pressed, returning to main menu");
+    
+    // Simply return to the main menu view - no need to rebuild since it's a separate submenu
+    return UidBruteSmarterViewMenu;
+}
+
+static uint32_t uid_brute_smarter_brute_back_callback(void* context) {
+    DEBUG_LOG("[BACK] === BACK CALLBACK TRIGGERED ===");
+    UidBruteSmarter* instance = (UidBruteSmarter*)context;
+    DEBUG_LOG("[BACK] Instance: %p", instance);
+    
+    if(!instance) {
+        ERROR_LOG("[BACK] NULL instance in back callback!");
+        return UidBruteSmarterViewMenu;
+    }
+    
+    DEBUG_LOG("[BACK] Stopping brute force...");
+    
+    // Set stopping flag first to prevent race conditions
+    instance->thread_stopping = true;
+    
+    // Stop the timer
+    if(instance->brute_timer) {
+        furi_timer_stop(instance->brute_timer);
+    }
+    
+    // Signal the brute force thread to stop
+    if(instance->app) {
+        instance->app->should_stop = true;
+    }
+    
+    // Acquire mutex for thread cleanup
+    furi_mutex_acquire(instance->thread_mutex, FuriWaitForever);
+    
+    // If thread exists, clean it up
+    if(instance->brute_thread) {
+        FuriThreadState state = furi_thread_get_state(instance->brute_thread);
+        if(state == FuriThreadStateRunning) {
+            DEBUG_LOG("[BRUTE] Waiting for thread to stop...");
+            // Release mutex while waiting for thread to avoid deadlock
+            furi_mutex_release(instance->thread_mutex);
+            furi_thread_join(instance->brute_thread);
+            furi_mutex_acquire(instance->thread_mutex, FuriWaitForever);
+        }
+        
+        // Now safe to free the thread
+        furi_thread_free(instance->brute_thread);
+        instance->brute_thread = NULL;
+    }
+    
+    // Reset the stopping flag
+    instance->thread_stopping = false;
+    
+    furi_mutex_release(instance->thread_mutex);
+    
+    // Return to main menu
+    return UidBruteSmarterViewMenu;
+}
+
 static void uid_brute_smarter_setup_config(UidBruteSmarter* instance) {
     variable_item_list_reset(instance->variable_item_list);
     
@@ -751,9 +1175,10 @@ static void uid_brute_smarter_setup_config(UidBruteSmarter* instance) {
     variable_item_set_current_value_index(item, instance->app->pause_duration_s);
     variable_item_set_current_value_text(item, value_str);
     
+    // Set previous callback to handle back button
     view_set_previous_callback(
         variable_item_list_get_view(instance->variable_item_list), 
-        uid_brute_smarter_exit_callback);
+        uid_brute_smarter_config_back_callback);
 }
 
 static void uid_brute_smarter_setup_menu(UidBruteSmarter* instance) {
@@ -766,6 +1191,8 @@ static void uid_brute_smarter_setup_menu(UidBruteSmarter* instance) {
     
     view_set_previous_callback(submenu_get_view(instance->submenu), uid_brute_smarter_exit_callback);
 }
+
+// Removed - not needed with proper view handling
 
 int32_t uid_brute_smarter_app(void* p) {
     UNUSED(p);

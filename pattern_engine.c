@@ -41,10 +41,14 @@
 #include <string.h>
 #define TAG "PatternEngine"
 #define FURI_LOG_E(tag, ...) (void)(tag)
+#define FURI_LOG_W(tag, ...) (void)(tag)
 #define FURI_LOG_D(tag, ...) (void)(tag)
 #define FURI_LOG_I(tag, ...) (void)(tag)
 #define furi_assert(condition) (void)(condition)
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
 #endif
+
+
 
 #define TAG "PatternEngine"
 #define MAX_RANGE_SIZE 1000
@@ -63,12 +67,18 @@ bool pattern_engine_detect(const uint32_t* uids, uint8_t count, PatternResult* r
     }
     
     if(count == 1) {
-        // Single card - use default range expansion
+        // Single card - use conservative range expansion
         result->type = PatternUnknown;
-        result->start_uid = (uids[0] > 256) ? uids[0] - 256 : 0;
-        result->end_uid = (uids[0] < 0xFFFFFF00) ? uids[0] + 256 : 0xFFFFFFFF;
+        result->start_uid = (uids[0] > 100) ? uids[0] - 100 : 0;
+        result->end_uid = (uids[0] < 0xFFFFFF9B) ? uids[0] + 100 : 0xFFFFFFFF;
         result->step = 1;
         result->range_size = (result->end_uid - result->start_uid) + 1;
+        
+        // Ensure range doesn't exceed MAX_RANGE_SIZE
+        if(result->range_size > MAX_RANGE_SIZE) {
+            result->range_size = MAX_RANGE_SIZE;
+            result->end_uid = result->start_uid + MAX_RANGE_SIZE - 1;
+        }
         return true;
     }
     
@@ -89,11 +99,17 @@ bool pattern_engine_detect(const uint32_t* uids, uint8_t count, PatternResult* r
     
     if(is_inc1) {
         result->type = PatternInc1;
-        // Expand range by 128 in each direction
-        result->start_uid = (uids[0] > 128) ? uids[0] - 128 : 0;
-        result->end_uid = (uids[count - 1] < 0xFFFFFF80) ? uids[count - 1] + 128 : 0xFFFFFFFF;
+        // Expand range by 100 in each direction (reduced from 128)
+        result->start_uid = (uids[0] > 100) ? uids[0] - 100 : 0;
+        result->end_uid = (uids[count - 1] < 0xFFFFFF9B) ? uids[count - 1] + 100 : 0xFFFFFFFF;
         result->step = 1;
         result->range_size = (result->end_uid - result->start_uid) + 1;
+        
+        // Ensure range doesn't exceed MAX_RANGE_SIZE
+        if(result->range_size > MAX_RANGE_SIZE) {
+            result->range_size = MAX_RANGE_SIZE;
+            result->end_uid = result->start_uid + MAX_RANGE_SIZE - 1;
+        }
         return true;
     }
     
@@ -111,12 +127,18 @@ bool pattern_engine_detect(const uint32_t* uids, uint8_t count, PatternResult* r
         
         if(is_inc_k) {
             result->type = PatternIncK;
-            // Expand range by 10 steps in each direction
-            uint32_t expand = 10 * k;
+            // Expand range by 5 steps in each direction (reduced from 10)
+            uint32_t expand = 5 * k;
             result->start_uid = (uids[0] > expand) ? uids[0] - expand : 0;
             result->end_uid = (uids[count - 1] < (0xFFFFFFFF - expand)) ? uids[count - 1] + expand : 0xFFFFFFFF;
             result->step = k;
             result->range_size = ((result->end_uid - result->start_uid) / k) + 1;
+            
+            // Ensure range doesn't exceed MAX_RANGE_SIZE
+            if(result->range_size > MAX_RANGE_SIZE) {
+                result->range_size = MAX_RANGE_SIZE;
+                result->end_uid = result->start_uid + (MAX_RANGE_SIZE - 1) * k;
+            }
             return true;
         }
     }
@@ -132,16 +154,27 @@ bool pattern_engine_detect(const uint32_t* uids, uint8_t count, PatternResult* r
     
     if(is_le16) {
         result->type = PatternLe16;
-        // For 16-bit counter, generate full 16-bit range
+        // For 16-bit counter, limit to MAX_RANGE_SIZE instead of full range
         uint32_t base = uids[0] & 0xFFFF0000;
-        result->start_uid = base;
-        result->end_uid = base | 0x0000FFFF;
+        uint32_t offset = uids[0] & 0x0000FFFF;
+        
+        // Create a limited range around the detected offset
+        uint32_t start_offset = (offset > 500) ? offset - 500 : 0;
+        uint32_t end_offset = (offset < 65035) ? offset + 500 : 0xFFFF;
+        
+        // Ensure range doesn't exceed MAX_RANGE_SIZE
+        if((end_offset - start_offset + 1) > MAX_RANGE_SIZE) {
+            end_offset = start_offset + MAX_RANGE_SIZE - 1;
+        }
+        
+        result->start_uid = base | start_offset;
+        result->end_uid = base | end_offset;
         result->step = 1;
-        result->range_size = 65536; // Full 16-bit range
+        result->range_size = (result->end_uid - result->start_uid) + 1;
         return true;
     }
     
-    // Unknown pattern - expand around min/max values
+    // Unknown pattern - expand around min/max values with constraints
     result->type = PatternUnknown;
     
     uint32_t min_uid = uids[0];
@@ -152,11 +185,29 @@ bool pattern_engine_detect(const uint32_t* uids, uint8_t count, PatternResult* r
         if(uids[i] > max_uid) max_uid = uids[i];
     }
     
-    // Expand by 256 in each direction
-    result->start_uid = (min_uid > 256) ? min_uid - 256 : 0;
-    result->end_uid = (max_uid < 0xFFFFFF00) ? max_uid + 256 : 0xFFFFFFFF;
+    // Calculate the gap between min and max
+    uint32_t gap = max_uid - min_uid;
+    
+    // Use conservative expansion based on gap size
+    uint32_t expansion = 100;
+    if(gap > 1000) {
+        // For very large gaps, use minimal expansion
+        expansion = 50;
+    } else if(gap > 100) {
+        // For medium gaps, reduce expansion
+        expansion = 75;
+    }
+    
+    result->start_uid = (min_uid > expansion) ? min_uid - expansion : 0;
+    result->end_uid = (max_uid < (0xFFFFFFFF - expansion)) ? max_uid + expansion : 0xFFFFFFFF;
     result->step = 1;
     result->range_size = (result->end_uid - result->start_uid) + 1;
+    
+    // Ensure range doesn't exceed MAX_RANGE_SIZE
+    if(result->range_size > MAX_RANGE_SIZE) {
+        result->range_size = MAX_RANGE_SIZE;
+        result->end_uid = result->start_uid + MAX_RANGE_SIZE - 1;
+    }
     
     return true;
 }
@@ -169,6 +220,9 @@ bool pattern_engine_build_range(
     furi_assert(result);
     furi_assert(range);
     furi_assert(actual_size);
+    
+    FURI_LOG_D(TAG, "[BUILD_RANGE] Starting build: start=%08lX, end=%08lX, step=%lu, range_size=%lu", 
+               result->start_uid, result->end_uid, result->step, result->range_size);
     
     if(result->start_uid > result->end_uid) {
         FURI_LOG_E(TAG, "Invalid range: start=%lu > end=%lu", 
@@ -190,13 +244,33 @@ bool pattern_engine_build_range(
     *actual_size = 0;
     uint32_t current = result->start_uid;
     
-    while(current <= result->end_uid && *actual_size < range_size) {
+    // Safety check: ensure we don't overflow the range buffer
+    uint16_t max_iterations = MIN(range_size, result->range_size);
+    FURI_LOG_D(TAG, "[BUILD_RANGE] Max iterations: %d", max_iterations);
+    
+    while(current <= result->end_uid && *actual_size < max_iterations) {
         range[*actual_size] = current;
         (*actual_size)++;
         current += result->step;
+        
+        // Additional safety check to prevent infinite loops
+        if(*actual_size >= MAX_RANGE_SIZE) {
+            FURI_LOG_W(TAG, "[BUILD_RANGE] Reached MAX_RANGE_SIZE limit");
+            break;
+        }
+        
+        // Log progress every 50 iterations
+        if(*actual_size % 50 == 0) {
+            FURI_LOG_D(TAG, "[BUILD_RANGE] Progress: %d/%d, current=%08lX", 
+                      *actual_size, max_iterations, current);
+        }
     }
     
-    FURI_LOG_I(TAG, "Built range with %d UIDs", *actual_size);
+    FURI_LOG_I(TAG, "[BUILD_RANGE] Completed: built range with %d UIDs", *actual_size);
+    if(*actual_size > 0) {
+        FURI_LOG_D(TAG, "[BUILD_RANGE] First UID: %08lX, Last UID: %08lX", 
+                  range[0], range[*actual_size-1]);
+    }
     return true;
 }
 
@@ -215,19 +289,28 @@ const char* pattern_engine_get_name(PatternType type) {
 }
 
 bool pattern_engine_validate_range(uint32_t start, uint32_t end, uint32_t step) {
+    FURI_LOG_D(TAG, "[VALIDATE_RANGE] Validating: start=%08lX, end=%08lX, step=%lu", 
+               start, end, step);
+    
     if(step == 0) {
+        FURI_LOG_E(TAG, "[VALIDATE_RANGE] Invalid step: 0");
         return false;
     }
     
     if(start >= end) {
+        FURI_LOG_E(TAG, "[VALIDATE_RANGE] Invalid range: start >= end");
         return false;
     }
     
     // Check if range is too large
     uint64_t range_size = ((uint64_t)end - (uint64_t)start) / (uint64_t)step + 1;
+    FURI_LOG_D(TAG, "[VALIDATE_RANGE] Calculated range_size: %llu", range_size);
+    
     if(range_size > MAX_RANGE_SIZE) {
+        FURI_LOG_E(TAG, "[VALIDATE_RANGE] Range too large: %llu > %d", range_size, MAX_RANGE_SIZE);
         return false;
     }
     
+    FURI_LOG_D(TAG, "[VALIDATE_RANGE] Range validation successful");
     return true;
 }

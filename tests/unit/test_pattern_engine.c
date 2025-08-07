@@ -1,5 +1,5 @@
 /* Comprehensive unit tests for pattern engine */
-#include "unity/unity.h"
+#include "../unity/unity.h"
 #include "../mocks/furi_mock.h"
 #include "../../pattern_engine.h"
 

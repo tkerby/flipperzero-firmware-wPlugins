@@ -3,7 +3,7 @@
 
 # Compiler settings
 CC = gcc
-CFLAGS = -Wall -Wextra -std=c99 -g -O0 -I../ -I./unity -I./mocks -DUNIT_TEST
+CFLAGS = -Wall -Wextra -std=c99 -g -O0 -I../ -I../unity -I./mocks -DUNIT_TEST
 LDFLAGS = 
 
 # Add coverage flags if not disabled
@@ -64,8 +64,32 @@ test-key: unity/unity.o mocks/furi_mock.o
 	$(CC) $(CFLAGS) unit/test_key_management.c unity/unity.o mocks/furi_mock.o -o $(BUILD_DIR)/test_key_management
 	./$(BUILD_DIR)/test_key_management
 
+# Menu navigation tests
+test-menu: unity/unity.o mocks/furi_mock.o
+	@mkdir -p $(BUILD_DIR)
+	$(CC) $(CFLAGS) unit/test_menu_navigation.c unity/unity.o mocks/furi_mock.o -o $(BUILD_DIR)/test_menu_navigation
+	./$(BUILD_DIR)/test_menu_navigation
+
+# Brute force completion tests
+test-brute: unity/unity.o mocks/furi_mock.o
+	@mkdir -p $(BUILD_DIR)
+	$(CC) $(CFLAGS) unit/test_brute_force_completion.c unity/unity.o mocks/furi_mock.o -o $(BUILD_DIR)/test_brute_force_completion
+	./$(BUILD_DIR)/test_brute_force_completion
+
+# UI state management tests
+test-ui: unity/unity.o mocks/furi_mock.o
+	@mkdir -p $(BUILD_DIR)
+	$(CC) $(CFLAGS) unit/test_ui_state_management.c unity/unity.o mocks/furi_mock.o -o $(BUILD_DIR)/test_ui_state_management
+	./$(BUILD_DIR)/test_ui_state_management
+
+# Config callback tests
+test-config: unity/unity.o mocks/furi_mock.o
+	@mkdir -p $(BUILD_DIR)
+	$(CC) $(CFLAGS) unit/test_config_callback.c unity/unity.o mocks/furi_mock.o -o $(BUILD_DIR)/test_config_callback
+	./$(BUILD_DIR)/test_config_callback
+
 # Run all tests
-test: test-pattern test-nfc test-key
+test: test-pattern test-nfc test-key test-menu test-brute test-ui test-config
 	@echo "✅ All tests completed successfully!"
 
 # Generate coverage report
@@ -119,10 +143,13 @@ help:
 	@echo "  make test-pattern  - Run pattern engine tests only"
 	@echo "  make test-nfc      - Run NFC parser tests only"
 	@echo "  make test-key      - Run key management tests only"
+	@echo "  make test-menu     - Run menu navigation tests only"
+	@echo "  make test-config   - Run config callback tests only"
+	@echo "  make test-brute    - Run brute force completion tests only"
+	@echo "  make test-ui       - Run UI state management tests only"
 	@echo "  make coverage      - Run tests and generate coverage report"
 	@echo "  make coverage-check - Show coverage summary"
 	@echo "  make clean         - Clean build artifacts"
-	@echo "  make help          - Show this help"
 	@echo ""
 	@echo "Quick start:"
 	@echo "  make dev-setup && make test && make coverage"

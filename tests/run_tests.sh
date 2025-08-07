@@ -78,6 +78,34 @@ run_tests() {
     log_success "All unit tests passed!"
 }
 
+# Run specific test categories
+run_menu_tests() {
+    log_info "Running menu navigation tests..."
+    
+    cd "$TEST_DIR"
+    make test-menu
+    
+    log_success "Menu navigation tests passed!"
+}
+
+run_brute_tests() {
+    log_info "Running brute force completion tests..."
+    
+    cd "$TEST_DIR"
+    make test-brute
+    
+    log_success "Brute force completion tests passed!"
+}
+
+run_ui_tests() {
+    log_info "Running UI state management tests..."
+    
+    cd "$TEST_DIR"
+    make test-ui
+    
+    log_success "UI state management tests passed!"
+}
+
 # Generate coverage report
 generate_coverage() {
     log_info "Generating coverage report..."
@@ -168,6 +196,9 @@ show_usage() {
     echo "Options:"
     echo "  -h, --help      Show this help message"
     echo "  -t, --test      Run unit tests only"
+    echo "  -m, --menu      Run menu navigation tests only"
+    echo "  -b, --brute     Run brute force completion tests only"
+    echo "  -u, --ui        Run UI state management tests only"
     echo "  -c, --coverage  Run tests with coverage"
     echo "  -q, --quick     Run quick checks"
     echo "  -a, --all       Run tests, coverage, and checks"
@@ -176,6 +207,9 @@ show_usage() {
     echo "Examples:"
     echo "  $0 --all        Run complete test suite"
     echo "  $0 --test       Run tests only"
+    echo "  $0 --menu       Run menu navigation tests"
+    echo "  $0 --brute      Run brute force completion tests"
+    echo "  $0 --ui         Run UI state management tests"
     echo "  $0 --coverage   Run tests with coverage"
 }
 
@@ -192,6 +226,18 @@ main() {
                 ;;
             -t|--test)
                 action="test"
+                shift
+                ;;
+            -m|--menu)
+                action="menu"
+                shift
+                ;;
+            -b|--brute)
+                action="brute"
+                shift
+                ;;
+            -u|--ui)
+                action="ui"
                 shift
                 ;;
             -c|--coverage)
@@ -226,6 +272,18 @@ main() {
         "test")
             check_dependencies
             run_tests
+            ;;
+        "menu")
+            check_dependencies
+            run_menu_tests
+            ;;
+        "brute")
+            check_dependencies
+            run_brute_tests
+            ;;
+        "ui")
+            check_dependencies
+            run_ui_tests
             ;;
         "coverage")
             check_dependencies

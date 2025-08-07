@@ -1,5 +1,5 @@
 /* Comprehensive unit tests for NFC file parsing */
-#include "unity/unity.h"
+#include "../unity/unity.h"
 #include "../mocks/furi_mock.h"
 #include <stdio.h>
 #include <stdlib.h>
