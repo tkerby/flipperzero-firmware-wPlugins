@@ -7,7 +7,9 @@ static int32_t mouse_jiggler_worker_thread_callback(void* context) {
         if (instance->is_jiggle) {
             furi_hal_hid_mouse_move(instance->mouse_move_dx, 0);
             instance->mouse_move_dx = -(instance->mouse_move_dx);
-            for (uint32_t delay = 0; instance->is_running && delay < instance->delay_value; delay += MOUSE_JIGGLER_DELAY_MS) {
+            for (uint32_t delay = 0;
+                instance->is_running && instance->is_jiggle && delay < instance->delay_value;
+                delay += MOUSE_JIGGLER_DELAY_MS) {
                 furi_delay_ms(MOUSE_JIGGLER_DELAY_MS);
             }
         } else {
@@ -27,24 +29,24 @@ MouseJigglerWorker* mouse_jiggler_worker_alloc() {
     instance->is_running = false;
     instance->is_jiggle = false;
     instance->delay_index = 0;
-    instance->delay_value = mouse_jiggler_interval_values[0];
+    instance->delay_value = MOUSE_JIGGLER_INTERVAL_MS[0];
     instance->mouse_move_dx = MOUSE_JIGGLER_MOUSE_MOVE_DX;
     return instance;
 }
 
-void mouse_jiggler_worker_free(MouseJigglerWorker *instance) {
+void mouse_jiggler_worker_free(MouseJigglerWorker* instance) {
     furi_check(instance);
     furi_thread_free(instance->thread);
 }
 
-void mouse_jiggler_worker_start(MouseJigglerWorker *instance) {
+void mouse_jiggler_worker_start(MouseJigglerWorker* instance) {
     furi_check(instance);
     furi_check(instance->is_running == false);
     furi_thread_start(instance->thread);
     instance->is_running = true;
 }
 
-void mouse_jiggler_worker_stop(MouseJigglerWorker *instance) {
+void mouse_jiggler_worker_stop(MouseJigglerWorker* instance) {
     furi_check(instance);
     furi_check(instance->is_running == true);
     instance->is_jiggle = false;
@@ -52,13 +54,29 @@ void mouse_jiggler_worker_stop(MouseJigglerWorker *instance) {
     furi_thread_join(instance->thread);
 }
 
-void mouse_jiggler_worker_set_delay(MouseJigglerWorker *instance) {
-    furi_check(instance);
-    furi_check(instance->is_jiggle == false);
-    instance->delay_value = mouse_jiggler_interval_values[instance->delay_index];
-}
-
-void mouse_jiggler_worker_toggle_jiggle(MouseJigglerWorker *instance) {
+void mouse_jiggler_worker_toggle_jiggle(MouseJigglerWorker* instance) {
     furi_check(instance);
     instance->is_jiggle = !(instance->is_jiggle);
+}
+
+bool mouse_jiggler_worker_increase_delay(MouseJigglerWorker* instance) {
+    furi_check(instance);
+    furi_check(instance->is_jiggle == false);
+    if (instance->delay_index == MOUSE_JIGGLER_INTERVAL_N - 1) {
+        return false;
+    }
+    instance->delay_index++;
+    instance->delay_value = MOUSE_JIGGLER_INTERVAL_MS[instance->delay_index];
+    return true;
+}
+
+bool mouse_jiggler_worker_decrease_delay(MouseJigglerWorker* instance) {
+    furi_check(instance);
+    furi_check(instance->is_jiggle == false);
+    if (instance->delay_index == 0) {
+        return false;
+    }
+    instance->delay_index--;
+    instance->delay_value = MOUSE_JIGGLER_INTERVAL_MS[instance->delay_index];
+    return true;
 }
