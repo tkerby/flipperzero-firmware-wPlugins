@@ -15,6 +15,7 @@ typedef struct {
     int last_calculated_piece_x;
     int last_calculated_piece_y;
     bool game_over;
+    int difficulty_level;
     int board_state[11][6];
 } JumpingPawnsModel;
 

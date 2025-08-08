@@ -15,14 +15,11 @@
 
 typedef enum {
     JumpingPawnsSubmenu,
+    JumpingPawnsDifficultySubmenu, // NEW
     JumpingPawnsPlayView,
     JumpingPawnsViewTutorial,
     JumpingPawnsAbout,
 } JumpingPawnsViews;
-
-typedef enum {
-    JumpingPawnsRedrawEventId = 0
-} JumpingPawnsEventId;
 
 typedef enum {
     JumpingPawnsPlayPvPIndex,
@@ -31,10 +28,21 @@ typedef enum {
     JumpingPawnsAboutIndex,
 } JumpingPawnsSubmenuIndex;
 
+typedef enum {
+    JumpingPawnsEasyIndex,
+    JumpingPawnsMediumIndex,
+    JumpingPawnsHardIndex,
+} JumpingPawnsDifficultyIndex;
+
+typedef enum {
+    JumpingPawnsRedrawEventId = 0
+} JumpingPawnsEventId;
+
 typedef struct {
     ViewDispatcher* view_dispatcher;
     NotificationApp* notifications;
     Submenu* submenu;
+    Submenu* difficulty_submenu;
     View* view;
     Widget* widget_tutorial;
     Widget* widget_about;
@@ -53,43 +61,6 @@ void end_turn(void* context) {
         }
     }
 }
-
-// void find_jumps(int board[11][6], int x, int y) {
-//     int dx[] = {0, 0, -1, 1};
-//     int dy[] = {-1, 1, 0, 0};
-
-//     for (int dir = 0; dir < 4; dir++) {
-//         // Check for a pawn in the adjacent square to begin a jump
-//         int first_pawn_x = x + dx[dir];
-//         int first_pawn_y = y + dy[dir];
-
-//         if (first_pawn_x >= 0 && first_pawn_x < 6 && first_pawn_y >= 0 && first_pawn_y < 11 && board[first_pawn_y][first_pawn_x] != 0 && board[first_pawn_y][first_pawn_x] != 3) {
-            
-//             // Traverse from the first pawn to find the end of the clump
-//             int last_pawn_x = first_pawn_x;
-//             int last_pawn_y = first_pawn_y;
-//             int next_x = last_pawn_x + dx[dir];
-//             int next_y = last_pawn_y + dy[dir];
-
-//             while (next_x >= 0 && next_x < 6 && next_y >= 0 && next_y < 11 && board[next_y][next_x] != 0 && board[next_y][next_x] != 3) {
-//                 last_pawn_x = next_x;
-//                 last_pawn_y = next_y;
-//                 next_x = last_pawn_x + dx[dir];
-//                 next_y = last_pawn_y + dy[dir];
-//             }
-
-//             // The square after the last pawn is the landing spot
-//             int landing_x = next_x;
-//             int landing_y = next_y;
-
-//             // Check if the landing spot is a valid, empty tile
-//             if (landing_x >= 0 && landing_x < 6 && landing_y >= 0 && landing_y < 11 && board[landing_y][landing_x] == 0) {
-//                 board[landing_y][landing_x] = 3; // Mark as valid move
-//                 find_jumps(board, landing_x, landing_y); // Recurse
-//             }
-//         }
-//     }
-// }
 
 void find_jumps(int board[11][6], int x, int y) {
     int dx[] = {0, 0, -1, 1}; // directions: up, down, left, right
@@ -164,7 +135,6 @@ void find_jumps(int board[11][6], int x, int y) {
     }
 }
 
-
 void check_for_game_end(void* context) {
     JumpingPawnsApp* app = (JumpingPawnsApp*)context;
     JumpingPawnsModel* model = view_get_model(app->view);
@@ -198,92 +168,6 @@ void check_for_game_end(void* context) {
         model->game_over = true;
     }
 }
-
-// void player_moving(void* context) {
-//     JumpingPawnsApp* app = (JumpingPawnsApp*)context;
-//     JumpingPawnsModel* model = view_get_model(app->view);
-//     int flipped[11][6];
-
-//     // if selected square was a dot, then move a piece there instead of displaying more dots
-//     int sx = model->selected_x - 1;
-//     int sy = model->selected_y - 1;
-
-//     if(strcmp(model->whose_turn, "player2") == 0) {
-//         sx = 5 - sx;
-//         sy = 10 - sy;
-//     }
-
-//     if (model->board_state[sy][sx] == 3) {
-//         model->board_state[model->last_calculated_piece_y - 1][model->last_calculated_piece_x - 1] = 0;
-//         int piece_value = strcmp(model->whose_turn, "player2") == 0 ? 2 : 1;
-//         model->board_state[sy][sx] = piece_value;
-
-//         // Clear previous move indicators (number 3 in board_state)
-//         for (int y = 0; y < 11; y++) {
-//             for (int x = 0; x < 6; x++) {
-//                 if (model->board_state[y][x] == 3) {
-//                     model->board_state[y][x] = 0;
-//                 }
-//             }
-//         }
-
-//         check_for_game_end(context);
-
-//         if (strcmp(model->ai_or_player, "ai") == 0) {
-//             ai_move(model);
-//         } else {
-//             end_turn(app);
-//         }
-//         return;
-//     }
-
-//     if(strcmp(model->whose_turn, "player2") == 0) {
-//         model->last_calculated_piece_x = 6 - model->selected_x;
-//         model->last_calculated_piece_y = 12 - model->selected_y;
-//     } else {
-//         model->last_calculated_piece_x = model->selected_x;
-//         model->last_calculated_piece_y = model->selected_y;
-//     }
-
-//     // Clear previous move indicators
-//     for (int y = 0; y < 11; y++) {
-//         for (int x = 0; x < 6; x++) {
-//             if (model->board_state[y][x] == 3) {
-//                 model->board_state[y][x] = 0;
-//             }
-//         }
-//     }
-
-//     if(strcmp(model->whose_turn, "player2") == 0) {
-//         for(int i = 0; i < 11; i++) {
-//             for(int j = 0; j < 6; j++) {
-//                 flipped[i][j] = model->board_state[10 - i][5 - j];
-//             }
-//         }
-
-//         int sx = model->selected_x - 1;
-//         int sy = model->selected_y - 1;
-
-//         if (flipped[sy][sx] != 2) return;
-
-//         find_jumps(flipped, sx, sy);
-
-//         for (int i = 0; i < 11; i++) {
-//             for (int j = 0; j < 6; j++) {
-//                 if (flipped[i][j] == 3) {
-//                     model->board_state[10 - i][5 - j] = 3;
-//                 }
-//             }
-//         }
-//     } else {
-//         int sx = model->selected_x - 1;
-//         int sy = model->selected_y - 1;
-
-//         if (model->board_state[sy][sx] != 1) return;
-
-//         find_jumps(model->board_state, sx, sy);
-//     }
-// }
 
 void player_moving(void* context) {
     JumpingPawnsApp* app = (JumpingPawnsApp*)context;
@@ -407,26 +291,65 @@ static void submenu_callback(void* context, uint32_t index) {
         {1, 1, 1, 1, 1, 1}
     };
 
+    // reset board
+    memcpy(model->board_state, temp_board, sizeof(temp_board));
+
     switch(index) {
     case JumpingPawnsPlayPvPIndex:
         model->ai_or_player = "player";
         model->whose_turn = "player1";
-        // reset board
-        memcpy(model->board_state, temp_board, sizeof(temp_board));
         view_dispatcher_switch_to_view(app->view_dispatcher, JumpingPawnsPlayView);
         break;
     case JumpingPawnsPlayPvEIndex:
         model->ai_or_player = "ai";
         model->whose_turn = "player";
-        // reset board
-        memcpy(model->board_state, temp_board, sizeof(temp_board));
-        view_dispatcher_switch_to_view(app->view_dispatcher, JumpingPawnsPlayView);
+        view_dispatcher_switch_to_view(app->view_dispatcher, JumpingPawnsDifficultySubmenu);
         break;
     case JumpingPawnsTutorialIndex:
         view_dispatcher_switch_to_view(app->view_dispatcher, JumpingPawnsViewTutorial);
         break;
     case JumpingPawnsAboutIndex:
         view_dispatcher_switch_to_view(app->view_dispatcher, JumpingPawnsAbout);
+        break;
+    default:
+        break;
+    }
+}
+
+static void difficulty_submenu_callback(void* context, uint32_t index) {
+    UNUSED(index);
+    JumpingPawnsApp* app = (JumpingPawnsApp*)context;
+    JumpingPawnsModel* model = view_get_model(app->view);
+
+    int temp_board[11][6] = {
+        {2, 2, 2, 2, 2, 2},
+        {2, 2, 2, 2, 2, 2},
+        {0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0},
+        {1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 1, 1}
+    };
+
+    // reset board
+    memcpy(model->board_state, temp_board, sizeof(temp_board));
+
+    switch(index) {
+    case JumpingPawnsEasyIndex:
+        model->difficulty_level = 1;
+        view_dispatcher_switch_to_view(app->view_dispatcher, JumpingPawnsPlayView);
+        break;
+    case JumpingPawnsMediumIndex:
+        model->difficulty_level = 2;
+        view_dispatcher_switch_to_view(app->view_dispatcher, JumpingPawnsPlayView);
+        break;
+    case JumpingPawnsHardIndex:
+        model->difficulty_level = 3;
+        view_dispatcher_switch_to_view(app->view_dispatcher, JumpingPawnsPlayView);
         break;
     default:
         break;
@@ -440,6 +363,7 @@ static void jumping_pawns_draw_callback(Canvas* canvas, void* model) {
     canvas_set_font(canvas, FontSecondary);
 
     if (my_model->game_over) {
+        canvas_clear(canvas);
         canvas_draw_str(canvas, 15, 15, "Game over!");
     }
 
@@ -705,6 +629,13 @@ static JumpingPawnsApp* jumping_pawns_alloc() {
     view_dispatcher_add_view(app->view_dispatcher, JumpingPawnsSubmenu, submenu_get_view(app->submenu));
     view_dispatcher_switch_to_view(app->view_dispatcher, JumpingPawnsSubmenu);
 
+    app->difficulty_submenu = submenu_alloc();
+    submenu_add_item(app->difficulty_submenu, "Easy", JumpingPawnsEasyIndex, difficulty_submenu_callback, app);
+    submenu_add_item(app->difficulty_submenu, "Medium", JumpingPawnsMediumIndex, difficulty_submenu_callback, app);
+    submenu_add_item(app->difficulty_submenu, "Hard", JumpingPawnsHardIndex, difficulty_submenu_callback, app);
+    view_set_previous_callback(submenu_get_view(app->difficulty_submenu), navigation_submenu_callback);
+    view_dispatcher_add_view(app->view_dispatcher, JumpingPawnsDifficultySubmenu, submenu_get_view(app->difficulty_submenu));
+
     app->view = view_alloc();
     view_set_draw_callback(app->view, jumping_pawns_draw_callback);
     view_set_input_callback(app->view, jumping_pawns_input_callback);
@@ -719,11 +650,10 @@ static JumpingPawnsApp* jumping_pawns_alloc() {
     model->whose_turn = "";
     model->selected_x = 1;
     model->selected_y = 1;
-    // used to keep track of which piece to move once a move option is selected
     model->last_calculated_piece_x = 0;
     model->last_calculated_piece_y = 0;
     model->game_over = false;
-
+    model->difficulty_level = 1;
     int temp_board[11][6] = {
         {2, 2, 2, 2, 2, 2},
         {2, 2, 2, 2, 2, 2},
@@ -737,7 +667,6 @@ static JumpingPawnsApp* jumping_pawns_alloc() {
         {1, 1, 1, 1, 1, 1},
         {1, 1, 1, 1, 1, 1}
     };
-
     memcpy(model->board_state, temp_board, sizeof(temp_board));
 
     view_dispatcher_add_view(app->view_dispatcher, JumpingPawnsPlayView, app->view);
@@ -750,7 +679,7 @@ static JumpingPawnsApp* jumping_pawns_alloc() {
         128,
         64,
         "How to play:\n\n"
-        "You and your opponent have 12 pawns. These pawns can only move by jumping over other groups of pawns. The pawns can jump horizontally and vertically, but not diagonally. Pawns can also jump over multiple pawn groups. Your goal is to get all of your pawns to the two rows opposite your side.");
+        "You and your opponent have 12 pawns. These pawns can only move by jumping over other groups of pawns. The pawns can jump horizontally and vertically, but not diagonally. Pawns can also jump over multiple pawn groups. Your goal is to get all of your pawns to the two rows opposite your side before your opponent.");
     view_set_previous_callback(widget_get_view(app->widget_tutorial), navigation_submenu_callback);
     view_dispatcher_add_view(app->view_dispatcher, JumpingPawnsViewTutorial, widget_get_view(app->widget_tutorial));
 
@@ -765,8 +694,7 @@ static JumpingPawnsApp* jumping_pawns_alloc() {
         "v0.1\n"
         "Author: @TAxelAnderson\n"
         "Repo: https://github.com/TAxelAnderson/FZ-Jumping-Pawns");
-    view_set_previous_callback(
-        widget_get_view(app->widget_about), navigation_submenu_callback);
+    view_set_previous_callback(widget_get_view(app->widget_about), navigation_submenu_callback);
     view_dispatcher_add_view(app->view_dispatcher, JumpingPawnsAbout, widget_get_view(app->widget_about));
 
     app->notifications = furi_record_open(RECORD_NOTIFICATION);
@@ -784,6 +712,8 @@ static void jumping_pawns_free(JumpingPawnsApp* app) {
     view_free(app->view);
     view_dispatcher_remove_view(app->view_dispatcher, JumpingPawnsSubmenu);
     submenu_free(app->submenu);
+    view_dispatcher_remove_view(app->view_dispatcher, JumpingPawnsDifficultySubmenu);
+    submenu_free(app->difficulty_submenu);
     view_dispatcher_free(app->view_dispatcher);
     furi_record_close(RECORD_GUI);
 
