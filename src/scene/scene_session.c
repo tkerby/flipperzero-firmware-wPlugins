@@ -78,32 +78,23 @@ static void callbackRender(Canvas* const canvas, void* const context) {
 	}
 
 	const char* text;
-	uint8_t firstX;
-	uint8_t secondX;
-	const char* firstText;
-	const char* secondText;
+	uint8_t firstX = 27;
+	uint8_t secondX = 85;
+	const char* firstText = "Select";
+	const char* secondText = "Ok";
 
 	switch(instance->text) {
 	case TEXT_NO_FILE_SELECTED:
 		text = "No session file was selected.";
-		firstX = 27;
-		secondX = 85;
-		firstText = "Select";
-		secondText = "Ok";
 		break;
 	case TEXT_APPEARS_INCORRECT_TYPE:
 		text = "The selected file does not\nappear to be a session file.\nOpen anyway?";
 		firstX = 23;
 		secondX = 79;
-		firstText = "Select";
 		secondText = "Open";
 		break;
 	case TEXT_NOT_SESSION_FILE:
 		text = "The selected file\nis not a session file.\nIt might be corrupted.";
-		firstX = 27;
-		secondX = 85;
-		firstText = "Select";
-		secondText = "Ok";
 		break;
 	case TEXT_DELETE_CONFIRM:
 		text = "Are you sure you want to\ndelete the current session?";
