@@ -779,14 +779,19 @@ static int32_t uid_brute_smarter_brute_worker(void* context) {
     
     // DO NOT update GUI from worker thread!
     
-    // Allocate ISO14443-3A data on heap to avoid stack overflow
-    Iso14443_3aData* iso_data = malloc(sizeof(Iso14443_3aData));
+    // Allocate ISO14443-3A data using protocol API (safer than raw malloc)
+    Iso14443_3aData* iso_data = iso14443_3a_alloc();
     if(!iso_data) {
         ERROR_LOG("[BRUTE_WORKER] Failed to allocate memory for ISO data");
         return -1;
     }
     
     DEBUG_LOG("[BRUTE_WORKER] Starting brute force loop with %d UIDs", actual_size);
+    
+    // Track consecutive failures for emergency abort
+    int consecutive_failures = 0;
+    const int MAX_CONSECUTIVE_FAILURES = 5;
+    
     for(uint16_t i = 0; i < actual_size && !instance->app->should_stop; i++) {
         DEBUG_LOG("[BRUTE_WORKER] Processing UID %d/%d: %08lX", i + 1, actual_size, range[i]);
         
@@ -803,28 +808,26 @@ static int32_t uid_brute_smarter_brute_worker(void* context) {
         // Create and configure NFC device with the UID
         DEBUG_LOG("[BRUTE_WORKER] Creating ISO14443-3a data for UID %08lX", range[i]);
         
-        // CRITICAL: Zero-initialize the entire structure to avoid garbage in padding
-        memset(iso_data, 0, sizeof(Iso14443_3aData));
-        
-        // Now set the fields
-        iso_data->uid_len = STANDARD_UID_LENGTH;
-        iso_data->atqa[0] = ATQA_DEFAULT_LOW;
-        iso_data->atqa[1] = ATQA_DEFAULT_HIGH;
-        iso_data->sak = SAK_DEFAULT;
-        
-        // Convert UID to bytes (big-endian to little-endian)
-        iso_data->uid[0] = (range[i] >> 24) & 0xFF;
-        iso_data->uid[1] = (range[i] >> 16) & 0xFF;
-        iso_data->uid[2] = (range[i] >> 8) & 0xFF;
-        iso_data->uid[3] = range[i] & 0xFF;
+        // Reset and set fields via protocol API to ensure validity
+        iso14443_3a_reset(iso_data);
+        const uint8_t uid_bytes[4] = {
+            (uint8_t)((range[i] >> 24) & 0xFF),
+            (uint8_t)((range[i] >> 16) & 0xFF),
+            (uint8_t)((range[i] >> 8) & 0xFF),
+            (uint8_t)(range[i] & 0xFF),
+        };
+        iso14443_3a_set_uid(iso_data, uid_bytes, STANDARD_UID_LENGTH);
+        const uint8_t atqa_bytes[2] = {ATQA_DEFAULT_LOW, ATQA_DEFAULT_HIGH};
+        iso14443_3a_set_atqa(iso_data, atqa_bytes);
+        iso14443_3a_set_sak(iso_data, SAK_DEFAULT);
         
         DEBUG_LOG("[BRUTE_WORKER] UID bytes: %02X %02X %02X %02X", 
-                  iso_data->uid[0], iso_data->uid[1], iso_data->uid[2], iso_data->uid[3]);
+                  uid_bytes[0], uid_bytes[1], uid_bytes[2], uid_bytes[3]);
         
         // Validate NFC device before setting data
         if(!instance->nfc_device) {
             ERROR_LOG("[BRUTE_WORKER] NFC device is NULL");
-            free(iso_data);
+            iso14443_3a_free(iso_data);
             return -1;
         }
         
@@ -838,67 +841,125 @@ static int32_t uid_brute_smarter_brute_worker(void* context) {
         // Start NFC emulation - simplified approach
         DEBUG_LOG("[BRUTE_WORKER] Starting NFC emulation for UID %08lX...", range[i]);
         
-        // Try to start emulation with error handling
+        // Try to start emulation with error handling and retry logic
         NfcListener* listener = NULL;
         bool emulation_success = false;
+        int retry_count = 0;
+        const int MAX_RETRIES = 3;
         
-        do {
-            DEBUG_LOG("[BRUTE_WORKER] About to call nfc_listener_alloc...");
-            DEBUG_LOG("[BRUTE_WORKER] Instance NFC ptr: %p, Protocol: %d", 
-                      instance->nfc, NfcProtocolIso14443_3a);
+        while(retry_count < MAX_RETRIES && !emulation_success) {
+            retry_count++;
             
-            // Verify NFC handle is valid before allocation
-            if(!instance->nfc) {
-                ERROR_LOG("[BRUTE_WORKER] NFC handle is NULL");
-                break;
+            DEBUG_LOG("[BRUTE_WORKER] Emulation attempt %d/%d for UID %08lX", retry_count, MAX_RETRIES, range[i]);
+            
+            // Small delay between retries to let NFC hardware settle
+            if(retry_count > 1) {
+                DEBUG_LOG("[BRUTE_WORKER] Waiting 100ms before retry...");
+                furi_delay_ms(100);
+                
+                // Clear NFC device on retry to reset state
+                nfc_device_clear(instance->nfc_device);
+                
+                // Re-set the UID data
+                nfc_device_set_data(instance->nfc_device, NfcProtocolIso14443_3a, iso_data);
             }
             
-            // Get the device data for the listener
-            const NfcDeviceData* device_data = nfc_device_get_data(instance->nfc_device, NfcProtocolIso14443_3a);
-            if(!device_data) {
-                ERROR_LOG("[BRUTE_WORKER] Failed to get device data");
+            do {
+                DEBUG_LOG("[BRUTE_WORKER] About to call nfc_listener_alloc...");
+                DEBUG_LOG("[BRUTE_WORKER] Instance NFC ptr: %p, Protocol: %d", 
+                          instance->nfc, NfcProtocolIso14443_3a);
+                
+                // Verify NFC handle is valid before allocation
+                if(!instance->nfc) {
+                    ERROR_LOG("[BRUTE_WORKER] NFC handle is NULL");
+                    break;
+                }
+                
+                // Use data from NfcDevice to ensure correct internal layout
+                const Iso14443_3aData* device_data =
+                    nfc_device_get_data(instance->nfc_device, NfcProtocolIso14443_3a);
+                
+                // Allocate listener with correct API (3 parameters)
+                DEBUG_LOG("[BRUTE_WORKER] Calling nfc_listener_alloc with device data: %p...", device_data);
+                listener = nfc_listener_alloc(instance->nfc, NfcProtocolIso14443_3a, device_data);
+                if(!listener) {
+                    ERROR_LOG("[BRUTE_WORKER] Failed to allocate NFC listener (attempt %d/%d)", retry_count, MAX_RETRIES);
+                    break;
+                }
+                
+                DEBUG_LOG("[BRUTE_WORKER] NFC listener allocated: %p, starting emulation...", listener);
+                
+                // Start listener with a timeout check
+                DEBUG_LOG("[BRUTE_WORKER] Calling nfc_listener_start...");
+                
+                // Start the listener (this should return quickly)
+                nfc_listener_start(listener, NULL, NULL);
+                
+                // If we got here, listener started successfully
+                DEBUG_LOG("[BRUTE_WORKER] nfc_listener_start returned successfully");
+            
+                DEBUG_LOG("[BRUTE_WORKER] NFC emulation started, waiting %lu ms...", instance->app->delay_ms);
+                
+                // Update current UID for display AFTER starting emulation
+                instance->app->current_uid = range[i];
+                
+                // Emulate for the specified delay with periodic checks
+                uint32_t elapsed = 0;
+                const uint32_t check_interval = 50; // Check every 50ms
+                while(elapsed < instance->app->delay_ms && !instance->app->should_stop) {
+                    furi_delay_ms(check_interval);
+                    elapsed += check_interval;
+                }
+                
+                DEBUG_LOG("[BRUTE_WORKER] Delay complete for UID %08lX", range[i]);
+                
+                emulation_success = true;
+                DEBUG_LOG("[BRUTE_WORKER] NFC emulation completed successfully");
+            } while(0);
+            
+            // If emulation succeeded, break out of retry loop
+            if(emulation_success) {
                 break;
             }
-            
-            // Allocate listener with correct API (3 parameters)
-            DEBUG_LOG("[BRUTE_WORKER] Calling nfc_listener_alloc with data: %p...", device_data);
-            listener = nfc_listener_alloc(instance->nfc, NfcProtocolIso14443_3a, device_data);
-            if(!listener) {
-                ERROR_LOG("[BRUTE_WORKER] Failed to allocate NFC listener");
-                break;
-            }
-            
-            DEBUG_LOG("[BRUTE_WORKER] NFC listener allocated: %p, starting emulation...", listener);
-            
-            // Start listener (returns void) - this should not block
-            DEBUG_LOG("[BRUTE_WORKER] Calling nfc_listener_start...");
-            nfc_listener_start(listener, NULL, NULL);
-            
-            DEBUG_LOG("[BRUTE_WORKER] NFC emulation started, waiting %lu ms...", instance->app->delay_ms);
-            
-            // Update current UID for display AFTER starting emulation
-            instance->app->current_uid = range[i];
-            
-            // Emulate for the specified delay
-            furi_delay_ms(instance->app->delay_ms);
-            
-            DEBUG_LOG("[BRUTE_WORKER] Delay complete for UID %08lX", range[i]);
-            
-            emulation_success = true;
-            DEBUG_LOG("[BRUTE_WORKER] NFC emulation completed successfully");
-        } while(0);
+        }
         
-        // Cleanup
+        // Cleanup with proper timing
         if(listener) {
-            DEBUG_LOG("[BRUTE_WORKER] Stopping and freeing NFC listener...");
+            DEBUG_LOG("[BRUTE_WORKER] Stopping NFC listener...");
             nfc_listener_stop(listener);
+            
+            // Small delay to ensure listener fully stops
+            furi_delay_ms(10);
+            
+            DEBUG_LOG("[BRUTE_WORKER] Freeing NFC listener...");
             nfc_listener_free(listener);
+            listener = NULL;
+            
+            // Another small delay to let NFC hardware settle
+            furi_delay_ms(10);
         }
         
         if(!emulation_success) {
-            ERROR_LOG("[BRUTE_WORKER] NFC emulation failed for UID %08lX", range[i]);
+            ERROR_LOG("[BRUTE_WORKER] NFC emulation failed for UID %08lX after %d attempts", range[i], retry_count);
+            
+            // Increment failure counter
+            consecutive_failures++;
+            
+            if(consecutive_failures >= MAX_CONSECUTIVE_FAILURES) {
+                ERROR_LOG("[BRUTE_WORKER] Too many consecutive failures (%d), aborting", consecutive_failures);
+                instance->app->should_stop = true;
+                break;
+            }
+            
+            // Try to reset NFC state for next UID
+            DEBUG_LOG("[BRUTE_WORKER] Attempting NFC recovery...");
+            nfc_device_clear(instance->nfc_device);
+            furi_delay_ms(200); // Longer delay for recovery
+            
             // Continue with next UID instead of crashing
-            furi_delay_ms(100); // Small delay before continuing
+        } else {
+            // Reset failure counter on success
+            consecutive_failures = 0;
         }
         
         // Handle pause
@@ -916,7 +977,7 @@ static int32_t uid_brute_smarter_brute_worker(void* context) {
     DEBUG_LOG("[BRUTE_WORKER] Brute force finished, was_stopped=%d", instance->app->should_stop);
     
     // Free allocated memory
-    free(iso_data);
+    iso14443_3a_free(iso_data);
     
     // Clear the NFC device for cleanup
     nfc_device_clear(instance->nfc_device);
@@ -955,6 +1016,11 @@ static void uid_brute_smarter_start_brute_force(UidBruteSmarter* instance) {
         view_dispatcher_switch_to_view(instance->view_dispatcher, UidBruteSmarterViewBrute);
         return;
     }
+    
+    // Reset NFC device to ensure clean state
+    DEBUG_LOG("[START_BRUTE] Resetting NFC device for clean state...");
+    nfc_device_clear(instance->nfc_device);
+    furi_delay_ms(50); // Small delay to ensure NFC hardware is ready
     
     DEBUG_LOG("[START_BRUTE] Resetting flags...");
     // Reset stop flags and current UID
@@ -1115,6 +1181,7 @@ static uint32_t uid_brute_smarter_brute_back_callback(void* context) {
     // Signal the brute force thread to stop
     if(instance->app) {
         instance->app->should_stop = true;
+        instance->app->is_running = false; // Ensure running flag is cleared
     }
     
     // Acquire mutex for thread cleanup
@@ -1134,6 +1201,12 @@ static uint32_t uid_brute_smarter_brute_back_callback(void* context) {
         // Now safe to free the thread
         furi_thread_free(instance->brute_thread);
         instance->brute_thread = NULL;
+    }
+    
+    // Reset NFC device state after stopping brute force
+    if(instance->nfc_device) {
+        DEBUG_LOG("[BACK] Clearing NFC device state...");
+        nfc_device_clear(instance->nfc_device);
     }
     
     // Reset the stopping flag
