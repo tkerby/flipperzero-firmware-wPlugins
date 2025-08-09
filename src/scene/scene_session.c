@@ -222,13 +222,15 @@ static void actionSelect(const PSESSIONSCENE instance, FuriString* const path) {
 		goto updateViewport;
 	}
 
+	if(!furi_string_end_withi_str(path, ".cbzs")) {
+		instance->renderText = 1;
+		instance->text = TEXT_APPEARS_INCORRECT_TYPE;
+		goto updateViewport;
+	}
+
 /*Storage* storage = furi_record_open(RECORD_STORAGE);
 	File* file = storage_file_alloc(storage);
 	instance->renderText = 1;
-
-	if(!furi_string_end_withi_str(path, ".cbzs")) {
-		instance->text = TEXT_APPEARS_INCORRECT_TYPE;
-	}
 
 	if(!storage_file_open(file, furi_string_get_cstr(path), FSAM_READ_WRITE, FSOM_OPEN_EXISTING)) {
 		instance->text = TEXT_NOT_SESSION_FILE;
