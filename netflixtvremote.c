@@ -12,33 +12,36 @@
 #define GRID_ROWS 2
 #define GRID_COLS 4
 
+// Structure representing each button in the grid UI
 typedef struct {
-    int x;
-    int y;
-    const Icon* icon_light;
-    const Icon* icon_dark;
-    bool active;
+    int x; // X coordinate for icon placement
+    int y; // Y coordinate for icon placement
+    const Icon* icon_light; // Icon shown when not selected
+    const Icon* icon_dark; // Icon shown when selected (highlighted)
+    bool active; // Whether the button is enabled/selectable
 } GridButton;
 
-int selected_row = 1;
-int selected_col = 0;
-bool dpad_active = false;
+int selected_row = 1; // Currently selected row in the grid
+int selected_col = 0; // Currently selected column in the grid
+bool dpad_active = false; // Flag indicating if the dpad control mode is active
 
+// Grid of buttons representing remote control functions with position and icons
 GridButton grid[GRID_ROWS][GRID_COLS] = {
     {
-        {21, 5, &I_netflix_20x19, &I_netflix_hover_20x19, true},
-        {47, 5, &I_play_pause_20x19, &I_play_pause_hover_20x19, true},
-        {76, 5, &I_mute_20x19, &I_mute_hover_20x19, true},
-        {104, 6, &I_dpad_20x52, &I_dpad_hover_20x52, true},
+        {21, 5, &I_netflix_20x19, &I_netflix_hover_20x19, true}, // Netflix button
+        {47, 5, &I_play_pause_20x19, &I_play_pause_hover_20x19, true}, // Play/Pause button
+        {76, 5, &I_mute_20x19, &I_mute_hover_20x19, true}, // Mute button
+        {104, 6, &I_dpad_20x52, &I_dpad_hover_20x52, true}, // D-pad activation button (top row)
     },
     {
-        {21, 36, &I_power_20x19, &I_power_hover_20x19, true},
-        {47, 34, &I_volup_21x24, &I_volup_hover_21x24, true},
-        {76, 34, &I_voldown_21x24, &I_voldown_hover_21x24, true},
-        {104, 6, &I_dpad_20x52, &I_dpad_hover_20x52, true},
+        {21, 36, &I_power_20x19, &I_power_hover_20x19, true}, // Power button
+        {47, 34, &I_volup_21x24, &I_volup_hover_21x24, true}, // Volume Up button
+        {76, 34, &I_voldown_21x24, &I_voldown_hover_21x24, true}, // Volume Down button
+        {104, 6, &I_dpad_20x52, &I_dpad_hover_20x52, true}, // D-pad activation button (bottom row)
     },
 };
 
+// Infrared codes for different remote commands with protocol and data
 const InfraredMessage IR_NETFLIX = {InfraredProtocolSIRC15, 0x1A, 0x7C, false};
 const InfraredMessage IR_PLAY = {InfraredProtocolSIRC15, 0x97, 0x1A, false};
 const InfraredMessage IR_MUTE = {InfraredProtocolSIRC, 0x01, 0x14, false};
@@ -52,64 +55,65 @@ const InfraredMessage IR_DOWN = {InfraredProtocolSIRC, 0x01, 0x75, false};
 const InfraredMessage IR_ENTER = {InfraredProtocolSIRC, 0x01, 0x65, false};
 const InfraredMessage IR_BACK = {InfraredProtocolSIRC15, 0x97, 0x23, false};
 
+// Send an infrared command using InfraredSignal allocation and transmission
 static void send_ir_code(InfraredMessage message) {
-    // 1. Allocate memory for an InfraredSignal
-    InfraredSignal* signal = infrared_signal_alloc();
-    furi_check(signal);
+    InfraredSignal* signal = infrared_signal_alloc(); // Allocate infrared signal
+    furi_check(signal); // Verify allocation success
 
-    // 2. Assign the message to the signal structure
-    infrared_signal_set_message(signal, &message);
-
-    // 3. Transmit the signal
-    infrared_signal_transmit(signal);
-
-    // 4. Free the allocated memory
-    infrared_signal_free(signal);
+    infrared_signal_set_message(signal, &message); // Set the message in the signal
+    infrared_signal_transmit(signal); // Transmit the infrared signal
+    infrared_signal_free(signal); // Free the allocated memory
 }
 
+// Draw the main UI grid with icons, highlighting the selected button
 static void draw_callback(Canvas* canvas, void* ctx) {
     UNUSED(ctx);
 
-    canvas_draw_icon(canvas, 0, 0, &I_header_18x64);
-    canvas_draw_icon(canvas, 55, 32, &I_vol_tv_text_34x29); // decorazione fissa
+    canvas_draw_icon(canvas, 0, 0, &I_header_18x64); // Draw header icon
+    canvas_draw_icon(canvas, 55, 32, &I_vol_tv_text_34x29); // Static decoration icon
 
     for(int row = 0; row < GRID_ROWS; row++) {
         for(int col = 0; col < GRID_COLS; col++) {
             GridButton* btn = &grid[row][col];
-            if(!btn->active) continue;
+            if(!btn->active) continue; // Skip inactive buttons
 
             bool selected = (row == selected_row && col == selected_col);
 
+            // Always highlight D-pad button if selected
             if(col == 3 && (selected_row == 0 || selected_row == 1) && selected_col == 3) {
                 selected = true;
             }
 
+            // Draw icon dark if selected, light otherwise
             const Icon* icon = selected ? btn->icon_dark : btn->icon_light;
             canvas_draw_icon(canvas, btn->x, btn->y, icon);
         }
     }
 }
 
+// Draw the D-pad view with a dedicated icon layout
 static void draw_dpad_callback(Canvas* canvas, void* ctx) {
     UNUSED(ctx);
     canvas_draw_icon(canvas, 0, 0, &I_dpad_scene_128x64);
 }
 
+// Handle user input for main grid: navigation, selection, and sending IR codes
 static void input_callback(InputEvent* event, void* ctx) {
     bool* running = ctx;
 
     if(event->type == InputTypeLong && event->key == InputKeyBack) {
-        *running = false;
+        *running = false; // Long press Back to exit app
         return;
     }
 
     if(event->key == InputKeyOk) {
         if(event->type == InputTypeShort || event->type == InputTypeRepeat) {
             if(selected_col == 3) {
-                dpad_active = true;
+                dpad_active = true; // Activate D-pad mode if last column selected
                 return;
             }
 
+            // Send corresponding IR code based on selected button in first row
             if(selected_row == 0) {
                 switch(selected_col) {
                 case 0:
@@ -122,7 +126,9 @@ static void input_callback(InputEvent* event, void* ctx) {
                     send_ir_code(IR_MUTE);
                     break;
                 }
-            } else if(selected_row == 1) {
+            }
+            // Send IR code based on selected button in second row
+            else if(selected_row == 1) {
                 switch(selected_col) {
                 case 0:
                     send_ir_code(IR_POWER);
@@ -139,10 +145,12 @@ static void input_callback(InputEvent* event, void* ctx) {
         return;
     }
 
+    // Ignore events other than short press or repeat for navigation
     if(event->type != InputTypeRepeat && event->type != InputTypeShort) {
         return;
     }
 
+    // Navigation logic updating selected button on arrow keys
     int new_row = selected_row;
     int new_col = selected_col;
 
@@ -160,29 +168,32 @@ static void input_callback(InputEvent* event, void* ctx) {
         if(new_col < GRID_COLS - 1) new_col++;
         break;
     case InputKeyBack:
-        send_ir_code(IR_BACK);
+        send_ir_code(IR_BACK); // Back key sends IR Back code
         break;
     default:
         break;
     }
 
+    // Update selection if new position corresponds to an active button
     if(grid[new_row][new_col].active) {
         selected_row = new_row;
         selected_col = new_col;
     }
 }
 
+// Handle user input in D-pad mode, sending corresponding directional IR commands
 static void input_dpad_callback(InputEvent* event, void* ctx) {
     UNUSED(ctx);
 
     if(event->type == InputTypeLong && event->key == InputKeyBack) {
-        dpad_active = false;
+        dpad_active = false; // Long press Back to exit D-pad mode
         return;
     }
 
     if(event->key == InputKeyUp || event->key == InputKeyDown || event->key == InputKeyLeft ||
        event->key == InputKeyRight || event->key == InputKeyOk || event->key == InputKeyBack) {
         if(event->type == InputTypeShort || event->type == InputTypeRepeat) {
+            // Map input keys to IR directional commands in D-pad mode
             switch(event->key) {
             case InputKeyUp:
                 send_ir_code(IR_RIGHT);
@@ -210,6 +221,7 @@ static void input_dpad_callback(InputEvent* event, void* ctx) {
     }
 }
 
+// Main application entry point for the Netflix TV remote app
 int32_t netflixtvremote_app(void* p) {
     UNUSED(p);
     FURI_LOG_I("TEST", "Hello world");
@@ -217,18 +229,22 @@ int32_t netflixtvremote_app(void* p) {
 
     Gui* gui = furi_record_open("gui");
 
+    // Allocate viewports for main grid and D-pad UI
     ViewPort* main_viewport = view_port_alloc();
     ViewPort* dpad_viewport = view_port_alloc();
     bool running = true;
 
+    // Set draw and input callbacks for main grid
     view_port_draw_callback_set(main_viewport, draw_callback, NULL);
     view_port_input_callback_set(main_viewport, input_callback, &running);
 
+    // Set draw and input callbacks for D-pad view
     view_port_draw_callback_set(dpad_viewport, draw_dpad_callback, NULL);
     view_port_input_callback_set(dpad_viewport, input_dpad_callback, &running);
 
     gui_add_view_port(gui, main_viewport, GuiLayerFullscreen);
 
+    // Main event loop: toggle between main grid and D-pad views
     while(running) {
         if(dpad_active) {
             gui_remove_view_port(gui, main_viewport);
@@ -240,6 +256,7 @@ int32_t netflixtvremote_app(void* p) {
         furi_delay_ms(50);
     }
 
+    // Cleanup resources before exit
     gui_remove_view_port(gui, main_viewport);
     view_port_free(main_viewport);
     view_port_free(dpad_viewport);
