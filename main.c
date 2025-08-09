@@ -2800,8 +2800,8 @@ void flip_crypt_about_scene_on_enter(void* context) {
     App* app = context;
     widget_reset(app->widget);
     widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "FlipCrypt\n"
-    "v0.4\n"
-    "Explore and learn about various cryptograpic and text encoding methods.\n\n"
+    "v0.5\n"
+    "Explore and learn about various cryptographic and text encrypting / encoding methods.\n\n"
     "Usage:\n"
     "Select the method you want to use for encoding / decoding text and fill in the necessary inputs.\n"
     "On the output screen, there are up to three options for actions you can do with the output - Save, NFC, and QR. The save button saves the output to a text file in the folder located at /ext/flip_crypt_saved/. The NFC button emulates the output using NTAG215. The QR button generates and displays a QR code of your output. Not all three options will be available on every output screen due to memory limitations - for instance the flipper just can't handle the QR code for a SHA-512 output.\n\n"
