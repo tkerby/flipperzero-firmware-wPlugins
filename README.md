@@ -50,6 +50,18 @@ Death Note-themed graphical interface.
 
 ---
 
+## Preview
+
+### Main Screen
+
+![Main Screen](images/main_screen_128x64.png)
+
+### D-pad Screen
+
+![D-pad Screen](images/dpad_scene_128x64.png)
+
+---
+
 ## Dependencies
 
 - Flipper Zero SDK (furi, gui, input, infrared).  
