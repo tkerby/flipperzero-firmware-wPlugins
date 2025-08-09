@@ -692,7 +692,7 @@ static JumpingPawnsApp* jumping_pawns_alloc() {
         64,
         "Jumping Pawns\n\n"
         "v0.1\n"
-        "Author: @TAxelAnderson\n"
+        "Author: @Tyl3rA\n"
         "Repo: https://github.com/TAxelAnderson/Jumping-Pawns");
     view_set_previous_callback(widget_get_view(app->widget_about), navigation_submenu_callback);
     view_dispatcher_add_view(app->view_dispatcher, JumpingPawnsAbout, widget_get_view(app->widget_about));
