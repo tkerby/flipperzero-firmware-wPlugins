@@ -1,5 +1,5 @@
 ## V0.5
-- Updated widget text.
+- Updated widget text, fixed some typos.
 
 ## V0.4
 - Fixed NFC emulation issue.
