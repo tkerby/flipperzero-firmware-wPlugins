@@ -1,5 +1,8 @@
+## V0.5
+- Updated widget text.
+
 ## V0.4
-- Fixed NFC emulation issue
+- Fixed NFC emulation issue.
 
 ## V0.3
 - Added ROT-13 cipher.
