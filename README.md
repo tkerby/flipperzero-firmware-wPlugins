@@ -78,4 +78,4 @@ Not compatible with other TV models or brands without modifying IR codes.
 
 ## License
 
-To be defined.
+This project is licensed under the MIT License. See the [LICENSE.md](LICENSE.md) file for details.
