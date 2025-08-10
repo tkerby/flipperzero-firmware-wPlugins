@@ -209,6 +209,32 @@ updateViewport:
 	view_port_update(instance->viewport);
 }
 
+static void actionOpenAnyway(const PSESSIONSCENE instance, FuriString* const path) {
+	Storage* const storage = furi_record_open(RECORD_STORAGE);
+	File* const file = storage_file_alloc(storage);
+
+	if(!storage_file_open(file, furi_string_get_cstr(path), FSAM_READ_WRITE, FSOM_OPEN_EXISTING)) {
+		instance->renderText = 1;
+		instance->text = TEXT_NOT_SESSION_FILE;
+		goto updateViewport;
+	}
+
+	const uint64_t size = storage_file_size(file);
+
+	if(size < 4) {
+		instance->renderText = 1;
+		instance->text = TEXT_NOT_SESSION_FILE;
+		goto updateViewport;
+	}
+
+	storage_file_close(file);
+	storage_file_free(file);
+	furi_record_close(RECORD_STORAGE);
+	return;
+updateViewport:
+	view_port_update(instance->viewport);
+}
+
 static void actionSelect(const PSESSIONSCENE instance, FuriString* const path) {
 	furi_string_set_str(path, APP_DATA_PATH("sessions"));
 	DialogsFileBrowserOptions options;
@@ -228,24 +254,8 @@ static void actionSelect(const PSESSIONSCENE instance, FuriString* const path) {
 		goto updateViewport;
 	}
 
-/*Storage* storage = furi_record_open(RECORD_STORAGE);
-	File* file = storage_file_alloc(storage);
-	instance->renderText = 1;
-
-	if(!storage_file_open(file, furi_string_get_cstr(path), FSAM_READ_WRITE, FSOM_OPEN_EXISTING)) {
-		instance->text = TEXT_NOT_SESSION_FILE;
-	}
-
-	uint64_t size = storage_file_size(file);
-
-	if(size < 4) {
-		instance->text = TEXT_NOT_SESSION_FILE;
-	}
-
-	storage_file_close(file);
-	storage_file_free(file);
-	furi_record_close(RECORD_STORAGE);
-	view_port_update(instance->viewport);*/
+	actionOpenAnyway(instance, path);
+	return;
 updateViewport:
 	view_port_update(instance->viewport);
 }
@@ -271,6 +281,7 @@ void SceneSessionEnter(void* const context) {
 			actionSelect(instance, path);
 			break;
 		case ACTION_OPEN_ANYWAY:
+			actionOpenAnyway(instance, path);
 			break;
 		case ACTION_DELETE:
 			break;
