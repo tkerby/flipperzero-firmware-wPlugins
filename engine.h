@@ -15,6 +15,8 @@ typedef struct {
     int last_calculated_piece_x;
     int last_calculated_piece_y;
     bool is_ai_thinking;
+    bool led_notifications;
+    bool vibro_notifications;
     bool game_over;
     int difficulty_level;
     int board_state[11][6];

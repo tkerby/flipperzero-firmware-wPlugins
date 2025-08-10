@@ -15,7 +15,8 @@
 
 typedef enum {
     JumpingPawnsSubmenu,
-    JumpingPawnsDifficultySubmenu, // NEW
+    JumpingPawnsDifficultySubmenu,
+    JumpingPawnsNotificationsSubmenu,
     JumpingPawnsPlayView,
     JumpingPawnsViewTutorial,
     JumpingPawnsAbout,
@@ -35,6 +36,13 @@ typedef enum {
 } JumpingPawnsDifficultyIndex;
 
 typedef enum {
+    JumpingPawnsNoIndex,
+    JumpingPawnsLEDIndex,
+    JumpingPawnsVibroIndex,
+    JumpingPawnsBothIndex,
+} JumpingPawnsNotifictionsIndex;
+
+typedef enum {
     JumpingPawnsRedrawEventId = 0
 } JumpingPawnsEventId;
 
@@ -43,12 +51,25 @@ typedef struct {
     NotificationApp* notifications;
     Submenu* submenu;
     Submenu* difficulty_submenu;
+    Submenu* notifications_submenu;
     View* view;
     Widget* widget_tutorial;
     Widget* widget_about;
 
     FuriTimer* timer;
 } JumpingPawnsApp;
+
+static void led_notify(void* context) {
+    JumpingPawnsApp* app = (JumpingPawnsApp*)context;
+
+    notification_message(app->notifications, &sequence_blink_red_100);
+}
+
+static void vibro_notify(void* context) {
+    JumpingPawnsApp* app = (JumpingPawnsApp*)context;
+
+    notification_message(app->notifications, &sequence_single_vibro);
+}
 
 void end_turn(void* context) {
     JumpingPawnsApp* app = (JumpingPawnsApp*)context;
@@ -213,6 +234,12 @@ void player_moving(void* context) {
                 },
                 true);
             ai_move(model);
+            if (model->led_notifications) {
+                led_notify(app);
+            }
+            if (model->vibro_notifications) {
+                vibro_notify(app);
+            }
         } else {
             end_turn(app);
         }
@@ -280,6 +307,11 @@ static uint32_t navigation_submenu_callback(void* _context) {
     return JumpingPawnsSubmenu;
 }
 
+static uint32_t notifications_navigation_submenu_callback(void* _context) {
+    UNUSED(_context);
+    return JumpingPawnsDifficultySubmenu;
+}
+
 static void submenu_callback(void* context, uint32_t index) {
     JumpingPawnsApp* app = (JumpingPawnsApp*)context;
     JumpingPawnsModel* model = view_get_model(app->view);
@@ -324,7 +356,6 @@ static void submenu_callback(void* context, uint32_t index) {
 }
 
 static void difficulty_submenu_callback(void* context, uint32_t index) {
-    UNUSED(index);
     JumpingPawnsApp* app = (JumpingPawnsApp*)context;
     JumpingPawnsModel* model = view_get_model(app->view);
 
@@ -348,14 +379,44 @@ static void difficulty_submenu_callback(void* context, uint32_t index) {
     switch(index) {
     case JumpingPawnsEasyIndex:
         model->difficulty_level = 1;
-        view_dispatcher_switch_to_view(app->view_dispatcher, JumpingPawnsPlayView);
+        view_dispatcher_switch_to_view(app->view_dispatcher, JumpingPawnsNotificationsSubmenu);
         break;
     case JumpingPawnsMediumIndex:
         model->difficulty_level = 2;
-        view_dispatcher_switch_to_view(app->view_dispatcher, JumpingPawnsPlayView);
+        view_dispatcher_switch_to_view(app->view_dispatcher, JumpingPawnsNotificationsSubmenu);
         break;
     case JumpingPawnsHardIndex:
         model->difficulty_level = 3;
+        view_dispatcher_switch_to_view(app->view_dispatcher, JumpingPawnsNotificationsSubmenu);
+        break;
+    default:
+        break;
+    }
+}
+
+static void notifications_submenu_callback(void* context, uint32_t index) {
+    JumpingPawnsApp* app = (JumpingPawnsApp*)context;
+    JumpingPawnsModel* model = view_get_model(app->view);
+
+    switch(index) {
+    case JumpingPawnsNoIndex:
+        model->led_notifications = false;
+        model->vibro_notifications = false;
+        view_dispatcher_switch_to_view(app->view_dispatcher, JumpingPawnsPlayView);
+        break;
+    case JumpingPawnsLEDIndex:
+        model->led_notifications = true;
+        model->vibro_notifications = false;
+        view_dispatcher_switch_to_view(app->view_dispatcher, JumpingPawnsPlayView);
+        break;
+    case JumpingPawnsVibroIndex:
+        model->led_notifications = false;
+        model->vibro_notifications = true;
+        view_dispatcher_switch_to_view(app->view_dispatcher, JumpingPawnsPlayView);
+        break;
+    case JumpingPawnsBothIndex:
+        model->led_notifications = true;
+        model->vibro_notifications = true;
         view_dispatcher_switch_to_view(app->view_dispatcher, JumpingPawnsPlayView);
         break;
     default:
@@ -652,6 +713,14 @@ static JumpingPawnsApp* jumping_pawns_alloc() {
     view_set_previous_callback(submenu_get_view(app->difficulty_submenu), navigation_submenu_callback);
     view_dispatcher_add_view(app->view_dispatcher, JumpingPawnsDifficultySubmenu, submenu_get_view(app->difficulty_submenu));
 
+    app->notifications_submenu = submenu_alloc();
+    submenu_add_item(app->notifications_submenu, "No Notifications", JumpingPawnsNoIndex, notifications_submenu_callback, app);
+    submenu_add_item(app->notifications_submenu, "LED", JumpingPawnsLEDIndex, notifications_submenu_callback, app);
+    submenu_add_item(app->notifications_submenu, "Vibro", JumpingPawnsVibroIndex, notifications_submenu_callback, app);
+    submenu_add_item(app->notifications_submenu, "Both", JumpingPawnsBothIndex, notifications_submenu_callback, app);
+    view_set_previous_callback(submenu_get_view(app->notifications_submenu), notifications_navigation_submenu_callback);
+    view_dispatcher_add_view(app->view_dispatcher, JumpingPawnsNotificationsSubmenu, submenu_get_view(app->notifications_submenu));
+
     app->view = view_alloc();
     view_set_draw_callback(app->view, jumping_pawns_draw_callback);
     view_set_input_callback(app->view, jumping_pawns_input_callback);
@@ -666,6 +735,8 @@ static JumpingPawnsApp* jumping_pawns_alloc() {
     model->whose_turn = "";
     model->selected_x = 1;
     model->selected_y = 1;
+    model->led_notifications = false;
+    model->vibro_notifications = false;
     model->last_calculated_piece_x = 0;
     model->last_calculated_piece_y = 0;
     model->is_ai_thinking = false;
@@ -731,6 +802,8 @@ static void jumping_pawns_free(JumpingPawnsApp* app) {
     submenu_free(app->submenu);
     view_dispatcher_remove_view(app->view_dispatcher, JumpingPawnsDifficultySubmenu);
     submenu_free(app->difficulty_submenu);
+    view_dispatcher_remove_view(app->view_dispatcher, JumpingPawnsNotificationsSubmenu);
+    submenu_free(app->notifications_submenu);
     view_dispatcher_free(app->view_dispatcher);
     furi_record_close(RECORD_GUI);
 

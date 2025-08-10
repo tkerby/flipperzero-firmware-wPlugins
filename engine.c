@@ -3,46 +3,139 @@
 #include <stdio.h>
 #include "engine.h"
 
-void find_ai_jumps(JumpingPawnsModel* model, int board[11][6], int from_x, int from_y, int x, int y, int player_value, AIMoveStructure* move_list, size_t* move_count, size_t max_moves, bool visited[11][6]) {
-    int dx[] = {0, 0, -1, 1};
+// void find_ai_jumps(JumpingPawnsModel* model, int board[11][6], int from_x, int from_y, int x, int y, int player_value, AIMoveStructure* move_list, size_t* move_count, size_t max_moves, bool visited[11][6]) {
+//     int dx[] = {0, 0, -1, 1};
+//     int dy[] = {-1, 1, 0, 0};
+
+//     visited[y][x] = true;
+
+//     for (int dir = 0; dir < 4; dir++) {
+//         int cx = x;
+//         int cy = y;
+
+//         bool found_clump = false;
+
+//         int mid_x = cx + dx[dir];
+//         int mid_y = cy + dy[dir];
+
+//         // Traverse clump (any non-zero tile, avoid infinite loop on marked moves)
+//         while (mid_x >= 0 && mid_x < 6 && mid_y >= 0 && mid_y < 11 &&
+//                board[mid_y][mid_x] != 0 && board[mid_y][mid_x] != 3) {
+//             cx = mid_x;
+//             cy = mid_y;
+//             mid_x = cx + dx[dir];
+//             mid_y = cy + dy[dir];
+//             found_clump = true;
+//         }
+
+//         // Landing square
+//         if (found_clump &&
+//             mid_x >= 0 && mid_x < 6 && mid_y >= 0 && mid_y < 11 &&
+//             board[mid_y][mid_x] == 0 && !visited[mid_y][mid_x]) {
+
+//             if (*move_count < max_moves) {
+//                 move_list[(*move_count)++] = (AIMoveStructure){
+//                     .from_x = from_x,
+//                     .from_y = from_y,
+//                     .to_x = mid_x,
+//                     .to_y = mid_y,
+//                 };
+//             }
+
+//             find_ai_jumps(model, board, from_x, from_y, mid_x, mid_y, player_value, move_list, move_count, max_moves, visited);
+//         }
+//     }
+
+//     visited[y][x] = false;
+// }
+
+void find_ai_jumps(JumpingPawnsModel* model,
+                   int board[11][6],
+                   int from_x, int from_y,
+                   int x, int y,
+                   int player_value,
+                   AIMoveStructure* move_list,
+                   size_t* move_count, size_t max_moves,
+                   bool visited[11][6]) {
+    int dx[] = {0, 0, -1, 1}; // directions: up, down, left, right
     int dy[] = {-1, 1, 0, 0};
 
     visited[y][x] = true;
 
     for (int dir = 0; dir < 4; dir++) {
-        int cx = x;
-        int cy = y;
+        int first_pawn_x = x + dx[dir];
+        int first_pawn_y = y + dy[dir];
 
-        bool found_clump = false;
-
-        int mid_x = cx + dx[dir];
-        int mid_y = cy + dy[dir];
-
-        // Traverse clump (any non-zero tile, avoid infinite loop on marked moves)
-        while (mid_x >= 0 && mid_x < 6 && mid_y >= 0 && mid_y < 11 &&
-               board[mid_y][mid_x] != 0 && board[mid_y][mid_x] != 3) {
-            cx = mid_x;
-            cy = mid_y;
-            mid_x = cx + dx[dir];
-            mid_y = cy + dy[dir];
-            found_clump = true;
+        // Must start with a pawn in this direction
+        if (first_pawn_x < 0 || first_pawn_x >= 6 ||
+            first_pawn_y < 0 || first_pawn_y >= 11 ||
+            board[first_pawn_y][first_pawn_x] == 0 ||
+            board[first_pawn_y][first_pawn_x] == 3) {
+            continue;
         }
 
-        // Landing square
-        if (found_clump &&
-            mid_x >= 0 && mid_x < 6 && mid_y >= 0 && mid_y < 11 &&
-            board[mid_y][mid_x] == 0 && !visited[mid_y][mid_x]) {
+        // Step past contiguous pawns
+        int next_x = first_pawn_x + dx[dir];
+        int next_y = first_pawn_y + dy[dir];
+        while (next_x >= 0 && next_x < 6 &&
+               next_y >= 0 && next_y < 11 &&
+               board[next_y][next_x] != 0 &&
+               board[next_y][next_x] != 3) {
+            next_x += dx[dir];
+            next_y += dy[dir];
+        }
 
-            if (*move_count < max_moves) {
-                move_list[(*move_count)++] = (AIMoveStructure){
-                    .from_x = from_x,
-                    .from_y = from_y,
-                    .to_x = mid_x,
-                    .to_y = mid_y,
-                };
-            }
+        // Check landing square
+        int landing_x = next_x;
+        int landing_y = next_y;
 
-            find_ai_jumps(model, board, from_x, from_y, mid_x, mid_y, player_value, move_list, move_count, max_moves, visited);
+        // Must jump at least one pawn and land in bounds on empty square
+        if ((abs(landing_x - x) <= 1 && abs(landing_y - y) <= 1) ||
+            landing_x < 0 || landing_x >= 6 ||
+            landing_y < 0 || landing_y >= 11 ||
+            board[landing_y][landing_x] != 0 ||
+            visited[landing_y][landing_x]) {
+            continue;
+        }
+
+        // Temporarily remove jumped pawns for this direction
+        int jumped_pawns[11][6] = {0};
+        int temp_x = first_pawn_x;
+        int temp_y = first_pawn_y;
+        while (temp_x >= 0 && temp_x < 6 &&
+               temp_y >= 0 && temp_y < 11 &&
+               board[temp_y][temp_x] != 0 &&
+               board[temp_y][temp_x] != 3) {
+            jumped_pawns[temp_y][temp_x] = board[temp_y][temp_x];
+            board[temp_y][temp_x] = 0;
+            temp_x += dx[dir];
+            temp_y += dy[dir];
+        }
+
+        // Store the move
+        if (*move_count < max_moves) {
+            move_list[(*move_count)++] = (AIMoveStructure){
+                .from_x = from_x,
+                .from_y = from_y,
+                .to_x = landing_x,
+                .to_y = landing_y,
+            };
+        }
+
+        // Recurse from the new landing position
+        find_ai_jumps(model, board, from_x, from_y,
+                      landing_x, landing_y,
+                      player_value, move_list, move_count, max_moves, visited);
+
+        // Restore jumped pawns
+        temp_x = first_pawn_x;
+        temp_y = first_pawn_y;
+        while (temp_x >= 0 && temp_x < 6 &&
+               temp_y >= 0 && temp_y < 11 &&
+               jumped_pawns[temp_y][temp_x] != 0) {
+            board[temp_y][temp_x] = jumped_pawns[temp_y][temp_x];
+            temp_x += dx[dir];
+            temp_y += dy[dir];
         }
     }
 
@@ -240,8 +333,8 @@ int evaluate_board(JumpingPawnsModel* model) {
             // --- Distance scoring with quadratic emphasis on progress ---
             if(piece == 2) {
                 score += y * y;  // AI pawns gain more score the further down the board
-                if(y >= 9) score += 15; // Bonus for reaching final rows
-                if(y <= 2) score -= 5;  // Penalty for camping near start
+                if(y >= 9) score += 15; // Bonus for reaching final 3 rows
+                if(y <= 2) score -= 5;  // Penalty for camping near starting 3 rows
             } else {
                 int dist = 10 - y;
                 score -= dist * dist;  // Opponent distance is bad for AI
@@ -268,7 +361,7 @@ int evaluate_board(JumpingPawnsModel* model) {
                 else           score += isolation_penalty;
             }
 
-            // Isolation check for horizontal pairs (avoid double-counting)
+            // Isolation check for horizontal pairs
             if(right) {
                 if(x == 0 || model->board_state[y][x-1] != piece) {
                     if((x+2 >= 6) || model->board_state[y][x+2] != piece) {
@@ -362,8 +455,8 @@ int evaluate_board(JumpingPawnsModel* model) {
                 if(piece == 2) score -= 20;  // Big penalty for stranded AI pawn
                 else           score += 20;  // Big bonus for stranded opponent pawn
             } else {
-                if(piece == 2) score += mobility;  // Small bonus for AI pawn mobility
-                else           score -= mobility;  // Small penalty for opponent pawn mobility
+                if(piece == 2) score += mobility + 5;  // Medium bonus for AI pawn mobility
+                else           score -= mobility + 5;  // Medium penalty for opponent pawn mobility
             }
         }
     }
@@ -438,7 +531,9 @@ void ai_move(JumpingPawnsModel* model) {
 
     // If many pawns are in final rows, increase depth
     if(ai_goal_pawns >= 10 || player_goal_pawns >= 10) {
-        depth = 4;
+        if (depth < 3) {
+            depth = 3;
+        }
     }
 
     int best_score = -10000;
