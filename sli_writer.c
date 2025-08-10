@@ -5,19 +5,17 @@
 /*
 Résumé :
 - Pas de sous-thread pour nfc_start : tout est fait dans le worker.
-- Logs ultra verbeux à chaque étape (alloc, start, poller, inventory, magic, etc.).
-- Sélection directe du dossier /ext/nfc pour le choix du fichier.
+- Logs verbeux à chaque étape (alloc, start, poller, inventory, magic, etc.).
+- Sélection du fichier via service Dialogs (dialog_file_browser_show).
 - Menu racine : "Write NFC File" et "Test Magic INIT".
-- Utilise l’API 0.82 (Unleashed) : nfc_alloc() / nfc_start(cb) / nfc_poller_alloc(NfcProtocolIso15693_3)
+- API Unleashed : nfc_alloc() / nfc_start(cb) / nfc_poller_alloc(NfcProtocolIso15693_3)
 - Envoi des trames via iso15693_3_poller_send_frame() avec BitBuffer.
 
-Si nfc_start() bloque toujours, les logs s’arrêteront juste après "nfc_start (worker)..." : 
-=> c’est précisément ce qu’on veut montrer au Discord.
+Si nfc_start() bloque, les logs s’arrêtent juste après "nfc_start (worker)..."
 */
 
 // ------------------------------------------------------------
-// ISO15693 octets standard (définis ici pour ne pas dépendre
-// d'éventuels alias d'en-têtes qui diffèrent entre firmwares)
+// ISO15693 octets standard
 // ------------------------------------------------------------
 #define ISO15693_FLAG_RATE_HIGH   0x02
 #define ISO15693_FLAG_INVENTORY   0x04
@@ -322,7 +320,7 @@ static bool write_blocks(Iso15693_3Poller* iso, const uint8_t uid_addr[8],
 }
 
 // ==============================
-// NFC event callback (0.82: event est une struct, switch sur event.type)
+// NFC event callback
 // ==============================
 static NfcCommand nfc_event_cb(NfcEvent event, void* ctx) {
     UNUSED(ctx);
@@ -357,7 +355,7 @@ static bool detect_activate_inventory(SliWriterApp* app, Iso15693_3Poller** out_
     Iso15693_3Poller* iso = (Iso15693_3Poller*)nfc_poller_get_data(app->poller);
     if(!iso) { furi_string_set(app->error_message, "ISO poller NULL"); return false; }
 
-    Iso15693_3Data iso_data = {0};
+    Iso15693_3Data iso_data = (Iso15693_3Data){0};
     Iso15693_3Error aerr = iso15693_3_poller_activate(iso, &iso_data);
     FURI_LOG_I(TAG, "activate ret=%d", aerr);
     if(aerr != Iso15693_3ErrorNone) {
@@ -514,7 +512,7 @@ WORKER_FAIL:
 // ==============================
 // Scenes
 // ==============================
-void sli_writer_scene_start_on_enter(void* context) {
+static void sli_writer_scene_start_on_enter(void* context) {
     SliWriterApp* app = (SliWriterApp*)context;
     if(!app) return;
 
@@ -527,7 +525,7 @@ void sli_writer_scene_start_on_enter(void* context) {
     view_dispatcher_switch_to_view(app->view_dispatcher, SliWriterViewSubmenu);
 }
 
-bool sli_writer_scene_start_on_event(void* context, SceneManagerEvent event) {
+static bool sli_writer_scene_start_on_event(void* context, SceneManagerEvent event) {
     SliWriterApp* app = (SliWriterApp*)context;
     if(!app) return false;
     if(event.type == SceneManagerEventTypeCustom) {
@@ -556,14 +554,14 @@ bool sli_writer_scene_start_on_event(void* context, SceneManagerEvent event) {
     return false;
 }
 
-void sli_writer_scene_start_on_exit(void* context) {
+static void sli_writer_scene_start_on_exit(void* context) {
     SliWriterApp* app = (SliWriterApp*)context;
     if(!app) return;
     FURI_LOG_I(TAG, "Scene Start exit");
     submenu_reset(app->submenu);
 }
 
-void sli_writer_scene_file_select_on_enter(void* context) {
+static void sli_writer_scene_file_select_on_enter(void* context) {
     SliWriterApp* app = (SliWriterApp*)context;
     if(!app) return;
 
@@ -573,6 +571,7 @@ void sli_writer_scene_file_select_on_enter(void* context) {
     if(!app->file_path) app->file_path = furi_string_alloc();
     furi_string_set(app->file_path, "/ext/nfc");
 
+    // --- Service Dialogs (synchrone) ---
     DialogsFileBrowserOptions opt;
     dialog_file_browser_set_basic_options(&opt, SLI_WRITER_FILE_EXTENSION, NULL);
 
@@ -585,17 +584,17 @@ void sli_writer_scene_file_select_on_enter(void* context) {
     }
 }
 
-bool sli_writer_scene_file_select_on_event(void* context, SceneManagerEvent event) {
+static bool sli_writer_scene_file_select_on_event(void* context, SceneManagerEvent event) {
     UNUSED(context); UNUSED(event); return false;
 }
 
-void sli_writer_scene_file_select_on_exit(void* context) {
+static void sli_writer_scene_file_select_on_exit(void* context) {
     FURI_LOG_I(TAG, "Scene FileSelect exit");
     UNUSED(context);
 }
 
 // --------- WRITE SCENE ---------
-void sli_writer_scene_write_on_enter(void* context) {
+static void sli_writer_scene_write_on_enter(void* context) {
     SliWriterApp* app = (SliWriterApp*)context;
     if(!app) return;
 
@@ -616,7 +615,7 @@ void sli_writer_scene_write_on_enter(void* context) {
     furi_thread_start(app->worker_thread);
 }
 
-bool sli_writer_scene_write_on_event(void* context, SceneManagerEvent event) {
+static bool sli_writer_scene_write_on_event(void* context, SceneManagerEvent event) {
     SliWriterApp* app = (SliWriterApp*)context;
     if(!app) return false;
 
@@ -635,7 +634,7 @@ bool sli_writer_scene_write_on_event(void* context, SceneManagerEvent event) {
     return false;
 }
 
-void sli_writer_scene_write_on_exit(void* context) {
+static void sli_writer_scene_write_on_exit(void* context) {
     SliWriterApp* app = (SliWriterApp*)context;
     if(!app) return;
     FURI_LOG_I(TAG, "Scene Write exit (join worker)");
@@ -648,7 +647,7 @@ void sli_writer_scene_write_on_exit(void* context) {
     // Le worker a déjà nettoyé NFC/poller.
 }
 
-void sli_writer_scene_success_on_enter(void* context) {
+static void sli_writer_scene_success_on_enter(void* context) {
     SliWriterApp* app = (SliWriterApp*)context;
     if(!app) return;
     FURI_LOG_I(TAG, "Scene Success enter");
@@ -659,7 +658,7 @@ void sli_writer_scene_success_on_enter(void* context) {
     view_dispatcher_switch_to_view(app->view_dispatcher, SliWriterViewDialogEx);
 }
 
-bool sli_writer_scene_success_on_event(void* context, SceneManagerEvent event) {
+static bool sli_writer_scene_success_on_event(void* context, SceneManagerEvent event) {
     SliWriterApp* app = (SliWriterApp*)context;
     if(!app) return false;
     if(event.type == SceneManagerEventTypeBack ||
@@ -671,14 +670,14 @@ bool sli_writer_scene_success_on_event(void* context, SceneManagerEvent event) {
     return false;
 }
 
-void sli_writer_scene_success_on_exit(void* context) {
+static void sli_writer_scene_success_on_exit(void* context) {
     SliWriterApp* app = (SliWriterApp*)context;
     if(!app) return;
     FURI_LOG_I(TAG, "Scene Success exit");
     dialog_ex_reset(app->dialog_ex);
 }
 
-void sli_writer_scene_error_on_enter(void* context) {
+static void sli_writer_scene_error_on_enter(void* context) {
     SliWriterApp* app = (SliWriterApp*)context;
     if(!app) return;
     FURI_LOG_I(TAG, "Scene Error enter: %s", furi_string_get_cstr(app->error_message));
@@ -689,7 +688,7 @@ void sli_writer_scene_error_on_enter(void* context) {
     view_dispatcher_switch_to_view(app->view_dispatcher, SliWriterViewDialogEx);
 }
 
-bool sli_writer_scene_error_on_event(void* context, SceneManagerEvent event) {
+static bool sli_writer_scene_error_on_event(void* context, SceneManagerEvent event) {
     SliWriterApp* app = (SliWriterApp*)context;
     if(!app) return false;
     if(event.type == SceneManagerEventTypeBack ||
@@ -701,7 +700,7 @@ bool sli_writer_scene_error_on_event(void* context, SceneManagerEvent event) {
     return false;
 }
 
-void sli_writer_scene_error_on_exit(void* context) {
+static void sli_writer_scene_error_on_exit(void* context) {
     SliWriterApp* app = (SliWriterApp*)context;
     if(!app) return;
     FURI_LOG_I(TAG, "Scene Error exit");
@@ -784,7 +783,7 @@ SliWriterApp* sli_writer_app_alloc(void) {
     app->loading = loading_alloc();
 
     app->storage = furi_record_open(RECORD_STORAGE);
-    app->dialogs = furi_record_open(RECORD_DIALOGS);
+    app->dialogs = furi_record_open(RECORD_DIALOGS); // <-- service Dialogs
 
     app->file_path = furi_string_alloc();
     app->error_message = furi_string_alloc();
@@ -855,3 +854,4 @@ int32_t sli_writer_app(void* p) {
     FURI_LOG_I(TAG, "Exit");
     return 0;
 }
+
