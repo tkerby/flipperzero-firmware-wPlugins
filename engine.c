@@ -64,51 +64,254 @@ size_t generate_legal_ai_moves(JumpingPawnsModel* model, int player_value, AIMov
     return move_count;
 }
 
+// int evaluate_board(JumpingPawnsModel* model) {
+//     int score = 0;
+//     int isolation_penalty = 15;  // single pawn penalty
+//     int short_l_penalty   = 10;  // short L penalty
+//     int pair_penalty      = 10;  // isolated horizontal pair penalty
+
+//     // Helper macro to check if coords are inside the board
+//     #define IN_BOUNDS(_y,_x) ((_y) >= 0 && (_y) < 11 && (_x) >= 0 && (_x) < 6)
+
+//     for(int y = 0; y < 11; y++) {
+//         for(int x = 0; x < 6; x++) {
+//             uint8_t piece = model->board_state[y][x];
+//             if(piece != 1 && piece != 2) continue; // skip empty
+
+//             // Distance scoring
+//             if(piece == 2) score += y;
+//             else           score += y - 10;
+
+//             // Neighbor flags
+//             int left  = (x > 0  && model->board_state[y][x-1] == piece);
+//             int right = (x < 5  && model->board_state[y][x+1] == piece);
+//             int up    = (y > 0  && model->board_state[y-1][x] == piece);
+//             int down  = (y < 10 && model->board_state[y+1][x] == piece);
+
+//             // Isolation check for single pawn
+//             if(!left && !right && !up && !down) {
+//                 if(piece == 2) score -= isolation_penalty;
+//                 else           score += isolation_penalty;
+//             }
+
+//             // Isolation check for horizontal pair (avoid double-counting)
+//             if(right) {
+//                 if(x == 0 || model->board_state[y][x-1] != piece) { // left end of pair
+//                     // Check if exactly two in a row
+//                     if((x+2 >= 6) || model->board_state[y][x+2] != piece) {
+//                         // Now check isolation for the pair
+//                         int isolated = 1;
+//                         int coords[2][2] = {{y,x}, {y,x+1}};
+//                         for(int i = 0; i < 2 && isolated; i++) {
+//                             int cy = coords[i][0];
+//                             int cx = coords[i][1];
+//                             const int ny[4] = {cy-1, cy+1, cy,   cy};
+//                             const int nx[4] = {cx,   cx,   cx-1, cx+1};
+//                             for(int n = 0; n < 4; n++) {
+//                                 int ny_ = ny[n];
+//                                 int nx_ = nx[n];
+//                                 if(!IN_BOUNDS(ny_, nx_)) continue;
+//                                 // Skip checking the pair itself
+//                                 if((ny_ == coords[0][0] && nx_ == coords[0][1]) ||
+//                                    (ny_ == coords[1][0] && nx_ == coords[1][1])) {
+//                                     continue;
+//                                 }
+//                                 if(model->board_state[ny_][nx_] == piece) {
+//                                     isolated = 0;
+//                                     break;
+//                                 }
+//                             }
+//                         }
+//                         if(isolated) {
+//                             if(piece == 2) score -= pair_penalty;
+//                             else           score += pair_penalty;
+//                         }
+//                     }
+//                 }
+//             }
+
+//             // --- Short L check with isolation ---
+//             int is_l_isolated(int coords[3][2]) {
+//                 for(int i = 0; i < 3; i++) {
+//                     int cy = coords[i][0];
+//                     int cx = coords[i][1];
+//                     const int ny[4] = {cy-1, cy+1, cy,   cy};
+//                     const int nx[4] = {cx,   cx,   cx-1, cx+1};
+//                     for(int n = 0; n < 4; n++) {
+//                         int ny_ = ny[n];
+//                         int nx_ = nx[n];
+//                         if(!IN_BOUNDS(ny_, nx_)) continue;
+//                         int skip = 0;
+//                         for(int k = 0; k < 3; k++) {
+//                             if(coords[k][0] == ny_ && coords[k][1] == nx_) {
+//                                 skip = 1;
+//                                 break;
+//                             }
+//                         }
+//                         if(skip) continue;
+//                         if(model->board_state[ny_][nx_] == piece) return 0;
+//                     }
+//                 }
+//                 return 1;
+//             }
+
+//             // Horizontal pair + vertical one above
+//             if(right && y > 0) {
+//                 if(model->board_state[y-1][x] == piece && model->board_state[y-1][x+1] != piece) {
+//                     int l_coords[3][2] = {{y,x}, {y,x+1}, {y-1,x}};
+//                     if(is_l_isolated(l_coords)) {
+//                         if(piece == 2) score -= short_l_penalty; else score += short_l_penalty;
+//                     }
+//                 }
+//                 if(model->board_state[y+1][x] == piece && model->board_state[y+1][x+1] != piece && y < 10) {
+//                     int l_coords[3][2] = {{y,x}, {y,x+1}, {y+1,x}};
+//                     if(is_l_isolated(l_coords)) {
+//                         if(piece == 2) score -= short_l_penalty; else score += short_l_penalty;
+//                     }
+//                 }
+//             }
+
+//             // Vertical pair + horizontal one left
+//             if(down && x > 0) {
+//                 if(model->board_state[y][x-1] == piece && model->board_state[y+1][x-1] != piece) {
+//                     int l_coords[3][2] = {{y,x}, {y+1,x}, {y,x-1}};
+//                     if(is_l_isolated(l_coords)) {
+//                         if(piece == 2) score -= short_l_penalty; else score += short_l_penalty;
+//                     }
+//                 }
+//                 if(model->board_state[y][x+1] == piece && model->board_state[y+1][x+1] != piece && x < 5) {
+//                     int l_coords[3][2] = {{y,x}, {y+1,x}, {y,x+1}};
+//                     if(is_l_isolated(l_coords)) {
+//                         if(piece == 2) score -= short_l_penalty; else score += short_l_penalty;
+//                     }
+//                 }
+//             }
+//         }
+//     }
+
+//     #undef IN_BOUNDS
+//     return score;
+// }
+
+int count_pawn_moves(JumpingPawnsModel* model, int y, int x) {
+    int move_count = 0;
+    const int dx[] = {0, 0, -1, 1};
+    const int dy[] = {-1, 1, 0, 0};
+
+    for(int dir = 0; dir < 4; dir++) {
+        int nx = x + dx[dir];
+        int ny = y + dy[dir];
+
+        // Adjacent simple move
+        if(ny >= 0 && ny < 11 && nx >= 0 && nx < 6 && model->board_state[ny][nx] == 0) {
+            move_count++;
+        }
+
+        // Check jump over clump
+        int cx = nx;
+        int cy = ny;
+        bool found_clump = false;
+        while(cx >= 0 && cx < 6 && cy >= 0 && cy < 11 &&
+              model->board_state[cy][cx] != 0 && model->board_state[cy][cx] != 3) {
+            cx += dx[dir];
+            cy += dy[dir];
+            found_clump = true;
+        }
+        if(found_clump && cx >= 0 && cx < 6 && cy >= 0 && cy < 11 && model->board_state[cy][cx] == 0) {
+            move_count++;
+        }
+    }
+    return move_count;
+}
+
 int evaluate_board(JumpingPawnsModel* model) {
     int score = 0;
     int isolation_penalty = 15;  // single pawn penalty
-    int short_l_penalty   = 10;  // short L penalty (adjust for balance)
+    int short_l_penalty   = 10;  // short L penalty
+    int pair_penalty      = 10;  // isolated horizontal pair penalty
 
-    // Helper lambda to check if coords are inside the board
     #define IN_BOUNDS(_y,_x) ((_y) >= 0 && (_y) < 11 && (_x) >= 0 && (_x) < 6)
 
     for(int y = 0; y < 11; y++) {
         for(int x = 0; x < 6; x++) {
             uint8_t piece = model->board_state[y][x];
-            if(piece != 1 && piece != 2) continue; // skip empty
+            if(piece != 1 && piece != 2) continue;
 
-            // Distance scoring
-            if(piece == 2) score += y;
-            else           score += y - 10;
+            // --- Distance scoring with quadratic emphasis on progress ---
+            if(piece == 2) {
+                score += y * y;  // AI pawns gain more score the further down the board
+                if(y >= 9) score += 15; // Bonus for reaching final rows
+                if(y <= 2) score -= 5;  // Penalty for camping near start
+            } else {
+                int dist = 10 - y;
+                score -= dist * dist;  // Opponent distance is bad for AI
+                if(y <= 1) score -= 15; // Opponent close to goal is bad
+                if(y >= 8) score += 5;  // Opponent pawns far back give small bonus
+            }
 
-            // Neighbor flags
+            // --- Neighbor flags for connectivity ---
             int left  = (x > 0  && model->board_state[y][x-1] == piece);
             int right = (x < 5  && model->board_state[y][x+1] == piece);
             int up    = (y > 0  && model->board_state[y-1][x] == piece);
             int down  = (y < 10 && model->board_state[y+1][x] == piece);
 
-            // Isolation check
+            // Reward connected groups moving forward
+            int connections = left + right + up + down;
+            if(connections >= 2) {
+                if(piece == 2) score += 3;
+                else score -= 3;
+            }
+
+            // --- Isolation penalties ---
             if(!left && !right && !up && !down) {
                 if(piece == 2) score -= isolation_penalty;
                 else           score += isolation_penalty;
             }
 
-            // Short L check with isolation condition
-            // Only check “forward” to avoid double counting
+            // Isolation check for horizontal pairs (avoid double-counting)
+            if(right) {
+                if(x == 0 || model->board_state[y][x-1] != piece) {
+                    if((x+2 >= 6) || model->board_state[y][x+2] != piece) {
+                        int isolated = 1;
+                        int coords[2][2] = {{y,x}, {y,x+1}};
+                        for(int i = 0; i < 2 && isolated; i++) {
+                            int cy = coords[i][0];
+                            int cx = coords[i][1];
+                            const int ny[4] = {cy-1, cy+1, cy,   cy};
+                            const int nx[4] = {cx,   cx,   cx-1, cx+1};
+                            for(int n = 0; n < 4; n++) {
+                                int ny_ = ny[n];
+                                int nx_ = nx[n];
+                                if(!IN_BOUNDS(ny_, nx_)) continue;
+                                if((ny_ == coords[0][0] && nx_ == coords[0][1]) ||
+                                   (ny_ == coords[1][0] && nx_ == coords[1][1])) {
+                                    continue;
+                                }
+                                if(model->board_state[ny_][nx_] == piece) {
+                                    isolated = 0;
+                                    break;
+                                }
+                            }
+                        }
+                        if(isolated) {
+                            if(piece == 2) score -= pair_penalty;
+                            else           score += pair_penalty;
+                        }
+                    }
+                }
+            }
 
-            // Helper function to check isolation of an L shape
+            // --- Short L check with isolation ---
             int is_l_isolated(int coords[3][2]) {
                 for(int i = 0; i < 3; i++) {
                     int cy = coords[i][0];
                     int cx = coords[i][1];
-                    // Check all 4 neighbors
                     const int ny[4] = {cy-1, cy+1, cy,   cy};
                     const int nx[4] = {cx,   cx,   cx-1, cx+1};
                     for(int n = 0; n < 4; n++) {
                         int ny_ = ny[n];
                         int nx_ = nx[n];
                         if(!IN_BOUNDS(ny_, nx_)) continue;
-                        // Skip neighbors that are part of the L shape itself
                         int skip = 0;
                         for(int k = 0; k < 3; k++) {
                             if(coords[k][0] == ny_ && coords[k][1] == nx_) {
@@ -117,14 +320,12 @@ int evaluate_board(JumpingPawnsModel* model) {
                             }
                         }
                         if(skip) continue;
-                        // If neighbor is same piece, L is not isolated
                         if(model->board_state[ny_][nx_] == piece) return 0;
                     }
                 }
                 return 1;
             }
 
-            // Horizontal pair + vertical one above
             if(right && y > 0) {
                 if(model->board_state[y-1][x] == piece && model->board_state[y-1][x+1] != piece) {
                     int l_coords[3][2] = {{y,x}, {y,x+1}, {y-1,x}};
@@ -132,8 +333,7 @@ int evaluate_board(JumpingPawnsModel* model) {
                         if(piece == 2) score -= short_l_penalty; else score += short_l_penalty;
                     }
                 }
-                // vertical one below
-                if(model->board_state[y+1][x] == piece && model->board_state[y+1][x+1] != piece && y < 10) {
+                if(y < 10 && model->board_state[y+1][x] == piece && model->board_state[y+1][x+1] != piece) {
                     int l_coords[3][2] = {{y,x}, {y,x+1}, {y+1,x}};
                     if(is_l_isolated(l_coords)) {
                         if(piece == 2) score -= short_l_penalty; else score += short_l_penalty;
@@ -141,7 +341,6 @@ int evaluate_board(JumpingPawnsModel* model) {
                 }
             }
 
-            // Vertical pair + horizontal one left
             if(down && x > 0) {
                 if(model->board_state[y][x-1] == piece && model->board_state[y+1][x-1] != piece) {
                     int l_coords[3][2] = {{y,x}, {y+1,x}, {y,x-1}};
@@ -149,13 +348,22 @@ int evaluate_board(JumpingPawnsModel* model) {
                         if(piece == 2) score -= short_l_penalty; else score += short_l_penalty;
                     }
                 }
-                // horizontal one right
-                if(model->board_state[y][x+1] == piece && model->board_state[y+1][x+1] != piece && x < 5) {
+                if(x < 5 && model->board_state[y][x+1] == piece && model->board_state[y+1][x+1] != piece) {
                     int l_coords[3][2] = {{y,x}, {y+1,x}, {y,x+1}};
                     if(is_l_isolated(l_coords)) {
                         if(piece == 2) score -= short_l_penalty; else score += short_l_penalty;
                     }
                 }
+            }
+
+            // --- Mobility scoring ---
+            int mobility = count_pawn_moves(model, y, x);
+            if(mobility == 0) {
+                if(piece == 2) score -= 20;  // Big penalty for stranded AI pawn
+                else           score += 20;  // Big bonus for stranded opponent pawn
+            } else {
+                if(piece == 2) score += mobility;  // Small bonus for AI pawn mobility
+                else           score -= mobility;  // Small penalty for opponent pawn mobility
             }
         }
     }
@@ -210,10 +418,28 @@ void apply_ai_move(JumpingPawnsModel* model, AIMoveStructure move, int player_va
 
 void ai_move(JumpingPawnsModel* model) {
     AIMoveStructure moves[64];
-    size_t count = generate_legal_ai_moves(model, 2, moves, 64); // 2 is the AI pawn value in the board array
+    size_t count = generate_legal_ai_moves(model, 2, moves, 64);
+    if(count == 0) return;
+
     int depth = model->difficulty_level + 1;
 
-    if(count == 0) return;
+    // --- Endgame detection ---
+    int ai_goal_pawns = 0;
+    int player_goal_pawns = 0;
+
+    for(int y = 0; y < 11; y++) {
+        for(int x = 0; x < 6; x++) {
+            if(model->board_state[y][x] == 2 && (y == 9 || y == 10))
+                ai_goal_pawns++;
+            if(model->board_state[y][x] == 1 && (y == 0 || y == 1))
+                player_goal_pawns++;
+        }
+    }
+
+    // If many pawns are in final rows, increase depth
+    if(ai_goal_pawns >= 10 || player_goal_pawns >= 10) {
+        depth = 4;
+    }
 
     int best_score = -10000;
     AIMoveStructure best_move = moves[0];
@@ -230,5 +456,6 @@ void ai_move(JumpingPawnsModel* model) {
         }
     }
 
+    model->is_ai_thinking = false;
     apply_ai_move(model, best_move, 2);
 }

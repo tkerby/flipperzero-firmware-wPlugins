@@ -14,6 +14,7 @@ typedef struct {
     int selected_y;
     int last_calculated_piece_x;
     int last_calculated_piece_y;
+    bool is_ai_thinking;
     bool game_over;
     int difficulty_level;
     int board_state[11][6];

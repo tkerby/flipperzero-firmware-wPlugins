@@ -205,6 +205,13 @@ void player_moving(void* context) {
         check_for_game_end(context);
 
         if (strcmp(model->ai_or_player, "ai") == 0) {
+            model->is_ai_thinking = true;
+            with_view_model(
+                app->view,
+                model,
+                { 
+                },
+                true);
             ai_move(model);
         } else {
             end_turn(app);
@@ -365,6 +372,7 @@ static void jumping_pawns_draw_callback(Canvas* canvas, void* model) {
     if (my_model->game_over) {
         canvas_clear(canvas);
         canvas_draw_str(canvas, 15, 15, "Game over!");
+        return;
     }
 
     // draw gameboard
@@ -459,6 +467,14 @@ static void jumping_pawns_draw_callback(Canvas* canvas, void* model) {
             canvas_draw_icon(canvas, (10 * my_model->selected_x) - 7, (10 * my_model->selected_y) - 7, &I_selecteddot);
         } else {
             canvas_draw_icon(canvas, (10 * my_model->selected_x) - 7, (10 * my_model->selected_y) - 7, &I_frame1);
+        }
+    }
+
+    if (strcmp(my_model->ai_or_player, "ai") == 0) {
+        if (my_model->is_ai_thinking) {
+            canvas_draw_str(canvas, 5, 123, "Thinking...");
+        } else {
+            canvas_draw_str(canvas, 5, 123, "Your move!");
         }
     }
 
@@ -652,6 +668,7 @@ static JumpingPawnsApp* jumping_pawns_alloc() {
     model->selected_y = 1;
     model->last_calculated_piece_x = 0;
     model->last_calculated_piece_y = 0;
+    model->is_ai_thinking = false;
     model->game_over = false;
     model->difficulty_level = 1;
     int temp_board[11][6] = {
@@ -690,10 +707,10 @@ static JumpingPawnsApp* jumping_pawns_alloc() {
         0,
         128,
         64,
-        "Jumping Pawns\n\n"
-        "v0.1\n"
+        "Jumping Pawns\n"
+        "v0.1\n\n"
         "Author: @Tyl3rA\n"
-        "Repo: https://github.com/TAxelAnderson/Jumping-Pawns");
+        "Repo: https://github.com/Tyl3rA/Jumping-Pawns");
     view_set_previous_callback(widget_get_view(app->widget_about), navigation_submenu_callback);
     view_dispatcher_add_view(app->view_dispatcher, JumpingPawnsAbout, widget_get_view(app->widget_about));
 
