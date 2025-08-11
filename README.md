@@ -1,7 +1,5 @@
 # Jumping Pawns  
 
-*A fast-paced Flipper Zero strategy game of leaps, traps, and outsmarting your opponent.*  
-
 **Jumping Pawns** is a strategy game for the Flipper Zero. Play locally against a friend or challenge an AI powered by a minimax algorithm.  
 
 ## Usage  
