@@ -436,15 +436,15 @@ static void jumping_pawns_draw_callback(Canvas* canvas, void* model) {
         canvas_clear(canvas);
         if (strcmp(my_model->ai_or_player, "ai") == 0) {
             if (my_model->player_1_win) {
-                canvas_draw_str(canvas, 10, 15, "Player 1 wins!");
+                canvas_draw_str(canvas, 5, 62, "Player 1 wins!");
             } else if (my_model->player_2_win) {
-                canvas_draw_str(canvas, 10, 15, "AI wins!");
+                canvas_draw_str(canvas, 15, 62, "AI wins!");
             }
         } else {
             if (my_model->player_1_win) {
-                canvas_draw_str(canvas, 10, 15, "Player 1 wins!");
+                canvas_draw_str(canvas, 5, 62, "Player 1 wins!");
             } else if (my_model->player_2_win) {
-                canvas_draw_str(canvas, 10, 15, "Player 2 wins!");
+                canvas_draw_str(canvas, 5, 62, "Player 2 wins!");
             }
         }
         return;
@@ -783,7 +783,8 @@ static JumpingPawnsApp* jumping_pawns_alloc() {
         128,
         64,
         "How to play:\n\n"
-        "You and your opponent have 12 pawns. These pawns can only move by jumping over other groups of pawns. The pawns can jump horizontally and vertically, but not diagonally. Pawns can also jump over multiple pawn groups. Your goal is to get all of your pawns to the two rows opposite your side before your opponent.");
+        "You and your opponent have 12 pawns. These pawns can only move by jumping over other groups of one or more pawns. The pawns can jump horizontally and vertically, but not diagonally. Pawns can also jump over multiple pawn groups. Your goal is to get all of your pawns to the two rows opposite your side before your opponent. A more detailed explanation can be found in the GitHub readme.\n"
+        "https://github.com/Tyl3rA/Jumping-Pawns/README.md");
     view_set_previous_callback(widget_get_view(app->widget_tutorial), navigation_submenu_callback);
     view_dispatcher_add_view(app->view_dispatcher, JumpingPawnsViewTutorial, widget_get_view(app->widget_tutorial));
 
