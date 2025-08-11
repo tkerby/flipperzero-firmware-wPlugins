@@ -1,7 +1,26 @@
-# Jumping Pawns
+# Jumping Pawns  
 
-## Usage
-  The PvP option in the submenu is local play, the PvE option lets you play against a minimax algorithm. After choosing PvE, you will select a difficulty and a notifcation level submenu. Easy has a depth of 2, Medium has a depth of 3, and Hard has a depth of 4. If Easy is selected, the depth increases to 3 once 10 pawns have reached their target rows. The notifications options are straightfoward, you choose if / how you want to be notified once the AI has made its move whether that be a blink of the LED, a short buzz of the vibro motor, or both.
+*A fast-paced Flipper Zero strategy game of leaps, traps, and outsmarting your opponent.*  
 
-## How to Play
-  Each player starts with 12 pawns in the rows on their side of the board. Your goal is to reach the other side of the board with all of your pawns before your opponent does. Each pawn moves only by jumping vertically or horizontally over other groups of pawns.
+**Jumping Pawns** is a strategy game for the Flipper Zero. Play locally against a friend or challenge an AI powered by a minimax algorithm.  
+
+## Usage  
+From the main menu:  
+- **PvP** – Local two-player mode.  
+- **PvE** – Play against the AI. After selecting PvE, choose:  
+  1. **Difficulty**:  
+     - *Easy*: Search depth 2 (increases to 3 once 10 pawns have reached their target rows).  
+     - *Medium*: Search depth 3.  
+     - *Hard*: Search depth 4.  
+  2. **Notifications**: Choose how the Flipper Zero alerts you when the AI moves:  
+     - LED blink  
+     - Vibration  
+     - Both  
+     *(Notifications apply only in PvE mode.)*  
+
+## How to Play  
+- The board is fixed at **11×6**.  
+- Each player starts with 12 pawns on their side.  
+- The objective: Move all your pawns to the opposite side of the board before your opponent does.  
+- Pawns move **only by jumping** vertically or horizontally over **one or more consecutive pawns** (yours or your opponent’s).  
+- There are no tiebreakers — the first player to get all pawns across wins.  
