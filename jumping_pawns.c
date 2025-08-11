@@ -440,14 +440,13 @@ static void jumping_pawns_draw_callback(Canvas* canvas, void* model) {
             } else if (my_model->player_2_win) {
                 canvas_draw_str(canvas, 10, 15, "AI wins!");
             }
-        }  else {
+        } else {
             if (my_model->player_1_win) {
                 canvas_draw_str(canvas, 10, 15, "Player 1 wins!");
             } else if (my_model->player_2_win) {
                 canvas_draw_str(canvas, 10, 15, "Player 2 wins!");
             }
         }
-        canvas_draw_str(canvas, 15, 15, "Game over!");
         return;
     }
 
