@@ -185,8 +185,10 @@ void check_for_game_end(void* context) {
 
     if (player_1_win) {
         model->game_over = true;
+        model->player_1_win = true;
     } else if (player_2_win) {
         model->game_over = true;
+        model->player_2_win = true;
     }
 }
 
@@ -432,6 +434,19 @@ static void jumping_pawns_draw_callback(Canvas* canvas, void* model) {
 
     if (my_model->game_over) {
         canvas_clear(canvas);
+        if (strcmp(my_model->ai_or_player, "ai") == 0) {
+            if (my_model->player_1_win) {
+                canvas_draw_str(canvas, 10, 15, "Player 1 wins!");
+            } else if (my_model->player_2_win) {
+                canvas_draw_str(canvas, 10, 15, "AI wins!");
+            }
+        }  else {
+            if (my_model->player_1_win) {
+                canvas_draw_str(canvas, 10, 15, "Player 1 wins!");
+            } else if (my_model->player_2_win) {
+                canvas_draw_str(canvas, 10, 15, "Player 2 wins!");
+            }
+        }
         canvas_draw_str(canvas, 15, 15, "Game over!");
         return;
     }
@@ -741,6 +756,8 @@ static JumpingPawnsApp* jumping_pawns_alloc() {
     model->last_calculated_piece_y = 0;
     model->is_ai_thinking = false;
     model->game_over = false;
+    model->player_1_win = false;
+    model->player_2_win = false;
     model->difficulty_level = 1;
     int temp_board[11][6] = {
         {2, 2, 2, 2, 2, 2},
