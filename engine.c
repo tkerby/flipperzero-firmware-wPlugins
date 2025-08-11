@@ -499,6 +499,7 @@ void ai_move(JumpingPawnsModel* model) {
     AIMoveStructure moves[64];
     size_t count = generate_legal_ai_moves(model, 2, moves, 64);
     if(count == 0) return;
+    if (model->game_over) return;
 
     int depth = model->difficulty_level + 1;
 
