@@ -44,6 +44,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - NFC: [Fix incorrect Saflok year formula (By Eltrick)](https://github.com/Next-Flip/Momentum-Firmware/pull/433)
 - RFID: [Add additional procotols supported by EM4305 chipset (By jamisonderek)](https://github.com/Next-Flip/Momentum-Firmware/pull/434)
 - Picopass: [Support loading file from launch argument (By Willy-JL)](https://github.com/Next-Flip/Momentum-Firmware/commit/b376e6db971ee7b4c18f19e2bc48337f0655862a)
+- SubGHz: Add variant of Add Manually menu with manual editing for each value (By MrLego8-9)
+- Updated: [Sub-GHz Remote v1.5 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote) Add possibility to use custom buttons when using the SubGHz remote app (By MrLego8-9)
+- SubGHz: Add ZKTeco 430.5 MHz add manually support (By xMasterX)
 
 <a name="release">
 
@@ -698,7 +701,7 @@ $ ./fbt dolphin_ext
 - [Sub-GHz Bruteforcer v4.0 (By Ganapati/xMasterX/derskythe)](https://github.com/derskythe/flipperzero-subbrute/tree/master)
 - [Sub-GHz Playlist v1.0.1 (By darmiel)](https://github.com/darmiel/flipper-playlist)
 - [Sub-GHz Playlist Creator v0.2 (By coolerUA)](https://github.com/coolerUA/Sub-Ghz-Playlist-Creator)
-- [Sub-GHz Remote v1.4 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote)
+- [Sub-GHz Remote v1.5 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote)
 - [Sub-GHz Rolling Flaws v1.5 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials)
 - [Sub-GHz Scheduler v2.2 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
 - [Sub-Ghz Toolkit v1.0 (By RocketGod-git)](https://github.com/RocketGod-git/RocketGods-SubGHz-Toolkit)

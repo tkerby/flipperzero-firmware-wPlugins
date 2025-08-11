@@ -24,6 +24,9 @@ static void subghz_remote_make_app_folder(SubGhzRemoteApp* app) {
 
     Storage* storage = furi_record_open(RECORD_STORAGE);
 
+    // Migrate old users data
+    storage_common_migrate(storage, EXT_PATH("unirf"), SUBREM_APP_FOLDER);
+
     if(!storage_simply_mkdir(storage, SUBREM_APP_FOLDER)) {
         // FURI_LOG_E(TAG, "Could not create folder %s", SUBREM_APP_FOLDER);
         dialog_message_show_storage_error(app->dialogs, "Cannot create\napp folder");
@@ -65,6 +68,11 @@ SubGhzRemoteApp* subghz_remote_app_alloc() {
     app->submenu = submenu_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher, SubRemViewIDSubmenu, submenu_get_view(app->submenu));
+
+    // Variable item list
+    app->var_item_list = variable_item_list_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher, SubRemViewIDVariableItemList, variable_item_list_get_view(app->var_item_list));
 
     // Dialog
     app->dialogs = furi_record_open(RECORD_DIALOGS);
@@ -119,6 +127,10 @@ void subghz_remote_app_free(SubGhzRemoteApp* app) {
     // Submenu
     view_dispatcher_remove_view(app->view_dispatcher, SubRemViewIDSubmenu);
     submenu_free(app->submenu);
+
+    // Variable item list
+    view_dispatcher_remove_view(app->view_dispatcher, SubRemViewIDVariableItemList);
+    variable_item_list_free(app->var_item_list);
 
     // Dialog
     furi_record_close(RECORD_DIALOGS);
