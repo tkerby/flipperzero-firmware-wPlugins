@@ -24,3 +24,7 @@ From the main menu:
 - The objective: Move all your pawns to the opposite side of the board before your opponent does.  
 - Pawns move **only by jumping** vertically or horizontally over **one or more consecutive pawns** (yours or your opponent’s).  
 - There are no tiebreakers — the first player to get all pawns across wins.  
+
+##
+Feel free to leave a Github issue / PR with a feature you'd like to see.
+##
