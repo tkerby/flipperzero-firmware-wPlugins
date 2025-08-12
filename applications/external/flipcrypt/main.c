@@ -37,6 +37,7 @@
 #include "ciphers/caesar.h"
 #include "ciphers/playfair.h"
 #include "ciphers/polybius.h"
+#include "ciphers/porta.h"
 #include "ciphers/railfence.h"
 #include "ciphers/rc4.h"
 #include "ciphers/rot13.h"
@@ -137,6 +138,15 @@ typedef enum {
     FlipCryptPolybiusDecryptInputScene,
     FlipCryptPolybiusDecryptOutputScene,
     FlipCryptPolybiusLearnScene,
+    // Porta scenes
+    FlipCryptPortaSubmenuScene,
+    FlipCryptPortaInputScene,
+    FlipCryptPortaKeywordInputScene,
+    FlipCryptPortaDecryptKeywordInputScene,
+    FlipCryptPortaOutputScene,
+    FlipCryptPortaDecryptInputScene,
+    FlipCryptPortaDecryptOutputScene,
+    FlipCryptPortaLearnScene,
     // Railfence scenes
     FlipCryptRailfenceSubmenuScene,
     FlipCryptRailfenceInputScene,
@@ -302,6 +312,7 @@ typedef struct App {
     char* beaufort_key_input;
     int32_t caesar_key_input;
     char* playfair_keyword_input;
+    char* porta_keyword_input;
     int32_t railfence_key_input;
     char* rc4_keyword_input;
     int32_t scytale_keyword_input;
@@ -312,6 +323,7 @@ typedef struct App {
     uint8_t aes_key_input_size;
     uint8_t beaufort_key_input_size;
     uint8_t playfair_keyword_input_size;
+    uint8_t porta_keyword_input_size;
     uint8_t rc4_keyword_input_size;
     uint8_t vigenere_keyword_input_size;
     uint8_t sip_keyword_input_size;
@@ -333,6 +345,7 @@ typedef enum {
     MenuIndexCaesar,
     MenuIndexPlayfair,
     MenuIndexPolybius,
+    MenuIndexPorta,
     MenuIndexRailfence,
     MenuIndexRC4,
     MenuIndexROT13,
@@ -369,6 +382,7 @@ typedef enum {
     EventCaesar,
     EventPlayfair,
     EventPolybius,
+    EventPorta,
     EventRailfence,
     EventRC4,
     EventROT13,
@@ -436,6 +450,9 @@ void flip_crypt_menu_callback(void* context, uint32_t index) {
         break;
     case MenuIndexPolybius:
         scene_manager_handle_custom_event(app->scene_manager, EventPolybius);
+        break;
+    case MenuIndexPorta:
+        scene_manager_handle_custom_event(app->scene_manager, EventPorta);
         break;
     case MenuIndexRailfence:
         scene_manager_handle_custom_event(app->scene_manager, EventRailfence);
@@ -531,6 +548,7 @@ void flip_crypt_cipher_submenu_scene_on_enter(void* context) {
         app->submenu, "Playfair Cipher", MenuIndexPlayfair, flip_crypt_menu_callback, app);
     submenu_add_item(
         app->submenu, "Polybius Square", MenuIndexPolybius, flip_crypt_menu_callback, app);
+    submenu_add_item(app->submenu, "Porta Cipher", MenuIndexPorta, flip_crypt_menu_callback, app);
     submenu_add_item(
         app->submenu, "Railfence Cipher", MenuIndexRailfence, flip_crypt_menu_callback, app);
     submenu_add_item(app->submenu, "RC4 Cipher", MenuIndexRC4, flip_crypt_menu_callback, app);
@@ -627,6 +645,10 @@ bool flip_crypt_main_menu_scene_on_event(void* context, SceneManagerEvent event)
             break;
         case EventPolybius:
             scene_manager_next_scene(app->scene_manager, FlipCryptPolybiusSubmenuScene);
+            consumed = true;
+            break;
+        case EventPorta:
+            scene_manager_next_scene(app->scene_manager, FlipCryptPortaSubmenuScene);
             consumed = true;
             break;
         case EventRailfence:
@@ -750,6 +772,9 @@ void cipher_encrypt_submenu_callback(void* context, uint32_t index) {
     case FlipCryptPolybiusSubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptPolybiusInputScene);
         break;
+    case FlipCryptPortaSubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptPortaKeywordInputScene);
+        break;
     case FlipCryptRailfenceSubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptRailfenceKeyInputScene);
         break;
@@ -846,6 +871,9 @@ void cipher_decrypt_submenu_callback(void* context, uint32_t index) {
     case FlipCryptPolybiusSubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptPolybiusDecryptInputScene);
         break;
+    case FlipCryptPortaSubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptPortaDecryptKeywordInputScene);
+        break;
     case FlipCryptRailfenceSubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptRailfenceDecryptKeyInputScene);
         break;
@@ -906,6 +934,9 @@ void cipher_learn_submenu_callback(void* context, uint32_t index) {
         break;
     case FlipCryptPolybiusSubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptPolybiusLearnScene);
+        break;
+    case FlipCryptPortaSubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptPortaLearnScene);
         break;
     case FlipCryptRailfenceSubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptRailfenceLearnScene);
@@ -1195,6 +1226,12 @@ void cipher_submenu_scene_on_enter(void* context) {
         submenu_add_item(app->submenu, "Decode Text", 1, cipher_decrypt_submenu_callback, app);
         submenu_add_item(app->submenu, "Learn", 2, cipher_learn_submenu_callback, app);
         break;
+    case FlipCryptPortaSubmenuScene:
+        submenu_set_header(app->submenu, "Porta Cipher");
+        submenu_add_item(app->submenu, "Encode Text", 0, cipher_encrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Decode Text", 1, cipher_decrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Learn", 3, cipher_learn_submenu_callback, app);
+        break;
     case FlipCryptRailfenceSubmenuScene:
         submenu_set_header(app->submenu, "Railfence Cipher");
         submenu_add_item(app->submenu, "Encode Text", 0, cipher_encrypt_submenu_callback, app);
@@ -1389,6 +1426,18 @@ void flip_crypt_text_input_callback(void* context) {
         break;
     case FlipCryptPolybiusDecryptInputScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptPolybiusDecryptOutputScene);
+        break;
+    case FlipCryptPortaInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptPortaOutputScene);
+        break;
+    case FlipCryptPortaDecryptInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptPortaDecryptOutputScene);
+        break;
+    case FlipCryptPortaKeywordInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptPortaInputScene);
+        break;
+    case FlipCryptPortaDecryptKeywordInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptPortaDecryptInputScene);
         break;
     case FlipCryptRailfenceInputScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptRailfenceOutputScene);
@@ -1715,6 +1764,46 @@ void cipher_input_scene_on_enter(void* context) {
             true);
         break;
     case FlipCryptPolybiusDecryptInputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->universal_input,
+            app->universal_input_size,
+            true);
+        break;
+    case FlipCryptPortaInputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->universal_input,
+            app->universal_input_size,
+            true);
+        break;
+    case FlipCryptPortaDecryptInputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->universal_input,
+            app->universal_input_size,
+            true);
+        break;
+    case FlipCryptPortaKeywordInputScene:
+        text_input_reset(app->text_input);
+        text_input_set_header_text(app->text_input, "Enter key");
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->universal_input,
+            app->universal_input_size,
+            true);
+        break;
+    case FlipCryptPortaDecryptKeywordInputScene:
+        text_input_reset(app->text_input);
+        text_input_set_header_text(app->text_input, "Enter key");
         text_input_set_result_callback(
             app->text_input,
             flip_crypt_text_input_callback,
@@ -2347,6 +2436,30 @@ void dialog_cipher_output_scene_on_enter(void* context) {
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
         dialog_ex_set_right_button_text(app->dialog_ex, "QR");
         break;
+    case FlipCryptPortaOutputScene:
+        dialog_ex_set_text(
+            app->dialog_ex,
+            porta_encrypt(app->universal_input, app->porta_keyword_input),
+            64,
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_result_generic(
+            APP_DATA_PATH("porta.txt"),
+            porta_encrypt(app->universal_input, app->porta_keyword_input));
+        app->last_output_scene = "Porta";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
+    case FlipCryptPortaDecryptOutputScene:
+        dialog_ex_set_text(app->dialog_ex, "test", 64, 18, AlignCenter, AlignCenter);
+        save_result_generic(APP_DATA_PATH("porta_decrypt.txt"), "test");
+        app->last_output_scene = "PortaDecrypt";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
     case FlipCryptRailfenceOutputScene:
         dialog_ex_set_text(
             app->dialog_ex,
@@ -2890,6 +3003,10 @@ void cipher_learn_scene_on_enter(void* context) {
             "The Polybius square is a classical cipher that uses a 5x5 grid filled with letters of the alphabet to convert plaintext into pairs of numbers. Each letter is identified by its row and column numbers in the grid. For example, 'A' might be encoded as '11', 'B' as '12', and so on. Since the Latin alphabet has 26 letters, 'I' and 'J' are typically combined to fit into the 25-cell grid. The Polybius square is easy to implement and was historically used for signaling and cryptography in wartime. It is simple and easy to decode, and therefore offers minimal security by modern standards.");
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
         break;
+    case FlipCryptPortaLearnScene:
+        widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "Porta cipher learn here!");
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
+        break;
     case FlipCryptRailfenceLearnScene:
         widget_add_text_scroll_element(
             app->widget,
@@ -3214,6 +3331,10 @@ void flip_crypt_nfc_scene_on_enter(void* context) {
         create_nfc_tag(context, load_result_generic(APP_DATA_PATH("polybius.txt")));
     } else if(strcmp(app->last_output_scene, "PolybiusDecrypt") == 0) {
         create_nfc_tag(context, load_result_generic(APP_DATA_PATH("polybius_decrypt.txt")));
+    } else if(strcmp(app->last_output_scene, "Porta") == 0) {
+        create_nfc_tag(context, load_result_generic(APP_DATA_PATH("porta.txt")));
+    } else if(strcmp(app->last_output_scene, "PortaDecrypt") == 0) {
+        create_nfc_tag(context, load_result_generic(APP_DATA_PATH("porta_decrypt.txt")));
     } else if(strcmp(app->last_output_scene, "Railfence") == 0) {
         create_nfc_tag(context, load_result_generic(APP_DATA_PATH("railfence.txt")));
     } else if(strcmp(app->last_output_scene, "RailfenceDecrypt") == 0) {
@@ -3449,6 +3570,26 @@ void flip_crypt_qr_scene_on_enter(void* context) {
     } else if(strcmp(app->last_output_scene, "PolybiusDecrypt") == 0) {
         qrcodegen_encodeText(
             load_result_generic(APP_DATA_PATH("polybius_decrypt.txt")),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "Porta") == 0) {
+        qrcodegen_encodeText(
+            load_result_generic(APP_DATA_PATH("porta.txt")),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "PortaDecrypt") == 0) {
+        qrcodegen_encodeText(
+            load_result_generic(APP_DATA_PATH("porta_decrypt.txt")),
             app->qr_buffer,
             app->qrcode,
             qrcodegen_Ecc_LOW,
@@ -3806,6 +3947,10 @@ void flip_crypt_save_scene_on_enter(void* context) {
     } else if(strcmp(app->last_output_scene, "PolybiusDecrypt") == 0) {
         save_result(
             load_result_generic(APP_DATA_PATH("polybius_decrypt.txt")), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "Porta") == 0) {
+        save_result(load_result_generic(APP_DATA_PATH("porta.txt")), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "PortaDecrypt") == 0) {
+        save_result(load_result_generic(APP_DATA_PATH("porta_decrypt.txt")), app->save_name_input);
     } else if(strcmp(app->last_output_scene, "Railfence") == 0) {
         save_result(load_result_generic(APP_DATA_PATH("railfence.txt")), app->save_name_input);
     } else if(strcmp(app->last_output_scene, "RailfenceDecrypt") == 0) {
@@ -4005,6 +4150,14 @@ void (*const flip_crypt_scene_on_enter_handlers[])(void*) = {
     cipher_input_scene_on_enter, // PolybiusDecryptInput
     dialog_cipher_output_scene_on_enter, // PolybiusDecryptOutput
     cipher_learn_scene_on_enter, // PolybiusLearn
+    cipher_submenu_scene_on_enter, // PortaSubmenu
+    cipher_input_scene_on_enter, // PortaInput
+    cipher_input_scene_on_enter, // PortaKeywordInput
+    cipher_input_scene_on_enter, // PortaDecryptKeywordInput
+    dialog_cipher_output_scene_on_enter, // PortaOutput
+    cipher_input_scene_on_enter, // PortaDecryptInput
+    dialog_cipher_output_scene_on_enter, // PortaDecryptOutput
+    cipher_learn_scene_on_enter, // PortaLearn
     cipher_submenu_scene_on_enter, // RailfenceSubmenu
     cipher_input_scene_on_enter, // RailfenceInput
     number_input_scene_on_enter, // RailfenceKeyInput
@@ -4182,6 +4335,14 @@ bool (*const flip_crypt_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     flip_crypt_generic_event_handler, // PolybiusDecryptInput
     flip_crypt_generic_event_handler, // PolybiusDecryptOutput
     flip_crypt_generic_event_handler, // PolybiusLearn
+    flip_crypt_generic_event_handler, // PortaSubmenu
+    flip_crypt_generic_event_handler, // PortaInput
+    flip_crypt_generic_event_handler, // PortaKeywordInput
+    flip_crypt_generic_event_handler, // PortaDecryptKeywordInput
+    flip_crypt_generic_event_handler, // PortaOutput
+    flip_crypt_generic_event_handler, // PortaDecryptInput
+    flip_crypt_generic_event_handler, // PortaDecryptOutput
+    flip_crypt_generic_event_handler, // PortaLearn
     flip_crypt_generic_event_handler, // RailfenceSubmenu
     flip_crypt_generic_event_handler, // RailfenceInput
     flip_crypt_generic_event_handler, // RailfenceKeyInput
@@ -4359,6 +4520,14 @@ void (*const flip_crypt_scene_on_exit_handlers[])(void*) = {
     flip_crypt_generic_on_exit, // PolybiusDecryptInput
     flip_crypt_generic_on_exit, // PolybiusDecryptOutput
     flip_crypt_generic_on_exit, // PolybiusLearn
+    flip_crypt_generic_on_exit, // PortaSubmenu
+    flip_crypt_generic_on_exit, // PortaInput
+    flip_crypt_generic_on_exit, // PortaKeywordInput
+    flip_crypt_generic_on_exit, // PortaDecryptKeywordInput
+    flip_crypt_generic_on_exit, // PortaOutput
+    flip_crypt_generic_on_exit, // PortaDecryptInput
+    flip_crypt_generic_on_exit, // PortaDecryptOutput
+    flip_crypt_generic_on_exit, // PortaLearn
     flip_crypt_generic_on_exit, // RailfenceSubmenu
     flip_crypt_generic_on_exit, // RailfenceInput
     flip_crypt_generic_on_exit, // RailfenceKeyInput
@@ -4502,6 +4671,7 @@ static App* app_alloc() {
     app->aes_key_input_size = 17;
     app->beaufort_key_input_size = 64;
     app->playfair_keyword_input_size = 26;
+    app->porta_keyword_input_size = 64;
     app->rc4_keyword_input_size = 64;
     app->vigenere_keyword_input_size = 64;
     app->universal_input = malloc(app->universal_input_size);
@@ -4513,6 +4683,7 @@ static App* app_alloc() {
     app->beaufort_key_input = malloc(app->beaufort_key_input_size);
     app->caesar_key_input = 0;
     app->playfair_keyword_input = malloc(app->playfair_keyword_input_size);
+    app->porta_keyword_input = malloc(app->porta_keyword_input_size);
     app->railfence_key_input = 1;
     app->rc4_keyword_input = malloc(app->rc4_keyword_input_size);
     app->scytale_keyword_input = 0;
@@ -4574,6 +4745,7 @@ static void app_free(App* app) {
     free(app->aes_key_input);
     free(app->beaufort_key_input);
     free(app->playfair_keyword_input);
+    free(app->porta_keyword_input);
     free(app->rc4_keyword_input);
     free(app->vigenere_keyword_input);
     free(app->sip_keyword_input);

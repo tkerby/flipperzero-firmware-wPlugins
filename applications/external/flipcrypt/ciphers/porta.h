@@ -1,0 +1,1 @@
+char* porta_encrypt(const char* plaintext, const char* keyword);

@@ -1,5 +1,6 @@
 ## V0.6
 - Decreased RAM usage.
+- Add Porta cipher.
 
 ## V0.5
 - Updated widget text, fixed some typos.
