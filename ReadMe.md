@@ -46,13 +46,13 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [WiFi (Marauder) v0.7.4 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion) `Req: ESP32`
 - Updated: [FlipSocial v2.0 (By jblanked)](https://github.com/jblanked/FlipSocial)
 - Updated: [T-Union Master (China) v0.1 (By SocialSisterYi)](https://github.com/SocialSisterYi/T-Union_Master)
-- Updated: [Ghost ESP v1.4 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
 - Updated: [Key Copier v1.5 (By zinongli)](https://github.com/zinongli/KeyCopier)
 - Added: [Sub-Ghz Toolkit v1.0 (By RocketGod-git)](https://github.com/RocketGod-git/RocketGods-SubGHz-Toolkit)
 - ESP Flasher: [Bump Marauder v1.8.4 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.8.4)
 - Updated: [Rubiks Cube Timer v0.0.2 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
 - Updated: [Wendigo Bluetooth Tracker WIP v0.4 (By chris-bc)](https://github.com/chris-bc/wendigo) `WIP Req: ESP32`
 - Updated: [FlipCrypt v0.6 (By TAxelAnderson)](https://github.com/TAxelAnderson/FlipCrypt)
+- Updated: [Ghost ESP v1.4 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
 
 <a name="release">
 
