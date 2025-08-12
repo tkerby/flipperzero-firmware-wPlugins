@@ -1,6 +1,6 @@
 # Jumping Pawns  
 
-**Jumping Pawns** is a strategy game for the Flipper Zero. Play locally against a friend or challenge an AI powered by a minimax algorithm.  
+**Jumping Pawns** is a strategy game for the Flipper Zero. Play locally against a friend or challenge a minimax algorithm.  
 > [!WARNING]  
 > This is still in active development and, while functional, is not completed.
 
