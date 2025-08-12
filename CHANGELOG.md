@@ -3,6 +3,12 @@
 ## v1.4
 
 - Set Evil Portal HTML from the Flipper's Filesystem
+- Added "Scan APs Live" command to WiFi Scanning menu
+- Added "Chip Info" command to WiFi Scanning menu
+- Added "Disconnect WiFi" command to WiFi Scanning menu
+- Added "ARP Scan" command to WiFi Scanning menu
+- Added "Scan SSH" command to WiFi Scanning menu
+- Fixed RGB Mode setting to work with the correct command in the new firmware
 
 ## v1.3.1
 

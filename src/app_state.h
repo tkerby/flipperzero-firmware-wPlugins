@@ -12,6 +12,8 @@
 #include "app_types.h"
 #include "settings_ui_types.h"
 
+#define INPUT_BUFFER_SIZE 128
+
 typedef struct {
     bool enabled; // Master switch for filtering
     bool show_ble_status;

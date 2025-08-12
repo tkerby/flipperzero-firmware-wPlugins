@@ -37,7 +37,10 @@ bool ghost_esp_ep_read_html_file(AppState* app, uint8_t** the_html, size_t* html
         storage = furi_record_open(RECORD_STORAGE);
         index_html = storage_file_alloc(storage);
         if(!storage_file_open(
-               index_html, furi_string_get_cstr(selected_filepath), FSAM_READ, FSOM_OPEN_EXISTING)) {
+               index_html,
+               furi_string_get_cstr(selected_filepath),
+               FSAM_READ,
+               FSOM_OPEN_EXISTING)) {
             dialog_message_show_storage_error(app->dialogs, "Cannot open file");
             break;
         }
