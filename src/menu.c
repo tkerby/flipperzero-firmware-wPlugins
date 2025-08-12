@@ -527,12 +527,10 @@ static const MenuCommand wifi_settings_commands[] = {
                         "Use same value for all\n"
                         "pins for single-pin LED.",
     },
-    {
-        .label = "Chip Info",
-        .command = "chipinfo\n",
-        .details_header = "Chip Info",
-        .details_text = "Displays chip information from the ESP\n"
-    },
+    {.label = "Chip Info",
+     .command = "chipinfo\n",
+     .details_header = "Chip Info",
+     .details_text = "Displays chip information from the ESP\n"},
     {
         .label = "Show SD Pin Config",
         .command = "sd_config",
@@ -971,7 +969,7 @@ static void send_evil_portal_html(AppState* state) {
             // End HTML block
             const char* html_close_marker = "[HTML/CLOSE]";
             uart_send(state->uart_context, (const uint8_t*)html_close_marker, 12);
-            
+
             free(the_html);
         }
     }
