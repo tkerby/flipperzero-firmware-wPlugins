@@ -292,115 +292,29 @@ typedef struct App {
     Nfc* nfc;
     NfcListener* listener;
     NfcDevice* nfc_device;
+    char* universal_input;
+    uint8_t universal_input_size;
     char* save_name_input;
     char* last_output_scene;
-    char* aes_input;
     char* aes_key_input;
-    char* aes_decrypt_input;
-    char* affine_input;
     int32_t affine_keya_input;
     int32_t affine_keyb_input;
-    char* affine_decrypt_input;
-    char* atbash_input;
-    char* atbash_decrypt_input;
-    char* baconian_input;
-    char* baconian_decrypt_input;
-    char* beaufort_input;
     char* beaufort_key_input;
-    char* beaufort_decrypt_input;
-    char* caesar_input;
     int32_t caesar_key_input;
-    char* caesar_decrypt_input;
-    char* playfair_input;
     char* playfair_keyword_input;
-    char* playfair_decrypt_input;
-    char* polybius_input;
-    char* polybius_decrypt_input;
-    char* railfence_input;
     int32_t railfence_key_input;
-    char* railfence_decrypt_input;
-    char* rc4_input;
     char* rc4_keyword_input;
-    char* rc4_decrypt_input;
-    char* rot13_input;
-    char* rot13_decrypt_input;
-    char* scytale_input;
     int32_t scytale_keyword_input;
-    char* scytale_decrypt_input;
-    char* vigenere_input;
     char* vigenere_keyword_input;
-    char* vigenere_decrypt_input;
-    char* blake2_input;
-    char* fnv1a_input;
-    char* md2_input;
-    char* md5_input;
-    char* murmur3_input;
-    char* sip_input;
     char* sip_keyword_input;
-    char* sha1_input;
-    char* sha224_input;
-    char* sha256_input;
-    char* sha384_input;
-    char* sha512_input;
-    char* xx_input;
-    char* base32_input;
-    char* base32_decrypt_input;
-    char* base58_input;
-    char* base58_decrypt_input;
-    char* base64_input;
-    char* base64_decrypt_input;
     uint8_t save_name_input_size;
     uint8_t last_output_scene_size;
-    uint8_t aes_input_size;
     uint8_t aes_key_input_size;
-    uint8_t aes_decrypt_input_size;
-    uint8_t affine_input_size;
-    uint8_t affine_decrypt_input_size;
-    uint8_t atbash_input_size;
-    uint8_t atbash_decrypt_input_size;
-    uint8_t baconian_input_size;
-    uint8_t baconian_decrypt_input_size;
-    uint8_t beaufort_input_size;
     uint8_t beaufort_key_input_size;
-    uint8_t beaufort_decrypt_input_size;
-    uint8_t caesar_input_size;
-    uint8_t caesar_decrypt_input_size;
-    uint8_t playfair_input_size;
     uint8_t playfair_keyword_input_size;
-    uint8_t playfair_decrypt_input_size;
-    uint8_t polybius_input_size;
-    uint8_t polybius_decrypt_input_size;
-    uint8_t railfence_input_size;
-    uint8_t railfence_decrypt_input_size;
-    uint8_t rc4_input_size;
     uint8_t rc4_keyword_input_size;
-    uint8_t rc4_decrypt_input_size;
-    uint8_t rot13_input_size;
-    uint8_t rot13_decrypt_input_size;
-    uint8_t scytale_input_size;
-    uint8_t scytale_decrypt_input_size;
-    uint8_t vigenere_input_size;
     uint8_t vigenere_keyword_input_size;
-    uint8_t vigenere_decrypt_input_size;
-    uint8_t blake2_input_size;
-    uint8_t fnv1a_input_size;
-    uint8_t md2_input_size;
-    uint8_t md5_input_size;
-    uint8_t murmur3_input_size;
-    uint8_t sip_input_size;
     uint8_t sip_keyword_input_size;
-    uint8_t sha1_input_size;
-    uint8_t sha224_input_size;
-    uint8_t sha256_input_size;
-    uint8_t sha384_input_size;
-    uint8_t sha512_input_size;
-    uint8_t xx_input_size;
-    uint8_t base32_input_size;
-    uint8_t base32_decrypt_input_size;
-    uint8_t base58_input_size;
-    uint8_t base58_decrypt_input_size;
-    uint8_t base64_input_size;
-    uint8_t base64_decrypt_input_size;
     uint8_t* qr_buffer;
     uint8_t* qrcode;
 } App;
@@ -1604,8 +1518,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->aes_input,
-            app->aes_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptAESKeyInputScene:
@@ -1635,8 +1549,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->aes_decrypt_input,
-            app->aes_decrypt_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptAffineInputScene:
@@ -1644,8 +1558,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->affine_input,
-            app->affine_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptAffineDecryptInputScene:
@@ -1653,8 +1567,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->affine_decrypt_input,
-            app->affine_decrypt_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptAtbashInputScene:
@@ -1662,8 +1576,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->atbash_input,
-            app->atbash_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptAtbashDecryptInputScene:
@@ -1671,8 +1585,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->atbash_decrypt_input,
-            app->atbash_decrypt_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptBaconianInputScene:
@@ -1680,8 +1594,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->baconian_input,
-            app->baconian_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptBaconianDecryptInputScene:
@@ -1689,8 +1603,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->baconian_decrypt_input,
-            app->baconian_decrypt_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptBeaufortInputScene:
@@ -1698,8 +1612,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->beaufort_input,
-            app->beaufort_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptBeaufortKeyInputScene:
@@ -1729,8 +1643,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->beaufort_decrypt_input,
-            app->beaufort_decrypt_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptCaesarInputScene:
@@ -1738,8 +1652,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->caesar_input,
-            app->caesar_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptCaesarDecryptInputScene:
@@ -1747,8 +1661,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->caesar_decrypt_input,
-            app->caesar_decrypt_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptPlayfairInputScene:
@@ -1756,8 +1670,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->playfair_input,
-            app->playfair_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptPlayfairKeywordInputScene:
@@ -1787,8 +1701,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->playfair_decrypt_input,
-            app->playfair_decrypt_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptPolybiusInputScene:
@@ -1796,8 +1710,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->polybius_input,
-            app->polybius_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptPolybiusDecryptInputScene:
@@ -1805,8 +1719,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->polybius_decrypt_input,
-            app->polybius_decrypt_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptRailfenceInputScene:
@@ -1814,8 +1728,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->railfence_input,
-            app->railfence_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptRailfenceDecryptInputScene:
@@ -1823,8 +1737,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->railfence_decrypt_input,
-            app->railfence_decrypt_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptRC4KeywordInputScene:
@@ -1854,8 +1768,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->rc4_input,
-            app->rc4_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptRC4DecryptInputScene:
@@ -1863,8 +1777,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->rc4_decrypt_input,
-            app->rc4_decrypt_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptROT13InputScene:
@@ -1872,8 +1786,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->rot13_input,
-            app->rot13_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptROT13DecryptInputScene:
@@ -1881,8 +1795,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->rot13_decrypt_input,
-            app->rot13_decrypt_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptScytaleInputScene:
@@ -1890,8 +1804,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->scytale_input,
-            app->scytale_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptScytaleDecryptInputScene:
@@ -1899,8 +1813,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->scytale_decrypt_input,
-            app->scytale_decrypt_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptVigenereKeywordInputScene:
@@ -1930,8 +1844,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->vigenere_input,
-            app->vigenere_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptVigenereDecryptInputScene:
@@ -1939,8 +1853,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->vigenere_decrypt_input,
-            app->vigenere_decrypt_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptBlake2InputScene:
@@ -1948,8 +1862,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->blake2_input,
-            app->blake2_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptFNV1AInputScene:
@@ -1957,8 +1871,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->fnv1a_input,
-            app->fnv1a_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptMD2InputScene:
@@ -1966,8 +1880,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->md2_input,
-            app->md2_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptMD5InputScene:
@@ -1975,8 +1889,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->md5_input,
-            app->md5_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptMurmur3InputScene:
@@ -1984,8 +1898,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->murmur3_input,
-            app->murmur3_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptSipKeywordInputScene:
@@ -2004,8 +1918,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->sip_input,
-            app->sip_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptSHA1InputScene:
@@ -2013,8 +1927,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->sha1_input,
-            app->sha1_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptSHA224InputScene:
@@ -2022,8 +1936,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->sha224_input,
-            app->sha224_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptSHA256InputScene:
@@ -2031,8 +1945,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->sha256_input,
-            app->sha256_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptSHA384InputScene:
@@ -2040,8 +1954,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->sha384_input,
-            app->sha384_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptSHA512InputScene:
@@ -2049,8 +1963,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->sha512_input,
-            app->sha512_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptXXInputScene:
@@ -2058,8 +1972,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->xx_input,
-            app->xx_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptBase32InputScene:
@@ -2067,8 +1981,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->base32_input,
-            app->base32_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptBase32DecryptInputScene:
@@ -2076,8 +1990,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->base32_decrypt_input,
-            app->base32_decrypt_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptBase58InputScene:
@@ -2085,8 +1999,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->base58_input,
-            app->base58_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptBase58DecryptInputScene:
@@ -2094,8 +2008,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->base58_decrypt_input,
-            app->base58_decrypt_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptBase64InputScene:
@@ -2103,8 +2017,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->base64_input,
-            app->base64_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     case FlipCryptBase64DecryptInputScene:
@@ -2112,8 +2026,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->base64_decrypt_input,
-            app->base64_decrypt_input_size,
+            app->universal_input,
+            app->universal_input_size,
             true);
         break;
     default:
@@ -2160,13 +2074,13 @@ void dialog_cipher_output_scene_on_enter(void* context) {
                 app->dialog_ex, "Key must be 16 bytes", 64, 18, AlignCenter, AlignCenter);
             break;
         }
-        size_t aes_encrypt_len = strlen(app->aes_input);
+        size_t aes_encrypt_len = strlen(app->universal_input);
         if(aes_encrypt_len > 128) aes_encrypt_len = 128;
         uint8_t key[16];
         memcpy(key, app->aes_key_input, 16);
         uint8_t iv[16] = {0};
         uint8_t aes_encrypt_encrypted[128];
-        memcpy(aes_encrypt_encrypted, app->aes_input, aes_encrypt_len);
+        memcpy(aes_encrypt_encrypted, app->universal_input, aes_encrypt_len);
         struct AES_ctx aes_ctx;
         AES_init_ctx_iv(&aes_ctx, key, iv);
         AES_CTR_xcrypt_buffer(&aes_ctx, aes_encrypt_encrypted, aes_encrypt_len);
@@ -2186,7 +2100,7 @@ void dialog_cipher_output_scene_on_enter(void* context) {
                 app->dialog_ex, "Key must be 16 bytes", 64, 18, AlignCenter, AlignCenter);
             break;
         }
-        size_t aes_decrypt_input_len = strlen(app->aes_decrypt_input);
+        size_t aes_decrypt_input_len = strlen(app->universal_input);
         if(aes_decrypt_input_len > 256) aes_decrypt_input_len = 256;
         if(aes_decrypt_input_len % 2 != 0) {
             dialog_ex_set_text(
@@ -2198,7 +2112,7 @@ void dialog_cipher_output_scene_on_enter(void* context) {
         memcpy(aes_decrypt_key, app->aes_key_input, 16);
         uint8_t aes_iv[16] = {0};
         uint8_t aes_decrypt_encrypted[128];
-        aes_hex_to_bytes(app->aes_decrypt_input, aes_decrypt_encrypted, aes_decrypt_input_len);
+        aes_hex_to_bytes(app->universal_input, aes_decrypt_encrypted, aes_decrypt_input_len);
         struct AES_ctx aes_decrypt_ctx;
         AES_init_ctx_iv(&aes_decrypt_ctx, aes_decrypt_key, aes_iv);
         AES_CTR_xcrypt_buffer(&aes_decrypt_ctx, aes_decrypt_encrypted, aes_decrypt_len);
@@ -2216,14 +2130,14 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptAffineOutputScene:
         dialog_ex_set_text(
             app->dialog_ex,
-            encode_affine(app->affine_input, app->affine_keya_input, app->affine_keyb_input),
+            encode_affine(app->universal_input, app->affine_keya_input, app->affine_keyb_input),
             64,
             18,
             AlignCenter,
             AlignCenter);
         save_result_generic(
             APP_DATA_PATH("affine.txt"),
-            encode_affine(app->affine_input, app->affine_keya_input, app->affine_keyb_input));
+            encode_affine(app->universal_input, app->affine_keya_input, app->affine_keyb_input));
         app->last_output_scene = "Affine";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2232,16 +2146,14 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptAffineDecryptOutputScene:
         dialog_ex_set_text(
             app->dialog_ex,
-            decode_affine(
-                app->affine_decrypt_input, app->affine_keya_input, app->affine_keyb_input),
+            decode_affine(app->universal_input, app->affine_keya_input, app->affine_keyb_input),
             64,
             18,
             AlignCenter,
             AlignCenter);
         save_result_generic(
             APP_DATA_PATH("affine_decrypt.txt"),
-            decode_affine(
-                app->affine_decrypt_input, app->affine_keya_input, app->affine_keyb_input));
+            decode_affine(app->universal_input, app->affine_keya_input, app->affine_keyb_input));
         app->last_output_scene = "AffineDecrypt";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2250,13 +2162,13 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptAtbashOutputScene:
         dialog_ex_set_text(
             app->dialog_ex,
-            atbash_encrypt_or_decrypt(app->atbash_input),
+            atbash_encrypt_or_decrypt(app->universal_input),
             64,
             18,
             AlignCenter,
             AlignCenter);
         save_result_generic(
-            APP_DATA_PATH("atbash.txt"), atbash_encrypt_or_decrypt(app->atbash_input));
+            APP_DATA_PATH("atbash.txt"), atbash_encrypt_or_decrypt(app->universal_input));
         app->last_output_scene = "Atbash";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2265,14 +2177,13 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptAtbashDecryptOutputScene:
         dialog_ex_set_text(
             app->dialog_ex,
-            atbash_encrypt_or_decrypt(app->atbash_decrypt_input),
+            atbash_encrypt_or_decrypt(app->universal_input),
             64,
             18,
             AlignCenter,
             AlignCenter);
         save_result_generic(
-            APP_DATA_PATH("atbash_decrypt.txt"),
-            atbash_encrypt_or_decrypt(app->atbash_decrypt_input));
+            APP_DATA_PATH("atbash_decrypt.txt"), atbash_encrypt_or_decrypt(app->universal_input));
         app->last_output_scene = "AtbashDecrypt";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2281,12 +2192,12 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptBaconianOutputScene:
         dialog_ex_set_text(
             app->dialog_ex,
-            baconian_encrypt(app->baconian_input),
+            baconian_encrypt(app->universal_input),
             64,
             18,
             AlignCenter,
             AlignCenter);
-        save_result_generic(APP_DATA_PATH("baconian.txt"), baconian_encrypt(app->baconian_input));
+        save_result_generic(APP_DATA_PATH("baconian.txt"), baconian_encrypt(app->universal_input));
         app->last_output_scene = "Baconian";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2295,13 +2206,13 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptBaconianDecryptOutputScene:
         dialog_ex_set_text(
             app->dialog_ex,
-            baconian_decrypt(app->baconian_decrypt_input),
+            baconian_decrypt(app->universal_input),
             64,
             18,
             AlignCenter,
             AlignCenter);
         save_result_generic(
-            APP_DATA_PATH("baconian_decrypt.txt"), baconian_decrypt(app->baconian_decrypt_input));
+            APP_DATA_PATH("baconian_decrypt.txt"), baconian_decrypt(app->universal_input));
         app->last_output_scene = "BaconianDecrypt";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2310,14 +2221,14 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptBeaufortOutputScene:
         dialog_ex_set_text(
             app->dialog_ex,
-            beaufort_cipher_encrypt_and_decrypt(app->beaufort_input, app->beaufort_key_input),
+            beaufort_cipher_encrypt_and_decrypt(app->universal_input, app->beaufort_key_input),
             64,
             18,
             AlignCenter,
             AlignCenter);
         save_result_generic(
             APP_DATA_PATH("beaufort.txt"),
-            beaufort_cipher_encrypt_and_decrypt(app->beaufort_input, app->beaufort_key_input));
+            beaufort_cipher_encrypt_and_decrypt(app->universal_input, app->beaufort_key_input));
         app->last_output_scene = "Beaufort";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2326,16 +2237,14 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptBeaufortDecryptOutputScene:
         dialog_ex_set_text(
             app->dialog_ex,
-            beaufort_cipher_encrypt_and_decrypt(
-                app->beaufort_decrypt_input, app->beaufort_key_input),
+            beaufort_cipher_encrypt_and_decrypt(app->universal_input, app->beaufort_key_input),
             64,
             18,
             AlignCenter,
             AlignCenter);
         save_result_generic(
             APP_DATA_PATH("beaufort_decrypt.txt"),
-            beaufort_cipher_encrypt_and_decrypt(
-                app->beaufort_decrypt_input, app->beaufort_key_input));
+            beaufort_cipher_encrypt_and_decrypt(app->universal_input, app->beaufort_key_input));
         app->last_output_scene = "BeaufortDecrypt";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2344,13 +2253,14 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptCaesarOutputScene:
         dialog_ex_set_text(
             app->dialog_ex,
-            encode_caesar(app->caesar_input, app->caesar_key_input),
+            encode_caesar(app->universal_input, app->caesar_key_input),
             64,
             18,
             AlignCenter,
             AlignCenter);
         save_result_generic(
-            APP_DATA_PATH("caesar.txt"), encode_caesar(app->caesar_input, app->caesar_key_input));
+            APP_DATA_PATH("caesar.txt"),
+            encode_caesar(app->universal_input, app->caesar_key_input));
         app->last_output_scene = "Caesar";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2359,14 +2269,14 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptCaesarDecryptOutputScene:
         dialog_ex_set_text(
             app->dialog_ex,
-            decode_caesar(app->caesar_decrypt_input, app->caesar_key_input),
+            decode_caesar(app->universal_input, app->caesar_key_input),
             64,
             18,
             AlignCenter,
             AlignCenter);
         save_result_generic(
             APP_DATA_PATH("caesar_decrypt.txt"),
-            decode_caesar(app->caesar_decrypt_input, app->caesar_key_input));
+            decode_caesar(app->universal_input, app->caesar_key_input));
         app->last_output_scene = "CaesarDecrypt";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2375,7 +2285,8 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptPlayfairOutputScene:
         dialog_ex_set_text(
             app->dialog_ex,
-            playfair_encrypt(app->playfair_input, playfair_make_table(app->playfair_keyword_input)),
+            playfair_encrypt(
+                app->universal_input, playfair_make_table(app->playfair_keyword_input)),
             64,
             18,
             AlignCenter,
@@ -2383,7 +2294,7 @@ void dialog_cipher_output_scene_on_enter(void* context) {
         save_result_generic(
             APP_DATA_PATH("playfair.txt"),
             playfair_encrypt(
-                app->playfair_input, playfair_make_table(app->playfair_keyword_input)));
+                app->universal_input, playfair_make_table(app->playfair_keyword_input)));
         app->last_output_scene = "Playfair";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2393,7 +2304,7 @@ void dialog_cipher_output_scene_on_enter(void* context) {
         dialog_ex_set_text(
             app->dialog_ex,
             playfair_decrypt(
-                app->playfair_decrypt_input, playfair_make_table(app->playfair_keyword_input)),
+                app->universal_input, playfair_make_table(app->playfair_keyword_input)),
             64,
             18,
             AlignCenter,
@@ -2401,7 +2312,7 @@ void dialog_cipher_output_scene_on_enter(void* context) {
         save_result_generic(
             APP_DATA_PATH("playfair_decrypt.txt"),
             playfair_decrypt(
-                app->playfair_decrypt_input, playfair_make_table(app->playfair_keyword_input)));
+                app->universal_input, playfair_make_table(app->playfair_keyword_input)));
         app->last_output_scene = "PlayfairDecrypt";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2410,12 +2321,12 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptPolybiusOutputScene:
         dialog_ex_set_text(
             app->dialog_ex,
-            encrypt_polybius(app->polybius_input),
+            encrypt_polybius(app->universal_input),
             64,
             18,
             AlignCenter,
             AlignCenter);
-        save_result_generic(APP_DATA_PATH("polybius.txt"), encrypt_polybius(app->polybius_input));
+        save_result_generic(APP_DATA_PATH("polybius.txt"), encrypt_polybius(app->universal_input));
         app->last_output_scene = "Polybius";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2424,13 +2335,13 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptPolybiusDecryptOutputScene:
         dialog_ex_set_text(
             app->dialog_ex,
-            decrypt_polybius(app->polybius_decrypt_input),
+            decrypt_polybius(app->universal_input),
             64,
             18,
             AlignCenter,
             AlignCenter);
         save_result_generic(
-            APP_DATA_PATH("polybius_decrypt.txt"), decrypt_polybius(app->polybius_decrypt_input));
+            APP_DATA_PATH("polybius_decrypt.txt"), decrypt_polybius(app->universal_input));
         app->last_output_scene = "PolybiusDecrypt";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2439,14 +2350,14 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptRailfenceOutputScene:
         dialog_ex_set_text(
             app->dialog_ex,
-            rail_fence_encrypt(app->railfence_input, app->railfence_key_input),
+            rail_fence_encrypt(app->universal_input, app->railfence_key_input),
             64,
             18,
             AlignCenter,
             AlignCenter);
         save_result_generic(
             APP_DATA_PATH("railfence.txt"),
-            rail_fence_encrypt(app->railfence_input, app->railfence_key_input));
+            rail_fence_encrypt(app->universal_input, app->railfence_key_input));
         app->last_output_scene = "Railfence";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2455,23 +2366,23 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptRailfenceDecryptOutputScene:
         dialog_ex_set_text(
             app->dialog_ex,
-            rail_fence_decrypt(app->railfence_decrypt_input, app->railfence_key_input),
+            rail_fence_decrypt(app->universal_input, app->railfence_key_input),
             64,
             18,
             AlignCenter,
             AlignCenter);
         save_result_generic(
             APP_DATA_PATH("railfence_decrypt.txt"),
-            rail_fence_decrypt(app->railfence_decrypt_input, app->railfence_key_input));
+            rail_fence_decrypt(app->universal_input, app->railfence_key_input));
         app->last_output_scene = "RailfenceDecrypt";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
         dialog_ex_set_right_button_text(app->dialog_ex, "QR");
         break;
     case FlipCryptRC4OutputScene:
-        size_t rc4_input_len = strlen(app->rc4_input);
+        size_t rc4_input_len = strlen(app->universal_input);
         unsigned char* rc4_encrypted = rc4_encrypt_and_decrypt(
-            app->rc4_keyword_input, (const unsigned char*)app->rc4_input, rc4_input_len);
+            app->rc4_keyword_input, (const unsigned char*)app->universal_input, rc4_input_len);
         if(!rc4_encrypted) {
             dialog_ex_set_text(
                 app->dialog_ex, "Encryption failed", 64, 18, AlignCenter, AlignCenter);
@@ -2491,7 +2402,7 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptRC4DecryptOutputScene:
         size_t rc4_encrypted_len;
         unsigned char* rc4_encrypted_bytes =
-            rc4_hex_to_bytes(app->rc4_decrypt_input, &rc4_encrypted_len);
+            rc4_hex_to_bytes(app->universal_input, &rc4_encrypted_len);
         if(!rc4_encrypted_bytes) {
             dialog_ex_set_text(
                 app->dialog_ex, "Invalid hex input", 64, 18, AlignCenter, AlignCenter);
@@ -2523,8 +2434,8 @@ void dialog_cipher_output_scene_on_enter(void* context) {
         break;
     case FlipCryptROT13OutputScene:
         dialog_ex_set_text(
-            app->dialog_ex, encrypt_rot13(app->rot13_input), 64, 18, AlignCenter, AlignCenter);
-        save_result_generic(APP_DATA_PATH("rot13.txt"), encrypt_rot13(app->rot13_input));
+            app->dialog_ex, encrypt_rot13(app->universal_input), 64, 18, AlignCenter, AlignCenter);
+        save_result_generic(APP_DATA_PATH("rot13.txt"), encrypt_rot13(app->universal_input));
         app->last_output_scene = "ROT13";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2532,14 +2443,9 @@ void dialog_cipher_output_scene_on_enter(void* context) {
         break;
     case FlipCryptROT13DecryptOutputScene:
         dialog_ex_set_text(
-            app->dialog_ex,
-            decrypt_rot13(app->rot13_decrypt_input),
-            64,
-            18,
-            AlignCenter,
-            AlignCenter);
+            app->dialog_ex, decrypt_rot13(app->universal_input), 64, 18, AlignCenter, AlignCenter);
         save_result_generic(
-            APP_DATA_PATH("rot13_decrypt.txt"), decrypt_rot13(app->rot13_decrypt_input));
+            APP_DATA_PATH("rot13_decrypt.txt"), decrypt_rot13(app->universal_input));
         app->last_output_scene = "ROT13Decrypt";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2548,14 +2454,14 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptScytaleOutputScene:
         dialog_ex_set_text(
             app->dialog_ex,
-            scytale_encrypt(app->scytale_input, app->scytale_keyword_input),
+            scytale_encrypt(app->universal_input, app->scytale_keyword_input),
             64,
             18,
             AlignCenter,
             AlignCenter);
         save_result_generic(
             APP_DATA_PATH("scytale.txt"),
-            scytale_encrypt(app->scytale_input, app->scytale_keyword_input));
+            scytale_encrypt(app->universal_input, app->scytale_keyword_input));
         app->last_output_scene = "Scytale";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2564,14 +2470,14 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptScytaleDecryptOutputScene:
         dialog_ex_set_text(
             app->dialog_ex,
-            scytale_decrypt(app->scytale_decrypt_input, app->scytale_keyword_input),
+            scytale_decrypt(app->universal_input, app->scytale_keyword_input),
             64,
             18,
             AlignCenter,
             AlignCenter);
         save_result_generic(
             APP_DATA_PATH("scytale_decrypt.txt"),
-            scytale_decrypt(app->scytale_decrypt_input, app->scytale_keyword_input));
+            scytale_decrypt(app->universal_input, app->scytale_keyword_input));
         app->last_output_scene = "ScytaleDecrypt";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2580,14 +2486,14 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptVigenereOutputScene:
         dialog_ex_set_text(
             app->dialog_ex,
-            vigenere_encrypt(app->vigenere_input, app->vigenere_keyword_input),
+            vigenere_encrypt(app->universal_input, app->vigenere_keyword_input),
             64,
             18,
             AlignCenter,
             AlignCenter);
         save_result_generic(
             APP_DATA_PATH("vigenere.txt"),
-            vigenere_encrypt(app->vigenere_input, app->vigenere_keyword_input));
+            vigenere_encrypt(app->universal_input, app->vigenere_keyword_input));
         app->last_output_scene = "Vigenere";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2596,14 +2502,14 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptVigenereDecryptOutputScene:
         dialog_ex_set_text(
             app->dialog_ex,
-            vigenere_decrypt(app->vigenere_decrypt_input, app->vigenere_keyword_input),
+            vigenere_decrypt(app->universal_input, app->vigenere_keyword_input),
             64,
             18,
             AlignCenter,
             AlignCenter);
         save_result_generic(
             APP_DATA_PATH("vigenere_decrypt.txt"),
-            vigenere_decrypt(app->vigenere_decrypt_input, app->vigenere_keyword_input));
+            vigenere_decrypt(app->universal_input, app->vigenere_keyword_input));
         app->last_output_scene = "VigenereDecrypt";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2614,7 +2520,8 @@ void dialog_cipher_output_scene_on_enter(void* context) {
         uint8_t blake2_hash[BLAKE2S_OUTLEN];
         char blake2_hex_output[BLAKE2S_OUTLEN * 2 + 1] = {0};
         blake2s_init(&blake2_ctx);
-        blake2s_update(&blake2_ctx, (const uint8_t*)app->blake2_input, strlen(app->blake2_input));
+        blake2s_update(
+            &blake2_ctx, (const uint8_t*)app->universal_input, strlen(app->universal_input));
         blake2s_finalize(&blake2_ctx, blake2_hash);
         blake2s_to_hex(blake2_hash, blake2_hex_output);
         dialog_ex_set_text(app->dialog_ex, blake2_hex_output, 64, 18, AlignCenter, AlignCenter);
@@ -2626,7 +2533,7 @@ void dialog_cipher_output_scene_on_enter(void* context) {
         break;
     case FlipCryptFNV1AOutputScene:
         char fnv1a_hash_str[11];
-        Fnv32_t fnv1a_hash = fnv_32a_str(app->fnv1a_input, FNV1_32A_INIT);
+        Fnv32_t fnv1a_hash = fnv_32a_str(app->universal_input, FNV1_32A_INIT);
         snprintf(fnv1a_hash_str, sizeof(fnv1a_hash_str), "0x%08lx", fnv1a_hash);
         dialog_ex_set_text(app->dialog_ex, fnv1a_hash_str, 64, 18, AlignCenter, AlignCenter);
         save_result_generic(APP_DATA_PATH("fnv1a.txt"), fnv1a_hash_str);
@@ -2639,7 +2546,7 @@ void dialog_cipher_output_scene_on_enter(void* context) {
         BYTE hash[MD2_BLOCK_SIZE];
         MD2_CTX ctx;
         md2_init(&ctx);
-        md2_update(&ctx, (const BYTE*)app->md2_input, strlen(app->md2_input));
+        md2_update(&ctx, (const BYTE*)app->universal_input, strlen(app->universal_input));
         md2_final(&ctx, hash);
         char md2_hash_str[MD2_BLOCK_SIZE * 2 + 1];
         for(int i = 0; i < MD2_BLOCK_SIZE; ++i) {
@@ -2657,7 +2564,7 @@ void dialog_cipher_output_scene_on_enter(void* context) {
         char md5_hex_output[33] = {0};
         MD5Context md5_ctx;
         md5_init(&md5_ctx);
-        md5_update(&md5_ctx, (const uint8_t*)app->md5_input, strlen(app->md5_input));
+        md5_update(&md5_ctx, (const uint8_t*)app->universal_input, strlen(app->universal_input));
         md5_finalize(&md5_ctx, md5_hash);
         md5_to_hex(md5_hash, md5_hex_output);
         dialog_ex_set_text(app->dialog_ex, md5_hex_output, 64, 18, AlignCenter, AlignCenter);
@@ -2670,14 +2577,14 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptMurmur3OutputScene:
         dialog_ex_set_text(
             app->dialog_ex,
-            MurmurHash3_x86_32(app->murmur3_input, strlen(app->murmur3_input), 0),
+            MurmurHash3_x86_32(app->universal_input, strlen(app->universal_input), 0),
             64,
             18,
             AlignCenter,
             AlignCenter);
         save_result_generic(
             APP_DATA_PATH("murmur3.txt"),
-            MurmurHash3_x86_32(app->murmur3_input, strlen(app->murmur3_input), 0));
+            MurmurHash3_x86_32(app->universal_input, strlen(app->universal_input), 0));
         app->last_output_scene = "Murmur3";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2685,7 +2592,12 @@ void dialog_cipher_output_scene_on_enter(void* context) {
         break;
     case FlipCryptSipOutputScene:
         uint8_t siphash_output[8];
-        siphash(app->sip_input, strlen(app->sip_input), app->sip_keyword_input, siphash_output, 8);
+        siphash(
+            app->universal_input,
+            strlen(app->universal_input),
+            app->sip_keyword_input,
+            siphash_output,
+            8);
         char siphash_str[17];
         for(int i = 0; i < 8; ++i) {
             snprintf(&siphash_str[i * 2], 3, "%02x", siphash_output[i]);
@@ -2703,7 +2615,7 @@ void dialog_cipher_output_scene_on_enter(void* context) {
         uint8_t sha1_hash[20];
         char sha1_hex_output[41] = {0};
         sha1_init(&sha1_ctx);
-        sha1_update(&sha1_ctx, (const uint8_t*)app->sha1_input, strlen(app->sha1_input));
+        sha1_update(&sha1_ctx, (const uint8_t*)app->universal_input, strlen(app->universal_input));
         sha1_finalize(&sha1_ctx, sha1_hash);
         sha1_to_hex(sha1_hash, sha1_hex_output);
         dialog_ex_set_text(app->dialog_ex, sha1_hex_output, 64, 18, AlignCenter, AlignCenter);
@@ -2716,7 +2628,10 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptSHA224OutputScene:
         uint8_t sha224_hash[28];
         char sha224_hex_output[57] = {0};
-        sha224((const uint8_t*)app->sha224_input, (uint64)strlen(app->sha224_input), sha224_hash);
+        sha224(
+            (const uint8_t*)app->universal_input,
+            (uint64)strlen(app->universal_input),
+            sha224_hash);
         for(int i = 0; i < 28; i++) {
             sha224_hex_output[i * 2] = sha_hex_chars[(sha224_hash[i] >> 4) & 0xF];
             sha224_hex_output[i * 2 + 1] = sha_hex_chars[sha224_hash[i] & 0xF];
@@ -2732,7 +2647,10 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptSHA256OutputScene:
         uint8_t sha256_hash[32];
         char sha256_hex_output[65] = {0};
-        sha256((const uint8_t*)app->sha256_input, (uint64)strlen(app->sha256_input), sha256_hash);
+        sha256(
+            (const uint8_t*)app->universal_input,
+            (uint64)strlen(app->universal_input),
+            sha256_hash);
         for(int i = 0; i < 32; i++) {
             sha256_hex_output[i * 2] = sha_hex_chars[(sha256_hash[i] >> 4) & 0xF];
             sha256_hex_output[i * 2 + 1] = sha_hex_chars[sha256_hash[i] & 0xF];
@@ -2748,7 +2666,10 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptSHA384OutputScene:
         uint8_t sha384_hash[48];
         char sha384_hex_output[97] = {0};
-        sha384((const uint8_t*)app->sha384_input, (uint64)strlen(app->sha384_input), sha384_hash);
+        sha384(
+            (const uint8_t*)app->universal_input,
+            (uint64)strlen(app->universal_input),
+            sha384_hash);
         for(int i = 0; i < 48; i++) {
             sha384_hex_output[i * 2] = sha_hex_chars[(sha384_hash[i] >> 4) & 0xF];
             sha384_hex_output[i * 2 + 1] = sha_hex_chars[sha384_hash[i] & 0xF];
@@ -2764,7 +2685,10 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptSHA512OutputScene:
         uint8_t sha512_hash[64];
         char sha512_hex_output[129] = {0};
-        sha512((const uint8_t*)app->sha512_input, (uint64)strlen(app->sha512_input), sha512_hash);
+        sha512(
+            (const uint8_t*)app->universal_input,
+            (uint64)strlen(app->universal_input),
+            sha512_hash);
         for(int i = 0; i < 64; i++) {
             sha512_hex_output[i * 2] = sha_hex_chars[(sha512_hash[i] >> 4) & 0xF];
             sha512_hex_output[i * 2 + 1] = sha_hex_chars[sha512_hash[i] & 0xF];
@@ -2778,7 +2702,7 @@ void dialog_cipher_output_scene_on_enter(void* context) {
         dialog_ex_set_right_button_text(app->dialog_ex, "QR");
         break;
     case FlipCryptXXOutputScene:
-        uint64_t xxhash = XXH64(app->xx_input, strlen(app->xx_input), 0);
+        uint64_t xxhash = XXH64(app->universal_input, strlen(app->universal_input), 0);
         char xxhash_str[17];
         snprintf(xxhash_str, sizeof(xxhash_str), "%016llX", xxhash);
         dialog_ex_set_text(app->dialog_ex, xxhash_str, 64, 18, AlignCenter, AlignCenter);
@@ -2791,14 +2715,14 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptBase32OutputScene:
         dialog_ex_set_text(
             app->dialog_ex,
-            base32_encode((const uint8_t*)app->base32_input, strlen(app->base32_input)),
+            base32_encode((const uint8_t*)app->universal_input, strlen(app->universal_input)),
             64,
             18,
             AlignCenter,
             AlignCenter);
         save_result_generic(
             APP_DATA_PATH("base32.txt"),
-            base32_encode((const uint8_t*)app->base32_input, strlen(app->base32_input)));
+            base32_encode((const uint8_t*)app->universal_input, strlen(app->universal_input)));
         app->last_output_scene = "Base32";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2808,14 +2732,14 @@ void dialog_cipher_output_scene_on_enter(void* context) {
         size_t base32_decoded_len;
         dialog_ex_set_text(
             app->dialog_ex,
-            (const char*)base32_decode(app->base32_decrypt_input, &base32_decoded_len),
+            (const char*)base32_decode(app->universal_input, &base32_decoded_len),
             64,
             18,
             AlignCenter,
             AlignCenter);
         save_result_generic(
             APP_DATA_PATH("base32_decrypt.txt"),
-            (const char*)base32_decode(app->base32_decrypt_input, &base32_decoded_len));
+            (const char*)base32_decode(app->universal_input, &base32_decoded_len));
         app->last_output_scene = "Base32Decrypt";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2823,8 +2747,8 @@ void dialog_cipher_output_scene_on_enter(void* context) {
         break;
     case FlipCryptBase58OutputScene:
         dialog_ex_set_text(
-            app->dialog_ex, base58_encode(app->base58_input), 64, 18, AlignCenter, AlignCenter);
-        save_result_generic(APP_DATA_PATH("base58.txt"), base58_encode(app->base58_input));
+            app->dialog_ex, base58_encode(app->universal_input), 64, 18, AlignCenter, AlignCenter);
+        save_result_generic(APP_DATA_PATH("base58.txt"), base58_encode(app->universal_input));
         app->last_output_scene = "Base58";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2832,14 +2756,9 @@ void dialog_cipher_output_scene_on_enter(void* context) {
         break;
     case FlipCryptBase58DecryptOutputScene:
         dialog_ex_set_text(
-            app->dialog_ex,
-            base58_decode(app->base58_decrypt_input),
-            64,
-            18,
-            AlignCenter,
-            AlignCenter);
+            app->dialog_ex, base58_decode(app->universal_input), 64, 18, AlignCenter, AlignCenter);
         save_result_generic(
-            APP_DATA_PATH("base58_decrypt.txt"), base58_decode(app->base58_decrypt_input));
+            APP_DATA_PATH("base58_decrypt.txt"), base58_decode(app->universal_input));
         app->last_output_scene = "Base58Decrypt";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2848,14 +2767,15 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     case FlipCryptBase64OutputScene:
         dialog_ex_set_text(
             app->dialog_ex,
-            base64_encode((const unsigned char*)app->base64_input, strlen(app->base64_input)),
+            base64_encode((const unsigned char*)app->universal_input, strlen(app->universal_input)),
             64,
             18,
             AlignCenter,
             AlignCenter);
         save_result_generic(
             APP_DATA_PATH("base64.txt"),
-            base64_encode((const unsigned char*)app->base64_input, strlen(app->base64_input)));
+            base64_encode(
+                (const unsigned char*)app->universal_input, strlen(app->universal_input)));
         app->last_output_scene = "Base64";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2865,14 +2785,14 @@ void dialog_cipher_output_scene_on_enter(void* context) {
         size_t base64_decoded_len;
         dialog_ex_set_text(
             app->dialog_ex,
-            (const char*)base64_decode(app->base64_decrypt_input, &base64_decoded_len),
+            (const char*)base64_decode(app->universal_input, &base64_decoded_len),
             64,
             18,
             AlignCenter,
             AlignCenter);
         save_result_generic(
             APP_DATA_PATH("base64_decrypt.txt"),
-            (const char*)base64_decode(app->base64_decrypt_input, &base64_decoded_len));
+            (const char*)base64_decode(app->universal_input, &base64_decoded_len));
         app->last_output_scene = "Base64Decrypt";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -3968,8 +3888,8 @@ void flip_crypt_about_scene_on_enter(void* context) {
         128,
         64,
         "FlipCrypt\n"
-        "v0.5\n"
-        "Explore and learn about various cryptographic and text encrypting / encoding methods.\n\n"
+        "v0.6\n"
+        "Explore and learn about various cryptographic and text encoding methods.\n\n"
         "Usage:\n"
         "Select the method you want to use for encoding / decoding text and fill in the necessary inputs.\n"
         "On the output screen, there are up to three options for actions you can do with the output - Save, NFC, and QR. The save button saves the output to a text file in the folder located at /ext/flip_crypt_saved/. The NFC button emulates the output using NTAG215. The QR button generates and displays a QR code of your output. Not all three options will be available on every output screen due to memory limitations - for instance the flipper just can't handle the QR code for a SHA-512 output.\n\n"
@@ -4577,113 +4497,26 @@ static App* app_alloc() {
     // Vars
     app->last_output_scene_size = 64;
     app->save_name_input_size = 64;
-    app->aes_input_size = 64;
+    // universal input
+    app->universal_input_size = 255;
     app->aes_key_input_size = 17;
-    app->aes_decrypt_input_size = 64;
-    app->affine_input_size = 64;
-    app->affine_decrypt_input_size = 64;
-    app->atbash_input_size = 64;
-    app->atbash_decrypt_input_size = 64;
-    app->baconian_input_size = 64;
-    app->baconian_decrypt_input_size = 157;
-    app->beaufort_input_size = 64;
     app->beaufort_key_input_size = 64;
-    app->beaufort_decrypt_input_size = 64;
-    app->caesar_input_size = 64;
-    app->caesar_decrypt_input_size = 64;
-    app->playfair_input_size = 64;
     app->playfair_keyword_input_size = 26;
-    app->playfair_decrypt_input_size = 64;
-    app->polybius_input_size = 64;
-    app->polybius_decrypt_input_size = 64;
-    app->railfence_input_size = 64;
-    app->railfence_decrypt_input_size = 64;
-    app->rc4_input_size = 64;
     app->rc4_keyword_input_size = 64;
-    app->rc4_decrypt_input_size = 64;
-    app->rot13_input_size = 64;
-    app->rot13_decrypt_input_size = 64;
-    app->scytale_input_size = 64;
-    app->scytale_decrypt_input_size = 64;
-    app->vigenere_input_size = 64;
     app->vigenere_keyword_input_size = 64;
-    app->vigenere_decrypt_input_size = 64;
-    app->blake2_input_size = 64;
-    app->fnv1a_input_size = 64;
-    app->md2_input_size = 64;
-    app->md5_input_size = 64;
-    app->murmur3_input_size = 64;
-    app->sip_input_size = 64;
-    app->sip_keyword_input_size = 17;
-    app->sha1_input_size = 64;
-    app->sha224_input_size = 64;
-    app->sha256_input_size = 64;
-    app->sha384_input_size = 64;
-    app->sha512_input_size = 64;
-    app->xx_input_size = 64;
-    app->base32_input_size = 64;
-    app->base32_decrypt_input_size = 64;
-    app->base58_input_size = 64;
-    app->base58_decrypt_input_size = 64;
-    app->base64_input_size = 64;
-    app->base64_decrypt_input_size = 64;
+    app->universal_input = malloc(app->universal_input_size);
     app->save_name_input = malloc(app->save_name_input_size);
     app->last_output_scene = malloc(app->last_output_scene_size);
-    app->aes_input = malloc(app->aes_input_size);
     app->aes_key_input = malloc(app->aes_key_input_size);
-    app->aes_decrypt_input = malloc(app->aes_decrypt_input_size);
-    app->affine_input = malloc(app->affine_input_size);
     app->affine_keya_input = 1;
     app->affine_keyb_input = 1;
-    app->affine_decrypt_input = malloc(app->affine_decrypt_input_size);
-    app->atbash_input = malloc(app->atbash_input_size);
-    app->atbash_decrypt_input = malloc(app->atbash_decrypt_input_size);
-    app->baconian_input = malloc(app->baconian_input_size);
-    app->baconian_decrypt_input = malloc(app->baconian_decrypt_input_size);
-    app->beaufort_input = malloc(app->beaufort_input_size);
     app->beaufort_key_input = malloc(app->beaufort_key_input_size);
-    app->beaufort_decrypt_input = malloc(app->beaufort_decrypt_input_size);
-    app->caesar_input = malloc(app->caesar_input_size);
     app->caesar_key_input = 0;
-    app->caesar_decrypt_input = malloc(app->caesar_decrypt_input_size);
-    app->playfair_input = malloc(app->playfair_input_size);
     app->playfair_keyword_input = malloc(app->playfair_keyword_input_size);
-    app->playfair_decrypt_input = malloc(app->playfair_decrypt_input_size);
-    app->polybius_input = malloc(app->polybius_input_size);
-    app->polybius_decrypt_input = malloc(app->polybius_decrypt_input_size);
-    app->railfence_input = malloc(app->railfence_input_size);
     app->railfence_key_input = 1;
-    app->railfence_decrypt_input = malloc(app->railfence_decrypt_input_size);
-    app->rc4_input = malloc(app->rc4_input_size);
     app->rc4_keyword_input = malloc(app->rc4_keyword_input_size);
-    app->rc4_decrypt_input = malloc(app->rc4_decrypt_input_size);
-    app->rot13_input = malloc(app->rot13_input_size);
-    app->rot13_decrypt_input = malloc(app->rot13_decrypt_input_size);
-    app->scytale_input = malloc(app->scytale_input_size);
     app->scytale_keyword_input = 0;
-    app->scytale_decrypt_input = malloc(app->scytale_decrypt_input_size);
-    app->vigenere_input = malloc(app->vigenere_input_size);
     app->vigenere_keyword_input = malloc(app->vigenere_keyword_input_size);
-    app->vigenere_decrypt_input = malloc(app->vigenere_decrypt_input_size);
-    app->blake2_input = malloc(app->blake2_input_size);
-    app->fnv1a_input = malloc(app->fnv1a_input_size);
-    app->md2_input = malloc(app->md2_input_size);
-    app->md5_input = malloc(app->md5_input_size);
-    app->murmur3_input = malloc(app->murmur3_input_size);
-    app->sip_input = malloc(app->sip_input_size);
-    app->sip_keyword_input = malloc(app->sip_keyword_input_size);
-    app->sha1_input = malloc(app->sha1_input_size);
-    app->sha224_input = malloc(app->sha224_input_size);
-    app->sha256_input = malloc(app->sha256_input_size);
-    app->sha384_input = malloc(app->sha384_input_size);
-    app->sha512_input = malloc(app->sha512_input_size);
-    app->xx_input = malloc(app->xx_input_size);
-    app->base32_input = malloc(app->base32_input_size);
-    app->base32_decrypt_input = malloc(app->base32_decrypt_input_size);
-    app->base58_input = malloc(app->base58_input_size);
-    app->base58_decrypt_input = malloc(app->base58_decrypt_input_size);
-    app->base64_input = malloc(app->base64_input_size);
-    app->base64_decrypt_input = malloc(app->base64_decrypt_input_size);
     // Other
     app->scene_manager = scene_manager_alloc(&flip_crypt_scene_manager_handlers, app);
     app->view_dispatcher = view_dispatcher_alloc();
@@ -4737,56 +4570,13 @@ static void app_free(App* app) {
     free(app->qr_buffer);
     free(app->qrcode);
     free(app->last_output_scene);
-    free(app->aes_input);
+    free(app->universal_input);
     free(app->aes_key_input);
-    free(app->aes_decrypt_input);
-    free(app->affine_input);
-    free(app->affine_decrypt_input);
-    free(app->atbash_input);
-    free(app->atbash_decrypt_input);
-    free(app->baconian_input);
-    free(app->baconian_decrypt_input);
-    free(app->beaufort_input);
     free(app->beaufort_key_input);
-    free(app->beaufort_decrypt_input);
-    free(app->caesar_input);
-    free(app->caesar_decrypt_input);
-    free(app->playfair_input);
     free(app->playfair_keyword_input);
-    free(app->playfair_decrypt_input);
-    free(app->polybius_input);
-    free(app->polybius_decrypt_input);
-    free(app->railfence_input);
-    free(app->railfence_decrypt_input);
-    free(app->rc4_input);
     free(app->rc4_keyword_input);
-    free(app->rc4_decrypt_input);
-    free(app->rot13_input);
-    free(app->rot13_decrypt_input);
-    free(app->scytale_input);
-    free(app->scytale_decrypt_input);
-    free(app->vigenere_input);
     free(app->vigenere_keyword_input);
-    free(app->vigenere_decrypt_input);
-    free(app->blake2_input);
-    free(app->fnv1a_input);
-    free(app->md2_input);
-    free(app->md5_input);
-    free(app->murmur3_input);
-    free(app->sip_input);
     free(app->sip_keyword_input);
-    free(app->sha1_input);
-    free(app->sha224_input);
-    free(app->sha256_input);
-    free(app->sha384_input);
-    free(app->sha512_input);
-    free(app->xx_input);
-    free(app->base32_input);
-    free(app->base32_decrypt_input);
-    free(app->base58_input);
-    free(app->base58_decrypt_input);
-    free(app->base64_input);
-    free(app->base64_decrypt_input);
     free(app);
 }
 

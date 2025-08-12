@@ -1,3 +1,6 @@
+## V0.6
+- Decreased RAM usage.
+
 ## V0.5
 - Updated widget text, fixed some typos.
 
