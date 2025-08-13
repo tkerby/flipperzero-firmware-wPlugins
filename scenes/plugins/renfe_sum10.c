@@ -630,14 +630,78 @@ static const char* renfe_sum10_get_zone_name(uint16_t zone_code) {
         case 0x6800: case 0x6810: case 0x6850: return "D";
         case 0x6600: case 0x6610: case 0x6650: return "E";
         case 0x6400: case 0x6410: case 0x6450: return "F";
+        case 0x4C00: return "CD";  // Added support for zone CD (0x4C13)
+        
+        // Zonas combinadas
+        case 0x6D00: return "AB";
+        case 0x6E00: return "AC";
+        case 0x6F00: return "BC";
+        case 0x7000: return "ABC";
+        case 0x7100: return "ABCD";
+        case 0x7200: return "ABCDE";
+        case 0x7300: return "ABCDEF";
+        
+        // Subzonas A
+        case 0x6C50: return "A1";
+        case 0x6C80: return "A2";
+        case 0x6C90: return "A3";
+        case 0x6CA0: return "A4";
+        case 0x6CB0: return "A5";
+        case 0x6CC0: return "A6";
+        
+        // Subzonas B
+        case 0x6280: return "B2";
+        case 0x6290: return "B3";
+        case 0x62A0: return "B4";
+        case 0x62B0: return "B5";
+        case 0x62C0: return "B6";
+        
+        // Subzonas C
+        case 0x6A80: return "C2";
+        case 0x6A90: return "C3";
+        case 0x6AA0: return "C4";
+        case 0x6AB0: return "C5";
+        case 0x6AC0: return "C6";
+        case 0x7260: return "C7";
+        
+        // Zonas numericas
         case 0x8100: case 0x8200: return "1";
         case 0x8110: case 0x8210: return "2";
         case 0x8120: case 0x8220: return "3";
         case 0x8130: return "4";
         case 0x8140: return "5";
         case 0x8150: return "6";
+        case 0x6700: return "7";
+        case 0x6900: return "8";
+        case 0x6B00: return "9";  // Changed from 0x6A00 to avoid duplicate
+        
+        // Lineas de Metro
         case 0x9200: case 0xA100: case 0x0C00: return "L1";
         case 0x9210: case 0xA110: case 0x0C10: return "L2";
+        case 0xA120: return "L3";
+        case 0x6040: return "L4";
+        case 0x6050: return "L6";
+        case 0x6060: return "L8";
+        case 0x6070: return "L9";
+        
+        // Euskotren
+        case 0xA200: return "E1";
+        case 0xA210: return "E2";
+        case 0xA220: return "E3";
+        
+        // Zonas especiales
+        case 0x9100: case 0x9300: return "Centro";
+        case 0x9110: return "Periférico";
+        case 0x9310: return "Norte";
+        case 0x0B00: return "M1";
+        case 0x0B10: return "M2";
+        
+        // RENFE Especiales
+        case 0xF000: return "Cercanías Nacional";
+        case 0xF100: return "AVE Nacional";
+        case 0xF200: return "Media Distancia";
+        case 0xF300: return "Larga Distancia";
+        
         case 0xEC00: return "B1";  // Added support for zone B1 (0xEC16)
         case 0x0000: return "Not available";
         default: return "Unknown";
