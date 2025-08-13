@@ -3,7 +3,7 @@
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://lh3.googleusercontent.com/d/1iYQlRQXM7nA4IAdcPwvcKRSTCMoi8tug' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0723-1435-0.420.0-90cb91c.tgz&channel=RM0723-1435-0.420.0-90cb91c&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0813-0001-0.420.0-e8c9f32.tgz&channel=RM0813-0001-0.420.0-e8c9f32&version=0.420.0&target=f7)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -26,31 +26,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0801-1209-0.420.0-cc9d720](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0812-2332-0.420.0-e92c7b1](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-08-01 12:09 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-08-01 12:09 EST`
-- Updated: [Ghost ESP v1.4 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
-- Updated: [Yatzee v1.2 (By emfleak)](https://github.com/emfleak/flipperzero-yatzee) [Fix Full House calculation, and improve code readability a bit (By zessx)](https://github.com/emfleak/flipperzero-yatzee/pull/2)
-- Added: [Lights Out Flipper Zero v1.1 (By DigiMancer3D)](https://github.com/user/DigiMancer3D)
-- Updated: [ESP32CAM Marauder v0.7.4 (By 0xchocolate & eried)](https://github.com/eried/flipperzero-mayhem) `Req: ESP32-CAM (Mayhem)`
-- Updated: [Wendigo Bluetooth Tracker WIP v0.3 (By chris-bc)](https://github.com/chris-bc/wendigo) `WIP Req: ESP32`
-- Added: [Sub Analyzer v1.0 (By RocketGod)](https://github.com/RocketGod-git/Flipper-Zero-SUB-Analyzer)
-- Added: [Multi Timer v1.1 (By C0d3-5t3w)](https://github.com/C0d3-5t3w/flipper-multitimer)
-- Added: [Nah 2 da Nah Nah Nah v0.2 (By DigiMancer3D)](https://github.com/DigiMancer3D/nah2nah3)
-- Added: [Groks Adventure v0.15 (By DigiMancer3D)](https://github.com/DigiMancer3D/Groks_Adventure)
-- Added: [Lab401/DigiLab v1.0 (By lab-401 & tixlegeek)](https://github.com/lab-401/fzDigiLab)
-- Updated: [FlipCrypt v0.4 (By TAxelAnderson)](https://github.com/TAxelAnderson/FlipCrypt)
-- ESP Flasher: [Bump Marauder v1.8.3 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.8.3)
-- Updated: [LEGO Dimensions Toy Pad v0.5 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
-- Updated: [USB HID Autofire v0.6 (By pbek)](https://github.com/pbek/usb_hid_autofire) Added delay between double clicks (By RogueMaster)
-- Updated: [MiZip Balance Editor v0.2 (By teohumeau)](https://github.com/teohumeau/MiZipBalanceEditor)
-- Updated: [IR Xbox Controller v1.5 (By gebeto)](https://github.com/gebeto/flipper-xbox-controller)
-- Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip) [Renfe suma 10 fix origin /region && add support for load renfe suma 10 saved cards (By BocamoCM)](https://github.com/luu176/Metroflip/pull/69)
-- Updated: [WiFi (Marauder) v0.7.4 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion) `Req: ESP32`
-- Updated: [Rubiks Cube Timer v0.0.2 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
-- Updated: [FlipSocial v2.0 (By jblanked)](https://github.com/jblanked/FlipSocial)
-- Updated: [T-Union Master (China) v0.1 (By SocialSisterYi)](https://github.com/SocialSisterYi/T-Union_Master)
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-08-12 23:32 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-08-12 23:32 EST`
 
 <a name="release">
 
@@ -505,7 +484,7 @@ $ ./fbt dolphin_ext
 - [FlipBoard Signal v3.12 (By jamisonderek)](https://github.com/jamisonderek/flipboard)
 - [FlipBoard Simon v1.10 (By jamisonderek)](https://github.com/jamisonderek/flipboard)
 - [FlipBIP Crypto Wallet v1.18 (By xtruan)](https://github.com/xtruan/FlipBIP)
-- [FlipCrypt v0.4 (By TAxelAnderson)](https://github.com/TAxelAnderson/FlipCrypt)
+- [FlipCrypt v0.6 (By TAxelAnderson)](https://github.com/TAxelAnderson/FlipCrypt)
 - [Flipper Aid v1.0 (By spaghety)](https://github.com/spaghety/flipper-aid)
 - [Flipper Doctor v0.1 (By julandealb)](https://github.com/julandealb/flipperdoc)
 - [Flipper Tag v1.0 (By thejudge156)](https://github.com/thejudge156/flippertag)
@@ -558,7 +537,7 @@ $ ./fbt dolphin_ext
 - [IR Xbox Controller v1.5 (By gebeto)](https://github.com/gebeto/flipper-xbox-controller)
 - [J305 Geiger Counter v1.4 (By nmrr)](https://github.com/nmrr/flipperzero-geigercounter)
 - [JS Runner v1.0 (By nminaylov & DrZlo13)-OFW](https://github.com/flipperdevices/flipperzero-firmware/pull/3286)
-- [Key Copier v1.4 (By zinongli)](https://github.com/zinongli/KeyCopier)
+- [Key Copier v1.5 (By zinongli)](https://github.com/zinongli/KeyCopier)
 - [Lab401/DigiLab v1.0 (By lab-401 & tixlegeek)](https://github.com/lab-401/fzDigiLab)
 - [Lab401/Light MESSENGER v1.4.1 (By tixlegeek)](https://github.com/lab-401/fzLightMessenger/tree/main/401lightMessengerApp)
 - [LaserCat v1.1 (By DroWez)](https://github.com/DroWez/LaserCat)
@@ -707,6 +686,7 @@ $ ./fbt dolphin_ext
 - [Sub-GHz Remote v1.4 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote)
 - [Sub-GHz Rolling Flaws v1.5 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials)
 - [Sub-GHz Scheduler v2.2 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
+- [Sub-Ghz Toolkit v1.0 (By RocketGod-git)](https://github.com/RocketGod-git/RocketGods-SubGHz-Toolkit)
 - [SWD Probe v1.3 (By g3gg0)](https://github.com/g3gg0/flipper-swd_probe)
 - [T5577 Multiwriter v0.2 (By Leptopt1los)](https://github.com/Leptopt1los/t5577_multiwriter)
 - [T5577 Raw Writer v1.1 (By zinongli)](https://github.com/zinongli/T5577_Raw_Writer)
@@ -748,7 +728,7 @@ $ ./fbt dolphin_ext
 - [Weather Station v1.9.4 (By Skorpionm)-OFW](https://github.com/flipperdevices/flipperzero-good-faps/tree/dev/weather_station)
 - [Web Crawler v1.0.1 (By jblanked)](https://github.com/jblanked/WebCrawler-FlipperZero) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - [Weebo v0.2 (By bettse)](https://github.com/bettse/weebo) `Req: key_retail.bin on SD card /apps_data/weebo` (Amiibo Remixer)
-- [Wendigo Bluetooth Tracker WIP v0.3 (By chris-bc)](https://github.com/chris-bc/wendigo) `WIP Req: ESP32`
+- [Wendigo Bluetooth Tracker WIP v0.4 (By chris-bc)](https://github.com/chris-bc/wendigo) `WIP Req: ESP32`
 - [Wiegand Reader v1.4 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/gpio)
 - [WiFi (Deauther) V2 (By Timmotools)](https://github.com/Timmotools/flipperzero_esp8266_deautherv2) `Req: ESP8266`
 - [WiFi (Marauder) v0.7.4 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion) `Req: ESP32` with [ESP32 MARAUDER Firmware](https://github.com/justcallmekoko/ESP32Marauder/releases/latest)
@@ -775,4 +755,4 @@ $ ./fbt dolphin_ext
 - Have a new app? Submit GitHub link to me on Discord for a special reward (if I add it to RM Firmware).
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0723-1435-0.420.0-90cb91c.tgz&channel=RM0723-1435-0.420.0-90cb91c&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0813-0001-0.420.0-e8c9f32.tgz&channel=RM0813-0001-0.420.0-e8c9f32&version=0.420.0&target=f7)

@@ -1,5 +1,12 @@
+## V0.6
+- Decreased RAM usage.
+- Add Porta cipher.
+
+## V0.5
+- Updated widget text, fixed some typos.
+
 ## V0.4
-- Fixed NFC emulation issue
+- Fixed NFC emulation issue.
 
 ## V0.3
 - Added ROT-13 cipher.

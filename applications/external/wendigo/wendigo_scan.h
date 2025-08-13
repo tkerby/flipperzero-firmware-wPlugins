@@ -7,13 +7,15 @@ extern void wendigo_scene_device_list_update(WendigoApp* app, wendigo_device* de
 extern void wendigo_scene_status_add_attribute(WendigoApp* app, char* name, char* value);
 extern void wendigo_scene_status_finish_layout(WendigoApp* app);
 extern void wendigo_scene_status_begin_layout(WendigoApp* app);
-extern uint16_t wendigo_set_current_devices(uint8_t deviceMask);
+extern uint16_t wendigo_scene_device_list_set_current_devices_mask(uint8_t deviceMask);
+extern void wendigo_scene_device_list_set_current_devices(DeviceListInstance* devices);
 
 /* Device caches - Declared extern to get around header spaghetti */
 extern wendigo_device** devices;
 extern uint16_t devices_count;
 extern uint16_t devices_capacity;
 
+void wendigo_set_scanning_interface(WendigoApp* app, InterfaceType interface, bool starting);
 void wendigo_set_scanning_active(WendigoApp* app, bool starting);
 void wendigo_scan_handle_rx_data_cb(uint8_t* buf, size_t len, void* context);
 void wendigo_free_uart_buffer();

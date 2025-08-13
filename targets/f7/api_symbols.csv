@@ -231,6 +231,7 @@ Header,+,lib/subghz/protocols/raw.h,,
 Header,+,lib/subghz/receiver.h,,
 Header,+,lib/subghz/registry.h,,
 Header,+,lib/subghz/subghz_file_encoder_worker.h,,
+Header,+,lib/subghz/subghz_keystore.h,,
 Header,+,lib/subghz/subghz_protocol_registry.h,,
 Header,+,lib/subghz/subghz_setting.h,,
 Header,+,lib/subghz/subghz_tx_rx_worker.h,,
@@ -3552,9 +3553,9 @@ Function,+,subghz_file_encoder_worker_get_text_progress,void,"SubGhzFileEncoderW
 Function,+,subghz_file_encoder_worker_is_running,_Bool,SubGhzFileEncoderWorker*
 Function,+,subghz_file_encoder_worker_start,_Bool,"SubGhzFileEncoderWorker*, const char*, const char*"
 Function,+,subghz_file_encoder_worker_stop,void,SubGhzFileEncoderWorker*
-Function,-,subghz_keystore_alloc,SubGhzKeystore*,
-Function,-,subghz_keystore_free,void,SubGhzKeystore*
-Function,-,subghz_keystore_get_data,SubGhzKeyArray_t*,SubGhzKeystore*
+Function,+,subghz_keystore_alloc,SubGhzKeystore*,
+Function,+,subghz_keystore_free,void,SubGhzKeystore*
+Function,+,subghz_keystore_get_data,SubGhzKeyArray_t*,SubGhzKeystore*
 Function,+,subghz_keystore_load,_Bool,"SubGhzKeystore*, const char*"
 Function,+,subghz_keystore_raw_encrypted_save,_Bool,"const char*, const char*, uint8_t*"
 Function,-,subghz_keystore_raw_get_data,_Bool,"const char*, size_t, uint8_t*, size_t"
