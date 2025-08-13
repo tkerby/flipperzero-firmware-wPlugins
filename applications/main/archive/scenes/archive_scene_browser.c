@@ -37,6 +37,8 @@ const char* archive_get_flipper_app_name(ArchiveFileTypeEnum file_type) {
         return EXT_PATH("apps/Media/wav_player.fap");
     case ArchiveFileTypeMag:
         return EXT_PATH("apps/GPIO/magspoof.fap");
+    case ArchiveFileTypePicopass:
+        return EXT_PATH("apps/NFC/picopass.fap");
     case ArchiveFileTypeU2f:
         return "U2F";
     case ArchiveFileTypeUpdateManifest:

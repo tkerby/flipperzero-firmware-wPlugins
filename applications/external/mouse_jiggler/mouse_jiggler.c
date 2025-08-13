@@ -11,9 +11,10 @@ static void mouse_jiggler_render_callback(Canvas* canvas, void* ctx) {
     canvas_draw_str(canvas, 5, 28, "status");
 
     canvas_set_font(canvas, FontKeyboard);
-    canvas_draw_str(canvas, 60, 41, MOUSE_JIGGLER_INTERVAL_STR[mouse_jiggler->worker->delay_index]);
+    canvas_draw_str(
+        canvas, 60, 41, MOUSE_JIGGLER_INTERVAL_STR[mouse_jiggler->worker->delay_index]);
 
-    if (mouse_jiggler->worker->is_jiggle) {
+    if(mouse_jiggler->worker->is_jiggle) {
         canvas_draw_str(canvas, 60, 28, "RUNNING");
         canvas_set_font(canvas, FontSecondary);
         canvas_draw_str(canvas, 108, 60, "stop");
@@ -35,7 +36,7 @@ static void mouse_jiggler_render_callback(Canvas* canvas, void* ctx) {
 static void mouse_jiggler_input_callback(InputEvent* input_event, void* ctx) {
     furi_check(ctx);
     const MouseJiggler* mouse_jiggler = ctx;
-    if (input_event->type == InputTypePress) {
+    if(input_event->type == InputTypePress) {
         furi_message_queue_put(mouse_jiggler->event_queue, input_event, FuriWaitForever);
     }
 }
@@ -78,27 +79,29 @@ int32_t mouse_jiggler_app() {
     furi_hal_usb_set_config(&usb_hid, NULL);
     mouse_jiggler_worker_start(worker);
 
-    while(!mouse_jiggler->exit && furi_message_queue_get(mouse_jiggler->event_queue, &event, FuriWaitForever) == FuriStatusOk) {
+    while(!mouse_jiggler->exit &&
+          furi_message_queue_get(mouse_jiggler->event_queue, &event, FuriWaitForever) ==
+              FuriStatusOk) {
         furi_check(furi_mutex_acquire(mouse_jiggler->mutex, FuriWaitForever) == FuriStatusOk);
-        switch (event.key) {
+        switch(event.key) {
         case InputKeyUp:
-            if (!worker->is_jiggle && mouse_jiggler_worker_increase_delay(worker)) {
+            if(!worker->is_jiggle && mouse_jiggler_worker_increase_delay(worker)) {
                 view_port_update(mouse_jiggler->view_port);
             }
             break;
         case InputKeyDown:
-            if (!worker->is_jiggle && mouse_jiggler_worker_decrease_delay(worker)) {
+            if(!worker->is_jiggle && mouse_jiggler_worker_decrease_delay(worker)) {
                 view_port_update(mouse_jiggler->view_port);
             }
             break;
         case InputKeyOk:
-            if (!worker->is_jiggle) {
+            if(!worker->is_jiggle) {
                 mouse_jiggler_worker_toggle_jiggle(worker);
                 view_port_update(mouse_jiggler->view_port);
             }
             break;
         case InputKeyBack:
-            if (!worker->is_jiggle) {
+            if(!worker->is_jiggle) {
                 mouse_jiggler->exit = true;
             } else {
                 mouse_jiggler_worker_toggle_jiggle(worker);

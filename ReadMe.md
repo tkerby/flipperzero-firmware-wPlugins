@@ -34,15 +34,16 @@ This software is for experimental purposes only and is not meant for any illegal
 - SubGHz: Roger (static 28 bit) with add manually support (By xMasterX & mishamyte)
 - SubGHz: V2 Phoenix full support (button switch, add manually, counter decrypt/encrypt) (By xMasterX & RocketGod-git, original code By Skorpionm)
 - SubGHz: Keeloq: Add support for - Motorline (with add manually support), Rosh, Pecinin, Rossi, Merlin, Steelmate (By xMasterX & RocketGod-git)
-- SubGHz: Reduce less popular freqs in default hopper preset, make it faster
+- SubGHz: Reduce less popular freqs in default hopper preset, make it faster (By xMasterX)
 - SubGHz: Marantec protocol implement crc verification display and add manually support (By xMasterX & li0ard, original code By Skorpionm)
-- SubGHz: Keeloq: Comunello - add manually support
-- SubGHz: Rename and extend Alarms, Sensors, Cars ignore options (Alarms: Hollarm, GangQi | Cars: Kia, Starline, ScherKhan | Sensors: Magellan, Honeywell, Honeywell WDB (doorbells), Legrand (doorbells), Feron (RGB lights))
-- SubGHz: Add keeloq ironlogic (aka il100) smart clone cloners support (thanks to Vitaly for RAWs)
-- SubGHz: Fix CAME 24bit decoder
-- SubGHz: Tune holtek ht12x to decode holtek only and not conflict with came 12bit
-- [NFC: Fix incorrect Saflok year formula (By Eltrick)](https://github.com/Next-Flip/Momentum-Firmware/pull/433)
-- [RFID: Add additional procotols supported by EM4305 chipset (By jamisonderek)](https://github.com/Next-Flip/Momentum-Firmware/pull/434)
+- SubGHz: Keeloq: Comunello - add manually support (By xMasterX)
+- SubGHz: Rename and extend Alarms, Sensors, Cars ignore options (Alarms: Hollarm, GangQi | Cars: Kia, Starline, ScherKhan | Sensors: Magellan, Honeywell, Honeywell WDB (doorbells), Legrand (doorbells), Feron (RGB lights)) (By xMasterX)
+- SubGHz: Add keeloq ironlogic (aka il100) smart clone cloners support (thanks to Vitaly for RAWs) (By xMasterX)
+- SubGHz: Fix CAME 24bit decoder (By xMasterX)
+- SubGHz: Tune holtek ht12x to decode holtek only and not conflict with came 12bit (By xMasterX)
+- NFC: [Fix incorrect Saflok year formula (By Eltrick)](https://github.com/Next-Flip/Momentum-Firmware/pull/433)
+- RFID: [Add additional procotols supported by EM4305 chipset (By jamisonderek)](https://github.com/Next-Flip/Momentum-Firmware/pull/434)
+- Picopass: [Support loading file from launch argument (By Willy-JL)](https://github.com/Next-Flip/Momentum-Firmware/commit/b376e6db971ee7b4c18f19e2bc48337f0655862a)
 
 <a name="release">
 

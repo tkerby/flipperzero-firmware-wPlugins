@@ -22,6 +22,7 @@ typedef enum {
     ArchiveFileTypeBadUsb,
     ArchiveFileTypeWAV,
     ArchiveFileTypeMag,
+    ArchiveFileTypePicopass,
     ArchiveFileTypeU2f,
     ArchiveFileTypeApplication,
     ArchiveFileTypeJS,
