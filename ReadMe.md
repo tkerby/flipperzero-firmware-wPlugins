@@ -26,10 +26,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0807-0604-0.420.0-7d98f39](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0812-2332-0.420.0-e92c7b1](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-08-07 06:04 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-08-07 06:04 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-08-12 23:32 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-08-12 23:32 EST`
 - Updated: [Yatzee v1.2 (By emfleak)](https://github.com/emfleak/flipperzero-yatzee) [Fix Full House calculation, and improve code readability a bit (By zessx)](https://github.com/emfleak/flipperzero-yatzee/pull/2)
 - Added: [Lights Out Flipper Zero v1.1 (By DigiMancer3D)](https://github.com/user/DigiMancer3D)
 - Updated: [ESP32CAM Marauder v0.7.4 (By 0xchocolate & eried)](https://github.com/eried/flipperzero-mayhem) `Req: ESP32-CAM (Mayhem)`
