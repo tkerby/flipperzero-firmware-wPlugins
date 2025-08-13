@@ -30,6 +30,7 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-08-12 23:32 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-08-12 23:32 EST`
+- Updated: [Mouse Jiggler v1.2 (By Jacob-Tate & ozgunawesome)](https://github.com/Jacob-Tate/flipperzero-firmware/blob/dev/applications/mouse_jiggler/mouse_jiggler.c) [GUI & Accuracy Updates (By ozgunawesome)](https://github.com/ozgunawesome/ozzymaster/blob/420/applications/external/mouse_jiggler/mouse_jiggler.c)
 
 <a name="release">
 
@@ -582,7 +583,7 @@ $ ./fbt dolphin_ext
 - [Morse Code v1.2 (By wh00hw)](https://github.com/DarkFlippers/unleashed-firmware/pull/144)
 - [Mouse Jacker v1.2 (By mothball187)](https://github.com/mothball187/flipperzero-nrf24/tree/main/mousejacker) [Pin Out from nocomp/Frog/UberGuidoZ](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/mousejacker) `Req: NRF24`
 - [Mouse Jacker for MS Mouse v1.2 (Remixed By coded-with-claws)](https://github.com/coded-with-claws/flipperzero-tools/tree/main/applications_user/mousejacker_ms) `Req: NRF24`
-- [Mouse Jiggler v1.1 (By Jacob-Tate)](https://github.com/Jacob-Tate/flipperzero-firmware/blob/dev/applications/mouse_jiggler/mouse_jiggler.c)
+- [Mouse Jiggler v1.2 (By Jacob-Tate & ozgunawesome)](https://github.com/Jacob-Tate/flipperzero-firmware/blob/dev/applications/mouse_jiggler/mouse_jiggler.c)
 - [Multi Converter v1.2 (By theisolinearchip)](https://github.com/theisolinearchip)
 - [Multi Timer v1.1 (By C0d3-5t3w)](https://github.com/C0d3-5t3w/flipper-multitimer)
 - [Music Beeper (By DrZlo13)](https://github.com/flipperdevices/flipperzero-firmware/pull/1189)
