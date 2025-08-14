@@ -26,10 +26,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0812-2332-0.420.0-e92c7b1](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0814-0343-0.420.0-6ac7241](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-08-12 23:32 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-08-12 23:32 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-08-14 03:43 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-08-14 03:43 EST`
 - Updated: [Mouse Jiggler v1.2 (By Jacob-Tate & ozgunawesome)](https://github.com/Jacob-Tate/flipperzero-firmware/blob/dev/applications/mouse_jiggler/mouse_jiggler.c) [GUI & Accuracy Updates (By ozgunawesome)](https://github.com/ozgunawesome/ozzymaster/blob/420/applications/external/mouse_jiggler/mouse_jiggler.c)
 - SubGHz: Roger (static 28 bit) with add manually support (By xMasterX & mishamyte)
 - SubGHz: V2 Phoenix full support (button switch, add manually, counter decrypt/encrypt) (By xMasterX & RocketGod-git, original code By Skorpionm)
