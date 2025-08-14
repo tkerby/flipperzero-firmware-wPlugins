@@ -1,5 +1,6 @@
 #include "src/cuberzero.h"
 #include <dialogs/dialogs.h>
+#include <gui/elements.h>
 
 typedef struct {
 	PCUBERZERO instance;
@@ -14,9 +15,40 @@ enum ACTION {
 	ACTION_EXIT
 };
 
+static inline void drawButton(Canvas* const canvas, const uint8_t x, const uint8_t y, const uint8_t pressed, const char* const text) {
+	const uint16_t width = canvas_string_width(canvas, text);
+	canvas_set_color(canvas, ColorBlack);
+	canvas_draw_line(canvas, x + 1, y, x + width + 4, y);
+	canvas_draw_line(canvas, x + 1, y + 12, x + width + 4, y + 12);
+	canvas_draw_line(canvas, x, y + 1, x, y + 11);
+	canvas_draw_line(canvas, x + width + 5, y + 1, x + width + 5, y + 11);
+
+	if(pressed) {
+		canvas_draw_box(canvas, x + 1, y + 1, width + 4, 11);
+		canvas_set_color(canvas, ColorWhite);
+	}
+
+	canvas_draw_str(canvas, x + 3, y + 10, text);
+}
+
 static void callbackRender(Canvas* const canvas, void* const context) {
-	UNUSED(canvas);
-	UNUSED(context);
+	furi_check(canvas && context);
+	//const PSESSIONSCENE instance = context;
+	canvas_clear(canvas);
+
+	if(1) {
+		canvas_set_font(canvas, FontPrimary);
+		canvas_draw_str(canvas, 0, 8, "Current Session:");
+		elements_text_box(canvas, 0, 11, 128, 39, AlignLeft, AlignTop, "Session 8192", 1);
+		//drawButton(canvas, 10, 51, instance->button == BUTTON_SESSION_SELECT, "Select");
+		//drawButton(canvas, 52, 51, instance->button == BUTTON_SESSION_NEW, "New");
+		//drawButton(canvas, 86, 51, instance->button == BUTTON_SESSION_DELETE, "Delete");
+		drawButton(canvas, 2, 51, 0, "Select");
+		drawButton(canvas, 33, 51, 0, "Rename");
+		drawButton(canvas, 71, 51, 0, "New");
+		drawButton(canvas, 94, 51, 0, "Delete");
+		return;
+	}
 }
 
 static void callbackInput(InputEvent* const event, void* const context) {
