@@ -99,10 +99,6 @@ typedef struct {
 
 typedef struct {
     ComboLockType lock_type;
-    int first_lock; // to be removed...
-    int second_lock; // to be removed...
-    float resistance; // to be removed...
-
     uint8_t first_lock_index; //  Index into gc_lock_string_*
     uint8_t second_lock_index; // Index into gc_lock_string_*
     uint8_t resistance_index; //  Index into gc_resistance_string_*
@@ -185,12 +181,9 @@ static void dump_state_and_combinations_to_model_result(
     written = snprintf(
         b,
         remaining_bytes,
-        "M: %d (%d), %d (%d), %.1f (%d)",
-        model->first_lock,
+        "M: %d, %d, %d",
         model->first_lock_index,
-        model->second_lock,
         model->second_lock_index,
-        (double)(model->resistance),
         model->resistance_index);
     if((written < 0) || (written >= remaining_bytes)) {
         // can't add anything more, so return.
@@ -652,16 +645,13 @@ static bool combo_view_cracker_input_callback(InputEvent* event, void* context) 
                 app->view_cracker,
                 ComboLockCrackerModel * model,
                 {
-                    if(model->selected == 0 && model->first_lock > 0) {
-                        model->first_lock--;
+                    if(model->selected == 0 && model->first_lock_index > 0) {
                         model->first_lock_index--;
                     }
-                    if(model->selected == 1 && model->second_lock > 0) {
-                        model->second_lock--;
+                    if(model->selected == 1 && model->second_lock_index > 0) {
                         model->second_lock_index--;
                     }
-                    if(model->selected == 2 && model->resistance > 0) {
-                        model->resistance -= 0.5f;
+                    if(model->selected == 2 && model->resistance_index > 0) {
                         model->resistance_index -= 1;
                     }
                 },
@@ -672,16 +662,13 @@ static bool combo_view_cracker_input_callback(InputEvent* event, void* context) 
                 app->view_cracker,
                 ComboLockCrackerModel * model,
                 {
-                    if(model->selected == 0 && model->first_lock < 39) {
-                        model->first_lock++;
+                    if(model->selected == 0 && model->first_lock_index < 39) {
                         model->first_lock_index++;
                     }
-                    if(model->selected == 1 && model->second_lock < 39) {
-                        model->second_lock++;
+                    if(model->selected == 1 && model->first_lock_index < 39) {
                         model->second_lock_index++;
                     }
-                    if(model->selected == 2 && model->resistance < 39.5f) {
-                        model->resistance += 0.5f;
+                    if(model->selected == 2 && model->resistance_index < 79) {
                         model->resistance_index++;
                     }
                 },
@@ -700,16 +687,13 @@ static bool combo_view_cracker_input_callback(InputEvent* event, void* context) 
                 app->view_cracker,
                 ComboLockCrackerModel * model,
                 {
-                    if(model->selected == 0 && model->first_lock > 0) {
-                        model->first_lock--;
+                    if(model->selected == 0 && model->first_lock_index > 0) {
                         model->first_lock_index--;
                     }
-                    if(model->selected == 1 && model->second_lock > 0) {
-                        model->second_lock--;
+                    if(model->selected == 1 && model->second_lock_index > 0) {
                         model->second_lock_index--;
                     }
-                    if(model->selected == 2 && model->resistance > 0) {
-                        model->resistance -= 0.5f;
+                    if(model->selected == 2 && model->resistance_index > 0) {
                         model->resistance_index--;
                     }
                 },
@@ -720,16 +704,13 @@ static bool combo_view_cracker_input_callback(InputEvent* event, void* context) 
                 app->view_cracker,
                 ComboLockCrackerModel * model,
                 {
-                    if(model->selected == 0 && model->first_lock < 39) {
-                        model->first_lock++;
+                    if(model->selected == 0 && model->first_lock_index < 39) {
                         model->first_lock_index++;
                     }
-                    if(model->selected == 1 && model->second_lock < 39) {
-                        model->second_lock++;
+                    if(model->selected == 1 && model->second_lock_index < 39) {
                         model->second_lock_index++;
                     }
-                    if(model->selected == 2 && model->resistance < 39.5f) {
-                        model->resistance += 0.5f;
+                    if(model->selected == 2 && model->resistance_index < 79) {
                         model->resistance_index++;
                     }
                 },
@@ -808,9 +789,6 @@ static ComboLockCrackerApp* combo_app_alloc() {
     view_allocate_model(app->view_cracker, ViewModelTypeLockFree, sizeof(ComboLockCrackerModel));
 
     ComboLockCrackerModel* model = view_get_model(app->view_cracker);
-    model->first_lock = 7;
-    model->second_lock = 14;
-    model->resistance = 13.0f;
     model->first_lock_index = 7;
     model->second_lock_index = 14;
     model->resistance_index = 26;
