@@ -338,7 +338,7 @@ static void dump_state_and_combinations_to_model_result(
 }
 
 static void
-    calculate_combination(const ComboLockCrackerModel* model, ComboLockCombination* solution) {
+    calculate_solution(const ComboLockCrackerModel* model, ComboLockCombination* solution) {
     // First things first... zero the solution structure
     memset(solution, 0, sizeof(ComboLockCombination));
 
@@ -428,103 +428,14 @@ static void
     }
 }
 
-/**
- * @brief      calculate the combination based on inputs, AND displays the results
- * @param      model   the model containing input values
- */
-static void calculate_combo(ComboLockCrackerModel* model) {
-    // For numeric locks (0..39):
-    //     If the resistance corresponds to a whole number,
-    //     then the first digit is: (int(number) + 5)
-    //     Otherwise round up:      (int(number) + 6)
-    // Converting to using indices 0..79:
-    //     Whole number from index: (index % 2u == 0u)
-    //     Index increases by:      (index + 10 + ((index % 2u == 0u) ? 0u : 1u)) % RESISTANCE_INDEX_COUNT
-
-    ComboLockCombination result2 = {};
-    ComboLockCombination result_new = {};
-    calculate_combination(model, &result_new);
-
-    if(true) {
-        int first_digit;
-        if(true) {
-            float sticky_number = model->resistance;
-            int sticky_as_int = (int)sticky_number;
-
-            if((sticky_number - sticky_as_int) == 0.0f) {
-                // first digit easy, numeric resistance + 5... crazy world we live in
-                first_digit = sticky_as_int + 5;
-            } else {
-                first_digit =
-                    (int)(sticky_number + 5) + 1; // ceiling that biih... prob. a better way
-            }
-
-            first_digit = first_digit % 40;
-        }
-
-        int remainder = first_digit % 4;
-        int a = model->first_lock;
-        int b = model->second_lock;
-
-        // third digit isn't too bad
-        int third_position_values[MAX_VALUES];
-        int third_count = 0;
-
-        for(int i = 0; i < 3; i++) {
-            if(a % 4 == remainder) third_position_values[third_count++] = a;
-            if(b % 4 == remainder) third_position_values[third_count++] = b;
-            a = (a + 10) % 40;
-            b = (b + 10) % 40;
-        }
-
-        int row_1 = (remainder + 2) % 40;
-        int row_2 = (row_1 + 4) % 40;
-
-        int second_position_values[MAX_VALUES];
-        int second_count = 0;
-        second_position_values[second_count++] = row_1;
-        second_position_values[second_count++] = row_2;
-
-        for(int i = 0; i < 4; i++) {
-            row_1 = (row_1 + 8) % 40;
-            row_2 = (row_2 + 8) % 40;
-            second_position_values[second_count++] = row_1;
-            second_position_values[second_count++] = row_2;
-        }
-
-        for(int i = 0; i < second_count - 1; i++) {
-            for(int j = i + 1; j < second_count; j++) {
-                if(second_position_values[i] > second_position_values[j]) {
-                    int temp = second_position_values[i];
-                    second_position_values[i] = second_position_values[j];
-                    second_position_values[j] = temp;
-                }
-            }
-        }
-
-        // STORE IN NEW STRUCTURE TO ALLOW SPLITTING THIS FUNCTION,
-        // ALLOWING TO COMPARING RESULTS, ETC.
-        result2.first_pin_index = first_digit;
-        result2.second_pin_count = second_count;
-        result2.third_pin_count = third_count;
-        for(int i = 0; i < second_count; ++i) {
-            result2.second_pin_index[i] = second_position_values[i];
-        }
-        for(int i = 0; i < third_count; ++i) {
-            result2.third_pin_index[i] = third_position_values[i];
-        }
-    }
-
-    ComboLockCombination* solution = &result2;
-
-    // COMPARE OLD VS. NEW RESULTS
-    if(0 != SolutionComparator(&result2, &result_new)) {
-        // LOG AN ERROR ... the new computation is giving a different result!
-        dump_state_and_combinations_to_model_result(model, &result2, &result_new);
-        return;
-    }
-
-    // BEGIN DISPLAY OF ABOVE-CALCULATED RESULTS
+static void
+    fill_model_result_with_solution(ComboLockCrackerModel* model, ComboLockCombination* solution) {
+    // TODO: consider a struct + helper function to store buffer + remaining_bytes
+    //       and a helper variadic function that does the repeated bits here....
+    //       (saves result of snprintf(), checks result, reduces remaining bytes available, etc.)
+    //       this way, folks can just pass the buffer wrapper struct to the helper function,
+    //       even if there's no space left, and nothing bad happens ... but the caller's code
+    //       ends up MUCH easier to read.
     int pos = 0;
     if(true) {
         const char* s = label_from_solution_index(model, solution->first_pin_index);
@@ -586,6 +497,30 @@ static void calculate_combo(ComboLockCrackerModel* model) {
             pos += written;
         }
     }
+    return;
+}
+/**
+ * @brief      calculate the combination based on inputs, AND displays the results
+ * @param      model   the model containing input values
+ */
+static void calculate_combo(ComboLockCrackerModel* model) {
+    // For numeric locks (0..39):
+    //     If the resistance corresponds to a whole number,
+    //     then the first digit is: (int(number) + 5)
+    //     Otherwise round up:      (int(number) + 6)
+    // Converting to using indices 0..79:
+    //     Whole number from index: (index % 2u == 0u)
+    //     Index increases by:      (index + 10 + ((index % 2u == 0u) ? 0u : 1u)) % RESISTANCE_INDEX_COUNT
+
+    ComboLockCombination result = {};
+    calculate_solution(model, &result);
+    if((result.third_pin_count < 1) || (result.second_pin_count < 1)) {
+        (void)SolutionComparator;
+        dump_state_and_combinations_to_model_result(model, &result, NULL);
+        return;
+    }
+
+    fill_model_result_with_solution(model, &result);
     return;
 }
 
@@ -873,14 +808,14 @@ static ComboLockCrackerApp* combo_app_alloc() {
     view_allocate_model(app->view_cracker, ViewModelTypeLockFree, sizeof(ComboLockCrackerModel));
 
     ComboLockCrackerModel* model = view_get_model(app->view_cracker);
-    model->first_lock = 0;
-    model->second_lock = 0;
-    model->resistance = 0.0f;
-    model->first_lock_index = 0;
-    model->second_lock_index = 0;
-    model->resistance_index = 0;
+    model->first_lock = 7;
+    model->second_lock = 14;
+    model->resistance = 13.0f;
+    model->first_lock_index = 7;
+    model->second_lock_index = 14;
+    model->resistance_index = 26;
     model->selected = 0;
-    model->result[0] = '\0';
+    memset(model->result, 0, sizeof(model->result));
 
     view_dispatcher_add_view(app->view_dispatcher, ComboViewCracker, app->view_cracker);
 
