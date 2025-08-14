@@ -1,2 +1,7 @@
-/dist
-/.vscode
+dist/*
+.vscode
+.clang-format
+.clangd
+.editorconfig
+.env
+.ufbt
