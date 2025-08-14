@@ -40,6 +40,7 @@ typedef enum _ComboLockType {
     ComboLockTypeNumeric = 0, // zero-init == numeric as default
     ComboLockTypeAlphabetic
 } ComboLockType;
+#define COMBO_LOCK_TYPE_COUNT (2) // e.g., for modulo operations to iterate...
 
 // store as array of fixed-length strings, so don't need to store 120x pointer values in RAM.
 #define LOCK_INDEX_COUNT       (40u)
@@ -177,6 +178,15 @@ static const char* label_from_solution_index(const ComboLockCrackerModel* model,
     default:
         return "?SS?";
     }
+}
+static const char* lock_type_label(const ComboLockCrackerModel* model) {
+    switch(model->lock_type) {
+    case ComboLockTypeAlphabetic:
+        return "Alpha";
+    case ComboLockTypeNumeric:
+        return "Numeric";
+    }
+    return "????";
 }
 
 static int SolutionComparator(const ComboLockCombination* r1, const ComboLockCombination* r2) {
@@ -653,6 +663,15 @@ static void combo_view_cracker_draw_callback(Canvas* canvas, void* model) {
         (my_model->selected == 2 ? ">" : ""));
     canvas_draw_str(canvas, value_x, 36, buf);
 
+    canvas_draw_str(canvas, text_x, 48, "LockType: ");
+    snprintf(buf, sizeof(buf), "%s", lock_type_label(my_model));
+    canvas_draw_str(
+        canvas,
+        value_x + (my_model->selected == 3 ? indicator_offset : 0),
+        48,
+        (my_model->selected == 3 ? ">" : ""));
+    canvas_draw_str(canvas, value_x, 48, buf);
+
     canvas_draw_str(canvas, text_x, 62, "OK to calculate");
     canvas_draw_icon(canvas, icon_x, icon_y, &I_lock32x32);
 }
@@ -674,14 +693,14 @@ static bool combo_view_cracker_input_callback(InputEvent* event, void* context) 
             with_view_model(
                 app->view_cracker,
                 ComboLockCrackerModel * model,
-                { model->selected = (model->selected > 0) ? model->selected - 1 : 2; },
+                { model->selected = (model->selected > 0) ? model->selected - 1 : 3; },
                 redraw);
             break;
         case InputKeyDown:
             with_view_model(
                 app->view_cracker,
                 ComboLockCrackerModel * model,
-                { model->selected = (model->selected < 2) ? model->selected + 1 : 0; },
+                { model->selected = (model->selected < 3) ? model->selected + 1 : 0; },
                 redraw);
             break;
         case InputKeyLeft:
@@ -697,6 +716,10 @@ static bool combo_view_cracker_input_callback(InputEvent* event, void* context) 
                     }
                     if(model->selected == 2 && model->resistance_index > 0) {
                         model->resistance_index -= 1;
+                    }
+                    if(model->selected == 3) {
+                        model->lock_type =
+                            (model->lock_type + COMBO_LOCK_TYPE_COUNT - 1) % COMBO_LOCK_TYPE_COUNT;
                     }
                 },
                 redraw);
@@ -714,6 +737,9 @@ static bool combo_view_cracker_input_callback(InputEvent* event, void* context) 
                     }
                     if(model->selected == 2 && model->resistance_index < 79) {
                         model->resistance_index++;
+                    }
+                    if(model->selected == 3) {
+                        model->lock_type = (model->lock_type + 1) % COMBO_LOCK_TYPE_COUNT;
                     }
                 },
                 redraw);
@@ -740,6 +766,10 @@ static bool combo_view_cracker_input_callback(InputEvent* event, void* context) 
                     if(model->selected == 2 && model->resistance_index > 0) {
                         model->resistance_index--;
                     }
+                    if(model->selected == 3) {
+                        model->lock_type =
+                            (model->lock_type + COMBO_LOCK_TYPE_COUNT - 1) % COMBO_LOCK_TYPE_COUNT;
+                    }
                 },
                 redraw);
             break;
@@ -756,6 +786,9 @@ static bool combo_view_cracker_input_callback(InputEvent* event, void* context) 
                     }
                     if(model->selected == 2 && model->resistance_index < 79) {
                         model->resistance_index++;
+                    }
+                    if(model->selected == 3) {
+                        model->lock_type = (model->lock_type + 1) % COMBO_LOCK_TYPE_COUNT;
                     }
                 },
                 redraw);
@@ -833,10 +866,9 @@ static ComboLockCrackerApp* combo_app_alloc() {
     view_allocate_model(app->view_cracker, ViewModelTypeLockFree, sizeof(ComboLockCrackerModel));
 
     ComboLockCrackerModel* model = view_get_model(app->view_cracker);
-    model->lock_type = ComboLockTypeAlphabetic;
-    model->first_lock_index = 7;
-    model->second_lock_index = 14;
-    model->resistance_index = 26;
+    model->first_lock_index = 1;
+    model->second_lock_index = 8;
+    model->resistance_index = 40;
     model->selected = 0;
     memset(model->result, 0, sizeof(model->result));
 
