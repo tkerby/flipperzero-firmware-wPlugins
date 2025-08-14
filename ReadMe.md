@@ -47,6 +47,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - SubGHz: Add variant of Add Manually menu with manual editing for each value (By MrLego8-9)
 - Updated: [Sub-GHz Remote v1.5 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote) Add possibility to use custom buttons when using the SubGHz remote app (By MrLego8-9)
 - SubGHz: Add ZKTeco 430.5 MHz add manually support (By xMasterX)
+- Updated: [Sub-Ghz Toolkit v1.0 (By RocketGod-git)](https://github.com/RocketGod-git/RocketGods-SubGHz-Toolkit) Fixed Launch Issue on RM FW.
+- Updated: [ESP32CAM Marauder v0.7.5 (By 0xchocolate & eried)](https://github.com/eried/flipperzero-mayhem) `Req: ESP32-CAM (Mayhem)`
 
 <a name="release">
 
@@ -469,7 +471,7 @@ $ ./fbt dolphin_ext
 - [ESP32 Gravity v0.6.0 (By chris-bc)](https://github.com/chris-bc/Flipper-Gravity) `Req: ESP32`
 - [ESP32 WIFI Mapping v0.2 (By carvilsi)](https://github.com/carvilsi/flipper0-wifi-map) `Req: ESP32` & [ESP32 FW](https://github.com/carvilsi/esp32-wifi-map)
 - [ESP32CAM Camera v1.0.0 (By Z4urce & eried)](https://github.com/eried/flipperzero-mayhem) `Req: ESP32-CAM (Mayhem)`
-- [ESP32CAM Marauder v0.7.4 (By 0xchocolate & eried)](https://github.com/eried/flipperzero-mayhem) `Req: ESP32-CAM (Mayhem)`
+- [ESP32CAM Marauder v0.7.5 (By 0xchocolate & eried)](https://github.com/eried/flipperzero-mayhem) `Req: ESP32-CAM (Mayhem)`
 - [ESP32CAM Morse Flasher v0.1 (By eried)](https://github.com/eried/flipperzero-mayhem) `Req: ESP32-CAM (Mayhem)`
 - [ESP32CAM Motion Detection v0.1 (By eried)](https://github.com/eried/flipperzero-mayhem) `Req: ESP32-CAM (Mayhem)`
 - [ESP32CAM Nanny Cam v0.1 (By eried)](https://github.com/eried/flipperzero-mayhem) `Req: ESP32-CAM (Mayhem)`
