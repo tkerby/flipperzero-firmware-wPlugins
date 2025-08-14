@@ -58,6 +58,23 @@ static const char gc_lock_labels_numeric[LOCK_INDEX_COUNT][3u] = {
     "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27",
     "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39",
 };
+static const char gc_resistance_labels_alpha[RESISTANCE_INDEX_COUNT][5u] = {
+    // NOTE: For whatever reason, I chose for `Y` to be equivalent to `0`
+    "Y.00", "Y.25", "Y.50", "Y.75", "A.00", "A.25", "A.50", "A.75", "B.00", "B.25", "B.50", "B.75",
+    "C.00", "C.25", "C.50", "C.75", "D.00", "D.25", "D.50", "D.75", "E.00", "E.25", "E.50", "E.75",
+    "F.00", "F.25", "F.50", "F.75", "G.00", "G.25", "G.50", "G.75", "H.00", "H.25", "H.50", "H.75",
+    "I.00", "I.25", "I.50", "I.75", "L.00", "L.25", "L.50", "L.75", "M.00", "M.25", "M.50", "M.75",
+    "N.00", "N.25", "N.50", "N.75", "O.00", "O.25", "O.50", "O.75", "P.00", "P.25", "P.50", "P.75",
+    "R.00", "R.25", "R.50", "R.75", "S.00", "S.25", "S.50", "S.75", "T.00", "T.25", "T.50", "T.75",
+    "U.00", "U.25", "U.50", "U.75", "W.00", "W.25", "W.50", "W.75",
+};
+static const char gc_lock_labels_alpha[LOCK_INDEX_COUNT][4u] = {
+    // NOTE: For whatever reason, I chose for `Y` to be equivalent to `0`
+    "Y", "Y.5", "A", "A.5", "B", "B.5", "C", "C.5", "D", "D.5", "E", "E.5", "F", "F.5",
+    "G", "G.5", "H", "H.5", "I", "I.5", "L", "L.5", "M", "M.5", "N", "N.5", "O", "O.5",
+    "P", "P.5", "R", "R.5", "S", "S.5", "T", "T.5", "U", "U.5", "W", "W.5",
+};
+
 #if 1 // pragma region // static const char gc_howto_numeric[]
 static const char gc_instructions_numeric[] =
     "How to use:\n"
@@ -122,17 +139,44 @@ typedef struct {
  */
 
 static const char* lock1_label_from_model(const ComboLockCrackerModel* model) {
-    return gc_lock_labels_numeric[model->first_lock_index];
+    switch(model->lock_type) {
+    case ComboLockTypeNumeric:
+        return gc_lock_labels_numeric[model->first_lock_index];
+    case ComboLockTypeAlphabetic:
+        return gc_lock_labels_alpha[model->first_lock_index];
+    default:
+        return "?L1?";
+    }
 }
 static const char* lock2_label_from_model(const ComboLockCrackerModel* model) {
-    return gc_lock_labels_numeric[model->second_lock_index];
+    switch(model->lock_type) {
+    case ComboLockTypeNumeric:
+        return gc_lock_labels_numeric[model->second_lock_index];
+    case ComboLockTypeAlphabetic:
+        return gc_lock_labels_alpha[model->second_lock_index];
+    default:
+        return "?L2?";
+    }
 }
 static const char* resistance_label_from_model(const ComboLockCrackerModel* model) {
-    return gc_resistance_labels_numeric[model->resistance_index];
+    switch(model->lock_type) {
+    case ComboLockTypeNumeric:
+        return gc_resistance_labels_numeric[model->resistance_index];
+    case ComboLockTypeAlphabetic:
+        return gc_resistance_labels_alpha[model->resistance_index];
+    default:
+        return "?RR?";
+    }
 }
 static const char* label_from_solution_index(const ComboLockCrackerModel* model, int index) {
-    (void)(model); // need this to swap based on current lock model
-    return gc_lock_labels_numeric[index];
+    switch(model->lock_type) {
+    case ComboLockTypeNumeric:
+        return gc_lock_labels_numeric[index];
+    case ComboLockTypeAlphabetic:
+        return gc_lock_labels_alpha[index];
+    default:
+        return "?SS?";
+    }
 }
 
 static int SolutionComparator(const ComboLockCombination* r1, const ComboLockCombination* r2) {
@@ -789,6 +833,7 @@ static ComboLockCrackerApp* combo_app_alloc() {
     view_allocate_model(app->view_cracker, ViewModelTypeLockFree, sizeof(ComboLockCrackerModel));
 
     ComboLockCrackerModel* model = view_get_model(app->view_cracker);
+    model->lock_type = ComboLockTypeAlphabetic;
     model->first_lock_index = 7;
     model->second_lock_index = 14;
     model->resistance_index = 26;
