@@ -41,10 +41,10 @@ typedef enum _ComboLockType {
     ComboLockTypeAlphabetic
 } ComboLockType;
 
-// store as array of fixed-length strings, so don't need to store 80x pointer values in RAM.
+// store as array of fixed-length strings, so don't need to store 120x pointer values in RAM.
 #define LOCK_INDEX_COUNT       (40u)
 #define RESISTANCE_INDEX_COUNT (80u)
-static const char gc_resistance_strings_numeric[RESISTANCE_INDEX_COUNT][5u] = {
+static const char gc_resistance_labels_numeric[RESISTANCE_INDEX_COUNT][5u] = {
     "0.0",  "0.5",  "1.0",  "1.5",  "2.0",  "2.5",  "3.0",  "3.5",  "4.0",  "4.5",  "5.0",  "5.5",
     "6.0",  "6.5",  "7.0",  "7.5",  "8.0",  "8.5",  "9.0",  "9.5",  "10.0", "10.5", "11.0", "11.5",
     "12.0", "12.5", "13.0", "13.5", "14.0", "14.5", "15.0", "15.5", "16.0", "16.5", "17.0", "17.5",
@@ -53,13 +53,13 @@ static const char gc_resistance_strings_numeric[RESISTANCE_INDEX_COUNT][5u] = {
     "30.0", "30.5", "31.0", "31.5", "32.0", "32.5", "33.0", "33.5", "34.0", "34.5", "35.0", "35.5",
     "36.0", "36.5", "37.0", "37.5", "38.0", "38.5", "39.0", "39.5",
 };
-static const char gc_lock_strings_numeric[LOCK_INDEX_COUNT][3u] = {
+static const char gc_lock_labels_numeric[LOCK_INDEX_COUNT][3u] = {
     "0",  "1",  "2",  "3",  "4",  "5",  "6",  "7",  "8",  "9",  "10", "11", "12", "13",
     "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27",
     "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39",
 };
 #if 1 // pragma region // static const char gc_howto_numeric[]
-static const char gc_howto_numeric[] =
+static const char gc_instructions_numeric[] =
     "How to use:\n"
     "---\n"
     "First lock value:\n"
@@ -103,20 +103,20 @@ typedef struct {
     int second_lock; // to be removed...
     float resistance; // to be removed...
 
-    unsigned int first_lock_index; //  Index into gc_lock_string_*
-    unsigned int second_lock_index; // Index into gc_lock_string_*
-    unsigned int resistance_index; //  Index into gc_resistance_string_*
+    uint8_t first_lock_index; //  Index into gc_lock_string_*
+    uint8_t second_lock_index; // Index into gc_lock_string_*
+    uint8_t resistance_index; //  Index into gc_resistance_string_*
 
     int selected; // tracks which UI element is currently selected?
     char result[256]; // this is string buffer for UI display of the result ... not the result itself.
 } ComboLockCrackerModel;
 
 typedef struct {
-    unsigned int second_pin_count; // variable number of pins for second digit [1..MAX_VALUES]
-    unsigned int third_pin_count; // variable number of pins for third digit   [1..MAX_VALUES]
-    unsigned int first_pin_index; // first pin is directly calculated (no guesswork)
-    unsigned int second_pin_index[MAX_VALUES]; // up to MAX_VALUES entries
-    unsigned int third_pin_index[MAX_VALUES]; //  up to MAX_VALUES entries
+    uint8_t second_pin_count; // variable number of pins for second digit [1..MAX_VALUES]
+    uint8_t third_pin_count; // variable number of pins for third digit   [1..MAX_VALUES]
+    uint8_t first_pin_index; // first pin is directly calculated (no guesswork)
+    uint8_t second_pin_index[MAX_VALUES]; // up to MAX_VALUES entries
+    uint8_t third_pin_index[MAX_VALUES]; //  up to MAX_VALUES entries
 } ComboLockCombination;
 
 /**
@@ -125,18 +125,18 @@ typedef struct {
  * @return     string representation of the float
  */
 
-static const char* lock1_from_model(const ComboLockCrackerModel* model) {
-    return gc_lock_strings_numeric[model->first_lock_index];
+static const char* lock1_label_from_model(const ComboLockCrackerModel* model) {
+    return gc_lock_labels_numeric[model->first_lock_index];
 }
-static const char* lock2_from_model(const ComboLockCrackerModel* model) {
-    return gc_lock_strings_numeric[model->second_lock_index];
+static const char* lock2_label_from_model(const ComboLockCrackerModel* model) {
+    return gc_lock_labels_numeric[model->second_lock_index];
 }
-static const char* resistance_from_model(const ComboLockCrackerModel* model) {
-    return gc_resistance_strings_numeric[model->resistance_index];
+static const char* resistance_label_from_model(const ComboLockCrackerModel* model) {
+    return gc_resistance_labels_numeric[model->resistance_index];
 }
 static const char* label_from_solution_index(const ComboLockCrackerModel* model, int index) {
     (void)(model); // need this to swap based on current lock model
-    return gc_lock_strings_numeric[index];
+    return gc_lock_labels_numeric[index];
 }
 
 static int SolutionComparator(const ComboLockCombination* r1, const ComboLockCombination* r2) {
@@ -172,13 +172,177 @@ static int SolutionComparator(const ComboLockCombination* r1, const ComboLockCom
     }
     return 0;
 }
+static void dump_state_and_combinations_to_model_result(
+    ComboLockCrackerModel* model,
+    const ComboLockCombination* r1,
+    const ComboLockCombination* r2) {
+    memset(model->result, 0, sizeof(model->result));
+    int remaining_bytes = sizeof(model->result) - 1;
+    char* b = model->result;
+    int written;
+
+    // write indices
+    written = snprintf(
+        b,
+        remaining_bytes,
+        "M: %d (%d), %d (%d), %.1f (%d)",
+        model->first_lock,
+        model->first_lock_index,
+        model->second_lock,
+        model->second_lock_index,
+        (double)(model->resistance),
+        model->resistance_index);
+    if((written < 0) || (written >= remaining_bytes)) {
+        // can't add anything more, so return.
+        return;
+    }
+    remaining_bytes -= written;
+    b += written;
+
+    // write result1 (if non-null)
+    if(r1 != NULL) {
+        const ComboLockCombination* tmp = r1;
+        const char rnum = '1';
+
+        written = snprintf(
+            b,
+            remaining_bytes,
+            "\nR%c: %d  %d(",
+            rnum,
+            tmp->first_pin_index,
+            tmp->second_pin_count);
+        if((written < 0) || (written >= remaining_bytes)) {
+            // can't add anything more, so return.
+            return;
+        }
+        remaining_bytes -= written;
+        b += written;
+
+        // second pin indices
+        for(uint8_t i = 0; i < tmp->second_pin_count; ++i) {
+            written = snprintf(
+                b,
+                remaining_bytes,
+                (i == 0) ? "%d" :
+                (i == 3) ? ",\n  %d" :
+                           ", %d",
+                tmp->second_pin_index[i]);
+            if((written < 0) || (written >= remaining_bytes)) {
+                // can't add anything more, so return.
+                return;
+            }
+            remaining_bytes -= written;
+            b += written;
+        }
+        written = snprintf(b, remaining_bytes, ") %d(", tmp->third_pin_count);
+        if((written < 0) || (written >= remaining_bytes)) {
+            // can't add anything more, so return.
+            return;
+        }
+        remaining_bytes -= written;
+        b += written;
+
+        // third pin indices
+        for(uint8_t i = 0; i < tmp->third_pin_count; ++i) {
+            written = snprintf(
+                b,
+                remaining_bytes,
+                (i == 0) ? "%d" :
+                (i == 3) ? ",\n  %d" :
+                           ", %d",
+                tmp->third_pin_index[i]);
+            if((written < 0) || (written >= remaining_bytes)) {
+                // can't add anything more, so return.
+                return;
+            }
+            remaining_bytes -= written;
+            b += written;
+        }
+        written = snprintf(b, remaining_bytes, ")");
+        if((written < 0) || (written >= remaining_bytes)) {
+            // can't add anything more, so return.
+            return;
+        }
+        remaining_bytes -= written;
+        b += written;
+    }
+    if(r2 != NULL) {
+        const ComboLockCombination* tmp = r2;
+        const char rnum = '2';
+
+        written = snprintf(
+            b,
+            remaining_bytes,
+            "\nR%c: %d  %d(",
+            rnum,
+            tmp->first_pin_index,
+            tmp->second_pin_count);
+        if((written < 0) || (written >= remaining_bytes)) {
+            // can't add anything more, so return.
+            return;
+        }
+        remaining_bytes -= written;
+        b += written;
+
+        // second pin indices
+        for(uint8_t i = 0; i < tmp->second_pin_count; ++i) {
+            written = snprintf(
+                b,
+                remaining_bytes,
+                (i == 0) ? "%d" :
+                (i == 3) ? ",\n  %d" :
+                           ", %d",
+                tmp->second_pin_index[i]);
+            if((written < 0) || (written >= remaining_bytes)) {
+                // can't add anything more, so return.
+                return;
+            }
+            remaining_bytes -= written;
+            b += written;
+        }
+        written = snprintf(b, remaining_bytes, ") %d(", tmp->third_pin_count);
+        if((written < 0) || (written >= remaining_bytes)) {
+            // can't add anything more, so return.
+            return;
+        }
+        remaining_bytes -= written;
+        b += written;
+
+        // third pin indices
+        for(uint8_t i = 0; i < tmp->third_pin_count; ++i) {
+            written = snprintf(
+                b,
+                remaining_bytes,
+                (i == 0) ? "%d" :
+                (i == 3) ? ",\n  %d" :
+                           ", %d",
+                tmp->third_pin_index[i]);
+            if((written < 0) || (written >= remaining_bytes)) {
+                // can't add anything more, so return.
+                return;
+            }
+            remaining_bytes -= written;
+            b += written;
+        }
+        written = snprintf(b, remaining_bytes, ")");
+        if((written < 0) || (written >= remaining_bytes)) {
+            // can't add anything more, so return.
+            return;
+        }
+        remaining_bytes -= written;
+        b += written;
+    }
+
+    // that's it ... best effort completed
+    return;
+}
 
 static void
-    calculate_combination(const ComboLockCrackerModel* model, ComboLockCombination* result) {
-    // First things first... zero the result structure
-    memset(result, 0, sizeof(ComboLockCombination));
+    calculate_combination(const ComboLockCrackerModel* model, ComboLockCombination* solution) {
+    // First things first... zero the solution structure
+    memset(solution, 0, sizeof(ComboLockCombination));
 
-    // calculate first result (index == value for numeric combo locks)
+    // calculate first pin (index == value for numeric combo locks)
     if(true) {
         // From old code:
         //     For numeric locks (0..39):
@@ -200,27 +364,36 @@ static void
             pin0 += 5;
         }
         pin0 %= LOCK_INDEX_COUNT;
-        result->first_pin_index = pin0;
+        solution->first_pin_index = pin0;
     }
 
-    unsigned int remainder = result->first_pin_index % 4;
+    uint8_t remainder = solution->first_pin_index % 4;
 
     // calculate the potential THIRD pins
     if(true) {
-        unsigned int a = model->first_lock_index; //  index == value for numeric combo locks
-        unsigned int b = model->second_lock_index; // index == value for numeric combo locks
+        uint8_t a = model->first_lock_index; //  index == value for numeric combo locks
+        uint8_t b = model->second_lock_index; // index == value for numeric combo locks
 
         // Third digit:
         //    Check N, N+10, N+20, N+30 (for N is either of the two lock indices)
         // If any of those (value % 4) == (first pin % 4),
         // then it's a potential solution.
-        for(int i = 0; i < 3; i++) {
-            if(((a + (10 * i)) % 4) == remainder) {
-                result->third_pin_index[result->third_pin_count++] = a;
+        //
+        // Typically:
+        // * lock1 and lock2 are offset by an odd value
+        // * thus, only one of them would ever match the modulo by adding multiples of 10.
+        // * 10 % 4 == 2, so only half the additions (+0, +10, +20, +30) will match the modulo.
+        // * Thus, expect to get two values stored.
+        // * NOTE: Invalid inputs might store 4 values.
+        for(uint8_t i = 0u; i < 3u; i++) {
+            if((a % 4u) == remainder) {
+                solution->third_pin_index[solution->third_pin_count++] = a;
             }
-            if(((b + (10 * i)) % 4) == remainder) {
-                result->third_pin_index[result->third_pin_count++] = b;
+            if((b % 4u) == remainder) {
+                solution->third_pin_index[solution->third_pin_count++] = b;
             }
+            a = (a + 10u) % 40u;
+            b = (b + 10u) % 40u;
         }
     }
 
@@ -228,28 +401,28 @@ static void
     if(true) {
         // first two possibilities: remainder + 2, remainder + 6
         // Note that modulo here is redundant, as remainder is in range [0..3]
-        int row_1 = (remainder + 2) % LOCK_INDEX_COUNT;
-        int row_2 = (row_1 + 4) % LOCK_INDEX_COUNT;
-        result->second_pin_index[result->second_pin_count++] = row_1;
-        result->second_pin_index[result->second_pin_count++] = row_2;
+        uint8_t row_1 = (remainder + 2) % LOCK_INDEX_COUNT;
+        uint8_t row_2 = (row_1 + 4) % LOCK_INDEX_COUNT;
+        solution->second_pin_index[solution->second_pin_count++] = row_1;
+        solution->second_pin_index[solution->second_pin_count++] = row_2;
 
-        for(int i = 0; i < 4; i++) {
-            row_1 = (row_1 + 8) % LOCK_INDEX_COUNT;
-            row_2 = (row_2 + 8) % LOCK_INDEX_COUNT;
-            result->second_pin_index[result->second_pin_count++] = row_1;
-            result->second_pin_index[result->second_pin_count++] = row_2;
+        for(uint8_t i = 0u; i < 4u; i++) {
+            row_1 = (row_1 + 8u) % LOCK_INDEX_COUNT;
+            row_2 = (row_2 + 8u) % LOCK_INDEX_COUNT;
+            solution->second_pin_index[solution->second_pin_count++] = row_1;
+            solution->second_pin_index[solution->second_pin_count++] = row_2;
         }
     }
     // O(n^2) sorting of second pin numbers ... but as n is small (~8) it's good enough
-    for(unsigned int i = 0; i < result->second_pin_count - 1; i++) {
+    for(uint8_t i = 0; i < solution->second_pin_count - 1; i++) {
         // ensure smallest of all remaining values is in index i...
-        for(unsigned int j = i + 1; j < result->second_pin_count; j++) {
+        for(uint8_t j = i + 1; j < solution->second_pin_count; j++) {
             // by comparing against all the remaining indices
-            if(result->second_pin_index[i] > result->second_pin_index[j]) {
+            if(solution->second_pin_index[i] > solution->second_pin_index[j]) {
                 // swap the values so smallest value comes first
-                unsigned int temp = result->second_pin_index[i];
-                result->second_pin_index[i] = result->second_pin_index[j];
-                result->second_pin_index[j] = temp;
+                uint8_t temp = solution->second_pin_index[i];
+                solution->second_pin_index[i] = solution->second_pin_index[j];
+                solution->second_pin_index[j] = temp;
             }
         }
     }
@@ -347,6 +520,8 @@ static void calculate_combo(ComboLockCrackerModel* model) {
     // COMPARE OLD VS. NEW RESULTS
     if(0 != SolutionComparator(&result2, &result_new)) {
         // LOG AN ERROR ... the new computation is giving a different result!
+        dump_state_and_combinations_to_model_result(model, &result2, &result_new);
+        return;
     }
 
     // BEGIN DISPLAY OF ABOVE-CALCULATED RESULTS
@@ -362,7 +537,7 @@ static void calculate_combo(ComboLockCrackerModel* model) {
         pos += written;
     }
 
-    for(unsigned int i = 0; i < solution->second_pin_count; i++) {
+    for(uint8_t i = 0; i < solution->second_pin_count; i++) {
         const char* s = label_from_solution_index(model, solution->second_pin_index[i]);
         int written = snprintf(model->result + pos, sizeof(model->result) - pos, "%s", s);
         if(written < 0 || written >= (int)(sizeof(model->result) - pos)) {
@@ -393,7 +568,7 @@ static void calculate_combo(ComboLockCrackerModel* model) {
         pos += written;
     }
 
-    for(unsigned int i = 0; i < solution->third_pin_count; i++) {
+    for(uint8_t i = 0; i < solution->third_pin_count; i++) {
         const char* s = label_from_solution_index(model, solution->third_pin_index[i]);
         int written = snprintf(model->result + pos, sizeof(model->result) - pos, "%s", s);
         if((written < 0) || (written >= (int)(sizeof(model->result) - pos))) {
@@ -480,7 +655,7 @@ static void combo_view_cracker_draw_callback(Canvas* canvas, void* model) {
     int indicator_offset = -5;
 
     canvas_draw_str(canvas, text_x, 12, "First Lock:");
-    snprintf(buf, sizeof(buf), "%s", lock1_from_model(my_model));
+    snprintf(buf, sizeof(buf), "%s", lock1_label_from_model(my_model));
     canvas_draw_str(
         canvas,
         value_x + (my_model->selected == 0 ? indicator_offset : 0),
@@ -489,7 +664,7 @@ static void combo_view_cracker_draw_callback(Canvas* canvas, void* model) {
     canvas_draw_str(canvas, value_x, 12, buf);
 
     canvas_draw_str(canvas, text_x, 24, "Second Lock:");
-    snprintf(buf, sizeof(buf), "%s", lock2_from_model(my_model));
+    snprintf(buf, sizeof(buf), "%s", lock2_label_from_model(my_model));
     canvas_draw_str(
         canvas,
         value_x + (my_model->selected == 1 ? indicator_offset : 0),
@@ -498,7 +673,7 @@ static void combo_view_cracker_draw_callback(Canvas* canvas, void* model) {
     canvas_draw_str(canvas, value_x, 24, buf);
 
     canvas_draw_str(canvas, text_x, 36, "Resistance:");
-    snprintf(buf, sizeof(buf), "%s", resistance_from_model(my_model));
+    snprintf(buf, sizeof(buf), "%s", resistance_label_from_model(my_model));
     canvas_draw_str(
         canvas,
         value_x + (my_model->selected == 2 ? indicator_offset : 0),
@@ -716,7 +891,7 @@ static ComboLockCrackerApp* combo_app_alloc() {
         app->view_dispatcher, ComboViewResults, widget_get_view(app->widget_results));
 
     app->widget_tutorial = widget_alloc();
-    widget_add_text_scroll_element(app->widget_tutorial, 0, 0, 128, 64, gc_howto_numeric);
+    widget_add_text_scroll_element(app->widget_tutorial, 0, 0, 128, 64, gc_instructions_numeric);
     view_set_previous_callback(
         widget_get_view(app->widget_tutorial), combo_navigation_submenu_callback);
     view_dispatcher_add_view(
