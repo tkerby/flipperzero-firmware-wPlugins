@@ -104,11 +104,13 @@ static bool subrem_map_preset_load(SubRemMapPreset* map_preset, FlipperFormat* f
         // Block does not change ret, value is optional.
         if(!flipper_format_rewind(fff_data_file)) {
             // Rewind error
-        } else if (!flipper_format_read_string(fff_data_file, map_file_labels[i][2], button_str)) {
+        } else if(!flipper_format_read_string(fff_data_file, map_file_labels[i][2], button_str)) {
 #ifdef FURI_DEBUG
             FURI_LOG_W(TAG, "No Button for %s", map_file_labels[i][0]);
 #endif
-        } else if (strint_to_uint16(furi_string_get_cstr(button_str), NULL, &button_code, 16) != StrintParseNoError) {
+        } else if(
+            strint_to_uint16(furi_string_get_cstr(button_str), NULL, &button_code, 16) !=
+            StrintParseNoError) {
 #ifdef FURI_DEBUG
             FURI_LOG_W(TAG, "Invalid Button for %s: %s", map_file_labels[i][0], button_str);
 #endif
@@ -334,7 +336,7 @@ bool subrem_save_map_to_file(SubGhzRemoteApp* app) {
         }
     }
 
-    for (uint8_t i = 0; i < SubRemSubKeyNameMaxCount; i++) {
+    for(uint8_t i = 0; i < SubRemSubKeyNameMaxCount; i++) {
         sub_preset = app->map_preset->subs_preset[i];
         if(sub_preset->button != 0) {
             flipper_format_write_hex(fff_data, map_file_labels[i][2], &sub_preset->button, 1);

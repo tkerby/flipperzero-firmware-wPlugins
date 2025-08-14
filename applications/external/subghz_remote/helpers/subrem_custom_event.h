@@ -46,7 +46,6 @@ typedef enum {
     SubRemCustomEventSceneEditButtonWidgetAccess,
     SubRemCustomEventSceneEditButtonWidgetBack,
 
-
     SubRemCustomEventSceneEditOpenSubErrorPopup,
 
     SubRemCustomEventSceneEditPreviewSaved,

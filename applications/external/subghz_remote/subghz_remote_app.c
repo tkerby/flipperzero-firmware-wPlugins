@@ -72,7 +72,9 @@ SubGhzRemoteApp* subghz_remote_app_alloc() {
     // Variable item list
     app->var_item_list = variable_item_list_alloc();
     view_dispatcher_add_view(
-        app->view_dispatcher, SubRemViewIDVariableItemList, variable_item_list_get_view(app->var_item_list));
+        app->view_dispatcher,
+        SubRemViewIDVariableItemList,
+        variable_item_list_get_view(app->var_item_list));
 
     // Dialog
     app->dialogs = furi_record_open(RECORD_DIALOGS);

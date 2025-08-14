@@ -2,13 +2,7 @@
 #include "../helpers/subrem_custom_event.h"
 #include "../helpers/subrem_custom_button_info.h"
 
-const char* const custom_button_text[NumButtons] = {
-    "Default",
-    "Up",
-    "Down",
-    "Left",
-    "Right"
-};
+const char* const custom_button_text[NumButtons] = {"Default", "Up", "Down", "Left", "Right"};
 
 void subrem_scene_edit_submenu_text_input_callback(void* context) {
     furi_assert(context);
@@ -34,7 +28,7 @@ void subrem_scene_edit_submenu_var_list_change_callback(VariableItem* item) {
     uint8_t index = variable_item_get_current_value_index(item);
 
     variable_item_set_current_value_text(item, custom_button_text[index]);
-    SubRemSubFilePreset *sub_preset = app->map_preset->subs_preset[app->chosen_sub];
+    SubRemSubFilePreset* sub_preset = app->map_preset->subs_preset[app->chosen_sub];
     sub_preset->button = index;
 }
 
@@ -46,12 +40,16 @@ void subrem_scene_edit_submenu_on_enter(void* context) {
     VariableItem* item;
 
     SubRemSubFilePreset* sub_preset = app->map_preset->subs_preset[app->chosen_sub];
-    variable_item_list_set_enter_callback(
-            var_item_list, subrem_scene_edit_submenu_callback, app);
+    variable_item_list_set_enter_callback(var_item_list, subrem_scene_edit_submenu_callback, app);
 
     variable_item_list_add(var_item_list, "Edit Label", 0, NULL, NULL);
     variable_item_list_add(var_item_list, "Edit File", 0, NULL, NULL);
-    item = variable_item_list_add(var_item_list, "Button", NumButtons, subrem_scene_edit_submenu_var_list_change_callback, app);
+    item = variable_item_list_add(
+        var_item_list,
+        "Button",
+        NumButtons,
+        subrem_scene_edit_submenu_var_list_change_callback,
+        app);
 
     variable_item_set_current_value_index(item, sub_preset->button);
     variable_item_set_current_value_text(item, custom_button_text[sub_preset->button]);
