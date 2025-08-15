@@ -8,11 +8,20 @@ typedef struct {
 	FuriMessageQueue* queue;
 	struct {
 		uint8_t action : 1;
+		uint8_t button : 2;
 	};
 } SESSIONSCENE, *PSESSIONSCENE;
 
 enum ACTION {
 	ACTION_EXIT
+};
+
+enum BUTTONSESSION {
+	BUTTON_SESSION_SELECT,
+	BUTTON_SESSION_RENAME,
+	BUTTON_SESSION_NEW,
+	BUTTON_SESSION_DELETE,
+	COUNT_BUTTON_SESSION
 };
 
 static inline void drawButton(Canvas* const canvas, const uint8_t x, const uint8_t y, const uint8_t pressed, const char* const text) {
@@ -33,20 +42,17 @@ static inline void drawButton(Canvas* const canvas, const uint8_t x, const uint8
 
 static void callbackRender(Canvas* const canvas, void* const context) {
 	furi_check(canvas && context);
-	//const PSESSIONSCENE instance = context;
+	const PSESSIONSCENE instance = context;
 	canvas_clear(canvas);
 
 	if(1) {
 		canvas_set_font(canvas, FontPrimary);
 		canvas_draw_str(canvas, 0, 8, "Current Session:");
 		elements_text_box(canvas, 0, 11, 128, 39, AlignLeft, AlignTop, "Session 8192", 1);
-		//drawButton(canvas, 10, 51, instance->button == BUTTON_SESSION_SELECT, "Select");
-		//drawButton(canvas, 52, 51, instance->button == BUTTON_SESSION_NEW, "New");
-		//drawButton(canvas, 86, 51, instance->button == BUTTON_SESSION_DELETE, "Delete");
-		drawButton(canvas, 2, 51, 0, "Select");
-		drawButton(canvas, 33, 51, 0, "Rename");
-		drawButton(canvas, 71, 51, 0, "New");
-		drawButton(canvas, 94, 51, 0, "Delete");
+		drawButton(canvas, 2, 51, instance->button == BUTTON_SESSION_SELECT, "Select");
+		drawButton(canvas, 33, 51, instance->button == BUTTON_SESSION_RENAME, "Rename");
+		drawButton(canvas, 71, 51, instance->button == BUTTON_SESSION_NEW, "New");
+		drawButton(canvas, 94, 51, instance->button == BUTTON_SESSION_DELETE, "Delete");
 		return;
 	}
 }
