@@ -52,6 +52,43 @@ void mizip_balance_editor_show_balances(void* context) {
     dialog_ex_set_text(app->dialog_ex, str, 64, 29, AlignCenter, AlignCenter);
 }
 
+void mizip_balance_editor_scene_show_balance_center_button_handle(void* context) {
+    MiZipBalanceEditorApp* app = context;
+
+    if(app->is_valid_mizip_data) {
+        //Open NumberInput for custom value
+        app->is_number_input_active = true;
+        scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdNumberInput);
+    } else {
+        //Get back if data isn't valid
+        switch(app->currentDataSource) {
+        case DataSourceNfc:
+            scene_manager_search_and_switch_to_previous_scene(
+                app->scene_manager, MiZipBalanceEditorViewIdScanner);
+            break;
+        case DataSourceFile:
+            scene_manager_previous_scene(app->scene_manager);
+            break;
+        }
+    }
+}
+
+void mizip_balance_editor_scene_show_balance_back_button_handle(void* context) {
+    MiZipBalanceEditorApp* app = context;
+
+    if(app->new_balance != app->current_balance) {
+        bool write_success = mizip_balance_editor_write_new_balance(context);
+        if(write_success) {
+            scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdWriteSuccess);
+        } else {
+            //TODO Writing fail message
+        }
+    } else {
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MiZipBalanceEditorViewIdMainMenu);
+    }
+}
+
 void mizip_balance_editor_scene_show_balance_on_enter(void* context) {
     furi_assert(context);
     MiZipBalanceEditorApp* app = context;
@@ -105,24 +142,7 @@ bool mizip_balance_editor_scene_show_balance_on_event(void* context, SceneManage
     if(event.type == SceneManagerEventTypeCustom) {
         switch(event.event) {
         case DialogExResultCenter:
-            if(app->is_valid_mizip_data) {
-                //Open NumberInput for custom value
-                app->is_number_input_active = true;
-                scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdNumberInput);
-            } else {
-                //Get back if data isn't valid
-                switch(app->currentDataSource) {
-                case DataSourceNfc:
-                    scene_manager_search_and_switch_to_previous_scene(
-                        app->scene_manager, MiZipBalanceEditorViewIdScanner);
-                    break;
-                case DataSourceFile:
-                    scene_manager_previous_scene(app->scene_manager);
-                    break;
-                default:
-                    break;
-                }
-            }
+            mizip_balance_editor_scene_show_balance_center_button_handle(context);
             consumed = true;
             break;
         case DialogExResultLeft:
@@ -151,18 +171,8 @@ bool mizip_balance_editor_scene_show_balance_on_event(void* context, SceneManage
             break;
         }
     } else if(event.type == SceneManagerEventTypeBack) {
-        if(app->new_balance != app->current_balance) {
-            bool write_success = mizip_balance_editor_write_new_balance(context);
-            if(write_success) {
-                scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdWriteSuccess);
-            } else {
-                //TODO Writing fail message
-            }
-            consumed = true;
-        } else {
-            scene_manager_search_and_switch_to_another_scene(
-                app->scene_manager, MiZipBalanceEditorViewIdMainMenu);
-        }
+        mizip_balance_editor_scene_show_balance_back_button_handle(context);
+        consumed = true;
     }
     return consumed;
 }
