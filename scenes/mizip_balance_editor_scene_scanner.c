@@ -95,6 +95,7 @@ bool mizip_balance_editor_scene_scanner_on_event(void* context, SceneManagerEven
             nfc_scanner_stop(app->scanner);
             nfc_scanner_free(app->scanner);
             app->is_scan_active = false;
+            notification_message(app->notifications, &sequence_blink_stop);
             popup_set_header(app->popup, "Wrong tag", 65, 40, AlignLeft, AlignTop);
             consumed = true;
         } else if(event.event == MiZipBalanceEditorCustomEventMfClassicCard) {
