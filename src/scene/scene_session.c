@@ -58,8 +58,30 @@ static void callbackRender(Canvas* const canvas, void* const context) {
 }
 
 static void callbackInput(InputEvent* const event, void* const context) {
-	UNUSED(event);
-	UNUSED(context);
+	furi_check(event && context);
+
+	if(event->type != InputTypeShort) {
+		return;
+	}
+
+	const PSESSIONSCENE instance = context;
+
+	switch(event->key) {
+	case InputKeyUp:
+	case InputKeyRight:
+		instance->button = (instance->button + 1) % COUNT_BUTTON_SESSION;
+		//instance->button = (instance->button + 1) % (instance->renderText ? COUNT_BUTTON_TEXT : COUNT_BUTTON_SESSION);
+		goto updateViewport;
+	case InputKeyDown:
+	case InputKeyLeft:
+		instance->button = (instance->button ? instance->button : COUNT_BUTTON_SESSION) - 1;
+		//instance->button = (instance->button ? instance->button : (instance->renderText ? COUNT_BUTTON_TEXT : COUNT_BUTTON_SESSION)) - 1;
+		goto updateViewport;
+	default:
+		break;
+	}
+updateViewport:
+	view_port_update(instance->viewport);
 }
 
 void SceneSessionEnter(void* const context) {
