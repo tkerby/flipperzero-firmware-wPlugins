@@ -52,6 +52,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [WiFi (Marauder) v0.7.5 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion) `Req: ESP32` with [ESP32 MARAUDER Firmware](https://github.com/justcallmekoko/ESP32Marauder/releases/latest)
 - Updated: [MiZip Balance Editor v0.2 (By teohumeau)](https://github.com/teohumeau/MiZipBalanceEditor)
 - Updated: [Wendigo Bluetooth Tracker WIP v0.5 (By chris-bc)](https://github.com/chris-bc/wendigo) `WIP Req: ESP32`
+- Updated: [Combo Cracker v0.2 (By CharlesTheGreat77)](https://github.com/CharlesTheGreat77/ComboCracker-FZ)
 
 <a name="release">
 
