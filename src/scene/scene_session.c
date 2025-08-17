@@ -9,6 +9,7 @@ typedef struct {
 	struct {
 		uint8_t action : 1;
 		uint8_t button : 2;
+		uint8_t dialog : 1;
 	};
 } SESSIONSCENE, *PSESSIONSCENE;
 
@@ -24,7 +25,7 @@ enum BUTTONSESSION {
 	COUNT_BUTTON_SESSION
 };
 
-static inline void drawButton(Canvas* const canvas, const uint8_t x, const uint8_t y, const uint8_t pressed, const char* const text) {
+static inline void renderButton(Canvas* const canvas, const uint8_t x, const uint8_t y, const uint8_t pressed, const char* const text) {
 	const uint16_t width = canvas_string_width(canvas, text);
 	canvas_set_color(canvas, ColorBlack);
 	canvas_draw_line(canvas, x + 1, y, x + width + 4, y);
@@ -45,14 +46,14 @@ static void callbackRender(Canvas* const canvas, void* const context) {
 	const PSESSIONSCENE instance = context;
 	canvas_clear(canvas);
 
-	if(1) {
+	if(!instance->dialog) {
 		canvas_set_font(canvas, FontPrimary);
 		canvas_draw_str(canvas, 0, 8, "Current Session:");
 		elements_text_box(canvas, 0, 11, 128, 39, AlignLeft, AlignTop, "Session 8192", 1);
-		drawButton(canvas, 2, 51, instance->button == BUTTON_SESSION_SELECT, "Select");
-		drawButton(canvas, 33, 51, instance->button == BUTTON_SESSION_RENAME, "Rename");
-		drawButton(canvas, 71, 51, instance->button == BUTTON_SESSION_NEW, "New");
-		drawButton(canvas, 94, 51, instance->button == BUTTON_SESSION_DELETE, "Delete");
+		renderButton(canvas, 2, 51, instance->button == BUTTON_SESSION_SELECT, "Select");
+		renderButton(canvas, 33, 51, instance->button == BUTTON_SESSION_RENAME, "Rename");
+		renderButton(canvas, 71, 51, instance->button == BUTTON_SESSION_NEW, "New");
+		renderButton(canvas, 94, 51, instance->button == BUTTON_SESSION_DELETE, "Delete");
 		return;
 	}
 }
@@ -69,13 +70,11 @@ static void callbackInput(InputEvent* const event, void* const context) {
 	switch(event->key) {
 	case InputKeyUp:
 	case InputKeyRight:
-		instance->button = (instance->button + 1) % COUNT_BUTTON_SESSION;
-		//instance->button = (instance->button + 1) % (instance->renderText ? COUNT_BUTTON_TEXT : COUNT_BUTTON_SESSION);
+		instance->button = (instance->button + 1) % (instance->dialog ? COUNT_BUTTON_TEXT : COUNT_BUTTON_SESSION);
 		goto updateViewport;
 	case InputKeyDown:
 	case InputKeyLeft:
-		instance->button = (instance->button ? instance->button : COUNT_BUTTON_SESSION) - 1;
-		//instance->button = (instance->button ? instance->button : (instance->renderText ? COUNT_BUTTON_TEXT : COUNT_BUTTON_SESSION)) - 1;
+		instance->button = (instance->button ? instance->button : (instance->dialog ? COUNT_BUTTON_TEXT : COUNT_BUTTON_SESSION)) - 1;
 		goto updateViewport;
 	default:
 		break;
