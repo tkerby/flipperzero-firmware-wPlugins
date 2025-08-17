@@ -108,6 +108,7 @@ struct MiZipBalanceEditorApp {
     FuriString* filePath;
     FuriString* shadowFilePath;
     bool is_shadow_file_exists;
+    bool is_file_loaded;
 
     //Mifare Classic data
     uint8_t current_sector;
