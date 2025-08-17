@@ -9,6 +9,7 @@ void nfc_dict_manager_scene_optimize_on_enter(void* context) {
     DialogsFileBrowserOptions browser_options;
     dialog_file_browser_set_basic_options(&browser_options, DICT_EXTENSION, &I_file_10px);
     browser_options.base_path = DICT_FOLDER_PATH;
+    browser_options.skip_assets = false; 
     
     FuriString* path = furi_string_alloc();
     furi_string_set(path, DICT_FOLDER_PATH);
