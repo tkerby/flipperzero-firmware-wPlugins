@@ -21,7 +21,7 @@
 
 #define IS_FLIPPER_APP          (1)
 /* TODO: Find a way to extract fap_version from application.fam */
-#define FLIPPER_WENDIGO_VERSION "0.5.0"
+#define FLIPPER_WENDIGO_VERSION "0.5.1"
 
 #include "wendigo_common_defs.h"
 #include "wendigo_pnl.h"
@@ -176,6 +176,8 @@ struct WendigoApp {
     FuriMutex* bufferMutex;
     FuriMutex* devicesMutex;
     FuriMutex* pnlMutex;
+    /* Timer to poll the ESP32 if packets have stopped being received */
+    FuriTimer* scan_timer;
 
     const char* selected_tx_string;
     bool is_command;
