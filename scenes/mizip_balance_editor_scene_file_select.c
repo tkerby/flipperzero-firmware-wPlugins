@@ -47,7 +47,6 @@ void mizip_balance_editor_scene_file_select_on_enter(void* context) {
         }
 
         //Check if file is MiZip file
-        app->nfc_device = nfc_device_alloc();
         if(nfc_device_load(app->nfc_device, furi_string_get_cstr(app->filePath))) {
             FURI_LOG_D(
                 "MiZipBalanceEditor", "Loaded file: %s", furi_string_get_cstr(app->filePath));
@@ -57,11 +56,9 @@ void mizip_balance_editor_scene_file_select_on_enter(void* context) {
                     nfc_device_get_data(app->nfc_device, NfcProtocolMfClassic));
                 memcpy(app->uid, app->mf_classic_data->iso14443_3a_data->uid, UID_LENGTH);
                 app->is_valid_mizip_data = mizip_parse(context);
-                nfc_device_free(app->nfc_device);
                 scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdShowBalance);
             } else {
                 app->is_valid_mizip_data = false;
-                nfc_device_free(app->nfc_device);
                 scene_manager_previous_scene(app->scene_manager);
             }
         }
