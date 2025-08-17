@@ -14,7 +14,8 @@ typedef struct {
 } SESSIONSCENE, *PSESSIONSCENE;
 
 enum ACTION {
-	ACTION_EXIT
+	ACTION_EXIT,
+	ACTION_SELECT
 };
 
 enum BUTTONSESSION {
@@ -58,6 +59,22 @@ static void callbackRender(Canvas* const canvas, void* const context) {
 	}
 }
 
+static inline void handleKeyOk(const PSESSIONSCENE instance) {
+	switch(instance->button) {
+	case BUTTON_SESSION_SELECT:
+		break;
+	case BUTTON_SESSION_RENAME:
+		break;
+	case BUTTON_SESSION_NEW:
+		break;
+	case BUTTON_SESSION_DELETE:
+		break;
+	}
+}
+
+static inline void handleKeyBack() {
+}
+
 static void callbackInput(InputEvent* const event, void* const context) {
 	furi_check(event && context);
 
@@ -76,8 +93,14 @@ static void callbackInput(InputEvent* const event, void* const context) {
 	case InputKeyLeft:
 		instance->button = (instance->button ? instance->button : (instance->dialog ? COUNT_BUTTON_TEXT : COUNT_BUTTON_SESSION)) - 1;
 		goto updateViewport;
+	case InputKeyOk:
+		handleKeyOk(instance);
+		return;
+	case InputKeyBack:
+		handleKeyBack();
+		return;
 	default:
-		break;
+		return;
 	}
 updateViewport:
 	view_port_update(instance->viewport);
@@ -99,6 +122,8 @@ void SceneSessionEnter(void* const context) {
 		switch(instance->action) {
 		case ACTION_EXIT:
 			goto functionExit;
+		case ACTION_SELECT:
+			break;
 		}
 	}
 functionExit:
