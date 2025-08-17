@@ -72,7 +72,13 @@ static inline void handleKeyOk(const PSESSIONSCENE instance) {
 	}
 }
 
-static inline void handleKeyBack() {
+static inline void handleKeyBack(const PSESSIONSCENE instance, const InputEvent* const event) {
+	if(instance->dialog) {
+		return;
+	}
+
+	instance->action = ACTION_EXIT;
+	furi_message_queue_put(instance->queue, event, FuriWaitForever);
 }
 
 static void callbackInput(InputEvent* const event, void* const context) {
@@ -87,17 +93,17 @@ static void callbackInput(InputEvent* const event, void* const context) {
 	switch(event->key) {
 	case InputKeyUp:
 	case InputKeyRight:
-		instance->button = (instance->button + 1) % (instance->dialog ? COUNT_BUTTON_TEXT : COUNT_BUTTON_SESSION);
+		instance->button = (instance->button + 1) % COUNT_BUTTON_SESSION; //(instance->dialog ? COUNT_BUTTON_TEXT : COUNT_BUTTON_SESSION);
 		goto updateViewport;
 	case InputKeyDown:
 	case InputKeyLeft:
-		instance->button = (instance->button ? instance->button : (instance->dialog ? COUNT_BUTTON_TEXT : COUNT_BUTTON_SESSION)) - 1;
+		instance->button = (instance->button ? instance->button : COUNT_BUTTON_SESSION) - 1; //(instance->dialog ? COUNT_BUTTON_TEXT : COUNT_BUTTON_SESSION)) - 1;
 		goto updateViewport;
 	case InputKeyOk:
 		handleKeyOk(instance);
 		return;
 	case InputKeyBack:
-		handleKeyBack();
+		handleKeyBack(instance, event);
 		return;
 	default:
 		return;
