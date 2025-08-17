@@ -47,9 +47,9 @@ bool mizip_balance_editor_write_new_balance(void* context) {
 
 bool mizip_balance_editor_write_new_balance_to_file(void* context) {
     MiZipBalanceEditorApp* app = context;
-    NfcDevice* nfc_device = nfc_device_alloc();
-    nfc_device_set_data(nfc_device, NfcProtocolMfClassic, app->mf_classic_data);
-    bool write_success = nfc_device_save(nfc_device, furi_string_get_cstr(app->shadowFilePath));
+    nfc_device_set_data(app->nfc_device, NfcProtocolMfClassic, app->mf_classic_data);
+    bool write_success =
+        nfc_device_save(app->nfc_device, furi_string_get_cstr(app->shadowFilePath));
     if(write_success) {
         FURI_LOG_D(
             "MiZipBalanceEditor",
@@ -61,7 +61,6 @@ bool mizip_balance_editor_write_new_balance_to_file(void* context) {
             "Failed to write to %s",
             furi_string_get_cstr(app->shadowFilePath));
     }
-    nfc_device_free(nfc_device);
     return write_success;
 }
 
@@ -74,7 +73,7 @@ bool mizip_balance_editor_write_new_balance_to_tag(void* context) {
     uint8_t keyB[MIZIP_SECTOR_COUNT][MIZIP_KEY_LENGTH];
 
     // Set Key B sector 0 (standard)
-    const uint8_t keyB_0[] = {0xB4, 0xC1, 0x32, 0x43, 0x9E, 0xEF};
+    const uint8_t keyB_0[] = MIZIP_KEYB_0_BYTES;
     memcpy(keyB[0], keyB_0, MIZIP_KEY_LENGTH);
 
     // Generate the other keys from the UID

@@ -92,17 +92,6 @@ void mizip_balance_editor_scene_show_balance_back_button_handle(void* context) {
 void mizip_balance_editor_scene_show_balance_on_enter(void* context) {
     furi_assert(context);
     MiZipBalanceEditorApp* app = context;
-    //Get and show UID
-    char uid[18];
-    snprintf(
-        uid,
-        sizeof(uid),
-        "UID: %02X %02X %02X %02X",
-        app->uid[0],
-        app->uid[1],
-        app->uid[2],
-        app->uid[3]);
-    dialog_ex_set_header(app->dialog_ex, uid, 64, 0, AlignCenter, AlignTop);
 
     //Set MiZip data as valid for tag reading testing
     //TODO proper verification
@@ -110,25 +99,49 @@ void mizip_balance_editor_scene_show_balance_on_enter(void* context) {
         app->is_valid_mizip_data = true;
     }
 
-    if(app->is_valid_mizip_data) {
-        //Get balances
-        if(!app->is_number_input_active) {
-            mizip_balance_editor_get_balances(context);
-        }
-
-        //Show balances
-        mizip_balance_editor_show_balances(context);
-
-        //Init buttons
-        dialog_ex_set_left_button_text(app->dialog_ex, "-");
-        dialog_ex_set_right_button_text(app->dialog_ex, "+");
-        dialog_ex_set_center_button_text(app->dialog_ex, "Custom value");
-        app->is_number_input_active = false;
-    } else {
+    if(app->currentDataSource == DataSourceFile && app->is_file_loaded == false) {
         dialog_ex_set_text(
-            app->dialog_ex, "No MiZip data found", 64, 29, AlignCenter, AlignCenter);
+            app->dialog_ex, "Unable to load file", 64, 29, AlignCenter, AlignCenter);
+        dialog_ex_set_center_button_text(app->dialog_ex, "Retry");
+    } else if(nfc_device_get_protocol(app->nfc_device) == NfcProtocolMfClassic) {
+        //Get and show UID
+        char uid[18];
+        snprintf(
+            uid,
+            sizeof(uid),
+            "UID: %02X %02X %02X %02X",
+            app->uid[0],
+            app->uid[1],
+            app->uid[2],
+            app->uid[3]);
+        dialog_ex_set_header(app->dialog_ex, uid, 64, 0, AlignCenter, AlignTop);
+
+        if(app->is_valid_mizip_data) {
+            //Get balances
+            if(!app->is_number_input_active) {
+                mizip_balance_editor_get_balances(context);
+            }
+
+            //Show balances
+            mizip_balance_editor_show_balances(context);
+
+            //Init buttons
+            dialog_ex_set_left_button_text(app->dialog_ex, "-");
+            dialog_ex_set_right_button_text(app->dialog_ex, "+");
+            dialog_ex_set_center_button_text(app->dialog_ex, "Custom value");
+            app->is_number_input_active = false;
+        } else {
+            dialog_ex_set_text(
+                app->dialog_ex, "No MiZip data found", 64, 29, AlignCenter, AlignCenter);
+            dialog_ex_set_center_button_text(app->dialog_ex, "Retry");
+        }
+    } else {
+        // Nfc tag reading don't leads here so it's a file
+        dialog_ex_set_text(
+            app->dialog_ex, "File isn't MIFARE Classic", 64, 29, AlignCenter, AlignCenter);
         dialog_ex_set_center_button_text(app->dialog_ex, "Retry");
     }
+
     dialog_ex_set_result_callback(
         app->dialog_ex, mizip_balance_editor_scene_confirm_dialog_callback);
     dialog_ex_set_context(app->dialog_ex, app);

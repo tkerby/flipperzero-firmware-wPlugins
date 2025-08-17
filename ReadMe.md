@@ -50,9 +50,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Sub-Ghz Toolkit v1.0 (By RocketGod-git)](https://github.com/RocketGod-git/RocketGods-SubGHz-Toolkit) Fixed Launch Issue on RM FW.
 - Updated: [ESP32CAM Marauder v0.7.5 (By 0xchocolate & eried)](https://github.com/eried/flipperzero-mayhem) `Req: ESP32-CAM (Mayhem)`
 - Updated: [WiFi (Marauder) v0.7.5 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion) `Req: ESP32` with [ESP32 MARAUDER Firmware](https://github.com/justcallmekoko/ESP32Marauder/releases/latest)
-- Updated: [MiZip Balance Editor v0.2 (By teohumeau)](https://github.com/teohumeau/MiZipBalanceEditor)
 - Updated: [Combo Cracker v0.2 (By CharlesTheGreat77)](https://github.com/CharlesTheGreat77/ComboCracker-FZ)
 - Updated: [Wendigo Bluetooth Tracker WIP v0.5.1 (By chris-bc)](https://github.com/chris-bc/wendigo) `WIP Req: ESP32`
+- Updated: [MiZip Balance Editor v0.2 (By teohumeau)](https://github.com/teohumeau/MiZipBalanceEditor)
 
 <a name="release">
 
