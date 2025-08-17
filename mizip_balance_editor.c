@@ -74,7 +74,7 @@ bool mizip_balance_editor_write_new_balance_to_tag(void* context) {
     uint8_t keyB[MIZIP_SECTOR_COUNT][MIZIP_KEY_LENGTH];
 
     // Set Key B sector 0 (standard)
-    const uint8_t keyB_0[] = {0xB4, 0xC1, 0x32, 0x43, 0x9E, 0xEF};
+    const uint8_t keyB_0[] = MIZIP_KEYB_0_BYTES;
     memcpy(keyB[0], keyB_0, MIZIP_KEY_LENGTH);
 
     // Generate the other keys from the UID
