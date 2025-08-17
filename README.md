@@ -17,7 +17,7 @@ Death Note-themed graphical interface.
 ## UI Structure
 
 - Grid of 2 rows × 4 columns of buttons.  
-- Selected icons highlighted with light/dark theme.  
+- Selected icons highlighted with dark theme.  
 - D-pad mode activated via button in last column.
 
 ---
@@ -59,13 +59,6 @@ Death Note-themed graphical interface.
 ### D-pad Screen
 
 ![D-pad Screen](images/dpad_scene_128x64.png)
-
----
-
-## Dependencies
-
-- Flipper Zero SDK (furi, gui, input, infrared).  
-- Icons generated from `.png` files located in the `images` folder.
 
 ---
 
