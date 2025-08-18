@@ -9,7 +9,7 @@
 #include <furi.h>
 #include <furi_hal.h>
 #include <furi_hal_gpio.h>
-static const char* TAG = "401_DigiLab";
+//static const char* TAG = "401_DigiLab";
 #define CHECK_HAT
 
 /**
