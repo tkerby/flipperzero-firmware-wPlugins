@@ -3,7 +3,7 @@
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://lh3.googleusercontent.com/d/1iYQlRQXM7nA4IAdcPwvcKRSTCMoi8tug' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0813-0001-0.420.0-e8c9f32.tgz&channel=RM0813-0001-0.420.0-e8c9f32&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0818-0124-0.420.0-4da3601.tgz&channel=RM0818-0124-0.420.0-4da3601&version=0.420.0&target=f7)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -30,29 +30,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-08-17 20:11 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-08-17 20:11 EST`
-- Updated: [Mouse Jiggler v1.2 (By Jacob-Tate & ozgunawesome)](https://github.com/Jacob-Tate/flipperzero-firmware/blob/dev/applications/mouse_jiggler/mouse_jiggler.c) [GUI & Accuracy Updates (By ozgunawesome)](https://github.com/ozgunawesome/ozzymaster/blob/420/applications/external/mouse_jiggler/mouse_jiggler.c)
-- SubGHz: Roger (static 28 bit) with add manually support (By xMasterX & mishamyte)
-- SubGHz: V2 Phoenix full support (button switch, add manually, counter decrypt/encrypt) (By xMasterX & RocketGod-git, original code By Skorpionm)
-- SubGHz: Keeloq: Add support for - Motorline (with add manually support), Rosh, Pecinin, Rossi, Merlin, Steelmate (By xMasterX & RocketGod-git)
-- SubGHz: Reduce less popular freqs in default hopper preset, make it faster (By xMasterX)
-- SubGHz: Marantec protocol implement crc verification display and add manually support (By xMasterX & li0ard, original code By Skorpionm)
-- SubGHz: Keeloq: Comunello - add manually support (By xMasterX)
-- SubGHz: Rename and extend Alarms, Sensors, Cars ignore options (Alarms: Hollarm, GangQi | Cars: Kia, Starline, ScherKhan | Sensors: Magellan, Honeywell, Honeywell WDB (doorbells), Legrand (doorbells), Feron (RGB lights)) (By xMasterX)
-- SubGHz: Add keeloq ironlogic (aka il100) smart clone cloners support (thanks to Vitaly for RAWs) (By xMasterX)
-- SubGHz: Fix CAME 24bit decoder (By xMasterX)
-- SubGHz: Tune holtek ht12x to decode holtek only and not conflict with came 12bit (By xMasterX)
-- NFC: [Fix incorrect Saflok year formula (By Eltrick)](https://github.com/Next-Flip/Momentum-Firmware/pull/433)
-- RFID: [Add additional procotols supported by EM4305 chipset (By jamisonderek)](https://github.com/Next-Flip/Momentum-Firmware/pull/434)
-- Picopass: [Support loading file from launch argument (By Willy-JL)](https://github.com/Next-Flip/Momentum-Firmware/commit/b376e6db971ee7b4c18f19e2bc48337f0655862a)
-- SubGHz: Add variant of Add Manually menu with manual editing for each value (By MrLego8-9)
-- Updated: [Sub-GHz Remote v1.5 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote) Add possibility to use custom buttons when using the SubGHz remote app (By MrLego8-9)
-- SubGHz: Add ZKTeco 430.5 MHz add manually support (By xMasterX)
-- Updated: [Sub-Ghz Toolkit v1.0 (By RocketGod-git)](https://github.com/RocketGod-git/RocketGods-SubGHz-Toolkit) Fixed Launch Issue on RM FW.
-- Updated: [ESP32CAM Marauder v0.7.5 (By 0xchocolate & eried)](https://github.com/eried/flipperzero-mayhem) `Req: ESP32-CAM (Mayhem)`
-- Updated: [WiFi (Marauder) v0.7.5 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion) `Req: ESP32` with [ESP32 MARAUDER Firmware](https://github.com/justcallmekoko/ESP32Marauder/releases/latest)
-- Updated: [Combo Cracker v0.2 (By CharlesTheGreat77)](https://github.com/CharlesTheGreat77/ComboCracker-FZ)
-- Updated: [Wendigo Bluetooth Tracker WIP v0.5.1 (By chris-bc)](https://github.com/chris-bc/wendigo) `WIP Req: ESP32`
-- Updated: [MiZip Balance Editor v0.2 (By teohumeau)](https://github.com/teohumeau/MiZipBalanceEditor)
 
 <a name="release">
 
@@ -779,4 +756,4 @@ $ ./fbt dolphin_ext
 - Have a new app? Submit GitHub link to me on Discord for a special reward (if I add it to RM Firmware).
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0813-0001-0.420.0-e8c9f32.tgz&channel=RM0813-0001-0.420.0-e8c9f32&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0818-0124-0.420.0-4da3601.tgz&channel=RM0818-0124-0.420.0-4da3601&version=0.420.0&target=f7)
