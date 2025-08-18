@@ -1,0 +1,46 @@
+name: "FAP: Create Release"
+on:
+  workflow_dispatch:
+    inputs:
+      tag-name:
+        description: 'Name of the tag for the release (will create tag if DNE)'
+        required: true
+      commit-sha:
+        description: 'Commit SHA to associate with the tag (and release)'
+        required: true
+
+jobs:
+  ufbt-build-action:
+    runs-on: ubuntu-latest
+    name: 'ufbt: Build for release branch'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.commit-sha }}
+          submodules: 'true'
+      - name: Build with ufbt
+        uses: flipperdevices/flipperzero-ufbt-action@v0.1.2
+        id: build-app
+        with:
+          sdk-channel: release
+      - name: Upload app artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}-${{ steps.build-app.outputs.suffix }}
+          path: ${{ steps.build-app.outputs.fap-artifacts }}
+      # You can remove this step if you don't want to check source code formatting
+      - name: Lint sources
+        uses: flipperdevices/flipperzero-ufbt-action@v0.1.2
+        with:
+          # skip SDK setup, we already did it in previous step
+          skip-setup: true
+          task: lint
+      # Generate the release
+      - name: Create Github Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.build-app.outputs.fap-artifacts }}
+          name: Release ${{ github.event.inputs.tag-name }}
+          tag_name: ${{ github.event.inputs.tag-name }}
+          target_commitish: ${{ github.event.inputs.commitish }}
