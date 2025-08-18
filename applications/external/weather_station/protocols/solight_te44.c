@@ -1,4 +1,5 @@
 #include "solight_te44.h"
+#include <float.h>
 #define TAG "WSProtocolSolightTE44"
 
 /*
@@ -93,8 +94,8 @@ const SubGhzProtocol ws_protocol_solight_te44 = {
     .name = WS_PROTOCOL_SOLIGHT_TE44_NAME,
     .type = SubGhzProtocolWeatherStation,
     .flag = SubGhzProtocolFlag_433 | SubGhzProtocolFlag_315 | SubGhzProtocolFlag_868 |
-            SubGhzProtocolFlag_AM | SubGhzProtocolFlag_Decodable,
-
+            SubGhzProtocolFlag_AM | SubGhzProtocolFlag_Decodable | SubGhzProtocolFlag_Load |
+            SubGhzProtocolFlag_Save,
     .decoder = &ws_protocol_solight_te44_decoder,
     .encoder = &ws_protocol_solight_te44_encoder,
 };
@@ -104,6 +105,10 @@ typedef enum {
     SolightTE44DecoderStepSaveDuration,
     SolightTE44DecoderStepCheckDuration,
 } SolightTE44DecoderStep;
+
+bool float_is_equal(float a, float b) {
+    return fabsf(a - b) <= FLT_EPSILON * fmaxf(fabsf(a), fabsf(b));
+}
 
 void* ws_protocol_decoder_solight_te44_alloc(SubGhzEnvironment* environment) {
     UNUSED(environment);
@@ -148,7 +153,7 @@ static bool ws_protocol_solight_te44_check(WSProtocolDecoderSolightTE44* instanc
  */
 static void ws_protocol_solight_te44_extract_data(WSBlockGeneric* instance) {
     instance->id = (instance->data >> 28) & 0xff;
-    instance->battery_low = !(instance->data >> 27) & 0x01;
+    instance->battery_low = !((instance->data >> 27) & 0x01);
     instance->channel = ((instance->data >> 24) & 0x03) + 1;
 
     int16_t temp = (instance->data >> 12) & 0x0fff;
@@ -156,7 +161,7 @@ static void ws_protocol_solight_te44_extract_data(WSBlockGeneric* instance) {
     if(temp & 0x0800) {
         temp |= 0xf000;
     }
-    instance->temp = (float)temp / 10.0;
+    instance->temp = (float)(temp / 10.0f);
 
     instance->btn = WS_NO_BTN;
     instance->humidity = WS_NO_HUMIDITY;
@@ -250,22 +255,85 @@ SubGhzProtocolStatus
         ws_protocol_solight_te44_const.min_count_bit_for_found);
 }
 
+void generic_get_string(WSBlockGeneric* instance, FuriString* output) {
+    furi_string_cat_printf(
+        output, "%s\r\n%dbit", instance->protocol_name, instance->data_count_bit);
+    if(instance->channel != WS_NO_CHANNEL) {
+        furi_string_cat_printf(output, "   Ch: %01d", instance->channel);
+    }
+    if(instance->btn != WS_NO_BTN) {
+        furi_string_cat_printf(output, "   Btn: %01d\r\n", instance->btn);
+    } else {
+        furi_string_cat(output, "\r\n");
+    }
+
+    if(instance->id != WS_NO_ID) {
+        furi_string_cat_printf(output, "Sn: 0x%02lX   ", instance->id);
+    }
+    if(instance->battery_low != WS_NO_BATT) {
+        furi_string_cat_printf(output, "Batt: %s\r\n", (!instance->battery_low ? "ok" : "low"));
+    } else {
+        furi_string_cat(output, "\r\n");
+    }
+
+    furi_string_cat_printf(
+        output,
+        "Data: 0x%lX%08lX\r\n",
+        (uint32_t)(instance->data >> 32),
+        (uint32_t)(instance->data));
+
+    if(!float_is_equal(instance->temp, WS_NO_TEMPERATURE)) {
+        bool is_metric = furi_hal_rtc_get_locale_units() == FuriHalRtcLocaleUnitsMetric;
+        furi_string_cat_printf(
+            output,
+            "Temp: %3.1f%c   ",
+            (double)(is_metric ? instance->temp : locale_celsius_to_fahrenheit(instance->temp)),
+            is_metric ? 'C' : 'F');
+    }
+    if(instance->humidity != WS_NO_HUMIDITY) {
+        furi_string_cat_printf(output, "Hum: %d%%", instance->humidity);
+    }
+}
+
 void ws_protocol_decoder_solight_te44_get_string(void* context, FuriString* output) {
     furi_assert(context);
-    WSProtocolDecoderSolightTE44* instance = context;
-    furi_string_printf(
+    WSBlockGeneric* instance = &((WSProtocolDecoderSolightTE44*)context)->generic;
+
+    furi_string_cat_printf(
+        output, "%s\r\n%dbit", instance->protocol_name, instance->data_count_bit);
+    if(instance->channel != WS_NO_CHANNEL) {
+        furi_string_cat_printf(output, "   Ch: %01d", instance->channel);
+    }
+    if(instance->btn != WS_NO_BTN) {
+        furi_string_cat_printf(output, "   Btn: %01d\r\n", instance->btn);
+    } else {
+        furi_string_cat(output, "\r\n");
+    }
+
+    if(instance->id != WS_NO_ID) {
+        furi_string_cat_printf(output, "Sn: 0x%02lX   ", instance->id);
+    }
+    if(instance->battery_low != WS_NO_BATT) {
+        furi_string_cat_printf(output, "Batt: %s\r\n", (!instance->battery_low ? "ok" : "low"));
+    } else {
+        furi_string_cat(output, "\r\n");
+    }
+
+    furi_string_cat_printf(
         output,
-        "%s %dbit\r\n"
-        "Key:0x%lX%08lX\r\n"
-        "Sn:0x%lX Ch:%d  Bat:%d\r\n"
-        "Temp:%3.1f C Hum:%d%%",
-        instance->generic.protocol_name,
-        instance->generic.data_count_bit,
-        (uint32_t)(instance->generic.data >> 32),
-        (uint32_t)(instance->generic.data),
-        instance->generic.id,
-        instance->generic.channel,
-        instance->generic.battery_low,
-        (double)instance->generic.temp,
-        instance->generic.humidity);
+        "Data: 0x%lX%08lX\r\n",
+        (uint32_t)(instance->data >> 32),
+        (uint32_t)(instance->data));
+
+    if(!float_is_equal(instance->temp, WS_NO_TEMPERATURE)) {
+        bool is_metric = furi_hal_rtc_get_locale_units() == FuriHalRtcLocaleUnitsMetric;
+        furi_string_cat_printf(
+            output,
+            "Temp: %3.1f%c   ",
+            (double)(is_metric ? instance->temp : locale_celsius_to_fahrenheit(instance->temp)),
+            is_metric ? 'C' : 'F');
+    }
+    if(instance->humidity != WS_NO_HUMIDITY) {
+        furi_string_cat_printf(output, "Hum: %d%%", instance->humidity);
+    }
 }
