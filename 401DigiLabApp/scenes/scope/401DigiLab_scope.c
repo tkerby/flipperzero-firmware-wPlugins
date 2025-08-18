@@ -1,5 +1,5 @@
 /**
- *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2024 LAB401 GPLv3
+ *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2025 LAB401 GPLv3
  *  ▌  ▛▜ ▛▚ ▙▙ ▌▐ ▐  This program is free software
  *  ▀▀ ▘▝ ▀▘  ▘ ▝▘ ▀▘ See LICENSE.txt - lab401.com
  *    + Tixlegeek
@@ -19,6 +19,9 @@ static const char* TAG = "401_DigiLabScope";
 #include <drivers/sk6805.h>
 uint16_t redraw_cnt = 0;
 
+/**
+ * @brief Stop and release the speaker if currently active.
+ */
 static void scope_sound_stop() {
     if(furi_hal_speaker_is_mine()) {
         furi_hal_speaker_stop();
@@ -26,28 +29,51 @@ static void scope_sound_stop() {
     }
 }
 
+/**
+ * @brief Turn off all LEDs on the SK6805 driver.
+ */
 static void scope_LED_stop() {
     SK6805_off();
 }
 
+/**
+ * @brief Disable the vibration actuator.
+ */
 static void scope_vibro_stop() {
     furi_hal_gpio_write(&gpio_vibro, false);
 }
 
+/**
+ * @brief Acquire and configure the ADC handle for sampling.
+ *
+ * @param[out] adc Double pointer to store the acquired ADC handle.
+ */
 static void scope_adc_start(FuriHalAdcHandle** adc) {
     *adc = furi_hal_adc_acquire();
     furi_hal_adc_configure(*adc);
 }
 
+/**
+ * @brief Release the previously acquired ADC handle.
+ *
+ * @param[in,out] adc Double pointer referencing the ADC handle to release.
+ */
 static void scope_adc_stop(FuriHalAdcHandle** adc) {
     if(*adc) {
         furi_hal_adc_release(*adc);
     }
 }
 
+/**
+ * @brief Evaluate whether the current voltage reading triggers an alert.
+ *
+ * @param model Pointer to the ScopeModel containing voltage data.
+ * @param ctx   Pointer to the application context for configuration access.
+ * @return true if the configured alert condition is met; false otherwise.
+ */
 static bool CheckAlert(ScopeModel* model, void* ctx) {
     AppContext* app = (AppContext*)ctx;
-    float voltage = model->voltage;
+    float voltage = model->voltage / 10;
     switch(app->data->config->ScopeAlert) {
     case DigiLab_ScopeAlert_lt3V:
         return ((voltage) < 3.3);
@@ -80,11 +106,20 @@ static bool CheckAlert(ScopeModel* model, void* ctx) {
     }
 }
 
+/**
+* @brief Manage audio feedback based on voltage and alert status.
+*
+* @param app   Pointer to the application context.
+* @param model Pointer to the ScopeModel containing voltage data.
+* @param alert Boolean indicating if an alert condition is active.
+*/
 static void adc_scopeSound(AppContext* app, ScopeModel* model, bool alert) {
+    float voltage = model->voltage / 10;
+
     switch(app->data->config->ScopeSound) {
     case Digilab_ScopeSoundOn:
         if(furi_hal_speaker_is_mine() || furi_hal_speaker_acquire(SPEAKER_ACQUIRE_TIMEOUT)) {
-            furi_hal_speaker_start((float)(model->voltage * 75), 1.0F);
+            furi_hal_speaker_start((float)(voltage * 75), 1.0F);
         }
         break;
     case DigiLab_ScopeSoundAlert:
@@ -110,6 +145,13 @@ static void adc_scopeSound(AppContext* app, ScopeModel* model, bool alert) {
     }
 }
 
+/**
+* @brief Manage vibration feedback based on alert status.
+*
+* @param app   Pointer to the application context.
+* @param model Pointer to the ScopeModel (unused).
+* @param alert Boolean indicating if an alert condition is active.
+*/
 static void adc_scopeVibro(AppContext* app, ScopeModel* model, bool alert) {
     UNUSED(model);
     switch(app->data->config->ScopeVibro) {
@@ -126,19 +168,36 @@ static void adc_scopeVibro(AppContext* app, ScopeModel* model, bool alert) {
     }
 }
 
+/**
+* @brief Calculate RGB color values corresponding to a voltage level.
+*
+* @param voltage Voltage value, clamped to the maximum allowed.
+* @param[out] r  Pointer to receive the computed red component (0–255).
+* @param[out] g  Pointer to receive the computed green component (0–255).
+* @param[out] b  Pointer to receive the computed blue component (0–255).
+*/
 static void adc_scopeLed_voltageColor(uint32_t voltage, uint8_t* r, uint8_t* g, uint8_t* b) {
-    // Limites de tension en mV
+    // Higher voltage limit
     const uint32_t max_voltage = 12; // Max 12V
     if(voltage > max_voltage) {
         voltage = max_voltage;
     }
+    // Color ramp
     uint32_t ratio = (voltage * 255) / max_voltage;
-    *r = (ratio * 255) / 255; // Rouge de 0 à 255
-    *g = ((255 - ratio) * 255) / 255; // Vert de 255 à 0
-    *b = 0; // Bleu fixé à 0
+    *r = (ratio * 255) / 255;
+    *g = ((255 - ratio) * 255) / 255;
+    *b = 0;
 }
 
+/**
+ * @brief Update the LED strip based on voltage, variance, and alert modes.
+ *
+ * @param app   Pointer to the application context.
+ * @param model Pointer to the ScopeModel containing waveform and voltage data.
+ * @param alert Boolean indicating if an alert condition is active.
+ */
 static void adc_scopeLed(AppContext* app, ScopeModel* model, bool alert) {
+    float voltage = model->voltage / 10;
     switch(app->data->config->ScopeLed) {
     case DigiLab_ScopeLedOff:
         SK6805_set_led_color(0, 0, 0, 0);
@@ -162,11 +221,11 @@ static void adc_scopeLed(AppContext* app, ScopeModel* model, bool alert) {
         }
         break;
     case DigiLab_ScopeLedFollow:
-        if(model->voltage > 0.5) {
+        if(voltage > 0.5) {
             uint8_t r = 0;
             uint8_t g = 0;
             uint8_t b = 0;
-            adc_scopeLed_voltageColor(model->voltage, &r, &g, &b);
+            adc_scopeLed_voltageColor(voltage, &r, &g, &b);
             SK6805_set_led_color(0, r, g, b);
             SK6805_update();
         } else {
@@ -182,11 +241,11 @@ static void adc_scopeLed(AppContext* app, ScopeModel* model, bool alert) {
         SK6805_update();
         break;
     case DigiLab_ScopeLedTrigger:
-        if(model->voltage > (model->oscWindow->vTrig / OSC_SCALE_V)) {
+        if(voltage > (model->oscWindow->vTrig / OSC_SCALE_V)) {
             uint8_t r = 0;
             uint8_t g = 0;
             uint8_t b = 0;
-            adc_scopeLed_voltageColor(model->voltage, &r, &g, &b);
+            adc_scopeLed_voltageColor(voltage, &r, &g, &b);
             SK6805_set_led_color(0, r, g, b);
             SK6805_update();
         } else {
@@ -200,6 +259,13 @@ static void adc_scopeLed(AppContext* app, ScopeModel* model, bool alert) {
 bool previous_int = false;
 bool current_int = false;
 
+/**
+ * @brief Timer callback for periodic ADC sampling and redraw event dispatch.
+ *
+ * Reads the ADC, updates the ScopeModel, and requests a screen redraw every 100 cycles.
+ *
+ * @param ctx Pointer to the application context.
+ */
 void adc_timer_cb(void* ctx) {
     AppContext* app = (AppContext*)ctx;
     AppScope* appScope = (AppScope*)app->sceneScope;
@@ -229,7 +295,12 @@ void adc_timer_cb(void* ctx) {
         view_dispatcher_send_custom_event(app->view_dispatcher, ScopeEventRedraw);
     }
 }
-
+/**
+ * @brief Draw the oscilloscope waveform and UI elements on the provided canvas.
+ *
+ * @param canvas Pointer to the canvas used for drawing.
+ * @param model  Pointer to the ScopeModel containing waveform data.
+ */
 void osc_draw_screen(Canvas* canvas, ScopeModel* model) {
     OscWindow_draw(canvas, model->oscWindow);
     if(model->inversion_count > 0) {
@@ -246,13 +317,15 @@ void osc_draw_screen(Canvas* canvas, ScopeModel* model) {
     }
     elements_button_left(canvas, "Config");
 }
-
 /**
- * @brief Render callback for the app osc.
+ * @brief Render callback for the oscilloscope scene.
  *
- * @param canvas The canvas to be used for rendering.
- * @param model The model passed to the callback.
+ * Clears the canvas, sets the font, and invokes osc_draw_screen().
+ *
+ * @param canvas Pointer to the canvas for rendering.
+ * @param ctx    Pointer to the ScopeModel passed as context.
  */
+
 void app_scope_render_callback(Canvas* canvas, void* ctx) {
     // UNUSED(model);
     ScopeModel* model = (ScopeModel*)ctx;
@@ -261,12 +334,15 @@ void app_scope_render_callback(Canvas* canvas, void* ctx) {
     canvas_set_font(canvas, FontPrimary);
     osc_draw_screen(canvas, model);
 }
-
 /**
- * @brief Allocate memory and initialize the app osc.
+ * @brief Allocate and initialize the AppScope structure and its resources.
  *
- * @return Returns a pointer to the allocated AppScope.
+ * Enables OTG if needed, allocates view, model, timer, and configures GPIO/vibrator.
+ *
+ * @param ctx Pointer to the application context.
+ * @return Pointer to the newly allocated AppScope.
  */
+
 AppScope* app_scope_alloc(void* ctx) {
     furi_assert(ctx);
     AppContext* app = (AppContext*)ctx;
@@ -302,22 +378,32 @@ AppScope* app_scope_alloc(void* ctx) {
 
     return appScope;
 }
-
+/**
+ * @brief Start the periodic scope sampling timer at 1 ms intervals.
+ *
+ * @param timer Pointer to the FuriTimer used for ADC sampling.
+ */
 static void scope_timer_start(FuriTimer* timer) {
     furi_timer_start(timer, (furi_kernel_get_tick_frequency() / 1000));
 }
-
+/**
+ * @brief Stop the periodic scope sampling timer.
+ *
+ * @param timer Pointer to the FuriTimer to stop.
+ */
 static void scope_timer_stop(FuriTimer* timer) {
     furi_timer_stop(timer);
 }
-
 /**
- * @brief Callback function to handle input events for the app osc.
+ * @brief Handle input events for the oscilloscope scene.
  *
- * @param input_event The input event.
- * @param ctx The context passed to the callback.
- * @return Returns true if the event was handled, otherwise false.
+ * Processes short key events to navigate, start/stop capture, or switch scenes.
+ *
+ * @param input_event Pointer to the input event data.
+ * @param ctx         Pointer to the application context.
+ * @return true if the event was handled; false otherwise.
  */
+
 bool app_scope_input_callback(InputEvent* input_event, void* ctx) {
     AppContext* app = (AppContext*)ctx;
     UNUSED(input_event);
@@ -350,31 +436,31 @@ bool app_scope_input_callback(InputEvent* input_event, void* ctx) {
                 true);
             break;
         default:
-
             FURI_LOG_I(TAG, "Resume to not handled");
             break;
         }
     }
     return handled;
 }
-
 /**
- * @brief Get the view associated with the app osc.
+ * @brief Retrieve the view associated with the oscilloscope scene.
  *
- * @param appScope The AppScope for which the view is to be fetched.
- * @return Returns a pointer to the View.
+ * @param appScope Pointer to the AppScope instance.
+ * @return Pointer to the View used for oscilloscope rendering.
  */
+
 View* app_scope_get_view(AppScope* appScope) {
     furi_assert(appScope);
     return appScope->view;
 }
-
 /**
- * @brief Handle scene manager events for the app osc scene.
+ * @brief Handle generic scene manager events for the oscilloscope scene.
  *
- * @param context The context passed to the callback.
- * @param event The scene manager event.
- * @return Returns true if the event was consumed, otherwise false.
+ * Currently unused; always returns false.
+ *
+ * @param ctx   Pointer to the application context.
+ * @param event SceneManagerEvent to process.
+ * @return true if the event was consumed; false otherwise.
  */
 bool app_scene_scope_on_event(void* ctx, SceneManagerEvent event) {
     bool consumed = false;
@@ -383,7 +469,15 @@ bool app_scene_scope_on_event(void* ctx, SceneManagerEvent event) {
 
     return consumed;
 }
-
+/**
+ * @brief Handle custom events, such as redraw, for the oscilloscope scene.
+ *
+ * On redraw event, updates waveform statistics, triggers feedback, and commits model.
+ *
+ * @param event Event identifier.
+ * @param ctx   Pointer to the application context.
+ * @return true if the event was consumed; false otherwise.
+ */
 bool app_scene_scope_on_custom_event(uint32_t event, void* ctx) {
     bool consumed = false;
     AppContext* app = (AppContext*)ctx;
@@ -430,9 +524,11 @@ void app_scene_scope_on_enter(void* ctx) {
 }
 
 /**
- * @brief Callback when the app osc scene is exited.
+ * @brief Callback invoked when exiting the oscilloscope scene.
  *
- * @param ctx The context passed to the callback.
+ * Stops sampling timer, delays for hardware settle, and shuts down all outputs.
+ *
+ * @param ctx Pointer to the application context.
  */
 void app_scene_scope_on_exit(void* ctx) {
     furi_check(ctx);
@@ -449,9 +545,11 @@ void app_scene_scope_on_exit(void* ctx) {
 }
 
 /**
- * @brief Free the memory occupied by the app osc.
+ * @brief Free all resources allocated for the oscilloscope scene.
  *
- * @param appScope The AppScope to be freed.
+ * Releases view, model, timer, and memory associated with AppScope.
+ *
+ * @param appScope Pointer to the AppScope to be freed.
  */
 void app_scope_free(AppScope* appScope) {
     furi_assert(appScope);
