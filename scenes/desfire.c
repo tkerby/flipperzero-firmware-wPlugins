@@ -88,7 +88,7 @@ TransitCardInfo cards[83] = {
     { 0x9111F2, "Clipper (SFO)", "MTC", false},
     { 0xA012F2, "Go CT", "CTtransit", true},
     { 0xA013F2, "Wave (PVD)", "RIPTA", true},
-    { 0xA1B1C1, "AHORRABUS (MEX)", "MOBILITY ADO", true},
+    { 0xA1B1C1, "AHORROBUS (MEX)", "MOBILITY ADO", true},
     { 0xAF1122, "Leap (DUB)", "TFI", true},
     { 0xB006F2, "metroCARD (ADL)", "Adelaide Metro", true},
     { 0xB52C99, "Umo", "Cubic", true},
