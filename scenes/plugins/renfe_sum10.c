@@ -365,7 +365,7 @@ static uint32_t renfe_sum10_extract_timestamp(const uint8_t* block_data) {
     
     return timestamp;
 }
-// Sort history entries manually (newest first) - using bubble sort since qsort is not available
+// Sort history entries manually (newest first)
 static void renfe_sum10_sort_history_entries(HistoryEntry* entries, int count) {
     if(!entries || count <= 1) return;
     
@@ -622,15 +622,14 @@ static uint16_t renfe_sum10_extract_mobilis_zone_code(const MfClassicData* data)
 
 // Get zone name from zone code (simplified for memory efficiency)
 static const char* renfe_sum10_get_zone_name(uint16_t zone_code) {
-    // Basic zone detection - most common cases only
     switch(zone_code & 0xFF00) {
-        case 0x6C00: return "A";
+        case 0x6C00: return "ABC";
         case 0x6200: case 0x6250: case 0x6270: return "B";
         case 0x6A00: case 0x6A10: case 0x6A50: return "C";
         case 0x6800: case 0x6810: case 0x6850: return "D";
         case 0x6600: case 0x6610: case 0x6650: return "E";
         case 0x6400: case 0x6410: case 0x6450: return "F";
-        case 0x4C00: return "CD";  // Added support for zone CD (0x4C13)
+        case 0x4C00: return "CD";
         
         // Zonas combinadas
         case 0x6D00: return "AB";
@@ -702,8 +701,8 @@ static const char* renfe_sum10_get_zone_name(uint16_t zone_code) {
         case 0xF200: return "Media Distancia";
         case 0xF300: return "Larga Distancia";
         
-        case 0xEC00: return "B1";  // Added support for zone B1 (0xEC16)
-        case 0x0000: return "Not available";
+        case 0xEC00: return "ABC";
+        case 0x0000: return "N/A";
         default: return "Unknown";
     }
 }
@@ -718,34 +717,11 @@ static void renfe_sum10_parse_history_entry(FuriString* parsed_data, const uint8
     // Extract transaction type from first byte
     uint8_t transaction_type = block_data[0];
     
-    /* TRANSACTION TYPES MAPPING (based on analysis):
-     * CONFIRMED TYPES:
-     * 0x13 = ENTRY     - Entrada al sistema
-     * 0x1A = EXIT      - Salida del sistema  
-     * 0x1E = TRANSFER  - Transbordo entre lineas
-     * 0x16 = VALIDATION- Validacion de titulo
-     * 0x33 = TOP-UP    - Recarga de saldo
-     * 0x3A = CHARGE    - Carga/cargo adicional
-     * 0x18 = CHECK     - Verificacion
-     * 0x2B = SPECIAL   - Operacion especial
-     * 
-     * DEDUCED TYPES (found in real cards):
-     * 0x17 = INSPECTION- Posible control/revision de inspector
-     * 0x23 = DISCOUNT  - Posible aplicacion de descuento
-     * 0x2A = PENALTY   - Posible sancion o multa
-     */
-    
-    // Extract timestamp data (bytes 2-4)
-    uint8_t timestamp_1 = block_data[2];
-    uint8_t timestamp_2 = block_data[3];
-    uint8_t timestamp_3 = block_data[4];
+    // Transaction type mappings
+    // 0x13=Entry, 0x1A=Exit, 0x1E=Transfer, 0x16=Validation, 0x33=Top-up, etc.
     
     // Extract station codes (bytes 9-10) - Read as big-endian
     uint16_t station_code = (block_data[9] << 8) | block_data[10];
-    
-    // Extract transaction details
-    uint8_t detail1 = block_data[5];
-    uint8_t detail2 = block_data[6];
     
     // Format the entry
     furi_string_cat_printf(parsed_data, "%d. ", entry_num);
@@ -786,7 +762,7 @@ static void renfe_sum10_parse_history_entry(FuriString* parsed_data, const uint8
             furi_string_cat_printf(parsed_data, "Special");
             break;
         default:
-            furi_string_cat_printf(parsed_data, "Unknown (0x%02X)", transaction_type);
+            furi_string_cat_printf(parsed_data, "Unknown");
             break;
     }
     // Add station information
@@ -796,14 +772,6 @@ static void renfe_sum10_parse_history_entry(FuriString* parsed_data, const uint8
         if(strcmp(station_name, "Unknown") == 0) {
             furi_string_cat_printf(parsed_data, " (Code: %04X)", station_code);
         }
-    }
-    
-    // Add timestamp info in a cleaner format
-    furi_string_cat_printf(parsed_data, " [%02X%02X%02X]", timestamp_1, timestamp_2, timestamp_3);
-    
-    // Add additional details if available
-    if(detail1 != 0x00 || detail2 != 0x00) {
-        furi_string_cat_printf(parsed_data, " (Details: %02X%02X)", detail1, detail2);
     }
     
     furi_string_cat_printf(parsed_data, "\n");
@@ -865,7 +833,7 @@ static void renfe_sum10_parse_travel_history(FuriString* parsed_data, const MfCl
         renfe_sum10_sort_history_entries(history_entries, history_count);
         
         // Display the sorted history
-        furi_string_cat_printf(parsed_data, "🎫 Travel History (%d trips):\n", history_count);
+        furi_string_cat_printf(parsed_data, "Travel History (%d trips):\n", history_count);
         furi_string_cat_printf(parsed_data, "(Most recent first)\n\n");
         
         for(int i = 0; i < history_count; i++) {
@@ -924,7 +892,7 @@ static bool renfe_sum10_parse_history_only(FuriString* parsed_data, const MfClas
     
     if(!has_history) {
         // Show a clear message when no history is found
-        furi_string_cat_printf(parsed_data, "📅 No travel history found\n\n");
+        furi_string_cat_printf(parsed_data, "No travel history found\n\n");
         furi_string_cat_printf(parsed_data, "This card appears to be:\n");
         furi_string_cat_printf(parsed_data, "• New or unused\n");
         furi_string_cat_printf(parsed_data, "• Recently reset\n");
@@ -937,7 +905,7 @@ static bool renfe_sum10_parse_history_only(FuriString* parsed_data, const MfClas
         renfe_sum10_parse_travel_history(parsed_data, data);
     }
     
-    furi_string_cat_printf(parsed_data, "\n⬅️ Press LEFT to return");
+    furi_string_cat_printf(parsed_data, "\n Press LEFT to return");
     
     return true;
 }
@@ -1037,36 +1005,27 @@ static bool renfe_sum10_parse(FuriString* parsed_data, const MfClassicData* data
         
         // 1. Show card type info
         if(data->type == MfClassicType1k) {
-            furi_string_cat_printf(parsed_data, "📱 Type: Mifare Classic 1K\n");
+            furi_string_cat_printf(parsed_data, "Type: Mifare Classic 1K\n");
         } else if(data->type == MfClassicType4k) {
-            furi_string_cat_printf(parsed_data, "📱 Type: Mifare Plus 2K\n");
+            furi_string_cat_printf(parsed_data, "Type: Mifare Plus 2K\n");
         } else {
-            furi_string_cat_printf(parsed_data, "📱 Type: Unknown\n");
+            furi_string_cat_printf(parsed_data, "Type: Unknown\n");
         }
         
         // 2. Extract and show UID
         if(data->iso14443_3a_data && data->iso14443_3a_data->uid_len > 0) {
-            // Use UID from iso14443_3a_data when available (live reading)
-            const uint8_t* uid = data->iso14443_3a_data->uid;
-            size_t uid_len = data->iso14443_3a_data->uid_len;
-            
-            furi_string_cat_printf(parsed_data, "🔢 UID: ");
-            for(size_t i = 0; i < uid_len; i++) {
-                furi_string_cat_printf(parsed_data, "%02X", uid[i]);
-                if(i < uid_len - 1) furi_string_cat_printf(parsed_data, " ");
-            }
-            furi_string_cat_printf(parsed_data, "\n");
+            // UID available from live reading
+            furi_string_cat_printf(parsed_data, "UID: Available\n");
         } else if(mf_classic_is_block_read(data, 0)) {
-            // Fallback: Extract UID from Block 0 when loading from saved files
-            const uint8_t* block0 = data->block[0].data;
-            furi_string_cat_printf(parsed_data, "🔢 UID: %02X %02X %02X %02X\n", block0[0], block0[1], block0[2], block0[3]);
+            // Show simplified UID info
+            furi_string_cat_printf(parsed_data, "UID: Available\n");
         } else {
-            furi_string_cat_printf(parsed_data, "🔢 UID: Not available\n");
+            furi_string_cat_printf(parsed_data, "UID: N/A\n");
         }
         
         // 3. Show card variant-specific information
         if(strcmp(card_variant, "MOBILIS 30") == 0) {
-            furi_string_cat_printf(parsed_data, "🎫 Variant: Monthly Pass\n");
+            furi_string_cat_printf(parsed_data, "Variant: Monthly Pass\n");
             
             // Extract cardholder name from Block 9 if available
             if(mf_classic_is_block_read(data, 9)) {
@@ -1218,15 +1177,15 @@ static bool renfe_sum10_parse(FuriString* parsed_data, const MfClassicData* data
         // 4. Extract and show origin station information (where card was first topped up)
         const char* origin_station = renfe_sum10_get_origin_station(data);
         if(origin_station && strcmp(origin_station, "Unknown") != 0) {
-            furi_string_cat_printf(parsed_data, "🏠 Origin: %s\n", origin_station);
+            furi_string_cat_printf(parsed_data, "Origin: %s\n", origin_station);
             
         } else {
-            furi_string_cat_printf(parsed_data, "🏠 Origin: Unknown\n");
+            furi_string_cat_printf(parsed_data, "Origin: Unknown\n");
         }
         
         // 5. Extract and show zone information
         uint16_t zone_code = 0x0000;
-        const char* zone_name = "Not available";
+        const char* zone_name = "N/A";
         
         // For MOBILIS 30, use specialized zone extraction
         if(strcmp(card_variant, "MOBILIS 30") == 0) {
@@ -1242,15 +1201,12 @@ static bool renfe_sum10_parse(FuriString* parsed_data, const MfClassicData* data
         }
         
         if(zone_code != 0x0000) {
-            furi_string_cat_printf(parsed_data, " Zone: %s\n", zone_name);
-            if(strcmp(zone_name, "Unknown") == 0) {
-                furi_string_cat_printf(parsed_data, "   Code: 0x%04X\n", zone_code);
-            }
+            furi_string_cat_printf(parsed_data, "Zone: %s\n", zone_name ? zone_name : "Error");
         } else {
-            furi_string_cat_printf(parsed_data, "Zone: %s\n", zone_name);
+            furi_string_cat_printf(parsed_data, "Zone: %s\n", zone_name ? zone_name : "Error");
         }
         
-        // 6. Extract and show trips from Block 5 (based on real dump analysis)
+        // 6. Extract and show trips from Block 5
         if(mf_classic_is_block_read(data, 5)) {
             const uint8_t* block5 = data->block[5].data;
             if(block5[0] == 0x01 && block5[1] == 0x00 && block5[2] == 0x00 && block5[3] == 0x00) {
@@ -1258,10 +1214,10 @@ static bool renfe_sum10_parse(FuriString* parsed_data, const MfClassicData* data
                 int viajes = (int)block5[4];
                 furi_string_cat_printf(parsed_data, " Trips: %d\n", viajes);
             } else {
-                furi_string_cat_printf(parsed_data, " Trips: Not available\n");
+                furi_string_cat_printf(parsed_data, "Trips: N/A\n");
             }
         } else {
-            furi_string_cat_printf(parsed_data, " Trips: Block 5 not available\n");
+            furi_string_cat_printf(parsed_data, "Trips: N/A\n");
         }
         
         // Add travel history status prominently (visible above buttons)
