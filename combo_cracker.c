@@ -822,7 +822,7 @@ static bool combo_view_cracker_custom_event_callback(uint32_t event, void* conte
             {
                 calculate_combo(model);
                 widget_reset(app->widget_results);
-                widget_add_text_scroll_element(app->widget_results, 0, 0, 128, 64, model->result);
+                widget_add_text_scroll_element(app->widget_results, 2, 2, 124, 60, model->result);
             },
             redraw);
 
