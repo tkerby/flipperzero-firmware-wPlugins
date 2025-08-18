@@ -35,7 +35,7 @@ const MfClassicKeyPair metromoney_1k_verify_key[] = {
 const MfClassicKeyPair renfe_suma10_1k_keys[] = {
     {.a = 0xA8844B0BCA06}, // Sector 0 - RENFE specific key from dumps
     {.a = 0xCB5ED0E57B08}, // Sector 1 - RENFE specific key from dumps  
-    {.a = 0xffffffffffff}, // Default key for other sectors
+    {.a = 0xffffffff}, // Default key for other sectors
     {.a = 0xa0a1a2a3a4a5}, // Alternative common key
     {.a = 0xC0C1C2C3C4C5}, // Key for sectors 10-15 from dumps
 };
@@ -317,7 +317,7 @@ static bool renfe_suma10_verify(Nfc* nfc, MfClassicData* mfc_data, bool data_loa
                 if(error != MfClassicErrorNone) {
                     FURI_LOG_I(TAG, "renfe_suma10_verify: RENFE sector 1 key also failed: %d", error);
                     
-              
+                    // Try default key as fallback for some Mobilis cards
                     bit_lib_num_to_bytes_be(0xffffffffffff, COUNT_OF(key.data), key.data);
                     error = mf_classic_poller_sync_auth(
                         nfc, block_num, &key, MfClassicKeyTypeA, &auth_context);
@@ -327,8 +327,9 @@ static bool renfe_suma10_verify(Nfc* nfc, MfClassicData* mfc_data, bool data_loa
                         break;
                     }
                     
-                    FURI_LOG_I(TAG, "renfe_suma10_verify: Default key worked, but not specific enough for RENFE");
-                    
+                    // Default key worked, but we need additional verification
+                    // This is too permissive - default key is used by many card types
+                    FURI_LOG_I(TAG, "renfe_suma10_verify: Default key worked but not specific enough for SUMA 10");
                     break;
                 } else {
                     FURI_LOG_I(TAG, "renfe_suma10_verify: RENFE sector 1 key authentication SUCCESS!");
@@ -362,6 +363,21 @@ static bool renfe_suma10_verify(Nfc* nfc, MfClassicData* mfc_data, bool data_loa
             bool has_renfe_sector0_key = false;
             bool has_renfe_sector1_key = false;
             bool has_renfe_block5_pattern = false;
+            bool has_mobilis_pattern = false;
+            
+            // Check for Mobilis-specific pattern in Block 12
+            if(mf_classic_is_block_read(mfc_data, 12)) {
+                const uint8_t* block12 = mfc_data->block[12].data;
+                FURI_LOG_I(TAG, "RENFE Suma 10 - Block 12 pattern: %02X %02X %02X %02X", 
+                           block12[0], block12[1], block12[2], block12[3]);
+                
+                // Mobilis pattern: 81 F8 01 02
+                if(block12[0] == 0x81 && block12[1] == 0xF8 && 
+                   block12[2] == 0x01 && block12[3] == 0x02) {
+                    FURI_LOG_I(TAG, "RENFE Suma 10 - Found Mobilis pattern in Block 12!");
+                    has_mobilis_pattern = true;
+                }
+            }
             
             MfClassicSectorTrailer* sec_tr0 = mf_classic_get_sector_trailer_by_sector(mfc_data, 0);
             if(sec_tr0) {
@@ -397,18 +413,43 @@ static bool renfe_suma10_verify(Nfc* nfc, MfClassicData* mfc_data, bool data_loa
                 has_renfe_block5_pattern = true;
             }
             
-            if((has_renfe_sector0_key || has_renfe_sector1_key) && has_renfe_block5_pattern) {
+            if(has_mobilis_pattern) {
+                FURI_LOG_I(TAG, "RENFE Suma 10 - VERIFIED! Found Mobilis pattern (subtype of SUMA 10)");
+                verified = true;
+            } else if((has_renfe_sector0_key || has_renfe_sector1_key) && has_renfe_block5_pattern) {
                 FURI_LOG_I(TAG, "RENFE Suma 10 - VERIFIED! Has RENFE keys and block 5 pattern");
                 verified = true;
             } else if(has_renfe_sector0_key && has_renfe_sector1_key) {
                 FURI_LOG_I(TAG, "RENFE Suma 10 - VERIFIED! Has both RENFE sector keys");
                 verified = true;
             } else {
-                FURI_LOG_I(TAG, "RENFE Suma 10 - NOT VERIFIED: missing RENFE patterns (sector0_key=%s, sector1_key=%s, block5_pattern=%s)",
-                           has_renfe_sector0_key ? "YES" : "NO",
-                           has_renfe_sector1_key ? "YES" : "NO", 
-                           has_renfe_block5_pattern ? "YES" : "NO");
-                verified = false;
+                // Check if any SUMA 10 keys are present in sectors
+                const size_t num_suma_keys = sizeof(renfe_suma10_1k_keys) / sizeof(renfe_suma10_1k_keys[0]);
+                bool has_suma_key = false;
+                
+                for(uint8_t sector = 0; sector < 4 && !has_suma_key; sector++) {
+                    MfClassicSectorTrailer* sec_tr = mf_classic_get_sector_trailer_by_sector(mfc_data, sector);
+                    if(sec_tr) {
+                        uint64_t key = bit_lib_bytes_to_num_be(sec_tr->key_a.data, 6);
+                        
+                        for(size_t i = 0; i < num_suma_keys; i++) {
+                            if(key == renfe_suma10_1k_keys[i].a) {
+                                FURI_LOG_I(TAG, "RENFE Suma 10 - Found SUMA key in sector %d", sector);
+                                has_suma_key = true;
+                                verified = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                if(!verified) {
+                    FURI_LOG_I(TAG, "RENFE Suma 10 - NOT VERIFIED: missing RENFE/Mobilis patterns (sector0_key=%s, sector1_key=%s, block5_pattern=%s, mobilis_pattern=%s)",
+                               has_renfe_sector0_key ? "YES" : "NO",
+                               has_renfe_sector1_key ? "YES" : "NO", 
+                               has_renfe_block5_pattern ? "YES" : "NO",
+                               has_mobilis_pattern ? "YES" : "NO");
+                }
             }
         }
     } while(false);
@@ -448,15 +489,15 @@ static bool renfe_regular_verify(Nfc* nfc, MfClassicData* mfc_data, bool data_lo
                 if(error != MfClassicErrorNone) {
                     FURI_LOG_I(TAG, "renfe_regular_verify: RENFE Regular sector 1 key also failed: %d", error);
                     
-               
+                    // Try default Mifare Classic keys but be more restrictive
                     bit_lib_num_to_bytes_be(0xffffffffffff, COUNT_OF(key.data), key.data);
                     error = mf_classic_poller_sync_auth(
                         nfc, block_num, &key, MfClassicKeyTypeA, &auth_context);
                     
                     if(error == MfClassicErrorNone) {
-                        FURI_LOG_I(TAG, "renfe_regular_verify: Found Mifare Classic with default keys - could be RENFE Regular");
-                      
-                        verified = true;
+                        FURI_LOG_I(TAG, "renfe_regular_verify: Found default keys - but not specific enough for RENFE Regular");
+                        // Don't verify as RENFE Regular just because default keys work
+                        break;
                     } else {
                         bit_lib_num_to_bytes_be(0xa0a1a2a3a4a5, COUNT_OF(key.data), key.data);
                         error = mf_classic_poller_sync_auth(
@@ -467,7 +508,7 @@ static bool renfe_regular_verify(Nfc* nfc, MfClassicData* mfc_data, bool data_lo
                             verified = true;
                         } else {
                             FURI_LOG_I(TAG, "renfe_regular_verify: No common key access - checking if this could be protected RENFE Regular");
-                       
+                            
                             int auth_failures = 0;
                             bit_lib_num_to_bytes_be(0xffffffffffff, COUNT_OF(key.data), key.data);
                             
@@ -505,74 +546,85 @@ static bool renfe_regular_verify(Nfc* nfc, MfClassicData* mfc_data, bool data_lo
             
             FURI_LOG_I(TAG, "RENFE Regular - analyzing loaded data patterns");
             
-            bool has_renfe_regular_sector0_key = false;
-            bool has_renfe_regular_sector1_key = false;
-            bool has_renfe_regular_pattern = false;
-            bool has_protected_sectors = false;
+            // Check for RENFE patterns in the data - more generic approach
+            int pattern_score = 0;
             
-            MfClassicSectorTrailer* sec_tr0 = mf_classic_get_sector_trailer_by_sector(mfc_data, 0);
-            if(sec_tr0) {
-                uint64_t key0 = bit_lib_bytes_to_num_be(sec_tr0->key_a.data, 6);
-                FURI_LOG_I(TAG, "RENFE Regular - sector 0 key: %012llX", key0);
-                
-                if(key0 == 0x37E0DB717D08) {
-                    FURI_LOG_I(TAG, "RENFE Regular - sector 0 has REAL RENFE Regular key!");
-                    has_renfe_regular_sector0_key = true;
-                } else if(key0 != 0xFFFFFFFFFFFF && key0 != 0xA0A1A2A3A4A5 && key0 != 0x000000000000) {
-                    FURI_LOG_I(TAG, "RENFE Regular - sector 0 has non-default key, could be RENFE Regular");
-                    has_protected_sectors = true;
+            // Check Block 8 pattern (common in RENFE cards)
+            if(mf_classic_is_block_read(mfc_data, 8)) {
+                const uint8_t* block8 = mfc_data->block[8].data;
+                // Pattern: second byte is usually E2 in RENFE cards
+                if(block8[1] == 0xE2) {
+                    FURI_LOG_I(TAG, "RENFE Regular - found Block 8 RENFE signature (xxE2)");
+                    pattern_score += 2;
+                }
+                // Additional patterns for Block 8
+                if(block8[2] == 0xA5 || block8[2] == 0xB5) {
+                    FURI_LOG_I(TAG, "RENFE Regular - found Block 8 secondary pattern");
+                    pattern_score += 1;
                 }
             }
             
-            MfClassicSectorTrailer* sec_tr1 = mf_classic_get_sector_trailer_by_sector(mfc_data, 1);
-            if(sec_tr1) {
-                uint64_t key1 = bit_lib_bytes_to_num_be(sec_tr1->key_a.data, 6);
-                FURI_LOG_I(TAG, "RENFE Regular - sector 1 key: %012llX", key1);
-                
-                if(key1 == 0x421BFA445657) {
-                    FURI_LOG_I(TAG, "RENFE Regular - sector 1 has REAL RENFE Regular key!");
-                    has_renfe_regular_sector1_key = true;
-                } else if(key1 != 0xFFFFFFFFFFFF && key1 != 0xA0A1A2A3A4A5 && key1 != 0x000000000000) {
-                    FURI_LOG_I(TAG, "RENFE Regular - sector 1 has non-default key, could be RENFE Regular");
-                    has_protected_sectors = true;
-                }
-            }
-         
-            if(mf_classic_is_block_read(mfc_data, 1)) {
-                const uint8_t* block1 = mfc_data->block[1].data;
-                if(block1[0] == 0x42 && block1[1] == 0x1B && block1[2] == 0xFA && block1[3] == 0x44) {
-                    FURI_LOG_I(TAG, "RENFE Regular - block 1 has REAL RENFE Regular pattern!");
-                    has_renfe_regular_pattern = true;
+            // Check Block 12 pattern (trip counter/info location)
+            if(mf_classic_is_block_read(mfc_data, 12)) {
+                const uint8_t* block12 = mfc_data->block[12].data;
+                // Pattern: E4 or E8 in first byte is common in RENFE
+                if(block12[0] == 0xE4 || block12[0] == 0xE8) {
+                    FURI_LOG_I(TAG, "RENFE Regular - found Block 12 RENFE pattern (E4/E8)");
+                    pattern_score += 2;
                 }
             }
             
+            // Check Block 2 pattern (network identifier)
             if(mf_classic_is_block_read(mfc_data, 2)) {
                 const uint8_t* block2 = mfc_data->block[2].data;
-                if(block2[0] == 0x06 && block2[1] == 0x00 && block2[2] == 0x5C && block2[3] == 0x9F) {
-                    FURI_LOG_I(TAG, "RENFE Regular - block 2 has REAL RENFE network pattern!");
-                    has_renfe_regular_pattern = true;
+                // Pattern: 5C 9F is RENFE network signature
+                if(block2[2] == 0x5C && block2[3] == 0x9F) {
+                    FURI_LOG_I(TAG, "RENFE Regular - found Block 2 RENFE network signature (5C9F)");
+                    pattern_score += 3; // High confidence pattern
                 }
             }
             
-            if(mf_classic_is_block_read(mfc_data, 0)) {
-                const uint8_t* block0 = mfc_data->block[0].data;
-                if(block0[0] == 0x37 || block0[0] == 0xB7) { 
-                    FURI_LOG_I(TAG, "RENFE Regular - UID matches known RENFE Regular pattern");
-                    has_renfe_regular_pattern = true;
+            // Check for common RENFE data patterns in multiple blocks
+            for(int block = 13; block <= 21; block++) {
+                if(mf_classic_is_block_read(mfc_data, block)) {
+                    const uint8_t* block_data = mfc_data->block[block].data;
+                    // Look for common RENFE patterns in trip data
+                    if((block_data[6] == 0x4D && block_data[7] == 0xDF) || // Common RENFE pattern
+                       (block_data[0] > 0x50 && block_data[1] < 0x10)) {   // Trip data pattern
+                        FURI_LOG_I(TAG, "RENFE Regular - found trip data pattern in block %d", block);
+                        pattern_score += 1;
+                    }
                 }
             }
             
-            if(has_renfe_regular_sector0_key || has_renfe_regular_sector1_key) {
-                FURI_LOG_I(TAG, "RENFE Regular - VERIFIED! Has RENFE Regular keys");
+            // Check sector access patterns (RENFE uses specific key patterns)
+            int protected_sectors = 0;
+            for(int sector = 0; sector < 16; sector++) {
+                MfClassicSectorTrailer* sec_tr = mf_classic_get_sector_trailer_by_sector(mfc_data, sector);
+                if(sec_tr) {
+                    uint64_t key = bit_lib_bytes_to_num_be(sec_tr->key_a.data, 6);
+                    // Check if it's not a default key
+                    if(key != 0xFFFFFFFFFFFF && key != 0xA0A1A2A3A4A5 && 
+                       key != 0x000000000000 && key != 0xB0B1B2B3B4B5) {
+                        protected_sectors++;
+                    }
+                }
+            }
+            
+            if(protected_sectors >= 3) {
+                FURI_LOG_I(TAG, "RENFE Regular - found %d protected sectors", protected_sectors);
+                pattern_score += 1;
+            }
+            
+            // Decision based on pattern score
+            if(pattern_score >= 3) {
+                FURI_LOG_I(TAG, "RENFE Regular - VERIFIED! Pattern score: %d (high confidence)", pattern_score);
                 verified = true;
-            } else if(has_protected_sectors && has_renfe_regular_pattern) {
-                FURI_LOG_I(TAG, "RENFE Regular - VERIFIED! Has protected sectors with RENFE patterns");
-                verified = true;
-            } else if(has_protected_sectors) {
-                FURI_LOG_I(TAG, "RENFE Regular - PROBABLY VERIFIED! Has protected sectors (likely RENFE Regular)");
+            } else if(pattern_score >= 1) {
+                FURI_LOG_I(TAG, "RENFE Regular - PROBABLY VERIFIED! Pattern score: %d (medium confidence)", pattern_score);
                 verified = true;
             } else {
-                FURI_LOG_I(TAG, "RENFE Regular - NOT VERIFIED: missing RENFE Regular patterns");
+                FURI_LOG_I(TAG, "RENFE Regular - NOT VERIFIED: Pattern score: %d (too low)", pattern_score);
                 verified = false;
             }
         }
@@ -583,7 +635,8 @@ static bool renfe_regular_verify(Nfc* nfc, MfClassicData* mfc_data, bool data_lo
 }
 
 CardType determine_card_type(Nfc* nfc, MfClassicData* mfc_data, bool data_loaded) {
-    FURI_LOG_I(TAG, "checking keys..");
+    FURI_LOG_I(TAG, "=== CARD TYPE DETECTION START ===");
+    FURI_LOG_I(TAG, "data_loaded: %s", data_loaded ? "true" : "false");
     UNUSED(bip_verify);
 
     if(bip_verify(nfc, mfc_data, data_loaded)) {
@@ -593,15 +646,17 @@ CardType determine_card_type(Nfc* nfc, MfClassicData* mfc_data, bool data_loaded
     } else if(smartrider_verify(nfc, mfc_data, data_loaded)) {
         return CARD_TYPE_SMARTRIDER;
     } else if(renfe_suma10_verify(nfc, mfc_data, data_loaded)) {
+        FURI_LOG_I(TAG, "=== RENFE SUMA 10 DETECTED! ===");
         return CARD_TYPE_RENFE_SUM10;
+    } else if(renfe_regular_verify(nfc, mfc_data, data_loaded)) {
+        FURI_LOG_I(TAG, "=== RENFE REGULAR DETECTED! ===");
+        return CARD_TYPE_RENFE_REGULAR;
     } else if(troika_verify(nfc, mfc_data, data_loaded)) {
         return CARD_TYPE_TROIKA;
     } else if(charliecard_verify(nfc, mfc_data, data_loaded)) {
         return CARD_TYPE_CHARLIECARD;
     } else if(gocard_verify(mfc_data, data_loaded)) {
         return CARD_TYPE_GOCARD;
-    } else if(renfe_regular_verify(nfc, mfc_data, data_loaded)) {
-        return CARD_TYPE_RENFE_REGULAR;
     } else {
         if(!data_loaded && nfc) {
             FURI_LOG_I(TAG, "No known cards detected - checking if this could be a protected RENFE Regular");
