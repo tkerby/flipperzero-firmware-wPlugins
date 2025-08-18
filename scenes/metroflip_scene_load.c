@@ -74,6 +74,10 @@ void metroflip_scene_load_on_enter(void* context) {
                     case CARD_TYPE_RENFE_SUM10:
                         app->card_type = "renfe_sum10";
                         break;
+                    case CARD_TYPE_RENFE_REGULAR:
+                        app->card_type = "renfe_regular";
+                        FURI_LOG_I(TAG, "Detected: RENFE Regular");
+                        break;
                     case CARD_TYPE_GOCARD:
                         app->card_type = "gocard";
                         break;
