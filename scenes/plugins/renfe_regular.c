@@ -336,9 +336,10 @@ static const char* renfe_regular_detect_card_type(const MfClassicData* data) {
     // Check for Bono Regular 10 trips pattern FIRST (most specific)
     if(mf_classic_is_block_read(data, 12)) {
         const uint8_t* block12 = data->block[12].data;
-        // Pattern found in BonoReg.nfc: E8 03 04 00 00 00 00 00 04 00 60 3A 01 00 00 B0
-        if(block12[0] == 0xE8 && block12[1] == 0x03 && block12[2] == 0x04 && 
-           block12[8] == 0x04 && block12[9] == 0x00 && block12[10] == 0x60 && block12[11] == 0x3A) {
+        // Pattern for BONO: E8 03 XX (less strict detection)
+        // Original pattern: E8 03 04 00 00 00 00 00 04 00 60 3A 01 00 00 B0
+        // Relaxed pattern: E8 03 and byte 8 = trip counter
+        if(block12[0] == 0xE8 && block12[1] == 0x03) {
             return "Bono Regular 10 trips";
         }
     }
@@ -373,6 +374,10 @@ static bool renfe_regular_is_ida_vuelta_card(const MfClassicData* data) {
         if(block12[0] == 0xE4 && block12[1] == 0x02) {
             return true;
         }
+        // 04 01 pattern also indicates ida/vuelta card (alternative format)
+        if(block12[0] == 0x04 && block12[1] == 0x01) {
+            return true;
+        }
     }
     
     return false;
@@ -394,7 +399,19 @@ static int renfe_regular_get_bono_trip_count(const MfClassicData* data) {
                 return trip_count;
             }
         } else if(block12[0] == 0xE4 && block12[1] == 0x02) {
-            // This is a regular IDA/VUELTA card
+            // This is a regular IDA/VUELTA card (format 1)
+            int usage_status = (int)block12[2];
+            
+            // For ida/vuelta cards, we need to interpret the usage differently
+            if(usage_status == 0x02) {
+                return -2; // Special code to indicate "used"
+            } else if(usage_status == 0x00) {
+                return -1; // Special code to indicate "unused"
+            } else {
+                return -3; // Special code for unknown status
+            }
+        } else if(block12[0] == 0x04 && block12[1] == 0x01) {
+            // This is a regular IDA/VUELTA card (format 2)
             int usage_status = (int)block12[2];
             
             // For ida/vuelta cards, we need to interpret the usage differently
