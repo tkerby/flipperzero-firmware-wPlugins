@@ -27,7 +27,7 @@ typedef struct {
 
 // Station name cache structure
 #define MAX_STATION_NAME_LENGTH 28
-#define MAX_CACHED_STATIONS 50  // Reduced from 150 to 50 - sufficient for most cards
+#define MAX_CACHED_STATIONS 50
 typedef struct {
     uint16_t code;
     char name[MAX_STATION_NAME_LENGTH];
@@ -37,7 +37,7 @@ typedef struct {
     StationEntry stations[MAX_CACHED_STATIONS];
     size_t count;
     bool loaded;
-    char current_region[32];
+    char current_region[16];  // Reduced from 32
 } StationCache;
 
 // Global station cache
@@ -59,21 +59,23 @@ static bool renfe_regular_is_default_station_code(uint16_t station_code);
 static bool renfe_regular_is_valid_timestamp(const uint8_t* block_data);
 static const char* renfe_regular_get_region_from_data(const MfClassicData* data);
 static const char* renfe_regular_detect_card_type(const MfClassicData* data);
+static int renfe_regular_get_bono_trip_count(const MfClassicData* data);
+static bool renfe_regular_is_ida_vuelta_card(const MfClassicData* data);
 
-// Keys for RENFE Regular cards - generic keys found in dumps
+// Keys for RENFE Regular cards
 const MfClassicKeyPair renfe_regular_keys[16] = {
     {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 0
     {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 1
     {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 2
-    {.a = 0x747734CC8ED3, .b = 0x78778869ffff}, // Sector 3 - Found in dumps
+    {.a = 0x747734CC8ED3, .b = 0x78778869ffff}, // Sector 3
     {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 4
     {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 5
     {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 6
-    {.a = 0xffffffffffff, .b = 0x78778869ffff}, // Sector 7 - Common pattern
+    {.a = 0xffffffffffff, .b = 0x78778869ffff}, // Sector 7
     {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 8
     {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 9
     {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 10
-    {.a = 0x749934CC8ED3, .b = 0x78778869ffff}, // Sector 11 - Found in dumps
+    {.a = 0x749934CC8ED3, .b = 0x78778869ffff}, // Sector 11
     {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 12
     {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 13
     {.a = 0xffffffffffff, .b = 0xffffffffffff}, // Sector 14
@@ -109,26 +111,26 @@ static bool renfe_regular_is_history_entry(const uint8_t* block_data) {
         return false;
     }
     
-    // Look for patterns found in the dumps
-    // Pattern 1: 3D 80 A6 EF (Entry pattern from dumps)
+    // Look for patterns
+    // Pattern 1: 3D 80 A6 EF (Entry pattern)
     if(block_data[0] == 0x3D && block_data[1] == 0x80 && 
        block_data[2] == 0xA6 && block_data[3] == 0xEF) {
         return true;
     }
     
-    // Pattern 2: 3C 80 DE EF (Exit pattern from dumps)
+    // Pattern 2: 3C 80 DE EF (Exit pattern)
     if(block_data[0] == 0x3C && block_data[1] == 0x80 && 
        block_data[2] == 0xDE && block_data[3] == 0xEF) {
         return true;
     }
     
-    // Pattern 3: 3D 80 DE EF (Transfer pattern from dumps)
+    // Pattern 3: 3D 80 DE EF (Transfer pattern)
     if(block_data[0] == 0x3D && block_data[1] == 0x80 && 
        block_data[2] == 0xDE && block_data[3] == 0xEF) {
         return true;
     }
     
-    // Pattern 4: 3C 80 A6 EF (Alternative pattern from dumps)
+    // Pattern 4: 3C 80 A6 EF (Alternative pattern)
     if(block_data[0] == 0x3C && block_data[1] == 0x80 && 
        block_data[2] == 0xA6 && block_data[3] == 0xEF) {
         return true;
@@ -154,7 +156,7 @@ static bool renfe_regular_is_history_entry(const uint8_t* block_data) {
 static uint32_t renfe_regular_extract_timestamp(const uint8_t* block_data) {
     if(!block_data) return 0;
     
-    // Extract timestamp from bytes 4-6 based on dump analysis
+    // Extract timestamp from bytes 4-6
     uint32_t timestamp = ((uint32_t)block_data[4] << 16) | 
                         ((uint32_t)block_data[5] << 8) | 
                         (uint32_t)block_data[6];
@@ -327,7 +329,7 @@ static const char* renfe_regular_get_station_name_dynamic(uint16_t station_code)
     return "Unknown";
 }
 
-// Detect card type based on patterns in the data
+// Detect card type
 static const char* renfe_regular_detect_card_type(const MfClassicData* data) {
     if(!data) return "Unknown";
     
@@ -346,6 +348,7 @@ static const char* renfe_regular_detect_card_type(const MfClassicData* data) {
         const uint8_t* block2 = data->block[2].data;
         if(block2[2] == 0x5C && block2[3] == 0x9F) {
             return "RENFE Cercanias";
+
         }
     }
     
@@ -360,133 +363,70 @@ static const char* renfe_regular_detect_card_type(const MfClassicData* data) {
     return "RENFE Tarjeta Regular";
 }
 
-// Extract trip counter for Bono Regular 10 trips
+// Check if card is ida/vuelta type (shouldn't show history button)
+static bool renfe_regular_is_ida_vuelta_card(const MfClassicData* data) {
+    if(!data) return false;
+    
+    if(mf_classic_is_block_read(data, 12)) {
+        const uint8_t* block12 = data->block[12].data;
+        // E4 02 pattern indicates ida/vuelta card
+        if(block12[0] == 0xE4 && block12[1] == 0x02) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+// Extract trip counter for all RENFE regular cards
 static int renfe_regular_get_bono_trip_count(const MfClassicData* data) {
     if(!data) return -1;
     
-    // Check if this is actually a Bono Regular 10 trips card
-    const char* card_type = renfe_regular_detect_card_type(data);
-    if(strcmp(card_type, "Bono Regular 10 trips") != 0) {
-        return -1;
-    }
-    
-    // Try multiple locations to find the trip counter
-    int potential_counts[10];
-    int count_candidates = 0;
-    
-    // Check Block 12 where we detected the pattern (original location)
+    // Check Block 12 first - this is where the trip counter usually is
     if(mf_classic_is_block_read(data, 12)) {
         const uint8_t* block12 = data->block[12].data;
         
-        // Try different bytes in block 12 that might be the counter
-        for(int i = 0; i < 16; i++) {
-            int value = (int)block12[i];
-            if(value >= 0 && value <= 10) {
-                potential_counts[count_candidates++] = value;
-                if(count_candidates >= 10) break;
+        // Detect card type from Block 12
+        if(block12[0] == 0xE8 && block12[1] == 0x03) {
+            // This is a BONO (multi-trip card)
+            int trip_count = (int)block12[2];
+            if(trip_count >= 0 && trip_count <= 10) {
+                return trip_count;
+            }
+        } else if(block12[0] == 0xE4 && block12[1] == 0x02) {
+            // This is a regular IDA/VUELTA card
+            int usage_status = (int)block12[2];
+            
+            // For ida/vuelta cards, we need to interpret the usage differently
+            if(usage_status == 0x02) {
+                return -2; // Special code to indicate "used"
+            } else if(usage_status == 0x00) {
+                return -1; // Special code to indicate "unused"
+            } else {
+                return -3; // Special code for unknown status
             }
         }
         
-        // Based on the pattern E8 03 04, byte 2 (0x04) might be counter
-        // But if user says it shows 4 trips, let's look for that value
-        for(int i = 0; i < 16; i++) {
-            if(block12[i] == 0x04) {
-                return 4; // If we find 0x04 and user says 4 trips, this might be it
-            }
+        // Fallback: try to interpret as regular trip counter
+        int trip_count = (int)block12[2];
+        if(trip_count >= 0 && trip_count <= 10) {
+            return trip_count;
         }
     }
     
-    // Check other blocks for trip counter (blocks 4-16 where trip data might be)
-    for(int block_num = 4; block_num <= 16; block_num++) {
+    // Check other common blocks for trip counter
+    for(int block_num = 8; block_num <= 16; block_num++) {
         if(!mf_classic_is_block_read(data, block_num)) continue;
         
         const uint8_t* block_data = data->block[block_num].data;
         
-        // Look for bytes that might represent the trip counter
-        for(int i = 0; i < 16; i++) {
-            int value = (int)block_data[i];
-            if(value >= 0 && value <= 10) {
-                // If this value appears multiple times, it's likely the counter
-                bool already_found = false;
-                for(int j = 0; j < count_candidates; j++) {
-                    if(potential_counts[j] == value) {
-                        already_found = true;
-                        break;
-                    }
-                }
-                if(!already_found && count_candidates < 10) {
-                    potential_counts[count_candidates++] = value;
-                }
-            }
-        }
-        
-        // Special check for common counter locations
-        // Byte 2 is often used for counters
-        if(block_data[2] > 0 && block_data[2] <= 10) {
-            return (int)block_data[2];
-        }
-        
-        // Last byte is sometimes used for counters
-        if(block_data[15] > 0 && block_data[15] <= 10) {
-            return (int)block_data[15];
-        }
-        
-        // First byte after header
-        if(block_data[4] > 0 && block_data[4] <= 10) {
-            return (int)block_data[4];
+        // Check byte 2 specifically as it's common for counters
+        int potential_count = (int)block_data[2];
+        if(potential_count >= 0 && potential_count <= 10) {
+            return potential_count;
         }
     }
     
-    // Check Block 8 as alternative location for trip counter
-    if(mf_classic_is_block_read(data, 8)) {
-        const uint8_t* block8 = data->block[8].data;
-        // Check different byte positions that might contain the counter
-        for(int i = 0; i < 16; i++) {
-            int potential_count = (int)block8[i];
-            if(potential_count >= 0 && potential_count <= 10) {
-                return potential_count;
-            }
-        }
-    }
-    
-    // If we found multiple candidates, return the most common one
-    if(count_candidates > 0) {
-        // Count frequency of each value
-        int max_freq = 0;
-        int best_count = 0;
-        
-        for(int i = 0; i < count_candidates; i++) {
-            int freq = 0;
-            for(int j = 0; j < count_candidates; j++) {
-                if(potential_counts[j] == potential_counts[i]) {
-                    freq++;
-                }
-            }
-            if(freq > max_freq) {
-                max_freq = freq;
-                best_count = potential_counts[i];
-            }
-        }
-        
-        if(best_count > 0) {
-            return best_count;
-        }
-    }
-    
-    // If user reports 4/10 and we can't find it, let's try a heuristic approach
-    // Look for any block that has exactly the value 4
-    for(int block_num = 1; block_num <= 16; block_num++) {
-        if(!mf_classic_is_block_read(data, block_num)) continue;
-        
-        const uint8_t* block_data = data->block[block_num].data;
-        for(int i = 0; i < 16; i++) {
-            if(block_data[i] == 0x04) {
-                return 4; // Return 4 if we find this value anywhere
-            }
-        }
-    }
-    
-    // If we can't determine the count, return 0 as default
     return 0;
 }
 
@@ -494,14 +434,14 @@ static int renfe_regular_get_bono_trip_count(const MfClassicData* data) {
 static const char* renfe_regular_get_region_from_data(const MfClassicData* data) {
     if(!data) return "Unknown";
     
-    // Try to detect region based on patterns in the data
+    // Try to detect region from data patterns
     // Check specific blocks for regional patterns
     
     // Check Block 2 for regional indicators (Cercanías patterns)
     if(mf_classic_is_block_read(data, 2)) {
         const uint8_t* block2 = data->block[2].data;
         
-        // Valencia region indicators (based on dumps provided)
+        // Valencia region indicators
         if(block2[2] == 0x5C && block2[3] == 0x9F) {
             return "valencia";
         }
@@ -666,30 +606,14 @@ static void renfe_regular_parse_history_entry(FuriString* parsed_data, const uin
         return;
     }
     
-    // Log the entire block for Bono Regular 10 trips debugging
-    FURI_LOG_I(TAG, "History Entry %d - Block data: %02X%02X%02X%02X %02X%02X%02X%02X %02X%02X%02X%02X %02X%02X%02X%02X", 
-               entry_num,
-               block_data[0], block_data[1], block_data[2], block_data[3],
-               block_data[4], block_data[5], block_data[6], block_data[7],
-               block_data[8], block_data[9], block_data[10], block_data[11],
-               block_data[12], block_data[13], block_data[14], block_data[15]);
-    
     // Extract transaction type from pattern
     uint8_t pattern1 = block_data[0];
     uint8_t pattern2 = block_data[1];
     uint8_t pattern3 = block_data[2];
     uint8_t pattern4 = block_data[3];
     
-    // Extract timestamp
-    uint8_t timestamp_1 = block_data[4];
-    uint8_t timestamp_2 = block_data[5];
-    uint8_t timestamp_3 = block_data[6];
-    
-    // Extract station code (trying different positions based on block patterns)
+    // Extract station code from different positions
     uint16_t station_code = 0;
-    
-    // For Bono Regular 10 trips, try specific positions based on the block data
-    // Based on debug logs, different blocks have station codes in different positions
     
     // Position candidates for station codes
     uint16_t pos_std = (block_data[9] << 8) | block_data[10];  // Standard position bytes 9-10
@@ -699,12 +623,8 @@ static void renfe_regular_parse_history_entry(FuriString* parsed_data, const uin
     uint16_t pos_alt2 = (block_data[11] << 8) | block_data[12];  // bytes 11-12
     uint16_t pos_mid = (block_data[7] << 8) | block_data[8];     // bytes 7-8
     
-    FURI_LOG_I(TAG, "Entry %d - Station code candidates: std=0x%04X end_single=0x%02X end_pair=0x%04X alt1=0x%04X alt2=0x%04X mid=0x%04X", 
-               entry_num, pos_std, pos_end_single, pos_end_pair, pos_alt1, pos_alt2, pos_mid);
-    
     // Try to find a reasonable station code using various strategies
     uint16_t candidates[] = {pos_end_single, pos_alt1, pos_alt2, pos_mid, pos_end_pair, pos_std};
-    const char* candidate_names[] = {"byte15", "bytes10-11", "bytes11-12", "bytes7-8", "bytes14-15", "bytes9-10"};
     int num_candidates = sizeof(candidates) / sizeof(candidates[0]);
     
     // Strategy 1: Look for small values that could be station IDs (prefer single byte values under 0x100)
@@ -712,7 +632,6 @@ static void renfe_regular_parse_history_entry(FuriString* parsed_data, const uin
         uint16_t candidate = candidates[i];
         if(candidate > 0x00 && candidate < 0x100 && candidate != 0xFF) {
             station_code = candidate;
-            FURI_LOG_I(TAG, "Entry %d - Using station code from %s: 0x%04X", entry_num, candidate_names[i], station_code);
             break;
         }
     }
@@ -723,7 +642,6 @@ static void renfe_regular_parse_history_entry(FuriString* parsed_data, const uin
             uint16_t candidate = candidates[i];
             if(candidate > 0x00 && candidate < 0x8000 && candidate != 0xFFFF) {
                 station_code = candidate;
-                FURI_LOG_I(TAG, "Entry %d - Using fallback station code from %s: 0x%04X", entry_num, candidate_names[i], station_code);
                 break;
             }
         }
@@ -732,19 +650,14 @@ static void renfe_regular_parse_history_entry(FuriString* parsed_data, const uin
     // Strategy 3: Default to standard position if nothing else works
     if(station_code == 0) {
         station_code = pos_std;
-        FURI_LOG_I(TAG, "Entry %d - Using default station code (standard position): 0x%04X", entry_num, station_code);
     }
-    
-    // Log station code for debugging (simplified)
-    // Station code extracted: removed detailed logging
     
     // Extract additional transaction details
     uint8_t detail_byte = block_data[7];
-    uint8_t value_byte = block_data[11];
     
     furi_string_cat_printf(parsed_data, "%d. ", entry_num);
     
-    // Interpret transaction type based on patterns found in dumps
+    // Interpret transaction type
     if(pattern1 == 0x3D && pattern2 == 0x80 && pattern3 == 0xA6 && pattern4 == 0xEF) {
         furi_string_cat_printf(parsed_data, "Entry");
     } else if(pattern1 == 0x3C && pattern2 == 0x80 && pattern3 == 0xDE && pattern4 == 0xEF) {
@@ -754,40 +667,17 @@ static void renfe_regular_parse_history_entry(FuriString* parsed_data, const uin
     } else if(pattern1 == 0x3C && pattern2 == 0x80 && pattern3 == 0xA6 && pattern4 == 0xEF) {
         furi_string_cat_printf(parsed_data, "Validation");
     } else {
-        furi_string_cat_printf(parsed_data, "Transaction (%02X%02X%02X%02X)", pattern1, pattern2, pattern3, pattern4);
+        furi_string_cat_printf(parsed_data, "Transaction");
     }
     
     // Add station information
     const char* station_name = renfe_regular_get_station_name_dynamic(station_code);
     
-    // Log station lookup result for Bono Regular debugging with enhanced info
-    FURI_LOG_I(TAG, "Entry %d - Station lookup: code=0x%04X -> name='%s'", 
-               entry_num, station_code, station_name);
-    
-    // Additional logging for debugging unknown station codes
-    if(strcmp(station_name, "Unknown") == 0 && station_code != 0x0000) {
-        FURI_LOG_I(TAG, "Entry %d - UNKNOWN STATION CODE: 0x%04X (decimal: %d) - Consider adding to valencia.txt", 
-                   entry_num, station_code, station_code);
-        
-        // Check if this is a Valencia region card and suggest file update
-        if(station_cache.loaded && strcmp(station_cache.current_region, "valencia") == 0) {
-            FURI_LOG_I(TAG, "Entry %d - Valencia region detected - Add '0x%04X,Station_%d' to valencia.txt", 
-                       entry_num, station_code, station_code);
-        }
-    }
-    
     if(station_code != 0x0000 && strlen(station_name) > 0) {
         furi_string_cat_printf(parsed_data, " - %s", station_name);
-        if(strcmp(station_name, "Unknown") == 0) {
-            furi_string_cat_printf(parsed_data, " (Code: %04X)", station_code);
-        }
     } else {
-        // Show the station code even if no name found
-        furi_string_cat_printf(parsed_data, " (Code: %04X)", station_code);
+        // Station name not available
     }
-    
-    // Add timestamp
-    furi_string_cat_printf(parsed_data, " [%02X%02X%02X]", timestamp_1, timestamp_2, timestamp_3);
     
     // Add transaction details if available
     if(detail_byte != 0x00 && detail_byte != 0xFF) {
@@ -796,13 +686,8 @@ static void renfe_regular_parse_history_entry(FuriString* parsed_data, const uin
         } else if(detail_byte == 0x00) {
             furi_string_cat_printf(parsed_data, " (Free)");
         } else {
-            furi_string_cat_printf(parsed_data, " (Type:%02X)", detail_byte);
+            furi_string_cat_printf(parsed_data, " (Special)");
         }
-    }
-    
-    // Add value information if relevant
-    if(value_byte != 0x00 && value_byte != 0xFF) {
-        furi_string_cat_printf(parsed_data, " Val:%02X", value_byte);
     }
     
     furi_string_cat_printf(parsed_data, "\n");
@@ -821,7 +706,7 @@ static void renfe_regular_parse_travel_history(FuriString* parsed_data, const Mf
     // Pre-load the region-specific station file for faster lookups
     renfe_regular_load_station_file(detected_region);
     
-    // History blocks where transactions are stored (based on dump analysis)
+    // History blocks where transactions are stored
     // Different blocks for different card types
     int history_blocks[25];  // Reduced from 20 to 25 for safety but more efficient than before
     int num_blocks = 0;
@@ -869,16 +754,7 @@ static void renfe_regular_parse_travel_history(FuriString* parsed_data, const Mf
         // For Bono Regular 10 trips, use different history detection logic
         bool is_history = false;
         if(strcmp(card_type, "Bono Regular 10 trips") == 0) {
-            // Log the block being analyzed for Bono Regular 10 trips
-            FURI_LOG_I(TAG, "Bono Regular - Analyzing block %d: %02X%02X%02X%02X %02X%02X%02X%02X %02X%02X%02X%02X %02X%02X%02X%02X", 
-                       block,
-                       block_data[0], block_data[1], block_data[2], block_data[3],
-                       block_data[4], block_data[5], block_data[6], block_data[7],
-                       block_data[8], block_data[9], block_data[10], block_data[11],
-                       block_data[12], block_data[13], block_data[14], block_data[15]);
-            
             // Check for any non-zero, non-FF patterns that might indicate usage
-            // Look for any block that has transaction-like patterns
             bool has_data = false;
             for(int j = 0; j < 16; j++) {
                 if(block_data[j] != 0x00 && block_data[j] != 0xFF) {
@@ -888,32 +764,16 @@ static void renfe_regular_parse_travel_history(FuriString* parsed_data, const Mf
             }
             
             if(has_data) {
-                FURI_LOG_I(TAG, "Bono Regular - Block %d has meaningful data", block);
-                
                 // Check for specific patterns that might indicate trip usage
-                // Pattern 1: Any timestamp-like sequences
                 if(block_data[0] >= 0x20 && block_data[0] <= 0x40) {
-                    FURI_LOG_I(TAG, "Bono Regular - Block %d matches timestamp pattern (byte[0]=0x%02X)", block, block_data[0]);
                     is_history = true;
                 }
-                // Pattern 2: Station code-like patterns (small numbers)
                 else if(block_data[15] > 0x00 && block_data[15] < 0x80) {
-                    FURI_LOG_I(TAG, "Bono Regular - Block %d matches station pattern (byte[15]=0x%02X)", block, block_data[15]);
                     is_history = true;
                 }
-                // Pattern 3: Sequential patterns that might indicate usage counters
                 else if(block_data[2] > 0x00 && block_data[2] <= 0x10) {
-                    FURI_LOG_I(TAG, "Bono Regular - Block %d matches counter pattern (byte[2]=0x%02X)", block, block_data[2]);
                     is_history = true;
                 }
-                
-                if(is_history) {
-                    FURI_LOG_I(TAG, "Bono Regular - Block %d ACCEPTED as history entry", block);
-                } else {
-                    FURI_LOG_I(TAG, "Bono Regular - Block %d rejected (no matching patterns)", block);
-                }
-            } else {
-                FURI_LOG_I(TAG, "Bono Regular - Block %d rejected (all zeros/FFs)", block);
             }
         } else {
             // Use regular history detection for other card types
@@ -929,10 +789,9 @@ static void renfe_regular_parse_travel_history(FuriString* parsed_data, const Mf
     }
     
     if(history_count == 0) {
-        FURI_LOG_I(TAG, "Bono Regular - No history entries found in %d blocks checked", num_blocks);
         // If no history found but we know there should be trips (for Bono 10 trips)
         if(strcmp(card_type, "Bono Regular 10 trips") == 0) {
-            furi_string_cat_printf(parsed_data, "🚂 Bono Trip History:\n");
+            furi_string_cat_printf(parsed_data, "Bono Trip History:\n");
             furi_string_cat_printf(parsed_data, "Card shows trips used but\n");
             furi_string_cat_printf(parsed_data, "detailed history format not\n");
             furi_string_cat_printf(parsed_data, "yet decoded.\n\n");
@@ -954,11 +813,10 @@ static void renfe_regular_parse_travel_history(FuriString* parsed_data, const Mf
         }
         // Empty - let calling function handle message for regular cards
     } else {
-        FURI_LOG_I(TAG, "Bono Regular - Found %d history entries to display", history_count);
         // Sort and display history
         renfe_regular_sort_history_entries(history_entries, history_count);
         
-        furi_string_cat_printf(parsed_data, "🚂 Travel History (%d entries):\n", history_count);
+        furi_string_cat_printf(parsed_data, "Travel History (%d entries):\n", history_count);
         furi_string_cat_printf(parsed_data, "Region: %s\n", detected_region);
         furi_string_cat_printf(parsed_data, "Card Type: %s\n", card_type);
         furi_string_cat_printf(parsed_data, "(Most recent first)\n\n");
@@ -1071,7 +929,7 @@ static bool renfe_regular_parse_history_only(FuriString* parsed_data, const MfCl
     bool has_history = renfe_regular_has_history_data(data);
     
     if(!has_history) {
-        furi_string_cat_printf(parsed_data, "📅 No travel history found\n\n");
+        furi_string_cat_printf(parsed_data, "No travel history found\n\n");
         furi_string_cat_printf(parsed_data, "This card appears to be:\n");
         furi_string_cat_printf(parsed_data, "• New or unused\n");
         furi_string_cat_printf(parsed_data, "• Recently cleared\n");
@@ -1080,7 +938,7 @@ static bool renfe_regular_parse_history_only(FuriString* parsed_data, const MfCl
         renfe_regular_parse_travel_history(parsed_data, data);
     }
     
-    furi_string_cat_printf(parsed_data, "\n⬅️ Press LEFT to return");
+    furi_string_cat_printf(parsed_data, "\nPress LEFT to return");
     
     return true;
 }
@@ -1125,54 +983,69 @@ static bool renfe_regular_parse(FuriString* parsed_data, const MfClassicData* da
             break;
         }
 
-        furi_string_cat_printf(parsed_data, "\e#🚆 RENFE REGULAR\n");
+        furi_string_cat_printf(parsed_data, "\e#RENFE REGULAR\n");
         
         // 1. Show card type
         const char* card_type = renfe_regular_detect_card_type(data);
-        furi_string_cat_printf(parsed_data, "🎫 Type: %s\n", card_type);
+        furi_string_cat_printf(parsed_data, "Type: %s\n", card_type);
         
-        // 1.1. If it's a Bono Regular 10 trips, show the trip counter
+        // 1.1. Show trip counter or usage status
         if(strcmp(card_type, "Bono Regular 10 trips") == 0) {
+            // Multi-trip BONO card
             int trip_count = renfe_regular_get_bono_trip_count(data);
             if(trip_count >= 0) {
-                furi_string_cat_printf(parsed_data, "🔢 Trips: %d/10\n", trip_count);
+                furi_string_cat_printf(parsed_data, "Trips: %d/10\n", trip_count);
             } else {
-                furi_string_cat_printf(parsed_data, "🔢 Trips: Unknown/10\n");
+                furi_string_cat_printf(parsed_data, "Trips: Unknown/10\n");
+            }
+        } else {
+            // Regular ida/vuelta card
+            int trip_count = renfe_regular_get_bono_trip_count(data);
+            if(trip_count == -2) {
+                furi_string_cat_printf(parsed_data, "Status: USED\n");
+            } else if(trip_count == -1) {
+                furi_string_cat_printf(parsed_data, "Status: UNUSED\n");
+            } else if(trip_count == -3) {
+                furi_string_cat_printf(parsed_data, "Status: UNKNOWN\n");
+            } else if(trip_count >= 0) {
+                furi_string_cat_printf(parsed_data, "Trips: %d\n", trip_count);
+            } else {
+                furi_string_cat_printf(parsed_data, "Status: Cannot read\n");
             }
         }
         
         // 2. Show card format
         if(data->type == MfClassicType1k) {
-            furi_string_cat_printf(parsed_data, "📱 Format: Mifare Classic 1K\n");
+            furi_string_cat_printf(parsed_data, "Format: Mifare Classic 1K\n");
         } else if(data->type == MfClassicType4k) {
-            furi_string_cat_printf(parsed_data, "📱 Format: Mifare Classic 4K\n");
+            furi_string_cat_printf(parsed_data, "Format: Mifare Classic 4K\n");
         } else {
-            furi_string_cat_printf(parsed_data, "📱 Format: Unknown\n");
+            furi_string_cat_printf(parsed_data, "Format: Unknown\n");
         }
         
         // 3. Extract and show UID
-        // Attempting to extract UID (logging simplified)
+        // Attempting to extract UID
         
         if(data->iso14443_3a_data && data->iso14443_3a_data->uid_len > 0) {
             const uint8_t* uid = data->iso14443_3a_data->uid;
             size_t uid_len = data->iso14443_3a_data->uid_len;
             
-            // UID data found (logging simplified)
+            // UID data found
             
-            furi_string_cat_printf(parsed_data, "🔢 UID: ");
+            furi_string_cat_printf(parsed_data, "UID: ");
             for(size_t i = 0; i < uid_len; i++) {
                 furi_string_cat_printf(parsed_data, "%02X", uid[i]);
                 if(i < uid_len - 1) furi_string_cat_printf(parsed_data, " ");
             }
             furi_string_cat_printf(parsed_data, "\n");
         } else {
-            // Try to extract UID from block 0 as fallback
-            // Using block 0 fallback (logging simplified)
+            // Extract UID from block 0
+
             if(mf_classic_is_block_read(data, 0)) {
                 const uint8_t* block0 = data->block[0].data;
-                furi_string_cat_printf(parsed_data, "🔢 UID: %02X %02X %02X %02X\n", block0[0], block0[1], block0[2], block0[3]);
+                furi_string_cat_printf(parsed_data, "UID: %02X %02X %02X %02X\n", block0[0], block0[1], block0[2], block0[3]);
             } else {
-                furi_string_cat_printf(parsed_data, "🔢 UID: Not available\n");
+                furi_string_cat_printf(parsed_data, "UID: N/A\n");
             }
         }
         
@@ -1194,21 +1067,19 @@ static bool renfe_regular_parse(FuriString* parsed_data, const MfClassicData* da
                 }
             }
         }
-        furi_string_cat_printf(parsed_data, "📍 Region: %s\n", display_region);
+        furi_string_cat_printf(parsed_data, "Region: %s\n", display_region);
         
-        // 5. Additional card info from specific blocks if available
-        if(mf_classic_is_block_read(data, 12)) {
-            furi_string_cat_printf(parsed_data, "� Data Blocks: 12+ available\n");
-        }
-        
-        // Add travel history status
-        furi_string_cat_printf(parsed_data, "\n");
-        if(renfe_regular_has_history_data(data)) {
-            furi_string_cat_printf(parsed_data, "📚 History: Available\n");
-            furi_string_cat_printf(parsed_data, "   ⬅️ Press LEFT to view details\n");
-        } else {
-            furi_string_cat_printf(parsed_data, "📭 History: Empty/Not found\n");
-            furi_string_cat_printf(parsed_data, "   Load dump from Saved\n");
+        // Add travel history status (only for non-ida/vuelta cards)
+        bool is_ida_vuelta = renfe_regular_is_ida_vuelta_card(data);
+        if(!is_ida_vuelta) {
+            furi_string_cat_printf(parsed_data, "\n");
+            if(renfe_regular_has_history_data(data)) {
+                furi_string_cat_printf(parsed_data, "History: Available\n");
+                furi_string_cat_printf(parsed_data, "   Press LEFT to view details\n");
+            } else {
+                furi_string_cat_printf(parsed_data, "History: Empty/Not found\n");
+                furi_string_cat_printf(parsed_data, "   Load dump from Saved\n");
+            }
         }
         
         parsed = true;
@@ -1240,7 +1111,7 @@ static void renfe_regular_on_enter(Metroflip* app) {
         return;
     }
     
-    // RENFE Regular plugin entry (logging simplified)
+    // RENFE Regular plugin entry
     
     dolphin_deed(DolphinDeedNfcRead);
 
@@ -1265,12 +1136,12 @@ static void renfe_regular_on_enter(Metroflip* app) {
         }
         
         if(mfc_data) {
-            // RENFE Regular: MFC data available (logging simplified)
+            // RENFE Regular: MFC data available
             FuriString* parsed_data = furi_string_alloc();
             Widget* widget = app->widget;
 
             if(!widget) {
-                // RENFE Regular: Widget is NULL (logging simplified)
+                // RENFE Regular: Widget is NULL
                 if(should_free_mfc_data) mf_classic_free(mfc_data);
                 furi_string_free(parsed_data);
                 return;
@@ -1289,7 +1160,14 @@ static void renfe_regular_on_enter(Metroflip* app) {
             }
             widget_add_text_scroll_element(widget, 0, 0, 128, 52, furi_string_get_cstr(parsed_data));
 
-            widget_add_button_element(widget, GuiButtonTypeLeft, "History", renfe_regular_widget_callback, app);
+            // Check if it's ida/vuelta card to decide whether to show History button
+            bool is_ida_vuelta = renfe_regular_is_ida_vuelta_card(mfc_data);
+            
+            if(!is_ida_vuelta) {
+                // Only show History button for non-ida/vuelta cards
+                widget_add_button_element(widget, GuiButtonTypeLeft, "History", renfe_regular_widget_callback, app);
+            }
+            
             widget_add_button_element(widget, GuiButtonTypeCenter, "Delete", metroflip_delete_widget_callback, app);
             widget_add_button_element(widget, GuiButtonTypeRight, "Exit", metroflip_exit_widget_callback, app);
             
@@ -1302,10 +1180,10 @@ static void renfe_regular_on_enter(Metroflip* app) {
             if(should_free_mfc_data) mf_classic_free(mfc_data);
             furi_string_free(parsed_data);
             
-            // RENFE Regular: Switching to widget view (logging simplified)
+            // RENFE Regular: Switching to widget view
             view_dispatcher_switch_to_view(app->view_dispatcher, MetroflipViewWidget);
         } else {
-            // RENFE Regular: Failed to load MFC data (logging simplified)
+            // RENFE Regular: Failed to load MFC data
         }
     } else {
         // Card reading not supported - show message to load dump
@@ -1324,7 +1202,7 @@ static void renfe_regular_on_enter(Metroflip* app) {
         furi_string_cat_printf(message, "These cards use specific keys\n");
         furi_string_cat_printf(message, "that vary by card.\n\n");
         furi_string_cat_printf(message, " Load your dump from:\n");
-        furi_string_cat_printf(message, "   Saved → [filename].nfc\n\n");
+        furi_string_cat_printf(message, "   Saved -> [filename].nfc\n\n");
         furi_string_cat_printf(message, " Supports all 18 regions:\n");
         furi_string_cat_printf(message, "   Valencia, Madrid, Catalunya,\n");
         furi_string_cat_printf(message, "   Andalucia, Pais Vasco,\n");
@@ -1414,7 +1292,14 @@ static bool renfe_regular_on_event(Metroflip* app, SceneManagerEvent event) {
                         }
                         widget_add_text_scroll_element(widget, 0, 0, 128, 52, furi_string_get_cstr(parsed_data));
 
-                        widget_add_button_element(widget, GuiButtonTypeLeft, "History", renfe_regular_widget_callback, app);
+                        // Check if it's ida/vuelta card to decide whether to show History button
+                        bool is_ida_vuelta = renfe_regular_is_ida_vuelta_card(mfc_data);
+                        
+                        if(!is_ida_vuelta) {
+                            // Only show History button for non-ida/vuelta cards
+                            widget_add_button_element(widget, GuiButtonTypeLeft, "History", renfe_regular_widget_callback, app);
+                        }
+                        
                         widget_add_button_element(widget, GuiButtonTypeCenter, "Delete", metroflip_delete_widget_callback, app);
                         widget_add_button_element(widget, GuiButtonTypeRight, "Exit", metroflip_exit_widget_callback, app);
                         
@@ -1437,7 +1322,7 @@ static bool renfe_regular_on_event(Metroflip* app, SceneManagerEvent event) {
 
 static void renfe_regular_on_exit(Metroflip* app) {
     if(!app) {
-        // renfe_regular_on_exit: app is NULL (logging simplified)
+        // renfe_regular_on_exit: app is NULL
         return;
     }
 
