@@ -1,5 +1,5 @@
 /**
- *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2024 LAB401 GPLv3
+ *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2025 LAB401 GPLv3
  *  ▌  ▛▜ ▛▚ ▙▙ ▌▐ ▐  This program is free software
  *  ▀▀ ▘▝ ▀▘  ▘ ▝▘ ▀▘ See LICENSE.txt - lab401.com
  *    + Tixlegeek
@@ -114,8 +114,8 @@ AppScopeConfig* app_scope_config_alloc(void* ctx) {
     furi_assert(ctx);
     AppContext* app = (AppContext*)ctx;
     Configuration* config = app->data->config;
-    // UNUSED(ctx);
     AppScopeConfig* appScopeConfig = malloc(sizeof(AppScopeConfig));
+
     appScopeConfig->list = variable_item_list_alloc();
     variable_item_list_reset(appScopeConfig->list);
 
@@ -226,8 +226,6 @@ bool app_scene_scope_config_on_event(void* ctx, SceneManagerEvent event) {
  */
 void app_scene_scope_config_on_exit(void* ctx) {
     AppContext* app = (AppContext*)ctx;
-    // AppScopeConfig *appScopeConfig = (AppScopeConfig *)app->sceneConfig;
-
     l401_err res = config_save_json(DIGILABCONF_CONFIG_FILE, app->data->config);
 
     if(res == L401_OK) {

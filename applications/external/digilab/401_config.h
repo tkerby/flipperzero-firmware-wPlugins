@@ -1,5 +1,5 @@
 /**
- *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2024 LAB401 GPLv3
+ *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2025 LAB401 GPLv3
  *  ▌  ▛▜ ▛▚ ▙▙ ▌▐ ▐  This program is free software
  *  ▀▀ ▘▝ ▀▘  ▘ ▝▘ ▀▘ See LICENSE.txt - lab401.com
  *    + Tixlegeek
@@ -11,14 +11,16 @@
 #include <storage/storage.h>
 #include <toolbox/path.h>
 
-#define DIGILAB_VERSION                    "1.0"
-#define DIGILAB_DEFAULT_SCOPE_SOUND        0
-#define DIGILAB_DEFAULT_SCOPE_VIBRO        0
-#define DIGILAB_DEFAULT_SCOPE_LED          0
-#define DIGILAB_DEFAULT_SCOPE_ALERT        0
-#define DIGILAB_DEFAULT_SCOPE_BRIDGEFACTOR 0.435
+#define DIGILAB_VERSION                        "1.0"
+#define DIGILAB_DEFAULT_SCOPE_SOUND            0
+#define DIGILAB_DEFAULT_SCOPE_VIBRO            0
+#define DIGILAB_DEFAULT_SCOPE_LED              0
+#define DIGILAB_DEFAULT_SCOPE_ALERT            0
+#define DIGILAB_DEFAULT_SCOPE_BRIDGEFACTOR     4.39
+#define DIGILAB_DEFAULT_SCOPE_BRIDGEFACTOR_MIN 4.00
+#define DIGILAB_DEFAULT_SCOPE_BRIDGEFACTOR_MAX 5.00
 
-#include "401_err.h"
+#include <401_err.h>
 #include "app_params.h"
 
 typedef enum {
@@ -69,4 +71,7 @@ l401_err config_read_json(const char* filename, Configuration* config);
 l401_err config_init_dir(const char* filename);
 l401_err config_load_json(const char* filename, Configuration* config);
 
+l401_err config_reset_calibration(void);
+l401_err config_set_calibration(void);
+l401_err config_check_calibration(void);
 #endif /* end of include guard: 401_CONFIG_H_ */

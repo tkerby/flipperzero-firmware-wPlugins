@@ -1,5 +1,5 @@
 /**
- *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2024 LAB401 GPLv3
+ *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2025 LAB401 GPLv3
  *  ▌  ▛▜ ▛▚ ▙▙ ▌▐ ▐  This program is free software
  *  ▀▀ ▘▝ ▀▘  ▘ ▝▘ ▀▘ See LICENSE.txt - lab401.com
  *    + Tixlegeek
@@ -9,8 +9,9 @@
 #include <furi.h>
 #include <furi_hal.h>
 #include <furi_hal_gpio.h>
-static const char* TAG = "401_DigiLab";
+//static const char* TAG = "401_DigiLab";
 #define CHECK_HAT
+
 /**
  * Handles input events for the app.
  *
@@ -130,24 +131,13 @@ uint32_t app_navigateTo_Splash_callback(void* ctx) {
 }
 
 l401_err check_hat(AppContext* app) {
-    //  furi_assert(app);
-    //  AppContext *app_ctx = app;
     UNUSED(app);
-
     furi_hal_i2c_acquire(I2C_BUS);
     uint8_t data[4] = {0};
     bool res = false;
     // Read the first 5 bytes from the EEPROM
     res = furi_hal_i2c_read_mem(I2C_BUS, 0x57 << 1, 0x00, data, 4, I2C_MEM_I2C_TIMEOUT);
     furi_hal_i2c_release(I2C_BUS);
-    FURI_LOG_I(
-        TAG,
-        "EEPROM READ: %d 0x%.02X 0x%.02X 0x%.02X 0x%.02X",
-        res,
-        data[0],
-        data[1],
-        data[2],
-        data[3]);
     return res ? L401_OK : L401_ERR_HARDWARE;
 }
 
@@ -158,6 +148,7 @@ l401_err check_hat(AppContext* app) {
  * @return A pointer to the allocated AppContext.
  */
 AppContext* app_alloc() {
+    bool must_recalibrate = false;
     // Enables 5V on GPIO Header
     if(!furi_hal_power_is_otg_enabled()) furi_hal_power_enable_otg();
 
@@ -176,10 +167,7 @@ AppContext* app_alloc() {
 
     // Initialize MainMenu
     app_ctx->mainmenu = submenu_alloc();
-
-    // scene_manager_set_scene(app_ctx->scene_manager,AppSceneSplash);
     app_ctx->data = malloc(sizeof(AppData));
-
     app_ctx->err = L401_OK;
 
 #ifdef CHECK_HAT
@@ -194,7 +182,11 @@ AppContext* app_alloc() {
         app_ctx->err = L401_ERR_INTERNAL;
         return app_ctx;
     }
-
+    // Check calibration
+    res = config_check_calibration();
+    if(res != L401_OK) {
+        must_recalibrate = true;
+    }
     // Load configuration.
     res = config_load_json(DIGILABCONF_CONFIG_FILE, app_ctx->data->config);
     if(res != L401_OK) {
@@ -203,7 +195,6 @@ AppContext* app_alloc() {
     }
 
     view_dispatcher_set_event_callback_context(app_ctx->view_dispatcher, app_ctx);
-    FURI_LOG_E(__FILE__, "----- %d", __LINE__);
 
     submenu_add_item(
         app_ctx->mainmenu, "I2C Probe", AppMainMenuIndex_I2CTool, appMainMenu_callback, app_ctx);
@@ -214,7 +205,7 @@ AppContext* app_alloc() {
     submenu_add_item(
         app_ctx->mainmenu, "Scope", AppMainMenuIndex_Osc, appMainMenu_callback, app_ctx);
     submenu_add_item(
-        app_ctx->mainmenu, "Configuration", AppMainMenuIndex_Config, appMainMenu_callback, app_ctx);
+        app_ctx->mainmenu, "Calibration", AppMainMenuIndex_Config, appMainMenu_callback, app_ctx);
     submenu_add_item(
         app_ctx->mainmenu, "About", AppMainMenuIndex_About, appMainMenu_callback, app_ctx);
     submenu_add_item(
@@ -270,7 +261,11 @@ AppContext* app_alloc() {
     view_dispatcher_set_custom_event_callback(app_ctx->view_dispatcher, app_custom_event_callback);
     view_set_previous_callback(submenu_get_view(app_ctx->mainmenu), app_Quit_callback);
 
-    scene_manager_next_scene(app_ctx->scene_manager, AppSceneSplash);
+    if(must_recalibrate == true) {
+        scene_manager_next_scene(app_ctx->scene_manager, AppSceneConfig);
+    } else {
+        scene_manager_next_scene(app_ctx->scene_manager, AppSceneSplash);
+    }
 
     return app_ctx;
 }

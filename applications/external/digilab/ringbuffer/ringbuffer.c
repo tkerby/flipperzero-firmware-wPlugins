@@ -1,5 +1,5 @@
 /**
- *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2024 LAB401 GPLv3
+ *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2025 LAB401 GPLv3
  *  ▌  ▛▜ ▛▚ ▙▙ ▌▐ ▐  This program is free software
  *  ▀▀ ▘▝ ▀▘  ▘ ▝▘ ▀▘ See LICENSE.txt - lab401.com
  *    + Tixlegeek
@@ -88,21 +88,21 @@ double RingBuffer_getVariance(RingBuffer* rb) {
 }
 
 /**
- * @brief Mappe la variance calculée sur un uint8_t.
+ * @brief Maps variane to an uint8_t
  *
- * @param rb Pointeur sur le RingBuffer.
- * @return uint8_t Variance mappée dans un uint8_t.
+ * @param rb pointer to the RingBuffer.
+ * @return uint8_t Variance mapped to uint8_t.
  */
 uint8_t RingBuffer_getVarianceMapped(RingBuffer* rb) {
     // Récupérer la variance du RingBuffer
     double variance = RingBuffer_getVariance(rb);
 
-    // Limiter la variance à une valeur maximale
+    // Caps the vaiance at a max value
     if(variance > MAX_VARIANCE_MV) {
         variance = MAX_VARIANCE_MV;
     }
 
-    // Mapper la variance sur une échelle de 0 à 255
+    // maps the variance between 0 and 255
     uint8_t mappedVariance = (uint8_t)((variance / MAX_VARIANCE_MV) * 255);
 
     return mappedVariance;
@@ -119,29 +119,28 @@ double RingBuffer_getStandardDeviation(RingBuffer* rb) {
 }
 
 /**
- * @brief Mappe la déviation standard calculée sur un uint8_t.
+ * @brief Maps the deviation on an uint8_t
  *
- * @param rb Pointeur sur le RingBuffer.
- * @return uint8_t Déviation standard mappée dans un uint8_t.
+ * @param rb pointer to RingBuffer.
+
  */
 uint8_t RingBuffer_getStandardDeviationMapped(RingBuffer* rb, double minVal, double maxVal) {
-    // Récupérer la déviation standard du RingBuffer
+    // Get the standard deviation from the ring buffer
     double stdDev = RingBuffer_getStandardDeviation(rb);
-
-    // Calculer la déviation standard maximale attendue à partir des valeurs réelles
+    // Computes the max standard deviation from ground truth values
     double maxStdDev = (double)((maxVal - minVal) / 2); // Estimation max théorique de l'écart-type
 
-    // Eviter une division par zéro si les valeurs sont constantes
+    // No DIV/0
     if(maxStdDev == 0) {
         return 0;
     }
 
-    // Limiter la déviation standard à la valeur maximale calculée
+    // Caps the standard deviation to its max
     if(stdDev > maxStdDev) {
         stdDev = maxStdDev;
     }
 
-    // Mapper la déviation standard sur une échelle de 0 à 255
+    // maps the variance between 0 and 255
     uint8_t mappedStdDev = (uint8_t)((stdDev / maxStdDev) * 255);
 
     return mappedStdDev;
@@ -195,28 +194,28 @@ double RingBuffer_getMax(RingBuffer* rb) {
 }
 
 /**
- * @brief Récupère les valeurs minimale et maximale du RingBuffer en une seule passe.
+ * @brief Get min and max values from ring buffer in one pass
  *
- * @param rb Pointeur sur le RingBuffer.
- * @param min Pointeur pour stocker la valeur minimale.
- * @param max Pointeur pour stocker la valeur maximale.
+ * @param rb pointer to RingBuffer.
+ * @param min pointer to the  min value.
+ * @param max pointer to the  max value.
  */
 void RingBuffer_getMinMax(RingBuffer* rb, double* min, double* max) {
-    // Vérifier si le RingBuffer est vide
+    // check if RB's empty
     if(rb->count == 0) {
         *min = 0;
         *max = 0;
         return;
     }
 
-    // Initialiser l'index du RingBuffer au dernier élément ajouté
+    // Init rb's index to the last inserted value
     size_t index = rb->head == 0 ? rb->bufferSize - 1 : rb->head - 1;
 
-    // Initialiser min et max avec la première valeur
+    // Initialize min and max values
     double minValue = rb->buffer[index];
     double maxValue = rb->buffer[index];
 
-    // Parcourir tous les éléments du RingBuffer
+    // Go throught every rb's elements
     for(size_t i = 0; i < rb->count; i++) {
         if(rb->buffer[index] < minValue) {
             minValue = rb->buffer[index];
@@ -224,11 +223,11 @@ void RingBuffer_getMinMax(RingBuffer* rb, double* min, double* max) {
         if(rb->buffer[index] > maxValue) {
             maxValue = rb->buffer[index];
         }
-        // Passer à l'élément précédent (gestion circulaire)
+        // Go to the next element
         index = index == 0 ? rb->bufferSize - 1 : index - 1;
     }
 
-    // Mettre à jour les valeurs min et max
+    // Updates min and max
     *min = minValue;
     *max = maxValue;
 }

@@ -129,16 +129,14 @@ The Scope comes with a bunch of nice feedback configuration, allowing the user t
 
 You need to calibrate the voltage measurement to ensure its accuracy. Note that the DigiLab is not a precision measurement tool. However, it can provide accurate readings once properly calibrated.
 
-To do that, go to **Configuration** in the main menu.
+To do that, go to **Calibration** in the main menu.
 
-![cali2](./READMEassets/cali2.gif)
+![cali2](./READMEassets/cali.png)
 
 Then Probe the 5V Test pad at on the tom left corner of the digilab as shown bellow:
 ![probecali](./READMEassets/probecali.png)
 
-While probing, press the **OK** button. You can then leave the menu by pressing **Return**
-
-The calibration value will then be stored inside **config.json** on the SD Card.
+Then follow the instructions. Any bad measure will force recalibration of the device.
 
 ## Capabilities:
 
@@ -152,7 +150,7 @@ Lab401's DigiLab by tixlegeek is able to measure in those limits:
 
 **SPI** and **I2C** devices **must be 3.3V compatible**
 
-You can use **BusPiratev5** hardware on the dedicated port
+You can use **BusPiratev5** hardware on the dedicated port. WARNING! Only 3v Compatible signals.
 
 ## Contributing
 

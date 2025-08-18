@@ -1,5 +1,5 @@
 /**
- *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2024 LAB401 GPLv3
+ *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2025 LAB401 GPLv3
  *  ▌  ▛▜ ▛▚ ▙▙ ▌▐ ▐  This program is free software
  *  ▀▀ ▘▝ ▀▘  ▘ ▝▘ ▀▘ See LICENSE.txt - lab401.com
  *    + Tixlegeek
@@ -22,15 +22,9 @@ static const char* TAG = "401_DigiLabI2CToolReader";
 #include <toolbox/path.h>
 ////#include <u8g2_glue.h>
 
-#include "401_err.h"
+#include <401_err.h>
 #include "cJSON/cJSON.h"
 
-/**
- * @brief Render callback for the app i2ctoolreader.
- *
- * @param canvas The canvas to be used for rendering.
- * @param model The model passed to the callback.
- */
 #define CELL_WIDTH       4
 #define LINE_HEIGHT      6
 #define HEXDUMP_OFFSET_W 1
@@ -38,6 +32,14 @@ static const char* TAG = "401_DigiLabI2CToolReader";
 
 static uint8_t input_read_offset = 0;
 
+/**
+ * @brief Transform a xy coordiante on the grid into a xtyt coordiante on the screen
+ *
+ * @param x Position x on the grid
+ * @param y Position y on the grid
+ * @param xt pointer to the transormed x position
+ * @param yt pointer to the transormed y position
+ */
 static void hex_dump_grid_transform(uint8_t x, uint8_t y, uint8_t* xt, uint8_t* yt) {
     uint8_t space = 18;
     if(x < 18) {
@@ -46,7 +48,15 @@ static void hex_dump_grid_transform(uint8_t x, uint8_t y, uint8_t* xt, uint8_t* 
     *xt = HEXDUMP_OFFSET_W + x * CELL_WIDTH + space;
     *yt = HEXDUMP_OFFSET_H + y * LINE_HEIGHT;
 }
-// Fonction pour dessiner un caractère individuel sur une cellule de la grille
+
+/**
+ * @brief Draws a single character based on it's coordinate
+ *
+ * @param canvas Canvas to be rendered to
+ * @param cell_x Position x on the grid
+ * @param cell_y Position y on the grid
+ * @param c byte to be shown
+ */
 void hex_dump_grid_draw(Canvas* canvas, int cell_x, int cell_y, char c) {
     char str[2] = {c, '\0'}; // Convertir le caractère en chaîne de 1 caractère
     uint8_t x = 0;
@@ -63,6 +73,12 @@ void hex_dump_grid_draw(Canvas* canvas, int cell_x, int cell_y, char c) {
     canvas_draw_str_aligned(canvas, x, y, AlignLeft, AlignTop, str);
 }
 
+/**
+ * @brief Draws a selected octet at offset "offset"
+ *
+ * @param canvas Canvas to be rendered to
+ * @param offset Offset of the byte to be drawn as selected
+ */
 void hex_dump_grid_draw_selected(Canvas* canvas, uint8_t offset) {
     canvas_set_color(canvas, ColorXOR);
     uint8_t xb = ((offset % 8) + 1) * 2;
@@ -78,6 +94,12 @@ void hex_dump_grid_draw_selected(Canvas* canvas, uint8_t offset) {
     canvas_draw_box(canvas, xt - 1, yt - 1, (CELL_WIDTH) + 1, LINE_HEIGHT + 1);
 }
 
+/**
+ * @brief Draws the hex editor
+ *
+ * @param canvas Canvas to be rendered to
+ * @param ctx I2CTool reader model
+ */
 void app_i2ctoolreader_render_callback(Canvas* canvas, void* ctx) {
     furi_assert(canvas);
     furi_assert(ctx);
@@ -85,16 +107,15 @@ void app_i2ctoolreader_render_callback(Canvas* canvas, void* ctx) {
     i2CToolReaderModel* model = (i2CToolReaderModel*)ctx;
 
     canvas_clear(canvas);
-    // char str[32] = {};
-    // snprintf(str, 32, "0x%.02X", model->device->addr);
-    // canvas_draw_str_aligned(canvas, 0, 10, AlignLeft, AlignTop, str);
+
     size_t data_len = model->data_len;
     uint8_t* data = model->data;
 
     canvas_set_custom_u8g2_font(canvas, CUSTOM_FONT_TINY_REGULAR);
-    uint8_t bytes_per_line = 8;
-    size_t offset = 0;
-    int line = 0; // L'index de la ligne dans la grille
+    uint8_t bytes_per_line = 8; // Number of bytes to display per row
+    size_t offset = 0; // Current data offset
+    int line = 0; // Current row index
+
     canvas_set_color(canvas, ColorBlack);
     canvas_draw_rbox(
         canvas,
@@ -103,16 +124,18 @@ void app_i2ctoolreader_render_callback(Canvas* canvas, void* ctx) {
         CELL_WIDTH * 2 + 2,
         LINE_HEIGHT * ((data_len / bytes_per_line) + 1) + 2,
         2);
-    // Parcourir les données par blocs de `bytes_per_line` octets
+
+    // Loop over data in increments of bytes_per_line
     while(offset < data_len) {
         int cell_x = 0;
-        // Afficher l'offset (sur 2 caractères hexadécimaux)
+
+        // Draw offset marker (two hex digits)
         char offset_str[3];
         snprintf(offset_str, sizeof(offset_str), "%02X", offset);
         hex_dump_grid_draw(canvas, cell_x++, line, offset_str[0]);
         hex_dump_grid_draw(canvas, cell_x++, line, offset_str[1]);
 
-        // Afficher les octets sous forme hexadécimale
+        // Draw HEX part: each byte as two hex digits
         for(size_t i = 0; i < bytes_per_line; i++) {
             if(offset + i < data_len) {
                 char byte_str[3];
@@ -120,30 +143,32 @@ void app_i2ctoolreader_render_callback(Canvas* canvas, void* ctx) {
                 hex_dump_grid_draw(canvas, cell_x++, line, byte_str[0]);
                 hex_dump_grid_draw(canvas, cell_x++, line, byte_str[1]);
             } else {
-                // Si moins d'octets, combler les cellules avec des espaces
+                // Fill empty cells when data exhausted
                 cell_x += 2;
             }
         }
 
-        // Ajouter un espace avant la partie ASCII
-        // cell_x++;
-
-        // Afficher la représentation ASCII des octets
+        // Draw ASCII part: printable characters or '.' for non-printable
         for(size_t i = 0; i < bytes_per_line; i++) {
             if(offset + i < data_len) {
                 unsigned char byte = data[offset + i];
                 char ascii_char = isprint(byte) ? byte : '.';
                 hex_dump_grid_draw(canvas, cell_x++, line, ascii_char);
             } else {
+                // Skip cell when no data
                 cell_x++;
             }
         }
-        // Passer à la ligne suivante
+
+        // Advance to next line
         offset += bytes_per_line;
         line++;
     }
 
+    // Highlight the currently selected byte
     hex_dump_grid_draw_selected(canvas, model->data_offset);
+
+    // Draw title and buttons
     canvas_set_color(canvas, ColorBlack);
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str_aligned(canvas, 64, 0, AlignCenter, AlignTop, "Hex editor");
@@ -200,6 +225,11 @@ bool i2cmem_write(uint8_t addr, uint16_t offset, uint8_t* data, uint8_t length, 
     return res;
 }
 
+/**
+ * @brief Triggers the "Sucess" popup.
+ *
+ * @param ctx App's CTX
+ */
 void app_i2ctoolreader_write_success_popup_callback(void* ctx) {
     AppContext* app = (AppContext*)ctx;
     view_dispatcher_send_custom_event(app->view_dispatcher, I2CReaderEventExitPopup);
@@ -213,7 +243,6 @@ void app_i2ctoolreader_write_success_popup_callback(void* ctx) {
  * @return Returns true if the event was handled, otherwise false.
  */
 bool app_i2ctoolreader_input_callback(InputEvent* input_event, void* ctx) {
-    FURI_LOG_I(TAG, "app_i2ctoolreader_input_callback");
     AppContext* app = (AppContext*)ctx;
     AppI2CToolReader* appI2CToolReader = app->sceneI2CToolReader;
     i2CToolReaderModel* model = view_get_model(appI2CToolReader->view);
@@ -299,7 +328,11 @@ bool app_i2ctoolreader_input_callback(InputEvent* input_event, void* ctx) {
 
     return consumed;
 }
-
+/**
+ * @brief Set the offset to the model when offset's dialog is validated
+ *
+ * @param ctx App's CTX
+ */
 static void app_i2ctoolreader_input_readOffset_callback(void* ctx) {
     AppContext* app = (AppContext*)ctx;
     AppI2CToolReader* appI2CToolReader = app->sceneI2CToolReader;
@@ -310,6 +343,12 @@ static void app_i2ctoolreader_input_readOffset_callback(void* ctx) {
     view_dispatcher_send_custom_event(app->view_dispatcher, I2CReaderEventByteInput);
 }
 
+/**
+* @brief Set the len to the model when len's dialog is validated
+ *
+ * @param ctx App's CTX
+ * @param number the offset
+ */
 static void app_i2ctoolreader_input_readLen_callback(void* ctx, int32_t number) {
     AppContext* app = (AppContext*)ctx;
     AppI2CToolReader* appI2CToolReader = app->sceneI2CToolReader;
@@ -326,11 +365,12 @@ static void app_i2ctoolreader_input_readLen_callback(void* ctx, int32_t number) 
  * @return Returns a pointer to the allocated AppI2CToolReader.
  */
 AppI2CToolReader* app_i2ctoolreader_alloc(void* ctx) {
-    FURI_LOG_I(TAG, "app_i2ctoolreader_alloc");
     furi_assert(ctx);
     AppContext* app = (AppContext*)ctx;
     AppI2CToolReader* appI2CToolReader = malloc(sizeof(AppI2CToolReader));
+
     appI2CToolReader->view = view_alloc();
+
     appI2CToolReader->popup = popup_alloc();
     popup_set_timeout(appI2CToolReader->popup, 1000);
     popup_enable_timeout(appI2CToolReader->popup);
@@ -347,6 +387,7 @@ AppI2CToolReader* app_i2ctoolreader_alloc(void* ctx) {
     view_set_input_callback(appI2CToolReader->view, app_i2ctoolreader_input_callback);
 
     appI2CToolReader->InputReadOffset = byte_input_alloc();
+
     byte_input_set_header_text(appI2CToolReader->InputReadOffset, "Register:");
     byte_input_set_result_callback(
         appI2CToolReader->InputReadOffset,
@@ -357,7 +398,7 @@ AppI2CToolReader* app_i2ctoolreader_alloc(void* ctx) {
         1);
 
     appI2CToolReader->InputReadLen = number_input_alloc();
-    number_input_set_header_text(appI2CToolReader->InputReadLen, "Data len: (max: 48)");
+    number_input_set_header_text(appI2CToolReader->InputReadLen, "Data len: Octets, max: 48)");
     number_input_set_result_callback(
         appI2CToolReader->InputReadLen, app_i2ctoolreader_input_readLen_callback, app, 1, 1, 48);
 
@@ -381,7 +422,6 @@ AppI2CToolReader* app_i2ctoolreader_alloc(void* ctx) {
  * @return Returns a pointer to the View.
  */
 View* app_i2ctoolreader_get_view(AppI2CToolReader* appI2CToolReader) {
-    FURI_LOG_I(TAG, "app_i2ctoolreader_get_view");
     furi_assert(appI2CToolReader);
     return appI2CToolReader->view;
 }
@@ -392,7 +432,6 @@ View* app_i2ctoolreader_get_view(AppI2CToolReader* appI2CToolReader) {
  * @param ctx The context passed to the callback.
  */
 void app_scene_i2ctoolreader_on_enter(void* ctx) {
-    FURI_LOG_I(TAG, "app_scene_i2ctoolreader_on_enter");
     AppContext* app = (AppContext*)ctx;
     AppI2CToolReader* appI2CToolReader = app->sceneI2CToolReader;
     with_view_model(
@@ -438,11 +477,6 @@ bool app_scene_i2ctoolreader_on_event(void* ctx, SceneManagerEvent event) {
                     model->data_offset = 0;
                     furi_hal_i2c_acquire(I2C_BUS);
                     bool res = false;
-                    // Read the first 5 bytes from the EEPROM
-                    FURI_LOG_I(TAG, "---- WRITE I2C: ----");
-                    FURI_LOG_I(TAG, "- ADDR: %02x", model->device->addr << 1);
-                    FURI_LOG_I(TAG, "- OFFSET: %02x", model->read_offset);
-                    FURI_LOG_I(TAG, "- LEN: %02x", model->data_len);
                     res = furi_hal_i2c_read_mem(
                         I2C_BUS,
                         model->device->addr << 1,

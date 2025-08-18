@@ -33,6 +33,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Weebo v0.2 (By bettse)](https://github.com/bettse/weebo) `Req: key_retail.bin on SD card /apps_data/weebo` (Amiibo Remixer)
 - Updated: [Seos compatible v1.2 (By bettse)](https://gitlab.com/bettse/flipper_seos)
 - Updated: [Weather Station v1.9.5 (By Skorpionm)-OFW](https://github.com/flipperdevices/flipperzero-good-faps/tree/dev/weather_station) [Support for solight TE44 (By fersingb)](https://github.com/flipperdevices/flipperzero-good-faps/pull/285)
+- Updated: [Lab401/DigiLab v1.1 (By lab-401 & tixlegeek)](https://github.com/lab-401/fzDigiLab)
 
 <a name="release">
 
@@ -542,7 +543,7 @@ $ ./fbt dolphin_ext
 - [J305 Geiger Counter v1.4 (By nmrr)](https://github.com/nmrr/flipperzero-geigercounter)
 - [JS Runner v1.0 (By nminaylov & DrZlo13)-OFW](https://github.com/flipperdevices/flipperzero-firmware/pull/3286)
 - [Key Copier v1.5 (By zinongli)](https://github.com/zinongli/KeyCopier)
-- [Lab401/DigiLab v1.0 (By lab-401 & tixlegeek)](https://github.com/lab-401/fzDigiLab)
+- [Lab401/DigiLab v1.1 (By lab-401 & tixlegeek)](https://github.com/lab-401/fzDigiLab)
 - [Lab401/Light MESSENGER v1.4.1 (By tixlegeek)](https://github.com/lab-401/fzLightMessenger/tree/main/401lightMessengerApp)
 - [LaserCat v1.1 (By DroWez)](https://github.com/DroWez/LaserCat)
 - [LED Blinker v1.0 (By Cupprum)](https://github.com/Cupprum/Blinker)
