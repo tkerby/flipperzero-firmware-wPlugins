@@ -1,5 +1,5 @@
 /**
- *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2024 LAB401 GPLv3
+ *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2025 LAB401 GPLv3
  *  ▌  ▛▜ ▛▚ ▙▙ ▌▐ ▐  This program is free software
  *  ▀▀ ▘▝ ▀▘  ▘ ▝▘ ▀▘ See LICENSE.txt - lab401.com
  *    + Tixlegeek
@@ -147,7 +147,6 @@ l401_err json_to_config(char* jsontxt, Configuration* config) {
     config->ScopeAlert = (uint8_t)json_ScopeAlert->valuedouble;
     config->BridgeFactor = json_BridgeFactor->valuedouble;
 
-    // config->version = strdup(json_version->valuestring);
     cJSON_Delete(json);
     return L401_OK;
 }
@@ -244,10 +243,13 @@ l401_err config_init_dir(const char* filename) {
     furi_record_close(RECORD_STORAGE);
     return L401_OK;
 }
+
 l401_err config_create_json(const char* filename, Configuration* config) {
     furi_assert(filename);
     furi_assert(config);
+    config_reset_calibration();
     config_default_init(config);
+
     FURI_LOG_I(TAG, "Save JSON to %s", filename);
     l401_err res = config_save_json(filename, config);
     if(res != L401_OK) {
@@ -298,4 +300,104 @@ l401_err config_load_json(const char* filename, Configuration* config) {
     }
     furi_record_close(RECORD_STORAGE);
     return res;
+}
+
+/**
+ * @brief Reset the calibration by deleting the calibration file.
+ *
+ * @return L401_OK                  Calibration file successfully removed.
+ * @return L401_ERR_FILE_DOESNT_EXISTS
+ *                                  Calibration file was not found.
+ * @return L401_ERR_FILESYSTEM      Failed to open storage or remove file.
+ */
+l401_err config_reset_calibration(void) {
+    l401_err err = L401_OK;
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    if(!storage) {
+        FURI_LOG_E(TAG, "COuld not open storage.");
+        return L401_ERR_FILESYSTEM;
+    }
+
+    // If it doesn't exist, return an error.
+    if(storage_common_stat(storage, DIGILABCONF_CALIBRATION_FILE, NULL) != FSE_OK) {
+        err = L401_ERR_FILE_DOESNT_EXISTS;
+    }
+    // If it does, we remove it.
+    else if(storage_common_remove(storage, DIGILABCONF_CALIBRATION_FILE) != FSE_OK) {
+        FURI_LOG_E(TAG, "COuld not delete file \"%s\".", DIGILABCONF_CALIBRATION_FILE);
+        err = L401_ERR_FILESYSTEM;
+    }
+
+    furi_record_close(RECORD_STORAGE);
+    return err;
+}
+
+/**
+ * @brief Ensure the calibration file exists, creating it if necessary.
+ *
+ *
+ * @return L401_OK             Calibration file already existed or was created successfully.
+ * @return L401_ERR_FILESYSTEM Failed to open storage, create the file, or write data.
+ */
+l401_err config_set_calibration(void) {
+    l401_err err = L401_OK;
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    if(!storage) {
+        return L401_ERR_FILESYSTEM;
+    }
+
+    // If the file already exists, we do nothing
+    if(storage_common_stat(storage, DIGILABCONF_CALIBRATION_FILE, NULL) == FSE_OK) {
+        goto cleanup;
+    }
+
+    // Create the calibration file.
+    File* file = storage_file_alloc(storage);
+    if(!storage_file_open(file, DIGILABCONF_CALIBRATION_FILE, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+        FURI_LOG_E(
+            TAG,
+            "Write failed \"%s\" : %s",
+            DIGILABCONF_CALIBRATION_FILE,
+            storage_file_get_error_desc(file));
+        err = L401_ERR_FILESYSTEM;
+        storage_file_free(file);
+        goto cleanup;
+    }
+
+    if(storage_file_write(file, "CAL", 3) != 3) {
+        FURI_LOG_E(TAG, "Could'nt write into file \"%s\".", DIGILABCONF_CALIBRATION_FILE);
+        err = L401_ERR_FILESYSTEM;
+    }
+
+    storage_file_close(file);
+    storage_file_free(file);
+
+cleanup:
+    furi_record_close(RECORD_STORAGE);
+    return err;
+}
+
+/**
+ * @brief Check if the calibration file exists.
+ *
+ * @return L401_OK                   Calibration file exists.
+ * @return L401_ERR_FILE_DOESNT_EXISTS
+ *                                   Calibration file was not found.
+ * @return L401_ERR_FILESYSTEM       Failed to open storage.
+ */
+l401_err config_check_calibration(void) {
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    if(!storage) {
+        return L401_ERR_FILESYSTEM;
+    }
+
+    l401_err err;
+    if(storage_common_stat(storage, DIGILABCONF_CALIBRATION_FILE, NULL) != FSE_OK) {
+        err = L401_ERR_FILE_DOESNT_EXISTS;
+    } else {
+        err = L401_OK;
+    }
+
+    furi_record_close(RECORD_STORAGE);
+    return err;
 }

@@ -1,5 +1,5 @@
 /**
- *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2024 LAB401 GPLv3
+ *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2025 LAB401 GPLv3
  *  ▌  ▛▜ ▛▚ ▙▙ ▌▐ ▐  This program is free software
  *  ▀▀ ▘▝ ▀▘  ▘ ▝▘ ▀▘ See LICENSE.txt - lab401.com
  *    + Tixlegeek
@@ -24,12 +24,12 @@
 #include "401_config.h"
 
 typedef struct {
-    uint8_t value;
-} AppConfigModel;
+    const char* text; /**< Texte de la boîte de dialogue */
+    const char* button; /**< Libellé du bouton */
+} CalibrationStep;
 
 typedef struct AppConfig {
     View* view;
-    AppConfigModel* model;
 } AppConfig;
 
 #include "401DigiLab_main.h"
@@ -37,8 +37,6 @@ typedef struct AppConfig {
 AppConfig* app_config_alloc();
 void app_config_free(AppConfig* appConfig);
 View* app_config_get_view(AppConfig* appConfig);
-void app_config_render_callback(Canvas* canvas, void* ctx);
-bool app_config_input_callback(InputEvent* input_event, void* ctx);
 void app_scene_config_on_enter(void* ctx);
 bool app_scene_config_on_event(void* ctx, SceneManagerEvent event);
 void app_scene_config_on_exit(void* ctx);

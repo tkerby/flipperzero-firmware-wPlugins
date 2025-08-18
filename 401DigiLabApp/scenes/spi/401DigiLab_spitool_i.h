@@ -1,5 +1,5 @@
 /**
- *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2024 LAB401 GPLv3
+ *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2025 LAB401 GPLv3
  *  ▌  ▛▜ ▛▚ ▙▙ ▌▐ ▐  This program is free software
  *  ▀▀ ▘▝ ▀▘  ▘ ▝▘ ▀▘ See LICENSE.txt - lab401.com
  *    + Tixlegeek
@@ -8,7 +8,7 @@
 #ifndef _401DIGILAB_SCENE_SPITOOL_I_H
 #define _401DIGILAB_SCENE_SPITOOL_I_H
 
-#include "401_err.h"
+#include <401_err.h>
 #include "board.h"
 #include "devicehelpers.h"
 

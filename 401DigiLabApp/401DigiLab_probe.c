@@ -1,5 +1,5 @@
 /**
- *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2024 LAB401 GPLv3
+ *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2025 LAB401 GPLv3
  *  ▌  ▛▜ ▛▚ ▙▙ ▌▐ ▐  This program is free software
  *  ▀▀ ▘▝ ▀▘  ▘ ▝▘ ▀▘ See LICENSE.txt - lab401.com
  *    + Tixlegeek
@@ -64,7 +64,7 @@ void probe_timer_cb(void* ctx) {
     model->inf = isinf(model->frequency);
     model->raw = furi_hal_adc_read(appProbe->adc, FuriHalAdcChannel4);
     model->voltage = (double)((double)furi_hal_adc_convert_to_voltage(appProbe->adc, model->raw) *
-                              (model->BridgeFactor/10));
+                              (model->BridgeFactor / 10));
     view_commit_model(appProbe->view, true);
     RingBuffer_reset(model->rb);
 }

@@ -1,5 +1,5 @@
 /**
- *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2024 LAB401 GPLv3
+ *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2025 LAB401 GPLv3
  *  ▌  ▛▜ ▛▚ ▙▙ ▌▐ ▐  This program is free software
  *  ▀▀ ▘▝ ▀▘  ▘ ▝▘ ▀▘ See LICENSE.txt - lab401.com
  *    + Tixlegeek
@@ -21,14 +21,18 @@ static const char* TAG = "401_DigiLabI2CToolScanner";
 
 #include <storage/storage.h>
 #include <toolbox/path.h>
-////#include <u8g2_glue.h>
 
-#include "401_err.h"
+#include <401_err.h>
 #include <devicehelpers.h>
 
 #include "cJSON/cJSON.h"
 #include <cJSON/cJSON_helpers.h>
 
+/**
+ * @brief Checks if an address is known
+ *
+ * @param addr address to check
+ */
 bool i2cdevice_is_known(uint8_t addr) {
     bool found = false;
     char addr_filename[64] = {0};
@@ -43,6 +47,11 @@ bool i2cdevice_is_known(uint8_t addr) {
     return found;
 }
 
+/**
+ * @brief Scans for any i2C devices connected
+ *
+ * @param appI2CToolScanner scene context
+ */
 void i2ctoolscanner_scan(AppI2CToolScanner* appI2CToolScanner) {
     FURI_LOG_I(TAG, "i2ctoolscanner_scan");
     uint8_t addr = 0;
@@ -94,6 +103,12 @@ void i2ctoolscanner_scan(AppI2CToolScanner* appI2CToolScanner) {
         true);
 }
 
+/**
+ * @brief Render I2C devices menu
+ *
+ * @param canvas canvas to draw on
+ * @param appI2CToolScanner scene model
+ */
 static void app_i2ctool_render_i2cDeviceMenu(Canvas* canvas, void* ctx) {
     i2CToolScannerModel* model = (i2CToolScannerModel*)ctx;
     char str[32] = {0};
@@ -140,6 +155,11 @@ static void app_i2ctool_render_i2cDeviceMenu(Canvas* canvas, void* ctx) {
     }
 }
 
+/**
+ * @brief Free I2C device
+ *
+ * @param device allocated device
+ */
 static void app_i2ctool_free_options(i2cdevice_t* device) {
     FURI_LOG_I(TAG, "Setting params to 0");
     device->option_selected = 0;
@@ -154,6 +174,11 @@ static void app_i2ctool_free_options(i2cdevice_t* device) {
     device->loaded = false;
 }
 
+/**
+ * @brief Load every gesses from an address.
+ *
+ * @param device allocated device
+ */
 static l401_err app_i2ctool_load_options(i2cdevice_t* device) {
     l401_err err = L401_OK;
     char addr_filename[64] = {0};
@@ -243,6 +268,12 @@ static l401_err app_i2ctool_load_options(i2cdevice_t* device) {
     return L401_OK;
 }
 
+/**
+ * @brief Render I2C devices informations
+ *
+ * @param canvas canvas to draw on
+ * @param appI2CToolScanner scene model
+ */
 void app_i2ctool_render_i2cDeviceInfo(Canvas* canvas, void* ctx) {
     i2CToolScannerModel* model = (i2CToolScannerModel*)ctx;
     char str[64] = {0};
@@ -273,6 +304,7 @@ void app_i2ctool_render_i2cDeviceInfo(Canvas* canvas, void* ctx) {
         elements_button_left(canvas, "Prev");
     }
 }
+
 /**
  * @brief Render callback for the app i2ctoolscanner.
  *
@@ -281,13 +313,10 @@ void app_i2ctool_render_i2cDeviceInfo(Canvas* canvas, void* ctx) {
  */
 
 void app_i2ctoolscanner_render_callback(Canvas* canvas, void* ctx) {
-    FURI_LOG_I(TAG, "app_i2ctoolscanner_render_callback");
     l401_err err = L401_OK;
     i2CToolScannerModel* model = (i2CToolScannerModel*)ctx;
     canvas_clear(canvas);
     canvas_set_color(canvas, ColorBlack);
-    // canvas_set_font(canvas, FontPrimary);
-    FURI_LOG_I(TAG, "SCREEN VIEW: %ld", (uint32_t)model->screenview);
 
     switch(model->screenview) {
     case I2C_VIEW_SCAN:
@@ -320,7 +349,6 @@ void app_i2ctoolscanner_render_callback(Canvas* canvas, void* ctx) {
             model->devices_map[model->device_selected].loaded = true;
         }
         app_i2ctool_render_i2cDeviceInfo(canvas, ctx);
-        //  model->devices_map[model->device_selected]
         break;
     case I2C_VIEW_UNKNOWN:
         canvas_set_font(canvas, FontSecondary);
