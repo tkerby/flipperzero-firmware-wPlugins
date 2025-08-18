@@ -19,6 +19,7 @@
 #include <toolbox/stream/file_stream.h>
 //#include "assets_icons.h"
 #include <gui/icon.h> 
+#include "nfc_dict_manager_icons.h"
 
 #define TAG "NFC_Dict_Manager"
 #define DICT_FOLDER_PATH "/ext/nfc/dictionaries"
