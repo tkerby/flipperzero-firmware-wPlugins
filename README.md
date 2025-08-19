@@ -187,7 +187,10 @@ The DigiLab is designed for low-voltage digital electronics, compatible with IoT
 ### Accessories
 
 DigiLab is compatible with all BusPirate v5 accessories, specifically:
-- **BusPirate Flash Adaptors** - for easy connection of DIP8, SOP8 and WSON8 flash chips
+**BusPirate Flash Adaptors** - for easy connection of DIP8, SOP8 and WSON8 flash chips.
+
+⚠️ Please note, the BusPirate port outputs 3.3v. Do **not** connect 1.8v accessories, or you **will** release magic smoke.
+
 
 ---
 
