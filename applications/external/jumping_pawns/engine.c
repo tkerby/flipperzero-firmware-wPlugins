@@ -3,28 +3,38 @@
 #include <stdio.h>
 #include "engine.h"
 
-void find_ai_jumps(JumpingPawnsModel* model, int board[11][6], int from_x, int from_y, int x, int y, int player_value, AIMoveStructure* move_list, size_t* move_count, size_t max_moves, bool visited[11][6]) {
+void find_ai_jumps(
+    JumpingPawnsModel* model,
+    int board[11][6],
+    int from_x,
+    int from_y,
+    int x,
+    int y,
+    int player_value,
+    AIMoveStructure* move_list,
+    size_t* move_count,
+    size_t max_moves,
+    bool visited[11][6]) {
     int dx[] = {0, 0, -1, 1}; // directions: up, down, left, right
     int dy[] = {-1, 1, 0, 0};
 
     visited[y][x] = true;
 
-    for (int dir = 0; dir < 4; dir++) {
+    for(int dir = 0; dir < 4; dir++) {
         int first_pawn_x = x + dx[dir];
         int first_pawn_y = y + dy[dir];
 
         // Must start with a pawn in this direction
-        if (first_pawn_x < 0 || first_pawn_x >= 6 ||
-            first_pawn_y < 0 || first_pawn_y >= 11 ||
-            board[first_pawn_y][first_pawn_x] == 0 ||
-            board[first_pawn_y][first_pawn_x] == 3) {
+        if(first_pawn_x < 0 || first_pawn_x >= 6 || first_pawn_y < 0 || first_pawn_y >= 11 ||
+           board[first_pawn_y][first_pawn_x] == 0 || board[first_pawn_y][first_pawn_x] == 3) {
             continue;
         }
 
         // Step past contiguous pawns
         int next_x = first_pawn_x + dx[dir];
         int next_y = first_pawn_y + dy[dir];
-        while (next_x >= 0 && next_x < 6 && next_y >= 0 && next_y < 11 && board[next_y][next_x] != 0 && board[next_y][next_x] != 3) {
+        while(next_x >= 0 && next_x < 6 && next_y >= 0 && next_y < 11 &&
+              board[next_y][next_x] != 0 && board[next_y][next_x] != 3) {
             next_x += dx[dir];
             next_y += dy[dir];
         }
@@ -34,11 +44,9 @@ void find_ai_jumps(JumpingPawnsModel* model, int board[11][6], int from_x, int f
         int landing_y = next_y;
 
         // Must jump at least one pawn and land in bounds on empty square
-        if ((abs(landing_x - x) <= 1 && abs(landing_y - y) <= 1) ||
-            landing_x < 0 || landing_x >= 6 ||
-            landing_y < 0 || landing_y >= 11 ||
-            board[landing_y][landing_x] != 0 ||
-            visited[landing_y][landing_x]) {
+        if((abs(landing_x - x) <= 1 && abs(landing_y - y) <= 1) || landing_x < 0 ||
+           landing_x >= 6 || landing_y < 0 || landing_y >= 11 ||
+           board[landing_y][landing_x] != 0 || visited[landing_y][landing_x]) {
             continue;
         }
 
@@ -46,7 +54,8 @@ void find_ai_jumps(JumpingPawnsModel* model, int board[11][6], int from_x, int f
         int jumped_pawns[11][6] = {0};
         int temp_x = first_pawn_x;
         int temp_y = first_pawn_y;
-        while (temp_x >= 0 && temp_x < 6 && temp_y >= 0 && temp_y < 11 && board[temp_y][temp_x] != 0 && board[temp_y][temp_x] != 3) {
+        while(temp_x >= 0 && temp_x < 6 && temp_y >= 0 && temp_y < 11 &&
+              board[temp_y][temp_x] != 0 && board[temp_y][temp_x] != 3) {
             jumped_pawns[temp_y][temp_x] = board[temp_y][temp_x];
             board[temp_y][temp_x] = 0;
             temp_x += dx[dir];
@@ -54,7 +63,7 @@ void find_ai_jumps(JumpingPawnsModel* model, int board[11][6], int from_x, int f
         }
 
         // Store the move
-        if (*move_count < max_moves) {
+        if(*move_count < max_moves) {
             move_list[(*move_count)++] = (AIMoveStructure){
                 .from_x = from_x,
                 .from_y = from_y,
@@ -64,12 +73,24 @@ void find_ai_jumps(JumpingPawnsModel* model, int board[11][6], int from_x, int f
         }
 
         // Recurse from the new landing position
-        find_ai_jumps(model, board, from_x, from_y, landing_x, landing_y, player_value, move_list, move_count, max_moves, visited);
+        find_ai_jumps(
+            model,
+            board,
+            from_x,
+            from_y,
+            landing_x,
+            landing_y,
+            player_value,
+            move_list,
+            move_count,
+            max_moves,
+            visited);
 
         // Restore jumped pawns
         temp_x = first_pawn_x;
         temp_y = first_pawn_y;
-        while (temp_x >= 0 && temp_x < 6 && temp_y >= 0 && temp_y < 11 && jumped_pawns[temp_y][temp_x] != 0) {
+        while(temp_x >= 0 && temp_x < 6 && temp_y >= 0 && temp_y < 11 &&
+              jumped_pawns[temp_y][temp_x] != 0) {
             board[temp_y][temp_x] = jumped_pawns[temp_y][temp_x];
             temp_x += dx[dir];
             temp_y += dy[dir];
@@ -79,15 +100,30 @@ void find_ai_jumps(JumpingPawnsModel* model, int board[11][6], int from_x, int f
     visited[y][x] = false;
 }
 
-size_t generate_legal_ai_moves(JumpingPawnsModel* model, int player_value, AIMoveStructure* move_list, size_t max_moves) {
+size_t generate_legal_ai_moves(
+    JumpingPawnsModel* model,
+    int player_value,
+    AIMoveStructure* move_list,
+    size_t max_moves) {
     size_t move_count = 0;
 
-    for (int sy = 0; sy < 11; sy++) {
-        for (int sx = 0; sx < 6; sx++) {
-            if (model->board_state[sy][sx] != player_value) continue;
+    for(int sy = 0; sy < 11; sy++) {
+        for(int sx = 0; sx < 6; sx++) {
+            if(model->board_state[sy][sx] != player_value) continue;
 
             bool visited[11][6] = {false};
-            find_ai_jumps(model, model->board_state, sx, sy, sx, sy, player_value, move_list, &move_count, max_moves, visited);
+            find_ai_jumps(
+                model,
+                model->board_state,
+                sx,
+                sy,
+                sx,
+                sy,
+                player_value,
+                move_list,
+                &move_count,
+                max_moves,
+                visited);
         }
     }
 
@@ -112,13 +148,14 @@ int count_pawn_moves(JumpingPawnsModel* model, int y, int x) {
         int cx = nx;
         int cy = ny;
         bool found_clump = false;
-        while(cx >= 0 && cx < 6 && cy >= 0 && cy < 11 &&
-              model->board_state[cy][cx] != 0 && model->board_state[cy][cx] != 3) {
+        while(cx >= 0 && cx < 6 && cy >= 0 && cy < 11 && model->board_state[cy][cx] != 0 &&
+              model->board_state[cy][cx] != 3) {
             cx += dx[dir];
             cy += dy[dir];
             found_clump = true;
         }
-        if(found_clump && cx >= 0 && cx < 6 && cy >= 0 && cy < 11 && model->board_state[cy][cx] == 0) {
+        if(found_clump && cx >= 0 && cx < 6 && cy >= 0 && cy < 11 &&
+           model->board_state[cy][cx] == 0) {
             move_count++;
         }
     }
@@ -128,9 +165,9 @@ int count_pawn_moves(JumpingPawnsModel* model, int y, int x) {
 int count_forward_moves(JumpingPawnsModel* model, int y, int x, uint8_t piece) {
     int moves = 0;
     // Assuming AI is moving down (y+)
-    static const int dirs_ai[4][2] = {{1,0},{1,1},{1,-1},{-1,0}}; 
-    static const int dirs_op[4][2] = {{-1,0},{-1,1},{-1,-1},{1,0}}; 
-    const int (*dirs)[2] = (piece == 2) ? dirs_ai : dirs_op;
+    static const int dirs_ai[4][2] = {{1, 0}, {1, 1}, {1, -1}, {-1, 0}};
+    static const int dirs_op[4][2] = {{-1, 0}, {-1, 1}, {-1, -1}, {1, 0}};
+    const int(*dirs)[2] = (piece == 2) ? dirs_ai : dirs_op;
     for(int i = 0; i < 3; i++) { // only check forward & diagonals
         int ny = y + dirs[i][0];
         int nx = x + dirs[i][1];
@@ -140,7 +177,6 @@ int count_forward_moves(JumpingPawnsModel* model, int y, int x, uint8_t piece) {
     }
     return moves;
 }
-
 
 // int evaluate_board(JumpingPawnsModel* model) {
 //     int score = 0;
@@ -293,17 +329,16 @@ int count_forward_moves(JumpingPawnsModel* model, int y, int x, uint8_t piece) {
 int evaluate_board(JumpingPawnsModel* model) {
     int score = 0;
     int isolation_penalty = 15;
-    int short_l_penalty   = 10;
-    int pair_penalty      = 10;
+    int short_l_penalty = 10;
+    int pair_penalty = 10;
 
-    #define IN_BOUNDS(_y,_x) ((_y) >= 0 && (_y) < 11 && (_x) >= 0 && (_x) < 6)
+#define IN_BOUNDS(_y, _x) ((_y) >= 0 && (_y) < 11 && (_x) >= 0 && (_x) < 6)
 
     // Detect late game
     int total_pawns = 0;
     for(int yy = 0; yy < 11; yy++) {
         for(int xx = 0; xx < 6; xx++) {
-            if(model->board_state[yy][xx] == 1 || model->board_state[yy][xx] == 2)
-                total_pawns++;
+            if(model->board_state[yy][xx] == 1 || model->board_state[yy][xx] == 2) total_pawns++;
         }
     }
     bool late_game = total_pawns < 10;
@@ -315,14 +350,16 @@ int evaluate_board(JumpingPawnsModel* model) {
 
             // --- Forward progress scoring ---
             if(piece == 2) {
-                score += (y * y * 2);  // stronger forward emphasis
+                score += (y * y * 2); // stronger forward emphasis
 
-                if(y == 8) score += 50;   // strong final approach bonus
+                if(y == 8) score += 50; // strong final approach bonus
                 if(y >= 9) score += 200; // finishing rows
 
                 // Very strong penalty for staying back
-                if(y <= 1) score -= 50;   // don't sit on start
-                else if(y == 2) score -= 20;
+                if(y <= 1)
+                    score -= 50; // don't sit on start
+                else if(y == 2)
+                    score -= 20;
 
                 // Bonus for leaving start zone
                 if(y > 0 && y <= 3) score += 10;
@@ -336,14 +373,17 @@ int evaluate_board(JumpingPawnsModel* model) {
             }
 
             // --- Neighbor connectivity ---
-            int left  = (x > 0  && model->board_state[y][x-1] == piece);
-            int right = (x < 5  && model->board_state[y][x+1] == piece);
-            int up    = (y > 0  && model->board_state[y-1][x] == piece);
-            int down  = (y < 10 && model->board_state[y+1][x] == piece);
+            int left = (x > 0 && model->board_state[y][x - 1] == piece);
+            int right = (x < 5 && model->board_state[y][x + 1] == piece);
+            int up = (y > 0 && model->board_state[y - 1][x] == piece);
+            int down = (y < 10 && model->board_state[y + 1][x] == piece);
 
             int connections = left + right + up + down;
             if(connections >= 2) {
-                if(piece == 2) score += 3; else score -= 3;
+                if(piece == 2)
+                    score += 3;
+                else
+                    score -= 3;
             }
 
             // --- Isolation penalty ---
@@ -352,15 +392,18 @@ int evaluate_board(JumpingPawnsModel* model) {
                 // No isolation penalty for AI pawns in start zone
                 if(piece == 2 && y <= 2) pen = 0;
                 if(late_game && piece == 2) pen /= 2;
-                if(piece == 2) score -= pen; else score += pen;
+                if(piece == 2)
+                    score -= pen;
+                else
+                    score += pen;
             }
 
             // --- Horizontal pair isolation ---
             if(right) {
-                if(x == 0 || model->board_state[y][x-1] != piece) {
-                    if((x+2 >= 6) || model->board_state[y][x+2] != piece) {
+                if(x == 0 || model->board_state[y][x - 1] != piece) {
+                    if((x + 2 >= 6) || model->board_state[y][x + 2] != piece) {
                         int isolated = 1;
-                        int coords[2][2] = {{y,x}, {y,x+1}};
+                        int coords[2][2] = {{y, x}, {y, x + 1}};
                         for(int i = 0; i < 2 && isolated; i++) {
                             int cy = coords[i][0], cx = coords[i][1];
                             const int ny[4] = {cy - 1, cy + 1, cy, cx};
@@ -369,14 +412,19 @@ int evaluate_board(JumpingPawnsModel* model) {
                                 int ny_ = ny[n], nx_ = nx[n];
                                 if(!IN_BOUNDS(ny_, nx_)) continue;
                                 if((ny_ == coords[0][0] && nx_ == coords[0][1]) ||
-                                   (ny_ == coords[1][0] && nx_ == coords[1][1])) continue;
+                                   (ny_ == coords[1][0] && nx_ == coords[1][1]))
+                                    continue;
                                 if(model->board_state[ny_][nx_] == piece) {
-                                    isolated = 0; break;
+                                    isolated = 0;
+                                    break;
                                 }
                             }
                         }
                         if(isolated) {
-                            if(piece == 2) score -= pair_penalty; else score += pair_penalty;
+                            if(piece == 2)
+                                score -= pair_penalty;
+                            else
+                                score += pair_penalty;
                         }
                     }
                 }
@@ -394,7 +442,8 @@ int evaluate_board(JumpingPawnsModel* model) {
                         int skip = 0;
                         for(int k = 0; k < 3; k++) {
                             if(coords[k][0] == ny_ && coords[k][1] == nx_) {
-                                skip = 1; break;
+                                skip = 1;
+                                break;
                             }
                         }
                         if(skip) continue;
@@ -405,30 +454,46 @@ int evaluate_board(JumpingPawnsModel* model) {
             }
 
             if(right && y > 0) {
-                if(model->board_state[y-1][x] == piece && model->board_state[y-1][x+1] != piece) {
-                    int l_coords[3][2] = {{y, x}, {y, x+1}, {y-1, x}};
+                if(model->board_state[y - 1][x] == piece &&
+                   model->board_state[y - 1][x + 1] != piece) {
+                    int l_coords[3][2] = {{y, x}, {y, x + 1}, {y - 1, x}};
                     if(is_l_isolated(l_coords)) {
-                        if(piece == 2) score -= short_l_penalty; else score += short_l_penalty;
+                        if(piece == 2)
+                            score -= short_l_penalty;
+                        else
+                            score += short_l_penalty;
                     }
                 }
-                if(y < 10 && model->board_state[y+1][x] == piece && model->board_state[y+1][x+1] != piece) {
-                    int l_coords[3][2] = {{y, x}, {y, x+1}, {y+1, x}};
+                if(y < 10 && model->board_state[y + 1][x] == piece &&
+                   model->board_state[y + 1][x + 1] != piece) {
+                    int l_coords[3][2] = {{y, x}, {y, x + 1}, {y + 1, x}};
                     if(is_l_isolated(l_coords)) {
-                        if(piece == 2) score -= short_l_penalty; else score += short_l_penalty;
+                        if(piece == 2)
+                            score -= short_l_penalty;
+                        else
+                            score += short_l_penalty;
                     }
                 }
             }
             if(down && x > 0) {
-                if(model->board_state[y][x-1] == piece && model->board_state[y+1][x-1] != piece) {
-                    int l_coords[3][2] = {{y, x}, {y+1, x}, {y, x-1}};
+                if(model->board_state[y][x - 1] == piece &&
+                   model->board_state[y + 1][x - 1] != piece) {
+                    int l_coords[3][2] = {{y, x}, {y + 1, x}, {y, x - 1}};
                     if(is_l_isolated(l_coords)) {
-                        if(piece == 2) score -= short_l_penalty; else score += short_l_penalty;
+                        if(piece == 2)
+                            score -= short_l_penalty;
+                        else
+                            score += short_l_penalty;
                     }
                 }
-                if(x < 5 && model->board_state[y][x+1] == piece && model->board_state[y+1][x+1] != piece) {
-                    int l_coords[3][2] = {{y, x}, {y+1, x}, {y, x+1}};
+                if(x < 5 && model->board_state[y][x + 1] == piece &&
+                   model->board_state[y + 1][x + 1] != piece) {
+                    int l_coords[3][2] = {{y, x}, {y + 1, x}, {y, x + 1}};
                     if(is_l_isolated(l_coords)) {
-                        if(piece == 2) score -= short_l_penalty; else score += short_l_penalty;
+                        if(piece == 2)
+                            score -= short_l_penalty;
+                        else
+                            score += short_l_penalty;
                     }
                 }
             }
@@ -438,16 +503,21 @@ int evaluate_board(JumpingPawnsModel* model) {
             int forward_moves = count_forward_moves(model, y, x, piece);
             int sideways_moves = mobility - forward_moves;
             if(mobility == 0) {
-                if(piece == 2) score -= 20; else score += 20;
+                if(piece == 2)
+                    score -= 20;
+                else
+                    score += 20;
             } else {
                 int forward_weight = (y <= 3) ? 6 : 5; // early game prefers forward more
-                if(piece == 2) score += (forward_moves * forward_weight) + (sideways_moves * 1);
-                else           score -= (forward_moves * forward_weight) + (sideways_moves * 1);
+                if(piece == 2)
+                    score += (forward_moves * forward_weight) + (sideways_moves * 1);
+                else
+                    score -= (forward_moves * forward_weight) + (sideways_moves * 1);
             }
         }
     }
 
-    #undef IN_BOUNDS
+#undef IN_BOUNDS
     return score;
 }
 
@@ -499,7 +569,7 @@ void ai_move(JumpingPawnsModel* model) {
     AIMoveStructure moves[64];
     size_t count = generate_legal_ai_moves(model, 2, moves, 64);
     if(count == 0) return;
-    if (model->game_over) return;
+    if(model->game_over) return;
 
     int depth = model->difficulty_level + 1;
 
@@ -509,16 +579,14 @@ void ai_move(JumpingPawnsModel* model) {
 
     for(int y = 0; y < 11; y++) {
         for(int x = 0; x < 6; x++) {
-            if(model->board_state[y][x] == 2 && (y == 9 || y == 10))
-                ai_goal_pawns++;
-            if(model->board_state[y][x] == 1 && (y == 0 || y == 1))
-                player_goal_pawns++;
+            if(model->board_state[y][x] == 2 && (y == 9 || y == 10)) ai_goal_pawns++;
+            if(model->board_state[y][x] == 1 && (y == 0 || y == 1)) player_goal_pawns++;
         }
     }
 
     // If many pawns are in final rows, increase depth
     if(ai_goal_pawns >= 10 || player_goal_pawns >= 10) {
-        if (depth < 3) {
+        if(depth < 3) {
             depth = 3;
         }
     }

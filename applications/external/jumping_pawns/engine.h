@@ -25,7 +25,11 @@ typedef struct {
 } JumpingPawnsModel;
 
 // generates a list of legal moves the engine can make
-size_t generate_legal_ai_moves(JumpingPawnsModel* model, int player_value, AIMoveStructure* move_list, size_t max_moves);
+size_t generate_legal_ai_moves(
+    JumpingPawnsModel* model,
+    int player_value,
+    AIMoveStructure* move_list,
+    size_t max_moves);
 // actually make the move
 void apply_ai_move(JumpingPawnsModel* model, AIMoveStructure move, int player_value);
 // calls both funcs along with some other stuff
