@@ -1,11 +1,10 @@
 #ifndef __CUBERZERO_H__
 #define __CUBERZERO_H__
 
-#include <furi.h>
 #include <gui/modules/submenu.h>
-#include <gui/gui.h>
 #include <gui/view_dispatcher.h>
 #include <gui/scene_manager.h>
+#include <storage/storage.h>
 
 #define CUBERZERO_TAG	  "CuberZero"
 #define CUBERZERO_VERSION "0.0.1"
@@ -26,6 +25,11 @@ typedef struct {
 			uint32_t index;
 		} home;
 	} scene;
+
+	struct {
+		FuriString* path;
+		File* file;
+	} session;
 } CUBERZERO, *PCUBERZERO;
 
 typedef enum {
