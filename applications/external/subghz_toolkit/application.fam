@@ -1,6 +1,6 @@
 App(
     appid="subghz_toolkit",
-    name="Sub-GHz Toolkit",
+    name="SubGhz Toolkit",
     apptype=FlipperAppType.EXTERNAL,
     targets=["f7"],
     entry_point="subghz_toolkit_app",
