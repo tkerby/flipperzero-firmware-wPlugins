@@ -1,4 +1,4 @@
-name: "FAP: Create Release (actually...)"
+name: "FAP: Create Release"
 on:
   workflow_dispatch:
     inputs:
