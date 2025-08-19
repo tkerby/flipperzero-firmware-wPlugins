@@ -1,0 +1,16 @@
+App(
+    appid="frsscan",
+    name="FRSScan",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="frsscan_app",
+    requires=["gui", "subghz", "furi"],
+    cdefines=["APP_FRSSCAN"],
+    stack_size=2 * 1024,
+    fap_category="Sub-GHz",
+    fap_version="0.2",
+    fap_icon_assets="assets",
+    fap_author="@thecybermind",
+    fap_description="FRS Scanner for Flipper",
+    fap_icon="icons/frsscan.png",
+    fap_weburl="https://github.com/thecybermind/",
+)
