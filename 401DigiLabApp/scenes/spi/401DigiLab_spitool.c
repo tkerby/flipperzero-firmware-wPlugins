@@ -65,7 +65,6 @@ void app_scene_spitool_on_exit(void* ctx) {
  * @return A pointer to the allocated AppI2cTool or NULL.
  */
 Submenu* app_spitool_alloc(void* ctx) {
-    FURI_LOG_I(TAG, "app_spitool_alloc");
     AppContext* app = (AppContext*)ctx;
     Submenu* submenu = submenu_alloc();
     submenu_add_item(submenu, "SPI Scanner", AppSPIToolIndex_Scanner, appSPITool_callback, app);

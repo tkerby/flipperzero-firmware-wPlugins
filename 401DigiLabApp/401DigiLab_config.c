@@ -93,6 +93,7 @@ void app_scene_config_on_enter(void* ctx) {
     DialogMessage* msg = dialog_message_alloc();
     bool calibrated = false;
     uint8_t calibration_step = 0;
+    bool must_recalibrate = (config_check_calibration() == L401_OK )?false: true;
     while(calibrated == false) {
         // Display dialogs
         for(uint8_t i = calibration_step; i < CALIBRATION_STEP_COUNT; i++) {
@@ -101,8 +102,10 @@ void app_scene_config_on_enter(void* ctx) {
                 msg, calibration_steps[i].text, 63, 32, AlignCenter, AlignCenter);
             dialog_message_set_buttons(msg, "", calibration_steps[i].button, "");
             res = dialog_message_show(dialogs, msg);
-            if(res == DialogMessageButtonBack) {
-                i -= 2;
+            if((res == DialogMessageButtonBack) && ( must_recalibrate == false)){
+              dialog_message_free(msg);
+              scene_manager_previous_scene(app->scene_manager);
+              return;
             }
         }
         // Read ADC Value
@@ -125,7 +128,7 @@ void app_scene_config_on_enter(void* ctx) {
                 msg, calibration_steps_error.text, 63, 32, AlignCenter, AlignCenter);
             dialog_message_set_buttons(msg, "", calibration_steps_error.button, "");
             res = dialog_message_show(dialogs, msg);
-            // Next step is 1
+              // Next step is 1
             calibration_step = 1;
             // Still not calibrated
             calibrated = false;

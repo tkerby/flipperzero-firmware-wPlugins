@@ -311,7 +311,6 @@ RingBuffer* RingBuffer_create(size_t initialSize) {
  *       It is advisable to set the pointer to NULL in the calling code after freeing to prevent accidental usage.
  */
 void RingBuffer_free(RingBuffer* rb) {
-    FURI_LOG_I(TAG, "RingBuffer_free");
     free(rb->buffer);
     free(rb);
 }

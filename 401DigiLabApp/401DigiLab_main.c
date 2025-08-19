@@ -9,7 +9,7 @@
 #include <furi.h>
 #include <furi_hal.h>
 #include <furi_hal_gpio.h>
-//static const char* TAG = "401_DigiLab";
+//  static const char* TAG = "401_DigiLab";
 #define CHECK_HAT
 
 /**
@@ -162,7 +162,7 @@ AppContext* app_alloc() {
     app_ctx->view_dispatcher = view_dispatcher_alloc();
 
     view_dispatcher_attach_to_gui(app_ctx->view_dispatcher, gui, ViewDispatcherTypeFullscreen);
-    view_dispatcher_enable_queue(app_ctx->view_dispatcher);
+    //view_dispatcher_enable_queue(app_ctx->view_dispatcher);
 
     // Initialize MainMenu
     app_ctx->mainmenu = submenu_alloc();

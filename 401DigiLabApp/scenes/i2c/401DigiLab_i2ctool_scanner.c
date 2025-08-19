@@ -404,10 +404,8 @@ bool app_i2ctoolscanner_input_callback(InputEvent* input_event, void* ctx) {
     if(input_event->type == InputTypeShort) {
         switch(input_event->key) {
         case InputKeyUp:
-
             break;
         case InputKeyDown:
-
             break;
         case InputKeyLeft:
             switch(model->screenview) {
@@ -486,7 +484,6 @@ bool app_i2ctoolscanner_input_callback(InputEvent* input_event, void* ctx) {
             }
             break;
         default:
-            FURI_LOG_I(TAG, "Resume to not handled");
             break;
         }
     }

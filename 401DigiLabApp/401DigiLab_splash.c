@@ -141,8 +141,6 @@ bool app_scene_splash_on_event(void* context, SceneManagerEvent event) {
                 view_dispatcher_send_custom_event(app->view_dispatcher, AppSplashEventQuit);
             }
         } else if(event.event == AppSplashEventQuit) {
-            FURI_LOG_I(TAG, "QUIT");
-
             scene_manager_next_scene(app->scene_manager, AppSceneMainMenu);
             consumed = true;
         }
