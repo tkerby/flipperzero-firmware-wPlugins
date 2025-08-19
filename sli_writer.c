@@ -1,42 +1,19 @@
+// sli_writer.c - Version worker-only NFC: callback NfcCommand enrichi,
+// INVENTORY robuste, BitBuffer OOM-safe, clamp+padding block_size,
+// Magic SLI write with retries, worker interruptible, logs détaillés.
+
 #include "sli_writer.h"
+#include <furi.h>
+#include <furi_hal.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
-#define TAG "SLI_Writer"
+#define TAG "SLI_Writer_App"
 
-/*
-Résumé :
-- Pas de sous-thread pour nfc_start : tout est fait dans le worker.
-- Logs verbeux à chaque étape (alloc, start, poller, inventory, magic, etc.).
-- Sélection du fichier via service Dialogs (dialog_file_browser_show).
-- Menu racine : "Write NFC File" et "Test Magic INIT".
-- API Unleashed : nfc_alloc() / nfc_start(cb) / nfc_poller_alloc(NfcProtocolIso15693_3)
-- Envoi des trames via iso15693_3_poller_send_frame() avec BitBuffer.
-
-Si nfc_start() bloque, les logs s’arrêtent juste après "nfc_start (worker)..."
-*/
-
-// ------------------------------------------------------------
-// ISO15693 octets standard
-// ------------------------------------------------------------
-#define ISO15693_FLAG_RATE_HIGH   0x02
-#define ISO15693_FLAG_INVENTORY   0x04
-#define ISO15693_FLAG_ADDRESSED   0x20
-
-#define ISO15693_CMD_INVENTORY            0x01
-#define ISO15693_CMD_WRITE_SINGLE_BLOCK   0x21
-#define ISO15693_CMD_CUSTOM               0xA0   // "Custom Command"
-
-// ------------------------------------------------------------
-// Magic SLI subcommands (style Proxmark3)
-// ------------------------------------------------------------
-#define SLI_MAGIC_CMD_INIT         0x36
-#define SLI_MAGIC_CMD_SET_UID_HIGH 0x37
-#define SLI_MAGIC_CMD_SET_UID_LOW  0x38
-#define SLI_MAGIC_CMD_FINALIZE     0x39
-#define SLI_MAGIC_CMD_SET_PASSWORD 0x3A
-
-// ==============================
-// BitBuffer helpers
-// ==============================
+// ============================================================================
+// Helpers pour BitBuffer (Version sécurisée)
+// ============================================================================
 static BitBuffer* bb_from_bytes_const(const uint8_t* data, size_t len_bytes) {
     BitBuffer* bb = bit_buffer_alloc(len_bytes * 8);
     if(!bb) return NULL;
@@ -52,42 +29,36 @@ static BitBuffer* bb_alloc_for_rx(size_t max_len_bytes) {
     return bb;
 }
 
-// ==============================
-// ISO15693: Inventory -> UID (via Iso15693_3Poller*)
-// ==============================
+// ============================================================================
+// Helpers de communication ISO15693
+// ============================================================================
+// Gestion robuste de la réponse INVENTORY (support 9 ou 10 octets)
 static bool iso15693_inventory_get_uid(Iso15693_3Poller* iso, uint8_t out_uid[8]) {
-    if(!iso || !out_uid) return false;
-
-    uint8_t tx[2] = {
-        (uint8_t)(ISO15693_FLAG_INVENTORY | ISO15693_FLAG_RATE_HIGH),
-        ISO15693_CMD_INVENTORY,
+    uint8_t tx[3] = {
+        (uint8_t)(0x04 /*INVENTORY*/ | 0x02 /*HIGH RATE*/),
+        0x01 /*INVENTORY*/,
+        0x00 /*mask length 0*/
     };
     BitBuffer* txbb = bb_from_bytes_const(tx, sizeof(tx));
     if(!txbb) return false;
-
-    BitBuffer* rxbb = bb_alloc_for_rx(32);
+    BitBuffer* rxbb = bb_alloc_for_rx(24);
     if(!rxbb) { bit_buffer_free(txbb); return false; }
 
-    FURI_LOG_I(TAG, "Inventory send (timeout=30ms)");
-    Iso15693_3Error err = iso15693_3_poller_send_frame(iso, txbb, rxbb, 30);
-    size_t rx_bits = bit_buffer_get_size(rxbb);
-    FURI_LOG_I(TAG, "Inventory ret=%d rx_bits=%u", err, (unsigned)rx_bits);
-
     bool ok = false;
-    if(err == Iso15693_3ErrorNone) {
-        size_t rx_bytes = rx_bits / 8;
-        if(rx_bytes >= 9) {
-            uint8_t buf[32] = {0};
-            size_t copy = (rx_bytes > sizeof(buf)) ? sizeof(buf) : rx_bytes;
-            bit_buffer_write_bytes(rxbb, buf, copy);
-            // buf[0] = DSFID ; buf[1..8] = UID (LSB->MSB dans la réponse ISO)
-            for(size_t i = 0; i < 8; i++) out_uid[i] = buf[1 + i];
+    if(iso15693_3_poller_send_frame(iso, txbb, rxbb, 50) == Iso15693_3ErrorNone) {
+        size_t bits = bit_buffer_get_size(rxbb);
+        if(bits >= 80) { // Flags(1) + DSFID(1) + UID(8) = 10 bytes
+            uint8_t buf10[10] = {0};
+            bit_buffer_write_bytes(rxbb, buf10, 10);
+            memcpy(out_uid, &buf10[2], 8);
             ok = true;
-            FURI_LOG_I(TAG, "Inventory UID: %02X %02X %02X %02X %02X %02X %02X %02X",
-                out_uid[0], out_uid[1], out_uid[2], out_uid[3],
-                out_uid[4], out_uid[5], out_uid[6], out_uid[7]);
+        } else if(bits >= 72) { // Flags(1) + UID(8) = 9 bytes
+            uint8_t buf9[9] = {0};
+            bit_buffer_write_bytes(rxbb, buf9, 9);
+            memcpy(out_uid, &buf9[1], 8);
+            ok = true;
         } else {
-            FURI_LOG_W(TAG, "Inventory response too short: %u bytes", (unsigned)rx_bytes);
+            FURI_LOG_W(TAG, "Inventory reply too short: %u bits", (unsigned)bits);
         }
     }
 
@@ -96,30 +67,24 @@ static bool iso15693_inventory_get_uid(Iso15693_3Poller* iso, uint8_t out_uid[8]
     return ok;
 }
 
-// ==============================
-// ISO15693 addressed raw sender (via Iso15693_3Poller*)
-// ==============================
+// Envoi générique ISO15693 en mode "addressed" + parsing du FLAGS d'erreur
 static bool iso15693_send_addressed_raw(
     Iso15693_3Poller* iso,
     uint8_t cmd,
     const uint8_t uid[8],
     const uint8_t* payload,
     size_t payload_len,
-    uint32_t fwt_ms /* 0 = défaut */
+    uint32_t fwt_ms
 ) {
-    if(!iso || !uid) return false;
-
     uint8_t frame[64];
     size_t len = 0;
-
-    frame[len++] = (uint8_t)(ISO15693_FLAG_ADDRESSED | ISO15693_FLAG_RATE_HIGH);
+    frame[len++] = (uint8_t)(0x20 /*ADDRESSED*/ | 0x02 /*HIGH RATE*/);
     frame[len++] = cmd;
-    for(size_t i = 0; i < 8; i++) frame[len++] = uid[i];
+    memcpy(&frame[len], uid, 8);
+    len += 8;
+
     if(payload && payload_len) {
-        if(len + payload_len > sizeof(frame)) {
-            FURI_LOG_E(TAG, "TX frame overflow (%u+%u)", (unsigned)len, (unsigned)payload_len);
-            return false;
-        }
+        if (len + payload_len > sizeof(frame)) return false;
         memcpy(&frame[len], payload, payload_len);
         len += payload_len;
     }
@@ -129,189 +94,99 @@ static bool iso15693_send_addressed_raw(
     BitBuffer* rxbb = bb_alloc_for_rx(24);
     if(!rxbb) { bit_buffer_free(txbb); return false; }
 
-    uint32_t to = fwt_ms ? fwt_ms : 50;
-    FURI_LOG_D(TAG, "Send cmd=0x%02X len=%u to=%ums", cmd, (unsigned)len, (unsigned)to);
-    Iso15693_3Error err = iso15693_3_poller_send_frame(iso, txbb, rxbb, to);
-    FURI_LOG_D(TAG, "Send ret=%d rx_bits=%u", err, (unsigned)bit_buffer_get_size(rxbb));
+    bool ok = false;
+    Iso15693_3Error err = iso15693_3_poller_send_frame(iso, txbb, rxbb, fwt_ms ? fwt_ms : 60);
+    if(err == Iso15693_3ErrorNone) {
+        const size_t rx_bits = bit_buffer_get_size(rxbb);
+        const size_t rx_bytes = (rx_bits + 7U) / 8U;
+        if(rx_bytes >= 1) {
+            uint8_t rxb[2] = {0};
+            bit_buffer_write_bytes(rxbb, rxb, rx_bytes >= 2 ? 2 : 1);
+            uint8_t flags = rxb[0];
+            if(flags & 0x01) {
+                uint8_t err_code = (rx_bytes >= 2) ? rxb[1] : 0xFF;
+                FURI_LOG_E(TAG, "ISO15693 error: flags=0x%02X code=0x%02X", flags, err_code);
+            } else {
+                ok = true;
+            }
+        } else {
+            FURI_LOG_E(TAG, "ISO15693 short reply: %u bits", (unsigned)rx_bits);
+        }
+    } else {
+        FURI_LOG_E(TAG, "send_frame err=%d", (int)err);
+    }
 
     bit_buffer_free(txbb);
     bit_buffer_free(rxbb);
-    return (err == Iso15693_3ErrorNone);
-}
-
-// ==============================
-// Parser de fichier .NFC (format Flipper .nfc)
-// ==============================
-bool sli_writer_parse_nfc_file(SliWriterApp* app, const char* file_path) {
-    if(!app || !file_path || !app->storage) return false;
-
-    FURI_LOG_I(TAG, "Parse file: %s", file_path);
-
-    File* file = storage_file_alloc(app->storage);
-    if(!file) return false;
-
-    bool ok = false;
-
-    if(!storage_file_open(file, file_path, FSAM_READ, FSOM_OPEN_EXISTING)) {
-        storage_file_free(file);
-        return false;
-    }
-
-    size_t file_size = storage_file_size(file);
-    if(file_size == 0) { storage_file_close(file); storage_file_free(file); return false; }
-    if(file_size > 8192) file_size = 8192;
-
-    char* buf = malloc(file_size + 1);
-    if(!buf) { storage_file_close(file); storage_file_free(file); return false; }
-
-    size_t rd = storage_file_read(file, buf, file_size);
-    buf[rd] = '\0';
-    storage_file_close(file);
-    storage_file_free(file);
-
-    memset(&app->nfc_data, 0, sizeof(app->nfc_data));
-    app->nfc_data.block_size  = SLI_MAGIC_BLOCK_SIZE; // défaut 4
-    app->nfc_data.block_count = 8;
-
-    // UID
-    char* p = strstr(buf, "UID: ");
-    if(!p) { free(buf); return false; }
-    p += 5;
-    for(int i = 0; i < 8; i++) {
-        unsigned v; if(sscanf(p + i*3, "%02X", &v) != 1) { free(buf); return false; }
-        app->nfc_data.uid[i] = (uint8_t)v;
-    }
-    FURI_LOG_I(TAG, "File UID: %02X %02X %02X %02X %02X %02X %02X %02X",
-        app->nfc_data.uid[0], app->nfc_data.uid[1], app->nfc_data.uid[2], app->nfc_data.uid[3],
-        app->nfc_data.uid[4], app->nfc_data.uid[5], app->nfc_data.uid[6], app->nfc_data.uid[7]);
-
-    // Block Count
-    p = strstr(buf, "Block Count: ");
-    if(p) {
-        p += 13; int bc = 0;
-        if(sscanf(p, "%d", &bc) == 1 && bc > 0 && bc <= SLI_MAGIC_MAX_BLOCKS) app->nfc_data.block_count = (uint8_t)bc;
-    }
-
-    // Block Size (hex)
-    p = strstr(buf, "Block Size: ");
-    if(p) {
-        p += 12; unsigned bs = 0;
-        if(sscanf(p, "%02X", &bs) == 1 && bs >= 1 && bs <= 0x20) app->nfc_data.block_size = (uint8_t)bs;
-    }
-
-    // Data Content (ligne d’octets hex séparés par espaces)
-    size_t di = 0;
-    p = strstr(buf, "Data Content: ");
-    if(p) {
-        p += 14;
-        char* eol = strchr(p, '\n'); if(eol) *eol = '\0';
-        while(*p && di < sizeof(app->nfc_data.data)) {
-            unsigned v; int n = 0;
-            if(sscanf(p, "%02X%n", &v, &n) != 1) break;
-            app->nfc_data.data[di++] = (uint8_t)v;
-            p += n; while(*p == ' ') p++;
-        }
-        if(eol) *eol = '\n';
-    }
-
-    // Cohérence taille
-    size_t needed = (size_t)app->nfc_data.block_count * app->nfc_data.block_size;
-    if(needed > sizeof(app->nfc_data.data)) needed = sizeof(app->nfc_data.data);
-    if(needed && di < needed) {
-        FURI_LOG_E(TAG, "Data too short: have=%u need=%u", (unsigned)di, (unsigned)needed);
-        free(buf);
-        return false;
-    }
-
-    // Password Privacy
-    p = strstr(buf, "Password Privacy: ");
-    if(p) {
-        p += 18;
-        for(int i = 0; i < 4; i++) { unsigned v; if(sscanf(p + i*3, "%02X", &v) == 1) app->nfc_data.password_privacy[i] = (uint8_t)v; }
-        FURI_LOG_I(TAG, "Privacy pwd: %02X %02X %02X %02X",
-            app->nfc_data.password_privacy[0], app->nfc_data.password_privacy[1],
-            app->nfc_data.password_privacy[2], app->nfc_data.password_privacy[3]);
-    }
-
-    ok = true;
-    free(buf);
     return ok;
 }
 
-// ==============================
-// Magic commands helpers
-// ==============================
-static bool magic_send(Iso15693_3Poller* iso, const uint8_t uid_addr[8],
-                       uint8_t subcmd, const uint8_t* data, size_t len) {
-    if(!iso || !uid_addr) return false;
-    uint8_t payload[16]; size_t p = 0;
-    payload[p++] = subcmd;
-    if(data && len) {
-        if(p + len > sizeof(payload)) return false;
-        memcpy(&payload[p], data, len);
-        p += len;
+// ============================================================================
+// Helpers pour commandes Magic (avec retries)
+// ============================================================================
+static bool magic_send(
+    Iso15693_3Poller* iso,
+    const uint8_t uid_addr[8],
+    uint8_t subcmd,
+    const uint8_t* data,
+    size_t len
+) {
+    uint8_t payload[16];
+    payload[0] = subcmd;
+    if(data && len > 0) {
+        if(1 + len > sizeof(payload)) return false;
+        memcpy(&payload[1], data, len);
     }
-    FURI_LOG_I(TAG, "Magic subcmd=0x%02X len=%u", subcmd, (unsigned)len);
-    return iso15693_send_addressed_raw(iso, ISO15693_CMD_CUSTOM, uid_addr, payload, p, 50);
+    for(int attempt = 0; attempt < 3; attempt++) {
+        if(iso15693_send_addressed_raw(iso, 0xA0 /*CUSTOM*/, uid_addr, payload, len + 1, 60)) {
+            return true;
+        }
+        furi_delay_ms(8);
+    }
+    return false;
 }
 
 static bool write_uid_magic(Iso15693_3Poller* iso, const uint8_t uid_new[8], const uint8_t uid_addr[8]) {
-    uint8_t uid_high[4] = { uid_new[7], uid_new[6], uid_new[5], uid_new[4] };
-    uint8_t uid_low [4] = { uid_new[3], uid_new[2], uid_new[1], uid_new[0] };
-
-    FURI_LOG_I(TAG, "Write UID (INIT)");
-    if(!magic_send(iso, uid_addr, SLI_MAGIC_CMD_INIT, NULL, 0)) return false;
+    uint8_t uid_high[4] = {uid_new[7], uid_new[6], uid_new[5], uid_new[4]};
+    uint8_t uid_low[4] = {uid_new[3], uid_new[2], uid_new[1], uid_new[0]};
+    if(!magic_send(iso, uid_addr, 0x36 /*INIT*/, NULL, 0)) return false;
     furi_delay_ms(30);
-
-    FURI_LOG_I(TAG, "Write UID HIGH: %02X %02X %02X %02X", uid_high[0], uid_high[1], uid_high[2], uid_high[3]);
-    if(!magic_send(iso, uid_addr, SLI_MAGIC_CMD_SET_UID_HIGH, uid_high, sizeof(uid_high))) return false;
+    if(!magic_send(iso, uid_addr, 0x37 /*SET_UID_HIGH*/, uid_high, sizeof(uid_high))) return false;
     furi_delay_ms(30);
-
-    FURI_LOG_I(TAG, "Write UID LOW : %02X %02X %02X %02X", uid_low[0], uid_low[1], uid_low[2], uid_low[3]);
-    if(!magic_send(iso, uid_addr, SLI_MAGIC_CMD_SET_UID_LOW, uid_low, sizeof(uid_low))) return false;
+    if(!magic_send(iso, uid_addr, 0x38 /*SET_UID_LOW*/, uid_low, sizeof(uid_low))) return false;
     furi_delay_ms(30);
-
-    FURI_LOG_I(TAG, "Finalize UID");
-    if(!magic_send(iso, uid_addr, SLI_MAGIC_CMD_FINALIZE, uid_low, sizeof(uid_low))) return false;
-
+#if SLI_FINALIZE_WITH_PAYLOAD
+    if(!magic_send(iso, uid_addr, 0x39 /*FINALIZE*/, uid_low, sizeof(uid_low))) return false;
+#else
+    if(!magic_send(iso, uid_addr, 0x39 /*FINALIZE*/, NULL, 0)) return false;
+#endif
     return true;
 }
 
-static bool write_passwords_magic(Iso15693_3Poller* iso, const uint8_t uid_addr[8], const uint8_t pwd[4]) {
-    bool any = false; for(int i=0;i<4;i++) if(pwd[i]) { any = true; break; }
-    if(!any) { FURI_LOG_I(TAG, "No privacy password to write"); return true; }
-    FURI_LOG_I(TAG, "Write privacy password");
-    return magic_send(iso, uid_addr, SLI_MAGIC_CMD_SET_PASSWORD, pwd, 4);
-}
-
-// ==============================
-// Write data blocks (addressed Write Single Block)
-// ==============================
-static bool write_blocks(Iso15693_3Poller* iso, const uint8_t uid_addr[8],
-                         const uint8_t* data, uint8_t block_count, uint8_t block_size) {
-    size_t blocks = block_count;
-    if(blocks > SLI_MAGIC_MAX_BLOCKS) blocks = SLI_MAGIC_MAX_BLOCKS;
-
-    uint8_t eff_size = (block_size == 0) ? 4 : block_size;
-    if(eff_size != 4) eff_size = 4;
-
-    FURI_LOG_I(TAG, "Write %u blocks (size=%u)", (unsigned)blocks, (unsigned)eff_size);
-
+static bool write_blocks(
+    Iso15693_3Poller* iso,
+    const uint8_t uid_addr[8],
+    const uint8_t* data,
+    uint8_t block_count,
+    uint8_t block_size
+) {
+    size_t blocks = (block_count > SLI_MAGIC_MAX_BLOCKS) ? SLI_MAGIC_MAX_BLOCKS : block_count;
+    if(block_size == 0) block_size = 4; // défaut
+    if(block_size > 4) block_size = 4; // clamp pour SLIX
     for(size_t b = 0; b < blocks; b++) {
         uint8_t payload[1 + 4];
         payload[0] = (uint8_t)b;
-
-        size_t base = b * eff_size;
-        for(size_t i=0;i<4;i++) {
-            size_t idx = base + i;
-            payload[1+i] = data ? data[idx] : 0x00;
+        size_t have = (block_size < 4) ? block_size : 4;
+        memcpy(&payload[1], &data[b * block_size], have);
+        if(have < 4) memset(&payload[1 + have], 0x00, 4 - have); // padding
+        bool wrote = false;
+        for(int attempt = 0; attempt < 3 && !wrote; attempt++) {
+            wrote = iso15693_send_addressed_raw(
+                iso, 0x21 /*WRITE_SINGLE_BLOCK*/, uid_addr, payload, 1 + 4, 80);
+            if(!wrote) furi_delay_ms(10);
         }
-
-        FURI_LOG_D(TAG, "Write block %u: %02X %02X %02X %02X",
-            (unsigned)b, payload[1], payload[2], payload[3], payload[4]);
-
-        if(!iso15693_send_addressed_raw(iso, ISO15693_CMD_WRITE_SINGLE_BLOCK, uid_addr, payload, sizeof(payload), 60)) {
-            FURI_LOG_E(TAG, "Write block %u failed", (unsigned)b);
+        if(!wrote) {
+            FURI_LOG_E(TAG, "Write block %zu failed", b);
             return false;
         }
         furi_delay_ms(12);
@@ -319,233 +194,257 @@ static bool write_blocks(Iso15693_3Poller* iso, const uint8_t uid_addr[8],
     return true;
 }
 
-// ==============================
-// NFC event callback
-// ==============================
-static NfcCommand nfc_event_cb(NfcEvent event, void* ctx) {
-    UNUSED(ctx);
+// ============================================================================
+// PARSING DE FICHIER (NFC Parser)
+// ============================================================================
+bool sli_writer_parse_nfc_file(SliWriterApp* app, const char* file_path) {
+    File* file = storage_file_alloc(app->storage);
+    bool parsed = false;
+    if(storage_file_open(file, file_path, FSAM_READ, FSOM_OPEN_EXISTING)) {
+        size_t file_size = storage_file_size(file);
+        char* buf = malloc(file_size + 1);
+        if(buf) {
+            size_t read_len = storage_file_read(file, buf, file_size);
+            buf[read_len] = '\0';
+            char* p;
+            // Defaults
+            app->nfc_data.block_count = 0;
+            app->nfc_data.block_size = 4;
+            if((p = strstr(buf, "UID: "))) {
+                p += 5;
+                for(int i = 0; i < 8; i++) sscanf(p + i * 3, "%2hhx", &app->nfc_data.uid[i]);
+                if((p = strstr(buf, "Block Count: "))) sscanf(p + 13, "%hhu", &app->nfc_data.block_count);
+                if((p = strstr(buf, "Block Size: "))) sscanf(p + 12, "%hhu", &app->nfc_data.block_size);
+                if((p = strstr(buf, "Data Content: "))) {
+                    p += 14;
+                    for(size_t i = 0; i < (size_t)app->nfc_data.block_count * app->nfc_data.block_size; i++) {
+                        sscanf(p + i * 3, "%2hhx", &app->nfc_data.data[i]);
+                    }
+                }
+                parsed = true;
+            }
+            free(buf);
+        }
+    }
+    storage_file_close(file);
+    storage_file_free(file);
+    return parsed;
+}
+
+static bool slix_writer_do_write_operations(SliWriterApp* app, Iso15693_3Poller* iso) {
+    if(!sli_writer_parse_nfc_file(app, furi_string_get_cstr(app->file_path))) {
+        furi_string_set(app->error_message, "Parse failed");
+        return false;
+    }
+    uint8_t current_uid[8];
+    memcpy(current_uid, app->detected_uid, 8);
+    if(memcmp(app->nfc_data.uid, "\x00\x00\x00\x00\x00\x00\x00\x00", 8) != 0) {
+        if(!write_uid_magic(iso, app->nfc_data.uid, current_uid)) {
+            furi_string_set(app->error_message, "Failed to write UID");
+            return false;
+        }
+        memcpy(current_uid, app->nfc_data.uid, 8);
+    }
+    if(!write_blocks(iso,
+                     current_uid,
+                     app->nfc_data.data,
+                     app->nfc_data.block_count,
+                     app->nfc_data.block_size)) {
+        furi_string_set(app->error_message, "Failed to write blocks");
+        return false;
+    }
+    return true;
+}
+
+// ============================================================================
+// Callback (BY VALUE, correct SDK signature; add error handling, no NfcEventTypeError case)
+// ============================================================================
+static NfcCommand nfc_event_cb(NfcEvent event, void* context) {
+    SliWriterApp* app = context;
+    furi_assert(app);
+
+    FURI_LOG_D(TAG, "cb: event type %d", event.type);
+
     switch(event.type) {
-        case NfcEventTypePollerReady:
-            FURI_LOG_D(TAG, "NFC cb: PollerReady");
-            break;
-        default:
-            FURI_LOG_D(TAG, "NFC cb: type=%u", (unsigned)event.type);
-            break;
+    case NfcEventTypePollerReady: {
+        if(!app->poller_ready) {
+            app->poller_ready = true;
+            FURI_LOG_I(TAG, "cb: PollerReady");
+            view_dispatcher_send_custom_event(app->view_dispatcher, SliWriterCustomEventPollerReady);
+        }
+        break;
+    }
+    case NfcEventTypeFieldOn: {
+        app->field_present = true;
+        FURI_LOG_D(TAG, "cb: Field ON");
+        break;
+    }
+    case NfcEventTypeFieldOff: {
+        app->field_present = false;
+        FURI_LOG_D(TAG, "cb: Field OFF");
+        break;
+    }
+    default: {
+        FURI_LOG_D(TAG, "cb: unknown type %d", event.type);
+        break;
+    }
     }
     return NfcCommandContinue;
 }
 
-// ==============================
-// Detect + Activate + Inventory (worker)
-// ==============================
-static bool detect_activate_inventory(SliWriterApp* app, Iso15693_3Poller** out_iso) {
-    if(!app || !app->poller) return false;
-
-    // detect avec retries
-    bool present = false;
-    for(int i=0;i<10;i++) {
-        if(nfc_poller_detect(app->poller)) { present = true; break; }
-        furi_delay_ms(60);
-    }
-    if(!present) {
-        furi_string_set(app->error_message, "No tag detected");
-        return false;
-    }
-
-    Iso15693_3Poller* iso = (Iso15693_3Poller*)nfc_poller_get_data(app->poller);
-    if(!iso) { furi_string_set(app->error_message, "ISO poller NULL"); return false; }
-
-    Iso15693_3Data iso_data = (Iso15693_3Data){0};
-    Iso15693_3Error aerr = iso15693_3_poller_activate(iso, &iso_data);
-    FURI_LOG_I(TAG, "activate ret=%d", aerr);
-    if(aerr != Iso15693_3ErrorNone) {
-        furi_string_set(app->error_message, "ISO activate failed");
-        return false;
-    }
-
-    if(!iso15693_inventory_get_uid(iso, app->detected_uid)) {
-        furi_string_set(app->error_message, "Inventory/UID a échoué");
-        return false;
-    }
-    app->have_uid = true;
-    if(out_iso) *out_iso = iso;
-    return true;
-}
-
-// ==============================
-// Écriture complète (UID + pwd + blocs) - worker
-// ==============================
-bool slix_writer_perform_write(SliWriterApp* app) {
-    if(!app) return false;
-    FURI_LOG_I(TAG, "=== WRITE START ===");
-
-    Iso15693_3Poller* iso = NULL;
-    if(!detect_activate_inventory(app, &iso)) return false;
-
-    // 1) UID magic adressé à l'UID détecté
-    if(!write_uid_magic(iso, app->nfc_data.uid, app->detected_uid)) {
-        furi_string_set(app->error_message, "Échec écriture UID");
-        return false;
-    }
-    furi_delay_ms(150);
-
-    // 1b) Inventory de confirmation
-    uint8_t confirm_uid[8] = {0};
-    if(!iso15693_inventory_get_uid(iso, confirm_uid)) {
-        furi_string_set(app->error_message, "Inventory après UID échoué");
-        return false;
-    }
-
-    // 2) MDP Privacy adressé au NOUVEL UID
-    if(!write_passwords_magic(iso, confirm_uid, app->nfc_data.password_privacy)) {
-        furi_string_set(app->error_message, "Échec écriture mot de passe");
-        return false;
-    }
-    furi_delay_ms(60);
-
-    // 3) Blocs adressés au NOUVEL UID
-    if(!write_blocks(iso, confirm_uid, app->nfc_data.data, app->nfc_data.block_count, app->nfc_data.block_size)) {
-        furi_string_set(app->error_message, "Échec écriture blocs");
-        return false;
-    }
-
-    FURI_LOG_I(TAG, "=== WRITE OK ===");
-    return true;
-}
-
-// ==============================
-// Mode test: envoyer uniquement INIT magic - worker
-// ==============================
-bool slix_writer_perform_test(SliWriterApp* app) {
-    if(!app) return false;
-    FURI_LOG_I(TAG, "=== TEST MAGIC INIT START ===");
-
-    Iso15693_3Poller* iso = NULL;
-    if(!detect_activate_inventory(app, &iso)) return false;
-
-    if(!magic_send(iso, app->detected_uid, SLI_MAGIC_CMD_INIT, NULL, 0)) {
-        furi_string_set(app->error_message, "INIT magic échoué");
-        return false;
-    }
-    FURI_LOG_I(TAG, "=== TEST MAGIC INIT OK ===");
-    return true;
-}
-
-// ==============================
-// Worker thread (tout le NFC ici) — nfc_alloc puis nfc_start
-// ==============================
+// ============================================================================
+// WORKER THREAD (gère tout le cycle NFC)
+// ============================================================================
 int32_t slix_writer_work_thread(void* context) {
-    SliWriterApp* app = (SliWriterApp*)context;
-    if(!app) return 0;
-
-    FURI_LOG_I(TAG, "Worker start");
-
-    // === NFC alloc ===
+    SliWriterApp* app = context;
+    furi_assert(app);
+    bool success = false;
+    FURI_LOG_I(TAG, "worker: enter");
+    // Remet l'état RF au propre (au cas où une app précédente a laissé le front-end ON)
+    // furi_hal_nfc_abort();
+    // furi_delay_ms(20);
+    // 1) Alloc NFC
+    app->nfc = nfc_alloc();
     if(!app->nfc) {
-        FURI_LOG_I(TAG, "nfc_alloc (worker)...");
-        app->nfc = nfc_alloc();
-        if(!app->nfc) {
-            furi_string_set(app->error_message, "nfc_alloc failed");
-            view_dispatcher_send_custom_event(app->view_dispatcher, SliWriterCustomEventWriteError);
-            return 0;
-        }
+        FURI_LOG_E(TAG, "worker: nfc_alloc FAILED");
+        furi_string_set(app->error_message, "NFC alloc failed");
+        goto done_send_event;
     }
-
-    // Petite sieste avant nfc_start (évite parfois un interlock sur UI)
-    furi_delay_ms(20);
-
-    // === NFC start === (si ça bloque, on le verra au log Discord)
-    FURI_LOG_I(TAG, "nfc_start (worker)...");
+    FURI_LOG_I(TAG, "worker: nfc_alloc ok");
+    // 2) Config NFC
+    nfc_config(app->nfc, NfcModePoller, NfcTechIso15693);
+    FURI_LOG_I(TAG, "worker: nfc_config ok");
+    // 3) Démarre le core NFC AVEC LE CALLBACK
+    FURI_LOG_I(TAG, "worker: nfc_start()");
     nfc_start(app->nfc, nfc_event_cb, app);
-    app->nfc_started = true;
-    FURI_LOG_I(TAG, "nfc_start (worker) returned");
-
-    // === Poller ISO15693 ===
-    if(app->poller) { nfc_poller_free(app->poller); app->poller = NULL; }
-    FURI_LOG_I(TAG, "nfc_poller_alloc ISO15693 (worker)...");
-    app->poller = nfc_poller_alloc(app->nfc, NfcProtocolIso15693_3);
+    // Petite pause pour laisser le driver s'initialiser
+    furi_delay_ms(80);
+/* Also wait for the callback to signal PollerReady, but cap it */
+for(uint32_t spins = 0; spins < 10 && !app->poller_ready; spins++) {
+furi_delay_ms(20);
+}
+FURI_LOG_I(TAG, "worker: poller_alloc");
+app->poller = nfc_poller_alloc(app->nfc, NfcProtocolIso15693_3);
     if(!app->poller) {
-        furi_string_set(app->error_message, "poller alloc failed");
-        goto WORKER_FAIL;
+        FURI_LOG_E(TAG, "worker: poller_alloc FAILED");
+        furi_string_set(app->error_message, "Poller alloc failed");
+        goto stop_nfc_and_free;
     }
-    FURI_LOG_I(TAG, "nfc_poller_alloc OK");
-
-    // === Mode test vs mode écriture ===
-    if(app->test_mode) {
-        if(slix_writer_perform_test(app)) {
-            FURI_LOG_I(TAG, "Test success");
-            goto WORKER_OK;
+    FURI_LOG_I(TAG, "worker: poller_start");
+    nfc_poller_start(app->poller, NULL, NULL);
+    furi_delay_ms(20);
+// 5) Boucle de détection
+FURI_LOG_I(TAG, "worker: detect loop");
+bool detected = false;
+const uint32_t max_attempts = 50; // ~5 s
+for(uint32_t i = 0; i < max_attempts && app->running; ++i) {
+// (optionnel) si tu utilises nfc_start + callback, profite du flag field_present
+if(app->field_present) {
+if(nfc_poller_detect(app->poller)) {
+detected = true;
+break;
+}
+}
+// petit log toutes les 10 itérations pour tracer sans spammer
+if((i % 10) == 0) {
+FURI_LOG_D(TAG, "detect... (%lu/%lu)", (unsigned long)i, (unsigned long)max_attempts);
+}
+furi_delay_ms(100);
+}
+FURI_LOG_I(TAG, "worker: detect=%d", detected);
+    if(detected) {
+        Iso15693_3Poller* iso = (Iso15693_3Poller*)nfc_poller_get_data(app->poller);
+        if(iso && iso15693_inventory_get_uid(iso, app->detected_uid)) {
+            app->have_uid = true;
+            if(app->test_mode) {
+                char uid_str[64];
+                snprintf(uid_str, sizeof(uid_str),
+                         "UID: %02X%02X%02X%02X\n%02X%02X%02X%02X",
+                         app->detected_uid[7], app->detected_uid[6],
+                         app->detected_uid[5], app->detected_uid[4],
+                         app->detected_uid[3], app->detected_uid[2],
+                         app->detected_uid[1], app->detected_uid[0]);
+                furi_string_set(app->error_message, uid_str);
+                success = true;
+            } else {
+                success = slix_writer_do_write_operations(app, iso);
+            }
         } else {
-            FURI_LOG_E(TAG, "Test error: %s", furi_string_get_cstr(app->error_message));
-            goto WORKER_FAIL;
+            FURI_LOG_E(TAG, "worker: Read UID failed");
+            furi_string_set(app->error_message, "Read UID failed");
+            success = false;
         }
     } else {
-        if(!sli_writer_parse_nfc_file(app, furi_string_get_cstr(app->file_path))) {
-            FURI_LOG_E(TAG, "Parse failed");
-            furi_string_set(app->error_message, "Erreur lecture fichier");
-            goto WORKER_FAIL;
-        }
-        if(slix_writer_perform_write(app)) {
-            FURI_LOG_I(TAG, "Write success");
-            goto WORKER_OK;
-        } else {
-            FURI_LOG_E(TAG, "Write error: %s", furi_string_get_cstr(app->error_message));
-            goto WORKER_FAIL;
-        }
+        furi_string_set(app->error_message, "No card detected");
+        success = false;
     }
-
-WORKER_OK:
-    if(app->poller) { nfc_poller_free(app->poller); app->poller = NULL; }
-    if(app->nfc_started) { FURI_LOG_I(TAG, "nfc_stop (worker)"); nfc_stop(app->nfc); app->nfc_started = false; }
-    if(app->nfc) { FURI_LOG_I(TAG, "nfc_free (worker)"); nfc_free(app->nfc); app->nfc = NULL; }
-    view_dispatcher_send_custom_event(app->view_dispatcher, SliWriterCustomEventWriteSuccess);
-    return 0;
-
-WORKER_FAIL:
-    if(app->poller) { nfc_poller_free(app->poller); app->poller = NULL; }
-    if(app->nfc_started) { FURI_LOG_I(TAG, "nfc_stop (worker)"); nfc_stop(app->nfc); app->nfc_started = false; }
-    if(app->nfc) { FURI_LOG_I(TAG, "nfc_free (worker)"); nfc_free(app->nfc); app->nfc = NULL; }
-    view_dispatcher_send_custom_event(app->view_dispatcher, SliWriterCustomEventWriteError);
+    // 6) Teardown du poller
+    FURI_LOG_I(TAG, "worker: poller_stop/free");
+    nfc_poller_stop(app->poller);
+    nfc_poller_free(app->poller);
+    app->poller = NULL;
+stop_nfc_and_free:
+    // 7) Stop + free NFC
+    FURI_LOG_I(TAG, "worker: nfc_stop/free");
+    nfc_stop(app->nfc);
+    nfc_free(app->nfc);
+    app->nfc = NULL;
+done_send_event:
+    if(furi_thread_get_state(furi_thread_get_current()) != FuriThreadStateStopped) {
+        view_dispatcher_send_custom_event(
+            app->view_dispatcher,
+            success ? SliWriterCustomEventWriteSuccess : SliWriterCustomEventWriteError);
+    }
+    FURI_LOG_I(TAG, "worker: exit (success=%d)", success);
     return 0;
 }
 
-// ==============================
-// Scenes
-// ==============================
-static void sli_writer_scene_start_on_enter(void* context) {
-    SliWriterApp* app = (SliWriterApp*)context;
-    if(!app) return;
+// ============================================================================
+// Fonctions de Callback pour l'UI
+// ============================================================================
+void sli_writer_submenu_callback(void* context, uint32_t index) {
+    SliWriterApp* app = context;
+    view_dispatcher_send_custom_event(app->view_dispatcher, index);
+}
+void sli_writer_dialog_ex_callback(DialogExResult result, void* context) {
+    SliWriterApp* app = context;
+    view_dispatcher_send_custom_event(app->view_dispatcher, result);
+}
+bool sli_writer_custom_event_callback(void* context, uint32_t event) {
+    SliWriterApp* app = context;
+    return scene_manager_handle_custom_event(app->scene_manager, event);
+}
+bool sli_writer_back_event_callback(void* context) {
+    SliWriterApp* app = context;
+    return scene_manager_handle_back_event(app->scene_manager);
+}
 
-    FURI_LOG_I(TAG, "Scene Start enter");
-
+// ============================================================================
+// Définitions des Scènes
+// ============================================================================
+void sli_writer_scene_start_on_enter(void* context) {
+    SliWriterApp* app = context;
+    FURI_LOG_I(TAG, "scene_start: enter");
     submenu_reset(app->submenu);
-    submenu_add_item(app->submenu, "Write NFC File",   SliWriterSubmenuIndexWrite,     sli_writer_submenu_callback, app);
-    submenu_add_item(app->submenu, "Test Magic INIT",  SliWriterSubmenuIndexTestMagic, sli_writer_submenu_callback, app);
-    submenu_add_item(app->submenu, "About",            SliWriterSubmenuIndexAbout,     sli_writer_submenu_callback, app);
+    submenu_add_item(app->submenu, "Write from File", SliWriterSubmenuIndexWrite, sli_writer_submenu_callback, app);
+    submenu_add_item(app->submenu, "Read ISO15693 UID", SliWriterSubmenuIndexTestMagic, sli_writer_submenu_callback, app);
+    submenu_add_item(app->submenu, "About", SliWriterSubmenuIndexAbout, sli_writer_submenu_callback, app);
     view_dispatcher_switch_to_view(app->view_dispatcher, SliWriterViewSubmenu);
 }
-
-static bool sli_writer_scene_start_on_event(void* context, SceneManagerEvent event) {
-    SliWriterApp* app = (SliWriterApp*)context;
-    if(!app) return false;
+bool sli_writer_scene_start_on_event(void* context, SceneManagerEvent event) {
+    SliWriterApp* app = context;
     if(event.type == SceneManagerEventTypeCustom) {
         if(event.event == SliWriterSubmenuIndexWrite) {
-            FURI_LOG_I(TAG, "Menu -> FileSelect");
             app->test_mode = false;
             scene_manager_next_scene(app->scene_manager, SliWriterSceneFileSelect);
             return true;
-        }
-        if(event.event == SliWriterSubmenuIndexTestMagic) {
-            FURI_LOG_I(TAG, "Menu -> TestMagic");
+        } else if(event.event == SliWriterSubmenuIndexTestMagic) {
             app->test_mode = true;
             scene_manager_next_scene(app->scene_manager, SliWriterSceneWrite);
             return true;
-        }
-        if(event.event == SliWriterSubmenuIndexAbout) {
-            FURI_LOG_I(TAG, "Menu -> About");
-            dialog_ex_reset(app->dialog_ex);
+        } else if(event.event == SliWriterSubmenuIndexAbout) {
             dialog_ex_set_header(app->dialog_ex, "SLI Writer", 64, 0, AlignCenter, AlignTop);
-            dialog_ex_set_text(app->dialog_ex, "Write SLIX .nfc files\nto SLI Magic cards\n\nv2.7 (single-thread NFC)\n⚠️ Use with caution!", 64, 32, AlignCenter, AlignCenter);
+            dialog_ex_set_text(app->dialog_ex, "Write to Magic ISO15693\nSLI/SLIX Cards", 64, 32, AlignCenter, AlignCenter);
             dialog_ex_set_left_button_text(app->dialog_ex, "Back");
             view_dispatcher_switch_to_view(app->view_dispatcher, SliWriterViewDialogEx);
             return true;
@@ -553,305 +452,247 @@ static bool sli_writer_scene_start_on_event(void* context, SceneManagerEvent eve
     }
     return false;
 }
-
-static void sli_writer_scene_start_on_exit(void* context) {
-    SliWriterApp* app = (SliWriterApp*)context;
-    if(!app) return;
-    FURI_LOG_I(TAG, "Scene Start exit");
+void sli_writer_scene_start_on_exit(void* context) {
+    SliWriterApp* app = context;
+    FURI_LOG_I(TAG, "scene_start: exit");
     submenu_reset(app->submenu);
 }
-
-static void sli_writer_scene_file_select_on_enter(void* context) {
-    SliWriterApp* app = (SliWriterApp*)context;
-    if(!app) return;
-
-    FURI_LOG_I(TAG, "Scene FileSelect enter");
-
-    // Ouvrir directement sur /ext/nfc
-    if(!app->file_path) app->file_path = furi_string_alloc();
+// Scène: File Select
+void sli_writer_scene_file_select_on_enter(void* context) {
+    SliWriterApp* app = context;
+    FURI_LOG_I(TAG, "scene_file_select: enter");
     furi_string_set(app->file_path, "/ext/nfc");
-
-    // --- Service Dialogs (synchrone) ---
-    DialogsFileBrowserOptions opt;
-    dialog_file_browser_set_basic_options(&opt, SLI_WRITER_FILE_EXTENSION, NULL);
-
-    if(dialog_file_browser_show(app->dialogs, app->file_path, app->file_path, &opt)) {
-        FURI_LOG_I(TAG, "File chosen: %s", furi_string_get_cstr(app->file_path));
+    DialogsFileBrowserOptions options;
+    dialog_file_browser_set_basic_options(&options, SLI_WRITER_FILE_EXTENSION, NULL);
+    if(dialog_file_browser_show(app->dialogs, app->file_path, app->file_path, &options)) {
         scene_manager_next_scene(app->scene_manager, SliWriterSceneWrite);
     } else {
-        FURI_LOG_I(TAG, "File selection canceled");
         scene_manager_previous_scene(app->scene_manager);
     }
 }
-
-static bool sli_writer_scene_file_select_on_event(void* context, SceneManagerEvent event) {
-    UNUSED(context); UNUSED(event); return false;
+bool sli_writer_scene_file_select_on_event(void* context, SceneManagerEvent event) {
+    (void)context;
+    (void)event;
+    return false;
 }
-
-static void sli_writer_scene_file_select_on_exit(void* context) {
-    FURI_LOG_I(TAG, "Scene FileSelect exit");
-    UNUSED(context);
+void sli_writer_scene_file_select_on_exit(void* context) {
+    FURI_LOG_I(TAG, "scene_file_select: exit");
+    (void)context;
 }
-
-// --------- WRITE SCENE ---------
-static void sli_writer_scene_write_on_enter(void* context) {
-    SliWriterApp* app = (SliWriterApp*)context;
-    if(!app) return;
-
-    FURI_LOG_I(TAG, "Scene Write enter -> loading (worker runs NFC)");
+// Scène: Write (lance seulement le worker)
+void sli_writer_scene_write_on_enter(void* context) {
+    SliWriterApp* app = context;
+    FURI_LOG_I(TAG, "scene_write: enter");
+    // UI: écran de chargement
     view_dispatcher_switch_to_view(app->view_dispatcher, SliWriterViewLoading);
-
-    if(app->worker_thread) {
-        furi_thread_join(app->worker_thread);
-        furi_thread_free(app->worker_thread);
-        app->worker_thread = NULL;
-    }
-    app->worker_thread = furi_thread_alloc_ex("sli_writer_worker", 8192, slix_writer_work_thread, app);
+    // Réinit état
+    app->have_uid = false;
+    furi_string_reset(app->error_message);
+    // Arme le flag de boucle du worker (assure-toi d'avoir `bool running;` dans le .h)
+    app->running = true;
+    // Démarre le worker si pas déjà lancé
     if(!app->worker_thread) {
-        furi_string_set(app->error_message, "Thread alloc failed");
-        scene_manager_next_scene(app->scene_manager, SliWriterSceneError);
-        return;
+        app->worker_thread = furi_thread_alloc_ex(
+            "sli_writer_worker",
+            4096,
+            slix_writer_work_thread,
+            app);
+        furi_thread_start(app->worker_thread);
+        FURI_LOG_I(TAG, "scene_write: worker started");
+    } else {
+        FURI_LOG_W(TAG, "scene_write: worker already running (ignored)");
     }
-    furi_thread_start(app->worker_thread);
 }
-
-static bool sli_writer_scene_write_on_event(void* context, SceneManagerEvent event) {
-    SliWriterApp* app = (SliWriterApp*)context;
-    if(!app) return false;
-
+bool sli_writer_scene_write_on_event(void* context, SceneManagerEvent event) {
+    SliWriterApp* app = context;
     if(event.type == SceneManagerEventTypeCustom) {
-        if(event.event == SliWriterCustomEventWriteSuccess) {
-            FURI_LOG_I(TAG, "Scene Write -> Success");
+        if(event.event == SliWriterCustomEventPollerReady) {
+            if(!app->worker_thread) {
+                app->worker_thread = furi_thread_alloc_ex(
+                    "sli_writer_worker", 4096, slix_writer_work_thread, app);
+                furi_thread_start(app->worker_thread);
+            }
+            return true;
+        } else if(event.event == SliWriterCustomEventWriteSuccess) { // <<< ADD THIS
+            FURI_LOG_I(TAG, "scene_write: success");
             scene_manager_next_scene(app->scene_manager, SliWriterSceneSuccess);
             return true;
-        }
-        if(event.event == SliWriterCustomEventParseError || event.event == SliWriterCustomEventWriteError) {
-            FURI_LOG_I(TAG, "Scene Write -> Error");
+        } else if(event.event == SliWriterCustomEventWriteError) {
+            FURI_LOG_I(TAG, "scene_write: error");
             scene_manager_next_scene(app->scene_manager, SliWriterSceneError);
             return true;
         }
     }
     return false;
 }
-
-static void sli_writer_scene_write_on_exit(void* context) {
-    SliWriterApp* app = (SliWriterApp*)context;
-    if(!app) return;
-    FURI_LOG_I(TAG, "Scene Write exit (join worker)");
-
+void sli_writer_scene_write_on_exit(void* context) {
+    SliWriterApp* app = context;
+    FURI_LOG_I(TAG, "scene_write: exit");
+    // Demande l'arrêt propre du worker
+    app->running = false;
+    // Joindre/libérer le worker si présent
     if(app->worker_thread) {
         furi_thread_join(app->worker_thread);
         furi_thread_free(app->worker_thread);
         app->worker_thread = NULL;
+        FURI_LOG_I(TAG, "scene_write: worker joined & freed");
     }
-    // Le worker a déjà nettoyé NFC/poller.
+    // Le worker libère déjà poller + nfc ; on s’assure juste de ne rien laisser traîner
+    app->poller = NULL;
+    app->nfc = NULL;
 }
-
-static void sli_writer_scene_success_on_enter(void* context) {
-    SliWriterApp* app = (SliWriterApp*)context;
-    if(!app) return;
-    FURI_LOG_I(TAG, "Scene Success enter");
+// Scène: Success
+void sli_writer_scene_success_on_enter(void* context) {
+    SliWriterApp* app = context;
+    FURI_LOG_I(TAG, "scene_success: enter");
     dialog_ex_reset(app->dialog_ex);
-    dialog_ex_set_header(app->dialog_ex, "Success!", 64, 0, AlignCenter, AlignTop);
-    dialog_ex_set_text(app->dialog_ex, "Card written successfully\n(or test OK)", 64, 32, AlignCenter, AlignCenter);
-    dialog_ex_set_left_button_text(app->dialog_ex, "Back");
+    if(app->test_mode) {
+        dialog_ex_set_header(app->dialog_ex, "Read Success", 64, 0, AlignCenter, AlignTop);
+        dialog_ex_set_text(app->dialog_ex, furi_string_get_cstr(app->error_message), 64, 22, AlignCenter, AlignTop);
+    } else {
+        dialog_ex_set_header(app->dialog_ex, "Write Success!", 64, 0, AlignCenter, AlignTop);
+        dialog_ex_set_text(app->dialog_ex, "Card written successfully", 64, 32, AlignCenter, AlignCenter);
+    }
+    dialog_ex_set_left_button_text(app->dialog_ex, "OK");
     view_dispatcher_switch_to_view(app->view_dispatcher, SliWriterViewDialogEx);
 }
-
-static bool sli_writer_scene_success_on_event(void* context, SceneManagerEvent event) {
-    SliWriterApp* app = (SliWriterApp*)context;
-    if(!app) return false;
+bool sli_writer_scene_success_on_event(void* context, SceneManagerEvent event) {
+    SliWriterApp* app = context;
     if(event.type == SceneManagerEventTypeBack ||
        (event.type == SceneManagerEventTypeCustom && event.event == DialogExResultLeft)) {
-        FURI_LOG_I(TAG, "Scene Success -> Start");
+        FURI_LOG_I(TAG, "scene_success: back");
         scene_manager_search_and_switch_to_previous_scene(app->scene_manager, SliWriterSceneStart);
         return true;
     }
     return false;
 }
-
-static void sli_writer_scene_success_on_exit(void* context) {
-    SliWriterApp* app = (SliWriterApp*)context;
-    if(!app) return;
-    FURI_LOG_I(TAG, "Scene Success exit");
+void sli_writer_scene_success_on_exit(void* context) {
+    SliWriterApp* app = context;
+    FURI_LOG_I(TAG, "scene_success: exit");
     dialog_ex_reset(app->dialog_ex);
 }
-
-static void sli_writer_scene_error_on_enter(void* context) {
-    SliWriterApp* app = (SliWriterApp*)context;
-    if(!app) return;
-    FURI_LOG_I(TAG, "Scene Error enter: %s", furi_string_get_cstr(app->error_message));
+// Scène: Error
+void sli_writer_scene_error_on_enter(void* context) {
+    SliWriterApp* app = context;
+    FURI_LOG_I(TAG, "scene_error: enter");
     dialog_ex_reset(app->dialog_ex);
     dialog_ex_set_header(app->dialog_ex, "Error", 64, 0, AlignCenter, AlignTop);
     dialog_ex_set_text(app->dialog_ex, furi_string_get_cstr(app->error_message), 64, 32, AlignCenter, AlignCenter);
-    dialog_ex_set_left_button_text(app->dialog_ex, "Back");
+    dialog_ex_set_left_button_text(app->dialog_ex, "OK");
     view_dispatcher_switch_to_view(app->view_dispatcher, SliWriterViewDialogEx);
 }
-
-static bool sli_writer_scene_error_on_event(void* context, SceneManagerEvent event) {
-    SliWriterApp* app = (SliWriterApp*)context;
-    if(!app) return false;
+bool sli_writer_scene_error_on_event(void* context, SceneManagerEvent event) {
+    SliWriterApp* app = context;
     if(event.type == SceneManagerEventTypeBack ||
        (event.type == SceneManagerEventTypeCustom && event.event == DialogExResultLeft)) {
-        FURI_LOG_I(TAG, "Scene Error -> Start");
+        FURI_LOG_I(TAG, "scene_error: back");
         scene_manager_search_and_switch_to_previous_scene(app->scene_manager, SliWriterSceneStart);
         return true;
     }
     return false;
 }
-
-static void sli_writer_scene_error_on_exit(void* context) {
-    SliWriterApp* app = (SliWriterApp*)context;
-    if(!app) return;
-    FURI_LOG_I(TAG, "Scene Error exit");
+void sli_writer_scene_error_on_exit(void* context) {
+    SliWriterApp* app = context;
+    FURI_LOG_I(TAG, "scene_error: exit");
     dialog_ex_reset(app->dialog_ex);
 }
-
-// ==============================
-// Callbacks
-// ==============================
-void sli_writer_submenu_callback(void* context, uint32_t index) {
-    SliWriterApp* app = (SliWriterApp*)context; if(!app) return;
-    FURI_LOG_I(TAG, "Submenu index=%lu", index);
-    view_dispatcher_send_custom_event(app->view_dispatcher, index);
-}
-
-void sli_writer_dialog_ex_callback(DialogExResult result, void* context) {
-    SliWriterApp* app = (SliWriterApp*)context; if(!app) return;
-    FURI_LOG_I(TAG, "Dialog result=%d", result);
-    view_dispatcher_send_custom_event(app->view_dispatcher, result);
-}
-
-bool sli_writer_back_event_callback(void* context) {
-    SliWriterApp* app = (SliWriterApp*)context; if(!app) return false;
-    FURI_LOG_I(TAG, "Back event");
-    return scene_manager_handle_back_event(app->scene_manager);
-}
-
-bool sli_writer_custom_event_callback(void* context, uint32_t event) {
-    SliWriterApp* app = (SliWriterApp*)context; if(!app) return false;
-    FURI_LOG_I(TAG, "Custom event=%lu", event);
-    return scene_manager_handle_custom_event(app->scene_manager, event);
-}
-
-// ==============================
-// Scene handlers arrays & lifecycle
-// ==============================
-static void (*const s_on_enter[])(void*) = {
+// ============================================================================
+// GESTIONNAIRE DE SCENES
+// ============================================================================
+static void (*const sli_writer_scene_on_enter_handlers[])(void*) = {
     sli_writer_scene_start_on_enter,
     sli_writer_scene_file_select_on_enter,
     sli_writer_scene_write_on_enter,
     sli_writer_scene_success_on_enter,
     sli_writer_scene_error_on_enter,
 };
-
-static bool (*const s_on_event[])(void*, SceneManagerEvent) = {
+static bool (*const sli_writer_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     sli_writer_scene_start_on_event,
     sli_writer_scene_file_select_on_event,
     sli_writer_scene_write_on_event,
     sli_writer_scene_success_on_event,
     sli_writer_scene_error_on_event,
 };
-
-static void (*const s_on_exit[])(void*) = {
+static void (*const sli_writer_scene_on_exit_handlers[])(void*) = {
     sli_writer_scene_start_on_exit,
     sli_writer_scene_file_select_on_exit,
     sli_writer_scene_write_on_exit,
     sli_writer_scene_success_on_exit,
     sli_writer_scene_error_on_exit,
 };
-
+static const SceneManagerHandlers sli_writer_scene_handlers = {
+    .on_enter_handlers = sli_writer_scene_on_enter_handlers,
+    .on_event_handlers = sli_writer_scene_on_event_handlers,
+    .on_exit_handlers = sli_writer_scene_on_exit_handlers,
+    .scene_num = SliWriterSceneNum,
+};
+// ============================================================================
+// Cycle de vie de l'application
+// ============================================================================
 SliWriterApp* sli_writer_app_alloc(void) {
-    FURI_LOG_I(TAG, "App alloc");
     SliWriterApp* app = malloc(sizeof(SliWriterApp));
-    if(!app) return NULL;
-    memset(app, 0, sizeof(*app));
-
+    furi_check(app);
     app->gui = furi_record_open(RECORD_GUI);
-    app->view_dispatcher = view_dispatcher_alloc();
-
-    static const SceneManagerHandlers handlers = {
-        .on_enter_handlers = s_on_enter,
-        .on_event_handlers = s_on_event,
-        .on_exit_handlers  = s_on_exit,
-        .scene_num = SliWriterSceneNum,
-    };
-    app->scene_manager = scene_manager_alloc(&handlers, app);
-
-    app->submenu = submenu_alloc();
-    app->dialog_ex = dialog_ex_alloc();
-    app->loading = loading_alloc();
-
     app->storage = furi_record_open(RECORD_STORAGE);
-    app->dialogs = furi_record_open(RECORD_DIALOGS); // <-- service Dialogs
-
-    app->file_path = furi_string_alloc();
-    app->error_message = furi_string_alloc();
-
+    app->dialogs = furi_record_open(RECORD_DIALOGS);
+    app->view_dispatcher = view_dispatcher_alloc();
+    app->scene_manager = scene_manager_alloc(&sli_writer_scene_handlers, app);
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_custom_event_callback(app->view_dispatcher, sli_writer_custom_event_callback);
     view_dispatcher_set_navigation_event_callback(app->view_dispatcher, sli_writer_back_event_callback);
-
+    app->submenu = submenu_alloc();
     view_dispatcher_add_view(app->view_dispatcher, SliWriterViewSubmenu, submenu_get_view(app->submenu));
+    app->dialog_ex = dialog_ex_alloc();
     view_dispatcher_add_view(app->view_dispatcher, SliWriterViewDialogEx, dialog_ex_get_view(app->dialog_ex));
-    view_dispatcher_add_view(app->view_dispatcher, SliWriterViewLoading, loading_get_view(app->loading));
-
     dialog_ex_set_context(app->dialog_ex, app);
     dialog_ex_set_result_callback(app->dialog_ex, sli_writer_dialog_ex_callback);
-
-    view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
-
-    // NFC : alloué/démarré UNIQUEMENT dans le worker
+    app->loading = loading_alloc();
+    view_dispatcher_add_view(app->view_dispatcher, SliWriterViewLoading, loading_get_view(app->loading));
+    app->file_path = furi_string_alloc();
+    app->error_message = furi_string_alloc();
+    // États runtime
     app->nfc = NULL;
-    app->nfc_started = false;
-
+    app->poller = NULL;
+    app->worker_thread = NULL;
+    app->have_uid = false;
+    app->test_mode = false;
+    /* AJOUTS */
+    app->poller_ready = false;
+    app->field_present = false;
+    app->fatal_error = false;
+    app->running = false;
+    view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
     scene_manager_next_scene(app->scene_manager, SliWriterSceneStart);
     return app;
 }
-
 void sli_writer_app_free(SliWriterApp* app) {
-    FURI_LOG_I(TAG, "App free");
-    if(!app) return;
-
-    if(app->worker_thread) { furi_thread_join(app->worker_thread); furi_thread_free(app->worker_thread); app->worker_thread = NULL; }
-
-    // Sécurité : si le worker a été interrompu, on nettoie proprement
-    if(app->poller) { nfc_poller_free(app->poller); app->poller = NULL; }
-    if(app->nfc_started && app->nfc) { nfc_stop(app->nfc); app->nfc_started = false; }
-    if(app->nfc) { nfc_free(app->nfc); app->nfc = NULL; }
-
+    furi_assert(app);
     view_dispatcher_remove_view(app->view_dispatcher, SliWriterViewSubmenu);
+    submenu_free(app->submenu);
     view_dispatcher_remove_view(app->view_dispatcher, SliWriterViewDialogEx);
+    dialog_ex_free(app->dialog_ex);
     view_dispatcher_remove_view(app->view_dispatcher, SliWriterViewLoading);
-
-    if(app->submenu) submenu_free(app->submenu);
-    if(app->dialog_ex) dialog_ex_free(app->dialog_ex);
-    if(app->loading) loading_free(app->loading);
-
-    if(app->view_dispatcher) view_dispatcher_free(app->view_dispatcher);
-    if(app->scene_manager) scene_manager_free(app->scene_manager);
-
-    if(app->storage) furi_record_close(RECORD_STORAGE);
-    if(app->dialogs) furi_record_close(RECORD_DIALOGS);
-    if(app->gui)     furi_record_close(RECORD_GUI);
-
-    if(app->file_path)     furi_string_free(app->file_path);
-    if(app->error_message) furi_string_free(app->error_message);
-
+    loading_free(app->loading);
+    view_dispatcher_free(app->view_dispatcher);
+    scene_manager_free(app->scene_manager);
+    furi_string_free(app->file_path);
+    furi_string_free(app->error_message);
+    // Le worker libère NFC/poller ; ici on vérifie juste qu'ils sont bien NULL
+    furi_assert(app->nfc == NULL);
+    furi_assert(app->poller == NULL);
+    furi_record_close(RECORD_GUI);
+    furi_record_close(RECORD_STORAGE);
+    furi_record_close(RECORD_DIALOGS);
     free(app);
 }
 
-// ==============================
-// Entry point
-// ==============================
+// ============================================================================
+// Point d'entrée de l'application
+// ============================================================================
 int32_t sli_writer_app(void* p) {
     UNUSED(p);
-    FURI_LOG_I(TAG, "Entry");
     SliWriterApp* app = sli_writer_app_alloc();
-    if(!app) return -1;
     view_dispatcher_run(app->view_dispatcher);
     sli_writer_app_free(app);
-    FURI_LOG_I(TAG, "Exit");
     return 0;
 }
-
