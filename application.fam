@@ -12,6 +12,7 @@ App(
     ],
     stack_size=2 * 1024,
     fap_icon="icon.png",
+    fap_icon_assets="icons",
     fap_category="NFC",
     fap_description="Advanced NFC dictionary management tool for Flipper Zero",
     fap_author="grugnoymeme a.k.a. 47LeCoste",
