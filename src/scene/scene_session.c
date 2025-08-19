@@ -86,7 +86,7 @@ static inline void handleKeyBack(const PSESSIONSCENE instance, const InputEvent*
 static void callbackInput(InputEvent* const event, void* const context) {
 	furi_check(event && context);
 
-	if(event->type != InputTypeShort) {
+	if(event->type != InputTypeShort && event->type != InputTypeRepeat) {
 		return;
 	}
 
