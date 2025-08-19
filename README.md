@@ -6,19 +6,34 @@
 
 [Lab401's DigiLab](https://lab401.com/products/lab401-digilab) by [tixlegeek](https://cyberpunk.company/) is a [Flipper Zero®](https://flipperzero.one/) accessory that introduces a new way to explore electronics. Designed to be the first tool you reach for when you're developing, debugging, tinkering or exploring digital electronics.
 
-**Discover signals** via the **Scope** application, **probe** for voltages and frequencies in the Probe function, and **detect, discover and interact** with **SPI & I2C** devices directly via the SPI Probe and I2C Probe functions.
+### Key Features
 
-But what makes the DigiLab special is that you can **feel** the circuits you're exploring.
+- **Discover signals** via the Scope application
+- **Probe for voltages and frequencies** in the Probe function  
+- **Detect, discover and interact** with SPI & I2C devices directly via the SPI Probe and I2C Probe functions
 
-By combining an RGB LED, Flipper's speaker and vibration motor, you can **see voltage fluctuations**, **hear** the difference between different protocols, and **feel the different signals** flowing around a circuit. 
+### What Makes DigiLab Special
 
-Equally comfortable in desktop mode (with the **included custom-designed mini-probes**) or portable mode (with the included probe tip), the DigiLab's collection of functions allows you to study, see, feel and understand a circuit before or instead of resorting to more specialised tools.
+The DigiLab allows you to **feel** the circuits you're exploring by combining:
+- RGB LED
+- Flipper's speaker
+- Vibration motor
 
-The DigiLab is even compatible with the full range of BusPirate accessories; making SPI and I2C exploration even more easy.
+This combination lets you:
+- **See** voltage fluctuations
+- **Hear** the difference between different protocols
+- **Feel** the different signals flowing around a circuit
 
-It's 100% Open Source and Open Hardware, and is the perfect combination of functional, fun and educational that your Flipper has been waiting for.
+### Versatile Usage Modes
 
-**If you love electronics, you'll love Lab401's DigiLab.**
+- **Desktop mode** - with included custom-designed mini-probes
+- **Portable mode** - with included probe tip
+
+### Compatibility & Open Source
+
+- Compatible with the full range of **BusPirate accessories**
+- **100% Open Source and Open Hardware**
+- Perfect combination of functional, fun and educational
 
 ---
 
