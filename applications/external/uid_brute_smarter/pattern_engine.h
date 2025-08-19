@@ -71,9 +71,9 @@ bool pattern_engine_detect(const uint32_t* uids, uint8_t count, PatternResult* r
  * @return true if range built successfully, false otherwise
  */
 bool pattern_engine_build_range(
-    const PatternResult* result, 
-    uint32_t* range, 
-    uint16_t range_size, 
+    const PatternResult* result,
+    uint32_t* range,
+    uint16_t range_size,
     uint16_t* actual_size);
 
 /**

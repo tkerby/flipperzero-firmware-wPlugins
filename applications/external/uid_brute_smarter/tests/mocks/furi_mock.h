@@ -13,17 +13,17 @@
 #define FURI_LOG_D(tag, fmt, ...) (void)(tag)
 
 // Mock furi_assert
-#define furi_assert(condition) \
-    do { \
-        if (!(condition)) { \
+#define furi_assert(condition)                         \
+    do {                                               \
+        if(!(condition)) {                             \
             printf("ASSERT FAILED: %s\n", #condition); \
-            abort(); \
-        } \
+            abort();                                   \
+        }                                              \
     } while(0)
 
 // Mock memory functions
 #define furi_alloc malloc
-#define furi_free free
+#define furi_free  free
 
 // Mock tick functions
 uint32_t furi_get_tick(void);

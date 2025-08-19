@@ -17,16 +17,19 @@ void unity_begin(void) {
 int unity_end(void) {
     printf("\n");
     printf("================================\n");
-    printf("🎯 Test Results: %d tests, %d passed, %d failed\n", 
-           Unity.tests, Unity.tests - Unity.failures, Unity.failures);
-    
-    if (Unity.failures == 0) {
+    printf(
+        "🎯 Test Results: %d tests, %d passed, %d failed\n",
+        Unity.tests,
+        Unity.tests - Unity.failures,
+        Unity.failures);
+
+    if(Unity.failures == 0) {
         printf("✅ ALL TESTS PASSED!\n");
     } else {
         printf("❌ SOME TESTS FAILED!\n");
     }
     printf("================================\n\n");
-    
+
     return Unity.failures;
 }
 
@@ -37,7 +40,7 @@ void unity_test_start(const char* name) {
 }
 
 void unity_test_finish(void) {
-    if (Unity.failures == 0 || current_test_name == NULL) {
+    if(Unity.failures == 0 || current_test_name == NULL) {
         printf("   ✅ PASSED\n\n");
     } else {
         printf("   ❌ FAILED\n\n");
@@ -46,7 +49,7 @@ void unity_test_finish(void) {
 }
 
 void _unity_assert_equal_int(int expected, int actual, int line, const char* file) {
-    if (expected != actual) {
+    if(expected != actual) {
         printf("   ❌ ASSERT FAILED at %s:%d\n", file, line);
         printf("      Expected: %d (0x%08x)\n", expected, expected);
         printf("      Actual:   %d (0x%08x)\n", actual, actual);
@@ -54,8 +57,12 @@ void _unity_assert_equal_int(int expected, int actual, int line, const char* fil
     }
 }
 
-void _unity_assert_equal_uint(unsigned int expected, unsigned int actual, int line, const char* file) {
-    if (expected != actual) {
+void _unity_assert_equal_uint(
+    unsigned int expected,
+    unsigned int actual,
+    int line,
+    const char* file) {
+    if(expected != actual) {
         printf("   ❌ ASSERT FAILED at %s:%d\n", file, line);
         printf("      Expected: %u (0x%08x)\n", expected, expected);
         printf("      Actual:   %u (0x%08x)\n", actual, actual);
@@ -64,7 +71,7 @@ void _unity_assert_equal_uint(unsigned int expected, unsigned int actual, int li
 }
 
 void _unity_assert_equal_hex32(uint32_t expected, uint32_t actual, int line, const char* file) {
-    if (expected != actual) {
+    if(expected != actual) {
         printf("   ❌ ASSERT FAILED at %s:%d\n", file, line);
         printf("      Expected: 0x%08lx\n", (unsigned long)expected);
         printf("      Actual:   0x%08lx\n", (unsigned long)actual);
@@ -73,7 +80,7 @@ void _unity_assert_equal_hex32(uint32_t expected, uint32_t actual, int line, con
 }
 
 void _unity_assert_true(bool condition, int line, const char* file) {
-    if (!condition) {
+    if(!condition) {
         printf("   ❌ ASSERT FAILED at %s:%d\n", file, line);
         printf("      Expected: TRUE\n");
         printf("      Actual:   FALSE\n");
@@ -82,7 +89,7 @@ void _unity_assert_true(bool condition, int line, const char* file) {
 }
 
 void _unity_assert_false(bool condition, int line, const char* file) {
-    if (condition) {
+    if(condition) {
         printf("   ❌ ASSERT FAILED at %s:%d\n", file, line);
         printf("      Expected: FALSE\n");
         printf("      Actual:   TRUE\n");
@@ -91,7 +98,7 @@ void _unity_assert_false(bool condition, int line, const char* file) {
 }
 
 void _unity_assert_null(const void* pointer, int line, const char* file) {
-    if (pointer != NULL) {
+    if(pointer != NULL) {
         printf("   ❌ ASSERT FAILED at %s:%d\n", file, line);
         printf("      Expected: NULL\n");
         printf("      Actual:   %p\n", pointer);
@@ -100,7 +107,7 @@ void _unity_assert_null(const void* pointer, int line, const char* file) {
 }
 
 void _unity_assert_not_null(const void* pointer, int line, const char* file) {
-    if (pointer == NULL) {
+    if(pointer == NULL) {
         printf("   ❌ ASSERT FAILED at %s:%d\n", file, line);
         printf("      Expected: Not NULL\n");
         printf("      Actual:   NULL\n");
@@ -108,10 +115,13 @@ void _unity_assert_not_null(const void* pointer, int line, const char* file) {
     }
 }
 
-void _unity_assert_equal_string(const char* expected, const char* actual, int line, const char* file) {
-    if ((expected == NULL && actual != NULL) || 
-        (expected != NULL && actual == NULL) ||
-        (expected != NULL && actual != NULL && strcmp(expected, actual) != 0)) {
+void _unity_assert_equal_string(
+    const char* expected,
+    const char* actual,
+    int line,
+    const char* file) {
+    if((expected == NULL && actual != NULL) || (expected != NULL && actual == NULL) ||
+       (expected != NULL && actual != NULL && strcmp(expected, actual) != 0)) {
         printf("   ❌ ASSERT FAILED at %s:%d\n", file, line);
         printf("      Expected: \"%s\"\n", expected ? expected : "NULL");
         printf("      Actual:   \"%s\"\n", actual ? actual : "NULL");
@@ -119,15 +129,20 @@ void _unity_assert_equal_string(const char* expected, const char* actual, int li
     }
 }
 
-void _unity_assert_equal_memory(const void* expected, const void* actual, size_t len, int line, const char* file) {
-    if (expected == NULL || actual == NULL) {
+void _unity_assert_equal_memory(
+    const void* expected,
+    const void* actual,
+    size_t len,
+    int line,
+    const char* file) {
+    if(expected == NULL || actual == NULL) {
         printf("   ❌ ASSERT FAILED at %s:%d\n", file, line);
         printf("      NULL pointer in memory comparison\n");
         Unity.failures++;
         return;
     }
-    
-    if (memcmp(expected, actual, len) != 0) {
+
+    if(memcmp(expected, actual, len) != 0) {
         printf("   ❌ ASSERT FAILED at %s:%d\n", file, line);
         printf("      Memory contents differ\n");
         Unity.failures++;
