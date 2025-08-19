@@ -7,7 +7,7 @@
 #include "about/about.hpp"
 
 #define TAG         "FlipDownloader"
-#define VERSION     "1.3.2"
+#define VERSION     "1.3.3"
 #define VERSION_TAG TAG " " VERSION
 #define APP_ID      "flip_downloader"
 
@@ -82,6 +82,7 @@ public:
     }
     static void viewPortDraw(Canvas* canvas, void* context);
     static void viewPortInput(InputEvent* event, void* context);
+    void updateApp(); // check for app update
 
     bool httpDownloadFile(
         const char* saveLocation, // full path where the file will be saved

@@ -36,7 +36,11 @@ void FlipDownloaderSettings::free() {
 void FlipDownloaderSettings::freeTextInput() {
     if(text_input && view_dispatcher_ref && *view_dispatcher_ref) {
         view_dispatcher_remove_view(*view_dispatcher_ref, FlipDownloaderViewTextInput);
+#ifndef FW_ORIGIN_Momentum
         uart_text_input_free(text_input);
+#else
+        text_input_free(text_input);
+#endif
         text_input = nullptr;
     }
     text_input_buffer.reset();
@@ -112,6 +116,7 @@ bool FlipDownloaderSettings::initTextInput(uint32_t view) {
             text_input_temp_buffer[0] = '\0'; // Ensure empty if not loaded
         }
         text_input_temp_buffer[text_input_buffer_size - 1] = '\0'; // Ensure null-termination
+#ifndef FW_ORIGIN_Momentum
         return easy_flipper_set_uart_text_input(
             &text_input,
             FlipDownloaderViewTextInput,
@@ -122,6 +127,18 @@ bool FlipDownloaderSettings::initTextInput(uint32_t view) {
             callbackToSettings,
             view_dispatcher_ref,
             this);
+#else
+        return easy_flipper_set_text_input(
+            &text_input,
+            FlipDownloaderViewTextInput,
+            "Enter SSID",
+            text_input_temp_buffer.get(),
+            text_input_buffer_size,
+            textUpdatedSsidCallback,
+            callbackToSettings,
+            view_dispatcher_ref,
+            this);
+#endif
     } else if(view == SettingsViewPassword) {
         if(app->load_char("wifi_pass", loaded, sizeof(loaded))) {
             strncpy(text_input_temp_buffer.get(), loaded, text_input_buffer_size);
@@ -129,6 +146,7 @@ bool FlipDownloaderSettings::initTextInput(uint32_t view) {
             text_input_temp_buffer[0] = '\0'; // Ensure empty if not loaded
         }
         text_input_temp_buffer[text_input_buffer_size - 1] = '\0'; // Ensure null-termination
+#ifndef FW_ORIGIN_Momentum
         return easy_flipper_set_uart_text_input(
             &text_input,
             FlipDownloaderViewTextInput,
@@ -139,6 +157,18 @@ bool FlipDownloaderSettings::initTextInput(uint32_t view) {
             callbackToSettings,
             view_dispatcher_ref,
             this);
+#else
+        return easy_flipper_set_text_input(
+            &text_input,
+            FlipDownloaderViewTextInput,
+            "Enter Password",
+            text_input_temp_buffer.get(),
+            text_input_buffer_size,
+            textUpdatedPassCallback,
+            callbackToSettings,
+            view_dispatcher_ref,
+            this);
+#endif
     }
     return false;
 }

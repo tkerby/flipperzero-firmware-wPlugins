@@ -42,6 +42,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Time Dilation Calculator v1.0 (By ejfox)](https://github.com/ejfox/flipper-space-calculators)
 - Added: [Space Travel Calculator v1.0 (By ejfox)](https://github.com/ejfox/flipper-space-calculators)
 - Updated: [Rubiks Cube Timer v0.0.2 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
+- Updated: [FlipDownloader v1.3.3 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 
 <a name="release">
 
@@ -482,7 +483,7 @@ $ ./fbt dolphin_ext
 - [FindMy Flipper v3.5.2 (By MatthewKuKanich)](https://github.com/MatthewKuKanich/FindMyFlipper)
 - [Flame RNG v0.3 (By OrionW06)](https://github.com/OrionW06/Flame-RNG)
 - [Flashlight v1.2 (By xMasterX)](https://github.com/xMasterX/flipper-flashlight)
-- [FlipDownloader v1.3.2 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- [FlipDownloader v1.3.3 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - [FlipLibrary v1.4 (By jblanked)](https://github.com/jblanked/FlipLibrary) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - [Flipper Blackhat v0.4 (By o7-machinehum)](https://github.com/o7-machinehum/flipper-blackhat-app) `Req: Blackhat Board` with [Blackhat OS](https://github.com/o7-machinehum/flipper-blackhat-os)
 - [Flipper Printer v1.0 (By alxcrt)](https://github.com/alxcrt/flipper-zero-thermal-printer) `Req: T7-US thermal printer module`
