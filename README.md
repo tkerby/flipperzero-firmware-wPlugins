@@ -1,4 +1,4 @@
-# Lab401 DigiLab Documentation
+# Lab401 DigiLab
 
 ![DigiLab](./README.assets/DigiLab-header.png)
 
