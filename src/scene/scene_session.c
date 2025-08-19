@@ -114,6 +114,31 @@ updateViewport:
 	view_port_update(instance->viewport);
 }
 
+static void actionSelect(const PSESSIONSCENE instance) {
+	furi_string_set_str(instance->instance->session.path, APP_DATA_PATH("sessions"));
+	DialogsFileBrowserOptions options;
+	memset(&options, 0, sizeof(DialogsFileBrowserOptions));
+	options.skip_assets = dialog_file_browser_show(furi_record_open(RECORD_DIALOGS), instance->instance->session.path, instance->instance->session.path, &options);
+	furi_record_close(RECORD_DIALOGS);
+
+	if(!options.skip_assets) {
+		//instance->renderText = 1;
+		//instance->text = TEXT_NO_FILE_SELECTED;
+		goto updateViewport;
+	}
+
+	if(!furi_string_end_withi_str(instance->instance->session.path, ".cbzs")) {
+		//instance->renderText = 1;
+		//instance->text = TEXT_APPEARS_INCORRECT_TYPE;
+		goto updateViewport;
+	}
+
+	//actionOpenAnyway(instance, path);
+	return;
+updateViewport:
+	view_port_update(instance->viewport);
+}
+
 void SceneSessionEnter(void* const context) {
 	furi_check(context);
 	const PSESSIONSCENE instance = malloc(sizeof(SESSIONSCENE));
@@ -131,6 +156,7 @@ void SceneSessionEnter(void* const context) {
 		case ACTION_EXIT:
 			goto functionExit;
 		case ACTION_SELECT:
+			actionSelect(instance);
 			break;
 		}
 	}

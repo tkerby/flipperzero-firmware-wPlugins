@@ -32,6 +32,7 @@ int32_t cuberzeroMain(const void* const unused) {
 	static const AppSceneOnExitCallback handlerExit[] = {callbackEmptyExit, callbackEmptyExit, callbackEmptyExit};
 	static const SceneManagerHandlers handlers = {handlerEnter, handlerEvent, handlerExit, COUNT_SCENE};
 	instance->manager = scene_manager_alloc(&handlers, instance);
+	instance->session.path = furi_string_alloc();
 	view_dispatcher_set_event_callback_context(instance->dispatcher, instance);
 	view_dispatcher_set_custom_event_callback(instance->dispatcher, callbackCustomEvent);
 	view_dispatcher_set_navigation_event_callback(instance->dispatcher, callbackNavigationEvent);
@@ -40,6 +41,7 @@ int32_t cuberzeroMain(const void* const unused) {
 	scene_manager_next_scene(instance->manager, SCENE_HOME);
 	view_dispatcher_run(instance->dispatcher);
 	view_dispatcher_remove_view(instance->dispatcher, VIEW_SUBMENU);
+	furi_string_free(instance->session.path);
 	scene_manager_free(instance->manager);
 	view_dispatcher_free(instance->dispatcher);
 	furi_record_close(RECORD_GUI);
