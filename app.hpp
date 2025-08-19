@@ -76,6 +76,7 @@ public:
     }
     static void viewPortDraw(Canvas *canvas, void *context);
     static void viewPortInput(InputEvent *event, void *context);
+    void updateApp(); // check for app update
 
     bool httpDownloadFile(
         const char *saveLocation, // full path where the file will be saved

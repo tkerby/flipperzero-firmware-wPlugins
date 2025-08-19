@@ -1,4 +1,5 @@
 #include "app.hpp"
+#include <update/update.h>
 
 void FlipDownloaderApp::callbackSubmenuChoices(uint32_t index)
 {
@@ -456,6 +457,17 @@ void FlipDownloaderApp::runDispatcher()
     view_dispatcher_run(viewDispatcher);
 }
 
+void FlipDownloaderApp::updateApp()
+{
+    if (flipperHttp && isBoardConnected() && hasWiFiCredentials())
+    {
+        if (update_is_ready(flipperHttp, true))
+        {
+            easy_flipper_dialog("Update Status", "Complete.\nRestart your Flipper Zero.");
+        }
+    }
+}
+
 extern "C"
 {
     int32_t main_flip_downloader(void *p)
@@ -465,6 +477,11 @@ extern "C"
 
         // Create the app
         FlipDownloaderApp app;
+
+        app.save_char("app_version", VERSION);
+
+        // check if update is available from lab.flipper.net
+        app.updateApp();
 
         // Run the app
         app.runDispatcher();
