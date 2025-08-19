@@ -62,8 +62,6 @@ The first time you use DigiLab (or when reinstalling the app), calibration is re
 
 > **Note:** If accuracy drifts or you made a calibration mistake, you can easily recalibrate via the "Calibration" menu.
 
-![cali2](./README.assets/cali.png)
-
 ---
 
 ## DigiLab Functionality
@@ -81,15 +79,14 @@ The Scope tool allows you to intuitively feel, measure and understand all kinds 
 
 ![scope](./README.assets/scope.gif)
 
-#### Basic Features
-- Functions like a traditional oscilloscope
-- Measure and track minimum, maximum and average voltages
-- See how voltages change over time
+At first glance, it looks like a traditional oscilloscope, allowing you to measure and track track minimum, maximum and average voltages, and see how they change over time.
 
-#### Advanced Configuration
-Access advanced features via the "Config" option to link and configure multiple physical feedback mechanisms:
+However, when it's configured to use a combination of the **physical feedback mechanisms**, it's a bit more of a magic wand than a traditional oscilloscope.
 
-**Example Configuration:** Listen to the signal, track voltage via LED colour, and vibrate if voltage exceeds a configured value.
+By clicking on the "Config" option, you can link and configure multiple different physical feedback mechanisms to different measured values or alerts.
+
+**Example Configuration:** One example could be: listen to the signal, track voltage via LED colour, and vibrate if the voltage exceeds a configured value.
+You can mix and match many different options.
 
 ![alerts](./README.assets/alerts.gif)
 
@@ -133,26 +130,24 @@ DigiLab's I2C probe automatically scans for I2C devices connected via onboard pi
 
 ![i2cScan](./README.assets/i2cScan.gif)
 
-#### Built-in Testing
-- Includes on-board I2C EEPROM (Memory Chip, U6, on right side of PCB)
-- Allows experimentation with I2C Probe tool out of the box
-- Can store information you want to keep "secret" from your Flipper
+DigiLab's I2C probe will automatically scan for I2C devices connected via the onboard pins. The DigiLab includes an on-board I2C EEPROM (Memory Chip, U6, on the right side of the PCB) to allow you to experiment with the I2C Probe tool out of the box. (You can even use it to store information that you want to keep "secret" from your Flipper..)
 
 #### Scanned Devices
-- Automatic scanning when tool opens
-- Navigate through multiple detected devices using arrow keys
+When you open the tool, it will automatically scan for I2C Devices.
+When the scan is completed, you'll be presented with the results. If more than one device was detected, you can use the arrow keys to scroll through the devices.
 
 ![i2cresults](./README.assets/i2c-results.png)
 
 #### Prediction Engine
-- Uses built-in heuristics database to predict device type
-- Launch via "Info" button
-- Scroll through results with arrow buttons
+Based on the information gleaned during the scan, the DigiLab will use its in-built heuristics database to try to predict what the detect device might be.
+You can launch the Prediction Engine by clicking the "Info" button. If results are found you can scroll through them via the arrow buttons.
 
 ![i2c-prediction](./README.assets/i2c-prediction.png)
 
 #### Read/Write Registers
-The DigiLab features embedded hexadecimal editor for direct register access:
+The DigiLab also features a handy embedded hexadecimal editor, which can be used to directly read/write the registers of I2C devices.
+For example, the device included on the DigiLab board is an EEPROM memory - you can read/write directly into its memory.
+If it was another device, such as an I2C thermometer, you could peek into its registers directly to obtain the temperature information!
 
 ![hexedit](./README.assets/hexedit.gif)
 
