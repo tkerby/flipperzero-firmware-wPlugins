@@ -11,35 +11,15 @@
 #define FRSSCAN_DEFAULT_RSSI        (-100.0f)
 #define FRSSCAN_DEFAULT_SENSITIVITY (-85.0f)
 
-#define FRSSCAN_VOLUME_QUIET        0.0f
-#define FRSSCAN_VOLUME_LOUD         1.0f
+#define FRSSCAN_VOLUME_QUIET 0.0f
+#define FRSSCAN_VOLUME_LOUD  1.0f
 
-#define SUBGHZ_DEVICE_NAME			"cc1101_int"
+#define SUBGHZ_DEVICE_NAME "cc1101_int"
 
 const uint32_t freqs[] = {
-	0,
-	462562500,
-	462587500,
-	462612500,
-	462637500,
-	462662500,
-	462687500,
-	462712500,
-	467562500,
-	467587500,
-	467612500,
-	467637500,
-	467662500,
-	467687500,
-	467712500,
-	462550000,
-	462575000,
-	462600000,
-	462625000,
-	462650000,
-	462675000,
-	462700000,
-	462725000,
+    0,         462562500, 462587500, 462612500, 462637500, 462662500, 462687500, 462712500,
+    467562500, 467587500, 467612500, 467637500, 467662500, 467687500, 467712500, 462550000,
+    462575000, 462600000, 462625000, 462650000, 462675000, 462700000, 462725000,
 };
 const int num_channels = sizeof(freqs) / sizeof(freqs[0]);
 const int min_channel = 1;
@@ -47,16 +27,16 @@ const int max_channel = num_channels - 1;
 
 static void speaker_mute(FRSScanApp* app) {
     if(app->speaker_acquired && furi_hal_speaker_is_mine()) {
-		subghz_devices_set_async_mirror_pin(app->radio_device, NULL);
-		furi_hal_speaker_set_volume(FRSSCAN_VOLUME_QUIET);
-	}
+        subghz_devices_set_async_mirror_pin(app->radio_device, NULL);
+        furi_hal_speaker_set_volume(FRSSCAN_VOLUME_QUIET);
+    }
 }
 
 static void speaker_loud(FRSScanApp* app) {
     if(app->speaker_acquired && furi_hal_speaker_is_mine()) {
         subghz_devices_set_async_mirror_pin(app->radio_device, &gpio_speaker);
-		furi_hal_speaker_set_volume(FRSSCAN_VOLUME_LOUD);
-	}
+        furi_hal_speaker_set_volume(FRSSCAN_VOLUME_LOUD);
+    }
 }
 
 static void frsscan_draw_callback(Canvas* canvas, void* context) {
@@ -68,9 +48,10 @@ static void frsscan_draw_callback(Canvas* canvas, void* context) {
     canvas_draw_str_aligned(canvas, 64, 2, AlignCenter, AlignTop, "FRSScan");
 
     canvas_set_font(canvas, FontSecondary);
-	#define BUFLEN 32
+#define BUFLEN 32
     char buf[BUFLEN + 1] = "";
-    snprintf(buf, BUFLEN, "< Chan %ld (%.4f) >", app->freq_channel, (double)app->frequency / 1000000);
+    snprintf(
+        buf, BUFLEN, "< Chan %ld (%.4f) >", app->freq_channel, (double)app->frequency / 1000000);
     canvas_draw_str_aligned(canvas, 64, 18, AlignCenter, AlignTop, buf);
 
     snprintf(buf, BUFLEN, "RSSI: %.2f", (double)app->rssi);
@@ -79,7 +60,8 @@ static void frsscan_draw_callback(Canvas* canvas, void* context) {
     snprintf(buf, BUFLEN, "^ Sens: %.2f V", (double)app->sensitivity);
     canvas_draw_str_aligned(canvas, 64, 42, AlignCenter, AlignTop, buf);
 
-    canvas_draw_str_aligned(canvas, 64, 54, AlignCenter, AlignTop, app->scanning ? "Scanning  ()" : "Locked  ()");
+    canvas_draw_str_aligned(
+        canvas, 64, 54, AlignCenter, AlignTop, app->scanning ? "Scanning  ()" : "Locked  ()");
 }
 
 static void frsscan_input_callback(InputEvent* input_event, void* context) {
@@ -129,7 +111,7 @@ static bool frsscan_init_subghz(FRSScanApp* app) {
     subghz_devices_start_async_rx(device, frsscan_rx_callback, app);
     if(furi_hal_speaker_acquire(30)) {
         app->speaker_acquired = true;
-		speaker_mute(app);
+        speaker_mute(app);
     } else {
         app->speaker_acquired = false;
         FURI_LOG_E(TAG, "Failed to acquire speaker");
@@ -138,19 +120,19 @@ static bool frsscan_init_subghz(FRSScanApp* app) {
 }
 
 static uint32_t frsscan_next_channel(FRSScanApp* app) {
-	uint32_t channel = app->freq_channel;
-	
-	if (app->scan_dir == ScanDirDown)
-		channel -= 1;
-	else
-		channel += 1;
-	
-	if (channel < min_channel)
-		channel = max_channel;
-	else if (channel > max_channel)
-		channel = min_channel;
-	
-	return channel;
+    uint32_t channel = app->freq_channel;
+
+    if(app->scan_dir == ScanDirDown)
+        channel -= 1;
+    else
+        channel += 1;
+
+    if(channel < min_channel)
+        channel = max_channel;
+    else if(channel > max_channel)
+        channel = min_channel;
+
+    return channel;
 }
 
 static void frsscan_process_scanning(FRSScanApp* app) {
@@ -168,19 +150,19 @@ static void frsscan_process_scanning(FRSScanApp* app) {
         }
     }
 
-	if (app->scanning) {
-		speaker_mute(app);
-	} else {
-		speaker_loud(app);
+    if(app->scanning) {
+        speaker_mute(app);
+    } else {
+        speaker_loud(app);
     }
-    
-	// get new freq	
-	uint32_t new_channel = frsscan_next_channel(app);	
-	uint32_t new_frequency = freqs[new_channel];
+
+    // get new freq
+    uint32_t new_channel = frsscan_next_channel(app);
+    uint32_t new_frequency = freqs[new_channel];
 
     if(!subghz_devices_is_frequency_valid(app->radio_device, new_frequency)) {
         new_channel = min_channel;
-		new_frequency = freqs[new_channel];
+        new_frequency = freqs[new_channel];
     }
 
     subghz_devices_flush_rx(app->radio_device);
@@ -206,7 +188,7 @@ FRSScanApp* frsscan_app_alloc() {
     app->event_queue = furi_message_queue_alloc(8, sizeof(InputEvent));
 
     app->running = true;
-	app->freq_channel = min_channel;
+    app->freq_channel = min_channel;
     app->frequency = freqs[app->freq_channel];
     app->rssi = FRSSCAN_DEFAULT_RSSI;
     app->sensitivity = FRSSCAN_DEFAULT_SENSITIVITY;
@@ -231,7 +213,7 @@ void frsscan_app_free(FRSScanApp* app) {
     if(app->speaker_acquired && furi_hal_speaker_is_mine()) {
         subghz_devices_set_async_mirror_pin(app->radio_device, NULL);
         furi_hal_speaker_set_volume(FRSSCAN_VOLUME_LOUD);
-		furi_hal_speaker_release();
+        furi_hal_speaker_release();
         app->speaker_acquired = false;
     }
 
@@ -273,10 +255,10 @@ int32_t frsscan_app(void* p) {
     InputEvent event;
     while(app->running) {
         if(app->scanning) {
-			speaker_mute(app);
+            speaker_mute(app);
             frsscan_process_scanning(app);
         } else {
-			speaker_loud(app);
+            speaker_loud(app);
             frsscan_update_rssi(app);
         }
 
@@ -292,10 +274,10 @@ int32_t frsscan_app(void* p) {
                     app->sensitivity -= 1.0f;
                     FURI_LOG_I(TAG, "Decreased sensitivity: %f", (double)app->sensitivity);
                 } else if(event.key == InputKeyLeft) {
-					app->scan_dir = ScanDirDown;
+                    app->scan_dir = ScanDirDown;
                     FURI_LOG_I(TAG, "Scan direction set to down");
                 } else if(event.key == InputKeyRight) {
-					app->scan_dir = ScanDirUp;
+                    app->scan_dir = ScanDirUp;
                     FURI_LOG_I(TAG, "Scan direction set to up");
                 } else if(event.key == InputKeyBack) {
                     app->running = false;
@@ -305,7 +287,7 @@ int32_t frsscan_app(void* p) {
         }
 
         view_port_update(app->view_port);
-		furi_delay_ms(500);
+        furi_delay_ms(500);
     }
 
     frsscan_app_free(app);

@@ -6,7 +6,7 @@
 
 typedef enum {
     ScanDirDown,
-	ScanDirUp,
+    ScanDirUp,
 } ScanDir;
 
 typedef struct {
@@ -14,7 +14,7 @@ typedef struct {
     ViewPort* view_port;
     FuriMessageQueue* event_queue;
     bool running;
-	uint32_t freq_channel;
+    uint32_t freq_channel;
     uint32_t frequency;
     float rssi;
     float sensitivity;

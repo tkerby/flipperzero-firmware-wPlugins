@@ -37,6 +37,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [NFC Dict Manager v1.0 (By grugnoymeme)](https://github.com/grugnoymeme/nfc_dicts_manager)
 - Added: [Jumping Pawns v0.1 (By Tyl3rA)](https://github.com/Tyl3rA/Jumping-Pawns)
 - Added: [UID Brute Smarter v1.0 (By fbettag)](https://github.com/fbettag/uid_brute_smarter)
+- Added: [FRSScan v0.2 (By thecybermind)](https://github.com/thecybermind/frsscan)
 
 <a name="release">
 
@@ -507,6 +508,7 @@ $ ./fbt dolphin_ext
 - [Ford Radio Codes v0.1 (By DavidB445)](https://github.com/DavidB445/fz_fordradiocodes)
 - [Free Roam v0.2 (By jblanked)](https://github.com/jblanked/Free-Roam) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - [Frequency Analyzer (External) v1.0 (By xMasterX)](https://github.com/xMasterX/all-the-plugins/tree/dev/non_catalog_apps/freq_analyzer_ext)
+- [FRSScan v0.2 (By thecybermind)](https://github.com/thecybermind/frsscan)
 - [FZ nRF24 Jammer v1.4 (By W0rthlessS0ul)](https://github.com/W0rthlessS0ul/FZ_nRF24_jammer)
 - [Gas Sensor v0.1 (By iancohee)](https://github.com/iancohee/gas_sensor_fap) `Req: BME680 / SGP30`
 - [Gauge Tool v0.1 (By skotopes)](https://github.com/skotopes/flipperzero_gauge_tool) (Used To Downgrade From 10/07/2024 Update)
