@@ -7,14 +7,15 @@ void nfc_dict_manager_scene_merge_select_a_on_enter(void* context) {
     DialogsFileBrowserOptions browser_options;
     dialog_file_browser_set_basic_options(&browser_options, DICT_EXTENSION, &I_file_10px);
     browser_options.base_path = DICT_FOLDER_PATH;
-    browser_options.skip_assets = false; 
-    
+    browser_options.skip_assets = false;
+
     FuriString* path = furi_string_alloc();
     furi_string_set(path, DICT_FOLDER_PATH);
-    
-    bool success = dialog_file_browser_show(app->dialogs, app->selected_dict_a, path, &browser_options);
+
+    bool success =
+        dialog_file_browser_show(app->dialogs, app->selected_dict_a, path, &browser_options);
     furi_string_free(path);
-    
+
     if(success) {
         scene_manager_previous_scene(app->scene_manager);
     } else {
@@ -25,12 +26,12 @@ void nfc_dict_manager_scene_merge_select_a_on_enter(void* context) {
 bool nfc_dict_manager_scene_merge_select_a_on_event(void* context, SceneManagerEvent event) {
     NfcDictManager* app = context;
     bool consumed = false;
-    
+
     if(event.type == SceneManagerEventTypeBack) {
         scene_manager_previous_scene(app->scene_manager);
         consumed = true;
     }
-    
+
     return consumed;
 }
 

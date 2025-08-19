@@ -18,18 +18,18 @@
 #include <datetime/datetime.h>
 #include <toolbox/stream/file_stream.h>
 //#include "assets_icons.h"
-#include <gui/icon.h> 
+#include <gui/icon.h>
 #include "nfc_dict_manager_icons.h"
 
-#define TAG "NFC_Dict_Manager"
-#define DICT_FOLDER_PATH "/ext/nfc/dictionaries"
-#define BACKUP_FOLDER_PATH "/ext/nfc/dictionaries/backup"
-#define SYSTEM_DICT_PATH "/ext/nfc/assets/mf_classic_dict.nfc"
-#define USER_DICT_PATH "/ext/nfc/assets/mf_classic_dict_user.nfc"
-#define DICT_EXTENSION ".nfc"
-#define MAX_PATH_LENGTH 256
+#define TAG                 "NFC_Dict_Manager"
+#define DICT_FOLDER_PATH    "/ext/nfc/dictionaries"
+#define BACKUP_FOLDER_PATH  "/ext/nfc/dictionaries/backup"
+#define SYSTEM_DICT_PATH    "/ext/nfc/assets/mf_classic_dict.nfc"
+#define USER_DICT_PATH      "/ext/nfc/assets/mf_classic_dict_user.nfc"
+#define DICT_EXTENSION      ".nfc"
+#define MAX_PATH_LENGTH     256
 #define MAX_FILENAME_LENGTH 128
-#define MAX_KEY_LENGTH 12
+#define MAX_KEY_LENGTH      12
 
 typedef enum {
     NfcDictManagerViewSubmenu,
@@ -67,13 +67,13 @@ typedef struct {
     TextBox* text_box;
     DialogsApp* dialogs;
     NotificationApp* notification;
-    
+
     FuriString* selected_dict_a;
     FuriString* selected_dict_b;
     FuriString* current_dict;
     FuriString* file_browser_result;
     FuriString* text_box_content;
-    
+
     Storage* storage;
     FuriTimer* backup_timer;
     FuriTimer* success_timer;

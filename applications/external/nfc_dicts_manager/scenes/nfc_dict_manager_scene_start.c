@@ -3,7 +3,7 @@
 
 void nfc_dict_manager_scene_start_on_enter(void* context) {
     NfcDictManager* app = context;
-    
+
     submenu_reset(app->submenu);
     submenu_add_item(app->submenu, "Backup dict", 0, nfc_dict_manager_submenu_callback, app);
     submenu_add_item(app->submenu, "Select dict", 1, nfc_dict_manager_submenu_callback, app);
@@ -11,16 +11,16 @@ void nfc_dict_manager_scene_start_on_enter(void* context) {
     submenu_add_item(app->submenu, "Optimize dict", 3, nfc_dict_manager_submenu_callback, app);
     submenu_add_item(app->submenu, "Edit dict (WIP)", 4, nfc_dict_manager_submenu_callback, app);
     submenu_add_item(app->submenu, "About", 5, nfc_dict_manager_submenu_callback, app);
-    
+
     view_dispatcher_switch_to_view(app->view_dispatcher, NfcDictManagerViewSubmenu);
 }
 
 bool nfc_dict_manager_scene_start_on_event(void* context, SceneManagerEvent event) {
     NfcDictManager* app = context;
     bool consumed = false;
-    
-    if (event.type == SceneManagerEventTypeCustom) {
-        switch (event.event) {
+
+    if(event.type == SceneManagerEventTypeCustom) {
+        switch(event.event) {
         case 0: // backup dict
             scene_manager_next_scene(app->scene_manager, NfcDictManagerSceneBackup);
             consumed = true;
@@ -47,7 +47,7 @@ bool nfc_dict_manager_scene_start_on_event(void* context, SceneManagerEvent even
             break;
         }
     }
-    
+
     return consumed;
 }
 
