@@ -4,7 +4,7 @@
 
 ## Overview
 
-[Lab401's DigiLab]() by [tixlegeek](https://cyberpunk.company/) is a [Flipper Zero®](https://flipperzero.one/) accessory that introduces a new way to explore electronics. Designed to be the first tool you reach for when you're developing, debugging, tinkering or exploring digital electronics.
+[Lab401's DigiLab](https://lab401.com/products/lab401-digilab) by [tixlegeek](https://cyberpunk.company/) is a [Flipper Zero®](https://flipperzero.one/) accessory that introduces a new way to explore electronics. Designed to be the first tool you reach for when you're developing, debugging, tinkering or exploring digital electronics.
 
 ### Key Features
 
