@@ -429,7 +429,7 @@ static void
         // * 10 % 4 == 2, so only half the additions (+0, +10, +20, +30) will match the modulo.
         // * Thus, expect to get two values stored.
         // * NOTE: Invalid inputs might store 4 values.
-        for(uint8_t i = 0u; i < 3u; i++) {
+        for(uint8_t i = 0u; i < 4u; i++) {
             if((a % 4u) == remainder) {
                 solution->third_pin_index[solution->third_pin_count++] = a;
             }
