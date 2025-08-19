@@ -50,7 +50,7 @@ Warning - Being connected to qFlipper does make a decent amount of QR generation
 v0.1 is licensed under the MIT license.
 v0.2 and later is licensed under the GNU General Public License.
 
-v0.1 can still be accessed through the Releases page.
+All previous versions can still be accessed through the Releases page.
 
 Any licenses for the cipher / hash function implementations I included is at the top of their respective code files.
 
