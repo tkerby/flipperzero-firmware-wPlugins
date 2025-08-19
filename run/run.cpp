@@ -1,22 +1,6 @@
 #include "run/run.hpp"
 #include "app.hpp"
 
-// keyboard layouts
-static const char keyboard_lowercase[3][11] = {
-    {'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '\0'},
-    {'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', '-', '\0'},
-    {'z', 'x', 'c', 'v', 'b', 'n', 'm', '.', '_', '/', '\0'}};
-
-static const char keyboard_uppercase[3][11] = {
-    {'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '\0'},
-    {'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', '-', '\0'},
-    {'Z', 'X', 'C', 'V', 'B', 'N', 'M', '.', '_', '/', '\0'}};
-
-static const char keyboard_numbers[3][11] = {
-    {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\0'},
-    {'@', '#', '$', '%', '&', '*', '+', '=', '?', '!', '\0'},
-    {'(', ')', '[', ']', '{', '}', '<', '>', '|', '\\', '\0'}};
-
 FlipDownloaderRun::FlipDownloaderRun() : isLoadingNextApps{false}
 {
     // Initialize download queue
@@ -557,143 +541,6 @@ void FlipDownloaderRun::drawDownloadProgress(Canvas *canvas)
     default:
         break;
     };
-}
-
-void FlipDownloaderRun::drawGitHubInput(Canvas *canvas)
-{
-    canvas_clear(canvas);
-
-    // Get current keyboard layout
-    const char (*keyboard)[11];
-    const char *mode_name;
-    switch (text_input_keyboard_mode)
-    {
-    case 1:
-        keyboard = keyboard_uppercase;
-        mode_name = text_input_caps_lock ? "CAPS" : "ABC";
-        break;
-    case 2:
-        keyboard = keyboard_numbers;
-        mode_name = "123";
-        break;
-    default:
-        keyboard = keyboard_lowercase;
-        mode_name = "abc";
-        break;
-    }
-
-    // Draw title and current input
-    canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-    if (currentView == RunViewGitHubAuthor)
-    {
-        canvas_draw_str(canvas, 0, 8, "Author:");
-        canvas_draw_str(canvas, 42, 8, github_author);
-    }
-    else if (currentView == RunViewGitHubRepo)
-    {
-        canvas_draw_str(canvas, 0, 8, "Repo:");
-        canvas_draw_str(canvas, 32, 8, github_repo);
-    }
-
-    // Draw mode indicator in top right
-    canvas_draw_str(canvas, 100, 8, mode_name);
-
-    // Draw compact 3x10 virtual keyboard
-    for (int row = 0; row < 3; row++)
-    {
-        for (int col = 0; col < 10; col++)
-        {
-            char ch = keyboard[row][col];
-            if (ch == '\0')
-                break;
-
-            int x = 3 + col * 12;
-            int y = 22 + row * 10;
-
-            // Highlight current cursor position
-            if (row == text_input_cursor_y && col == text_input_cursor_x)
-            {
-                canvas_draw_rbox(canvas, x - 1, y - 7, 11, 9, 1);
-                canvas_set_color(canvas, ColorWhite);
-            }
-
-            // Draw character
-            char str[2] = {ch, '\0'};
-            canvas_draw_str(canvas, x + 1, y, str);
-            canvas_set_color(canvas, ColorBlack);
-        }
-    }
-
-    // Draw function keys below the main keyboard
-    int func_y = 55;
-
-    // Space bar (wide button)
-    bool space_selected = (text_input_cursor_y == 3 && text_input_cursor_x == 0);
-    if (space_selected)
-    {
-        canvas_draw_rbox(canvas, 3, func_y - 7, 30, 9, 1);
-        canvas_set_color(canvas, ColorWhite);
-    }
-    canvas_draw_str(canvas, 10, func_y, "SPACE");
-    canvas_set_color(canvas, ColorBlack);
-
-    // Backspace
-    bool backspace_selected = (text_input_cursor_y == 3 && text_input_cursor_x == 1);
-    if (backspace_selected)
-    {
-        canvas_draw_rbox(canvas, 35, func_y - 7, 20, 9, 1);
-        canvas_set_color(canvas, ColorWhite);
-    }
-    canvas_draw_str(canvas, 38, func_y, "DEL");
-    canvas_set_color(canvas, ColorBlack);
-
-    // Shift/Mode
-    bool shift_selected = (text_input_cursor_y == 3 && text_input_cursor_x == 2);
-    if (shift_selected)
-    {
-        canvas_draw_rbox(canvas, 57, func_y - 7, 20, 9, 1);
-        canvas_set_color(canvas, ColorWhite);
-    }
-    if (text_input_keyboard_mode == 2)
-    {
-        canvas_draw_str(canvas, 60, func_y, "ABC");
-    }
-    else
-    {
-        canvas_draw_str(canvas, 60, func_y, "123");
-    }
-    canvas_set_color(canvas, ColorBlack);
-
-    // Caps Lock (only show in letter modes)
-    if (text_input_keyboard_mode != 2)
-    {
-        bool caps_selected = (text_input_cursor_y == 3 && text_input_cursor_x == 3);
-        if (caps_selected)
-        {
-            canvas_draw_rbox(canvas, 79, func_y - 7, 20, 9, 1);
-            canvas_set_color(canvas, ColorWhite);
-        }
-        if (text_input_caps_lock)
-        {
-            canvas_draw_box(canvas, 81, func_y - 5, 16, 5); // Filled when caps lock is on
-            canvas_set_color(canvas, ColorWhite);
-        }
-        canvas_draw_str(canvas, 82, func_y, "CAPS");
-        canvas_set_color(canvas, ColorBlack);
-    }
-
-    // Done/Enter
-    bool done_selected = (text_input_cursor_y == 3 && text_input_cursor_x == 4);
-    if (done_selected)
-    {
-        canvas_draw_rbox(canvas, 101, func_y - 7, 25, 9, 1);
-        canvas_set_color(canvas, ColorWhite);
-    }
-    canvas_draw_str(canvas, 105, func_y, "DONE");
-    canvas_set_color(canvas, ColorBlack);
-
-    canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-    canvas_draw_str(canvas, 0, 64, "↑↓←→ OK=Select");
 }
 
 void FlipDownloaderRun::drawGitHubProgress(Canvas *canvas)
@@ -2248,245 +2095,6 @@ std::unique_ptr<FlipperAppInfo> FlipDownloaderRun::getAppInfo(FlipperAppCategory
     return appInfoPtr;
 }
 
-void FlipDownloaderRun::handleGitHubKeyboardInput(InputEvent *event)
-{
-    // Get current keyboard layout
-    const char (*keyboard)[11];
-    switch (text_input_keyboard_mode)
-    {
-    case 1:
-        keyboard = keyboard_uppercase;
-        break;
-    case 2:
-        keyboard = keyboard_numbers;
-        break;
-    default:
-        keyboard = keyboard_lowercase;
-        break;
-    }
-
-    switch (event->key)
-    {
-    case InputKeyLeft:
-        if (text_input_cursor_y < 3) // Main keyboard area
-        {
-            if (text_input_cursor_x > 0)
-            {
-                text_input_cursor_x--;
-            }
-            else
-            {
-                // Wrap to end of row
-                text_input_cursor_x = 9; // Last column in 3x10 grid
-                while (text_input_cursor_x > 0 && keyboard[text_input_cursor_y][text_input_cursor_x] == '\0')
-                {
-                    text_input_cursor_x--;
-                }
-            }
-        }
-        else // Function key row
-        {
-            if (text_input_cursor_x > 0)
-            {
-                text_input_cursor_x--;
-            }
-            else
-            {
-                // Wrap to last function key
-                text_input_cursor_x = (text_input_keyboard_mode == 2) ? 3 : 4; // No caps in number mode
-            }
-        }
-        break;
-
-    case InputKeyRight:
-        if (text_input_cursor_y < 3) // Main keyboard area
-        {
-            if (text_input_cursor_x < 9 && keyboard[text_input_cursor_y][text_input_cursor_x + 1] != '\0')
-            {
-                text_input_cursor_x++;
-            }
-            else
-            {
-                // Wrap to beginning of row
-                text_input_cursor_x = 0;
-            }
-        }
-        else // Function key row
-        {
-            int max_func_key = (text_input_keyboard_mode == 2) ? 3 : 4; // No caps in number mode
-            if (text_input_cursor_x < max_func_key)
-            {
-                text_input_cursor_x++;
-            }
-            else
-            {
-                text_input_cursor_x = 0;
-            }
-        }
-        break;
-
-    case InputKeyUp:
-        if (text_input_cursor_y > 0)
-        {
-            text_input_cursor_y--;
-
-            if (text_input_cursor_y < 3) // Moving to main keyboard
-            {
-                // Clamp cursor to valid position in keyboard grid
-                if (text_input_cursor_x > 9)
-                    text_input_cursor_x = 9;
-                while (text_input_cursor_x > 0 && keyboard[text_input_cursor_y][text_input_cursor_x] == '\0')
-                {
-                    text_input_cursor_x--;
-                }
-            }
-        }
-        else
-        {
-            // Wrap to function key row
-            text_input_cursor_y = 3;
-            if (text_input_cursor_x > 4)
-                text_input_cursor_x = 4;
-        }
-        break;
-
-    case InputKeyDown:
-        if (text_input_cursor_y < 3)
-        {
-            if (text_input_cursor_y < 2) // Can move down within keyboard
-            {
-                text_input_cursor_y++;
-                // Make sure cursor position is valid for this row
-                while (text_input_cursor_x > 0 && keyboard[text_input_cursor_y][text_input_cursor_x] == '\0')
-                {
-                    text_input_cursor_x--;
-                }
-            }
-            else // Move to function keys
-            {
-                text_input_cursor_y = 3;
-                if (text_input_cursor_x > 4)
-                    text_input_cursor_x = 4;
-            }
-        }
-        else
-        {
-            // Wrap to top row
-            text_input_cursor_y = 0;
-            if (text_input_cursor_x > 9)
-                text_input_cursor_x = 9;
-        }
-        break;
-
-    case InputKeyOk:
-    {
-        char *target_buffer = (currentView == RunViewGitHubAuthor) ? github_author : github_repo;
-        size_t target_size = (currentView == RunViewGitHubAuthor) ? sizeof(github_author) : sizeof(github_repo);
-
-        if (text_input_cursor_y == 3) // Function key row
-        {
-            switch (text_input_cursor_x)
-            {
-            case 0: // Space
-            {
-                size_t len = 0;
-                while (len < target_size - 1 && target_buffer[len] != '\0')
-                    len++; // Manual length
-                if (len < target_size - 1)
-                {
-                    target_buffer[len] = ' ';
-                    target_buffer[len + 1] = '\0';
-                }
-            }
-            break;
-
-            case 1: // Backspace
-            {
-                size_t len = 0;
-                while (len < target_size - 1 && target_buffer[len] != '\0')
-                    len++; // Manual length
-                if (len > 0)
-                {
-                    target_buffer[len - 1] = '\0';
-                }
-            }
-            break;
-
-            case 2: // Mode switch (ABC/123)
-                if (text_input_keyboard_mode == 2)
-                {
-                    text_input_keyboard_mode = text_input_caps_lock ? 1 : 0;
-                }
-                else
-                {
-                    text_input_keyboard_mode = 2;
-                }
-                break;
-
-            case 3: // Caps Lock (only in letter modes)
-                if (text_input_keyboard_mode != 2)
-                {
-                    text_input_caps_lock = !text_input_caps_lock;
-                    text_input_keyboard_mode = text_input_caps_lock ? 1 : 0;
-                }
-                break;
-
-            case 4: // Done
-                if (currentView == RunViewGitHubAuthor)
-                {
-                    // Move to repo input
-                    currentView = RunViewGitHubRepo;
-                    startTextInput(RunViewGitHubRepo);
-                }
-                else if (currentView == RunViewGitHubRepo)
-                {
-                    // Start download
-                    startGitHubDownload();
-                }
-                break;
-            }
-        }
-        else // Main keyboard area
-        {
-            char ch = keyboard[text_input_cursor_y][text_input_cursor_x];
-            if (ch != '\0')
-            {
-                size_t len = 0;
-                while (len < target_size - 1 && target_buffer[len] != '\0')
-                    len++; // Manual length
-                if (len < target_size - 1)
-                {
-                    target_buffer[len] = ch;
-                    target_buffer[len + 1] = '\0';
-
-                    // Auto-switch to lowercase after typing a letter in caps mode (not caps lock)
-                    if (text_input_keyboard_mode == 1 && !text_input_caps_lock &&
-                        ((ch >= 'A' && ch <= 'Z')))
-                    {
-                        text_input_keyboard_mode = 0;
-                    }
-                }
-            }
-        }
-    }
-    break;
-
-    case InputKeyBack:
-        if (currentView == RunViewGitHubRepo)
-        {
-            currentView = RunViewGitHubAuthor;
-        }
-        else if (currentView == RunViewGitHubAuthor)
-        {
-            currentView = RunViewMainMenu;
-        }
-        break;
-
-    default:
-        break;
-    }
-}
-
 bool FlipDownloaderRun::hasAppsAvailable(FlipperAppCategory category)
 {
     char savePath[128];
@@ -2797,11 +2405,15 @@ void FlipDownloaderRun::startDownloadQueue()
 
 bool FlipDownloaderRun::startTextInput(uint32_t view)
 {
-    // Initialize text input state
-    text_input_cursor_x = 0;
-    text_input_cursor_y = 0;
-    text_input_keyboard_mode = 0; // 0=lowercase, 1=uppercase, 2=numbers
-    text_input_caps_lock = false; // Start with caps lock off
+    if (!keyboard)
+    {
+        keyboard = std::make_unique<Keyboard>();
+    }
+    else
+    {
+        keyboard.reset();
+        keyboard = std::make_unique<Keyboard>();
+    }
 
     if (view == RunViewGitHubAuthor)
     {
@@ -2972,8 +2584,16 @@ void FlipDownloaderRun::updateDraw(Canvas *canvas)
         drawMenuVGM(canvas);
         break;
     case RunViewGitHubAuthor:
+        if (keyboard)
+        {
+            keyboard->draw(canvas, "Author:");
+        }
+        break;
     case RunViewGitHubRepo:
-        drawGitHubInput(canvas);
+        if (keyboard)
+        {
+            keyboard->draw(canvas, "Repo:");
+        }
         break;
     case RunViewGitHubProgress:
         drawGitHubProgress(canvas);
@@ -3074,7 +2694,45 @@ void FlipDownloaderRun::updateInput(InputEvent *event)
             if (currentView == RunViewGitHubAuthor || currentView == RunViewGitHubRepo)
             {
                 // Virtual keyboard input handling
-                handleGitHubKeyboardInput(event);
+                if (keyboard)
+                {
+                    switch (event->key)
+                    {
+                    case InputKeyBack:
+                        if (currentView == RunViewGitHubRepo)
+                        {
+                            currentView = RunViewGitHubAuthor;
+                        }
+                        else if (currentView == RunViewGitHubAuthor)
+                        {
+                            currentView = RunViewMainMenu;
+                        }
+                        break;
+
+                    default:
+                        if (keyboard)
+                        {
+                            if (keyboard->handleInput(event->key))
+                            {
+                                // Handle successful input
+                                if (currentView == RunViewGitHubAuthor)
+                                {
+                                    // Move to repo input
+                                    snprintf(github_author, sizeof(github_author), "%s", keyboard->getText());
+                                    currentView = RunViewGitHubRepo;
+                                    startTextInput(RunViewGitHubRepo);
+                                }
+                                else if (currentView == RunViewGitHubRepo)
+                                {
+                                    // Start download
+                                    snprintf(github_repo, sizeof(github_repo), "%s", keyboard->getText());
+                                    startGitHubDownload();
+                                }
+                            }
+                        }
+                        break;
+                    };
+                }
             }
             else if (currentView == RunViewGitHubProgress)
             {

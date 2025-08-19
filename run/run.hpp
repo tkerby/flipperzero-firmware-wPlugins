@@ -1,6 +1,7 @@
 #pragma once
 #include "easy_flipper/easy_flipper.h"
 #include "loading/loading.hpp"
+#include "run/keyboard.hpp"
 
 class FlipDownloaderApp;
 
@@ -88,6 +89,7 @@ class FlipDownloaderRun
     bool isGitHubDownloadComplete = false;                // Flag to indicate if GitHub downloads are complete
     bool isDownloadingIndividualApp = false;              // Flag to indicate if downloading an individual app
     bool isLoadingNextApps = false;                       // Flag to indicate if loading next batch of apps
+    std::unique_ptr<Keyboard> keyboard;                   // keyboard instance for input handling
     std::unique_ptr<Loading> loading;                     // Loading screen instance
     char savePath[256];                                   // Buffer to store the save path
     uint8_t selectedIndexMain = 0;                        // Currently selected menu item
@@ -96,10 +98,6 @@ class FlipDownloaderRun
     uint8_t selectedIndexVGM = 0;                         // Currently selected VGM item
     uint8_t selectedIndexApps = 0;                        // Currently selected app item
     bool shouldReturnToMenu = false;                      // Flag to signal return to menu
-    uint8_t text_input_cursor_x;                          // X position of cursor on virtual keyboard
-    uint8_t text_input_cursor_y;                          // Y position of cursor on virtual keyboard
-    uint8_t text_input_keyboard_mode;                     // 0=lowercase, 1=uppercase, 2=numbers
-    bool text_input_caps_lock;                            // Caps lock state for persistent uppercase
 
     //
     void clearDownloadQueue();                                                                          // Clear the download queue
@@ -116,7 +114,6 @@ class FlipDownloaderRun
     void drawApps(Canvas *canvas);                                                                      // Draw the apps view
     void drawGitHubInput(Canvas *canvas);                                                               // Draw GitHub input screen
     void drawGitHubProgress(Canvas *canvas);                                                            // Draw GitHub download progress
-    void handleGitHubKeyboardInput(InputEvent *event);                                                  // Handle virtual keyboard input for GitHub author/repo
     bool downloadApp(const char *appId, const char *buildId, const char *category);                     // Download an app based on the category and index
     bool downloadCategoryInfo(FlipperAppCategory category, uint8_t iteration);                          // Download category information based on the category and iteration
     bool downloadFile(FlipDownloaderDownloadLink link);                                                 // Download a file based on the link type
