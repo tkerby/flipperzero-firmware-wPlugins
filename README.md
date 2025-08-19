@@ -1,17 +1,18 @@
-I am no dev, I tried to vibe code an app to write .NFC to magic SLI/SLIX card bought from Aliexpress (normally written with PM3).
-
-Compiled with Unleashed 0.82
-
-No matter what I try it crashes on NFC_start
-
-Looking for help!
-
-37733540 [I][SLI_Writer] Menu -> TestMagic
-37733544 [I][SLI_Writer] Scene Start exit
-37733546 [I][SLI_Writer] Scene Write enter -> loading (worker will run NFC)
-37733554 [D][ViewDispatcher] View changed while key press 2000FB20 -> 20011FB0. Sending key: OK, type: Release, sequence: 0000003C to previous view
-37733567 [I][SLI_Writer] Worker start
-37733569 [I][SLI_Writer] nfc_alloc (worker)...
-37733573 [I][SLI_Writer] nfc_runner spawn
-37733576 [I][SLI_Writer] nfc_runner: nfc_start...
-
+35313 [I][SLI_Writer_App] scene_start: enter
+36482 [I][SLI_Writer_App] scene_start: exit
+36489 [I][SLI_Writer_App] scene_write: enter
+36495 [I][SLI_Writer_App] scene_write: worker started
+36499 [D][ViewDispatcher] View changed while key press 20010B20 -> 20011A20. Sending key: OK, type: Release, sequence: 00000034 to previous view
+36510 [I][SLI_Writer_App] worker: enter
+36533 [I][SLI_Writer_App] worker: nfc_alloc ok
+36537 [I][SLI_Writer_App] worker: nfc_config ok
+36539 [I][SLI_Writer_App] worker: nfc_start()
+36542 [D][SLI_Writer_App] cb: event type 8
+36545 [I][SLI_Writer_App] cb: PollerReady
+36547 [D][SLI_Writer_App] cb: event type 8
+36549 [D][SLI_Writer_App] cb: event type 8
+36552 [D][SLI_Writer_App] cb: event type 8
+36554 [D][SLI_Writer_App] cb: event type 8
+36556 [D][SLI_Writer_App] cb: event type 8
+36559 [D][SLI_Writer_App] cb: event type 8
+36561 [D][SLI_Writer_App] cb: event type 8
