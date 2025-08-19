@@ -9,7 +9,7 @@ App(
     fap_icon_assets="icons",
     fap_category="NFC",
     fap_author="grugnoymeme a.k.a. 47LeCoste",
-    fap_weburl="https://github.com/grugnoymeme/nfc_dicts_manager",
+    fap_weburl="https://github.com/grugnoymeme/Flipper-Zero-NFC-Dicts-Manager",
     fap_version="1.0",
     fap_description="Advanced NFC dictionary management tool for Flipper Zero",
 )
