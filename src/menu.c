@@ -157,6 +157,7 @@ static const CyclingMenuDef rgbmode_commands[] = {
 
 static const CyclingMenuDef wifi_scan_modes[] = {
     {"< Scan: (APs) >", "scanap\n", "WiFi AP Scanner", "Scans for WiFi APs...", false, NULL},
+    {"< Scan: (APs Live) >", "scanap -live\n", "Live AP Scanner", "Continuously updates as APs are found\n- SSID names\n- Signal levels\n- Security type\n- Channel info\n", false, NULL},
     {"< Scan: (Stations) >", "scansta\n", "Station Scanner", "Scans for clients...", false, NULL},
     {"< Scan: (AP+STA) >", "scanall\n", "Scan All", "Combined AP/Station scan...", false, NULL},
 };
@@ -228,15 +229,6 @@ static const MenuCommand wifi_scanning_commands[] = {
         .details_header = wifi_list_modes[0].details_header,
         .details_text = wifi_list_modes[0].details_text,
     },
-        .label = "Scan APs Live",
-        .command = "scanap -live\n",
-        .details_header = "Live AP Scanner",
-        .details_text = "Continuously updates as APs are found\n"
-                        "- SSID names\n"
-                        "- Signal levels\n"
-                        "- Security type\n"
-                        "- Channel info\n",
-    },
     {
         .label = "< Select: (AP) >", // Initial label
         .command = wifi_select_modes[0].command,
@@ -279,7 +271,6 @@ static const MenuCommand wifi_scanning_commands[] = {
                         "Ex: 192.168.1.1 80-1000",
     },
     {
-
         .label = "ARP Scan",
         .command = "scanarp\n",
         .details_header = "ARP Scan",
@@ -474,6 +465,7 @@ static const MenuCommand wifi_network_commands[] = {
         .details_header = "List Portals",
         .details_text = "Show all available HTML portals\non the SD card.",
     },
+    {
         .label = "Set Evil Portal HTML",
         .command = "set_evil_portal_html",
         .needs_input = true,
@@ -482,7 +474,6 @@ static const MenuCommand wifi_network_commands[] = {
         .details_text = "Select and send an HTML\n"
                         "file to the ESP32 for\n"
                         "the evil portal.\n\n",
-
     },
     {
         .label = "Connect To WiFi",
@@ -918,6 +909,33 @@ static const MenuCommand gps_commands[] = {
     },
 };
 
+static bool cycle_menu_item(
+    CyclingMenuDef* cycling_array,
+    size_t cycling_count,
+    size_t* current_index,
+    MenuCommand* menu_commands,
+    size_t menu_index,
+    Submenu* menu,
+    InputEvent* event) {
+
+    if(event->key == InputKeyRight) {
+        *current_index = (*current_index + 1) % cycling_count;
+    } else {
+        *current_index = (*current_index == 0) ? (cycling_count - 1) : (*current_index - 1);
+    }
+    submenu_change_item_label(menu, menu_index, cycling_array[*current_index].label);
+
+    // Update menu command fields
+    MenuCommand* cmd = &menu_commands[menu_index];
+    cmd->command = cycling_array[*current_index].command;
+    cmd->needs_input = cycling_array[*current_index].needs_input;
+    cmd->input_text = cycling_array[*current_index].input_text;
+    cmd->details_header = cycling_array[*current_index].details_header;
+    cmd->details_text = cycling_array[*current_index].details_text;
+
+    return true;
+}
+
 void send_uart_command(const char* command, void* state) {
     AppState* app_state = (AppState*)state;
     uart_send(app_state->uart_context, (uint8_t*)command, strlen(command));
@@ -1115,7 +1133,6 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
     if(!uart_is_esp_connected(state->uart_context)) {
         state->previous_view = state->current_view;
         confirmation_view_set_header(state->confirmation_view, "Connection Error");
-        // ... (rest of the code remains the same)
         confirmation_view_set_text(
             state->confirmation_view,
             "No response from ESP!\nIs a command running?\nRestart the app.\nRestart ESP.\nCheck UART Pins.\nReflash if issues persist.\nYou can disable this check in the settings menu.\n\n");
@@ -2064,6 +2081,7 @@ static bool menu_input_handler(InputEvent* event, void* context) {
         case InputKeyLeft:
             // Handle sniff command cycling
             if(state->current_view == 11 && current_index == 0) {
+                // sniff_commands is not CyclingMenuDef, so keep legacy logic for now
                 if(event->key == InputKeyRight) {
                     current_sniff_index = (current_sniff_index + 1) % COUNT_OF(sniff_commands);
                 } else {
@@ -2077,136 +2095,80 @@ static bool menu_input_handler(InputEvent* event, void* context) {
             }
             // Handle beacon spam command cycling
             else if(state->current_view == 12 && current_index == 0) {
-                if(event->key == InputKeyRight) {
-                    current_beacon_index =
-                        (current_beacon_index + 1) % COUNT_OF(beacon_spam_commands);
-                } else {
-                    current_beacon_index = (current_beacon_index == 0) ?
-                                               (size_t)(COUNT_OF(beacon_spam_commands) - 1) :
-                                               (current_beacon_index - 1);
-                }
-                submenu_change_item_label(
-                    current_menu, current_index, beacon_spam_commands[current_beacon_index].label);
-                consumed = true;
+                consumed = cycle_menu_item(
+                    (CyclingMenuDef*)beacon_spam_commands,
+                    COUNT_OF(beacon_spam_commands),
+                    &current_beacon_index,
+                    (MenuCommand*)wifi_attack_commands,
+                    0,
+                    current_menu,
+                    event);
             }
             // Handle rgbmode command cycling (new branch for index 17)
             else if(state->current_view == 14 && current_index == 0) {
-                if(event->key == InputKeyRight) {
-                    current_rgb_index = (current_rgb_index + 1) % COUNT_OF(rgbmode_commands);
-                } else {
-                    current_rgb_index = (current_rgb_index == 0) ?
-                                            (COUNT_OF(rgbmode_commands) - 1) :
-                                            (current_rgb_index - 1);
-                }
-                submenu_change_item_label(
-                    current_menu, current_index, rgbmode_commands[current_rgb_index].label);
-                consumed = true;
+                consumed = cycle_menu_item(
+                    (CyclingMenuDef*)rgbmode_commands,
+                    COUNT_OF(rgbmode_commands),
+                    &current_rgb_index,
+                    (MenuCommand*)wifi_settings_commands,
+                    0,
+                    current_menu,
+                    event);
             }
             // Handle BLE spam command cycling
             else if(state->current_view == 22 && current_index == 0) {
-                if(event->key == InputKeyRight) {
-                    current_ble_spam_index =
-                        (current_ble_spam_index + 1) % COUNT_OF(ble_spam_commands);
-                } else {
-                    current_ble_spam_index = (current_ble_spam_index == 0) ?
-                                                 (COUNT_OF(ble_spam_commands) - 1) :
-                                                 (current_ble_spam_index - 1);
-                }
-                submenu_change_item_label(
-                    current_menu, current_index, ble_spam_commands[current_ble_spam_index].label);
-                consumed = true;
+                consumed = cycle_menu_item(
+                    (CyclingMenuDef*)ble_spam_commands,
+                    COUNT_OF(ble_spam_commands),
+                    &current_ble_spam_index,
+                    (MenuCommand*)ble_attack_commands,
+                    0,
+                    current_menu,
+                    event);
             }
             // Handle WiFi scan mode cycling
-            else if(state->current_view == 10 && current_index == 0) { // Assuming it's the first item
-                if(event->key == InputKeyRight) {
-                    current_wifi_scan_index =
-                        (current_wifi_scan_index + 1) % COUNT_OF(wifi_scan_modes);
-                } else {
-                    current_wifi_scan_index = (current_wifi_scan_index == 0) ?
-                                                  (COUNT_OF(wifi_scan_modes) - 1) :
-                                                  (current_wifi_scan_index - 1);
-                }
-                submenu_change_item_label(
-                    current_menu, current_index, wifi_scan_modes[current_wifi_scan_index].label);
-
-                // Update the cycling menu item fields
-                MenuCommand* scan_cmd = (MenuCommand*)&wifi_scanning_commands[0];
-                scan_cmd->command = wifi_scan_modes[current_wifi_scan_index].command;
-                scan_cmd->details_header = wifi_scan_modes[current_wifi_scan_index].details_header;
-                scan_cmd->details_text = wifi_scan_modes[current_wifi_scan_index].details_text;
-
-                consumed = true;
+            else if(state->current_view == 10 && current_index == 0) {
+                consumed = cycle_menu_item(
+                    (CyclingMenuDef*)wifi_scan_modes,
+                    COUNT_OF(wifi_scan_modes),
+                    &current_wifi_scan_index,
+                    (MenuCommand*)wifi_scanning_commands,
+                    0,
+                    current_menu,
+                    event);
             }
             // List mode cycling
             else if(state->current_view == 10 && current_index == 1) {
-                if(event->key == InputKeyRight) {
-                    current_wifi_list_index =
-                        (current_wifi_list_index + 1) % COUNT_OF(wifi_list_modes);
-                } else {
-                    current_wifi_list_index = (current_wifi_list_index == 0) ?
-                                                  (COUNT_OF(wifi_list_modes) - 1) :
-                                                  (current_wifi_list_index - 1);
-                }
-                submenu_change_item_label(
-                    current_menu, current_index, wifi_list_modes[current_wifi_list_index].label);
-                // Update cycling menu item fields
-                MenuCommand* list_cmd = (MenuCommand*)&wifi_scanning_commands[1];
-                list_cmd->command = wifi_list_modes[current_wifi_list_index].command;
-                list_cmd->details_header = wifi_list_modes[current_wifi_list_index].details_header;
-                list_cmd->details_text = wifi_list_modes[current_wifi_list_index].details_text;
-                consumed = true;
+                consumed = cycle_menu_item(
+                    (CyclingMenuDef*)wifi_list_modes,
+                    COUNT_OF(wifi_list_modes),
+                    &current_wifi_list_index,
+                    (MenuCommand*)wifi_scanning_commands,
+                    1,
+                    current_menu,
+                    event);
             }
             // Select mode cycling
             else if(state->current_view == 10 && current_index == 2) {
-                if(event->key == InputKeyRight) {
-                    current_wifi_select_index =
-                        (current_wifi_select_index + 1) % COUNT_OF(wifi_select_modes);
-                } else {
-                    current_wifi_select_index = (current_wifi_select_index == 0) ?
-
-                                                    (COUNT_OF(wifi_select_modes) - 1) :
-                                                    (current_wifi_select_index - 1);
-                }
-                submenu_change_item_label(
+                consumed = cycle_menu_item(
+                    (CyclingMenuDef*)wifi_select_modes,
+                    COUNT_OF(wifi_select_modes),
+                    &current_wifi_select_index,
+                    (MenuCommand*)wifi_scanning_commands,
+                    2,
                     current_menu,
-                    current_index,
-                    wifi_select_modes[current_wifi_select_index].label);
-                // Update cycling menu item fields
-                MenuCommand* select_cmd = (MenuCommand*)&wifi_scanning_commands[2];
-                select_cmd->command = wifi_select_modes[current_wifi_select_index].command;
-                select_cmd->needs_input = wifi_select_modes[current_wifi_select_index].needs_input;
-                select_cmd->input_text = wifi_select_modes[current_wifi_select_index].input_text;
-                select_cmd->details_header =
-                    wifi_select_modes[current_wifi_select_index].details_header;
-                select_cmd->details_text =
-                    wifi_select_modes[current_wifi_select_index].details_text;
-                consumed = true;
+                    event);
             }
             // Handle listen mode cycling
-            else if(state->current_view == 10 && current_index == 3) { // Adjust index as needed
-                if(event->key == InputKeyRight) {
-                    current_wifi_listen_index =
-                        (current_wifi_listen_index + 1) % COUNT_OF(wifi_listen_modes);
-                } else {
-                    current_wifi_listen_index = (current_wifi_listen_index == 0) ?
-                                                    (COUNT_OF(wifi_listen_modes) - 1) :
-                                                    (current_wifi_listen_index - 1);
-                }
-                submenu_change_item_label(
+            else if(state->current_view == 10 && current_index == 3) {
+                consumed = cycle_menu_item(
+                    (CyclingMenuDef*)wifi_listen_modes,
+                    COUNT_OF(wifi_listen_modes),
+                    &current_wifi_listen_index,
+                    (MenuCommand*)wifi_scanning_commands,
+                    3,
                     current_menu,
-                    current_index,
-                    wifi_listen_modes[current_wifi_listen_index].label);
-                // Update cycling menu item fields
-                MenuCommand* listen_cmd =
-                    (MenuCommand*)&wifi_scanning_commands[3]; // Adjust index as needed
-                listen_cmd->command = wifi_listen_modes[current_wifi_listen_index].command;
-                listen_cmd->needs_input = wifi_listen_modes[current_wifi_listen_index].needs_input;
-                listen_cmd->input_text = wifi_listen_modes[current_wifi_listen_index].input_text;
-                listen_cmd->details_header =
-                    wifi_listen_modes[current_wifi_listen_index].details_header;
-                listen_cmd->details_text =
-                    wifi_listen_modes[current_wifi_listen_index].details_text;
-                consumed = true;
+                    event);
             }
             break;
         case InputKeyMAX:
