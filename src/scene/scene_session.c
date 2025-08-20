@@ -1,6 +1,7 @@
 #include "src/cuberzero.h"
 #include <dialogs/dialogs.h>
 #include <gui/elements.h>
+#include <gui/view_holder.h>
 
 typedef struct {
 	PCUBERZERO instance;
@@ -65,8 +66,13 @@ static inline void handleKeyOk(const PSESSIONSCENE instance, const InputEvent* c
 		instance->action = ACTION_SELECT;
 		furi_message_queue_put(instance->queue, event, FuriWaitForever);
 		break;
-	case BUTTON_SESSION_RENAME:
+	case BUTTON_SESSION_RENAME: {
+		ViewHolder* holder = view_holder_alloc();
+		view_holder_attach_to_gui(holder, instance->instance->interface);
+		view_holder_send_to_front(holder);
+		free(holder);
 		break;
+	}
 	case BUTTON_SESSION_NEW:
 		break;
 	case BUTTON_SESSION_DELETE:
