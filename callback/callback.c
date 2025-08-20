@@ -680,7 +680,7 @@ void callback_submenu_choices(void *context, uint32_t index)
         }
         if (callback_scan(app->fhttp))
         {
-            furi_delay_ms(100); // wait for the command to be sent
+            furi_delay_ms(500); // wait for the command to be sent
             // wait for the scan to complete
             Loading *loading = loading_alloc();
             int32_t loading_view_id = 87654321; // Random ID

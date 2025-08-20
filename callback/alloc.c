@@ -269,7 +269,7 @@ bool alloc_text_inputs(void *context, uint32_t view)
     case FlipWiFiViewTextInputDeauth:
         if (!app->uart_text_input)
         {
-            if (!easy_flipper_set_uart_text_input(&app->uart_text_input, FlipWiFiViewTextInput, "Enter SSID", app->uart_text_input_temp_buffer, app->uart_text_input_buffer_size, callback_text_updated_deauth, callback_to_submenu_scan, &app->view_dispatcher, app))
+            if (!easy_flipper_set_uart_text_input(&app->uart_text_input, FlipWiFiViewTextInput, "Enter SSID", app->uart_text_input_temp_buffer, app->uart_text_input_buffer_size, callback_text_updated_deauth, callback_to_submenu_main, &app->view_dispatcher, app))
             {
                 FURI_LOG_E(TAG, "Failed to allocate text input for WiFi Deauth");
                 return false;
