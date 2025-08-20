@@ -43,6 +43,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Space Travel Calculator v1.0 (By ejfox)](https://github.com/ejfox/flipper-space-calculators)
 - Updated: [Rubiks Cube Timer v0.0.2 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
 - Updated: [FlipDownloader v1.3.3 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- Updated: [NFC Seader v3.3 (By bettse)](https://github.com/bettse/seader)
 
 <a name="release">
 
