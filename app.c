@@ -33,7 +33,7 @@ int32_t flip_wifi_main(void *p)
         return -1;
     }
 
-    furi_delay_ms(100);
+    furi_delay_ms(500);
 
     // Try to wait for pong response.
     uint32_t counter = 10;
