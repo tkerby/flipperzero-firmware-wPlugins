@@ -352,7 +352,7 @@ bool alloc_text_inputs(void* context, uint32_t view) {
                    app->uart_text_input_temp_buffer,
                    app->uart_text_input_buffer_size,
                    callback_text_updated_deauth,
-                   callback_to_submenu_scan,
+                   callback_to_submenu_main,
                    &app->view_dispatcher,
                    app)) {
                 FURI_LOG_E(TAG, "Failed to allocate text input for WiFi Deauth");
