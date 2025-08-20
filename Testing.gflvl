@@ -1,67 +1,45 @@
-# Geometry Flip Testing.gflvl
-# Internal level to test some things
-# Format for block: objtype,x,y
-# Типы: 0=empty, 1=block, 2=spike_up, 3=spike_down, 4=spike_left, 5=spike_right
-
-# Some blocks
+# Geometry Flip Physics Engine Testing
+# Demo with blocks, platforms, walls, spikes; ship, cube, gravity portals
+# Leave comments like in Python!
+# The level starts here
 1,5,0
 1,6,0
-1,10,0
-1,11,0
+2,8,0 # Upside down spike
 
-# Spike
-2,15,0
+# TODO FOR DOCS: b is a platform mark, id, sort of.
+b,10,0,15 # Platform with 15 blocks in a row with coordinates (10, 0)
+2,25,0 # Spike on the end
 
-# Small platform
-1,20,1
-1,21,1
+# TODO FOR DOCS: w is a wall mark
+w,30,0,8 # 8 block wall on (30, 0)
+2,30,8 # Spike on the wall peak
 
-# A spike
-2,22,1
+# Portals
+b,35,0,5 # Platform
+6,37,0 # TODO FOR DOCS: Ship portal (6)
+b,40,0,3 # Platform for portal
+b,45,1,3 # Ground platform
 
-# Platform of 2 blocks
-1,25,0
-1,26,0
+# Gravity for ship
+b,50,0,2
+8,51,1 # Upside down portal (8)
+b,55,2,2 # Platform in the air
 
-# A spike
-2,30,0
+# Cube portal
+7,60,0 # TODO FOR DOCS: cube is (7)
 
-# Air block
-1,35,2
+# Section to test coyote time
+b,65,0,3 # Platform
+3,66,1 # Upside down test spike
+2,70,0 # Normal test spike
 
-# Spike under the block
-3,35,1
+# Portal for the ship
+6,75,0 # Id for ship is (6)
+b,80,0,3
+9,81,1 # Normal gravity portal with id (9)
+b,85,2,2 # A funky block
 
-# Platform
-1,40,0
-1,41,0
-1,42,0
-1,43,0
-1,44,0
-1,45,0
-1,46,0
-1,47,0
-1,48,0
-1,49,0
-1,50,0
-1,51,0
-1,52,0
-1,53,0
-1,54,0
-1,55,0
-1,56,0
-1,57,0
-1,58,0
-1,59,0
-1,60,0
-1,61,0
-1,62,0
-1,63,0
-1,64,0
-1,65,0
-1,66,0
-1,67,0
-1,68,0
-1,69,0
-1,70,0
-# Конец уровня
+# Become cube again
+7,90,0 # Cube is id (7)
+b,95,0,5 # Final platform!
+2,100,0 # Final spike!
