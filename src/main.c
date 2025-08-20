@@ -23,6 +23,7 @@
 #include "callbacks.h"
 #include "confirmation_view.h"
 #include "utils.h"
+#include "app_state.h"
 
 // Include the header where settings_custom_event_callback is declared
 #include "settings_ui.h"
@@ -52,6 +53,8 @@ int32_t ghost_esp_app(void* p) {
     AppState* state = malloc(sizeof(AppState));
     if(!state) return -1;
     memset(state, 0, sizeof(AppState)); // Zero all memory first
+    // Open dialogs record for file browser
+    state->dialogs = furi_record_open(RECORD_DIALOGS);
 
     // Initialize menu selection indices
     state->last_wifi_category_index = 0;
@@ -76,9 +79,9 @@ int32_t ghost_esp_app(void* p) {
         state->textBoxBuffer[0] = '\0';
     }
     state->buffer_length = 0;
-    state->input_buffer = malloc(32);
+    state->input_buffer = malloc(INPUT_BUFFER_SIZE);
     if(state->input_buffer) {
-        memset(state->input_buffer, 0, 32);
+        memset(state->input_buffer, 0, INPUT_BUFFER_SIZE);
     }
 
     // Initialize UI components - core components first

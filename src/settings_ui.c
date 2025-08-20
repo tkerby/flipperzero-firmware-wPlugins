@@ -375,7 +375,14 @@ static void settings_item_change_callback(VariableItem* item) {
 
     if(settings_set(context->settings, key, value, context)) {
         variable_item_set_current_value_text(item, metadata->data.setting.value_names[value]);
-        if(metadata->data.setting.uart_command && context->send_uart_command) {
+        if(key == SETTING_RGB_MODE && context->send_uart_command) {
+            const char* modes[] = {"stealth", "normal", "rainbow"};
+            const char* mode = "normal";
+            if(value < (sizeof(modes) / sizeof(modes[0]))) mode = modes[value];
+            char command[64];
+            snprintf(command, sizeof(command), "setrgbmode %s\n", mode);
+            context->send_uart_command(command, context->context);
+        } else if(metadata->data.setting.uart_command && context->send_uart_command) {
             char command[64];
             snprintf(
                 command,
@@ -549,7 +556,8 @@ bool settings_custom_event_callback(void* context, uint32_t event_id) {
                                 "Updated by: Jay Candel\n"
                                 "Built with <3";
 
-        confirmation_view_set_header(app_state->confirmation_view, "Ghost ESP v1.4 dev");
+
+        confirmation_view_set_header(app_state->confirmation_view, "Ghost ESP v1.4");
         confirmation_view_set_text(app_state->confirmation_view, info_text);
 
         // Save current view before switching

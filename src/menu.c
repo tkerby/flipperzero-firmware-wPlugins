@@ -5,6 +5,7 @@
 #include "settings_storage.h"
 #include "settings_def.h"
 #include "confirmation_view.h"
+#include "ghost_esp_ep.h"
 
 typedef struct {
     const char* label; // Display label in menu
@@ -227,6 +228,15 @@ static const MenuCommand wifi_scanning_commands[] = {
         .details_header = wifi_list_modes[0].details_header,
         .details_text = wifi_list_modes[0].details_text,
     },
+        .label = "Scan APs Live",
+        .command = "scanap -live\n",
+        .details_header = "Live AP Scanner",
+        .details_text = "Continuously updates as APs are found\n"
+                        "- SSID names\n"
+                        "- Signal levels\n"
+                        "- Security type\n"
+                        "- Channel info\n",
+    },
     {
         .label = "< Select: (AP) >", // Initial label
         .command = wifi_select_modes[0].command,
@@ -267,6 +277,43 @@ static const MenuCommand wifi_scanning_commands[] = {
                         "Options: -C, -A, range\n"
                         "Ex: local -C\n"
                         "Ex: 192.168.1.1 80-1000",
+    },
+    {
+
+        .label = "ARP Scan",
+        .command = "scanarp\n",
+        .details_header = "ARP Scan",
+        .details_text = "Initiates an ARP scan on the local network to discover hosts:\n"
+                        "- Sends ARP requests across the subnet\n"
+                        "- Shows responding IP/MAC pairs\n"
+                        "Requires WiFi connection.\n",
+    },
+    {
+        .label = "Scan SSH",
+        .command = "scanssh",
+        .needs_input = true,
+        .input_text = "IP",
+        .details_header = "SSH Scan",
+        .details_text = "Initiate an SSH port/service scan against the target IP:\n"
+                        "- Provide an IP address (e.g., 192.168.1.10)\n"
+                        "- Scans common SSH ports and reports responses\n"
+                        "- Requires network connectivity\n\n",
+    },
+    {
+        .label = "Listen Probes (Hop)",
+        .command = "listenprobes\n",
+        .details_header = "Listen for Probes",
+        .details_text = "Listen for and log probe requests\n"
+                        "while hopping channels.",
+    },
+    {
+        .label = "Listen Probes (Chan)",
+        .command = "listenprobes",
+        .needs_input = true,
+        .input_text = "Channel (1-165)",
+        .details_header = "Listen on Channel",
+        .details_text = "Listen for probe requests on a\n"
+                        "specific channel.",
     },
     {
         .label = "Stop Listen Probes",
@@ -336,6 +383,7 @@ static const MenuCommand wifi_attack_commands[] = {
         .details_header = "SAE Flood Attack",
         .details_text = "Floods WPA3 networks with\nSAE handshakes. Select a WPA3 AP first.",
     },
+
     {
         .label = "DHCP Starve Start",
         .command = "dhcpstarve",
@@ -420,10 +468,21 @@ static const MenuCommand wifi_network_commands[] = {
                         "- Landing page\n",
     },
     {
+
         .label = "List Portals",
         .command = "listportals\n",
         .details_header = "List Portals",
         .details_text = "Show all available HTML portals\non the SD card.",
+    },
+        .label = "Set Evil Portal HTML",
+        .command = "set_evil_portal_html",
+        .needs_input = true,
+        .input_text = "HTML File",
+        .details_header = "Set Evil Portal HTML",
+        .details_text = "Select and send an HTML\n"
+                        "file to the ESP32 for\n"
+                        "the evil portal.\n\n",
+
     },
     {
         .label = "Connect To WiFi",
@@ -432,8 +491,23 @@ static const MenuCommand wifi_network_commands[] = {
         .input_text = "SSID",
         .details_header = "WiFi Connect",
         .details_text = "Connect ESP to WiFi:\n"
-                        "Enter SSID followed by password.\n",
+                        "Enter SSID followed by password.\n\n",
     },
+    {
+        .label = "Connect to Saved WiFi",
+        .command = "connect\n",
+        .details_header = "Connect (Saved)",
+        .details_text = "Connect to the previously saved WiFi credentials on the ESP.\n"
+                        "No input required.\n\n",
+    },
+    {
+        .label = "Disconnect WiFi",
+        .command = "disconnect\n",
+        .details_header = "Disconnect",
+        .details_text = "Disconnects from the current WiFi network on the ESP.\n"
+                        "No input required.\n",
+    },
+
     {
         .label = "Cast Random Video",
         .command = "dialconnect\n",
@@ -445,7 +519,7 @@ static const MenuCommand wifi_network_commands[] = {
         .details_text = "Casts random videos\n"
                         "to nearby Cast/DIAL\n"
                         "enabled devices.\n"
-                        "Range: ~50m\n",
+                        "Range: ~50m\n\n",
     },
     {
         .label = "Printer Power",
@@ -458,7 +532,7 @@ static const MenuCommand wifi_network_commands[] = {
                         "of network printers.\n"
                         "Configure in WebUI:\n"
                         "- Printer IP/Port\n"
-                        "- Protocol type\n",
+                        "- Protocol type\n\n",
     },
     {
         .label = "Scan Local Network",
@@ -472,8 +546,9 @@ static const MenuCommand wifi_network_commands[] = {
                         "- Printers\n"
                         "- Smart devices\n"
                         "- Cast devices\n"
-                        "- Requires WiFi connection\n",
+                        "- Requires WiFi connection\n\n",
     },
+
     {
         .label = "Set WebUI Creds",
         .command = "apcred",
@@ -537,6 +612,10 @@ static const MenuCommand wifi_settings_commands[] = {
                         "Use same value for all\n"
                         "pins for single-pin LED.",
     },
+    {.label = "Chip Info",
+     .command = "chipinfo\n",
+     .details_header = "Chip Info",
+     .details_text = "Displays chip information from the ESP\n"},
     {
         .label = "Show SD Pin Config",
         .command = "sd_config",
@@ -968,6 +1047,7 @@ static void text_input_result_callback(void* context) {
         memcpy(input_state->connect_ssid, input_state->input_buffer, len);
         input_state->connect_ssid[len] = '\0';
         input_state->connect_input_stage = 2;
+        if(input_state->input_buffer) memset(input_state->input_buffer, 0, INPUT_BUFFER_SIZE);
         text_input_reset(input_state->text_input);
         text_input_set_header_text(input_state->text_input, "PASSWORD");
         text_input_set_result_callback(
@@ -975,7 +1055,7 @@ static void text_input_result_callback(void* context) {
             text_input_result_callback,
             input_state,
             input_state->input_buffer,
-            128,
+            INPUT_BUFFER_SIZE,
             true);
         view_dispatcher_switch_to_view(input_state->view_dispatcher, 6);
         return;
@@ -997,12 +1077,45 @@ static void text_input_result_callback(void* context) {
     }
     uart_receive_data(
         input_state->uart_context, input_state->view_dispatcher, input_state, "", "", "");
+    if(input_state->input_buffer) memset(input_state->input_buffer, 0, INPUT_BUFFER_SIZE);
+}
+
+static void send_evil_portal_html(AppState* state) {
+    uint8_t* the_html = NULL;
+    size_t html_size = 0;
+
+    if(ghost_esp_ep_read_html_file(state, &the_html, &html_size)) {
+        if(the_html != NULL) {
+            // Send the command first
+            const char* command_str = "evilportal -c sethtmlstr\n";
+            uart_send(state->uart_context, (const uint8_t*)command_str, strlen(command_str));
+
+            // Begin HTML block
+            const char* html_begin_marker = "[HTML/BEGIN]";
+            uart_send(state->uart_context, (const uint8_t*)html_begin_marker, 12);
+
+            // Send HTML content
+            uart_send(state->uart_context, the_html, html_size);
+
+            // End HTML block
+            const char* html_close_marker = "[HTML/CLOSE]";
+            uart_send(state->uart_context, (const uint8_t*)html_close_marker, 12);
+
+            free(the_html);
+        }
+    }
 }
 
 static void execute_menu_command(AppState* state, const MenuCommand* command) {
+    // Special handler for setting the evil portal HTML
+    if(strcmp(command->command, "set_evil_portal_html") == 0) {
+        send_evil_portal_html(state);
+        return;
+    }
     if(!uart_is_esp_connected(state->uart_context)) {
         state->previous_view = state->current_view;
         confirmation_view_set_header(state->confirmation_view, "Connection Error");
+        // ... (rest of the code remains the same)
         confirmation_view_set_text(
             state->confirmation_view,
             "No response from ESP!\nIs a command running?\nRestart the app.\nRestart ESP.\nCheck UART Pins.\nReflash if issues persist.\nYou can disable this check in the settings menu.\n\n");
@@ -1019,9 +1132,15 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
         state->uart_command = command->command;
         state->previous_view = state->current_view;
         text_input_reset(state->text_input);
+        if(state->input_buffer) memset(state->input_buffer, 0, INPUT_BUFFER_SIZE);
         text_input_set_header_text(state->text_input, "SSID");
         text_input_set_result_callback(
-            state->text_input, text_input_result_callback, state, state->input_buffer, 128, true);
+            state->text_input,
+            text_input_result_callback,
+            state,
+            state->input_buffer,
+            INPUT_BUFFER_SIZE,
+            true);
         view_dispatcher_switch_to_view(state->view_dispatcher, 6);
         state->current_view = 6;
         return;
@@ -1032,9 +1151,15 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
         state->uart_command = command->command;
         state->previous_view = state->current_view;
         text_input_reset(state->text_input);
+        if(state->input_buffer) memset(state->input_buffer, 0, INPUT_BUFFER_SIZE);
         text_input_set_header_text(state->text_input, command->input_text);
         text_input_set_result_callback(
-            state->text_input, text_input_result_callback, state, state->input_buffer, 128, true);
+            state->text_input,
+            text_input_result_callback,
+            state,
+            state->input_buffer,
+            INPUT_BUFFER_SIZE,
+            true);
         view_dispatcher_switch_to_view(state->view_dispatcher, 6);
         state->current_view = 6;
         return;
@@ -1108,7 +1233,7 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
                 text_input_result_callback,
                 state,
                 state->input_buffer,
-                128,
+                INPUT_BUFFER_SIZE,
                 true);
             view_dispatcher_switch_to_view(state->view_dispatcher, 6);
             state->current_view = 6;
@@ -1526,12 +1651,11 @@ static void show_menu_help(void* context, uint32_t index) {
                             "previous menu\n"
                             "\n"
                             "=== File Locations ===\n"
-                            "PCAP files: /pcaps\n"
-                            "GPS data: /wardrive\n"
+                            "/apps_data/ghost_esp/\n"
+                            "\n"
                             "\n"
                             "=== Tips ===\n"
                             "- One capture at a time\n"
-                            "  for best performance\n"
                             "- Hold OK on any command\n"
                             "  to see range & details\n"
                             "\n"
@@ -1691,6 +1815,10 @@ bool back_event_callback(void* context) {
         }
         // Clear any command setup state
         state->uart_command = NULL;
+        state->connect_input_stage = 0;
+        state->connect_ssid[0] = '\0';
+        if(state->text_input) text_input_reset(state->text_input);
+        if(state->input_buffer) memset(state->input_buffer, 0, INPUT_BUFFER_SIZE);
 
         switch(state->previous_view) {
         case 1:
