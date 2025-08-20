@@ -1,0 +1,18 @@
+App(
+    appid="sli_writer",
+    name="SLI Writer",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="sli_writer_app",
+    requires=[
+        "gui",
+        "storage",
+        "dialogs",
+        "nfc",
+    ],
+    stack_size=8 * 1024,
+    order=25,
+    fap_category="NFC",
+    fap_description="Write SLIX .nfc files to SLI Magic cards (UID addressed mode) - REAL WRITE",
+    fap_author="YourName",
+    fap_version="1.4",
+)
