@@ -14,7 +14,7 @@
 #include <furi_hal_nfc.h>
 
 #include <nfc/nfc.h>
-#include <nfc/nfc_device.h>  // Pour nfc_detect
+#include <nfc/nfc_device.h> // Pour nfc_detect
 #include <nfc/protocols/iso15693_3/iso15693_3.h>
 #include <nfc/protocols/iso15693_3/iso15693_3_poller.h>
 
@@ -37,12 +37,12 @@
  *  Constants
  * ========================================================================== */
 
-#define SLI_WRITER_FILE_EXTENSION  ".nfc"
-#define SLI_MAGIC_BLOCK_SIZE       4
-#define SLI_MAGIC_MAX_BLOCKS       64
+#define SLI_WRITER_FILE_EXTENSION ".nfc"
+#define SLI_MAGIC_BLOCK_SIZE      4
+#define SLI_MAGIC_MAX_BLOCKS      64
 
 /* Some “magic” cards accept FINALIZE without payload */
-#define SLI_FINALIZE_WITH_PAYLOAD  1
+#define SLI_FINALIZE_WITH_PAYLOAD 1
 
 /* ============================================================================
  *  Scenes / Views / Menu
@@ -64,16 +64,16 @@ typedef enum {
 } SliWriterView;
 
 typedef enum {
-    SliWriterSubmenuIndexWrite = 0,     /* "Write NFC File" */
-    SliWriterSubmenuIndexTestMagic,     /* "Read ISO15693 UID" */
-    SliWriterSubmenuIndexAbout,         /* "About" */
+    SliWriterSubmenuIndexWrite = 0, /* "Write NFC File" */
+    SliWriterSubmenuIndexTestMagic, /* "Read ISO15693 UID" */
+    SliWriterSubmenuIndexAbout, /* "About" */
 } SliWriterSubmenuIndex;
 
 typedef enum {
     SliWriterCustomEventWriteSuccess = 100,
     SliWriterCustomEventWriteError,
     SliWriterCustomEventParseError,
-    SliWriterCustomEventPollerReady = 0xA100,  // Valeur directe, pas de #define
+    SliWriterCustomEventPollerReady = 0xA100, // Valeur directe, pas de #define
 } SliWriterCustomEvent;
 
 /* ============================================================================
