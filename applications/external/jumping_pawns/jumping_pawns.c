@@ -55,19 +55,15 @@ typedef struct {
     View* view;
     Widget* widget_tutorial;
     Widget* widget_about;
-
-    FuriTimer* timer;
 } JumpingPawnsApp;
 
 static void led_notify(void* context) {
     JumpingPawnsApp* app = (JumpingPawnsApp*)context;
-
     notification_message(app->notifications, &sequence_blink_red_100);
 }
 
 static void vibro_notify(void* context) {
     JumpingPawnsApp* app = (JumpingPawnsApp*)context;
-
     notification_message(app->notifications, &sequence_single_vibro);
 }
 

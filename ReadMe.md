@@ -47,6 +47,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: PR: NFC: [Update microel.c #4264 (By grugnoymeme)](https://github.com/flipperdevices/flipperzero-firmware/pull/4264)
 - Added: [MFDesfire Auth v0.1 (By Gatorixx)](https://github.com/Gatorixx/flipper-zero-legacy-authentication)
 - Added: [SLI Writer v1.4 (By Julienbxl)](https://github.com/Julienbxl/SLI-Writer)
+- Updated: [Jumping Pawns v0.1 (By Tyl3rA)](https://github.com/Tyl3rA/Jumping-Pawns)
 
 <a name="release">
 
