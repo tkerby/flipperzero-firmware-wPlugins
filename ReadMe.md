@@ -45,6 +45,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipDownloader v1.3.3 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [NFC Seader v3.3 (By bettse)](https://github.com/bettse/seader)
 - OFW: PR: NFC: [Update microel.c #4264 (By grugnoymeme)](https://github.com/flipperdevices/flipperzero-firmware/pull/4264)
+- Added: [MFDesfire Auth v0.1 (By Gatorixx)](https://github.com/Gatorixx/flipper-zero-legacy-authentication)
 
 <a name="release">
 
@@ -588,6 +589,7 @@ $ ./fbt dolphin_ext
 - [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip)
 - [Metronome v1.3 (By panki27)](https://github.com/panki27/Metronome)
 - [MFC Editor v1.0 (By TollyH)](https://github.com/TollyH/flipper-apps)
+- [MFDesfire Auth v0.1 (By Gatorixx)](https://github.com/Gatorixx/flipper-zero-legacy-authentication)
 - [Mfkey v3.0 (By noproto)](https://github.com/noproto/FlipperMfkey)
 - [MH-Z19 CO2 Sensor v0.2 (By meshchaninov)](https://github.com/meshchaninov/flipper-zero-mh-z19)
 - [MH-Z19 UART (By skotopes)](https://github.com/skotopes/flipperzero_mhz19_uart)

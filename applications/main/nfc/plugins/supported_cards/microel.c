@@ -10,7 +10,7 @@
 #define KEY_LENGTH 6
 #define UID_LENGTH 4
 // Offset per la conversione dell'anno (5 bit: da 0 a 31, quindi range 2010–2041)
-#define BASE_YEAR 2010
+#define BASE_YEAR  2010
 
 typedef struct {
     uint64_t a;
@@ -190,45 +190,50 @@ static bool microel_parse(const NfcDevice* device, FuriString* parsed_data) {
         if(key != key_for_check_from_array) break;
 
         // Header info (UID, ATQA, SAK)
-	furi_string_cat_printf(parsed_data, "\e#Microel Card\n");
-	furi_string_cat_printf(parsed_data, "(Mifare Classic 1k)\n");
-	furi_string_cat_printf(parsed_data, "====================\n");
+        furi_string_cat_printf(parsed_data, "\e#Microel Card\n");
+        furi_string_cat_printf(parsed_data, "(Mifare Classic 1k)\n");
+        furi_string_cat_printf(parsed_data, "====================\n");
 
-	// UID
-	furi_string_cat_printf(parsed_data, "UID:");
-	for(size_t i = 0; i < UID_LENGTH; i++) {
-    	    furi_string_cat_printf(parsed_data, " %02X", data->block[0].data[i]);
-	}
-	furi_string_cat_printf(parsed_data, "\n");
+        // UID
+        furi_string_cat_printf(parsed_data, "UID:");
+        for(size_t i = 0; i < UID_LENGTH; i++) {
+            furi_string_cat_printf(parsed_data, " %02X", data->block[0].data[i]);
+        }
+        furi_string_cat_printf(parsed_data, "\n");
 
-	uint8_t atqa_lsb = data->block[0].data[6];
-	uint8_t atqa_msb = data->block[0].data[7];
-	uint8_t sak = data->block[0].data[5];
-	furi_string_cat_printf(parsed_data, "ATQA: %02X %02X ~ SAK: %02X\n", atqa_msb, atqa_lsb, sak);
-	
-	furi_string_cat_printf(parsed_data, "--------------------\n");
-	
-	// Credito disponibile
+        uint8_t atqa_lsb = data->block[0].data[6];
+        uint8_t atqa_msb = data->block[0].data[7];
+        uint8_t sak = data->block[0].data[5];
+        furi_string_cat_printf(
+            parsed_data, "ATQA: %02X %02X ~ SAK: %02X\n", atqa_msb, atqa_lsb, sak);
+
+        furi_string_cat_printf(parsed_data, "--------------------\n");
+
+        // Credito disponibile
         uint16_t credito_raw = (data->block[4].data[6] << 8) | data->block[4].data[5];
-	// Dati credito precedente (Block 5)
+        // Dati credito precedente (Block 5)
         uint16_t credito_precedente = (data->block[5].data[6] << 8) | data->block[5].data[5];
-	// Data e ora (Block 4, bytes 7-10) in formato MicroEL
-	uint32_t raw_data_op = (data->block[4].data[10] << 24) | (data->block[4].data[9] << 16) | (data->block[4].data[8] << 8) | data->block[4].data[7];
-	// Ricava tutti i campi (scarta i primi 5 bit)
-	uint32_t useful_bits = raw_data_op & 0x07FFFFFF; // ultimi 27 bit
+        // Data e ora (Block 4, bytes 7-10) in formato MicroEL
+        uint32_t raw_data_op = (data->block[4].data[10] << 24) | (data->block[4].data[9] << 16) |
+                               (data->block[4].data[8] << 8) | data->block[4].data[7];
+        // Ricava tutti i campi (scarta i primi 5 bit)
+        uint32_t useful_bits = raw_data_op & 0x07FFFFFF; // ultimi 27 bit
 
-	uint8_t minuti     = (useful_bits >> 21) & 0x3F; // 6 bit
-	uint8_t ore        = (useful_bits >> 16) & 0x1F; // 5 bit
-	uint8_t tipo_op    = (useful_bits >> 14) & 0x03; // 2 bit
-	uint16_t anno      = ((useful_bits >> 9) & 0x1F) + BASE_YEAR; // 5 bit + offset
-	uint8_t mese       = (useful_bits >> 5) & 0x0F;  // 4 bit
-	uint8_t giorno     = useful_bits & 0x1F;         // ultimi 5 bit
+        uint8_t minuti = (useful_bits >> 21) & 0x3F; // 6 bit
+        uint8_t ore = (useful_bits >> 16) & 0x1F; // 5 bit
+        uint8_t tipo_op = (useful_bits >> 14) & 0x03; // 2 bit
+        uint16_t anno = ((useful_bits >> 9) & 0x1F) + BASE_YEAR; // 5 bit + offset
+        uint8_t mese = (useful_bits >> 5) & 0x0F; // 4 bit
+        uint8_t giorno = useful_bits & 0x1F; // ultimi 5 bit
 
-	// Conversione tipo operazione in stringa
-	const char* tipo_op_str;
-	if(tipo_op == 0) tipo_op_str = "Firts operation"; // 00
-	else if(tipo_op == 1) tipo_op_str = "Recharge";   // 01
-	else tipo_op_str = "Payment";  // 10
+        // Conversione tipo operazione in stringa
+        const char* tipo_op_str;
+        if(tipo_op == 0)
+            tipo_op_str = "Firts operation"; // 00
+        else if(tipo_op == 1)
+            tipo_op_str = "Recharge"; // 01
+        else
+            tipo_op_str = "Payment"; // 10
 
         // Numero operazione (Block 4, bytes 0-1)
         uint16_t num_op = (data->block[4].data[1] << 8) | data->block[4].data[0];
@@ -237,48 +242,62 @@ static bool microel_parse(const NfcDevice* device, FuriString* parsed_data) {
         // Ultima transazione (Block 4, bytes 13-14)
         uint16_t transazione_raw = (data->block[4].data[14] << 8) | data->block[4].data[13];
         // Somma in ingresso e cauzione (Block 4)
-	uint16_t somma_raw = data->block[4].data[2] | (data->block[4].data[3] << 8);
-	float somma = somma_raw / 10.0f;
-	bool cauzione = data->block[4].data[4] != 0;
-	uint8_t cauzione_raw = data->block[4].data[4];
+        uint16_t somma_raw = data->block[4].data[2] | (data->block[4].data[3] << 8);
+        float somma = somma_raw / 10.0f;
+        bool cauzione = data->block[4].data[4] != 0;
+        uint8_t cauzione_raw = data->block[4].data[4];
 
-        furi_string_cat_printf(parsed_data, "-> Credit Available: %d.%02d\n", credito_raw / 100, credito_raw % 100);
-	furi_string_cat_printf(parsed_data, "-> Previous Credit: %d.%02d\n", credito_precedente / 100, credito_precedente % 100);
-	furi_string_cat_printf(parsed_data, "--------------------\n");
-	furi_string_cat_printf(parsed_data, "Last transaction: %d.%02d\n", transazione_raw / 100, transazione_raw % 100);
-        furi_string_cat_printf(parsed_data, "Date: %02d/%02d/%04d ~ %02d:%02d\n", giorno, mese, anno, ore, minuti);
+        furi_string_cat_printf(
+            parsed_data, "-> Credit Available: %d.%02d\n", credito_raw / 100, credito_raw % 100);
+        furi_string_cat_printf(
+            parsed_data,
+            "-> Previous Credit: %d.%02d\n",
+            credito_precedente / 100,
+            credito_precedente % 100);
+        furi_string_cat_printf(parsed_data, "--------------------\n");
+        furi_string_cat_printf(
+            parsed_data,
+            "Last transaction: %d.%02d\n",
+            transazione_raw / 100,
+            transazione_raw % 100);
+        furi_string_cat_printf(
+            parsed_data, "Date: %02d/%02d/%04d ~ %02d:%02d\n", giorno, mese, anno, ore, minuti);
         furi_string_cat_printf(parsed_data, "Operation Nr: (%d)\n", num_op);
-        furi_string_cat_printf(parsed_data, "Op. Type: [%s]\n", tipo_op_str);       
+        furi_string_cat_printf(parsed_data, "Op. Type: [%s]\n", tipo_op_str);
         furi_string_cat_printf(parsed_data, "====================\n");
 
-	// Vendor ID - Block 1 (entire block)
+        // Vendor ID - Block 1 (entire block)
         furi_string_cat_printf(parsed_data, "Vendor Univocal ID:\n");
-	for (size_t i = 0; i < 16; i++) {
-    	    furi_string_cat_printf(parsed_data, "%02X", data->block[1].data[i]);
-    	    if (i % 8 == 7) {
+        for(size_t i = 0; i < 16; i++) {
+            furi_string_cat_printf(parsed_data, "%02X", data->block[1].data[i]);
+            if(i % 8 == 7) {
                 // Dopo ogni 6 byte, vai a capo
                 furi_string_cat_printf(parsed_data, "\n");
-    	    } else {
-        	// Altrimenti, aggiungi uno spazio
-        	furi_string_cat_printf(parsed_data, " ");
-    	    }
+            } else {
+                // Altrimenti, aggiungi uno spazio
+                furi_string_cat_printf(parsed_data, " ");
+            }
         }
-        
+
         furi_string_cat_printf(parsed_data, "--------------------\n");
-        
+
         furi_string_cat_printf(parsed_data, "Points balance: (%d pt.)\n", saldo_punti);
-	furi_string_cat_printf(parsed_data, "Admission credit: %d.%02d\n", (int)somma, (int)(somma * 100) % 100);
-	
-	// Gestione deposito aggiornata
-	if (cauzione) {
-	    furi_string_cat_printf(parsed_data, "Deposit: [Yes] ~ (%d.%02d)\n", 
-	                          cauzione_raw / 100, cauzione_raw % 100);
-	} else {
-	    furi_string_cat_printf(parsed_data, "Deposit: [No]\n");
-	}
-	
-	furi_string_cat_printf(parsed_data, "--------------------\n");
-	
+        furi_string_cat_printf(
+            parsed_data, "Admission credit: %d.%02d\n", (int)somma, (int)(somma * 100) % 100);
+
+        // Gestione deposito aggiornata
+        if(cauzione) {
+            furi_string_cat_printf(
+                parsed_data,
+                "Deposit: [Yes] ~ (%d.%02d)\n",
+                cauzione_raw / 100,
+                cauzione_raw % 100);
+        } else {
+            furi_string_cat_printf(parsed_data, "Deposit: [No]\n");
+        }
+
+        furi_string_cat_printf(parsed_data, "--------------------\n");
+
         parsed = true;
     } while(false);
 

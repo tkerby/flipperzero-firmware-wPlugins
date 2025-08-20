@@ -96,7 +96,7 @@ static bool mfdesfire_auth_save_settings(MfDesfireAuthApp* app, uint32_t index) 
 
     do {
         // Open existing or create a new one
-        if(!flipper_format_file_open_existing(file, SAVE_PATH)){
+        if(!flipper_format_file_open_existing(file, SAVE_PATH)) {
             flipper_format_file_open_new(file, SAVE_PATH);
             // Write the header to a new file
             if(!flipper_format_write_header_cstr(file, SAVE_FILE_HEADER, SAVE_FILE_VERSION)) break;
@@ -107,16 +107,22 @@ static bool mfdesfire_auth_save_settings(MfDesfireAuthApp* app, uint32_t index) 
 
         // Set key for card path
         furi_string_printf(key_name, "Card_Path_%s", filename);
-        if(!flipper_format_insert_or_update_string(file, furi_string_get_cstr(key_name), app->selected_card_path)) break;
+        if(!flipper_format_insert_or_update_string(
+               file, furi_string_get_cstr(key_name), app->selected_card_path))
+            break;
 
-        if(index == MfDesfireAuthSaveIV){
+        if(index == MfDesfireAuthSaveIV) {
             furi_string_printf(key_name, "Initial_Vector_%s", filename);
-            if(!flipper_format_insert_or_update_hex(file, furi_string_get_cstr(key_name), app->initial_vector, INITIAL_VECTOR_SIZE)) break;
+            if(!flipper_format_insert_or_update_hex(
+                   file, furi_string_get_cstr(key_name), app->initial_vector, INITIAL_VECTOR_SIZE))
+                break;
         }
 
-        if(index == MfDesfireAuthSaveKey){
+        if(index == MfDesfireAuthSaveKey) {
             furi_string_printf(key_name, "Key_%s", filename);
-            if(!flipper_format_insert_or_update_hex(file, furi_string_get_cstr(key_name), app->key, KEY_SIZE)) break;
+            if(!flipper_format_insert_or_update_hex(
+                   file, furi_string_get_cstr(key_name), app->key, KEY_SIZE))
+                break;
         }
 
         furi_string_free(key_name);
@@ -157,10 +163,17 @@ static bool mfdesfire_auth_load_settings(MfDesfireAuthApp* app) {
         if(flipper_format_read_string(file, furi_string_get_cstr(key_name), temp_str)) {
             if(furi_string_equal(temp_str, app->selected_card_path)) {
                 furi_string_printf(key_name, "Initial_Vector_%s", filename);
-                if(!flipper_format_read_hex(file, furi_string_get_cstr(key_name), app->initial_vector, INITIAL_VECTOR_SIZE)) break;
+                if(!flipper_format_read_hex(
+                       file,
+                       furi_string_get_cstr(key_name),
+                       app->initial_vector,
+                       INITIAL_VECTOR_SIZE))
+                    break;
 
                 furi_string_printf(key_name, "Key_%s", filename);
-                if(!flipper_format_read_hex(file, furi_string_get_cstr(key_name), app->key, KEY_SIZE)) break;
+                if(!flipper_format_read_hex(
+                       file, furi_string_get_cstr(key_name), app->key, KEY_SIZE))
+                    break;
 
                 result = true;
             }
@@ -224,7 +237,6 @@ static bool mfdesfire_auth_navigation_callback(void* context) {
 static void mfdesfire_auth_byte_input_callback(MfDesfireAuthApp* app, uint32_t index) {
     mfdesfire_auth_save_settings(app, index);
 
-
     app->current_view = MfDesfireAuthAppViewSubmenu;
     view_dispatcher_switch_to_view(app->view_dispatcher, MfDesfireAuthAppViewSubmenu);
 }
@@ -254,12 +266,12 @@ static void mfdesfire_auth_submenu_callback(void* context, uint32_t index) {
     case MfDesfireAuthSubmenuSetIV:
         byte_input_set_header_text(app->byte_input, "Set Initial Vector:");
         byte_input_set_result_callback( // Tohle je callback na to kdyz dam save. Kdyz klikam zpet tak se vola jiny.
-                app->byte_input,
-                mfdesfire_auth_byte_input_vector_callback,
-                NULL,
-                app,
-                app->initial_vector,
-                INITIAL_VECTOR_SIZE);
+            app->byte_input,
+            mfdesfire_auth_byte_input_vector_callback,
+            NULL,
+            app,
+            app->initial_vector,
+            INITIAL_VECTOR_SIZE);
         app->current_view = MfDesfireAuthAppViewByteInputIV;
         view_dispatcher_switch_to_view(app->view_dispatcher, MfDesfireAuthAppViewByteInputIV);
         break;
@@ -332,6 +344,7 @@ MfDesfireAuthApp* mfdesfire_auth_app_alloc() {
     // GUI komponenty
     app->gui = furi_record_open(RECORD_GUI);
     app->view_dispatcher = view_dispatcher_alloc();
+    view_dispatcher_enable_queue(app->view_dispatcher);
     app->file_browser = file_browser_alloc(
         app->selected_card_path); // Ulozi vyslednou cestu do selected card path - je to v file_browser.c inner se o to stara
     app->submenu = submenu_alloc();
