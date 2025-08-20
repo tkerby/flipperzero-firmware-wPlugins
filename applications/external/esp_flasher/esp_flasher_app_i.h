@@ -29,6 +29,7 @@
 
 typedef enum SelectedFlashOptions {
     SelectedFlashS3Mode,
+    SelectedFlashC5Mode,
     SelectedFlashBoot,
     SelectedFlashPart,
     SelectedFlashNvs,
