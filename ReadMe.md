@@ -48,6 +48,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [MFDesfire Auth v0.1 (By Gatorixx)](https://github.com/Gatorixx/flipper-zero-legacy-authentication)
 - Added: [SLI Writer v1.4 (By Julienbxl)](https://github.com/Julienbxl/SLI-Writer)
 - Updated: [Jumping Pawns v0.1 (By Tyl3rA)](https://github.com/Tyl3rA/Jumping-Pawns)
+- Updated: [ESP Flasher v1.7.2 (By 0xchocolate)](https://github.com/0xchocolate/flipperzero-esp-flasher) Adds C5 support thanks to app changes (By Play2BReal) and espressif library changes (By Dzarda7)!
 
 <a name="release">
 
