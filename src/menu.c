@@ -376,7 +376,7 @@ static const MenuCommand wifi_attack_commands[] = {
     },
     {
         .label = "SAE Handshake Flood",
-        .command = "attack -s\n",
+        .command = "saeflood\n",
         .details_header = "SAE Flood Attack",
         .details_text = "Floods WPA3 networks with\nSAE handshakes. Select a "
                         "WPA3 AP first.",
@@ -466,7 +466,6 @@ static const MenuCommand wifi_network_commands[] = {
                         "- Landing page\n",
     },
     {
-
         .label = "List Portals",
         .command = "listportals\n",
         .details_header = "List Portals",
@@ -547,7 +546,6 @@ static const MenuCommand wifi_network_commands[] = {
                         "- Cast devices\n"
                         "- Requires WiFi connection\n\n",
     },
-
     {
         .label = "Set WebUI Creds",
         .command = "apcred",
