@@ -46,7 +46,12 @@ static int32_t govee_worker(void* context) {
 
 static uint32_t govee_exit_callback(void* context) {
     UNUSED(context);
-    return VIEW_NONE;
+    return GoveeViewMenu;
+}
+
+static void govee_popup_callback(void* context) {
+    GoveeApp* app = context;
+    view_dispatcher_switch_to_view(app->view_dispatcher, GoveeViewMenu);
 }
 
 static void govee_submenu_callback(void* context, uint32_t index) {
@@ -55,9 +60,16 @@ static void govee_submenu_callback(void* context, uint32_t index) {
     switch(index) {
     case 0:
         // Start scanning
+        FURI_LOG_I(TAG, "Starting BLE scan");
+        popup_set_text(app->popup, "Scanning for devices...\nPress Back to cancel", 64, 32, AlignCenter, AlignCenter);
         view_dispatcher_switch_to_view(app->view_dispatcher, GoveeViewScanning);
         break;
     case 1:
+        // Manual entry
+        popup_set_text(app->popup, "Manual mode\nNot implemented yet\nPress Back", 64, 32, AlignCenter, AlignCenter);
+        view_dispatcher_switch_to_view(app->view_dispatcher, GoveeViewScanning);
+        break;
+    case 2:
         // Device list
         view_dispatcher_switch_to_view(app->view_dispatcher, GoveeViewDeviceControl);
         break;
@@ -89,14 +101,19 @@ static GoveeApp* govee_app_alloc() {
     // Submenu
     app->submenu = submenu_alloc();
     submenu_add_item(app->submenu, "Scan for Devices", 0, govee_submenu_callback, app);
-    submenu_add_item(app->submenu, "Saved Devices", 1, govee_submenu_callback, app);
+    submenu_add_item(app->submenu, "Manual Entry", 1, govee_submenu_callback, app);
+    submenu_add_item(app->submenu, "Saved Devices", 2, govee_submenu_callback, app);
     view_set_previous_callback(submenu_get_view(app->submenu), govee_exit_callback);
     view_dispatcher_add_view(app->view_dispatcher, GoveeViewMenu, submenu_get_view(app->submenu));
 
     // Popup for scanning
     app->popup = popup_alloc();
     popup_set_header(app->popup, "Scanning", 64, 10, AlignCenter, AlignTop);
-    popup_set_text(app->popup, "Looking for H6006...", 64, 32, AlignCenter, AlignCenter);
+    popup_set_text(app->popup, "Looking for H6006...\nPress Back to cancel", 64, 32, AlignCenter, AlignCenter);
+    popup_set_timeout(app->popup, 10000); // 10 second timeout
+    popup_set_callback(app->popup, govee_popup_callback);
+    popup_set_context(app->popup, app);
+    view_set_previous_callback(popup_get_view(app->popup), govee_exit_callback);
     view_dispatcher_add_view(app->view_dispatcher, GoveeViewScanning, popup_get_view(app->popup));
 
     // Variable item list for device control

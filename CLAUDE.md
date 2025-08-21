@@ -9,29 +9,20 @@ Flipper Zero Bluetooth Govee Smart LED Controller - A native Flipper Zero applic
 
 ### Build System
 ```bash
-# Build the application
-./fbt fap_govee_control
-ufbt                          # Alternative using micro build tool
+# Build the application (WORKS)
+ufbt                          # Builds to dist/govee_control.fap
 
-# Flash to device
-./fbt flash
-ufbt flash
+# Deploy and launch on connected Flipper (WORKS)
+ufbt launch                   # Installs and launches app on device
 
-# Debug build and session
-./fbt debug
-ufbt debug
+# Flash firmware to device (REQUIRES DEVICE)
+ufbt flash                    # Only works with Flipper connected
 
-# Launch specific app
-./fbt launch APPSRC=applications_user/govee_control
+# Debug session (REQUIRES DEVICE)
+ufbt debug                    # Needs connected Flipper
 
-# Run unit tests
-./fbt test
-
-# Run on emulator
-./fbt qflipper
-
-# Access CLI for logs
-./fbt cli
+# Access CLI for logs (REQUIRES DEVICE)
+ufbt cli                      # Serial connection to Flipper
 ```
 
 ### Code Quality Tools
