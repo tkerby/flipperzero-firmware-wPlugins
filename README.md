@@ -127,38 +127,76 @@ Download the latest `.fap` file from the releases page and copy it to your Flipp
 
 The application communicates with Govee devices using the following protocol:
 
-- **Service UUID**: `0000180a-0000-1000-8000-00805f9b34fb`
-- **Control Characteristic**: `00010203-0405-0607-0809-0a0b0c0d1910`
-- **Status Characteristic**: `00010203-0405-0607-0809-0a0b0c0d1911`
+#### Service UUIDs
+- **Primary Control Service**: `000102030405060708090a0b0c0d1910`
+- **Alternative Service** (some models): `02f0000000000000000000000000fe00`
+
+#### Characteristic UUIDs
+- **Control Write**: `000102030405060708090a0b0c0d2b10`
+- **Status Read/Notify**: `000102030405060708090a0b0c0d2b11`
 
 #### Command Structure
 All commands follow a 20-byte packet format:
-- Byte 0: Header (0x33)
+- Byte 0: Header (0x33 for commands, 0xAA for keep-alive, 0xA3 for gradient)
 - Byte 1: Command type
-- Bytes 2-18: Payload
+- Bytes 2-18: Payload (command-specific data)
 - Byte 19: XOR checksum
+
+#### Command Examples
+- **Power On**: `33 01 01 00...00 [XOR]`
+- **Power Off**: `33 01 00 00...00 [XOR]`
+- **Set RGB**: `33 05 02 [R] [G] [B] 00...00 [XOR]`
+- **Set Brightness**: `33 04 [LEVEL] 00...00 [XOR]`
+- **Keep-Alive**: `AA 01 00...00 [XOR]`
 
 ## Development
 
 ### Prerequisites
 
-- Flipper Zero SDK or ufbt
+- Flipper Zero SDK or ufbt (micro Flipper Build Tool)
 - ARM GCC toolchain
 - Python 3.8+
 - Git
 
+### SDK Setup
+
+```bash
+# Clone Flipper Zero firmware
+git clone --recursive https://github.com/flipperdevices/flipperzero-firmware.git
+cd flipperzero-firmware
+
+# Install uFBT for easier development
+python3 -m pip install --upgrade ufbt
+
+# Setup VSCode integration (optional)
+ufbt vscode_dist
+```
+
 ### Project Structure
 
 ```
-flipper-govee-controller/
-├── src/
-│   ├── ble/              # BLE communication layer
-│   ├── devices/          # Device-specific drivers
-│   ├── scenes/           # Scene management
-│   ├── ui/               # User interface
-│   └── main.c            # Application entry point
-├── assets/               # Icons and resources
-├── docs/                 # Documentation
+govee_control/
+├── application.fam       # App manifest
+├── govee_control.c       # Main entry point
+├── ble/
+│   ├── ble_manager.c    # BLE connection management
+│   ├── ble_scanner.c    # Device discovery
+│   └── ble_protocol.c   # Protocol implementation
+├── devices/
+│   ├── device_registry.c # Device abstraction layer
+│   ├── govee_h6006.c    # H6006 Smart Bulb driver
+│   ├── govee_h6160.c    # H6160 LED Strip driver
+│   └── govee_h6163.c    # H6163 LED Strip Pro driver
+├── ui/
+│   ├── views/           # UI views
+│   │   ├── device_list.c
+│   │   ├── color_picker.c
+│   │   └── scene_editor.c
+│   └── govee_ui.c       # UI manager
+├── storage/
+│   ├── config_storage.c # Configuration persistence
+│   └── scene_storage.c  # Scene library storage
+├── assets/              # Icons and resources
 └── tests/               # Unit tests
 ```
 
@@ -205,29 +243,34 @@ Contributions are welcome! Please follow these guidelines:
 
 ## Roadmap
 
-### Phase 1: Foundation
+### Phase 1: Foundation (Weeks 1-3)
 - [x] Project setup and documentation
+- [x] Technical implementation specifications
 - [ ] BLE scanner implementation
 - [ ] Basic device connection
 - [ ] Simple on/off control
+- [ ] Device listing UI
 
-### Phase 2: Core Features
+### Phase 2: Core Features (Weeks 4-6)
 - [ ] Color and brightness control
-- [ ] Multi-device support
+- [ ] Multi-device support (5+ simultaneous)
 - [ ] Group management
 - [ ] Basic scenes
+- [ ] H6006 Smart Bulb full support
 
-### Phase 3: Advanced Control
-- [ ] Effects library
-- [ ] Custom animations
-- [ ] Scene sequencing
+### Phase 3: Advanced Control (Weeks 7-9)
+- [ ] Effects library implementation
+- [ ] Custom animations engine
+- [ ] Scene sequencing and transitions
 - [ ] Scheduling system
+- [ ] Automation rules
 
-### Phase 4: Polish
-- [ ] Performance optimization
-- [ ] Battery usage improvements
+### Phase 4: Polish & Optimization (Weeks 10-12)
+- [ ] Performance optimization (<100ms latency)
+- [ ] Battery usage improvements (<10% per hour)
 - [ ] Enhanced error handling
-- [ ] User documentation
+- [ ] Complete user documentation
+- [ ] Beta testing program
 
 ## Performance Metrics
 
@@ -250,6 +293,14 @@ Contributions are welcome! Please follow these guidelines:
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Documentation
+
+### Available Documents
+- [Product Requirements Document](prd.md) - Complete product specifications
+- [Technical Implementation](technical_implementation.md) - Detailed BLE protocol and implementation guide
+- [Project Status](status.md) - Current development progress
+- [Changelog](changelog.md) - Version history and updates
 
 ## Acknowledgments
 

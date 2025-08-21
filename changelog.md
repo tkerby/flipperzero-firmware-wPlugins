@@ -49,3 +49,10 @@
   - Scene and effect engine specifications
   - Model compatibility matrix for H6006, H6160, H6163
   - Agent-optimized development specifications
+- Created comprehensive README.md
+  - Professional GitHub-ready documentation
+  - H6006 prioritized in supported devices
+  - Updated BLE protocol specifications
+  - Enhanced project structure details
+  - SDK setup instructions
+  - Documentation links to avoid redundancy
