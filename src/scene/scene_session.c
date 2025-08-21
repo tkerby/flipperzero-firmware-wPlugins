@@ -2,6 +2,7 @@
 #include <dialogs/dialogs.h>
 #include <gui/elements.h>
 #include <gui/view_holder.h>
+#include <gui/modules/text_input.h>
 
 typedef struct {
 	PCUBERZERO instance;
@@ -69,6 +70,9 @@ static inline void handleKeyOk(const PSESSIONSCENE instance, const InputEvent* c
 	case BUTTON_SESSION_RENAME: {
 		ViewHolder* holder = view_holder_alloc();
 		view_holder_attach_to_gui(holder, instance->instance->interface);
+		TextInput* input = text_input_alloc();
+		view_holder_set_view(holder, text_input_get_view(input));
+		text_input_free(input);
 		view_holder_send_to_front(holder);
 		free(holder);
 		break;
