@@ -34,6 +34,35 @@ ufbt debug
 ./fbt cli
 ```
 
+### Code Quality Tools
+```bash
+# Run all code quality checks at once
+./check.sh
+
+# Format code with clang-format
+clang-format -i govee_control/*.c govee_control/*.h
+
+# Run static analysis with clang-tidy (requires LLVM)
+clang-tidy govee_control/*.c -- -I. -Igovee_control
+
+# Run bug detection with cppcheck
+cppcheck --enable=all --suppress=missingInclude govee_control/
+
+# Check formatting without modifying files
+clang-format --dry-run --Werror govee_control/*.c
+```
+
+#### Installed Linting Infrastructure
+- **clang-format** - Enforces consistent code style (LLVM-based, 100 char line limit)
+- **clang-tidy** - Deep static analysis for bugs, memory issues, and best practices
+- **cppcheck** - Additional bug detection focusing on memory safety
+- **.clang-format** - Project formatting rules
+- **.clang-tidy** - Static analysis configuration
+- **compile_flags.txt** - Strict compiler warnings (-Wall -Wextra -Werror and more)
+- **check.sh** - Automated script that runs all checks and reports issues
+
+**IMPORTANT**: Always run `./check.sh` before committing to ensure code quality and catch potential bugs early.
+
 ### Project Structure
 ```
 govee_control/
