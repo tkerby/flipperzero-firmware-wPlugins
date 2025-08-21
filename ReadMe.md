@@ -50,6 +50,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Jumping Pawns v0.1 (By Tyl3rA)](https://github.com/Tyl3rA/Jumping-Pawns)
 - Updated: [ESP Flasher v1.7.2 (By 0xchocolate)](https://github.com/0xchocolate/flipperzero-esp-flasher) Adds C5 support thanks to app changes (By Play2BReal) and espressif library changes (By Dzarda7)!
 - Updated: [FlipWifi v1.6.2 (By jblanked)](https://github.com/jblanked/FlipWiFi) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- Updated: [Passy v1.4 (By bettse)](https://github.com/bettse/passy)
+- Updated: [NFC Seader v3.3 (By bettse)](https://github.com/bettse/seader)
 
 <a name="release">
 
