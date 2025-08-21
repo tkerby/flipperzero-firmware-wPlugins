@@ -1,0 +1,83 @@
+# Flipper Zero build artifacts
+build/
+dist/
+.obj/
+*.fap
+*.elf
+*.bin
+*.dfu
+*.tgz
+*.zip
+
+# Flipper Zero SDK
+.ufbt/
+.fbt/
+.sconsign.dblite
+.clang-format
+.vscode/compile_commands.json
+
+# Debug files
+*.pdb
+*.map
+*.lst
+*.dump
+*.sym
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# C/C++ build files
+*.o
+*.obj
+*.a
+*.lib
+*.dll
+*.so
+*.dylib
+*.exe
+*.out
+*.app
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+*.db
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+
+# User-specific Flipper files
+.flipper/
+user_data/
+*.keys
+
+# Test coverage
+coverage/
+*.gcov
+*.gcda
+*.gcno
+
+# Documentation build
+docs/_build/
+docs/_static/
+docs/_templates/
