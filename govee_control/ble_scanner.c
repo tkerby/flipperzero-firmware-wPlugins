@@ -23,7 +23,7 @@ typedef struct {
 // static bool is_govee_device(const char* name) {
 //     if(!name) return false;
 //     // H6006 devices typically show as "ihoment_H6006_XXXX" or "Govee_H6006_XXXX"
-//     return (strstr(name, "H6006") != NULL) || 
+//     return (strstr(name, "H6006") != NULL) ||
 //            (strstr(name, "ihoment") != NULL) ||
 //            (strstr(name, "Govee") != NULL);
 // }
@@ -31,16 +31,16 @@ typedef struct {
 static int32_t ble_scanner_thread(void* context) {
     BleScanner* scanner = context;
     FURI_LOG_I(TAG, "BLE Scanner started");
-    
+
     // Initialize BLE stack
     furi_hal_bt_start_advertising();
     furi_delay_ms(100);
     furi_hal_bt_stop_advertising();
-    
+
     while(scanner->scanning) {
         // TODO: Implement actual BLE GAP scanning
         // This is a simplified version - real implementation needs GAP API
-        
+
         // Simulate finding a device for testing
         static bool found = false;
         if(!found) {
@@ -54,24 +54,39 @@ static int32_t ble_scanner_thread(void* context) {
             device.address[4] = 0xEE;
             device.address[5] = 0xFF;
             device.rssi = -65;
-            
+
             if(scanner->device_found_callback) {
                 scanner->device_found_callback(device.address, device.name, device.rssi);
             }
             found = true;
         }
-        
+
         furi_delay_ms(1000);
     }
-    
+
     FURI_LOG_I(TAG, "BLE Scanner stopped");
     return 0;
 }
 
 BleScanner* ble_scanner_alloc() {
     BleScanner* scanner = malloc(sizeof(BleScanner));
+    if(!scanner) {
+        return NULL;
+    }
+
     scanner->queue = furi_message_queue_alloc(10, sizeof(BleDevice));
+    if(!scanner->queue) {
+        free(scanner);
+        return NULL;
+    }
+
     scanner->thread = furi_thread_alloc();
+    if(!scanner->thread) {
+        furi_message_queue_free(scanner->queue);
+        free(scanner);
+        return NULL;
+    }
+
     furi_thread_set_name(scanner->thread, "BleScanner");
     furi_thread_set_stack_size(scanner->thread, 2048);
     furi_thread_set_context(scanner->thread, scanner);

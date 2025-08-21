@@ -3,15 +3,15 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define GOVEE_PACKET_SIZE 20
-#define GOVEE_SERVICE_UUID "000102030405060708090a0b0c0d1910"
+#define GOVEE_PACKET_SIZE     20
+#define GOVEE_SERVICE_UUID    "000102030405060708090a0b0c0d1910"
 #define GOVEE_CHAR_WRITE_UUID "000102030405060708090a0b0c0d2b10"
 
 // H6006 Commands
-#define GOVEE_CMD_POWER     0x01
+#define GOVEE_CMD_POWER      0x01
 #define GOVEE_CMD_BRIGHTNESS 0x04
-#define GOVEE_CMD_COLOR     0x05
-#define GOVEE_CMD_KEEPALIVE 0xAA
+#define GOVEE_CMD_COLOR      0x05
+#define GOVEE_CMD_KEEPALIVE  0xAA
 
 typedef struct {
     uint8_t r;

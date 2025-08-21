@@ -1,5 +1,6 @@
 #include "govee_h6006.h"
 #include <string.h>
+#include <stdint.h>
 
 uint8_t govee_calculate_checksum(const uint8_t* packet) {
     uint8_t checksum = 0;
@@ -44,7 +45,7 @@ void govee_h6006_create_white_packet(uint8_t* packet, uint16_t temperature) {
     // Temperature range: 2000K-9000K
     // Map to 0x00-0xFE
     uint8_t temp_value = (uint8_t)((temperature - 2000) * 254 / 7000);
-    
+
     memset(packet, 0, GOVEE_PACKET_SIZE);
     packet[0] = 0x33;
     packet[1] = GOVEE_CMD_COLOR;

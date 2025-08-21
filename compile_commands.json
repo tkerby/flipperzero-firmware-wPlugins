@@ -1,0 +1,22 @@
+[
+  {
+    "directory": "/Users/bioharz/git/2025_2/flipper",
+    "command": "clang -c -I. -Igovee_control -std=c11 -DFURI_LOG_D=printf -DFURI_LOG_E=printf -DFURI_LOG_I=printf govee_control/govee_h6006.c",
+    "file": "govee_control/govee_h6006.c"
+  },
+  {
+    "directory": "/Users/bioharz/git/2025_2/flipper",
+    "command": "clang -c -I. -Igovee_control -std=c11 -DFURI_LOG_D=printf -DFURI_LOG_E=printf -DFURI_LOG_I=printf govee_control/ble_connection.c",
+    "file": "govee_control/ble_connection.c"
+  },
+  {
+    "directory": "/Users/bioharz/git/2025_2/flipper",
+    "command": "clang -c -I. -Igovee_control -std=c11 -DFURI_LOG_D=printf -DFURI_LOG_E=printf -DFURI_LOG_I=printf govee_control/ble_scanner.c",
+    "file": "govee_control/ble_scanner.c"
+  },
+  {
+    "directory": "/Users/bioharz/git/2025_2/flipper",
+    "command": "clang -c -I. -Igovee_control -std=c11 -DFURI_LOG_D=printf -DFURI_LOG_E=printf -DFURI_LOG_I=printf govee_control/govee_control.c",
+    "file": "govee_control/govee_control.c"
+  }
+]
