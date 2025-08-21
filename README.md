@@ -1,14 +1,14 @@
-# Flipper Zero Govee BLE Controller
+# GlowFin - Flipper Zero Govee BLE Controller
 
 ```
     ╔═════════════════════════════════════════════════════════════════════════════╗
-    ║                    FLIPPER ZERO - GOVEE BLE CONTROLLER                     ║
+    ║                         GLOWFIN - GOVEE BLE CONTROLLER                     ║
     ╠═════════════════════════════════════════════════════════════════════════════╣
     ║                                                                             ║
     ║      ┌──────────────────────────────────────────────────────────┐          ║
     ║      │░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│          ║
     ║      │░┌────────────────────────────────────────────────────┐░░│          ║
-    ║      │░│                 GOVEE CONTROL                      │░░│  )))     ║
+    ║      │░│                    GLOWFIN                         │░░│  )))     ║
     ║      │░│                                                    │░░│   )))    ║
     ║      │░│  > Scan for Devices                               │░░│    )))   ║
     ║      │░│    Manual Entry                                   │░░│          ║
@@ -35,7 +35,7 @@
     ║                                                                             ║
     ║   ┌──────────────────────────────────────────────────────────┐             ║
     ║   │████████████████████████████████████████████████████████  │  12:45 PM   ║
-    ║   │█ GOVEE CONTROL          ≡ █████████████████████████BT:ON█│  BAT: 87%   ║
+    ║   │█ GLOWFIN                ≡ █████████████████████████BT:ON█│  BAT: 87%   ║
     ║   │████████████████████████████████████████████████████████  │             ║
     ║   │                                                          │             ║
     ║   │  Scanning...                                            │  H6006      ║
@@ -75,7 +75,7 @@
     ╚═════════════════════════════════════════════════════════════════════════════╝
 ```
 
-A native Flipper Zero application for comprehensive control of Govee Bluetooth-enabled LED devices, providing advanced lighting automation, scene management, and multi-device orchestration capabilities.
+GlowFin is a native Flipper Zero application for comprehensive control of Govee Bluetooth-enabled LED devices, providing advanced lighting automation, scene management, and multi-device orchestration capabilities.
 
 ## Features
 
@@ -124,8 +124,8 @@ Coming soon - The application will be available through the official Flipper cat
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/flipper-govee-controller.git
-cd flipper-govee-controller
+git clone https://github.com/yourusername/glowfin.git
+cd glowfin
 ```
 
 2. Set up the Flipper Zero SDK:
