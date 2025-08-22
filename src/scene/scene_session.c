@@ -3,13 +3,14 @@
 #include <gui/elements.h>
 #include <gui/view_holder.h>
 #include <gui/modules/text_input.h>
+#include <toolbox/api_lock.h>
 
 typedef struct {
 	PCUBERZERO instance;
 	ViewPort* viewport;
 	FuriMessageQueue* queue;
 	struct {
-		uint8_t action : 1;
+		uint8_t action : 2;
 		uint8_t button : 2;
 		uint8_t dialog : 1;
 	};
@@ -17,7 +18,8 @@ typedef struct {
 
 enum ACTION {
 	ACTION_EXIT,
-	ACTION_SELECT
+	ACTION_SELECT,
+	ACTION_TESTING
 };
 
 enum BUTTONSESSION {
@@ -61,6 +63,10 @@ static void callbackRender(Canvas* const canvas, void* const context) {
 	}
 }
 
+static void callback(void* const context) {
+	api_lock_unlock(context);
+}
+
 static inline void handleKeyOk(const PSESSIONSCENE instance, const InputEvent* const event) {
 	switch(instance->button) {
 	case BUTTON_SESSION_SELECT:
@@ -68,13 +74,8 @@ static inline void handleKeyOk(const PSESSIONSCENE instance, const InputEvent* c
 		furi_message_queue_put(instance->queue, event, FuriWaitForever);
 		break;
 	case BUTTON_SESSION_RENAME: {
-		ViewHolder* holder = view_holder_alloc();
-		view_holder_attach_to_gui(holder, instance->instance->interface);
-		TextInput* input = text_input_alloc();
-		view_holder_set_view(holder, text_input_get_view(input));
-		text_input_free(input);
-		view_holder_send_to_front(holder);
-		free(holder);
+		instance->action = ACTION_TESTING;
+		furi_message_queue_put(instance->queue, event, FuriWaitForever);
 		break;
 	}
 	case BUTTON_SESSION_NEW:
@@ -168,6 +169,22 @@ void SceneSessionEnter(void* const context) {
 		case ACTION_SELECT:
 			actionSelect(instance);
 			break;
+		case ACTION_TESTING: {
+			FuriEventFlag* flag = api_lock_alloc_locked();
+			ViewHolder* holder = view_holder_alloc();
+			TextInput* input = text_input_alloc();
+			Gui* interface = furi_record_open(RECORD_GUI);
+			view_holder_attach_to_gui(holder, interface);
+			view_holder_set_back_callback(holder, callback, flag);
+			view_holder_set_view(holder, text_input_get_view(input));
+			api_lock_wait_unlock(flag);
+			view_holder_set_view(holder, 0);
+			text_input_free(input);
+			view_holder_free(holder);
+			furi_record_close(RECORD_GUI);
+			api_lock_free(flag);
+			break;
+		}
 		}
 	}
 functionExit:
