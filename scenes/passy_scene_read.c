@@ -119,14 +119,14 @@ bool passy_scene_read_on_event(void* context, SceneManagerEvent event) {
 void passy_scene_read_on_exit(void* context) {
     Passy* passy = context;
 
-    if(passy_reader) {
-        passy_reader_free(passy_reader);
-        passy_reader = NULL;
-    }
     if(passy->poller) {
         nfc_poller_stop(passy->poller);
         nfc_poller_free(passy->poller);
         passy->poller = NULL;
+    }
+    if(passy_reader) {
+        passy_reader_free(passy_reader);
+        passy_reader = NULL;
     }
     if(passy->scanner) {
         nfc_scanner_stop(passy->scanner);
