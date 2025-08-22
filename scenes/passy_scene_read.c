@@ -34,6 +34,8 @@ void passy_scene_read_on_enter(void* context) {
     Passy* passy = context;
     dolphin_deed(DolphinDeedNfcRead);
 
+    passy->poller = NULL;
+
     // Setup view
     Popup* popup = passy->popup;
     popup_set_header(popup, "Reading", 68, 30, AlignLeft, AlignTop);
