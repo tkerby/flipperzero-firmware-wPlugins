@@ -38,7 +38,7 @@ void passy_scene_read_on_enter(void* context) {
 
     // Setup view
     Popup* popup = passy->popup;
-    popup_set_header(popup, "Reading", 68, 30, AlignLeft, AlignTop);
+    popup_set_header(popup, "Detecting...", 68, 30, AlignLeft, AlignTop);
     popup_set_icon(popup, 0, 3, &I_RFIDDolphinReceive_97x61);
     passy->scanner = nfc_scanner_alloc(passy->nfc);
     nfc_scanner_start(
