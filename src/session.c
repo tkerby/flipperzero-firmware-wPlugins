@@ -52,3 +52,12 @@ functionExit:
 	furi_record_close(RECORD_STORAGE);
 	return codeExit;
 }
+
+void SessionCleanup(const PCUBERZERO instance) {
+	if(!instance->session.file) {
+		return;
+	}
+
+	storage_file_close(instance->session.file);
+	storage_file_free(instance->session.file);
+}

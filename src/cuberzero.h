@@ -79,6 +79,7 @@ bool SceneHomeEvent(void* const context, const SceneManagerEvent event);
 extern "C" {
 #endif
 uint8_t SessionOpen(const PCUBERZERO instance, const char* const path);
+void SessionCleanup(const PCUBERZERO instance);
 #ifdef __cplusplus
 }
 #endif

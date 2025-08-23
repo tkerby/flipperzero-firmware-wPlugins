@@ -41,6 +41,7 @@ int32_t cuberzeroMain(const void* const unused) {
 	scene_manager_next_scene(instance->manager, SCENE_HOME);
 	view_dispatcher_run(instance->dispatcher);
 	view_dispatcher_remove_view(instance->dispatcher, VIEW_SUBMENU);
+	SessionCleanup(instance);
 	furi_string_free(instance->session.path);
 	scene_manager_free(instance->manager);
 	view_dispatcher_free(instance->dispatcher);

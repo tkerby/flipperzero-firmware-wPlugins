@@ -137,13 +137,14 @@ static void actionSelect(const PSESSIONSCENE instance) {
 		goto updateViewport;
 	}
 
-	if(!furi_string_end_withi_str(instance->instance->session.path, ".cbzs")) {
-		//instance->renderText = 1;
-		//instance->text = TEXT_APPEARS_INCORRECT_TYPE;
+	/*if(!furi_string_end_withi_str(instance->instance->session.path, ".cbzs")) {
+		instance->renderText = 1;
+		instance->text = TEXT_APPEARS_INCORRECT_TYPE;
 		goto updateViewport;
 	}
 
-	//actionOpenAnyway(instance, path);
+	actionOpenAnyway(instance, path);*/
+	SessionOpen(instance->instance, furi_string_get_cstr(instance->instance->session.path));
 	return;
 updateViewport:
 	view_port_update(instance->viewport);
