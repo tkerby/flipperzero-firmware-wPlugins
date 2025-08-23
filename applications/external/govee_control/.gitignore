@@ -1,0 +1,58 @@
+# Build outputs
+dist/
+build/
+*.fap
+*.elf
+*.o
+*.d
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Clang and formatting
+.clang-format
+.clang-tidy
+.clangd
+.editorconfig
+compile_flags.txt
+
+# Environment and secrets
+.env
+.env.*
+*.key
+*.pem
+
+# ufbt specific
+.ufbt/
+.ufbt_build/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+env/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+.cache/
+
+# Pre-commit
+.pre-commit-config.yaml
+.sanitizers.mk
+
+# Test files
+check.sh
+test_*.c
