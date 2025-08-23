@@ -1,8 +1,8 @@
 #include "src/cuberzero.h"
 #include <dialogs/dialogs.h>
 #include <gui/elements.h>
-#include <gui/view_holder.h>
 #include <gui/modules/text_input.h>
+#include <gui/view_holder.h>
 #include <toolbox/api_lock.h>
 
 typedef struct {
@@ -10,16 +10,18 @@ typedef struct {
 	ViewPort* viewport;
 	FuriMessageQueue* queue;
 	struct {
-		uint8_t action : 2;
+		uint8_t action : 3;
 		uint8_t button : 2;
 		uint8_t dialog : 1;
 	};
 } SESSIONSCENE, *PSESSIONSCENE;
 
 enum ACTION {
+	ACTION_DELETE,
 	ACTION_EXIT,
-	ACTION_SELECT,
-	ACTION_TESTING
+	ACTION_NEW,
+	ACTION_RENAME,
+	ACTION_SELECT
 };
 
 enum BUTTONSESSION {
@@ -63,22 +65,19 @@ static void callbackRender(Canvas* const canvas, void* const context) {
 	}
 }
 
-static void callback(void* const context) {
-	api_lock_unlock(context);
-}
-
 static inline void handleKeyOk(const PSESSIONSCENE instance, const InputEvent* const event) {
 	switch(instance->button) {
 	case BUTTON_SESSION_SELECT:
 		instance->action = ACTION_SELECT;
 		furi_message_queue_put(instance->queue, event, FuriWaitForever);
 		break;
-	case BUTTON_SESSION_RENAME: {
-		instance->action = ACTION_TESTING;
+	case BUTTON_SESSION_RENAME:
+		instance->action = ACTION_RENAME;
 		furi_message_queue_put(instance->queue, event, FuriWaitForever);
 		break;
-	}
 	case BUTTON_SESSION_NEW:
+		instance->action = ACTION_NEW;
+		furi_message_queue_put(instance->queue, event, FuriWaitForever);
 		break;
 	case BUTTON_SESSION_DELETE:
 		break;
@@ -164,27 +163,17 @@ void SceneSessionEnter(void* const context) {
 
 	while(furi_message_queue_get(instance->queue, &event, FuriWaitForever) == FuriStatusOk) {
 		switch(instance->action) {
+		case ACTION_DELETE:
+			break;
 		case ACTION_EXIT:
 			goto functionExit;
+		case ACTION_NEW:
+			break;
+		case ACTION_RENAME:
+			break;
 		case ACTION_SELECT:
 			actionSelect(instance);
 			break;
-		case ACTION_TESTING: {
-			FuriEventFlag* flag = api_lock_alloc_locked();
-			ViewHolder* holder = view_holder_alloc();
-			TextInput* input = text_input_alloc();
-			Gui* interface = furi_record_open(RECORD_GUI);
-			view_holder_attach_to_gui(holder, interface);
-			view_holder_set_back_callback(holder, callback, flag);
-			view_holder_set_view(holder, text_input_get_view(input));
-			api_lock_wait_unlock(flag);
-			view_holder_set_view(holder, 0);
-			text_input_free(input);
-			view_holder_free(holder);
-			furi_record_close(RECORD_GUI);
-			api_lock_free(flag);
-			break;
-		}
 		}
 	}
 functionExit:
