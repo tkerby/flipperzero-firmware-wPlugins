@@ -1,3 +1,7 @@
 dist
 .vscode
 .aider*
+.clangd
+.editorconfig
+.env
+.ufbt
