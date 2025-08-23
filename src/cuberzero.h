@@ -44,6 +44,11 @@ typedef enum {
 	COUNT_SCENE
 } SCENE;
 
+typedef enum {
+	SESSION_SUCCESS,
+	SESSION_OPEN_FAILED
+} SESSIONRESULT;
+
 struct ViewDispatcher {
 	bool eventLoopOwned;
 	FuriEventLoop* eventLoop;
@@ -72,7 +77,7 @@ bool SceneHomeEvent(void* const context, const SceneManagerEvent event);
 #ifdef __cplusplus
 extern "C" {
 #endif
-uint8_t SessionOpen(const PCUBERZERO instance, const FuriString* const path);
+uint8_t SessionOpen(const PCUBERZERO instance, const char* const path);
 #ifdef __cplusplus
 }
 #endif
