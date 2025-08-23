@@ -96,14 +96,13 @@ bool passy_scene_read_on_event(void* context, SceneManagerEvent event) {
                 popup_set_header(popup, "Reading", 68, 30, AlignLeft, AlignTop);
             } else {
                 // Update the header with the current bytes read
-                char header[32];
                 snprintf(
-                    header,
-                    sizeof(header),
+                    passy->text_store,
+                    PASSY_TEXT_STORE_SIZE,
                     "Reading\n%d/%dk",
                     passy->offset,
                     (passy->bytes_total / 1024));
-                popup_set_header(popup, header, 68, 30, AlignLeft, AlignTop);
+                popup_set_header(popup, passy->text_store, 68, 30, AlignLeft, AlignTop);
             }
         }
     } else if(event.type == SceneManagerEventTypeBack) {
