@@ -9,7 +9,7 @@
 
 #define TAG "GeometryDash"
 
-#define GD_APP_DATA_PATH APP_ASSETS_PATH("")
+#define GD_APP_DATA_PATH EXT_PATH("apps_assets/geometry_flip")
 
 #define SCREEN_WIDTH  128
 #define SCREEN_HEIGHT 64

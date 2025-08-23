@@ -358,8 +358,10 @@ UartContext* uart_init(AppState* state) {
         return NULL;
     }
 
-    // Initialize serial - Only change is using UART_CH_ESP instead of FuriHalSerialIdUsart
-    uart->serial_handle = furi_hal_serial_control_acquire(UART_CH_ESP);
+    // Initialize serial with firmware-aware channel selection
+    FuriHalSerialId uart_channel = UART_CH_ESP;
+
+    uart->serial_handle = furi_hal_serial_control_acquire(uart_channel);
     if(uart->serial_handle) {
         furi_hal_serial_init(uart->serial_handle, 115200);
         uart->is_serial_active = true;
