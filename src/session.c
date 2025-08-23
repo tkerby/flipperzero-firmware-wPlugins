@@ -46,6 +46,8 @@ uint8_t SessionOpen(const PCUBERZERO instance, const char* const path) {
 		codeExit = SESSION_INVALID_FORMAT;
 		goto functionExit;
 	}
+
+	instance->session.file = file;
 functionExit:
 	storage_file_close(file);
 	storage_file_free(file);
