@@ -69,4 +69,11 @@ bool SceneHomeEvent(void* const context, const SceneManagerEvent event);
 #ifdef __cplusplus
 }
 #endif
+#ifdef __cplusplus
+extern "C" {
+#endif
+uint8_t SessionOpen(const PCUBERZERO instance, const FuriString* const path);
+#ifdef __cplusplus
+}
+#endif
 #endif
