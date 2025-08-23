@@ -1,5 +1,9 @@
 #include "src/cuberzero.h"
 
+typedef struct {
+	uint8_t magicNumber[4];
+} CBZSHEADER, *PCBZSHEADER;
+
 uint8_t SessionOpen(const PCUBERZERO instance, const char* const path) {
 	UNUSED(instance);
 	UNUSED(path);
@@ -12,7 +16,11 @@ uint8_t SessionOpen(const PCUBERZERO instance, const char* const path) {
 		goto functionExit;
 	}
 
-	uint64_t size = storage_file_size(file);
+	/*uint64_t size = storage_file_size(file);
+
+	if(size < sizeof(CBZSHEADER)) {
+		goto functionExit;
+	}*/
 functionExit:
 	storage_file_close(file);
 	storage_file_free(file);
