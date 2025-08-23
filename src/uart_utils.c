@@ -359,12 +359,7 @@ UartContext* uart_init(AppState* state) {
     }
 
     // Initialize serial with firmware-aware channel selection
-    FuriHalSerialId uart_channel;
-    if(has_momentum_features()) {
-        uart_channel = UART_CH_ESP;
-    } else {
-        uart_channel = FuriHalSerialIdUsart;
-    }
+    FuriHalSerialId uart_channel = UART_CH_ESP;
 
     uart->serial_handle = furi_hal_serial_control_acquire(uart_channel);
     if(uart->serial_handle) {
