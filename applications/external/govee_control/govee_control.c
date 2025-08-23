@@ -61,12 +61,24 @@ static void govee_submenu_callback(void* context, uint32_t index) {
     case 0:
         // Start scanning
         FURI_LOG_I(TAG, "Starting BLE scan");
-        popup_set_text(app->popup, "Scanning for devices...\nPress Back to cancel", 64, 32, AlignCenter, AlignCenter);
+        popup_set_text(
+            app->popup,
+            "Scanning for devices...\nPress Back to cancel",
+            64,
+            32,
+            AlignCenter,
+            AlignCenter);
         view_dispatcher_switch_to_view(app->view_dispatcher, GoveeViewScanning);
         break;
     case 1:
         // Manual entry
-        popup_set_text(app->popup, "Manual mode\nNot implemented yet\nPress Back", 64, 32, AlignCenter, AlignCenter);
+        popup_set_text(
+            app->popup,
+            "Manual mode\nNot implemented yet\nPress Back",
+            64,
+            32,
+            AlignCenter,
+            AlignCenter);
         view_dispatcher_switch_to_view(app->view_dispatcher, GoveeViewScanning);
         break;
     case 2:
@@ -90,6 +102,7 @@ static GoveeApp* govee_app_alloc() {
 
     // View dispatcher
     app->view_dispatcher = view_dispatcher_alloc();
+    view_dispatcher_enable_queue(app->view_dispatcher);
     if(!app->view_dispatcher) {
         furi_record_close(RECORD_GUI);
         furi_record_close(RECORD_NOTIFICATION);
@@ -109,7 +122,8 @@ static GoveeApp* govee_app_alloc() {
     // Popup for scanning
     app->popup = popup_alloc();
     popup_set_header(app->popup, "Scanning", 64, 10, AlignCenter, AlignTop);
-    popup_set_text(app->popup, "Looking for H6006...\nPress Back to cancel", 64, 32, AlignCenter, AlignCenter);
+    popup_set_text(
+        app->popup, "Looking for H6006...\nPress Back to cancel", 64, 32, AlignCenter, AlignCenter);
     popup_set_timeout(app->popup, 10000); // 10 second timeout
     popup_set_callback(app->popup, govee_popup_callback);
     popup_set_context(app->popup, app);
