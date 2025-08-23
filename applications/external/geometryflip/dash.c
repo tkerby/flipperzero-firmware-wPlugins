@@ -9,26 +9,26 @@
 
 #define TAG "GeometryDash"
 
-#define GD_APP_DATA_PATH EXT_PATH("apps_data/geometry_flip")
+#define GD_APP_DATA_PATH APP_ASSETS_PATH("")
 
-#define SCREEN_WIDTH 128
+#define SCREEN_WIDTH  128
 #define SCREEN_HEIGHT 64
 
-#define CUBE_SIZE 8
-#define CUBE_X_POS 20
+#define CUBE_SIZE     8
+#define CUBE_X_POS    20
 #define CUBE_JUMP_VEL -120.0f
-#define CUBE_GRAVITY 250.0f
-#define GROUND_Y (SCREEN_HEIGHT - 8)
+#define CUBE_GRAVITY  250.0f
+#define GROUND_Y      (SCREEN_HEIGHT - 8)
 
-#define SHIP_SIZE 8
-#define SHIP_FLY_VEL -100.0f
-#define SHIP_GRAVITY 150.0f
+#define SHIP_SIZE          8
+#define SHIP_FLY_VEL       -100.0f
+#define SHIP_GRAVITY       150.0f
 #define SHIP_MAX_FALLSPEED 200.0f
 
-#define SCROLL_SPEED 60.0f
-#define OBSTACLE_WIDTH CUBE_SIZE
+#define SCROLL_SPEED    60.0f
+#define OBSTACLE_WIDTH  CUBE_SIZE
 #define OBSTACLE_HEIGHT CUBE_SIZE
-#define OBSTACLE_GAP 20
+#define OBSTACLE_GAP    20
 
 #define COYOTE_TIME_MS 120
 
@@ -106,132 +106,181 @@ static void draw_cube(Canvas* canvas, float y) {
 static void draw_ship(Canvas* canvas, float y, GravityDirection gravity_dir) {
     int ship_y = (int)y;
     int ship_bottom = ship_y + SHIP_SIZE;
-    
-    if (gravity_dir == GravityDirectionDown) {
-        canvas_draw_line(canvas, CUBE_X_POS, ship_y + SHIP_SIZE/2, CUBE_X_POS + SHIP_SIZE, ship_y);
-        canvas_draw_line(canvas, CUBE_X_POS, ship_y + SHIP_SIZE/2, CUBE_X_POS + SHIP_SIZE, ship_bottom);
-        canvas_draw_line(canvas, CUBE_X_POS + SHIP_SIZE, ship_y, CUBE_X_POS + SHIP_SIZE, ship_bottom);
+
+    if(gravity_dir == GravityDirectionDown) {
+        canvas_draw_line(
+            canvas, CUBE_X_POS, ship_y + SHIP_SIZE / 2, CUBE_X_POS + SHIP_SIZE, ship_y);
+        canvas_draw_line(
+            canvas, CUBE_X_POS, ship_y + SHIP_SIZE / 2, CUBE_X_POS + SHIP_SIZE, ship_bottom);
+        canvas_draw_line(
+            canvas, CUBE_X_POS + SHIP_SIZE, ship_y, CUBE_X_POS + SHIP_SIZE, ship_bottom);
     } else {
-        canvas_draw_line(canvas, CUBE_X_POS, ship_y + SHIP_SIZE/2, CUBE_X_POS + SHIP_SIZE, ship_y);
-        canvas_draw_line(canvas, CUBE_X_POS, ship_y + SHIP_SIZE/2, CUBE_X_POS + SHIP_SIZE, ship_bottom);
-        canvas_draw_line(canvas, CUBE_X_POS + SHIP_SIZE, ship_y, CUBE_X_POS + SHIP_SIZE, ship_bottom);
+        canvas_draw_line(
+            canvas, CUBE_X_POS, ship_y + SHIP_SIZE / 2, CUBE_X_POS + SHIP_SIZE, ship_y);
+        canvas_draw_line(
+            canvas, CUBE_X_POS, ship_y + SHIP_SIZE / 2, CUBE_X_POS + SHIP_SIZE, ship_bottom);
+        canvas_draw_line(
+            canvas, CUBE_X_POS + SHIP_SIZE, ship_y, CUBE_X_POS + SHIP_SIZE, ship_bottom);
     }
 }
 
 static void draw_player(GeometryDashApp* app, Canvas* canvas) {
-    if (app->player_mode == PlayerModeCube) {
+    if(app->player_mode == PlayerModeCube) {
         draw_cube(canvas, app->cube_y);
-    } else if (app->player_mode == PlayerModeShip) {
+    } else if(app->player_mode == PlayerModeShip) {
         draw_ship(canvas, app->cube_y, app->ship_gravity_dir);
     }
 }
 
-static void draw_vertical_special_object(Canvas* canvas, int screen_x, int base_grid_y, ObstacleType type) {
-    for (int i = 0; i < 3; i++) {
+static void
+    draw_vertical_special_object(Canvas* canvas, int screen_x, int base_grid_y, ObstacleType type) {
+    for(int i = 0; i < 3; i++) {
         int y = base_grid_y + i;
         int screen_y = GROUND_Y - (y + 1) * OBSTACLE_HEIGHT;
-        
+
         canvas_draw_frame(canvas, screen_x, screen_y, OBSTACLE_WIDTH, OBSTACLE_HEIGHT);
-        
-        if (i == 1) {
-            switch (type) {
-                case ObstacleTypePortalShip:
-                    canvas_draw_line(canvas, screen_x, screen_y, screen_x + OBSTACLE_WIDTH, screen_y + OBSTACLE_HEIGHT);
-                    canvas_draw_line(canvas, screen_x + OBSTACLE_WIDTH, screen_y, screen_x, screen_y + OBSTACLE_HEIGHT);
-                    break;
-                case ObstacleTypePortalCube:
-                    canvas_draw_disc(canvas, screen_x + OBSTACLE_WIDTH/2, screen_y + OBSTACLE_HEIGHT/2, 2);
-                    break;
-                case ObstacleTypeGravityUp:
-                    canvas_draw_line(canvas, screen_x + OBSTACLE_WIDTH/2, screen_y + 2, screen_x + OBSTACLE_WIDTH/2, screen_y + OBSTACLE_HEIGHT - 2);
-                    canvas_draw_line(canvas, screen_x + OBSTACLE_WIDTH/2, screen_y + 2, screen_x + OBSTACLE_WIDTH/2 - 2, screen_y + 4);
-                    canvas_draw_line(canvas, screen_x + OBSTACLE_WIDTH/2, screen_y + 2, screen_x + OBSTACLE_WIDTH/2 + 2, screen_y + 4);
-                    break;
-                case ObstacleTypeGravityDown:
-                    canvas_draw_line(canvas, screen_x + OBSTACLE_WIDTH/2, screen_y + 2, screen_x + OBSTACLE_WIDTH/2, screen_y + OBSTACLE_HEIGHT - 2);
-                    canvas_draw_line(canvas, screen_x + OBSTACLE_WIDTH/2, screen_y + OBSTACLE_HEIGHT - 2, screen_x + OBSTACLE_WIDTH/2 - 2, screen_y + OBSTACLE_HEIGHT - 4);
-                    canvas_draw_line(canvas, screen_x + OBSTACLE_WIDTH/2, screen_y + OBSTACLE_HEIGHT - 2, screen_x + OBSTACLE_WIDTH/2 + 2, screen_y + OBSTACLE_HEIGHT - 4);
-                    break;
-                default:
-                    break;
+
+        if(i == 1) {
+            switch(type) {
+            case ObstacleTypePortalShip:
+                canvas_draw_line(
+                    canvas,
+                    screen_x,
+                    screen_y,
+                    screen_x + OBSTACLE_WIDTH,
+                    screen_y + OBSTACLE_HEIGHT);
+                canvas_draw_line(
+                    canvas,
+                    screen_x + OBSTACLE_WIDTH,
+                    screen_y,
+                    screen_x,
+                    screen_y + OBSTACLE_HEIGHT);
+                break;
+            case ObstacleTypePortalCube:
+                canvas_draw_disc(
+                    canvas, screen_x + OBSTACLE_WIDTH / 2, screen_y + OBSTACLE_HEIGHT / 2, 2);
+                break;
+            case ObstacleTypeGravityUp:
+                canvas_draw_line(
+                    canvas,
+                    screen_x + OBSTACLE_WIDTH / 2,
+                    screen_y + 2,
+                    screen_x + OBSTACLE_WIDTH / 2,
+                    screen_y + OBSTACLE_HEIGHT - 2);
+                canvas_draw_line(
+                    canvas,
+                    screen_x + OBSTACLE_WIDTH / 2,
+                    screen_y + 2,
+                    screen_x + OBSTACLE_WIDTH / 2 - 2,
+                    screen_y + 4);
+                canvas_draw_line(
+                    canvas,
+                    screen_x + OBSTACLE_WIDTH / 2,
+                    screen_y + 2,
+                    screen_x + OBSTACLE_WIDTH / 2 + 2,
+                    screen_y + 4);
+                break;
+            case ObstacleTypeGravityDown:
+                canvas_draw_line(
+                    canvas,
+                    screen_x + OBSTACLE_WIDTH / 2,
+                    screen_y + 2,
+                    screen_x + OBSTACLE_WIDTH / 2,
+                    screen_y + OBSTACLE_HEIGHT - 2);
+                canvas_draw_line(
+                    canvas,
+                    screen_x + OBSTACLE_WIDTH / 2,
+                    screen_y + OBSTACLE_HEIGHT - 2,
+                    screen_x + OBSTACLE_WIDTH / 2 - 2,
+                    screen_y + OBSTACLE_HEIGHT - 4);
+                canvas_draw_line(
+                    canvas,
+                    screen_x + OBSTACLE_WIDTH / 2,
+                    screen_y + OBSTACLE_HEIGHT - 2,
+                    screen_x + OBSTACLE_WIDTH / 2 + 2,
+                    screen_y + OBSTACLE_HEIGHT - 4);
+                break;
+            default:
+                break;
             }
         }
     }
 }
 
 static void draw_filled_spike(Canvas* canvas, int screen_x, int screen_y, ObstacleType type) {
-    switch (type) {
-        case ObstacleTypeSpikeUp: {
-            for (int y = screen_y; y < screen_y + OBSTACLE_HEIGHT; y++) {
-                int height = y - screen_y;
-                int width = (OBSTACLE_WIDTH * height) / OBSTACLE_HEIGHT;
-                int left_x = screen_x + (OBSTACLE_WIDTH - width) / 2;
-                canvas_draw_line(canvas, left_x, y, left_x + width, y);
-            }
-            break;
+    switch(type) {
+    case ObstacleTypeSpikeUp: {
+        for(int y = screen_y; y < screen_y + OBSTACLE_HEIGHT; y++) {
+            int height = y - screen_y;
+            int width = (OBSTACLE_WIDTH * height) / OBSTACLE_HEIGHT;
+            int left_x = screen_x + (OBSTACLE_WIDTH - width) / 2;
+            canvas_draw_line(canvas, left_x, y, left_x + width, y);
         }
-        case ObstacleTypeSpikeDown: {
-            screen_y -= OBSTACLE_HEIGHT;
-            
-            for (int y = screen_y; y < screen_y + OBSTACLE_HEIGHT; y++) {
-                int height = (screen_y + OBSTACLE_HEIGHT) - y;
-                int width = (OBSTACLE_WIDTH * height) / OBSTACLE_HEIGHT;
-                int left_x = screen_x + (OBSTACLE_WIDTH - width) / 2;
-                canvas_draw_line(canvas, left_x, y, left_x + width, y);
-            }
-            break;
+        break;
+    }
+    case ObstacleTypeSpikeDown: {
+        screen_y -= OBSTACLE_HEIGHT;
+
+        for(int y = screen_y; y < screen_y + OBSTACLE_HEIGHT; y++) {
+            int height = (screen_y + OBSTACLE_HEIGHT) - y;
+            int width = (OBSTACLE_WIDTH * height) / OBSTACLE_HEIGHT;
+            int left_x = screen_x + (OBSTACLE_WIDTH - width) / 2;
+            canvas_draw_line(canvas, left_x, y, left_x + width, y);
         }
-        case ObstacleTypeSpikeLeft: {
-            for (int x = screen_x; x < screen_x + OBSTACLE_WIDTH; x++) {
-                int width = x - screen_x;
-                int height = (OBSTACLE_HEIGHT * width) / OBSTACLE_WIDTH;
-                int top_y = screen_y + (OBSTACLE_HEIGHT - height) / 2;
-                canvas_draw_line(canvas, x, top_y, x, top_y + height);
-            }
-            break;
+        break;
+    }
+    case ObstacleTypeSpikeLeft: {
+        for(int x = screen_x; x < screen_x + OBSTACLE_WIDTH; x++) {
+            int width = x - screen_x;
+            int height = (OBSTACLE_HEIGHT * width) / OBSTACLE_WIDTH;
+            int top_y = screen_y + (OBSTACLE_HEIGHT - height) / 2;
+            canvas_draw_line(canvas, x, top_y, x, top_y + height);
         }
-        case ObstacleTypeSpikeRight: {
-            for (int x = screen_x; x < screen_x + OBSTACLE_WIDTH; x++) {
-                int width = (screen_x + OBSTACLE_WIDTH) - x;
-                int height = (OBSTACLE_HEIGHT * width) / OBSTACLE_WIDTH;
-                int top_y = screen_y + (OBSTACLE_HEIGHT - height) / 2;
-                canvas_draw_line(canvas, x, top_y, x, top_y + height);
-            }
-            break;
+        break;
+    }
+    case ObstacleTypeSpikeRight: {
+        for(int x = screen_x; x < screen_x + OBSTACLE_WIDTH; x++) {
+            int width = (screen_x + OBSTACLE_WIDTH) - x;
+            int height = (OBSTACLE_HEIGHT * width) / OBSTACLE_WIDTH;
+            int top_y = screen_y + (OBSTACLE_HEIGHT - height) / 2;
+            canvas_draw_line(canvas, x, top_y, x, top_y + height);
         }
-        default:
-            break;
+        break;
+    }
+    default:
+        break;
     }
 }
 
 static void draw_obstacle(Canvas* canvas, int screen_x, int grid_y, ObstacleType type) {
-    if (type == ObstacleTypeNone) return;
+    if(type == ObstacleTypeNone) return;
 
-    bool is_special_object = (type == ObstacleTypePortalShip || type == ObstacleTypePortalCube ||
-                              type == ObstacleTypeGravityUp || type == ObstacleTypeGravityDown);
+    bool is_special_object =
+        (type == ObstacleTypePortalShip || type == ObstacleTypePortalCube ||
+         type == ObstacleTypeGravityUp || type == ObstacleTypeGravityDown);
 
-    if (is_special_object) {
+    if(is_special_object) {
         draw_vertical_special_object(canvas, screen_x, grid_y, type);
         return;
     }
 
     int screen_y = 0;
-    
-    if (type == ObstacleTypeSpikeUp) {
+
+    if(type == ObstacleTypeSpikeUp) {
         screen_y = GROUND_Y - (grid_y + 1) * OBSTACLE_HEIGHT;
-    } else if (type == ObstacleTypeSpikeDown) {
+    } else if(type == ObstacleTypeSpikeDown) {
         screen_y = GROUND_Y - (grid_y + 1) * OBSTACLE_HEIGHT + OBSTACLE_HEIGHT;
     }
 
-    switch (type) {
-        case ObstacleTypeSpikeUp:
-        case ObstacleTypeSpikeDown:
-        case ObstacleTypeSpikeLeft:
-        case ObstacleTypeSpikeRight:
-            draw_filled_spike(canvas, screen_x, screen_y, type);
-            break;
-        default:
-            break;
+    switch(type) {
+    case ObstacleTypeSpikeUp:
+    case ObstacleTypeSpikeDown:
+    case ObstacleTypeSpikeLeft:
+    case ObstacleTypeSpikeRight:
+        draw_filled_spike(canvas, screen_x, screen_y, type);
+        break;
+    default:
+        break;
     }
 }
 
@@ -241,12 +290,14 @@ static void draw_ground(Canvas* canvas) {
 
 static void draw_ui(Canvas* canvas, GeometryDashApp* app) {
     char buffer[64];
-    int progress = (int)((app->scroll_offset / (app->current_level.max_grid_x * OBSTACLE_GAP)) * 100);
-    if (progress > 100) progress = 100;
+    int progress =
+        (int)((app->scroll_offset / (app->current_level.max_grid_x * OBSTACLE_GAP)) * 100);
+    if(progress > 100) progress = 100;
     snprintf(buffer, sizeof(buffer), "Progress: %d%%", progress);
     canvas_draw_str(canvas, 2, 10, buffer);
 
-    if(app->state == GameStatePlaying || app->state == GameStateGameOver || app->state == GameStateWin) {
+    if(app->state == GameStatePlaying || app->state == GameStateGameOver ||
+       app->state == GameStateWin) {
         snprintf(buffer, sizeof(buffer), "Level: %s", app->current_level.name);
         canvas_draw_str(canvas, 2, 20, buffer);
     }
@@ -259,25 +310,25 @@ static void render_callback(Canvas* canvas, void* ctx) {
     canvas_clear(canvas);
     canvas_set_color(canvas, ColorBlack);
 
-    if (app->state == GameStateMenu) {
+    if(app->state == GameStateMenu) {
         canvas_set_font(canvas, FontPrimary);
         canvas_draw_str_aligned(canvas, 64, 5, AlignCenter, AlignTop, "Geometry Dash");
         canvas_set_font(canvas, FontSecondary);
 
         size_t file_count = LevelFileArray_size(app->level_files);
-        if (file_count == 0) {
-             canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignTop, "No levels found!");
-             canvas_draw_str_aligned(canvas, 64, 45, AlignCenter, AlignTop, "Put .gflvl files in");
-             canvas_draw_str_aligned(canvas, 64, 55, AlignCenter, AlignTop, GD_APP_DATA_PATH);
-             return;
+        if(file_count == 0) {
+            canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignTop, "No levels found!");
+            canvas_draw_str_aligned(canvas, 64, 45, AlignCenter, AlignTop, "Put .gflvl files in");
+            canvas_draw_str_aligned(canvas, 64, 55, AlignCenter, AlignTop, GD_APP_DATA_PATH);
+            return;
         }
 
         int start_index = MAX(0, app->selected_menu_item - 2);
         int end_index = MIN((int)file_count, start_index + 5);
 
-        for (int i = start_index; i < end_index; i++) {
+        for(int i = start_index; i < end_index; i++) {
             int y_pos = 20 + (i - start_index) * 12;
-            if (i == app->selected_menu_item) {
+            if(i == app->selected_menu_item) {
                 canvas_draw_str(canvas, 2, y_pos, ">");
             }
             char** filename_ptr = LevelFileArray_get(app->level_files, i);
@@ -295,7 +346,7 @@ static void render_callback(Canvas* canvas, void* ctx) {
         return;
     }
 
-    if (app->state == GameStateGameOver) {
+    if(app->state == GameStateGameOver) {
         canvas_set_font(canvas, FontPrimary);
         canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignTop, "Game Over!");
         canvas_set_font(canvas, FontSecondary);
@@ -304,7 +355,7 @@ static void render_callback(Canvas* canvas, void* ctx) {
         return;
     }
 
-    if (app->state == GameStateWin) {
+    if(app->state == GameStateWin) {
         canvas_set_font(canvas, FontPrimary);
         canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignTop, "Level Complete!");
         canvas_set_font(canvas, FontSecondary);
@@ -320,18 +371,17 @@ static void render_callback(Canvas* canvas, void* ctx) {
     int start_grid_x = (int)(app->scroll_offset / OBSTACLE_GAP) - 2;
     int end_grid_x = start_grid_x + (SCREEN_WIDTH / OBSTACLE_GAP) + 4;
 
-    for (int grid_x = start_grid_x; grid_x <= end_grid_x; grid_x++) {
+    for(int grid_x = start_grid_x; grid_x <= end_grid_x; grid_x++) {
         int screen_x = (grid_x * OBSTACLE_GAP) - (int)app->scroll_offset;
 
-        for (int j = 0; j < app->current_level.length; j++) {
+        for(int j = 0; j < app->current_level.length; j++) {
             Obstacle* obs = &app->current_level.obstacles[j];
-            if (obs->grid_x == grid_x) {
-                if (obs->type == ObstacleTypeBlock) {
+            if(obs->grid_x == grid_x) {
+                if(obs->type == ObstacleTypeBlock) {
                     int platform_width = obs->length * OBSTACLE_WIDTH;
                     int screen_y = GROUND_Y - (obs->grid_y + 1) * OBSTACLE_HEIGHT;
                     canvas_draw_box(canvas, screen_x, screen_y, platform_width, OBSTACLE_HEIGHT);
-                } 
-                else {
+                } else {
                     draw_obstacle(canvas, screen_x, obs->grid_y, obs->type);
                 }
             }
@@ -346,64 +396,68 @@ static void input_callback(InputEvent* input_event, void* ctx) {
 }
 
 static void process_game_logic(GeometryDashApp* app, uint32_t dt_ms) {
-    if (app->state != GameStatePlaying) return;
+    if(app->state != GameStatePlaying) return;
 
     float dt = dt_ms / 1000.0f;
 
     app->scroll_offset += SCROLL_SPEED * dt;
-    if (app->scroll_offset >= app->current_level.max_grid_x * OBSTACLE_GAP) {
+    if(app->scroll_offset >= app->current_level.max_grid_x * OBSTACLE_GAP) {
         app->state = GameStateWin;
         return;
     }
 
-    if (app->player_mode == PlayerModeCube) {
+    if(app->player_mode == PlayerModeCube) {
         app->cube_velocity_y += CUBE_GRAVITY * dt;
         app->cube_y += app->cube_velocity_y * dt;
 
         bool was_on_ground = app->is_on_ground;
         app->is_on_ground = false;
 
-        if (app->cube_y > GROUND_Y - CUBE_SIZE) {
+        if(app->cube_y > GROUND_Y - CUBE_SIZE) {
             app->cube_y = GROUND_Y - CUBE_SIZE;
             app->cube_velocity_y = 0.0f;
             app->is_on_ground = true;
-            if (!was_on_ground) {
+            if(!was_on_ground) {
                 app->ground_lost_time = furi_get_tick();
             }
         }
 
-        if (app->cube_y < 0) {
+        if(app->cube_y < 0) {
             app->cube_y = 0;
             app->cube_velocity_y = 0.0f;
         }
 
-    } else if (app->player_mode == PlayerModeShip) {
-        float current_gravity = (app->ship_gravity_dir == GravityDirectionDown) ? SHIP_GRAVITY : -SHIP_GRAVITY;
+    } else if(app->player_mode == PlayerModeShip) {
+        float current_gravity = (app->ship_gravity_dir == GravityDirectionDown) ? SHIP_GRAVITY :
+                                                                                  -SHIP_GRAVITY;
         app->cube_velocity_y += current_gravity * dt;
-        
-        if (app->ship_gravity_dir == GravityDirectionDown && app->cube_velocity_y > SHIP_MAX_FALLSPEED) {
+
+        if(app->ship_gravity_dir == GravityDirectionDown &&
+           app->cube_velocity_y > SHIP_MAX_FALLSPEED) {
             app->cube_velocity_y = SHIP_MAX_FALLSPEED;
-        } else if (app->ship_gravity_dir == GravityDirectionUp && app->cube_velocity_y < -SHIP_MAX_FALLSPEED) {
+        } else if(
+            app->ship_gravity_dir == GravityDirectionUp &&
+            app->cube_velocity_y < -SHIP_MAX_FALLSPEED) {
             app->cube_velocity_y = -SHIP_MAX_FALLSPEED;
         }
-        
+
         app->cube_y += app->cube_velocity_y * dt;
 
-        if (app->ship_gravity_dir == GravityDirectionDown) {
-            if (app->cube_y > GROUND_Y - SHIP_SIZE) {
+        if(app->ship_gravity_dir == GravityDirectionDown) {
+            if(app->cube_y > GROUND_Y - SHIP_SIZE) {
                 app->cube_y = GROUND_Y - SHIP_SIZE;
                 app->cube_velocity_y = 0.0f;
             }
-            if (app->cube_y < 0) {
+            if(app->cube_y < 0) {
                 app->cube_y = 0;
                 app->cube_velocity_y = 0.0f;
             }
         } else {
-            if (app->cube_y < 0) {
+            if(app->cube_y < 0) {
                 app->cube_y = 0;
                 app->cube_velocity_y = 0.0f;
             }
-            if (app->cube_y > GROUND_Y - SHIP_SIZE) {
+            if(app->cube_y > GROUND_Y - SHIP_SIZE) {
                 app->cube_y = GROUND_Y - SHIP_SIZE;
                 app->cube_velocity_y = 0.0f;
             }
@@ -412,62 +466,67 @@ static void process_game_logic(GeometryDashApp* app, uint32_t dt_ms) {
 
     int player_screen_x = CUBE_X_POS;
     int player_screen_y = (int)app->cube_y;
-    int player_right = player_screen_x + ((app->player_mode == PlayerModeCube) ? CUBE_SIZE : SHIP_SIZE);
-    int player_bottom = player_screen_y + ((app->player_mode == PlayerModeCube) ? CUBE_SIZE : SHIP_SIZE);
+    int player_right =
+        player_screen_x + ((app->player_mode == PlayerModeCube) ? CUBE_SIZE : SHIP_SIZE);
+    int player_bottom =
+        player_screen_y + ((app->player_mode == PlayerModeCube) ? CUBE_SIZE : SHIP_SIZE);
 
     int start_grid_x = (int)(app->scroll_offset / OBSTACLE_GAP) - 1;
     int end_grid_x = start_grid_x + (SCREEN_WIDTH / OBSTACLE_GAP) + 2;
 
-    for (int grid_x = start_grid_x; grid_x <= end_grid_x; grid_x++) {
+    for(int grid_x = start_grid_x; grid_x <= end_grid_x; grid_x++) {
         int obstacle_screen_x = (grid_x * OBSTACLE_GAP) - (int)app->scroll_offset;
 
-        for (int j = 0; j < app->current_level.length; j++) {
+        for(int j = 0; j < app->current_level.length; j++) {
             Obstacle* obstacle = &app->current_level.obstacles[j];
-            if (obstacle->grid_x == grid_x && obstacle->type != ObstacleTypeNone) {
-
-                bool is_special_object = (obstacle->type == ObstacleTypePortalShip || obstacle->type == ObstacleTypePortalCube ||
-                                          obstacle->type == ObstacleTypeGravityUp || obstacle->type == ObstacleTypeGravityDown);
+            if(obstacle->grid_x == grid_x && obstacle->type != ObstacleTypeNone) {
+                bool is_special_object =
+                    (obstacle->type == ObstacleTypePortalShip ||
+                     obstacle->type == ObstacleTypePortalCube ||
+                     obstacle->type == ObstacleTypeGravityUp ||
+                     obstacle->type == ObstacleTypeGravityDown);
 
                 bool collision = false;
 
-                if (is_special_object) {
-                    for (int k = 0; k < 3; k++) {
+                if(is_special_object) {
+                    for(int k = 0; k < 3; k++) {
                         int block_y = obstacle->grid_y + k;
                         int block_screen_y = GROUND_Y - (block_y + 1) * OBSTACLE_HEIGHT;
                         int block_bottom = block_screen_y + OBSTACLE_HEIGHT;
 
-                        if (player_screen_x < obstacle_screen_x + OBSTACLE_WIDTH && player_right > obstacle_screen_x &&
-                            player_screen_y < block_bottom && player_bottom > block_screen_y) {
+                        if(player_screen_x < obstacle_screen_x + OBSTACLE_WIDTH &&
+                           player_right > obstacle_screen_x && player_screen_y < block_bottom &&
+                           player_bottom > block_screen_y) {
                             collision = true;
                             break;
                         }
                     }
-                    
-                    if (collision) {
-                        switch (obstacle->type) {
-                            case ObstacleTypePortalShip:
-                                app->player_mode = PlayerModeShip;
-                                app->cube_velocity_y = 0.0f;
-                                app->is_on_ground = false;
-                                return;
-                            case ObstacleTypePortalCube:
-                                app->player_mode = PlayerModeCube;
-                                app->cube_velocity_y = 0.0f;
-                                app->is_on_ground = false;
-                                return;
-                            case ObstacleTypeGravityUp:
-                                if (app->player_mode == PlayerModeShip) {
-                                    app->ship_gravity_dir = GravityDirectionUp;
-                                }
-                                return;
-                            case ObstacleTypeGravityDown:
-                                if (app->player_mode == PlayerModeShip) {
-                                    app->ship_gravity_dir = GravityDirectionDown;
-                                }
-                                return;
-                            default:
-                                app->state = GameStateGameOver;
-                                return;
+
+                    if(collision) {
+                        switch(obstacle->type) {
+                        case ObstacleTypePortalShip:
+                            app->player_mode = PlayerModeShip;
+                            app->cube_velocity_y = 0.0f;
+                            app->is_on_ground = false;
+                            return;
+                        case ObstacleTypePortalCube:
+                            app->player_mode = PlayerModeCube;
+                            app->cube_velocity_y = 0.0f;
+                            app->is_on_ground = false;
+                            return;
+                        case ObstacleTypeGravityUp:
+                            if(app->player_mode == PlayerModeShip) {
+                                app->ship_gravity_dir = GravityDirectionUp;
+                            }
+                            return;
+                        case ObstacleTypeGravityDown:
+                            if(app->player_mode == PlayerModeShip) {
+                                app->ship_gravity_dir = GravityDirectionDown;
+                            }
+                            return;
+                        default:
+                            app->state = GameStateGameOver;
+                            return;
                         }
                     }
                 } else {
@@ -475,65 +534,75 @@ static void process_game_logic(GeometryDashApp* app, uint32_t dt_ms) {
                     int obstacle_bottom = 0;
                     int obstacle_right = 0;
 
-                    bool is_on_ground = (obstacle->type == ObstacleTypeBlock || obstacle->type == ObstacleTypeSpikeUp);
-                    
-                    if (is_on_ground) {
+                    bool is_on_ground =
+                        (obstacle->type == ObstacleTypeBlock ||
+                         obstacle->type == ObstacleTypeSpikeUp);
+
+                    if(is_on_ground) {
                         obstacle_screen_y = GROUND_Y - (obstacle->grid_y + 1) * OBSTACLE_HEIGHT;
-                    } else if (obstacle->type == ObstacleTypeSpikeDown) {
-                        obstacle_screen_y = GROUND_Y - (obstacle->grid_y + 1) * OBSTACLE_HEIGHT + OBSTACLE_HEIGHT;
-                    } else if (obstacle->type == ObstacleTypeSpikeLeft || obstacle->type == ObstacleTypeSpikeRight) {
+                    } else if(obstacle->type == ObstacleTypeSpikeDown) {
+                        obstacle_screen_y =
+                            GROUND_Y - (obstacle->grid_y + 1) * OBSTACLE_HEIGHT + OBSTACLE_HEIGHT;
+                    } else if(
+                        obstacle->type == ObstacleTypeSpikeLeft ||
+                        obstacle->type == ObstacleTypeSpikeRight) {
                         obstacle_screen_y = GROUND_Y - (obstacle->grid_y + 1) * OBSTACLE_HEIGHT;
                     }
-                    
-                    if (obstacle->type == ObstacleTypeBlock) {
+
+                    if(obstacle->type == ObstacleTypeBlock) {
                         obstacle_right = obstacle_screen_x + (obstacle->length * OBSTACLE_WIDTH);
                         obstacle_bottom = obstacle_screen_y + OBSTACLE_HEIGHT;
                     } else {
                         obstacle_right = obstacle_screen_x + OBSTACLE_WIDTH;
-                        obstacle_bottom = obstacle_screen_y + ((obstacle->type == ObstacleTypeSpikeDown || 
-                                                               obstacle->type == ObstacleTypeSpikeLeft || 
-                                                               obstacle->type == ObstacleTypeSpikeRight) ? 0 : OBSTACLE_HEIGHT);
+                        obstacle_bottom =
+                            obstacle_screen_y + ((obstacle->type == ObstacleTypeSpikeDown ||
+                                                  obstacle->type == ObstacleTypeSpikeLeft ||
+                                                  obstacle->type == ObstacleTypeSpikeRight) ?
+                                                     0 :
+                                                     OBSTACLE_HEIGHT);
                     }
 
-                    if (player_screen_x < obstacle_right && player_right > obstacle_screen_x &&
-                        player_screen_y < obstacle_bottom && player_bottom > obstacle_screen_y) {
-
-                        if (obstacle->type == ObstacleTypeBlock) {
-                            if (app->player_mode == PlayerModeCube) {
+                    if(player_screen_x < obstacle_right && player_right > obstacle_screen_x &&
+                       player_screen_y < obstacle_bottom && player_bottom > obstacle_screen_y) {
+                        if(obstacle->type == ObstacleTypeBlock) {
+                            if(app->player_mode == PlayerModeCube) {
                                 int overlap_left = player_right - obstacle_screen_x;
                                 int overlap_right = obstacle_right - player_screen_x;
                                 int overlap_top = player_bottom - obstacle_screen_y;
                                 int overlap_bottom = obstacle_bottom - player_screen_y;
 
-                                int min_overlap = MIN(MIN(overlap_left, overlap_right), MIN(overlap_top, overlap_bottom));
+                                int min_overlap =
+                                    MIN(MIN(overlap_left, overlap_right),
+                                        MIN(overlap_top, overlap_bottom));
 
-                                if (min_overlap == overlap_top && app->cube_velocity_y >= 0) {
+                                if(min_overlap == overlap_top && app->cube_velocity_y >= 0) {
                                     app->cube_y = obstacle_screen_y - CUBE_SIZE;
                                     app->cube_velocity_y = 0.0f;
                                     bool was_on_ground = app->is_on_ground;
                                     app->is_on_ground = true;
-                                    if (!was_on_ground) {
+                                    if(!was_on_ground) {
                                         app->ground_lost_time = furi_get_tick();
                                     }
                                     collision = false;
-                                } else if (min_overlap == overlap_bottom && app->cube_velocity_y <= 0) {
+                                } else if(min_overlap == overlap_bottom && app->cube_velocity_y <= 0) {
                                     app->cube_y = obstacle_bottom;
                                     app->cube_velocity_y = 0.0f;
                                     collision = false;
                                 } else {
                                     collision = true;
                                 }
-                            } else if (app->player_mode == PlayerModeShip) {
+                            } else if(app->player_mode == PlayerModeShip) {
                                 collision = true;
                             }
-                        } else if (obstacle->type == ObstacleTypeSpikeUp || 
-                                   obstacle->type == ObstacleTypeSpikeDown ||
-                                   obstacle->type == ObstacleTypeSpikeLeft ||
-                                   obstacle->type == ObstacleTypeSpikeRight) {
+                        } else if(
+                            obstacle->type == ObstacleTypeSpikeUp ||
+                            obstacle->type == ObstacleTypeSpikeDown ||
+                            obstacle->type == ObstacleTypeSpikeLeft ||
+                            obstacle->type == ObstacleTypeSpikeRight) {
                             collision = true;
                         }
 
-                        if (collision) {
+                        if(collision) {
                             app->state = GameStateGameOver;
                             return;
                         }
@@ -546,24 +615,36 @@ static void process_game_logic(GeometryDashApp* app, uint32_t dt_ms) {
 
 static ObstacleType char_to_obstacle_type(char c) {
     switch(c) {
-        case '0': return ObstacleTypeNone;
-        case '1': return ObstacleTypeBlock;
-        case '2': return ObstacleTypeSpikeUp;
-        case '3': return ObstacleTypeSpikeDown;
-        case '4': return ObstacleTypeSpikeLeft;
-        case '5': return ObstacleTypeSpikeRight;
-        case '6': return ObstacleTypePortalShip;
-        case '7': return ObstacleTypePortalCube;
-        case '8': return ObstacleTypeGravityUp;
-        case '9': return ObstacleTypeGravityDown;
-        default: return ObstacleTypeNone;
+    case '0':
+        return ObstacleTypeNone;
+    case '1':
+        return ObstacleTypeBlock;
+    case '2':
+        return ObstacleTypeSpikeUp;
+    case '3':
+        return ObstacleTypeSpikeDown;
+    case '4':
+        return ObstacleTypeSpikeLeft;
+    case '5':
+        return ObstacleTypeSpikeRight;
+    case '6':
+        return ObstacleTypePortalShip;
+    case '7':
+        return ObstacleTypePortalCube;
+    case '8':
+        return ObstacleTypeGravityUp;
+    case '9':
+        return ObstacleTypeGravityDown;
+    default:
+        return ObstacleTypeNone;
     }
 }
 
 static int safe_atoi(const char* str) {
-    if (!str) return 0;
-    while (*str == ' ') str++;
-    if (*str == '\0' || (!isdigit((unsigned char)*str) && *str != '-' && *str != '+')) {
+    if(!str) return 0;
+    while(*str == ' ')
+        str++;
+    if(*str == '\0' || (!isdigit((unsigned char)*str) && *str != '-' && *str != '+')) {
         return 0;
     }
     return atoi(str);
@@ -589,9 +670,8 @@ static bool load_level_from_file(GeometryDashApp* app, const char* filename) {
             size_t line_len = strlen(line_str);
 
             if(line_len > 0 && line_str[0] != '#' && line_str[0] != '\n' && line_str[0] != '\r') {
-                
                 char command_char = line_str[0];
-                
+
                 char* commas[4] = {0};
                 int comma_count = 0;
                 char* temp = strchr(line_str, ',');
@@ -599,25 +679,25 @@ static bool load_level_from_file(GeometryDashApp* app, const char* filename) {
                     commas[comma_count++] = temp;
                     temp = strchr(temp + 1, ',');
                 }
-                
-                if (comma_count >= 2) {
+
+                if(comma_count >= 2) {
                     *commas[0] = '\0';
                     *commas[1] = '\0';
-                    
+
                     int x = safe_atoi(commas[0] + 1);
                     int y = safe_atoi(commas[1] + 1);
                     int length_or_height = 1;
-                    
-                    if (comma_count >= 3) {
+
+                    if(comma_count >= 3) {
                         *commas[2] = '\0';
                         length_or_height = safe_atoi(commas[2] + 1);
                     }
-                    
-                    if (length_or_height < 1) length_or_height = 1;
-                    if (length_or_height > 100) length_or_height = 100;
 
-                    if (command_char == 'b') {
-                        if (index < MAX_LEVEL_OBSTACLES) {
+                    if(length_or_height < 1) length_or_height = 1;
+                    if(length_or_height > 100) length_or_height = 100;
+
+                    if(command_char == 'b') {
+                        if(index < MAX_LEVEL_OBSTACLES) {
                             Obstacle* obs = &app->current_level.obstacles[index];
                             obs->type = ObstacleTypeBlock;
                             obs->grid_x = x;
@@ -625,38 +705,38 @@ static bool load_level_from_file(GeometryDashApp* app, const char* filename) {
                             obs->length = length_or_height;
                             index++;
                             int last_x = x + length_or_height - 1;
-                            if (last_x > max_x) max_x = last_x;
+                            if(last_x > max_x) max_x = last_x;
                         }
-                    } else if (command_char == 'w') {
-                        if (index < MAX_LEVEL_OBSTACLES) {
+                    } else if(command_char == 'w') {
+                        if(index < MAX_LEVEL_OBSTACLES) {
                             Obstacle* obs = &app->current_level.obstacles[index];
                             obs->type = ObstacleTypeBlock;
                             obs->grid_x = x;
                             obs->grid_y = y;
                             obs->length = length_or_height;
                             index++;
-                            if (x > max_x) max_x = x;
+                            if(x > max_x) max_x = x;
                         }
                     } else {
                         ObstacleType type = char_to_obstacle_type(command_char);
-                        if (type != ObstacleTypeNone) {
-                            if (index < MAX_LEVEL_OBSTACLES) {
+                        if(type != ObstacleTypeNone) {
+                            if(index < MAX_LEVEL_OBSTACLES) {
                                 Obstacle* obs = &app->current_level.obstacles[index];
                                 obs->type = type;
                                 obs->grid_x = x;
                                 obs->grid_y = y;
                                 obs->length = 1;
                                 index++;
-                                if (x > max_x) max_x = x;
+                                if(x > max_x) max_x = x;
                             }
                         }
                     }
                 }
             }
         }
-        
+
         app->current_level.length = index;
-        app->current_level.max_grid_x = max_x + 10; 
+        app->current_level.max_grid_x = max_x + 10;
         strncpy(app->current_level.name, filename, sizeof(app->current_level.name) - 1);
         app->current_level.name[sizeof(app->current_level.name) - 1] = '\0';
         char* dot = strrchr(app->current_level.name, '.');
@@ -675,7 +755,6 @@ static bool load_level_from_file(GeometryDashApp* app, const char* filename) {
 
     return success;
 }
-
 
 static void free_level_files(LevelFileArray_t* level_files) {
     for(size_t i = 0; i < LevelFileArray_size(*level_files); i++) {
@@ -705,7 +784,7 @@ static void scan_level_files(GeometryDashApp* app) {
 
         while(storage_dir_read(dir, &fileinfo, name, sizeof(name))) {
             if(!(fileinfo.flags & FSF_DIRECTORY)) {
-                const char *dot = strrchr(name, '.');
+                const char* dot = strrchr(name, '.');
                 if(dot && strcmp(dot, ".gflvl") == 0) {
                     char* name_copy = strdup(name);
                     LevelFileArray_push_back(app->level_files, name_copy);
@@ -772,15 +851,17 @@ int32_t geometry_dash_app(void* p) {
 
         if(event_status == FuriStatusOk) {
             if(event.type == InputTypePress || event.type == InputTypeRepeat) {
-                if (app->state == GameStateMenu) {
+                if(app->state == GameStateMenu) {
                     size_t file_count = LevelFileArray_size(app->level_files);
                     if(file_count > 0) {
                         if(event.key == InputKeyUp) {
-                            app->selected_menu_item = (app->selected_menu_item - 1 + file_count) % file_count;
+                            app->selected_menu_item =
+                                (app->selected_menu_item - 1 + file_count) % file_count;
                         } else if(event.key == InputKeyDown) {
                             app->selected_menu_item = (app->selected_menu_item + 1) % file_count;
                         } else if(event.key == InputKeyOk) {
-                            char** selected_filename_ptr = LevelFileArray_get(app->level_files, app->selected_menu_item);
+                            char** selected_filename_ptr =
+                                LevelFileArray_get(app->level_files, app->selected_menu_item);
                             if(selected_filename_ptr) {
                                 char* selected_filename = *selected_filename_ptr;
                                 if(load_level_from_file(app, selected_filename)) {
@@ -794,54 +875,58 @@ int32_t geometry_dash_app(void* p) {
                     if(event.key == InputKeyBack) {
                         running = false;
                     }
-                } else if (app->state == GameStatePlaying) {
+                } else if(app->state == GameStatePlaying) {
                     if(event.key == InputKeyOk) {
-                        if (app->player_mode == PlayerModeCube) {
+                        if(app->player_mode == PlayerModeCube) {
                             uint32_t current_time = furi_get_tick();
                             uint32_t time_since_ground_lost = current_time - app->ground_lost_time;
 
-                            bool can_jump = app->is_on_ground ||
-                                           (!app->is_on_ground && time_since_ground_lost < COYOTE_TIME_MS);
+                            bool can_jump =
+                                app->is_on_ground ||
+                                (!app->is_on_ground && time_since_ground_lost < COYOTE_TIME_MS);
 
-                            if (can_jump && !app->input_pressed) {
+                            if(can_jump && !app->input_pressed) {
                                 app->cube_velocity_y = CUBE_JUMP_VEL;
                                 app->input_pressed = true;
                             }
-                        } else if (app->player_mode == PlayerModeShip) {
-                            if (!app->input_pressed) {
-                                float fly_vel = (app->ship_gravity_dir == GravityDirectionDown) ? SHIP_FLY_VEL : -SHIP_FLY_VEL;
+                        } else if(app->player_mode == PlayerModeShip) {
+                            if(!app->input_pressed) {
+                                float fly_vel = (app->ship_gravity_dir == GravityDirectionDown) ?
+                                                    SHIP_FLY_VEL :
+                                                    -SHIP_FLY_VEL;
                                 app->cube_velocity_y = fly_vel;
                                 app->input_pressed = true;
                             }
                         }
                     } else if(event.key == InputKeyBack) {
-                         app->state = GameStateMenu;
-                         scan_level_files(app);
+                        app->state = GameStateMenu;
+                        scan_level_files(app);
                     }
-                } else if (app->state == GameStateGameOver || app->state == GameStateWin) {
-                     if(event.key == InputKeyOk) {
-                         char** selected_filename_ptr = LevelFileArray_get(app->level_files, app->selected_menu_item);
-                         if(selected_filename_ptr) {
-                             char* selected_filename = *selected_filename_ptr;
-                             if(load_level_from_file(app, selected_filename)) {
+                } else if(app->state == GameStateGameOver || app->state == GameStateWin) {
+                    if(event.key == InputKeyOk) {
+                        char** selected_filename_ptr =
+                            LevelFileArray_get(app->level_files, app->selected_menu_item);
+                        if(selected_filename_ptr) {
+                            char* selected_filename = *selected_filename_ptr;
+                            if(load_level_from_file(app, selected_filename)) {
                                 reset_game(app);
-                             } else {
+                            } else {
                                 FURI_LOG_E(TAG, "Failed to reload level: %s", selected_filename);
-                             }
-                         }
-                     } else if(event.key == InputKeyBack) {
-                         app->state = GameStateMenu;
-                         scan_level_files(app);
-                     }
+                            }
+                        }
+                    } else if(event.key == InputKeyBack) {
+                        app->state = GameStateMenu;
+                        scan_level_files(app);
+                    }
                 }
-            } else if (event.type == InputTypeRelease && event.key == InputKeyOk) {
-                 app->input_pressed = false;
+            } else if(event.type == InputTypeRelease && event.key == InputKeyOk) {
+                app->input_pressed = false;
             }
         }
 
         uint32_t current_tick = furi_get_tick();
         uint32_t dt_ms = current_tick - app->last_tick;
-        if (dt_ms > 0 && dt_ms < 100) {
+        if(dt_ms > 0 && dt_ms < 100) {
             process_game_logic(app, dt_ms);
             app->last_tick = current_tick;
         }
