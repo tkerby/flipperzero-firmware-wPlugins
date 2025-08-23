@@ -1,7 +1,7 @@
 #include "src/cuberzero.h"
 
 typedef struct {
-	uint8_t magicNumber[4];
+	uint32_t magicNumber;
 } CBZSHEADER, *PCBZSHEADER;
 
 uint8_t SessionOpen(const PCUBERZERO instance, const char* const path) {
@@ -16,11 +16,36 @@ uint8_t SessionOpen(const PCUBERZERO instance, const char* const path) {
 		goto functionExit;
 	}
 
-	/*uint64_t size = storage_file_size(file);
+	uint64_t size = storage_file_size(file);
+
+	if(size < 4) {
+		codeExit = SESSION_INVALID_FORMAT;
+		goto functionExit;
+	}
+
+	CBZSHEADER header;
+
+	if(storage_file_read(file, &header.magicNumber, 4) < 4) {
+		codeExit = SESSION_INVALID_FORMAT;
+		goto functionExit;
+	}
+
+	if(header.magicNumber != 0x43425A53) {
+		codeExit = SESSION_INVALID_FORMAT;
+		goto functionExit;
+	}
 
 	if(size < sizeof(CBZSHEADER)) {
+		codeExit = SESSION_INVALID_FORMAT;
 		goto functionExit;
-	}*/
+	}
+
+	storage_file_seek(file, 0, 1);
+
+	if(storage_file_read(file, &header, sizeof(CBZSHEADER)) < sizeof(CBZSHEADER)) {
+		codeExit = SESSION_INVALID_FORMAT;
+		goto functionExit;
+	}
 functionExit:
 	storage_file_close(file);
 	storage_file_free(file);

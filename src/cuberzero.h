@@ -46,7 +46,8 @@ typedef enum {
 
 typedef enum {
 	SESSION_SUCCESS,
-	SESSION_OPEN_FAILED
+	SESSION_OPEN_FAILED,
+	SESSION_INVALID_FORMAT
 } SESSIONRESULT;
 
 struct ViewDispatcher {
