@@ -110,29 +110,6 @@ void callback_text_updated_deauth(void *context)
             return;
         }
     }
-    // first check version number
-    if (!flipper_http_send_data(app->fhttp, "[VERSION]"))
-    {
-        easy_flipper_dialog("[ERROR]", "Failed to send version command");
-        flipper_http_free(app->fhttp);
-        return;
-    }
-    while (app->fhttp->last_response == NULL || strlen(app->fhttp->last_response) == 0)
-    {
-        furi_delay_ms(100);
-    }
-    // check if verison is 2.0
-    if (strstr(app->fhttp->last_response, "2.0") == NULL)
-    {
-        FURI_LOG_I(TAG, app->fhttp->last_response);
-        easy_flipper_dialog("[ERROR]", "FlipperHTTP version 2.0 or\nhigher is required");
-        flipper_http_free(app->fhttp);
-        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWiFiViewSubmenuMain);
-        return;
-    }
-    // erase the response
-    if (app->fhttp->last_response)
-        snprintf(app->fhttp->last_response, RX_BUF_SIZE, "%s", "");
     Loading *loading = loading_alloc();
     int32_t loading_view_id = 87654321; // Random ID
     view_dispatcher_add_view(app->view_dispatcher, loading_view_id, loading_get_view(loading));
@@ -680,7 +657,7 @@ void callback_submenu_choices(void *context, uint32_t index)
         }
         if (callback_scan(app->fhttp))
         {
-            furi_delay_ms(500); // wait for the command to be sent
+            furi_delay_ms(1000); // wait for the command to be sent
             // wait for the scan to complete
             Loading *loading = loading_alloc();
             int32_t loading_view_id = 87654321; // Random ID
