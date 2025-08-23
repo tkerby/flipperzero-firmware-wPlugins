@@ -53,6 +53,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Passy v1.4 (By bettse)](https://github.com/bettse/passy)
 - Updated: [NFC Seader v3.3 (By bettse)](https://github.com/bettse/seader)
 - Added: [Govee Control v0.1 (By devdotbo)](https://github.com/devdotbo/GlowFin)
+- Added: NFC: [Added treA parser (By grugnoymeme)](https://github.com/Next-Flip/Momentum-Firmware/pull/441)
 
 <a name="release">
 
