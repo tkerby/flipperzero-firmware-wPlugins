@@ -54,11 +54,11 @@ Death Note-themed graphical interface.
 
 ### Main Screen
 
-![Main Screen](images/main_screen_128x64.png)
+![Main Screen](images/main_screen_preview.png)
 
 ### D-pad Screen
 
-![D-pad Screen](images/dpad_scene_128x64.png)
+![D-pad Screen](images/dpad_preview.png)
 
 ---
 
