@@ -37,7 +37,7 @@
 ### OFW TO ADD: [#4043](https://github.com/flipperdevices/flipperzero-firmware/pull/4043)
 ### OFW TO ADD: [#4075](https://github.com/flipperdevices/flipperzero-firmware/pull/4075)
 ### OFW TO ADD: [#4109](https://github.com/flipperdevices/flipperzero-firmware/pull/4109)
-### OFW TO ADD: [#4090](https://github.com/flipperdevices/flipperzero-firmware/pull/4090)
+### OFW TO ADD: [#4090 NORALSY](https://github.com/flipperdevices/flipperzero-firmware/pull/4090)
 ### OFW TO ADD: [#4103](https://github.com/flipperdevices/flipperzero-firmware/pull/4103)
 ### OFW TO ADD: [#4121](https://github.com/flipperdevices/flipperzero-firmware/pull/4121)
 ### OFW TO ADD: [#4119](https://github.com/flipperdevices/flipperzero-firmware/pull/4119)
@@ -67,6 +67,10 @@
 ### OFW TO ADD: [#4192](https://github.com/flipperdevices/flipperzero-firmware/pull/4192)
 ### OFW TO ADD: [#4212](https://github.com/flipperdevices/flipperzero-firmware/pull/4212)
 ### OFW TO ADD: [#4242 NTAG4](https://github.com/flipperdevices/flipperzero-firmware/pull/4242)
+- [NFC Maker v2.1 (by WillyJL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/343cb39d08f60b75b537e1a31100707935cf6e9d) (NTAG4 Support)
+- [Flipper Share v1.0 (By lomalkin)](https://github.com/lomalkin/flipper-zero-apps/flipper_share)
+- [Nearby Files (By Stichoza)](https://github.com/Stichoza/flipper-nearby-files)
+- [Atari SIO Emulator v0.5 (By cepetr)](https://github.com/cepetr/sio2flip) (Changes using Pipe)
 
 ## WISH LIST ITEMS:
 - Battery Type moved to Power Settings
