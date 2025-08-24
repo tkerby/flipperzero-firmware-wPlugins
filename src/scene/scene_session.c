@@ -124,6 +124,12 @@ updateViewport:
 	view_port_update(instance->viewport);
 }
 
+static void actionNew() {
+}
+
+static void actionRename() {
+}
+
 static void actionSelect(const PSESSIONSCENE instance) {
 	furi_string_set_str(instance->instance->session.path, APP_DATA_PATH("sessions"));
 	DialogsFileBrowserOptions options;
@@ -169,8 +175,10 @@ void SceneSessionEnter(void* const context) {
 		case ACTION_EXIT:
 			goto functionExit;
 		case ACTION_NEW:
+			actionNew();
 			break;
 		case ACTION_RENAME:
+			actionRename();
 			break;
 		case ACTION_SELECT:
 			actionSelect(instance);
