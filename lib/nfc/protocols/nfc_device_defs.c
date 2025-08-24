@@ -22,9 +22,9 @@
 #include <nfc/protocols/mf_classic/mf_classic.h>
 #include <nfc/protocols/mf_plus/mf_plus.h>
 #include <nfc/protocols/mf_desfire/mf_desfire.h>
-#include <nfc/protocols/emv/emv.h>
 #include <nfc/protocols/slix/slix_device_defs.h>
 #include <nfc/protocols/st25tb/st25tb.h>
+#include <nfc/protocols/emv/emv.h>
 
 /**
  * @brief List of registered NFC device implementations.
@@ -32,7 +32,7 @@
  * When implementing a new protocol, add its implementation
  * here under its own index defined in nfc_protocol.h.
  */
-const NfcDeviceBase* nfc_devices[NfcProtocolNum] = {
+const NfcDeviceBase* const nfc_devices[NfcProtocolNum] = {
     [NfcProtocolIso14443_3a] = &nfc_device_iso14443_3a,
     [NfcProtocolIso14443_3b] = &nfc_device_iso14443_3b,
     [NfcProtocolIso14443_4a] = &nfc_device_iso14443_4a,

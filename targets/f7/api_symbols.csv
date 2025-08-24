@@ -2177,6 +2177,9 @@ Function,+,iso14443_3a_get_device_name,const char*,"const Iso14443_3aData*, NfcD
 Function,+,iso14443_3a_get_sak,uint8_t,const Iso14443_3aData*
 Function,+,iso14443_3a_get_uid,const uint8_t*,"const Iso14443_3aData*, size_t*"
 Function,+,iso14443_3a_is_equal,_Bool,"const Iso14443_3aData*, const Iso14443_3aData*"
+Function,+,iso14443_3a_listener_send_standard_frame,Iso14443_3aError,"Iso14443_3aListener*, const BitBuffer*"
+Function,+,iso14443_3a_listener_tx,Iso14443_3aError,"Iso14443_3aListener*, const BitBuffer*"
+Function,+,iso14443_3a_listener_tx_with_custom_parity,Iso14443_3aError,"Iso14443_3aListener*, const BitBuffer*"
 Function,+,iso14443_3a_load,_Bool,"Iso14443_3aData*, FlipperFormat*, uint32_t"
 Function,+,iso14443_3a_poller_activate,Iso14443_3aError,"Iso14443_3aPoller*, Iso14443_3aData*"
 Function,+,iso14443_3a_poller_check_presence,Iso14443_3aError,Iso14443_3aPoller*
@@ -2223,6 +2226,7 @@ Function,+,iso14443_4a_get_fwt_fc_max,uint32_t,const Iso14443_4aData*
 Function,+,iso14443_4a_get_historical_bytes,const uint8_t*,"const Iso14443_4aData*, uint32_t*"
 Function,+,iso14443_4a_get_uid,const uint8_t*,"const Iso14443_4aData*, size_t*"
 Function,+,iso14443_4a_is_equal,_Bool,"const Iso14443_4aData*, const Iso14443_4aData*"
+Function,+,iso14443_4a_listener_send_block,Iso14443_4aError,"Iso14443_4aListener*, const BitBuffer*"
 Function,+,iso14443_4a_load,_Bool,"Iso14443_4aData*, FlipperFormat*, uint32_t"
 Function,+,iso14443_4a_poller_halt,Iso14443_4aError,Iso14443_4aPoller*
 Function,+,iso14443_4a_poller_read_ats,Iso14443_4aError,"Iso14443_4aPoller*, Iso14443_4aAtsData*"
@@ -2927,17 +2931,12 @@ Function,+,nfc_device_set_data,void,"NfcDevice*, NfcProtocol, const NfcDeviceDat
 Function,+,nfc_device_set_loading_callback,void,"NfcDevice*, NfcLoadingCallback, void*"
 Function,+,nfc_device_set_uid,_Bool,"NfcDevice*, const uint8_t*, size_t"
 Function,+,nfc_felica_listener_set_sensf_res_data,NfcError,"Nfc*, const uint8_t*, const uint8_t, const uint8_t*, const uint8_t, const uint16_t"
-Function,+,nfc_felica_listener_timer_anticol_start,void,"Nfc*, uint8_t"
-Function,+,nfc_felica_listener_timer_anticol_stop,void,Nfc*
 Function,+,nfc_free,void,Nfc*
 Function,+,nfc_iso14443a_listener_set_col_res_data,NfcError,"Nfc*, uint8_t*, uint8_t, uint8_t*, uint8_t"
 Function,+,nfc_iso14443a_listener_tx_custom_parity,NfcError,"Nfc*, const BitBuffer*"
 Function,+,nfc_iso14443a_poller_trx_custom_parity,NfcError,"Nfc*, const BitBuffer*, BitBuffer*, uint32_t"
 Function,+,nfc_iso14443a_poller_trx_sdd_frame,NfcError,"Nfc*, const BitBuffer*, BitBuffer*, uint32_t"
 Function,+,nfc_iso14443a_poller_trx_short_frame,NfcError,"Nfc*, NfcIso14443aShortFrame, BitBuffer*, uint32_t"
-Function,+,nfc_iso15693_detect_mode,NfcError,Nfc*
-Function,+,nfc_iso15693_force_1outof256,NfcError,Nfc*
-Function,+,nfc_iso15693_force_1outof4,NfcError,Nfc*
 Function,+,nfc_iso15693_listener_tx_sof,NfcError,Nfc*
 Function,+,nfc_listener_alloc,NfcListener*,"Nfc*, NfcProtocol, const NfcDeviceData*"
 Function,+,nfc_listener_free,void,NfcListener*
@@ -3692,6 +3691,7 @@ Function,+,submenu_change_item_label,void,"Submenu*, uint32_t, const char*"
 Function,+,submenu_free,void,Submenu*
 Function,+,submenu_get_selected_item,uint32_t,Submenu*
 Function,+,submenu_get_view,View*,Submenu*
+Function,+,submenu_remove_item,void,"Submenu*, uint32_t"
 Function,+,submenu_reset,void,Submenu*
 Function,+,submenu_set_header,void,"Submenu*, const char*"
 Function,+,submenu_set_orientation,void,"Submenu*, ViewOrientation"

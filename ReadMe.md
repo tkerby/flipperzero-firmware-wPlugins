@@ -57,6 +57,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipWifi v1.6.3 (By jblanked)](https://github.com/jblanked/FlipWiFi) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - NFC: [Fix read crash with unexpectedly large MFC AUTH(0) response, eg with Chameleon Ultra NTAG emualtion (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/050814e2a9346201a0c10d37a9742c4453b73cca)
 - Sub-GHz: [Tune Linear (add better EZCode support), Dickert MAHS decoders (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/eb9b84e0c0ec4d01c03bc90a41162d3f7d3d7528)
+- OFW: PR: [NFC: Many Improvements (By WillyJL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4242)
+- Minor updates to SubGHz, iButton & RFID (By WillyJL)
 
 <a name="release">
 

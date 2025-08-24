@@ -63,6 +63,7 @@ static void ibutton_rpc_command_callback(const RpcAppSystemEvent* event, void* c
 bool ibutton_custom_event_callback(void* context, uint32_t event) {
     furi_assert(context);
     iButton* ibutton = context;
+
     return scene_manager_handle_custom_event(ibutton->scene_manager, event);
 }
 
@@ -185,7 +186,7 @@ bool ibutton_load_key(iButton* ibutton, bool show_error) {
         FuriString* tmp = furi_string_alloc();
 
         path_extract_filename(ibutton->file_path, tmp, true);
-        strncpy(ibutton->key_name, furi_string_get_cstr(tmp), IBUTTON_KEY_NAME_SIZE);
+        strlcpy(ibutton->key_name, furi_string_get_cstr(tmp), IBUTTON_KEY_NAME_SIZE);
 
         furi_string_free(tmp);
     } else if(show_error) {
@@ -245,7 +246,7 @@ bool ibutton_delete_key(iButton* ibutton) {
 }
 
 void ibutton_reset_key(iButton* ibutton) {
-    memset(ibutton->key_name, 0, IBUTTON_KEY_NAME_SIZE + 1);
+    ibutton->key_name[0] = '\0';
     furi_string_reset(ibutton->file_path);
     ibutton_key_reset(ibutton->key);
 }

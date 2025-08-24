@@ -10,11 +10,11 @@
 #include <nfc/protocols/mf_classic/mf_classic_poller_defs.h>
 #include <nfc/protocols/mf_plus/mf_plus_poller_defs.h>
 #include <nfc/protocols/mf_desfire/mf_desfire_poller_defs.h>
-#include <nfc/protocols/emv/emv_poller_defs.h>
 #include <nfc/protocols/slix/slix_poller_defs.h>
 #include <nfc/protocols/st25tb/st25tb_poller_defs.h>
+#include <nfc/protocols/emv/emv_poller_defs.h>
 
-const NfcPollerBase* nfc_pollers_api[NfcProtocolNum] = {
+const NfcPollerBase* const nfc_pollers_api[NfcProtocolNum] = {
     [NfcProtocolIso14443_3a] = &nfc_poller_iso14443_3a,
     [NfcProtocolIso14443_3b] = &nfc_poller_iso14443_3b,
     [NfcProtocolIso14443_4a] = &nfc_poller_iso14443_4a,

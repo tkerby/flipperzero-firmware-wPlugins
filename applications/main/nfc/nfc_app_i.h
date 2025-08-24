@@ -175,6 +175,11 @@ typedef enum {
     NfcViewDetectReader,
 } NfcView;
 
+typedef enum {
+    NfcSceneSaveConfirmStateDetectReader,
+    NfcSceneSaveConfirmStateCrackNonces,
+} NfcSceneSaveConfirmState;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
