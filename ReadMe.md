@@ -59,6 +59,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Sub-GHz: [Tune Linear (add better EZCode support), Dickert MAHS decoders (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/eb9b84e0c0ec4d01c03bc90a41162d3f7d3d7528)
 - OFW: PR: [NFC: Many Improvements (By WillyJL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4242)
 - Minor updates to SubGHz, iButton & RFID (By WillyJL)
+- Updated: [NFC Dict Manager v1.0 (By grugnoymeme)](https://github.com/grugnoymeme/nfc_dicts_manager)
 
 <a name="release">
 
