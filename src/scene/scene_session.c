@@ -150,7 +150,7 @@ static void actionSelect(const PSESSIONSCENE instance) {
 	}
 
 	actionOpenAnyway(instance, path);*/
-	SessionOpen(instance->instance, furi_string_get_cstr(instance->instance->session.path));
+	//SessionOpen(instance->instance, furi_string_get_cstr(instance->instance->session.path));
 	return;
 updateViewport:
 	view_port_update(instance->viewport);

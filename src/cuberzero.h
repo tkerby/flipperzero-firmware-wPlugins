@@ -1,10 +1,10 @@
 #ifndef __CUBERZERO_H__
 #define __CUBERZERO_H__
 
+#include "src/session.h"
 #include <gui/modules/submenu.h>
 #include <gui/view_dispatcher.h>
 #include <gui/scene_manager.h>
-#include <storage/storage.h>
 
 #define CUBERZERO_TAG	  "CuberZero"
 #define CUBERZERO_VERSION "0.0.1"
@@ -26,10 +26,7 @@ typedef struct {
 		} home;
 	} scene;
 
-	struct {
-		FuriString* path;
-		File* file;
-	} session;
+	SESSION session;
 } CUBERZERO, *PCUBERZERO;
 
 typedef enum {
@@ -72,14 +69,6 @@ void SceneTimerEnter(void* const context);
 extern "C" {
 #endif
 bool SceneHomeEvent(void* const context, const SceneManagerEvent event);
-#ifdef __cplusplus
-}
-#endif
-#ifdef __cplusplus
-extern "C" {
-#endif
-uint8_t SessionOpen(const PCUBERZERO instance, const char* const path);
-void SessionCleanup(const PCUBERZERO instance);
 #ifdef __cplusplus
 }
 #endif
