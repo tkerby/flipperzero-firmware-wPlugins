@@ -4,7 +4,7 @@
 
 typedef struct {
 	uint32_t magicNumber;
-	uint8_t type;
+	SESSIONSETTINGS settings;
 } CBZSHEADER, *PCBZSHEADER;
 
 uint8_t SessionCreate(const PSESSION session, const char* const path) {
@@ -22,7 +22,7 @@ uint8_t SessionCreate(const PSESSION session, const char* const path) {
 		return SESSION_CREATE_FAILED_TO_CREATE_FILE;
 	}
 
-	const CBZSHEADER header = {CBZS_MAGIC_NUMBER, 0};
+	const CBZSHEADER header = {CBZS_MAGIC_NUMBER, {0}};
 	size_t written = 0;
 	while(written < sizeof(CBZSHEADER)) written += storage_file_write(file, &header + written, sizeof(CBZSHEADER) - written);
 
@@ -33,6 +33,10 @@ uint8_t SessionCreate(const PSESSION session, const char* const path) {
 
 	session->file = file;
 	return SESSION_CREATE_SUCCESS;
+}
+
+void SessionDelete(const PSESSION session) {
+	furi_check(session);
 }
 
 void SessionFree(const PSESSION session) {
@@ -62,6 +66,14 @@ void SessionInitialize(const PSESSION session) {
 
 void SessionLoadSettings(const PSESSION session, const PSESSIONSETTINGS settings) {
 	furi_check(session && settings);
+}
+
+void SessionOpen(const PSESSION session) {
+	furi_check(session);
+}
+
+void SessionRename(const PSESSION session) {
+	furi_check(session);
 }
 
 void SessionSaveSettings(const PSESSION session, const PSESSIONSETTINGS settings) {

@@ -21,9 +21,12 @@ typedef struct {
 extern "C" {
 #endif
 uint8_t SessionCreate(const PSESSION session, const char* const path);
+void SessionDelete(const PSESSION session);
 void SessionFree(const PSESSION session);
 void SessionInitialize(const PSESSION session);
 void SessionLoadSettings(const PSESSION session, const PSESSIONSETTINGS settings);
+void SessionOpen(const PSESSION session);
+void SessionRename(const PSESSION session);
 void SessionSaveSettings(const PSESSION session, const PSESSIONSETTINGS settings);
 #ifdef __cplusplus
 }
