@@ -41,7 +41,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [FM Transmitter KT0803 v1.0 (By goosedev72-projects)](https://github.com/goosedev72-projects/flipperzero-kt0803-transmitter) `Req: KT0803`
 - Added: [Time Dilation Calculator v1.0 (By ejfox)](https://github.com/ejfox/flipper-space-calculators)
 - Added: [Space Travel Calculator v1.0 (By ejfox)](https://github.com/ejfox/flipper-space-calculators)
-- Updated: [Rubiks Cube Timer v0.0.2 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
 - Updated: [FlipDownloader v1.3.3 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [NFC Seader v3.3 (By bettse)](https://github.com/bettse/seader)
 - OFW: PR: NFC: [Update microel.c #4264 (By grugnoymeme)](https://github.com/flipperdevices/flipperzero-firmware/pull/4264)
@@ -60,6 +59,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: PR: [NFC: Many Improvements (By WillyJL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4242)
 - Minor updates to SubGHz, iButton & RFID (By WillyJL)
 - Updated: [NFC Dict Manager v1.0 (By grugnoymeme)](https://github.com/grugnoymeme/nfc_dicts_manager)
+- Updated: [Rubiks Cube Timer v0.0.2 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
 
 <a name="release">
 
