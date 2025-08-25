@@ -1,5 +1,29 @@
 #include "src/session.h"
 
+uint8_t SessionCreate(const PSESSION session, const char* const path) {
+	furi_check(session && path);
+
+	if(storage_file_exists(session->storage, path)) {
+		return SESSION_CREATE_DUPLICATE_FILE_NAME;
+	}
+
+	File* const file = storage_file_alloc(session->storage);
+
+	if(!storage_file_open(file, path, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+		storage_file_close(file);
+		storage_file_free(file);
+		return SESSION_CREATE_FAILED_TO_CREATE_FILE;
+	}
+
+	if(session->file) {
+		storage_file_close(session->file);
+		storage_file_free(session->file);
+	}
+
+	session->file = file;
+	return SESSION_CREATE_SUCCESS;
+}
+
 void SessionFree(const PSESSION session) {
 	furi_check(session);
 
@@ -13,12 +37,24 @@ void SessionFree(const PSESSION session) {
 		furi_string_free(session->path);
 		session->path = 0;
 	}
+
+	furi_record_close(RECORD_STORAGE);
+	session->storage = 0;
 }
 
 void SessionInitialize(const PSESSION session) {
 	furi_check(session);
+	session->storage = furi_record_open(RECORD_STORAGE);
 	session->path = furi_string_alloc();
 	session->file = 0;
+}
+
+void SessionLoadSettings(const PSESSION session, const PSESSIONSETTINGS settings) {
+	furi_check(session && settings);
+}
+
+void SessionSaveSettings(const PSESSION session, const PSESSIONSETTINGS settings) {
+	furi_check(session && settings);
 }
 
 /*#include "src/cuberzero.h"
