@@ -66,6 +66,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [NFC: UI: Dictionary attack scene and menu options (By noproto)](https://github.com/noproto/xero-firmware/commit/40b533fddb3808bc1661605f58bbac66748e4724)
 - Updated: [Mfkey v3.1 (By noproto)](https://github.com/noproto/FlipperMfkey) [Key recovery is 20% faster, new write buffering of Static Encrypted Nested key candidates performs recovery 70x faster (By noproto, CavallUwU & Ivisayan)](https://github.com/noproto/xero-firmware/commit/40b533fddb3808bc1661605f58bbac66748e4724)
 - [Fixed: Various issues with ByteInput, KeysDict, and key input length overflow (By noproto)](https://github.com/noproto/xero-firmware/commit/40b533fddb3808bc1661605f58bbac66748e4724)
+- [Sub-GHz: Only fix Linear inverted bits in user interface, keep old remotes compatible (By Willy-JL)](https://github.com/Next-Flip/Momentum-Firmware/pull/460)
 
 <a name="release">
 
