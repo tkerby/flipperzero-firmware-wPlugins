@@ -1,14 +1,24 @@
 #include "src/session.h"
-#include <furi/core/check.h>
-
-void SessionAllocate(const PSESSION session) {
-	furi_check(session);
-	session->path = furi_string_alloc();
-}
 
 void SessionFree(const PSESSION session) {
 	furi_check(session);
-	furi_string_free(session->path);
+
+	if(session->file) {
+		storage_file_close(session->file);
+		storage_file_free(session->file);
+		session->file = 0;
+	}
+
+	if(session->path) {
+		furi_string_free(session->path);
+		session->path = 0;
+	}
+}
+
+void SessionInitialize(const PSESSION session) {
+	furi_check(session);
+	session->path = furi_string_alloc();
+	session->file = 0;
 }
 
 /*#include "src/cuberzero.h"
