@@ -60,6 +60,12 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [NFC Dict Manager v1.0 (By grugnoymeme)](https://github.com/grugnoymeme/nfc_dicts_manager)
 - Updated: [Rubiks Cube Timer v0.0.2 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
 - Updated: [Ghost ESP v1.4.1 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
+- [NFC: MIFARE Ultralight C feature parity with MIFARE Classic in native NFC app (By noproto)](https://github.com/noproto/xero-firmware/commit/40b533fddb3808bc1661605f58bbac66748e4724)
+- [NFC: Dictionary attack: Uses system and user dictionaries stored under /nfc/assets/ to unlock Ultralight C tags (By noproto)](https://github.com/noproto/xero-firmware/commit/40b533fddb3808bc1661605f58bbac66748e4724)
+- [NFC: Key management: Extra Actions → MIFARE Ultralight C Keys in the NFC app allows you to add, list, and remove Ultralight C keys from your Flipper (By noproto)](https://github.com/noproto/xero-firmware/commit/40b533fddb3808bc1661605f58bbac66748e4724)
+- [NFC: UI: Dictionary attack scene and menu options (By noproto)](https://github.com/noproto/xero-firmware/commit/40b533fddb3808bc1661605f58bbac66748e4724)
+- Updated: [Mfkey v3.1 (By noproto)](https://github.com/noproto/FlipperMfkey) [Key recovery is 20% faster, new write buffering of Static Encrypted Nested key candidates performs recovery 70x faster (By noproto, CavallUwU & Ivisayan)](https://github.com/noproto/xero-firmware/commit/40b533fddb3808bc1661605f58bbac66748e4724)
+- [Fixed: Various issues with ByteInput, KeysDict, and key input length overflow (By noproto)](https://github.com/noproto/xero-firmware/commit/40b533fddb3808bc1661605f58bbac66748e4724)
 
 <a name="release">
 
@@ -605,7 +611,7 @@ $ ./fbt dolphin_ext
 - [Metronome v1.3 (By panki27)](https://github.com/panki27/Metronome)
 - [MFC Editor v1.0 (By TollyH)](https://github.com/TollyH/flipper-apps)
 - [MFDesfire Auth v0.1 (By Gatorixx)](https://github.com/Gatorixx/flipper-zero-legacy-authentication)
-- [Mfkey v3.0 (By noproto)](https://github.com/noproto/FlipperMfkey)
+- [Mfkey v3.1 (By noproto)](https://github.com/noproto/FlipperMfkey)
 - [MH-Z19 CO2 Sensor v0.2 (By meshchaninov)](https://github.com/meshchaninov/flipper-zero-mh-z19)
 - [MH-Z19 UART (By skotopes)](https://github.com/skotopes/flipperzero_mhz19_uart)
 - [MIDI Ocarina v0.1 (By crackerjacques)](https://github.com/crackerjacques/Flipper_Zero_MIDI_Ocarina)

@@ -20,7 +20,7 @@ static const DolphinDeedWeight dolphin_deed_weights[] = {
     {5, DolphinAppNfc}, // DolphinDeedNfcSave
     {5, DolphinAppNfc}, // DolphinDeedNfcDetectReader
     {10, DolphinAppNfc}, // DolphinDeedNfcEmulate
-    {10, DolphinAppNfc}, // DolphinDeedNfcMfcAdd
+    {10, DolphinAppNfc}, // DolphinDeedNfcKeyAdd
     {5, DolphinAppNfc}, // DolphinDeedNfcAddSave
     {5, DolphinAppNfc}, // DolphinDeedNfcAddEmulate
 
