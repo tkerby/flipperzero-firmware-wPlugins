@@ -1,5 +1,12 @@
 #include "src/session.h"
 
+#define CBZS_MAGIC_NUMBER 0x43425A53
+
+typedef struct {
+	uint32_t magicNumber;
+	uint8_t type;
+} CBZSHEADER, *PCBZSHEADER;
+
 uint8_t SessionCreate(const PSESSION session, const char* const path) {
 	furi_check(session && path);
 
@@ -14,6 +21,10 @@ uint8_t SessionCreate(const PSESSION session, const char* const path) {
 		storage_file_free(file);
 		return SESSION_CREATE_FAILED_TO_CREATE_FILE;
 	}
+
+	const CBZSHEADER header = {CBZS_MAGIC_NUMBER, 0};
+	size_t written = 0;
+	while(written < sizeof(CBZSHEADER)) written += storage_file_write(file, &header + written, sizeof(CBZSHEADER) - written);
 
 	if(session->file) {
 		storage_file_close(session->file);
@@ -58,10 +69,6 @@ void SessionSaveSettings(const PSESSION session, const PSESSIONSETTINGS settings
 }
 
 /*#include "src/cuberzero.h"
-
-typedef struct {
-	uint32_t magicNumber;
-} CBZSHEADER, *PCBZSHEADER;
 
 uint8_t SessionOpen(const PCUBERZERO instance, const char* const path) {
 	UNUSED(instance);
