@@ -297,22 +297,6 @@ static const MenuCommand wifi_scanning_commands[] = {
                         "- Requires network connectivity\n\n",
     },
     {
-        .label = "Listen Probes (Hop)",
-        .command = "listenprobes\n",
-        .details_header = "Listen for Probes",
-        .details_text = "Listen for and log probe requests\n"
-                        "while hopping channels.",
-    },
-    {
-        .label = "Listen Probes (Chan)",
-        .command = "listenprobes",
-        .needs_input = true,
-        .input_text = "Channel (1-165)",
-        .details_header = "Listen on Channel",
-        .details_text = "Listen for probe requests on a\n"
-                        "specific channel.",
-    },
-    {
         .label = "Stop Listen Probes",
         .command = "listenprobes stop\n",
         .details_header = "Stop Listening",
