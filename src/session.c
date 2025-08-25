@@ -1,4 +1,12 @@
-#include "src/cuberzero.h"
+#include "src/session.h"
+
+void SessionAllocate(const PSESSION session) {
+}
+
+void SessionFree(const PSESSION session) {
+}
+
+/*#include "src/cuberzero.h"
 
 typedef struct {
 	uint32_t magicNumber;
@@ -62,4 +70,4 @@ void SessionCleanup(const PCUBERZERO instance) {
 
 	storage_file_close(instance->session.file);
 	storage_file_free(instance->session.file);
-}
+}*/

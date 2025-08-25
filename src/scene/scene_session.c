@@ -56,7 +56,7 @@ static void callbackRender(Canvas* const canvas, void* const context) {
 	if(!instance->dialog) {
 		canvas_set_font(canvas, FontPrimary);
 		canvas_draw_str(canvas, 0, 8, "Current Session:");
-		elements_text_box(canvas, 0, 11, 128, 39, AlignLeft, AlignTop, furi_string_empty(instance->instance->session.path) ? "<empty>" : "Session 8192", 1);
+		elements_text_box(canvas, 0, 11, 128, 39, AlignLeft, AlignTop, furi_string_empty(instance->instance->session.path) ? "<empty session>" : "Session 8192", 1);
 		renderButton(canvas, 2, 51, instance->button == BUTTON_SESSION_SELECT, "Select");
 		renderButton(canvas, 33, 51, instance->button == BUTTON_SESSION_RENAME, "Rename");
 		renderButton(canvas, 71, 51, instance->button == BUTTON_SESSION_NEW, "New");
