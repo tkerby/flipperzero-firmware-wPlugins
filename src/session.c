@@ -1,9 +1,14 @@
 #include "src/session.h"
+#include <furi/core/check.h>
 
 void SessionAllocate(const PSESSION session) {
+	furi_check(session);
+	session->path = furi_string_alloc();
 }
 
 void SessionFree(const PSESSION session) {
+	furi_check(session);
+	furi_string_free(session->path);
 }
 
 /*#include "src/cuberzero.h"

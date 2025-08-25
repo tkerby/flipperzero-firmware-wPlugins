@@ -1,6 +1,7 @@
-#include <stdint.h>
+#include <furi/core/string.h>
 
 typedef struct {
+	FuriString* path;
 } SESSION, *PSESSION;
 
 #ifdef __cplusplus
