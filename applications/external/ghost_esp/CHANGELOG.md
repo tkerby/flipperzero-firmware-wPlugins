@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.4.1
+- Collapsed things into rotating picker menus in the WiFi section - #9 by @tototo31 
+
 ## v1.4
 
 - Set Evil Portal HTML from the Flipper's Filesystem

@@ -553,10 +553,13 @@ bool settings_custom_event_callback(void* context, uint32_t event_id) {
         confirm_ctx->state = app_state;
 
         const char* info_text = "Created by: Spooky\n"
-                                "Updated by: Jay Candel\n"
-                                "Built with <3";
+                                "Updated by:\n"
+                                "@jaylikesbunda\n"
+                                "@tototo31\n"
+                                "Built with <3\n"
+                                "github.com/jaylikesbunda/ghost_esp\n\n";
 
-        confirmation_view_set_header(app_state->confirmation_view, "Ghost ESP v1.4");
+        confirmation_view_set_header(app_state->confirmation_view, "Ghost ESP v1.4.1");
         confirmation_view_set_text(app_state->confirmation_view, info_text);
 
         // Save current view before switching
