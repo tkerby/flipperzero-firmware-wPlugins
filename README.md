@@ -1,6 +1,10 @@
 # Flipper Zero Geometry Flip
 Geometry Dash Demake with level system, basic physics engine, coyote time physics and basic UI. 
 
+## My plans
+I am making real ship, ball and ufo physics!
+After full engine polishing, there will be UI and Scratch-based editor
+
 ## Installation
 Download a release (or pre-release to stand in the middle of releases)
 Drop to SD Card/apps/Games and also...
