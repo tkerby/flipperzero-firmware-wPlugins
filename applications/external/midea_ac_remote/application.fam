@@ -4,18 +4,8 @@ App(
     apptype=FlipperAppType.EXTERNAL,
     targets=["f7"],
     entry_point="ac_remote_app",
-    cdefines=["APP_MIDEA_AC_REMOTE"],
-    requires=[
-        "storage",
-        "gui",
-        "infrared",
-    ],
     stack_size=1 * 2048,
-    order=90,
-    fap_description="Midea Electric Air Conditioner remote control",
-    fap_version="1.0",
     fap_icon="ac_remote.png",
-    fap_category="Infrared",
     fap_icon_assets="assets",
     fap_private_libs=[
         Lib(
@@ -25,4 +15,9 @@ App(
             ],
         ),
     ],
+    fap_category="Infrared",
+    fap_author="xakep666",
+    fap_weburl="https://github.com/xakep666/flipperzero-midea-ac-remote",
+    fap_version="1.0",
+    fap_description="Midea Electric Air Conditioner remote control",
 )

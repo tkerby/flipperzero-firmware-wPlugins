@@ -72,6 +72,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Video Player v0.4 (By LTVA1)](https://github.com/LTVA1/flipper-zero-video-player)
 - Added: [Chief Cooker v1.0 (By denr01)](https://github.com/denr01/FZ-ChiefCooker)
 - Added: [Space PLayground v0.1 (By alanfortlink)](https://github.com/alanfortlink/fzspground)
+- Added: [Midea AC Remote v1.0 (By xakep666)](https://github.com/xakep666/flipperzero-midea-ac-remote)
 
 <a name="release">
 
@@ -621,6 +622,7 @@ $ ./fbt dolphin_ext
 - [Mfkey v3.1 (By noproto)](https://github.com/noproto/FlipperMfkey)
 - [MH-Z19 CO2 Sensor v0.2 (By meshchaninov)](https://github.com/meshchaninov/flipper-zero-mh-z19)
 - [MH-Z19 UART (By skotopes)](https://github.com/skotopes/flipperzero_mhz19_uart)
+- [Midea AC Remote v1.0 (By xakep666)](https://github.com/xakep666/flipperzero-midea-ac-remote)
 - [MIDI Ocarina v0.1 (By crackerjacques)](https://github.com/crackerjacques/Flipper_Zero_MIDI_Ocarina)
 - [MIDI RX v0.1 (By crackerjacques)](https://github.com/crackerjacques/flipper_zero_midi_rx)
 - [Mifare Fuzzer v1.5 (By spheeere98)](https://github.com/spheeere98/mifare_fuzzer)
