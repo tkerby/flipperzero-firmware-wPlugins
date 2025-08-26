@@ -3,7 +3,7 @@
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://lh3.googleusercontent.com/d/1iYQlRQXM7nA4IAdcPwvcKRSTCMoi8tug' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0826-0039-0.420.0-190c304.tgz&channel=RM0826-0039-0.420.0-190c304&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0826-1923-0.420.0-630e1e2.tgz&channel=RM0826-1923-0.420.0-630e1e2&version=0.420.0&target=f7)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -30,9 +30,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-08-26 19:06 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-08-26 19:06 EST`
-- Fixes to NFC merge causing issues with NFC (By RogueMaster)
-- Updated: [MFDesfire Auth v1.0 (By Gatorixx)](https://github.com/Gatorixx/flipper-zero-legacy-authentication) (Version Only)
-- Updated: [Combo Cracker v0.5 (By CharlesTheGreat77)](https://github.com/CharlesTheGreat77/ComboCracker-FZ)
 
 <a name="release">
 
@@ -772,4 +769,4 @@ $ ./fbt dolphin_ext
 - Have a new app? Submit GitHub link to me on Discord for a special reward (if I add it to RM Firmware).
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0826-0039-0.420.0-190c304.tgz&channel=RM0826-0039-0.420.0-190c304&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0826-1923-0.420.0-630e1e2.tgz&channel=RM0826-1923-0.420.0-630e1e2&version=0.420.0&target=f7)
