@@ -70,6 +70,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [USB Midi v1.0 (By DrZlo13 & kribesk)](https://github.com/kribesk/flipper-zero-usb-midi)
 - Updated: [Sub-GHz Playlist v1.0.1 (By darmiel)](https://github.com/darmiel/flipper-playlist) [Fix crash on disallowed frequencies (By WillyJL)](https://github.com/Next-Flip/Momentum-Apps/commit/c7f3c08aa938ce00afbb33aaf568c38c1184b6ae)
 - Updated: [Video Player v0.4 (By LTVA1)](https://github.com/LTVA1/flipper-zero-video-player)
+- Added: [Chief Cooker v1.0 (By denr01)](https://github.com/denr01/FZ-ChiefCooker)
 
 <a name="release">
 
@@ -454,6 +455,7 @@ $ ./fbt dolphin_ext
 - [Canon Intervalometer v1.0 (By TravisCG)](https://github.com/TravisCG/canonivm)
 - [Caesar Cipher v1.2 (By panki27)](https://github.com/panki27/caesar-cipher)
 - [CFW Settings v1.6 - Imported/Modified By RogueMaster (By WillyJL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/ecf91524a956f773881d564c4ada833f844264ca)
+- [Chief Cooker v1.0 (By denr01)](https://github.com/denr01/FZ-ChiefCooker)
 - [Chronometer (By nmrr)](https://github.com/nmrr/flipperzero-chronometer)
 - [CLI Bridge v1.6 (By ranchordo)](https://github.com/ranchordo/flipperzero-cli-bridge)
 - [Clippy v0.1 (By mtormento)](https://github.com/mtormento/clippy)
