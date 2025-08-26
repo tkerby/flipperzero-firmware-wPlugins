@@ -67,6 +67,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Mfkey v3.1 (By noproto)](https://github.com/noproto/FlipperMfkey) [Key recovery is 20% faster, new write buffering of Static Encrypted Nested key candidates performs recovery 70x faster (By noproto, CavallUwU & Ivisayan)](https://github.com/noproto/xero-firmware/commit/40b533fddb3808bc1661605f58bbac66748e4724)
 - [Fixed: Various issues with ByteInput, KeysDict, and key input length overflow (By noproto)](https://github.com/noproto/xero-firmware/commit/40b533fddb3808bc1661605f58bbac66748e4724)
 - [Sub-GHz: Only fix Linear inverted bits in user interface, keep old remotes compatible (By Willy-JL)](https://github.com/Next-Flip/Momentum-Firmware/pull/460)
+- Updated: [USB Midi v1.0 (By DrZlo13 & kribesk)](https://github.com/kribesk/flipper-zero-usb-midi)
+- Updated: [Sub-GHz Playlist v1.0.1 (By darmiel)](https://github.com/darmiel/flipper-playlist) [Fix crash on disallowed frequencies (By WillyJL)](https://github.com/Next-Flip/Momentum-Apps/commit/c7f3c08aa938ce00afbb33aaf568c38c1184b6ae)
+- Updated: [Video Player v0.4 (By LTVA1)](https://github.com/LTVA1/flipper-zero-video-player)
 
 <a name="release">
 
@@ -731,7 +734,7 @@ $ ./fbt dolphin_ext
 - [Sub-GHz Playlist Creator v0.2 (By coolerUA)](https://github.com/coolerUA/Sub-Ghz-Playlist-Creator)
 - [Sub-GHz Remote v1.5 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote)
 - [Sub-GHz Rolling Flaws v1.5 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials)
-- [Sub-GHz Scheduler v2.2 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
+- [Sub-GHz Scheduler v2.3 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
 - [Sub-Ghz Toolkit 1808 v1.0 (By RocketGod-git)](https://github.com/RocketGod-git/RocketGods-SubGHz-Toolkit)
 - [SWD Probe v1.3 (By g3gg0)](https://github.com/g3gg0/flipper-swd_probe)
 - [T5577 Multiwriter v0.2 (By Leptopt1los)](https://github.com/Leptopt1los/t5577_multiwriter)
@@ -759,12 +762,12 @@ $ ./fbt dolphin_ext
 - [USB Consumer Control (By WithSecureLabs)](https://github.com/WithSecureLabs/usb-consumer-control)
 - [USB HID Autofire v0.6 (By pbek)](https://github.com/pbek/usb_hid_autofire)
 - [USB Mass Storage v1.4 (By nminaylov)](https://github.com/flipperdevices/flipperzero-good-faps/tree/nm/usb_mass_storage_app/mass_storage)
-- [USB Midi (By DrZlo13)](https://github.com/DrZlo13/flipper-zero-usb-midi) [Instructions by ESurge](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/applications/plugins/usb_midi/ReadMe.md)
+- [USB Midi v1.0 (By DrZlo13 & kribesk)](https://github.com/kribesk/flipper-zero-usb-midi) [Instructions by ESurge](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/applications/plugins/usb_midi/ReadMe.md)
 - [UV Meter v1.0 (By michaelbaisch)](https://github.com/michaelbaisch/uv_meter) `Req: AS7331`
 - [VB Migration Assistant v1.3 (By GMMan)](https://github.com/GMMan/flipperzero-vb-migrate)
 - [VGM Air Mouse v1.3 (By nminaylov)](https://github.com/flipperdevices/flipperzero-good-faps/tree/nm/motion_mouse_app) `Req: ICM42688, or Video Game Module By Flipper Devices`
 - [VGM Game Remote v1.1 (By jblanked)](https://github.com/jblanked/VGM-Library) `Req: Video Game Module By Flipper Devices`
-- [Video Player v0.3 (By LTVA1)](https://github.com/LTVA1/flipper-zero-video-player)
+- [Video Player v0.4 (By LTVA1)](https://github.com/LTVA1/flipper-zero-video-player)
 - [VIN Decoder v0.2 (By evillero)](https://github.com/evillero/vin_decoder)
 - [VL6180X Distance Sensor I2C v0.1 (By kdiller713)](https://github.com/kdiller713/public-FlipperApps/tree/main/vl6180x) `Req: Adafruit VL6180X`
 - [Voltage Calculator v1.0 (By HappyAmos)](https://github.com/HappyAmos/Flipper_FAPS)
