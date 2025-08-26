@@ -30,7 +30,7 @@ void nfc_scene_start_on_enter(void* context) {
     submenu_add_item(submenu, "Read", SubmenuIndexRead, nfc_scene_start_submenu_callback, nfc);
     submenu_add_item(
         submenu,
-        "Extract MFC Keys",
+        "Extract MF Keys",
         SubmenuIndexDetectReader,
         nfc_scene_start_submenu_callback,
         nfc);
@@ -63,25 +63,37 @@ bool nfc_scene_start_on_event(void* context, SceneManagerEvent event) {
     bool consumed = false;
 
     if(event.type == SceneManagerEventTypeCustom) {
-        consumed = true;
         if(event.event == SubmenuIndexRead) {
+            scene_manager_set_scene_state(nfc->scene_manager, NfcSceneStart, SubmenuIndexRead);
             scene_manager_next_scene(nfc->scene_manager, NfcSceneDetect);
             dolphin_deed(DolphinDeedNfcRead);
+            consumed = true;
         } else if(event.event == SubmenuIndexDetectReader) {
+            scene_manager_set_scene_state(
+                nfc->scene_manager, NfcSceneStart, SubmenuIndexDetectReader);
             scene_manager_next_scene(nfc->scene_manager, NfcSceneMfClassicDetectReader);
+            consumed = true;
         } else if(event.event == SubmenuIndexSaved) {
+            // Save the scene state explicitly in each branch, so that
+            // if the user cancels loading a file, the Saved menu item
+            // is properly reselected.
+            scene_manager_set_scene_state(nfc->scene_manager, NfcSceneStart, SubmenuIndexSaved);
             scene_manager_next_scene(nfc->scene_manager, NfcSceneFileSelect);
+            consumed = true;
         } else if(event.event == SubmenuIndexExtraAction) {
+            scene_manager_set_scene_state(
+                nfc->scene_manager, NfcSceneStart, SubmenuIndexExtraAction);
             scene_manager_next_scene(nfc->scene_manager, NfcSceneExtraActions);
+            consumed = true;
         } else if(event.event == SubmenuIndexAddManually) {
+            scene_manager_set_scene_state(
+                nfc->scene_manager, NfcSceneStart, SubmenuIndexAddManually);
             scene_manager_next_scene(nfc->scene_manager, NfcSceneSetType);
+            consumed = true;
         } else if(event.event == SubmenuIndexDebug) {
+            scene_manager_set_scene_state(nfc->scene_manager, NfcSceneStart, SubmenuIndexDebug);
             scene_manager_next_scene(nfc->scene_manager, NfcSceneDebug);
-        } else {
-            consumed = false;
-        }
-        if(consumed) {
-            scene_manager_set_scene_state(nfc->scene_manager, NfcSceneStart, event.event);
+            consumed = true;
         }
     }
     return consumed;
