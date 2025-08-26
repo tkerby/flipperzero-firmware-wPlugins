@@ -65,7 +65,14 @@ void SessionInitialize(const PSESSION session) {
 }
 
 void SessionLoadSettings(const PSESSION session, const PSESSIONSETTINGS settings) {
-	furi_check(session && settings);
+	furi_check(session);
+
+	if(!session->file) {
+		return;
+	}
+
+	furi_check(settings);
+	storage_file_read(session->file, settings, 1);
 }
 
 void SessionOpen(const PSESSION session) {
@@ -77,7 +84,14 @@ void SessionRename(const PSESSION session) {
 }
 
 void SessionSaveSettings(const PSESSION session, const PSESSIONSETTINGS settings) {
-	furi_check(session && settings);
+	furi_check(session);
+
+	if(!session->file) {
+		return;
+	}
+
+	furi_check(settings);
+	storage_file_write(session->file, settings, sizeof(SESSIONSETTINGS));
 }
 
 /*#include "src/cuberzero.h"
