@@ -74,6 +74,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Space PLayground v0.1 (By alanfortlink)](https://github.com/alanfortlink/fzspground)
 - Added: [Midea AC Remote v1.0 (By xakep666)](https://github.com/xakep666/flipperzero-midea-ac-remote)
 - Updated: [Combo Cracker v0.3 (By CharlesTheGreat77)](https://github.com/CharlesTheGreat77/ComboCracker-FZ) (version Only)
+- Updated: [BlackJack Counter v1.0 (By grugnoymeme)](https://github.com/grugnoymeme/flipperzero-blackjack_counter-fap)
 
 <a name="release">
 
