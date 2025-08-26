@@ -71,6 +71,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Sub-GHz Playlist v1.0.1 (By darmiel)](https://github.com/darmiel/flipper-playlist) [Fix crash on disallowed frequencies (By WillyJL)](https://github.com/Next-Flip/Momentum-Apps/commit/c7f3c08aa938ce00afbb33aaf568c38c1184b6ae)
 - Updated: [Video Player v0.4 (By LTVA1)](https://github.com/LTVA1/flipper-zero-video-player)
 - Added: [Chief Cooker v1.0 (By denr01)](https://github.com/denr01/FZ-ChiefCooker)
+- Added: [Space PLayground v0.1 (By alanfortlink)](https://github.com/alanfortlink/fzspground)
 
 <a name="release">
 
@@ -724,6 +725,7 @@ $ ./fbt dolphin_ext
 - [SLI Writer v1.4 (By Julienbxl)](https://github.com/Julienbxl/SLI-Writer)
 - [Smack My Dolphin Up! (By siberianbot)](https://github.com/siberianbot/smack-my-dolphin-up)
 - [Smartra VIN2PIN v1.0 (By evillero)](https://github.com/evillero/smartra_vin2pin)
+- [Space PLayground v0.1 (By alanfortlink)](https://github.com/alanfortlink/fzspground)
 - [Space Travel Calculator v1.0 (By ejfox)](https://github.com/ejfox/flipper-space-calculators)
 - [Spectrum Analyzer v1.3 (By jolcese)](https://github.com/jolcese/flipperzero-firmware/tree/spectrum/applications/spectrum_analyzer)
 - [Spotify Remote v0.1 (By benjamindrussell)](https://github.com/benjamindrussell/flipper-spotify-remote) `Req: ESP32` with [ESP32 Spotify Remote](https://github.com/benjamindrussell/esp32-spotify-remote)

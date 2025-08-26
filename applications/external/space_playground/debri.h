@@ -14,7 +14,6 @@ typedef struct {
     Vec2 velocity;
 } Debri;
 
-
 List debri_list;
 
 void debri_clear() {

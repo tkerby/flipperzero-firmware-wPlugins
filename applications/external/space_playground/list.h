@@ -83,7 +83,7 @@ void* list_pop_head(List* list) {
     } else {
         list->tail = NULL; // List is now empty
     }
-    
+
     free(node);
     list->size--;
     return data;
