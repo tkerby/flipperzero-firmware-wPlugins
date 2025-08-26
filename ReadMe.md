@@ -3,7 +3,7 @@
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://lh3.googleusercontent.com/d/1iYQlRQXM7nA4IAdcPwvcKRSTCMoi8tug' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0818-0124-0.420.0-4da3601.tgz&channel=RM0818-0124-0.420.0-4da3601&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0826-0039-0.420.0-190c304.tgz&channel=RM0826-0039-0.420.0-190c304&version=0.420.0&target=f7)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -30,51 +30,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-08-26 00:23 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-08-26 00:23 EST`
-- Updated: [Weebo v0.2 (By bettse)](https://github.com/bettse/weebo) `Req: key_retail.bin on SD card /apps_data/weebo` (Amiibo Remixer)
-- Updated: [Seos compatible v1.2 (By bettse)](https://gitlab.com/bettse/flipper_seos)
-- Updated: [Weather Station v1.9.5 (By Skorpionm)-OFW](https://github.com/flipperdevices/flipperzero-good-faps/tree/dev/weather_station) [Support for solight TE44 (By fersingb)](https://github.com/flipperdevices/flipperzero-good-faps/pull/285)
-- Updated: [Lab401/DigiLab v1.1 (By lab-401 & tixlegeek)](https://github.com/lab-401/fzDigiLab)
-- Added: [NFC Dict Manager v1.0 (By grugnoymeme)](https://github.com/grugnoymeme/nfc_dicts_manager)
-- Added: [Jumping Pawns v0.1 (By Tyl3rA)](https://github.com/Tyl3rA/Jumping-Pawns)
-- Added: [UID Brute Smarter v1.0 (By fbettag)](https://github.com/fbettag/uid_brute_smarter)
-- Added: [FRSScan v0.2 (By thecybermind)](https://github.com/thecybermind/frsscan)
-- Added: [FM Transmitter KT0803 v1.0 (By goosedev72-projects)](https://github.com/goosedev72-projects/flipperzero-kt0803-transmitter) `Req: KT0803`
-- Added: [Time Dilation Calculator v1.0 (By ejfox)](https://github.com/ejfox/flipper-space-calculators)
-- Added: [Space Travel Calculator v1.0 (By ejfox)](https://github.com/ejfox/flipper-space-calculators)
-- Updated: [FlipDownloader v1.3.3 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [NFC Seader v3.3 (By bettse)](https://github.com/bettse/seader)
-- OFW: PR: NFC: [Update microel.c #4264 (By grugnoymeme)](https://github.com/flipperdevices/flipperzero-firmware/pull/4264)
-- Added: [MFDesfire Auth v0.1 (By Gatorixx)](https://github.com/Gatorixx/flipper-zero-legacy-authentication)
-- Added: [SLI Writer v1.4 (By Julienbxl)](https://github.com/Julienbxl/SLI-Writer)
-- Updated: [Jumping Pawns v0.1 (By Tyl3rA)](https://github.com/Tyl3rA/Jumping-Pawns)
-- Updated: [ESP Flasher v1.7.2 (By 0xchocolate)](https://github.com/0xchocolate/flipperzero-esp-flasher) Adds C5 support thanks to app changes (By Play2BReal) and espressif library changes (By Dzarda7)!
-- Updated: [NFC Seader v3.3 (By bettse)](https://github.com/bettse/seader)
-- Added: [Govee Control v0.1 (By devdotbo)](https://github.com/devdotbo/GlowFin)
-- Added: NFC: [Added treA parser (By grugnoymeme)](https://github.com/Next-Flip/Momentum-Firmware/pull/441)
-- Updated: [Passy v1.4 (By bettse)](https://github.com/bettse/passy)
-- Updated: [FlipWifi v1.6.3 (By jblanked)](https://github.com/jblanked/FlipWiFi) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- NFC: [Fix read crash with unexpectedly large MFC AUTH(0) response, eg with Chameleon Ultra NTAG emualtion (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/050814e2a9346201a0c10d37a9742c4453b73cca)
-- Sub-GHz: [Tune Linear (add better EZCode support), Dickert MAHS decoders (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/eb9b84e0c0ec4d01c03bc90a41162d3f7d3d7528)
-- OFW: PR: [NFC: Many Improvements (By WillyJL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4242)
-- Minor updates to SubGHz, iButton & RFID (By WillyJL)
-- Updated: [NFC Dict Manager v1.0 (By grugnoymeme)](https://github.com/grugnoymeme/nfc_dicts_manager)
-- Updated: [Rubiks Cube Timer v0.0.2 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
-- Updated: [Ghost ESP v1.4.1 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
-- [NFC: MIFARE Ultralight C feature parity with MIFARE Classic in native NFC app (By noproto)](https://github.com/noproto/xero-firmware/commit/40b533fddb3808bc1661605f58bbac66748e4724)
-- [NFC: Dictionary attack: Uses system and user dictionaries stored under /nfc/assets/ to unlock Ultralight C tags (By noproto)](https://github.com/noproto/xero-firmware/commit/40b533fddb3808bc1661605f58bbac66748e4724)
-- [NFC: Key management: Extra Actions → MIFARE Ultralight C Keys in the NFC app allows you to add, list, and remove Ultralight C keys from your Flipper (By noproto)](https://github.com/noproto/xero-firmware/commit/40b533fddb3808bc1661605f58bbac66748e4724)
-- [NFC: UI: Dictionary attack scene and menu options (By noproto)](https://github.com/noproto/xero-firmware/commit/40b533fddb3808bc1661605f58bbac66748e4724)
-- Updated: [Mfkey v3.1 (By noproto)](https://github.com/noproto/FlipperMfkey) [Key recovery is 20% faster, new write buffering of Static Encrypted Nested key candidates performs recovery 70x faster (By noproto, CavallUwU & Ivisayan)](https://github.com/noproto/xero-firmware/commit/40b533fddb3808bc1661605f58bbac66748e4724)
-- [Fixed: Various issues with ByteInput, KeysDict, and key input length overflow (By noproto)](https://github.com/noproto/xero-firmware/commit/40b533fddb3808bc1661605f58bbac66748e4724)
-- [Sub-GHz: Only fix Linear inverted bits in user interface, keep old remotes compatible (By Willy-JL)](https://github.com/Next-Flip/Momentum-Firmware/pull/460)
-- Updated: [USB Midi v1.0 (By DrZlo13 & kribesk)](https://github.com/kribesk/flipper-zero-usb-midi)
-- Updated: [Sub-GHz Playlist v1.0.1 (By darmiel)](https://github.com/darmiel/flipper-playlist) [Fix crash on disallowed frequencies (By WillyJL)](https://github.com/Next-Flip/Momentum-Apps/commit/c7f3c08aa938ce00afbb33aaf568c38c1184b6ae)
-- Updated: [Video Player v0.4 (By LTVA1)](https://github.com/LTVA1/flipper-zero-video-player)
-- Added: [Chief Cooker v1.0 (By denr01)](https://github.com/denr01/FZ-ChiefCooker)
-- Added: [Space PLayground v0.1 (By alanfortlink)](https://github.com/alanfortlink/fzspground)
-- Added: [Midea AC Remote v1.0 (By xakep666)](https://github.com/xakep666/flipperzero-midea-ac-remote)
-- Updated: [Combo Cracker v0.3 (By CharlesTheGreat77)](https://github.com/CharlesTheGreat77/ComboCracker-FZ) (version Only)
-- Updated: [BlackJack Counter v1.0 (By grugnoymeme)](https://github.com/grugnoymeme/flipperzero-blackjack_counter-fap)
 
 <a name="release">
 
@@ -814,4 +769,4 @@ $ ./fbt dolphin_ext
 - Have a new app? Submit GitHub link to me on Discord for a special reward (if I add it to RM Firmware).
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0818-0124-0.420.0-4da3601.tgz&channel=RM0818-0124-0.420.0-4da3601&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0826-0039-0.420.0-190c304.tgz&channel=RM0826-0039-0.420.0-190c304&version=0.420.0&target=f7)
