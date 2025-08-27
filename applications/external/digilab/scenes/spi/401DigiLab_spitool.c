@@ -5,7 +5,7 @@
  *    + Tixlegeek
  */
 #include "scenes/spi/401DigiLab_spitool.h"
-static const char* TAG = "401_DigiLabSPITool";
+//static const char* TAG = "401_DigiLabSPITool";
 
 /**
  * Callback function for the main menu. Handles menu item selection and
@@ -65,7 +65,6 @@ void app_scene_spitool_on_exit(void* ctx) {
  * @return A pointer to the allocated AppI2cTool or NULL.
  */
 Submenu* app_spitool_alloc(void* ctx) {
-    FURI_LOG_I(TAG, "app_spitool_alloc");
     AppContext* app = (AppContext*)ctx;
     Submenu* submenu = submenu_alloc();
     submenu_add_item(submenu, "SPI Scanner", AppSPIToolIndex_Scanner, appSPITool_callback, app);

@@ -5,7 +5,7 @@
  *    + Tixlegeek
  */
 #include "401DigiLab_probe.h"
-static const char* TAG = "401_DigiLabProbe";
+//static const char* TAG = "401_DigiLabProbe";
 
 #include <furi.h>
 #include <furi_hal.h>
@@ -97,8 +97,6 @@ void counter_start(void* ctx) {
     LL_TIM_SetCounter(TIM2, 0);
     // Start the TIM2 counter (begin counting)
     LL_TIM_EnableCounter(TIM2);
-
-    FURI_LOG_I(TAG, "counter_started");
 }
 
 static void probe_counter_stop() {
@@ -110,8 +108,6 @@ static void probe_counter_stop() {
     furi_hal_gpio_remove_int_callback(L401DIGILAB_BOARD_PIN_INT);
     // Optionally, clear the TIM2 counter value (if resetting is needed)
     LL_TIM_SetCounter(TIM2, 0);
-
-    FURI_LOG_I(TAG, "probe_counter_stopped");
 }
 
 void probe_draw_ladder(Canvas* canvas, ProbeModel* model) {
@@ -232,19 +228,15 @@ bool app_probe_input_callback(InputEvent* input_event, void* ctx) {
     if(input_event->type == InputTypeShort) {
         switch(input_event->key) {
         case InputKeyUp:
-            FURI_LOG_I(TAG, "UP");
             break;
         case InputKeyDown:
-            FURI_LOG_I(TAG, "DOWN");
             break;
         case InputKeyLeft:
-            FURI_LOG_I(TAG, "LEFT");
             break;
         case InputKeyRight:
             scene_manager_search_and_switch_to_another_scene(app->scene_manager, AppSceneScope);
             break;
         default:
-            FURI_LOG_I(TAG, "Resume to not handled");
             break;
         }
     }

@@ -321,7 +321,6 @@ bool app_i2ctoolreader_input_callback(InputEvent* input_event, void* ctx) {
             }
             break;
         default:
-            FURI_LOG_I(TAG, "Resume to not handled");
             break;
         }
     }
