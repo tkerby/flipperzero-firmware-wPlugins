@@ -13,7 +13,6 @@
 #include <furi_hal_resources.h>
 #include <limits.h>
 #include <401_config.h>
-#include <drivers/sk6805.h>
 
 uint16_t redraw_cnt = 0;
 #define SPEAKER_ACQUIRE_TIMEOUT 100

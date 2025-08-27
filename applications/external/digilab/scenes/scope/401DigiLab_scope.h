@@ -25,7 +25,7 @@
 #include <locale/locale.h>
 #include <ringbuffer/ringbuffer.h>
 #include <osc.h>
-#include "drivers/sk6805.h"
+#include "../../drivers/sk6805.h"
 #include "app_params.h" // Application specific oscuration
 
 #define L401DIGILAB_HW_BRIDGE_RATIO 0.435
