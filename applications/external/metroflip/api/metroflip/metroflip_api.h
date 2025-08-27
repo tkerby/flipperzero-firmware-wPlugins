@@ -141,7 +141,7 @@ extern const Icon I_RFIDDolphinReceive_97x61;
 extern const Icon I_icon;
 extern const Icon I_DolphinDone_80x58;
 extern const Icon I_WarningDolphinFlip_45x42;
-extern const Icon I_DolphinMafia_115x62;
+extern const Icon I_DolphinMafia_119x62;
 
 extern const Icon I_Suica_AsakusaA;
 extern const Icon I_Suica_BigStar;
@@ -284,13 +284,6 @@ extern const Icon I_Suica_VendingIcon;
 extern const Icon I_Suica_TrainIcon;
 extern const Icon I_Suica_BdayCakeIcon;
 extern const Icon I_Suica_UnknownIcon;
-
-void render_section_header(
-    FuriString* str,
-    const char* name,
-    uint8_t prefix_separator_cnt,
-    uint8_t suffix_separator_cnt);
-bool mosgortrans_parse_transport_block(const MfClassicBlock* block, FuriString* result);
 
 /*******************/
 #ifdef __cplusplus
