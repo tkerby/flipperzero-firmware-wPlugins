@@ -37,6 +37,7 @@ uint8_t SessionCreate(const PSESSION session, const char* const path) {
 
 void SessionDelete(const PSESSION session) {
 	furi_check(session);
+	storage_common_remove(session->storage, furi_string_cstr(session->path));
 }
 
 void SessionFree(const PSESSION session) {
