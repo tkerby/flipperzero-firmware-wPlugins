@@ -32,7 +32,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-08-26 19:06 EST`
 - Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip)
 - OFW: PR: [SubGHz: Linear and Dickert MAHS protocols fixes & improvements #4267 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4267)
-- OFW: PR: [Infrared: Added some remotes to the universal remote database #4266 (By LukeVilla)](https://github.com/flipperdevices/flipperzero-firmware/pull/4266)
+- OFW: PR: [Infrared: Added remotes for audio + tv #4266 (By LukeVilla)](https://github.com/flipperdevices/flipperzero-firmware/pull/4266)
+- NFC: [Parser for Banapass MFC 1k (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4260)
+- NFC: [Parser for Amusement IC (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4259)
 
 <a name="release">
 
@@ -180,6 +182,8 @@ $ ./fbt dolphin_ext
 - NFC: [Added additional aid GeldKarte (for emv) (thanks to haisenteck) (From Korai-Labs / ankris812)](https://github.com/Korai-Labs/Korai)
 - NFC: [Extra NFC Mifare Keys (By Korai-Labs / ankris812)](https://github.com/Korai-Labs/Korai)
 - NFC: [Parser / KDF for mizip and mykey updated & addition of hi and microel (By zProAle)](https://github.com/zProAle/my_flipper_kdf)
+- NFC: [Parser for Amusement IC (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4259)
+- NFC: [Parser for Banapass MFC 1k (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4260)
 - NFC: [Parser for CSC Service Works Reloadable Cash Card (By zinongli)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/fa9b702dc24f3c892798dec86e4f5f25443432c2)
 - NFC: [Parser for CTAS Andalucia (By Alejandro12120 & duhow)](https://github.com/DarkFlippers/unleashed-firmware/pull/808)
 - NFC: [Parser for Disney Infinity (By bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/4087)
