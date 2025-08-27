@@ -123,7 +123,6 @@ static bool spitoolscanner_tests(cJSON* json_device) {
         uint8_t reg = (uint8_t)strtoul(json_reg->valuestring, NULL, 16);
         // Detect test
         if(strncmp(json_type->valuestring, "READ", strlen(json_type->valuestring)) == 0) {
-            FURI_LOG_W(__FUNCTION__, "TESTING READ");
             cJSON* json_expect_item = cJSON_GetObjectItem(json_test, "expect");
             if(!cJSON_IsString(json_expect_item)) {
                 FURI_LOG_E(__FUNCTION__, "Missing or invalid 'expected_value'.");
@@ -135,7 +134,6 @@ static bool spitoolscanner_tests(cJSON* json_device) {
             }
 
         } else if(strncmp(json_type->valuestring, "WRITE", strlen(json_type->valuestring)) == 0) {
-            FURI_LOG_W(__FUNCTION__, "TESTING WRITE");
             cJSON* value_item = cJSON_GetObjectItem(json_test, "value");
             if(!cJSON_IsString(value_item)) {
                 FURI_LOG_E(__FUNCTION__, "Missing or invalid 'value'.");
@@ -147,7 +145,6 @@ static bool spitoolscanner_tests(cJSON* json_device) {
             }
             write_spi_reg(reg, value);
         } else if(strncmp(type, "READN", strlen(json_type->valuestring)) == 0) {
-            FURI_LOG_W(__FUNCTION__, "TESTING READN");
             cJSON* json_expect_item = cJSON_GetObjectItem(json_test, "expect");
             if(!cJSON_IsArray(json_expect_item)) {
                 FURI_LOG_E(__FUNCTION__, "Missing or invalid 'expected_value' field.");
@@ -398,10 +395,8 @@ bool app_spitoolscanner_input_callback(InputEvent* input_event, void* ctx) {
     if(input_event->type == InputTypeShort) {
         switch(input_event->key) {
         case InputKeyUp:
-
             break;
         case InputKeyDown:
-
             break;
         case InputKeyLeft:
             switch(model->screenview) {
@@ -432,7 +427,6 @@ bool app_spitoolscanner_input_callback(InputEvent* input_event, void* ctx) {
             }
             break;
         default:
-            FURI_LOG_I(TAG, "Resume to not handled");
             break;
         }
     }

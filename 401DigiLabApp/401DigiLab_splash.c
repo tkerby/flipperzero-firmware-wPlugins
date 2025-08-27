@@ -6,7 +6,7 @@
  */
 #include "401DigiLab_splash.h"
 
-static const char* TAG = "401_DigiLabSplash";
+//static const char* TAG = "401_DigiLabSplash";
 /**
  * Handles input events for the splash scene. Sends custom events based on
  * the user's keypresses.
@@ -141,8 +141,6 @@ bool app_scene_splash_on_event(void* context, SceneManagerEvent event) {
                 view_dispatcher_send_custom_event(app->view_dispatcher, AppSplashEventQuit);
             }
         } else if(event.event == AppSplashEventQuit) {
-            FURI_LOG_I(TAG, "QUIT");
-
             scene_manager_next_scene(app->scene_manager, AppSceneMainMenu);
             consumed = true;
         }

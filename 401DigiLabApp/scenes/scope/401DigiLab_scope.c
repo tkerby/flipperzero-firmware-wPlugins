@@ -5,8 +5,6 @@
  *    + Tixlegeek
  */
 #include "scenes/scope/401DigiLab_scope.h"
-static const char* TAG = "401_DigiLabScope";
-
 #include <furi.h>
 #include <furi_hal.h>
 #include <furi_hal_gpio.h>
@@ -14,10 +12,11 @@ static const char* TAG = "401_DigiLabScope";
 #include <furi_hal_bus.h>
 #include <furi_hal_resources.h>
 #include <limits.h>
-#define SPEAKER_ACQUIRE_TIMEOUT 100
 #include <401_config.h>
 #include <drivers/sk6805.h>
+
 uint16_t redraw_cnt = 0;
+#define SPEAKER_ACQUIRE_TIMEOUT 100
 
 /**
  * @brief Stop and release the speaker if currently active.
@@ -436,7 +435,6 @@ bool app_scope_input_callback(InputEvent* input_event, void* ctx) {
                 true);
             break;
         default:
-            FURI_LOG_I(TAG, "Resume to not handled");
             break;
         }
     }

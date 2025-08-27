@@ -92,9 +92,6 @@ int OscWindow_draw_grid(Canvas* canvas, OscWindow* oscWindow) {
 }
 
 int OscWindow_draw(Canvas* canvas, OscWindow* oscWindow) {
-    // uint8_t x, y, x1, y1;
-    //  draw grid
-    // int trigidx = OscWindow_findTrigger(oscWindow, TRIG_BOTH, 20,0);
     char text[32];
 
     canvas_set_color(canvas, ColorXOR);
@@ -124,7 +121,6 @@ int OscWindow_draw(Canvas* canvas, OscWindow* oscWindow) {
 }
 
 OscWindow* OscWindow_create(size_t sampleCount, uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
-    FURI_LOG_I(TAG, "OscWindow_create");
     OscWindow* oscwindow = (OscWindow*)malloc(sizeof(OscWindow));
     if(oscwindow == NULL) {
         FURI_LOG_E(TAG, "Failed to allocate OscWindow struct");
@@ -227,7 +223,6 @@ size_t OscWindow_findTrigger(
 }
 
 void OscWindow_free(OscWindow* oscWindow) {
-    FURI_LOG_I(TAG, "OscWindow_free");
     RingBuffer_free(oscWindow->samples);
     free(oscWindow);
 }
