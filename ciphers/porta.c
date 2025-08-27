@@ -5,22 +5,6 @@
 
 #include "porta.h"
 
-static const char* porta_rows[13] = {
-    "NOPQRSTUVWXYZABCDEFGHIJKLM", // A/B
-    "OPQRSTUVWXYZABCDEFGHIJKLMN", // C/D
-    "PQRSTUVWXYZABCDEFGHIJKLMNO", // E/F
-    "QRSTUVWXYZABCDEFGHIJKLMNOP", // G/H
-    "RSTUVWXYZABCDEFGHIJKLMNOPQ", // I/J
-    "STUVWXYZABCDEFGHIJKLMNOPQR", // K/L
-    "TUVWXYZABCDEFGHIJKLMNOPQRS", // M/N
-    "UVWXYZABCDEFGHIJKLMNOPQRST", // O/P
-    "VWXYZABCDEFGHIJKLMNOPQRSTU", // Q/R
-    "WXYZABCDEFGHIJKLMNOPQRSTUV", // S/T
-    "XYZABCDEFGHIJKLMNOPQRSTUVW", // U/V
-    "YZABCDEFGHIJKLMNOPQRSTUVWX", // W/X
-    "ZABCDEFGHIJKLMNOPQRSTUVWXY"  // Y/Z
-};
-
 static int number_to_index(char letter) {
     if (letter >= 'a' && letter <= 'z') {
         return letter - 'a';
@@ -31,40 +15,47 @@ static int number_to_index(char letter) {
     }
 }
 
-char* porta_encrypt(const char* plaintext, const char* keyword) {
-    size_t plaintext_length = strlen(plaintext);
-    size_t keyword_length = strlen(keyword);
+static inline int porta_map_index(int p_index, int k_index) {
+    int j = (k_index >= 0 ? k_index / 2 : 0); // pair index 0..12
+    if (p_index < 13) {
+        // A–M map into N–Z, shifted by j within the half
+        return 13 + ((p_index + j) % 13);
+    } else {
+        // N–Z map into A–M, shifted by -j within the half
+        return ((p_index - 13 - j) % 13 + 13) % 13; // ensure 0..12
+    }
+}
 
-    char* output = malloc(plaintext_length + 1);
+char* porta_encrypt_and_decrypt(const char* plaintext, const char* keyword) {
+    size_t n = strlen(plaintext);
+    size_t klen = strlen(keyword);
+
+    char* output = malloc(n + 1);
     if (!output) return "memory allocation failed, try again";
 
-    for (size_t i = 0; i < plaintext_length; i++) {
+    size_t ki = 0; // advance key only when we process a letter
+
+    for (size_t i = 0; i < n; i++) {
         char p = plaintext[i];
         int p_index = number_to_index(p);
 
         if (p_index >= 0) {
-            char k = keyword[i % keyword_length];
-            int k_index = number_to_index(k);
+            // pull next alphabetic key character
+            int k_index;
+            do {
+                char k = keyword[ki % klen];
+                k_index = number_to_index(k);
+                ki++; // consume key position only when we hit a plaintext letter
+            } while (k_index < 0); // skip any non-letters in key
 
-            // Determine row number
-            int table = k_index / 2;
-            // Porta cipher: letters A–M get substituted from row, N–Z get substituted from first half
-            if (p_index < 13) {
-                output[i] = porta_rows[table][p_index];
-            } else {
-                output[i] = porta_rows[table][p_index - 13];
-            }
-
-            // Preserve case
-            if (islower(p)) {
-                output[i] = tolower(output[i]);
-            }
+            int c_index = porta_map_index(p_index, k_index);
+            char c = (char)('A' + c_index);
+            output[i] = islower((unsigned char)p) ? (char)tolower((unsigned char)c) : c;
         } else {
-            // Non-letter, copy directly
-            output[i] = p;
+            output[i] = p; // non-letter
         }
     }
 
-    output[plaintext_length] = '\0';
+    output[n] = '\0';
     return output;
 }

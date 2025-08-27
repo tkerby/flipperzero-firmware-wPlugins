@@ -1582,12 +1582,12 @@ void cipher_input_scene_on_enter(void* context) {
         case FlipCryptPortaKeywordInputScene:
             text_input_reset(app->text_input);
             text_input_set_header_text(app->text_input, "Enter key");
-            text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback, app, app->universal_input, app->universal_input_size, true);
+            text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback, app, app->porta_keyword_input, app->porta_keyword_input_size, true);
             break;
         case FlipCryptPortaDecryptKeywordInputScene:
             text_input_reset(app->text_input);
             text_input_set_header_text(app->text_input, "Enter key");
-            text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback, app, app->universal_input, app->universal_input_size, true);
+            text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback, app, app->porta_keyword_input, app->porta_keyword_input_size, true);
             break;
         case FlipCryptRailfenceInputScene:
             text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback, app, app->universal_input, app->universal_input_size, true);
@@ -1904,16 +1904,16 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptPortaOutputScene:
-            dialog_ex_set_text(app->dialog_ex, porta_encrypt(app->universal_input, app->porta_keyword_input), 64, 18, AlignCenter, AlignCenter);
-            save_result_generic(APP_DATA_PATH("porta.txt"), porta_encrypt(app->universal_input, app->porta_keyword_input));
+            dialog_ex_set_text(app->dialog_ex, porta_encrypt_and_decrypt(app->universal_input, app->porta_keyword_input), 64, 18, AlignCenter, AlignCenter);
+            save_result_generic(APP_DATA_PATH("porta.txt"), porta_encrypt_and_decrypt(app->universal_input, app->porta_keyword_input));
             app->last_output_scene = "Porta";
             dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
             dialog_ex_set_center_button_text(app->dialog_ex, "Save");
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptPortaDecryptOutputScene:
-            dialog_ex_set_text(app->dialog_ex, "test", 64, 18, AlignCenter, AlignCenter);
-            save_result_generic(APP_DATA_PATH("porta_decrypt.txt"), "test");
+            dialog_ex_set_text(app->dialog_ex, porta_encrypt_and_decrypt(app->universal_input, app->porta_keyword_input), 64, 18, AlignCenter, AlignCenter);
+            save_result_generic(APP_DATA_PATH("porta_decrypt.txt"), porta_encrypt_and_decrypt(app->universal_input, app->porta_keyword_input));
             app->last_output_scene = "PortaDecrypt";
             dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
             dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2294,7 +2294,7 @@ void cipher_learn_scene_on_enter(void* context) {
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptPortaLearnScene:
-            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "Porta cipher learn here!");
+            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "The Porta cipher is a classical polyalphabetic substitution cipher invented by Giovanni Battista della Porta in the 16th century. Unlike simple monoalphabetic ciphers, it uses a repeating key to select from a set of 13 reciprocal substitution alphabets, where each pair of key letters (A/B, C/D, etc.) corresponds to one alphabet. Because the substitution is reciprocal, the same process is used for both encryption and decryption, making it relatively easy to implement. While more secure than a Caesar cipher, it is still vulnerable to frequency analysis and modern cryptanalysis techniques.");
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptRailfenceLearnScene:
