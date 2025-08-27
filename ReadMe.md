@@ -32,6 +32,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-08-26 19:06 EST`
 - Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip)
 - OFW: PR: [SubGHz: Linear and Dickert MAHS protocols fixes & improvements #4267 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4267)
+- OFW: PR: [Infrared: Added some remotes to the universal remote database #4266 (By LukeVilla)](https://github.com/flipperdevices/flipperzero-firmware/pull/4266)
 
 <a name="release">
 
