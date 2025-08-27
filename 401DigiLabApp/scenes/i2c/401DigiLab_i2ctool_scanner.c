@@ -53,7 +53,6 @@ bool i2cdevice_is_known(uint8_t addr) {
  * @param appI2CToolScanner scene context
  */
 void i2ctoolscanner_scan(AppI2CToolScanner* appI2CToolScanner) {
-    FURI_LOG_I(TAG, "i2ctoolscanner_scan");
     uint8_t addr = 0;
 
     i2CToolScannerModel* model = view_get_model(appI2CToolScanner->view);
@@ -368,7 +367,6 @@ void app_i2ctoolscanner_render_callback(Canvas* canvas, void* ctx) {
  * @return Returns a pointer to the allocated AppI2CToolScanner.
  */
 AppI2CToolScanner* app_i2ctoolscanner_alloc(void* ctx) {
-    FURI_LOG_I(TAG, "app_i2ctoolscanner_alloc");
     furi_assert(ctx);
     AppContext* app = (AppContext*)ctx;
     AppI2CToolScanner* appI2CToolScanner = malloc(sizeof(AppI2CToolScanner));
@@ -395,7 +393,6 @@ AppI2CToolScanner* app_i2ctoolscanner_alloc(void* ctx) {
  * @return Returns true if the event was handled, otherwise false.
  */
 bool app_i2ctoolscanner_input_callback(InputEvent* input_event, void* ctx) {
-    FURI_LOG_I(TAG, "app_i2ctoolscanner_input_callback");
     AppContext* app = (AppContext*)ctx;
     AppI2CToolScanner* appI2CToolScanner = (AppI2CToolScanner*)app->sceneI2CToolScanner;
     i2CToolScannerModel* model = view_get_model(appI2CToolScanner->view);
@@ -499,7 +496,6 @@ bool app_i2ctoolscanner_input_callback(InputEvent* input_event, void* ctx) {
  * @return Returns a pointer to the View.
  */
 View* app_i2ctoolscanner_get_view(AppI2CToolScanner* appI2CToolScanner) {
-    FURI_LOG_I(TAG, "app_i2ctoolscanner_get_view");
     furi_assert(appI2CToolScanner);
     return appI2CToolScanner->view;
 }
@@ -510,7 +506,6 @@ View* app_i2ctoolscanner_get_view(AppI2CToolScanner* appI2CToolScanner) {
  * @param ctx The context passed to the callback.
  */
 void app_scene_i2ctoolscanner_on_enter(void* ctx) {
-    FURI_LOG_I(TAG, "app_scene_i2ctoolscanner_on_enter");
     AppContext* app = (AppContext*)ctx;
     AppI2CToolScanner* appI2CToolScanner = app->sceneI2CToolScanner;
     with_view_model(
@@ -530,7 +525,6 @@ void app_scene_i2ctoolscanner_on_enter(void* ctx) {
  * @return Returns true if the event was consumed, otherwise false.
  */
 bool app_scene_i2ctoolscanner_on_event(void* ctx, SceneManagerEvent event) {
-    FURI_LOG_I(TAG, "app_scene_i2ctoolscanner_on_event");
     UNUSED(ctx);
     UNUSED(event);
     return false;
@@ -547,7 +541,6 @@ void app_scene_i2ctoolscanner_on_exit(void* ctx) {
   i2CToolScannerModel *model = view_get_model(appI2CToolScanner->view);
   */
     UNUSED(ctx);
-    FURI_LOG_I(TAG, "app_scene_i2ctoolscanner_on_exit");
 }
 
 /**
@@ -557,7 +550,6 @@ void app_scene_i2ctoolscanner_on_exit(void* ctx) {
  */
 void app_i2ctoolscanner_free(AppI2CToolScanner* appI2CToolScanner) {
     i2CToolScannerModel* model = view_get_model(appI2CToolScanner->view);
-    FURI_LOG_I(TAG, "app_i2ctoolscanner_free");
     for(int i = 0; i < model->devices; i++) {
         FURI_LOG_I(
             TAG,

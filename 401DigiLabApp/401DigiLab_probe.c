@@ -5,7 +5,7 @@
  *    + Tixlegeek
  */
 #include "401DigiLab_probe.h"
-static const char* TAG = "401_DigiLabProbe";
+//static const char* TAG = "401_DigiLabProbe";
 
 #include <furi.h>
 #include <furi_hal.h>
@@ -97,7 +97,6 @@ void counter_start(void* ctx) {
     LL_TIM_SetCounter(TIM2, 0);
     // Start the TIM2 counter (begin counting)
     LL_TIM_EnableCounter(TIM2);
-
 }
 
 static void probe_counter_stop() {

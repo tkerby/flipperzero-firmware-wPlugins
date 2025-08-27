@@ -3,3 +3,4 @@
 *.h.gch
 dist
 venv
+.vscode

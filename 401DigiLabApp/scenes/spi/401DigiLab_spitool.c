@@ -5,7 +5,7 @@
  *    + Tixlegeek
  */
 #include "scenes/spi/401DigiLab_spitool.h"
-static const char* TAG = "401_DigiLabSPITool";
+//static const char* TAG = "401_DigiLabSPITool";
 
 /**
  * Callback function for the main menu. Handles menu item selection and

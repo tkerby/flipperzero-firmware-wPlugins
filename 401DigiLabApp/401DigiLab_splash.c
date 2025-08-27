@@ -6,7 +6,7 @@
  */
 #include "401DigiLab_splash.h"
 
-static const char* TAG = "401_DigiLabSplash";
+//static const char* TAG = "401_DigiLabSplash";
 /**
  * Handles input events for the splash scene. Sends custom events based on
  * the user's keypresses.
