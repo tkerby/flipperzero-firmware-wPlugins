@@ -29,6 +29,8 @@ extern "C" {
 
 #define PLAYLIST_LOCATION     "/ext/apps_data/nfc_playlist/"
 #define PLAYLIST_DIR          "/ext/apps_data/nfc_playlist"
+#define SETTINGS_LOCATION     "/ext/apps_data/nfc_playlist/settings/settings.txt"
+#define SETTINGS_DIR          "/ext/apps_data/nfc_playlist/settings"
 #define NFC_ITEM_LOCATION     "/ext/nfc/"
 #define MAX_PLAYLIST_NAME_LEN 50
 

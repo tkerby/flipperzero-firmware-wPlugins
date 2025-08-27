@@ -7,6 +7,7 @@ typedef enum {
    NfcPlaylistSettings_SkipError,
    NfcPlaylistSettings_Loop,
    NfcPlaylistSettings_UserControls,
+   NfcPlaylistSettings_Save,
    NfcPlaylistSettings_Reset
 } NfcPlaylistSettingsMenuSelection;
 
@@ -144,6 +145,8 @@ void nfc_playlist_settings_scene_on_enter(void* context) {
    variable_item_set_current_value_text(
       user_controls_setting, nfc_playlist->worker_info.settings->user_controls ? "ON" : "OFF");
 
+   variable_item_list_add(nfc_playlist->views.variable_item_list, "Save settings", 0, NULL, NULL);
+
    variable_item_list_add(nfc_playlist->views.variable_item_list, "Reset settings", 0, NULL, NULL);
 
    VariableItem* credits = variable_item_list_add(
@@ -162,6 +165,36 @@ bool nfc_playlist_settings_scene_on_event(void* context, SceneManagerEvent event
    bool consumed = false;
    if(event.type == SceneManagerEventTypeCustom) {
       switch(event.event) {
+      case NfcPlaylistSettings_Save: {
+         FuriString* tmp_str = furi_string_alloc();
+
+         furi_string_printf(
+            tmp_str,
+            "emulate_timeout=%d\nemulate_delay=%d\nemulate_led_indicator=%s\nskip_error=%s\nloop=%s\nuser_controls=%s",
+            nfc_playlist->worker_info.settings->emulate_timeout,
+            nfc_playlist->worker_info.settings->emulate_delay,
+            nfc_playlist->worker_info.settings->emulate_led_indicator ? "true" : "false",
+            nfc_playlist->worker_info.settings->skip_error ? "true" : "false",
+            nfc_playlist->worker_info.settings->loop ? "true" : "false",
+            nfc_playlist->worker_info.settings->user_controls ? "true" : "false");
+
+         Storage* storage = furi_record_open(RECORD_STORAGE);
+         Stream* stream = file_stream_alloc(storage);
+
+         if (!storage_dir_exists(storage, SETTINGS_DIR)) {
+            storage_simply_mkdir(storage, SETTINGS_DIR);
+         }
+
+         file_stream_open(stream, SETTINGS_LOCATION, FSAM_READ_WRITE, FSOM_OPEN_ALWAYS);
+         stream_clean(stream);
+         stream_write_string(stream, tmp_str);
+         file_stream_close(stream);
+         stream_free(stream);
+         furi_record_close(RECORD_STORAGE);
+
+         furi_string_free(tmp_str);
+         break;
+      }
       case NfcPlaylistSettings_Reset: {
          FuriString* tmp_str = furi_string_alloc();
 
