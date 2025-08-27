@@ -34,10 +34,7 @@ const MfClassicKeyPair metromoney_1k_verify_key[] = {
 };
 const MfClassicKeyPair renfe_suma10_1k_keys[] = {
     {.a = 0xA8844B0BCA06}, // Sector 0 - RENFE specific key from dumps
-    {.a = 0xCB5ED0E57B08}, // Sector 1 - RENFE specific key from dumps  
-    {.a = 0xffffffffffff}, // Default key for other sectors
-    {.a = 0xa0a1a2a3a4a5}, // Alternative common key
-    {.a = 0xC0C1C2C3C4C5}, // Key for sectors 10-15 from dumps
+    {.a = 0xCB5ED0E57B08}, // Sector 1 - RENFE specific key from dumps 
 };
 
 
@@ -316,18 +313,6 @@ static bool renfe_suma10_verify(Nfc* nfc, MfClassicData* mfc_data, bool data_loa
                 
                 if(error != MfClassicErrorNone) {
                     FURI_LOG_I(TAG, "renfe_suma10_verify: RENFE sector 1 key also failed: %d", error);
-                    
-              
-                    bit_lib_num_to_bytes_be(0xffffffffffff, COUNT_OF(key.data), key.data);
-                    error = mf_classic_poller_sync_auth(
-                        nfc, block_num, &key, MfClassicKeyTypeA, &auth_context);
-                    
-                    if(error != MfClassicErrorNone) {
-                        FURI_LOG_I(TAG, "renfe_suma10_verify: Default key also failed: %d", error);
-                        break;
-                    }
-                    
-                    FURI_LOG_I(TAG, "renfe_suma10_verify: Default key worked, but not specific enough for RENFE");
                     
                     break;
                 } else {
