@@ -18,6 +18,55 @@ static void nfc_playlist_tick_event_callback(void* context) {
     scene_manager_handle_tick_event(nfc_playlist->scene_manager);
 }
 
+static void nfc_playlist_load_settings(void* context, Storage* storage) {
+    furi_assert(context);
+    NfcPlaylist* nfc_playlist = context;
+    Stream* stream = file_stream_alloc(storage);
+
+    if(file_stream_open(stream, SETTINGS_LOCATION, FSAM_READ, FSOM_OPEN_EXISTING)) {
+        FuriString* line = furi_string_alloc();
+        FuriString* key = furi_string_alloc();
+        FuriString* value = furi_string_alloc();
+
+        while(stream_read_line(stream, line)) {
+            if(furi_string_empty(line) || furi_string_start_with_str(line, "#")) continue;
+
+            ssize_t equal_index = furi_string_search_char(line, '=');
+            if(equal_index < 0) continue;
+
+            furi_string_set_strn(key, furi_string_get_cstr(line), equal_index);
+            furi_string_set_str(value, furi_string_get_cstr(line) + equal_index + 1);
+
+            furi_string_trim(key);
+            furi_string_trim(value);
+
+            const char* k = furi_string_get_cstr(key);
+            const char* v = furi_string_get_cstr(value);
+
+            if(strcmp(k, "emulate_timeout") == 0) {
+                nfc_playlist->worker_info.settings->emulate_timeout = atoi(v);
+            } else if(strcmp(k, "emulate_delay") == 0) {
+                nfc_playlist->worker_info.settings->emulate_delay = atoi(v);
+            } else if(strcmp(k, "emulate_led_indicator") == 0) {
+                nfc_playlist->worker_info.settings->emulate_led_indicator =
+                    (strcasecmp(v, "true") == 0);
+            } else if(strcmp(k, "skip_error") == 0) {
+                nfc_playlist->worker_info.settings->skip_error = (strcasecmp(v, "true") == 0);
+            } else if(strcmp(k, "loop") == 0) {
+                nfc_playlist->worker_info.settings->loop = (strcasecmp(v, "true") == 0);
+            } else if(strcmp(k, "user_controls") == 0) {
+                nfc_playlist->worker_info.settings->user_controls = (strcasecmp(v, "true") == 0);
+            }
+        }
+
+        file_stream_close(stream);
+        furi_string_free(line);
+        furi_string_free(key);
+        furi_string_free(value);
+    }
+    stream_free(stream);
+}
+
 static NfcPlaylist* nfc_playlist_alloc() {
     NfcPlaylist* nfc_playlist = malloc(sizeof(NfcPlaylist));
     furi_assert(nfc_playlist);
@@ -51,6 +100,10 @@ static NfcPlaylist* nfc_playlist_alloc() {
     nfc_playlist->worker_info.settings->skip_error = default_skip_error;
     nfc_playlist->worker_info.settings->loop = default_loop;
     nfc_playlist->worker_info.settings->user_controls = default_user_controls;
+
+    if(storage_file_exists(storage, SETTINGS_LOCATION)) {
+        nfc_playlist_load_settings(nfc_playlist, storage);
+    }
 
     view_dispatcher_set_event_callback_context(nfc_playlist->view_dispatcher, nfc_playlist);
     view_dispatcher_set_custom_event_callback(

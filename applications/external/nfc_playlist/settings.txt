@@ -1,0 +1,6 @@
+emulate_timeout=4
+emulate_delay=2
+emulate_led_indicator=true
+skip_error=false
+loop=true
+user_controls=false
