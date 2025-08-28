@@ -611,6 +611,9 @@ static void uid_brute_smarter_menu_callback(void* context, uint32_t index) {
                         snprintf(progress_text, sizeof(progress_text), "%d UIDs loaded", 
                                  instance->loaded_keys_count);
                         popup_set_text(instance->popup, progress_text, 64, 40, AlignCenter, AlignTop);
+                        
+                        // Refresh menu to show updated key count
+                        uid_brute_smarter_setup_menu(instance);
                     } else {
                         popup_set_header(instance->popup, "Error", 64, 20, AlignCenter, AlignTop);
                         popup_set_text(instance->popup, "Load failed!\nCheck .nfc format", 64, 40, AlignCenter, AlignTop);
@@ -1154,7 +1157,6 @@ static uint32_t uid_brute_smarter_key_list_back_callback(void* context) {
     
     DEBUG_LOG("[KEY_LIST] Back button pressed, returning to main menu");
     
-    // Simply return to the main menu view - no need to rebuild since it's a separate submenu
     return UidBruteSmarterViewMenu;
 }
 
@@ -1258,7 +1260,14 @@ static void uid_brute_smarter_setup_menu(UidBruteSmarter* instance) {
     submenu_reset(instance->submenu);
     submenu_set_header(instance->submenu, "UID Brute Smarter");
     submenu_add_item(instance->submenu, "Load Cards", 0, uid_brute_smarter_menu_callback, instance);
-    submenu_add_item(instance->submenu, "View Keys", 1, uid_brute_smarter_menu_callback, instance);
+    
+    // Only show "View Keys" if keys are loaded
+    if(instance->loaded_keys_count > 0) {
+        char view_keys_text[32];
+        snprintf(view_keys_text, sizeof(view_keys_text), "View Keys (%d)", instance->loaded_keys_count);
+        submenu_add_item(instance->submenu, view_keys_text, 1, uid_brute_smarter_menu_callback, instance);
+    }
+    
     submenu_add_item(instance->submenu, "Configure", 2, uid_brute_smarter_menu_callback, instance);
     submenu_add_item(instance->submenu, "Start Brute Force", 3, uid_brute_smarter_menu_callback, instance);
     
