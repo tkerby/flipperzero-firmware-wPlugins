@@ -10,11 +10,10 @@ From the main menu:
      - Easy: Search depth 2 (increases to 3 once 10 pawns have reached their target rows).  
      - Medium: Search depth 3.  
      - Hard: Search depth 4.  
-  2. Notifications: Choose how the Flipper Zero alerts you when the AI moves:  
+  2. Notifications: Choose how the Flipper Zero alerts you when the AI moves (notifications apply only in PvE mode.):  
      - LED blink  
      - Vibration  
      - Both  
-     *(Notifications apply only in PvE mode.)*  
 
 ## How to Play  
 - The board is fixed at 11×6.  
