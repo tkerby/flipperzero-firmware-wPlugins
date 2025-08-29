@@ -11,7 +11,10 @@ FlipMapSettings::FlipMapSettings(ViewDispatcher **view_dispatcher, void *appCont
 
     variable_item_wifi_ssid = variable_item_list_add(variable_item_list, "WiFi SSID", 1, nullptr, nullptr);
     variable_item_wifi_pass = variable_item_list_add(variable_item_list, "WiFi Password", 1, nullptr, nullptr);
-    variable_item_connect = variable_item_list_add(variable_item_list, "Connect", 1, nullptr, nullptr);
+    variable_item_connect = variable_item_list_add(variable_item_list, "[Connect To WiFi]", 1, nullptr, nullptr);
+    variable_item_user_name = variable_item_list_add(variable_item_list, "User Name", 1, nullptr, nullptr);
+    variable_item_user_pass = variable_item_list_add(variable_item_list, "User Password", 1, nullptr, nullptr);
+    variable_item_location = variable_item_list_add(variable_item_list, "Location", 2, callbackLocation, nullptr);
 
     char loaded_ssid[64];
     char loaded_pass[64];
@@ -33,6 +36,35 @@ FlipMapSettings::FlipMapSettings(ViewDispatcher **view_dispatcher, void *appCont
         variable_item_set_current_value_text(variable_item_wifi_pass, "");
     }
     variable_item_set_current_value_text(variable_item_connect, "");
+    if (app->loadChar("user_name", loaded_ssid, sizeof(loaded_ssid)))
+    {
+        variable_item_set_current_value_text(variable_item_user_name, loaded_ssid);
+    }
+    else
+    {
+        variable_item_set_current_value_text(variable_item_user_name, "");
+    }
+    if (app->loadChar("user_pass", loaded_pass, sizeof(loaded_pass)))
+    {
+        variable_item_set_current_value_text(variable_item_user_pass, "*****");
+    }
+    else
+    {
+        variable_item_set_current_value_text(variable_item_user_pass, "");
+    }
+
+    char locationStatus[16];
+    if (app->loadChar("location_status", locationStatus, sizeof(locationStatus)))
+    {
+        const int index = strcmp(locationStatus, "Enabled") == 0 ? 1 : 0;
+        variable_item_set_current_value_index(variable_item_location, index);
+        variable_item_set_current_value_text(variable_item_location, locationStatus);
+    }
+    else
+    {
+        variable_item_set_current_value_index(variable_item_location, 0);
+        variable_item_set_current_value_text(variable_item_location, "Disabled");
+    }
 }
 
 FlipMapSettings::~FlipMapSettings()
@@ -58,8 +90,42 @@ uint32_t FlipMapSettings::callbackToSettings(void *context)
 
 uint32_t FlipMapSettings::callbackToSubmenu(void *context)
 {
-    UNUSED(context);
+    FlipMapApp *app = static_cast<FlipMapApp *>(context);
+    char locationStatus[16];
+    if (app && app->loadChar("location_status", locationStatus, sizeof(locationStatus)))
+    {
+        const int index = strcmp(locationStatus, "Enabled") == 0 ? 1 : 0;
+        // show warning message if enabled
+        if (index == 1)
+        {
+            easy_flipper_dialog("Warning", "User location is enabled.\n\nOther users may see your\ngeneral location ONLY. Exact\nlocation is NEVER shared!");
+        }
+
+        // later we'll send a request to update the location status
+        // something like https://www.jblanked.com/api/flipper/location/<user_id>/<location_status>
+    }
     return FlipMapViewSubmenu;
+}
+
+void FlipMapSettings::callbackLocation(VariableItem *item)
+{
+
+    uint8_t index = variable_item_get_current_value_index(item);
+    const char *locationOptions[] = {"Disabled", "Enabled"};
+    variable_item_set_current_value_text(item, locationOptions[index]);
+    variable_item_set_current_value_index(item, index);
+    // manual save here since appContext is not available in static methods
+    // which still doesnt make sense to me but probably because it expects a C function
+    Storage *storage = static_cast<Storage *>(furi_record_open(RECORD_STORAGE));
+    File *file = storage_file_alloc(storage);
+    char file_path[256];
+    snprintf(file_path, sizeof(file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/%s.txt", APP_ID, "location_status");
+    storage_file_open(file, file_path, FSAM_WRITE, FSOM_CREATE_ALWAYS);
+    size_t data_size = strlen(locationOptions[index]) + 1; // Include null terminator
+    storage_file_write(file, locationOptions[index], data_size);
+    storage_file_close(file);
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
 }
 
 void FlipMapSettings::freeTextInput()
@@ -144,6 +210,48 @@ bool FlipMapSettings::initTextInput(uint32_t view)
                                            textUpdatedPassCallback, callbackToSettings, view_dispatcher_ref, this);
 #endif
     }
+    else if (view == SettingsViewUserName)
+    {
+        if (app->loadChar("user_name", loaded, sizeof(loaded)))
+        {
+            strncpy(text_input_temp_buffer.get(), loaded, text_input_buffer_size);
+        }
+        else
+        {
+            text_input_temp_buffer[0] = '\0'; // Ensure empty if not loaded
+        }
+        text_input_temp_buffer[text_input_buffer_size - 1] = '\0'; // Ensure null-termination
+#ifndef FW_ORIGIN_Momentum
+        return easy_flipper_set_uart_text_input(&text_input, FlipMapViewTextInput,
+                                                "Enter User Name", text_input_temp_buffer.get(), text_input_buffer_size,
+                                                textUpdatedUserNameCallback, callbackToSettings, view_dispatcher_ref, this);
+#else
+        return easy_flipper_set_text_input(&text_input, FlipMapViewTextInput,
+                                           "Enter User Name", text_input_temp_buffer.get(), text_input_buffer_size,
+                                           textUpdatedUserNameCallback, callbackToSettings, view_dispatcher_ref, this);
+#endif
+    }
+    else if (view == SettingsViewUserPass)
+    {
+        if (app->loadChar("user_pass", loaded, sizeof(loaded)))
+        {
+            strncpy(text_input_temp_buffer.get(), loaded, text_input_buffer_size);
+        }
+        else
+        {
+            text_input_temp_buffer[0] = '\0'; // Ensure empty if not loaded
+        }
+        text_input_temp_buffer[text_input_buffer_size - 1] = '\0'; // Ensure null-termination
+#ifndef FW_ORIGIN_Momentum
+        return easy_flipper_set_uart_text_input(&text_input, FlipMapViewTextInput,
+                                                "Enter User Password", text_input_temp_buffer.get(), text_input_buffer_size,
+                                                textUpdatedUserPassCallback, callbackToSettings, view_dispatcher_ref, this);
+#else
+        return easy_flipper_set_text_input(&text_input, FlipMapViewTextInput,
+                                           "Enter User Password", text_input_temp_buffer.get(), text_input_buffer_size,
+                                           textUpdatedUserPassCallback, callbackToSettings, view_dispatcher_ref, this);
+#endif
+    }
     return false;
 }
 
@@ -153,6 +261,8 @@ void FlipMapSettings::settingsItemSelected(uint32_t index)
     {
     case SettingsViewSSID:
     case SettingsViewPassword:
+    case SettingsViewUserName:
+    case SettingsViewUserPass:
         startTextInput(index);
         break;
     case SettingsViewConnect:
@@ -230,6 +340,20 @@ void FlipMapSettings::textUpdated(uint32_t view)
         }
         app->saveChar("wifi_pass", text_input_buffer.get());
         break;
+    case SettingsViewUserName:
+        if (variable_item_user_name)
+        {
+            variable_item_set_current_value_text(variable_item_user_name, text_input_buffer.get());
+        }
+        app->saveChar("user_name", text_input_buffer.get());
+        break;
+    case SettingsViewUserPass:
+        if (variable_item_user_pass)
+        {
+            variable_item_set_current_value_text(variable_item_user_pass, text_input_buffer.get());
+        }
+        app->saveChar("user_pass", text_input_buffer.get());
+        break;
     default:
         break;
     }
@@ -251,4 +375,16 @@ void FlipMapSettings::textUpdatedPassCallback(void *context)
 {
     FlipMapSettings *settings = (FlipMapSettings *)context;
     settings->textUpdated(SettingsViewPassword);
+}
+
+void FlipMapSettings::textUpdatedUserNameCallback(void *context)
+{
+    FlipMapSettings *settings = (FlipMapSettings *)context;
+    settings->textUpdated(SettingsViewUserName);
+}
+
+void FlipMapSettings::textUpdatedUserPassCallback(void *context)
+{
+    FlipMapSettings *settings = (FlipMapSettings *)context;
+    settings->textUpdated(SettingsViewUserPass);
 }
