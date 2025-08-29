@@ -7,6 +7,11 @@ typedef struct {
 	SESSIONSETTINGS settings;
 } CBZSHEADER, *PCBZSHEADER;
 
+typedef struct {
+	uint8_t scramble[8];
+	uint64_t time;
+} SESSIONENTRY, *PSESSIONENTRY;
+
 uint8_t SessionCreate(const PSESSION session, const char* const path) {
 	furi_check(session && path);
 
