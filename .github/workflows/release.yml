@@ -6,10 +6,14 @@ on:
       - 'v*'
   workflow_dispatch:
     inputs:
-      tag_name:
-        description: 'Tag name for release'
+      version:
+        description: 'Version for manual release (e.g., 1.0.0)'
         required: false
         default: 'manual'
+
+permissions:
+  contents: write
+  packages: write
 
 jobs:
   build-release:
@@ -20,6 +24,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         path: uid_brute_smarter
+        fetch-depth: 0  # Full history for changelog generation
         
     - name: Checkout Momentum Firmware
       uses: actions/checkout@v4
@@ -43,6 +48,19 @@ jobs:
           protobuf-compiler \
           ccache
           
+    - name: Get version
+      id: version
+      run: |
+        if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          VERSION=${GITHUB_REF#refs/tags/}
+        elif [[ -n "${{ github.event.inputs.version }}" ]]; then
+          VERSION="v${{ github.event.inputs.version }}"
+        else
+          VERSION="v$(date +'%Y%m%d')-manual"
+        fi
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "Building version: $VERSION"
+        
     - name: Install app to firmware
       run: |
         mkdir -p momentum-firmware/applications_user/uid_brute_smarter
@@ -58,23 +76,109 @@ jobs:
         cd momentum-firmware
         ./fbt fap_uid_brute_smarter
         
-    - name: Package release files
+    - name: Find and prepare release artifacts
+      id: artifacts
       run: |
         mkdir -p release
-        find momentum-firmware/build -name "*uid_brute_smarter*.fap" -exec cp {} release/ \;
+        
+        # Find the .fap file in multiple possible locations
+        echo "Searching for .fap file..."
+        FAP_FILE=""
+        for path in \
+          "momentum-firmware/build/f7-firmware-C/.extapps/uid_brute_smarter.fap" \
+          "momentum-firmware/build/f7-firmware-C/uid_brute_smarter.fap" \
+          "momentum-firmware/dist/f7-C/apps/NFC/uid_brute_smarter.fap" \
+          "momentum-firmware/dist/f7-C/apps_data/uid_brute_smarter.fap" \
+          "momentum-firmware/build/latest/.extapps/uid_brute_smarter.fap"; do
+          if [ -f "$path" ]; then
+            FAP_FILE="$path"
+            echo "Found .fap at: $FAP_FILE"
+            break
+          fi
+        done
+        
+        # Fallback: search for any .fap file
+        if [ -z "$FAP_FILE" ]; then
+          FAP_FILE=$(find momentum-firmware -name "uid_brute_smarter.fap" -type f 2>/dev/null | head -1)
+          if [ -n "$FAP_FILE" ]; then
+            echo "Found .fap via search: $FAP_FILE"
+          fi
+        fi
+        
+        if [ -z "$FAP_FILE" ]; then
+          echo "ERROR: Could not find uid_brute_smarter.fap"
+          exit 1
+        fi
+        
+        # Copy and rename with version
+        VERSION="${{ steps.version.outputs.VERSION }}"
+        cp "$FAP_FILE" "release/uid_brute_smarter_${VERSION}.fap"
+        cp "$FAP_FILE" "release/uid_brute_smarter.fap"  # Also keep unversioned copy
+        
+        # Copy documentation
         cp uid_brute_smarter/README.md release/
+        if [ -f uid_brute_smarter/CHANGELOG.md ]; then
+          cp uid_brute_smarter/CHANGELOG.md release/
+        fi
+        
+        # Generate checksums
         cd release
-        zip -r uid_brute_smarter_momentum.zip *
+        sha256sum *.fap > SHA256SUMS.txt
+        
+        # Create zip archive
+        zip -r "uid_brute_smarter_${VERSION}.zip" *.fap *.md SHA256SUMS.txt
+        
+        # List artifacts
+        echo "Release artifacts:"
+        ls -la
+        
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        VERSION="${{ steps.version.outputs.VERSION }}"
+        cat > release_notes.md << 'EOF'
+        ## UID Brute Smarter ${{ steps.version.outputs.VERSION }}
+        
+        ### Installation
+        
+        #### Direct Installation
+        1. Download `uid_brute_smarter_${{ steps.version.outputs.VERSION }}.fap`
+        2. Copy to your Flipper Zero's SD card: `/ext/apps/NFC/`
+        3. Launch from NFC -> Apps menu
+        
+        #### Archive Installation
+        1. Download `uid_brute_smarter_${{ steps.version.outputs.VERSION }}.zip`
+        2. Extract and copy the `.fap` file to your Flipper's SD card
+        
+        ### File Checksums
+        Verify your download with SHA256 checksums available in the release assets.
+        
+        ### What's Changed
+        See commit history below for detailed changes.
+        
+        ---
+        Built with Momentum Firmware
+        EOF
         
     - name: Create Release
       uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: release/uid_brute_smarter_momentum.zip
+        tag_name: ${{ steps.version.outputs.VERSION }}
+        name: UID Brute Smarter ${{ steps.version.outputs.VERSION }}
+        body_path: release_notes.md
+        files: |
+          release/uid_brute_smarter_${{ steps.version.outputs.VERSION }}.fap
+          release/uid_brute_smarter_${{ steps.version.outputs.VERSION }}.zip
+          release/SHA256SUMS.txt
         generate_release_notes: true
+        draft: false
+        prerelease: false
         
-    - name: Upload artifacts
+    - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: uid-brute-smarter-release
-        path: release/
+        name: uid-brute-smarter-${{ steps.version.outputs.VERSION }}
+        path: |
+          release/*.fap
+          release/*.zip
+          release/SHA256SUMS.txt
