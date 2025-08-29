@@ -168,6 +168,26 @@ void FlipMapApp::createAppDataPath()
     furi_record_close(RECORD_STORAGE);
 }
 
+bool FlipMapApp::hasWiFiCredentials()
+{
+    char ssid[64] = {0};
+    char password[64] = {0};
+    return loadChar("wifi_ssid", ssid, sizeof(ssid)) &&
+           loadChar("wifi_pass", password, sizeof(password)) &&
+           strlen(ssid) > 0 &&
+           strlen(password) > 0;
+}
+
+bool FlipMapApp::hasUserCredentials()
+{
+    char username[64] = {0};
+    char password[64] = {0};
+    return loadChar("user_name", username, sizeof(username)) &&
+           loadChar("user_pass", password, sizeof(password)) &&
+           strlen(username) > 0 &&
+           strlen(password) > 0;
+}
+
 FuriString *FlipMapApp::httpRequest(
     const char *url,
     HTTPMethod method,
