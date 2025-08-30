@@ -91,18 +91,18 @@ uint32_t FlipMapSettings::callbackToSettings(void *context)
 uint32_t FlipMapSettings::callbackToSubmenu(void *context)
 {
     FlipMapApp *app = static_cast<FlipMapApp *>(context);
+    furi_check(app);
+
     char locationStatus[16];
-    if (app && app->loadChar("location_status", locationStatus, sizeof(locationStatus)))
+    if (app->loadChar("location_status", locationStatus, sizeof(locationStatus)))
     {
         const int index = strcmp(locationStatus, "Enabled") == 0 ? 1 : 0;
+
         // show warning message if enabled
         if (index == 1)
         {
             easy_flipper_dialog("Warning", "User location is enabled.\n\nOther users may see your\ngeneral location ONLY. Exact\nlocation is NEVER shared!");
         }
-
-        // later we'll send a request to update the location status
-        // something like https://www.jblanked.com/api/flipper/location/<user_id>/<location_status>
     }
     return FlipMapViewSubmenu;
 }
