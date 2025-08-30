@@ -167,6 +167,12 @@ void FlipMapApp::callbackSubmenuChoices(uint32_t index)
         view_dispatcher_switch_to_view(viewDispatcher, FlipMapViewAbout);
         break;
     case FlipMapSubmenuSettings:
+        // if the board is not connected, we can't use WiFi when getting location
+        if (!isBoardConnected())
+        {
+            easy_flipper_dialog("FlipperHTTP Error", "Ensure your WiFi Developer\nBoard or Pico W is connected\nand the latest FlipperHTTP\nfirmware is installed.");
+            return;
+        }
         if (!settings)
         {
             settings = std::make_unique<FlipMapSettings>(&viewDispatcher, this);
