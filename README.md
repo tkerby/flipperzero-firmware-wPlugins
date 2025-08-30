@@ -1,6 +1,11 @@
 # Atari SIO Peripheral Emulator for Flipper Zero
 
-sio2flip is a Flipper Zero application that emulates SIO peripherals for Atari 8-bit computers. The project is still in its early stages, but it already features:
+<div>
+<img src="hardware/sio2flip-dock-flipper-atari.jpg" width="45%" />
+<img src="hardware/sio2flip-dock.jpg" width="45%" />
+</div>
+
+SIO2FLIP is a Flipper Zero application that emulates SIO peripherals for Atari 8-bit computers. The project is still in its early stages, but it already features:
 
 - **Floppy drive emulation**
   - Sector reading and writing commands
@@ -36,7 +41,11 @@ The wiring is quite simple; only three signals are need.
 
 Note: All signals on the Atari SIO use 5V TTL logic. Although the Flipper Zero’s I/Os are 5V tolerant when configured as inputs, be careful when connecting your Flipper Zero to your Atari computer, as incorrect wiring or improper use could potentially damage your Flipper or your precious Atari hardware.
 
-<img src="https://github.com/user-attachments/assets/71bd3d8d-ba43-493b-aad7-f414037da486" width="30%" />
+<div>
+<img src="https://github.com/user-attachments/assets/71bd3d8d-ba43-493b-aad7-f414037da486" width="25%" />
+</div>
+
+Or you can build something more reliable -  [docking station ↗](hardware).
 
 ## Instructions for Use
 
