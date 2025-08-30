@@ -10,6 +10,7 @@ typedef enum
     FlipMapRunViewLogin = 0,        // login view
     FlipMapRunViewRegistration = 1, // registration view
     FlipMapRunViewMapData = 2,      // map data view
+    FlipMapRunViewLocation = 3      // location view
 } FlipMapRunView;
 
 typedef enum
@@ -45,9 +46,20 @@ typedef enum
 
 typedef enum
 {
-    RequestTypeLogin = 0,        // Request login (login the user)
-    RequestTypeRegistration = 1, // Request registration (register the user)
-    RequestTypeMapData = 2,      // Request map data (fetch map data)
+    LocationCredentialsMissing = -1, // Credentials missing
+    LocationNotStarted = 0,          // Location not started
+    LocationWaiting = 1,             // Waiting for location response
+    LocationSuccess = 2,             // Location fetched successfully
+    LocationParseError = 3,          // Error parsing location data
+    LocationRequestError = 4,        // Error in location request
+} LocationStatus;
+
+typedef enum
+{
+    RequestTypeLogin = 0,         // Request login (login the user)
+    RequestTypeRegistration = 1,  // Request registration (register the user)
+    RequestTypeMapData = 2,       // Request map data (fetch map data)
+    RequestTypeLocationUpdate = 3 // Request location update (update user location)
 } RequestType;
 
 class FlipMapRun
@@ -57,6 +69,7 @@ class FlipMapRun
     bool inputHeld;                        // flag to check if input is held
     InputKey lastInput;                    // last input key pressed
     std::unique_ptr<Loading> loading;      // loading animation instance
+    LocationStatus locationStatus;         // current location status
     LoginStatus loginStatus;               // current login status
     MapDataStatus mapDataStatus;           // current map data status
     RegistrationStatus registrationStatus; // current registration status
@@ -64,6 +77,7 @@ class FlipMapRun
     bool shouldReturnToMenu;               // Flag to signal return to menu
     //
     void debounceInput();                      // debounce input to prevent multiple triggers
+    void drawLocationView(Canvas *canvas);     // draw the location view
     void drawLoginView(Canvas *canvas);        // draw the login view
     void drawRegistrationView(Canvas *canvas); // draw the registration view
     bool httpRequestIsFinished();              // check if the HTTP request is finished

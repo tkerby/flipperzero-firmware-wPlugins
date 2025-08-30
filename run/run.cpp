@@ -2,7 +2,7 @@
 #include "app.hpp"
 
 FlipMapRun::FlipMapRun(void *appContext) : appContext(appContext), currentView(FlipMapRunViewLogin), inputHeld(false),
-                                           lastInput(InputKeyMAX), loginStatus(LoginNotStarted), mapDataStatus(MapDataNotStarted),
+                                           lastInput(InputKeyMAX), locationStatus(LocationNotStarted), loginStatus(LoginNotStarted), mapDataStatus(MapDataNotStarted),
                                            registrationStatus(RegistrationNotStarted), shouldDebounce(false), shouldReturnToMenu(false)
 {
     char *loginStatusStr = (char *)malloc(32);
@@ -14,9 +14,9 @@ FlipMapRun::FlipMapRun(void *appContext) : appContext(appContext), currentView(F
             if (strcmp(loginStatusStr, "success") == 0)
             {
                 loginStatus = LoginSuccess;
-                mapDataStatus = MapDataWaiting;
-                currentView = FlipMapRunViewMapData;
-                userRequest(RequestTypeMapData);
+                locationStatus = LocationWaiting;
+                currentView = FlipMapRunViewLocation;
+                userRequest(RequestTypeLocationUpdate);
             }
             else
             {
@@ -47,6 +47,91 @@ void FlipMapRun::debounceInput()
         debounceCounter = 0;
         shouldDebounce = false;
         inputHeld = false;
+    }
+}
+
+void FlipMapRun::drawLocationView(Canvas *canvas)
+{
+    canvas_set_font(canvas, FontPrimary);
+    static bool loadingStarted = false;
+    switch (locationStatus)
+    {
+    case LocationWaiting:
+        if (!loadingStarted)
+        {
+            if (!loading)
+            {
+                loading = std::make_unique<Loading>(canvas);
+            }
+            loadingStarted = true;
+            if (loading)
+            {
+                loading->setText("Syncing...");
+            }
+        }
+        if (!this->httpRequestIsFinished())
+        {
+            if (loading)
+            {
+                loading->animate();
+            }
+        }
+        else
+        {
+            if (loading)
+            {
+                loading->stop();
+            }
+            loadingStarted = false;
+            FlipMapApp *app = static_cast<FlipMapApp *>(appContext);
+            if (app->getHttpState() == ISSUE)
+            {
+                locationStatus = LocationRequestError;
+                return;
+            }
+            char response[256];
+            if (app && app->loadChar("location_status", response, sizeof(response)))
+            {
+                if (strstr(response, "[ERROR]") == NULL)
+                {
+                    locationStatus = LocationSuccess;
+                    currentView = FlipMapRunViewMapData;
+                    mapDataStatus = MapDataWaiting;
+                    userRequest(RequestTypeMapData);
+                }
+                else
+                {
+                    locationStatus = LocationRequestError;
+                }
+            }
+            else
+            {
+                locationStatus = LocationRequestError;
+            }
+        }
+        break;
+    case LocationSuccess:
+        canvas_draw_str(canvas, 0, 10, "Location successful!");
+        canvas_draw_str(canvas, 0, 20, "Press OK to continue.");
+        break;
+    case LocationCredentialsMissing:
+        canvas_draw_str(canvas, 0, 10, "Missing credentials!");
+        canvas_draw_str(canvas, 0, 20, "Please set your username");
+        canvas_draw_str(canvas, 0, 30, "and password in the app.");
+        break;
+    case LocationRequestError:
+        canvas_draw_str(canvas, 0, 10, "Location request failed!");
+        canvas_draw_str(canvas, 0, 20, "Check your network and");
+        canvas_draw_str(canvas, 0, 30, "try again later.");
+        break;
+    case LocationNotStarted:
+        locationStatus = LocationWaiting;
+        userRequest(RequestTypeLocationUpdate);
+        break;
+    default:
+        FURI_LOG_E(TAG, "Unknown location status");
+        canvas_draw_str(canvas, 0, 10, "Syncing...");
+        break;
     }
 }
 
@@ -95,10 +180,10 @@ void FlipMapRun::drawLoginView(Canvas *canvas)
                 if (strstr(response, "[SUCCESS]") != NULL)
                 {
                     loginStatus = LoginSuccess;
-                    currentView = FlipMapRunViewMapData;
                     app->saveChar("login_status", "success");
-                    mapDataStatus = MapDataWaiting;
-                    userRequest(RequestTypeMapData);
+                    locationStatus = LocationWaiting;
+                    currentView = FlipMapRunViewLocation;
+                    userRequest(RequestTypeLocationUpdate);
                 }
                 else if (strstr(response, "User not found") != NULL)
                 {
@@ -200,9 +285,9 @@ void FlipMapRun::drawRegistrationView(Canvas *canvas)
                 if (strstr(response, "[SUCCESS]") != NULL)
                 {
                     registrationStatus = RegistrationSuccess;
-                    currentView = FlipMapRunViewMapData;
-                    mapDataStatus = MapDataWaiting;
-                    userRequest(RequestTypeMapData);
+                    locationStatus = LocationWaiting;
+                    currentView = FlipMapRunViewLocation;
+                    userRequest(RequestTypeLocationUpdate);
                 }
                 else if (strstr(response, "Username or password not provided") != NULL)
                 {
@@ -271,6 +356,9 @@ void FlipMapRun::updateDraw(Canvas *canvas)
         // nothing yet
         canvas_draw_str(canvas, 0, 10, "Map Data View");
         break;
+    case FlipMapRunViewLocation:
+        drawLocationView(canvas);
+        break;
     default:
         canvas_draw_str(canvas, 0, 10, "Unknown view");
         break;
@@ -298,25 +386,7 @@ void FlipMapRun::updateInput(InputEvent *event)
 void FlipMapRun::userRequest(RequestType requestType)
 {
     FlipMapApp *app = static_cast<FlipMapApp *>(appContext);
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "userRequest: App context is null");
-        switch (requestType)
-        {
-        case RequestTypeLogin:
-            loginStatus = LoginRequestError;
-            break;
-        case RequestTypeRegistration:
-            registrationStatus = RegistrationRequestError;
-            break;
-        case RequestTypeMapData:
-            mapDataStatus = MapDataRequestError;
-            break;
-        default:
-            break;
-        }
-        return;
-    }
+    furi_check(app);
 
     // Allocate memory for credentials
     char *username = (char *)malloc(64);
@@ -357,11 +427,15 @@ void FlipMapRun::userRequest(RequestType requestType)
         case RequestTypeMapData:
             mapDataStatus = MapDataCredentialsMissing;
             break;
+        case RequestTypeLocationUpdate:
+            locationStatus = LocationCredentialsMissing;
+            break;
         default:
             FURI_LOG_E(TAG, "Unknown request type: %d", requestType);
             loginStatus = LoginRequestError;
             registrationStatus = RegistrationRequestError;
             mapDataStatus = MapDataRequestError;
+            locationStatus = LocationRequestError;
             break;
         }
         free(username);
@@ -400,11 +474,44 @@ void FlipMapRun::userRequest(RequestType requestType)
         break;
     case RequestTypeMapData:
         break;
+    case RequestTypeLocationUpdate:
+    {
+        char *authHeaders = (char *)malloc(256);
+        char *url = (char *)malloc(256);
+        char *locationStatusStr = (char *)malloc(16);
+        if (!authHeaders && !url && !locationStatusStr)
+        {
+            if (authHeaders)
+                free(authHeaders);
+            if (url)
+                free(url);
+            if (locationStatusStr)
+                free(locationStatusStr);
+            FURI_LOG_E(TAG, "userRequest: Failed to allocate memory for location update");
+            locationStatus = LocationRequestError;
+            return;
+        }
+        if (!app->loadChar("location_status", locationStatusStr, 16))
+        {
+            snprintf(locationStatusStr, 16, "Disabled");
+        }
+        snprintf(url, 256, "https://www.jblanked.com/flipper/api/user/location/update/%s/%s/", username, locationStatusStr);
+        snprintf(authHeaders, 256, "{\"Content-Type\":\"application/json\", \"username\":\"%s\", \"password\":\"%s\"}", username, password);
+        if (!app->httpRequestAsync("location_request.txt", url, GET, authHeaders, nullptr))
+        {
+            locationStatus = LocationRequestError;
+        }
+        free(authHeaders);
+        free(url);
+        free(locationStatusStr);
+        break;
+    }
     default:
         FURI_LOG_E(TAG, "Unknown request type: %d", requestType);
         loginStatus = LoginRequestError;
         registrationStatus = RegistrationRequestError;
         mapDataStatus = MapDataRequestError;
+        locationStatus = LocationRequestError;
         break;
     }
 
