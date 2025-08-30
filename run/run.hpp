@@ -66,12 +66,16 @@ class FlipMapRun
 {
     void *appContext;                      // reference to the app context
     FlipMapRunView currentView;            // current view of the social run
+    bool inCountryView;                    // flag to track if we're viewing countries or cities
     bool inputHeld;                        // flag to check if input is held
     InputKey lastInput;                    // last input key pressed
     std::unique_ptr<Loading> loading;      // loading animation instance
     LocationStatus locationStatus;         // current location status
     LoginStatus loginStatus;               // current login status
     MapDataStatus mapDataStatus;           // current map data status
+    uint8_t menuIndex;                     // current menu index
+    uint8_t menuMaxIndex;                  // maximum menu index
+    uint8_t menuStartIndex;                // starting index for display
     RegistrationStatus registrationStatus; // current registration status
     bool shouldDebounce;                   // flag to debounce input
     bool shouldReturnToMenu;               // Flag to signal return to menu
@@ -79,6 +83,8 @@ class FlipMapRun
     void debounceInput();                      // debounce input to prevent multiple triggers
     void drawLocationView(Canvas *canvas);     // draw the location view
     void drawLoginView(Canvas *canvas);        // draw the login view
+    void drawMapDataMenu(Canvas *canvas);      // draw the scrollable map data menu
+    void drawMapDataView(Canvas *canvas);      // draw the map data view
     void drawRegistrationView(Canvas *canvas); // draw the registration view
     bool httpRequestIsFinished();              // check if the HTTP request is finished
     void userRequest(RequestType requestType); // Send a user request to the server based on the request type

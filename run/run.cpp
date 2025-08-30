@@ -1,8 +1,10 @@
 #include "run/run.hpp"
 #include "app.hpp"
+#include "flip_map_icons.h"
 
-FlipMapRun::FlipMapRun(void *appContext) : appContext(appContext), currentView(FlipMapRunViewLogin), inputHeld(false),
+FlipMapRun::FlipMapRun(void *appContext) : appContext(appContext), currentView(FlipMapRunViewLogin), inCountryView(true), inputHeld(false),
                                            lastInput(InputKeyMAX), locationStatus(LocationNotStarted), loginStatus(LoginNotStarted), mapDataStatus(MapDataNotStarted),
+                                           menuIndex(0), menuMaxIndex(0), menuStartIndex(0),
                                            registrationStatus(RegistrationNotStarted), shouldDebounce(false), shouldReturnToMenu(false)
 {
     char *loginStatusStr = (char *)malloc(32);
@@ -97,6 +99,10 @@ void FlipMapRun::drawLocationView(Canvas *canvas)
                     locationStatus = LocationSuccess;
                     currentView = FlipMapRunViewMapData;
                     mapDataStatus = MapDataWaiting;
+                    // Reset menu state for map data
+                    menuIndex = 0;
+                    menuStartIndex = 0;
+                    inCountryView = true;
                     userRequest(RequestTypeMapData);
                 }
                 else
@@ -240,6 +246,289 @@ void FlipMapRun::drawLoginView(Canvas *canvas)
     }
 }
 
+void FlipMapRun::drawMapDataMenu(Canvas *canvas)
+{
+    canvas_clear(canvas);
+
+    FlipMapApp *app = static_cast<FlipMapApp *>(appContext);
+    char *response = (char *)malloc(2048);
+    if (!app || !app->loadChar("map_data", response, 2048))
+    {
+        canvas_draw_str(canvas, 0, 10, "Error loading map data!");
+        free(response);
+        return;
+    }
+
+    // Parse total users
+    char *total_users = get_json_value("total_users", response);
+    if (!total_users)
+    {
+        canvas_draw_str(canvas, 0, 10, "Error parsing map data!");
+        free(response);
+        return;
+    }
+
+    // Draw title with current view indicator
+    canvas_set_font(canvas, FontPrimary);
+    char title[32];
+    snprintf(title, sizeof(title), "FlipMap - %s", inCountryView ? "Countries" : "Cities");
+    int title_width = canvas_string_width(canvas, title);
+    int title_x = (128 - title_width) / 2;
+    canvas_draw_str(canvas, title_x, 10, title);
+
+    // Draw underline for title
+    canvas_draw_line(canvas, title_x, 12, title_x + title_width, 12);
+
+    // Draw decorative top pattern
+    for (int i = 0; i < 128; i += 6)
+    {
+        canvas_draw_dot(canvas, i, 16);
+    }
+
+    // Draw total users info in top-right corner
+    canvas_set_font(canvas, FontSecondary);
+    char users_text[16];
+    snprintf(users_text, sizeof(users_text), "Users: %s", total_users);
+    int users_width = canvas_string_width(canvas, users_text);
+    canvas_draw_str(canvas, 128 - users_width - 2, 63, users_text);
+
+    // Count items for the current view
+    uint8_t currentItemCount = 0;
+    const char *arrayKey = inCountryView ? "countries" : "cities";
+
+    for (uint8_t i = 0; i < 50; i++) // Check up to 50 items
+    {
+        char *item = get_json_array_value(arrayKey, i, response);
+        if (!item)
+        {
+            break;
+        }
+        currentItemCount++;
+        free(item);
+    }
+
+    if (currentItemCount == 0)
+    {
+        // No items found
+        canvas_set_font(canvas, FontPrimary);
+        char no_items[32];
+        snprintf(no_items, sizeof(no_items), "No %s found", inCountryView ? "countries" : "cities");
+        int no_items_width = canvas_string_width(canvas, no_items);
+        int no_items_x = (128 - no_items_width) / 2;
+        canvas_draw_str(canvas, no_items_x, 35, no_items);
+    }
+    else
+    {
+        // Update menu bounds
+        menuMaxIndex = currentItemCount - 1;
+
+        // Adjust scroll if needed
+        if (menuIndex > menuMaxIndex)
+        {
+            menuIndex = menuMaxIndex;
+        }
+
+        // Display parameters
+        const uint8_t maxDisplayItems = 4;
+        const uint8_t itemStartY = 22;
+        const uint8_t itemHeight = 10;
+
+        // Calculate display window
+        if (menuIndex < menuStartIndex)
+        {
+            menuStartIndex = menuIndex;
+        }
+        else if (menuIndex >= menuStartIndex + maxDisplayItems)
+        {
+            menuStartIndex = menuIndex - maxDisplayItems + 1;
+        }
+
+        // Display items with better formatting
+        canvas_set_font(canvas, FontSecondary);
+        uint8_t displayCount = 0;
+        for (uint8_t i = menuStartIndex; i < currentItemCount && displayCount < maxDisplayItems; i++)
+        {
+            char *item = get_json_array_value(arrayKey, i, response);
+            if (!item)
+            {
+                break;
+            }
+
+            char *itemName = get_json_value("name", item);
+            char *itemCount = get_json_value("count", item);
+
+            if (itemName && itemCount)
+            {
+                // Draw selection box for current item
+                int item_y = itemStartY + (displayCount * itemHeight);
+                if (i == menuIndex)
+                {
+                    // Draw filled selection box with rounded corners
+                    canvas_draw_rbox(canvas, 2, item_y - 8, 124, itemHeight - 1, 2);
+                    canvas_set_color(canvas, ColorWhite);
+
+                    // Add selection indicator arrow
+                    canvas_draw_str(canvas, 4, item_y - 1, ">");
+                }
+
+                // Format the item text with better spacing
+                char itemText[128];
+                int name_width = canvas_string_width(canvas, itemName);
+                int max_name_width = 85; // Leave space for count
+
+                if (name_width > max_name_width)
+                {
+                    // Truncate name if too long
+                    char truncated_name[64];
+                    strncpy(truncated_name, itemName, sizeof(truncated_name) - 4);
+                    truncated_name[sizeof(truncated_name) - 4] = '\0';
+                    snprintf(itemText, sizeof(itemText), "%s...", truncated_name);
+                }
+                else
+                {
+                    snprintf(itemText, sizeof(itemText), "%s", itemName);
+                }
+
+                // Draw item name (adjust position if selected to account for arrow)
+                int text_x = (i == menuIndex) ? 14 : 6;
+                canvas_draw_str(canvas, text_x, item_y, itemText);
+
+                // Draw count aligned to the right
+                char count_text[16];
+                snprintf(count_text, sizeof(count_text), "(%s)", itemCount);
+                int count_width = canvas_string_width(canvas, count_text);
+                canvas_draw_str(canvas, 122 - count_width, item_y, count_text);
+
+                if (i == menuIndex)
+                {
+                    canvas_set_color(canvas, ColorBlack);
+                }
+            }
+
+            free(itemName);
+            free(itemCount);
+            free(item);
+            displayCount++;
+        }
+
+        // Draw scroll indicators if needed
+        if (currentItemCount > maxDisplayItems)
+        {
+            // Up arrow
+            if (menuStartIndex > 0)
+            {
+                canvas_draw_str(canvas, 60, 20, "^");
+            }
+
+            // Down arrow
+            if (menuStartIndex + maxDisplayItems < currentItemCount)
+            {
+                canvas_draw_str(canvas, 60, 62, "v");
+            }
+        }
+    }
+
+    // Draw navigation hints at bottom
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str(canvas, 18, 63, "Switch");
+    canvas_draw_icon(canvas, 2, 56, &I_ButtonLeft_4x7);
+    canvas_draw_icon(canvas, 10, 56, &I_ButtonRight_4x7);
+
+    // Draw decorative bottom pattern
+    for (int i = 0; i < 128; i += 6)
+    {
+        canvas_draw_dot(canvas, i, 48);
+    }
+
+    // Draw side decorations
+    canvas_draw_line(canvas, 0, 18, 0, 46);
+    canvas_draw_line(canvas, 127, 18, 127, 46);
+
+    free(total_users);
+    free(response);
+}
+
+void FlipMapRun::drawMapDataView(Canvas *canvas)
+{
+    canvas_set_font(canvas, FontPrimary);
+    static bool loadingStarted = false;
+    switch (mapDataStatus)
+    {
+    case MapDataWaiting:
+        if (!loadingStarted)
+        {
+            if (!loading)
+            {
+                loading = std::make_unique<Loading>(canvas);
+            }
+            loadingStarted = true;
+            if (loading)
+            {
+                loading->setText("Locating...");
+            }
+        }
+        if (!this->httpRequestIsFinished())
+        {
+            if (loading)
+            {
+                loading->animate();
+            }
+        }
+        else
+        {
+            if (loading)
+            {
+                loading->stop();
+            }
+            loadingStarted = false;
+            FlipMapApp *app = static_cast<FlipMapApp *>(appContext);
+            if (app->getHttpState() == ISSUE)
+            {
+                mapDataStatus = MapDataRequestError;
+                return;
+            }
+            char *response = (char *)malloc(2048);
+            if (app && app->loadChar("map_data", response, 2048))
+            {
+                if (strstr(response, "[ERROR]") == NULL)
+                {
+                    mapDataStatus = MapDataSuccess;
+                }
+                else
+                {
+                    mapDataStatus = MapDataRequestError;
+                }
+            }
+            else
+            {
+                mapDataStatus = MapDataRequestError;
+            }
+            free(response);
+        }
+        break;
+    case MapDataSuccess:
+    {
+        drawMapDataMenu(canvas);
+        break;
+    }
+    case MapDataNotStarted:
+        canvas_draw_str(canvas, 0, 10, "Map data not started.");
+        canvas_draw_str(canvas, 0, 20, "Please try again later.");
+        break;
+    case MapDataRequestError:
+        canvas_draw_str(canvas, 0, 10, "Map data request failed!");
+        canvas_draw_str(canvas, 0, 20, "Check your network and");
+        canvas_draw_str(canvas, 0, 30, "try again later.");
+        break;
+    case MapDataParseError:
+        canvas_draw_str(canvas, 0, 10, "Error parsing map data!");
+        break;
+    default:
+        canvas_draw_str(canvas, 0, 10, "Fetching map data...");
+        break;
+    };
+}
+
 void FlipMapRun::drawRegistrationView(Canvas *canvas)
 {
     canvas_set_font(canvas, FontPrimary);
@@ -353,8 +642,7 @@ void FlipMapRun::updateDraw(Canvas *canvas)
         drawRegistrationView(canvas);
         break;
     case FlipMapRunViewMapData:
-        // nothing yet
-        canvas_draw_str(canvas, 0, 10, "Map Data View");
+        drawMapDataView(canvas);
         break;
     case FlipMapRunViewLocation:
         drawLocationView(canvas);
@@ -370,17 +658,64 @@ void FlipMapRun::updateInput(InputEvent *event)
     lastInput = event->key;
     debounceInput();
 
-    switch (lastInput)
+    // Handle input based on current view
+    if (currentView == FlipMapRunViewMapData && mapDataStatus == MapDataSuccess)
     {
-    case InputKeyBack:
-        // return to menu
-        shouldReturnToMenu = true;
-        break;
-    default:
-        // nothing else for now
-        // but we could use it to move in the map
-        break;
-    };
+        switch (lastInput)
+        {
+        case InputKeyUp:
+            if (menuIndex > 0)
+            {
+                menuIndex--;
+            }
+            break;
+        case InputKeyDown:
+            if (menuIndex < menuMaxIndex)
+            {
+                menuIndex++;
+            }
+            break;
+        case InputKeyLeft:
+            if (!inCountryView)
+            {
+                inCountryView = true;
+                menuIndex = 0;
+                menuStartIndex = 0;
+            }
+            break;
+        case InputKeyRight:
+            if (inCountryView)
+            {
+                inCountryView = false;
+                menuIndex = 0;
+                menuStartIndex = 0;
+            }
+            break;
+        case InputKeyOk:
+            // maybe in next release we can add functionality to
+            // select/view details of a specific country/city
+            break;
+        case InputKeyBack:
+            shouldReturnToMenu = true;
+            break;
+        default:
+            break;
+        }
+    }
+    else
+    {
+        switch (lastInput)
+        {
+        case InputKeyBack:
+            // return to menu
+            shouldReturnToMenu = true;
+            break;
+        default:
+            // nothing else for now
+            // but we could use it to move in the map
+            break;
+        }
+    }
 }
 
 void FlipMapRun::userRequest(RequestType requestType)
@@ -473,7 +808,24 @@ void FlipMapRun::userRequest(RequestType requestType)
         }
         break;
     case RequestTypeMapData:
+    {
+        char *authHeaders = (char *)malloc(256);
+        if (!authHeaders)
+        {
+            FURI_LOG_E(TAG, "userRequest: Failed to allocate memory for authHeaders");
+            mapDataStatus = MapDataRequestError;
+            return;
+        }
+        snprintf(authHeaders, 256, "{\"Content-Type\":\"application/json\", \"username\":\"%s\", \"password\":\"%s\"}", username, password);
+        if (!app->httpRequestAsync("map_data.txt",
+                                   "https://www.jblanked.com/flipper/api/map/",
+                                   GET, authHeaders, nullptr))
+        {
+            mapDataStatus = MapDataRequestError;
+        }
+        free(authHeaders);
         break;
+    }
     case RequestTypeLocationUpdate:
     {
         char *authHeaders = (char *)malloc(256);
