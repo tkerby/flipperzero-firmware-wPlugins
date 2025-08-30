@@ -1,0 +1,23 @@
+# Build artifacts
+dist/
+build/
+*.fap
+*.elf
+*.o
+*.d
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.log

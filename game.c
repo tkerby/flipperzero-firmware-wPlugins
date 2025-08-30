@@ -8,6 +8,52 @@ static const EntityDescription submarine_desc;
 static const EntityDescription torpedo_desc;
 static const LevelBehaviour level;
 
+/****** Camera/Coordinate System ******/
+
+typedef struct {
+    float screen_x;
+    float screen_y;
+} ScreenPoint;
+
+// Transform world coordinates to screen coordinates relative to submarine
+static ScreenPoint world_to_screen(GameContext* ctx, float world_x, float world_y) {
+    // Translate relative to submarine position
+    float rel_x = world_x - ctx->world_x;
+    float rel_y = world_y - ctx->world_y;
+    
+    // Rotate around submarine (submarine always points "up" on screen)
+    float cos_h = cosf(-ctx->heading * 2 * 3.14159f);  // Negative for counter-rotation
+    float sin_h = sinf(-ctx->heading * 2 * 3.14159f);
+    
+    float rot_x = rel_x * cos_h - rel_y * sin_h;
+    float rot_y = rel_x * sin_h + rel_y * cos_h;
+    
+    // Translate to screen coordinates (submarine at center)
+    ScreenPoint screen;
+    screen.screen_x = ctx->screen_x + rot_x;
+    screen.screen_y = ctx->screen_y + rot_y;  // Note: Y points down in screen coords
+    
+    return screen;
+}
+
+// Transform screen coordinates back to world coordinates (for future use)
+__attribute__((unused)) static void screen_to_world(GameContext* ctx, float screen_x, float screen_y, float* world_x, float* world_y) {
+    // Translate relative to submarine screen position
+    float rel_x = screen_x - ctx->screen_x;
+    float rel_y = screen_y - ctx->screen_y;
+    
+    // Rotate to world coordinates
+    float cos_h = cosf(ctx->heading * 2 * 3.14159f);
+    float sin_h = sinf(ctx->heading * 2 * 3.14159f);
+    
+    float rot_x = rel_x * cos_h - rel_y * sin_h;
+    float rot_y = rel_x * sin_h + rel_y * cos_h;
+    
+    // Translate to world coordinates
+    *world_x = ctx->world_x + rot_x;
+    *world_y = ctx->world_y + rot_y;
+}
+
 /****** Input Handling ******/
 
 static void handle_input(GameManager* manager, GameContext* game_context) {
@@ -95,8 +141,8 @@ static void submarine_update(Entity* self, GameManager* manager, void* context) 
             // Start ping
             if(!game_context->ping_active) {
                 game_context->ping_active = true;
-                game_context->ping_x = game_context->pos_x;
-                game_context->ping_y = game_context->pos_y;
+                game_context->ping_x = game_context->world_x;
+                game_context->ping_y = game_context->world_y;
                 game_context->ping_radius = 0;
                 game_context->ping_timer = furi_get_tick();
             }
@@ -106,8 +152,8 @@ static void submarine_update(Entity* self, GameManager* manager, void* context) 
                 Level* current_level = game_manager_current_level_get(manager);
                 Entity* torpedo = level_add_entity(current_level, &torpedo_desc);
                 if(torpedo) {
-                    // Set torpedo initial position and heading
-                    entity_pos_set(torpedo, (Vector){game_context->pos_x, game_context->pos_y});
+                    // Set torpedo initial world position and screen position
+                    entity_pos_set(torpedo, (Vector){game_context->screen_x, game_context->screen_y});
                     game_context->torpedo_count++;
                 }
             }
@@ -143,30 +189,27 @@ static void submarine_update(Entity* self, GameManager* manager, void* context) 
         }
     }
     
-    // Update submarine position with terrain collision
-    float dx = game_context->velocity * cosf(game_context->heading * 2 * 3.14159f);
-    float dy = game_context->velocity * sinf(game_context->heading * 2 * 3.14159f);
+    // Update submarine world position
+    // Adjust heading so 0 = forward (negative Y), matching screen orientation
+    float movement_heading = (game_context->heading - 0.25f) * 2 * 3.14159f;
+    float dx = game_context->velocity * cosf(movement_heading);
+    float dy = game_context->velocity * sinf(movement_heading);
     
-    float new_x = game_context->pos_x + dx;
-    float new_y = game_context->pos_y + dy;
+    float new_world_x = game_context->world_x + dx;
+    float new_world_y = game_context->world_y + dy;
     
-    // Check terrain collision
-    if(game_context->terrain && terrain_check_collision(game_context->terrain, (int)new_x, (int)new_y)) {
+    // Check terrain collision in world coordinates
+    if(game_context->terrain && terrain_check_collision(game_context->terrain, (int)new_world_x, (int)new_world_y)) {
         // Stop submarine if hitting terrain
         game_context->velocity = 0;
     } else {
-        game_context->pos_x = new_x;
-        game_context->pos_y = new_y;
+        game_context->world_x = new_world_x;
+        game_context->world_y = new_world_y;
     }
     
-    // Keep submarine on screen
-    if(game_context->pos_x < 2) game_context->pos_x = 2;
-    if(game_context->pos_x > 126) game_context->pos_x = 126;
-    if(game_context->pos_y < 2) game_context->pos_y = 2;
-    if(game_context->pos_y > 62) game_context->pos_y = 62;
-    
-    // Update entity position
-    entity_pos_set(self, (Vector){game_context->pos_x, game_context->pos_y});
+    // Submarine screen position is always centered (no boundary checks needed)
+    // Update entity position to screen center
+    entity_pos_set(self, (Vector){game_context->screen_x, game_context->screen_y});
 }
 
 static void submarine_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
@@ -175,50 +218,70 @@ static void submarine_render(Entity* self, GameManager* manager, Canvas* canvas,
     SubmarineContext* sub_context = context;
     GameContext* game_context = sub_context->game_context;
     
-    // Draw terrain (discovered areas only)
+    // Draw terrain - transform world coordinates to screen
     if(game_context->terrain && game_context->sonar_chart) {
-        for(int y = 0; y < 64 && y < game_context->chart_height; y++) {
-            for(int x = 0; x < 128 && x < game_context->chart_width; x++) {
-                int chart_idx = y * game_context->chart_width + x;
-                if(game_context->sonar_chart[chart_idx] && 
-                   terrain_check_collision(game_context->terrain, x, y)) {
-                    canvas_draw_dot(canvas, x, y);
+        // Sample terrain around submarine's world position
+        int sample_radius = 80; // How far to sample around submarine
+        
+        for(int world_y = (int)game_context->world_y - sample_radius; 
+            world_y <= (int)game_context->world_y + sample_radius; world_y++) {
+            for(int world_x = (int)game_context->world_x - sample_radius; 
+                world_x <= (int)game_context->world_x + sample_radius; world_x++) {
+                
+                // Check if this world coordinate is in bounds and discovered
+                if(world_x >= 0 && world_x < game_context->chart_width &&
+                   world_y >= 0 && world_y < game_context->chart_height) {
+                    
+                    int chart_idx = world_y * game_context->chart_width + world_x;
+                    if(game_context->sonar_chart[chart_idx] && 
+                       terrain_check_collision(game_context->terrain, world_x, world_y)) {
+                        
+                        // Transform world coordinates to screen
+                        ScreenPoint screen = world_to_screen(game_context, world_x, world_y);
+                        
+                        // Only draw if on screen
+                        if(screen.screen_x >= 0 && screen.screen_x < 128 &&
+                           screen.screen_y >= 0 && screen.screen_y < 64) {
+                            canvas_draw_dot(canvas, screen.screen_x, screen.screen_y);
+                        }
+                    }
                 }
             }
         }
     }
     
-    // Draw submarine
-    canvas_draw_disc(canvas, game_context->pos_x, game_context->pos_y, 2);
+    // Draw submarine (always centered and pointing up)
+    canvas_draw_disc(canvas, game_context->screen_x, game_context->screen_y, 2);
     
-    // Draw heading indicator
-    float head_x = game_context->pos_x + cosf(game_context->heading * 2 * 3.14159f) * 8;
-    float head_y = game_context->pos_y + sinf(game_context->heading * 2 * 3.14159f) * 8;
-    canvas_draw_line(canvas, game_context->pos_x, game_context->pos_y, head_x, head_y);
+    // Draw heading indicator (always pointing up on screen)
+    float head_x = game_context->screen_x;
+    float head_y = game_context->screen_y - 8; // Point up
+    canvas_draw_line(canvas, game_context->screen_x, game_context->screen_y, head_x, head_y);
     
     // Draw velocity vector or torpedo targeting
     if(game_context->mode == GAME_MODE_NAV && game_context->velocity > 0.01f) {
-        // Navigation mode: show velocity vector
-        float vel_x = game_context->pos_x + cosf(game_context->heading * 2 * 3.14159f) * game_context->velocity * 20;
-        float vel_y = game_context->pos_y + sinf(game_context->heading * 2 * 3.14159f) * game_context->velocity * 20;
+        // Navigation mode: show velocity vector (always pointing up)
+        float vel_x = game_context->screen_x;
+        float vel_y = game_context->screen_y - 8 - game_context->velocity * 20;
         canvas_draw_line(canvas, head_x, head_y, vel_x, vel_y);
     } else if(game_context->mode == GAME_MODE_TORPEDO) {
-        // Torpedo mode: show targeting cone
+        // Torpedo mode: show targeting cone (symmetric around up direction)
         float range = 30.0f;
-        float cone_angle = 0.1f; // ~6 degrees
+        float cone_offset = 8.0f; // pixels offset for cone width
         
-        float target1_x = game_context->pos_x + cosf((game_context->heading + cone_angle) * 2 * 3.14159f) * range;
-        float target1_y = game_context->pos_y + sinf((game_context->heading + cone_angle) * 2 * 3.14159f) * range;
-        float target2_x = game_context->pos_x + cosf((game_context->heading - cone_angle) * 2 * 3.14159f) * range;
-        float target2_y = game_context->pos_y + sinf((game_context->heading - cone_angle) * 2 * 3.14159f) * range;
+        float target1_x = game_context->screen_x - cone_offset;
+        float target1_y = game_context->screen_y - range;
+        float target2_x = game_context->screen_x + cone_offset;
+        float target2_y = game_context->screen_y - range;
         
-        canvas_draw_line(canvas, game_context->pos_x, game_context->pos_y, target1_x, target1_y);
-        canvas_draw_line(canvas, game_context->pos_x, game_context->pos_y, target2_x, target2_y);
+        canvas_draw_line(canvas, game_context->screen_x, game_context->screen_y, target1_x, target1_y);
+        canvas_draw_line(canvas, game_context->screen_x, game_context->screen_y, target2_x, target2_y);
     }
     
-    // Draw ping
+    // Draw ping (transform ping center to screen)
     if(game_context->ping_active) {
-        canvas_draw_circle(canvas, game_context->ping_x, game_context->ping_y, game_context->ping_radius);
+        ScreenPoint ping_screen = world_to_screen(game_context, game_context->ping_x, game_context->ping_y);
+        canvas_draw_circle(canvas, ping_screen.screen_x, ping_screen.screen_y, game_context->ping_radius);
     }
     
     // Draw HUD
@@ -241,6 +304,8 @@ static const EntityDescription submarine_desc = {
 /****** Entities: Torpedo ******/
 
 typedef struct {
+    float world_x;
+    float world_y;
     float heading;
     float speed;
     GameContext* game_context;
@@ -251,7 +316,9 @@ static void torpedo_start(Entity* self, GameManager* manager, void* context) {
     TorpedoContext* torp_context = context;
     GameContext* game_context = game_manager_game_context_get(manager);
     
-    // Initialize torpedo with submarine's heading
+    // Initialize torpedo with submarine's current world position and heading
+    torp_context->world_x = game_context->world_x;
+    torp_context->world_y = game_context->world_y;
     torp_context->heading = game_context->heading;
     torp_context->speed = 0.15f; // Faster than submarine max speed
     torp_context->game_context = game_context;
@@ -263,18 +330,19 @@ static void torpedo_start(Entity* self, GameManager* manager, void* context) {
 static void torpedo_update(Entity* self, GameManager* manager, void* context) {
     UNUSED(manager);
     TorpedoContext* torp_context = context;
-    Vector pos = entity_pos_get(self);
     
-    // Move torpedo
-    float dx = torp_context->speed * cosf(torp_context->heading * 2 * 3.14159f);
-    float dy = torp_context->speed * sinf(torp_context->heading * 2 * 3.14159f);
+    // Move torpedo in world coordinates
+    // Use same heading adjustment as submarine movement
+    float movement_heading = (torp_context->heading - 0.25f) * 2 * 3.14159f;
+    float dx = torp_context->speed * cosf(movement_heading);
+    float dy = torp_context->speed * sinf(movement_heading);
     
-    pos.x += dx;
-    pos.y += dy;
+    torp_context->world_x += dx;
+    torp_context->world_y += dy;
     
-    // Check terrain collision
+    // Check terrain collision in world coordinates
     if(torp_context->game_context->terrain && 
-       terrain_check_collision(torp_context->game_context->terrain, (int)pos.x, (int)pos.y)) {
+       terrain_check_collision(torp_context->game_context->terrain, (int)torp_context->world_x, (int)torp_context->world_y)) {
         // Torpedo hit terrain - remove it
         Level* current_level = game_manager_current_level_get(manager);
         torp_context->game_context->torpedo_count--;
@@ -282,16 +350,22 @@ static void torpedo_update(Entity* self, GameManager* manager, void* context) {
         return;
     }
     
-    // Check screen boundaries
-    if(pos.x < 0 || pos.x > 128 || pos.y < 0 || pos.y > 64) {
-        // Torpedo left screen - remove it
+    // Check if torpedo is too far from submarine (replace screen boundary check)
+    float dist_x = torp_context->world_x - torp_context->game_context->world_x;
+    float dist_y = torp_context->world_y - torp_context->game_context->world_y;
+    float distance_squared = dist_x * dist_x + dist_y * dist_y;
+    
+    if(distance_squared > 100 * 100) { // Max range of 100 units
+        // Torpedo went too far - remove it
         Level* current_level = game_manager_current_level_get(manager);
         torp_context->game_context->torpedo_count--;
         level_remove_entity(current_level, self);
         return;
     }
     
-    entity_pos_set(self, pos);
+    // Transform torpedo world position to screen position
+    ScreenPoint screen = world_to_screen(torp_context->game_context, torp_context->world_x, torp_context->world_y);
+    entity_pos_set(self, (Vector){screen.screen_x, screen.screen_y});
 }
 
 static void torpedo_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
@@ -359,42 +433,70 @@ static void game_start(GameManager* game_manager, void* ctx) {
         memset(game_context->sonar_chart, 0, chart_size * sizeof(bool));
     }
     
-    // Find a safe starting position in water
-    game_context->pos_x = 64;
-    game_context->pos_y = 32;
+    // Set submarine screen position (always center)
+    game_context->screen_x = 64;  // Center of 128px screen
+    game_context->screen_y = 32;  // Center of 64px screen
     
-    // Search for water if starting position is in terrain
+    // Find a safe starting world position in water
+    game_context->world_x = 64;
+    game_context->world_y = 32;
+    
+    // Search more thoroughly for water if starting position is in terrain
     if(game_context->terrain) {
         bool found_water = false;
-        for(int attempts = 0; attempts < 100 && !found_water; attempts++) {
-            int test_x = 10 + (attempts * 3) % 108; // Scan across screen
-            int test_y = 10 + (attempts / 36) % 44; // Scan down screen
-            
-            if(!terrain_check_collision(game_context->terrain, test_x, test_y)) {
-                game_context->pos_x = test_x;
-                game_context->pos_y = test_y;
-                found_water = true;
+        
+        // First check if default position has enough open water around it
+        bool default_has_open_water = true;
+        for(int dy = -5; dy <= 5 && default_has_open_water; dy++) {
+            for(int dx = -5; dx <= 5 && default_has_open_water; dx++) {
+                int check_x = (int)game_context->world_x + dx;
+                int check_y = (int)game_context->world_y + dy;
+                if(terrain_check_collision(game_context->terrain, check_x, check_y)) {
+                    default_has_open_water = false;
+                }
             }
         }
         
-        // Add initial sonar coverage around starting position
-        if(game_context->sonar_chart) {
-            int start_x = (int)game_context->pos_x;
-            int start_y = (int)game_context->pos_y;
-            
-            for(int dy = -10; dy <= 10; dy++) {
-                for(int dx = -10; dx <= 10; dx++) {
-                    int map_x = start_x + dx;
-                    int map_y = start_y + dy;
+        if(default_has_open_water) {
+            found_water = true;
+        }
+        
+        // If not, search in expanding circles for a good water area
+        if(!found_water) {
+            for(int radius = 10; radius <= 50 && !found_water; radius += 5) {
+                for(int angle = 0; angle < 36 && !found_water; angle++) {
+                    float test_angle = angle * (2.0f * 3.14159f / 36.0f);
+                    int test_x = (int)(game_context->world_x + cosf(test_angle) * radius);
+                    int test_y = (int)(game_context->world_y + sinf(test_angle) * radius);
                     
-                    if(map_x >= 0 && map_x < game_context->chart_width &&
-                       map_y >= 0 && map_y < game_context->chart_height) {
-                        int chart_idx = map_y * game_context->chart_width + map_x;
-                        game_context->sonar_chart[chart_idx] = true;
+                    // Keep within terrain bounds with bigger margin
+                    if(test_x >= 15 && test_x < game_context->chart_width - 15 &&
+                       test_y >= 15 && test_y < game_context->chart_height - 15) {
+                        
+                        // Check for open water in a 10x10 area around this position
+                        bool has_open_water = true;
+                        for(int dy = -5; dy <= 5 && has_open_water; dy++) {
+                            for(int dx = -5; dx <= 5 && has_open_water; dx++) {
+                                int check_x = test_x + dx;
+                                int check_y = test_y + dy;
+                                if(terrain_check_collision(game_context->terrain, check_x, check_y)) {
+                                    has_open_water = false;
+                                }
+                            }
+                        }
+                        
+                        if(has_open_water) {
+                            game_context->world_x = test_x;
+                            game_context->world_y = test_y;
+                            found_water = true;
+                        }
                     }
                 }
             }
         }
+        
+        // No initial sonar coverage - start with blank map
+        // Player must use sonar to discover terrain
     }
     game_context->velocity = 0;
     game_context->heading = 0;

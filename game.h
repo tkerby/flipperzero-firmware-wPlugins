@@ -8,12 +8,16 @@ typedef enum {
 } GameMode;
 
 typedef struct {
-    // Submarine state
-    float pos_x;
-    float pos_y;
+    // Submarine state (world coordinates)
+    float world_x;
+    float world_y;
     float velocity;
     float heading;
     GameMode mode;
+    
+    // Screen position (always centered)
+    float screen_x;
+    float screen_y;
     
     // Torpedo management
     uint8_t torpedo_count;
