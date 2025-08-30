@@ -2,7 +2,7 @@
 
 FlipMapAbout::FlipMapAbout(ViewDispatcher **viewDispatcher) : widget(nullptr), viewDispatcherRef(viewDispatcher)
 {
-    easy_flipper_set_widget(&widget, FlipMapViewAbout, "Find Nearby Flipper Users\n\n\n\n\nwww.github.com/jblanked", callbackToSubmenu, viewDispatcherRef);
+    easy_flipper_set_widget(&widget, FlipMapViewAbout, "Find Flipper Zero Users\n\n\n\n\nwww.github.com/jblanked", callbackToSubmenu, viewDispatcherRef);
 }
 
 FlipMapAbout::~FlipMapAbout()

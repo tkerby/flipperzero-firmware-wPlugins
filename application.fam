@@ -7,8 +7,8 @@ App(
     fap_icon="app.png",
     fap_category="GPIO",
     fap_icon_assets="assets",
-    fap_description="Find Nearby Flipper Zero Users", 
+    fap_description="Find Flipper Zero Users", 
     fap_author="JBlanked",
     fap_weburl="https://github.com/jblanked/FlipMap/",
-    fap_version="1.0",
+    fap_version="0.1",
 )
