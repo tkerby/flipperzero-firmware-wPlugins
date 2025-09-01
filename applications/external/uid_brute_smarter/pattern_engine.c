@@ -216,9 +216,17 @@ bool pattern_engine_build_range(
     uint32_t* range,
     uint16_t range_size,
     uint16_t* actual_size) {
-    furi_assert(result);
-    furi_assert(range);
-    furi_assert(actual_size);
+    // Enhanced input validation
+    if(!result || !range || !actual_size) {
+        FURI_LOG_E(TAG, "[BUILD_RANGE] NULL pointer passed");
+        return false;
+    }
+
+    if(range_size == 0 || range_size > MAX_RANGE_SIZE) {
+        FURI_LOG_E(
+            TAG, "[BUILD_RANGE] Invalid range_size: %d (max: %d)", range_size, MAX_RANGE_SIZE);
+        return false;
+    }
 
     FURI_LOG_D(
         TAG,
@@ -256,8 +264,21 @@ bool pattern_engine_build_range(
     FURI_LOG_D(TAG, "[BUILD_RANGE] Max iterations: %d", max_iterations);
 
     while(current <= result->end_uid && *actual_size < max_iterations) {
+        // Additional bounds checking
+        if(*actual_size >= range_size) {
+            FURI_LOG_W(TAG, "[BUILD_RANGE] Reached range_size limit: %d", range_size);
+            break;
+        }
+
         range[*actual_size] = current;
         (*actual_size)++;
+
+        // Check for overflow before adding step
+        if(current > (UINT32_MAX - result->step)) {
+            FURI_LOG_W(TAG, "[BUILD_RANGE] UID overflow prevented at %08lX", current);
+            break;
+        }
+
         current += result->step;
 
         // Additional safety check to prevent infinite loops

@@ -37,6 +37,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - NFC: [Parser for Amusement IC (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4259)
 - Updated: [Lab401/DigiLab v1.1.1 (By lab-401 & tixlegeek)](https://github.com/lab-401/fzDigiLab)
 - Updated: [NFC Playlist v3.2 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
+- Updated: [UID Brute Smarter v1.0 (By fbettag)](https://github.com/fbettag/uid_brute_smarter)
 
 <a name="release">
 
