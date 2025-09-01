@@ -40,6 +40,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [UID Brute Smarter v1.0 (By fbettag)](https://github.com/fbettag/uid_brute_smarter)
 - Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [FlipSocial v2.0.1 (By jblanked)](https://github.com/jblanked/FlipSocial)
+- Updated: [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader) (Version Only)
 
 <a name="release">
 
@@ -622,7 +623,7 @@ $ ./fbt dolphin_ext
 - [NFC Maker v2.0 (by WillyJL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/343cb39d08f60b75b537e1a31100707935cf6e9d)
 - [NFC Playlist v3.2 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
 - [NFC Relay v0.2 (By leommxj)](https://github.com/leommxj/nfc_relay)
-- [NFC Seader v3.3 (By bettse)](https://github.com/bettse/seader)
+- [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader)
 - [NFC Sniffer v0.2 (By kdiller713)](https://github.com/kdiller713/public-FlipperApps/tree/main/nfc_sniffer)
 - [NFC URL v1.0 (By y-dejong)](https://github.com/y-dejong/nfcurl)
 - [Nickname Generator v0.1 (By disaxq)](https://github.com/disaxq/Nickname-Generator)
