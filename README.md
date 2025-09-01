@@ -91,20 +91,20 @@ Si el módulo está bien conectado, la aplicación se inicializará mostrando el
 
 ### Ataques disponibles
 
-#### 🔎 Sniffing
+####  Sniffing
 - Captura de tramas CAN.  
 - Visualización de IDs y valores.  
 <p align="center"><img src="docs/img/fzs.png" width="250"/> <img src="docs/img/fzs2.png" width="250"/></p>
 
-#### 🔁 Replay Attack
+####  Replay Attack
 Reenvía tramas guardadas (por defecto: `ID:0x123 Payload:00 01 02 03 04 05 06 07`).  
 <p align="center"><img src="docs/img/fzr1.png" width="250"/></p>
 
-#### ✏️ Modify Attack
+####  Modify Attack
 Permite editar **ID** o **Payload** antes de enviar.  
 <p align="center"><img src="docs/img/fzm1.png" width="250"/> <img src="docs/img/fzm2.png" width="250"/> <img src="docs/img/fzm3.png" width="250"/></p>
 
-#### 🚨 DoS Attack
+####  DoS Attack
 Satura el bus con tramas dominantes (`0x001`).  
 <p align="center"><img src="docs/img/fzd1.png" width="250"/> <img src="docs/img/fzd2.png" width="250"/> <img src="docs/img/fzd3.png" width="250"/> <img src="docs/img/fzd4.png" width="250"/></p>
 
@@ -112,7 +112,7 @@ Satura el bus con tramas dominantes (`0x001`).
 - Uso exclusivo educativo.  
 - No en vehículos reales.  
 
-### 🛠️ Solución de problemas
+###  Solución de problemas
 
 | Problema              | Posible causa                                                   | Solución                                                       |
 |------------------------|----------------------------------------------------------------|----------------------------------------------------------------|
@@ -208,19 +208,19 @@ If connected properly, the app will show the main menu.
 
 ### Attacks
 
-#### 🔎 Sniffing
+####  Sniffing
 Passive capture of frames.  
 <p align="center"><img src="docs/img/fzs.png" width="250"/> <img src="docs/img/fzs2.png" width="250"/></p>
 
-#### 🔁 Replay
+####  Replay
 Replays stored frame (default `ID:0x123 Payload:00 01 02 03 04 05 06 07`).  
 <p align="center"><img src="docs/img/fzr1.png" width="250"/></p>
 
-#### ✏️ Modify
+####  Modify
 Edit **ID** or **Payload** before sending.  
 <p align="center"><img src="docs/img/fzm1.png" width="250"/> <img src="docs/img/fzm2.png" width="250"/> <img src="docs/img/fzm3.png" width="250"/></p>
 
-#### 🚨 DoS
+####  DoS
 Floods bus with dominant frames.  
 <p align="center"><img src="docs/img/fzd1.png" width="250"/> <img src="docs/img/fzd2.png" width="250"/> <img src="docs/img/fzd3.png" width="250"/> <img src="docs/img/fzd4.png" width="250"/></p>
 
@@ -228,7 +228,7 @@ Floods bus with dominant frames.
 - For educational purposes only.  
 - Never on real vehicles.  
 
-### 🛠️ Troubleshooting
+### Troubleshooting
 
 | Issue                  | Possible Cause                                | Solution                                                |
 |-------------------------|-----------------------------------------------|--------------------------------------------------------|
