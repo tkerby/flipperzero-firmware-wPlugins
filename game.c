@@ -15,6 +15,16 @@ typedef struct {
     float screen_y;
 } ScreenPoint;
 
+// Convert portrait coordinates to landscape screen coordinates
+// Portrait (64x128) -> Landscape (128x64) with 90° CW rotation
+static ScreenPoint portrait_to_screen(float portrait_x, float portrait_y) {
+    ScreenPoint screen;
+    // Rotate 90° clockwise: (x,y) -> (y, 63-x)
+    screen.screen_x = portrait_y;
+    screen.screen_y = 63 - portrait_x;
+    return screen;
+}
+
 // Transform world coordinates to screen coordinates relative to submarine
 static ScreenPoint world_to_screen(GameContext* ctx, float world_x, float world_y) {
     // Translate relative to submarine position
@@ -28,12 +38,12 @@ static ScreenPoint world_to_screen(GameContext* ctx, float world_x, float world_
     float rot_x = rel_x * cos_h - rel_y * sin_h;
     float rot_y = rel_x * sin_h + rel_y * cos_h;
     
-    // Translate to screen coordinates (submarine at center)
-    ScreenPoint screen;
-    screen.screen_x = ctx->screen_x + rot_x;
-    screen.screen_y = ctx->screen_y + rot_y;  // Note: Y points down in screen coords
+    // Calculate portrait coordinates first (64x128 coordinate system)
+    float portrait_x = 32 + rot_x;   // Center at 32 (half of 64)
+    float portrait_y = 64 + rot_y;   // Center at 64 (half of 128)
     
-    return screen;
+    // Convert to actual screen coordinates (128x64)
+    return portrait_to_screen(portrait_x, portrait_y);
 }
 
 // Transform screen coordinates back to world coordinates (for future use)
@@ -115,24 +125,35 @@ static void submarine_update(Entity* self, GameManager* manager, void* context) 
     
     InputState input = game_manager_input_get(manager);
     
-    // Handle movement controls
-    if(input.held & GameKeyLeft) {
-        game_context->heading -= game_context->turn_rate;
-        if(game_context->heading < 0) game_context->heading += 1.0f;
-    }
-    if(input.held & GameKeyRight) {
+    // Handle movement controls (rotated 90° CCW for portrait mode)
+    // Physical UP -> turn right, DOWN -> turn left, LEFT -> accelerate, RIGHT -> decelerate
+    if(input.held & GameKeyUp) {    // Physical up = turn right
         game_context->heading += game_context->turn_rate;
         if(game_context->heading >= 1.0f) game_context->heading -= 1.0f;
     }
-    if(input.held & GameKeyUp) {
-        game_context->velocity += game_context->acceleration;
-        if(game_context->velocity > game_context->max_velocity) {
-            game_context->velocity = game_context->max_velocity;
-        }
+    if(input.held & GameKeyDown) {  // Physical down = turn left
+        game_context->heading -= game_context->turn_rate;
+        if(game_context->heading < 0) game_context->heading += 1.0f;
     }
-    if(input.held & GameKeyDown) {
-        game_context->velocity -= game_context->acceleration;
-        if(game_context->velocity < 0) game_context->velocity = 0;
+    if(input.pressed & GameKeyLeft) { // Physical left = accelerate (discrete)
+        if(game_context->velocity < 0.001f) {
+            game_context->velocity = 0.033f;  // Stop -> Slow
+        } else if(game_context->velocity < 0.034f) {
+            game_context->velocity = 0.066f;  // Slow -> Medium
+        } else if(game_context->velocity < 0.067f) {
+            game_context->velocity = 0.1f;    // Medium -> Fast
+        }
+        // Already at max, do nothing
+    }
+    if(input.pressed & GameKeyRight) {  // Physical right = decelerate (discrete)
+        if(game_context->velocity > 0.067f) {
+            game_context->velocity = 0.066f;  // Fast -> Medium
+        } else if(game_context->velocity > 0.034f) {
+            game_context->velocity = 0.033f;  // Medium -> Slow
+        } else if(game_context->velocity > 0.001f) {
+            game_context->velocity = 0.0f;    // Slow -> Stop
+        }
+        // Already stopped, do nothing
     }
     
     // Handle OK button (ping or fire)
@@ -239,7 +260,7 @@ static void submarine_render(Entity* self, GameManager* manager, Canvas* canvas,
                         // Transform world coordinates to screen
                         ScreenPoint screen = world_to_screen(game_context, world_x, world_y);
                         
-                        // Only draw if on screen
+                        // Only draw if on screen (landscape screen)
                         if(screen.screen_x >= 0 && screen.screen_x < 128 &&
                            screen.screen_y >= 0 && screen.screen_y < 64) {
                             canvas_draw_dot(canvas, screen.screen_x, screen.screen_y);
@@ -250,32 +271,29 @@ static void submarine_render(Entity* self, GameManager* manager, Canvas* canvas,
         }
     }
     
-    // Draw submarine (always centered and pointing up)
-    canvas_draw_disc(canvas, game_context->screen_x, game_context->screen_y, 2);
+    // Draw submarine (always centered and pointing up in portrait)
+    ScreenPoint sub_screen = portrait_to_screen(32, 64);
+    canvas_draw_disc(canvas, sub_screen.screen_x, sub_screen.screen_y, 2);
     
-    // Draw heading indicator (always pointing up on screen)
-    float head_x = game_context->screen_x;
-    float head_y = game_context->screen_y - 8; // Point up
-    canvas_draw_line(canvas, game_context->screen_x, game_context->screen_y, head_x, head_y);
+    // Draw heading indicator (always pointing up in portrait)
+    ScreenPoint head_screen = portrait_to_screen(32, 64 - 8); // Point up in portrait
+    canvas_draw_line(canvas, sub_screen.screen_x, sub_screen.screen_y, head_screen.screen_x, head_screen.screen_y);
     
     // Draw velocity vector or torpedo targeting
     if(game_context->mode == GAME_MODE_NAV && game_context->velocity > 0.01f) {
-        // Navigation mode: show velocity vector (always pointing up)
-        float vel_x = game_context->screen_x;
-        float vel_y = game_context->screen_y - 8 - game_context->velocity * 20;
-        canvas_draw_line(canvas, head_x, head_y, vel_x, vel_y);
+        // Navigation mode: show velocity vector (always pointing up in portrait)
+        ScreenPoint vel_screen = portrait_to_screen(32, 64 - 8 - game_context->velocity * 20);
+        canvas_draw_line(canvas, head_screen.screen_x, head_screen.screen_y, vel_screen.screen_x, vel_screen.screen_y);
     } else if(game_context->mode == GAME_MODE_TORPEDO) {
-        // Torpedo mode: show targeting cone (symmetric around up direction)
+        // Torpedo mode: show targeting cone (symmetric around up direction in portrait)
         float range = 30.0f;
         float cone_offset = 8.0f; // pixels offset for cone width
         
-        float target1_x = game_context->screen_x - cone_offset;
-        float target1_y = game_context->screen_y - range;
-        float target2_x = game_context->screen_x + cone_offset;
-        float target2_y = game_context->screen_y - range;
+        ScreenPoint target1_screen = portrait_to_screen(32 - cone_offset, 64 - range);
+        ScreenPoint target2_screen = portrait_to_screen(32 + cone_offset, 64 - range);
         
-        canvas_draw_line(canvas, game_context->screen_x, game_context->screen_y, target1_x, target1_y);
-        canvas_draw_line(canvas, game_context->screen_x, game_context->screen_y, target2_x, target2_y);
+        canvas_draw_line(canvas, sub_screen.screen_x, sub_screen.screen_y, target1_screen.screen_x, target1_screen.screen_y);
+        canvas_draw_line(canvas, sub_screen.screen_x, sub_screen.screen_y, target2_screen.screen_x, target2_screen.screen_y);
     }
     
     // Draw ping (transform ping center to screen)
@@ -284,11 +302,55 @@ static void submarine_render(Entity* self, GameManager* manager, Canvas* canvas,
         canvas_draw_circle(canvas, ping_screen.screen_x, ping_screen.screen_y, game_context->ping_radius);
     }
     
-    // Draw HUD
-    canvas_printf(canvas, 2, 8, "V:%.2f H:%.2f", (double)game_context->velocity, (double)game_context->heading);
-    canvas_printf(canvas, 2, 62, "%s T:%d/%d", 
-                  game_context->mode == GAME_MODE_NAV ? "NAV" : "TORP",
-                  game_context->torpedo_count, game_context->max_torpedoes);
+    // Draw velocity bars (bottom left in portrait)
+    int vel_bars = 0;
+    if(game_context->velocity > 0.066f) vel_bars = 3;     // Fast
+    else if(game_context->velocity > 0.033f) vel_bars = 2; // Medium  
+    else if(game_context->velocity > 0.001f) vel_bars = 1; // Slow
+    
+    for(int i = 0; i < 3; i++) {
+        ScreenPoint bar_screen = portrait_to_screen(2 + (i * 4), 120);
+        if(i < vel_bars) {
+            canvas_draw_box(canvas, bar_screen.screen_x, bar_screen.screen_y, 3, 6);  // Filled bar
+        } else {
+            canvas_draw_frame(canvas, bar_screen.screen_x, bar_screen.screen_y, 3, 6);  // Empty frame
+        }
+    }
+    
+    // Draw mode indicator boxes
+    if(game_context->mode == GAME_MODE_NAV) {
+        // Box around velocity bars for nav mode
+        ScreenPoint box_screen = portrait_to_screen(0, 114);
+        canvas_draw_frame(canvas, box_screen.screen_x, box_screen.screen_y, 16, 12);
+    }
+    
+    // Draw torpedo indicators (bottom right in portrait)
+    for(int i = 0; i < game_context->max_torpedoes; i++) {
+        int torp_portrait_x = 40 + (i % 4) * 6;  // 4 columns
+        int torp_portrait_y = 118 + (i / 4) * 8;  // 2 rows
+        ScreenPoint torp_screen = portrait_to_screen(torp_portrait_x, torp_portrait_y);
+        
+        if(i < game_context->torpedo_count) {
+            // Draw filled torpedo (fired)
+            canvas_draw_disc(canvas, torp_screen.screen_x, torp_screen.screen_y, 1);
+            ScreenPoint torp_tail_screen = portrait_to_screen(torp_portrait_x + 2, torp_portrait_y);
+            canvas_draw_line(canvas, torp_tail_screen.screen_x, torp_tail_screen.screen_y, 
+                           torp_tail_screen.screen_x + 1, torp_tail_screen.screen_y);
+        } else {
+            // Draw outline torpedo (available)
+            canvas_draw_circle(canvas, torp_screen.screen_x, torp_screen.screen_y, 1);
+            ScreenPoint torp_tail_screen = portrait_to_screen(torp_portrait_x + 2, torp_portrait_y);
+            canvas_draw_dot(canvas, torp_tail_screen.screen_x, torp_tail_screen.screen_y);
+            canvas_draw_dot(canvas, torp_tail_screen.screen_x + 1, torp_tail_screen.screen_y);
+        }
+    }
+    
+    // Draw torpedo mode indicator box
+    if(game_context->mode == GAME_MODE_TORPEDO) {
+        // Box around torpedo indicators for torpedo mode
+        ScreenPoint torp_box_screen = portrait_to_screen(38, 116);
+        canvas_draw_frame(canvas, torp_box_screen.screen_x, torp_box_screen.screen_y, 26, 18);
+    }
 }
 
 static const EntityDescription submarine_desc = {
@@ -424,7 +486,7 @@ static void game_start(GameManager* game_manager, void* ctx) {
     // Initialize terrain system first
     game_context->terrain = terrain_manager_alloc(12345, 0.5f); // seed=12345, elevation=0.5
     
-    // Initialize sonar chart (same size as screen for now)
+    // Initialize sonar chart (same size as screen)
     game_context->chart_width = 128;
     game_context->chart_height = 64;
     size_t chart_size = game_context->chart_width * game_context->chart_height;
@@ -433,9 +495,9 @@ static void game_start(GameManager* game_manager, void* ctx) {
         memset(game_context->sonar_chart, 0, chart_size * sizeof(bool));
     }
     
-    // Set submarine screen position (always center)
-    game_context->screen_x = 64;  // Center of 128px screen
-    game_context->screen_y = 32;  // Center of 64px screen
+    // Set submarine screen position (always center) - landscape screen
+    game_context->screen_x = 64;  // Center of 128px screen width
+    game_context->screen_y = 32;  // Center of 64px screen height
     
     // Find a safe starting world position in water
     game_context->world_x = 64;
