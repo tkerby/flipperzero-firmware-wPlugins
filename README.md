@@ -114,11 +114,11 @@ Satura el bus con tramas dominantes (`0x001`).
 
 ###  Solución de problemas
 
-| Problema              | Posible causa                                                   | Solución                                                       |
-|------------------------|----------------------------------------------------------------|----------------------------------------------------------------|
-| La app no aparece      | El archivo `.fap` no está en la carpeta correcta               | Asegúrate de copiarla en `apps/`                               |
-| No se detecta tráfico  | El módulo MCP2515 no está conectado o la red está inactiva     | Verifica las conexiones físicas y la velocidad del bus         |
-| El ataque no tiene efecto | La red no responde al ID utilizado                         | Prueba con otra trama o revisa el entorno simulado             |
+| Problema              | Posible causa                                                                                                           |
+|------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| La app no aparece      | El archivo `.fap` no está en la carpeta correcta                \n *Solución:* Asegúrate de copiarla en `apps/`                               |
+| No se detecta tráfico  | El módulo MCP2515 no está conectado o la red está inactiva     \n *Solución:*Verifica las conexiones físicas y la velocidad del bus         |
+| El ataque no tiene efecto | La red no responde al ID utilizado                         \n *Solución:*Prueba con otra trama o revisa el entorno simulado             |
 
 
 ---
