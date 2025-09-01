@@ -112,12 +112,14 @@ Satura el bus con tramas dominantes (`0x001`).
 - Uso exclusivo educativo.  
 - No en vehículos reales.  
 
-### Solución de problemas
-| Problema              | Posible causa                  | Solución |
-|------------------------|--------------------------------|----------|
-| App no aparece         | `.fap` en carpeta incorrecta   | Copiar a `/apps/` |
-| No se detecta tráfico  | MCP2515 mal conectado          | Revisar conexiones |
-| Ataque sin efecto      | Red no responde al ID usado    | Probar otra trama |
+### 🛠️ Solución de problemas
+
+| Problema              | Posible causa                                                   | Solución                                                       |
+|------------------------|----------------------------------------------------------------|----------------------------------------------------------------|
+| La app no aparece      | El archivo `.fap` no está en la carpeta correcta               | Asegúrate de copiarla en `apps/`                               |
+| No se detecta tráfico  | El módulo MCP2515 no está conectado o la red está inactiva     | Verifica las conexiones físicas y la velocidad del bus         |
+| El ataque no tiene efecto | La red no responde al ID utilizado                         | Prueba con otra trama o revisa el entorno simulado             |
+
 
 ---
 
@@ -226,12 +228,13 @@ Floods bus with dominant frames.
 - For educational purposes only.  
 - Never on real vehicles.  
 
-### Troubleshooting
-| Issue                 | Cause                          | Solution |
-|------------------------|-------------------------------|----------|
-| App not showing        | `.fap` not in `/apps/`        | Copy file correctly |
-| No traffic             | MCP2515 disconnected          | Check wiring |
-| Attack ineffective     | Network not responding to ID  | Try another frame |
+### 🛠️ Troubleshooting
+
+| Issue                  | Possible Cause                                | Solution                                                |
+|-------------------------|-----------------------------------------------|--------------------------------------------------------|
+| App not showing         | The `.fap` file is not in the correct folder  | Make sure to copy it into `apps/`                      |
+| No traffic detected     | MCP2515 module not connected or inactive bus  | Check physical connections and bus speed               |
+| Attack has no effect    | The network is not responding to the used ID  | Try with another frame or review the simulated network |
 
 ---
 
