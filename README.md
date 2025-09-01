@@ -13,7 +13,7 @@ It was developed as part of a university cybersecurity research project and is i
 
 ## Manual de Instalación
 
-Este apéndice describe dos procedimientos distintos: por un lado, la instalación directa de la aplicación en el dispositivo Flipper Zero para usuarios que solo deseen ejecutarla; por otro, la configuración del entorno de desarrollo para aquellos que deseen modificar el código fuente o extender sus funcionalidades.
+Este manual describe dos procedimientos distintos: por un lado, la instalación directa de la aplicación en el dispositivo Flipper Zero para usuarios que solo deseen ejecutarla; por otro, la configuración del entorno de desarrollo para aquellos que deseen modificar el código fuente o extender sus funcionalidades.
 
 ### Instalación directa de la aplicación
 
