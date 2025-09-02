@@ -1013,7 +1013,7 @@ static bool renfe_sum10_parse(FuriString* parsed_data, const MfClassicData* data
         }
         
 
-        // 2. Extract and show UID
+    
         if(data->iso14443_3a_data && data->iso14443_3a_data->uid_len > 0) {
             // UID available from live reading - show actual UID
             furi_string_cat_printf(parsed_data, "UID: ");
@@ -1025,31 +1025,37 @@ static bool renfe_sum10_parse(FuriString* parsed_data, const MfClassicData* data
             }
             furi_string_cat_printf(parsed_data, "\n");
         } else if(mf_classic_is_block_read(data, 0)) {
-            // Extract UID from Block 0 (first 4 bytes for 4-byte UID, or first 7 bytes for 7-byte UID)
+            // Extract UID from Block 0 with null pointer safety
             const uint8_t* block0 = data->block[0].data;
-            furi_string_cat_printf(parsed_data, "UID: ");
             
-            // Determine UID length from Block 0
-            // If byte 0 is 0x88, it's a 7-byte UID, otherwise it's 4-byte
-            if(block0[0] == 0x88) {
-                // 7-byte UID: Skip cascade tag (0x88), take next 3 bytes from block 0
-                // and 4 more bytes from elsewhere
-                for(int i = 1; i < 4; i++) {
-                    furi_string_cat_printf(parsed_data, "%02X ", block0[i]);
-                }
-                // For 7-byte UIDs, we would need the remaining bytes from the card data
-                // But for simplicity, we'll show what we have
-                furi_string_cat_printf(parsed_data, "XX XX XX XX");
-            } else {
-                // 4-byte UID: First 4 bytes of block 0
-                for(int i = 0; i < 4; i++) {
-                    furi_string_cat_printf(parsed_data, "%02X", block0[i]);
-                    if(i < 3) {
-                        furi_string_cat_printf(parsed_data, " ");
+            // VALIDACIÓN CRÍTICA: Verificar que block0 no sea NULL
+            if(block0 != NULL) {
+                furi_string_cat_printf(parsed_data, "UID: ");
+                
+                // Determine UID length from Block 0
+                // If byte 0 is 0x88, it's a 7-byte UID, otherwise it's 4-byte
+                if(block0[0] == 0x88) {
+                    // 7-byte UID: Skip cascade tag (0x88), take next 3 bytes from block 0
+                    for(int i = 1; i < 4; i++) {
+                        furi_string_cat_printf(parsed_data, "%02X ", block0[i]);
+                    }
+                    // For 7-byte UIDs, we would need the remaining bytes from the card data
+                    // But for simplicity, we'll show what we have
+                    furi_string_cat_printf(parsed_data, "XX XX XX XX");
+                } else {
+                    // 4-byte UID: First 4 bytes of block 0
+                    for(int i = 0; i < 4; i++) {
+                        furi_string_cat_printf(parsed_data, "%02X", block0[i]);
+                        if(i < 3) {
+                            furi_string_cat_printf(parsed_data, " ");
+                        }
                     }
                 }
+                furi_string_cat_printf(parsed_data, "\n");
+            } else {
+                // Block 0 data is NULL - fallback seguro
+                furi_string_cat_printf(parsed_data, "UID: Block 0 unavailable\n");
             }
-            furi_string_cat_printf(parsed_data, "\n");
         } else {
             furi_string_cat_printf(parsed_data, "UID: N/A\n");
         }
