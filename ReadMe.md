@@ -44,6 +44,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Seos compatible v1.2 (By bettse)](https://gitlab.com/bettse/flipper_seos)
 - Updated: [NFC Playlist v3.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
 - [SubGHz: Linear protocols fixes (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/354dad4af372c5e7f17d3e5dd04474e67e637afc)
+- [BT Remote: Add Rename Option, simplify Bad KB BLE profile (By aaronjamt & WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/pull/439)
 
 <a name="release">
 

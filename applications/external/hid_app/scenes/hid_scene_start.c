@@ -16,6 +16,7 @@ enum HidSubmenuIndex {
     HidSubmenuIndexMouseJigglerStealth,
     HidSubmenuIndexCamera,
     HidSubmenuIndexPushToTalk,
+    HidSubmenuIndexRename,
     HidSubmenuIndexRemovePairing,
 };
 
@@ -86,6 +87,12 @@ void hid_scene_start_on_enter(void* context) {
 #ifdef HID_TRANSPORT_BLE
     submenu_add_item(
         app->submenu,
+        "Bluetooth Remote Name",
+        HidSubmenuIndexRename,
+        hid_scene_start_submenu_callback,
+        app);
+    submenu_add_item(
+        app->submenu,
         "Bluetooth Unpairing",
         HidSubmenuIndexRemovePairing,
         hid_scene_start_submenu_callback,
@@ -104,6 +111,8 @@ bool hid_scene_start_on_event(void* context, SceneManagerEvent event) {
     if(event.type == SceneManagerEventTypeCustom) {
         if(event.event == HidSubmenuIndexRemovePairing) {
             scene_manager_next_scene(app->scene_manager, HidSceneUnpair);
+        } else if(event.event == HidSubmenuIndexRename) {
+            scene_manager_next_scene(app->scene_manager, HidSceneRename);
         } else {
             HidView view_id;
 
