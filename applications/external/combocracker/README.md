@@ -4,6 +4,9 @@
 
 Using a clever approach/exploit and feedback from the lock’s dial resistance, you can determine the combination in **just 8 attempts or less** — instead of the known issues which deduce such to 100 or so brute-force attempts.
 
+# Flipper Lab 🧪 
+https://lab.flipper.net/apps/combo_cracker
+
 ## 📚 Background: Samy Kamkar's Research
 Samy Kamkar discovered a weakness in many standard **Master Lock** combination padlocks that allows their 3-digit codes to be deduced using subtle physical feedback from the lock's mechanism.
 
