@@ -1220,22 +1220,24 @@ if(data && data->iso14443_3a_data && data->iso14443_3a_data->uid_len > 0) {
             furi_string_cat_printf(parsed_data, "Origin: Unknown\n");
         }
         
-        // 5. Extract and show zone information
-        uint16_t zone_code = 0x0000;
-        const char* zone_name = "N/A";
-        
-        // For MOBILIS 30, use specialized zone extraction
-        if(strcmp(card_variant, "MOBILIS 30") == 0) {
-            zone_code = renfe_sum10_extract_mobilis_zone_code(data);
+        // Extract and show zone information
+uint16_t zone_code = 0x0000;
+const char* zone_name = "N/A";
+
+// For MOBILIS 30, use specialized zone extraction
+if(strcmp(card_variant, "MOBILIS 30") == 0) {
+    zone_code = renfe_sum10_extract_mobilis_zone_code(data);
+    zone_name = renfe_sum10_get_zone_name(zone_code);
+} else {
+    // For SUMA 10, use standard Block 5 extraction
+    if(mf_classic_is_block_read(data, 5)) {
+        const uint8_t* block5 = data->block[5].data;
+        if(block5 != NULL) {  // Add this null check
+            zone_code = renfe_sum10_extract_zone_code(block5);
             zone_name = renfe_sum10_get_zone_name(zone_code);
-        } else {
-            // For SUMA 10, use standard Block 5 extraction
-            const uint8_t* block5 = data->block[5].data;
-            if(block5) {
-                zone_code = renfe_sum10_extract_zone_code(block5);
-                zone_name = renfe_sum10_get_zone_name(zone_code);
-            }
         }
+    }
+}
         
         if(zone_code != 0x0000) {
             furi_string_cat_printf(parsed_data, "Zone: %s\n", zone_name ? zone_name : "Error");
