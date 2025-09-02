@@ -42,6 +42,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipSocial v2.0.1 (By jblanked)](https://github.com/jblanked/FlipSocial)
 - Updated: [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader) (Version Only)
 - Updated: [Weebo v0.3 (By bettse)](https://github.com/bettse/weebo) `Req: key_retail.bin on SD card /apps_data/weebo` (Amiibo Remixer)
+- Updated: [Seos compatible v1.2 (By bettse)](https://gitlab.com/bettse/flipper_seos)
 
 <a name="release">
 
