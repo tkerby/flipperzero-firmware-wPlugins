@@ -36,13 +36,13 @@ This software is for experimental purposes only and is not meant for any illegal
 - NFC: [Parser for Banapass MFC 1k (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4260)
 - NFC: [Parser for Amusement IC (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4259)
 - Updated: [Lab401/DigiLab v1.1.1 (By lab-401 & tixlegeek)](https://github.com/lab-401/fzDigiLab)
-- Updated: [NFC Playlist v3.2 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
 - Updated: [UID Brute Smarter v1.0 (By fbettag)](https://github.com/fbettag/uid_brute_smarter)
 - Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [FlipSocial v2.0.1 (By jblanked)](https://github.com/jblanked/FlipSocial)
 - Updated: [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader) (Version Only)
 - Updated: [Weebo v0.3 (By bettse)](https://github.com/bettse/weebo) `Req: key_retail.bin on SD card /apps_data/weebo` (Amiibo Remixer)
 - Updated: [Seos compatible v1.2 (By bettse)](https://gitlab.com/bettse/flipper_seos)
+- Updated: [NFC Playlist v3.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
 
 <a name="release">
 
@@ -623,7 +623,7 @@ $ ./fbt dolphin_ext
 - [NFC Keyboard v1.0 (By Patrick762)](https://github.com/Patrick762/flipper-nfc-keyboard)
 - [NFC Magic v1.15.1 (By gornekich)](https://github.com/flipperdevices/flipperzero-firmware/pull/1966)
 - [NFC Maker v2.0 (by WillyJL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/343cb39d08f60b75b537e1a31100707935cf6e9d)
-- [NFC Playlist v3.2 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
+- [NFC Playlist v3.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
 - [NFC Relay v0.2 (By leommxj)](https://github.com/leommxj/nfc_relay)
 - [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader)
 - [NFC Sniffer v0.2 (By kdiller713)](https://github.com/kdiller713/public-FlipperApps/tree/main/nfc_sniffer)
