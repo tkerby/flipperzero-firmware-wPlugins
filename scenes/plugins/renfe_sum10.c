@@ -1013,55 +1013,52 @@ static bool renfe_sum10_parse(FuriString* parsed_data, const MfClassicData* data
         }
         
 
+         // 2. Extract and show UID (SECURE VERSION - following renfe_regular approach)
+if(data && data->iso14443_3a_data && data->iso14443_3a_data->uid_len > 0) {
+    // UID available from live reading - show actual UID
+    const uint8_t* uid = data->iso14443_3a_data->uid;
+    size_t uid_len = data->iso14443_3a_data->uid_len;
     
-    
-                // 2. Extract and show UID (SECURE VERSION - following renfe_regular approach)
-        if(data && data->iso14443_3a_data && data->iso14443_3a_data->uid_len > 0) {
-            // UID available from live reading - show actual UID
-            const uint8_t* uid = data->iso14443_3a_data->uid;
-            size_t uid_len = data->iso14443_3a_data->uid_len;
-            
+    furi_string_cat_printf(parsed_data, "UID: ");
+    for(size_t i = 0; i < uid_len; i++) {
+        furi_string_cat_printf(parsed_data, "%02X", uid[i]);
+        if(i < uid_len - 1) {
+            furi_string_cat_printf(parsed_data, " ");
+        }
+    }
+    furi_string_cat_printf(parsed_data, "\n");
+} else {
+    // Try to extract UID from block 0 as fallback
+    if(mf_classic_is_block_read(data, 0)) {
+        const uint8_t* block0 = data->block[0].data;
+        
+        // Additional null pointer safety check
+        if(block0 != NULL) {
             furi_string_cat_printf(parsed_data, "UID: ");
-            for(size_t i = 0; i < uid_len; i++) {
-                furi_string_cat_printf(parsed_data, "%02X", uid[i]);
-                if(i < uid_len - 1) {
-                    furi_string_cat_printf(parsed_data, " ");
+            
+            if(block0[0] == 0x88) {
+                // 7-byte UID: Skip cascade tag (0x88), take next 3 bytes
+                for(int i = 1; i < 4; i++) {
+                    furi_string_cat_printf(parsed_data, "%02X ", block0[i]);
+                }
+                furi_string_cat_printf(parsed_data, "XX XX XX XX");
+            } else {
+                // 4-byte UID
+                for(int i = 0; i < 4; i++) {
+                    furi_string_cat_printf(parsed_data, "%02X", block0[i]);
+                    if(i < 3) {
+                        furi_string_cat_printf(parsed_data, " ");
+                    }
                 }
             }
             furi_string_cat_printf(parsed_data, "\n");
         } else {
-            // Try to extract UID from block 0 as fallback
-            if(mf_classic_is_block_read(data, 0)) {
-                const uint8_t* block0 = data->block[0].data;
-                
-                // Additional null pointer safety check
-                if(block0 != NULL) {
-                    furi_string_cat_printf(parsed_data, "UID: ");
-                    
-                    if(block0[0] == 0x88) {
-                        // 7-byte UID: Skip cascade tag (0x88), take next 3 bytes
-                        for(int i = 1; i < 4; i++) {
-                            furi_string_cat_printf(parsed_data, "%02X ", block0[i]);
-                        }
-                        furi_string_cat_printf(parsed_data, "XX XX XX XX");
-                    } else {
-                        // 4-byte UID
-                        for(int i = 0; i < 4; i++) {
-                            furi_string_cat_printf(parsed_data, "%02X", block0[i]);
-                            if(i < 3) {
-                                furi_string_cat_printf(parsed_data, " ");
-                            }
-                        }
-                    }
-                    furi_string_cat_printf(parsed_data, "\n");
-                } else {
-                    furi_string_cat_printf(parsed_data, "UID: Block 0 unavailable\n");
-                }
-            } else {
-                furi_string_cat_printf(parsed_data, "UID: N/A\n");
-            }
+            furi_string_cat_printf(parsed_data, "UID: Block 0 unavailable\n");
         }
-
+    } else {
+        furi_string_cat_printf(parsed_data, "UID: N/A\n");
+    }
+}
 
         // 3. Show card variant-specific information
         if(strcmp(card_variant, "MOBILIS 30") == 0) {
