@@ -13,7 +13,7 @@ static void frame_cb(GameEngine* engine, Canvas* canvas, InputState input, void*
     game_manager_render(game_manager, canvas);
 }
 
-int32_t game_app(void* p) {
+int32_t hunter_flipper_app(void* p) {
     UNUSED(p);
     GameManager* game_manager = game_manager_alloc();
 

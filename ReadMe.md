@@ -47,6 +47,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [BT Remote: Add Rename Option, simplify Bad KB BLE profile (By aaronjamt & WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/pull/439)
 - Added: [CarJacker v1.0 (By RocketGod-git)](https://github.com/RocketGod-git/Flipper-Zero-CarJacker)
 - Updated: [Morse Master v1.1 (By w84death)](https://github.com/w84death/morse-master)
+- Added: [Hunter Killer v1.0 (By josephburnett)](https://github.com/josephburnett/hunter-flipper)
 
 <a name="release">
 
@@ -320,6 +321,7 @@ $ ./fbt dolphin_ext
 - [Hangman v1.5 (By Evgeny Stepanischev & Eva Stepanischeva)](https://github.com/bolknote/Flipper-Zero-Hangman-Game)
 - [Hanoi Towers v1.0 (By AlexTaran)](https://github.com/AlexTaran/flipperzero)
 - [Heap Defence v1.3 (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/fc776446de9fdd553b221c02668b925b689378d8)
+- [Hunter Killer v1.0 (By josephburnett)](https://github.com/josephburnett/hunter-flipper)
 - [Infinite Tic Tac Toe v0.1 (By kdiller713)](https://github.com/kdiller713/public-FlipperApps/tree/main/infinite_tic_tac_toe)
 - [Insults v1.0 (By ERSUCC)](https://github.com/ERSUCC/Flipper-Insults)
 - [JetPack v1.1 (by timstrasser)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/1164e4d214efa38847e08c6387bf53578bc0d366)
