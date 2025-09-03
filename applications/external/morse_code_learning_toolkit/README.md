@@ -1,9 +1,8 @@
 # Morse Master: Morse Code Learning Toolkit for Flipper Zero
 
-<div align="center">
-  <img src="media/titlescreen.png" alt="Morse Code Learning Toolkit" width="320"/>
-  <p><em>A comprehensive Morse code learning and practice app for Flipper Zero</em></p>
-</div>
+![Morse Master Title Screen](media/titlescreen.png)
+
+A comprehensive Morse code learning and practice app for Flipper Zero. Final release of version 1.0.
 
 ## Overview
 
@@ -12,21 +11,33 @@ The Morse Master is an interactive application for Flipper Zero that helps you l
 ## Features
 
 ### Learning Mode
+
+![Learning](media/learn.png)
+
 - **Character Sets**: Switch between letters (A-Z) and numbers (0-9) with the LEFT/RIGHT buttons
 - **Visual Representation**: See the Morse code pattern for each character
 - **Audio Playback**: Hear the Morse code pattern played with clear and consistent timing
 - **Navigation**: Cycle through characters with UP/DOWN buttons
 
 ### Practice Mode
+
+![Practice](media/practice.png)
+
 - **Real-time Input**: Compose Morse code using short presses (dots) and long presses (dashes)
 - **Live Decoding**: See your input decoded as you enter Morse code
 - **Volume Control**: Adjust speaker volume with UP/DOWN buttons
 - **Visual Feedback**: LED indicators change color based on input (red for dots, blue for dashes)
 
+
+## Help
+
+![Help](media/help.png)
+
+
 ## Installation
 
 ### Method 1: Using qFlipper
-1. Download the latest `.fap` file from the [releases page](https://github.com/yourusername/flipper-zero-morse-toolkit/releases)
+1. Download the latest `.fap` file from the [releases page](https://github.com/w8death/morse-master/releases)
 2. Open qFlipper and connect your Flipper Zero
 3. Drag and drop the `.fap` file to the `Apps` folder on your Flipper Zero
 4. Find the app in the `Apps` menu on your Flipper Zero
@@ -34,10 +45,10 @@ The Morse Master is an interactive application for Flipper Zero that helps you l
 ### Method 2: Using ufbt (for developers)
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/flipper-zero-morse-toolkit.git
+git clone https://github.com/w84death/morse-master.git
 
 # Navigate to the project directory
-cd flipper-zero-morse-toolkit
+cd morse-master
 
 # Build and install the app
 ufbt launch
@@ -70,16 +81,6 @@ ufbt launch
 - Sound output via Flipper Zero's internal speaker
 - Visual feedback via Flipper Zero's LED
 - Low memory footprint: fits within Flipper Zero's limited resources
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
 
 ## License
 
