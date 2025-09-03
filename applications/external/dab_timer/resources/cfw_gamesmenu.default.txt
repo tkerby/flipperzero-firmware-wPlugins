@@ -47,7 +47,7 @@ GamesMenuList Version 0
 /ext/apps/Games/hangman.fap
 /ext/apps/Games/hanoi_towers.fap
 /ext/apps/Games/heap_defence.fap
-/ext/apps/Games/hunter_killer.fap
+/ext/apps/Games/hunter_flipper.fap
 /ext/apps/Games/infinite_tic_tac_toe.fap
 /ext/apps/Games/insults.fap
 /ext/apps/Games/jetpack.fap
