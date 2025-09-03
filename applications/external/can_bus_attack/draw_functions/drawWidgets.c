@@ -11,7 +11,7 @@ void draw_in_development(App* app) {
 // Draws device not connected
 void draw_device_no_connected(App* app) {
     widget_reset(app->widget);
-    widget_add_icon_element(app->widget, 4, 0, &I_Icon_No_canbusModule );
+    widget_add_icon_element(app->widget, 4, 0, &I_Icon_No_canbusModule);
     widget_add_string_multiline_element(
         app->widget, 65, 60, AlignCenter, AlignBottom, FontPrimary, "DEVICE NOT\nCONNECTED");
 }

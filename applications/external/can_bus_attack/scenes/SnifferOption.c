@@ -41,23 +41,22 @@ void restart_filtering(MCP2515* CAN) {
     init_filter(CAN, 5, 0);
 }
 
-
 static void canid_context_menu_callback(void* context, uint32_t action_index) {
     App* app = context;
     switch(action_index) {
-        case 0: // See values
-            scene_manager_set_scene_state(app->scene_manager, app_scene_history_view, app->frameArray[app->sniffer_index].canId);
-            scene_manager_next_scene(app->scene_manager, app_scene_history_view);
-            break;
-        case 1: // Save
-            app->replay_frame = app->frameArray[app->sniffer_index];
-            dialog_message_show_storage_error(app->dialogs, "Message saved \non memory.");
-            break;
-        default:
-            break;
+    case 0: // See values
+        scene_manager_set_scene_state(
+            app->scene_manager, app_scene_history_view, app->frameArray[app->sniffer_index].canId);
+        scene_manager_next_scene(app->scene_manager, app_scene_history_view);
+        break;
+    case 1: // Save
+        app->replay_frame = app->frameArray[app->sniffer_index];
+        dialog_message_show_storage_error(app->dialogs, "Message saved \non memory.");
+        break;
+    default:
+        break;
     }
 }
-
 
 static void sniffer_menu_callback(void* context, uint32_t index) {
     App* app = context;
@@ -68,7 +67,6 @@ static void sniffer_menu_callback(void* context, uint32_t index) {
     submenu_add_item(app->submenu, "Save", 1, canid_context_menu_callback, app);
     view_dispatcher_switch_to_view(app->view_dispatcher, SubmenuView);
 }
-
 
 void app_scene_sniffing_on_enter(void* context) {
     App* app = context;
@@ -92,25 +90,25 @@ bool app_scene_sniffing_on_event(void* context, SceneManagerEvent event) {
     App* app = context;
     bool consumed = false;
     switch(event.type) {
-        case SceneManagerEventTypeCustom:
-            switch(event.event) {
-                case EntryEvent:
-                    condition = false;
-                    wait_to_be_set = true;
-                    scene_manager_next_scene(app->scene_manager, app_scene_box_sniffing);
-                    consumed = true;
-                    break;
-                case DEVICE_NO_CONNECTED:
-                    scene_manager_set_scene_state(app->scene_manager, app_scene_sniffing_option, 1);
-                    scene_manager_next_scene(app->scene_manager, app_scene_device_no_connected);
-                    consumed = true;
-                    break;
-                default:
-                    break;
-            }
+    case SceneManagerEventTypeCustom:
+        switch(event.event) {
+        case EntryEvent:
+            condition = false;
+            wait_to_be_set = true;
+            scene_manager_next_scene(app->scene_manager, app_scene_box_sniffing);
+            consumed = true;
+            break;
+        case DEVICE_NO_CONNECTED:
+            scene_manager_set_scene_state(app->scene_manager, app_scene_sniffing_option, 1);
+            scene_manager_next_scene(app->scene_manager, app_scene_device_no_connected);
+            consumed = true;
             break;
         default:
             break;
+        }
+        break;
+    default:
+        break;
     }
     return consumed;
 }
@@ -124,7 +122,6 @@ void app_scene_sniffing_on_exit(void* context) {
     }
 }
 
-
 void draw_box_text(App* app) {
     furi_string_reset(app->text);
     furi_string_cat_printf(
@@ -134,7 +131,8 @@ void draw_box_text(App* app) {
         app->frameArray[app->sniffer_index].data_lenght);
 
     for(uint8_t i = 0; i < app->frameArray[app->sniffer_index].data_lenght; i++) {
-        furi_string_cat_printf(app->text, "[%u]:  %02X ", i, app->frameArray[app->sniffer_index].buffer[i]);
+        furi_string_cat_printf(
+            app->text, "[%u]:  %02X ", i, app->frameArray[app->sniffer_index].buffer[i]);
     }
 
     furi_string_cat_printf(app->text, "\ntime: %li ms", app->times[app->sniffer_index]);
@@ -189,7 +187,8 @@ static int32_t worker_sniffing(void* context) {
     memset(app->frameArray, 0, sizeof(CANFRAME) * 100);
 
     while(run) {
-        while(!condition && wait_to_be_set) furi_delay_ms(1);
+        while(!condition && wait_to_be_set)
+            furi_delay_ms(1);
 
         if(check_receive(mcp_can) == ERROR_OK) {
             read_can_message(mcp_can, &frame);
@@ -207,14 +206,18 @@ static int32_t worker_sniffing(void* context) {
                 app->frameArray[num_of_devices] = frame;
                 app->times[num_of_devices] = 0;
                 app->current_time[num_of_devices] = furi_get_tick();
-            
+
                 furi_string_reset(label);
                 furi_string_cat_printf(label, "0x%lx", frame.canId);
-                submenu_add_item(app->submenu, furi_string_get_cstr(label), num_of_devices, sniffer_menu_callback, app);
-            
+                submenu_add_item(
+                    app->submenu,
+                    furi_string_get_cstr(label),
+                    num_of_devices,
+                    sniffer_menu_callback,
+                    app);
+
                 num_of_devices++;
             }
-            
 
             for(uint8_t i = 0; i < num_of_devices; i++) {
                 if(frame.canId == app->frameArray[i].canId) {

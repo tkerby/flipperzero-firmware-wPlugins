@@ -47,14 +47,12 @@ typedef enum {
 
 #define WORKER_ALL_RX_EVENTS (WorkerflagStop | WorkerflagReceived)
 
-
 typedef struct {
     uint32_t canid;
     uint8_t history[MAX_HISTORY][8]; // data of each saved frame
-    uint8_t dlc[MAX_HISTORY];        // length of each saved frame
-    uint8_t count;                   // how many historical frames we have saved
+    uint8_t dlc[MAX_HISTORY]; // length of each saved frame
+    uint8_t count; // how many historical frames we have saved
 } CanIdHistory;
-
 
 typedef struct {
     MCP2515* mcp_can;

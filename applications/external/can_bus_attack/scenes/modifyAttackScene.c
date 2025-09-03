@@ -11,7 +11,6 @@ void app_scene_modify_attack_on_enter(void* context) {
     draw_modify_attack_scene(app);
 }
 
-
 bool app_scene_modify_attack_on_event(void* context, SceneManagerEvent event) {
     App* app = context;
 
@@ -21,7 +20,6 @@ bool app_scene_modify_attack_on_event(void* context, SceneManagerEvent event) {
     }
 
     return false;
-
 }
 
 void app_scene_modify_attack_on_exit(void* context) {
@@ -47,7 +45,6 @@ static void modify_attack_right_callback(GuiButtonType type, InputType input, vo
     if(type == GuiButtonTypeRight && input == InputTypeShort) {
         App* app = context;
         scene_manager_next_scene(app->scene_manager, app_scene_modify_attack_edit_frame);
-
     }
 }
 
@@ -55,14 +52,14 @@ static void modify_attack_left_callback(GuiButtonType type, InputType input, voi
     if(type == GuiButtonTypeLeft && input == InputTypeShort) {
         App* app = context;
         scene_manager_next_scene(app->scene_manager, app_scene_modify_attack_edit_id);
-
     }
 }
 
 static void draw_modify_attack_scene(App* app) {
     widget_reset(app->widget);
 
-    widget_add_string_element(app->widget, 64, 5, AlignCenter, AlignTop, FontPrimary, "Modify & Send");
+    widget_add_string_element(
+        app->widget, 64, 5, AlignCenter, AlignTop, FontPrimary, "Modify & Send");
     CANFRAME* frame = app->modify_frame;
     char id_str[32];
     snprintf(id_str, sizeof(id_str), "ID: 0x%lX", frame->canId);
@@ -76,9 +73,12 @@ static void draw_modify_attack_scene(App* app) {
     }
 
     widget_add_string_element(app->widget, 64, 35, AlignCenter, AlignTop, FontSecondary, data_str);
-    widget_add_button_element(app->widget, GuiButtonTypeCenter, "SEND", modify_attack_center_callback, app);
-    widget_add_button_element(app->widget, GuiButtonTypeLeft, "ID", modify_attack_left_callback, app);
-    widget_add_button_element(app->widget, GuiButtonTypeRight, "DATA", modify_attack_right_callback, app);
+    widget_add_button_element(
+        app->widget, GuiButtonTypeCenter, "SEND", modify_attack_center_callback, app);
+    widget_add_button_element(
+        app->widget, GuiButtonTypeLeft, "ID", modify_attack_left_callback, app);
+    widget_add_button_element(
+        app->widget, GuiButtonTypeRight, "DATA", modify_attack_right_callback, app);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, ViewWidget);
 }
@@ -97,7 +97,7 @@ static int32_t thread_modify_attack(void* context) {
     frame->ext = 0;
     frame->req = 0;
     frame->data_lenght = 8;
-    
+
     furi_hal_light_set(LightGreen, 0);
     furi_hal_light_blink_start(LightRed, 255, 20, 100);
 

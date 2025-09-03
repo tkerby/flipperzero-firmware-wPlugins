@@ -12,7 +12,13 @@ void draw_start(App* app) {
     widget_add_string_element(
         app->widget, 64, 40, AlignCenter, AlignCenter, FontPrimary, "CANBUS ATTACK APP");
     widget_add_string_element(
-        app->widget, 64, 55, AlignCenter, AlignCenter, FontSecondary, "TFG - Jorge Pimentel Naranjo");
+        app->widget,
+        64,
+        55,
+        AlignCenter,
+        AlignCenter,
+        FontSecondary,
+        "TFG - Jorge Pimentel Naranjo");
 
     view_dispatcher_switch_to_view(app->view_dispatcher, ViewWidget);
 }
@@ -63,13 +69,16 @@ void app_scene_menu_on_enter(void* context) {
 
     submenu_set_header(app->submenu, "MENU ATTACKS");
 
-    submenu_add_item(app->submenu, "Sniffing", SniffingTestOption, basic_scenes_menu_callback, app);
+    submenu_add_item(
+        app->submenu, "Sniffing", SniffingTestOption, basic_scenes_menu_callback, app);
 
     submenu_add_item(app->submenu, "DoS Attack", AttackDoSOption, basic_scenes_menu_callback, app);
 
-    submenu_add_item(app->submenu, "Replay Attack", ReplayAttackOption, basic_scenes_menu_callback, app);
+    submenu_add_item(
+        app->submenu, "Replay Attack", ReplayAttackOption, basic_scenes_menu_callback, app);
 
-    submenu_add_item(app->submenu, "Modify Attack", ModifyAttackOption, basic_scenes_menu_callback, app);
+    submenu_add_item(
+        app->submenu, "Modify Attack", ModifyAttackOption, basic_scenes_menu_callback, app);
 
     submenu_add_item(app->submenu, "About Us", AboutUsOption, basic_scenes_menu_callback, app);
 
@@ -105,7 +114,7 @@ bool app_scene_menu_on_event(void* context, SceneManagerEvent event) {
         case ModifyAttackOptionEvent:
             if(app->modify_frame->canId == 0) {
                 memcpy(app->modify_frame, &app->replay_frame, sizeof(CANFRAME));
-            }            
+            }
             scene_manager_next_scene(app->scene_manager, app_scene_attack_modify_option);
             consumed = true;
             break;

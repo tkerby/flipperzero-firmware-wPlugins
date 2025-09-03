@@ -33,7 +33,6 @@ void save_frame_history(App* app, uint32_t canid, uint8_t* buf, uint8_t len) {
     }
 }
 
-
 // ---------- SCENE: Histórico ----------
 void app_scene_history_on_enter(void* context) {
     App* app = context;
@@ -68,7 +67,6 @@ void app_scene_history_on_enter(void* context) {
     view_dispatcher_switch_to_view(app->view_dispatcher, TextBoxView);
 }
 
-
 bool app_scene_history_on_event(void* context, SceneManagerEvent event) {
     UNUSED(context);
     UNUSED(event);
@@ -80,4 +78,3 @@ void app_scene_history_on_exit(void* context) {
     furi_string_reset(app->text);
     text_box_reset(app->textBox);
 }
-

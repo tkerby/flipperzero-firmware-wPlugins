@@ -17,4 +17,3 @@ ADD_SCENE(app, modify_attack, attack_modify_option)
 ADD_SCENE(app, attack_dos, attack_dos_option)
 
 ADD_SCENE(app, replay_attack, replay_attack_option)
-

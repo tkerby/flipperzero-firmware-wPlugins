@@ -23,7 +23,6 @@ static void draw_present_view(App* app) {
     widget_add_string_multiline_element(
         app->widget, 65, 40, AlignCenter, AlignCenter, FontPrimary, "ELECTRONIC CATS \nAND");
     widget_add_button_element(app->widget, GuiButtonTypeRight, "Next", button_callback, app);
-
 }
 
 static void draw_present_view2(App* app) {
@@ -31,11 +30,9 @@ static void draw_present_view2(App* app) {
     widget_add_icon_element(app->widget, 26, 6, &I_Icons_etsi_uma);
     widget_add_string_multiline_element(
         app->widget, 65, 40, AlignCenter, AlignCenter, FontPrimary, "\n Presents:");
-        
+
     widget_add_button_element(app->widget, GuiButtonTypeRight, "Next", button_callback, app);
     widget_add_button_element(app->widget, GuiButtonTypeLeft, "Prev", button_callback, app);
-
-    
 }
 
 static void draw_can_app_view(App* app) {
@@ -63,10 +60,14 @@ void draw_more_info_view(App* app) {
     widget_reset(app->widget);
     widget_add_string_element(
         app->widget, 10, 5, AlignLeft, AlignCenter, FontPrimary, "More info:");
-    widget_add_string_element(app->widget, 64, 15, AlignCenter, AlignTop, FontSecondary, "github.com/ElectronicCats");
-    widget_add_string_element(app->widget, 64, 27, AlignCenter, AlignTop, FontSecondary, "/canbus_app");
-    widget_add_string_element(app->widget, 64, 39, AlignCenter, AlignTop, FontSecondary, "github.com/jorgepnaranjo25");
-    widget_add_string_element(app->widget, 64, 51, AlignCenter, AlignTop, FontSecondary, "/CAN-Bus-Attack");
+    widget_add_string_element(
+        app->widget, 64, 15, AlignCenter, AlignTop, FontSecondary, "github.com/ElectronicCats");
+    widget_add_string_element(
+        app->widget, 64, 27, AlignCenter, AlignTop, FontSecondary, "/canbus_app");
+    widget_add_string_element(
+        app->widget, 64, 39, AlignCenter, AlignTop, FontSecondary, "github.com/jorgepnaranjo25");
+    widget_add_string_element(
+        app->widget, 64, 51, AlignCenter, AlignTop, FontSecondary, "/CAN-Bus-Attack");
     widget_add_button_element(app->widget, GuiButtonTypeLeft, "Prev", button_callback, app);
 }
 

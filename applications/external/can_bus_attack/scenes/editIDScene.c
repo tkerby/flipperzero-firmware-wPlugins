@@ -24,12 +24,7 @@ void app_scene_attack_dos_edit_id_on_enter(void* context) {
     byte_input_set_header_text(app->input_byte_value, "Edit ID (DoS)");
 
     byte_input_set_result_callback(
-        app->input_byte_value,
-        attack_dos_edit_id_callback,
-        NULL,
-        app,
-        id_bytes,
-        2);
+        app->input_byte_value, attack_dos_edit_id_callback, NULL, app, id_bytes, 2);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, InputByteView);
 }
@@ -65,12 +60,7 @@ void app_scene_modify_attack_edit_id_on_enter(void* context) {
     byte_input_set_header_text(app->input_byte_value, "Edit ID (Modify)");
 
     byte_input_set_result_callback(
-        app->input_byte_value,
-        modify_attack_edit_id_callback,
-        NULL,
-        app,
-        id_bytes,
-        2);
+        app->input_byte_value, modify_attack_edit_id_callback, NULL, app, id_bytes, 2);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, InputByteView);
 }

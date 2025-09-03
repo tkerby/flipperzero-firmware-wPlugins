@@ -239,8 +239,7 @@ void separate_codes(CANFRAME* frames, uint16_t* save_codes, uint8_t length) {
 
 // This is for translate codes
 void get_dtc(uint16_t numerical_code, char* dtc_code) {
-    char* first = NULL; 
-
+    char* first = NULL;
 
     FuriString* text = furi_string_alloc();
 

@@ -1,9 +1,0 @@
-{
-    "files.associations": {
-        "mcp_can_2515.h": "c",
-        "app_scene_functions.h": "c",
-        "stdint.h": "c",
-        "app_user.h": "c",
-        "string.h": "c"
-    }
-}
