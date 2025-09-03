@@ -1,17 +1,14 @@
-# For details & more options, see documentation/AppManifests.md in firmware repo
-
 App(
-    appid="netflixtvremote",  # Must be unique
-    name="Netflix TV Remote",  # Displayed in menus
+    appid="netflixtvremote",
+    name="Netflix TV Remote",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="netflixtvremote_app",
     stack_size=2 * 1024,
+    fap_icon="netflixtvremote.png",
+    fap_icon_assets="images",
     fap_category="Infrared",
-    # Optional values
-    # fap_version="0.1",
-    fap_icon="netflixtvremote.png",  # 10x10 1-bit PNG
-    fap_description="A simple IR TV remote for Netflix",
     fap_author="ablaran",
-    fap_weburl="https://github.com/user/netflixtvremote",
-    fap_icon_assets="images",  # Image assets to compile for this application
+    fap_weburl="https://github.com/ablaran/NetflixTvRemote",
+    fap_version="0.1",
+    fap_description="A simple IR TV remote for Netflix for Sony BRAVIA 4K VH2",
 )

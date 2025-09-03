@@ -28,7 +28,6 @@ static void app_tick_event(void* context) {
     UNUSED(app);
 }
 
-
 static App* app_alloc() {
     App* app = malloc(sizeof(App));
     app->scene_manager = scene_manager_alloc(&app_scene_handlers, app);
@@ -51,10 +50,10 @@ static App* app_alloc() {
 
     app->textBox = text_box_alloc();
     view_dispatcher_add_view(app->view_dispatcher, TextBoxView, text_box_get_view(app->textBox));
-    
 
     app->input_byte_value = byte_input_alloc();
-    view_dispatcher_add_view(app->view_dispatcher, InputByteView, byte_input_get_view(app->input_byte_value));
+    view_dispatcher_add_view(
+        app->view_dispatcher, InputByteView, byte_input_get_view(app->input_byte_value));
 
     app->dialogs = furi_record_open(RECORD_DIALOGS);
     app->storage = furi_record_open(RECORD_STORAGE);
@@ -83,7 +82,6 @@ static App* app_alloc() {
     app->modify_frame = malloc(sizeof(CANFRAME));
     memset(app->modify_frame, 0, sizeof(CANFRAME));
     app->modify_frame->data_lenght = 8;
-    
 
     app->obdii.bitrate = app->mcp_can->bitRate;
 
