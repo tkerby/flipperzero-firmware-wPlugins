@@ -9,6 +9,17 @@ typedef enum {
 static uint8_t selected_target;
 static uint8_t selected_destination;
 
+static void nfc_playlist_nfc_move_item_lock_state_check(void* context) {
+    furi_assert(context);
+    NfcPlaylist* nfc_playlist = context;
+
+    variable_item_set_locked(
+        variable_item_list_get(
+            nfc_playlist->views.variable_item_list, NfcPlaylistNfcMoveItem_MoveItem),
+        (selected_target == selected_destination),
+        "Target\nand\nDestination\nare the same");
+}
+
 static void nfc_playlist_nfc_move_item_menu_callback(void* context, uint32_t index) {
     furi_assert(context);
     NfcPlaylist* nfc_playlist = context;
@@ -42,11 +53,7 @@ static void nfc_playlist_nfc_move_item_options_change_callback(VariableItem* ite
         break;
     }
 
-    variable_item_set_locked(
-        variable_item_list_get(
-            nfc_playlist->views.variable_item_list, NfcPlaylistNfcMoveItem_MoveItem),
-        (selected_target == selected_destination),
-        "Target\nand\nDestination\nare the same");
+    nfc_playlist_nfc_move_item_lock_state_check(nfc_playlist);
 }
 
 void nfc_playlist_nfc_move_item_scene_on_enter(void* context) {
@@ -76,12 +83,9 @@ void nfc_playlist_nfc_move_item_scene_on_enter(void* context) {
     variable_item_set_current_value_index(destination_selector, 0);
     variable_item_set_current_value_text(destination_selector, "1");
 
-    VariableItem* move_button =
-        variable_item_list_add(nfc_playlist->views.variable_item_list, "Move Item", 0, NULL, NULL);
-    variable_item_set_locked(
-        move_button,
-        (selected_target == selected_destination),
-        "Target\nand\nDestination\nare the same");
+    variable_item_list_add(nfc_playlist->views.variable_item_list, "Move Item", 0, NULL, NULL);
+
+    nfc_playlist_nfc_move_item_lock_state_check(nfc_playlist);
 
     variable_item_list_set_enter_callback(
         nfc_playlist->views.variable_item_list,

@@ -27,6 +27,7 @@ void nfc_playlist_load_settings(void* context) {
     nfc_playlist->worker_info.settings->emulate_led_indicator = default_emulate_led_indicator;
     nfc_playlist->worker_info.settings->skip_error = default_skip_error;
     nfc_playlist->worker_info.settings->loop = default_loop;
+    nfc_playlist->worker_info.settings->time_controls = default_time_controls;
     nfc_playlist->worker_info.settings->user_controls = default_user_controls;
 
     Storage* storage = furi_record_open(RECORD_STORAGE);
@@ -65,10 +66,19 @@ void nfc_playlist_load_settings(void* context) {
                     nfc_playlist->worker_info.settings->skip_error = (strcasecmp(v, "true") == 0);
                 } else if(strcmp(k, "loop") == 0) {
                     nfc_playlist->worker_info.settings->loop = (strcasecmp(v, "true") == 0);
+                } else if(strcmp(k, "time_controls") == 0) {
+                    nfc_playlist->worker_info.settings->time_controls =
+                        (strcasecmp(v, "true") == 0);
                 } else if(strcmp(k, "user_controls") == 0) {
                     nfc_playlist->worker_info.settings->user_controls =
                         (strcasecmp(v, "true") == 0);
                 }
+            }
+
+            if(!nfc_playlist->worker_info.settings->time_controls &&
+               !nfc_playlist->worker_info.settings->user_controls) {
+                nfc_playlist->worker_info.settings->time_controls = true;
+                nfc_playlist->worker_info.settings->user_controls = true;
             }
 
             file_stream_close(stream);
@@ -90,12 +100,13 @@ void nfc_playlist_save_settings(void* context) {
 
     furi_string_printf(
         tmp_str,
-        "emulate_timeout=%d\nemulate_delay=%d\nemulate_led_indicator=%s\nskip_error=%s\nloop=%s\nuser_controls=%s",
+        "emulate_timeout=%d\nemulate_delay=%d\nemulate_led_indicator=%s\nskip_error=%s\nloop=%s\ntime_controls=%s\nuser_controls=%s",
         nfc_playlist->worker_info.settings->emulate_timeout,
         nfc_playlist->worker_info.settings->emulate_delay,
         nfc_playlist->worker_info.settings->emulate_led_indicator ? "true" : "false",
         nfc_playlist->worker_info.settings->skip_error ? "true" : "false",
         nfc_playlist->worker_info.settings->loop ? "true" : "false",
+        nfc_playlist->worker_info.settings->time_controls ? "true" : "false",
         nfc_playlist->worker_info.settings->user_controls ? "true" : "false");
 
     Storage* storage = furi_record_open(RECORD_STORAGE);

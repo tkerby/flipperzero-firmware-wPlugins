@@ -80,15 +80,17 @@ bool nfc_playlist_emulation_scene_on_event(void* context, SceneManagerEvent even
                 5,
                 AlignCenter,
                 AlignTop);
-            furi_string_printf(
-                text_str_static, "%ds", (nfc_playlist->worker_info.worker->ms_counter / 1000));
-            dialog_ex_set_text(
-                nfc_playlist->views.dialog,
-                furi_string_get_cstr(text_str_static),
-                64,
-                50,
-                AlignCenter,
-                AlignTop);
+            if(nfc_playlist->worker_info.settings->time_controls) {
+                furi_string_printf(
+                    text_str_static, "%ds", (nfc_playlist->worker_info.worker->ms_counter / 1000));
+                dialog_ex_set_text(
+                    nfc_playlist->views.dialog,
+                    furi_string_get_cstr(text_str_static),
+                    64,
+                    50,
+                    AlignCenter,
+                    AlignTop);
+            }
             if(nfc_playlist->worker_info.settings->user_controls) {
                 dialog_ex_set_left_button_text(nfc_playlist->views.dialog, "Rewind");
                 dialog_ex_set_right_button_text(nfc_playlist->views.dialog, "Skip");
@@ -149,15 +151,17 @@ bool nfc_playlist_emulation_scene_on_event(void* context, SceneManagerEvent even
                 5,
                 AlignCenter,
                 AlignTop);
-            furi_string_printf(
-                text_str_static, "%ds", (nfc_playlist->worker_info.worker->ms_counter / 1000));
-            dialog_ex_set_text(
-                nfc_playlist->views.dialog,
-                furi_string_get_cstr(text_str_static),
-                64,
-                50,
-                AlignCenter,
-                AlignTop);
+            if(nfc_playlist->worker_info.settings->time_controls) {
+                furi_string_printf(
+                    text_str_static, "%ds", (nfc_playlist->worker_info.worker->ms_counter / 1000));
+                dialog_ex_set_text(
+                    nfc_playlist->views.dialog,
+                    furi_string_get_cstr(text_str_static),
+                    64,
+                    50,
+                    AlignCenter,
+                    AlignTop);
+            }
             if(nfc_playlist->worker_info.settings->user_controls) {
                 dialog_ex_set_left_button_text(nfc_playlist->views.dialog, "Rewind");
                 dialog_ex_set_right_button_text(nfc_playlist->views.dialog, "Skip");
@@ -183,16 +187,17 @@ bool nfc_playlist_emulation_scene_on_event(void* context, SceneManagerEvent even
                 5,
                 AlignCenter,
                 AlignTop);
-            furi_string_printf(
-                text_str_static, "%ds", (nfc_playlist->worker_info.worker->ms_counter / 1000));
-            dialog_ex_set_text(
-                nfc_playlist->views.dialog,
-                furi_string_get_cstr(text_str_static),
-                64,
-                50,
-                AlignCenter,
-                AlignTop);
-
+            if(nfc_playlist->worker_info.settings->time_controls) {
+                furi_string_printf(
+                    text_str_static, "%ds", (nfc_playlist->worker_info.worker->ms_counter / 1000));
+                dialog_ex_set_text(
+                    nfc_playlist->views.dialog,
+                    furi_string_get_cstr(text_str_static),
+                    64,
+                    50,
+                    AlignCenter,
+                    AlignTop);
+            }
             if(nfc_playlist->worker_info.settings->user_controls) {
                 dialog_ex_set_left_button_text(nfc_playlist->views.dialog, "Rewind");
                 dialog_ex_set_right_button_text(nfc_playlist->views.dialog, "Skip");
@@ -218,15 +223,17 @@ bool nfc_playlist_emulation_scene_on_event(void* context, SceneManagerEvent even
                 5,
                 AlignCenter,
                 AlignTop);
-            furi_string_printf(
-                text_str_static, "%ds", (nfc_playlist->worker_info.worker->ms_counter / 1000));
-            dialog_ex_set_text(
-                nfc_playlist->views.dialog,
-                furi_string_get_cstr(text_str_static),
-                64,
-                50,
-                AlignCenter,
-                AlignTop);
+            if(nfc_playlist->worker_info.settings->time_controls) {
+                furi_string_printf(
+                    text_str_static, "%ds", (nfc_playlist->worker_info.worker->ms_counter / 1000));
+                dialog_ex_set_text(
+                    nfc_playlist->views.dialog,
+                    furi_string_get_cstr(text_str_static),
+                    64,
+                    50,
+                    AlignCenter,
+                    AlignTop);
+            }
             if(nfc_playlist->worker_info.settings->user_controls) {
                 dialog_ex_set_left_button_text(nfc_playlist->views.dialog, "Rewind");
                 dialog_ex_set_right_button_text(nfc_playlist->views.dialog, "Skip");
