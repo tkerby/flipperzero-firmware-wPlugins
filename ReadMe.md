@@ -54,6 +54,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Infrared: Fixed tv.ir (By cyba3r)
 - Infrared: Fixed audio.ir (By cyba3r)
 - Updated: [NFC Playlist v3.4 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
+- Updated: [Sub-GHz Remote v1.5 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote)
 
 <a name="release">
 
