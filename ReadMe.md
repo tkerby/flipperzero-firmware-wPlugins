@@ -53,6 +53,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added Hunter Killer but not CarJacker to Default Games Mode Menu (By RogueMaster)
 - Created Icon for Hunter Killer (By RogueMaster)
 - Infrared: Fixed tv.ir (By cyba3r)
+- Infrared: Fixed audio.ir (By cyba3r)
 
 <a name="release">
 
