@@ -45,6 +45,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [NFC Playlist v3.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
 - [SubGHz: Linear protocols fixes (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/354dad4af372c5e7f17d3e5dd04474e67e637afc)
 - [BT Remote: Add Rename Option, simplify Bad KB BLE profile (By aaronjamt & WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/pull/439)
+- Added: [CarJacker v1.0 (By RocketGod-git)](https://github.com/RocketGod-git/Flipper-Zero-CarJacker)
 
 <a name="release">
 
@@ -282,6 +283,7 @@ $ ./fbt dolphin_ext
 - [BlackJack v1.1 (By teeebor)](https://github.com/teeebor/flipper_games)
 - [Bomberduck v1.2 (By leo-need-more-coffee)](https://github.com/leo-need-more-coffee/flipperzero-bomberduck)
 - [Bomberfox v1.0 (By ashleyhuxley)](https://github.com/ashleyhuxley/bomber)
+- [CarJacker v1.0 (By RocketGod-git)](https://github.com/RocketGod-git/Flipper-Zero-CarJacker)
 - [Cells Lab v0.1 (By PilotOfAsuka)](https://github.com/PilotOfAsuka/Cells-lab-on-Flipper-Zero)
 - [Chess v1.12 (By xtruan)](https://github.com/xtruan/flipper-chess)
 - [Chess Clock (By ihatecsv)](https://github.com/ihatecsv/flipper_chess_clock)
