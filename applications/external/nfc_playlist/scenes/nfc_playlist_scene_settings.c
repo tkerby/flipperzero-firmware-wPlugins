@@ -14,7 +14,7 @@ typedef enum {
     NfcPlaylistSettings_DeleteSettings,
 } NfcPlaylistSettingsMenuSelection;
 
-static void nfc_playlist_settings_lock_state_check(void* context) {
+static void nfc_playlist_settings_scene_lock_state_check(void* context) {
     furi_assert(context);
     NfcPlaylist* nfc_playlist = context;
 
@@ -41,13 +41,13 @@ static void nfc_playlist_settings_lock_state_check(void* context) {
         "Time\nControls\nDisabled");
 }
 
-static void nfc_playlist_settings_menu_callback(void* context, uint32_t index) {
+static void nfc_playlist_settings_scene_menu_callback(void* context, uint32_t index) {
     furi_assert(context);
     NfcPlaylist* nfc_playlist = context;
     scene_manager_handle_custom_event(nfc_playlist->scene_manager, index);
 }
 
-static void nfc_playlist_settings_options_change_callback(VariableItem* item) {
+static void nfc_playlist_settings_scene_options_change_callback(VariableItem* item) {
     furi_assert(item);
     NfcPlaylist* nfc_playlist = variable_item_get_context(item);
 
@@ -101,7 +101,7 @@ static void nfc_playlist_settings_options_change_callback(VariableItem* item) {
     default:
         break;
     }
-    nfc_playlist_settings_lock_state_check(nfc_playlist);
+    nfc_playlist_settings_scene_lock_state_check(nfc_playlist);
 }
 
 void nfc_playlist_settings_scene_on_enter(void* context) {
@@ -114,7 +114,7 @@ void nfc_playlist_settings_scene_on_enter(void* context) {
         nfc_playlist->views.variable_item_list,
         "Emulate time",
         (sizeof(options_emulate_timeout) / sizeof(options_emulate_timeout[0])),
-        nfc_playlist_settings_options_change_callback,
+        nfc_playlist_settings_scene_options_change_callback,
         nfc_playlist);
     variable_item_set_current_value_index(
         emulation_timeout_setting, nfc_playlist->worker_info.settings->emulate_timeout);
@@ -128,7 +128,7 @@ void nfc_playlist_settings_scene_on_enter(void* context) {
         nfc_playlist->views.variable_item_list,
         "Delay time",
         (sizeof(options_emulate_delay) / sizeof(options_emulate_delay[0])),
-        nfc_playlist_settings_options_change_callback,
+        nfc_playlist_settings_scene_options_change_callback,
         nfc_playlist);
     variable_item_set_current_value_index(
         emulation_delay_setting, nfc_playlist->worker_info.settings->emulate_delay);
@@ -142,7 +142,7 @@ void nfc_playlist_settings_scene_on_enter(void* context) {
         nfc_playlist->views.variable_item_list,
         "LED Indicator",
         2,
-        nfc_playlist_settings_options_change_callback,
+        nfc_playlist_settings_scene_options_change_callback,
         nfc_playlist);
     variable_item_set_current_value_index(
         emulation_led_indicator_setting,
@@ -155,7 +155,7 @@ void nfc_playlist_settings_scene_on_enter(void* context) {
         nfc_playlist->views.variable_item_list,
         "Skip Error",
         2,
-        nfc_playlist_settings_options_change_callback,
+        nfc_playlist_settings_scene_options_change_callback,
         nfc_playlist);
     variable_item_set_current_value_index(
         emulation_skip_error_setting, nfc_playlist->worker_info.settings->skip_error);
@@ -167,7 +167,7 @@ void nfc_playlist_settings_scene_on_enter(void* context) {
         nfc_playlist->views.variable_item_list,
         "Loop",
         2,
-        nfc_playlist_settings_options_change_callback,
+        nfc_playlist_settings_scene_options_change_callback,
         nfc_playlist);
     variable_item_set_current_value_index(loop_setting, nfc_playlist->worker_info.settings->loop);
     variable_item_set_current_value_text(
@@ -177,7 +177,7 @@ void nfc_playlist_settings_scene_on_enter(void* context) {
         nfc_playlist->views.variable_item_list,
         "Time Controls",
         2,
-        nfc_playlist_settings_options_change_callback,
+        nfc_playlist_settings_scene_options_change_callback,
         nfc_playlist);
     variable_item_set_current_value_index(
         time_controls_settings, nfc_playlist->worker_info.settings->time_controls);
@@ -188,7 +188,7 @@ void nfc_playlist_settings_scene_on_enter(void* context) {
         nfc_playlist->views.variable_item_list,
         "User Controls",
         2,
-        nfc_playlist_settings_options_change_callback,
+        nfc_playlist_settings_scene_options_change_callback,
         nfc_playlist);
     variable_item_set_current_value_index(
         user_controls_setting, nfc_playlist->worker_info.settings->user_controls);
@@ -211,9 +211,11 @@ void nfc_playlist_settings_scene_on_enter(void* context) {
     variable_item_set_current_value_text(credits, "Credits");
 
     variable_item_list_set_enter_callback(
-        nfc_playlist->views.variable_item_list, nfc_playlist_settings_menu_callback, nfc_playlist);
+        nfc_playlist->views.variable_item_list,
+        nfc_playlist_settings_scene_menu_callback,
+        nfc_playlist);
 
-    nfc_playlist_settings_lock_state_check(nfc_playlist);
+    nfc_playlist_settings_scene_lock_state_check(nfc_playlist);
 
     view_dispatcher_switch_to_view(
         nfc_playlist->view_dispatcher, NfcPlaylistView_VariableItemList);
@@ -282,7 +284,7 @@ static void nfc_playlist_settings_update_view(void* context) {
     variable_item_set_current_value_text(
         user_controls_setting, nfc_playlist->worker_info.settings->user_controls ? "ON" : "OFF");
 
-    nfc_playlist_settings_lock_state_check(nfc_playlist);
+    nfc_playlist_settings_scene_lock_state_check(nfc_playlist);
 }
 
 bool nfc_playlist_settings_scene_on_event(void* context, SceneManagerEvent event) {
