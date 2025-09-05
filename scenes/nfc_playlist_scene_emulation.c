@@ -3,7 +3,7 @@
 static FuriString* header_str_static = NULL;
 static FuriString* text_str_static = NULL;
 
-static void nfc_playlist_emulation_dialog_callback(DialogExResult result, void* context) {
+static void nfc_playlist_emulation_scene_dialog_callback(DialogExResult result, void* context) {
    furi_assert(context);
    NfcPlaylist* nfc_playlist = context;
 
@@ -26,7 +26,7 @@ void nfc_playlist_emulation_scene_on_enter(void* context) {
    dialog_ex_reset(nfc_playlist->views.dialog);
    dialog_ex_set_context(nfc_playlist->views.dialog, nfc_playlist);
    dialog_ex_set_result_callback(
-      nfc_playlist->views.dialog, nfc_playlist_emulation_dialog_callback);
+      nfc_playlist->views.dialog, nfc_playlist_emulation_scene_dialog_callback);
    view_dispatcher_switch_to_view(nfc_playlist->view_dispatcher, NfcPlaylistView_Dialog);
 
    nfc_playlist->worker_info.worker =
