@@ -1,85 +1,60 @@
-#include <furi.h>
-#include <furi_hal.h>
-#include <gui/gui.h>
-#include <gui/view_dispatcher.h>
-#include <gui/modules/file_browser.h>
-#include <gui/modules/submenu.h>
-#include <gui/modules/byte_input.h>
-#include <gui/modules/popup.h>
-#include <dialogs/dialogs.h>
-#include <furi/core/string.h>
-#include <storage/storage.h>
-#include <flipper_format/flipper_format.h>
+#include "mfdesfire_auth_i.h"
 
-#include <gui/icon_i.h>
+bool mfdesfire_auth_load_settings(MfDesApp* instance) {
+    bool result = false;
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    FlipperFormat* file = flipper_format_file_alloc(storage);
+    FuriString* temp_str = furi_string_alloc();
+    uint32_t version;
 
-#define TAG                 "MfDesfireAuthApp"
-#define NFC_CARDS_PATH      "/ext/nfc"
-#define INITIAL_VECTOR_SIZE 8
-#define KEY_SIZE            24
+    do {
+        if(!flipper_format_file_open_existing(file, SAVE_PATH)) break;
 
-#define SAVE_PATH         APP_DATA_PATH("mfdesfire_auth.save")
-#define SAVE_FILE_HEADER  "Flipper DESFire Auth Settings"
-#define SAVE_FILE_VERSION 1
+        // Read and verify header
+        if(!flipper_format_read_header(file, temp_str, &version)) break;
+        if(!furi_string_equal_str(temp_str, SAVE_FILE_HEADER)) break;
+        if(version != SAVE_FILE_VERSION) break;
 
-const uint8_t icon_data[] = {0x00, 0x80, 0x00, 0x02, 0x01, 0x1E, 0x02, 0x24, 0x02, 0x44, 0x02,
-                             0x44, 0x02, 0x44, 0x02, 0x44, 0x02, 0x3E, 0x01, 0x80, 0x00};
+        // Extract filename from full path
+        const char* filename = strrchr(furi_string_get_cstr(instance->selected_card_path), '/');
+        if(filename) {
+            filename++; // Skip the '/' character
+        } else {
+            filename = furi_string_get_cstr(instance->selected_card_path);
+        }
 
-// Pointers to frame data
-const uint8_t* const icon_frames_10px[] = {icon_data};
+        FuriString* key_name = furi_string_alloc();
 
-const Icon submenu_icon = {
-    .width = 10,
-    .height = 10,
-    .frame_count = 1,
-    .frame_rate = 0,
-    .frames = icon_frames_10px,
-};
+        furi_string_printf(key_name, "Card_Path_%s", filename);
+        if(flipper_format_read_string(file, furi_string_get_cstr(key_name), temp_str)) {
+            if(furi_string_equal(temp_str, instance->selected_card_path)) {
+                furi_string_printf(key_name, "Initial_Vector_%s", filename);
+                if(!flipper_format_read_hex(
+                       file,
+                       furi_string_get_cstr(key_name),
+                       instance->initial_vector,
+                       INITIAL_VECTOR_SIZE))
+                    break;
 
-// Enum pro definici pohledů
-typedef enum {
-    MfDesfireAuthAppViewBrowser,
-    MfDesfireAuthAppViewSubmenu,
-    MfDesfireAuthAppViewByteInputIV,
-    MfDesfireAuthAppViewByteInputKey,
-    MfDesfireAuthAppViewPopupAuth,
-} MfDesfireAuthAppView;
+                furi_string_printf(key_name, "Key_%s", filename);
+                if(!flipper_format_read_hex(
+                       file, furi_string_get_cstr(key_name), instance->key, KEY_SIZE))
+                    break;
 
-// Enum pro submenu položky
-typedef enum {
-    MfDesfireAuthSubmenuSetIV,
-    MfDesfireAuthSubmenuSetKey,
-    MfDesfireAuthSubmenuAuthenticate,
-} MfDesfireAuthSubmenuIndex;
+                result = true;
+            }
+        }
 
-typedef enum {
-    MfDesfireAuthSaveIV,
-    MfDesfireAuthSaveKey,
-} MfDesfireAuthSaveIndex;
+        furi_string_free(key_name);
+    } while(false);
 
-/**
- * @brief Struktura pro uchování stavu aplikace.
- */
-typedef struct {
-    //Zaklad pro aplikaci
-    Gui* gui;
-    ViewDispatcher* view_dispatcher;
+    furi_string_free(temp_str);
+    flipper_format_free(file);
+    furi_record_close(RECORD_STORAGE);
+    return result;
+}
 
-    // Jednotliva views
-    FileBrowser* file_browser;
-    Submenu* submenu;
-    ByteInput* byte_input;
-    Popup* popup;
-
-    FuriString* selected_card_path;
-
-    uint8_t initial_vector[INITIAL_VECTOR_SIZE];
-    uint8_t key[KEY_SIZE];
-
-    MfDesfireAuthAppView current_view; // Track current view manually
-} MfDesfireAuthApp;
-
-static bool mfdesfire_auth_save_settings(MfDesfireAuthApp* app, uint32_t index) {
+bool mfdesfire_auth_save_settings(MfDesApp* app, uint32_t index) {
     bool result = false;
     // UNUSED(index);
     // MfDesfireAuthApp* app = context;
@@ -111,14 +86,14 @@ static bool mfdesfire_auth_save_settings(MfDesfireAuthApp* app, uint32_t index) 
                file, furi_string_get_cstr(key_name), app->selected_card_path))
             break;
 
-        if(index == MfDesfireAuthSaveIV) {
+        if(index == MfDesAppByteInputIV) {
             furi_string_printf(key_name, "Initial_Vector_%s", filename);
             if(!flipper_format_insert_or_update_hex(
                    file, furi_string_get_cstr(key_name), app->initial_vector, INITIAL_VECTOR_SIZE))
                 break;
         }
 
-        if(index == MfDesfireAuthSaveKey) {
+        if(index == MfDesAppByteInputKey) {
             furi_string_printf(key_name, "Key_%s", filename);
             if(!flipper_format_insert_or_update_hex(
                    file, furi_string_get_cstr(key_name), app->key, KEY_SIZE))
@@ -134,316 +109,118 @@ static bool mfdesfire_auth_save_settings(MfDesfireAuthApp* app, uint32_t index) 
     return result;
 }
 
-static bool mfdesfire_auth_load_settings(MfDesfireAuthApp* app) {
-    bool result = false;
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-    FlipperFormat* file = flipper_format_file_alloc(storage);
-    FuriString* temp_str = furi_string_alloc();
-    uint32_t version;
+// /**
+//  * @brief Callback pro popup timeout.
+//  */
+// static void mfdesfire_auth_popup_callback(void* context) {
+//     furi_assert(context);
+//     MfDesApp* instance = context;
+//     view_dispatcher_switch_to_view(instance->view_dispatcher, MfDesAppViewSubmenu);
+// }
 
-    do {
-        if(!flipper_format_file_open_existing(file, SAVE_PATH)) break;
-
-        // Read and verify header
-        if(!flipper_format_read_header(file, temp_str, &version)) break;
-        if(!furi_string_equal_str(temp_str, SAVE_FILE_HEADER)) break;
-        if(version != SAVE_FILE_VERSION) break;
-
-        // Extract filename from full path
-        const char* filename = strrchr(furi_string_get_cstr(app->selected_card_path), '/');
-        if(filename) {
-            filename++; // Skip the '/' character
-        } else {
-            filename = furi_string_get_cstr(app->selected_card_path);
-        }
-
-        FuriString* key_name = furi_string_alloc();
-
-        furi_string_printf(key_name, "Card_Path_%s", filename);
-        if(flipper_format_read_string(file, furi_string_get_cstr(key_name), temp_str)) {
-            if(furi_string_equal(temp_str, app->selected_card_path)) {
-                furi_string_printf(key_name, "Initial_Vector_%s", filename);
-                if(!flipper_format_read_hex(
-                       file,
-                       furi_string_get_cstr(key_name),
-                       app->initial_vector,
-                       INITIAL_VECTOR_SIZE))
-                    break;
-
-                furi_string_printf(key_name, "Key_%s", filename);
-                if(!flipper_format_read_hex(
-                       file, furi_string_get_cstr(key_name), app->key, KEY_SIZE))
-                    break;
-
-                result = true;
-            }
-        }
-
-        furi_string_free(key_name);
-    } while(false);
-
-    furi_string_free(temp_str);
-    flipper_format_free(file);
-    furi_record_close(RECORD_STORAGE);
-    return result;
-}
-
-/**
- * @brief Callback funkce volaná při stisknutí tlačítka Zpět.
- */
-static bool mfdesfire_auth_navigation_callback(void* context) {
+static bool mfdes_app_custom_event_callback(void* context, uint32_t event) {
     furi_assert(context);
-    MfDesfireAuthApp* app = context;
-
-    switch(app->current_view) {
-    case MfDesfireAuthAppViewBrowser:
-        // Z file browseru ukončíme aplikaci
-        view_dispatcher_stop(app->view_dispatcher);
-        break;
-
-    case MfDesfireAuthAppViewSubmenu:
-        // Ze submenu se vrátíme do file browseru
-        app->current_view = MfDesfireAuthAppViewBrowser;
-        view_dispatcher_switch_to_view(app->view_dispatcher, MfDesfireAuthAppViewBrowser);
-        break;
-
-    case MfDesfireAuthAppViewByteInputIV:
-    case MfDesfireAuthAppViewByteInputKey:
-    case MfDesfireAuthAppViewPopupAuth:
-        // Z byte input views se vrátíme do submenu
-        app->current_view = MfDesfireAuthAppViewSubmenu;
-        view_dispatcher_switch_to_view(app->view_dispatcher, MfDesfireAuthAppViewSubmenu);
-        // TODO udelat tady load zpatky aby to neukazovalo fake 1
-        break;
-
-        // case MfDesfireAuthAppViewPopupAuth:
-        //     // Z popup se vrátíme do submenu
-        //     app->current_view = MfDesfireAuthAppViewSubmenu;
-        //     view_dispatcher_switch_to_view(app->view_dispatcher, MfDesfireAuthAppViewSubmenu);
-        //     break;
-
-    default:
-        // Jako fallback ukončíme aplikaci
-        view_dispatcher_stop(app->view_dispatcher);
-        break;
-    }
-
-    return true;
+    MfDesApp* app = context;
+    return scene_manager_handle_custom_event(app->scene_manager, event);
 }
 
-/**
- * @brief Callback pro ukončení byte input.
- */
-static void mfdesfire_auth_byte_input_callback(MfDesfireAuthApp* app, uint32_t index) {
-    mfdesfire_auth_save_settings(app, index);
-
-    app->current_view = MfDesfireAuthAppViewSubmenu;
-    view_dispatcher_switch_to_view(app->view_dispatcher, MfDesfireAuthAppViewSubmenu);
-}
-
-static void mfdesfire_auth_byte_input_vector_callback(void* context) {
+static bool mfdes_back_event_callback(void* context) {
     furi_assert(context);
-    MfDesfireAuthApp* app = context;
-
-    mfdesfire_auth_byte_input_callback(app, MfDesfireAuthSaveIV);
-}
-
-static void mfdesfire_auth_byte_input_key_callback(void* context) {
-    furi_assert(context);
-    MfDesfireAuthApp* app = context;
-
-    mfdesfire_auth_byte_input_callback(app, MfDesfireAuthSaveKey);
-}
-
-/**
- * @brief Callback pro submenu.
- */
-static void mfdesfire_auth_submenu_callback(void* context, uint32_t index) {
-    furi_assert(context);
-    MfDesfireAuthApp* app = context;
-
-    switch(index) {
-    case MfDesfireAuthSubmenuSetIV:
-        byte_input_set_header_text(app->byte_input, "Set Initial Vector:");
-        byte_input_set_result_callback( // Tohle je callback na to kdyz dam save. Kdyz klikam zpet tak se vola jiny.
-            app->byte_input,
-            mfdesfire_auth_byte_input_vector_callback,
-            NULL,
-            app,
-            app->initial_vector,
-            INITIAL_VECTOR_SIZE);
-        app->current_view = MfDesfireAuthAppViewByteInputIV;
-        view_dispatcher_switch_to_view(app->view_dispatcher, MfDesfireAuthAppViewByteInputIV);
-        break;
-
-    case MfDesfireAuthSubmenuSetKey:
-        byte_input_set_header_text(app->byte_input, "Set Key:");
-        byte_input_set_result_callback(
-            app->byte_input, mfdesfire_auth_byte_input_key_callback, NULL, app, app->key, KEY_SIZE);
-        app->current_view = MfDesfireAuthAppViewByteInputKey;
-        view_dispatcher_switch_to_view(app->view_dispatcher, MfDesfireAuthAppViewByteInputKey);
-        break;
-
-    case MfDesfireAuthSubmenuAuthenticate:
-        popup_set_header(app->popup, "Authenticating...", 64, 20, AlignCenter, AlignCenter);
-        popup_set_text(app->popup, "Please wait", 64, 40, AlignCenter, AlignCenter);
-        popup_set_icon(app->popup, 0, 0, NULL); // No icon
-        popup_set_timeout(app->popup, 3000); // 3 seconds timeout
-        popup_set_context(app->popup, app);
-        popup_set_callback(app->popup, NULL); // No callback needed
-        popup_enable_timeout(app->popup);
-        app->current_view = MfDesfireAuthAppViewPopupAuth;
-        view_dispatcher_switch_to_view(app->view_dispatcher, MfDesfireAuthAppViewPopupAuth);
-        break;
-
-    default:
-        break;
-    }
-}
-
-/**
- * @brief Callback funkce volaná po výběru souboru v FileBrowseru.
- */
-static void mfdesfire_auth_file_select_callback(void* context) {
-    furi_assert(context);
-    MfDesfireAuthApp* app = context;
-
-    // Try to load settings for selected card
-    if(!mfdesfire_auth_load_settings(app)) {
-        // If no settings found, initialize with zeros
-        memset(app->initial_vector, 0, INITIAL_VECTOR_SIZE);
-        memset(app->key, 0, KEY_SIZE);
-    }
-
-    app->current_view = MfDesfireAuthAppViewSubmenu;
-    view_dispatcher_switch_to_view(app->view_dispatcher, MfDesfireAuthAppViewSubmenu);
-}
-
-/**
- * @brief Callback pro popup timeout.
- */
-static void mfdesfire_auth_popup_callback(void* context) {
-    furi_assert(context);
-    MfDesfireAuthApp* app = context;
-    app->current_view = MfDesfireAuthAppViewSubmenu;
-    view_dispatcher_switch_to_view(app->view_dispatcher, MfDesfireAuthAppViewSubmenu);
+    MfDesApp* instance = context;
+    return scene_manager_handle_back_event(instance->scene_manager);
 }
 
 /**
  * @brief Alokuje a inicializuje zdroje aplikace.
  */
-MfDesfireAuthApp* mfdesfire_auth_app_alloc() {
-    MfDesfireAuthApp* app = malloc(sizeof(MfDesfireAuthApp));
+MfDesApp* mfdesfire_auth_app_alloc() {
+    MfDesApp* instance = malloc(sizeof(MfDesApp));
 
-    // Inicializace dat
-    app->selected_card_path = furi_string_alloc();
-    app->current_view = MfDesfireAuthAppViewBrowser; // Initialize current view
-    memset(app->initial_vector, 0, INITIAL_VECTOR_SIZE);
-    memset(app->key, 0, KEY_SIZE);
+    // Open GUI record
+    instance->gui = furi_record_open(RECORD_GUI);
 
-    // GUI komponenty
-    app->gui = furi_record_open(RECORD_GUI);
-    app->view_dispatcher = view_dispatcher_alloc();
-    view_dispatcher_enable_queue(app->view_dispatcher);
-    app->file_browser = file_browser_alloc(
-        app->selected_card_path); // Ulozi vyslednou cestu do selected card path - je to v file_browser.c inner se o to stara
-    app->submenu = submenu_alloc();
-    app->byte_input = byte_input_alloc();
-    app->popup = popup_alloc();
+    // Open Notification record
+    instance->notifications = furi_record_open(RECORD_NOTIFICATION);
 
-    // Nastavení FileBrowseru
-    file_browser_set_callback(
-        app->file_browser, mfdesfire_auth_file_select_callback, app); // Select v file browseru
-    file_browser_configure(app->file_browser, ".nfc", NFC_CARDS_PATH, 1, 1, &submenu_icon, 1);
-    file_browser_start(app->file_browser, furi_string_alloc_set(NFC_CARDS_PATH));
-
-    // Nastavení Submenu
-    submenu_add_item(
-        app->submenu,
-        "Set Initial Vector",
-        MfDesfireAuthSubmenuSetIV,
-        mfdesfire_auth_submenu_callback,
-        app);
-    submenu_add_item(
-        app->submenu, "Set Key", MfDesfireAuthSubmenuSetKey, mfdesfire_auth_submenu_callback, app);
-    submenu_add_item(
-        app->submenu,
-        "Legacy Authetication",
-        MfDesfireAuthSubmenuAuthenticate,
-        mfdesfire_auth_submenu_callback,
-        app);
-
-    // Nastavení Popup
-    popup_set_callback(app->popup, mfdesfire_auth_popup_callback);
-    popup_set_context(app->popup, app);
-
-    // Nastavení ViewDispatcheru
-    view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
+    // View dispatcher settings
+    instance->view_dispatcher = view_dispatcher_alloc();
+    view_dispatcher_enable_queue(instance->view_dispatcher);
+    view_dispatcher_set_event_callback_context(instance->view_dispatcher, instance);
+    view_dispatcher_set_custom_event_callback(
+        instance->view_dispatcher, mfdes_app_custom_event_callback);
     view_dispatcher_set_navigation_event_callback(
-        app->view_dispatcher,
-        mfdesfire_auth_navigation_callback); // Tohle se zavola kdyz kratce kliknu tlacitko zpet
-    view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
+        instance->view_dispatcher,
+        mfdes_back_event_callback); // Tohle se zavola kdyz kratce kliknu tlacitko zpet
+    view_dispatcher_attach_to_gui(
+        instance->view_dispatcher, instance->gui, ViewDispatcherTypeFullscreen);
+
+    instance->selected_card_path = furi_string_alloc();
+    // memset(instance->initial_vector, 0, INITIAL_VECTOR_SIZE);
+    // memset(instance->key, 0, KEY_SIZE);
 
     // Přidání views
+    instance->file_browser = file_browser_alloc(
+        instance
+            ->selected_card_path); // Ulozi vyslednou cestu do selected card path - je to v file_browser.c inner se o to stara
     view_dispatcher_add_view(
-        app->view_dispatcher,
-        MfDesfireAuthAppViewBrowser,
-        file_browser_get_view(app->file_browser));
+        instance->view_dispatcher,
+        MfDesAppViewBrowser,
+        file_browser_get_view(instance->file_browser));
 
+    instance->submenu = submenu_alloc();
     view_dispatcher_add_view(
-        app->view_dispatcher, MfDesfireAuthAppViewSubmenu, submenu_get_view(app->submenu));
+        instance->view_dispatcher, MfDesAppViewSubmenu, submenu_get_view(instance->submenu));
 
+    instance->byte_input = byte_input_alloc();
     view_dispatcher_add_view(
-        app->view_dispatcher,
-        MfDesfireAuthAppViewByteInputIV,
-        byte_input_get_view(app->byte_input));
+        instance->view_dispatcher,
+        MfDesAppViewByteInput,
+        byte_input_get_view(instance->byte_input));
 
+    instance->popup = popup_alloc();
     view_dispatcher_add_view(
-        app->view_dispatcher,
-        MfDesfireAuthAppViewByteInputKey,
-        byte_input_get_view(app->byte_input));
+        instance->view_dispatcher, MfDesAppViewPopupAuth, popup_get_view(instance->popup));
 
-    view_dispatcher_add_view(
-        app->view_dispatcher, MfDesfireAuthAppViewPopupAuth, popup_get_view(app->popup));
+    instance->scene_manager = scene_manager_alloc(&desfire_app_scene_handlers, instance);
 
-    return app;
+    return instance;
 }
 
 /**
  * @brief Uvolní všechny alokované zdroje aplikace.
  */
-void mfdesfire_auth_app_free(MfDesfireAuthApp* app) {
-    furi_assert(app);
+void mfdesfire_auth_app_free(MfDesApp* instance) {
+    furi_assert(instance);
 
     // Odstranění views
-    view_dispatcher_remove_view(app->view_dispatcher, MfDesfireAuthAppViewBrowser);
-    view_dispatcher_remove_view(app->view_dispatcher, MfDesfireAuthAppViewSubmenu);
-    view_dispatcher_remove_view(app->view_dispatcher, MfDesfireAuthAppViewByteInputIV);
-    view_dispatcher_remove_view(app->view_dispatcher, MfDesfireAuthAppViewByteInputKey);
-    view_dispatcher_remove_view(app->view_dispatcher, MfDesfireAuthAppViewPopupAuth);
+    view_dispatcher_remove_view(instance->view_dispatcher, MfDesAppViewBrowser);
+    view_dispatcher_remove_view(instance->view_dispatcher, MfDesAppViewSubmenu);
+    view_dispatcher_remove_view(instance->view_dispatcher, MfDesAppViewByteInput);
+    // view_dispatcher_remove_view(instance->view_dispatcher, MfDesAppViewByteInputKey);
+    view_dispatcher_remove_view(instance->view_dispatcher, MfDesAppViewPopupAuth);
 
     // Uvolnění zdrojů
-    view_dispatcher_free(app->view_dispatcher);
-    file_browser_stop(app->file_browser);
-    file_browser_free(app->file_browser);
-    submenu_free(app->submenu);
-    byte_input_free(app->byte_input);
-    popup_free(app->popup);
-    furi_string_free(app->selected_card_path);
+    view_dispatcher_free(instance->view_dispatcher);
+    file_browser_stop(instance->file_browser);
+    file_browser_free(instance->file_browser);
+    submenu_free(instance->submenu);
+    byte_input_free(instance->byte_input);
+    popup_free(instance->popup);
+    furi_string_free(instance->selected_card_path);
     furi_record_close(RECORD_GUI);
-    free(app);
+    free(instance);
 }
 
 int32_t mfdesfire_auth_main(void* p) {
     UNUSED(p);
 
-    MfDesfireAuthApp* app = mfdesfire_auth_app_alloc();
-    app->current_view = MfDesfireAuthAppViewBrowser;
-    view_dispatcher_switch_to_view(app->view_dispatcher, MfDesfireAuthAppViewBrowser);
-    view_dispatcher_run(app->view_dispatcher);
+    MfDesApp* instance = mfdesfire_auth_app_alloc();
+    // view_dispatcher_switch_to_view(instance->view_dispatcher, MfDesAppViewBrowser);
+    scene_manager_next_scene(instance->scene_manager, MfDesAppViewBrowser);
+    view_dispatcher_run(instance->view_dispatcher);
 
-    FURI_LOG_I(TAG, "Stopping app & cleaning");
-    mfdesfire_auth_app_free(app);
+    // FURI_LOG_I(TAG, "Stopping instance & cleaning");
+    mfdesfire_auth_app_free(instance);
 
     return 0;
 }
