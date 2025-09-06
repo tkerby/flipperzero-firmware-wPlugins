@@ -60,7 +60,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [SubGHz: Linear protocols fixes (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/af67a99da9c741a283c0491b4c8645fb92d99258)
 - [Sub-GHz Remote: Fix hang with RAW files, prevent it for the future (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/bf106d5e3d2946db5f5f086b34933a4bb8db52f1)
 - [Revert Fix ByteInput to properly zero bytes (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/5a4a8c71d85aad53624a126bc02cb4aa827fbad4)
-- NFC: [Xero Merge + Improvements (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/3a35730a24acae0636d1674e1ebb3857a64a5daa#diff-c529e0dd110ff74f85f983fee6262117f3773a7ff528f7b66b0f45220c5326d7)
+- NFC: [Xero Merge Improvements (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/3a35730a24acae0636d1674e1ebb3857a64a5daa#diff-c529e0dd110ff74f85f983fee6262117f3773a7ff528f7b66b0f45220c5326d7)
 
 <a name="release">
 
