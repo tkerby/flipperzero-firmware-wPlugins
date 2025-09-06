@@ -57,7 +57,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [MODBUS v1.1.3.1 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-rs485modbus) `Req: Modbus By ElectronicCats`
 - Updated: [MFDesfire Auth v1.0 (By Gatorixx)](https://github.com/Gatorixx/flipper-zero-legacy-authentication)
 - Updated: [NFC Playlist v3.4 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
-- [SubGHz: Linear protocols fixes (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/354dad4af372c5e7f17d3e5dd04474e67e637afc)
+- [SubGHz: Linear protocols fixes (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/af67a99da9c741a283c0491b4c8645fb92d99258)
+- [Sub-GHz Remote: Fix hang with RAW files, prevent it for the future (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/bf106d5e3d2946db5f5f086b34933a4bb8db52f1)
 
 <a name="release">
 
