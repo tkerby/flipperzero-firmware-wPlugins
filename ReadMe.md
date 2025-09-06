@@ -59,6 +59,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [NFC Playlist v3.4 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
 - [SubGHz: Linear protocols fixes (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/af67a99da9c741a283c0491b4c8645fb92d99258)
 - [Sub-GHz Remote: Fix hang with RAW files, prevent it for the future (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/bf106d5e3d2946db5f5f086b34933a4bb8db52f1)
+- [Revert Fix ByteInput to properly zero bytes (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/5a4a8c71d85aad53624a126bc02cb4aa827fbad4)
 
 <a name="release">
 
