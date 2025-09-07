@@ -1,0 +1,18 @@
+# For details & more options, see documentation/AppManifests.md in firmware repo
+
+App(
+    appid="firestring",
+    name="Fire String",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="firestring_app",
+    stack_size=2 * 1024,
+    fap_category="Examples",
+    # Optional values
+    fap_version="0.1",
+    fap_icon="firestring.png",  # 10x10 1-bit PNG
+    fap_description="Generate truly random strings using IR noise as entropy.",
+    fap_author="Ryan Aboueljoud",
+    fap_weburl="https://github.com/RyanAboueljoud/Fire-String",
+    fap_icon_assets="images",  # Image assets to compile for this application
+    fap_libs=["assets"],  # Includes firmware assets linking
+)
