@@ -56,9 +56,19 @@ void nfc_playlist_load_settings(void* context) {
                 const char* v = furi_string_get_cstr(value);
 
                 if(strcmp(k, "emulate_timeout") == 0) {
-                    nfc_playlist->worker_info.settings->emulate_timeout = atoi(v);
+                    int emulate_timeout = atoi(v);
+                    if(emulate_timeout < 0 ||
+                       emulate_timeout >= (int)(sizeof(options_emulate_timeout) /
+                                                sizeof(options_emulate_timeout[0])))
+                        continue;
+                    nfc_playlist->worker_info.settings->emulate_timeout = emulate_timeout;
                 } else if(strcmp(k, "emulate_delay") == 0) {
-                    nfc_playlist->worker_info.settings->emulate_delay = atoi(v);
+                    int emulate_delay = atoi(v);
+                    if(emulate_delay < 0 ||
+                       emulate_delay >=
+                           (int)(sizeof(options_emulate_delay) / sizeof(options_emulate_delay[0])))
+                        continue;
+                    nfc_playlist->worker_info.settings->emulate_delay = emulate_delay;
                 } else if(strcmp(k, "emulate_led_indicator") == 0) {
                     nfc_playlist->worker_info.settings->emulate_led_indicator =
                         (strcasecmp(v, "true") == 0);

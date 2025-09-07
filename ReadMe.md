@@ -56,12 +56,12 @@ This software is for experimental purposes only and is not meant for any illegal
 - ESP Flasher: [Bump Marauder v1.8.5 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.8.5)
 - Updated: [MODBUS v1.1.3.1 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-rs485modbus) `Req: Modbus By ElectronicCats`
 - Updated: [MFDesfire Auth v1.0 (By Gatorixx)](https://github.com/Gatorixx/flipper-zero-legacy-authentication)
-- Updated: [NFC Playlist v3.4 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
 - [SubGHz: Linear protocols fixes (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/af67a99da9c741a283c0491b4c8645fb92d99258)
 - [Sub-GHz Remote: Fix hang with RAW files, prevent it for the future (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/bf106d5e3d2946db5f5f086b34933a4bb8db52f1)
 - [Revert Fix ByteInput to properly zero bytes (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/5a4a8c71d85aad53624a126bc02cb4aa827fbad4)
 - NFC: [Xero Merge Improvements (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/3a35730a24acae0636d1674e1ebb3857a64a5daa#diff-c529e0dd110ff74f85f983fee6262117f3773a7ff528f7b66b0f45220c5326d7)
 - Revert part of [Sub-GHz Remote: Fix hang with RAW files, prevent it for the future (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/bf106d5e3d2946db5f5f086b34933a4bb8db52f1)
+- Updated: [NFC Playlist v3.4 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
 
 <a name="release">
 
