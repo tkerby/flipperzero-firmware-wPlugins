@@ -3,7 +3,7 @@
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://lh3.googleusercontent.com/d/1iYQlRQXM7nA4IAdcPwvcKRSTCMoi8tug' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0826-1923-0.420.0-630e1e2.tgz&channel=RM0826-1923-0.420.0-630e1e2&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0907-1722-0.420.0-46b4982.tgz&channel=RM0907-1722-0.420.0-46b4982&version=0.420.0&target=f7)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -30,38 +30,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-09-07 17:07 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-09-07 17:07 EST`
-- Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip)
-- OFW: PR: [SubGHz: Linear and Dickert MAHS protocols fixes & improvements #4267 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4267)
-- OFW: PR: [Infrared: Added remotes for audio + tv #4266 (By LukeVilla)](https://github.com/flipperdevices/flipperzero-firmware/pull/4266)
-- NFC: [Parser for Banapass MFC 1k (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4260)
-- NFC: [Parser for Amusement IC (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4259)
-- Updated: [Lab401/DigiLab v1.1.1 (By lab-401 & tixlegeek)](https://github.com/lab-401/fzDigiLab)
-- Updated: [UID Brute Smarter v1.0 (By fbettag)](https://github.com/fbettag/uid_brute_smarter)
-- Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip)
-- Updated: [FlipSocial v2.0.1 (By jblanked)](https://github.com/jblanked/FlipSocial)
-- Updated: [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader) (Version Only)
-- Updated: [Weebo v0.3 (By bettse)](https://github.com/bettse/weebo) `Req: key_retail.bin on SD card /apps_data/weebo` (Amiibo Remixer)
-- Updated: [Seos compatible v1.2 (By bettse)](https://gitlab.com/bettse/flipper_seos)
-- [BT Remote: Add Rename Option, simplify Bad KB BLE profile (By aaronjamt & WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/pull/439)
-- Added: [CarJacker v1.0 (By RocketGod-git)](https://github.com/RocketGod-git/Flipper-Zero-CarJacker)
-- Updated: [Morse Master v1.1 (By w84death)](https://github.com/w84death/morse-master)
-- Added: [Hunter Killer v1.0 (By josephburnett)](https://github.com/josephburnett/hunter-flipper)
-- Added: [CANBUS ATTACK v1.0 (By jorgepnaranjo25)](https://github.com/jorgepnaranjo25/CAN-Bus-Attack) `Req: CANBUS By ElectronicCats`
-- Added: [Netflix TV Remote v0.1 (By ablaran)](https://github.com/ablaran/NetflixTvRemote)
-- Added Hunter Killer but not CarJacker to Default Games Mode Menu (By RogueMaster)
-- Created Icon for Hunter Killer (By RogueMaster)
-- Infrared: Fixed tv.ir (By cyba3r)
-- Infrared: Fixed audio.ir (By cyba3r)
-- Updated: [Sub-GHz Remote v1.5 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote)
-- ESP Flasher: [Bump Marauder v1.8.5 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.8.5)
-- Updated: [MODBUS v1.1.3.1 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-rs485modbus) `Req: Modbus By ElectronicCats`
-- Updated: [MFDesfire Auth v1.0 (By Gatorixx)](https://github.com/Gatorixx/flipper-zero-legacy-authentication)
-- [SubGHz: Linear protocols fixes (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/af67a99da9c741a283c0491b4c8645fb92d99258)
-- [Sub-GHz Remote: Fix hang with RAW files, prevent it for the future (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/bf106d5e3d2946db5f5f086b34933a4bb8db52f1)
-- [Revert Fix ByteInput to properly zero bytes (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/5a4a8c71d85aad53624a126bc02cb4aa827fbad4)
-- NFC: [Xero Merge Improvements (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/3a35730a24acae0636d1674e1ebb3857a64a5daa#diff-c529e0dd110ff74f85f983fee6262117f3773a7ff528f7b66b0f45220c5326d7)
-- Revert part of [Sub-GHz Remote: Fix hang with RAW files, prevent it for the future (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/bf106d5e3d2946db5f5f086b34933a4bb8db52f1)
-- Updated: [NFC Playlist v3.4 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
 
 <a name="release">
 
@@ -807,4 +775,4 @@ $ ./fbt dolphin_ext
 - Have a new app? Submit GitHub link to me on Discord for a special reward (if I add it to RM Firmware).
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0826-1923-0.420.0-630e1e2.tgz&channel=RM0826-1923-0.420.0-630e1e2&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0907-1722-0.420.0-46b4982.tgz&channel=RM0907-1722-0.420.0-46b4982&version=0.420.0&target=f7)
