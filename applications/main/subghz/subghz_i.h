@@ -41,10 +41,9 @@
 #include "helpers/subghz_txrx.h"
 #include "helpers/subghz_gps.h"
 
-#define SUBGHZ_MAX_LEN_NAME      64
-#define SUBGHZ_EXT_PRESET_NAME   true
-#define SUBGHZ_RAW_THRESHOLD_MIN (-90.0f)
-#define SUBGHZ_MEASURE_LOADING   false
+#define SUBGHZ_MAX_LEN_NAME    64
+#define SUBGHZ_EXT_PRESET_NAME true
+#define SUBGHZ_MEASURE_LOADING false
 
 struct SubGhz {
     Gui* gui;
