@@ -31,6 +31,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-09-07 17:07 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-09-07 17:07 EST`
 - [Sub-GHz: Fix RAW files again (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/f09942a4a3cb3bf5ba5c0ffcb03769282da2a325)
+- [Add Colemak keyboard layout for badusb (By Ashe-Sterling)](https://github.com/Next-Flip/Momentum-Firmware/pull/466)
 
 <a name="release">
 
