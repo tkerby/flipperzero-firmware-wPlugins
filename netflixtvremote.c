@@ -245,13 +245,17 @@ int32_t netflixtvremote_app(void* p) {
     gui_add_view_port(gui, main_viewport, GuiLayerFullscreen);
 
     // Main event loop: toggle between main grid and D-pad views
+    bool last_dpad_state = !dpad_active;
     while(running) {
-        if(dpad_active) {
-            gui_remove_view_port(gui, main_viewport);
-            gui_add_view_port(gui, dpad_viewport, GuiLayerFullscreen);
-        } else {
-            gui_remove_view_port(gui, dpad_viewport);
-            gui_add_view_port(gui, main_viewport, GuiLayerFullscreen);
+        if(dpad_active != last_dpad_state) {
+            if(dpad_active) {
+                gui_remove_view_port(gui, main_viewport);
+                gui_add_view_port(gui, dpad_viewport, GuiLayerFullscreen);
+            } else {
+                gui_remove_view_port(gui, dpad_viewport);
+                gui_add_view_port(gui, main_viewport, GuiLayerFullscreen);
+            }
+            last_dpad_state = dpad_active;
         }
         furi_delay_ms(50);
     }
