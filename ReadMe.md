@@ -33,6 +33,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Sub-GHz: Fix RAW files again (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/f09942a4a3cb3bf5ba5c0ffcb03769282da2a325)
 - [Add Colemak keyboard layout for badusb (By Ashe-Sterling)](https://github.com/Next-Flip/Momentum-Firmware/pull/466)
 - SubGHz: [Tweaks + Show Sats (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/blob/dev/applications/drivers/subghz/cc1101_ext/cc1101_ext.c)
+- Updated: [USB Mass Storage v1.5 (By nminaylov)](https://github.com/flipperdevices/flipperzero-good-faps/tree/nm/usb_mass_storage_app/mass_storage)
 
 <a name="release">
 
@@ -733,7 +734,7 @@ $ ./fbt dolphin_ext
 - [uPython v1.7 (By ofabel)](https://github.com/ofabel/mp-flipper)
 - [USB Consumer Control (By WithSecureLabs)](https://github.com/WithSecureLabs/usb-consumer-control)
 - [USB HID Autofire v0.6 (By pbek)](https://github.com/pbek/usb_hid_autofire)
-- [USB Mass Storage v1.4 (By nminaylov)](https://github.com/flipperdevices/flipperzero-good-faps/tree/nm/usb_mass_storage_app/mass_storage)
+- [USB Mass Storage v1.5 (By nminaylov)](https://github.com/flipperdevices/flipperzero-good-faps/tree/nm/usb_mass_storage_app/mass_storage)
 - [USB Midi v1.0 (By DrZlo13 & kribesk)](https://github.com/kribesk/flipper-zero-usb-midi) [Instructions by ESurge](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/applications/plugins/usb_midi/ReadMe.md)
 - [UV Meter v1.0 (By michaelbaisch)](https://github.com/michaelbaisch/uv_meter) `Req: AS7331`
 - [VB Migration Assistant v1.3 (By GMMan)](https://github.com/GMMan/flipperzero-vb-migrate)
