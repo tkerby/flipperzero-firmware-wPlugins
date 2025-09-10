@@ -34,6 +34,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Add Colemak keyboard layout for badusb (By Ashe-Sterling)](https://github.com/Next-Flip/Momentum-Firmware/pull/466)
 - SubGHz: [Tweaks + Show Sats (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/blob/dev/applications/drivers/subghz/cc1101_ext/cc1101_ext.c)
 - Updated: [USB Mass Storage v1.5 (By nminaylov)](https://github.com/flipperdevices/flipperzero-good-faps/tree/nm/usb_mass_storage_app/mass_storage)
+- Updated: [Netflix TV Remote v0.1 (By ablaran)](https://github.com/ablaran/NetflixTvRemote)
 
 <a name="release">
 
