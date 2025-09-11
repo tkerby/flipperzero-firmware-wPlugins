@@ -15,7 +15,7 @@ App(
     stack_size=2 * 1024,
     order=20,
     fap_icon="icons/lux_icon.png",
-    fap_category="Sensors",
+    fap_category="GPIO",
     fap_author="@Dr.Mosfet",
     fap_weburl="https://github.com/kamylwnb/Flipper-zero-app-VEML7700/tree/main",
     fap_version="1.0",
