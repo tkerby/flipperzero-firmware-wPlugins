@@ -9,18 +9,11 @@
 #define ALS_CONF_REG 0x00
 #define ALS_MEAS_RESULT_REG 0x04
 
-/**
- * @brief Konstruktor klasy VEML7700
- * @param i2c_address_7bit 7-bitowy adres I2C czujnika
- */
+
 VEML7700::VEML7700(uint8_t i2c_address_7bit) : _i2c_addr_8bit(i2c_address_7bit << 1) {}
 
-/**
- * @brief Inicjalizacja czujnika
- * @return true, jeśli inicjalizacja się powiodła, false w przeciwnym razie
- */
+
 bool VEML7700::init() {
-    // Wartości konfiguracyjne z Twojego kodu Pythona
     uint16_t initial_config_value = 0x0000;
     uint8_t config_buffer[3];
     config_buffer[0] = ALS_CONF_REG;
@@ -47,11 +40,7 @@ bool VEML7700::init() {
     return true;
 }
 
-/**
- * @brief Odczyt wartości lux z czujnika
- * @param lux_value Referencja, do której zapisana zostanie wartość lux
- * @return true, jeśli odczyt się powiódł, false w przeciwnym razie
- */
+
 bool VEML7700::readLux(float& lux_value) {
     uint8_t raw_data[2];
     uint8_t reg_addr = ALS_MEAS_RESULT_REG;
@@ -101,3 +90,4 @@ bool VEML7700::readLux(float& lux_value) {
     
     return true;
 }
+
