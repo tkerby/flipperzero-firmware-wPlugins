@@ -245,7 +245,6 @@ void fire_string_scene_on_enter_string_generator(void* context) {
 
     FireString* app = context;
 
-    widget_reset(app->widget);
     furi_string_reset(app->fire_string);
 
     if(app->settings->use_ir == true) {
@@ -288,6 +287,7 @@ void fire_string_scene_on_exit_string_generator(void* context) {
 
     FireString* app = context;
 
+    widget_reset(app->widget);
     if(app->settings->use_ir) {
         infrared_worker_rx_stop(app->ir_worker);
     }

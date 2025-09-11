@@ -10,11 +10,16 @@
 #include <gui/modules/text_box.h>
 #include <gui/modules/variable_item_list.h>
 #include <gui/modules/file_browser.h>
+#include <gui/modules/loading.h>
 #include <infrared.h>
 #include <infrared_worker.h>
 #include <furi_hal_infrared.h>
 #include <firestring_icons.h>
 #include <assets_icons.h>
+
+#include "helpers/bad_usb_hid.h"
+#include "helpers/ble_profile/extra_profiles/hid_profile.h"
+#include "helpers/ble_profile/extra_services/hid_service.h"
 
 #define TAG "firestring-app"
 
@@ -24,11 +29,11 @@ typedef enum {
     FireStringScene_Settings,
     FireStringScene_Generate,
     FireStringScene_GenerateStepTwo,
+    FireStringScene_LoadingUSB,
     FireStringScene_USB,
     FireStringScene_Save,
     FireStringScene_SavedPopup,
     // FireStringScene_AboutPopup,  // TODO
-    FireStringScene_Load,
     FireStringScene_count
 } FireStringScene;
 
@@ -36,10 +41,12 @@ typedef enum {
 typedef enum {
     FireStringView_Menu,
     FireStringView_VariableItemList,
+    FireStringView_Loading,
     FireStringView_Widget,
     FireStringView_Popup,
     FireStringView_FileBrowser,
-    FireStringView_TextInput
+    FireStringView_TextInput,
+
 } FireStringView;
 
 // custom event index
@@ -69,6 +76,14 @@ typedef struct {
     bool use_ir;
 } FireStringSettings;
 
+typedef struct {
+    const BadUsbHidApi* api;
+    void* hid_inst;
+    BadUsbHidInterface interface;
+    FuriHalUsbInterface* usb_if_prev;
+    uint16_t layout[128];
+} FireStringHID;
+
 // app context
 typedef struct {
     SceneManager* scene_manager;
@@ -79,7 +94,10 @@ typedef struct {
     VariableItemList* variable_item_list;
     FileBrowser* file_browser;
     Popup* popup;
+    Loading* loading;
     InfraredWorker* ir_worker;
     FuriString* fire_string;
+    FireStringHID* hid;
     FireStringSettings* settings;
+    FuriThread* thread;
 } FireString;

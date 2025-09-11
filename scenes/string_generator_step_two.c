@@ -4,9 +4,11 @@
 typedef enum {
     FireStringStepTwoSelection_USB,
     // FireStringStepTwoSelection_BT        // TODO
-    // FireStringStepTwoSelection_NFC,      // TODO
+    // FireStringStepTwoSelection_NFC,      // TODO?
     // FireStringStepTwoSelection_RFID,     // TODO?? Not sure if this has any uses?
-    // FireStringStepTwoSelection_Infrared  // TODO??? Does this even make any sense to do?
+    // FireStringStepTwoSelection_SUBGHZ    // TODO??? Is this getting too crazy?
+    // FireStringStepTwoSelection_Infrared  // TODO???? Does this even make any sense to do?
+
     FireStringStepTwoSelection_Save,
     FireStringStepTwoSelection_Restart,
     FireStringStepTwoSelection_Exit
@@ -20,7 +22,7 @@ void fire_string_menu_callback_step_two_menu(void* context, uint32_t index) {
 
     switch(index) {
     case FireStringStepTwoSelection_USB:
-        scene_manager_next_scene(app->scene_manager, FireStringScene_USB);
+        scene_manager_next_scene(app->scene_manager, FireStringScene_LoadingUSB);
         break;
     case FireStringStepTwoSelection_Save:
         break;
@@ -84,7 +86,7 @@ bool fire_string_scene_on_event_step_two_menu(void* context, SceneManagerEvent e
     case SceneManagerEventTypeCustom:
         switch(event.event) {
         case FireStringEvent_ShowBadUSBPopup:
-            scene_manager_next_scene(app->scene_manager, FireStringScene_USB);
+            scene_manager_next_scene(app->scene_manager, FireStringScene_LoadingUSB);
             consumed = true;
             break;
         case FireStringEvent_ShowSavedPopup: // DEBUG: popup, text_input or both?

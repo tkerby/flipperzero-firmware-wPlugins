@@ -7,6 +7,7 @@ void (*const fire_string_scene_on_enter_handlers[])(void*) = {
     fire_string_scene_on_enter_settings,
     fire_string_scene_on_enter_string_generator,
     fire_string_scene_on_enter_step_two_menu,
+    fire_string_scene_on_enter_loading_usb,
     fire_string_scene_on_enter_usb,
     // fire_string_scene_on_enter_load_string,
     // fire_string_scene_on_enter_about_popup   // TODO
@@ -18,6 +19,7 @@ bool (*const fire_string_scene_on_event_handlers[])(void*, SceneManagerEvent) = 
     fire_string_scene_on_event_settings,
     fire_string_scene_on_event_string_generator,
     fire_string_scene_on_event_step_two_menu,
+    fire_string_scene_on_event_loading_usb,
     fire_string_scene_on_event_usb,
     // fire_string_scene_on_event_load_string,
 };
@@ -28,6 +30,7 @@ void (*const fire_string_scene_on_exit_handlers[])(void*) = {
     fire_string_scene_on_exit_settings,
     fire_string_scene_on_exit_string_generator,
     fire_string_scene_on_exit_step_two_menu,
+    fire_string_scene_on_exit_loading_usb,
     fire_string_scene_on_exit_usb,
     // fire_string_scene_on_exit_load_string,
 };
@@ -55,6 +58,12 @@ bool fire_string_scene_manager_navigation_event_callback(void* context) {
     return scene_manager_handle_back_event(app->scene_manager);
 }
 
+static void fire_string_tick_event_callback(void* context) {
+    furi_assert(context);
+    FireString* app = context;
+    scene_manager_handle_tick_event(app->scene_manager);
+}
+
 /** initilize scene manager with all handlers */
 void fire_string_scene_manager_init(FireString* app) {
     FURI_LOG_T(TAG, "fire_string_scene_manager_init");
@@ -70,6 +79,8 @@ void fire_string_view_dispatcher_init(FireString* app) {
     FURI_LOG_D(TAG, "fire_string_view_dispatcher_init allocating views");
     app->menu = menu_alloc();
     app->widget = widget_alloc();
+    app->loading = loading_alloc();
+    app->popup = popup_alloc();
 
     // app->file_browser = file_browser_alloc();
     app->variable_item_list = variable_item_list_alloc();
@@ -82,6 +93,8 @@ void fire_string_view_dispatcher_init(FireString* app) {
         app->view_dispatcher, fire_string_scene_manager_custom_event_callback);
     view_dispatcher_set_navigation_event_callback(
         app->view_dispatcher, fire_string_scene_manager_navigation_event_callback);
+    view_dispatcher_set_tick_event_callback(
+        app->view_dispatcher, fire_string_tick_event_callback, 500);
 
     // add views to the dispatcher, indexed by their enum value
     FURI_LOG_D(TAG, "fire_string_view_dispatcher_init adding view menu");
@@ -106,6 +119,10 @@ void fire_string_view_dispatcher_init(FireString* app) {
     FURI_LOG_D(TAG, "fire_string_view_dispatcher_init adding view popup");
     view_dispatcher_add_view(
         app->view_dispatcher, FireStringView_Popup, popup_get_view(app->popup));
+
+    FURI_LOG_D(TAG, "fire_string_view_dispatcher_init adding view loading");
+    view_dispatcher_add_view(
+        app->view_dispatcher, FireStringView_Loading, loading_get_view(app->loading));
 }
 
 /** initilise app data, scene manager, and view dispatcher */
@@ -119,9 +136,18 @@ FireString* fire_string_init() {
     app->settings->str_type = StrType_AlphaNumSymb;
     app->settings->use_ir = true;
 
+    // Set HID defaults
+    app->hid = malloc(sizeof(FireStringHID));
+    app->hid->api = NULL;
+    app->hid->interface = BadUsbHidInterfaceUsb;
+    app->hid->usb_if_prev = NULL;
+    app->hid->hid_inst = NULL;
+    // Set default keyboard layout
+    memset(app->hid->layout, HID_KEYBOARD_NONE, sizeof(app->hid->layout));
+    memcpy(app->hid->layout, hid_asciimap, MIN(sizeof(hid_asciimap), sizeof(app->hid->layout)));
+
     app->fire_string = furi_string_alloc();
     app->ir_worker = infrared_worker_alloc();
-    app->popup = popup_alloc();
 
     fire_string_scene_manager_init(app);
     fire_string_view_dispatcher_init(app);
@@ -139,16 +165,19 @@ void fire_string_free(FireString* app) {
     view_dispatcher_remove_view(app->view_dispatcher, FireStringView_VariableItemList);
     view_dispatcher_remove_view(app->view_dispatcher, FireStringView_Widget);
     // view_dispatcher_remove_view(app->view_dispatcher, FireStringView_FileBrowser);
+    view_dispatcher_remove_view(app->view_dispatcher, FireStringView_Loading);
     view_dispatcher_remove_view(app->view_dispatcher, FireStringView_Popup);
 
     view_dispatcher_free(app->view_dispatcher);
     menu_free(app->menu);
     variable_item_list_free(app->variable_item_list);
     widget_free(app->widget);
+    loading_free(app->loading);
     furi_string_free(app->fire_string);
     infrared_worker_free(app->ir_worker);
     popup_free(app->popup);
     free(app->settings);
+    free(app->hid);
     free(app);
 }
 
