@@ -14,13 +14,22 @@ Inspired by a [Lemmy post](https://lemmy.dbzer0.com/post/29276607) from dipdowel
 
 :white_check_mark: Variable string lengths
 
-:black_square_button: Send generated string though Flipper's USB HID
+:white_check_mark: Send generated Fire String though Flipper's USB HID
 
 :black_square_button: Save generated string to internal storage
 
 :black_square_button: Load generated string from internal storage
 
 :black_square_button: Add an About popup to the main menu, introducing the app
+
+:black_square_button: Create custom app icon
+
+### Features to consider:
+* Send Fire String using Bluetooth HID
+* Use raw subghz noise as entropy
+* Send Fire String using various other wireless capabilities (for fun?) e.g. NFC, RFID, subghz, infrared
+* Create custom animations and icons for more flare 🔥
+* Spam mode - continuously generate and send random characters while center button is held down (could be fun?)
 
 ## Disclaimer
 
