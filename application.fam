@@ -1,0 +1,34 @@
+App(
+    appid="veml7700luxmeter",
+    name="VEML7700 Lux Meter",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="veml7700_app",
+    # Definicje, które mogą być używane w kodzie C++
+    cdefines=["APP_VEML7700"],
+    # Aplikacja wymaga dostępu do GUI i magistrali I2C
+    requires=[
+        "gui",
+        "i2c",
+    ],
+    # Pliki źródłowe dla Twojej aplikacji
+    sources=[
+        "veml7700_app.cpp",
+        "veml7700.cpp",
+    ],
+    # Rozmiar stosu dla aplikacji
+    stack_size=2 * 1024,
+    # Kolejność wyświetlania w menu
+    order=20,
+    # Ustawienia ikony (ikona powinna znajdować się w folderze "icons")
+    fap_icon="icons/lux_icon.png",
+    # Kategoria aplikacji w menu Flipper Zero
+    fap_category="GPIO",
+    # Dane autora (zmień na swoje)
+    fap_author="@TwojaNazwa",
+    # Adres strony internetowej / repozytorium
+    fap_weburl="https://github.com/TwojeRepo/flipper-veml7700",
+    # Wersja aplikacji
+    fap_version="1.0",
+    # Opis aplikacji
+    fap_description="Mierzy oświetlenie otoczenia w luksach za pomocą czujnika VEML7700 przez magistralę I2C i wyświetla wartość na ekranie.",
+)
