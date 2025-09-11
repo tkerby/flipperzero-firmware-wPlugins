@@ -7,40 +7,40 @@
 #include <furi_hal_gpio.h>
 #include <furi_hal_bus.h>
 
-// Adres I2C czujnika VEML7700 (7-bitowy)
+// VEML7700 sensor I2C address (7-bit)
 #define VEML7700_I2C_ADDR 0x10
 
-// Rejestry VEML7700
+// VEML7700 registers
 #define ALS_CONF_REG 0x00
 #define ALS_MEAS_RESULT_REG 0x04
-// Wzmocnienie (Gain)
+// Gain
 #define ALS_GAIN_1_8_VAL 0x02
 #define ALS_GAIN_1_4_VAL 0x01
 #define ALS_GAIN_1_VAL 0x00
 #define ALS_GAIN_2_VAL 0x03
-// Czas integracji (Integration Time)
+// Integration Time
 #define ALS_IT_100MS_VAL 0x00
-// Tryb oszczedzania energii
+// Power saving mode
 #define ALS_POWER_SAVE_MODE_1_VAL 0x00
 
-// Timeout dla operacji I2C
+// I2C operation timeout
 #define VEML7700_I2C_TIMEOUT 100
 
-// Enumeracja do zarzadzania stanami (ekranami) aplikacji
+// Enumeration for managing application states (screens)
 typedef enum {
     AppState_Main,
     AppState_Settings,
-    AppState_Credits,
+    AppState_About,
 } AppState;
 
-// Enumeracja dla opcji w menu ustawien
+// Enumeration for options in the settings menu
 typedef enum {
     SettingsItem_Address,
     SettingsItem_Gain,
     SettingsItem_Count
 } SettingsItem;
 
-// Struktura do przechowywania stanu aplikacji
+// Structure to store application state
 typedef struct {
     Gui* gui;
     ViewPort* view_port;
@@ -50,26 +50,26 @@ typedef struct {
     bool running;
     bool is_sensor_initialized;
 
-    // Zmienne dla ustawien
+    // Variables for settings
     uint8_t settings_cursor;
     uint8_t i2c_address;
     uint8_t als_gain; // 0=1/8, 1=1/4, 2=1, 3=2
 } VEML7700App;
 
-// Funkcja rysujaca glowny ekran
+// Function to draw the main screen
 static void draw_main_screen(Canvas* canvas, VEML7700App* app) {
     canvas_clear(canvas);
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str_aligned(canvas, 64, 5, AlignCenter, AlignTop, "VEML7700 LUX Meter");
 
-    // Zabezpiecz dostep do danych sensora
+    // Secure access to sensor data
     furi_mutex_acquire(app->mutex, FuriWaitForever);
     bool sensor_ok = app->is_sensor_initialized;
     float lux_value = app->lux_value;
     furi_mutex_release(app->mutex);
 
     if (sensor_ok) {
-        // Rysuj wartosc lux
+        // Draw lux value
         canvas_set_font(canvas, FontBigNumbers);
         FuriString* lux_str = furi_string_alloc();
         furi_string_printf(lux_str, "%.1f", (double)lux_value);
@@ -79,39 +79,39 @@ static void draw_main_screen(Canvas* canvas, VEML7700App* app) {
         canvas_set_font(canvas, FontPrimary);
         canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignTop, "lx");
     } else {
-        // Rysuj komunikat o braku czujnika
+        // Draw "sensor not connected" message
         canvas_set_font(canvas, FontPrimary);
-        const char* msg = "Podlacz czujnik";
+        const char* msg = "Connect sensor";
         canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignTop, msg);
     }
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str_aligned(canvas, 64, 60, AlignCenter, AlignBottom, "[Ok] Menu [<-] Wyjscie");
+    canvas_draw_str_aligned(canvas, 64, 60, AlignCenter, AlignBottom, "[Ok] Menu [<] Exit");
 }
 
-// Funkcja rysujaca ekran ustawien
+// Function to draw the settings screen
 static void draw_settings_screen(Canvas* canvas, VEML7700App* app) {
     canvas_clear(canvas);
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str_aligned(canvas, 64, 5, AlignCenter, AlignTop, "Ustawienia");
+    canvas_draw_str_aligned(canvas, 64, 5, AlignCenter, AlignTop, "Settings");
 
     FuriString* value_str = furi_string_alloc();
     canvas_set_font(canvas, FontSecondary);
     
-    // Rysuj opcje adresu I2C
+    // Draw I2C address option
     if (app->settings_cursor == SettingsItem_Address) {
         canvas_draw_box(canvas, 0, 20, 128, 15);
         canvas_set_color(canvas, ColorWhite);
     } else {
         canvas_set_color(canvas, ColorBlack);
     }
-    canvas_draw_str(canvas, 5, 30, "Adres I2C:");
+    canvas_draw_str(canvas, 5, 30, "I2C Address:");
     furi_string_printf(value_str, "0x%02X", app->i2c_address);
     canvas_draw_str_aligned(canvas, 123, 26, AlignRight, AlignTop, furi_string_get_cstr(value_str));
     if (app->settings_cursor == SettingsItem_Address) {
         canvas_draw_str(canvas, 1, 30, ">");
     }
 
-    // Rysuj opcje wzmocnienia
+    // Draw gain option
     canvas_set_font(canvas, FontSecondary);
     if (app->settings_cursor == SettingsItem_Gain) {
         canvas_draw_box(canvas, 0, 35, 128, 15);
@@ -120,7 +120,7 @@ static void draw_settings_screen(Canvas* canvas, VEML7700App* app) {
         canvas_set_color(canvas, ColorBlack);
     }
     const char* gain_values[] = {"1/8", "1/4", "1", "2"};
-    canvas_draw_str(canvas, 5, 45, "Wzmocnienie:");
+    canvas_draw_str(canvas, 5, 45, "Gain:");
     canvas_draw_str_aligned(canvas, 123, 41, AlignRight, AlignTop, gain_values[app->als_gain]);
     if (app->settings_cursor == SettingsItem_Gain) {
         canvas_draw_str(canvas, 1, 45, ">");
@@ -128,28 +128,28 @@ static void draw_settings_screen(Canvas* canvas, VEML7700App* app) {
     
     furi_string_free(value_str);
 
-    // Przycisk powrotu
+    // Back button
     canvas_set_color(canvas, ColorBlack);
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str_aligned(canvas, 64, 60, AlignCenter, AlignBottom, "[Ok] Powrot");
+    canvas_draw_str_aligned(canvas, 64, 60, AlignCenter, AlignBottom, "[Ok] Back");
 }
 
-// Funkcja rysujaca ekran z informacjami
-static void draw_credits_screen(Canvas* canvas, VEML7700App* app) {
-    UNUSED(app); // Oznaczenie parametru jako nieuzywanego
+// Function to draw the about screen
+static void draw_about_screen(Canvas* canvas, VEML7700App* app) {
+    UNUSED(app); // Mark parameter as unused
     canvas_clear(canvas);
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str_aligned(canvas, 64, 5, AlignCenter, AlignTop, "Informacje");
+    canvas_draw_str_aligned(canvas, 64, 5, AlignCenter, AlignTop, "About");
 
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignTop, "Aplikacja VEML7700");
-    canvas_draw_str_aligned(canvas, 64, 45, AlignCenter, AlignTop, "Autor: Dr Mosfet");
+    canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignTop, "VEML7700 Application");
+    canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignTop, "Author: Dr Mosfet");
     
-    // Przycisk powrotu
-    canvas_draw_str_aligned(canvas, 64, 60, AlignCenter, AlignBottom, "[Ok] Powrot");
+    // Back button
+    canvas_draw_str_aligned(canvas, 64, 60, AlignCenter, AlignBottom, "[Ok] Back");
 }
 
-// Glowna funkcja rysowania, ktora przelacza ekrany
+// Main drawing function that switches screens
 static void veml7700_draw_callback(Canvas* canvas, void* context) {
     furi_assert(context);
     VEML7700App* app = static_cast<VEML7700App*>(context);
@@ -161,13 +161,13 @@ static void veml7700_draw_callback(Canvas* canvas, void* context) {
         case AppState_Settings:
             draw_settings_screen(canvas, app);
             break;
-        case AppState_Credits:
-            draw_credits_screen(canvas, app);
+        case AppState_About:
+            draw_about_screen(canvas, app);
             break;
     }
 }
 
-// Nowa funkcja do konfiguracji czujnika VEML7700
+// Function to configure the VEML7700 sensor
 static bool init_veml7700(VEML7700App* app) {
     uint8_t als_gain_val;
     switch (app->als_gain) {
@@ -184,14 +184,14 @@ static bool init_veml7700(VEML7700App* app) {
             als_gain_val = ALS_GAIN_2_VAL;
             break;
         default:
-            als_gain_val = ALS_GAIN_1_VAL; // Domyslna wartosc
+            als_gain_val = ALS_GAIN_1_VAL; // Default value
             break;
     }
 
     uint16_t als_conf_data = (als_gain_val << 11) | (ALS_IT_100MS_VAL << 6) | (ALS_POWER_SAVE_MODE_1_VAL << 1);
 
     uint8_t write_buffer[3];
-    write_buffer[0] = ALS_CONF_REG; // Rejestr konfiguracji
+    write_buffer[0] = ALS_CONF_REG; // Configuration register
     write_buffer[1] = als_conf_data & 0xFF; // Low byte
     write_buffer[2] = (als_conf_data >> 8) & 0xFF; // High byte
 
@@ -210,18 +210,18 @@ static bool init_veml7700(VEML7700App* app) {
     return success;
 }
 
-// Funkcja odczytu danych z czujnika
+// Function to read data from the sensor
 static bool read_veml7700(VEML7700App* app) {
     uint8_t raw_data[2];
     uint8_t reg_addr = ALS_MEAS_RESULT_REG;
 
-    // Uzyskaj dostep do magistrali
+    // Acquire I2C bus access
     furi_hal_i2c_acquire(&furi_hal_i2c_handle_external);
 
-    // Sprobuj wyslac adres rejestru
+    // Attempt to send register address
     bool success_tx = furi_hal_i2c_tx_ext(
         &furi_hal_i2c_handle_external,
-        app->i2c_address << 1, // Uzycie adresu z ustawien
+        app->i2c_address << 1, // Use address from settings
         false,
         &reg_addr,
         1,
@@ -229,12 +229,12 @@ static bool read_veml7700(VEML7700App* app) {
         FuriHalI2cEndAwaitRestart,
         VEML7700_I2C_TIMEOUT);
 
-    // Sprobuj odczytac dane
+    // Attempt to read data
     bool success_rx = false;
     if (success_tx) {
         success_rx = furi_hal_i2c_rx_ext(
             &furi_hal_i2c_handle_external,
-            app->i2c_address << 1, // Uzycie adresu z ustawien
+            app->i2c_address << 1, // Use address from settings
             false,
             raw_data,
             2,
@@ -243,14 +243,14 @@ static bool read_veml7700(VEML7700App* app) {
             VEML7700_I2C_TIMEOUT);
     }
 
-    // Zwolnij magistrale
+    // Release I2C bus
     furi_hal_i2c_release(&furi_hal_i2c_handle_external);
 
     if (success_tx && success_rx) {
         uint16_t als_value = (static_cast<uint16_t>(raw_data[1]) << 8) | raw_data[0];
         furi_mutex_acquire(app->mutex, FuriWaitForever);
         
-        // Zastosuj współczynnik kompensacji w zależności od ustawionego wzmocnienia
+        // Apply compensation factor based on the set gain
         float gain_compensation;
         switch (app->als_gain) {
             case 0: // 1/8
@@ -266,7 +266,7 @@ static bool read_veml7700(VEML7700App* app) {
                 gain_compensation = 0.089152f;
                 break;
             default:
-                gain_compensation = 0.044576f; // Domyślne dla GAIN 1
+                gain_compensation = 0.044576f; // Default for GAIN 1
                 break;
         }
 
@@ -282,7 +282,7 @@ static bool read_veml7700(VEML7700App* app) {
     return false;
 }
 
-// Funkcja obslugi zdarzen wejscia (klawiszy)
+// Function to handle input events (keys)
 static void veml7700_input_callback(InputEvent* input_event, void* context) {
     furi_assert(context);
     VEML7700App* app = static_cast<VEML7700App*>(context);
@@ -295,7 +295,7 @@ static void veml7700_input_callback(InputEvent* input_event, void* context) {
                 } else if (input_event->key == InputKeyBack) {
                     app->running = false;
                 } else if (input_event->key == InputKeyRight) {
-                     app->current_state = AppState_Credits;
+                    app->current_state = AppState_About;
                 }
                 break;
             case AppState_Settings:
@@ -319,23 +319,23 @@ static void veml7700_input_callback(InputEvent* input_event, void* context) {
                             if (app->als_gain > 0) {
                                 app->als_gain--;
                             } else {
-                                app->als_gain = 3; // Zapętlenie
+                                app->als_gain = 3; // Looping
                             }
                         } else {
                             if (app->als_gain < 3) {
                                 app->als_gain++;
                             } else {
-                                app->als_gain = 0; // Zapętlenie
+                                app->als_gain = 0; // Looping
                             }
                         }
                     }
-                    // Zastosuj nowe ustawienia po zmianie wartosci
+                    // Apply new settings after changing a value
                     init_veml7700(app);
                 } else if (input_event->key == InputKeyOk || input_event->key == InputKeyBack) {
                     app->current_state = AppState_Main;
                 }
                 break;
-            case AppState_Credits:
+            case AppState_About:
                 if (input_event->key == InputKeyOk || input_event->key == InputKeyBack) {
                     app->current_state = AppState_Main;
                 }
@@ -344,7 +344,7 @@ static void veml7700_input_callback(InputEvent* input_event, void* context) {
     }
 }
 
-// Alokacja i inicjalizacja aplikacji
+// Application allocation and initialization
 static VEML7700App* veml7700_app_alloc() {
     VEML7700App* app = static_cast<VEML7700App*>(malloc(sizeof(VEML7700App)));
     furi_assert(app);
@@ -359,18 +359,15 @@ static VEML7700App* veml7700_app_alloc() {
     app->lux_value = 0.0f;
     app->is_sensor_initialized = false;
     
-    // Inicjalizacja ustawien
+    // Settings initialization
     app->settings_cursor = SettingsItem_Address;
     app->i2c_address = VEML7700_I2C_ADDR;
-    app->als_gain = 2; // Domyslne wzmocnienie 1, to jest 2gi indeks
+    app->als_gain = 2; // Default gain 1, which is index 2
     
-    // ZAWSZE inicjalizuj czujnik na poczatku
-    init_veml7700(app);
-
     return app;
 }
 
-// Zwolnienie zasobow
+// Free resources
 static void veml7700_app_free(VEML7700App* app) {
     furi_assert(app);
     gui_remove_view_port(app->gui, app->view_port);
@@ -380,16 +377,27 @@ static void veml7700_app_free(VEML7700App* app) {
     free(app);
 }
 
-// Punkt wejscia aplikacji
+// Application entry point
 extern "C" int32_t veml7700_app(void* p) {
     UNUSED(p);
     VEML7700App* app = veml7700_app_alloc();
 
-    // Glowna petla aplikacji
+    // Main application loop
     while (app->running) {
-        read_veml7700(app);
+        // If the sensor is not initialized, try to initialize it.
+        // This handles cases where the sensor is connected after the app starts.
+        if(!app->is_sensor_initialized) {
+            app->is_sensor_initialized = init_veml7700(app);
+        }
+
+        // Only read from the sensor if it is initialized.
+        // The read function will update the is_sensor_initialized flag if it fails.
+        if(app->is_sensor_initialized) {
+            read_veml7700(app);
+        }
+
         view_port_update(app->view_port);
-        furi_delay_ms(500); // Odswiezanie co 500ms
+        furi_delay_ms(500); // Refresh every 500ms
     }
     
     veml7700_app_free(app);
