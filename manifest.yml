@@ -1,0 +1,10 @@
+fap_version: 1.0
+fap_source_base: "."
+fap_icon: veml7700_10x10.png
+fap_category: "Sensors" 
+fap_name: "VEML7700 Lux Meter"
+fap_author: "Dr.Mosfet"
+fap_description: "An application for measuring light intensity using the VEML7700 sensor."
+fap_targets:
+  - f7
+  - wb55
