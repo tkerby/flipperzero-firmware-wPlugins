@@ -1,10 +1,14 @@
-fap_version: 1.0
-fap_source_base: "."
-fap_icon: veml7700_10x10.png
-fap_category: "Sensors" 
-fap_name: "VEML7700 Lux Meter"
-fap_author: "Dr.Mosfet"
-fap_description: "An application for measuring light intensity using the VEML7700 sensor."
-fap_targets:
-  - f7
-  - wb55
+sourcecode:
+  type: git
+  location:
+    origin: https://github.com/kamylwnb/Flipper-zero-app-VEML7700
+    commit_sha: 7ab6ac3c6711d844739627c1a8dd0615757bfa18
+
+short_description: An application for measuring light intensity using the VEML7700 sensor.
+
+description: "@README.md"
+changelog: "@changelog.md"
+
+screenshots:
+  - screenshots/screenshot1.png
+  - screenshots/screenshot2.png
