@@ -382,16 +382,11 @@ extern "C" int32_t veml7700_app(void* p) {
     UNUSED(p);
     VEML7700App* app = veml7700_app_alloc();
 
-    // Main application loop
     while (app->running) {
-        // If the sensor is not initialized, try to initialize it.
-        // This handles cases where the sensor is connected after the app starts.
         if(!app->is_sensor_initialized) {
             app->is_sensor_initialized = init_veml7700(app);
         }
 
-        // Only read from the sensor if it is initialized.
-        // The read function will update the is_sensor_initialized flag if it fails.
         if(app->is_sensor_initialized) {
             read_veml7700(app);
         }
@@ -403,3 +398,4 @@ extern "C" int32_t veml7700_app(void* p) {
     veml7700_app_free(app);
     return 0;
 }
+
