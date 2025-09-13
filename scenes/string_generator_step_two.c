@@ -27,7 +27,9 @@ void fire_string_menu_callback_step_two_menu(void* context, uint32_t index) {
     case FireStringStepTwoSelection_Save:
         break;
     case FireStringStepTwoSelection_Restart:
-        scene_manager_next_scene(app->scene_manager, FireStringScene_Generate);
+        furi_string_reset(app->fire_string);
+        scene_manager_search_and_switch_to_previous_scene(
+            app->scene_manager, FireStringScene_Generate);
         break;
     case FireStringStepTwoSelection_Exit:
         view_dispatcher_stop(app->view_dispatcher);

@@ -94,7 +94,7 @@ void fire_string_view_dispatcher_init(FireString* app) {
     view_dispatcher_set_navigation_event_callback(
         app->view_dispatcher, fire_string_scene_manager_navigation_event_callback);
     view_dispatcher_set_tick_event_callback(
-        app->view_dispatcher, fire_string_tick_event_callback, 500);
+        app->view_dispatcher, fire_string_tick_event_callback, 10);
 
     // add views to the dispatcher, indexed by their enum value
     FURI_LOG_D(TAG, "fire_string_view_dispatcher_init adding view menu");

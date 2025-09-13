@@ -82,6 +82,7 @@ typedef struct {
     BadUsbHidInterface interface;
     FuriHalUsbInterface* usb_if_prev;
     uint16_t layout[128];
+    char* char_list;
 } FireStringHID;
 
 // app context

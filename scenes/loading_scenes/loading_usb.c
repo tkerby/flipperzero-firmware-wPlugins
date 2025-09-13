@@ -63,6 +63,7 @@ bool fire_string_scene_on_event_loading_usb(void* context, SceneManagerEvent eve
                 furi_thread_get_state(app->thread) == FuriThreadStateRunning ? "Running" :
                                                                                "Starting");
         }
+        furi_delay_tick(500);
         break;
     case SceneManagerEventTypeBack:
         app->hid->api->deinit(app->hid->hid_inst);

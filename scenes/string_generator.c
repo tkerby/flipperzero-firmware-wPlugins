@@ -9,7 +9,10 @@
 
 void build_string_generator_widget(FireString* app);
 
-const char* get_char_list(FireString* app) {
+#define DEFAULT_DELAY 250
+uint32_t delay_ms = DEFAULT_DELAY;
+
+void get_char_list(FireString* app) {
     FuriString* list = furi_string_alloc();
 
     // Alphabet: Uppercase (65-90) and Lowercase (97-122)
@@ -105,18 +108,20 @@ const char* get_char_list(FireString* app) {
         break;
     }
 
-    return furi_string_get_cstr(list);
+    app->hid->char_list = (char*)malloc(sizeof(char) * furi_string_size(list));
+    memcpy(app->hid->char_list, furi_string_get_cstr(list), furi_string_size(list));
+    furi_string_free(list);
 }
 
-static void get_random_str(FireString* app) {
+void get_random_str(FireString* app) {
     uint8_t rnd_byte = 0b00000000;
-    char* buffer = malloc(sizeof(char) * app->settings->str_len + 1);
-    const char* char_list = get_char_list(app);
-    const size_t char_list_len = strlen(char_list);
+    uint32_t str_len = app->settings->str_len - furi_string_size(app->fire_string);
+    char* buffer = malloc(sizeof(char) * str_len + 1);
+    const size_t char_list_len = strlen(app->hid->char_list);
 
     furi_hal_random_init();
 
-    for(uint32_t i = 0; i < app->settings->str_len; i++) {
+    for(uint32_t i = 0; i < str_len; i++) {
         furi_hal_random_fill_buf(&rnd_byte, sizeof(rnd_byte));
         rnd_byte &= 0b01111111;
         while(rnd_byte > char_list_len - 1) {
@@ -124,22 +129,32 @@ static void get_random_str(FireString* app) {
             furi_hal_random_fill_buf(&rnd_byte, sizeof(rnd_byte));
             rnd_byte &= 0b01111111;
         }
-        buffer[i] = char_list[rnd_byte];
-
-        // TODO: Maybe add fun animated delay to string generation - might need to use scene_manager_handle_tick_event or something similar to view_port_update?
-        //       Code below does not trigger UI update, not sure why. Maybe furi_delay_ is locking update?
-        // uint32_t delay_us = 1000000;
-        // furi_string_reset(app->fire_string);
-        // furi_string_set_str(app->fire_string, buffer);
-        // build_string_generator_widget(app);
-        // furi_delay_us(delay_us);
-        // // delay_us = delay_us / 2;     // Some sort of quick decay curve for delay time
+        buffer[i] = app->hid->char_list[rnd_byte];
     }
-    buffer[app->settings->str_len + 1] = '\0'; // does furi_string_ handle this automatically?
+    buffer[str_len + 1] = '\0';
 
-    furi_string_set_str(app->fire_string, buffer);
+    furi_string_cat_str(app->fire_string, buffer);
 
     free(buffer);
+}
+
+void get_random_char(FireString* app) {
+    uint8_t rnd_byte = 0b00000000;
+    char buffer;
+    const size_t char_list_len = strlen(app->hid->char_list);
+
+    furi_hal_random_init();
+
+    furi_hal_random_fill_buf(&rnd_byte, sizeof(rnd_byte));
+    rnd_byte &= 0b01111111;
+    while(rnd_byte > char_list_len - 1) {
+        rnd_byte = 0;
+        furi_hal_random_fill_buf(&rnd_byte, sizeof(rnd_byte));
+        rnd_byte &= 0b01111111;
+    }
+    buffer = app->hid->char_list[rnd_byte];
+
+    furi_string_cat_printf(app->fire_string, "%c", buffer);
 }
 
 void string_generator_btn_callback(GuiButtonType result, InputType type, void* context) {
@@ -159,10 +174,10 @@ void string_generator_btn_callback(GuiButtonType result, InputType type, void* c
             break;
         case GuiButtonTypeCenter:
             furi_string_reset(app->fire_string);
-            if(app->settings->use_ir == false) {
-                get_random_str(app);
+            delay_ms = DEFAULT_DELAY;
+            if(app->settings->use_ir == true) {
+                build_string_generator_widget(app);
             }
-            build_string_generator_widget(app);
             break;
         default:
             break;
@@ -187,8 +202,11 @@ void build_string_generator_widget(FireString* app) {
 
     widget_add_button_element(
         app->widget, GuiButtonTypeLeft, "Config", string_generator_btn_callback, app);
-    widget_add_button_element(
-        app->widget, GuiButtonTypeCenter, "New", string_generator_btn_callback, app);
+
+    if(furi_string_size(app->fire_string) > 0) {
+        widget_add_button_element(
+            app->widget, GuiButtonTypeCenter, "Reset", string_generator_btn_callback, app);
+    }
 
     if(furi_string_size(app->fire_string) == app->settings->str_len) {
         widget_add_button_element(
@@ -212,8 +230,7 @@ static void ir_received_callback(void* context, InfraredWorkerSignal* signal) {
     furi_assert(context);
 
     FireString* app = context;
-    const char* char_list = get_char_list(app);
-    const size_t char_list_len = strlen(char_list);
+    const size_t char_list_len = strlen(app->hid->char_list);
 
     const uint32_t* timings;
     size_t timings_size;
@@ -224,7 +241,7 @@ static void ir_received_callback(void* context, InfraredWorkerSignal* signal) {
     uint32_t i = 0;
     while((furi_string_size(app->fire_string) + strlen(tmpStr)) < app->settings->str_len &&
           i < timings_size) {
-        tmpStr[i] = char_list[timings[i] % char_list_len];
+        tmpStr[i] = app->hid->char_list[timings[i] % char_list_len];
         i++;
     }
     if(furi_string_size(app->fire_string) > 0) {
@@ -245,15 +262,13 @@ void fire_string_scene_on_enter_string_generator(void* context) {
 
     FireString* app = context;
 
-    furi_string_reset(app->fire_string);
+    get_char_list(app);
 
     if(app->settings->use_ir == true) {
         infrared_worker_rx_enable_signal_decoding(app->ir_worker, false);
         infrared_worker_rx_enable_blink_on_receiving(app->ir_worker, true);
         infrared_worker_rx_set_received_signal_callback(app->ir_worker, ir_received_callback, app);
         infrared_worker_rx_start(app->ir_worker);
-    } else {
-        get_random_str(app);
     }
 
     build_string_generator_widget(app);
@@ -267,17 +282,32 @@ bool fire_string_scene_on_event_string_generator(void* context, SceneManagerEven
 
     FireString* app = context;
     bool consumed = false;
-    if(event.type == SceneManagerEventTypeCustom) {
-        if(event.event == GuiButtonTypeCenter) {
-            get_random_str(app);
-            consumed = true;
-        }
-    } else if(event.type == SceneManagerEventTypeBack) {
+    switch(event.type) {
+    case SceneManagerEventTypeCustom:
+        break;
+    case SceneManagerEventTypeBack:
         scene_manager_previous_scene(app->scene_manager);
         consumed = true;
-    } else {
-        consumed = false;
+        break;
+    case SceneManagerEventTypeTick:
+        // animate automatic string generation
+        if(furi_string_size(app->fire_string) < app->settings->str_len && !app->settings->use_ir) {
+            if(furi_string_size(app->fire_string) > 30) {
+                get_random_str(app);
+            } else {
+                get_random_char(app);
+                furi_delay_tick(furi_ms_to_ticks(delay_ms));
+                if(delay_ms > 1) {
+                    delay_ms /= 1.5;
+                } else {
+                    delay_ms = 0;
+                }
+            }
+            build_string_generator_widget(app);
+        }
+        break;
     }
+
     return consumed;
 }
 
@@ -286,6 +316,7 @@ void fire_string_scene_on_exit_string_generator(void* context) {
     furi_assert(context);
 
     FireString* app = context;
+    free(app->hid->char_list);
 
     widget_reset(app->widget);
     if(app->settings->use_ir) {
