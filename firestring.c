@@ -78,6 +78,7 @@ void fire_string_view_dispatcher_init(FireString* app) {
     // allocate each view
     FURI_LOG_D(TAG, "fire_string_view_dispatcher_init allocating views");
     app->menu = menu_alloc();
+    app->submenu = submenu_alloc();
     app->widget = widget_alloc();
     app->loading = loading_alloc();
     app->popup = popup_alloc();
@@ -99,6 +100,10 @@ void fire_string_view_dispatcher_init(FireString* app) {
     // add views to the dispatcher, indexed by their enum value
     FURI_LOG_D(TAG, "fire_string_view_dispatcher_init adding view menu");
     view_dispatcher_add_view(app->view_dispatcher, FireStringView_Menu, menu_get_view(app->menu));
+
+    FURI_LOG_D(TAG, "fire_string_view_dispatcher_init adding view submenu");
+    view_dispatcher_add_view(
+        app->view_dispatcher, FireStringView_SubMenu, submenu_get_view(app->submenu));
 
     FURI_LOG_D(TAG, "fire_string_view_dispatcher_init adding view variable_item_list");
     view_dispatcher_add_view(
@@ -162,6 +167,7 @@ void fire_string_free(FireString* app) {
     FURI_LOG_T(TAG, "fire_string_free");
     scene_manager_free(app->scene_manager);
     view_dispatcher_remove_view(app->view_dispatcher, FireStringView_Menu);
+    view_dispatcher_remove_view(app->view_dispatcher, FireStringView_SubMenu);
     view_dispatcher_remove_view(app->view_dispatcher, FireStringView_VariableItemList);
     view_dispatcher_remove_view(app->view_dispatcher, FireStringView_Widget);
     // view_dispatcher_remove_view(app->view_dispatcher, FireStringView_FileBrowser);
@@ -170,6 +176,7 @@ void fire_string_free(FireString* app) {
 
     view_dispatcher_free(app->view_dispatcher);
     menu_free(app->menu);
+    submenu_free(app->submenu);
     variable_item_list_free(app->variable_item_list);
     widget_free(app->widget);
     loading_free(app->loading);

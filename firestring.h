@@ -5,6 +5,7 @@
 #include <gui/view_dispatcher.h>
 #include <gui/scene_manager.h>
 #include <gui/modules/menu.h>
+#include <gui/modules/submenu.h>
 #include <gui/modules/widget.h>
 #include <gui/modules/popup.h>
 #include <gui/modules/text_box.h>
@@ -40,13 +41,13 @@ typedef enum {
 // view index
 typedef enum {
     FireStringView_Menu,
+    FireStringView_SubMenu,
     FireStringView_VariableItemList,
     FireStringView_Loading,
     FireStringView_Widget,
     FireStringView_Popup,
     FireStringView_FileBrowser,
     FireStringView_TextInput,
-
 } FireStringView;
 
 // custom event index
@@ -91,6 +92,7 @@ typedef struct {
     ViewDispatcher* view_dispatcher;
     Gui* gui;
     Menu* menu;
+    Submenu* submenu;
     Widget* widget;
     VariableItemList* variable_item_list;
     FileBrowser* file_browser;

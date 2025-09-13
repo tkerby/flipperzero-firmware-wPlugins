@@ -8,7 +8,6 @@ typedef enum {
     // FireStringStepTwoSelection_RFID,     // TODO?? Not sure if this has any uses?
     // FireStringStepTwoSelection_SUBGHZ    // TODO??? Is this getting too crazy?
     // FireStringStepTwoSelection_Infrared  // TODO???? Does this even make any sense to do?
-
     FireStringStepTwoSelection_Save,
     FireStringStepTwoSelection_Restart,
     FireStringStepTwoSelection_Exit
@@ -37,44 +36,38 @@ void fire_string_menu_callback_step_two_menu(void* context, uint32_t index) {
     }
 }
 
-/** resets the menu, gives it content, callbacks and selection enums */
 void fire_string_scene_on_enter_step_two_menu(void* context) {
     FURI_LOG_T(TAG, "fire_string_scene_on_enter_step_two_menu");
     furi_check(context);
 
     FireString* app = context;
-    menu_reset(app->menu);
 
-    menu_add_item(
-        app->menu,
-        "USB",
-        NULL,
+    submenu_add_item(
+        app->submenu,
+        "Send through USB",
         FireStringStepTwoSelection_USB,
         fire_string_menu_callback_step_two_menu,
         app);
-    menu_add_item(
-        app->menu,
-        "Save",
-        NULL,
+    submenu_add_item(
+        app->submenu,
+        "Save to internal storage",
         FireStringStepTwoSelection_Save,
         fire_string_menu_callback_step_two_menu,
         app);
-    menu_add_item(
-        app->menu,
+    submenu_add_item(
+        app->submenu,
         "Restart",
-        NULL,
         FireStringStepTwoSelection_Restart,
         fire_string_menu_callback_step_two_menu,
         app);
-    menu_add_item(
-        app->menu,
+    submenu_add_item(
+        app->submenu,
         "Exit",
-        NULL,
         FireStringStepTwoSelection_Exit,
         fire_string_menu_callback_step_two_menu,
         app);
 
-    view_dispatcher_switch_to_view(app->view_dispatcher, FireStringView_Menu);
+    view_dispatcher_switch_to_view(app->view_dispatcher, FireStringView_SubMenu);
 }
 
 /** main menu event handler - switches scene based on the event */
@@ -118,5 +111,5 @@ void fire_string_scene_on_exit_step_two_menu(void* context) {
     furi_check(context);
 
     FireString* app = context;
-    menu_reset(app->menu);
+    submenu_reset(app->submenu);
 }
