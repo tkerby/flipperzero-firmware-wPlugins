@@ -1,6 +1,6 @@
 #include "transaction_detail.h"
 #include "../view_modules/elements.h"
-#include "assets_icons.h"
+#include "../view_modules/app_elements.h"
 
 struct TransactionDetailView {
     View* view;
@@ -60,27 +60,22 @@ void transaction_detail_reset(TransactionDetailView* instance) {
 static void transaction_detail_view_draw_cb(Canvas* canvas, void* _model) {
     RecordListViewModel* model = _model;
     TUnionMessage* msg = model->message;
-    TUnionTransaction* curr_transcation = &msg->transactions[model->index];
+    TUnionTransaction* transcation = &msg->transactions[model->index];
 
     FuriString* temp_str = furi_string_alloc();
 
     // 翻页箭头
-    if(model->index != 0) {
-        canvas_draw_icon(canvas, 118, 3, &I_ButtonUp_7x4);
-    }
-    if(model->index != msg->transaction_cnt - 1) {
-        canvas_draw_icon(canvas, 118, 60, &I_ButtonDown_7x4);
-    }
+    elements_draw_page_cursor(canvas, model->index, msg->transaction_cnt);
 
     canvas_draw_box(canvas, 0, 0, 116, 16);
     canvas_set_color(canvas, ColorWhite);
     // 交易类型
-    if(curr_transcation->type == 9) {
-        if(curr_transcation->money != 0)
+    if(transcation->type == 9) {
+        if(transcation->money != 0)
             furi_string_set(temp_str, "消费");
         else
             furi_string_set(temp_str, "区间记账");
-    } else if(curr_transcation->type == 2)
+    } else if(transcation->type == 2)
         furi_string_set(temp_str, "充值");
     else
         furi_string_set(temp_str, "其他");
@@ -92,14 +87,14 @@ static void transaction_detail_view_draw_cb(Canvas* canvas, void* _model) {
     furi_string_printf(
         temp_str,
         "%c%lu.%lu",
-        (curr_transcation->type == 2) ? '+' : '-',
-        curr_transcation->money / 100,
-        curr_transcation->money % 100);
+        (transcation->type == 2) ? '+' : '-',
+        transcation->money / 100,
+        transcation->money % 100);
     canvas_draw_str(canvas, 52, 12, furi_string_get_cstr(temp_str));
     furi_string_reset(temp_str);
 
     // 交易序号
-    furi_string_printf(temp_str, "#%u", curr_transcation->seqense);
+    furi_string_printf(temp_str, "#%u", transcation->seqense);
     canvas_set_font(canvas, FontSecondary);
     canvas_draw_str(canvas, 80, 12, furi_string_get_cstr(temp_str));
     furi_string_reset(temp_str);
@@ -110,12 +105,12 @@ static void transaction_detail_view_draw_cb(Canvas* canvas, void* _model) {
     furi_string_printf(
         temp_str,
         "%04u-%02u-%02u %02u:%02u:%02u",
-        curr_transcation->year,
-        curr_transcation->month,
-        curr_transcation->day,
-        curr_transcation->hour,
-        curr_transcation->month,
-        curr_transcation->second);
+        transcation->year,
+        transcation->month,
+        transcation->day,
+        transcation->hour,
+        transcation->month,
+        transcation->second);
     canvas_draw_str(canvas, 2, 26, furi_string_get_cstr(temp_str));
     furi_string_reset(temp_str);
 
@@ -123,13 +118,13 @@ static void transaction_detail_view_draw_cb(Canvas* canvas, void* _model) {
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str(canvas, 2, 40, "Terminal ID");
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str(canvas, 2, 50, curr_transcation->terminal_id);
+    canvas_draw_str(canvas, 2, 50, transcation->terminal_id);
 
     // type值
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str(canvas, 80, 40, "Type");
     canvas_set_font(canvas, FontSecondary);
-    furi_string_printf(temp_str, "%02u", curr_transcation->type);
+    furi_string_printf(temp_str, "%02u", transcation->type);
     canvas_draw_str(canvas, 80, 50, furi_string_get_cstr(temp_str));
 
     furi_string_free(temp_str);

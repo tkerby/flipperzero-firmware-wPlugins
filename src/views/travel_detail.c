@@ -1,5 +1,6 @@
 #include "travel_detail.h"
 #include "../view_modules/elements.h"
+#include "../view_modules/app_elements.h"
 
 struct TravelDetailView {
     View* view;
@@ -19,12 +20,7 @@ void travel_detail_process_up(TravelDetailView* instance) {
         instance->view,
         RecordListViewModel * model,
         {
-            const size_t items_size = model->message->travel_cnt;
-
-            if(model->index > 0)
-                model->index--;
-            else
-                model->index = items_size - 1;
+            if(model->index > 0) model->index--;
         },
         true);
 }
@@ -34,12 +30,7 @@ void travel_detail_process_down(TravelDetailView* instance) {
         instance->view,
         RecordListViewModel * model,
         {
-            const size_t items_size = model->message->travel_cnt;
-
-            if(model->index < items_size - 1)
-                model->index++;
-            else
-                model->index = 0;
+            if(model->index < model->message->travel_cnt - 1) model->index++;
         },
         true);
 }
@@ -71,11 +62,55 @@ void travel_detail_reset(TravelDetailView* instance) {
 }
 
 static void travel_detail_view_draw_cb(Canvas* canvas, void* _model) {
-    RecordListViewModel* model = _model;
+    RecordListViewModel *model = _model;
+    TUnionMessage *msg = model->message;
+    TUnionMessageExt *msg_ext = model->message_ext;
 
-    FuriString* temp_str = furi_string_alloc_printf("travel detail idx=%d", model->index);
+    TUnionTravel *travel = &msg->travels[model->index];
+    TUnionTravelExt *travel_ext = &msg_ext->travels_ext[model->index];
+
+    FuriString* temp_str = furi_string_alloc();
+    
+    // 翻页箭头
+    elements_draw_page_cursor(canvas, model->index, msg->travel_cnt);
+
+    // 时间戳
+    canvas_draw_box(canvas, 0, 0, 116, 10);
+    canvas_set_color(canvas, ColorWhite);
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str(canvas, 2, 8, furi_string_get_cstr(temp_str));
+    furi_string_printf(
+        temp_str,
+        "%04u-%02u-%02u %02u:%02u:%02u",
+        travel->year,
+        travel->month,
+        travel->day,
+        travel->hour,
+        travel->month,
+        travel->second);
+    canvas_draw_str(canvas, 2, 9, furi_string_get_cstr(temp_str));
+    furi_string_reset(temp_str);
+
+    canvas_set_color(canvas, ColorBlack);
+
+    // 城市
+    elements_draw_str_utf8(canvas, 2, 24, furi_string_get_cstr(travel_ext->city_name));
+    
+    // 交通LOGO
+    canvas_draw_rframe(canvas, 2, 26, 36, 36, 1);
+    if (travel_ext->line_type == LineTypeMetro) {
+        const Icon *logo = get_mtr_logo_by_city_id(travel->city_id);
+        canvas_draw_icon(canvas, 4, 26 + 2, logo);
+    }
+
+    // 线路名
+    elements_draw_str_utf8(canvas, 40, 42, furi_string_get_cstr(travel_ext->line_name));
+    
+    // 站台名
+    elements_draw_str_utf8(canvas, 40, 56, furi_string_get_cstr(travel_ext->station_name));
+
+    // 行程属性图标
+    elements_draw_travel_attr_icons(canvas, 40, 60, travel, travel_ext);
+    
     furi_string_free(temp_str);
 }
 

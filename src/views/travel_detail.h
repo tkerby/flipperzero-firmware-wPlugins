@@ -3,8 +3,10 @@
 #include <furi.h>
 #include <gui/view.h>
 #include "../protocol/t_union_msg.h"
-#include "../utils/t_union_msgext.h"
 #include "../t_union_custom_events.h"
+
+#include "../utils/t_union_msgext.h"
+#include "../utils/logo.h"
 
 typedef struct TravelDetailView TravelDetailView;
 typedef void (*TravelDetailViewCallback)(TUM_CustomEvent event, void* context);
