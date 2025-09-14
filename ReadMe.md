@@ -35,6 +35,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - SubGHz: [Tweaks + Show Sats (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/blob/dev/applications/drivers/subghz/cc1101_ext/cc1101_ext.c)
 - Updated: [USB Mass Storage v1.5 (By nminaylov)](https://github.com/flipperdevices/flipperzero-good-faps/tree/nm/usb_mass_storage_app/mass_storage) [Add ability for mass storage to spoof USB identity values (By xtruan)](https://github.com/Next-Flip/Momentum-Apps/pull/60)
 - Updated: [Netflix TV Remote v0.1 (By ablaran)](https://github.com/ablaran/NetflixTvRemote)
+- Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip)
 
 <a name="release">
 
