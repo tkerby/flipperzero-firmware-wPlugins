@@ -1136,15 +1136,51 @@ static bool renfe_sum10_parse(FuriString* parsed_data, const MfClassicData* data
             furi_string_cat_printf(parsed_data, "Type: Unknown\n");
         }
 
-        // 2. Extract and show UID
-        if(data->iso14443_3a_data && data->iso14443_3a_data->uid_len > 0) {
-            // UID available from live reading
-            furi_string_cat_printf(parsed_data, "UID: Available\n");
-        } else if(mf_classic_is_block_read(data, 0)) {
-            // Show simplified UID info
-            furi_string_cat_printf(parsed_data, "UID: Available\n");
+        // 2. Extract and show UID (SECURE VERSION - following renfe_regular approach)
+        if(data && data->iso14443_3a_data && data->iso14443_3a_data->uid_len > 0) {
+            // UID available from live reading - show actual UID
+            const uint8_t* uid = data->iso14443_3a_data->uid;
+            size_t uid_len = data->iso14443_3a_data->uid_len;
+
+            furi_string_cat_printf(parsed_data, "UID: ");
+            for(size_t i = 0; i < uid_len; i++) {
+                furi_string_cat_printf(parsed_data, "%02X", uid[i]);
+                if(i < uid_len - 1) {
+                    furi_string_cat_printf(parsed_data, " ");
+                }
+            }
+            furi_string_cat_printf(parsed_data, "\n");
         } else {
-            furi_string_cat_printf(parsed_data, "UID: N/A\n");
+            // Try to extract UID from block 0 as fallback
+            if(mf_classic_is_block_read(data, 0)) {
+                const uint8_t* block0 = data->block[0].data;
+
+                // Additional null pointer safety check
+                if(block0 != NULL) {
+                    furi_string_cat_printf(parsed_data, "UID: ");
+
+                    if(block0[0] == 0x88) {
+                        // 7-byte UID: Skip cascade tag (0x88), take next 3 bytes
+                        for(int i = 1; i < 4; i++) {
+                            furi_string_cat_printf(parsed_data, "%02X ", block0[i]);
+                        }
+                        furi_string_cat_printf(parsed_data, "XX XX XX XX");
+                    } else {
+                        // 4-byte UID
+                        for(int i = 0; i < 4; i++) {
+                            furi_string_cat_printf(parsed_data, "%02X", block0[i]);
+                            if(i < 3) {
+                                furi_string_cat_printf(parsed_data, " ");
+                            }
+                        }
+                    }
+                    furi_string_cat_printf(parsed_data, "\n");
+                } else {
+                    furi_string_cat_printf(parsed_data, "UID: Block 0 unavailable\n");
+                }
+            } else {
+                furi_string_cat_printf(parsed_data, "UID: N/A\n");
+            }
         }
 
         // 3. Show card variant-specific information
@@ -1303,14 +1339,13 @@ static bool renfe_sum10_parse(FuriString* parsed_data, const MfClassicData* data
                 }
             }
         } else {
-            furi_string_cat_printf(parsed_data, " Variant: Pay-per-trip\n");
+            furi_string_cat_printf(parsed_data, "Variant: Pay-per-trip\n");
         }
 
         // 4. Extract and show origin station information (where card was first topped up)
         const char* origin_station = renfe_sum10_get_origin_station(data);
         if(origin_station && strcmp(origin_station, "Unknown") != 0) {
             furi_string_cat_printf(parsed_data, "Origin: %s\n", origin_station);
-
         } else {
             furi_string_cat_printf(parsed_data, "Origin: Unknown\n");
         }
@@ -1325,10 +1360,12 @@ static bool renfe_sum10_parse(FuriString* parsed_data, const MfClassicData* data
             zone_name = renfe_sum10_get_zone_name(zone_code);
         } else {
             // For SUMA 10, use standard Block 5 extraction
-            const uint8_t* block5 = data->block[5].data;
-            if(block5) {
-                zone_code = renfe_sum10_extract_zone_code(block5);
-                zone_name = renfe_sum10_get_zone_name(zone_code);
+            if(mf_classic_is_block_read(data, 5)) {
+                const uint8_t* block5 = data->block[5].data;
+                if(block5 != NULL) {
+                    zone_code = renfe_sum10_extract_zone_code(block5);
+                    zone_name = renfe_sum10_get_zone_name(zone_code);
+                }
             }
         }
 
@@ -1341,10 +1378,11 @@ static bool renfe_sum10_parse(FuriString* parsed_data, const MfClassicData* data
         // 6. Extract and show trips from Block 5
         if(mf_classic_is_block_read(data, 5)) {
             const uint8_t* block5 = data->block[5].data;
-            if(block5[0] == 0x01 && block5[1] == 0x00 && block5[2] == 0x00 && block5[3] == 0x00) {
+            if(block5 != NULL && block5[0] == 0x01 && block5[1] == 0x00 && block5[2] == 0x00 &&
+               block5[3] == 0x00) {
                 // Extract trip count from byte 4
                 int viajes = (int)block5[4];
-                furi_string_cat_printf(parsed_data, " Trips: %d\n", viajes);
+                furi_string_cat_printf(parsed_data, "Trips: %d\n", viajes);
             } else {
                 furi_string_cat_printf(parsed_data, "Trips: N/A\n");
             }
@@ -1355,10 +1393,10 @@ static bool renfe_sum10_parse(FuriString* parsed_data, const MfClassicData* data
         // Add travel history status prominently (visible above buttons)
         furi_string_cat_printf(parsed_data, "\n");
         if(renfe_sum10_has_history_data(data)) {
-            furi_string_cat_printf(parsed_data, " History: Available\n");
+            furi_string_cat_printf(parsed_data, "History: Available\n");
             furi_string_cat_printf(parsed_data, "   ⬅ Press LEFT to view details\n");
         } else {
-            furi_string_cat_printf(parsed_data, " History: Empty/Not found\n");
+            furi_string_cat_printf(parsed_data, "History: Empty/Not found\n");
             furi_string_cat_printf(parsed_data, "   (New card or cleared history)\n");
         }
 
