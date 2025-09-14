@@ -47,7 +47,7 @@ static NfcCommand t_union_poller_handler_select_ppse(TUnionPoller* instance) {
 
     if(instance->error == TUnionPollerErrorNone) {
         FURI_LOG_D(TAG, "Select PPSE success");
-        if(strcmp(instance->application.appl, "MOT_T_EP") == 0) {
+        if(!strcmp(instance->application.appl, "MOT_T_EP")) {
             // APP_LABEL 校验成功
             FURI_LOG_D(TAG, "APP_LABEL check success");
             instance->state = TUnionPollerStateSelectApplication;

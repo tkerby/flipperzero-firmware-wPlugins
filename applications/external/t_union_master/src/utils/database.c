@@ -53,18 +53,20 @@ void tum_db_get_line_type_name(LineType line_type, FuriString* line_type_name) {
 
 // 转换线路类型
 LineType tum_db_parse_line_type(const char* line_type_str) {
-    if(strncmp(line_type_str, "mtr", 3))
-        return LineTypeMetro;
-    else if(strncmp(line_type_str, "brt", 3))
-        return LineTypeBRT;
-    else if(strncmp(line_type_str, "trm", 3))
-        return LineTypeTram;
-    else if(strncmp(line_type_str, "trn", 3))
-        return LineTypeTrain;
-    else if(strncmp(line_type_str, "bus", 3))
-        return LineTypeBUS;
+    LineType line_type;
+    if(!strncmp(line_type_str, "mtr", 3))
+        line_type = LineTypeMetro;
+    else if(!strncmp(line_type_str, "brt", 3))
+        line_type = LineTypeBRT;
+    else if(!strncmp(line_type_str, "trm", 3))
+        line_type = LineTypeTram;
+    else if(!strncmp(line_type_str, "trn", 3))
+        line_type = LineTypeTrain;
+    else if(!strncmp(line_type_str, "bus", 3))
+        line_type = LineTypeBUS;
     else
-        return LineTypeUnknown;
+        line_type = LineTypeUnknown;
+    return line_type;
 }
 
 // 查询卡号对应卡名
