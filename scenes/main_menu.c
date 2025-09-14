@@ -4,7 +4,7 @@
 typedef enum {
     FireStringMenuSelection_Generate,
     FireStringMenuSelection_Settings,
-    FireStringMenuSelection_Load
+    FireStringMenuSelection_LoadString
 } FireStringMenuSelection;
 
 void fire_string_menu_callback_main_menu(void* context, uint32_t index) {
@@ -20,8 +20,8 @@ void fire_string_menu_callback_main_menu(void* context, uint32_t index) {
         scene_manager_handle_custom_event(
             app->scene_manager, FireStringEvent_ShowVariableItemList);
         break;
-    case FireStringMenuSelection_Load:
-        // scene_manager_handle_custom_event(app->scene_manager, FireStringEvent_ShowFileBrowser);
+    case FireStringMenuSelection_LoadString:
+        scene_manager_handle_custom_event(app->scene_manager, FireStringEvent_ShowFileBrowser);
         break;
     }
 }
@@ -30,7 +30,6 @@ void fire_string_menu_callback_main_menu(void* context, uint32_t index) {
 void fire_string_scene_on_enter_main_menu(void* context) {
     FURI_LOG_T(TAG, "fire_string_scene_on_enter_main_menu");
     FireString* app = context;
-    menu_reset(app->menu);
 
     menu_add_item(
         app->menu,
@@ -50,7 +49,7 @@ void fire_string_scene_on_enter_main_menu(void* context) {
         app->menu,
         "Load Saved String",
         NULL,
-        FireStringMenuSelection_Load,
+        FireStringMenuSelection_LoadString,
         fire_string_menu_callback_main_menu,
         app);
 
@@ -59,7 +58,7 @@ void fire_string_scene_on_enter_main_menu(void* context) {
 
 /** main menu event handler - switches scene based on the event */
 bool fire_string_scene_on_event_main_menu(void* context, SceneManagerEvent event) {
-    FURI_LOG_T(TAG, "fire_string_scene_on_event_main_menu");
+    // FURI_LOG_T(TAG, "fire_string_scene_on_event_main_menu");
     FireString* app = context;
     bool consumed = false;
     switch(event.type) {
@@ -73,6 +72,8 @@ bool fire_string_scene_on_event_main_menu(void* context, SceneManagerEvent event
             scene_manager_next_scene(app->scene_manager, FireStringScene_Settings);
             consumed = true;
             break;
+        case FireStringEvent_ShowFileBrowser:
+            scene_manager_next_scene(app->scene_manager, FireStringScene_LoadString);
         default:
             break;
         }

@@ -235,41 +235,55 @@ static void ir_received_callback(void* context, InfraredWorkerSignal* signal) {
     const uint32_t* timings;
     size_t timings_size;
 
-    infrared_worker_get_raw_signal(signal, &timings, &timings_size);
+    if(app->ir_worker) {
+        infrared_worker_get_raw_signal(signal, &timings, &timings_size);
 
-    char* tmpStr = malloc(sizeof(char) * app->settings->str_len + 1);
-    uint32_t i = 0;
-    while((furi_string_size(app->fire_string) + strlen(tmpStr)) < app->settings->str_len &&
-          i < timings_size) {
-        tmpStr[i] = app->hid->char_list[timings[i] % char_list_len];
-        i++;
-    }
-    if(furi_string_size(app->fire_string) > 0) {
-        if(furi_string_size(app->fire_string) < app->settings->str_len) {
-            furi_string_cat_str(app->fire_string, tmpStr);
+        char* tmpStr = malloc(sizeof(char) * app->settings->str_len + 1);
+        uint32_t i = 0;
+        while((furi_string_size(app->fire_string) + strlen(tmpStr)) < app->settings->str_len &&
+              i < timings_size) {
+            tmpStr[i] = app->hid->char_list[timings[i] % char_list_len];
+            i++;
         }
-    } else {
-        furi_string_set_str(app->fire_string, tmpStr);
+        if(furi_string_size(app->fire_string) > 0) {
+            if(furi_string_size(app->fire_string) < app->settings->str_len) {
+                furi_string_cat_str(app->fire_string, tmpStr);
+            }
+        } else {
+            furi_string_set_str(app->fire_string, tmpStr);
+        }
+        free(tmpStr);
     }
-    free(tmpStr);
 
     build_string_generator_widget(app);
 }
 
+void infrared_rx_start(FireString* app) {
+    FURI_LOG_T(TAG, "infrared_rx_start");
+
+    app->ir_worker = infrared_worker_alloc();
+
+    infrared_worker_rx_enable_signal_decoding(app->ir_worker, false);
+    infrared_worker_rx_enable_blink_on_receiving(app->ir_worker, true);
+    infrared_worker_rx_set_received_signal_callback(app->ir_worker, ir_received_callback, app);
+    infrared_worker_rx_start(app->ir_worker);
+}
+
+void infrared_rx_stop(FireString* app) {
+    FURI_LOG_T(TAG, "infrared_rx_stop");
+
+    infrared_worker_rx_stop(app->ir_worker);
+    infrared_worker_free(app->ir_worker);
+    app->ir_worker = NULL;
+}
+
 void fire_string_scene_on_enter_string_generator(void* context) {
     FURI_LOG_T(TAG, "fire_string_scene_on_enter_string_generator");
-    furi_assert(context);
+    furi_check(context);
 
     FireString* app = context;
 
     get_char_list(app);
-
-    if(app->settings->use_ir == true) {
-        infrared_worker_rx_enable_signal_decoding(app->ir_worker, false);
-        infrared_worker_rx_enable_blink_on_receiving(app->ir_worker, true);
-        infrared_worker_rx_set_received_signal_callback(app->ir_worker, ir_received_callback, app);
-        infrared_worker_rx_start(app->ir_worker);
-    }
 
     build_string_generator_widget(app);
 
@@ -277,8 +291,8 @@ void fire_string_scene_on_enter_string_generator(void* context) {
 }
 
 bool fire_string_scene_on_event_string_generator(void* context, SceneManagerEvent event) {
-    FURI_LOG_T(TAG, "fire_string_scene_on_event_string_generator");
-    furi_assert(context);
+    // FURI_LOG_T(TAG, "fire_string_scene_on_event_string_generator");
+    furi_check(context);
 
     FireString* app = context;
     bool consumed = false;
@@ -286,7 +300,8 @@ bool fire_string_scene_on_event_string_generator(void* context, SceneManagerEven
     case SceneManagerEventTypeCustom:
         break;
     case SceneManagerEventTypeBack:
-        scene_manager_previous_scene(app->scene_manager);
+        scene_manager_search_and_switch_to_previous_scene(
+            app->scene_manager, FireStringScene_MainMenu);
         consumed = true;
         break;
     case SceneManagerEventTypeTick:
@@ -305,6 +320,13 @@ bool fire_string_scene_on_event_string_generator(void* context, SceneManagerEven
             }
             build_string_generator_widget(app);
         }
+        // Toggle infrared_worker if needed
+        if(furi_string_size(app->fire_string) < app->settings->str_len && !app->ir_worker) {
+            infrared_rx_start(app);
+        }
+        if(furi_string_size(app->fire_string) == app->settings->str_len && app->ir_worker) {
+            infrared_rx_stop(app);
+        }
         break;
     }
 
@@ -313,13 +335,10 @@ bool fire_string_scene_on_event_string_generator(void* context, SceneManagerEven
 
 void fire_string_scene_on_exit_string_generator(void* context) {
     FURI_LOG_T(TAG, "fire_string_scene_on_exit_string_generator");
-    furi_assert(context);
+    furi_check(context);
 
     FireString* app = context;
     free(app->hid->char_list);
 
     widget_reset(app->widget);
-    if(app->settings->use_ir) {
-        infrared_worker_rx_stop(app->ir_worker);
-    }
 }

@@ -18,7 +18,7 @@ Inspired by a [Lemmy post](https://lemmy.dbzer0.com/post/29276607) from dipdowel
 
 :black_square_button: Save generated string to internal storage
 
-:black_square_button: Load generated string from internal storage
+:white_check_mark: Load generated string from internal storage
 
 :black_square_button: Add an About popup to the main menu, introducing the app
 

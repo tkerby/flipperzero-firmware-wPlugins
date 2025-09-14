@@ -2,6 +2,7 @@
 
 // Include Scenes
 #include "scenes/main_menu.h"
+#include "scenes/load_string.h"
 #include "scenes/settings.h"
 #include "scenes/string_generator.h"
 #include "scenes/string_generator_step_two.h"

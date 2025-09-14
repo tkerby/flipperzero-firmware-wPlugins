@@ -11,6 +11,7 @@
 #include <gui/modules/text_box.h>
 #include <gui/modules/variable_item_list.h>
 #include <gui/modules/file_browser.h>
+#include <dialogs/dialogs.h>
 #include <gui/modules/loading.h>
 #include <infrared.h>
 #include <infrared_worker.h>
@@ -22,7 +23,9 @@
 #include "helpers/ble_profile/extra_profiles/hid_profile.h"
 #include "helpers/ble_profile/extra_services/hid_service.h"
 
-#define TAG "firestring-app"
+#define TAG          "firestring-app"
+#define DEFAULT_PATH APP_DATA_PATH()
+#define FILE_EXT     ".rnd"
 
 // scene index
 typedef enum {
@@ -32,6 +35,7 @@ typedef enum {
     FireStringScene_GenerateStepTwo,
     FireStringScene_LoadingUSB,
     FireStringScene_USB,
+    FireStringScene_LoadString,
     FireStringScene_Save,
     FireStringScene_SavedPopup,
     // FireStringScene_AboutPopup,  // TODO
@@ -95,7 +99,7 @@ typedef struct {
     Submenu* submenu;
     Widget* widget;
     VariableItemList* variable_item_list;
-    FileBrowser* file_browser;
+    DialogsApp* dialogs;
     Popup* popup;
     Loading* loading;
     InfraredWorker* ir_worker;
