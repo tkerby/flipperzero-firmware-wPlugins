@@ -41,6 +41,7 @@ void fire_string_scene_on_enter_load_string(void* context) {
     }
 
     storage_file_free(rnd_file);
+    furi_record_close(RECORD_STORAGE);
     furi_string_free(file_path);
 
     if(res) {
