@@ -26,10 +26,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0910-0342-0.420.0-891b10c](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0914-2355-0.420.0-281386f](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-09-10 03:42 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-09-10 03:42 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-09-12 23:55 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-09-12 23:55 EST`
 - [Sub-GHz: Fix RAW files again (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/f09942a4a3cb3bf5ba5c0ffcb03769282da2a325)
 - [Add Colemak keyboard layout for badusb (By Ashe-Sterling)](https://github.com/Next-Flip/Momentum-Firmware/pull/466)
 - SubGHz: [Tweaks + Show Sats (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/blob/dev/applications/drivers/subghz/cc1101_ext/cc1101_ext.c)
