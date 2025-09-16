@@ -24,6 +24,7 @@ void fire_string_menu_callback_step_two_menu(void* context, uint32_t index) {
         scene_manager_next_scene(app->scene_manager, FireStringScene_LoadingUSB);
         break;
     case FireStringStepTwoSelection_Save:
+        scene_manager_next_scene(app->scene_manager, FireStringScene_SaveString);
         break;
     case FireStringStepTwoSelection_Restart:
         furi_string_reset(app->fire_string);

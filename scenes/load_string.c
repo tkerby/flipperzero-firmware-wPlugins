@@ -11,7 +11,6 @@ void fire_string_scene_on_enter_load_string(void* context) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
 
     FuriString* file_path = furi_string_alloc();
-    furi_string_reset(file_path);
 
     app->dialogs = furi_record_open(RECORD_DIALOGS);
 

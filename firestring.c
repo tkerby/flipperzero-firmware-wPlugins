@@ -10,6 +10,7 @@ void (*const fire_string_scene_on_enter_handlers[])(void*) = {
     fire_string_scene_on_enter_loading_usb,
     fire_string_scene_on_enter_usb,
     fire_string_scene_on_enter_load_string,
+    fire_string_scene_on_enter_save_string,
     // fire_string_scene_on_enter_about_popup   // TODO
 };
 
@@ -22,7 +23,7 @@ bool (*const fire_string_scene_on_event_handlers[])(void*, SceneManagerEvent) = 
     fire_string_scene_on_event_loading_usb,
     fire_string_scene_on_event_usb,
     fire_string_scene_on_event_load_string,
-};
+    fire_string_scene_on_event_save_string};
 
 /** collection of all scene on exit handlers - in the same order as their enum */
 void (*const fire_string_scene_on_exit_handlers[])(void*) = {
@@ -33,7 +34,7 @@ void (*const fire_string_scene_on_exit_handlers[])(void*) = {
     fire_string_scene_on_exit_loading_usb,
     fire_string_scene_on_exit_usb,
     fire_string_scene_on_exit_load_string,
-};
+    fire_string_scene_on_exit_save_string};
 
 /** collection of all on_enter, on_event, on_exit handlers */
 const SceneManagerHandlers fire_string_scene_event_handlers = {
@@ -82,6 +83,7 @@ void fire_string_view_dispatcher_init(FireString* app) {
     app->widget = widget_alloc();
     app->loading = loading_alloc();
     app->popup = popup_alloc();
+    app->text_input = text_input_alloc();
 
     app->variable_item_list = variable_item_list_alloc();
     variable_item_list_reset(app->variable_item_list);
@@ -121,6 +123,10 @@ void fire_string_view_dispatcher_init(FireString* app) {
     FURI_LOG_D(TAG, "fire_string_view_dispatcher_init adding view loading");
     view_dispatcher_add_view(
         app->view_dispatcher, FireStringView_Loading, loading_get_view(app->loading));
+
+    FURI_LOG_D(TAG, "fire_string_view_dispatcher_init adding view text_input");
+    view_dispatcher_add_view(
+        app->view_dispatcher, FireStringView_TextInput, text_input_get_view(app->text_input));
 }
 
 /** initilise app data, scene manager, and view dispatcher */
@@ -163,6 +169,7 @@ void fire_string_free(FireString* app) {
     view_dispatcher_remove_view(app->view_dispatcher, FireStringView_VariableItemList);
     view_dispatcher_remove_view(app->view_dispatcher, FireStringView_Widget);
     view_dispatcher_remove_view(app->view_dispatcher, FireStringView_Loading);
+    view_dispatcher_remove_view(app->view_dispatcher, FireStringView_TextInput);
     view_dispatcher_remove_view(app->view_dispatcher, FireStringView_Popup);
 
     view_dispatcher_free(app->view_dispatcher);
@@ -172,6 +179,7 @@ void fire_string_free(FireString* app) {
     widget_free(app->widget);
     loading_free(app->loading);
     furi_string_free(app->fire_string);
+    text_input_free(app->text_input);
     popup_free(app->popup);
     free(app->settings);
     free(app->hid);

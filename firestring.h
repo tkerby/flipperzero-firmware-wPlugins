@@ -10,7 +10,7 @@
 #include <gui/modules/popup.h>
 #include <gui/modules/text_box.h>
 #include <gui/modules/variable_item_list.h>
-#include <gui/modules/file_browser.h>
+#include <gui/modules/text_input.h>
 #include <dialogs/dialogs.h>
 #include <gui/modules/loading.h>
 #include <infrared.h>
@@ -23,9 +23,10 @@
 #include "helpers/ble_profile/extra_profiles/hid_profile.h"
 #include "helpers/ble_profile/extra_services/hid_service.h"
 
-#define TAG          "firestring-app"
-#define DEFAULT_PATH APP_DATA_PATH()
-#define FILE_EXT     ".rnd"
+#define TAG                 "firestring-app"
+#define DEFAULT_PATH        APP_DATA_PATH()
+#define FILE_EXT            ".rnd"
+#define TEXT_INPUT_BUF_SIZE 24
 
 // scene index
 typedef enum {
@@ -36,7 +37,7 @@ typedef enum {
     FireStringScene_LoadingUSB,
     FireStringScene_USB,
     FireStringScene_LoadString,
-    FireStringScene_Save,
+    FireStringScene_SaveString,
     FireStringScene_SavedPopup,
     // FireStringScene_AboutPopup,  // TODO
     FireStringScene_count
@@ -49,9 +50,8 @@ typedef enum {
     FireStringView_VariableItemList,
     FireStringView_Loading,
     FireStringView_Widget,
-    FireStringView_Popup,
-    FireStringView_FileBrowser,
     FireStringView_TextInput,
+    FireStringView_Popup,
 } FireStringView;
 
 // custom event index
@@ -100,6 +100,8 @@ typedef struct {
     Widget* widget;
     VariableItemList* variable_item_list;
     DialogsApp* dialogs;
+    TextInput* text_input;
+    char text_buffer[TEXT_INPUT_BUF_SIZE];
     Popup* popup;
     Loading* loading;
     InfraredWorker* ir_worker;

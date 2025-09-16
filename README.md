@@ -16,7 +16,7 @@ Inspired by a [Lemmy post](https://lemmy.dbzer0.com/post/29276607) from dipdowel
 
 :white_check_mark: Send generated Fire String though Flipper's USB HID
 
-:black_square_button: Save generated string to internal storage
+:white_check_mark: Save generated string to internal storage
 
 :white_check_mark: Load generated string from internal storage
 

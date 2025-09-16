@@ -8,3 +8,4 @@
 #include "scenes/string_generator_step_two.h"
 #include "scenes/usb.h"
 #include "scenes/loading_scenes/loading_usb.h"
+#include "scenes/save_string.h"
