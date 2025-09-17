@@ -16,7 +16,7 @@
 #include <infrared.h>
 #include <infrared_worker.h>
 #include <furi_hal_infrared.h>
-#include <firestring_icons.h>
+#include <fire_string_icons.h>
 #include <assets_icons.h>
 
 #include "helpers/bad_usb_hid.h"

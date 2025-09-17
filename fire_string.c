@@ -1,5 +1,5 @@
-#include "firestring.h"
-#include "firestring_i.h"
+#include "fire_string.h"
+#include "fire_string_i.h"
 
 /** collection of all scene on_enter handlers - in the same order as their enum */
 void (*const fire_string_scene_on_enter_handlers[])(void*) = {
@@ -196,7 +196,7 @@ void fire_string_set_log_level() {
 }
 
 /** entrypoint */
-int32_t firestring_app(void* p) {
+int32_t fire_string_app(void* p) {
     UNUSED(p);
     fire_string_set_log_level();
 

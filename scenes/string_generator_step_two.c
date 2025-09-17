@@ -1,4 +1,4 @@
-#include "../firestring.h"
+#include "../fire_string.h"
 
 /** indicies for menu items*/
 typedef enum {

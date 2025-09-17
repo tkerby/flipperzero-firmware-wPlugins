@@ -1,4 +1,4 @@
-#include "../firestring.h"
+#include "../fire_string.h"
 #include "furi_hal_random.h"
 
 #define ALPH_ROWS 2

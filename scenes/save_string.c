@@ -1,4 +1,4 @@
-#include "../firestring.h"
+#include "../fire_string.h"
 #include "storage/storage.h"
 
 void text_input_callback(void* context) {

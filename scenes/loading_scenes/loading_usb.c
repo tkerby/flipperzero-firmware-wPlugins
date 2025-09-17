@@ -1,4 +1,4 @@
-#include "../../firestring.h"
+#include "../../fire_string.h"
 
 static int32_t usb_worker(void* context) {
     FURI_LOG_I(TAG, "usb_worker");

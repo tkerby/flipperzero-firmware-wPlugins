@@ -1,4 +1,4 @@
-#include "../firestring.h"
+#include "../fire_string.h"
 
 const char* str_len[] = {"4", "8", "12", "16", "24", "32", "48", "64", "256", "512"};
 const char* type_strings[] = {"AlphNumSymb", "AlphNum", "Alpha", "Symbols", "Numeric", "Binary"};

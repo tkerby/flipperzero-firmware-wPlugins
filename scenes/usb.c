@@ -1,4 +1,4 @@
-#include "../firestring.h"
+#include "../fire_string.h"
 
 static void usb_scene_builder(FireString* app);
 
