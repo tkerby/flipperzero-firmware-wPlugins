@@ -5,6 +5,8 @@ static void usb_scene_builder(FireString* app);
 #define USB_ASCII_TO_KEY(script, x) \
     (((uint8_t)x < 128) ? (script->hid->layout[(uint8_t)x]) : HID_KEYBOARD_NONE)
 
+bool usb_state = false;
+
 bool ducky_string(FireString* app) {
     if(furi_string_size(app->fire_string) == 0) {
         return false;
@@ -57,7 +59,7 @@ static void usb_scene_builder(FireString* app) {
     widget_reset(app->widget);
 
     widget_add_icon_element(app->widget, 80, 20, &I_UsbTree_48x22);
-    widget_add_button_element(app->widget, GuiButtonTypeRight, "Info", usb_btn_callback, app);
+    // widget_add_button_element(app->widget, GuiButtonTypeRight, "Info", usb_btn_callback, app);   // TODO: Add info screen
     widget_add_button_element(app->widget, GuiButtonTypeLeft, "Back", usb_btn_callback, app);
 
     if(app->hid->api->is_connected(app->hid->hid_inst)) {
@@ -80,6 +82,7 @@ void fire_string_scene_on_enter_usb(void* context) {
 
     FireString* app = context;
 
+    usb_state = app->hid->api->is_connected(app->hid->hid_inst);
     usb_scene_builder(app);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, FireStringView_Widget);
@@ -90,6 +93,7 @@ bool fire_string_scene_on_event_usb(void* context, SceneManagerEvent event) {
     furi_check(context);
 
     FireString* app = context;
+    bool is_connected = app->hid->api->is_connected(app->hid->hid_inst);
     bool consumed = false;
 
     switch(event.type) {
@@ -100,7 +104,10 @@ bool fire_string_scene_on_event_usb(void* context, SceneManagerEvent event) {
         }
         break;
     case SceneManagerEventTypeTick:
-        usb_scene_builder(app);
+        if(usb_state != is_connected) {
+            usb_state = is_connected;
+            usb_scene_builder(app);
+        }
         break;
     case SceneManagerEventTypeBack:
         consumed = true;
