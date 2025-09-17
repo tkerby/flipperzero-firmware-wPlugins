@@ -3,8 +3,6 @@ Generate truly random strings from the Flipper Zero using its IR sensor. Capture
 
 Inspired by a [Lemmy post](https://lemmy.dbzer0.com/post/29276607) from dipdowel
 
-# *** Work in Progress ***
-
 ### Main Goals:
 :white_check_mark: Generate random string using IR noise
 
