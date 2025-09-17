@@ -22,7 +22,7 @@ Inspired by a [Lemmy post](https://lemmy.dbzer0.com/post/29276607) from dipdowel
 
 :black_square_button: Add an About popup to the main menu, introducing the app
 
-:black_square_button: Create custom app icon
+:white_check_mark: Create custom app icon
 
 ### Features to consider:
 * Send Fire String using Bluetooth HID
