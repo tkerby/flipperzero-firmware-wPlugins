@@ -534,6 +534,8 @@ extern "C"
         // Create the app
         FlipMapApp app;
 
+        app.saveChar("app_version", VERSION_TAG);
+
         // Run the app
         app.runDispatcher();
 
