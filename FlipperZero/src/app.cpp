@@ -30,7 +30,8 @@ FlipWorldApp::FlipWorldApp()
         return;
     }
 
-    createAppDataPath();
+    createAppDataPath(APP_ID);
+    createAppDataPath("flipper_http");
 
     // Switch to the submenu view
     view_dispatcher_switch_to_view(viewDispatcher, FlipWorldViewSubmenu);
@@ -184,13 +185,13 @@ void FlipWorldApp::clearLastResponse() noexcept
         flipperHttp->last_response[0] = '\0';
 }
 
-void FlipWorldApp::createAppDataPath()
+void FlipWorldApp::createAppDataPath(const char *appId)
 {
     Storage *storage = static_cast<Storage *>(furi_record_open(RECORD_STORAGE));
     char directory_path[256];
-    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s", APP_ID);
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s", appId);
     storage_common_mkdir(storage, directory_path);
-    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data", APP_ID);
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data", appId);
     storage_common_mkdir(storage, directory_path);
     furi_record_close(RECORD_STORAGE);
 }
@@ -207,8 +208,8 @@ bool FlipWorldApp::hasWiFiCredentials()
 {
     char ssid[64] = {0};
     char password[64] = {0};
-    return loadChar("wifi_ssid", ssid, sizeof(ssid)) &&
-           loadChar("wifi_pass", password, sizeof(password)) &&
+    return loadChar("wifi_ssid", ssid, sizeof(ssid), "flipper_http") &&
+           loadChar("wifi_pass", password, sizeof(password), "flipper_http") &&
            strlen(ssid) > 0 &&
            strlen(password) > 0;
 }
@@ -217,8 +218,8 @@ bool FlipWorldApp::hasUserCredentials()
 {
     char userName[64] = {0};
     char userPass[64] = {0};
-    return loadChar("user_name", userName, sizeof(userName)) &&
-           loadChar("user_pass", userPass, sizeof(userPass)) &&
+    return loadChar("user_name", userName, sizeof(userName), "flipper_http") &&
+           loadChar("user_pass", userPass, sizeof(userPass), "flipper_http") &&
            strlen(userName) > 0 &&
            strlen(userPass) > 0;
 }
@@ -301,12 +302,12 @@ bool FlipWorldApp::isBoardConnected()
     return flipperHttp->last_response && strcmp(flipperHttp->last_response, "[PONG]") == 0;
 }
 
-bool FlipWorldApp::loadChar(const char *path_name, char *value, size_t value_size)
+bool FlipWorldApp::loadChar(const char *path_name, char *value, size_t value_size, const char *appId)
 {
     Storage *storage = static_cast<Storage *>(furi_record_open(RECORD_STORAGE));
     File *file = storage_file_alloc(storage);
     char file_path[256];
-    snprintf(file_path, sizeof(file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/%s.txt", APP_ID, path_name);
+    snprintf(file_path, sizeof(file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/%s.txt", appId, path_name);
     if (!storage_file_open(file, file_path, FSAM_READ, FSOM_OPEN_EXISTING))
     {
         storage_file_free(file);
@@ -418,12 +419,12 @@ void FlipWorldApp::runDispatcher()
     view_dispatcher_run(viewDispatcher);
 }
 
-bool FlipWorldApp::saveChar(const char *path_name, const char *value)
+bool FlipWorldApp::saveChar(const char *path_name, const char *value, const char *appId)
 {
     Storage *storage = static_cast<Storage *>(furi_record_open(RECORD_STORAGE));
     File *file = storage_file_alloc(storage);
     char file_path[256];
-    snprintf(file_path, sizeof(file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/%s.txt", APP_ID, path_name);
+    snprintf(file_path, sizeof(file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/%s.txt", appId, path_name);
     storage_file_open(file, file_path, FSAM_WRITE, FSOM_CREATE_ALWAYS);
     size_t data_size = strlen(value) + 1; // Include null terminator
     storage_file_write(file, value, data_size);
