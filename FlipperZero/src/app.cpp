@@ -582,6 +582,8 @@ extern "C"
         // Create the app
         FlipWorldApp app;
 
+        app.saveChar("app_version", VERSION);
+
         // Run the app
         app.runDispatcher();
 
