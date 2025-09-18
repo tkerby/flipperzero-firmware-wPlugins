@@ -1,9 +1,9 @@
 #pragma once
-#include <gui/gui.h>
+#include <engine/draw.hpp>
 
 class Loading {
 public:
-    Loading(Canvas* canvas);
+    Loading(Draw* draw);
     //
     void animate();
     void stop();
@@ -12,16 +12,16 @@ public:
         currentText = text;
     }
     //
-    uint16_t getTimeElapsed() {
+    uint32_t getTimeElapsed() {
         return timeElapsed;
     }
 
 private:
-    Canvas* canvas = nullptr;
+    Draw* draw = nullptr;
     void drawSpinner();
-    uint16_t spinnerPosition;
-    uint16_t timeElapsed;
-    uint16_t timeStart;
+    uint32_t spinnerPosition;
+    uint32_t timeElapsed;
+    uint32_t timeStart;
     bool animating = false;
     const char* currentText = "Loading...";
 };

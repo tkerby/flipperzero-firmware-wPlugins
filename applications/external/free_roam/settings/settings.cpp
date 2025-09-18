@@ -103,25 +103,25 @@ void FreeRoamSettings::text_updated(uint32_t view) {
         if(variable_item_wifi_ssid) {
             variable_item_set_current_value_text(variable_item_wifi_ssid, text_input_buffer.get());
         }
-        app->save_char("wifi_ssid", text_input_buffer.get());
+        app->save_char("wifi_ssid", text_input_buffer.get(), "flipper_http");
         break;
     case TextInputWiFiPassword:
         if(variable_item_wifi_pass) {
             variable_item_set_current_value_text(variable_item_wifi_pass, text_input_buffer.get());
         }
-        app->save_char("wifi_pass", text_input_buffer.get());
+        app->save_char("wifi_pass", text_input_buffer.get(), "flipper_http");
         break;
     case TextInputUserName:
         if(variable_item_user_name) {
             variable_item_set_current_value_text(variable_item_user_name, text_input_buffer.get());
         }
-        app->save_char("user_name", text_input_buffer.get());
+        app->save_char("user_name", text_input_buffer.get(), "flipper_http");
         break;
     case TextInputUserPassword:
         if(variable_item_user_pass) {
             variable_item_set_current_value_text(variable_item_user_pass, text_input_buffer.get());
         }
-        app->save_char("user_pass", text_input_buffer.get());
+        app->save_char("user_pass", text_input_buffer.get(), "flipper_http");
         break;
     default:
         break;
@@ -156,7 +156,7 @@ bool FreeRoamSettings::init_text_input(uint32_t view) {
     char loaded[256];
 
     if(view == TextInputWiFiSSID) {
-        if(app->load_char("wifi_ssid", loaded, sizeof(loaded))) {
+        if(app->load_char("wifi_ssid", loaded, sizeof(loaded), "flipper_http")) {
             strncpy(text_input_temp_buffer.get(), loaded, text_input_buffer_size);
         } else {
             text_input_temp_buffer[0] = '\0'; // Ensure empty if not loaded
@@ -173,7 +173,7 @@ bool FreeRoamSettings::init_text_input(uint32_t view) {
             view_dispatcher_ref,
             this);
     } else if(view == TextInputWiFiPassword) {
-        if(app->load_char("wifi_pass", loaded, sizeof(loaded))) {
+        if(app->load_char("wifi_pass", loaded, sizeof(loaded), "flipper_http")) {
             strncpy(text_input_temp_buffer.get(), loaded, text_input_buffer_size);
         } else {
             text_input_temp_buffer[0] = '\0'; // Ensure empty if not loaded
@@ -190,7 +190,7 @@ bool FreeRoamSettings::init_text_input(uint32_t view) {
             view_dispatcher_ref,
             this);
     } else if(view == TextInputUserName) {
-        if(app->load_char("user_name", loaded, sizeof(loaded))) {
+        if(app->load_char("user_name", loaded, sizeof(loaded), "flipper_http")) {
             strncpy(text_input_temp_buffer.get(), loaded, text_input_buffer_size);
         } else {
             text_input_temp_buffer[0] = '\0'; // Ensure empty if not loaded
@@ -207,7 +207,7 @@ bool FreeRoamSettings::init_text_input(uint32_t view) {
             view_dispatcher_ref,
             this);
     } else if(view == TextInputUserPassword) {
-        if(app->load_char("user_pass", loaded, sizeof(loaded))) {
+        if(app->load_char("user_pass", loaded, sizeof(loaded), "flipper_http")) {
             strncpy(text_input_temp_buffer.get(), loaded, text_input_buffer_size);
         } else {
             text_input_temp_buffer[0] = '\0'; // Ensure empty if not loaded

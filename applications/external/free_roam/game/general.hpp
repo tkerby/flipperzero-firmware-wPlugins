@@ -36,9 +36,9 @@ typedef enum {
     GameStateLeavingGame = 3, // Game is leaving
 } GameState;
 
-inline const char* toggleToString(ToggleState state) noexcept {
-    return state == ToggleOn ? "On" : "Off";
-}
 inline bool toggleToBool(ToggleState state) noexcept {
     return state == ToggleOn;
+}
+inline const char* toggleToString(ToggleState state) noexcept {
+    return state == ToggleOn ? "On" : "Off";
 }

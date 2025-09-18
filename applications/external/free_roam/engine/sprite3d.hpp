@@ -1,7 +1,6 @@
 #pragma once
 #include "furi.h"
 #include "engine/vector.hpp"
-#include "engine/draw.hpp"
 #include <math.h>
 
 #define MAX_TRIANGLES_PER_SPRITE 28

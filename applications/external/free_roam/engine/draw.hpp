@@ -17,6 +17,7 @@ public:
         Vector size,
         Color color =
             ColorWhite); // Clears the display at the specified position and size with the specified color.
+    void color(Color color = ColorBlack); // Sets the color for drawing.
     void drawCircle(
         Vector position,
         int16_t r,
@@ -66,7 +67,10 @@ public:
     void text(
         Vector position,
         const char* text,
+        Color color); // Draws text on the display at the specified position with the specified color only.
+    void text(
+        Vector position,
+        const char* text,
         Color color,
-        Font font =
-            FontPrimary); // Draws text on the display at the specified position with the specified font.
+        Font font); // Draws text on the display at the specified position with the specified font.
 };

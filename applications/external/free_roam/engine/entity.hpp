@@ -137,7 +137,6 @@ private:
         float view_height) const;
     void fillTriangle(Draw* const draw, Vector p1, Vector p2, Vector p3) const;
 
-private:
     void (*_start)(Entity*, Game*);
     void (*_stop)(Entity*, Game*);
     void (*_update)(Entity*, Game*);
