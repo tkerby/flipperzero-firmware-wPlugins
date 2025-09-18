@@ -20,7 +20,15 @@ void Loading::animate()
     drawSpinner();
     draw->setFontCustom(FONT_SIZE_SMALL);
     draw->text(Vector(44, 5), currentText, ColorBlack);
-    timeElapsed = millis() - timeStart;
+    uint32_t currentTime = millis();
+    if (currentTime >= timeStart)
+    {
+        timeElapsed = currentTime - timeStart;
+    }
+    else
+    {
+        timeElapsed = (UINT32_MAX - timeStart) + currentTime + 1;
+    }
     spinnerPosition = (spinnerPosition + 10) % 360; // Rotate by 10 degrees each frame
 }
 
@@ -73,10 +81,13 @@ void Loading::drawSpinner()
         {
             snprintf(timeStr, sizeof(timeStr), "%u seconds", seconds);
         }
+        draw->text(Vector(90, 60), timeStr, ColorBlack);
     }
     else
     {
-        snprintf(timeStr, sizeof(timeStr), "%u minutes", seconds / 60);
+        uint32_t minutes = seconds / 60;
+        uint32_t remainingSeconds = seconds % 60;
+        snprintf(timeStr, sizeof(timeStr), "%lu:%02lu", (unsigned long)minutes, (unsigned long)remainingSeconds);
+        draw->text(Vector(105, 60), timeStr, ColorBlack);
     }
-    draw->text(Vector(90, 60), timeStr, ColorBlack);
 }

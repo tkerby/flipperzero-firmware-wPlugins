@@ -217,8 +217,8 @@ void Player::drawLoginView(Draw *canvas)
                 {
                     loginStatus = LoginNotStarted;
                     currentMainView = GameViewRegistration;
-                    userRequest(RequestTypeRegistration);
                     registrationStatus = RegistrationWaiting;
+                    userRequest(RequestTypeRegistration);
                 }
                 else
                 {
@@ -993,8 +993,8 @@ void Player::processInput()
             {
                 // Try to login first
                 currentMainView = GameViewLogin;
-                userRequest(RequestTypeLogin);
                 loginStatus = LoginWaiting;
+                userRequest(RequestTypeLogin);
             }
             else
             {
@@ -1070,8 +1070,8 @@ void Player::processInput()
             // 3. Set userInfoStatus = UserInfoWaiting
             // The user info view will then load player stats and transition to the selected game mode
             currentMainView = GameViewUserInfo;
-            userRequest(RequestTypeUserInfo);
             userInfoStatus = UserInfoWaiting;
+            userRequest(RequestTypeUserInfo);
             freeRoamGame->shouldDebounce = true;
             break;
         case InputKeyBack:
