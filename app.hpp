@@ -40,7 +40,7 @@ private:
     static uint32_t callbackExitApp(void *context);
     void callbackSubmenuChoices(uint32_t index);
     static uint32_t callbackToSubmenu(void *context);
-    void createAppDataPath();
+    void createAppDataPath(const char *appId = APP_ID);
     void settingsItemSelected(uint32_t index);
     static void settings_item_selected_callback(void *context, uint32_t index);
     static void submenu_choices_callback(void *context, uint32_t index);
@@ -58,13 +58,13 @@ public:
     size_t getBytesReceived() const noexcept { return flipperHttp ? flipperHttp->bytes_received : 0; }
     size_t getContentLength() const noexcept { return flipperHttp ? flipperHttp->content_length : 0; }
     HTTPState getHttpState() const noexcept { return flipperHttp ? flipperHttp->state : INACTIVE; }
-    bool hasWiFiCredentials();                                             // check if WiFi credentials are set
-    bool initRunView();                                                    // initialize the Run View
-    bool isBoardConnected();                                               // check if the board is connected
-    bool load_char(const char *path_name, char *value, size_t value_size); // load a string from storage
+    bool hasWiFiCredentials();                                                                         // check if WiFi credentials are set
+    bool initRunView();                                                                                // initialize the Run View
+    bool isBoardConnected();                                                                           // check if the board is connected
+    bool load_char(const char *path_name, char *value, size_t value_size, const char *appId = APP_ID); // load a string from storage
     void runDispatcher();
-    bool save_char(const char *path_name, const char *value);         // save a string to storage
-    bool sendWiFiCredentials(const char *ssid, const char *password); // send WiFi credentials to the board
+    bool save_char(const char *path_name, const char *value, const char *appId = APP_ID); // save a string to storage
+    bool sendWiFiCredentials(const char *ssid, const char *password);                     // send WiFi credentials to the board
     bool setHttpState(HTTPState state = IDLE) noexcept
     {
         if (flipperHttp)
