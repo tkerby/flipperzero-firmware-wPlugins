@@ -27,7 +27,8 @@ FlipSocialApp::FlipSocialApp() {
         return;
     }
 
-    createAppDataPath();
+    createAppDataPath(APP_ID);
+    createAppDataPath("flipper_http");
 
     // Switch to the submenu view
     view_dispatcher_switch_to_view(viewDispatcher, FlipSocialViewSubmenu);
@@ -157,17 +158,17 @@ void FlipSocialApp::callbackSubmenuChoices(uint32_t index) {
     }
 }
 
-void FlipSocialApp::createAppDataPath() {
+void FlipSocialApp::createAppDataPath(const char* appId) {
     Storage* storage = static_cast<Storage*>(furi_record_open(RECORD_STORAGE));
     char directory_path[256];
     snprintf(
-        directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s", APP_ID);
+        directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s", appId);
     storage_common_mkdir(storage, directory_path);
     snprintf(
         directory_path,
         sizeof(directory_path),
         STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data",
-        APP_ID);
+        appId);
     storage_common_mkdir(storage, directory_path);
     furi_record_close(RECORD_STORAGE);
 }
@@ -228,17 +229,17 @@ bool FlipSocialApp::httpRequestAsync(
 bool FlipSocialApp::hasWiFiCredentials() {
     char ssid[64] = {0};
     char password[64] = {0};
-    return loadChar("wifi_ssid", ssid, sizeof(ssid)) &&
-           loadChar("wifi_pass", password, sizeof(password)) && strlen(ssid) > 0 &&
+    return loadChar("wifi_ssid", ssid, sizeof(ssid), "flipper_http") &&
+           loadChar("wifi_pass", password, sizeof(password), "flipper_http") && strlen(ssid) > 0 &&
            strlen(password) > 0;
 }
 
 bool FlipSocialApp::hasUserCredentials() {
     char username[64] = {0};
     char password[64] = {0};
-    return loadChar("user_name", username, sizeof(username)) &&
-           loadChar("user_pass", password, sizeof(password)) && strlen(username) > 0 &&
-           strlen(password) > 0;
+    return loadChar("user_name", username, sizeof(username), "flipper_http") &&
+           loadChar("user_pass", password, sizeof(password), "flipper_http") &&
+           strlen(username) > 0 && strlen(password) > 0;
 }
 
 bool FlipSocialApp::isBoardConnected() {
@@ -264,7 +265,11 @@ bool FlipSocialApp::isBoardConnected() {
     return flipperHttp->last_response && strcmp(flipperHttp->last_response, "[PONG]") == 0;
 }
 
-bool FlipSocialApp::loadChar(const char* path_name, char* value, size_t value_size) {
+bool FlipSocialApp::loadChar(
+    const char* path_name,
+    char* value,
+    size_t value_size,
+    const char* appId) {
     Storage* storage = static_cast<Storage*>(furi_record_open(RECORD_STORAGE));
     File* file = storage_file_alloc(storage);
     char file_path[256];
@@ -272,7 +277,7 @@ bool FlipSocialApp::loadChar(const char* path_name, char* value, size_t value_si
         file_path,
         sizeof(file_path),
         STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/%s.txt",
-        APP_ID,
+        appId,
         path_name);
     if(!storage_file_open(file, file_path, FSAM_READ, FSOM_OPEN_EXISTING)) {
         storage_file_free(file);
@@ -369,7 +374,7 @@ void FlipSocialApp::runDispatcher() {
     view_dispatcher_run(viewDispatcher);
 }
 
-bool FlipSocialApp::saveChar(const char* path_name, const char* value) {
+bool FlipSocialApp::saveChar(const char* path_name, const char* value, const char* appId) {
     Storage* storage = static_cast<Storage*>(furi_record_open(RECORD_STORAGE));
     File* file = storage_file_alloc(storage);
     char file_path[256];
@@ -377,7 +382,7 @@ bool FlipSocialApp::saveChar(const char* path_name, const char* value) {
         file_path,
         sizeof(file_path),
         STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/%s.txt",
-        APP_ID,
+        appId,
         path_name);
     storage_file_open(file, file_path, FSAM_WRITE, FSOM_CREATE_ALWAYS);
     size_t data_size = strlen(value) + 1; // Include null terminator
