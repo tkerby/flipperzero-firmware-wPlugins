@@ -74,7 +74,7 @@ bool FlipWorldSettings::init(ViewDispatcher **view_dispatcher, void *appContext)
     char loaded_ssid[64];
     char loaded_pass[64];
     FlipWorldApp *app = static_cast<FlipWorldApp *>(appContext);
-    if (app->loadChar("wifi_ssid", loaded_ssid, sizeof(loaded_ssid)))
+    if (app->loadChar("wifi_ssid", loaded_ssid, sizeof(loaded_ssid), "flipper_http"))
     {
         variable_item_set_current_value_text(variable_item_wifi_ssid, loaded_ssid);
     }
@@ -82,7 +82,7 @@ bool FlipWorldSettings::init(ViewDispatcher **view_dispatcher, void *appContext)
     {
         variable_item_set_current_value_text(variable_item_wifi_ssid, "");
     }
-    if (app->loadChar("wifi_pass", loaded_pass, sizeof(loaded_pass)))
+    if (app->loadChar("wifi_pass", loaded_pass, sizeof(loaded_pass), "flipper_http"))
     {
         variable_item_set_current_value_text(variable_item_wifi_pass, "*****");
     }
@@ -91,7 +91,7 @@ bool FlipWorldSettings::init(ViewDispatcher **view_dispatcher, void *appContext)
         variable_item_set_current_value_text(variable_item_wifi_pass, "");
     }
     variable_item_set_current_value_text(variable_item_connect, "");
-    if (app->loadChar("user_name", loaded_ssid, sizeof(loaded_ssid)))
+    if (app->loadChar("user_name", loaded_ssid, sizeof(loaded_ssid), "flipper_http"))
     {
         variable_item_set_current_value_text(variable_item_user_name, loaded_ssid);
     }
@@ -99,7 +99,7 @@ bool FlipWorldSettings::init(ViewDispatcher **view_dispatcher, void *appContext)
     {
         variable_item_set_current_value_text(variable_item_user_name, "");
     }
-    if (app->loadChar("user_pass", loaded_pass, sizeof(loaded_pass)))
+    if (app->loadChar("user_pass", loaded_pass, sizeof(loaded_pass), "flipper_http"))
     {
         variable_item_set_current_value_text(variable_item_user_pass, "*****");
     }
@@ -137,7 +137,7 @@ bool FlipWorldSettings::initTextInput(uint32_t view)
 
     if (view == SettingsViewSSID)
     {
-        if (app->loadChar("wifi_ssid", loaded, sizeof(loaded)))
+        if (app->loadChar("wifi_ssid", loaded, sizeof(loaded), "flipper_http"))
         {
             strncpy(text_input_temp_buffer.get(), loaded, text_input_buffer_size);
         }
@@ -158,7 +158,7 @@ bool FlipWorldSettings::initTextInput(uint32_t view)
     }
     else if (view == SettingsViewPassword)
     {
-        if (app->loadChar("wifi_pass", loaded, sizeof(loaded)))
+        if (app->loadChar("wifi_pass", loaded, sizeof(loaded), "flipper_http"))
         {
             strncpy(text_input_temp_buffer.get(), loaded, text_input_buffer_size);
         }
@@ -179,7 +179,7 @@ bool FlipWorldSettings::initTextInput(uint32_t view)
     }
     else if (view == SettingsViewUserName)
     {
-        if (app->loadChar("user_name", loaded, sizeof(loaded)))
+        if (app->loadChar("user_name", loaded, sizeof(loaded), "flipper_http"))
         {
             strncpy(text_input_temp_buffer.get(), loaded, text_input_buffer_size);
         }
@@ -200,7 +200,7 @@ bool FlipWorldSettings::initTextInput(uint32_t view)
     }
     else if (view == SettingsViewUserPass)
     {
-        if (app->loadChar("user_pass", loaded, sizeof(loaded)))
+        if (app->loadChar("user_pass", loaded, sizeof(loaded), "flipper_http"))
         {
             strncpy(text_input_temp_buffer.get(), loaded, text_input_buffer_size);
         }
@@ -237,8 +237,8 @@ void FlipWorldSettings::settingsItemSelected(uint32_t index)
         FlipWorldApp *app = static_cast<FlipWorldApp *>(appContext);
         char loaded_ssid[64];
         char loaded_pass[64];
-        if (!app->loadChar("wifi_ssid", loaded_ssid, sizeof(loaded_ssid)) ||
-            !app->loadChar("wifi_pass", loaded_pass, sizeof(loaded_pass)))
+        if (!app->loadChar("wifi_ssid", loaded_ssid, sizeof(loaded_ssid), "flipper_http") ||
+            !app->loadChar("wifi_pass", loaded_pass, sizeof(loaded_pass), "flipper_http"))
         {
             FURI_LOG_E(TAG, "WiFi credentials not set");
             easy_flipper_dialog("No WiFi Credentials", "Please set your WiFi SSID\nand Password in Settings.");
@@ -298,28 +298,28 @@ void FlipWorldSettings::textUpdated(uint32_t view)
         {
             variable_item_set_current_value_text(variable_item_wifi_ssid, text_input_buffer.get());
         }
-        app->saveChar("wifi_ssid", text_input_buffer.get());
+        app->saveChar("wifi_ssid", text_input_buffer.get(), "flipper_http");
         break;
     case SettingsViewPassword:
         if (variable_item_wifi_pass)
         {
             variable_item_set_current_value_text(variable_item_wifi_pass, text_input_buffer.get());
         }
-        app->saveChar("wifi_pass", text_input_buffer.get());
+        app->saveChar("wifi_pass", text_input_buffer.get(), "flipper_http");
         break;
     case SettingsViewUserName:
         if (variable_item_user_name)
         {
             variable_item_set_current_value_text(variable_item_user_name, text_input_buffer.get());
         }
-        app->saveChar("user_name", text_input_buffer.get());
+        app->saveChar("user_name", text_input_buffer.get(), "flipper_http");
         break;
     case SettingsViewUserPass:
         if (variable_item_user_pass)
         {
             variable_item_set_current_value_text(variable_item_user_pass, text_input_buffer.get());
         }
-        app->saveChar("user_pass", text_input_buffer.get());
+        app->saveChar("user_pass", text_input_buffer.get(), "flipper_http");
         break;
     default:
         break;
