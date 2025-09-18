@@ -51,7 +51,6 @@ private:
     FuriTimer *timer = nullptr;
 
     // Static callback functions
-    static uint32_t callback_to_submenu(void *context);
     static uint32_t callback_exit_app(void *context);
     static void submenu_choices_callback(void *context, uint32_t index);
     static void settings_item_selected_callback(void *context, uint32_t index);
@@ -61,11 +60,11 @@ private:
     void callbackSubmenuChoices(uint32_t index);
     void settingsItemSelected(uint32_t index);
 
-    void createAppDataPath();
+    void createAppDataPath(const char *appId = "free_roam");
 
 public:
-    bool load_char(const char *path_name, char *value, size_t value_size); // load a string from storage
-    bool save_char(const char *path_name, const char *value);              // save a string to storage
+    bool load_char(const char *path_name, char *value, size_t value_size, const char *appId = "free_roam"); // load a string from storage
+    bool save_char(const char *path_name, const char *value, const char *appId = "free_roam");              // save a string to storage
     ViewDispatcher *viewDispatcher = nullptr;
     Gui *gui = nullptr;
     ViewPort *viewPort = nullptr;

@@ -2,8 +2,8 @@
 #include "font/font.h"
 #define millis() furi_get_tick() * 10
 #define PI 3.14159265358979323846f
-Loading::Loading(Canvas *canvas)
-    : canvas(canvas)
+Loading::Loading(Draw *draw)
+    : draw(draw)
 {
     spinnerPosition = 0;
     timeElapsed = 0;
@@ -18,9 +18,17 @@ void Loading::animate()
         timeStart = millis();
     }
     drawSpinner();
-    canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-    canvas_draw_str(canvas, 44, 5, currentText);
-    timeElapsed = millis() - timeStart;
+    draw->setFontCustom(FONT_SIZE_SMALL);
+    draw->text(Vector(44, 5), currentText, ColorBlack);
+    uint32_t currentTime = millis();
+    if (currentTime >= timeStart)
+    {
+        timeElapsed = currentTime - timeStart;
+    }
+    else
+    {
+        timeElapsed = (UINT32_MAX - timeStart) + currentTime + 1;
+    }
     spinnerPosition = (spinnerPosition + 10) % 360; // Rotate by 10 degrees each frame
 }
 
@@ -55,12 +63,12 @@ void Loading::drawSpinner()
         int y2 = centerY + int(radius * sin(nextAngle * rad));
 
         // draw just the edge segment
-        canvas_draw_line(canvas, x1, y1, x2, y2);
+        draw->drawLine(Vector(x1, y1), Vector(x2, y2), ColorBlack);
     }
 
     // draw time elapsed in milliseconds
-    canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-    canvas_draw_str(canvas, 0, 60, "Time Elapsed:");
+    draw->setFontCustom(FONT_SIZE_SMALL);
+    draw->text(Vector(0, 60), "Time Elapsed:", ColorBlack);
     char timeStr[16];
     int seconds = timeElapsed / 10000;
     if (seconds < 60)
@@ -73,10 +81,13 @@ void Loading::drawSpinner()
         {
             snprintf(timeStr, sizeof(timeStr), "%u seconds", seconds);
         }
+        draw->text(Vector(90, 60), timeStr, ColorBlack);
     }
     else
     {
-        snprintf(timeStr, sizeof(timeStr), "%u minutes", seconds / 60);
+        uint32_t minutes = seconds / 60;
+        uint32_t remainingSeconds = seconds % 60;
+        snprintf(timeStr, sizeof(timeStr), "%lu:%02lu", (unsigned long)minutes, (unsigned long)remainingSeconds);
+        draw->text(Vector(105, 60), timeStr, ColorBlack);
     }
-    canvas_draw_str(canvas, 90, 60, timeStr);
 }

@@ -1,5 +1,5 @@
 #pragma once
-#include <furi.h>
+#include <Arduino.h>
 
 typedef enum
 {
@@ -41,6 +41,42 @@ typedef enum
     GameStateSwitchingLevels = 2, // Game is switching levels
     GameStateLeavingGame = 3,     // Game is leaving
 } GameState;
+
+#ifndef InputKeyMAX
+#define InputKeyMAX -1
+#endif
+
+#ifndef ColorBlack
+#define ColorBlack TFT_BLACK
+#endif
+
+#ifndef ColorWhite
+#define ColorWhite TFT_WHITE
+#endif
+
+#ifndef InputKeyRight
+#define InputKeyRight BUTTON_RIGHT
+#endif
+
+#ifndef InputKeyLeft
+#define InputKeyLeft BUTTON_LEFT
+#endif
+
+#ifndef InputKeyUp
+#define InputKeyUp BUTTON_UP
+#endif
+
+#ifndef InputKeyDown
+#define InputKeyDown BUTTON_DOWN
+#endif
+
+#ifndef InputKeyOk
+#define InputKeyOk BUTTON_CENTER
+#endif
+
+#ifndef InputKeyBack
+#define InputKeyBack BUTTON_BACK
+#endif
 
 inline bool toggleToBool(ToggleState state) noexcept { return state == ToggleOn; }
 inline const char *toggleToString(ToggleState state) noexcept { return state == ToggleOn ? "On" : "Off"; }

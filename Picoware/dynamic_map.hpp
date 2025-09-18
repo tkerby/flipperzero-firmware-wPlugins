@@ -1,11 +1,17 @@
 #pragma once
-#include "furi.h"
-#include "engine/vector.hpp"
-#include "engine/draw.hpp"
-
+#include "../../../../internal/gui/draw.hpp"
+using namespace Picoware;
 #define MAX_MAP_WIDTH 64
 #define MAX_MAP_HEIGHT 64
 #define MAX_WALLS 100
+
+#ifndef ColorWhite
+#define ColorWhite TFT_WHITE
+#endif
+
+#ifndef ColorBlack
+#define ColorBlack TFT_BLACK
+#endif
 
 enum TileType
 {
@@ -197,12 +203,15 @@ public:
 
     uint8_t getWidth() const { return width; }
 
-    void render(float view_height, Draw *const canvas, Vector player_pos, Vector player_dir, Vector player_plane) const
+    void render(float view_height, Draw *const canvas, Vector player_pos, Vector player_dir, Vector player_plane, Vector size = Vector(128, 64)) const
     {
         // render walls using existing raycasting
-        for (uint8_t x = 0; x < 128; x += 2) // SCREEN_WIDTH with RES_DIVIDER
+        uint16_t screen_width = (uint16_t)size.x;
+        uint16_t screen_height = (uint16_t)size.y;
+
+        for (uint16_t x = 0; x < screen_width; x += 2) // Use dynamic screen width with RES_DIVIDER
         {
-            float camera_x = 2 * (float)x / 128 - 1; // SCREEN_WIDTH
+            float camera_x = 2 * (float)x / screen_width - 1; // Use dynamic screen width
             float ray_x = player_dir.x + player_plane.x * camera_x;
             float ray_y = player_dir.y + player_plane.y * camera_x;
             uint8_t map_x = (uint8_t)player_pos.x;
@@ -301,39 +310,43 @@ public:
                     distance = fmax(1, (map_y - player_pos.y + (1 - step_y) / 2) / ray_y);
                 }
 
-                // rendered line height
-                uint8_t line_height = 56 / distance;                                          // RENDER_HEIGHT
-                int8_t start_y = (int8_t)(view_height / distance - line_height / 2 + 56 / 2); // RENDER_HEIGHT
-                int8_t end_y = (int8_t)(view_height / distance + line_height / 2 + 56 / 2);
+                // rendered line height - scale based on screen height
+                uint16_t render_height = screen_height * 56 / 64; // Scale render height proportionally
+                uint16_t line_height = render_height / distance;
+                int16_t start_y = (int16_t)(view_height / distance - line_height / 2 + render_height / 2);
+                int16_t end_y = (int16_t)(view_height / distance + line_height / 2 + render_height / 2);
 
                 // Clamp to screen bounds
                 if (start_y < 0)
                     start_y = 0;
-                if (end_y >= 64)
-                    end_y = 63;
+                if (end_y >= screen_height)
+                    end_y = screen_height - 1;
 
                 // Draw vertical line
-                uint8_t dots = end_y - start_y;
-                if (fillIn)
+                int16_t dots = end_y - start_y;
+                if (dots > 0)
                 {
-                    // Fill in walls pixel-by-pixel
-                    for (int i = 0; i < dots; i++)
+                    if (fillIn)
                     {
-                        // Draw the outline pixels
-                        canvas->drawPixel(Vector(x, start_y + i), ColorBlack);
-                        // Fill in the wall by drawing additional pixels to the right
-                        if (x + 1 < 128) // Make sure we don't go out of bounds
+                        // Fill in walls pixel-by-pixel
+                        for (int16_t i = 0; i < dots; i++)
                         {
-                            canvas->drawPixel(Vector(x + 1, start_y + i), ColorBlack);
+                            // Draw the outline pixels
+                            canvas->drawPixel(Vector(x, start_y + i), ColorBlack);
+                            // Fill in the wall by drawing additional pixels to the right
+                            if (x + 1 < screen_width) // Make sure we don't go out of bounds
+                            {
+                                canvas->drawPixel(Vector(x + 1, start_y + i), ColorBlack);
+                            }
                         }
                     }
-                }
-                else
-                {
-                    // draw the outline
-                    for (int i = 0; i < dots; i++)
+                    else
                     {
-                        canvas->drawPixel(Vector(x, start_y + i), ColorBlack);
+                        // draw the outline
+                        for (int16_t i = 0; i < dots; i++)
+                        {
+                            canvas->drawPixel(Vector(x, start_y + i), ColorBlack);
+                        }
                     }
                 }
             }

@@ -1,15 +1,9 @@
-#include "game/game.hpp"
-#include "app.hpp"
-#include "free_roam_icons.h"
-#include "engine/draw.hpp"
-#include "engine/game.hpp"
-#include "engine/engine.hpp"
-#include "game/sprites.hpp"
-#include <math.h>
+#include "../../../../internal/applications/games/freeroam/game.hpp"
+#include "../../../../internal/applications/games/freeroam/sprite.hpp"
 
-FreeRoamGame::FreeRoamGame()
+FreeRoamGame::FreeRoamGame(ViewManager *viewManager)
 {
-    // nothing to do
+    this->viewManagerRef = viewManager;
 }
 
 FreeRoamGame::~FreeRoamGame()
@@ -22,7 +16,7 @@ void FreeRoamGame::debounceInput()
     static uint8_t debounceCounter = 0;
     if (shouldDebounce)
     {
-        lastInput = InputKeyMAX;
+        lastInput = -1;
         debounceCounter++;
         if (debounceCounter < 2) // Reduced from 4 to 2 for faster menu response
         {
@@ -46,41 +40,6 @@ void FreeRoamGame::endGame()
     {
         engine->stop();
     }
-
-    if (draw)
-    {
-        draw.reset();
-    }
-}
-
-bool FreeRoamGame::init(ViewDispatcher **viewDispatcher, void *appContext)
-{
-    this->viewDispatcherRef = viewDispatcher;
-    this->appContext = appContext;
-
-    FreeRoamApp *app = static_cast<FreeRoamApp *>(appContext);
-    if (!app)
-    {
-        FURI_LOG_E("FreeRoamGame", "App context is null");
-        return false;
-    }
-
-    // Load sound and vibration toggle states from app settings
-    soundToggle = app->isSoundEnabled() ? ToggleOn : ToggleOff;
-    vibrationToggle = app->isVibrationEnabled() ? ToggleOn : ToggleOff;
-
-    // Check board connection before proceeding
-    if (app->isBoardConnected())
-    {
-        return true;
-    }
-    else
-    {
-        FURI_LOG_E("FreeRoamGame", "Board is not connected");
-        easy_flipper_dialog("FlipperHTTP Error", "Ensure your WiFi Developer\nBoard or Pico W is connected\nand the latest FlipperHTTP\nfirmware is installed.");
-        endGame(); // End the game if board is not connected
-        return false;
-    }
 }
 
 void FreeRoamGame::inputManager()
@@ -88,7 +47,7 @@ void FreeRoamGame::inputManager()
     static int inputHeldCounter = 0;
 
     // Track input held state
-    if (lastInput != InputKeyMAX)
+    if (lastInput != -1)
     {
         inputHeldCounter++;
         if (inputHeldCounter > 10)
@@ -136,30 +95,34 @@ void FreeRoamGame::inputManager()
 
 bool FreeRoamGame::startGame()
 {
+    auto draw = getDraw();
+
     draw->fillScreen(ColorWhite);
     draw->text(Vector(0, 10), "Initializing game...", ColorBlack);
 
     if (isGameRunning || engine)
     {
-        FURI_LOG_E("FreeRoamGame", "Game already running, skipping start");
+        // Game already running, skipping start
         return true;
     }
 
+    auto board = getBoard();
+
     // Create the game instance with 3rd person perspective
-    auto game = std::make_unique<Game>("Free Roam", Vector(128, 64), draw.get(), ColorBlack, ColorWhite, CAMERA_THIRD_PERSON);
+    auto game = std::make_unique<Game>("Free Roam", Vector(128, 64), draw, viewManagerRef->getInputManager(), ColorBlack, ColorWhite, CAMERA_THIRD_PERSON);
     if (!game)
     {
-        FURI_LOG_E("FreeRoamGame", "Failed to create Game object");
+        // Failed to create Game object
         return false;
     }
 
     // Create the player instance if it doesn't exist
     if (!player)
     {
-        player = std::make_unique<Player>();
+        player = std::make_unique<Player>(board);
         if (!player)
         {
-            FURI_LOG_E("FreeRoamGame", "Failed to create Player object");
+            // Failed to create Player object
             return false;
         }
     }
@@ -176,13 +139,18 @@ bool FreeRoamGame::startGame()
     std::unique_ptr<Level> level2 = std::make_unique<Level>("First", Vector(128, 64), game.get());
     std::unique_ptr<Level> level3 = std::make_unique<Level>("Second", Vector(128, 64), game.get());
 
+    // we'll clear ourselves and swap afterwards too
+    level1->setClearAllowed(false);
+    level2->setClearAllowed(false);
+    level3->setClearAllowed(false);
+
     level1->entity_add(player.get());
     level2->entity_add(player.get());
     level3->entity_add(player.get());
 
     // add some 3D sprites
-    std::unique_ptr<Entity> tutorialGuard1 = std::make_unique<Sprite>("Tutorial Guard 1", Vector(3, 7), SPRITE_3D_HUMANOID, 1.7f, M_PI / 4, 0.f, Vector(9, 7));
-    std::unique_ptr<Entity> tutorialGuard2 = std::make_unique<Sprite>("Tutorial Guard 2", Vector(6, 2), SPRITE_3D_HUMANOID, 1.7f, M_PI / 4, 0.f, Vector(1, 2));
+    std::unique_ptr<Entity> tutorialGuard1 = std::make_unique<Sprite>(board, "Tutorial Guard 1", Vector(3, 7), SPRITE_3D_HUMANOID, 1.7f, 1.0f, M_PI / 4, Vector(9, 7));
+    std::unique_ptr<Entity> tutorialGuard2 = std::make_unique<Sprite>(board, "Tutorial Guard 2", Vector(6, 2), SPRITE_3D_HUMANOID, 1.7f, 1.0f, M_PI / 4, Vector(1, 2));
     level1->entity_add(tutorialGuard1.release());
     level1->entity_add(tutorialGuard2.release());
 
@@ -193,7 +161,7 @@ bool FreeRoamGame::startGame()
     this->engine = std::make_unique<GameEngine>(game.release(), 240);
     if (!this->engine)
     {
-        FURI_LOG_E("FreeRoamGame", "Failed to create GameEngine");
+        // Failed to create GameEngine
         return false;
     }
 
@@ -212,7 +180,6 @@ void FreeRoamGame::switchToLevel(int levelIndex)
     // Ensure the level index is within bounds
     if (levelIndex < 0 || levelIndex >= totalLevels)
     {
-        FURI_LOG_E("FreeRoamGame", "Invalid level index: %d", levelIndex);
         return;
     }
 
@@ -232,7 +199,6 @@ void FreeRoamGame::switchToNextLevel()
 {
     if (!isGameRunning || !engine || !engine->getGame())
     {
-        FURI_LOG_W("FreeRoamGame", "Cannot switch level - game not running or engine not ready");
         return;
     }
 
@@ -249,18 +215,12 @@ void FreeRoamGame::switchToNextLevel()
     }
 }
 
-void FreeRoamGame::updateDraw(Canvas *canvas)
+void FreeRoamGame::updateDraw()
 {
-    // set Draw instance
-    if (!draw)
-    {
-        draw = std::make_unique<Draw>(canvas);
-    }
-
     // Initialize player if not already done
     if (!player)
     {
-        player = std::make_unique<Player>();
+        player = std::make_unique<Player>(getBoard());
         if (player)
         {
             player->setFreeRoamGame(this);
@@ -272,7 +232,7 @@ void FreeRoamGame::updateDraw(Canvas *canvas)
     // Let the player handle all drawing
     if (player)
     {
-        player->drawCurrentView(draw.get());
+        player->drawCurrentView(getDraw());
 
         if (player->shouldLeaveGame())
         {
@@ -283,15 +243,9 @@ void FreeRoamGame::updateDraw(Canvas *canvas)
     }
 }
 
-void FreeRoamGame::updateInput(InputEvent *event)
+void FreeRoamGame::updateInput(uint8_t key)
 {
-    if (!event)
-    {
-        FURI_LOG_E("FreeRoamGame", "updateInput: no event available");
-        return;
-    }
-
-    this->lastInput = event->key;
+    this->lastInput = key;
 
     // Only run inputManager when not in an active game to avoid input conflicts
     if (!(player && player->getCurrentMainView() == GameViewGameLocal && this->isGameRunning))
@@ -302,18 +256,10 @@ void FreeRoamGame::updateInput(InputEvent *event)
 
 void FreeRoamGame::updateSoundToggle()
 {
-    FreeRoamApp *app = static_cast<FreeRoamApp *>(appContext);
-    if (app)
-    {
-        app->setSoundEnabled(soundToggle == ToggleOn);
-    }
+    // there is sound for the PicoCalc but I haven't implemented it yet
 }
 
 void FreeRoamGame::updateVibrationToggle()
 {
-    FreeRoamApp *app = static_cast<FreeRoamApp *>(appContext);
-    if (app)
-    {
-        app->setVibrationEnabled(vibrationToggle == ToggleOn);
-    }
+    // no vibration in Picoware systems yet
 }

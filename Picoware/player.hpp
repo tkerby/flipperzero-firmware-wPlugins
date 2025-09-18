@@ -1,14 +1,13 @@
 #pragma once
-#include <furi.h>
-#include "engine/entity.hpp"
-#include "engine/game.hpp"
-#include "engine/level.hpp"
-#include "game/maps.hpp"
-#include "game/general.hpp"
-#include "game/loading.hpp"
-#include "engine/draw.hpp"
-#include "flipper_http/flipper_http.h"
-
+#include "../../../../internal/engine/entity.hpp"
+#include "../../../../internal/engine/game.hpp"
+#include "../../../../internal/engine/level.hpp"
+#include "../../../../internal/gui/draw.hpp"
+#include "../../../../internal/gui/loading.hpp"
+#include "../../../../internal/applications/games/freeroam/maps.hpp"
+#include "../../../../internal/applications/games/freeroam/general.hpp"
+#include "../../../../internal/system/http.hpp"
+using namespace Picoware;
 class FreeRoamGame;
 
 typedef enum
@@ -65,7 +64,7 @@ typedef enum
 class Player : public Entity
 {
 public:
-    Player();
+    Player(Board board);
     ~Player();
 
     char player_name[64] = {0};
@@ -85,7 +84,7 @@ public:
     void setFreeRoamGame(FreeRoamGame *game) { freeRoamGame = game; }
     void setGameState(GameState state) { gameState = state; }
     bool setHttpState(HTTPState state);
-    void setInputKey(InputKey key) { lastInput = key; }
+    void setInputKey(uint8_t key) { lastInput = key; }
     void setLobbyMenuIndex(LobbyMenuIndex index) { currentLobbyMenuIndex = index; }
     void setLoginStatus(LoginStatus status) { loginStatus = status; }
     void setMainView(GameMainView view) { currentMainView = view; }
@@ -99,7 +98,7 @@ public:
     void setWelcomeFrame(uint8_t frame) { welcomeFrame = frame; }
     bool shouldLeaveGame() const noexcept { return leaveGame == ToggleOn; }
     void update(Game *game) override;
-    void userRequest(RequestType requestType);
+    String userRequest(RequestType requestType);
 
 private:
     std::unique_ptr<DynamicMap> currentDynamicMap;                  // current dynamic map
@@ -114,7 +113,7 @@ private:
     bool inputHeld = false;                                         // whether input is held
     bool justStarted = true;                                        // whether the player just started the game
     bool justSwitchedLevels = false;                                // whether the player just switched levels
-    InputKey lastInput = InputKeyMAX;                               // Last input key
+    uint8_t lastInput = -1;                                         // Last input key
     ToggleState leaveGame = ToggleOff;                              // leave game toggle state
     uint8_t levelSwitchCounter = 0;                                 // counter for level switch delay
     std::unique_ptr<Loading> loading;                               // loading animation instance
@@ -141,6 +140,11 @@ private:
     void drawUserInfoView(Draw *canvas);                                                               // draw the user info view
     void drawWelcomeView(Draw *canvas);                                                                // draw the welcome view
     Vector findSafeSpawnPosition(const char *levelName);                                               // find a safe spawn position for a level
+    Board getBoard() const noexcept { return getViewManager()->getBoard(); }                           // Get the board from the FreeRoamGame instance
+    String getDataFromFlash(const char *path, const char *key);                                        // Get data from flash storage
+    String getUsernameFromFlash();                                                                     // Get the username from flash storage
+    String getPasswordFromFlash();                                                                     // Get the password from flash storage
+    ViewManager *getViewManager() const noexcept;                                                      // Get the view manager from the FreeRoamGame instance
     bool isPositionSafe(Vector pos);                                                                   // check if a position is safe (not in a wall)
     void switchLevels(Game *game);                                                                     // switch levels based on the current dynamic map and level name
 };

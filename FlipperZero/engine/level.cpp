@@ -185,7 +185,7 @@ bool Level::is_collision(const Entity *a, const Entity *b) const
 void Level::render(Game *game, CameraPerspective perspective, const CameraParams *camera_params)
 {
     // on flipper we only need to clear the screen and render the entities
-    game->draw->clear(Vector(0, 0), game->size, game->bg_color);
+    game->draw->clear(Vector(0, 0), Vector(128, 64), game->bg_color);
 
     // If using third person perspective but no camera params provided, calculate them from player
     CameraParams calculated_camera_params;
