@@ -1,46 +1,5 @@
 #include "app.hpp"
 
-uint32_t FreeRoamApp::callback_to_submenu(void *context)
-{
-    FreeRoamApp *app = (FreeRoamApp *)context;
-    if (app)
-    {
-        // Stop and cleanup timer first
-        if (app->timer)
-        {
-            furi_timer_stop(app->timer);
-        }
-
-        // Clean up viewport if it exists
-        if (app->gui && app->viewPort)
-        {
-            gui_remove_view_port(app->gui, app->viewPort);
-            view_port_free(app->viewPort);
-            app->viewPort = nullptr;
-        }
-
-        // quick reset game when returning to submenu
-        if (app->game)
-        {
-            app->game.reset();
-        }
-
-        // quick reset settings when returning to submenu
-        if (app->settings)
-        {
-            app->settings.reset();
-        }
-
-        // quick reset about when returning to submenu
-        if (app->about)
-        {
-            app->about.reset();
-        }
-    }
-
-    return FreeRoamViewSubmenu;
-}
-
 uint32_t FreeRoamApp::callback_exit_app(void *context)
 {
     UNUSED(context);
@@ -67,13 +26,13 @@ void FreeRoamApp::settingsItemSelected(uint32_t index)
     }
 }
 
-void FreeRoamApp::createAppDataPath()
+void FreeRoamApp::createAppDataPath(const char *appId)
 {
     Storage *storage = static_cast<Storage *>(furi_record_open(RECORD_STORAGE));
     char directory_path[256];
-    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/free_roam");
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s", appId);
     storage_common_mkdir(storage, directory_path);
-    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/free_roam/data");
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data", appId);
     storage_common_mkdir(storage, directory_path);
     furi_record_close(RECORD_STORAGE);
 }
@@ -216,12 +175,12 @@ bool FreeRoamApp::isBoardConnected()
     return flipperHttp->last_response && strcmp(flipperHttp->last_response, "[PONG]") == 0;
 }
 
-bool FreeRoamApp::save_char(const char *path_name, const char *value)
+bool FreeRoamApp::save_char(const char *path_name, const char *value, const char *appId)
 {
     Storage *storage = static_cast<Storage *>(furi_record_open(RECORD_STORAGE));
     File *file = storage_file_alloc(storage);
     char file_path[256];
-    snprintf(file_path, sizeof(file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/free_roam/data/%s.txt", path_name);
+    snprintf(file_path, sizeof(file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/%s.txt", appId, path_name);
     storage_file_open(file, file_path, FSAM_WRITE, FSOM_CREATE_ALWAYS);
     size_t data_size = strlen(value) + 1; // Include null terminator
     storage_file_write(file, value, data_size);
@@ -231,12 +190,12 @@ bool FreeRoamApp::save_char(const char *path_name, const char *value)
     return true;
 }
 
-bool FreeRoamApp::load_char(const char *path_name, char *value, size_t value_size)
+bool FreeRoamApp::load_char(const char *path_name, char *value, size_t value_size, const char *appId)
 {
     Storage *storage = static_cast<Storage *>(furi_record_open(RECORD_STORAGE));
     File *file = storage_file_alloc(storage);
     char file_path[256];
-    snprintf(file_path, sizeof(file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/free_roam/data/%s.txt", path_name);
+    snprintf(file_path, sizeof(file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/%s.txt", appId, path_name);
     if (!storage_file_open(file, file_path, FSAM_READ, FSOM_OPEN_EXISTING))
     {
         storage_file_free(file);
@@ -374,7 +333,8 @@ FreeRoamApp::FreeRoamApp()
         return;
     }
 
-    createAppDataPath();
+    createAppDataPath("free_roam");
+    createAppDataPath("flipper_http");
 
     // Switch to the submenu view
     view_dispatcher_switch_to_view(viewDispatcher, FreeRoamViewSubmenu);
