@@ -3,7 +3,7 @@
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://lh3.googleusercontent.com/d/1iYQlRQXM7nA4IAdcPwvcKRSTCMoi8tug' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0907-1722-0.420.0-46b4982.tgz&channel=RM0907-1722-0.420.0-46b4982&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0918-1509-0.420.0-6ba1888.tgz&channel=RM0918-1509-0.420.0-6ba1888&version=0.420.0&target=f7)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -30,14 +30,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-09-18 08:57 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-09-18 08:57 EST`
-- [Sub-GHz: Fix RAW files again (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/f09942a4a3cb3bf5ba5c0ffcb03769282da2a325)
-- [Add Colemak keyboard layout for badusb (By Ashe-Sterling)](https://github.com/Next-Flip/Momentum-Firmware/pull/466)
-- SubGHz: [Tweaks + Show Sats (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/blob/dev/applications/drivers/subghz/cc1101_ext/cc1101_ext.c)
-- Updated: [USB Mass Storage v1.5 (By nminaylov)](https://github.com/flipperdevices/flipperzero-good-faps/tree/nm/usb_mass_storage_app/mass_storage) [Add ability for mass storage to spoof USB identity values (By xtruan)](https://github.com/Next-Flip/Momentum-Apps/pull/60)
-- Updated: [Netflix TV Remote v0.1 (By ablaran)](https://github.com/ablaran/NetflixTvRemote)
-- Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip)
-- Updated: [T-Union Master (China) v0.1 (By SocialSisterYi)](https://github.com/SocialSisterYi/T-Union_Master)
-- Updated: [Flipper Blackhat v0.4 (By o7-machinehum)](https://github.com/o7-machinehum/flipper-blackhat-app)
 
 <a name="release">
 
@@ -783,4 +775,4 @@ $ ./fbt dolphin_ext
 - Have a new app? Submit GitHub link to me on Discord for a special reward (if I add it to RM Firmware).
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0907-1722-0.420.0-46b4982.tgz&channel=RM0907-1722-0.420.0-46b4982&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0918-1509-0.420.0-6ba1888.tgz&channel=RM0918-1509-0.420.0-6ba1888&version=0.420.0&target=f7)
