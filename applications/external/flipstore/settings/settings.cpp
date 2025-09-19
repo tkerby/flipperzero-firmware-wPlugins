@@ -71,12 +71,12 @@ bool FlipDownloaderSettings::init(ViewDispatcher** view_dispatcher, void* appCon
     char loaded_ssid[64];
     char loaded_pass[64];
     FlipDownloaderApp* app = static_cast<FlipDownloaderApp*>(appContext);
-    if(app->load_char("wifi_ssid", loaded_ssid, sizeof(loaded_ssid))) {
+    if(app->load_char("wifi_ssid", loaded_ssid, sizeof(loaded_ssid), "flipper_http")) {
         variable_item_set_current_value_text(variable_item_wifi_ssid, loaded_ssid);
     } else {
         variable_item_set_current_value_text(variable_item_wifi_ssid, "");
     }
-    if(app->load_char("wifi_pass", loaded_pass, sizeof(loaded_pass))) {
+    if(app->load_char("wifi_pass", loaded_pass, sizeof(loaded_pass), "flipper_http")) {
         variable_item_set_current_value_text(variable_item_wifi_pass, "*****");
     } else {
         variable_item_set_current_value_text(variable_item_wifi_pass, "");
@@ -110,7 +110,7 @@ bool FlipDownloaderSettings::initTextInput(uint32_t view) {
     char loaded[256];
 
     if(view == SettingsViewSSID) {
-        if(app->load_char("wifi_ssid", loaded, sizeof(loaded))) {
+        if(app->load_char("wifi_ssid", loaded, sizeof(loaded), "flipper_http")) {
             strncpy(text_input_temp_buffer.get(), loaded, text_input_buffer_size);
         } else {
             text_input_temp_buffer[0] = '\0'; // Ensure empty if not loaded
@@ -140,7 +140,7 @@ bool FlipDownloaderSettings::initTextInput(uint32_t view) {
             this);
 #endif
     } else if(view == SettingsViewPassword) {
-        if(app->load_char("wifi_pass", loaded, sizeof(loaded))) {
+        if(app->load_char("wifi_pass", loaded, sizeof(loaded), "flipper_http")) {
             strncpy(text_input_temp_buffer.get(), loaded, text_input_buffer_size);
         } else {
             text_input_temp_buffer[0] = '\0'; // Ensure empty if not loaded
@@ -188,8 +188,8 @@ void FlipDownloaderSettings::settingsItemSelected(uint32_t index) {
         FlipDownloaderApp* app = static_cast<FlipDownloaderApp*>(appContext);
         char loaded_ssid[64];
         char loaded_pass[64];
-        if(!app->load_char("wifi_ssid", loaded_ssid, sizeof(loaded_ssid)) ||
-           !app->load_char("wifi_pass", loaded_pass, sizeof(loaded_pass))) {
+        if(!app->load_char("wifi_ssid", loaded_ssid, sizeof(loaded_ssid), "flipper_http") ||
+           !app->load_char("wifi_pass", loaded_pass, sizeof(loaded_pass), "flipper_http")) {
             FURI_LOG_E(TAG, "WiFi credentials not set");
             easy_flipper_dialog(
                 "No WiFi Credentials", "Please set your WiFi SSID\nand Password in Settings.");
@@ -243,13 +243,13 @@ void FlipDownloaderSettings::textUpdated(uint32_t view) {
         if(variable_item_wifi_ssid) {
             variable_item_set_current_value_text(variable_item_wifi_ssid, text_input_buffer.get());
         }
-        app->save_char("wifi_ssid", text_input_buffer.get());
+        app->save_char("wifi_ssid", text_input_buffer.get(), "flipper_http");
         break;
     case SettingsViewPassword:
         if(variable_item_wifi_pass) {
             variable_item_set_current_value_text(variable_item_wifi_pass, text_input_buffer.get());
         }
-        app->save_char("wifi_pass", text_input_buffer.get());
+        app->save_char("wifi_pass", text_input_buffer.get(), "flipper_http");
         break;
     default:
         break;

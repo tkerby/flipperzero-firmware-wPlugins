@@ -1,3 +1,10 @@
+## v1.3.4
+- Updated the save/load functions to use a specific folder ("flipper_http") for storing Wi-Fi and user credentials. This simplifies management and avoids potential conflicts with other applications.
+
+## v1.3.3
+- Merged keyboard class from FlipSocial
+- Added auto updating
+
 ## v1.3
 - Fixed the ESP32 firmware download functionality to ensure it downloads each file one-by-one (as intended)
 - Switched from "regular" text input to MasterX's (for saving WiFi credentials)

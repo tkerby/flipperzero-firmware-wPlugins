@@ -254,7 +254,7 @@ bool FlipDownloaderRun::downloadFile(FlipDownloaderDownloadLink link) {
     case DownloadLinkVGMPicoware:
         return app->httpDownloadFile(
             savePath,
-            "https://raw.githubusercontent.com/jblanked/Picoware/main/builds/Picoware-VGM.uf2");
+            "https://raw.githubusercontent.com/jblanked/Picoware/main/builds/ArduinoIDE/Picoware-VGM.uf2");
         break;
     default:
         break;

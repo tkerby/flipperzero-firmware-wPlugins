@@ -7,7 +7,7 @@
 #include "about/about.hpp"
 
 #define TAG         "FlipDownloader"
-#define VERSION     "1.3.3"
+#define VERSION     "1.3.4"
 #define VERSION_TAG TAG " " VERSION
 #define APP_ID      "flip_downloader"
 
@@ -37,7 +37,7 @@ private:
     static uint32_t callbackExitApp(void* context);
     void callbackSubmenuChoices(uint32_t index);
     static uint32_t callbackToSubmenu(void* context);
-    void createAppDataPath();
+    void createAppDataPath(const char* appId = APP_ID);
     void settingsItemSelected(uint32_t index);
     static void settings_item_selected_callback(void* context, uint32_t index);
     static void submenu_choices_callback(void* context, uint32_t index);
@@ -67,9 +67,13 @@ public:
     bool load_char(
         const char* path_name,
         char* value,
-        size_t value_size); // load a string from storage
+        size_t value_size,
+        const char* appId = APP_ID); // load a string from storage
     void runDispatcher();
-    bool save_char(const char* path_name, const char* value); // save a string to storage
+    bool save_char(
+        const char* path_name,
+        const char* value,
+        const char* appId = APP_ID); // save a string to storage
     bool sendWiFiCredentials(
         const char* ssid,
         const char* password); // send WiFi credentials to the board
