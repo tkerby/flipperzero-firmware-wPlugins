@@ -554,13 +554,13 @@ void Player::drawLoginView(Draw* canvas) {
                 if(strstr(response, "[SUCCESS]") != NULL) {
                     loginStatus = LoginSuccess;
                     currentMainView = GameViewUserInfo; // switch to user info view
-                    userRequest(RequestTypeUserInfo);
                     userInfoStatus = UserInfoWaiting; // set user info status to waiting
+                    userRequest(RequestTypeUserInfo);
                 } else if(strstr(response, "User not found") != NULL) {
                     loginStatus = LoginNotStarted;
                     currentMainView = GameViewRegistration;
-                    userRequest(RequestTypeRegistration);
                     registrationStatus = RegistrationWaiting;
+                    userRequest(RequestTypeRegistration);
                 } else if(strstr(response, "Incorrect password") != NULL) {
                     loginStatus = LoginWrongPassword;
                 } else if(strstr(response, "Username or password is empty.") != NULL) {
@@ -654,8 +654,8 @@ void Player::drawRegistrationView(Draw* canvas) {
                 if(strstr(response, "[SUCCESS]") != NULL) {
                     registrationStatus = RegistrationSuccess;
                     currentMainView = GameViewUserInfo; // switch to user info view
-                    userRequest(RequestTypeUserInfo);
                     userInfoStatus = UserInfoWaiting; // set user info status to waiting
+                    userRequest(RequestTypeUserInfo);
                 } else if(strstr(response, "Username or password not provided") != NULL) {
                     registrationStatus = RegistrationCredentialsMissing;
                 } else if(strstr(response, "User already exists") != NULL) {
@@ -1054,8 +1054,8 @@ void Player::processInput() {
         case InputKeyOk:
             flipWorldRun->shouldDebounce = true;
             currentMainView = GameViewLogin; // Switch to login view
-            userRequest(RequestTypeLogin);
             loginStatus = LoginWaiting;
+            userRequest(RequestTypeLogin);
             break;
         case InputKeyBack:
             leaveGame = ToggleOn;
@@ -1074,8 +1074,8 @@ void Player::processInput() {
         case InputKeyOk:
             if(loginStatus == LoginSuccess) {
                 currentMainView = GameViewUserInfo;
-                userRequest(RequestTypeUserInfo);
                 userInfoStatus = UserInfoWaiting;
+                userRequest(RequestTypeUserInfo);
                 flipWorldRun->shouldDebounce = true;
             }
             break;
@@ -1093,8 +1093,8 @@ void Player::processInput() {
         case InputKeyOk:
             if(registrationStatus == RegistrationSuccess) {
                 currentMainView = GameViewUserInfo;
-                userRequest(RequestTypeUserInfo);
                 userInfoStatus = UserInfoWaiting;
+                userRequest(RequestTypeUserInfo);
                 flipWorldRun->shouldDebounce = true;
             }
             break;

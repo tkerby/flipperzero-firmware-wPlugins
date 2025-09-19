@@ -7,7 +7,7 @@
 #include "about/about.hpp"
 
 #define TAG         "FlipWorld"
-#define VERSION     "1.0"
+#define VERSION     "1.0.1"
 #define VERSION_TAG TAG " " VERSION
 #define APP_ID      "flip_world"
 
@@ -36,7 +36,7 @@ private:
     //
     static uint32_t callbackExitApp(void* context); // Callback to exit the app
     void callbackSubmenuChoices(uint32_t index); // Callback for submenu choices
-    void createAppDataPath(); // Create the app data path in storage
+    void createAppDataPath(const char* appId = APP_ID); // Create the app data path in storage
     void settingsItemSelected(uint32_t index); // Handle settings item selection
     static void
         submenuChoicesCallback(void* context, uint32_t index); // Callback for submenu choices
@@ -84,14 +84,18 @@ public:
     bool loadChar(
         const char* path_name,
         char* value,
-        size_t value_size); // load a string from storage
+        size_t value_size,
+        const char* appId = APP_ID); // load a string from storage
     bool loadFileChunk(
         const char* filePath,
         char* buffer,
         size_t sizeOfChunk,
         uint8_t iteration); // Load a file chunk from storage
     void runDispatcher(); // run the app's view dispatcher to handle views and events
-    bool saveChar(const char* path_name, const char* value); // save a string to storage
+    bool saveChar(
+        const char* path_name,
+        const char* value,
+        const char* appId = APP_ID); // save a string to storage
     bool setHttpState(HTTPState state = IDLE) noexcept; // set the HTTP state
     bool sendWiFiCredentials(
         const char* ssid,

@@ -26,7 +26,8 @@ FlipWorldApp::FlipWorldApp() {
         return;
     }
 
-    createAppDataPath();
+    createAppDataPath(APP_ID);
+    createAppDataPath("flipper_http");
 
     // Switch to the submenu view
     view_dispatcher_switch_to_view(viewDispatcher, FlipWorldViewSubmenu);
@@ -161,17 +162,17 @@ void FlipWorldApp::clearLastResponse() noexcept {
     if(flipperHttp) flipperHttp->last_response[0] = '\0';
 }
 
-void FlipWorldApp::createAppDataPath() {
+void FlipWorldApp::createAppDataPath(const char* appId) {
     Storage* storage = static_cast<Storage*>(furi_record_open(RECORD_STORAGE));
     char directory_path[256];
     snprintf(
-        directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s", APP_ID);
+        directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s", appId);
     storage_common_mkdir(storage, directory_path);
     snprintf(
         directory_path,
         sizeof(directory_path),
         STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data",
-        APP_ID);
+        appId);
     storage_common_mkdir(storage, directory_path);
     furi_record_close(RECORD_STORAGE);
 }
@@ -186,17 +187,17 @@ bool FlipWorldApp::fileExists(const char* path_name) const noexcept {
 bool FlipWorldApp::hasWiFiCredentials() {
     char ssid[64] = {0};
     char password[64] = {0};
-    return loadChar("wifi_ssid", ssid, sizeof(ssid)) &&
-           loadChar("wifi_pass", password, sizeof(password)) && strlen(ssid) > 0 &&
+    return loadChar("wifi_ssid", ssid, sizeof(ssid), "flipper_http") &&
+           loadChar("wifi_pass", password, sizeof(password), "flipper_http") && strlen(ssid) > 0 &&
            strlen(password) > 0;
 }
 
 bool FlipWorldApp::hasUserCredentials() {
     char userName[64] = {0};
     char userPass[64] = {0};
-    return loadChar("user_name", userName, sizeof(userName)) &&
-           loadChar("user_pass", userPass, sizeof(userPass)) && strlen(userName) > 0 &&
-           strlen(userPass) > 0;
+    return loadChar("user_name", userName, sizeof(userName), "flipper_http") &&
+           loadChar("user_pass", userPass, sizeof(userPass), "flipper_http") &&
+           strlen(userName) > 0 && strlen(userPass) > 0;
 }
 
 FuriString* FlipWorldApp::httpRequest(
@@ -275,7 +276,11 @@ bool FlipWorldApp::isBoardConnected() {
     return flipperHttp->last_response && strcmp(flipperHttp->last_response, "[PONG]") == 0;
 }
 
-bool FlipWorldApp::loadChar(const char* path_name, char* value, size_t value_size) {
+bool FlipWorldApp::loadChar(
+    const char* path_name,
+    char* value,
+    size_t value_size,
+    const char* appId) {
     Storage* storage = static_cast<Storage*>(furi_record_open(RECORD_STORAGE));
     File* file = storage_file_alloc(storage);
     char file_path[256];
@@ -283,7 +288,7 @@ bool FlipWorldApp::loadChar(const char* path_name, char* value, size_t value_siz
         file_path,
         sizeof(file_path),
         STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/%s.txt",
-        APP_ID,
+        appId,
         path_name);
     if(!storage_file_open(file, file_path, FSAM_READ, FSOM_OPEN_EXISTING)) {
         storage_file_free(file);
@@ -380,7 +385,7 @@ void FlipWorldApp::runDispatcher() {
     view_dispatcher_run(viewDispatcher);
 }
 
-bool FlipWorldApp::saveChar(const char* path_name, const char* value) {
+bool FlipWorldApp::saveChar(const char* path_name, const char* value, const char* appId) {
     Storage* storage = static_cast<Storage*>(furi_record_open(RECORD_STORAGE));
     File* file = storage_file_alloc(storage);
     char file_path[256];
@@ -388,7 +393,7 @@ bool FlipWorldApp::saveChar(const char* path_name, const char* value) {
         file_path,
         sizeof(file_path),
         STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/%s.txt",
-        APP_ID,
+        appId,
         path_name);
     storage_file_open(file, file_path, FSAM_WRITE, FSOM_CREATE_ALWAYS);
     size_t data_size = strlen(value) + 1; // Include null terminator
@@ -518,6 +523,8 @@ int32_t flip_world_main(void* p) {
 
     // Create the app
     FlipWorldApp app;
+
+    app.saveChar("app_version", VERSION);
 
     // Run the app
     app.runDispatcher();
