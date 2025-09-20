@@ -18,7 +18,7 @@ Inspired by a [Lemmy post](https://lemmy.dbzer0.com/post/29276607) from dipdowel
 
 :white_check_mark: Load generated string from internal storage
 
-:black_square_button: Add an About popup to the main menu, introducing the app
+:white_check_mark: Add an About scene to the main menu, introducing the app
 
 :white_check_mark: Create custom app icon
 
@@ -35,6 +35,8 @@ Don't be stupid with fire, it burns things. Never keep an open flame unattended 
 
 ### Acknowledgments
 [The Flipper Developer Docs](https://developer.flipper.net/flipperzero/doxygen/)
+
+[The Flipper Zero Firmware](https://github.com/flipperdevices/flipperzero-firmware)
 
 [A Visual Guide to Flipper Zero GUI Modules](https://brodan.biz/blog/a-visual-guide-to-flipper-zero-gui-components/)
 

@@ -7,7 +7,6 @@
 #include <gui/modules/menu.h>
 #include <gui/modules/submenu.h>
 #include <gui/modules/widget.h>
-#include <gui/modules/popup.h>
 #include <gui/modules/text_box.h>
 #include <gui/modules/variable_item_list.h>
 #include <gui/modules/text_input.h>
@@ -38,8 +37,7 @@ typedef enum {
     FireStringScene_USB,
     FireStringScene_LoadString,
     FireStringScene_SaveString,
-    FireStringScene_SavedPopup,
-    // FireStringScene_AboutPopup,  // TODO
+    FireStringScene_About,
     FireStringScene_count
 } FireStringScene;
 
@@ -51,16 +49,16 @@ typedef enum {
     FireStringView_Loading,
     FireStringView_Widget,
     FireStringView_TextInput,
-    FireStringView_Popup,
 } FireStringView;
 
 // custom event index
 typedef enum {
     FireStringEvent_ShowVariableItemList,
     FireStringEvent_ShowStringGeneratorView,
-    FireStringEvent_ShowBadUSBPopup,
+    FireStringEvent_ShowBadUSB,
     FireStringEvent_ShowFileBrowser,
-    FireStringEvent_ShowSavedPopup,
+    FireStringEvent_ShowSaved,
+    FireStringEvent_ShowAbout,
     FireStringEvent_Exit
 } FireStringEvent;
 
@@ -102,7 +100,6 @@ typedef struct {
     DialogsApp* dialogs;
     TextInput* text_input;
     char text_buffer[TEXT_INPUT_BUF_SIZE];
-    Popup* popup;
     Loading* loading;
     InfraredWorker* ir_worker;
     FuriString* fire_string;

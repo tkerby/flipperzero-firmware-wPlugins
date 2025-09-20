@@ -76,34 +76,9 @@ bool fire_string_scene_on_event_step_two_menu(void* context, SceneManagerEvent e
     FURI_LOG_T(TAG, "fire_string_scene_on_event_step_two_menu");
     furi_check(context);
 
-    FireString* app = context;
+    UNUSED(event);
     bool consumed = false;
-    switch(event.type) {
-    case SceneManagerEventTypeCustom:
-        switch(event.event) {
-        case FireStringEvent_ShowBadUSBPopup:
-            scene_manager_next_scene(app->scene_manager, FireStringScene_LoadingUSB);
-            consumed = true;
-            break;
-        case FireStringEvent_ShowSavedPopup: // DEBUG: popup, text_input or both?
-            // scene_manager_next_scene(app->scene_manager, FireStringScene_Generate);
-            consumed = true;
-            break;
-        case FireStringEvent_Exit:
-            consumed = true;
-            view_dispatcher_stop(app->view_dispatcher);
-            break;
-        default:
-            break;
-        }
-        break;
-    case SceneManagerEventTypeBack:
-        consumed = true;
-        scene_manager_previous_scene(app->scene_manager);
-        break;
-    default:
-        break;
-    }
+
     return consumed;
 }
 

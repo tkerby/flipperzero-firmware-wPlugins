@@ -4,7 +4,8 @@
 typedef enum {
     FireStringMenuSelection_Generate,
     FireStringMenuSelection_Settings,
-    FireStringMenuSelection_LoadString
+    FireStringMenuSelection_LoadString,
+    FireStringMenuSelection_About
 } FireStringMenuSelection;
 
 void fire_string_menu_callback_main_menu(void* context, uint32_t index) {
@@ -22,6 +23,9 @@ void fire_string_menu_callback_main_menu(void* context, uint32_t index) {
         break;
     case FireStringMenuSelection_LoadString:
         scene_manager_handle_custom_event(app->scene_manager, FireStringEvent_ShowFileBrowser);
+        break;
+    case FireStringMenuSelection_About:
+        scene_manager_handle_custom_event(app->scene_manager, FireStringEvent_ShowAbout);
         break;
     }
 }
@@ -43,6 +47,13 @@ void fire_string_scene_on_enter_main_menu(void* context) {
         "Settings",
         NULL,
         FireStringMenuSelection_Settings,
+        fire_string_menu_callback_main_menu,
+        app);
+    menu_add_item(
+        app->menu,
+        "About",
+        NULL,
+        FireStringMenuSelection_About,
         fire_string_menu_callback_main_menu,
         app);
     menu_add_item(
@@ -74,6 +85,10 @@ bool fire_string_scene_on_event_main_menu(void* context, SceneManagerEvent event
             break;
         case FireStringEvent_ShowFileBrowser:
             scene_manager_next_scene(app->scene_manager, FireStringScene_LoadString);
+            break;
+        case FireStringEvent_ShowAbout:
+            scene_manager_next_scene(app->scene_manager, FireStringScene_About);
+            break;
         default:
             break;
         }
