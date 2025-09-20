@@ -338,6 +338,9 @@ void fire_string_scene_on_exit_string_generator(void* context) {
     furi_check(context);
 
     FireString* app = context;
+    if(app->ir_worker != NULL) {
+        infrared_rx_stop(app);
+    }
     free(app->hid->char_list);
 
     widget_reset(app->widget);
