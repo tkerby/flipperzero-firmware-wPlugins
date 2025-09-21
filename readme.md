@@ -18,4 +18,3 @@
 ---
 
 ## Made by Matvey Strelov
-# flipper-water-sensor

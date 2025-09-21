@@ -1,5 +1,5 @@
 #include "water_sensor.h"
-
+// Made by Matvey Strelov
 #include <gui/gui.h>
 #include <gui/view_port.h>
 #include <gui/elements.h>
@@ -21,19 +21,17 @@ static void draw_callback(Canvas* canvas, void* ctx) {
 
     char line[64];
 
-    // Заголовок
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str_aligned(canvas, 64, 8, AlignCenter, AlignTop, "Water Sensor reader");
 
-    // RAW
+
     snprintf(line, sizeof(line), "RAW: %u", app->raw);
     canvas_draw_str_aligned(canvas, 8, 24, AlignLeft, AlignTop, line);
 
-    // Милливольты
     snprintf(line, sizeof(line), "V: %.1f mV", (double)app->mv);
     canvas_draw_str_aligned(canvas, 8, 36, AlignLeft, AlignTop, line);
 
-    // Прогрессбар (0..3300 mV)
+
     const float max_mv = 2000.0f;
     float progress = app->mv / max_mv;
     if(progress < 0.0f) progress = 0.0f;
@@ -66,10 +64,10 @@ int32_t water_sensor_main(void* p) {
     view_port_input_callback_set(app.view_port, input_callback, &app);
     gui_add_view_port(app.gui, app.view_port, GuiLayerFullscreen);
 
-    // Настраиваем GPIO как аналоговый вход
+    
     furi_hal_gpio_init(ADC_GPIO, GpioModeAnalog, GpioPullNo, GpioSpeedVeryHigh);
 
-    // Берём ADC и настраиваем по умолчанию
+
     app.adc = furi_hal_adc_acquire();
     furi_hal_adc_configure(app.adc);
 
