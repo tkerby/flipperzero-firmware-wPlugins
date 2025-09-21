@@ -1,7 +1,7 @@
 # Fire String
 Generate truly random strings from the Flipper Zero using its IR sensor. Capture the infrared bursts from a flame source (like a lighter) as an unpredictable entropy source.
 
-Inspired by a [Lemmy post](https://lemmy.dbzer0.com/post/29276607) from dipdowel
+Inspired by [Flipper, Fire, RNG!](https://github.com/dipdowel/flipper-fire-rng) by dipdowel
 
 ### Main Goals:
 :white_check_mark: Generate random string using IR noise
