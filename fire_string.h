@@ -15,12 +15,11 @@
 #include <infrared.h>
 #include <infrared_worker.h>
 #include <furi_hal_infrared.h>
+#include <ble_profile/extra_profiles/hid_profile.h>
+#include <ble_profile/extra_services/hid_service.h>
 #include <fire_string_icons.h>
-#include <assets_icons.h>
 
 #include "helpers/bad_usb_hid.h"
-#include "helpers/ble_profile/extra_profiles/hid_profile.h"
-#include "helpers/ble_profile/extra_services/hid_service.h"
 
 #define TAG                 "firestring-app"
 #define DEFAULT_PATH        APP_DATA_PATH()
