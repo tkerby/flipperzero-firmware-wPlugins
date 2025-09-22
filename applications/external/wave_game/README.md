@@ -10,3 +10,19 @@ The logic is simple: the arrow falls down, and when you hold down the **OK** or 
 
 Inspired by *Geometry Dash* and also by [flipperzero-drifter](https://github.com/jean-edouard/flipperzero-drifter).  
 After looking at his code, I finally understood how to build level generation.
+
+## SUPPORT
+
+If you'd like to support me, you can donate to my crypto wallets. I'd be very grateful for any donations, thank you.
+
+**TON ADDRESS**
+UQCwTm1bbYwTFDAiW6Ae6z2C7fXrv1Rxsx_bi_rFXL7o6D-e
+
+**USDT TON ADDRESS**
+UQCwTm1bbYwTFDAiW6Ae6z2C7fXrv1Rxsx_bi_rFXL7o6D-e
+
+**BTC ADDRESS**
+1J8jQL7HpjNTq4Ty3g4m6zdyCJrsUAyXh4
+
+**ETH ADDRESS**
+0xa0b7b7b011584396315e826145d2259ab45C45b7
