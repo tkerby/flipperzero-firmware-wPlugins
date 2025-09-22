@@ -1,6 +1,6 @@
 App(
-    appid="rg_tool",
-    name="RGs Tool",
+    appid="tester",
+    name="tester",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="subghz_toolkit_app",
     requires=[
