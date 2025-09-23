@@ -28,8 +28,8 @@ This software is for experimental purposes only and is not meant for any illegal
 
 ## Latest Updates - [PATREON: Latest Release RM0923-1031-0.420.0-bfa8267](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-09-23 10:31 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-09-23 10:31 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-09-23 18:50 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-09-23 18:50 EST`
 - Updated: [Free Roam v0.3.1 (By jblanked)](https://github.com/jblanked/Free-Roam) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [FlipSocial v2.0.2 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [FlipDownloader v1.3.4 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
@@ -38,6 +38,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [MODBUS v1.1.3.1 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-rs485modbus) `Req: Modbus By ElectronicCats`
 - [ESP Flasher: Bump Marauder v1.8.6 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.8.6)
 - OFW: [Add an old JVC model to universal remotes #4274 (By zgracem)](https://github.com/flipperdevices/flipperzero-firmware/pull/4274)
+- OFW: [NFC: MFC 1k Banapass Parser #4260 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4260) Already in RM
+- OFW: [NFC: Fix read crash with unexpectedly large MFC AUTH(0) response #4265 (By WillyJL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4265) Already in RM
+- OFW: [GUI Bug Fix: Number Input Save Icon #4273 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4273)
 
 <a name="release">
 
