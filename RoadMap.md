@@ -71,6 +71,7 @@
 - [Flipper Share v1.0 (By lomalkin)](https://github.com/lomalkin/flipper-zero-apps/flipper_share)
 - [Nearby Files (By Stichoza)](https://github.com/Stichoza/flipper-nearby-files)
 - [Atari SIO Emulator v0.5 (By cepetr)](https://github.com/cepetr/sio2flip) (Changes using Pipe)
+### OFW TO ADD: [#4243](https://github.com/flipperdevices/flipperzero-firmware/pull/4243)
 
 ## WISH LIST ITEMS:
 - Battery Type moved to Power Settings
