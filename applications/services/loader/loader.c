@@ -99,6 +99,7 @@ static void loader_show_gui_error(
     LoaderMessageLoaderStatusResult status,
     const char* name,
     FuriString* error_message) {
+    furi_check(name);
     DialogsApp* dialogs = furi_record_open(RECORD_DIALOGS);
     DialogMessage* message = dialog_message_alloc();
 
@@ -1080,13 +1081,13 @@ int32_t loader_srv(void* p) {
             switch(message.type) {
             case LoaderMessageTypeStartByName:
                 *(message.status_value) = loader_do_start_by_name(
-                    loader, message.start.name, message.start.args, message.start.error_message);
+                    loader, message.start.name, message.start.args, message.start.error_message); //-V595
                 api_lock_unlock(message.api_lock);
                 break;
             case LoaderMessageTypeStartByNameDetachedWithGuiError: {
                 FuriString* error_message = furi_string_alloc();
                 LoaderMessageLoaderStatusResult status = loader_do_start_by_name(
-                    loader, message.start.name, message.start.args, error_message);
+                    loader, message.start.name, message.start.args, error_message); //-V595
                 loader_show_gui_error(status, message.start.name, error_message);
                 if(message.start.name) free((void*)message.start.name);
                 if(message.start.args) free((void*)message.start.args);

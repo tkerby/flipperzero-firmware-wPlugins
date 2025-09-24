@@ -37,7 +37,7 @@ static void onewire_cli_search(Cli* cli) {
     onewire_host_start(onewire);
     if(!furi_hal_power_is_otg_enabled()) furi_hal_power_enable_otg();
 
-    while(!done) {
+    while(!done) { //-V1044
         if(onewire_host_search(onewire, address, OneWireHostSearchModeNormal) != 1) {
             printf("Search finished\r\n");
             onewire_host_reset_search(onewire);
