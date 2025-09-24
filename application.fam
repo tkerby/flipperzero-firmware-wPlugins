@@ -1,5 +1,5 @@
 App(
-    appid="veml7700luxmeter",
+    appid="LuxMeterVEML7700",
     name="VEML7700 Lux Meter",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="veml7700_app",
