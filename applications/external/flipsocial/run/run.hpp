@@ -152,6 +152,9 @@ class FlipSocialRun {
     uint8_t feedItemIndex; // current feed item index
     uint8_t feedIteration; // current feed iteration
     FeedStatus feedStatus; // current feed status
+    bool feedItemFlipOverride
+        [MAX_FEED_ITEMS]; // local override for flip status to show immediate feedback
+    bool feedItemFlipOverrideActive[MAX_FEED_ITEMS]; // track which items have local overrides
     bool inputHeld; // flag to check if input is held
     InputKey lastInput; // last input key pressed
     std::unique_ptr<Keyboard> keyboard; // keyboard instance for input handling
@@ -204,6 +207,8 @@ class FlipSocialRun {
         char* buffer,
         size_t buffer_size); // get the selected post at the specified postIndex
     bool httpRequestIsFinished(); // check if the HTTP request is finished
+    void
+        updateFeedItemFlipStatus(); // update the flip status of the current feed item in cached data
     void userRequest(
         RequestType requestType); // Send a user request to the server based on the request type
 public:
