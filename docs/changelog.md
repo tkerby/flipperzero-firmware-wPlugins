@@ -1,3 +1,8 @@
+## v0.7.6
+
+New command support for firmware v1.8.5 and v1.8.6!
+
+
 ## v0.7.5
 
 New features for firmware v1.8.4
