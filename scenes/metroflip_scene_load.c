@@ -108,7 +108,7 @@ void metroflip_scene_load_on_enter(void* context) {
             } else {
                 const char* card_str = furi_string_get_cstr(card_type_str);
                 
-                if(strcmp(card_str, "Japan Rail IC") == 0) {
+                if(strcmp(card_str, "Japan Transit IC") == 0) {
                     app->card_type = "suica";
                     app->is_desfire = false;
                     app->data_loaded = true;
@@ -191,3 +191,4 @@ void metroflip_scene_load_on_exit(void* context) {
     Metroflip* app = context;
     UNUSED(app);
 }
+
