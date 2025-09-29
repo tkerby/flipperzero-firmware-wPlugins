@@ -73,6 +73,10 @@
 - [Atari SIO Emulator v0.5 (By cepetr)](https://github.com/cepetr/sio2flip) (Changes using Pipe)
 ### OFW TO ADD: [#4243](https://github.com/flipperdevices/flipperzero-firmware/pull/4243)
 ### OFW TO ADD: [#4252](https://github.com/flipperdevices/flipperzero-firmware/pull/4252)
+### OFW TO ADD: [#4251](https://github.com/flipperdevices/flipperzero-firmware/pull/4251)
+### OFW TO ADD: [#4206](https://github.com/flipperdevices/flipperzero-firmware/pull/4206)
+### OFW TO ADD: [#4155](https://github.com/flipperdevices/flipperzero-firmware/pull/4155)
+### OFW TO ADD: [#4158](https://github.com/flipperdevices/flipperzero-firmware/pull/4158)
 
 ## WISH LIST ITEMS:
 - Battery Type moved to Power Settings
