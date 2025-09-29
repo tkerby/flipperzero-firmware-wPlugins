@@ -1,5 +1,4 @@
 #include "../fire_string.h"
-#include "storage/storage.h"
 
 void fire_string_scene_on_enter_load_string(void* context) {
     FURI_LOG_T(TAG, "fire_string_scene_on_enter_load_string");

@@ -157,6 +157,27 @@ void get_random_char(FireString* app) {
     furi_string_cat_printf(app->fire_string, "%c", buffer);
 }
 
+uint32_t get_word_count(FireString* app) {
+    uint32_t word_count = 0;
+    uint32_t string_size = furi_string_size(app->fire_string);
+    const char* c_str = malloc(sizeof(char) * string_size);
+    c_str = furi_string_get_cstr(app->fire_string);
+
+    if(string_size == 0) {
+        return word_count;
+    } else {
+        word_count = 1;
+    }
+
+    for(uint32_t i = 0; i < word_count - 1; i++) {
+        if(c_str[i] == '-') {
+            word_count++;
+        }
+    }
+
+    return word_count;
+}
+
 void string_generator_btn_callback(GuiButtonType result, InputType type, void* context) {
     FURI_LOG_T(TAG, "string_generator_btn_callback");
     furi_assert(context);
@@ -283,7 +304,12 @@ void fire_string_scene_on_enter_string_generator(void* context) {
 
     FireString* app = context;
 
-    get_char_list(app);
+    if(app->settings->str_type == StrType_Passphrase && app->hid->word_list == NULL) {
+        scene_manager_next_scene(app->scene_manager, FireStringScene_Loading_Word_List);
+    }
+    if(app->settings->str_type != StrType_Passphrase) {
+        get_char_list(app);
+    }
 
     build_string_generator_widget(app);
 
@@ -341,7 +367,16 @@ void fire_string_scene_on_exit_string_generator(void* context) {
     if(app->ir_worker != NULL) {
         infrared_rx_stop(app);
     }
-    free(app->hid->char_list);
+    if(app->settings->str_type == StrType_Passphrase && app->hid->word_list != NULL) { // Phrase
+        uint32_t i = 0;
+        while(app->hid->word_list[i] != 0x0) {
+            furi_string_free(app->hid->word_list[i]);
+            i++;
+        }
+    }
+    if(app->settings->str_type != StrType_Passphrase && app->hid->char_list != NULL) {
+        free(app->hid->char_list);
+    }
 
     widget_reset(app->widget);
 }

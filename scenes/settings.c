@@ -1,7 +1,8 @@
 #include "../fire_string.h"
 
 const char* str_len[] = {"4", "8", "12", "16", "24", "32", "48", "64", "256", "512"};
-const char* type_strings[] = {"AlphNumSymb", "AlphNum", "Alpha", "Symbols", "Numeric", "Binary"};
+const char* type_strings[] =
+    {"AlphNumSymb", "Phrase", "AlphNum", "Alpha", "Symbols", "Numeric", "Binary"};
 const char* use_ir_strings[] = {"False", "True"};
 
 uint8_t get_str_len_index(uint32_t num) {
@@ -82,7 +83,7 @@ void fire_string_scene_on_enter_settings(void* context) {
 }
 
 bool fire_string_scene_on_event_settings(void* context, SceneManagerEvent event) {
-    FURI_LOG_T(TAG, "fire_string_scene_on_event_settings");
+    // FURI_LOG_T(TAG, "fire_string_scene_on_event_settings");
     furi_check(context);
 
     FireString* app = context;

@@ -11,7 +11,8 @@ void (*const fire_string_scene_on_enter_handlers[])(void*) = {
     fire_string_scene_on_enter_usb,
     fire_string_scene_on_enter_load_string,
     fire_string_scene_on_enter_save_string,
-    fire_string_scene_on_enter_about};
+    fire_string_scene_on_enter_about,
+    fire_string_scene_on_enter_loading_word_list};
 
 /** collection of all scene on event handlers - in the same order as their enum */
 bool (*const fire_string_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
@@ -23,7 +24,8 @@ bool (*const fire_string_scene_on_event_handlers[])(void*, SceneManagerEvent) = 
     fire_string_scene_on_event_usb,
     fire_string_scene_on_event_load_string,
     fire_string_scene_on_event_save_string,
-    fire_string_scene_on_event_about};
+    fire_string_scene_on_event_about,
+    fire_string_scene_on_event_loading_word_list};
 
 /** collection of all scene on exit handlers - in the same order as their enum */
 void (*const fire_string_scene_on_exit_handlers[])(void*) = {
@@ -35,7 +37,8 @@ void (*const fire_string_scene_on_exit_handlers[])(void*) = {
     fire_string_scene_on_exit_usb,
     fire_string_scene_on_exit_load_string,
     fire_string_scene_on_exit_save_string,
-    fire_string_scene_on_exit_about};
+    fire_string_scene_on_exit_about,
+    fire_string_scene_on_exit_loading_word_list};
 
 /** collection of all on_enter, on_event, on_exit handlers */
 const SceneManagerHandlers fire_string_scene_event_handlers = {
