@@ -1081,7 +1081,10 @@ int32_t loader_srv(void* p) {
             switch(message.type) {
             case LoaderMessageTypeStartByName:
                 *(message.status_value) = loader_do_start_by_name(
-                    loader, message.start.name, message.start.args, message.start.error_message); //-V595
+                    loader,
+                    message.start.name,
+                    message.start.args,
+                    message.start.error_message); //-V595
                 api_lock_unlock(message.api_lock);
                 break;
             case LoaderMessageTypeStartByNameDetachedWithGuiError: {

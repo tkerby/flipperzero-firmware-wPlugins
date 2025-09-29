@@ -45,6 +45,18 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [WiFi (Marauder) v0.7.6 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion)
 - Updated: [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader)
+- OFW: [FeliCa Emulation: Handle certain Polling commands in firmware #4204 (By dogtopus)](https://github.com/flipperdevices/flipperzero-firmware/pull/4204)
+- OFW: [FuriHalSerial: Fix RXFNE interrupt hang #4246 (By WillyJL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4246)
+- OFW: [SubGHz: Linear and Dickert MAHS protocols fixes & improvements #4267 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4267) (Alreadi in RM)
+- OFW: [hid_app mouse clicker: make mouse button selectable #4270 (By LordMZTE)](https://github.com/flipperdevices/flipperzero-firmware/pull/4270)
+- OFW: [NFC: Amusement IC Card Parser (FeliCa Lite & Lite-S) #4259 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4259) (Alreadi in RM)
+- OFW: [Add Daikin FTXN25LV1B9 and Toyotomi KTN22-12R32 #4232 (By minchogaydarov)](https://github.com/flipperdevices/flipperzero-firmware/pull/4232)
+- OFW: [SubGhz: fix TIM17 config not applied immediately #4205 (By Aerosnail)](https://github.com/flipperdevices/flipperzero-firmware/pull/4205)
+- OFW: [BadUSB: Fix case sensitive key combos, fix modifiers in HOLD/RELEASE #4216 (By WillyJL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4216)
+- OFW: [LFRFID: Show ISO-3166 Country Names For Pet Chips #4091 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4091)
+- OFW: [Update demo_windows.txt #4211 (By ase1590)](https://github.com/flipperdevices/flipperzero-firmware/pull/4211)
+- OFW: [tm01x dallas write support #4230 (By Leptopt1los)](https://github.com/flipperdevices/flipperzero-firmware/pull/4230)
+- OFW: [Fix PVS warnings #4277 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4277)
 
 <a name="release">
 
