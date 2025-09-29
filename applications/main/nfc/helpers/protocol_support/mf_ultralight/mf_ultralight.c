@@ -14,6 +14,7 @@ enum {
     SubmenuIndexUnlock = SubmenuIndexCommonMax,
     SubmenuIndexUnlockByReader,
     SubmenuIndexUnlockByPassword,
+    SubmenuIndexWrite,
     SubmenuIndexDictAttack
 };
 
@@ -230,6 +231,16 @@ static void nfc_scene_read_and_saved_menu_on_enter_mf_ultralight(NfcApp* instanc
                 nfc_protocol_support_common_submenu_callback,
                 instance);
         }
+    } else if(
+        data->type == MfUltralightTypeNTAG213 || data->type == MfUltralightTypeNTAG215 ||
+        data->type == MfUltralightTypeNTAG216 || data->type == MfUltralightTypeUL11 ||
+        data->type == MfUltralightTypeUL21 || data->type == MfUltralightTypeOrigin) {
+        submenu_add_item(
+            submenu,
+            "Write",
+            SubmenuIndexWrite,
+            nfc_protocol_support_common_submenu_callback,
+            instance);
     }
 }
 
@@ -281,6 +292,12 @@ static bool nfc_scene_read_and_saved_menu_on_event_mf_ultralight(
                                       NfcSceneDesAuthKeyInput :
                                       NfcSceneMfUltralightUnlockMenu;
             scene_manager_next_scene(instance->scene_manager, next_scene);
+            consumed = true;
+        } else if(event.event == SubmenuIndexDictAttack) {
+            if(!scene_manager_search_and_switch_to_previous_scene(
+                   instance->scene_manager, NfcSceneMfUltralightCDictAttack)) {
+                scene_manager_next_scene(instance->scene_manager, NfcSceneMfUltralightCDictAttack);
+            }
             consumed = true;
         } else if(event.event == SubmenuIndexDictAttack) {
             if(!scene_manager_search_and_switch_to_previous_scene(
