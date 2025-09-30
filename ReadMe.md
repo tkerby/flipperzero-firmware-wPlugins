@@ -57,6 +57,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: [Update demo_windows.txt #4211 (By ase1590)](https://github.com/flipperdevices/flipperzero-firmware/pull/4211)
 - OFW: [tm01x dallas write support #4230 (By Leptopt1los)](https://github.com/flipperdevices/flipperzero-firmware/pull/4230)
 - OFW: [Fix PVS warnings #4277 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4277)
+- Updated: [T-Union Master (China) v0.1 (By SocialSisterYi)](https://github.com/SocialSisterYi/T-Union_Master)
 
 <a name="release">
 
