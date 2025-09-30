@@ -38,7 +38,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [ESP Flasher: Bump Marauder v1.8.6 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.8.6)
 - OFW: [Add an old JVC model to universal remotes #4274 (By zgracem)](https://github.com/flipperdevices/flipperzero-firmware/pull/4274)
 - OFW: [NFC: MFC 1k Banapass Parser #4260 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4260) (Already in RM)
-- OFW: [NFC: Fix read crash with unexpectedly large MFC AUTH(0) response #4265 (By WillyJL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4265) Already in RM
+- OFW: [NFC: Fix read crash with unexpectedly large MFC AUTH(0) response #4265 (By WillyJL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4265) (Already in RM)
 - OFW: [GUI Bug Fix: Number Input Save Icon #4273 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4273)
 - Updated: [ESP32 WIFI Mapping v0.2 (By carvilsi)](https://github.com/carvilsi/flipper0-wifi-map) `Req: ESP32` & [ESP32 FW](https://github.com/carvilsi/esp32-wifi-map)
 - Updated: [FlipSocial v2.0.3 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
