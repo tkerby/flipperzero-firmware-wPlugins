@@ -1,6 +1,6 @@
 VEML7700 Lux Meter for Flipper Zero
 This is an application for the Flipper Zero that measures ambient light intensity using a VEML7700 sensor and displays the result in lux (lx).
-
+![VEML7700 Lux Meter na Flipper Zero](Flipper-zero-app-VEML7700/screenshots/1.png)
 Features
 Real-time Reading: The application continuously refreshes and displays the measured light intensity value.
 
