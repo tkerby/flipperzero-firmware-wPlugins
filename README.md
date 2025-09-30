@@ -7,7 +7,7 @@ This is an application for the **Flipper Zero** device that measures ambient lig
 
 | Main Screen | Gain Settings | I2C Address Settings |
 | :---: | :---: | :---: |
-| ![Main screen showing Lux measurement](Flipper-zero-app-VEML7700/screenshots/1.png) | ![Gain setting screen](Flipper-zero-app-VEML7700/screenshots/2.png) | ![I2C Address setting screen](Flipper-zero-app-VEML7700/screenshots/3.png) |
+| ![Main screen showing Lux measurement](screenshots/1.png) | ![Gain setting screen](Flipper-zero-app-VEML7700/screenshots/2.png) | ![I2C Address setting screen](Flipper-zero-app-VEML7700/screenshots/3.png) |
 
 ---
 ## ✨ Features
