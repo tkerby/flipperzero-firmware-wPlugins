@@ -37,7 +37,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [MODBUS v1.1.3.1 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-rs485modbus) `Req: Modbus By ElectronicCats`
 - [ESP Flasher: Bump Marauder v1.8.6 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.8.6)
 - OFW: [Add an old JVC model to universal remotes #4274 (By zgracem)](https://github.com/flipperdevices/flipperzero-firmware/pull/4274)
-- OFW: [NFC: MFC 1k Banapass Parser #4260 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4260) Already in RM
+- OFW: [NFC: MFC 1k Banapass Parser #4260 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4260) (Already in RM)
 - OFW: [NFC: Fix read crash with unexpectedly large MFC AUTH(0) response #4265 (By WillyJL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4265) Already in RM
 - OFW: [GUI Bug Fix: Number Input Save Icon #4273 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4273)
 - Updated: [ESP32 WIFI Mapping v0.2 (By carvilsi)](https://github.com/carvilsi/flipper0-wifi-map) `Req: ESP32` & [ESP32 FW](https://github.com/carvilsi/esp32-wifi-map)
@@ -47,9 +47,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader)
 - OFW: [FeliCa Emulation: Handle certain Polling commands in firmware #4204 (By dogtopus)](https://github.com/flipperdevices/flipperzero-firmware/pull/4204)
 - OFW: [FuriHalSerial: Fix RXFNE interrupt hang #4246 (By WillyJL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4246)
-- OFW: [SubGHz: Linear and Dickert MAHS protocols fixes & improvements #4267 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4267) (Alreadi in RM)
+- OFW: [SubGHz: Linear and Dickert MAHS protocols fixes & improvements #4267 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4267) (Already in RM)
 - OFW: [hid_app mouse clicker: make mouse button selectable #4270 (By LordMZTE)](https://github.com/flipperdevices/flipperzero-firmware/pull/4270)
-- OFW: [NFC: Amusement IC Card Parser (FeliCa Lite & Lite-S) #4259 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4259) (Alreadi in RM)
+- OFW: [NFC: Amusement IC Card Parser (FeliCa Lite & Lite-S) #4259 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4259) (Already in RM)
 - OFW: [Add Daikin FTXN25LV1B9 and Toyotomi KTN22-12R32 #4232 (By minchogaydarov)](https://github.com/flipperdevices/flipperzero-firmware/pull/4232)
 - OFW: [SubGhz: fix TIM17 config not applied immediately #4205 (By Aerosnail)](https://github.com/flipperdevices/flipperzero-firmware/pull/4205)
 - OFW: [BadUSB: Fix case sensitive key combos, fix modifiers in HOLD/RELEASE #4216 (By WillyJL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4216)
