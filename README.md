@@ -3,17 +3,13 @@
 This is an application for the **Flipper Zero** device that measures ambient light intensity using a **VEML7700 sensor** and displays the result in lux ($\text{lx}$).
 
 ---
-
 ## 📸 Screenshots
 
-| Main Screen | Gain Settings |
-| :---: | :---: |
-| ![Main screen showing Lux measurement](Flipper-zero-app-VEML7700/screenshots/1.png) | ![Gain setting screen](Flipper-zero-app-VEML7700/screenshots/2.png) |
-| **I2C Address Settings** | |
-| ![I2C Address setting screen](Flipper-zero-app-VEML7700/screenshots/3.png) | |
+| Main Screen | Gain Settings | I2C Address Settings |
+| :---: | :---: | :---: |
+| ![Main screen showing Lux measurement](Flipper-zero-app-VEML7700/screenshots/1.png) | ![Gain setting screen](Flipper-zero-app-VEML7700/screenshots/2.png) | ![I2C Address setting screen](Flipper-zero-app-VEML7700/screenshots/3.png) |
 
 ---
-
 ## ✨ Features
 
 * **Real-time Reading:** The application continuously refreshes and displays the measured light intensity value.
@@ -22,14 +18,12 @@ This is an application for the **Flipper Zero** device that measures ambient lig
 * **Simple Menu:** Intuitive navigation using the Flipper Zero buttons (**OK**, arrows, **Back**).
 
 ---
-
 ## 🛠️ Hardware Requirements
 
 * **Flipper Zero** device.
 * **VEML7700** ambient light sensor connected to the GPIO pins (I2C).
 
 ---
-
 ## 🚀 Usage
 
 1.  Make sure the VEML7700 sensor is correctly connected to the Flipper Zero (I2C pins).
@@ -41,7 +35,6 @@ This is an application for the **Flipper Zero** device that measures ambient lig
 7.  Press the **Back** button on the main screen to exit the application.
 
 ---
-
 ## 💻 Code Structure
 
 * `veml7700_app.c`: The main application file.
