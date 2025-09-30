@@ -1,6 +1,7 @@
 #include "travel_detail.h"
 #include "../view_modules/elements.h"
 #include "../view_modules/app_elements.h"
+#include "t_union_master_icons.h"
 
 struct TravelDetailView {
     View* view;
@@ -97,13 +98,23 @@ static void travel_detail_view_draw_cb(Canvas* canvas, void* _model) {
     
     // 交通LOGO
     canvas_draw_rframe(canvas, 2, 26, 36, 36, 1);
+    const Icon *logo;
     if (travel_ext->line_type == LineTypeMetro) {
-        const Icon *logo = get_mtr_logo_by_city_id(travel->city_id);
-        canvas_draw_icon(canvas, 4, 26 + 2, logo);
+        logo = get_mtr_logo_by_city_id(travel->city_id);
+    } else {
+        logo = &I_logo_bus_32x32;
     }
+    canvas_draw_icon(canvas, 4, 26 + 2, logo);
 
     // 线路名
-    elements_draw_str_utf8(canvas, 40, 42, furi_string_get_cstr(travel_ext->line_name));
+    FURI_LOG_D("T", "line_type=%d", travel_ext->line_type);
+    if (travel_ext->line_type == LineTypeBUS) {
+        furi_string_set(temp_str, "公交车");
+    } else {
+        furi_string_set(temp_str, travel_ext->line_name);
+    }
+    elements_draw_str_utf8(canvas, 40, 42, furi_string_get_cstr(temp_str));
+    furi_string_reset(temp_str);
     
     // 站台名
     elements_draw_str_utf8(canvas, 40, 56, furi_string_get_cstr(travel_ext->station_name));
