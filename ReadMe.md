@@ -30,11 +30,20 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-10-12 22:56 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-10-12 22:56 EST`
-- SubGHz: [Add Elplast 18bit static code protocol (By Hackcat)]
-- SubGHz: Try to decode BFT (2 buttons remotes only) on the fly in regular Read mode (for 4 button remote follow docs [here](https://github.com/DarkFlippers/unleashed-firmware/blob/dev/documentation/SubGHzRemoteProg.md)) (By xMasterX)
+- SubGHz: [Add Elplast 18bit static code protocol (By Hackcat)](https://github.com/DarkFlippers/unleashed-firmware/commit/a4f5f1e862c5b7adfb9ff7dfa84481e63f53d7af)
+- SubGHz: Try to decode BFT (2 buttons remotes only) on the fly in regular Read mode (for 4 button remote follow docs [here](https://github.com/DarkFlippers/unleashed-firmware/blob/dev/documentation/SubGHzRemoteProg.md)) [(By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/3e45fce96d25c55bb4565d9a5d99a42fa771408b)
 - OFW: [IR: Add Onn Roku TV control to universal remote #4201 (By MrNull1)](https://github.com/flipperdevices/flipperzero-firmware/pull/4201)
-- SubGHz: Updates to ensure correct byte shifts (By xMasterX)
+- SubGHz: [Updates to ensure correct byte shifts (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/a5dedec00ab132025e3be51870459433aec3c187)
 - OFW: [SubGHz: Add 9 new protocols, fixes to existing protocols #4255 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4255)
+- OFW: [NFC FeliCa Standard: Service Directory Traverse + Dump All Unencrypted-Readable Services' Blocks #4254 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4254)
+- OFW: [Fix Ultralight EV1 regression #4287 (By noproto)](https://github.com/flipperdevices/flipperzero-firmware/pull/4287)
+- NFC: [Add MIFARE Classic Show Keys UI (By aaronjamt)](https://github.com/Next-Flip/Momentum-Firmware/pull/473)
+- [API: Catalog now matches release channel not release-candidate (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/c878aa85b8aa733a93644af4887d47b651ca60f4)
+- [HID PTT: adding global zoom and google meet shortcuts for MacOS (By hryamzik)](https://github.com/DarkFlippers/unleashed-firmware/pull/921)
+- NFC: [Returning fix for reading PWD locked MFUL (By mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/pull/922)
+- NFC: [Added UL-C keys to the dictionary (By mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/pull/923)
+- SubGHz: [add support for top44rbn remotes (By xMasterX thanks mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/commit/b03316d89d652035fb3829d09b1ca8473e89cb56)
+- OFW: PR: [NFC FeliCa Minor Fix: FelicaPollerEventType should only be Incomplete if the tag is FeliCa Lite #4279 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4279)
 
 <a name="release">
 
