@@ -110,11 +110,10 @@ static void suica_parse_train_code(
     FuriString* station_num_candidate = furi_string_alloc_set("0");
     FuriString* station_JR_header_candidate = furi_string_alloc_set("0");
     FuriString* line_copy = furi_string_alloc();
-    FuriString* file_name = furi_string_alloc();    
+    FuriString* file_name = furi_string_alloc();
 
     furi_string_printf(line_code_str, "0x%02X", line_code);
     furi_string_printf(line_and_station_code_str, "0x%02X,0x%02X", line_code, station_code);
-
 
     size_t line_comma_ind = 0;
     size_t station_comma_ind = 0;
@@ -216,7 +215,7 @@ static void suica_parse_train_code(
     furi_string_free(station_num_candidate);
     furi_string_free(station_JR_header_candidate);
     furi_string_free(file_name);
-    
+
     file_stream_close(stream);
     stream_free(stream);
     furi_record_close(RECORD_STORAGE);
@@ -306,6 +305,27 @@ static void suica_parse(SuicaHistoryViewModel* my_model) {
     }
 }
 
+static bool suica_model_pack_data(
+    SuicaHistoryViewModel* model,
+    const FelicaData* felica_data,
+    Metroflip* app) {
+    uint32_t public_block_count = simple_array_get_count(felica_data->public_blocks);
+    bool found = false;
+    for(uint16_t i = 0; i < public_block_count; i++) {
+        FelicaPublicBlock* public_block = simple_array_get(felica_data->public_blocks, i);
+        if(public_block->service_code == SERVICE_CODE_HISTORY_IN_LE) {
+            suica_add_entry(model, public_block->block.data);
+            furi_string_cat_printf(app->suica_file_data, "Log %02X: ", i);
+            for(size_t j = 0; j < FELICA_DATA_BLOCK_SIZE; j++) {
+                furi_string_cat_printf(app->suica_file_data, "%02X ", public_block->block.data[j]);
+            }
+            furi_string_cat_printf(app->suica_file_data, "\n");
+            found = true;
+        }
+    }
+    return found;
+}
+
 static void suica_parse_detail_callback(GuiButtonType result, InputType type, void* context) {
     Metroflip* app = context;
     UNUSED(result);
@@ -320,7 +340,7 @@ static void suica_parse_detail_callback(GuiButtonType result, InputType type, vo
 static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
     furi_assert(event.protocol == NfcProtocolFelica);
     NfcCommand command = NfcCommandContinue;
-    MetroflipPollerEventType stage = MetroflipPollerEventTypeStart;
+    // MetroflipPollerEventType stage = MetroflipPollerEventTypeStart;
 
     Metroflip* app = context;
     FuriString* parsed_data = furi_string_alloc();
@@ -328,97 +348,42 @@ static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
 
     Widget* widget = app->widget;
 
-    const uint16_t service_code[2] = {SERVICE_CODE_HISTORY_IN_LE, SERVICE_CODE_TAPS_LOG_IN_LE};
-
     const FelicaPollerEvent* felica_event = event.event_data;
-    FelicaPoller* felica_poller = event.instance;
-    const FelicaData* felica_data = nfc_poller_get_data(app->poller);
-    FURI_LOG_I(TAG, "Poller set");
-    if(felica_event->type == FelicaPollerEventTypeRequestAuthContext) {
-        view_dispatcher_send_custom_event(app->view_dispatcher, MetroflipCustomEventCardDetected);
-        command = NfcCommandContinue;
+    FURI_LOG_I(TAG, "Felica event: %d", felica_event->type);
+    if(felica_event->type == FelicaPollerEventTypeReady) {
+        FURI_LOG_I(TAG, "Read complete");
+        // view_dispatcher_send_custom_event(app->view_dispatcher, MetroflipCustomEventPollerSuccess);
+        command = NfcCommandStop;
 
-        if(stage == MetroflipPollerEventTypeStart) {
-            nfc_device_set_data(
-                app->nfc_device, NfcProtocolFelica, nfc_poller_get_data(app->poller));
-            furi_string_printf(parsed_data, "\e#Japan Transit IC\n");
+        // if(stage == MetroflipPollerEventTypeStart) {
+        nfc_device_set_data(app->nfc_device, NfcProtocolFelica, nfc_poller_get_data(app->poller));
+        furi_string_printf(parsed_data, "\e#Japan Transit IC\n");
+        const FelicaData* felica_data = nfc_poller_get_data(app->poller);
 
-            // Authenticate with the card
-            // Iterate through the two services
-            for(int service_code_index = 0; service_code_index < 2; service_code_index++) {
-                furi_string_cat_printf(
-                    parsed_data, "%s: \n", suica_service_names[service_code_index]);
-                FelicaError error = FelicaErrorNone;
-                FelicaPollerReadCommandResponse* rx_resp;
-                uint8_t blocks[1] = {0x00}; // firmware api requires this to be a list
+        bool found = suica_model_pack_data(model, felica_data, app);
+        furi_string_cat(parsed_data, app->suica_file_data);
 
-                do {
-                    uint8_t block_data[16] = {0};
-                    error = felica_poller_read_blocks(
-                        felica_poller, 1, blocks, service_code[service_code_index], &rx_resp);
-                    if(error != FelicaErrorNone) {
-                        view_dispatcher_send_custom_event(
-                            app->view_dispatcher, MetroflipCustomEventCardLost);
-                        command = NfcCommandStop;
-                        break;
-                    }
-                    furi_string_cat_printf(parsed_data, "Log %02X: ", blocks[0]);
-                    if(service_code_index == 0) {
-                        furi_string_cat_printf(app->suica_file_data, "Log %02X: ", blocks[0]);
-                    }
-                    blocks[0]++;
-                    for(size_t i = 0; i < FELICA_DATA_BLOCK_SIZE; i++) {
-                        furi_string_cat_printf(parsed_data, "%02X ", rx_resp->data[i]);
-                        if(service_code_index == 0) {
-                            furi_string_cat_printf(
-                                app->suica_file_data, "%02X ", rx_resp->data[i]);
-                        }
-                        block_data[i] = rx_resp->data[i];
-                    }
-                    furi_string_cat_printf(parsed_data, "\n");
-                    if(service_code_index == 0) {
-                        FURI_LOG_I(
-                            TAG,
-                            "Service code %d, adding entry %x",
-                            service_code_index,
-                            model->size);
-                        suica_add_entry(model, block_data);
-                        furi_string_cat_printf(app->suica_file_data, "\n");
-                    }
-                } while((rx_resp->SF1 + rx_resp->SF2) == 0 &&
-                        blocks[0] < SUICA_MAX_HISTORY_ENTRIES && error == FelicaErrorNone);
-                if(error != FelicaErrorNone) {
+        metroflip_app_blink_stop(app);
 
-                    break;
-                }
-            }
-            metroflip_app_blink_stop(app);
-
-            if(model->size == 1) { // Have to let the poller run once before knowing we failed
-                furi_string_printf(
-                    parsed_data,
-                    "\e#Japan Transit IC\nSorry, no data found.\nPlease let the developers know and we will add support.");
-            }
-
-            if(model->size == 1 && felica_data->pmm.data[1] != SUICA_IC_TYPE_CODE) {
-                furi_string_printf(
-                    parsed_data,
-                    "\e#FeliCa\nSorry, unrecorded IC type.\nPlease let the developers know and we will add support.");
-            }
-            widget_add_text_scroll_element(
-                widget, 0, 0, 128, 64, furi_string_get_cstr(parsed_data));
-
-            widget_add_button_element(
-                widget, GuiButtonTypeRight, "Exit", metroflip_exit_widget_callback, app);
-            widget_add_button_element(
-                widget, GuiButtonTypeLeft, "Save", metroflip_save_widget_callback, app);
-
-            if(model->size > 1) {
-                widget_add_button_element(
-                    widget, GuiButtonTypeCenter, "Parse", suica_parse_detail_callback, app);
-            }
-            view_dispatcher_switch_to_view(app->view_dispatcher, MetroflipViewWidget);
+        if(!found) {
+            furi_string_printf(
+                parsed_data,
+                "\e#FeliCa\nSorry, unrecorded service code.\nPlease let the developers know and we will add support.");
         }
+
+        widget_add_text_scroll_element(widget, 0, 0, 128, 64, furi_string_get_cstr(parsed_data));
+
+        widget_add_button_element(
+            widget, GuiButtonTypeRight, "Exit", metroflip_exit_widget_callback, app);
+        widget_add_button_element(
+            widget, GuiButtonTypeLeft, "Save", metroflip_save_widget_callback, app);
+
+        if(found) {
+            widget_add_button_element(
+                widget, GuiButtonTypeCenter, "Parse", suica_parse_detail_callback, app);
+        }
+        view_dispatcher_switch_to_view(app->view_dispatcher, MetroflipViewWidget);
+        // }
     }
     furi_string_free(parsed_data);
     command = NfcCommandStop;
@@ -487,17 +452,7 @@ static bool suica_history_input_callback(InputEvent* event, void* context) {
             // Handle other keys or do nothing
             break;
         }
-        // with_view_model(
-        //     app->suica_context->view_history,
-        //     SuicaHistoryViewModel * model,
-        //     {
-        //         if((model->history.history_type == SuicaHistoryTopUp) && model->page == 1) {
-        //             model->animator_tick = 0;
-        //         }
-        //     },
-        //     false);
     }
-
     return false;
 }
 
@@ -580,10 +535,6 @@ static bool suica_on_event(Metroflip* app, SceneManagerEvent event) {
             consumed = true;
         } else if(event.event == MetroflipCustomEventCardLost) {
             popup_set_header(popup, "Card \n lost", 68, 30, AlignLeft, AlignTop);
-            // popup_set_timeout(popup, 2000);
-            // popup_enable_timeout(popup);
-            // view_dispatcher_switch_to_view(app->view_dispatcher, SuicaViewPopup);
-            // popup_disable_timeout(popup);
             scene_manager_search_and_switch_to_previous_scene(
                 app->scene_manager, MetroflipSceneStart);
             consumed = true;
