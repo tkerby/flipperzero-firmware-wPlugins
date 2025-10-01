@@ -495,34 +495,50 @@ static void suica_on_enter(Metroflip* app) {
 
         metroflip_app_blink_start(app);
     } else {
-        SuicaHistoryViewModel* model = view_get_model(app->suica_context->view_history);
-        suica_model_initialize_after_load(model);
-        Widget* widget = app->widget;
-        FuriString* parsed_data = furi_string_alloc();
-        furi_string_printf(parsed_data, "\e#Japan Transit IC\n");
+        FURI_LOG_I(TAG, "Loading FeliCa data");
+        Storage* storage = furi_record_open(RECORD_STORAGE);
+        FlipperFormat* ff = flipper_format_file_alloc(storage);
+        if(flipper_format_file_open_existing(ff, app->file_path)) {
+            FURI_LOG_I(TAG, "File path: %s", app->file_path);
+            FelicaData* felica_data = felica_alloc();
+            felica_load(felica_data, ff, 4);
+            FURI_LOG_I(TAG, "FeliCa data workflow type: %d", felica_data->workflow_type);
+            FURI_LOG_I(
+                TAG,
+                "FeliCa data pmm: %02X%02X",
+                felica_data->pmm.data[0],
+                felica_data->pmm.data[1]);
 
-        for(uint8_t i = 0; i < model->size; i++) {
-            furi_string_cat_printf(app->suica_file_data, "Log %02X: ", i);
-            for(size_t j = 0; j < FELICA_DATA_BLOCK_SIZE; j++) {
-                furi_string_cat_printf(
-                    app->suica_file_data, "%02X ", model->travel_history[i * 16 + j]);
+            SuicaHistoryViewModel* model = view_get_model(app->suica_context->view_history);
+            suica_model_initialize_after_load(model);
+            Widget* widget = app->widget;
+            FuriString* parsed_data = furi_string_alloc();
+            furi_string_printf(parsed_data, "\e#Japan Transit IC\n");
+            bool found = suica_model_pack_data(model, felica_data, app);
+            furi_string_cat(parsed_data, app->suica_file_data);
+            if(!found) {
+                furi_string_printf(
+                    parsed_data,
+                    "\e#FeliCa\nSorry, unrecorded service code.\nPlease let the developers know and we will add support.");
             }
-            furi_string_cat_printf(app->suica_file_data, "\n");
-        }
-        furi_string_cat(parsed_data, app->suica_file_data);
-        widget_add_text_scroll_element(widget, 0, 0, 128, 64, furi_string_get_cstr(parsed_data));
 
-        widget_add_button_element(
-            widget, GuiButtonTypeRight, "Exit", metroflip_exit_widget_callback, app);
-        widget_add_button_element(
-            widget, GuiButtonTypeLeft, "Save", metroflip_save_widget_callback, app);
+            widget_add_text_scroll_element(
+                widget, 0, 0, 128, 64, furi_string_get_cstr(parsed_data));
 
-        if(model->size > 1) {
             widget_add_button_element(
-                widget, GuiButtonTypeCenter, "Parse", suica_parse_detail_callback, app);
+                widget, GuiButtonTypeRight, "Exit", metroflip_exit_widget_callback, app);
+
+            // No reason to put a save button here if the data is loaded from an existing file
+
+            if(found) {
+                widget_add_button_element(
+                    widget, GuiButtonTypeCenter, "Parse", suica_parse_detail_callback, app);
+            }
+            view_dispatcher_switch_to_view(app->view_dispatcher, MetroflipViewWidget);
+            furi_string_free(parsed_data);
+            felica_free(felica_data);
         }
-        view_dispatcher_switch_to_view(app->view_dispatcher, MetroflipViewWidget);
-        furi_string_free(parsed_data);
+        flipper_format_free(ff);
     }
 }
 

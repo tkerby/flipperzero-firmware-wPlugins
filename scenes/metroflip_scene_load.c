@@ -33,7 +33,15 @@ void metroflip_scene_load_on_enter(void* context) {
 
         do {
             if(!flipper_format_file_open_existing(format, furi_string_get_cstr(file_path))) break;
-            if(!flipper_format_read_string(format, "Device Type", device_type)) {
+            FuriString* lower_case_buffer = furi_string_alloc();    
+            bool lower_case_success = flipper_format_read_string(format, "Device type", lower_case_buffer);
+            if(lower_case_success) furi_string_set_str(device_type, furi_string_get_cstr(lower_case_buffer));
+
+            FuriString* upper_case_buffer = furi_string_alloc();
+            bool upper_case_success = flipper_format_read_string(format, "Device Type", upper_case_buffer);
+            if(upper_case_success) furi_string_set_str(device_type, furi_string_get_cstr(upper_case_buffer));
+
+            if(!(lower_case_success || upper_case_success)) {
                 // Try to assume it's a Mifare Classic card and proceed
                 furi_string_set_str(device_type, "Mifare Classic");
             }
@@ -103,16 +111,23 @@ void metroflip_scene_load_on_enter(void* context) {
                         desfire_type(data); // This must return a static literal string
 
                     mf_desfire_free(data);
+                } else if(strcmp(protocol_name, "FeliCa") == 0) {
+                    app->card_type = "suica";
+                    app->is_desfire = false;
+                    app->data_loaded = true;
+                    load_suica_data(app, format, false);
+                    FURI_LOG_I(TAG, "Detected: FeliCa");
                 }
 
             } else {
                 const char* card_str = furi_string_get_cstr(card_type_str);
-                
+
                 if(strcmp(card_str, "Japan Transit IC") == 0) {
                     app->card_type = "suica";
                     app->is_desfire = false;
                     app->data_loaded = true;
-                    load_suica_data(app, format);
+                    load_suica_data(app, format, true);
+                    // This is outdated after OFW #4254 but kept for backward compatibility
                 } else if(strcmp(card_str, "calypso") == 0) {
                     app->card_type = "calypso";
                     app->is_desfire = false;
@@ -121,13 +136,13 @@ void metroflip_scene_load_on_enter(void* context) {
                     // For RENFE cards, we need to load the MFC data and set it up properly
                     flipper_format_file_close(format);
                     flipper_format_file_open_existing(format, furi_string_get_cstr(file_path));
-                    
+
                     MfClassicData* mfc_data = mf_classic_alloc();
                     if(!mf_classic_load(mfc_data, format, 2)) {
                         mf_classic_free(mfc_data);
                         break;
                     }
-                    
+
                     app->card_type = "renfe_sum10";
                     app->mfc_card_type = CARD_TYPE_RENFE_SUM10;
                     app->mfc_data = mfc_data;
@@ -148,6 +163,9 @@ void metroflip_scene_load_on_enter(void* context) {
                 sizeof(app->delete_file_path) - 1);
             app->delete_file_path[sizeof(app->delete_file_path) - 1] = '\0';
 
+            furi_string_free(lower_case_buffer);
+            furi_string_free(upper_case_buffer);
+
         } while(0);
 
         flipper_format_free(format);
@@ -156,9 +174,11 @@ void metroflip_scene_load_on_enter(void* context) {
     // Scene transitions
     if(app->data_loaded) {
         FURI_LOG_I(TAG, "Data loaded successfully, transitioning to parse scene");
-        FURI_LOG_I(TAG, "Card type: %s, MFC data: %s", 
-                   app->card_type ? app->card_type : "NULL",
-                   app->mfc_data ? "exists" : "NULL");
+        FURI_LOG_I(
+            TAG,
+            "Card type: %s, MFC data: %s",
+            app->card_type ? app->card_type : "NULL",
+            app->mfc_data ? "exists" : "NULL");
         scene_manager_search_and_switch_to_previous_scene(app->scene_manager, MetroflipSceneStart);
         scene_manager_next_scene(app->scene_manager, MetroflipSceneParse);
     } else {
@@ -191,4 +211,3 @@ void metroflip_scene_load_on_exit(void* context) {
     Metroflip* app = context;
     UNUSED(app);
 }
-
