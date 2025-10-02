@@ -58,6 +58,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: [Fix PVS warnings #4277 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4277)
 - Updated: [T-Union Master (China) v0.1 (By SocialSisterYi)](https://github.com/SocialSisterYi/T-Union_Master)
 - Updated: [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader)
+- Updated: [GPS v1.4 (By ezod)](https://github.com/ezod/flipperzero-gps) `Req: NMEA 0183`
 
 <a name="release">
 
