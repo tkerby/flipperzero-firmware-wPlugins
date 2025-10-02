@@ -44,7 +44,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipSocial v2.0.3 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [WiFi (Marauder) v0.7.6 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion)
-- Updated: [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader)
 - OFW: [FeliCa Emulation: Handle certain Polling commands in firmware #4204 (By dogtopus)](https://github.com/flipperdevices/flipperzero-firmware/pull/4204)
 - OFW: [FuriHalSerial: Fix RXFNE interrupt hang #4246 (By WillyJL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4246)
 - OFW: [SubGHz: Linear and Dickert MAHS protocols fixes & improvements #4267 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4267) (Already in RM)
@@ -58,6 +57,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: [tm01x dallas write support #4230 (By Leptopt1los)](https://github.com/flipperdevices/flipperzero-firmware/pull/4230)
 - OFW: [Fix PVS warnings #4277 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4277)
 - Updated: [T-Union Master (China) v0.1 (By SocialSisterYi)](https://github.com/SocialSisterYi/T-Union_Master)
+- Updated: [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader)
 
 <a name="release">
 
