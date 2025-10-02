@@ -332,21 +332,39 @@ static bool suica_help_with_octopus(const FelicaData* felica_data, FuriString* p
         FelicaPublicBlock* public_block = simple_array_get(felica_data->public_blocks, i);
         if(public_block->service_code == SERVICE_CODE_OCTOPUS_IN_LE) {
             uint16_t unsigned_balance = ((uint16_t)public_block->block.data[2] << 8) |
-                                        (uint16_t)public_block->block.data[3];
-            int16_t newer_balance = unsigned_balance - 500;
-            int16_t  newer_balance_cents = newer_balance % 100;
-            int16_t newer_balance_dollars = newer_balance / 100;
+                                        (uint16_t)public_block->block.data[3]; // 0x0000..0xFFFF
 
-            int16_t older_balance = newer_balance - 350;
-            int16_t  older_balance_cents = older_balance % 100;
-            int16_t older_balance_dollars = older_balance / 100;
-            furi_string_printf(parsed_data, "\e#Octopus\n");
+            int32_t older_balance_cents = (int32_t)unsigned_balance - 350;
+            int32_t newer_balance_cents = (int32_t)unsigned_balance - 500;
+
+            uint16_t older_abs_cents =
+                (uint16_t)(older_balance_cents < 0 ? -older_balance_cents : older_balance_cents);
+            uint16_t newer_abs_cents =
+                (uint16_t)(newer_balance_cents < 0 ? -newer_balance_cents : newer_balance_cents);
+
+            uint16_t older_dollars = (uint16_t)(older_abs_cents / 100);
+            uint8_t older_cents = (uint8_t)(older_abs_cents % 100);
+
+            uint16_t newer_dollars = (uint16_t)(newer_abs_cents / 100);
+            uint8_t newer_cents = (uint8_t)(newer_abs_cents % 100);
+
             furi_string_cat_printf(
-                parsed_data, "If this card was issued before 2017 October 1st:");
-            furi_string_cat_printf(parsed_data, "Balance: %d.%02d\n\n", older_balance_dollars, older_balance_cents);
+                parsed_data, "If this card was issued \nbefore 2017 October 1st:\n");
             furi_string_cat_printf(
-                parsed_data, "If this card was issued after 2017 October 1st:");
-            furi_string_cat_printf(parsed_data, "Balance: %d.%02d\n\n", newer_balance_dollars, newer_balance_cents);
+                parsed_data,
+                "Balance: %s%d.%02d\n\n",
+                older_balance_cents < 0 ? "-" : "",
+                older_dollars,
+                older_cents);
+
+            furi_string_cat_printf(
+                parsed_data, "If this card was issued \nafter 2017 October 1st:\n");
+            furi_string_cat_printf(
+                parsed_data,
+                "Balance: %s%d.%02d\n\n",
+                newer_balance_cents < 0 ? "-" : "",
+                newer_dollars,
+                newer_cents);
 
             furi_string_cat_printf(parsed_data, "Data: ");
             for(size_t j = 0; j < FELICA_DATA_BLOCK_SIZE; j++) {
@@ -402,6 +420,7 @@ static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
         if(!found) {
             found = suica_help_with_octopus(felica_data, parsed_data);
         }
+
         if(!found) {
             furi_string_printf(
                 parsed_data,
@@ -553,6 +572,11 @@ static void suica_on_enter(Metroflip* app) {
             furi_string_printf(parsed_data, "\e#Japan Transit IC\n");
             bool found = suica_model_pack_data(model, felica_data, app);
             furi_string_cat(parsed_data, app->suica_file_data);
+
+            if(!found) {
+                found = suica_help_with_octopus(felica_data, parsed_data);
+            }
+
             if(!found) {
                 furi_string_printf(
                     parsed_data,
