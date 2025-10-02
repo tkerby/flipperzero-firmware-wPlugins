@@ -350,7 +350,7 @@ static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
 
     const FelicaPollerEvent* felica_event = event.event_data;
     FURI_LOG_I(TAG, "Felica event: %d", felica_event->type);
-    if(felica_event->type == FelicaPollerEventTypeReady) {
+    if(felica_event->type == FelicaPollerEventTypeReady || felica_event->type == FelicaPollerEventTypeIncomplete) {
         FURI_LOG_I(TAG, "Read complete");
         // view_dispatcher_send_custom_event(app->view_dispatcher, MetroflipCustomEventPollerSuccess);
         command = NfcCommandStop;
