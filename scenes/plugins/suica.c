@@ -326,6 +326,35 @@ static bool suica_model_pack_data(
     return found;
 }
 
+static bool suica_help_with_octopus(const FelicaData* felica_data, FuriString* parsed_data) {
+    bool found = false;
+    for(uint16_t i = 0; i < simple_array_get_count(felica_data->public_blocks); i++) {
+        FelicaPublicBlock* public_block = simple_array_get(felica_data->public_blocks, i);
+        if(public_block->service_code == SERVICE_CODE_OCTOPUS_IN_LE) {
+            uint16_t unsigned_balance = ((uint16_t)public_block->block.data[2] << 8) |
+                                        (uint16_t)public_block->block.data[3];
+            int16_t newer_balance = unsigned_balance - 500;
+            int16_t older_balance = newer_balance - 350;
+            furi_string_printf(parsed_data, "\e#Octopus\n");
+            furi_string_cat_printf(
+                parsed_data, "If this card was issued before 2017 October 1st:");
+            furi_string_cat_printf(parsed_data, "Balance: %04X\n", older_balance);
+            furi_string_cat_printf(
+                parsed_data, "If this card was issued after 2017 October 1st:");
+            furi_string_cat_printf(parsed_data, "Balance: %04X\n\n", newer_balance);
+
+            furi_string_cat_printf(parsed_data, "Data: ");
+            for(size_t j = 0; j < FELICA_DATA_BLOCK_SIZE; j++) {
+                furi_string_cat_printf(parsed_data, "%02X ", public_block->block.data[j]);
+            }
+            furi_string_cat_printf(parsed_data, "\n");
+            found = true;
+            break; // Octopus only has one block
+        }
+    }
+    return found;
+}
+
 static void suica_parse_detail_callback(GuiButtonType result, InputType type, void* context) {
     Metroflip* app = context;
     UNUSED(result);
@@ -350,12 +379,12 @@ static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
 
     const FelicaPollerEvent* felica_event = event.event_data;
     FURI_LOG_I(TAG, "Felica event: %d", felica_event->type);
-    if(felica_event->type == FelicaPollerEventTypeReady || felica_event->type == FelicaPollerEventTypeIncomplete) {
+    if(felica_event->type == FelicaPollerEventTypeReady ||
+       felica_event->type == FelicaPollerEventTypeIncomplete) {
         FURI_LOG_I(TAG, "Read complete");
-        // view_dispatcher_send_custom_event(app->view_dispatcher, MetroflipCustomEventPollerSuccess);
+        view_dispatcher_send_custom_event(app->view_dispatcher, MetroflipCustomEventPollerSuccess);
         command = NfcCommandStop;
 
-        // if(stage == MetroflipPollerEventTypeStart) {
         nfc_device_set_data(app->nfc_device, NfcProtocolFelica, nfc_poller_get_data(app->poller));
         furi_string_printf(parsed_data, "\e#Japan Transit IC\n");
         const FelicaData* felica_data = nfc_poller_get_data(app->poller);
@@ -365,6 +394,9 @@ static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
 
         metroflip_app_blink_stop(app);
 
+        if(!found) {
+            found = suica_help_with_octopus(felica_data, parsed_data);
+        }
         if(!found) {
             furi_string_printf(
                 parsed_data,
