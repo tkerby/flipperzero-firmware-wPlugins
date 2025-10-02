@@ -352,7 +352,7 @@ static bool suica_help_with_octopus(const FelicaData* felica_data, FuriString* p
                 parsed_data, "If this card was issued \nbefore 2017 October 1st:\n");
             furi_string_cat_printf(
                 parsed_data,
-                "Balance: %s%d.%02d\n\n",
+                "Balance: %s%d.%02d HKD\n\n",
                 older_balance_cents < 0 ? "-" : "",
                 older_dollars,
                 older_cents);
@@ -361,7 +361,7 @@ static bool suica_help_with_octopus(const FelicaData* felica_data, FuriString* p
                 parsed_data, "If this card was issued \nafter 2017 October 1st:\n");
             furi_string_cat_printf(
                 parsed_data,
-                "Balance: %s%d.%02d\n\n",
+                "Balance: %s%d.%02d HKD\n\n",
                 newer_balance_cents < 0 ? "-" : "",
                 newer_dollars,
                 newer_cents);
@@ -412,19 +412,18 @@ static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
         furi_string_printf(parsed_data, "\e#Japan Transit IC\n");
         const FelicaData* felica_data = nfc_poller_get_data(app->poller);
 
-        bool found = suica_model_pack_data(model, felica_data, app);
+        bool suica_found = suica_model_pack_data(model, felica_data, app);
         furi_string_cat(parsed_data, app->suica_file_data);
 
         metroflip_app_blink_stop(app);
 
-        if(!found) {
-            found = suica_help_with_octopus(felica_data, parsed_data);
-        }
-
-        if(!found) {
-            furi_string_printf(
-                parsed_data,
-                "\e#FeliCa\nSorry, unrecorded service code.\nPlease let the developers know and we will add support.");
+        if(!suica_found) {
+            bool octopus_found = suica_help_with_octopus(felica_data, parsed_data);
+            if(!octopus_found) {
+                furi_string_printf(
+                    parsed_data,
+                    "\e#FeliCa\nSorry, unrecorded service code.\nPlease let the developers know and we will add support.");
+            }
         }
 
         widget_add_text_scroll_element(widget, 0, 0, 128, 64, furi_string_get_cstr(parsed_data));
@@ -434,7 +433,7 @@ static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
         widget_add_button_element(
             widget, GuiButtonTypeLeft, "Save", metroflip_save_widget_callback, app);
 
-        if(found) {
+        if(suica_found) {
             widget_add_button_element(
                 widget, GuiButtonTypeCenter, "Parse", suica_parse_detail_callback, app);
         }
@@ -570,17 +569,16 @@ static void suica_on_enter(Metroflip* app) {
             Widget* widget = app->widget;
             FuriString* parsed_data = furi_string_alloc();
             furi_string_printf(parsed_data, "\e#Japan Transit IC\n");
-            bool found = suica_model_pack_data(model, felica_data, app);
+            bool suica_found = suica_model_pack_data(model, felica_data, app);
             furi_string_cat(parsed_data, app->suica_file_data);
 
-            if(!found) {
-                found = suica_help_with_octopus(felica_data, parsed_data);
-            }
-
-            if(!found) {
-                furi_string_printf(
-                    parsed_data,
-                    "\e#FeliCa\nSorry, unrecorded service code.\nPlease let the developers know and we will add support.");
+            if(!suica_found) {
+                bool octopus_found = suica_help_with_octopus(felica_data, parsed_data);
+                if(!octopus_found) {
+                    furi_string_printf(
+                        parsed_data,
+                        "\e#FeliCa\nSorry, unrecorded service code.\nPlease let the developers know and we will add support.");
+                }
             }
 
             widget_add_text_scroll_element(
@@ -591,7 +589,7 @@ static void suica_on_enter(Metroflip* app) {
 
             // No reason to put a save button here if the data is loaded from an existing file
 
-            if(found) {
+            if(suica_found) {
                 widget_add_button_element(
                     widget, GuiButtonTypeCenter, "Parse", suica_parse_detail_callback, app);
             }
