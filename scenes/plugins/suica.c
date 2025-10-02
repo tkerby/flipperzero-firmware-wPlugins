@@ -334,14 +334,19 @@ static bool suica_help_with_octopus(const FelicaData* felica_data, FuriString* p
             uint16_t unsigned_balance = ((uint16_t)public_block->block.data[2] << 8) |
                                         (uint16_t)public_block->block.data[3];
             int16_t newer_balance = unsigned_balance - 500;
+            int16_t  newer_balance_cents = newer_balance % 100;
+            int16_t newer_balance_dollars = newer_balance / 100;
+
             int16_t older_balance = newer_balance - 350;
+            int16_t  older_balance_cents = older_balance % 100;
+            int16_t older_balance_dollars = older_balance / 100;
             furi_string_printf(parsed_data, "\e#Octopus\n");
             furi_string_cat_printf(
                 parsed_data, "If this card was issued before 2017 October 1st:");
-            furi_string_cat_printf(parsed_data, "Balance: %04X\n", older_balance);
+            furi_string_cat_printf(parsed_data, "Balance: %d.%02d\n\n", older_balance_dollars, older_balance_cents);
             furi_string_cat_printf(
                 parsed_data, "If this card was issued after 2017 October 1st:");
-            furi_string_cat_printf(parsed_data, "Balance: %04X\n\n", newer_balance);
+            furi_string_cat_printf(parsed_data, "Balance: %d.%02d\n\n", newer_balance_dollars, newer_balance_cents);
 
             furi_string_cat_printf(parsed_data, "Data: ");
             for(size_t j = 0; j < FELICA_DATA_BLOCK_SIZE; j++) {
