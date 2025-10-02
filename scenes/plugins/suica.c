@@ -353,7 +353,7 @@ static bool suica_help_with_octopus(const FelicaData* felica_data, FuriString* p
                 parsed_data, "If this card was issued \nbefore 2017 October 1st:\n");
             furi_string_cat_printf(
                 parsed_data,
-                "Balance: %s%d.%02d HK$\n\n",
+                "Balance: HK$ %s%d.%02d\n\n",
                 older_balance_cents < 0 ? "-" : "",
                 older_dollars,
                 older_cents);
@@ -362,7 +362,7 @@ static bool suica_help_with_octopus(const FelicaData* felica_data, FuriString* p
                 parsed_data, "If this card was issued \nafter 2017 October 1st:\n");
             furi_string_cat_printf(
                 parsed_data,
-                "Balance: %s%d.%02d HK$\n\n",
+                "Balance: HK$ %s%d.%02d\n\n",
                 newer_balance_cents < 0 ? "-" : "",
                 newer_dollars,
                 newer_cents);
@@ -557,7 +557,7 @@ static void suica_on_enter(Metroflip* app) {
         if(flipper_format_file_open_existing(ff, app->file_path)) {
             FURI_LOG_I(TAG, "File path: %s", app->file_path);
             FelicaData* felica_data = felica_alloc();
-            felica_load(felica_data, ff, NFC_CURRENT_FORMAT_VERSION);
+            felica_load(felica_data, ff, 4);
 
             SuicaHistoryViewModel* model = view_get_model(app->suica_context->view_history);
             suica_model_initialize_after_load(model);
