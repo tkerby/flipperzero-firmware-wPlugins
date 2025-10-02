@@ -1,0 +1,84 @@
+# Flipper Zero FAP Development .gitignore
+
+# Build artifacts
+*.fap
+*.elf
+*.o
+*.d
+*.bin
+*.hex
+*.map
+*.lst
+build/
+dist/
+.fapbuild/
+
+# Compiled assets
+*.png.c
+*.bm.c
+compiled/
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Python cache (if using scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+*.egg-info/
+
+# Documentation build
+docs/_build/
+docs/.doctrees/
+doxygen_output/
+html/
+latex/
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+*.db
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+.*.swp
+
+# OS-specific
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Flipper-specific
+.ufbt/
+.fbt/
+firmware/
+toolchain/
+
+# Testing artifacts
+test_results/
+coverage/
+*.gcda
+*.gcno
+*.gcov
+
+# Personal notes
+TODO.txt
+NOTES.md
+scratch/
+
+merge*

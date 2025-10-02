@@ -1,0 +1,21 @@
+App(
+    appid="miband_nfc",
+    name="Mi Band NFC",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="miband_nfc_app",
+    stack_size=2 * 1024,  # Ridotto stack
+    fap_category="NFC",
+    fap_description="NFC writer for Mi Band with 0xFF keys",
+    fap_author="Developer",
+    fap_version="1.0",
+    fap_icon="miband_nfc.png",
+    fap_icon_assets="icons",
+    sources=["*.c"],
+    requires=[
+        "gui",
+        "dialogs",
+        "storage",
+        "notification",
+    ],
+    # fap_libs=["nfc"],
+)
