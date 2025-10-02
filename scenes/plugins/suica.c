@@ -352,7 +352,7 @@ static bool suica_help_with_octopus(const FelicaData* felica_data, FuriString* p
                 parsed_data, "If this card was issued \nbefore 2017 October 1st:\n");
             furi_string_cat_printf(
                 parsed_data,
-                "Balance: %s%d.%02d HKD\n\n",
+                "Balance: %s%d.%02d HK$\n\n",
                 older_balance_cents < 0 ? "-" : "",
                 older_dollars,
                 older_cents);
@@ -361,7 +361,7 @@ static bool suica_help_with_octopus(const FelicaData* felica_data, FuriString* p
                 parsed_data, "If this card was issued \nafter 2017 October 1st:\n");
             furi_string_cat_printf(
                 parsed_data,
-                "Balance: %s%d.%02d HKD\n\n",
+                "Balance: %s%d.%02d HK$\n\n",
                 newer_balance_cents < 0 ? "-" : "",
                 newer_dollars,
                 newer_cents);
