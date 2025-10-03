@@ -1421,21 +1421,17 @@ static void renfe_sum10_on_enter(Metroflip* app) {
         MfClassicData* mfc_data = NULL;
         bool should_free_mfc_data = false;
         
-        // Check if we already have data loaded in memory (from dump loading)
-        if(app->mfc_data) {
-            mfc_data = app->mfc_data;
-        } else {
-            // Load from file (original behavior)
-            Storage* storage = furi_record_open(RECORD_STORAGE);
-            FlipperFormat* ff = flipper_format_file_alloc(storage);
-            if(flipper_format_file_open_existing(ff, app->file_path)) {
-                mfc_data = mf_classic_alloc();
-                mf_classic_load(mfc_data, ff, 2);
-                should_free_mfc_data = true;
-            }
-            flipper_format_free(ff);
-            furi_record_close(RECORD_STORAGE);
+        // Load from file (original behavior)
+        Storage* storage = furi_record_open(RECORD_STORAGE);
+        FlipperFormat* ff = flipper_format_file_alloc(storage);
+        if(flipper_format_file_open_existing(ff, app->file_path)) {
+            mfc_data = mf_classic_alloc();
+            mf_classic_load(mfc_data, ff, 2);
+            should_free_mfc_data = true;
         }
+        flipper_format_free(ff);
+        furi_record_close(RECORD_STORAGE);
+        
         
         if(mfc_data) {
             FuriString* parsed_data = furi_string_alloc();
@@ -1540,21 +1536,17 @@ static bool renfe_sum10_on_event(Metroflip* app, SceneManagerEvent event) {
                 MfClassicData* mfc_data = NULL;
                 bool should_free_mfc_data = false;
                 
-                // Check if we already have data loaded in memory (from dump loading)
-                if(app->mfc_data) {
-                    mfc_data = app->mfc_data;
-                } else {
-                    // Load from file (original behavior)
-                    Storage* storage = furi_record_open(RECORD_STORAGE);
-                    FlipperFormat* ff = flipper_format_file_alloc(storage);
-                    if(flipper_format_file_open_existing(ff, app->file_path)) {
-                        mfc_data = mf_classic_alloc();
-                        mf_classic_load(mfc_data, ff, 2);
-                        should_free_mfc_data = true;
-                    }
-                    flipper_format_free(ff);
-                    furi_record_close(RECORD_STORAGE);
+                // Load from file (original behavior)
+                Storage* storage = furi_record_open(RECORD_STORAGE);
+                FlipperFormat* ff = flipper_format_file_alloc(storage);
+                if(flipper_format_file_open_existing(ff, app->file_path)) {
+                    mfc_data = mf_classic_alloc();
+                    mf_classic_load(mfc_data, ff, 2);
+                    should_free_mfc_data = true;
                 }
+                flipper_format_free(ff);
+                furi_record_close(RECORD_STORAGE);
+
                 
                 if(mfc_data) {
                     FuriString* parsed_data = furi_string_alloc();
@@ -1602,21 +1594,17 @@ static bool renfe_sum10_on_event(Metroflip* app, SceneManagerEvent event) {
                 MfClassicData* mfc_data = NULL;
                 bool should_free_mfc_data = false;
                 
-                // Check if we already have data loaded in memory (from dump loading)
-                if(app->mfc_data) {
-                    mfc_data = app->mfc_data;
-                } else {
-                    // Load from file (original behavior)
-                    Storage* storage = furi_record_open(RECORD_STORAGE);
-                    FlipperFormat* ff = flipper_format_file_alloc(storage);
-                    if(flipper_format_file_open_existing(ff, app->file_path)) {
-                        mfc_data = mf_classic_alloc();
-                        mf_classic_load(mfc_data, ff, 2);
-                        should_free_mfc_data = true;
-                    }
-                    flipper_format_free(ff);
-                    furi_record_close(RECORD_STORAGE);
+                // Load from file (original behavior)
+                Storage* storage = furi_record_open(RECORD_STORAGE);
+                FlipperFormat* ff = flipper_format_file_alloc(storage);
+                if(flipper_format_file_open_existing(ff, app->file_path)) {
+                    mfc_data = mf_classic_alloc();
+                    mf_classic_load(mfc_data, ff, 2);
+                    should_free_mfc_data = true;
                 }
+                flipper_format_free(ff);
+                furi_record_close(RECORD_STORAGE);
+                
                 
                 if(mfc_data) {
                     FuriString* parsed_data = furi_string_alloc();

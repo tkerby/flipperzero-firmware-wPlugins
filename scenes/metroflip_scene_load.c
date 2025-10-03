@@ -99,9 +99,6 @@ void metroflip_scene_load_on_enter(void* context) {
                         break;
                     }
 
-                    // Store the loaded MFC data in the app for plugins to use
-                    app->mfc_data = mfc_data;
-
                 } else if(strcmp(protocol_name, "Mifare DESFire") == 0) {
                     MfDesfireData* data = mf_desfire_alloc();
                     if(!mf_desfire_load(data, format, 2)) {
@@ -159,7 +156,6 @@ void metroflip_scene_load_on_enter(void* context) {
 
                     app->card_type = "renfe_sum10";
                     app->mfc_card_type = CARD_TYPE_RENFE_SUM10;
-                    app->mfc_data = mfc_data;
                     app->data_loaded = true;
                     app->is_desfire = false;
                 } else {
@@ -185,11 +181,6 @@ void metroflip_scene_load_on_enter(void* context) {
     // Scene transitions
     if(app->data_loaded) {
         FURI_LOG_I(TAG, "Data loaded successfully, transitioning to parse scene");
-        FURI_LOG_I(
-            TAG,
-            "Card type: %s, MFC data: %s",
-            app->card_type ? app->card_type : "NULL",
-            app->mfc_data ? "exists" : "NULL");
         scene_manager_search_and_switch_to_previous_scene(app->scene_manager, MetroflipSceneStart);
         scene_manager_next_scene(app->scene_manager, MetroflipSceneParse);
     } else {
