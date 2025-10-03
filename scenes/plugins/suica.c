@@ -353,7 +353,7 @@ static bool suica_help_with_octopus(const FelicaData* felica_data, FuriString* p
                 parsed_data, "If this card was issued \nbefore 2017 October 1st:\n");
             furi_string_cat_printf(
                 parsed_data,
-                "Balance: HK$ %s%d.%02d\n\n",
+                "Balance: %sHK$ %d.%02d\n\n",
                 older_balance_cents < 0 ? "-" : "",
                 older_dollars,
                 older_cents);
@@ -362,7 +362,7 @@ static bool suica_help_with_octopus(const FelicaData* felica_data, FuriString* p
                 parsed_data, "If this card was issued \nafter 2017 October 1st:\n");
             furi_string_cat_printf(
                 parsed_data,
-                "Balance: HK$ %s%d.%02d\n\n",
+                "Balance: %sHK$ %d.%02d\n\n",
                 newer_balance_cents < 0 ? "-" : "",
                 newer_dollars,
                 newer_cents);
@@ -413,14 +413,13 @@ static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
         const FelicaData* felica_data = nfc_poller_get_data(app->poller);
 
         metroflip_app_blink_stop(app);
+
+        bool suica_found = suica_model_pack_data(model, felica_data, app);
+
         do {
-            bool suica_found = suica_model_pack_data(model, felica_data, app);
             if(suica_found) {
                 furi_string_printf(parsed_data, "\e#Japan Transit IC\n");
                 furi_string_cat(parsed_data, app->suica_file_data);
-                widget_add_button_element(
-                    widget, GuiButtonTypeCenter, "Parse", suica_parse_detail_callback, app);
-
                 break;
             }
             bool octopus_found = suica_help_with_octopus(felica_data, parsed_data);
@@ -433,13 +432,17 @@ static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
 
         widget_add_text_scroll_element(widget, 0, 0, 128, 64, furi_string_get_cstr(parsed_data));
 
+        if(suica_found) {
+            widget_add_button_element(
+                widget, GuiButtonTypeCenter, "Parse", suica_parse_detail_callback, app);
+        }
+
         widget_add_button_element(
             widget, GuiButtonTypeRight, "Exit", metroflip_exit_widget_callback, app);
         widget_add_button_element(
             widget, GuiButtonTypeLeft, "Save", metroflip_save_widget_callback, app);
 
         view_dispatcher_switch_to_view(app->view_dispatcher, MetroflipViewWidget);
-        
     }
     furi_string_free(parsed_data);
     command = NfcCommandStop;
@@ -563,14 +566,13 @@ static void suica_on_enter(Metroflip* app) {
             suica_model_initialize_after_load(model);
             Widget* widget = app->widget;
             FuriString* parsed_data = furi_string_alloc();
+            bool suica_found = suica_model_pack_data(model, felica_data, app);
+
             do {
-                bool suica_found = suica_model_pack_data(model, felica_data, app);
                 if(suica_found) {
                     furi_string_printf(parsed_data, "\e#Japan Transit IC\n");
                     furi_string_cat(parsed_data, app->suica_file_data);
-                    widget_add_button_element(
-                        widget, GuiButtonTypeCenter, "Parse", suica_parse_detail_callback, app);
-    
+
                     break;
                 }
                 bool octopus_found = suica_help_with_octopus(felica_data, parsed_data);
@@ -583,6 +585,11 @@ static void suica_on_enter(Metroflip* app) {
 
             widget_add_text_scroll_element(
                 widget, 0, 0, 128, 64, furi_string_get_cstr(parsed_data));
+
+            if(suica_found) {
+                widget_add_button_element(
+                    widget, GuiButtonTypeCenter, "Parse", suica_parse_detail_callback, app);
+            }
 
             widget_add_button_element(
                 widget, GuiButtonTypeRight, "Exit", metroflip_exit_widget_callback, app);
