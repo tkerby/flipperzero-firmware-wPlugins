@@ -201,7 +201,6 @@ static int32_t wifi_map_worker(void* context) {
                 uint8_t data[64];
                 length = furi_stream_buffer_receive(app->rx_stream, data, 64, 0);
                 if(length > 0) {
-                    furi_hal_serial_tx(app->serial_handle, data, length);
                     with_view_model(
                         app->view,
                         WifiMapModel * model,

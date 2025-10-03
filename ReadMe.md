@@ -40,7 +40,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: [NFC: MFC 1k Banapass Parser #4260 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4260) (Already in RM)
 - OFW: [NFC: Fix read crash with unexpectedly large MFC AUTH(0) response #4265 (By WillyJL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4265) (Already in RM)
 - OFW: [GUI Bug Fix: Number Input Save Icon #4273 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4273)
-- Updated: [ESP32 WIFI Mapping v0.2 (By carvilsi)](https://github.com/carvilsi/flipper0-wifi-map) `Req: ESP32` & [ESP32 FW](https://github.com/carvilsi/esp32-wifi-map)
 - Updated: [FlipSocial v2.0.3 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [WiFi (Marauder) v0.7.6 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion)
@@ -59,6 +58,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [T-Union Master (China) v0.1 (By SocialSisterYi)](https://github.com/SocialSisterYi/T-Union_Master)
 - Updated: [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader)
 - Updated: [GPS v1.4 (By ezod)](https://github.com/ezod/flipperzero-gps) `Req: NMEA 0183`
+- Updated: [ESP32 WIFI Mapping v0.2 (By carvilsi)](https://github.com/carvilsi/flipper0-wifi-map) `Req: ESP32` & [ESP32 FW](https://github.com/carvilsi/esp32-wifi-map)
 
 <a name="release">
 
