@@ -83,6 +83,7 @@ This is a list of metro cards and transit systems that need support or have part
 | **SmartRider**     | 🇦🇺 Perth, WA, Australia                      | MIFARE Classic    |
 | **Suica**          | 🇯🇵 Japan                                     | FeliCa            |
 | **Troika**         | 🇷🇺 Moscow, Russia                            | MIFARE Classic    |
+| **Octopus**        | 🇭🇰 Hong Kong                                 | FeliCa            |
 
 
 ---
@@ -103,6 +104,7 @@ This is a list of metro cards and transit systems that need support or have part
 - **RENFE Parser:** [@BocamoCM](https://github.com/BocamoCM)
 - **Suica Parser:** [@zinongli](https://github.com/zinongli)
 - **Troika Parser:** [@gornekich](https://github.com/gornekich)
+- **Octopus Parser:** [@zinongli](https://github.com/zinongli)
 
 ---
 

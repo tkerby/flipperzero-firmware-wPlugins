@@ -31,18 +31,6 @@ void metroflip_scene_save_result_on_enter(void* context) {
         flipper_format_free(ff);
         furi_record_close(RECORD_STORAGE);
         furi_string_reset(app->calypso_file_data);
-    } else if(strcmp(app->card_type, "suica") == 0) {
-        Storage* storage = furi_record_open(RECORD_STORAGE);
-        FlipperFormat* ff = flipper_format_file_alloc(storage);
-        success = flipper_format_file_open_new(ff, path);
-        success &= flipper_format_write_header_cstr(ff, "Flipper Metroflip File", 1);
-        success &= flipper_format_write_string_cstr(ff, "Device Type", "Felica");
-        success &= flipper_format_write_string_cstr(ff, "Card Type", "Japan Transit IC");
-        success &= flipper_format_write_string(ff, "Travel Logs:", app->suica_file_data);
-        flipper_format_file_close(ff);
-        flipper_format_free(ff);
-        furi_record_close(RECORD_STORAGE);
-        furi_string_reset(app->suica_file_data);
     } else {
         success = nfc_device_save(app->nfc_device, path);
         Storage* storage = furi_record_open(RECORD_STORAGE);

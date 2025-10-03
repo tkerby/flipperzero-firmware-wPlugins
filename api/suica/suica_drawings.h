@@ -13,6 +13,7 @@
 #define SUICA_IC_TYPE_CODE          0x31
 #define SERVICE_CODE_HISTORY_IN_LE  (0x090FU)
 #define SERVICE_CODE_TAPS_LOG_IN_LE (0x108FU)
+#define SERVICE_CODE_OCTOPUS_IN_LE  (0x0117U)
 #define BLOCK_COUNT                 1
 #define HISTORY_VIEW_PAGE_NUM       3
 
