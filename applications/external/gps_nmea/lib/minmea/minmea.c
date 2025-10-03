@@ -13,7 +13,6 @@
 #include <stdarg.h>
 
 #define boolstr(s) ((s) ? "true" : "false")
-#define countof(array) (sizeof(array) / sizeof(array[0]))
 
 static int hex2int(char c)
 {
@@ -349,31 +348,6 @@ bool minmea_talker_id(char talker[3], const char *sentence)
     return true;
 }
 
-struct sentence_id_map_entry {
-    const char *str;
-    enum minmea_sentence_id id;
-};
-
-struct sentence_id_map_entry sentence_id_map[] = {
-    { "INVALID", MINMEA_INVALID },
-    { "GBS", MINMEA_SENTENCE_GBS },
-    { "GGA", MINMEA_SENTENCE_GGA },
-    { "GLL", MINMEA_SENTENCE_GLL },
-    { "GSA", MINMEA_SENTENCE_GSA },
-    { "GST", MINMEA_SENTENCE_GST },
-    { "GSV", MINMEA_SENTENCE_GSV },
-    { "RMC", MINMEA_SENTENCE_RMC },
-    { "VTG", MINMEA_SENTENCE_VTG },
-    { "ZDA", MINMEA_SENTENCE_ZDA },
-};
-
-const char* minmea_sentence(enum minmea_sentence_id id) {
-    if (id < 0 || id >= (int)countof(sentence_id_map)) {
-        return "UNKNOWN";
-    }
-    return sentence_id_map[id].str;
-}
-
 enum minmea_sentence_id minmea_sentence_id(const char *sentence, bool strict)
 {
     if (!minmea_check(sentence, strict))
@@ -383,11 +357,24 @@ enum minmea_sentence_id minmea_sentence_id(const char *sentence, bool strict)
     if (!minmea_scan(sentence, "t", type))
         return MINMEA_INVALID;
 
-    for (uint i = 0; i < countof(sentence_id_map); i++) {
-        if (!memcmp(type.sentence_id, sentence_id_map[i].str, sizeof(type.sentence_id))) {
-            return sentence_id_map[i].id;
-        }
-    }
+    if (!strcmp(type+2, "GBS"))
+        return MINMEA_SENTENCE_GBS;
+    if (!strcmp(type+2, "GGA"))
+        return MINMEA_SENTENCE_GGA;
+    if (!strcmp(type+2, "GLL"))
+        return MINMEA_SENTENCE_GLL;
+    if (!strcmp(type+2, "GSA"))
+        return MINMEA_SENTENCE_GSA;
+    if (!strcmp(type+2, "GST"))
+        return MINMEA_SENTENCE_GST;
+    if (!strcmp(type+2, "GSV"))
+        return MINMEA_SENTENCE_GSV;
+    if (!strcmp(type+2, "RMC"))
+        return MINMEA_SENTENCE_RMC;
+    if (!strcmp(type+2, "VTG"))
+        return MINMEA_SENTENCE_VTG;
+    if (!strcmp(type+2, "ZDA"))
+        return MINMEA_SENTENCE_ZDA;
 
     return MINMEA_UNKNOWN;
 }
