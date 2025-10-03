@@ -348,31 +348,34 @@ static bool suica_help_with_octopus(const FelicaData* felica_data, FuriString* p
 
             uint16_t newer_dollars = (uint16_t)(newer_abs_cents / 100);
             uint8_t newer_cents = (uint8_t)(newer_abs_cents % 100);
-
             furi_string_printf(parsed_data, "\e#Octopus Card\n");
+            furi_string_cat_str(
+                parsed_data, "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n");
+
             furi_string_cat_printf(
                 parsed_data, "If this card was issued \nbefore 2017 October 1st:\n");
             furi_string_cat_printf(
                 parsed_data,
-                "Balance: %sHK$ %d.%02d\n\n",
+                "Balance: %sHK$ %d.%02d\n",
                 older_balance_cents < 0 ? "-" : "",
                 older_dollars,
                 older_cents);
+
+            furi_string_cat_str(
+                parsed_data, "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n");
 
             furi_string_cat_printf(
                 parsed_data, "If this card was issued \nafter 2017 October 1st:\n");
             furi_string_cat_printf(
                 parsed_data,
-                "Balance: %sHK$ %d.%02d\n\n",
+                "Balance: %sHK$ %d.%02d\n",
                 newer_balance_cents < 0 ? "-" : "",
                 newer_dollars,
                 newer_cents);
 
-            furi_string_cat_printf(parsed_data, "Data: ");
-            for(size_t j = 0; j < FELICA_DATA_BLOCK_SIZE; j++) {
-                furi_string_cat_printf(parsed_data, "%02X ", public_block->block.data[j]);
-            }
-            furi_string_cat_printf(parsed_data, "\n");
+            furi_string_cat_str(
+                parsed_data, "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::");
+
             found = true;
             break; // Octopus only has one public block
         }
