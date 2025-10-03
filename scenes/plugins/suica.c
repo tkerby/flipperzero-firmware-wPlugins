@@ -308,18 +308,19 @@ static void suica_parse(SuicaHistoryViewModel* my_model) {
 static bool suica_model_pack_data(
     SuicaHistoryViewModel* model,
     const FelicaData* felica_data,
-    Metroflip* app) {
+    FuriString* parsed_data) {
     uint32_t public_block_count = simple_array_get_count(felica_data->public_blocks);
     bool found = false;
+    furi_string_printf(parsed_data, "\e#Japan Transit IC\n\n");
     for(uint16_t i = 0; i < public_block_count; i++) {
         FelicaPublicBlock* public_block = simple_array_get(felica_data->public_blocks, i);
         if(public_block->service_code == SERVICE_CODE_HISTORY_IN_LE) {
             suica_add_entry(model, public_block->block.data);
-            furi_string_cat_printf(app->suica_file_data, "Log %02X: ", i);
+            furi_string_cat_printf(parsed_data, "Log %02X: ", i);
             for(size_t j = 0; j < FELICA_DATA_BLOCK_SIZE; j++) {
-                furi_string_cat_printf(app->suica_file_data, "%02X ", public_block->block.data[j]);
+                furi_string_cat_printf(parsed_data, "%02X ", public_block->block.data[j]);
             }
-            furi_string_cat_printf(app->suica_file_data, "\n");
+            furi_string_cat_printf(parsed_data, "\n");
             found = true;
         }
     }
@@ -405,6 +406,8 @@ static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
     FURI_LOG_I(TAG, "Felica event: %d", felica_event->type);
     if(felica_event->type == FelicaPollerEventTypeReady ||
        felica_event->type == FelicaPollerEventTypeIncomplete) {
+        dolphin_deed(DolphinDeedNfcRead);
+
         FURI_LOG_I(TAG, "Read complete");
         view_dispatcher_send_custom_event(app->view_dispatcher, MetroflipCustomEventPollerSuccess);
         command = NfcCommandStop;
@@ -414,12 +417,11 @@ static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
 
         metroflip_app_blink_stop(app);
 
-        bool suica_found = suica_model_pack_data(model, felica_data, app);
+        bool suica_found = suica_model_pack_data(model, felica_data, parsed_data);
 
         do {
             if(suica_found) {
                 furi_string_printf(parsed_data, "\e#Japan Transit IC\n");
-                furi_string_cat(parsed_data, app->suica_file_data);
                 break;
             }
             bool octopus_found = suica_help_with_octopus(felica_data, parsed_data);
@@ -516,11 +518,6 @@ static bool suica_history_input_callback(InputEvent* event, void* context) {
 }
 
 static void suica_on_enter(Metroflip* app) {
-    // Gui* gui = furi_record_open(RECORD_GUI);
-    dolphin_deed(DolphinDeedNfcRead);
-    furi_string_reset(app->suica_file_data);
-    furi_string_cat_str(app->suica_file_data, "\n");
-
     if(app->data_loaded == false) {
         app->suica_context = malloc(sizeof(SuicaContext));
         app->suica_context->view_history = view_alloc();
@@ -560,39 +557,50 @@ static void suica_on_enter(Metroflip* app) {
         if(flipper_format_file_open_existing(ff, app->file_path)) {
             FURI_LOG_I(TAG, "File path: %s", app->file_path);
             FelicaData* felica_data = felica_alloc();
-            felica_load(felica_data, ff, 4);
+            bool is_stock_nfc_file = felica_load(felica_data, ff, 4);
 
             SuicaHistoryViewModel* model = view_get_model(app->suica_context->view_history);
             suica_model_initialize_after_load(model);
             Widget* widget = app->widget;
             FuriString* parsed_data = furi_string_alloc();
-            bool suica_found = suica_model_pack_data(model, felica_data, app);
-
+            bool suica_found = false;
             do {
-                if(suica_found) {
-                    furi_string_printf(parsed_data, "\e#Japan Transit IC\n");
-                    furi_string_cat(parsed_data, app->suica_file_data);
+                if(is_stock_nfc_file) { // loading from stock NFC file (API 87.0+)
+                    suica_found = suica_model_pack_data(model, felica_data, parsed_data);
+                    if(suica_found) break;
 
+                    bool octopus_found = suica_help_with_octopus(felica_data, parsed_data);
+                    if(octopus_found) break;
+                } else { // loading from legacy saved file (pre API 87.0)
+                    suica_found = true;
+                    furi_string_printf(parsed_data, "\e#Japan Transit IC\n\n");
+                    for(uint8_t i = 0; i < model->size; i++) {
+                        furi_string_cat_printf(parsed_data, "Log %02X: ", i);
+                        for(size_t j = 0; j < FELICA_DATA_BLOCK_SIZE; j++) {
+                            furi_string_cat_printf(
+                                parsed_data, "%02X ", model->travel_history[i * 16 + j]);
+                        }
+                        furi_string_cat_printf(parsed_data, "\n");
+                    }
                     break;
                 }
-                bool octopus_found = suica_help_with_octopus(felica_data, parsed_data);
-                if(octopus_found) break;
 
                 furi_string_printf(
                     parsed_data,
                     "\e#FeliCa\nSorry, unrecorded service code.\nPlease let the developers know and we will add support.");
             } while(false);
 
+            // Text scroll must be added before buttons to prevent overlay
             widget_add_text_scroll_element(
                 widget, 0, 0, 128, 64, furi_string_get_cstr(parsed_data));
+
+            widget_add_button_element(
+                widget, GuiButtonTypeRight, "Exit", metroflip_exit_widget_callback, app);
 
             if(suica_found) {
                 widget_add_button_element(
                     widget, GuiButtonTypeCenter, "Parse", suica_parse_detail_callback, app);
             }
-
-            widget_add_button_element(
-                widget, GuiButtonTypeRight, "Exit", metroflip_exit_widget_callback, app);
 
             // No reason to put a save button here if the data is loaded from an existing file
 

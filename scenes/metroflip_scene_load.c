@@ -33,15 +33,19 @@ void metroflip_scene_load_on_enter(void* context) {
 
         do {
             if(!flipper_format_file_open_existing(format, furi_string_get_cstr(file_path))) break;
-            FuriString* lower_case_buffer = furi_string_alloc();    
-            bool lower_case_success = flipper_format_read_string(format, "Device type", lower_case_buffer);
-            if(lower_case_success) furi_string_set_str(device_type, furi_string_get_cstr(lower_case_buffer));
 
-            FuriString* upper_case_buffer = furi_string_alloc();
-            bool upper_case_success = flipper_format_read_string(format, "Device Type", upper_case_buffer);
-            if(upper_case_success) furi_string_set_str(device_type, furi_string_get_cstr(upper_case_buffer));
+            bool read_device_type = false;
+            do {
+                read_device_type = flipper_format_read_string(format, "Device Type", device_type);
+                if(read_device_type) break;
 
-            if(!(lower_case_success || upper_case_success)) {
+                flipper_format_file_close(format);
+                flipper_format_file_open_existing(format, furi_string_get_cstr(file_path));
+                // Reopen file because Flipper Format likes to clip stream if key was invalid first try
+                read_device_type = flipper_format_read_string(format, "Device type", device_type);
+            } while(0);
+
+            if(!read_device_type) {
                 // Try to assume it's a Mifare Classic card and proceed
                 furi_string_set_str(device_type, "Mifare Classic");
             }
@@ -112,22 +116,32 @@ void metroflip_scene_load_on_enter(void* context) {
 
                     mf_desfire_free(data);
                 } else if(strcmp(protocol_name, "FeliCa") == 0) {
-                    app->card_type = "suica";
-                    app->is_desfire = false;
-                    app->data_loaded = true;
-                    load_suica_data(app, format, false);
-                    FURI_LOG_I(TAG, "Detected: FeliCa");
+                    do {
+                        uint32_t data_format_version = 0;
+                        bool read_success = flipper_format_read_uint32(
+                            format, "Data format version", &data_format_version, 1);
+                        if(!read_success || data_format_version != 2) break;
+                        // data format version 2 => post API 87.0 i.e. OFW #4254
+                        // If we didn't find a format version, it should be saved by previous Metroflip version
+                        // So we let it fall through to the Japan Transit IC logic below
+                        app->card_type = "suica";
+                        app->is_desfire = false;
+                        app->data_loaded = true;
+                        load_suica_data(app, format, false);
+                        FURI_LOG_I(TAG, "Detected: FeliCa (API 87.0+)");
+                    } while(false);
                 }
 
             } else {
                 const char* card_str = furi_string_get_cstr(card_type_str);
 
                 if(strcmp(card_str, "Japan Transit IC") == 0) {
+                    FURI_LOG_I(TAG, "Detected: Japan Transit IC");
                     app->card_type = "suica";
                     app->is_desfire = false;
                     app->data_loaded = true;
                     load_suica_data(app, format, true);
-                    // This is outdated after OFW #4254 but kept for backward compatibility
+                    // This format is deprecated after OFW #4254 but kept for backward compatibility
                 } else if(strcmp(card_str, "calypso") == 0) {
                     app->card_type = "calypso";
                     app->is_desfire = false;
@@ -162,9 +176,6 @@ void metroflip_scene_load_on_enter(void* context) {
                 furi_string_get_cstr(file_path),
                 sizeof(app->delete_file_path) - 1);
             app->delete_file_path[sizeof(app->delete_file_path) - 1] = '\0';
-
-            furi_string_free(lower_case_buffer);
-            furi_string_free(upper_case_buffer);
 
         } while(0);
 

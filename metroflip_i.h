@@ -107,7 +107,6 @@ typedef struct {
 
     // Suica
     SuicaContext* suica_context;
-    FuriString* suica_file_data;
 
     DialogsApp* dialogs;
 
