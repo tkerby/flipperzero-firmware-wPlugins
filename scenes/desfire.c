@@ -26,7 +26,7 @@ TransitCardInfo cards[82] = {
     {0x004048, "Mi Movilidad (GDL)", "SITEUR", true},
     {0x004055, "AT HOP (AKL)", "Auckland Transport", true},
     {0x004063, "Travel Pass (DOH)", "Qatar Rail", true},
-    {0x004078, "nol (DXB)", "RTA", true},
+    {0x004078, "nol", "RTA", false},
     {0x008057, "NORTIC", "NRPA", true},
     {0x010000, "Breeze / Compass / EASY / FREEDOM", "MARTA / TransLink / MIA County / PATCO", true},
     {0x012340, "motion (ECN)", "MoTCW", true},
