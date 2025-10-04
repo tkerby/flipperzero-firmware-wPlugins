@@ -44,7 +44,7 @@ bool nol_parse(const MfDesfireData* data, FuriString* parsed_data) {
         uint32_t last_group   =  nol_serial_number               % 10000U; // last 4
         
         furi_string_set(parsed_data, "\e#nol\n\nSerial No.: ");
-        furi_string_cat_printf(parsed_data, "%03ld" "-%03ld" "-%04ld",
+        furi_string_cat_printf(parsed_data, "%03ld %03ld %04ld",
                                first_group, middle_group, last_group);
         parsed = true;
     } while(false);
