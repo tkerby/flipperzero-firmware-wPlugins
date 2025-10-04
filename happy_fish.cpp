@@ -4,7 +4,8 @@
 #include <gui/gui.h>
 #include <stdlib.h>
 
-constexpr int SCORE = 0;
+int SCORE = 0;
+char score_str[16];
 
 int player_x = 6;
 int player_y = 52;
@@ -18,7 +19,7 @@ bool is_jumping = false;
 bool is_random_kelp = true;
 bool is_random_jellyfish = true;
 int kelp_x_rand = rand() % 4 + 1;
-int kelp_y_rand = rand() % 6 + 1;
+int kelp_y_rand = rand() % 2 + 1;
 int jellyfish_x_rand = rand() % 4 + 1;
 int jellyfish_y_rand = rand() % 4 + 1;
 
@@ -53,13 +54,19 @@ void collide_rect()
 
     bool jellyfish_collision = player_left <= jellyfish_right && player_right >= jellyfish_left && player_top <= jellyfish_bottom && player_bottom >= jellyfish_top;
 
-    if (kelp_collision || jellyfish_collision)
+    if (kelp_collision || jellyfish_collision || player_bottom == 64 || player_top == 0)
     {
         kelp_x = 124;
         is_random_kelp = true;
 
         jellyfish_x = 64;
         is_random_jellyfish = true;
+
+        player_x = 6;
+        player_y = 52;
+        player_offset = 28;
+
+        SCORE = 0;
     }
 }
 
@@ -93,7 +100,7 @@ void draw_kelp(Canvas* canvas)
     if (is_random_kelp)
     {
         kelp_x_rand = rand() % 4 + 1;
-        kelp_y_rand = rand() % 6 + 1;
+        kelp_y_rand = rand() % 2 + 1;
         is_random_kelp = false;
     }
     
@@ -190,6 +197,9 @@ static void draw_callback(Canvas* canvas, void* context)
     draw_player(canvas);
     draw_kelp(canvas);
     draw_jellyfish(canvas);
+    snprintf(score_str, sizeof(score_str), "%d", SCORE);
+    canvas_draw_str(canvas,2,8,score_str);
+    SCORE += 1;
     canvas_commit(canvas);
 }
 
