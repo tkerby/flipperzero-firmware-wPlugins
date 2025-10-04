@@ -44,5 +44,8 @@ Don't be stupid with fire, it burns things. Never keep an open flame unattended 
 
 [Building an app for Flipper Zero](https://instantiator.dev/post/flipper-zero-app-tutorial-01/])
 
+[EFF Dice-Generated Passphrases](https://www.eff.org/dice)
+
+
 And all the wonderful and helpful people on the Flipper Zero [Discord Server](https://flipperzero.one/discord) 
 

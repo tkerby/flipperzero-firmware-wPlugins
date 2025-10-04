@@ -26,7 +26,7 @@
 #define DEFAULT_PATH        APP_DATA_PATH()
 #define FILE_EXT            ".rnd"
 #define TEXT_INPUT_BUF_SIZE 24
-#define DICT_FILE           "words_alpha_resized_5120.txt"
+#define DICT_FILE           "eff_short_wordlist_1_alpha.txt"
 
 // scene index
 typedef enum {

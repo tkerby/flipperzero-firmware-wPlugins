@@ -113,9 +113,107 @@ void get_char_list(FireString* app) {
     furi_string_free(list);
 }
 
+static int32_t get_word_list(void* context) {
+    FURI_LOG_T(TAG, "get_word_list");
+    furi_check(context);
+
+    FireString* app = context;
+
+    // TODO: exec this function on a dedicated thread
+    view_dispatcher_switch_to_view(app->view_dispatcher, FireStringView_Loading);
+
+    File* word_file = storage_file_alloc(furi_record_open(RECORD_STORAGE));
+    FuriString* word_buffer = furi_string_alloc();
+    size_t word_count = 0;
+    size_t buf_size = 0;
+
+    // Open wordlist file
+    if(storage_file_open( // TODO: add proper error handling
+           word_file,
+           APP_ASSETS_PATH(DICT_FILE),
+           FSAM_READ,
+           FSOM_OPEN_EXISTING)) {
+        buf_size = storage_file_size(word_file);
+        if(buf_size > memmgr_get_free_heap()) { // Check if memory is available to read file
+            FURI_LOG_E(TAG, "File too large");
+        } else { // read file and build string
+            uint8_t* file_buf = malloc(sizeof(char) * buf_size + 1);
+            size_t read_count = storage_file_read(word_file, file_buf, buf_size);
+
+            size_t i = 0;
+            while(i < read_count) { // Get word count for word_list malloc
+                if(file_buf[i] == '\n') {
+                    word_count++;
+                }
+                i++;
+            }
+
+            // malloc word_list using word_count
+            app->hid->word_list = (FuriString**)malloc(sizeof(FuriString*) * word_count);
+            if(app->hid->word_list == NULL) { // TODO: proper error handling
+                FURI_LOG_E(TAG, "Failed to allocate word list");
+            }
+
+            i = 0;
+            size_t j = 0;
+            while(i < read_count) {
+                if(file_buf[i] == '\n' && read_count > 0) {
+                    app->hid->word_list[j] = furi_string_alloc_set(word_buffer);
+                    furi_string_reset(word_buffer);
+                    j++;
+                } else {
+                    furi_string_push_back(word_buffer, file_buf[i]);
+                }
+                i++;
+            }
+            app->hid->word_list[j] = furi_string_alloc_set(word_buffer);
+            app->hid->word_list[j + 1] = furi_string_alloc();
+            free(file_buf);
+        }
+    } else {
+        FURI_LOG_E(TAG, "File open error");
+    }
+    storage_file_close(word_file);
+    free(word_file);
+    furi_record_close(RECORD_STORAGE);
+    if(word_buffer != NULL) {
+        furi_string_free(word_buffer);
+    }
+
+    view_dispatcher_switch_to_view(app->view_dispatcher, FireStringView_Widget);
+
+    return 0;
+}
+
+// Get string length or word count if phrase is enabled
+uint32_t get_str_len(FireString* app) {
+    if(app->settings->str_type == StrType_Passphrase) {
+        uint32_t word_count = 0;
+        uint32_t string_size = furi_string_size(app->fire_string);
+        const char* c_str = malloc(sizeof(char) * string_size);
+        c_str = furi_string_get_cstr(app->fire_string);
+
+        if(string_size == 0) {
+            return word_count;
+        } else {
+            word_count = 1;
+        }
+
+        for(uint32_t i = 0; i < string_size; i++) {
+            if(c_str[i] == '-') {
+                word_count++;
+            }
+        }
+
+        return word_count;
+    } else {
+        return furi_string_size(app->fire_string);
+    }
+}
+
 void get_random_str(FireString* app) {
     uint8_t rnd_byte = 0b00000000;
-    uint32_t str_len = app->settings->str_len - furi_string_size(app->fire_string);
+    uint32_t str_len = app->settings->str_len - get_str_len(app);
     char* buffer = malloc(sizeof(char) * str_len + 1);
     const size_t char_list_len = strlen(app->hid->char_list);
 
@@ -157,27 +255,6 @@ void get_random_char(FireString* app) {
     furi_string_cat_printf(app->fire_string, "%c", buffer);
 }
 
-uint32_t get_word_count(FireString* app) {
-    uint32_t word_count = 0;
-    uint32_t string_size = furi_string_size(app->fire_string);
-    const char* c_str = malloc(sizeof(char) * string_size);
-    c_str = furi_string_get_cstr(app->fire_string);
-
-    if(string_size == 0) {
-        return word_count;
-    } else {
-        word_count = 1;
-    }
-
-    for(uint32_t i = 0; i < word_count - 1; i++) {
-        if(c_str[i] == '-') {
-            word_count++;
-        }
-    }
-
-    return word_count;
-}
-
 void string_generator_btn_callback(GuiButtonType result, InputType type, void* context) {
     FURI_LOG_T(TAG, "string_generator_btn_callback");
     furi_assert(context);
@@ -213,8 +290,7 @@ void build_string_generator_widget(FireString* app) {
     FURI_LOG_T(TAG, "build_string_generator_widget");
 
     FuriString* progress = furi_string_alloc();
-    furi_string_printf(
-        progress, "%d/%ld", furi_string_size(app->fire_string), app->settings->str_len);
+    furi_string_printf(progress, "%ld/%ld", get_str_len(app), app->settings->str_len);
 
     widget_reset(app->widget);
 
@@ -224,12 +300,12 @@ void build_string_generator_widget(FireString* app) {
     widget_add_button_element(
         app->widget, GuiButtonTypeLeft, "Config", string_generator_btn_callback, app);
 
-    if(furi_string_size(app->fire_string) > 0) {
+    if(get_str_len(app) > 0) {
         widget_add_button_element(
             app->widget, GuiButtonTypeCenter, "Reset", string_generator_btn_callback, app);
     }
 
-    if(furi_string_size(app->fire_string) == app->settings->str_len) {
+    if(get_str_len(app) == app->settings->str_len) {
         widget_add_button_element(
             app->widget, GuiButtonTypeRight, "Next", string_generator_btn_callback, app);
     } else {
@@ -251,7 +327,16 @@ static void ir_received_callback(void* context, InfraredWorkerSignal* signal) {
     furi_assert(context);
 
     FireString* app = context;
-    const size_t char_list_len = strlen(app->hid->char_list);
+    size_t dict_len = 0;
+    if(app->settings->str_type == StrType_Passphrase) {
+        uint32_t i = 0;
+        while(app->hid->word_list[i] != 0x0) {
+            i++;
+        }
+        dict_len = i;
+    } else {
+        dict_len = strlen(app->hid->char_list);
+    }
 
     const uint32_t* timings;
     size_t timings_size;
@@ -259,21 +344,29 @@ static void ir_received_callback(void* context, InfraredWorkerSignal* signal) {
     if(app->ir_worker) {
         infrared_worker_get_raw_signal(signal, &timings, &timings_size);
 
-        char* tmpStr = malloc(sizeof(char) * app->settings->str_len + 1);
         uint32_t i = 0;
-        while((furi_string_size(app->fire_string) + strlen(tmpStr)) < app->settings->str_len &&
-              i < timings_size) {
-            tmpStr[i] = app->hid->char_list[timings[i] % char_list_len];
-            i++;
-        }
-        if(furi_string_size(app->fire_string) > 0) {
-            if(furi_string_size(app->fire_string) < app->settings->str_len) {
-                furi_string_cat_str(app->fire_string, tmpStr);
+        if(app->settings->str_type == StrType_Passphrase) {
+            while(get_str_len(app) < app->settings->str_len && i < timings_size) {
+                if(get_str_len(app) < 1) {
+                    furi_string_cat_printf(
+                        app->fire_string,
+                        "%s",
+                        furi_string_get_cstr(app->hid->word_list[timings[i] % dict_len]));
+                } else {
+                    furi_string_cat_printf(
+                        app->fire_string,
+                        "-%s",
+                        furi_string_get_cstr(app->hid->word_list[timings[i] % dict_len]));
+                }
+                i++;
             }
         } else {
-            furi_string_set_str(app->fire_string, tmpStr);
+            while(get_str_len(app) < app->settings->str_len && i < timings_size) {
+                furi_string_push_back(
+                    app->fire_string, app->hid->char_list[timings[i] % dict_len]);
+                i++;
+            }
         }
-        free(tmpStr);
     }
 
     build_string_generator_widget(app);
@@ -304,16 +397,17 @@ void fire_string_scene_on_enter_string_generator(void* context) {
 
     FireString* app = context;
 
+    view_dispatcher_switch_to_view(app->view_dispatcher, FireStringView_Widget);
+
     if(app->settings->str_type == StrType_Passphrase && app->hid->word_list == NULL) {
-        scene_manager_next_scene(app->scene_manager, FireStringScene_Loading_Word_List);
+        get_word_list(app);
+        // scene_manager_next_scene(app->scene_manager, FireStringScene_Loading_Word_List);
     }
     if(app->settings->str_type != StrType_Passphrase) {
         get_char_list(app);
     }
 
     build_string_generator_widget(app);
-
-    view_dispatcher_switch_to_view(app->view_dispatcher, FireStringView_Widget);
 }
 
 bool fire_string_scene_on_event_string_generator(void* context, SceneManagerEvent event) {
@@ -332,8 +426,8 @@ bool fire_string_scene_on_event_string_generator(void* context, SceneManagerEven
         break;
     case SceneManagerEventTypeTick:
         // animate automatic string generation
-        if(furi_string_size(app->fire_string) < app->settings->str_len && !app->settings->use_ir) {
-            if(furi_string_size(app->fire_string) > 30) {
+        if(get_str_len(app) < app->settings->str_len && !app->settings->use_ir) {
+            if(get_str_len(app) > 30) { // arbitrarily skip animation at certain length
                 get_random_str(app);
             } else {
                 get_random_char(app);
@@ -347,10 +441,10 @@ bool fire_string_scene_on_event_string_generator(void* context, SceneManagerEven
             build_string_generator_widget(app);
         }
         // Toggle infrared_worker if needed
-        if(furi_string_size(app->fire_string) < app->settings->str_len && !app->ir_worker) {
+        if(get_str_len(app) < app->settings->str_len && !app->ir_worker) {
             infrared_rx_start(app);
         }
-        if(furi_string_size(app->fire_string) == app->settings->str_len && app->ir_worker) {
+        if(get_str_len(app) == app->settings->str_len && app->ir_worker) {
             infrared_rx_stop(app);
         }
         break;
@@ -368,11 +462,15 @@ void fire_string_scene_on_exit_string_generator(void* context) {
         infrared_rx_stop(app);
     }
     if(app->settings->str_type == StrType_Passphrase && app->hid->word_list != NULL) { // Phrase
+        view_dispatcher_switch_to_view(app->view_dispatcher, FireStringView_Loading);
         uint32_t i = 0;
-        while(app->hid->word_list[i] != 0x0) {
+        while(app->hid->word_list[i] != NULL && !furi_string_empty(app->hid->word_list[i])) {
+            FURI_LOG_D(TAG, "%i", (uint8_t)furi_string_get_char(app->hid->word_list[i], 0));
             furi_string_free(app->hid->word_list[i]);
             i++;
         }
+        free(app->hid->word_list);
+        app->hid->word_list = NULL;
     }
     if(app->settings->str_type != StrType_Passphrase && app->hid->char_list != NULL) {
         free(app->hid->char_list);
