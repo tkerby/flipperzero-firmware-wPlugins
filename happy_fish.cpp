@@ -15,7 +15,6 @@ int jellyfish_x = 64;
 int jellyfish_y = 0;
 
 bool is_jumping = false;
-
 bool is_random_kelp = true;
 bool is_random_jellyfish = true;
 int kelp_x_rand = rand() % 4 + 1;
@@ -31,6 +30,39 @@ int max_jump = 2;
 int players[][2] = {{10,2},{11,2},{2,3},{3,3},{8,3},{9,3},{12,3},{13,3},{2,4},{4,4},{6,4},{7,4},{14,4},{15,4},{2,5},{5,5},{16,5},{2,6},{5,6},{16,6},{2,7},{4,7},{6,7},{7,7},{14,7},{15,7},{2,8},{3,8},{8,8},{9,8},{12,8},{13,8},{10,9},{11,9}};
 int kelp[][2] = {{2,2},{4,2},{3,3},{2,4},{4,4},{3,5},{2,6},{4,6},{3,7},{2,8},{4,8},{3,9}};
 int jellyfish[][2] = {{3,2},{4,2},{5,2},{6,2},{7,2},{8,2},{2,3},{9,3},{2,4},{9,4},{3,5},{4,5},{5,5},{6,5},{7,5},{8,5},{3,6},{6,6},{8,6},{4,7},{6,7},{9,7},{2,8},{4,8},{7,8},{3,9}};
+
+void collide_rect()
+{
+    
+    int player_left = player_x;
+    int player_top = player_offset + 4;
+    int player_right = player_x + 16;
+    int player_bottom = player_offset + 8 + 4;
+
+    int kelp_left = kelp_x - kelp_x_rand * 4;
+    int kelp_top = kelp_y - kelp_y_rand * 8 + 2;
+    int kelp_right = kelp_x;
+    int kelp_bottom = kelp_y + 2;
+
+    int jellyfish_left = jellyfish_x - jellyfish_x_rand * 8;
+    int jellyfish_top = jellyfish_y + 10;
+    int jellyfish_right = jellyfish_x;
+    int jellyfish_bottom = jellyfish_y + jellyfish_y_rand * 8 + 10;
+
+    bool kelp_collision = player_left <= kelp_right && player_right >= kelp_left && player_top <= kelp_bottom && player_bottom >= kelp_top;
+
+    bool jellyfish_collision = player_left <= jellyfish_right && player_right >= jellyfish_left && player_top <= jellyfish_bottom && player_bottom >= jellyfish_top;
+
+    if (kelp_collision || jellyfish_collision)
+    {
+        kelp_x = 124;
+        is_random_kelp = true;
+
+        jellyfish_x = 64;
+        is_random_jellyfish = true;
+    }
+}
+
 
 void draw_player(Canvas* canvas)
 {
@@ -66,9 +98,9 @@ void draw_kelp(Canvas* canvas)
     }
     
     int array_size = sizeof(kelp) / sizeof(kelp[0]);
-    for (int a = 1; a < kelp_y_rand+1; a++)
+    for (int a = 1; a < kelp_y_rand+2; a++)
     {
-        for (int b = 1; b < kelp_x_rand+1; b++)
+        for (int b = 1; b < kelp_x_rand+2; b++)
         {
             for(int i = 0; i < array_size; i++)
             {
@@ -101,9 +133,9 @@ void draw_jellyfish(Canvas* canvas)
     }
     
     int array_size = sizeof(jellyfish) / sizeof(jellyfish[0]);
-    for (int a = 1; a < jellyfish_y_rand+1; a++)
+    for (int a = 1; a < jellyfish_y_rand+2; a++)
     {
-        for (int b = 1; b < jellyfish_x_rand+1; b++)
+        for (int b = 1; b < jellyfish_x_rand+2; b++)
         {
             for(int i = 0; i < array_size; i++)
             {
@@ -154,6 +186,7 @@ static void draw_callback(Canvas* canvas, void* context)
 {
     UNUSED(context);
     canvas_clear(canvas);
+    collide_rect();
     draw_player(canvas);
     draw_kelp(canvas);
     draw_jellyfish(canvas);
@@ -176,9 +209,12 @@ int main()
     dolphin_deed(DolphinDeedPluginGameStart);
     InputEvent event;
     bool running = true;
-    while(running) {
-        if(furi_message_queue_get(queue, &event, FuriWaitForever) == FuriStatusOk) {
-            if(event.type == InputTypeShort && event.key == InputKeyBack) {
+    while(running)
+    {
+        if(furi_message_queue_get(queue, &event, FuriWaitForever) == FuriStatusOk)
+        {
+            if(event.type == InputTypeShort && event.key == InputKeyBack)
+            {
                 running = false;
             }
         }
