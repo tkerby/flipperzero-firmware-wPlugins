@@ -84,6 +84,8 @@ This is a list of metro cards and transit systems that need support or have part
 | **Suica**          | 🇯🇵 Japan                                     | FeliCa            |
 | **Troika**         | 🇷🇺 Moscow, Russia                            | MIFARE Classic    |
 | **Octopus**        | 🇭🇰 Hong Kong                                 | FeliCa            |
+| **nol**            | 🇦🇪 Dubai, UAE                                | MIFARE DESFire    |
+
 
 
 ---
@@ -105,6 +107,7 @@ This is a list of metro cards and transit systems that need support or have part
 - **Suica Parser:** [@zinongli](https://github.com/zinongli)
 - **Troika Parser:** [@gornekich](https://github.com/gornekich)
 - **Octopus Parser:** [@zinongli](https://github.com/zinongli)
+- **nol Parser:** [@zinongli](https://github.com/zinongli)
 
 ---
 

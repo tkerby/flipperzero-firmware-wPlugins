@@ -138,3 +138,12 @@ App(
     sources=["scenes/plugins/renfe_regular.c"],
     fal_embedded=True,
 )
+
+App(
+    appid="nol_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="nol_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/nol.c"],
+    fal_embedded=True,
+)

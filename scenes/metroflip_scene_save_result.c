@@ -37,7 +37,6 @@ void metroflip_scene_save_result_on_enter(void* context) {
         FlipperFormat* ff = flipper_format_file_alloc(storage);
         flipper_format_write_empty_line(ff);
         flipper_format_file_open_existing(ff, path);
-        flipper_format_insert_or_update_string_cstr(ff, "Card Type", app->card_type);
         flipper_format_file_close(ff);
         flipper_format_free(ff);
         furi_record_close(RECORD_STORAGE);
