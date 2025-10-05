@@ -5,6 +5,8 @@
 #include <stdlib.h>
 
 int SCORE = 0;
+int SCORE_BONUS = 1;
+int HIGH_SCORE = 100;
 char score_str[16];
 
 int player_x = 6;
@@ -54,7 +56,7 @@ void collide_rect()
 
     bool jellyfish_collision = player_left <= jellyfish_right && player_right >= jellyfish_left && player_top <= jellyfish_bottom && player_bottom >= jellyfish_top;
 
-    if (kelp_collision || jellyfish_collision || player_bottom == 64 || player_top == 0)
+    if (kelp_collision || jellyfish_collision || player_bottom >= 64 || player_top <= 0)
     {
         kelp_x = 124;
         is_random_kelp = true;
@@ -65,6 +67,9 @@ void collide_rect()
         player_x = 6;
         player_y = 52;
         player_offset = 28;
+
+        SCORE_BONUS = 1;
+        HIGH_SCORE = 100;
 
         SCORE = 0;
     }
@@ -121,9 +126,9 @@ void draw_kelp(Canvas* canvas)
         }
     }
 
-    kelp_x -= 1;
+    kelp_x -= SCORE_BONUS;
 
-    if (kelp_x == -16)
+    if (kelp_x <= -16)
     {
         kelp_x = 124;
         is_random_kelp = true;
@@ -156,9 +161,9 @@ void draw_jellyfish(Canvas* canvas)
         }
     }
 
-    jellyfish_x -= 1;
+    jellyfish_x -= SCORE_BONUS;
 
-    if (jellyfish_x == -16)
+    if (jellyfish_x <= -16)
     {
         jellyfish_x = 124;
         is_random_jellyfish = true;
@@ -199,7 +204,18 @@ static void draw_callback(Canvas* canvas, void* context)
     draw_jellyfish(canvas);
     snprintf(score_str, sizeof(score_str), "%d", SCORE);
     canvas_draw_str(canvas,2,8,score_str);
-    SCORE += 1;
+
+    snprintf(score_str, sizeof(score_str), "%dx", SCORE_BONUS);
+    canvas_draw_str(canvas,2,64,score_str);
+    
+    SCORE += SCORE_BONUS;
+
+    if (SCORE >= HIGH_SCORE)
+    {
+        HIGH_SCORE += 100;
+        SCORE_BONUS += 1;
+    }
+
     canvas_commit(canvas);
 }
 
