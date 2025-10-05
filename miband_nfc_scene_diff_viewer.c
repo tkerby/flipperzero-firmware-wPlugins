@@ -1,35 +1,20 @@
 /**
  * @file miband_nfc_scene_diff_viewer.c
- * @brief Detailed difference viewer for verify results
- * 
- * This scene displays detailed information about blocks that differ
- * between the expected dump and the actual Mi Band data, showing
- * hex values and highlighting exact byte differences.
+ * @brief Detailed difference viewer - FIXED
  */
 
 #include "miband_nfc_i.h"
 
 #define TAG "MiBandNfc"
 
-/**
- * @brief Structure to store block difference information
- */
 typedef struct {
     size_t block_index;
     uint8_t expected[16];
     uint8_t found[16];
-    uint8_t diff_mask[16]; // 1 = different, 0 = same
+    uint8_t diff_mask[16];
     uint8_t diff_count;
 } BlockDifference;
 
-/**
- * @brief Format hex string with differences highlighted
- * 
- * @param output Output string buffer
- * @param data Data bytes
- * @param mask Difference mask
- * @param length Number of bytes
- */
 static void format_hex_with_diff(
     FuriString* output,
     const uint8_t* data,
@@ -37,9 +22,9 @@ static void format_hex_with_diff(
     size_t length) {
     for(size_t i = 0; i < length; i++) {
         if(mask && mask[i]) {
-            furi_string_cat_printf(output, "[%02X]", data[i]); // Different
+            furi_string_cat_printf(output, "[%02X]", data[i]);
         } else {
-            furi_string_cat_printf(output, " %02X ", data[i]); // Same
+            furi_string_cat_printf(output, " %02X ", data[i]);
         }
         if((i + 1) % 8 == 0 && i < length - 1) {
             furi_string_cat_str(output, "\n     ");
@@ -47,20 +32,13 @@ static void format_hex_with_diff(
     }
 }
 
-/**
- * @brief Generate detailed difference report
- * 
- * @param app Pointer to MiBandNfcApp instance
- * @param differences Array of block differences
- * @param diff_count Number of differences
- * @return Allocated FuriString with report text
- */
 static FuriString*
     generate_difference_report(MiBandNfcApp* app, BlockDifference* differences, size_t diff_count) {
     FuriString* report = furi_string_alloc();
+    if(!report) return NULL;
+
     size_t total_blocks = mf_classic_get_total_block_num(app->mf_classic_data->type);
 
-    // Header
     furi_string_printf(
         report,
         "Verification Results\n"
@@ -73,18 +51,17 @@ static FuriString*
         diff_count);
 
     if(diff_count == 0) {
-        furi_string_cat_str(report, "All blocks match perfectly!\n\n");
+        furi_string_cat_str(report, "All blocks match!\n\n");
+        furi_string_cat_str(report, "Press Back to exit");
         return report;
     }
 
-    furi_string_cat_str(report, "Differences Found:\n");
-    furi_string_cat_str(report, "==================\n\n");
+    furi_string_cat_str(report, "Differences:\n");
+    furi_string_cat_str(report, "============\n\n");
 
-    // Detail each difference
-    for(size_t i = 0; i < diff_count; i++) {
+    for(size_t i = 0; i < diff_count && i < 10; i++) {
         BlockDifference* diff = &differences[i];
 
-        // Block header
         const char* block_type = "Data";
         if(diff->block_index == 0) {
             block_type = "UID";
@@ -94,133 +71,131 @@ static FuriString*
 
         furi_string_cat_printf(
             report,
-            "Block %zu (%s): %u bytes differ\n",
+            "Block %zu (%s)\n%u bytes differ\n",
             diff->block_index,
             block_type,
             diff->diff_count);
 
-        // Expected data
         furi_string_cat_str(report, "Exp: ");
         format_hex_with_diff(report, diff->expected, diff->diff_mask, 16);
         furi_string_cat_str(report, "\n");
 
-        // Found data
         furi_string_cat_str(report, "Got: ");
         format_hex_with_diff(report, diff->found, diff->diff_mask, 16);
         furi_string_cat_str(report, "\n\n");
-
-        // Limit report length
-        if(i >= 9 && diff_count > 10) {
-            furi_string_cat_printf(report, "... and %zu more differences\n\n", diff_count - i - 1);
-            break;
-        }
     }
 
-    // Summary
-    furi_string_cat_str(
-        report,
-        "Legend: [XX] = different\n"
-        "         XX  = same\n\n"
-        "Press Back to exit");
+    if(diff_count > 10) {
+        furi_string_cat_printf(report, "... %zu more\n\n", diff_count - 10);
+    }
 
+    furi_string_cat_str(report, "[XX]=diff  XX=same\n\nPress Back");
     return report;
 }
 
-/**
- * @brief Scene entry point
- * 
- * Expects app->target_data to contain read data and app->mf_classic_data
- * to contain expected data. Compares and generates detailed report.
- * 
- * @param context Pointer to MiBandNfcApp instance
- */
 void miband_nfc_scene_diff_viewer_on_enter(void* context) {
     furi_assert(context);
     MiBandNfcApp* app = context;
+
+    FURI_LOG_I(TAG, "DiffViewer: Starting");
+
+    // RESET FORZATO di tutte le altre view PRIMA
+    popup_reset(app->popup);
+    dialog_ex_reset(app->dialog_ex);
 
     if(!app->is_valid_nfc_data) {
         scene_manager_previous_scene(app->scene_manager);
         return;
     }
 
+    // 1. GENERA TUTTO IL TESTO PRIMA
     size_t total_blocks = mf_classic_get_total_block_num(app->mf_classic_data->type);
-
     BlockDifference* differences = malloc(sizeof(BlockDifference) * total_blocks);
+
+    if(!differences) {
+        FURI_LOG_E(TAG, "Alloc failed");
+        scene_manager_previous_scene(app->scene_manager);
+        return;
+    }
+
     size_t diff_count = 0;
 
-    // Compara tutti i blocchi
+    // Trova differenze
     for(size_t i = 0; i < total_blocks; i++) {
+        if(i == 0 || mf_classic_is_sector_trailer(i)) continue;
+
         bool blocks_differ = false;
         uint8_t diff_mask[16] = {0};
         uint8_t diff_bytes = 0;
 
-        if(i == 0) {
-            // Block 0: Skip - UID preserved
-            continue;
-        } else if(mf_classic_is_sector_trailer(i)) {
-            // Trailer: Skip - keys differ
-            continue;
-        } else {
-            // Data block: Full comparison
-            for(size_t j = 0; j < 16; j++) {
-                if(app->mf_classic_data->block[i].data[j] != app->target_data->block[i].data[j]) {
-                    blocks_differ = true;
-                    diff_mask[j] = 1;
-                    diff_bytes++;
-                }
+        for(size_t j = 0; j < 16; j++) {
+            if(app->mf_classic_data->block[i].data[j] != app->target_data->block[i].data[j]) {
+                blocks_differ = true;
+                diff_mask[j] = 1;
+                diff_bytes++;
             }
         }
 
-        if(blocks_differ) {
-            BlockDifference* diff = &differences[diff_count++];
-            diff->block_index = i;
-            diff->diff_count = diff_bytes;
-            memcpy(diff->expected, app->mf_classic_data->block[i].data, 16);
-            memcpy(diff->found, app->target_data->block[i].data, 16);
-            memcpy(diff->diff_mask, diff_mask, 16);
+        if(blocks_differ && diff_count < total_blocks) {
+            differences[diff_count].block_index = i;
+            differences[diff_count].diff_count = diff_bytes;
+            memcpy(differences[diff_count].expected, app->mf_classic_data->block[i].data, 16);
+            memcpy(differences[diff_count].found, app->target_data->block[i].data, 16);
+            memcpy(differences[diff_count].diff_mask, diff_mask, 16);
+            diff_count++;
         }
     }
 
-    // Genera report
+    FURI_LOG_I(TAG, "Found %zu differences", diff_count);
+
+    // 2. GENERA IL REPORT COMPLETO
     FuriString* report = generate_difference_report(app, differences, diff_count);
-
-    // RESET text_box PRIMA di usarlo
-    text_box_reset(app->text_box);
-    text_box_set_text(app->text_box, furi_string_get_cstr(report));
-    text_box_set_font(app->text_box, TextBoxFontText);
-    text_box_set_focus(app->text_box, TextBoxFocusStart);
-
-    // Switch to text_box view
-    view_dispatcher_switch_to_view(app->view_dispatcher, MiBandNfcViewIdAbout);
-
-    // Cleanup
-    furi_string_free(report);
     free(differences);
 
-    FURI_LOG_I(TAG, "Difference viewer: %zu differences found", diff_count);
-}
-
-/**
- * @brief Scene event handler
- */
-bool miband_nfc_scene_diff_viewer_on_event(void* context, SceneManagerEvent event) {
-    MiBandNfcApp* app = context;
-    bool consumed = false;
-
-    if(event.type == SceneManagerEventTypeBack) {
-        // Return to main menu
-        scene_manager_search_and_switch_to_another_scene(
-            app->scene_manager, MiBandNfcSceneMainMenu);
-        consumed = true;
+    if(!report) {
+        scene_manager_previous_scene(app->scene_manager);
+        return;
     }
 
-    return consumed;
+    if(app->diff_viewer_text) {
+        free(app->diff_viewer_text);
+    }
+
+    app->diff_viewer_text = malloc(furi_string_size(report) + 1);
+    if(!app->diff_viewer_text) {
+        furi_string_free(report);
+        scene_manager_previous_scene(app->scene_manager);
+        return;
+    }
+
+    strcpy(app->diff_viewer_text, furi_string_get_cstr(report));
+    furi_string_free(report);
+
+    // DOPPIO RESET della text_box
+    text_box_reset(app->text_box_report);
+    furi_delay_ms(10); // Dai tempo alla view
+    text_box_reset(app->text_box_report);
+
+    text_box_set_text(app->text_box_report, app->diff_viewer_text);
+    text_box_set_font(app->text_box_report, TextBoxFontText);
+    text_box_set_focus(app->text_box_report, TextBoxFocusStart);
+
+    FURI_LOG_I(TAG, "Text set, switching view");
+    view_dispatcher_switch_to_view(app->view_dispatcher, MiBandNfcViewIdUidReport);
 }
 
-/**
- * @brief Scene exit handler
- */
+bool miband_nfc_scene_diff_viewer_on_event(void* context, SceneManagerEvent event) {
+    MiBandNfcApp* app = context;
+
+    if(event.type == SceneManagerEventTypeBack) {
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MiBandNfcSceneMainMenu);
+        return true;
+    }
+    return false;
+}
+
 void miband_nfc_scene_diff_viewer_on_exit(void* context) {
     MiBandNfcApp* app = context;
-    text_box_reset(app->text_box);
+    text_box_reset(app->text_box_report);
 }

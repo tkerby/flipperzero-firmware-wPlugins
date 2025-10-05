@@ -37,14 +37,14 @@
 #define NFC_APP_EXTENSION ".nfc"
 
 typedef enum {
-    MiBandNfcViewIdMainMenu,
-    MiBandNfcViewIdScanner,
-    MiBandNfcViewIdMagicEmulator,
-    MiBandNfcViewIdWriter,
-    MiBandNfcViewIdFileSelect,
-    MiBandNfcViewIdAbout,
-    MiBandNfcViewIdUidReport,
-    MiBandNfcViewIdDialog,
+    MiBandNfcViewIdMainMenu, // 0
+    MiBandNfcViewIdScanner, // 1
+    MiBandNfcViewIdMagicEmulator, // 2
+    MiBandNfcViewIdWriter, // 3
+    MiBandNfcViewIdFileSelect, // 4
+    MiBandNfcViewIdAbout, // 5
+    MiBandNfcViewIdUidReport, // 6
+    MiBandNfcViewIdDialog, // 7
 } MiBandNfcViewId;
 
 /**
@@ -100,6 +100,7 @@ struct MiBandNfcApp {
     Submenu* submenu;
     Popup* popup;
     TextBox* text_box; // Shared by About and UID Check
+    TextBox* text_box_report;
     DialogEx* dialog_ex;
 
     // File handling
@@ -131,6 +132,9 @@ struct MiBandNfcApp {
     bool is_scan_active;
     SubmenuIndex last_selected_submenu_index;
     OperationType current_operation;
+
+    char* diff_viewer_text; // Testo temporaneo per diff viewer
+    char* uid_check_text; // Testo temporaneo per uid check
 };
 
 bool miband_settings_save(MiBandNfcApp* app);

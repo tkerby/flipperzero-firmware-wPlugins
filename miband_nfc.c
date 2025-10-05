@@ -64,6 +64,10 @@ static MiBandNfcApp* miband_nfc_app_alloc() {
     view_dispatcher_add_view(
         app->view_dispatcher, MiBandNfcViewIdDialog, dialog_ex_get_view(app->dialog_ex));
 
+    app->text_box_report = text_box_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher, MiBandNfcViewIdUidReport, text_box_get_view(app->text_box_report));
+
     // Allocate NFC components
     app->nfc = nfc_alloc();
     app->nfc_device = nfc_device_alloc();
@@ -126,6 +130,11 @@ static void miband_nfc_app_free(MiBandNfcApp* app) {
     if(app->text_box) {
         view_dispatcher_remove_view(app->view_dispatcher, MiBandNfcViewIdAbout);
         text_box_free(app->text_box);
+    }
+
+    if(app->text_box_report) {
+        view_dispatcher_remove_view(app->view_dispatcher, MiBandNfcViewIdUidReport);
+        text_box_free(app->text_box_report);
     }
 
     if(app->dialog_ex) {

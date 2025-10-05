@@ -8,7 +8,7 @@ App(
     fap_description="NFC writer for Mi Band with 0xFF keys",
     fap_author="Developer",
     fap_version="1.0",
-    fap_icon="miband_nfc.png",
+    fap_icon="miband_nfc.bmp",
     fap_icon_assets="icons",
     sources=["*.c"],
     requires=[

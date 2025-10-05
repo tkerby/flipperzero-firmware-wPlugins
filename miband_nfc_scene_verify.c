@@ -536,8 +536,13 @@ bool miband_nfc_scene_verify_on_event(void* context, SceneManagerEvent event) {
             }
 
             if(data_match && different_blocks == 0) {
-                // SUCCESS - tutto ok
+                // SUCCESS
                 notification_message(app->notifications, &sequence_success);
+
+                // RESET COMPLETO prima di mostrare popup
+                text_box_reset(app->text_box_report);
+                dialog_ex_reset(app->dialog_ex);
+
                 popup_reset(app->popup);
                 popup_set_header(app->popup, "SUCCESS!", 64, 4, AlignCenter, AlignTop);
                 popup_set_text(
@@ -547,9 +552,16 @@ bool miband_nfc_scene_verify_on_event(void* context, SceneManagerEvent event) {
                 furi_delay_ms(3000);
                 scene_manager_search_and_switch_to_another_scene(
                     app->scene_manager, MiBandNfcSceneMainMenu);
+
             } else {
+                // DIFFERENCES FOUND
                 notification_message(app->notifications, &sequence_blink_stop);
                 notification_message(app->notifications, &sequence_error);
+
+                // RESET TUTTO PRIMA del dialog
+                popup_reset(app->popup);
+                text_box_reset(app->text_box_report);
+
                 dialog_ex_reset(app->dialog_ex);
                 dialog_ex_set_header(
                     app->dialog_ex, "Differences Found", 64, 0, AlignCenter, AlignTop);
@@ -563,7 +575,6 @@ bool miband_nfc_scene_verify_on_event(void* context, SceneManagerEvent event) {
                 dialog_ex_set_left_button_text(app->dialog_ex, "Exit");
                 dialog_ex_set_right_button_text(app->dialog_ex, "Details");
                 dialog_ex_set_icon(app->dialog_ex, 0, 0, NULL);
-
                 dialog_ex_set_result_callback(app->dialog_ex, verify_dialog_callback);
                 dialog_ex_set_context(app->dialog_ex, app);
 
@@ -623,5 +634,9 @@ void miband_nfc_scene_verify_on_exit(void* context) {
 
     verify_tracker_free();
     notification_message(app->notifications, &sequence_blink_stop);
+
+    // RESET COMPLETO di tutte le view usate
     popup_reset(app->popup);
+    dialog_ex_reset(app->dialog_ex);
+    text_box_reset(app->text_box_report);
 }
