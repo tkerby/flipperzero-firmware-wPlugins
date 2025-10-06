@@ -154,6 +154,14 @@ uint32_t get_str_len(FireString* app) {
     }
 }
 
+void vibro(FireString* app) {
+    if(app->settings->str_len == get_str_len(app)) {
+        furi_hal_vibro_on(true);
+        furi_delay_ms(30);
+        furi_hal_vibro_on(false);
+    }
+}
+
 // Use internal rng to append random char or word to fire_string
 void random_generator(FireString* app) {
     size_t dict_len = get_dict_len(app);
@@ -359,6 +367,7 @@ bool fire_string_scene_on_event_string_generator(void* context, SceneManagerEven
         }
         if(get_str_len(app) == app->settings->str_len && app->ir_worker && app->settings->use_ir) {
             infrared_rx_stop(app);
+            vibro(app);
         }
         // animate automatic string generation
         if(get_str_len(app) < app->settings->str_len && !app->settings->use_ir) {
@@ -374,11 +383,7 @@ bool fire_string_scene_on_event_string_generator(void* context, SceneManagerEven
                 }
             }
             build_string_generator_widget(app);
-            if(app->settings->str_len == get_str_len(app)) {
-                furi_hal_vibro_on(true);
-                furi_delay_ms(30);
-                furi_hal_vibro_on(false);
-            }
+            vibro(app);
         }
         break;
     }
