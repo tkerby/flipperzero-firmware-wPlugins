@@ -24,6 +24,7 @@
 #include <lib/nfc/protocols/mf_classic/mf_classic_poller.h>
 #include <nfc/protocols/mf_classic/mf_classic_poller_sync.h>
 #include <nfc/protocols/mf_classic/mf_classic_listener.h>
+#include <nfc/protocols/iso14443_3a/iso14443_3a_poller_sync.h>
 #include <storage/storage.h>
 
 #include <furi_hal_rtc.h>
@@ -133,8 +134,7 @@ struct MiBandNfcApp {
     SubmenuIndex last_selected_submenu_index;
     OperationType current_operation;
 
-    char* diff_viewer_text; // Testo temporaneo per diff viewer
-    char* uid_check_text; // Testo temporaneo per uid check
+    FuriString* temp_text_buffer;
 };
 
 bool miband_settings_save(MiBandNfcApp* app);

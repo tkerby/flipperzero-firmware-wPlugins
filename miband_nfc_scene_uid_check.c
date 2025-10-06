@@ -60,14 +60,15 @@ static void scan_directory_for_uid(
             if(nfc_device_get_protocol(temp_device) == NfcProtocolMfClassic) {
                 const MfClassicData* data = nfc_device_get_data(temp_device, NfcProtocolMfClassic);
                 if(data && memcmp(data->block[0].data, target_uid, 4) == 0) {
-                    if(*found_count < max_files) {
-                        strncpy(found_files[*found_count].filename, name, 127);
-                        found_files[*found_count].filename[127] = '\0';
-                        strncpy(
-                            found_files[*found_count].path, furi_string_get_cstr(full_path), 255);
-                        found_files[*found_count].path[255] = '\0';
-                        (*found_count)++;
+                    if(*found_count >= max_files) {
+                        FURI_LOG_W(TAG, "Max files reached");
+                        break; // Esci dal loop
                     }
+                    strncpy(found_files[*found_count].filename, name, 127);
+                    found_files[*found_count].filename[127] = '\0';
+                    strncpy(found_files[*found_count].path, furi_string_get_cstr(full_path), 255);
+                    found_files[*found_count].path[255] = '\0';
+                    (*found_count)++;
                 }
             }
         }
@@ -135,102 +136,52 @@ void miband_nfc_scene_uid_check_on_enter(void* context) {
     furi_assert(context);
     MiBandNfcApp* app = context;
 
-    FURI_LOG_I(TAG, "UID Check: Starting");
+    // Reset buffer
+    furi_string_reset(app->temp_text_buffer);
 
-    // Reset view
     text_box_reset(app->text_box_report);
     dialog_ex_reset(app->dialog_ex);
-
-    // Mostra popup BREVEMENTE poi nascondi
     popup_reset(app->popup);
-    popup_set_header(app->popup, "UID Check", 64, 4, AlignCenter, AlignTop);
-    popup_set_text(app->popup, "Place card and\nhold steady...", 64, 22, AlignCenter, AlignTop);
-    view_dispatcher_switch_to_view(app->view_dispatcher, MiBandNfcViewIdScanner);
 
+    popup_set_header(app->popup, "UID Check", 64, 4, AlignCenter, AlignTop);
+    popup_set_text(app->popup, "Place card near\nFlipper Zero", 64, 22, AlignCenter, AlignTop);
+    view_dispatcher_switch_to_view(app->view_dispatcher, MiBandNfcViewIdScanner);
     notification_message(app->notifications, &sequence_blink_start_cyan);
 
-    // DAI TEMPO ALL'UTENTE DI POSIZIONARE LA CARTA
-    furi_delay_ms(1500);
+    Iso14443_3aData iso_data = {0};
+    bool read_success = false;
 
-    // Rileva carta
-    MfClassicType detected_type = MfClassicType1k;
-    MfClassicError detect_error = mf_classic_poller_sync_detect_type(app->nfc, &detected_type);
-
-    if(detect_error != MfClassicErrorNone) {
-        FURI_LOG_E(TAG, "Detection failed: %d", detect_error);
-        notification_message(app->notifications, &sequence_blink_stop);
-        notification_message(app->notifications, &sequence_error);
-        popup_set_text(app->popup, "No card detected", 64, 30, AlignCenter, AlignTop);
-        furi_delay_ms(2000);
-        scene_manager_previous_scene(app->scene_manager);
-        return;
-    }
-
-    FURI_LOG_I(TAG, "Card detected: type %d", detected_type);
-
-    // Leggi blocco 0 - NESSUN UPDATE UI QUI
-    MfClassicBlock block0;
-    MfClassicKey magic_key;
-    memset(magic_key.data, 0xFF, 6);
-    MfClassicAuthContext auth_context;
-
-    MfClassicError auth_error =
-        mf_classic_poller_sync_auth(app->nfc, 0, &magic_key, MfClassicKeyTypeA, &auth_context);
-
-    if(auth_error != MfClassicErrorNone) {
-        FURI_LOG_E(TAG, "Auth failed: %d", auth_error);
-
-        // Prova con scanner invece di poller diretto
-        notification_message(app->notifications, &sequence_blink_stop);
-        furi_delay_ms(500);
-        notification_message(app->notifications, &sequence_blink_start_cyan);
-
-        // Secondo tentativo
-        detect_error = mf_classic_poller_sync_detect_type(app->nfc, &detected_type);
-        if(detect_error == MfClassicErrorNone) {
-            auth_error = mf_classic_poller_sync_auth(
-                app->nfc, 0, &magic_key, MfClassicKeyTypeA, &auth_context);
+    for(int attempt = 0; attempt < 15 && !read_success; attempt++) {
+        if(attempt % 3 == 0) {
+            FuriString* msg = furi_string_alloc_printf("Reading UID...\n%d/15", attempt + 1);
+            popup_set_text(app->popup, furi_string_get_cstr(msg), 64, 22, AlignCenter, AlignTop);
+            furi_string_free(msg);
         }
 
-        if(auth_error != MfClassicErrorNone) {
-            notification_message(app->notifications, &sequence_blink_stop);
-            notification_message(app->notifications, &sequence_error);
-            popup_set_text(app->popup, "Auth failed\nTry again", 64, 30, AlignCenter, AlignTop);
-            furi_delay_ms(2000);
-            scene_manager_previous_scene(app->scene_manager);
-            return;
+        furi_delay_ms(300);
+
+        Iso14443_3aError error = iso14443_3a_poller_sync_read(app->nfc, &iso_data);
+
+        if(error == Iso14443_3aErrorNone && iso_data.uid_len >= 4) {
+            read_success = true;
+            break;
         }
     }
-
-    MfClassicError read_error =
-        mf_classic_poller_sync_read_block(app->nfc, 0, &magic_key, MfClassicKeyTypeA, &block0);
 
     notification_message(app->notifications, &sequence_blink_stop);
 
-    if(read_error != MfClassicErrorNone) {
-        FURI_LOG_E(TAG, "Read failed: %d", read_error);
+    if(!read_success) {
         notification_message(app->notifications, &sequence_error);
-        popup_set_text(app->popup, "Read failed", 64, 30, AlignCenter, AlignTop);
-        furi_delay_ms(2000);
+        popup_set_text(app->popup, "Card not found", 64, 22, AlignCenter, AlignTop);
+        furi_delay_ms(1500);
         scene_manager_previous_scene(app->scene_manager);
         return;
     }
 
-    FURI_LOG_I(
-        TAG,
-        "UID: %02X%02X%02X%02X",
-        block0.data[0],
-        block0.data[1],
-        block0.data[2],
-        block0.data[3]);
-
     notification_message(app->notifications, &sequence_success);
+    popup_set_text(app->popup, "UID read!\nScanning...", 64, 22, AlignCenter, AlignTop);
+    furi_delay_ms(200);
 
-    // ORA puoi aggiornare UI
-    popup_set_text(app->popup, "Success!\nScanning disk...", 64, 30, AlignCenter, AlignTop);
-    furi_delay_ms(300);
-
-    // Scan disco
     FoundFile* found_files = malloc(sizeof(FoundFile) * MAX_FILES_TO_CHECK);
     if(!found_files) {
         scene_manager_previous_scene(app->scene_manager);
@@ -241,11 +192,18 @@ void miband_nfc_scene_uid_check_on_enter(void* context) {
     scan_directory_for_uid(
         app->storage,
         NFC_APP_FOLDER,
-        block0.data,
+        iso_data.uid,
         found_files,
         MAX_FILES_TO_CHECK,
         &found_count,
         app->popup);
+
+    MfClassicBlock block0 = {0};
+    memcpy(block0.data, iso_data.uid, 4);
+    block0.data[4] = iso_data.uid[0] ^ iso_data.uid[1] ^ iso_data.uid[2] ^ iso_data.uid[3];
+    block0.data[5] = iso_data.sak;
+    block0.data[6] = iso_data.atqa[0];
+    block0.data[7] = iso_data.atqa[1];
 
     FuriString* report = generate_uid_report(&block0, found_files, found_count);
     free(found_files);
@@ -255,26 +213,14 @@ void miband_nfc_scene_uid_check_on_enter(void* context) {
         return;
     }
 
-    if(app->uid_check_text) {
-        free(app->uid_check_text);
-    }
-
-    app->uid_check_text = malloc(furi_string_size(report) + 1);
-    if(!app->uid_check_text) {
-        furi_string_free(report);
-        scene_manager_previous_scene(app->scene_manager);
-        return;
-    }
-
-    strcpy(app->uid_check_text, furi_string_get_cstr(report));
+    furi_string_set(app->temp_text_buffer, report);
     furi_string_free(report);
 
-    // Reset e switch
     popup_reset(app->popup);
-    furi_delay_ms(50);
+    furi_delay_ms(10);
 
     text_box_reset(app->text_box_report);
-    text_box_set_text(app->text_box_report, app->uid_check_text);
+    text_box_set_text(app->text_box_report, furi_string_get_cstr(app->temp_text_buffer));
     text_box_set_font(app->text_box_report, TextBoxFontText);
     text_box_set_focus(app->text_box_report, TextBoxFocusStart);
 
@@ -296,9 +242,4 @@ void miband_nfc_scene_uid_check_on_exit(void* context) {
     notification_message(app->notifications, &sequence_blink_stop);
     popup_reset(app->popup);
     text_box_reset(app->text_box_report);
-
-    if(app->uid_check_text) {
-        free(app->uid_check_text);
-        app->uid_check_text = NULL;
-    }
 }

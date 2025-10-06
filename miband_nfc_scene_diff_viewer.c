@@ -97,9 +97,9 @@ void miband_nfc_scene_diff_viewer_on_enter(void* context) {
     furi_assert(context);
     MiBandNfcApp* app = context;
 
-    FURI_LOG_I(TAG, "DiffViewer: Starting");
+    // Reset buffer
+    furi_string_reset(app->temp_text_buffer);
 
-    // RESET FORZATO di tutte le altre view PRIMA
     popup_reset(app->popup);
     dialog_ex_reset(app->dialog_ex);
 
@@ -108,19 +108,16 @@ void miband_nfc_scene_diff_viewer_on_enter(void* context) {
         return;
     }
 
-    // 1. GENERA TUTTO IL TESTO PRIMA
     size_t total_blocks = mf_classic_get_total_block_num(app->mf_classic_data->type);
-    BlockDifference* differences = malloc(sizeof(BlockDifference) * total_blocks);
 
+    BlockDifference* differences = malloc(sizeof(BlockDifference) * total_blocks);
     if(!differences) {
-        FURI_LOG_E(TAG, "Alloc failed");
         scene_manager_previous_scene(app->scene_manager);
         return;
     }
 
     size_t diff_count = 0;
 
-    // Trova differenze
     for(size_t i = 0; i < total_blocks; i++) {
         if(i == 0 || mf_classic_is_sector_trailer(i)) continue;
 
@@ -136,7 +133,12 @@ void miband_nfc_scene_diff_viewer_on_enter(void* context) {
             }
         }
 
-        if(blocks_differ && diff_count < total_blocks) {
+        if(blocks_differ) {
+            if(diff_count >= total_blocks) {
+                FURI_LOG_E(TAG, "Diff count overflow!");
+                break;
+            }
+
             differences[diff_count].block_index = i;
             differences[diff_count].diff_count = diff_bytes;
             memcpy(differences[diff_count].expected, app->mf_classic_data->block[i].data, 16);
@@ -146,9 +148,6 @@ void miband_nfc_scene_diff_viewer_on_enter(void* context) {
         }
     }
 
-    FURI_LOG_I(TAG, "Found %zu differences", diff_count);
-
-    // 2. GENERA IL REPORT COMPLETO
     FuriString* report = generate_difference_report(app, differences, diff_count);
     free(differences);
 
@@ -157,30 +156,14 @@ void miband_nfc_scene_diff_viewer_on_enter(void* context) {
         return;
     }
 
-    if(app->diff_viewer_text) {
-        free(app->diff_viewer_text);
-    }
-
-    app->diff_viewer_text = malloc(furi_string_size(report) + 1);
-    if(!app->diff_viewer_text) {
-        furi_string_free(report);
-        scene_manager_previous_scene(app->scene_manager);
-        return;
-    }
-
-    strcpy(app->diff_viewer_text, furi_string_get_cstr(report));
+    furi_string_set(app->temp_text_buffer, report);
     furi_string_free(report);
 
-    // DOPPIO RESET della text_box
     text_box_reset(app->text_box_report);
-    furi_delay_ms(10); // Dai tempo alla view
-    text_box_reset(app->text_box_report);
-
-    text_box_set_text(app->text_box_report, app->diff_viewer_text);
+    text_box_set_text(app->text_box_report, furi_string_get_cstr(app->temp_text_buffer));
     text_box_set_font(app->text_box_report, TextBoxFontText);
     text_box_set_focus(app->text_box_report, TextBoxFocusStart);
 
-    FURI_LOG_I(TAG, "Text set, switching view");
     view_dispatcher_switch_to_view(app->view_dispatcher, MiBandNfcViewIdUidReport);
 }
 

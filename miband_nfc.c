@@ -107,6 +107,7 @@ static MiBandNfcApp* miband_nfc_app_alloc() {
     }
     miband_logger_set_enabled(app->logger, app->enable_logging);
     miband_logger_log(app->logger, LogLevelInfo, "Application started");
+    app->temp_text_buffer = furi_string_alloc();
 
     return app;
 }
@@ -210,7 +211,9 @@ static void miband_nfc_app_free(MiBandNfcApp* app) {
         miband_logger_log(app->logger, LogLevelInfo, "Application closing");
         miband_logger_free(app->logger);
     }
-
+    if(app->temp_text_buffer) {
+        furi_string_free(app->temp_text_buffer);
+    }
     // Finally free app structure
     free(app);
 }
