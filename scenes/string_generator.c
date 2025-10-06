@@ -374,6 +374,11 @@ bool fire_string_scene_on_event_string_generator(void* context, SceneManagerEven
                 }
             }
             build_string_generator_widget(app);
+            if(app->settings->str_len == get_str_len(app)) {
+                furi_hal_vibro_on(true);
+                furi_delay_ms(30);
+                furi_hal_vibro_on(false);
+            }
         }
         break;
     }
