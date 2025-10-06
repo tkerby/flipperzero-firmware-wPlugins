@@ -10,7 +10,6 @@ static int32_t usb_worker(void* context) {
 
     if(furi_hal_usb_is_locked()) {
         app->hid->usb_if_prev = NULL;
-        // Do something
     } else {
         app->hid->usb_if_prev = furi_hal_usb_get_config();
         furi_check(furi_hal_usb_set_config(NULL, NULL));

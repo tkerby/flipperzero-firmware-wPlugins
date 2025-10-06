@@ -10,6 +10,7 @@
 #include <gui/modules/text_box.h>
 #include <gui/modules/variable_item_list.h>
 #include <gui/modules/text_input.h>
+#include <storage/storage.h>
 #include <dialogs/dialogs.h>
 #include <gui/modules/loading.h>
 #include <infrared.h>
@@ -25,6 +26,7 @@
 #define DEFAULT_PATH        APP_DATA_PATH()
 #define FILE_EXT            ".rnd"
 #define TEXT_INPUT_BUF_SIZE 24
+#define DICT_FILE           "eff_short_wordlist_1_alpha.txt"
 
 // scene index
 typedef enum {
@@ -37,6 +39,7 @@ typedef enum {
     FireStringScene_LoadString,
     FireStringScene_SaveString,
     FireStringScene_About,
+    FireStringScene_Loading_Word_List,
     FireStringScene_count
 } FireStringScene;
 
@@ -63,12 +66,12 @@ typedef enum {
 
 typedef enum {
     StrType_AlphaNumSymb,
+    StrType_Passphrase,
     StrType_AlphaNum,
     StrType_Alpha,
     StrType_Symb,
     StrType_Num,
     StrType_Bin,
-    // StrType_Passphrase,  // TODO - randomly pull from words_alpha.txt
 } StrType;
 
 // app settings
@@ -84,7 +87,8 @@ typedef struct {
     BadUsbHidInterface interface;
     FuriHalUsbInterface* usb_if_prev;
     uint16_t layout[128];
-    char* char_list;
+    char* char_list; // TODO: convert to FuriString*
+    FuriString** word_list;
 } FireStringHID;
 
 // app context

@@ -14,5 +14,6 @@ App(
     fap_author="Ryan Aboueljoud",
     fap_weburl="https://github.com/RyanAboueljoud/Fire-String",
     fap_icon_assets="images",  # Image assets to compile for this application
+    fap_file_assets="files",
     fap_libs=["ble_profile"],  # Includes firmware assets linking
 )
