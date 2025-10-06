@@ -1,13 +1,15 @@
 ;***************************************************************
-; Atari 2600: Solid blue + 16x8 fish sprite
-; Sprite moves up with joystick fire button
+; Atari 2600: Fish sprite with Flappy-Bird style movement
+; Solid blue background
+; Fish moves down automatically, moves up when fire pressed
+; Resets if it touches top or bottom
 ;***************************************************************
 
     PROCESSOR 6502
     INCLUDE "vcs.h"
 
 ;---------------------------------------------------------------
-; NTSC timing
+; Constants
 ;---------------------------------------------------------------
 BLUE           = $84
 GREY           = $0A
@@ -17,6 +19,8 @@ OVERSCAN_LINES = 33
 MIN_Y          = 10
 MAX_Y          = 180
 SPRITE_HEIGHT  = 8
+START_Y        = 90
+START_X        = 00
 
 ;---------------------------------------------------------------
 ; Zero page
@@ -28,8 +32,8 @@ Scanline  ds 1      ; current scanline in visible area
 RowIndex  ds 1      ; index into sprite arrays
 
 ;---------------------------------------------------------------
-; Sprite data (16x8 fish)
-; Left 8 pixels -> GRP0, Right 8 pixels -> GRP1
+; Fish sprite data (16x8)
+; Replace these with your Pillow-generated GRP0/GRP1
 ;---------------------------------------------------------------
     SEG CODE
     ORG $F000
@@ -54,6 +58,7 @@ GRP1_DATA:
     .BYTE %00110000
     .BYTE %11000000
 
+
 ;---------------------------------------------------------------
 RESET:
     SEI
@@ -77,10 +82,10 @@ ClrRAM:
     STA COLUP1
 
     ; Init sprite vertical position
-    LDA #50
+    LDA #START_Y
     STA PlayerY
 
-    ; Horizontal position
+    ; Horizontal position (fixed)
     LDA #50
     STA RESP0
     STA RESP1
@@ -103,16 +108,35 @@ MainLoop:
     LDA #2
     STA VBLANK
 
-    ; --- Input ---
+    ; --- Flappy movement ---
     LDA INPT4
-    BMI NoPress
+    BMI MoveUp
+    ; Fire not pressed: move down by 1
     LDA PlayerY
-    CMP #MIN_Y
-    BEQ NoPress
-    SEC
+    CLC
     SBC #1
+    CMP #MAX_Y
+    BCC StoreY
+    ; If exceeded bottom, reset
+    LDA #START_Y
     STA PlayerY
-NoPress:
+    JMP SkipMove
+
+MoveUp:
+    LDA PlayerY
+    SEC
+    ADC #2
+    CMP #MIN_Y
+    BCC ResetTop
+StoreY:
+    STA PlayerY
+    JMP SkipMove
+
+ResetTop:
+    LDA #START_Y
+    STA PlayerY
+
+SkipMove:
 
     LDY #VBLANK_LINES
 VBLoop:
@@ -124,7 +148,7 @@ VBLoop:
 ; Visible area (192 lines)
 ;-----------------------
     LDA #0
-    STA VBLANK      ; beam ON
+    STA VBLANK
     LDA #0
     STA Scanline
 
