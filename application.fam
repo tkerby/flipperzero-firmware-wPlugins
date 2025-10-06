@@ -1,8 +1,0 @@
-App(
-    appid="happy_fish",
-    apptype=FlipperAppType.EXTERNAL,
-    entry_point="main",
-    fap_description="flappy bird rogue-like",
-    fap_author="Invizabel",
-    fap_weburl="https://github.com/Invizabel/happy-dolphin",
-)
