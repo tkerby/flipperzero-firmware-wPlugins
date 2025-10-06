@@ -1,0 +1,8 @@
+App(
+    appid="fish",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="main",
+    fap_description="flappy bird rogue-like but as a fish",
+    fap_author="Invizabel",
+    fap_weburl="https://github.com/Invizabel/fish",
+)
