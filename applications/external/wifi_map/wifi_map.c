@@ -12,7 +12,6 @@
 #include <expansion/expansion.h>
 
 #define TAG                "WIFI_MAP"
-#define FILE_NAME          "wifi_map_data.csv"
 #define MAX_AP_LIST        20
 #define WORKER_EVENTS_MASK (WorkerEventStop | WorkerEventRx)
 #define BAUD_RATE          115200
@@ -63,9 +62,24 @@ static File* open_file() {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* file = storage_file_alloc(storage);
 
-    if(!storage_file_open(file, APP_DATA_PATH(FILE_NAME), FSAM_WRITE, FSOM_OPEN_APPEND)) {
+    DateTime rtc = {0};
+    furi_hal_rtc_get_datetime(&rtc);
+    FuriString* flnm = furi_string_alloc();
+    furi_string_printf(
+        flnm,
+        "/data/wifi_map_%d-%d-%d_%d_%d_%d.csv",
+        rtc.day,
+        rtc.month,
+        rtc.year,
+        rtc.hour,
+        rtc.minute,
+        rtc.second);
+    const char* filename = furi_string_get_cstr(flnm);
+
+    if(!storage_file_open(file, filename, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
         FURI_LOG_E(TAG, "Failed to open file");
     }
+    furi_string_free(flnm);
     return file;
 }
 
@@ -328,23 +342,13 @@ int32_t wifi_map_app(void* p) {
 
     FURI_LOG_I(TAG, "wifi_map_app starting...");
     WiFiMapApp* app = wifi_map_app_alloc();
-    DateTime rtc = {0};
-    furi_hal_rtc_get_datetime(&rtc);
-    FuriString* datetime = furi_string_alloc();
-    furi_string_printf(
-        datetime,
-        "##### %d-%d-%d_%d:%d:%d #####\n",
-        rtc.day,
-        rtc.month,
-        rtc.year,
-        rtc.hour,
-        rtc.minute,
-        rtc.second);
-    if(!storage_file_write(app->file, furi_string_get_cstr(datetime), furi_string_size(datetime))) {
+
+    char* headers = "AP hash;Distance (meters);AP auth mode;Time from start (seconds)\n";
+
+    if(!storage_file_write(app->file, headers, (uint16_t)strlen(headers))) {
         FURI_LOG_E(TAG, "Failed to write to file");
     }
     view_dispatcher_run(app->view_dispatcher);
-    furi_string_free(datetime);
     wifi_map_app_free(app);
     // Return previous state of expansion
     expansion_enable(expansion);
