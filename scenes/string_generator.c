@@ -113,78 +113,6 @@ void get_char_list(FireString* app) {
     furi_string_free(list);
 }
 
-static int32_t get_word_list(void* context) {
-    FURI_LOG_T(TAG, "get_word_list");
-    furi_check(context);
-
-    FireString* app = context;
-
-    // TODO: exec this function on a dedicated thread
-    view_dispatcher_switch_to_view(app->view_dispatcher, FireStringView_Loading);
-
-    File* word_file = storage_file_alloc(furi_record_open(RECORD_STORAGE));
-    FuriString* word_buffer = furi_string_alloc();
-    size_t word_count = 0;
-    size_t buf_size = 0;
-
-    // Open wordlist file
-    if(storage_file_open( // TODO: add proper error handling
-           word_file,
-           APP_ASSETS_PATH(DICT_FILE),
-           FSAM_READ,
-           FSOM_OPEN_EXISTING)) {
-        buf_size = storage_file_size(word_file);
-        if(buf_size > memmgr_get_free_heap()) { // Check if memory is available to read file
-            FURI_LOG_E(TAG, "File too large");
-        } else { // read file and build string
-            uint8_t* file_buf = malloc(sizeof(char) * buf_size + 1);
-            size_t read_count = storage_file_read(word_file, file_buf, buf_size);
-
-            size_t i = 0;
-            while(i < read_count) { // Get word count for word_list malloc
-                if(file_buf[i] == '\n') {
-                    word_count++;
-                }
-                i++;
-            }
-
-            // malloc word_list using word_count
-            app->hid->word_list = (FuriString**)malloc(sizeof(FuriString*) * word_count);
-            if(app->hid->word_list == NULL) { // TODO: proper error handling
-                FURI_LOG_E(TAG, "Failed to allocate word list");
-            }
-
-            i = 0;
-            size_t j = 0;
-            while(i < read_count) {
-                if(file_buf[i] == '\n' && read_count > 0) {
-                    app->hid->word_list[j] = furi_string_alloc_set(word_buffer);
-                    furi_string_reset(word_buffer);
-                    j++;
-                } else {
-                    furi_string_push_back(word_buffer, file_buf[i]);
-                }
-                i++;
-            }
-            app->hid->word_list[j] = furi_string_alloc_set(word_buffer);
-            app->hid->word_list[j + 1] = furi_string_alloc();
-            free(file_buf);
-        }
-    } else {
-        FURI_LOG_E(TAG, "File open error");
-    }
-    storage_file_close(word_file);
-    free(word_file);
-    furi_record_close(RECORD_STORAGE);
-    if(word_buffer != NULL) {
-        furi_string_free(word_buffer);
-    }
-
-    view_dispatcher_switch_to_view(app->view_dispatcher, FireStringView_Widget);
-
-    return 0;
-}
-
 uint32_t get_dict_len(FireString* app) {
     size_t dict_len = 0;
     if(app->settings->str_type == StrType_Passphrase) {
@@ -401,8 +329,7 @@ void fire_string_scene_on_enter_string_generator(void* context) {
     view_dispatcher_switch_to_view(app->view_dispatcher, FireStringView_Widget);
 
     if(app->settings->str_type == StrType_Passphrase && app->hid->word_list == NULL) {
-        get_word_list(app);
-        // scene_manager_next_scene(app->scene_manager, FireStringScene_Loading_Word_List);
+        scene_manager_next_scene(app->scene_manager, FireStringScene_Loading_Word_List);
     }
     if(app->settings->str_type != StrType_Passphrase) {
         get_char_list(app);
@@ -463,7 +390,6 @@ void fire_string_scene_on_exit_string_generator(void* context) {
         infrared_rx_stop(app);
     }
     if(app->settings->str_type == StrType_Passphrase && app->hid->word_list != NULL) { // Phrase
-        view_dispatcher_switch_to_view(app->view_dispatcher, FireStringView_Loading);
         uint32_t i = 0;
         while(app->hid->word_list[i] != NULL && !furi_string_empty(app->hid->word_list[i])) {
             furi_string_free(app->hid->word_list[i]);

@@ -1,5 +1,4 @@
 #include "../fire_string.h"
-#include "storage/storage.h"
 
 void text_input_callback(void* context) {
     FURI_LOG_T(TAG, "text_input_callback");
@@ -24,7 +23,7 @@ void text_input_callback(void* context) {
         dialog_message_show_storage_error(dialogs, "File Exists");
     } else {
         if(!storage_file_write(
-               file, furi_string_get_cstr(app->fire_string), app->settings->str_len + 1)) {
+               file, furi_string_get_cstr(app->fire_string), furi_string_size(app->fire_string))) {
             FURI_LOG_E(TAG, "Failed to write to file");
             dialog_message_show_storage_error(dialogs, "Failed to write to file");
 
