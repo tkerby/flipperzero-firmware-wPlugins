@@ -87,7 +87,7 @@ typedef struct {
     BadUsbHidInterface interface;
     FuriHalUsbInterface* usb_if_prev;
     uint16_t layout[128];
-    char* char_list;
+    char* char_list; // TODO: convert to FuriString*
     FuriString** word_list;
 } FireStringHID;
 

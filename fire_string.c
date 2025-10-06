@@ -178,6 +178,17 @@ void fire_string_free(FireString* app) {
     loading_free(app->loading);
     furi_string_free(app->fire_string);
     text_input_free(app->text_input);
+
+    if(app->hid->word_list != NULL) {
+        uint32_t i = 0;
+        while(app->hid->word_list[i] != NULL && !furi_string_empty(app->hid->word_list[i])) {
+            furi_string_free(app->hid->word_list[i]);
+            i++;
+        }
+        free(app->hid->word_list);
+        app->hid->word_list = NULL;
+    }
+
     free(app->settings);
     free(app->hid);
     free(app);
