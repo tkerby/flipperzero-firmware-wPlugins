@@ -1,64 +1,39 @@
-;***************************************************************
-; Atari 2600: Fish sprite with Flappy-Bird style movement
-; Solid blue background
-; Fish moves down automatically, moves up when fire pressed
-; Resets if it touches top or bottom
-;***************************************************************
-
     PROCESSOR 6502
     INCLUDE "vcs.h"
 
-;---------------------------------------------------------------
 ; Constants
-;---------------------------------------------------------------
 BLUE           = $84
 GREY           = $0A
 VBLANK_LINES   = 37
 VISIBLE_LINES  = 192
 OVERSCAN_LINES = 33
 MIN_Y          = 10
-MAX_Y          = 180
-SPRITE_HEIGHT  = 8
+MAX_Y          = 182
+PLAYER_HEIGHT  = 8
 START_Y        = 90
 
-;---------------------------------------------------------------
-; Zero page
-;---------------------------------------------------------------
+; Zero Page
     SEG.U VARS
     ORG $80
-PlayerY   ds 1      ; vertical position of sprite
+PlayerY   ds 1      ; vertical position of player
 Scanline  ds 1      ; current scanline in visible area
-RowIndex  ds 1      ; index into sprite arrays
+RowIndex  ds 1      ; index into player arrays
 
-;---------------------------------------------------------------
-; Fish sprite data (16x8)
-; Replace these with your Pillow-generated GRP0/GRP1
-;---------------------------------------------------------------
+;player sprite registers
     SEG CODE
     ORG $F000
 
+; player sprite data/coordinates
 GRP0_DATA:
     .BYTE %00000000
-    .BYTE %11000011
-    .BYTE %10101100
-    .BYTE %10010000
-    .BYTE %10010000
-    .BYTE %10101100
-    .BYTE %11000011
+    .BYTE %00001100
+    .BYTE %11010010
+    .BYTE %10100001
+    .BYTE %10100001
+    .BYTE %11010010
+    .BYTE %00001100
     .BYTE %00000000
 
-GRP1_DATA:
-    .BYTE %11000000
-    .BYTE %00110000
-    .BYTE %00001100
-    .BYTE %00000010
-    .BYTE %00000010
-    .BYTE %00001100
-    .BYTE %00110000
-    .BYTE %11000000
-
-
-;---------------------------------------------------------------
 RESET:
     SEI
     CLD
@@ -80,7 +55,7 @@ ClrRAM:
     STA COLUP0
     STA COLUP1
 
-    ; Init sprite vertical position
+    ; Init player vertical position
     LDA #START_Y
     STA PlayerY
 
@@ -90,9 +65,7 @@ ClrRAM:
     STA RESP1
 
 MainLoop:
-;-----------------------
-; VSYNC (3 lines)
-;-----------------------
+; VSYNC
     LDA #2
     STA VSYNC
     STA WSYNC
@@ -101,18 +74,16 @@ MainLoop:
     LDA #0
     STA VSYNC
 
-;-----------------------
-; VBLANK (37 lines)
-;-----------------------
+; VBLANK
     LDA #2
     STA VBLANK
 
-    ; --- Flappy movement ---
+    ; Movement
     LDA INPT4
     BMI MoveUp
     ; Fire not pressed: move down by 1
     LDA PlayerY
-    CLC
+    SEC
     SBC #1
     CMP #MAX_Y
     BCC StoreY
@@ -127,6 +98,7 @@ MoveUp:
     ADC #2
     CMP #MIN_Y
     BCC ResetTop
+    
 StoreY:
     STA PlayerY
     JMP SkipMove
@@ -136,16 +108,14 @@ ResetTop:
     STA PlayerY
 
 SkipMove:
-
     LDY #VBLANK_LINES
+    
 VBLoop:
     STA WSYNC
     DEY
     BNE VBLoop
 
-;-----------------------
-; Visible area (192 lines)
-;-----------------------
+; Visible Area
     LDA #0
     STA VBLANK
     LDA #0
@@ -158,35 +128,34 @@ VisibleLoop:
     SBC PlayerY
     STA RowIndex
 
-    ; Only draw sprite if RowIndex < SPRITE_HEIGHT
+    ; Only draw player if RowIndex < PLAYER_HEIGHT
     LDA RowIndex
-    CMP #SPRITE_HEIGHT
-    BCC DrawSprite
-SkipSprite:
+    CMP #PLAYER_HEIGHT
+    BCC DrawPlayer
+
+SkipPlayer:
     LDA #0
     STA GRP0
-    STA GRP1
-    JMP AfterSprite
-DrawSprite:
+    JMP AfterPlayer
+
+DrawPlayer:
     LDA RowIndex
     TAX
     LDA GRP0_DATA,X
     STA GRP0
-    LDA GRP1_DATA,X
-    STA GRP1
-AfterSprite:
+
+AfterPlayer:
     STA WSYNC
     INC Scanline
     LDA Scanline
     CMP #VISIBLE_LINES
     BNE VisibleLoop
 
-;-----------------------
-; Overscan (33 lines)
-;-----------------------
+; OVERSCAN
     LDA #2
     STA VBLANK
     LDY #OVERSCAN_LINES
+    
 OSLoop:
     STA WSYNC
     DEY
@@ -194,9 +163,7 @@ OSLoop:
 
     JMP MainLoop
 
-;---------------------------------------------------------------
 ; Vectors
-;---------------------------------------------------------------
     ORG $FFFA
     .WORD RESET
     .WORD RESET
