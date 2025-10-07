@@ -1,1 +1,1 @@
-![Atari2600]([https://github.com/[username]/[reponame]/blob/[branch]/image.jpg?raw=true](https://github.com/Invizabel/FISH/blob/main/Atari2600/screenshots/screenshot.png))
+![Atari2600](https://raw.githubusercontent.com/Invizabel/FISH/refs/heads/main/Atari2600/screenshots/screenshot.png)
