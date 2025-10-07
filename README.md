@@ -1,4 +1,4 @@
-````markdown
+
 # IR Transfer (Flipper Zero) — NEC Only
 
 File transfer over infrared between two Flipper Zero devices using the **NEC** protocol for both control and data.
@@ -40,7 +40,6 @@ mkdir -p applications_user
 cd applications_user
 git clone https://github.com/<your-username>/ir_transfer.git
 ```
-````
 
 ---
 
