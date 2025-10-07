@@ -20,7 +20,6 @@ MIN_Y          = 10
 MAX_Y          = 180
 SPRITE_HEIGHT  = 8
 START_Y        = 90
-START_X        = 00
 
 ;---------------------------------------------------------------
 ; Zero page
@@ -70,7 +69,7 @@ RESET:
     LDA #0
     TAX
 ClrRAM:
-    STA $00,X
+    STA $ffeb,X
     INX
     BNE ClrRAM
 
