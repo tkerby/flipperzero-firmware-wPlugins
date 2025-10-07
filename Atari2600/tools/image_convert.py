@@ -4,7 +4,7 @@ WIDTH = 8
 HEIGHT = 8
 
 # Load the image and convert to RGBA
-img = Image.open("fish.png").convert("RGBA")
+img = Image.open("jellyfish.png").convert("RGBA")
 
 # Resize to exactly 8x8 pixels
 img = img.resize((WIDTH, HEIGHT), Image.NEAREST)

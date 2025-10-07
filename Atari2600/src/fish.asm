@@ -1,3 +1,4 @@
+
     PROCESSOR 6502
     INCLUDE "vcs.h"
 
@@ -9,21 +10,21 @@ VISIBLE_LINES  = 192
 OVERSCAN_LINES = 33
 MIN_Y          = 10
 MAX_Y          = 182
-PLAYER_HEIGHT  = 8
+SPRITE_HEIGHT  = 8
 START_Y        = 90
 
 ; Zero Page
     SEG.U VARS
     ORG $80
-PlayerY   ds 1      ; vertical position of player
+SpriteY   ds 1      ; vertical position of player
 Scanline  ds 1      ; current scanline in visible area
 RowIndex  ds 1      ; index into player arrays
 
-;player sprite registers
+;player player registers
     SEG CODE
     ORG $F000
 
-; player sprite data/coordinates
+; player player data/coordinates
 GRP0_DATA:
     .BYTE %00000000
     .BYTE %00001100
@@ -33,6 +34,16 @@ GRP0_DATA:
     .BYTE %11010010
     .BYTE %00001100
     .BYTE %00000000
+
+GRP1_DATA:
+    .BYTE %01111110
+    .BYTE %10000001
+    .BYTE %10000001
+    .BYTE %01111110
+    .BYTE %01001010
+    .BYTE %00101001
+    .BYTE %10100100
+    .BYTE %01000000
 
 RESET:
     SEI
@@ -57,7 +68,7 @@ ClrRAM:
 
     ; Init player vertical position
     LDA #START_Y
-    STA PlayerY
+    STA SpriteY
 
     ; Horizontal position (fixed)
     LDA #50
@@ -82,30 +93,30 @@ MainLoop:
     LDA INPT4
     BMI MoveUp
     ; Fire not pressed: move down by 1
-    LDA PlayerY
+    LDA SpriteY
     SEC
     SBC #2
     CMP #MAX_Y
     BCC StoreY
     ; If exceeded bottom, reset
     LDA #START_Y
-    STA PlayerY
+    STA SpriteY
     JMP SkipMove
 
 MoveUp:
-    LDA PlayerY
+    LDA SpriteY
     SEC
     ADC #1
     CMP #MIN_Y
     BCC ResetTop
     
 StoreY:
-    STA PlayerY
+    STA SpriteY
     JMP SkipMove
 
 ResetTop:
     LDA #START_Y
-    STA PlayerY
+    STA SpriteY
 
 SkipMove:
     LDY #VBLANK_LINES
@@ -122,29 +133,32 @@ VBLoop:
     STA Scanline
 
 VisibleLoop:
-    ; Compute row index = Scanline - PlayerY
+    ; Compute row index = Scanline - SpriteY
     LDA Scanline
     SEC
-    SBC PlayerY
+    SBC SpriteY
     STA RowIndex
 
-    ; Only draw player if RowIndex < PLAYER_HEIGHT
+    ; Only draw player if RowIndex < SPRITE_HEIGHT
     LDA RowIndex
-    CMP #PLAYER_HEIGHT
-    BCC DrawPlayer
+    CMP #SPRITE_HEIGHT
+    BCC DrawSprite
 
-SkipPlayer:
+SkipSprite:
     LDA #0
     STA GRP0
-    JMP AfterPlayer
+    STA GRP1
+    JMP AfterSprite
 
-DrawPlayer:
+DrawSprite:
     LDA RowIndex
     TAX
     LDA GRP0_DATA,X
     STA GRP0
+    LDA GRP1_DATA,X
+    STA GRP1
 
-AfterPlayer:
+AfterSprite:
     STA WSYNC
     INC Scanline
     LDA Scanline
