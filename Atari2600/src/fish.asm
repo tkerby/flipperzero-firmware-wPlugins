@@ -3,8 +3,9 @@
     INCLUDE "vcs.h"
 
 ; Constants
-BLUE           = $84
-GREY           = $0A
+BLUE           = $9E
+ORANGE         = $2A
+PINK           = $5C
 VBLANK_LINES   = 37
 VISIBLE_LINES  = 192
 OVERSCAN_LINES = 33
@@ -28,17 +29,17 @@ RowIndex  ds 1      ; index into player arrays
 GRP0_DATA:
     .BYTE %00000000
     .BYTE %00001100
-    .BYTE %11010010
-    .BYTE %10100001
-    .BYTE %10100001
-    .BYTE %11010010
+    .BYTE %11011110
+    .BYTE %11111111
+    .BYTE %11111111
+    .BYTE %11011110
     .BYTE %00001100
     .BYTE %00000000
 
 GRP1_DATA:
     .BYTE %01111110
-    .BYTE %10000001
-    .BYTE %10000001
+    .BYTE %11111111
+    .BYTE %11111111
     .BYTE %01111110
     .BYTE %01001010
     .BYTE %00101001
@@ -62,8 +63,9 @@ ClrRAM:
     ; Init colors
     LDA #BLUE
     STA COLUBK
-    LDA #GREY
+    LDA #ORANGE
     STA COLUP0
+    LDA #PINK
     STA COLUP1
 
     ; Init player vertical position
