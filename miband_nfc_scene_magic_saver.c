@@ -100,7 +100,13 @@ void miband_nfc_scene_magic_saver_on_enter(void* context) {
         scene_manager_previous_scene(app->scene_manager);
         return;
     }
-
+    if(app->logger) {
+        miband_logger_log(
+            app->logger,
+            LogLevelInfo,
+            "Magic dump conversion started for: %s",
+            furi_string_get_cstr(app->file_path));
+    }
     popup_reset(app->popup);
     popup_set_header(app->popup, "Saving Magic Dump", 64, 4, AlignCenter, AlignTop);
     popup_set_text(app->popup, "Preparing...", 64, 22, AlignCenter, AlignTop);
@@ -113,6 +119,9 @@ void miband_nfc_scene_magic_saver_on_enter(void* context) {
     popup_reset(app->popup);
 
     if(save_success) {
+        if(app->logger) {
+            miband_logger_log(app->logger, LogLevelInfo, "Magic dump saved with _magic suffix");
+        }
         notification_message(app->notifications, &sequence_success);
         popup_set_header(app->popup, "Success!", 64, 4, AlignCenter, AlignTop);
         popup_set_text(
@@ -120,6 +129,9 @@ void miband_nfc_scene_magic_saver_on_enter(void* context) {
         popup_set_icon(app->popup, 32, 28, &I_DolphinSuccess_91x55);
         furi_delay_ms(2000);
     } else {
+        if(app->logger) {
+            miband_logger_log(app->logger, LogLevelError, "Failed to save magic dump");
+        }
         notification_message(app->notifications, &sequence_error);
         popup_set_header(app->popup, "Failed", 64, 4, AlignCenter, AlignTop);
         popup_set_text(app->popup, "Could not save file", 64, 22, AlignCenter, AlignTop);

@@ -25,8 +25,16 @@ void miband_nfc_scene_file_select_on_enter(void* context) {
     browser_options.skip_assets = false;
 
     if(!dialog_file_browser_show(app->dialogs, app->file_path, app->file_path, &browser_options)) {
+        if(app->logger) {
+            miband_logger_log(app->logger, LogLevelInfo, "File selection cancelled by user");
+        }
         scene_manager_previous_scene(app->scene_manager);
         return;
+    }
+
+    if(app->logger) {
+        miband_logger_log(
+            app->logger, LogLevelInfo, "File selected: %s", furi_string_get_cstr(app->file_path));
     }
 
     FURI_LOG_D(TAG, "File selected: %s", furi_string_get_cstr(app->file_path));
@@ -44,7 +52,9 @@ void miband_nfc_scene_file_select_on_enter(void* context) {
         if(nfc_device_get_protocol(app->nfc_device) == NfcProtocolMfClassic) {
             const MfClassicData* loaded_data =
                 nfc_device_get_data(app->nfc_device, NfcProtocolMfClassic);
-
+            if(app->logger) {
+                miband_logger_log(app->logger, LogLevelInfo, "MfClassic file loaded successfully");
+            }
             if(loaded_data == NULL) {
                 FURI_LOG_E(TAG, "Failed to get MfClassic data from loaded file");
                 popup_set_text(app->popup, "Invalid data", 64, 30, AlignCenter, AlignTop);
@@ -82,12 +92,22 @@ void miband_nfc_scene_file_select_on_enter(void* context) {
             }
         } else {
             FURI_LOG_W(TAG, "File is not Mifare Classic protocol.");
+            if(app->logger) {
+                miband_logger_log(app->logger, LogLevelWarning, "File is not MfClassic protocol");
+            }
             popup_set_text(app->popup, "Not MF Classic", 64, 30, AlignCenter, AlignTop);
             furi_delay_ms(1000);
             scene_manager_previous_scene(app->scene_manager);
         }
     } else {
         FURI_LOG_E(TAG, "Failed to load file: %s", furi_string_get_cstr(app->file_path));
+        if(app->logger) {
+            miband_logger_log(
+                app->logger,
+                LogLevelError,
+                "Failed to load file: %s",
+                furi_string_get_cstr(app->file_path));
+        }
         popup_set_text(app->popup, "Load failed", 64, 30, AlignCenter, AlignTop);
         furi_delay_ms(1000);
         scene_manager_previous_scene(app->scene_manager);

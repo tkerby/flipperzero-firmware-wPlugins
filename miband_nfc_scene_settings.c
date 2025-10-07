@@ -181,7 +181,13 @@ bool miband_nfc_scene_settings_on_event(void* context, SceneManagerEvent event) 
         case SettingsIndexAutoBackup:
             app->auto_backup_enabled = !app->auto_backup_enabled;
             miband_settings_save(app);
-
+            if(app->logger) {
+                miband_logger_log(
+                    app->logger,
+                    LogLevelInfo,
+                    "Auto backup %s",
+                    app->auto_backup_enabled ? "enabled" : "disabled");
+            }
             // Refresh scene
             miband_nfc_scene_settings_on_exit(app);
             miband_nfc_scene_settings_on_enter(app);
@@ -191,7 +197,13 @@ bool miband_nfc_scene_settings_on_event(void* context, SceneManagerEvent event) 
         case SettingsIndexVerifyAfterWrite:
             app->verify_after_write = !app->verify_after_write;
             miband_settings_save(app);
-
+            if(app->logger) {
+                miband_logger_log(
+                    app->logger,
+                    LogLevelInfo,
+                    "Verify after write %s",
+                    app->verify_after_write ? "enabled" : "disabled");
+            }
             // Refresh scene
             miband_nfc_scene_settings_on_exit(app);
             miband_nfc_scene_settings_on_enter(app);
@@ -210,6 +222,13 @@ bool miband_nfc_scene_settings_on_event(void* context, SceneManagerEvent event) 
 
         case SettingsIndexEnableLogging:
             app->enable_logging = !app->enable_logging;
+            if(app->logger) {
+                miband_logger_log(
+                    app->logger,
+                    LogLevelInfo,
+                    "Logging %s",
+                    app->enable_logging ? "enabled" : "disabled");
+            }
             miband_settings_save(app);
             miband_logger_set_enabled(app->logger, app->enable_logging);
             miband_nfc_scene_settings_on_exit(app);
@@ -230,7 +249,9 @@ bool miband_nfc_scene_settings_on_event(void* context, SceneManagerEvent event) 
                 dt.second);
 
             bool success = miband_logger_export(app->logger, furi_string_get_cstr(filename));
-
+            if(app->logger) {
+                miband_logger_log(app->logger, LogLevelInfo, "Log export requested");
+            }
             popup_reset(app->popup);
             popup_set_header(
                 app->popup, success ? "Success" : "Failed", 64, 4, AlignCenter, AlignTop);
@@ -252,6 +273,9 @@ bool miband_nfc_scene_settings_on_event(void* context, SceneManagerEvent event) 
         }
 
         case SettingsIndexClearLogs:
+            if(app->logger) {
+                miband_logger_log(app->logger, LogLevelInfo, "Log clear requested");
+            }
             miband_logger_clear(app->logger);
             miband_nfc_scene_settings_on_exit(app);
             miband_nfc_scene_settings_on_enter(app);

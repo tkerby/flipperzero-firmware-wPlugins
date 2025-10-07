@@ -212,13 +212,26 @@ static NfcCommand miband_nfc_magic_emulator_callback(NfcGenericEvent event, void
                 view_dispatcher_send_custom_event(
                     app->view_dispatcher, MiBandNfcCustomEventCardDetected);
             }
-
+            if(app->logger && emulation_stats && emulation_stats->auth_attempts % 10 == 0) {
+                miband_logger_log(
+                    app->logger,
+                    LogLevelDebug,
+                    "Magic emulation: %lu authentications completed",
+                    emulation_stats->auth_attempts);
+            }
             if(emulation_stats && emulation_stats->auth_attempts > 100) {
                 furi_string_set_str(
                     emulation_stats->status_message, "Too many auth attempts - stopping");
                 furi_string_set_str(emulation_stats->last_activity, "Safety stop triggered");
                 FURI_LOG_W(
                     TAG, "Too many auth attempts (%lu), stopping", emulation_stats->auth_attempts);
+                if(app->logger) {
+                    miband_logger_log(
+                        app->logger,
+                        LogLevelWarning,
+                        "Magic emulation stopped: too many auth attempts (%lu)",
+                        emulation_stats->auth_attempts);
+                }
                 return NfcCommandStop;
             }
         }
@@ -230,7 +243,9 @@ static NfcCommand miband_nfc_magic_emulator_callback(NfcGenericEvent event, void
 void miband_nfc_scene_magic_emulator_on_enter(void* context) {
     furi_assert(context);
     MiBandNfcApp* app = context;
-
+    if(app->logger) {
+        miband_logger_log(app->logger, LogLevelInfo, "Magic emulation started");
+    }
     if(!app->is_valid_nfc_data) {
         scene_manager_previous_scene(app->scene_manager);
         return;
@@ -246,7 +261,17 @@ void miband_nfc_scene_magic_emulator_on_enter(void* context) {
 
     notification_message(app->notifications, &sequence_blink_start_cyan);
     emulation_timer_callback(app);
-
+    if(app->logger) {
+        uint8_t* uid = app->mf_classic_data->block[0].data;
+        miband_logger_log(
+            app->logger,
+            LogLevelInfo,
+            "Magic template prepared with UID: %02X %02X %02X %02X",
+            uid[0],
+            uid[1],
+            uid[2],
+            uid[3]);
+    }
     FURI_LOG_I(TAG, "Started blank template emulation for Mi Band");
 }
 
@@ -290,7 +315,13 @@ void miband_nfc_scene_magic_emulator_on_exit(void* context) {
         nfc_listener_free(app->listener);
         app->listener = NULL;
     }
-
+    if(app->logger && emulation_stats) {
+        miband_logger_log(
+            app->logger,
+            LogLevelInfo,
+            "Magic emulation ended: %lu total authentications",
+            emulation_stats->auth_attempts);
+    }
     emulation_stats_free();
     notification_message(app->notifications, &sequence_blink_stop);
     popup_reset(app->popup);

@@ -143,7 +143,9 @@ static bool backup_read_all_data(MiBandNfcApp* app) {
 void miband_nfc_scene_backup_on_enter(void* context) {
     furi_assert(context);
     MiBandNfcApp* app = context;
-
+    if(app->logger) {
+        miband_logger_log(app->logger, LogLevelInfo, "Backup operation started");
+    }
     popup_reset(app->popup);
     popup_set_header(app->popup, "Creating Backup", 64, 4, AlignCenter, AlignTop);
     popup_set_text(
@@ -153,6 +155,9 @@ void miband_nfc_scene_backup_on_enter(void* context) {
     notification_message(app->notifications, &sequence_blink_start_cyan);
 
     if(!ensure_backup_directory(app->storage)) {
+        if(app->logger) {
+            miband_logger_log(app->logger, LogLevelError, "Cannot create backup directory");
+        }
         notification_message(app->notifications, &sequence_error);
         popup_set_header(app->popup, "Backup Failed", 64, 4, AlignCenter, AlignTop);
         popup_set_text(app->popup, "Cannot create\nbackup folder", 64, 22, AlignCenter, AlignTop);
@@ -177,6 +182,9 @@ void miband_nfc_scene_backup_on_enter(void* context) {
     }
 
     if(!backup_read_all_data(app)) {
+        if(app->logger) {
+            miband_logger_log(app->logger, LogLevelError, "Backup: cannot read all sectors");
+        }
         notification_message(app->notifications, &sequence_error);
         popup_set_header(app->popup, "Read Failed", 64, 4, AlignCenter, AlignTop);
         popup_set_text(app->popup, "Cannot read\nall sectors", 64, 22, AlignCenter, AlignTop);
@@ -207,6 +215,10 @@ void miband_nfc_scene_backup_on_enter(void* context) {
     popup_reset(app->popup);
 
     if(save_success) {
+        if(app->logger) {
+            miband_logger_log(
+                app->logger, LogLevelInfo, "Backup saved: %s", furi_string_get_cstr(backup_path));
+        }
         notification_message(app->notifications, &sequence_success);
         popup_set_header(app->popup, "Backup Created!", 64, 4, AlignCenter, AlignTop);
 
@@ -225,6 +237,9 @@ void miband_nfc_scene_backup_on_enter(void* context) {
         furi_string_free(msg);
         FURI_LOG_I(TAG, "Backup saved: %s", furi_string_get_cstr(backup_path));
     } else {
+        if(app->logger) {
+            miband_logger_log(app->logger, LogLevelError, "Failed to save backup file");
+        }
         notification_message(app->notifications, &sequence_error);
         popup_set_header(app->popup, "Save Failed", 64, 4, AlignCenter, AlignTop);
         popup_set_text(app->popup, "Cannot save\nbackup file", 64, 22, AlignCenter, AlignTop);

@@ -131,7 +131,10 @@ static bool miband_write_with_sync_approach(MiBandNfcApp* app) {
         return false;
     }
 
-    // NON usare popup_reset qui - è già stato fatto in on_enter
+    if(app->logger) {
+        miband_logger_log(app->logger, LogLevelInfo, "Starting sync write approach");
+    }
+
     popup_set_text(app->popup, "Detecting card state...", 64, 24, AlignCenter, AlignTop);
     furi_delay_ms(100);
 
@@ -362,6 +365,9 @@ static bool miband_write_with_sync_approach(MiBandNfcApp* app) {
         }
 
         if(has_magic_keys) {
+            if(app->logger) {
+                miband_logger_log(app->logger, LogLevelInfo, "Card has magic keys (0xFF)");
+            }
             memset(auth_key.data, 0xFF, sizeof(auth_key.data));
             error = mf_classic_poller_sync_auth(
                 app->nfc, first_block, &auth_key, MfClassicKeyTypeA, &auth_context);
@@ -372,7 +378,9 @@ static bool miband_write_with_sync_approach(MiBandNfcApp* app) {
                     app, sector, first_block, blocks_in_sector, &auth_key, MfClassicKeyTypeA);
             }
         }
-
+        if(app->logger) {
+            miband_logger_log(app->logger, LogLevelInfo, "Card has original keys");
+        }
         if(!sector_written) {
             if(mf_classic_is_key_found(app->mf_classic_data, sector, MfClassicKeyTypeA)) {
                 memcpy(auth_key.data, sec_tr->key_a.data, sizeof(auth_key.data));
@@ -436,11 +444,24 @@ static bool miband_write_with_sync_approach(MiBandNfcApp* app) {
 
         if(!sector_written) {
             FURI_LOG_E(TAG, "Sector %zu: ALL authentication methods FAILED", sector);
+            if(app->logger) {
+                miband_logger_log(
+                    app->logger,
+                    LogLevelError,
+                    "Failed to write sector %zu - all auth methods failed",
+                    sector);
+            }
             write_success = false;
             break;
         }
     }
-
+    if(app->logger) {
+        miband_logger_log(
+            app->logger,
+            write_success ? LogLevelInfo : LogLevelError,
+            "Write operation %s",
+            write_success ? "completed" : "failed");
+    }
     FURI_LOG_I(TAG, "Sync write completed: %s", write_success ? "SUCCESS" : "FAILED");
     return write_success;
 }
@@ -501,7 +522,13 @@ void miband_nfc_scene_writer_on_enter(void* context) {
         scene_manager_previous_scene(app->scene_manager);
         return;
     }
-
+    if(app->logger) {
+        miband_logger_log(
+            app->logger,
+            LogLevelInfo,
+            "Write operation started for: %s",
+            furi_string_get_cstr(app->file_path));
+    }
     popup_reset(app->popup);
 
     if(app->current_operation == OperationTypeWriteOriginal) {
@@ -559,11 +586,9 @@ bool miband_nfc_scene_writer_on_event(void* context, SceneManagerEvent event) {
             popup_set_text(app->popup, "Starting write...", 64, 18, AlignCenter, AlignTop);
             furi_delay_ms(500);
 
-            miband_logger_log(
-                app->logger,
-                LogLevelInfo,
-                "Write started: %s",
-                furi_string_get_cstr(app->file_path));
+            if(app->logger) {
+                miband_logger_log(app->logger, LogLevelInfo, "Card detected, starting write");
+            }
 
             notification_message(app->notifications, &sequence_blink_stop);
             notification_message(app->notifications, &sequence_blink_start_magenta);
@@ -574,6 +599,13 @@ bool miband_nfc_scene_writer_on_event(void* context, SceneManagerEvent event) {
             popup_reset(app->popup);
 
             if(write_result) {
+                if(app->logger) {
+                    miband_logger_log(
+                        app->logger,
+                        LogLevelInfo,
+                        "Write successful for: %s",
+                        furi_string_get_cstr(app->file_path));
+                }
                 notification_message(app->notifications, &sequence_success);
                 popup_set_header(app->popup, "Write Success!", 64, 4, AlignCenter, AlignTop);
                 popup_set_text(
@@ -590,6 +622,13 @@ bool miband_nfc_scene_writer_on_event(void* context, SceneManagerEvent event) {
                         app->scene_manager, MiBandNfcSceneMainMenu);
                 }
             } else {
+                if(app->logger) {
+                    miband_logger_log(
+                        app->logger,
+                        LogLevelError,
+                        "Write failed for: %s",
+                        furi_string_get_cstr(app->file_path));
+                }
                 notification_message(app->notifications, &sequence_error);
                 popup_set_header(app->popup, "Write Failed", 64, 4, AlignCenter, AlignTop);
                 popup_set_text(
@@ -610,6 +649,9 @@ bool miband_nfc_scene_writer_on_event(void* context, SceneManagerEvent event) {
             break;
 
         case MiBandNfcCustomEventWrongCard:
+            if(app->logger) {
+                miband_logger_log(app->logger, LogLevelWarning, "Wrong card type detected");
+            }
             if(app->scanner) {
                 nfc_scanner_stop(app->scanner);
                 nfc_scanner_free(app->scanner);

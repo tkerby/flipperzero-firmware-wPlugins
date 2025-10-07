@@ -27,15 +27,18 @@ static void verify_dialog_callback(DialogExResult result, void* context) {
     MiBandNfcApp* app = context;
 
     if(result == DialogExResultLeft) {
-        // Exit - torna al menu
+        // Exit o Back - torna al menu
         view_dispatcher_send_custom_event(app->view_dispatcher, MiBandNfcCustomEventVerifyExit);
     } else if(result == DialogExResultRight) {
         // View Details - vai al diff viewer
         view_dispatcher_send_custom_event(
             app->view_dispatcher, MiBandNfcCustomEventVerifyViewDetails);
     }
+    // AGGIUNGI: Gestisci anche center (se solo Back button)
+    else if(result == DialogExResultCenter) {
+        view_dispatcher_send_custom_event(app->view_dispatcher, MiBandNfcCustomEventVerifyExit);
+    }
 }
-
 /**
  * @brief Verification progress tracker
  * 
@@ -339,7 +342,7 @@ static bool miband_verify_read_card(MiBandNfcApp* app) {
 
         // CHIAMALO PIÙ SPESSO - ogni settore
         update_verify_ui(app, "Reading Mi Band");
-
+        popup_set_text(app->popup, "Read in progress...", 64, 20, AlignCenter, AlignTop);
         furi_delay_ms(50);
 
         uint8_t first_block = mf_classic_get_first_block_num_of_sector(sector);
@@ -355,6 +358,10 @@ static bool miband_verify_read_card(MiBandNfcApp* app) {
             furi_delay_ms(50);
         } else {
             verify_tracker.sectors_failed++;
+            if(app->logger) {
+                miband_logger_log(
+                    app->logger, LogLevelError, "Verify: failed to read sector %zu", sector);
+            }
             overall_success = false;
             furi_string_printf(verify_tracker.error_details, "Sector %zu failed", sector);
             FURI_LOG_E(TAG, "Failed to read sector %zu", sector);
@@ -429,7 +436,13 @@ void miband_nfc_scene_verify_on_enter(void* context) {
         scene_manager_previous_scene(app->scene_manager);
         return;
     }
-
+    if(app->logger) {
+        miband_logger_log(
+            app->logger,
+            LogLevelInfo,
+            "Verify operation started for: %s",
+            furi_string_get_cstr(app->file_path));
+    }
     verify_tracker_init();
     scene_manager_set_scene_state(
         app->scene_manager, MiBandNfcSceneVerify, MiBandNfcSceneVerifyStateCardSearch);
@@ -486,16 +499,127 @@ bool miband_nfc_scene_verify_on_event(void* context, SceneManagerEvent event) {
 
             if(!read_success) {
                 notification_message(app->notifications, &sequence_error);
-                furi_string_set_str(
-                    verify_tracker.error_details, "Cannot read Mi Band\nCheck keys or position");
-                update_verify_ui(app, "Read Failed");
-                furi_delay_ms(3000);
-                scene_manager_search_and_switch_to_another_scene(
-                    app->scene_manager, MiBandNfcSceneMainMenu);
+
+                // Leggi UID della card fisica
+                Iso14443_3aData card_iso_data = {0};
+                bool has_card_uid = false;
+
+                for(int attempt = 0; attempt < 3; attempt++) {
+                    if(iso14443_3a_poller_sync_read(app->nfc, &card_iso_data) ==
+                       Iso14443_3aErrorNone) {
+                        has_card_uid = true;
+                        break;
+                    }
+                    furi_delay_ms(100);
+                }
+
+                // LOG dettagliato
+                if(app->logger) {
+                    if(has_card_uid) {
+                        miband_logger_log(
+                            app->logger,
+                            LogLevelError,
+                            "Verify read failed - Card UID: %02X %02X %02X %02X",
+                            card_iso_data.uid[0],
+                            card_iso_data.uid[1],
+                            card_iso_data.uid[2],
+                            card_iso_data.uid[3]);
+                    } else {
+                        miband_logger_log(
+                            app->logger, LogLevelError, "Verify read failed - No card detected");
+                    }
+
+                    if(app->mf_classic_data) {
+                        uint8_t* file_uid = app->mf_classic_data->block[0].data;
+                        miband_logger_log(
+                            app->logger,
+                            LogLevelInfo,
+                            "Expected file UID: %02X %02X %02X %02X",
+                            file_uid[0],
+                            file_uid[1],
+                            file_uid[2],
+                            file_uid[3]);
+                    }
+                }
+
+                // RESET tutto
+                popup_reset(app->popup);
+                text_box_reset(app->text_box_report);
+                dialog_ex_reset(app->dialog_ex);
+
+                // Prepara messaggio
+                FuriString* error_msg = furi_string_alloc();
+                const char* header_text = "Verify Failed";
+
+                if(has_card_uid) {
+                    if(app->mf_classic_data) {
+                        uint8_t* file_uid = app->mf_classic_data->block[0].data;
+
+                        if(memcmp(card_iso_data.uid, file_uid, 4) != 0) {
+                            // WRONG CARD
+                            header_text = "Wrong Card!";
+                            furi_string_printf(
+                                error_msg,
+                                "Card UID: %02X %02X %02X %02X\n"
+                                "Expected: %02X %02X %02X %02X\n"
+                                "Use 'Quick UID Check' function",
+                                card_iso_data.uid[0],
+                                card_iso_data.uid[1],
+                                card_iso_data.uid[2],
+                                card_iso_data.uid[3],
+                                file_uid[0],
+                                file_uid[1],
+                                file_uid[2],
+                                file_uid[3]);
+
+                        } else {
+                            // UID OK but read failed
+                            furi_string_printf(
+                                error_msg,
+                                "Card UID OK:%02X %02X %02X %02X\n"
+                                "Cannot read data\nCheck keys",
+                                card_iso_data.uid[0],
+                                card_iso_data.uid[1],
+                                card_iso_data.uid[2],
+                                card_iso_data.uid[3]);
+                        }
+                    } else {
+                        furi_string_printf(
+                            error_msg,
+                            "Card UID:%02X %02X %02X %02X\n"
+                            "Cannot read data",
+                            card_iso_data.uid[0],
+                            card_iso_data.uid[1],
+                            card_iso_data.uid[2],
+                            card_iso_data.uid[3]);
+                    }
+                } else {
+                    header_text = "No Card";
+                    furi_string_set_str(error_msg, "Place card near\nFlipper Zero");
+                }
+
+                // USA DIALOG_EX
+                dialog_ex_set_header(app->dialog_ex, header_text, 64, 4, AlignCenter, AlignTop);
+                dialog_ex_set_text(
+                    app->dialog_ex,
+                    furi_string_get_cstr(error_msg),
+                    64,
+                    32,
+                    AlignCenter,
+                    AlignCenter);
+                dialog_ex_set_left_button_text(app->dialog_ex, "Back");
+                dialog_ex_set_icon(app->dialog_ex, 0, 0, NULL);
+                dialog_ex_set_result_callback(app->dialog_ex, verify_dialog_callback);
+                dialog_ex_set_context(app->dialog_ex, app);
+
+                view_dispatcher_switch_to_view(app->view_dispatcher, MiBandNfcViewIdDialog);
+
+                furi_string_free(error_msg);
+                notification_message(app->notifications, &sequence_blink_stop);
+                notification_message(app->notifications, &sequence_error);
                 consumed = true;
                 break;
             }
-
             furi_string_set_str(verify_tracker.current_operation, "Comparing data");
             update_verify_ui(app, "Comparing Data");
             furi_delay_ms(500);
@@ -553,11 +677,21 @@ bool miband_nfc_scene_verify_on_event(void* context, SceneManagerEvent event) {
                 scene_manager_search_and_switch_to_another_scene(
                     app->scene_manager, MiBandNfcSceneMainMenu);
 
+                if(app->logger) {
+                    miband_logger_log(
+                        app->logger, LogLevelInfo, "Verify successful: all blocks match");
+                }
             } else {
                 // DIFFERENCES FOUND
                 notification_message(app->notifications, &sequence_blink_stop);
                 notification_message(app->notifications, &sequence_error);
-
+                if(app->logger) {
+                    miband_logger_log(
+                        app->logger,
+                        LogLevelWarning,
+                        "Verify failed: %d blocks differ",
+                        different_blocks);
+                }
                 // RESET TUTTO PRIMA del dialog
                 popup_reset(app->popup);
                 text_box_reset(app->text_box_report);
@@ -585,7 +719,7 @@ bool miband_nfc_scene_verify_on_event(void* context, SceneManagerEvent event) {
             break;
 
         case MiBandNfcCustomEventVerifyExit:
-            // User sceglie Exit
+            // User sceglie Exit/Back
             scene_manager_search_and_switch_to_another_scene(
                 app->scene_manager, MiBandNfcSceneMainMenu);
             consumed = true;

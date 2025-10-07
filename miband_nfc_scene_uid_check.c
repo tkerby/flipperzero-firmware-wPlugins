@@ -35,6 +35,8 @@ typedef struct {
 
     // Thread control
     FuriThread* thread;
+
+    // CRITICAL: NO app pointer - causa crash nel worker thread!
 } UidCheckContext;
 
 // Global context (per comunicare con scene)
@@ -109,6 +111,7 @@ static bool dynamic_array_add(DynamicFileArray* arr, const char* filename, const
 static int32_t uid_check_worker_thread(void* context) {
     UidCheckContext* ctx = context;
 
+    // SAFE: Solo FURI_LOG nel worker, MAI app->logger
     FURI_LOG_I(TAG, "Worker started");
     FURI_LOG_I(
         TAG,
@@ -140,6 +143,7 @@ static int32_t uid_check_worker_thread(void* context) {
     // Prima passata: conta i file totali
     ctx->files_total = 0;
     while(storage_dir_read(dir, &file_info, name, sizeof(name))) {
+        if(ctx->scan_aborted) break;
         if(name[0] == '.') continue;
         if(file_info.flags & FSF_DIRECTORY) continue;
         size_t name_len = strlen(name);
@@ -265,11 +269,9 @@ static FuriString* generate_report(UidCheckContext* ctx) {
         furi_string_cat_str(report, "No matching files\n\n");
     } else {
         furi_string_cat_str(report, "Matching files:\n");
+        furi_string_cat_printf(report, "%zu file(s):\n\n", ctx->results->count);
         for(size_t i = 0; i < ctx->results->count; i++) {
-            const char* rel = strstr(ctx->results->files[i].path, "/nfc/");
-            const char* display = rel ? rel + 5 : ctx->results->files[i].filename;
-
-            furi_string_cat_printf(report, "%zu. %s\n", i + 1, display);
+            furi_string_cat_printf(report, "%zu. %s\n", i + 1, ctx->results->files[i].path);
         }
     }
 
@@ -284,6 +286,11 @@ void miband_nfc_scene_uid_check_on_enter(void* context) {
     MiBandNfcApp* app = context;
 
     FURI_LOG_I(TAG, "=== UID CHECK START ===");
+
+    // LOG: Inizio scena
+    if(app->logger) {
+        miband_logger_log(app->logger, LogLevelInfo, "UID Check scene started");
+    }
 
     furi_string_reset(app->temp_text_buffer);
     text_box_reset(app->text_box_report);
@@ -316,10 +323,27 @@ void miband_nfc_scene_uid_check_on_enter(void* context) {
     notification_message(app->notifications, &sequence_blink_stop);
 
     if(!read_ok) {
+        // LOG: Lettura fallita
+        if(app->logger) {
+            miband_logger_log(
+                app->logger, LogLevelError, "Failed to read card UID after 12 attempts");
+        }
         popup_set_text(app->popup, "Card not found", 64, 22, AlignCenter, AlignTop);
         furi_delay_ms(1500);
         scene_manager_previous_scene(app->scene_manager);
         return;
+    }
+
+    // LOG: UID letto
+    if(app->logger) {
+        miband_logger_log(
+            app->logger,
+            LogLevelInfo,
+            "UID read: %02X %02X %02X %02X",
+            iso_data.uid[0],
+            iso_data.uid[1],
+            iso_data.uid[2],
+            iso_data.uid[3]);
     }
 
     notification_message(app->notifications, &sequence_success);
@@ -327,6 +351,10 @@ void miband_nfc_scene_uid_check_on_enter(void* context) {
     // STEP 2: Setup context
     g_ctx = malloc(sizeof(UidCheckContext));
     if(!g_ctx) {
+        // LOG: Alloc fallita
+        if(app->logger) {
+            miband_logger_log(app->logger, LogLevelError, "Failed to allocate UID check context");
+        }
         popup_set_text(app->popup, "Memory error", 64, 22, AlignCenter, AlignTop);
         furi_delay_ms(1500);
         scene_manager_previous_scene(app->scene_manager);
@@ -335,6 +363,10 @@ void miband_nfc_scene_uid_check_on_enter(void* context) {
 
     g_ctx->results = dynamic_array_alloc();
     if(!g_ctx->results) {
+        // LOG: Alloc array fallita
+        if(app->logger) {
+            miband_logger_log(app->logger, LogLevelError, "Failed to allocate dynamic array");
+        }
         free(g_ctx);
         g_ctx = NULL;
         popup_set_text(app->popup, "Memory error", 64, 22, AlignCenter, AlignTop);
@@ -364,26 +396,51 @@ void miband_nfc_scene_uid_check_on_enter(void* context) {
 
     // STEP 4: Poll worker with UI updates
     uint32_t last_update = furi_get_tick();
+    uint32_t last_count = 0;
+
     while(!g_ctx->scan_complete) {
-        if(furi_get_tick() - last_update > 300) {
+        uint32_t now = furi_get_tick();
+
+        // Forza update se counter cambia O ogni 300ms
+        if((g_ctx->files_checked != last_count) || (now - last_update > 300)) {
             FuriString* msg = furi_string_alloc_printf(
                 "Scanning...\n\n%lu / %lu files\n%zu matches",
                 g_ctx->files_checked,
                 g_ctx->files_total > 0 ? g_ctx->files_total : g_ctx->files_checked,
                 g_ctx->results->count);
+
+            popup_reset(app->popup);
+            popup_set_header(app->popup, "UID Check", 64, 4, AlignCenter, AlignTop);
             popup_set_text(app->popup, furi_string_get_cstr(msg), 64, 18, AlignCenter, AlignTop);
             furi_string_free(msg);
-            last_update = furi_get_tick();
+
+            last_update = now;
+            last_count = g_ctx->files_checked;
         }
-        furi_delay_ms(100);
+
+        furi_delay_ms(50); // Ridotto da 100 a 50ms per UI più responsive
     }
 
     furi_thread_join(g_ctx->thread);
     furi_thread_free(g_ctx->thread);
 
+    // LOG: Scan completato
+    if(app->logger) {
+        miband_logger_log(
+            app->logger,
+            LogLevelInfo,
+            "UID Check complete: %lu files scanned, %zu matches found",
+            g_ctx->files_checked,
+            g_ctx->results->count);
+    }
+
     // STEP 5: Generate report
     FuriString* report = generate_report(g_ctx);
     if(!report) {
+        // LOG: Report fallito
+        if(app->logger) {
+            miband_logger_log(app->logger, LogLevelError, "Failed to generate report");
+        }
         dynamic_array_free(g_ctx->results);
         free(g_ctx);
         g_ctx = NULL;
