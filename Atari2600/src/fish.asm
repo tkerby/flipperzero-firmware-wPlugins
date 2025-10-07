@@ -84,7 +84,7 @@ MainLoop:
     ; Fire not pressed: move down by 1
     LDA PlayerY
     SEC
-    SBC #1
+    SBC #2
     CMP #MAX_Y
     BCC StoreY
     ; If exceeded bottom, reset
@@ -95,7 +95,7 @@ MainLoop:
 MoveUp:
     LDA PlayerY
     SEC
-    ADC #2
+    ADC #1
     CMP #MIN_Y
     BCC ResetTop
     
