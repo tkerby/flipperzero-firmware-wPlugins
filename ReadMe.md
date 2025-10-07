@@ -57,7 +57,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [T-Union Master (China) v0.1 (By SocialSisterYi)](https://github.com/SocialSisterYi/T-Union_Master)
 - Updated: [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader)
 - Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip)
-- Updated: [ESP32 WIFI Mapping v0.2 (By carvilsi)](https://github.com/carvilsi/flipper0-wifi-map) `Req: ESP32` & [ESP32 FW](https://github.com/carvilsi/esp32-wifi-map)
+- Updated: [ESP32 WIFI Mapping v0.2 (By carvilsi)](https://github.com/carvilsi/flipper0-wifi-map) `Req: ESP32`
+- Updated: [Chief Cooker v1.0 (By denr01)](https://github.com/denr01/FZ-ChiefCooker)
+- [ESP Flasher: Bump Marauder v1.8.8 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.8.8)
 
 <a name="release">
 
