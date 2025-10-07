@@ -73,7 +73,7 @@ void fire_string_scene_on_enter_step_two_menu(void* context) {
 
 /** main menu event handler - switches scene based on the event */
 bool fire_string_scene_on_event_step_two_menu(void* context, SceneManagerEvent event) {
-    FURI_LOG_T(TAG, "fire_string_scene_on_event_step_two_menu");
+    // FURI_LOG_T(TAG, "fire_string_scene_on_event_step_two_menu");
     furi_check(context);
 
     UNUSED(event);
