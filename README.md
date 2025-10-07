@@ -3,9 +3,6 @@
 
 File transfer over infrared between two Flipper Zero devices using the **NEC** protocol for both control and data.
 
-> This version is **NEC-only** (no RAW/Manchester).  
-> Data is sent **1 byte per NEC frame**, and a final **XOR checksum** validates integrity.
-
 ---
 
 ## ✨ Features
