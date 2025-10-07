@@ -32,10 +32,10 @@ File transfer over infrared between two Flipper Zero devices using the **NEC** p
 ## 🚀 Install
 
 ```bash
-cd <firmware-root>                    # e.g. ~/flipper/Momentum-Firmware_gemini
+cd <firmware-root>                    # e.g. ~/flipper/Momentum-Firmware
 mkdir -p applications_user
 cd applications_user
-git clone https://github.com/<your-username>/ir_transfer.git
+git clone https://github.com/WBP20/ir_transfer.git
 ```
 
 ---
