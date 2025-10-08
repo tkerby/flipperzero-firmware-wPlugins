@@ -423,10 +423,8 @@ static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
         bool suica_found = suica_model_pack_data(model, felica_data, parsed_data);
 
         do {
-            if(suica_found) {
-                furi_string_printf(parsed_data, "\e#Japan Transit IC\n");
-                break;
-            }
+            if(suica_found) break;
+
             bool octopus_found = suica_help_with_octopus(felica_data, parsed_data);
             if(octopus_found) break;
 

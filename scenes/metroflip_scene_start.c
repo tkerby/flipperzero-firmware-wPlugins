@@ -47,6 +47,7 @@ void metroflip_scene_start_on_enter(void* context) {
     submenu_set_selected_item(
         submenu, scene_manager_get_scene_state(app->scene_manager, MetroflipSceneStart));
 
+    notification_message(app->notifications, &sequence_display_backlight_on);
     view_dispatcher_switch_to_view(app->view_dispatcher, MetroflipViewSubmenu);
 }
 
