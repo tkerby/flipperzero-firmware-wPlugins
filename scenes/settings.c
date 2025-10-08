@@ -21,6 +21,7 @@ void str_type_change_callback(VariableItem* item) {
     uint8_t index = variable_item_get_current_value_index(item);
     variable_item_set_current_value_text(item, type_strings[index]);
     app->settings->str_type = index;
+    furi_string_reset(app->fire_string);
 }
 
 void str_len_change_callback(VariableItem* item) {
@@ -28,12 +29,14 @@ void str_len_change_callback(VariableItem* item) {
     uint8_t index = variable_item_get_current_value_index(item);
     variable_item_set_current_value_text(item, str_len[index]);
     app->settings->str_len = atoi(str_len[index]);
+    furi_string_reset(app->fire_string);
 }
 
 void use_ir_change_callback(VariableItem* item) {
     FireString* app = variable_item_get_context(item);
     app->settings->use_ir = !app->settings->use_ir;
     variable_item_set_current_value_text(item, use_ir_strings[(uint8_t)app->settings->use_ir]);
+    furi_string_reset(app->fire_string);
 }
 
 void settings_enter_callback(void* context, uint32_t index) {
