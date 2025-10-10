@@ -52,36 +52,38 @@ void nfc_playlist_load_settings(void* context) {
                 furi_string_trim(key);
                 furi_string_trim(value);
 
-                const char* k = furi_string_get_cstr(key);
-                const char* v = furi_string_get_cstr(value);
+                const char* key_str = furi_string_get_cstr(key);
+                const char* value_str = furi_string_get_cstr(value);
 
-                if(strcmp(k, "emulate_timeout") == 0) {
-                    int emulate_timeout = atoi(v);
+                if(strcmp(key_str, "emulate_timeout") == 0) {
+                    int emulate_timeout = atoi(value_str);
                     if(emulate_timeout < 0 ||
                        emulate_timeout >= (int)(sizeof(options_emulate_timeout) /
                                                 sizeof(options_emulate_timeout[0])))
                         continue;
                     nfc_playlist->worker_info.settings->emulate_timeout = emulate_timeout;
-                } else if(strcmp(k, "emulate_delay") == 0) {
-                    int emulate_delay = atoi(v);
+                } else if(strcmp(key_str, "emulate_delay") == 0) {
+                    int emulate_delay = atoi(value_str);
                     if(emulate_delay < 0 ||
                        emulate_delay >=
                            (int)(sizeof(options_emulate_delay) / sizeof(options_emulate_delay[0])))
                         continue;
                     nfc_playlist->worker_info.settings->emulate_delay = emulate_delay;
-                } else if(strcmp(k, "emulate_led_indicator") == 0) {
+                } else if(strcmp(key_str, "emulate_led_indicator") == 0) {
                     nfc_playlist->worker_info.settings->emulate_led_indicator =
-                        (strcasecmp(v, "true") == 0);
-                } else if(strcmp(k, "skip_error") == 0) {
-                    nfc_playlist->worker_info.settings->skip_error = (strcasecmp(v, "true") == 0);
-                } else if(strcmp(k, "loop") == 0) {
-                    nfc_playlist->worker_info.settings->loop = (strcasecmp(v, "true") == 0);
-                } else if(strcmp(k, "time_controls") == 0) {
+                        (strcasecmp(value_str, "true") == 0);
+                } else if(strcmp(key_str, "skip_error") == 0) {
+                    nfc_playlist->worker_info.settings->skip_error =
+                        (strcasecmp(value_str, "true") == 0);
+                } else if(strcmp(key_str, "loop") == 0) {
+                    nfc_playlist->worker_info.settings->loop =
+                        (strcasecmp(value_str, "true") == 0);
+                } else if(strcmp(key_str, "time_controls") == 0) {
                     nfc_playlist->worker_info.settings->time_controls =
-                        (strcasecmp(v, "true") == 0);
-                } else if(strcmp(k, "user_controls") == 0) {
+                        (strcasecmp(value_str, "true") == 0);
+                } else if(strcmp(key_str, "user_controls") == 0) {
                     nfc_playlist->worker_info.settings->user_controls =
-                        (strcasecmp(v, "true") == 0);
+                        (strcasecmp(value_str, "true") == 0);
                 }
             }
 
@@ -162,7 +164,7 @@ static NfcPlaylist* nfc_playlist_alloc() {
         file_browser_alloc(nfc_playlist->views.file_browser.output);
     nfc_playlist->views.variable_item_list = variable_item_list_alloc();
     nfc_playlist->views.text_input.view = text_input_alloc();
-    nfc_playlist->views.dialog = dialog_ex_alloc();
+    nfc_playlist->views.dialog_ex = dialog_ex_alloc();
 
     nfc_playlist->notification_app = furi_record_open(RECORD_NOTIFICATION);
 
@@ -210,9 +212,8 @@ static NfcPlaylist* nfc_playlist_alloc() {
         text_input_get_view(nfc_playlist->views.text_input.view));
     view_dispatcher_add_view(
         nfc_playlist->view_dispatcher,
-        NfcPlaylistView_Dialog,
-        dialog_ex_get_view(nfc_playlist->views.dialog));
-
+        NfcPlaylistView_DialogEx,
+        dialog_ex_get_view(nfc_playlist->views.dialog_ex));
     return nfc_playlist;
 }
 
@@ -224,7 +225,7 @@ static void nfc_playlist_free(NfcPlaylist* nfc_playlist) {
     view_dispatcher_remove_view(nfc_playlist->view_dispatcher, NfcPlaylistView_VariableItemList);
     view_dispatcher_remove_view(nfc_playlist->view_dispatcher, NfcPlaylistView_FileBrowser);
     view_dispatcher_remove_view(nfc_playlist->view_dispatcher, NfcPlaylistView_TextInput);
-    view_dispatcher_remove_view(nfc_playlist->view_dispatcher, NfcPlaylistView_Dialog);
+    view_dispatcher_remove_view(nfc_playlist->view_dispatcher, NfcPlaylistView_DialogEx);
 
     scene_manager_free(nfc_playlist->scene_manager);
     view_dispatcher_free(nfc_playlist->view_dispatcher);
@@ -235,7 +236,7 @@ static void nfc_playlist_free(NfcPlaylist* nfc_playlist) {
     file_browser_free(nfc_playlist->views.file_browser.view);
     variable_item_list_free(nfc_playlist->views.variable_item_list);
     text_input_free(nfc_playlist->views.text_input.view);
-    dialog_ex_free(nfc_playlist->views.dialog);
+    dialog_ex_free(nfc_playlist->views.dialog_ex);
 
     furi_string_free(nfc_playlist->worker_info.settings->playlist_path);
     free(nfc_playlist->worker_info.settings);
