@@ -23,11 +23,11 @@ void nfc_playlist_emulation_scene_on_enter(void* context) {
    furi_assert(context);
    NfcPlaylist* nfc_playlist = context;
 
-   dialog_ex_reset(nfc_playlist->views.dialog);
-   dialog_ex_set_context(nfc_playlist->views.dialog, nfc_playlist);
+   dialog_ex_reset(nfc_playlist->views.dialog_ex);
+   dialog_ex_set_context(nfc_playlist->views.dialog_ex, nfc_playlist);
    dialog_ex_set_result_callback(
-      nfc_playlist->views.dialog, nfc_playlist_emulation_scene_dialog_callback);
-   view_dispatcher_switch_to_view(nfc_playlist->view_dispatcher, NfcPlaylistView_Dialog);
+      nfc_playlist->views.dialog_ex, nfc_playlist_emulation_scene_dialog_callback);
+   view_dispatcher_switch_to_view(nfc_playlist->view_dispatcher, NfcPlaylistView_DialogEx);
 
    nfc_playlist->worker_info.worker =
       nfc_playlist_worker_alloc(nfc_playlist->worker_info.settings);
@@ -46,12 +46,10 @@ bool nfc_playlist_emulation_scene_on_event(void* context, SceneManagerEvent even
       switch(event.event) {
       case GuiButtonTypeLeft:
          nfc_playlist_worker_rewind(nfc_playlist->worker_info.worker);
-         FURI_LOG_I("NFC Playlist", "Left button pressed");
          consumed = true;
          break;
       case GuiButtonTypeRight:
          nfc_playlist_worker_skip(nfc_playlist->worker_info.worker);
-         FURI_LOG_I("NFC Playlist", "Right button pressed");
          consumed = true;
          break;
       default:
@@ -73,7 +71,7 @@ bool nfc_playlist_emulation_scene_on_event(void* context, SceneManagerEvent even
             header_str_static, "Emulating:\n%s", furi_string_get_cstr(nfc_card_name));
          furi_string_free(nfc_card_name);
          dialog_ex_set_header(
-            nfc_playlist->views.dialog,
+            nfc_playlist->views.dialog_ex,
             furi_string_get_cstr(header_str_static),
             64,
             5,
@@ -83,7 +81,7 @@ bool nfc_playlist_emulation_scene_on_event(void* context, SceneManagerEvent even
             furi_string_printf(
                text_str_static, "%ds", (nfc_playlist->worker_info.worker->ms_counter / 1000));
             dialog_ex_set_text(
-               nfc_playlist->views.dialog,
+               nfc_playlist->views.dialog_ex,
                furi_string_get_cstr(text_str_static),
                64,
                50,
@@ -91,8 +89,8 @@ bool nfc_playlist_emulation_scene_on_event(void* context, SceneManagerEvent even
                AlignTop);
          }
          if(nfc_playlist->worker_info.settings->user_controls) {
-            dialog_ex_set_left_button_text(nfc_playlist->views.dialog, "Rewind");
-            dialog_ex_set_right_button_text(nfc_playlist->views.dialog, "Skip");
+            dialog_ex_set_left_button_text(nfc_playlist->views.dialog_ex, "Rewind");
+            dialog_ex_set_right_button_text(nfc_playlist->views.dialog_ex, "Skip");
          }
          consumed = true;
          break;
@@ -104,19 +102,19 @@ bool nfc_playlist_emulation_scene_on_event(void* context, SceneManagerEvent even
          }
          if(!text_str_static) text_str_static = furi_string_alloc();
          dialog_ex_set_header(
-            nfc_playlist->views.dialog, "Delaying", 64, 5, AlignCenter, AlignTop);
+            nfc_playlist->views.dialog_ex, "Delaying", 64, 5, AlignCenter, AlignTop);
          furi_string_printf(
             text_str_static, "%ds", (nfc_playlist->worker_info.worker->ms_counter / 1000));
          dialog_ex_set_text(
-            nfc_playlist->views.dialog,
+            nfc_playlist->views.dialog_ex,
             furi_string_get_cstr(text_str_static),
             64,
             50,
             AlignCenter,
             AlignTop);
          if(nfc_playlist->worker_info.settings->user_controls) {
-            dialog_ex_set_left_button_text(nfc_playlist->views.dialog, "Rewind");
-            dialog_ex_set_right_button_text(nfc_playlist->views.dialog, "Skip");
+            dialog_ex_set_left_button_text(nfc_playlist->views.dialog_ex, "Rewind");
+            dialog_ex_set_right_button_text(nfc_playlist->views.dialog_ex, "Skip");
          }
          consumed = true;
          break;
@@ -144,7 +142,7 @@ bool nfc_playlist_emulation_scene_on_event(void* context, SceneManagerEvent even
             "Failed to load:\n%s",
             furi_string_get_cstr(nfc_playlist->worker_info.worker->nfc_card_path));
          dialog_ex_set_header(
-            nfc_playlist->views.dialog,
+            nfc_playlist->views.dialog_ex,
             furi_string_get_cstr(header_str_static),
             64,
             5,
@@ -154,7 +152,7 @@ bool nfc_playlist_emulation_scene_on_event(void* context, SceneManagerEvent even
             furi_string_printf(
                text_str_static, "%ds", (nfc_playlist->worker_info.worker->ms_counter / 1000));
             dialog_ex_set_text(
-               nfc_playlist->views.dialog,
+               nfc_playlist->views.dialog_ex,
                furi_string_get_cstr(text_str_static),
                64,
                50,
@@ -162,8 +160,8 @@ bool nfc_playlist_emulation_scene_on_event(void* context, SceneManagerEvent even
                AlignTop);
          }
          if(nfc_playlist->worker_info.settings->user_controls) {
-            dialog_ex_set_left_button_text(nfc_playlist->views.dialog, "Rewind");
-            dialog_ex_set_right_button_text(nfc_playlist->views.dialog, "Skip");
+            dialog_ex_set_left_button_text(nfc_playlist->views.dialog_ex, "Rewind");
+            dialog_ex_set_right_button_text(nfc_playlist->views.dialog_ex, "Skip");
          }
          consumed = true;
          break;
@@ -180,7 +178,7 @@ bool nfc_playlist_emulation_scene_on_event(void* context, SceneManagerEvent even
             "Invalid file type:\n%s",
             furi_string_get_cstr(nfc_playlist->worker_info.worker->nfc_card_path));
          dialog_ex_set_header(
-            nfc_playlist->views.dialog,
+            nfc_playlist->views.dialog_ex,
             furi_string_get_cstr(header_str_static),
             64,
             5,
@@ -190,7 +188,7 @@ bool nfc_playlist_emulation_scene_on_event(void* context, SceneManagerEvent even
             furi_string_printf(
                text_str_static, "%ds", (nfc_playlist->worker_info.worker->ms_counter / 1000));
             dialog_ex_set_text(
-               nfc_playlist->views.dialog,
+               nfc_playlist->views.dialog_ex,
                furi_string_get_cstr(text_str_static),
                64,
                50,
@@ -198,8 +196,8 @@ bool nfc_playlist_emulation_scene_on_event(void* context, SceneManagerEvent even
                AlignTop);
          }
          if(nfc_playlist->worker_info.settings->user_controls) {
-            dialog_ex_set_left_button_text(nfc_playlist->views.dialog, "Rewind");
-            dialog_ex_set_right_button_text(nfc_playlist->views.dialog, "Skip");
+            dialog_ex_set_left_button_text(nfc_playlist->views.dialog_ex, "Rewind");
+            dialog_ex_set_right_button_text(nfc_playlist->views.dialog_ex, "Skip");
          }
          consumed = true;
          break;
@@ -216,7 +214,7 @@ bool nfc_playlist_emulation_scene_on_event(void* context, SceneManagerEvent even
             "File does not exist:\n%s",
             furi_string_get_cstr(nfc_playlist->worker_info.worker->nfc_card_path));
          dialog_ex_set_header(
-            nfc_playlist->views.dialog,
+            nfc_playlist->views.dialog_ex,
             furi_string_get_cstr(header_str_static),
             64,
             5,
@@ -226,7 +224,7 @@ bool nfc_playlist_emulation_scene_on_event(void* context, SceneManagerEvent even
             furi_string_printf(
                text_str_static, "%ds", (nfc_playlist->worker_info.worker->ms_counter / 1000));
             dialog_ex_set_text(
-               nfc_playlist->views.dialog,
+               nfc_playlist->views.dialog_ex,
                furi_string_get_cstr(text_str_static),
                64,
                50,
@@ -234,8 +232,8 @@ bool nfc_playlist_emulation_scene_on_event(void* context, SceneManagerEvent even
                AlignTop);
          }
          if(nfc_playlist->worker_info.settings->user_controls) {
-            dialog_ex_set_left_button_text(nfc_playlist->views.dialog, "Rewind");
-            dialog_ex_set_right_button_text(nfc_playlist->views.dialog, "Skip");
+            dialog_ex_set_left_button_text(nfc_playlist->views.dialog_ex, "Rewind");
+            dialog_ex_set_right_button_text(nfc_playlist->views.dialog_ex, "Skip");
          }
          consumed = true;
          break;
@@ -257,7 +255,7 @@ void nfc_playlist_emulation_scene_on_exit(void* context) {
    furi_assert(context);
    NfcPlaylist* nfc_playlist = context;
    nfc_playlist_led_worker_stop(nfc_playlist->notification_app);
-   dialog_ex_reset(nfc_playlist->views.dialog);
+   dialog_ex_reset(nfc_playlist->views.dialog_ex);
    nfc_playlist_worker_free(nfc_playlist->worker_info.worker);
    nfc_playlist->worker_info.worker = NULL;
    if(header_str_static) {
