@@ -8,6 +8,7 @@
 #include <lib/nfc/protocols/felica/felica.h>
 #include <lib/nfc/protocols/felica/felica_poller.h>
 #include <lib/bit_lib/bit_lib.h>
+#include "suica_font.h"
 
 #define SUICA_STATION_LIST_PATH     APP_ASSETS_PATH("suica/")
 #define SUICA_IC_TYPE_CODE          0x31
@@ -328,6 +329,15 @@ static void
         furi_string_printf(buffer, "%02d", history.entry_station.station_number);
         canvas_draw_str(canvas, 14, 51, furi_string_get_cstr(buffer));
         break;
+    case SuicaJRWest:
+        canvas_set_color(canvas, ColorBlack);
+        canvas_draw_box(canvas, 8, 20, 34, 34);
+        canvas_set_color(canvas, ColorWhite);
+        canvas_set_custom_u8g2_font(canvas, u8g2_font_fub14_tr);
+        canvas_draw_str(canvas, 20, 36, history.entry_line.short_name);
+        canvas_set_font(canvas, FontBigNumbers);
+        canvas_draw_str(canvas, 14, 52, furi_string_get_cstr(buffer));
+        break;
     case SuicaTokyoMetro:
     case SuicaToei:
         canvas_draw_disc(canvas, 24, 38, 24);
@@ -355,7 +365,7 @@ static void
         canvas_draw_line(canvas, 13, 53, 9, 49);
 
         canvas_set_color(canvas, ColorWhite);
-        canvas_draw_icon(canvas, 20, 23, history.entry_line.logo_icon);
+        canvas_draw_icon(canvas, 21, 23, history.entry_line.logo_icon);
         canvas_set_font(canvas, FontBigNumbers);
         furi_string_printf(buffer, "%02d", history.entry_station.station_number);
         canvas_draw_str(canvas, 13, 53, furi_string_get_cstr(buffer));
@@ -461,6 +471,15 @@ static void
         furi_string_printf(buffer, "%02d", history.exit_station.station_number);
         canvas_draw_str(canvas, 92, 51, furi_string_get_cstr(buffer));
         break;
+    case SuicaJRWest:
+        canvas_set_color(canvas, ColorBlack);
+        canvas_draw_box(canvas, 86, 20, 34, 34);
+        canvas_set_color(canvas, ColorWhite);
+        canvas_set_custom_u8g2_font(canvas, u8g2_font_fub14_tr);
+        canvas_draw_str(canvas, 98, 36, history.entry_line.short_name);
+        canvas_set_font(canvas, FontBigNumbers);
+        canvas_draw_str(canvas, 92, 52, furi_string_get_cstr(buffer));
+        break;
     case SuicaTokyoMetro:
     case SuicaToei:
         canvas_draw_disc(canvas, 103, 38, 24);
@@ -488,7 +507,7 @@ static void
         canvas_draw_line(canvas, 92, 53, 88, 49);
 
         canvas_set_color(canvas, ColorWhite);
-        canvas_draw_icon(canvas, 99, 23, history.exit_line.logo_icon);
+        canvas_draw_icon(canvas, 100, 23, history.exit_line.logo_icon);
         canvas_set_font(canvas, FontBigNumbers);
         furi_string_printf(buffer, "%02d", history.exit_station.station_number);
         canvas_draw_str(canvas, 92, 53, furi_string_get_cstr(buffer));
