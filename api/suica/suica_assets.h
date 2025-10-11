@@ -4,13 +4,13 @@
 
 #include "suica_structs_i.h"
 
-#define SUICA_RAILWAY_NUM 41 // Don't count Unknown
+#define SUICA_RAILWAY_NUM 44 // Don't count Unknown
 
 #define SUICA_RAILWAY_UNKNOWN_NAME "Unknown"
 // Railway
 
 static const Railway RailwaysList[] = {
-    // Japan Railway East JREast
+    // East Japan Railway Company JREast
     {0x01, {0, 0}, "Keihin Tohoku", 14, SuicaJREast, "JK", 0},
     {0x01, {0, 0}, "East Tokaido", 21, SuicaJREast, "JT", 0},
     {0x02, {0, 0}, "Keihin Tohoku", 22, SuicaJREast, "JK", 0},
@@ -24,15 +24,20 @@ static const Railway RailwaysList[] = {
     {0x1D, {0, 0}, "Negishi", 10, SuicaJREast, "JK", 0},
     {0x25, {0, 0}, "Yamanote", 16, SuicaJREast, "JY", 0},
 
-    // Japan Railway Central JRCentral
+    // Central Japan Railway Company JRCentral
     {0x01, {0, 0}, "Central Tokaido", 83, SuicaJRCentral, "CA", 0},
     {0x03, {0, 0}, "Chuo West", 37, SuicaJRCentral, "CF", 0},
 
-    // Tokyo Waterfront Area Rapid Transit TWR
+    // West Japan Railway Company JRWest
+    {0x01, {0, 0}, "Biwako", 20, SuicaJRWest, "A", 0},
+    {0x01, {0, 0}, "JR Kyoto", 17, SuicaJRWest, "A", 0},
+    {0x09, {0, 0}, "Hokuriku Main", 11, SuicaJRWest, "A", 0},
+
+    // Tokyo Waterfront Area Rapid Transit Company TWR
     {0x82, {0, 0}, "Rinkai", 8, SuicaTWR, "R", &I_Suica_RinkaiR},
     {0x82, {0, 0}, "Yurikamome", 16, SuicaYurikamome, "U", &I_Suica_YurikamomeU},
 
-    // Tokyu
+    // Tokyu Corporation Tokyu
     {0xCE, {0, 0}, "Toyoko", 23, SuicaTokyu, "TY", 0},
     {0xCF, {0, 0}, "Tamagawa", 7, SuicaTokyu, "TM", 0},
     {0xCF, {0, 0}, "Meguro", 8, SuicaTokyu, "MG", 0},
@@ -41,7 +46,6 @@ static const Railway RailwaysList[] = {
     {0xD1, {0, 0}, "Ikegami", 15, SuicaTokyu, "IK", 0},
     {0xD2, {0, 0}, "Den-en-toshi", 7, SuicaTokyu, "DT", 0},
     {0xD3, {0, 0}, "Setagaya", 10, SuicaTokyu, "SG", 0},
-
 
     // Keikyu
     {0xD5, {0, 0}, "Keikyu Main", 50, SuicaKeikyu, "KK", &I_Suica_KeikyuKK},
