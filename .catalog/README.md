@@ -23,7 +23,7 @@ The Fire String generator uses the IR sensor to detect unpredictable infrared no
 
 * **Save/Export**: When the set number of characters is reached, you may then proceed to the next step which will allow you to save and export the generated Fire String. 
 
-### Supported Character Sets
+## Supported Character Sets
 
 * Alphabetic, Numeric and Symbols
 * Phrases
