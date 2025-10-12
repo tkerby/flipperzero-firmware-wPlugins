@@ -4,7 +4,7 @@
 
 #include "suica_structs_i.h"
 
-#define SUICA_RAILWAY_NUM 68 // Don't count Unknown
+#define SUICA_RAILWAY_NUM 72 // Don't count Unknown
 
 #define SUICA_RAILWAY_UNKNOWN_NAME "Unknown"
 // Railway
@@ -96,10 +96,14 @@ static const Railway RailwaysList[] = {
 
     // ----------------Area Code = 0b10----------------
     // Osaka Metro Company SuicaOsakaMetro
-    {0x81, {0, 0}, "Midosuji", 20, SuicaOsakaMetro, "M", 0},
-    {0x82, {0, 0}, "Tanimachi", 26, SuicaOsakaMetro, "T", 0},
-    {0x83, {0, 0}, "Yotsubashi", 11, SuicaOsakaMetro, "Y", 0},
-    {0x84, {0, 0}, "Osaka Chuo", 14, SuicaOsakaMetro, "C", 0},
+    {0x81, {0, 0}, "#1 Midosuji", 20, SuicaOsakaMetro, "M", 0},
+    {0x82, {0, 0}, "#2 Tanimachi", 26, SuicaOsakaMetro, "T", 0},
+    {0x83, {0, 0}, "#3 Yotsubashi", 11, SuicaOsakaMetro, "Y", 0},
+    {0x84, {0, 0}, "#4 Chuo", 14, SuicaOsakaMetro, "C", 0},
+    {0x85, {0, 0}, "#5 Sennichimae", 14, SuicaOsakaMetro, "S", 0},
+    {0x86, {0, 0}, "#6 Sakaisuji", 10, SuicaOsakaMetro, "K", 0},
+    {0x87, {0, 0}, "#7 Nagahori T-R", 17, SuicaOsakaMetro, "N", 0},
+    {0x88, {0, 0}, "#8 Imazatosuji", 11, SuicaOsakaMetro, "I", 0},
 
     // Unknown
     {0x00,
