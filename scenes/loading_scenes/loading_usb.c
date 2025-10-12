@@ -30,10 +30,10 @@ void fire_string_scene_on_enter_loading_usb(void* context) {
 
     FireString* app = context;
 
+    view_dispatcher_switch_to_view(app->view_dispatcher, FireStringView_Loading);
+
     app->thread = furi_thread_alloc_ex("USBWorker", 2048, usb_worker, app);
     furi_thread_start(app->thread);
-
-    view_dispatcher_switch_to_view(app->view_dispatcher, FireStringView_Loading);
 }
 
 bool fire_string_scene_on_event_loading_usb(void* context, SceneManagerEvent event) {
@@ -62,7 +62,7 @@ bool fire_string_scene_on_event_loading_usb(void* context, SceneManagerEvent eve
                 furi_thread_get_state(app->thread) == FuriThreadStateRunning ? "Running" :
                                                                                "Starting");
         }
-        furi_delay_tick(500);
+        furi_delay_tick(500); // Give USB HID time to settle
         break;
     case SceneManagerEventTypeBack:
         app->hid->api->deinit(app->hid->hid_inst);
@@ -85,5 +85,5 @@ void fire_string_scene_on_exit_loading_usb(void* context) {
     FireString* app = context;
 
     furi_thread_free(app->thread);
-    furi_check(context);
+    app->thread = NULL;
 }

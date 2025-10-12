@@ -116,4 +116,5 @@ void fire_string_scene_on_exit_loading_word_list(void* context) {
     FireString* app = context;
 
     furi_thread_free(app->thread);
+    app->thread = NULL;
 }
