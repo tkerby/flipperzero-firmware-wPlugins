@@ -4,7 +4,7 @@
 
 #include "suica_structs_i.h"
 
-#define SUICA_RAILWAY_NUM 60 // Don't count Unknown
+#define SUICA_RAILWAY_NUM 62 // Don't count Unknown
 
 #define SUICA_RAILWAY_UNKNOWN_NAME "Unknown"
 // Railway
@@ -37,13 +37,15 @@ static const Railway RailwaysList[] = {
     {0x0A, {0, 0}, "JR Kobe", 22, SuicaJRWest, "A", 0},
     {0x0A, {0, 0}, "San'yo Main", 7, SuicaJRWest, "A", 0},
     {0x0A, {0, 0}, "San'yo MI-OY", 11, SuicaJRWest, "S", 0},
-    {0x0A, {-1, 0}, "San'yo OY-FY", 13, SuicaJRWest, "W", 0},
+    {0x0A, {0, 0}, "San'yo OY-FY", 13, SuicaJRWest, "W", 0},
     {0x0A, {0, 0}, "San'yo FY-MH", 6, SuicaJRWest, "X", 0},
-    {0x0A, {-1, 0}, "San'yo IZ-HS", 17, SuicaJRWest, "G", 0},
+    {0x0A, {0, 0}, "San'yo IZ-HS", 17, SuicaJRWest, "G", 0},
     {0x0A, {0, 0}, "San'yo HS-IK", 14, SuicaJRWest, "R", 0},
     {0x0C, {0, 0}, "Osaka Loop", 11, SuicaJRWest, "O", 0},
+    {0x23, {0, 0}, "Hakubi", 13, SuicaJRWest, "V", 0},
     {0x24, {0, 0}, "Geibi", 9, SuicaJRWest, "P", 0},
     {0x26, {0, 0}, "Kure", 27, SuicaJRWest, "Y", 0},
+    {0x2D, {0, 0}, "Kabe", 13, SuicaJRWest, "B", 0},
     {0x5B, {0, 0}, "Osaka Loop", 8, SuicaJRWest, "O", 0},
 
     // Tokyo Waterfront Area Rapid Transit Company SuicaTWR
