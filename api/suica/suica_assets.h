@@ -4,7 +4,7 @@
 
 #include "suica_structs_i.h"
 
-#define SUICA_RAILWAY_NUM 77 // Don't count Unknown
+#define SUICA_RAILWAY_NUM 78 // Don't count Unknown
 
 #define SUICA_RAILWAY_UNKNOWN_NAME "Unknown"
 // Railway
@@ -32,8 +32,8 @@ static const Railway RailwaysList[] = {
     {0x3E, {0, 0}, "Minobu", 12, SuicaJRCentral, "CC", 0},
     {0x43, {0, 0}, "Taketoyo", 10, SuicaJRCentral, "CD", 0},
     {0x44, {0, 0}, "Takayama", 23, SuicaJRCentral, "CG", 0},
+    {0x58, {0, 0}, "Taita", 8, SuicaJRCentral, "CI", 0},
     {0x5F, {0, 0}, "Kansai Main", 17, SuicaJRCentral, "CJ", 0},
-
 
     // West Japan Railway Company SuicaJRWest
     {0x01, {0, 0}, "Biwako", 20, SuicaJRWest, "A", 0},
