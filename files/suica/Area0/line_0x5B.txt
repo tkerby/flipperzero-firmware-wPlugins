@@ -1,0 +1,8 @@
+0x5B,0x02,Osaka Loop,福島,Fukushima,12,0
+0x5B,0x03,Osaka Loop,野田,Noda,13,0
+0x5B,0x04,Osaka Loop,西九条,Nishikujo,14,0
+0x5B,0x06,Osaka Loop,弁天町,Bentencho,15,0
+0x5B,0x07,Osaka Loop,大正,Taisho,16,0
+0x5B,0x08,Osaka Loop,芦原橋,Ashiharabashi,17,0
+0x5B,0x0A,Osaka Loop,今宮,Imamiya,18,0
+0x5B,0x0B,Osaka Loop,新今宮,Shin-Imamiya,19,0
