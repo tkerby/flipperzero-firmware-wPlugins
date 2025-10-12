@@ -1,6 +1,7 @@
 #include "../fire_string.h"
 
-const char* str_len[] = {"4", "8", "12", "16", "24", "32", "48", "64", "256", "512"};
+const char* str_len[] =
+    {"1", "2", "4", "6", "8", "12", "16", "24", "32", "48", "64", "256", "512", "1024"};
 const char* type_strings[] =
     {"AlphNumSymb", "Phrase", "AlphNum", "Alpha", "Symbols", "Numeric", "Binary"};
 const char* use_ir_strings[] = {"False", "True"};
@@ -22,6 +23,7 @@ void str_type_change_callback(VariableItem* item) {
     variable_item_set_current_value_text(item, type_strings[index]);
     app->settings->str_type = index;
     furi_string_reset(app->fire_string);
+    app->settings->file_loaded = false;
 }
 
 void str_len_change_callback(VariableItem* item) {
@@ -30,6 +32,7 @@ void str_len_change_callback(VariableItem* item) {
     variable_item_set_current_value_text(item, str_len[index]);
     app->settings->str_len = atoi(str_len[index]);
     furi_string_reset(app->fire_string);
+    app->settings->file_loaded = false;
 }
 
 void use_ir_change_callback(VariableItem* item) {
@@ -37,6 +40,7 @@ void use_ir_change_callback(VariableItem* item) {
     app->settings->use_ir = !app->settings->use_ir;
     variable_item_set_current_value_text(item, use_ir_strings[(uint8_t)app->settings->use_ir]);
     furi_string_reset(app->fire_string);
+    app->settings->file_loaded = false;
 }
 
 void settings_enter_callback(void* context, uint32_t index) {

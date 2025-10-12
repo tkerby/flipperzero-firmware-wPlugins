@@ -138,6 +138,7 @@ FireString* fire_string_init() {
     app->settings->str_len = 16;
     app->settings->str_type = StrType_AlphaNumSymb;
     app->settings->use_ir = true;
+    app->settings->file_loaded = false;
 
     // Set HID defaults
     app->hid = malloc(sizeof(FireStringHID));

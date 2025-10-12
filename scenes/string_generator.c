@@ -133,8 +133,6 @@ uint32_t get_str_len(FireString* app) {
     if(app->settings->str_type == StrType_Passphrase) {
         uint32_t word_count = 0;
         uint32_t string_size = furi_string_size(app->fire_string);
-        const char* c_str = malloc(sizeof(char) * string_size);
-        c_str = furi_string_get_cstr(app->fire_string);
 
         if(string_size == 0) {
             return word_count;
@@ -143,7 +141,7 @@ uint32_t get_str_len(FireString* app) {
         }
 
         for(uint32_t i = 0; i < string_size; i++) {
-            if(c_str[i] == '-') {
+            if(furi_string_get_char(app->fire_string, i) == '-') {
                 word_count++;
             }
         }
@@ -155,7 +153,7 @@ uint32_t get_str_len(FireString* app) {
 }
 
 void vibro(FireString* app) {
-    if(app->settings->str_len == get_str_len(app)) {
+    if(get_str_len(app) >= app->settings->str_len && app->settings->file_loaded == false) {
         furi_hal_vibro_on(true);
         furi_delay_ms(30);
         furi_hal_vibro_on(false);
@@ -219,6 +217,7 @@ void string_generator_btn_callback(GuiButtonType result, InputType type, void* c
         case GuiButtonTypeCenter:
             furi_string_reset(app->fire_string);
             delay_ms = DEFAULT_DELAY;
+            app->settings->file_loaded = false;
             if(app->settings->use_ir == true) {
                 build_string_generator_widget(app);
             }
@@ -234,9 +233,10 @@ void string_generator_btn_callback(GuiButtonType result, InputType type, void* c
 
 void build_string_generator_widget(FireString* app) {
     FURI_LOG_T(TAG, "build_string_generator_widget");
+    size_t str_len = get_str_len(app);
 
     FuriString* progress = furi_string_alloc();
-    furi_string_printf(progress, "%ld/%ld", get_str_len(app), app->settings->str_len);
+    furi_string_printf(progress, "%d/%ld", str_len, app->settings->str_len);
 
     widget_reset(app->widget);
 
@@ -246,12 +246,12 @@ void build_string_generator_widget(FireString* app) {
     widget_add_button_element(
         app->widget, GuiButtonTypeLeft, "Config", string_generator_btn_callback, app);
 
-    if(get_str_len(app) > 0) {
+    if(str_len > 0) {
         widget_add_button_element(
             app->widget, GuiButtonTypeCenter, "Reset", string_generator_btn_callback, app);
     }
 
-    if(get_str_len(app) == app->settings->str_len) {
+    if(str_len >= app->settings->str_len || app->settings->file_loaded == true) {
         widget_add_button_element(
             app->widget, GuiButtonTypeRight, "Next", string_generator_btn_callback, app);
     } else {
@@ -362,15 +362,17 @@ bool fire_string_scene_on_event_string_generator(void* context, SceneManagerEven
         break;
     case SceneManagerEventTypeTick:
         // Toggle infrared_worker if needed
-        if(get_str_len(app) < app->settings->str_len && !app->ir_worker && app->settings->use_ir) {
+        if(get_str_len(app) < app->settings->str_len && !app->ir_worker && app->settings->use_ir &&
+           app->settings->file_loaded == false) {
             infrared_rx_start(app);
         }
-        if(get_str_len(app) == app->settings->str_len && app->ir_worker && app->settings->use_ir) {
+        if(get_str_len(app) >= app->settings->str_len && app->ir_worker && app->settings->use_ir) {
             infrared_rx_stop(app);
             vibro(app);
         }
         // animate automatic string generation
-        if(get_str_len(app) < app->settings->str_len && !app->settings->use_ir) {
+        if(get_str_len(app) < app->settings->str_len && !app->settings->use_ir &&
+           app->settings->file_loaded == false) {
             if(get_str_len(app) > 30) { // arbitrarily skip animation at certain length
                 get_random_str(app);
             } else {

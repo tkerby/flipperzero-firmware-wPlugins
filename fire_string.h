@@ -79,6 +79,7 @@ typedef struct {
     uint32_t str_len;
     uint8_t str_type;
     bool use_ir;
+    bool file_loaded;
 } FireStringSettings;
 
 typedef struct {
@@ -100,7 +101,6 @@ typedef struct {
     Submenu* submenu;
     Widget* widget;
     VariableItemList* variable_item_list;
-    DialogsApp* dialogs;
     TextInput* text_input;
     char text_buffer[TEXT_INPUT_BUF_SIZE];
     Loading* loading;
