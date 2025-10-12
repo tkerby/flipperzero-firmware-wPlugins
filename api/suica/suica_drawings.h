@@ -156,6 +156,9 @@ static void suica_draw_train_page_1(
     case SuicaTokyu:
         canvas_draw_icon(canvas, 3, 11, &I_Suica_TokyuLogo);
         break;
+    case SuicaOsakaMetro:
+        canvas_draw_icon(canvas, 0, 11, &I_Suica_OsakaMetroLogo);
+        break;
     case SuicaRailwayTypeMax:
         canvas_draw_icon(canvas, 5, 11, &I_Suica_QuestionMarkSmall);
         break;
@@ -206,6 +209,9 @@ static void suica_draw_train_page_1(
         case SuicaTokyu:
             canvas_draw_icon(canvas, 3, 39, &I_Suica_TokyuLogo);
             break;
+        case SuicaOsakaMetro:
+            canvas_draw_icon(canvas, 0, 39, &I_Suica_OsakaMetroLogo);
+            break;
         case SuicaRailwayTypeMax:
             canvas_draw_icon(canvas, 5, 39, &I_Suica_QuestionMarkSmall);
             break;
@@ -225,7 +231,7 @@ static void suica_draw_train_page_1(
         // Birthday
         canvas_draw_icon(canvas, 5, 42, &I_Suica_CrackingEgg);
         canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 28, 56, "Suica issued");
+        canvas_draw_str(canvas, 28, 56, "Card issued");
         break;
     case SuicaHistoryTopUp:
         // Top Up
