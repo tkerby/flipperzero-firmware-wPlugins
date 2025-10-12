@@ -4,7 +4,7 @@
 
 #include "suica_structs_i.h"
 
-#define SUICA_RAILWAY_NUM 81 // Don't count Unknown
+#define SUICA_RAILWAY_NUM 86 // Don't count Unknown
 
 #define SUICA_RAILWAY_UNKNOWN_NAME "Unknown"
 // Railway
@@ -49,17 +49,22 @@ static const Railway RailwaysList[] = {
     {0x0A, {0, 0}, "San'yo HS-IK", 14, SuicaJRWest, "R", 0},
     {0x0B, {0, 0}, "Sagano", 16, SuicaJRWest, "E", 0},
     {0x0C, {-1, 0}, "Osaka Loop", 11, SuicaJRWest, "O", 0},
+    {0x1F, {-1, 0}, "Seto-Ohashi", 7, SuicaJRWest, "M", 0},
     {0x20, {0, 0}, "Kibi Momotaro", 9, SuicaJRWest, "U", 0},
+    {0x23, {0, 0}, "JR Tozai", 8, SuicaJRWest, "H", 0},
     {0x23, {0, 0}, "Hakubi", 13, SuicaJRWest, "V", 0},
     {0x24, {0, 0}, "Geibi", 9, SuicaJRWest, "P", 0},
     {0x26, {0, 0}, "Kure", 27, SuicaJRWest, "Y", 0},
     {0x2D, {0, 0}, "Kabe", 13, SuicaJRWest, "B", 0},
+    {0x35, {-1, 0}, "Seto-Ohashi", 4, SuicaJRWest, "M", 0},
     {0x5B, {-1, 0}, "Osaka Loop", 8, SuicaJRWest, "O", 0},
+    {0x5C, {0, 0}, "Sakurajima", 4, SuicaJRWest, "P", 0},
     {0x5F, {0, 0}, "Yamatoji", 22, SuicaJRWest, "Q", 0},
     {0x60, {0, 0}, "Kyoto", 22, SuicaJRWest, "D", 0},
     {0x63, {0, 0}, "Hanwa", 34, SuicaJRWest, "R", 0},
     {0x6A, {0, 0}, "Osaka Higashi", 5, SuicaJRWest, "F", 0},
     {0x6D, {0, 0}, "Kosai", 19, SuicaJRWest, "B", 0},
+    {0x70, {-1, 0}, "Kansai Airport", 2, SuicaJRWest, "S", 0},
     {0x73, {0, 0}, "Ako", 12, SuicaJRWest, "N", 0},
 
     // Tokyo Waterfront Area Rapid Transit Company SuicaTWR
