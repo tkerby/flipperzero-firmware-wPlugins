@@ -328,7 +328,12 @@ static void
         canvas_set_color(canvas, ColorWhite);
         canvas_set_font(canvas, FontPrimary);
         canvas_draw_str_aligned(
-            canvas, 24, 33, AlignCenter, AlignBottom, history.entry_line.short_name);
+            canvas,
+            24 + history.entry_line.logo_offset[0],
+            33 + history.entry_line.logo_offset[1],
+            AlignCenter,
+            AlignBottom,
+            history.entry_line.short_name);
         canvas_draw_box(canvas, 11, 35, 28, 18);
         canvas_set_color(canvas, ColorBlack);
         canvas_set_font(canvas, FontBigNumbers);
@@ -476,7 +481,12 @@ static void
         canvas_set_color(canvas, ColorWhite);
         canvas_set_font(canvas, FontPrimary);
         canvas_draw_str_aligned(
-            canvas, 102, 33, AlignCenter, AlignBottom, history.exit_line.short_name);
+            canvas,
+            102 + history.exit_line.logo_offset[0],
+            33 + history.exit_line.logo_offset[1],
+            AlignCenter,
+            AlignBottom,
+            history.exit_line.short_name);
         canvas_draw_box(canvas, 89, 35, 28, 18);
         canvas_set_color(canvas, ColorBlack);
         canvas_set_font(canvas, FontBigNumbers);
