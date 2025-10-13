@@ -46,6 +46,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: PR: [NFC FeliCa Minor Fix: FelicaPollerEventType should only be Incomplete if the tag is FeliCa Lite #4279 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4279)
 - Added: [VEML7700 Lux Meter v1.0 (By kamylwnb)](https://github.com/kamylwnb/Flipper-zero-app-VEML7700)
 - Added: [Fire String v1.0 (By RyanAboueljoud)](https://github.com/RyanAboueljoud/Fire-String)
+- [Updated default animations to include Halloween animation (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/dbc5895b30f3afb2f692dd7a8681945832cf80a3) [Updated on Stock, Minimal and Manifest Switcher Builds for Patreon Members](https://www.patreon.com/RogueMaster/membership)
+- [Updated 18+, 420-18+ and Manifest Switcher Builds for Patreon Members to include 4 new 18+ animations submitted by Discord users](https://www.patreon.com/RogueMaster/membership)
 
 <a name="release">
 
