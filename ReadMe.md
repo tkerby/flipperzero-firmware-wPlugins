@@ -3,7 +3,7 @@
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://lh3.googleusercontent.com/d/1iYQlRQXM7nA4IAdcPwvcKRSTCMoi8tug' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0918-1509-0.420.0-6ba1888.tgz&channel=RM0918-1509-0.420.0-6ba1888&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM1012-2314-0.420.0-f53bc1f.tgz&channel=RM1012-2314-0.420.0-f53bc1f&version=0.420.0&target=f7)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -30,38 +30,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-10-12 22:56 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-10-12 22:56 EST`
-- Updated: [Free Roam v0.3.1 (By jblanked)](https://github.com/jblanked/Free-Roam) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [FlipDownloader v1.3.4 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [FlipWorld v1.0.1 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [Barcode App v1.4 (By Kingal1337)](https://github.com/Kingal1337/flipper-barcode-generator)
-- Updated: [MODBUS v1.1.3.1 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-rs485modbus) `Req: Modbus By ElectronicCats`
-- [ESP Flasher: Bump Marauder v1.8.6 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.8.6)
-- OFW: [Add an old JVC model to universal remotes #4274 (By zgracem)](https://github.com/flipperdevices/flipperzero-firmware/pull/4274)
-- OFW: [NFC: MFC 1k Banapass Parser #4260 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4260) (Already in RM)
-- OFW: [NFC: Fix read crash with unexpectedly large MFC AUTH(0) response #4265 (By WillyJL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4265) (Already in RM)
-- OFW: [GUI Bug Fix: Number Input Save Icon #4273 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4273)
-- Updated: [FlipSocial v2.0.3 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [WiFi (Marauder) v0.7.6 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion)
-- OFW: [FeliCa Emulation: Handle certain Polling commands in firmware #4204 (By dogtopus)](https://github.com/flipperdevices/flipperzero-firmware/pull/4204)
-- OFW: [FuriHalSerial: Fix RXFNE interrupt hang #4246 (By WillyJL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4246)
-- OFW: [SubGHz: Linear and Dickert MAHS protocols fixes & improvements #4267 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4267) (Already in RM)
-- OFW: [hid_app mouse clicker: make mouse button selectable #4270 (By LordMZTE)](https://github.com/flipperdevices/flipperzero-firmware/pull/4270)
-- OFW: [NFC: Amusement IC Card Parser (FeliCa Lite & Lite-S) #4259 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4259) (Already in RM)
-- OFW: [Add Daikin FTXN25LV1B9 and Toyotomi KTN22-12R32 #4232 (By minchogaydarov)](https://github.com/flipperdevices/flipperzero-firmware/pull/4232)
-- OFW: [SubGhz: fix TIM17 config not applied immediately #4205 (By Aerosnail)](https://github.com/flipperdevices/flipperzero-firmware/pull/4205)
-- OFW: [BadUSB: Fix case sensitive key combos, fix modifiers in HOLD/RELEASE #4216 (By WillyJL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4216)
-- OFW: [LFRFID: Show ISO-3166 Country Names For Pet Chips #4091 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4091)
-- OFW: [Update demo_windows.txt #4211 (By ase1590)](https://github.com/flipperdevices/flipperzero-firmware/pull/4211)
-- OFW: [tm01x dallas write support #4230 (By Leptopt1los)](https://github.com/flipperdevices/flipperzero-firmware/pull/4230)
-- OFW: [Fix PVS warnings #4277 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4277)
-- Updated: [T-Union Master (China) v0.1 (By SocialSisterYi)](https://github.com/SocialSisterYi/T-Union_Master)
-- Updated: [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader)
-- Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip)
-- Updated: [ESP32 WIFI Mapping v0.2 (By carvilsi)](https://github.com/carvilsi/flipper0-wifi-map) `Req: ESP32`
-- Updated: [Chief Cooker v1.0 (By denr01)](https://github.com/denr01/FZ-ChiefCooker)
-- [ESP Flasher: Bump Marauder v1.8.8 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.8.8)
-- Updated: [NFC Playlist v3.4 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
-- Updated: [CANBUS v1.1.4 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
 
 <a name="release">
 
@@ -807,4 +775,4 @@ $ ./fbt dolphin_ext
 - Have a new app? Submit GitHub link to me on Discord for a special reward (if I add it to RM Firmware).
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0918-1509-0.420.0-6ba1888.tgz&channel=RM0918-1509-0.420.0-6ba1888&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM1012-2314-0.420.0-f53bc1f.tgz&channel=RM1012-2314-0.420.0-f53bc1f&version=0.420.0&target=f7)
