@@ -1,3 +1,6 @@
+v1.0.4
+Target release candidate (sdk 87)
+
 v.1.0.3
 Fix errors in application.fam for the shop
 
