@@ -39,6 +39,9 @@ const MfClassicKeyPair renfe_suma10_1k_keys[] = {
     {.a = 0xa0a1a2a3a4a5}, // Alternative common key
     {.a = 0xC0C1C2C3C4C5}, // Key for sectors 10-15 from dumps
 };
+const MfClassicKeyPair two_cities_4k_verify_key[] = {
+    {.a = 0x2aa05ed1856f},
+};
 
 const uint8_t gocard_verify_data[1][14] = {
     {0x16, 0x18, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x5A, 0x5B, 0x20, 0x21, 0x22, 0x23}};
@@ -149,6 +152,43 @@ static bool metromoney_verify(Nfc* nfc, MfClassicData* mfc_data, bool data_loade
 
             uint64_t key = bit_lib_bytes_to_num_be(sec_tr->key_a.data, 6);
             if(key != metromoney_1k_verify_key[0].a) {
+                break;
+            }
+
+            verified = true;
+        }
+    } while(false);
+
+    return verified;
+}
+
+static bool two_cities_verify(Nfc* nfc, MfClassicData* mfc_data, bool data_loaded) {
+    bool verified = false;
+    const uint8_t ticket_sector_number = 4;
+    do {
+        if(!data_loaded) {
+            const uint8_t ticket_block_number =
+                mf_classic_get_first_block_num_of_sector(ticket_sector_number) + 1;
+            FURI_LOG_D(TAG, "Verifying sector %u", ticket_sector_number);
+
+            MfClassicKey key = {0};
+            bit_lib_num_to_bytes_be(two_cities_4k_verify_key[0].a, COUNT_OF(key.data), key.data);
+
+            MfClassicAuthContext auth_context;
+            MfClassicError error = mf_classic_poller_sync_auth(
+                nfc, ticket_block_number, &key, MfClassicKeyTypeA, &auth_context);
+            if(error != MfClassicErrorNone) {
+                FURI_LOG_D(TAG, "Failed to read block %u: %d", ticket_block_number, error);
+                break;
+            }
+
+            verified = true;
+        } else {
+            MfClassicSectorTrailer* sec_tr =
+                mf_classic_get_sector_trailer_by_sector(mfc_data, ticket_sector_number);
+
+            uint64_t key = bit_lib_bytes_to_num_be(sec_tr->key_a.data, 6);
+            if(key != two_cities_4k_verify_key[0].a) {
                 break;
             }
 
@@ -436,6 +476,8 @@ CardType determine_card_type(Nfc* nfc, MfClassicData* mfc_data, bool data_loaded
         return CARD_TYPE_CHARLIECARD;
     } else if(gocard_verify(mfc_data, data_loaded)) {
         return CARD_TYPE_GOCARD;
+    } else if(two_cities_verify(nfc, mfc_data,data_loaded)) {
+        return CARD_TYPE_TWO_CITIES;
     } else if(renfe_suma10_verify(nfc, mfc_data, data_loaded)) {
         return CARD_TYPE_RENFE_SUM10;
     } else {
