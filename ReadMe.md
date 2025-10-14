@@ -45,6 +45,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - SubGHz: [add support for top44rbn remotes (By xMasterX thanks mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/commit/b03316d89d652035fb3829d09b1ca8473e89cb56)
 - OFW: PR: [NFC FeliCa Minor Fix: FelicaPollerEventType should only be Incomplete if the tag is FeliCa Lite #4279 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4279)
 - Added: [VEML7700 Lux Meter v1.0 (By kamylwnb)](https://github.com/kamylwnb/Flipper-zero-app-VEML7700)
+- Added: [Fire String v1.0 (By RyanAboueljoud)](https://github.com/RyanAboueljoud/Fire-String)
 
 <a name="release">
 
@@ -489,6 +490,7 @@ $ ./fbt dolphin_ext
 - [Fencing Test Box v0.1 (By aarjaneiro)](https://www.github.com/aarjaneiro/fencing_testbox)
 - [Financial Calculator v1.0 (By schaene)](https://github.com/schaene/Flipper-Financial-Calculator)
 - [FindMy Flipper v3.5.2 (By MatthewKuKanich)](https://github.com/MatthewKuKanich/FindMyFlipper)
+- [Fire String v1.0 (By RyanAboueljoud)](https://github.com/RyanAboueljoud/Fire-String)
 - [Flame RNG v0.3 (By OrionW06)](https://github.com/OrionW06/Flame-RNG)
 - [Flashlight v1.2 (By xMasterX)](https://github.com/xMasterX/flipper-flashlight)
 - [FlipDownloader v1.3.4 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
