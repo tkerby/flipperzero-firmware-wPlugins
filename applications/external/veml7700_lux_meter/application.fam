@@ -3,7 +3,6 @@ App(
     name="VEML7700 Lux Meter",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="veml7700_app",
-    cdefines=["APP_VEML7700"],
     requires=[
         "gui",
         "i2c",
@@ -13,11 +12,10 @@ App(
         "veml7700.cpp",
     ],
     stack_size=2 * 1024,
-    order=20,
     fap_icon="icons/lux_icon.png",
-    fap_category="GPIO",
-    fap_author="@Dr.Mosfet",
-    fap_weburl="https://github.com/kamylwnb/Flipper-zero-app-VEML7700/tree/main",
+    fap_category="GPIO/Sensors",
+    fap_author="kamylwnb / Dr.Mosfet",
+    fap_weburl="https://github.com/kamylwnb/Flipper-zero-app-VEML7700",
     fap_version="1.0",
-    fap_description="Mierzy oświetlenie otoczenia w luksach za pomocą czujnika VEML7700 przez magistralę I2C i wyświetla wartość na ekranie.",
+    fap_description="Measures ambient light in lux using a VEML7700 sensor via I2C bus and displays the value on the screen.",
 )

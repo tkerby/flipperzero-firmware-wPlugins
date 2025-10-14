@@ -44,6 +44,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - NFC: [Added UL-C keys to the dictionary (By mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/pull/923)
 - SubGHz: [add support for top44rbn remotes (By xMasterX thanks mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/commit/b03316d89d652035fb3829d09b1ca8473e89cb56)
 - OFW: PR: [NFC FeliCa Minor Fix: FelicaPollerEventType should only be Incomplete if the tag is FeliCa Lite #4279 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4279)
+- Added: [VEML7700 Lux Meter v1.0 (By kamylwnb)](https://github.com/kamylwnb/Flipper-zero-app-VEML7700)
 
 <a name="release">
 
@@ -748,6 +749,7 @@ $ ./fbt dolphin_ext
 - [USB Midi v1.0 (By DrZlo13 & kribesk)](https://github.com/kribesk/flipper-zero-usb-midi) [Instructions by ESurge](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/applications/plugins/usb_midi/ReadMe.md)
 - [UV Meter v1.0 (By michaelbaisch)](https://github.com/michaelbaisch/uv_meter) `Req: AS7331`
 - [VB Migration Assistant v1.3 (By GMMan)](https://github.com/GMMan/flipperzero-vb-migrate)
+- [VEML7700 Lux Meter v1.0 (By kamylwnb)](https://github.com/kamylwnb/Flipper-zero-app-VEML7700)
 - [VGM Air Mouse v1.3 (By nminaylov)](https://github.com/flipperdevices/flipperzero-good-faps/tree/nm/motion_mouse_app) `Req: ICM42688, or Video Game Module By Flipper Devices`
 - [VGM Game Remote v1.1 (By jblanked)](https://github.com/jblanked/VGM-Library) `Req: Video Game Module By Flipper Devices`
 - [Video Player v0.4 (By LTVA1)](https://github.com/LTVA1/flipper-zero-video-player)
