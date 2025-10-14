@@ -50,9 +50,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Updated 18+, 420-18+ and Manifest Switcher Builds for Patreon Members to include 4 new 18+ animations submitted by Discord users](https://www.patreon.com/RogueMaster/membership)
 - Updated: [Fire String v1.0 (By RyanAboueljoud)](https://github.com/RyanAboueljoud/Fire-String) (Fix run issue)
 - Added: [Mi Band NFC Writer v1.0 (By LucaTomei)](https://github.com/LucaTomei/flipper-miband-nfc-writer)
-- Updated: [CANBUS v1.1.4 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
 - Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [Mi Band NFC Writer v1.0 (By LucaTomei)](https://github.com/LucaTomei/flipper-miband-nfc-writer) (Fix run issue)
+- Updated: [CANBUS v1.1.4 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
 
 <a name="release">
 
