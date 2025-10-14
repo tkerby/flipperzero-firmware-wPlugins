@@ -2,8 +2,8 @@
 
 void makePaths(App* app) {
     furi_assert(app);
-    if(!storage_simply_mkdir(app->storage, PATHAPPEXT)) {
-        dialog_message_show_storage_error(app->dialogs, "Cannot create\napp folder");
+    if(!storage_simply_mkdir(app->storage, PATHEXPORTS)) {
+        dialog_message_show_storage_error(app->dialogs, "Cannot create\nexports folder");
     }
     if(!storage_simply_mkdir(app->storage, PATHLOGS)) {
         dialog_message_show_storage_error(app->dialogs, "Cannot create\nlogs folder");
@@ -37,6 +37,9 @@ static App* app_alloc() {
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_navigation_event_callback(app->view_dispatcher, app_scene_back_event);
     view_dispatcher_set_tick_event_callback(app->view_dispatcher, app_tick_event, 100);
+
+    app->loading = loading_alloc();
+    view_dispatcher_add_view(app->view_dispatcher, LoadingView, loading_get_view(app->loading));
 
     app->widget = widget_alloc();
     view_dispatcher_add_view(app->view_dispatcher, ViewWidget, widget_get_view(app->widget));
@@ -99,6 +102,7 @@ static App* app_alloc() {
 static void app_free(App* app) {
     furi_assert(app);
 
+    view_dispatcher_remove_view(app->view_dispatcher, LoadingView);
     view_dispatcher_remove_view(app->view_dispatcher, SubmenuView);
     view_dispatcher_remove_view(app->view_dispatcher, ViewWidget);
     view_dispatcher_remove_view(app->view_dispatcher, TextBoxView);
@@ -116,6 +120,7 @@ static void app_free(App* app) {
     text_box_free(app->textBox);
     byte_input_free(app->input_byte_value);
     file_browser_free(app->file_browser);
+    loading_free(app->loading);
 
     furi_string_free(app->text);
     furi_string_free(app->data);
