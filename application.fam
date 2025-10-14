@@ -23,6 +23,15 @@ App(
 )
 
 App(
+    appid="two_cities_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="two_cities_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/two_cities.c"],
+    fal_embedded=True,
+)
+
+App(
     appid="calypso_plugin",
     apptype=FlipperAppType.PLUGIN,
     entry_point="calypso_plugin_ep",
