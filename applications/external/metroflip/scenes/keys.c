@@ -476,7 +476,7 @@ CardType determine_card_type(Nfc* nfc, MfClassicData* mfc_data, bool data_loaded
         return CARD_TYPE_CHARLIECARD;
     } else if(gocard_verify(mfc_data, data_loaded)) {
         return CARD_TYPE_GOCARD;
-    } else if(two_cities_verify(nfc, mfc_data,data_loaded)) {
+    } else if(two_cities_verify(nfc, mfc_data, data_loaded)) {
         return CARD_TYPE_TWO_CITIES;
     } else if(renfe_suma10_verify(nfc, mfc_data, data_loaded)) {
         return CARD_TYPE_RENFE_SUM10;
