@@ -49,6 +49,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Updated default animations to include Halloween animation (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/dbc5895b30f3afb2f692dd7a8681945832cf80a3) [Updated on Stock, Minimal and Manifest Switcher Builds for Patreon Members](https://www.patreon.com/RogueMaster/membership)
 - [Updated 18+, 420-18+ and Manifest Switcher Builds for Patreon Members to include 4 new 18+ animations submitted by Discord users](https://www.patreon.com/RogueMaster/membership)
 - Updated: [CANBUS v1.1.4 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
+- Updated: [Fire String v1.0 (By RyanAboueljoud)](https://github.com/RyanAboueljoud/Fire-String) (Fix run issue)
 
 <a name="release">
 
