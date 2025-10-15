@@ -1,0 +1,10 @@
+App(
+    appid="water_sensor_reader",
+    name="Water Sensor reader",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="water_sensor_main",
+    requires=["gui","input"],
+    stack_size=2 * 1024,
+    fap_category="GPIO",
+    fap_icon="images/icon.png",
+)
