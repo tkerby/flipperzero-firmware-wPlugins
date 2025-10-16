@@ -29,6 +29,12 @@ App(
                 "exporter_csv.c",
             ],
         ),
+        Lib(
+            name="hex_converter",
+            sources=[
+                "hex_converter.c",
+            ],
+        ),
     ],
     fap_category="GPIO",
     fap_author="ElectronicCats",
