@@ -8,4 +8,7 @@ App(
     fap_icon="icons/FdxbMaker_10px.png",
     fap_category="RFID",
     fap_icon_assets="icons",
+    fap_description="FDX-B format file maker for animal microchips",
+    fap_author="Skye Gibbs",
+    fap_version="1.0"
 )
