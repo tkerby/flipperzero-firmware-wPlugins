@@ -3,7 +3,7 @@
 #include "../ir_main.h"
 
 typedef struct {
-	char* landing;
+    char* landing;
 } LandingModel;
 
 View* landing_view_alloc(App* app);

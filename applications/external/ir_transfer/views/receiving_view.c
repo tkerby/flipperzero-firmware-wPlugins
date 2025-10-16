@@ -53,9 +53,8 @@ static void Receiving_draw_callback(Canvas* canvas, void* model) {
 
     if(rx_has_activity(rec_model)) {
         elements_button_center(canvas, "cancel");
-    } 
+    }
     elements_button_left(canvas, "back");
-
 }
 
 static uint32_t receiving_exit_callback(void* _context) {
@@ -64,17 +63,12 @@ static uint32_t receiving_exit_callback(void* _context) {
 }
 
 static bool Receiving_input_callback(InputEvent* event, void* context) {
-    
-	
-
-	App* app = (App*)context;
+    App* app = (App*)context;
     ReceivingModel* model = view_get_model(app->rec_view);
-	bool in_activity = rx_has_activity(model);
-	
+    bool in_activity = rx_has_activity(model);
+
     if(event->type == InputTypeShort) {
         if(event->key == InputKeyOk) {
-            
-
             // 1) Supprime le fichier temporaire s'il existe
             Storage* storage = furi_record_open(RECORD_STORAGE);
             if(storage_file_exists(storage, FILE_PATH_RECV)) {
@@ -84,7 +78,8 @@ static bool Receiving_input_callback(InputEvent* event, void* context) {
 
             // 2) Reset complet de l'état RX (protégé par mutex)
             if(model->controller) {
-                if(furi_mutex_acquire(model->controller->state_mutex, FuriWaitForever) == FuriStatusOk) {
+                if(furi_mutex_acquire(model->controller->state_mutex, FuriWaitForever) ==
+                   FuriStatusOk) {
                     reset_reception_state(model->controller);
                     furi_mutex_release(model->controller->state_mutex);
                 } else {
@@ -94,12 +89,16 @@ static bool Receiving_input_callback(InputEvent* event, void* context) {
 
             // 3) Met à jour l'UI (statut/progression/chemin)
             with_view_model(
-                app->rec_view, ReceivingModel* _m, {
+                app->rec_view,
+                ReceivingModel * _m,
+                {
                     _m->loading = 0.0f;
-                    furi_string_set(_m->status, in_activity ? "transfer canceled" : "awaiting signal");
+                    furi_string_set(
+                        _m->status, in_activity ? "transfer canceled" : "awaiting signal");
                     furi_string_set(_m->progression, "not started");
                     furi_string_set(_m->receiving_path, FILE_PATH_FOLDER);
-                }, true);
+                },
+                true);
 
             return true;
         } else if(event->key == InputKeyLeft) {
@@ -121,12 +120,15 @@ static void rec_view_enter_callback(void* context) {
 
     bool redraw = true;
     with_view_model(
-        app->rec_view, ReceivingModel* _model, {
+        app->rec_view,
+        ReceivingModel * _model,
+        {
             _model->loading = 0;
             furi_string_set(_model->status, "awaiting signal");
             furi_string_set(_model->receiving_path, FILE_PATH_FOLDER);
             furi_string_set(_model->progression, "not started");
-        }, redraw);
+        },
+        redraw);
 
     model->controller = infrared_controller_alloc(app);
 }

@@ -6,15 +6,15 @@
 #define TEXT_VIEWER_EXTENSION "*"
 
 typedef struct {
-	bool isSending;
-	float loading;
-	FuriString* sending_path;
-	FuriString* status;
-	FuriString* progression;
+    bool isSending;
+    float loading;
+    FuriString* sending_path;
+    FuriString* status;
+    FuriString* progression;
 } SendingModel;
 
 typedef enum {
-    RedrawSendScreen = 0, 
+    RedrawSendScreen = 0,
 } EventId;
 
 View* sending_view_alloc(App* app);
