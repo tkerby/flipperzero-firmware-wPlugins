@@ -1,7 +1,7 @@
 #include "landing_view.h"
 #include <gui/elements.h>
 #include <ir_transfer_icons.h> // Assuming this is needed for icons
-#include "../Utils/draw_utils.h"
+#include "../utils/draw_utils.h"
 
 static void Landing_draw_callback(Canvas* canvas, void* model) {
     UNUSED(model);

@@ -117,13 +117,6 @@ ir_transfer/
 
 ## 🧰 Troubleshooting
 
-- **Missing imports / unresolved symbols**
-  Ensure all `.c` files are matched by the `sources` globs in `application.fam`.
-  Folder names are **lowercase**: `views/`, `infrared/`, `utils/`.
-
-- **Include path / case sensitivity**
-  Use `../infrared/...` and `../utils/...` (not `../Infrared/` or `../Utils/`).
-
 - **Build noise from other apps**
   External app warnings in your firmware tree don’t affect this app.
 

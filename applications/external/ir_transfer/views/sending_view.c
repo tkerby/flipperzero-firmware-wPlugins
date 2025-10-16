@@ -3,8 +3,8 @@
 #include <dialogs/dialogs.h> // For DialogsFileBrowserOptions, DialogsApp, dialog_file_browser_set_basic_options, dialog_file_browser_show, furi_record_open, furi_record_close
 #include <furi_hal.h> // For FURI_LOG_I, FURI_LOG_E
 #include <furi.h> // For furi_thread_alloc_ex, furi_thread_start, furi_thread_get_state, furi_thread_join, furi_thread_free, furi_delay_ms
-#include "../Utils/draw_utils.h"
-#include "../Infrared/infrared_transfer.h"
+#include "../utils/draw_utils.h"
+#include "../infrared/infrared_transfer.h"
 #include "../ir_main.h" // Explicitly include for TEXT_VIEWER_EXTENSION and RedrawSendScreen
 
 static void Sending_draw_callback(Canvas* canvas, void* model) {

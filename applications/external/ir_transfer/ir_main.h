@@ -2,7 +2,7 @@
 #include <gui/view_dispatcher.h>
 #include <gui/modules/text_input.h>
 #include <furi/core/string.h> // For FuriString*
-#include "Infrared/infrared_transfer.h" // For InfraredController
+#include "infrared/infrared_transfer.h" // For InfraredController
 
 typedef enum {
     LandingView,
