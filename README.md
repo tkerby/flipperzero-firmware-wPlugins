@@ -3,6 +3,8 @@
 
 File transfer over infrared between two Flipper Zero devices using the **NEC** protocol for both control and data.
 
+[WARNING] This repo is public for testing purpose only atm, It is working properly as intented
+
 ---
 
 ## ✨ Features
