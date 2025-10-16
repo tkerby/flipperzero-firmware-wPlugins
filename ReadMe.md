@@ -61,6 +61,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Free Roam v0.3.2 (By jblanked)](https://github.com/jblanked/Free-Roam) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [FlipSocial v2.0.4 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [FlipWorld v1.0.2 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- SubGHz: [Return Honeywell Sec with fixes and improvements (By htotoo & LiQuiDz & xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/d673fd5573eaa2755f3004ec35a7445c2620cb6d)
 
 <a name="release">
 
@@ -263,7 +264,7 @@ $ ./fbt dolphin_ext
 - SubGHz: [Beep on TX for SubGHz & Remote (By LeeroysHub)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/ad0a273a71d7701af30df75c9174f3bdc3fd6e4a)
 - SubGhz: [GPS support (By Sil333033) & SubGHz Repeater (By LeeroysHub) & Optimizations (By WillyJL) & Merge Fixes (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/3e5e1870621b52caad8fd1287e116c542703984a)
 - SubGHz: [keeloq jolly motors add full support with add manually (By pkooiman)](https://github.com/DarkFlippers/unleashed-firmware/commit/dd6e0a9b721c09b82a127aadd0a1accba8b18f7c)
-- SubGHz: [Ignore options - Alarms: Hollarm, GangQi | Cars: Kia, Starline, ScherKhan (By xMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/9effc03c355630b004afc52db976229a024d90d5)
+- SubGHz: [Ignore options - Alarms: Hollarm, GangQi | Cars: Kia, Starline, ScherKhan | Sensors: Magellan, Honeywell Sec, Honeywell WDB (doorbells), Legrand (doorbells), Feron (RGB lights) (By xMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/9effc03c355630b004afc52db976229a024d90d5)
 - SubGHz: Moved setting_user file to setting_user.txt! This makes it changable from IOS app. (By RogueMaster)
 - SubGHz: Nicer SubGHz Chat via [CLI Bridge (By ranchordo)](https://github.com/ranchordo/flipperzero-cli-bridge) with "chat" command (Thanks ESurge and qqMajikpp)
 - SubGHz: OFW PR [Decode RAW recordings #1667 (By qistoph)](https://github.com/flipperdevices/flipperzero-firmware/pull/1667)
