@@ -57,6 +57,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [IR Transfer v0.1 (By WBP20)](https://github.com/WBP20/ir_transfer)
 - Updated: [CANBUS v1.1.4 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
 - Updated: [FlipMap v0.2.2 (By jblanked)](https://github.com/jblanked/FlipMap) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- Added: [FDX-B Maker v1.0 (By snowsign)](https://github.com/snowsign/fdxb-maker)
 
 <a name="release">
 
@@ -498,6 +499,7 @@ $ ./fbt dolphin_ext
 - [EXTRA Demo v0.4 (By Milk-Cool)](https://github.com/Milk-Cool/EXTRA-demo) (This app has VERY useful functions!)
 - [FAP Boilerplate v1.3 (By leedave)](https://github.com/leedave/flipper-zero-fap-boilerplate)
 - [FastJS v1.2 (By jblanked)](https://github.com/jblanked/FastJS-FlipperZero)
+- [FDX-B Maker v1.0 (By snowsign)](https://github.com/snowsign/fdxb-maker)
 - [Fencing Test Box v0.1 (By aarjaneiro)](https://www.github.com/aarjaneiro/fencing_testbox)
 - [Financial Calculator v1.0 (By schaene)](https://github.com/schaene/Flipper-Financial-Calculator)
 - [FindMy Flipper v3.5.2 (By MatthewKuKanich)](https://github.com/MatthewKuKanich/FindMyFlipper)
@@ -506,7 +508,7 @@ $ ./fbt dolphin_ext
 - [Flashlight v1.2 (By xMasterX)](https://github.com/xMasterX/flipper-flashlight)
 - [FlipDownloader v1.3.4 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - [FlipLibrary v1.4 (By jblanked)](https://github.com/jblanked/FlipLibrary) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- [FlipMap v0.2.1 (By jblanked)](https://github.com/jblanked/FlipMap) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- [FlipMap v0.2.2 (By jblanked)](https://github.com/jblanked/FlipMap) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - [Flipper Blackhat v0.4 (By o7-machinehum)](https://github.com/o7-machinehum/flipper-blackhat-app) `Req: Blackhat Board` with [Blackhat OS](https://github.com/o7-machinehum/flipper-blackhat-os)
 - [Flipper Printer v1.0 (By alxcrt)](https://github.com/alxcrt/flipper-zero-thermal-printer) `Req: T7-US thermal printer module`
 - [FlipRPI v1.0 (By jblanked)](https://github.com/jblanked/FlipRPI) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
