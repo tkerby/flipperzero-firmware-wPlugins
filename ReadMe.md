@@ -56,6 +56,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [FlipMap v0.2.1 (By jblanked)](https://github.com/jblanked/FlipMap) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Added: [IR Transfer v0.1 (By WBP20)](https://github.com/WBP20/ir_transfer)
 - Updated: [CANBUS v1.1.4 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
+- Updated: [FlipMap v0.2.2 (By jblanked)](https://github.com/jblanked/FlipMap) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 
 <a name="release">
 
