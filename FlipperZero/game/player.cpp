@@ -1625,12 +1625,12 @@ void Player::userRequest(RequestType requestType)
 
     // Load credentials from storage
     bool credentialsLoaded = true;
-    if (!app->load_char("user_name", username, 64))
+    if (!app->load_char("user_name", username, 64, "flipper_http"))
     {
         FURI_LOG_E("Player", "Failed to load user_name");
         credentialsLoaded = false;
     }
-    if (!app->load_char("user_pass", password, 64))
+    if (!app->load_char("user_pass", password, 64, "flipper_http"))
     {
         FURI_LOG_E("Player", "Failed to load user_pass");
         credentialsLoaded = false;
