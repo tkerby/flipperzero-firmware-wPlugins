@@ -54,10 +54,11 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Mi Band NFC Writer v1.0 (By LucaTomei)](https://github.com/LucaTomei/flipper-miband-nfc-writer) (Fix run issue)
 - Added: [Water Sensor Reader v1.0 (By MatveyStrelov)](https://github.com/MatveyStrelov/flipper-water-sensor)
 - Added: [FlipMap v0.2.1 (By jblanked)](https://github.com/jblanked/FlipMap) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Added: [IR Transfer v0.1 (By WBP20)](https://github.com/WBP20/ir_transfer)
+- Added: [IR Transfer WIP v0.1 (By WBP20)](https://github.com/WBP20/ir_transfer)
 - Updated: [CANBUS v1.1.4 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
 - Updated: [FlipMap v0.2.2 (By jblanked)](https://github.com/jblanked/FlipMap) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Added: [FDX-B Maker v1.0 (By snowsign)](https://github.com/snowsign/fdxb-maker)
+- Updated: [Free Roam v0.3.2 (By jblanked)](https://github.com/jblanked/Free-Roam) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 
 <a name="release">
 
@@ -536,7 +537,7 @@ $ ./fbt dolphin_ext
 - [FM Transmitter KT0803 v1.0 (By goosedev72-projects)](https://github.com/goosedev72-projects/flipperzero-kt0803-transmitter) `Req: KT0803`
 - [FMF2USBMIDI v0.1 (By crackerjacques)](https://github.com/crackerjacques/Flipper_Zero_FMF2USBMIDI)
 - [Ford Radio Codes v0.1 (By DavidB445)](https://github.com/DavidB445/fz_fordradiocodes)
-- [Free Roam v0.3.1 (By jblanked)](https://github.com/jblanked/Free-Roam) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- [Free Roam v0.3.2 (By jblanked)](https://github.com/jblanked/Free-Roam) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - [Frequency Analyzer (External) v1.0 (By xMasterX)](https://github.com/xMasterX/all-the-plugins/tree/dev/non_catalog_apps/freq_analyzer_ext)
 - [FRSScan v0.2 (By thecybermind)](https://github.com/thecybermind/frsscan)
 - [FZ nRF24 Jammer v1.4 (By W0rthlessS0ul)](https://github.com/W0rthlessS0ul/FZ_nRF24_jammer)
@@ -576,7 +577,7 @@ $ ./fbt dolphin_ext
 - [IR Intervalometer v2.2 (By Nitepone)](https://github.com/Nitepone/flipper-intervalometer)
 - [IR Remote v1.1 (By Hong5489)](https://github.com/Hong5489/ir_remote)
 - [IR Scope v1.3 (By kallanreed)](https://github.com/kallanreed/unleashed-firmware/tree/dev/applications/external/ir_scope)
-- [IR Transfer v0.1 (By WBP20)](https://github.com/WBP20/ir_transfer)
+- [IR Transfer WIP v0.1 (By WBP20)](https://github.com/WBP20/ir_transfer)
 - [IR Xbox Controller v1.5 (By gebeto)](https://github.com/gebeto/flipper-xbox-controller)
 - [J305 Geiger Counter v1.4 (By nmrr)](https://github.com/nmrr/flipperzero-geigercounter)
 - [JS Runner v1.0 (By nminaylov & DrZlo13)-OFW](https://github.com/flipperdevices/flipperzero-firmware/pull/3286)
