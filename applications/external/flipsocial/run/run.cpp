@@ -1512,7 +1512,7 @@ void FlipSocialRun::drawProfileView(Canvas* canvas) {
     }
 
     char userInfo[256];
-    if(!app->loadChar("user_info", userInfo, sizeof(userInfo))) {
+    if(!app->loadChar("user_info", userInfo, sizeof(userInfo), APP_ID)) {
         canvas_set_font(canvas, FontSecondary);
         canvas_draw_str_aligned(
             canvas, 64, 32, AlignCenter, AlignCenter, "Failed to load user info.");
@@ -1520,7 +1520,7 @@ void FlipSocialRun::drawProfileView(Canvas* canvas) {
     }
 
     char username[64];
-    if(!app->loadChar("user_name", username, sizeof(username))) {
+    if(!app->loadChar("user_name", username, sizeof(username), "flipper_http")) {
         canvas_set_font(canvas, FontSecondary);
         canvas_draw_str_aligned(
             canvas, 64, 32, AlignCenter, AlignCenter, "Failed to load username.");
@@ -1777,7 +1777,7 @@ void FlipSocialRun::drawUserInfoView(Canvas* canvas) {
                 return;
             }
             char response[512];
-            if(app && app->loadChar("user_info", response, sizeof(response))) {
+            if(app && app->loadChar("user_info", response, sizeof(response), APP_ID)) {
                 userInfoStatus = UserInfoSuccess;
                 app->saveChar("login_status", "success");
                 if(loading) {
@@ -2580,11 +2580,11 @@ void FlipSocialRun::userRequest(RequestType requestType) {
 
     // Load credentials from storage
     bool credentialsLoaded = true;
-    if(!app->loadChar("user_name", username, 64)) {
+    if(!app->loadChar("user_name", username, 64, "flipper_http")) {
         FURI_LOG_E(TAG, "Failed to load user_name");
         credentialsLoaded = false;
     }
-    if(!app->loadChar("user_pass", password, 64)) {
+    if(!app->loadChar("user_pass", password, 64, "flipper_http")) {
         FURI_LOG_E(TAG, "Failed to load user_pass");
         credentialsLoaded = false;
     }
