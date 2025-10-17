@@ -55,12 +55,12 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Water Sensor Reader v1.0 (By MatveyStrelov)](https://github.com/MatveyStrelov/flipper-water-sensor)
 - Added: [FlipMap v0.2.1 (By jblanked)](https://github.com/jblanked/FlipMap) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Added: [IR Transfer WIP v0.1 (By WBP20)](https://github.com/WBP20/ir_transfer)
-- Updated: [CANBUS v1.1.4 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
 - Updated: [FlipMap v0.2.2 (By jblanked)](https://github.com/jblanked/FlipMap) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Added: [FDX-B Maker v1.0 (By snowsign)](https://github.com/snowsign/fdxb-maker)
 - Updated: [Free Roam v0.3.2 (By jblanked)](https://github.com/jblanked/Free-Roam) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [FlipSocial v2.0.4 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [FlipWorld v1.0.2 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- Updated: [CANBUS v1.1.4 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
 - SubGHz: [Return Honeywell Sec with fixes and improvements (By htotoo & LiQuiDz & xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/d673fd5573eaa2755f3004ec35a7445c2620cb6d)
 
 <a name="release">
