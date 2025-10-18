@@ -1,4 +1,4 @@
-# Fire String
+# 🔥 Fire String 🔥
 
 Generate truly random strings from the Flipper Zero using its IR sensor. Capture the infrared bursts from sparking a flame as an unpredictable entropy source. The app also allows saving and loading strings from internal storage or transferring them to external sources via USB.
 
@@ -35,20 +35,22 @@ The Fire String generator uses the IR sensor to detect unpredictable infrared no
 * Numeric
 * Binary
 
-## Disclaimer
+## ⚠️ Disclaimer
 
 Fire is dangerous and can burn things, always handle a flame with caution and care. Never ignite a flame too close to the Flipper or any other flammable objects, always ensure a safe distance is maintained. Never leave a flame unattended. I am not responsible for any damages or harm caused by playing with fire.
 
 While suitable for casual use, avoid using generated strings for secure cryptographic applications. This application was developed as a hobby project for fun and has not undergone rigorous cryptographic testing and should not be used in critical security applications without further verification.
 
-### Features to consider:
+## ❓ Features to consider:
+
 * Send Fire String using Bluetooth HID
 * Use raw subghz noise as entropy
 * Send Fire String using various other wireless capabilities (for fun?) e.g. NFC, RFID, subghz, infrared
 * Create custom animations and icons for more flare 🔥
 * Spam mode - continuously generate and send random characters while center button is held down (could be fun?)
 
-### Acknowledgments
+## 🤝 Acknowledgments
+
 [The Flipper Developer Docs](https://developer.flipper.net/flipperzero/doxygen/)
 
 [The Flipper Zero Firmware](https://github.com/flipperdevices/flipperzero-firmware)
