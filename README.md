@@ -72,7 +72,7 @@ There is a post on a website called emcot.world that has all of the codes that I
 And that's it!
 
 
-
+Credit to [wrenchathome]([url](https://github.com/wrenchathome/ofw_ble_spam)) for the BLE Spam code 
 (ChatGPT has helped a lot with the formation of the Flipper app, as I am fairly new to it.)
 (Thank you to the person who made the emcot.world guide, it has been a BIG help!)
 
