@@ -39,7 +39,7 @@ void flipper_migrate_files() {
     storage_common_remove(storage, BT_KEYS_STORAGE_OLD_PATH);
     storage_common_copy(storage, NOTIFICATION_SETTINGS_OLD_PATH, NOTIFICATION_SETTINGS_PATH);
     storage_common_remove(storage, NOTIFICATION_SETTINGS_OLD_PATH);
-    // Ext -> Int
+    // Int -> Ext
     storage_common_copy(storage, DESKTOP_SETTINGS_OLD_PATH, DESKTOP_SETTINGS_PATH);
     storage_common_remove(storage, DESKTOP_SETTINGS_OLD_PATH);
 
