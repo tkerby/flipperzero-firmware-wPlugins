@@ -54,7 +54,9 @@ bool desktop_main_input_callback(InputEvent* event, void* context) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     if(!storage_file_exists(storage, DESKTOP_SETTINGS_PATH)) {
         furi_record_close(RECORD_STORAGE);
-        main_view->callback(DesktopAnimationEventNewIdleAnimation, main_view->context); // NO SD SHOW INSERT SD ANIM or NO DESKTOP SETTINGS? RESTART FLIPPER
+        main_view->callback(
+            DesktopAnimationEventNewIdleAnimation,
+            main_view->context); // NO SD SHOW INSERT SD ANIM or NO DESKTOP SETTINGS? RESTART FLIPPER
     } else {
         // change to only check for game mode setting on keypress
         if(event->type == InputTypeShort || event->type == InputTypeLong) {
@@ -130,7 +132,7 @@ bool desktop_main_input_callback(InputEvent* event, void* context) {
         if(event->type == InputTypePress) {
             furi_timer_start(main_view->poweroff_timer, DESKTOP_MAIN_VIEW_POWEROFF_TIMEOUT);
         } else if(event->type == InputTypeRelease) {
-           furi_timer_stop(main_view->poweroff_timer);
+            furi_timer_stop(main_view->poweroff_timer);
         }
     }
 
