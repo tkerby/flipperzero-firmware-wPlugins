@@ -33,8 +33,8 @@ static int32_t word_list_worker(void* context) {
             }
 
             // malloc word_list using word_count
-            app->hid->word_list = (FuriString**)malloc(sizeof(FuriString*) * word_count);
-            if(app->hid->word_list == NULL) { // TODO: proper error handling
+            app->dict->word_list = (FuriString**)malloc(sizeof(FuriString*) * word_count);
+            if(app->dict->word_list == NULL) { // TODO: proper error handling
                 FURI_LOG_E(TAG, "Failed to allocate word list");
             }
 
@@ -42,7 +42,7 @@ static int32_t word_list_worker(void* context) {
             size_t j = 0;
             while(i < read_count) {
                 if(file_buf[i] == '\n' && read_count > 0) {
-                    app->hid->word_list[j] = furi_string_alloc_set(word_buffer);
+                    app->dict->word_list[j] = furi_string_alloc_set(word_buffer);
                     furi_string_reset(word_buffer);
                     j++;
                 } else {
@@ -50,8 +50,8 @@ static int32_t word_list_worker(void* context) {
                 }
                 i++;
             }
-            app->hid->word_list[j] = furi_string_alloc_set(word_buffer);
-            app->hid->word_list[j + 1] = furi_string_alloc();
+            app->dict->word_list[j] = furi_string_alloc_set(word_buffer);
+            app->dict->word_list[j + 1] = furi_string_alloc();
             free(file_buf);
         }
     } else {
