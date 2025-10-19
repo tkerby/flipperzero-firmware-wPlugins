@@ -49,7 +49,7 @@ void flipper_migrate_files() {
         storage_common_remove(storage, U2F_CNT_FILE); // Remove outdated on Ext
         storage_common_copy(storage, U2F_CNT_OLD_FILE, U2F_CNT_FILE); // Int -> Ext
     }
-    storage_common_copy(storage, U2F_KEY_OLD_FILE, U2F_KEY_FILE); // Ext -> Int
+    storage_common_copy(storage, U2F_KEY_OLD_FILE, U2F_KEY_FILE); // Int -> Ext
 
     furi_record_close(RECORD_STORAGE);
     FURI_LOG_I(TAG, "flipper_migrate_files DONE");

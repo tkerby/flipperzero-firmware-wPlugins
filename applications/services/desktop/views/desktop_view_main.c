@@ -51,71 +51,77 @@ bool desktop_main_input_callback(InputEvent* event, void* context) {
     furi_assert(context);
     DesktopMainView* main_view = context;
 
-    // change to only check for game mode setting on keypress
-    if(event->type == InputTypeShort || event->type == InputTypeLong) {
-        main_view->is_gamemode = false;
-        DesktopSettings* desktop_settings = malloc(sizeof(DesktopSettings));
-        DESKTOP_SETTINGS_LOAD(desktop_settings);
-        if(desktop_settings->is_dumbmode) main_view->is_gamemode = true;
-        free(desktop_settings);
-    }
-
-    if(main_view->is_gamemode == false && main_view->dummy_mode == false) {
-        if(event->type == InputTypeShort) {
-            if(event->key == InputKeyOk) {
-                main_view->callback(DesktopMainEventOpenMenu, main_view->context);
-            } else if(event->key == InputKeyUp) {
-                main_view->callback(DesktopMainEventOpenLockMenu, main_view->context);
-            } else if(event->key == InputKeyDown) {
-                main_view->callback(DesktopMainEventOpenArchive, main_view->context);
-            } else if(event->key == InputKeyLeft) {
-                main_view->callback(DesktopMainEventOpenFavoriteLeftShort, main_view->context);
-            }
-        } else if(event->type == InputTypeLong) {
-            if(event->key == InputKeyOk) {
-                main_view->callback(DesktopAnimationEventNewIdleAnimation, main_view->context);
-            } else if(event->key == InputKeyUp) {
-                main_view->callback(DesktopMainEventOpenFavoriteUpLong, main_view->context);
-            } else if(event->key == InputKeyDown) {
-                main_view->callback(DesktopMainEventOpenFavoriteDownLong, main_view->context);
-            } else if(event->key == InputKeyLeft) {
-                main_view->callback(DesktopMainEventOpenFavoriteLeftLong, main_view->context);
-            } else if(event->key == InputKeyRight) {
-                main_view->callback(DesktopMainEventOpenFavoriteRightLong, main_view->context);
-            }
-        }
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    if(!storage_file_exists(storage, DESKTOP_SETTINGS_PATH)) {
+        furi_record_close(RECORD_STORAGE);
+        main_view->callback(DesktopAnimationEventNewIdleAnimation, main_view->context); // NO SD SHOW INSERT SD ANIM or NO DESKTOP SETTINGS? RESTART FLIPPER
     } else {
-        if(event->type == InputTypeShort) {
-            if(event->key == InputKeyOk) {
-                main_view->callback(DesktopDummyEventOpenOk, main_view->context);
-            } else if(event->key == InputKeyUp) {
-                if(main_view->is_gamemode == true) {
-                    main_view->callback(
-                        DesktopMainEventOpenGamesMenu, main_view->context); // OPENS GamesMenu
-                } else {
+        // change to only check for game mode setting on keypress
+        if(event->type == InputTypeShort || event->type == InputTypeLong) {
+            main_view->is_gamemode = false;
+            DesktopSettings* desktop_settings = malloc(sizeof(DesktopSettings));
+            DESKTOP_SETTINGS_LOAD(desktop_settings);
+            if(desktop_settings->is_dumbmode) main_view->is_gamemode = true;
+            free(desktop_settings);
+        }
+
+        if(main_view->is_gamemode == false && main_view->dummy_mode == false) {
+            if(event->type == InputTypeShort) {
+                if(event->key == InputKeyOk) {
+                    main_view->callback(DesktopMainEventOpenMenu, main_view->context);
+                } else if(event->key == InputKeyUp) {
                     main_view->callback(DesktopMainEventOpenLockMenu, main_view->context);
+                } else if(event->key == InputKeyDown) {
+                    main_view->callback(DesktopMainEventOpenArchive, main_view->context);
+                } else if(event->key == InputKeyLeft) {
+                    main_view->callback(DesktopMainEventOpenFavoriteLeftShort, main_view->context);
                 }
-            } else if(event->key == InputKeyDown) {
-                main_view->callback(DesktopDummyEventOpenDown, main_view->context);
-            } else if(event->key == InputKeyLeft) {
-                main_view->callback(DesktopDummyEventOpenLeft, main_view->context);
+            } else if(event->type == InputTypeLong) {
+                if(event->key == InputKeyOk) {
+                    main_view->callback(DesktopAnimationEventNewIdleAnimation, main_view->context);
+                } else if(event->key == InputKeyUp) {
+                    main_view->callback(DesktopMainEventOpenFavoriteUpLong, main_view->context);
+                } else if(event->key == InputKeyDown) {
+                    main_view->callback(DesktopMainEventOpenFavoriteDownLong, main_view->context);
+                } else if(event->key == InputKeyLeft) {
+                    main_view->callback(DesktopMainEventOpenFavoriteLeftLong, main_view->context);
+                } else if(event->key == InputKeyRight) {
+                    main_view->callback(DesktopMainEventOpenFavoriteRightLong, main_view->context);
+                }
             }
-        } else if(event->type == InputTypeLong) {
-            if(event->key == InputKeyOk) {
-                main_view->callback(DesktopDummyEventOpenOkLong, main_view->context);
-            } else if(event->key == InputKeyUp) {
-                main_view->callback(DesktopDummyEventOpenUpLong, main_view->context);
-            } else if(event->key == InputKeyDown) {
-                main_view->callback(DesktopDummyEventOpenDownLong, main_view->context);
-            } else if(event->key == InputKeyLeft) {
-                if(main_view->is_gamemode == true) {
-                    main_view->callback(
-                        DesktopMainEventOpenClock, main_view->context); // OPENS CLOCK
-                } else {
-                    main_view->callback(DesktopDummyEventOpenLeftLong, main_view->context);
+        } else {
+            if(event->type == InputTypeShort) {
+                if(event->key == InputKeyOk) {
+                    main_view->callback(DesktopDummyEventOpenOk, main_view->context);
+                } else if(event->key == InputKeyUp) {
+                    if(main_view->is_gamemode == true) {
+                        main_view->callback(
+                            DesktopMainEventOpenGamesMenu, main_view->context); // OPENS GamesMenu
+                    } else {
+                        main_view->callback(DesktopMainEventOpenLockMenu, main_view->context);
+                    }
+                } else if(event->key == InputKeyDown) {
+                    main_view->callback(DesktopDummyEventOpenDown, main_view->context);
+                } else if(event->key == InputKeyLeft) {
+                    main_view->callback(DesktopDummyEventOpenLeft, main_view->context);
                 }
-            } else if(event->key == InputKeyRight) {
-                main_view->callback(DesktopDummyEventOpenRightLong, main_view->context);
+            } else if(event->type == InputTypeLong) {
+                if(event->key == InputKeyOk) {
+                    main_view->callback(DesktopDummyEventOpenOkLong, main_view->context);
+                } else if(event->key == InputKeyUp) {
+                    main_view->callback(DesktopDummyEventOpenUpLong, main_view->context);
+                } else if(event->key == InputKeyDown) {
+                    main_view->callback(DesktopDummyEventOpenDownLong, main_view->context);
+                } else if(event->key == InputKeyLeft) {
+                    if(main_view->is_gamemode == true) {
+                        main_view->callback(
+                            DesktopMainEventOpenClock, main_view->context); // OPENS CLOCK
+                    } else {
+                        main_view->callback(DesktopDummyEventOpenLeftLong, main_view->context);
+                    }
+                } else if(event->key == InputKeyRight) {
+                    main_view->callback(DesktopDummyEventOpenRightLong, main_view->context);
+                }
             }
         }
     }
@@ -124,7 +130,7 @@ bool desktop_main_input_callback(InputEvent* event, void* context) {
         if(event->type == InputTypePress) {
             furi_timer_start(main_view->poweroff_timer, DESKTOP_MAIN_VIEW_POWEROFF_TIMEOUT);
         } else if(event->type == InputTypeRelease) {
-            furi_timer_stop(main_view->poweroff_timer);
+           furi_timer_stop(main_view->poweroff_timer);
         }
     }
 
