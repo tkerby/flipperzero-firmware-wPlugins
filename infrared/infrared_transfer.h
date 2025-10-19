@@ -5,7 +5,8 @@
 #include <infrared_worker.h>
 #include <gui/view.h> // For View*
 #include <furi/core/string.h> // For FuriString*
-#include <notification/notification.h> // For RECORD_NOTIFICATION
+#include <notification/notification.h>
+#include <notification/notification_messages.h> // For RECORD_NOTIFICATION
 #include "../ir_main.h" // For App struct
 #include "infrared_signal.h"
 
@@ -32,6 +33,9 @@ typedef struct InfraredController {
 	char file_name_buffer[MAX_FILENAME_SIZE];
 	uint8_t file_name_index;
 	FuriString* file_path;
+	bool name_done;
+	NotificationApp* notifications; 
+    bool led_blinking;
 
 } InfraredController;
 

@@ -4,8 +4,6 @@
 #include <gui/view.h>
 #include <gui/view_dispatcher.h>
 #include <gui/elements.h>
-#include <gui/modules/submenu.h>
-#include <gui/modules/text_input.h>
 #include <gui/modules/widget.h>
 #include <gui/modules/file_browser.h>
 #include <gui/modules/variable_item_list.h>
@@ -60,21 +58,17 @@ App* app_alloc() {
     view_dispatcher_attach_to_gui(app->view_dispatcher, gui, ViewDispatcherTypeFullscreen);
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
 
-    app->text_input = text_input_alloc();
-    view_dispatcher_add_view(app->view_dispatcher, TextInputView, text_input_get_view(app->text_input));
     app->temp_buffer_size = 32;
     app->temp_buffer = (char*)malloc(app->temp_buffer_size);
 
     app->landing_view = landing_view_alloc(app);
     view_dispatcher_add_view(app->view_dispatcher, LandingView, app->landing_view);
 
-
 	app->rec_view = receiving_view_alloc(app);
     view_dispatcher_add_view(app->view_dispatcher, RecView, app->rec_view);
 
 	app->send_view = sending_view_alloc(app);
     view_dispatcher_add_view(app->view_dispatcher, SendView, app->send_view);
-
 
     app->notifications = furi_record_open(RECORD_NOTIFICATION);
 
@@ -89,10 +83,7 @@ void app_free(App* app) {
     notification_message(app->notifications, &sequence_display_backlight_enforce_auto);
 #endif
     furi_record_close(RECORD_NOTIFICATION);
-
 	furi_string_free(app->send_path);
-	view_dispatcher_remove_view(app->view_dispatcher, TextInputView);
-    text_input_free(app->text_input);
     free(app->temp_buffer);
     view_dispatcher_remove_view(app->view_dispatcher, LandingView);
     landing_view_free(app->landing_view);
