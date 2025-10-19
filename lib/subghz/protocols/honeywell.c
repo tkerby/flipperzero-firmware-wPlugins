@@ -76,11 +76,11 @@ const SubGhzProtocol subghz_protocol_honeywell = {
     .name = SUBGHZ_PROTOCOL_HONEYWELL_NAME,
     .type = SubGhzProtocolTypeStatic,
     .flag = SubGhzProtocolFlag_315 | SubGhzProtocolFlag_AM | SubGhzProtocolFlag_Decodable |
-            SubGhzProtocolFlag_Load | SubGhzProtocolFlag_Save | SubGhzProtocolFlag_Send |
-            SubGhzProtocolFlag_Sensors,
-    .encoder = &subghz_protocol_honeywell_encoder,
+            SubGhzProtocolFlag_Load | SubGhzProtocolFlag_Save | SubGhzProtocolFlag_Send,
     .decoder = &subghz_protocol_honeywell_decoder,
+    .encoder = &subghz_protocol_honeywell_encoder,
 
+    .filter = SubGhzProtocolFilter_Sensors,
 };
 
 static void subghz_protocol_decoder_honeywell_addbit(void* context, bool data);
