@@ -73,8 +73,8 @@ And that's it!
 
 
 
--# ChatGPT has helped a lot with the formation of the Flipper app, as I am fairly new to it.
--# Thank you to the person who made the emcot.world guide, it has been a BIG help!
+(ChatGPT has helped a lot with the formation of the Flipper app, as I am fairly new to it.)
+(Thank you to the person who made the emcot.world guide, it has been a BIG help!)
 
 
 
