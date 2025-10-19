@@ -88,9 +88,13 @@ typedef struct {
     BadUsbHidInterface interface;
     FuriHalUsbInterface* usb_if_prev;
     uint16_t layout[128];
-    char* char_list; // TODO: convert to FuriString*
-    FuriString** word_list;
 } FireStringHID;
+
+typedef struct {
+    FuriString* char_list;
+    FuriString** word_list;
+    size_t len;
+} FireStringDictionary;
 
 // app context
 typedef struct {
@@ -106,6 +110,7 @@ typedef struct {
     Loading* loading;
     InfraredWorker* ir_worker;
     FuriString* fire_string;
+    FireStringDictionary* dict;
     FireStringHID* hid;
     FireStringSettings* settings;
     FuriThread* thread;

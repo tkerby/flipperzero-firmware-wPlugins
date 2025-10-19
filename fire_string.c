@@ -150,6 +150,12 @@ FireString* fire_string_init() {
     memset(app->hid->layout, HID_KEYBOARD_NONE, sizeof(app->hid->layout));
     memcpy(app->hid->layout, hid_asciimap, MIN(sizeof(hid_asciimap), sizeof(app->hid->layout)));
 
+    // Init dictionary
+    app->dict = malloc(sizeof(FireStringDictionary));
+    app->dict->char_list = NULL;
+    app->dict->word_list = NULL;
+    app->dict->len = 0;
+
     app->fire_string = furi_string_alloc();
 
     fire_string_scene_manager_init(app);
@@ -180,18 +186,23 @@ void fire_string_free(FireString* app) {
     furi_string_free(app->fire_string);
     text_input_free(app->text_input);
 
-    if(app->hid->word_list != NULL) {
+    if(app->dict->word_list != NULL) {
         uint32_t i = 0;
-        while(app->hid->word_list[i] != NULL && !furi_string_empty(app->hid->word_list[i])) {
-            furi_string_free(app->hid->word_list[i]);
+        while(app->dict->word_list[i] != NULL && !furi_string_empty(app->dict->word_list[i])) {
+            furi_string_free(app->dict->word_list[i]);
             i++;
         }
-        free(app->hid->word_list);
-        app->hid->word_list = NULL;
+        free(app->dict->word_list);
+        app->dict->word_list = NULL;
+    }
+    if(app->dict->char_list != NULL) {
+        furi_string_free(app->dict->char_list);
+        app->dict->char_list = NULL;
     }
 
     free(app->settings);
     free(app->hid);
+    free(app->dict);
     free(app);
 }
 
