@@ -58,6 +58,7 @@ bool desktop_main_input_callback(InputEvent* event, void* context) {
             DesktopAnimationEventNewIdleAnimation,
             main_view->context); // NO SD SHOW INSERT SD ANIM or NO DESKTOP SETTINGS? RESTART FLIPPER
     } else {
+        furi_record_close(RECORD_STORAGE);
         // change to only check for game mode setting on keypress
         if(event->type == InputTypeShort || event->type == InputTypeLong) {
             main_view->is_gamemode = false;
