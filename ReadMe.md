@@ -60,7 +60,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Free Roam v0.3.2 (By jblanked)](https://github.com/jblanked/Free-Roam) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [FlipSocial v2.0.4 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [FlipWorld v1.0.2 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [CANBUS v1.1.4 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
 - SubGHz: [Return Honeywell Sec with fixes and improvements (By htotoo & LiQuiDz & xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/d673fd5573eaa2755f3004ec35a7445c2620cb6d)
 - Updated: [Pet a Dolphin v1.2 (By ugeneSmile)](https://github.com/EugeneSmile/PetADolphin)
 - Updated: [NFC E-Ink Tags v1.0.4 (By RebornedBrain)](https://github.com/flipperdevices/flipperzero-good-faps/pull/245)
@@ -69,6 +68,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Added alternative GAME MODE EXIT now that SD CARD is used for GAME MODE SETTINGS (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/GAMES_ONLY.md)
 - Updated: [IR Transfer WIP v0.1 (By WBP20)](https://github.com/WBP20/ir_transfer)
 - Updated: [SPI Mem Manager v1.4 (By drunkbatya)-OFW](https://github.com/flipperdevices/flipperzero-good-faps/tree/dev/spi_mem_manager) [Added FM25Q16A support for SPI MEM Manager (By majorpbx)](https://github.com/flipperdevices/flipperzero-good-faps/pull/288)
+- Updated: [CANBUS v1.1.4 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
 
 <a name="release">
 
