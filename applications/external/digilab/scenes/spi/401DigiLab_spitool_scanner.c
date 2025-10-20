@@ -165,12 +165,9 @@ static bool spitoolscanner_tests(cJSON* json_device) {
         } else {
             return false;
         }
-
-        if(res) {
-            return true;
-        }
     }
-    return false;
+
+    return res;
 }
 
 static void spitoolscanner_powercycle() {
@@ -273,7 +270,7 @@ static bool spitoolscanner_scan(AppSPIToolScanner* appSpitoolScanner) {
     with_view_model(
         appSpitoolScanner->view,
         SPIToolScannerModel * model,
-        { model->screenview = SPI_VIEW_DETAIL; },
+        { model->screenview = model->devices ? SPI_VIEW_DETAIL : SPI_VIEW_UNKNOWN; },
         true);
     return true;
 }
