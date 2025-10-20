@@ -68,6 +68,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Updated U2F & Desktop settings to save to SD. Also updated desktop behavior with no SD card. (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/d3caf2c7dea1bac3afb44af39ced0b3b6474197b)
 - [Added alternative GAME MODE EXIT now that SD CARD is used for GAME MODE SETTINGS (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/GAMES_ONLY.md)
 - Updated: [IR Transfer WIP v0.1 (By WBP20)](https://github.com/WBP20/ir_transfer)
+- Updated: [SPI Mem Manager v1.4 (By drunkbatya)-OFW](https://github.com/flipperdevices/flipperzero-good-faps/tree/dev/spi_mem_manager) [Added FM25Q16A support for SPI MEM Manager (By majorpbx)](https://github.com/flipperdevices/flipperzero-good-faps/pull/288)
 
 <a name="release">
 
