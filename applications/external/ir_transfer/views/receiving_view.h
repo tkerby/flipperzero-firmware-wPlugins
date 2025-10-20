@@ -2,7 +2,7 @@
 #include <gui/view.h>
 #include <furi/core/string.h>
 #include "../ir_main.h"
-#include "../infrared/infrared_transfer.h" // InfraredController
+#include "../infrared/infrared_transfer.h"
 
 typedef struct {
     float loading;
