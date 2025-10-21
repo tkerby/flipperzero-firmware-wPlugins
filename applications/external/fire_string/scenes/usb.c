@@ -1,10 +1,14 @@
 #include "../fire_string.h"
+#include "string_generator.h"
 
 static void usb_scene_builder(FireString* app);
 
 #define USB_ASCII_TO_KEY(script, x) \
     (((uint8_t)x < 128) ? (script->hid->layout[(uint8_t)x]) : HID_KEYBOARD_NONE)
 
+#define SPAM_UNLOCK 5
+
+uint8_t right_btn_clk_cnt = 0;
 bool usb_state = false;
 
 bool ducky_string(FireString* app) {
@@ -12,17 +16,13 @@ bool ducky_string(FireString* app) {
         return false;
     }
     const char* param = furi_string_get_cstr(app->fire_string);
+    uint16_t keycode = HID_KEYBOARD_NONE;
     uint32_t i = 0;
     while(param[i] != '\0') {
-        if(param[i] != '\n') { // inner conditional needed?
-            uint16_t keycode = USB_ASCII_TO_KEY(app, param[i]);
-            if(keycode != HID_KEYBOARD_NONE) {
-                app->hid->api->kb_press(app->hid->hid_inst, keycode);
-                app->hid->api->kb_release(app->hid->hid_inst, keycode);
-            }
-        } else {
-            app->hid->api->kb_press(app->hid->hid_inst, HID_KEYBOARD_RETURN);
-            app->hid->api->kb_release(app->hid->hid_inst, HID_KEYBOARD_RETURN);
+        keycode = USB_ASCII_TO_KEY(app, param[i]);
+        if(keycode != HID_KEYBOARD_NONE) {
+            app->hid->api->kb_press(app->hid->hid_inst, keycode);
+            app->hid->api->kb_release(app->hid->hid_inst, keycode);
         }
         i++;
     }
@@ -47,8 +47,40 @@ void usb_btn_callback(GuiButtonType result, InputType type, void* context) {
                 app->scene_manager, FireStringScene_GenerateStepTwo);
             break;
         case GuiButtonTypeRight:
-            // TODO: Info screen
+            if(right_btn_clk_cnt < SPAM_UNLOCK) {
+                right_btn_clk_cnt++;
+                if(right_btn_clk_cnt == SPAM_UNLOCK) {
+                    usb_scene_builder(app);
+                    furi_hal_vibro_on(true);
+                    furi_delay_ms(30);
+                    furi_hal_vibro_on(false);
+                }
+            }
             break;
+        }
+    }
+    if(type == InputTypeRepeat && right_btn_clk_cnt == SPAM_UNLOCK) {
+        if(app->hid->api->is_connected) {
+            uint16_t keycode = HID_KEYBOARD_NONE;
+            if(app->settings->str_type == StrType_Passphrase) {
+                const char* param = get_rnd_word(app, false);
+                uint32_t i = 0;
+                while(param[i] != '\0') {
+                    keycode = USB_ASCII_TO_KEY(app, param[i]);
+                    if(keycode != HID_KEYBOARD_NONE) {
+                        app->hid->api->kb_press(app->hid->hid_inst, keycode);
+                        app->hid->api->kb_release(app->hid->hid_inst, keycode);
+                    }
+                    i++;
+                }
+            } else {
+                char rnd_char = get_rnd_char(app, false);
+                keycode = USB_ASCII_TO_KEY(app, rnd_char);
+                if(keycode != HID_KEYBOARD_NONE) {
+                    app->hid->api->kb_press(app->hid->hid_inst, keycode);
+                    app->hid->api->kb_release(app->hid->hid_inst, keycode);
+                }
+            }
         }
     }
 }
@@ -59,15 +91,21 @@ static void usb_scene_builder(FireString* app) {
     widget_reset(app->widget);
 
     widget_add_icon_element(app->widget, 80, 20, &I_UsbTree_48x22);
-    // widget_add_button_element(app->widget, GuiButtonTypeRight, "Info", usb_btn_callback, app);   // TODO: Add info screen
     widget_add_button_element(app->widget, GuiButtonTypeLeft, "Back", usb_btn_callback, app);
 
     if(app->hid->api->is_connected(app->hid->hid_inst)) {
         widget_add_string_element(
             app->widget, 0, 0, AlignLeft, AlignTop, FontPrimary, "Ready to send Fire String");
-        widget_add_icon_element(app->widget, 62, 22, &I_Smile_18x18);
         widget_add_icon_element(app->widget, 0, 20, &I_Connected_62x31);
         widget_add_button_element(app->widget, GuiButtonTypeCenter, "Send", usb_btn_callback, app);
+        if(right_btn_clk_cnt < SPAM_UNLOCK) {
+            widget_add_icon_element(app->widget, 62, 22, &I_Smile_18x18);
+            widget_add_button_element(app->widget, GuiButtonTypeRight, "", usb_btn_callback, app);
+        } else {
+            widget_add_icon_element(app->widget, 62, 20, &I_EviSmile2_18x21);
+            widget_add_button_element(
+                app->widget, GuiButtonTypeRight, "Spam", usb_btn_callback, app);
+        }
     } else {
         widget_add_string_element(
             app->widget, 0, 0, AlignLeft, AlignTop, FontPrimary, "Waiting for connection...");
@@ -82,6 +120,7 @@ void fire_string_scene_on_enter_usb(void* context) {
 
     FireString* app = context;
 
+    right_btn_clk_cnt = 0;
     usb_state = app->hid->api->is_connected(app->hid->hid_inst);
     usb_scene_builder(app);
 

@@ -13,7 +13,9 @@ void build_string_generator_widget(FireString* app);
 uint32_t delay_ms = DEFAULT_DELAY;
 
 void get_char_list(FireString* app) {
-    FuriString* list = furi_string_alloc();
+    FURI_LOG_T(TAG, "get_char_list");
+
+    app->dict->char_list = furi_string_alloc();
 
     // Alphabet: Uppercase (65-90) and Lowercase (97-122)
     const int alphabet_ranges[ALPH_ROWS][COLS] = {
@@ -44,19 +46,19 @@ void get_char_list(FireString* app) {
         // cat alphabetic chars
         for(uint8_t i = 0; i < ALPH_ROWS; i++) {
             for(uint8_t j = alphabet_ranges[i][0]; j <= alphabet_ranges[i][COLS - 1]; j++) {
-                furi_string_cat_printf(list, "%c", j);
+                furi_string_push_back(app->dict->char_list, j);
             }
         }
         // cat numerical chars
         for(uint8_t i = 0; i < NUMS_ROWS; i++) {
             for(uint8_t j = numbers_ranges[i][0]; j <= numbers_ranges[i][COLS - 1]; j++) {
-                furi_string_cat_printf(list, "%c", j);
+                furi_string_push_back(app->dict->char_list, j);
             }
         }
         // cat symbol chars
         for(uint8_t i = 0; i < SYMB_ROWS; i++) {
             for(uint8_t j = symbols_ranges[i][0]; j <= symbols_ranges[i][COLS - 1]; j++) {
-                furi_string_cat_printf(list, "%c", j);
+                furi_string_push_back(app->dict->char_list, j);
             }
         }
         break;
@@ -64,13 +66,13 @@ void get_char_list(FireString* app) {
         // cat alphabetic chars
         for(uint8_t i = 0; i < ALPH_ROWS; i++) {
             for(uint8_t j = alphabet_ranges[i][0]; j <= alphabet_ranges[i][COLS - 1]; j++) {
-                furi_string_cat_printf(list, "%c", j);
+                furi_string_push_back(app->dict->char_list, j);
             }
         }
         // cat numerical chars
         for(uint8_t i = 0; i < NUMS_ROWS; i++) {
             for(uint8_t j = numbers_ranges[i][0]; j <= numbers_ranges[i][COLS - 1]; j++) {
-                furi_string_cat_printf(list, "%c", j);
+                furi_string_push_back(app->dict->char_list, j);
             }
         }
         break;
@@ -78,7 +80,7 @@ void get_char_list(FireString* app) {
         // cat alphabetic chars
         for(uint8_t i = 0; i < ALPH_ROWS; i++) {
             for(uint8_t j = alphabet_ranges[i][0]; j <= alphabet_ranges[i][COLS - 1]; j++) {
-                furi_string_cat_printf(list, "%c", j);
+                furi_string_push_back(app->dict->char_list, j);
             }
         }
         break;
@@ -86,7 +88,7 @@ void get_char_list(FireString* app) {
         // cat symbol chars
         for(uint8_t i = 0; i < SYMB_ROWS; i++) {
             for(uint8_t j = symbols_ranges[i][0]; j <= symbols_ranges[i][COLS - 1]; j++) {
-                furi_string_cat_printf(list, "%c", j);
+                furi_string_push_back(app->dict->char_list, j);
             }
         }
         break;
@@ -94,7 +96,7 @@ void get_char_list(FireString* app) {
         // cat numerical chars
         for(uint8_t i = 0; i < NUMS_ROWS; i++) {
             for(uint8_t j = numbers_ranges[i][0]; j <= numbers_ranges[i][COLS - 1]; j++) {
-                furi_string_cat_printf(list, "%c", j);
+                furi_string_push_back(app->dict->char_list, j);
             }
         }
         break;
@@ -102,30 +104,26 @@ void get_char_list(FireString* app) {
         // cat binary chars
         for(uint8_t i = 0; i < BIN_ROWS; i++) {
             for(uint8_t j = binary_range[i][0]; j <= binary_range[i][COLS - 1]; j++) {
-                furi_string_cat_printf(list, "%c", j);
+                furi_string_push_back(app->dict->char_list, j);
             }
         }
         break;
     }
-
-    app->hid->char_list = (char*)malloc(sizeof(char) * furi_string_size(list));
-    memcpy(app->hid->char_list, furi_string_get_cstr(list), furi_string_size(list));
-    furi_string_free(list);
 }
 
-uint32_t get_dict_len(FireString* app) {
-    size_t dict_len = 0;
+void get_dict_len(FireString* app) {
+    FURI_LOG_T(TAG, "get_dict_len");
+
+    app->dict->len = 0;
     if(app->settings->str_type == StrType_Passphrase) {
-        uint32_t i = 0;
-        while(app->hid->word_list[i] != NULL && !furi_string_empty(app->hid->word_list[i])) {
+        size_t i = 0;
+        while(app->dict->word_list[i] != NULL && !furi_string_empty(app->dict->word_list[i])) {
             i++;
         }
-        dict_len = i;
+        app->dict->len = i;
     } else {
-        dict_len = strlen(app->hid->char_list);
+        app->dict->len = furi_string_size(app->dict->char_list);
     }
-
-    return dict_len;
 }
 
 // Get string length or word count if phrase is enabled
@@ -160,42 +158,56 @@ void vibro(FireString* app) {
     }
 }
 
-// Use internal rng to append random char or word to fire_string
-void random_generator(FireString* app) {
-    size_t dict_len = get_dict_len(app);
-    furi_hal_random_init();
-
-    if(app->settings->str_type == StrType_Passphrase) {
-        uint32_t rnd_buffer = 0;
-        rnd_buffer = furi_hal_random_get() & 0xFFF; // Bit mask for 12 bit; max int index 4095
-        while(rnd_buffer > dict_len - 1) {
-            rnd_buffer = furi_hal_random_get() & 0xFFF;
-        }
-        if(furi_string_size(app->fire_string) < 1) {
-            furi_string_set(app->fire_string, app->hid->word_list[rnd_buffer]);
-        } else {
-            furi_string_cat_printf(
-                app->fire_string, "-%s", furi_string_get_cstr(app->hid->word_list[rnd_buffer]));
-        }
-    } else {
-        uint8_t rnd_byte = 0b00000000;
-        furi_hal_random_fill_buf(&rnd_byte, sizeof(rnd_byte));
-        rnd_byte &= 0b01111111; // Bit mask for char
-        while(rnd_byte > dict_len - 1) {
-            rnd_byte = 0;
-            furi_hal_random_fill_buf(&rnd_byte, sizeof(rnd_byte));
-            rnd_byte &= 0b01111111;
-        }
-        furi_string_push_back(app->fire_string, app->hid->char_list[rnd_byte]);
+// get word using internal rng
+const char* get_rnd_word(FireString* app, bool save) {
+    uint32_t rnd_buffer = 0;
+    rnd_buffer = furi_hal_random_get() & 0xFFF; // Bit mask for 12 bit; max int index 4095
+    while(rnd_buffer > app->dict->len - 1) {
+        rnd_buffer = furi_hal_random_get() & 0xFFF;
     }
+    if(furi_string_size(app->fire_string) < 1 && save) {
+        furi_string_set(app->fire_string, app->dict->word_list[rnd_buffer]);
+    } else {
+        if(save) {
+            furi_string_cat_printf(
+                app->fire_string, "-%s", furi_string_get_cstr(app->dict->word_list[rnd_buffer]));
+        }
+    }
+    if(!save) {
+        return furi_string_get_cstr(app->dict->word_list[rnd_buffer]);
+    }
+    return 0;
 }
 
-// User internal rng to generate fire_string of str_len
+// get character using internal rng
+char get_rnd_char(FireString* app, bool save) {
+    uint8_t rnd_byte = 0b00000000;
+    furi_hal_random_fill_buf(&rnd_byte, sizeof(rnd_byte));
+    rnd_byte &= 0b01111111; // Bit mask for char
+    while(rnd_byte > app->dict->len - 1) {
+        rnd_byte = 0;
+        furi_hal_random_fill_buf(&rnd_byte, sizeof(rnd_byte));
+        rnd_byte &= 0b01111111;
+    }
+    if(save) {
+        furi_string_push_back(
+            app->fire_string, furi_string_get_char(app->dict->char_list, rnd_byte));
+    } else {
+        return furi_string_get_char(app->dict->char_list, rnd_byte);
+    }
+    return 0;
+}
+
+// use internal rng to generate fire_string of str_len
 void get_random_str(FireString* app) {
     uint32_t str_len = app->settings->str_len - get_str_len(app);
 
     for(uint32_t i = 0; i < str_len; i++) {
-        random_generator(app);
+        if(app->settings->str_type == StrType_Passphrase) {
+            get_rnd_word(app, true);
+        } else {
+            get_rnd_char(app, true);
+        }
     }
 }
 
@@ -268,12 +280,12 @@ void build_string_generator_widget(FireString* app) {
     furi_string_free(progress);
 }
 
+// rng using IR input
 static void ir_received_callback(void* context, InfraredWorkerSignal* signal) {
     FURI_LOG_T(TAG, "ir_received_callback");
     furi_assert(context);
 
     FireString* app = context;
-    size_t dict_len = get_dict_len(app);
 
     const uint32_t* timings;
     size_t timings_size;
@@ -288,19 +300,20 @@ static void ir_received_callback(void* context, InfraredWorkerSignal* signal) {
                     furi_string_cat_printf(
                         app->fire_string,
                         "%s",
-                        furi_string_get_cstr(app->hid->word_list[timings[i] % dict_len]));
+                        furi_string_get_cstr(app->dict->word_list[timings[i] % app->dict->len]));
                 } else {
                     furi_string_cat_printf(
                         app->fire_string,
                         "-%s",
-                        furi_string_get_cstr(app->hid->word_list[timings[i] % dict_len]));
+                        furi_string_get_cstr(app->dict->word_list[timings[i] % app->dict->len]));
                 }
                 i++;
             }
         } else {
             while(get_str_len(app) < app->settings->str_len && i < timings_size) {
                 furi_string_push_back(
-                    app->fire_string, app->hid->char_list[timings[i] % dict_len]);
+                    app->fire_string,
+                    furi_string_get_char(app->dict->char_list, timings[i] % app->dict->len));
                 i++;
             }
         }
@@ -336,11 +349,17 @@ void fire_string_scene_on_enter_string_generator(void* context) {
 
     view_dispatcher_switch_to_view(app->view_dispatcher, FireStringView_Widget);
 
-    if(app->settings->str_type == StrType_Passphrase && app->hid->word_list == NULL) {
+    furi_hal_random_init();
+
+    if(app->settings->str_type == StrType_Passphrase && app->dict->word_list == NULL) {
         scene_manager_next_scene(app->scene_manager, FireStringScene_Loading_Word_List);
     }
     if(app->settings->str_type != StrType_Passphrase) {
         get_char_list(app);
+    }
+
+    if(app->dict->char_list != NULL || app->dict->word_list != NULL) {
+        get_dict_len(app);
     }
 
     build_string_generator_widget(app);
@@ -376,8 +395,12 @@ bool fire_string_scene_on_event_string_generator(void* context, SceneManagerEven
             if(get_str_len(app) > 30) { // arbitrarily skip animation at certain length
                 get_random_str(app);
             } else {
-                random_generator(app);
-                furi_delay_tick(furi_ms_to_ticks(delay_ms));
+                if(app->settings->str_type == StrType_Passphrase) {
+                    get_rnd_word(app, true);
+                } else {
+                    get_rnd_char(app, true);
+                }
+                furi_delay_ms(delay_ms);
                 if(delay_ms > 1) {
                     delay_ms /= 1.5;
                 } else {
@@ -398,20 +421,24 @@ void fire_string_scene_on_exit_string_generator(void* context) {
     furi_check(context);
 
     FireString* app = context;
+
     if(app->ir_worker != NULL) {
         infrared_rx_stop(app);
     }
-    if(app->settings->str_type == StrType_Passphrase && app->hid->word_list != NULL) { // Phrase
+
+    // clean dictionaries not in use
+    if(app->settings->str_type != StrType_Passphrase && app->dict->word_list != NULL) {
         uint32_t i = 0;
-        while(app->hid->word_list[i] != NULL && !furi_string_empty(app->hid->word_list[i])) {
-            furi_string_free(app->hid->word_list[i]);
+        while(app->dict->word_list[i] != NULL && !furi_string_empty(app->dict->word_list[i])) {
+            furi_string_free(app->dict->word_list[i]);
             i++;
         }
-        free(app->hid->word_list);
-        app->hid->word_list = NULL;
+        free(app->dict->word_list);
+        app->dict->word_list = NULL;
     }
-    if(app->settings->str_type != StrType_Passphrase && app->hid->char_list != NULL) {
-        free(app->hid->char_list);
+    if(app->settings->str_type == StrType_Passphrase && app->dict->char_list != NULL) {
+        furi_string_free(app->dict->char_list);
+        app->dict->char_list = NULL;
     }
 
     widget_reset(app->widget);

@@ -48,7 +48,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Fire String v1.0 (By RyanAboueljoud)](https://github.com/RyanAboueljoud/Fire-String)
 - [Updated default animations to include Halloween animation (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/dbc5895b30f3afb2f692dd7a8681945832cf80a3) [Updated on Stock, Minimal and Manifest Switcher Builds for Patreon Members](https://www.patreon.com/RogueMaster/membership)
 - [Updated 18+, 420-18+ and Manifest Switcher Builds for Patreon Members to include 4 new 18+ animations submitted by Discord users](https://www.patreon.com/RogueMaster/membership)
-- Updated: [Fire String v1.0 (By RyanAboueljoud)](https://github.com/RyanAboueljoud/Fire-String) (Fix run issue)
 - Added: [Mi Band NFC Writer v1.0 (By LucaTomei)](https://github.com/LucaTomei/flipper-miband-nfc-writer)
 - Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [Mi Band NFC Writer v1.0 (By LucaTomei)](https://github.com/LucaTomei/flipper-miband-nfc-writer) (Fix run issue)
@@ -70,6 +69,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [SPI Mem Manager v1.4 (By drunkbatya)-OFW](https://github.com/flipperdevices/flipperzero-good-faps/tree/dev/spi_mem_manager) [Added FM25Q16A support for SPI MEM Manager (By majorpbx)](https://github.com/flipperdevices/flipperzero-good-faps/pull/288)
 - Updated: [CANBUS v1.1.4 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
 - Updated: [Lab401/DigiLab v1.1.1 (By lab-401 & tixlegeek)](https://github.com/lab-401/fzDigiLab)
+- Updated: [Fire String v1.2 (By RyanAboueljoud)](https://github.com/RyanAboueljoud/Fire-String) (Fix run issue)
 
 <a name="release">
 
@@ -515,7 +515,7 @@ $ ./fbt dolphin_ext
 - [Fencing Test Box v0.1 (By aarjaneiro)](https://www.github.com/aarjaneiro/fencing_testbox)
 - [Financial Calculator v1.0 (By schaene)](https://github.com/schaene/Flipper-Financial-Calculator)
 - [FindMy Flipper v3.5.2 (By MatthewKuKanich)](https://github.com/MatthewKuKanich/FindMyFlipper)
-- [Fire String v1.0 (By RyanAboueljoud)](https://github.com/RyanAboueljoud/Fire-String)
+- [Fire String v1.2 (By RyanAboueljoud)](https://github.com/RyanAboueljoud/Fire-String)
 - [Flame RNG v0.3 (By OrionW06)](https://github.com/OrionW06/Flame-RNG)
 - [Flashlight v1.2 (By xMasterX)](https://github.com/xMasterX/flipper-flashlight)
 - [FlipDownloader v1.3.4 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)

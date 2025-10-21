@@ -21,7 +21,10 @@ void fire_string_scene_on_enter_about(void* context) {
         tmp_str, "Generate a truly random\nstring using IR noise as\nentropy.\n\n");
     furi_string_cat_printf(
         tmp_str,
-        "Ignite a lighter 6+ inches\naway from the Flipper's IR\nsensor. The Fire String\ngenerator will capture IR\nbursts and use them to\ngenerate truly random strings\nof characters.\n");
+        "When generating a string,\nflick a lighter several inches\naway from the Flipper Zero's\nIR sensor to capture IR bursts\nwhich are then used to\ngenerate random strings.\n\n");
+    furi_string_cat_printf(
+        tmp_str,
+        "Fire is dangerous and can\nburn things, always handle a\nflame with caution and care.");
 
     widget_add_text_box_element(
         app->widget,
