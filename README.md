@@ -1,5 +1,9 @@
 # Disney MagicBand + Lights at home
 
+**Unofficial project.** Not affiliated with, endorsed, or sponsored by The Walt Disney Company.
+MagicBand and MagicBand+ are trademarks of Disney Enterprises, Inc. Names are used only to
+describe compatibility.
+
 Welcome!
 This Github repository hosts the open source files for the MagicBand + Light commands that I have compiled into a app for the Flipper Zero, so you can have your own light show at home!
 
