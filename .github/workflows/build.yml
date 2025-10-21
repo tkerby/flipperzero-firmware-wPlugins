@@ -22,6 +22,14 @@ jobs:
       - name: Fetch SDK
         run: ufbt update
 
+      - name: Debug tree
+        run: |
+          pwd
+          ls -lah
+          ls -lah protocols || true
+          git ls-files | grep -i ble_spam_icons || true
+          sed -n '1,120p' protocols/_base.h
+        
       - name: Build
         run: APPID=magicband_plus_lights ufbt build
 
