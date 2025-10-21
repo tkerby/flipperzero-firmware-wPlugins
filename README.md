@@ -33,7 +33,7 @@ This app holds all *current* known MagicBand BLE Commands.
 # Part 2: How can I install it?
 There is 2 ways - both require downloading the .fap from the releases on this repository.
 
-This app can be put **wherever** you want in the Flipper's directory, but since it is a Bluetooth application, I reccomend you put it in the Bluetooth folder.
+This app can be put **wherever** you want in the Flipper's directory, but since it is a Bluetooth application, I recommend you put it in the Bluetooth folder.
 
 You can put it in by 2 ways: qFlipper or the Flipper mobile app. 
 
