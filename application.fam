@@ -1,15 +1,19 @@
 App(
     appid="magicband_plus_lights",
-    name="MagicBand+ Lights",
-    apptype=FlipperAppType.EXTERNAL,
+    name="MagicBand Plus Lights (Unofficial)",
+    apptype=FlipperAppType.EXTERNAL,          # <-- must be EXTERNAL
     entry_point="ble_spam",
     stack_size=2 * 1024,
-
     fap_icon="ble_spam_10px.png",
     fap_category="Bluetooth",
+    fap_file_assets="assets",
 
-    fap_author="@Haw8411",
+    # These two lines make uFBT generate ble_spam_icons.[ch]
+    fap_icon_assets="icons",                   # <-- folder committed to your repo
+    fap_icon_assets_symbol="ble_spam",         # <-- prefix for generated symbols
+
+    fap_author="Henry Willis (Haw8411)",
     fap_weburl="https://github.com/Haw8411/magic-band-plus-lights",
     fap_version="1.0.0",
-    fap_description="Trigger MagicBand+ light/vibe effects via BLE advertisements.",
+    fap_description="Trigger light effects on compatible bands. Works with MagicBand+. Not affiliated with Disney.",
 )
