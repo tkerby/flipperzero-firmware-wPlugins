@@ -1,4 +1,6 @@
 #pragma once
+#include <stddef.h>
+#include "../ble_spam.h"   // must be before using Protocol / Payload
 
 #include "continuity.h"
 #include "easysetup.h"
