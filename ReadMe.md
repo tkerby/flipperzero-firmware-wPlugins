@@ -70,6 +70,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Fire String v1.2 (By RyanAboueljoud)](https://github.com/RyanAboueljoud/Fire-String)
 - Updated: [CANBUS v1.1.6 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
 - Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip)
+- SubGHz: [Add IL-100 Smart support for Add manually (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/9ae3af999f4a6ca78fb0b6cbc9a20818d33f1f04)
+- SubGHz: [Add experimental counter overflow mode (OFEX), replicates how some key duplicators work, DO NOT USE if you don't know what you are doing, it will reset your counter value! (accesible with debug on in radio settings - counter incr.) (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/a2cc68b40ce3f5b1d01dd50b1e1e56b50c41f66e)
+- SubGHz: [Honeywell support for old files with 62-63bits (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/b63c7a8772d49876ab1e403636cf66f214835d86)
 
 <a name="release">
 
