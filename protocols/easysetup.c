@@ -1,5 +1,5 @@
-#include "easysetup.h"
 #include "_protocols.h"
+#include <stddef.h>  // for NULL
 
 // Hacked together by @Willy-JL and @Spooks4576
 // Research by @Spooks4576
