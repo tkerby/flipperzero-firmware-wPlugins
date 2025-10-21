@@ -47,7 +47,6 @@ While suitable for casual use, avoid using generated strings for secure cryptogr
 * Use raw subghz noise as entropy
 * Send Fire String using various other wireless capabilities (for fun?) e.g. NFC, RFID, subghz, infrared
 * Create custom animations and icons for more flare 🔥
-* Spam mode - continuously generate and send random characters while center button is held down (could be fun?)
 
 ## 🤝 Acknowledgments
 
