@@ -1,7 +1,7 @@
 App(
     appid="magicband_plus_lights",
     name="MagicBand Plus Lights (Unofficial)",
-    apptype=FlipperAppType.EXTERNAL,     
+    apptype=FlipperAppType.EXTERNAL,      # must be EXTERNAL
     entry_point="ble_spam",
     stack_size=2 * 1024,
 
@@ -9,6 +9,7 @@ App(
     fap_category="Bluetooth",
     fap_file_assets="assets",
 
+    # These lines trigger generation of ble_spam_icons.[ch]
     fap_icon_assets="icons",
     fap_icon_assets_symbol="ble_spam",
 
