@@ -1,9 +1,9 @@
-// protocols/_protocols.h
 #pragma once
 
-// Must come first so Protocol/Payload are known to everything below
+/* THIS MUST BE FIRST so Protocol/Payload are known everywhere */
 #include "_base.h"
 
+/* Now include per-protocol public headers */
 #include "continuity.h"
 #include "easysetup.h"
 #include "fastpair.h"
@@ -12,13 +12,11 @@
 #include "swiftpair.h"
 #include "magicband.h"
 
-// (rest of your declarations)
-
-// Master list (defined in _protocols.c)
+/* Registry of all protocols */
 extern const Protocol* protocols[];
 
-// Handy pair for menus/selectors
+/* Example composite that other code uses */
 typedef struct {
     const Protocol* protocol;
     Payload         payload;
-} ProtocolWithPayload;
+} Attack;
