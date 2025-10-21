@@ -1,7 +1,9 @@
+// protocols/_protocols.h
 #pragma once
+
+// Must come first so Protocol/Payload are known to everything below
 #include "_base.h"
 
-// Pull in each protocol’s header (each one should also include _base.h itself)
 #include "continuity.h"
 #include "easysetup.h"
 #include "fastpair.h"
@@ -9,6 +11,8 @@
 #include "nameflood.h"
 #include "swiftpair.h"
 #include "magicband.h"
+
+// (rest of your declarations)
 
 // Master list (defined in _protocols.c)
 extern const Protocol* protocols[];
