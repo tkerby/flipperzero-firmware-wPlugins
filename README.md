@@ -13,7 +13,7 @@ And other information of course!
 
 # Download the app first:
 
-[Click here to download the app for your Flipper Zero.]([url](https://github.com/Haw8411/magic-band-plus-lights/blob/main/magicband_plus_lights.fap))
+https://github.com/Haw8411/magic-band-plus-lights/blob/main/magicband_plus_lights.fap
 
 # Part 1: What is this app anyway?
 
