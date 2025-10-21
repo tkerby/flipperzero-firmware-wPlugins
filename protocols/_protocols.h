@@ -1,7 +1,7 @@
 #pragma once
-#include <stddef.h>
-#include "../ble_spam.h"   // must be before using Protocol / Payload
+#include "_base.h"
 
+// Pull in each protocol’s header (each one should also include _base.h itself)
 #include "continuity.h"
 #include "easysetup.h"
 #include "fastpair.h"
@@ -10,39 +10,11 @@
 #include "swiftpair.h"
 #include "magicband.h"
 
-typedef enum {
-    PayloadModeRandom,
-    PayloadModeValue,
-    PayloadModeBruteforce,
-} PayloadMode;
-
-struct Payload {
-    bool random_mac;
-    PayloadMode mode;
-    struct {
-        uint8_t counter;
-        uint32_t value;
-        uint8_t size;
-    } bruteforce;
-    union {
-        MagicbandCfg magicband;
-
-        ContinuityCfg continuity;
-        EasysetupCfg easysetup;
-        FastpairCfg fastpair;
-        LovespouseCfg lovespouse;
-        NamefloodCfg nameflood;
-        SwiftpairCfg swiftpair;
-    } cfg;
-};
-
+// Master list (defined in _protocols.c)
 extern const Protocol* protocols[];
 
-extern const size_t protocols_count;
-
-struct Attack {
-    const char* title;
-    const char* text;
+// Handy pair for menus/selectors
+typedef struct {
     const Protocol* protocol;
-    Payload payload;
-};
+    Payload         payload;
+} ProtocolWithPayload;
