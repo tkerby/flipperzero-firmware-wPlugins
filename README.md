@@ -13,7 +13,7 @@ And other information of course!
 
 # Download the app first:
 
-https://github.com/Haw8411/magic-band-plus-lights/blob/main/magicband_plus_lights.fap
+https://github.com/Haw8411/magic-band-plus-lights/releases/download/v1.0.0/magicband_plus_lights.fap
 
 # Part 1: What is this app anyway?
 
