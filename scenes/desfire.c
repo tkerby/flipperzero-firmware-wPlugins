@@ -51,6 +51,7 @@ TransitCardInfo cards[87] = {
     {0x1120EF, "HSL (HEL)", "HRT", true},
     {0x1201F4, "itso", "ITSO (UK)", false},
     {0x1301F4, "itso", "ITSO (UK)", false},
+    {0x1401F4, "itso", "ITSO (UK)", false},
     {0x1602A0, "itso", "ITSO (UK)", false},
     {0x171108, "TRIPKO (MNL)", "JourneyTech", true},
     {0x227508, "Umo", "Cubic", true},
