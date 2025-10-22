@@ -49,8 +49,6 @@ static void suica_model_initialize(SuicaHistoryViewModel* model, size_t initial_
     model->history.exit_station.jr_header = furi_string_alloc_set("0");
     model->history.entry_line = RailwaysList[SUICA_RAILWAY_NUM];
     model->history.exit_line = RailwaysList[SUICA_RAILWAY_NUM];
-    model->buffer = furi_string_alloc();
-    furi_string_reserve(model->buffer, 64);
 }
 
 static void suica_model_initialize_after_load(SuicaHistoryViewModel* model) {
@@ -63,8 +61,6 @@ static void suica_model_initialize_after_load(SuicaHistoryViewModel* model) {
     model->history.exit_station.jr_header = furi_string_alloc_set("0");
     model->history.entry_line = RailwaysList[SUICA_RAILWAY_NUM];
     model->history.exit_line = RailwaysList[SUICA_RAILWAY_NUM];
-    model->buffer = furi_string_alloc();
-    furi_string_reserve(model->buffer, 64);
 }
 
 static void suica_model_free(SuicaHistoryViewModel* model) {
@@ -73,17 +69,16 @@ static void suica_model_free(SuicaHistoryViewModel* model) {
     furi_string_free(model->history.entry_station.jr_header);
     furi_string_free(model->history.exit_station.name);
     furi_string_free(model->history.exit_station.jr_header);
-    furi_string_free(model->buffer);
     // no need to free RailwaysList — static
 }
 
 static void suica_add_entry(SuicaHistoryViewModel* model, const uint8_t* entry) {
     if(model->size <= 0) {
-        suica_model_initialize(model, 20);
+        suica_model_initialize(model, 3);
     }
     // Check if resizing is needed
     if(model->size == model->capacity) {
-        size_t new_capacity = model->capacity + 1; // Increment the capacity, very unlikely
+        size_t new_capacity = model->capacity * 2; // Double the capacity
         uint8_t* new_data =
             (uint8_t*)realloc(model->travel_history, new_capacity * FELICA_DATA_BLOCK_SIZE);
         model->travel_history = new_data;
@@ -107,79 +102,71 @@ static void suica_parse_train_code(
     Storage* storage = furi_record_open(RECORD_STORAGE);
     Stream* stream = file_stream_alloc(storage);
 
-    // Reuse one dynamic string plus small stack buffers
-    FuriString* line = model->buffer; // was reserved in initialize()
-    furi_string_reset(line);
-    char file_name[64];
-    char line_candidate[48] = SUICA_RAILWAY_UNKNOWN_NAME;
-    char station_candidate[48] = SUICA_RAILWAY_UNKNOWN_NAME;
-    char station_num_candidate[8] = "0";
-    char station_jr_header_candidate[8] = "0";
-    char want_line[8], want_line_station[16];
-    snprintf(want_line, sizeof(want_line), "0x%02X", line_code);
-    snprintf(
-        want_line_station, sizeof(want_line_station), "0x%02X,0x%02X", line_code, station_code);
+    FuriString* line = furi_string_alloc();
+    FuriString* line_code_str = furi_string_alloc();
+    FuriString* line_and_station_code_str = furi_string_alloc();
+    FuriString* line_candidate = furi_string_alloc_set(SUICA_RAILWAY_UNKNOWN_NAME);
+    FuriString* station_candidate = furi_string_alloc_set(SUICA_RAILWAY_UNKNOWN_NAME);
+    FuriString* station_num_candidate = furi_string_alloc_set("0");
+    FuriString* station_JR_header_candidate = furi_string_alloc_set("0");
+    FuriString* line_copy = furi_string_alloc();
+    FuriString* file_name = furi_string_alloc();
 
-    snprintf(
-        file_name,
-        sizeof(file_name),
-        "%sArea%01X/line_0x%02X.txt",
-        SUICA_STATION_LIST_PATH,
-        area_code,
-        line_code);
+    furi_string_printf(line_code_str, "0x%02X", line_code);
+    furi_string_printf(line_and_station_code_str, "0x%02X,0x%02X", line_code, station_code);
+
+    size_t line_comma_ind = 0;
+    size_t station_comma_ind = 0;
+    size_t station_num_comma_ind = 0;
+    size_t station_JR_header_comma_ind = 0;
 
     bool station_found = false;
 
-    if(file_stream_open(stream, file_name, FSAM_READ, FSOM_OPEN_EXISTING)) {
+    furi_string_printf(
+        file_name, "%sArea%01X/line_0x%02X.txt", SUICA_STATION_LIST_PATH, area_code, line_code);
+    if(file_stream_open(stream, furi_string_get_cstr(file_name), FSAM_READ, FSOM_OPEN_EXISTING)) {
         while(stream_read_line(stream, line) && !station_found) {
             // file is in csv format: station_group_id,station_id,station_sub_id,station_name
-            const char* s = furi_string_get_cstr(line);
-            // trim CR/LF
-            while(*s == '\r' || *s == '\n')
-                ++s;
-            if(strncmp(s, want_line, strlen(want_line)) == 0) {
-                // s = "0xLL,0xSS,LineName,StationName,Num,JR"
-                // skip "0xLL,0xSS,"
-                const char* p = strchr(s, ',');
-                if(!p) continue;
-                p = strchr(p + 1, ',');
-                if(!p) continue;
-                const char* line_start = p + 1;
-                const char* comma1 = strchr(line_start, ',');
-                if(!comma1) continue;
-                size_t ln = (size_t)(comma1 - line_start);
-                if(ln >= sizeof(line_candidate)) ln = sizeof(line_candidate) - 1;
-                memcpy(line_candidate, line_start, ln);
-                line_candidate[ln] = '\0';
-                if(strncmp(s, want_line_station, strlen(want_line_station)) == 0) {
-                    const char* st_start = comma1 + 1;
-                    const char* comma2 = strchr(st_start, ',');
-                    if(!comma2) continue;
-                    size_t sn = (size_t)(comma2 - st_start);
-                    if(sn >= sizeof(station_candidate)) sn = sizeof(station_candidate) - 1;
-                    memcpy(station_candidate, st_start, sn);
-                    station_candidate[sn] = '\0';
-                    const char* num_start = comma2 + 1;
-                    const char* comma3 = strchr(num_start, ',');
-                    if(!comma3) continue;
-                    size_t nn = (size_t)(comma3 - num_start);
-                    if(nn >= sizeof(station_num_candidate)) nn = sizeof(station_num_candidate) - 1;
-                    memcpy(station_num_candidate, num_start, nn);
-                    station_num_candidate[nn] = '\0';
-                    const char* jr_start = comma3 + 1;
-                    size_t jn = strcspn(jr_start, ",\r\n");
-                    if(jn >= sizeof(station_jr_header_candidate))
-                        jn = sizeof(station_jr_header_candidate) - 1;
-                    memcpy(station_jr_header_candidate, jr_start, jn);
-                    station_jr_header_candidate[jn] = '\0';
+            // search for the station
+            furi_string_replace_all(line, "\r", "");
+            furi_string_replace_all(line, "\n", "");
+            furi_string_set(line_copy, line); // 0xD5,0x02,Keikyu Main,Shinagawa,1,0
+
+            if(furi_string_start_with(line, line_code_str)) {
+                // set line name here
+                furi_string_right(line_copy, 10); // Keikyu Main,Shinagawa,1,0
+                furi_string_set(line_candidate, line_copy);
+                line_comma_ind = furi_string_search_char(line_candidate, ',', 0);
+                furi_string_left(line_candidate, line_comma_ind); // Keikyu Main
+                // we cut the line and station code in the line line copy
+                // and we leave only the line name for the line candidate
+                if(furi_string_start_with(line, line_and_station_code_str)) {
+                    furi_string_set(station_candidate, line_copy); // Keikyu Main,Shinagawa,1,0
+                    furi_string_right(station_candidate, line_comma_ind + 1);
+                    station_comma_ind =
+                        furi_string_search_char(station_candidate, ',', 0); // Shinagawa,1,0
+                    furi_string_left(station_candidate, station_comma_ind); //  Shinagawa
                     station_found = true;
                     break;
                 }
             }
         }
     } else {
-        FURI_LOG_E(TAG, "Failed to open stations: %s", file_name);
+        FURI_LOG_E(
+            TAG, "Failed to open stations list text file: %s", furi_string_get_cstr(file_name));
     }
+
+    furi_string_set(station_num_candidate, line_copy); // Keikyu Main,Shinagawa,1,0
+    furi_string_right(station_num_candidate, line_comma_ind + station_comma_ind + 2); // 1,0
+    station_num_comma_ind = furi_string_search_char(station_num_candidate, ',', 0);
+    furi_string_left(station_num_candidate, station_num_comma_ind); // 1
+
+    furi_string_set(station_JR_header_candidate, line_copy); // Keikyu Main,Shinagawa,1,0
+    furi_string_right(
+        station_JR_header_candidate,
+        line_comma_ind + station_comma_ind + station_num_comma_ind + 3); // 0
+    station_JR_header_comma_ind = furi_string_search_char(station_JR_header_candidate, ',', 0);
+    furi_string_left(station_JR_header_candidate, station_JR_header_comma_ind); // 0
 
     switch(ride_type) {
     case SuicaTrainRideEntry:
@@ -187,12 +174,13 @@ static void suica_parse_train_code(
         furi_string_set(model->history.entry_station.jr_header, "0");
         model->history.entry_line = RailwaysList[SUICA_RAILWAY_NUM];
         for(size_t i = 0; i < SUICA_RAILWAY_NUM; i++) {
-            if(strcmp(line_candidate, RailwaysList[i].long_name) == 0) {
+            if(furi_string_equal_str(line_candidate, RailwaysList[i].long_name)) {
                 model->history.entry_line = RailwaysList[i];
                 furi_string_set(model->history.entry_station.name, station_candidate);
-                model->history.entry_station.station_number = atoi(station_num_candidate);
+                model->history.entry_station.station_number =
+                    atoi(furi_string_get_cstr(station_num_candidate));
                 furi_string_set(
-                    model->history.entry_station.jr_header, station_jr_header_candidate);
+                    model->history.entry_station.jr_header, station_JR_header_candidate);
                 break;
             }
         }
@@ -202,12 +190,13 @@ static void suica_parse_train_code(
         furi_string_set(model->history.exit_station.jr_header, "0");
         model->history.exit_line = RailwaysList[SUICA_RAILWAY_NUM];
         for(size_t i = 0; i < SUICA_RAILWAY_NUM; i++) {
-            if(strcmp(line_candidate, RailwaysList[i].long_name) == 0) {
+            if(furi_string_equal_str(line_candidate, RailwaysList[i].long_name)) {
                 model->history.exit_line = RailwaysList[i];
                 furi_string_set(model->history.exit_station.name, station_candidate);
-                model->history.exit_station.station_number = atoi(station_num_candidate);
+                model->history.exit_station.station_number =
+                    atoi(furi_string_get_cstr(station_num_candidate));
                 furi_string_set(
-                    model->history.exit_station.jr_header, station_jr_header_candidate);
+                    model->history.exit_station.jr_header, station_JR_header_candidate);
                 break;
             }
         }
@@ -216,6 +205,16 @@ static void suica_parse_train_code(
         UNUSED(model);
         break;
     }
+
+    furi_string_free(line);
+    furi_string_free(line_copy);
+    furi_string_free(line_code_str);
+    furi_string_free(line_and_station_code_str);
+    furi_string_free(line_candidate);
+    furi_string_free(station_candidate);
+    furi_string_free(station_num_candidate);
+    furi_string_free(station_JR_header_candidate);
+    furi_string_free(file_name);
 
     file_stream_close(stream);
     stream_free(stream);
@@ -306,6 +305,84 @@ static void suica_parse(SuicaHistoryViewModel* my_model) {
     }
 }
 
+static bool suica_model_pack_data(
+    SuicaHistoryViewModel* model,
+    const FelicaData* felica_data,
+    FuriString* parsed_data) {
+    uint32_t public_block_count = simple_array_get_count(felica_data->public_blocks);
+    bool found = false;
+    furi_string_printf(parsed_data, "\e#Japan Transit IC\n\n");
+    for(uint16_t i = 0; i < public_block_count; i++) {
+        FelicaPublicBlock* public_block = simple_array_get(felica_data->public_blocks, i);
+        if(public_block->service_code == SERVICE_CODE_HISTORY_IN_LE) {
+            suica_add_entry(model, public_block->block.data);
+            furi_string_cat_printf(parsed_data, "Log %02X: ", i);
+            for(size_t j = 0; j < FELICA_DATA_BLOCK_SIZE; j++) {
+                furi_string_cat_printf(parsed_data, "%02X ", public_block->block.data[j]);
+            }
+            furi_string_cat_printf(parsed_data, "\n");
+            found = true;
+        }
+    }
+    return found;
+}
+
+static bool suica_help_with_octopus(const FelicaData* felica_data, FuriString* parsed_data) {
+    bool found = false;
+    for(uint16_t i = 0; i < simple_array_get_count(felica_data->public_blocks); i++) {
+        FelicaPublicBlock* public_block = simple_array_get(felica_data->public_blocks, i);
+        if(public_block->service_code == SERVICE_CODE_OCTOPUS_IN_LE) {
+            uint16_t unsigned_balance = ((uint16_t)public_block->block.data[2] << 8) |
+                                        (uint16_t)public_block->block.data[3]; // 0x0000..0xFFFF
+
+            int32_t older_balance_cents = (int32_t)unsigned_balance - 350;
+            int32_t newer_balance_cents = (int32_t)unsigned_balance - 500;
+
+            uint16_t older_abs_cents =
+                (uint16_t)(older_balance_cents < 0 ? -older_balance_cents : older_balance_cents);
+            uint16_t newer_abs_cents =
+                (uint16_t)(newer_balance_cents < 0 ? -newer_balance_cents : newer_balance_cents);
+
+            uint16_t older_dollars = (uint16_t)(older_abs_cents / 100);
+            uint8_t older_cents = (uint8_t)(older_abs_cents % 100);
+
+            uint16_t newer_dollars = (uint16_t)(newer_abs_cents / 100);
+            uint8_t newer_cents = (uint8_t)(newer_abs_cents % 100);
+            furi_string_printf(parsed_data, "\e#Octopus Card\n");
+            furi_string_cat_str(
+                parsed_data, "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n");
+
+            furi_string_cat_printf(
+                parsed_data, "If this card was issued \nbefore 2017 October 1st:\n");
+            furi_string_cat_printf(
+                parsed_data,
+                "Balance: %sHK$ %d.%02d\n",
+                older_balance_cents < 0 ? "-" : "",
+                older_dollars,
+                older_cents);
+
+            furi_string_cat_str(
+                parsed_data, "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n");
+
+            furi_string_cat_printf(
+                parsed_data, "If this card was issued \nafter 2017 October 1st:\n");
+            furi_string_cat_printf(
+                parsed_data,
+                "Balance: %sHK$ %d.%02d\n",
+                newer_balance_cents < 0 ? "-" : "",
+                newer_dollars,
+                newer_cents);
+
+            furi_string_cat_str(
+                parsed_data, "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::");
+
+            found = true;
+            break; // Octopus only has one public block
+        }
+    }
+    return found;
+}
+
 static void suica_parse_detail_callback(GuiButtonType result, InputType type, void* context) {
     Metroflip* app = context;
     UNUSED(result);
@@ -320,7 +397,7 @@ static void suica_parse_detail_callback(GuiButtonType result, InputType type, vo
 static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
     furi_assert(event.protocol == NfcProtocolFelica);
     NfcCommand command = NfcCommandContinue;
-    MetroflipPollerEventType stage = MetroflipPollerEventTypeStart;
+    // MetroflipPollerEventType stage = MetroflipPollerEventTypeStart;
 
     Metroflip* app = context;
     FuriString* parsed_data = furi_string_alloc();
@@ -328,98 +405,47 @@ static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
 
     Widget* widget = app->widget;
 
-    const uint16_t service_code[2] = {SERVICE_CODE_HISTORY_IN_LE, SERVICE_CODE_TAPS_LOG_IN_LE};
-
     const FelicaPollerEvent* felica_event = event.event_data;
-    FelicaPoller* felica_poller = event.instance;
-    const FelicaData* felica_data = nfc_poller_get_data(app->poller);
-    FURI_LOG_I(TAG, "Poller set");
-    if(felica_event->type == FelicaPollerEventTypeRequestAuthContext) {
-        view_dispatcher_send_custom_event(app->view_dispatcher, MetroflipCustomEventCardDetected);
-        command = NfcCommandContinue;
+    FURI_LOG_I(TAG, "Felica event: %d", felica_event->type);
+    if(felica_event->type == FelicaPollerEventTypeReady ||
+       felica_event->type == FelicaPollerEventTypeIncomplete) {
+        dolphin_deed(DolphinDeedNfcRead);
 
-        if(stage == MetroflipPollerEventTypeStart) {
-            nfc_device_set_data(
-                app->nfc_device, NfcProtocolFelica, nfc_poller_get_data(app->poller));
-            furi_string_printf(parsed_data, "\e#Japan Transit IC\n");
+        FURI_LOG_I(TAG, "Read complete");
+        view_dispatcher_send_custom_event(app->view_dispatcher, MetroflipCustomEventPollerSuccess);
+        command = NfcCommandStop;
 
-            // Authenticate with the card
-            // Iterate through the two services
-            for(int service_code_index = 0; service_code_index < 2; service_code_index++) {
-                furi_string_cat_printf(
-                    parsed_data, "%s: \n", suica_service_names[service_code_index]);
-                FelicaError error = FelicaErrorNone;
-                FelicaPollerReadCommandResponse* rx_resp;
-                uint8_t blocks[1] = {0x00}; // firmware api requires this to be a list
+        nfc_device_set_data(app->nfc_device, NfcProtocolFelica, nfc_poller_get_data(app->poller));
+        const FelicaData* felica_data = nfc_poller_get_data(app->poller);
 
-                do {
-                    uint8_t block_data[16] = {0};
-                    error = felica_poller_read_blocks(
-                        felica_poller, 1, blocks, service_code[service_code_index], &rx_resp);
-                    if(error != FelicaErrorNone) {
-                        view_dispatcher_send_custom_event(
-                            app->view_dispatcher, MetroflipCustomEventCardLost);
-                        command = NfcCommandStop;
-                        break;
-                    }
-                    if(rx_resp->SF1 == 0 || rx_resp->SF2 == 0) {
-                        break;
-                    }
-                    furi_string_cat_printf(parsed_data, "Log %02X: ", blocks[0]);
-                    if(service_code_index == 0) {
-                        furi_string_cat_printf(app->suica_file_data, "Log %02X: ", blocks[0]);
-                    }
-                    blocks[0]++;
-                    for(size_t i = 0; i < FELICA_DATA_BLOCK_SIZE; i++) {
-                        furi_string_cat_printf(parsed_data, "%02X ", rx_resp->data[i]);
-                        if(service_code_index == 0) {
-                            furi_string_cat_printf(
-                                app->suica_file_data, "%02X ", rx_resp->data[i]);
-                        }
-                        block_data[i] = rx_resp->data[i];
-                    }
-                    furi_string_cat_printf(parsed_data, "\n");
-                    if(service_code_index == 0) {
-                        FURI_LOG_I(
-                            TAG,
-                            "Service code %d, adding entry %x",
-                            service_code_index,
-                            model->size);
-                        suica_add_entry(model, block_data);
-                        furi_string_cat_printf(app->suica_file_data, "\n");
-                    }
-                } while(blocks[0] < SUICA_MAX_HISTORY_ENTRIES && error == FelicaErrorNone);
-                if(error != FelicaErrorNone) {
-                    break;
-                }
-            }
-            metroflip_app_blink_stop(app);
+        metroflip_app_blink_stop(app);
 
-            if(model->size == 1) { // Have to let the poller run once before knowing we failed
-                furi_string_printf(
-                    parsed_data,
-                    "\e#Japan Transit IC\nSorry, no data found.\nPlease let the developers know and we will add support.");
-            }
+        bool suica_found = suica_model_pack_data(model, felica_data, parsed_data);
 
-            if(model->size == 1 && felica_data->pmm.data[1] != SUICA_IC_TYPE_CODE) {
-                furi_string_printf(
-                    parsed_data,
-                    "\e#Felica\nSorry, unrecorded IC type.\nIs this Octopus?\nPlease let the developers know and we will add support.");
-            }
-            widget_add_text_scroll_element(
-                widget, 0, 0, 128, 64, furi_string_get_cstr(parsed_data));
+        do {
+            if(suica_found) break;
 
+            bool octopus_found = suica_help_with_octopus(felica_data, parsed_data);
+            if(octopus_found) break;
+
+            furi_string_printf(
+                parsed_data,
+                "\e#FeliCa\nSorry, unrecorded service code.\nPlease let the developers know and we will add support.");
+        } while(false);
+
+        widget_add_text_scroll_element(widget, 0, 0, 128, 64, furi_string_get_cstr(parsed_data));
+
+        if(suica_found) {
             widget_add_button_element(
-                widget, GuiButtonTypeRight, "Exit", metroflip_exit_widget_callback, app);
-            widget_add_button_element(
-                widget, GuiButtonTypeLeft, "Save", metroflip_save_widget_callback, app);
-
-            if(model->size > 1) {
-                widget_add_button_element(
-                    widget, GuiButtonTypeCenter, "Parse", suica_parse_detail_callback, app);
-            }
-            view_dispatcher_switch_to_view(app->view_dispatcher, MetroflipViewWidget);
+                widget, GuiButtonTypeCenter, "Parse", suica_parse_detail_callback, app);
         }
+
+        widget_add_button_element(
+            widget, GuiButtonTypeRight, "Exit", metroflip_exit_widget_callback, app);
+        widget_add_button_element(
+            widget, GuiButtonTypeLeft, "Save", metroflip_save_widget_callback, app);
+
+        view_dispatcher_switch_to_view(app->view_dispatcher, MetroflipViewWidget);
     }
     furi_string_free(parsed_data);
     command = NfcCommandStop;
@@ -488,26 +514,11 @@ static bool suica_history_input_callback(InputEvent* event, void* context) {
             // Handle other keys or do nothing
             break;
         }
-        // with_view_model(
-        //     app->suica_context->view_history,
-        //     SuicaHistoryViewModel * model,
-        //     {
-        //         if((model->history.history_type == SuicaHistoryTopUp) && model->page == 1) {
-        //             model->animator_tick = 0;
-        //         }
-        //     },
-        //     false);
     }
-
     return false;
 }
 
 static void suica_on_enter(Metroflip* app) {
-    // Gui* gui = furi_record_open(RECORD_GUI);
-    dolphin_deed(DolphinDeedNfcRead);
-    furi_string_reset(app->suica_file_data);
-    furi_string_cat_str(app->suica_file_data, "\n");
-
     if(app->data_loaded == false) {
         app->suica_context = malloc(sizeof(SuicaContext));
         app->suica_context->view_history = view_alloc();
@@ -541,34 +552,64 @@ static void suica_on_enter(Metroflip* app) {
 
         metroflip_app_blink_start(app);
     } else {
-        SuicaHistoryViewModel* model = view_get_model(app->suica_context->view_history);
-        suica_model_initialize_after_load(model);
-        Widget* widget = app->widget;
-        FuriString* parsed_data = furi_string_alloc();
-        furi_string_printf(parsed_data, "\e#Japan Transit IC\n");
+        FURI_LOG_I(TAG, "Loading FeliCa data");
+        Storage* storage = furi_record_open(RECORD_STORAGE);
+        FlipperFormat* ff = flipper_format_file_alloc(storage);
+        if(flipper_format_file_open_existing(ff, app->file_path)) {
+            FURI_LOG_I(TAG, "File path: %s", app->file_path);
+            FelicaData* felica_data = felica_alloc();
+            bool is_stock_nfc_file = felica_load(felica_data, ff, 4);
 
-        for(uint8_t i = 0; i < model->size; i++) {
-            furi_string_cat_printf(app->suica_file_data, "Log %02X: ", i);
-            for(size_t j = 0; j < FELICA_DATA_BLOCK_SIZE; j++) {
-                furi_string_cat_printf(
-                    app->suica_file_data, "%02X ", model->travel_history[i * 16 + j]);
-            }
-            furi_string_cat_printf(app->suica_file_data, "\n");
-        }
-        furi_string_cat(parsed_data, app->suica_file_data);
-        widget_add_text_scroll_element(widget, 0, 0, 128, 64, furi_string_get_cstr(parsed_data));
+            SuicaHistoryViewModel* model = view_get_model(app->suica_context->view_history);
+            suica_model_initialize_after_load(model);
+            Widget* widget = app->widget;
+            FuriString* parsed_data = furi_string_alloc();
+            bool suica_found = false;
+            do {
+                if(is_stock_nfc_file) { // loading from stock NFC file (API 87.0+)
+                    suica_found = suica_model_pack_data(model, felica_data, parsed_data);
+                    if(suica_found) break;
 
-        widget_add_button_element(
-            widget, GuiButtonTypeRight, "Exit", metroflip_exit_widget_callback, app);
-        widget_add_button_element(
-            widget, GuiButtonTypeLeft, "Save", metroflip_save_widget_callback, app);
+                    bool octopus_found = suica_help_with_octopus(felica_data, parsed_data);
+                    if(octopus_found) break;
+                } else { // loading from legacy saved file (pre API 87.0)
+                    suica_found = true;
+                    furi_string_printf(parsed_data, "\e#Japan Transit IC\n\n");
+                    for(uint8_t i = 0; i < model->size; i++) {
+                        furi_string_cat_printf(parsed_data, "Log %02X: ", i);
+                        for(size_t j = 0; j < FELICA_DATA_BLOCK_SIZE; j++) {
+                            furi_string_cat_printf(
+                                parsed_data, "%02X ", model->travel_history[i * 16 + j]);
+                        }
+                        furi_string_cat_printf(parsed_data, "\n");
+                    }
+                    break;
+                }
 
-        if(model->size > 1) {
+                furi_string_printf(
+                    parsed_data,
+                    "\e#FeliCa\nSorry, unrecorded service code.\nPlease let the developers know and we will add support.");
+            } while(false);
+
+            // Text scroll must be added before buttons to prevent overlay
+            widget_add_text_scroll_element(
+                widget, 0, 0, 128, 64, furi_string_get_cstr(parsed_data));
+
             widget_add_button_element(
-                widget, GuiButtonTypeCenter, "Parse", suica_parse_detail_callback, app);
+                widget, GuiButtonTypeRight, "Exit", metroflip_exit_widget_callback, app);
+
+            if(suica_found) {
+                widget_add_button_element(
+                    widget, GuiButtonTypeCenter, "Parse", suica_parse_detail_callback, app);
+            }
+
+            // No reason to put a save button here if the data is loaded from an existing file
+
+            view_dispatcher_switch_to_view(app->view_dispatcher, MetroflipViewWidget);
+            furi_string_free(parsed_data);
+            felica_free(felica_data);
         }
-        view_dispatcher_switch_to_view(app->view_dispatcher, MetroflipViewWidget);
-        furi_string_free(parsed_data);
+        flipper_format_free(ff);
     }
 }
 
@@ -581,10 +622,6 @@ static bool suica_on_event(Metroflip* app, SceneManagerEvent event) {
             consumed = true;
         } else if(event.event == MetroflipCustomEventCardLost) {
             popup_set_header(popup, "Card \n lost", 68, 30, AlignLeft, AlignTop);
-            // popup_set_timeout(popup, 2000);
-            // popup_enable_timeout(popup);
-            // view_dispatcher_switch_to_view(app->view_dispatcher, SuicaViewPopup);
-            // popup_disable_timeout(popup);
             scene_manager_search_and_switch_to_previous_scene(
                 app->scene_manager, MetroflipSceneStart);
             consumed = true;

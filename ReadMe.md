@@ -49,7 +49,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Updated default animations to include Halloween animation (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/dbc5895b30f3afb2f692dd7a8681945832cf80a3) [Updated on Stock, Minimal and Manifest Switcher Builds for Patreon Members](https://www.patreon.com/RogueMaster/membership)
 - [Updated 18+, 420-18+ and Manifest Switcher Builds for Patreon Members to include 4 new 18+ animations submitted by Discord users](https://www.patreon.com/RogueMaster/membership)
 - Added: [Mi Band NFC Writer v1.0 (By LucaTomei)](https://github.com/LucaTomei/flipper-miband-nfc-writer)
-- Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [Mi Band NFC Writer v1.0 (By LucaTomei)](https://github.com/LucaTomei/flipper-miband-nfc-writer) (Fix run issue)
 - Added: [Water Sensor Reader v1.0 (By MatveyStrelov)](https://github.com/MatveyStrelov/flipper-water-sensor)
 - Added: [FlipMap v0.2.1 (By jblanked)](https://github.com/jblanked/FlipMap) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
@@ -67,9 +66,10 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Added alternative GAME MODE EXIT now that SD CARD is used for GAME MODE SETTINGS (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/GAMES_ONLY.md)
 - Updated: [IR Transfer WIP v0.1 (By WBP20)](https://github.com/WBP20/ir_transfer)
 - Updated: [SPI Mem Manager v1.4 (By drunkbatya)-OFW](https://github.com/flipperdevices/flipperzero-good-faps/tree/dev/spi_mem_manager) [Added FM25Q16A support for SPI MEM Manager (By majorpbx)](https://github.com/flipperdevices/flipperzero-good-faps/pull/288)
-- Updated: [CANBUS v1.1.4 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
 - Updated: [Lab401/DigiLab v1.1.1 (By lab-401 & tixlegeek)](https://github.com/lab-401/fzDigiLab)
 - Updated: [Fire String v1.2 (By RyanAboueljoud)](https://github.com/RyanAboueljoud/Fire-String) (Fix run issue)
+- Updated: [CANBUS v1.1.4 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
+- Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip)
 
 <a name="release">
 
