@@ -143,13 +143,6 @@ extern const Icon I_DolphinDone_80x58;
 extern const Icon I_WarningDolphinFlip_45x42;
 extern const Icon I_DolphinMafia_115x62;
 
-void render_section_header(
-    FuriString* str,
-    const char* name,
-    uint8_t prefix_separator_cnt,
-    uint8_t suffix_separator_cnt);
-bool mosgortrans_parse_transport_block(const MfClassicBlock* block, FuriString* result);
-
 extern const Icon I_Suica_AsakusaA;
 extern const Icon I_Suica_BigStar;
 extern const Icon I_Suica_ChiyodaC;

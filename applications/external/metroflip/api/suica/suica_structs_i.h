@@ -68,5 +68,4 @@ typedef struct {
     size_t capacity; // Allocated capacity
     uint8_t animator_tick; // Counter for the animations
     SuicaHistory history; // Current history entry
-    FuriString* buffer;
 } SuicaHistoryViewModel;

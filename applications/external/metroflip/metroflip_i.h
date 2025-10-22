@@ -43,8 +43,8 @@
 #include <strings.h>
 #include <flipper_application/flipper_application.h>
 #include <loader/firmware_api/firmware_api.h>
-#include <storage/storage.h>
-#include <dialogs/dialogs.h>
+#include <applications/services/storage/storage.h>
+#include <applications/services/dialogs/dialogs.h>
 
 #include "scenes/metroflip_scene.h"
 
@@ -106,7 +106,6 @@ typedef struct {
 
     // Suica
     SuicaContext* suica_context;
-    FuriString* suica_file_data;
 
     DialogsApp* dialogs;
 
