@@ -38,7 +38,7 @@ void fire_string_scene_on_enter_main_menu(void* context) {
     menu_add_item(
         app->menu,
         "Generate",
-        NULL,
+        &A_Flame,
         FireStringMenuSelection_Generate,
         fire_string_menu_callback_main_menu,
         app);
