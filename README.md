@@ -4,6 +4,8 @@ Generate truly random strings from the Flipper Zero using its IR sensor. Capture
 
 Inspired by [Flipper, Fire, RNG!](https://github.com/dipdowel/flipper-fire-rng) by dipdowel
 
+Available on the Flipper Lab [App Store](https://lab.flipper.net/apps/fire_string)
+
 ## Features
 
 * **IR Sensor Input**: Use the IR sensor to capture unpredictable randomness (e.g., lighter ignition).
