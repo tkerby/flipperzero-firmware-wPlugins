@@ -1,3 +1,5 @@
+## v1.7
+- Fix Fixed prev navigation for AttackTypeLoadFileCustomUids
 ## v1.6
 New systems in RFID Fuzzer:
     - Electra
