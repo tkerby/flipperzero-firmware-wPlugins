@@ -11,7 +11,8 @@ uint32_t g_uart_rx_session_bytes = 0;
 bool g_uart_rx_session_started = false;
 uint32_t g_uart_callback_count = 0;
 
-#define WORKER_ALL_RX_EVENTS   (WorkerEvtStop | WorkerEvtRxDone | WorkerEvtPcapDone | WorkerEvtCsvDone)
+#define WORKER_ALL_RX_EVENTS \
+    (WorkerEvtStop | WorkerEvtRxDone | WorkerEvtPcapDone | WorkerEvtCsvDone)
 #define PCAP_WRITE_CHUNK_SIZE  1024
 #define AP_LIST_TIMEOUT_MS     5000
 #define INITIAL_BUFFER_SIZE    2048
@@ -139,7 +140,7 @@ static void
     }
 
     uint8_t data = furi_hal_serial_async_rx(handle);
-    
+
     g_uart_rx_session_bytes++;
 
     // Check if we're collecting a marker
@@ -227,8 +228,8 @@ static void
                 uart->mark_test_idx = 0;
                 uart->mark_candidate_mask = 0;
 
-                if(data == mark_pcap_begin[0] || data == mark_pcap_close[0] || data == mark_csv_begin[0] ||
-                   data == mark_csv_close[0]) {
+                if(data == mark_pcap_begin[0] || data == mark_pcap_close[0] ||
+                   data == mark_csv_begin[0] || data == mark_csv_close[0]) {
                     uart->mark_test_buf[0] = data;
                     uart->mark_test_idx = 1;
                     uart->mark_candidate_mask = 0x0F;
@@ -283,8 +284,8 @@ void handle_uart_rx_data(uint8_t* buf, size_t len, void* context) {
     }
 
     // Only log data if NOT in PCAP or CSV mode
-    if(!state->uart_context->pcap && !state->uart_context->csv && state->uart_context->storageContext &&
-       state->uart_context->storageContext->log_file &&
+    if(!state->uart_context->pcap && !state->uart_context->csv &&
+       state->uart_context->storageContext && state->uart_context->storageContext->log_file &&
        state->uart_context->storageContext->HasOpenedFile) {
         static size_t bytes_since_sync = 0;
 
@@ -346,8 +347,7 @@ static int32_t uart_worker(void* context) {
             size_t total = 0;
             size_t len = 0;
             do {
-                len =
-                    furi_stream_buffer_receive(uart->pcap_stream, uart->rx_buf, RX_BUF_SIZE, 0);
+                len = furi_stream_buffer_receive(uart->pcap_stream, uart->rx_buf, RX_BUF_SIZE, 0);
                 if(len > 0) {
                     FURI_LOG_D("Worker", "Processing pcap_stream data: %zu bytes", len);
                     if(uart->handle_rx_pcap_cb) {
@@ -671,18 +671,23 @@ bool uart_receive_data(
         uart->storageContext->HasOpenedFile = false;
     }
 
-    FURI_LOG_I("UART", "[INIT] uart_receive_data: BEFORE reset pcap=%d csv=%d", uart->pcap, uart->csv);
+    FURI_LOG_I(
+        "UART", "[INIT] uart_receive_data: BEFORE reset pcap=%d csv=%d", uart->pcap, uart->csv);
     uart->pcap = false;
     uart->csv = false;
     uart->pcap_flush_pending = false;
-    FURI_LOG_I("UART", "[INIT] uart_receive_data: AFTER reset pcap=%d csv=%d (should be 0 0)", uart->pcap, uart->csv);
+    FURI_LOG_I(
+        "UART",
+        "[INIT] uart_receive_data: AFTER reset pcap=%d csv=%d (should be 0 0)",
+        uart->pcap,
+        uart->csv);
     furi_stream_buffer_reset(uart->pcap_stream);
     furi_stream_buffer_reset(uart->csv_stream);
 
     g_uart_rx_session_bytes = 0;
     g_uart_rx_session_started = false;
     g_uart_callback_count = 0;
-    
+
     FURI_LOG_I("UART", "[INIT] Reset RX logging counters for new session");
 
     // Clear display before switching view
