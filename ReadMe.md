@@ -76,6 +76,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Ghost ESP v1.5.0 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
 - Updated: [RFID Fuzzer v1.7 (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/507) [Fixed prev navigation for AttackTypeLoadFileCustomUids (By ahnilica)](https://github.com/DarkFlippers/Multi_Fuzzer/pull/17)
 - Updated: [iButton Fuzzer v1.7 (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/507) [Fixed prev navigation for AttackTypeLoadFileCustomUids (By ahnilica)](https://github.com/DarkFlippers/Multi_Fuzzer/pull/17)
+- Updated: [LoRa Sample v1.1.3 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-SX1262-LoRa) `Req: SX1262 By ElectronicCats`
 
 <a name="release">
 
