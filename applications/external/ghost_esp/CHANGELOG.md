@@ -1,7 +1,13 @@
 # Changelog
 
+## v1.5.0
+
+- Support for new pcap marker handling by the firmware as of v1.8
+- Fixed no wardriving files being saved
+
 ## v1.4.1
-- Collapsed things into rotating picker menus in the WiFi section - #9 by @tototo31 
+
+- Collapsed things into rotating picker menus in the WiFi section - #9 by @tototo31
 
 ## v1.4
 
@@ -147,7 +153,7 @@
 - Added proper storage system initialization
 - Removed the line buffering logic for PCAP data
 
-### Improvements  
+### Improvements
 
 - Added error checking for storage operations
 - Filtering majorly improved

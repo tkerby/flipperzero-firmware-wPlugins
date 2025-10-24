@@ -73,6 +73,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - SubGHz: [Add IL-100 Smart support for Add manually (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/9ae3af999f4a6ca78fb0b6cbc9a20818d33f1f04)
 - SubGHz: [Add experimental counter overflow mode (OFEX), replicates how some key duplicators work, DO NOT USE if you don't know what you are doing, it will reset your counter value! (accesible with debug on in radio settings - counter incr.) (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/a2cc68b40ce3f5b1d01dd50b1e1e56b50c41f66e)
 - SubGHz: [Honeywell support for old files with 62-63bits (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/b63c7a8772d49876ab1e403636cf66f214835d86)
+- Updated: [Ghost ESP v1.5.0 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
 
 <a name="release">
 
@@ -560,7 +561,7 @@ $ ./fbt dolphin_ext
 - [GB Printer v0.5 (By kbembedded)](https://github.com/kbembedded/flipper-gb-printer) `Req: GB Link Cable / Malveke`
 - [Gemini IA v1.1 (By d4rks1d33 & jamisonderek)](https://github.com/d4rks1d33/Gemini-Flipper)
 - [Genie Recorder v3.1 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/subghz/apps/genie-recorder)
-- [Ghost ESP v1.4.1 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
+- [Ghost ESP v1.5.0 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
 - [GnomishTool v1.0 (By Andreeved88)](https://github.com/Andreeved88/GnomishTool)
 - [Govee Control v0.1 (By devdotbo)](https://github.com/devdotbo/GlowFin)
 - [GPIO 7-Segment Output v1.3 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/gpio)
