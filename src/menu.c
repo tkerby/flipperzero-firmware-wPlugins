@@ -870,6 +870,9 @@ static const MenuCommand gps_commands[] = {
     {
         .label = "Start Wardriving",
         .command = "startwd\n",
+        .capture_prefix = "wardrive_wifi",
+        .file_ext = "csv",
+        .folder = GHOST_ESP_APP_FOLDER_WARDRIVE,
         .details_header = "Wardrive Mode",
         .details_text = "Maps WiFi networks:\n"
                         "- Network info\n"
@@ -880,6 +883,9 @@ static const MenuCommand gps_commands[] = {
     {
         .label = "BLE Wardriving",
         .command = "blewardriving\n",
+        .capture_prefix = "wardrive_ble",
+        .file_ext = "csv",
+        .folder = GHOST_ESP_APP_FOLDER_WARDRIVE,
         .details_header = "BLE Wardriving",
         .details_text = "Maps BLE devices:\n"
                         "- Device info\n"
