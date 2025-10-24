@@ -28,7 +28,7 @@ This software is for experimental purposes only and is not meant for any illegal
 
 ## Latest Updates - [PATREON: Latest Release RM1023-0135-0.420.0-3360e0a](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-10-23 01:35 EST`
+4- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-10-23 01:35 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-10-23 01:35 EST`
 - SubGHz: [Add Elplast 18bit static code protocol (By Hackcat)](https://github.com/DarkFlippers/unleashed-firmware/commit/a4f5f1e862c5b7adfb9ff7dfa84481e63f53d7af)
 - SubGHz: Try to decode BFT (2 buttons remotes only) on the fly in regular Read mode (for 4 button remote follow docs [here](https://github.com/DarkFlippers/unleashed-firmware/blob/dev/documentation/SubGHzRemoteProg.md)) [(By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/3e45fce96d25c55bb4565d9a5d99a42fa771408b)
@@ -74,6 +74,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - SubGHz: [Add experimental counter overflow mode (OFEX), replicates how some key duplicators work, DO NOT USE if you don't know what you are doing, it will reset your counter value! (accesible with debug on in radio settings - counter incr.) (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/a2cc68b40ce3f5b1d01dd50b1e1e56b50c41f66e)
 - SubGHz: [Honeywell support for old files with 62-63bits (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/b63c7a8772d49876ab1e403636cf66f214835d86)
 - Updated: [Ghost ESP v1.5.0 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
+- Updated: [RFID Fuzzer v1.7 (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/507) [Fixed prev navigation for AttackTypeLoadFileCustomUids (By ahnilica)](https://github.com/DarkFlippers/Multi_Fuzzer/pull/17)
+- Updated: [iButton Fuzzer v1.7 (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/507) [Fixed prev navigation for AttackTypeLoadFileCustomUids (By ahnilica)](https://github.com/DarkFlippers/Multi_Fuzzer/pull/17)
 
 <a name="release">
 
@@ -581,7 +583,7 @@ $ ./fbt dolphin_ext
 - [Hitachi AC Remote v1.1 (By dogtopus)](https://github.com/dogtopus/flipperzero-hitachi-ac-remote)
 - [i2c Tools v1.2 (By NaejEL)](https://github.com/NaejEL/flipperzero-i2ctools)
 - [iButton Converter v1.1 (By Leptopt1los)](https://github.com/Leptopt1los/ibutton_converter)
-- [iButton Fuzzer v1.6 (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/507)
+- [iButton Fuzzer v1.7 (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/507)
 - [ID Card v3.0 (By evillero)](https://github.com/evillero/ID_card_v2)
 - [IFTTT Button (By Ferrazzi)](https://github.com/Ferrazzi/FlipperZero_IFTTT_Virtual_Button) `Req: ESP8266 w/ IFTTT FW Flashed`
 - [Image Viewer v0.1 (By polioan)](https://github.com/polioan/flipper-zero-image-viewer)
@@ -713,7 +715,7 @@ $ ./fbt dolphin_ext
 - [Remote Maker (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/487)
 - [Resistance Calculator v1.4 (By instantiator)](https://github.com/instantiator/flipper-zero-experimental-apps)
 - [Restaurant Pager Trigger v1.7 (By leedave)](https://github.com/leedave/flipper-zero-meal-pager)
-- [RFID Fuzzer v1.6 (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/507)
+- [RFID Fuzzer v1.7 (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/507)
 - [RGB LED (By flyandi)](https://github.com/flyandi/flipper_zero_rgb_led)
 - [R.O.B. Control v1.0.1 (By riney)](https://github.com/riney/flip_rob)
 - [Roman Decoder v0.1 (By evillero)](https://github.com/evillero/roman_decoder)
