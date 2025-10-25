@@ -20,10 +20,10 @@ int jellyfish_y = 0;
 bool is_jumping = false;
 bool is_random_kelp = true;
 bool is_random_jellyfish = true;
-int kelp_x_rand = rand() % 4 + 1;
+int kelp_x_rand = rand() % 2 + 1;
 int kelp_y_rand = rand() % 2 + 1;
-int jellyfish_x_rand = rand() % 4 + 1;
-int jellyfish_y_rand = rand() % 4 + 1;
+int jellyfish_x_rand = rand() % 2 + 1;
+int jellyfish_y_rand = rand() % 2 + 1;
 
 // specials
 int max_gravity = 1;
@@ -104,7 +104,7 @@ void draw_kelp(Canvas* canvas)
 { 
     if (is_random_kelp)
     {
-        kelp_x_rand = rand() % 4 + 1;
+        kelp_x_rand = rand() % 2 + 1;
         kelp_y_rand = rand() % 2 + 1;
         is_random_kelp = false;
     }
@@ -139,8 +139,8 @@ void draw_jellyfish(Canvas* canvas)
 { 
     if (is_random_jellyfish)
     {
-        jellyfish_x_rand = rand() % 4 + 1;
-        jellyfish_y_rand = rand() % 4 + 1;
+        jellyfish_x_rand = rand() % 2 + 1;
+        jellyfish_y_rand = rand() % 2 + 1;
         is_random_jellyfish = false;
     }
     
