@@ -77,6 +77,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [RFID Fuzzer v1.7 (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/507) [Fixed prev navigation for AttackTypeLoadFileCustomUids (By ahnilica)](https://github.com/DarkFlippers/Multi_Fuzzer/pull/17)
 - Updated: [iButton Fuzzer v1.7 (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/507) [Fixed prev navigation for AttackTypeLoadFileCustomUids (By ahnilica)](https://github.com/DarkFlippers/Multi_Fuzzer/pull/17)
 - Updated: [LoRa Sample v1.1.3 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-SX1262-LoRa) `Req: SX1262 By ElectronicCats`
+- Added: [Evil BW16 Controller v1.0 (By dagnazty)](https://github.com/dagnazty/Flipper_Apps)
 
 <a name="release">
 
@@ -512,6 +513,7 @@ $ ./fbt dolphin_ext
 - [ESP32CAM Nanny Cam v0.1 (By eried)](https://github.com/eried/flipperzero-mayhem) `Req: ESP32-CAM (Mayhem)`
 - [ESP32CAM QR Code v0.1 (By eried)](https://github.com/eried/flipperzero-mayhem) `Req: ESP32-CAM (Mayhem)`
 - [Ethernet W5500 v1.1 (By karasevia)](https://github.com/karasevia/finik_eth) `Req: W5500`
+- [Evil BW16 Controller v1.0 (By dagnazty)](https://github.com/dagnazty/Flipper_Apps)
 - [Evil Portal v0.6 (By bigbrodude6119)](https://github.com/bigbrodude6119/flipper-zero-evil-portal)
 - [Extend Range (By maede97)](https://github.com/maede97/flipperzero-extend-range) (Allows SubGHz Unlock!)
 - [Eye Saver v0.1 (By paul-sopin)](https://github.com/paul-sopin/flipper-eye-saver)

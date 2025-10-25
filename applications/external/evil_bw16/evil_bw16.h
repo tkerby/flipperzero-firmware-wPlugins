@@ -14,12 +14,12 @@
 #include <dialogs/dialogs.h>
 #include <notification/notification_messages.h>
 
-#define EVIL_BW16_TEXT_BOX_STORE_SIZE (4096)
+#define EVIL_BW16_TEXT_BOX_STORE_SIZE   (4096)
 #define EVIL_BW16_TEXT_INPUT_STORE_SIZE (512)
-#define EVIL_BW16_UART_BAUD_RATE (115200)
-#define EVIL_BW16_UART_RX_BUF_SIZE (2048)
-#define EVIL_BW16_MAX_NETWORKS (50)
-#define EVIL_BW16_MAX_TARGETS (10)
+#define EVIL_BW16_UART_BAUD_RATE        (115200)
+#define EVIL_BW16_UART_RX_BUF_SIZE      (2048)
+#define EVIL_BW16_MAX_NETWORKS          (50)
+#define EVIL_BW16_MAX_TARGETS           (10)
 
 // Scene definitions
 typedef enum {
@@ -107,14 +107,14 @@ typedef enum {
 
 // GPIO pin selection for UART
 typedef enum {
-    EvilBw16GpioPins13_14 = 0,  // USART (pins 13/14)
-    EvilBw16GpioPins15_16 = 1,  // LPUART (pins 15/16)
+    EvilBw16GpioPins13_14 = 0, // USART (pins 13/14)
+    EvilBw16GpioPins15_16 = 1, // LPUART (pins 15/16)
 } EvilBw16GpioPins;
 
 // WiFi Network structure
 typedef struct {
-    uint8_t index;           // Internal array index for menu selection
-    uint8_t device_index;    // Original index from BW16 device (for commands)
+    uint8_t index; // Internal array index for menu selection
+    uint8_t device_index; // Original index from BW16 device (for commands)
     char ssid[64];
     char bssid[18];
     int channel;
@@ -132,7 +132,7 @@ typedef struct {
     bool scan_cycles;
     bool led_enabled;
     bool debug_mode;
-    EvilBw16GpioPins gpio_pins;  // GPIO pin selection
+    EvilBw16GpioPins gpio_pins; // GPIO pin selection
 } EvilBw16Config;
 
 // Attack state
@@ -164,37 +164,37 @@ typedef struct {
     SceneManager* scene_manager;
     NotificationApp* notifications;
     DialogsApp* dialogs;
-    
+
     // Views
     Submenu* submenu;
     TextBox* text_box;
     TextInput* text_input;
     Popup* popup;
     Widget* widget;
-    
+
     // Text storage
     char* text_box_store;
     char* text_input_store;
     FuriString* text_box_string;
-    
+
     // UART communication
     EvilBw16UartWorker* uart_worker;
     FuriStreamBuffer* uart_rx_stream;
-    
+
     // Data storage
     EvilBw16Network networks[EVIL_BW16_MAX_NETWORKS];
     uint8_t network_count;
     bool scan_in_progress;
-    
+
     EvilBw16Config config;
     EvilBw16AttackState attack_state;
     EvilBw16SnifferState sniffer_state;
-    
+
     // UI state
     uint8_t selected_menu_index;
     uint8_t selected_network_index;
     bool show_loading;
-    
+
     // Status
     bool device_connected;
     char device_info[256];
@@ -270,9 +270,18 @@ void evil_bw16_uart_restart(EvilBw16App* app);
 void evil_bw16_uart_tx(EvilBw16UartWorker* worker, const uint8_t* data, size_t len);
 void evil_bw16_uart_tx_string(EvilBw16UartWorker* worker, const char* str);
 void evil_bw16_uart_send_command(EvilBw16UartWorker* worker, const char* command);
-bool evil_bw16_uart_read_line(EvilBw16UartWorker* worker, char* buffer, size_t buffer_size, uint32_t timeout_ms);
+bool evil_bw16_uart_read_line(
+    EvilBw16UartWorker* worker,
+    char* buffer,
+    size_t buffer_size,
+    uint32_t timeout_ms);
 size_t evil_bw16_uart_rx_available(EvilBw16UartWorker* worker);
-bool evil_bw16_uart_wait_for_response(EvilBw16UartWorker* worker, const char* expected_prefix, char* response_buffer, size_t buffer_size, uint32_t timeout_ms);
+bool evil_bw16_uart_wait_for_response(
+    EvilBw16UartWorker* worker,
+    const char* expected_prefix,
+    char* response_buffer,
+    size_t buffer_size,
+    uint32_t timeout_ms);
 
 // Command Functions
 void evil_bw16_send_command(EvilBw16App* app, const char* command);
@@ -299,4 +308,4 @@ void evil_bw16_clear_log(EvilBw16App* app);
 void evil_bw16_notification_message(EvilBw16App* app, const NotificationSequence* sequence);
 
 // Debug functions
-void debug_write_to_sd(const char* data); 
+void debug_write_to_sd(const char* data);
