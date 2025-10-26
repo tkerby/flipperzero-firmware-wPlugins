@@ -4,6 +4,8 @@
 
 - Support for new pcap marker handling by the firmware as of v1.8
 - Fixed no wardriving files being saved
+- Added new commands
+- Removed unused legacy commands
 
 ## v1.4.1
 
