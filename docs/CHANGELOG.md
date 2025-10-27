@@ -1,16 +1,24 @@
-v1.1
-released app
-Feature & Flow Updates
-Added SettingsItem_Start to the settings enumeration (enum).
+V1.1 Released: Application Feature & Flow Updates
+🚀 Application Flow & User Interface Enhancements
+This update introduces a new application startup flow and significant improvements to the screen layouts for a better user experience.
 
-Added a started field to the VEML7700App structure and configured the application to begin on the settings screen with the cursor positioned on "Start".
+New Startup Screen: The application now defaults to the Settings screen upon launch, with the cursor immediately positioned on a new "Start" option.
 
-Modified draw_settings_screen: added the "Start" option, limited the view to 2 items, and included a side scrollbar.
+Implementation Details: This was achieved by adding SettingsItem_Start to the settings enum and a started field to the VEML7700App structure.
 
-Modified draw_main_screen: the main value is now displayed in a large font, the unit "lx" is shown below the value, and the key legend was removed.
+Simple Activation: Pressing OK on the "Start" option sets started = true and immediately transitions to the main measurement screen.
 
-Modified input handling: pressing OK on "Start" sets started = true and returns to the main screen.
+The main application loop is now guarded, only performing sensor initialization (init) and data reading (read) when started is true, ensuring the sensor is active only after user confirmation.
 
-The main loop only performs sensor initialization (init) and reading (read) when started == true.
+Settings Menu Polish: The draw_settings_screen function was updated to include the "Start" option, limit the visible items to 2, and add a side scrollbar for better navigation.
 
-Added support for the WHITE channel (WHITE_MEAS_RESULT_REG) and channel selection in the settings.
+📊 Measurement & Sensor Updates
+Improved Main Screen Layout: The draw_main_screen function was redesigned for clarity:
+
+The primary lux value is now displayed in a large font.
+
+The unit "lx" is positioned clearly below the value.
+
+The key legend was removed from the main screen to reduce clutter.
+
+New Measurement Channel: Added full support for the WHITE light channel (WHITE_MEAS_RESULT_REG), which is now selectable within the settings menu.
