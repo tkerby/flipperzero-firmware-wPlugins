@@ -73,11 +73,11 @@ This software is for experimental purposes only and is not meant for any illegal
 - SubGHz: [Add IL-100 Smart support for Add manually (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/9ae3af999f4a6ca78fb0b6cbc9a20818d33f1f04)
 - SubGHz: [Add experimental counter overflow mode (OFEX), replicates how some key duplicators work, DO NOT USE if you don't know what you are doing, it will reset your counter value! (accesible with debug on in radio settings - counter incr.) (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/a2cc68b40ce3f5b1d01dd50b1e1e56b50c41f66e)
 - SubGHz: [Honeywell support for old files with 62-63bits (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/b63c7a8772d49876ab1e403636cf66f214835d86)
-- Updated: [Ghost ESP v1.5.0 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
 - Updated: [RFID Fuzzer v1.7 (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/507) [Fixed prev navigation for AttackTypeLoadFileCustomUids (By ahnilica)](https://github.com/DarkFlippers/Multi_Fuzzer/pull/17)
 - Updated: [iButton Fuzzer v1.7 (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/507) [Fixed prev navigation for AttackTypeLoadFileCustomUids (By ahnilica)](https://github.com/DarkFlippers/Multi_Fuzzer/pull/17)
 - Updated: [LoRa Sample v1.1.3 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-SX1262-LoRa) `Req: SX1262 By ElectronicCats`
 - Added: [Evil BW16 Controller v1.0 (By dagnazty)](https://github.com/dagnazty/Flipper_Apps)
+- Updated: [Ghost ESP v1.5.0 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
 
 <a name="release">
 

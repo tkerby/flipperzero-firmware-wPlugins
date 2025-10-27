@@ -258,6 +258,12 @@ static const MenuCommand wifi_scanning_commands[] = {
         .details_text = "Detects WiFi Pineapple devices\n",
     },
     {
+        .label = "Stop Pineapple Detect",
+        .command = "pineap -s\n",
+        .details_header = "Stop Pineapple Detect",
+        .details_text = "Stops Pineapple detection mode.",
+    },
+    {
         .label = "Channel Congestion",
         .command = "congestion\n",
         .details_header = "Channel Congestion",
@@ -360,12 +366,51 @@ static const MenuCommand wifi_attack_commands[] = {
     },
     {
         .label = "SAE Handshake Flood",
-        .command = "saeflood\n",
+        .command = "saeflood",
+        .needs_input = true,
+        .input_text = "SAE PSK",
         .details_header = "SAE Flood Attack",
-        .details_text = "Floods WPA3 networks with\nSAE handshakes. Select a "
-                        "WPA3 AP first.",
+        .details_text = "Floods WPA3 networks with\nSAE handshakes using the\n"
+                        "provided PSK. Select a\nWPA3 AP first.",
     },
-
+    {
+        .label = "Stop SAE Flood",
+        .command = "stopsaeflood\n",
+        .details_header = "Stop SAE Flood",
+        .details_text = "Stops active SAE flood and\n"
+                        "password spray attacks.",
+    },
+    {
+        .label = "SAE Flood Help",
+        .command = "saefloodhelp\n",
+        .details_header = "SAE Flood Help",
+        .details_text = "Shows usage guidance for\n"
+                        "SAE flood operations.",
+    },
+    {
+        .label = "Karma Start",
+        .command = "karma start\n",
+        .details_header = "Karma Rogue AP",
+        .details_text = "Replies to probe requests\n"
+                        "with saved SSIDs.",
+    },
+    {
+        .label = "Karma Start (Custom)",
+        .command = "karma start",
+        .needs_input = true,
+        .input_text = "SSID [SSID...]",
+        .details_header = "Karma Rogue AP (Custom)",
+        .details_text = "Replies to probe requests\n"
+                        "using SSIDs you provide\n"
+                        "or saved entries.",
+    },
+    {
+        .label = "Karma Stop",
+        .command = "karma stop\n",
+        .details_header = "Stop Karma Rogue AP",
+        .details_text = "Stops the active Karma\n"
+                        "rogue AP responder.",
+    },
     {
         .label = "DHCP Starve Start",
         .command = "dhcpstarve",
@@ -466,6 +511,13 @@ static const MenuCommand wifi_network_commands[] = {
                         "the evil portal.\n\n",
     },
     {
+        .label = "Clear Evil Portal HTML",
+        .command = "evilportal -c clear\n",
+        .details_header = "Clear Evil Portal",
+        .details_text = "Restores the default portal\n"
+                        "landing page on the ESP.",
+    },
+    {
         .label = "Connect To WiFi",
         .command = "connect",
         .needs_input = true,
@@ -488,7 +540,6 @@ static const MenuCommand wifi_network_commands[] = {
         .details_text = "Disconnects from the current WiFi network on the ESP.\n"
                         "No input required.\n",
     },
-
     {
         .label = "Cast Random Video",
         .command = "dialconnect\n",
@@ -593,10 +644,12 @@ static const MenuCommand wifi_settings_commands[] = {
                         "Use same value for all\n"
                         "pins for single-pin LED.",
     },
-    {.label = "Chip Info",
-     .command = "chipinfo\n",
-     .details_header = "Chip Info",
-     .details_text = "Displays chip information from the ESP\n"},
+    {
+        .label = "Chip Info",
+        .command = "chipinfo\n",
+        .details_header = "Chip Info",
+        .details_text = "Displays chip information from the ESP\n",
+    },
     {
         .label = "Show SD Pin Config",
         .command = "sd_config",
@@ -666,6 +719,79 @@ static const MenuCommand wifi_settings_commands[] = {
         .details_header = "Set WiFi Country",
         .details_text = "Set the WiFi country code.\n"
                         "May require ESP32-C5.",
+    },
+    {
+        .label = "Set RGB Profile",
+        .command = "setrgbmode",
+        .needs_input = true,
+        .input_text = "normal|rainbow|stealth",
+        .details_header = "Set RGB Profile",
+        .details_text = "Save the default LED mode\n"
+                        "used after reboot.",
+    },
+    {
+        .label = "Set NeoPixel Brightness",
+        .command = "setneopixelbrightness",
+        .needs_input = true,
+        .input_text = "0-100",
+        .details_header = "NeoPixel Brightness",
+        .details_text = "Adjust NeoPixel brightness\n"
+                        "from 0 to 100%.",
+    },
+    {
+        .label = "Get NeoPixel Brightness",
+        .command = "getneopixelbrightness\n",
+        .details_header = "NeoPixel Brightness",
+        .details_text = "Displays the current NeoPixel\n"
+                        "brightness level.",
+    },
+    {
+        .label = "Settings List",
+        .command = "settings list\n",
+        .details_header = "List Settings",
+        .details_text = "Shows available configuration\n"
+                        "keys and descriptions.",
+    },
+    {
+        .label = "Settings Help",
+        .command = "settings help\n",
+        .details_header = "Settings Help",
+        .details_text = "Displays CLI usage for\n"
+                        "settings commands.",
+    },
+    {
+        .label = "Settings Get",
+        .command = "settings get",
+        .needs_input = true,
+        .input_text = "Key",
+        .details_header = "Get Setting",
+        .details_text = "Read the current value for\n"
+                        "a configuration key.",
+    },
+    {
+        .label = "Settings Set",
+        .command = "settings set",
+        .needs_input = true,
+        .input_text = "Key Value",
+        .details_header = "Set Setting",
+        .details_text = "Update a configuration key\n"
+                        "with a new value.",
+    },
+    {
+        .label = "Settings Reset (Key)",
+        .command = "settings reset",
+        .needs_input = true,
+        .input_text = "Key",
+        .details_header = "Reset Setting",
+        .details_text = "Reset a specific configuration\n"
+                        "key to defaults.",
+    },
+    {
+        .label = "Settings Reset (All)",
+        .command = "settings reset\n",
+        .details_header = "Reset Settings",
+        .details_text = "Restore all configuration\n"
+                        "keys to defaults.",
     },
     {
         .label = "Show Help",
@@ -768,18 +894,12 @@ static const MenuCommand ble_scanning_commands[] = {
                         "in range.",
     },
     {
-        .label = "Select Flipper",
+        .label = "Select Flipper to Track",
         .command = "selectflipper",
         .needs_input = true,
         .input_text = "Flipper Number",
-        .details_header = "Select Flipper",
-        .details_text = "Select a Flipper by number.",
-    },
-    {
-        .label = "Detect BLE Spam",
-        .command = "blescan -ds\n",
-        .details_header = "BLE Spam Detection",
-        .details_text = "Detects Bluetooth spam devices\nin the area.",
+        .details_header = "Select Flipper to Track",
+        .details_text = "Select a Flipper by number to track RSSI strength.",
     },
     {
         .label = "View All BLE Traffic",
@@ -892,6 +1012,13 @@ static const MenuCommand gps_commands[] = {
                         "- GPS location\n"
                         "- Signal levels\n"
                         "Saves as CSV\n",
+    },
+    {
+        .label = "Stop BLE Wardriving",
+        .command = "blewardriving -s\n",
+        .details_header = "Stop BLE Wardrive",
+        .details_text = "Stops BLE wardriving capture\n"
+                        "and logging.",
     },
     {
         .label = "Stop All GPS",
