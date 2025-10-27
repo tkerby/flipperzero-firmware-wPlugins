@@ -3,7 +3,7 @@
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://lh3.googleusercontent.com/d/1iYQlRQXM7nA4IAdcPwvcKRSTCMoi8tug' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM1012-2314-0.420.0-f53bc1f.tgz&channel=RM1012-2314-0.420.0-f53bc1f&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM1027-1607-0.420.0-6949cab.tgz&channel=RM1027-1607-0.420.0-6949cab&version=0.420.0&target=f7)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -30,54 +30,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-10-27 15:25 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-10-27 15:25 EST`
-- SubGHz: [Add Elplast 18bit static code protocol (By Hackcat)](https://github.com/DarkFlippers/unleashed-firmware/commit/a4f5f1e862c5b7adfb9ff7dfa84481e63f53d7af)
-- SubGHz: Try to decode BFT (2 buttons remotes only) on the fly in regular Read mode (for 4 button remote follow docs [here](https://github.com/DarkFlippers/unleashed-firmware/blob/dev/documentation/SubGHzRemoteProg.md)) [(By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/3e45fce96d25c55bb4565d9a5d99a42fa771408b)
-- OFW: [IR: Add Onn Roku TV control to universal remote #4201 (By MrNull1)](https://github.com/flipperdevices/flipperzero-firmware/pull/4201)
-- SubGHz: [Updates to ensure correct byte shifts (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/a5dedec00ab132025e3be51870459433aec3c187)
-- OFW: [SubGHz: Add 9 new protocols, fixes to existing protocols #4255 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4255)
-- OFW: [NFC FeliCa Standard: Service Directory Traverse + Dump All Unencrypted-Readable Services' Blocks #4254 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4254)
-- OFW: [Fix Ultralight EV1 regression #4287 (By noproto)](https://github.com/flipperdevices/flipperzero-firmware/pull/4287)
-- NFC: [Add MIFARE Classic Show Keys UI (By aaronjamt)](https://github.com/Next-Flip/Momentum-Firmware/pull/473)
-- [API: Catalog now matches release channel not release-candidate (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/c878aa85b8aa733a93644af4887d47b651ca60f4)
-- [HID PTT: adding global zoom and google meet shortcuts for MacOS (By hryamzik)](https://github.com/DarkFlippers/unleashed-firmware/pull/921)
-- NFC: [Returning fix for reading PWD locked MFUL (By mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/pull/922)
-- NFC: [Added UL-C keys to the dictionary (By mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/pull/923)
-- SubGHz: [add support for top44rbn remotes (By xMasterX thanks mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/commit/b03316d89d652035fb3829d09b1ca8473e89cb56)
-- OFW: PR: [NFC FeliCa Minor Fix: FelicaPollerEventType should only be Incomplete if the tag is FeliCa Lite #4279 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4279)
-- Added: [VEML7700 Lux Meter v1.0 (By kamylwnb)](https://github.com/kamylwnb/Flipper-zero-app-VEML7700)
-- Added: [Fire String v1.0 (By RyanAboueljoud)](https://github.com/RyanAboueljoud/Fire-String)
-- [Updated default animations to include Halloween animation (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/dbc5895b30f3afb2f692dd7a8681945832cf80a3) [Updated on Stock, Minimal and Manifest Switcher Builds for Patreon Members](https://www.patreon.com/RogueMaster/membership)
-- [Updated 18+, 420-18+ and Manifest Switcher Builds for Patreon Members to include 4 new 18+ animations submitted by Discord users](https://www.patreon.com/RogueMaster/membership)
-- Added: [Mi Band NFC Writer v1.0 (By LucaTomei)](https://github.com/LucaTomei/flipper-miband-nfc-writer)
-- Updated: [Mi Band NFC Writer v1.0 (By LucaTomei)](https://github.com/LucaTomei/flipper-miband-nfc-writer) (Fix run issue)
-- Added: [Water Sensor Reader v1.0 (By MatveyStrelov)](https://github.com/MatveyStrelov/flipper-water-sensor)
-- Added: [FlipMap v0.2.1 (By jblanked)](https://github.com/jblanked/FlipMap) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Added: [IR Transfer WIP v0.1 (By WBP20)](https://github.com/WBP20/ir_transfer)
-- Updated: [FlipMap v0.2.2 (By jblanked)](https://github.com/jblanked/FlipMap) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Added: [FDX-B Maker v1.0 (By snowsign)](https://github.com/snowsign/fdxb-maker)
-- Updated: [Free Roam v0.3.2 (By jblanked)](https://github.com/jblanked/Free-Roam) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [FlipSocial v2.0.4 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [FlipWorld v1.0.2 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- SubGHz: [Return Honeywell Sec with fixes and improvements (By htotoo & LiQuiDz & xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/d673fd5573eaa2755f3004ec35a7445c2620cb6d)
-- Updated: [Pet a Dolphin v1.2 (By ugeneSmile)](https://github.com/EugeneSmile/PetADolphin)
-- Updated: [NFC E-Ink Tags v1.0.4 (By RebornedBrain)](https://github.com/flipperdevices/flipperzero-good-faps/pull/245)
-- Updated: [Password Manager v1.2 (By Rrycbarm)](https://github.com/Rrycbarm/flipperZeroPasswordManager)
-- [Updated U2F & Desktop settings to save to SD. Also updated desktop behavior with no SD card. (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/d3caf2c7dea1bac3afb44af39ced0b3b6474197b)
-- [Added alternative GAME MODE EXIT now that SD CARD is used for GAME MODE SETTINGS (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/GAMES_ONLY.md)
-- Updated: [IR Transfer WIP v0.1 (By WBP20)](https://github.com/WBP20/ir_transfer)
-- Updated: [SPI Mem Manager v1.4 (By drunkbatya)-OFW](https://github.com/flipperdevices/flipperzero-good-faps/tree/dev/spi_mem_manager) [Added FM25Q16A support for SPI MEM Manager (By majorpbx)](https://github.com/flipperdevices/flipperzero-good-faps/pull/288)
-- Updated: [Lab401/DigiLab v1.1.1 (By lab-401 & tixlegeek)](https://github.com/lab-401/fzDigiLab)
-- Updated: [Fire String v1.2 (By RyanAboueljoud)](https://github.com/RyanAboueljoud/Fire-String)
-- Updated: [CANBUS v1.1.6 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
-- Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip)
-- SubGHz: [Add IL-100 Smart support for Add manually (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/9ae3af999f4a6ca78fb0b6cbc9a20818d33f1f04)
-- SubGHz: [Add experimental counter overflow mode (OFEX), replicates how some key duplicators work, DO NOT USE if you don't know what you are doing, it will reset your counter value! (accesible with debug on in radio settings - counter incr.) (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/a2cc68b40ce3f5b1d01dd50b1e1e56b50c41f66e)
-- SubGHz: [Honeywell support for old files with 62-63bits (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/b63c7a8772d49876ab1e403636cf66f214835d86)
-- Updated: [RFID Fuzzer v1.7 (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/507) [Fixed prev navigation for AttackTypeLoadFileCustomUids (By ahnilica)](https://github.com/DarkFlippers/Multi_Fuzzer/pull/17)
-- Updated: [iButton Fuzzer v1.7 (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/507) [Fixed prev navigation for AttackTypeLoadFileCustomUids (By ahnilica)](https://github.com/DarkFlippers/Multi_Fuzzer/pull/17)
-- Updated: [LoRa Sample v1.1.3 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-SX1262-LoRa) `Req: SX1262 By ElectronicCats`
-- Added: [Evil BW16 Controller v1.0 (By dagnazty)](https://github.com/dagnazty/Flipper_Apps)
-- Updated: [Ghost ESP v1.5.0 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
 
 <a name="release">
 
@@ -831,4 +783,4 @@ $ ./fbt dolphin_ext
 - Have a new app? Submit GitHub link to me on Discord for a special reward (if I add it to RM Firmware).
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM1012-2314-0.420.0-f53bc1f.tgz&channel=RM1012-2314-0.420.0-f53bc1f&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM1027-1607-0.420.0-6949cab.tgz&channel=RM1027-1607-0.420.0-6949cab&version=0.420.0&target=f7)
