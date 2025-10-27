@@ -26,10 +26,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM1024-1921-0.420.0-50b804f](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM1027-1525-0.420.0-a40d70c](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-4- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-10-24 19:21 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-10-24 19:21 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-10-27 15:25 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-10-27 15:25 EST`
 - SubGHz: [Add Elplast 18bit static code protocol (By Hackcat)](https://github.com/DarkFlippers/unleashed-firmware/commit/a4f5f1e862c5b7adfb9ff7dfa84481e63f53d7af)
 - SubGHz: Try to decode BFT (2 buttons remotes only) on the fly in regular Read mode (for 4 button remote follow docs [here](https://github.com/DarkFlippers/unleashed-firmware/blob/dev/documentation/SubGHzRemoteProg.md)) [(By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/3e45fce96d25c55bb4565d9a5d99a42fa771408b)
 - OFW: [IR: Add Onn Roku TV control to universal remote #4201 (By MrNull1)](https://github.com/flipperdevices/flipperzero-firmware/pull/4201)
