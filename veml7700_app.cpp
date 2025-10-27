@@ -37,6 +37,7 @@ typedef enum {
 
 // Enumeration for options in the settings menu
 typedef enum {
+    SettingsItem_Start,   // <-- new Start item as first option
     SettingsItem_Address,
     SettingsItem_Gain,
     SettingsItem_Channel, // <-- added channel selection
@@ -57,7 +58,8 @@ typedef struct {
     uint8_t settings_cursor;
     uint8_t i2c_address;
     uint8_t als_gain; // 0=1/8, 1=1/4, 2=1, 3=2
-    uint8_t channel; // 0 = ALS, 1 = WHITE  <-- added
+    uint8_t channel; // 0 = ALS, 1 = WHITE
+    bool started; // <-- new: whether measurements are started
 } VEML7700App;
 
 // Function to draw the main screen
@@ -74,17 +76,16 @@ static void draw_main_screen(Canvas* canvas, VEML7700App* app) {
     furi_mutex_release(app->mutex);
 
     if(sensor_ok) {
-        // Draw lux value with unit
+        // Draw lux value (big)
         canvas_set_font(canvas, FontBigNumbers);
         FuriString* lux_str = furi_string_alloc();
         furi_string_printf(lux_str, "%.1f", (double)lux_value);
-        canvas_draw_str_aligned(
-            canvas, 64, 25, AlignCenter, AlignTop, furi_string_get_cstr(lux_str));
+        canvas_draw_str_aligned(canvas, 64, 25, AlignCenter, AlignTop, furi_string_get_cstr(lux_str));
         furi_string_free(lux_str);
 
-        // Draw lx unit next to the value
+        // Draw 'lx' unit below the value
         canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str_aligned(canvas, 100, 25, AlignLeft, AlignTop, "lx");
+        canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignTop, "lx");
 
         // Draw channel label (ALS/WHITE)
         const char* channel_label = (channel == 0) ? "ALS" : "WHITE";
@@ -113,19 +114,20 @@ static void draw_settings_screen(Canvas* canvas, VEML7700App* app) {
     // Calculate which items should be visible (show 2 items at a time)
     uint8_t start_item = (app->settings_cursor / 2) * 2;
 
-    // Poprawione obliczenia paska przewijania
+    // Scrollbar calculations (clamped)
     uint8_t scroll_height = 40;
     uint8_t scroll_y = 15;
     uint8_t slider_height = (2 * scroll_height) / SettingsItem_Count;
-    // Dodajemy ograniczenie maksymalnej pozycji suwaka
     uint8_t max_slider_position = scroll_height - slider_height;
-    uint8_t slider_position = (start_item * max_slider_position) / (SettingsItem_Count - 2);
+    uint8_t denom = (SettingsItem_Count > 2) ? (SettingsItem_Count - 2) : 1;
+    uint8_t slider_position = (start_item * max_slider_position) / denom;
     if(slider_position > max_slider_position) slider_position = max_slider_position;
 
-    // Rysowanie paska przewijania
+    // Draw scrollbar at right
     canvas_draw_frame(canvas, 120, scroll_y, 3, scroll_height);
     canvas_draw_box(canvas, 121, scroll_y + slider_position, 1, slider_height);
 
+    // Render max 2 items starting at start_item (Start, Address, Gain, Channel)
     for(uint8_t i = 0; i < 2 && (start_item + i) < SettingsItem_Count; i++) {
         uint8_t current_item = start_item + i;
         uint8_t y_pos = 25 + (i * 15);
@@ -142,6 +144,10 @@ static void draw_settings_screen(Canvas* canvas, VEML7700App* app) {
         }
 
         switch(current_item) {
+        case SettingsItem_Start:
+            canvas_draw_str(canvas, 5, y_pos + 5, "Start");
+            break;
+
         case SettingsItem_Address:
             canvas_draw_str(canvas, 5, y_pos + 5, "I2C Address:");
             furi_string_printf(value_str, "0x%02X", app->i2c_address);
@@ -372,7 +378,16 @@ static void veml7700_input_callback(InputEvent* input_event, void* context) {
                 }
                 // Apply new settings after changing a value
                 init_veml7700(app);
-            } else if(input_event->key == InputKeyOk || input_event->key == InputKeyBack) {
+            } else if(input_event->key == InputKeyOk) {
+                // If Start selected, begin measurements; otherwise return to main
+                if(app->settings_cursor == SettingsItem_Start) {
+                    app->started = true;
+                    app->is_sensor_initialized = false; // force init on next loop
+                    app->current_state = AppState_Main;
+                } else {
+                    app->current_state = AppState_Main;
+                }
+            } else if(input_event->key == InputKeyBack) {
                 app->current_state = AppState_Main;
             }
             break;
@@ -396,15 +411,16 @@ static VEML7700App* veml7700_app_alloc() {
     view_port_input_callback_set(app->view_port, veml7700_input_callback, app);
     gui_add_view_port(app->gui, app->view_port, GuiLayerFullscreen);
     app->running = true;
-    app->current_state = AppState_Main;
+    app->current_state = AppState_Settings; // start in settings so user sees Start first
     app->lux_value = 0.0f;
     app->is_sensor_initialized = false;
 
     // Settings initialization
-    app->settings_cursor = SettingsItem_Address;
+    app->settings_cursor = SettingsItem_Start; // default cursor on Start
     app->i2c_address = VEML7700_I2C_ADDR;
-    app->als_gain = 2; // Default gain 1, which is index 2
-    app->channel = 0; // Default to ALS
+    app->als_gain = 2;
+    app->channel = 0;
+    app->started = false; // measurements not started until user presses Start
 
     return app;
 }
@@ -425,16 +441,18 @@ extern "C" int32_t veml7700_app(void* p) {
     VEML7700App* app = veml7700_app_alloc();
 
     while(app->running) {
-        if(!app->is_sensor_initialized) {
-            app->is_sensor_initialized = init_veml7700(app);
-        }
-
-        if(app->is_sensor_initialized) {
-            read_veml7700(app);
+        // Only initialize/read sensor after user pressed Start
+        if(app->started) {
+            if(!app->is_sensor_initialized) {
+                app->is_sensor_initialized = init_veml7700(app);
+            }
+            if(app->is_sensor_initialized) {
+                read_veml7700(app);
+            }
         }
 
         view_port_update(app->view_port);
-        furi_delay_ms(500); // Refresh every 500ms
+        furi_delay_ms(500);
     }
 
     veml7700_app_free(app);
