@@ -1,6 +1,6 @@
-# Ghost ESP
+# GhostESP Flipper Zero App
 
-A Flipper Zero application for interfacing with the Ghost ESP32 firmware
+A Flipper Zero application for interfacing with the [GhostESP: Revival firmware](https://github.com/jaylikesbunda/Ghost_ESP).
 
 ## Preview
 
