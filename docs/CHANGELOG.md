@@ -1,20 +1,16 @@
 v1.1
 released app
-📝 List of Changes (Brief)
-Added the ability to select the measurement channel: ALS or WHITE.
+Feature & Flow Updates
+Added SettingsItem_Start to the settings enumeration (enum).
 
-Modified the sensor reading to read the register appropriate for the selected channel.
+Added a started field to the VEML7700App structure and configured the application to begin on the settings screen with the cursor positioned on "Start".
 
-Added a side scrollbar (a slider showing the position) in the settings menu.
+Modified draw_settings_screen: added the "Start" option, limited the view to 2 items, and included a side scrollbar.
 
-Limited the settings view to a maximum of 2 items simultaneously with scrolling.
+Modified draw_main_screen: the main value is now displayed in a large font, the unit "lx" is shown below the value, and the key legend was removed.
 
-Aligned and offset the values in the settings menu (I2C address, gain, channel) for better text and value positioning.
+Modified input handling: pressing OK on "Start" sets started = true and returns to the main screen.
 
-Fixed the scrollbar position calculation to prevent it from going outside the frame.
+The main loop only performs sensor initialization (init) and reading (read) when started == true.
 
-The unit "lx" for the main value is now displayed below the value (clearer, in a separate font).
-
-Removed the key legend from the main screen and improved the general screen layout.
-
-Various fixes for I2C stability, input handling, and sensor initialization.
+Added support for the WHITE channel (WHITE_MEAS_RESULT_REG) and channel selection in the settings.
