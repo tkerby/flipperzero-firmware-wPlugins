@@ -18,6 +18,6 @@ App(
     fap_category="GPIO",
     fap_author="@Dr.Mosfet",
     fap_weburl="https://github.com/kamylwnb/Flipper-zero-app-VEML7700/tree/main",
-    fap_version="1.0",
+    fap_version="1.1",
     fap_description="Mierzy oświetlenie otoczenia w luksach za pomocą czujnika VEML7700 przez magistralę I2C i wyświetla wartość na ekranie.",
 )
