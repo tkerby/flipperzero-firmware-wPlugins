@@ -6,6 +6,10 @@
 #include <furi_hal.h>
 #include <furi_hal_gpio.h>
 #include <furi_hal_bus.h>
+#include <storage/storage.h>
+#include <toolbox/path.h>
+#include <notification/notification.h>
+#include <notification/notification_messages.h>
 
 // VEML7700 sensor I2C address (7-bit)
 #define VEML7700_I2C_ADDR 0x10
@@ -33,14 +37,16 @@ typedef enum {
     AppState_Main,
     AppState_Settings,
     AppState_About,
+    AppState_StartConfirm, // Nowy stan dla ekranu potwierdzenia startu
 } AppState;
 
 // Enumeration for options in the settings menu
 typedef enum {
-    SettingsItem_Start,   // <-- new Start item as first option
+    SettingsItem_Start, // <-- new Start item as first option
     SettingsItem_Address,
     SettingsItem_Gain,
     SettingsItem_Channel, // <-- added channel selection
+    SettingsItem_DarkMode, // Nowa opcja
     SettingsItem_Count
 } SettingsItem;
 
@@ -60,11 +66,24 @@ typedef struct {
     uint8_t als_gain; // 0=1/8, 1=1/4, 2=1, 3=2
     uint8_t channel; // 0 = ALS, 1 = WHITE
     bool started; // <-- new: whether measurements are started
+
+    // New variables for additional features
+    bool dark_mode; // Tryb ciemny
 } VEML7700App;
 
 // Function to draw the main screen
 static void draw_main_screen(Canvas* canvas, VEML7700App* app) {
     canvas_clear(canvas);
+
+    // Odwrócona logika dark mode
+    if(app->dark_mode) {
+        canvas_set_color(canvas, ColorBlack);
+        canvas_draw_box(canvas, 0, 0, 128, 64);
+        canvas_set_color(canvas, ColorWhite);
+    } else {
+        canvas_set_color(canvas, ColorBlack);
+    }
+
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str_aligned(canvas, 64, 5, AlignCenter, AlignTop, "VEML7700 LUX Meter");
 
@@ -80,7 +99,8 @@ static void draw_main_screen(Canvas* canvas, VEML7700App* app) {
         canvas_set_font(canvas, FontBigNumbers);
         FuriString* lux_str = furi_string_alloc();
         furi_string_printf(lux_str, "%.1f", (double)lux_value);
-        canvas_draw_str_aligned(canvas, 64, 25, AlignCenter, AlignTop, furi_string_get_cstr(lux_str));
+        canvas_draw_str_aligned(
+            canvas, 64, 25, AlignCenter, AlignTop, furi_string_get_cstr(lux_str));
         furi_string_free(lux_str);
 
         // Draw 'lx' unit below the value
@@ -166,6 +186,12 @@ static void draw_settings_screen(Canvas* canvas, VEML7700App* app) {
             canvas_draw_str_aligned(
                 canvas, 113, y_pos - 1, AlignRight, AlignTop, channel_values[app->channel]);
             break;
+
+        case SettingsItem_DarkMode:
+            canvas_draw_str(canvas, 5, y_pos + 5, "Dark Mode:");
+            canvas_draw_str_aligned(
+                canvas, 113, y_pos - 1, AlignRight, AlignTop, app->dark_mode ? "(*)" : "( )");
+            break;
         }
         canvas_set_color(canvas, ColorBlack);
     }
@@ -192,6 +218,17 @@ static void draw_about_screen(Canvas* canvas, VEML7700App* app) {
     canvas_draw_str_aligned(canvas, 64, 60, AlignCenter, AlignBottom, "[Ok] Back");
 }
 
+// Dodaj funkcję rysowania ekranu potwierdzenia
+static void draw_start_confirm_screen(Canvas* canvas, VEML7700App* app) {
+    UNUSED(app);
+    canvas_clear(canvas);
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignTop, "Start Measurement?");
+
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str_aligned(canvas, 64, 60, AlignCenter, AlignBottom, "[Ok] Start [Back] Cancel");
+}
+
 // Main drawing function that switches screens
 static void veml7700_draw_callback(Canvas* canvas, void* context) {
     furi_assert(context);
@@ -206,6 +243,9 @@ static void veml7700_draw_callback(Canvas* canvas, void* context) {
         break;
     case AppState_About:
         draw_about_screen(canvas, app);
+        break;
+    case AppState_StartConfirm:
+        draw_start_confirm_screen(canvas, app);
         break;
     }
 }
@@ -332,7 +372,8 @@ static void veml7700_input_callback(InputEvent* input_event, void* context) {
     furi_assert(context);
     VEML7700App* app = static_cast<VEML7700App*>(context);
 
-    if(input_event->type == InputTypeShort) {
+    if(input_event->type == InputTypeShort ||
+       input_event->type == InputTypeRepeat) { // Dodano obsługę repeat
         switch(app->current_state) {
         case AppState_Main:
             if(input_event->key == InputKeyOk) {
@@ -347,18 +388,21 @@ static void veml7700_input_callback(InputEvent* input_event, void* context) {
             if(input_event->key == InputKeyUp) {
                 if(app->settings_cursor > 0) {
                     app->settings_cursor--;
+                    // Przeskok do ostatniej pozycji po dojściu do góry
+                    if(app->settings_cursor == 0xFF) {
+                        app->settings_cursor = SettingsItem_Count - 1;
+                    }
                 }
             } else if(input_event->key == InputKeyDown) {
-                if(app->settings_cursor < SettingsItem_Count - 1) {
-                    app->settings_cursor++;
+                app->settings_cursor++;
+                // Przeskok do pierwszej pozycji po dojściu do dołu
+                if(app->settings_cursor >= SettingsItem_Count) {
+                    app->settings_cursor = 0;
                 }
             } else if(input_event->key == InputKeyLeft || input_event->key == InputKeyRight) {
                 if(app->settings_cursor == SettingsItem_Address) {
-                    if(input_event->key == InputKeyLeft) {
-                        app->i2c_address--;
-                    } else {
-                        app->i2c_address++;
-                    }
+                    // Toggle między 0x10 a 0x11
+                    app->i2c_address = (app->i2c_address == 0x10) ? 0x11 : 0x10;
                 } else if(app->settings_cursor == SettingsItem_Gain) {
                     if(input_event->key == InputKeyLeft) {
                         if(app->als_gain > 0) {
@@ -376,16 +420,11 @@ static void veml7700_input_callback(InputEvent* input_event, void* context) {
                 } else if(app->settings_cursor == SettingsItem_Channel) {
                     app->channel = (app->channel == 0) ? 1 : 0;
                 }
-                // Apply new settings after changing a value
-                init_veml7700(app);
             } else if(input_event->key == InputKeyOk) {
-                // If Start selected, begin measurements; otherwise return to main
                 if(app->settings_cursor == SettingsItem_Start) {
-                    app->started = true;
-                    app->is_sensor_initialized = false; // force init on next loop
-                    app->current_state = AppState_Main;
-                } else {
-                    app->current_state = AppState_Main;
+                    app->current_state = AppState_StartConfirm;
+                } else if(app->settings_cursor == SettingsItem_DarkMode) {
+                    app->dark_mode = !app->dark_mode;
                 }
             } else if(input_event->key == InputKeyBack) {
                 app->current_state = AppState_Main;
@@ -394,6 +433,15 @@ static void veml7700_input_callback(InputEvent* input_event, void* context) {
         case AppState_About:
             if(input_event->key == InputKeyOk || input_event->key == InputKeyBack) {
                 app->current_state = AppState_Main;
+            }
+            break;
+        case AppState_StartConfirm:
+            if(input_event->key == InputKeyOk) {
+                app->started = true;
+                app->is_sensor_initialized = false;
+                app->current_state = AppState_Main;
+            } else if(input_event->key == InputKeyBack) {
+                app->current_state = AppState_Settings;
             }
             break;
         }
@@ -416,11 +464,9 @@ static VEML7700App* veml7700_app_alloc() {
     app->is_sensor_initialized = false;
 
     // Settings initialization
-    app->settings_cursor = SettingsItem_Start; // default cursor on Start
-    app->i2c_address = VEML7700_I2C_ADDR;
+    app->dark_mode = false;
+    app->i2c_address = VEML7700_I2C_ADDR; // Domyślnie 0x10
     app->als_gain = 2;
-    app->channel = 0;
-    app->started = false; // measurements not started until user presses Start
 
     return app;
 }
@@ -452,7 +498,7 @@ extern "C" int32_t veml7700_app(void* p) {
         }
 
         view_port_update(app->view_port);
-        furi_delay_ms(500);
+        furi_delay_ms(100); // Zmniejszono opóźnienie z 500ms na 100ms
     }
 
     veml7700_app_free(app);
