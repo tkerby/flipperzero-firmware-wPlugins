@@ -11,8 +11,10 @@
 #define VEML7700_I2C_ADDR 0x10
 
 // VEML7700 registers
-#define ALS_CONF_REG              0x00
-#define ALS_MEAS_RESULT_REG       0x04
+#define ALS_CONF_REG          0x00
+#define ALS_MEAS_RESULT_REG   0x04
+#define WHITE_MEAS_RESULT_REG 0x05 // <-- added white-channel register
+
 // Gain
 #define ALS_GAIN_1_8_VAL          0x02
 #define ALS_GAIN_1_4_VAL          0x01
@@ -35,8 +37,10 @@ typedef enum {
 
 // Enumeration for options in the settings menu
 typedef enum {
+    SettingsItem_Start, // <-- new Start item as first option
     SettingsItem_Address,
     SettingsItem_Gain,
+    SettingsItem_Channel, // <-- added channel selection
     SettingsItem_Count
 } SettingsItem;
 
@@ -54,6 +58,8 @@ typedef struct {
     uint8_t settings_cursor;
     uint8_t i2c_address;
     uint8_t als_gain; // 0=1/8, 1=1/4, 2=1, 3=2
+    uint8_t channel; // 0 = ALS, 1 = WHITE
+    bool started; // <-- new: whether measurements are started
 } VEML7700App;
 
 // Function to draw the main screen
@@ -66,10 +72,11 @@ static void draw_main_screen(Canvas* canvas, VEML7700App* app) {
     furi_mutex_acquire(app->mutex, FuriWaitForever);
     bool sensor_ok = app->is_sensor_initialized;
     float lux_value = app->lux_value;
+    uint8_t channel = app->channel;
     furi_mutex_release(app->mutex);
 
     if(sensor_ok) {
-        // Draw lux value
+        // Draw lux value (big)
         canvas_set_font(canvas, FontBigNumbers);
         FuriString* lux_str = furi_string_alloc();
         furi_string_printf(lux_str, "%.1f", (double)lux_value);
@@ -77,16 +84,20 @@ static void draw_main_screen(Canvas* canvas, VEML7700App* app) {
             canvas, 64, 25, AlignCenter, AlignTop, furi_string_get_cstr(lux_str));
         furi_string_free(lux_str);
 
+        // Draw 'lx' unit below the value
         canvas_set_font(canvas, FontPrimary);
         canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignTop, "lx");
+
+        // Draw channel label (ALS/WHITE)
+        const char* channel_label = (channel == 0) ? "ALS" : "WHITE";
+        canvas_set_font(canvas, FontSecondary);
+        canvas_draw_str_aligned(canvas, 64, 50, AlignCenter, AlignTop, channel_label);
     } else {
         // Draw "sensor not connected" message
         canvas_set_font(canvas, FontPrimary);
         const char* msg = "Connect sensor";
         canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignTop, msg);
     }
-    canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str_aligned(canvas, 64, 60, AlignCenter, AlignBottom, "[Ok] Menu [<] Exit");
 }
 
 // Function to draw the settings screen
@@ -98,39 +109,70 @@ static void draw_settings_screen(Canvas* canvas, VEML7700App* app) {
     FuriString* value_str = furi_string_alloc();
     canvas_set_font(canvas, FontSecondary);
 
-    // Draw I2C address option
-    if(app->settings_cursor == SettingsItem_Address) {
-        canvas_draw_box(canvas, 0, 20, 128, 15);
-        canvas_set_color(canvas, ColorWhite);
-    } else {
-        canvas_set_color(canvas, ColorBlack);
-    }
-    canvas_draw_str(canvas, 5, 30, "I2C Address:");
-    furi_string_printf(value_str, "0x%02X", app->i2c_address);
-    canvas_draw_str_aligned(
-        canvas, 123, 26, AlignRight, AlignTop, furi_string_get_cstr(value_str));
-    if(app->settings_cursor == SettingsItem_Address) {
-        canvas_draw_str(canvas, 1, 30, ">");
-    }
-
-    // Draw gain option
-    canvas_set_font(canvas, FontSecondary);
-    if(app->settings_cursor == SettingsItem_Gain) {
-        canvas_draw_box(canvas, 0, 35, 128, 15);
-        canvas_set_color(canvas, ColorWhite);
-    } else {
-        canvas_set_color(canvas, ColorBlack);
-    }
     const char* gain_values[] = {"1/8", "1/4", "1", "2"};
-    canvas_draw_str(canvas, 5, 45, "Gain:");
-    canvas_draw_str_aligned(canvas, 123, 41, AlignRight, AlignTop, gain_values[app->als_gain]);
-    if(app->settings_cursor == SettingsItem_Gain) {
-        canvas_draw_str(canvas, 1, 45, ">");
+    const char* channel_values[] = {"ALS", "WHITE"};
+
+    // Calculate which items should be visible (show 2 items at a time)
+    uint8_t start_item = (app->settings_cursor / 2) * 2;
+
+    // Scrollbar calculations (clamped)
+    uint8_t scroll_height = 40;
+    uint8_t scroll_y = 15;
+    uint8_t slider_height = (2 * scroll_height) / SettingsItem_Count;
+    uint8_t max_slider_position = scroll_height - slider_height;
+    uint8_t denom = (SettingsItem_Count > 2) ? (SettingsItem_Count - 2) : 1;
+    uint8_t slider_position = (start_item * max_slider_position) / denom;
+    if(slider_position > max_slider_position) slider_position = max_slider_position;
+
+    // Draw scrollbar at right
+    canvas_draw_frame(canvas, 120, scroll_y, 3, scroll_height);
+    canvas_draw_box(canvas, 121, scroll_y + slider_position, 1, slider_height);
+
+    // Render max 2 items starting at start_item (Start, Address, Gain, Channel)
+    for(uint8_t i = 0; i < 2 && (start_item + i) < SettingsItem_Count; i++) {
+        uint8_t current_item = start_item + i;
+        uint8_t y_pos = 25 + (i * 15);
+
+        if(app->settings_cursor == current_item) {
+            canvas_draw_box(canvas, 0, y_pos - 4, 118, 15);
+            canvas_set_color(canvas, ColorWhite);
+        } else {
+            canvas_set_color(canvas, ColorBlack);
+        }
+
+        if(app->settings_cursor == current_item) {
+            canvas_draw_str(canvas, 1, y_pos + 5, ">");
+        }
+
+        switch(current_item) {
+        case SettingsItem_Start:
+            canvas_draw_str(canvas, 5, y_pos + 5, "Start");
+            break;
+
+        case SettingsItem_Address:
+            canvas_draw_str(canvas, 5, y_pos + 5, "I2C Address:");
+            furi_string_printf(value_str, "0x%02X", app->i2c_address);
+            canvas_draw_str_aligned(
+                canvas, 113, y_pos - 1, AlignRight, AlignTop, furi_string_get_cstr(value_str));
+            break;
+
+        case SettingsItem_Gain:
+            canvas_draw_str(canvas, 5, y_pos + 5, "Gain:");
+            canvas_draw_str_aligned(
+                canvas, 113, y_pos - 1, AlignRight, AlignTop, gain_values[app->als_gain]);
+            break;
+
+        case SettingsItem_Channel:
+            canvas_draw_str(canvas, 5, y_pos + 5, "Channel:");
+            canvas_draw_str_aligned(
+                canvas, 113, y_pos - 1, AlignRight, AlignTop, channel_values[app->channel]);
+            break;
+        }
+        canvas_set_color(canvas, ColorBlack);
     }
 
     furi_string_free(value_str);
 
-    // Back button
     canvas_set_color(canvas, ColorBlack);
     canvas_set_font(canvas, FontSecondary);
     canvas_draw_str_aligned(canvas, 64, 60, AlignCenter, AlignBottom, "[Ok] Back");
@@ -216,7 +258,8 @@ static bool init_veml7700(VEML7700App* app) {
 // Function to read data from the sensor
 static bool read_veml7700(VEML7700App* app) {
     uint8_t raw_data[2];
-    uint8_t reg_addr = ALS_MEAS_RESULT_REG;
+    // choose register depending on selected channel
+    uint8_t reg_addr = (app->channel == 1) ? WHITE_MEAS_RESULT_REG : ALS_MEAS_RESULT_REG;
 
     // Acquire I2C bus access
     furi_hal_i2c_acquire(&furi_hal_i2c_handle_external);
@@ -322,19 +365,30 @@ static void veml7700_input_callback(InputEvent* input_event, void* context) {
                         if(app->als_gain > 0) {
                             app->als_gain--;
                         } else {
-                            app->als_gain = 3; // Looping
+                            app->als_gain = 3;
                         }
                     } else {
                         if(app->als_gain < 3) {
                             app->als_gain++;
                         } else {
-                            app->als_gain = 0; // Looping
+                            app->als_gain = 0;
                         }
                     }
+                } else if(app->settings_cursor == SettingsItem_Channel) {
+                    app->channel = (app->channel == 0) ? 1 : 0;
                 }
                 // Apply new settings after changing a value
                 init_veml7700(app);
-            } else if(input_event->key == InputKeyOk || input_event->key == InputKeyBack) {
+            } else if(input_event->key == InputKeyOk) {
+                // If Start selected, begin measurements; otherwise return to main
+                if(app->settings_cursor == SettingsItem_Start) {
+                    app->started = true;
+                    app->is_sensor_initialized = false; // force init on next loop
+                    app->current_state = AppState_Main;
+                } else {
+                    app->current_state = AppState_Main;
+                }
+            } else if(input_event->key == InputKeyBack) {
                 app->current_state = AppState_Main;
             }
             break;
@@ -358,14 +412,16 @@ static VEML7700App* veml7700_app_alloc() {
     view_port_input_callback_set(app->view_port, veml7700_input_callback, app);
     gui_add_view_port(app->gui, app->view_port, GuiLayerFullscreen);
     app->running = true;
-    app->current_state = AppState_Main;
+    app->current_state = AppState_Settings; // start in settings so user sees Start first
     app->lux_value = 0.0f;
     app->is_sensor_initialized = false;
 
     // Settings initialization
-    app->settings_cursor = SettingsItem_Address;
+    app->settings_cursor = SettingsItem_Start; // default cursor on Start
     app->i2c_address = VEML7700_I2C_ADDR;
-    app->als_gain = 2; // Default gain 1, which is index 2
+    app->als_gain = 2;
+    app->channel = 0;
+    app->started = false; // measurements not started until user presses Start
 
     return app;
 }
@@ -386,16 +442,18 @@ extern "C" int32_t veml7700_app(void* p) {
     VEML7700App* app = veml7700_app_alloc();
 
     while(app->running) {
-        if(!app->is_sensor_initialized) {
-            app->is_sensor_initialized = init_veml7700(app);
-        }
-
-        if(app->is_sensor_initialized) {
-            read_veml7700(app);
+        // Only initialize/read sensor after user pressed Start
+        if(app->started) {
+            if(!app->is_sensor_initialized) {
+                app->is_sensor_initialized = init_veml7700(app);
+            }
+            if(app->is_sensor_initialized) {
+                read_veml7700(app);
+            }
         }
 
         view_port_update(app->view_port);
-        furi_delay_ms(500); // Refresh every 500ms
+        furi_delay_ms(500);
     }
 
     veml7700_app_free(app);
