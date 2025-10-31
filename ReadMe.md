@@ -34,6 +34,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: PR: [Infrared: Audio Remote - Add Teufel KB 62 RC #4299 (By testcenter)](https://github.com/flipperdevices/flipperzero-firmware/pull/4299)
 - Updated: [VEML7700 Lux Meter v1.1 (By kamylwnb)](https://github.com/kamylwnb/Flipper-zero-app-VEML7700)
 - Updated: [UDECard v1.0.3 (By hahnworks](https://github.com/hahnworks/UDECard)
+- Updated: [Furious Birds v1.0 (By bmstr-ru)](https://github.com/bmstr-ru/furious-birds)
 
 <a name="release">
 
