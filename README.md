@@ -6,7 +6,13 @@ Inspired by [Flipper, Fire, RNG!](https://github.com/dipdowel/flipper-fire-rng) 
 
 Available on the Flipper Lab [App Store](https://lab.flipper.net/apps/fire_string)
 
-![Main Menu](.catalog/screens/screen0.png "Main Menu") ![String Generation](.catalog/screens/screen1.png "String Generation") ![Settings](.catalog/screens/screen2.png "Settings") ![String Export](.catalog/screens/screen3.png "String Export")
+![Main Menu](.catalog/screens/screen0.png "Main Menu") 
+
+![String Generation](.catalog/screens/screen1.png "String Generation") 
+
+![Settings](.catalog/screens/screen2.png "Settings") 
+
+![String Export](.catalog/screens/screen3.png "String Export")
 
 ## Features
 
