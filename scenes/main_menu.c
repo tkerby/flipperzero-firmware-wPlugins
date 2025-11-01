@@ -38,28 +38,28 @@ void fire_string_scene_on_enter_main_menu(void* context) {
     menu_add_item(
         app->menu,
         "Generate",
-        NULL,
+        &A_Flame,
         FireStringMenuSelection_Generate,
         fire_string_menu_callback_main_menu,
         app);
     menu_add_item(
         app->menu,
         "Settings",
-        NULL,
+        &A_Settings_14,
         FireStringMenuSelection_Settings,
         fire_string_menu_callback_main_menu,
         app);
     menu_add_item(
         app->menu,
         "About",
-        NULL,
+        &A_About,
         FireStringMenuSelection_About,
         fire_string_menu_callback_main_menu,
         app);
     menu_add_item(
         app->menu,
         "Load Saved String",
-        NULL,
+        &A_Load,
         FireStringMenuSelection_LoadString,
         fire_string_menu_callback_main_menu,
         app);
