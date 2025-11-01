@@ -55,7 +55,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: [NFC: Re-apply fix for reading PWD locked MFUL #4295 (By mishamyte)](https://github.com/flipperdevices/flipperzero-firmware/pull/4295) (Already In RM)
 - Updated default animations to remove Halloween animation (By xMasterX) Updated on Stock, Minimal and Manifest Switcher Builds for Patreon Members. This animation is still in the Dolphin animation set.
 - SubGHz: [Counter modes for Keeloq, CAME Atomo, Nice Flor S, AlutechAT4N (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/documentation/SubGHzCounterMode.md)
-- SubGHz: Add AN-Motors AT4 button on arrow keys (0xC) (By xMasterX)
+- SubGHz: [Add AN-Motors AT4 button on arrow keys (0xC) (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/edd0bb403cf1288511d1c860a9ec1f311120e8bc)
+- OFW: PR: [NFC: Synchronise mf_classic_dict.nfc with mfc_default_keys.dic #4298 (By ry4000)](https://github.com/flipperdevices/flipperzero-firmware/pull/4298)
+- Removed dupes from IR remotes
 
 <a name="release">
 
