@@ -1404,6 +1404,18 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
         return;
     }
 
+    // Handle variable WiFi scan command (scan modes like APs / APs Live / Stations / All)
+    if(state->current_view == 10 && state->current_index == 0) {
+        const CyclingMenuDef* current_scan = &wifi_scan_modes[current_wifi_scan_index];
+        // Save view and show terminal log
+        state->previous_view = state->current_view;
+        uart_receive_data(state->uart_context, state->view_dispatcher, state, "", "", "");
+        state->current_view = 5;
+        furi_delay_ms(5);
+        send_uart_command(current_scan->command, state);
+        return;
+    }
+
     // Handle variable BLE spam command
     if(state->current_view == 22 && state->current_index == 0) {
         const CyclingMenuDef* current_ble_spam = &ble_spam_commands[current_ble_spam_index];
@@ -1522,6 +1534,19 @@ void show_wifi_scanning_menu(AppState* state) {
         "Scanning & Probing",
         state->wifi_scanning_menu,
         10);
+
+    // Ensure the first item label reflects the currently selected scan mode
+    // (so the menu shows "Scan: (APs Live)" etc. after cycling)
+    submenu_change_item_label(
+        state->wifi_scanning_menu, 0, wifi_scan_modes[current_wifi_scan_index].label);
+
+    // Also persist labels for list/select/listen cycling entries
+    submenu_change_item_label(
+        state->wifi_scanning_menu, 1, wifi_list_modes[current_wifi_list_index].label);
+    submenu_change_item_label(
+        state->wifi_scanning_menu, 2, wifi_select_modes[current_wifi_select_index].label);
+    submenu_change_item_label(
+        state->wifi_scanning_menu, 3, wifi_listen_modes[current_wifi_listen_index].label);
 }
 
 void show_wifi_capture_menu(AppState* state) {
@@ -1542,6 +1567,10 @@ void show_wifi_attack_menu(AppState* state) {
         "Attacks",
         state->wifi_attack_menu,
         12);
+
+    // Ensure beacon spam cycling label persists
+    submenu_change_item_label(
+        state->wifi_attack_menu, 0, beacon_spam_commands[current_beacon_index].label);
 }
 
 void show_wifi_network_menu(AppState* state) {
@@ -1562,6 +1591,10 @@ void show_wifi_settings_menu(AppState* state) {
         "Settings & Hardware",
         state->wifi_settings_menu,
         14);
+
+    // Ensure rgbmode cycling label persists
+    submenu_change_item_label(
+        state->wifi_settings_menu, 0, rgbmode_commands[current_rgb_index].label);
 }
 
 void show_ble_scanning_menu(AppState* state) {
@@ -1592,6 +1625,10 @@ void show_ble_attack_menu(AppState* state) {
         "Attacks & Spoofing",
         state->ble_attack_menu,
         22);
+
+    // Ensure BLE spam cycling label persists
+    submenu_change_item_label(
+        state->ble_attack_menu, 0, ble_spam_commands[current_ble_spam_index].label);
 }
 
 void show_wifi_menu(AppState* state) {
