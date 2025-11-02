@@ -4,7 +4,6 @@ App(
     apptype=FlipperAppType.EXTERNAL,
     entry_point="fzspground_app",
     stack_size=2 * 1024,
-    fap_icon_assets="images",
     fap_icon="fzspground.png",
     fap_category="Media",
     fap_author="Alan Silva",

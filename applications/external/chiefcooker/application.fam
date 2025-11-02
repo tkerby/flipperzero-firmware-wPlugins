@@ -5,7 +5,6 @@ App(
     entry_point="chief_cooker_app",
     stack_size=2 * 1024,
     fap_icon="chief_cooker.png",
-    fap_icon_assets="images",
     fap_category="Sub-GHz",
     fap_author="Denr01",
     fap_weburl="https://github.com/denr01/FZ-ChiefCooker",

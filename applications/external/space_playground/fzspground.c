@@ -6,7 +6,7 @@
 #include <gui/gui.h>
 #include <furi.h>
 
-#include <space_playground_icons.h>
+// #include <space_playground_icons.h>
 
 #include "planet.h"
 #include "asteroid.h"
