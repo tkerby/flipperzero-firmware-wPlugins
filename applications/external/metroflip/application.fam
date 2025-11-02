@@ -161,3 +161,21 @@ App(
     sources=["scenes/plugins/nol.c"],
     fal_embedded=True,
 )
+
+App(
+    appid="atr_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="atr_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/atr.c"],
+    fal_embedded=True,
+)
+
+App(
+    appid="tmobilitat_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="tmobilitat_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/tmobilitat.c"],
+    fal_embedded=True,
+)

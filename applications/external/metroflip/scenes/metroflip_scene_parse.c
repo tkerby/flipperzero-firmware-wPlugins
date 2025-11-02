@@ -14,15 +14,30 @@ void metroflip_scene_parse_on_enter(void* context) {
         app->card_type ? app->card_type : "NULL",
         app->data_loaded ? "true" : "false");
 
-    // Check if card_type is empty or unknown
-    FURI_LOG_I(TAG, "test1");
-
     if(!app->card_type || (app->card_type[0] == '\0') ||
        (strcmp(app->card_type, "unknown") == 0) || (strcmp(app->card_type, "Unknown Card") == 0) ||
        (app->is_desfire && is_desfire_locked(app->card_type))) {
         FURI_LOG_I(TAG, "Bad card condition met - sending wrong card event");
         view_dispatcher_send_custom_event(app->view_dispatcher, MetroflipCustomEventWrongCard);
     } else {
+        if((strcmp(app->card_type, "atr") == 0) && app->hist_bytes_count > 0) {
+            FURI_LOG_I(TAG, "Tag is either T-Mobilitat or T-Money");
+            if(app->hist_bytes[0] == 0x2A && app->hist_bytes[1] == 0x26) {
+                FURI_LOG_I(TAG, "Card is T-Mobilitat");
+                app->card_type = "tmobilitat";
+
+            } else if(app->hist_bytes[0] == 0x04 && app->hist_bytes[1] == 0x02) {
+                FURI_LOG_I(TAG, "Card is T-Money");
+
+                //app->card_type = "tmoney"
+                //for now we blank out the line above as it's not merged yet
+                view_dispatcher_send_custom_event(
+                    app->view_dispatcher, MetroflipCustomEventWrongCard);
+            } else {
+                view_dispatcher_send_custom_event(
+                    app->view_dispatcher, MetroflipCustomEventWrongCard);
+            }
+        }
         FURI_LOG_I(TAG, "Card is valid, loading plugin for: %s", app->card_type);
         metroflip_plugin_manager_alloc(app);
         char path[128]; // Adjust size as needed
