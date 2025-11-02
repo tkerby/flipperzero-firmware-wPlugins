@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.5.1
+
+- Fixed issue where the command label could be wrong when exiting a command
+
 ## v1.5.0
 
 - Support for new pcap marker handling by the firmware as of v1.8
