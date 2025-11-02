@@ -30,7 +30,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-11-01 18:35 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-11-01 18:35 EST`
-- Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip) [Suica Parser: add 40+ Kansai region lines (By zinongli)](https://github.com/luu176/Metroflip/pull/83)
 - OFW: PR: [Infrared: Audio Remote - Add Teufel KB 62 RC #4299 (By testcenter)](https://github.com/flipperdevices/flipperzero-firmware/pull/4299)
 - Updated: [VEML7700 Lux Meter v1.1 (By kamylwnb)](https://github.com/kamylwnb/Flipper-zero-app-VEML7700)
 - Updated: [UDECard v1.0.3 (By hahnworks](https://github.com/hahnworks/UDECard)
@@ -38,6 +37,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [ESP Flasher: Bump Marauder v1.8.9 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.8.9)
 - Updated: [Fire String v1.3 (By RyanAboueljoud)](https://github.com/RyanAboueljoud/Fire-String)
 - Updated: [Ghost ESP v1.5.1 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app)
+- Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip) [Suica Parser: add 40+ Kansai region lines (By zinongli)](https://github.com/luu176/Metroflip/pull/83)
 
 <a name="release">
 
