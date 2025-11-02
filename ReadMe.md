@@ -36,6 +36,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [UDECard v1.0.3 (By hahnworks](https://github.com/hahnworks/UDECard)
 - Updated: [Furious Birds v1.0 (By bmstr-ru)](https://github.com/bmstr-ru/furious-birds)
 - [ESP Flasher: Bump Marauder v1.8.9 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.8.9)
+- Updated: [Fire String v1.3 (By RyanAboueljoud)](https://github.com/RyanAboueljoud/Fire-String)
 
 <a name="release">
 
@@ -482,7 +483,7 @@ $ ./fbt dolphin_ext
 - [Fencing Test Box v0.1 (By aarjaneiro)](https://www.github.com/aarjaneiro/fencing_testbox)
 - [Financial Calculator v1.0 (By schaene)](https://github.com/schaene/Flipper-Financial-Calculator)
 - [FindMy Flipper v3.5.2 (By MatthewKuKanich)](https://github.com/MatthewKuKanich/FindMyFlipper)
-- [Fire String v1.2 (By RyanAboueljoud)](https://github.com/RyanAboueljoud/Fire-String)
+- [Fire String v1.3 (By RyanAboueljoud)](https://github.com/RyanAboueljoud/Fire-String)
 - [Flame RNG v0.3 (By OrionW06)](https://github.com/OrionW06/Flame-RNG)
 - [Flashlight v1.2 (By xMasterX)](https://github.com/xMasterX/flipper-flashlight)
 - [FlipDownloader v1.3.4 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
