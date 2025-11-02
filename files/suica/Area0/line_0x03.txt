@@ -102,7 +102,7 @@
 ,,,,,
 0x03,0x03,Chuo-Sobu,Ochanomizu,18,0
 0x03,0x04,Chuo-Sobu,Suidobashi,17,0
-0x03,0x06,Chuo-Sobu,Idabashi,16,0
+0x03,0x06,Chuo-Sobu,Iidabashi,16,0
 0x03,0x07,Chuo-Sobu,Ichigaya,15,0
 0x03,0x08,Chuo-Sobu,Yotsuya,14,0
 0x03,0x09,Chuo-Sobu,Shinanomachi,13,0

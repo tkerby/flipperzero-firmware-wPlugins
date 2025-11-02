@@ -23,6 +23,15 @@ App(
 )
 
 App(
+    appid="two_cities_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="two_cities_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/two_cities.c"],
+    fal_embedded=True,
+)
+
+App(
     appid="calypso_plugin",
     apptype=FlipperAppType.PLUGIN,
     entry_point="calypso_plugin_ep",
@@ -136,5 +145,19 @@ App(
     entry_point="tmoney_plugin_ep",
     requires=["metroflip"],
     sources=["scenes/plugins/tmoney.c"],
+    appid="renfe_regular_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="renfe_regular_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/renfe_regular.c"],
+    fal_embedded=True,
+)
+
+App(
+    appid="nol_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="nol_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/nol.c"],
     fal_embedded=True,
 )
