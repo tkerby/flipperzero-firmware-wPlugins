@@ -1,8 +1,8 @@
-#include "boilerplate_haptic.h"
-#include "../boilerplate.h"
+#include "game_haptic.h"
+#include "../guess_the_number.h"
 
-void boilerplate_play_happy_bump(void* context) {
-    Boilerplate* app = context;
+void game_play_happy_bump(void* context) {
+    GameApp* app = context;
     if(app->haptic != 1) {
         return;
     }
@@ -11,8 +11,8 @@ void boilerplate_play_happy_bump(void* context) {
     notification_message(app->notification, &sequence_reset_vibro);
 }
 
-void boilerplate_play_bad_bump(void* context) {
-    Boilerplate* app = context;
+void game_play_bad_bump(void* context) {
+    GameApp* app = context;
     if(app->haptic != 1) {
         return;
     }
@@ -21,8 +21,8 @@ void boilerplate_play_bad_bump(void* context) {
     notification_message(app->notification, &sequence_reset_vibro);
 }
 
-void boilerplate_play_short_bump(void* context) {
-    Boilerplate* app = context;
+void game_play_short_bump(void* context) {
+    GameApp* app = context;
     if(app->haptic != 1) {
         return;
     }
@@ -34,8 +34,8 @@ void boilerplate_play_short_bump(void* context) {
     }
 }
 
-void boilerplate_play_long_bump(void* context) {
-    Boilerplate* app = context;
+void game_play_long_bump(void* context) {
+    GameApp* app = context;
     if(app->haptic != 1) {
         return;
     }
@@ -47,12 +47,11 @@ void boilerplate_play_long_bump(void* context) {
     }
 }
 
-void boilerplate_play_close_bump(void* context) {
-    Boilerplate* app = context;
+void game_play_close_bump(void* context) {
+    GameApp* app = context;
     if(app->haptic != 1) {
         return;
     }
-    // Triple short vibration for "close" feedback
     for(int i = 0; i < 3; i++) {
         notification_message(app->notification, &sequence_set_vibro_on);
         furi_thread_flags_wait(0, FuriFlagWaitAny, 30);
@@ -61,8 +60,8 @@ void boilerplate_play_close_bump(void* context) {
     }
 }
 
-void boilerplate_play_button_press(void* context) {
-    Boilerplate* app = context;
+void game_play_button_press(void* context) {
+    GameApp* app = context;
     if(app->haptic != 1) {
         return;
     }
