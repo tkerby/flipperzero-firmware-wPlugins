@@ -39,6 +39,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Ghost ESP v1.5.1 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app)
 - Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip) [Suica Parser: add 40+ Kansai region lines (By zinongli)](https://github.com/luu176/Metroflip/pull/83)
 - Updated: [Guess The Number v1.3 (By kWAYTV)](https://github.com/kWAYTV/guess-the-number-fz)
+- Updated: [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader)
 
 <a name="release">
 
