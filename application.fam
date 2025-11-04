@@ -1,0 +1,11 @@
+App(
+    appid="i2c_explorer",
+    name="I2C Explorer",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="i2c_explorer_app",
+    requires=["gui"],
+    stack_size=2 * 1024,
+    fap_icon="assets/i2c_explorer.png",
+    fap_category="GPIO",
+    fap_icon_assets="assets",
+)
