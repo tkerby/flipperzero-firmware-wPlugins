@@ -60,6 +60,10 @@ int16_t getRSSI() {
     return rssi;
 }
 
+int8_t getSNR() {
+    return snr;
+}
+
 void checkBusy() {
     uint8_t busy_timeout_cnt;
     busy_timeout_cnt = 0;
@@ -616,12 +620,6 @@ void setPacketParams(
     uint8_t preambleMSB = packetParam1 >> 8;
     uint8_t preambleLSB = packetParam1 & 0xFF;
 
-    //savedPacketParam1 = packetParam1;
-    //savedPacketParam2 = packetParam2;
-    //savedPacketParam3 = packetParam3;
-    //savedPacketParam4 = packetParam4;
-    //savedPacketParam5 = packetParam5;
-
     spiBuff[0] = 0x8C; //Opcode for "SetPacketParameters"
     spiBuff[1] = preambleMSB; //Preamble Len MSB
     spiBuff[2] = preambleLSB; //Preamble Len LSB
@@ -636,6 +634,14 @@ void setPacketParams(
 
     if(furi_hal_spi_bus_tx(spi, spiBuff, 7, timeout)) {
         furi_hal_spi_release(spi);
+        FURI_LOG_I(
+            "LoRaSPI",
+            "PacketParams written OK -> Preamble: %u, Header: %u, Payload: %u, CRC: %u, IQ: %u",
+            packetParam1,
+            packetParam2,
+            packetParam3,
+            packetParam4,
+            packetParam5);
     } else {
         FURI_LOG_E(TAG, "FAILED - furi_hal_spi_bus_tx or furi_hal_spi_bus_rx failed.");
         furi_hal_spi_release(spi);

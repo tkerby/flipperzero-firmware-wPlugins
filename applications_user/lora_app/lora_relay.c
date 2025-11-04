@@ -16,6 +16,8 @@
 #include <dialogs/dialogs.h>
 #include <storage/storage.h>
 
+#include <furi_hal_usb_cdc.h>
+
 #include "lora_app_icons.h"
 
 #define PATHAPP                 "apps_data/lora"
@@ -24,6 +26,8 @@
 #define LORA_LOG_FILE_EXTENSION ".log"
 
 #define MAX_LINE_LENGTH 256
+
+#define CDC_PORT_NUM 1 // Port CDC 1 (second port USB)
 
 #define TIME_LEN 12
 #define DATE_LEN 14
@@ -38,11 +42,9 @@ const GpioPin* const pin_back = &gpio_button_back;
 
 #define TAG "LoRa"
 
-uint8_t receiveBuff[255];
-char asciiBuff[512];
-
 void abandone();
 int16_t getRSSI();
+int8_t getSNR();
 void configureRadioEssentials();
 bool begin();
 bool sanityCheck();
@@ -1640,6 +1642,32 @@ static void lora_setting_item_clicked(void* context, uint32_t index) {
     }
 }
 
+// Open serial port USB (dual mode CDC)
+bool serial_open_port(void) {
+    if(furi_hal_usb_get_config() != &usb_cdc_dual) {
+        return furi_hal_usb_set_config(&usb_cdc_dual, NULL);
+    }
+    return true;
+}
+
+// Close serial port (simple mode)
+bool serial_close_port(void) {
+    if(furi_hal_usb_get_config() == &usb_cdc_dual) {
+        return furi_hal_usb_set_config(&usb_cdc_single, NULL);
+    }
+    return true;
+}
+
+// Send raw bytes
+void serial_send_bytes(const uint8_t* data, size_t len) {
+    if(len > 0) {
+        furi_hal_cdc_send(CDC_PORT_NUM, (uint8_t*)data, len);
+    }
+}
+
+uint8_t receiveBuff[255];
+char asciiBuff[512];
+
 void bytesToAsciiHex(uint8_t* buffer, uint8_t length) {
     uint8_t i;
     for(i = 0; i < length; ++i) {
@@ -1648,6 +1676,9 @@ void bytesToAsciiHex(uint8_t* buffer, uint8_t length) {
     }
     asciiBuff[length * 2] = '\0'; // Null-terminate the string
     FURI_LOG_E(TAG, "OUT bytesToAsciiHex ");
+
+    for(int i = 0; i < length; i++)
+        FURI_LOG_E(TAG, "%02X ", buffer[i]);
 }
 
 void asciiHexToBytes(const char* hex, uint8_t* bytes, size_t length) {
@@ -1669,13 +1700,38 @@ static void lora_view_sniffer_draw_callback(Canvas* canvas, void* model) {
 
     canvas_draw_icon(canvas, 0, 17, &I_flippers_cat);
 
-    //Receive a packet over radio
+    // Receive a packet over radio
     int bytesRead = lora_receive_async(receiveBuff, sizeof(receiveBuff));
 
     if(bytesRead > -1) {
         FURI_LOG_E(TAG, "Packet received... ");
         receiveBuff[bytesRead] = '\0';
         bytesToAsciiHex(receiveBuff, bytesRead);
+
+        uint8_t hdr[4];
+
+        // SOF + length
+        hdr[0] = '@';
+        hdr[1] = 'S';
+        hdr[2] = (uint8_t)((bytesRead >> 8) & 0xFF);
+        hdr[3] = (uint8_t)(bytesRead & 0xFF);
+
+        serial_send_bytes(hdr, 4); // header
+        serial_send_bytes((uint8_t*)receiveBuff, bytesRead); // payload
+
+        // RSSI (int16_t -> 2 bytes big-endian)
+        int16_t rssi = getRSSI();
+        uint8_t rssi_b[2] = {(uint8_t)((rssi >> 8) & 0xFF), (uint8_t)(rssi & 0xFF)};
+        serial_send_bytes(rssi_b, 2);
+
+        // SNR (int8_t -> 1 byte)
+        int8_t snr = getSNR();
+        uint8_t snr_b = (uint8_t)snr;
+        serial_send_bytes(&snr_b, 1);
+
+        // EOF
+        uint8_t eof[4] = {'@', 'E', '\r', '\n'};
+        serial_send_bytes(eof, 4);
 
         if(flag_file) {
             DateTime curr_dt;
@@ -1702,7 +1758,7 @@ static void lora_view_sniffer_draw_callback(Canvas* canvas, void* model) {
             char final_string[400];
             const char* freq_str = furi_string_get_cstr(my_model->config_freq_name);
 
-            //JSON format
+            // JSON format
             snprintf(
                 final_string,
                 666,
@@ -1801,7 +1857,7 @@ static void lora_view_transmitter_timer_callback(void* context) {
 /**
  * @brief      Callback when the user starts the sniffer screen.
  * @details    This function is called when the user enters the sniffer screen.  We start a timer to
- *           redraw the screen periodically (so the random number is refreshed).
+ *           redraw the screen periodically.
  * @param      context  The context - LoRaApp object.
 */
 static void lora_view_sniffer_enter_callback(void* context) {
@@ -1872,7 +1928,7 @@ static bool lora_view_sniffer_custom_event_callback(uint32_t event, void* contex
             return true;
         }
     case LoRaEventIdOkPressed:
-        // Process the OK button.  We play a tone based on the x coordinate.
+        // Process the OK button.  We play a tone.
         if(furi_hal_speaker_acquire(500)) {
             float frequency;
             bool redraw = false;
@@ -1910,7 +1966,7 @@ static bool lora_view_transmitter_custom_event_callback(uint32_t event, void* co
             return true;
         }
     case LoRaEventIdOkPressed:
-        // Process the OK button.  We play a tone based on the x coordinate.
+        // Process the OK button.  We play a tone.
         if(furi_hal_speaker_acquire(500)) {
             float frequency;
             bool redraw = false;
@@ -2539,6 +2595,8 @@ static LoRaApp* lora_app_alloc() {
 
     app->notifications = furi_record_open(RECORD_NOTIFICATION);
 
+    serial_open_port(); // Second serial port USB active
+
 #ifdef BACKLIGHT_ON
     notification_message(app->notifications, &sequence_display_backlight_enforce_on);
 #endif
@@ -2592,6 +2650,8 @@ static void lora_app_free(LoRaApp* app) {
     submenu_free(app->submenu);
     view_dispatcher_free(app->view_dispatcher);
     furi_record_close(RECORD_GUI);
+
+    serial_close_port(); // USB normal
 
     free(app);
 }
