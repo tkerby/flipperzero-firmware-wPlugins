@@ -18,6 +18,7 @@ enum {
 struct FlippPomodoroTimerView {
     View* view;
     FlippPomodoroTimerViewInputCb right_cb;
+    FlippPomodoroTimerViewInputCb left_cb;
     FlippPomodoroTimerViewInputCb ok_cb;
     void* callback_context;
 };
@@ -81,16 +82,12 @@ static void draw_str_with_drop_shadow(
     canvas_draw_str_aligned(canvas, x, y, horizontal, vertical, str);
 }
 
-static void
-    flipp_pomodoro_view_timer_draw_current_stage_label(Canvas* canvas, FlippPomodoroState* state) {
+static void flipp_pomodoro_view_timer_draw_current_stage_label(
+    Canvas* canvas,
+    FlippPomodoroTimerViewModel* model) {
     canvas_set_font(canvas, FontPrimary);
-    draw_str_with_drop_shadow(
-        canvas,
-        canvas_width(canvas),
-        0,
-        AlignRight,
-        AlignTop,
-        flipp_pomodoro__current_stage_label(state));
+    const char* label = flipp_pomodoro__current_stage_label(model->state);
+    draw_str_with_drop_shadow(canvas, canvas_width(canvas), 0, AlignRight, AlignTop, label);
 }
 
 static void
@@ -158,13 +155,14 @@ static void flipp_pomodoro_view_timer_draw_callback(Canvas* canvas, void* _model
     flipp_pomodoro_view_timer_draw_countdown(
         canvas, flipp_pomodoro__stage_remaining_duration(model->state));
 
-    flipp_pomodoro_view_timer_draw_current_stage_label(canvas, model->state);
+    flipp_pomodoro_view_timer_draw_current_stage_label(canvas, model);
 
     canvas_set_color(canvas, ColorBlack);
 
     canvas_set_font(canvas, FontSecondary);
     elements_button_right(canvas, flipp_pomodoro__next_stage_label(model->state));
     flipp_pomodoro_view_timer_draw_hint(canvas, model);
+    elements_button_left(canvas, flipp_pomodoro__settings_button_label());
 }
 
 bool flipp_pomodoro_view_timer_input_callback(InputEvent* event, void* ctx) {
@@ -181,6 +179,9 @@ bool flipp_pomodoro_view_timer_input_callback(InputEvent* event, void* ctx) {
     switch(event->key) {
     case InputKeyRight:
         timer->right_cb(timer->callback_context);
+        return ViewInputConsumed;
+    case InputKeyLeft:
+        timer->left_cb(timer->callback_context);
         return ViewInputConsumed;
     case InputKeyOk:
         timer->ok_cb(timer->callback_context);
@@ -293,4 +294,12 @@ void flipp_pomodoro_view_timer_free(FlippPomodoroTimerView* timer) {
     view_free(timer->view);
 
     free(timer);
+}
+
+void flipp_pomodoro_view_timer_set_on_left_cb(
+    FlippPomodoroTimerView* timer,
+    FlippPomodoroTimerViewInputCb left_cb) {
+    furi_assert(timer);
+    furi_assert(left_cb);
+    timer->left_cb = left_cb;
 }

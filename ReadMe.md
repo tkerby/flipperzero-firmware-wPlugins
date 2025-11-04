@@ -40,6 +40,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip) [Suica Parser: add 40+ Kansai region lines (By zinongli)](https://github.com/luu176/Metroflip/pull/83)
 - Updated: [Guess The Number v1.3 (By kWAYTV)](https://github.com/kWAYTV/guess-the-number-fz)
 - Updated: [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader)
+- Updated: [Pomodoro 2 v2.4.1 (By Th3Un1q3)](https://github.com/Th3Un1q3/flipp_pomodoro)
 
 <a name="release">
 
@@ -664,7 +665,7 @@ $ ./fbt dolphin_ext
 - [POCSAG Pager v1.3 (By XMasterx & Shmuma)](https://github.com/xMasterX/flipper-pager)
 - [Pokemon Trading v2.3 (By EstebanFuentealba & kbembedded)](https://github.com/EstebanFuentealba/Flipper-Zero-Game-Boy-Trading-Pokemons)
 - [Pomodoro Timer v1.4 (By sbrin)](https://github.com/sbrin/flipperzero_pomodoro)
-- [Pomodoro 2 v1.4 (By Th3Un1q3)](https://github.com/Th3Un1q3/flipp_pomodoro)
+- [Pomodoro 2 v2.4.1 (By Th3Un1q3)](https://github.com/Th3Un1q3/flipp_pomodoro)
 - [Portal of Flipper v1.3 (By bettse)](https://gitlab.com/bettse/portal_of_flipper)
 - [Postman v0.1 (By MassivDash)](https://github.com/MassivDash/flipper-postman) `Req: ESP32` with [Postman Firmware](https://github.com/MassivDash/flipper-postman-esp32s2)
 - [Programmer Calculator v0.9.2 (By armixz)](https://github.com/armixz/Flipper-Zero-Programmer-Calculator)
