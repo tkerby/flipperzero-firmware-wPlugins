@@ -41,6 +41,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Guess The Number v1.3 (By kWAYTV)](https://github.com/kWAYTV/guess-the-number-fz)
 - Updated: [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader)
 - Updated: [Pomodoro 2 v2.4.1 (By Th3Un1q3)](https://github.com/Th3Un1q3/flipp_pomodoro)
+- Added: [OpenPrintTag v1.0 (By Houzvicka)](https://github.com/Houzvicka/FlipperPrintTag)
 
 <a name="release">
 
@@ -648,6 +649,7 @@ $ ./fbt dolphin_ext
 - [NRF24 Scanner v2.3 (By vad7)](https://github.com/vad7/nrf24scan)
 - [NRF24 Jammer v1.0 (By huuck)](https://github.com/huuck/FlipperZeroNRFJammer) (Exercise Caution and Follow Your Local Laws)
 - [Ocarina v1.3 (By invalidna-me)](https://github.com/invalidna-me/flipperzero-ocarina) [Here are the LOTZ Songs](https://www.zeldadungeon.net/wiki/Ocarina_of_Time_Songs)
+- [OpenPrintTag v1.0 (By Houzvicka)](https://github.com/Houzvicka/FlipperPrintTag)
 - [Orgasmotron v1.1 (By leedave)](https://github.com/leedave/Leeds-Flipper-Zero-Applications)
 - [Oscilloscope v0.4 (By anfractuosity)](https://github.com/anfractuosity/flipperscope)
 - [Paranoia WIP v0.1 (By C0d3-5t3w)](https://github.com/C0d3-5t3w/flipper-paranoia)
