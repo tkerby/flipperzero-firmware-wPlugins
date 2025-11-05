@@ -44,7 +44,7 @@ typedef enum {
     ExplMenuMax
 } I2CExplMenuRows;
 
-const char *expl_menu_titles[ExplMenuMax] = {"Dump...", "Load...", "About..."}; 
+const char* expl_menu_titles[ExplMenuMax] = {"Dump...", "Load...", "About..."};
 
 typedef enum {
     AppEventTypeTick,
@@ -77,27 +77,27 @@ typedef struct {
 } I2CExplAppState;
 
 typedef struct {
-    Gui *gui;
-    ViewPort *view_port;
-    
+    Gui* gui;
+    ViewPort* view_port;
+
     FuriMessageQueue* queue; // Message queue (AppEvent items to process).
     FuriMutex* mutex; // Used to provide thread safe access to data for callbacks.
     I2CExplAppState* data; // Data accessed by multiple threads (acquire the mutex before accessing!)
 } I2CExplAppContext;
 
 // Invoked when input (button press) is detected.  We queue a message and then return to the caller.
-static void input_callback(InputEvent* input_event, void *ctx) {
-    FuriMessageQueue* queue = (FuriMessageQueue*) ctx;
-    
+static void input_callback(InputEvent* input_event, void* ctx) {
+    FuriMessageQueue* queue = (FuriMessageQueue*)ctx;
+
     // Bubble up to top level
     AppEvent event = {.type = AppEventTypeKey, .input = *input_event};
-    furi_message_queue_put(queue, &event, FuriWaitForever);   
+    furi_message_queue_put(queue, &event, FuriWaitForever);
 }
 
 // Invoked by the timer on every tick.  We queue a message and then return to the caller.
 static void tick_callback(void* ctx) {
     FuriMessageQueue* queue = ctx;
-    
+
     AppEvent event = {.type = AppEventTypeTick};
     // It's OK to loose this event if system overloaded (so we don't pass a wait value for 3rd parameter.)
     furi_message_queue_put(queue, &event, 0);
@@ -107,95 +107,94 @@ static void scroll_vert(void* ctx, bool down) {
     I2CExplAppContext* app_context = ctx;
     I2CExplAppState* data = app_context->data;
 
-    if (data->selected_column == ExplColDevAddr) {
+    if(data->selected_column == ExplColDevAddr) {
         int16_t last_addr = -1;
-    
-        for (uint8_t addr = 0; addr <= 0x7f; addr++) {
-            if (!down && addr == data->selected_addr) {
+
+        for(uint8_t addr = 0; addr <= 0x7f; addr++) {
+            if(!down && addr == data->selected_addr) {
                 data->selected_addr = last_addr;
                 break;
             }
 
-            if ((data->scan_hits[addr >> 3] & (1 << (addr & 0x07))) != 0) {
-                if (down && addr > data->selected_addr) {
+            if((data->scan_hits[addr >> 3] & (1 << (addr & 0x07))) != 0) {
+                if(down && addr > data->selected_addr) {
                     data->selected_addr = addr;
                     break;
                 }
-            
+
                 last_addr = addr;
-            }   
+            }
         }
 
-        if (last_addr == 0x7f &&
-            (data->scan_hits[data->selected_addr >> 3] & (1 << (data->selected_addr & 0x07))) == 0) {
+        if(last_addr == 0x7f && (data->scan_hits[data->selected_addr >> 3] &
+                                 (1 << (data->selected_addr & 0x07))) == 0) {
             data->selected_addr = -1;
         }
-    } else if (data->selected_column == ExplColRegDump) {
+    } else if(data->selected_column == ExplColRegDump) {
         data->selected_reg = (data->selected_reg + (down ? 1 : 255)) % 256;
-        
-        if (data->selected_reg < data->start_reg) {
+
+        if(data->selected_reg < data->start_reg) {
             data->start_reg = data->selected_reg;
-        } else if (data->selected_reg >= data->start_reg + VIEW_ROW_COUNT) {
+        } else if(data->selected_reg >= data->start_reg + VIEW_ROW_COUNT) {
             data->start_reg = data->selected_reg - VIEW_ROW_COUNT + 1;
         }
-    } else if (data->selected_column == ExplColRegBits) {
+    } else if(data->selected_column == ExplColRegBits) {
         data->selected_bit = (data->selected_bit + (down ? -1 : 1) + 8) % 8;
-    } else if (data->selected_column == ExplColMenu) {
+    } else if(data->selected_column == ExplColMenu) {
         data->selected_menu = (data->selected_menu + (down ? 1 : -1) + ExplMenuMax) % ExplMenuMax;
     }
 }
 
-static void scroll_horiz(void *ctx, bool right) {
+static void scroll_horiz(void* ctx, bool right) {
     I2CExplAppContext* app_context = ctx;
     I2CExplAppState* data = app_context->data;
 
     data->selected_column += (right ? 1 : -1) + ExplColMax;
     data->selected_column %= ExplColMax;
 
-    if (data->selected_column - data->start_column >= 2) {
+    if(data->selected_column - data->start_column >= 2) {
         data->start_column = data->selected_column - 1;
-    } else if (data->selected_column < data->start_column) {
+    } else if(data->selected_column < data->start_column) {
         data->start_column = data->selected_column;
     }
-    
 }
 
-static bool load_dump_file(I2CExplAppContext *app_context, const char* file_path) {
+static bool load_dump_file(I2CExplAppContext* app_context, const char* file_path) {
     I2CExplAppState* data = app_context->data;
     bool success = false;
 
-    if (data->selected_addr < 0 ||
-        (data->scan_hits[data->selected_addr >> 3] & (1 << (data->selected_addr & 0x07))) == 0) {
+    if(data->selected_addr < 0 ||
+       (data->scan_hits[data->selected_addr >> 3] & (1 << (data->selected_addr & 0x07))) == 0) {
         return false;
     }
 
-    Storage *storage = furi_record_open(RECORD_STORAGE);    
-    Stream *stream = file_stream_alloc(storage);
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    Stream* stream = file_stream_alloc(storage);
 
-    if (!file_stream_open(stream, file_path, FSAM_READ, FSOM_OPEN_EXISTING)) {
+    if(!file_stream_open(stream, file_path, FSAM_READ, FSOM_OPEN_EXISTING)) {
         goto load_dump_bail_1;
     };
-       
+
     furi_hal_i2c_acquire(&furi_hal_i2c_handle_external);
-    FuriString *str_line = furi_string_alloc();
-    FuriString *str_val = furi_string_alloc();
+    FuriString* str_line = furi_string_alloc();
+    FuriString* str_val = furi_string_alloc();
 
     uint8_t target_addr = data->selected_addr;
-    
-    while (!stream_eof(stream)) {
-        if (!stream_read_line(stream, str_line)) {
+
+    while(!stream_eof(stream)) {
+        if(!stream_read_line(stream, str_line)) {
             goto load_dump_bail_2;
         }
 
         furi_string_trim(str_line);
-        if (furi_string_size(str_line) == 0 || furi_string_get_char(str_line, 0) == '#') {
+        if(furi_string_size(str_line) == 0 || furi_string_get_char(str_line, 0) == '#') {
             // Comment, ignore
             continue;
         }
-        
+
         size_t mid_pos = furi_string_search_char(str_line, ':', 0);
-        if (mid_pos == FURI_STRING_FAILURE) {
-            goto load_dump_bail_2;            
+        if(mid_pos == FURI_STRING_FAILURE) {
+            goto load_dump_bail_2;
         }
 
         furi_string_set(str_val, str_line);
@@ -206,81 +205,81 @@ static bool load_dump_file(I2CExplAppContext *app_context, const char* file_path
         furi_string_right(str_val, mid_pos + 1);
         furi_string_trim(str_val);
 
-        if (furi_string_equal_str(str_line, "Address") && furi_string_size(str_val) == 2) {
+        if(furi_string_equal_str(str_line, "Address") && furi_string_size(str_val) == 2) {
             // Override target device address for subsequent reg writes:
             // (you can do this more than once)
             target_addr = strtol(furi_string_get_cstr(str_val), NULL, 16);
             continue;
         }
 
-        if (furi_string_size(str_line) != 2 || furi_string_size(str_val) != 2) {
+        if(furi_string_size(str_line) != 2 || furi_string_size(str_val) != 2) {
             goto load_dump_bail_2;
         }
 
         uint8_t reg = strtol(furi_string_get_cstr(str_line), NULL, 16);
         uint8_t value = strtol(furi_string_get_cstr(str_val), NULL, 16);
-        
+
         furi_hal_i2c_write_reg_8(&furi_hal_i2c_handle_external, target_addr << 1, reg, value, 5);
     }
     success = true;
 
- load_dump_bail_2:
+load_dump_bail_2:
     furi_string_free(str_val);
     furi_string_free(str_line);
     furi_hal_i2c_release(&furi_hal_i2c_handle_external);
 
     file_stream_close(stream);
 
- load_dump_bail_1:
+load_dump_bail_1:
     stream_free(stream);
-    
+
     furi_record_close(RECORD_STORAGE);
-    
+
     return success;
 }
 
-static bool save_dump_file(I2CExplAppContext *app_context, const char* file_path) {
+static bool save_dump_file(I2CExplAppContext* app_context, const char* file_path) {
     I2CExplAppState* data = app_context->data;
     bool success = false;
 
-    if (data->selected_addr < 0 ||
-        (data->scan_hits[data->selected_addr >> 3] & (1 << (data->selected_addr & 0x07))) == 0) {
+    if(data->selected_addr < 0 ||
+       (data->scan_hits[data->selected_addr >> 3] & (1 << (data->selected_addr & 0x07))) == 0) {
         return false;
     }
 
-    Storage *storage = furi_record_open(RECORD_STORAGE);    
-    Stream *stream = file_stream_alloc(storage);
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    Stream* stream = file_stream_alloc(storage);
 
-    if (!file_stream_open(stream, file_path, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+    if(!file_stream_open(stream, file_path, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
         goto save_dump_bail_1;
     };
-       
+
     furi_hal_i2c_acquire(&furi_hal_i2c_handle_external);
 
-    for (uint16_t reg = 0; reg <= 0xFF; reg++) {
+    for(uint16_t reg = 0; reg <= 0xFF; reg++) {
         uint8_t value = 0;
-        if (!furi_hal_i2c_read_reg_8(&furi_hal_i2c_handle_external, data->selected_addr << 1, reg, &value, 5)) {
+        if(!furi_hal_i2c_read_reg_8(
+               &furi_hal_i2c_handle_external, data->selected_addr << 1, reg, &value, 5)) {
             continue;
         }
 
         size_t count = stream_write_format(stream, "%02x: %02x\n", reg, value);
-        if (count < 7) {
+        if(count < 7) {
             goto save_dump_bail_2;
         }
-        
     }
     success = true;
 
- save_dump_bail_2:    
+save_dump_bail_2:
     furi_hal_i2c_release(&furi_hal_i2c_handle_external);
 
     file_stream_close(stream);
 
- save_dump_bail_1:
+save_dump_bail_1:
     stream_free(stream);
-    
+
     furi_record_close(RECORD_STORAGE);
-    
+
     return success;
 }
 
@@ -288,7 +287,7 @@ static void dialog_message(DialogsApp* context, bool error, const char* text) {
     DialogMessage* message = dialog_message_alloc();
     dialog_message_set_text(message, text, 88, 32, AlignCenter, AlignCenter);
     dialog_message_set_icon(message, &I_i2c_explorer, 15, 25);
-    if (error) {
+    if(error) {
         dialog_message_set_buttons(message, "Back", NULL, NULL);
     } else {
         dialog_message_set_buttons(message, NULL, "OK", NULL);
@@ -298,20 +297,22 @@ static void dialog_message(DialogsApp* context, bool error, const char* text) {
 }
 
 typedef struct {
-    ViewDispatcher *view_dispatcher;
+    ViewDispatcher* view_dispatcher;
     bool success;
 } StandaloneViewContext;
 
-static uint32_t standalone_view_cancel_callback(void *ctx) {
-    (void) ctx;
+static uint32_t standalone_view_cancel_callback(void* ctx) {
+    (void)ctx;
     return VIEW_NONE;
 }
 
-static bool launch_view_standalone(I2CExplAppContext* app_context, View *view, StandaloneViewContext *ctx) {
+static bool
+    launch_view_standalone(I2CExplAppContext* app_context, View* view, StandaloneViewContext* ctx) {
     // Pain in the butt -- need to instantiate the whole view dispatcher framework to launch stuff like
     // a text input.
 
-    ViewDispatcher *view_dispatcher = view_dispatcher_alloc();
+    ViewDispatcher* view_dispatcher = view_dispatcher_alloc();
+    view_dispatcher_enable_queue(*view_dispatcher);
     view_dispatcher_attach_to_gui(view_dispatcher, app_context->gui, ViewDispatcherTypeFullscreen);
 
     ctx->success = false;
@@ -333,76 +334,85 @@ static bool launch_view_standalone(I2CExplAppContext* app_context, View *view, S
     return ctx->success;
 }
 
-static void text_input_updated_callback(void *ctx) {
-    StandaloneViewContext *context = (StandaloneViewContext *) ctx;
+static void text_input_updated_callback(void* ctx) {
+    StandaloneViewContext* context = (StandaloneViewContext*)ctx;
     context->success = true;
-    view_dispatcher_switch_to_view(context->view_dispatcher, VIEW_NONE);    
+    view_dispatcher_switch_to_view(context->view_dispatcher, VIEW_NONE);
 }
 
-static bool get_text_input(I2CExplAppContext* app_context, char *header, char *buffer, uint16_t buffer_size) {
-    StandaloneViewContext ctx = {0};    
-    TextInput *text_input = text_input_alloc();
-    
+static bool get_text_input(
+    I2CExplAppContext* app_context,
+    char* header,
+    char* buffer,
+    uint16_t buffer_size) {
+    StandaloneViewContext ctx = {0};
+    TextInput* text_input = text_input_alloc();
+
     bool clear_previous_text = false;
-    text_input_set_result_callback(text_input,
-                                   text_input_updated_callback,
-                                   &ctx,
-                                   buffer,
-                                   buffer_size,
-                                   clear_previous_text);
+    text_input_set_result_callback(
+        text_input, text_input_updated_callback, &ctx, buffer, buffer_size, clear_previous_text);
 
     text_input_set_header_text(text_input, header);
 
     bool result = launch_view_standalone(app_context, text_input_get_view(text_input), &ctx);
-    
+
     text_input_free(text_input);
 
     return result;
 }
 
-
-static void select_item(void *ctx) {
+static void select_item(void* ctx) {
     I2CExplAppContext* app_context = ctx;
     I2CExplAppState* data = app_context->data;
 
-    if (data->selected_column == ExplColDevAddr || data->selected_column == ExplColRegDump) {
+    if(data->selected_column == ExplColDevAddr || data->selected_column == ExplColRegDump) {
         scroll_horiz(ctx, true);
-    } else if (data->selected_column == ExplColRegBits) {
+    } else if(data->selected_column == ExplColRegBits) {
         // Crude having this here....
         furi_hal_i2c_acquire(&furi_hal_i2c_handle_external);
-        
+
         uint8_t value = 0;
-        if (furi_hal_i2c_read_reg_8(&furi_hal_i2c_handle_external, data->selected_addr << 1, data->selected_reg, &value, 5)) {
+        if(furi_hal_i2c_read_reg_8(
+               &furi_hal_i2c_handle_external,
+               data->selected_addr << 1,
+               data->selected_reg,
+               &value,
+               5)) {
             value ^= 1 << data->selected_bit;
-            furi_hal_i2c_write_reg_8(&furi_hal_i2c_handle_external, data->selected_addr << 1, data->selected_reg, value, 5);            
+            furi_hal_i2c_write_reg_8(
+                &furi_hal_i2c_handle_external,
+                data->selected_addr << 1,
+                data->selected_reg,
+                value,
+                5);
         }
-        
+
         furi_hal_i2c_release(&furi_hal_i2c_handle_external);
-    } else if (data->selected_column == ExplColMenu) {
-        bool valid_addr_selected = data->selected_addr >= 0 &&
+    } else if(data->selected_column == ExplColMenu) {
+        bool valid_addr_selected =
+            data->selected_addr >= 0 &&
             (data->scan_hits[data->selected_addr >> 3] & (1 << (data->selected_addr & 0x07))) != 0;
-        
+
         view_port_enabled_set(app_context->view_port, false);
         gui_remove_view_port(app_context->gui, app_context->view_port);
         DialogsApp* dialogs = furi_record_open(RECORD_DIALOGS);
 
-        switch (data->selected_menu) {
+        switch(data->selected_menu) {
         case ExplMenuSaveDump:
-            if (valid_addr_selected) {
+            if(valid_addr_selected) {
                 char filename_str[32];
-                snprintf(filename_str,
-                         sizeof(filename_str),
-                         "reg_dump_0x%02x",
-                         data->selected_addr);
+                snprintf(
+                    filename_str, sizeof(filename_str), "reg_dump_0x%02x", data->selected_addr);
 
-                if (get_text_input(app_context, "Enter dump filename:", filename_str, sizeof(filename_str))) {
-                    FuriString *full_path = furi_string_alloc_set("/ext/apps/GPIO/");
+                if(get_text_input(
+                       app_context, "Enter dump filename:", filename_str, sizeof(filename_str))) {
+                    FuriString* full_path = furi_string_alloc_set("/ext/apps/GPIO/");
                     furi_string_cat_str(full_path, filename_str);
                     furi_string_cat_str(full_path, ".i2c");
-                
-                    if (save_dump_file(app_context, furi_string_get_cstr(full_path))) {
+
+                    if(save_dump_file(app_context, furi_string_get_cstr(full_path))) {
                         dialog_message(dialogs, false, "Dump saved to file!");
-                    } else {                
+                    } else {
                         dialog_message(dialogs, true, "Error creating dump file");
                     }
 
@@ -410,19 +420,20 @@ static void select_item(void *ctx) {
                 }
             }
             break;
-            
+
         case ExplMenuLoad:
-            if (valid_addr_selected) {
+            if(valid_addr_selected) {
                 FuriString* file_path = furi_string_alloc_set("/any/apps/GPIO");
-                
+
                 DialogsFileBrowserOptions browser_options;
                 dialog_file_browser_set_basic_options(&browser_options, "i2c", NULL);
                 browser_options.hide_ext = false;
-                
-                bool success = dialog_file_browser_show(dialogs, file_path, file_path, &browser_options);
-                
-                if (success) {
-                    if (load_dump_file(app_context, furi_string_get_cstr(file_path))) {
+
+                bool success =
+                    dialog_file_browser_show(dialogs, file_path, file_path, &browser_options);
+
+                if(success) {
+                    if(load_dump_file(app_context, furi_string_get_cstr(file_path))) {
                         dialog_message(dialogs, false, "Dump written to I2C!");
                     } else {
                         dialog_message(dialogs, true, "Error loading dump");
@@ -434,22 +445,23 @@ static void select_item(void *ctx) {
             break;
 
         case ExplMenuAbout:
-            dialog_message(dialogs, true,
-                           "I2C Explorer\n"
-                           "@4mb3rz 2025\n"
-                           "GND(18) <-> GND\n"
-                           "C0(16) <-> SCL\n"
-                           "C1(15) <-> SDA\n"
-                           "3V3(9) <-> VCC"
-                           );
+            dialog_message(
+                dialogs,
+                true,
+                "I2C Explorer\n"
+                "@4mb3rz 2025\n"
+                "GND(18) <-> GND\n"
+                "C0(16) <-> SCL\n"
+                "C1(15) <-> SDA\n"
+                "3V3(9) <-> VCC");
             break;
-            
+
         default:
         }
-        
+
         furi_record_close(RECORD_DIALOGS);
         gui_add_view_port(app_context->gui, app_context->view_port, GuiLayerFullscreen);
-        view_port_enabled_set(app_context->view_port, true);        
+        view_port_enabled_set(app_context->view_port, true);
     }
 }
 
@@ -459,19 +471,25 @@ typedef enum {
     FrameActive
 } frame_state;
 
-static void draw_framed_text(Canvas* canvas, int xcoord, int ycoord, int round, frame_state state, const char *string) {
+static void draw_framed_text(
+    Canvas* canvas,
+    int xcoord,
+    int ycoord,
+    int round,
+    frame_state state,
+    const char* string) {
     uint16_t str_width = canvas_string_width(canvas, string);
     uint16_t str_height = canvas_current_font_height(canvas) - round /*HAACK!*/;
-    if (state == FrameActive) {
+    if(state == FrameActive) {
         canvas_draw_rbox(canvas, xcoord - 1, ycoord - 1, str_width + 2, str_height, round);
         canvas_invert_color(canvas);
-    } else if (state == FrameInactive) {
+    } else if(state == FrameInactive) {
         canvas_draw_rframe(canvas, xcoord - 1, ycoord - 1, str_width + 2, str_height, round);
     }
     canvas_draw_str_aligned(canvas, xcoord, ycoord, AlignLeft, AlignTop, string);
-    if (state == FrameActive) {
+    if(state == FrameActive) {
         canvas_invert_color(canvas);
-    }    
+    }
 }
 
 // Invoked by the draw callback to render the screen. We render our UI on the callback thread.
@@ -486,57 +504,60 @@ static void render_callback(Canvas* canvas, void* ctx) {
     Font font_heading = FontPrimary;
     Font font_body = FontKeyboard;
     Font font_notice = FontSecondary;
-    
-    canvas_set_font(canvas, font_heading);    
+
+    canvas_set_font(canvas, font_heading);
     uint16_t heading_height = canvas_current_font_height(canvas);
 
     // Poll SCL/SDA status
     // Hacky to do this here, but it does give better responsiveness (and it's not slow like scanning)
-    
+
 #define pinSCL &gpio_ext_pc0
 #define pinSDA &gpio_ext_pc1
 
     furi_hal_gpio_init(pinSCL, GpioModeInput, GpioPullNo, GpioSpeedVeryHigh);
-    furi_hal_gpio_init(pinSDA, GpioModeInput, GpioPullNo, GpioSpeedVeryHigh);    
-    
+    furi_hal_gpio_init(pinSDA, GpioModeInput, GpioPullNo, GpioSpeedVeryHigh);
+
     bool levelSCL = furi_hal_gpio_read(pinSCL);
     bool levelSDA = furi_hal_gpio_read(pinSDA);
     bool not_ready = !levelSCL || !levelSDA;
 
     // Make it so floating SCL/SDA are detected promptly
-    // Not a legal bus state but seems to be tolerated? 
+    // Not a legal bus state but seems to be tolerated?
     furi_hal_gpio_init(pinSCL, GpioModeAnalog, GpioPullDown, GpioSpeedLow);
     furi_hal_gpio_init(pinSDA, GpioModeAnalog, GpioPullDown, GpioSpeedLow);
 
+    canvas_set_font(canvas, font_heading);
 
-    canvas_set_font(canvas, font_heading);    
-
-    char *addr_banner = "I2C Devices:";
+    char* addr_banner = "I2C Devices:";
     uint16_t addr_banner_width = canvas_string_width(canvas, addr_banner);
 
     int16_t xoffset = 0;
-    if (data->start_column >= ExplColRegDump) {
+    if(data->start_column >= ExplColRegDump) {
         xoffset -= addr_banner_width - 10;
     }
-    if (data->start_column >= ExplColRegBits) {
-        xoffset -= addr_banner_width - 10;  // eh. Not the right width field.
+    if(data->start_column >= ExplColRegBits) {
+        xoffset -= addr_banner_width - 10; // eh. Not the right width field.
     }
 
-    draw_framed_text(canvas, xoffset + 5, 2, 0,
-                     (data->selected_column == ExplColDevAddr) ? FrameActive : FrameInactive,
-                     addr_banner);
-
+    draw_framed_text(
+        canvas,
+        xoffset + 5,
+        2,
+        0,
+        (data->selected_column == ExplColDevAddr) ? FrameActive : FrameInactive,
+        addr_banner);
 
     canvas_set_font(canvas, font_notice);
-    //uint16_t notice_height = canvas_current_font_height(canvas);    
+    //uint16_t notice_height = canvas_current_font_height(canvas);
 
-    if (not_ready) {
+    if(not_ready) {
         // Draw some pretty background graphics while waiting for the bus to be connected
         int16_t wave_incr = 5;
         bool phase = false;
-        for (int16_t x = xoffset; x < ((int16_t) canvas_width(canvas)) * 4 / 3 + xoffset; x += wave_incr) {
+        for(int16_t x = xoffset; x < ((int16_t)canvas_width(canvas)) * 4 / 3 + xoffset;
+            x += wave_incr) {
             phase = !phase;
-            for (int16_t y = heading_height * 5 / 2; y < heading_height * 4; y += heading_height) {
+            for(int16_t y = heading_height * 5 / 2; y < heading_height * 4; y += heading_height) {
                 uint16_t x1 = x < 0 ? 0 : x;
                 uint16_t x2 = x + wave_incr < 0 ? 0 : x + wave_incr;
                 uint16_t y2 = y - (phase ? wave_incr : 0);
@@ -544,168 +565,196 @@ static void render_callback(Canvas* canvas, void* ctx) {
                 canvas_draw_line(canvas, x1, y2, x2, y2);
             }
         }
-        
+
         canvas_draw_icon(canvas, xoffset + 30, 2 + heading_height, &I_Grumpy_Flipper);
 
         uint16_t notice_y = VIEW_ROW_COUNT * heading_height;
-        char * scl_str = "!SCL(C0)";
+        char* scl_str = "!SCL(C0)";
         uint16_t scl_width = canvas_string_width(canvas, scl_str);
-        if (!levelSCL) {
+        if(!levelSCL) {
             draw_framed_text(canvas, 5, notice_y, 0, FrameActive, scl_str);
         }
-        char *sda_str = "!SDA(C1)";
-        uint16_t sda_width = canvas_string_width(canvas, sda_str);        
-        if (!levelSDA) {
+        char* sda_str = "!SDA(C1)";
+        uint16_t sda_width = canvas_string_width(canvas, sda_str);
+        if(!levelSDA) {
             draw_framed_text(canvas, 10 + scl_width, notice_y, 0, FrameActive, sda_str);
         }
-        
+
         draw_framed_text(canvas, 15 + scl_width + sda_width, notice_y, 0, FrameNone, "Use 3.3V");
     }
-    
-    
-    bool valid_addr_selected = data->selected_addr >= 0 &&
+
+    bool valid_addr_selected =
+        data->selected_addr >= 0 &&
         (data->scan_hits[data->selected_addr >> 3] & (1 << (data->selected_addr & 0x07))) != 0;
-    
+
     // Collect detected I2C devices into list
     uint8_t visible_addrs[VIEW_ROW_COUNT] = {0};
     uint8_t visible_addr_count = 0;
     bool found_selected_addr = false;
-    for (uint8_t addr = 0; addr <= 0x7f; addr++) {
-        if ((data->scan_hits[addr >> 3] & (1 << (addr & 0x07))) != 0) {
-            if (data->selected_addr == addr) {
+    for(uint8_t addr = 0; addr <= 0x7f; addr++) {
+        if((data->scan_hits[addr >> 3] & (1 << (addr & 0x07))) != 0) {
+            if(data->selected_addr == addr) {
                 found_selected_addr = true;
             }
             visible_addrs[visible_addr_count] = addr;
             visible_addr_count++;
-            if (visible_addr_count >= VIEW_ROW_COUNT) {
-                if (found_selected_addr || !valid_addr_selected) {
+            if(visible_addr_count >= VIEW_ROW_COUNT) {
+                if(found_selected_addr || !valid_addr_selected) {
                     break;
                 } else {
                     // Forced scroll (crude, doesn't keep place)
-                    for (int i = 0; i < VIEW_ROW_COUNT - 1; i++) {
+                    for(int i = 0; i < VIEW_ROW_COUNT - 1; i++) {
                         visible_addrs[i] = visible_addrs[i + 1];
                     }
                     visible_addr_count--;
                 }
             }
-        }   
+        }
     }
 
     canvas_set_font(canvas, font_body);
-    uint16_t body_height = canvas_current_font_height(canvas);    
-    if (!not_ready) {
-        for (int i = 0; i < visible_addr_count; i++) {
+    uint16_t body_height = canvas_current_font_height(canvas);
+    if(!not_ready) {
+        for(int i = 0; i < visible_addr_count; i++) {
             bool is_selected = (visible_addrs[i] == data->selected_addr);
-            
+
             int16_t xcoord = 5 + xoffset;
             int16_t ycoord = 2 + heading_height + (body_height - 1) * i;
-            
+
             furi_string_printf(data->buffer, "Addr 0x%02x", visible_addrs[i]);
-            
+
             frame_state framing = is_selected ? FrameInactive : FrameNone;
-            if (is_selected && data->selected_column == ExplColDevAddr) {
+            if(is_selected && data->selected_column == ExplColDevAddr) {
                 framing = FrameActive;
-            }            
-            draw_framed_text(canvas, xcoord, ycoord, 1, framing, furi_string_get_cstr(data->buffer));
+            }
+            draw_framed_text(
+                canvas, xcoord, ycoord, 1, framing, furi_string_get_cstr(data->buffer));
         }
     }
 
     canvas_set_font(canvas, font_heading);
-    char *reg_banner = "Regs:";
+    char* reg_banner = "Regs:";
     uint16_t reg_banner_width = canvas_string_width(canvas, reg_banner);
 
     int16_t x0 = addr_banner_width + 5 + xoffset;
-    draw_framed_text(canvas, x0 + 5, 2, 0,
-                     (data->selected_column == ExplColRegDump) ? FrameActive : FrameInactive,
-                     reg_banner);
+    draw_framed_text(
+        canvas,
+        x0 + 5,
+        2,
+        0,
+        (data->selected_column == ExplColRegDump) ? FrameActive : FrameInactive,
+        reg_banner);
 
-    if (data->start_column <= ExplColRegDump) {
+    if(data->start_column <= ExplColRegDump) {
         canvas_draw_str_aligned(canvas, canvas_width(canvas) - 10, 2, AlignLeft, AlignTop, ">>");
     }
-    
+
     canvas_set_font(canvas, font_body);
-    if (!not_ready && valid_addr_selected) {
-        for (uint16_t i = 0; i < VIEW_ROW_COUNT; i++) {
+    if(!not_ready && valid_addr_selected) {
+        for(uint16_t i = 0; i < VIEW_ROW_COUNT; i++) {
             uint16_t reg = i + data->start_reg;
             bool is_selected = (reg == data->selected_reg);
 
             int16_t xcoord = x0 + 5;
             int16_t ycoord = 2 + heading_height + (body_height - 1) * i;
-            
+
             furi_string_printf(data->buffer, "[%02x]0x%02x", reg, data->reg_dump[i]);
 
             frame_state framing = is_selected ? FrameInactive : FrameNone;
-            if (is_selected && data->selected_column == ExplColRegDump) {
+            if(is_selected && data->selected_column == ExplColRegDump) {
                 framing = FrameActive;
             }
-            draw_framed_text(canvas, xcoord, ycoord, 1, framing, furi_string_get_cstr(data->buffer));            
+            draw_framed_text(
+                canvas, xcoord, ycoord, 1, framing, furi_string_get_cstr(data->buffer));
         }
     }
 
     canvas_set_font(canvas, font_heading);
-    char *bits_banner = "Bits:";
+    char* bits_banner = "Bits:";
     uint16_t bits_col_width = canvas_string_width(canvas, "00000000");
-    
-    x0 = addr_banner_width + 5 + reg_banner_width * 2 + 5 + xoffset;
-    draw_framed_text(canvas, x0 + 5, 2, 0,
-                     (data->selected_column == ExplColRegBits) ? FrameActive : FrameInactive,
-                     bits_banner);
 
-    canvas_set_font(canvas, font_body);    
-    if (!not_ready && valid_addr_selected) {
-        for (uint16_t i = 0; i < VIEW_ROW_COUNT; i++) {
+    x0 = addr_banner_width + 5 + reg_banner_width * 2 + 5 + xoffset;
+    draw_framed_text(
+        canvas,
+        x0 + 5,
+        2,
+        0,
+        (data->selected_column == ExplColRegBits) ? FrameActive : FrameInactive,
+        bits_banner);
+
+    canvas_set_font(canvas, font_body);
+    if(!not_ready && valid_addr_selected) {
+        for(uint16_t i = 0; i < VIEW_ROW_COUNT; i++) {
             uint16_t reg = i + data->start_reg;
             bool is_selected = (reg == data->selected_reg);
 
             int16_t xcoord = x0 + 5;
             int16_t ycoord = 2 + heading_height + (body_height - 1) * i;
-            
+
             furi_string_printf(data->buffer, "%08b", data->reg_dump[i]);
-            
-            canvas_draw_str_aligned(canvas, xcoord, ycoord, AlignLeft, AlignTop, furi_string_get_cstr(data->buffer));
-            if (is_selected) {
+
+            canvas_draw_str_aligned(
+                canvas, xcoord, ycoord, AlignLeft, AlignTop, furi_string_get_cstr(data->buffer));
+            if(is_selected) {
                 uint16_t bit_xwidth = canvas_string_width(canvas, "0");
                 furi_string_left(data->buffer, 7 - data->selected_bit);
-                uint16_t bit_xoffset = canvas_string_width(canvas, furi_string_get_cstr(data->buffer));
-                if (data->selected_bit < 7) {
+                uint16_t bit_xoffset =
+                    canvas_string_width(canvas, furi_string_get_cstr(data->buffer));
+                if(data->selected_bit < 7) {
                     bit_xoffset += 1; // haack??
                 }
-                
-                if (data->selected_column == ExplColRegBits) {
+
+                if(data->selected_column == ExplColRegBits) {
                     // draw_framed_text isn't quite flexible enough here to get the alignment well
                     uint16_t fudge = 1;
-                    canvas_draw_rbox(canvas, xcoord + bit_xoffset - 1, ycoord - 1, bit_xwidth + 2 - fudge, body_height - fudge, 1);
+                    canvas_draw_rbox(
+                        canvas,
+                        xcoord + bit_xoffset - 1,
+                        ycoord - 1,
+                        bit_xwidth + 2 - fudge,
+                        body_height - fudge,
+                        1);
                     canvas_invert_color(canvas);
-                    canvas_draw_str_aligned(canvas, xcoord + bit_xoffset, ycoord, AlignLeft, AlignTop, (data->reg_dump[i] & (1 << data->selected_bit)) ? "1" : "0");
+                    canvas_draw_str_aligned(
+                        canvas,
+                        xcoord + bit_xoffset,
+                        ycoord,
+                        AlignLeft,
+                        AlignTop,
+                        (data->reg_dump[i] & (1 << data->selected_bit)) ? "1" : "0");
                     canvas_invert_color(canvas);
                 }
             }
-        }                
-    }    
+        }
+    }
 
     canvas_set_font(canvas, font_heading);
-    char *menu_banner = "More:";
+    char* menu_banner = "More:";
     //uint16_t bits_banner_width = canvas_string_width(canvas, bits_banner);
 
     x0 += bits_col_width + 10;
-    draw_framed_text(canvas, x0 + 5, 2, 0,
-                     (data->selected_column == ExplColMenu) ? FrameActive : FrameInactive,
-                     menu_banner);
-    
-    for (uint16_t i = 0; i < ExplMenuMax; i++) {
+    draw_framed_text(
+        canvas,
+        x0 + 5,
+        2,
+        0,
+        (data->selected_column == ExplColMenu) ? FrameActive : FrameInactive,
+        menu_banner);
+
+    for(uint16_t i = 0; i < ExplMenuMax; i++) {
         bool is_selected = (i == data->selected_menu);
-        
+
         int16_t xcoord = 5 + x0;
         int16_t ycoord = 2 + heading_height + (body_height - 1) * i;
-        
+
         frame_state framing = is_selected ? FrameInactive : FrameNone;
-        if (is_selected && data->selected_column == ExplColMenu) {
+        if(is_selected && data->selected_column == ExplColMenu) {
             bool always_active_menu = (i == ExplMenuAbout);
             framing = (valid_addr_selected || always_active_menu) ? FrameActive : FrameInactive;
         }
         draw_framed_text(canvas, xcoord, ycoord, 1, framing, expl_menu_titles[i]);
     }
-    
+
     // Release the context, so other threads can update the data.
     furi_mutex_release(app_context->mutex);
 }
@@ -719,26 +768,31 @@ static void update_i2c_status(void* ctx) {
 
     furi_hal_i2c_acquire(&furi_hal_i2c_handle_external);
 
-    for (addr = 0; addr <= 0x7f; addr++) {
-        if (furi_hal_i2c_is_device_ready(&furi_hal_i2c_handle_external, addr << 1, 2)) {
+    for(addr = 0; addr <= 0x7f; addr++) {
+        if(furi_hal_i2c_is_device_ready(&furi_hal_i2c_handle_external, addr << 1, 2)) {
             data->scan_hits[addr >> 3] |= 1 << (addr & 0x07);
         } else {
             data->scan_hits[addr >> 3] &= ~(1 << (addr & 0x07));
         }
     }
 
-    if (data->selected_addr >= 0) {
-        if ((data->scan_hits[data->selected_addr >> 3] & (1 << (data->selected_addr & 0x07))) != 0) {
-
-            for (int i = 0; i < VIEW_ROW_COUNT; i++) {
+    if(data->selected_addr >= 0) {
+        if((data->scan_hits[data->selected_addr >> 3] & (1 << (data->selected_addr & 0x07))) !=
+           0) {
+            for(int i = 0; i < VIEW_ROW_COUNT; i++) {
                 uint16_t reg = i + data->start_reg;
-                if (!furi_hal_i2c_read_reg_8(&furi_hal_i2c_handle_external, data->selected_addr << 1, reg, &data->reg_dump[i], 5)) {
+                if(!furi_hal_i2c_read_reg_8(
+                       &furi_hal_i2c_handle_external,
+                       data->selected_addr << 1,
+                       reg,
+                       &data->reg_dump[i],
+                       5)) {
                     data->reg_dump[i] = 0x00; // TODO something smarter?
                 }
             }
         }
     }
-    
+
     furi_hal_i2c_release(&furi_hal_i2c_handle_external);
 }
 
@@ -751,22 +805,22 @@ int32_t i2c_explorer_app(void* p) {
     app_context->data = malloc(sizeof(I2CExplAppState));
     app_context->data->buffer = furi_string_alloc();
     app_context->data->selected_column = ExplColDevAddr;
-    app_context->data->start_column = ExplColDevAddr;    
-    
-    app_context->data->selected_addr = -1;    
+    app_context->data->start_column = ExplColDevAddr;
+
+    app_context->data->selected_addr = -1;
     memset(app_context->data->scan_hits, 0, sizeof(app_context->data->scan_hits));
-    
+
     app_context->data->start_reg = 0;
     memset(app_context->data->reg_dump, 0, sizeof(app_context->data->reg_dump));
     app_context->data->selected_reg = 0;
 
     app_context->data->selected_bit = 7;
 
-    app_context->data->selected_menu = 0;    
-    
+    app_context->data->selected_menu = 0;
+
     // Get initial data
     update_i2c_status(app_context);
-    
+
     // Queue for events (tick or input)
     app_context->queue = furi_message_queue_alloc(8, sizeof(AppEvent));
 
@@ -783,54 +837,53 @@ int32_t i2c_explorer_app(void* p) {
     FuriTimer* timer = furi_timer_alloc(tick_callback, FuriTimerTypePeriodic, app_context->queue);
     furi_timer_start(timer, 500);
 
-
     // Main loop
     AppEvent event;
     bool processing = true;
     do {
-        if (furi_message_queue_get(app_context->queue, &event, FuriWaitForever) == FuriStatusOk) {
-            switch (event.type) {
+        if(furi_message_queue_get(app_context->queue, &event, FuriWaitForever) == FuriStatusOk) {
+            switch(event.type) {
             case AppEventTypeKey:
 
                 // this is absolute trash architecture shouldn't be here at all
-                if (event.input.type == InputTypeShort && event.input.key == InputKeyUp) {
+                if(event.input.type == InputTypeShort && event.input.key == InputKeyUp) {
                     furi_mutex_acquire(app_context->mutex, FuriWaitForever);
                     scroll_vert(app_context, false);
                     update_i2c_status(app_context);
                     furi_mutex_release(app_context->mutex);
-                } else if (event.input.type == InputTypeShort && event.input.key == InputKeyDown) {
+                } else if(event.input.type == InputTypeShort && event.input.key == InputKeyDown) {
                     furi_mutex_acquire(app_context->mutex, FuriWaitForever);
                     scroll_vert(app_context, true);
                     update_i2c_status(app_context);
                     furi_mutex_release(app_context->mutex);
-                } else if (event.input.type == InputTypeShort && event.input.key == InputKeyLeft) {
+                } else if(event.input.type == InputTypeShort && event.input.key == InputKeyLeft) {
                     furi_mutex_acquire(app_context->mutex, FuriWaitForever);
                     scroll_horiz(app_context, false);
                     //update_i2c_status(app_context);
                     furi_mutex_release(app_context->mutex);
-                } else if (event.input.type == InputTypeShort && event.input.key == InputKeyRight) {
+                } else if(event.input.type == InputTypeShort && event.input.key == InputKeyRight) {
                     furi_mutex_acquire(app_context->mutex, FuriWaitForever);
                     scroll_horiz(app_context, true);
                     //update_i2c_status(app_context);
                     furi_mutex_release(app_context->mutex);
-                } else if (event.input.type == InputTypeShort && event.input.key == InputKeyOk) {
+                } else if(event.input.type == InputTypeShort && event.input.key == InputKeyOk) {
                     furi_mutex_acquire(app_context->mutex, FuriWaitForever);
                     select_item(app_context);
                     update_i2c_status(app_context);
                     furi_mutex_release(app_context->mutex);
-                } else if (event.input.type == InputTypeShort && event.input.key == InputKeyBack) {
+                } else if(event.input.type == InputTypeShort && event.input.key == InputKeyBack) {
                     // Short press of back button exits the program.
                     processing = false;
                 }
                 break;
-                
+
             case AppEventTypeTick:
                 // Every timer tick we update the i2c status.
                 furi_mutex_acquire(app_context->mutex, FuriWaitForever);
                 update_i2c_status(app_context);
                 furi_mutex_release(app_context->mutex);
                 break;
-                
+
             default:
                 break;
             }
@@ -841,8 +894,7 @@ int32_t i2c_explorer_app(void* p) {
             // We had an issue getting message from the queue, so exit application.
             processing = false;
         }
-    } while (processing);
-
+    } while(processing);
 
     // Free resources
     furi_timer_free(timer);
@@ -858,7 +910,7 @@ int32_t i2c_explorer_app(void* p) {
 
     // Reset GPIO from probing state
     furi_hal_gpio_init(pinSCL, GpioModeAnalog, GpioPullNo, GpioSpeedLow);
-    furi_hal_gpio_init(pinSDA, GpioModeAnalog, GpioPullNo, GpioSpeedLow);    
-    
+    furi_hal_gpio_init(pinSDA, GpioModeAnalog, GpioPullNo, GpioSpeedLow);
+
     return 0;
 }
