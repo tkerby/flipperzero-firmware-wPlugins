@@ -1,0 +1,21 @@
+# Build artifacts
+*.fap
+*.elf
+*.d
+*.o
+build/
+dist/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Flipper build system
+.ufbt/
