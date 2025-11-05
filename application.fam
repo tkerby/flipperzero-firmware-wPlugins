@@ -7,5 +7,6 @@ App(
     stack_size=2 * 1024,
     fap_icon="assets/i2c_explorer.png",
     fap_category="GPIO",
+    fap_version="0.9",
     fap_icon_assets="assets",
 )
