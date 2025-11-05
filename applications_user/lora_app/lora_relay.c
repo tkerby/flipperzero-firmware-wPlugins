@@ -1675,10 +1675,10 @@ void bytesToAsciiHex(uint8_t* buffer, uint8_t length) {
         asciiBuff[i * 2 + 1] = "0123456789ABCDEF"[buffer[i] & 0x0F]; // Low nibble
     }
     asciiBuff[length * 2] = '\0'; // Null-terminate the string
-    FURI_LOG_E(TAG, "OUT bytesToAsciiHex ");
 
-    for(int i = 0; i < length; i++)
-        FURI_LOG_E(TAG, "%02X ", buffer[i]);
+    //FURI_LOG_E(TAG, "OUT bytesToAsciiHex ");
+    //for (int i = 0; i < length; i++)
+    //FURI_LOG_E(TAG, "%02X ", buffer[i]);
 }
 
 void asciiHexToBytes(const char* hex, uint8_t* bytes, size_t length) {
@@ -1686,6 +1686,12 @@ void asciiHexToBytes(const char* hex, uint8_t* bytes, size_t length) {
         sscanf(hex + 2 * i, "%02hhx", &bytes[i]);
     }
 }
+
+uint8_t payload[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xD0, 0x2B, 0x98, 0x6C, 0xAA, 0x20, 0x16, 0x99,
+                     0x21, 0x16, 0x00, 0xD0, 0x08, 0x01, 0x12, 0x24, 0x4C, 0x6F, 0x20, 0x20,
+                     0x65, 0x73, 0x65, 0x6E, 0x63, 0x69, 0x61, 0x6C, 0x20, 0x65, 0x73, 0x20,
+                     0x69, 0x6E, 0x76, 0x69, 0x73, 0x69, 0x62, 0x6C, 0x65, 0x20, 0x61, 0x20,
+                     0x6C, 0x6F, 0x73, 0x20, 0x6F, 0x6A, 0x6F, 0x73, 0x48, 0x00};
 
 /**
  * @brief      Callback for drawing the sniffer screen.
@@ -1703,35 +1709,59 @@ static void lora_view_sniffer_draw_callback(Canvas* canvas, void* model) {
     // Receive a packet over radio
     int bytesRead = lora_receive_async(receiveBuff, sizeof(receiveBuff));
 
+    size_t payloadLen = sizeof(payload);
+
     if(bytesRead > -1) {
         FURI_LOG_E(TAG, "Packet received... ");
         receiveBuff[bytesRead] = '\0';
         bytesToAsciiHex(receiveBuff, bytesRead);
 
-        uint8_t hdr[4];
+        memcpy(receiveBuff, payload, payloadLen);
+        bytesRead = (uint16_t)payloadLen;
 
-        // SOF + length
-        hdr[0] = '@';
-        hdr[1] = 'S';
-        hdr[2] = (uint8_t)((bytesRead >> 8) & 0xFF);
-        hdr[3] = (uint8_t)(bytesRead & 0xFF);
+        FURI_LOG_E(TAG, "bytesRead = %d", bytesRead);
+        FURI_LOG_E(TAG, "receiveBuff -> %s", receiveBuff);
 
-        serial_send_bytes(hdr, 4); // header
-        serial_send_bytes((uint8_t*)receiveBuff, bytesRead); // payload
+        //uint8_t hello[13] = "HELL0 WORLD!";
+        //serial_send_bytes(hello,13);
 
-        // RSSI (int16_t -> 2 bytes big-endian)
+        uint8_t frame[512];
+        uint16_t index = 0;
+
+        // SOF
+        frame[index++] = '@';
+        frame[index++] = 'S';
+
+        // Packet length (bytesRead)
+        frame[index++] = (uint8_t)((bytesRead >> 8) & 0xFF); // high byte
+        frame[index++] = (uint8_t)(bytesRead & 0xFF); // low byte
+
+        FURI_LOG_E(TAG, "hdr -> %s", frame);
+
+        // Payload
+        memcpy(&frame[index], receiveBuff, bytesRead);
+        index += bytesRead;
+
+        FURI_LOG_E(TAG, "hdr + payload -> %s", frame);
+
+        // RSSI
         int16_t rssi = getRSSI();
-        uint8_t rssi_b[2] = {(uint8_t)((rssi >> 8) & 0xFF), (uint8_t)(rssi & 0xFF)};
-        serial_send_bytes(rssi_b, 2);
+        frame[index++] = (uint8_t)((rssi >> 8) & 0xFF);
+        frame[index++] = (uint8_t)(rssi & 0xFF);
 
-        // SNR (int8_t -> 1 byte)
+        // SNR
         int8_t snr = getSNR();
-        uint8_t snr_b = (uint8_t)snr;
-        serial_send_bytes(&snr_b, 1);
+        frame[index++] = (uint8_t)snr;
 
         // EOF
-        uint8_t eof[4] = {'@', 'E', '\r', '\n'};
-        serial_send_bytes(eof, 4);
+        frame[index++] = '@';
+        frame[index++] = 'E';
+        frame[index++] = '\r';
+        frame[index++] = '\n';
+
+        FURI_LOG_E(TAG, "%s", frame);
+
+        serial_send_bytes(frame, index);
 
         if(flag_file) {
             DateTime curr_dt;
@@ -1777,7 +1807,8 @@ static void lora_view_sniffer_draw_callback(Canvas* canvas, void* model) {
             storage_file_write(my_model->file_rx, final_string, strlen(final_string));
             storage_file_write(my_model->file_rx, "\n", 1);
         }
-        FURI_LOG_E(TAG, "%s", receiveBuff);
+
+        FURI_LOG_E(TAG, "%s", asciiBuff); //receiveBuff);
     }
 
     FuriString* xstr = furi_string_alloc();
