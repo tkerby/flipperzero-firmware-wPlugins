@@ -1,4 +1,7 @@
 # Flipper Zero I2C Explorer
+
+![Screenshot](/screenshots/main-screen-not-connected.png)
+
 ## Introduction
 
 This is a simple tool for interactive exploration of an I2C bus
@@ -32,6 +35,10 @@ is manufacturer-specific as to whether a device will accept verbatim
 writes or have more complex cross-register side effects. You can,
 however, manually edit a dump to include only the specific registers
 you wish to write back, in the order you wish to write them.)
+
+![Screenshot](/screenshots/devices-regs-connected.png)
+
+![Screenshot](/screenshots/bits-menu-connected.png)
 
 ## Installation Directions
 
