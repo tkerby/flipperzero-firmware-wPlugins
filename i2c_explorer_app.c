@@ -40,11 +40,13 @@ typedef enum {
 typedef enum {
     ExplMenuSaveDump = 0,
     ExplMenuLoad,
+    ExplMenuRegSize,
     ExplMenuAbout,
     ExplMenuMax
 } I2CExplMenuRows;
 
-const char *expl_menu_titles[ExplMenuMax] = {"Dump...", "Load...", "About..."}; 
+const char *expl_menu_titles[ExplMenuMax] = {"Dump...", "Load...", "---", "About..."};
+const char *reg_size_title_alternatives[2] = {"8b regs", "2B regs"};
 
 typedef enum {
     AppEventTypeTick,
@@ -64,11 +66,13 @@ typedef struct {
     I2CExplUIColumn selected_column;
     I2CExplUIColumn start_column;
 
+    bool reg_mode_16b;
+    
     uint8_t scan_hits[16];
     int16_t selected_addr;
 
     int16_t start_reg;
-    uint8_t reg_dump[VIEW_ROW_COUNT];
+    uint16_t reg_dump[VIEW_ROW_COUNT];
     int16_t selected_reg;
 
     uint8_t selected_bit;
@@ -139,7 +143,8 @@ static void scroll_vert(void* ctx, bool down) {
             data->start_reg = data->selected_reg - VIEW_ROW_COUNT + 1;
         }
     } else if (data->selected_column == ExplColRegBits) {
-        data->selected_bit = (data->selected_bit + (down ? -1 : 1) + 8) % 8;
+        uint8_t bit_count = data->reg_mode_16b ? 16 : 8;
+        data->selected_bit = (data->selected_bit + (down ? -1 : 1) + bit_count) % bit_count;
     } else if (data->selected_column == ExplColMenu) {
         data->selected_menu = (data->selected_menu + (down ? 1 : -1) + ExplMenuMax) % ExplMenuMax;
     }
@@ -213,14 +218,21 @@ static bool load_dump_file(I2CExplAppContext *app_context, const char* file_path
             continue;
         }
 
-        if (furi_string_size(str_line) != 2 || furi_string_size(str_val) != 2) {
+        if (furi_string_size(str_line) != 2 || furi_string_size(str_val) < 2) {
             goto load_dump_bail_2;
         }
 
         uint8_t reg = strtol(furi_string_get_cstr(str_line), NULL, 16);
-        uint8_t value = strtol(furi_string_get_cstr(str_val), NULL, 16);
-        
-        furi_hal_i2c_write_reg_8(&furi_hal_i2c_handle_external, target_addr << 1, reg, value, 5);
+        uint16_t value = strtol(furi_string_get_cstr(str_val), NULL, 16);
+
+        if (furi_string_size(str_val) == 2) {
+            furi_hal_i2c_write_reg_8(&furi_hal_i2c_handle_external, target_addr << 1, reg, value, 5);
+        } else if (furi_string_size(str_val) == 4) {
+            // Blindly uses default endianness
+            furi_hal_i2c_write_reg_16(&furi_hal_i2c_handle_external, target_addr << 1, reg, value, 5);
+        } else {
+            goto load_dump_bail_2;
+        }
     }
     success = true;
 
@@ -237,6 +249,18 @@ static bool load_dump_file(I2CExplAppContext *app_context, const char* file_path
     furi_record_close(RECORD_STORAGE);
     
     return success;
+}
+
+static bool expl_i2c_read_reg(uint8_t address, uint8_t reg, bool read_16b, uint16_t *value, uint16_t timeout) {
+    if (read_16b) {
+        return furi_hal_i2c_read_reg_16(&furi_hal_i2c_handle_external, address << 1, reg, value, timeout);
+    } else {
+        uint8_t value_8b = 0;
+        bool result =
+            furi_hal_i2c_read_reg_8(&furi_hal_i2c_handle_external, address << 1, reg, &value_8b, timeout);
+        *value = value_8b;
+        return result;
+    }
 }
 
 static bool save_dump_file(I2CExplAppContext *app_context, const char* file_path) {
@@ -258,12 +282,15 @@ static bool save_dump_file(I2CExplAppContext *app_context, const char* file_path
     furi_hal_i2c_acquire(&furi_hal_i2c_handle_external);
 
     for (uint16_t reg = 0; reg <= 0xFF; reg++) {
-        uint8_t value = 0;
-        if (!furi_hal_i2c_read_reg_8(&furi_hal_i2c_handle_external, data->selected_addr << 1, reg, &value, 5)) {
+        uint16_t value = 0;
+        if (!expl_i2c_read_reg(data->selected_addr, reg, data->reg_mode_16b, &value, 5)) {
             continue;
         }
 
-        size_t count = stream_write_format(stream, "%02x: %02x\n", reg, value);
+        size_t count = stream_write_format(stream,
+                                           data->reg_mode_16b ? "%02x: %04x\n" : "%02x: %02x\n",
+                                           reg,
+                                           value);
         if (count < 7) {
             goto save_dump_bail_2;
         }
@@ -371,10 +398,14 @@ static void select_item(void *ctx) {
         // Crude having this here....
         furi_hal_i2c_acquire(&furi_hal_i2c_handle_external);
         
-        uint8_t value = 0;
-        if (furi_hal_i2c_read_reg_8(&furi_hal_i2c_handle_external, data->selected_addr << 1, data->selected_reg, &value, 5)) {
+        uint16_t value = 0;
+        if (expl_i2c_read_reg(data->selected_addr, data->selected_reg, data->reg_mode_16b, &value, 5)) {
             value ^= 1 << data->selected_bit;
-            furi_hal_i2c_write_reg_8(&furi_hal_i2c_handle_external, data->selected_addr << 1, data->selected_reg, value, 5);            
+            if (data->reg_mode_16b) {
+                furi_hal_i2c_write_reg_16(&furi_hal_i2c_handle_external, data->selected_addr << 1, data->selected_reg, value, 5);
+            } else {
+                furi_hal_i2c_write_reg_8(&furi_hal_i2c_handle_external, data->selected_addr << 1, data->selected_reg, value, 5);
+            }
         }
         
         furi_hal_i2c_release(&furi_hal_i2c_handle_external);
@@ -433,6 +464,11 @@ static void select_item(void *ctx) {
             }
             break;
 
+        case ExplMenuRegSize:
+            data->reg_mode_16b ^= true;
+            data->selected_bit = data->selected_bit % 8; // Just to clamp it
+            break;
+            
         case ExplMenuAbout:
             dialog_message(dialogs, true,
                            "I2C Explorer\n"
@@ -516,10 +552,16 @@ static void render_callback(Canvas* canvas, void* ctx) {
 
     int16_t xoffset = 0;
     if (data->start_column >= ExplColRegDump) {
-        xoffset -= addr_banner_width - 10;
+        xoffset -= addr_banner_width - 11;
+        if (data->reg_mode_16b) {
+            xoffset -= 10;
+        }
     }
     if (data->start_column >= ExplColRegBits) {
-        xoffset -= addr_banner_width - 10;  // eh. Not the right width field.
+        xoffset -= addr_banner_width - 14;  // eh. Not the right width field, but we don't have the right one here
+        if (data->reg_mode_16b) {
+            xoffset -= addr_banner_width - 12;
+        }
     }
 
     draw_framed_text(canvas, xoffset + 5, 2, 0,
@@ -612,7 +654,6 @@ static void render_callback(Canvas* canvas, void* ctx) {
 
     canvas_set_font(canvas, font_heading);
     char *reg_banner = "Regs:";
-    uint16_t reg_banner_width = canvas_string_width(canvas, reg_banner);
 
     int16_t x0 = addr_banner_width + 5 + xoffset;
     draw_framed_text(canvas, x0 + 5, 2, 0,
@@ -624,6 +665,8 @@ static void render_callback(Canvas* canvas, void* ctx) {
     }
     
     canvas_set_font(canvas, font_body);
+    uint16_t reg_col_width = canvas_string_width(canvas, data->reg_mode_16b ? "[00]0x0000" : "[00]0x00") + 5;
+
     if (!not_ready && valid_addr_selected) {
         for (uint16_t i = 0; i < VIEW_ROW_COUNT; i++) {
             uint16_t reg = i + data->start_reg;
@@ -632,7 +675,10 @@ static void render_callback(Canvas* canvas, void* ctx) {
             int16_t xcoord = x0 + 5;
             int16_t ycoord = 2 + heading_height + (body_height - 1) * i;
             
-            furi_string_printf(data->buffer, "[%02x]0x%02x", reg, data->reg_dump[i]);
+            furi_string_printf(data->buffer,
+                               data->reg_mode_16b ? "[%02x]0x%04x" : "[%02x]0x%02x",
+                               reg,
+                               data->reg_dump[i]);
 
             frame_state framing = is_selected ? FrameInactive : FrameNone;
             if (is_selected && data->selected_column == ExplColRegDump) {
@@ -644,9 +690,9 @@ static void render_callback(Canvas* canvas, void* ctx) {
 
     canvas_set_font(canvas, font_heading);
     char *bits_banner = "Bits:";
-    uint16_t bits_col_width = canvas_string_width(canvas, "00000000");
+    uint16_t bits_col_width = canvas_string_width(canvas, "00000000") * (data->reg_mode_16b ? 2 : 1);
     
-    x0 = addr_banner_width + 5 + reg_banner_width * 2 + 5 + xoffset;
+    x0 = addr_banner_width + 5 + reg_col_width + 5 + xoffset;
     draw_framed_text(canvas, x0 + 5, 2, 0,
                      (data->selected_column == ExplColRegBits) ? FrameActive : FrameInactive,
                      bits_banner);
@@ -660,14 +706,17 @@ static void render_callback(Canvas* canvas, void* ctx) {
             int16_t xcoord = x0 + 5;
             int16_t ycoord = 2 + heading_height + (body_height - 1) * i;
             
-            furi_string_printf(data->buffer, "%08b", data->reg_dump[i]);
+            furi_string_printf(data->buffer,
+                               data->reg_mode_16b ? "%016b" : "%08b",
+                               data->reg_dump[i]);
             
             canvas_draw_str_aligned(canvas, xcoord, ycoord, AlignLeft, AlignTop, furi_string_get_cstr(data->buffer));
             if (is_selected) {
                 uint16_t bit_xwidth = canvas_string_width(canvas, "0");
-                furi_string_left(data->buffer, 7 - data->selected_bit);
+                uint8_t msb_index = data->reg_mode_16b ? 15 : 7;
+                furi_string_left(data->buffer, msb_index - data->selected_bit);
                 uint16_t bit_xoffset = canvas_string_width(canvas, furi_string_get_cstr(data->buffer));
-                if (data->selected_bit < 7) {
+                if (data->selected_bit < msb_index) {
                     bit_xoffset += 1; // haack??
                 }
                 
@@ -691,6 +740,8 @@ static void render_callback(Canvas* canvas, void* ctx) {
     draw_framed_text(canvas, x0 + 5, 2, 0,
                      (data->selected_column == ExplColMenu) ? FrameActive : FrameInactive,
                      menu_banner);
+
+    expl_menu_titles[ExplMenuRegSize] = reg_size_title_alternatives[data->reg_mode_16b ? 1 : 0];
     
     for (uint16_t i = 0; i < ExplMenuMax; i++) {
         bool is_selected = (i == data->selected_menu);
@@ -700,7 +751,7 @@ static void render_callback(Canvas* canvas, void* ctx) {
         
         frame_state framing = is_selected ? FrameInactive : FrameNone;
         if (is_selected && data->selected_column == ExplColMenu) {
-            bool always_active_menu = (i == ExplMenuAbout);
+            bool always_active_menu = (i >= ExplMenuRegSize);
             framing = (valid_addr_selected || always_active_menu) ? FrameActive : FrameInactive;
         }
         draw_framed_text(canvas, xcoord, ycoord, 1, framing, expl_menu_titles[i]);
@@ -732,7 +783,7 @@ static void update_i2c_status(void* ctx) {
 
             for (int i = 0; i < VIEW_ROW_COUNT; i++) {
                 uint16_t reg = i + data->start_reg;
-                if (!furi_hal_i2c_read_reg_8(&furi_hal_i2c_handle_external, data->selected_addr << 1, reg, &data->reg_dump[i], 5)) {
+                if (!expl_i2c_read_reg(data->selected_addr, reg, data->reg_mode_16b, &data->reg_dump[i], 5)) {
                     data->reg_dump[i] = 0x00; // TODO something smarter?
                 }
             }
@@ -755,6 +806,8 @@ int32_t i2c_explorer_app(void* p) {
     
     app_context->data->selected_addr = -1;    
     memset(app_context->data->scan_hits, 0, sizeof(app_context->data->scan_hits));
+
+    app_context->data->reg_mode_16b = false;
     
     app_context->data->start_reg = 0;
     memset(app_context->data->reg_dump, 0, sizeof(app_context->data->reg_dump));

@@ -63,8 +63,8 @@ not, please press the back button until you are at the desktop.
 ## I2C dump file format
 
 `.i2c` files consist of a series of lines of the form `RR: VV` where
-RR is a 2-digit hex register address and VV is a 2-digit hex
-value. (They must be padded to 2 digits even for numbers less than
+RR is a 2-digit hex register address and VV is a 2-digit or 4-digit
+hex value. (They must be padded to 2 digits even for numbers less than
 0x0F.) By default, dump files do not include the device address and,
 when loaded, will write their contents to whatever I2C device is
 currently selected in the GUI. However, manually created `.i2c` files
