@@ -23,6 +23,7 @@
 #include "callbacks.h"
 #include "confirmation_view.h"
 #include "utils.h"
+#include "app_state.h"
 
 // Include the header where settings_custom_event_callback is declared
 #include "settings_ui.h"
@@ -52,14 +53,25 @@ int32_t ghost_esp_app(void* p) {
     AppState* state = malloc(sizeof(AppState));
     if(!state) return -1;
     memset(state, 0, sizeof(AppState)); // Zero all memory first
+    // Open dialogs record for file browser
+    state->dialogs = furi_record_open(RECORD_DIALOGS);
 
     // Initialize menu selection indices
-    state->last_wifi_index = 0;
-    state->last_ble_index = 0;
+    state->last_wifi_category_index = 0;
+    state->last_wifi_scanning_index = 0;
+    state->last_wifi_capture_index = 0;
+    state->last_wifi_attack_index = 0;
+    state->last_wifi_network_index = 0;
+    state->last_wifi_settings_index = 0;
+    state->last_ble_category_index = 0;
+    state->last_ble_scanning_index = 0;
+    state->last_ble_capture_index = 0;
+    state->last_ble_attack_index = 0;
     state->last_gps_index = 0;
     state->current_index = 0;
     state->current_view = 0;
     state->previous_view = 0;
+    state->came_from_settings = false;
 
     // Initialize essential text buffers with minimal size
     state->textBoxBuffer = malloc(1);
@@ -67,9 +79,9 @@ int32_t ghost_esp_app(void* p) {
         state->textBoxBuffer[0] = '\0';
     }
     state->buffer_length = 0;
-    state->input_buffer = malloc(32);
+    state->input_buffer = malloc(INPUT_BUFFER_SIZE);
     if(state->input_buffer) {
-        memset(state->input_buffer, 0, 32);
+        memset(state->input_buffer, 0, INPUT_BUFFER_SIZE);
     }
 
     // Initialize UI components - core components first
@@ -88,7 +100,15 @@ int32_t ghost_esp_app(void* p) {
 
     // Allocate remaining UI components
     state->wifi_menu = submenu_alloc();
+    state->wifi_scanning_menu = submenu_alloc();
+    state->wifi_capture_menu = submenu_alloc();
+    state->wifi_attack_menu = submenu_alloc();
+    state->wifi_network_menu = submenu_alloc();
+    state->wifi_settings_menu = submenu_alloc();
     state->ble_menu = submenu_alloc();
+    state->ble_scanning_menu = submenu_alloc();
+    state->ble_capture_menu = submenu_alloc();
+    state->ble_attack_menu = submenu_alloc();
     state->gps_menu = submenu_alloc();
     state->text_box = text_box_alloc();
     state->settings_menu = variable_item_list_alloc();
@@ -169,6 +189,30 @@ int32_t ghost_esp_app(void* p) {
         if(state->settings_actions_menu)
             view_dispatcher_add_view(
                 state->view_dispatcher, 8, submenu_get_view(state->settings_actions_menu));
+        if(state->wifi_scanning_menu)
+            view_dispatcher_add_view(
+                state->view_dispatcher, 10, submenu_get_view(state->wifi_scanning_menu));
+        if(state->wifi_capture_menu)
+            view_dispatcher_add_view(
+                state->view_dispatcher, 11, submenu_get_view(state->wifi_capture_menu));
+        if(state->wifi_attack_menu)
+            view_dispatcher_add_view(
+                state->view_dispatcher, 12, submenu_get_view(state->wifi_attack_menu));
+        if(state->wifi_network_menu)
+            view_dispatcher_add_view(
+                state->view_dispatcher, 13, submenu_get_view(state->wifi_network_menu));
+        if(state->wifi_settings_menu)
+            view_dispatcher_add_view(
+                state->view_dispatcher, 14, submenu_get_view(state->wifi_settings_menu));
+        if(state->ble_scanning_menu)
+            view_dispatcher_add_view(
+                state->view_dispatcher, 20, submenu_get_view(state->ble_scanning_menu));
+        if(state->ble_capture_menu)
+            view_dispatcher_add_view(
+                state->view_dispatcher, 21, submenu_get_view(state->ble_capture_menu));
+        if(state->ble_attack_menu)
+            view_dispatcher_add_view(
+                state->view_dispatcher, 22, submenu_get_view(state->ble_attack_menu));
 
         view_dispatcher_set_custom_event_callback(
             state->view_dispatcher, settings_custom_event_callback);
@@ -235,6 +279,14 @@ int32_t ghost_esp_app(void* p) {
         if(state->text_input) view_dispatcher_remove_view(state->view_dispatcher, 6);
         if(state->confirmation_view) view_dispatcher_remove_view(state->view_dispatcher, 7);
         if(state->settings_actions_menu) view_dispatcher_remove_view(state->view_dispatcher, 8);
+        if(state->wifi_scanning_menu) view_dispatcher_remove_view(state->view_dispatcher, 10);
+        if(state->wifi_capture_menu) view_dispatcher_remove_view(state->view_dispatcher, 11);
+        if(state->wifi_attack_menu) view_dispatcher_remove_view(state->view_dispatcher, 12);
+        if(state->wifi_network_menu) view_dispatcher_remove_view(state->view_dispatcher, 13);
+        if(state->wifi_settings_menu) view_dispatcher_remove_view(state->view_dispatcher, 14);
+        if(state->ble_scanning_menu) view_dispatcher_remove_view(state->view_dispatcher, 20);
+        if(state->ble_capture_menu) view_dispatcher_remove_view(state->view_dispatcher, 21);
+        if(state->ble_attack_menu) view_dispatcher_remove_view(state->view_dispatcher, 22);
         FURI_LOG_I("Ghost_ESP", "Views removed.");
         view_dispatcher_free(state->view_dispatcher);
         state->view_dispatcher = NULL;
@@ -254,7 +306,15 @@ int32_t ghost_esp_app(void* p) {
     if(state && state->settings_actions_menu) submenu_free(state->settings_actions_menu);
     if(state && state->settings_menu) variable_item_list_free(state->settings_menu);
     if(state && state->wifi_menu) submenu_free(state->wifi_menu);
+    if(state && state->wifi_scanning_menu) submenu_free(state->wifi_scanning_menu);
+    if(state && state->wifi_capture_menu) submenu_free(state->wifi_capture_menu);
+    if(state && state->wifi_attack_menu) submenu_free(state->wifi_attack_menu);
+    if(state && state->wifi_network_menu) submenu_free(state->wifi_network_menu);
+    if(state && state->wifi_settings_menu) submenu_free(state->wifi_settings_menu);
     if(state && state->ble_menu) submenu_free(state->ble_menu);
+    if(state && state->ble_scanning_menu) submenu_free(state->ble_scanning_menu);
+    if(state && state->ble_capture_menu) submenu_free(state->ble_capture_menu);
+    if(state && state->ble_attack_menu) submenu_free(state->ble_attack_menu);
     if(state && state->gps_menu) submenu_free(state->gps_menu);
     if(state && state->main_menu) main_menu_free(state->main_menu);
     FURI_LOG_I("Ghost_ESP", "UI components freed.");

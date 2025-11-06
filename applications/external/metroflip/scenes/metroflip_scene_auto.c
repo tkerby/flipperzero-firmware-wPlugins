@@ -43,13 +43,10 @@ void metroflip_scene_detect_scan_callback(NfcScannerEvent event, void* context) 
     Metroflip* app = context;
 
     if(event.type == NfcScannerEventTypeDetected) {
+        FURI_LOG_I(TAG, "test");
+
         view_dispatcher_send_custom_event(app->view_dispatcher, MetroflipCustomEventCardDetected);
         if(event.data.protocols && *event.data.protocols == NfcProtocolMfClassic) {
-            nfc_detected_protocols_set(
-                app->detected_protocols, event.data.protocols, event.data.protocol_num);
-            view_dispatcher_send_custom_event(
-                app->view_dispatcher, MetroflipCustomEventPollerDetect);
-        } else if(event.data.protocols && *event.data.protocols == NfcProtocolIso14443_4b) {
             nfc_detected_protocols_set(
                 app->detected_protocols, event.data.protocols, event.data.protocol_num);
             view_dispatcher_send_custom_event(
@@ -64,10 +61,21 @@ void metroflip_scene_detect_scan_callback(NfcScannerEvent event, void* context) 
                 app->detected_protocols, event.data.protocols, event.data.protocol_num);
             view_dispatcher_send_custom_event(
                 app->view_dispatcher, MetroflipCustomEventPollerDetect);
+        } else if(event.data.protocols && *event.data.protocols == NfcProtocolIso14443_4b) {
+            nfc_detected_protocols_set(
+                app->detected_protocols, event.data.protocols, event.data.protocol_num);
+            view_dispatcher_send_custom_event(
+                app->view_dispatcher, MetroflipCustomEventPollerDetect);
+        } else if(event.data.protocols && *event.data.protocols == NfcProtocolIso14443_4a) {
+            nfc_detected_protocols_set(
+                app->detected_protocols, event.data.protocols, event.data.protocol_num);
+            view_dispatcher_send_custom_event(
+                app->view_dispatcher, MetroflipCustomEventPollerDetect);
         } else {
             const NfcProtocol* invalid_protocol = (const NfcProtocol*)NfcProtocolInvalid;
-            nfc_detected_protocols_set(
-                app->detected_protocols, invalid_protocol, event.data.protocol_num);
+            nfc_detected_protocols_set(app->detected_protocols, invalid_protocol, 0);
+            view_dispatcher_send_custom_event(
+                app->view_dispatcher, MetroflipCustomEventPollerDetect);
         }
     }
 }
@@ -121,6 +129,8 @@ bool metroflip_scene_auto_on_event(void* context, SceneManagerEvent event) {
             nfc_scanner_stop(app->scanner);
             nfc_scanner_free(app->scanner);
             app->auto_mode = true;
+            FURI_LOG_I(
+                TAG, "proto: %d", nfc_detected_protocols_get_protocol(app->detected_protocols, 0));
             if(nfc_detected_protocols_get_protocol(app->detected_protocols, 0) ==
                NfcProtocolMfClassic) {
                 MfClassicData* mfc_data = mf_classic_alloc();
@@ -146,6 +156,14 @@ bool metroflip_scene_auto_on_event(void* context, SceneManagerEvent event) {
                 case CARD_TYPE_TROIKA:
                     app->card_type = "troika";
                     FURI_LOG_I(TAG, "Detected: Troika\n");
+                    break;
+                case CARD_TYPE_RENFE_SUM10:
+                    app->card_type = "renfe_sum10";
+                    FURI_LOG_I(TAG, "Detected: RENFE Suma 10\n");
+                    break;
+                case CARD_TYPE_RENFE_REGULAR:
+                    app->card_type = "renfe_regular";
+                    FURI_LOG_I(TAG, "Detected: RENFE Regular\n");
                     break;
                 case CARD_TYPE_UNKNOWN:
                     app->card_type = "Unknown Card";
@@ -183,15 +201,24 @@ bool metroflip_scene_auto_on_event(void* context, SceneManagerEvent event) {
                 consumed = true;
             } else if(
                 nfc_detected_protocols_get_protocol(app->detected_protocols, 0) ==
+                NfcProtocolIso14443_4a) {
+                app->card_type = "atr"; // place holder for now
+                app->is_desfire = false;
+                scene_manager_next_scene(app->scene_manager, MetroflipSceneParse);
+                consumed = true;
+            } else if(
+                nfc_detected_protocols_get_protocol(app->detected_protocols, 0) ==
                 NfcProtocolInvalid) {
                 app->card_type = "Unknown Card";
                 Popup* popup = app->popup;
-                popup_set_header(
-                    popup, "protocol\n currently\n unsupported", 58, 31, AlignLeft, AlignTop);
+                popup_set_header(popup, "Card\n Unsupported", 58, 31, AlignLeft, AlignTop);
+                scene_manager_next_scene(app->scene_manager, MetroflipSceneParse);
                 consumed = true;
             } else {
                 Popup* popup = app->popup;
-                popup_set_header(popup, "error", 68, 30, AlignLeft, AlignTop);
+                app->card_type = "Unknown Card";
+                popup_set_header(popup, "Card\n Unsupported", 68, 30, AlignLeft, AlignTop);
+                scene_manager_next_scene(app->scene_manager, MetroflipSceneParse);
                 consumed = true;
             }
         }

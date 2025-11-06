@@ -1,4 +1,4 @@
-//Pokemon Data and Functions
+// Pokemon Data and Functions
 #include "pokemon.h"
 #include <stdlib.h> // For malloc/free
 #include <string.h> // For strcpy

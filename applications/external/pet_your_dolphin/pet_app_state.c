@@ -3,7 +3,7 @@
 #include <storage/storage.h>
 #include <toolbox/saved_struct.h>
 
-#define PET_APP_STATE_FILE_PATH      INT_PATH(".pet_app.state")
+#define PET_APP_STATE_FILE_PATH      CFG_PATH(".pet_app.state")
 #define PET_APP_STATE_HEADER_MAGIC   0xDE
 #define PET_APP_STATE_HEADER_VERSION 0x01
 

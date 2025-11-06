@@ -13,6 +13,7 @@ void subghz_extended_freq(void) {
     if(flipper_format_file_open_existing(file, "/ext/subghz/assets/extend_range.txt")) {
         flipper_format_read_bool(file, "use_ext_range_at_own_risk", &is_extended_i, 1);
         flipper_format_read_bool(file, "ignore_default_tx_region", &is_bypassed, 1);
+        flipper_format_file_close(file);
     }
 
     furi_hal_subghz_set_extended_range(is_extended_i);

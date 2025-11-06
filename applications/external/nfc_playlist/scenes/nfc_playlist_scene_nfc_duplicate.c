@@ -1,7 +1,9 @@
 #include "../nfc_playlist.h"
 
-static void
-    nfc_playlist_nfc_duplicate_menu_callback(GuiButtonType result, InputType type, void* context) {
+static void nfc_playlist_nfc_duplicate_scene_menu_callback(
+    GuiButtonType result,
+    InputType type,
+    void* context) {
     furi_assert(context);
     NfcPlaylist* nfc_playlist = context;
     if(type == InputTypeShort) {
@@ -27,13 +29,13 @@ void nfc_playlist_nfc_duplicate_scene_on_enter(void* context) {
         nfc_playlist->views.widget,
         GuiButtonTypeLeft,
         "Try Again",
-        nfc_playlist_nfc_duplicate_menu_callback,
+        nfc_playlist_nfc_duplicate_scene_menu_callback,
         nfc_playlist);
     widget_add_button_element(
         nfc_playlist->views.widget,
         GuiButtonTypeRight,
         "Continue",
-        nfc_playlist_nfc_duplicate_menu_callback,
+        nfc_playlist_nfc_duplicate_scene_menu_callback,
         nfc_playlist);
 
     view_dispatcher_switch_to_view(nfc_playlist->view_dispatcher, NfcPlaylistView_Widget);
@@ -51,7 +53,7 @@ bool nfc_playlist_nfc_duplicate_scene_on_event(void* context, SceneManagerEvent 
 
             if(file_stream_open(
                    stream,
-                   furi_string_get_cstr(nfc_playlist->settings.playlist_path),
+                   furi_string_get_cstr(nfc_playlist->worker_info.settings->playlist_path),
                    FSAM_READ_WRITE,
                    FSOM_OPEN_EXISTING)) {
                 FuriString* line = furi_string_alloc();
@@ -69,7 +71,7 @@ bool nfc_playlist_nfc_duplicate_scene_on_event(void* context, SceneManagerEvent 
                     tmp_str, furi_string_get_cstr(nfc_playlist->views.file_browser.output));
                 stream_clean(stream);
                 stream_write_string(stream, tmp_str);
-                nfc_playlist->settings.playlist_length++;
+                nfc_playlist->worker_info.settings->playlist_length++;
                 furi_string_reset(nfc_playlist->views.file_browser.output);
 
                 file_stream_close(stream);

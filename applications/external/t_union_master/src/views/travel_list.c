@@ -1,6 +1,6 @@
 #include "travel_list.h"
 #include "../view_modules/elements.h"
-#include <t_union_master_icons.h>
+#include "../view_modules/app_elements.h"
 
 struct TravelListView {
     View* view;
@@ -157,41 +157,9 @@ static void travel_list_view_draw_cb(Canvas* canvas, void* _model) {
                     canvas_set_color(canvas, ColorBlack);
                 }
 
-                // 进出站图标
-                if(travel->type == 0x03) {
-                    canvas_draw_icon(
-                        canvas,
-                        2,
-                        (item_position * item_height) + item_height - 7,
-                        &I_ButtonUp_7x4);
-                } else if(travel->type == 0x04) {
-                    canvas_draw_icon(
-                        canvas,
-                        10,
-                        (item_position * item_height) + item_height - 7,
-                        &I_ButtonDown_7x4);
-                }
-
-                // 换乘图标
-                if(travel_ext->transfer)
-                    canvas_draw_icon(
-                        canvas,
-                        18,
-                        (item_position * item_height) + item_height - 7,
-                        &I_transfer_7x4);
-
-                // 夜间图标
-                if(travel_ext->night)
-                    canvas_draw_icon(
-                        canvas, 26, (item_position * item_height) + item_height - 7, &I_night_7x4);
-
-                // 漫游图标
-                if(travel_ext->roaming)
-                    canvas_draw_icon(
-                        canvas,
-                        34,
-                        (item_position * item_height) + item_height - 7,
-                        &I_roaming_7x4);
+                // 行程属性图标
+                elements_draw_travel_attr_icons(
+                    canvas, 2, (item_position * item_height) + item_height - 7, travel, travel_ext);
 
                 // 线路名+站台名
                 if(furi_string_size(travel_ext->line_name) != 0) {

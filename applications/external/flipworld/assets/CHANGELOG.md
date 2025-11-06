@@ -1,3 +1,12 @@
+## 1.0.2 (2025-10-18)
+- Updated to use the flipper_http folder as intended
+
+## 1.0 (2025-07-11)
+- Changed from C to C++
+- Removed VGM support (temporarily)
+- Removed PvP (only Story and PvE remain)
+- Fixed world transitions
+
 ## 0.8.3 (2025-04-24)
 - Added PVE multiplayer (up to 5 users per game).
 - Added a level requirement to play multiplayer.

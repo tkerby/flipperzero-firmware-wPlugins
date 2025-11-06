@@ -94,24 +94,19 @@ bool udecard_parse_member_type(UDECard* udecard) {
     MfClassicData* mfclassicdata = udecard->carddata;
 
     MfClassicBlock member_type_block = mfclassicdata->block[UDECARD_MEMBERTYPE_BLOCK];
-    uint8_t member_type_1 = member_type_block.data[UDECARD_MEMBERTYPE_BYTE_IN_BLOCK_1OCC];
-    uint8_t member_type_2 = member_type_block.data[UDECARD_MEMBERTYPE_BYTE_IN_BLOCK_2OCC];
-    // check second occurence of member type
-    if(member_type_1 != member_type_2) {
+    uint8_t member_type = member_type_block.data[UDECARD_MEMBERTYPE_BYTE_IN_BLOCK_1OCC];
+
+    switch(member_type) {
+    case UDECARD_MEMBER_TYPE_STUDENT_BYTE:
+        udecard->member_type = UDECardMemberTypeStudent;
+        break;
+    case UDECARD_MEMBER_TYPE_EMPLOYEE_BYTE:
+        udecard->member_type = UDECardMemberTypeEmployee;
+        break;
+    default:
         udecard->member_type = UDECardMemberTypeUnknown;
         return false;
-    } else
-        switch(member_type_1) {
-        case UDECARD_MEMBER_TYPE_STUDENT_BYTE:
-            udecard->member_type = UDECardMemberTypeStudent;
-            break;
-        case UDECARD_MEMBER_TYPE_EMPLOYEE_BYTE:
-            udecard->member_type = UDECardMemberTypeEmployee;
-            break;
-        default:
-            udecard->member_type = UDECardMemberTypeUnknown;
-            return false;
-        }
+    }
 
     return true;
 }

@@ -6,7 +6,6 @@ App(
     stack_size=2 * 1024,
     fap_category="Tools",
     fap_icon="tasks.png",
-    fap_icon_assets="images",
     fap_author="Stanislav Vasilev(Madman10K)",
     fap_weburl="https://github.com/MadLadSquad/FlipperTasks",
     fap_version="1.2",

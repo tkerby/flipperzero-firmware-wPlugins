@@ -1,3 +1,9 @@
+## v0.3.2
+- Updated to use the flipper_http folder as intended
+
+## v0.3.1
+- Updated the save/load functions to use a specific folder ("flipper_http") for storing Wi-Fi and user credentials. This simplifies management and avoids potential conflicts with other applications.
+
 ## v0.2 
 - Added teleport doors and an information screen after the user teleports
 - Updated the player's sprite to face the direction of movement

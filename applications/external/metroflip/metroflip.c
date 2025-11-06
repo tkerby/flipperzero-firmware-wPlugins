@@ -1,4 +1,3 @@
-
 #include "metroflip_i.h"
 
 #define TAG "Metroflip"

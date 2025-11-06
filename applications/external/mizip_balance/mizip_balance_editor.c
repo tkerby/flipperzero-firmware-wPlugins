@@ -34,9 +34,22 @@ bool mizip_balance_editor_write_new_balance(void* context) {
         app->mf_classic_data->block[app->credit_pointer].data[1] ^
         app->mf_classic_data->block[app->credit_pointer].data[2]; //Checksum
 
-    NfcDevice* nfc_device = nfc_device_alloc();
-    nfc_device_set_data(nfc_device, NfcProtocolMfClassic, app->mf_classic_data);
-    bool write_success = nfc_device_save(nfc_device, furi_string_get_cstr(app->shadowFilePath));
+    bool write_success = false;
+
+    if(app->currentDataSource == DataSourceFile) {
+        write_success = mizip_balance_editor_write_new_balance_to_file(context);
+    } else if(app->currentDataSource == DataSourceNfc) {
+        write_success = mizip_balance_editor_write_new_balance_to_tag(context);
+    }
+
+    return write_success;
+}
+
+bool mizip_balance_editor_write_new_balance_to_file(void* context) {
+    MiZipBalanceEditorApp* app = context;
+    nfc_device_set_data(app->nfc_device, NfcProtocolMfClassic, app->mf_classic_data);
+    bool write_success =
+        nfc_device_save(app->nfc_device, furi_string_get_cstr(app->shadowFilePath));
     if(write_success) {
         FURI_LOG_D(
             "MiZipBalanceEditor",
@@ -48,7 +61,64 @@ bool mizip_balance_editor_write_new_balance(void* context) {
             "Failed to write to %s",
             furi_string_get_cstr(app->shadowFilePath));
     }
-    nfc_device_free(nfc_device);
+    return write_success;
+}
+
+bool mizip_balance_editor_write_new_balance_to_tag(void* context) {
+    MiZipBalanceEditorApp* app = context;
+    bool write_success = false;
+
+    // Generates keys for writing
+    uint8_t keyA[MIZIP_SECTOR_COUNT][MIZIP_KEY_LENGTH];
+    uint8_t keyB[MIZIP_SECTOR_COUNT][MIZIP_KEY_LENGTH];
+
+    // Set Key B sector 0 (standard)
+    const uint8_t keyB_0[] = MIZIP_KEYB_0_BYTES;
+    memcpy(keyB[0], keyB_0, MIZIP_KEY_LENGTH);
+
+    // Generate the other keys from the UID
+    mizip_generate_key(app->uid, keyA, keyB);
+
+    // Configure keys for writing
+    MfClassicDeviceKeys keys = {};
+    for(size_t i = 0; i < 5; i++) {
+        bit_lib_num_to_bytes_be(
+            bit_lib_bytes_to_num_be(keyB[i], MIZIP_KEY_LENGTH),
+            sizeof(MfClassicKey),
+            keys.key_b[i].data);
+        FURI_BIT_SET(keys.key_b_mask, i);
+    }
+
+    // Write the modified blocks on tag
+    MfClassicKey key_b_prev, key_b_curr;
+
+    // Determine which sector for each block
+    uint8_t sector_prev =
+        app->previous_credit_pointer / 4; // Block 8 = sector 2, block 9 = sector 2
+    uint8_t sector_curr = app->credit_pointer / 4;
+
+    memcpy(key_b_prev.data, keyB[sector_prev], MIZIP_KEY_LENGTH);
+    memcpy(key_b_curr.data, keyB[sector_curr], MIZIP_KEY_LENGTH);
+
+    MfClassicError error_prev = mf_classic_poller_sync_write_block(
+        app->nfc,
+        app->previous_credit_pointer,
+        &key_b_prev,
+        MfClassicKeyTypeB,
+        &app->mf_classic_data->block[app->previous_credit_pointer]);
+
+    MfClassicError error_curr = mf_classic_poller_sync_write_block(
+        app->nfc,
+        app->credit_pointer,
+        &key_b_curr,
+        MfClassicKeyTypeB,
+        &app->mf_classic_data->block[app->credit_pointer]);
+
+    write_success = (error_prev == MfClassicErrorNone && error_curr == MfClassicErrorNone);
+
+    FURI_LOG_D(
+        "MiZipBalanceEditor", "Physical write result: %s", write_success ? "SUCCESS" : "FAILED");
+
     return write_success;
 }
 

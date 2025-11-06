@@ -193,7 +193,7 @@ static bool hid_tiktok_input_callback(InputEvent* event, void* context) {
                     hid_hal_mouse_release(hid_tiktok->hid, HID_MOUSE_BTN_LEFT);
                     consumed = true;
                 } else if(event->key == InputKeyUp) {
-                    // Swipe to previous video
+                    // Emulate up swipe
                     hid_hal_mouse_scroll(hid_tiktok->hid, -12);
                     hid_hal_mouse_scroll(hid_tiktok->hid, -24);
                     hid_hal_mouse_scroll(hid_tiktok->hid, -38);
@@ -201,7 +201,7 @@ static bool hid_tiktok_input_callback(InputEvent* event, void* context) {
                     hid_hal_mouse_scroll(hid_tiktok->hid, -12);
                     consumed = true;
                 } else if(event->key == InputKeyDown) {
-                    // Swipe to next video
+                    // Emulate down swipe
                     hid_hal_mouse_scroll(hid_tiktok->hid, 12);
                     hid_hal_mouse_scroll(hid_tiktok->hid, 24);
                     hid_hal_mouse_scroll(hid_tiktok->hid, 38);

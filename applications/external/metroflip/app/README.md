@@ -19,6 +19,7 @@ This is a list of metro cards and transit systems that are supported.
 - **Opal**  
 - **Opus**  
 - **Rav-Kav**  
+- **RENFE**
 - **Troika**
 - **Suica**
 
@@ -30,12 +31,13 @@ More coming soon!
 - **Bip! Parser**: rbasoalto, gornekich  
 - **Charliecard Parser**: zacharyweiss  
 - **Clipper Parser**: ke6jjj  
-- **Info Slaves**: equipter, TheDingo8MyBaby  
+- **Info Slaves**: equipter, TheDingo8MyBaby, ry4000, WillyJL
 - **ITSO Parser**: gsp8181, hedger, gornekich  
 - **Metromoney Parser**: Leptopt1los  
 - **myki Parser**: gornekich  
 - **Navigo Parser**: luu176, DocSystem  
 - **Opal Parser**: gornekich  
 - **Rav-Kav Parser**: luu176  
+- **RENFE Parser**: BocamoCM  
 - **Troika Parser**: gornekich
 - **Suica parser**: zinongli 

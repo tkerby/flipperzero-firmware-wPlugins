@@ -2,6 +2,12 @@
 
 A powerful Flipper Zero NTAG215 parser, writer, emulator, remixer, and duplicator, designed for enthusiasts who want to unlock the full potential of their NFC experience.
 
+## `key_retail.bin`
+
+google "key_retail.bin" and you should be able to find kt.
+
+This isn't unique to weebo and lots of other similar apps require it as well.  It can't be included for legal reasons, so you will need to find it yourself.
+
 ## Features
 
 - Parse, write, and emulate NTAG215 NFC tags with your Flipper Zero.

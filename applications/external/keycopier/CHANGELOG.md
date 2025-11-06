@@ -1,3 +1,9 @@
+## 1.5 
+* Added Suzuki SUZ18 key format support by @RIcePatrol
+
+## 1.4
+* Added Weiser WR3 key format support by @lightos
+
 ## 1.3
 * A new UI/workflow for key format selection by @Offreds's PR
 * Added QR code directing user to @TalkingSasquach's awesome video from decoding keys to 3D-printing copies.

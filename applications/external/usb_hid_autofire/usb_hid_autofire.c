@@ -20,7 +20,8 @@ typedef struct {
 } UsbMouseEvent;
 
 bool btn_left_autofire = false;
-uint32_t autofire_delay = 10;
+uint32_t autofire_delay = 100;
+uint32_t secondClick = 0;
 
 static void usb_hid_autofire_render_callback(Canvas* canvas, void* ctx) {
     UNUSED(ctx);
@@ -110,6 +111,11 @@ int32_t usb_hid_autofire_app(void* p) {
             furi_delay_us(autofire_delay * 500);
             furi_hal_hid_mouse_release(HID_MOUSE_BTN_LEFT);
             furi_delay_us(autofire_delay * 500);
+            secondClick++;
+            if(secondClick > 2) {
+                furi_delay_ms(autofire_delay * 4);
+                secondClick = 0;
+            }
         }
 
         view_port_update(view_port);

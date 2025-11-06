@@ -28,7 +28,7 @@ static const struct {
     {"lpuart", FuriHalSerialIdLpuart},
 };
 
-ARRAY_DEF(PatternArray, PatternArrayItem, M_POD_OPLIST);
+ARRAY_DEF(PatternArray, PatternArrayItem, M_POD_OPLIST); //-V658
 
 static void
     js_serial_on_async_rx(FuriHalSerialHandle* handle, FuriHalSerialRxEvent event, void* context) {

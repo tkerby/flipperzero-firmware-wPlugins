@@ -2,7 +2,7 @@ App(
     appid="guess_the_number",
     name="Guess The Number",
     apptype=FlipperAppType.EXTERNAL,
-    entry_point="boilerplate_app",
+    entry_point="guess_the_number_app",
     stack_size=2 * 1024,
     fap_icon="icons/appicon.png",
     fap_icon_assets="icons",

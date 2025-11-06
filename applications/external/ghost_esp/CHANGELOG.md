@@ -1,5 +1,41 @@
 # Changelog
 
+## v1.5.1
+
+- Fixed issue where the command label could be wrong when exiting a command
+
+## v1.5.0
+
+- Support for new pcap marker handling by the firmware as of v1.8
+- Fixed no wardriving files being saved
+- Added new commands
+- Removed unused legacy commands
+
+## v1.4.1
+
+- Collapsed things into rotating picker menus in the WiFi section - #9 by @tototo31
+
+## v1.4
+
+- Set Evil Portal HTML from the Flipper's Filesystem
+- Added "Scan APs Live" command to WiFi Scanning menu
+- Added "Chip Info" command to WiFi Scanning menu
+- Added "Disconnect WiFi" command to WiFi Scanning menu
+- Added "ARP Scan" command to WiFi Scanning menu
+- Added "Scan SSH" command to WiFi Scanning menu
+- Fixed RGB Mode setting to work with the correct command in the new firmware
+
+## v1.3.1
+
+- Might fix crash when closing app without a board connected
+
+## v1.3
+
+- Add WiFi and BLE menu subcategories
+- Remember menu position after command execution
+- Add missing and new commands
+- Move settings from WiFi menu to Settings menu
+
 ## v1.2.6
 
 - Fix connect command syntax (#2 @tototo31)
@@ -123,7 +159,7 @@
 - Added proper storage system initialization
 - Removed the line buffering logic for PCAP data
 
-### Improvements  
+### Improvements
 
 - Added error checking for storage operations
 - Filtering majorly improved

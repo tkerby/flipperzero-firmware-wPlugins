@@ -1,6 +1,6 @@
 #include "../nfc_playlist.h"
 
-void nfc_playlist_name_new_playlist_menu_callback(void* context) {
+void nfc_playlist_name_new_playlist_scene_menu_callback(void* context) {
     NfcPlaylist* nfc_playlist = context;
 
     FuriString* file_name = furi_string_alloc_printf(
@@ -14,8 +14,8 @@ void nfc_playlist_name_new_playlist_menu_callback(void* context) {
     if(!storage_file_exists(storage, file_name_cstr)) {
         if(storage_file_open(file, file_name_cstr, FSAM_READ_WRITE, FSOM_CREATE_NEW)) {
             storage_file_close(file);
-            furi_string_swap(nfc_playlist->settings.playlist_path, file_name);
-            nfc_playlist->settings.playlist_length = 0;
+            furi_string_swap(nfc_playlist->worker_info.settings->playlist_path, file_name);
+            nfc_playlist->worker_info.settings->playlist_length = 0;
         }
     } else {
         playlist_exist_already = true;
@@ -36,7 +36,7 @@ void nfc_playlist_name_new_playlist_scene_on_enter(void* context) {
     text_input_set_minimum_length(nfc_playlist->views.text_input.view, 1);
     text_input_set_result_callback(
         nfc_playlist->views.text_input.view,
-        nfc_playlist_name_new_playlist_menu_callback,
+        nfc_playlist_name_new_playlist_scene_menu_callback,
         nfc_playlist,
         nfc_playlist->views.text_input.output,
         MAX_PLAYLIST_NAME_LEN,
@@ -49,8 +49,7 @@ bool nfc_playlist_name_new_playlist_scene_on_event(void* context, SceneManagerEv
     NfcPlaylist* nfc_playlist = context;
 
     if(event.type == SceneManagerEventTypeCustom) {
-        bool playlist_exist_already = event.event;
-        if(playlist_exist_already) {
+        if(event.event) {
             scene_manager_next_scene(
                 nfc_playlist->scene_manager, NfcPlaylistScene_ErrorPlaylistAlreadyExists);
         } else {

@@ -68,6 +68,6 @@ Pokemon* pokemon_create_from_species(const PokemonSpecies* species, uint8_t leve
 void pokemon_free(Pokemon* pokemon);
 uint16_t pokemon_calculate_damage(Pokemon* attacker, Pokemon* defender, uint8_t move_power);
 
-//Get available Pokemon
+// Get available Pokemon
 const PokemonSpecies* pokemon_get_species_list(void);
 int pokemon_get_species_count(void);

@@ -497,24 +497,6 @@ NfcError nfc_iso15693_listener_tx_sof(Nfc* instance) {
     return NfcErrorNone;
 }
 
-NfcError nfc_iso15693_detect_mode(Nfc* instance) {
-    UNUSED(instance);
-
-    return NfcErrorNone;
-}
-
-NfcError nfc_iso15693_force_1outof4(Nfc* instance) {
-    UNUSED(instance);
-
-    return NfcErrorNone;
-}
-
-NfcError nfc_iso15693_force_1outof256(Nfc* instance) {
-    UNUSED(instance);
-
-    return NfcErrorNone;
-}
-
 NfcError nfc_felica_listener_set_sensf_res_data(
     Nfc* instance,
     const uint8_t* idm,
@@ -534,6 +516,16 @@ NfcError nfc_felica_listener_set_sensf_res_data(
     memcpy(instance->pt_memory.sens_res.idm.data, idm, idm_len);
     memcpy(instance->pt_memory.sens_res.pmm.data, pmm, pmm_len);
     return NfcErrorNone;
+}
+
+void nfc_felica_listener_timer_anticol_start(Nfc* instance, uint8_t target_time_slot) {
+    furi_check(instance);
+
+    UNUSED(target_time_slot);
+}
+
+void nfc_felica_listener_timer_anticol_stop(Nfc* instance) {
+    furi_check(instance);
 }
 
 #endif

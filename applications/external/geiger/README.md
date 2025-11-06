@@ -181,6 +181,10 @@ I maintain another application that uses the **geiger board** to roll dice by us
 
 <img src="https://github.com/nmrr/flipperzero-geigercounter/blob/main/img/user/flipper-zero-geiger-counter-why-not-v0-8tiv6hg1kxpe1.jpg" width=50% height=50%>
 
+[kasiin.top](https://kasiin.top/blog/2025-08-04-flipper_zero_geiger_counter_module/)
+
+<img src="https://github.com/nmrr/flipperzero-geigercounter/blob/main/img/user/4d9fb7d9.jpeg" width=50% height=50%>
+
 [Seanclark2409 [YouTube]](https://www.youtube.com/@seanclark2409) (click on the picture to see the video): 
 
 [![Watch the video](https://img.youtube.com/vi/JQB2jvY1oZ0/maxresdefault.jpg)](https://youtu.be/JQB2jvY1oZ0)
@@ -196,6 +200,14 @@ I maintain another application that uses the **geiger board** to roll dice by us
 [Erwin Ried [YouTube]](https://www.youtube.com/@eried) (click on the picture to see the video):
 
 [![Watch the video](https://img.youtube.com/vi/lVqxNnsxskg/maxresdefault.jpg)](https://www.youtube.com/watch?v=lVqxNnsxskg)
+
+[Jeremiah of All Trades [YouTube]](https://www.youtube.com/@Jeremiah.o.A.T) (click on the picture to see the video):
+
+[![Watch the video](https://img.youtube.com/vi/hJV7HJcZ4aA/maxresdefault.jpg)](https://www.youtube.com/watch?v=hJV7HJcZ4aA)
+
+[FlipperZero [YouTube]](https://www.youtube.com/@FlipperZero) (click on the picture to see the video):
+
+[![Watch the video](https://img.youtube.com/vi/MG8LLoqSnD8/maxresdefault.jpg)](https://www.youtube.com/watch?v=MG8LLoqSnD8)
 
 ## What's next ?
 

@@ -10,12 +10,13 @@
 #include <gui/modules/text_input.h>
 #include <gui/modules/dialog_ex.h>
 #include <input/input.h>
+#include <storage/storage.h>
 #include <stdlib.h>
 #include <string.h>
 
 // TODO: VOID HARDCODED STUFF
 #define MENU_ITEMS     3
-#define PASS_SAVE_PATH "/ext/passwordManager.txt"
+#define PASS_SAVE_PATH APP_DATA_PATH("passwordManager.txt")
 
 // Define view IDs
 typedef enum {

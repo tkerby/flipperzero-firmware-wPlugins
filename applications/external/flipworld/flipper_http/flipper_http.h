@@ -15,21 +15,18 @@
 #include <storage/storage.h>
 #include <cfw/cfw.h>
 
-// added by Derek Jamison to lower memory usage
-#undef FURI_LOG_E
-#define FURI_LOG_E(tag, msg, ...)
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#undef FURI_LOG_I
-#define FURI_LOG_I(tag, msg, ...)
-
-#define HTTP_TAG               "FlipWorld" // change this to your app name
-#define http_tag               "flip_world" // change this to your app id
+#define HTTP_TAG               "FlipperHTTP" // change this to your app name
+#define http_tag               "hello_world" // change this to your app id
 #define UART_CH                (cfw_settings.uart_esp_channel) // UART channel
 #define TIMEOUT_DURATION_TICKS (5 * 1000) // 5 seconds
 #define BAUDRATE               (115200) // UART baudrate
 #define RX_BUF_SIZE            2048 // UART RX buffer size
-#define RX_LINE_BUFFER_SIZE    1024 // UART RX line buffer size (increase for large responses)
-#define MAX_FILE_SHOW          3000 // Maximum data from file to show
+#define RX_LINE_BUFFER_SIZE    2048 // UART RX line buffer size (increase for large responses)
+#define MAX_FILE_SHOW          2048 // Maximum data from file to show
 #define FILE_BUFFER_SIZE       512 // File buffer size
 
 // Forward declaration for callback
@@ -69,8 +66,7 @@ typedef enum {
     HTTP_CMD_LIST_COMMANDS,
     HTTP_CMD_LED_ON,
     HTTP_CMD_LED_OFF,
-    HTTP_CMD_PING,
-    HTTP_CMD_REBOOT
+    HTTP_CMD_PING
 } HTTPCommand; // list of non-input commands
 
 // FlipperHTTP Structure
@@ -101,29 +97,29 @@ typedef struct {
 } FlipperHTTP;
 
 /**
- * @brief      Initialize UART.
- * @return     FlipperHTTP context if the UART was initialized successfully, NULL otherwise.
- * @note       The received data will be handled asynchronously via the callback.
- */
+     * @brief      Initialize UART.
+     * @return     FlipperHTTP context if the UART was initialized successfully, NULL otherwise.
+     * @note       The received data will be handled asynchronously via the callback.
+     */
 FlipperHTTP* flipper_http_alloc();
 
 /**
- * @brief      Deinitialize UART.
- * @return     void
- * @param fhttp The FlipperHTTP context
- * @note       This function will stop the asynchronous RX, release the serial handle, and free the resources.
- */
+     * @brief      Deinitialize UART.
+     * @return     void
+     * @param fhttp The FlipperHTTP context
+     * @note       This function will stop the asynchronous RX, release the serial handle, and free the resources.
+     */
 void flipper_http_free(FlipperHTTP* fhttp);
 
 /**
- * @brief      Append received data to a file.
- * @return     true if the data was appended successfully, false otherwise.
- * @param      data        The data to append to the file.
- * @param      data_size   The size of the data to append.
- * @param      start_new_file  Flag to indicate if a new file should be created.
- * @param      file_path   The path to the file.
- * @note       Make sure to initialize the file path before calling this function.
- */
+     * @brief      Append received data to a file.
+     * @return     true if the data was appended successfully, false otherwise.
+     * @param      data        The data to append to the file.
+     * @param      data_size   The size of the data to append.
+     * @param      start_new_file  Flag to indicate if a new file should be created.
+     * @param      file_path   The path to the file.
+     * @note       Make sure to initialize the file path before calling this function.
+     */
 bool flipper_http_append_to_file(
     const void* data,
     size_t data_size,
@@ -131,30 +127,30 @@ bool flipper_http_append_to_file(
     char* file_path);
 
 /**
- * @brief      Load data from a file.
- * @return     The loaded data as a FuriString.
- * @param      file_path The path to the file to load.
- */
+     * @brief      Load data from a file.
+     * @return     The loaded data as a FuriString.
+     * @param      file_path The path to the file to load.
+     */
 FuriString* flipper_http_load_from_file(char* file_path);
 
 /**
- * @brief      Load data from a file with a size limit.
- * @return     The loaded data as a FuriString.
- * @param      file_path The path to the file to load.
- * @param      limit     The size limit for loading data.
- */
+     * @brief      Load data from a file with a size limit.
+     * @return     The loaded data as a FuriString.
+     * @param      file_path The path to the file to load.
+     * @param      limit     The size limit for loading data.
+     */
 FuriString* flipper_http_load_from_file_with_limit(char* file_path, size_t limit);
 
 /**
- * @brief Perform a task while displaying a loading screen
- * @param fhttp The FlipperHTTP context
- * @param http_request The function to send the request
- * @param parse_response The function to parse the response
- * @param success_view_id The view ID to switch to on success
- * @param failure_view_id The view ID to switch to on failure
- * @param view_dispatcher The view dispatcher to use
- * @return
- */
+     * @brief Perform a task while displaying a loading screen
+     * @param fhttp The FlipperHTTP context
+     * @param http_request The function to send the request
+     * @param parse_response The function to parse the response
+     * @param success_view_id The view ID to switch to on success
+     * @param failure_view_id The view ID to switch to on failure
+     * @param view_dispatcher The view dispatcher to use
+     * @return
+     */
 void flipper_http_loading_task(
     FlipperHTTP* fhttp,
     bool (*http_request)(void),
@@ -164,24 +160,24 @@ void flipper_http_loading_task(
     ViewDispatcher** view_dispatcher);
 
 /**
- * @brief      Parse JSON data.
- * @return     true if the JSON data was parsed successfully, false otherwise.
- * @param fhttp The FlipperHTTP context
- * @param      key       The key to parse from the JSON data.
- * @param      json_data The JSON data to parse.
- * @note       The received data will be handled asynchronously via the callback.
- */
+     * @brief      Parse JSON data.
+     * @return     true if the JSON data was parsed successfully, false otherwise.
+     * @param fhttp The FlipperHTTP context
+     * @param      key       The key to parse from the JSON data.
+     * @param      json_data The JSON data to parse.
+     * @note       The received data will be handled asynchronously via the callback.
+     */
 bool flipper_http_parse_json(FlipperHTTP* fhttp, const char* key, const char* json_data);
 
 /**
- * @brief      Parse JSON array data.
- * @return     true if the JSON array data was parsed successfully, false otherwise.
- * @param fhttp The FlipperHTTP context
- * @param      key       The key to parse from the JSON array data.
- * @param      index     The index to parse from the JSON array data.
- * @param      json_data The JSON array data to parse.
- * @note       The received data will be handled asynchronously via the callback.
- */
+     * @brief      Parse JSON array data.
+     * @return     true if the JSON array data was parsed successfully, false otherwise.
+     * @param fhttp The FlipperHTTP context
+     * @param      key       The key to parse from the JSON array data.
+     * @param      index     The index to parse from the JSON array data.
+     * @param      json_data The JSON array data to parse.
+     * @note       The received data will be handled asynchronously via the callback.
+     */
 bool flipper_http_parse_json_array(
     FlipperHTTP* fhttp,
     const char* key,
@@ -189,27 +185,27 @@ bool flipper_http_parse_json_array(
     const char* json_data);
 
 /**
- * @brief Process requests and parse JSON data asynchronously
- * @param fhttp The FlipperHTTP context
- * @param http_request The function to send the request
- * @param parse_json The function to parse the JSON
- * @return true if successful, false otherwise
- */
+     * @brief Process requests and parse JSON data asynchronously
+     * @param fhttp The FlipperHTTP context
+     * @param http_request The function to send the request
+     * @param parse_json The function to parse the JSON
+     * @return true if successful, false otherwise
+     */
 bool flipper_http_process_response_async(
     FlipperHTTP* fhttp,
     bool (*http_request)(void),
     bool (*parse_json)(void));
 
 /**
- * @brief      Send a request to the specified URL.
- * @return     true if the request was successful, false otherwise.
- * @param      fhttp The FlipperHTTP context
- * @param      method The HTTP method to use.
- * @param      url  The URL to send the request to.
- * @param      headers  The headers to send with the request.
- * @param      payload  The data to send with the request.
- * @note       The received data will be handled asynchronously via the callback.
- */
+     * @brief      Send a request to the specified URL.
+     * @return     true if the request was successful, false otherwise.
+     * @param      fhttp The FlipperHTTP context
+     * @param      method The HTTP method to use.
+     * @param      url  The URL to send the request to.
+     * @param      headers  The headers to send with the request.
+     * @param      payload  The data to send with the request.
+     * @note       The received data will be handled asynchronously via the callback.
+     */
 bool flipper_http_request(
     FlipperHTTP* fhttp,
     HTTPMethod method,
@@ -218,40 +214,40 @@ bool flipper_http_request(
     const char* payload);
 
 /**
- * @brief      Send a command to save WiFi settings.
- * @return     true if the request was successful, false otherwise.
- * @param fhttp The FlipperHTTP context
- * @note       The received data will be handled asynchronously via the callback.
- */
+     * @brief      Send a command to save WiFi settings.
+     * @return     true if the request was successful, false otherwise.
+     * @param fhttp The FlipperHTTP context
+     * @note       The received data will be handled asynchronously via the callback.
+     */
 bool flipper_http_save_wifi(FlipperHTTP* fhttp, const char* ssid, const char* password);
 
 /**
- * @brief      Send a command.
- * @return     true if the request was successful, false otherwise.
- * @param      fhttp The FlipperHTTP context
- * @param      command The command to send.
- * @note       The received data will be handled asynchronously via the callback.
- */
+     * @brief      Send a command.
+     * @return     true if the request was successful, false otherwise.
+     * @param      fhttp The FlipperHTTP context
+     * @param      command The command to send.
+     * @note       The received data will be handled asynchronously via the callback.
+     */
 bool flipper_http_send_command(FlipperHTTP* fhttp, HTTPCommand command);
 
 /**
- * @brief      Send data over UART with newline termination.
- * @return     true if the data was sent successfully, false otherwise.
- * @param fhttp The FlipperHTTP context
- * @param      data  The data to send over UART.
- * @note       The data will be sent over UART with a newline character appended.
- */
+     * @brief      Send data over UART with newline termination.
+     * @return     true if the data was sent successfully, false otherwise.
+     * @param fhttp The FlipperHTTP context
+     * @param      data  The data to send over UART.
+     * @note       The data will be sent over UART with a newline character appended.
+     */
 bool flipper_http_send_data(FlipperHTTP* fhttp, const char* data);
 
 /**
- * @brief      Send a request to the specified URL to start a WebSocket connection.
- * @return     true if the request was successful, false otherwise.
- * @param fhttp The FlipperHTTP context
- * @param      url  The URL to send the WebSocket request to.
- * @param port The port to connect to
- * @param headers The headers to send with the WebSocket request
- * @note       The received data will be handled asynchronously via the callback.
- */
+     * @brief      Send a request to the specified URL to start a WebSocket connection.
+     * @return     true if the request was successful, false otherwise.
+     * @param fhttp The FlipperHTTP context
+     * @param      url  The URL to send the WebSocket request to.
+     * @param port The port to connect to
+     * @param headers The headers to send with the WebSocket request
+     * @note       The received data will be handled asynchronously via the callback.
+     */
 bool flipper_http_websocket_start(
     FlipperHTTP* fhttp,
     const char* url,
@@ -259,9 +255,13 @@ bool flipper_http_websocket_start(
     const char* headers);
 
 /**
- * @brief      Send a request to stop the WebSocket connection.
- * @return     true if the request was successful, false otherwise.
- * @param fhttp The FlipperHTTP context
- * @note       The received data will be handled asynchronously via the callback.
- */
+     * @brief      Send a request to stop the WebSocket connection.
+     * @return     true if the request was successful, false otherwise.
+     * @param fhttp The FlipperHTTP context
+     * @note       The received data will be handled asynchronously via the callback.
+     */
 bool flipper_http_websocket_stop(FlipperHTTP* fhttp);
+
+#ifdef __cplusplus
+}
+#endif

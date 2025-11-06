@@ -134,23 +134,20 @@ static void get_timeout_timer_callback(void* context) {
 }
 
 static void flipper_http_rx_callback(const char* line, void* context); // forward declaration
-// Instead of two globals, we use a single static pointer to the active instance.
-static FlipperHTTP* active_fhttp = NULL;
 
+// UART initialization function
+/**
+ * @brief      Initialize UART.
+ * @return     FlipperHTTP context if the UART was initialized successfully, NULL otherwise.
+ * @note       The received data will be handled asynchronously via the callback.
+ */
 FlipperHTTP* flipper_http_alloc() {
-    // If an active instance already exists, free it first.
-    if(active_fhttp != NULL) {
-        FURI_LOG_E(HTTP_TAG, "Existing UART instance detected, freeing previous instance.");
-        flipper_http_free(active_fhttp);
-        active_fhttp = NULL;
-    }
-
-    FlipperHTTP* fhttp = malloc(sizeof(FlipperHTTP));
+    FlipperHTTP* fhttp = (FlipperHTTP*)malloc(sizeof(FlipperHTTP));
     if(!fhttp) {
         FURI_LOG_E(HTTP_TAG, "Failed to allocate FlipperHTTP.");
         return NULL;
     }
-    memset(fhttp, 0, sizeof(FlipperHTTP));
+    memset(fhttp, 0, sizeof(FlipperHTTP)); // Initialize allocated memory to zero
 
     fhttp->flipper_http_stream = furi_stream_buffer_alloc(RX_BUF_SIZE, 1);
     if(!fhttp->flipper_http_stream) {
@@ -169,7 +166,7 @@ FlipperHTTP* flipper_http_alloc() {
 
     furi_thread_set_name(fhttp->rx_thread, "FlipperHTTP_RxThread");
     furi_thread_set_stack_size(fhttp->rx_thread, 1024);
-    furi_thread_set_context(fhttp->rx_thread, fhttp);
+    furi_thread_set_context(fhttp->rx_thread, fhttp); // Corrected context
     furi_thread_set_callback(fhttp->rx_thread, flipper_http_worker);
 
     fhttp->handle_rx_line_cb = flipper_http_rx_callback;
@@ -178,10 +175,10 @@ FlipperHTTP* flipper_http_alloc() {
     furi_thread_start(fhttp->rx_thread);
     fhttp->rx_thread_id = furi_thread_get_id(fhttp->rx_thread);
 
-    // Acquire UART control
-    fhttp->serial_handle = furi_hal_serial_control_acquire(UART_CH);
-    if(!fhttp->serial_handle) {
-        FURI_LOG_E(HTTP_TAG, "Failed to acquire UART control - handle is NULL");
+    // Handle when the UART control is busy to avoid furi_check failed
+    if(furi_hal_serial_control_is_busy(UART_CH)) {
+        FURI_LOG_E(HTTP_TAG, "UART control is busy.");
+        // Cleanup resources
         furi_thread_flags_set(fhttp->rx_thread_id, WorkerEvtStop);
         furi_thread_join(fhttp->rx_thread);
         furi_thread_free(fhttp->rx_thread);
@@ -190,17 +187,41 @@ FlipperHTTP* flipper_http_alloc() {
         return NULL;
     }
 
-    // Initialize and enable UART
+    fhttp->serial_handle = furi_hal_serial_control_acquire(UART_CH);
+    if(!fhttp->serial_handle) {
+        FURI_LOG_E(HTTP_TAG, "Failed to acquire UART control - handle is NULL");
+        // Cleanup resources
+        furi_thread_flags_set(fhttp->rx_thread_id, WorkerEvtStop);
+        furi_thread_join(fhttp->rx_thread);
+        furi_thread_free(fhttp->rx_thread);
+        furi_stream_buffer_free(fhttp->flipper_http_stream);
+        free(fhttp);
+        return NULL;
+    }
+
+    // Initialize UART with acquired handle
     furi_hal_serial_init(fhttp->serial_handle, BAUDRATE);
+
+    // Enable RX direction
     furi_hal_serial_enable_direction(fhttp->serial_handle, FuriHalSerialDirectionRx);
-    furi_hal_serial_async_rx_start(fhttp->serial_handle, _flipper_http_rx_callback, fhttp, false);
+
+    // Start asynchronous RX with the corrected callback and context
+    furi_hal_serial_async_rx_start(
+        fhttp->serial_handle, _flipper_http_rx_callback, fhttp, false); // Corrected context
+
+    // Wait for the TX to complete to ensure UART is ready
     furi_hal_serial_tx_wait_complete(fhttp->serial_handle);
 
-    // Allocate the timeout timer
-    fhttp->get_timeout_timer =
-        furi_timer_alloc(get_timeout_timer_callback, FuriTimerTypeOnce, fhttp);
+    // Allocate the timer for handling timeouts
+    fhttp->get_timeout_timer = furi_timer_alloc(
+        get_timeout_timer_callback, // Callback function
+        FuriTimerTypeOnce, // One-shot timer
+        fhttp // Corrected context
+    );
+
     if(!fhttp->get_timeout_timer) {
         FURI_LOG_E(HTTP_TAG, "Failed to allocate HTTP request timeout timer.");
+        // Cleanup resources
         furi_hal_serial_async_rx_stop(fhttp->serial_handle);
         furi_hal_serial_disable_direction(fhttp->serial_handle, FuriHalSerialDirectionRx);
         furi_hal_serial_control_release(fhttp->serial_handle);
@@ -212,11 +233,14 @@ FlipperHTTP* flipper_http_alloc() {
         free(fhttp);
         return NULL;
     }
+
+    // Set the timer thread priority if needed
     furi_timer_set_thread_priority(FuriTimerThreadPriorityElevated);
 
-    fhttp->last_response = malloc(RX_BUF_SIZE);
+    fhttp->last_response = (char*)malloc(RX_BUF_SIZE);
     if(!fhttp->last_response) {
         FURI_LOG_E(HTTP_TAG, "Failed to allocate memory for last_response.");
+        // Cleanup resources
         furi_timer_free(fhttp->get_timeout_timer);
         furi_hal_serial_async_rx_stop(fhttp->serial_handle);
         furi_hal_serial_disable_direction(fhttp->serial_handle, FuriHalSerialDirectionRx);
@@ -229,15 +253,21 @@ FlipperHTTP* flipper_http_alloc() {
         free(fhttp);
         return NULL;
     }
-    memset(fhttp->last_response, 0, RX_BUF_SIZE);
+    memset(fhttp->last_response, 0, RX_BUF_SIZE); // Initialize last_response
+
     fhttp->state = IDLE;
 
-    // Track the active instance globally.
-    active_fhttp = fhttp;
-
+    // FURI_LOG_I(HTTP_TAG, "UART initialized successfully.");
     return fhttp;
 }
 
+// Deinitialize UART
+/**
+ * @brief      Deinitialize UART.
+ * @return     void
+ * @param fhttp The FlipperHTTP context
+ * @note       This function will stop the asynchronous RX, release the serial handle, and free the resources.
+ */
 void flipper_http_free(FlipperHTTP* fhttp) {
     if(!fhttp) {
         FURI_LOG_E(HTTP_TAG, "Failed to get context.");
@@ -247,39 +277,41 @@ void flipper_http_free(FlipperHTTP* fhttp) {
         FURI_LOG_E(HTTP_TAG, "UART handle is NULL. Already deinitialized?");
         return;
     }
-    // Stop asynchronous RX and clean up UART
+    // Stop asynchronous RX
     furi_hal_serial_async_rx_stop(fhttp->serial_handle);
-    furi_hal_serial_disable_direction(fhttp->serial_handle, FuriHalSerialDirectionRx);
-    furi_hal_serial_deinit(fhttp->serial_handle);
-    furi_hal_serial_control_release(fhttp->serial_handle);
 
-    // Signal and free the worker thread
+    // Release and deinitialize the serial handle
+    furi_hal_serial_disable_direction(fhttp->serial_handle, FuriHalSerialDirectionRx);
+    furi_hal_serial_control_release(fhttp->serial_handle);
+    furi_hal_serial_deinit(fhttp->serial_handle);
+
+    // Signal the worker thread to stop
     furi_thread_flags_set(fhttp->rx_thread_id, WorkerEvtStop);
+    // Wait for the thread to finish
     furi_thread_join(fhttp->rx_thread);
+    // Free the thread resources
     furi_thread_free(fhttp->rx_thread);
 
     // Free the stream buffer
     furi_stream_buffer_free(fhttp->flipper_http_stream);
 
-    // Free the timer, if allocated
+    // Free the timer
     if(fhttp->get_timeout_timer) {
         furi_timer_free(fhttp->get_timeout_timer);
         fhttp->get_timeout_timer = NULL;
     }
 
-    // Free the last_response buffer
+    // Free the last response
     if(fhttp->last_response) {
         free(fhttp->last_response);
         fhttp->last_response = NULL;
     }
 
-    // If this instance is the active instance, clear the static pointer.
-    if(active_fhttp == fhttp) {
-        free(active_fhttp);
-        active_fhttp = NULL;
-    }
-
+    // Free the FlipperHTTP context
     free(fhttp);
+    fhttp = NULL;
+
+    // FURI_LOG_I("FlipperHTTP", "UART deinitialized successfully.");
 }
 
 /**
@@ -716,7 +748,7 @@ bool flipper_http_request(
     const char* headers,
     const char* payload) {
     if(!fhttp) {
-        FURI_LOG_E("FlipperHTTP", "flipper_http_request: Failed to get context.");
+        FURI_LOG_E("FlipperHTTP", "Failed to get context.");
         return false;
     }
     if(!url) {
@@ -865,7 +897,7 @@ bool flipper_http_save_wifi(FlipperHTTP* fhttp, const char* ssid, const char* pa
  */
 bool flipper_http_send_command(FlipperHTTP* fhttp, HTTPCommand command) {
     if(!fhttp) {
-        FURI_LOG_E(HTTP_TAG, "flipper_http_send_command: Failed to get context.");
+        FURI_LOG_E(HTTP_TAG, "Failed to get context.");
         return false;
     }
     switch(command) {
@@ -888,8 +920,6 @@ bool flipper_http_send_command(FlipperHTTP* fhttp, HTTPCommand command) {
     case HTTP_CMD_PING:
         fhttp->state = INACTIVE; // set state as INACTIVE to be made IDLE if PONG is received
         return flipper_http_send_data(fhttp, "[PING]");
-    case HTTP_CMD_REBOOT:
-        return flipper_http_send_data(fhttp, "[REBOOT]");
     default:
         FURI_LOG_E(HTTP_TAG, "Invalid command.");
         return false;
@@ -905,7 +935,7 @@ bool flipper_http_send_command(FlipperHTTP* fhttp, HTTPCommand command) {
  */
 bool flipper_http_send_data(FlipperHTTP* fhttp, const char* data) {
     if(!fhttp) {
-        FURI_LOG_E(HTTP_TAG, "flipper_http_send_data: Failed to get context.");
+        FURI_LOG_E(HTTP_TAG, "Failed to get context.");
         return false;
     }
 
@@ -1056,7 +1086,7 @@ static char* trim(const char* str) {
 static void flipper_http_rx_callback(const char* line, void* context) {
     FlipperHTTP* fhttp = (FlipperHTTP*)context;
     if(!fhttp) {
-        FURI_LOG_E(HTTP_TAG, "flipper_http_rx_callback: Failed to get context.");
+        FURI_LOG_E(HTTP_TAG, "Failed to get context.");
         return;
     }
     if(!line) {
@@ -1082,7 +1112,7 @@ static void flipper_http_rx_callback(const char* line, void* context) {
     }
 
     // Uncomment below line to log the data received over UART
-    // FURI_LOG_I(HTTP_TAG, "Received UART line: %s", line);
+    // (HTTP_TAG, "Received UART line: %s", line);
 
     // Check if we've started receiving data from a GET request
     if(fhttp->started_receiving && (fhttp->method == GET || fhttp->method == BYTES)) {
@@ -1090,8 +1120,8 @@ static void flipper_http_rx_callback(const char* line, void* context) {
         furi_timer_restart(fhttp->get_timeout_timer, TIMEOUT_DURATION_TICKS);
 
         if(strstr(line, "[GET/END]") != NULL) {
-            FURI_LOG_I(HTTP_TAG, "GET request completed.");
-            // Stop the timer since we've completed the GET request
+            // FURI_LOG_I(HTTP_TAG, "GET request completed.");
+            //  Stop the timer since we've completed the GET request
             furi_timer_stop(fhttp->get_timeout_timer);
             fhttp->started_receiving = false;
             fhttp->just_started = false;
@@ -1155,8 +1185,8 @@ static void flipper_http_rx_callback(const char* line, void* context) {
         furi_timer_restart(fhttp->get_timeout_timer, TIMEOUT_DURATION_TICKS);
 
         if(strstr(line, "[POST/END]") != NULL) {
-            FURI_LOG_I(HTTP_TAG, "POST request completed.");
-            // Stop the timer since we've completed the POST request
+            // FURI_LOG_I(HTTP_TAG, "POST request completed.");
+            //  Stop the timer since we've completed the POST request
             furi_timer_stop(fhttp->get_timeout_timer);
             fhttp->started_receiving = false;
             fhttp->just_started = false;
@@ -1220,8 +1250,8 @@ static void flipper_http_rx_callback(const char* line, void* context) {
         furi_timer_restart(fhttp->get_timeout_timer, TIMEOUT_DURATION_TICKS);
 
         if(strstr(line, "[PUT/END]") != NULL) {
-            FURI_LOG_I(HTTP_TAG, "PUT request completed.");
-            // Stop the timer since we've completed the PUT request
+            // FURI_LOG_I(HTTP_TAG, "PUT request completed.");
+            //  Stop the timer since we've completed the PUT request
             furi_timer_stop(fhttp->get_timeout_timer);
             fhttp->started_receiving = false;
             fhttp->just_started = false;
@@ -1255,8 +1285,8 @@ static void flipper_http_rx_callback(const char* line, void* context) {
         furi_timer_restart(fhttp->get_timeout_timer, TIMEOUT_DURATION_TICKS);
 
         if(strstr(line, "[DELETE/END]") != NULL) {
-            FURI_LOG_I(HTTP_TAG, "DELETE request completed.");
-            // Stop the timer since we've completed the DELETE request
+            // FURI_LOG_I(HTTP_TAG, "DELETE request completed.");
+            //  Stop the timer since we've completed the DELETE request
             furi_timer_stop(fhttp->get_timeout_timer);
             fhttp->started_receiving = false;
             fhttp->just_started = false;
@@ -1286,15 +1316,15 @@ static void flipper_http_rx_callback(const char* line, void* context) {
 
     // Handle different types of responses
     if(strstr(line, "[SUCCESS]") != NULL || strstr(line, "[CONNECTED]") != NULL) {
-        FURI_LOG_I(HTTP_TAG, "Operation succeeded.");
+        // FURI_LOG_I(HTTP_TAG, "Operation succeeded.");
     } else if(strstr(line, "[INFO]") != NULL) {
-        FURI_LOG_I(HTTP_TAG, "Received info: %s", line);
+        // FURI_LOG_I(HTTP_TAG, "Received info: %s", line);
 
         if(fhttp->state == INACTIVE && strstr(line, "[INFO] Already connected to Wifi.") != NULL) {
             fhttp->state = IDLE;
         }
     } else if(strstr(line, "[GET/SUCCESS]") != NULL) {
-        FURI_LOG_I(HTTP_TAG, "GET request succeeded.");
+        // FURI_LOG_I(HTTP_TAG, "GET request succeeded.");
         furi_timer_start(fhttp->get_timeout_timer, TIMEOUT_DURATION_TICKS);
 
         fhttp->started_receiving = true;
@@ -1309,7 +1339,7 @@ static void flipper_http_rx_callback(const char* line, void* context) {
         set_header(fhttp);
         return;
     } else if(strstr(line, "[POST/SUCCESS]") != NULL) {
-        FURI_LOG_I(HTTP_TAG, "POST request succeeded.");
+        // FURI_LOG_I(HTTP_TAG, "POST request succeeded.");
         furi_timer_start(fhttp->get_timeout_timer, TIMEOUT_DURATION_TICKS);
 
         fhttp->started_receiving = true;
@@ -1324,7 +1354,7 @@ static void flipper_http_rx_callback(const char* line, void* context) {
         set_header(fhttp);
         return;
     } else if(strstr(line, "[PUT/SUCCESS]") != NULL) {
-        FURI_LOG_I(HTTP_TAG, "PUT request succeeded.");
+        // FURI_LOG_I(HTTP_TAG, "PUT request succeeded.");
         furi_timer_start(fhttp->get_timeout_timer, TIMEOUT_DURATION_TICKS);
 
         fhttp->started_receiving = true;
@@ -1334,7 +1364,7 @@ static void flipper_http_rx_callback(const char* line, void* context) {
         set_header(fhttp);
         return;
     } else if(strstr(line, "[DELETE/SUCCESS]") != NULL) {
-        FURI_LOG_I(HTTP_TAG, "DELETE request succeeded.");
+        // FURI_LOG_I(HTTP_TAG, "DELETE request succeeded.");
         furi_timer_start(fhttp->get_timeout_timer, TIMEOUT_DURATION_TICKS);
 
         fhttp->started_receiving = true;
@@ -1344,13 +1374,13 @@ static void flipper_http_rx_callback(const char* line, void* context) {
         set_header(fhttp);
         return;
     } else if(strstr(line, "[DISCONNECTED]") != NULL) {
-        FURI_LOG_I(HTTP_TAG, "WiFi disconnected successfully.");
+        // FURI_LOG_I(HTTP_TAG, "WiFi disconnected successfully.");
     } else if(strstr(line, "[ERROR]") != NULL) {
         FURI_LOG_E(HTTP_TAG, "Received error: %s", line);
         fhttp->state = ISSUE;
         return;
     } else if(strstr(line, "[PONG]") != NULL) {
-        FURI_LOG_I(HTTP_TAG, "Received PONG response: Wifi Dev Board is still alive.");
+        // FURI_LOG_I(HTTP_TAG, "Received PONG response: Wifi Dev Board is still alive.");
 
         // send command to connect to WiFi
         if(fhttp->state == INACTIVE) {
@@ -1383,7 +1413,7 @@ bool flipper_http_websocket_start(
     uint16_t port,
     const char* headers) {
     if(!fhttp) {
-        FURI_LOG_E(HTTP_TAG, "flipper_http_websocket_start: Failed to get context.");
+        FURI_LOG_E(HTTP_TAG, "Failed to get context.");
         return false;
     }
     if(!url || !headers) {
@@ -1418,7 +1448,7 @@ bool flipper_http_websocket_start(
  */
 bool flipper_http_websocket_stop(FlipperHTTP* fhttp) {
     if(!fhttp) {
-        FURI_LOG_E(HTTP_TAG, "flipper_http_websocket_stop: Failed to get context.");
+        FURI_LOG_E(HTTP_TAG, "Failed to get context.");
         return false;
     }
     return flipper_http_send_data(fhttp, "[SOCKET/STOP]");

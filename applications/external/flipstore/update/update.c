@@ -1,6 +1,5 @@
 #include <update/update.h>
 #include <storage/storage.h>
-#include <apps/flip_store_apps.h>
 
 static bool update_is_str(const char* src, const char* dst) {
     return strcmp(src, dst) == 0;
@@ -231,59 +230,6 @@ static bool update_is_update_time(DateTime* time_current) {
     return time_diff;
 }
 
-static bool
-    update_fetch_github_manifest(FlipperHTTP* fhttp, const char* app_folder, const char* fap_id) {
-    if(!fhttp) {
-        FURI_LOG_E(TAG, "fhttp is NULL");
-        return false;
-    }
-    if(!fap_id) {
-        FURI_LOG_E(TAG, "fap_id is NULL");
-        return false;
-    }
-    // make sure folder is created
-    char directory_path[256];
-    snprintf(
-        directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s", APP_ID);
-
-    // Create the directory
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-    storage_common_mkdir(storage, directory_path);
-    snprintf(
-        directory_path,
-        sizeof(directory_path),
-        STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data",
-        APP_ID);
-    storage_common_mkdir(storage, directory_path);
-    snprintf(
-        directory_path,
-        sizeof(directory_path),
-        STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/%s_last_update_request.txt",
-        APP_ID,
-        fap_id);
-    storage_simply_remove_recursive(storage, directory_path); // ensure the file is empty
-    furi_record_close(RECORD_STORAGE);
-
-    fhttp->save_received_data = false;
-    fhttp->is_bytes_request = true;
-
-    snprintf(
-        fhttp->file_path,
-        sizeof(fhttp->file_path),
-        STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/%s_last_update_request.txt",
-        APP_ID,
-        fap_id);
-    char url[256];
-    snprintf(
-        url,
-        sizeof(url),
-        "https://raw.githubusercontent.com/flipperdevices/flipper-application-catalog/main/applications/%s/%s/manifest.yml",
-        app_folder,
-        fap_id);
-    return flipper_http_request(
-        fhttp, BYTES, url, "{\"Content-Type\":\"application/json\"}", NULL);
-}
-
 // Sends a request to fetch the last updated date of the app.
 static bool update_last_app_update(FlipperHTTP* fhttp, bool flipper_server) {
     if(!fhttp) {
@@ -292,7 +238,47 @@ static bool update_last_app_update(FlipperHTTP* fhttp, bool flipper_server) {
     }
     char url[256];
     if(flipper_server) {
-        return update_fetch_github_manifest(fhttp, APP_FOLDER, FAP_ID);
+        // make sure folder is created
+        char directory_path[256];
+        snprintf(
+            directory_path,
+            sizeof(directory_path),
+            STORAGE_EXT_PATH_PREFIX "/apps_data/%s",
+            APP_ID);
+
+        // Create the directory
+        Storage* storage = furi_record_open(RECORD_STORAGE);
+        storage_common_mkdir(storage, directory_path);
+        snprintf(
+            directory_path,
+            sizeof(directory_path),
+            STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data",
+            APP_ID);
+        storage_common_mkdir(storage, directory_path);
+        snprintf(
+            directory_path,
+            sizeof(directory_path),
+            STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/last_update_request.txt",
+            APP_ID);
+        storage_simply_remove_recursive(storage, directory_path); // ensure the file is empty
+        furi_record_close(RECORD_STORAGE);
+
+        fhttp->save_received_data = false;
+        fhttp->is_bytes_request = true;
+
+        snprintf(
+            fhttp->file_path,
+            sizeof(fhttp->file_path),
+            STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/last_update_request.txt",
+            APP_ID);
+        snprintf(
+            url,
+            sizeof(url),
+            "https://raw.githubusercontent.com/flipperdevices/flipper-application-catalog/main/applications/%s/%s/manifest.yml",
+            APP_FOLDER,
+            FAP_ID);
+        return flipper_http_request(
+            fhttp, BYTES, url, "{\"Content-Type\":\"application/json\"}", NULL);
     } else {
         snprintf(
             url, sizeof(url), "https://www.jblanked.com/flipper/api/app/last-updated/%s/", FAP_ID);
@@ -444,6 +430,8 @@ static bool update_get_fap_file(FlipperHTTP* fhttp, bool flipper_server) {
         snprintf(
             url, sizeof(url), "https://www.jblanked.com/flipper/api/app/download/%s/", FAP_ID);
     }
+    FURI_LOG_I(TAG, "Requesting FAP file from: %s", url);
+    FURI_LOG_I(TAG, "Saving FAP file to: %s", fhttp->file_path);
     return flipper_http_request(
         fhttp, BYTES, url, "{\"Content-Type\": \"application/octet-stream\"}", NULL);
 }
@@ -465,7 +453,7 @@ static bool update_update_app(FlipperHTTP* fhttp, DateTime* time_current, bool u
     }
     furi_timer_stop(fhttp->get_timeout_timer);
     if(update_parse_last_app_update(fhttp, time_current, use_flipper_api)) {
-        if(!update_get_fap_file(fhttp, false)) {
+        if(!update_get_fap_file(fhttp, use_flipper_api)) {
             FURI_LOG_E(TAG, "Failed to fetch fap file 1");
             return false;
         }
@@ -524,176 +512,5 @@ bool update_is_ready(FlipperHTTP* fhttp, bool use_flipper_api) {
             return true;
         }
         return false; // No update necessary.
-    }
-}
-#define MAX_APP_FETCH 100
-static bool update_app_list_category(
-    Storage* storage,
-    File* file,
-    const char* category,
-    bool save_file_extension) {
-    if(!storage || !file || !category) {
-        FURI_LOG_E(TAG, "storage, file or category is NULL");
-        return false;
-    }
-    char directory_path[256];
-    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps/%s", category);
-    if(!storage_common_exists(storage, directory_path) ||
-       !storage_dir_open(file, directory_path)) {
-        FURI_LOG_E(TAG, "Directory %s does not exist, or failed to open.", directory_path);
-        return false;
-    }
-    FileInfo fileinfo;
-    char name[128];
-    FuriString* json_app_list = furi_string_alloc();
-    furi_string_cat_str(json_app_list, "{\"apps\":[");
-    bool while_flag = true;
-    int count = 0;
-    while(while_flag) {
-        if(count >= MAX_APP_FETCH) {
-            FURI_LOG_E(TAG, "Maximum app fetch limit reached.");
-            break;
-        }
-        if(!storage_dir_read(file, &fileinfo, name, sizeof(name))) {
-            FURI_LOG_E(TAG, "Failed to get the next item in the directory.");
-            while_flag = false;
-            break;
-        }
-        snprintf(
-            directory_path,
-            sizeof(directory_path),
-            STORAGE_EXT_PATH_PREFIX "/apps/%s/%s",
-            category,
-            name);
-        if(storage_dir_exists(storage, directory_path)) {
-            FURI_LOG_I(TAG, "Directory: %s", name);
-            continue;
-        }
-        if(strstr(name, ".fap") == NULL) {
-            FURI_LOG_I(TAG, "Not a .fap file: %s", name);
-            continue;
-        }
-        furi_string_push_back(json_app_list, '"');
-        if(save_file_extension) {
-            furi_string_cat_str(json_app_list, name);
-        } else {
-            char* dot = strrchr(name, '.');
-            if(dot) {
-                *dot = '\0'; // Remove the file extension
-            }
-            furi_string_cat_str(json_app_list, name);
-        }
-        furi_string_push_back(json_app_list, '"');
-        furi_string_push_back(json_app_list, ',');
-        count++;
-    };
-    if(furi_string_size(json_app_list) > 1) {
-        furi_string_set_char(
-            json_app_list, furi_string_size(json_app_list) - 1, ']'); // remove the last comma
-        furi_string_cat_str(json_app_list, "}");
-        char json_path[32];
-        snprintf(json_path, sizeof(json_path), "apps_%s", category);
-        save_char(json_path, furi_string_get_cstr(json_app_list));
-        furi_string_free(json_app_list);
-        return true;
-    } else {
-        FURI_LOG_E(TAG, "No apps found in the directory.");
-        furi_string_free(json_app_list);
-        return false;
-    }
-}
-static bool update_app_list() {
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-    File* file = storage_file_alloc(storage);
-    if(!file || !storage) {
-        FURI_LOG_E(TAG, "Failed to allocate storage or file");
-        return false;
-    }
-    // categories array from apps/flip_store_apps.h
-    for(int i = 0; i < 11; i++) {
-        if(!update_app_list_category(storage, file, categories[i], false)) {
-            FURI_LOG_E(TAG, "Failed to update app list for category: %s", categories[i]);
-            return false;
-        }
-    }
-    // storage_file_close(file);
-    storage_file_free(file);
-    furi_record_close(RECORD_STORAGE);
-    return true;
-}
-
-bool update_fetch_all_manifests(FlipperHTTP* fhtp) {
-    // apps_GPIO, apps_Bluetooth, etc
-    // categories array from apps/flip_store_apps.h
-    char json_path[32];
-    char json_data[256];
-    for(int i = 0; i < 11; i++) {
-        snprintf(json_path, sizeof(json_path), "apps_%s", categories[i]);
-        if(load_char(json_path, json_data, sizeof(json_data))) {
-            for(size_t j = 0; j < MAX_APP_FETCH; j++) {
-                char* app_name = get_json_array_value("apps", j, json_data);
-                if(!app_name) {
-                    FURI_LOG_E(TAG, "Failed to get app name from JSON");
-                    break;
-                }
-                update_fetch_github_manifest(fhtp, categories[i], app_name);
-                free(app_name);
-            }
-        } else {
-            FURI_LOG_E(TAG, "Failed to load app list for category: %s", categories[i]);
-            return false;
-        }
-    }
-    return true;
-}
-
-void update_all_apps(FlipperHTTP* fhttp) {
-    if(!fhttp) {
-        FURI_LOG_E(TAG, "fhttp is NULL");
-        return;
-    }
-    /* Steps
-    1. Get the current time
-    2. Check if the last update time is more than one hour ago
-    3. if yes, loop through all the apps available and create a list of apps
-    4. loop through each app and download information from the github manifest
-    5. check if the version is different from the manifest version
-    6. if the version is different, download the app
-    7. repeat for all apps
-    8. save the current time
-    9. return true if any app was updated, false otherwise
-    */
-
-    //--- 1: Get the current time
-    DateTime rtc_time;
-    furi_hal_rtc_get_datetime(&rtc_time);
-
-    //--- 2: Check if the last update time is more than one hour ago
-    char last_checked[32];
-    if(!load_char("last_checked_all", last_checked, sizeof(last_checked))) {
-        // First time – save the current time and check for an update.
-        if(!update_save_rtc_time(&rtc_time)) {
-            FURI_LOG_E(TAG, "Failed to save RTC time");
-            return;
-        }
-        // No need to check for an update
-        return;
-    }
-    // Check if the current RTC time is at least one hour past the stored time.
-    if(!update_is_update_time(&rtc_time)) {
-        FURI_LOG_I(TAG, "No update necessary");
-        return;
-    }
-
-    //--- 3: Loop through all the apps available and create a list of apps
-    if(!update_app_list()) {
-        FURI_LOG_E(TAG, "Failed to update app list");
-        return;
-    }
-
-    //--- 4: Loop through each app and download information from the github manifest
-    if(!update_fetch_all_manifests(fhttp)) {
-        FURI_LOG_E(TAG, "Failed to fetch all manifests");
-        return;
     }
 }

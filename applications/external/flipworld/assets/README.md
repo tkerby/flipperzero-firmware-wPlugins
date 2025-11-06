@@ -7,12 +7,13 @@ The first open-world multiplayer game for the Flipper Zero, best played with the
 - Other: https://www.jblanked.com/social/
 
 ## Requirements
-- WiFi Developer Board, Raspberry Pi, or ESP32 device flashed with FlipperHTTP v1.8.2 or higher: https://github.com/jblanked/FlipperHTTP
+- WiFi Developer Board, Raspberry Pi, or ESP32 device flashed with FlipperHTTP v2.0 or higher: https://github.com/jblanked/FlipperHTTP
 - 2.4 GHz WiFi access point
+
 
 ## How It Works
 
-FlipWorld and FlipSocial are connected. Your login information is the same in both apps; if you register an account in either app, you can log in to both using that information. This also means that your friends, messages, and achievements are synced between apps. You only need a username and password to start, which are set in the User Settings. Keep in mind your username will be displayed to others, so choose wisely.
+FlipWorld, FlipSocial, and Free Roam are connected. Your login information is the same in both apps; if you register an account in either app, you can log in to both using that information. This also means that your friends, messages, and achievements are synced between apps. You only need a username and password to start, which are set in the User Settings. Keep in mind your username will be displayed to others, so choose wisely.
 
 **Settings**
 
@@ -55,12 +56,3 @@ An enemy attack registers if the enemy is facing you and collides with you. Howe
 **NPCs**
 
 NPCs are friendly characters that players can interact with. Currently, you can interact with them by clicking "OK" while colliding with them.
-
-## Short Tutorial
-
-1. Ensure your WiFi Developer Board and Video Game Module are flashed with FlipperHTTP.
-2. Install the app.
-3. Restart your Flipper Zero, then open FlipWorld.
-4. Click "Settings -> WiFi", then input your WiFi SSID and password.
-5. Hit the "BACK" button, click "User". If your username is not present, click "Username" and add one. Do the same for the password field.
-6. Go back to the main menu and hit "Play", followed by "Tutorial". It will register an account if necessary and fetch data from our API that's used to render our graphics.

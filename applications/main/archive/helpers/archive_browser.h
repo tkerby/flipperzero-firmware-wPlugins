@@ -38,6 +38,7 @@ static const char* known_ext[] = {
     [ArchiveFileTypeBadUsb] = ".txt",
     [ArchiveFileTypeWAV] = ".wav",
     [ArchiveFileTypeMag] = ".mag",
+    [ArchiveFileTypePicopass] = ".picopass",
     [ArchiveFileTypeU2f] = "?",
     [ArchiveFileTypeApplication] = ".fap",
     [ArchiveFileTypeJS] = ".js",

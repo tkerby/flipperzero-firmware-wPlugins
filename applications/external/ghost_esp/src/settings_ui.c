@@ -375,7 +375,14 @@ static void settings_item_change_callback(VariableItem* item) {
 
     if(settings_set(context->settings, key, value, context)) {
         variable_item_set_current_value_text(item, metadata->data.setting.value_names[value]);
-        if(metadata->data.setting.uart_command && context->send_uart_command) {
+        if(key == SETTING_RGB_MODE && context->send_uart_command) {
+            const char* modes[] = {"stealth", "normal", "rainbow"};
+            const char* mode = "normal";
+            if(value < (sizeof(modes) / sizeof(modes[0]))) mode = modes[value];
+            char command[64];
+            snprintf(command, sizeof(command), "setrgbmode %s\n", mode);
+            context->send_uart_command(command, context->context);
+        } else if(metadata->data.setting.uart_command && context->send_uart_command) {
             char command[64];
             snprintf(
                 command,
@@ -402,6 +409,16 @@ static void settings_action_callback(void* context, uint32_t index) {
     settings_set(settings_context->settings, index, 0, settings_context);
 }
 
+// submenu callback to open wifi hardware settings menu from settings actions
+#define WIFI_SETTINGS_MENU_ID 200
+static void wifi_settings_menu_callback(void* context, uint32_t index) {
+    UNUSED(index);
+    AppState* state = (AppState*)context;
+    if(!state) return;
+    show_wifi_settings_menu(state);
+    state->came_from_settings = true;
+}
+
 void settings_setup_gui(VariableItemList* list, SettingsUIContext* context) {
     FURI_LOG_D("SettingsSetup", "Entering settings_setup_gui");
     AppState* app_state = (AppState*)context->context;
@@ -412,6 +429,14 @@ void settings_setup_gui(VariableItemList* list, SettingsUIContext* context) {
         "Configuration  >",
         SETTINGS_COUNT,
         settings_menu_callback,
+        app_state);
+
+    // add hardware submenu item in settings actions menu
+    submenu_add_item(
+        app_state->settings_actions_menu,
+        "Hardware  >",
+        WIFI_SETTINGS_MENU_ID,
+        wifi_settings_menu_callback,
         app_state);
 
     // Iterate over all settings
@@ -528,10 +553,13 @@ bool settings_custom_event_callback(void* context, uint32_t event_id) {
         confirm_ctx->state = app_state;
 
         const char* info_text = "Created by: Spooky\n"
-                                "Updated by: Jay Candel\n"
-                                "Built with <3";
+                                "Updated by:\n"
+                                "@jaylikesbunda\n"
+                                "@tototo31\n"
+                                "Built with <3\n"
+                                "github.com/jaylikesbunda/ghost_esp\n\n";
 
-        confirmation_view_set_header(app_state->confirmation_view, "Ghost ESP v1.2.6");
+        confirmation_view_set_header(app_state->confirmation_view, "Ghost ESP v1.5.1");
         confirmation_view_set_text(app_state->confirmation_view, info_text);
 
         // Save current view before switching

@@ -1,0 +1,13 @@
+App(
+    appid="water_sensor_reader",
+    name="Water Sensor Reader",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="water_sensor_main",
+    stack_size=2 * 1024,
+    fap_icon="images/icon.png",
+    fap_category="GPIO/Sensors",
+    fap_author="MatveyStrelov",
+    fap_weburl="https://github.com/MatveyStrelov/flipper-water-sensor",
+    fap_version="1.0",
+    fap_description="Water Sensor Reader is a simple Flipper Zero application that reads an analog water sensor connected to a GPIO pin and displays its values in real-time. The app shows both the raw ADC value and the corresponding voltage in millivolts, along with a visual progress bar.",
+)

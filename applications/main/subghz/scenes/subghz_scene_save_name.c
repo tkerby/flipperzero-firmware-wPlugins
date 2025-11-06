@@ -63,7 +63,7 @@ void subghz_scene_save_name_on_enter(void* context) {
         furi_string_set(subghz->file_path, dir_name);
     }
 
-    strncpy(subghz->file_name_tmp, furi_string_get_cstr(file_name), SUBGHZ_MAX_LEN_NAME);
+    strlcpy(subghz->file_name_tmp, furi_string_get_cstr(file_name), SUBGHZ_MAX_LEN_NAME);
     text_input_set_header_text(text_input, "Name signal");
     text_input_set_result_callback(
         text_input,
@@ -96,12 +96,8 @@ bool subghz_scene_save_name_on_event(void* context, SceneManagerEvent event) {
                 furi_string_set(subghz->file_path, subghz->file_path_tmp);
             }
         }
-        if(scene_manager_has_previous_scene(subghz->scene_manager, SubGhzSceneSetSeed)) {
-            scene_manager_search_and_switch_to_previous_scene(
-                subghz->scene_manager, SubGhzSceneSetType);
-        } else {
-            scene_manager_previous_scene(subghz->scene_manager);
-        }
+
+        scene_manager_previous_scene(subghz->scene_manager);
 
         return true;
     } else if(event.type == SceneManagerEventTypeCustom) {

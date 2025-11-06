@@ -14,3 +14,9 @@ Short UP:    Game Menu
 
 - - Enter Games Only mode from Settings=>Desktop OR Up on Desktop and Ok on Lock Icon OR:
 ### FROM CLOCK: UP UP DOWN DOWN LEFT RIGHT LEFT RIGHT - ENTER/EXIT GAME MODE
+
+### HOW TO EXIT:
+
+Option A) Long LEFT for Clock, FROM CLOCK: UP UP DOWN DOWN LEFT RIGHT LEFT RIGHT
+
+As of October 18, 2025: Option B) You can exit game mode by deleting desktop settings file from SD card and restarting flipper.

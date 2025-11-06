@@ -10,8 +10,11 @@ void on_rgb_mode_changed(VariableItem* item) {
     uint8_t index = variable_item_get_current_value_index(item);
     app->settings.rgb_mode_index = index;
     variable_item_set_current_value_text(item, SETTING_VALUE_NAMES_RGB_MODE[index]);
+    const char* rgb_modes[] = {"stealth", "normal", "rainbow"};
+    const char* mode = "normal";
+    if(index < (sizeof(rgb_modes) / sizeof(rgb_modes[0]))) mode = rgb_modes[index];
     char command[32];
-    snprintf(command, sizeof(command), "setsetting -i 1 -v %d\n", index + 1);
+    snprintf(command, sizeof(command), "setrgbmode %s\n", mode);
     send_uart_command(command, app);
 }
 

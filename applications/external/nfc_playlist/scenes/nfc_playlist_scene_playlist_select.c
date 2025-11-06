@@ -1,10 +1,11 @@
 #include "../nfc_playlist.h"
 
-static void nfc_playlist_playlist_select_menu_callback(void* context) {
+static void nfc_playlist_playlist_select_scene_menu_callback(void* context) {
     furi_assert(context);
     NfcPlaylist* nfc_playlist = context;
     furi_string_swap(
-        nfc_playlist->settings.playlist_path, nfc_playlist->views.file_browser.output);
+        nfc_playlist->worker_info.settings->playlist_path,
+        nfc_playlist->views.file_browser.output);
     furi_string_reset(nfc_playlist->views.file_browser.output);
 
     Storage* storage = furi_record_open(RECORD_STORAGE);
@@ -12,13 +13,13 @@ static void nfc_playlist_playlist_select_menu_callback(void* context) {
 
     if(file_stream_open(
            stream,
-           furi_string_get_cstr(nfc_playlist->settings.playlist_path),
+           furi_string_get_cstr(nfc_playlist->worker_info.settings->playlist_path),
            FSAM_READ,
            FSOM_OPEN_EXISTING)) {
-        nfc_playlist->settings.playlist_length = 0;
+        nfc_playlist->worker_info.settings->playlist_length = 0;
         FuriString* line = furi_string_alloc();
         while(stream_read_line(stream, line)) {
-            nfc_playlist->settings.playlist_length++;
+            nfc_playlist->worker_info.settings->playlist_length++;
         }
         furi_string_free(line);
         file_stream_close(stream);
@@ -43,7 +44,7 @@ void nfc_playlist_playlist_select_scene_on_enter(void* context) {
         true);
     file_browser_set_callback(
         nfc_playlist->views.file_browser.view,
-        nfc_playlist_playlist_select_menu_callback,
+        nfc_playlist_playlist_select_scene_menu_callback,
         nfc_playlist);
     FuriString* tmp_str = furi_string_alloc_set_str(PLAYLIST_LOCATION);
     file_browser_start(nfc_playlist->views.file_browser.view, tmp_str);

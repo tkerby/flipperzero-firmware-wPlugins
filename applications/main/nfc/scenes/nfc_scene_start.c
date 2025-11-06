@@ -30,7 +30,7 @@ void nfc_scene_start_on_enter(void* context) {
     submenu_add_item(submenu, "Read", SubmenuIndexRead, nfc_scene_start_submenu_callback, nfc);
     submenu_add_item(
         submenu,
-        "Extract MF Keys",
+        "Extract MFC Keys",
         SubmenuIndexDetectReader,
         nfc_scene_start_submenu_callback,
         nfc);
@@ -47,7 +47,10 @@ void nfc_scene_start_on_enter(void* context) {
         nfc_scene_start_submenu_callback,
         nfc,
         !furi_hal_rtc_is_flag_set(FuriHalRtcFlagDebug),
-        "Enable\nDebug!");
+        "Enable\n"
+        "Settings >\n"
+        "System >\n"
+        "Debug");
 
     submenu_set_selected_item(
         submenu, scene_manager_get_scene_state(nfc->scene_manager, NfcSceneStart));

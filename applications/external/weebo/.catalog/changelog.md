@@ -1,3 +1,7 @@
+## 0.3
+ - Prevent 0x88 in UID byte 3
+ - Added more figures to the database
+
 ## 0.2
  - Info shows the ID of the figure
  - More IDs added for Smash characters and many older figures

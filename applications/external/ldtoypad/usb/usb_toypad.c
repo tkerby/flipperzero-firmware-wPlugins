@@ -10,6 +10,8 @@
 #include "../burtle.h"
 #include "../minifigures.h"
 #include "save_toypad.h"
+#include "bytes.h"
+#include "descriptors.h"
 
 // Define all the possible commands
 #define CMD_WAKE   0xB0
@@ -33,15 +35,12 @@
 
 #define HID_INTERVAL 1
 
-#define HID__VID_DEFAULT 0x0e6f // Logic3
-#define HID__PID_DEFAULT 0x0241
-
 #define USB_EP0_SIZE 64
 PLACE_IN_SECTION("MB_MEM2") static uint32_t ubuf[0x20];
 
 ToyPadEmu* emulator;
 
-int connected_status = 0;
+int connected_status = ConnectedStatusDisconnected;
 int get_connected_status() {
     return connected_status;
 }
@@ -49,90 +48,14 @@ void set_connected_status(int status) {
     connected_status = status;
 }
 
-// create a string variablethat contains the text: nothing to debug yet
-char debug_text_ep_in[HID_EP_SZ * 4] = "nothing";
-
-// char debug_text_ep_out[] = "nothing to debug yet";
-char debug_text_ep_out[HID_EP_SZ] = "nothing";
-
 char debug_text[64] = " ";
 
 void set_debug_text(char* text) {
     snprintf(debug_text, sizeof(debug_text), "%s", text);
 }
 
-void set_debug_text_ep_in(char* text) {
-    sprintf(debug_text_ep_in, "%s", text);
-}
-
-// a function that returns a pointer to the string
-char* get_debug_text_ep_in() {
-    return debug_text_ep_in;
-}
-char* get_debug_text_ep_out() {
-    return debug_text_ep_out;
-}
 char* get_debug_text() {
     return debug_text;
-}
-
-uint32_t readUInt32LE(const unsigned char* buffer, int offset) {
-    return (uint32_t)buffer[offset] | ((uint32_t)buffer[offset + 1] << 8) |
-           ((uint32_t)buffer[offset + 2] << 16) | ((uint32_t)buffer[offset + 3] << 24);
-}
-
-uint32_t readUInt32BE(const unsigned char* buffer, int offset) {
-    return ((uint32_t)buffer[offset] << 24) | ((uint32_t)buffer[offset + 1] << 16) |
-           ((uint32_t)buffer[offset + 2] << 8) | (uint32_t)buffer[offset + 3];
-}
-
-// Function to write uint16_t to little-endian
-void writeUInt16LE(uint8_t* buffer, uint16_t value) {
-    buffer[0] = value & 0xFF;
-    buffer[1] = (value >> 8) & 0xFF;
-}
-
-// Function to write uint16_t to big-endian
-void writeUInt16BE(uint8_t* buffer, uint16_t value, int offset) {
-    buffer[offset] = (value >> 8) & 0xFF;
-    buffer[offset + 1] = value & 0xFF;
-}
-
-// Function to write uint32_t to little-endian
-void writeUInt32LE(uint8_t* buffer, uint32_t value) {
-    buffer[0] = value & 0xFF;
-    buffer[1] = (value >> 8) & 0xFF;
-    buffer[2] = (value >> 16) & 0xFF;
-    buffer[3] = (value >> 24) & 0xFF;
-}
-
-// Function to write uint32_t to big-endian
-void writeUInt32BE(uint8_t* buffer, uint32_t value, int offset) {
-    buffer[offset] = (value >> 24) & 0xFF;
-    buffer[offset + 1] = (value >> 16) & 0xFF;
-    buffer[offset + 2] = (value >> 8) & 0xFF;
-    buffer[offset + 3] = value & 0xFF;
-}
-
-// Function to parse a Frame into a Request
-void parse_request(Request* request, Frame* f) {
-    if(request == NULL || f == NULL) return;
-
-    request->frame = *f;
-    uint8_t* p = f->payload;
-
-    request->cmd = p[0];
-    request->cid = p[1];
-    memcpy(request->payload, p + 2, f->len - 2); // Copy payload, excluding cmd and cid
-}
-
-// Function to parse a Frame from a buffer
-void parse_frame(Frame* frame, unsigned char* buf, int len) {
-    UNUSED(len);
-    frame->type = buf[0];
-    frame->len = buf[1];
-    memcpy(frame->payload, buf + 2, frame->len);
-    // frame->chksum = buf[frame->len + 2];
 }
 
 // Function to calculate checksum
@@ -152,32 +75,6 @@ void calculate_checksum(uint8_t* buf, int length, int place) {
     buf[place] = checksum;
 }
 
-// Function to build a Frame into a buffer
-int build_frame(Frame* frame, unsigned char* buf) {
-    buf[0] = frame->type;
-    buf[1] = frame->len;
-    memcpy(buf + 2, frame->payload, frame->len);
-    calculate_checksum(buf, frame->len + 2, -1);
-    return frame->len + 3;
-}
-
-// Function to parse a Response from a Frame
-void parse_response(Response* response, Frame* frame) {
-    response->frame = *frame;
-    response->cid = frame->payload[0];
-    response->payload_len = frame->len - 1;
-    memcpy(response->payload, frame->payload + 1, response->payload_len);
-}
-
-// Function to build a Response into a Frame
-int build_response(Response* response, unsigned char* buf) {
-    response->frame.type = FRAME_TYPE_RESPONSE;
-    response->frame.len = response->payload_len + 1;
-    response->frame.payload[0] = response->cid;
-    memcpy(response->frame.payload + 1, response->payload, response->payload_len);
-    return build_frame(&response->frame, buf);
-}
-
 Token* find_token_by_index(ToyPadEmu* emulator, int index) {
     for(int i = 0; i < MAX_TOKENS; i++) {
         if(emulator->tokens[i] != NULL && emulator->tokens[i]->index == index) {
@@ -186,120 +83,6 @@ Token* find_token_by_index(ToyPadEmu* emulator, int index) {
     }
     return NULL;
 }
-
-/* String descriptors */
-enum UsbDevDescStr {
-    UsbDevLang = 0,
-    UsbDevManuf = 1,
-    UsbDevProduct = 2,
-    UsbDevSerial = 3,
-};
-
-struct HidIntfDescriptor {
-    struct usb_interface_descriptor hid;
-    struct usb_hid_descriptor hid_desc;
-    struct usb_endpoint_descriptor hid_ep_in;
-    struct usb_endpoint_descriptor hid_ep_out;
-};
-
-struct HidConfigDescriptor {
-    struct usb_config_descriptor config;
-    struct HidIntfDescriptor intf_0;
-} __attribute__((packed));
-
-/* HID report descriptor */
-static const uint8_t hid_report_desc[] = {
-    0x06, 0x00, 0xFF, // Usage Page (Vendor Defined)
-    0x09, 0x01, // Usage (Vendor Usage 1)
-    0xA1, 0x01, // Collection (Application)
-    0x19, 0x01, //   Usage Minimum (Vendor Usage 1)
-    0x29, 0x20, //   Usage Maximum (Vendor Usage 32)
-    0x15, 0x00, //   Logical Minimum (0)
-    0x26, 0xFF, 0x00, //   Logical Maximum (255)
-    0x75, 0x08, //   Report Size (8 bits)
-    0x95, 0x20, //   Report Count (32 bytes)
-    0x81, 0x00, //   Input (Data, Array, Absolute)
-    0x19, 0x01, //   Usage Minimum (Vendor Usage 1)
-    0x29, 0x20, //   Usage Maximum (Vendor Usage 32)
-    0x91, 0x00, //   Output (Data, Array, Absolute)
-    0xC0 // End Collection
-};
-
-/* Device descriptor */
-static struct usb_device_descriptor hid_device_desc = {
-    .bLength = sizeof(struct usb_device_descriptor),
-    .bDescriptorType = USB_DTYPE_DEVICE,
-    .bcdUSB = VERSION_BCD(2, 0, 0),
-    .bDeviceClass = USB_CLASS_PER_INTERFACE,
-    .bDeviceSubClass = USB_SUBCLASS_NONE,
-    .bDeviceProtocol = USB_PROTO_NONE,
-    .bMaxPacketSize0 = USB_EP0_SIZE,
-    .idVendor = HID__VID_DEFAULT,
-    .idProduct = HID__PID_DEFAULT,
-    .bcdDevice = VERSION_BCD(1, 0, 0),
-    .iManufacturer = 1,
-    .iProduct = 2,
-    .iSerialNumber = 3,
-    .bNumConfigurations = 1,
-};
-
-/* Device configuration descriptor */
-static const struct HidConfigDescriptor hid_cfg_desc = {
-    .config =
-        {
-            .bLength = sizeof(struct usb_config_descriptor),
-            .bDescriptorType = USB_DTYPE_CONFIGURATION,
-            .wTotalLength = sizeof(struct HidConfigDescriptor),
-            .bNumInterfaces = 1,
-            .bConfigurationValue = 1,
-            .iConfiguration = NO_DESCRIPTOR,
-            .bmAttributes = USB_CFG_ATTR_RESERVED,
-            .bMaxPower = USB_CFG_POWER_MA(500),
-        },
-    .intf_0 =
-        {
-            .hid =
-                {
-                    .bLength = sizeof(struct usb_interface_descriptor),
-                    .bDescriptorType = USB_DTYPE_INTERFACE,
-                    .bInterfaceNumber = 0,
-                    .bAlternateSetting = 0,
-                    .bNumEndpoints = 2,
-                    .bInterfaceClass = USB_CLASS_HID,
-                    .bInterfaceSubClass = USB_HID_SUBCLASS_NONBOOT,
-                    .bInterfaceProtocol = USB_HID_PROTO_NONBOOT,
-                    .iInterface = NO_DESCRIPTOR,
-                },
-            .hid_desc =
-                {
-                    .bLength = sizeof(struct usb_hid_descriptor),
-                    .bDescriptorType = USB_DTYPE_HID,
-                    .bcdHID = VERSION_BCD(1, 0, 0),
-                    .bCountryCode = USB_HID_COUNTRY_NONE,
-                    .bNumDescriptors = 1,
-                    .bDescriptorType0 = USB_DTYPE_HID_REPORT,
-                    .wDescriptorLength0 = sizeof(hid_report_desc),
-                },
-            .hid_ep_in =
-                {
-                    .bLength = sizeof(struct usb_endpoint_descriptor),
-                    .bDescriptorType = USB_DTYPE_ENDPOINT,
-                    .bEndpointAddress = HID_EP_IN,
-                    .bmAttributes = USB_EPTYPE_INTERRUPT,
-                    .wMaxPacketSize = HID_EP_SZ,
-                    .bInterval = HID_INTERVAL,
-                },
-            .hid_ep_out =
-                {
-                    .bLength = sizeof(struct usb_endpoint_descriptor),
-                    .bDescriptorType = USB_DTYPE_ENDPOINT,
-                    .bEndpointAddress = HID_EP_OUT,
-                    .bmAttributes = USB_EPTYPE_INTERRUPT,
-                    .wMaxPacketSize = HID_EP_SZ,
-                    .bInterval = HID_INTERVAL,
-                },
-        },
-};
 
 static void hid_init(usbd_device* dev, FuriHalUsbInterface* intf, void* ctx);
 static void hid_deinit(usbd_device* dev);
@@ -388,9 +171,7 @@ void create_uid(Token* token, int id) {
 }
 
 Token* createCharacter(int id) {
-    Token* token = malloc(sizeof(Token)); // Allocate memory for the token
-
-    memset(token->token, 0, sizeof(token->token));
+    Token* token = (Token*)malloc(sizeof(Token)); // Allocate memory for the token
 
     token->id = id; // Set the ID
 
@@ -402,35 +183,22 @@ Token* createCharacter(int id) {
     return token; // Return the created token
 }
 
-// Helper to write a 16-bit little-endian value, no offset
-void writeUInt16LE_NO(uint8_t* buffer, uint16_t value) {
-    buffer[0] = (value >> 0) & 0xFF;
-    buffer[1] = (value >> 8) & 0xFF;
-}
-
-// Helper to write a 16-bit big-endian value, no offset
-void writeUInt16BE_NO(uint8_t* buffer, uint16_t value) {
-    buffer[0] = (value >> 8) & 0xFF;
-    buffer[1] = (value >> 0) & 0xFF;
-}
-
 Token* createVehicle(int id, uint32_t upgrades[2]) {
     Token* token = (Token*)malloc(sizeof(Token));
-    if(!token) {
-        return NULL;
-    }
 
     // Initialize the token data to zero
     memset(token, 0, sizeof(Token));
+
+    // Dont set an ID for vehicles, it is in the token buffer already, we can use this to see if it is an minfig or vehicle by checking if the ID set or not
 
     // Generate a random UID and store it
     create_uid(token, id);
 
     // Write the upgrades and ID to the token data
-    writeUInt32LE(&token->token[0x23 * 4], upgrades[0]); // Upgrades[0]
-    writeUInt16LE_NO(&token->token[0x24 * 4], id); // ID
-    writeUInt32LE(&token->token[0x25 * 4], upgrades[1]); // Upgrades[1]
-    writeUInt16BE_NO(&token->token[0x26 * 4], 1); // Constant value 1 (Big Endian)
+    writeUInt32LE(&token->token[0x23 * 4], upgrades[0], 0); // Upgrades[0]
+    writeUInt16LE(&token->token[0x24 * 4], id, 0); // ID
+    writeUInt32LE(&token->token[0x25 * 4], upgrades[1], 0); // Upgrades[1]
+    writeUInt16BE(&token->token[0x26 * 4], 1, 0); // Constant value 1 (Big Endian)
 
     snprintf(token->name, sizeof(token->name), "%s", get_vehicle_name(id));
 
@@ -452,15 +220,35 @@ bool ToyPadEmu_remove(int index) {
     buffer[4] = index; // Index of token to remove
     buffer[5] = 0x01; // Tag removed (not placed)
     memcpy(&buffer[6], emulator->tokens[index]->uid, 7); // UID
-    buffer[13] = generate_checksum_for_command(buffer, 13);
+    buffer[13] = generate_checksum(buffer, 13);
 
     usbd_ep_write(get_usb_device(), HID_EP_IN, buffer, sizeof(buffer));
 
-    // Free the token and clear the slot
-    free(emulator->tokens[index]);
+    if(emulator->tokens[index] != NULL) {
+        // Free the token and clear the slot
+        free(emulator->tokens[index]);
+    }
+
     emulator->tokens[index] = NULL;
 
     return true;
+}
+
+void ToyPadEmu_clear() {
+    // clear the tokens on the emulator and free the memory
+    for(int i = 0; i < MAX_TOKENS; i++) {
+        if(emulator->tokens[i] != NULL) {
+            free(emulator->tokens[i]);
+            emulator->tokens[i] = NULL;
+        }
+    }
+    memset(emulator->tokens, 0, sizeof(emulator->tokens));
+
+    // clear all box info
+    for(int i = 0; i < NUM_BOXES; i++) {
+        boxInfo[i].isFilled = false;
+        boxInfo[i].index = -1; // Reset index
+    }
 }
 
 static void hid_init(usbd_device* dev, FuriHalUsbInterface* intf, void* ctx) {
@@ -474,8 +262,8 @@ static void hid_init(usbd_device* dev, FuriHalUsbInterface* intf, void* ctx) {
     usb_hid.dev_descr->iProduct = 0;
     usb_hid.str_manuf_descr = NULL;
     usb_hid.str_prod_descr = NULL;
-    usb_hid.dev_descr->idVendor = HID__VID_DEFAULT;
-    usb_hid.dev_descr->idProduct = HID__PID_DEFAULT;
+    usb_hid.dev_descr->idVendor = HID_VID_TOYPAD;
+    usb_hid.dev_descr->idProduct = HID_PID_TOYPAD;
 
     if(cfg != NULL) {
         usb_hid.dev_descr->idVendor = cfg->vid;
@@ -500,6 +288,26 @@ static void hid_init(usbd_device* dev, FuriHalUsbInterface* intf, void* ctx) {
     usbd_init(dev, &usbd_hw, USB_EP0_SIZE, ubuf, sizeof(ubuf));
 
     usbd_connect(dev, true);
+
+    uint8_t default_tea_key[16] = {
+        0x55,
+        0xFE,
+        0xF6,
+        0xB0,
+        0x62,
+        0xBF,
+        0x0B,
+        0x41,
+        0xC9,
+        0xB3,
+        0x7C,
+        0xB4,
+        0x97,
+        0x3E,
+        0x29,
+        0x7B};
+
+    memcpy(emulator->tea_key, default_tea_key, sizeof(emulator->tea_key));
 }
 
 static void hid_deinit(usbd_device* dev) {
@@ -514,17 +322,8 @@ static void hid_deinit(usbd_device* dev) {
 
     free(burtle);
 
-    // clear the tokens on the emulator and free the memory
-    for(int i = 0; i < MAX_TOKENS; i++) {
-        if(emulator->tokens[i] != NULL) {
-            free(emulator->tokens[i]);
-            emulator->tokens[i] = NULL;
-        }
-    }
-    emulator->token_count = 0;
-    memset(emulator->tokens, 0, sizeof(emulator->tokens));
-
-    connected_status = 0;
+    connected_status =
+        ConnectedStatusCleanupWanted; // disconnected, needs cleanup outside of the ISR context
 }
 
 static void hid_on_wakeup(usbd_device* dev) {
@@ -544,6 +343,8 @@ static void hid_on_suspend(usbd_device* dev) {
         if(callback != NULL) {
             callback(false, cb_ctx);
         }
+        connected_status =
+            ConnectedStatusCleanupWanted; // disconnected, needs cleanup outside of the ISR context
     }
 }
 
@@ -565,9 +366,6 @@ void hid_out_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
 
     // Read data from the OUT endpoint
     int32_t len = usbd_ep_read(dev, HID_EP_OUT, req_buf, HID_EP_SZ);
-
-    // Make from the data a string and save it to the debug_text_ep_out string
-    sprintf(debug_text_ep_out, "%s", req_buf);
 
     if(len <= 0) return;
 
@@ -596,28 +394,6 @@ void hid_out_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
     case CMD_WAKE:
         sprintf(debug_text, "CMD_WAKE");
 
-        emulator->token_count = 0;
-
-        uint8_t default_tea_key[16] = {
-            0x55,
-            0xFE,
-            0xF6,
-            0xB0,
-            0x62,
-            0xBF,
-            0x0B,
-            0x41,
-            0xC9,
-            0xB3,
-            0x7C,
-            0xB4,
-            0x97,
-            0x3E,
-            0x29,
-            0x7B};
-
-        memcpy(emulator->tea_key, default_tea_key, sizeof(emulator->tea_key));
-
         // From: https://github.com/AlinaNova21/node-ld/blob/f54b177d2418432688673aa07c54466d2e6041af/src/lib/ToyPadEmu.js#L139
         uint8_t wake_payload[13] = {
             0x28, 0x63, 0x29, 0x20, 0x4C, 0x45, 0x47, 0x4F, 0x20, 0x32, 0x30, 0x31, 0x34};
@@ -626,7 +402,7 @@ void hid_out_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
 
         response.payload_len = sizeof(wake_payload);
 
-        connected_status = 2; // connected / reconnected
+        connected_status = ConnectedStatusReconnecting; // Connected / Reconnected
 
         break;
     case CMD_READ:
@@ -669,7 +445,7 @@ void hid_out_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
         if(token) {
             if(token->id) {
                 response.payload[0] = 0x00;
-                writeUInt32LE(buf, token->id);
+                writeUInt32LE(buf, token->id, 0);
                 tea_encrypt(buf, emulator->tea_key, response.payload + 1);
                 response.payload_len = 9;
             } else {
@@ -745,7 +521,7 @@ void hid_out_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
         uint32_t rand = burtle_rand(burtle);
 
         // write the rand to the response payload as Int32LE
-        writeUInt32LE(response.payload, rand);
+        writeUInt32LE(response.payload, rand, 0);
 
         // write the conf to the response payload as Int32BE
         writeUInt32BE(response.payload + 4, conf, 0);

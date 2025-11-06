@@ -18,6 +18,7 @@
 #include <gui/view_dispatcher.h>
 #include <gui/scene_manager.h>
 #include <gui/modules/submenu.h>
+#include <gui/modules/variable_item_list.h>
 #include <gui/modules/widget.h>
 #include <gui/modules/text_input.h>
 #include <gui/modules/popup.h>
@@ -40,9 +41,11 @@ typedef struct {
     Popup* popup;
     TextInput* text_input;
     Submenu* submenu;
+    VariableItemList* var_item_list;
 
     FuriString* file_path;
     char file_name_tmp[SUBREM_MAX_LEN_NAME];
+    uint8_t button_tmp;
 
     SubRemViewRemote* subrem_remote_view;
     SubRemViewEditMenu* subrem_edit_menu;

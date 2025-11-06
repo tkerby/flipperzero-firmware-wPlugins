@@ -17,7 +17,7 @@ const SettingMetadata SETTING_METADATA[SETTINGS_COUNT] = {
          .data.setting =
              {.max_value = RGB_MODE_COUNT - 1,
               .value_names = SETTING_VALUE_NAMES_RGB_MODE,
-              .uart_command = "setsetting -i 1 -v"},
+              .uart_command = NULL},
          .is_action = false},
     [SETTING_CHANNEL_HOP_DELAY] =
         {.name = "Channel Switch Delay",
@@ -87,7 +87,8 @@ const SettingMetadata SETTING_METADATA[SETTINGS_COUNT] = {
         .is_action = false}};
 
 bool setting_is_visible(SettingKey key) {
-    if(key == SETTING_ENABLE_FILTERING) {
+    if(key == SETTING_ENABLE_FILTERING || key == SETTING_CHANNEL_HOP_DELAY ||
+       key == SETTING_ENABLE_CHANNEL_HOPPING || key == SETTING_ENABLE_RANDOM_BLE_MAC) {
         return false;
     }
     return true;

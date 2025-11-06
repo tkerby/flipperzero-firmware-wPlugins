@@ -19,10 +19,11 @@ void seader_scene_read_card_success_on_enter(void* context) {
     PluginWiegand* plugin = seader->plugin_wiegand;
     Widget* widget = seader->widget;
 
-    FuriString* type_str = furi_string_alloc();
-    FuriString* bitlength_str = furi_string_alloc();
-    FuriString* credential_str = furi_string_alloc();
-    FuriString* sio_str = furi_string_alloc();
+    // Use reusable strings instead of allocating new ones
+    FuriString* type_str = seader->temp_string1;
+    FuriString* bitlength_str = seader->temp_string2;
+    FuriString* credential_str = seader->temp_string3;
+    FuriString* sio_str = seader->temp_string4;
 
     dolphin_deed(DolphinDeedNfcReadSuccess);
 
@@ -51,6 +52,11 @@ void seader_scene_read_card_success_on_enter(void* context) {
         }
     } else {
         furi_string_set(type_str, "Read error");
+
+        SeaderWorker* seader_worker = seader->worker;
+        SeaderUartBridge* seader_uart = seader_worker->uart;
+        seader_t_1_reset();
+        seader_ccid_check_for_sam(seader_uart);
     }
 
     widget_add_button_element(
@@ -95,10 +101,7 @@ void seader_scene_read_card_success_on_enter(void* context) {
             widget, 64, 48, AlignCenter, AlignCenter, FontSecondary, furi_string_get_cstr(sio_str));
     }
 
-    furi_string_free(credential_str);
-    furi_string_free(bitlength_str);
-    furi_string_free(type_str);
-    furi_string_free(sio_str);
+    // No need to free strings as they are reused from seader struct
 
     view_dispatcher_switch_to_view(seader->view_dispatcher, SeaderViewWidget);
 }

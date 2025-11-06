@@ -29,7 +29,6 @@ __pycache__/
 
 .obj/
 bindings/
-.DS_Store
 .mxproject
 Brewfile.lock.json
 

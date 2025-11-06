@@ -35,16 +35,21 @@ typedef struct {
 } AppConfigOption;
 
 typedef enum {
-    SpeedIndex_19200 = 40,
-    SpeedIndex_38400 = 16,
-    SpeedIndex_57600 = 8,
-    SpeedIndex_61440 = 7,
-    SpeedIndex_68266 = 6,
-    SpeedIndex_73728 = 5,
+    SpeedIndex_40_19K = 40,
+    SpeedIndex_16_38K = 16,
+    SpeedIndex_8_56K = 8,
+    SpeedIndex_7_61K = 7,
+    SpeedIndex_6_68K = 6,
+    SpeedIndex_5_74K = 5,
+    SpeedIndex_4_81K = 4,
+    SpeedIndex_3_89K = 3,
+    SpeedIndex_2_99K = 2,
+    SpeedIndex_1_111K = 1,
+    SpeedIndex_0_127K = 0,
 } SpeedIndex;
 
 // All possible high-speed indexes
-extern const AppConfigOption speed_index_options[5];
+extern const AppConfigOption speed_index_options[10];
 
 // Finds the high-speed index option by its value
 const AppConfigOption* speed_index_by_value(SpeedIndex value);

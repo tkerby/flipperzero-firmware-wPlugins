@@ -1,0 +1,302 @@
+#include <furi.h>
+#include <gui/gui.h>
+#include <input/input.h>
+#include <math.h>
+
+// Time units for cycling
+typedef enum {
+    UNIT_HOURS,
+    UNIT_DAYS,
+    UNIT_YEARS,
+    UNIT_COUNT
+} TimeUnit;
+
+// Application state
+typedef struct {
+    double velocity_c; // Velocity as fraction of c (0.0 to 0.999)
+    double time_value; // Time duration value
+    TimeUnit time_unit; // Current time unit
+    bool running; // App running state
+} DilateState;
+
+// Constants explicitly typed as double to avoid float/double promotion issues
+static const double HOURS_TO_SECONDS = 3600.0;
+static const double DAYS_TO_SECONDS = 86400.0;
+static const double YEARS_TO_SECONDS = 31536000.0;
+static const double VELOCITY_MAX = 0.999;
+static const double VELOCITY_HIGH_PRECISION = 0.99;
+static const double VELOCITY_MID_PRECISION = 0.90;
+static const double TIME_MIN = 0.1;
+static const double TIME_MAX = 999.9;
+static const double TIME_STEP = 0.1;
+static const double VELOCITY_STEP_COARSE = 0.05;
+static const double VELOCITY_STEP_MEDIUM = 0.01;
+static const double VELOCITY_STEP_FINE = 0.001;
+static const double ZERO = 0.0;
+static const double ONE = 1.0;
+static const double SIXTY = 60.0;
+static const double HUNDRED = 100.0;
+
+// Physics calculations - verified formulas from CLAUDE.md
+static double lorentz_factor(double v_over_c) {
+    // Prevent division by zero at light speed
+    if(v_over_c >= ONE) return (double)INFINITY;
+    if(v_over_c < ZERO) return ONE; // Handle negative velocities
+    double v_squared = v_over_c * v_over_c;
+    return ONE / sqrt(ONE - v_squared);
+}
+
+// Convert time to seconds for consistent calculations
+static double time_to_seconds(double value, TimeUnit unit) {
+    switch(unit) {
+    case UNIT_HOURS:
+        return value * HOURS_TO_SECONDS;
+    case UNIT_DAYS:
+        return value * DAYS_TO_SECONDS;
+    case UNIT_YEARS:
+        return value * YEARS_TO_SECONDS;
+    default:
+        return value;
+    }
+}
+
+// Format time difference with auto-scaling
+static void format_time_difference(double diff_seconds, char* buffer, size_t buffer_size) {
+    if(diff_seconds < SIXTY) {
+        // Show seconds
+        if(diff_seconds < ONE) {
+            snprintf(buffer, buffer_size, "+%.1fs", diff_seconds);
+        } else {
+            snprintf(buffer, buffer_size, "+%.0fs", diff_seconds);
+        }
+    } else if(diff_seconds < HOURS_TO_SECONDS) {
+        // Show minutes
+        double minutes = diff_seconds / SIXTY;
+        snprintf(buffer, buffer_size, "+%.1fm", minutes);
+    } else if(diff_seconds < DAYS_TO_SECONDS) {
+        // Show hours
+        double hours = diff_seconds / HOURS_TO_SECONDS;
+        snprintf(buffer, buffer_size, "+%.1fh", hours);
+    } else if(diff_seconds < YEARS_TO_SECONDS) {
+        // Show days
+        double days = diff_seconds / DAYS_TO_SECONDS;
+        snprintf(buffer, buffer_size, "+%.1fd", days);
+    } else {
+        // Show years
+        double years = diff_seconds / YEARS_TO_SECONDS;
+        if(years >= HUNDRED) {
+            snprintf(
+                buffer, buffer_size, "+%.1gy", years); // Use %g for automatic scientific notation
+        } else {
+            snprintf(buffer, buffer_size, "+%.1fy", years);
+        }
+    }
+}
+
+// Format velocity with adaptive precision
+static void format_velocity(double v_c, char* buffer, size_t buffer_size) {
+    if(v_c >= VELOCITY_MAX) {
+        snprintf(buffer, buffer_size, "0.999c MAX");
+    } else if(v_c >= VELOCITY_HIGH_PRECISION) {
+        snprintf(buffer, buffer_size, "%.3fc", v_c);
+    } else if(v_c >= VELOCITY_MID_PRECISION) {
+        snprintf(buffer, buffer_size, "%.2fc", v_c);
+    } else {
+        snprintf(buffer, buffer_size, "%.2fc", v_c);
+    }
+}
+
+// Format time value with unit
+static void format_time(double value, TimeUnit unit, char* buffer, size_t buffer_size) {
+    const char* unit_symbols[] = {"h", "d", "y"};
+    snprintf(buffer, buffer_size, "%.1f%s", value, unit_symbols[unit]);
+}
+
+// Get velocity adjustment step based on current velocity
+static double get_velocity_step(double current_v) {
+    if(current_v < VELOCITY_MID_PRECISION) {
+        return VELOCITY_STEP_COARSE;
+    } else if(current_v < VELOCITY_HIGH_PRECISION) {
+        return VELOCITY_STEP_MEDIUM;
+    } else {
+        return VELOCITY_STEP_FINE;
+    }
+}
+
+// Draw callback for GUI
+static void dilate_draw_callback(Canvas* canvas, void* ctx) {
+    DilateState* state = (DilateState*)ctx;
+
+    canvas_clear(canvas);
+    canvas_set_font(canvas, FontPrimary);
+
+    // Format velocity display
+    char velocity_str[32];
+    format_velocity(state->velocity_c, velocity_str, sizeof(velocity_str));
+
+    // Format time display
+    char time_str[32];
+    format_time(state->time_value, state->time_unit, time_str, sizeof(time_str));
+
+    // Calculate physics
+    double traveler_seconds = time_to_seconds(state->time_value, state->time_unit);
+    double earth_seconds = traveler_seconds * lorentz_factor(state->velocity_c);
+    double diff_seconds = earth_seconds - traveler_seconds;
+
+    // Handle edge case: velocity at or above light speed
+    if(state->velocity_c >= ONE) {
+        canvas_draw_str(canvas, 2, 12, "SPEED:");
+        canvas_draw_str(canvas, 50, 12, "1.00c");
+        canvas_draw_str(canvas, 2, 24, "TIME:");
+        canvas_draw_str(canvas, 50, 24, time_str);
+        canvas_draw_str(canvas, 2, 36, "──────────────");
+        canvas_draw_str(canvas, 2, 48, "UNDEFINED");
+        return;
+    }
+
+    // Format results
+    char earth_time_str[32];
+    char diff_str[32];
+
+    // Convert back to display units for Earth time
+    double earth_display_time = earth_seconds / time_to_seconds(ONE, state->time_unit);
+
+    // Format Earth time in same units as input
+    const char* unit_symbols[] = {"h", "d", "y"};
+    if(earth_display_time >= HUNDRED) {
+        snprintf(
+            earth_time_str,
+            sizeof(earth_time_str),
+            "%.1g%s",
+            earth_display_time,
+            unit_symbols[state->time_unit]);
+    } else {
+        snprintf(
+            earth_time_str,
+            sizeof(earth_time_str),
+            "%.1f%s",
+            earth_display_time,
+            unit_symbols[state->time_unit]);
+    }
+
+    // Format difference with auto-scaling
+    format_time_difference(diff_seconds, diff_str, sizeof(diff_str));
+
+    // Display layout matching specifications
+    canvas_draw_str(canvas, 2, 12, "SPEED:");
+    canvas_draw_str(canvas, 50, 12, velocity_str);
+
+    canvas_draw_str(canvas, 2, 24, "TIME:");
+    canvas_draw_str(canvas, 50, 24, time_str);
+
+    canvas_draw_str(canvas, 2, 36, "──────────────");
+
+    canvas_draw_str(canvas, 2, 48, "YOU:");
+    canvas_draw_str(canvas, 50, 48, time_str);
+
+    canvas_draw_str(canvas, 2, 58, "EARTH:");
+    canvas_draw_str(canvas, 50, 58, earth_time_str);
+
+    // Only show difference if meaningful (> 0.1 seconds)
+    if(diff_seconds > TIME_MIN) {
+        canvas_draw_str(canvas, 2, 68, "DIFF:");
+        canvas_draw_str(canvas, 50, 68, diff_str);
+    }
+}
+
+// Input callback for GUI
+static void dilate_input_callback(InputEvent* input_event, void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
+    furi_message_queue_put(event_queue, input_event, FuriWaitForever);
+}
+
+// Main application entry point
+int32_t dilate_app(void* p) {
+    UNUSED(p);
+
+    // Initialize state with starting values from specs
+    DilateState* state = malloc(sizeof(DilateState));
+    state->velocity_c = VELOCITY_MID_PRECISION; // Initial state: 0.90c
+    state->time_value = 1.0; // Initial state: 1.0 years
+    state->time_unit = UNIT_YEARS;
+    state->running = true;
+
+    // Set up GUI
+    Gui* gui = furi_record_open(RECORD_GUI);
+    ViewPort* view_port = view_port_alloc();
+
+    view_port_draw_callback_set(view_port, dilate_draw_callback, state);
+    view_port_input_callback_set(view_port, dilate_input_callback, NULL);
+
+    // Create event queue for input
+    FuriMessageQueue* event_queue = furi_message_queue_alloc(8, sizeof(InputEvent));
+    view_port_input_callback_set(view_port, dilate_input_callback, event_queue);
+
+    gui_add_view_port(gui, view_port, GuiLayerFullscreen);
+
+    // Main event loop
+    InputEvent event;
+    while(state->running) {
+        if(furi_message_queue_get(event_queue, &event, 100) == FuriStatusOk) {
+            if(event.type == InputTypePress) {
+                switch(event.key) {
+                case InputKeyUp:
+                    // Increase velocity with adaptive step
+                    state->velocity_c += get_velocity_step(state->velocity_c);
+                    if(state->velocity_c > VELOCITY_MAX) {
+                        state->velocity_c = VELOCITY_MAX; // Cap at 0.999c
+                    }
+                    break;
+
+                case InputKeyDown:
+                    // Decrease velocity with adaptive step
+                    state->velocity_c -= get_velocity_step(state->velocity_c);
+                    if(state->velocity_c < ZERO) {
+                        state->velocity_c = ZERO;
+                    }
+                    break;
+
+                case InputKeyRight:
+                    // Increase time duration
+                    state->time_value += TIME_STEP;
+                    if(state->time_value > TIME_MAX) {
+                        state->time_value = TIME_MAX;
+                    }
+                    break;
+
+                case InputKeyLeft:
+                    // Decrease time duration
+                    state->time_value -= TIME_STEP;
+                    if(state->time_value < TIME_MIN) {
+                        state->time_value = TIME_MIN;
+                    }
+                    break;
+
+                case InputKeyOk:
+                    // Cycle time units: h → d → y → h
+                    state->time_unit = (state->time_unit + 1) % UNIT_COUNT;
+                    break;
+
+                case InputKeyBack:
+                    // Exit application
+                    state->running = false;
+                    break;
+
+                default:
+                    break;
+                }
+            }
+        }
+        view_port_update(view_port);
+    }
+
+    // Cleanup
+    gui_remove_view_port(gui, view_port);
+    view_port_free(view_port);
+    furi_message_queue_free(event_queue);
+    furi_record_close(RECORD_GUI);
+    free(state);
+
+    return 0;
+}

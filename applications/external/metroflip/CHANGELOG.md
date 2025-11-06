@@ -1,11 +1,24 @@
+## v0.9
+
+- Fix unsupported card crash
+- RENFE Suma 10 support ADDED 
+- GEG Connect AID added to DESfire list.
+- Top Up log parsing and animations.
+- 16 new rail lines, including JR lines like Chuo, Negishi, Joban, and Yamanote; and all of Tokyu's operating lines.
+- Added support for parsing area codes for future expansion on non-Tokyo areas.
+- Added saving function for Suica/Japan Rail IC readings.
+- Various bug fixes and safer memory manegements improvements.
+
 ## v0.8
 
-- Added 80+ Desfire card AIDs (can't all be parsed, just company names)  
-- Fixed Desfire parsing  
-- Added Calypso saving to save Calypso cards  
-- Fixed Navigo crash  
-- Fixed Clipper timestamp epoch  
-- Fixed Calypso file saving  
+- Added 80+ card AIDs (most may not be fully parsed)
+- Added more AIDs for DESFire
+- Added Calypso card saving support
+- Fixed DESFire parsing
+- Fixed Navigo crash
+- Fixed crash when opening Navigo files after exit
+- Fixed Clipper timestamp epoch conversion
+- Fixed Calypso file saving 
 
 ## v0.7
 
@@ -24,10 +37,10 @@
 Big update!
 
 - Custom API Added: A custom API for Metroflip has been introduced for smoother operation and better scalability  
-- Parsers Moved to Plugins: All parsers have been moved to individual plugins, loaded from the SD card as `.fal` files  
-- Scene Optimization: All scenes merged into `metroflip_scene_parse.c` for simplification  
+- Parsers Moved to Plugins: All parsers have been moved to individual plugins, loaded from the SD card as '.fal' files  
+- Scene Optimization: All scenes merged into 'metroflip_scene_parse.c' for simplification  
 - RAM Usage Reduced: Over 45% reduction in RAM usage  
-- Navigo Station List: Moved to `apps_assets`  
+- Navigo Station List: Moved to 'apps_assets'
 - Unified Calypso Parser: Thanks to DocSystem  
 - Rav-Kav Moved to Calypso Parser: Credit to luu176  
 

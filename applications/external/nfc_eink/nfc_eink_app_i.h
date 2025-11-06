@@ -40,7 +40,7 @@
 
 #define NFC_EINK_NAME_SIZE       (50)
 #define NFC_EINK_APP_EXTENSION   ".eink"
-#define NFC_EINK_APP_FOLDER_NAME "nfc_eink"
+#define NFC_EINK_APP_FOLDER_NAME "nfc/nfc_eink"
 
 #define NFC_EINK_APP_FOLDER          EXT_PATH(NFC_EINK_APP_FOLDER_NAME)
 #define NFC_EINK_APP_TEXT_STORE_SIZE (100)

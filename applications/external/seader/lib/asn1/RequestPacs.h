@@ -13,6 +13,7 @@
 
 /* Including external dependencies */
 #include "ContentElementTag.h"
+#include <OCTET_STRING.h>
 #include <constr_SEQUENCE.h>
 
 #ifdef __cplusplus
@@ -22,6 +23,7 @@ extern "C" {
 /* RequestPacs */
 typedef struct RequestPacs {
 	ContentElementTag_t	 contentElementTag;
+	OCTET_STRING_t	*oid	/* OPTIONAL */;
 	
 	/* Context for parsing across buffer boundaries */
 	asn_struct_ctx_t _asn_ctx;
@@ -30,7 +32,7 @@ typedef struct RequestPacs {
 /* Implementation */
 extern asn_TYPE_descriptor_t asn_DEF_RequestPacs;
 extern asn_SEQUENCE_specifics_t asn_SPC_RequestPacs_specs_1;
-extern asn_TYPE_member_t asn_MBR_RequestPacs_1[1];
+extern asn_TYPE_member_t asn_MBR_RequestPacs_1[2];
 
 #ifdef __cplusplus
 }

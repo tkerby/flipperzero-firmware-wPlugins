@@ -1,7 +1,6 @@
 #include "barcode_app.h"
 
 #include "barcode_app_icons.h"
-#include <assets_icons.h>
 #include <notification/notification.h>
 #include <notification/notification_messages.h>
 
@@ -26,7 +25,7 @@ const NotificationSequence sequence_display_backlight_barcode = {
 static bool select_file(const char* folder, FuriString* file_path) {
     DialogsApp* dialogs = furi_record_open(RECORD_DIALOGS);
     DialogsFileBrowserOptions browser_options;
-    dialog_file_browser_set_basic_options(&browser_options, "", &I_barcode_10);
+    dialog_file_browser_set_basic_options(&browser_options, "", NULL);
     browser_options.base_path = DEFAULT_USER_BARCODES;
     furi_string_set(file_path, folder);
 
