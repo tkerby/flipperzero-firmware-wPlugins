@@ -46,6 +46,13 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [IconEdit v0.2 (By rdefeo)](https://github.com/rdefeo/iconedit)
 - Added: [MagicBand Plus Lights v1.0 (By Haw8411)](https://github.com/Haw8411/magic-band-plus-lights)
 - Updated: [Metroflip v1.0 (By luu176)](https://github.com/luu176/Metroflip)
+- OFW: [Devboard docs update #4301 (By alexeyzakh)](https://github.com/flipperdevices/flipperzero-firmware/pull/4301)
+- OFW: [github: fail submit_sdk on catalog api error #4294 (By an5t)](https://github.com/flipperdevices/flipperzero-firmware/pull/4294) (Not Used)
+- OFW: [NFC lib: Expose nfc_common.h #4283 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4283) (Already In RM)
+- OFW: [NFC FeliCa Minor Fix: FelicaPollerEventType should only be Incomplete if the tag is FeliCa Lite #4279 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4279) (Already In RM)
+- OFW: [Fix Ultralight EV1 regression #4287 (By noproto)](https://github.com/flipperdevices/flipperzero-firmware/pull/4287) (Already In RM)
+- OFW: [Fix MIFARE Plus SL1 sector overrun issue in state machine #4288 (By noproto)](https://github.com/flipperdevices/flipperzero-firmware/pull/4288) (Already In RM)
+- OFW: [NFC: Re-apply fix for reading PWD locked MFUL #4295 (By mishamyte)](https://github.com/flipperdevices/flipperzero-firmware/pull/4295) (Already In RM)
 
 <a name="release">
 
