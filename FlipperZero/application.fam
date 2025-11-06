@@ -7,6 +7,6 @@ App(
     fap_author="Invizabel",
     fap_weburl="https://github.com/Invizabel/fish",
     fap_icon="assets/icon.png",
-    fap_category="GAMES",
+    fap_category="Games",
     fap_version="1.0"
 )
