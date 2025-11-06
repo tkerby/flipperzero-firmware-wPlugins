@@ -1564,7 +1564,7 @@ static void lora_config_meshtastic_change(VariableItem* item) {
 */
 static const char* config_freq_config_label = "Frequency";
 static const char* config_freq_entry_text = "Enter frequency (MHz)";
-static const char* config_freq_default_value = "915.0";
+static const char* config_freq_default_value = "923.375";
 static void lora_config_freq_text_updated(void* context) {
     LoRaApp* app = (LoRaApp*)context;
     bool redraw = true;
@@ -1736,13 +1736,9 @@ static void lora_view_sniffer_draw_callback(Canvas* canvas, void* model) {
         frame[index++] = (uint8_t)((bytesRead >> 8) & 0xFF); // high byte
         frame[index++] = (uint8_t)(bytesRead & 0xFF); // low byte
 
-        FURI_LOG_E(TAG, "hdr -> %s", frame);
-
         // Payload
         memcpy(&frame[index], receiveBuff, bytesRead);
         index += bytesRead;
-
-        FURI_LOG_E(TAG, "hdr + payload -> %s", frame);
 
         // RSSI
         int16_t rssi = getRSSI();
@@ -1758,8 +1754,6 @@ static void lora_view_sniffer_draw_callback(Canvas* canvas, void* model) {
         frame[index++] = 'E';
         frame[index++] = '\r';
         frame[index++] = '\n';
-
-        FURI_LOG_E(TAG, "%s", frame);
 
         serial_send_bytes(frame, index);
 

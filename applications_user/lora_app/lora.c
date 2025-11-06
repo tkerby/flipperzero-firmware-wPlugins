@@ -603,7 +603,12 @@ bool configSetSpreadingFactor(int sf) {
     if(sf < 5 || sf > 12) {
         return false;
     }
-    lowDataRateOptimize = (sf >= 11) ? 1 : 0; // Turn on for SF11+SF12, turn off for anything else
+    FURI_LOG_E(TAG, "SF %d", sf);
+    FURI_LOG_E(TAG, "BW %d", bandwidth);
+    lowDataRateOptimize = (sf == 12 && bandwidth == 4) ?
+                              1 :
+                              0; // Turn on for SF12 125 kHz, turn off for anything else
+    FURI_LOG_E(TAG, "LOD %d", lowDataRateOptimize);
     spreadingFactor = sf;
     updateModulationParameters();
     return true;
