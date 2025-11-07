@@ -1675,10 +1675,6 @@ void bytesToAsciiHex(uint8_t* buffer, uint8_t length) {
         asciiBuff[i * 2 + 1] = "0123456789ABCDEF"[buffer[i] & 0x0F]; // Low nibble
     }
     asciiBuff[length * 2] = '\0'; // Null-terminate the string
-
-    //FURI_LOG_E(TAG, "OUT bytesToAsciiHex ");
-    //for (int i = 0; i < length; i++)
-    //FURI_LOG_E(TAG, "%02X ", buffer[i]);
 }
 
 void asciiHexToBytes(const char* hex, uint8_t* bytes, size_t length) {
@@ -1687,11 +1683,8 @@ void asciiHexToBytes(const char* hex, uint8_t* bytes, size_t length) {
     }
 }
 
-uint8_t payload[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xD0, 0x2B, 0x98, 0x6C, 0xAA, 0x20, 0x16, 0x99,
-                     0x21, 0x16, 0x00, 0xD0, 0x08, 0x01, 0x12, 0x24, 0x4C, 0x6F, 0x20, 0x20,
-                     0x65, 0x73, 0x65, 0x6E, 0x63, 0x69, 0x61, 0x6C, 0x20, 0x65, 0x73, 0x20,
-                     0x69, 0x6E, 0x76, 0x69, 0x73, 0x69, 0x62, 0x6C, 0x65, 0x20, 0x61, 0x20,
-                     0x6C, 0x6F, 0x73, 0x20, 0x6F, 0x6A, 0x6F, 0x73, 0x48, 0x00};
+uint8_t hola[] = "¡Hola mundo!, esta es una prueba.";
+uint8_t mundo[] = " lo esencial :D";
 
 /**
  * @brief      Callback for drawing the sniffer screen.
@@ -1709,21 +1702,13 @@ static void lora_view_sniffer_draw_callback(Canvas* canvas, void* model) {
     // Receive a packet over radio
     int bytesRead = lora_receive_async(receiveBuff, sizeof(receiveBuff));
 
-    size_t payloadLen = sizeof(payload);
-
     if(bytesRead > -1) {
         FURI_LOG_E(TAG, "Packet received... ");
         receiveBuff[bytesRead] = '\0';
         bytesToAsciiHex(receiveBuff, bytesRead);
 
-        memcpy(receiveBuff, payload, payloadLen);
-        bytesRead = (uint16_t)payloadLen;
-
         FURI_LOG_E(TAG, "bytesRead = %d", bytesRead);
         FURI_LOG_E(TAG, "receiveBuff -> %s", receiveBuff);
-
-        //uint8_t hello[13] = "HELL0 WORLD!";
-        //serial_send_bytes(hello,13);
 
         uint8_t frame[512];
         uint16_t index = 0;
@@ -1755,7 +1740,11 @@ static void lora_view_sniffer_draw_callback(Canvas* canvas, void* model) {
         frame[index++] = '\r';
         frame[index++] = '\n';
 
-        serial_send_bytes(frame, index);
+        for(uint16_t i = 0; i < index; i += 64) {
+            size_t chunk = (index - i > 64) ? 64 : (index - i);
+            serial_send_bytes(frame + i, chunk);
+            furi_delay_ms(2);
+        }
 
         if(flag_file) {
             DateTime curr_dt;

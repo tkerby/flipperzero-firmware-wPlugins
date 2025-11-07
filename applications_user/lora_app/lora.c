@@ -360,7 +360,7 @@ void configureRadioEssentials() {
 
     // Just a single SPI command to set the frequency, but it's broken out
     // into its own function so we can call it on-the-fly when the config changes
-    configSetFrequency(915000000); // Set default frequency to 915mhz
+    configSetFrequency(923375000); // Set default frequency to 915mhz
 
     // Set modem to LoRa (described in datasheet section 13.4.2)
     furi_hal_gpio_write(pin_nss1, false); // Enable radio chip-select
