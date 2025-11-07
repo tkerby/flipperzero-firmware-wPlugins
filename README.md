@@ -2,6 +2,14 @@
 
 Complete Flipper Zero application (.fap) to control and manage your Chameleon Ultra device via USB or Bluetooth.
 
+**🎬 Features fun bar animation when devices connect!** Watch Chameleon and Dolphin meet at a bar! 🍺
+
+## Quick Links
+
+- 📖 [Quick Start Guide](docs/QUICK_START.md) - Get started in minutes
+- 🎨 [Animation Documentation](docs/ANIMATION.md) - Learn about the connection animation
+- 🔧 [Protocol Documentation](docs/PROTOCOL.md) - Detailed protocol specification
+
 ## Features
 
 ### Connection Methods
@@ -48,6 +56,9 @@ Chameleon_Flipper/
 │   └── ble_handler/                   # Bluetooth handler
 │       ├── ble_handler.h
 │       └── ble_handler.c
+├── views/                             # Custom views
+│   ├── chameleon_animation_view.h     # Bar animation view
+│   └── chameleon_animation_view.c
 ├── scenes/                            # GUI scenes
 │   ├── chameleon_scene.h              # Scene headers
 │   ├── chameleon_scene.c              # Scene manager
@@ -65,8 +76,12 @@ Chameleon_Flipper/
 │   ├── chameleon_scene_tag_write.c
 │   ├── chameleon_scene_diagnostic.c
 │   └── chameleon_scene_about.c
-└── icons/                             # Application icons
-    └── chameleon_10px.png
+├── icons/                             # Application icons
+│   └── chameleon_10px.png
+└── docs/                              # Documentation
+    ├── QUICK_START.md                 # Quick start guide
+    ├── ANIMATION.md                   # Animation details
+    └── PROTOCOL.md                    # Protocol specification
 ```
 
 ## Protocol Implementation
