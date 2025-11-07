@@ -14,513 +14,140 @@
 #include <iconedit_icons.h>
 
 #include "icon.h"
-#include "utils/editor_tools.h"
-#include "utils/file_utils.h"
-#include "utils/draw.h"
+#include "panels/panels.h"
 
-#define VIEW_X     64
-#define VIEW_Y     2
-#define VIEW_SCALE 6
-#define PREVIEW_X  50
-#define PREVIEW_Y  45
-
-typedef struct {
-    FuriApiLock lock;
-    bool result;
-} TextInputContext;
-
-static void text_input_back_callback(void* context) {
-    TextInputContext* ti_context = context;
-    ti_context->result = false;
-    api_lock_unlock(ti_context->lock);
-}
-static void text_input_callback(void* context) {
-    TextInputContext* ti_context = context;
-    ti_context->result = true;
-    api_lock_unlock(ti_context->lock);
-}
-
+// We don't just draw the current tab or panel. Since some panels can overlay
+// others (like the modal panels), we need to draw them last
 void iconedit_draw_callback(Canvas* canvas, void* context) {
     IconEdit* app = context;
-    IEIcon* icon = app->icon;
+    // IEIcon* icon = app->icon;
 
-    FURI_LOG_I("Editor", "draw_callback");
+    // FURI_LOG_I("Editor", "draw_callback");
     canvas_clear(canvas);
 
-    // draw icon name
-    canvas_draw_str(canvas, 1, 10, furi_string_get_cstr(icon->name));
-
-    // draw tools / buttons 3x3
-    int tool_R = 3;
-    int tool_x = 2; // These should be #defines
-    int tool_y = 13;
-    int save_x = 0;
-    int save_y = 0;
-    for(int t = Tool_START; t < Tool_COUNT; t++) {
-        canvas_draw_icon(
-            canvas,
-            tool_x + 2 + (t % tool_R) * TOOL_WIDTH,
-            tool_y + 2 + (t / tool_R) * TOOL_HEIGHT,
-            EditorTool_Icon[t]);
-        // IEIcon* tool = tools_get_icon(t);
-        // if(tool) {
-        //     size_t size;
-        //     uint8_t* xbm = convert_bytes_to_xbm_bits(tool, &size);
-        //     // log_xbm_data(xbm, size);
-        //     // FURI_LOG_I("editor", "XMB bytes %d - %d x %d", size, tool->width, tool->height);
-        //     canvas_draw_xbm(
-        //         canvas,
-        //         tool_x + 2 + (t % tool_R) * TOOL_WIDTH,
-        //         tool_y + 2 + (t / tool_R) * TOOL_HEIGHT,
-        //         tool->width,
-        //         tool->height,
-        //         xbm);
-        //     free(xbm);
-        // } else {
-        //     canvas_draw_disc(
-        //         canvas,
-        //         (tool_x + (t % tool_R) * TOOL_WIDTH) + TOOL_WIDTH / 2,
-        //         (tool_y + (t / tool_R) * TOOL_HEIGHT) + TOOL_HEIGHT / 2,
-        //         4);
-        // }
-        if(t == Tool_Save) {
-            save_x = tool_x + (t % tool_R) * TOOL_WIDTH;
-            save_y = tool_y + (t / tool_R) * TOOL_HEIGHT;
-        }
-        if((EditorTool)t == app->tool) {
-            ie_draw_str(canvas, 1, 64 - 7, AlignLeft, AlignTop, Font5x7, EditorTool_Desc[t]);
-
-            if(app->mode == Mode_Tools) {
-                canvas_draw_frame(
-                    canvas,
-                    tool_x + (t % tool_R) * TOOL_WIDTH,
-                    tool_y + (t / tool_R) * TOOL_HEIGHT,
-                    TOOL_WIDTH,
-                    TOOL_HEIGHT);
-            } else {
-                // draw corner caps over our tool - not the full frame
-                canvas_set_color(canvas, ColorXOR);
-                canvas_draw_box(
-                    canvas,
-                    tool_x + (t % tool_R) * TOOL_WIDTH,
-                    tool_y + (t / tool_R) * TOOL_HEIGHT,
-                    TOOL_WIDTH,
-                    TOOL_HEIGHT);
-                canvas_set_color(canvas, ColorBlack);
-            }
-        }
+    // for now, playback is fullscreen-ish
+    if(app->panel == Panel_Playback) {
+        playback_draw(canvas, app);
+        return;
     }
 
-    // draw editor grid? - assumes square canvas
-    for(size_t i = 0; i < (icon->width + 1); ++i) {
-        // top and bottom frame dots
-        canvas_draw_dot(canvas, VIEW_X + i * VIEW_SCALE, VIEW_Y - 1);
-        canvas_draw_dot(canvas, VIEW_X + i * VIEW_SCALE, VIEW_Y + (icon->height * VIEW_SCALE) + 1);
-        // left and right frame dots
-        canvas_draw_dot(canvas, VIEW_X - 1, VIEW_Y + i * VIEW_SCALE);
-        canvas_draw_dot(canvas, VIEW_X + (icon->width * VIEW_SCALE) + 1, VIEW_Y + i * VIEW_SCALE);
+    switch(tabbar_get_selected_tab()) {
+    case TabFile:
+        file_draw(canvas, app);
+        break;
+    case TabTools:
+        tools_draw(canvas, app);
+        break;
+    // case TabSettings:
+    //     settings_draw(canvas, app);
+    //     break;
+    case TabAbout:
+        about_draw(canvas, app);
+        break;
+    default:
+        break;
     }
 
-    // set display buffer
-    for(size_t i = 0; i < icon->width * icon->height; ++i) {
-        app->double_buffer[i] = icon->data[i];
-    }
+    tabbar_draw(canvas, app);
+    canvas_draw(canvas, app);
 
-    // if we're drawing a circle/rect/line, add that to our view
-    if(app->mode == Mode_Canvas && app->draw_state == Draw_Point1_Set) {
-        uint8_t x1 = app->p1x;
-        uint8_t y1 = app->p1y;
-        uint8_t x2 = app->cursor_x;
-        uint8_t y2 = app->cursor_y;
-        switch(app->tool) {
-        case Tool_Line:
-            // draw line between pt1 and cursor
-            ie_draw_line(app->double_buffer, x1, y1, x2, y2);
-            break;
-        case Tool_Circle:
-            ie_draw_circle(app->double_buffer, x1, y1, x2, y2);
-            break;
-        case Tool_Rect:
-            ie_draw_line(app->double_buffer, x1, y1, x2, y1);
-            ie_draw_line(app->double_buffer, x2, y1, x2, y2);
-            ie_draw_line(app->double_buffer, x2, y2, x1, y2);
-            ie_draw_line(app->double_buffer, x1, y1, x1, y2);
-            break;
-        default:
-            break;
-        }
-    }
-
-    // Draw the icon in two ways:
-    // draw scaled editor view
-    for(size_t i = 0; i < icon->width * icon->height; ++i) {
-        if(app->double_buffer[i]) {
-            canvas_draw_box(
-                canvas,
-                VIEW_X + (i % icon->width) * VIEW_SCALE,
-                VIEW_Y + (i / icon->width) * VIEW_SCALE,
-                VIEW_SCALE,
-                VIEW_SCALE);
-        }
-    }
-    // draw actual sized preview
-    for(size_t i = 0; i < icon->width * icon->height; ++i) {
-        if(app->double_buffer[i]) {
-            canvas_draw_dot(canvas, PREVIEW_X + (i % icon->width), PREVIEW_Y + (i / icon->width));
-        }
-    }
-
-    // draw cursor position coordinates
-    // FuriString* coord = furi_string_alloc();
-    // furi_string_printf(coord, "x:%u", app->cursor_x);
-    // ie_draw_str(
-    //     canvas,
-    //     PREVIEW_X + icon->width,
-    //     PREVIEW_Y + icon->height,
-    //     AlignRight,
-    //     AlignTop,
-    //     furi_string_get_cstr(coord));
-    // furi_string_printf(coord, "y:%u", app->cursor_y);
-    // ie_draw_str(
-    //     canvas,
-    //     PREVIEW_X + icon->width,
-    //     PREVIEW_Y + icon->height + 6,
-    //     AlignRight,
-    //     AlignTop,
-    //     furi_string_get_cstr(coord));
-
-    // draw indicator which shows which mode we're in
-    if(app->mode == Mode_Canvas) {
-        // draw cursor
-        // FURI_LOG_I("Editor", "Drawing cursor at: %d, %d", icon->cursor_x, icon->cursor_y);
-        canvas_set_color(canvas, ColorXOR);
-        canvas_draw_frame(
-            canvas,
-            VIEW_X + app->cursor_x * VIEW_SCALE,
-            VIEW_Y + app->cursor_y * VIEW_SCALE,
-            VIEW_SCALE,
-            VIEW_SCALE);
-        canvas_set_color(canvas, ColorBlack);
-    } else {
-        // draw another thing
-    }
-
-    // draw save mode popup menu
-    if(app->in_save_mode) {
-        int popup_x = save_x + TOOL_WIDTH + 2;
-        int popup_y = save_y;
-        int popup_pad = 2; // outer pad btw frame and selected item
-        int popup_elem_height = 7; // the actual text dimension
-        int popup_elem_width = 22;
-        int popup_elem_pad = 1;
-        // clear an empty space of a width by height x num elems
-        canvas_set_color(canvas, ColorWhite);
-        canvas_draw_box(
-            canvas,
-            popup_x,
-            popup_y,
-            popup_elem_width + (popup_pad * 2) + (popup_elem_pad * 2),
-            (popup_elem_height + (popup_elem_pad * 2)) * 3 + (popup_pad * 2));
-        canvas_set_color(canvas, ColorBlack);
-        canvas_draw_rframe(
-            canvas,
-            popup_x,
-            popup_y,
-            popup_elem_width + (popup_pad * 2) + (popup_elem_pad * 2),
-            (popup_elem_height + (popup_elem_pad * 2)) * 3 + (popup_pad * 2),
-            0);
-        for(int mode = Save_START; mode < Save_COUNT; mode++) {
-            canvas_draw_str_aligned(
-                canvas,
-                popup_x + popup_pad + popup_elem_pad + 1,
-                popup_y + popup_pad + popup_elem_pad +
-                    mode * (popup_elem_height + popup_elem_pad * 2),
-                AlignLeft,
-                AlignTop,
-                EditorToolSaveModeStr[mode]);
-        }
-        // draw the highlighted item
-        canvas_set_color(canvas, ColorXOR);
-        canvas_draw_rbox(
-            canvas,
-            popup_x + popup_pad,
-            popup_y + popup_pad + (popup_elem_height + (popup_elem_pad * 2)) * app->save_mode,
-            popup_elem_width + popup_elem_pad * 2,
-            popup_elem_height + popup_elem_pad * 2,
-            0);
-        canvas_set_color(canvas, ColorBlack);
+    // now draw modal panels
+    switch(app->panel) {
+    case Panel_New:
+        new_icon_draw(canvas, app);
+        break;
+    case Panel_SaveAs:
+        save_as_draw(canvas, app);
+        break;
+    case Panel_FPS:
+        fps_draw(canvas, app);
+        break;
+    case Panel_Playback:
+        playback_draw(canvas, app);
+        break;
+    case Panel_SendUSB:
+        send_usb_draw(canvas, app);
+        break;
+    case Panel_Dialog:
+        dialog_draw(canvas, app);
+        break;
+    default:
+        break;
     }
 }
 
-bool iconedit_input_up(IconEdit* app) {
-    if(app->mode == Mode_Tools) {
-        if(!app->in_save_mode) {
-            EditorTool next_tool = EditorTool_UP[app->tool];
-            if(next_tool != Tool_NONE) {
-                app->tool = next_tool;
-            }
-        } else {
-            // move up to next save tool
-            EditorToolSaveMode next_save = EditorToolSave_UP[app->save_mode];
-            if(next_save != Save_NONE) {
-                app->save_mode = next_save;
-            }
-        }
-    } else if(app->mode == Mode_Canvas) {
-        app->cursor_y -= app->cursor_y > 0;
+void iconedit_user_exit(void* context, DialogButton button) {
+    IconEdit* app = context;
+    app->panel = Panel_TabBar;
+    if(button == DialogBtn_OK) {
+        app->running = false;
     }
-    return true;
-}
-
-bool iconedit_input_down(IconEdit* app) {
-    if(app->mode == Mode_Tools) {
-        if(!app->in_save_mode) {
-            EditorTool next_tool = EditorTool_DOWN[app->tool];
-            if(next_tool != Tool_NONE) {
-                app->tool = next_tool;
-            }
-        } else {
-            // move up to next save tool
-            EditorToolSaveMode next_save = EditorToolSave_DOWN[app->save_mode];
-            if(next_save != Save_NONE) {
-                app->save_mode = next_save;
-            }
-        }
-    } else if(app->mode == Mode_Canvas) {
-        app->cursor_y += app->cursor_y < (app->icon->height - 1);
-    }
-    return true;
-}
-
-bool iconedit_input_left(IconEdit* app) {
-    if(app->mode == Mode_Tools) {
-        EditorTool next_tool = EditorTool_LEFT[app->tool];
-        if(next_tool != Tool_NONE) {
-            app->tool = next_tool;
-        }
-    } else if(app->mode == Mode_Canvas) {
-        app->cursor_x -= app->cursor_x > 0;
-    }
-    return true;
-}
-
-bool iconedit_input_right(IconEdit* app) {
-    if(app->mode == Mode_Tools) {
-        EditorTool next_tool = EditorTool_RIGHT[app->tool];
-        if(next_tool != Tool_NONE) {
-            app->tool = next_tool;
-        }
-    } else if(app->mode == Mode_Canvas) {
-        app->cursor_x += app->cursor_x < (app->icon->width - 1);
-    }
-    return true;
-}
-
-bool iconedit_input_ok(IconEdit* app) {
-    if(app->mode == Mode_Tools) {
-        switch(app->tool) {
-        case Tool_New:
-            // TODO: prompt the user: Are you sure? or You have unsaved changes
-            // TODO: Ask for icon size? 10x10, 8x8, etc
-            icon_reset(app->icon);
-            break;
-        case Tool_Open: {
-            // TODO: You have unsaved changes, are you sure?
-            DialogsFileBrowserOptions ieOptions;
-            dialog_file_browser_set_basic_options(&ieOptions, ".png", NULL);
-            ieOptions.base_path = STORAGE_EXT_PATH_PREFIX;
-            ieOptions.skip_assets = true;
-            DialogsApp* dialog = furi_record_open(RECORD_DIALOGS);
-            if(dialog_file_browser_show(dialog, app->temp_str, app->temp_str, &ieOptions)) {
-                FURI_LOG_I(TAG, "Selected %s to open", furi_string_get_cstr(app->temp_str));
-                IEIcon* icon = png_file_open(furi_string_get_cstr(app->temp_str));
-                app->icon = icon;
-            }
-            furi_record_close(RECORD_DIALOGS);
-            break;
-        }
-        case Tool_Save:
-            if(!app->in_save_mode) {
-                app->in_save_mode = true;
-            } else {
-                // save based on the selected save mode
-                switch(app->save_mode) {
-                case Save_PNG: {
-                    bool foo = png_file_save(app->icon);
-                    FURI_LOG_I("Editor", "PNG file saved? %d", foo);
-                    break;
-                }
-                case Save_C: {
-                    bool foo = c_file_save(app->icon);
-                    FURI_LOG_I("Editor", "C file saved? %d", foo);
-                    break;
-                }
-                case Save_XBM: {
-                    bool foo = xbm_file_save(app->icon);
-                    FURI_LOG_I("Editor", "XBM saved? %d", foo);
-                    break;
-                }
-                default:
-                    FURI_LOG_E("Editor", "Unknown save mode");
-                    break;
-                }
-                app->in_save_mode = false;
-                app->save_mode = Save_PNG; // our default save mode
-            }
-            break;
-        case Tool_Rename: {
-            // prompt user with filename editor
-            FURI_LOG_I("Editor", "Rename");
-
-            Gui* gui = furi_record_open(RECORD_GUI);
-
-            TextInputContext* ti_context = malloc(sizeof(TextInputContext));
-            ti_context->lock = api_lock_alloc_locked();
-
-            ViewHolder* view_holder = view_holder_alloc();
-            view_holder_attach_to_gui(view_holder, gui);
-
-            view_holder_set_back_callback(view_holder, text_input_back_callback, ti_context);
-
-            TextInput* text_input = text_input_alloc();
-            strncpy(app->temp_cstr, furi_string_get_cstr(app->icon->name), 64);
-            text_input_set_result_callback(
-                text_input, text_input_callback, ti_context, app->temp_cstr, 64, false);
-            text_input_set_header_text(text_input, "Rename icon:");
-
-            view_holder_set_view(view_holder, text_input_get_view(text_input));
-            api_lock_wait_unlock(ti_context->lock);
-
-            if(ti_context->result) {
-                FURI_LOG_I(TAG, "Renaming file to: %s", app->temp_cstr);
-                furi_string_set_str(app->icon->name, app->temp_cstr);
-            } else {
-                FURI_LOG_I(TAG, "Not renaming file!");
-            }
-
-            view_holder_set_view(view_holder, NULL);
-            text_input_free(text_input);
-            view_holder_free(view_holder);
-            api_lock_free(ti_context->lock);
-            free(ti_context);
-            furi_record_close(RECORD_GUI);
-
-            break;
-        }
-        case Tool_Draw:
-            app->mode = Mode_Canvas;
-            break;
-        case Tool_Line:
-        case Tool_Circle:
-        case Tool_Rect:
-            app->mode = Mode_Canvas;
-            app->draw_state = Draw_NONE;
-            break;
-        default:
-            break;
-        }
-    } else if(app->mode == Mode_Canvas) {
-        switch(app->tool) {
-        case Tool_Draw: {
-            size_t offset = app->cursor_y * app->icon->width + app->cursor_x;
-            app->icon->data[offset] = app->icon->data[offset] ? 0 : 1;
-            break;
-        }
-        case Tool_Line:
-        case Tool_Circle:
-        case Tool_Rect:
-            switch(app->draw_state) {
-            case Draw_NONE:
-                app->p1x = app->cursor_x;
-                app->p1y = app->cursor_y;
-                app->draw_state = Draw_Point1_Set;
-                break;
-            case Draw_Point1_Set: {
-                uint8_t x2 = app->cursor_x;
-                uint8_t y2 = app->cursor_y;
-                // actually draw the line to icon image data
-                if(app->tool == Tool_Line) {
-                    ie_draw_line(app->icon->data, app->p1x, app->p1y, x2, y2);
-                } else if(app->tool == Tool_Circle) {
-                    ie_draw_circle(app->icon->data, app->p1x, app->p1y, x2, y2);
-                } else if(app->tool == Tool_Rect) {
-                    ie_draw_line(app->icon->data, app->p1x, app->p1y, x2, app->p1y);
-                    ie_draw_line(app->icon->data, x2, app->p1y, x2, y2);
-                    ie_draw_line(app->icon->data, x2, y2, app->p1x, y2);
-                    ie_draw_line(app->icon->data, app->p1x, app->p1y, app->p1x, y2);
-                }
-                // reset
-                app->draw_state = Draw_NONE;
-                break;
-            }
-            }
-            break;
-        default:
-            break;
-        }
-    }
-    return true;
-}
-
-bool iconedit_input_back(IconEdit* app) {
-    bool processed = false;
-    if(app->mode == Mode_Canvas) {
-        if(app->draw_state == Draw_Point1_Set) {
-            app->draw_state = Draw_NONE;
-        } else {
-            app->mode = Mode_Tools;
-        }
-        processed = true;
-    } else {
-        if(app->in_save_mode) {
-            app->in_save_mode = false;
-            app->save_mode = Save_PNG; // force reset to PNG Save mode?
-            processed = true;
-        } else {
-            processed = false;
-        }
-    }
-    return processed;
 }
 
 bool iconedit_input_process_event(InputEvent* event, void* context) {
-    FURI_LOG_I("Editor", "view_input_callback: %d", event->type);
     furi_assert(event);
     IconEdit* app = context;
+    FURI_LOG_I("Editor", "view_input_callback: %d, panel: %d", event->type, app->panel);
 
     bool consumed = false;
-    if(event->type == InputTypeShort) {
-        FURI_LOG_I("Editor", "InputTypePress");
-        switch(event->key) {
-        case InputKeyUp:
-            consumed = iconedit_input_up(app);
-            break;
-        case InputKeyDown:
-            consumed = iconedit_input_down(app);
-            break;
-        case InputKeyLeft:
-            consumed = iconedit_input_left(app);
-            break;
-        case InputKeyRight:
-            consumed = iconedit_input_right(app);
-            break;
-        case InputKeyOk:
-            consumed = iconedit_input_ok(app);
-            break;
-        case InputKeyBack:
-            consumed = iconedit_input_back(app);
-            if(!consumed) {
-                FURI_LOG_W(TAG, "Back pressed! Exit app");
+
+    switch(app->panel) {
+    case Panel_TabBar:
+        consumed = tabbar_input(event, context);
+        if(!consumed) {
+            if(app->dirty) {
+                app->panel = Panel_Dialog;
+                dialog_setup("Unsaved changes, exit?", Dialog_OK_CANCEL, iconedit_user_exit, app);
+            } else {
                 app->running = false;
             }
-            break;
-        default:
-            FURI_LOG_I("Editor", "default");
-            break;
         }
+        break;
+    case Panel_File:
+        consumed = file_input(event, context);
+        break;
+    case Panel_Tools:
+        consumed = tools_input(event, context);
+        break;
+    case Panel_Playback:
+        consumed = playback_input(event, context);
+        break;
+    // case Panel_Settings:
+    //     consumed = settings_input(event, context);
+    //     break;
+    case Panel_About:
+        consumed = about_input(event, context);
+        break;
+    case Panel_Canvas:
+        consumed = canvas_input(event, context);
+        break;
+    case Panel_New:
+        consumed = new_icon_input(event, context);
+        break;
+    case Panel_SaveAs:
+        consumed = save_as_input(event, context);
+        break;
+    case Panel_FPS:
+        consumed = fps_input(event, context);
+        break;
+    case Panel_SendUSB:
+        consumed = send_usb_input(event, context);
+        break;
+    case Panel_Dialog:
+        consumed = dialog_input(event, context);
+        // dialog_get_button or something
+        break;
+    default:
+        break;
     }
+
     return consumed;
 }
+
+// void tool_selected_callback(EditorTool tool, void* context) {
+//     IconEdit* app = context;
+//     canvas_set_selected_tool(tool);
+// }
 
 void iconedit_input_callback(InputEvent* input_event, void* context) {
     FuriMessageQueue* event_queue = context;
@@ -529,26 +156,23 @@ void iconedit_input_callback(InputEvent* input_event, void* context) {
 
 IconEdit* iconedit_app_alloc() {
     IconEdit* app = malloc(sizeof(IconEdit));
-
+    FURI_LOG_I(TAG, "app_alloc - impl");
     app->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
 
-    app->icon = icon_alloc();
+    app->icon = ie_icon_alloc(true);
+    FURI_LOG_I(TAG, "icon_alloc done");
 
-    app->mode = Mode_Tools;
-    app->tool = Tool_Draw;
-    app->save_mode = Save_PNG;
-    app->in_save_mode = false;
-
-    // place the cursor in the middle-ish
-    app->cursor_x = 4;
-    app->cursor_y = 4;
-
-    app->double_buffer = malloc(10 * 10 * sizeof(uint8_t));
+    app->panel = Panel_Tools;
 
     app->storage = furi_record_open(RECORD_STORAGE);
     app->temp_str = furi_string_alloc();
 
+    // panels setup
+    // tools_set_callback(tool_selected_callback);
+    canvas_alloc_canvas(app->icon->width, app->icon->height);
+
     app->running = true;
+    app->dirty = false;
 
     return app;
 }
@@ -556,8 +180,8 @@ IconEdit* iconedit_app_alloc() {
 void iconedit_app_free(IconEdit* app) {
     FURI_LOG_W(TAG, "_free");
 
-    icon_free(app->icon);
-    free(app->double_buffer);
+    ie_icon_free(app->icon);
+    canvas_free_canvas();
 
     furi_record_close(RECORD_STORAGE);
 
@@ -570,9 +194,24 @@ void iconedit_app_free(IconEdit* app) {
     free(app);
 }
 
+// Why does the callback need the IEIconAnimation* ptr?? the context is the most important thing
+void iconedit_playback_animation_callback(IEIconAnimation* anim, void* context) {
+    UNUSED(anim);
+    ViewPort* view_port = context;
+    view_port_update(view_port);
+}
+
+// called by panels when they need a re-draw
+void iconedit_viewport_update_callback(void* context) {
+    ViewPort* view_port = context;
+    view_port_update(view_port);
+}
+
 int32_t iconedit_app(void* p) {
     UNUSED(p);
+    FURI_LOG_I(TAG, "iconedit_app");
     IconEdit* app = iconedit_app_alloc();
+    FURI_LOG_I(TAG, "app_alloc");
 
     FuriMessageQueue* event_queue = furi_message_queue_alloc(8, sizeof(InputEvent));
     ViewPort* view_port = view_port_alloc();
@@ -580,12 +219,23 @@ int32_t iconedit_app(void* p) {
     view_port_draw_callback_set(view_port, iconedit_draw_callback, app);
     view_port_input_callback_set(view_port, iconedit_input_callback, event_queue);
 
-    // NotificationApp* notify = furi_record_open(RECORD_NOTIFICATION);
-    // notification_message(notify, &sequence_display_backlight_on);
+    FURI_LOG_I(TAG, "view_port created");
+    app->notify = furi_record_open(RECORD_NOTIFICATION);
+    notification_message(app->notify, &sequence_display_backlight_on);
 
     Gui* gui = furi_record_open(RECORD_GUI);
     gui_add_view_port(gui, view_port, GuiLayerFullscreen);
 
+    playback_set_update_callback(iconedit_playback_animation_callback, view_port);
+    send_usb_set_update_callback(iconedit_viewport_update_callback, view_port);
+
+    FURI_LOG_W(
+        TAG,
+        "Icon created: %d x %d with name %s",
+        app->icon->width,
+        app->icon->height,
+        furi_string_get_cstr(app->icon->name));
+    FURI_LOG_I(TAG, "starting event loop");
     InputEvent event;
     while(app->running) {
         FuriStatus event_status = furi_message_queue_get(event_queue, &event, 1000);
@@ -597,8 +247,8 @@ int32_t iconedit_app(void* p) {
         furi_mutex_release(app->mutex);
     }
 
-    // notification_message(notify, &sequence_display_backlight_enforce_auto);
-    // furi_record_close(RECORD_NOTIFICATION);
+    notification_message(app->notify, &sequence_display_backlight_enforce_auto);
+    furi_record_close(RECORD_NOTIFICATION);
     FURI_LOG_I(TAG, "App no longer running - cleanup");
 
     view_port_enabled_set(view_port, false);

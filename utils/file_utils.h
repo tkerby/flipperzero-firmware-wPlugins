@@ -2,10 +2,10 @@
 
 #include "../icon.h"
 
-uint8_t* convert_bytes_to_xbm_bits(IEIcon* icon, size_t* size);
+// Returns icon as C code text string
+FuriString* c_file_generate(IEIcon* icon);
 
-void log_xbm_data(uint8_t* data, size_t size);
-
+// File writers
 bool c_file_save(IEIcon* icon);
 bool xbm_file_save(IEIcon* icon);
 bool png_file_save(IEIcon* icon);
