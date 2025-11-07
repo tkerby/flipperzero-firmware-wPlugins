@@ -1,0 +1,19 @@
+App(
+    appid="chameleon_ultra",
+    name="Chameleon Ultra",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="chameleon_ultra_app",
+    requires=[
+        "gui",
+        "dialogs",
+        "storage",
+        "notification",
+    ],
+    stack_size=2 * 1024,
+    fap_category="Tools",
+    fap_icon="icons/chameleon_10px.png",
+    fap_description="Control Chameleon Ultra via USB/Bluetooth - Manage slots, transfer tags, emulation",
+    fap_author="Chameleon Flipper Team",
+    fap_version="1.0",
+    fap_icon_assets="icons",
+)
