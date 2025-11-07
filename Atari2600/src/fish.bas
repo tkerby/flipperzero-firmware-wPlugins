@@ -51,7 +51,7 @@ main
  
  if !switchleftb then score = 0 : player0x = 16 : player0y = 45 : player1x = 150 : h = 0 : b = 1 : a = 0 : b = 0 : c = 0 : d = 0 : e = 0 : m = 1 : goto single
  if switchreset then score = 0 : player0x = 16 : player0y = 45 : player1x = 150 : h = 0 : b = 1 : a = 0 : b = 0 : c = 0 : d = 0 : e = 0 : m = 1 : goto main
- if !switchbw then COLUBK = $AC : COLUP0 = $2A : COLUP1 = $5C
+ if !switchbw then COLUBK = $9E : COLUP0 = $2A : COLUP1 = $5C
  if switchbw then COLUBK = $02 : COLUP0 = $0C : COLUP1 = $0C
  if !switchrightb then COLUBK = $2A : COLUP0 = $00 : COLUP1 = $00
 
@@ -84,7 +84,7 @@ single_done
 
  if switchleftb then score = 0 : player0x = 16 : player0y = 45 : player1x = 150 : h = 0 : b = 1 : a = 0 : b = 0 : c = 0 : d = 0 : e = 0 : m = 1 : goto main
  if switchreset then score = 0 : player0x = 16 : player0y = 45 : player1x = 150 : h = 0 : b = 1 : a = 0 : b = 0 : c = 0 : d = 0 : e = 0 : m = 1 : goto main
- if !switchbw then COLUBK = $AC : COLUP0 = $2A : COLUP1 = $5C
+ if !switchbw then COLUBK = $9E : COLUP0 = $2A : COLUP1 = $5C
  if switchbw then COLUBK = $02 : COLUP0 = $0C : COLUP1 = $0C
  if !switchrightb then COLUBK = $2A : COLUP0 = $00 : COLUP1 = $00
  
