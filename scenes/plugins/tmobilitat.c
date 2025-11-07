@@ -47,12 +47,12 @@ static bool tmobilitat_parse(FuriString* parsed_data, Metroflip* app) {
 }
 
 static void tmobilitat_on_enter(Metroflip* app) {
-    dolphin_deed(DolphinDeedNfcRead);
     FuriString* parsed_data = furi_string_alloc();
     Widget* widget = app->widget;
 
     furi_string_reset(app->text_box_store);
     widget_reset(widget);
+    
     
     if(!tmobilitat_parse(parsed_data, app)) {
         furi_string_reset(app->text_box_store);
@@ -64,8 +64,10 @@ static void tmobilitat_on_enter(Metroflip* app) {
 
     widget_add_button_element(
         widget, GuiButtonTypeRight, "Exit", metroflip_exit_widget_callback, app);
-    furi_string_free(parsed_data);
+    
     view_dispatcher_switch_to_view(app->view_dispatcher, MetroflipViewWidget);
+    furi_string_free(parsed_data);
+
 }
 
 
@@ -82,7 +84,7 @@ static bool tmobilitat_on_event(Metroflip* app, SceneManagerEvent event) {
 
 static void tmobilitat_on_exit(Metroflip* app) {
     widget_reset(app->widget);
-
+    
     // Clear view
     popup_reset(app->popup);
 }
