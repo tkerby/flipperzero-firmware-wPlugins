@@ -18,6 +18,7 @@
 #include "lib/chameleon_protocol/chameleon_protocol.h"
 #include "lib/uart_handler/uart_handler.h"
 #include "lib/ble_handler/ble_handler.h"
+#include "views/chameleon_animation_view.h"
 
 #define TAG "ChameleonUltra"
 
@@ -90,6 +91,7 @@ typedef enum {
     ChameleonViewPopup,
     ChameleonViewWidget,
     ChameleonViewLoading,
+    ChameleonViewAnimation,
 } ChameleonView;
 
 // Main application structure
@@ -108,6 +110,7 @@ typedef struct {
     Popup* popup;
     Widget* widget;
     Loading* loading;
+    ChameleonAnimationView* animation_view;
 
     // Connection
     ChameleonConnectionType connection_type;

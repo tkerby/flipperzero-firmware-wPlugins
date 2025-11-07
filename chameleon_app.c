@@ -60,6 +60,12 @@ ChameleonApp* chameleon_app_alloc() {
     app->loading = loading_alloc();
     view_dispatcher_add_view(app->view_dispatcher, ChameleonViewLoading, loading_get_view(app->loading));
 
+    app->animation_view = chameleon_animation_view_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher,
+        ChameleonViewAnimation,
+        chameleon_animation_view_get_view(app->animation_view));
+
     // Initialize protocol
     app->protocol = chameleon_protocol_alloc();
 
@@ -115,6 +121,9 @@ void chameleon_app_free(ChameleonApp* app) {
 
     view_dispatcher_remove_view(app->view_dispatcher, ChameleonViewLoading);
     loading_free(app->loading);
+
+    view_dispatcher_remove_view(app->view_dispatcher, ChameleonViewAnimation);
+    chameleon_animation_view_free(app->animation_view);
 
     // Free scene manager
     scene_manager_free(app->scene_manager);
