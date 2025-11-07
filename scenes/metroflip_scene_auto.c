@@ -71,6 +71,11 @@ void metroflip_scene_detect_scan_callback(NfcScannerEvent event, void* context) 
                 app->detected_protocols, event.data.protocols, event.data.protocol_num);
             view_dispatcher_send_custom_event(
                 app->view_dispatcher, MetroflipCustomEventPollerDetect);
+        } else if(event.data.protocols && *event.data.protocols == NfcProtocolSt25tb) {
+            nfc_detected_protocols_set(
+                app->detected_protocols, event.data.protocols, event.data.protocol_num);
+            view_dispatcher_send_custom_event(
+                app->view_dispatcher, MetroflipCustomEventPollerDetect);
         }else {
             const NfcProtocol* invalid_protocol = (const NfcProtocol*)NfcProtocolInvalid;
             nfc_detected_protocols_set(app->detected_protocols, invalid_protocol, 0);
@@ -207,6 +212,14 @@ bool metroflip_scene_auto_on_event(void* context, SceneManagerEvent event) {
                 scene_manager_next_scene(app->scene_manager, MetroflipSceneParse);
                 consumed = true;
             } else if(
+                nfc_detected_protocols_get_protocol(app->detected_protocols, 0) ==
+                NfcProtocolSt25tb) {
+                FURI_LOG_I(TAG, "Protocol is ST25TB");
+                app->card_type = "star"; // place holder for now
+                app->is_desfire = false;
+                scene_manager_next_scene(app->scene_manager, MetroflipSceneParse);
+                consumed = true;
+            }else if(
                 nfc_detected_protocols_get_protocol(app->detected_protocols, 0) ==
                 NfcProtocolInvalid) {
                 app->card_type = "Unknown Card";

@@ -84,9 +84,12 @@ static bool tmobilitat_on_event(Metroflip* app, SceneManagerEvent event) {
 
 static void tmobilitat_on_exit(Metroflip* app) {
     widget_reset(app->widget);
-    
     // Clear view
     popup_reset(app->popup);
+    if(app->poller && !app->data_loaded) {
+        nfc_poller_stop(app->poller);
+        nfc_poller_free(app->poller);
+    }
 }
 
 /* Actual implementation of app<>plugin interface */

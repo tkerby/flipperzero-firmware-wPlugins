@@ -130,42 +130,45 @@ void metroflip_scene_load_on_enter(void* context) {
                         load_suica_data(app, format, false);
                         FURI_LOG_I(TAG, "Detected: FeliCa (API 87.0+)");
                     } while(false);
+                } else if(strcmp(protocol_name, "ST25TB") == 0) {
+                    app->card_type = "star";
+                    app->is_desfire = false;
+                    app->data_loaded = true;
                 }
-
             } else {
-                const char* card_str = furi_string_get_cstr(card_type_str);
+            const char* card_str = furi_string_get_cstr(card_type_str);
 
-                if(strcmp(card_str, "Japan Transit IC") == 0) {
-                    FURI_LOG_I(TAG, "Detected: Japan Transit IC");
-                    app->card_type = "suica";
-                    app->is_desfire = false;
-                    app->data_loaded = true;
-                    load_suica_data(app, format, true);
-                    // This format is deprecated after OFW #4254 but kept for backward compatibility
-                } else if(strcmp(card_str, "calypso") == 0) {
-                    app->card_type = "calypso";
-                    app->is_desfire = false;
-                    app->data_loaded = true;
-                } else if(strcmp(card_str, "renfe_sum10") == 0) {
-                    // For RENFE cards, we need to load the MFC data and set it up properly
-                    flipper_format_file_close(format);
-                    flipper_format_file_open_existing(format, furi_string_get_cstr(file_path));
+            if(strcmp(card_str, "Japan Transit IC") == 0) {
+                FURI_LOG_I(TAG, "Detected: Japan Transit IC");
+                app->card_type = "suica";
+                app->is_desfire = false;
+                app->data_loaded = true;
+                load_suica_data(app, format, true);
+                // This format is deprecated after OFW #4254 but kept for backward compatibility
+            } else if(strcmp(card_str, "calypso") == 0) {
+                app->card_type = "calypso";
+                app->is_desfire = false;
+                app->data_loaded = true;
+            } else if(strcmp(card_str, "renfe_sum10") == 0) {
+                // For RENFE cards, we need to load the MFC data and set it up properly
+                flipper_format_file_close(format);
+                flipper_format_file_open_existing(format, furi_string_get_cstr(file_path));
 
-                    MfClassicData* mfc_data = mf_classic_alloc();
-                    if(!mf_classic_load(mfc_data, format, 2)) {
-                        mf_classic_free(mfc_data);
-                        break;
-                    }
-
-                    app->card_type = "renfe_sum10";
-                    app->mfc_card_type = CARD_TYPE_RENFE_SUM10;
-                    app->data_loaded = true;
-                    app->is_desfire = false;
-                } else {
-                    app->card_type = "unknown";
-                    app->data_loaded = false;
+                MfClassicData* mfc_data = mf_classic_alloc();
+                if(!mf_classic_load(mfc_data, format, 2)) {
+                    mf_classic_free(mfc_data);
+                    break;
                 }
+
+                app->card_type = "renfe_sum10";
+                app->mfc_card_type = CARD_TYPE_RENFE_SUM10;
+                app->data_loaded = true;
+                app->is_desfire = false;
+            } else {
+                app->card_type = "unknown";
+                app->data_loaded = false;
             }
+        }
 
             // Set file path
             strncpy(app->file_path, furi_string_get_cstr(file_path), sizeof(app->file_path) - 1);

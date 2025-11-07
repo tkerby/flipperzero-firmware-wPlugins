@@ -174,3 +174,12 @@ App(
     sources=["scenes/plugins/tmobilitat.c"],
     fal_embedded=True,
 )
+
+App(
+    appid="star_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="star_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/star.c"],
+    fal_embedded=True,
+)
