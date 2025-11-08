@@ -92,7 +92,7 @@ canvas_draw_icon(canvas, x, y, &I_smiley);
 
 This project would not be possible without the efforts and source from the following projects:
 
-* [pngle](https://github.com/kikuchan/pngle) - includes miniz
+* [pngle](https://github.com/kikuchan/pngle) - reads and uncompresses PNG files using miniz
 * [png](https://github.com/dangee1705/png) - write uncompressed png files
 
 <a href="https://www.buymeacoffee.com/rdefeo" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
