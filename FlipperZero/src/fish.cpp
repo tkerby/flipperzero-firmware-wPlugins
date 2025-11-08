@@ -6,12 +6,11 @@
 
 int SCORE = 0;
 int SCORE_BONUS = 1;
-int HIGH_SCORE = 100;
+int HIGH_SCORE = 256;
 char score_str[16];
 
 int player_x = 6;
-int player_y = 52;
-int player_offset = 28;
+int player_y = 28;
 int kelp_x = 124;
 int kelp_y = 56;
 int jellyfish_x = 64;
@@ -30,7 +29,7 @@ int max_gravity = 1;
 int max_jump = 2;
 
 // player coordinates for drawing
-int players[][2] = {{10,2},{11,2},{2,3},{3,3},{8,3},{9,3},{12,3},{13,3},{2,4},{4,4},{6,4},{7,4},{14,4},{15,4},{2,5},{5,5},{16,5},{2,6},{5,6},{16,6},{2,7},{4,7},{6,7},{7,7},{14,7},{15,7},{2,8},{3,8},{8,8},{9,8},{12,8},{13,8},{10,9},{11,9}};
+int players[][2] = {{7,4},{8,4},{3,5},{4,5},{6,5},{9,5},{3,6},{5,6},{10,6},{3,7},{5,7},{10,7},{3,8},{4,8},{6,8},{9,8},{7,9},{8,9}};
 int kelp[][2] = {{2,2},{4,2},{3,3},{2,4},{4,4},{3,5},{2,6},{4,6},{3,7},{2,8},{4,8},{3,9}};
 int jellyfish[][2] = {{3,2},{4,2},{5,2},{6,2},{7,2},{8,2},{2,3},{9,3},{2,4},{9,4},{3,5},{4,5},{5,5},{6,5},{7,5},{8,5},{3,6},{6,6},{8,6},{4,7},{6,7},{9,7},{2,8},{4,8},{7,8},{3,9}};
 
@@ -38,14 +37,14 @@ void collide_rect()
 {
     
     int player_left = player_x;
-    int player_top = player_offset + 4;
-    int player_right = player_x + 16;
-    int player_bottom = player_offset + 8 + 4;
+    int player_top = player_y - 1;
+    int player_right = player_x + 8;
+    int player_bottom = player_y + 7;
 
-    int kelp_left = kelp_x - kelp_x_rand * 4;
-    int kelp_top = kelp_y - kelp_y_rand * 8 + 2;
+    int kelp_left = kelp_x - kelp_x_rand * 8 + 4;
+    int kelp_top = kelp_y - kelp_y_rand * 8 - 10;
     int kelp_right = kelp_x;
-    int kelp_bottom = kelp_y + 2;
+    int kelp_bottom = kelp_y + 10;
 
     int jellyfish_left = jellyfish_x - jellyfish_x_rand * 8;
     int jellyfish_top = jellyfish_y + 10;
@@ -65,11 +64,10 @@ void collide_rect()
         is_random_jellyfish = true;
 
         player_x = 6;
-        player_y = 52;
-        player_offset = 28;
+        player_y = 28;
 
         SCORE_BONUS = 1;
-        HIGH_SCORE = 100;
+        HIGH_SCORE = 256;
 
         SCORE = 0;
     }
@@ -80,12 +78,12 @@ void draw_player(Canvas* canvas)
 {
     if (is_jumping)
     {
-        player_offset -= max_jump;
+        player_y -= max_jump;
     }
 
     else
     {
-        player_offset += max_gravity;
+        player_y += max_gravity;
     }
     
     int array_size = sizeof(players) / sizeof(players[0]);
@@ -95,7 +93,7 @@ void draw_player(Canvas* canvas)
         int y = players[i][1];
         if(x != 0 && y != 0)
         {
-            canvas_draw_dot(canvas, x + player_x, y + player_offset);
+            canvas_draw_dot(canvas, x + player_x, y + player_y);
         }
     }
 }
@@ -202,6 +200,7 @@ static void draw_callback(Canvas* canvas, void* context)
     draw_player(canvas);
     draw_kelp(canvas);
     draw_jellyfish(canvas);
+
     snprintf(score_str, sizeof(score_str), "%d", SCORE);
     canvas_draw_str(canvas,2,8,score_str);
 
@@ -212,7 +211,7 @@ static void draw_callback(Canvas* canvas, void* context)
 
     if (SCORE >= HIGH_SCORE)
     {
-        HIGH_SCORE += 100;
+        HIGH_SCORE += 256;
         SCORE_BONUS += 1;
     }
 
