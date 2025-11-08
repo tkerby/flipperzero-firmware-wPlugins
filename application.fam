@@ -183,3 +183,12 @@ App(
     sources=["scenes/plugins/intertic.c"],
     fal_embedded=True,
 )
+
+App(
+    appid="trt_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="trt_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/trt.c"],
+    fal_embedded=True,
+)
