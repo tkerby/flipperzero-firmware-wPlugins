@@ -38,12 +38,12 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Fire String v1.3 (By RyanAboueljoud)](https://github.com/RyanAboueljoud/Fire-String)
 - Updated: [Ghost ESP v1.5.1 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app)
 - Updated: [Guess The Number v1.3 (By kWAYTV)](https://github.com/kWAYTV/guess-the-number-fz)
-- Updated: [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader)
 - Updated: [Pomodoro 2 v2.4.1 (By Th3Un1q3)](https://github.com/Th3Un1q3/flipp_pomodoro)
 - Added: [OpenPrintTag v1.0 (By Houzvicka)](https://github.com/Houzvicka/FlipperPrintTag)
 - Added: [I2C Explorer v0.9 (By 4mb3rz)](https://github.com/4mb3rz/Flipper-I2C-Explorer)
 - Updated: [I2C Explorer v0.9 (By 4mb3rz)](https://github.com/4mb3rz/Flipper-I2C-Explorer)
 - Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip) [Suica Parser: add 40+ Kansai region lines (By zinongli)](https://github.com/luu176/Metroflip/pull/83)
+- Updated: [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader)
 
 <a name="release">
 
