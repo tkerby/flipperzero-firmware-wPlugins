@@ -3,6 +3,7 @@
 - New Cards:
 - Intertic disposable ST25TB cards adding 21 French cities and companies
 - T-Mobilitat can parse card number from historical bytes
+- TRT
 - Fix a lot of bugs relating mifare classic and stuff
 
 ## v0.9
