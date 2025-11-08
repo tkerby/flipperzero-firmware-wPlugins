@@ -176,10 +176,10 @@ App(
 )
 
 App(
-    appid="star_plugin",
+    appid="intertic_plugin",
     apptype=FlipperAppType.PLUGIN,
-    entry_point="star_plugin_ep",
+    entry_point="intertic_plugin_ep",
     requires=["metroflip"],
-    sources=["scenes/plugins/star.c"],
+    sources=["scenes/plugins/intertic.c"],
     fal_embedded=True,
 )
