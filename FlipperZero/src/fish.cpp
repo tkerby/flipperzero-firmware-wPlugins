@@ -6,7 +6,7 @@
 
 int SCORE = 0;
 int SCORE_BONUS = 1;
-int HIGH_SCORE = 256;
+int HIGH_SCORE = 100;
 char score_str[16];
 
 int player_x = 6;
@@ -67,7 +67,7 @@ void collide_rect()
         player_y = 28;
 
         SCORE_BONUS = 1;
-        HIGH_SCORE = 256;
+        HIGH_SCORE = 100;
 
         SCORE = 0;
     }
@@ -211,7 +211,7 @@ static void draw_callback(Canvas* canvas, void* context)
 
     if (SCORE >= HIGH_SCORE)
     {
-        HIGH_SCORE += 256;
+        HIGH_SCORE += 100;
         SCORE_BONUS += 1;
     }
 
