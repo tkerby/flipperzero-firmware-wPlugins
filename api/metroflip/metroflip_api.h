@@ -189,6 +189,7 @@ extern const Icon I_Suica_MoneyStack4;
 extern const Icon I_Suica_NambokuN;
 extern const Icon I_Suica_Nothing;
 extern const Icon I_Suica_OedoE;
+extern const Icon I_Suica_OsakaMetroLogo;
 extern const Icon I_Suica_PenguinHappyBirthday;
 extern const Icon I_Suica_PenguinTodaysVIP;
 extern const Icon I_Suica_PlusSign1;
