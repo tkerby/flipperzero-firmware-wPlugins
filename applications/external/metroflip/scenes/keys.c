@@ -564,8 +564,8 @@ static bool renfe_regular_verify(Nfc* nfc, MfClassicData* mfc_data, bool data_lo
                         if(error == MfClassicErrorNone) {
                             FURI_LOG_I(
                                 TAG,
-                                "renfe_regular_verify: Found Mifare Classic with common keys - could be RENFE Regular");
-                            verified = true;
+                                "renfe_regular_verify: Found Mifare Classic with MAD - could be RENFE Regular");
+                            verified = false;
                         } else {
                             FURI_LOG_I(
                                 TAG,
@@ -588,7 +588,7 @@ static bool renfe_regular_verify(Nfc* nfc, MfClassicData* mfc_data, bool data_lo
                                 FURI_LOG_I(
                                     TAG,
                                     "renfe_regular_verify: Multiple sectors protected - likely RENFE Regular with unique keys");
-                                verified = true;
+                                verified = false;
                             } else {
                                 FURI_LOG_I(
                                     TAG,

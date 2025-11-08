@@ -42,8 +42,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [OpenPrintTag v1.0 (By Houzvicka)](https://github.com/Houzvicka/FlipperPrintTag)
 - Added: [I2C Explorer v0.9 (By 4mb3rz)](https://github.com/4mb3rz/Flipper-I2C-Explorer)
 - Updated: [I2C Explorer v0.9 (By 4mb3rz)](https://github.com/4mb3rz/Flipper-I2C-Explorer)
-- Updated: [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip) [Suica Parser: add 40+ Kansai region lines (By zinongli)](https://github.com/luu176/Metroflip/pull/83)
 - Updated: [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader)
+- Updated: [Metroflip v1.0 (By luu176)](https://github.com/luu176/Metroflip)
 
 <a name="release">
 
@@ -597,7 +597,7 @@ $ ./fbt dolphin_ext
 - [Marmalade v0.1.1 (By RocketGod)](https://github.com/RocketGod-git/flipper-zero-rf-jammer) (Exercise Caution and Follow Your Local Laws)
 - [Math Wiz v1.1 (By ImPapaGhost)](https://github.com/ImPapaGhost/math_wiz)
 - [MAX31855 (By skotopes)](https://github.com/skotopes/flipperzero_max31855)
-- [Metroflip v0.9 (By luu176)](https://github.com/luu176/Metroflip)
+- [Metroflip v1.0 (By luu176)](https://github.com/luu176/Metroflip)
 - [Metronome v1.3 (By panki27)](https://github.com/panki27/Metronome)
 - [MFC Editor v1.0 (By TollyH)](https://github.com/TollyH/flipper-apps)
 - [MFDesfire Auth v1.0 (By Gatorixx)](https://github.com/Gatorixx/flipper-zero-legacy-authentication)
