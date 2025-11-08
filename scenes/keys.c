@@ -36,6 +36,9 @@ const MfClassicKeyPair renfe_suma10_1k_keys[] = {
     {.a = 0xA8844B0BCA06}, // Sector 0 - RENFE specific key from dumps
     {.a = 0xCB5ED0E57B08}, // Sector 1 - RENFE specific key from dumps 
 };
+const MfClassicKeyPair two_cities_4k_verify_key[] = {
+    {.a = 0x2aa05ed1856f},
+};
 
 // RENFE Regular verification keys - extracted from dump analysis
 const uint8_t gocard_verify_data[1][14] = {
@@ -147,6 +150,43 @@ static bool metromoney_verify(Nfc* nfc, MfClassicData* mfc_data, bool data_loade
 
             uint64_t key = bit_lib_bytes_to_num_be(sec_tr->key_a.data, 6);
             if(key != metromoney_1k_verify_key[0].a) {
+                break;
+            }
+
+            verified = true;
+        }
+    } while(false);
+
+    return verified;
+}
+
+static bool two_cities_verify(Nfc* nfc, MfClassicData* mfc_data, bool data_loaded) {
+    bool verified = false;
+    const uint8_t ticket_sector_number = 4;
+    do {
+        if(!data_loaded) {
+            const uint8_t ticket_block_number =
+                mf_classic_get_first_block_num_of_sector(ticket_sector_number) + 1;
+            FURI_LOG_D(TAG, "Verifying sector %u", ticket_sector_number);
+
+            MfClassicKey key = {0};
+            bit_lib_num_to_bytes_be(two_cities_4k_verify_key[0].a, COUNT_OF(key.data), key.data);
+
+            MfClassicAuthContext auth_context;
+            MfClassicError error = mf_classic_poller_sync_auth(
+                nfc, ticket_block_number, &key, MfClassicKeyTypeA, &auth_context);
+            if(error != MfClassicErrorNone) {
+                FURI_LOG_D(TAG, "Failed to read block %u: %d", ticket_block_number, error);
+                break;
+            }
+
+            verified = true;
+        } else {
+            MfClassicSectorTrailer* sec_tr =
+                mf_classic_get_sector_trailer_by_sector(mfc_data, ticket_sector_number);
+
+            uint64_t key = bit_lib_bytes_to_num_be(sec_tr->key_a.data, 6);
+            if(key != two_cities_4k_verify_key[0].a) {
                 break;
             }
 
@@ -488,8 +528,8 @@ static bool renfe_regular_verify(Nfc* nfc, MfClassicData* mfc_data, bool data_lo
                             nfc, block_num, &key, MfClassicKeyTypeA, &auth_context);
                         
                         if(error == MfClassicErrorNone) {
-                            FURI_LOG_I(TAG, "renfe_regular_verify: Found Mifare Classic with common keys - could be RENFE Regular");
-                            verified = true;
+                            FURI_LOG_I(TAG, "renfe_regular_verify: Found Mifare Classic with MAD - could be RENFE Regular");
+                            verified = false;
                         } else {
                             FURI_LOG_I(TAG, "renfe_regular_verify: No common key access - checking if this could be protected RENFE Regular");
                             
@@ -507,7 +547,7 @@ static bool renfe_regular_verify(Nfc* nfc, MfClassicData* mfc_data, bool data_lo
                             
                             if(auth_failures >= 3) {
                                 FURI_LOG_I(TAG, "renfe_regular_verify: Multiple sectors protected - likely RENFE Regular with unique keys");
-                                verified = true;
+                                verified = false;
                             } else {
                                 FURI_LOG_I(TAG, "renfe_regular_verify: Card behavior doesn't match RENFE Regular");
                             }
@@ -635,6 +675,8 @@ CardType determine_card_type(Nfc* nfc, MfClassicData* mfc_data, bool data_loaded
         return CARD_TYPE_CHARLIECARD;
     } else if(gocard_verify(mfc_data, data_loaded)) {
         return CARD_TYPE_GOCARD;
+    } else if(two_cities_verify(nfc, mfc_data,data_loaded)) {
+        return CARD_TYPE_TWO_CITIES;
     } else if(renfe_suma10_verify(nfc, mfc_data, data_loaded)) {
         return CARD_TYPE_RENFE_SUM10;
     } else if(renfe_regular_verify(nfc, mfc_data, data_loaded)) {

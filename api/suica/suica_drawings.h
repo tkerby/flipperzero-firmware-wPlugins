@@ -604,30 +604,30 @@ static void
     canvas_draw_icon(canvas, 27, 14, &I_Suica_PenguinHappyBirthday);
     canvas_draw_icon(canvas, 14, 14, &I_Suica_PenguinTodaysVIP);
     canvas_draw_rframe(canvas, 12, 12, 13, 52, 2); // VIP frame
-    uint8_t star_bits[4] = {0b11000000, 0b11110000, 0b11111111, 0b00000000};
+    uint8_t intertic_bits[4] = {0b11000000, 0b11110000, 0b11111111, 0b00000000};
 
     // Arrow
     if(model->animator_tick > 3) {
         // 4 steps of animation
         model->animator_tick = 0;
     }
-    uint8_t current_star_bits = star_bits[model->animator_tick];
+    uint8_t current_intertic_bits = intertic_bits[model->animator_tick];
     canvas_draw_icon(
-        canvas, 87, 30, (current_star_bits & 0b10000000) ? &I_Suica_BigStar : &I_Suica_Nothing);
+        canvas, 87, 30, (current_intertic_bits & 0b10000000) ? &I_Suica_BigStar : &I_Suica_Nothing);
     canvas_draw_icon(
-        canvas, 90, 12, (current_star_bits & 0b01000000) ? &I_Suica_PlusStar : &I_Suica_Nothing);
+        canvas, 90, 12, (current_intertic_bits & 0b01000000) ? &I_Suica_PlusStar : &I_Suica_Nothing);
     canvas_draw_icon(
-        canvas, 99, 34, (current_star_bits & 0b00100000) ? &I_Suica_SmallStar : &I_Suica_Nothing);
+        canvas, 99, 34, (current_intertic_bits & 0b00100000) ? &I_Suica_SmallStar : &I_Suica_Nothing);
     canvas_draw_icon(
-        canvas, 103, 12, (current_star_bits & 0b00010000) ? &I_Suica_SmallStar : &I_Suica_Nothing);
+        canvas, 103, 12, (current_intertic_bits & 0b00010000) ? &I_Suica_SmallStar : &I_Suica_Nothing);
     canvas_draw_icon(
-        canvas, 106, 21, (current_star_bits & 0b00001000) ? &I_Suica_BigStar : &I_Suica_Nothing);
+        canvas, 106, 21, (current_intertic_bits & 0b00001000) ? &I_Suica_BigStar : &I_Suica_Nothing);
     canvas_draw_icon(
-        canvas, 109, 43, (current_star_bits & 0b00000100) ? &I_Suica_PlusStar : &I_Suica_Nothing);
+        canvas, 109, 43, (current_intertic_bits & 0b00000100) ? &I_Suica_PlusStar : &I_Suica_Nothing);
     canvas_draw_icon(
-        canvas, 117, 28, (current_star_bits & 0b00000010) ? &I_Suica_BigStar : &I_Suica_Nothing);
+        canvas, 117, 28, (current_intertic_bits & 0b00000010) ? &I_Suica_BigStar : &I_Suica_Nothing);
     canvas_draw_icon(
-        canvas, 115, 16, (current_star_bits & 0b00000100) ? &I_Suica_PlusStar : &I_Suica_Nothing);
+        canvas, 115, 16, (current_intertic_bits & 0b00000100) ? &I_Suica_PlusStar : &I_Suica_Nothing);
 }
 
 static void suica_draw_vending_machine_page_1(

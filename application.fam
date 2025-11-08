@@ -23,6 +23,15 @@ App(
 )
 
 App(
+    appid="two_cities_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="two_cities_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/two_cities.c"],
+    fal_embedded=True,
+)
+
+App(
     appid="calypso_plugin",
     apptype=FlipperAppType.PLUGIN,
     entry_point="calypso_plugin_ep",
@@ -145,5 +154,41 @@ App(
     entry_point="nol_plugin_ep",
     requires=["metroflip"],
     sources=["scenes/plugins/nol.c"],
+    fal_embedded=True,
+)
+
+App(
+    appid="atr_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="atr_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/atr.c"],
+    fal_embedded=True,
+)
+
+App(
+    appid="tmobilitat_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="tmobilitat_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/tmobilitat.c"],
+    fal_embedded=True,
+)
+
+App(
+    appid="intertic_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="intertic_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/intertic.c"],
+    fal_embedded=True,
+)
+
+App(
+    appid="trt_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="trt_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/trt.c"],
     fal_embedded=True,
 )

@@ -23,6 +23,7 @@ void metroflip_scene_credits_on_enter(void* context) {
     furi_string_cat_printf(str, "CharlieCard Parser:\nzacharyweiss\n\n");
     furi_string_cat_printf(str, "Clipper Parser:\nke6jjj\n\n");
     furi_string_cat_printf(str, "ITSO Parser:\ngsp8181, hedger, gornekich\n\n");
+    furi_string_cat_printf(str, "Intertic Parser:\nluu176");
     furi_string_cat_printf(str, "Metromoney Parser:\nLeptopt1los\n\n");
     furi_string_cat_printf(str, "myki Parser:\ngornekich\n\n");
     furi_string_cat_printf(str, "Navigo Parser:\nluu176, DocSystem \n\n");
@@ -31,7 +32,8 @@ void metroflip_scene_credits_on_enter(void* context) {
     furi_string_cat_printf(str, "Rav-Kav Parser:\nluu176\n\n");
     furi_string_cat_printf(str, "RENFE Parser:\nBocamoCM\n\n");
     furi_string_cat_printf(str, "Japan Transit IC Parser:\nzinongli\n\n");
-    furi_string_cat_printf(str, "Troika Parser:\ngornekich");
+    furi_string_cat_printf(str, "Troika Parser:\ngornekich\n\n");
+    furi_string_cat_printf(str, "TRT Parser:\nluu176, zinongli");
     furi_string_cat_printf(str, "Octopus Parser:\nzinongli\n\n");
     furi_string_cat_printf(str, "nol Parser:\nzinongli\n\n");
 

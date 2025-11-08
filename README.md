@@ -72,6 +72,7 @@ This is a list of metro cards and transit systems that need support or have part
 | **Bip!**           | 🇨🇱 Santiago de Chile, Chile                  | MIFARE Classic    |
 | **Charliecard**    | 🇺🇸 Boston, MA, USA                           | MIFARE Classic    |
 | **Clipper**        | 🇺🇸 San Francisco, CA, USA                    | MIFARE DESFire    |
+| **Intertic**       | 🇫🇷 France, About 21 Cities / Companies       | ST25TB            |
 | **ITSO**           | 🇬🇧 United Kingdom                            | MIFARE DESFire    |
 | **Metromoney**     | 🇬🇪 Tbilisi, Georgia                          | MIFARE Classic    |
 | **myki**           | 🇦🇺 Melbourne (and surrounds), VIC, Australia | MIFARE DESFire    |
@@ -83,6 +84,7 @@ This is a list of metro cards and transit systems that need support or have part
 | **SmartRider**     | 🇦🇺 Perth, WA, Australia                      | MIFARE Classic    |
 | **Suica**          | 🇯🇵 Japan                                     | FeliCa            |
 | **Troika**         | 🇷🇺 Moscow, Russia                            | MIFARE Classic    |
+| **Trt**            | 🇨🇳 Tianjin, China                            | MIFARE Ultralight |
 | **Octopus**        | 🇭🇰 Hong Kong                                 | FeliCa            |
 | **nol**            | 🇦🇪 Dubai, UAE                                | MIFARE DESFire    |
 
@@ -92,10 +94,11 @@ This is a list of metro cards and transit systems that need support or have part
 
 # Credits
 - **App Author:** [@luu176](https://github.com/luu176)
-- **Info Slaves:** [@equipter](https://github.com/equipter), [@TheDingo8MyBaby](https://github.com/thedingo8mybaby), [@ry4000](https://github.com/ry4000), [@WillyJL](https://github.com/WillyJL)
+- **Info Slaves:** [@equipter](https://github.com/equipter), [@TheDingo8MyBaby](https://github.com/thedingo8mybaby), [@ry4000](https://github.com/ry4000), [@WillyJL](https://github.com/WillyJL), 
 - **Bip! Parser:** [@rbasoalto](https://github.com/rbasoalto), [@gornekich](https://github.com/gornekich)
 - **Charliecard Parser:** [@zacharyweiss](https://github.com/zacharyweiss)
 - **Clipper Parser:** [@ke6jjj](https://github.com/ke6jjj)
+- **Intertic Parser (21 Cities):**[@gornekich](https://github.com/luu176)**, **[@gentilkiwi](https://github.com/gentilkiwi)**
 - **ITSO Parser:** [@gsp8181](https://github.com/gsp8181), [@hedger](https://github.com/hedger), [@gornekich](https://github.com/gornekich)
 - **Metromoney Parser:** [@Leptopt1los](https://github.com/Leptopt1los)
 - **myki Parser:** [@gornekich](https://github.com/gornekich)
@@ -106,10 +109,11 @@ This is a list of metro cards and transit systems that need support or have part
 - **RENFE Parser:** [@BocamoCM](https://github.com/BocamoCM)
 - **Suica Parser:** [@zinongli](https://github.com/zinongli)
 - **Troika Parser:** [@gornekich](https://github.com/gornekich)
+- **TRT Parser:** [@luu176](https://github.com/luu176), [@zinongli](https://github.com/zinongli)
 - **Octopus Parser:** [@zinongli](https://github.com/zinongli)
 - **nol Parser:** [@zinongli](https://github.com/zinongli)
 
 ---
 
 ### Special Thanks
-Huge thanks to [@equipter](https://github.com/equipter) & [@ry4000](https://github.com/ry4000) for helping out the community!
+Huge thanks to [@equipter](https://github.com/equipter) & [@ry4000](https://github.com/ry4000) for helping out the Discord community!
