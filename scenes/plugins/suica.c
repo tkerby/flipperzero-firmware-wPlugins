@@ -399,12 +399,13 @@ static void suica_parse_detail_callback(GuiButtonType result, InputType type, vo
 static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
     furi_assert(event.protocol == NfcProtocolFelica);
     NfcCommand command = NfcCommandContinue;
-    // MetroflipPollerEventType stage = MetroflipPollerEventTypeStart;
+    Metroflip* app = context;
     const FelicaPollerEvent* felica_event = event.event_data;
     FURI_LOG_I(TAG, "Felica event: %d", felica_event->type);
 
+    felica_event->data->auth_context->skip_auth = true;
+
     if(felica_event->type == FelicaPollerEventTypeReady) {
-        Metroflip* app = context;
         SuicaHistoryViewModel* model = view_get_model(app->suica_context->view_history);
         Widget* widget = app->widget;
         FuriString* parsed_data = furi_string_alloc();
@@ -427,7 +428,6 @@ static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
         uint8_t octopus_system_index = 0;
         for(uint8_t i = 0; i < system_count; i++) {
             FelicaSystem* system = simple_array_get(felica_data->systems, i);
-            FURI_LOG_I(TAG, "System %02X: %04X", i, system->system_code);
             if(system->system_code == JAPAN_IC_SYSTEM_CODE) {
                 suica_found = true;
                 suica_system_index = i;
@@ -596,7 +596,6 @@ static void suica_on_enter(Metroflip* app) {
                     uint8_t octopus_system_index = 0;
                     for(uint8_t i = 0; i < system_count; i++) {
                         FelicaSystem* system = simple_array_get(felica_data->systems, i);
-                        FURI_LOG_I(TAG, "System %02X: %04X", i, system->system_code);
                         if(system->system_code == JAPAN_IC_SYSTEM_CODE) {
                             suica_found = true;
                             suica_system_index = i;
