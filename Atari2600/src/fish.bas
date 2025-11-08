@@ -28,14 +28,12 @@ end
  player1y = 45
 
 main
- AUDV0 = 0
- 
  if player0y > player1y - 8 && player0y < player1y + 8 then player0y = player0y - 2
  if player0y >= 90 then  player0y = player0y - 2
  if collision(player0, player1) then score = 0 : player0x = 16 : player0y = 45 : a = 0 : b = 0 : c = 0 : d = 0 : e = 0 : m = 1
  if player0y = 100 then score = 0 : player0x = 16 : player0y = 45 : player1x = 150 : h = 0 : b = 1 : a = 0 : b = 0 : c = 0 : d = 0 : e = 0 : m = 1
  if player0y = 0 then score = 0 : player0x = 16 : player0y = 45 : player1x = 150 : h = 0 : b = 1 : a = 0 : b = 0 : c = 0 : d = 0 : e = 0 : m = 1
- if player1x <= 16 then player1x = 150 : player1y = (rand&110) + 10 : AUDV0 = 12 : AUDC0 = 12 : AUDF0 = 12
+ if player1x <= 16 then player1x = 150 : player1y = (rand&110) + 10
  if a < 100 then a = a + 1
  if a = 100 then b = b + 1
  if b = 100 then c = c + 1 : a = 0
@@ -63,12 +61,10 @@ single
  if joy0fire then player0y = player0y - 2 : goto single_done
 single_done
 
- AUDV0 = 0
-
  if collision(player0, player1) then score = 0 : player0x = 16 : player0y = 45 : a = 0 : b = 0 : c = 0 : d = 0 : e = 0 : m = 1
  if player0y = 100 then score = 0 : player0x = 16 : player0y = 45 : player1x = 150 : h = 0 : b = 1 : a = 0 : b = 0 : c = 0 : d = 0 : e = 0 : m = 1
  if player0y = 0 then score = 0 : player0x = 16 : player0y = 45 : player1x = 150 : h = 0 : b = 1 : a = 0 : b = 0 : c = 0 : d = 0 : e = 0 : m = 1
- if player1x <= 16 then player1x = 150 : player1y = (rand&110) + 10 : AUDV0 = 12 : AUDC0 = 12 : AUDF0 = 12
+ if player1x <= 16 then player1x = 150 : player1y = (rand&110) + 10
  if a < 100 then a = a + 1
  if a = 100 then b = b + 1
  if b = 100 then c = c + 1 : a = 0
