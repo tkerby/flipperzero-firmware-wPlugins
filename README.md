@@ -71,4 +71,4 @@ Not compatible with other TV models or brands without modifying IR codes.
 
 ## License
 
-This project is licensed under the GPL-3.0 license. See the [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under the GPL-3.0 license. See the [LICENSE](LICENSE) file for details.
