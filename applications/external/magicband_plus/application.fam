@@ -1,18 +1,13 @@
 App(
     appid="magicband_plus_lights",
     name="MagicBand Plus Lights (Unofficial)",
-    apptype=FlipperAppType.EXTERNAL,      # must be EXTERNAL
-    entry_point="ble_spam",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="magicband_plus_lights_main",
     stack_size=2 * 1024,
-
-    fap_icon="ble_spam_10px.png",
-    fap_category="Bluetooth",
+    fap_icon="magicband_plus_lights_10px.png",
     fap_file_assets="assets",
-
-    # These lines trigger generation of ble_spam_icons.[ch]
     fap_icon_assets="icons",
-    fap_icon_assets_symbol="ble_spam",
-
+    fap_category="Bluetooth",
     fap_author="Henry Willis (Haw8411)",
     fap_weburl="https://github.com/Haw8411/magic-band-plus-lights",
     fap_version="1.0.0",

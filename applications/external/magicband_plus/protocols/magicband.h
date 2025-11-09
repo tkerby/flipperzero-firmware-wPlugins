@@ -27,10 +27,10 @@ typedef enum {
 } MagicbandCategory;
 
 typedef struct {
-    uint8_t category;   // MagicbandCategory
-    uint8_t index;      // example index (for categories with example lists)
-    uint8_t color5;     // 0..31 for E9-05
-    bool    vibe_on;    // applies to E9-05
+    uint8_t category; // MagicbandCategory
+    uint8_t index; // example index (for categories with example lists)
+    uint8_t color5; // 0..31 for E9-05
+    bool vibe_on; // applies to E9-05
 } MagicbandCfg;
 
 extern const Protocol protocol_magicband;

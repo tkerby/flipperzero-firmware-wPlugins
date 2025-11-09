@@ -45,4 +45,3 @@ typedef struct {
     VariableItem* item_pp_color;
 
 } Ctx;
-
