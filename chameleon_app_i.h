@@ -143,6 +143,9 @@ typedef struct {
 ChameleonApp* chameleon_app_alloc();
 void chameleon_app_free(ChameleonApp* app);
 
+// RX callback for UART/BLE (used by connection scenes)
+void chameleon_app_rx_callback(const uint8_t* data, size_t length, void* context);
+
 // Connection management
 bool chameleon_app_connect_usb(ChameleonApp* app);
 bool chameleon_app_connect_ble(ChameleonApp* app);

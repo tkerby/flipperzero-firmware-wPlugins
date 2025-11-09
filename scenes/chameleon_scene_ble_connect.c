@@ -53,6 +53,11 @@ bool chameleon_scene_ble_connect_on_event(void* context, SceneManagerEvent event
             furi_delay_ms(1000);
 
             if(ble_handler_connect(app->ble_handler, device_index)) {
+                // Set RX callback for BLE
+                ble_handler_set_rx_callback(app->ble_handler, chameleon_app_rx_callback, app);
+                
+                // Update connection state
+                app->connection_type = ChameleonConnectionBLE;
                 app->connection_status = ChameleonStatusConnected;
 
                 // Show the fun animation of chameleon and dolphin at the bar!

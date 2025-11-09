@@ -4,7 +4,7 @@
 #define TAG "ChameleonApp"
 
 // Callback for UART/BLE data reception
-static void chameleon_app_rx_callback(const uint8_t* data, size_t length, void* context) {
+void chameleon_app_rx_callback(const uint8_t* data, size_t length, void* context) {
     ChameleonApp* app = context;
     
     FURI_LOG_D(TAG, "Received %zu bytes", length);

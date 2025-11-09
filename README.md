@@ -13,15 +13,18 @@ Complete Flipper Zero application (.fap) to control and manage your Chameleon Ul
 ## Features
 
 ### Connection Methods
-- **USB/Serial Connection** - Direct communication via USB CDC
-- **Bluetooth Low Energy (BLE)** - Wireless control of your Chameleon Ultra
+- **USB/Serial Connection** - Direct communication via USB CDC ✅ **Fully working**
+- **Bluetooth Low Energy (BLE)** - Wireless control of your Chameleon Ultra ⚠️ **Connection only** (data operations via USB recommended)
+
+> **Note**: BLE data communication (slot management, tag operations) is currently in development. BLE connection and scanning work, but bidirectional data transfer requires full BLE GATT implementation. Use USB connection for full functionality.
 
 ### Functionality
 - **Slot Management** - Manage all 8 slots on your Chameleon Ultra
-  - View slot information
-  - Rename slots
+  - View slot information with real-time sync
+  - Rename slots (32 characters max, UTF-8)
   - Set active slot
   - Configure tag types
+  - **Real device communication** - reads actual slot data from Chameleon Ultra
 - **Tag Operations** - Read and write tags
   - Read tags from Chameleon Ultra
   - Transfer Flipper tags to Chameleon Ultra
