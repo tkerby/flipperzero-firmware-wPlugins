@@ -3,6 +3,50 @@
 #undef TAG
 #define TAG "ChameleonApp"
 
+// Callback for UART/BLE data reception
+static void chameleon_app_rx_callback(const uint8_t* data, size_t length, void* context) {
+    ChameleonApp* app = context;
+    
+    FURI_LOG_D(TAG, "Received %zu bytes", length);
+    
+    // Acquire mutex
+    furi_mutex_acquire(app->response_mutex, FuriWaitForever);
+    
+    // Validate frame
+    if(length < CHAMELEON_FRAME_OVERHEAD || !chameleon_protocol_validate_frame(data, length)) {
+        FURI_LOG_W(TAG, "Invalid frame received");
+        furi_mutex_release(app->response_mutex);
+        return;
+    }
+    
+    // Parse the frame
+    uint16_t cmd, status;
+    uint16_t data_len;
+    
+    if(chameleon_protocol_parse_frame(
+        app->protocol,
+        data,
+        length,
+        &cmd,
+        &status,
+        app->data_buffer,
+        &data_len)) {
+        
+        FURI_LOG_I(TAG, "Parsed frame - CMD: 0x%04X, Status: 0x%04X, Data len: %u", cmd, status, data_len);
+        
+        // Store response
+        app->response_cmd = cmd;
+        app->response_status = status;
+        app->response_length = data_len;
+        memcpy(app->response_buffer, app->data_buffer, data_len);
+        app->response_ready = true;
+    } else {
+        FURI_LOG_E(TAG, "Failed to parse frame");
+    }
+    
+    furi_mutex_release(app->response_mutex);
+}
+
 static bool chameleon_app_custom_event_callback(void* context, uint32_t event) {
     furi_assert(context);
     ChameleonApp* app = context;
@@ -77,6 +121,11 @@ ChameleonApp* chameleon_app_alloc() {
     app->connection_type = ChameleonConnectionNone;
     app->connection_status = ChameleonStatusDisconnected;
 
+    // Initialize response handling
+    app->response_mutex = furi_mutex_alloc(FuriMutexTypeNormal);
+    app->response_ready = false;
+    app->response_length = 0;
+
     // Initialize slots
     for(uint8_t i = 0; i < 8; i++) {
         app->slots[i].slot_number = i;
@@ -95,6 +144,9 @@ void chameleon_app_free(ChameleonApp* app) {
 
     // Disconnect if connected
     chameleon_app_disconnect(app);
+
+    // Free response mutex
+    furi_mutex_free(app->response_mutex);
 
     // Free handlers
     uart_handler_free(app->uart_handler);
@@ -150,6 +202,9 @@ bool chameleon_app_connect_usb(ChameleonApp* app) {
         return false;
     }
 
+    // Set RX callback
+    uart_handler_set_rx_callback(app->uart_handler, chameleon_app_rx_callback, app);
+    
     uart_handler_start_rx(app->uart_handler);
 
     app->connection_type = ChameleonConnectionUSB;
@@ -238,10 +293,111 @@ bool chameleon_app_get_slots_info(ChameleonApp* app) {
 
     FURI_LOG_I(TAG, "Getting slots info");
 
-    // TODO: Implement GET_SLOT_INFO command
-    // For now, set dummy data
-    for(uint8_t i = 0; i < 8; i++) {
-        snprintf(app->slots[i].nickname, sizeof(app->slots[i].nickname), "Slot %d", i);
+    // Clear response flag
+    furi_mutex_acquire(app->response_mutex, FuriWaitForever);
+    app->response_ready = false;
+    furi_mutex_release(app->response_mutex);
+
+    // Build GET_SLOT_INFO command
+    uint8_t cmd_buffer[CHAMELEON_FRAME_OVERHEAD];
+    size_t cmd_len;
+
+    if(!chameleon_protocol_build_cmd_no_data(app->protocol, CMD_GET_SLOT_INFO, cmd_buffer, &cmd_len)) {
+        FURI_LOG_E(TAG, "Failed to build GET_SLOT_INFO command");
+        return false;
+    }
+
+    // Send command
+    if(app->connection_type == ChameleonConnectionUSB) {
+        uart_handler_send(app->uart_handler, cmd_buffer, cmd_len);
+    } else if(app->connection_type == ChameleonConnectionBLE) {
+        ble_handler_send(app->ble_handler, cmd_buffer, cmd_len);
+    } else {
+        FURI_LOG_E(TAG, "Not connected");
+        return false;
+    }
+
+    // Wait for response (with timeout)
+    uint32_t timeout_ms = 2000;
+    uint32_t elapsed_ms = 0;
+    bool got_response = false;
+
+    while(elapsed_ms < timeout_ms) {
+        furi_mutex_acquire(app->response_mutex, FuriWaitForever);
+        
+        if(app->response_ready && app->response_cmd == CMD_GET_SLOT_INFO) {
+            got_response = true;
+            
+            // Check status
+            if(app->response_status != STATUS_SUCCESS) {
+                FURI_LOG_E(TAG, "GET_SLOT_INFO failed with status: 0x%04X", app->response_status);
+                furi_mutex_release(app->response_mutex);
+                return false;
+            }
+
+            // Parse slot info
+            // Expected format: For each slot (8 slots):
+            // - 1 byte: slot number
+            // - 1 byte: HF tag type
+            // - 1 byte: LF tag type  
+            // - 1 byte: HF enabled
+            // - 1 byte: LF enabled
+            // - 32 bytes: nickname (UTF-8, may contain null terminator)
+            // Total per slot: 37 bytes
+            // Total for 8 slots: 296 bytes
+            
+            if(app->response_length >= 296) {
+                const uint8_t* data = app->response_buffer;
+                
+                for(uint8_t i = 0; i < 8; i++) {
+                    size_t offset = i * 37;
+                    
+                    app->slots[i].slot_number = data[offset];
+                    app->slots[i].hf_tag_type = (ChameleonTagType)data[offset + 1];
+                    app->slots[i].lf_tag_type = (ChameleonTagType)data[offset + 2];
+                    app->slots[i].hf_enabled = data[offset + 3] != 0;
+                    app->slots[i].lf_enabled = data[offset + 4] != 0;
+                    
+                    // Copy nickname (ensure null termination)
+                    memcpy(app->slots[i].nickname, &data[offset + 5], 32);
+                    app->slots[i].nickname[32] = '\0';
+                    
+                    FURI_LOG_D(TAG, "Slot %d: HF=%d LF=%d Nick='%s'", 
+                        i, 
+                        app->slots[i].hf_tag_type,
+                        app->slots[i].lf_tag_type,
+                        app->slots[i].nickname);
+                }
+                
+                FURI_LOG_I(TAG, "Slots info parsed successfully");
+            } else {
+                FURI_LOG_W(TAG, "Response too short: %zu bytes (expected 296)", app->response_length);
+                
+                // Set placeholder data for empty slots
+                for(uint8_t i = 0; i < 8; i++) {
+                    snprintf(app->slots[i].nickname, sizeof(app->slots[i].nickname), "Slot %d", i);
+                }
+            }
+            
+            app->response_ready = false;
+            furi_mutex_release(app->response_mutex);
+            break;
+        }
+        
+        furi_mutex_release(app->response_mutex);
+        furi_delay_ms(50);
+        elapsed_ms += 50;
+    }
+
+    if(!got_response) {
+        FURI_LOG_E(TAG, "Timeout waiting for GET_SLOT_INFO response");
+        
+        // Set placeholder data
+        for(uint8_t i = 0; i < 8; i++) {
+            snprintf(app->slots[i].nickname, sizeof(app->slots[i].nickname), "Slot %d (No data)", i);
+        }
+        
+        return false;
     }
 
     FURI_LOG_I(TAG, "Slots info retrieved");
@@ -371,3 +527,11 @@ int32_t chameleon_ultra_app(void* p) {
 
     return 0;
 }
+
+// Include library implementations directly to ensure they are linked
+#undef TAG
+#include "lib/uart_handler/uart_handler.c"
+#undef TAG
+#include "lib/ble_handler/ble_handler.c"
+#undef TAG
+#include "lib/chameleon_protocol/chameleon_protocol.c"

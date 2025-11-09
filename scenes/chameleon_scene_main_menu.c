@@ -69,7 +69,12 @@ bool chameleon_scene_main_menu_on_event(void* context, SceneManagerEvent event) 
     ChameleonApp* app = context;
     bool consumed = false;
 
-    if(event.type == SceneManagerEventTypeCustom) {
+    if(event.type == SceneManagerEventTypeBack) {
+        // Exit the app when back is pressed on main menu
+        scene_manager_stop(app->scene_manager);
+        view_dispatcher_stop(app->view_dispatcher);
+        consumed = true;
+    } else if(event.type == SceneManagerEventTypeCustom) {
         switch(event.event) {
         case SubmenuIndexConnect:
             scene_manager_next_scene(app->scene_manager, ChameleonSceneConnectionType);

@@ -129,6 +129,14 @@ typedef struct {
 
     // Protocol handler
     ChameleonProtocol* protocol;
+
+    // Response handling
+    FuriMutex* response_mutex;
+    uint8_t response_buffer[CHAMELEON_MAX_DATA_LEN + CHAMELEON_FRAME_OVERHEAD];
+    size_t response_length;
+    uint16_t response_cmd;
+    uint16_t response_status;
+    bool response_ready;
 } ChameleonApp;
 
 // Application lifecycle
