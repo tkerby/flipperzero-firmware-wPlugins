@@ -23,12 +23,17 @@ void chameleon_scene_connection_type_on_enter(void* context) {
         chameleon_scene_connection_type_submenu_callback,
         app);
 
+    // BLE is disabled due to Flipper Zero hardware limitation
+    // The Flipper BLE stack only supports peripheral/server mode, not central/client
+    // Uncomment when Flipper adds BLE central support:
+    /*
     submenu_add_item(
         submenu,
         "Bluetooth Connection",
         SubmenuIndexBluetooth,
         chameleon_scene_connection_type_submenu_callback,
         app);
+    */
 
     view_dispatcher_switch_to_view(app->view_dispatcher, ChameleonViewSubmenu);
 }

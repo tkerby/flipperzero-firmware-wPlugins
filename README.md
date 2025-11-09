@@ -14,9 +14,16 @@ Complete Flipper Zero application (.fap) to control and manage your Chameleon Ul
 
 ### Connection Methods
 - **USB/Serial Connection** - Direct communication via USB CDC ✅ **Fully working**
-- **Bluetooth Low Energy (BLE)** - Wireless control of your Chameleon Ultra ⚠️ **Connection only** (data operations via USB recommended)
+  - Full bidirectional communication
+  - Real-time slot management
+  - Tag read/write operations
+  - Device diagnostics
+  
+- **Bluetooth Low Energy (BLE)** - ⚠️ **Not supported** (Flipper Zero hardware limitation)
 
-> **Note**: BLE data communication (slot management, tag operations) is currently in development. BLE connection and scanning work, but bidirectional data transfer requires full BLE GATT implementation. Use USB connection for full functionality.
+> **Technical Note**: The Flipper Zero BLE stack is designed as a **peripheral/server only** (HID keyboard, serial device, etc.). It does not support **central/client** mode required to connect to other BLE peripherals like the Chameleon Ultra. The Flipper's BLE APIs (`furi_hal_bt`, `gap`, `ble_app`) only expose peripheral functionality - there are no public APIs for BLE scanning, connecting as central, or GATT client operations.
+> 
+> **Workaround**: Use USB-C connection for full functionality. The Chameleon Ultra's USB interface provides complete access to all features.
 
 ### Functionality
 - **Slot Management** - Manage all 8 slots on your Chameleon Ultra

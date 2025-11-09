@@ -82,16 +82,7 @@ bool chameleon_scene_main_menu_on_event(void* context, SceneManagerEvent event) 
             break;
         case SubmenuIndexSlots:
             if(app->connection_status == ChameleonStatusConnected) {
-                // Check if BLE connection (not fully implemented yet)
-                if(app->connection_type == ChameleonConnectionBLE) {
-                    popup_set_header(app->popup, "Notice", 64, 10, AlignCenter, AlignTop);
-                    popup_set_text(app->popup, "BLE slot management\nis work in progress.\nUse USB for now.", 64, 32, AlignCenter, AlignCenter);
-                    view_dispatcher_switch_to_view(app->view_dispatcher, ChameleonViewPopup);
-                    furi_delay_ms(2500);
-                    view_dispatcher_switch_to_view(app->view_dispatcher, ChameleonViewSubmenu);
-                } else {
-                    scene_manager_next_scene(app->scene_manager, ChameleonSceneSlotList);
-                }
+                scene_manager_next_scene(app->scene_manager, ChameleonSceneSlotList);
             } else {
                 // Show error popup
                 popup_set_header(app->popup, "Error", 64, 10, AlignCenter, AlignTop);
@@ -104,15 +95,7 @@ bool chameleon_scene_main_menu_on_event(void* context, SceneManagerEvent event) 
             break;
         case SubmenuIndexReadTag:
             if(app->connection_status == ChameleonStatusConnected) {
-                if(app->connection_type == ChameleonConnectionBLE) {
-                    popup_set_header(app->popup, "Notice", 64, 10, AlignCenter, AlignTop);
-                    popup_set_text(app->popup, "BLE tag operations\nare work in progress.\nUse USB for now.", 64, 32, AlignCenter, AlignCenter);
-                    view_dispatcher_switch_to_view(app->view_dispatcher, ChameleonViewPopup);
-                    furi_delay_ms(2500);
-                    view_dispatcher_switch_to_view(app->view_dispatcher, ChameleonViewSubmenu);
-                } else {
-                    scene_manager_next_scene(app->scene_manager, ChameleonSceneTagRead);
-                }
+                scene_manager_next_scene(app->scene_manager, ChameleonSceneTagRead);
             } else {
                 popup_set_header(app->popup, "Error", 64, 10, AlignCenter, AlignTop);
                 popup_set_text(app->popup, "Not connected\nto device", 64, 32, AlignCenter, AlignCenter);
@@ -124,15 +107,7 @@ bool chameleon_scene_main_menu_on_event(void* context, SceneManagerEvent event) 
             break;
         case SubmenuIndexWriteTag:
             if(app->connection_status == ChameleonStatusConnected) {
-                if(app->connection_type == ChameleonConnectionBLE) {
-                    popup_set_header(app->popup, "Notice", 64, 10, AlignCenter, AlignTop);
-                    popup_set_text(app->popup, "BLE tag operations\nare work in progress.\nUse USB for now.", 64, 32, AlignCenter, AlignCenter);
-                    view_dispatcher_switch_to_view(app->view_dispatcher, ChameleonViewPopup);
-                    furi_delay_ms(2500);
-                    view_dispatcher_switch_to_view(app->view_dispatcher, ChameleonViewSubmenu);
-                } else {
-                    scene_manager_next_scene(app->scene_manager, ChameleonSceneTagWrite);
-                }
+                scene_manager_next_scene(app->scene_manager, ChameleonSceneTagWrite);
             } else {
                 popup_set_header(app->popup, "Error", 64, 10, AlignCenter, AlignTop);
                 popup_set_text(app->popup, "Not connected\nto device", 64, 32, AlignCenter, AlignCenter);
@@ -144,15 +119,7 @@ bool chameleon_scene_main_menu_on_event(void* context, SceneManagerEvent event) 
             break;
         case SubmenuIndexDiagnostic:
             if(app->connection_status == ChameleonStatusConnected) {
-                if(app->connection_type == ChameleonConnectionBLE) {
-                    popup_set_header(app->popup, "Notice", 64, 10, AlignCenter, AlignTop);
-                    popup_set_text(app->popup, "BLE diagnostics\nare work in progress.\nUse USB for now.", 64, 32, AlignCenter, AlignCenter);
-                    view_dispatcher_switch_to_view(app->view_dispatcher, ChameleonViewPopup);
-                    furi_delay_ms(2500);
-                    view_dispatcher_switch_to_view(app->view_dispatcher, ChameleonViewSubmenu);
-                } else {
-                    scene_manager_next_scene(app->scene_manager, ChameleonSceneDiagnostic);
-                }
+                scene_manager_next_scene(app->scene_manager, ChameleonSceneDiagnostic);
             } else {
                 popup_set_header(app->popup, "Error", 64, 10, AlignCenter, AlignTop);
                 popup_set_text(app->popup, "Not connected\nto device", 64, 32, AlignCenter, AlignCenter);
