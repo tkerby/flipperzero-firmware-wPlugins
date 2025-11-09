@@ -8,16 +8,23 @@
 #include <dolphin/dolphin.h>
 #include <bit_lib.h>
 #include <furi_hal.h>
+#include <furi.h>
 #include <nfc/nfc.h>
 #include <nfc/nfc_device.h>
 #include <nfc/nfc_listener.h>
 #include "../../api/metroflip/metroflip_api.h"
 #include "../../metroflip_plugins.h"
 #include <machine/endian.h>
+#include <stdio.h>
+#include <applications/services/locale/locale.h>
+#include <datetime.h>
+#include <stdint.h>
 #define ST25TB_UID_SIZE (8U)
 #define ST25TB_TOTAL_BYTES 64
-#define DISTRIBUTIN_DATA_START 0
-#define DISTRIBUTIN_DATA_END 19
+#define DISTRIBUTION_DATA_START 0
+#define DISTRIBUTION_DATA_END 20
+
+
 
 #define TAG "Metroflip:Scene:Star"
 
@@ -92,7 +99,7 @@ static void bytes_to_bit_string(const uint8_t* buffer, size_t start_byte, size_t
     char* dst = bit_str;
     for(size_t i = start_byte; i <= end_byte; i++) {
         for(int bit = 7; bit >= 0; bit--) {
-            *dst++ = (buffer[i] & (1 << bit)) ? '1' : '0';
+            *dst++ = (buffer[i] & (1 << bit)) ? '1': '0';
         }
     }
     *dst = '\0';
@@ -112,18 +119,161 @@ uint64_t extract_bits(const uint8_t* buffer, size_t start_byte, size_t end_byte,
     return val;
 }
 
+void append_bytes(uint8_t* dest, size_t* dest_size, size_t dest_max,
+                  const uint8_t* src, size_t src_size,
+                  size_t start, size_t length) {
+    if(start >= src_size) return; // invalid start
+    if(start + length > src_size) length = src_size - start; // clamp length
+    if(*dest_size + length > dest_max) length = dest_max - *dest_size; // clamp to dest space
+    if(length == 0) return;
+
+    memcpy(dest + *dest_size, src + start, length);
+    *dest_size += length;
+}
+
+bool parse_timestamp(uint64_t days_since_1997, FuriString* parsed_data) {
+    if(!parsed_data) return false;
+
+    uint64_t unixTimestamp = days_since_1997 * 24 * 60 * 60 + 852076800ULL;
+
+    DateTime dt = {0};
+    datetime_timestamp_to_datetime(unixTimestamp, &dt);
+
+    FuriString* timestamp_str = furi_string_alloc();
+    locale_format_date(timestamp_str, &dt, locale_get_date_format(), "-");
+
+    furi_string_cat_printf(parsed_data, "%s", furi_string_get_cstr(timestamp_str));
+    furi_string_free(timestamp_str);
+
+    return true;
+}
+
+void Describe_Usage_1(uint8_t* UsageAB, uint64_t ContractMediumEndDate, FuriString* parsed_data) {
+    uint64_t EventDateStamp = extract_bits(UsageAB, 0, 20, 0, 10);
+    uint64_t EventTimeStamp = extract_bits(UsageAB, 0, 20, 10, 11);
+    uint64_t EventValidityTimeFirstStamp = extract_bits(UsageAB, 0, 20, 86, 11);
+
+    furi_string_cat_printf(parsed_data, "\n  EventDateStamp: ");
+    parse_timestamp(ContractMediumEndDate - EventDateStamp, parsed_data);
+    furi_string_cat_printf(parsed_data, "\n  EventTimeStamp: %02llu:%02llu",
+                           EventTimeStamp / 60, EventTimeStamp % 60);
+    furi_string_cat_printf(parsed_data, "\n  EventValidityTimeFirstStamp:\n  %02llu:%02llu\n",
+                           EventValidityTimeFirstStamp / 60, EventValidityTimeFirstStamp % 60);
+}
+
+void Describe_Usage_1_1(uint8_t* UsageAB, uint64_t ContractMediumEndDate, FuriString* parsed_data) {
+    uint64_t EventDateStamp = extract_bits(UsageAB, 0, 20, 0, 10);
+    uint64_t EventTimeStamp = extract_bits(UsageAB, 0, 20, 10, 11);
+    uint64_t EventCode_Nature = extract_bits(UsageAB, 0, 20, 29, 5);
+    uint64_t EventCode_Type = extract_bits(UsageAB, 0, 20, 34, 5);
+    uint64_t EventGeoVehicleId = extract_bits(UsageAB, 0, 20, 50, 16);
+    uint64_t EventGeoRouteId = extract_bits(UsageAB, 0, 20, 66, 14);
+    uint64_t EventGeoRoute_Direction = extract_bits(UsageAB, 0, 20, 80, 2);
+    uint64_t EventCountPassengers_mb = extract_bits(UsageAB, 0, 20, 82, 4);
+    uint64_t EventValidityTimeFirstStamp = extract_bits(UsageAB, 0, 20, 86, 11);
+
+    furi_string_cat_printf(parsed_data, "\n  DateStamp: ");
+    parse_timestamp(ContractMediumEndDate - EventDateStamp, parsed_data);
+    furi_string_cat_printf(parsed_data, "\n  TimeStamp: %02llu:%02llu\n",
+                           EventTimeStamp / 60, EventTimeStamp % 60);
+    furi_string_cat_printf(parsed_data, "\n  Code/Nature: 0x%llx", EventCode_Nature);
+    furi_string_cat_printf(parsed_data, "\n  Code/Type: 0x%llx", EventCode_Type);
+    furi_string_cat_printf(parsed_data, "\n  GeoVehicleId: %llu", EventGeoVehicleId);
+    furi_string_cat_printf(parsed_data, "\n  GeoRouteId: %llu", EventGeoRouteId);
+    furi_string_cat_printf(parsed_data, "\n  Direction: %llu", EventGeoRoute_Direction);
+    furi_string_cat_printf(parsed_data, "\n  Passengers: %llu", EventCountPassengers_mb);
+    furi_string_cat_printf(parsed_data, "\n  ValidityTimeFirstStamp:\n      %02llu:%02llu\n",
+                           EventValidityTimeFirstStamp / 60, EventValidityTimeFirstStamp % 60);
+}
+
+void Describe_Usage_2(uint8_t* UsageAB, uint64_t ContractMediumEndDate, FuriString* parsed_data) {
+    uint64_t EventDateStamp = extract_bits(UsageAB, 0, 20, 0, 10);
+    uint64_t EventTimeStamp = extract_bits(UsageAB, 0, 20, 10, 11);
+    uint64_t EventCode_Nature = extract_bits(UsageAB, 0, 20, 29, 5);
+    uint64_t EventCode_Type = extract_bits(UsageAB, 0, 20, 34, 5);
+    uint64_t EventGeoRouteId = extract_bits(UsageAB, 0, 20, 50, 14);
+    uint64_t EventGeoRoute_Direction = extract_bits(UsageAB, 0, 20, 64, 2);
+    uint64_t EventCountPassengers_mb = extract_bits(UsageAB, 0, 20, 66, 4);
+    uint64_t EventValidityTimeFirstStamp = extract_bits(UsageAB, 0, 20, 70, 11);
+
+    furi_string_cat_printf(parsed_data, "\n  DateStamp: ");
+    parse_timestamp(ContractMediumEndDate - EventDateStamp, parsed_data);
+    furi_string_cat_printf(parsed_data, "\n  TimeStamp: %02llu:%02llu",
+                           EventTimeStamp / 60, EventTimeStamp % 60);
+    furi_string_cat_printf(parsed_data, "\n  Code/Nature: 0x%llx", EventCode_Nature);
+    furi_string_cat_printf(parsed_data, "\n  Code/Type: 0x%llx", EventCode_Type);
+    furi_string_cat_printf(parsed_data, "\n  GeoRouteId: %llu", EventGeoRouteId);
+    furi_string_cat_printf(parsed_data, "\n  Direction: %llu", EventGeoRoute_Direction);
+    furi_string_cat_printf(parsed_data, "\n  Passengers: %llu", EventCountPassengers_mb);
+    furi_string_cat_printf(parsed_data, "\n  ValidityTimeFirstStamp:\n     %02llu:%02llu\n",
+                           EventValidityTimeFirstStamp / 60, EventValidityTimeFirstStamp % 60);
+}
+
+void Describe_Usage_1_2(uint8_t* UsageAB, uint64_t ContractMediumEndDate, FuriString* parsed_data) {
+    uint64_t EventDateStamp = extract_bits(UsageAB, 0, 20, 0, 10);
+    uint64_t EventTimeStamp = extract_bits(UsageAB, 0, 20, 10, 11);
+    uint64_t EventCount_mb = extract_bits(UsageAB, 0, 20, 21, 6);
+    uint64_t EventCode_Nature_mb = extract_bits(UsageAB, 0, 20, 30, 4);
+    uint64_t EventCode_Type_mb = extract_bits(UsageAB, 0, 20, 34, 4);
+    uint64_t EventGeoVehicleId = extract_bits(UsageAB, 0, 20, 49, 16);
+    uint64_t EventGeoRouteId = extract_bits(UsageAB, 0, 20, 65, 14);
+    uint64_t EventGeoRoute_Direction = extract_bits(UsageAB, 0, 20, 79, 2);
+    uint64_t EventCountPassengers_mb = extract_bits(UsageAB, 0, 20, 81, 4);
+    uint64_t EventValidityTimeFirstStamp = extract_bits(UsageAB, 0, 20, 85, 11);
+
+    furi_string_cat_printf(parsed_data, "\n  DateStamp: ");
+    parse_timestamp(ContractMediumEndDate - EventDateStamp, parsed_data);
+    furi_string_cat_printf(parsed_data, "\n  TimeStamp: %02llu:%02llu", EventTimeStamp / 60, EventTimeStamp % 60);
+    furi_string_cat_printf(parsed_data, "\n  Count: %llu", EventCount_mb);
+
+    // Proper switch for EventCode_Nature_mb
+    switch(EventCode_Nature_mb) {
+        case 0x4: furi_string_cat_printf(parsed_data, "\n  Code/Nature:\n0x%llx (urban bus)", EventCode_Nature_mb); break;
+        case 0x1: furi_string_cat_printf(parsed_data, "\n  Code/Nature:\n0x%llx (tramway)", EventCode_Nature_mb); break;
+        default:  furi_string_cat_printf(parsed_data, "\n  Code/Nature:\n0x%llx (?)", EventCode_Nature_mb); break;
+    }
+
+    furi_string_cat_printf(parsed_data, "\n  Code/Type: 0x%llu", EventCode_Type_mb);
+    furi_string_cat_printf(parsed_data, "\n  GeoVehicleId: %llu", EventGeoVehicleId);
+    furi_string_cat_printf(parsed_data, "\n  GeoRouteId: %llu", EventGeoRouteId);
+    furi_string_cat_printf(parsed_data, "\n  Direction: %llu", EventGeoRoute_Direction);
+    furi_string_cat_printf(parsed_data, "\n  Passengers: %llu", EventCountPassengers_mb);
+    furi_string_cat_printf(parsed_data, "\n  ValidityTimeFirstStamp: %02llu:%02llu\n",
+                           EventValidityTimeFirstStamp / 60, EventValidityTimeFirstStamp % 60);
+}
+
+void Describe_Usage_3(uint8_t* UsageAB, uint64_t ContractMediumEndDate, FuriString* parsed_data) {
+    uint64_t EventDateStamp = extract_bits(UsageAB, 0, 20, 0, 10);
+    uint64_t EventTimeStamp = extract_bits(UsageAB, 0, 20, 10, 11);
+    uint64_t EventValidityTimeFirstStamp = extract_bits(UsageAB, 0, 20, 48, 11);
+
+    furi_string_cat_printf(parsed_data, "\n  EventDateStamp: ");
+    parse_timestamp(ContractMediumEndDate - EventDateStamp, parsed_data);
+    furi_string_cat_printf(parsed_data, "\n  EventTimeStamp: %02llu:%02llu",
+                           EventTimeStamp / 60, EventTimeStamp % 60);
+    furi_string_cat_printf(parsed_data, "\n  EventValidityTimeFirstStamp:\n    %02llu:%02llu\n",
+                           EventValidityTimeFirstStamp / 60, EventValidityTimeFirstStamp % 60);
+}
+
+void Describe_Usage_4(uint8_t* UsageAB, uint64_t ContractMediumEndDate, FuriString* parsed_data) {
+    uint64_t EventDateStamp = extract_bits(UsageAB, 0, 20, 0, 10);
+    uint64_t EventTimeStamp = extract_bits(UsageAB, 0, 20, 10, 11);
+    uint64_t EventValidityTimeFirstStamp = extract_bits(UsageAB, 0, 20, 84, 11);
+
+    furi_string_cat_printf(parsed_data, "\n  EventDateStamp: ");
+    parse_timestamp(ContractMediumEndDate - EventDateStamp, parsed_data);
+    furi_string_cat_printf(parsed_data, "\n  EventTimeStamp: %02llu:%02llu",
+                           EventTimeStamp / 60, EventTimeStamp % 60);
+    furi_string_cat_printf(parsed_data, "\n  EventValidityTimeFirstStamp:\n   %02llu:%02llu\n",
+                           EventValidityTimeFirstStamp / 60, EventValidityTimeFirstStamp % 60);
+}
+
+
+
 static bool intertic_parse(FuriString* parsed_data, const St25tbData* data) {
     bool parsed = false;
 
     do {
-        //do some check here
-        //let's get distribution data:
-        uint8_t big_endian_file_buffer[64];
-        big_endian_version(big_endian_file_buffer, data, ST25TB_TOTAL_BYTES);
-        uint64_t countryISOCode = extract_bits(big_endian_file_buffer, DISTRIBUTIN_DATA_START, DISTRIBUTIN_DATA_END, 32, 12);
-        FURI_LOG_I(TAG, "Country ISO Code: %02llX", countryISOCode);
-
-        if (countryISOCode != 0x250) break; //it needs to be france
         furi_string_cat_printf(
             parsed_data,
             "\e#Star\n");
@@ -132,52 +282,140 @@ static bool intertic_parse(FuriString* parsed_data, const St25tbData* data) {
         for(size_t i = 0; i < ST25TB_UID_SIZE; i++) {
             furi_string_cat_printf(parsed_data, " %02X", data->uid[i]);
         }
+        //do some check here
+        //let's get distribution data:
+        uint8_t big_endian_file_buffer[64];
+        big_endian_version(big_endian_file_buffer, data, ST25TB_TOTAL_BYTES);
+        uint64_t PID = extract_bits(big_endian_file_buffer, DISTRIBUTION_DATA_START, DISTRIBUTION_DATA_END, 27, 5);
+
+        uint8_t distributionData[20];
+        size_t distributionData_size = 0;
+        uint8_t usageA[20];
+        size_t usageA_size = 0;
+        uint8_t reloading1[1];
+        size_t reloading1_size = 0;
+        uint8_t counter1[3];
+        size_t counter1_size = 0;
+        uint8_t SWAP[4];
+        size_t SWAP_size = 0;
+        uint8_t usageB[20];
+        size_t usageB_size = 0;
+
+        switch(PID) {
+            case 0x10:
+                FURI_LOG_I(TAG, "PID 0x10");
+                append_bytes(distributionData, &distributionData_size, sizeof(distributionData), big_endian_file_buffer, sizeof(big_endian_file_buffer), 4, 8);
+                append_bytes(distributionData, &distributionData_size, sizeof(distributionData), big_endian_file_buffer, sizeof(big_endian_file_buffer), 0, 3);
+                append_bytes(usageA, &usageA_size, sizeof(usageA), big_endian_file_buffer, sizeof(big_endian_file_buffer), 12, 8);
+                append_bytes(reloading1, &reloading1_size, sizeof(reloading1), big_endian_file_buffer, sizeof(big_endian_file_buffer), 20, 1);
+                append_bytes(counter1, &counter1_size, sizeof(counter1), big_endian_file_buffer, sizeof(big_endian_file_buffer), 21, 3);
+                append_bytes(SWAP, &SWAP_size, sizeof(SWAP), big_endian_file_buffer, sizeof(big_endian_file_buffer), 24, 4);
+                append_bytes(usageA, &usageA_size, sizeof(usageA), big_endian_file_buffer, sizeof(big_endian_file_buffer), 28, 12);
+                append_bytes(usageB, &usageB_size, sizeof(usageB), big_endian_file_buffer, sizeof(big_endian_file_buffer), 40, 20);
+                break;
+            case 0x11 | 0x19:
+                FURI_LOG_I(TAG, "PID 0x11|0x19");
+                append_bytes(distributionData, &distributionData_size, sizeof(distributionData), big_endian_file_buffer, sizeof(big_endian_file_buffer), 4, 16);
+                append_bytes(distributionData, &distributionData_size, sizeof(distributionData), big_endian_file_buffer, sizeof(big_endian_file_buffer), 0, 3);
+                append_bytes(reloading1, &reloading1_size, sizeof(reloading1), big_endian_file_buffer, sizeof(big_endian_file_buffer), 20, 1);
+                append_bytes(counter1, &counter1_size, sizeof(counter1), big_endian_file_buffer, sizeof(big_endian_file_buffer), 21, 3);
+                append_bytes(SWAP, &SWAP_size, sizeof(SWAP), big_endian_file_buffer, sizeof(big_endian_file_buffer), 24, 4);
+                append_bytes(usageA, &usageA_size, sizeof(usageA), big_endian_file_buffer, sizeof(big_endian_file_buffer), 28, 16);
+                append_bytes(usageB, &usageB_size, sizeof(usageB), big_endian_file_buffer, sizeof(big_endian_file_buffer), 44, 16);
+                break;
+            default:
+                parsed = true;
+                FURI_LOG_I(TAG, "Unkown PID");
+                furi_string_cat_printf(parsed_data, "\nUNKNOWN PID:\n0x%02llX\n", PID);
+                continue;
+
+        }
+        uint64_t countryISOCode = extract_bits(distributionData, DISTRIBUTION_DATA_START, sizeof(distributionData), 0, 12);
+        if (countryISOCode != 0x250) break; // FRANCE
+        uint64_t organizationalAuthority = extract_bits(distributionData, DISTRIBUTION_DATA_START, sizeof(distributionData), 12, 12);
+        uint64_t contractApplicationVersionNumber = extract_bits(distributionData, DISTRIBUTION_DATA_START, sizeof(distributionData), 24, 6);
+        uint64_t contractProvider = extract_bits(distributionData, DISTRIBUTION_DATA_START, sizeof(distributionData), 30, 8);
+        uint64_t ContractMediumEndDate = extract_bits(distributionData, DISTRIBUTION_DATA_START, sizeof(distributionData), 54, 14);
 
         furi_string_cat_printf(
             parsed_data,
-            "\nCountry Code: \n0x%02llX (France)\n",
+            "\nCountry Code:\n0x%02llX (France\n",
             countryISOCode);
-        uint64_t organizationalAuthority = extract_bits(big_endian_file_buffer, DISTRIBUTIN_DATA_START, DISTRIBUTIN_DATA_END, 44, 12);
         furi_string_cat_printf(
             parsed_data,
-            "\nOrganizational Authority: \n0x%02llX\n",
+            "\nOrganizational Authority:\n0x%02llX\n",
             organizationalAuthority);
-        uint64_t contractApplicationVersionNumber = extract_bits(big_endian_file_buffer, DISTRIBUTIN_DATA_START, DISTRIBUTIN_DATA_END, 56, 6);
         
         furi_string_cat_printf(
             parsed_data,
-            "\nContract Application \nVersion Number: %lld\n",
+            "\nContract Application\nVersion Number: %lld\n",
             contractApplicationVersionNumber);
 
-        uint64_t contractProvider = extract_bits(big_endian_file_buffer, DISTRIBUTIN_DATA_START, DISTRIBUTIN_DATA_END, 62, 8);
         
         furi_string_cat_printf(
             parsed_data,
             "\nContract Provider: %lld\n",
             contractProvider);
+        
+        furi_string_cat_printf(
+            parsed_data,
+            "\nContract End Date:\n");
+
+        parse_timestamp(ContractMediumEndDate, parsed_data);
 
         InterticEntry* entry = find_entry(organizationalAuthority, contractProvider);
         if (entry) {
-            furi_string_cat_printf(parsed_data, "\nCity: \n%s\n", entry->city); 
+            furi_string_cat_printf(parsed_data, "\n\nCity: \n%s\n", entry->city); 
             furi_string_cat_printf(parsed_data, "\nSystem: \n%s\n", entry->system);
         } else {
             furi_string_cat_printf(
-            parsed_data,"\nCity code not indexed\n");
+            parsed_data,"\n\nCity code not indexed\n");
+        }
+        uint32_t swap_value = (SWAP[0] << 24) | (SWAP[1] << 16) | (SWAP[2] << 8) | SWAP[3];
+        uint32_t counter_value = (counter1[0] << 16) | (counter1[1] << 8) | counter1[2];
+
+        furi_string_cat_printf(parsed_data, "\nLast usage: USAGE_%c\n", (swap_value & 0b1) ? 'B': 'A');
+
+        
+        furi_string_cat_printf(parsed_data, "\nRemaining Trips:\n%lu\n", (unsigned long)counter_value);
+
+ 
+
+        furi_string_cat_printf(parsed_data, "\nUSAGE A:\n");
+        if(strcmp(entry->usage, "_1") == 0) {
+            Describe_Usage_1(usageA, ContractMediumEndDate, parsed_data);
+        } else if(strcmp(entry->usage, "_1_1") == 0) {
+            Describe_Usage_1_1(usageA, ContractMediumEndDate, parsed_data);
+        } else if(strcmp(entry->usage, "_1_2") == 0) {
+            Describe_Usage_1_2(usageA, ContractMediumEndDate, parsed_data);
+        } else if(strcmp(entry->usage, "_2") == 0) {
+            Describe_Usage_2(usageA, ContractMediumEndDate, parsed_data);
+        } else if(strcmp(entry->usage, "_3") == 0) {
+            Describe_Usage_3(usageA, ContractMediumEndDate, parsed_data);
+        } else if(strcmp(entry->usage, "_4") == 0) {
+            Describe_Usage_4(usageA, ContractMediumEndDate, parsed_data);
+        } else {
+            Describe_Usage_1(usageA, ContractMediumEndDate, parsed_data);
         }
 
+        furi_string_cat_printf(parsed_data, "\nUSAGE B:\n");
+        if(strcmp(entry->usage, "_1") == 0) {
+            Describe_Usage_1(usageB, ContractMediumEndDate, parsed_data);
+        } else if(strcmp(entry->usage, "_1_1") == 0) {
+            Describe_Usage_1_1(usageB, ContractMediumEndDate, parsed_data);
+        } else if(strcmp(entry->usage, "_1_2") == 0) {
+            Describe_Usage_1_2(usageB, ContractMediumEndDate, parsed_data);
+        } else if(strcmp(entry->usage, "_2") == 0) {
+            Describe_Usage_2(usageB, ContractMediumEndDate, parsed_data);
+        } else if(strcmp(entry->usage, "_3") == 0) {
+            Describe_Usage_3(usageB, ContractMediumEndDate, parsed_data);
+        } else if(strcmp(entry->usage, "_4") == 0) {
+            Describe_Usage_4(usageB, ContractMediumEndDate, parsed_data);
+        } else {
+            Describe_Usage_1(usageB, ContractMediumEndDate, parsed_data);
+        }
+        
 
-        size_t remaining_trips_block = 5;
-        uint8_t r0 = st25tb_get_block_byte(data, remaining_trips_block, 0);
-        uint8_t r1 = st25tb_get_block_byte(data, remaining_trips_block, 1);
-        uint8_t r2 = st25tb_get_block_byte(data, remaining_trips_block, 2);
-
-        // reverse order: r2 r1 r0
-        uint32_t remaining_total = (r2 << 16) | (r1 << 8) | r0;
-
-        furi_string_cat_printf(
-            parsed_data,
-            "\nRemaining Trips: \n%ld\n",
-            remaining_total);
         parsed = true;
     } while(false);
 
