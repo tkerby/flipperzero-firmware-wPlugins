@@ -104,12 +104,28 @@ void file_draw(Canvas* canvas, void* context) {
     }
 }
 
-void file_new_icon(void* context, DialogButton button) {
+void file_new_icon_dialog_cb(void* context, DialogButton button) {
     IconEdit* app = context;
     if(button == DialogBtn_OK) {
         app->panel = Panel_New;
     } else {
         app->panel = Panel_File;
+    }
+}
+
+// forward declare
+void file_input_handle_ok(void* context);
+
+// OK, this is sneaky. Since the File Open dialog appears INSIDE Panel_File, we have no panel
+// to switch to in this callback, like with file_new_icon. So instead, we reset the dirty
+// flag, if btn OK, and then re-call the handle_ok method. Ensuring that for both OK and Cancel
+// we switch back to Panel_File from Panel_Dialog
+void file_clear_dirty_dialog_cb(void* context, DialogButton button) {
+    IconEdit* app = context;
+    app->panel = Panel_File;
+    if(button == DialogBtn_OK) {
+        app->dirty = false;
+        file_input_handle_ok(app);
     }
 }
 
@@ -119,15 +135,19 @@ void file_input_handle_ok(void* context) {
     case File_New:
         if(app->dirty) {
             app->panel = Panel_Dialog;
-            dialog_setup("Discard changes?", Dialog_OK_CANCEL, file_new_icon, app);
+            dialog_setup("Discard changes?", Dialog_OK_CANCEL, file_new_icon_dialog_cb, app);
         } else {
             app->panel = Panel_New;
         }
         break;
     case File_Open: {
-        // TODO: You have unsaved changes, are you sure?
+        if(app->dirty) {
+            app->panel = Panel_Dialog;
+            dialog_setup("Discard changes?", Dialog_OK_CANCEL, file_clear_dirty_dialog_cb, app);
+            break;
+        }
         DialogsFileBrowserOptions ieOptions;
-        dialog_file_browser_set_basic_options(&ieOptions, ".png", NULL);
+        dialog_file_browser_set_basic_options(&ieOptions, "png", &I_iet_PNG);
         ieOptions.base_path = STORAGE_EXT_PATH_PREFIX;
         ieOptions.skip_assets = true;
         DialogsApp* dialog = furi_record_open(RECORD_DIALOGS);
