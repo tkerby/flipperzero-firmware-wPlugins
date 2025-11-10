@@ -20,10 +20,10 @@ Change animation frame rate | Save as PNG, .C, or XBM
 * Draw lines, circles, and rectangles
 * Scrollable canvas (if image has a dimension greater than 32px)
 * Create animated icons: insert/duplicate and delete frames, change frame rates
-* Open `.png` files
-* Save your icons as `.png`, `.xbm`, and even in a C source file format for direct use in your code!
+* Open `.png` and `.bmx` files
+* Save your icons as `.png`, `.bmx`, `.xbm`, and even in a C source file format for direct use in your code!
   * Files are saved in the `apps_data/iconedit` folder on the SD card
-  * Multiple numbered `.png` and `.xbm` files are created for animations
+  * Multiple numbered `.png` and `.xbm` files are created for animations (bmx files are not yet supported for animations)
   * Simply copy the saved `.png` files from your SD card to your application's `images` folder to be included in your next `.fap` build
 * Even better, directly transfer C source file representations of the icons over USB to your IDE!
 * Preview of your icon, including animation playback
@@ -36,7 +36,7 @@ Change animation frame rate | Save as PNG, .C, or XBM
 * File
   * New Icon - prompts to select icon dimensions (max size 128x64)
   * Open Icon - select existing .PNG file from SDCard for editing
-  * Save Icon - Save as PNG, .C source file, or XBM formats. Multiple files are created for PNG and XBM for each frame
+  * Save Icon - Save as PNG, .C source file, BMX, or XBM formats. Multiple files are created for PNG and XBM for each frame
   * Rename Icon - change the name used for filenames and C source variable names
   * Send via USB - Sends C source text via USB to your active text editor
   * Send via BT - not yet implemented, but will be the same as above, just via BT
