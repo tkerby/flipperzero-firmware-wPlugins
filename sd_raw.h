@@ -3,7 +3,6 @@
 #include "ui.h"
 #include "furi_hal_sd.h"
 #include "helpers/mass_storage_scsi.h"
-#include "sector_cache.h"
 
 #define TAG "SDRAW"
 
@@ -14,21 +13,21 @@ void sd_init() {
     furi_hal_sd_init(false);
 }
 
-FuriHalSdInfo *try_get_sd_info() {
+FuriHalSdInfo* try_get_sd_info() {
     // Blink magenta while trying to scan for the SD card
     notify(&led_blink_magenta);
 
-    FuriHalSdInfo *info = malloc(sizeof(FuriHalSdInfo));
+    FuriHalSdInfo* info = malloc(sizeof(FuriHalSdInfo));
 
     // Try for up to 3 seconds (30 loops of 100ms)
-    for (int i=0; i<30; i++) {
+    for(int i = 0; i < 30; i++) {
         // Initialize the card and wait a bit before checking
         // Also power cycle the card every 10th time
         furi_hal_sd_init(i % 10 == 0);
         furi_delay_ms(100);
 
         // Check if card has been removed
-        if (!furi_hal_sd_is_present()) {
+        if(!furi_hal_sd_is_present()) {
             notify(NULL);
             return NULL;
         }
@@ -46,9 +45,10 @@ FuriHalSdInfo *try_get_sd_info() {
     return NULL;
 }
 
-FuriString *get_card_desc(FuriHalSdInfo info) {
-    FuriString *desc = furi_string_alloc();
-    furi_string_printf(desc,
+FuriString* get_card_desc(FuriHalSdInfo info) {
+    FuriString* desc = furi_string_alloc();
+    furi_string_printf(
+        desc,
         "%02x %s %s v%i.%i SN#%04lx Mfg.%02i/%i",
         info.manufacturer_id,
         info.oem_id,
@@ -67,18 +67,25 @@ bool sd_raw_read(
     uint8_t* out,
     uint32_t* out_len,
     uint32_t out_cap) {
-    Context *context = ctx;
+    Context* context = ctx;
 
     uint32_t length = MIN(out_cap, count * SCSI_BLOCK_SIZE) / context->logical_block_size;
     uint32_t sector = lba * SCSI_BLOCK_SIZE / context->logical_block_size;
 
-    FURI_LOG_T(TAG, "file_read lba=%08lX count=%04X out_cap=%08lX | length = %08lX sector=%08lX", lba, count, out_cap, length, sector);
+    FURI_LOG_T(
+        TAG,
+        "file_read lba=%08lX count=%04X out_cap=%08lX | length = %08lX sector=%08lX",
+        lba,
+        count,
+        out_cap,
+        length,
+        sector);
 
     // This function reads uint32_t's, so we divide the sector and length by 4 TIMES 512 BECAUSE SOMEONE IS A DUMBASS
     FuriStatus result = furi_hal_sd_read_blocks((uint32_t*)out, sector, length);
 
-    if (result == FuriStatusOk) {
-        context->bytes_read += *out_len = length * context->logical_block_size;
+    if(result == FuriStatusOk) {
+        context->bytes_read += * out_len = length * context->logical_block_size;
         FURI_LOG_T(TAG, "Read %lu/%lu bytes.", *out_len, count * SCSI_BLOCK_SIZE);
         return true;
     } else {
@@ -88,7 +95,7 @@ bool sd_raw_read(
 }
 
 bool sd_raw_write(void* ctx, uint32_t lba, uint16_t count, uint8_t* buf, uint32_t len) {
-    Context *context = ctx;
+    Context* context = ctx;
 
     // Don't actually perform any write operations for now, don't want to corrupt anything
     (void)lba;
@@ -112,11 +119,11 @@ bool sd_raw_write(void* ctx, uint32_t lba, uint16_t count, uint8_t* buf, uint32_
 }
 
 uint32_t sd_num_blocks(void* ctx) {
-    Context *context = ctx;
+    Context* context = ctx;
     return context->card_size_in_blocks;
 }
 
 void sd_eject(void* ctx) {
-    Context *context = ctx;
+    Context* context = ctx;
     furi_thread_flags_set(context->thread_id, FlagEject);
 }

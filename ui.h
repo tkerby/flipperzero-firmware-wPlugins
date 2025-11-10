@@ -1,14 +1,17 @@
 #pragma once
 #include <notification/notification_messages.h>
-#include <assets_icons.h>
+
+#include "gui/icon.h"
+extern const Icon I_SDQuestion_35x43;
+extern const Icon I_Error_62x31;
 
 // Show a message and continue immediately
-void show(const char *message);
+void show(const char* message);
 // Update the existing popup with a new message
-void update_existing_popup(const char *message);
+void update_existing_popup(const char* message);
 
 // Show an error message and wait for the user to confirm
-void show_error_and_wait(const char *text, const Icon* icon, int icon_width);
+void show_error_and_wait(const char* text, const Icon* icon, int icon_width);
 
 // Trigger a system "notification" (i.e. vibration, sound, and/or LED) sequence.
 // Pass NULL to reset the notification state.
@@ -19,7 +22,6 @@ bool back_button_was_pressed();
 
 void ui_init();
 void ui_cleanup();
-
 
 // Notification sequences
 static const NotificationSequence vibrate = {
