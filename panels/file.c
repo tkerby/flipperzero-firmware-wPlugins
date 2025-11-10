@@ -3,6 +3,7 @@
 #include <dialogs/dialogs.h>
 #include <gui/view_holder.h>
 #include <toolbox/api_lock.h>
+#include <toolbox/path.h>
 #include <gui/modules/text_input.h>
 
 #include "panels.h"
@@ -129,6 +130,26 @@ void file_clear_dirty_dialog_cb(void* context, DialogButton button) {
     }
 }
 
+bool file_open_file_browser_callback(
+    FuriString* path,
+    void* context,
+    uint8_t** icon,
+    FuriString* item_name) {
+    UNUSED(path);
+    UNUSED(context);
+    UNUSED(item_name);
+    char ext[5];
+    path_extract_extension(path, ext, 5);
+    if(!strcmp(ext, ".png")) {
+        memcpy(*icon, icon_get_frame_data(&I_iet_PNG, 0), 32);
+    } else if(!strcmp(ext, ".bmx")) {
+        memcpy(*icon, icon_get_frame_data(&I_iet_BMX, 0), 32);
+    } else {
+        return false;
+    }
+    return true;
+}
+
 void file_input_handle_ok(void* context) {
     IconEdit* app = context;
     switch(tool) {
@@ -147,20 +168,34 @@ void file_input_handle_ok(void* context) {
             break;
         }
         DialogsFileBrowserOptions ieOptions;
-        dialog_file_browser_set_basic_options(&ieOptions, "png", &I_iet_PNG);
+        dialog_file_browser_set_basic_options(&ieOptions, "", NULL);
         ieOptions.base_path = STORAGE_EXT_PATH_PREFIX;
         ieOptions.skip_assets = true;
+        ieOptions.item_loader_callback = file_open_file_browser_callback;
         DialogsApp* dialog = furi_record_open(RECORD_DIALOGS);
-        FuriString* tmp_str = furi_string_alloc();
-        if(dialog_file_browser_show(dialog, tmp_str, tmp_str, &ieOptions)) {
-            FURI_LOG_I(TAG, "Selected %s to open", furi_string_get_cstr(tmp_str));
-            IEIcon* icon = png_file_open(furi_string_get_cstr(tmp_str));
-            app->icon = icon;
-            canvas_free_canvas();
-            canvas_alloc_canvas(icon->width, icon->height);
+        FuriString* filename = furi_string_alloc_set("/data");
+        if(dialog_file_browser_show(dialog, filename, filename, &ieOptions)) {
+            // FURI_LOG_I(TAG, "Selected %s to open", furi_string_get_cstr(tmp_str));
+            char ext[5];
+            path_extract_extension(filename, ext, 5);
+            IEIcon* icon = NULL;
+            if(!strcmp(ext, ".png")) {
+                icon = png_file_open(furi_string_get_cstr(filename));
+            }
+            if(!strcmp(ext, ".bmx")) {
+                icon = bmx_file_open(furi_string_get_cstr(filename));
+            }
+            if(icon) {
+                app->icon = icon;
+                canvas_free_canvas();
+                canvas_alloc_canvas(icon->width, icon->height);
+            } else {
+                // unsupported file type
+                dialog_info_dialog(app, "Unsupported type", app->panel);
+            }
         }
         furi_record_close(RECORD_DIALOGS);
-        furi_string_free(tmp_str);
+        furi_string_free(filename);
         break;
     }
     case File_Save:

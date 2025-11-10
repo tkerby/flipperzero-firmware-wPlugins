@@ -16,16 +16,19 @@ static struct {
     DrawState draw_state;
     size_t p1x, p1y;
     uint8_t* double_buffer;
+
+    // tool modifiers
+    int pen_size;
 } canvasModel;
 
 void canvas_alloc_canvas(size_t width, size_t height) {
     // place the cursor in the middle-ish
     // keeping in mind the canvas size (64x64) and our lowest scale of 2x
-    canvasModel.cursor_x = (width / 2) - 1;
+    canvasModel.cursor_x = MAX((int)(width / 2) - 1, 0);
     if(width > 32) {
         canvasModel.cursor_x = 15;
     }
-    canvasModel.cursor_y = (height / 2) - 1;
+    canvasModel.cursor_y = MAX((int)(height / 2) - 1, 0);
     if(height > 32) {
         canvasModel.cursor_y = 15;
     }
@@ -66,18 +69,6 @@ void canvas_draw(Canvas* canvas, void* context) {
 
     // our icon is too big for the canvas, even at the low 2x scale, or it fits
     // either way, we want it centered, accounting for both width and height
-
-    // if(scroll) {
-    //     if(icon->width * scale <= 64) {
-    //         x_offset += (64 - (icon->width * scale)) / 2;
-    //     }
-    //     if(icon->height * scale <= 64) {
-    //         y_offset += (64 - (icon->height * scale)) / 2;
-    //     }
-    // } else {
-    //     x_offset += (64 - (icon->width * scale)) / 2;
-    //     y_offset += (64 - (icon->height * scale)) / 2;
-    // }
     if(!scroll || icon->width * scale <= 64) {
         x_offset += (64 - (icon->width * scale)) / 2;
     }
