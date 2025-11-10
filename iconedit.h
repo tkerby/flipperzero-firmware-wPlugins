@@ -5,8 +5,9 @@
 #include <notification/notification.h>
 #include "icon.h"
 
-#define TAG     "IE"
-#define VERSION "0.2"
+#define TAG             "IE"
+#define VERSION         "0.3"
+#define ENABLE_XBM_SAVE // Enables XBM file save
 
 typedef struct {
     InputEvent input;

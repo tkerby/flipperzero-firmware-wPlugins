@@ -19,3 +19,6 @@ typedef void (*DialogCallback)(void* context, DialogButton button);
 
 void dialog_setup(const char* msg, DialogPrompt prompt, DialogCallback callback, void* context);
 DialogButton dialog_get_button();
+
+// Simple OK dialog, returns you back to return_to on OK
+void dialog_info_dialog(IconEdit* app, const char* msg, PanelType return_to);

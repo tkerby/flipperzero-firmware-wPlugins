@@ -1,6 +1,7 @@
 #include <furi.h>
 #include <storage/storage.h>
 #include <toolbox/path.h>
+#include <toolbox/compress.h>
 #include "png_write.h"
 #include "pngle.h"
 
@@ -19,23 +20,50 @@ int get_frame_num_fmt_width(IEIcon* icon) {
     return (int)floor(log10(icon->frame_count)) + 1;
 }
 
+// creates a packed XBM binary buffer
 uint8_t* convert_bytes_to_xbm_bits(IEIcon* icon, size_t* size, size_t frame) {
-    *size = ceil(icon->width / 8.0) * icon->height;
+    int bytes_per_row = (icon->width + 7) / 8;
+    *size = bytes_per_row * icon->height;
     uint8_t* c = malloc(*size);
     memset(c, 0, *size);
-    size_t byte = 0;
-    Frame* f = ie_icon_get_frame(icon, frame);
+    const Frame* f = ie_icon_get_frame(icon, frame);
     for(size_t y = 0; y < icon->height; ++y) {
-        for(size_t x = 0; x < icon->width; ++x) {
-            size_t b = y * icon->width + x;
-            c[byte] |= f->data[b] << (x % 8);
-            if(x != 0 && (x + 1) % 8 == 0) {
-                byte++;
+        for(int bx = 0; bx < bytes_per_row; bx++) {
+            uint8_t byte = 0;
+            for(int bit = 0; bit < 8; bit++) {
+                size_t x = bx * 8 + bit;
+                if(x < icon->width) {
+                    if(f->data[y * icon->width + x]) {
+                        byte |= (1 << bit);
+                    }
+                }
             }
+            c[y * bytes_per_row + bx] = byte;
         }
-        byte++;
     }
     return c;
+}
+
+// unpacks XBM binary buffer
+IEIcon* convert_xbm_bits_to_bytes(uint8_t* xbm, int32_t w, int32_t h) {
+    int num_pixels = w * h;
+    int bytes_per_row = (w + 7) / 8; // XBM pads rows to full bytes
+    int bit_index = 0;
+    IEIcon* icon = ie_icon_alloc(false);
+    ie_icon_reset(icon, w, h);
+
+    FURI_LOG_I("BMX", "decoding: bytes_per_row: %d", bytes_per_row);
+    for(int y = 0; y < h; y++) {
+        for(int x_byte = 0; x_byte < bytes_per_row; x_byte++) {
+            uint8_t byte = xbm[y * bytes_per_row + x_byte];
+            for(int bit = 0; bit < 8; bit++) {
+                if(bit_index >= num_pixels) break;
+                // XBM stores bits least-significant-bit first
+                icon->frames->data[bit_index++] = (byte & (1 << bit)) ? 1 : 0;
+            }
+        }
+    }
+    return icon;
 }
 
 // Write the XBM bytes to the log for debugging
@@ -202,7 +230,8 @@ bool xbm_file_save(IEIcon* icon) {
 
         } else {
             success = false;
-            FURI_LOG_E("IE", "Couldn't save xbm file");
+            FURI_LOG_E(
+                "IE", "Failed to open file for saving: %s", storage_file_get_error_desc(xbm_file));
         }
 
         furi_string_free(filename);
@@ -243,7 +272,8 @@ bool png_file_save(IEIcon* icon) {
 
         } else {
             success = false;
-            FURI_LOG_E("IE", "Couldn't save png file");
+            FURI_LOG_E(
+                "IE", "Failed to open file for saving: %s", storage_file_get_error_desc(png_file));
         }
         storage_file_close(png_file);
         storage_file_free(png_file);
@@ -293,8 +323,8 @@ IEIcon* png_file_open(const char* icon_path) {
     bool success = false;
     do {
         if(!storage_file_open(png_file, icon_path, FSAM_READ, FSOM_OPEN_EXISTING)) {
-            FURI_LOG_E("PNG", "Failed to open file!");
-            FURI_LOG_E("PNG", "Error: %s", storage_file_get_error_desc(png_file));
+            FURI_LOG_E(
+                "PNG", "Failed to open %s: %s", icon_path, storage_file_get_error_desc(png_file));
             break;
         }
 
@@ -335,5 +365,121 @@ IEIcon* png_file_open(const char* icon_path) {
     storage_file_free(png_file);
 
     furi_record_close(RECORD_STORAGE);
+    return icon;
+}
+
+bool bmx_file_save(IEIcon* icon) {
+    // create the XBM bytes
+    size_t size;
+    uint8_t* xbm = convert_bytes_to_xbm_bits(icon, &size, 0);
+
+    // log_xbm_data(xbm, size);
+
+    // then compress (heatshrink) them
+    uint8_t* encoded_data = malloc(128 * 64); // is this too big?
+    size_t encoded_size = 0;
+    Compress* compress =
+        compress_alloc(CompressTypeHeatshrink, &compress_config_heatshrink_default);
+    bool encode_success =
+        compress_encode(compress, xbm, size, encoded_data, 128 * 64, &encoded_size);
+    compress_free(compress);
+    free(xbm);
+
+    if(!encode_success) {
+        FURI_LOG_E("BMX", "Failed to encode icon!");
+        free(encoded_data);
+        return false;
+    }
+
+    // write
+    bool success = false;
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    File* bmx_file = storage_file_alloc(storage);
+    FuriString* filename =
+        furi_string_alloc_printf("/data/%s.bmx", furi_string_get_cstr(icon->name));
+    if(storage_file_open(
+           bmx_file, furi_string_get_cstr(filename), FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+        int32_t w = icon->width;
+        int32_t h = icon->height;
+        storage_file_write(bmx_file, &w, sizeof(w));
+        storage_file_write(bmx_file, &h, sizeof(h));
+        storage_file_write(bmx_file, encoded_data, encoded_size);
+        success = true;
+    } else {
+        FURI_LOG_E(
+            "BMX", "Couldn't open BMX file for save: %s", storage_file_get_error_desc(bmx_file));
+    }
+    free(encoded_data);
+
+    storage_file_close(bmx_file);
+    storage_file_free(bmx_file);
+
+    furi_string_free(filename);
+    furi_record_close(RECORD_STORAGE);
+
+    return success;
+}
+
+IEIcon* bmx_file_open(const char* icon_path) {
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    File* bmx_file = storage_file_alloc(storage);
+    IEIcon* icon = NULL;
+
+    do {
+        if(!storage_file_open(bmx_file, icon_path, FSAM_READ, FSOM_OPEN_EXISTING)) {
+            FURI_LOG_E(
+                "BMX", "Failed to open %s: %s", icon_path, storage_file_get_error_desc(bmx_file));
+            break;
+        }
+        uint64_t bmx_file_size = storage_file_size(bmx_file);
+        if(bmx_file_size == 0) {
+            FURI_LOG_E("BMX", "File size is zero!");
+            break;
+        }
+        int32_t w, h;
+        if(storage_file_read(bmx_file, &w, sizeof(w)) != sizeof(w)) {
+            FURI_LOG_E("BMX", "BMX image width can't be read");
+            break;
+        }
+        if(storage_file_read(bmx_file, &h, sizeof(h)) != sizeof(h)) {
+            FURI_LOG_E("BMX", "BMX image height can't be read");
+            break;
+        }
+        uint8_t* encoded_data = malloc(bmx_file_size - 2 * sizeof(int32_t));
+        size_t bytes_read =
+            storage_file_read(bmx_file, encoded_data, bmx_file_size - 2 * sizeof(int32_t));
+        if(bytes_read != (bmx_file_size - 2 * sizeof(int32_t))) {
+            FURI_LOG_E(
+                "BMX", "Bytes read (%d) doesn't match file size (%lld)", bytes_read, bmx_file_size);
+            break;
+        }
+
+        uint8_t* decoded_data = malloc(128 * 64);
+        size_t decoded_data_size = 0;
+        Compress* compress =
+            compress_alloc(CompressTypeHeatshrink, &compress_config_heatshrink_default);
+        bool decode_success = compress_decode(
+            compress, encoded_data, bytes_read, decoded_data, 128 * 64, &decoded_data_size);
+        free(encoded_data);
+        compress_free(compress);
+        if(!decode_success) {
+            FURI_LOG_E("BMX", "Failed to decode BMX data");
+            free(decoded_data);
+            break;
+        }
+
+        // log_xbm_data(decoded_data, decoded_data_size);
+
+        // turn the decoded xbm bytes into an icon
+        icon = convert_xbm_bits_to_bytes(decoded_data, w, h);
+        path_extract_filename_no_ext(icon_path, icon->name);
+        free(decoded_data);
+    } while(false);
+
+    storage_file_close(bmx_file);
+    storage_file_free(bmx_file);
+
+    furi_record_close(RECORD_STORAGE);
+
     return icon;
 }

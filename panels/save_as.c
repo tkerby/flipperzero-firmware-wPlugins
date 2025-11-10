@@ -10,14 +10,37 @@ typedef enum {
     Save_START,
     Save_PNG = Save_START,
     Save_C,
+#ifdef ENABLE_XBM_SAVE
     Save_XBM,
+#endif
+    Save_BMX, // used for Asset Packs
     Save_COUNT,
     Save_NONE
 } SaveMode;
 
-const char* SaveModeStr[Save_COUNT] = {"PNG", ".C", "XBM"};
-const SaveMode Save_UP[Save_COUNT] = {Save_NONE, Save_PNG, Save_C};
-const SaveMode Save_DOWN[Save_COUNT] = {Save_C, Save_XBM, Save_NONE};
+const char* SaveModeStr[Save_COUNT] = {
+    "PNG",
+    ".C",
+#ifdef ENABLE_XBM_SAVE
+    "XBM",
+#endif
+    "BMX",
+};
+const SaveMode Save_UP[Save_COUNT] = {
+    Save_NONE,
+    Save_PNG,
+    Save_C,
+#ifdef ENABLE_XBM_SAVE
+    Save_XBM,
+#endif
+};
+const SaveMode Save_DOWN[Save_COUNT] = {
+    Save_C,
+#ifdef ENABLE_XBM_SAVE
+    Save_XBM,
+#endif
+    Save_BMX,
+    Save_NONE};
 
 static struct {
     SaveMode save_mode;
@@ -85,24 +108,33 @@ bool save_as_input(InputEvent* event, void* context) {
             break;
         }
         case InputKeyOk: {
+            bool save_successful = false;
             switch(saveModel.save_mode) {
             case Save_PNG: {
-                png_file_save(app->icon);
+                save_successful = png_file_save(app->icon);
+                break;
+            }
+            case Save_BMX: {
+                save_successful = bmx_file_save(app->icon);
                 break;
             }
             case Save_C: {
-                c_file_save(app->icon);
+                save_successful = c_file_save(app->icon);
                 break;
             }
             case Save_XBM: {
-                xbm_file_save(app->icon);
+                save_successful = xbm_file_save(app->icon);
                 break;
             }
             default:
                 break;
             }
-            app->panel = Panel_File;
-            app->dirty = false;
+            if(save_successful) {
+                dialog_info_dialog(app, "File saved!", Panel_File);
+                app->dirty = false;
+            } else {
+                dialog_info_dialog(app, "Failed to save!", Panel_File);
+            }
             consumed = false;
             break;
         }

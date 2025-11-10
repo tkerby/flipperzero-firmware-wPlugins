@@ -9,6 +9,8 @@ FuriString* c_file_generate(IEIcon* icon);
 bool c_file_save(IEIcon* icon);
 bool xbm_file_save(IEIcon* icon);
 bool png_file_save(IEIcon* icon);
+bool bmx_file_save(IEIcon* icon);
 
 // bool xbm_file_open(IEIcon* icon, filename);
 IEIcon* png_file_open(const char* icon_path);
+IEIcon* bmx_file_open(const char* icon_path);
