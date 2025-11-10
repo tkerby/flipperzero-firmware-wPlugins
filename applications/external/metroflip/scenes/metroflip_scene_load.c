@@ -131,7 +131,7 @@ void metroflip_scene_load_on_enter(void* context) {
                         FURI_LOG_I(TAG, "Detected: FeliCa (API 87.0+)");
                     } while(false);
                 } else if(strcmp(protocol_name, "ST25TB") == 0) {
-                    app->card_type = "star";
+                    app->card_type = "intertic";
                     app->is_desfire = false;
                     app->data_loaded = true;
                 }

@@ -220,7 +220,7 @@ bool metroflip_scene_auto_on_event(void* context, SceneManagerEvent event) {
                 nfc_detected_protocols_get_protocol(app->detected_protocols, 0) ==
                 NfcProtocolSt25tb) {
                 FURI_LOG_I(TAG, "Protocol is ST25TB");
-                app->card_type = "star"; // place holder for now
+                app->card_type = "intertic"; // place holder for now
                 app->is_desfire = false;
                 scene_manager_next_scene(app->scene_manager, MetroflipSceneParse);
                 consumed = true;

@@ -43,9 +43,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [I2C Explorer v0.9 (By 4mb3rz)](https://github.com/4mb3rz/Flipper-I2C-Explorer)
 - Updated: [I2C Explorer v0.9 (By 4mb3rz)](https://github.com/4mb3rz/Flipper-I2C-Explorer)
 - Updated: [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader)
-- Updated: [Metroflip v1.0 (By luu176)](https://github.com/luu176/Metroflip)
 - Added: [IconEdit v0.2 (By rdefeo)](https://github.com/rdefeo/iconedit)
 - Added: [MagicBand Plus Lights v1.0 (By Haw8411)](https://github.com/Haw8411/magic-band-plus-lights)
+- Updated: [Metroflip v1.0 (By luu176)](https://github.com/luu176/Metroflip)
 
 <a name="release">
 
