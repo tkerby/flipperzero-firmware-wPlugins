@@ -28,8 +28,8 @@ This software is for experimental purposes only and is not meant for any illegal
 
 ## Latest Updates - [PATREON: Latest Release RM1110-1330-0.420.0-fdd1b9f](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-11-10 13:30 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-11-10 13:30 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-11-11 03:33 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-11-11 03:33 EST`
 - OFW: PR: [Infrared: Audio Remote - Add Teufel KB 62 RC #4299 (By testcenter)](https://github.com/flipperdevices/flipperzero-firmware/pull/4299)
 - Updated: [VEML7700 Lux Meter v1.1 (By kamylwnb)](https://github.com/kamylwnb/Flipper-zero-app-VEML7700)
 - Updated: [UDECard v1.0.3 (By hahnworks](https://github.com/hahnworks/UDECard)
@@ -57,7 +57,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - SubGHz: [Counter modes for Keeloq, CAME Atomo, Nice Flor S, AlutechAT4N (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/documentation/SubGHzCounterMode.md)
 - SubGHz: [Add AN-Motors AT4 button on arrow keys (0xC) (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/edd0bb403cf1288511d1c860a9ec1f311120e8bc)
 - OFW: PR: [NFC: Synchronise mf_classic_dict.nfc with mfc_default_keys.dic #4298 (By ry4000)](https://github.com/flipperdevices/flipperzero-firmware/pull/4298)
-- Removed dupes from IR remotes
+- [Removed dupes from IR remotes](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/1c170088cccd99a9632922a15b04abb8b606effb)
 
 <a name="release">
 
