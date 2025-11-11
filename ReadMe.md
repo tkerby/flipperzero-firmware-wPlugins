@@ -53,6 +53,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: [Fix Ultralight EV1 regression #4287 (By noproto)](https://github.com/flipperdevices/flipperzero-firmware/pull/4287) (Already In RM)
 - OFW: [Fix MIFARE Plus SL1 sector overrun issue in state machine #4288 (By noproto)](https://github.com/flipperdevices/flipperzero-firmware/pull/4288) (Already In RM)
 - OFW: [NFC: Re-apply fix for reading PWD locked MFUL #4295 (By mishamyte)](https://github.com/flipperdevices/flipperzero-firmware/pull/4295) (Already In RM)
+- Updated default animations to remove Halloween animation (By xMasterX) Updated on Stock, Minimal and Manifest Switcher Builds for Patreon Members. This animation is still in the Dolphin animation set.
+- SubGHz: [Counter modes for Keeloq, CAME Atomo, Nice Flor S, AlutechAT4N (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/documentation/SubGHzCounterMode.md)
+- SubGHz: Add AN-Motors AT4 button on arrow keys (0xC) (By xMasterX)
 
 <a name="release">
 
