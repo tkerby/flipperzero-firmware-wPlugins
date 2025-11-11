@@ -4,12 +4,12 @@ App(
     appid="space_invaders",  # Must be unique
     name="Space Invaders",  # Displayed in menus
     apptype=FlipperAppType.EXTERNAL,
-    entry_point="mytestapp_app",
+    entry_point="invaders_app",
     stack_size=2 * 1024,
     fap_category="Games",
     # Optional values
     # fap_version="0.1",
-    fap_icon="mytestapp.png",  # 10x10 1-bit PNG
+    fap_icon="invaders.png",  # 10x10 1-bit PNG
     fap_description="Adaptation for classic Space Invaders",
     fap_author="PavelZurek",
     fap_weburl="https://github.com/PavelZurek/flipperzero-space-invaders",

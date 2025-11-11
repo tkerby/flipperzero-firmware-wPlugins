@@ -422,7 +422,7 @@ static void timer_callback(void* context) {
     }
 }
 
-int32_t mytestapp_app(void* p) {
+int32_t invaders_app(void* p) {
     UNUSED(p);
 
     // ---------------
