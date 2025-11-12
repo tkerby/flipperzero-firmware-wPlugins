@@ -25,9 +25,10 @@ void draw_callback(Canvas* canvas, void* context) {
 
     canvas_set_color(canvas, ColorBlack);
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str_aligned(canvas, 1, 8, AlignLeft, AlignTop, "Welcome. Nothing here yet.");
+    canvas_draw_str_aligned(canvas, 1, 14, AlignLeft, AlignTop, "Welcome.");
 
     canvas_draw_icon(canvas, 63, 1, &I_icon_64x64);
+    canvas_draw_str_aligned(canvas, 1, 55, AlignLeft, AlignTop, "Hier gibt es nichts.");
 }
 
 void input_callback(InputEvent* event, void* context) {
