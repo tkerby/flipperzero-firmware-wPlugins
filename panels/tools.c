@@ -49,8 +49,8 @@ const EditorTool EditorTool_DOWN[Tool_COUNT] = {
     Tool_FPS,
     Tool_PrevFrame,
     Tool_NextFrame,
-    Tool_NONE,
-    Tool_NONE,
+    Tool_NextFrame,
+    Tool_NextFrame,
     Tool_NONE,
     Tool_NONE};
 const EditorTool EditorTool_LEFT[Tool_COUNT] = {

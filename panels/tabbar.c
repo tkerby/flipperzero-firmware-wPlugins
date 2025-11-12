@@ -9,13 +9,14 @@ static const char* TAB_NAMES[] = {
     "File",
     "Tools",
     // "Settings",
+    "Help",
     "About",
 };
 
-const Tab Tab_LEFT[Tab_COUNT] = {Tab_NONE, TabFile, TabTools};
-const Tab Tab_RIGHT[Tab_COUNT] = {TabTools, TabAbout, Tab_NONE};
+const Tab Tab_LEFT[Tab_COUNT] = {Tab_NONE, TabFile, TabTools, TabHelp};
+const Tab Tab_RIGHT[Tab_COUNT] = {TabTools, TabHelp, TabAbout, Tab_NONE};
 
-const PanelType Tab2Panel[Tab_COUNT] = {Panel_File, Panel_Tools, Panel_About};
+const PanelType Tab2Panel[Tab_COUNT] = {Panel_File, Panel_Tools, Panel_Help, Panel_About};
 
 static struct {
     Tab tab;

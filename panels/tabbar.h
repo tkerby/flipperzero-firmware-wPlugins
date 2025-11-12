@@ -6,6 +6,7 @@ typedef enum {
     TabFile = Tab_START,
     TabTools,
     // TabSettings,
+    TabHelp,
     TabAbout,
     Tab_COUNT,
     Tab_NONE

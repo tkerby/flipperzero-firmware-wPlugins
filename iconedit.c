@@ -41,6 +41,9 @@ void iconedit_draw_callback(Canvas* canvas, void* context) {
     // case TabSettings:
     //     settings_draw(canvas, app);
     //     break;
+    case TabHelp:
+        help_draw(canvas, app);
+        break;
     case TabAbout:
         about_draw(canvas, app);
         break;
@@ -49,7 +52,9 @@ void iconedit_draw_callback(Canvas* canvas, void* context) {
     }
 
     tabbar_draw(canvas, app);
-    canvas_draw(canvas, app);
+    if(tabbar_get_selected_tab() != TabHelp) {
+        canvas_draw(canvas, app);
+    }
 
     // now draw modal panels
     switch(app->panel) {
@@ -70,6 +75,9 @@ void iconedit_draw_callback(Canvas* canvas, void* context) {
         break;
     case Panel_Dialog:
         dialog_draw(canvas, app);
+        break;
+    case Panel_SendAs:
+        send_as_draw(canvas, app);
         break;
     default:
         break;
@@ -135,8 +143,14 @@ bool iconedit_input_process_event(InputEvent* event, void* context) {
         break;
     case Panel_Dialog:
         consumed = dialog_input(event, context);
-        // dialog_get_button or something
         break;
+    case Panel_SendAs:
+        consumed = send_as_input(event, context);
+        break;
+    case Panel_Help:
+        consumed = help_input(event, context);
+        break;
+
     default:
         break;
     }

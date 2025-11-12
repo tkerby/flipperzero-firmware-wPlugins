@@ -52,7 +52,7 @@ void save_as_draw(Canvas* canvas, void* context) {
     int pad = 2; // outside padding between frame and item
     int elem_h = 7;
     int elem_w = 22;
-    int elem_pad = 1; // the space between
+    int elem_pad = 2; // the space between
 
     // draw an empty panel frame
     int rw = elem_w + (pad * 2) + (elem_pad * 2);

@@ -1,3 +1,8 @@
+## 0.4
+
+- Send binary files to PC
+- Added Help
+
 ## 0.3
 
 - Added support to open/save .bmx files
