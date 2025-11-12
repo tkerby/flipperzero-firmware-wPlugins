@@ -1,6 +1,6 @@
 App(
      # Unique identifier used by the build system (must be unique across firmware).
-    appid="mitzi-tree-ident",
+    appid="tree-ident",
 
     # What users will see when browsing apps
     name="Tree Identification",
