@@ -35,7 +35,7 @@ void input_callback(InputEvent* event, void* context) {
     furi_message_queue_put(app->input_queue, event, 0);
 }
 
-int32_t id_card_main(void* p) {
+int32_t tree_ident_main(void* p) {
     UNUSED(p);
 
     Id_card app;
