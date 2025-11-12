@@ -107,7 +107,6 @@ void send_usb_send_filename() {
     FuriString* filename = furi_string_alloc_set(sendModel.icon->name);
     if(sendModel.send_as == SendAsPNG) {
         furi_string_cat_str(filename, ".png");
-
     }
     furi_string_cat_str(filename, "\n");
     send_usb_send_str(furi_string_get_cstr(filename));

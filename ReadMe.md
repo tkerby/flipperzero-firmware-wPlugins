@@ -3,7 +3,7 @@
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://lh3.googleusercontent.com/d/1iYQlRQXM7nA4IAdcPwvcKRSTCMoi8tug' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM1027-1607-0.420.0-6949cab.tgz&channel=RM1027-1607-0.420.0-6949cab&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM1112-0137-0.420.0-9f46c4a.tgz&channel=RM1112-0137-0.420.0-9f46c4a&version=0.420.0&target=f7)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -30,36 +30,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-11-12 01:20 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-12-11 01:20 EST`
-- OFW: PR: [Infrared: Audio Remote - Add Teufel KB 62 RC #4299 (By testcenter)](https://github.com/flipperdevices/flipperzero-firmware/pull/4299)
-- Updated: [VEML7700 Lux Meter v1.1 (By kamylwnb)](https://github.com/kamylwnb/Flipper-zero-app-VEML7700)
-- Updated: [UDECard v1.0.3 (By hahnworks](https://github.com/hahnworks/UDECard)
-- Updated: [Furious Birds v1.1 (By bmstr-ru)](https://github.com/bmstr-ru/furious-birds)
-- [ESP Flasher: Bump Marauder v1.8.9 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.8.9)
-- Updated: [Fire String v1.3 (By RyanAboueljoud)](https://github.com/RyanAboueljoud/Fire-String)
-- Updated: [Ghost ESP v1.5.1 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app)
-- Updated: [Guess The Number v1.3 (By kWAYTV)](https://github.com/kWAYTV/guess-the-number-fz)
-- Updated: [Pomodoro 2 v2.4.1 (By Th3Un1q3)](https://github.com/Th3Un1q3/flipp_pomodoro)
-- Added: [OpenPrintTag v1.0 (By Houzvicka)](https://github.com/Houzvicka/FlipperPrintTag)
-- Added: [I2C Explorer v0.9 (By 4mb3rz)](https://github.com/4mb3rz/Flipper-I2C-Explorer)
-- Updated: [I2C Explorer v0.9 (By 4mb3rz)](https://github.com/4mb3rz/Flipper-I2C-Explorer)
-- Updated: [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader)
-- Added: [IconEdit v0.2 (By rdefeo)](https://github.com/rdefeo/iconedit)
-- Added: [MagicBand Plus Lights v1.0 (By Haw8411)](https://github.com/Haw8411/magic-band-plus-lights)
-- Updated: [Metroflip v1.0 (By luu176)](https://github.com/luu176/Metroflip)
-- OFW: [Devboard docs update #4301 (By alexeyzakh)](https://github.com/flipperdevices/flipperzero-firmware/pull/4301)
-- OFW: [github: fail submit_sdk on catalog api error #4294 (By an5t)](https://github.com/flipperdevices/flipperzero-firmware/pull/4294) (Not Used)
-- OFW: [NFC lib: Expose nfc_common.h #4283 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4283) (Already In RM)
-- OFW: [NFC FeliCa Minor Fix: FelicaPollerEventType should only be Incomplete if the tag is FeliCa Lite #4279 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4279) (Already In RM)
-- OFW: [Fix Ultralight EV1 regression #4287 (By noproto)](https://github.com/flipperdevices/flipperzero-firmware/pull/4287) (Already In RM)
-- OFW: [Fix MIFARE Plus SL1 sector overrun issue in state machine #4288 (By noproto)](https://github.com/flipperdevices/flipperzero-firmware/pull/4288) (Already In RM)
-- OFW: [NFC: Re-apply fix for reading PWD locked MFUL #4295 (By mishamyte)](https://github.com/flipperdevices/flipperzero-firmware/pull/4295) (Already In RM)
-- Updated default animations to remove Halloween animation (By xMasterX) Updated on Stock, Minimal and Manifest Switcher Builds for Patreon Members. This animation is still in the Dolphin animation set.
-- SubGHz: [Counter modes for Keeloq, CAME Atomo, Nice Flor S, AlutechAT4N (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/documentation/SubGHzCounterMode.md)
-- SubGHz: [Add AN-Motors AT4 button on arrow keys (0xC) (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/edd0bb403cf1288511d1c860a9ec1f311120e8bc)
-- OFW: PR: [NFC: Synchronise mf_classic_dict.nfc with mfc_default_keys.dic #4298 (By ry4000)](https://github.com/flipperdevices/flipperzero-firmware/pull/4298)
-- [Removed dupes from IR remotes](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/1c170088cccd99a9632922a15b04abb8b606effb)
-- Updated: [Space Invaders v0.1 (By PavelZurek)](https://github.com/PavelZurek/flipperzero-space-invaders)
-- Updated: [IconEdit v0.4 (By rdefeo)](https://github.com/rdefeo/iconedit)
 
 <a name="release">
 
@@ -817,4 +787,4 @@ $ ./fbt dolphin_ext
 - Have a new app? Submit GitHub link to me on Discord for a special reward (if I add it to RM Firmware).
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM1027-1607-0.420.0-6949cab.tgz&channel=RM1027-1607-0.420.0-6949cab&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM1112-0137-0.420.0-9f46c4a.tgz&channel=RM1112-0137-0.420.0-9f46c4a&version=0.420.0&target=f7)
