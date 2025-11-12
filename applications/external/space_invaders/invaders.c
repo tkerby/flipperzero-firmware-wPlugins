@@ -55,11 +55,12 @@ typedef struct {
     short int projectileY;
 
     // Enemies
-    short int enemyX[3][8];
-    short int enemyY[3];
-    short int enemyDirection;
-    short int enemyCount[3];
-    bool enemyAnimation;
+    float enemyX[3][8]; // X coordinate of each emeny
+    short int enemyY[3]; // Y coordinate of each row of enemies
+    float enemyDirection; // Direction of enemy movement
+    float enemySpeed; // Speed of enemy movement
+    short int enemyCount[3]; // Number of enemies in each row
+    bool enemyAnimation; // Animation frame
 
     // Expolosions
     short int explosionCount;
@@ -92,6 +93,7 @@ void init_game_state(AppContext* app) {
     app->gameContext.time = 0;
     app->gameContext.shoot = false;
     app->gameContext.enemyDirection = 1;
+    app->gameContext.enemySpeed = .15;
     app->gameContext.explosionCount = 0;
     app->gameContext.enemyAnimation = false;
 
@@ -293,6 +295,7 @@ static void timer_callback(void* context) {
         }
     }
 
+    // Increment enemy animation frame
     if(app->gameContext.time % 15 == 1) {
         app->gameContext.enemyAnimation = !app->gameContext.enemyAnimation;
     }
@@ -317,8 +320,8 @@ static void timer_callback(void* context) {
     }
 
     // Enemy movement
-    if(app->gameContext.time % 3 == 0 && app->gameContext.gameState == GameStatePlay) {
-        int enemyDirection = app->gameContext.enemyDirection;
+    if(app->gameContext.time && app->gameContext.gameState == GameStatePlay) {
+        float enemyDirection = app->gameContext.enemyDirection;
         int maxEnemyX = 0;
         int minEnemyX = DISPLAY_WIDTH;
         bool movementY = false;
@@ -334,19 +337,18 @@ static void timer_callback(void* context) {
             }
         }
 
-        // Change direction and ascend
-        if(enemyDirection == 1 && maxEnemyX >= DISPLAY_WIDTH) {
-            app->gameContext.enemyDirection = -1;
-            movementY = true;
-        } else if(enemyDirection == -1 && minEnemyX <= 0) {
-            app->gameContext.enemyDirection = 1;
+        // Change direction and descend
+        if((enemyDirection > 0 && maxEnemyX >= DISPLAY_WIDTH) ||
+           (enemyDirection < 0 && minEnemyX <= 0)) {
+            app->gameContext.enemyDirection = app->gameContext.enemyDirection * -1;
             movementY = true;
         }
         // Or move in the direction
         else {
             for(short int et = 0; et < 3; et++) {
                 for(short int i = 0; i < app->gameContext.enemyCount[et]; i++) {
-                    app->gameContext.enemyX[et][i] += app->gameContext.enemyDirection;
+                    app->gameContext.enemyX[et][i] +=
+                        app->gameContext.enemyDirection * app->gameContext.enemySpeed;
                 }
             }
         }
@@ -420,7 +422,7 @@ static void timer_callback(void* context) {
     }
 }
 
-int32_t mytestapp_app(void* p) {
+int32_t invaders_app(void* p) {
     UNUSED(p);
 
     // ---------------
