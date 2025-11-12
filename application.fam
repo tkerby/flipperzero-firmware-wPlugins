@@ -1,6 +1,6 @@
 App(
      # Unique identifier used by the build system (must be unique across firmware).
-    appid="tree-ident",
+    appid="tree_ident",
 
     # What users will see when browsing apps
     name="Tree Identification",
