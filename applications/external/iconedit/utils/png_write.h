@@ -8,12 +8,18 @@ typedef struct {
     unsigned char r, g, b, a;
 } rgba_t;
 
+#define BYTES_GROW_SIZE 512
 typedef struct {
     unsigned int width;
     unsigned int height;
     rgba_t* pixels;
 
+    bool save_to_bytes;
     File* file;
+    uint8_t* bytes;
+    size_t bytes_len;
+    size_t size;
+
     unsigned int crc;
     unsigned int s1;
     unsigned int s2;
@@ -34,6 +40,12 @@ image_t* image_new(unsigned int width, unsigned int height) {
     image->width = width;
     image->height = height;
     image->pixels = malloc(sizeof(rgba_t) * width * height);
+
+    image->save_to_bytes = false;
+    image->file = NULL;
+    image->bytes = NULL;
+    image->bytes_len = 0;
+    image->size = 0;
     return image;
 }
 
@@ -63,12 +75,32 @@ static inline void make_crc_table() {
     crc_table_computed = 1;
 }
 
+void check_bytes_size(image_t* image, size_t num_bytes_to_write) {
+    if(!image->save_to_bytes) return;
+    if(image->size + num_bytes_to_write > image->bytes_len) {
+        image->bytes = realloc(image->bytes, image->bytes_len + BYTES_GROW_SIZE);
+        image->bytes_len += BYTES_GROW_SIZE;
+    }
+}
+
 static inline void image_write_header(image_t* image) {
-    storage_file_write(image->file, "\x89PNG\r\n\x1a\n", 8);
+    if(image->save_to_bytes) {
+        check_bytes_size(image, 8);
+        memcpy(image->bytes + image->size, "\x89PNG\r\n\x1a\n", 8);
+        image->size += 8;
+    } else {
+        storage_file_write(image->file, "\x89PNG\r\n\x1a\n", 8);
+    }
 }
 
 static inline void image_write_uchar(image_t* image, unsigned char c) {
-    storage_file_write(image->file, &c, 1);
+    if(image->save_to_bytes) {
+        check_bytes_size(image, 1);
+        memcpy(image->bytes + image->size, &c, 1);
+        image->size += 1;
+    } else {
+        storage_file_write(image->file, &c, 1);
+    }
 }
 
 static inline void image_update_crc(image_t* image, unsigned char c) {
@@ -111,7 +143,13 @@ static inline void image_write_chunk_end(image_t* image) {
         (image->crc >> 16) & 0xff,
         (image->crc >> 8) & 0xff,
         (image->crc) & 0xff};
-    storage_file_write(image->file, chunk, 4);
+    if(image->save_to_bytes) {
+        check_bytes_size(image, 4);
+        memcpy(image->bytes + image->size, chunk, 4);
+        image->size += 4;
+    } else {
+        storage_file_write(image->file, chunk, 4);
+    }
 }
 
 static inline void image_write_ihdr_chunk(image_t* image) {
@@ -184,6 +222,7 @@ static inline void image_write_iend_chunk(image_t* image) {
 }
 
 void image_save(image_t* image) {
+    assert(image->file != NULL && image->bytes != NULL);
     image_write_header(image);
     image_write_ihdr_chunk(image);
     image_write_idat_chunk(image);

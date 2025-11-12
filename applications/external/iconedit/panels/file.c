@@ -21,8 +21,7 @@ typedef enum {
     File_Open,
     File_Save,
     File_Rename,
-    File_USB,
-    File_BLE,
+    File_SendAs,
     File_COUNT,
     File_NONE,
     File_TABBAR
@@ -30,26 +29,24 @@ typedef enum {
 
 // const char* FileTool_Names[File_COUNT] = {"New", "Open", "Save", "Rename"};
 const char* FileTool_Desc[File_COUNT] =
-    {"New Icon", "Open Icon", "Save To...", "Rename...", "Send via USB", "Send via BT"};
+    {"New Icon", "Open Icon", "Save To...", "Rename...", "Send to PC"};
 
 const Icon* FileTool_Icon[File_COUNT] = {
     [File_New] = &I_iet_New,
     [File_Open] = &I_iet_Open,
     [File_Save] = &I_iet_Save,
     [File_Rename] = &I_iet_Rename,
-    [File_USB] = &I_iet_USB,
-    [File_BLE] = &I_iet_BLE,
+    [File_SendAs] = &I_iet_SendAs,
 };
 
 // should UP go to the tab bar?
 const FileTool FileTool_UP[File_COUNT] =
-    {File_TABBAR, File_TABBAR, File_TABBAR, File_TABBAR, File_New, File_Open};
+    {File_TABBAR, File_TABBAR, File_TABBAR, File_TABBAR, File_New};
 const FileTool FileTool_DOWN[File_COUNT] =
-    {File_USB, File_BLE, File_NONE, File_NONE, File_NONE, File_NONE};
-const FileTool FileTool_LEFT[File_COUNT] =
-    {File_NONE, File_New, File_Open, File_Save, File_NONE, File_USB};
+    {File_SendAs, File_SendAs, File_SendAs, File_SendAs, File_NONE};
+const FileTool FileTool_LEFT[File_COUNT] = {File_NONE, File_New, File_Open, File_Save, File_NONE};
 const FileTool FileTool_RIGHT[File_COUNT] =
-    {File_Open, File_Save, File_Rename, File_NONE, File_BLE, File_NONE};
+    {File_Open, File_Save, File_Rename, File_NONE, File_NONE};
 
 FileTool tool = File_New;
 
@@ -206,13 +203,8 @@ void file_input_handle_ok(void* context) {
 
         break;
     }
-    case File_USB:
-        app->panel = Panel_SendUSB;
-        send_usb_start(app->icon);
-        break;
-    case File_BLE:
-        FURI_LOG_W(TAG, "Send BLE not implemented");
-        notify_error(app);
+    case File_SendAs:
+        app->panel = Panel_SendAs;
         break;
     default:
         break;

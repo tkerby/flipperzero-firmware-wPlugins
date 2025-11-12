@@ -9,6 +9,7 @@ App(
     fap_category="Tools",
     fap_author="Roberto De Feo",
     fap_weburl="https://github.com/rdefeo/iconedit",
-    fap_version="0.2",
+    fap_version="0.4",
     fap_description="Icon editor",
+    #  COMPRESSION UPDATES / Save/SendAsBMX FROM 0.3 REMOVED
 )

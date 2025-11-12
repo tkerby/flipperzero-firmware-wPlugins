@@ -5,8 +5,9 @@
 #include <notification/notification.h>
 #include "icon.h"
 
-#define TAG     "IE"
-#define VERSION "0.2"
+#define TAG             "IE"
+#define VERSION         FAP_VERSION
+#define ENABLE_XBM_SAVE // Enables XBM file save
 
 typedef struct {
     InputEvent input;
@@ -22,6 +23,7 @@ typedef enum {
     Panel_File,
     Panel_Tools,
     Panel_Settings,
+    Panel_Help,
     Panel_About,
 
     // modal panels
@@ -30,8 +32,8 @@ typedef enum {
     Panel_New, // dimension prompt
     Panel_FPS, // select FPS
     Panel_SendUSB,
-    Panel_SendBT, // can this be the same as USB?
     Panel_Dialog,
+    Panel_SendAs,
 } PanelType;
 
 typedef void (*IconEditUpdateCallback)(void* context);

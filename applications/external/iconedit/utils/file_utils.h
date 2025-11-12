@@ -2,8 +2,9 @@
 
 #include "../icon.h"
 
-// Returns icon as C code text string
+// Returns icon as text string, binary files are in hex bytes (i.e. "013CFF...")
 FuriString* c_file_generate(IEIcon* icon);
+FuriString* png_file_generate(IEIcon* icon);
 
 // File writers
 bool c_file_save(IEIcon* icon);

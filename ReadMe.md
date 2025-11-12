@@ -59,6 +59,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: PR: [NFC: Synchronise mf_classic_dict.nfc with mfc_default_keys.dic #4298 (By ry4000)](https://github.com/flipperdevices/flipperzero-firmware/pull/4298)
 - [Removed dupes from IR remotes](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/1c170088cccd99a9632922a15b04abb8b606effb)
 - Updated: [Space Invaders v0.1 (By PavelZurek)](https://github.com/PavelZurek/flipperzero-space-invaders)
+- Updated: [IconEdit v0.4 (By rdefeo)](https://github.com/rdefeo/iconedit)
 
 <a name="release">
 
@@ -569,7 +570,7 @@ $ ./fbt dolphin_ext
 - [i2c Tools v1.2 (By NaejEL)](https://github.com/NaejEL/flipperzero-i2ctools)
 - [iButton Converter v1.1 (By Leptopt1los)](https://github.com/Leptopt1los/ibutton_converter)
 - [iButton Fuzzer v1.7 (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/507)
-- [IconEdit v0.2 (By rdefeo)](https://github.com/rdefeo/iconedit)
+- [IconEdit v0.4 (By rdefeo)](https://github.com/rdefeo/iconedit)
 - [ID Card v3.0 (By evillero)](https://github.com/evillero/ID_card_v2)
 - [IFTTT Button (By Ferrazzi)](https://github.com/Ferrazzi/FlipperZero_IFTTT_Virtual_Button) `Req: ESP8266 w/ IFTTT FW Flashed`
 - [Image Viewer v0.1 (By polioan)](https://github.com/polioan/flipper-zero-image-viewer)
