@@ -1564,7 +1564,7 @@ static void lora_config_meshtastic_change(VariableItem* item) {
 */
 static const char* config_freq_config_label = "Frequency";
 static const char* config_freq_entry_text = "Enter frequency (MHz)";
-static const char* config_freq_default_value = "923.375";
+static const char* config_freq_default_value = "915.0";
 static void lora_config_freq_text_updated(void* context) {
     LoRaApp* app = (LoRaApp*)context;
     bool redraw = true;
