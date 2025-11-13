@@ -159,15 +159,13 @@ int32_t tree_ident_main(void* p) {
 		// Handle button presses based on current screen
         switch(input.key) {
 		case InputKeyUp:
-			if(app.current_screen == ScreenQuestion) {
+			if(app.current_screen == ScreenQuestion && input.type == InputTypePress) {
 				app.selected_option = (app.selected_option - 1 + 4) % 4;
-				furi_delay_ms(500);
 			}
 			break;
 		case InputKeyDown:
-			if(app.current_screen == ScreenQuestion) {
+			if(app.current_screen == ScreenQuestion && input.type == InputTypePress) {
 				app.selected_option = (app.selected_option + 1) % 4;
-				furi_delay_ms(500);
 			}
 			break;
 		case InputKeyOk:
