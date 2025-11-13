@@ -56,7 +56,11 @@ bool chameleon_scene_slot_config_on_event(void* context, SceneManagerEvent event
         case SubmenuIndexActivate:
             if(chameleon_app_set_active_slot(app, app->active_slot)) {
                 popup_set_header(app->popup, "Success", 64, 10, AlignCenter, AlignTop);
-                snprintf(app->text_buffer, sizeof(app->text_buffer), "Slot %d activated", app->active_slot);
+                snprintf(
+                    app->text_buffer,
+                    sizeof(app->text_buffer),
+                    "Slot %d activated",
+                    app->active_slot);
                 popup_set_text(app->popup, app->text_buffer, 64, 32, AlignCenter, AlignCenter);
             } else {
                 popup_set_header(app->popup, "Error", 64, 10, AlignCenter, AlignTop);
@@ -75,7 +79,13 @@ bool chameleon_scene_slot_config_on_event(void* context, SceneManagerEvent event
 
         case SubmenuIndexChangeType:
             popup_set_header(app->popup, "Coming Soon", 64, 10, AlignCenter, AlignTop);
-            popup_set_text(app->popup, "Tag type change\nnot yet implemented", 64, 32, AlignCenter, AlignCenter);
+            popup_set_text(
+                app->popup,
+                "Tag type change\nnot yet implemented",
+                64,
+                32,
+                AlignCenter,
+                AlignCenter);
             view_dispatcher_switch_to_view(app->view_dispatcher, ChameleonViewPopup);
             furi_delay_ms(1500);
             view_dispatcher_switch_to_view(app->view_dispatcher, ChameleonViewSubmenu);

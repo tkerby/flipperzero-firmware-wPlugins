@@ -26,9 +26,7 @@ void chameleon_scene_usb_connect_on_enter(void* context) {
         // Show the handshake animation for successful connection!
         chameleon_animation_view_set_type(app->animation_view, ChameleonAnimationHandshake);
         chameleon_animation_view_set_callback(
-            app->animation_view,
-            chameleon_scene_usb_connect_animation_callback,
-            app);
+            app->animation_view, chameleon_scene_usb_connect_animation_callback, app);
 
         view_dispatcher_switch_to_view(app->view_dispatcher, ChameleonViewAnimation);
         chameleon_animation_view_start(app->animation_view);
@@ -38,9 +36,7 @@ void chameleon_scene_usb_connect_on_enter(void* context) {
         // Show error animation
         chameleon_animation_view_set_type(app->animation_view, ChameleonAnimationError);
         chameleon_animation_view_set_callback(
-            app->animation_view,
-            chameleon_scene_usb_connect_animation_callback,
-            app);
+            app->animation_view, chameleon_scene_usb_connect_animation_callback, app);
 
         view_dispatcher_switch_to_view(app->view_dispatcher, ChameleonViewAnimation);
         chameleon_animation_view_start(app->animation_view);
@@ -54,7 +50,8 @@ bool chameleon_scene_usb_connect_on_event(void* context, SceneManagerEvent event
     if(event.type == SceneManagerEventTypeCustom) {
         if(event.event == UsbConnectEventAnimationDone) {
             // Animation finished, go back to main menu
-            scene_manager_search_and_switch_to_previous_scene(app->scene_manager, ChameleonSceneMainMenu);
+            scene_manager_search_and_switch_to_previous_scene(
+                app->scene_manager, ChameleonSceneMainMenu);
             consumed = true;
         }
     }

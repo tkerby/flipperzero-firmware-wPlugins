@@ -8,15 +8,15 @@ typedef void (*ChameleonAnimationViewCallback)(void* context);
 
 // Different animation types for different contexts
 typedef enum {
-    ChameleonAnimationBar,          // Bar scene (default)
-    ChameleonAnimationHandshake,    // Meeting/greeting
-    ChameleonAnimationWorkshop,     // Working together
-    ChameleonAnimationDance,        // Celebration
-    ChameleonAnimationError,        // Connection failed
-    ChameleonAnimationDisconnect,   // Goodbye
-    ChameleonAnimationScan,         // Scanning for devices
-    ChameleonAnimationTransfer,     // Data transfer
-    ChameleonAnimationSuccess,      // Operation successful
+    ChameleonAnimationBar, // Bar scene (default)
+    ChameleonAnimationHandshake, // Meeting/greeting
+    ChameleonAnimationWorkshop, // Working together
+    ChameleonAnimationDance, // Celebration
+    ChameleonAnimationError, // Connection failed
+    ChameleonAnimationDisconnect, // Goodbye
+    ChameleonAnimationScan, // Scanning for devices
+    ChameleonAnimationTransfer, // Data transfer
+    ChameleonAnimationSuccess, // Operation successful
 } ChameleonAnimationType;
 
 ChameleonAnimationView* chameleon_animation_view_alloc();

@@ -35,11 +35,7 @@ void chameleon_scene_main_menu_on_enter(void* context) {
         app);
 
     submenu_add_item(
-        submenu,
-        "Read Tag",
-        SubmenuIndexReadTag,
-        chameleon_scene_main_menu_submenu_callback,
-        app);
+        submenu, "Read Tag", SubmenuIndexReadTag, chameleon_scene_main_menu_submenu_callback, app);
 
     submenu_add_item(
         submenu,
@@ -56,11 +52,7 @@ void chameleon_scene_main_menu_on_enter(void* context) {
         app);
 
     submenu_add_item(
-        submenu,
-        "About",
-        SubmenuIndexAbout,
-        chameleon_scene_main_menu_submenu_callback,
-        app);
+        submenu, "About", SubmenuIndexAbout, chameleon_scene_main_menu_submenu_callback, app);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, ChameleonViewSubmenu);
 }
@@ -86,7 +78,8 @@ bool chameleon_scene_main_menu_on_event(void* context, SceneManagerEvent event) 
             } else {
                 // Show error popup
                 popup_set_header(app->popup, "Error", 64, 10, AlignCenter, AlignTop);
-                popup_set_text(app->popup, "Not connected\nto device", 64, 32, AlignCenter, AlignCenter);
+                popup_set_text(
+                    app->popup, "Not connected\nto device", 64, 32, AlignCenter, AlignCenter);
                 view_dispatcher_switch_to_view(app->view_dispatcher, ChameleonViewPopup);
                 furi_delay_ms(1500);
                 view_dispatcher_switch_to_view(app->view_dispatcher, ChameleonViewSubmenu);
@@ -98,7 +91,8 @@ bool chameleon_scene_main_menu_on_event(void* context, SceneManagerEvent event) 
                 scene_manager_next_scene(app->scene_manager, ChameleonSceneTagRead);
             } else {
                 popup_set_header(app->popup, "Error", 64, 10, AlignCenter, AlignTop);
-                popup_set_text(app->popup, "Not connected\nto device", 64, 32, AlignCenter, AlignCenter);
+                popup_set_text(
+                    app->popup, "Not connected\nto device", 64, 32, AlignCenter, AlignCenter);
                 view_dispatcher_switch_to_view(app->view_dispatcher, ChameleonViewPopup);
                 furi_delay_ms(1500);
                 view_dispatcher_switch_to_view(app->view_dispatcher, ChameleonViewSubmenu);
@@ -110,7 +104,8 @@ bool chameleon_scene_main_menu_on_event(void* context, SceneManagerEvent event) 
                 scene_manager_next_scene(app->scene_manager, ChameleonSceneTagWrite);
             } else {
                 popup_set_header(app->popup, "Error", 64, 10, AlignCenter, AlignTop);
-                popup_set_text(app->popup, "Not connected\nto device", 64, 32, AlignCenter, AlignCenter);
+                popup_set_text(
+                    app->popup, "Not connected\nto device", 64, 32, AlignCenter, AlignCenter);
                 view_dispatcher_switch_to_view(app->view_dispatcher, ChameleonViewPopup);
                 furi_delay_ms(1500);
                 view_dispatcher_switch_to_view(app->view_dispatcher, ChameleonViewSubmenu);
@@ -122,7 +117,8 @@ bool chameleon_scene_main_menu_on_event(void* context, SceneManagerEvent event) 
                 scene_manager_next_scene(app->scene_manager, ChameleonSceneDiagnostic);
             } else {
                 popup_set_header(app->popup, "Error", 64, 10, AlignCenter, AlignTop);
-                popup_set_text(app->popup, "Not connected\nto device", 64, 32, AlignCenter, AlignCenter);
+                popup_set_text(
+                    app->popup, "Not connected\nto device", 64, 32, AlignCenter, AlignCenter);
                 view_dispatcher_switch_to_view(app->view_dispatcher, ChameleonViewPopup);
                 furi_delay_ms(1500);
                 view_dispatcher_switch_to_view(app->view_dispatcher, ChameleonViewSubmenu);

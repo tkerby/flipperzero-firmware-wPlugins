@@ -6,34 +6,28 @@
 // Callback for UART/BLE data reception
 void chameleon_app_rx_callback(const uint8_t* data, size_t length, void* context) {
     ChameleonApp* app = context;
-    
+
     FURI_LOG_D(TAG, "Received %zu bytes", length);
-    
+
     // Acquire mutex
     furi_mutex_acquire(app->response_mutex, FuriWaitForever);
-    
+
     // Validate frame
     if(length < CHAMELEON_FRAME_OVERHEAD || !chameleon_protocol_validate_frame(data, length)) {
         FURI_LOG_W(TAG, "Invalid frame received");
         furi_mutex_release(app->response_mutex);
         return;
     }
-    
+
     // Parse the frame
     uint16_t cmd, status;
     uint16_t data_len;
-    
+
     if(chameleon_protocol_parse_frame(
-        app->protocol,
-        data,
-        length,
-        &cmd,
-        &status,
-        app->data_buffer,
-        &data_len)) {
-        
-        FURI_LOG_I(TAG, "Parsed frame - CMD: 0x%04X, Status: 0x%04X, Data len: %u", cmd, status, data_len);
-        
+           app->protocol, data, length, &cmd, &status, app->data_buffer, &data_len)) {
+        FURI_LOG_I(
+            TAG, "Parsed frame - CMD: 0x%04X, Status: 0x%04X, Data len: %u", cmd, status, data_len);
+
         // Store response
         app->response_cmd = cmd;
         app->response_status = status;
@@ -43,7 +37,7 @@ void chameleon_app_rx_callback(const uint8_t* data, size_t length, void* context
     } else {
         FURI_LOG_E(TAG, "Failed to parse frame");
     }
-    
+
     furi_mutex_release(app->response_mutex);
 }
 
@@ -71,9 +65,12 @@ ChameleonApp* chameleon_app_alloc() {
 
     // Initialize view dispatcher
     app->view_dispatcher = view_dispatcher_alloc();
+    view_dispatcher_enable_queue(app->view_dispatcher);
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
-    view_dispatcher_set_custom_event_callback(app->view_dispatcher, chameleon_app_custom_event_callback);
-    view_dispatcher_set_navigation_event_callback(app->view_dispatcher, chameleon_app_back_event_callback);
+    view_dispatcher_set_custom_event_callback(
+        app->view_dispatcher, chameleon_app_custom_event_callback);
+    view_dispatcher_set_navigation_event_callback(
+        app->view_dispatcher, chameleon_app_back_event_callback);
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
 
     // Initialize scene manager
@@ -81,7 +78,8 @@ ChameleonApp* chameleon_app_alloc() {
 
     // Initialize views
     app->submenu = submenu_alloc();
-    view_dispatcher_add_view(app->view_dispatcher, ChameleonViewSubmenu, submenu_get_view(app->submenu));
+    view_dispatcher_add_view(
+        app->view_dispatcher, ChameleonViewSubmenu, submenu_get_view(app->submenu));
 
     app->variable_item_list = variable_item_list_alloc();
     view_dispatcher_add_view(
@@ -91,18 +89,18 @@ ChameleonApp* chameleon_app_alloc() {
 
     app->text_input = text_input_alloc();
     view_dispatcher_add_view(
-        app->view_dispatcher,
-        ChameleonViewTextInput,
-        text_input_get_view(app->text_input));
+        app->view_dispatcher, ChameleonViewTextInput, text_input_get_view(app->text_input));
 
     app->popup = popup_alloc();
     view_dispatcher_add_view(app->view_dispatcher, ChameleonViewPopup, popup_get_view(app->popup));
 
     app->widget = widget_alloc();
-    view_dispatcher_add_view(app->view_dispatcher, ChameleonViewWidget, widget_get_view(app->widget));
+    view_dispatcher_add_view(
+        app->view_dispatcher, ChameleonViewWidget, widget_get_view(app->widget));
 
     app->loading = loading_alloc();
-    view_dispatcher_add_view(app->view_dispatcher, ChameleonViewLoading, loading_get_view(app->loading));
+    view_dispatcher_add_view(
+        app->view_dispatcher, ChameleonViewLoading, loading_get_view(app->loading));
 
     app->animation_view = chameleon_animation_view_alloc();
     view_dispatcher_add_view(
@@ -204,7 +202,7 @@ bool chameleon_app_connect_usb(ChameleonApp* app) {
 
     // Set RX callback
     uart_handler_set_rx_callback(app->uart_handler, chameleon_app_rx_callback, app);
-    
+
     uart_handler_start_rx(app->uart_handler);
 
     app->connection_type = ChameleonConnectionUSB;
@@ -260,7 +258,8 @@ bool chameleon_app_get_device_info(ChameleonApp* app) {
     uint8_t cmd_buffer[CHAMELEON_FRAME_OVERHEAD];
     size_t cmd_len;
 
-    if(!chameleon_protocol_build_cmd_no_data(app->protocol, CMD_GET_APP_VERSION, cmd_buffer, &cmd_len)) {
+    if(!chameleon_protocol_build_cmd_no_data(
+           app->protocol, CMD_GET_APP_VERSION, cmd_buffer, &cmd_len)) {
         FURI_LOG_E(TAG, "Failed to build GET_APP_VERSION command");
         return false;
     }
@@ -302,7 +301,8 @@ bool chameleon_app_get_slots_info(ChameleonApp* app) {
     uint8_t cmd_buffer[CHAMELEON_FRAME_OVERHEAD];
     size_t cmd_len;
 
-    if(!chameleon_protocol_build_cmd_no_data(app->protocol, CMD_GET_SLOT_INFO, cmd_buffer, &cmd_len)) {
+    if(!chameleon_protocol_build_cmd_no_data(
+           app->protocol, CMD_GET_SLOT_INFO, cmd_buffer, &cmd_len)) {
         FURI_LOG_E(TAG, "Failed to build GET_SLOT_INFO command");
         return false;
     }
@@ -324,10 +324,10 @@ bool chameleon_app_get_slots_info(ChameleonApp* app) {
 
     while(elapsed_ms < timeout_ms) {
         furi_mutex_acquire(app->response_mutex, FuriWaitForever);
-        
+
         if(app->response_ready && app->response_cmd == CMD_GET_SLOT_INFO) {
             got_response = true;
-            
+
             // Check status
             if(app->response_status != STATUS_SUCCESS) {
                 FURI_LOG_E(TAG, "GET_SLOT_INFO failed with status: 0x%04X", app->response_status);
@@ -339,51 +339,54 @@ bool chameleon_app_get_slots_info(ChameleonApp* app) {
             // Expected format: For each slot (8 slots):
             // - 1 byte: slot number
             // - 1 byte: HF tag type
-            // - 1 byte: LF tag type  
+            // - 1 byte: LF tag type
             // - 1 byte: HF enabled
             // - 1 byte: LF enabled
             // - 32 bytes: nickname (UTF-8, may contain null terminator)
             // Total per slot: 37 bytes
             // Total for 8 slots: 296 bytes
-            
+
             if(app->response_length >= 296) {
                 const uint8_t* data = app->response_buffer;
-                
+
                 for(uint8_t i = 0; i < 8; i++) {
                     size_t offset = i * 37;
-                    
+
                     app->slots[i].slot_number = data[offset];
                     app->slots[i].hf_tag_type = (ChameleonTagType)data[offset + 1];
                     app->slots[i].lf_tag_type = (ChameleonTagType)data[offset + 2];
                     app->slots[i].hf_enabled = data[offset + 3] != 0;
                     app->slots[i].lf_enabled = data[offset + 4] != 0;
-                    
+
                     // Copy nickname (ensure null termination)
                     memcpy(app->slots[i].nickname, &data[offset + 5], 32);
                     app->slots[i].nickname[32] = '\0';
-                    
-                    FURI_LOG_D(TAG, "Slot %d: HF=%d LF=%d Nick='%s'", 
-                        i, 
+
+                    FURI_LOG_D(
+                        TAG,
+                        "Slot %d: HF=%d LF=%d Nick='%s'",
+                        i,
                         app->slots[i].hf_tag_type,
                         app->slots[i].lf_tag_type,
                         app->slots[i].nickname);
                 }
-                
+
                 FURI_LOG_I(TAG, "Slots info parsed successfully");
             } else {
-                FURI_LOG_W(TAG, "Response too short: %zu bytes (expected 296)", app->response_length);
-                
+                FURI_LOG_W(
+                    TAG, "Response too short: %zu bytes (expected 296)", app->response_length);
+
                 // Set placeholder data for empty slots
                 for(uint8_t i = 0; i < 8; i++) {
                     snprintf(app->slots[i].nickname, sizeof(app->slots[i].nickname), "Slot %d", i);
                 }
             }
-            
+
             app->response_ready = false;
             furi_mutex_release(app->response_mutex);
             break;
         }
-        
+
         furi_mutex_release(app->response_mutex);
         furi_delay_ms(50);
         elapsed_ms += 50;
@@ -391,12 +394,13 @@ bool chameleon_app_get_slots_info(ChameleonApp* app) {
 
     if(!got_response) {
         FURI_LOG_E(TAG, "Timeout waiting for GET_SLOT_INFO response");
-        
+
         // Set placeholder data
         for(uint8_t i = 0; i < 8; i++) {
-            snprintf(app->slots[i].nickname, sizeof(app->slots[i].nickname), "Slot %d (No data)", i);
+            snprintf(
+                app->slots[i].nickname, sizeof(app->slots[i].nickname), "Slot %d (No data)", i);
         }
-        
+
         return false;
     }
 
@@ -414,7 +418,8 @@ bool chameleon_app_set_active_slot(ChameleonApp* app, uint8_t slot) {
     uint8_t cmd_buffer[CHAMELEON_FRAME_OVERHEAD + 1];
     size_t cmd_len;
 
-    if(!chameleon_protocol_build_cmd_with_data(app->protocol, CMD_SET_ACTIVE_SLOT, &slot, 1, cmd_buffer, &cmd_len)) {
+    if(!chameleon_protocol_build_cmd_with_data(
+           app->protocol, CMD_SET_ACTIVE_SLOT, &slot, 1, cmd_buffer, &cmd_len)) {
         FURI_LOG_E(TAG, "Failed to build SET_ACTIVE_SLOT command");
         return false;
     }

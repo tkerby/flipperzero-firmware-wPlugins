@@ -15,9 +15,7 @@ void chameleon_scene_ble_scan_on_enter(void* context) {
     // Show scanning animation
     chameleon_animation_view_set_type(app->animation_view, ChameleonAnimationScan);
     chameleon_animation_view_set_callback(
-        app->animation_view,
-        chameleon_scene_ble_scan_animation_callback,
-        app);
+        app->animation_view, chameleon_scene_ble_scan_animation_callback, app);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, ChameleonViewAnimation);
     chameleon_animation_view_start(app->animation_view);
@@ -42,10 +40,11 @@ bool chameleon_scene_ble_scan_on_event(void* context, SceneManagerEvent event) {
                 // No devices found, show error animation then return
                 chameleon_animation_view_set_type(app->animation_view, ChameleonAnimationError);
                 chameleon_animation_view_start(app->animation_view);
-                
+
                 // After error animation, return to main menu
                 furi_delay_ms(2000);
-                scene_manager_search_and_switch_to_previous_scene(app->scene_manager, ChameleonSceneMainMenu);
+                scene_manager_search_and_switch_to_previous_scene(
+                    app->scene_manager, ChameleonSceneMainMenu);
             }
             consumed = true;
         }
