@@ -1,9 +1,10 @@
-#include <furi.h>         // Core Furi OS functionality
+#include <furi.h>         // Flipper Universal Registry Implementation = Core OS functionality
 #include <gui/gui.h>      // GUI system
 #include <input/input.h>  // Input handling (buttons)
 #include <stdint.h>       // Standard integer types
 #include <stdlib.h>       // Standard library functions
 #include <gui/elements.h> // to access button drawing functions
+
 #include "tree_ident_icons.h"  // Custom icon definitions
 
 // Tag for logging purposes
@@ -27,23 +28,31 @@ void draw_callback(Canvas* canvas, void* context) {
     
     if(app->current_screen == 0) { // First screen ----------------------------
         canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str_aligned(canvas, 1, 5, AlignLeft, AlignTop, "Tree Ident");
+		canvas_draw_str_aligned(canvas, 1, 5, AlignLeft, AlignTop, "Identify a tree");
+		
+		canvas_draw_icon(canvas, 75, 1, &I_icon_52x52); // 51 is a pixel above the buttons
 
         canvas_set_color(canvas, ColorBlack);
         canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str_aligned(canvas, 1, 14, AlignLeft, AlignTop, "Welcome.");
+        canvas_draw_str_aligned(canvas, 1, 16, AlignLeft, AlignTop, "Just answer a few");
+		canvas_draw_str_aligned(canvas, 1, 25, AlignLeft, AlignTop, "questions.");
+		
+		canvas_draw_str_aligned(canvas, 1, 49, AlignLeft, AlignTop, "Hold 'back'");
+		canvas_draw_str_aligned(canvas, 1, 57, AlignLeft, AlignTop, "to exit.");
+		
+        canvas_draw_str_aligned(canvas, 100, 54, AlignLeft, AlignTop, "F. Greil");
+		canvas_draw_str_aligned(canvas, 110, 1, AlignLeft, AlignTop, "v0.9");
 
-        canvas_draw_icon(canvas, 63, 1, &I_icon_64x64);
 		// Draw button hints at bottom using elements library
-		elements_button_left(canvas, "Exit"); // for the Back button
-		elements_button_center(canvas, "Continue"); // for the OK button
+		elements_button_center(canvas, "OK"); // for the OK button
     } else { // Second screen -------------------------------------------------
-        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
+		canvas_set_font(canvas, FontPrimary);
         canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignTop, "Second Screen");
         
         canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignTop, "You pressed OK!");
-        
+        canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignTop, "Hic sunt leones.");
+        canvas_draw_str_aligned(canvas, 100, 54, AlignLeft, AlignTop, "F. Greil");
         // Navigation hint using elements library
         elements_button_left(canvas, "Return");
     }
@@ -100,7 +109,10 @@ int32_t tree_ident_main(void* p) {
                 }
             }
             break;
-        case InputKeyLeft:
+        case InputKeyLeft: 
+			if(app.current_screen == 1) {
+                app.current_screen = 0; // Go to first screen
+            }
         case InputKeyRight:
         case InputKeyUp:
         case InputKeyDown:
