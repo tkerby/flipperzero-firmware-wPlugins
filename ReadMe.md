@@ -31,6 +31,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-11-12 01:20 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-12-11 01:20 EST`
 - Added: [Chameleon Ultra v1.0 (By muylder)](https://github.com/muylder/Chameleon_Flipper)
+- Added: [SD Card Mounter v0.1 (By aaronjamt)](https://github.com/aaronjamt/flipper_sd_mounters)
 
 <a name="release">
 
@@ -684,6 +685,7 @@ $ ./fbt dolphin_ext
 - [ROT13 v0.1 (By nothingbutlucas)](https://codeberg.org/nothingbutlucas/flipperzero_rot13)
 - [Rubiks Cube Timer v0.0.2 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
 - [SAM (By Unknown)][Original?](https://github.com/ctoth/SAM)
+- [SD Card Mounter v0.1 (By aaronjamt)](https://github.com/aaronjamt/flipper_sd_mounters)
 - [SD Info v0.1 (By Sladkisnovraper)](https://github.com/Sladkisnovraper/SD-Info-For-Flipper-Zero)
 - [SD SPI v0.5 (By Gl1tchub)](https://github.com/Gl1tchub/Flipperzero-SD-SPI) `Req: External SD Board`
 - [Segment Clock v0.1 (By Sladkisnovraper)](https://github.com/Sladkisnovraper/Segment-Clock-For-Flipper-Zero)

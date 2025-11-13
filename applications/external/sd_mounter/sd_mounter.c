@@ -7,6 +7,7 @@
 #include "helpers/mass_storage_usb.h"
 #include "sd_raw.h"
 #include "ui.h"
+#include "sd_mounter_icons.h"
 
 #ifdef TAG
 #undef TAG
@@ -14,7 +15,7 @@
 #define TAG "SDMounter"
 
 Storage* storage;
-FuriThreadId *storage_thread;
+FuriThreadId* storage_thread;
 
 bool find_storage_thread();
 void do_mass_storage(FuriHalSdInfo card_info);
@@ -22,31 +23,33 @@ int32_t sd_mounter_app(void* p);
 void cleanup();
 
 bool find_storage_thread() {
-    FuriThreadList *threads = furi_thread_list_alloc();
+    FuriThreadList* threads = furi_thread_list_alloc();
     furi_thread_enumerate(threads);
 
-    FuriThread *result = NULL;
+    FuriThread* result = NULL;
 
     for(size_t i = 0; i < furi_thread_list_size(threads); i++) {
         const FuriThreadListItem* item = furi_thread_list_get_at(threads, i);
-        
-        if (strcmp(item->app_id, "storage") == 0) {
-            if (result == NULL) {
+
+        if(strcmp(item->app_id, "storage") == 0) {
+            if(result == NULL) {
                 result = item->thread;
             } else {
-                show_error_and_wait("More than one storage thread!\nPlease report this error to the\napplication developer.", &I_Error_62x31, 62);
+                show_error_and_wait(
+                    "More than one storage thread!\nPlease report this error to the\napplication developer.",
+                    &I_Error_62x31,
+                    62);
                 return false;
             }
         }
 
-        if (strcmp(item->name, "MassStorageUsb") == 0 || strcmp(item->name, "SD Card Mounter") == 0) {
-            FURI_LOG_E("DBG","%-20s -> ID %p",
-                item->name,
-                furi_thread_get_id(item->thread));
+        if(strcmp(item->name, "MassStorageUsb") == 0 ||
+           strcmp(item->name, "SD Card Mounter") == 0) {
+            FURI_LOG_E("DBG", "%-20s -> ID %p", item->name, furi_thread_get_id(item->thread));
         }
     }
 
-    if (result != NULL) {
+    if(result != NULL) {
         storage_thread = furi_thread_get_id(result);
         return storage_thread != NULL;
     }
@@ -79,9 +82,12 @@ void do_mass_storage(FuriHalSdInfo card_info) {
     };
     furi_hal_usb_unlock();
 
-    MassStorageUsb *usb = mass_storage_usb_start(card_desc, fn);
-    if (usb == NULL) {
-        show_error_and_wait("Unable to connect to computer.\nPlease try again.", &I_SDQuestion_35x43, 35); // TODO: Diff icon?
+    MassStorageUsb* usb = mass_storage_usb_start(card_desc, fn);
+    if(usb == NULL) {
+        show_error_and_wait(
+            "Unable to connect to computer.\nPlease try again.",
+            &I_SDQuestion_35x43,
+            35); // TODO: Diff icon?
         return;
     }
 
@@ -90,14 +96,17 @@ void do_mass_storage(FuriHalSdInfo card_info) {
     uint64_t last_read = 0;
 
     // Wait for the card to be ejected
-    FuriString *message = furi_string_alloc();
-    while (1) {
+    FuriString* message = furi_string_alloc();
+    while(1) {
         // Update bytes counter
-        furi_string_printf(message, "Read: %llu kB\nWritten: %llu kB",
-            ctx.bytes_read/1024, ctx.bytes_written/1024);
+        furi_string_printf(
+            message,
+            "Read: %llu kB\nWritten: %llu kB",
+            ctx.bytes_read / 1024,
+            ctx.bytes_written / 1024);
         update_existing_popup(furi_string_get_cstr(message));
 
-        if (last_read != ctx.bytes_read) {
+        if(last_read != ctx.bytes_read) {
             last_read = ctx.bytes_read;
             notify(NULL);
             furi_delay_ms(2);
@@ -106,13 +115,13 @@ void do_mass_storage(FuriHalSdInfo card_info) {
         }
 
         // Quit if the card is removed
-        if (!furi_hal_sd_is_present()) break;
+        if(!furi_hal_sd_is_present()) break;
 
         // Stop if the card is ejected (from the computer) or the back button is pressed
-        uint32_t flags = furi_thread_flags_wait(FlagEject | FlagBackButtonPressed, FuriFlagNoClear, 50);
-        if (flags != FuriFlagErrorTimeout) break;
+        uint32_t flags =
+            furi_thread_flags_wait(FlagEject | FlagBackButtonPressed, FuriFlagNoClear, 50);
+        if(flags != FuriFlagErrorTimeout) break;
     }
-
 
     // Cleanup
     mass_storage_usb_stop(usb);
@@ -122,31 +131,40 @@ int32_t sd_mounter_app(void* p) {
     UNUSED(p);
 
     ui_init();
-            
+
     /*
     * Initialize Storage
     * Unmounts SD card and suspends the Storage thred
     */
     storage = furi_record_open(RECORD_STORAGE);
     FS_Error error = storage_sd_unmount(storage);
-    switch (error) {
-        case FSE_OK:        // Success
-        case FSE_NOT_READY: // Already unmounted
-            break;
+    switch(error) {
+    case FSE_OK: // Success
+    case FSE_NOT_READY: // Already unmounted
+        break;
 
-        case FSE_DENIED:    // Can't unmount, open files
-            show_error_and_wait("Can't unmount SD\ncard. Please close all\nopen files.", &I_SDQuestion_35x43, 35); // TODO: Diff icon?
-            cleanup();
-            return -1;
-            
-        default:
-            show_error_and_wait("Can't unmount SD\ncard due to an\nunknown error", &I_SDQuestion_35x43, 35); // TODO: Diff icon?
-            cleanup();
-            return -1;
+    case FSE_DENIED: // Can't unmount, open files
+        show_error_and_wait(
+            "Can't unmount SD\ncard. Please close all\nopen files.",
+            &I_SDQuestion_35x43,
+            35); // TODO: Diff icon?
+        cleanup();
+        return -1;
+
+    default:
+        show_error_and_wait(
+            "Can't unmount SD\ncard due to an\nunknown error",
+            &I_SDQuestion_35x43,
+            35); // TODO: Diff icon?
+        cleanup();
+        return -1;
     }
 
-    if (!find_storage_thread()) {
-        show_error_and_wait("Unable to find storage thread!\nPlease report this error to the\napplication developer.", &I_Error_62x31, 62);
+    if(!find_storage_thread()) {
+        show_error_and_wait(
+            "Unable to find storage thread!\nPlease report this error to the\napplication developer.",
+            &I_Error_62x31,
+            62);
         cleanup();
         return -1;
     }
@@ -161,32 +179,34 @@ int32_t sd_mounter_app(void* p) {
     * Stores infomation about the current SD card, to check whether it has been reinserted
     */
 
-    FuriHalSdInfo *target_card_info = NULL;
+    FuriHalSdInfo* target_card_info = NULL;
     show("Scanning card, please wait...\nDO NOT REMOVE CARD!");
     target_card_info = try_get_sd_info();
-    if (target_card_info == NULL) {
-        show_error_and_wait("Error getting SD card\ninformation!", &I_SDQuestion_35x43, 35); // TODO: Diff icon?
+    if(target_card_info == NULL) {
+        show_error_and_wait(
+            "Error getting SD card\ninformation!", &I_SDQuestion_35x43, 35); // TODO: Diff icon?
         cleanup();
         return -1;
     }
-    FuriString *original_card_desc = get_card_desc(*target_card_info);
+    FuriString* original_card_desc = get_card_desc(*target_card_info);
 
     FURI_LOG_D(TAG, "Original card info: '%s'", furi_string_get_cstr(original_card_desc));
-    
+
     /*
     * Main Loop
     * This loop runs until the user presses the Back button
     */
-    FuriHalSdInfo *card_info = NULL;
-    FuriString *card_desc = NULL;
-    while (!back_button_was_pressed()) {
+    FuriHalSdInfo* card_info = NULL;
+    FuriString* card_desc = NULL;
+    while(!back_button_was_pressed()) {
         show("Insert an SD card");
         // Wait for the card to be inserted or the back button to be pressed
         notify(&led_blink_cyan);
-        while (!furi_hal_sd_is_present() && !back_button_was_pressed()) furi_thread_yield();
-        
+        while(!furi_hal_sd_is_present() && !back_button_was_pressed())
+            furi_thread_yield();
+
         // If the back button was pressed, attempt to quit the app
-        if (back_button_was_pressed()) break;
+        if(back_button_was_pressed()) break;
 
         show("Scanning card, please wait...\nDO NOT REMOVE CARD!");
 
@@ -194,16 +214,17 @@ int32_t sd_mounter_app(void* p) {
         card_info = try_get_sd_info();
 
         // Fetching the card info can take a while so check again if the back button was pressed
-        if (back_button_was_pressed()) break;
+        if(back_button_was_pressed()) break;
 
-        if (card_info == NULL) {
+        if(card_info == NULL) {
             show("Failed to get card info!\nRemove card and try again.");
             // Wait for card to be removed before continuing
             notify(&led_red);
-            while (furi_hal_sd_is_present()) furi_thread_yield();
+            while(furi_hal_sd_is_present())
+                furi_thread_yield();
             continue;
         }
-        
+
         card_desc = get_card_desc(*card_info);
         notify(&led_green);
 
@@ -215,7 +236,8 @@ int32_t sd_mounter_app(void* p) {
         // Card ejected, wait for it to be removed
         show("Card ejected.\nPlease remove it.");
         notify(&led_blink_yellow_slow);
-        while (furi_hal_sd_is_present()) furi_thread_yield();
+        while(furi_hal_sd_is_present())
+            furi_thread_yield();
     };
 
     /*
@@ -224,23 +246,25 @@ int32_t sd_mounter_app(void* p) {
     card_info = NULL;
     card_desc = NULL;
     notify(&led_blink_cyan);
-    while (1) {
+    while(1) {
         show("Please reinsert the Flipper's\noriginal SD card to exit this app.");
-        if (furi_hal_sd_is_present()) {
+        if(furi_hal_sd_is_present()) {
             show("Scanning card, please wait...\nDO NOT REMOVE CARD!");
             card_info = try_get_sd_info();
-            if (card_info != NULL) {
+            if(card_info != NULL) {
                 card_desc = get_card_desc(*card_info);
             }
-            
+
             // If the card is the correct one, exit the loop
-            if (card_info != NULL && card_desc != NULL) {
-                if (furi_string_equal(card_desc, original_card_desc)) {
+            if(card_info != NULL && card_desc != NULL) {
+                if(furi_string_equal(card_desc, original_card_desc)) {
                     notify(&led_green);
                     break;
                 } else {
-                    FuriString *message = furi_string_alloc();
-                    furi_string_printf(message, "Expected:\n%s\nGot:\n%s",
+                    FuriString* message = furi_string_alloc();
+                    furi_string_printf(
+                        message,
+                        "Expected:\n%s\nGot:\n%s",
                         furi_string_get_cstr(original_card_desc),
                         furi_string_get_cstr(card_desc));
                     show(furi_string_get_cstr(message));
@@ -248,12 +272,14 @@ int32_t sd_mounter_app(void* p) {
                     // show("Failed to scan card. Reinsert\nthe Flipper's original SD card\nto exit this app.");
                 }
             } else {
-                show("Wrong SD card card. Reinsert\nthe Flipper's original SD card\nto exit this app.");
+                show(
+                    "Wrong SD card card. Reinsert\nthe Flipper's original SD card\nto exit this app.");
             }
-                
+
             // Otherwise, show a message and wait for the card to be removed
             notify(&led_red);
-            while (furi_hal_sd_is_present()) furi_thread_yield();
+            while(furi_hal_sd_is_present())
+                furi_thread_yield();
             notify(&led_blink_cyan);
         }
     }
@@ -261,7 +287,7 @@ int32_t sd_mounter_app(void* p) {
     notify(NULL);
     show("Flipper card reinserted.\nGoodbye!");
     furi_delay_ms(500);
-    
+
     cleanup();
     return 0;
 }
@@ -276,14 +302,14 @@ void cleanup() {
     sd_init();
 
     // If the storage thread was found, resume it
-    if (storage_thread != NULL) {
+    if(storage_thread != NULL) {
         furi_thread_resume(storage_thread);
     }
 
     // Make sure the SD card is mounted before exiting
     storage_sd_mount(storage);
-    
-    if (storage != NULL) {
+
+    if(storage != NULL) {
         furi_record_close(RECORD_STORAGE);
     }
 

@@ -1,9 +1,6 @@
 #pragma once
 #include <notification/notification_messages.h>
-
-#include "gui/icon.h"
-extern const Icon I_SDQuestion_35x43;
-extern const Icon I_Error_62x31;
+#include <gui/icon.h>
 
 // Show a message and continue immediately
 void show(const char* message);

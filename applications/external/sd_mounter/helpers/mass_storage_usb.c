@@ -275,7 +275,7 @@ static void usb_init(usbd_device* dev, FuriHalUsbInterface* intf, void* ctx) {
 
     mass->thread = furi_thread_alloc();
     furi_thread_set_name(mass->thread, "MassStorageUsb");
-    furi_thread_set_stack_size(mass->thread, 1024*2);
+    furi_thread_set_stack_size(mass->thread, 1024 * 2);
     furi_thread_set_context(mass->thread, ctx);
     furi_thread_set_callback(mass->thread, mass_thread_worker);
     furi_thread_start(mass->thread);
