@@ -238,18 +238,18 @@ static bool switch_controller_view_controller_input_callback(InputEvent* event, 
                         if(model->control_mode == ControlModeDPad) {
                             model->state.hat = SWITCH_HAT_UP;
                         } else if(model->control_mode == ControlModeLeftStick) {
-                            model->state.ly = 0x0000; // Full up
+                            model->state.ly = 0; // Full up (8-bit: 0 = top)
                         } else if(model->control_mode == ControlModeRightStick) {
-                            model->state.ry = 0x0000; // Full up
+                            model->state.ry = 0; // Full up (8-bit: 0 = top)
                         }
                         consumed = true;
                     } else if(event->type == InputTypeRelease) {
                         if(model->control_mode == ControlModeDPad) {
                             model->state.hat = SWITCH_HAT_NEUTRAL;
                         } else if(model->control_mode == ControlModeLeftStick) {
-                            model->state.ly = STICK_CENTER;
+                            model->state.ly = STICK_CENTER; // 128
                         } else if(model->control_mode == ControlModeRightStick) {
-                            model->state.ry = STICK_CENTER;
+                            model->state.ry = STICK_CENTER; // 128
                         }
                         consumed = true;
                     }
@@ -258,18 +258,18 @@ static bool switch_controller_view_controller_input_callback(InputEvent* event, 
                         if(model->control_mode == ControlModeDPad) {
                             model->state.hat = SWITCH_HAT_DOWN;
                         } else if(model->control_mode == ControlModeLeftStick) {
-                            model->state.ly = 0xFFFF; // Full down
+                            model->state.ly = 255; // Full down (8-bit: 255 = bottom)
                         } else if(model->control_mode == ControlModeRightStick) {
-                            model->state.ry = 0xFFFF; // Full down
+                            model->state.ry = 255; // Full down (8-bit: 255 = bottom)
                         }
                         consumed = true;
                     } else if(event->type == InputTypeRelease) {
                         if(model->control_mode == ControlModeDPad) {
                             model->state.hat = SWITCH_HAT_NEUTRAL;
                         } else if(model->control_mode == ControlModeLeftStick) {
-                            model->state.ly = STICK_CENTER;
+                            model->state.ly = STICK_CENTER; // 128
                         } else if(model->control_mode == ControlModeRightStick) {
-                            model->state.ry = STICK_CENTER;
+                            model->state.ry = STICK_CENTER; // 128
                         }
                         consumed = true;
                     }
@@ -278,18 +278,18 @@ static bool switch_controller_view_controller_input_callback(InputEvent* event, 
                         if(model->control_mode == ControlModeDPad) {
                             model->state.hat = SWITCH_HAT_LEFT;
                         } else if(model->control_mode == ControlModeLeftStick) {
-                            model->state.lx = 0x0000; // Full left
+                            model->state.lx = 0; // Full left (8-bit: 0 = left)
                         } else if(model->control_mode == ControlModeRightStick) {
-                            model->state.rx = 0x0000; // Full left
+                            model->state.rx = 0; // Full left (8-bit: 0 = left)
                         }
                         consumed = true;
                     } else if(event->type == InputTypeRelease) {
                         if(model->control_mode == ControlModeDPad) {
                             model->state.hat = SWITCH_HAT_NEUTRAL;
                         } else if(model->control_mode == ControlModeLeftStick) {
-                            model->state.lx = STICK_CENTER;
+                            model->state.lx = STICK_CENTER; // 128
                         } else if(model->control_mode == ControlModeRightStick) {
-                            model->state.rx = STICK_CENTER;
+                            model->state.rx = STICK_CENTER; // 128
                         }
                         consumed = true;
                     }
@@ -298,18 +298,18 @@ static bool switch_controller_view_controller_input_callback(InputEvent* event, 
                         if(model->control_mode == ControlModeDPad) {
                             model->state.hat = SWITCH_HAT_RIGHT;
                         } else if(model->control_mode == ControlModeLeftStick) {
-                            model->state.lx = 0xFFFF; // Full right
+                            model->state.lx = 255; // Full right (8-bit: 255 = right)
                         } else if(model->control_mode == ControlModeRightStick) {
-                            model->state.rx = 0xFFFF; // Full right
+                            model->state.rx = 255; // Full right (8-bit: 255 = right)
                         }
                         consumed = true;
                     } else if(event->type == InputTypeRelease) {
                         if(model->control_mode == ControlModeDPad) {
                             model->state.hat = SWITCH_HAT_NEUTRAL;
                         } else if(model->control_mode == ControlModeLeftStick) {
-                            model->state.lx = STICK_CENTER;
+                            model->state.lx = STICK_CENTER; // 128
                         } else if(model->control_mode == ControlModeRightStick) {
-                            model->state.rx = STICK_CENTER;
+                            model->state.rx = STICK_CENTER; // 128
                         }
                         consumed = true;
                     }

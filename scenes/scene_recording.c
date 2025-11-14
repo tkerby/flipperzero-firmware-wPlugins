@@ -108,18 +108,18 @@ static bool switch_controller_view_recording_input_callback(InputEvent* event, v
                             if(model->control_mode == ControlModeDPad) {
                                 model->state.hat = SWITCH_HAT_UP;
                             } else if(model->control_mode == ControlModeLeftStick) {
-                                model->state.ly = 0x0000;
+                                model->state.ly = 0; // Full up (8-bit)
                             } else if(model->control_mode == ControlModeRightStick) {
-                                model->state.ry = 0x0000;
+                                model->state.ry = 0; // Full up (8-bit)
                             }
                             state_changed = true;
                         } else if(event->type == InputTypeRelease) {
                             if(model->control_mode == ControlModeDPad) {
                                 model->state.hat = SWITCH_HAT_NEUTRAL;
                             } else if(model->control_mode == ControlModeLeftStick) {
-                                model->state.ly = STICK_CENTER;
+                                model->state.ly = STICK_CENTER; // 128
                             } else if(model->control_mode == ControlModeRightStick) {
-                                model->state.ry = STICK_CENTER;
+                                model->state.ry = STICK_CENTER; // 128
                             }
                             state_changed = true;
                         }
@@ -128,18 +128,18 @@ static bool switch_controller_view_recording_input_callback(InputEvent* event, v
                             if(model->control_mode == ControlModeDPad) {
                                 model->state.hat = SWITCH_HAT_DOWN;
                             } else if(model->control_mode == ControlModeLeftStick) {
-                                model->state.ly = 0xFFFF;
+                                model->state.ly = 255; // Full down (8-bit)
                             } else if(model->control_mode == ControlModeRightStick) {
-                                model->state.ry = 0xFFFF;
+                                model->state.ry = 255; // Full down (8-bit)
                             }
                             state_changed = true;
                         } else if(event->type == InputTypeRelease) {
                             if(model->control_mode == ControlModeDPad) {
                                 model->state.hat = SWITCH_HAT_NEUTRAL;
                             } else if(model->control_mode == ControlModeLeftStick) {
-                                model->state.ly = STICK_CENTER;
+                                model->state.ly = STICK_CENTER; // 128
                             } else if(model->control_mode == ControlModeRightStick) {
-                                model->state.ry = STICK_CENTER;
+                                model->state.ry = STICK_CENTER; // 128
                             }
                             state_changed = true;
                         }
@@ -148,18 +148,18 @@ static bool switch_controller_view_recording_input_callback(InputEvent* event, v
                             if(model->control_mode == ControlModeDPad) {
                                 model->state.hat = SWITCH_HAT_LEFT;
                             } else if(model->control_mode == ControlModeLeftStick) {
-                                model->state.lx = 0x0000;
+                                model->state.lx = 0; // Full left (8-bit)
                             } else if(model->control_mode == ControlModeRightStick) {
-                                model->state.rx = 0x0000;
+                                model->state.rx = 0; // Full left (8-bit)
                             }
                             state_changed = true;
                         } else if(event->type == InputTypeRelease) {
                             if(model->control_mode == ControlModeDPad) {
                                 model->state.hat = SWITCH_HAT_NEUTRAL;
                             } else if(model->control_mode == ControlModeLeftStick) {
-                                model->state.lx = STICK_CENTER;
+                                model->state.lx = STICK_CENTER; // 128
                             } else if(model->control_mode == ControlModeRightStick) {
-                                model->state.rx = STICK_CENTER;
+                                model->state.rx = STICK_CENTER; // 128
                             }
                             state_changed = true;
                         }
@@ -168,18 +168,18 @@ static bool switch_controller_view_recording_input_callback(InputEvent* event, v
                             if(model->control_mode == ControlModeDPad) {
                                 model->state.hat = SWITCH_HAT_RIGHT;
                             } else if(model->control_mode == ControlModeLeftStick) {
-                                model->state.lx = 0xFFFF;
+                                model->state.lx = 255; // Full right (8-bit)
                             } else if(model->control_mode == ControlModeRightStick) {
-                                model->state.rx = 0xFFFF;
+                                model->state.rx = 255; // Full right (8-bit)
                             }
                             state_changed = true;
                         } else if(event->type == InputTypeRelease) {
                             if(model->control_mode == ControlModeDPad) {
                                 model->state.hat = SWITCH_HAT_NEUTRAL;
                             } else if(model->control_mode == ControlModeLeftStick) {
-                                model->state.lx = STICK_CENTER;
+                                model->state.lx = STICK_CENTER; // 128
                             } else if(model->control_mode == ControlModeRightStick) {
-                                model->state.rx = STICK_CENTER;
+                                model->state.rx = STICK_CENTER; // 128
                             }
                             state_changed = true;
                         }

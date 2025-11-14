@@ -3,58 +3,56 @@
 #include <usb_std.h>
 #include <usbd_core.h>
 
-// HID Report Descriptor for Nintendo Switch Pro Controller
+// HID Report Descriptor for POKKEN CONTROLLER (HORI 0x0F0D/0x0092)
+// Based on Arduino JoyCon Library - proven to work with Nintendo Switch
+// 7-byte report: 2 button bytes + 1 hat + 4 axis bytes (8-bit each)
 static const uint8_t hid_report_descriptor[] = {
-    0x05, 0x01, // Usage Page (Generic Desktop)
-    0x09, 0x05, // Usage (Game Pad)
-    0xA1, 0x01, // Collection (Application)
+    0x05, 0x01,        // Usage Page (Generic Desktop)
+    0x09, 0x05,        // Usage (Game Pad)
+    0xA1, 0x01,        // Collection (Application)
+    0x85, 0x01,        //   Report ID (1) - POKKEN uses Report ID
 
-    // Buttons (14 buttons)
-    0x15, 0x00, //   Logical Minimum (0)
-    0x25, 0x01, //   Logical Maximum (1)
-    0x35, 0x00, //   Physical Minimum (0)
-    0x45, 0x01, //   Physical Maximum (1)
-    0x75, 0x01, //   Report Size (1)
-    0x95, 0x0E, //   Report Count (14)
-    0x05, 0x09, //   Usage Page (Button)
-    0x19, 0x01, //   Usage Minimum (Button 1)
-    0x29, 0x0E, //   Usage Maximum (Button 14)
-    0x81, 0x02, //   Input (Data,Var,Abs)
+    // Buttons (16 buttons in 2 bytes)
+    0x05, 0x09,        //   Usage Page (Button)
+    0x19, 0x01,        //   Usage Minimum (Button 1)
+    0x29, 0x10,        //   Usage Maximum (Button 16)
+    0x15, 0x00,        //   Logical Minimum (0)
+    0x25, 0x01,        //   Logical Maximum (1)
+    0x75, 0x01,        //   Report Size (1 bit)
+    0x95, 0x10,        //   Report Count (16 buttons)
+    0x81, 0x02,        //   Input (Data,Var,Abs)
 
-    // Padding (2 bits to align to byte boundary)
-    0x95, 0x02, //   Report Count (2)
-    0x81, 0x01, //   Input (Const,Array,Abs)
+    // HAT Switch (D-Pad) - 4 bits
+    0x05, 0x01,        //   Usage Page (Generic Desktop)
+    0x09, 0x39,        //   Usage (Hat Switch)
+    0x15, 0x00,        //   Logical Minimum (0)
+    0x25, 0x07,        //   Logical Maximum (7)
+    0x35, 0x00,        //   Physical Minimum (0)
+    0x46, 0x3B, 0x01,  //   Physical Maximum (315)
+    0x65, 0x14,        //   Unit (Eng Rot: Degree)
+    0x75, 0x04,        //   Report Size (4 bits)
+    0x95, 0x01,        //   Report Count (1)
+    0x81, 0x42,        //   Input (Data,Var,Abs,Null)
 
-    // HAT Switch (D-Pad)
-    0x05, 0x01, //   Usage Page (Generic Desktop)
-    0x09, 0x39, //   Usage (Hat Switch)
-    0x15, 0x00, //   Logical Minimum (0)
-    0x25, 0x07, //   Logical Maximum (7)
-    0x35, 0x00, //   Physical Minimum (0)
-    0x46, 0x3B, 0x01, // Physical Maximum (315)
-    0x65, 0x14, //   Unit (Eng Rot: Degree)
-    0x75, 0x04, //   Report Size (4)
-    0x95, 0x01, //   Report Count (1)
-    0x81, 0x42, //   Input (Data,Var,Abs,Null)
+    // Padding (4 bits to align to byte boundary)
+    0x65, 0x00,        //   Unit (None)
+    0x75, 0x04,        //   Report Size (4 bits)
+    0x95, 0x01,        //   Report Count (1)
+    0x81, 0x01,        //   Input (Const,Array,Abs)
 
-    // Padding (4 bits)
-    0x65, 0x00, //   Unit (None)
-    0x95, 0x01, //   Report Count (1)
-    0x81, 0x01, //   Input (Const,Array,Abs)
+    // Analog Sticks (4 axes: LX, LY, RX, RY) - 8-bit each
+    0x05, 0x01,        //   Usage Page (Generic Desktop)
+    0x09, 0x30,        //   Usage (X)
+    0x09, 0x31,        //   Usage (Y)
+    0x09, 0x32,        //   Usage (Z)
+    0x09, 0x35,        //   Usage (Rz)
+    0x15, 0x00,        //   Logical Minimum (0)
+    0x26, 0xFF, 0x00,  //   Logical Maximum (255)
+    0x75, 0x08,        //   Report Size (8 bits)
+    0x95, 0x04,        //   Report Count (4 axes)
+    0x81, 0x02,        //   Input (Data,Var,Abs)
 
-    // Analog sticks (4 axes: LX, LY, RX, RY)
-    0x05, 0x01, //   Usage Page (Generic Desktop)
-    0x09, 0x30, //   Usage (X)
-    0x09, 0x31, //   Usage (Y)
-    0x09, 0x32, //   Usage (Z)
-    0x09, 0x35, //   Usage (Rz)
-    0x15, 0x00, //   Logical Minimum (0)
-    0x27, 0xFF, 0xFF, 0x00, 0x00, // Logical Maximum (65535)
-    0x75, 0x10, //   Report Size (16)
-    0x95, 0x04, //   Report Count (4)
-    0x81, 0x02, //   Input (Data,Var,Abs)
-
-    0xC0, // End Collection
+    0xC0               // End Collection
 };
 
 // USB device descriptor
@@ -122,9 +120,9 @@ static const struct {
     },
 };
 
-// String descriptors
-static const struct usb_string_descriptor dev_manuf_desc = USB_STRING_DESC("Nintendo Co., Ltd");
-static const struct usb_string_descriptor dev_prod_desc = USB_STRING_DESC("Pro Controller");
+// String descriptors - POKKEN CONTROLLER
+static const struct usb_string_descriptor dev_manuf_desc = USB_STRING_DESC("HORI CO.,LTD.");
+static const struct usb_string_descriptor dev_prod_desc = USB_STRING_DESC("POKKEN CONTROLLER");
 
 // USB interface callbacks
 static usbd_respond hid_switch_ep_config(usbd_device* dev, uint8_t cfg);
@@ -242,30 +240,32 @@ void usb_hid_switch_deinit() {
 bool usb_hid_switch_send_report(SwitchControllerState* state) {
     if(!state || !usb_dev) return false;
 
-    // Build HID report (11 bytes total as per HID descriptor)
-    uint8_t report[11];
+    // Build POKKEN CONTROLLER HID report (8 bytes total: 1 Report ID + 7 data bytes)
+    uint8_t report[8];
 
-    // Bytes 0-1: Buttons (14 bits + 2 padding)
-    report[0] = state->buttons & 0xFF;
-    report[1] = (state->buttons >> 8) & 0xFF;
+    // Byte 0: Report ID (required for POKKEN Controller)
+    report[0] = POKKEN_REPORT_ID;
 
-    // Byte 2: HAT (4 bits) + padding (4 bits)
-    report[2] = (state->hat & 0x0F);
+    // Bytes 1-2: Buttons (16 buttons across 2 bytes)
+    // Byte 1: Y, B, A, X, L, R, ZL, ZR (bits 0-7)
+    // Byte 2: -, +, LStick, RStick, Home, Capture, reserved (bits 0-5)
+    report[1] = state->buttons & 0xFF;
+    report[2] = (state->buttons >> 8) & 0xFF;
 
-    // Bytes 3-10: Analog sticks (4 axes, 16-bit each, little-endian)
-    report[3] = state->lx & 0xFF;
-    report[4] = (state->lx >> 8) & 0xFF;
-    report[5] = state->ly & 0xFF;
-    report[6] = (state->ly >> 8) & 0xFF;
-    report[7] = state->rx & 0xFF;
-    report[8] = (state->rx >> 8) & 0xFF;
-    report[9] = state->ry & 0xFF;
-    report[10] = (state->ry >> 8) & 0xFF;
+    // Byte 3: HAT Switch (4 bits) + padding (4 bits)
+    // Hat uses lower 4 bits, upper 4 bits are padding
+    report[3] = (state->hat & 0x0F);
 
-    // Send report (exactly 11 bytes)
-    int result = usbd_ep_write(usb_dev, HID_EP_IN, report, 11);
+    // Bytes 4-7: Analog sticks (4 axes, 8-bit each, 0-255 range)
+    report[4] = state->lx;  // Left stick X
+    report[5] = state->ly;  // Left stick Y
+    report[6] = state->rx;  // Right stick X
+    report[7] = state->ry;  // Right stick Y
 
-    return (result == 11);
+    // Send report (8 bytes: Report ID + 7 data bytes)
+    int result = usbd_ep_write(usb_dev, HID_EP_IN, report, 8);
+
+    return (result == 8);
 }
 
 void usb_hid_switch_reset_state(SwitchControllerState* state) {
