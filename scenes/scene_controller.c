@@ -17,6 +17,8 @@ typedef struct {
     ControlMode control_mode; // Current control mode
     bool exit_confirm; // Exit confirmation dialog
     uint32_t last_ok_press_time; // For double-click detection
+    uint16_t button_to_release; // Button that needs to be auto-released
+    uint32_t button_release_time; // When to release the button
 } ControllerViewModel;
 
 // Button menu items (for long press OK)
@@ -141,6 +143,15 @@ static void switch_controller_timer_callback(void* context) {
         ControllerViewModel * model,
         {
             if(model && model->connected) {
+                // Check if we need to auto-release a button
+                if(model->button_to_release != 0) {
+                    uint32_t current_time = furi_get_tick();
+                    if(current_time >= model->button_release_time) {
+                        model->state.buttons &= ~model->button_to_release;
+                        model->button_to_release = 0;
+                    }
+                }
+
                 usb_hid_switch_send_report(&model->state);
             }
         },
@@ -184,7 +195,7 @@ static bool switch_controller_view_controller_input_callback(InputEvent* event, 
         ControllerViewModel * model,
         {
             if(model->selected_button > 0) {
-                // In button menu
+                // In button menu - consume ALL events to prevent dismissal
                 if(event->type == InputTypePress || event->type == InputTypeRepeat) {
                     if(event->key == InputKeyUp) {
                         if(model->selected_button > 1) {
@@ -197,15 +208,27 @@ static bool switch_controller_view_controller_input_callback(InputEvent* event, 
                         }
                         consumed = true;
                     } else if(event->key == InputKeyOk) {
-                        // Press selected button
+                        // Press selected button and schedule auto-release after 100ms
                         uint8_t idx = model->selected_button - 1;
-                        model->state.buttons |= button_menu_flags[idx];
+                        uint16_t button_flag = button_menu_flags[idx];
+                        model->state.buttons |= button_flag;
+                        model->button_to_release = button_flag;
+                        model->button_release_time = furi_get_tick() + 100; // 100ms press
                         model->selected_button = 0; // Close menu
                         consumed = true;
                     } else if(event->key == InputKeyBack) {
                         model->selected_button = 0; // Close menu
                         consumed = true;
                     }
+                } else if(event->type == InputTypeRelease) {
+                    // Consume release events for buttons that were pressed
+                    if(event->key == InputKeyUp || event->key == InputKeyDown ||
+                       event->key == InputKeyOk || event->key == InputKeyBack) {
+                        consumed = true;
+                    }
+                } else {
+                    // Consume all other event types when menu is active
+                    consumed = true;
                 }
             } else {
                 // Normal controller mode
@@ -328,6 +351,9 @@ static bool switch_controller_view_controller_input_callback(InputEvent* event, 
                     } else if(event->type == InputTypeRelease) {
                         model->state.buttons &= ~SWITCH_BTN_B;
                         consumed = true; // Don't let it exit immediately
+                    } else if(event->type == InputTypeShort) {
+                        // Consume short press event to prevent navigation callback
+                        consumed = true;
                     } else if(event->type == InputTypeLong) {
                         // Show exit confirmation dialog
                         model->exit_confirm = true;
@@ -369,6 +395,8 @@ void switch_controller_scene_on_enter_controller(void* context) {
             model->control_mode = ControlModeDPad;
             model->exit_confirm = false;
             model->last_ok_press_time = 0;
+            model->button_to_release = 0;
+            model->button_release_time = 0;
         },
         true);
 
