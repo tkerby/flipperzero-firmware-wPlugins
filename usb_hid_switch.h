@@ -3,6 +3,7 @@
 #include <furi.h>
 #include <furi_hal_usb.h>
 #include <furi_hal_usb_hid.h>
+#include <usb_hid.h>
 
 #ifdef __cplusplus
 extern "C" {

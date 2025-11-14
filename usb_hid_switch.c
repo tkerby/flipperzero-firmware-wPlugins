@@ -1,10 +1,7 @@
 #include "usb_hid_switch.h"
 #include <furi_hal.h>
-#include <furi_hal_usb.h>
-#include <furi_hal_usb_hid.h>
 #include <usb_std.h>
 #include <usbd_core.h>
-#include <usb_hid.h>
 
 // HID Report Descriptor for Nintendo Switch Pro Controller
 static const uint8_t hid_report_descriptor[] = {
