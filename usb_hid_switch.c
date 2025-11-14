@@ -4,12 +4,14 @@
 #include <usbd_core.h>
 
 // HID Report Descriptor for POKKEN CONTROLLER (HORI 0x0F0D/0x0092)
-// Exact bytes from squirelo Arduino-JoyCon-Library - proven to work with Switch
-// 8-byte input (no Report ID) + 8-byte output
+// Matches Arduino JoyCon Library EXACTLY - 7-byte report (NO vendor byte)
+// Report: 2 bytes buttons + 1 byte HAT + 4 bytes axes = 7 bytes total
 static const uint8_t hid_report_descriptor[] = {
     0x05, 0x01,        // Usage Page (Generic Desktop)
     0x09, 0x05,        // Usage (Game Pad)
     0xA1, 0x01,        // Collection (Application)
+
+    // Buttons (16 buttons in 2 bytes)
     0x15, 0x00,        //   Logical Minimum (0)
     0x25, 0x01,        //   Logical Maximum (1)
     0x35, 0x00,        //   Physical Minimum (0)
@@ -20,6 +22,8 @@ static const uint8_t hid_report_descriptor[] = {
     0x19, 0x01,        //   Usage Minimum (Button 1)
     0x29, 0x10,        //   Usage Maximum (Button 16)
     0x81, 0x02,        //   Input (Data,Var,Abs)
+
+    // HAT Switch (D-Pad)
     0x05, 0x01,        //   Usage Page (Generic Desktop)
     0x25, 0x07,        //   Logical Maximum (7)
     0x46, 0x3B, 0x01,  //   Physical Maximum (315)
@@ -28,9 +32,13 @@ static const uint8_t hid_report_descriptor[] = {
     0x65, 0x14,        //   Unit (Degrees)
     0x09, 0x39,        //   Usage (Hat Switch)
     0x81, 0x42,        //   Input (Data,Var,Abs,Null)
+
+    // Padding (4 bits to align to byte boundary)
     0x65, 0x00,        //   Unit (None)
     0x95, 0x01,        //   Report Count (1)
-    0x81, 0x01,        //   Input (Const,Array,Abs) - padding
+    0x81, 0x01,        //   Input (Const,Array,Abs)
+
+    // Analog Sticks (4 axes: X, Y, Z, Rz - 8-bit each)
     0x26, 0xFF, 0x00,  //   Logical Maximum (255)
     0x46, 0xFF, 0x00,  //   Physical Maximum (255)
     0x09, 0x30,        //   Usage (X)
@@ -40,13 +48,7 @@ static const uint8_t hid_report_descriptor[] = {
     0x75, 0x08,        //   Report Size (8)
     0x95, 0x04,        //   Report Count (4) - axes
     0x81, 0x02,        //   Input (Data,Var,Abs)
-    0x06, 0x00, 0xFF,  //   Usage Page (Vendor 0xFF00)
-    0x09, 0x20,        //   Usage (0x20)
-    0x95, 0x01,        //   Report Count (1) - vendor byte
-    0x81, 0x02,        //   Input (Data,Var,Abs)
-    0x0A, 0x21, 0x26,  //   Usage (0x2621)
-    0x95, 0x08,        //   Report Count (8) - output
-    0x91, 0x02,        //   Output (Data,Var,Abs)
+
     0xC0               // End Collection
 };
 
@@ -235,9 +237,9 @@ void usb_hid_switch_deinit() {
 bool usb_hid_switch_send_report(SwitchControllerState* state) {
     if(!state || !usb_dev) return false;
 
-    // Build POKKEN CONTROLLER HID report (8 bytes, NO Report ID)
-    // Format: 2 bytes buttons + 1 byte HAT/padding + 4 bytes axes + 1 byte vendor
-    uint8_t report[8];
+    // Build POKKEN CONTROLLER HID report (7 bytes, NO Report ID)
+    // Matches Arduino library EXACTLY: 2 buttons + 1 HAT + 4 axes
+    uint8_t report[7];
 
     // Bytes 0-1: Buttons (16 buttons across 2 bytes)
     // Byte 0: Y, B, A, X, L, R, ZL, ZR (bits 0-7)
@@ -249,18 +251,15 @@ bool usb_hid_switch_send_report(SwitchControllerState* state) {
     report[2] = (state->hat & 0x0F);
 
     // Bytes 3-6: Analog sticks (4 axes, 8-bit each, 0-255 range)
-    report[3] = state->lx;  // Left stick X
-    report[4] = state->ly;  // Left stick Y
-    report[5] = state->rx;  // Right stick X
-    report[6] = state->ry;  // Right stick Y
+    report[3] = state->lx;  // Left stick X (axis 0 = X)
+    report[4] = state->ly;  // Left stick Y (axis 1 = Y)
+    report[5] = state->rx;  // Right stick X (axis 2 = Z)
+    report[6] = state->ry;  // Right stick Y (axis 3 = Rz)
 
-    // Byte 7: Vendor-specific byte (set to 0)
-    report[7] = 0x00;
+    // Send report (exactly 7 bytes, no Report ID)
+    int result = usbd_ep_write(usb_dev, HID_EP_IN, report, 7);
 
-    // Send report (exactly 8 bytes, no Report ID)
-    int result = usbd_ep_write(usb_dev, HID_EP_IN, report, 8);
-
-    return (result == 8);
+    return (result == 7);
 }
 
 void usb_hid_switch_reset_state(SwitchControllerState* state) {
