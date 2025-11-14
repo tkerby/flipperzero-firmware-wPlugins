@@ -1,5 +1,9 @@
 #include "usb_hid_switch.h"
 #include <furi_hal.h>
+#include <furi_hal_usb.h>
+#include <furi_hal_usb_hid.h>
+#include <usb_std.h>
+#include <usbd_core.h>
 
 // HID Report Descriptor for Nintendo Switch Pro Controller
 static const uint8_t hid_report_descriptor[] = {
@@ -121,18 +125,20 @@ static const struct {
 };
 
 // String descriptors
-static const struct usb_string_descriptor dev_manuf_desc = USB_STRING_DESC("Nintendo Co., Ltd");
-static const struct usb_string_descriptor dev_prod_desc = USB_STRING_DESC("Pro Controller");
+static const struct usb_string_descriptor dev_manuf_desc = USB_STRING_DESC(u"Nintendo Co., Ltd");
+static const struct usb_string_descriptor dev_prod_desc = USB_STRING_DESC(u"Pro Controller");
 
 // USB interface callbacks
 static usbd_respond hid_switch_ep_config(usbd_device* dev, uint8_t cfg);
 static usbd_respond hid_switch_control(usbd_device* dev, usbd_ctlreq* req, usbd_rqc_callback* callback);
-static usbd_device* usb_dev;
+static void hid_switch_init(usbd_device* dev, FuriHalUsbInterface* intf, void* ctx);
+static void hid_switch_deinit(usbd_device* dev);
+static usbd_device* usb_dev = NULL;
 
 // USB interface structure
 static FuriHalUsbInterface usb_hid_switch = {
-    .init = NULL,
-    .deinit = NULL,
+    .init = hid_switch_init,
+    .deinit = hid_switch_deinit,
     .wakeup = NULL,
     .suspend = NULL,
     .dev_descr = (struct usb_device_descriptor*)&hid_switch_device_descriptor,
@@ -196,24 +202,37 @@ static usbd_respond hid_switch_control(usbd_device* dev, usbd_ctlreq* req, usbd_
     return usbd_fail;
 }
 
+// USB interface init callback
+static void hid_switch_init(usbd_device* dev, FuriHalUsbInterface* intf, void* ctx) {
+    UNUSED(intf);
+    UNUSED(ctx);
+
+    // Store device handle
+    usb_dev = dev;
+
+    // Register callbacks
+    usbd_reg_config(dev, hid_switch_ep_config);
+    usbd_reg_control(dev, hid_switch_control);
+
+    // Configure endpoint
+    usbd_ep_config(dev, HID_EP_IN, USB_EPTYPE_INTERRUPT, HID_EP_SZ);
+    usbd_reg_endpoint(dev, HID_EP_IN, NULL);
+}
+
+// USB interface deinit callback
+static void hid_switch_deinit(usbd_device* dev) {
+    // Deconfigure endpoint
+    usbd_ep_deconfig(dev, HID_EP_IN);
+    usbd_reg_endpoint(dev, HID_EP_IN, NULL);
+
+    // Clear device handle
+    usb_dev = NULL;
+}
+
 bool usb_hid_switch_init() {
-    // Set up the USB interface
-    usb_hid_switch.init = NULL;
-    usb_hid_switch.deinit = NULL;
-    usb_hid_switch.wakeup = NULL;
-    usb_hid_switch.suspend = NULL;
-
-    // Get USB device
-    usb_dev = furi_hal_usb_get_dev();
-
-    // Configure endpoints and control
-    usbd_reg_config(usb_dev, hid_switch_ep_config);
-    usbd_reg_control(usb_dev, hid_switch_control);
-
     // Set USB configuration
     furi_hal_usb_unlock();
     bool result = furi_hal_usb_set_config(&usb_hid_switch, NULL);
-
     return result;
 }
 
@@ -223,7 +242,7 @@ void usb_hid_switch_deinit() {
 }
 
 bool usb_hid_switch_send_report(SwitchControllerState* state) {
-    if(!state) return false;
+    if(!state || !usb_dev) return false;
 
     // Build HID report (12 bytes total)
     uint8_t report[12];
