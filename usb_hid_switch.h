@@ -181,9 +181,8 @@ extern "C" {
 #define HID_EP_SZ 64
 #define HID_INTERVAL 5
 
-// POKKEN Controller report configuration
-#define POKKEN_REPORT_ID 0x01
-#define POKKEN_REPORT_SIZE 7  // 7 bytes: 2 button bytes + 1 hat + 4 axis bytes
+// POKKEN Controller report configuration (NO Report ID, raw 8 bytes)
+#define POKKEN_REPORT_SIZE 8  // 8 bytes: 2 buttons + 1 HAT + 4 axes + 1 vendor
 
 // Switch controller state structure (POKKEN Controller format)
 // Uses 8-bit analog sticks (0-255 range, 128 = center)
