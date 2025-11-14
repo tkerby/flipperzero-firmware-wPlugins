@@ -23,11 +23,15 @@ This guide provides complete instructions for installing and using the Switch Co
 - *Optional:* Computer for building from source
 
 ### Firmware Requirements
-- Flipper Zero firmware **0.98.0** or newer
-- Firmware can be updated via:
+- **Official Firmware**: 0.98.0 or newer
+- **Momentum Firmware**: Any recent version (fully compatible)
+- **Unleashed Firmware**: Should work (not officially tested)
+
+Firmware can be updated via:
   - Flipper Mobile App (iOS/Android)
   - qFlipper desktop app (Windows/Mac/Linux)
   - Web updater: https://update.flipperzero.one/
+  - Momentum updater: https://momentum-fw.dev/update
 
 ---
 
@@ -36,6 +40,8 @@ This guide provides complete instructions for installing and using the Switch Co
 ### Method 1: Using uFBT (Recommended)
 
 This method builds the app from source and installs it directly to your Flipper.
+
+**✅ Works with both Official and Momentum Firmware**
 
 #### Step 1: Install uFBT
 
@@ -48,6 +54,8 @@ python3 -m pip install --upgrade ufbt
 ```bash
 py -m pip install --upgrade ufbt
 ```
+
+**Note for Momentum users:** uFBT automatically detects your firmware version and builds accordingly.
 
 #### Step 2: Clone the Repository
 
@@ -215,8 +223,9 @@ Control your Switch with Flipper buttons:
 ## Troubleshooting
 
 ### App Not Appearing
-- **Check firmware version:** Must be 0.98.0+
+- **Check firmware version:** Official 0.98.0+ or any recent Momentum version
 - **Check installation path:** Should be in `/ext/apps/USB/`
+- **Momentum users:** App may also appear in the custom apps folder
 - **Try reinstalling:** Delete old version and install again
 - **Restart Flipper:** Hold Back button for 10 seconds
 

@@ -2,6 +2,8 @@
 
 A Flipper Zero application that emulates a Nintendo Switch Pro Controller over USB with macro recording and playback capabilities.
 
+**✅ Compatible with Official Firmware and Momentum Firmware**
+
 ## Features
 
 - **Manual Controller Mode**: Use your Flipper Zero as a Nintendo Switch controller
