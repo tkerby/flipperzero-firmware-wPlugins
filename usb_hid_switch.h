@@ -42,6 +42,137 @@ extern "C" {
 // Analog stick center position
 #define STICK_CENTER 0x8000
 
+// USB HID specific constants (not always in SDK headers)
+#ifndef USB_DTYPE_HID
+#define USB_DTYPE_HID 0x21
+#endif
+
+#ifndef USB_DTYPE_HID_REPORT
+#define USB_DTYPE_HID_REPORT 0x22
+#endif
+
+#ifndef USB_CLASS_HID
+#define USB_CLASS_HID 0x03
+#endif
+
+#ifndef USB_HID_SUBCLASS_NONBOOT
+#define USB_HID_SUBCLASS_NONBOOT 0x00
+#endif
+
+#ifndef USB_HID_PROTO_NONBOOT
+#define USB_HID_PROTO_NONBOOT 0x00
+#endif
+
+#ifndef USB_HID_COUNTRY_NONE
+#define USB_HID_COUNTRY_NONE 0x00
+#endif
+
+#ifndef USB_HID_SETIDLE
+#define USB_HID_SETIDLE 0x0A
+#endif
+
+#ifndef USB_HID_GETREPORT
+#define USB_HID_GETREPORT 0x01
+#endif
+
+#ifndef USB_EPTYPE_INTERRUPT
+#define USB_EPTYPE_INTERRUPT 0x03
+#endif
+
+#ifndef USB_CSCP_NoDeviceClass
+#define USB_CSCP_NoDeviceClass 0x00
+#endif
+
+#ifndef USB_CSCP_NoDeviceSubclass
+#define USB_CSCP_NoDeviceSubclass 0x00
+#endif
+
+#ifndef USB_CSCP_NoDeviceProtocol
+#define USB_CSCP_NoDeviceProtocol 0x00
+#endif
+
+#ifndef USB_EP0_SIZE
+#define USB_EP0_SIZE 64
+#endif
+
+// USB descriptor type constants
+#ifndef USB_DTYPE_DEVICE
+#define USB_DTYPE_DEVICE 0x01
+#endif
+
+#ifndef USB_DTYPE_CONFIGURATION
+#define USB_DTYPE_CONFIGURATION 0x02
+#endif
+
+#ifndef USB_DTYPE_STRING
+#define USB_DTYPE_STRING 0x03
+#endif
+
+#ifndef USB_DTYPE_INTERFACE
+#define USB_DTYPE_INTERFACE 0x04
+#endif
+
+#ifndef USB_DTYPE_ENDPOINT
+#define USB_DTYPE_ENDPOINT 0x05
+#endif
+
+// USB string descriptor indices
+#ifndef UsbDevManuf
+#define UsbDevManuf 1
+#endif
+
+#ifndef UsbDevProduct
+#define UsbDevProduct 2
+#endif
+
+#ifndef UsbDevSerial
+#define UsbDevSerial 3
+#endif
+
+#ifndef NO_DESCRIPTOR
+#define NO_DESCRIPTOR 0
+#endif
+
+// USB standard request
+#ifndef USB_STD_GET_DESCRIPTOR
+#define USB_STD_GET_DESCRIPTOR 0x06
+#endif
+
+// USB configuration attributes
+#ifndef USB_CFG_ATTR_RESERVED
+#define USB_CFG_ATTR_RESERVED 0x80
+#endif
+
+#ifndef USB_CFG_POWER_MA
+#define USB_CFG_POWER_MA(mA) ((mA) >> 1)
+#endif
+
+// USB request type and recipient masks
+#ifndef USB_REQ_RECIPIENT
+#define USB_REQ_RECIPIENT (3 << 0)
+#endif
+
+#ifndef USB_REQ_TYPE
+#define USB_REQ_TYPE (3 << 5)
+#endif
+
+#ifndef USB_REQ_INTERFACE
+#define USB_REQ_INTERFACE (1 << 0)
+#endif
+
+#ifndef USB_REQ_STANDARD
+#define USB_REQ_STANDARD (0 << 5)
+#endif
+
+#ifndef USB_REQ_CLASS
+#define USB_REQ_CLASS (1 << 5)
+#endif
+
+// VERSION_BCD macro
+#ifndef VERSION_BCD
+#define VERSION_BCD(maj, min, rev) (((maj & 0xFF) << 8) | ((min & 0x0F) << 4) | (rev & 0x0F))
+#endif
+
 // HID endpoint configuration
 #define HID_EP_IN 0x81
 #define HID_EP_SZ 64
