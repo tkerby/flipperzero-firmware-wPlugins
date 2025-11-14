@@ -42,6 +42,73 @@ extern "C" {
 // Analog stick center position
 #define STICK_CENTER 0x8000
 
+// USB descriptor constants
+#define USB_CSCP_NoDeviceClass 0x00
+#define USB_CSCP_NoDeviceSubclass 0x00
+#define USB_CSCP_NoDeviceProtocol 0x00
+#define USB_EP0_SIZE 64
+#define NO_DESCRIPTOR 0
+
+// USB version macro (creates BCD version)
+#define VERSION_BCD(maj, min, rev) \
+    ((((maj) & 0xFF) << 8) | (((min) & 0x0F) << 4) | ((rev) & 0x0F))
+
+// USB string descriptor macro
+#define USB_STRING_DESC(str) \
+    { \
+        .bLength = sizeof(struct usb_string_descriptor) + sizeof(str) - 2, \
+        .bDescriptorType = USB_DTYPE_STRING, \
+        .wString = str \
+    }
+
+// USB descriptor types
+#define USB_DTYPE_DEVICE 0x01
+#define USB_DTYPE_CONFIGURATION 0x02
+#define USB_DTYPE_STRING 0x03
+#define USB_DTYPE_INTERFACE 0x04
+#define USB_DTYPE_ENDPOINT 0x05
+#define USB_DTYPE_HID 0x21
+#define USB_DTYPE_HID_REPORT 0x22
+
+// USB string descriptor indices
+#define UsbDevManuf 1
+#define UsbDevProduct 2
+#define UsbDevSerial 3
+
+// USB HID class constants
+#define USB_CLASS_HID 0x03
+#define USB_HID_SUBCLASS_NONBOOT 0x00
+#define USB_HID_PROTO_NONBOOT 0x00
+
+// USB configuration attributes and power
+#define USB_CFG_ATTR_RESERVED 0x80
+#define USB_CFG_POWER_MA(mA) ((mA) / 2)
+
+// USB endpoint types
+#define USB_EPTYPE_INTERRUPT 0x03
+
+// USB request types and recipients
+#define USB_REQ_RECIPIENT 0x1F
+#define USB_REQ_TYPE 0x60
+#define USB_REQ_INTERFACE 0x01
+#define USB_REQ_STANDARD 0x00
+#define USB_REQ_CLASS 0x20
+
+// USB standard requests
+#define USB_STD_GET_DESCRIPTOR 0x06
+
+// USB HID class requests
+#define USB_HID_SETIDLE 0x0A
+#define USB_HID_GETREPORT 0x01
+
+// USB HID country codes
+#define USB_HID_COUNTRY_NONE 0x00
+
+// HID endpoint configuration
+#define HID_EP_IN 0x81
+#define HID_EP_SZ 64
+#define HID_INTERVAL 5
+
 // Switch controller state structure
 typedef struct {
     uint16_t buttons;

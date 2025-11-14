@@ -3,7 +3,7 @@
 
 typedef struct {
     char name[MACRO_NAME_MAX_LEN];
-    char path[128];
+    char path[256];
 } MacroListItem;
 
 static MacroListItem* macro_list_items = NULL;

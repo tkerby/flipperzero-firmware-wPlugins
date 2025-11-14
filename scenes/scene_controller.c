@@ -61,7 +61,6 @@ static void switch_controller_view_controller_draw_callback(Canvas* canvas, void
 
     // Draw control mode
     canvas_set_font(canvas, FontSecondary);
-    const char* mode_str = "Mode: ";
     switch(m->control_mode) {
     case ControlModeDPad:
         canvas_draw_str(canvas, 2, 30, "Mode: D-Pad");
@@ -261,21 +260,6 @@ static bool switch_controller_view_controller_input_callback(InputEvent* event, 
         consumed);
 
     return consumed;
-}
-
-// Timer callback to send periodic updates
-static void switch_controller_view_controller_timer_callback(void* context) {
-    SwitchControllerApp* app = context;
-
-    with_view_model(
-        app->controller_view,
-        ControllerViewModel * model,
-        {
-            if(model->connected) {
-                usb_hid_switch_send_report(&model->state);
-            }
-        },
-        false);
 }
 
 void switch_controller_scene_on_enter_controller(void* context) {
