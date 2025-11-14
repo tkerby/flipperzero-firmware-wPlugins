@@ -4,6 +4,7 @@
 #include <furi_hal_usb_hid.h>
 #include <usb_std.h>
 #include <usbd_core.h>
+#include <usb_hid.h>
 
 // HID Report Descriptor for Nintendo Switch Pro Controller
 static const uint8_t hid_report_descriptor[] = {
@@ -125,8 +126,8 @@ static const struct {
 };
 
 // String descriptors
-static const struct usb_string_descriptor dev_manuf_desc = USB_STRING_DESC(u"Nintendo Co., Ltd");
-static const struct usb_string_descriptor dev_prod_desc = USB_STRING_DESC(u"Pro Controller");
+static const struct usb_string_descriptor dev_manuf_desc = USB_STRING_DESC("Nintendo Co., Ltd");
+static const struct usb_string_descriptor dev_prod_desc = USB_STRING_DESC("Pro Controller");
 
 // USB interface callbacks
 static usbd_respond hid_switch_ep_config(usbd_device* dev, uint8_t cfg);
