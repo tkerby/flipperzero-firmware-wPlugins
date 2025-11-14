@@ -15,6 +15,8 @@ typedef struct {
     bool connected;
     uint8_t selected_button; // For button menu (0 = none, 1-9 = button index)
     ControlMode control_mode; // Current control mode
+    bool exit_confirm; // Exit confirmation dialog
+    uint32_t last_ok_press_time; // For double-click detection
 } ControllerViewModel;
 
 // Button menu items (for long press OK)
@@ -49,6 +51,20 @@ static void switch_controller_view_controller_draw_callback(Canvas* canvas, void
     canvas_clear(canvas);
     canvas_set_font(canvas, FontPrimary);
 
+    // Show exit confirmation dialog
+    if(m->exit_confirm) {
+        canvas_draw_frame(canvas, 5, 10, 118, 44);
+        canvas_draw_box(canvas, 6, 11, 116, 42);
+        canvas_set_color(canvas, ColorWhite);
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str_aligned(canvas, 64, 22, AlignCenter, AlignCenter, "Exit App?");
+        canvas_set_font(canvas, FontSecondary);
+        canvas_draw_str_aligned(canvas, 64, 35, AlignCenter, AlignCenter, "Press LEFT to confirm");
+        canvas_draw_str_aligned(canvas, 64, 45, AlignCenter, AlignCenter, "Press BACK to cancel");
+        canvas_set_color(canvas, ColorBlack);
+        return;
+    }
+
     if(m->connected) {
         canvas_draw_str(canvas, 2, 10, "Switch Controller");
         canvas_set_font(canvas, FontSecondary);
@@ -76,33 +92,54 @@ static void switch_controller_view_controller_draw_callback(Canvas* canvas, void
     }
 
     // Draw instructions
-    canvas_draw_str(canvas, 2, 42, "Directions: Move/DPad");
+    canvas_draw_str(canvas, 2, 42, "2x OK: Toggle Mode");
     canvas_draw_str(canvas, 2, 51, "OK: A | Back: B");
-    canvas_draw_str(canvas, 2, 60, "Long OK: Btns");
+    canvas_draw_str(canvas, 2, 60, "Long OK: Btns | Long Back: Exit");
 
     // Show button menu if active
     if(m->selected_button > 0) {
-        canvas_draw_frame(canvas, 10, 15, 108, 40);
+        // Draw filled background
+        canvas_draw_box(canvas, 8, 13, 112, 42);
+        canvas_set_color(canvas, ColorWhite);
+
         canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 14, 25, "Select Button:");
+        canvas_draw_str(canvas, 12, 22, "Select Button:");
 
         canvas_set_font(canvas, FontSecondary);
         uint8_t idx = m->selected_button - 1;
+
+        // Draw previous item (if exists)
         if(idx > 0) {
-            canvas_draw_str(canvas, 14, 35, button_menu_items[idx - 1]);
+            canvas_draw_str(canvas, 20, 32, button_menu_items[idx - 1]);
         }
-        canvas_draw_str(canvas, 14, 45, button_menu_items[idx]);
+
+        // Draw current item (highlighted)
+        canvas_draw_str(canvas, 12, 40, ">");
+        canvas_draw_str(canvas, 20, 40, button_menu_items[idx]);
+
+        // Draw next item (if exists)
         if(idx < 8) {
-            canvas_draw_str(canvas, 14, 55, button_menu_items[idx + 1]);
+            canvas_draw_str(canvas, 20, 48, button_menu_items[idx + 1]);
         }
 
-        // Highlight selected
-        canvas_draw_str(canvas, 4, 45, ">");
-
-        // Show mode toggle hint
-        canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str(canvas, 14, 63, "Long Back: Toggle Mode");
+        canvas_set_color(canvas, ColorBlack);
+        canvas_draw_frame(canvas, 8, 13, 112, 42);
     }
+}
+
+// Timer callback for continuous USB updates
+static void switch_controller_timer_callback(void* context) {
+    SwitchControllerApp* app = context;
+
+    with_view_model(
+        app->controller_view,
+        ControllerViewModel * model,
+        {
+            if(model->connected) {
+                usb_hid_switch_send_report(&model->state);
+            }
+        },
+        false);
 }
 
 // Input callback
@@ -114,6 +151,22 @@ static bool switch_controller_view_controller_input_callback(InputEvent* event, 
         app->controller_view,
         ControllerViewModel * model,
         {
+            // Handle exit confirmation dialog
+            if(model->exit_confirm) {
+                if(event->type == InputTypeShort) {
+                    if(event->key == InputKeyLeft) {
+                        // Confirm exit - let back event propagate
+                        consumed = false;
+                        model->exit_confirm = false;
+                    } else if(event->key == InputKeyBack) {
+                        // Cancel exit
+                        model->exit_confirm = false;
+                        consumed = true;
+                    }
+                }
+                return; // Don't process other inputs in exit mode
+            }
+
             if(model->selected_button > 0) {
                 // In button menu
                 if(event->type == InputTypePress || event->type == InputTypeRepeat) {
@@ -231,6 +284,25 @@ static bool switch_controller_view_controller_input_callback(InputEvent* event, 
                     } else if(event->type == InputTypeLong) {
                         // Open button menu
                         model->selected_button = 1;
+                        // Release A button when menu opens
+                        model->state.buttons &= ~SWITCH_BTN_A;
+                        consumed = true;
+                    } else if(event->type == InputTypeShort) {
+                        // Check for double-click to toggle mode
+                        uint32_t current_time = furi_get_tick();
+                        uint32_t time_since_last = current_time - model->last_ok_press_time;
+
+                        if(time_since_last < 500) { // 500ms window for double-click
+                            // Double click detected - toggle mode
+                            model->control_mode = (model->control_mode + 1) % ControlModeCount;
+                            // Reset stick positions when switching modes
+                            if(model->control_mode != ControlModeDPad) {
+                                model->state.hat = SWITCH_HAT_NEUTRAL;
+                            }
+                            model->last_ok_press_time = 0; // Reset to prevent triple-click
+                        } else {
+                            model->last_ok_press_time = current_time;
+                        }
                         consumed = true;
                     }
                 } else if(event->key == InputKeyBack) {
@@ -239,22 +311,15 @@ static bool switch_controller_view_controller_input_callback(InputEvent* event, 
                         consumed = true;
                     } else if(event->type == InputTypeRelease) {
                         model->state.buttons &= ~SWITCH_BTN_B;
-                        consumed = false; // Let it go back
+                        consumed = true; // Don't let it exit immediately
                     } else if(event->type == InputTypeLong) {
-                        // Toggle control mode
-                        model->control_mode = (model->control_mode + 1) % ControlModeCount;
-                        // Reset stick positions when switching modes
-                        if(model->control_mode != ControlModeDPad) {
-                            model->state.hat = SWITCH_HAT_NEUTRAL;
-                        }
+                        // Show exit confirmation dialog
+                        model->exit_confirm = true;
+                        // Release B button
+                        model->state.buttons &= ~SWITCH_BTN_B;
                         consumed = true;
                     }
                 }
-            }
-
-            // Send USB report if connected
-            if(model->connected) {
-                usb_hid_switch_send_report(&model->state);
             }
         },
         consumed);
@@ -292,8 +357,16 @@ void switch_controller_scene_on_enter_controller(void* context) {
             model->connected = app->usb_connected;
             model->selected_button = 0;
             model->control_mode = ControlModeDPad;
+            model->exit_confirm = false;
+            model->last_ok_press_time = 0;
         },
         true);
+
+    // Start timer for continuous USB updates (100Hz = 10ms)
+    if(app->timer == NULL) {
+        app->timer = furi_timer_alloc(switch_controller_timer_callback, FuriTimerTypePeriodic, app);
+    }
+    furi_timer_start(app->timer, 10);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, SwitchControllerViewController);
 }
@@ -306,6 +379,11 @@ bool switch_controller_scene_on_event_controller(void* context, SceneManagerEven
 
 void switch_controller_scene_on_exit_controller(void* context) {
     SwitchControllerApp* app = context;
+
+    // Stop timer
+    if(app->timer) {
+        furi_timer_stop(app->timer);
+    }
 
     // Deinitialize USB
     if(app->usb_connected) {
