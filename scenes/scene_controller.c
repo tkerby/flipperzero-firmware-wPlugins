@@ -131,11 +131,16 @@ static void switch_controller_view_controller_draw_callback(Canvas* canvas, void
 static void switch_controller_timer_callback(void* context) {
     SwitchControllerApp* app = context;
 
+    // Safety checks
+    if(!app || !app->controller_view) {
+        return;
+    }
+
     with_view_model(
         app->controller_view,
         ControllerViewModel * model,
         {
-            if(model->connected) {
+            if(model && model->connected) {
                 usb_hid_switch_send_report(&model->state);
             }
         },
@@ -147,25 +152,38 @@ static bool switch_controller_view_controller_input_callback(InputEvent* event, 
     SwitchControllerApp* app = context;
     bool consumed = false;
 
+    // Handle exit confirmation OUTSIDE of with_view_model
+    bool exit_confirm_shown = false;
+    with_view_model(
+        app->controller_view,
+        ControllerViewModel * model,
+        { exit_confirm_shown = model->exit_confirm; },
+        false);
+
+    if(exit_confirm_shown) {
+        if(event->type == InputTypeShort) {
+            if(event->key == InputKeyLeft) {
+                // Confirm exit - stop the app
+                view_dispatcher_stop(app->view_dispatcher);
+                return true;
+            } else if(event->key == InputKeyBack) {
+                // Cancel exit
+                with_view_model(
+                    app->controller_view,
+                    ControllerViewModel * model,
+                    { model->exit_confirm = false; },
+                    true);
+                return true;
+            }
+        }
+        return true; // Consume all events when exit dialog is shown
+    }
+
     with_view_model(
         app->controller_view,
         ControllerViewModel * model,
         {
-            // Handle exit confirmation dialog
-            if(model->exit_confirm) {
-                if(event->type == InputTypeShort) {
-                    if(event->key == InputKeyLeft) {
-                        // Confirm exit - let back event propagate
-                        consumed = false;
-                        model->exit_confirm = false;
-                    } else if(event->key == InputKeyBack) {
-                        // Cancel exit
-                        model->exit_confirm = false;
-                        consumed = true;
-                    }
-                }
-                // Don't process other inputs in exit mode
-            } else if(model->selected_button > 0) {
+            if(model->selected_button > 0) {
                 // In button menu
                 if(event->type == InputTypePress || event->type == InputTypeRepeat) {
                     if(event->key == InputKeyUp) {
@@ -340,19 +358,13 @@ void switch_controller_scene_on_enter_controller(void* context) {
             app->view_dispatcher, SwitchControllerViewController, app->controller_view);
     }
 
-    // Initialize USB
-    app->usb_mode_prev = furi_hal_usb_get_config();
-    if(usb_hid_switch_init()) {
-        app->usb_connected = true;
-    }
-
-    // Initialize model
+    // Initialize model FIRST before USB/timer
     with_view_model(
         app->controller_view,
         ControllerViewModel * model,
         {
             usb_hid_switch_reset_state(&model->state);
-            model->connected = app->usb_connected;
+            model->connected = false; // Start disconnected
             model->selected_button = 0;
             model->control_mode = ControlModeDPad;
             model->exit_confirm = false;
@@ -360,13 +372,35 @@ void switch_controller_scene_on_enter_controller(void* context) {
         },
         true);
 
-    // Start timer for continuous USB updates (100Hz = 10ms)
+    // Switch to view before initializing USB
+    view_dispatcher_switch_to_view(app->view_dispatcher, SwitchControllerViewController);
+
+    // Small delay to let view stabilize
+    furi_delay_ms(100);
+
+    // Initialize USB
+    app->usb_mode_prev = furi_hal_usb_get_config();
+    app->usb_connected = false;
+
+    if(usb_hid_switch_init()) {
+        furi_delay_ms(50); // Let USB stabilize
+        app->usb_connected = true;
+
+        // Update connection status
+        with_view_model(
+            app->controller_view,
+            ControllerViewModel * model,
+            { model->connected = true; },
+            true);
+    }
+
+    // Allocate timer if needed
     if(app->timer == NULL) {
         app->timer = furi_timer_alloc(switch_controller_timer_callback, FuriTimerTypePeriodic, app);
     }
-    furi_timer_start(app->timer, 10);
 
-    view_dispatcher_switch_to_view(app->view_dispatcher, SwitchControllerViewController);
+    // Start timer LAST, after everything is initialized (100Hz = 10ms)
+    furi_timer_start(app->timer, 10);
 }
 
 bool switch_controller_scene_on_event_controller(void* context, SceneManagerEvent event) {
