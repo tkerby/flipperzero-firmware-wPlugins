@@ -242,8 +242,8 @@ void usb_hid_switch_deinit() {
 bool usb_hid_switch_send_report(SwitchControllerState* state) {
     if(!state || !usb_dev) return false;
 
-    // Build HID report (12 bytes total)
-    uint8_t report[12];
+    // Build HID report (11 bytes total as per HID descriptor)
+    uint8_t report[11];
 
     // Bytes 0-1: Buttons (14 bits + 2 padding)
     report[0] = state->buttons & 0xFF;
@@ -252,7 +252,7 @@ bool usb_hid_switch_send_report(SwitchControllerState* state) {
     // Byte 2: HAT (4 bits) + padding (4 bits)
     report[2] = (state->hat & 0x0F);
 
-    // Bytes 3-10: Analog sticks (4 axes, 16-bit each)
+    // Bytes 3-10: Analog sticks (4 axes, 16-bit each, little-endian)
     report[3] = state->lx & 0xFF;
     report[4] = (state->lx >> 8) & 0xFF;
     report[5] = state->ly & 0xFF;
@@ -262,10 +262,10 @@ bool usb_hid_switch_send_report(SwitchControllerState* state) {
     report[9] = state->ry & 0xFF;
     report[10] = (state->ry >> 8) & 0xFF;
 
-    // Send report
-    int result = usbd_ep_write(usb_dev, HID_EP_IN, report, sizeof(report));
+    // Send report (exactly 11 bytes)
+    int result = usbd_ep_write(usb_dev, HID_EP_IN, report, 11);
 
-    return (result == sizeof(report));
+    return (result == 11);
 }
 
 void usb_hid_switch_reset_state(SwitchControllerState* state) {

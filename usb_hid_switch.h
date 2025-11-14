@@ -10,8 +10,10 @@ extern "C" {
 #endif
 
 // Nintendo Switch Pro Controller VID/PID
-#define USB_VID_NINTENDO 0x057E
-#define USB_PID_SWITCH_PRO 0x2009
+// Note: Using generic gamepad IDs as Switch requires full Pro Controller protocol for official IDs
+// Many USB adapters use generic HID gamepad VID/PID that Switch accepts
+#define USB_VID_NINTENDO 0x0f0d  // HORI (licensed Switch controller manufacturer)
+#define USB_PID_SWITCH_PRO 0x00c1  // HORI Fighting Commander
 
 // Button bit positions for Switch Pro Controller
 #define SWITCH_BTN_Y (1 << 0)
