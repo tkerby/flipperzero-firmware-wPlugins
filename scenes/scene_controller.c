@@ -164,10 +164,8 @@ static bool switch_controller_view_controller_input_callback(InputEvent* event, 
                         consumed = true;
                     }
                 }
-                return; // Don't process other inputs in exit mode
-            }
-
-            if(model->selected_button > 0) {
+                // Don't process other inputs in exit mode
+            } else if(model->selected_button > 0) {
                 // In button menu
                 if(event->type == InputTypePress || event->type == InputTypeRepeat) {
                     if(event->key == InputKeyUp) {
