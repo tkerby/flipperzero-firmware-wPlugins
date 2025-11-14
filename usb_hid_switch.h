@@ -40,7 +40,7 @@ extern "C" {
 #define SWITCH_HAT_DOWN_LEFT 0x05
 #define SWITCH_HAT_LEFT 0x06
 #define SWITCH_HAT_UP_LEFT 0x07
-#define SWITCH_HAT_NEUTRAL 0x0F  // POKKEN uses 15 (0x0F) for neutral
+#define SWITCH_HAT_NEUTRAL 0x08  // Neutral state (no direction pressed)
 
 // Analog stick center position (8-bit for POKKEN Controller)
 #define STICK_CENTER 128  // 0x80 - center value for 8-bit sticks (0-255 range)
