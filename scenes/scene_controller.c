@@ -70,7 +70,7 @@ static void switch_controller_view_controller_draw_callback(Canvas* canvas, void
     if(m->connected) {
         canvas_draw_str(canvas, 2, 10, "Switch Controller");
         canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str(canvas, 2, 20, "Connected");
+        canvas_draw_str(canvas, 2, 20, "Connected (POKKEN)");
     } else {
         canvas_draw_str(canvas, 2, 10, "Switch Controller");
         canvas_set_font(canvas, FontSecondary);
@@ -93,10 +93,17 @@ static void switch_controller_view_controller_draw_callback(Canvas* canvas, void
         break;
     }
 
+    // Debug: Show current state
+    char debug_buf[32];
+    snprintf(debug_buf, sizeof(debug_buf), "B:%04X H:%X", m->state.buttons, m->state.hat);
+    canvas_draw_str(canvas, 2, 40, debug_buf);
+
+    snprintf(debug_buf, sizeof(debug_buf), "L:%d,%d R:%d,%d",
+             m->state.lx, m->state.ly, m->state.rx, m->state.ry);
+    canvas_draw_str(canvas, 2, 50, debug_buf);
+
     // Draw instructions
-    canvas_draw_str(canvas, 2, 42, "2x OK: Toggle Mode");
-    canvas_draw_str(canvas, 2, 51, "OK: A | Back: B");
-    canvas_draw_str(canvas, 2, 60, "Long OK: Btns | Long Back: Exit");
+    canvas_draw_str(canvas, 2, 60, "OK:A Back:B LongOK:Menu");
 
     // Show button menu if active
     if(m->selected_button > 0) {
