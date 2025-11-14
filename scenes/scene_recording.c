@@ -1,11 +1,20 @@
 #include "../switch_controller_app.h"
 #include <input/input.h>
 
+// Control modes (same as controller)
+typedef enum {
+    ControlModeDPad = 0,
+    ControlModeLeftStick,
+    ControlModeRightStick,
+    ControlModeCount,
+} ControlMode;
+
 typedef struct {
     bool recording;
     uint32_t event_count;
     uint32_t duration_ms;
     SwitchControllerState state;
+    ControlMode control_mode;
 } RecordingViewModel;
 
 static void switch_controller_view_recording_draw_callback(Canvas* canvas, void* model) {
@@ -17,20 +26,36 @@ static void switch_controller_view_recording_draw_callback(Canvas* canvas, void*
 
     canvas_set_font(canvas, FontSecondary);
 
+    // Show control mode
+    switch(m->control_mode) {
+    case ControlModeDPad:
+        canvas_draw_str(canvas, 2, 20, "Mode: D-Pad");
+        break;
+    case ControlModeLeftStick:
+        canvas_draw_str(canvas, 2, 20, "Mode: Left Stick");
+        break;
+    case ControlModeRightStick:
+        canvas_draw_str(canvas, 2, 20, "Mode: Right Stick");
+        break;
+    default:
+        break;
+    }
+
     // Show recording status
     if(m->recording) {
         char buf[32];
         snprintf(buf, sizeof(buf), "Events: %lu", m->event_count);
-        canvas_draw_str(canvas, 2, 25, buf);
+        canvas_draw_str(canvas, 2, 32, buf);
 
         snprintf(buf, sizeof(buf), "Time: %lu.%lus", m->duration_ms / 1000, (m->duration_ms % 1000) / 100);
-        canvas_draw_str(canvas, 2, 35, buf);
+        canvas_draw_str(canvas, 2, 42, buf);
 
-        canvas_draw_str(canvas, 2, 50, "Recording...");
-        canvas_draw_str(canvas, 2, 60, "Press Back to stop");
+        canvas_draw_str(canvas, 2, 54, "Recording...");
+        canvas_draw_str(canvas, 2, 63, "Back: Stop");
     } else {
-        canvas_draw_str(canvas, 2, 25, "Ready to record");
-        canvas_draw_str(canvas, 2, 35, "Press OK to start");
+        canvas_draw_str(canvas, 2, 32, "Ready to record");
+        canvas_draw_str(canvas, 2, 42, "OK: Start");
+        canvas_draw_str(canvas, 2, 52, "Long Back: Mode");
     }
 }
 
@@ -47,6 +72,10 @@ static bool switch_controller_view_recording_input_callback(InputEvent* event, v
                 if(event->key == InputKeyOk && event->type == InputTypePress) {
                     model->recording = true;
                     macro_recorder_start(app->recorder, app->current_macro, app->macro_name_buffer);
+                    consumed = true;
+                } else if(event->key == InputKeyBack && event->type == InputTypeLong) {
+                    // Toggle control mode before recording
+                    model->control_mode = (model->control_mode + 1) % ControlModeCount;
                     consumed = true;
                 }
             } else {
@@ -73,37 +102,85 @@ static bool switch_controller_view_recording_input_callback(InputEvent* event, v
                     view_dispatcher_send_custom_event(app->view_dispatcher, 0);
                     consumed = true;
                 } else {
-                    // Update controller state based on input
+                    // Update controller state based on input and control mode
                     if(event->key == InputKeyUp) {
                         if(event->type == InputTypePress) {
-                            model->state.hat = SWITCH_HAT_UP;
+                            if(model->control_mode == ControlModeDPad) {
+                                model->state.hat = SWITCH_HAT_UP;
+                            } else if(model->control_mode == ControlModeLeftStick) {
+                                model->state.ly = 0x0000;
+                            } else if(model->control_mode == ControlModeRightStick) {
+                                model->state.ry = 0x0000;
+                            }
                             state_changed = true;
                         } else if(event->type == InputTypeRelease) {
-                            model->state.hat = SWITCH_HAT_NEUTRAL;
+                            if(model->control_mode == ControlModeDPad) {
+                                model->state.hat = SWITCH_HAT_NEUTRAL;
+                            } else if(model->control_mode == ControlModeLeftStick) {
+                                model->state.ly = STICK_CENTER;
+                            } else if(model->control_mode == ControlModeRightStick) {
+                                model->state.ry = STICK_CENTER;
+                            }
                             state_changed = true;
                         }
                     } else if(event->key == InputKeyDown) {
                         if(event->type == InputTypePress) {
-                            model->state.hat = SWITCH_HAT_DOWN;
+                            if(model->control_mode == ControlModeDPad) {
+                                model->state.hat = SWITCH_HAT_DOWN;
+                            } else if(model->control_mode == ControlModeLeftStick) {
+                                model->state.ly = 0xFFFF;
+                            } else if(model->control_mode == ControlModeRightStick) {
+                                model->state.ry = 0xFFFF;
+                            }
                             state_changed = true;
                         } else if(event->type == InputTypeRelease) {
-                            model->state.hat = SWITCH_HAT_NEUTRAL;
+                            if(model->control_mode == ControlModeDPad) {
+                                model->state.hat = SWITCH_HAT_NEUTRAL;
+                            } else if(model->control_mode == ControlModeLeftStick) {
+                                model->state.ly = STICK_CENTER;
+                            } else if(model->control_mode == ControlModeRightStick) {
+                                model->state.ry = STICK_CENTER;
+                            }
                             state_changed = true;
                         }
                     } else if(event->key == InputKeyLeft) {
                         if(event->type == InputTypePress) {
-                            model->state.hat = SWITCH_HAT_LEFT;
+                            if(model->control_mode == ControlModeDPad) {
+                                model->state.hat = SWITCH_HAT_LEFT;
+                            } else if(model->control_mode == ControlModeLeftStick) {
+                                model->state.lx = 0x0000;
+                            } else if(model->control_mode == ControlModeRightStick) {
+                                model->state.rx = 0x0000;
+                            }
                             state_changed = true;
                         } else if(event->type == InputTypeRelease) {
-                            model->state.hat = SWITCH_HAT_NEUTRAL;
+                            if(model->control_mode == ControlModeDPad) {
+                                model->state.hat = SWITCH_HAT_NEUTRAL;
+                            } else if(model->control_mode == ControlModeLeftStick) {
+                                model->state.lx = STICK_CENTER;
+                            } else if(model->control_mode == ControlModeRightStick) {
+                                model->state.rx = STICK_CENTER;
+                            }
                             state_changed = true;
                         }
                     } else if(event->key == InputKeyRight) {
                         if(event->type == InputTypePress) {
-                            model->state.hat = SWITCH_HAT_RIGHT;
+                            if(model->control_mode == ControlModeDPad) {
+                                model->state.hat = SWITCH_HAT_RIGHT;
+                            } else if(model->control_mode == ControlModeLeftStick) {
+                                model->state.lx = 0xFFFF;
+                            } else if(model->control_mode == ControlModeRightStick) {
+                                model->state.rx = 0xFFFF;
+                            }
                             state_changed = true;
                         } else if(event->type == InputTypeRelease) {
-                            model->state.hat = SWITCH_HAT_NEUTRAL;
+                            if(model->control_mode == ControlModeDPad) {
+                                model->state.hat = SWITCH_HAT_NEUTRAL;
+                            } else if(model->control_mode == ControlModeLeftStick) {
+                                model->state.lx = STICK_CENTER;
+                            } else if(model->control_mode == ControlModeRightStick) {
+                                model->state.rx = STICK_CENTER;
+                            }
                             state_changed = true;
                         }
                     } else if(event->key == InputKeyOk) {
@@ -155,6 +232,7 @@ void switch_controller_scene_on_enter_recording(void* context) {
             model->recording = false;
             model->event_count = 0;
             model->duration_ms = 0;
+            model->control_mode = ControlModeDPad;
             usb_hid_switch_reset_state(&model->state);
         },
         true);

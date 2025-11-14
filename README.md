@@ -5,15 +5,18 @@ A Flipper Zero application that emulates a Nintendo Switch Pro Controller over U
 ## Features
 
 - **Manual Controller Mode**: Use your Flipper Zero as a Nintendo Switch controller
-  - D-Pad mapped to directional buttons
+  - Three control modes: D-Pad, Left Stick, Right Stick
+  - Toggle modes with long press Back button
   - OK button → A button
   - Back button → B button
   - Long press OK → Menu for additional buttons (X, Y, L, R, ZL, ZR, +, -, Home)
+  - Directional buttons control D-Pad or analog sticks based on mode
 
 - **Macro Recording**: Record button sequences with precise timing
-  - Records D-Pad movements
+  - Records D-Pad movements and analog stick inputs
   - Records button presses and releases
   - Timestamps for accurate playback
+  - Switch control modes during recording
 
 - **Macro Playback**: Play back recorded macros
   - Loop or one-time playback
@@ -27,21 +30,25 @@ A Flipper Zero application that emulates a Nintendo Switch Pro Controller over U
 
 ## Installation
 
-### Prerequisites
+**📖 For detailed installation instructions, see [INSTALLATION.md](INSTALLATION.md)**
 
-- Flipper Zero with latest firmware
-- [uFBT (micro Flipper Build Tool)](https://github.com/flipperdevices/flipperzero-ufbt) installed
+The installation guide covers:
+- Multiple installation methods (uFBT, Mobile App, qFlipper)
+- Prerequisites and requirements
+- First-time setup
+- Troubleshooting common issues
 
-### Building
+### Quick Start (uFBT)
 
-1. Clone this repository:
+1. Install uFBT:
+   ```bash
+   python3 -m pip install --upgrade ufbt
+   ```
+
+2. Clone and build:
    ```bash
    git clone https://github.com/ccyyturralde/Flipper-Zero-Joycon.git
    cd Flipper-Zero-Joycon
-   ```
-
-2. Build the app:
-   ```bash
    ufbt
    ```
 
@@ -58,19 +65,29 @@ A Flipper Zero application that emulates a Nintendo Switch Pro Controller over U
 2. Launch the Switch Controller app
 3. Select "Manual Controller"
 4. Control the Switch using:
-   - **D-Pad**: Up/Down/Left/Right buttons
+   - **Directional buttons**: Up/Down/Left/Right (controls D-Pad or sticks)
    - **A Button**: OK button
-   - **B Button**: Back button
-   - **Other buttons**: Long press OK to open menu
+   - **B Button**: Back button (short press)
+   - **Mode Toggle**: Back button (long press) - cycles between D-Pad, Left Stick, Right Stick
+   - **Button Menu**: OK button (long press) - access X, Y, L, R, ZL, ZR, +, -, Home
+
+**Control Modes:**
+- **D-Pad Mode**: Directional buttons control the D-Pad
+- **Left Stick Mode**: Directional buttons control the left analog stick
+- **Right Stick Mode**: Directional buttons control the right analog stick
 
 ### Recording a Macro
 
 1. Launch the Switch Controller app
 2. Select "Record Macro"
 3. Enter a name for your macro
-4. Press OK to start recording
-5. Perform the button sequence you want to record
-6. Press Back to stop and save the recording
+4. **Before recording**: Use long press Back to set control mode (D-Pad/Left Stick/Right Stick)
+5. Press OK to start recording
+6. Perform your button sequence:
+   - Use directional buttons for D-Pad or stick movements
+   - Press OK for A button
+   - You can switch control modes during recording with long press Back
+7. Press Back (short press) to stop and save the recording
 
 ### Playing a Macro
 
@@ -103,21 +120,29 @@ Macros are stored in `/ext/apps_data/switch_controller/` with `.scm` extension:
 
 ### Limitations
 
-- Flipper Zero has only 6 physical buttons, so not all Switch buttons are directly accessible
-- Analog stick movements are not supported in macro recording (sticks are centered)
+- Flipper Zero has only 6 physical buttons, so not all Switch buttons are directly accessible (use button menu)
+- Analog stick movements are digital (full direction or centered, no partial movements)
 - Some advanced controller features (rumble, gyro, NFC) are not implemented
 
 ## Button Mapping
 
-| Flipper Button | Switch Button |
+| Flipper Button | Switch Function |
 |---------------|---------------|
-| Up | D-Pad Up |
-| Down | D-Pad Down |
-| Left | D-Pad Left |
-| Right | D-Pad Right |
-| OK | A Button |
-| Back | B Button |
+| Up/Down/Left/Right | D-Pad or Analog Stick (depends on mode) |
+| OK (short press) | A Button |
 | OK (long press) | Button Menu → X, Y, L, R, ZL, ZR, +, -, Home |
+| Back (short press) | B Button |
+| Back (long press) | Toggle Control Mode (D-Pad/L-Stick/R-Stick) |
+
+### Control Modes
+
+The app has three modes that change what the directional buttons control:
+
+1. **D-Pad Mode** (default): Directional buttons → D-Pad movements
+2. **Left Stick Mode**: Directional buttons → Left analog stick (full deflection)
+3. **Right Stick Mode**: Directional buttons → Right analog stick (full deflection)
+
+Switch between modes anytime with long press Back button.
 
 ## Credits
 

@@ -1,11 +1,20 @@
 #include "../switch_controller_app.h"
 #include <input/input.h>
 
+// Control modes
+typedef enum {
+    ControlModeDPad = 0,
+    ControlModeLeftStick,
+    ControlModeRightStick,
+    ControlModeCount,
+} ControlMode;
+
 // Controller view model
 typedef struct {
     SwitchControllerState state;
     bool connected;
     uint8_t selected_button; // For button menu (0 = none, 1-9 = button index)
+    ControlMode control_mode; // Current control mode
 } ControllerViewModel;
 
 // Button menu items (for long press OK)
@@ -50,12 +59,27 @@ static void switch_controller_view_controller_draw_callback(Canvas* canvas, void
         canvas_draw_str(canvas, 2, 20, "Not Connected");
     }
 
-    // Draw instructions
+    // Draw control mode
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str(canvas, 2, 35, "DPad: Up/Down/Left/Right");
-    canvas_draw_str(canvas, 2, 44, "OK: A button");
-    canvas_draw_str(canvas, 2, 53, "Back: B button");
-    canvas_draw_str(canvas, 2, 62, "Long OK: More buttons");
+    const char* mode_str = "Mode: ";
+    switch(m->control_mode) {
+    case ControlModeDPad:
+        canvas_draw_str(canvas, 2, 30, "Mode: D-Pad");
+        break;
+    case ControlModeLeftStick:
+        canvas_draw_str(canvas, 2, 30, "Mode: Left Stick");
+        break;
+    case ControlModeRightStick:
+        canvas_draw_str(canvas, 2, 30, "Mode: Right Stick");
+        break;
+    default:
+        break;
+    }
+
+    // Draw instructions
+    canvas_draw_str(canvas, 2, 42, "Directions: Move/DPad");
+    canvas_draw_str(canvas, 2, 51, "OK: A | Back: B");
+    canvas_draw_str(canvas, 2, 60, "Long OK: Btns");
 
     // Show button menu if active
     if(m->selected_button > 0) {
@@ -75,6 +99,10 @@ static void switch_controller_view_controller_draw_callback(Canvas* canvas, void
 
         // Highlight selected
         canvas_draw_str(canvas, 4, 45, ">");
+
+        // Show mode toggle hint
+        canvas_set_font(canvas, FontSecondary);
+        canvas_draw_str(canvas, 14, 63, "Long Back: Toggle Mode");
     }
 }
 
@@ -113,36 +141,85 @@ static bool switch_controller_view_controller_input_callback(InputEvent* event, 
                 }
             } else {
                 // Normal controller mode
+                // Handle directional inputs based on control mode
                 if(event->key == InputKeyUp) {
                     if(event->type == InputTypePress) {
-                        model->state.hat = SWITCH_HAT_UP;
+                        if(model->control_mode == ControlModeDPad) {
+                            model->state.hat = SWITCH_HAT_UP;
+                        } else if(model->control_mode == ControlModeLeftStick) {
+                            model->state.ly = 0x0000; // Full up
+                        } else if(model->control_mode == ControlModeRightStick) {
+                            model->state.ry = 0x0000; // Full up
+                        }
                         consumed = true;
                     } else if(event->type == InputTypeRelease) {
-                        model->state.hat = SWITCH_HAT_NEUTRAL;
+                        if(model->control_mode == ControlModeDPad) {
+                            model->state.hat = SWITCH_HAT_NEUTRAL;
+                        } else if(model->control_mode == ControlModeLeftStick) {
+                            model->state.ly = STICK_CENTER;
+                        } else if(model->control_mode == ControlModeRightStick) {
+                            model->state.ry = STICK_CENTER;
+                        }
                         consumed = true;
                     }
                 } else if(event->key == InputKeyDown) {
                     if(event->type == InputTypePress) {
-                        model->state.hat = SWITCH_HAT_DOWN;
+                        if(model->control_mode == ControlModeDPad) {
+                            model->state.hat = SWITCH_HAT_DOWN;
+                        } else if(model->control_mode == ControlModeLeftStick) {
+                            model->state.ly = 0xFFFF; // Full down
+                        } else if(model->control_mode == ControlModeRightStick) {
+                            model->state.ry = 0xFFFF; // Full down
+                        }
                         consumed = true;
                     } else if(event->type == InputTypeRelease) {
-                        model->state.hat = SWITCH_HAT_NEUTRAL;
+                        if(model->control_mode == ControlModeDPad) {
+                            model->state.hat = SWITCH_HAT_NEUTRAL;
+                        } else if(model->control_mode == ControlModeLeftStick) {
+                            model->state.ly = STICK_CENTER;
+                        } else if(model->control_mode == ControlModeRightStick) {
+                            model->state.ry = STICK_CENTER;
+                        }
                         consumed = true;
                     }
                 } else if(event->key == InputKeyLeft) {
                     if(event->type == InputTypePress) {
-                        model->state.hat = SWITCH_HAT_LEFT;
+                        if(model->control_mode == ControlModeDPad) {
+                            model->state.hat = SWITCH_HAT_LEFT;
+                        } else if(model->control_mode == ControlModeLeftStick) {
+                            model->state.lx = 0x0000; // Full left
+                        } else if(model->control_mode == ControlModeRightStick) {
+                            model->state.rx = 0x0000; // Full left
+                        }
                         consumed = true;
                     } else if(event->type == InputTypeRelease) {
-                        model->state.hat = SWITCH_HAT_NEUTRAL;
+                        if(model->control_mode == ControlModeDPad) {
+                            model->state.hat = SWITCH_HAT_NEUTRAL;
+                        } else if(model->control_mode == ControlModeLeftStick) {
+                            model->state.lx = STICK_CENTER;
+                        } else if(model->control_mode == ControlModeRightStick) {
+                            model->state.rx = STICK_CENTER;
+                        }
                         consumed = true;
                     }
                 } else if(event->key == InputKeyRight) {
                     if(event->type == InputTypePress) {
-                        model->state.hat = SWITCH_HAT_RIGHT;
+                        if(model->control_mode == ControlModeDPad) {
+                            model->state.hat = SWITCH_HAT_RIGHT;
+                        } else if(model->control_mode == ControlModeLeftStick) {
+                            model->state.lx = 0xFFFF; // Full right
+                        } else if(model->control_mode == ControlModeRightStick) {
+                            model->state.rx = 0xFFFF; // Full right
+                        }
                         consumed = true;
                     } else if(event->type == InputTypeRelease) {
-                        model->state.hat = SWITCH_HAT_NEUTRAL;
+                        if(model->control_mode == ControlModeDPad) {
+                            model->state.hat = SWITCH_HAT_NEUTRAL;
+                        } else if(model->control_mode == ControlModeLeftStick) {
+                            model->state.lx = STICK_CENTER;
+                        } else if(model->control_mode == ControlModeRightStick) {
+                            model->state.rx = STICK_CENTER;
+                        }
                         consumed = true;
                     }
                 } else if(event->key == InputKeyOk) {
@@ -164,6 +241,14 @@ static bool switch_controller_view_controller_input_callback(InputEvent* event, 
                     } else if(event->type == InputTypeRelease) {
                         model->state.buttons &= ~SWITCH_BTN_B;
                         consumed = false; // Let it go back
+                    } else if(event->type == InputTypeLong) {
+                        // Toggle control mode
+                        model->control_mode = (model->control_mode + 1) % ControlModeCount;
+                        // Reset stick positions when switching modes
+                        if(model->control_mode != ControlModeDPad) {
+                            model->state.hat = SWITCH_HAT_NEUTRAL;
+                        }
+                        consumed = true;
                     }
                 }
             }
@@ -222,6 +307,7 @@ void switch_controller_scene_on_enter_controller(void* context) {
             usb_hid_switch_reset_state(&model->state);
             model->connected = app->usb_connected;
             model->selected_button = 0;
+            model->control_mode = ControlModeDPad;
         },
         true);
 

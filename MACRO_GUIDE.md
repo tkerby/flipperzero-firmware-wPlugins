@@ -6,24 +6,37 @@ The Flipper Zero only has 6 physical buttons (Up, Down, Left, Right, OK, Back), 
 
 ## Approach 1: Manual Controller Mode (Current Implementation)
 
-The app currently maps Flipper buttons as follows:
-- **D-Pad**: Up/Down/Left/Right buttons
+The app currently maps Flipper buttons with three control modes:
+
+### Control Modes
+- **D-Pad Mode**: Up/Down/Left/Right → D-Pad movements
+- **Left Stick Mode**: Up/Down/Left/Right → Left analog stick (full deflection)
+- **Right Stick Mode**: Up/Down/Left/Right → Right analog stick (full deflection)
+
+**Toggle modes**: Long press Back button
+
+### Button Mapping
+- **Directional Buttons**: Up/Down/Left/Right (controls D-Pad or sticks based on mode)
 - **A Button**: OK button
 - **B Button**: Back button (short press)
-- **Button Menu**: Long press OK to access X, Y, L, R, ZL, ZR, +, -, Home
+- **Mode Toggle**: Back button (long press)
+- **Button Menu**: OK button (long press) to access X, Y, L, R, ZL, ZR, +, -, Home
 
 ### Recording Macros with Manual Mode
 
-1. Use the basic buttons (D-Pad, A, B) for simple macros
-2. For complex button combinations:
-   - Long press OK to open button menu
-   - Select additional buttons (X, Y, L, R, etc.)
-   - These will be recorded in the macro
+1. Before recording, set the control mode (D-Pad, Left Stick, or Right Stick)
+2. Start recording
+3. Use directional buttons for D-Pad or stick movements
+4. Switch modes during recording if needed (long press Back)
+5. Use button menu (long press OK) for additional buttons
+6. Stop recording
 
 **Example Use Cases:**
-- Menu navigation (D-Pad + A/B)
-- Repeated button presses (farming, grinding)
-- Simple combos (fighting games)
+- **Menu navigation**: D-Pad Mode + A/B buttons
+- **Character movement**: Left Stick Mode for 3D games
+- **Camera control**: Right Stick Mode for camera movement
+- **Repeated actions**: Any mode for farming, grinding
+- **Complex combos**: Switch between modes during recording
 
 ## Approach 2: Create Macros via Text Files
 
@@ -188,13 +201,23 @@ Records pressing A button 10 times with 200ms delay between presses.
 DOWN -> A -> DOWN -> A -> DOWN -> A
 ```
 
-### Pokémon Egg Hatching
+### Pokémon Egg Hatching (D-Pad Mode)
 ```
 Loop:
   DPAD LEFT (hold 2s)
   DPAD NEUTRAL
   DPAD RIGHT (hold 2s)
   DPAD NEUTRAL
+```
+
+### Character Circling (Left Stick Mode)
+```
+Loop:
+  LEFT STICK UP (0.5s)
+  LEFT STICK RIGHT (0.5s)
+  LEFT STICK DOWN (0.5s)
+  LEFT STICK LEFT (0.5s)
+  CENTER
 ```
 
 ## Tips
@@ -207,10 +230,11 @@ Loop:
 
 ## Limitations
 
-- Analog stick movements are not currently supported in recording (centered by default)
+- Analog stick movements are digital only (full deflection or centered, no partial movements)
 - Maximum 1000 events per macro
 - No real-time editing during recording
 - Cannot record simultaneous button presses (they're recorded sequentially)
+- Diagonal stick movements require switching rapidly between directions (not true analog)
 
 ## Future Ideas
 
