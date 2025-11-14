@@ -1,0 +1,20 @@
+# Build artifacts
+dist/
+build/
+*.fap
+*.elf
+*.bin
+
+# uFBT artifacts
+.ufbt/
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
