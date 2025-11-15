@@ -12,20 +12,24 @@
 
 typedef enum {
     ScreenSplash,
-    ScreenQuestion,
-    ScreenA1,
-    ScreenA2,
-    ScreenA3,
-    ScreenA4
+    ScreenL1Question,
+    ScreenL1_A1,
+    ScreenL1_A2,
+    ScreenL1_A3, 
+	ScreenL2_A1_1,  // Real needles
+	ScreenL2_A1_2,  // Scales
+	ScreenL2_A2_1,  // Compound leaves
+	ScreenL2_A2_2   // Single leaf
 } AppScreen;
 
 // Main application structure
 typedef struct {
     FuriMessageQueue* input_queue;  // Queue for handling input events
-    ViewPort* view_port;             // ViewPort for rendering UI
-    Gui* gui;                        // GUI instance
-    uint8_t current_screen;          // 0 = first screen, 1 = second screen
-	int selected_option;
+    ViewPort* view_port;            // ViewPort for rendering UI
+    Gui* gui;                       // GUI instance
+    uint8_t current_screen;         // 0 = first screen, 1 = second screen
+	int selected_L1_option;         // Selected option for Level 1 
+	int selected_L2_option;         // Selected option for Level 2
 } AppState;
 
 // Draw callback - called whenever the screen needs to be redrawn
@@ -52,69 +56,112 @@ void draw_callback(Canvas* canvas, void* context) {
 			canvas_draw_str_aligned(canvas, 1, 57, AlignLeft, AlignTop, "to exit.");
 			
 			canvas_draw_str_aligned(canvas, 100, 54, AlignLeft, AlignTop, "F. Greil");
-			canvas_draw_str_aligned(canvas, 110, 1, AlignLeft, AlignTop, "v0.9");
+			canvas_draw_str_aligned(canvas, 110, 1, AlignLeft, AlignTop, "v0.3");
 			
 			// Draw button hints at bottom using elements library
 			elements_button_center(canvas, "OK"); // for the OK button
 			break;
-		case ScreenQuestion: // Second screen -------------------------------------------------
-			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);		
-			// Draw menu box and options
-            canvas_draw_frame(canvas, 13, 5, 108, 44); // Menu box
-            canvas_draw_str(canvas, 20, 15, "Screen A1");
-            canvas_draw_str(canvas, 20, 25, "Screen A2");
-            canvas_draw_str(canvas, 20, 35, "Screen A3");
-            canvas_draw_str(canvas, 20, 45, "Screen A4");
-            
+		case ScreenL1Question: // Second screen -------------------------------------------------
+			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);	
+			// Level 1 Question
+			canvas_set_font(canvas, FontPrimary);
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "My tree has...");
+			canvas_draw_frame(canvas, 1, 11, 127, 34); // Menu box: x, y, w, h
+            // Level 1 Choices
+			canvas_set_font(canvas, FontSecondary);
+			canvas_draw_str(canvas, 7, 21, ".. needles.");
+            canvas_draw_str(canvas, 7, 31, ".. leaves.");
+            canvas_draw_str(canvas, 7, 41, "I don't know.");       
             // Draw selection indicator
-            canvas_draw_str(canvas, 15, 15 + (state->selected_option * 10), ">");
-			
-			
-			// Navigation hints 
-			canvas_draw_str_aligned(canvas, 1, 49, AlignLeft, AlignTop, "Press 'back' for");	
-			canvas_draw_str_aligned(canvas, 1, 56, AlignLeft, AlignTop, "splash screen.");	
-
-			canvas_draw_icon(canvas, 64, 54, &I_ButtonUp_7x4);
-			canvas_draw_icon(canvas, 64, 59, &I_ButtonDown_7x4);
-			// The elements library is helpful
-			elements_button_right(canvas, "Select");
+            canvas_draw_str(canvas, 3, 21 + (state->selected_L1_option* 10), ">");
+						
+			// Navigation hints
+			canvas_draw_icon(canvas, 119, 34, &I_ButtonUp_7x4);
+			canvas_draw_icon(canvas, 119, 39, &I_ButtonDown_7x4);				
+			canvas_draw_str_aligned(canvas, 1, 49, AlignLeft, AlignTop, "Press 'back'");	
+			canvas_draw_str_aligned(canvas, 1, 56, AlignLeft, AlignTop, "for splash.");	
+			elements_button_center(canvas, "OK"); // for the OK button
 			break;
-		case ScreenA1:
-			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);	
+		case ScreenL1_A1: // Level 1: Option 1: Needle Tree
+ 			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10); // icon with App logo
+			canvas_draw_icon(canvas, 118, 1, &I_NeedleTree_10x10); // icon with choosen option for level 1 		 
             canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignCenter, "Screen A1 Content");
-            canvas_set_font(canvas, FontSecondary);
-            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones");
-			elements_button_left(canvas, "Menu"); 
-
-        break;
-		case ScreenA2:
-			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);	
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Needle-leaves are..");
+            canvas_draw_frame(canvas, 1, 11, 127, 24); // Menu box: x, y, w, h
+            // Level 2 Answer 1 Choices
+			canvas_set_font(canvas, FontSecondary);
+			canvas_draw_str(canvas, 7, 21, "long and pointed needles");
+            canvas_draw_str(canvas, 7, 31, "are small and flat scales");
+			// Draw selection indicator
+            canvas_draw_str(canvas, 3, 21 + (state->selected_L2_option* 10), ">");
+			// Navigation hints		
+			canvas_draw_icon(canvas, 119, 24, &I_ButtonUp_7x4);
+			canvas_draw_icon(canvas, 119, 29, &I_ButtonDown_7x4);	
+			elements_button_left(canvas, "Prev. ?"); 
+			elements_button_center(canvas, "OK"); // for the OK button
+			break;
+		case ScreenL1_A2: // Level 2: Option 2: Leave Tree
+			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10); // icon with App logo
+			canvas_draw_icon(canvas, 118, 1, &I_LeaveTree_10x10); // icon with choosen option for level 1 	
             canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignCenter, "Screen A2 Content");
-            canvas_set_font(canvas, FontSecondary);
-            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones");
-			
-			elements_button_left(canvas, "Menu"); 
-        break;
-		case ScreenA3:
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Broad leaves are..");
+            canvas_draw_frame(canvas, 1, 11, 127, 24); // Menu box: x, y, w, h
+			// Level 2 Answer 2 Choices
+			canvas_set_font(canvas, FontSecondary);
+            canvas_draw_str(canvas, 7, 21, "compound leaves w. leaflets");
+            canvas_draw_str(canvas, 7, 31, "single, undivided leaves");
+			// Draw selection indicator
+            canvas_draw_str(canvas, 3, 21 + (state->selected_L2_option* 10), ">");
+			// Navigation bar
+			canvas_draw_icon(canvas, 119, 24, &I_ButtonUp_7x4);
+			canvas_draw_icon(canvas, 119, 29, &I_ButtonDown_7x4);				
+			elements_button_left(canvas, "Prev. ?"); 
+			elements_button_center(canvas, "OK"); // for the OK button
+			break;
+		case ScreenL1_A3: // Level 2: Option 3: Nothing chosen
 			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);	
-            canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignCenter, "Screen A3 Content");
+			canvas_set_font(canvas, FontPrimary);
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "No leave type chosen");
             canvas_set_font(canvas, FontSecondary);
-            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones");
-			
-			elements_button_left(canvas, "Menu"); 
-        break;
-		case ScreenA4:
+            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Wait to next spring :-)");
+			elements_button_left(canvas, "Prev. question"); 
+			break;
+		case ScreenL2_A1_1: // Level 2: Option 1_1: Needles
+			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
+			canvas_draw_icon(canvas, 118, 1, &I_NeedleTree_10x10); // icon with choosen option for level 1 				
+			canvas_set_font(canvas, FontPrimary);
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Real needles");
+            canvas_set_font(canvas, FontSecondary);
+            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones.");
+			elements_button_left(canvas, "Prev. question"); 
+			break;
+		case ScreenL2_A1_2: // Level 2: Option 1_2: Scales
 			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);	
-            canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignCenter, "Screen A4 Content");
+			canvas_draw_icon(canvas, 118, 1, &I_NeedleTree_10x10); // icon with choosen option for level 1 	
+			canvas_set_font(canvas, FontPrimary);
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Scales");
             canvas_set_font(canvas, FontSecondary);
-            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones");
-			
-			elements_button_left(canvas, "Menu"); 
-        break;
+            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones.");
+			elements_button_left(canvas, "Prev. question"); 
+			break;
+		case ScreenL2_A2_1: // Level 2: Option 2_1: Compound leave
+			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
+			canvas_draw_icon(canvas, 118, 1, &I_LeaveTree_10x10); // icon with choosen option for level 1 	
+			canvas_set_font(canvas, FontPrimary);
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Compound leaves");
+            canvas_set_font(canvas, FontSecondary);
+            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones.");
+			elements_button_left(canvas, "Prev. question"); 
+			break;
+		case ScreenL2_A2_2: // Level 2: Option 2_2: Undivided leaf
+			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
+			canvas_draw_icon(canvas, 118, 1, &I_LeaveTree_10x10); // icon with choosen option for level 1 	
+			canvas_set_font(canvas, FontPrimary);
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Undivided leaf");			
+            canvas_set_font(canvas, FontSecondary);
+            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones.");
+			elements_button_left(canvas, "Prev. question"); 
+			break;
     }
 }
 
@@ -134,7 +181,8 @@ int32_t tree_ident_main(void* p) {
 
     AppState app; // Application state struct
 	app.current_screen = ScreenSplash;  // Start on first screen (0)
-	app.selected_option = 0; // Start with first line highlighted
+	app.selected_L1_option= 0; // Level 1: Start with first line highlighted
+	app.selected_L2_option= 0; // Level 2: Start with first line highlighted
 
     // Allocate resources for rendering and 
     app.view_port = view_port_alloc(); // for rendering
@@ -159,23 +207,52 @@ int32_t tree_ident_main(void* p) {
 		// Handle button presses based on current screen
         switch(input.key) {
 		case InputKeyUp:
-			if(app.current_screen == ScreenQuestion && input.type == InputTypePress) {
-				app.selected_option = (app.selected_option - 1 + 4) % 4;
+			if(app.current_screen == ScreenL1Question && input.type == InputTypePress) {
+				app.selected_L1_option= (app.selected_L1_option- 1 + 3) % 3;
+			}
+			if((app.current_screen == ScreenL1_A1 || app.current_screen == ScreenL1_A2)
+				&& input.type == InputTypePress) {
+				app.selected_L2_option= (app.selected_L2_option- 1 + 2) % 2;
 			}
 			break;
 		case InputKeyDown:
-			if(app.current_screen == ScreenQuestion && input.type == InputTypePress) {
-				app.selected_option = (app.selected_option + 1) % 4;
+			if(app.current_screen == ScreenL1Question && input.type == InputTypePress) {
+				app.selected_L1_option= (app.selected_L1_option+ 1) % 3;
+			}
+			if((app.current_screen == ScreenL1_A1 || app.current_screen == ScreenL1_A2)
+				&& input.type == InputTypePress) {
+				app.selected_L2_option= (app.selected_L2_option- 1 + 2) % 2;
 			}
 			break;
 		case InputKeyOk:
-            switch (app.current_screen) {
-				case ScreenSplash:
-					app.current_screen = ScreenQuestion;  // Move to second screen
-					break;
-				default:
-					break;
-            }
+			if (input.type == InputTypePress){
+				switch (app.current_screen) {
+					case ScreenSplash:
+						app.current_screen = ScreenL1Question;  // Move to second screen
+						break;
+					case ScreenL1Question:
+						switch (app.selected_L1_option){
+							case 0: app.current_screen = ScreenL1_A1; break;
+							case 1: app.current_screen = ScreenL1_A2; break;
+							case 2: app.current_screen = ScreenL1_A3; break;
+						}
+						break;
+					case ScreenL1_A1: // Needles
+						switch (app.selected_L2_option){
+							case 0: app.current_screen = ScreenL2_A1_1; break;
+							case 1: app.current_screen = ScreenL2_A1_2; break;
+						}
+						break;
+					case ScreenL1_A2: // Leaves
+						switch (app.selected_L2_option){
+							case 0: app.current_screen = ScreenL2_A2_1; break;
+							case 1: app.current_screen = ScreenL2_A2_2; break;
+						}
+						break;
+					default:
+						break;
+				}
+		}
             break;
         case InputKeyBack:
 			switch(app.current_screen){
@@ -184,37 +261,42 @@ int32_t tree_ident_main(void* p) {
 						exit_loop = 1;  // Exit app after long press
 					}
 					break;
-				case ScreenQuestion: // Back button: return to first screen
+				case ScreenL1Question: // Back button: return to first screen
 					app.current_screen = ScreenSplash;
 					break;
+	
+				
 			}
             break;
         case InputKeyLeft: 
-			switch(app.current_screen){
-				case ScreenA1:
-					app.current_screen = ScreenQuestion;
-					break;
-				case ScreenA2:
-					app.current_screen = ScreenQuestion;
-					break;
-				case ScreenA3:
-					app.current_screen = ScreenQuestion;
-					break;
-				case ScreenA4:
-					app.current_screen = ScreenQuestion;
-					break;
-				default:
-					break;
-            }
+			if (input.type == InputTypePress){
+				switch(app.current_screen){
+					case ScreenL1_A1:
+					case ScreenL1_A2:
+					case ScreenL1_A3:
+						app.current_screen = ScreenL1Question;
+						break;
+					case ScreenL2_A1_1:
+					case ScreenL2_A1_2:
+						app.current_screen = ScreenL1_A1;
+						break;		
+					case ScreenL2_A2_1:
+					case ScreenL2_A2_2:
+						app.current_screen = ScreenL1_A2;
+						break;	
+					default:
+						break;
+				}
+				break;
+			}
 			break;
         case InputKeyRight:
 		    switch (app.current_screen) {
-				case ScreenQuestion:
-					switch (app.selected_option){
-						case 0: app.current_screen = ScreenA1; break;
-						case 1: app.current_screen = ScreenA2; break;
-						case 2: app.current_screen = ScreenA3; break;
-						case 3: app.current_screen = ScreenA4; break;
+				case ScreenL1Question:
+					switch (app.selected_L1_option){
+						case 0: app.current_screen = ScreenL1_A1; break;
+						case 1: app.current_screen = ScreenL1_A2; break;
+						case 2: app.current_screen = ScreenL1_A3; break;
 					}
 					break;
 				default: break;
