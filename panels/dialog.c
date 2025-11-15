@@ -5,8 +5,6 @@
 #include "../iconedit.h"
 #include "../utils/draw.h"
 #include "../utils/notification.h"
-// #include "../icon.h"
-// #include "canvas.h"
 
 #define LIST_LEN(x) (sizeof(x) / sizeof((x)[0]))
 

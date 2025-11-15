@@ -1,3 +1,8 @@
+## 0.5
+
+- XBM fixes
+- UI cleanup
+
 ## 0.4
 
 - Send binary files to PC

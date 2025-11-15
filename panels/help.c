@@ -2,7 +2,6 @@
 #include <input/input.h>
 
 #include "panels.h"
-#include "../utils/draw.h"
 #include "../iconedit.h"
 
 #define LINE_COUNT 5 // number of lines visible in the panel

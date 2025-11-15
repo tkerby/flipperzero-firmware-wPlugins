@@ -3,7 +3,6 @@
 
 #include "panels.h"
 #include "../iconedit.h"
-#include "../utils/file_utils.h"
 #include "../utils/draw.h"
 
 typedef enum {
