@@ -17,6 +17,8 @@ typedef struct {
     ControlMode control_mode; // Current control mode
     bool exit_confirm; // Exit confirmation dialog
     uint32_t last_ok_press_time; // For double-click detection
+    uint16_t button_to_release; // Button that needs to be auto-released
+    uint32_t button_release_time; // When to release the button
 } ControllerViewModel;
 
 // Button menu items (for long press OK)
@@ -68,7 +70,7 @@ static void switch_controller_view_controller_draw_callback(Canvas* canvas, void
     if(m->connected) {
         canvas_draw_str(canvas, 2, 10, "Switch Controller");
         canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str(canvas, 2, 20, "Connected");
+        canvas_draw_str(canvas, 2, 20, "Connected (POKKEN)");
     } else {
         canvas_draw_str(canvas, 2, 10, "Switch Controller");
         canvas_set_font(canvas, FontSecondary);
@@ -91,10 +93,17 @@ static void switch_controller_view_controller_draw_callback(Canvas* canvas, void
         break;
     }
 
+    // Debug: Show current state
+    char debug_buf[32];
+    snprintf(debug_buf, sizeof(debug_buf), "B:%04X H:%X", m->state.buttons, m->state.hat);
+    canvas_draw_str(canvas, 2, 40, debug_buf);
+
+    snprintf(debug_buf, sizeof(debug_buf), "L:%d,%d R:%d,%d",
+             m->state.lx, m->state.ly, m->state.rx, m->state.ry);
+    canvas_draw_str(canvas, 2, 50, debug_buf);
+
     // Draw instructions
-    canvas_draw_str(canvas, 2, 42, "2x OK: Toggle Mode");
-    canvas_draw_str(canvas, 2, 51, "OK: A | Back: B");
-    canvas_draw_str(canvas, 2, 60, "Long OK: Btns | Long Back: Exit");
+    canvas_draw_str(canvas, 2, 60, "OK:A Back:B LongOK:Menu");
 
     // Show button menu if active
     if(m->selected_button > 0) {
@@ -141,6 +150,15 @@ static void switch_controller_timer_callback(void* context) {
         ControllerViewModel * model,
         {
             if(model && model->connected) {
+                // Check if we need to auto-release a button
+                if(model->button_to_release != 0) {
+                    uint32_t current_time = furi_get_tick();
+                    if(current_time >= model->button_release_time) {
+                        model->state.buttons &= ~model->button_to_release;
+                        model->button_to_release = 0;
+                    }
+                }
+
                 usb_hid_switch_send_report(&model->state);
             }
         },
@@ -184,7 +202,7 @@ static bool switch_controller_view_controller_input_callback(InputEvent* event, 
         ControllerViewModel * model,
         {
             if(model->selected_button > 0) {
-                // In button menu
+                // In button menu - consume ALL events to prevent dismissal
                 if(event->type == InputTypePress || event->type == InputTypeRepeat) {
                     if(event->key == InputKeyUp) {
                         if(model->selected_button > 1) {
@@ -197,15 +215,27 @@ static bool switch_controller_view_controller_input_callback(InputEvent* event, 
                         }
                         consumed = true;
                     } else if(event->key == InputKeyOk) {
-                        // Press selected button
+                        // Press selected button and schedule auto-release after 100ms
                         uint8_t idx = model->selected_button - 1;
-                        model->state.buttons |= button_menu_flags[idx];
+                        uint16_t button_flag = button_menu_flags[idx];
+                        model->state.buttons |= button_flag;
+                        model->button_to_release = button_flag;
+                        model->button_release_time = furi_get_tick() + 100; // 100ms press
                         model->selected_button = 0; // Close menu
                         consumed = true;
                     } else if(event->key == InputKeyBack) {
                         model->selected_button = 0; // Close menu
                         consumed = true;
                     }
+                } else if(event->type == InputTypeRelease) {
+                    // Consume release events for buttons that were pressed
+                    if(event->key == InputKeyUp || event->key == InputKeyDown ||
+                       event->key == InputKeyOk || event->key == InputKeyBack) {
+                        consumed = true;
+                    }
+                } else {
+                    // Consume all other event types when menu is active
+                    consumed = true;
                 }
             } else {
                 // Normal controller mode
@@ -215,18 +245,18 @@ static bool switch_controller_view_controller_input_callback(InputEvent* event, 
                         if(model->control_mode == ControlModeDPad) {
                             model->state.hat = SWITCH_HAT_UP;
                         } else if(model->control_mode == ControlModeLeftStick) {
-                            model->state.ly = 0x0000; // Full up
+                            model->state.ly = 0; // Full up (8-bit: 0 = top)
                         } else if(model->control_mode == ControlModeRightStick) {
-                            model->state.ry = 0x0000; // Full up
+                            model->state.ry = 0; // Full up (8-bit: 0 = top)
                         }
                         consumed = true;
                     } else if(event->type == InputTypeRelease) {
                         if(model->control_mode == ControlModeDPad) {
                             model->state.hat = SWITCH_HAT_NEUTRAL;
                         } else if(model->control_mode == ControlModeLeftStick) {
-                            model->state.ly = STICK_CENTER;
+                            model->state.ly = STICK_CENTER; // 128
                         } else if(model->control_mode == ControlModeRightStick) {
-                            model->state.ry = STICK_CENTER;
+                            model->state.ry = STICK_CENTER; // 128
                         }
                         consumed = true;
                     }
@@ -235,18 +265,18 @@ static bool switch_controller_view_controller_input_callback(InputEvent* event, 
                         if(model->control_mode == ControlModeDPad) {
                             model->state.hat = SWITCH_HAT_DOWN;
                         } else if(model->control_mode == ControlModeLeftStick) {
-                            model->state.ly = 0xFFFF; // Full down
+                            model->state.ly = 255; // Full down (8-bit: 255 = bottom)
                         } else if(model->control_mode == ControlModeRightStick) {
-                            model->state.ry = 0xFFFF; // Full down
+                            model->state.ry = 255; // Full down (8-bit: 255 = bottom)
                         }
                         consumed = true;
                     } else if(event->type == InputTypeRelease) {
                         if(model->control_mode == ControlModeDPad) {
                             model->state.hat = SWITCH_HAT_NEUTRAL;
                         } else if(model->control_mode == ControlModeLeftStick) {
-                            model->state.ly = STICK_CENTER;
+                            model->state.ly = STICK_CENTER; // 128
                         } else if(model->control_mode == ControlModeRightStick) {
-                            model->state.ry = STICK_CENTER;
+                            model->state.ry = STICK_CENTER; // 128
                         }
                         consumed = true;
                     }
@@ -255,18 +285,18 @@ static bool switch_controller_view_controller_input_callback(InputEvent* event, 
                         if(model->control_mode == ControlModeDPad) {
                             model->state.hat = SWITCH_HAT_LEFT;
                         } else if(model->control_mode == ControlModeLeftStick) {
-                            model->state.lx = 0x0000; // Full left
+                            model->state.lx = 0; // Full left (8-bit: 0 = left)
                         } else if(model->control_mode == ControlModeRightStick) {
-                            model->state.rx = 0x0000; // Full left
+                            model->state.rx = 0; // Full left (8-bit: 0 = left)
                         }
                         consumed = true;
                     } else if(event->type == InputTypeRelease) {
                         if(model->control_mode == ControlModeDPad) {
                             model->state.hat = SWITCH_HAT_NEUTRAL;
                         } else if(model->control_mode == ControlModeLeftStick) {
-                            model->state.lx = STICK_CENTER;
+                            model->state.lx = STICK_CENTER; // 128
                         } else if(model->control_mode == ControlModeRightStick) {
-                            model->state.rx = STICK_CENTER;
+                            model->state.rx = STICK_CENTER; // 128
                         }
                         consumed = true;
                     }
@@ -275,18 +305,18 @@ static bool switch_controller_view_controller_input_callback(InputEvent* event, 
                         if(model->control_mode == ControlModeDPad) {
                             model->state.hat = SWITCH_HAT_RIGHT;
                         } else if(model->control_mode == ControlModeLeftStick) {
-                            model->state.lx = 0xFFFF; // Full right
+                            model->state.lx = 255; // Full right (8-bit: 255 = right)
                         } else if(model->control_mode == ControlModeRightStick) {
-                            model->state.rx = 0xFFFF; // Full right
+                            model->state.rx = 255; // Full right (8-bit: 255 = right)
                         }
                         consumed = true;
                     } else if(event->type == InputTypeRelease) {
                         if(model->control_mode == ControlModeDPad) {
                             model->state.hat = SWITCH_HAT_NEUTRAL;
                         } else if(model->control_mode == ControlModeLeftStick) {
-                            model->state.lx = STICK_CENTER;
+                            model->state.lx = STICK_CENTER; // 128
                         } else if(model->control_mode == ControlModeRightStick) {
-                            model->state.rx = STICK_CENTER;
+                            model->state.rx = STICK_CENTER; // 128
                         }
                         consumed = true;
                     }
@@ -328,6 +358,9 @@ static bool switch_controller_view_controller_input_callback(InputEvent* event, 
                     } else if(event->type == InputTypeRelease) {
                         model->state.buttons &= ~SWITCH_BTN_B;
                         consumed = true; // Don't let it exit immediately
+                    } else if(event->type == InputTypeShort) {
+                        // Consume short press event to prevent navigation callback
+                        consumed = true;
                     } else if(event->type == InputTypeLong) {
                         // Show exit confirmation dialog
                         model->exit_confirm = true;
@@ -369,6 +402,8 @@ void switch_controller_scene_on_enter_controller(void* context) {
             model->control_mode = ControlModeDPad;
             model->exit_confirm = false;
             model->last_ok_press_time = 0;
+            model->button_to_release = 0;
+            model->button_release_time = 0;
         },
         true);
 
