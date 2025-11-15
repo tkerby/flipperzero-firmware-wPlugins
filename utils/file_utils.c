@@ -24,53 +24,67 @@ int get_frame_num_fmt_width(IEIcon* icon) {
 // * XBM
 // *******************************************************************************
 // creates a packed XBM binary buffer
-uint8_t* convert_bytes_to_xbm_bits(IEIcon* icon, size_t* size, size_t frame) {
-    int bytes_per_row = (icon->width + 7) / 8;
-    *size = bytes_per_row * icon->height;
-    uint8_t* c = malloc(*size);
-    memset(c, 0, *size);
-    const Frame* f = ie_icon_get_frame(icon, frame);
-    for(size_t y = 0; y < icon->height; ++y) {
+uint8_t* xbm_encode(const uint8_t* data, size_t width, size_t height, size_t* size) {
+    int bytes_per_row = (width + 7) / 8;
+    *size = bytes_per_row * height;
+    uint8_t* xbm = malloc(*size);
+    memset(xbm, 0, *size);
+    // const Frame* f = ie_icon_get_frame(icon, frame);
+    for(size_t y = 0; y < height; ++y) {
         for(int bx = 0; bx < bytes_per_row; bx++) {
             uint8_t byte = 0;
             for(int bit = 0; bit < 8; bit++) {
                 size_t x = bx * 8 + bit;
-                if(x < icon->width) {
-                    if(f->data[y * icon->width + x]) {
+                if(x < width) {
+                    if(data[y * width + x]) {
                         byte |= (1 << bit);
                     }
                 }
             }
-            c[y * bytes_per_row + bx] = byte;
+            xbm[y * bytes_per_row + bx] = byte;
         }
     }
-    return c;
+    return xbm;
+}
+uint8_t* xbm_encode_from_icon(IEIcon* icon, size_t frame, size_t* size) {
+    const Frame* iframe = ie_icon_get_frame(icon, frame);
+    uint8_t* xbm = xbm_encode(iframe->data, icon->width, icon->height, size);
+    return xbm;
 }
 
 // unpacks XBM binary buffer
-IEIcon* convert_xbm_bits_to_bytes(uint8_t* xbm, int32_t w, int32_t h) {
+uint8_t* xbm_decode(const uint8_t* xbm, int32_t w, int32_t h) {
     int num_pixels = w * h;
     int bytes_per_row = (w + 7) / 8; // XBM pads rows to full bytes
-    int bit_index = 0;
-    IEIcon* icon = ie_icon_alloc(false);
-    ie_icon_reset(icon, w, h);
+    int byte_index = 0;
+    uint8_t* data = malloc(num_pixels * sizeof(uint8_t));
 
     FURI_LOG_I("BMX", "decoding: bytes_per_row: %d", bytes_per_row);
     for(int y = 0; y < h; y++) {
         for(int x_byte = 0; x_byte < bytes_per_row; x_byte++) {
             uint8_t byte = xbm[y * bytes_per_row + x_byte];
+            // FURI_LOG_I("dec", "%02x", byte);
             for(int bit = 0; bit < 8; bit++) {
-                if(bit_index >= num_pixels) break;
-                // XBM stores bits least-significant-bit first
-                icon->frames->data[bit_index++] = (byte & (1 << bit)) ? 1 : 0;
+                // check if we've processed all bits for this row
+                int x = x_byte * 8 + bit;
+                if(x >= w) break; // and then ignore padding bits
+                uint8_t pixel = (byte >> bit) & 0x01;
+                data[byte_index++] = pixel;
             }
         }
     }
+    return data;
+}
+
+IEIcon* xbm_decode_to_icon(const uint8_t* xbm, int32_t w, int32_t h) {
+    IEIcon* icon = ie_icon_alloc(false);
+    uint8_t* data = xbm_decode(xbm, w, h);
+    ie_icon_reset(icon, w, h, data);
     return icon;
 }
 
 // Write the XBM bytes to the log for debugging
-void log_xbm_data(uint8_t* data, size_t size) {
+void log_xbm_data(const uint8_t* data, size_t size) {
     FuriString* tmp = furi_string_alloc_set_str("");
     size_t i = 0;
     while(i < size) {
@@ -112,33 +126,34 @@ bool xbm_file_save(IEIcon* icon) {
             FuriString* tmp = furi_string_alloc();
             // dimensions
             furi_string_printf(tmp, "#define %s_width %d\n", name, icon->width);
-            FURI_LOG_I("XBM", "%s", furi_string_get_cstr(tmp));
+            // FURI_LOG_I("XBM", "%s", furi_string_get_cstr(tmp));
             storage_file_write(xbm_file, furi_string_get_cstr(tmp), furi_string_size(tmp));
             furi_string_printf(tmp, "#define %s_height %d\n", name, icon->height);
-            FURI_LOG_I("XBM", "%s", furi_string_get_cstr(tmp));
+            // FURI_LOG_I("XBM", "%s", furi_string_get_cstr(tmp));
             storage_file_write(xbm_file, furi_string_get_cstr(tmp), furi_string_size(tmp));
 
             // prefix
             furi_string_printf(tmp, "static unsigned char %s_bits[] = {\n", name);
-            FURI_LOG_I("XBM", "%s", furi_string_get_cstr(tmp));
+            // FURI_LOG_I("XBM", "%s", furi_string_get_cstr(tmp));
             storage_file_write(xbm_file, furi_string_get_cstr(tmp), furi_string_size(tmp));
 
             // raw data
             furi_string_set_str(tmp, "");
             size_t size;
-            uint8_t* data = convert_bytes_to_xbm_bits(icon, &size, f);
+            // uint8_t* data = convert_bytes_to_xbm_bits(icon, &size, f);
+            uint8_t* data = xbm_encode_from_icon(icon, f, &size);
             for(size_t i = 0; i < size; ++i) {
                 furi_string_cat_printf(tmp, "0x%02x", data[i]);
                 if(i < size - 1) {
                     furi_string_cat_str(tmp, ",");
                 }
             }
-            FURI_LOG_I("XBM", "%s", furi_string_get_cstr(tmp));
+            // FURI_LOG_I("XBM", "%s", furi_string_get_cstr(tmp));
             storage_file_write(xbm_file, furi_string_get_cstr(tmp), furi_string_size(tmp));
 
             // suffix
             furi_string_set_str(tmp, " };");
-            FURI_LOG_I("XBM", "%s", furi_string_get_cstr(tmp));
+            // FURI_LOG_I("XBM", "%s", furi_string_get_cstr(tmp));
             storage_file_write(xbm_file, furi_string_get_cstr(tmp), furi_string_size(tmp));
 
             free(data);
@@ -161,100 +176,17 @@ bool xbm_file_save(IEIcon* icon) {
 }
 
 // *******************************************************************************
-// * .C source code
-// *******************************************************************************
-
-// Generates the single .C file (whether single frame or multi frame) as one
-// Furi string. Used by both C file saving and USB send.
-FuriString* c_file_generate(IEIcon* icon) {
-    const char* name = furi_string_get_cstr(icon->name);
-
-    FuriString* tmp = furi_string_alloc();
-
-    int pad_width = get_frame_num_fmt_width(icon);
-
-    // Include the Icon header
-    furi_string_cat_printf(tmp, "#include <gui/icon_i.h>\n");
-
-    // Generate each frame variable
-    for(size_t f = 0; f < icon->frame_count; f++) {
-        // frame 0 data start
-        furi_string_cat_printf(tmp, "const uint8_t _I_%s_%0*d[] = {", name, pad_width, f);
-        // raw data
-        size_t size;
-        uint8_t* data = convert_bytes_to_xbm_bits(icon, &size, f);
-        for(size_t i = 0; i < size; ++i) {
-            furi_string_cat_printf(tmp, " 0x%02x", data[i]);
-            if(i < size - 1) {
-                furi_string_cat_str(tmp, ",");
-            }
-        }
-        free(data);
-        furi_string_cat_printf(tmp, "};\n");
-    }
-
-    // Generate the frame list
-    furi_string_cat_printf(tmp, "const uint8_t* const _I_%s[] = {", name);
-    for(size_t f = 0; f < icon->frame_count; f++) {
-        furi_string_cat_printf(tmp, "_I_%s_%0*d", name, pad_width, f);
-        if(f < icon->frame_count - 1) {
-            furi_string_cat_printf(tmp, ",");
-        }
-    }
-    furi_string_cat_printf(tmp, "};\n");
-
-    // Generate the main icon definition
-    furi_string_cat_printf(
-        tmp,
-        "const Icon I_%s = {.width=%d,.height=%d,.frame_count=%d,.frame_rate=%d,.frames=_I_%s};\n",
-        name,
-        icon->width,
-        icon->height,
-        icon->frame_count,
-        icon->frame_rate,
-        name);
-    // FURI_LOG_I("C", "\n\n%s\n", furi_string_get_cstr(tmp));
-    return tmp;
-}
-
-// Saves the icon in XBM format, as a .C file, that is directly usable by
-// Flipper's canvas_draw_icon This differs from true XBM in that all Flipper
-// icons are multi-frame capable
-bool c_file_save(IEIcon* icon) {
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-
-    const char* fn_fmt = "/data/%s.c";
-    bool success = true;
-    FuriString* filename = furi_string_alloc_printf(fn_fmt, furi_string_get_cstr(icon->name));
-
-    File* c_file = storage_file_alloc(storage);
-    if(storage_file_open(c_file, furi_string_get_cstr(filename), FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
-        FuriString* tmp = c_file_generate(icon);
-        storage_file_write(c_file, furi_string_get_cstr(tmp), furi_string_size(tmp));
-        FURI_LOG_I("C", "%s", furi_string_get_cstr(tmp));
-        furi_string_free(tmp);
-
-        storage_file_close(c_file);
-        storage_file_free(c_file);
-
-    } else {
-        success = false;
-        FURI_LOG_E("IE", "Couldn't save C file");
-    }
-
-    furi_string_free(filename);
-    furi_record_close(RECORD_STORAGE);
-    return success;
-}
-
-// *******************************************************************************
 // * PNG
 // *******************************************************************************
 
 // Generates PNG byte buffer of current frame with zero compression
-bool png_file_generate_binary(IEIcon* icon, uint8_t** png_file_data, size_t* png_file_size) {
+bool png_file_generate_binary(
+    IEIcon* icon,
+    size_t frame_num,
+    uint8_t** png_file_data,
+    size_t* png_file_size) {
     bool success = true;
-    Frame* frame = ie_icon_get_current_frame(icon);
+    Frame* frame = ie_icon_get_frame(icon, frame_num);
     image_t* image = image_new(icon->width, icon->height);
     for(size_t i = 0; i < icon->width * icon->height; i++) {
         bool bit_on = frame->data[i];
@@ -324,7 +256,7 @@ void png_init_cb(pngle_t* pngle, uint32_t width, uint32_t height) {
     assert(icon->data == NULL);
     assert(width > 0);
     assert(height > 0);
-    ie_icon_reset(icon, width, height);
+    ie_icon_reset(icon, width, height, NULL);
 }
 
 void png_draw_cb(pngle_t* pngle, uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint8_t rgba[4]) {
@@ -394,7 +326,8 @@ IEIcon* png_file_open(const char* icon_path) {
     } else {
         path_extract_filename_no_ext(icon_path, icon->name);
 
-        FURI_LOG_I("PNG", "Opened png file?");
+        FURI_LOG_I("PNG", "Opened png file");
+        log_xbm_data(icon->frames->data, icon->width * icon->height);
     }
 
     storage_file_close(png_file);
@@ -405,13 +338,18 @@ IEIcon* png_file_open(const char* icon_path) {
 }
 
 // *******************************************************************************
-// * BMX
+// * BMX - A compressed XBM format with width/height prepended
 // *******************************************************************************
 
-bool bmx_file_generate_binary(IEIcon* icon, uint8_t** bmx_file_data, size_t* bmx_file_size) {
+bool bmx_file_generate_binary(
+    IEIcon* icon,
+    size_t frame,
+    uint8_t** bmx_file_data,
+    size_t* bmx_file_size) {
     // create the XBM bytes
     size_t size;
-    uint8_t* xbm = convert_bytes_to_xbm_bits(icon, &size, 0);
+    // uint8_t* xbm = convert_bytes_to_xbm_bits(icon, &size, 0);
+    uint8_t* xbm = xbm_encode_from_icon(icon, frame, &size);
 
     // log_xbm_data(xbm, size);
 
@@ -449,7 +387,7 @@ bool bmx_file_save(IEIcon* icon) {
     uint8_t* bmx_file_data = NULL;
     size_t bmx_file_size;
 
-    if(!bmx_file_generate_binary(icon, &bmx_file_data, &bmx_file_size)) {
+    if(!bmx_file_generate_binary(icon, 0, &bmx_file_data, &bmx_file_size)) {
         FURI_LOG_E("BMX", "Failed to generate BMX file data");
         return false;
     }
@@ -527,10 +465,9 @@ IEIcon* bmx_file_open(const char* icon_path) {
             break;
         }
 
-        // log_xbm_data(decoded_data, decoded_data_size);
-
         // turn the decoded xbm bytes into an icon
-        icon = convert_xbm_bits_to_bytes(decoded_data, w, h);
+        icon = xbm_decode_to_icon(decoded_data, w, h);
+
         path_extract_filename_no_ext(icon_path, icon->name);
         free(decoded_data);
     } while(false);
@@ -544,7 +481,108 @@ IEIcon* bmx_file_open(const char* icon_path) {
 }
 
 // *******************************************************************************
-// * Generator methods
+// * .C source code - Flipper specific
+// *******************************************************************************
+
+// Generates the single .C file (whether single frame or multi frame) as one
+// Furi string. Used by both C file saving and USB send. This is a compressed
+// XBM format, which means that the first bytes denotes the compression and the
+// remaining data is either raw XBM or Heatshrink2 compressed bytes. It is not
+// a true XBM format
+FuriString* c_file_generate(IEIcon* icon) {
+    const char* name = furi_string_get_cstr(icon->name);
+
+    FuriString* tmp = furi_string_alloc();
+
+    int pad_width = get_frame_num_fmt_width(icon);
+
+    // Include the Icon header
+    furi_string_cat_printf(tmp, "#include <gui/icon_i.h>\n");
+
+    Compress* compress =
+        compress_alloc(CompressTypeHeatshrink, &compress_config_heatshrink_default);
+    // Generate each frame variable
+    for(size_t f = 0; f < icon->frame_count; f++) {
+        // frame 0 data start
+        furi_string_cat_printf(tmp, "const uint8_t _I_%s_%0*d[] = {", name, pad_width, f);
+
+        // create the XBM bytes
+        size_t size;
+        uint8_t* xbm = xbm_encode_from_icon(icon, f, &size);
+        // then compress (heatshrink) them
+        uint8_t* encoded_data = malloc(128 * 64); // is this too big?
+        size_t encoded_size = 0;
+        compress_encode(compress, xbm, size, encoded_data, 128 * 64, &encoded_size);
+        free(xbm);
+
+        // convert to hex
+        for(size_t i = 0; i < encoded_size; ++i) {
+            furi_string_cat_printf(tmp, " 0x%02x", encoded_data[i]);
+            if(i < encoded_size - 1) {
+                furi_string_cat_str(tmp, ",");
+            }
+        }
+        free(encoded_data);
+        furi_string_cat_printf(tmp, "};\n");
+    }
+    compress_free(compress);
+
+    // Generate the frame list
+    furi_string_cat_printf(tmp, "const uint8_t* const _I_%s[] = {", name);
+    for(size_t f = 0; f < icon->frame_count; f++) {
+        furi_string_cat_printf(tmp, "_I_%s_%0*d", name, pad_width, f);
+        if(f < icon->frame_count - 1) {
+            furi_string_cat_printf(tmp, ",");
+        }
+    }
+    furi_string_cat_printf(tmp, "};\n");
+
+    // Generate the main icon definition
+    furi_string_cat_printf(
+        tmp,
+        "const Icon I_%s = {.width=%d,.height=%d,.frame_count=%d,.frame_rate=%d,.frames=_I_%s};\n",
+        name,
+        icon->width,
+        icon->height,
+        icon->frame_count,
+        icon->frame_rate,
+        name);
+    // FURI_LOG_I("C", "\n\n%s\n", furi_string_get_cstr(tmp));
+    return tmp;
+}
+
+// Saves the icon in XBM format, as a .C file, that is directly usable by
+// Flipper's canvas_draw_icon This differs from true XBM in that all Flipper
+// icons are multi-frame capable
+bool c_file_save(IEIcon* icon) {
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+
+    const char* fn_fmt = "/data/%s.c";
+    bool success = true;
+    FuriString* filename = furi_string_alloc_printf(fn_fmt, furi_string_get_cstr(icon->name));
+
+    File* c_file = storage_file_alloc(storage);
+    if(storage_file_open(c_file, furi_string_get_cstr(filename), FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+        FuriString* tmp = c_file_generate(icon);
+        storage_file_write(c_file, furi_string_get_cstr(tmp), furi_string_size(tmp));
+        FURI_LOG_I("C", "%s", furi_string_get_cstr(tmp));
+        furi_string_free(tmp);
+
+        storage_file_close(c_file);
+        storage_file_free(c_file);
+
+    } else {
+        success = false;
+        FURI_LOG_E("IE", "Couldn't save C file");
+    }
+
+    furi_string_free(filename);
+    furi_record_close(RECORD_STORAGE);
+    return success;
+}
+
+// *******************************************************************************
+// * Generator methods - Frame 0 only
 // *******************************************************************************
 
 FuriString* generate_text_from_binary(uint8_t* data, size_t size) {
@@ -566,7 +604,7 @@ FuriString* generate_text_from_binary(uint8_t* data, size_t size) {
     FuriString* TYPE##_file_generate(IEIcon* icon) {              \
         uint8_t* data;                                            \
         size_t size;                                              \
-        TYPE##_file_generate_binary(icon, &data, &size);          \
+        TYPE##_file_generate_binary(icon, 0, &data, &size);       \
         FuriString* text = generate_text_from_binary(data, size); \
         free(data);                                               \
         return text;                                              \

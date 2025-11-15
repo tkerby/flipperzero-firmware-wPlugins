@@ -258,9 +258,15 @@ void ie_draw_modal_panel_frame(Canvas* canvas, int x, int y, int w, int h) {
     int shadow_y = 1;
 
     canvas_set_color(canvas, ColorWhite);
-    canvas_draw_box(canvas, x - pad, y - pad, w + pad * 2 + shadow_x, h + pad * 2 + shadow_y);
+    canvas_draw_box(
+        canvas,
+        x - pad - 1,
+        y - pad - 1,
+        w + pad * 2 + 2 + 1 + shadow_x,
+        h + pad * 2 + 2 + 1 + shadow_y);
     canvas_set_color(canvas, ColorBlack);
     canvas_draw_frame(canvas, x - pad, y - pad, w + pad * 2, h + pad * 2);
+    // draw shadow lines
     canvas_draw_line(
         canvas,
         x - pad + shadow_x,

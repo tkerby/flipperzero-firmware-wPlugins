@@ -7,6 +7,7 @@
 #include "../utils/notification.h"
 #include "../icon.h"
 #include "canvas.h"
+#include <iconedit_icons.h>
 
 #define MAX_WIDTH  128
 #define MAX_HEIGHT 64
@@ -52,10 +53,8 @@ void new_icon_draw(Canvas* canvas, void* context) {
             canvas, x + xpad + i * dw + 3, y + ypad, AlignCenter, AlignTop, buf);
         if(newModel.curr_digit == i) {
             // draw up/down arrow thingies too
-            canvas_draw_triangle(
-                canvas, x + xpad + i * dw + 3, y + ypad - 3, 5, 3, CanvasDirectionBottomToTop);
-            canvas_draw_triangle(
-                canvas, x + xpad + i * dw + 3, y + ypad + 8 + 2, 5, 3, CanvasDirectionTopToBottom);
+            canvas_draw_icon(canvas, x + xpad + i * dw + 1, y + ypad - 5, &I_iet_smArrowU);
+            canvas_draw_icon(canvas, x + xpad + i * dw + 1, y + ypad + 9, &I_iet_smArrowD);
         }
         if(i == 2) {
             // draw the X
@@ -102,7 +101,7 @@ bool new_icon_input(InputEvent* event, void* context) {
         case InputKeyOk:
             // set the new dimensions
             if(new_icon_check_digits()) {
-                ie_icon_reset(app->icon, newModel.w, newModel.h);
+                ie_icon_reset(app->icon, newModel.w, newModel.h, NULL);
                 canvas_free_canvas();
                 canvas_alloc_canvas(newModel.w, newModel.h);
                 // user just created a new icon, place them directly into Tools!

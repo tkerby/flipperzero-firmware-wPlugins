@@ -6,6 +6,7 @@
 #include "icon.h"
 
 #define TAG             "IE"
+#define APP_NAME        "IconEdit"
 #define VERSION         "0.4"
 #define ENABLE_XBM_SAVE // Enables XBM file save
 

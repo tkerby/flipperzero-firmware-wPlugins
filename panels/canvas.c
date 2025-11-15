@@ -248,7 +248,7 @@ void canvas_draw(Canvas* canvas, void* context) {
 bool canvas_input(InputEvent* event, void* context) {
     IconEdit* app = context;
     bool consumed = true;
-    if(event->type == InputTypeShort) {
+    if(event->type == InputTypeShort || event->type == InputTypeRepeat) {
         switch(event->key) {
         case InputKeyUp: {
             canvasModel.cursor_y -= canvasModel.cursor_y > 0;

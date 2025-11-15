@@ -31,6 +31,8 @@ void iconedit_draw_callback(Canvas* canvas, void* context) {
         return;
     }
 
+    tabbar_draw(canvas, app);
+
     switch(tabbar_get_selected_tab()) {
     case TabFile:
         file_draw(canvas, app);
@@ -51,8 +53,8 @@ void iconedit_draw_callback(Canvas* canvas, void* context) {
         break;
     }
 
-    tabbar_draw(canvas, app);
-    if(tabbar_get_selected_tab() != TabHelp) {
+    Tab selected_tab = tabbar_get_selected_tab();
+    if(selected_tab != TabHelp && selected_tab != TabAbout) {
         canvas_draw(canvas, app);
     }
 
