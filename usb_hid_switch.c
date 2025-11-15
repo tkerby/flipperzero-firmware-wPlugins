@@ -4,8 +4,8 @@
 #include <usbd_core.h>
 
 // HID Report Descriptor for POKKEN CONTROLLER (HORI 0x0F0D/0x0092)
-// Matches Arduino JoyCon Library EXACTLY - 7-byte report (NO vendor byte)
-// Report: 2 bytes buttons + 1 byte HAT + 4 bytes axes = 7 bytes total
+// Based on kashalls/NintendoSwitchController - proven working implementation
+// 8-byte input + 8-byte output (Switch REQUIRES output descriptor!)
 static const uint8_t hid_report_descriptor[] = {
     0x05, 0x01,        // Usage Page (Generic Desktop)
     0x09, 0x05,        // Usage (Game Pad)
@@ -48,6 +48,16 @@ static const uint8_t hid_report_descriptor[] = {
     0x75, 0x08,        //   Report Size (8)
     0x95, 0x04,        //   Report Count (4) - axes
     0x81, 0x02,        //   Input (Data,Var,Abs)
+
+    // Vendor Specific byte (REQUIRED by Switch!)
+    0x75, 0x08,        //   Report Size (8)
+    0x95, 0x01,        //   Report Count (1)
+    0x81, 0x03,        //   Input (Const,Var,Abs)
+
+    // Output Report (8 bytes) - Switch REQUIRES this!
+    0x75, 0x08,        //   Report Size (8)
+    0x95, 0x08,        //   Report Count (8)
+    0x91, 0x02,        //   Output (Data,Var,Abs)
 
     0xC0               // End Collection
 };
