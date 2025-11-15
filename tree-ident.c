@@ -1,14 +1,12 @@
-#include <furi.h>         // Flipper Universal Registry Implementation = Core OS functionality
-#include <gui/gui.h>      // GUI system
-#include <input/input.h>  // Input handling (buttons)
-#include <stdint.h>       // Standard integer types
-#include <stdlib.h>       // Standard library functions
+#include <furi.h> // Flipper Universal Registry Implementation = Core OS functionality
+#include <gui/gui.h> // GUI system
+#include <input/input.h> // Input handling (buttons)
+#include <stdint.h> // Standard integer types
+#include <stdlib.h> // Standard library functions
 #include <gui/elements.h> // to access button drawing functions
+#include "tree_ident_icons.h" // Custom icon definitions
 
-#include "tree_ident_icons.h"  // Custom icon definitions
-
-// Tag for logging purposes
-#define TAG "Tree Ident"
+#define TAG "Tree Ident" // Tag for logging purposes
 
 typedef enum {
     ScreenSplash,
@@ -19,7 +17,16 @@ typedef enum {
 	ScreenL2_A1_1,  // Real needles
 	ScreenL2_A1_2,  // Scales
 	ScreenL2_A2_1,  // Compound leaves
-	ScreenL2_A2_2   // Single leaf
+	ScreenL2_A2_2,  // Single leaf
+	ScreenL3_A1_1_1,  // Needles only on long shoots
+	ScreenL3_A1_1_2,  // Needles on short shoots
+	ScreenL3_A1_1_3,  // Needles on long and short shoots
+	ScreenL3_A2_1_1,  // Odd # of leaflets, terminal leaflet
+	ScreenL3_A2_1_2,  // Even # of leaflets, no terminal leaflet
+	ScreenL3_A2_1_3,  // Leaflets radiate from single point
+	ScreenL3_A2_2_1,  // Big rounded or pointed bumps
+	ScreenL3_A2_2_2,  // Leaf margin is smooth
+	ScreenL3_A2_2_3   // Small teeth or cuts
 } AppScreen;
 
 // Main application structure
@@ -30,6 +37,7 @@ typedef struct {
     uint8_t current_screen;         // 0 = first screen, 1 = second screen
 	int selected_L1_option;         // Selected option for Level 1 
 	int selected_L2_option;         // Selected option for Level 2
+	int selected_L3_option;         // Selected option for Level 3
 } AppState;
 
 // Draw callback - called whenever the screen needs to be redrawn
@@ -56,7 +64,7 @@ void draw_callback(Canvas* canvas, void* context) {
 			canvas_draw_str_aligned(canvas, 1, 57, AlignLeft, AlignTop, "to exit.");
 			
 			canvas_draw_str_aligned(canvas, 100, 54, AlignLeft, AlignTop, "F. Greil");
-			canvas_draw_str_aligned(canvas, 110, 1, AlignLeft, AlignTop, "v0.3");
+			canvas_draw_str_aligned(canvas, 110, 1, AlignLeft, AlignTop, "v0.4");
 			
 			// Draw button hints at bottom using elements library
 			elements_button_center(canvas, "OK"); // for the OK button
@@ -130,10 +138,19 @@ void draw_callback(Canvas* canvas, void* context) {
 			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
 			canvas_draw_icon(canvas, 118, 1, &I_NeedleTree_10x10); // icon with choosen option for level 1 				
 			canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Real needles");
-            canvas_set_font(canvas, FontSecondary);
-            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones.");
-			elements_button_left(canvas, "Prev. question"); 
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Where are needles?");
+            canvas_draw_frame(canvas, 1, 11, 127, 34); // Menu box: x, y, w, h
+			canvas_set_font(canvas, FontSecondary);
+			canvas_draw_str(canvas, 7, 21, "Only on long shoots");
+            canvas_draw_str(canvas, 7, 31, "On short shoots");
+            canvas_draw_str(canvas, 7, 41, "Both on long& short shoots");
+			// Draw selection indicator
+            canvas_draw_str(canvas, 3, 21 + (state->selected_L3_option* 10), ">");
+			// Navigation hints		
+			canvas_draw_icon(canvas, 119, 34, &I_ButtonUp_7x4);
+			canvas_draw_icon(canvas, 119, 39, &I_ButtonDown_7x4);	
+			elements_button_left(canvas, "Prev. ?"); 
+			elements_button_center(canvas, "OK");
 			break;
 		case ScreenL2_A1_2: // Level 2: Option 1_2: Scales
 			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);	
@@ -146,18 +163,117 @@ void draw_callback(Canvas* canvas, void* context) {
 			break;
 		case ScreenL2_A2_1: // Level 2: Option 2_1: Compound leave
 			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
-			canvas_draw_icon(canvas, 118, 1, &I_LeaveTree_10x10); // icon with choosen option for level 1 	
+			// canvas_draw_icon(canvas, 118, 1, &I_LeaveTree_10x10); // icon with choosen option for level 1 	
 			canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Compound leaves");
-            canvas_set_font(canvas, FontSecondary);
-            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones.");
-			elements_button_left(canvas, "Prev. question"); 
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Leaflets' arrangement?");
+            canvas_draw_frame(canvas, 1, 11, 127, 34); // Menu box: x, y, w, h
+			canvas_set_font(canvas, FontSecondary);
+			canvas_draw_str(canvas, 7, 21, "Odd #, single terminal leaflet");
+            canvas_draw_str(canvas, 7, 31, "Even #, no terminal leaflet");
+            canvas_draw_str(canvas, 7, 41, "Leaflets radiate from point");
+			// Draw selection indicator
+            canvas_draw_str(canvas, 3, 21 + (state->selected_L3_option* 10), ">");
+			// Navigation hints		
+			canvas_draw_icon(canvas, 119, 34, &I_ButtonUp_7x4);
+			canvas_draw_icon(canvas, 119, 39, &I_ButtonDown_7x4);	
+			elements_button_left(canvas, "Prev. ?"); 
+			elements_button_center(canvas, "OK");
 			break;
 		case ScreenL2_A2_2: // Level 2: Option 2_2: Undivided leaf
 			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
 			canvas_draw_icon(canvas, 118, 1, &I_LeaveTree_10x10); // icon with choosen option for level 1 	
 			canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Undivided leaf");			
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Type of leaf margin?");
+            canvas_draw_frame(canvas, 1, 11, 127, 34); // Menu box: x, y, w, h
+			canvas_set_font(canvas, FontSecondary);
+			canvas_draw_str(canvas, 7, 21, "Big rounded o.pointed bumps");
+            canvas_draw_str(canvas, 7, 31, "Leaf margin is smooth");
+            canvas_draw_str(canvas, 7, 41, "Small teeth or cuts");
+			// Draw selection indicator
+            canvas_draw_str(canvas, 3, 21 + (state->selected_L3_option* 10), ">");
+			// Navigation hints		
+			canvas_draw_icon(canvas, 119, 34, &I_ButtonUp_7x4);
+			canvas_draw_icon(canvas, 119, 39, &I_ButtonDown_7x4);	
+			elements_button_left(canvas, "Prev. ?"); 
+			elements_button_center(canvas, "OK");
+			break;
+		case ScreenL3_A1_1_1: // Level 3: Needles only on long shoots
+			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
+			canvas_draw_icon(canvas, 118, 1, &I_NeedleTree_10x10);
+			canvas_set_font(canvas, FontPrimary);
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "On long shoots");
+            canvas_set_font(canvas, FontSecondary);
+            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones.");
+			elements_button_left(canvas, "Prev. question"); 
+			break;
+		case ScreenL3_A1_1_2: // Level 3: Needles on short shoots
+			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
+			canvas_draw_icon(canvas, 118, 1, &I_NeedleTree_10x10);
+			canvas_set_font(canvas, FontPrimary);
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "On short shoots");
+            canvas_set_font(canvas, FontSecondary);
+            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones.");
+			elements_button_left(canvas, "Prev. question"); 
+			break;
+		case ScreenL3_A1_1_3: // Level 3: Needles on long and short shoots
+			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
+			canvas_draw_icon(canvas, 118, 1, &I_NeedleTree_10x10);
+			canvas_set_font(canvas, FontPrimary);
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "On all shoots");
+            canvas_set_font(canvas, FontSecondary);
+            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones.");
+			elements_button_left(canvas, "Prev. question"); 
+			break;
+		case ScreenL3_A2_1_1: // Level 3: Odd-pinnate leaves / unpaarig gefiedert
+			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
+			canvas_draw_icon(canvas, 118, 1, &I_LeaveTree_10x10);
+			canvas_set_font(canvas, FontPrimary);
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Odd-pinnate leaves");
+            canvas_set_font(canvas, FontSecondary);
+            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones.");
+			elements_button_left(canvas, "Prev. question"); 
+			break;
+		case ScreenL3_A2_1_2: // Level 3: Even-pinnate leaves / paarig gefiedert
+			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10); 
+			canvas_draw_icon(canvas, 118, 1, &I_LeaveTree_10x10);
+			canvas_set_font(canvas, FontPrimary);
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Even-pinnate leaves");
+            canvas_set_font(canvas, FontSecondary);
+            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones.");
+			elements_button_left(canvas, "Prev. question"); 
+			break;
+		case ScreenL3_A2_1_3: // Level 3: Palmate leaves / gefingert
+			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
+			canvas_draw_icon(canvas, 118, 1, &I_LeaveTree_10x10);
+			canvas_set_font(canvas, FontPrimary);
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Palmate leaves");
+            canvas_set_font(canvas, FontSecondary);
+            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones.");
+			elements_button_left(canvas, "Prev. question"); 
+			break;
+		case ScreenL3_A2_2_1: // Level 3: Lobed leaves / Gelappte Laubblätter
+			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
+			canvas_draw_icon(canvas, 118, 1, &I_LeaveTree_10x10);
+			canvas_set_font(canvas, FontPrimary);
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Lobed leaf");
+            canvas_set_font(canvas, FontSecondary);
+            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones.");
+			elements_button_left(canvas, "Prev. question"); 
+			break;
+		case ScreenL3_A2_2_2: // Level 3: Entire leaves / Ganzrandige Laubblätter
+			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
+			canvas_draw_icon(canvas, 118, 1, &I_LeaveTree_10x10);
+			canvas_set_font(canvas, FontPrimary);
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Entire leaf");
+            canvas_set_font(canvas, FontSecondary);
+            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones.");
+			elements_button_left(canvas, "Prev. question"); 
+			break;
+		case ScreenL3_A2_2_3: // Level 3: Serrated or notched leaves
+			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
+			canvas_draw_icon(canvas, 118, 1, &I_LeaveTree_10x10);
+			canvas_set_font(canvas, FontPrimary);
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Serrated o.notched leaf");
             canvas_set_font(canvas, FontSecondary);
             canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones.");
 			elements_button_left(canvas, "Prev. question"); 
@@ -170,10 +286,6 @@ void input_callback(InputEvent* event, void* context) {
 	// Put the input event into the message queue for processing
     // Timeout of 0 means non-blocking
     furi_message_queue_put(app->input_queue, event, 0);
-	
-	// furi_assert(context);
-    // FuriMessageQueue* event_queue = context;
-    // furi_message_queue_put(event_queue, event, FuriWaitForever);
 }
 
 int32_t tree_ident_main(void* p) {
@@ -183,6 +295,7 @@ int32_t tree_ident_main(void* p) {
 	app.current_screen = ScreenSplash;  // Start on first screen (0)
 	app.selected_L1_option= 0; // Level 1: Start with first line highlighted
 	app.selected_L2_option= 0; // Level 2: Start with first line highlighted
+	app.selected_L3_option= 0; // Level 3: Start with first line highlighted
 
     // Allocate resources for rendering and 
     app.view_port = view_port_alloc(); // for rendering
@@ -214,6 +327,10 @@ int32_t tree_ident_main(void* p) {
 				&& input.type == InputTypePress) {
 				app.selected_L2_option= (app.selected_L2_option- 1 + 2) % 2;
 			}
+			if((app.current_screen == ScreenL2_A1_1 || app.current_screen == ScreenL2_A2_1 || app.current_screen == ScreenL2_A2_2)
+				&& input.type == InputTypePress) {
+				app.selected_L3_option= (app.selected_L3_option- 1 + 3) % 3;
+			}
 			break;
 		case InputKeyDown:
 			if(app.current_screen == ScreenL1Question && input.type == InputTypePress) {
@@ -221,7 +338,11 @@ int32_t tree_ident_main(void* p) {
 			}
 			if((app.current_screen == ScreenL1_A1 || app.current_screen == ScreenL1_A2)
 				&& input.type == InputTypePress) {
-				app.selected_L2_option= (app.selected_L2_option- 1 + 2) % 2;
+				app.selected_L2_option= (app.selected_L2_option+ 1) % 2;
+			}
+			if((app.current_screen == ScreenL2_A1_1 || app.current_screen == ScreenL2_A2_1 || app.current_screen == ScreenL2_A2_2)
+				&& input.type == InputTypePress) {
+				app.selected_L3_option= (app.selected_L3_option+ 1) % 3;
 			}
 			break;
 		case InputKeyOk:
@@ -249,6 +370,27 @@ int32_t tree_ident_main(void* p) {
 							case 1: app.current_screen = ScreenL2_A2_2; break;
 						}
 						break;
+					case ScreenL2_A1_1: // Where are the needles?
+						switch (app.selected_L3_option){
+							case 0: app.current_screen = ScreenL3_A1_1_1; break;
+							case 1: app.current_screen = ScreenL3_A1_1_2; break;
+							case 2: app.current_screen = ScreenL3_A1_1_3; break;
+						}
+						break;
+					case ScreenL2_A2_1: // How are leaflets arranged?
+						switch (app.selected_L3_option){
+							case 0: app.current_screen = ScreenL3_A2_1_1; break;
+							case 1: app.current_screen = ScreenL3_A2_1_2; break;
+							case 2: app.current_screen = ScreenL3_A2_1_3; break;
+						}
+						break;
+					case ScreenL2_A2_2: // Type of leaf margin?
+						switch (app.selected_L3_option){
+							case 0: app.current_screen = ScreenL3_A2_2_1; break;
+							case 1: app.current_screen = ScreenL3_A2_2_2; break;
+							case 2: app.current_screen = ScreenL3_A2_2_3; break;
+						}
+						break;
 					default:
 						break;
 				}
@@ -261,11 +403,25 @@ int32_t tree_ident_main(void* p) {
 						exit_loop = 1;  // Exit app after long press
 					}
 					break;
+				case ScreenL2_A1_1:
+				case ScreenL2_A2_1:
+				case ScreenL2_A2_2:  
+				case ScreenL3_A1_1_1:
+				case ScreenL3_A1_1_2:
+				case ScreenL3_A1_1_3:
+				case ScreenL3_A2_1_1:
+				case ScreenL3_A2_1_2:
+				case ScreenL3_A2_1_3:
+				case ScreenL3_A2_2_2:
+				case ScreenL3_A2_2_1:
+				case ScreenL3_A2_2_3: 
+					if(input.type == InputTypePress) {
+						app.current_screen = ScreenL1Question;
+					}
+					break;
 				case ScreenL1Question: // Back button: return to first screen
 					app.current_screen = ScreenSplash;
-					break;
-	
-				
+					break;	
 			}
             break;
         case InputKeyLeft: 
@@ -283,7 +439,22 @@ int32_t tree_ident_main(void* p) {
 					case ScreenL2_A2_1:
 					case ScreenL2_A2_2:
 						app.current_screen = ScreenL1_A2;
-						break;	
+						break;
+					case ScreenL3_A1_1_1:
+					case ScreenL3_A1_1_2:
+					case ScreenL3_A1_1_3:
+						app.current_screen = ScreenL2_A1_1;
+						break;
+					case ScreenL3_A2_1_1:
+					case ScreenL3_A2_1_2:
+					case ScreenL3_A2_1_3:
+						app.current_screen = ScreenL2_A2_1;
+						break;
+					case ScreenL3_A2_2_1:
+					case ScreenL3_A2_2_2:
+					case ScreenL3_A2_2_3:
+						app.current_screen = ScreenL2_A2_2;
+						break;
 					default:
 						break;
 				}
