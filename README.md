@@ -12,5 +12,6 @@ In case there is only one question to answer, the user flow would roughly be the
 <img alt="Screenshot Splash screen"  src="screenshots/ScreenshotScreenSplash-20251113.png" width="50%" />
 
 ## Version history
-* **2025-11-12** :: Boiler plate code & splash screen with graphics
-* **2025-11-13** :: Layout fiddeling & first steps towards a screen with a (first) question
+* 2025-11-12 :: **v0.1** :: Boiler plate code & splash screen with graphics
+* 2025-11-13 :: **v0.2** :: Layout fiddeling & first steps towards screens with placeholders for first question
+* 2025-11-15 :: **v0.3** :: Replacing placeholders with content, conditional questions for the 2nd level
