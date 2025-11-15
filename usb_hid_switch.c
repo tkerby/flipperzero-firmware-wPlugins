@@ -237,9 +237,9 @@ void usb_hid_switch_deinit() {
 bool usb_hid_switch_send_report(SwitchControllerState* state) {
     if(!state || !usb_dev) return false;
 
-    // Build POKKEN CONTROLLER HID report (7 bytes, NO Report ID)
-    // Matches Arduino library EXACTLY: 2 buttons + 1 HAT + 4 axes
-    uint8_t report[7];
+    // Build POKKEN CONTROLLER HID report (8 bytes, NO Report ID)
+    // Based on kashalls/NintendoSwitchController proven implementation
+    uint8_t report[8];
 
     // Bytes 0-1: Buttons (16 buttons across 2 bytes)
     // Byte 0: Y, B, A, X, L, R, ZL, ZR (bits 0-7)
@@ -256,10 +256,13 @@ bool usb_hid_switch_send_report(SwitchControllerState* state) {
     report[5] = state->rx;  // Right stick X (axis 2 = Z)
     report[6] = state->ry;  // Right stick Y (axis 3 = Rz)
 
-    // Send report (exactly 7 bytes, no Report ID)
-    int result = usbd_ep_write(usb_dev, HID_EP_IN, report, 7);
+    // Byte 7: Vendor-specific byte (set to 0)
+    report[7] = 0x00;
 
-    return (result == 7);
+    // Send report (exactly 8 bytes, no Report ID)
+    int result = usbd_ep_write(usb_dev, HID_EP_IN, report, 8);
+
+    return (result == 8);
 }
 
 void usb_hid_switch_reset_state(SwitchControllerState* state) {
