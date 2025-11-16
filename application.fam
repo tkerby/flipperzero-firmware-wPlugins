@@ -30,4 +30,7 @@ App(
 
     # Available categories: Main, GPIO, Sub-GHz, RFID, NFC, Infrared, Misc, Games, Tools, Settings, USB
     fap_category="Tools",
+
+    # Version number
+    fap_version=0.4,
 )
