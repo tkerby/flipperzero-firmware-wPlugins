@@ -149,7 +149,7 @@ void draw_callback(Canvas* canvas, void* context) {
 			// Navigation hints		
 			canvas_draw_icon(canvas, 119, 34, &I_ButtonUp_7x4);
 			canvas_draw_icon(canvas, 119, 39, &I_ButtonDown_7x4);	
-			elements_button_left(canvas, "Prev. ?"); 
+			elements_button_left(canvas, "Prev.?"); 
 			elements_button_center(canvas, "OK");
 			break;
 		case ScreenL2_A1_2: // Level 2: Option 1_2: Scales
@@ -158,8 +158,8 @@ void draw_callback(Canvas* canvas, void* context) {
 			canvas_set_font(canvas, FontPrimary);
 			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Scales");
             canvas_set_font(canvas, FontSecondary);
-            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones.");
-			elements_button_left(canvas, "Prev. question"); 
+			elements_multiline_text_aligned(canvas,1,11,AlignLeft,AlignTop, "Cypress, Ccedar, Giant sequoia, Redwood, Juniper (most species), Arbor vitae, ..");
+			elements_button_left(canvas, "Prev.?"); 
 			break;
 		case ScreenL2_A2_1: // Level 2: Option 2_1: Compound leave
 			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
@@ -176,7 +176,7 @@ void draw_callback(Canvas* canvas, void* context) {
 			// Navigation hints		
 			canvas_draw_icon(canvas, 119, 34, &I_ButtonUp_7x4);
 			canvas_draw_icon(canvas, 119, 39, &I_ButtonDown_7x4);	
-			elements_button_left(canvas, "Prev. ?"); 
+			elements_button_left(canvas, "Prev.?"); 
 			elements_button_center(canvas, "OK");
 			break;
 		case ScreenL2_A2_2: // Level 2: Option 2_2: Undivided leaf
@@ -194,7 +194,7 @@ void draw_callback(Canvas* canvas, void* context) {
 			// Navigation hints		
 			canvas_draw_icon(canvas, 119, 34, &I_ButtonUp_7x4);
 			canvas_draw_icon(canvas, 119, 39, &I_ButtonDown_7x4);	
-			elements_button_left(canvas, "Prev. ?"); 
+			elements_button_left(canvas, "Prev.?"); 
 			elements_button_center(canvas, "OK");
 			break;
 		case ScreenL3_A1_1_1: // Level 3: Needles only on long shoots
@@ -203,8 +203,9 @@ void draw_callback(Canvas* canvas, void* context) {
 			canvas_set_font(canvas, FontPrimary);
 			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "On long shoots");
             canvas_set_font(canvas, FontSecondary);
-            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones.");
-			elements_button_left(canvas, "Prev. question"); 
+            elements_multiline_text_aligned(canvas,1,11,AlignLeft,AlignTop,
+			  "Fir, Spruce, Hemlock, Yew.");
+			elements_button_left(canvas, "Prev.?"); 
 			break;
 		case ScreenL3_A1_1_2: // Level 3: Needles on short shoots
 			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
@@ -212,8 +213,9 @@ void draw_callback(Canvas* canvas, void* context) {
 			canvas_set_font(canvas, FontPrimary);
 			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "On short shoots");
             canvas_set_font(canvas, FontSecondary);
-            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones.");
-			elements_button_left(canvas, "Prev. question"); 
+			elements_multiline_text_aligned(canvas,1,11,AlignLeft,AlignTop,
+			  "Larch, Cedar.");
+			elements_button_left(canvas, "Prev.?"); 
 			break;
 		case ScreenL3_A1_1_3: // Level 3: Needles on long and short shoots
 			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
@@ -221,62 +223,69 @@ void draw_callback(Canvas* canvas, void* context) {
 			canvas_set_font(canvas, FontPrimary);
 			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "On all shoots");
             canvas_set_font(canvas, FontSecondary);
-            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones.");
-			elements_button_left(canvas, "Prev. question"); 
+            elements_multiline_text_aligned(canvas,1,11,AlignLeft,AlignTop,
+			  "Pines.");
+			elements_button_left(canvas, "Prev.?"); 
 			break;
 		case ScreenL3_A2_1_1: // Level 3: Odd-pinnate leaves / unpaarig gefiedert
 			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
-			canvas_draw_icon(canvas, 118, 1, &I_LeaveTree_10x10);
+			canvas_draw_icon(canvas, 118, 1, &I_Imparipinnate_10x10);
 			canvas_set_font(canvas, FontPrimary);
 			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Odd-pinnate leaves");
             canvas_set_font(canvas, FontSecondary);
-            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones.");
-			elements_button_left(canvas, "Prev. question"); 
+			elements_multiline_text_aligned(canvas,1,11,AlignLeft,AlignTop,
+			  "European ash, Rowan, Common walnut, Elder, False acacia, Black walnut, Hickory, Sumac, Yellowwood, ..");
+			elements_button_left(canvas, "Prev.?"); 
 			break;
 		case ScreenL3_A2_1_2: // Level 3: Even-pinnate leaves / paarig gefiedert
 			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10); 
-			canvas_draw_icon(canvas, 118, 1, &I_LeaveTree_10x10);
+			canvas_draw_icon(canvas, 118, 1, &I_Paripinnate_10x10);
 			canvas_set_font(canvas, FontPrimary);
 			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Even-pinnate leaves");
             canvas_set_font(canvas, FontSecondary);
-            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones.");
-			elements_button_left(canvas, "Prev. question"); 
+			elements_multiline_text_aligned(canvas,1,11,AlignLeft,AlignTop,
+			  "Locust, Carob tree, Laburnum, Mimosa, Judas tree, ..");
+			elements_button_left(canvas, "Prev.?"); 
 			break;
 		case ScreenL3_A2_1_3: // Level 3: Palmate leaves / gefingert
 			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
-			canvas_draw_icon(canvas, 118, 1, &I_LeaveTree_10x10);
+			canvas_draw_icon(canvas, 118, 1, &I_Palmate_10x10);
 			canvas_set_font(canvas, FontPrimary);
 			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Palmate leaves");
             canvas_set_font(canvas, FontSecondary);
-            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones.");
-			elements_button_left(canvas, "Prev. question"); 
+            elements_multiline_text_aligned(canvas,1,11,AlignLeft,AlignTop,
+			  "Horse chestnut, Maple, Sycamore, Vine, Fig, ..");
+			elements_button_left(canvas, "Prev.?"); 
 			break;
 		case ScreenL3_A2_2_1: // Level 3: Lobed leaves / Gelappte Laubblätter
 			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
-			canvas_draw_icon(canvas, 118, 1, &I_LeaveTree_10x10);
+			canvas_draw_icon(canvas, 118, 1, &I_Lobed_10x10);
 			canvas_set_font(canvas, FontPrimary);
 			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Lobed leaf");
             canvas_set_font(canvas, FontSecondary);
-            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones.");
-			elements_button_left(canvas, "Prev. question"); 
+            elements_multiline_text_aligned(canvas,1,11,AlignLeft,AlignTop,
+			  "Oak, Hawthorn, White polar, London plane, Mulberry, Ginkgo, Sassafras, ..");
+			elements_button_left(canvas, "Prev.?"); 
 			break;
 		case ScreenL3_A2_2_2: // Level 3: Entire leaves / Ganzrandige Laubblätter
 			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
-			canvas_draw_icon(canvas, 118, 1, &I_LeaveTree_10x10);
+			canvas_draw_icon(canvas, 118, 1, &I_Entire_10x10);
 			canvas_set_font(canvas, FontPrimary);
 			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Entire leaf");
             canvas_set_font(canvas, FontSecondary);
-            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones.");
-			elements_button_left(canvas, "Prev. question"); 
+            elements_multiline_text_aligned(canvas,1,11,AlignLeft,AlignTop,
+			  "European beech, Common box, Laurel, Holly, Magnolia, Olive, Pear, Dogwood, ..)");
+			elements_button_left(canvas, "Prev.?"); 
 			break;
 		case ScreenL3_A2_2_3: // Level 3: Serrated or notched leaves
 			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
-			canvas_draw_icon(canvas, 118, 1, &I_LeaveTree_10x10);
+			canvas_draw_icon(canvas, 118, 1, &I_Notched_10x10);
 			canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Serrated o.notched leaf");
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Notched leaf");
             canvas_set_font(canvas, FontSecondary);
-            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Hic sunt leones.");
-			elements_button_left(canvas, "Prev. question"); 
+			elements_multiline_text_aligned(canvas,1,11,AlignLeft,AlignTop,
+			  "Silver birch, European hornbeam, Com.hazel, Elm, Sweet chestnut, Alder, Aspen, Apple, Cherry, Plum, ..");
+			elements_button_left(canvas, "Prev.?"); 
 			break;
     }
 }
