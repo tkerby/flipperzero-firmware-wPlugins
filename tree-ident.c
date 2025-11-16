@@ -59,6 +59,10 @@ void draw_callback(Canvas* canvas, void* context) {
 			canvas_set_font(canvas, FontSecondary);
 			canvas_draw_str_aligned(canvas, 1, 16, AlignLeft, AlignTop, "Just answer a few");
 			canvas_draw_str_aligned(canvas, 1, 25, AlignLeft, AlignTop, "questions.");
+						
+			canvas_set_font_direction(canvas, CanvasDirectionBottomToTop); // Set text rotation to 90 degrees 
+			canvas_draw_str(canvas, 128, 45, "2025-11");		
+			canvas_set_font_direction(canvas, CanvasDirectionLeftToRight); // Reset to normal text direction
 			
 			canvas_draw_str_aligned(canvas, 1, 49, AlignLeft, AlignTop, "Hold 'back'");
 			canvas_draw_str_aligned(canvas, 1, 57, AlignLeft, AlignTop, "to exit.");
