@@ -8,5 +8,6 @@ App(
     fap_icon="assets/i2c_explorer.png",
     fap_category="GPIO",
     fap_version="0.9",
+    fap_weburl="https://github.com/4mb3rz/Flipper-I2C-Explorer",
     fap_icon_assets="assets",
 )
