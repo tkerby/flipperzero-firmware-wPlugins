@@ -98,7 +98,7 @@ This is a list of metro cards and transit systems that need support or have part
 - **Bip! Parser:** [@rbasoalto](https://github.com/rbasoalto), [@gornekich](https://github.com/gornekich)
 - **Charliecard Parser:** [@zacharyweiss](https://github.com/zacharyweiss)
 - **Clipper Parser:** [@ke6jjj](https://github.com/ke6jjj)
-- **Intertic Parser (21 Cities):[@luu176](https://github.com/luu176), [@gentilkiwi](https://github.com/gentilkiwi)
+- **Intertic Parser (21 Cities):** [@luu176](https://github.com/luu176), [@gentilkiwi](https://github.com/gentilkiwi)
 - **ITSO Parser:** [@gsp8181](https://github.com/gsp8181), [@hedger](https://github.com/hedger), [@gornekich](https://github.com/gornekich)
 - **Metromoney Parser:** [@Leptopt1los](https://github.com/Leptopt1los)
 - **myki Parser:** [@gornekich](https://github.com/gornekich)
