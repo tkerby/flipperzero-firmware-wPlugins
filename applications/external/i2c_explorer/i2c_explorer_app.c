@@ -89,6 +89,31 @@ typedef struct {
     I2CExplAppState* data; // Data accessed by multiple threads (acquire the mutex before accessing!)
 } I2CExplAppContext;
 
+typedef enum {
+    I2cGpioReady = 0,
+    I2cGpioSclLow = 1,
+    I2cGpioSdaLow = 2
+} I2cBusGpioState;
+
+const GpioPin* pinSCL = &gpio_ext_pc0;
+const GpioPin* pinSDA = &gpio_ext_pc1;
+
+I2cBusGpioState poll_i2c_gpio_state() {
+    furi_hal_gpio_init(pinSCL, GpioModeInput, GpioPullNo, GpioSpeedVeryHigh);
+    furi_hal_gpio_init(pinSDA, GpioModeInput, GpioPullNo, GpioSpeedVeryHigh);
+
+    I2cBusGpioState result = I2cGpioReady;
+    result |= furi_hal_gpio_read(pinSCL) ? I2cGpioReady : I2cGpioSclLow;
+    result |= furi_hal_gpio_read(pinSDA) ? I2cGpioReady : I2cGpioSdaLow;
+
+    // Make it so floating SCL/SDA are detected promptly
+    // Not a legal bus state but seems to be tolerated?
+    furi_hal_gpio_init(pinSCL, GpioModeAnalog, GpioPullDown, GpioSpeedLow);
+    furi_hal_gpio_init(pinSDA, GpioModeAnalog, GpioPullDown, GpioSpeedLow);
+
+    return result;
+}
+
 // Invoked when input (button press) is detected.  We queue a message and then return to the caller.
 static void input_callback(InputEvent* input_event, void* ctx) {
     FuriMessageQueue* queue = (FuriMessageQueue*)ctx;
@@ -214,6 +239,16 @@ static bool load_dump_file(I2CExplAppContext* app_context, const char* file_path
             // Override target device address for subsequent reg writes:
             // (you can do this more than once)
             target_addr = strtol(furi_string_get_cstr(str_val), NULL, 16);
+            continue;
+        } else if(furi_string_equal_str(str_line, "Delay") && furi_string_size(str_val) > 0) {
+            uint32_t sleep_time = strtol(furi_string_get_cstr(str_val), NULL, 0);
+            // This is a blocking wait where the UI will be unresponsive, so for sanity, we cap at 10s.
+            // Use more than one delay if you want more than this.
+            if(sleep_time > 10000) {
+                sleep_time = 10000;
+            }
+
+            furi_delay_ms(sleep_time);
             continue;
         }
 
@@ -552,21 +587,10 @@ static void render_callback(Canvas* canvas, void* ctx) {
 
     // Poll SCL/SDA status
     // Hacky to do this here, but it does give better responsiveness (and it's not slow like scanning)
-
-#define pinSCL &gpio_ext_pc0
-#define pinSDA &gpio_ext_pc1
-
-    furi_hal_gpio_init(pinSCL, GpioModeInput, GpioPullNo, GpioSpeedVeryHigh);
-    furi_hal_gpio_init(pinSDA, GpioModeInput, GpioPullNo, GpioSpeedVeryHigh);
-
-    bool levelSCL = furi_hal_gpio_read(pinSCL);
-    bool levelSDA = furi_hal_gpio_read(pinSDA);
-    bool not_ready = !levelSCL || !levelSDA;
-
-    // Make it so floating SCL/SDA are detected promptly
-    // Not a legal bus state but seems to be tolerated?
-    furi_hal_gpio_init(pinSCL, GpioModeAnalog, GpioPullDown, GpioSpeedLow);
-    furi_hal_gpio_init(pinSDA, GpioModeAnalog, GpioPullDown, GpioSpeedLow);
+    I2cBusGpioState gpio_state = poll_i2c_gpio_state();
+    bool levelSCL = !(gpio_state & I2cGpioSclLow);
+    bool levelSDA = !(gpio_state & I2cGpioSdaLow);
+    bool not_ready = gpio_state != I2cGpioReady;
 
     canvas_set_font(canvas, font_heading);
 
@@ -819,12 +843,17 @@ static void render_callback(Canvas* canvas, void* ctx) {
     furi_mutex_release(app_context->mutex);
 }
 
-static void update_i2c_status(void* ctx) {
+static void update_i2c_status(void* ctx, bool forced) {
     I2CExplAppContext* app_context = ctx;
     I2CExplAppState* data = app_context->data;
     // Our main loop invokes this method after acquiring the mutex, so we can safely access the protected data.
 
     uint8_t addr = 0;
+
+    if(!forced && poll_i2c_gpio_state() != I2cGpioReady) {
+        // Don't waste time when the bus is not online. This reduces GUI sluggishness when disconnected.
+        return;
+    }
 
     furi_hal_i2c_acquire(&furi_hal_i2c_handle_external);
 
@@ -877,7 +906,7 @@ int32_t i2c_explorer_app(void* p) {
     app_context->data->selected_menu = 0;
 
     // Get initial data
-    update_i2c_status(app_context);
+    update_i2c_status(app_context, true);
 
     // Queue for events (tick or input)
     app_context->queue = furi_message_queue_alloc(8, sizeof(AppEvent));
@@ -903,42 +932,51 @@ int32_t i2c_explorer_app(void* p) {
             switch(event.type) {
             case AppEventTypeKey:
 
-                // this is absolute trash architecture shouldn't be here at all
-                if(event.input.type == InputTypeShort && event.input.key == InputKeyUp) {
-                    furi_mutex_acquire(app_context->mutex, FuriWaitForever);
-                    scroll_vert(app_context, false);
-                    update_i2c_status(app_context);
-                    furi_mutex_release(app_context->mutex);
-                } else if(event.input.type == InputTypeShort && event.input.key == InputKeyDown) {
-                    furi_mutex_acquire(app_context->mutex, FuriWaitForever);
-                    scroll_vert(app_context, true);
-                    update_i2c_status(app_context);
-                    furi_mutex_release(app_context->mutex);
-                } else if(event.input.type == InputTypeShort && event.input.key == InputKeyLeft) {
-                    furi_mutex_acquire(app_context->mutex, FuriWaitForever);
-                    scroll_horiz(app_context, false);
-                    //update_i2c_status(app_context);
-                    furi_mutex_release(app_context->mutex);
-                } else if(event.input.type == InputTypeShort && event.input.key == InputKeyRight) {
-                    furi_mutex_acquire(app_context->mutex, FuriWaitForever);
-                    scroll_horiz(app_context, true);
-                    //update_i2c_status(app_context);
-                    furi_mutex_release(app_context->mutex);
-                } else if(event.input.type == InputTypeShort && event.input.key == InputKeyOk) {
-                    furi_mutex_acquire(app_context->mutex, FuriWaitForever);
-                    select_item(app_context);
-                    update_i2c_status(app_context);
-                    furi_mutex_release(app_context->mutex);
-                } else if(event.input.type == InputTypeShort && event.input.key == InputKeyBack) {
-                    // Short press of back button exits the program.
-                    processing = false;
+                // This is absolute trash architecture shouldn't be here at top level all...
+                if(event.input.type == InputTypeShort || event.input.type == InputTypeRepeat) {
+                    if(event.input.key == InputKeyUp) {
+                        furi_mutex_acquire(app_context->mutex, FuriWaitForever);
+                        scroll_vert(app_context, false);
+                        update_i2c_status(app_context, false);
+                        furi_mutex_release(app_context->mutex);
+
+                    } else if(event.input.key == InputKeyDown) {
+                        furi_mutex_acquire(app_context->mutex, FuriWaitForever);
+                        scroll_vert(app_context, true);
+                        update_i2c_status(app_context, false);
+                        furi_mutex_release(app_context->mutex);
+
+                    } else if(event.input.key == InputKeyLeft) {
+                        furi_mutex_acquire(app_context->mutex, FuriWaitForever);
+                        scroll_horiz(app_context, false);
+                        //update_i2c_status(app_context, false);
+                        furi_mutex_release(app_context->mutex);
+
+                    } else if(event.input.key == InputKeyRight) {
+                        furi_mutex_acquire(app_context->mutex, FuriWaitForever);
+                        scroll_horiz(app_context, true);
+                        //update_i2c_status(app_context, false);
+                        furi_mutex_release(app_context->mutex);
+
+                    } else if(event.input.key == InputKeyOk) {
+                        furi_mutex_acquire(app_context->mutex, FuriWaitForever);
+                        select_item(app_context);
+                        update_i2c_status(app_context, false);
+                        furi_mutex_release(app_context->mutex);
+
+                    } else if(event.input.key == InputKeyBack) {
+                        // Press of back button exits the program.
+                        processing = false;
+                    }
                 }
                 break;
 
             case AppEventTypeTick:
                 // Every timer tick we update the i2c status.
                 furi_mutex_acquire(app_context->mutex, FuriWaitForever);
-                update_i2c_status(app_context);
+                // Force this update even if the bus doesn't look ready, just in case something is funny
+                // (may not be necessary)
+                update_i2c_status(app_context, true);
                 furi_mutex_release(app_context->mutex);
                 break;
 
