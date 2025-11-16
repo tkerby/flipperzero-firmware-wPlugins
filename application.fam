@@ -5,6 +5,9 @@ App(
     # What users will see when browsing apps
     name="Tree Identification",
 
+    # Description for the Flipper Application catalogue
+    fap_description="Identify a tree by answering questions about the leave shapes",
+
     # Application type - EXTERNAL means it's a .fap file loaded from SD card
     apptype=FlipperAppType.EXTERNAL,
     
