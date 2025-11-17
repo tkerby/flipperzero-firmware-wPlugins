@@ -34,6 +34,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [SD Card Mounter v0.1 (By aaronjamt)](https://github.com/aaronjamt/flipper_sd_mounters)
 - Updated: [I2C Explorer v0.9 (By 4mb3rz)](https://github.com/4mb3rz/Flipper-I2C-Explorer)
 - Updated: [VEML7700 Lux Meter v1.1 (By kamylwnb)](https://github.com/kamylwnb/Flipper-zero-app-VEML7700)
+- Updated: [Metroflip v1.0 (By luu176)](https://github.com/luu176/Metroflip)
 
 <a name="release">
 

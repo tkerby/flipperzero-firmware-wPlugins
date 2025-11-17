@@ -57,7 +57,7 @@ typedef struct {
     Gui* gui; // pointer do gui
     ViewPort* view_port; // viewport czyli miejsce gdzie sie rysuje
     FuriMutex* mutex; // mutex zeby nie bylo syfu jak 2 watki chca to samo zmienic
-    
+
     // stan apki
     AppState current_state; // na ktorym ekranie jestem (menu, settings etc)
     float lux_value; // aktualna wartosc luxow
@@ -127,14 +127,14 @@ static void draw_main_screen(Canvas* canvas, VEML7700App* app) {
 // rysowanie ekranu settings
 static void draw_settings_screen(Canvas* canvas, VEML7700App* app) {
     canvas_clear(canvas); // wyczysc ekran
-    
+
     // tytul na gorze
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str_aligned(canvas, 64, 5, AlignCenter, AlignTop, "Settings");
 
     //string do formatowania wartosci
     FuriString* value_str = furi_string_alloc();
-    
+
     canvas_set_font(canvas, FontSecondary);
 
     // teksty do wyswietlania opcji
@@ -147,13 +147,13 @@ static void draw_settings_screen(Canvas* canvas, VEML7700App* app) {
     // scrollbar z prawej strony - zeby user wiedzial gdzie jest
     uint8_t scroll_height = 40;
     uint8_t scroll_y = 15;
-    
+
     uint8_t slider_height = (2 * scroll_height) / SettingsItem_Count;
     uint8_t max_slider_position = scroll_height - slider_height;
-    
+
     // zabezpieczenie przed dzieleniem przez 0 (nigdy nie wiadomo)
     uint8_t denom = (SettingsItem_Count > 2) ? (SettingsItem_Count - 2) : 1;
-    
+
     uint8_t slider_position = (start_item * max_slider_position) / denom;
     if(slider_position > max_slider_position) slider_position = max_slider_position;
 
@@ -218,7 +218,7 @@ static void draw_settings_screen(Canvas* canvas, VEML7700App* app) {
                 canvas, 113, y_pos - 1, AlignRight, AlignTop, app->dark_mode ? "(*)" : "( )");
             break;
         }
-        
+
         canvas_set_color(canvas, ColorBlack);
     }
 
@@ -428,11 +428,11 @@ static void veml7700_input_callback(InputEvent* input_event, void* context) {
                 }
             } else if(input_event->key == InputKeyLeft || input_event->key == InputKeyRight) {
                 // lewo/prawo zmienia wartosci
-                
+
                 if(app->settings_cursor == SettingsItem_Address) {
                     // przelacz adres miedzy 0x10 a 0x11
                     app->i2c_address = (app->i2c_address == 0x10) ? 0x11 : 0x10;
-                    
+
                 } else if(app->settings_cursor == SettingsItem_Gain) {
                     // gain 0-3 z zawijaniem
                     if(input_event->key == InputKeyLeft) {
@@ -448,11 +448,11 @@ static void veml7700_input_callback(InputEvent* input_event, void* context) {
                             app->als_gain = 0; // wroc do 0
                         }
                     }
-                    
+
                 } else if(app->settings_cursor == SettingsItem_Channel) {
                     // toggle channel
                     app->channel = (app->channel == 0) ? 1 : 0;
-                    
+
                 } else if(app->settings_cursor == SettingsItem_RefreshRate) {
                     // refresh rate - dodalem to zeby mozna bylo dostosowac predkosc
                     if(input_event->key == InputKeyLeft) {
@@ -496,7 +496,7 @@ static void veml7700_input_callback(InputEvent* input_event, void* context) {
             break;
         }
     }
-    
+
     // dlugie nacisniecie - wyjscie z apki
     if(input_event->type == InputTypeLong) {
         if(input_event->key == InputKeyBack) {
@@ -511,23 +511,23 @@ static VEML7700App* veml7700_app_alloc() {
     // alokuj pamiec na strukture
     VEML7700App* app = static_cast<VEML7700App*>(malloc(sizeof(VEML7700App)));
     furi_assert(app); // jak sie nie uda to niech crashuje
-    
+
     // mutex do ochrony przed race conditions
     app->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
-    
+
     // otworz GUI
     app->gui = static_cast<Gui*>(furi_record_open(RECORD_GUI));
-    
+
     // viewport to miejsce gdzie rysuje
     app->view_port = view_port_alloc();
-    
+
     // ustaw callbacki
     view_port_draw_callback_set(app->view_port, veml7700_draw_callback, app);
     view_port_input_callback_set(app->view_port, veml7700_input_callback, app);
-    
+
     // dodaj do gui fullscreen
     gui_add_view_port(app->gui, app->view_port, GuiLayerFullscreen);
-    
+
     app->running = true;
     app->current_state = AppState_Settings; // zaczynam w settings zeby user widzial start
     app->lux_value = 0.0f;
@@ -558,7 +558,7 @@ static void veml7700_app_free(VEML7700App* app) {
 // main loop apki
 extern "C" int32_t veml7700_app(void* p) {
     UNUSED(p);
-    
+
     VEML7700App* app = veml7700_app_alloc();
 
     while(app->running) {
@@ -573,7 +573,7 @@ extern "C" int32_t veml7700_app(void* p) {
         }
 
         view_port_update(app->view_port); // odswiez ekran
-        
+
         // tutaj uzywam refresh_rate_ms zamiast hardcodowanego 500
         // user moze sobie ustawic jak szybko ma odswiezac
         furi_delay_ms(app->refresh_rate_ms);
