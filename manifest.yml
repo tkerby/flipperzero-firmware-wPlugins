@@ -16,7 +16,7 @@ sourcecode:
 description: |
  The app helps users identify trees through a series of guided questions. 
  It uses a decision-tree approach to narrow down possible tree species based on observable features.
-changelog: "@CHANGELOG.md"
+changelog: "@changelog.md"
 ## Unmodified screenshots from qFlipper
 screenshots:
   - screenshots/SplashScreen.png
