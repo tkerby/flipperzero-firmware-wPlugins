@@ -9,16 +9,18 @@ sourcecode:
     commit_sha: 0302a5e6910d10d0d9ba2e2a9344baee45f5e41b
     ## (Optional) If your app is located in a subdirectory of the repository, specify it here
     # subdir: .
-## If application.fam contains 'fap_description', it will be used as a short description
+## My application.fam contains 'fap_description', hope it will be used as a short description
 # short_description: A short app description.
 ## For 'description' and 'changelog', you can use limited markdown syntax
 ## You can also specify a file from your app's repository as a source with @
 description: |
-  A long app description.
-  Very long.
-  Spanning multiple lines.
+ The app helps users identify trees through a series of guided questions. 
+ It uses a decision-tree approach to narrow down possible tree species based on observable features.
 changelog: "@CHANGELOG.md"
 ## Unmodified screenshots from qFlipper
 screenshots:
-  - screenshots/flp0.png
-  
+  - screenshots/SplashScreen.png
+  - screenshots/QuestionL1.png
+  - screenshots/QuestionL2Leaves.png
+  - screenshots/QuestionL3Leaflets.png
+  - screenshots/AnswerOddPinnateLeaves.png
