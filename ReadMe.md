@@ -32,6 +32,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-12-11 01:20 EST`
 - Added: [Chameleon Ultra v1.0 (By muylder)](https://github.com/muylder/Chameleon_Flipper)
 - Added: [SD Card Mounter v0.1 (By aaronjamt)](https://github.com/aaronjamt/flipper_sd_mounters)
+- Updated: [I2C Explorer v0.9 (By 4mb3rz)](https://github.com/4mb3rz/Flipper-I2C-Explorer)
+- Updated: [VEML7700 Lux Meter v1.1 (By kamylwnb)](https://github.com/kamylwnb/Flipper-zero-app-VEML7700)
 
 <a name="release">
 
