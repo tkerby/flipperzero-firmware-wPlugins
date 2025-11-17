@@ -6,7 +6,7 @@ sourcecode:
     ## Specify the git URL of your repository
     origin: https://github.com/fgreil/mitzi-tree-ident.git
     ## Put the full commit SHA of the commit with the app's code you want to submit
-    commit_sha: 0302a5e6910d10d0d9ba2e2a9344baee45f5e41b
+    commit_sha: ed91dc6020a714ac9830fcf018e7d693072f1c1e
     ## (Optional) If your app is located in a subdirectory of the repository, specify it here
     # subdir: .
 ## My application.fam contains 'fap_description', hope it will be used as a short description
