@@ -4,7 +4,7 @@ It lets you assign any keyboard key to each button on your Flipper Zero and use 
 
 ## How to Use
 
-To use the app, simply open it, select **Settings**, and set the key mappings to whatever you want. These settings will be saved to the SD card and will remain the same the next time you open the app.
+To use the app, simply open it and select **Manage Presets** to create, edit, switch between, rename, or delete key-mapping presets. All presets and settings will be saved to the SD card.
 
 Then, go back to the main menu, press **Start**, and connect to Bluetooth. Once you're successfully connected, you'll see the controller screen.
 
