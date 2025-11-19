@@ -9,7 +9,7 @@ Requirements:
   pip install textual rich cryptography meshtastic
 
 Usage:
-  python monitor.py [-p PORT] [-baud BAUDRATE]
+  python meshtasticDashboard.py [-p PORT] [-baud BAUDRATE]
 
 Options:
   -p, --port       Serial port (e.g. /dev/ttyACM0 or COM3)
