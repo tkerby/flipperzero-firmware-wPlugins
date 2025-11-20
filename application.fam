@@ -145,6 +145,9 @@ App(
     entry_point="tmoney_plugin_ep",
     requires=["metroflip"],
     sources=["scenes/plugins/tmoney.c"],
+)
+
+App(
     appid="renfe_regular_plugin",
     apptype=FlipperAppType.PLUGIN,
     entry_point="renfe_regular_plugin_ep",
