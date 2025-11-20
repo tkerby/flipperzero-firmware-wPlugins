@@ -337,19 +337,19 @@ static bool suica_help_with_octopus(const FelicaSystem* suica_system, FuriString
             uint16_t unsigned_balance = ((uint16_t)public_block->block.data[2] << 8) |
                                         (uint16_t)public_block->block.data[3]; // 0x0000..0xFFFF
 
-            int32_t older_balance_cents = (int32_t)unsigned_balance - 350;
-            int32_t newer_balance_cents = (int32_t)unsigned_balance - 500;
+            int32_t older_balance_ten_cents = (int32_t)unsigned_balance - 350;
+            int32_t newer_balance_ten_cents = (int32_t)unsigned_balance - 500;
 
-            uint16_t older_abs_cents =
-                (uint16_t)(older_balance_cents < 0 ? -older_balance_cents : older_balance_cents);
-            uint16_t newer_abs_cents =
-                (uint16_t)(newer_balance_cents < 0 ? -newer_balance_cents : newer_balance_cents);
+            uint16_t older_abs_ten_cents =
+                (uint16_t)(older_balance_ten_cents < 0 ? -older_balance_ten_cents : older_balance_ten_cents);
+            uint16_t newer_abs_ten_cents =
+                (uint16_t)(newer_balance_ten_cents < 0 ? -newer_balance_ten_cents : newer_balance_ten_cents);
 
-            uint16_t older_dollars = (uint16_t)(older_abs_cents / 100);
-            uint8_t older_cents = (uint8_t)(older_abs_cents % 100);
+            uint16_t older_dollars = (uint16_t)(older_abs_ten_cents / 10);
+            uint8_t older_cents = (uint8_t)((older_abs_ten_cents % 10) * 10 );
 
-            uint16_t newer_dollars = (uint16_t)(newer_abs_cents / 100);
-            uint8_t newer_cents = (uint8_t)(newer_abs_cents % 100);
+            uint16_t newer_dollars = (uint16_t)(newer_abs_ten_cents / 10);
+            uint8_t newer_cents = (uint8_t)((newer_abs_ten_cents % 10) * 10);
             furi_string_printf(parsed_data, "\e#Octopus Card\n");
             furi_string_cat_str(
                 parsed_data, "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n");
@@ -359,7 +359,7 @@ static bool suica_help_with_octopus(const FelicaSystem* suica_system, FuriString
             furi_string_cat_printf(
                 parsed_data,
                 "Balance: %sHK$ %d.%02d\n",
-                older_balance_cents < 0 ? "-" : "",
+                older_balance_ten_cents < 0 ? "-" : "",
                 older_dollars,
                 older_cents);
 
@@ -371,7 +371,7 @@ static bool suica_help_with_octopus(const FelicaSystem* suica_system, FuriString
             furi_string_cat_printf(
                 parsed_data,
                 "Balance: %sHK$ %d.%02d\n",
-                newer_balance_cents < 0 ? "-" : "",
+                newer_balance_ten_cents < 0 ? "-" : "",
                 newer_dollars,
                 newer_cents);
 
