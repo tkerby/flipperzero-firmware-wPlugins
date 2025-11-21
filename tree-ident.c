@@ -26,7 +26,15 @@ typedef enum {
 	ScreenL3_A2_1_3,  // Leaflets radiate from single point
 	ScreenL3_A2_2_1,  // Big rounded or pointed bumps
 	ScreenL3_A2_2_2,  // Leaf margin is smooth
-	ScreenL3_A2_2_3   // Small teeth or cuts
+	ScreenL3_A2_2_3,  // Small teeth or cuts
+	Screen_Fruit_Unknown,
+    Screen_Fruit_Nut,
+    Screen_Fruit_Samara,
+    Screen_Fruit_Drupe,
+    Screen_Fruit_Cone,
+    Screen_Fruit_Berry,
+    Screen_Fruit_Pome,
+    Screen_Fruit_Other
 } AppScreen;
 
 // Main application structure
@@ -38,6 +46,8 @@ typedef struct {
 	int selected_L1_option;         // Selected option for Level 1 
 	int selected_L2_option;         // Selected option for Level 2
 	int selected_L3_option;         // Selected option for Level 3
+	int selected_fruit_option;      // 0-7 for the 8 options
+	int fruit_scroll_offset;        // Track scroll position (0-4)
 } AppState;
 
 // Draw callback - called whenever the screen needs to be redrawn
@@ -130,13 +140,44 @@ void draw_callback(Canvas* canvas, void* context) {
 			elements_button_left(canvas, "Prev. ?"); 
 			elements_button_center(canvas, "OK"); // for the OK button
 			break;
-		case ScreenL1_A3: // Level 2: Option 3: Nothing chosen
-			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);	
-			canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "No leave type chosen");
-            canvas_set_font(canvas, FontSecondary);
-            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Wait to next spring :-)");
-			elements_button_left(canvas, "Prev. question"); 
+		case ScreenL1_A3: // Level 2: Option 3: No leave type chosen. Fruit identification with scrolling
+			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10); // icon with App logo
+			// canvas_draw_icon(canvas, 118, 1, &I_IconNotReady_10x10); 	
+            canvas_set_font(canvas, FontPrimary);
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "My tree's fruit are..");
+            canvas_draw_frame(canvas, 1, 11, 127, 44); // Menu box for 4 visible items
+			canvas_set_font(canvas, FontSecondary);
+			const char* fruit_options[8] = {
+				"not present.",
+				"hard nut with shell",
+				"winged fruit (samara)",
+				"fleshy w. hard stone",
+				"woody cone",
+				"soft berries",
+				"fleshy, w. seeds inside",
+				"something else"
+			};
+			// Calculate which 4 items to display
+			int display_start = state->fruit_scroll_offset;
+			int display_end = display_start + 4;
+			
+			// Write the 4 visible options onto the screen
+			canvas_set_font(canvas, FontSecondary);
+			for(int i = 0; i < 4 && (display_start + i) < 8; i++) {
+				int option_index = display_start + i;
+				canvas_draw_str(canvas, 7, 21 + (i * 10), fruit_options[option_index]);
+			}
+			
+			// Draw selection indicator at the correct position
+			if(state->selected_fruit_option >= display_start && 
+			   state->selected_fruit_option < display_end) {
+				int indicator_line = state->selected_fruit_option - display_start;
+				canvas_draw_str(canvas, 3, 21 + (indicator_line * 10), ">");
+			}
+			canvas_draw_icon(canvas, 119, 44, &I_ButtonUp_7x4);
+			canvas_draw_icon(canvas, 119, 49, &I_ButtonDown_7x4);					
+			elements_button_left(canvas, "Prev. ?"); 
+			elements_button_center(canvas, "OK"); // for the OK button
 			break;
 		case ScreenL2_A1_1: // Level 2: Option 1_1: Needles
 			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
@@ -291,6 +332,86 @@ void draw_callback(Canvas* canvas, void* context) {
 			  "Silver birch, European hornbeam, Com.hazel, Elm, Sweet chestnut, Alder, Aspen, Apple, Cherry, Plum, ..");
 			elements_button_left(canvas, "Prev.?"); 
 			break;
+		case Screen_Fruit_Unknown:
+			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
+			// canvas_draw_icon(canvas, 118, 1, &I_TBD_10x10);
+			canvas_set_font(canvas, FontPrimary);
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Unknown fruit");
+			canvas_set_font(canvas, FontSecondary);
+			elements_multiline_text_aligned(canvas, 1, 11, AlignLeft, AlignTop,
+				"Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
+			elements_button_left(canvas, "Prev.?");
+			break;
+		case Screen_Fruit_Nut:
+			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
+			// canvas_draw_icon(canvas, 118, 1, &I_TBD_10x10);
+			canvas_set_font(canvas, FontPrimary);
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Nut");
+			canvas_set_font(canvas, FontSecondary);
+			elements_multiline_text_aligned(canvas, 1, 11, AlignLeft, AlignTop,
+				"Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
+			elements_button_left(canvas, "Prev.?");
+			break;
+		case Screen_Fruit_Samara:
+			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
+			// canvas_draw_icon(canvas, 118, 1, &I_TBD_10x10);
+			canvas_set_font(canvas, FontPrimary);
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Samara");
+			canvas_set_font(canvas, FontSecondary);
+			elements_multiline_text_aligned(canvas, 1, 11, AlignLeft, AlignTop,
+				"Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
+			elements_button_left(canvas, "Prev.?");
+			break;
+		case Screen_Fruit_Drupe:
+			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
+			// canvas_draw_icon(canvas, 118, 1, &I_TBD_10x10);
+			canvas_set_font(canvas, FontPrimary);
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Drupe");
+			canvas_set_font(canvas, FontSecondary);
+			elements_multiline_text_aligned(canvas, 1, 11, AlignLeft, AlignTop,
+				"Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
+			elements_button_left(canvas, "Prev.?");
+			break;
+		case Screen_Fruit_Cone:
+			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
+			// canvas_draw_icon(canvas, 118, 1, &I_TBD_10x10);
+			canvas_set_font(canvas, FontPrimary);
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Cone");
+			canvas_set_font(canvas, FontSecondary);
+			elements_multiline_text_aligned(canvas, 1, 11, AlignLeft, AlignTop,
+				"Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
+			elements_button_left(canvas, "Prev.?");
+			break;
+		case Screen_Fruit_Berry:
+			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
+			// canvas_draw_icon(canvas, 118, 1, &I_TBD_10x10);
+			canvas_set_font(canvas, FontPrimary);
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Berry");
+			canvas_set_font(canvas, FontSecondary);
+			elements_multiline_text_aligned(canvas, 1, 11, AlignLeft, AlignTop,
+				"Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
+			elements_button_left(canvas, "Prev.?");
+			break;
+		case Screen_Fruit_Pome:
+			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
+			// canvas_draw_icon(canvas, 118, 1, &I_TBD_10x10);
+			canvas_set_font(canvas, FontPrimary);
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Pome");
+			canvas_set_font(canvas, FontSecondary);
+			elements_multiline_text_aligned(canvas, 1, 11, AlignLeft, AlignTop,
+				"Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
+			elements_button_left(canvas, "Prev.?");
+			break;
+		case Screen_Fruit_Other:
+			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
+			// canvas_draw_icon(canvas, 118, 1, &I_TBD_10x10);
+			canvas_set_font(canvas, FontPrimary);
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Other fruit");
+			canvas_set_font(canvas, FontSecondary);
+			elements_multiline_text_aligned(canvas, 1, 11, AlignLeft, AlignTop,
+				"Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
+			elements_button_left(canvas, "Prev.?");
+			break;		
     }
 }
 
@@ -309,6 +430,8 @@ int32_t tree_ident_main(void* p) {
 	app.selected_L1_option= 0; // Level 1: Start with first line highlighted
 	app.selected_L2_option= 0; // Level 2: Start with first line highlighted
 	app.selected_L3_option= 0; // Level 3: Start with first line highlighted
+	app.selected_fruit_option = 0;
+	app.fruit_scroll_offset = 0;	
 
     // Allocate resources for rendering and 
     app.view_port = view_port_alloc(); // for rendering
@@ -344,6 +467,14 @@ int32_t tree_ident_main(void* p) {
 				&& input.type == InputTypePress) {
 				app.selected_L3_option= (app.selected_L3_option- 1 + 3) % 3;
 			}
+			if(app.current_screen == ScreenL1_A3 && input.type == InputTypePress) {  // Handle fruit menu scrolling
+				if(app.selected_fruit_option > 0) {
+					app.selected_fruit_option--;	
+					if(app.selected_fruit_option < app.fruit_scroll_offset) { // Adjust scroll if selection goes above visible area
+						app.fruit_scroll_offset = app.selected_fruit_option;
+					}
+				}
+			}
 			break;
 		case InputKeyDown:
 			if(app.current_screen == ScreenL1Question && input.type == InputTypePress) {
@@ -357,6 +488,16 @@ int32_t tree_ident_main(void* p) {
 				&& input.type == InputTypePress) {
 				app.selected_L3_option= (app.selected_L3_option+ 1) % 3;
 			}
+			// NEW: Handle fruit menu scrolling
+			if(app.current_screen == ScreenL1_A3 && input.type == InputTypePress) {
+				if(app.selected_fruit_option < 7) {  // 0-7 = 8 options
+					app.selected_fruit_option++;
+					// Adjust scroll if selection goes below visible area
+					if(app.selected_fruit_option >= app.fruit_scroll_offset + 4) {
+						app.fruit_scroll_offset = app.selected_fruit_option - 3;
+					}
+				}
+			}			
 			break;
 		case InputKeyOk:
 			if (input.type == InputTypePress){
@@ -383,6 +524,18 @@ int32_t tree_ident_main(void* p) {
 							case 1: app.current_screen = ScreenL2_A2_2; break;
 						}
 						break;
+					case ScreenL1_A3:  // Fruit type selection
+					switch (app.selected_fruit_option) {
+						case 0: app.current_screen = Screen_Fruit_Unknown; break;
+						case 1: app.current_screen = Screen_Fruit_Nut; break;
+						case 2: app.current_screen = Screen_Fruit_Samara; break;
+						case 3: app.current_screen = Screen_Fruit_Drupe; break;
+						case 4: app.current_screen = Screen_Fruit_Cone; break;
+						case 5: app.current_screen = Screen_Fruit_Berry; break;
+						case 6: app.current_screen = Screen_Fruit_Pome; break;
+						case 7: app.current_screen = Screen_Fruit_Other; break;
+					}
+                break;
 					case ScreenL2_A1_1: // Where are the needles?
 						switch (app.selected_L3_option){
 							case 0: app.current_screen = ScreenL3_A1_1_1; break;
@@ -402,6 +555,18 @@ int32_t tree_ident_main(void* p) {
 							case 0: app.current_screen = ScreenL3_A2_2_1; break;
 							case 1: app.current_screen = ScreenL3_A2_2_2; break;
 							case 2: app.current_screen = ScreenL3_A2_2_3; break;
+						}
+						break;
+					case Screen_Fruit_Unknown:
+					case Screen_Fruit_Nut:
+					case Screen_Fruit_Samara:
+					case Screen_Fruit_Drupe:
+					case Screen_Fruit_Cone:
+					case Screen_Fruit_Berry:
+					case Screen_Fruit_Pome:
+					case Screen_Fruit_Other:
+						if(input.type == InputTypePress) {
+							app.current_screen = ScreenL1Question;
 						}
 						break;
 					default:
