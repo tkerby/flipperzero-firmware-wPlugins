@@ -18,4 +18,4 @@ What comes next
 - Add regional filtering (European vs. North American trees)
 
 ## Version history
-See [changelog.md](http://github.com/fgreil/mitzi-tree-ident/changelog.md)
+See [changelog.md](changelog.md)
