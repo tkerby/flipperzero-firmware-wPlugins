@@ -1,3 +1,6 @@
+v0.5:
+2025-11-21. Fruit identification screens ready.
+
 v0.4.1:
 2025-11-21. Fixed version formating issue in application.fam, new screens for fruit identification in preparation.
 
