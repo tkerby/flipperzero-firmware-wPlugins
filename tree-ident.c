@@ -78,7 +78,7 @@ void draw_callback(Canvas* canvas, void* context) {
 			canvas_draw_str_aligned(canvas, 1, 57, AlignLeft, AlignTop, "to exit.");
 			
 			canvas_draw_str_aligned(canvas, 100, 54, AlignLeft, AlignTop, "F. Greil");
-			canvas_draw_str_aligned(canvas, 110, 1, AlignLeft, AlignTop, "v0.4");
+			canvas_draw_str_aligned(canvas, 110, 1, AlignLeft, AlignTop, "v0.5");
 			
 			// Draw button hints at bottom using elements library
 			elements_button_center(canvas, "OK"); // for the OK button
