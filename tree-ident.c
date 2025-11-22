@@ -8,6 +8,16 @@
 
 #define TAG "Tree Ident" // Tag for logging purposes
 
+// Magic numbers 
+#define MENU_MAX_VISIBLE_ITEMS 4 // number of menu items visible at before scrolling is needed
+#define MENU_OPTION_HEIGHT 10	 // Vertical spacing between menu options in pixels
+#define MENU_START_Y 21			 // Y-coordinate where 1st menu option text starts within the frame
+#define MENU_FRAME_X 1           // Left edge of menu frame
+#define MENU_FRAME_Y 11          // Top of menu frame
+#define MENU_FRAME_WIDTH 127     // Frame width	 
+#define SELECTOR_X 3             // X position for ">" selection indicator
+#define OPTION_TEXT_X 7          // X value where option text begins 
+
 typedef enum {
     ScreenSplash,
     ScreenL1Question,
@@ -48,30 +58,86 @@ static const AppScreen FRUIT_SCREENS[] = {
     Screen_Fruit_Other
 };
 
+// Menu configuration structure containing all state variable for a menu
+typedef struct {
+    const char** options;       // Array of option strings to display
+    int total_options;          // Total number of options in the menu
+    int selected_index;         // Currently selected option (0-based index)
+    int scroll_offset;          // First visible item index (for scrolling menus)
+} MenuState;
+
+
 // Main application structure
 typedef struct {
     FuriMessageQueue* input_queue;  // Queue for handling input events
     ViewPort* view_port;            // ViewPort for rendering UI
     Gui* gui;                       // GUI instance
-    uint8_t current_screen;         // 0 = first screen, 1 = second screen
-	int selected_L1_option;         // Selected option for Level 1 
-	int selected_L2_option;         // Selected option for Level 2
-	int selected_L3_option;         // Selected option for Level 3
-	int selected_fruit_option;      // 0-7 for the 8 options
-	int fruit_scroll_offset;        // Track scroll position (0-4)
+	
+    uint8_t current_screen;         // 0 = first screen, 1 = second screen 
+	
+    MenuState level1_menu;
+    MenuState level2_needle_menu;      // For ScreenL1_A1
+    MenuState level2_leaf_menu;        // For ScreenL1_A2
+    MenuState level3_needle_location;  // For ScreenL2_A1_1
+    MenuState level3_leaflet_arrange;  // For ScreenL2_A2_1
+    MenuState level3_leaf_margin;      // For ScreenL2_A2_2
+    MenuState fruit_menu;
 } AppState;
 
-void draw_result_screen(Canvas* canvas, const Icon* icon, const char* title, const char* content) {
-    canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
-    if(icon != NULL) {
-        canvas_draw_icon(canvas, 118, 1, icon);
-    }
-    canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, title);
-    canvas_set_font(canvas, FontSecondary);
-    elements_multiline_text_aligned(canvas, 1, 11, AlignLeft, AlignTop, content);
-    elements_button_left(canvas, "Prev.?");
-	elements_button_center(canvas, "OK");
+// STATIC MENU OPTION ARRAYS ==================================================
+static const char* level1_options[] = {
+    ".. needles.",
+    ".. leaves.",
+    "I don't know. Ask differently."
+};
+
+static const char* needle_type_options[] = {
+    "long and pointed needles",
+    "are small and flat scales"
+};
+
+static const char* leaf_type_options[] = {
+    "compound leaves w. leaflets",
+    "single, undivided leaves"
+};
+
+static const char* needle_location_options[] = {
+    "only on long shoots",
+    "on short shoots",
+    "both on long& short shoots"
+};
+
+static const char* leaflet_arrangement_options[] = {
+    "Odd #, single terminal leaflet",
+    "Even #, no terminal leaflet",
+    "Leaflets radiate from point"
+};
+
+static const char* leaf_margin_options[] = {
+    "Big rounded o.pointed bumps",
+    "Leaf margin is smooth",
+    "Small teeth or cuts"
+};
+
+static const char* fruit_options[] = {
+    "have segmented flesh & rind",
+    "are hard-shelled, dry (nut)",
+    "are winged (samara)",
+    "are fleshy w. hard stone",
+    "are woody cones",
+    "are soft berries",
+    "are fleshy with seeds inside",
+    "are different or not present"
+};
+
+// =============================================================================
+// MENU HELPER FUNCTIONS
+// =============================================================================
+int get_menu_frame_height(int total_options) {
+    int visible_items = (total_options < MENU_MAX_VISIBLE_ITEMS) 
+                        ? total_options 
+                        : MENU_MAX_VISIBLE_ITEMS;
+    return 3 + (visible_items * MENU_OPTION_HEIGHT);
 }
 
 void handle_scrollable_menu_input(InputKey key, int* selected, int* scroll_offset, 
@@ -89,8 +155,83 @@ void handle_scrollable_menu_input(InputKey key, int* selected, int* scroll_offse
     }
 }
 
+void handle_menu_input(MenuState* menu, InputKey key, InputType type) {
+    if(type != InputTypePress) return;
+    
+    if(menu->total_options <= MENU_MAX_VISIBLE_ITEMS) {
+        // No scrolling - wraparound navigation
+        if(key == InputKeyUp) {
+            menu->selected_index = (menu->selected_index - 1 + menu->total_options) 
+                                   % menu->total_options;
+        } else if(key == InputKeyDown) {
+            menu->selected_index = (menu->selected_index + 1) % menu->total_options;
+        }
+    } else {
+        // Scrolling navigation
+        handle_scrollable_menu_input(key, &menu->selected_index, 
+                                     &menu->scroll_offset, 
+                                     menu->total_options, 
+                                     MENU_MAX_VISIBLE_ITEMS);
+    }
+}
 
-// Draw callback - called whenever the screen needs to be redrawn
+void setup_menu(MenuState* menu, const char** options, int count) {
+    menu->options = options;
+    menu->total_options = count;
+    menu->selected_index = 0;
+    menu->scroll_offset = 0;
+}
+
+// =============================================================================
+// DRAWING FUNCTIONS
+// =============================================================================
+void draw_menu(Canvas* canvas, MenuState* menu) {
+    // Calculate height of menu frame and draw it
+    int frame_height = get_menu_frame_height(menu->total_options);
+    canvas_draw_frame(canvas, MENU_FRAME_X, MENU_FRAME_Y, MENU_FRAME_WIDTH, frame_height); 
+    // If there are more MENU_MAX_VISIBLE_ITEMS, scrolling is needed
+    int visible_items = (menu->total_options < MENU_MAX_VISIBLE_ITEMS) 
+                        ? menu->total_options 
+                        : MENU_MAX_VISIBLE_ITEMS;
+    int display_start = menu->scroll_offset;
+    int display_end = display_start + visible_items;   
+    // Write visible options onto canvas
+    canvas_set_font(canvas, FontSecondary);
+    for(int i = 0; i < visible_items && (display_start + i) < menu->total_options; i++) {
+        int option_index = display_start + i;
+        int y_pos = MENU_START_Y + (i * MENU_OPTION_HEIGHT);
+        canvas_draw_str(canvas, OPTION_TEXT_X, y_pos, menu->options[option_index]);
+    }
+    // Draw selection indicator which is a greater-symbol
+    if(menu->selected_index >= display_start && menu->selected_index < display_end) {
+        int indicator_line = menu->selected_index - display_start;
+        int y_pos = MENU_START_Y + (indicator_line * MENU_OPTION_HEIGHT);
+        canvas_draw_str(canvas, SELECTOR_X, y_pos, ">");
+    }  
+    // Draw navigation hints
+    int nav_icon_y = MENU_FRAME_Y + frame_height - 11;
+    canvas_draw_icon(canvas, 119, nav_icon_y, &I_ButtonUp_7x4);
+    canvas_draw_icon(canvas, 119, nav_icon_y + 5, &I_ButtonDown_7x4);
+}
+
+void draw_result_screen(Canvas* canvas, const Icon* icon, const char* title, const char* content) {
+    canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
+    if(icon != NULL) {
+        canvas_draw_icon(canvas, 118, 1, icon);
+    }
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, title);
+    canvas_set_font(canvas, FontSecondary);
+    elements_multiline_text_aligned(canvas, 1, 11, AlignLeft, AlignTop, content);
+    elements_button_left(canvas, "Prev.?");
+	elements_button_center(canvas, "OK");
+}
+
+
+
+// =============================================================================
+// MAIN CALLBACK - called whenever the screen needs to be redrawn
+// =============================================================================
 void draw_callback(Canvas* canvas, void* context) {
     AppState* state = context;  // Get app context to check current screen
 
@@ -128,18 +269,7 @@ void draw_callback(Canvas* canvas, void* context) {
 			// Level 1 Question
 			canvas_set_font(canvas, FontPrimary);
 			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "My tree has...");
-			canvas_draw_frame(canvas, 1, 11, 127, 34); // Menu box: x, y, w, h
-            // Level 1 Choices
-			canvas_set_font(canvas, FontSecondary);
-			canvas_draw_str(canvas, 7, 21, ".. needles.");
-            canvas_draw_str(canvas, 7, 31, ".. leaves.");
-            canvas_draw_str(canvas, 7, 41, "I don't know.");       
-            // Draw selection indicator
-            canvas_draw_str(canvas, 3, 21 + (state->selected_L1_option* 10), ">");
-						
-			// Navigation hints
-			canvas_draw_icon(canvas, 119, 34, &I_ButtonUp_7x4);
-			canvas_draw_icon(canvas, 119, 39, &I_ButtonDown_7x4);				
+			draw_menu(canvas, &state->level1_menu); // custom function, see definition above
 			canvas_draw_str_aligned(canvas, 1, 49, AlignLeft, AlignTop, "Press 'back'");	
 			canvas_draw_str_aligned(canvas, 1, 56, AlignLeft, AlignTop, "for splash.");	
 			elements_button_center(canvas, "OK"); // for the OK button
@@ -149,16 +279,7 @@ void draw_callback(Canvas* canvas, void* context) {
 			canvas_draw_icon(canvas, 118, 1, &I_NeedleTree_10x10); // icon with choosen option for level 1 		 
             canvas_set_font(canvas, FontPrimary);
 			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Needle-leaves are..");
-            canvas_draw_frame(canvas, 1, 11, 127, 24); // Menu box: x, y, w, h
-            // Level 2 Answer 1 Choices
-			canvas_set_font(canvas, FontSecondary);
-			canvas_draw_str(canvas, 7, 21, "long and pointed needles");
-            canvas_draw_str(canvas, 7, 31, "are small and flat scales");
-			// Draw selection indicator
-            canvas_draw_str(canvas, 3, 21 + (state->selected_L2_option* 10), ">");
-			// Navigation hints		
-			canvas_draw_icon(canvas, 119, 24, &I_ButtonUp_7x4);
-			canvas_draw_icon(canvas, 119, 29, &I_ButtonDown_7x4);	
+			draw_menu(canvas, &state->level2_needle_menu);	
 			elements_button_left(canvas, "Prev. ?"); 
 			elements_button_center(canvas, "OK"); // for the OK button
 			break;
@@ -167,16 +288,7 @@ void draw_callback(Canvas* canvas, void* context) {
 			canvas_draw_icon(canvas, 118, 1, &I_LeaveTree_10x10); // icon with choosen option for level 1 	
             canvas_set_font(canvas, FontPrimary);
 			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Broad leaves are..");
-            canvas_draw_frame(canvas, 1, 11, 127, 24); // Menu box: x, y, w, h
-			// Level 2 Answer 2 Choices
-			canvas_set_font(canvas, FontSecondary);
-            canvas_draw_str(canvas, 7, 21, "compound leaves w. leaflets");
-            canvas_draw_str(canvas, 7, 31, "single, undivided leaves");
-			// Draw selection indicator
-            canvas_draw_str(canvas, 3, 21 + (state->selected_L2_option* 10), ">");
-			// Navigation bar
-			canvas_draw_icon(canvas, 119, 24, &I_ButtonUp_7x4);
-			canvas_draw_icon(canvas, 119, 29, &I_ButtonDown_7x4);				
+			draw_menu(canvas, &state->level2_leaf_menu);			
 			elements_button_left(canvas, "Prev. ?"); 
 			elements_button_center(canvas, "OK"); // for the OK button
 			break;
@@ -184,38 +296,8 @@ void draw_callback(Canvas* canvas, void* context) {
 			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10); // icon with App logo
 			// canvas_draw_icon(canvas, 118, 1, &I_IconNotReady_10x10); 	
             canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "My tree's fruits...");
-            canvas_draw_frame(canvas, 1, 11, 127, 44); // Menu box for 4 visible items
-			canvas_set_font(canvas, FontSecondary);
-			const char* fruit_options[8] = {
-				"have segmented flesh & rind",
-				"are hard-shelled, dry (nut)",
-				"are winged (samara)",
-				"are fleshy w. hard stone",
-				"are woody cones",
-				"are soft berries",
-				"are fleshy with seeds inside",
-				"are different or not present"
-			};
-			// Calculate which 4 items to display
-			int display_start = state->fruit_scroll_offset;
-			int display_end = display_start + 4;
-			
-			// Write the 4 visible options onto the screen
-			canvas_set_font(canvas, FontSecondary);
-			for(int i = 0; i < 4 && (display_start + i) < 8; i++) {
-				int option_index = display_start + i;
-				canvas_draw_str(canvas, 7, 21 + (i * 10), fruit_options[option_index]);
-			}
-			
-			// Draw selection indicator at the correct position
-			if(state->selected_fruit_option >= display_start && 
-			   state->selected_fruit_option < display_end) {
-				int indicator_line = state->selected_fruit_option - display_start;
-				canvas_draw_str(canvas, 3, 21 + (indicator_line * 10), ">");
-			}
-			canvas_draw_icon(canvas, 119, 44, &I_ButtonUp_7x4);
-			canvas_draw_icon(canvas, 119, 49, &I_ButtonDown_7x4);					
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "My trees fruit..");
+			draw_menu(canvas, &state->fruit_menu); 		
 			elements_button_left(canvas, "Prev. ?"); 
 			elements_button_center(canvas, "OK"); // for the OK button
 			break;
@@ -224,16 +306,7 @@ void draw_callback(Canvas* canvas, void* context) {
 			canvas_draw_icon(canvas, 118, 1, &I_NeedleTree_10x10); // icon with choosen option for level 1 				
 			canvas_set_font(canvas, FontPrimary);
 			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Where are needles?");
-            canvas_draw_frame(canvas, 1, 11, 127, 34); // Menu box: x, y, w, h
-			canvas_set_font(canvas, FontSecondary);
-			canvas_draw_str(canvas, 7, 21, "Only on long shoots");
-            canvas_draw_str(canvas, 7, 31, "On short shoots");
-            canvas_draw_str(canvas, 7, 41, "Both on long& short shoots");
-			// Draw selection indicator
-            canvas_draw_str(canvas, 3, 21 + (state->selected_L3_option* 10), ">");
-			// Navigation hints		
-			canvas_draw_icon(canvas, 119, 34, &I_ButtonUp_7x4);
-			canvas_draw_icon(canvas, 119, 39, &I_ButtonDown_7x4);	
+            draw_menu(canvas, &state->level3_needle_location);
 			elements_button_left(canvas, "Prev.?"); 
 			elements_button_center(canvas, "OK");
 			break;
@@ -251,16 +324,7 @@ void draw_callback(Canvas* canvas, void* context) {
 			// canvas_draw_icon(canvas, 118, 1, &I_LeaveTree_10x10); // icon with choosen option for level 1 	
 			canvas_set_font(canvas, FontPrimary);
 			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Leaflets' arrangement?");
-            canvas_draw_frame(canvas, 1, 11, 127, 34); // Menu box: x, y, w, h
-			canvas_set_font(canvas, FontSecondary);
-			canvas_draw_str(canvas, 7, 21, "Odd #, single terminal leaflet");
-            canvas_draw_str(canvas, 7, 31, "Even #, no terminal leaflet");
-            canvas_draw_str(canvas, 7, 41, "Leaflets radiate from point");
-			// Draw selection indicator
-            canvas_draw_str(canvas, 3, 21 + (state->selected_L3_option* 10), ">");
-			// Navigation hints		
-			canvas_draw_icon(canvas, 119, 34, &I_ButtonUp_7x4);
-			canvas_draw_icon(canvas, 119, 39, &I_ButtonDown_7x4);	
+            draw_menu(canvas, &state->level3_needle_location);
 			elements_button_left(canvas, "Prev.?"); 
 			elements_button_center(canvas, "OK");
 			break;
@@ -269,16 +333,7 @@ void draw_callback(Canvas* canvas, void* context) {
 			canvas_draw_icon(canvas, 118, 1, &I_LeaveTree_10x10); // icon with choosen option for level 1 	
 			canvas_set_font(canvas, FontPrimary);
 			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Type of leaf margin?");
-            canvas_draw_frame(canvas, 1, 11, 127, 34); // Menu box: x, y, w, h
-			canvas_set_font(canvas, FontSecondary);
-			canvas_draw_str(canvas, 7, 21, "Big rounded o.pointed bumps");
-            canvas_draw_str(canvas, 7, 31, "Leaf margin is smooth");
-            canvas_draw_str(canvas, 7, 41, "Small teeth or cuts");
-			// Draw selection indicator
-            canvas_draw_str(canvas, 3, 21 + (state->selected_L3_option* 10), ">");
-			// Navigation hints		
-			canvas_draw_icon(canvas, 119, 34, &I_ButtonUp_7x4);
-			canvas_draw_icon(canvas, 119, 39, &I_ButtonDown_7x4);	
+            draw_menu(canvas, &state->level3_leaf_margin);  
 			elements_button_left(canvas, "Prev.?"); 
 			elements_button_center(canvas, "OK");
 			break;
@@ -362,17 +417,24 @@ void input_callback(InputEvent* event, void* context) {
     furi_message_queue_put(app->input_queue, event, 0);
 }
 
+// =============================================================================
+// MAIN APPLICATION
+// =============================================================================
 int32_t tree_ident_main(void* p) {
     UNUSED(p);
 
     AppState app; // Application state struct
 	app.current_screen = ScreenSplash;  // Start on first screen (0)
-	app.selected_L1_option= 0; // Level 1: Start with first line highlighted
-	app.selected_L2_option= 0; // Level 2: Start with first line highlighted
-	app.selected_L3_option= 0; // Level 3: Start with first line highlighted
-	app.selected_fruit_option = 0;
-	app.fruit_scroll_offset = 0;	
-
+	
+	// Initialize Menu States
+	setup_menu(&app.level1_menu, level1_options, 3);
+    setup_menu(&app.level2_needle_menu, needle_type_options, 2);
+    setup_menu(&app.level2_leaf_menu, leaf_type_options, 2);
+    setup_menu(&app.level3_needle_location, needle_location_options, 3);
+    setup_menu(&app.level3_leaflet_arrange, leaflet_arrangement_options, 3);
+    setup_menu(&app.level3_leaf_margin, leaf_margin_options, 3);
+	setup_menu(&app.fruit_menu, fruit_options, 8);
+	
     // Allocate resources for rendering and 
     app.view_port = view_port_alloc(); // for rendering
     app.input_queue = furi_message_queue_alloc(1, sizeof(InputEvent)); // Only one element in queue
@@ -396,39 +458,58 @@ int32_t tree_ident_main(void* p) {
 		// Handle button presses based on current screen
         switch(input.key) {
 		case InputKeyUp:
-			if(app.current_screen == ScreenL1Question && input.type == InputTypePress) {
-				app.selected_L1_option= (app.selected_L1_option- 1 + 3) % 3;
-			}
-			if((app.current_screen == ScreenL1_A1 || app.current_screen == ScreenL1_A2)
-				&& input.type == InputTypePress) {
-				app.selected_L2_option= (app.selected_L2_option- 1 + 2) % 2;
-			}
-			if((app.current_screen == ScreenL2_A1_1 || app.current_screen == ScreenL2_A2_1 || app.current_screen == ScreenL2_A2_2)
-				&& input.type == InputTypePress) {
-				app.selected_L3_option= (app.selected_L3_option- 1 + 3) % 3;
-			}
-			if(app.current_screen == ScreenL1_A3 && input.type == InputTypePress) {  // Handle fruit menu scrolling
-				handle_scrollable_menu_input(InputKeyUp, &app.selected_fruit_option, 
-					&app.fruit_scroll_offset, 8, 4);
+			if(input.type == InputTypePress) {
+				switch(app.current_screen) {
+					case ScreenL1Question:
+						handle_menu_input(&app.level1_menu, InputKeyUp, input.type);
+						break;
+					case ScreenL1_A1:
+						handle_menu_input(&app.level2_needle_menu, InputKeyUp, input.type);
+						break;
+					case ScreenL1_A2:
+						handle_menu_input(&app.level2_leaf_menu, InputKeyUp, input.type);
+						break;
+					case ScreenL1_A3:
+						handle_menu_input(&app.fruit_menu, InputKeyUp, input.type);
+						break;
+					case ScreenL2_A1_1:
+						handle_menu_input(&app.level3_needle_location, InputKeyUp, input.type);
+						break;
+					case ScreenL2_A2_1:
+						handle_menu_input(&app.level3_leaflet_arrange, InputKeyUp, input.type);
+						break;
+					case ScreenL2_A2_2:
+						handle_menu_input(&app.level3_leaf_margin, InputKeyUp, input.type);
+						break;
+				}
 			}
 			break;
 		case InputKeyDown:
-			if(app.current_screen == ScreenL1Question && input.type == InputTypePress) {
-				app.selected_L1_option= (app.selected_L1_option+ 1) % 3;
-			}
-			if((app.current_screen == ScreenL1_A1 || app.current_screen == ScreenL1_A2)
-				&& input.type == InputTypePress) {
-				app.selected_L2_option= (app.selected_L2_option+ 1) % 2;
-			}
-			if((app.current_screen == ScreenL2_A1_1 || app.current_screen == ScreenL2_A2_1 || app.current_screen == ScreenL2_A2_2)
-				&& input.type == InputTypePress) {
-				app.selected_L3_option= (app.selected_L3_option+ 1) % 3;
-			}
-			// Handle fruit menu scrolling
-			if(app.current_screen == ScreenL1_A3 && input.type == InputTypePress) {		
-				handle_scrollable_menu_input(InputKeyDown, &app.selected_fruit_option, 
-                                 &app.fruit_scroll_offset, 8, 4);
-			}			
+			if(input.type == InputTypePress) {
+				switch(app.current_screen) {
+					case ScreenL1Question:
+						handle_menu_input(&app.level1_menu, InputKeyDown, input.type);
+						break;
+					case ScreenL1_A1:
+						handle_menu_input(&app.level2_needle_menu, InputKeyDown, input.type);
+						break;
+					case ScreenL1_A2:
+						handle_menu_input(&app.level2_leaf_menu, InputKeyDown, input.type);
+						break;
+					case ScreenL1_A3:
+						handle_menu_input(&app.fruit_menu, InputKeyDown, input.type);
+						break;
+					case ScreenL2_A1_1:
+						handle_menu_input(&app.level3_needle_location, InputKeyDown, input.type);
+						break;
+					case ScreenL2_A2_1:
+						handle_menu_input(&app.level3_leaflet_arrange, InputKeyDown, input.type);
+						break;
+					case ScreenL2_A2_2:
+						handle_menu_input(&app.level3_leaf_margin, InputKeyDown, input.type);
+						break;
+				}
+			}		
 			break;
 		case InputKeyOk:
 			if (input.type == InputTypePress){
@@ -437,44 +518,44 @@ int32_t tree_ident_main(void* p) {
 						app.current_screen = ScreenL1Question;  // Move to second screen
 						break;
 					case ScreenL1Question:
-						switch (app.selected_L1_option){
+						switch (app.level1_menu.selected_index){
 							case 0: app.current_screen = ScreenL1_A1; break;
 							case 1: app.current_screen = ScreenL1_A2; break;
 							case 2: app.current_screen = ScreenL1_A3; break;
 						}
 						break;
 					case ScreenL1_A1: // Needles
-						switch (app.selected_L2_option){
+						switch (app.level2_needle_menu.selected_index){
 							case 0: app.current_screen = ScreenL2_A1_1; break;
 							case 1: app.current_screen = ScreenL2_A1_2; break;
 						}
 						break;
 					case ScreenL1_A2: // Leaves
-						switch (app.selected_L2_option){
+						switch (app.level2_leaf_menu.selected_index){
 							case 0: app.current_screen = ScreenL2_A2_1; break;
 							case 1: app.current_screen = ScreenL2_A2_2; break;
 						}
 						break;
 					case ScreenL1_A3:  // Fruit type selection
-						app.current_screen = FRUIT_SCREENS[app.selected_fruit_option];
+						app.current_screen = FRUIT_SCREENS[app.fruit_menu.selected_index];
 						break;
                 break;
 					case ScreenL2_A1_1: // Where are the needles?
-						switch (app.selected_L3_option){
+						switch (app.level3_needle_location.selected_index){
 							case 0: app.current_screen = ScreenL3_A1_1_1; break;
 							case 1: app.current_screen = ScreenL3_A1_1_2; break;
 							case 2: app.current_screen = ScreenL3_A1_1_3; break;
 						}
 						break;
 					case ScreenL2_A2_1: // How are leaflets arranged?
-						switch (app.selected_L3_option){
+						switch (app.level3_leaflet_arrange.selected_index){
 							case 0: app.current_screen = ScreenL3_A2_1_1; break;
 							case 1: app.current_screen = ScreenL3_A2_1_2; break;
 							case 2: app.current_screen = ScreenL3_A2_1_3; break;
 						}
 						break;
 					case ScreenL2_A2_2: // Type of leaf margin?
-						switch (app.selected_L3_option){
+						switch (app.level3_leaflet_arrange.selected_index){
 							case 0: app.current_screen = ScreenL3_A2_2_1; break;
 							case 1: app.current_screen = ScreenL3_A2_2_2; break;
 							case 2: app.current_screen = ScreenL3_A2_2_3; break;
@@ -575,29 +656,26 @@ int32_t tree_ident_main(void* p) {
 				break;
 			}
 			break;
-        case InputKeyRight:
-		    switch (app.current_screen) {
-				case ScreenL1Question:
-					switch (app.selected_L1_option){
-						case 0: app.current_screen = ScreenL1_A1; break;
-						case 1: app.current_screen = ScreenL1_A2; break;
-						case 2: app.current_screen = ScreenL1_A3; break;
-					}
-					break;
-				default: break;
-            }
-            break;
-        default:
-            break;
+			case InputKeyRight:
+				switch (app.current_screen) {
+					case ScreenL1Question:
+						switch (app.level1_menu.selected_index){
+							case 0: app.current_screen = ScreenL1_A1; break;
+							case 1: app.current_screen = ScreenL1_A2; break;
+							case 2: app.current_screen = ScreenL1_A3; break;
+						}
+						break;
+					default: break;
+				}
+				break;
+			default:
+				break;
         }
 		
 		// Exit main app loop if exit flag is set
-        if(exit_loop) {
-            break;
-        }
-
+        if(exit_loop) break; 
 		// Trigger screen redraw
-        view_port_update(app.view_port);
+		view_port_update(app.view_port);
     }
 
     // Cleanup: Free all allocated resources
