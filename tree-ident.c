@@ -27,7 +27,7 @@ typedef enum {
 	ScreenL3_A2_2_1,  // Big rounded or pointed bumps
 	ScreenL3_A2_2_2,  // Leaf margin is smooth
 	ScreenL3_A2_2_3,  // Small teeth or cuts
-	Screen_Fruit_Unknown,
+	Screen_Fruit_Citrus,
     Screen_Fruit_Nut,
     Screen_Fruit_Samara,
     Screen_Fruit_Drupe,
@@ -36,6 +36,17 @@ typedef enum {
     Screen_Fruit_Pome,
     Screen_Fruit_Other
 } AppScreen;
+
+static const AppScreen FRUIT_SCREENS[] = {
+    Screen_Fruit_Citrus,
+    Screen_Fruit_Nut,
+    Screen_Fruit_Samara,
+    Screen_Fruit_Drupe,
+    Screen_Fruit_Cone,
+    Screen_Fruit_Berry,
+    Screen_Fruit_Pome,
+    Screen_Fruit_Other
+};
 
 // Main application structure
 typedef struct {
@@ -49,6 +60,35 @@ typedef struct {
 	int selected_fruit_option;      // 0-7 for the 8 options
 	int fruit_scroll_offset;        // Track scroll position (0-4)
 } AppState;
+
+void draw_result_screen(Canvas* canvas, const Icon* icon, const char* title, const char* content) {
+    canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
+    if(icon != NULL) {
+        canvas_draw_icon(canvas, 118, 1, icon);
+    }
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, title);
+    canvas_set_font(canvas, FontSecondary);
+    elements_multiline_text_aligned(canvas, 1, 11, AlignLeft, AlignTop, content);
+    elements_button_left(canvas, "Prev.?");
+	elements_button_center(canvas, "OK");
+}
+
+void handle_scrollable_menu_input(InputKey key, int* selected, int* scroll_offset, 
+                                   int total_items, int visible_items) {
+    if(key == InputKeyUp && *selected > 0) {
+        (*selected)--;
+        if(*selected < *scroll_offset) {
+            *scroll_offset = *selected;
+        }
+    } else if(key == InputKeyDown && *selected < total_items - 1) { // Adjust scroll if selection goes below visible area
+        (*selected)++;
+        if(*selected >= *scroll_offset + visible_items) {
+            *scroll_offset = *selected - visible_items + 1;
+        }
+    }
+}
+
 
 // Draw callback - called whenever the screen needs to be redrawn
 void draw_callback(Canvas* canvas, void* context) {
@@ -78,7 +118,7 @@ void draw_callback(Canvas* canvas, void* context) {
 			canvas_draw_str_aligned(canvas, 1, 57, AlignLeft, AlignTop, "to exit.");
 			
 			canvas_draw_str_aligned(canvas, 100, 54, AlignLeft, AlignTop, "F. Greil");
-			canvas_draw_str_aligned(canvas, 110, 1, AlignLeft, AlignTop, "v0.5");
+			canvas_draw_str_aligned(canvas, 110, 1, AlignLeft, AlignTop, "v0.4");
 			
 			// Draw button hints at bottom using elements library
 			elements_button_center(canvas, "OK"); // for the OK button
@@ -144,18 +184,18 @@ void draw_callback(Canvas* canvas, void* context) {
 			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10); // icon with App logo
 			// canvas_draw_icon(canvas, 118, 1, &I_IconNotReady_10x10); 	
             canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "My tree's fruit are..");
+			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "My tree's fruits...");
             canvas_draw_frame(canvas, 1, 11, 127, 44); // Menu box for 4 visible items
 			canvas_set_font(canvas, FontSecondary);
 			const char* fruit_options[8] = {
-				"not present.",
-				"hard nut with shell",
-				"winged fruit (samara)",
-				"fleshy w. hard stone",
-				"woody cone",
-				"soft berries",
-				"fleshy, w. seeds inside",
-				"something else"
+				"have segmented flesh & rind",
+				"are hard-shelled, dry (nut)",
+				"are winged (samara)",
+				"are fleshy w. hard stone",
+				"are woody cones",
+				"are soft berries",
+				"are fleshy with seeds inside",
+				"are different or not present"
 			};
 			// Calculate which 4 items to display
 			int display_start = state->fruit_scroll_offset;
@@ -243,174 +283,74 @@ void draw_callback(Canvas* canvas, void* context) {
 			elements_button_center(canvas, "OK");
 			break;
 		case ScreenL3_A1_1_1: // Level 3: Needles only on long shoots
-			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
-			canvas_draw_icon(canvas, 118, 1, &I_NeedleTree_10x10);
-			canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "On long shoots");
-            canvas_set_font(canvas, FontSecondary);
-            elements_multiline_text_aligned(canvas,1,11,AlignLeft,AlignTop,
-			  "Fir, Spruce, Hemlock, Yew.");
-			elements_button_left(canvas, "Prev.?"); 
+			draw_result_screen(canvas, &I_NeedleTree_10x10, "On long shoots", 
+                      "Fir, Spruce, Hemlock, Yew.");		
 			break;
 		case ScreenL3_A1_1_2: // Level 3: Needles on short shoots
-			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
-			canvas_draw_icon(canvas, 118, 1, &I_NeedleTree_10x10);
-			canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "On short shoots");
-            canvas_set_font(canvas, FontSecondary);
-			elements_multiline_text_aligned(canvas,1,11,AlignLeft,AlignTop,
-			  "Larch, Cedar.");
-			elements_button_left(canvas, "Prev.?"); 
+			draw_result_screen(canvas, &I_NeedleTree_10x10, "On short shoots",
+                      "Larch, Cedar.");
 			break;
 		case ScreenL3_A1_1_3: // Level 3: Needles on long and short shoots
-			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
-			canvas_draw_icon(canvas, 118, 1, &I_NeedleTree_10x10);
-			canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "On all shoots");
-            canvas_set_font(canvas, FontSecondary);
-            elements_multiline_text_aligned(canvas,1,11,AlignLeft,AlignTop,
-			  "Pines.");
-			elements_button_left(canvas, "Prev.?"); 
+			draw_result_screen(canvas, &I_NeedleTree_10x10, "On all shoots",
+                      "Pines.");
 			break;
 		case ScreenL3_A2_1_1: // Level 3: Odd-pinnate leaves / unpaarig gefiedert
-			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
-			canvas_draw_icon(canvas, 118, 1, &I_Imparipinnate_10x10);
-			canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Odd-pinnate leaves");
-            canvas_set_font(canvas, FontSecondary);
-			elements_multiline_text_aligned(canvas,1,11,AlignLeft,AlignTop,
-			  "European ash, Rowan, Common walnut, Elder, False acacia, Black walnut, Hickory, Sumac, Yellowwood, ..");
-			elements_button_left(canvas, "Prev.?"); 
+			draw_result_screen(canvas, &I_Imparipinnate_10x10, "Odd-pinnate leaves",
+                      "European ash, Rowan, Common walnut, Elder, False acacia, Black walnut, Hickory, Sumac, Yellowwood, ..");
+    break;
 			break;
 		case ScreenL3_A2_1_2: // Level 3: Even-pinnate leaves / paarig gefiedert
-			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10); 
-			canvas_draw_icon(canvas, 118, 1, &I_Paripinnate_10x10);
-			canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Even-pinnate leaves");
-            canvas_set_font(canvas, FontSecondary);
-			elements_multiline_text_aligned(canvas,1,11,AlignLeft,AlignTop,
-			  "Locust, Carob tree, Laburnum, Mimosa, Judas tree, ..");
-			elements_button_left(canvas, "Prev.?"); 
+			draw_result_screen(canvas, &I_Paripinnate_10x10, "Even-pinnate leaves",
+                      "Locust, Carob tree, Laburnum, Mimosa, Judas tree, ..");
 			break;
 		case ScreenL3_A2_1_3: // Level 3: Palmate leaves / gefingert
-			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
-			canvas_draw_icon(canvas, 118, 1, &I_Palmate_10x10);
-			canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Palmate leaves");
-            canvas_set_font(canvas, FontSecondary);
-            elements_multiline_text_aligned(canvas,1,11,AlignLeft,AlignTop,
-			  "Horse chestnut, Maple, Sycamore, Vine, Fig, ..");
-			elements_button_left(canvas, "Prev.?"); 
+			draw_result_screen(canvas, &I_Palmate_10x10, "Palmate leaves",
+                      "Horse chestnut, Maple, Sycamore, Vine, Fig, ..");
 			break;
 		case ScreenL3_A2_2_1: // Level 3: Lobed leaves / Gelappte Laubblätter
-			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
-			canvas_draw_icon(canvas, 118, 1, &I_Lobed_10x10);
-			canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Lobed leaf");
-            canvas_set_font(canvas, FontSecondary);
-            elements_multiline_text_aligned(canvas,1,11,AlignLeft,AlignTop,
-			  "Oak, Hawthorn, White polar, London plane, Mulberry, Ginkgo, Sassafras, ..");
-			elements_button_left(canvas, "Prev.?"); 
+			draw_result_screen(canvas, &I_Lobed_10x10, "Lobed leaf",
+                      "Oak, Hawthorn, White polar, London plane, Mulberry, Ginkgo, Sassafras, ..");
 			break;
 		case ScreenL3_A2_2_2: // Level 3: Entire leaves / Ganzrandige Laubblätter
-			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
-			canvas_draw_icon(canvas, 118, 1, &I_Entire_10x10);
-			canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Entire leaf");
-            canvas_set_font(canvas, FontSecondary);
-            elements_multiline_text_aligned(canvas,1,11,AlignLeft,AlignTop,
-			  "European beech, Common box, Laurel, Holly, Magnolia, Olive, Pear, Dogwood, ..)");
-			elements_button_left(canvas, "Prev.?"); 
+    		draw_result_screen(canvas, &I_Entire_10x10, "Entire leaf",
+                      "European beech, Common box, Laurel, Holly, Magnolia, Olive, Pear, Dogwood, ..)");
 			break;
 		case ScreenL3_A2_2_3: // Level 3: Serrated or notched leaves
-			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
-			canvas_draw_icon(canvas, 118, 1, &I_Notched_10x10);
-			canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Notched leaf");
-            canvas_set_font(canvas, FontSecondary);
-			elements_multiline_text_aligned(canvas,1,11,AlignLeft,AlignTop,
-			  "Silver birch, European hornbeam, Com.hazel, Elm, Sweet chestnut, Alder, Aspen, Apple, Cherry, Plum, ..");
-			elements_button_left(canvas, "Prev.?"); 
+			draw_result_screen(canvas, &I_Notched_10x10, "Notched leaf",
+                      "Silver birch, European hornbeam, Com.hazel, Elm, Sweet chestnut, Alder, Aspen, Apple, Cherry, Plum, ..");
 			break;
-		case Screen_Fruit_Unknown:
-			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
-			// canvas_draw_icon(canvas, 118, 1, &I_TBD_10x10);
-			canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Unknown fruit");
-			canvas_set_font(canvas, FontSecondary);
-			elements_multiline_text_aligned(canvas, 1, 11, AlignLeft, AlignTop,
-				"Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
-			elements_button_left(canvas, "Prev.?");
+		// Fruit identification results
+		case Screen_Fruit_Citrus:
+			draw_result_screen(canvas, &I_Citrus_10x10, "Citrus",
+					  "Leathery rind and segmented flesh: oranges, lemons, ..");
 			break;
 		case Screen_Fruit_Nut:
-			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
-			// canvas_draw_icon(canvas, 118, 1, &I_TBD_10x10);
-			canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Nut");
-			canvas_set_font(canvas, FontSecondary);
-			elements_multiline_text_aligned(canvas, 1, 11, AlignLeft, AlignTop,
-				"Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
-			elements_button_left(canvas, "Prev.?");
+			draw_result_screen(canvas, &I_Nut_10x10, "Nut",
+					  "A hard-shelled, dry fruit with a single seed that doesn't split open: acorns, hazelnuts, ..");
 			break;
 		case Screen_Fruit_Samara:
-			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
-			// canvas_draw_icon(canvas, 118, 1, &I_TBD_10x10);
-			canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Samara");
-			canvas_set_font(canvas, FontSecondary);
-			elements_multiline_text_aligned(canvas, 1, 11, AlignLeft, AlignTop,
-				"Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
-			elements_button_left(canvas, "Prev.?");
+			draw_result_screen(canvas, &I_Samara_10x10, "Samara",
+					  "A winged, dry fruit that doesn't split open: maple, elm seeds ..");
 			break;
 		case Screen_Fruit_Drupe:
-			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
-			// canvas_draw_icon(canvas, 118, 1, &I_TBD_10x10);
-			canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Drupe");
-			canvas_set_font(canvas, FontSecondary);
-			elements_multiline_text_aligned(canvas, 1, 11, AlignLeft, AlignTop,
-				"Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
-			elements_button_left(canvas, "Prev.?");
+			draw_result_screen(canvas, &I_Drupe_10x10, "Drupe",
+					  "Fleshy fruit with a hard stone enclosing a single seed (e.g., peaches, cherries, olives)");
 			break;
 		case Screen_Fruit_Cone:
-			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
-			// canvas_draw_icon(canvas, 118, 1, &I_TBD_10x10);
-			canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Cone");
-			canvas_set_font(canvas, FontSecondary);
-			elements_multiline_text_aligned(canvas, 1, 11, AlignLeft, AlignTop,
-				"Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
-			elements_button_left(canvas, "Prev.?");
+			draw_result_screen(canvas, &I_Cone_10x10, "Cone",
+					  "Seed-bearing structure with overlapping scales: pine/ spruce cones.");
 			break;
 		case Screen_Fruit_Berry:
-			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
-			// canvas_draw_icon(canvas, 118, 1, &I_TBD_10x10);
-			canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Berry");
-			canvas_set_font(canvas, FontSecondary);
-			elements_multiline_text_aligned(canvas, 1, 11, AlignLeft, AlignTop,
-				"Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
-			elements_button_left(canvas, "Prev.?");
+			draw_result_screen(canvas, &I_Berry_10x10, "Berry",
+					  "Fleshy fruit from single ovary w. seeds embedded in the flesh: tomatoes, blueberries, ..");
 			break;
 		case Screen_Fruit_Pome:
-			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
-			// canvas_draw_icon(canvas, 118, 1, &I_TBD_10x10);
-			canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Pome");
-			canvas_set_font(canvas, FontSecondary);
-			elements_multiline_text_aligned(canvas, 1, 11, AlignLeft, AlignTop,
-				"Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
-			elements_button_left(canvas, "Prev.?");
+			draw_result_screen(canvas, &I_Pome_10x10, "Pome",
+					  "Fleshy fruit where outer part comes from floral tube, not the ovary: apples, pears, ..");
 			break;
 		case Screen_Fruit_Other:
-			canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);
-			// canvas_draw_icon(canvas, 118, 1, &I_TBD_10x10);
-			canvas_set_font(canvas, FontPrimary);
-			canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Other fruit");
-			canvas_set_font(canvas, FontSecondary);
-			elements_multiline_text_aligned(canvas, 1, 11, AlignLeft, AlignTop,
-				"Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
-			elements_button_left(canvas, "Prev.?");
+			draw_result_screen(canvas, &I_IDK_10x10, "Other fruit",
+					  "Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
 			break;		
     }
 }
@@ -468,12 +408,8 @@ int32_t tree_ident_main(void* p) {
 				app.selected_L3_option= (app.selected_L3_option- 1 + 3) % 3;
 			}
 			if(app.current_screen == ScreenL1_A3 && input.type == InputTypePress) {  // Handle fruit menu scrolling
-				if(app.selected_fruit_option > 0) {
-					app.selected_fruit_option--;	
-					if(app.selected_fruit_option < app.fruit_scroll_offset) { // Adjust scroll if selection goes above visible area
-						app.fruit_scroll_offset = app.selected_fruit_option;
-					}
-				}
+				handle_scrollable_menu_input(InputKeyUp, &app.selected_fruit_option, 
+					&app.fruit_scroll_offset, 8, 4);
 			}
 			break;
 		case InputKeyDown:
@@ -488,15 +424,10 @@ int32_t tree_ident_main(void* p) {
 				&& input.type == InputTypePress) {
 				app.selected_L3_option= (app.selected_L3_option+ 1) % 3;
 			}
-			// NEW: Handle fruit menu scrolling
-			if(app.current_screen == ScreenL1_A3 && input.type == InputTypePress) {
-				if(app.selected_fruit_option < 7) {  // 0-7 = 8 options
-					app.selected_fruit_option++;
-					// Adjust scroll if selection goes below visible area
-					if(app.selected_fruit_option >= app.fruit_scroll_offset + 4) {
-						app.fruit_scroll_offset = app.selected_fruit_option - 3;
-					}
-				}
+			// Handle fruit menu scrolling
+			if(app.current_screen == ScreenL1_A3 && input.type == InputTypePress) {		
+				handle_scrollable_menu_input(InputKeyDown, &app.selected_fruit_option, 
+                                 &app.fruit_scroll_offset, 8, 4);
 			}			
 			break;
 		case InputKeyOk:
@@ -525,16 +456,8 @@ int32_t tree_ident_main(void* p) {
 						}
 						break;
 					case ScreenL1_A3:  // Fruit type selection
-					switch (app.selected_fruit_option) {
-						case 0: app.current_screen = Screen_Fruit_Unknown; break;
-						case 1: app.current_screen = Screen_Fruit_Nut; break;
-						case 2: app.current_screen = Screen_Fruit_Samara; break;
-						case 3: app.current_screen = Screen_Fruit_Drupe; break;
-						case 4: app.current_screen = Screen_Fruit_Cone; break;
-						case 5: app.current_screen = Screen_Fruit_Berry; break;
-						case 6: app.current_screen = Screen_Fruit_Pome; break;
-						case 7: app.current_screen = Screen_Fruit_Other; break;
-					}
+						app.current_screen = FRUIT_SCREENS[app.selected_fruit_option];
+						break;
                 break;
 					case ScreenL2_A1_1: // Where are the needles?
 						switch (app.selected_L3_option){
@@ -557,7 +480,7 @@ int32_t tree_ident_main(void* p) {
 							case 2: app.current_screen = ScreenL3_A2_2_3; break;
 						}
 						break;
-					case Screen_Fruit_Unknown:
+					case Screen_Fruit_Citrus:
 					case Screen_Fruit_Nut:
 					case Screen_Fruit_Samara:
 					case Screen_Fruit_Drupe:
@@ -566,7 +489,7 @@ int32_t tree_ident_main(void* p) {
 					case Screen_Fruit_Pome:
 					case Screen_Fruit_Other:
 						if(input.type == InputTypePress) {
-							app.current_screen = ScreenL1Question;
+							app.current_screen = ScreenL1_A3;
 						}
 						break;
 					default:
@@ -632,6 +555,19 @@ int32_t tree_ident_main(void* p) {
 					case ScreenL3_A2_2_2:
 					case ScreenL3_A2_2_3:
 						app.current_screen = ScreenL2_A2_2;
+						break;
+						break;
+					case Screen_Fruit_Citrus:
+					case Screen_Fruit_Nut:
+					case Screen_Fruit_Samara:
+					case Screen_Fruit_Drupe:
+					case Screen_Fruit_Cone:
+					case Screen_Fruit_Berry:
+					case Screen_Fruit_Pome:
+					case Screen_Fruit_Other:
+						if(input.type == InputTypePress) {
+							app.current_screen = ScreenL1_A3;
+						}
 						break;
 					default:
 						break;
