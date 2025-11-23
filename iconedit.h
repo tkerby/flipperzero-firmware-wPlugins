@@ -7,7 +7,7 @@
 
 #define TAG             "IE"
 #define APP_NAME        "IconEdit"
-#define VERSION         "0.5"
+#define VERSION         "0.6"
 #define ENABLE_XBM_SAVE // Enables XBM file save
 
 typedef struct {
@@ -29,7 +29,7 @@ typedef enum {
 
     // modal panels
     Panel_Playback,
-    Panel_SaveAs, // PNG, XBM, .C
+    Panel_SaveAs, // PNG, XBM, .C, BMX
     Panel_New, // dimension prompt
     Panel_FPS, // select FPS
     Panel_SendUSB,
