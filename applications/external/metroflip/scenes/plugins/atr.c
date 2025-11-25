@@ -39,7 +39,6 @@ static void atr_on_enter(Metroflip* app) {
     popup_set_icon(popup, 0, 3, &I_RFIDDolphinReceive_97x61);
 
     // Start worker
-    nfc_scanner_alloc(app->nfc);
     app->poller = nfc_poller_alloc(app->nfc, NfcProtocolIso14443_4a);
     nfc_poller_start(app->poller, atr_poller_callback_iso14443_4a, app);
 
@@ -64,10 +63,11 @@ static bool atr_on_event(Metroflip* app, SceneManagerEvent event) {
                 nfc_device_get_data(app->nfc_device, NfcProtocolIso14443_4a);
             uint32_t hist_bytes_count;
             const uint8_t* hist_bytes = iso14443_4a_get_historical_bytes(data, &hist_bytes_count);
-
+            FURI_LOG_I(TAG, "Historical bytes count: %ld", hist_bytes_count);
             if(hist_bytes && hist_bytes_count > 0) {
-                memcpy(app->hist_bytes, hist_bytes, hist_bytes_count);
-                app->hist_bytes_count = hist_bytes_count;
+                memcpy(
+                    app->hist_bytes, hist_bytes, MIN(hist_bytes_count, sizeof(app->hist_bytes)));
+                app->hist_bytes_count = MIN(hist_bytes_count, sizeof(app->hist_bytes));
             }
             scene_manager_next_scene(app->scene_manager, MetroflipSceneParse);
             consumed = true;

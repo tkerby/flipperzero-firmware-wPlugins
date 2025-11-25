@@ -40,35 +40,40 @@ typedef enum {
     AppState_StartConfirm, // Nowy stan dla ekranu potwierdzenia startu
 } AppState;
 
-// Enumeration for options in the settings menu
+// lista opcji w menu - kazda to osobna pozycja
 typedef enum {
-    SettingsItem_Start, // <-- new Start item as first option
-    SettingsItem_Address,
-    SettingsItem_Gain,
-    SettingsItem_Channel, // <-- added channel selection
-    SettingsItem_DarkMode, // Nowa opcja
-    SettingsItem_Count
+    SettingsItem_Start, // przycisk start zeby ruszyc pomiary
+    SettingsItem_Address, // adres i2c sensora 0x10 albo 0x11
+    SettingsItem_Gain, // gain sensora - 1/8, 1/4, 1, 2
+    SettingsItem_Channel, // kanal ALS albo WHITE
+    SettingsItem_RefreshRate, // jak czesto odswiezac - dodalem to zeby mozna bylo zwolnic/przyspieszyc
+    SettingsItem_DarkMode, // dark mode bo fajnie wyglada
+    SettingsItem_Count // to musi byc na koncu! liczy ile jest opcji
 } SettingsItem;
 
-// Structure to store application state
+// struktura z caloscia apki - tu trzymam wszystkie zmienne
 typedef struct {
-    Gui* gui;
-    ViewPort* view_port;
-    FuriMutex* mutex;
-    AppState current_state;
-    float lux_value;
-    bool running;
-    bool is_sensor_initialized;
+    // podstawowe rzeczy z systemu flippera
+    Gui* gui; // pointer do gui
+    ViewPort* view_port; // viewport czyli miejsce gdzie sie rysuje
+    FuriMutex* mutex; // mutex zeby nie bylo syfu jak 2 watki chca to samo zmienic
 
-    // Variables for settings
-    uint8_t settings_cursor;
-    uint8_t i2c_address;
-    uint8_t als_gain; // 0=1/8, 1=1/4, 2=1, 3=2
-    uint8_t channel; // 0 = ALS, 1 = WHITE
-    bool started; // <-- new: whether measurements are started
+    // stan apki
+    AppState current_state; // na ktorym ekranie jestem (menu, settings etc)
+    float lux_value; // aktualna wartosc luxow
+    bool running; // czy apka dziala czy ma sie wylaczyc
+    bool is_sensor_initialized; // czy sensor sie odezwal
 
-    // New variables for additional features
-    bool dark_mode; // Tryb ciemny
+    // ustawienia ktore user moze zmienic
+    uint8_t settings_cursor; // na ktorej opcji jest kursor w settings
+    uint8_t i2c_address; // adres czujnika domyslnie 0x10
+    uint8_t als_gain; // gain: 0=1/8, 1=1/4, 2=1, 3=2
+    uint8_t channel; // 0=ALS, 1=WHITE
+    uint16_t refresh_rate_ms; // dodalem to - jak czesto odswiezac wynik, 100-2000ms
+    bool started; // czy user kliknal start
+
+    // dodatkowe bajery
+    bool dark_mode; // dark mode bo czemu nie
 } VEML7700App;
 
 // Function to draw the main screen
@@ -119,39 +124,49 @@ static void draw_main_screen(Canvas* canvas, VEML7700App* app) {
     }
 }
 
-// Function to draw the settings screen
+// rysowanie ekranu settings
 static void draw_settings_screen(Canvas* canvas, VEML7700App* app) {
-    canvas_clear(canvas);
+    canvas_clear(canvas); // wyczysc ekran
+
+    // tytul na gorze
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str_aligned(canvas, 64, 5, AlignCenter, AlignTop, "Settings");
 
+    //string do formatowania wartosci
     FuriString* value_str = furi_string_alloc();
+
     canvas_set_font(canvas, FontSecondary);
 
+    // teksty do wyswietlania opcji
     const char* gain_values[] = {"1/8", "1/4", "1", "2"};
     const char* channel_values[] = {"ALS", "WHITE"};
 
-    // Calculate which items should be visible (show 2 items at a time)
+    // pokazuje tylko 2 itemy na raz wiec licze od ktorego startowac
     uint8_t start_item = (app->settings_cursor / 2) * 2;
 
-    // Scrollbar calculations (clamped)
+    // scrollbar z prawej strony - zeby user wiedzial gdzie jest
     uint8_t scroll_height = 40;
     uint8_t scroll_y = 15;
+
     uint8_t slider_height = (2 * scroll_height) / SettingsItem_Count;
     uint8_t max_slider_position = scroll_height - slider_height;
+
+    // zabezpieczenie przed dzieleniem przez 0 (nigdy nie wiadomo)
     uint8_t denom = (SettingsItem_Count > 2) ? (SettingsItem_Count - 2) : 1;
+
     uint8_t slider_position = (start_item * max_slider_position) / denom;
     if(slider_position > max_slider_position) slider_position = max_slider_position;
 
-    // Draw scrollbar at right
+    // rysuj scrollbar
     canvas_draw_frame(canvas, 120, scroll_y, 3, scroll_height);
     canvas_draw_box(canvas, 121, scroll_y + slider_position, 1, slider_height);
 
-    // Render max 2 items starting at start_item (Start, Address, Gain, Channel)
+    // petla po itemach - max 2 na ekranie
     for(uint8_t i = 0; i < 2 && (start_item + i) < SettingsItem_Count; i++) {
         uint8_t current_item = start_item + i;
-        uint8_t y_pos = 25 + (i * 15);
+        uint8_t y_pos = 25 + (i * 15); // kazdy item ma 15px wysokosci
 
+        // jak to jest zaznaczone to odwroc kolory
         if(app->settings_cursor == current_item) {
             canvas_draw_box(canvas, 0, y_pos - 4, 118, 15);
             canvas_set_color(canvas, ColorWhite);
@@ -159,10 +174,12 @@ static void draw_settings_screen(Canvas* canvas, VEML7700App* app) {
             canvas_set_color(canvas, ColorBlack);
         }
 
+        // strzalka dla zaznaczonego
         if(app->settings_cursor == current_item) {
             canvas_draw_str(canvas, 1, y_pos + 5, ">");
         }
 
+        // rysuj konkretna opcje
         switch(current_item) {
         case SettingsItem_Start:
             canvas_draw_str(canvas, 5, y_pos + 5, "Start");
@@ -187,12 +204,21 @@ static void draw_settings_screen(Canvas* canvas, VEML7700App* app) {
                 canvas, 113, y_pos - 1, AlignRight, AlignTop, channel_values[app->channel]);
             break;
 
+        case SettingsItem_RefreshRate:
+            // moja nowa opcja - refresh rate
+            canvas_draw_str(canvas, 5, y_pos + 5, "Refresh:");
+            furi_string_printf(value_str, "%ums", app->refresh_rate_ms);
+            canvas_draw_str_aligned(
+                canvas, 113, y_pos - 1, AlignRight, AlignTop, furi_string_get_cstr(value_str));
+            break;
+
         case SettingsItem_DarkMode:
             canvas_draw_str(canvas, 5, y_pos + 5, "Dark Mode:");
             canvas_draw_str_aligned(
                 canvas, 113, y_pos - 1, AlignRight, AlignTop, app->dark_mode ? "(*)" : "( )");
             break;
         }
+
         canvas_set_color(canvas, ColorBlack);
     }
 
@@ -367,19 +393,20 @@ static bool read_veml7700(VEML7700App* app) {
     return false;
 }
 
-// Function to handle input events (keys)
+// obsluga przyciskow
 static void veml7700_input_callback(InputEvent* input_event, void* context) {
     furi_assert(context);
     VEML7700App* app = static_cast<VEML7700App*>(context);
 
-    if(input_event->type == InputTypeShort ||
-       input_event->type == InputTypeRepeat) { // Dodano obsługę repeat
+    // krotkie i powtarzalne nacisniecia
+    if(input_event->type == InputTypeShort || input_event->type == InputTypeRepeat) {
         switch(app->current_state) {
         case AppState_Main:
             if(input_event->key == InputKeyOk) {
                 app->current_state = AppState_Settings;
             } else if(input_event->key == InputKeyBack) {
-                app->running = false;
+                // krotkie back wraca do settings jesli user byl tam wczesniej
+                app->current_state = AppState_Settings;
             } else if(input_event->key == InputKeyRight) {
                 app->current_state = AppState_About;
             }
@@ -400,25 +427,47 @@ static void veml7700_input_callback(InputEvent* input_event, void* context) {
                     app->settings_cursor = 0;
                 }
             } else if(input_event->key == InputKeyLeft || input_event->key == InputKeyRight) {
+                // lewo/prawo zmienia wartosci
+
                 if(app->settings_cursor == SettingsItem_Address) {
-                    // Toggle między 0x10 a 0x11
+                    // przelacz adres miedzy 0x10 a 0x11
                     app->i2c_address = (app->i2c_address == 0x10) ? 0x11 : 0x10;
+
                 } else if(app->settings_cursor == SettingsItem_Gain) {
+                    // gain 0-3 z zawijaniem
                     if(input_event->key == InputKeyLeft) {
                         if(app->als_gain > 0) {
                             app->als_gain--;
                         } else {
-                            app->als_gain = 3;
+                            app->als_gain = 3; // wroc do maks
                         }
                     } else {
                         if(app->als_gain < 3) {
                             app->als_gain++;
                         } else {
-                            app->als_gain = 0;
+                            app->als_gain = 0; // wroc do 0
                         }
                     }
+
                 } else if(app->settings_cursor == SettingsItem_Channel) {
+                    // toggle channel
                     app->channel = (app->channel == 0) ? 1 : 0;
+
+                } else if(app->settings_cursor == SettingsItem_RefreshRate) {
+                    // refresh rate - dodalem to zeby mozna bylo dostosowac predkosc
+                    if(input_event->key == InputKeyLeft) {
+                        if(app->refresh_rate_ms > 100) {
+                            app->refresh_rate_ms -= 100; // -100ms
+                        } else {
+                            app->refresh_rate_ms = 2000; // jak juz na minimalnym to wroc na max
+                        }
+                    } else {
+                        if(app->refresh_rate_ms < 2000) {
+                            app->refresh_rate_ms += 100; // +100ms
+                        } else {
+                            app->refresh_rate_ms = 100; // wrap around
+                        }
+                    }
                 }
             } else if(input_event->key == InputKeyOk) {
                 if(app->settings_cursor == SettingsItem_Start) {
@@ -427,6 +476,7 @@ static void veml7700_input_callback(InputEvent* input_event, void* context) {
                     app->dark_mode = !app->dark_mode;
                 }
             } else if(input_event->key == InputKeyBack) {
+                // krotkie back wraca do main
                 app->current_state = AppState_Main;
             }
             break;
@@ -446,27 +496,51 @@ static void veml7700_input_callback(InputEvent* input_event, void* context) {
             break;
         }
     }
+
+    // dlugie nacisniecie - wyjscie z apki
+    if(input_event->type == InputTypeLong) {
+        if(input_event->key == InputKeyBack) {
+            // dlugie back zawsze wychodzi z apki niezaleznie od ekranu
+            app->running = false;
+        }
+    }
 }
 
-// Application allocation and initialization
+// inicjalizacja apki
 static VEML7700App* veml7700_app_alloc() {
+    // alokuj pamiec na strukture
     VEML7700App* app = static_cast<VEML7700App*>(malloc(sizeof(VEML7700App)));
-    furi_assert(app);
+    furi_assert(app); // jak sie nie uda to niech crashuje
+
+    // mutex do ochrony przed race conditions
     app->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
+
+    // otworz GUI
     app->gui = static_cast<Gui*>(furi_record_open(RECORD_GUI));
+
+    // viewport to miejsce gdzie rysuje
     app->view_port = view_port_alloc();
+
+    // ustaw callbacki
     view_port_draw_callback_set(app->view_port, veml7700_draw_callback, app);
     view_port_input_callback_set(app->view_port, veml7700_input_callback, app);
+
+    // dodaj do gui fullscreen
     gui_add_view_port(app->gui, app->view_port, GuiLayerFullscreen);
+
     app->running = true;
-    app->current_state = AppState_Settings; // start in settings so user sees Start first
+    app->current_state = AppState_Settings; // zaczynam w settings zeby user widzial start
     app->lux_value = 0.0f;
     app->is_sensor_initialized = false;
 
-    // Settings initialization
+    // defaultowe ustawienia
     app->dark_mode = false;
-    app->i2c_address = VEML7700_I2C_ADDR; // Domyślnie 0x10
-    app->als_gain = 2;
+    app->i2c_address = VEML7700_I2C_ADDR; // 0x10
+    app->als_gain = 2; // gain=1
+    app->channel = 0; // ALS
+    app->refresh_rate_ms = 500; // 500ms wydaje sie ok na start, da sie pozniej zmienic
+    app->started = false;
+    app->settings_cursor = 0;
 
     return app;
 }
@@ -481,13 +555,14 @@ static void veml7700_app_free(VEML7700App* app) {
     free(app);
 }
 
-// Application entry point
+// main loop apki
 extern "C" int32_t veml7700_app(void* p) {
     UNUSED(p);
+
     VEML7700App* app = veml7700_app_alloc();
 
     while(app->running) {
-        // Only initialize/read sensor after user pressed Start
+        // czytaj z sensora tylko jak user kliknal start
         if(app->started) {
             if(!app->is_sensor_initialized) {
                 app->is_sensor_initialized = init_veml7700(app);
@@ -497,8 +572,11 @@ extern "C" int32_t veml7700_app(void* p) {
             }
         }
 
-        view_port_update(app->view_port);
-        furi_delay_ms(100); // Zmniejszono opóźnienie z 500ms na 100ms
+        view_port_update(app->view_port); // odswiez ekran
+
+        // tutaj uzywam refresh_rate_ms zamiast hardcodowanego 500
+        // user moze sobie ustawic jak szybko ma odswiezac
+        furi_delay_ms(app->refresh_rate_ms);
     }
 
     veml7700_app_free(app);

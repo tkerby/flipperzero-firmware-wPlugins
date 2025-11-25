@@ -26,10 +26,10 @@ void metroflip_scene_parse_on_enter(void* context) {
                 FURI_LOG_I(TAG, "Card is T-Mobilitat");
                 app->card_type = "tmobilitat";
 
-            } else if(app->hist_bytes[0] == 0x04 && app->hist_bytes[1] == 0x02) {
+            } else if(app->hist_bytes[0] == 0x04 && app->hist_bytes[1] == 0x09) {
                 FURI_LOG_I(TAG, "Card is T-Money");
 
-                //app->card_type = "tmoney"
+                app->card_type = "tmoney";
                 //for now we blank out the line above as it's not merged yet
                 view_dispatcher_send_custom_event(
                     app->view_dispatcher, MetroflipCustomEventWrongCard);

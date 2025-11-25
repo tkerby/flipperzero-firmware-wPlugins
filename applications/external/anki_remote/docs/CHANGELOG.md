@@ -1,3 +1,6 @@
+## v1.3
+- added presets, reworked app functionality
+- added new keyboard buttons (PrtSc, ScrLk, many more) 
 ## v1.2
 - added option to adjust LED light in settings
 ## v1.1

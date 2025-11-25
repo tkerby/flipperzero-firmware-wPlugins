@@ -1,0 +1,21 @@
+#pragma once
+
+#include <strings.h> // for size_t
+#include "../icon.h"
+#include "../iconedit.h"
+
+typedef enum {
+    Dialog_OK,
+    Dialog_OK_CANCEL
+} DialogPrompt;
+
+typedef enum {
+    DialogBtn_NONE,
+    DialogBtn_OK,
+    DialogBtn_CANCEL
+} DialogButton;
+
+typedef void (*DialogCallback)(void* context, DialogButton button);
+
+void dialog_setup(const char* msg, DialogPrompt prompt, DialogCallback callback, void* context);
+DialogButton dialog_get_button();

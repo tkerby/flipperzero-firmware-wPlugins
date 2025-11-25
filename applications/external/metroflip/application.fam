@@ -154,6 +154,15 @@ App(
 )
 
 App(
+    appid="tmoney_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="tmoney_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/tmoney.c"],
+    fal_embedded=True,
+)
+
+App(
     appid="nol_plugin",
     apptype=FlipperAppType.PLUGIN,
     entry_point="nol_plugin_ep",
@@ -177,5 +186,23 @@ App(
     entry_point="tmobilitat_plugin_ep",
     requires=["metroflip"],
     sources=["scenes/plugins/tmobilitat.c"],
+    fal_embedded=True,
+)
+
+App(
+    appid="intertic_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="intertic_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/intertic.c"],
+    fal_embedded=True,
+)
+
+App(
+    appid="trt_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="trt_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/trt.c"],
     fal_embedded=True,
 )
