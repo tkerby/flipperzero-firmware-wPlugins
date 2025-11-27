@@ -1,0 +1,39 @@
+App(
+     # Unique identifier used by the build system (must be unique across firmware).
+    appid="tree_ident",
+
+    # What users will see when browsing apps
+    name="Tree Identification",
+
+    # Description for the Flipper Application catalogue
+    fap_description="Identify a tree by answering questions about the leave shapes",
+
+    # Application type - EXTERNAL means it's a .fap file loaded from SD card
+    apptype=FlipperAppType.EXTERNAL,
+    
+    # The C function that starts the app, i.a.w. the main C file must contain: int32_t tree_ident_main(void* p) { ... }
+    entry_point="tree_ident_main",
+
+    # Preprocessor definitions added during compilation
+    cdefines=["APP_ID_CARD"],
+
+    # List of system modules this app depends on
+    # "gui" ensures the graphical user interface system is available. 
+    # Other common choices: "storage", "notification", "dialogs"
+    requires=["gui"],
+
+    # Stack memory allocated for the app's thread (in bytes). 1KB is enough here.
+    stack_size=1 * 1024,
+
+    # Path to the app icon displayed in the menu
+    fap_icon_assets="images",
+
+    # Format of the menu icon: Black-and-whit PNG (=1-bit color depth), 10x10 pixel
+    fap_icon="images/icon_10x10.png",
+
+    # Available categories: Main, GPIO, Sub-GHz, RFID, NFC, Infrared, Misc, Games, Tools, Settings, USB
+    fap_category="Tools",
+
+    # Version number
+    fap_version=(0, 0, 5)
+)
