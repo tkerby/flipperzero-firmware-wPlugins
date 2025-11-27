@@ -7,7 +7,6 @@
 
 #define TAG             "IE"
 #define APP_NAME        "IconEdit"
-#define VERSION         "0.6"
 #define ENABLE_XBM_SAVE // Enables XBM file save
 
 typedef struct {
