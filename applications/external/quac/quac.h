@@ -16,7 +16,7 @@
 #include "views/action_menu.h"
 #include "item.h"
 
-#define QUAC_NAME    "Quac!"
+#define QUAC_NAME "Quac!"
 #define QUAC_ABOUT                                    \
     "Quick Action remote control\nv" FAP_VERSION "\n" \
     "github.com/rdefeo/quac"
