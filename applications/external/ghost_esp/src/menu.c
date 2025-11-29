@@ -898,6 +898,13 @@ static const MenuCommand status_idle_commands[] = {
         .details_text = "Set idle status display to\n"
                         "starfield effect.",
     },
+    {
+        .label = "HUD",
+        .command = "statusidle set hud\n",
+        .details_header = "HUD Animation",
+        .details_text = "Set idle status display to\n"
+                        "HUD-style overlay.",
+    },
 };
 
 // BLE menu command definitions
@@ -1330,7 +1337,8 @@ static bool ir_query_and_parse_universals(AppState* state) {
     if(!buffer) return false;
 
     size_t len = 0;
-    if(!uart_copy_text_buffer(state->uart_context, buffer, RING_BUFFER_SIZE + 1, &len) ||
+    if(!uart_copy_text_buffer(
+           state->uart_context, buffer, IR_UART_PARSE_BUF_SIZE, &len) ||
        len == 0) {
         free(buffer);
         return false;
@@ -1896,7 +1904,7 @@ static bool handle_ir_command_feedback_ex(
                                 snprintf(
                                     summary,
                                     sizeof(summary),
-                                    "%s %s\nAddr: %s\nCmd: %s",
+                                    "%s (%s)\nAddr: %s\nCmd: %s",
                                     name,
                                     proto,
                                     addr,
@@ -2182,6 +2190,7 @@ static void ir_send_button_from_file(AppState* state, uint32_t button_index) {
 
     uart_reset_text_buffers(state->uart_context);
     uart_send(state->uart_context, (const uint8_t*)ir_begin_marker, 10);
+    uart_send(state->uart_context, (const uint8_t*)"\n", 1);
     uart_send(state->uart_context, buf + start, payload_len);
     uart_send(state->uart_context, (const uint8_t*)ir_close_marker, 10);
     uart_send(state->uart_context, (const uint8_t*)"\n", 1);
