@@ -1,0 +1,13 @@
+App(
+    appid="led_ring_tester",
+    name="LED Ring Tester",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="led_ring_tester_app",
+    stack_size=2 * 1024,
+    fap_category="GPIO",
+    fap_version="1.0",
+    fap_description="Test and control addressable LED rings (WS2812B/NeoPixel)",
+    fap_author="Claude",
+    fap_weburl="https://github.com/ccyyturralde/Flipper-Zero-Joycon",
+    fap_icon="led_ring_icon.png",
+)
