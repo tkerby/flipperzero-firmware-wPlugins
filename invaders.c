@@ -86,7 +86,7 @@ typedef struct {
     GameContext gameContext; // Application data
 } AppContext;
 
-void init_game_state(AppContext* app, int level) {
+void init_game_level(AppContext* app, int level) {
     app->gameContext.level = level;
 
     app->gameContext.gameState = GameStatePlay;
@@ -254,7 +254,7 @@ static void my_input_callback(InputEvent* input_event, void* context) {
         if(app->gameContext.gameState == GameStateWin ||
            app->gameContext.gameState == GameStateLost ||
            app->gameContext.gameState == GameStateStart) {
-            init_game_state(app, 1);
+            init_game_level(app, 1);
         }
         // Player shooting
         else if(!app->gameContext.shoot && app->gameContext.gameState == GameStatePlay) {
@@ -424,7 +424,7 @@ static void timer_callback(void* context) {
         if(app->gameContext.enemyCount[0] == 0 && app->gameContext.enemyCount[1] == 0 &&
            app->gameContext.enemyCount[2] == 0) {
             // New level
-            init_game_state(app, app->gameContext.level + 1);
+            init_game_level(app, app->gameContext.level + 1);
             return;
         }
     }
@@ -470,7 +470,7 @@ int32_t invaders_app(void* p) {
     app->enemyIcon[1][2] = (Icon*)&I_enemy3b;
     app->boomIcon = (Icon*)&I_boom;
 
-    init_game_state(app, 1);
+    init_game_level(app, 1);
     app->gameContext.gameState = GameStateStart;
 
     // ---------------
