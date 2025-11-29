@@ -97,12 +97,13 @@ void init_game_level(AppContext* app, int level) {
     app->gameContext.explosionCount = 0;
     app->gameContext.enemyAnimation = false;
 
+    app->gameContext.enemySpeed = .13 + (0.2 * level);
+
     if(level == 1) {
         app->gameContext.playerX = (DISPLAY_WIDTH - 13) / 2;
         app->gameContext.time = 0;
         app->gameContext.shoot = false;
         app->gameContext.playerDirection = 0;
-        app->gameContext.enemySpeed = .15;
         app->gameContext.score = 0;
         app->gameContext.score_string = furi_string_alloc_set_str("0");
     }
