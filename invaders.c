@@ -40,6 +40,9 @@ typedef struct {
     // Curent state of the game
     GameState gameState;
 
+    // Game level
+    short int level;
+
     // Player coordinates
     short int playerX;
     // Direction of player movement
@@ -83,19 +86,24 @@ typedef struct {
     GameContext gameContext; // Application data
 } AppContext;
 
-void init_game_state(AppContext* app) {
+void init_game_state(AppContext* app, int level) {
+    app->gameContext.level = level;
+
     app->gameContext.gameState = GameStatePlay;
 
-    app->gameContext.playerX = (DISPLAY_WIDTH - 13) / 2;
-    app->gameContext.playerDirection = 0;
-    app->gameContext.score = 0;
-    app->gameContext.score_string = furi_string_alloc_set_str("0");
-    app->gameContext.time = 0;
-    app->gameContext.shoot = false;
     app->gameContext.enemyDirection = 1;
-    app->gameContext.enemySpeed = .15;
     app->gameContext.explosionCount = 0;
     app->gameContext.enemyAnimation = false;
+
+    if(level == 1) {
+        app->gameContext.playerX = (DISPLAY_WIDTH - 13) / 2;
+        app->gameContext.time = 0;
+        app->gameContext.shoot = false;
+        app->gameContext.playerDirection = 0;
+        app->gameContext.enemySpeed = .15;
+        app->gameContext.score = 0;
+        app->gameContext.score_string = furi_string_alloc_set_str("0");
+    }
 
     for(short int et = 0; et < 3; et++) {
         for(short int i = 0; i < 8; i++) {
@@ -246,7 +254,7 @@ static void my_input_callback(InputEvent* input_event, void* context) {
         if(app->gameContext.gameState == GameStateWin ||
            app->gameContext.gameState == GameStateLost ||
            app->gameContext.gameState == GameStateStart) {
-            init_game_state(app);
+            init_game_state(app, 1);
         }
         // Player shooting
         else if(!app->gameContext.shoot && app->gameContext.gameState == GameStatePlay) {
@@ -320,7 +328,7 @@ static void timer_callback(void* context) {
     }
 
     // Enemy movement
-    if(app->gameContext.time && app->gameContext.gameState == GameStatePlay) {
+    if(app->gameContext.gameState == GameStatePlay) {
         float enemyDirection = app->gameContext.enemyDirection;
         int maxEnemyX = 0;
         int minEnemyX = DISPLAY_WIDTH;
@@ -415,8 +423,8 @@ static void timer_callback(void* context) {
         }
         if(app->gameContext.enemyCount[0] == 0 && app->gameContext.enemyCount[1] == 0 &&
            app->gameContext.enemyCount[2] == 0) {
-            // Win
-            app->gameContext.gameState = GameStateWin;
+            // New level
+            init_game_state(app, app->gameContext.level + 1);
             return;
         }
     }
@@ -462,7 +470,7 @@ int32_t invaders_app(void* p) {
     app->enemyIcon[1][2] = (Icon*)&I_enemy3b;
     app->boomIcon = (Icon*)&I_boom;
 
-    init_game_state(app);
+    init_game_state(app, 1);
     app->gameContext.gameState = GameStateStart;
 
     // ---------------
