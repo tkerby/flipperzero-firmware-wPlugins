@@ -37,8 +37,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Metroflip v1.0 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [Anki Remote v1.3 (By Blue5GD)](https://github.com/Blue5GD/Anki-Remote)
 - Added: [Tree Identification v0.0.5 (By fgreil)](https://github.com/fgreil/mitzi-tree-ident)
-- Black Friday Promo! Valid Now Till Monday! Use RM420 for 20% off your yearly RM Patreon subscription!
 - Updated: [Ghost ESP v1.6 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32`
+- Black Friday Promo! Valid Now Till Monday! Use RM420 for 20% off your yearly RM Patreon subscription!
 
 <a name="release">
 
