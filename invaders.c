@@ -11,7 +11,7 @@
 
 #define FPS 30
 
-#define MAX_EXPLOSIONS     3
+#define MAX_EXPLOSIONS     5
 #define EXPLOSION_DURATION 15 // In frames
 
 typedef enum {
@@ -417,8 +417,11 @@ static void timer_callback(void* context) {
                         explosion.x = app->gameContext.enemyX[et][j];
                         explosion.y = app->gameContext.enemyY[et];
                         explosion.time = app->gameContext.time;
-                        app->gameContext.explosion[app->gameContext.explosionCount] = explosion;
-                        app->gameContext.explosionCount++;
+                        if(app->gameContext.explosionCount <= MAX_EXPLOSIONS) { // TODO: patch
+                            app->gameContext.explosion[app->gameContext.explosionCount] =
+                                explosion;
+                            app->gameContext.explosionCount++;
+                        }
                         for(short int k = j; k <= app->gameContext.enemyCount[et] - 1; k++) {
                             app->gameContext.enemyX[et][k] = app->gameContext.enemyX[et][k + 1];
                         }
