@@ -1337,8 +1337,7 @@ static bool ir_query_and_parse_universals(AppState* state) {
     if(!buffer) return false;
 
     size_t len = 0;
-    if(!uart_copy_text_buffer(
-           state->uart_context, buffer, IR_UART_PARSE_BUF_SIZE, &len) ||
+    if(!uart_copy_text_buffer(state->uart_context, buffer, IR_UART_PARSE_BUF_SIZE, &len) ||
        len == 0) {
         free(buffer);
         return false;

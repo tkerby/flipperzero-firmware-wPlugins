@@ -11,7 +11,7 @@
 
 #define FPS 30
 
-#define MAX_EXPLOSIONS     3
+#define MAX_EXPLOSIONS     5
 #define EXPLOSION_DURATION 15 // In frames
 
 typedef enum {
@@ -26,7 +26,7 @@ typedef enum {
     GameStateStart,
     GameStatePlay,
     GameStatePause,
-    GameStateWin,
+    GameStateLevelUp,
     GameStateLost,
 } GameState;
 
@@ -39,6 +39,10 @@ typedef struct {
 typedef struct {
     // Curent state of the game
     GameState gameState;
+
+    // Game level
+    short int level;
+    FuriString* level_string;
 
     // Player coordinates
     short int playerX;
@@ -83,19 +87,26 @@ typedef struct {
     GameContext gameContext; // Application data
 } AppContext;
 
-void init_game_state(AppContext* app) {
+void init_game_level(AppContext* app, int level) {
     app->gameContext.gameState = GameStatePlay;
 
-    app->gameContext.playerX = (DISPLAY_WIDTH - 13) / 2;
-    app->gameContext.playerDirection = 0;
-    app->gameContext.score = 0;
-    app->gameContext.score_string = furi_string_alloc_set_str("0");
-    app->gameContext.time = 0;
-    app->gameContext.shoot = false;
+    app->gameContext.level = level;
+    furi_string_printf(app->gameContext.level_string, "Level %i!", app->gameContext.level);
+
     app->gameContext.enemyDirection = 1;
-    app->gameContext.enemySpeed = .15;
     app->gameContext.explosionCount = 0;
     app->gameContext.enemyAnimation = false;
+
+    app->gameContext.enemySpeed = .13 + (0.2 * level);
+
+    if(level == 1) {
+        app->gameContext.playerX = (DISPLAY_WIDTH - 13) / 2;
+        app->gameContext.time = 0;
+        app->gameContext.shoot = false;
+        app->gameContext.playerDirection = 0;
+        app->gameContext.score = 0;
+        app->gameContext.score_string = furi_string_alloc_set_str("0");
+    }
 
     for(short int et = 0; et < 3; et++) {
         for(short int i = 0; i < 8; i++) {
@@ -142,10 +153,16 @@ static void my_draw_callback(Canvas* canvas, void* context) {
             app->gameContext.projectileY + 3);
     }
 
-    // If player won, exit here
-    if(app->gameContext.gameState == GameStateWin) {
+    // If player completed level, exit here
+    if(app->gameContext.gameState == GameStateLevelUp) {
         canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str_aligned(canvas, 64, 31, AlignCenter, AlignBottom, "You win!");
+        canvas_draw_str_aligned(
+            canvas,
+            64,
+            31,
+            AlignCenter,
+            AlignBottom,
+            furi_string_get_cstr(app->gameContext.level_string));
         canvas_set_font(canvas, FontSecondary);
         canvas_draw_str_aligned(
             canvas,
@@ -242,11 +259,14 @@ static void my_input_callback(InputEvent* input_event, void* context) {
     }
 
     if(input_event->type == InputTypeShort && input_event->key == InputKeyOk) {
-        // If player won, restart game on OK
-        if(app->gameContext.gameState == GameStateWin ||
-           app->gameContext.gameState == GameStateLost ||
+        // If player lost, restart game on OK
+        if(app->gameContext.gameState == GameStateLost ||
            app->gameContext.gameState == GameStateStart) {
-            init_game_state(app);
+            init_game_level(app, 1);
+        }
+        // If player leveled, start game on OK
+        else if(app->gameContext.gameState == GameStateLevelUp) {
+            init_game_level(app, app->gameContext.level + 1);
         }
         // Player shooting
         else if(!app->gameContext.shoot && app->gameContext.gameState == GameStatePlay) {
@@ -258,7 +278,7 @@ static void my_input_callback(InputEvent* input_event, void* context) {
 
     // Player movement
     if(input_event->type == InputTypePress && (app->gameContext.gameState == GameStatePlay ||
-                                               app->gameContext.gameState == GameStateWin)) {
+                                               app->gameContext.gameState == GameStateLevelUp)) {
         if(input_event->key == InputKeyLeft)
             app->gameContext.playerDirection = -1;
         else if(input_event->key == InputKeyRight)
@@ -320,7 +340,7 @@ static void timer_callback(void* context) {
     }
 
     // Enemy movement
-    if(app->gameContext.time && app->gameContext.gameState == GameStatePlay) {
+    if(app->gameContext.gameState == GameStatePlay) {
         float enemyDirection = app->gameContext.enemyDirection;
         int maxEnemyX = 0;
         int minEnemyX = DISPLAY_WIDTH;
@@ -397,8 +417,11 @@ static void timer_callback(void* context) {
                         explosion.x = app->gameContext.enemyX[et][j];
                         explosion.y = app->gameContext.enemyY[et];
                         explosion.time = app->gameContext.time;
-                        app->gameContext.explosion[app->gameContext.explosionCount] = explosion;
-                        app->gameContext.explosionCount++;
+                        if(app->gameContext.explosionCount <= MAX_EXPLOSIONS) { // TODO: patch
+                            app->gameContext.explosion[app->gameContext.explosionCount] =
+                                explosion;
+                            app->gameContext.explosionCount++;
+                        }
                         for(short int k = j; k <= app->gameContext.enemyCount[et] - 1; k++) {
                             app->gameContext.enemyX[et][k] = app->gameContext.enemyX[et][k + 1];
                         }
@@ -415,8 +438,8 @@ static void timer_callback(void* context) {
         }
         if(app->gameContext.enemyCount[0] == 0 && app->gameContext.enemyCount[1] == 0 &&
            app->gameContext.enemyCount[2] == 0) {
-            // Win
-            app->gameContext.gameState = GameStateWin;
+            // New level
+            app->gameContext.gameState = GameStateLevelUp;
             return;
         }
     }
@@ -448,6 +471,7 @@ int32_t invaders_app(void* p) {
     furi_timer_start(app->timer, 1000 / FPS);
 
     app->gameContext.score_string = furi_string_alloc();
+    app->gameContext.level_string = furi_string_alloc();
 
     // ---------------
     //      Setup
@@ -462,7 +486,7 @@ int32_t invaders_app(void* p) {
     app->enemyIcon[1][2] = (Icon*)&I_enemy3b;
     app->boomIcon = (Icon*)&I_boom;
 
-    init_game_state(app);
+    init_game_level(app, 1);
     app->gameContext.gameState = GameStateStart;
 
     // ---------------
@@ -485,6 +509,7 @@ int32_t invaders_app(void* p) {
 
     // Free resources
     furi_string_free(app->gameContext.score_string);
+    furi_string_free(app->gameContext.level_string);
     furi_timer_free(app->timer);
     furi_message_queue_free(app->queue);
     view_port_enabled_set(app->view_port, false);
