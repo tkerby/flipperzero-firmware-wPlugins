@@ -23,7 +23,7 @@
 
 #define BAUDRATE (115200)
 
-#define TEXT_BOX_STORE_SIZE           (4096) // 4KB text box buffer size
+#define TEXT_BOX_STORE_SIZE           (8 * 1024) // 8KB text box buffer size
 #define RX_BUF_SIZE                   2048
 #define PCAP_BUF_SIZE                 4096
 #define STORAGE_BUF_SIZE              4096
@@ -33,8 +33,8 @@
 #define GHOST_ESP_APP_FOLDER_LOGS     "/ext/apps_data/ghost_esp/logs"
 #define GHOST_ESP_APP_SETTINGS_FILE   "/ext/apps_data/ghost_esp/settings.ini"
 #define ESP_CHECK_TIMEOUT_MS          100
-#define VIEW_BUFFER_SIZE              (16 * 1024) // 16KB for view
-#define RING_BUFFER_SIZE              (8 * 1024) // 8KB for incoming data
+#define VIEW_BUFFER_SIZE              TEXT_BOX_STORE_SIZE
+#define RING_BUFFER_SIZE              (4 * 1024) // 4KB for incoming data
 #define PCAP_GLOBAL_HEADER_SIZE       24
 #define PCAP_PACKET_HEADER_SIZE       16
 #define PCAP_TEMP_BUFFER_SIZE         4096
