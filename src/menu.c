@@ -1217,8 +1217,7 @@ static bool ir_query_and_parse_list(AppState* state) {
     const uint32_t timeout_ms = 2000;
     while(furi_get_tick() - start < timeout_ms) {
         furi_delay_ms(100);
-        if(uart_copy_text_buffer_tail(
-               state->uart_context, buffer, IR_UART_PARSE_BUF_SIZE, &len) &&
+        if(uart_copy_text_buffer_tail(state->uart_context, buffer, IR_UART_PARSE_BUF_SIZE, &len) &&
            len > 0) {
             if(strstr(buffer, "IR files in ") || strstr(buffer, "(none)") ||
                strstr(buffer, "(none).") || strchr(buffer, '[')) {
@@ -1277,8 +1276,7 @@ static bool ir_query_and_parse_show(AppState* state, uint32_t remote_index) {
     const uint32_t timeout_ms = 3000;
     while(furi_get_tick() - start < timeout_ms) {
         furi_delay_ms(100);
-        if(uart_copy_text_buffer_tail(
-               state->uart_context, buffer, IR_UART_PARSE_BUF_SIZE, &len) &&
+        if(uart_copy_text_buffer_tail(state->uart_context, buffer, IR_UART_PARSE_BUF_SIZE, &len) &&
            len > 0) {
             if(strstr(buffer, "Signals in ") || strstr(buffer, "Unique buttons in ") ||
                strchr(buffer, '[')) {
@@ -1339,8 +1337,7 @@ static bool ir_query_and_parse_universals(AppState* state) {
     char buffer[IR_UART_PARSE_BUF_SIZE];
 
     size_t len = 0;
-    if(!uart_copy_text_buffer_tail(
-           state->uart_context, buffer, IR_UART_PARSE_BUF_SIZE, &len) ||
+    if(!uart_copy_text_buffer_tail(state->uart_context, buffer, IR_UART_PARSE_BUF_SIZE, &len) ||
        len == 0) {
         return false;
     }
@@ -2114,12 +2111,7 @@ static void text_input_result_callback(void* context) {
             send_uart_command_with_text(
                 input_state->uart_command, input_state->input_buffer, input_state);
             uart_receive_data(
-                input_state->uart_context,
-                input_state->view_dispatcher,
-                input_state,
-                "",
-                "",
-                "");
+                input_state->uart_context, input_state->view_dispatcher, input_state, "", "", "");
         }
     }
     if(input_state->input_buffer) memset(input_state->input_buffer, 0, INPUT_BUFFER_SIZE);

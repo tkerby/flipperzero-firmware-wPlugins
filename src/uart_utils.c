@@ -391,8 +391,7 @@ void handle_uart_rx_data(uint8_t* buf, size_t len, void* context) {
         if(state->text_box) {
             text_box_set_text(state->text_box, state->uart_context->text_manager->view_buffer);
             text_box_set_focus(
-                state->text_box,
-                view_from_start ? TextBoxFocusStart : TextBoxFocusEnd);
+                state->text_box, view_from_start ? TextBoxFocusStart : TextBoxFocusEnd);
         }
     }
 }
