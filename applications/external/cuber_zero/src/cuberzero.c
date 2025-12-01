@@ -1,4 +1,5 @@
 #include "cuberzero.h"
+#include <furi_hal_gpio.h>
 
 static bool callbackEmptyEvent(void* const context, const SceneManagerEvent event) {
     UNUSED(context);

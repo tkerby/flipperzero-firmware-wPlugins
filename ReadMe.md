@@ -38,8 +38,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Anki Remote v1.3 (By Blue5GD)](https://github.com/Blue5GD/Anki-Remote)
 - Added: [Tree Identification v0.0.5 (By fgreil)](https://github.com/fgreil/mitzi-tree-ident)
 - Black Friday Promo! Valid Now Till Monday! Use RM420 for 20% off your yearly RM Patreon subscription!
-- Updated: [Ghost ESP v1.6 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32`
 - Updated: [Space Invaders v0.1 (By PavelZurek)](https://github.com/PavelZurek/flipperzero-space-invaders)
+- Updated: [Ghost ESP v1.6 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32`
+- Updated: [Rubiks Cube Timer v0.0.2 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
 
 <a name="release">
 
