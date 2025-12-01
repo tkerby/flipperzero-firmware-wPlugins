@@ -19,7 +19,7 @@ typedef struct {
     bool locked;
 } TransitCardInfo;
 
-TransitCardInfo cards[88] = {
+TransitCardInfo cards[89] = {
     {0x000001, "MAD TTP / MNL beep", "CRTM / AFPI", true},
     {0x000002, "MNL beep", "AFPI", true},
     {0x000003, "MNL beep", "AFPI", true},
@@ -61,7 +61,8 @@ TransitCardInfo cards[88] = {
     {0x31594F, "LHR Oyster", "TfL", true},
     {0x4012F2, "Connect (SMF)", "SACOG", true},
     {0x422201, "IST Istanbulkart", "BELBIM", true},
-    {0x422202, "IST Istanbulkart", "BELBIM", true},
+    {0x422204, "IST Istanbulkart", "BELBIM", true},
+    {0x422205, "IST Istanbulkart", "BELBIM", true},
     {0x422206, "IST Istanbulkart", "BELBIM", true},
     {0x425301, "BKK MRT SVC / BKK Rabbit", "BEM / BTS", true},
     {0x425302, "BKK MRT SVC / BKK Rabbit", "BEM / BTS", true},
