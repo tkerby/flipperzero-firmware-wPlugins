@@ -905,6 +905,13 @@ static const MenuCommand status_idle_commands[] = {
         .details_text = "Set idle status display to\n"
                         "HUD-style overlay.",
     },
+    {
+        .label = "Matrix",
+        .command = "statusidle set matrix\n",
+        .details_header = "Matrix Animation",
+        .details_text = "Set idle status display to\n"
+                        "Matrix-style rain effect.",
+    },
 };
 
 // BLE menu command definitions
@@ -1203,15 +1210,14 @@ static bool ir_query_and_parse_list(AppState* state) {
     uart_reset_text_buffers(state->uart_context);
     send_uart_command("ir list\n", state);
 
-    char* buffer = malloc(IR_UART_PARSE_BUF_SIZE);
-    if(!buffer) return false;
+    char buffer[IR_UART_PARSE_BUF_SIZE];
 
     size_t len = 0;
     uint32_t start = furi_get_tick();
     const uint32_t timeout_ms = 2000;
     while(furi_get_tick() - start < timeout_ms) {
         furi_delay_ms(100);
-        if(uart_copy_text_buffer(state->uart_context, buffer, IR_UART_PARSE_BUF_SIZE, &len) &&
+        if(uart_copy_text_buffer_tail(state->uart_context, buffer, IR_UART_PARSE_BUF_SIZE, &len) &&
            len > 0) {
             if(strstr(buffer, "IR files in ") || strstr(buffer, "(none)") ||
                strstr(buffer, "(none).") || strchr(buffer, '[')) {
@@ -1221,7 +1227,6 @@ static bool ir_query_and_parse_list(AppState* state) {
     }
 
     if(len == 0) {
-        free(buffer);
         return false;
     }
 
@@ -1252,7 +1257,6 @@ static bool ir_query_and_parse_list(AppState* state) {
         }
     }
 
-    free(buffer);
     return state->ir_remote_count > 0;
 }
 
@@ -1265,15 +1269,14 @@ static bool ir_query_and_parse_show(AppState* state, uint32_t remote_index) {
     snprintf(cmd, sizeof(cmd), "ir show %lu\n", (unsigned long)remote_index);
     send_uart_command(cmd, state);
 
-    char* buffer = malloc(IR_UART_PARSE_BUF_SIZE);
-    if(!buffer) return false;
+    char buffer[IR_UART_PARSE_BUF_SIZE];
 
     size_t len = 0;
     uint32_t start = furi_get_tick();
     const uint32_t timeout_ms = 3000;
     while(furi_get_tick() - start < timeout_ms) {
         furi_delay_ms(100);
-        if(uart_copy_text_buffer(state->uart_context, buffer, IR_UART_PARSE_BUF_SIZE, &len) &&
+        if(uart_copy_text_buffer_tail(state->uart_context, buffer, IR_UART_PARSE_BUF_SIZE, &len) &&
            len > 0) {
             if(strstr(buffer, "Signals in ") || strstr(buffer, "Unique buttons in ") ||
                strchr(buffer, '[')) {
@@ -1283,7 +1286,6 @@ static bool ir_query_and_parse_show(AppState* state, uint32_t remote_index) {
     }
 
     if(len == 0) {
-        free(buffer);
         return false;
     }
 
@@ -1322,7 +1324,6 @@ static bool ir_query_and_parse_show(AppState* state, uint32_t remote_index) {
         }
     }
 
-    free(buffer);
     return state->ir_signal_count > 0;
 }
 
@@ -1333,13 +1334,11 @@ static bool ir_query_and_parse_universals(AppState* state) {
     send_uart_command("ir universals list\n", state);
     furi_delay_ms(200);
 
-    char* buffer = malloc(IR_UART_PARSE_BUF_SIZE);
-    if(!buffer) return false;
+    char buffer[IR_UART_PARSE_BUF_SIZE];
 
     size_t len = 0;
-    if(!uart_copy_text_buffer(state->uart_context, buffer, IR_UART_PARSE_BUF_SIZE, &len) ||
+    if(!uart_copy_text_buffer_tail(state->uart_context, buffer, IR_UART_PARSE_BUF_SIZE, &len) ||
        len == 0) {
-        free(buffer);
         return false;
     }
 
@@ -1389,7 +1388,6 @@ static bool ir_query_and_parse_universals(AppState* state) {
         }
     }
 
-    free(buffer);
     return state->ir_universal_count > 0;
 }
 
@@ -1405,8 +1403,7 @@ static bool ir_query_and_parse_universal_buttons(AppState* state, const char* fi
     snprintf(cmd, sizeof(cmd), "ir show %s\n", path);
     send_uart_command(cmd, state);
 
-    char* buffer = malloc(IR_UART_PARSE_BUF_SIZE);
-    if(!buffer) return false;
+    char buffer[IR_UART_PARSE_BUF_SIZE];
 
     size_t len = 0;
 
@@ -1423,7 +1420,6 @@ static bool ir_query_and_parse_universal_buttons(AppState* state, const char* fi
     }
 
     if(len == 0) {
-        free(buffer);
         return false;
     }
 
@@ -1476,7 +1472,6 @@ static bool ir_query_and_parse_universal_buttons(AppState* state, const char* fi
     }
 
     bool result = state->ir_signal_count > 0;
-    free(buffer);
     return result;
 }
 
@@ -1818,8 +1813,8 @@ static bool handle_ir_command_feedback_ex(
 
     if(is_uni_sendall) {
         state->previous_view = state->current_view;
-        confirmation_view_set_header(state->confirmation_view, "IR Sweep");
-        confirmation_view_set_text(state->confirmation_view, "Transmitting sweep...\nOK = Stop");
+        confirmation_view_set_header(state->confirmation_view, "Universal send");
+        confirmation_view_set_text(state->confirmation_view, "Universal sending...\nOK = Stop");
         confirmation_view_set_ok_callback(state->confirmation_view, ir_sweep_stop_callback, state);
         confirmation_view_set_cancel_callback(
             state->confirmation_view, app_info_ok_callback, state);
@@ -1841,7 +1836,7 @@ static bool handle_ir_command_feedback_ex(
     bool saw_ok = false;
 
     uint32_t start = furi_get_tick();
-    const uint32_t timeout_ms = 5000;
+    const uint32_t timeout_ms = is_uni_sendall ? 60000 : 5000;
 
     while(furi_get_tick() - start < timeout_ms) {
         furi_delay_ms(100);
@@ -1872,7 +1867,8 @@ static bool handle_ir_command_feedback_ex(
                     char freq_str[24] = {0};
                     char duty_str[16] = {0};
 
-                    if(strstr(p, " raw ") || strstr(p, " raw len=")) {
+                    if(strncmp(p, "raw ", 4) == 0 || strncmp(p, "raw len=", 8) == 0 ||
+                       strstr(p, " raw ") || strstr(p, " raw len=")) {
                         if(sscanf(
                                line,
                                "IR: signal raw len=%15s freq=%31s duty=%15s",
@@ -1994,20 +1990,13 @@ static bool handle_ir_command_feedback_ex(
                 if(strstr(line, "universal sendall already running")) {
                     strncpy(
                         message,
-                        "Universal sweep already running; use 'stop' to cancel.",
+                        "Universal send already running; use 'stop' to cancel.",
                         sizeof(message) - 1);
                     message[sizeof(message) - 1] = '\0';
                     start = timeout_ms + start;
                     break;
                 }
                 if(strstr(line, "universal sendall started")) {
-                    strncpy(
-                        message,
-                        "Universal sending\nPress OK to stop and exit",
-                        sizeof(message) - 1);
-                    message[sizeof(message) - 1] = '\0';
-                    start = timeout_ms + start;
-                    break;
                 }
                 if(strstr(line, "no builtin signals named")) {
                     strncpy(message, "No builtin signals with that name.", sizeof(message) - 1);
@@ -2022,14 +2011,26 @@ static bool handle_ir_command_feedback_ex(
                     break;
                 }
                 if(strstr(line, "universal sendall finished")) {
-                    strncpy(message, "Universal sweep finished.", sizeof(message) - 1);
+                    strncpy(message, "Universal send finished.", sizeof(message) - 1);
                     message[sizeof(message) - 1] = '\0';
+                    confirmation_view_set_header(state->confirmation_view, "Universal send");
+                    confirmation_view_set_text(state->confirmation_view, message);
+                    confirmation_view_set_ok_callback(
+                        state->confirmation_view, app_info_ok_callback, state);
+                    confirmation_view_set_cancel_callback(
+                        state->confirmation_view, app_info_ok_callback, state);
                     start = timeout_ms + start;
                     break;
                 }
                 if(strstr(line, "universal sendall stopped")) {
-                    strncpy(message, "Universal sweep stopped.", sizeof(message) - 1);
+                    strncpy(message, "Universal send stopped.", sizeof(message) - 1);
                     message[sizeof(message) - 1] = '\0';
+                    confirmation_view_set_header(state->confirmation_view, "Universal send");
+                    confirmation_view_set_text(state->confirmation_view, message);
+                    confirmation_view_set_ok_callback(
+                        state->confirmation_view, app_info_ok_callback, state);
+                    confirmation_view_set_cancel_callback(
+                        state->confirmation_view, app_info_ok_callback, state);
                     start = timeout_ms + start;
                     break;
                 }
@@ -2102,11 +2103,17 @@ static void text_input_result_callback(void* context) {
         input_state->connect_input_stage = 0;
         input_state->connect_ssid[0] = '\0';
     } else {
-        send_uart_command_with_text(
-            input_state->uart_command, input_state->input_buffer, input_state);
+        if(input_state->uart_command && strcmp(input_state->uart_command, "ir send") == 0) {
+            char cmd[256];
+            snprintf(cmd, sizeof(cmd), "ir send %s\n", input_state->input_buffer);
+            handle_ir_command_feedback_ex(input_state, cmd, true, true);
+        } else {
+            send_uart_command_with_text(
+                input_state->uart_command, input_state->input_buffer, input_state);
+            uart_receive_data(
+                input_state->uart_context, input_state->view_dispatcher, input_state, "", "", "");
+        }
     }
-    uart_receive_data(
-        input_state->uart_context, input_state->view_dispatcher, input_state, "", "", "");
     if(input_state->input_buffer) memset(input_state->input_buffer, 0, INPUT_BUFFER_SIZE);
 }
 
@@ -2133,6 +2140,9 @@ static void send_ir_file(AppState* state) {
     state->ir_file_buttons_mode = true;
 
     if(!ir_parse_buttons_from_ir_buffer(state, state->ir_file_buffer, state->ir_file_buffer_size)) {
+        free(state->ir_file_buffer);
+        state->ir_file_buffer = NULL;
+        state->ir_file_buffer_size = 0;
         state->ir_file_buttons_mode = false;
         ir_show_error(state, "No IR buttons found.");
         return;
@@ -2973,11 +2983,7 @@ bool back_event_callback(void* context) {
 
         // Cleanup text buffer
         if(state->textBoxBuffer) {
-            free(state->textBoxBuffer);
-            state->textBoxBuffer = malloc(1);
-            if(state->textBoxBuffer) {
-                state->textBoxBuffer[0] = '\0';
-            }
+            state->textBoxBuffer[0] = '\0';
             state->buffer_length = 0;
         }
 
@@ -3075,6 +3081,14 @@ bool back_event_callback(void* context) {
     }
     // Handle IR submenus (31-33)
     else if(current_view >= 31 && current_view <= 33) {
+        if(state->ir_file_buffer) {
+            free(state->ir_file_buffer);
+            state->ir_file_buffer = NULL;
+            state->ir_file_buffer_size = 0;
+        }
+        state->ir_file_buttons_mode = false;
+        state->ir_universal_buttons_mode = false;
+
         show_ir_menu(state);
         submenu_set_selected_item(state->ir_menu, state->last_ir_index);
         state->current_view = 30;
