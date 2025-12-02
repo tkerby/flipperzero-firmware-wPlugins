@@ -13,37 +13,37 @@ NFC writer for Mi Band with 0xFF keys support and automatic verification.
 
 ## Usage
 
-**Quick Start**
-1. Load NFC dump from `/ext/nfc` folder
-2. Emulate magic template (for blank Mi Bands)
+Quick Start
+1. Load NFC dump from the nfc folder
+2. Emulate magic template for blank Mi Bands
 3. Write data with progress tracking
 4. Verify write results
 
-**Key Operations**
-- **Quick UID Check**: Read card UID and find matching files
-- **Magic Emulation**: Create blank template with 0xFF keys  
-- **Write Data**: Write dump to Mi Band with backup option
-- **Verify**: Compare written data with original
-- **Save Magic**: Convert dumps to 0xFF key format
+Key Operations
+- Quick UID Check: Read card UID and find matching files
+- Magic Emulation: Create blank template with 0xFF keys
+- Write Data: Write dump to Mi Band with backup option
+- Verify: Compare written data with original
+- Save Magic: Convert dumps to 0xFF key format
 
 ## Settings
 Configure auto-backup, verification, logging, and progress display options via Settings menu.
 
 ## File Locations
-- Dumps: `/ext/nfc/`
-- Backups: `/ext/nfc/backups/`
-- Logs: `/ext/apps_data/miband_nfc/logs/`
-- Settings: `/ext/apps_data/miband_nfc/settings.bin`
+- Dumps: nfc folder
+- Backups: nfc/backups folder
+- Logs: apps_data/miband_nfc/logs folder
+- Settings: apps_data/miband_nfc/settings.bin
 
 ## Troubleshooting
 - Ensure Mi Band is magic card type
 - Check card positioning during operations
-- Use "Emulate Magic Card" before first write
+- Use Emulate Magic Card before first write
 - Enable logging for detailed error information
 
 ## Support
 Check Flipper Zero community forums for updates and support.
 
-**Version**: 1.0  
-**Category**: NFC  
-**Developer**: LucasMac
+Version: 1.0
+Category: NFC
+Developer: LucasMac
