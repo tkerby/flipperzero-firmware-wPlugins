@@ -11,8 +11,8 @@
 #define MAX_SCAN_TIME_MS 30000 // 30 secondi max
 
 typedef struct {
-    char filename[128];
-    char path[256];
+    char filename[64];
+    char path[128];
 } FoundFile;
 
 typedef struct {
@@ -97,10 +97,10 @@ static bool dynamic_array_add(DynamicFileArray* arr, const char* filename, const
         }
     }
 
-    strncpy(arr->files[arr->count].filename, filename, 127);
-    arr->files[arr->count].filename[127] = '\0';
-    strncpy(arr->files[arr->count].path, path, 255);
-    arr->files[arr->count].path[255] = '\0';
+    strncpy(arr->files[arr->count].filename, filename, 63);
+    arr->files[arr->count].filename[63] = '\0';
+    strncpy(arr->files[arr->count].path, path, 127);
+    arr->files[arr->count].path[127] = '\0';
 
     arr->count++;
     return true;
@@ -136,7 +136,7 @@ static int32_t uid_check_worker_thread(void* context) {
     }
 
     FileInfo file_info;
-    char name[128];
+    char name[64];
     FuriString* full_path = furi_string_alloc();
     uint32_t start_time = furi_get_tick();
 
@@ -391,7 +391,7 @@ void miband_nfc_scene_uid_check_on_enter(void* context) {
     // STEP 3: Launch worker
     popup_set_text(app->popup, "Scanning...\n\nInitializing", 64, 22, AlignCenter, AlignTop);
 
-    g_ctx->thread = furi_thread_alloc_ex("UidCheckWorker", 4096, uid_check_worker_thread, g_ctx);
+    g_ctx->thread = furi_thread_alloc_ex("UidCheckWorker", 2048, uid_check_worker_thread, g_ctx);
     furi_thread_start(g_ctx->thread);
 
     // STEP 4: Poll worker with UI updates

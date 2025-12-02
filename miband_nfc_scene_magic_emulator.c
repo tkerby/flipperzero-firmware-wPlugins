@@ -27,7 +27,7 @@ static void emulation_stats_free(void) {
     }
 
     emulation_stats->is_active = false;
-
+    furi_delay_ms(50);
     if(emulation_stats->update_timer) {
         furi_timer_stop(emulation_stats->update_timer);
         furi_timer_free(emulation_stats->update_timer);
@@ -46,6 +46,11 @@ static void emulation_stats_free(void) {
 
 static void emulation_timer_callback(void* context) {
     MiBandNfcApp* app = context;
+
+    if(!emulation_stats || !emulation_stats->is_active) {
+        return;
+    }
+
     if(emulation_stats && emulation_stats->is_active) {
         popup_reset(app->popup);
         popup_set_header(app->popup, "Magic Template Active", 64, 2, AlignCenter, AlignTop);
@@ -307,24 +312,35 @@ bool miband_nfc_scene_magic_emulator_on_event(void* context, SceneManagerEvent e
 }
 
 void miband_nfc_scene_magic_emulator_on_exit(void* context) {
-    furi_assert(context);
     MiBandNfcApp* app = context;
 
+    // 1. PRIMA: Ferma il listener
     if(app->listener) {
         nfc_listener_stop(app->listener);
         nfc_listener_free(app->listener);
         app->listener = NULL;
     }
-    if(app->logger && emulation_stats) {
-        miband_logger_log(
-            app->logger,
-            LogLevelInfo,
-            "Magic emulation ended: %lu total authentications",
-            emulation_stats->auth_attempts);
+
+    // 2. POI: Gestisci il timer in modo sicuro
+    if(emulation_stats) {
+        emulation_stats->is_active = false; // PRIMA di tutto
+
+        if(emulation_stats->update_timer) {
+            furi_timer_stop(emulation_stats->update_timer);
+            furi_delay_ms(100); // Aspetta che callback finisca
+            furi_timer_free(emulation_stats->update_timer);
+            emulation_stats->update_timer = NULL;
+        }
+
+        if(emulation_stats->status_message) {
+            furi_string_free(emulation_stats->status_message);
+            emulation_stats->status_message = NULL;
+        }
+
+        free(emulation_stats);
+        emulation_stats = NULL;
     }
-    emulation_stats_free();
+
     notification_message(app->notifications, &sequence_blink_stop);
     popup_reset(app->popup);
-
-    FURI_LOG_I(TAG, "Stopped blank template emulation");
 }

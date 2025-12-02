@@ -179,10 +179,13 @@ static bool miband_write_with_sync_approach(MiBandNfcApp* app) {
 
     furi_delay_ms(1000);
 
-    for(size_t sector = 0; sector < total_sectors; sector++) {
+    FuriString* progress_msg = furi_string_alloc();
+    bool should_break = false;
+
+    for(size_t sector = 0; sector < total_sectors && !should_break; sector++) {
         FURI_LOG_I(TAG, "Processing sector %zu...", sector);
 
-        FuriString* progress_msg = furi_string_alloc();
+        furi_string_reset(progress_msg);
         furi_string_printf(progress_msg, "Sector %zu/%zu\n\n", sector + 1, total_sectors);
 
         uint32_t progress_percent = ((sector + 1) * 100) / total_sectors;
@@ -201,7 +204,6 @@ static bool miband_write_with_sync_approach(MiBandNfcApp* app) {
         // SOLO text update, NO reset
         popup_set_text(
             app->popup, furi_string_get_cstr(progress_msg), 64, 18, AlignCenter, AlignTop);
-        furi_string_free(progress_msg);
 
         furi_delay_ms(100);
 
@@ -270,7 +272,8 @@ static bool miband_write_with_sync_approach(MiBandNfcApp* app) {
             if(!block0_read) {
                 FURI_LOG_E(TAG, "CRITICAL: Cannot read Block 0!");
                 write_success = false;
-                break;
+                should_break = true;
+                continue;
             }
 
             FURI_LOG_I(
@@ -452,9 +455,12 @@ static bool miband_write_with_sync_approach(MiBandNfcApp* app) {
                     sector);
             }
             write_success = false;
+            should_break = true;
             break;
         }
     }
+
+    furi_string_free(progress_msg);
     if(app->logger) {
         miband_logger_log(
             app->logger,
