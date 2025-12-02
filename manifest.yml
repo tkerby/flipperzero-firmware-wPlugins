@@ -2,7 +2,7 @@ sourcecode:
   type: git
   location:
     origin: https://github.com/LucaTomei/flipper-miband-nfc-writer.git
-    commit_sha: b6a0053e07dec470e97ef24b76e83fb887d5bc28
+    commit_sha: f94de1b1d5b8d7b6dcaf6a1a103b40647d00772a
 
 changelog: "@./CHANGELOG.md"
 description: "@./README_flipperlab.md"
