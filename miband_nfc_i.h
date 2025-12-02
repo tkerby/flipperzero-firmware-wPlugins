@@ -135,6 +135,10 @@ struct MiBandNfcApp {
     OperationType current_operation;
 
     FuriString* temp_text_buffer;
+
+    bool is_emulating;
+    void* uid_check_context; // Puntatore a UidCheckContext (allocato dinamicamente)
+    void* emulation_stats; // Puntatore a EmulationStats
 };
 
 bool miband_settings_save(MiBandNfcApp* app);

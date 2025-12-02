@@ -126,6 +126,7 @@ static bool backup_read_all_data(MiBandNfcApp* app) {
 
         if(!sector_read) {
             FURI_LOG_W(TAG, "Failed to read sector %zu for backup", sector);
+            furi_string_free(progress);
             return false;
         }
 
