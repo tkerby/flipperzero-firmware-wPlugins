@@ -34,13 +34,14 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [SD Card Mounter v0.1 (By aaronjamt)](https://github.com/aaronjamt/flipper_sd_mounters)
 - Updated: [I2C Explorer v0.9 (By 4mb3rz)](https://github.com/4mb3rz/Flipper-I2C-Explorer)
 - Updated: [VEML7700 Lux Meter v1.1 (By kamylwnb)](https://github.com/kamylwnb/Flipper-zero-app-VEML7700)
-- Updated: [Metroflip v1.0 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [Anki Remote v1.3 (By Blue5GD)](https://github.com/Blue5GD/Anki-Remote)
 - Added: [Tree Identification v0.0.5 (By fgreil)](https://github.com/fgreil/mitzi-tree-ident)
 - Black Friday Promo! Valid Now Till Monday! Use RM420 for 20% off your yearly RM Patreon subscription!
 - Updated: [Space Invaders v0.1 (By PavelZurek)](https://github.com/PavelZurek/flipperzero-space-invaders)
 - Updated: [Ghost ESP v1.6 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32`
 - Updated: [Rubiks Cube Timer v0.0.2 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
+- Updated: [Passy v1.4 (By bettse)](https://github.com/bettse/passy)
+- Updated: [Metroflip v1.0 (By luu176)](https://github.com/luu176/Metroflip)
 
 <a name="release">
 
