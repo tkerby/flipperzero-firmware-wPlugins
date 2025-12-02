@@ -442,7 +442,7 @@ NfcCommand passy_reader_read_dg2_or_dg7(PassyReader* passy_reader) {
 
     furi_string_printf(
         path, "%s/%s-%s%s", STORAGE_APP_DATA_PATH_PREFIX, passy->passport_number, dg_type, dg_ext);
-    furi_string_filename_safe(path);
+    passy_furi_string_filename_safe(path);
     FURI_LOG_I(TAG, "Writing offset %d to %s", start, furi_string_get_cstr(path));
 
     Storage* storage = furi_record_open(RECORD_STORAGE);

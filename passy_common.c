@@ -122,7 +122,7 @@ char passy_checksum(char* str) {
     return 0x30 + (sum % 10);
 }
 
-size_t furi_string_filename_safe(FuriString* string) {
+size_t passy_furi_string_filename_safe(FuriString* string) {
     FuriString* safe = furi_string_alloc();
 
     size_t len = furi_string_size(string);
