@@ -6,7 +6,7 @@
 #include "miband_nfc_i.h"
 
 #define TAG              "MiBandNfc"
-#define INITIAL_CAPACITY 10
+#define INITIAL_CAPACITY 5
 #define GROW_FACTOR      2
 #define MAX_SCAN_TIME_MS 30000 // 30 secondi max
 
@@ -391,7 +391,7 @@ void miband_nfc_scene_uid_check_on_enter(void* context) {
     // STEP 3: Launch worker
     popup_set_text(app->popup, "Scanning...\n\nInitializing", 64, 22, AlignCenter, AlignTop);
 
-    g_ctx->thread = furi_thread_alloc_ex("UidCheckWorker", 2048, uid_check_worker_thread, g_ctx);
+    g_ctx->thread = furi_thread_alloc_ex("UidCheckWorker", 1024, uid_check_worker_thread, g_ctx);
     furi_thread_start(g_ctx->thread);
 
     // STEP 4: Poll worker with UI updates
