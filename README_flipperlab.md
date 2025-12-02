@@ -44,7 +44,6 @@ Configure auto-backup, verification, logging, and progress display options via S
 ## Support
 Check Flipper Zero community forums for updates and support.
 
----
 **Version**: 1.0  
 **Category**: NFC  
 **Developer**: LucasMac
