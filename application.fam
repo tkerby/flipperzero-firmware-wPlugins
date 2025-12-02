@@ -6,7 +6,7 @@ App(
     stack_size=4 * 1024,  # Aumento stack
     fap_category="NFC",
     fap_description="NFC writer for Mi Band with 0xFF keys",
-    fap_author="Developer",
+    fap_author="Luca Tomei",
     fap_version="1.0",
     fap_icon="miband_nfc.bmp",
     fap_icon_assets="icons",

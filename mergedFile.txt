@@ -1,4 +1,4 @@
----- File: C:\Users\luca.tomei\Downloads\DEV\PERSONALE\flipper-miband-nfc-writer\miband_logger.c ----
+---- File: C:\Users\luca.tomei\Downloads\New folder (2)\New folder\flipper-miband-nfc-writer\miband_logger.c ----
 /**
  * @file miband_logger.c
  * @brief Logging implementation
@@ -183,7 +183,7 @@ void miband_logger_set_enabled(MiBandLogger* logger, bool enabled) {
         logger->enabled = enabled;
     }
 }
----- File: C:\Users\luca.tomei\Downloads\DEV\PERSONALE\flipper-miband-nfc-writer\miband_logger.h ----
+---- File: C:\Users\luca.tomei\Downloads\New folder (2)\New folder\flipper-miband-nfc-writer\miband_logger.h ----
 /**
  * @file miband_logger.h
  * @brief Logging system with file export
@@ -254,7 +254,7 @@ size_t miband_logger_get_count(MiBandLogger* logger);
  * @brief Enable/disable logging
  */
 void miband_logger_set_enabled(MiBandLogger* logger, bool enabled);
----- File: C:\Users\luca.tomei\Downloads\DEV\PERSONALE\flipper-miband-nfc-writer\miband_nfc.c ----
+---- File: C:\Users\luca.tomei\Downloads\New folder (2)\New folder\flipper-miband-nfc-writer\miband_nfc.c ----
 /**
  * @file miband_nfc.c
  * @brief Main application with FIXED memory management
@@ -278,18 +278,25 @@ bool miband_nfc_app_back_event_callback(void* context) {
 
 static MiBandNfcApp* miband_nfc_app_alloc() {
     MiBandNfcApp* app = malloc(sizeof(MiBandNfcApp));
+    if(!app) {
+        FURI_LOG_E(TAG, "Failed to allocate app structure");
+        return NULL;
+    }
 
-    // Initialize all pointers to NULL
     memset(app, 0, sizeof(MiBandNfcApp));
 
-    // Open system records
     app->gui = furi_record_open(RECORD_GUI);
     app->notifications = furi_record_open(RECORD_NOTIFICATION);
     app->storage = furi_record_open(RECORD_STORAGE);
     app->dialogs = furi_record_open(RECORD_DIALOGS);
-    FURI_LOG_I(TAG, "Records opened, storage=%p", app->storage); // Debug
 
-    // Allocate view dispatcher and scene manager
+    if(!app->storage) {
+        FURI_LOG_E(TAG, "Failed to open storage record");
+        goto error;
+    }
+
+    FURI_LOG_I(TAG, "Records opened, storage=%p", app->storage);
+
     app->view_dispatcher = view_dispatcher_alloc();
     app->scene_manager = scene_manager_alloc(&miband_nfc_scene_handlers, app);
 
@@ -299,7 +306,6 @@ static MiBandNfcApp* miband_nfc_app_alloc() {
     view_dispatcher_set_navigation_event_callback(
         app->view_dispatcher, miband_nfc_app_back_event_callback);
 
-    // Allocate and register views
     app->submenu = submenu_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher, MiBandNfcViewIdMainMenu, submenu_get_view(app->submenu));
@@ -312,7 +318,6 @@ static MiBandNfcApp* miband_nfc_app_alloc() {
     view_dispatcher_add_view(
         app->view_dispatcher, MiBandNfcViewIdWriter, popup_get_view(app->popup));
 
-    // ONE TextBox for both About and UID Report
     app->text_box = text_box_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher, MiBandNfcViewIdAbout, text_box_get_view(app->text_box));
@@ -325,54 +330,57 @@ static MiBandNfcApp* miband_nfc_app_alloc() {
     view_dispatcher_add_view(
         app->view_dispatcher, MiBandNfcViewIdUidReport, text_box_get_view(app->text_box_report));
 
-    // Allocate NFC components
     app->nfc = nfc_alloc();
     app->nfc_device = nfc_device_alloc();
     app->target_data = mf_classic_alloc();
     app->mf_classic_data = mf_classic_alloc();
 
-    // NFC poller/scanner/listener allocated on demand, initialized to NULL
     app->poller = NULL;
     app->scanner = NULL;
     app->listener = NULL;
 
-    // Allocate string
     app->file_path = furi_string_alloc();
+    app->temp_text_buffer = furi_string_alloc();
 
-    // Initialize state
     app->is_valid_nfc_data = false;
     app->is_scan_active = false;
     app->last_selected_submenu_index = SubmenuIndexQuickUidCheck;
     app->current_operation = OperationTypeEmulateMagic;
 
-    // Initialize state
-    app->is_valid_nfc_data = false;
-    app->is_scan_active = false;
-    app->last_selected_submenu_index = SubmenuIndexQuickUidCheck;
-    app->current_operation = OperationTypeEmulateMagic;
-
+    // FIX: Controllo allocazione logger
     app->logger = miband_logger_alloc(app->storage);
+    if(!app->logger) {
+        FURI_LOG_W(TAG, "Failed to allocate logger, continuing without logging");
+    }
 
-    // Load settings or use defaults
     if(!miband_settings_load(app)) {
-        // Default settings
         app->auto_backup_enabled = true;
         app->verify_after_write = false;
         app->show_detailed_progress = true;
         app->enable_logging = true;
         FURI_LOG_I(TAG, "Using default settings");
     }
-    miband_logger_set_enabled(app->logger, app->enable_logging);
-    miband_logger_log(app->logger, LogLevelInfo, "Application started");
-    app->temp_text_buffer = furi_string_alloc();
+
+    if(app->logger) {
+        miband_logger_set_enabled(app->logger, app->enable_logging);
+        miband_logger_log(app->logger, LogLevelInfo, "Application started");
+    }
 
     return app;
+
+error:
+    // FIX: Cleanup parziale in caso di errore
+    if(app->dialogs) furi_record_close(RECORD_DIALOGS);
+    if(app->storage) furi_record_close(RECORD_STORAGE);
+    if(app->notifications) furi_record_close(RECORD_NOTIFICATION);
+    if(app->gui) furi_record_close(RECORD_GUI);
+    free(app);
+    return NULL;
 }
 
 static void miband_nfc_app_free(MiBandNfcApp* app) {
     furi_assert(app);
 
-    // Free views and remove from dispatcher
     if(app->submenu) {
         view_dispatcher_remove_view(app->view_dispatcher, MiBandNfcViewIdMainMenu);
         submenu_free(app->submenu);
@@ -400,7 +408,6 @@ static void miband_nfc_app_free(MiBandNfcApp* app) {
         dialog_ex_free(app->dialog_ex);
     }
 
-    // Free scene manager and view dispatcher
     if(app->scene_manager) {
         scene_manager_free(app->scene_manager);
     }
@@ -409,7 +416,6 @@ static void miband_nfc_app_free(MiBandNfcApp* app) {
         view_dispatcher_free(app->view_dispatcher);
     }
 
-    // Stop and free NFC components if active
     if(app->listener) {
         nfc_listener_stop(app->listener);
         nfc_listener_free(app->listener);
@@ -425,7 +431,6 @@ static void miband_nfc_app_free(MiBandNfcApp* app) {
         nfc_scanner_free(app->scanner);
     }
 
-    // Free NFC data structures
     if(app->nfc) {
         nfc_free(app->nfc);
     }
@@ -442,12 +447,19 @@ static void miband_nfc_app_free(MiBandNfcApp* app) {
         mf_classic_free(app->target_data);
     }
 
-    // Free string
     if(app->file_path) {
         furi_string_free(app->file_path);
     }
 
-    // Close system records
+    if(app->temp_text_buffer) {
+        furi_string_free(app->temp_text_buffer);
+    }
+
+    if(app->logger) {
+        miband_logger_log(app->logger, LogLevelInfo, "Application closing");
+        miband_logger_free(app->logger);
+    }
+
     if(app->dialogs) {
         furi_record_close(RECORD_DIALOGS);
     }
@@ -464,14 +476,6 @@ static void miband_nfc_app_free(MiBandNfcApp* app) {
         furi_record_close(RECORD_GUI);
     }
 
-    if(app->logger) {
-        miband_logger_log(app->logger, LogLevelInfo, "Application closing");
-        miband_logger_free(app->logger);
-    }
-    if(app->temp_text_buffer) {
-        furi_string_free(app->temp_text_buffer);
-    }
-    // Finally free app structure
     free(app);
 }
 
@@ -479,6 +483,10 @@ int32_t miband_nfc_app(void* p) {
     UNUSED(p);
 
     MiBandNfcApp* app = miband_nfc_app_alloc();
+    if(!app) {
+        FURI_LOG_E(TAG, "Failed to allocate application");
+        return -1;
+    }
 
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
     scene_manager_next_scene(app->scene_manager, MiBandNfcSceneMainMenu);
@@ -488,7 +496,7 @@ int32_t miband_nfc_app(void* p) {
 
     return 0;
 }
----- File: C:\Users\luca.tomei\Downloads\DEV\PERSONALE\flipper-miband-nfc-writer\miband_nfc.h ----
+---- File: C:\Users\luca.tomei\Downloads\New folder (2)\New folder\flipper-miband-nfc-writer\miband_nfc.h ----
 /**
  * @file miband_nfc.h
  * @brief Public header for Mi Band NFC Writer application
@@ -520,7 +528,7 @@ int32_t miband_nfc_app(void* p) {
  * to change without affecting external code.
  */
 typedef struct MiBandNfcApp MiBandNfcApp;
----- File: C:\Users\luca.tomei\Downloads\DEV\PERSONALE\flipper-miband-nfc-writer\miband_nfc_i.h ----
+---- File: C:\Users\luca.tomei\Downloads\New folder (2)\New folder\flipper-miband-nfc-writer\miband_nfc_i.h ----
 /**
  * @file miband_nfc_i.h
  * @brief Internal header - Updated with new features
@@ -662,7 +670,7 @@ struct MiBandNfcApp {
 
 bool miband_settings_save(MiBandNfcApp* app);
 bool miband_settings_load(MiBandNfcApp* app);
----- File: C:\Users\luca.tomei\Downloads\DEV\PERSONALE\flipper-miband-nfc-writer\miband_nfc_scene.c ----
+---- File: C:\Users\luca.tomei\Downloads\New folder (2)\New folder\flipper-miband-nfc-writer\miband_nfc_scene.c ----
 #include "miband_nfc_scene.h"
 
 // Generate scene on_enter handlers array
@@ -693,7 +701,7 @@ const SceneManagerHandlers miband_nfc_scene_handlers = {
     .on_exit_handlers = miband_nfc_on_exit_handlers,
     .scene_num = MiBandNfcSceneNum,
 };
----- File: C:\Users\luca.tomei\Downloads\DEV\PERSONALE\flipper-miband-nfc-writer\miband_nfc_scene.h ----
+---- File: C:\Users\luca.tomei\Downloads\New folder (2)\New folder\flipper-miband-nfc-writer\miband_nfc_scene.h ----
 /**
  * @file miband_nfc_scene.h
  * @brief Scene manager declarations and scene ID enumeration
@@ -777,7 +785,7 @@ typedef enum {
 #undef ADD_SCENE
     MiBandNfcSceneNum, // Total number of scenes
 } MiBandNfcScene;
----- File: C:\Users\luca.tomei\Downloads\DEV\PERSONALE\flipper-miband-nfc-writer\miband_nfc_scene_about.c ----
+---- File: C:\Users\luca.tomei\Downloads\New folder (2)\New folder\flipper-miband-nfc-writer\miband_nfc_scene_about.c ----
 /**
  * @file miband_nfc_scene_about.c
  * @brief About/Help information scene
@@ -904,7 +912,7 @@ void miband_nfc_scene_about_on_exit(void* context) {
     MiBandNfcApp* app = context;
     text_box_reset(app->text_box);
 }
----- File: C:\Users\luca.tomei\Downloads\DEV\PERSONALE\flipper-miband-nfc-writer\miband_nfc_scene_backup.c ----
+---- File: C:\Users\luca.tomei\Downloads\New folder (2)\New folder\flipper-miband-nfc-writer\miband_nfc_scene_backup.c ----
 /**
  * @file miband_nfc_scene_backup.c
  * @brief Automatic backup before write operations
@@ -949,14 +957,15 @@ static bool backup_read_all_data(MiBandNfcApp* app) {
 
     popup_set_text(app->popup, "Reading Mi Band...\n\nSector 0/16", 64, 22, AlignCenter, AlignTop);
 
+    FuriString* progress = furi_string_alloc();
     for(size_t sector = 0; sector < total_sectors; sector++) {
         uint8_t first_block = mf_classic_get_first_block_num_of_sector(sector);
         uint8_t blocks_in_sector = mf_classic_get_blocks_num_in_sector(sector);
 
         if(sector % 2 == 0) {
-            FuriString* progress = furi_string_alloc();
+            furi_string_reset(progress);
             furi_string_printf(
-                progress, "Reading...\nSector %zu/%zu\n\n", sector + 1, total_sectors);
+                progress, "Reading...\nSector %zu/%zu\n", sector + 1, total_sectors);
 
             uint32_t percent = ((sector + 1) * 100) / total_sectors;
             furi_string_cat_str(progress, "[");
@@ -970,7 +979,6 @@ static bool backup_read_all_data(MiBandNfcApp* app) {
 
             popup_set_text(
                 app->popup, furi_string_get_cstr(progress), 64, 18, AlignCenter, AlignTop);
-            furi_string_free(progress);
         }
 
         furi_delay_ms(50);
@@ -1038,7 +1046,7 @@ static bool backup_read_all_data(MiBandNfcApp* app) {
 
         furi_delay_ms(50);
     }
-
+    furi_string_free(progress);
     return true;
 }
 
@@ -1050,7 +1058,9 @@ static bool backup_read_all_data(MiBandNfcApp* app) {
 void miband_nfc_scene_backup_on_enter(void* context) {
     furi_assert(context);
     MiBandNfcApp* app = context;
-
+    if(app->logger) {
+        miband_logger_log(app->logger, LogLevelInfo, "Backup operation started");
+    }
     popup_reset(app->popup);
     popup_set_header(app->popup, "Creating Backup", 64, 4, AlignCenter, AlignTop);
     popup_set_text(
@@ -1060,6 +1070,9 @@ void miband_nfc_scene_backup_on_enter(void* context) {
     notification_message(app->notifications, &sequence_blink_start_cyan);
 
     if(!ensure_backup_directory(app->storage)) {
+        if(app->logger) {
+            miband_logger_log(app->logger, LogLevelError, "Cannot create backup directory");
+        }
         notification_message(app->notifications, &sequence_error);
         popup_set_header(app->popup, "Backup Failed", 64, 4, AlignCenter, AlignTop);
         popup_set_text(app->popup, "Cannot create\nbackup folder", 64, 22, AlignCenter, AlignTop);
@@ -1084,6 +1097,9 @@ void miband_nfc_scene_backup_on_enter(void* context) {
     }
 
     if(!backup_read_all_data(app)) {
+        if(app->logger) {
+            miband_logger_log(app->logger, LogLevelError, "Backup: cannot read all sectors");
+        }
         notification_message(app->notifications, &sequence_error);
         popup_set_header(app->popup, "Read Failed", 64, 4, AlignCenter, AlignTop);
         popup_set_text(app->popup, "Cannot read\nall sectors", 64, 22, AlignCenter, AlignTop);
@@ -1105,7 +1121,7 @@ void miband_nfc_scene_backup_on_enter(void* context) {
         datetime.minute,
         datetime.second);
 
-    popup_set_text(app->popup, "Saving backup...", 64, 30, AlignCenter, AlignTop);
+    popup_set_text(app->popup, "Saving backup...", 64, 11, AlignCenter, AlignTop);
 
     nfc_device_set_data(app->nfc_device, NfcProtocolMfClassic, app->target_data);
     bool save_success = nfc_device_save(app->nfc_device, furi_string_get_cstr(backup_path));
@@ -1114,6 +1130,10 @@ void miband_nfc_scene_backup_on_enter(void* context) {
     popup_reset(app->popup);
 
     if(save_success) {
+        if(app->logger) {
+            miband_logger_log(
+                app->logger, LogLevelInfo, "Backup saved: %s", furi_string_get_cstr(backup_path));
+        }
         notification_message(app->notifications, &sequence_success);
         popup_set_header(app->popup, "Backup Created!", 64, 4, AlignCenter, AlignTop);
 
@@ -1132,6 +1152,9 @@ void miband_nfc_scene_backup_on_enter(void* context) {
         furi_string_free(msg);
         FURI_LOG_I(TAG, "Backup saved: %s", furi_string_get_cstr(backup_path));
     } else {
+        if(app->logger) {
+            miband_logger_log(app->logger, LogLevelError, "Failed to save backup file");
+        }
         notification_message(app->notifications, &sequence_error);
         popup_set_header(app->popup, "Save Failed", 64, 4, AlignCenter, AlignTop);
         popup_set_text(app->popup, "Cannot save\nbackup file", 64, 22, AlignCenter, AlignTop);
@@ -1162,7 +1185,7 @@ void miband_nfc_scene_backup_on_exit(void* context) {
     notification_message(app->notifications, &sequence_blink_stop);
     popup_reset(app->popup);
 }
----- File: C:\Users\luca.tomei\Downloads\DEV\PERSONALE\flipper-miband-nfc-writer\miband_nfc_scene_config.h ----
+---- File: C:\Users\luca.tomei\Downloads\New folder (2)\New folder\flipper-miband-nfc-writer\miband_nfc_scene_config.h ----
 /**
  * @file miband_nfc_scene_config.h
  * @brief Scene configuration - Updated with new features
@@ -1202,7 +1225,7 @@ ADD_SCENE(miband_nfc, uid_check, UidCheck)
 ADD_SCENE(miband_nfc, about, About)
 
 ADD_SCENE(miband_nfc, settings, Settings)
----- File: C:\Users\luca.tomei\Downloads\DEV\PERSONALE\flipper-miband-nfc-writer\miband_nfc_scene_diff_viewer.c ----
+---- File: C:\Users\luca.tomei\Downloads\New folder (2)\New folder\flipper-miband-nfc-writer\miband_nfc_scene_diff_viewer.c ----
 /**
  * @file miband_nfc_scene_diff_viewer.c
  * @brief Detailed difference viewer - FIXED
@@ -1387,7 +1410,7 @@ void miband_nfc_scene_diff_viewer_on_exit(void* context) {
     MiBandNfcApp* app = context;
     text_box_reset(app->text_box_report);
 }
----- File: C:\Users\luca.tomei\Downloads\DEV\PERSONALE\flipper-miband-nfc-writer\miband_nfc_scene_file_select.c ----
+---- File: C:\Users\luca.tomei\Downloads\New folder (2)\New folder\flipper-miband-nfc-writer\miband_nfc_scene_file_select.c ----
 /**
  * @file miband_nfc_scene_file_select.c
  * @brief File selection with loading feedback
@@ -1415,8 +1438,16 @@ void miband_nfc_scene_file_select_on_enter(void* context) {
     browser_options.skip_assets = false;
 
     if(!dialog_file_browser_show(app->dialogs, app->file_path, app->file_path, &browser_options)) {
+        if(app->logger) {
+            miband_logger_log(app->logger, LogLevelInfo, "File selection cancelled by user");
+        }
         scene_manager_previous_scene(app->scene_manager);
         return;
+    }
+
+    if(app->logger) {
+        miband_logger_log(
+            app->logger, LogLevelInfo, "File selected: %s", furi_string_get_cstr(app->file_path));
     }
 
     FURI_LOG_D(TAG, "File selected: %s", furi_string_get_cstr(app->file_path));
@@ -1434,7 +1465,9 @@ void miband_nfc_scene_file_select_on_enter(void* context) {
         if(nfc_device_get_protocol(app->nfc_device) == NfcProtocolMfClassic) {
             const MfClassicData* loaded_data =
                 nfc_device_get_data(app->nfc_device, NfcProtocolMfClassic);
-
+            if(app->logger) {
+                miband_logger_log(app->logger, LogLevelInfo, "MfClassic file loaded successfully");
+            }
             if(loaded_data == NULL) {
                 FURI_LOG_E(TAG, "Failed to get MfClassic data from loaded file");
                 popup_set_text(app->popup, "Invalid data", 64, 30, AlignCenter, AlignTop);
@@ -1472,12 +1505,22 @@ void miband_nfc_scene_file_select_on_enter(void* context) {
             }
         } else {
             FURI_LOG_W(TAG, "File is not Mifare Classic protocol.");
+            if(app->logger) {
+                miband_logger_log(app->logger, LogLevelWarning, "File is not MfClassic protocol");
+            }
             popup_set_text(app->popup, "Not MF Classic", 64, 30, AlignCenter, AlignTop);
             furi_delay_ms(1000);
             scene_manager_previous_scene(app->scene_manager);
         }
     } else {
         FURI_LOG_E(TAG, "Failed to load file: %s", furi_string_get_cstr(app->file_path));
+        if(app->logger) {
+            miband_logger_log(
+                app->logger,
+                LogLevelError,
+                "Failed to load file: %s",
+                furi_string_get_cstr(app->file_path));
+        }
         popup_set_text(app->popup, "Load failed", 64, 30, AlignCenter, AlignTop);
         furi_delay_ms(1000);
         scene_manager_previous_scene(app->scene_manager);
@@ -1498,70 +1541,71 @@ void miband_nfc_scene_file_select_on_exit(void* context) {
     MiBandNfcApp* app = context;
     popup_reset(app->popup);
 }
----- File: C:\Users\luca.tomei\Downloads\DEV\PERSONALE\flipper-miband-nfc-writer\miband_nfc_scene_magic_emulator.c ----
+---- File: C:\Users\luca.tomei\Downloads\New folder (2)\New folder\flipper-miband-nfc-writer\miband_nfc_scene_magic_emulator.c ----
 /**
  * @file miband_nfc_scene_magic_emulator.c
- * @brief Magic card emulation scene
- * 
- * This scene emulates a "blank" Mifare Classic card with all data blocks zeroed
- * and all keys set to 0xFF (magic card format). This prepares the Mi Band NFC
- * for writing by creating a template that can be authenticated with magic keys.
- * 
- * The emulation preserves the original UID from the dump file and sets up
- * sector trailers with magic access bits that allow easy read/write access.
+ * @brief Magic card emulation scene - FIXED VERSION
  */
 
 #include "miband_nfc_i.h"
 
 #define TAG "MiBandNfc"
 
-/**
- * @brief Emulation statistics tracker
- * 
- * Tracks authentication attempts, reader connections, and other metrics
- * during emulation to provide real-time feedback to the user.
- */
 typedef struct {
-    uint32_t auth_attempts; // Total authentication attempts
-    uint32_t successful_auths; // Successful authentications
-    uint32_t failed_auths; // Failed authentications
-    uint32_t reader_connections; // Number of times reader connected
-    uint32_t data_reads; // Number of data block reads
-    FuriString* last_activity; // Description of last activity
-    FuriString* status_message; // Current status message
-    bool is_active; // True if emulation is running
-    FuriTimer* update_timer; // Timer for periodic UI updates
+    uint32_t auth_attempts;
+    uint32_t successful_auths;
+    uint32_t failed_auths;
+    uint32_t reader_connections;
+    uint32_t data_reads;
+    FuriString* last_activity;
+    FuriString* status_message;
+    bool is_active;
+    FuriTimer* update_timer;
 } EmulationStats;
 
 static EmulationStats* emulation_stats = NULL;
 
-/**
- * @brief Timer callback for periodic UI updates
- * 
- * Called every second to refresh the emulation statistics display.
- * Shows connection count, authentication stats, and current status.
- * 
- * @param context Pointer to MiBandNfcApp instance
- */
+static void emulation_stats_free(void) {
+    if(!emulation_stats) {
+        return;
+    }
+
+    emulation_stats->is_active = false;
+    furi_delay_ms(50);
+    if(emulation_stats->update_timer) {
+        furi_timer_stop(emulation_stats->update_timer);
+        furi_timer_free(emulation_stats->update_timer);
+    }
+
+    if(emulation_stats->last_activity) {
+        furi_string_free(emulation_stats->last_activity);
+    }
+    if(emulation_stats->status_message) {
+        furi_string_free(emulation_stats->status_message);
+    }
+
+    free(emulation_stats);
+    emulation_stats = NULL;
+}
+
 static void emulation_timer_callback(void* context) {
     MiBandNfcApp* app = context;
+
+    if(!emulation_stats || !emulation_stats->is_active) {
+        return;
+    }
+
     if(emulation_stats && emulation_stats->is_active) {
         popup_reset(app->popup);
-
         popup_set_header(app->popup, "Magic Template Active", 64, 2, AlignCenter, AlignTop);
 
         FuriString* stats_text = furi_string_alloc();
         furi_string_printf(stats_text, "UID+0xFF template\n");
-        // furi_string_cat_printf(
-        //     stats_text, "Connections: %lu\n", emulation_stats->reader_connections);
         furi_string_cat_printf(
             stats_text,
             "Auth: %lu | OK %lu\n",
             emulation_stats->auth_attempts,
             emulation_stats->successful_auths);
-        // furi_string_cat_printf(stats_text, "  Success: %lu\n", emulation_stats->successful_auths);
-        // furi_string_cat_printf(stats_text, "  Failed: %lu\n", emulation_stats->failed_auths);
-        // furi_string_cat_printf(stats_text, "Data reads: %lu\n", emulation_stats->data_reads);
 
         if(furi_string_size(emulation_stats->last_activity) > 0) {
             furi_string_cat_printf(
@@ -1582,20 +1626,18 @@ static void emulation_timer_callback(void* context) {
     }
 }
 
-/**
- * @brief Initialize emulation statistics tracking
- * 
- * Allocates and initializes the statistics structure and starts
- * the periodic update timer.
- * 
- * @param app Pointer to MiBandNfcApp instance
- */
 static void emulation_stats_init(MiBandNfcApp* app) {
+    // FIX: Libera risorse esistenti prima di reinizializzare
     if(emulation_stats) {
-        return; // Already initialized
+        emulation_stats_free();
     }
 
     emulation_stats = malloc(sizeof(EmulationStats));
+    if(!emulation_stats) {
+        FURI_LOG_E(TAG, "Failed to allocate emulation_stats");
+        return;
+    }
+
     emulation_stats->auth_attempts = 0;
     emulation_stats->successful_auths = 0;
     emulation_stats->failed_auths = 0;
@@ -1605,7 +1647,6 @@ static void emulation_stats_init(MiBandNfcApp* app) {
     emulation_stats->status_message = furi_string_alloc();
     emulation_stats->is_active = true;
 
-    // Create timer for UI updates every second
     emulation_stats->update_timer =
         furi_timer_alloc(emulation_timer_callback, FuriTimerTypePeriodic, app);
     furi_timer_start(emulation_stats->update_timer, 1000);
@@ -1614,38 +1655,6 @@ static void emulation_stats_init(MiBandNfcApp* app) {
     furi_string_set_str(emulation_stats->last_activity, "Emulation started");
 }
 
-/**
- * @brief Free emulation statistics and stop timer
- */
-static void emulation_stats_free(void) {
-    if(!emulation_stats) {
-        return;
-    }
-
-    emulation_stats->is_active = false;
-
-    if(emulation_stats->update_timer) {
-        furi_timer_stop(emulation_stats->update_timer);
-        furi_timer_free(emulation_stats->update_timer);
-    }
-
-    furi_string_free(emulation_stats->last_activity);
-    furi_string_free(emulation_stats->status_message);
-    free(emulation_stats);
-    emulation_stats = NULL;
-}
-
-/**
- * @brief Prepare blank magic card template from loaded dump
- * 
- * This function creates a magic card template by:
- * 1. Preserving the original UID from Block 0
- * 2. Zeroing all data blocks
- * 3. Setting all keys to 0xFF (magic keys)
- * 4. Configuring magic access bits in sector trailers
- * 
- * @param app Pointer to MiBandNfcApp instance
- */
 static void miband_nfc_magic_emulator_prepare_blank_template(MiBandNfcApp* app) {
     if(!app->is_valid_nfc_data) {
         return;
@@ -1656,58 +1665,45 @@ static void miband_nfc_magic_emulator_prepare_blank_template(MiBandNfcApp* app) 
         furi_string_set_str(emulation_stats->last_activity, "Template generation");
     }
 
-    // Save original Block 0 for UID preservation
     uint8_t original_block0_data[16];
     memcpy(original_block0_data, app->mf_classic_data->block[0].data, 16);
 
-    // Extract UID (first 4 bytes)
     uint8_t uid[4];
     memcpy(uid, app->mf_classic_data->block[0].data, 4);
 
-    // Calculate BCC (XOR of all UID bytes)
     uint8_t bcc = uid[0] ^ uid[1] ^ uid[2] ^ uid[3];
 
-    // Get card structure information
     size_t total_sectors = mf_classic_get_total_sectors_num(app->mf_classic_data->type);
     size_t total_blocks = mf_classic_get_total_block_num(app->mf_classic_data->type);
 
-    // Zero all blocks completely
     for(size_t block_idx = 0; block_idx < total_blocks; block_idx++) {
         memset(app->mf_classic_data->block[block_idx].data, 0x00, 16);
     }
 
-    // Reconstruct Block 0 with proper Mifare Classic structure
-    memcpy(app->mf_classic_data->block[0].data, uid, 4); // UID
-    app->mf_classic_data->block[0].data[4] = bcc; // BCC
-    app->mf_classic_data->block[0].data[5] = 0x08; // SAK for Classic 1K
-    app->mf_classic_data->block[0].data[6] = 0x04; // ATQA byte 1
-    app->mf_classic_data->block[0].data[7] = 0x00; // ATQA byte 2
-    // Preserve bytes 8-15 from original (manufacturer data)
+    memcpy(app->mf_classic_data->block[0].data, uid, 4);
+    app->mf_classic_data->block[0].data[4] = bcc;
+    app->mf_classic_data->block[0].data[5] = 0x08;
+    app->mf_classic_data->block[0].data[6] = 0x04;
+    app->mf_classic_data->block[0].data[7] = 0x00;
     memcpy(&app->mf_classic_data->block[0].data[8], &original_block0_data[8], 8);
 
-    // Configure all sector trailers with magic card format
     for(size_t sector_idx = 0; sector_idx < total_sectors; sector_idx++) {
-        // Calculate sector trailer block index
         uint8_t sector_trailer_block_idx;
         if(sector_idx < 32) {
-            // First 32 sectors: 4 blocks each
             sector_trailer_block_idx = sector_idx * 4 + 3;
         } else {
-            // Remaining sectors: 16 blocks each
             sector_trailer_block_idx = 32 * 4 + (sector_idx - 32) * 16 + 15;
         }
 
         MfClassicBlock* sector_trailer = &app->mf_classic_data->block[sector_trailer_block_idx];
 
-        // Set magic card sector trailer format:
-        memset(&sector_trailer->data[0], 0xFF, 6); // Key A: FF FF FF FF FF FF
-        sector_trailer->data[6] = 0xFF; // Access bits byte 0
-        sector_trailer->data[7] = 0x07; // Access bits byte 1
-        sector_trailer->data[8] = 0x80; // Access bits byte 2
-        sector_trailer->data[9] = 0x69; // User byte
-        memset(&sector_trailer->data[10], 0xFF, 6); // Key B: FF FF FF FF FF FF
+        memset(&sector_trailer->data[0], 0xFF, 6);
+        sector_trailer->data[6] = 0xFF;
+        sector_trailer->data[7] = 0x07;
+        sector_trailer->data[8] = 0x80;
+        sector_trailer->data[9] = 0x69;
+        memset(&sector_trailer->data[10], 0xFF, 6);
 
-        // Enable key masks to indicate keys are available
         FURI_BIT_SET(app->mf_classic_data->key_a_mask, sector_idx);
         FURI_BIT_SET(app->mf_classic_data->key_b_mask, sector_idx);
     }
@@ -1732,16 +1728,6 @@ static void miband_nfc_magic_emulator_prepare_blank_template(MiBandNfcApp* app) 
         uid[3]);
 }
 
-/**
- * @brief NFC listener callback for emulation events
- * 
- * Handles authentication events during emulation and updates statistics.
- * Provides feedback after multiple authentications to show progress.
- * 
- * @param event NFC generic event
- * @param context Pointer to MiBandNfcApp instance
- * @return NfcCommand to continue or stop emulation
- */
 static NfcCommand miband_nfc_magic_emulator_callback(NfcGenericEvent event, void* context) {
     furi_assert(context);
     MiBandNfcApp* app = context;
@@ -1750,14 +1736,12 @@ static NfcCommand miband_nfc_magic_emulator_callback(NfcGenericEvent event, void
         const MfClassicListenerEvent* mfc_event = event.event_data;
 
         if(mfc_event->type == MfClassicListenerEventTypeAuthContextPartCollected) {
-            // Partial authentication data collected
             if(emulation_stats) {
                 furi_string_set_str(emulation_stats->last_activity, "Auth data collected");
             }
             FURI_LOG_D(TAG, "Blank template: Auth part collected");
 
         } else if(mfc_event->type == MfClassicListenerEventTypeAuthContextFullCollected) {
-            // Full authentication completed successfully
             if(emulation_stats) {
                 emulation_stats->auth_attempts++;
                 emulation_stats->successful_auths++;
@@ -1773,19 +1757,30 @@ static NfcCommand miband_nfc_magic_emulator_callback(NfcGenericEvent event, void
                 "Blank template: Auth complete #%lu",
                 emulation_stats ? emulation_stats->auth_attempts : 0);
 
-            // Provide feedback every 5 authentications
             if(emulation_stats && emulation_stats->auth_attempts % 5 == 0) {
                 view_dispatcher_send_custom_event(
                     app->view_dispatcher, MiBandNfcCustomEventCardDetected);
             }
-
-            // Safety limit: Stop if too many authentications (indicates potential issue)
+            if(app->logger && emulation_stats && emulation_stats->auth_attempts % 10 == 0) {
+                miband_logger_log(
+                    app->logger,
+                    LogLevelDebug,
+                    "Magic emulation: %lu authentications completed",
+                    emulation_stats->auth_attempts);
+            }
             if(emulation_stats && emulation_stats->auth_attempts > 100) {
                 furi_string_set_str(
                     emulation_stats->status_message, "Too many auth attempts - stopping");
                 furi_string_set_str(emulation_stats->last_activity, "Safety stop triggered");
                 FURI_LOG_W(
                     TAG, "Too many auth attempts (%lu), stopping", emulation_stats->auth_attempts);
+                if(app->logger) {
+                    miband_logger_log(
+                        app->logger,
+                        LogLevelWarning,
+                        "Magic emulation stopped: too many auth attempts (%lu)",
+                        emulation_stats->auth_attempts);
+                }
                 return NfcCommandStop;
             }
         }
@@ -1794,54 +1789,41 @@ static NfcCommand miband_nfc_magic_emulator_callback(NfcGenericEvent event, void
     return NfcCommandContinue;
 }
 
-/**
- * @brief Scene entry point
- * 
- * Initializes emulation, prepares the magic card template, and starts
- * the NFC listener to emulate the card.
- * 
- * @param context Pointer to MiBandNfcApp instance
- */
 void miband_nfc_scene_magic_emulator_on_enter(void* context) {
     furi_assert(context);
     MiBandNfcApp* app = context;
-
+    if(app->logger) {
+        miband_logger_log(app->logger, LogLevelInfo, "Magic emulation started");
+    }
     if(!app->is_valid_nfc_data) {
         scene_manager_previous_scene(app->scene_manager);
         return;
     }
 
-    // Initialize statistics tracking
     emulation_stats_init(app);
-
-    // Prepare the blank magic template
     miband_nfc_magic_emulator_prepare_blank_template(app);
 
-    // Switch to emulator view
     view_dispatcher_switch_to_view(app->view_dispatcher, MiBandNfcViewIdMagicEmulator);
 
-    // Start NFC listener for emulation
     app->listener = nfc_listener_alloc(app->nfc, NfcProtocolMfClassic, app->mf_classic_data);
     nfc_listener_start(app->listener, miband_nfc_magic_emulator_callback, app);
 
-    // Start visual notification (cyan blinking LED)
     notification_message(app->notifications, &sequence_blink_start_cyan);
-
-    // Initial UI update
     emulation_timer_callback(app);
-
+    if(app->logger) {
+        uint8_t* uid = app->mf_classic_data->block[0].data;
+        miband_logger_log(
+            app->logger,
+            LogLevelInfo,
+            "Magic template prepared with UID: %02X %02X %02X %02X",
+            uid[0],
+            uid[1],
+            uid[2],
+            uid[3]);
+    }
     FURI_LOG_I(TAG, "Started blank template emulation for Mi Band");
 }
 
-/**
- * @brief Scene event handler
- * 
- * Handles card detection events and back button press to stop emulation.
- * 
- * @param context Pointer to MiBandNfcApp instance
- * @param event Scene manager event
- * @return true if event was consumed, false otherwise
- */
 bool miband_nfc_scene_magic_emulator_on_event(void* context, SceneManagerEvent event) {
     MiBandNfcApp* app = context;
     bool consumed = false;
@@ -1849,10 +1831,8 @@ bool miband_nfc_scene_magic_emulator_on_event(void* context, SceneManagerEvent e
     if(event.type == SceneManagerEventTypeCustom) {
         switch(event.event) {
         case MiBandNfcCustomEventCardDetected:
-            // Periodic feedback during active reading
             if(emulation_stats) {
                 furi_string_set_str(emulation_stats->status_message, "Mi Band actively reading");
-                // Provide tactile feedback
                 notification_message(app->notifications, &sequence_single_vibro);
             }
             consumed = true;
@@ -1861,7 +1841,6 @@ bool miband_nfc_scene_magic_emulator_on_event(void* context, SceneManagerEvent e
             break;
         }
     } else if(event.type == SceneManagerEventTypeBack) {
-        // User pressed back - stop emulation
         if(app->listener) {
             nfc_listener_stop(app->listener);
             nfc_listener_free(app->listener);
@@ -1876,30 +1855,40 @@ bool miband_nfc_scene_magic_emulator_on_event(void* context, SceneManagerEvent e
     return consumed;
 }
 
-/**
- * @brief Scene exit handler
- * 
- * Stops emulation, cleans up resources, and stops LED notifications.
- * 
- * @param context Pointer to MiBandNfcApp instance
- */
 void miband_nfc_scene_magic_emulator_on_exit(void* context) {
-    furi_assert(context);
     MiBandNfcApp* app = context;
 
+    // 1. PRIMA: Ferma il listener
     if(app->listener) {
         nfc_listener_stop(app->listener);
         nfc_listener_free(app->listener);
         app->listener = NULL;
     }
 
-    emulation_stats_free();
+    // 2. POI: Gestisci il timer in modo sicuro
+    if(emulation_stats) {
+        emulation_stats->is_active = false; // PRIMA di tutto
+
+        if(emulation_stats->update_timer) {
+            furi_timer_stop(emulation_stats->update_timer);
+            furi_delay_ms(100); // Aspetta che callback finisca
+            furi_timer_free(emulation_stats->update_timer);
+            emulation_stats->update_timer = NULL;
+        }
+
+        if(emulation_stats->status_message) {
+            furi_string_free(emulation_stats->status_message);
+            emulation_stats->status_message = NULL;
+        }
+
+        free(emulation_stats);
+        emulation_stats = NULL;
+    }
+
     notification_message(app->notifications, &sequence_blink_stop);
     popup_reset(app->popup);
-
-    FURI_LOG_I(TAG, "Stopped blank template emulation");
 }
----- File: C:\Users\luca.tomei\Downloads\DEV\PERSONALE\flipper-miband-nfc-writer\miband_nfc_scene_magic_saver.c ----
+---- File: C:\Users\luca.tomei\Downloads\New folder (2)\New folder\flipper-miband-nfc-writer\miband_nfc_scene_magic_saver.c ----
 /**
  * @file miband_nfc_scene_magic_saver.c
  * @brief Magic dump converter with GUI updates
@@ -1925,9 +1914,9 @@ static bool miband_nfc_save_magic_dump(MiBandNfcApp* app) {
 
     mf_classic_copy(magic_data, app->mf_classic_data);
     size_t total_sectors = mf_classic_get_total_sectors_num(magic_data->type);
-
+    FuriString* progress = furi_string_alloc();
     for(size_t sector_idx = 0; sector_idx < total_sectors; sector_idx++) {
-        FuriString* progress = furi_string_alloc();
+        furi_string_reset(progress);
         furi_string_printf(
             progress, "Converting keys\nSector %zu/%zu\n\n", sector_idx + 1, total_sectors);
 
@@ -1943,7 +1932,7 @@ static bool miband_nfc_save_magic_dump(MiBandNfcApp* app) {
         furi_string_cat_printf(progress, "]\n%lu%%", percent);
 
         popup_set_text(app->popup, furi_string_get_cstr(progress), 64, 22, AlignCenter, AlignTop);
-        furi_string_free(progress);
+
         furi_delay_ms(20);
 
         uint8_t sector_trailer_block_idx;
@@ -1965,6 +1954,7 @@ static bool miband_nfc_save_magic_dump(MiBandNfcApp* app) {
         FURI_BIT_SET(magic_data->key_a_mask, sector_idx);
         FURI_BIT_SET(magic_data->key_b_mask, sector_idx);
     }
+    furi_string_free(progress);
 
     popup_set_text(app->popup, "Saving file...", 64, 30, AlignCenter, AlignTop);
     furi_delay_ms(100);
@@ -2002,7 +1992,13 @@ void miband_nfc_scene_magic_saver_on_enter(void* context) {
         scene_manager_previous_scene(app->scene_manager);
         return;
     }
-
+    if(app->logger) {
+        miband_logger_log(
+            app->logger,
+            LogLevelInfo,
+            "Magic dump conversion started for: %s",
+            furi_string_get_cstr(app->file_path));
+    }
     popup_reset(app->popup);
     popup_set_header(app->popup, "Saving Magic Dump", 64, 4, AlignCenter, AlignTop);
     popup_set_text(app->popup, "Preparing...", 64, 22, AlignCenter, AlignTop);
@@ -2015,6 +2011,9 @@ void miband_nfc_scene_magic_saver_on_enter(void* context) {
     popup_reset(app->popup);
 
     if(save_success) {
+        if(app->logger) {
+            miband_logger_log(app->logger, LogLevelInfo, "Magic dump saved with _magic suffix");
+        }
         notification_message(app->notifications, &sequence_success);
         popup_set_header(app->popup, "Success!", 64, 4, AlignCenter, AlignTop);
         popup_set_text(
@@ -2022,6 +2021,9 @@ void miband_nfc_scene_magic_saver_on_enter(void* context) {
         popup_set_icon(app->popup, 32, 28, &I_DolphinSuccess_91x55);
         furi_delay_ms(2000);
     } else {
+        if(app->logger) {
+            miband_logger_log(app->logger, LogLevelError, "Failed to save magic dump");
+        }
         notification_message(app->notifications, &sequence_error);
         popup_set_header(app->popup, "Failed", 64, 4, AlignCenter, AlignTop);
         popup_set_text(app->popup, "Could not save file", 64, 22, AlignCenter, AlignTop);
@@ -2052,7 +2054,7 @@ void miband_nfc_scene_magic_saver_on_exit(void* context) {
     notification_message(app->notifications, &sequence_blink_stop);
     popup_reset(app->popup);
 }
----- File: C:\Users\luca.tomei\Downloads\DEV\PERSONALE\flipper-miband-nfc-writer\miband_nfc_scene_main_menu.c ----
+---- File: C:\Users\luca.tomei\Downloads\New folder (2)\New folder\flipper-miband-nfc-writer\miband_nfc_scene_main_menu.c ----
 /**
  * @file miband_nfc_scene_main_menu.c
  * @brief Main menu scene - Updated with new features
@@ -2177,7 +2179,7 @@ bool miband_nfc_scene_main_menu_on_event(void* context, SceneManagerEvent event)
 void miband_nfc_scene_main_menu_on_exit(void* context) {
     UNUSED(context);
 }
----- File: C:\Users\luca.tomei\Downloads\DEV\PERSONALE\flipper-miband-nfc-writer\miband_nfc_scene_scanner.c ----
+---- File: C:\Users\luca.tomei\Downloads\New folder (2)\New folder\flipper-miband-nfc-writer\miband_nfc_scene_scanner.c ----
 #include "miband_nfc_i.h"
 
 #define TAG "MiBandNfc"
@@ -2316,7 +2318,7 @@ void miband_nfc_scene_scanner_on_exit(void* context) {
     notification_message(app->notifications, &sequence_blink_stop);
     popup_reset(app->popup);
 }
----- File: C:\Users\luca.tomei\Downloads\DEV\PERSONALE\flipper-miband-nfc-writer\miband_nfc_scene_settings.c ----
+---- File: C:\Users\luca.tomei\Downloads\New folder (2)\New folder\flipper-miband-nfc-writer\miband_nfc_scene_settings.c ----
 /**
  * @file miband_nfc_scene_settings.c
  * @brief Settings menu with persistent storage
@@ -2500,7 +2502,13 @@ bool miband_nfc_scene_settings_on_event(void* context, SceneManagerEvent event) 
         case SettingsIndexAutoBackup:
             app->auto_backup_enabled = !app->auto_backup_enabled;
             miband_settings_save(app);
-
+            if(app->logger) {
+                miband_logger_log(
+                    app->logger,
+                    LogLevelInfo,
+                    "Auto backup %s",
+                    app->auto_backup_enabled ? "enabled" : "disabled");
+            }
             // Refresh scene
             miband_nfc_scene_settings_on_exit(app);
             miband_nfc_scene_settings_on_enter(app);
@@ -2510,7 +2518,13 @@ bool miband_nfc_scene_settings_on_event(void* context, SceneManagerEvent event) 
         case SettingsIndexVerifyAfterWrite:
             app->verify_after_write = !app->verify_after_write;
             miband_settings_save(app);
-
+            if(app->logger) {
+                miband_logger_log(
+                    app->logger,
+                    LogLevelInfo,
+                    "Verify after write %s",
+                    app->verify_after_write ? "enabled" : "disabled");
+            }
             // Refresh scene
             miband_nfc_scene_settings_on_exit(app);
             miband_nfc_scene_settings_on_enter(app);
@@ -2529,6 +2543,13 @@ bool miband_nfc_scene_settings_on_event(void* context, SceneManagerEvent event) 
 
         case SettingsIndexEnableLogging:
             app->enable_logging = !app->enable_logging;
+            if(app->logger) {
+                miband_logger_log(
+                    app->logger,
+                    LogLevelInfo,
+                    "Logging %s",
+                    app->enable_logging ? "enabled" : "disabled");
+            }
             miband_settings_save(app);
             miband_logger_set_enabled(app->logger, app->enable_logging);
             miband_nfc_scene_settings_on_exit(app);
@@ -2549,7 +2570,9 @@ bool miband_nfc_scene_settings_on_event(void* context, SceneManagerEvent event) 
                 dt.second);
 
             bool success = miband_logger_export(app->logger, furi_string_get_cstr(filename));
-
+            if(app->logger) {
+                miband_logger_log(app->logger, LogLevelInfo, "Log export requested");
+            }
             popup_reset(app->popup);
             popup_set_header(
                 app->popup, success ? "Success" : "Failed", 64, 4, AlignCenter, AlignTop);
@@ -2571,6 +2594,9 @@ bool miband_nfc_scene_settings_on_event(void* context, SceneManagerEvent event) 
         }
 
         case SettingsIndexClearLogs:
+            if(app->logger) {
+                miband_logger_log(app->logger, LogLevelInfo, "Log clear requested");
+            }
             miband_logger_clear(app->logger);
             miband_nfc_scene_settings_on_exit(app);
             miband_nfc_scene_settings_on_enter(app);
@@ -2594,134 +2620,281 @@ void miband_nfc_scene_settings_on_exit(void* context) {
     MiBandNfcApp* app = context;
     submenu_reset(app->submenu);
 }
----- File: C:\Users\luca.tomei\Downloads\DEV\PERSONALE\flipper-miband-nfc-writer\miband_nfc_scene_uid_check.c ----
+---- File: C:\Users\luca.tomei\Downloads\New folder (2)\New folder\flipper-miband-nfc-writer\miband_nfc_scene_uid_check.c ----
 /**
  * @file miband_nfc_scene_uid_check.c
- * @brief Quick UID checker - FIXED
+ * @brief UID checker with dynamic allocation and worker thread
  */
 
 #include "miband_nfc_i.h"
 
-#define TAG                "MiBandNfc"
-#define MAX_FILES_TO_CHECK 20
-#define MAX_SCAN_TIME_MS   5000
+#define TAG              "MiBandNfc"
+#define INITIAL_CAPACITY 5
+#define GROW_FACTOR      2
+#define MAX_SCAN_TIME_MS 30000 // 30 secondi max
 
 typedef struct {
-    char filename[128];
-    char path[256];
+    char filename[64];
+    char path[128];
 } FoundFile;
 
-static void scan_directory_for_uid(
-    Storage* storage,
-    const char* directory,
-    const uint8_t* target_uid,
-    FoundFile* found_files,
-    size_t max_files,
-    size_t* found_count,
-    Popup* popup) {
-    File* dir = storage_file_alloc(storage);
-    if(!dir) return;
+typedef struct {
+    FoundFile* files;
+    size_t count;
+    size_t capacity;
+} DynamicFileArray;
 
-    if(!storage_dir_open(dir, directory)) {
+typedef struct {
+    Storage* storage;
+    uint8_t target_uid[4];
+    DynamicFileArray* results;
+    MfClassicBlock block0;
+
+    // Status
+    volatile bool scan_complete;
+    volatile bool scan_aborted;
+    volatile uint32_t files_checked;
+    volatile uint32_t files_total;
+
+    // Thread control
+    FuriThread* thread;
+
+    // CRITICAL: NO app pointer - causa crash nel worker thread!
+} UidCheckContext;
+
+// Global context (per comunicare con scene)
+static UidCheckContext* g_ctx = NULL;
+
+// ==================== DYNAMIC ARRAY ====================
+
+static DynamicFileArray* dynamic_array_alloc(void) {
+    DynamicFileArray* arr = malloc(sizeof(DynamicFileArray));
+    if(!arr) return NULL;
+
+    arr->files = malloc(sizeof(FoundFile) * INITIAL_CAPACITY);
+    if(!arr->files) {
+        free(arr);
+        return NULL;
+    }
+
+    arr->count = 0;
+    arr->capacity = INITIAL_CAPACITY;
+
+    FURI_LOG_I(TAG, "Array allocated: capacity=%zu", arr->capacity);
+    return arr;
+}
+
+static void dynamic_array_free(DynamicFileArray* arr) {
+    if(arr) {
+        if(arr->files) free(arr->files);
+        free(arr);
+    }
+}
+
+static bool dynamic_array_grow(DynamicFileArray* arr) {
+    size_t new_capacity = arr->capacity * GROW_FACTOR;
+
+    // Limite di sicurezza: max 500 file
+    if(new_capacity > 500) {
+        FURI_LOG_W(TAG, "Array max capacity reached");
+        return false;
+    }
+
+    FoundFile* new_files = realloc(arr->files, sizeof(FoundFile) * new_capacity);
+    if(!new_files) {
+        FURI_LOG_E(TAG, "Array grow failed");
+        return false;
+    }
+
+    arr->files = new_files;
+    arr->capacity = new_capacity;
+
+    FURI_LOG_I(TAG, "Array grown: capacity=%zu", arr->capacity);
+    return true;
+}
+
+static bool dynamic_array_add(DynamicFileArray* arr, const char* filename, const char* path) {
+    if(arr->count >= arr->capacity) {
+        if(!dynamic_array_grow(arr)) {
+            return false;
+        }
+    }
+
+    strncpy(arr->files[arr->count].filename, filename, 63);
+    arr->files[arr->count].filename[63] = '\0';
+    strncpy(arr->files[arr->count].path, path, 127);
+    arr->files[arr->count].path[127] = '\0';
+
+    arr->count++;
+    return true;
+}
+
+// ==================== WORKER THREAD ====================
+
+static int32_t uid_check_worker_thread(void* context) {
+    UidCheckContext* ctx = context;
+
+    // SAFE: Solo FURI_LOG nel worker, MAI app->logger
+    FURI_LOG_I(TAG, "Worker started");
+    FURI_LOG_I(
+        TAG,
+        "Target UID: %02X %02X %02X %02X",
+        ctx->target_uid[0],
+        ctx->target_uid[1],
+        ctx->target_uid[2],
+        ctx->target_uid[3]);
+
+    File* dir = storage_file_alloc(ctx->storage);
+    if(!dir) {
+        FURI_LOG_E(TAG, "Worker: Failed to alloc dir");
+        ctx->scan_complete = true;
+        return -1;
+    }
+
+    if(!storage_dir_open(dir, NFC_APP_FOLDER)) {
+        FURI_LOG_E(TAG, "Worker: Failed to open dir");
         storage_file_free(dir);
-        return;
+        ctx->scan_complete = true;
+        return -1;
     }
 
     FileInfo file_info;
-    char name[128];
+    char name[64];
     FuriString* full_path = furi_string_alloc();
-    uint32_t files_checked = 0;
     uint32_t start_time = furi_get_tick();
 
+    // Prima passata: conta i file totali
+    ctx->files_total = 0;
     while(storage_dir_read(dir, &file_info, name, sizeof(name))) {
-        if(furi_get_tick() - start_time > MAX_SCAN_TIME_MS) break;
-        if(files_checked % 10 == 0) furi_delay_ms(10);
+        if(ctx->scan_aborted) break;
         if(name[0] == '.') continue;
         if(file_info.flags & FSF_DIRECTORY) continue;
-        if(!strstr(name, ".nfc")) continue;
+        size_t name_len = strlen(name);
+        if(name_len < 4) continue;
+        if(strcasecmp(&name[name_len - 4], ".nfc") != 0) continue;
+        ctx->files_total++;
+    }
 
-        files_checked++;
-        if(files_checked > MAX_FILES_TO_CHECK) break;
+    FURI_LOG_I(TAG, "Found %lu .nfc files", ctx->files_total);
 
-        if(files_checked % 5 == 0 && popup) {
-            FuriString* msg = furi_string_alloc_printf("Scanning...\n%lu files", files_checked);
-            popup_set_text(popup, furi_string_get_cstr(msg), 64, 30, AlignCenter, AlignTop);
-            furi_string_free(msg);
+    // Torna all'inizio
+    storage_dir_close(dir);
+    if(!storage_dir_open(dir, NFC_APP_FOLDER)) {
+        FURI_LOG_E(TAG, "Worker: Failed to reopen dir");
+        furi_string_free(full_path);
+        storage_file_free(dir);
+        ctx->scan_complete = true;
+        return -1;
+    }
+
+    // Seconda passata: scansiona
+    ctx->files_checked = 0;
+
+    while(storage_dir_read(dir, &file_info, name, sizeof(name))) {
+        // Check abort
+        if(ctx->scan_aborted) {
+            FURI_LOG_W(TAG, "Worker aborted by user");
+            break;
         }
 
-        furi_string_printf(full_path, "%s/%s", directory, name);
-        NfcDevice* temp_device = nfc_device_alloc();
-        if(!temp_device) continue;
+        // Check timeout
+        if(furi_get_tick() - start_time > MAX_SCAN_TIME_MS) {
+            FURI_LOG_W(TAG, "Worker timeout");
+            break;
+        }
 
-        if(nfc_device_load(temp_device, furi_string_get_cstr(full_path))) {
-            if(nfc_device_get_protocol(temp_device) == NfcProtocolMfClassic) {
-                const MfClassicData* data = nfc_device_get_data(temp_device, NfcProtocolMfClassic);
-                if(data && memcmp(data->block[0].data, target_uid, 4) == 0) {
-                    if(*found_count >= max_files) {
-                        FURI_LOG_W(TAG, "Max files reached");
-                        break; // Esci dal loop
-                    }
-                    strncpy(found_files[*found_count].filename, name, 127);
-                    found_files[*found_count].filename[127] = '\0';
-                    strncpy(found_files[*found_count].path, furi_string_get_cstr(full_path), 255);
-                    found_files[*found_count].path[255] = '\0';
-                    (*found_count)++;
+        if(name[0] == '.') continue;
+        if(file_info.flags & FSF_DIRECTORY) continue;
+
+        size_t name_len = strlen(name);
+        if(name_len < 4) continue;
+
+        if(strcasecmp(&name[name_len - 4], ".nfc") != 0) continue;
+
+        ctx->files_checked++;
+
+        furi_string_printf(full_path, "%s/%s", NFC_APP_FOLDER, name);
+
+        // IMPORTANTE: Yield ogni 3 file
+        if(ctx->files_checked % 3 == 0) {
+            furi_delay_ms(20);
+        }
+
+        NfcDevice* temp_device = nfc_device_alloc();
+        if(!temp_device) {
+            FURI_LOG_E(TAG, "Worker: Failed to alloc device");
+            continue;
+        }
+
+        bool loaded = nfc_device_load(temp_device, furi_string_get_cstr(full_path));
+
+        if(loaded && nfc_device_get_protocol(temp_device) == NfcProtocolMfClassic) {
+            const MfClassicData* data = nfc_device_get_data(temp_device, NfcProtocolMfClassic);
+
+            if(data && memcmp(data->block[0].data, ctx->target_uid, 4) == 0) {
+                FURI_LOG_I(TAG, "*** MATCH: %s ***", name);
+
+                if(!dynamic_array_add(ctx->results, name, furi_string_get_cstr(full_path))) {
+                    FURI_LOG_W(TAG, "Cannot add more files");
                 }
             }
         }
+
         nfc_device_free(temp_device);
         furi_delay_ms(5);
     }
 
+    FURI_LOG_I(
+        TAG,
+        "Worker done: %lu/%lu files, %zu matches",
+        ctx->files_checked,
+        ctx->files_total,
+        ctx->results->count);
+
     furi_string_free(full_path);
     storage_dir_close(dir);
     storage_file_free(dir);
+
+    ctx->scan_complete = true;
+    return 0;
 }
 
-static FuriString* generate_uid_report(
-    const MfClassicBlock* block0,
-    const FoundFile* found_files,
-    size_t found_count) {
+// ==================== REPORT GENERATION ====================
+
+static FuriString* generate_report(UidCheckContext* ctx) {
     FuriString* report = furi_string_alloc();
     if(!report) return NULL;
 
     furi_string_printf(
         report,
-        "Card Info\n"
-        "=========\n\n"
+        "Card UID Check\n"
+        "==============\n\n"
         "UID: %02X %02X %02X %02X\n"
-        "BCC: %02X %s\n"
+        "BCC: %02X\n"
         "SAK: %02X\n"
-        "ATQA: %02X %02X\n\n",
-        block0->data[0],
-        block0->data[1],
-        block0->data[2],
-        block0->data[3],
-        block0->data[4],
-        (block0->data[4] ==
-         (block0->data[0] ^ block0->data[1] ^ block0->data[2] ^ block0->data[3])) ?
-            "(OK)" :
-            "(BAD)",
-        block0->data[5],
-        block0->data[6],
-        block0->data[7]);
+        "ATQA: %02X %02X\n\n"
+        "Scan Results:\n"
+        "-------------\n"
+        "Files checked: %lu\n"
+        "Matches: %zu\n\n",
+        ctx->block0.data[0],
+        ctx->block0.data[1],
+        ctx->block0.data[2],
+        ctx->block0.data[3],
+        ctx->block0.data[4],
+        ctx->block0.data[5],
+        ctx->block0.data[6],
+        ctx->block0.data[7],
+        ctx->files_checked,
+        ctx->results->count);
 
-    furi_string_cat_str(report, "Manufacturer:\n  ");
-    for(int i = 8; i < 16; i++) {
-        furi_string_cat_printf(report, "%02X ", block0->data[i]);
-        if(i == 11) furi_string_cat_str(report, "\n  ");
-    }
-
-    furi_string_cat_str(report, "\n\nMatching Files:\n===============\n");
-
-    if(found_count == 0) {
-        furi_string_cat_str(report, "No matches found\n");
+    if(ctx->results->count == 0) {
+        furi_string_cat_str(report, "No matching files\n\n");
     } else {
-        furi_string_cat_printf(report, "%zu file(s):\n\n", found_count);
-        for(size_t i = 0; i < found_count; i++) {
-            const char* rel_path = strstr(found_files[i].path, "/nfc/");
-            furi_string_cat_printf(
-                report, "%zu. %s\n", i + 1, rel_path ? rel_path + 5 : found_files[i].filename);
+        furi_string_cat_str(report, "Matching files:\n");
+        furi_string_cat_printf(report, "%zu file(s):\n\n", ctx->results->count);
+        for(size_t i = 0; i < ctx->results->count; i++) {
+            furi_string_cat_printf(report, "%zu. %s\n", i + 1, ctx->results->files[i].path);
         }
     }
 
@@ -2729,83 +2902,173 @@ static FuriString* generate_uid_report(
     return report;
 }
 
+// ==================== SCENE HANDLERS ====================
+
 void miband_nfc_scene_uid_check_on_enter(void* context) {
     furi_assert(context);
     MiBandNfcApp* app = context;
 
-    // Reset buffer
-    furi_string_reset(app->temp_text_buffer);
+    FURI_LOG_I(TAG, "=== UID CHECK START ===");
 
+    // LOG: Inizio scena
+    if(app->logger) {
+        miband_logger_log(app->logger, LogLevelInfo, "UID Check scene started");
+    }
+
+    furi_string_reset(app->temp_text_buffer);
     text_box_reset(app->text_box_report);
-    dialog_ex_reset(app->dialog_ex);
     popup_reset(app->popup);
 
     popup_set_header(app->popup, "UID Check", 64, 4, AlignCenter, AlignTop);
-    popup_set_text(app->popup, "Place card near\nFlipper Zero", 64, 22, AlignCenter, AlignTop);
+    popup_set_text(app->popup, "Place card", 64, 22, AlignCenter, AlignTop);
     view_dispatcher_switch_to_view(app->view_dispatcher, MiBandNfcViewIdScanner);
     notification_message(app->notifications, &sequence_blink_start_cyan);
 
+    // STEP 1: Read UID
     Iso14443_3aData iso_data = {0};
-    bool read_success = false;
+    bool read_ok = false;
 
-    for(int attempt = 0; attempt < 15 && !read_success; attempt++) {
-        if(attempt % 3 == 0) {
-            FuriString* msg = furi_string_alloc_printf("Reading UID...\n%d/15", attempt + 1);
-            popup_set_text(app->popup, furi_string_get_cstr(msg), 64, 22, AlignCenter, AlignTop);
-            furi_string_free(msg);
-        }
-
-        furi_delay_ms(300);
-
-        Iso14443_3aError error = iso14443_3a_poller_sync_read(app->nfc, &iso_data);
-
-        if(error == Iso14443_3aErrorNone && iso_data.uid_len >= 4) {
-            read_success = true;
-            break;
+    for(int i = 0; i < 12 && !read_ok; i++) {
+        furi_delay_ms(250);
+        if(iso14443_3a_poller_sync_read(app->nfc, &iso_data) == Iso14443_3aErrorNone &&
+           iso_data.uid_len >= 4) {
+            read_ok = true;
+            FURI_LOG_I(
+                TAG,
+                "UID: %02X %02X %02X %02X",
+                iso_data.uid[0],
+                iso_data.uid[1],
+                iso_data.uid[2],
+                iso_data.uid[3]);
         }
     }
 
     notification_message(app->notifications, &sequence_blink_stop);
 
-    if(!read_success) {
-        notification_message(app->notifications, &sequence_error);
+    if(!read_ok) {
+        // LOG: Lettura fallita
+        if(app->logger) {
+            miband_logger_log(
+                app->logger, LogLevelError, "Failed to read card UID after 12 attempts");
+        }
         popup_set_text(app->popup, "Card not found", 64, 22, AlignCenter, AlignTop);
         furi_delay_ms(1500);
         scene_manager_previous_scene(app->scene_manager);
         return;
     }
 
-    notification_message(app->notifications, &sequence_success);
-    popup_set_text(app->popup, "UID read!\nScanning...", 64, 22, AlignCenter, AlignTop);
-    furi_delay_ms(200);
+    // LOG: UID letto
+    if(app->logger) {
+        miband_logger_log(
+            app->logger,
+            LogLevelInfo,
+            "UID read: %02X %02X %02X %02X",
+            iso_data.uid[0],
+            iso_data.uid[1],
+            iso_data.uid[2],
+            iso_data.uid[3]);
+    }
 
-    FoundFile* found_files = malloc(sizeof(FoundFile) * MAX_FILES_TO_CHECK);
-    if(!found_files) {
+    notification_message(app->notifications, &sequence_success);
+
+    // STEP 2: Setup context
+    g_ctx = malloc(sizeof(UidCheckContext));
+    if(!g_ctx) {
+        // LOG: Alloc fallita
+        if(app->logger) {
+            miband_logger_log(app->logger, LogLevelError, "Failed to allocate UID check context");
+        }
+        popup_set_text(app->popup, "Memory error", 64, 22, AlignCenter, AlignTop);
+        furi_delay_ms(1500);
         scene_manager_previous_scene(app->scene_manager);
         return;
     }
 
-    size_t found_count = 0;
-    scan_directory_for_uid(
-        app->storage,
-        NFC_APP_FOLDER,
-        iso_data.uid,
-        found_files,
-        MAX_FILES_TO_CHECK,
-        &found_count,
-        app->popup);
+    g_ctx->results = dynamic_array_alloc();
+    if(!g_ctx->results) {
+        // LOG: Alloc array fallita
+        if(app->logger) {
+            miband_logger_log(app->logger, LogLevelError, "Failed to allocate dynamic array");
+        }
+        free(g_ctx);
+        g_ctx = NULL;
+        popup_set_text(app->popup, "Memory error", 64, 22, AlignCenter, AlignTop);
+        furi_delay_ms(1500);
+        scene_manager_previous_scene(app->scene_manager);
+        return;
+    }
 
-    MfClassicBlock block0 = {0};
-    memcpy(block0.data, iso_data.uid, 4);
-    block0.data[4] = iso_data.uid[0] ^ iso_data.uid[1] ^ iso_data.uid[2] ^ iso_data.uid[3];
-    block0.data[5] = iso_data.sak;
-    block0.data[6] = iso_data.atqa[0];
-    block0.data[7] = iso_data.atqa[1];
+    g_ctx->storage = app->storage;
+    memcpy(g_ctx->target_uid, iso_data.uid, 4);
+    g_ctx->scan_complete = false;
+    g_ctx->scan_aborted = false;
+    g_ctx->files_checked = 0;
+    g_ctx->files_total = 0;
 
-    FuriString* report = generate_uid_report(&block0, found_files, found_count);
-    free(found_files);
+    memcpy(g_ctx->block0.data, iso_data.uid, 4);
+    g_ctx->block0.data[4] = iso_data.uid[0] ^ iso_data.uid[1] ^ iso_data.uid[2] ^ iso_data.uid[3];
+    g_ctx->block0.data[5] = iso_data.sak;
+    g_ctx->block0.data[6] = iso_data.atqa[0];
+    g_ctx->block0.data[7] = iso_data.atqa[1];
 
+    // STEP 3: Launch worker
+    popup_set_text(app->popup, "Scanning...\n\nInitializing", 64, 22, AlignCenter, AlignTop);
+
+    g_ctx->thread = furi_thread_alloc_ex("UidCheckWorker", 1024, uid_check_worker_thread, g_ctx);
+    furi_thread_start(g_ctx->thread);
+
+    // STEP 4: Poll worker with UI updates
+    uint32_t last_update = furi_get_tick();
+    uint32_t last_count = 0;
+
+    while(!g_ctx->scan_complete) {
+        uint32_t now = furi_get_tick();
+
+        // Forza update se counter cambia O ogni 300ms
+        if((g_ctx->files_checked != last_count) || (now - last_update > 300)) {
+            FuriString* msg = furi_string_alloc_printf(
+                "Scanning...\n\n%lu / %lu files\n%zu matches",
+                g_ctx->files_checked,
+                g_ctx->files_total > 0 ? g_ctx->files_total : g_ctx->files_checked,
+                g_ctx->results->count);
+
+            popup_reset(app->popup);
+            popup_set_header(app->popup, "UID Check", 64, 4, AlignCenter, AlignTop);
+            popup_set_text(app->popup, furi_string_get_cstr(msg), 64, 18, AlignCenter, AlignTop);
+            furi_string_free(msg);
+
+            last_update = now;
+            last_count = g_ctx->files_checked;
+        }
+
+        furi_delay_ms(50); // Ridotto da 100 a 50ms per UI più responsive
+    }
+
+    furi_thread_join(g_ctx->thread);
+    furi_thread_free(g_ctx->thread);
+
+    // LOG: Scan completato
+    if(app->logger) {
+        miband_logger_log(
+            app->logger,
+            LogLevelInfo,
+            "UID Check complete: %lu files scanned, %zu matches found",
+            g_ctx->files_checked,
+            g_ctx->results->count);
+    }
+
+    // STEP 5: Generate report
+    FuriString* report = generate_report(g_ctx);
     if(!report) {
+        // LOG: Report fallito
+        if(app->logger) {
+            miband_logger_log(app->logger, LogLevelError, "Failed to generate report");
+        }
+        dynamic_array_free(g_ctx->results);
+        free(g_ctx);
+        g_ctx = NULL;
+        popup_set_text(app->popup, "Error", 64, 22, AlignCenter, AlignTop);
+        furi_delay_ms(1500);
         scene_manager_previous_scene(app->scene_manager);
         return;
     }
@@ -2813,8 +3076,11 @@ void miband_nfc_scene_uid_check_on_enter(void* context) {
     furi_string_set(app->temp_text_buffer, report);
     furi_string_free(report);
 
+    dynamic_array_free(g_ctx->results);
+    free(g_ctx);
+    g_ctx = NULL;
+
     popup_reset(app->popup);
-    furi_delay_ms(10);
 
     text_box_reset(app->text_box_report);
     text_box_set_text(app->text_box_report, furi_string_get_cstr(app->temp_text_buffer));
@@ -2822,12 +3088,20 @@ void miband_nfc_scene_uid_check_on_enter(void* context) {
     text_box_set_focus(app->text_box_report, TextBoxFocusStart);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, MiBandNfcViewIdUidReport);
+
+    FURI_LOG_I(TAG, "=== UID CHECK DONE ===");
 }
 
 bool miband_nfc_scene_uid_check_on_event(void* context, SceneManagerEvent event) {
     MiBandNfcApp* app = context;
 
     if(event.type == SceneManagerEventTypeBack) {
+        // Abort scan if running
+        if(g_ctx && !g_ctx->scan_complete) {
+            g_ctx->scan_aborted = true;
+            FURI_LOG_W(TAG, "Scan aborted by user");
+        }
+
         scene_manager_previous_scene(app->scene_manager);
         return true;
     }
@@ -2836,11 +3110,30 @@ bool miband_nfc_scene_uid_check_on_event(void* context, SceneManagerEvent event)
 
 void miband_nfc_scene_uid_check_on_exit(void* context) {
     MiBandNfcApp* app = context;
+
+    if(g_ctx) {
+        if(!g_ctx->scan_complete) {
+            g_ctx->scan_aborted = true;
+        }
+
+        if(g_ctx->thread) {
+            furi_thread_join(g_ctx->thread);
+            furi_thread_free(g_ctx->thread);
+        }
+
+        if(g_ctx->results) {
+            dynamic_array_free(g_ctx->results);
+        }
+
+        free(g_ctx);
+        g_ctx = NULL;
+    }
+
     notification_message(app->notifications, &sequence_blink_stop);
     popup_reset(app->popup);
     text_box_reset(app->text_box_report);
 }
----- File: C:\Users\luca.tomei\Downloads\DEV\PERSONALE\flipper-miband-nfc-writer\miband_nfc_scene_verify.c ----
+---- File: C:\Users\luca.tomei\Downloads\New folder (2)\New folder\flipper-miband-nfc-writer\miband_nfc_scene_verify.c ----
 /**
  * @file miband_nfc_scene_verify.c
  * @brief Data verification scene (FIXED VERSION)
@@ -2870,15 +3163,18 @@ static void verify_dialog_callback(DialogExResult result, void* context) {
     MiBandNfcApp* app = context;
 
     if(result == DialogExResultLeft) {
-        // Exit - torna al menu
+        // Exit o Back - torna al menu
         view_dispatcher_send_custom_event(app->view_dispatcher, MiBandNfcCustomEventVerifyExit);
     } else if(result == DialogExResultRight) {
         // View Details - vai al diff viewer
         view_dispatcher_send_custom_event(
             app->view_dispatcher, MiBandNfcCustomEventVerifyViewDetails);
     }
+    // AGGIUNGI: Gestisci anche center (se solo Back button)
+    else if(result == DialogExResultCenter) {
+        view_dispatcher_send_custom_event(app->view_dispatcher, MiBandNfcCustomEventVerifyExit);
+    }
 }
-
 /**
  * @brief Verification progress tracker
  * 
@@ -2906,6 +3202,21 @@ static VerifyTracker verify_tracker = {0};
  * @brief Initialize verification tracker
  */
 static void verify_tracker_init(void) {
+    // PRIMA: Libera se esistono
+    if(verify_tracker.current_operation) {
+        furi_string_free(verify_tracker.current_operation);
+        verify_tracker.current_operation = NULL;
+    }
+    if(verify_tracker.last_result) {
+        furi_string_free(verify_tracker.last_result);
+        verify_tracker.last_result = NULL;
+    }
+    if(verify_tracker.error_details) {
+        furi_string_free(verify_tracker.error_details);
+        verify_tracker.error_details = NULL;
+    }
+
+    // Reset contatori
     verify_tracker.current_sector = 0;
     verify_tracker.total_sectors = 0;
     verify_tracker.sectors_read = 0;
@@ -2916,29 +3227,10 @@ static void verify_tracker_init(void) {
     verify_tracker.blocks_different = 0;
     verify_tracker.reading_complete = false;
 
-    if(!verify_tracker.current_operation) {
-        verify_tracker.current_operation = furi_string_alloc();
-        verify_tracker.last_result = furi_string_alloc();
-        verify_tracker.error_details = furi_string_alloc();
-    }
-
-    furi_string_reset(verify_tracker.current_operation);
-    furi_string_reset(verify_tracker.last_result);
-    furi_string_reset(verify_tracker.error_details);
-}
-
-/**
- * @brief Free verification tracker resources
- */
-static void verify_tracker_free(void) {
-    if(verify_tracker.current_operation) {
-        furi_string_free(verify_tracker.current_operation);
-        furi_string_free(verify_tracker.last_result);
-        furi_string_free(verify_tracker.error_details);
-        verify_tracker.current_operation = NULL;
-        verify_tracker.last_result = NULL;
-        verify_tracker.error_details = NULL;
-    }
+    // POI: Alloca nuove
+    verify_tracker.current_operation = furi_string_alloc();
+    verify_tracker.last_result = furi_string_alloc();
+    verify_tracker.error_details = furi_string_alloc();
 }
 
 /**
@@ -2950,9 +3242,7 @@ static void verify_tracker_free(void) {
  * @param header Header text for the popup
  */
 static void update_verify_ui(MiBandNfcApp* app, const char* header) {
-    popup_set_header(app->popup, header, 64, 2, AlignCenter, AlignTop);
-
-    FuriString* status_text = furi_string_alloc();
+    furi_string_reset(app->temp_text_buffer);
 
     if(verify_tracker.total_sectors > 0) {
         uint32_t progress_percent =
@@ -2961,63 +3251,28 @@ static void update_verify_ui(MiBandNfcApp* app, const char* header) {
                 (verify_tracker.current_sector * 100) / verify_tracker.total_sectors;
 
         furi_string_printf(
-            status_text,
-            "Sector: %lu/%lu\n\n",
+            app->temp_text_buffer,
+            "Sector %lu/%lu\n[",
             verify_tracker.current_sector,
             verify_tracker.total_sectors);
 
-        furi_string_cat_str(status_text, "[");
-        for(uint32_t i = 0; i < 20; i++) {
-            if(i < (progress_percent / 5)) {
-                furi_string_cat_str(status_text, "=");
-            } else if(i == (progress_percent / 5) && progress_percent < 100) {
-                furi_string_cat_str(status_text, ">");
+        for(uint32_t i = 0; i < 16; i++) {
+            if(i < (progress_percent / 6)) {
+                furi_string_cat_str(app->temp_text_buffer, "=");
             } else {
-                furi_string_cat_str(status_text, " ");
+                furi_string_cat_str(app->temp_text_buffer, " ");
             }
         }
-        furi_string_cat_printf(status_text, "]\n%lu%%\n\n", progress_percent);
+        furi_string_cat_printf(app->temp_text_buffer, "] %lu%%", progress_percent);
+    } else {
+        furi_string_set_str(app->temp_text_buffer, "Initializing...");
     }
 
-    if(furi_string_size(verify_tracker.current_operation) > 0) {
-        furi_string_cat_printf(
-            status_text, "%s\n", furi_string_get_cstr(verify_tracker.current_operation));
-    }
-
-    if(verify_tracker.auth_attempts > 0) {
-        furi_string_cat_printf(
-            status_text,
-            "Auth: %lu/%lu\n",
-            verify_tracker.auth_successes,
-            verify_tracker.auth_attempts);
-    }
-
-    if(verify_tracker.blocks_compared > 0) {
-        furi_string_cat_printf(status_text, "Compared: %lu\n", verify_tracker.blocks_compared);
-        if(verify_tracker.blocks_different > 0) {
-            furi_string_cat_printf(status_text, "Diff: %lu\n", verify_tracker.blocks_different);
-        }
-    }
-
-    if(furi_string_size(verify_tracker.error_details) > 0) {
-        furi_string_cat_printf(
-            status_text, "\n%s", furi_string_get_cstr(verify_tracker.error_details));
-    }
-
-    popup_set_text(app->popup, furi_string_get_cstr(status_text), 4, 12, AlignLeft, AlignTop);
-
-    // Icona solo alla fine
-    if(verify_tracker.reading_complete) {
-        if(furi_string_size(verify_tracker.error_details) > 0) {
-            popup_set_icon(app->popup, 96, 20, &I_WarningDolphinFlip_45x42);
-        } else {
-            popup_set_icon(app->popup, 90, 16, &I_DolphinSuccess_91x55);
-        }
-    }
-
-    furi_string_free(status_text);
+    popup_reset(app->popup);
+    popup_set_header(app->popup, header, 64, 4, AlignCenter, AlignTop);
+    popup_set_text(
+        app->popup, furi_string_get_cstr(app->temp_text_buffer), 64, 28, AlignCenter, AlignCenter);
 }
-
 /**
  * @brief Read a sector using multiple key strategies
  * 
@@ -3182,7 +3437,6 @@ static bool miband_verify_read_card(MiBandNfcApp* app) {
 
         // CHIAMALO PIÙ SPESSO - ogni settore
         update_verify_ui(app, "Reading Mi Band");
-
         furi_delay_ms(50);
 
         uint8_t first_block = mf_classic_get_first_block_num_of_sector(sector);
@@ -3193,11 +3447,14 @@ static bool miband_verify_read_card(MiBandNfcApp* app) {
         if(sector_success) {
             verify_tracker.sectors_read++;
             furi_string_printf(verify_tracker.last_result, "Sector %zu OK", sector);
-            // AGGIORNA SEMPRE
             update_verify_ui(app, "Reading Mi Band");
             furi_delay_ms(50);
         } else {
             verify_tracker.sectors_failed++;
+            if(app->logger) {
+                miband_logger_log(
+                    app->logger, LogLevelError, "Verify: failed to read sector %zu", sector);
+            }
             overall_success = false;
             furi_string_printf(verify_tracker.error_details, "Sector %zu failed", sector);
             FURI_LOG_E(TAG, "Failed to read sector %zu", sector);
@@ -3272,7 +3529,13 @@ void miband_nfc_scene_verify_on_enter(void* context) {
         scene_manager_previous_scene(app->scene_manager);
         return;
     }
-
+    if(app->logger) {
+        miband_logger_log(
+            app->logger,
+            LogLevelInfo,
+            "Verify operation started for: %s",
+            furi_string_get_cstr(app->file_path));
+    }
     verify_tracker_init();
     scene_manager_set_scene_state(
         app->scene_manager, MiBandNfcSceneVerify, MiBandNfcSceneVerifyStateCardSearch);
@@ -3329,16 +3592,127 @@ bool miband_nfc_scene_verify_on_event(void* context, SceneManagerEvent event) {
 
             if(!read_success) {
                 notification_message(app->notifications, &sequence_error);
-                furi_string_set_str(
-                    verify_tracker.error_details, "Cannot read Mi Band\nCheck keys or position");
-                update_verify_ui(app, "Read Failed");
-                furi_delay_ms(3000);
-                scene_manager_search_and_switch_to_another_scene(
-                    app->scene_manager, MiBandNfcSceneMainMenu);
+
+                // Leggi UID della card fisica
+                Iso14443_3aData card_iso_data = {0};
+                bool has_card_uid = false;
+
+                for(int attempt = 0; attempt < 3; attempt++) {
+                    if(iso14443_3a_poller_sync_read(app->nfc, &card_iso_data) ==
+                       Iso14443_3aErrorNone) {
+                        has_card_uid = true;
+                        break;
+                    }
+                    furi_delay_ms(100);
+                }
+
+                // LOG dettagliato
+                if(app->logger) {
+                    if(has_card_uid) {
+                        miband_logger_log(
+                            app->logger,
+                            LogLevelError,
+                            "Verify read failed - Card UID: %02X %02X %02X %02X",
+                            card_iso_data.uid[0],
+                            card_iso_data.uid[1],
+                            card_iso_data.uid[2],
+                            card_iso_data.uid[3]);
+                    } else {
+                        miband_logger_log(
+                            app->logger, LogLevelError, "Verify read failed - No card detected");
+                    }
+
+                    if(app->mf_classic_data) {
+                        uint8_t* file_uid = app->mf_classic_data->block[0].data;
+                        miband_logger_log(
+                            app->logger,
+                            LogLevelInfo,
+                            "Expected file UID: %02X %02X %02X %02X",
+                            file_uid[0],
+                            file_uid[1],
+                            file_uid[2],
+                            file_uid[3]);
+                    }
+                }
+
+                // RESET tutto
+                popup_reset(app->popup);
+                text_box_reset(app->text_box_report);
+                dialog_ex_reset(app->dialog_ex);
+
+                // Prepara messaggio
+                FuriString* error_msg = furi_string_alloc();
+                const char* header_text = "Verify Failed";
+
+                if(has_card_uid) {
+                    if(app->mf_classic_data) {
+                        uint8_t* file_uid = app->mf_classic_data->block[0].data;
+
+                        if(memcmp(card_iso_data.uid, file_uid, 4) != 0) {
+                            // WRONG CARD
+                            header_text = "Wrong Card!";
+                            furi_string_printf(
+                                error_msg,
+                                "Card UID: %02X %02X %02X %02X\n"
+                                "Expected: %02X %02X %02X %02X\n"
+                                "Use 'Quick UID Check' function",
+                                card_iso_data.uid[0],
+                                card_iso_data.uid[1],
+                                card_iso_data.uid[2],
+                                card_iso_data.uid[3],
+                                file_uid[0],
+                                file_uid[1],
+                                file_uid[2],
+                                file_uid[3]);
+
+                        } else {
+                            // UID OK but read failed
+                            furi_string_printf(
+                                error_msg,
+                                "Card UID OK:%02X %02X %02X %02X\n"
+                                "Cannot read data\nCheck keys",
+                                card_iso_data.uid[0],
+                                card_iso_data.uid[1],
+                                card_iso_data.uid[2],
+                                card_iso_data.uid[3]);
+                        }
+                    } else {
+                        furi_string_printf(
+                            error_msg,
+                            "Card UID:%02X %02X %02X %02X\n"
+                            "Cannot read data",
+                            card_iso_data.uid[0],
+                            card_iso_data.uid[1],
+                            card_iso_data.uid[2],
+                            card_iso_data.uid[3]);
+                    }
+                } else {
+                    header_text = "No Card";
+                    furi_string_set_str(error_msg, "Place card near\nFlipper Zero");
+                }
+
+                // USA DIALOG_EX
+                dialog_ex_set_header(app->dialog_ex, header_text, 64, 4, AlignCenter, AlignTop);
+                dialog_ex_set_text(
+                    app->dialog_ex,
+                    furi_string_get_cstr(error_msg),
+                    64,
+                    32,
+                    AlignCenter,
+                    AlignCenter);
+                dialog_ex_set_left_button_text(app->dialog_ex, "Back");
+                dialog_ex_set_icon(app->dialog_ex, 0, 0, NULL);
+                dialog_ex_set_result_callback(app->dialog_ex, verify_dialog_callback);
+                dialog_ex_set_context(app->dialog_ex, app);
+
+                view_dispatcher_switch_to_view(app->view_dispatcher, MiBandNfcViewIdDialog);
+
+                furi_string_free(error_msg);
+                notification_message(app->notifications, &sequence_blink_stop);
+                notification_message(app->notifications, &sequence_error);
                 consumed = true;
                 break;
             }
-
             furi_string_set_str(verify_tracker.current_operation, "Comparing data");
             update_verify_ui(app, "Comparing Data");
             furi_delay_ms(500);
@@ -3396,11 +3770,21 @@ bool miband_nfc_scene_verify_on_event(void* context, SceneManagerEvent event) {
                 scene_manager_search_and_switch_to_another_scene(
                     app->scene_manager, MiBandNfcSceneMainMenu);
 
+                if(app->logger) {
+                    miband_logger_log(
+                        app->logger, LogLevelInfo, "Verify successful: all blocks match");
+                }
             } else {
                 // DIFFERENCES FOUND
                 notification_message(app->notifications, &sequence_blink_stop);
                 notification_message(app->notifications, &sequence_error);
-
+                if(app->logger) {
+                    miband_logger_log(
+                        app->logger,
+                        LogLevelWarning,
+                        "Verify failed: %d blocks differ",
+                        different_blocks);
+                }
                 // RESET TUTTO PRIMA del dialog
                 popup_reset(app->popup);
                 text_box_reset(app->text_box_report);
@@ -3428,7 +3812,7 @@ bool miband_nfc_scene_verify_on_event(void* context, SceneManagerEvent event) {
             break;
 
         case MiBandNfcCustomEventVerifyExit:
-            // User sceglie Exit
+            // User sceglie Exit/Back
             scene_manager_search_and_switch_to_another_scene(
                 app->scene_manager, MiBandNfcSceneMainMenu);
             consumed = true;
@@ -3467,6 +3851,7 @@ bool miband_nfc_scene_verify_on_event(void* context, SceneManagerEvent event) {
  * @param context Pointer to MiBandNfcApp instance
  */
 void miband_nfc_scene_verify_on_exit(void* context) {
+    furi_assert(context);
     MiBandNfcApp* app = context;
 
     if(app->poller) {
@@ -3475,15 +3860,24 @@ void miband_nfc_scene_verify_on_exit(void* context) {
         app->poller = NULL;
     }
 
-    verify_tracker_free();
-    notification_message(app->notifications, &sequence_blink_stop);
+    if(verify_tracker.current_operation) {
+        furi_string_free(verify_tracker.current_operation);
+        verify_tracker.current_operation = NULL;
+    }
+    if(verify_tracker.last_result) {
+        furi_string_free(verify_tracker.last_result);
+        verify_tracker.last_result = NULL;
+    }
+    if(verify_tracker.error_details) {
+        furi_string_free(verify_tracker.error_details);
+        verify_tracker.error_details = NULL;
+    }
 
-    // RESET COMPLETO di tutte le view usate
+    notification_message(app->notifications, &sequence_blink_stop);
     popup_reset(app->popup);
     dialog_ex_reset(app->dialog_ex);
-    text_box_reset(app->text_box_report);
 }
----- File: C:\Users\luca.tomei\Downloads\DEV\PERSONALE\flipper-miband-nfc-writer\miband_nfc_scene_writer.c ----
+---- File: C:\Users\luca.tomei\Downloads\New folder (2)\New folder\flipper-miband-nfc-writer\miband_nfc_scene_writer.c ----
 /**
  * @file miband_nfc_scene_writer.c
  * @brief Mi Band NFC data writing scene
@@ -3617,7 +4011,10 @@ static bool miband_write_with_sync_approach(MiBandNfcApp* app) {
         return false;
     }
 
-    // NON usare popup_reset qui - è già stato fatto in on_enter
+    if(app->logger) {
+        miband_logger_log(app->logger, LogLevelInfo, "Starting sync write approach");
+    }
+
     popup_set_text(app->popup, "Detecting card state...", 64, 24, AlignCenter, AlignTop);
     furi_delay_ms(100);
 
@@ -3662,10 +4059,13 @@ static bool miband_write_with_sync_approach(MiBandNfcApp* app) {
 
     furi_delay_ms(1000);
 
-    for(size_t sector = 0; sector < total_sectors; sector++) {
+    FuriString* progress_msg = furi_string_alloc();
+    bool should_break = false;
+
+    for(size_t sector = 0; sector < total_sectors && !should_break; sector++) {
         FURI_LOG_I(TAG, "Processing sector %zu...", sector);
 
-        FuriString* progress_msg = furi_string_alloc();
+        furi_string_reset(progress_msg);
         furi_string_printf(progress_msg, "Sector %zu/%zu\n\n", sector + 1, total_sectors);
 
         uint32_t progress_percent = ((sector + 1) * 100) / total_sectors;
@@ -3684,7 +4084,6 @@ static bool miband_write_with_sync_approach(MiBandNfcApp* app) {
         // SOLO text update, NO reset
         popup_set_text(
             app->popup, furi_string_get_cstr(progress_msg), 64, 18, AlignCenter, AlignTop);
-        furi_string_free(progress_msg);
 
         furi_delay_ms(100);
 
@@ -3753,7 +4152,8 @@ static bool miband_write_with_sync_approach(MiBandNfcApp* app) {
             if(!block0_read) {
                 FURI_LOG_E(TAG, "CRITICAL: Cannot read Block 0!");
                 write_success = false;
-                break;
+                should_break = true;
+                continue;
             }
 
             FURI_LOG_I(
@@ -3848,6 +4248,9 @@ static bool miband_write_with_sync_approach(MiBandNfcApp* app) {
         }
 
         if(has_magic_keys) {
+            if(app->logger) {
+                miband_logger_log(app->logger, LogLevelInfo, "Card has magic keys (0xFF)");
+            }
             memset(auth_key.data, 0xFF, sizeof(auth_key.data));
             error = mf_classic_poller_sync_auth(
                 app->nfc, first_block, &auth_key, MfClassicKeyTypeA, &auth_context);
@@ -3858,7 +4261,9 @@ static bool miband_write_with_sync_approach(MiBandNfcApp* app) {
                     app, sector, first_block, blocks_in_sector, &auth_key, MfClassicKeyTypeA);
             }
         }
-
+        if(app->logger) {
+            miband_logger_log(app->logger, LogLevelInfo, "Card has original keys");
+        }
         if(!sector_written) {
             if(mf_classic_is_key_found(app->mf_classic_data, sector, MfClassicKeyTypeA)) {
                 memcpy(auth_key.data, sec_tr->key_a.data, sizeof(auth_key.data));
@@ -3922,11 +4327,27 @@ static bool miband_write_with_sync_approach(MiBandNfcApp* app) {
 
         if(!sector_written) {
             FURI_LOG_E(TAG, "Sector %zu: ALL authentication methods FAILED", sector);
+            if(app->logger) {
+                miband_logger_log(
+                    app->logger,
+                    LogLevelError,
+                    "Failed to write sector %zu - all auth methods failed",
+                    sector);
+            }
             write_success = false;
+            should_break = true;
             break;
         }
     }
 
+    furi_string_free(progress_msg);
+    if(app->logger) {
+        miband_logger_log(
+            app->logger,
+            write_success ? LogLevelInfo : LogLevelError,
+            "Write operation %s",
+            write_success ? "completed" : "failed");
+    }
     FURI_LOG_I(TAG, "Sync write completed: %s", write_success ? "SUCCESS" : "FAILED");
     return write_success;
 }
@@ -3987,7 +4408,13 @@ void miband_nfc_scene_writer_on_enter(void* context) {
         scene_manager_previous_scene(app->scene_manager);
         return;
     }
-
+    if(app->logger) {
+        miband_logger_log(
+            app->logger,
+            LogLevelInfo,
+            "Write operation started for: %s",
+            furi_string_get_cstr(app->file_path));
+    }
     popup_reset(app->popup);
 
     if(app->current_operation == OperationTypeWriteOriginal) {
@@ -4045,11 +4472,9 @@ bool miband_nfc_scene_writer_on_event(void* context, SceneManagerEvent event) {
             popup_set_text(app->popup, "Starting write...", 64, 18, AlignCenter, AlignTop);
             furi_delay_ms(500);
 
-            miband_logger_log(
-                app->logger,
-                LogLevelInfo,
-                "Write started: %s",
-                furi_string_get_cstr(app->file_path));
+            if(app->logger) {
+                miband_logger_log(app->logger, LogLevelInfo, "Card detected, starting write");
+            }
 
             notification_message(app->notifications, &sequence_blink_stop);
             notification_message(app->notifications, &sequence_blink_start_magenta);
@@ -4060,6 +4485,13 @@ bool miband_nfc_scene_writer_on_event(void* context, SceneManagerEvent event) {
             popup_reset(app->popup);
 
             if(write_result) {
+                if(app->logger) {
+                    miband_logger_log(
+                        app->logger,
+                        LogLevelInfo,
+                        "Write successful for: %s",
+                        furi_string_get_cstr(app->file_path));
+                }
                 notification_message(app->notifications, &sequence_success);
                 popup_set_header(app->popup, "Write Success!", 64, 4, AlignCenter, AlignTop);
                 popup_set_text(
@@ -4076,6 +4508,13 @@ bool miband_nfc_scene_writer_on_event(void* context, SceneManagerEvent event) {
                         app->scene_manager, MiBandNfcSceneMainMenu);
                 }
             } else {
+                if(app->logger) {
+                    miband_logger_log(
+                        app->logger,
+                        LogLevelError,
+                        "Write failed for: %s",
+                        furi_string_get_cstr(app->file_path));
+                }
                 notification_message(app->notifications, &sequence_error);
                 popup_set_header(app->popup, "Write Failed", 64, 4, AlignCenter, AlignTop);
                 popup_set_text(
@@ -4096,6 +4535,9 @@ bool miband_nfc_scene_writer_on_event(void* context, SceneManagerEvent event) {
             break;
 
         case MiBandNfcCustomEventWrongCard:
+            if(app->logger) {
+                miband_logger_log(app->logger, LogLevelWarning, "Wrong card type detected");
+            }
             if(app->scanner) {
                 nfc_scanner_stop(app->scanner);
                 nfc_scanner_free(app->scanner);
@@ -4152,7 +4594,7 @@ void miband_nfc_scene_writer_on_exit(void* context) {
     notification_message(app->notifications, &sequence_blink_stop);
     popup_reset(app->popup);
 }
----- File: C:\Users\luca.tomei\Downloads\DEV\PERSONALE\flipper-miband-nfc-writer\progress_tracker.c ----
+---- File: C:\Users\luca.tomei\Downloads\New folder (2)\New folder\flipper-miband-nfc-writer\progress_tracker.c ----
 /**
  * @file progress_tracker.c
  * @brief Progress tracker implementation
@@ -4283,7 +4725,7 @@ void progress_tracker_update_popup(
 
     furi_string_free(text);
 }
----- File: C:\Users\luca.tomei\Downloads\DEV\PERSONALE\flipper-miband-nfc-writer\progress_tracker.h ----
+---- File: C:\Users\luca.tomei\Downloads\New folder (2)\New folder\flipper-miband-nfc-writer\progress_tracker.h ----
 /**
  * @file progress_tracker.h
  * @brief Progress tracking utility for long operations
