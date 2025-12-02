@@ -66,6 +66,21 @@ static VerifyTracker verify_tracker = {0};
  * @brief Initialize verification tracker
  */
 static void verify_tracker_init(void) {
+    // PRIMA: Libera se esistono
+    if(verify_tracker.current_operation) {
+        furi_string_free(verify_tracker.current_operation);
+        verify_tracker.current_operation = NULL;
+    }
+    if(verify_tracker.last_result) {
+        furi_string_free(verify_tracker.last_result);
+        verify_tracker.last_result = NULL;
+    }
+    if(verify_tracker.error_details) {
+        furi_string_free(verify_tracker.error_details);
+        verify_tracker.error_details = NULL;
+    }
+
+    // Reset contatori
     verify_tracker.current_sector = 0;
     verify_tracker.total_sectors = 0;
     verify_tracker.sectors_read = 0;
@@ -76,29 +91,10 @@ static void verify_tracker_init(void) {
     verify_tracker.blocks_different = 0;
     verify_tracker.reading_complete = false;
 
-    if(!verify_tracker.current_operation) {
-        verify_tracker.current_operation = furi_string_alloc();
-        verify_tracker.last_result = furi_string_alloc();
-        verify_tracker.error_details = furi_string_alloc();
-    }
-
-    furi_string_reset(verify_tracker.current_operation);
-    furi_string_reset(verify_tracker.last_result);
-    furi_string_reset(verify_tracker.error_details);
-}
-
-/**
- * @brief Free verification tracker resources
- */
-static void verify_tracker_free(void) {
-    if(verify_tracker.current_operation) {
-        furi_string_free(verify_tracker.current_operation);
-        furi_string_free(verify_tracker.last_result);
-        furi_string_free(verify_tracker.error_details);
-        verify_tracker.current_operation = NULL;
-        verify_tracker.last_result = NULL;
-        verify_tracker.error_details = NULL;
-    }
+    // POI: Alloca nuove
+    verify_tracker.current_operation = furi_string_alloc();
+    verify_tracker.last_result = furi_string_alloc();
+    verify_tracker.error_details = furi_string_alloc();
 }
 
 /**
@@ -110,9 +106,7 @@ static void verify_tracker_free(void) {
  * @param header Header text for the popup
  */
 static void update_verify_ui(MiBandNfcApp* app, const char* header) {
-    popup_set_header(app->popup, header, 64, 2, AlignCenter, AlignTop);
-
-    FuriString* status_text = furi_string_alloc();
+    furi_string_reset(app->temp_text_buffer);
 
     if(verify_tracker.total_sectors > 0) {
         uint32_t progress_percent =
@@ -121,63 +115,28 @@ static void update_verify_ui(MiBandNfcApp* app, const char* header) {
                 (verify_tracker.current_sector * 100) / verify_tracker.total_sectors;
 
         furi_string_printf(
-            status_text,
-            "Sector: %lu/%lu\n\n",
+            app->temp_text_buffer,
+            "Sector %lu/%lu\n[",
             verify_tracker.current_sector,
             verify_tracker.total_sectors);
 
-        furi_string_cat_str(status_text, "[");
-        for(uint32_t i = 0; i < 20; i++) {
-            if(i < (progress_percent / 5)) {
-                furi_string_cat_str(status_text, "=");
-            } else if(i == (progress_percent / 5) && progress_percent < 100) {
-                furi_string_cat_str(status_text, ">");
+        for(uint32_t i = 0; i < 16; i++) {
+            if(i < (progress_percent / 6)) {
+                furi_string_cat_str(app->temp_text_buffer, "=");
             } else {
-                furi_string_cat_str(status_text, " ");
+                furi_string_cat_str(app->temp_text_buffer, " ");
             }
         }
-        furi_string_cat_printf(status_text, "]\n%lu%%\n\n", progress_percent);
+        furi_string_cat_printf(app->temp_text_buffer, "] %lu%%", progress_percent);
+    } else {
+        furi_string_set_str(app->temp_text_buffer, "Initializing...");
     }
 
-    if(furi_string_size(verify_tracker.current_operation) > 0) {
-        furi_string_cat_printf(
-            status_text, "%s\n", furi_string_get_cstr(verify_tracker.current_operation));
-    }
-
-    if(verify_tracker.auth_attempts > 0) {
-        furi_string_cat_printf(
-            status_text,
-            "Auth: %lu/%lu\n",
-            verify_tracker.auth_successes,
-            verify_tracker.auth_attempts);
-    }
-
-    if(verify_tracker.blocks_compared > 0) {
-        furi_string_cat_printf(status_text, "Compared: %lu\n", verify_tracker.blocks_compared);
-        if(verify_tracker.blocks_different > 0) {
-            furi_string_cat_printf(status_text, "Diff: %lu\n", verify_tracker.blocks_different);
-        }
-    }
-
-    if(furi_string_size(verify_tracker.error_details) > 0) {
-        furi_string_cat_printf(
-            status_text, "\n%s", furi_string_get_cstr(verify_tracker.error_details));
-    }
-
-    popup_set_text(app->popup, furi_string_get_cstr(status_text), 4, 12, AlignLeft, AlignTop);
-
-    // Icona solo alla fine
-    if(verify_tracker.reading_complete) {
-        if(furi_string_size(verify_tracker.error_details) > 0) {
-            popup_set_icon(app->popup, 96, 20, &I_WarningDolphinFlip_45x42);
-        } else {
-            popup_set_icon(app->popup, 90, 16, &I_DolphinSuccess_91x55);
-        }
-    }
-
-    furi_string_free(status_text);
+    popup_reset(app->popup);
+    popup_set_header(app->popup, header, 64, 4, AlignCenter, AlignTop);
+    popup_set_text(
+        app->popup, furi_string_get_cstr(app->temp_text_buffer), 64, 28, AlignCenter, AlignCenter);
 }
-
 /**
  * @brief Read a sector using multiple key strategies
  * 
@@ -342,7 +301,6 @@ static bool miband_verify_read_card(MiBandNfcApp* app) {
 
         // CHIAMALO PIÙ SPESSO - ogni settore
         update_verify_ui(app, "Reading Mi Band");
-        popup_set_text(app->popup, "Read in progress...", 64, 20, AlignCenter, AlignTop);
         furi_delay_ms(50);
 
         uint8_t first_block = mf_classic_get_first_block_num_of_sector(sector);
@@ -353,7 +311,6 @@ static bool miband_verify_read_card(MiBandNfcApp* app) {
         if(sector_success) {
             verify_tracker.sectors_read++;
             furi_string_printf(verify_tracker.last_result, "Sector %zu OK", sector);
-            // AGGIORNA SEMPRE
             update_verify_ui(app, "Reading Mi Band");
             furi_delay_ms(50);
         } else {
@@ -758,6 +715,7 @@ bool miband_nfc_scene_verify_on_event(void* context, SceneManagerEvent event) {
  * @param context Pointer to MiBandNfcApp instance
  */
 void miband_nfc_scene_verify_on_exit(void* context) {
+    furi_assert(context);
     MiBandNfcApp* app = context;
 
     if(app->poller) {
@@ -766,11 +724,20 @@ void miband_nfc_scene_verify_on_exit(void* context) {
         app->poller = NULL;
     }
 
-    verify_tracker_free();
-    notification_message(app->notifications, &sequence_blink_stop);
+    if(verify_tracker.current_operation) {
+        furi_string_free(verify_tracker.current_operation);
+        verify_tracker.current_operation = NULL;
+    }
+    if(verify_tracker.last_result) {
+        furi_string_free(verify_tracker.last_result);
+        verify_tracker.last_result = NULL;
+    }
+    if(verify_tracker.error_details) {
+        furi_string_free(verify_tracker.error_details);
+        verify_tracker.error_details = NULL;
+    }
 
-    // RESET COMPLETO di tutte le view usate
+    notification_message(app->notifications, &sequence_blink_stop);
     popup_reset(app->popup);
     dialog_ex_reset(app->dialog_ex);
-    text_box_reset(app->text_box_report);
 }

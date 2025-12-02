@@ -42,14 +42,15 @@ static bool backup_read_all_data(MiBandNfcApp* app) {
 
     popup_set_text(app->popup, "Reading Mi Band...\n\nSector 0/16", 64, 22, AlignCenter, AlignTop);
 
+    FuriString* progress = furi_string_alloc();
     for(size_t sector = 0; sector < total_sectors; sector++) {
         uint8_t first_block = mf_classic_get_first_block_num_of_sector(sector);
         uint8_t blocks_in_sector = mf_classic_get_blocks_num_in_sector(sector);
 
         if(sector % 2 == 0) {
-            FuriString* progress = furi_string_alloc();
+            furi_string_reset(progress);
             furi_string_printf(
-                progress, "Reading...\nSector %zu/%zu\n\n", sector + 1, total_sectors);
+                progress, "Reading...\nSector %zu/%zu\n", sector + 1, total_sectors);
 
             uint32_t percent = ((sector + 1) * 100) / total_sectors;
             furi_string_cat_str(progress, "[");
@@ -63,7 +64,6 @@ static bool backup_read_all_data(MiBandNfcApp* app) {
 
             popup_set_text(
                 app->popup, furi_string_get_cstr(progress), 64, 18, AlignCenter, AlignTop);
-            furi_string_free(progress);
         }
 
         furi_delay_ms(50);
@@ -126,12 +126,13 @@ static bool backup_read_all_data(MiBandNfcApp* app) {
 
         if(!sector_read) {
             FURI_LOG_W(TAG, "Failed to read sector %zu for backup", sector);
+            furi_string_free(progress);
             return false;
         }
 
         furi_delay_ms(50);
     }
-
+    furi_string_free(progress);
     return true;
 }
 
@@ -206,7 +207,7 @@ void miband_nfc_scene_backup_on_enter(void* context) {
         datetime.minute,
         datetime.second);
 
-    popup_set_text(app->popup, "Saving backup...", 64, 30, AlignCenter, AlignTop);
+    popup_set_text(app->popup, "Saving backup...", 64, 11, AlignCenter, AlignTop);
 
     nfc_device_set_data(app->nfc_device, NfcProtocolMfClassic, app->target_data);
     bool save_success = nfc_device_save(app->nfc_device, furi_string_get_cstr(backup_path));

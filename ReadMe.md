@@ -42,6 +42,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Rubiks Cube Timer v0.0.2 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
 - Updated: [Passy v1.4 (By bettse)](https://github.com/bettse/passy)
 - Updated: [Metroflip v1.0 (By luu176)](https://github.com/luu176/Metroflip)
+- Updated: [Mi Band NFC Writer v1.0 (By LucaTomei)](https://github.com/LucaTomei/flipper-miband-nfc-writer)
 
 <a name="release">
 

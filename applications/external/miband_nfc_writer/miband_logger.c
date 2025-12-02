@@ -66,7 +66,7 @@ void miband_logger_free(MiBandLogger* logger) {
 }
 
 void miband_logger_log(MiBandLogger* logger, LogLevel level, const char* format, ...) {
-    if(!logger || !logger->enabled || !logger->entries) return;
+    if(!logger || !logger->enabled || !logger->entries || !logger->storage) return;
 
     // Rotate if full
     if(logger->count >= logger->capacity) {

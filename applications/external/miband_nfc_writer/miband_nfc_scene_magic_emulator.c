@@ -17,103 +17,164 @@ typedef struct {
     FuriString* status_message;
     bool is_active;
     FuriTimer* update_timer;
+    FuriMutex* mutex;
 } EmulationStats;
 
-static EmulationStats* emulation_stats = NULL;
+static void emulation_stats_free(EmulationStats* stats) {
+    if(!stats) return;
 
-static void emulation_stats_free(void) {
-    if(!emulation_stats) {
-        return;
+    if(stats->update_timer) {
+        furi_timer_stop(stats->update_timer);
+        furi_timer_free(stats->update_timer);
+        stats->update_timer = NULL;
     }
 
-    emulation_stats->is_active = false;
+    if(stats->mutex) {
+        if(furi_mutex_acquire(stats->mutex, 200) == FuriStatusOk) {
+            stats->is_active = false;
 
-    if(emulation_stats->update_timer) {
-        furi_timer_stop(emulation_stats->update_timer);
-        furi_timer_free(emulation_stats->update_timer);
+            if(stats->last_activity) {
+                furi_string_free(stats->last_activity);
+                stats->last_activity = NULL;
+            }
+
+            if(stats->status_message) {
+                furi_string_free(stats->status_message);
+                stats->status_message = NULL;
+            }
+        }
+
+        furi_mutex_free(stats->mutex);
+        stats->mutex = NULL;
+    } else {
+        stats->is_active = false;
+
+        if(stats->last_activity) {
+            furi_string_free(stats->last_activity);
+            stats->last_activity = NULL;
+        }
+
+        if(stats->status_message) {
+            furi_string_free(stats->status_message);
+            stats->status_message = NULL;
+        }
     }
 
-    if(emulation_stats->last_activity) {
-        furi_string_free(emulation_stats->last_activity);
-    }
-    if(emulation_stats->status_message) {
-        furi_string_free(emulation_stats->status_message);
-    }
-
-    free(emulation_stats);
-    emulation_stats = NULL;
+    free(stats);
 }
 
 static void emulation_timer_callback(void* context) {
-    MiBandNfcApp* app = context;
-    if(emulation_stats && emulation_stats->is_active) {
-        popup_reset(app->popup);
-        popup_set_header(app->popup, "Magic Template Active", 64, 2, AlignCenter, AlignTop);
+    if(!context) return;
 
-        FuriString* stats_text = furi_string_alloc();
-        furi_string_printf(stats_text, "UID+0xFF template\n");
-        furi_string_cat_printf(
-            stats_text,
-            "Auth: %lu | OK %lu\n",
-            emulation_stats->auth_attempts,
-            emulation_stats->successful_auths);
+    MiBandNfcApp* app = (MiBandNfcApp*)context;
 
-        if(furi_string_size(emulation_stats->last_activity) > 0) {
-            furi_string_cat_printf(
-                stats_text, "%s\n", furi_string_get_cstr(emulation_stats->last_activity));
-        }
-
-        if(furi_string_size(emulation_stats->status_message) > 0) {
-            furi_string_cat_printf(
-                stats_text, "%s\n", furi_string_get_cstr(emulation_stats->status_message));
-        }
-
-        furi_string_cat_str(stats_text, "Back=Stop");
-
-        popup_set_text(app->popup, furi_string_get_cstr(stats_text), 2, 12, AlignLeft, AlignTop);
-        popup_set_icon(app->popup, 68, 20, &I_NFC_dolphin_emulation_51x64);
-
-        furi_string_free(stats_text);
-    }
-}
-
-static void emulation_stats_init(MiBandNfcApp* app) {
-    // FIX: Libera risorse esistenti prima di reinizializzare
-    if(emulation_stats) {
-        emulation_stats_free();
-    }
-
-    emulation_stats = malloc(sizeof(EmulationStats));
-    if(!emulation_stats) {
-        FURI_LOG_E(TAG, "Failed to allocate emulation_stats");
+    if(!app || !app->popup || !app->view_dispatcher) {
         return;
     }
 
-    emulation_stats->auth_attempts = 0;
-    emulation_stats->successful_auths = 0;
-    emulation_stats->failed_auths = 0;
-    emulation_stats->reader_connections = 0;
-    emulation_stats->data_reads = 0;
-    emulation_stats->last_activity = furi_string_alloc();
-    emulation_stats->status_message = furi_string_alloc();
-    emulation_stats->is_active = true;
+    if(!app->is_emulating) {
+        return;
+    }
 
-    emulation_stats->update_timer =
-        furi_timer_alloc(emulation_timer_callback, FuriTimerTypePeriodic, app);
-    furi_timer_start(emulation_stats->update_timer, 1000);
+    if(!app->emulation_stats) {
+        return;
+    }
 
-    furi_string_set_str(emulation_stats->status_message, "Template ready");
-    furi_string_set_str(emulation_stats->last_activity, "Emulation started");
+    EmulationStats* stats = (EmulationStats*)app->emulation_stats;
+
+    if(!stats || !stats->mutex) {
+        return;
+    }
+
+    if(furi_mutex_acquire(stats->mutex, 50) != FuriStatusOk) {
+        return;
+    }
+
+    bool is_active = stats->is_active;
+    uint32_t auth_attempts = stats->auth_attempts;
+    uint32_t successful_auths = stats->successful_auths;
+    const char* last_activity = furi_string_get_cstr(stats->last_activity);
+    const char* status_message = furi_string_get_cstr(stats->status_message);
+
+    furi_mutex_release(stats->mutex);
+
+    if(!is_active) {
+        return;
+    }
+
+    FuriString* stats_text = furi_string_alloc();
+    if(!stats_text) return;
+
+    furi_string_printf(stats_text, "UID+0xFF template\n");
+    furi_string_cat_printf(stats_text, "Auth: %lu | OK %lu\n", auth_attempts, successful_auths);
+
+    if(last_activity) {
+        furi_string_cat_printf(stats_text, "%s\n", last_activity);
+    }
+
+    if(status_message) {
+        furi_string_cat_printf(stats_text, "%s\n", status_message);
+    }
+
+    furi_string_cat_str(stats_text, "Back=Stop");
+
+    popup_reset(app->popup);
+    popup_set_header(app->popup, "Magic Template Active", 64, 2, AlignCenter, AlignTop);
+    popup_set_text(app->popup, furi_string_get_cstr(stats_text), 2, 12, AlignLeft, AlignTop);
+    popup_set_icon(app->popup, 68, 20, &I_NFC_dolphin_emulation_51x64);
+
+    furi_string_free(stats_text);
+}
+
+static EmulationStats* emulation_stats_alloc(MiBandNfcApp* app) {
+    EmulationStats* stats = malloc(sizeof(EmulationStats));
+    if(!stats) return NULL;
+
+    memset(stats, 0, sizeof(EmulationStats));
+
+    stats->auth_attempts = 0;
+    stats->successful_auths = 0;
+    stats->failed_auths = 0;
+    stats->reader_connections = 0;
+    stats->data_reads = 0;
+    stats->last_activity = furi_string_alloc();
+    stats->status_message = furi_string_alloc();
+    stats->is_active = true;
+    stats->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
+
+    if(!stats->last_activity || !stats->status_message || !stats->mutex) {
+        FURI_LOG_E(TAG, "Failed to allocate resources");
+        emulation_stats_free(stats);
+        return NULL;
+    }
+
+    stats->update_timer = furi_timer_alloc(emulation_timer_callback, FuriTimerTypePeriodic, app);
+    if(!stats->update_timer) {
+        FURI_LOG_E(TAG, "Failed to allocate timer");
+        emulation_stats_free(stats);
+        return NULL;
+    }
+
+    furi_timer_start(stats->update_timer, 1000);
+
+    furi_string_set_str(stats->status_message, "Template ready");
+    furi_string_set_str(stats->last_activity, "Emulation started");
+
+    return stats;
 }
 
 static void miband_nfc_magic_emulator_prepare_blank_template(MiBandNfcApp* app) {
-    if(!app->is_valid_nfc_data) {
+    if(!app || !app->is_valid_nfc_data) {
         return;
     }
 
-    if(emulation_stats) {
-        furi_string_set_str(emulation_stats->status_message, "Preparing template...");
-        furi_string_set_str(emulation_stats->last_activity, "Template generation");
+    EmulationStats* stats = (EmulationStats*)app->emulation_stats;
+    if(stats) {
+        if(furi_mutex_acquire(stats->mutex, 100) == FuriStatusOk) {
+            furi_string_set_str(stats->status_message, "Preparing template...");
+            furi_string_set_str(stats->last_activity, "Template generation");
+            furi_mutex_release(stats->mutex);
+        }
     }
 
     uint8_t original_block0_data[16];
@@ -139,7 +200,7 @@ static void miband_nfc_magic_emulator_prepare_blank_template(MiBandNfcApp* app) 
     memcpy(&app->mf_classic_data->block[0].data[8], &original_block0_data[8], 8);
 
     for(size_t sector_idx = 0; sector_idx < total_sectors; sector_idx++) {
-        uint8_t sector_trailer_block_idx;
+        size_t sector_trailer_block_idx;
         if(sector_idx < 32) {
             sector_trailer_block_idx = sector_idx * 4 + 3;
         } else {
@@ -148,26 +209,25 @@ static void miband_nfc_magic_emulator_prepare_blank_template(MiBandNfcApp* app) 
 
         MfClassicBlock* sector_trailer = &app->mf_classic_data->block[sector_trailer_block_idx];
 
-        memset(&sector_trailer->data[0], 0xFF, 6);
-        sector_trailer->data[6] = 0xFF;
-        sector_trailer->data[7] = 0x07;
-        sector_trailer->data[8] = 0x80;
-        sector_trailer->data[9] = 0x69;
-        memset(&sector_trailer->data[10], 0xFF, 6);
+        /* Construct a safe trailer. Note: access bits ideally should be calculated to be consistent */
+        memset(&sector_trailer->data[0], 0xFF, 6); /* Key A = FF..FF */
+        sector_trailer->data[6] = 0xFF; /* access byte 1 (example) */
+        sector_trailer->data[7] = 0x07; /* access byte 2 (example) */
+        sector_trailer->data[8] = 0x80; /* access byte 3 (example) */
+        sector_trailer->data[9] = 0x69; /* Key B first byte placeholder (if any) */
+        memset(&sector_trailer->data[10], 0xFF, 6); /* Key B = FF..FF */
 
         FURI_BIT_SET(app->mf_classic_data->key_a_mask, sector_idx);
         FURI_BIT_SET(app->mf_classic_data->key_b_mask, sector_idx);
     }
 
-    if(emulation_stats) {
-        furi_string_printf(
-            emulation_stats->status_message,
-            "UID %02X%02X%02X%02X",
-            uid[0],
-            uid[1],
-            uid[2],
-            uid[3]);
-        furi_string_set_str(emulation_stats->last_activity, "Template ready");
+    if(stats) {
+        if(furi_mutex_acquire(stats->mutex, 100) == FuriStatusOk) {
+            furi_string_printf(
+                stats->status_message, "UID %02X%02X%02X%02X", uid[0], uid[1], uid[2], uid[3]);
+            furi_string_set_str(stats->last_activity, "Template ready");
+            furi_mutex_release(stats->mutex);
+        }
     }
 
     FURI_LOG_I(
@@ -183,84 +243,132 @@ static NfcCommand miband_nfc_magic_emulator_callback(NfcGenericEvent event, void
     furi_assert(context);
     MiBandNfcApp* app = context;
 
-    if(event.protocol == NfcProtocolMfClassic) {
+    if(!app || !app->emulation_stats) {
+        return NfcCommandStop;
+    }
+
+    EmulationStats* stats = (EmulationStats*)app->emulation_stats;
+
+    if(!stats->mutex) {
+        return NfcCommandStop;
+    }
+
+    if(furi_mutex_acquire(stats->mutex, 100) != FuriStatusOk) {
+        return NfcCommandContinue;
+    }
+
+    bool should_stop = false;
+
+    if(!stats->is_active) {
+        should_stop = true;
+    } else if(event.protocol == NfcProtocolMfClassic) {
         const MfClassicListenerEvent* mfc_event = event.event_data;
 
         if(mfc_event->type == MfClassicListenerEventTypeAuthContextPartCollected) {
-            if(emulation_stats) {
-                furi_string_set_str(emulation_stats->last_activity, "Auth data collected");
+            if(stats->last_activity) {
+                furi_string_set_str(stats->last_activity, "Auth data collected");
             }
             FURI_LOG_D(TAG, "Blank template: Auth part collected");
 
         } else if(mfc_event->type == MfClassicListenerEventTypeAuthContextFullCollected) {
-            if(emulation_stats) {
-                emulation_stats->auth_attempts++;
-                emulation_stats->successful_auths++;
+            stats->auth_attempts++;
+            stats->successful_auths++;
+
+            if(stats->last_activity) {
                 furi_string_printf(
-                    emulation_stats->last_activity,
-                    "Auth #%lu complete",
-                    emulation_stats->auth_attempts);
-                furi_string_set_str(emulation_stats->status_message, "Authentication successful");
+                    stats->last_activity, "Auth #%lu complete", stats->auth_attempts);
             }
 
-            FURI_LOG_D(
-                TAG,
-                "Blank template: Auth complete #%lu",
-                emulation_stats ? emulation_stats->auth_attempts : 0);
+            if(stats->status_message) {
+                furi_string_set_str(stats->status_message, "Authentication successful");
+            }
 
-            if(emulation_stats && emulation_stats->auth_attempts % 5 == 0) {
+            FURI_LOG_D(TAG, "Blank template: Auth complete #%lu", stats->auth_attempts);
+
+            if(stats->auth_attempts % 5 == 0) {
                 view_dispatcher_send_custom_event(
                     app->view_dispatcher, MiBandNfcCustomEventCardDetected);
             }
-            if(app->logger && emulation_stats && emulation_stats->auth_attempts % 10 == 0) {
+
+            if(app->logger && stats->auth_attempts % 10 == 0) {
                 miband_logger_log(
                     app->logger,
                     LogLevelDebug,
                     "Magic emulation: %lu authentications completed",
-                    emulation_stats->auth_attempts);
+                    stats->auth_attempts);
             }
-            if(emulation_stats && emulation_stats->auth_attempts > 100) {
-                furi_string_set_str(
-                    emulation_stats->status_message, "Too many auth attempts - stopping");
-                furi_string_set_str(emulation_stats->last_activity, "Safety stop triggered");
-                FURI_LOG_W(
-                    TAG, "Too many auth attempts (%lu), stopping", emulation_stats->auth_attempts);
+
+            if(stats->auth_attempts > 100) {
+                if(stats->status_message) {
+                    furi_string_set_str(
+                        stats->status_message, "Too many auth attempts - stopping");
+                }
+                if(stats->last_activity) {
+                    furi_string_set_str(stats->last_activity, "Safety stop triggered");
+                }
+
+                FURI_LOG_W(TAG, "Too many auth attempts (%lu), stopping", stats->auth_attempts);
+
                 if(app->logger) {
                     miband_logger_log(
                         app->logger,
                         LogLevelWarning,
                         "Magic emulation stopped: too many auth attempts (%lu)",
-                        emulation_stats->auth_attempts);
+                        stats->auth_attempts);
                 }
-                return NfcCommandStop;
+
+                stats->is_active = false;
+                should_stop = true;
             }
         }
     }
 
-    return NfcCommandContinue;
+    furi_mutex_release(stats->mutex);
+
+    return should_stop ? NfcCommandStop : NfcCommandContinue;
 }
 
 void miband_nfc_scene_magic_emulator_on_enter(void* context) {
     furi_assert(context);
     MiBandNfcApp* app = context;
+
+    app->is_emulating = true;
+
     if(app->logger) {
         miband_logger_log(app->logger, LogLevelInfo, "Magic emulation started");
     }
+
     if(!app->is_valid_nfc_data) {
         scene_manager_previous_scene(app->scene_manager);
         return;
     }
 
-    emulation_stats_init(app);
+    app->emulation_stats = emulation_stats_alloc(app);
+    if(!app->emulation_stats) {
+        FURI_LOG_E(TAG, "Failed to allocate emulation stats");
+        scene_manager_previous_scene(app->scene_manager);
+        return;
+    }
+
     miband_nfc_magic_emulator_prepare_blank_template(app);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, MiBandNfcViewIdMagicEmulator);
 
     app->listener = nfc_listener_alloc(app->nfc, NfcProtocolMfClassic, app->mf_classic_data);
+    if(!app->listener) {
+        FURI_LOG_E(TAG, "Failed to allocate listener");
+        emulation_stats_free((EmulationStats*)app->emulation_stats);
+        app->emulation_stats = NULL;
+        scene_manager_previous_scene(app->scene_manager);
+        return;
+    }
+
     nfc_listener_start(app->listener, miband_nfc_magic_emulator_callback, app);
 
     notification_message(app->notifications, &sequence_blink_start_cyan);
+
     emulation_timer_callback(app);
+
     if(app->logger) {
         uint8_t* uid = app->mf_classic_data->block[0].data;
         miband_logger_log(
@@ -272,6 +380,7 @@ void miband_nfc_scene_magic_emulator_on_enter(void* context) {
             uid[2],
             uid[3]);
     }
+
     FURI_LOG_I(TAG, "Started blank template emulation for Mi Band");
 }
 
@@ -282,8 +391,9 @@ bool miband_nfc_scene_magic_emulator_on_event(void* context, SceneManagerEvent e
     if(event.type == SceneManagerEventTypeCustom) {
         switch(event.event) {
         case MiBandNfcCustomEventCardDetected:
-            if(emulation_stats) {
-                furi_string_set_str(emulation_stats->status_message, "Mi Band actively reading");
+            EmulationStats* stats = (EmulationStats*)app->emulation_stats;
+            if(stats) {
+                furi_string_set_str(stats->status_message, "Mi Band actively reading");
                 notification_message(app->notifications, &sequence_single_vibro);
             }
             consumed = true;
@@ -292,13 +402,13 @@ bool miband_nfc_scene_magic_emulator_on_event(void* context, SceneManagerEvent e
             break;
         }
     } else if(event.type == SceneManagerEventTypeBack) {
+        app->is_emulating = false;
         if(app->listener) {
             nfc_listener_stop(app->listener);
             nfc_listener_free(app->listener);
             app->listener = NULL;
         }
 
-        emulation_stats_free();
         scene_manager_previous_scene(app->scene_manager);
         consumed = true;
     }
@@ -307,24 +417,26 @@ bool miband_nfc_scene_magic_emulator_on_event(void* context, SceneManagerEvent e
 }
 
 void miband_nfc_scene_magic_emulator_on_exit(void* context) {
-    furi_assert(context);
     MiBandNfcApp* app = context;
+
+    if(!app) return;
+
+    app->is_emulating = false;
 
     if(app->listener) {
         nfc_listener_stop(app->listener);
         nfc_listener_free(app->listener);
         app->listener = NULL;
     }
-    if(app->logger && emulation_stats) {
-        miband_logger_log(
-            app->logger,
-            LogLevelInfo,
-            "Magic emulation ended: %lu total authentications",
-            emulation_stats->auth_attempts);
+
+    if(app->emulation_stats) {
+        emulation_stats_free((EmulationStats*)app->emulation_stats);
+        app->emulation_stats = NULL;
     }
-    emulation_stats_free();
+
     notification_message(app->notifications, &sequence_blink_stop);
+
     popup_reset(app->popup);
 
-    FURI_LOG_I(TAG, "Stopped blank template emulation");
+    FURI_LOG_I(TAG, "Magic emulation stopped");
 }

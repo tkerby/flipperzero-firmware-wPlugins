@@ -115,19 +115,21 @@ static bool write_sector_blocks(
 }
 
 /**
- * @brief Main write function using synchronous approach
+ * @brief Main write function using synchronous approach - FIXED VERSION
  * 
  * This function implements a robust writing strategy:
  * 1. Detects card state (magic keys or original keys)
  * 2. Preserves Block 0 UID
  * 3. Writes all sectors with appropriate authentication
  * 4. Provides progress feedback
+ * 5. FIXED: Properly handles authentication with 0xFF keys for first write
  * 
  * @param app Pointer to MiBandNfcApp instance
  * @return true if write successful, false otherwise
  */
 static bool miband_write_with_sync_approach(MiBandNfcApp* app) {
     if(!app->is_valid_nfc_data) {
+        FURI_LOG_E(TAG, "No valid NFC data to write");
         return false;
     }
 
@@ -139,17 +141,22 @@ static bool miband_write_with_sync_approach(MiBandNfcApp* app) {
     furi_delay_ms(100);
 
     MfClassicError error = MfClassicErrorNone;
-    bool write_success = true;
     size_t total_blocks = mf_classic_get_total_block_num(app->mf_classic_data->type);
     size_t total_sectors = mf_classic_get_total_sectors_num(app->mf_classic_data->type);
 
     FURI_LOG_I(
         TAG, "Starting sync write for %zu blocks in %zu sectors", total_blocks, total_sectors);
 
+    FuriString* progress_msg = furi_string_alloc();
+    bool should_break = false;
+    bool write_success = true;
+
+    // 1. Detect card type
     MfClassicType type = MfClassicType1k;
     MfClassicError detect_error = mf_classic_poller_sync_detect_type(app->nfc, &type);
     if(detect_error != MfClassicErrorNone) {
         FURI_LOG_E(TAG, "Card detection failed before write: %d", detect_error);
+        furi_string_free(progress_msg);
         popup_set_text(
             app->popup, "Card not detected\nCheck position", 64, 24, AlignCenter, AlignTop);
         furi_delay_ms(2000);
@@ -158,34 +165,39 @@ static bool miband_write_with_sync_approach(MiBandNfcApp* app) {
 
     FURI_LOG_I(TAG, "Card detected successfully, type: %d", type);
 
+    // 2. Detect if card has magic keys (0xFF) or original keys
     bool has_magic_keys = false;
     MfClassicKey test_key = {0};
     memset(test_key.data, 0xFF, sizeof(test_key.data));
     MfClassicAuthContext test_auth;
 
+    // Try to authenticate to sector 1 (block 4) with 0xFF keys
     MfClassicError test_error =
         mf_classic_poller_sync_auth(app->nfc, 4, &test_key, MfClassicKeyTypeA, &test_auth);
 
     if(test_error == MfClassicErrorNone) {
         has_magic_keys = true;
-        FURI_LOG_I(TAG, "Mi Band has 0xFF keys - first write scenario");
+        FURI_LOG_I(TAG, "Mi Band has 0xFF magic keys - first write scenario");
         popup_set_text(
             app->popup, "Magic keys detected\nWriting...", 64, 24, AlignCenter, AlignTop);
     } else {
-        FURI_LOG_I(TAG, "Mi Band has dump keys - rewrite scenario");
+        FURI_LOG_I(TAG, "Mi Band has original keys - rewrite scenario");
         popup_set_text(
             app->popup, "Original keys detected\nRewriting...", 64, 24, AlignCenter, AlignTop);
     }
 
-    furi_delay_ms(1000);
+    furi_delay_ms(500);
 
-    for(size_t sector = 0; sector < total_sectors; sector++) {
+    // 3. Write all sectors
+    for(size_t sector = 0; sector < total_sectors && !should_break; sector++) {
         FURI_LOG_I(TAG, "Processing sector %zu...", sector);
 
-        FuriString* progress_msg = furi_string_alloc();
+        // Update progress display
+        furi_string_reset(progress_msg);
         furi_string_printf(progress_msg, "Sector %zu/%zu\n\n", sector + 1, total_sectors);
 
-        uint32_t progress_percent = ((sector + 1) * 100) / total_sectors;
+        uint32_t progress_percent = total_sectors > 0 ? ((sector + 1) * 100) / total_sectors : 0;
+
         furi_string_cat_str(progress_msg, "[");
         for(uint8_t i = 0; i < 20; i++) {
             if(i < (progress_percent / 5)) {
@@ -198,12 +210,9 @@ static bool miband_write_with_sync_approach(MiBandNfcApp* app) {
         }
         furi_string_cat_printf(progress_msg, "]\n%lu%%", progress_percent);
 
-        // SOLO text update, NO reset
         popup_set_text(
             app->popup, furi_string_get_cstr(progress_msg), 64, 18, AlignCenter, AlignTop);
-        furi_string_free(progress_msg);
-
-        furi_delay_ms(100);
+        furi_delay_ms(50);
 
         uint8_t first_block = mf_classic_get_first_block_num_of_sector(sector);
         uint8_t blocks_in_sector = mf_classic_get_blocks_num_in_sector(sector);
@@ -211,29 +220,36 @@ static bool miband_write_with_sync_approach(MiBandNfcApp* app) {
 
         MfClassicSectorTrailer* sec_tr =
             mf_classic_get_sector_trailer_by_sector(app->mf_classic_data, sector);
+
         MfClassicKey auth_key = {0};
         MfClassicKeyType auth_key_type = MfClassicKeyTypeA;
         MfClassicAuthContext auth_context;
 
+        // 3.1 Special handling for Sector 0 (UID block)
         if(sector == 0) {
             FURI_LOG_I(TAG, "Sector 0: Special handling - preserving UID");
 
             MfClassicBlock current_block0;
             bool block0_read = false;
+            MfClassicKey auth_key_uid = {0};
 
-            memset(auth_key.data, 0xFF, sizeof(auth_key.data));
+            // Try to read current Block 0 with 0xFF keys
+            memset(auth_key_uid.data, 0xFF, sizeof(auth_key_uid.data));
             error = mf_classic_poller_sync_auth(
-                app->nfc, 0, &auth_key, MfClassicKeyTypeA, &auth_context);
+                app->nfc, 0, &auth_key_uid, MfClassicKeyTypeA, &auth_context);
 
             if(error == MfClassicErrorNone) {
                 error = mf_classic_poller_sync_read_block(
-                    app->nfc, 0, &auth_key, MfClassicKeyTypeA, &current_block0);
+                    app->nfc, 0, &auth_key_uid, MfClassicKeyTypeA, &current_block0);
                 if(error == MfClassicErrorNone) {
                     block0_read = true;
+                    auth_key_type = MfClassicKeyTypeA;
+                    memcpy(&auth_key, &auth_key_uid, sizeof(MfClassicKey));
                     FURI_LOG_I(TAG, "Block 0 read with 0xFF keys");
                 }
             }
 
+            // If 0xFF fails, try with dump Key A
             if(!block0_read &&
                mf_classic_is_key_found(app->mf_classic_data, 0, MfClassicKeyTypeA)) {
                 memcpy(auth_key.data, sec_tr->key_a.data, sizeof(auth_key.data));
@@ -245,11 +261,13 @@ static bool miband_write_with_sync_approach(MiBandNfcApp* app) {
                         app->nfc, 0, &auth_key, MfClassicKeyTypeA, &current_block0);
                     if(error == MfClassicErrorNone) {
                         block0_read = true;
+                        auth_key_type = MfClassicKeyTypeA;
                         FURI_LOG_I(TAG, "Block 0 read with dump Key A");
                     }
                 }
             }
 
+            // If Key A fails, try with dump Key B
             if(!block0_read &&
                mf_classic_is_key_found(app->mf_classic_data, 0, MfClassicKeyTypeB)) {
                 memcpy(auth_key.data, sec_tr->key_b.data, sizeof(auth_key.data));
@@ -273,33 +291,32 @@ static bool miband_write_with_sync_approach(MiBandNfcApp* app) {
                 break;
             }
 
+            // Log UID for debugging
             FURI_LOG_I(
                 TAG,
-                "Block 0 preserved: UID %02X%02X%02X%02X",
+                "Block 0 UID preserved: %02X%02X%02X%02X",
                 current_block0.data[0],
                 current_block0.data[1],
                 current_block0.data[2],
                 current_block0.data[3]);
 
-            FURI_LOG_D(TAG, "Writing sector 0 data blocks (1 and 2)");
-
+            // Write data blocks 1 and 2 of sector 0 (skip trailer block 3)
             for(uint8_t block_in_sector = 1; block_in_sector < (blocks_in_sector - 1);
                 block_in_sector++) {
                 size_t block_idx = first_block + block_in_sector;
 
+                // Re-authenticate if needed
                 if(block_in_sector > 1) {
                     error = mf_classic_poller_sync_auth(
                         app->nfc, first_block, &auth_key, auth_key_type, &auth_context);
                     if(error != MfClassicErrorNone) {
                         FURI_LOG_E(TAG, "Re-auth failed for block %zu", block_idx);
-                        miband_logger_log(
-                            app->logger, LogLevelError, "Auth failed on sector %zu", sector);
-
                         write_success = false;
                         break;
                     }
                 }
 
+                // Write block with retry
                 bool block_written = false;
                 for(int retry = 0; retry < 3 && !block_written; retry++) {
                     if(retry > 0) furi_delay_ms(100);
@@ -313,19 +330,20 @@ static bool miband_write_with_sync_approach(MiBandNfcApp* app) {
 
                     if(error == MfClassicErrorNone) {
                         block_written = true;
-                        FURI_LOG_D(TAG, "Block %zu written (retry %d)", block_idx, retry);
+                        FURI_LOG_D(TAG, "Sector 0 Block %zu written (retry %d)", block_idx, retry);
                     } else if(error != MfClassicErrorTimeout) {
                         break;
                     }
                 }
 
                 if(!block_written) {
-                    FURI_LOG_E(TAG, "Failed to write block %zu", block_idx);
+                    FURI_LOG_E(TAG, "Failed to write sector 0 block %zu", block_idx);
                     write_success = false;
                     break;
                 }
             }
 
+            // Write sector 0 trailer (block 3)
             if(write_success) {
                 size_t trailer_idx = first_block + blocks_in_sector - 1;
                 FURI_LOG_D(TAG, "Writing sector 0 trailer block %zu", trailer_idx);
@@ -361,87 +379,114 @@ static bool miband_write_with_sync_approach(MiBandNfcApp* app) {
                 }
             }
 
-            continue;
+            continue; // Skip to next sector
         }
 
+        // 3.2 Handle sectors 1-15
+        FURI_LOG_D(
+            TAG,
+            "Sector %zu: first_block=%d, blocks_in_sector=%d",
+            sector,
+            first_block,
+            blocks_in_sector);
+
+        // STRATEGY FOR WRITING SECTORS:
+        // 1. If card has magic keys (0xFF) -> use 0xFF to write
+        // 2. If card has original keys -> use dump keys
+        // 3. Fallback to 0xFF if everything fails
+
+        // OPTION 1: Try with magic keys (0xFF) if detected
         if(has_magic_keys) {
-            if(app->logger) {
-                miband_logger_log(app->logger, LogLevelInfo, "Card has magic keys (0xFF)");
-            }
+            FURI_LOG_I(TAG, "Sector %zu: Trying 0xFF keys (magic card)", sector);
+
             memset(auth_key.data, 0xFF, sizeof(auth_key.data));
             error = mf_classic_poller_sync_auth(
                 app->nfc, first_block, &auth_key, MfClassicKeyTypeA, &auth_context);
 
             if(error == MfClassicErrorNone) {
-                FURI_LOG_I(TAG, "Sector %zu: Auth with 0xFF", sector);
+                FURI_LOG_I(TAG, "Sector %zu: Auth with 0xFF successful", sector);
                 sector_written = write_sector_blocks(
                     app, sector, first_block, blocks_in_sector, &auth_key, MfClassicKeyTypeA);
+
+                if(sector_written) {
+                    FURI_LOG_I(TAG, "Sector %zu written with 0xFF keys", sector);
+                    continue; // Move to next sector
+                }
+            } else {
+                FURI_LOG_W(TAG, "Sector %zu: Auth with 0xFF failed: %d", sector, error);
             }
         }
-        if(app->logger) {
-            miband_logger_log(app->logger, LogLevelInfo, "Card has original keys");
-        }
+
+        // OPTION 2: Try with dump keys (for rewrites)
         if(!sector_written) {
+            FURI_LOG_I(TAG, "Sector %zu: Trying dump keys", sector);
+
+            // Try Key A from dump
             if(mf_classic_is_key_found(app->mf_classic_data, sector, MfClassicKeyTypeA)) {
                 memcpy(auth_key.data, sec_tr->key_a.data, sizeof(auth_key.data));
+                auth_key_type = MfClassicKeyTypeA;
 
                 for(int retry = 0; retry < 2 && !sector_written; retry++) {
-                    if(retry > 0) furi_delay_ms(200);
+                    if(retry > 0) {
+                        FURI_LOG_D(TAG, "Retry %d with dump Key A", retry);
+                        furi_delay_ms(200);
+                    }
 
                     error = mf_classic_poller_sync_auth(
-                        app->nfc, first_block, &auth_key, MfClassicKeyTypeA, &auth_context);
+                        app->nfc, first_block, &auth_key, auth_key_type, &auth_context);
 
                     if(error == MfClassicErrorNone) {
                         FURI_LOG_I(TAG, "Sector %zu: Auth with dump Key A", sector);
                         sector_written = write_sector_blocks(
-                            app,
-                            sector,
-                            first_block,
-                            blocks_in_sector,
-                            &auth_key,
-                            MfClassicKeyTypeA);
+                            app, sector, first_block, blocks_in_sector, &auth_key, auth_key_type);
                         break;
                     }
                 }
             }
 
+            // Try Key B from dump
             if(!sector_written &&
                mf_classic_is_key_found(app->mf_classic_data, sector, MfClassicKeyTypeB)) {
                 memcpy(auth_key.data, sec_tr->key_b.data, sizeof(auth_key.data));
+                auth_key_type = MfClassicKeyTypeB;
 
                 for(int retry = 0; retry < 2 && !sector_written; retry++) {
-                    if(retry > 0) furi_delay_ms(200);
+                    if(retry > 0) {
+                        FURI_LOG_D(TAG, "Retry %d with dump Key B", retry);
+                        furi_delay_ms(200);
+                    }
 
                     error = mf_classic_poller_sync_auth(
-                        app->nfc, first_block, &auth_key, MfClassicKeyTypeB, &auth_context);
+                        app->nfc, first_block, &auth_key, auth_key_type, &auth_context);
 
                     if(error == MfClassicErrorNone) {
                         FURI_LOG_I(TAG, "Sector %zu: Auth with dump Key B", sector);
                         sector_written = write_sector_blocks(
-                            app,
-                            sector,
-                            first_block,
-                            blocks_in_sector,
-                            &auth_key,
-                            MfClassicKeyTypeB);
+                            app, sector, first_block, blocks_in_sector, &auth_key, auth_key_type);
                         break;
                     }
                 }
             }
+        }
 
-            if(!sector_written && !has_magic_keys) {
-                FURI_LOG_W(TAG, "Sector %zu: Trying 0xFF as last resort", sector);
-                memset(auth_key.data, 0xFF, sizeof(auth_key.data));
-                error = mf_classic_poller_sync_auth(
-                    app->nfc, first_block, &auth_key, MfClassicKeyTypeA, &auth_context);
+        // OPTION 3: Last resort - try 0xFF even if not detected as magic
+        if(!sector_written && !has_magic_keys) {
+            FURI_LOG_W(TAG, "Sector %zu: Last resort - trying 0xFF keys", sector);
 
-                if(error == MfClassicErrorNone) {
-                    sector_written = write_sector_blocks(
-                        app, sector, first_block, blocks_in_sector, &auth_key, MfClassicKeyTypeA);
-                }
+            memset(auth_key.data, 0xFF, sizeof(auth_key.data));
+            auth_key_type = MfClassicKeyTypeA;
+
+            error = mf_classic_poller_sync_auth(
+                app->nfc, first_block, &auth_key, auth_key_type, &auth_context);
+
+            if(error == MfClassicErrorNone) {
+                FURI_LOG_I(TAG, "Sector %zu: Auth with 0xFF (last resort)", sector);
+                sector_written = write_sector_blocks(
+                    app, sector, first_block, blocks_in_sector, &auth_key, auth_key_type);
             }
         }
 
+        // Check if sector was written successfully
         if(!sector_written) {
             FURI_LOG_E(TAG, "Sector %zu: ALL authentication methods FAILED", sector);
             if(app->logger) {
@@ -451,18 +496,44 @@ static bool miband_write_with_sync_approach(MiBandNfcApp* app) {
                     "Failed to write sector %zu - all auth methods failed",
                     sector);
             }
+
+            // Special debug for sector 1 (blocks 4-7)
+            if(sector == 1) {
+                FURI_LOG_E(TAG, "CRITICAL: Sector 1 (blocks 4-7) failed to write!");
+                FURI_LOG_E(TAG, "This is likely your problem area.");
+                FURI_LOG_E(TAG, "has_magic_keys: %d", has_magic_keys);
+
+                // Log what keys we have in dump for sector 1
+                if(mf_classic_is_key_found(app->mf_classic_data, 1, MfClassicKeyTypeA)) {
+                    FURI_LOG_E(TAG, "Dump has Key A for sector 1");
+                }
+                if(mf_classic_is_key_found(app->mf_classic_data, 1, MfClassicKeyTypeB)) {
+                    FURI_LOG_E(TAG, "Dump has Key B for sector 1");
+                }
+            }
+
             write_success = false;
+            should_break = true;
             break;
         }
     }
-    if(app->logger) {
-        miband_logger_log(
-            app->logger,
-            write_success ? LogLevelInfo : LogLevelError,
-            "Write operation %s",
-            write_success ? "completed" : "failed");
+
+    // Cleanup
+    furi_string_free(progress_msg);
+
+    // Final result
+    if(write_success) {
+        FURI_LOG_I(TAG, "Write operation COMPLETED SUCCESSFULLY");
+        if(app->logger) {
+            miband_logger_log(app->logger, LogLevelInfo, "Write operation completed successfully");
+        }
+    } else {
+        FURI_LOG_E(TAG, "Write operation FAILED");
+        if(app->logger) {
+            miband_logger_log(app->logger, LogLevelError, "Write operation failed");
+        }
     }
-    FURI_LOG_I(TAG, "Sync write completed: %s", write_success ? "SUCCESS" : "FAILED");
+
     return write_success;
 }
 
@@ -574,10 +645,10 @@ bool miband_nfc_scene_writer_on_event(void* context, SceneManagerEvent event) {
         switch(event.event) {
         case MiBandNfcCustomEventCardDetected:
             if(app->scanner) {
+                app->is_scan_active = false;
                 nfc_scanner_stop(app->scanner);
                 nfc_scanner_free(app->scanner);
                 app->scanner = NULL;
-                app->is_scan_active = false;
             }
 
             popup_reset(app->popup);
@@ -698,12 +769,20 @@ void miband_nfc_scene_writer_on_exit(void* context) {
     furi_assert(context);
     MiBandNfcApp* app = context;
 
+    // Aggiungere:
+    if(app->poller) {
+        nfc_poller_stop(app->poller);
+        nfc_poller_free(app->poller);
+        app->poller = NULL;
+    }
+
+    app->is_scan_active = false;
+
     if(app->scanner) {
         nfc_scanner_stop(app->scanner);
         nfc_scanner_free(app->scanner);
         app->scanner = NULL;
     }
-    app->is_scan_active = false;
 
     notification_message(app->notifications, &sequence_blink_stop);
     popup_reset(app->popup);
