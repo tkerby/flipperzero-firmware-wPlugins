@@ -13,13 +13,13 @@ NFC writer for Mi Band with 0xFF keys support and automatic verification.
 
 ## Usage
 
-### Quick Start
+**Quick Start**
 1. Load NFC dump from `/ext/nfc` folder
 2. Emulate magic template (for blank Mi Bands)
 3. Write data with progress tracking
 4. Verify write results
 
-### Key Operations
+**Key Operations**
 - **Quick UID Check**: Read card UID and find matching files
 - **Magic Emulation**: Create blank template with 0xFF keys  
 - **Write Data**: Write dump to Mi Band with backup option
