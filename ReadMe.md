@@ -48,6 +48,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Amiibo Toolkit v1.0 (By Firefox2100)](https://github.com/Firefox2100/ami_tool)
 - Updated: [ProtoPirate WIP v1.1 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate) [add support for fiatv0 (By yougz/doob/CharlesTheGreat77)](https://github.com/RocketGod-git/ProtoPirate/pull/6)
 - Updated: [FlipTelegram v1.0.1 (By jblanked)](https://github.com/jblanked/FlipTelegram) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- Default/Minimal Build Updated to include Holiday / Winter animations.
+- [Patreon Build Update](https://www.patreon.com/RogueMaster/membership): ManifestSwitcher Build Updated to include Holiday / Winter animations in Minimal selection.
 
 <a name="release">
 
