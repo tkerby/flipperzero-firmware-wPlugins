@@ -69,24 +69,19 @@ bool sd_raw_read(
     uint32_t out_cap) {
     Context* context = ctx;
 
-    uint32_t length = MIN(out_cap, count * SCSI_BLOCK_SIZE) / context->logical_block_size;
-    uint32_t sector = lba * SCSI_BLOCK_SIZE / context->logical_block_size;
+    // Promote each to a larger size before multiplying
+    uint32_t length = (uint32_t)count * SCSI_BLOCK_SIZE / context->logical_block_size;
+    uint64_t sector = (uint64_t)lba * SCSI_BLOCK_SIZE / context->logical_block_size;
 
-    FURI_LOG_T(
-        TAG,
-        "file_read lba=%08lX count=%04X out_cap=%08lX | length = %08lX sector=%08lX",
-        lba,
-        count,
-        out_cap,
-        length,
-        sector);
+    // Prevent length from exceeding `out_cap` bytes
+    length = MIN(length, out_cap / context->logical_block_size);
 
     // This function reads uint32_t's, so we divide the sector and length by 4 TIMES 512 BECAUSE SOMEONE IS A DUMBASS
     FuriStatus result = furi_hal_sd_read_blocks((uint32_t*)out, sector, length);
 
     if(result == FuriStatusOk) {
-        context->bytes_read += * out_len = length * context->logical_block_size;
-        FURI_LOG_T(TAG, "Read %lu/%lu bytes.", *out_len, count * SCSI_BLOCK_SIZE);
+        context->bytes_read += (*out_len) = length * context->logical_block_size;
+        // FURI_LOG_T(TAG, "Read %lu bytes.", *out_len);
         return true;
     } else {
         *out_len = 0;
@@ -97,25 +92,24 @@ bool sd_raw_read(
 bool sd_raw_write(void* ctx, uint32_t lba, uint16_t count, uint8_t* buf, uint32_t len) {
     Context* context = ctx;
 
-    // Don't actually perform any write operations for now, don't want to corrupt anything
-    (void)lba;
-    (void)count;
-    (void)buf;
-
-    FURI_LOG_T(TAG, "file_write lba=%08lX count=%04X len=%08lX", lba, count, len);
     if(len != count * SCSI_BLOCK_SIZE) {
         FURI_LOG_W(TAG, "bad write params count=%u len=%lu", count, len);
         return false;
     }
-    // if(!storage_file_seek(app->file, lba * SCSI_BLOCK_SIZE, true)) {
-    //     FURI_LOG_W(TAG, "seek failed");
-    //     return false;
-    // }
-    // return storage_file_write(app->file, buf, len) == len;
 
-    context->bytes_written += len;
+    // Promote each to a larger size before multiplying
+    uint32_t length = (uint32_t)count * SCSI_BLOCK_SIZE / context->logical_block_size;
+    uint64_t sector = (uint64_t)lba * SCSI_BLOCK_SIZE / context->logical_block_size;
 
-    return true;
+    FuriStatus result = furi_hal_sd_write_blocks((uint32_t*)buf, sector, length);
+
+    if(result == FuriStatusOk) {
+        context->bytes_written += len;
+        // FURI_LOG_T(TAG, "Wrote %lu bytes.", len);
+        return true;
+    } else {
+        return false;
+    }
 }
 
 uint32_t sd_num_blocks(void* ctx) {

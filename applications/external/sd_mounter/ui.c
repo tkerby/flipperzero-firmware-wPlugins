@@ -69,14 +69,15 @@ void back_button_callback(void* ctx) {
 }
 
 // Helper method to check for the above flag
-bool back_button_was_pressed() {
-    uint32_t flags = furi_thread_flags_wait(FlagBackButtonPressed, FuriFlagNoClear, 1);
+bool back_button_was_pressed(bool clear) {
+    uint32_t flags = furi_thread_flags_wait(FlagBackButtonPressed, FuriFlagWaitAny, 1);
     bool pressed = flags == FlagBackButtonPressed;
-    // TODO; why doesn't this continue to show pressed forever?
     if(pressed) {
-        notify(&vibrate);
-        FURI_LOG_E("DBG", "Back button was pressed");
-        // furi_thread_flags_set(furi_thread_get_current_id(), FlagBackButtonPressed);
+        // Only vibrate if we're also clearing the flag, as otherwise we'll vibrate multiple times per press
+        if(clear)
+            notify(&vibrate);
+        else
+            furi_thread_flags_set(furi_thread_get_current_id(), FlagBackButtonPressed);
     }
     return pressed;
 }
@@ -91,7 +92,7 @@ void ui_init() {
     view_holder_attach_to_gui(view_holder, gui);
     view_holder_set_back_callback(view_holder, back_button_callback, furi_thread_get_current_id());
 
-    FURI_LOG_E("DBG", "Current thread ID: %p", furi_thread_get_current_id());
+    FURI_LOG_I("DBG", "Current thread ID: %p", furi_thread_get_current_id());
 }
 
 void ui_cleanup() {
