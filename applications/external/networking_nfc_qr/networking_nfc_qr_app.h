@@ -48,7 +48,7 @@ typedef struct {
     Widget* widget;
     Popup* popup;
     Loading* loading;
-    
+
     // Debug
     uint32_t current_view;
 } NfcQrApp;
