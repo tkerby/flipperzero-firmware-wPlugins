@@ -12,38 +12,38 @@ extern "C" {
 // Nintendo Switch POKKEN CONTROLLER VID/PID
 // Using HORI POKKEN CONTROLLER identifiers (proven to work with Switch)
 // Based on Arduino JoyCon Library implementation
-#define USB_VID_NINTENDO 0x0f0d  // HORI (licensed Switch controller manufacturer)
-#define USB_PID_SWITCH_PRO 0x0092  // HORI POKKEN CONTROLLER
+#define USB_VID_NINTENDO   0x0f0d // HORI (licensed Switch controller manufacturer)
+#define USB_PID_SWITCH_PRO 0x0092 // HORI POKKEN CONTROLLER
 
 // Button bit positions for Switch Pro Controller
-#define SWITCH_BTN_Y (1 << 0)
-#define SWITCH_BTN_B (1 << 1)
-#define SWITCH_BTN_A (1 << 2)
-#define SWITCH_BTN_X (1 << 3)
-#define SWITCH_BTN_L (1 << 4)
-#define SWITCH_BTN_R (1 << 5)
-#define SWITCH_BTN_ZL (1 << 6)
-#define SWITCH_BTN_ZR (1 << 7)
-#define SWITCH_BTN_MINUS (1 << 8)
-#define SWITCH_BTN_PLUS (1 << 9)
-#define SWITCH_BTN_LSTICK (1 << 10)
-#define SWITCH_BTN_RSTICK (1 << 11)
-#define SWITCH_BTN_HOME (1 << 12)
+#define SWITCH_BTN_Y       (1 << 0)
+#define SWITCH_BTN_B       (1 << 1)
+#define SWITCH_BTN_A       (1 << 2)
+#define SWITCH_BTN_X       (1 << 3)
+#define SWITCH_BTN_L       (1 << 4)
+#define SWITCH_BTN_R       (1 << 5)
+#define SWITCH_BTN_ZL      (1 << 6)
+#define SWITCH_BTN_ZR      (1 << 7)
+#define SWITCH_BTN_MINUS   (1 << 8)
+#define SWITCH_BTN_PLUS    (1 << 9)
+#define SWITCH_BTN_LSTICK  (1 << 10)
+#define SWITCH_BTN_RSTICK  (1 << 11)
+#define SWITCH_BTN_HOME    (1 << 12)
 #define SWITCH_BTN_CAPTURE (1 << 13)
 
 // D-Pad values (HAT switch) - POKKEN Controller format
-#define SWITCH_HAT_UP 0x00
-#define SWITCH_HAT_UP_RIGHT 0x01
-#define SWITCH_HAT_RIGHT 0x02
+#define SWITCH_HAT_UP         0x00
+#define SWITCH_HAT_UP_RIGHT   0x01
+#define SWITCH_HAT_RIGHT      0x02
 #define SWITCH_HAT_DOWN_RIGHT 0x03
-#define SWITCH_HAT_DOWN 0x04
-#define SWITCH_HAT_DOWN_LEFT 0x05
-#define SWITCH_HAT_LEFT 0x06
-#define SWITCH_HAT_UP_LEFT 0x07
-#define SWITCH_HAT_NEUTRAL 0x08  // Neutral state (no direction pressed)
+#define SWITCH_HAT_DOWN       0x04
+#define SWITCH_HAT_DOWN_LEFT  0x05
+#define SWITCH_HAT_LEFT       0x06
+#define SWITCH_HAT_UP_LEFT    0x07
+#define SWITCH_HAT_NEUTRAL    0x08 // Neutral state (no direction pressed)
 
 // Analog stick center position (8-bit for POKKEN Controller)
-#define STICK_CENTER 128  // 0x80 - center value for 8-bit sticks (0-255 range)
+#define STICK_CENTER 128 // 0x80 - center value for 8-bit sticks (0-255 range)
 
 // USB HID specific constants (not always in SDK headers)
 #ifndef USB_DTYPE_HID
@@ -177,22 +177,22 @@ extern "C" {
 #endif
 
 // HID endpoint configuration
-#define HID_EP_IN 0x81
-#define HID_EP_SZ 64
+#define HID_EP_IN    0x81
+#define HID_EP_SZ    64
 #define HID_INTERVAL 5
 
 // POKKEN Controller report configuration (NO Report ID, raw 8 bytes)
-#define POKKEN_REPORT_SIZE 8  // 8 bytes: 2 buttons + 1 HAT + 4 axes + 1 vendor
+#define POKKEN_REPORT_SIZE 8 // 8 bytes: 2 buttons + 1 HAT + 4 axes + 1 vendor
 
 // Switch controller state structure (POKKEN Controller format)
 // Uses 8-bit analog sticks (0-255 range, 128 = center)
 typedef struct {
-    uint16_t buttons;  // 16 buttons across 2 bytes
-    uint8_t hat;       // Hat switch (0-7 directions, 15 = neutral)
-    uint8_t lx;        // Left stick X (0-255, 128 = center)
-    uint8_t ly;        // Left stick Y (0-255, 128 = center)
-    uint8_t rx;        // Right stick X (0-255, 128 = center)
-    uint8_t ry;        // Right stick Y (0-255, 128 = center)
+    uint16_t buttons; // 16 buttons across 2 bytes
+    uint8_t hat; // Hat switch (0-7 directions, 15 = neutral)
+    uint8_t lx; // Left stick X (0-255, 128 = center)
+    uint8_t ly; // Left stick Y (0-255, 128 = center)
+    uint8_t rx; // Right stick X (0-255, 128 = center)
+    uint8_t ry; // Right stick Y (0-255, 128 = center)
 } SwitchControllerState;
 
 // Initialize USB HID for Switch Pro Controller

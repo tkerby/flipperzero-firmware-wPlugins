@@ -47,7 +47,12 @@ static void switch_controller_view_recording_draw_callback(Canvas* canvas, void*
         snprintf(buf, sizeof(buf), "Events: %lu", m->event_count);
         canvas_draw_str(canvas, 2, 32, buf);
 
-        snprintf(buf, sizeof(buf), "Time: %lu.%lus", m->duration_ms / 1000, (m->duration_ms % 1000) / 100);
+        snprintf(
+            buf,
+            sizeof(buf),
+            "Time: %lu.%lus",
+            m->duration_ms / 1000,
+            (m->duration_ms % 1000) / 100);
         canvas_draw_str(canvas, 2, 42, buf);
 
         canvas_draw_str(canvas, 2, 54, "Recording...");
@@ -71,7 +76,8 @@ static bool switch_controller_view_recording_input_callback(InputEvent* event, v
                 // Not recording yet - wait for OK to start
                 if(event->key == InputKeyOk && event->type == InputTypePress) {
                     model->recording = true;
-                    macro_recorder_start(app->recorder, app->current_macro, app->macro_name_buffer);
+                    macro_recorder_start(
+                        app->recorder, app->current_macro, app->macro_name_buffer);
                     consumed = true;
                 } else if(event->key == InputKeyBack && event->type == InputTypeLong) {
                     // Toggle control mode before recording
@@ -216,10 +222,11 @@ void switch_controller_scene_on_enter_recording(void* context) {
     if(!app->recording_view) {
         app->recording_view = view_alloc();
         view_set_context(app->recording_view, app);
-        view_allocate_model(
-            app->recording_view, ViewModelTypeLocking, sizeof(RecordingViewModel));
-        view_set_draw_callback(app->recording_view, switch_controller_view_recording_draw_callback);
-        view_set_input_callback(app->recording_view, switch_controller_view_recording_input_callback);
+        view_allocate_model(app->recording_view, ViewModelTypeLocking, sizeof(RecordingViewModel));
+        view_set_draw_callback(
+            app->recording_view, switch_controller_view_recording_draw_callback);
+        view_set_input_callback(
+            app->recording_view, switch_controller_view_recording_input_callback);
         view_dispatcher_add_view(
             app->view_dispatcher, SwitchControllerViewRecording, app->recording_view);
     }

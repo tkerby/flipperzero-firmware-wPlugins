@@ -98,8 +98,14 @@ static void switch_controller_view_controller_draw_callback(Canvas* canvas, void
     snprintf(debug_buf, sizeof(debug_buf), "B:%04X H:%X", m->state.buttons, m->state.hat);
     canvas_draw_str(canvas, 2, 40, debug_buf);
 
-    snprintf(debug_buf, sizeof(debug_buf), "L:%d,%d R:%d,%d",
-             m->state.lx, m->state.ly, m->state.rx, m->state.ry);
+    snprintf(
+        debug_buf,
+        sizeof(debug_buf),
+        "L:%d,%d R:%d,%d",
+        m->state.lx,
+        m->state.ly,
+        m->state.rx,
+        m->state.ry);
     canvas_draw_str(canvas, 2, 50, debug_buf);
 
     // Draw instructions
@@ -385,8 +391,10 @@ void switch_controller_scene_on_enter_controller(void* context) {
         view_set_context(app->controller_view, app);
         view_allocate_model(
             app->controller_view, ViewModelTypeLocking, sizeof(ControllerViewModel));
-        view_set_draw_callback(app->controller_view, switch_controller_view_controller_draw_callback);
-        view_set_input_callback(app->controller_view, switch_controller_view_controller_input_callback);
+        view_set_draw_callback(
+            app->controller_view, switch_controller_view_controller_draw_callback);
+        view_set_input_callback(
+            app->controller_view, switch_controller_view_controller_input_callback);
         view_dispatcher_add_view(
             app->view_dispatcher, SwitchControllerViewController, app->controller_view);
     }
@@ -423,15 +431,13 @@ void switch_controller_scene_on_enter_controller(void* context) {
 
         // Update connection status
         with_view_model(
-            app->controller_view,
-            ControllerViewModel * model,
-            { model->connected = true; },
-            true);
+            app->controller_view, ControllerViewModel * model, { model->connected = true; }, true);
     }
 
     // Allocate timer if needed
     if(app->timer == NULL) {
-        app->timer = furi_timer_alloc(switch_controller_timer_callback, FuriTimerTypePeriodic, app);
+        app->timer =
+            furi_timer_alloc(switch_controller_timer_callback, FuriTimerTypePeriodic, app);
     }
 
     // Start timer LAST, after everything is initialized (100Hz = 10ms)

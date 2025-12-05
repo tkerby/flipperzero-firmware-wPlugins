@@ -7,9 +7,9 @@
 extern "C" {
 #endif
 
-#define MACRO_MAX_EVENTS 1000
+#define MACRO_MAX_EVENTS   1000
 #define MACRO_NAME_MAX_LEN 32
-#define MACRO_FILE_MAGIC 0x4D414353 // "MACR" in hex
+#define MACRO_FILE_MAGIC   0x4D414353 // "MACR" in hex
 
 // Macro event types
 typedef enum {

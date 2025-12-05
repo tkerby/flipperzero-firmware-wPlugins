@@ -49,7 +49,8 @@ static bool switch_controller_view_dispatcher_navigation_event_callback(void* co
     return scene_manager_handle_back_event(app->scene_manager);
 }
 
-static bool switch_controller_view_dispatcher_custom_event_callback(void* context, uint32_t event) {
+static bool
+    switch_controller_view_dispatcher_custom_event_callback(void* context, uint32_t event) {
     furi_assert(context);
     SwitchControllerApp* app = context;
     return scene_manager_handle_custom_event(app->scene_manager, event);
@@ -71,6 +72,7 @@ static SwitchControllerApp* switch_controller_app_alloc() {
 
     // View dispatcher
     app->view_dispatcher = view_dispatcher_alloc();
+    view_dispatcher_enable_queue(app->view_dispatcher);
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_navigation_event_callback(
         app->view_dispatcher, switch_controller_view_dispatcher_navigation_event_callback);

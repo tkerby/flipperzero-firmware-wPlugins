@@ -221,8 +221,7 @@ bool macro_save(Macro* macro, const char* path) {
         if(storage_file_write(file, &magic, sizeof(magic)) != sizeof(magic)) break;
 
         // Write name
-        if(storage_file_write(file, macro->name, MACRO_NAME_MAX_LEN) != MACRO_NAME_MAX_LEN)
-            break;
+        if(storage_file_write(file, macro->name, MACRO_NAME_MAX_LEN) != MACRO_NAME_MAX_LEN) break;
 
         // Write event count
         if(storage_file_write(file, &macro->event_count, sizeof(macro->event_count)) !=
