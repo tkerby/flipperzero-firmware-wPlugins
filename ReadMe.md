@@ -43,6 +43,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Passy v1.4 (By bettse)](https://github.com/bettse/passy)
 - Updated: [Metroflip v1.0 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [Mi Band NFC Writer v1.0 (By LucaTomei)](https://github.com/LucaTomei/flipper-miband-nfc-writer)
+- Updated: [Seos compatible v1.2 (By bettse)](https://gitlab.com/bettse/flipper_seos)
 
 <a name="release">
 
