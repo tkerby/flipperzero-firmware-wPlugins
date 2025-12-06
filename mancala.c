@@ -36,12 +36,12 @@ typedef struct {
 
 // Layout: position mapping for drawing numbers (approx)
 // Y-positions only, X calculated based on pit index
-static const int ai_pit_y = 5;
+static const int ai_pit_y = 17;
 static const int user_pit_y = 22;
 static const int pit_start_x = 18;  // X position of first pit
 static const int pit_spacing = 15;  // Distance between pits
 
-static const int store_ai_x = 2;
+static const int store_ai_x = 27;
 static const int store_ai_y = 8;
 static const int store_user_x = 114;
 static const int store_user_y = 8;
@@ -101,16 +101,12 @@ static void end_game_if_needed(MancalaState* s){
     }
 }
 
-/*
- * do_move_from:
- *   pit_index: index 0..5 relative to the player performing the move
- *   by_user: true if the moving side is the user, false if AI
- */
+
 static void do_move_from(MancalaState* s, int pit_index, bool by_user){
+	// pit_index: index 0..5 relative to the player performing the move
+    // by_user: true if the moving side is the user, false if AI */
     if(s->game_over) return;
-    
-    // Validate pit index early
-    if(pit_index < 0 || pit_index > 5) return;
+    if(pit_index < 0 || pit_index > 5) return; // validate pit index
 
     // Get stones from the selected pit
     int stones = by_user ? s->pits_user[pit_index] : s->pits_ai[pit_index];
@@ -219,7 +215,7 @@ static void do_move_from(MancalaState* s, int pit_index, bool by_user){
 }
 
 /* ---------------------------------------------------------------------
-   AI (improved heuristic with scoring)
+   AI (simple heuristic with scoring)
    ------------------------------------------------------------------ */
 /*
  * For each possible pit (0..5):
@@ -307,8 +303,16 @@ static void draw_board_background(Canvas* canvas){
 	// canvas_draw_icon(canvas, 1, 1, &I_board); 
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str_aligned(canvas, 13, 1, AlignLeft, AlignTop, "Mancala"); // App title 
-	elements_button_right(canvas, ">");
-	elements_button_left(canvas, "<");
+	canvas_set_font(canvas, FontSecondary);
+	
+	// Only show navigation buttons when they're available
+	if(state.cursor < 5) {
+	    elements_button_right(canvas, "");
+	}
+	if(state.cursor > 0) {
+	    elements_button_left(canvas, "");
+	}
+	
 	elements_button_center(canvas, "Pick pit");
 }
 
@@ -351,10 +355,7 @@ static void draw_cursor(Canvas* canvas){
     canvas_draw_frame(canvas, x, y, 14, 14);
 }
 
-static void draw_status(Canvas* canvas){
-    // status text at top center
-    canvas_draw_str_aligned(canvas, 64, 0, AlignCenter, AlignTop, state.status_text);
-}
+
 
 static void render_callback(Canvas* canvas, void* ctx){
 	(void)ctx;  
@@ -362,13 +363,20 @@ static void render_callback(Canvas* canvas, void* ctx){
 
     draw_board_background(canvas);
     draw_numbers(canvas);
-    draw_cursor(canvas);
-    draw_status(canvas);
+
+    // Cursor to highlight selected user pit
+    int i = state.cursor;
+    int x = pit_start_x + (i * pit_spacing) - 7;
+    int y = user_pit_y - 7;
+    canvas_draw_frame(canvas, x, y, 14, 14);
+	draw_cursor(canvas);
+	// Status output
+    canvas_draw_str_aligned(canvas, 64, 50, AlignCenter, AlignBottom, state.status_text);
 
     if(state.game_over){
         // overlay message big-ish
-        canvas_draw_str_aligned(canvas, 64, 14, AlignCenter, AlignTop, state.status_text);
-        canvas_draw_str_aligned(canvas, 64, 24, AlignCenter, AlignTop, "Press OK to restart");
+        canvas_draw_str_aligned(canvas, 64, 44, AlignCenter, AlignBottom, state.status_text);
+        elements_button_center(canvas, "- Restart -");
     }
 }
 
@@ -420,13 +428,17 @@ static void input_handler(InputEvent* evt, void* ctx){
 
     if(evt->type == InputTypeShort){
         if(evt->key == InputKeyRight){
-            // move cursor right (wrap)
-            state.cursor = (state.cursor + 1) % 6;
-            state.redraw = true;
+            // move cursor right (no wrap)
+            if(state.cursor < 5) {
+                state.cursor++;
+                state.redraw = true;
+            }
         } else if(evt->key == InputKeyLeft){
-            // move cursor left (wrap)
-            state.cursor = (state.cursor + 5) % 6;
-            state.redraw = true;
+            // move cursor left (no wrap)
+            if(state.cursor > 0) {
+                state.cursor--;
+                state.redraw = true;
+            }
         } else if(evt->key == InputKeyOk){
             perform_user_action_ok();
         }
