@@ -1,3 +1,15 @@
+# mitzi-mancala
+<img alt="Main Mancala Screen"  src="screenshots/mitzi-mancala-main-v0.1.png" width="40%" />
+
+## Usage
+* **Left / Right-Button.** Moves cursor between the 6 user pits
+* **OK** picks up stones from selected pit and perform the distributions of the stones according to the rules
+* Holding **Back** quits the App.
+Further features:
+* Visual cursor to select your moves
+* Status messages for game events
+* Flipper's turn is delayed for visibility of the move
+
 ## Game rules for standard mancala ("Kalah")
 1. Pick up all stones from selected pit.
 2. Move counterclockwise placing 1 stone per pit.
@@ -7,12 +19,12 @@
 6. Game ends when one side is empty → other side’s remaining stones flow to their store.
 7. Store counts determine winner.
 
-## User flow
-* **Left / Right-Button.** Move cursor between the 6 user pits (wrapping is allowed)
-* **OK** picks up stones from selected pit and perform the distributions of the stones according to the rules
-* Holding **Back** quits the App.
+## Simple heuristics
+The computer player ('AI' is a bit much) tries all 6 possible moves and decides for the one with the highest score.
+It is based on the following (usual) scoring scheme:
+- Extra turns (highest priority): +100 points
+- Captures (medium priority): +50 points plus captured stones
+- Points gained: +10 per stone added to store
 
-## Simple AI heuristic
-1. If choosing a certain pit results in an extra turn, pick it.
-2. Else if any pit would result in a capture, pick it.
-3. Else choose the leftmost non-empty pit.
+## Version history
+See [changelog.md](changelog.md)
