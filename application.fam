@@ -20,6 +20,9 @@ App(
 	
     sources=["mancala.c"],
 
+	fap_author="F. Greil",
+    fap_weburl="https://github.com/fgreil/mitzi-mancala",
+
     # List of system modules this app depends on
     # "gui" ensures the graphical user interface system is available. 
     # Other common choices: "storage", "notification", "dialogs"
