@@ -23,12 +23,20 @@ typedef enum {
     TURN_AI = 1
 } Turn;
 
+// Represents board sections for stone sowing
+typedef enum {
+    SECTION_USER_PITS,
+    SECTION_USER_STORE,
+    SECTION_AI_PITS,
+    SECTION_AI_STORE
+} BoardSection;
+
 // Main application state structure
 typedef struct {
     ViewPort* view_port;    // ViewPort for rendering UI
     Gui* gui;               // GUI instance
-    int pits_user[6];       // Lower row (user's pits, left to right)
-    int pits_ai[6];         // Upper row (AI's pits, left to right)
+    int pits_user[6];       // Lower row (user's pits, left to right, indices 0-5)
+    int pits_ai[6];         // Upper row (AI's pits, left to right, indices 0-5)
     int store_user;         // Right store (user's collection)
     int store_ai;           // Left store (AI's collection)
     Turn turn;              // Current player's turn
@@ -36,7 +44,7 @@ typedef struct {
     bool game_over;         // Game completion flag
     char status_text[32];   // Status message displayed at bottom
     bool redraw;            // Flag to trigger screen redraw
-	bool ai_ready;          // Flag indicating AI's turn is ready to execute
+    bool ai_ready;          // Flag indicating AI's turn is ready to execute (needs user to press OK)
     bool should_exit;       // Flag to exit application
 } MancalaState;
 
@@ -94,8 +102,8 @@ static void init_game(MancalaState* s) {
     s->turn = TURN_USER;
     s->cursor = 0; // Default cursor position (left pit)
     s->game_over = false;
-	s->ai_ready = false;
-	stpcpy(s->status_text, ""); // Empty status line
+    s->ai_ready = false;
+    strcpy(s->status_text, ""); // Empty status line
     s->redraw = true;
 }
 
@@ -155,14 +163,23 @@ static void end_game_if_needed(MancalaState* s) {
  * Perform a move from a selected pit
  * 
  * @param s Game state
- * @param pit_index Index (0..5) of the pit to move from
+ * @param pit_index Index (0..5) of the pit to move from (left to right)
  * @param by_user true if user is moving, false if AI is moving
  * 
  * Implements standard Kalah rules:
- * - Sow stones counter-clockwise
- * - Skip opponent's store
+ * - Sow stones counter-clockwise around the board
+ * - Skip opponent's store when sowing
  * - Extra turn if last stone lands in own store
- * - Capture if last stone lands in own empty pit
+ * - Capture if last stone lands in own empty pit (opposite pit must have stones)
+ * 
+ * Board layout for counter-clockwise sowing:
+ *     AI pits: [5] [4] [3] [2] [1] [0]
+ * AI Store [  ]                      [  ] User Store
+ *    User pits: [0] [1] [2] [3] [4] [5]
+ * 
+ * Sowing direction: User pits increase left-to-right (0→5), 
+ *                   then user store, then AI pits decrease right-to-left (5→0),
+ *                   then AI store, then wrap back to user pits
  */
 static void do_move_from(MancalaState* s, int pit_index, bool by_user) {
     // Validate game state and pit selection
@@ -180,89 +197,117 @@ static void do_move_from(MancalaState* s, int pit_index, bool by_user) {
         s->pits_ai[pit_index] = 0;
     }
 
-    /**
-     * Board layout as slot indices for sowing:
-     * 0: store_ai (left)
-     * 1..6: ai pits[0..5] (left to right)
-     * 7: store_user (right)
-     * 8..13: user pits[0..5] (right to left)
-     */
+    // Track current position as we sow stones counter-clockwise
+    // We'll use a state machine approach: which side and which position
+    BoardSection current_section;
+    int current_pit_index;
     
-    // Calculate starting slot index
-    int slot_index;
+    // Initialize starting position based on who is moving
     if(by_user) {
-        // User pit: slots 8..13
-        slot_index = 8 + pit_index;
+        current_section = SECTION_USER_PITS;
+        current_pit_index = pit_index;
     } else {
-        // AI pit: slots 1..6
-        slot_index = 1 + pit_index;
+        current_section = SECTION_AI_PITS;
+        current_pit_index = pit_index;
     }
+    
+    // Variables to track where the last stone lands
+    BoardSection last_section = SECTION_USER_PITS;
+    int last_pit_index = -1;
 
     // Sow stones counter-clockwise
-    int last_slot = -1;
     while(stones > 0) {
-        // Move to next slot
-        slot_index--;
-        if(slot_index < 0) slot_index = 13;
+        // Move to next position counter-clockwise
+        if(current_section == SECTION_USER_PITS) {
+            current_pit_index++;
+            if(current_pit_index > 5) {
+                // Reached end of user pits, move to user store
+                current_section = SECTION_USER_STORE;
+            }
+        } else if(current_section == SECTION_USER_STORE) {
+            // Move from user store to AI pits (starting from rightmost = index 5)
+            current_section = SECTION_AI_PITS;
+            current_pit_index = 5;
+        } else if(current_section == SECTION_AI_PITS) {
+            current_pit_index--;
+            if(current_pit_index < 0) {
+                // Reached end of AI pits, move to AI store
+                current_section = SECTION_AI_STORE;
+            }
+        } else { // SECTION_AI_STORE
+            // Move from AI store back to user pits (starting from leftmost = index 0)
+            current_section = SECTION_USER_PITS;
+            current_pit_index = 0;
+        }
 
         // Skip opponent's store (standard Kalah rule)
-        if(by_user && slot_index == 0) {
-            // User skips AI store
-            slot_index--;
-            if(slot_index < 0) slot_index = 13;
+        if(by_user && current_section == SECTION_AI_STORE) {
+            // User skips AI store, continue to user pits
+            current_section = SECTION_USER_PITS;
+            current_pit_index = 0;
         }
-        if(!by_user && slot_index == 7) {
-            // AI skips user store
-            slot_index--;
-            if(slot_index < 0) slot_index = 13;
+        if(!by_user && current_section == SECTION_USER_STORE) {
+            // AI skips user store, continue to AI pits
+            current_section = SECTION_AI_PITS;
+            current_pit_index = 5;
         }
 
-        // Place one stone in current slot
-        if(slot_index == 0) {
-            s->store_ai += 1;
-        } else if(slot_index >= 1 && slot_index <= 6) {
-            s->pits_ai[slot_index - 1] += 1;
-        } else if(slot_index == 7) {
-            s->store_user += 1;
-        } else { // 8..13
-            s->pits_user[slot_index - 8] += 1;
+        // Place one stone in current position
+        if(current_section == SECTION_USER_PITS) {
+            s->pits_user[current_pit_index]++;
+        } else if(current_section == SECTION_USER_STORE) {
+            s->store_user++;
+        } else if(current_section == SECTION_AI_PITS) {
+            s->pits_ai[current_pit_index]++;
+        } else { // SECTION_AI_STORE
+            s->store_ai++;
         }
         
+        // Record where this stone landed
+        last_section = current_section;
+        last_pit_index = current_pit_index;
+        
         stones--;
-        last_slot = slot_index;
     }
 
     // Check for extra turn: last stone landed in own store
     bool extra_turn = false;
-    if(by_user && last_slot == 7) extra_turn = true;
-    if(!by_user && last_slot == 0) extra_turn = true;
+    if(by_user && last_section == SECTION_USER_STORE) {
+        extra_turn = true;
+    }
+    if(!by_user && last_section == SECTION_AI_STORE) {
+        extra_turn = true;
+    }
 
-    // Check for capture (only if no extra turn)
-    // If last stone landed in an empty pit on own side, capture opposite pit
+    // Check for capture (only if no extra turn occurred)
+    // Rule: If last stone landed in an empty pit on own side,
+    //       capture that stone plus all stones from the opposite pit
     if(!extra_turn) {
-        if(by_user && last_slot >= 8 && last_slot <= 13) {
-            // User's last stone in user pit
-            int idx = last_slot - 8;
-            if(s->pits_user[idx] == 1) { // Was empty before placing
-                int opposite_idx = 5 - idx;
+        if(by_user && last_section == SECTION_USER_PITS) {
+            // User's last stone landed in a user pit
+            // Check if it was empty before (now has exactly 1 stone)
+            if(s->pits_user[last_pit_index] == 1) {
+                // Calculate opposite pit: user pit i corresponds to AI pit (5-i)
+                int opposite_idx = 5 - last_pit_index;
                 int captured = s->pits_ai[opposite_idx];
                 if(captured > 0) {
-                    // Capture opposite pit and own stone
+                    // Capture: take opposite pit stones and the landing stone
                     s->pits_ai[opposite_idx] = 0;
-                    s->pits_user[idx] = 0;
+                    s->pits_user[last_pit_index] = 0;
                     s->store_user += (1 + captured);
                 }
             }
-        } else if(!by_user && last_slot >= 1 && last_slot <= 6) {
-            // AI's last stone in AI pit
-            int idx = last_slot - 1;
-            if(s->pits_ai[idx] == 1) { // Was empty before placing
-                int opposite_idx = 5 - idx;
+        } else if(!by_user && last_section == SECTION_AI_PITS) {
+            // AI's last stone landed in an AI pit
+            // Check if it was empty before (now has exactly 1 stone)
+            if(s->pits_ai[last_pit_index] == 1) {
+                // Calculate opposite pit: AI pit i corresponds to user pit (5-i)
+                int opposite_idx = 5 - last_pit_index;
                 int captured = s->pits_user[opposite_idx];
                 if(captured > 0) {
-                    // Capture opposite pit and own stone
+                    // Capture: take opposite pit stones and the landing stone
                     s->pits_user[opposite_idx] = 0;
-                    s->pits_ai[idx] = 0;
+                    s->pits_ai[last_pit_index] = 0;
                     s->store_ai += (1 + captured);
                 }
             }
@@ -275,16 +320,23 @@ static void do_move_from(MancalaState* s, int pit_index, bool by_user) {
         s->turn = by_user ? TURN_USER : TURN_AI;
         if(by_user) {
             strcpy(s->status_text, "Extra turn!");
-			s->ai_ready = false;
+            s->ai_ready = false;
         } else {
             strcpy(s->status_text, "AI extra turn");
-			s->ai_ready = false; // Auto-execute AI extra turns
+            // AI gets another turn immediately (auto-execute)
+            s->ai_ready = false;
         }
     } else {
         // Switch to other player
         s->turn = by_user ? TURN_AI : TURN_USER;
-        s->ai_ready = (s->turn == TURN_AI);
-        strcpy(s->status_text, "");
+        if(s->turn == TURN_AI) {
+            // AI's turn - set ready flag so user can trigger it
+            s->ai_ready = true;
+            strcpy(s->status_text, "");
+        } else {
+            s->ai_ready = false;
+            strcpy(s->status_text, "");
+        }
     }
 
     // Check if game has ended
@@ -296,6 +348,7 @@ static void do_move_from(MancalaState* s, int pit_index, bool by_user) {
 // AI IMPLEMENTATION (Heuristic-based move selection)
 // =============================================================================
 /**
+ * AI Strategy - prioritized evaluation:
  * 1. Extra turns (highest priority) - score +100
  * 2. Captures (medium priority) - score +50 plus captured stones
  * 3. Points gained - score +10 per stone added to store
@@ -314,54 +367,74 @@ static int ai_choose_move(MancalaState* s) {
         // Simulate move on temporary state copy
         MancalaState tmp = *s;
         
-        // Perform simulated move
+        // Perform simulated move using the same logic as do_move_from
         int stones = tmp.pits_ai[i];
         tmp.pits_ai[i] = 0;
-        int slot_index = 1 + i; // AI pit i maps to slot (1 + i)
+        
+        // Track position during sowing
+        BoardSection current_section = SECTION_AI_PITS;
+        int current_pit_index = i;
+        
+        BoardSection last_section = SECTION_AI_PITS;
+        int last_pit_index = -1;
 
-        int last_slot = -1;
+        // Sow stones counter-clockwise
         while(stones > 0) {
-            slot_index--;
-            if(slot_index < 0) slot_index = 13;
-            
-            // Skip user store
-            if(slot_index == 7) {
-                slot_index--;
-                if(slot_index < 0) slot_index = 13;
+            // Move to next position
+            if(current_section == SECTION_USER_PITS) {
+                current_pit_index++;
+                if(current_pit_index > 5) {
+                    current_section = SECTION_USER_STORE;
+                }
+            } else if(current_section == SECTION_USER_STORE) {
+                current_section = SECTION_AI_PITS;
+                current_pit_index = 5;
+            } else if(current_section == SECTION_AI_PITS) {
+                current_pit_index--;
+                if(current_pit_index < 0) {
+                    current_section = SECTION_AI_STORE;
+                }
+            } else { // SECTION_AI_STORE
+                current_section = SECTION_USER_PITS;
+                current_pit_index = 0;
+            }
+
+            // AI skips user store
+            if(current_section == SECTION_USER_STORE) {
+                current_section = SECTION_AI_PITS;
+                current_pit_index = 5;
             }
 
             // Place stone
-            if(slot_index == 0) {
-                tmp.store_ai++;
-            } else if(slot_index >= 1 && slot_index <= 6) {
-                tmp.pits_ai[slot_index - 1]++;
-            } else if(slot_index == 7) {
+            if(current_section == SECTION_USER_PITS) {
+                tmp.pits_user[current_pit_index]++;
+            } else if(current_section == SECTION_USER_STORE) {
                 tmp.store_user++;
-            } else {
-                tmp.pits_user[slot_index - 8]++;
+            } else if(current_section == SECTION_AI_PITS) {
+                tmp.pits_ai[current_pit_index]++;
+            } else { // SECTION_AI_STORE
+                tmp.store_ai++;
             }
             
+            last_section = current_section;
+            last_pit_index = current_pit_index;
             stones--;
-            last_slot = slot_index;
         }
 
         // Calculate score for this move
         int score = 0;
         
         // Check for extra turn (highest priority)
-        bool extra_turn = (last_slot == 0);
+        bool extra_turn = (last_section == SECTION_AI_STORE);
         if(extra_turn) score += 100;
         
         // Check for capture (medium priority)
-        if(!extra_turn) {
-            if(last_slot >= 1 && last_slot <= 6) {
-                int idx = last_slot - 1;
-                if(tmp.pits_ai[idx] == 1) { // Was empty
-                    int opposite_idx = 5 - idx;
-                    if(tmp.pits_user[opposite_idx] > 0) {
-                        // Value capture by amount captured
-                        score += 50 + tmp.pits_user[opposite_idx];
-                    }
+        if(!extra_turn && last_section == SECTION_AI_PITS) {
+            if(tmp.pits_ai[last_pit_index] == 1) { // Was empty before
+                int opposite_idx = 5 - last_pit_index;
+                if(tmp.pits_user[opposite_idx] > 0) {
+                    // Value capture by amount that would be captured
+                    score += 50 + tmp.pits_user[opposite_idx];
                 }
             }
         }
@@ -390,26 +463,26 @@ static int ai_choose_move(MancalaState* s) {
 // RENDERING FUNCTIONS
 // =============================================================================
 static void draw_board_background(Canvas* canvas, MancalaState* state) {
-	canvas_draw_icon(canvas, 1, 1, &I_board); 
-    canvas_draw_icon(canvas, 1, 1, &I_icon_10x10); // App icon comes on top of the board ^^
-	canvas_set_font(canvas, FontPrimary);
+    canvas_draw_icon(canvas, 1, 1, &I_board); 
+    canvas_draw_icon(canvas, 1, 1, &I_icon_10x10); // App icon comes on top of the board
+    canvas_set_font(canvas, FontPrimary);
     canvas_draw_str_aligned(canvas, 13, 1, AlignLeft, AlignTop, "Mancala");
     canvas_set_font(canvas, FontSecondary);
     
     // Draw navigation button hints (only when available)
-	if(state->game_over) {
+    if(state->game_over) {
         elements_button_left(canvas, "Exit");
     }
-	if(state->turn == TURN_USER && !state->game_over) {
-		if(state->cursor < 5) elements_button_right(canvas, "");
-		if(state->cursor > 0) elements_button_left(canvas, "");
-		elements_button_center(canvas, "Pick pit"); // Action button hint
-	}
+    if(state->turn == TURN_USER && !state->game_over) {
+        if(state->cursor < 5) elements_button_right(canvas, "");
+        if(state->cursor > 0) elements_button_left(canvas, "");
+        elements_button_center(canvas, "Pick pit"); // Action button hint
+    }
 }
 
 static void draw_numbers(Canvas* canvas, MancalaState* state) { 
     char buf[8];
-    // Write numbers for AI pits (top row)
+    // Write numbers for AI pits (top row, left to right)
     for(int i = 0; i < 6; i++) {
         snprintf(buf, sizeof(buf), "%d", state->pits_ai[i]);
         size_t len = strlen(buf);
@@ -418,7 +491,7 @@ static void draw_numbers(Canvas* canvas, MancalaState* state) {
         if(tx < 0) tx = 0; // Prevent negative coordinates
         canvas_draw_str(canvas, tx, ai_pit_y, buf);
     }  
-    // Write numbers for user pits (bottom row)
+    // Write numbers for user pits (bottom row, left to right)
     for(int i = 0; i < 6; i++) {
         snprintf(buf, sizeof(buf), "%d", state->pits_user[i]);
         size_t len = strlen(buf);
@@ -437,6 +510,7 @@ static void draw_numbers(Canvas* canvas, MancalaState* state) {
 }
 
 static void draw_cursor(Canvas* canvas, MancalaState* state) {
+    // Draw cursor frame around the selected pit
     int i = state->cursor;
     int x = pit_start_x + (i * pit_spacing) - 7;
     int y = user_pit_y - 11;
@@ -449,7 +523,7 @@ static void render_callback(Canvas* canvas, void* ctx) {
     canvas_clear(canvas);
     draw_board_background(canvas, state);
     draw_numbers(canvas, state);
-	if(state->turn == TURN_USER && !state->game_over) {
+    if(state->turn == TURN_USER && !state->game_over) {
         draw_cursor(canvas, state);
     }
     // Draw status message
@@ -459,8 +533,8 @@ static void render_callback(Canvas* canvas, void* ctx) {
     if(state->game_over) {
         canvas_draw_str_aligned(canvas, status_x, status_y, AlignLeft, AlignTop, state->status_text);
         elements_button_center(canvas, "Play again");
-	} else if(state->ai_ready) {
-       elements_button_center(canvas, "Excute Flipper's turn");
+    } else if(state->ai_ready) {
+        elements_button_center(canvas, "Let Flipper calculate");
     }
 }
 
@@ -473,12 +547,12 @@ static void perform_user_action_ok(MancalaState* state) {
         init_game(state);
         return;
     }
-	// Execute AI turn if ready
+    // Execute AI turn if ready and waiting for user confirmation
     if(state->ai_ready) {
         perform_ai_turn(state);
         state->ai_ready = false;
         return;
-	}    
+    }    
     // Only allow moves on user's turn
     if(state->turn != TURN_USER) return;
     // Check if selected pit has stones
@@ -494,13 +568,13 @@ static void perform_user_action_ok(MancalaState* state) {
 }
 
 static void perform_ai_turn(MancalaState* state) {
-	FURI_LOG_I(TAG, "perform_ai_turn() called.");
+    FURI_LOG_I(TAG, "perform_ai_turn() called.");
     if(state->game_over) return;
     
-    // Choose move
+    // Choose best move using AI heuristics
     int pick = ai_choose_move(state);
     if(pick < 0) {
-        // No valid moves - end game
+        // No valid moves available - end game
         end_game_if_needed(state);
         return;
     }
@@ -520,25 +594,25 @@ static void input_handler(InputEvent* evt, void* ctx) {
 
     // Handle short button presses
     if(evt->type == InputTypeShort) {
-		  // Exit on left button when game is over
+        // Exit on left button when game is over
         if(evt->key == InputKeyLeft && state->game_over) {
             state->should_exit = true;
             return;
         }
         if(evt->key == InputKeyRight) {
-            // Move cursor right (no wrap)
+            // Move cursor right (no wrap-around)
             if(state->cursor < 5) {
                 state->cursor++;
                 state->redraw = true;
             }
         } else if(evt->key == InputKeyLeft) {
-            // Move cursor left (no wrap)
+            // Move cursor left (no wrap-around)
             if(state->cursor > 0) {
                 state->cursor--;
                 state->redraw = true;
             }
         } else if(evt->key == InputKeyOk) {
-            // Select pit / restart
+            // Select pit / restart game / execute AI turn
             perform_user_action_ok(state);
         }
     }
@@ -567,18 +641,18 @@ int32_t mancala_main(void* p) {
 
     // Main game loop ----------------------------------------------------------
     while(!state->should_exit) {
-		// Auto-execute AI extra turns
-		if(state->turn == TURN_AI && !state->game_over && !state->ai_ready) {
-			// Small delay makes AI moves visible to user
-			furi_delay_ms(750);
-			perform_ai_turn(state);
-		}
+        // Auto-execute AI extra turns without user interaction
+        if(state->turn == TURN_AI && !state->game_over && !state->ai_ready) {
+            // Small delay makes AI moves visible to user
+            furi_delay_ms(750);
+            perform_ai_turn(state);
+        }
 
-		// Update display if redraw flag is set
-		if(state->redraw) {
-			view_port_update(state->view_port);
-			state->redraw = false;
-		}
+        // Update display if redraw flag is set
+        if(state->redraw) {
+            view_port_update(state->view_port);
+            state->redraw = false;
+        }
         
         // Small delay to prevent busy-waiting
         furi_delay_ms(50);
