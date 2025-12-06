@@ -5,7 +5,7 @@ sourcecode:
     ## Specify the git URL of your repository
     origin: https://github.com/fgreil/mitzi-mancala.git
     ## Put the full commit SHA of the commit with the app's code you want to submit
-    commit_sha: c2f1250ef977318ec1ec410c1609e9bc7d233124
+    commit_sha: b5f349a8550cd5856652e1af49749de450a59b0b
 ## My application.fam contains 'fap_description', hope it will be used as a short description
 # short_description: A short app description.
 ## For 'description' and 'changelog', you can use limited markdown syntax
