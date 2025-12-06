@@ -19,7 +19,12 @@ ufbt>=0.2.5
 requests==2.32.3
 ```
 
-In **Powershell* one may download the `bundle.py` with
+In **Powershell** one may download the `bundle.py` with
 ```
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/flipperdevices/flipper-application-catalog/refs/heads/main/tools/bundle.py" -OutFile "bundle.py"
+```
+
+Cloning the current FAC can be done (without password!) via
+```
+git clone https://github.com/flipperdevices/flipper-application-catalog.git
 ```
