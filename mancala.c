@@ -36,6 +36,7 @@ typedef struct {
     bool game_over;         // Game completion flag
     char status_text[32];   // Status message displayed at bottom
     bool redraw;            // Flag to trigger screen redraw
+	bool ai_ready;          // Flag indicating AI's turn is ready to execute
     bool should_exit;       // Flag to exit application
 } MancalaState;
 
@@ -90,14 +91,11 @@ static void init_game(MancalaState* s) {
     // Empty stores
     s->store_user = 0;
     s->store_ai = 0;
-    
-    // Game state: User goes first
     s->turn = TURN_USER;
-    s->cursor = 2; // Default cursor position (middle pit)
+    s->cursor = 0; // Default cursor position (left pit)
     s->game_over = false;
-    
-    // Initial status message
-    snprintf(s->status_text, sizeof(s->status_text), "You: 0 | AI: 0");
+	s->ai_ready = false;
+	stpcpy(s->status_text, ""); // Empty status line
     s->redraw = true;
 }
 
@@ -187,8 +185,7 @@ static void do_move_from(MancalaState* s, int pit_index, bool by_user) {
      * 0: store_ai (left)
      * 1..6: ai pits[0..5] (left to right)
      * 7: store_user (right)
-     * 8..13: user pits[0..5] (left to right)
-     * Movement is counter-clockwise: 0->1->...->13->0
+     * 8..13: user pits[0..5] (right to left)
      */
     
     // Calculate starting slot index
@@ -205,19 +202,19 @@ static void do_move_from(MancalaState* s, int pit_index, bool by_user) {
     int last_slot = -1;
     while(stones > 0) {
         // Move to next slot
-        slot_index++;
-        if(slot_index > 13) slot_index = 0;
+        slot_index--;
+        if(slot_index < 0) slot_index = 13;
 
         // Skip opponent's store (standard Kalah rule)
         if(by_user && slot_index == 0) {
             // User skips AI store
-            slot_index++;
-            if(slot_index > 13) slot_index = 0;
+            slot_index--;
+            if(slot_index < 0) slot_index = 13;
         }
         if(!by_user && slot_index == 7) {
             // AI skips user store
-            slot_index++;
-            if(slot_index > 13) slot_index = 0;
+            slot_index--;
+            if(slot_index < 0) slot_index = 13;
         }
 
         // Place one stone in current slot
@@ -278,18 +275,16 @@ static void do_move_from(MancalaState* s, int pit_index, bool by_user) {
         s->turn = by_user ? TURN_USER : TURN_AI;
         if(by_user) {
             strcpy(s->status_text, "Extra turn!");
+			s->ai_ready = false;
         } else {
             strcpy(s->status_text, "AI extra turn");
+			s->ai_ready = false; // Auto-execute AI extra turns
         }
     } else {
         // Switch to other player
         s->turn = by_user ? TURN_AI : TURN_USER;
-        if(s->turn == TURN_USER) {
-            snprintf(s->status_text, sizeof(s->status_text), 
-                    "You: %d | AI: %d", s->store_user, s->store_ai);
-        } else {
-            strcpy(s->status_text, "AI thinking...");
-        }
+        s->ai_ready = (s->turn == TURN_AI);
+        strcpy(s->status_text, "");
     }
 
     // Check if game has ended
@@ -326,13 +321,13 @@ static int ai_choose_move(MancalaState* s) {
 
         int last_slot = -1;
         while(stones > 0) {
-            slot_index++;
-            if(slot_index > 13) slot_index = 0;
+            slot_index--;
+            if(slot_index < 0) slot_index = 13;
             
             // Skip user store
             if(slot_index == 7) {
-                slot_index++;
-                if(slot_index > 13) slot_index = 0;
+                slot_index--;
+                if(slot_index < 0) slot_index = 13;
             }
 
             // Place stone
@@ -402,15 +397,19 @@ static void draw_board_background(Canvas* canvas, MancalaState* state) {
     canvas_set_font(canvas, FontSecondary);
     
     // Draw navigation button hints (only when available)
-    if(state->cursor < 5) elements_button_right(canvas, "");
-    if(state->cursor > 0) elements_button_left(canvas, "");
-    elements_button_center(canvas, "Pick pit"); // Action button hint
+	if(state->game_over) {
+        elements_button_left(canvas, "Exit");
+    }
+	if(state->turn == TURN_USER && !state->game_over) {
+		if(state->cursor < 5) elements_button_right(canvas, "");
+		if(state->cursor > 0) elements_button_left(canvas, "");
+		elements_button_center(canvas, "Pick pit"); // Action button hint
+	}
 }
 
 static void draw_numbers(Canvas* canvas, MancalaState* state) { 
     char buf[8];
-    
-    // Draw AI pits (top row)
+    // Write numbers for AI pits (top row)
     for(int i = 0; i < 6; i++) {
         snprintf(buf, sizeof(buf), "%d", state->pits_ai[i]);
         size_t len = strlen(buf);
@@ -418,9 +417,8 @@ static void draw_numbers(Canvas* canvas, MancalaState* state) {
         int tx = x - (len * 3); // Center text
         if(tx < 0) tx = 0; // Prevent negative coordinates
         canvas_draw_str(canvas, tx, ai_pit_y, buf);
-    }
-    
-    // Draw user pits (bottom row)
+    }  
+    // Write numbers for user pits (bottom row)
     for(int i = 0; i < 6; i++) {
         snprintf(buf, sizeof(buf), "%d", state->pits_user[i]);
         size_t len = strlen(buf);
@@ -451,7 +449,9 @@ static void render_callback(Canvas* canvas, void* ctx) {
     canvas_clear(canvas);
     draw_board_background(canvas, state);
     draw_numbers(canvas, state);
-    draw_cursor(canvas, state);
+	if(state->turn == TURN_USER && !state->game_over) {
+        draw_cursor(canvas, state);
+    }
     // Draw status message
     canvas_draw_str_aligned(canvas, status_x, status_y, AlignLeft, AlignTop, state->status_text);
 
@@ -459,28 +459,28 @@ static void render_callback(Canvas* canvas, void* ctx) {
     if(state->game_over) {
         canvas_draw_str_aligned(canvas, status_x, status_y, AlignLeft, AlignTop, state->status_text);
         elements_button_center(canvas, "Play again");
+	} else if(state->ai_ready) {
+       elements_button_center(canvas, "Excute Flipper's turn");
     }
 }
 
 // =============================================================================
 // INPUT HANDLING FUNCTIONS
 // =============================================================================
-
-/**
- * Handle OK button press
- * - During game: pick stones from selected pit
- * - After game: restart game
- */
 static void perform_user_action_ok(MancalaState* state) {
     // Restart game if it's over
     if(state->game_over) {
         init_game(state);
         return;
     }
-    
+	// Execute AI turn if ready
+    if(state->ai_ready) {
+        perform_ai_turn(state);
+        state->ai_ready = false;
+        return;
+	}    
     // Only allow moves on user's turn
     if(state->turn != TURN_USER) return;
-    
     // Check if selected pit has stones
     int idx = state->cursor;
     if(state->pits_user[idx] == 0) {
@@ -488,7 +488,6 @@ static void perform_user_action_ok(MancalaState* state) {
         state->redraw = true;
         return;
     }
-    
     // Perform the move
     do_move_from(state, idx, true);
     state->redraw = true;
@@ -521,6 +520,11 @@ static void input_handler(InputEvent* evt, void* ctx) {
 
     // Handle short button presses
     if(evt->type == InputTypeShort) {
+		  // Exit on left button when game is over
+        if(evt->key == InputKeyLeft && state->game_over) {
+            state->should_exit = true;
+            return;
+        }
         if(evt->key == InputKeyRight) {
             // Move cursor right (no wrap)
             if(state->cursor < 5) {
@@ -544,8 +548,7 @@ static void input_handler(InputEvent* evt, void* ctx) {
 // MAIN APPLICATION ENTRY POINT
 // =============================================================================
 int32_t mancala_main(void* p) {
-    UNUSED(p);
-    
+    UNUSED(p);    
     // Allocate and initialize game state
     MancalaState* state = malloc(sizeof(MancalaState));
     state->should_exit = false;
@@ -564,18 +567,18 @@ int32_t mancala_main(void* p) {
 
     // Main game loop ----------------------------------------------------------
     while(!state->should_exit) {
-        // Execute AI turn if it's AI's turn and game is ongoing
-        if(state->turn == TURN_AI && !state->game_over) {
-            // Small delay makes AI moves visible to user
-            furi_delay_ms(500);
-            perform_ai_turn(state);
-        }
+		// Auto-execute AI extra turns
+		if(state->turn == TURN_AI && !state->game_over && !state->ai_ready) {
+			// Small delay makes AI moves visible to user
+			furi_delay_ms(750);
+			perform_ai_turn(state);
+		}
 
-        // Update display if redraw flag is set
-        if(state->redraw) {
-            view_port_update(state->view_port);
-            state->redraw = false;
-        }
+		// Update display if redraw flag is set
+		if(state->redraw) {
+			view_port_update(state->view_port);
+			state->redraw = false;
+		}
         
         // Small delay to prevent busy-waiting
         furi_delay_ms(50);
