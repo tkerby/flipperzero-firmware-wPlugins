@@ -3,11 +3,16 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <furi.h>
-#include <gui/gui.h>
+#include <stdint.h> // Standard integer types
+#include <stdlib.h> // Standard library functions
+#include <furi.h> // Flipper Universal Registry Implementation = Core OS functionality
+#include <gui/gui.h> // GUI system
 #include <gui/view_port.h>
 #include <gui/canvas.h>
-#include <input.h>
+#include <gui/elements.h> // to access button drawing functions
+#include <input/input.h> // Input handling (buttons)
+
+#include "mitzi_mancala_icons.h" // Custom icon definitions
 
 // Game state
 typedef enum {
@@ -277,10 +282,9 @@ static int ai_choose_move(MancalaState* s){
     return -1;
 }
 
-/* ---------------------------------------------------------------------
-   RENDERING
-   ------------------------------------------------------------------ */
-
+// =============================================================================
+// RENDERING
+// =============================================================================
 static void draw_board_background(Canvas* canvas){
 #if BOARD_BITMAP_AVAILABLE
     // Draw pre-rendered bitmap occupying full screen 128x32
@@ -290,7 +294,6 @@ static void draw_board_background(Canvas* canvas){
     canvas_draw_bitmap(canvas, 0, 0, 128, 32, board_bitmap);
 #else
     // draw schematic: stores and pits outlines
-    canvas_draw_rect(canvas, 2, 2, 124, 28); // outer border
     // left store
     canvas_draw_rect(canvas, 2, 2, 12, 28);
     // right store
@@ -415,14 +418,12 @@ static void input_handler(InputEvent* evt, void* ctx){
     }
 }
 
-/* ---------------------------------------------------------------------
-   APPLICATION ENTRY
-   ------------------------------------------------------------------ */
-
-int32_t mancala_app(void* p){
+// =============================================================================
+// MAIN APPLICATION
+// =============================================================================
+int32_t mancala_main(void* p){
     UNUSED(p);
 
-    // initialize state
     init_game(&state);
 
     // create a queue to marshal events if needed
@@ -437,7 +438,7 @@ int32_t mancala_app(void* p){
     Gui* gui = furi_record_open("gui");
     gui_add_view_port(gui, view_port, GuiLayerFullscreen);
 
-    // main loop. We'll use a simple loop that polls and lets AI act when it's AI's turn.
+    // Main loop that polls and lets AI act when her turn.
     while(!should_exit){
         // If it's AI's turn and not game over -> perform AI action and short delay
         if(state.turn == TURN_AI && !state.game_over){
@@ -451,25 +452,13 @@ int32_t mancala_app(void* p){
             gui_request_full_redraw(gui);
             state.redraw = false;
         }
-
-        // Sleep a bit to yield CPU
-        furi_delay_ms(50);
     }
 
-    // cleanup
+    // Cleanup
     gui_remove_view_port(gui, view_port);
     view_port_free(view_port);
     furi_record_close("gui");
     if(event_queue) furi_message_queue_free(event_queue);
-
     return 0;
 }
 
-/* App entry point expected by some build systems */
-#ifdef MAIN
-int main(void){
-    // wrap mancala_app
-    mancala_app(NULL);
-    return 0;
-}
-#endif
