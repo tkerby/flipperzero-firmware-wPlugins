@@ -1,7 +1,7 @@
 # ProtoPirate
 ## for Flipper Zero
 
-Work in progress... currently only decoding Kia V0 and V1
+Work in progress by The Pirates' Plunder crew... currently only decoding Kia V0 and V1
 but will eventually be a drop-in app (fap) for decoding, storing, and replicating all automotive key fobs and any other protocols which utilize rolling code.
 
 
