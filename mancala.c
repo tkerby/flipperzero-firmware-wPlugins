@@ -311,6 +311,9 @@ static void draw_board_background(Canvas* canvas){
         canvas_draw_rect(canvas, x, y, 12, 12);
     }
 #endif
+    canvas_draw_icon(canvas, 1, -1, &I_icon_10x10); // App icon
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str_aligned(canvas, 13, 1, AlignLeft, AlignTop, "Mancala"); // App title 
 }
 
 static void draw_numbers(Canvas* canvas){
