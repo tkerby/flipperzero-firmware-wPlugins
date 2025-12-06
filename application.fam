@@ -16,7 +16,9 @@ App(
     entry_point="mancala_main",
 
     # Preprocessor definitions added during compilation
-    cdefines=["APP_ID_CARD"],
+    cdefines=["APP_MANCALA"],
+	
+    sources=["mancala.c"],
 
     # List of system modules this app depends on
     # "gui" ensures the graphical user interface system is available. 
@@ -26,12 +28,12 @@ App(
     # Stack memory allocated for the app's thread (in bytes). 1KB is enough here.
     stack_size=1 * 1024,
 
-    # Path to the app icon displayed in the menu
-    fap_icon_assets="images",
-
-    # Format of the menu icon: Black-and-whit PNG (=1-bit color depth), 10x10 pixel
+   # Format of the menu icon: Black-and-white PNG (=1-bit color depth), 10x10 pixel
     fap_icon="images/icon_10x10.png",
 
+    # Path to the app icon displayed in the menu
+    fap_icon_assets="images",
+ 
     # Available categories: Main, GPIO, Sub-GHz, RFID, NFC, Infrared, Misc, Games, Tools, Settings, USB
     fap_category="Games",
 
