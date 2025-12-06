@@ -33,6 +33,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Passy v1.4 (By bettse)](https://github.com/bettse/passy)
 - Added: [ProtoPirate WIP v1.0 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - Updated: [Sub-GHz Remote v1.8 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote)
+- UL: [Sub-GHz protocol updates (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/)
 
 <a name="release">
 
