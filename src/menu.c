@@ -1207,6 +1207,18 @@ static const MenuCommand ir_commands[] = {
         .details_text = "Transmit using raw indices.\n",
     },
     {
+        .label = "IR Dazzler Start",
+        .command = "ir dazzler\n",
+        .details_header = "IR Dazzler Start",
+        .details_text = "Start continuous IR dazzler flood.\n",
+    },
+    {
+        .label = "IR Dazzler Stop",
+        .command = "ir dazzler stop\n",
+        .details_header = "IR Dazzler Stop",
+        .details_text = "Stop continuous IR dazzler flood.\n",
+    },
+    {
         .label = "Stop IR",
         .command = "stop\n",
         .details_header = "Stop IR",
@@ -1829,8 +1841,9 @@ static bool handle_ir_command_feedback_ex(
     bool is_uni_send = strncmp(cmd, "ir universals send ", 20) == 0;
     bool is_uni_sendall = strncmp(cmd, "ir universals sendall", 21) == 0;
     bool is_inline = strncmp(cmd, "ir inline", 9) == 0;
+    bool is_dazzler = strncmp(cmd, "ir dazzler", 10) == 0;
 
-    if(!is_send && !is_uni_send && !is_uni_sendall && !is_inline) return false;
+    if(!is_send && !is_uni_send && !is_uni_sendall && !is_inline && !is_dazzler) return false;
 
     if(reset_buffers) {
         uart_reset_text_buffers(state->uart_context);
@@ -1848,6 +1861,8 @@ static bool handle_ir_command_feedback_ex(
             state->confirmation_view, app_info_ok_callback, state);
         view_dispatcher_switch_to_view(state->view_dispatcher, 7);
         state->current_view = 7;
+    } else if(is_dazzler) {
+        show_result_dialog(state, "IR Dazzler", "Working...");
     } else {
         show_result_dialog(state, "IR", "Transmitting...");
     }
@@ -1883,6 +1898,35 @@ static bool handle_ir_command_feedback_ex(
         while((line = next_line(buffer, &pos))) {
             while(*line == ' ' || *line == '\t')
                 line++;
+
+            if(is_dazzler) {
+                char* tag = strstr(line, "IR_DAZZLER:");
+                if(tag) {
+                    const char* code = tag + 11; // skip "IR_DAZZLER:"
+                    while(*code == ' ' || *code == '\t') code++;
+
+                    if(strncmp(code, "STARTED", 7) == 0) {
+                        strncpy(message, "Dazzler started successfully", sizeof(message) - 1);
+                    } else if(strncmp(code, "FAILED", 6) == 0) {
+                        strncpy(message, "Dazzler failed", sizeof(message) - 1);
+                    } else if(strncmp(code, "ALREADY_RUNNING", 15) == 0) {
+                        strncpy(message, "Dazzler is already running", sizeof(message) - 1);
+                    } else if(strncmp(code, "STOPPING", 8) == 0) {
+                        strncpy(message, "Stopped dazzler.", sizeof(message) - 1);
+                    } else if(strncmp(code, "NOT_RUNNING", 11) == 0) {
+                        strncpy(message, "Dazzler is not running", sizeof(message) - 1);
+                    } else {
+                        snprintf(
+                            message,
+                            sizeof(message),
+                            "Dazzler: %.64s",
+                            code);
+                    }
+                    message[sizeof(message) - 1] = '\0';
+                    start = timeout_ms + start;
+                    break;
+                }
+            }
 
             if(is_send || is_uni_send || is_inline) {
                 if(strncmp(line, "IR: signal ", 11) == 0) {

@@ -3,6 +3,7 @@
 ## v1.6.1
 
 - Added multiple status display animations from @tototo31
+- Added IR Dazzler menu option
 
 ## v1.6.0
 
