@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.6.1
+
+- Added multiple status display animations from @tototo31
+
 ## v1.6.0
 
 - Added IR menu

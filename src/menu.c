@@ -912,6 +912,34 @@ static const MenuCommand status_idle_commands[] = {
         .details_text = "Set idle status display to\n"
                         "Matrix-style rain effect.",
     },
+    {
+        .label = "Multiple Ghosts",
+        .command = "statusidle set ghosts\n",
+        .details_header = "Ghosts Animation",
+        .details_text = "Set idle status display to\n"
+                        "floating ghosts effect.",
+    },
+    {
+        .label = "Spiral",
+        .command = "statusidle set spiral\n",
+        .details_header = "Spiral Animation",
+        .details_text = "Set idle status display to\n"
+                        "spiral pattern effect.",
+    },
+    {
+        .label = "Falling Leaves",
+        .command = "statusidle set leaves\n",
+        .details_header = "Falling Leaves Animation",
+        .details_text = "Set idle status display to\n"
+                        "falling leaves effect.",
+    },
+    {
+        .label = "Bouncing Text",
+        .command = "statusidle set bouncing\n",
+        .details_header = "Bouncing Text Animation",
+        .details_text = "Set idle status display to\n"
+                        "bouncing text effect.",
+    },
 };
 
 // BLE menu command definitions
