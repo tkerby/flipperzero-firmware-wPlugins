@@ -148,7 +148,6 @@ static void draw_screen_splash(Canvas* canvas, DateTime* datetime) {
 	int week_num = get_iso_week_number(datetime->year, datetime->month, datetime->day);
 	snprintf(buffer, sizeof(buffer), "Week# %02d", week_num);
 	canvas_draw_str_aligned(canvas, 1, 64, AlignLeft, AlignBottom, buffer);
-	
 	// Version info
     canvas_draw_str_aligned(canvas, 128, 58, AlignRight, AlignBottom, "v0.1");    
     // Draw button hints at bottom using elements library
@@ -156,12 +155,38 @@ static void draw_screen_splash(Canvas* canvas, DateTime* datetime) {
 }
 
 static void draw_screen_weeks(Canvas* canvas, DateTime* datetime) {
-	UNUSED(datetime);
-    // App name and icon
-    canvas_draw_icon(canvas, 1, -1, &I_icon_10x10);
+	char buffer[64]; // buffer for string concatination
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str_aligned(canvas, 13, 1, AlignLeft, AlignTop, "Weeks");  
-    canvas_set_font(canvas, FontSecondary);
+	char days_current_week[7][4]; // output array to be populated by next function call
+	get_week_days(datetime->year, datetime->month, datetime->day, 0, days_current_week);
+	for(int i = 0; i < 7; i++) {
+		// Highlight current day with inverted colors
+		int highlight_col = (datetime->weekday + 6) % 7;  // Convert Sun=0 to Mon=0
+		if(i == highlight_col) {
+			canvas_draw_box(canvas, 2 + i*18, 1, 18, 11);  // Draw filled black box
+			canvas_set_color(canvas, ColorWhite);  // Switch to white for text
+		}
+		canvas_draw_str_aligned(canvas, 18 + i*18, 2, AlignRight, AlignTop, days_current_week[i]);
+		if(i == highlight_col) {
+			canvas_set_color(canvas, ColorBlack);  // Switch back to black
+		}
+	}	
+	canvas_draw_line(canvas, 0, 0, 127, 0);  // upper line of header
+	canvas_draw_line(canvas, 0, 11, 127, 11); // lower line of header
+	canvas_draw_line(canvas, 0, 63, 127, 63); // footer line
+	canvas_draw_line(canvas, 91, 0, 91, 63); // vertical weekend separator
+	// int dy = canvas_current_font_height(canvas);
+	int dy = 17;
+	for(uint8_t y = 11; y <= 61; y += dy) {
+		canvas_draw_line(canvas, 8, y, 127, y);
+	}
+	// Print month
+	canvas_set_font(canvas, FontSecondary);
+	snprintf(buffer, sizeof(buffer), "%04d-%02d",datetime->year, datetime->month);
+	canvas_set_font_direction(canvas, CanvasDirectionBottomToTop); // Set text rotation to 90 degrees 
+	canvas_draw_str(canvas, 7, 61, buffer);		
+	canvas_set_font_direction(canvas, CanvasDirectionLeftToRight); // Reset to normal text direction
+	
 }
 
 // =============================================================================
@@ -227,13 +252,12 @@ int32_t cal_weeks_main(void* p) {
 				break;
 		case InputKeyOk:
 				if (input.type == InputTypePress){
-					exit_loop = 1;
-					// switch (app.current_screen) {
-						// case ScreenSplash:
-							// app.current_screen = ScreenWeekView;   
-						// break;
-					// }
-					// break;
+					switch (app.current_screen) {
+						case ScreenSplash:
+							app.current_screen = ScreenWeekView;   
+						break;
+					}
+					break;
 				}
 				break;
 			case InputKeyBack:
