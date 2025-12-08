@@ -1903,7 +1903,8 @@ static bool handle_ir_command_feedback_ex(
                 char* tag = strstr(line, "IR_DAZZLER:");
                 if(tag) {
                     const char* code = tag + 11; // skip "IR_DAZZLER:"
-                    while(*code == ' ' || *code == '\t') code++;
+                    while(*code == ' ' || *code == '\t')
+                        code++;
 
                     if(strncmp(code, "STARTED", 7) == 0) {
                         strncpy(message, "Dazzler started successfully", sizeof(message) - 1);
@@ -1916,11 +1917,7 @@ static bool handle_ir_command_feedback_ex(
                     } else if(strncmp(code, "NOT_RUNNING", 11) == 0) {
                         strncpy(message, "Dazzler is not running", sizeof(message) - 1);
                     } else {
-                        snprintf(
-                            message,
-                            sizeof(message),
-                            "Dazzler: %.64s",
-                            code);
+                        snprintf(message, sizeof(message), "Dazzler: %.64s", code);
                     }
                     message[sizeof(message) - 1] = '\0';
                     start = timeout_ms + start;
