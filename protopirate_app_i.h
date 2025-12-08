@@ -1,11 +1,11 @@
-// kia_decoder_app_i.h
+// protopirate_app_i.h
 #pragma once
 
-#include "helpers/kia_decoder_types.h"
-#include "scenes/kia_decoder_scene.h"
-#include "views/kia_decoder_receiver.h"
-#include "views/kia_decoder_receiver_info.h"
-#include "kia_decoder_history.h"
+#include "helpers/protopirate_types.h"
+#include "scenes/protopirate_scene.h"
+#include "views/protopirate_receiver.h"
+#include "views/protopirate_receiver_info.h"
+#include "protopirate_history.h"
 #include "helpers/radio_device_loader.h"
 
 #include <gui/gui.h>
@@ -21,24 +21,24 @@
 #include <lib/subghz/transmitter.h>
 #include <lib/subghz/devices/devices.h>
 
-typedef struct KiaDecoderApp KiaDecoderApp;
+typedef struct ProtoPirateApp ProtoPirateApp;
 
 typedef struct {
     SubGhzWorker* worker;
     SubGhzEnvironment* environment;
     SubGhzReceiver* receiver;
     SubGhzRadioPreset* preset;
-    KiaHistory* history;
+    ProtoPirateHistory* history;
     const SubGhzDevice* radio_device;
-    KiaTxRxState txrx_state;
-    KiaHopperState hopper_state;
-    KiaRxKeyState rx_key_state;
+    ProtoPirateTxRxState txrx_state;
+    ProtoPirateHopperState hopper_state;
+    ProtoPirateRxKeyState rx_key_state;
     uint8_t hopper_idx_frequency;
     uint8_t hopper_timeout;
     uint16_t idx_menu_chosen;
-} KiaDecoderTxRx;
+} ProtoPirateTxRx;
 
-struct KiaDecoderApp {
+struct ProtoPirateApp {
     Gui* gui;
     ViewDispatcher* view_dispatcher;
     SceneManager* scene_manager;
@@ -46,30 +46,30 @@ struct KiaDecoderApp {
     VariableItemList* variable_item_list;
     Submenu* submenu;
     Widget* widget;
-    KiaReceiver* kia_receiver;
-    KiaReceiverInfo* kia_receiver_info;
-    KiaDecoderTxRx* txrx;
+    ProtoPirateReceiver* protopirate_receiver;
+    ProtoPirateReceiverInfo* protopirate_receiver_info;
+    ProtoPirateTxRx* txrx;
     SubGhzSetting* setting;
-    KiaLock lock;
+    ProtoPirateLock lock;
 };
 
-void kia_preset_init(
+void protopirate_preset_init(
     void* context,
     const char* preset_name,
     uint32_t frequency,
     uint8_t* preset_data,
     size_t preset_data_size);
 
-bool kia_set_preset(KiaDecoderApp* app, const char* preset);
+bool protopirate_set_preset(ProtoPirateApp* app, const char* preset);
 
-void kia_get_frequency_modulation(
-    KiaDecoderApp* app,
+void protopirate_get_frequency_modulation(
+    ProtoPirateApp* app,
     FuriString* frequency,
     FuriString* modulation);
 
-void kia_begin(KiaDecoderApp* app, uint8_t* preset_data);
-uint32_t kia_rx(KiaDecoderApp* app, uint32_t frequency);
-void kia_idle(KiaDecoderApp* app);
-void kia_rx_end(KiaDecoderApp* app);
-void kia_sleep(KiaDecoderApp* app);
-void kia_hopper_update(KiaDecoderApp* app);
+void protopirate_begin(ProtoPirateApp* app, uint8_t* preset_data);
+uint32_t protopirate_rx(ProtoPirateApp* app, uint32_t frequency);
+void protopirate_idle(ProtoPirateApp* app);
+void protopirate_rx_end(ProtoPirateApp* app);
+void protopirate_sleep(ProtoPirateApp* app);
+void protopirate_hopper_update(ProtoPirateApp* app);

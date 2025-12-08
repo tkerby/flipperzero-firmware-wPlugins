@@ -1,11 +1,11 @@
-// scenes/kia_decoder_scene_receiver_config.c
-#include "../kia_decoder_app_i.h"
+// scenes/protopirate_scene_receiver_config.c
+#include "../protopirate_app_i.h"
 
-enum KiaSettingIndex {
-    KiaSettingIndexFrequency,
-    KiaSettingIndexHopping,
-    KiaSettingIndexModulation,
-    KiaSettingIndexLock,
+enum ProtoPirateSettingIndex {
+    ProtoPirateSettingIndexFrequency,
+    ProtoPirateSettingIndexHopping,
+    ProtoPirateSettingIndexModulation,
+    ProtoPirateSettingIndexLock,
 };
 
 #define HOPPING_COUNT 2
@@ -14,13 +14,13 @@ const char* const hopping_text[HOPPING_COUNT] = {
     "ON",
 };
 const uint32_t hopping_value[HOPPING_COUNT] = {
-    KiaHopperStateOFF,
-    KiaHopperStateRunning,
+    ProtoPirateHopperStateOFF,
+    ProtoPirateHopperStateRunning,
 };
 
-uint8_t kia_decoder_scene_receiver_config_next_frequency(const uint32_t value, void* context) {
+uint8_t protopirate_scene_receiver_config_next_frequency(const uint32_t value, void* context) {
     furi_assert(context);
-    KiaDecoderApp* app = context;
+    ProtoPirateApp* app = context;
     uint8_t index = 0;
     for(uint8_t i = 0; i < subghz_setting_get_frequency_count(app->setting); i++) {
         if(value == subghz_setting_get_frequency(app->setting, i)) {
@@ -33,9 +33,9 @@ uint8_t kia_decoder_scene_receiver_config_next_frequency(const uint32_t value, v
     return index;
 }
 
-uint8_t kia_decoder_scene_receiver_config_next_preset(const char* preset_name, void* context) {
+uint8_t protopirate_scene_receiver_config_next_preset(const char* preset_name, void* context) {
     furi_assert(context);
-    KiaDecoderApp* app = context;
+    ProtoPirateApp* app = context;
     uint8_t index = 0;
     for(uint8_t i = 0; i < subghz_setting_get_preset_count(app->setting); i++) {
         if(!strcmp(subghz_setting_get_preset_name(app->setting, i), preset_name)) {
@@ -46,31 +46,31 @@ uint8_t kia_decoder_scene_receiver_config_next_preset(const char* preset_name, v
     return index;
 }
 
-uint8_t kia_decoder_scene_receiver_config_hopper_value_index(
+uint8_t protopirate_scene_receiver_config_hopper_value_index(
     const uint32_t value,
     const uint32_t values[],
     uint8_t values_count,
     void* context) {
     furi_assert(context);
     UNUSED(values_count);
-    KiaDecoderApp* app = context;
+    ProtoPirateApp* app = context;
 
     if(value == values[0]) {
         return 0;
     } else {
         variable_item_set_current_value_text(
             (VariableItem*)scene_manager_get_scene_state(
-                app->scene_manager, KiaDecoderSceneReceiverConfig),
+                app->scene_manager, ProtoPirateSceneReceiverConfig),
             " -----");
         return 1;
     }
 }
 
-static void kia_decoder_scene_receiver_config_set_frequency(VariableItem* item) {
-    KiaDecoderApp* app = variable_item_get_context(item);
+static void protopirate_scene_receiver_config_set_frequency(VariableItem* item) {
+    ProtoPirateApp* app = variable_item_get_context(item);
     uint8_t index = variable_item_get_current_value_index(item);
 
-    if(app->txrx->hopper_state == KiaHopperStateOFF) {
+    if(app->txrx->hopper_state == ProtoPirateHopperStateOFF) {
         char text_buf[10] = {0};
         snprintf(
             text_buf,
@@ -86,12 +86,12 @@ static void kia_decoder_scene_receiver_config_set_frequency(VariableItem* item) 
     }
 }
 
-static void kia_decoder_scene_receiver_config_set_preset(VariableItem* item) {
-    KiaDecoderApp* app = variable_item_get_context(item);
+static void protopirate_scene_receiver_config_set_preset(VariableItem* item) {
+    ProtoPirateApp* app = variable_item_get_context(item);
     uint8_t index = variable_item_get_current_value_index(item);
     variable_item_set_current_value_text(
         item, subghz_setting_get_preset_name(app->setting, index));
-    kia_preset_init(
+    protopirate_preset_init(
         app,
         subghz_setting_get_preset_name(app->setting, index),
         app->txrx->preset->frequency,
@@ -99,12 +99,12 @@ static void kia_decoder_scene_receiver_config_set_preset(VariableItem* item) {
         subghz_setting_get_preset_data_size(app->setting, index));
 }
 
-static void kia_decoder_scene_receiver_config_set_hopping_running(VariableItem* item) {
-    KiaDecoderApp* app = variable_item_get_context(item);
+static void protopirate_scene_receiver_config_set_hopping_running(VariableItem* item) {
+    ProtoPirateApp* app = variable_item_get_context(item);
     uint8_t index = variable_item_get_current_value_index(item);
 
     variable_item_set_current_value_text(item, hopping_text[index]);
-    if(hopping_value[index] == KiaHopperStateOFF) {
+    if(hopping_value[index] == ProtoPirateHopperStateOFF) {
         char text_buf[10] = {0};
         snprintf(
             text_buf,
@@ -114,21 +114,21 @@ static void kia_decoder_scene_receiver_config_set_hopping_running(VariableItem* 
             (subghz_setting_get_default_frequency(app->setting) % 1000000) / 10000);
         variable_item_set_current_value_text(
             (VariableItem*)scene_manager_get_scene_state(
-                app->scene_manager, KiaDecoderSceneReceiverConfig),
+                app->scene_manager, ProtoPirateSceneReceiverConfig),
             text_buf);
         app->txrx->preset->frequency = subghz_setting_get_default_frequency(app->setting);
         variable_item_set_current_value_index(
             (VariableItem*)scene_manager_get_scene_state(
-                app->scene_manager, KiaDecoderSceneReceiverConfig),
+                app->scene_manager, ProtoPirateSceneReceiverConfig),
             subghz_setting_get_frequency_default_index(app->setting));
     } else {
         variable_item_set_current_value_text(
             (VariableItem*)scene_manager_get_scene_state(
-                app->scene_manager, KiaDecoderSceneReceiverConfig),
+                app->scene_manager, ProtoPirateSceneReceiverConfig),
             " -----");
         variable_item_set_current_value_index(
             (VariableItem*)scene_manager_get_scene_state(
-                app->scene_manager, KiaDecoderSceneReceiverConfig),
+                app->scene_manager, ProtoPirateSceneReceiverConfig),
             subghz_setting_get_frequency_default_index(app->setting));
     }
 
@@ -136,16 +136,17 @@ static void kia_decoder_scene_receiver_config_set_hopping_running(VariableItem* 
 }
 
 static void
-    kia_decoder_scene_receiver_config_var_list_enter_callback(void* context, uint32_t index) {
+    protopirate_scene_receiver_config_var_list_enter_callback(void* context, uint32_t index) {
     furi_assert(context);
-    KiaDecoderApp* app = context;
-    if(index == KiaSettingIndexLock) {
-        view_dispatcher_send_custom_event(app->view_dispatcher, KiaCustomEventSceneSettingLock);
+    ProtoPirateApp* app = context;
+    if(index == ProtoPirateSettingIndexLock) {
+        view_dispatcher_send_custom_event(
+            app->view_dispatcher, ProtoPirateCustomEventSceneSettingLock);
     }
 }
 
-void kia_decoder_scene_receiver_config_on_enter(void* context) {
-    KiaDecoderApp* app = context;
+void protopirate_scene_receiver_config_on_enter(void* context) {
+    ProtoPirateApp* app = context;
     VariableItem* item;
     uint8_t value_index;
 
@@ -153,12 +154,12 @@ void kia_decoder_scene_receiver_config_on_enter(void* context) {
         app->variable_item_list,
         "Frequency:",
         subghz_setting_get_frequency_count(app->setting),
-        kia_decoder_scene_receiver_config_set_frequency,
+        protopirate_scene_receiver_config_set_frequency,
         app);
     value_index =
-        kia_decoder_scene_receiver_config_next_frequency(app->txrx->preset->frequency, app);
+        protopirate_scene_receiver_config_next_frequency(app->txrx->preset->frequency, app);
     scene_manager_set_scene_state(
-        app->scene_manager, KiaDecoderSceneReceiverConfig, (uint32_t)item);
+        app->scene_manager, ProtoPirateSceneReceiverConfig, (uint32_t)item);
     variable_item_set_current_value_index(item, value_index);
     char text_buf[10] = {0};
     snprintf(
@@ -173,9 +174,9 @@ void kia_decoder_scene_receiver_config_on_enter(void* context) {
         app->variable_item_list,
         "Hopping:",
         HOPPING_COUNT,
-        kia_decoder_scene_receiver_config_set_hopping_running,
+        protopirate_scene_receiver_config_set_hopping_running,
         app);
-    value_index = kia_decoder_scene_receiver_config_hopper_value_index(
+    value_index = protopirate_scene_receiver_config_hopper_value_index(
         app->txrx->hopper_state, hopping_value, HOPPING_COUNT, app);
     variable_item_set_current_value_index(item, value_index);
     variable_item_set_current_value_text(item, hopping_text[value_index]);
@@ -184,9 +185,9 @@ void kia_decoder_scene_receiver_config_on_enter(void* context) {
         app->variable_item_list,
         "Modulation:",
         subghz_setting_get_preset_count(app->setting),
-        kia_decoder_scene_receiver_config_set_preset,
+        protopirate_scene_receiver_config_set_preset,
         app);
-    value_index = kia_decoder_scene_receiver_config_next_preset(
+    value_index = protopirate_scene_receiver_config_next_preset(
         furi_string_get_cstr(app->txrx->preset->name), app);
     variable_item_set_current_value_index(item, value_index);
     variable_item_set_current_value_text(
@@ -194,20 +195,18 @@ void kia_decoder_scene_receiver_config_on_enter(void* context) {
 
     variable_item_list_add(app->variable_item_list, "Lock Keyboard", 1, NULL, NULL);
     variable_item_list_set_enter_callback(
-        app->variable_item_list,
-        kia_decoder_scene_receiver_config_var_list_enter_callback,
-        app);
+        app->variable_item_list, protopirate_scene_receiver_config_var_list_enter_callback, app);
 
-    view_dispatcher_switch_to_view(app->view_dispatcher, KiaDecoderViewVariableItemList);
+    view_dispatcher_switch_to_view(app->view_dispatcher, ProtoPirateViewVariableItemList);
 }
 
-bool kia_decoder_scene_receiver_config_on_event(void* context, SceneManagerEvent event) {
-    KiaDecoderApp* app = context;
+bool protopirate_scene_receiver_config_on_event(void* context, SceneManagerEvent event) {
+    ProtoPirateApp* app = context;
     bool consumed = false;
 
     if(event.type == SceneManagerEventTypeCustom) {
-        if(event.event == KiaCustomEventSceneSettingLock) {
-            app->lock = KiaLockOn;
+        if(event.event == ProtoPirateCustomEventSceneSettingLock) {
+            app->lock = ProtoPirateLockOn;
             scene_manager_previous_scene(app->scene_manager);
             consumed = true;
         }
@@ -215,8 +214,8 @@ bool kia_decoder_scene_receiver_config_on_event(void* context, SceneManagerEvent
     return consumed;
 }
 
-void kia_decoder_scene_receiver_config_on_exit(void* context) {
-    KiaDecoderApp* app = context;
+void protopirate_scene_receiver_config_on_exit(void* context) {
+    ProtoPirateApp* app = context;
     variable_item_list_set_selected_item(app->variable_item_list, 0);
     variable_item_list_reset(app->variable_item_list);
 }
