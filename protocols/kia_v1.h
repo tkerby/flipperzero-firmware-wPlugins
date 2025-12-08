@@ -20,5 +20,6 @@ SubGhzProtocolStatus kia_protocol_decoder_v1_serialize(
     void* context,
     FlipperFormat* flipper_format,
     SubGhzRadioPreset* preset);
-SubGhzProtocolStatus kia_protocol_decoder_v1_deserialize(void* context, FlipperFormat* flipper_format);
+SubGhzProtocolStatus
+    kia_protocol_decoder_v1_deserialize(void* context, FlipperFormat* flipper_format);
 void kia_protocol_decoder_v1_get_string(void* context, FuriString* output);

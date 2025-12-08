@@ -17,14 +17,14 @@ typedef struct SubGhzProtocolDecoderKiaV3V4 {
     SubGhzBlockDecoder decoder;
     SubGhzBlockGeneric generic;
     uint16_t header_count;
-    
+
     uint8_t raw_bits[32];
     uint16_t raw_bit_count;
-    bool is_v3_sync;  // true = V3 (long LOW sync), false = V4 (long HIGH sync)
-    
+    bool is_v3_sync; // true = V3 (long LOW sync), false = V4 (long HIGH sync)
+
     uint32_t encrypted;
     uint32_t decrypted;
-    uint8_t version;  // 0 = V4, 1 = V3
+    uint8_t version; // 0 = V4, 1 = V3
 } SubGhzProtocolDecoderKiaV3V4;
 
 typedef struct SubGhzProtocolEncoderKiaV3V4 {
@@ -44,10 +44,11 @@ static uint32_t keeloq_common_decrypt(uint32_t data, uint64_t key) {
     uint32_t block = data;
     uint64_t tkey = key;
     for(int i = 0; i < 528; i++) {
-        int lutkey = ((block >> 0) & 1) | ((block >> 7) & 2) | 
-                     ((block >> 17) & 4) | ((block >> 22) & 8) | ((block >> 26) & 16);
-        int lsb = ((block >> 31) ^ ((block >> 15) & 1) ^ 
-                   ((0x3A5C742E >> lutkey) & 1) ^ ((tkey >> 15) & 1));
+        int lutkey = ((block >> 0) & 1) | ((block >> 7) & 2) | ((block >> 17) & 4) |
+                     ((block >> 22) & 8) | ((block >> 26) & 16);
+        int lsb =
+            ((block >> 31) ^ ((block >> 15) & 1) ^ ((0x3A5C742E >> lutkey) & 1) ^
+             ((tkey >> 15) & 1));
         block = ((block & 0x7FFFFFFF) << 1) | lsb;
         tkey = ((tkey & 0x7FFFFFFFFFFFFFFFULL) << 1) | (tkey >> 63);
     }
@@ -78,9 +79,9 @@ static bool kia_v3_v4_process_buffer(SubGhzProtocolDecoderKiaV3V4* instance) {
     if(instance->raw_bit_count < 64) {
         return false;
     }
-    
+
     uint8_t* b = instance->raw_bits;
-    
+
     // For V3-style (long LOW sync), data is inverted
     if(instance->is_v3_sync) {
         uint16_t num_bytes = (instance->raw_bit_count + 7) / 8;
@@ -88,31 +89,27 @@ static bool kia_v3_v4_process_buffer(SubGhzProtocolDecoderKiaV3V4* instance) {
             b[i] = ~b[i];
         }
     }
-    
+
     // Extract fields
-    uint32_t encrypted = ((uint32_t)reverse8(b[3]) << 24) | 
-                          ((uint32_t)reverse8(b[2]) << 16) | 
-                          ((uint32_t)reverse8(b[1]) << 8) | 
-                          (uint32_t)reverse8(b[0]);
-    
-    uint32_t serial = ((uint32_t)reverse8(b[7] & 0xF0) << 24) | 
-                      ((uint32_t)reverse8(b[6]) << 16) | 
-                      ((uint32_t)reverse8(b[5]) << 8) | 
-                      (uint32_t)reverse8(b[4]);
-    
+    uint32_t encrypted = ((uint32_t)reverse8(b[3]) << 24) | ((uint32_t)reverse8(b[2]) << 16) |
+                         ((uint32_t)reverse8(b[1]) << 8) | (uint32_t)reverse8(b[0]);
+
+    uint32_t serial = ((uint32_t)reverse8(b[7] & 0xF0) << 24) | ((uint32_t)reverse8(b[6]) << 16) |
+                      ((uint32_t)reverse8(b[5]) << 8) | (uint32_t)reverse8(b[4]);
+
     uint8_t btn = (reverse8(b[7]) & 0xF0) >> 4;
     uint8_t our_serial_lsb = serial & 0xFF;
-    
+
     // Decrypt
     uint32_t decrypted = keeloq_common_decrypt(encrypted, kia_mf_key);
     uint8_t dec_btn = (decrypted >> 28) & 0x0F;
     uint8_t dec_serial_lsb = (decrypted >> 16) & 0xFF;
-    
+
     // Validate
     if(dec_btn != btn || dec_serial_lsb != our_serial_lsb) {
         return false;
     }
-    
+
     // Valid decode - version determined by sync type
     instance->encrypted = encrypted;
     instance->decrypted = decrypted;
@@ -120,14 +117,13 @@ static bool kia_v3_v4_process_buffer(SubGhzProtocolDecoderKiaV3V4* instance) {
     instance->generic.btn = btn;
     instance->generic.cnt = decrypted & 0xFFFF;
     instance->version = instance->is_v3_sync ? 1 : 0;
-    
-    uint64_t key_data = ((uint64_t)b[0] << 56) | ((uint64_t)b[1] << 48) | 
-                   ((uint64_t)b[2] << 40) | ((uint64_t)b[3] << 32) |
-                   ((uint64_t)b[4] << 24) | ((uint64_t)b[5] << 16) | 
-                   ((uint64_t)b[6] << 8)  | (uint64_t)b[7];
+
+    uint64_t key_data = ((uint64_t)b[0] << 56) | ((uint64_t)b[1] << 48) | ((uint64_t)b[2] << 40) |
+                        ((uint64_t)b[3] << 32) | ((uint64_t)b[4] << 24) | ((uint64_t)b[5] << 16) |
+                        ((uint64_t)b[6] << 8) | (uint64_t)b[7];
     instance->generic.data = key_data;
     instance->generic.data_count_bit = 64;
-    
+
     return true;
 }
 
@@ -153,7 +149,8 @@ const SubGhzProtocolEncoder kia_protocol_v3_v4_encoder = {
 const SubGhzProtocol kia_protocol_v3_v4 = {
     .name = KIA_PROTOCOL_V3_V4_NAME,
     .type = SubGhzProtocolTypeDynamic,
-    .flag = SubGhzProtocolFlag_315 | SubGhzProtocolFlag_433 | SubGhzProtocolFlag_AM | SubGhzProtocolFlag_FM | SubGhzProtocolFlag_Decodable,
+    .flag = SubGhzProtocolFlag_315 | SubGhzProtocolFlag_433 | SubGhzProtocolFlag_AM |
+            SubGhzProtocolFlag_FM | SubGhzProtocolFlag_Decodable,
     .decoder = &kia_protocol_v3_v4_decoder,
     .encoder = &kia_protocol_v3_v4_encoder,
 };
@@ -187,7 +184,8 @@ void kia_protocol_decoder_v3_v4_feed(void* context, bool level, uint32_t duratio
 
     switch(instance->decoder.parser_step) {
     case KiaV3V4DecoderStepReset:
-        if(level && DURATION_DIFF(duration, kia_protocol_v3_v4_const.te_short) < kia_protocol_v3_v4_const.te_delta) {
+        if(level && DURATION_DIFF(duration, kia_protocol_v3_v4_const.te_short) <
+                        kia_protocol_v3_v4_const.te_delta) {
             instance->decoder.parser_step = KiaV3V4DecoderStepCheckPreamble;
             instance->decoder.te_last = duration;
             instance->header_count = 1;
@@ -196,7 +194,8 @@ void kia_protocol_decoder_v3_v4_feed(void* context, bool level, uint32_t duratio
 
     case KiaV3V4DecoderStepCheckPreamble:
         if(level) {
-            if(DURATION_DIFF(duration, kia_protocol_v3_v4_const.te_short) < kia_protocol_v3_v4_const.te_delta) {
+            if(DURATION_DIFF(duration, kia_protocol_v3_v4_const.te_short) <
+               kia_protocol_v3_v4_const.te_delta) {
                 instance->decoder.te_last = duration;
             } else if(duration > 1000 && duration < 1500) {
                 // V4 style: Sync is LONG HIGH
@@ -222,8 +221,11 @@ void kia_protocol_decoder_v3_v4_feed(void* context, bool level, uint32_t duratio
                 } else {
                     instance->decoder.parser_step = KiaV3V4DecoderStepReset;
                 }
-            } else if(DURATION_DIFF(duration, kia_protocol_v3_v4_const.te_short) < kia_protocol_v3_v4_const.te_delta &&
-               DURATION_DIFF(instance->decoder.te_last, kia_protocol_v3_v4_const.te_short) < kia_protocol_v3_v4_const.te_delta) {
+            } else if(
+                DURATION_DIFF(duration, kia_protocol_v3_v4_const.te_short) <
+                    kia_protocol_v3_v4_const.te_delta &&
+                DURATION_DIFF(instance->decoder.te_last, kia_protocol_v3_v4_const.te_short) <
+                    kia_protocol_v3_v4_const.te_delta) {
                 instance->header_count++;
             } else if(duration > 1500) {
                 instance->decoder.parser_step = KiaV3V4DecoderStepReset;
@@ -240,9 +242,13 @@ void kia_protocol_decoder_v3_v4_feed(void* context, bool level, uint32_t duratio
                         instance->base.callback(&instance->base, instance->base.context);
                 }
                 instance->decoder.parser_step = KiaV3V4DecoderStepReset;
-            } else if(DURATION_DIFF(duration, kia_protocol_v3_v4_const.te_short) < kia_protocol_v3_v4_const.te_delta) {
+            } else if(
+                DURATION_DIFF(duration, kia_protocol_v3_v4_const.te_short) <
+                kia_protocol_v3_v4_const.te_delta) {
                 kia_v3_v4_add_raw_bit(instance, false);
-            } else if(DURATION_DIFF(duration, kia_protocol_v3_v4_const.te_long) < kia_protocol_v3_v4_const.te_delta) {
+            } else if(
+                DURATION_DIFF(duration, kia_protocol_v3_v4_const.te_long) <
+                kia_protocol_v3_v4_const.te_delta) {
                 kia_v3_v4_add_raw_bit(instance, true);
             } else {
                 instance->decoder.parser_step = KiaV3V4DecoderStepReset;
@@ -284,7 +290,8 @@ SubGhzProtocolStatus kia_protocol_decoder_v3_v4_serialize(
     return subghz_block_generic_serialize(&instance->generic, flipper_format, preset);
 }
 
-SubGhzProtocolStatus kia_protocol_decoder_v3_v4_deserialize(void* context, FlipperFormat* flipper_format) {
+SubGhzProtocolStatus
+    kia_protocol_decoder_v3_v4_deserialize(void* context, FlipperFormat* flipper_format) {
     furi_assert(context);
     SubGhzProtocolDecoderKiaV3V4* instance = context;
     return subghz_block_generic_deserialize_check_count_bit(
