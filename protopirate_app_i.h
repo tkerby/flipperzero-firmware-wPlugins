@@ -46,6 +46,7 @@ struct ProtoPirateApp {
     VariableItemList* variable_item_list;
     Submenu* submenu;
     Widget* widget;
+    View* view_about;
     ProtoPirateReceiver* protopirate_receiver;
     ProtoPirateReceiverInfo* protopirate_receiver_info;
     ProtoPirateTxRx* txrx;
