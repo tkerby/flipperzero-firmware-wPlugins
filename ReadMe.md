@@ -48,6 +48,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Joycon v1.0 (By ccyyturralde)](https://github.com/ccyyturralde/Flipper-Zero-Joycon)
 - Added: [Networking NFC + QR v1.0 (By DonJulve)](https://github.com/DonJulve/Networking_NFC_QR_Flipper_Zero)
 - Updated: [Weebo v0.3 (By bettse)](https://github.com/bettse/weebo)
+- Added: [Mancala v0.1 (By fgreil)](https://github.com/fgreil/mitzi-mancala)
 
 <a name="release">
 
@@ -330,6 +331,7 @@ $ ./fbt dolphin_ext
 - [Laser Tag v2.3 (By RocketGod & jamisonderek)](https://github.com/RocketGod-git/Flipper-Zero-Laser-Tag)
 - [Lifecounter v1.0 (By antsy)](https://github.com/antsy/Lifecounter) (Multi Counter remake)
 - [Lights Out Flipper Zero v1.1 (By DigiMancer3D)](https://github.com/user/DigiMancer3D)
+- [Mancala v0.1 (By fgreil)](https://github.com/fgreil/mitzi-mancala)
 - [Magic 8-ball v0.1 (By stevenquinn)](https://github.com/stevenquinn/flipper-8-ball)
 - [Mandelbrot Set v1.2 (By Possibly-Matt)](https://github.com/Possibly-Matt/flipperzero-firmware-wPlugins)
 - [Matagotchi v1.1 (By MrModd)](https://github.com/MrModd/Matagotchi)

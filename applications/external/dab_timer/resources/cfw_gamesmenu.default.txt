@@ -55,6 +55,7 @@ GamesMenuList Version 0
 /ext/apps/Games/laser_tag.fap
 /ext/apps/Games/lifecounter.fap
 /ext/apps/Games/lofz.fap
+/ext/apps/Games/mancala.fap
 /ext/apps/Games/mandelbrotset.fap
 /ext/apps/Games/matagotchi.fap
 /ext/apps/Games/mind_probe.fap

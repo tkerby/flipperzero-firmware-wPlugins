@@ -9,7 +9,7 @@
 #include <gui/canvas.h>
 #include <gui/elements.h> // Button drawing functions
 #include <input/input.h> // Input handling (buttons)
-#include <mitzi_mancala_icons.h>
+#include <mancala_icons.h>
 
 #define TAG "Mancala" // Tag for logging purposes
 
@@ -33,19 +33,19 @@ typedef enum {
 
 // Main application state structure
 typedef struct {
-    ViewPort* view_port;    // ViewPort for rendering UI
-    Gui* gui;               // GUI instance
-    int pits_user[6];       // Lower row (user's pits, left to right, indices 0-5)
-    int pits_ai[6];         // Upper row (AI's pits, left to right, indices 0-5)
-    int store_user;         // Right store (user's collection)
-    int store_ai;           // Left store (AI's collection)
-    Turn turn;              // Current player's turn
-    int cursor;             // Selected pit index for user (0..5, left->right)
-    bool game_over;         // Game completion flag
-    char status_text[32];   // Status message displayed at bottom
-    bool redraw;            // Flag to trigger screen redraw
-    bool ai_ready;          // Flag indicating AI's turn is ready to execute (needs user to press OK)
-    bool should_exit;       // Flag to exit application
+    ViewPort* view_port; // ViewPort for rendering UI
+    Gui* gui; // GUI instance
+    int pits_user[6]; // Lower row (user's pits, left to right, indices 0-5)
+    int pits_ai[6]; // Upper row (AI's pits, left to right, indices 0-5)
+    int store_user; // Right store (user's collection)
+    int store_ai; // Left store (AI's collection)
+    Turn turn; // Current player's turn
+    int cursor; // Selected pit index for user (0..5, left->right)
+    bool game_over; // Game completion flag
+    char status_text[32]; // Status message displayed at bottom
+    bool redraw; // Flag to trigger screen redraw
+    bool ai_ready; // Flag indicating AI's turn is ready to execute (needs user to press OK)
+    bool should_exit; // Flag to exit application
 } MancalaState;
 
 // Game constants
@@ -56,8 +56,8 @@ typedef struct {
 static const int ai_pit_y = 26;
 static const int user_pit_y = 45;
 // X-positions and spacing for pits
-static const int pit_start_x = 24;  // X position of first pit
-static const int pit_spacing = 16;  // Distance between pits
+static const int pit_start_x = 24; // X position of first pit
+static const int pit_spacing = 16; // Distance between pits
 // Number position for stores (=mancalas)
 static const int store_ai_x = 3;
 static const int store_ai_y = 36;
@@ -95,7 +95,7 @@ static void init_game(MancalaState* s) {
         s->pits_user[i] = INIT_STONES;
         s->pits_ai[i] = INIT_STONES;
     }
-    
+
     // Empty stores
     s->store_user = 0;
     s->store_ai = 0;
@@ -119,7 +119,7 @@ static void collect_remaining_to_stores(MancalaState* s) {
         s->pits_user[i] = 0;
     }
     s->store_user += sum;
-    
+
     // Collect AI's remaining stones
     sum = 0;
     for(int i = 0; i < 6; i++) {
@@ -136,18 +136,18 @@ static void collect_remaining_to_stores(MancalaState* s) {
 static void end_game_if_needed(MancalaState* s) {
     bool user_empty = true;
     bool ai_empty = true;
-    
+
     // Check if either side has no stones left
     for(int i = 0; i < 6; i++) {
         if(s->pits_user[i] != 0) user_empty = false;
         if(s->pits_ai[i] != 0) ai_empty = false;
     }
-    
+
     // If either side is empty, game ends
     if(user_empty || ai_empty) {
         collect_remaining_to_stores(s);
         s->game_over = true;
-        
+
         // Determine winner
         if(s->store_user > s->store_ai) {
             strcpy(s->status_text, "YOU WIN");
@@ -189,7 +189,7 @@ static void do_move_from(MancalaState* s, int pit_index, bool by_user) {
     // Get stones from the selected pit
     int stones = by_user ? s->pits_user[pit_index] : s->pits_ai[pit_index];
     if(stones == 0) return;
-    
+
     // Clear the pit
     if(by_user) {
         s->pits_user[pit_index] = 0;
@@ -201,7 +201,7 @@ static void do_move_from(MancalaState* s, int pit_index, bool by_user) {
     // We'll use a state machine approach: which side and which position
     BoardSection current_section;
     int current_pit_index;
-    
+
     // Initialize starting position based on who is moving
     if(by_user) {
         current_section = SECTION_USER_PITS;
@@ -210,7 +210,7 @@ static void do_move_from(MancalaState* s, int pit_index, bool by_user) {
         current_section = SECTION_AI_PITS;
         current_pit_index = pit_index;
     }
-    
+
     // Variables to track where the last stone lands
     BoardSection last_section = SECTION_USER_PITS;
     int last_pit_index = -1;
@@ -262,11 +262,11 @@ static void do_move_from(MancalaState* s, int pit_index, bool by_user) {
         } else { // SECTION_AI_STORE
             s->store_ai++;
         }
-        
+
         // Record where this stone landed
         last_section = current_section;
         last_pit_index = current_pit_index;
-        
+
         stones--;
     }
 
@@ -359,22 +359,22 @@ static void do_move_from(MancalaState* s, int pit_index, bool by_user) {
 static int ai_choose_move(MancalaState* s) {
     int best_move = -1;
     int best_score = -1000;
-    
+
     // Evaluate each possible move
     for(int i = 0; i < 6; i++) {
         if(s->pits_ai[i] == 0) continue; // Skip empty pits
 
         // Simulate move on temporary state copy
         MancalaState tmp = *s;
-        
+
         // Perform simulated move using the same logic as do_move_from
         int stones = tmp.pits_ai[i];
         tmp.pits_ai[i] = 0;
-        
+
         // Track position during sowing
         BoardSection current_section = SECTION_AI_PITS;
         int current_pit_index = i;
-        
+
         BoardSection last_section = SECTION_AI_PITS;
         int last_pit_index = -1;
 
@@ -415,7 +415,7 @@ static int ai_choose_move(MancalaState* s) {
             } else { // SECTION_AI_STORE
                 tmp.store_ai++;
             }
-            
+
             last_section = current_section;
             last_pit_index = current_pit_index;
             stones--;
@@ -423,11 +423,11 @@ static int ai_choose_move(MancalaState* s) {
 
         // Calculate score for this move
         int score = 0;
-        
+
         // Check for extra turn (highest priority)
         bool extra_turn = (last_section == SECTION_AI_STORE);
         if(extra_turn) score += 100;
-        
+
         // Check for capture (medium priority)
         if(!extra_turn && last_section == SECTION_AI_PITS) {
             if(tmp.pits_ai[last_pit_index] == 1) { // Was empty before
@@ -438,10 +438,10 @@ static int ai_choose_move(MancalaState* s) {
                 }
             }
         }
-        
+
         // Favor moves that increase our score (base priority)
         score += (tmp.store_ai - s->store_ai) * 10;
-        
+
         // Update best move if this is better
         if(score > best_score) {
             best_score = score;
@@ -455,7 +455,7 @@ static int ai_choose_move(MancalaState* s) {
             if(s->pits_ai[i] > 0) return i;
         }
     }
-    
+
     return best_move;
 }
 
@@ -463,12 +463,12 @@ static int ai_choose_move(MancalaState* s) {
 // RENDERING FUNCTIONS
 // =============================================================================
 static void draw_board_background(Canvas* canvas, MancalaState* state) {
-    canvas_draw_icon(canvas, 1, 1, &I_board); 
+    canvas_draw_icon(canvas, 1, 1, &I_board);
     canvas_draw_icon(canvas, 1, 1, &I_icon_10x10); // App icon comes on top of the board
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str_aligned(canvas, 13, 1, AlignLeft, AlignTop, "Mancala");
     canvas_set_font(canvas, FontSecondary);
-    
+
     // Draw navigation button hints (only when available)
     if(state->game_over) {
         elements_button_left(canvas, "Exit");
@@ -480,7 +480,7 @@ static void draw_board_background(Canvas* canvas, MancalaState* state) {
     }
 }
 
-static void draw_numbers(Canvas* canvas, MancalaState* state) { 
+static void draw_numbers(Canvas* canvas, MancalaState* state) {
     char buf[8];
     // Write numbers for AI pits (top row, left to right)
     for(int i = 0; i < 6; i++) {
@@ -490,7 +490,7 @@ static void draw_numbers(Canvas* canvas, MancalaState* state) {
         int tx = x - (len * 3); // Center text
         if(tx < 0) tx = 0; // Prevent negative coordinates
         canvas_draw_str(canvas, tx, ai_pit_y, buf);
-    }  
+    }
     // Write numbers for user pits (bottom row, left to right)
     for(int i = 0; i < 6; i++) {
         snprintf(buf, sizeof(buf), "%d", state->pits_user[i]);
@@ -500,11 +500,11 @@ static void draw_numbers(Canvas* canvas, MancalaState* state) {
         if(tx < 0) tx = 0; // Prevent negative coordinates
         canvas_draw_str(canvas, tx, user_pit_y, buf);
     }
-    
+
     // Draw store values
     snprintf(buf, sizeof(buf), "%d", state->store_ai);
     canvas_draw_str(canvas, store_ai_x, store_ai_y, buf);
-    
+
     snprintf(buf, sizeof(buf), "%d", state->store_user);
     canvas_draw_str(canvas, store_user_x, store_user_y, buf);
 }
@@ -531,7 +531,8 @@ static void render_callback(Canvas* canvas, void* ctx) {
 
     // Draw game over overlay if applicable
     if(state->game_over) {
-        canvas_draw_str_aligned(canvas, status_x, status_y, AlignLeft, AlignTop, state->status_text);
+        canvas_draw_str_aligned(
+            canvas, status_x, status_y, AlignLeft, AlignTop, state->status_text);
         elements_button_center(canvas, "Play again");
     } else if(state->ai_ready) {
         elements_button_center(canvas, "Let Flipper calculate");
@@ -552,7 +553,7 @@ static void perform_user_action_ok(MancalaState* state) {
         perform_ai_turn(state);
         state->ai_ready = false;
         return;
-    }    
+    }
     // Only allow moves on user's turn
     if(state->turn != TURN_USER) return;
     // Check if selected pit has stones
@@ -570,7 +571,7 @@ static void perform_user_action_ok(MancalaState* state) {
 static void perform_ai_turn(MancalaState* state) {
     FURI_LOG_I(TAG, "perform_ai_turn() called.");
     if(state->game_over) return;
-    
+
     // Choose best move using AI heuristics
     int pick = ai_choose_move(state);
     if(pick < 0) {
@@ -578,14 +579,14 @@ static void perform_ai_turn(MancalaState* state) {
         end_game_if_needed(state);
         return;
     }
-    
+
     // Perform AI move
     do_move_from(state, pick, false);
 }
 
 static void input_handler(InputEvent* evt, void* ctx) {
     MancalaState* state = (MancalaState*)ctx;
-    
+
     // Long back press exits application
     if(evt->type == InputTypeLong && evt->key == InputKeyBack) {
         state->should_exit = true;
@@ -622,21 +623,21 @@ static void input_handler(InputEvent* evt, void* ctx) {
 // MAIN APPLICATION ENTRY POINT
 // =============================================================================
 int32_t mancala_main(void* p) {
-    UNUSED(p);    
+    UNUSED(p);
     // Allocate and initialize game state
     MancalaState* state = malloc(sizeof(MancalaState));
     state->should_exit = false;
     init_game(state);
-    
+
     // Create and configure view port
     state->view_port = view_port_alloc();
     view_port_draw_callback_set(state->view_port, render_callback, state);
     view_port_input_callback_set(state->view_port, input_handler, state);
-    
+
     // Register with GUI system
     state->gui = furi_record_open(RECORD_GUI);
     gui_add_view_port(state->gui, state->view_port, GuiLayerFullscreen);
-    
+
     FURI_LOG_I(TAG, "Mancala game initialized and ready.");
 
     // Main game loop ----------------------------------------------------------
@@ -653,7 +654,7 @@ int32_t mancala_main(void* p) {
             view_port_update(state->view_port);
             state->redraw = false;
         }
-        
+
         // Small delay to prevent busy-waiting
         furi_delay_ms(50);
     }
@@ -665,6 +666,6 @@ int32_t mancala_main(void* p) {
     furi_record_close(RECORD_GUI);
     view_port_free(state->view_port);
     free(state);
-    
+
     return 0;
 }
