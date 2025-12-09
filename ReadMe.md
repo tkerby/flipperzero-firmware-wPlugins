@@ -39,7 +39,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Black Friday Promo! Valid Now Till Monday! Use RM420 for 20% off your yearly RM Patreon subscription!
 - Updated: [Space Invaders v0.1 (By PavelZurek)](https://github.com/PavelZurek/flipperzero-space-invaders)
 - Updated: [Rubiks Cube Timer v0.0.2 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
-- Updated: [Passy v1.4 (By bettse)](https://github.com/bettse/passy)
 - Updated: [Metroflip v1.0 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [Mi Band NFC Writer v1.0 (By LucaTomei)](https://github.com/LucaTomei/flipper-miband-nfc-writer)
 - Updated: [SD Card Mounter v0.1 (By aaronjamt)](https://github.com/aaronjamt/flipper_sd_mounters)
@@ -50,6 +49,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Mancala v0.1 (By fgreil)](https://github.com/fgreil/mitzi-mancala)
 - Updated: [Ghost ESP v1.6.1 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32`
 - Added: [Calendar of weeks v0.1 (By fgreil)](https://github.com/fgreil/mitzi-cal-weeks)
+- Updated: [Passy v1.4 (By bettse)](https://github.com/bettse/passy)
 
 <a name="release">
 
