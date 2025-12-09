@@ -10,8 +10,10 @@
 
 static const char* credits[] = {
     "Protocols: L0rdDiakon",
-    "Protocols: YougZ",
     "Protocols: RocketGod",
+    "Protocols: Trikk",
+    "Protocols: YougZ",
+    "Protocols: Wootini",
     "App: RocketGod",
     "App: MMX",
     // can add more
