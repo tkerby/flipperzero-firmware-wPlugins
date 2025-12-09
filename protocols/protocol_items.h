@@ -12,5 +12,6 @@
 #include "ford_v0.h"
 #include "subaru.h"
 #include "suzuki.h"
+#include "vw.h"
 
 extern const SubGhzProtocolRegistry protopirate_protocol_registry;

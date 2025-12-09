@@ -9,11 +9,12 @@
 #define SCROLL_SPEED 1
 
 static const char* credits[] = {
+    "",
     "Protocols: L0rdDiakon",
     "Protocols: RocketGod",
     "Protocols: Trikk",
-    "Protocols: YougZ",
     "Protocols: Wootini",
+    "Protocols: YougZ",
     "App: RocketGod",
     "App: MMX",
     // can add more

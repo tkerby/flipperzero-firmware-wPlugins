@@ -10,6 +10,7 @@ const SubGhzProtocol* protopirate_protocol_registry_items[] = {
     &ford_protocol_v0,
     &subaru_protocol,
     &suzuki_protocol,
+    &vw_protocol,
 };
 
 const SubGhzProtocolRegistry protopirate_protocol_registry = {
