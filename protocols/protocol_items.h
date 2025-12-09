@@ -10,5 +10,6 @@
 #include "kia_v3_v4.h"
 #include "kia_v5.h"
 #include "ford_v0.h"
+#include "subaru.h"
 
 extern const SubGhzProtocolRegistry protopirate_protocol_registry;
