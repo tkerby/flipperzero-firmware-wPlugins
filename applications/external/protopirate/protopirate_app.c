@@ -35,6 +35,7 @@ ProtoPirateApp* protopirate_app_alloc() {
 
     // View Dispatcher
     app->view_dispatcher = view_dispatcher_alloc();
+    view_dispatcher_enable_queue(app->view_dispatcher);
     app->scene_manager = scene_manager_alloc(&protopirate_scene_handlers, app);
 
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
@@ -70,7 +71,7 @@ ProtoPirateApp* protopirate_app_alloc() {
     // About View
     app->view_about = view_alloc();
     view_dispatcher_add_view(app->view_dispatcher, ProtoPirateViewAbout, app->view_about);
-        
+
     // Receiver
     app->protopirate_receiver = protopirate_view_receiver_alloc();
     view_dispatcher_add_view(
@@ -175,7 +176,7 @@ void protopirate_app_free(ProtoPirateApp* app) {
     view_dispatcher_remove_view(app->view_dispatcher, ProtoPirateViewVariableItemList);
     variable_item_list_free(app->variable_item_list);
 
-    // About View 
+    // About View
     view_dispatcher_remove_view(app->view_dispatcher, ProtoPirateViewAbout);
     view_free(app->view_about);
 

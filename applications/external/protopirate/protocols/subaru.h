@@ -23,5 +23,6 @@ SubGhzProtocolStatus subghz_protocol_decoder_subaru_serialize(
     void* context,
     FlipperFormat* flipper_format,
     SubGhzRadioPreset* preset);
-SubGhzProtocolStatus subghz_protocol_decoder_subaru_deserialize(void* context, FlipperFormat* flipper_format);
+SubGhzProtocolStatus
+    subghz_protocol_decoder_subaru_deserialize(void* context, FlipperFormat* flipper_format);
 void subghz_protocol_decoder_subaru_get_string(void* context, FuriString* output);

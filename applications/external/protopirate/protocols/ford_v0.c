@@ -13,15 +13,15 @@ typedef struct SubGhzProtocolDecoderFordV0 {
     SubGhzProtocolDecoderBase base;
     SubGhzBlockDecoder decoder;
     SubGhzBlockGeneric generic;
-    
+
     ManchesterState manchester_state;
-    
+
     uint64_t data_low;
     uint64_t data_high;
     uint8_t bit_count;
-    
+
     uint16_t header_count;
-    
+
     uint64_t key1;
     uint16_t key2;
     uint32_t serial;
@@ -45,7 +45,12 @@ typedef enum {
 
 // Forward declarations
 static void ford_v0_add_bit(SubGhzProtocolDecoderFordV0* instance, bool bit);
-static void decode_ford_v0(uint64_t key1, uint16_t key2, uint32_t* serial, uint8_t* button, uint32_t* count);
+static void decode_ford_v0(
+    uint64_t key1,
+    uint16_t key2,
+    uint32_t* serial,
+    uint8_t* button,
+    uint32_t* count);
 static bool ford_v0_process_data(SubGhzProtocolDecoderFordV0* instance);
 
 const SubGhzProtocolDecoder subghz_protocol_ford_v0_decoder = {
@@ -82,16 +87,21 @@ static void ford_v0_add_bit(SubGhzProtocolDecoderFordV0* instance, bool bit) {
     instance->bit_count++;
 }
 
-static void decode_ford_v0(uint64_t key1, uint16_t key2, uint32_t* serial, uint8_t* button, uint32_t* count) {
+static void decode_ford_v0(
+    uint64_t key1,
+    uint16_t key2,
+    uint32_t* serial,
+    uint8_t* button,
+    uint32_t* count) {
     uint8_t buf[13] = {0};
-    
+
     for(int i = 0; i < 8; ++i) {
         buf[i] = (uint8_t)(key1 >> (56 - i * 8));
     }
-    
+
     buf[8] = (uint8_t)(key2 >> 8);
     buf[9] = (uint8_t)(key2 & 0xFF);
-    
+
     uint8_t tmp = buf[8];
     uint8_t parity = 0;
     uint8_t parity_any = (tmp != 0);
@@ -100,7 +110,7 @@ static void decode_ford_v0(uint64_t key1, uint16_t key2, uint32_t* serial, uint8
         tmp >>= 1;
     }
     buf[11] = parity_any ? parity : 0;
-    
+
     uint8_t xor_byte;
     uint8_t limit;
     if(buf[11]) {
@@ -110,37 +120,31 @@ static void decode_ford_v0(uint64_t key1, uint16_t key2, uint32_t* serial, uint8
         xor_byte = buf[6];
         limit = 6;
     }
-    
+
     for(int idx = 1; idx < limit; ++idx) {
         buf[idx] ^= xor_byte;
     }
-    
+
     if(buf[11] == 0) {
         buf[7] ^= xor_byte;
     }
-    
+
     uint8_t orig_b7 = buf[7];
-    
+
     buf[7] = (orig_b7 & 0xAA) | (buf[6] & 0x55);
     uint8_t mixed = (buf[6] & 0xAA) | (orig_b7 & 0x55);
     buf[12] = mixed;
     buf[6] = mixed;
-    
-    uint32_t serial_le = ((uint32_t)buf[1]) |
-                         ((uint32_t)buf[2] << 8) |
-                         ((uint32_t)buf[3] << 16) |
+
+    uint32_t serial_le = ((uint32_t)buf[1]) | ((uint32_t)buf[2] << 8) | ((uint32_t)buf[3] << 16) |
                          ((uint32_t)buf[4] << 24);
-    
-    *serial = ((serial_le & 0xFF) << 24) |
-              (((serial_le >> 8) & 0xFF) << 16) |
-              (((serial_le >> 16) & 0xFF) << 8) |
-              ((serial_le >> 24) & 0xFF);
+
+    *serial = ((serial_le & 0xFF) << 24) | (((serial_le >> 8) & 0xFF) << 16) |
+              (((serial_le >> 16) & 0xFF) << 8) | ((serial_le >> 24) & 0xFF);
 
     *button = (buf[5] >> 4) & 0x0F;
 
-    *count = ((buf[5] & 0x0F) << 16) |
-             (buf[6] << 8) |
-             buf[7];
+    *count = ((buf[5] & 0x0F) << 16) | (buf[6] << 8) | buf[7];
 }
 
 static bool ford_v0_process_data(SubGhzProtocolDecoderFordV0* instance) {
@@ -151,16 +155,17 @@ static bool ford_v0_process_data(SubGhzProtocolDecoderFordV0* instance) {
         instance->data_high = 0;
         return false;
     }
-    
+
     if(instance->bit_count == 80) {
         uint16_t key2_raw = (uint16_t)(instance->data_low & 0xFFFF);
         uint16_t key2 = ~key2_raw;
-        
-        decode_ford_v0(instance->key1, key2, &instance->serial, &instance->button, &instance->count);
+
+        decode_ford_v0(
+            instance->key1, key2, &instance->serial, &instance->button, &instance->count);
         instance->key2 = key2;
         return true;
     }
-    
+
     return false;
 }
 
@@ -198,12 +203,12 @@ void subghz_protocol_decoder_ford_v0_reset(void* context) {
 void subghz_protocol_decoder_ford_v0_feed(void* context, bool level, uint32_t duration) {
     furi_assert(context);
     SubGhzProtocolDecoderFordV0* instance = context;
-    
+
     uint32_t te_short = subghz_protocol_ford_v0_const.te_short;
     uint32_t te_long = subghz_protocol_ford_v0_const.te_long;
     uint32_t te_delta = subghz_protocol_ford_v0_const.te_delta;
     uint32_t gap_threshold = 3500;
-    
+
     switch(instance->decoder.parser_step) {
     case FordV0DecoderStepReset:
         if(level && (DURATION_DIFF(duration, te_short) < te_delta)) {
@@ -213,10 +218,14 @@ void subghz_protocol_decoder_ford_v0_feed(void* context, bool level, uint32_t du
             instance->decoder.te_last = duration;
             instance->header_count = 0;
             instance->bit_count = 0;
-            manchester_advance(instance->manchester_state, ManchesterEventReset, &instance->manchester_state, NULL);
+            manchester_advance(
+                instance->manchester_state,
+                ManchesterEventReset,
+                &instance->manchester_state,
+                NULL);
         }
         break;
-        
+
     case FordV0DecoderStepPreamble:
         if(!level) {
             if(DURATION_DIFF(duration, te_long) < te_delta) {
@@ -227,7 +236,7 @@ void subghz_protocol_decoder_ford_v0_feed(void* context, bool level, uint32_t du
             }
         }
         break;
-        
+
     case FordV0DecoderStepPreambleCheck:
         if(level) {
             if(DURATION_DIFF(duration, te_long) < te_delta) {
@@ -241,7 +250,7 @@ void subghz_protocol_decoder_ford_v0_feed(void* context, bool level, uint32_t du
             }
         }
         break;
-        
+
     case FordV0DecoderStepGap:
         if(!level && (DURATION_DIFF(duration, gap_threshold) < 250)) {
             instance->data_low = 1;
@@ -252,10 +261,10 @@ void subghz_protocol_decoder_ford_v0_feed(void* context, bool level, uint32_t du
             instance->decoder.parser_step = FordV0DecoderStepReset;
         }
         break;
-        
+
     case FordV0DecoderStepData: {
         ManchesterEvent event;
-        
+
         if(DURATION_DIFF(duration, te_short) < te_delta) {
             event = level ? ManchesterEventShortLow : ManchesterEventShortHigh;
         } else if(DURATION_DIFF(duration, te_long) < te_delta) {
@@ -264,29 +273,30 @@ void subghz_protocol_decoder_ford_v0_feed(void* context, bool level, uint32_t du
             instance->decoder.parser_step = FordV0DecoderStepReset;
             break;
         }
-        
+
         bool data_bit;
-        if(manchester_advance(instance->manchester_state, event, &instance->manchester_state, &data_bit)) {
+        if(manchester_advance(
+               instance->manchester_state, event, &instance->manchester_state, &data_bit)) {
             ford_v0_add_bit(instance, data_bit);
-            
+
             if(ford_v0_process_data(instance)) {
                 instance->generic.data = instance->key1;
                 instance->generic.data_count_bit = 64;
                 instance->generic.serial = instance->serial;
                 instance->generic.btn = instance->button;
                 instance->generic.cnt = instance->count;
-                
+
                 if(instance->base.callback) {
                     instance->base.callback(&instance->base, instance->base.context);
                 }
-                
+
                 instance->data_low = 0;
                 instance->data_high = 0;
                 instance->bit_count = 0;
                 instance->decoder.parser_step = FordV0DecoderStepReset;
             }
         }
-        
+
         instance->decoder.te_last = duration;
         break;
     }
@@ -309,7 +319,8 @@ SubGhzProtocolStatus subghz_protocol_decoder_ford_v0_serialize(
     return subghz_block_generic_serialize(&instance->generic, flipper_format, preset);
 }
 
-SubGhzProtocolStatus subghz_protocol_decoder_ford_v0_deserialize(void* context, FlipperFormat* flipper_format) {
+SubGhzProtocolStatus
+    subghz_protocol_decoder_ford_v0_deserialize(void* context, FlipperFormat* flipper_format) {
     furi_assert(context);
     SubGhzProtocolDecoderFordV0* instance = context;
     return subghz_block_generic_deserialize_check_count_bit(
@@ -319,10 +330,10 @@ SubGhzProtocolStatus subghz_protocol_decoder_ford_v0_deserialize(void* context, 
 void subghz_protocol_decoder_ford_v0_get_string(void* context, FuriString* output) {
     furi_assert(context);
     SubGhzProtocolDecoderFordV0* instance = context;
-    
+
     uint32_t code_found_hi = (uint32_t)(instance->key1 >> 32);
     uint32_t code_found_lo = (uint32_t)(instance->key1 & 0xFFFFFFFF);
-    
+
     furi_string_cat_printf(
         output,
         "%s %dbit\r\n"
