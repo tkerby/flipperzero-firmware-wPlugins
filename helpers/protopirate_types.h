@@ -27,6 +27,11 @@ typedef enum
     // File management
     ProtoPirateCustomEventReceiverInfoSave,
     ProtoPirateCustomEventSavedInfoDelete,
+    // Emulator
+    ProtoPirateCustomEventSavedInfoEmulate,
+    ProtoPirateCustomEventEmulateTransmit,
+    ProtoPirateCustomEventEmulateStop,
+    ProtoPirateCustomEventEmulateExit,
 } ProtoPirateCustomEvent;
 
 typedef enum
@@ -39,6 +44,7 @@ typedef enum
 {
     ProtoPirateTxRxStateIDLE,
     ProtoPirateTxRxStateRx,
+    ProtoPirateTxRxStateTx,
     ProtoPirateTxRxStateSleep,
 } ProtoPirateTxRxState;
 
