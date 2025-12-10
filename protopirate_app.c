@@ -7,26 +7,30 @@
 
 #define TAG "ProtoPirateApp"
 
-static bool protopirate_app_custom_event_callback(void* context, uint32_t event) {
+static bool protopirate_app_custom_event_callback(void *context, uint32_t event)
+{
     furi_assert(context);
-    ProtoPirateApp* app = context;
+    ProtoPirateApp *app = context;
     return scene_manager_handle_custom_event(app->scene_manager, event);
 }
 
-static bool protopirate_app_back_event_callback(void* context) {
+static bool protopirate_app_back_event_callback(void *context)
+{
     furi_assert(context);
-    ProtoPirateApp* app = context;
+    ProtoPirateApp *app = context;
     return scene_manager_handle_back_event(app->scene_manager);
 }
 
-static void protopirate_app_tick_event_callback(void* context) {
+static void protopirate_app_tick_event_callback(void *context)
+{
     furi_assert(context);
-    ProtoPirateApp* app = context;
+    ProtoPirateApp *app = context;
     scene_manager_handle_tick_event(app->scene_manager);
 }
 
-ProtoPirateApp* protopirate_app_alloc() {
-    ProtoPirateApp* app = malloc(sizeof(ProtoPirateApp));
+ProtoPirateApp *protopirate_app_alloc()
+{
+    ProtoPirateApp *app = malloc(sizeof(ProtoPirateApp));
 
     FURI_LOG_I(TAG, "Allocating ProtoPirate Decoder App");
 
@@ -70,7 +74,7 @@ ProtoPirateApp* protopirate_app_alloc() {
     // About View
     app->view_about = view_alloc();
     view_dispatcher_add_view(app->view_dispatcher, ProtoPirateViewAbout, app->view_about);
-        
+
     // Receiver
     app->protopirate_receiver = protopirate_view_receiver_alloc();
     view_dispatcher_add_view(
@@ -87,6 +91,7 @@ ProtoPirateApp* protopirate_app_alloc() {
 
     // Init setting
     app->setting = subghz_setting_alloc();
+    app->loaded_file_path = NULL;
     subghz_setting_load(app->setting, EXT_PATH("subghz/assets/setting_user"));
 
     // Init Worker & Protocol & History
@@ -113,7 +118,7 @@ ProtoPirateApp* protopirate_app_alloc() {
 
     FURI_LOG_I(TAG, "Registering %zu ProtoPirate protocols", protopirate_protocol_registry.size);
     subghz_environment_set_protocol_registry(
-        app->txrx->environment, (void*)&protopirate_protocol_registry);
+        app->txrx->environment, (void *)&protopirate_protocol_registry);
 
     // Create receiver
     app->txrx->receiver = subghz_receiver_alloc_init(app->txrx->environment);
@@ -125,9 +130,12 @@ ProtoPirateApp* protopirate_app_alloc() {
     app->txrx->radio_device =
         radio_device_loader_set(app->txrx->radio_device, SubGhzRadioDeviceTypeInternal);
 
-    if(!app->txrx->radio_device) {
+    if (!app->txrx->radio_device)
+    {
         FURI_LOG_E(TAG, "Failed to initialize radio device!");
-    } else {
+    }
+    else
+    {
         FURI_LOG_I(TAG, "Radio device initialized");
     }
 
@@ -151,15 +159,22 @@ ProtoPirateApp* protopirate_app_alloc() {
     return app;
 }
 
-void protopirate_app_free(ProtoPirateApp* app) {
+void protopirate_app_free(ProtoPirateApp *app)
+{
     furi_assert(app);
 
     FURI_LOG_I(TAG, "Freeing ProtoPirate Decoder App");
 
     // Make sure we're not receiving
-    if(app->txrx->txrx_state == ProtoPirateTxRxStateRx) {
+    if (app->txrx->txrx_state == ProtoPirateTxRxStateRx)
+    {
         subghz_worker_stop(app->txrx->worker);
         subghz_devices_stop_async_rx(app->txrx->radio_device);
+    }
+
+    if (app->loaded_file_path)
+    {
+        furi_string_free(app->loaded_file_path);
     }
 
     subghz_devices_sleep(app->txrx->radio_device);
@@ -175,7 +190,7 @@ void protopirate_app_free(ProtoPirateApp* app) {
     view_dispatcher_remove_view(app->view_dispatcher, ProtoPirateViewVariableItemList);
     variable_item_list_free(app->variable_item_list);
 
-    // About View 
+    // About View
     view_dispatcher_remove_view(app->view_dispatcher, ProtoPirateViewAbout);
     view_free(app->view_about);
 
@@ -219,9 +234,10 @@ void protopirate_app_free(ProtoPirateApp* app) {
     free(app);
 }
 
-int32_t protopirate_app(void* p) {
+int32_t protopirate_app(void *p)
+{
     UNUSED(p);
-    ProtoPirateApp* protopirate_app = protopirate_app_alloc();
+    ProtoPirateApp *protopirate_app = protopirate_app_alloc();
 
     view_dispatcher_run(protopirate_app->view_dispatcher);
 

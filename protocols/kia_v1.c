@@ -10,7 +10,8 @@ static const SubGhzBlockConst kia_protocol_v1_const = {
     .min_count_bit_for_found = 56,
 };
 
-struct SubGhzProtocolDecoderKiaV1 {
+struct SubGhzProtocolDecoderKiaV1
+{
     SubGhzProtocolDecoderBase base;
     SubGhzBlockDecoder decoder;
     SubGhzBlockGeneric generic;
@@ -20,13 +21,15 @@ struct SubGhzProtocolDecoderKiaV1 {
     uint16_t raw_bit_count;
 };
 
-struct SubGhzProtocolEncoderKiaV1 {
+struct SubGhzProtocolEncoderKiaV1
+{
     SubGhzProtocolEncoderBase base;
     SubGhzProtocolBlockEncoder encoder;
     SubGhzBlockGeneric generic;
 };
 
-typedef enum {
+typedef enum
+{
     KiaV1DecoderStepReset = 0,
     KiaV1DecoderStepCheckPreamble,
     KiaV1DecoderStepFoundShortLow,
@@ -61,27 +64,35 @@ const SubGhzProtocol kia_protocol_v1 = {
     .encoder = &kia_protocol_v1_encoder,
 };
 
-static void kia_v1_add_raw_bit(SubGhzProtocolDecoderKiaV1* instance, bool bit) {
-    if(instance->raw_bit_count < 192) {
+static void kia_v1_add_raw_bit(SubGhzProtocolDecoderKiaV1 *instance, bool bit)
+{
+    if (instance->raw_bit_count < 192)
+    {
         uint16_t byte_idx = instance->raw_bit_count / 8;
         uint8_t bit_idx = 7 - (instance->raw_bit_count % 8);
-        if(bit) {
+        if (bit)
+        {
             instance->raw_bits[byte_idx] |= (1 << bit_idx);
-        } else {
+        }
+        else
+        {
             instance->raw_bits[byte_idx] &= ~(1 << bit_idx);
         }
         instance->raw_bit_count++;
     }
 }
 
-static inline bool kia_v1_get_raw_bit(SubGhzProtocolDecoderKiaV1* instance, uint16_t idx) {
+static inline bool kia_v1_get_raw_bit(SubGhzProtocolDecoderKiaV1 *instance, uint16_t idx)
+{
     uint16_t byte_idx = idx / 8;
     uint8_t bit_idx = 7 - (idx % 8);
     return (instance->raw_bits[byte_idx] >> bit_idx) & 1;
 }
 
-static bool kia_v1_manchester_decode(SubGhzProtocolDecoderKiaV1* instance) {
-    if(instance->raw_bit_count < 113) {
+static bool kia_v1_manchester_decode(SubGhzProtocolDecoderKiaV1 *instance)
+{
+    if (instance->raw_bit_count < 113)
+    {
         FURI_LOG_D(TAG, "Not enough raw bits: %u", instance->raw_bit_count);
         return false;
     }
@@ -101,29 +112,37 @@ static bool kia_v1_manchester_decode(SubGhzProtocolDecoderKiaV1* instance) {
     uint64_t best_data = 0;
     uint16_t best_offset = 0;
 
-    for(uint16_t offset = 0; offset < 8; offset++) {
+    for (uint16_t offset = 0; offset < 8; offset++)
+    {
         uint64_t data = 0;
         uint16_t decoded_bits = 0;
 
-        for(uint16_t i = offset; i + 1 < instance->raw_bit_count && decoded_bits < 56; i += 2) {
+        for (uint16_t i = offset; i + 1 < instance->raw_bit_count && decoded_bits < 56; i += 2)
+        {
             bool bit1 = kia_v1_get_raw_bit(instance, i);
             bool bit2 = kia_v1_get_raw_bit(instance, i + 1);
 
             uint8_t two_bits = (bit1 << 1) | bit2;
 
             // V1 uses: 10=1, 01=0
-            if(two_bits == 0x02) { // 10 = decoded 1
+            if (two_bits == 0x02)
+            { // 10 = decoded 1
                 data = (data << 1) | 1;
                 decoded_bits++;
-            } else if(two_bits == 0x01) { // 01 = decoded 0
+            }
+            else if (two_bits == 0x01)
+            { // 01 = decoded 0
                 data = (data << 1);
                 decoded_bits++;
-            } else {
+            }
+            else
+            {
                 break;
             }
         }
 
-        if(decoded_bits > best_bits) {
+        if (decoded_bits > best_bits)
+        {
             best_bits = decoded_bits;
             best_data = data;
             best_offset = offset;
@@ -138,38 +157,44 @@ static bool kia_v1_manchester_decode(SubGhzProtocolDecoderKiaV1* instance) {
     return best_bits >= kia_protocol_v1_const.min_count_bit_for_found;
 }
 
-void* kia_protocol_decoder_v1_alloc(SubGhzEnvironment* environment) {
+void *kia_protocol_decoder_v1_alloc(SubGhzEnvironment *environment)
+{
     UNUSED(environment);
-    SubGhzProtocolDecoderKiaV1* instance = malloc(sizeof(SubGhzProtocolDecoderKiaV1));
+    SubGhzProtocolDecoderKiaV1 *instance = malloc(sizeof(SubGhzProtocolDecoderKiaV1));
     instance->base.protocol = &kia_protocol_v1;
     instance->generic.protocol_name = instance->base.protocol->name;
     return instance;
 }
 
-void kia_protocol_decoder_v1_free(void* context) {
+void kia_protocol_decoder_v1_free(void *context)
+{
     furi_assert(context);
-    SubGhzProtocolDecoderKiaV1* instance = context;
+    SubGhzProtocolDecoderKiaV1 *instance = context;
     free(instance);
 }
 
-void kia_protocol_decoder_v1_reset(void* context) {
+void kia_protocol_decoder_v1_reset(void *context)
+{
     furi_assert(context);
-    SubGhzProtocolDecoderKiaV1* instance = context;
+    SubGhzProtocolDecoderKiaV1 *instance = context;
     instance->decoder.parser_step = KiaV1DecoderStepReset;
     instance->header_count = 0;
     instance->raw_bit_count = 0;
     memset(instance->raw_bits, 0, sizeof(instance->raw_bits));
 }
 
-void kia_protocol_decoder_v1_feed(void* context, bool level, uint32_t duration) {
+void kia_protocol_decoder_v1_feed(void *context, bool level, uint32_t duration)
+{
     furi_assert(context);
-    SubGhzProtocolDecoderKiaV1* instance = context;
+    SubGhzProtocolDecoderKiaV1 *instance = context;
 
-    switch(instance->decoder.parser_step) {
+    switch (instance->decoder.parser_step)
+    {
     case KiaV1DecoderStepReset:
         // Preamble 0xCCCCCCCD produces alternating LONG pulses
-        if((level) && (DURATION_DIFF(duration, kia_protocol_v1_const.te_long) <
-                       kia_protocol_v1_const.te_delta)) {
+        if ((level) && (DURATION_DIFF(duration, kia_protocol_v1_const.te_long) <
+                        kia_protocol_v1_const.te_delta))
+        {
             instance->decoder.parser_step = KiaV1DecoderStepCheckPreamble;
             instance->decoder.te_last = duration;
             instance->header_count = 1;
@@ -177,31 +202,45 @@ void kia_protocol_decoder_v1_feed(void* context, bool level, uint32_t duration) 
         break;
 
     case KiaV1DecoderStepCheckPreamble:
-        if(level) {
-            if(DURATION_DIFF(duration, kia_protocol_v1_const.te_long) <
-               kia_protocol_v1_const.te_delta) {
+        if (level)
+        {
+            if (DURATION_DIFF(duration, kia_protocol_v1_const.te_long) <
+                kia_protocol_v1_const.te_delta)
+            {
                 instance->decoder.te_last = duration;
                 instance->header_count++;
-            } else if(
+            }
+            else if (
                 DURATION_DIFF(duration, kia_protocol_v1_const.te_short) <
-                kia_protocol_v1_const.te_delta) {
+                kia_protocol_v1_const.te_delta)
+            {
                 instance->decoder.te_last = duration;
-            } else {
+            }
+            else
+            {
                 instance->decoder.parser_step = KiaV1DecoderStepReset;
             }
-        } else {
+        }
+        else
+        {
             // LOW pulse
-            if(DURATION_DIFF(duration, kia_protocol_v1_const.te_long) <
-               kia_protocol_v1_const.te_delta) {
+            if (DURATION_DIFF(duration, kia_protocol_v1_const.te_long) <
+                kia_protocol_v1_const.te_delta)
+            {
                 instance->header_count++;
-            } else if(
+            }
+            else if (
                 DURATION_DIFF(duration, kia_protocol_v1_const.te_short) <
-                kia_protocol_v1_const.te_delta) {
+                kia_protocol_v1_const.te_delta)
+            {
                 // Short LOW - this is the start of sync (0xCD ends: ...long H, short L, short H)
-                if(instance->header_count > 12) {
+                if (instance->header_count > 12)
+                {
                     instance->decoder.parser_step = KiaV1DecoderStepFoundShortLow;
                 }
-            } else {
+            }
+            else
+            {
                 instance->decoder.parser_step = KiaV1DecoderStepReset;
             }
         }
@@ -209,24 +248,29 @@ void kia_protocol_decoder_v1_feed(void* context, bool level, uint32_t duration) 
 
     case KiaV1DecoderStepFoundShortLow:
         // Expecting SHORT HIGH to complete sync
-        if(level && (DURATION_DIFF(duration, kia_protocol_v1_const.te_short) <
-                     kia_protocol_v1_const.te_delta)) {
+        if (level && (DURATION_DIFF(duration, kia_protocol_v1_const.te_short) <
+                      kia_protocol_v1_const.te_delta))
+        {
             FURI_LOG_I(TAG, "Sync! hdr=%u", instance->header_count);
             instance->decoder.parser_step = KiaV1DecoderStepCollectRawBits;
             instance->raw_bit_count = 0;
             memset(instance->raw_bits, 0, sizeof(instance->raw_bits));
             // Add the sync short HIGH as first raw bit
             kia_v1_add_raw_bit(instance, true);
-        } else {
+        }
+        else
+        {
             instance->decoder.parser_step = KiaV1DecoderStepReset;
         }
         break;
 
     case KiaV1DecoderStepCollectRawBits:
-        if(duration > 2400) {
+        if (duration > 2400)
+        {
             FURI_LOG_I(TAG, "End! raw_bits=%u", instance->raw_bit_count);
 
-            if(kia_v1_manchester_decode(instance)) {
+            if (kia_v1_manchester_decode(instance))
+            {
                 instance->generic.data = instance->decoder.decode_data;
                 instance->generic.data_count_bit = instance->decoder.decode_count_bit;
 
@@ -247,7 +291,7 @@ void kia_protocol_decoder_v1_feed(void* context, bool level, uint32_t duration) 
                     instance->generic.btn,
                     (uint8_t)instance->generic.cnt);
 
-                if(instance->base.callback)
+                if (instance->base.callback)
                     instance->base.callback(&instance->base, instance->base.context);
             }
 
@@ -256,14 +300,19 @@ void kia_protocol_decoder_v1_feed(void* context, bool level, uint32_t duration) 
         }
 
         int num_bits = 0;
-        if(DURATION_DIFF(duration, kia_protocol_v1_const.te_short) <
-           kia_protocol_v1_const.te_delta) {
+        if (DURATION_DIFF(duration, kia_protocol_v1_const.te_short) <
+            kia_protocol_v1_const.te_delta)
+        {
             num_bits = 1;
-        } else if(
+        }
+        else if (
             DURATION_DIFF(duration, kia_protocol_v1_const.te_long) <
-            kia_protocol_v1_const.te_delta) {
+            kia_protocol_v1_const.te_delta)
+        {
             num_bits = 2;
-        } else {
+        }
+        else
+        {
             FURI_LOG_D(
                 TAG,
                 "Invalid pulse: %s %lu, raw_bits=%u",
@@ -274,7 +323,8 @@ void kia_protocol_decoder_v1_feed(void* context, bool level, uint32_t duration) 
             break;
         }
 
-        for(int i = 0; i < num_bits; i++) {
+        for (int i = 0; i < num_bits; i++)
+        {
             kia_v1_add_raw_bit(instance, level);
         }
 
@@ -282,33 +332,58 @@ void kia_protocol_decoder_v1_feed(void* context, bool level, uint32_t duration) 
     }
 }
 
-uint8_t kia_protocol_decoder_v1_get_hash_data(void* context) {
+uint8_t kia_protocol_decoder_v1_get_hash_data(void *context)
+{
     furi_assert(context);
-    SubGhzProtocolDecoderKiaV1* instance = context;
+    SubGhzProtocolDecoderKiaV1 *instance = context;
     return subghz_protocol_blocks_get_hash_data(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 
 SubGhzProtocolStatus kia_protocol_decoder_v1_serialize(
-    void* context,
-    FlipperFormat* flipper_format,
-    SubGhzRadioPreset* preset) {
+    void *context,
+    FlipperFormat *flipper_format,
+    SubGhzRadioPreset *preset)
+{
     furi_assert(context);
-    SubGhzProtocolDecoderKiaV1* instance = context;
-    return subghz_block_generic_serialize(&instance->generic, flipper_format, preset);
+    SubGhzProtocolDecoderKiaV1 *instance = context;
+
+    SubGhzProtocolStatus ret = SubGhzProtocolStatusError;
+
+    ret = subghz_block_generic_serialize(&instance->generic, flipper_format, preset);
+
+    if (ret == SubGhzProtocolStatusOk)
+    {
+        // Save CRC (last byte)
+        uint32_t crc = instance->generic.data & 0xFF;
+        flipper_format_write_uint32(flipper_format, "CRC", &crc, 1);
+
+        // Save decoded fields
+        flipper_format_write_uint32(flipper_format, "Serial", &instance->generic.serial, 1);
+
+        uint32_t temp = instance->generic.btn;
+        flipper_format_write_uint32(flipper_format, "Btn", &temp, 1);
+
+        temp = instance->generic.cnt;
+        flipper_format_write_uint32(flipper_format, "Cnt", &temp, 1);
+    }
+
+    return ret;
 }
 
 SubGhzProtocolStatus
-    kia_protocol_decoder_v1_deserialize(void* context, FlipperFormat* flipper_format) {
+kia_protocol_decoder_v1_deserialize(void *context, FlipperFormat *flipper_format)
+{
     furi_assert(context);
-    SubGhzProtocolDecoderKiaV1* instance = context;
+    SubGhzProtocolDecoderKiaV1 *instance = context;
     return subghz_block_generic_deserialize_check_count_bit(
         &instance->generic, flipper_format, kia_protocol_v1_const.min_count_bit_for_found);
 }
 
-void kia_protocol_decoder_v1_get_string(void* context, FuriString* output) {
+void kia_protocol_decoder_v1_get_string(void *context, FuriString *output)
+{
     furi_assert(context);
-    SubGhzProtocolDecoderKiaV1* instance = context;
+    SubGhzProtocolDecoderKiaV1 *instance = context;
 
     uint8_t crc = instance->generic.data & 0xFF;
 
