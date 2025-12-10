@@ -5,7 +5,7 @@
 #define TAG "PassyCommon"
 
 static char asn1_log[PASSY_WORKER_MAX_BUFFER_SIZE];
-int print_struct_callback(const void* buffer, size_t size, void* app_key) {
+int passy_print_struct_callback(const void* buffer, size_t size, void* app_key) {
     if(app_key) {
         char* str = (char*)app_key;
         size_t next = strlen(str);
