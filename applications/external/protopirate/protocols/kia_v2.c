@@ -243,7 +243,30 @@ SubGhzProtocolStatus kia_protocol_decoder_v2_serialize(
     SubGhzRadioPreset* preset) {
     furi_assert(context);
     SubGhzProtocolDecoderKiaV2* instance = context;
-    return subghz_block_generic_serialize(&instance->generic, flipper_format, preset);
+
+    SubGhzProtocolStatus ret = SubGhzProtocolStatusError;
+
+    ret = subghz_block_generic_serialize(&instance->generic, flipper_format, preset);
+
+    if(ret == SubGhzProtocolStatusOk) {
+        // Save CRC (last nibble)
+        uint32_t crc = instance->generic.data & 0x0F;
+        flipper_format_write_uint32(flipper_format, "CRC", &crc, 1);
+
+        // Save decoded fields
+        flipper_format_write_uint32(flipper_format, "Serial", &instance->generic.serial, 1);
+
+        uint32_t temp = instance->generic.btn;
+        flipper_format_write_uint32(flipper_format, "Btn", &temp, 1);
+
+        flipper_format_write_uint32(flipper_format, "Cnt", &instance->generic.cnt, 1);
+
+        // Save raw count before transformation (for exact reproduction)
+        uint32_t raw_count = (uint16_t)((instance->generic.data >> 4) & 0xFFF);
+        flipper_format_write_uint32(flipper_format, "RawCnt", &raw_count, 1);
+    }
+
+    return ret;
 }
 
 SubGhzProtocolStatus

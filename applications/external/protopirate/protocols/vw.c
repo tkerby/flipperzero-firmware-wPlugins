@@ -309,7 +309,23 @@ SubGhzProtocolStatus subghz_protocol_decoder_vw_serialize(
     SubGhzRadioPreset* preset) {
     furi_assert(context);
     SubGhzProtocolDecoderVw* instance = context;
-    return subghz_block_generic_serialize(&instance->generic, flipper_format, preset);
+
+    SubGhzProtocolStatus ret = SubGhzProtocolStatusError;
+
+    ret = subghz_block_generic_serialize(&instance->generic, flipper_format, preset);
+
+    if(ret == SubGhzProtocolStatusOk) {
+        // Add VW-specific data
+        uint32_t type = (instance->data_2 >> 8) & 0xFF;
+        uint32_t check = instance->data_2 & 0xFF;
+        uint32_t btn = (check >> 4) & 0xF;
+
+        flipper_format_write_uint32(flipper_format, "Type", &type, 1);
+        flipper_format_write_uint32(flipper_format, "Check", &check, 1);
+        flipper_format_write_uint32(flipper_format, "Btn", &btn, 1);
+    }
+
+    return ret;
 }
 
 SubGhzProtocolStatus

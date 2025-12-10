@@ -316,7 +316,29 @@ SubGhzProtocolStatus subghz_protocol_decoder_ford_v0_serialize(
     SubGhzRadioPreset* preset) {
     furi_assert(context);
     SubGhzProtocolDecoderFordV0* instance = context;
-    return subghz_block_generic_serialize(&instance->generic, flipper_format, preset);
+
+    SubGhzProtocolStatus ret = SubGhzProtocolStatusError;
+
+    ret = subghz_block_generic_serialize(&instance->generic, flipper_format, preset);
+
+    if(ret == SubGhzProtocolStatusOk) {
+        // Add Ford-specific data
+        uint32_t temp = (instance->key2 >> 8) & 0xFF; // BS byte
+        flipper_format_write_uint32(flipper_format, "BS", &temp, 1);
+
+        temp = instance->key2 & 0xFF; // CRC byte
+        flipper_format_write_uint32(flipper_format, "CRC", &temp, 1);
+
+        // Ensure serial, button, count are saved
+        flipper_format_write_uint32(flipper_format, "Serial", &instance->serial, 1);
+
+        temp = instance->button;
+        flipper_format_write_uint32(flipper_format, "Btn", &temp, 1);
+
+        flipper_format_write_uint32(flipper_format, "Cnt", &instance->count, 1);
+    }
+
+    return ret;
 }
 
 SubGhzProtocolStatus

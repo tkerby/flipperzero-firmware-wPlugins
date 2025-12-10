@@ -152,3 +152,26 @@ void protopirate_hopper_update(ProtoPirateApp* app) {
         protopirate_rx(app, app->txrx->preset->frequency);
     }
 }
+
+void protopirate_tx(ProtoPirateApp* app, uint32_t frequency) {
+    furi_assert(app);
+    if(!subghz_devices_is_frequency_valid(app->txrx->radio_device, frequency)) {
+        return;
+    }
+
+    furi_assert(app->txrx->txrx_state == ProtoPirateTxRxStateIDLE);
+
+    subghz_devices_idle(app->txrx->radio_device);
+    subghz_devices_set_frequency(app->txrx->radio_device, frequency);
+    subghz_devices_set_tx(app->txrx->radio_device);
+
+    app->txrx->txrx_state = ProtoPirateTxRxStateTx;
+}
+
+void protopirate_tx_stop(ProtoPirateApp* app) {
+    furi_assert(app);
+    furi_assert(app->txrx->txrx_state == ProtoPirateTxRxStateTx);
+
+    subghz_devices_idle(app->txrx->radio_device);
+    app->txrx->txrx_state = ProtoPirateTxRxStateIDLE;
+}

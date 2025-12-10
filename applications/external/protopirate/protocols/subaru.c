@@ -315,7 +315,29 @@ SubGhzProtocolStatus subghz_protocol_decoder_subaru_serialize(
     SubGhzRadioPreset* preset) {
     furi_assert(context);
     SubGhzProtocolDecoderSubaru* instance = context;
-    return subghz_block_generic_serialize(&instance->generic, flipper_format, preset);
+
+    SubGhzProtocolStatus ret = SubGhzProtocolStatusError;
+
+    ret = subghz_block_generic_serialize(&instance->generic, flipper_format, preset);
+
+    if(ret == SubGhzProtocolStatusOk) {
+        // Subaru specific data - the counter uses special decoding
+        flipper_format_write_uint32(flipper_format, "Serial", &instance->serial, 1);
+
+        uint32_t temp = instance->button;
+        flipper_format_write_uint32(flipper_format, "Btn", &temp, 1);
+
+        temp = instance->count;
+        flipper_format_write_uint32(flipper_format, "Cnt", &temp, 1);
+
+        // Save raw data for exact reproduction
+        uint32_t raw_high = (uint32_t)(instance->key >> 32);
+        uint32_t raw_low = (uint32_t)(instance->key & 0xFFFFFFFF);
+        flipper_format_write_uint32(flipper_format, "DataHi", &raw_high, 1);
+        flipper_format_write_uint32(flipper_format, "DataLo", &raw_low, 1);
+    }
+
+    return ret;
 }
 
 SubGhzProtocolStatus

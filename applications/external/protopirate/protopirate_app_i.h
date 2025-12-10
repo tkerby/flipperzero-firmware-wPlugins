@@ -52,6 +52,7 @@ struct ProtoPirateApp {
     ProtoPirateTxRx* txrx;
     SubGhzSetting* setting;
     ProtoPirateLock lock;
+    FuriString* loaded_file_path;
 };
 
 void protopirate_preset_init(
@@ -74,3 +75,5 @@ void protopirate_idle(ProtoPirateApp* app);
 void protopirate_rx_end(ProtoPirateApp* app);
 void protopirate_sleep(ProtoPirateApp* app);
 void protopirate_hopper_update(ProtoPirateApp* app);
+void protopirate_tx(ProtoPirateApp* app, uint32_t frequency);
+void protopirate_tx_stop(ProtoPirateApp* app);

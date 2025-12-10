@@ -88,6 +88,7 @@ ProtoPirateApp* protopirate_app_alloc() {
 
     // Init setting
     app->setting = subghz_setting_alloc();
+    app->loaded_file_path = NULL;
     subghz_setting_load(app->setting, EXT_PATH("subghz/assets/setting_user"));
 
     // Init Worker & Protocol & History
@@ -161,6 +162,10 @@ void protopirate_app_free(ProtoPirateApp* app) {
     if(app->txrx->txrx_state == ProtoPirateTxRxStateRx) {
         subghz_worker_stop(app->txrx->worker);
         subghz_devices_stop_async_rx(app->txrx->radio_device);
+    }
+
+    if(app->loaded_file_path) {
+        furi_string_free(app->loaded_file_path);
     }
 
     subghz_devices_sleep(app->txrx->radio_device);

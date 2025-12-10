@@ -22,6 +22,14 @@ typedef enum {
     // Custom events for scenes
     ProtoPirateCustomEventSceneReceiverUpdate,
     ProtoPirateCustomEventSceneSettingLock,
+    // File management
+    ProtoPirateCustomEventReceiverInfoSave,
+    ProtoPirateCustomEventSavedInfoDelete,
+    // Emulator
+    ProtoPirateCustomEventSavedInfoEmulate,
+    ProtoPirateCustomEventEmulateTransmit,
+    ProtoPirateCustomEventEmulateStop,
+    ProtoPirateCustomEventEmulateExit,
 } ProtoPirateCustomEvent;
 
 typedef enum {
@@ -32,6 +40,7 @@ typedef enum {
 typedef enum {
     ProtoPirateTxRxStateIDLE,
     ProtoPirateTxRxStateRx,
+    ProtoPirateTxRxStateTx,
     ProtoPirateTxRxStateSleep,
 } ProtoPirateTxRxState;
 

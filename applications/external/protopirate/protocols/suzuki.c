@@ -203,7 +203,26 @@ SubGhzProtocolStatus subghz_protocol_decoder_suzuki_serialize(
     SubGhzRadioPreset* preset) {
     furi_assert(context);
     SubGhzProtocolDecoderSuzuki* instance = context;
-    return subghz_block_generic_serialize(&instance->generic, flipper_format, preset);
+
+    SubGhzProtocolStatus ret = SubGhzProtocolStatusError;
+
+    ret = subghz_block_generic_serialize(&instance->generic, flipper_format, preset);
+
+    if(ret == SubGhzProtocolStatusOk) {
+        // Extract and save CRC
+        uint32_t crc = (instance->generic.data >> 4) & 0xFF;
+        flipper_format_write_uint32(flipper_format, "CRC", &crc, 1);
+
+        // Save decoded fields
+        flipper_format_write_uint32(flipper_format, "Serial", &instance->generic.serial, 1);
+
+        uint32_t temp = instance->generic.btn;
+        flipper_format_write_uint32(flipper_format, "Btn", &temp, 1);
+
+        flipper_format_write_uint32(flipper_format, "Cnt", &instance->generic.cnt, 1);
+    }
+
+    return ret;
 }
 
 SubGhzProtocolStatus
