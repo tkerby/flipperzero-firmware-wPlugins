@@ -41,32 +41,41 @@ def process_amiibo_data(amiibo_data: dict):
     characters = amiibo_data.get("characters", {})
 
     with open("files/amiibo.dat", "w") as amiibo_file:
-        # Write headers
-        amiibo_file.write("Filetype: AmiTool Amiibo DB\n")
-        amiibo_file.write("Version: 1\n")
-        amiibo_file.write(f"AmiiboCount: {len(amiibos)}\n")
-        amiibo_file.write("\n")
+        with open("files/amiibo_name.dat", "w") as amiibo_name_file:
+            # Write headers
+            amiibo_file.write("Filetype: AmiTool Amiibo DB\n")
+            amiibo_file.write("Version: 1\n")
+            amiibo_file.write(f"AmiiboCount: {len(amiibos)}\n")
+            amiibo_file.write("\n")
 
-        # Write each Amiibo entry
-        for amiibo_id, amiibo in amiibos.items():
-            amiibo_id_clean = amiibo_id[2:]  # Remove "0x" prefix
-            name = amiibo.get("name", "Unknown")
-            character = characters.get(f"0x{amiibo_id_clean[0:4]}", "Unknown")
-            amiibo_series_name = amiibo_series.get(
-                f"0x{amiibo_id_clean[12:14]}", "Unknown"
-            )
-            game_series_name = game_series.get(f"0x{amiibo_id_clean[0:3]}", "Unknown")
-            type_name = types.get(f"0x{amiibo_id_clean[6:8]}", "Unknown")
+            amiibo_name_file.write("Filetype: AmiTool Amiibo Name DB\n")
+            amiibo_name_file.write("Version: 1\n")
+            amiibo_name_file.write(f"AmiiboCount: {len(amiibos)}\n")
+            amiibo_name_file.write("\n")
 
-            release_info = amiibo.get("release", {})
-            release_info_strs = []
-            for region, date in release_info.items():
-                release_info_strs.append(f"{region}.{date}")
-            release_info_line = ",".join(release_info_strs)
+            # Write each Amiibo entry
+            for amiibo_id, amiibo in amiibos.items():
+                amiibo_id_clean = amiibo_id[2:]  # Remove "0x" prefix
+                name = amiibo.get("name", "Unknown")
+                character = characters.get(f"0x{amiibo_id_clean[0:4]}", "Unknown")
+                amiibo_series_name = amiibo_series.get(
+                    f"0x{amiibo_id_clean[12:14]}", "Unknown"
+                )
+                game_series_name = game_series.get(
+                    f"0x{amiibo_id_clean[0:3]}", "Unknown"
+                )
+                type_name = types.get(f"0x{amiibo_id_clean[6:8]}", "Unknown")
 
-            amiibo_file.write(
-                f"{amiibo_id_clean}: {name}|{character}|{amiibo_series_name}|{game_series_name}|{type_name}|{release_info_line}\n"
-            )
+                release_info = amiibo.get("release", {})
+                release_info_strs = []
+                for region, date in release_info.items():
+                    release_info_strs.append(f"{region}.{date}")
+                release_info_line = ",".join(release_info_strs)
+
+                amiibo_file.write(
+                    f"{amiibo_id_clean}: {name}|{character}|{amiibo_series_name}|{game_series_name}|{type_name}|{release_info_line}\n"
+                )
+                amiibo_name_file.write(f"{name}: {amiibo_id_clean}\n")
 
 
 def _generate_usage_string(info: dict, platform: str) -> str:
@@ -153,7 +162,19 @@ def process_games_info_data(games_info_data: dict):
 
             usage_file.write(f"{amiibo_id_clean}: {'|'.join(usage_strs)}\n")
 
-    with open("files/games_3ds.dat", "w") as games_3ds_file:
+    with open("files/game_3ds.dat", "w") as games_3ds_file:
+        # Write headers
+        games_3ds_file.write("Filetype: AmiTool Games DB\n")
+        games_3ds_file.write("Version: 1\n")
+        games_3ds_file.write("Console: 3DS\n")
+        games_3ds_file.write(f"GameCount: {len(games_3ds)}\n")
+        games_3ds_file.write("\n")
+
+        # Write each game entry
+        for game_name in games_3ds.keys():
+            games_3ds_file.write(f"{game_name}\n")
+
+    with open("files/game_3ds_mapping.dat", "w") as games_3ds_file:
         # Write headers
         games_3ds_file.write("Filetype: AmiTool Games Mapping DB\n")
         games_3ds_file.write("Version: 1\n")
@@ -165,7 +186,19 @@ def process_games_info_data(games_info_data: dict):
         for game_name, amiibo_ids in games_3ds.items():
             games_3ds_file.write(f"{game_name}: {'|'.join(amiibo_ids)}\n")
 
-    with open("files/games_wii_u.dat", "w") as games_wii_u_file:
+    with open("files/game_wii_u.dat", "w") as games_wii_u_file:
+        # Write headers
+        games_wii_u_file.write("Filetype: AmiTool Games DB\n")
+        games_wii_u_file.write("Version: 1\n")
+        games_wii_u_file.write("Console: WiiU\n")
+        games_wii_u_file.write(f"GameCount: {len(games_wii_u)}\n")
+        games_wii_u_file.write("\n")
+
+        # Write each game entry
+        for game_name in games_wii_u.keys():
+            games_wii_u_file.write(f"{game_name}\n")
+
+    with open("files/game_wii_u_mapping.dat", "w") as games_wii_u_file:
         # Write headers
         games_wii_u_file.write("Filetype: AmiTool Games Mapping DB\n")
         games_wii_u_file.write("Version: 1\n")
@@ -177,7 +210,19 @@ def process_games_info_data(games_info_data: dict):
         for game_name, amiibo_ids in games_wii_u.items():
             games_wii_u_file.write(f"{game_name}: {'|'.join(amiibo_ids)}\n")
 
-    with open("files/games_switch.dat", "w") as games_switch_file:
+    with open("files/game_switch.dat", "w") as games_switch_file:
+        # Write headers
+        games_switch_file.write("Filetype: AmiTool Games DB\n")
+        games_switch_file.write("Version: 1\n")
+        games_switch_file.write("Console: Switch\n")
+        games_switch_file.write(f"GameCount: {len(games_switch)}\n")
+        games_switch_file.write("\n")
+
+        # Write each game entry
+        for game_name in games_switch.keys():
+            games_switch_file.write(f"{game_name}\n")
+
+    with open("files/game_switch_mapping.dat", "w") as games_switch_file:
         # Write headers
         games_switch_file.write("Filetype: AmiTool Games Mapping DB\n")
         games_switch_file.write("Version: 1\n")
@@ -189,7 +234,19 @@ def process_games_info_data(games_info_data: dict):
         for game_name, amiibo_ids in games_switch.items():
             games_switch_file.write(f"{game_name}: {'|'.join(amiibo_ids)}\n")
 
-    with open("files/games_switch2.dat", "w") as games_switch2_file:
+    with open("files/game_switch2.dat", "w") as games_switch2_file:
+        # Write headers
+        games_switch2_file.write("Filetype: AmiTool Games DB\n")
+        games_switch2_file.write("Version: 1\n")
+        games_switch2_file.write("Console: Switch2\n")
+        games_switch2_file.write(f"GameCount: {len(games_switch2)}\n")
+        games_switch2_file.write("\n")
+
+        # Write each game entry
+        for game_name in games_switch2.keys():
+            games_switch2_file.write(f"{game_name}\n")
+
+    with open("files/game_switch2_mapping.dat", "w") as games_switch2_file:
         # Write headers
         games_switch2_file.write("Filetype: AmiTool Games Mapping DB\n")
         games_switch2_file.write("Version: 1\n")
