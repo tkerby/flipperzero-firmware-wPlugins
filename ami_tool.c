@@ -47,6 +47,8 @@ AmiToolApp* ami_tool_alloc(void) {
     memset(&app->read_result, 0, sizeof(app->read_result));
     app->read_result.type = AmiToolReadResultNone;
     app->read_result.error = MfUltralightErrorNone;
+    app->tag_data = mf_ultralight_alloc();
+    app->tag_data_valid = false;
 
     return app;
 }
@@ -73,6 +75,10 @@ void ami_tool_free(AmiToolApp* app) {
     if(app->nfc) {
         nfc_free(app->nfc);
         app->nfc = NULL;
+    }
+    if(app->tag_data) {
+        mf_ultralight_free(app->tag_data);
+        app->tag_data = NULL;
     }
 
     /* View dispatcher & scene manager */

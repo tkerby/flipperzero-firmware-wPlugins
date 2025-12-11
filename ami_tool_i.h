@@ -69,6 +69,8 @@ struct AmiToolApp {
     FuriThread* read_thread;
     bool read_scene_active;
     AmiToolReadResult read_result;
+    MfUltralightData* tag_data;
+    bool tag_data_valid;
 };
 
 /* Scene handlers table */
