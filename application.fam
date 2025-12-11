@@ -12,5 +12,6 @@ App(
     fap_description="An Amiibo toolkit for Flipper Zero",
     fap_author="Firefox2100",
     fap_weburl="https://github.com/Firefox2100/ami_tool",
-    fap_icon_assets="images",  # Image assets to compile for this application
+    fap_icon_assets="images",
+    fap_file_assets="files",
 )
