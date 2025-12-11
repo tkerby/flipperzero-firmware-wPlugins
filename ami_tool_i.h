@@ -29,6 +29,7 @@ typedef enum {
     AmiToolEventMainMenuRead,
     AmiToolEventMainMenuGenerate,
     AmiToolEventMainMenuSaved,
+    AmiToolEventMainMenuExit,
 } AmiToolCustomEvent;
 
 struct AmiToolApp {

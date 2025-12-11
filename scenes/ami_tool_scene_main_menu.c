@@ -5,6 +5,7 @@ typedef enum {
     AmiToolMainMenuIndexRead,
     AmiToolMainMenuIndexGenerate,
     AmiToolMainMenuIndexSaved,
+    AmiToolMainMenuIndexExit,
 } AmiToolMainMenuIndex;
 
 static void ami_tool_scene_main_menu_submenu_callback(void* context, uint32_t index) {
@@ -19,6 +20,9 @@ static void ami_tool_scene_main_menu_submenu_callback(void* context, uint32_t in
         break;
     case AmiToolMainMenuIndexSaved:
         view_dispatcher_send_custom_event(app->view_dispatcher, AmiToolEventMainMenuSaved);
+        break;
+    case AmiToolMainMenuIndexExit:
+        view_dispatcher_send_custom_event(app->view_dispatcher, AmiToolEventMainMenuExit);
         break;
     default:
         break;
@@ -51,6 +55,13 @@ void ami_tool_scene_main_menu_on_enter(void* context) {
         ami_tool_scene_main_menu_submenu_callback,
         app);
 
+    submenu_add_item(
+        app->submenu,
+        "Exit",
+        AmiToolMainMenuIndexExit,
+        ami_tool_scene_main_menu_submenu_callback,
+        app);
+
     view_dispatcher_switch_to_view(app->view_dispatcher, AmiToolViewMenu);
 }
 
@@ -68,12 +79,17 @@ bool ami_tool_scene_main_menu_on_event(void* context, SceneManagerEvent event) {
         case AmiToolEventMainMenuSaved:
             scene_manager_next_scene(app->scene_manager, AmiToolSceneSaved);
             return true;
+        case AmiToolEventMainMenuExit:
+            scene_manager_stop(app->scene_manager);
+            view_dispatcher_stop(app->view_dispatcher);
+            return true;
         default:
             break;
         }
     } else if(event.type == SceneManagerEventTypeBack) {
         /* Back from main menu exits the app */
         scene_manager_stop(app->scene_manager);
+        view_dispatcher_stop(app->view_dispatcher);
         return true;
     }
 
