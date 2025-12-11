@@ -9,29 +9,32 @@ int SCORE_BONUS = 1;
 int HIGH_SCORE = 100;
 char score_str[16];
 
+bool character_selected = true;
+int is_character = 1;
+
 int player_x = 6;
 int player_y = 28;
 int kelp_x = 124;
 int kelp_y = 56;
-int jellyfish_x = 64;
-int jellyfish_y = 0;
+int enemy_x = 64;
+int enemy_y = 0;
 
 bool is_jumping = false;
 bool is_random_kelp = true;
-bool is_random_jellyfish = true;
+bool is_random_enemy = true;
 int kelp_x_rand = rand() % 2 + 1;
 int kelp_y_rand = rand() % 2 + 1;
-int jellyfish_x_rand = rand() % 2 + 1;
-int jellyfish_y_rand = rand() % 2 + 1;
+int enemy_x_rand = rand() % 2 + 1;
+int enemy_y_rand = rand() % 2 + 1;
 
 // specials
 int max_gravity = 1;
 int max_jump = 2;
 
 // player coordinates for drawing
-int players[][2] = {{7,4},{8,4},{3,5},{4,5},{6,5},{9,5},{3,6},{5,6},{10,6},{3,7},{5,7},{10,7},{3,8},{4,8},{6,8},{9,8},{7,9},{8,9}};
+int player[][2] = {{7,4},{8,4},{3,5},{4,5},{6,5},{9,5},{3,6},{5,6},{10,6},{3,7},{5,7},{10,7},{3,8},{4,8},{6,8},{9,8},{7,9},{8,9}};
 int kelp[][2] = {{2,2},{4,2},{3,3},{2,4},{4,4},{3,5},{2,6},{4,6},{3,7},{2,8},{4,8},{3,9}};
-int jellyfish[][2] = {{3,2},{4,2},{5,2},{6,2},{7,2},{8,2},{2,3},{9,3},{2,4},{9,4},{3,5},{4,5},{5,5},{6,5},{7,5},{8,5},{3,6},{6,6},{8,6},{4,7},{6,7},{9,7},{2,8},{4,8},{7,8},{3,9}};
+int enemy[][2] = {{3,2},{4,2},{5,2},{6,2},{7,2},{8,2},{2,3},{9,3},{2,4},{9,4},{3,5},{4,5},{5,5},{6,5},{7,5},{8,5},{3,6},{6,6},{8,6},{4,7},{6,7},{9,7},{2,8},{4,8},{7,8},{3,9}};
 
 void collide_rect()
 {
@@ -46,22 +49,22 @@ void collide_rect()
     int kelp_right = kelp_x;
     int kelp_bottom = kelp_y + 10;
 
-    int jellyfish_left = jellyfish_x - jellyfish_x_rand * 8;
-    int jellyfish_top = jellyfish_y + 10;
-    int jellyfish_right = jellyfish_x;
-    int jellyfish_bottom = jellyfish_y + jellyfish_y_rand * 8 + 10;
+    int enemy_left = enemy_x - enemy_x_rand * 8;
+    int enemy_top = enemy_y + 10;
+    int enemy_right = enemy_x;
+    int enemy_bottom = enemy_y + enemy_y_rand * 8 + 10;
 
     bool kelp_collision = player_left <= kelp_right && player_right >= kelp_left && player_top <= kelp_bottom && player_bottom >= kelp_top;
 
-    bool jellyfish_collision = player_left <= jellyfish_right && player_right >= jellyfish_left && player_top <= jellyfish_bottom && player_bottom >= jellyfish_top;
+    bool enemy_collision = player_left <= enemy_right && player_right >= enemy_left && player_top <= enemy_bottom && player_bottom >= enemy_top;
 
-    if (kelp_collision || jellyfish_collision || player_bottom >= 64 || player_top <= 0)
+    if (kelp_collision || enemy_collision || player_bottom >= 64 || player_top <= 0)
     {
         kelp_x = 124;
         is_random_kelp = true;
 
-        jellyfish_x = 64;
-        is_random_jellyfish = true;
+        enemy_x = 64;
+        is_random_enemy = true;
 
         player_x = 6;
         player_y = 28;
@@ -76,24 +79,51 @@ void collide_rect()
 
 void draw_player(Canvas* canvas)
 {
-    if (is_jumping)
+    if (is_character == 1)
     {
-        player_y -= max_jump;
+        if (is_jumping)
+        {
+            player_y -= max_jump;
+        }
+
+        else
+        {
+            player_y += max_gravity;
+        }
+        
+        int array_size = sizeof(player) / sizeof(player[0]);
+        for(int i = 0; i < array_size; i++)
+        {
+            int x = player[i][0];
+            int y = player[i][1];
+            if(x != 0 && y != 0)
+            {
+                canvas_draw_dot(canvas, x + player_x, y + player_y);
+            }
+        }
     }
 
     else
     {
-        player_y += max_gravity;
-    }
-    
-    int array_size = sizeof(players) / sizeof(players[0]);
-    for(int i = 0; i < array_size; i++)
-    {
-        int x = players[i][0];
-        int y = players[i][1];
-        if(x != 0 && y != 0)
+        if (is_jumping)
         {
-            canvas_draw_dot(canvas, x + player_x, y + player_y);
+            player_y -= max_jump;
+        }
+
+        else
+        {
+            player_y += max_gravity;
+        }
+        
+        int array_size = sizeof(enemy) / sizeof(enemy[0]);
+        for(int i = 0; i < array_size; i++)
+        {
+            int x = enemy[i][0];
+            int y = enemy[i][1];
+            if(x != 0 && y != 0)
+            {
+                canvas_draw_dot(canvas, x + player_x, y + player_y);
+            }
         }
     }
 }
@@ -133,38 +163,76 @@ void draw_kelp(Canvas* canvas)
     }
 }
 
-void draw_jellyfish(Canvas* canvas)
-{ 
-    if (is_random_jellyfish)
+void draw_enemy(Canvas* canvas)
+{
+    if (is_character == 1)
     {
-        jellyfish_x_rand = rand() % 2 + 1;
-        jellyfish_y_rand = rand() % 2 + 1;
-        is_random_jellyfish = false;
-    }
-    
-    int array_size = sizeof(jellyfish) / sizeof(jellyfish[0]);
-    for (int a = 1; a < jellyfish_y_rand+2; a++)
-    {
-        for (int b = 1; b < jellyfish_x_rand+2; b++)
+        if (is_random_enemy)
         {
-            for(int i = 0; i < array_size; i++)
+            enemy_x_rand = rand() % 2 + 1;
+            enemy_y_rand = rand() % 2 + 1;
+            is_random_enemy = false;
+        }
+        
+        int array_size = sizeof(enemy) / sizeof(enemy[0]);
+        for (int a = 1; a < enemy_y_rand + 2; a++)
+        {
+            for (int b = 1; b < enemy_x_rand + 2; b++)
             {
-                int x = jellyfish[i][0];
-                int y = jellyfish[i][1];
-                if(x != 0 && y != 0)
+                for(int i = 0; i < array_size; i++)
                 {
-                    canvas_draw_dot(canvas, (x + jellyfish_x) - (b * 8), y + jellyfish_y + a * 8);
+                    int x = enemy[i][0];
+                    int y = enemy[i][1];
+                    if(x != 0 && y != 0)
+                    {
+                        canvas_draw_dot(canvas, (x + enemy_x) - (b * 8), y + enemy_y + a * 8);
+                    }
                 }
             }
         }
+
+        enemy_x -= SCORE_BONUS;
+
+        if (enemy_x <= -16)
+        {
+            enemy_x = 124;
+            is_random_enemy = true;
+        }
     }
 
-    jellyfish_x -= SCORE_BONUS;
-
-    if (jellyfish_x <= -16)
+    else
     {
-        jellyfish_x = 124;
-        is_random_jellyfish = true;
+        if (is_random_enemy)
+        {
+            enemy_x_rand = rand() % 2 + 1;
+            enemy_y_rand = rand() % 2 + 1;
+            is_random_enemy = false;
+        }
+        
+        int array_size = sizeof(player) / sizeof(player[0]);
+        for (int a = 1; a < enemy_y_rand + 2; a++)
+        {
+            for (int b = 1; b < enemy_x_rand + 2; b++)
+            {
+                for(int i = 0; i < array_size; i++)
+                {
+                    int x = player[i][0];
+                    int y = player[i][1];
+                    if(x != 0 && y != 0)
+                    {
+                        canvas_draw_dot(canvas, (x + enemy_x) - (b * 8), y + enemy_y + a * 8);
+                    }
+                }
+            }
+        }
+
+        enemy_x -= SCORE_BONUS;
+
+        if (enemy_x <= -16)
+        {
+            enemy_x = 124;
+            is_random_enemy = true;
+        }
     }
 }
 
@@ -177,6 +245,21 @@ static void input_callback(InputEvent* event, void* context)
         {
             is_jumping = true;
         }
+
+        if (event->key == InputKeyDown)
+        {
+            if (is_character == 1 && character_selected)
+            {
+                is_character = 2; 
+                character_selected = false;
+            }
+
+            else if (character_selected)
+            {
+                is_character = 1;
+                character_selected = false;
+            }
+        }
     }
 
     if(event->type == InputTypeRelease)
@@ -184,6 +267,11 @@ static void input_callback(InputEvent* event, void* context)
         if (event->key == InputKeyOk)
         {
             is_jumping = false;
+        }
+
+        if (event->key == InputKeyDown)
+        {
+            character_selected = true;
         }
     }
     
@@ -199,7 +287,7 @@ static void draw_callback(Canvas* canvas, void* context)
     collide_rect();
     draw_player(canvas);
     draw_kelp(canvas);
-    draw_jellyfish(canvas);
+    draw_enemy(canvas);
 
     snprintf(score_str, sizeof(score_str), "%d", SCORE);
     canvas_draw_str(canvas,2,8,score_str);
