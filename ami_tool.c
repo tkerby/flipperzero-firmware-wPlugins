@@ -1,4 +1,5 @@
 #include "ami_tool_i.h"
+#include <string.h>
 
 /* Forward declarations of callbacks */
 static bool ami_tool_custom_event_callback(void* context, uint32_t event);
@@ -39,6 +40,14 @@ AmiToolApp* ami_tool_alloc(void) {
     view_dispatcher_add_view(
         app->view_dispatcher, AmiToolViewTextBox, text_box_get_view(app->text_box));
 
+    /* NFC resources */
+    app->nfc = nfc_alloc();
+    app->read_thread = NULL;
+    app->read_scene_active = false;
+    memset(&app->read_result, 0, sizeof(app->read_result));
+    app->read_result.type = AmiToolReadResultNone;
+    app->read_result.error = MfUltralightErrorNone;
+
     return app;
 }
 
@@ -54,6 +63,17 @@ void ami_tool_free(AmiToolApp* app) {
     submenu_free(app->submenu);
     text_box_free(app->text_box);
     furi_string_free(app->text_box_store);
+
+    /* NFC resources */
+    if(app->read_thread) {
+        furi_thread_join(app->read_thread);
+        furi_thread_free(app->read_thread);
+        app->read_thread = NULL;
+    }
+    if(app->nfc) {
+        nfc_free(app->nfc);
+        app->nfc = NULL;
+    }
 
     /* View dispatcher & scene manager */
     view_dispatcher_free(app->view_dispatcher);
