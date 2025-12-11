@@ -7,6 +7,7 @@
 #include <gui/modules/submenu.h>
 #include <gui/modules/text_box.h>
 #include <gui/scene_manager.h>
+#include <storage/storage.h>
 #include <nfc/nfc.h>
 #include <nfc/protocols/mf_ultralight/mf_ultralight.h>
 #include <nfc/protocols/mf_ultralight/mf_ultralight_poller_sync.h>
@@ -28,6 +29,23 @@ typedef enum {
     AmiToolSceneSaved,
     AmiToolSceneCount,
 } AmiToolScene;
+
+typedef enum {
+    AmiToolGenerateStateRootMenu,
+    AmiToolGenerateStateByNamePlaceholder,
+    AmiToolGenerateStatePlatformMenu,
+    AmiToolGenerateStateGameList,
+    AmiToolGenerateStateGamePlaceholder,
+    AmiToolGenerateStateMessage,
+} AmiToolGenerateState;
+
+typedef enum {
+    AmiToolGeneratePlatform3DS,
+    AmiToolGeneratePlatformWiiU,
+    AmiToolGeneratePlatformSwitch,
+    AmiToolGeneratePlatformSwitch2,
+    AmiToolGeneratePlatformCount,
+} AmiToolGeneratePlatform;
 
 /* Custom events from main menu */
 typedef enum {
@@ -60,6 +78,8 @@ struct AmiToolApp {
     ViewDispatcher* view_dispatcher;
     SceneManager* scene_manager;
 
+    Storage* storage;
+
     Submenu* submenu;
 
     TextBox* text_box;
@@ -71,6 +91,11 @@ struct AmiToolApp {
     AmiToolReadResult read_result;
     MfUltralightData* tag_data;
     bool tag_data_valid;
+
+    AmiToolGenerateState generate_state;
+    AmiToolGenerateState generate_return_state;
+    AmiToolGeneratePlatform generate_platform;
+    size_t generate_game_count;
 };
 
 /* Scene handlers table */

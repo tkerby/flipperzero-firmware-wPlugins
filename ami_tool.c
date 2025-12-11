@@ -40,6 +40,9 @@ AmiToolApp* ami_tool_alloc(void) {
     view_dispatcher_add_view(
         app->view_dispatcher, AmiToolViewTextBox, text_box_get_view(app->text_box));
 
+    /* Storage (for assets) */
+    app->storage = furi_record_open(RECORD_STORAGE);
+
     /* NFC resources */
     app->nfc = nfc_alloc();
     app->read_thread = NULL;
@@ -49,6 +52,12 @@ AmiToolApp* ami_tool_alloc(void) {
     app->read_result.error = MfUltralightErrorNone;
     app->tag_data = mf_ultralight_alloc();
     app->tag_data_valid = false;
+
+    /* Generate scene state */
+    app->generate_state = AmiToolGenerateStateRootMenu;
+    app->generate_return_state = AmiToolGenerateStateRootMenu;
+    app->generate_platform = AmiToolGeneratePlatform3DS;
+    app->generate_game_count = 0;
 
     return app;
 }
@@ -84,6 +93,12 @@ void ami_tool_free(AmiToolApp* app) {
     /* View dispatcher & scene manager */
     view_dispatcher_free(app->view_dispatcher);
     scene_manager_free(app->scene_manager);
+
+    /* Storage */
+    if(app->storage) {
+        furi_record_close(RECORD_STORAGE);
+        app->storage = NULL;
+    }
 
     /* GUI record */
     furi_record_close(RECORD_GUI);
