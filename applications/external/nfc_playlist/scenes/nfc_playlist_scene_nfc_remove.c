@@ -79,7 +79,7 @@ bool nfc_playlist_nfc_remove_scene_on_event(void* context, SceneManagerEvent eve
     bool consumed = false;
     if(event.type == SceneManagerEventTypeCustom) {
         switch(event.event) {
-        case NfcPlaylistNfcRemove_RemoveLine:
+        case NfcPlaylistNfcRemove_RemoveLine: {
             Storage* storage = furi_record_open(RECORD_STORAGE);
             Stream* stream = file_stream_alloc(storage);
 
@@ -129,6 +129,7 @@ bool nfc_playlist_nfc_remove_scene_on_event(void* context, SceneManagerEvent eve
 
             consumed = true;
             break;
+        }
         default:
             break;
         }

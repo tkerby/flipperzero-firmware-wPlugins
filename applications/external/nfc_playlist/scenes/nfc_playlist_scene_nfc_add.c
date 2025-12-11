@@ -20,7 +20,7 @@ static void nfc_playlist_nfc_add_scene_menu_callback(void* context) {
                 item_already_in_playlist = true;
                 break;
             }
-            furi_string_cat_printf(tmp_str, "%s", furi_string_get_cstr(line));
+            furi_string_cat(tmp_str, furi_string_get_cstr(line));
         }
         furi_string_free(line);
         if(!item_already_in_playlist) {

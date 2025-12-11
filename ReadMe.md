@@ -35,6 +35,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Sub-GHz Remote v1.8 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote)
 - UL: [Sub-GHz protocol updates (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/a9d4bc3401672151d45e26b2cc93bd9c4fc3fd0f)
 - Removed: [Kia Encoder #691 (By letvinov28)](https://github.com/DarkFlippers/unleashed-firmware/pull/691) Let me know if you tested this and think it works better with it.
+- Updated: [ProtoPirate WIP v1.1 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
+- Updated: [NFC Playlist v3.4 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
 
 <a name="release">
 
