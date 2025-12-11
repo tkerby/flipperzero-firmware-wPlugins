@@ -35,7 +35,8 @@ typedef enum {
     AmiToolGenerateStateByNamePlaceholder,
     AmiToolGenerateStatePlatformMenu,
     AmiToolGenerateStateGameList,
-    AmiToolGenerateStateGamePlaceholder,
+    AmiToolGenerateStateAmiiboList,
+    AmiToolGenerateStateAmiiboPlaceholder,
     AmiToolGenerateStateMessage,
 } AmiToolGenerateState;
 
@@ -96,6 +97,10 @@ struct AmiToolApp {
     AmiToolGenerateState generate_return_state;
     AmiToolGeneratePlatform generate_platform;
     size_t generate_game_count;
+    size_t generate_amiibo_count;
+    FuriString** generate_amiibo_names;
+    FuriString** generate_amiibo_ids;
+    FuriString* generate_selected_game;
 };
 
 /* Scene handlers table */
@@ -104,3 +109,4 @@ extern const SceneManagerHandlers ami_tool_scene_handlers;
 /* Allocation / free */
 AmiToolApp* ami_tool_alloc(void);
 void ami_tool_free(AmiToolApp* app);
+void ami_tool_generate_clear_amiibo_cache(AmiToolApp* app);

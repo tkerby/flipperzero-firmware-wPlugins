@@ -58,6 +58,10 @@ AmiToolApp* ami_tool_alloc(void) {
     app->generate_return_state = AmiToolGenerateStateRootMenu;
     app->generate_platform = AmiToolGeneratePlatform3DS;
     app->generate_game_count = 0;
+    app->generate_amiibo_count = 0;
+    app->generate_amiibo_names = NULL;
+    app->generate_amiibo_ids = NULL;
+    app->generate_selected_game = furi_string_alloc();
 
     return app;
 }
@@ -93,6 +97,13 @@ void ami_tool_free(AmiToolApp* app) {
     /* View dispatcher & scene manager */
     view_dispatcher_free(app->view_dispatcher);
     scene_manager_free(app->scene_manager);
+
+    /* Generate scene dynamic data */
+    ami_tool_generate_clear_amiibo_cache(app);
+    if(app->generate_selected_game) {
+        furi_string_free(app->generate_selected_game);
+        app->generate_selected_game = NULL;
+    }
 
     /* Storage */
     if(app->storage) {

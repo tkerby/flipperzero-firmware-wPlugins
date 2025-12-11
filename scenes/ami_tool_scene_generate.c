@@ -1,4 +1,6 @@
 #include "ami_tool_i.h"
+#include <stdlib.h>
+#include <string.h>
 
 #define AMI_TOOL_GENERATE_READ_BUFFER 64
 
@@ -7,30 +9,79 @@ typedef enum {
     AmiToolGenerateRootMenuIndexByGames,
 } AmiToolGenerateRootMenuIndex;
 
-typedef bool (*AmiToolGenerateGameCallback)(void* context, size_t index, FuriString* name);
+typedef bool (*AmiToolGenerateLineCallback)(void* context, size_t index, FuriString* line);
+
+static bool ami_tool_scene_generate_iterate_lines(
+    AmiToolApp* app,
+    const char* path,
+    bool skip_header,
+    AmiToolGenerateLineCallback callback,
+    void* context);
+static bool ami_tool_scene_generate_iterate_games(
+    AmiToolApp* app,
+    AmiToolGeneratePlatform platform,
+    AmiToolGenerateLineCallback callback,
+    void* context);
+static bool ami_tool_scene_generate_find_mapping_for_game(
+    AmiToolApp* app,
+    AmiToolGeneratePlatform platform,
+    const FuriString* game_name,
+    FuriString* out_ids);
+static bool ami_tool_scene_generate_prepare_amiibo_entries(
+    AmiToolApp* app,
+    const FuriString* game_name);
+static void ami_tool_scene_generate_show_amiibo_menu(AmiToolApp* app, size_t game_index);
+static void ami_tool_scene_generate_show_amiibo_placeholder(AmiToolApp* app, size_t amiibo_index);
+static void ami_tool_scene_generate_clear_selected_game(AmiToolApp* app);
+
+static void ami_tool_scene_generate_clear_selected_game(AmiToolApp* app) {
+    if(app->generate_selected_game) {
+        furi_string_reset(app->generate_selected_game);
+    }
+}
+
+void ami_tool_generate_clear_amiibo_cache(AmiToolApp* app) {
+    if(!app) return;
+
+    if(app->generate_amiibo_names) {
+        for(size_t i = 0; i < app->generate_amiibo_count; i++) {
+            if(app->generate_amiibo_names[i]) {
+                furi_string_free(app->generate_amiibo_names[i]);
+            }
+        }
+        free(app->generate_amiibo_names);
+        app->generate_amiibo_names = NULL;
+    }
+
+    if(app->generate_amiibo_ids) {
+        for(size_t i = 0; i < app->generate_amiibo_count; i++) {
+            if(app->generate_amiibo_ids[i]) {
+                furi_string_free(app->generate_amiibo_ids[i]);
+            }
+        }
+        free(app->generate_amiibo_ids);
+        app->generate_amiibo_ids = NULL;
+    }
+
+    app->generate_amiibo_count = 0;
+}
 
 static void ami_tool_scene_generate_submenu_callback(void* context, uint32_t index);
 static void ami_tool_scene_generate_show_root_menu(AmiToolApp* app);
 static void ami_tool_scene_generate_show_platform_menu(AmiToolApp* app);
 static void ami_tool_scene_generate_show_games_menu(AmiToolApp* app);
 static void ami_tool_scene_generate_show_name_placeholder(AmiToolApp* app);
-static void ami_tool_scene_generate_show_game_placeholder(AmiToolApp* app, size_t game_index);
 static void ami_tool_scene_generate_commit_text_view(
     AmiToolApp* app,
     AmiToolGenerateState state,
     AmiToolGenerateState return_state);
-static bool ami_tool_scene_generate_iterate_games(
-    AmiToolApp* app,
-    AmiToolGeneratePlatform platform,
-    AmiToolGenerateGameCallback callback,
-    void* context);
 static bool ami_tool_scene_generate_get_game_name(
     AmiToolApp* app,
     AmiToolGeneratePlatform platform,
     size_t target_index,
     FuriString* out);
 static const char* ami_tool_scene_generate_platform_label(AmiToolGeneratePlatform platform);
-static const char* ami_tool_scene_generate_platform_path(AmiToolGeneratePlatform platform);
+static const char* ami_tool_scene_generate_platform_mapping_path(AmiToolGeneratePlatform platform);
 static void ami_tool_scene_generate_return_to_state(AmiToolApp* app, AmiToolGenerateState state);
 
 typedef struct {
@@ -87,6 +138,8 @@ static void ami_tool_scene_generate_show_root_menu(AmiToolApp* app) {
         AmiToolGenerateRootMenuIndexByGames,
         ami_tool_scene_generate_submenu_callback,
         app);
+    ami_tool_generate_clear_amiibo_cache(app);
+    ami_tool_scene_generate_clear_selected_game(app);
     app->generate_state = AmiToolGenerateStateRootMenu;
     app->generate_return_state = AmiToolGenerateStateRootMenu;
     app->generate_game_count = 0;
@@ -110,6 +163,8 @@ static void ami_tool_scene_generate_show_platform_menu(AmiToolApp* app) {
 
 static void ami_tool_scene_generate_show_games_menu(AmiToolApp* app) {
     submenu_reset(app->submenu);
+    ami_tool_generate_clear_amiibo_cache(app);
+    ami_tool_scene_generate_clear_selected_game(app);
     furi_string_printf(
         app->text_box_store, "%s Games", ami_tool_scene_generate_platform_label(app->generate_platform));
     submenu_set_header(app->submenu, furi_string_get_cstr(app->text_box_store));
@@ -155,10 +210,10 @@ static void ami_tool_scene_generate_show_name_placeholder(AmiToolApp* app) {
         app, AmiToolGenerateStateByNamePlaceholder, AmiToolGenerateStateRootMenu);
 }
 
-static void ami_tool_scene_generate_show_game_placeholder(AmiToolApp* app, size_t game_index) {
+static void ami_tool_scene_generate_show_amiibo_menu(AmiToolApp* app, size_t game_index) {
     FuriString* game_name = furi_string_alloc();
-    bool found =
-        ami_tool_scene_generate_get_game_name(app, app->generate_platform, game_index, game_name);
+    bool found = ami_tool_scene_generate_get_game_name(
+        app, app->generate_platform, game_index, game_name);
 
     if(!found) {
         furi_string_printf(
@@ -166,17 +221,293 @@ static void ami_tool_scene_generate_show_game_placeholder(AmiToolApp* app, size_
             "Unable to find the selected game.\n\nReturn to the list and try again.");
         ami_tool_scene_generate_commit_text_view(
             app, AmiToolGenerateStateMessage, AmiToolGenerateStateGameList);
-    } else {
-        furi_string_printf(
-            app->text_box_store,
-            "%s\n\nGame-specific generation for %s titles is coming soon.",
-            furi_string_get_cstr(game_name),
-            ami_tool_scene_generate_platform_label(app->generate_platform));
-        ami_tool_scene_generate_commit_text_view(
-            app, AmiToolGenerateStateGamePlaceholder, AmiToolGenerateStateGameList);
+        furi_string_free(game_name);
+        return;
     }
 
+    bool ready = ami_tool_scene_generate_prepare_amiibo_entries(app, game_name);
+    if(!ready || app->generate_amiibo_count == 0) {
+        furi_string_free(game_name);
+        return;
+    }
+
+    furi_string_set(app->generate_selected_game, game_name);
+
+    submenu_reset(app->submenu);
+    furi_string_printf(
+        app->text_box_store,
+        "%s Amiibo",
+        furi_string_get_cstr(app->generate_selected_game));
+    submenu_set_header(app->submenu, furi_string_get_cstr(app->text_box_store));
+
+    for(size_t i = 0; i < app->generate_amiibo_count; i++) {
+        submenu_add_item(
+            app->submenu,
+            furi_string_get_cstr(app->generate_amiibo_names[i]),
+            i,
+            ami_tool_scene_generate_submenu_callback,
+            app);
+    }
+
+    app->generate_state = AmiToolGenerateStateAmiiboList;
+    view_dispatcher_switch_to_view(app->view_dispatcher, AmiToolViewMenu);
+
     furi_string_free(game_name);
+}
+
+static size_t ami_tool_scene_generate_count_tokens(const char* data) {
+    if(!data || data[0] == '\0') {
+        return 0;
+    }
+
+    size_t count = 0;
+    const char* cursor = data;
+
+    while(*cursor) {
+        while(*cursor == '|') {
+            cursor++;
+        }
+        if(*cursor == '\0') {
+            break;
+        }
+        count++;
+        while(*cursor && *cursor != '|') {
+            cursor++;
+        }
+    }
+
+    return count;
+}
+
+static bool ami_tool_scene_generate_populate_id_cache(AmiToolApp* app, const char* ids_line) {
+    size_t token_count = ami_tool_scene_generate_count_tokens(ids_line);
+    if(token_count == 0) {
+        return false;
+    }
+
+    ami_tool_generate_clear_amiibo_cache(app);
+
+    app->generate_amiibo_names = malloc(token_count * sizeof(FuriString*));
+    app->generate_amiibo_ids = malloc(token_count * sizeof(FuriString*));
+    if(!app->generate_amiibo_names || !app->generate_amiibo_ids) {
+        ami_tool_generate_clear_amiibo_cache(app);
+        return false;
+    }
+
+    for(size_t i = 0; i < token_count; i++) {
+        app->generate_amiibo_names[i] = furi_string_alloc();
+        app->generate_amiibo_ids[i] = furi_string_alloc();
+    }
+
+    size_t index = 0;
+    size_t token_start = 0;
+    size_t line_len = strlen(ids_line);
+
+    for(size_t pos = 0; pos <= line_len; pos++) {
+        if(ids_line[pos] == '|' || ids_line[pos] == '\0') {
+            size_t token_len = pos - token_start;
+            if(token_len > 0 && index < token_count) {
+                furi_string_set_strn(
+                    app->generate_amiibo_ids[index], ids_line + token_start, token_len);
+                furi_string_trim(app->generate_amiibo_ids[index]);
+                furi_string_set(
+                    app->generate_amiibo_names[index],
+                    furi_string_get_cstr(app->generate_amiibo_ids[index]));
+                index++;
+            }
+            token_start = pos + 1;
+        }
+    }
+
+    app->generate_amiibo_count = index;
+    if(index == 0) {
+        ami_tool_generate_clear_amiibo_cache(app);
+        return false;
+    }
+
+    return true;
+}
+
+typedef struct {
+    const FuriString* game_name;
+    FuriString* result_ids;
+    bool found;
+} AmiToolGenerateMappingContext;
+
+static bool ami_tool_scene_generate_mapping_callback(
+    void* context,
+    size_t index,
+    FuriString* line) {
+    UNUSED(index);
+    AmiToolGenerateMappingContext* ctx = context;
+    const char* raw = furi_string_get_cstr(line);
+    const char* target = furi_string_get_cstr(ctx->game_name);
+    size_t target_len = furi_string_size(ctx->game_name);
+
+    if(strncmp(raw, target, target_len) == 0 && raw[target_len] == ':') {
+        const char* value = raw + target_len + 1;
+        while(*value == ' ' || *value == '\t') {
+            value++;
+        }
+        furi_string_set(ctx->result_ids, value);
+        ctx->found = true;
+        return false;
+    }
+
+    return true;
+}
+
+static bool ami_tool_scene_generate_find_mapping_for_game(
+    AmiToolApp* app,
+    AmiToolGeneratePlatform platform,
+    const FuriString* game_name,
+    FuriString* out_ids) {
+    const char* path = ami_tool_scene_generate_platform_mapping_path(platform);
+    if(!path) {
+        return false;
+    }
+
+    AmiToolGenerateMappingContext context = {
+        .game_name = game_name,
+        .result_ids = out_ids,
+        .found = false,
+    };
+
+    furi_string_reset(out_ids);
+    bool ok = ami_tool_scene_generate_iterate_lines(
+        app, path, true, ami_tool_scene_generate_mapping_callback, &context);
+    return ok && context.found;
+}
+
+typedef struct {
+    AmiToolApp* app;
+    size_t remaining;
+} AmiToolGenerateAmiiboLookupContext;
+
+static bool ami_tool_scene_generate_amiibo_lookup_callback(
+    void* context,
+    size_t index,
+    FuriString* line) {
+    UNUSED(index);
+    AmiToolGenerateAmiiboLookupContext* lookup = context;
+    const char* raw = furi_string_get_cstr(line);
+    const char* colon = strchr(raw, ':');
+    if(!colon) {
+        return true;
+    }
+
+    size_t id_len = colon - raw;
+    const char* value = colon + 1;
+    while(*value == ' ' || *value == '\t') {
+        value++;
+    }
+    const char* pipe = strchr(value, '|');
+    size_t name_len = pipe ? (size_t)(pipe - value) : strlen(value);
+
+    for(size_t i = 0; i < lookup->app->generate_amiibo_count; i++) {
+        if(furi_string_size(lookup->app->generate_amiibo_ids[i]) == id_len &&
+           strncmp(
+               raw,
+               furi_string_get_cstr(lookup->app->generate_amiibo_ids[i]),
+               id_len) == 0) {
+            furi_string_set_strn(
+                lookup->app->generate_amiibo_names[i], value, name_len);
+            lookup->remaining--;
+            if(lookup->remaining == 0) {
+                return false;
+            }
+            break;
+        }
+    }
+
+    return true;
+}
+
+static bool ami_tool_scene_generate_resolve_amiibo_names(AmiToolApp* app) {
+    if(app->generate_amiibo_count == 0) {
+        return false;
+    }
+
+    AmiToolGenerateAmiiboLookupContext context = {
+        .app = app,
+        .remaining = app->generate_amiibo_count,
+    };
+
+    bool ok = ami_tool_scene_generate_iterate_lines(
+        app,
+        APP_ASSETS_PATH("amiibo.dat"),
+        true,
+        ami_tool_scene_generate_amiibo_lookup_callback,
+        &context);
+    return ok;
+}
+
+static bool ami_tool_scene_generate_prepare_amiibo_entries(
+    AmiToolApp* app,
+    const FuriString* game_name) {
+    FuriString* ids = furi_string_alloc();
+    bool found = ami_tool_scene_generate_find_mapping_for_game(
+        app, app->generate_platform, game_name, ids);
+
+    if(!found) {
+        furi_string_printf(
+            app->text_box_store,
+            "No Amiibo mapping found for:\n%s\n\nUpdate your assets.",
+            furi_string_get_cstr(game_name));
+        ami_tool_scene_generate_commit_text_view(
+            app, AmiToolGenerateStateMessage, AmiToolGenerateStateGameList);
+        furi_string_free(ids);
+        return false;
+    }
+
+    if(!ami_tool_scene_generate_populate_id_cache(app, furi_string_get_cstr(ids))) {
+        furi_string_printf(
+            app->text_box_store,
+            "Unable to parse Amiibo mapping for:\n%s",
+            furi_string_get_cstr(game_name));
+        ami_tool_scene_generate_commit_text_view(
+            app, AmiToolGenerateStateMessage, AmiToolGenerateStateGameList);
+        furi_string_free(ids);
+        return false;
+    }
+
+    ami_tool_scene_generate_resolve_amiibo_names(app);
+
+    if(app->generate_amiibo_count == 0) {
+        furi_string_printf(
+            app->text_box_store,
+            "No Amiibo IDs available for:\n%s",
+            furi_string_get_cstr(game_name));
+        ami_tool_scene_generate_commit_text_view(
+            app, AmiToolGenerateStateMessage, AmiToolGenerateStateGameList);
+        furi_string_free(ids);
+        return false;
+    }
+
+    furi_string_free(ids);
+    return true;
+}
+
+static void ami_tool_scene_generate_show_amiibo_placeholder(AmiToolApp* app, size_t amiibo_index) {
+    if(amiibo_index >= app->generate_amiibo_count) {
+        furi_string_printf(
+            app->text_box_store,
+            "Unknown Amiibo selection.\n\nReturn to the previous menu.");
+        ami_tool_scene_generate_commit_text_view(
+            app, AmiToolGenerateStateMessage, AmiToolGenerateStateAmiiboList);
+        return;
+    }
+
+    const char* id = furi_string_get_cstr(app->generate_amiibo_ids[amiibo_index]);
+    const char* name = furi_string_get_cstr(app->generate_amiibo_names[amiibo_index]);
+
+    furi_string_printf(
+        app->text_box_store,
+        "%s\n\nSelected Amiibo ID:\n%s\n\nGeneration placeholder.",
+        name,
+        id);
+    ami_tool_scene_generate_commit_text_view(
+        app, AmiToolGenerateStateAmiiboPlaceholder, AmiToolGenerateStateAmiiboList);
 }
 
 static void ami_tool_scene_generate_commit_text_view(
@@ -190,17 +521,13 @@ static void ami_tool_scene_generate_commit_text_view(
     view_dispatcher_switch_to_view(app->view_dispatcher, AmiToolViewTextBox);
 }
 
-static bool ami_tool_scene_generate_iterate_games(
+static bool ami_tool_scene_generate_iterate_lines(
     AmiToolApp* app,
-    AmiToolGeneratePlatform platform,
-    AmiToolGenerateGameCallback callback,
+    const char* path,
+    bool skip_header,
+    AmiToolGenerateLineCallback callback,
     void* context) {
-    if(!app->storage || !callback) {
-        return false;
-    }
-
-    const char* path = ami_tool_scene_generate_platform_path(platform);
-    if(!path) {
+    if(!app->storage || !path || !callback) {
         return false;
     }
 
@@ -213,8 +540,8 @@ static bool ami_tool_scene_generate_iterate_games(
     bool success = false;
 
     if(storage_file_open(file, path, FSAM_READ, FSOM_OPEN_EXISTING)) {
-        bool in_game_section = false;
-        size_t game_index = 0;
+        bool in_data_section = !skip_header;
+        size_t line_index = 0;
         bool keep_reading = true;
         uint8_t buffer[AMI_TOOL_GENERATE_READ_BUFFER];
 
@@ -228,13 +555,13 @@ static bool ami_tool_scene_generate_iterate_games(
                     continue;
                 }
                 if(ch == '\n') {
-                    if(in_game_section) {
+                    if(in_data_section) {
                         if(!furi_string_empty(line)) {
-                            keep_reading = callback(context, game_index, line);
-                            game_index++;
+                            keep_reading = callback(context, line_index, line);
+                            line_index++;
                         }
                     } else if(furi_string_empty(line)) {
-                        in_game_section = true;
+                        in_data_section = true;
                     }
                     furi_string_reset(line);
                     if(!keep_reading) break;
@@ -246,8 +573,8 @@ static bool ami_tool_scene_generate_iterate_games(
             if(!keep_reading) break;
         }
 
-        if(keep_reading && in_game_section && !furi_string_empty(line)) {
-            callback(context, game_index, line);
+        if(keep_reading && in_data_section && !furi_string_empty(line)) {
+            callback(context, line_index, line);
         }
 
         success = true;
@@ -257,6 +584,36 @@ static bool ami_tool_scene_generate_iterate_games(
     furi_string_free(line);
     storage_file_free(file);
     return success;
+}
+
+static bool ami_tool_scene_generate_iterate_games(
+    AmiToolApp* app,
+    AmiToolGeneratePlatform platform,
+    AmiToolGenerateLineCallback callback,
+    void* context) {
+    const char* path = NULL;
+    switch(platform) {
+    case AmiToolGeneratePlatform3DS:
+        path = APP_ASSETS_PATH("game_3ds.dat");
+        break;
+    case AmiToolGeneratePlatformWiiU:
+        path = APP_ASSETS_PATH("game_wii_u.dat");
+        break;
+    case AmiToolGeneratePlatformSwitch:
+        path = APP_ASSETS_PATH("game_switch.dat");
+        break;
+    case AmiToolGeneratePlatformSwitch2:
+        path = APP_ASSETS_PATH("game_switch2.dat");
+        break;
+    default:
+        break;
+    }
+
+    if(!path) {
+        return false;
+    }
+
+    return ami_tool_scene_generate_iterate_lines(app, path, true, callback, context);
 }
 
 static bool ami_tool_scene_generate_get_game_name(
@@ -292,16 +649,16 @@ static const char* ami_tool_scene_generate_platform_label(AmiToolGeneratePlatfor
     }
 }
 
-static const char* ami_tool_scene_generate_platform_path(AmiToolGeneratePlatform platform) {
+static const char* ami_tool_scene_generate_platform_mapping_path(AmiToolGeneratePlatform platform) {
     switch(platform) {
     case AmiToolGeneratePlatform3DS:
-        return APP_ASSETS_PATH("game_3ds.dat");
+        return APP_ASSETS_PATH("game_3ds_mapping.dat");
     case AmiToolGeneratePlatformWiiU:
-        return APP_ASSETS_PATH("game_wii_u.dat");
+        return APP_ASSETS_PATH("game_wii_u_mapping.dat");
     case AmiToolGeneratePlatformSwitch:
-        return APP_ASSETS_PATH("game_switch.dat");
+        return APP_ASSETS_PATH("game_switch_mapping.dat");
     case AmiToolGeneratePlatformSwitch2:
-        return APP_ASSETS_PATH("game_switch2.dat");
+        return APP_ASSETS_PATH("game_switch2_mapping.dat");
     default:
         return NULL;
     }
@@ -326,7 +683,12 @@ static void ami_tool_scene_generate_submenu_callback(void* context, uint32_t ind
         break;
     case AmiToolGenerateStateGameList:
         if(index < app->generate_game_count) {
-            ami_tool_scene_generate_show_game_placeholder(app, index);
+            ami_tool_scene_generate_show_amiibo_menu(app, index);
+        }
+        break;
+    case AmiToolGenerateStateAmiiboList:
+        if(index < app->generate_amiibo_count) {
+            ami_tool_scene_generate_show_amiibo_placeholder(app, index);
         }
         break;
     default:
@@ -344,6 +706,13 @@ static void ami_tool_scene_generate_return_to_state(AmiToolApp* app, AmiToolGene
         break;
     case AmiToolGenerateStateGameList:
         ami_tool_scene_generate_show_games_menu(app);
+        break;
+    case AmiToolGenerateStateAmiiboList:
+        if(app->generate_game_count > 0) {
+            ami_tool_scene_generate_show_games_menu(app);
+        } else {
+            ami_tool_scene_generate_show_platform_menu(app);
+        }
         break;
     default:
         ami_tool_scene_generate_show_root_menu(app);
@@ -369,10 +738,13 @@ bool ami_tool_scene_generate_on_event(void* context, SceneManagerEvent event) {
         case AmiToolGenerateStateGameList:
             ami_tool_scene_generate_show_platform_menu(app);
             return true;
+        case AmiToolGenerateStateAmiiboList:
+            ami_tool_scene_generate_show_games_menu(app);
+            return true;
         case AmiToolGenerateStateByNamePlaceholder:
             ami_tool_scene_generate_show_root_menu(app);
             return true;
-        case AmiToolGenerateStateGamePlaceholder:
+        case AmiToolGenerateStateAmiiboPlaceholder:
         case AmiToolGenerateStateMessage:
             ami_tool_scene_generate_return_to_state(app, app->generate_return_state);
             return true;
@@ -389,4 +761,6 @@ void ami_tool_scene_generate_on_exit(void* context) {
     app->generate_state = AmiToolGenerateStateRootMenu;
     app->generate_return_state = AmiToolGenerateStateRootMenu;
     app->generate_game_count = 0;
+    ami_tool_generate_clear_amiibo_cache(app);
+    ami_tool_scene_generate_clear_selected_game(app);
 }
