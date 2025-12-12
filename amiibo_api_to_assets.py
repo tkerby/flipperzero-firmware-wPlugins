@@ -40,42 +40,48 @@ def process_amiibo_data(amiibo_data: dict):
     types = amiibo_data.get("types", {})
     characters = amiibo_data.get("characters", {})
 
+    amiibo_strs = {}
+    amiibo_mapping_strs = {}
+
+    for amiibo_id, amiibo in amiibos.items():
+        amiibo_id_clean = amiibo_id[2:]  # Remove "0x" prefix
+        name = amiibo.get("name", "Unknown")
+        character = characters.get(f"0x{amiibo_id_clean[0:4]}", "Unknown")
+        amiibo_series_name = amiibo_series.get(f"0x{amiibo_id_clean[12:14]}", "Unknown")
+        game_series_name = game_series.get(f"0x{amiibo_id_clean[0:3]}", "Unknown")
+        type_name = types.get(f"0x{amiibo_id_clean[6:8]}", "Unknown")
+
+        release_info = amiibo.get("release", {})
+        release_info_strs = []
+        for region, date in release_info.items():
+            release_info_strs.append(f"{region}.{date}")
+        release_info_line = ",".join(release_info_strs)
+
+        amiibo_strs[amiibo_id_clean] = (
+            f"{name}|{character}|{amiibo_series_name}|{game_series_name}|{type_name}|{release_info_line}"
+        )
+        amiibo_mapping_strs[name] = amiibo_id_clean
+
+    amiibo_strs = dict(sorted(amiibo_strs.items()))
+    amiibo_mapping_strs = dict(sorted(amiibo_mapping_strs.items()))
+
     with open("files/amiibo.dat", "w") as amiibo_file:
-        with open("files/amiibo_name.dat", "w") as amiibo_name_file:
-            # Write headers
-            amiibo_file.write("Filetype: AmiTool Amiibo DB\n")
-            amiibo_file.write("Version: 1\n")
-            amiibo_file.write(f"AmiiboCount: {len(amiibos)}\n")
-            amiibo_file.write("\n")
+        amiibo_file.write("Filetype: AmiTool Amiibo DB\n")
+        amiibo_file.write("Version: 1\n")
+        amiibo_file.write(f"AmiiboCount: {len(amiibos)}\n")
+        amiibo_file.write("\n")
 
-            amiibo_name_file.write("Filetype: AmiTool Amiibo Name DB\n")
-            amiibo_name_file.write("Version: 1\n")
-            amiibo_name_file.write(f"AmiiboCount: {len(amiibos)}\n")
-            amiibo_name_file.write("\n")
+        for amiibo_id, amiibo_str in amiibo_strs.items():
+            amiibo_file.write(f"{amiibo_id}: {amiibo_str}\n")
 
-            # Write each Amiibo entry
-            for amiibo_id, amiibo in amiibos.items():
-                amiibo_id_clean = amiibo_id[2:]  # Remove "0x" prefix
-                name = amiibo.get("name", "Unknown")
-                character = characters.get(f"0x{amiibo_id_clean[0:4]}", "Unknown")
-                amiibo_series_name = amiibo_series.get(
-                    f"0x{amiibo_id_clean[12:14]}", "Unknown"
-                )
-                game_series_name = game_series.get(
-                    f"0x{amiibo_id_clean[0:3]}", "Unknown"
-                )
-                type_name = types.get(f"0x{amiibo_id_clean[6:8]}", "Unknown")
+    with open("files/amiibo_name.dat", "w") as amiibo_name_file:
+        amiibo_name_file.write("Filetype: AmiTool Amiibo Name DB\n")
+        amiibo_name_file.write("Version: 1\n")
+        amiibo_name_file.write(f"AmiiboCount: {len(amiibos)}\n")
+        amiibo_name_file.write("\n")
 
-                release_info = amiibo.get("release", {})
-                release_info_strs = []
-                for region, date in release_info.items():
-                    release_info_strs.append(f"{region}.{date}")
-                release_info_line = ",".join(release_info_strs)
-
-                amiibo_file.write(
-                    f"{amiibo_id_clean}: {name}|{character}|{amiibo_series_name}|{game_series_name}|{type_name}|{release_info_line}\n"
-                )
-                amiibo_name_file.write(f"{name}: {amiibo_id_clean}\n")
+        for amiibo_name, amiibo_id in amiibo_mapping_strs.items():
+            amiibo_name_file.write(f"{amiibo_name}: {amiibo_id}\n")
 
 
 def _generate_usage_string(info: dict, platform: str) -> str:
