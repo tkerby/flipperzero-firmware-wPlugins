@@ -1,1 +1,1 @@
-1.1- Added jellyfish as a playable character
+1.0- My first commit
