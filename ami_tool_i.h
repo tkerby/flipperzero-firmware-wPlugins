@@ -15,6 +15,9 @@
 #include <furi/core/thread.h>
 #include <furi_hal_random.h>
 
+#define AMI_TOOL_RETAIL_KEY_SIZE (160U)
+#define AMI_TOOL_RETAIL_KEY_FILENAME "key_retail.bin"
+
 typedef struct AmiToolApp AmiToolApp;
 
 /* View IDs for ViewDispatcher */
@@ -77,18 +80,29 @@ typedef struct {
     uint8_t uid[10];
 } AmiToolReadResult;
 
+typedef enum {
+    AmiToolRetailKeyStatusOk,
+    AmiToolRetailKeyStatusNotFound,
+    AmiToolRetailKeyStatusInvalidSize,
+    AmiToolRetailKeyStatusStorageError,
+} AmiToolRetailKeyStatus;
+
 struct AmiToolApp {
     Gui* gui;
     ViewDispatcher* view_dispatcher;
     SceneManager* scene_manager;
 
     Storage* storage;
+    uint8_t retail_key[AMI_TOOL_RETAIL_KEY_SIZE];
+    size_t retail_key_size;
+    bool retail_key_loaded;
 
     Submenu* submenu;
 
     TextBox* text_box;
     FuriString* text_box_store;
     Widget* info_widget;
+    bool main_menu_error_visible;
 
     Nfc* nfc;
     FuriThread* read_thread;
@@ -123,3 +137,5 @@ void ami_tool_info_show_page(AmiToolApp* app, const char* id_hex, bool from_read
 void ami_tool_store_uid(AmiToolApp* app, const uint8_t* uid, size_t len);
 void ami_tool_clear_cached_tag(AmiToolApp* app);
 void ami_tool_generate_random_uid(AmiToolApp* app);
+AmiToolRetailKeyStatus ami_tool_load_retail_key(AmiToolApp* app);
+bool ami_tool_has_retail_key(const AmiToolApp* app);

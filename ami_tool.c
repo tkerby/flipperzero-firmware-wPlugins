@@ -1,6 +1,13 @@
 #include "ami_tool_i.h"
 #include <string.h>
 
+static void ami_tool_reset_retail_key(AmiToolApp* app) {
+    if(!app) return;
+    memset(app->retail_key, 0, sizeof(app->retail_key));
+    app->retail_key_size = 0;
+    app->retail_key_loaded = false;
+}
+
 /* Forward declarations of callbacks */
 static bool ami_tool_custom_event_callback(void* context, uint32_t event);
 static bool ami_tool_back_event_callback(void* context);
@@ -42,9 +49,11 @@ AmiToolApp* ami_tool_alloc(void) {
     app->info_widget = widget_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher, AmiToolViewInfo, widget_get_view(app->info_widget));
+    app->main_menu_error_visible = false;
 
     /* Storage (for assets) */
     app->storage = furi_record_open(RECORD_STORAGE);
+    ami_tool_reset_retail_key(app);
 
     /* NFC resources */
     app->nfc = nfc_alloc();
@@ -114,6 +123,7 @@ void ami_tool_free(AmiToolApp* app) {
         furi_string_free(app->generate_selected_game);
         app->generate_selected_game = NULL;
     }
+    ami_tool_reset_retail_key(app);
 
     /* Storage */
     if(app->storage) {
@@ -164,4 +174,52 @@ int32_t ami_tool_app(void* p) {
     ami_tool_free(app);
 
     return 0;
+}
+
+AmiToolRetailKeyStatus ami_tool_load_retail_key(AmiToolApp* app) {
+    furi_assert(app);
+
+    if(!app->storage) {
+        ami_tool_reset_retail_key(app);
+        return AmiToolRetailKeyStatusStorageError;
+    }
+
+    File* file = storage_file_alloc(app->storage);
+    if(!file) {
+        ami_tool_reset_retail_key(app);
+        return AmiToolRetailKeyStatusStorageError;
+    }
+
+    AmiToolRetailKeyStatus status = AmiToolRetailKeyStatusStorageError;
+    const char* path = APP_DATA_PATH(AMI_TOOL_RETAIL_KEY_FILENAME);
+
+    if(storage_file_open(file, path, FSAM_READ, FSOM_OPEN_EXISTING)) {
+        size_t read = storage_file_read(file, app->retail_key, sizeof(app->retail_key));
+        if(read == AMI_TOOL_RETAIL_KEY_SIZE) {
+            uint8_t extra = 0;
+            size_t extra_read = storage_file_read(file, &extra, 1);
+            if(extra_read == 0) {
+                app->retail_key_size = read;
+                app->retail_key_loaded = true;
+                status = AmiToolRetailKeyStatusOk;
+            } else {
+                ami_tool_reset_retail_key(app);
+                status = AmiToolRetailKeyStatusInvalidSize;
+            }
+        } else {
+            ami_tool_reset_retail_key(app);
+            status = AmiToolRetailKeyStatusInvalidSize;
+        }
+        storage_file_close(file);
+    } else {
+        ami_tool_reset_retail_key(app);
+        status = AmiToolRetailKeyStatusNotFound;
+    }
+
+    storage_file_free(file);
+    return status;
+}
+
+bool ami_tool_has_retail_key(const AmiToolApp* app) {
+    return app && app->retail_key_loaded && (app->retail_key_size == AMI_TOOL_RETAIL_KEY_SIZE);
 }
