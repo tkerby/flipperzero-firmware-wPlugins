@@ -52,6 +52,8 @@ AmiToolApp* ami_tool_alloc(void) {
     app->read_result.error = MfUltralightErrorNone;
     app->tag_data = mf_ultralight_alloc();
     app->tag_data_valid = false;
+    memset(&app->tag_password, 0, sizeof(app->tag_password));
+    app->tag_password_valid = false;
 
     /* Generate scene state */
     app->generate_state = AmiToolGenerateStateRootMenu;

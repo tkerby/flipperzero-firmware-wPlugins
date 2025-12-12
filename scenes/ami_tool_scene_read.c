@@ -13,6 +13,8 @@ static void ami_tool_scene_read_reset_result(AmiToolApp* app) {
     app->read_result.uid_len = 0;
     memset(app->read_result.uid, 0, sizeof(app->read_result.uid));
     app->tag_data_valid = false;
+    memset(&app->tag_password, 0, sizeof(app->tag_password));
+    app->tag_password_valid = false;
 }
 
 static void ami_tool_scene_read_stop_thread(AmiToolApp* app) {
@@ -32,7 +34,7 @@ static const char* ami_tool_scene_read_error_to_string(MfUltralightError error) 
     case MfUltralightErrorProtocol:
         return "Protocol error while reading.";
     case MfUltralightErrorAuth:
-        return "Password incorrect.\nPossibly not an Amiibo.";
+        return "Authentication failed.";
     case MfUltralightErrorTimeout:
         return "Timed out waiting for tag.";
     default:
@@ -180,34 +182,22 @@ static int32_t ami_tool_scene_read_worker(void* context) {
                 result.type = AmiToolReadResultWrongType;
                 event = AmiToolEventReadWrongType;
             } else {
-                MfUltralightAuthPassword password = {};
-                if(!ami_tool_scene_read_compute_password(uid, result.uid_len, &password)) {
-                    result.type = AmiToolReadResultError;
-                    result.error = MfUltralightErrorAuth;
-                    event = AmiToolEventReadError;
-                } else {
-                    MfUltralightPollerAuthContext auth_context = {};
-                    memcpy(auth_context.password.data, password.data, sizeof(password.data));
-                    auth_context.skip_auth = false;
-                    auth_context.auth_success = false;
-
-                    MfUltralightError protected_error =
-                        mf_ultralight_poller_sync_read_card(app->nfc, data, &auth_context);
-
-                    if(protected_error == MfUltralightErrorNone) {
-                        if(app->tag_data) {
-                            mf_ultralight_copy(app->tag_data, data);
-                            app->tag_data_valid = true;
-                        }
-                        result.type = AmiToolReadResultSuccess;
-                        result.error = MfUltralightErrorNone;
-                        event = AmiToolEventReadSuccess;
-                    } else {
-                        result.type = AmiToolReadResultError;
-                        result.error = protected_error;
-                        event = AmiToolEventReadError;
-                    }
+                if(app->tag_data) {
+                    mf_ultralight_copy(app->tag_data, data);
+                    app->tag_data_valid = true;
                 }
+
+                if(ami_tool_scene_read_compute_password(
+                       uid, result.uid_len, &app->tag_password)) {
+                    app->tag_password_valid = true;
+                } else {
+                    app->tag_password_valid = false;
+                    memset(&app->tag_password, 0, sizeof(app->tag_password));
+                }
+
+                result.type = AmiToolReadResultSuccess;
+                result.error = MfUltralightErrorNone;
+                event = AmiToolEventReadSuccess;
             }
         } else {
             result.type = AmiToolReadResultError;

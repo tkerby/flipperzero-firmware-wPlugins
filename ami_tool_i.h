@@ -92,6 +92,8 @@ struct AmiToolApp {
     AmiToolReadResult read_result;
     MfUltralightData* tag_data;
     bool tag_data_valid;
+    MfUltralightAuthPassword tag_password;
+    bool tag_password_valid;
 
     AmiToolGenerateState generate_state;
     AmiToolGenerateState generate_return_state;
