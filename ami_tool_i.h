@@ -90,7 +90,6 @@ typedef enum {
 
 typedef enum {
     AmiToolGenerateStateRootMenu,
-    AmiToolGenerateStateByNamePlaceholder,
     AmiToolGenerateStatePlatformMenu,
     AmiToolGenerateStateGameList,
     AmiToolGenerateStateAmiiboList,
@@ -105,6 +104,11 @@ typedef enum {
     AmiToolGeneratePlatformSwitch2,
     AmiToolGeneratePlatformCount,
 } AmiToolGeneratePlatform;
+
+typedef enum {
+    AmiToolGenerateListSourceGame,
+    AmiToolGenerateListSourceName,
+} AmiToolGenerateListSource;
 
 /* Custom events from main menu */
 typedef enum {
@@ -154,6 +158,7 @@ struct AmiToolApp {
     // Lazy Amiibo list paging state
     size_t generate_page_offset;
     size_t generate_selected_index;
+    AmiToolGenerateListSource generate_list_source;
 
     TextBox* text_box;
     FuriString* text_box_store;

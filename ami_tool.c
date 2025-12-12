@@ -41,6 +41,7 @@ AmiToolApp* ami_tool_alloc(void) {
         app->view_dispatcher, AmiToolViewMenu, submenu_get_view(app->submenu));
     app->generate_page_offset = 0;
     app->generate_selected_index = 0;
+    app->generate_list_source = AmiToolGenerateListSourceGame;
 
     /* TextBox (simple placeholder screens) */
     app->text_box = text_box_alloc();
