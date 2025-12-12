@@ -6,12 +6,14 @@
 #include <gui/view_dispatcher.h>
 #include <gui/modules/submenu.h>
 #include <gui/modules/text_box.h>
+#include <gui/modules/widget.h>
 #include <gui/scene_manager.h>
 #include <storage/storage.h>
 #include <nfc/nfc.h>
 #include <nfc/protocols/mf_ultralight/mf_ultralight.h>
 #include <nfc/protocols/mf_ultralight/mf_ultralight_poller_sync.h>
 #include <furi/core/thread.h>
+#include <furi_hal_random.h>
 
 typedef struct AmiToolApp AmiToolApp;
 
@@ -19,6 +21,7 @@ typedef struct AmiToolApp AmiToolApp;
 typedef enum {
     AmiToolViewMenu,
     AmiToolViewTextBox,
+    AmiToolViewInfo,
 } AmiToolView;
 
 /* Scene IDs */
@@ -85,6 +88,7 @@ struct AmiToolApp {
 
     TextBox* text_box;
     FuriString* text_box_store;
+    Widget* info_widget;
 
     Nfc* nfc;
     FuriThread* read_thread;
@@ -94,6 +98,9 @@ struct AmiToolApp {
     bool tag_data_valid;
     MfUltralightAuthPassword tag_password;
     bool tag_password_valid;
+    uint8_t last_uid[10];
+    size_t last_uid_len;
+    bool last_uid_valid;
 
     AmiToolGenerateState generate_state;
     AmiToolGenerateState generate_return_state;
@@ -113,3 +120,6 @@ AmiToolApp* ami_tool_alloc(void);
 void ami_tool_free(AmiToolApp* app);
 void ami_tool_generate_clear_amiibo_cache(AmiToolApp* app);
 void ami_tool_info_show_page(AmiToolApp* app, const char* id_hex, bool from_read);
+void ami_tool_store_uid(AmiToolApp* app, const uint8_t* uid, size_t len);
+void ami_tool_clear_cached_tag(AmiToolApp* app);
+void ami_tool_generate_random_uid(AmiToolApp* app);

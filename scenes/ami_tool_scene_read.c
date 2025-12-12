@@ -175,6 +175,7 @@ static int32_t ami_tool_scene_read_worker(void* context) {
                     mf_ultralight_copy(app->tag_data, data);
                     app->tag_data_valid = true;
                 }
+                ami_tool_store_uid(app, result.uid, result.uid_len);
 
                 if(ami_tool_scene_read_compute_password(
                        uid, result.uid_len, &app->tag_password)) {

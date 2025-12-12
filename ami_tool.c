@@ -39,6 +39,9 @@ AmiToolApp* ami_tool_alloc(void) {
     app->text_box_store = furi_string_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher, AmiToolViewTextBox, text_box_get_view(app->text_box));
+    app->info_widget = widget_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher, AmiToolViewInfo, widget_get_view(app->info_widget));
 
     /* Storage (for assets) */
     app->storage = furi_record_open(RECORD_STORAGE);
@@ -54,6 +57,9 @@ AmiToolApp* ami_tool_alloc(void) {
     app->tag_data_valid = false;
     memset(&app->tag_password, 0, sizeof(app->tag_password));
     app->tag_password_valid = false;
+    memset(app->last_uid, 0, sizeof(app->last_uid));
+    app->last_uid_len = 0;
+    app->last_uid_valid = false;
 
     /* Generate scene state */
     app->generate_state = AmiToolGenerateStateRootMenu;
@@ -75,11 +81,13 @@ void ami_tool_free(AmiToolApp* app) {
     /* Remove views from dispatcher */
     view_dispatcher_remove_view(app->view_dispatcher, AmiToolViewMenu);
     view_dispatcher_remove_view(app->view_dispatcher, AmiToolViewTextBox);
+    view_dispatcher_remove_view(app->view_dispatcher, AmiToolViewInfo);
 
     /* Free modules */
     submenu_free(app->submenu);
     text_box_free(app->text_box);
     furi_string_free(app->text_box_store);
+    widget_free(app->info_widget);
 
     /* NFC resources */
     if(app->read_thread) {

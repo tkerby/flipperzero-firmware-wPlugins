@@ -499,6 +499,7 @@ static void ami_tool_scene_generate_show_amiibo_placeholder(AmiToolApp* app, siz
     }
 
     const char* id = furi_string_get_cstr(app->generate_amiibo_ids[amiibo_index]);
+    ami_tool_generate_random_uid(app);
     ami_tool_info_show_page(app, id, false);
     app->generate_state = AmiToolGenerateStateAmiiboPlaceholder;
     app->generate_return_state = AmiToolGenerateStateAmiiboList;
