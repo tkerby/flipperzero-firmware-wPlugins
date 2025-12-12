@@ -112,3 +112,4 @@ extern const SceneManagerHandlers ami_tool_scene_handlers;
 AmiToolApp* ami_tool_alloc(void);
 void ami_tool_free(AmiToolApp* app);
 void ami_tool_generate_clear_amiibo_cache(AmiToolApp* app);
+void ami_tool_info_show_page(AmiToolApp* app, const char* id_hex, bool from_read);

@@ -1,5 +1,6 @@
 #include "ami_tool_i.h"
 #include <string.h>
+#include <stdio.h>
 #include <furi_hal.h>
 #include <furi_hal_nfc.h>
 
@@ -81,20 +82,6 @@ static void ami_tool_scene_read_show_waiting(AmiToolApp* app) {
     text_box_set_text(app->text_box, furi_string_get_cstr(app->text_box_store));
 }
 
-static void ami_tool_scene_read_show_success(AmiToolApp* app) {
-    furi_string_printf(app->text_box_store, "Success!\nNTAG215 detected.\nUID:");
-    if(app->read_result.uid_len == 0) {
-        furi_string_cat_printf(app->text_box_store, " <unknown>");
-    } else {
-        for(size_t i = 0; i < app->read_result.uid_len; i++) {
-            furi_string_cat_printf(app->text_box_store, " %02X", app->read_result.uid[i]);
-        }
-    }
-    furi_string_cat_printf(app->text_box_store, "\n\nPress Back to return.");
-    text_box_reset(app->text_box);
-    text_box_set_text(app->text_box, furi_string_get_cstr(app->text_box_store));
-}
-
 static void ami_tool_scene_read_show_wrong_type(AmiToolApp* app) {
     furi_string_printf(
         app->text_box_store,
@@ -130,6 +117,8 @@ static bool ami_tool_scene_read_compute_password(
 }
 
 static int32_t ami_tool_scene_read_worker(void* context);
+static bool ami_tool_scene_read_extract_amiibo_id(AmiToolApp* app, char* buffer, size_t buffer_size);
+static void ami_tool_scene_read_show_info(AmiToolApp* app);
 
 static void ami_tool_scene_read_start_worker(AmiToolApp* app) {
     if(app->read_thread) {
@@ -230,7 +219,8 @@ bool ami_tool_scene_read_on_event(void* context, SceneManagerEvent event) {
         switch(event.event) {
         case AmiToolEventReadSuccess:
             ami_tool_scene_read_stop_thread(app);
-            ami_tool_scene_read_show_success(app);
+            app->read_scene_active = false;
+            ami_tool_scene_read_show_info(app);
             return true;
         case AmiToolEventReadWrongType:
             ami_tool_scene_read_stop_thread(app);
@@ -258,4 +248,36 @@ void ami_tool_scene_read_on_exit(void* context) {
     app->read_scene_active = false;
     furi_hal_nfc_abort();
     ami_tool_scene_read_stop_thread(app);
+}
+static bool ami_tool_scene_read_extract_amiibo_id(AmiToolApp* app, char* buffer, size_t buffer_size) {
+    if(!app || !buffer || buffer_size < 17) {
+        return false;
+    }
+    if(!app->tag_data_valid || !app->tag_data) {
+        return false;
+    }
+
+    const size_t start_page = 21;
+    if(app->tag_data->pages_total <= (start_page + 1)) {
+        return false;
+    }
+
+    uint8_t raw[8];
+    for(size_t i = 0; i < 4; i++) {
+        raw[i] = app->tag_data->page[start_page].data[i];
+        raw[i + 4] = app->tag_data->page[start_page + 1].data[i];
+    }
+
+    for(size_t i = 0; i < 8; i++) {
+        snprintf(buffer + (i * 2), buffer_size - (i * 2), "%02X", raw[i]);
+    }
+    buffer[16] = '\0';
+
+    return true;
+}
+
+static void ami_tool_scene_read_show_info(AmiToolApp* app) {
+    char id_hex[17] = {0};
+    bool has_id = ami_tool_scene_read_extract_amiibo_id(app, id_hex, sizeof(id_hex));
+    ami_tool_info_show_page(app, has_id ? id_hex : NULL, true);
 }

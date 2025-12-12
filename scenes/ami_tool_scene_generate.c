@@ -499,15 +499,9 @@ static void ami_tool_scene_generate_show_amiibo_placeholder(AmiToolApp* app, siz
     }
 
     const char* id = furi_string_get_cstr(app->generate_amiibo_ids[amiibo_index]);
-    const char* name = furi_string_get_cstr(app->generate_amiibo_names[amiibo_index]);
-
-    furi_string_printf(
-        app->text_box_store,
-        "%s\n\nSelected Amiibo ID:\n%s\n\nGeneration placeholder.",
-        name,
-        id);
-    ami_tool_scene_generate_commit_text_view(
-        app, AmiToolGenerateStateAmiiboPlaceholder, AmiToolGenerateStateAmiiboList);
+    ami_tool_info_show_page(app, id, false);
+    app->generate_state = AmiToolGenerateStateAmiiboPlaceholder;
+    app->generate_return_state = AmiToolGenerateStateAmiiboList;
 }
 
 static void ami_tool_scene_generate_commit_text_view(
