@@ -11,6 +11,7 @@
 #include <gui/scene_manager.h>
 #include <storage/storage.h>
 #include <nfc/nfc.h>
+#include <nfc/nfc_listener.h>
 #include <nfc/protocols/mf_ultralight/mf_ultralight.h>
 #include <nfc/protocols/mf_ultralight/mf_ultralight_poller_sync.h>
 #include <furi/core/thread.h>
@@ -119,6 +120,11 @@ typedef enum {
     AmiToolEventReadSuccess,
     AmiToolEventReadWrongType,
     AmiToolEventReadError,
+    AmiToolEventInfoShowActions,
+    AmiToolEventInfoActionEmulate,
+    AmiToolEventInfoActionChangeUid,
+    AmiToolEventInfoActionWriteTag,
+    AmiToolEventInfoActionSaveToStorage,
 } AmiToolCustomEvent;
 
 typedef enum {
@@ -164,6 +170,9 @@ struct AmiToolApp {
     FuriString* text_box_store;
     Widget* info_widget;
     bool main_menu_error_visible;
+    bool info_actions_visible;
+    bool info_action_message_visible;
+    bool info_emulation_active;
 
     Nfc* nfc;
     FuriThread* read_thread;
@@ -176,6 +185,7 @@ struct AmiToolApp {
     uint8_t last_uid[10];
     size_t last_uid_len;
     bool last_uid_valid;
+    NfcListener* emulation_listener;
 
     AmiToolGenerateState generate_state;
     AmiToolGenerateState generate_return_state;
@@ -195,6 +205,14 @@ AmiToolApp* ami_tool_alloc(void);
 void ami_tool_free(AmiToolApp* app);
 void ami_tool_generate_clear_amiibo_cache(AmiToolApp* app);
 void ami_tool_info_show_page(AmiToolApp* app, const char* id_hex, bool from_read);
+void ami_tool_info_show_actions_menu(AmiToolApp* app);
+void ami_tool_info_show_action_message(AmiToolApp* app, const char* message);
+bool ami_tool_info_start_emulation(AmiToolApp* app);
+void ami_tool_info_stop_emulation(AmiToolApp* app);
+bool ami_tool_compute_password_from_uid(
+    const uint8_t* uid,
+    size_t uid_len,
+    MfUltralightAuthPassword* password);
 void ami_tool_store_uid(AmiToolApp* app, const uint8_t* uid, size_t len);
 void ami_tool_clear_cached_tag(AmiToolApp* app);
 AmiToolRetailKeyStatus ami_tool_load_retail_key(AmiToolApp* app);

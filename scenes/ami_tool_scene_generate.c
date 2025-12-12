@@ -142,6 +142,12 @@ static bool ami_tool_scene_generate_prepare_dump(AmiToolApp* app, const char* id
     memcpy(uid, app->tag_data->page[0].data, 3);
     memcpy(uid + 3, app->tag_data->page[1].data, 4);
     ami_tool_store_uid(app, uid, sizeof(uid));
+    if(ami_tool_compute_password_from_uid(uid, sizeof(uid), &app->tag_password)) {
+        app->tag_password_valid = true;
+    } else {
+        app->tag_password_valid = false;
+        memset(&app->tag_password, 0, sizeof(app->tag_password));
+    }
 
     app->tag_data_valid = true;
     return true;
@@ -799,6 +805,9 @@ static void ami_tool_scene_generate_show_amiibo_placeholder(AmiToolApp* app, siz
             app, AmiToolGenerateStateMessage, AmiToolGenerateStateAmiiboList);
         return;
     }
+    ami_tool_info_stop_emulation(app);
+    app->info_actions_visible = false;
+    app->info_action_message_visible = false;
     ami_tool_info_show_page(app, id, false);
     app->generate_state = AmiToolGenerateStateAmiiboPlaceholder;
     app->generate_return_state = AmiToolGenerateStateAmiiboList;
@@ -1034,7 +1043,47 @@ void ami_tool_scene_generate_on_enter(void* context) {
 bool ami_tool_scene_generate_on_event(void* context, SceneManagerEvent event) {
     AmiToolApp* app = context;
 
+    if(event.type == SceneManagerEventTypeCustom) {
+        switch(event.event) {
+        case AmiToolEventInfoShowActions:
+            ami_tool_info_show_actions_menu(app);
+            return true;
+        case AmiToolEventInfoActionEmulate:
+            if(!ami_tool_info_start_emulation(app)) {
+                ami_tool_info_show_action_message(
+                    app, "Unable to start emulation.\nGenerate or read an Amiibo first.");
+            }
+            return true;
+        case AmiToolEventInfoActionChangeUid:
+            ami_tool_info_show_action_message(
+                app, "Change UID is not implemented yet.");
+            return true;
+        case AmiToolEventInfoActionWriteTag:
+            ami_tool_info_show_action_message(app, "Write to tag is not available yet.");
+            return true;
+        case AmiToolEventInfoActionSaveToStorage:
+            ami_tool_info_show_action_message(app, "Save to storage is not available yet.");
+            return true;
+        default:
+            break;
+        }
+    }
+
     if(event.type == SceneManagerEventTypeBack) {
+        if(app->info_emulation_active) {
+            ami_tool_info_stop_emulation(app);
+            ami_tool_info_show_actions_menu(app);
+            return true;
+        }
+        if(app->info_action_message_visible) {
+            ami_tool_info_show_actions_menu(app);
+            return true;
+        }
+        if(app->info_actions_visible) {
+            app->info_actions_visible = false;
+            view_dispatcher_switch_to_view(app->view_dispatcher, AmiToolViewInfo);
+            return true;
+        }
         switch(app->generate_state) {
         case AmiToolGenerateStateRootMenu:
             return false;
@@ -1070,4 +1119,7 @@ void ami_tool_scene_generate_on_exit(void* context) {
     app->generate_game_count = 0;
     ami_tool_generate_clear_amiibo_cache(app);
     ami_tool_scene_generate_clear_selected_game(app);
+    ami_tool_info_stop_emulation(app);
+    app->info_actions_visible = false;
+    app->info_action_message_visible = false;
 }

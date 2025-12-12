@@ -53,6 +53,9 @@ AmiToolApp* ami_tool_alloc(void) {
     view_dispatcher_add_view(
         app->view_dispatcher, AmiToolViewInfo, widget_get_view(app->info_widget));
     app->main_menu_error_visible = false;
+    app->info_actions_visible = false;
+    app->info_action_message_visible = false;
+    app->info_emulation_active = false;
 
     /* Storage (for assets) */
     app->storage = furi_record_open(RECORD_STORAGE);
@@ -72,6 +75,7 @@ AmiToolApp* ami_tool_alloc(void) {
     memset(app->last_uid, 0, sizeof(app->last_uid));
     app->last_uid_len = 0;
     app->last_uid_valid = false;
+    app->emulation_listener = NULL;
 
     /* Generate scene state */
     app->generate_state = AmiToolGenerateStateRootMenu;
@@ -89,6 +93,7 @@ AmiToolApp* ami_tool_alloc(void) {
 /* Free everything */
 void ami_tool_free(AmiToolApp* app) {
     furi_assert(app);
+    ami_tool_info_stop_emulation(app);
 
     /* Remove views from dispatcher */
     view_dispatcher_remove_view(app->view_dispatcher, AmiToolViewMenu);

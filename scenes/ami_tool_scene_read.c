@@ -100,22 +100,6 @@ static void ami_tool_scene_read_show_error(AmiToolApp* app) {
     text_box_set_text(app->text_box, furi_string_get_cstr(app->text_box_store));
 }
 
-static bool ami_tool_scene_read_compute_password(
-    const uint8_t* uid,
-    size_t uid_len,
-    MfUltralightAuthPassword* password) {
-    if((uid_len < 7) || (uid == NULL) || (password == NULL)) {
-        return false;
-    }
-
-    password->data[0] = 0xAA ^ (uid[1] ^ uid[3]);
-    password->data[1] = 0x55 ^ (uid[2] ^ uid[4]);
-    password->data[2] = 0xAA ^ (uid[3] ^ uid[5]);
-    password->data[3] = 0x55 ^ (uid[4] ^ uid[6]);
-
-    return true;
-}
-
 static int32_t ami_tool_scene_read_worker(void* context);
 static bool ami_tool_scene_read_extract_amiibo_id(AmiToolApp* app, char* buffer, size_t buffer_size);
 static void ami_tool_scene_read_show_info(AmiToolApp* app);
@@ -177,7 +161,7 @@ static int32_t ami_tool_scene_read_worker(void* context) {
                 }
                 ami_tool_store_uid(app, result.uid, result.uid_len);
 
-                if(ami_tool_scene_read_compute_password(
+                if(ami_tool_compute_password_from_uid(
                        uid, result.uid_len, &app->tag_password)) {
                     app->tag_password_valid = true;
                 } else {
@@ -231,10 +215,43 @@ bool ami_tool_scene_read_on_event(void* context, SceneManagerEvent event) {
             ami_tool_scene_read_stop_thread(app);
             ami_tool_scene_read_show_error(app);
             return true;
+        case AmiToolEventInfoShowActions:
+            ami_tool_info_show_actions_menu(app);
+            return true;
+        case AmiToolEventInfoActionEmulate:
+            if(!ami_tool_info_start_emulation(app)) {
+                ami_tool_info_show_action_message(
+                    app, "Unable to start emulation.\nRead or generate an Amiibo first.");
+            }
+            return true;
+        case AmiToolEventInfoActionChangeUid:
+            ami_tool_info_show_action_message(
+                app, "Change UID is not implemented yet.");
+            return true;
+        case AmiToolEventInfoActionWriteTag:
+            ami_tool_info_show_action_message(app, "Write to tag is not available yet.");
+            return true;
+        case AmiToolEventInfoActionSaveToStorage:
+            ami_tool_info_show_action_message(app, "Save to storage is not available yet.");
+            return true;
         default:
             break;
         }
     } else if(event.type == SceneManagerEventTypeBack) {
+        if(app->info_emulation_active) {
+            ami_tool_info_stop_emulation(app);
+            ami_tool_info_show_actions_menu(app);
+            return true;
+        }
+        if(app->info_action_message_visible) {
+            ami_tool_info_show_actions_menu(app);
+            return true;
+        }
+        if(app->info_actions_visible) {
+            app->info_actions_visible = false;
+            view_dispatcher_switch_to_view(app->view_dispatcher, AmiToolViewInfo);
+            return true;
+        }
         app->read_scene_active = false;
         furi_hal_nfc_abort();
         ami_tool_scene_read_stop_thread(app);
@@ -249,6 +266,9 @@ void ami_tool_scene_read_on_exit(void* context) {
     app->read_scene_active = false;
     furi_hal_nfc_abort();
     ami_tool_scene_read_stop_thread(app);
+    ami_tool_info_stop_emulation(app);
+    app->info_actions_visible = false;
+    app->info_action_message_visible = false;
 }
 static bool ami_tool_scene_read_extract_amiibo_id(AmiToolApp* app, char* buffer, size_t buffer_size) {
     if(!app || !buffer || buffer_size < 17) {
