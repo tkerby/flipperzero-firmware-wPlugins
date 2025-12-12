@@ -623,7 +623,7 @@ static bool ami_tool_scene_generate_show_cached_amiibo_menu(AmiToolApp* app) {
     submenu_reset(app->submenu);
     furi_string_printf(
         app->text_box_store,
-        "%s Amiibo (%u/%u)",
+        "%s (%u/%u)",
         furi_string_get_cstr(app->generate_selected_game),
         (unsigned int)current_page,
         (unsigned int)((total_pages > 0) ? total_pages : 1));
