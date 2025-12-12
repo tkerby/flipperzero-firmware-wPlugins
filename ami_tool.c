@@ -39,6 +39,8 @@ AmiToolApp* ami_tool_alloc(void) {
     app->submenu = submenu_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher, AmiToolViewMenu, submenu_get_view(app->submenu));
+    app->generate_page_offset = 0;
+    app->generate_selected_index = 0;
 
     /* TextBox (simple placeholder screens) */
     app->text_box = text_box_alloc();

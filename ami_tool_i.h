@@ -18,6 +18,7 @@
 
 #define AMI_TOOL_RETAIL_KEY_SIZE (160U)
 #define AMI_TOOL_RETAIL_KEY_FILENAME "key_retail.bin"
+#define AMI_TOOL_GENERATE_MAX_AMIIBO_PAGE_ITEMS (32U)
 
 typedef struct AmiToolApp AmiToolApp;
 
@@ -149,6 +150,10 @@ struct AmiToolApp {
     bool retail_key_loaded;
 
     Submenu* submenu;
+
+    // Lazy Amiibo list paging state
+    size_t generate_page_offset;
+    size_t generate_selected_index;
 
     TextBox* text_box;
     FuriString* text_box_store;
