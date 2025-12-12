@@ -83,8 +83,11 @@ AmiToolApp* ami_tool_alloc(void) {
     app->generate_platform = AmiToolGeneratePlatform3DS;
     app->generate_game_count = 0;
     app->generate_amiibo_count = 0;
-    app->generate_amiibo_names = NULL;
-    app->generate_amiibo_ids = NULL;
+    app->generate_page_entry_count = 0;
+    for(size_t i = 0; i < AMI_TOOL_GENERATE_MAX_AMIIBO_PAGE_ITEMS; i++) {
+        app->generate_page_names[i] = furi_string_alloc();
+        app->generate_page_ids[i] = furi_string_alloc();
+    }
     app->generate_selected_game = furi_string_alloc();
 
     return app;
@@ -130,6 +133,16 @@ void ami_tool_free(AmiToolApp* app) {
     if(app->generate_selected_game) {
         furi_string_free(app->generate_selected_game);
         app->generate_selected_game = NULL;
+    }
+    for(size_t i = 0; i < AMI_TOOL_GENERATE_MAX_AMIIBO_PAGE_ITEMS; i++) {
+        if(app->generate_page_names[i]) {
+            furi_string_free(app->generate_page_names[i]);
+            app->generate_page_names[i] = NULL;
+        }
+        if(app->generate_page_ids[i]) {
+            furi_string_free(app->generate_page_ids[i]);
+            app->generate_page_ids[i] = NULL;
+        }
     }
     ami_tool_reset_retail_key(app);
 

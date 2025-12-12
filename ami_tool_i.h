@@ -192,8 +192,9 @@ struct AmiToolApp {
     AmiToolGeneratePlatform generate_platform;
     size_t generate_game_count;
     size_t generate_amiibo_count;
-    FuriString** generate_amiibo_names;
-    FuriString** generate_amiibo_ids;
+    size_t generate_page_entry_count;
+    FuriString* generate_page_names[AMI_TOOL_GENERATE_MAX_AMIIBO_PAGE_ITEMS];
+    FuriString* generate_page_ids[AMI_TOOL_GENERATE_MAX_AMIIBO_PAGE_ITEMS];
     FuriString* generate_selected_game;
 };
 

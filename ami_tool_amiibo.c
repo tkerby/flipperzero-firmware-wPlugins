@@ -4,6 +4,7 @@
 #include <mbedtls/md.h>
 #include <mbedtls/aes.h>
 #include <string.h>
+#include <stdlib.h>
 
 #define AMIIBO_PAGE_COUNT (135U)
 #define AMIIBO_TOTAL_BYTES (AMIIBO_PAGE_COUNT * MF_ULTRALIGHT_PAGE_SIZE)
@@ -22,6 +23,8 @@
 #define AMIIBO_OFFSET_DATA_HASH (0x80U)
 #define AMIIBO_OFFSET_APP_DATA (0xA0U)
 #define AMIIBO_APP_DATA_SIZE (360U)
+#define AMIIBO_OFFSET_APP_ID (AMIIBO_OFFSET_APP_DATA + 8U)
+#define AMIIBO_APP_ID_SIZE (8U)
 #define AMIIBO_OFFSET_DYNAMIC_LOCK (0x208U)
 #define AMIIBO_OFFSET_RESERVED (0x20BU)
 #define AMIIBO_OFFSET_CONFIG (0x20CU)
@@ -107,7 +110,11 @@ RfidxStatus amiibo_derive_key(
 
     const uint8_t* raw = amiibo_bytes_const(tag_data);
 
-    uint8_t prepared_seed[AMIIBO_MAX_SEED_SIZE] = {0};
+    uint8_t* prepared_seed = malloc(AMIIBO_MAX_SEED_SIZE);
+    if(!prepared_seed) {
+        return RFIDX_ARGUMENT_ERROR;
+    }
+    memset(prepared_seed, 0, AMIIBO_MAX_SEED_SIZE);
     size_t type_len = strnlen(input_key->typeString, sizeof(input_key->typeString));
     if(type_len >= sizeof(input_key->typeString)) {
         type_len = sizeof(input_key->typeString) - 1;
@@ -132,14 +139,24 @@ RfidxStatus amiibo_derive_key(
     curr += AMIIBO_KEYGEN_SALT_SIZE;
 
     const size_t prepared_seed_size = curr - prepared_seed;
-    uint8_t buffer[sizeof(uint16_t) + AMIIBO_MAX_SEED_SIZE] = {0};
+    uint8_t* buffer = malloc(sizeof(uint16_t) + AMIIBO_MAX_SEED_SIZE);
+    if(!buffer) {
+        free(prepared_seed);
+        return RFIDX_ARGUMENT_ERROR;
+    }
+    memset(buffer, 0, sizeof(uint16_t) + AMIIBO_MAX_SEED_SIZE);
     memcpy(buffer + sizeof(uint16_t), prepared_seed, prepared_seed_size);
     const size_t buffer_size = sizeof(uint16_t) + prepared_seed_size;
 
     mbedtls_md_context_t hmac_context;
     mbedtls_md_init(&hmac_context);
     const mbedtls_md_info_t* md_info = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
-    mbedtls_md_setup(&hmac_context, md_info, 1);
+    if(mbedtls_md_setup(&hmac_context, md_info, 1) != 0) {
+        free(buffer);
+        free(prepared_seed);
+        mbedtls_md_free(&hmac_context);
+        return RFIDX_ARGUMENT_ERROR;
+    }
     mbedtls_md_hmac_starts(&hmac_context, input_key->hmacKey, sizeof(input_key->hmacKey));
 
     size_t remaining = sizeof(DerivedKey);
@@ -161,6 +178,8 @@ RfidxStatus amiibo_derive_key(
     }
 
     mbedtls_md_free(&hmac_context);
+    free(buffer);
+    free(prepared_seed);
 
     return RFIDX_OK;
 }
@@ -173,8 +192,9 @@ RfidxStatus amiibo_cipher(const DerivedKey* data_key, MfUltralightData* tag_data
         return RFIDX_ARGUMENT_ERROR;
     }
 
-    uint8_t* payload = amiibo_bytes(tag_data) + AMIIBO_OFFSET_TAG_CONFIG;
-    const size_t payload_size = AMIIBO_TAG_CONFIG_SIZE + AMIIBO_APP_DATA_SIZE;
+    uint8_t* raw = amiibo_bytes(tag_data);
+    uint8_t* tag_cfg = raw + AMIIBO_OFFSET_TAG_CONFIG;
+    uint8_t* app_data = raw + AMIIBO_OFFSET_APP_DATA;
 
     mbedtls_aes_context aes;
     mbedtls_aes_init(&aes);
@@ -185,8 +205,12 @@ RfidxStatus amiibo_cipher(const DerivedKey* data_key, MfUltralightData* tag_data
     memcpy(nonce_counter, data_key->aesIV, sizeof(nonce_counter));
     size_t nc_offset = 0;
 
+    // CTR stream must cover both encrypted regions consecutively even though they are
+    // non-contiguous in raw tag memory.
     mbedtls_aes_crypt_ctr(
-        &aes, payload_size, &nc_offset, nonce_counter, stream_block, payload, payload);
+        &aes, AMIIBO_TAG_CONFIG_SIZE, &nc_offset, nonce_counter, stream_block, tag_cfg, tag_cfg);
+    mbedtls_aes_crypt_ctr(
+        &aes, AMIIBO_APP_DATA_SIZE, &nc_offset, nonce_counter, stream_block, app_data, app_data);
 
     mbedtls_aes_free(&aes);
 
@@ -206,7 +230,11 @@ RfidxStatus amiibo_generate_signature(
         return RFIDX_ARGUMENT_ERROR;
     }
 
-    uint8_t signing_buffer[AMIIBO_SIGNING_BUFFER_SIZE] = {0};
+    uint8_t* signing_buffer = malloc(AMIIBO_SIGNING_BUFFER_SIZE);
+    if(!signing_buffer) {
+        return RFIDX_ARGUMENT_ERROR;
+    }
+    memset(signing_buffer, 0, AMIIBO_SIGNING_BUFFER_SIZE);
     const uint8_t* raw = amiibo_bytes_const(tag_data);
 
     memcpy(signing_buffer, raw + AMIIBO_OFFSET_FIXED_A5, 36);
@@ -223,6 +251,8 @@ RfidxStatus amiibo_generate_signature(
 
     mbedtls_md_hmac(
         md_info, data_key->hmacKey, sizeof(data_key->hmacKey), signing_buffer + 1, 479, data_hash);
+
+    free(signing_buffer);
 
     return RFIDX_OK;
 }
@@ -342,6 +372,7 @@ RfidxStatus amiibo_generate(
     furi_hal_random_fill_buf(raw + AMIIBO_OFFSET_KEYGEN_SALT, AMIIBO_KEYGEN_SALT_SIZE);
     memset(raw + AMIIBO_OFFSET_MODEL_INFO, 0, AMIIBO_MODEL_INFO_SIZE);
     memcpy(raw + AMIIBO_OFFSET_MODEL_INFO, uuid, 8);
+    memcpy(raw + AMIIBO_OFFSET_APP_ID, uuid, AMIIBO_APP_ID_SIZE);
 
     RfidxStatus status = amiibo_randomize_uid(raw);
     if(status != RFIDX_OK) {
