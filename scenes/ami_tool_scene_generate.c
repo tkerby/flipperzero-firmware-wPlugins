@@ -1,4 +1,5 @@
 #include "ami_tool_i.h"
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -33,6 +34,9 @@ static bool ami_tool_scene_generate_prepare_amiibo_entries(
 static void ami_tool_scene_generate_show_amiibo_menu(AmiToolApp* app, size_t game_index);
 static void ami_tool_scene_generate_show_amiibo_placeholder(AmiToolApp* app, size_t amiibo_index);
 static void ami_tool_scene_generate_clear_selected_game(AmiToolApp* app);
+static int8_t ami_tool_scene_generate_hex_value(char ch);
+static bool ami_tool_scene_generate_parse_uuid(const char* hex, uint8_t* out, size_t out_len);
+static bool ami_tool_scene_generate_prepare_dump(AmiToolApp* app, const char* id_hex);
 
 static void ami_tool_scene_generate_clear_selected_game(AmiToolApp* app) {
     if(app->generate_selected_game) {
@@ -64,6 +68,72 @@ void ami_tool_generate_clear_amiibo_cache(AmiToolApp* app) {
     }
 
     app->generate_amiibo_count = 0;
+}
+
+static int8_t ami_tool_scene_generate_hex_value(char ch) {
+    if(ch >= '0' && ch <= '9') {
+        return (int8_t)(ch - '0');
+    }
+    ch = (char)tolower((unsigned char)ch);
+    if(ch >= 'a' && ch <= 'f') {
+        return (int8_t)(10 + (ch - 'a'));
+    }
+    return -1;
+}
+
+static bool ami_tool_scene_generate_parse_uuid(const char* hex, uint8_t* out, size_t out_len) {
+    if(!hex || !out || out_len == 0) {
+        return false;
+    }
+    size_t required = out_len * 2;
+    if(strlen(hex) < required) {
+        return false;
+    }
+    for(size_t i = 0; i < out_len; i++) {
+        char hi_char = hex[i * 2];
+        char lo_char = hex[i * 2 + 1];
+        if(hi_char == '\0' || lo_char == '\0') {
+            return false;
+        }
+        int8_t hi = ami_tool_scene_generate_hex_value(hi_char);
+        int8_t lo = ami_tool_scene_generate_hex_value(lo_char);
+        if(hi < 0 || lo < 0) {
+            return false;
+        }
+        out[i] = (uint8_t)((hi << 4) | lo);
+    }
+    return true;
+}
+
+static bool ami_tool_scene_generate_prepare_dump(AmiToolApp* app, const char* id_hex) {
+    if(!app || !app->tag_data || !id_hex) {
+        return false;
+    }
+
+    uint8_t uuid[8];
+    if(!ami_tool_scene_generate_parse_uuid(id_hex, uuid, sizeof(uuid))) {
+        return false;
+    }
+
+    ami_tool_clear_cached_tag(app);
+
+    Ntag21xMetadataHeader header;
+    RfidxStatus status = amiibo_generate(uuid, app->tag_data, &header);
+    if(status != RFIDX_OK) {
+        return false;
+    }
+
+    if(app->tag_data->pages_total < 2) {
+        return false;
+    }
+
+    uint8_t uid[7];
+    memcpy(uid, app->tag_data->page[0].data, 3);
+    memcpy(uid + 3, app->tag_data->page[1].data, 4);
+    ami_tool_store_uid(app, uid, sizeof(uid));
+
+    app->tag_data_valid = true;
+    return true;
 }
 
 static void ami_tool_scene_generate_submenu_callback(void* context, uint32_t index);
@@ -499,7 +569,15 @@ static void ami_tool_scene_generate_show_amiibo_placeholder(AmiToolApp* app, siz
     }
 
     const char* id = furi_string_get_cstr(app->generate_amiibo_ids[amiibo_index]);
-    ami_tool_generate_random_uid(app);
+    if(!ami_tool_scene_generate_prepare_dump(app, id)) {
+        furi_string_printf(
+            app->text_box_store,
+            "Unable to generate Amiibo dump.\n\nID: %s",
+            id ? id : "Unknown");
+        ami_tool_scene_generate_commit_text_view(
+            app, AmiToolGenerateStateMessage, AmiToolGenerateStateAmiiboList);
+        return;
+    }
     ami_tool_info_show_page(app, id, false);
     app->generate_state = AmiToolGenerateStateAmiiboPlaceholder;
     app->generate_return_state = AmiToolGenerateStateAmiiboList;

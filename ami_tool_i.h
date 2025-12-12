@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdint.h>
 #include <furi.h>
 #include <gui/gui.h>
 #include <gui/view_dispatcher.h>
@@ -19,6 +20,56 @@
 #define AMI_TOOL_RETAIL_KEY_FILENAME "key_retail.bin"
 
 typedef struct AmiToolApp AmiToolApp;
+
+typedef enum {
+    RfidxStatusOk = 0,
+    RfidxStatusDrngError,
+    RfidxStatusAmiiboHmacError,
+    RfidxStatusArgumentError,
+} RfidxStatus;
+
+#define RFIDX_OK RfidxStatusOk
+#define RFIDX_DRNG_ERROR RfidxStatusDrngError
+#define RFIDX_AMIIBO_HMAC_VALIDATION_ERROR RfidxStatusAmiiboHmacError
+#define RFIDX_ARGUMENT_ERROR RfidxStatusArgumentError
+
+#define NTAG_SIGNATURE_SIZE (32U)
+
+typedef struct {
+    uint8_t version[8];
+    uint8_t tbo0[2];
+    uint8_t tbo1;
+    uint8_t memory_max;
+    uint8_t signature[NTAG_SIGNATURE_SIZE];
+    uint8_t counter0[3];
+    uint8_t tearing0;
+    uint8_t counter1[3];
+    uint8_t tearing1;
+    uint8_t counter2[3];
+    uint8_t tearing2;
+} Ntag21xMetadataHeader;
+
+#pragma pack(push, 1)
+typedef struct {
+    uint8_t hmacKey[16];
+    char typeString[14];
+    uint8_t rfu;
+    uint8_t magicBytesSize;
+    uint8_t magicBytes[16];
+    uint8_t xorTable[32];
+} DumpedKeySingle;
+
+typedef struct {
+    uint8_t aesKey[16];
+    uint8_t aesIV[16];
+    uint8_t hmacKey[16];
+} DerivedKey;
+
+typedef struct {
+    DumpedKeySingle data;
+    DumpedKeySingle tag;
+} DumpedKeys;
+#pragma pack(pop)
 
 /* View IDs for ViewDispatcher */
 typedef enum {
@@ -136,6 +187,30 @@ void ami_tool_generate_clear_amiibo_cache(AmiToolApp* app);
 void ami_tool_info_show_page(AmiToolApp* app, const char* id_hex, bool from_read);
 void ami_tool_store_uid(AmiToolApp* app, const uint8_t* uid, size_t len);
 void ami_tool_clear_cached_tag(AmiToolApp* app);
-void ami_tool_generate_random_uid(AmiToolApp* app);
 AmiToolRetailKeyStatus ami_tool_load_retail_key(AmiToolApp* app);
 bool ami_tool_has_retail_key(const AmiToolApp* app);
+
+RfidxStatus amiibo_derive_key(
+    const DumpedKeySingle* input_key,
+    const MfUltralightData* tag_data,
+    DerivedKey* derived_key);
+RfidxStatus amiibo_cipher(const DerivedKey* data_key, MfUltralightData* tag_data);
+RfidxStatus amiibo_generate_signature(
+    const DerivedKey* tag_key,
+    const DerivedKey* data_key,
+    const MfUltralightData* tag_data,
+    uint8_t* tag_hash,
+    uint8_t* data_hash);
+RfidxStatus amiibo_validate_signature(
+    const DerivedKey* tag_key,
+    const DerivedKey* data_key,
+    const MfUltralightData* tag_data);
+RfidxStatus amiibo_sign_payload(
+    const DerivedKey* tag_key,
+    const DerivedKey* data_key,
+    MfUltralightData* tag_data);
+RfidxStatus amiibo_format_dump(MfUltralightData* tag_data, Ntag21xMetadataHeader* header);
+RfidxStatus amiibo_generate(
+    const uint8_t* uuid,
+    MfUltralightData* tag_data,
+    Ntag21xMetadataHeader* header);

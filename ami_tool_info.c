@@ -242,6 +242,13 @@ static void ami_tool_info_show_text_info(AmiToolApp* app, const char* message) {
 void ami_tool_info_show_page(AmiToolApp* app, const char* id_hex, bool from_read) {
     furi_assert(app);
 
+    if(!app->tag_data || !app->tag_data_valid) {
+        ami_tool_info_show_text_info(
+            app,
+            "No Amiibo dump available.\nRead a tag or generate one, then try again.");
+        return;
+    }
+
     FuriString* entry = furi_string_alloc();
     bool asset_error = false;
     bool found = ami_tool_info_lookup_entry(app, id_hex, entry, &asset_error);
@@ -314,13 +321,4 @@ void ami_tool_clear_cached_tag(AmiToolApp* app) {
     }
     app->tag_password_valid = false;
     memset(&app->tag_password, 0, sizeof(app->tag_password));
-}
-
-void ami_tool_generate_random_uid(AmiToolApp* app) {
-    if(!app) return;
-    ami_tool_clear_cached_tag(app);
-    uint8_t uid[7] = {0};
-    uid[0] = 0x04;
-    furi_hal_random_fill_buf(&uid[1], sizeof(uid) - 1);
-    ami_tool_store_uid(app, uid, sizeof(uid));
 }
