@@ -1,11 +1,8 @@
-#include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
+#include <furi.h>
+#include "bytes.h"
+#include "debug.h"
 
 #define DELTA 0x9E3779B9
-
-#include "bytes.h"
-#include "./usb/usb_toypad.h"
 
 // Encipher function: core TEA encryption logic
 void encipher(uint32_t* v, uint32_t* k, uint32_t* result) {

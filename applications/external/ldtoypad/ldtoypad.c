@@ -328,12 +328,12 @@ static LDToyPadApp* ldtoypad_app_alloc() {
     ldtoypad_setup_dispatcher(app, gui);
     ldtoypad_setup_main_menu(app);
     ldtoypad_setup_settings(app);
-    ldtoypad_setup_emulation_view(app);
     ldtoypad_setup_about_view(app);
     ldtoypad_setup_minifigure_menu(app);
     ldtoypad_setup_vehicle_menu(app);
     ldtoypad_setup_favorites_menu(app);
     ldtoypad_setup_saved_menu(app);
+    ldtoypad_setup_emulation_view(app);
 
     return app;
 }

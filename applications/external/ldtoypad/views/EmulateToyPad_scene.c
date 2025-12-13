@@ -14,6 +14,7 @@
 #include "dolphin/dolphin.h"
 
 #include "minifigures.h"
+#include "debug.h"
 
 #include "usb/save_toypad.h"
 
@@ -810,7 +811,7 @@ void saved_token_submenu_callback(void* context, uint32_t index) {
     FuriString* filepath = (FuriString*)context;
 
     if(furi_string_utf8_length(filepath) == 0) {
-        set_debug_text("Not good filepath");
+        set_debug_text("Invalid filepath");
         return;
     }
 

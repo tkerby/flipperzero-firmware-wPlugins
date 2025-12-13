@@ -5,12 +5,12 @@
 #include "save_toypad.h"
 #include "../views/EmulateToyPad_scene.h"
 #include "../minifigures.h"
+#include "../debug.h"
 
 #define TAG "LDToyPad"
 
 #define FILEPATH_SIZE          128
 #define FILE_NAME_LEN_MAX      256
-#define MAX_FAVORITES          100
 #define TOKEN_FILE_EXTENSION   ".toy"
 #define TOKENS_DIR             "tokens"
 #define TOYPADS_DIR            "toypads"
