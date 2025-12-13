@@ -13,7 +13,6 @@
 
 #define AMI_TOOL_INFO_READ_BUFFER 96
 #define AMI_TOOL_WRITE_THREAD_STACK_SIZE 2048
-#define AMI_TOOL_NFC_FOLDER ANY_PATH("nfc")
 #define AMI_TOOL_NFC_EXTENSION ".nfc"
 
 typedef enum {
@@ -355,6 +354,46 @@ static void ami_tool_info_format_entry(
     ami_tool_info_append_releases(app->text_box_store, releases);
 
     free(temp);
+}
+
+bool ami_tool_info_get_name_for_id(AmiToolApp* app, const char* id_hex, FuriString* out_name) {
+    if(!app || !out_name || !id_hex || id_hex[0] == '\0') {
+        if(out_name) {
+            furi_string_reset(out_name);
+        }
+        return false;
+    }
+
+    FuriString* entry = furi_string_alloc();
+    bool asset_error = false;
+    bool found = ami_tool_info_lookup_entry(app, id_hex, entry, &asset_error);
+
+    if(found) {
+        const char* raw = furi_string_get_cstr(entry);
+        const char* data = raw;
+        const char* colon = strchr(raw, ':');
+        if(colon) {
+            data = colon + 1;
+            while(*data == ' ') {
+                data++;
+            }
+        }
+        const char* end = data;
+        while(*end && *end != '|' && *end != '\r' && *end != '\n') {
+            end++;
+        }
+        if(end > data) {
+            furi_string_reset(out_name);
+            furi_string_cat_printf(out_name, "%.*s", (int)(end - data), data);
+        } else {
+            furi_string_set(out_name, id_hex);
+        }
+    } else {
+        furi_string_set(out_name, id_hex);
+    }
+
+    furi_string_free(entry);
+    return found && furi_string_size(out_name) > 0;
 }
 
 static void ami_tool_info_show_text_info(AmiToolApp* app, const char* message) {

@@ -20,6 +20,8 @@
 #define AMI_TOOL_RETAIL_KEY_SIZE (160U)
 #define AMI_TOOL_RETAIL_KEY_FILENAME "key_retail.bin"
 #define AMI_TOOL_GENERATE_MAX_AMIIBO_PAGE_ITEMS (32U)
+#define AMI_TOOL_SAVED_MAX_PAGE_ITEMS (12U)
+#define AMI_TOOL_NFC_FOLDER ANY_PATH("nfc")
 
 typedef struct AmiToolApp AmiToolApp;
 
@@ -208,6 +210,13 @@ struct AmiToolApp {
     FuriString* generate_page_names[AMI_TOOL_GENERATE_MAX_AMIIBO_PAGE_ITEMS];
     FuriString* generate_page_ids[AMI_TOOL_GENERATE_MAX_AMIIBO_PAGE_ITEMS];
     FuriString* generate_selected_game;
+    size_t saved_page_offset;
+    size_t saved_page_entry_count;
+    bool saved_has_next_page;
+    bool saved_info_visible;
+    FuriString* saved_page_display[AMI_TOOL_SAVED_MAX_PAGE_ITEMS];
+    FuriString* saved_page_paths[AMI_TOOL_SAVED_MAX_PAGE_ITEMS];
+    FuriString* saved_page_ids[AMI_TOOL_SAVED_MAX_PAGE_ITEMS];
 };
 
 /* Scene handlers table */
@@ -225,6 +234,7 @@ void ami_tool_info_stop_emulation(AmiToolApp* app);
 bool ami_tool_info_change_uid(AmiToolApp* app);
 bool ami_tool_info_write_to_tag(AmiToolApp* app);
 bool ami_tool_info_save_to_storage(AmiToolApp* app);
+bool ami_tool_info_get_name_for_id(AmiToolApp* app, const char* id_hex, FuriString* out_name);
 void ami_tool_info_handle_write_event(AmiToolApp* app, AmiToolCustomEvent event);
 bool ami_tool_info_request_write_cancel(AmiToolApp* app);
 void ami_tool_info_abort_write(AmiToolApp* app);

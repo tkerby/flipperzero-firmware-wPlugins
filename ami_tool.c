@@ -97,6 +97,15 @@ AmiToolApp* ami_tool_alloc(void) {
         app->generate_page_ids[i] = furi_string_alloc();
     }
     app->generate_selected_game = furi_string_alloc();
+    app->saved_page_offset = 0;
+    app->saved_page_entry_count = 0;
+    app->saved_has_next_page = false;
+    app->saved_info_visible = false;
+    for(size_t i = 0; i < AMI_TOOL_SAVED_MAX_PAGE_ITEMS; i++) {
+        app->saved_page_display[i] = furi_string_alloc();
+        app->saved_page_paths[i] = furi_string_alloc();
+        app->saved_page_ids[i] = furi_string_alloc();
+    }
 
     return app;
 }
@@ -151,6 +160,20 @@ void ami_tool_free(AmiToolApp* app) {
         if(app->generate_page_ids[i]) {
             furi_string_free(app->generate_page_ids[i]);
             app->generate_page_ids[i] = NULL;
+        }
+    }
+    for(size_t i = 0; i < AMI_TOOL_SAVED_MAX_PAGE_ITEMS; i++) {
+        if(app->saved_page_display[i]) {
+            furi_string_free(app->saved_page_display[i]);
+            app->saved_page_display[i] = NULL;
+        }
+        if(app->saved_page_paths[i]) {
+            furi_string_free(app->saved_page_paths[i]);
+            app->saved_page_paths[i] = NULL;
+        }
+        if(app->saved_page_ids[i]) {
+            furi_string_free(app->saved_page_ids[i]);
+            app->saved_page_ids[i] = NULL;
         }
     }
     ami_tool_reset_retail_key(app);
