@@ -39,6 +39,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [NFC Playlist v3.4 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
 - Updated: [LEGO Dimensions Toy Pad v0.5 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
 - [ESP Flasher: Bump Marauder v1.9.0 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.9.0)
+- UL: [Sub-GHz: SecPlus v1 and v2 fixes (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/3c126874c4bb303f7d675022d6a7c4ff9d1f49f8)
 
 <a name="release">
 
