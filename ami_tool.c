@@ -56,6 +56,9 @@ AmiToolApp* ami_tool_alloc(void) {
     app->info_actions_visible = false;
     app->info_action_message_visible = false;
     app->info_emulation_active = false;
+    app->info_last_from_read = false;
+    app->info_last_has_id = false;
+    memset(app->info_last_id, 0, sizeof(app->info_last_id));
 
     /* Storage (for assets) */
     app->storage = furi_record_open(RECORD_STORAGE);

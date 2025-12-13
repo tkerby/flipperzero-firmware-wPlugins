@@ -2,6 +2,8 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#include <string.h>
 #include <input/input.h>
 #include <nfc/nfc.h>
 #include <nfc/nfc_listener.h>
@@ -294,6 +296,16 @@ static void ami_tool_info_show_widget_text(AmiToolApp* app, const char* text) {
 void ami_tool_info_show_page(AmiToolApp* app, const char* id_hex, bool from_read) {
     furi_assert(app);
 
+    app->info_last_from_read = from_read;
+    if(id_hex && id_hex[0] != '\0') {
+        strncpy(app->info_last_id, id_hex, sizeof(app->info_last_id) - 1);
+        app->info_last_id[sizeof(app->info_last_id) - 1] = '\0';
+        app->info_last_has_id = true;
+    } else {
+        app->info_last_id[0] = '\0';
+        app->info_last_has_id = false;
+    }
+
     if(!app->tag_data || !app->tag_data_valid) {
         ami_tool_info_show_text_info(
             app,
@@ -379,6 +391,119 @@ void ami_tool_clear_cached_tag(AmiToolApp* app) {
     }
     app->tag_password_valid = false;
     memset(&app->tag_password, 0, sizeof(app->tag_password));
+}
+
+bool ami_tool_extract_amiibo_id(
+    const MfUltralightData* tag_data,
+    char* buffer,
+    size_t buffer_size) {
+    if(!tag_data || !buffer || buffer_size < 17) {
+        return false;
+    }
+    const size_t start_page = 21;
+    if(tag_data->pages_total <= (start_page + 1)) {
+        return false;
+    }
+
+    uint8_t raw[8];
+    for(size_t i = 0; i < 4; i++) {
+        raw[i] = tag_data->page[start_page].data[i];
+        raw[i + 4] = tag_data->page[start_page + 1].data[i];
+    }
+
+    for(size_t i = 0; i < 8; i++) {
+        snprintf(buffer + (i * 2), buffer_size - (i * 2), "%02X", raw[i]);
+    }
+    buffer[16] = '\0';
+
+    return true;
+}
+
+bool ami_tool_info_change_uid(AmiToolApp* app) {
+    furi_assert(app);
+
+    if(!app->tag_data || !app->tag_data_valid) {
+        return false;
+    }
+
+    ami_tool_info_stop_emulation(app);
+
+    if(!ami_tool_has_retail_key(app)) {
+        if(ami_tool_load_retail_key(app) != AmiToolRetailKeyStatusOk) {
+            return false;
+        }
+    }
+
+    const DumpedKeys* keys = (const DumpedKeys*)app->retail_key;
+    DerivedKey old_data_key = {0};
+    DerivedKey old_tag_key = {0};
+    DerivedKey* cleanup_key = &old_data_key;
+    RfidxStatus status = amiibo_derive_key(&keys->data, app->tag_data, &old_data_key);
+    if(status != RFIDX_OK) {
+        return false;
+    }
+    status = amiibo_derive_key(&keys->tag, app->tag_data, &old_tag_key);
+    if(status != RFIDX_OK) {
+        return false;
+    }
+
+    bool decrypted = false;
+    status = amiibo_cipher(&old_data_key, app->tag_data);
+    if(status != RFIDX_OK) {
+        return false;
+    }
+    decrypted = true;
+
+    status = amiibo_change_uid(app->tag_data);
+    if(status != RFIDX_OK) {
+        goto cleanup;
+    }
+
+    DerivedKey new_data_key = {0};
+    DerivedKey new_tag_key = {0};
+
+    status = amiibo_derive_key(&keys->data, app->tag_data, &new_data_key);
+    if(status != RFIDX_OK) goto cleanup;
+    status = amiibo_derive_key(&keys->tag, app->tag_data, &new_tag_key);
+    if(status != RFIDX_OK) goto cleanup;
+    cleanup_key = &new_data_key;
+
+    status = amiibo_sign_payload(&new_tag_key, &new_data_key, app->tag_data);
+    if(status != RFIDX_OK) goto cleanup;
+
+    status = amiibo_cipher(&new_data_key, app->tag_data);
+    if(status != RFIDX_OK) {
+        decrypted = true;
+        goto cleanup;
+    }
+    decrypted = false;
+
+    amiibo_configure_rf_interface(app->tag_data);
+
+    if(app->tag_data->pages_total >= 2) {
+        uint8_t uid[7];
+        memcpy(uid, app->tag_data->page[0].data, 3);
+        memcpy(uid + 3, app->tag_data->page[1].data, 4);
+        ami_tool_store_uid(app, uid, sizeof(uid));
+        if(ami_tool_compute_password_from_uid(uid, sizeof(uid), &app->tag_password)) {
+            app->tag_password_valid = true;
+        } else {
+            app->tag_password_valid = false;
+            memset(&app->tag_password, 0, sizeof(app->tag_password));
+        }
+    }
+
+    const char* id_arg = app->info_last_has_id ? app->info_last_id : NULL;
+    ami_tool_info_show_page(app, id_arg, app->info_last_from_read);
+
+    return true;
+
+cleanup:
+    if(decrypted) {
+        amiibo_cipher(cleanup_key, app->tag_data);
+    }
+    amiibo_configure_rf_interface(app->tag_data);
+    return false;
 }
 
 static void ami_tool_info_actions_submenu_callback(void* context, uint32_t index) {

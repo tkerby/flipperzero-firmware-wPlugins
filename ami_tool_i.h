@@ -173,6 +173,9 @@ struct AmiToolApp {
     bool info_actions_visible;
     bool info_action_message_visible;
     bool info_emulation_active;
+    bool info_last_from_read;
+    bool info_last_has_id;
+    char info_last_id[17];
 
     Nfc* nfc;
     FuriThread* read_thread;
@@ -210,6 +213,7 @@ void ami_tool_info_show_actions_menu(AmiToolApp* app);
 void ami_tool_info_show_action_message(AmiToolApp* app, const char* message);
 bool ami_tool_info_start_emulation(AmiToolApp* app);
 void ami_tool_info_stop_emulation(AmiToolApp* app);
+bool ami_tool_info_change_uid(AmiToolApp* app);
 bool ami_tool_compute_password_from_uid(
     const uint8_t* uid,
     size_t uid_len,
@@ -218,6 +222,10 @@ void ami_tool_store_uid(AmiToolApp* app, const uint8_t* uid, size_t len);
 void ami_tool_clear_cached_tag(AmiToolApp* app);
 AmiToolRetailKeyStatus ami_tool_load_retail_key(AmiToolApp* app);
 bool ami_tool_has_retail_key(const AmiToolApp* app);
+bool ami_tool_extract_amiibo_id(
+    const MfUltralightData* tag_data,
+    char* buffer,
+    size_t buffer_size);
 
 RfidxStatus amiibo_derive_key(
     const DumpedKeySingle* input_key,
@@ -239,6 +247,7 @@ RfidxStatus amiibo_sign_payload(
     const DerivedKey* data_key,
     MfUltralightData* tag_data);
 RfidxStatus amiibo_format_dump(MfUltralightData* tag_data, Ntag21xMetadataHeader* header);
+RfidxStatus amiibo_change_uid(MfUltralightData* tag_data);
 void amiibo_configure_rf_interface(MfUltralightData* tag_data);
 RfidxStatus amiibo_generate(
     const uint8_t* uuid,

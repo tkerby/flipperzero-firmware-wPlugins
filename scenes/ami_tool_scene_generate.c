@@ -1100,8 +1100,10 @@ bool ami_tool_scene_generate_on_event(void* context, SceneManagerEvent event) {
             }
             return true;
         case AmiToolEventInfoActionChangeUid:
-            ami_tool_info_show_action_message(
-                app, "Change UID is not implemented yet.");
+            if(!ami_tool_info_change_uid(app)) {
+                ami_tool_info_show_action_message(
+                    app, "Unable to change UID.\nInstall key_retail.bin and try again.");
+            }
             return true;
         case AmiToolEventInfoActionWriteTag:
             ami_tool_info_show_action_message(app, "Write to tag is not available yet.");

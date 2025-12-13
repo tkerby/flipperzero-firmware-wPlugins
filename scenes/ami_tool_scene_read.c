@@ -101,7 +101,6 @@ static void ami_tool_scene_read_show_error(AmiToolApp* app) {
 }
 
 static int32_t ami_tool_scene_read_worker(void* context);
-static bool ami_tool_scene_read_extract_amiibo_id(AmiToolApp* app, char* buffer, size_t buffer_size);
 static void ami_tool_scene_read_show_info(AmiToolApp* app);
 
 static void ami_tool_scene_read_start_worker(AmiToolApp* app) {
@@ -225,8 +224,10 @@ bool ami_tool_scene_read_on_event(void* context, SceneManagerEvent event) {
             }
             return true;
         case AmiToolEventInfoActionChangeUid:
-            ami_tool_info_show_action_message(
-                app, "Change UID is not implemented yet.");
+            if(!ami_tool_info_change_uid(app)) {
+                ami_tool_info_show_action_message(
+                    app, "Unable to change UID.\nInstall key_retail.bin and try again.");
+            }
             return true;
         case AmiToolEventInfoActionWriteTag:
             ami_tool_info_show_action_message(app, "Write to tag is not available yet.");
@@ -270,35 +271,9 @@ void ami_tool_scene_read_on_exit(void* context) {
     app->info_actions_visible = false;
     app->info_action_message_visible = false;
 }
-static bool ami_tool_scene_read_extract_amiibo_id(AmiToolApp* app, char* buffer, size_t buffer_size) {
-    if(!app || !buffer || buffer_size < 17) {
-        return false;
-    }
-    if(!app->tag_data_valid || !app->tag_data) {
-        return false;
-    }
-
-    const size_t start_page = 21;
-    if(app->tag_data->pages_total <= (start_page + 1)) {
-        return false;
-    }
-
-    uint8_t raw[8];
-    for(size_t i = 0; i < 4; i++) {
-        raw[i] = app->tag_data->page[start_page].data[i];
-        raw[i + 4] = app->tag_data->page[start_page + 1].data[i];
-    }
-
-    for(size_t i = 0; i < 8; i++) {
-        snprintf(buffer + (i * 2), buffer_size - (i * 2), "%02X", raw[i]);
-    }
-    buffer[16] = '\0';
-
-    return true;
-}
-
 static void ami_tool_scene_read_show_info(AmiToolApp* app) {
     char id_hex[17] = {0};
-    bool has_id = ami_tool_scene_read_extract_amiibo_id(app, id_hex, sizeof(id_hex));
+    bool has_id =
+        ami_tool_extract_amiibo_id(app->tag_data_valid ? app->tag_data : NULL, id_hex, sizeof(id_hex));
     ami_tool_info_show_page(app, has_id ? id_hex : NULL, true);
 }

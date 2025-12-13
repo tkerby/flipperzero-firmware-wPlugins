@@ -580,6 +580,32 @@ RfidxStatus amiibo_format_dump(MfUltralightData* tag_data, Ntag21xMetadataHeader
     return RFIDX_OK;
 }
 
+RfidxStatus amiibo_change_uid(MfUltralightData* tag_data) {
+    if(!tag_data) {
+        return RFIDX_ARGUMENT_ERROR;
+    }
+    if(!amiibo_has_full_dump(tag_data)) {
+        return RFIDX_ARGUMENT_ERROR;
+    }
+
+    uint8_t* raw = amiibo_bytes(tag_data);
+    RfidxStatus status = amiibo_randomize_uid(raw);
+    if(status != RFIDX_OK) {
+        return status;
+    }
+
+    amiibo_store_uid_copy(raw);
+
+    uint8_t password[4];
+    amiibo_calculate_password(raw, password);
+    memcpy(raw + AMIIBO_OFFSET_CONFIG + 8, password, sizeof(password));
+
+    amiibo_write_checksums(raw);
+    amiibo_configure_rf_interface(tag_data);
+
+    return RFIDX_OK;
+}
+
 RfidxStatus amiibo_generate(
     const uint8_t* uuid,
     MfUltralightData* tag_data,
