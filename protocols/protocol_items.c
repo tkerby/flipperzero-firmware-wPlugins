@@ -1,4 +1,3 @@
-// protocols/protocol_items.c
 #include "protocol_items.h"
 
 const SubGhzProtocol* protopirate_protocol_registry_items[] = {
@@ -11,6 +10,7 @@ const SubGhzProtocol* protopirate_protocol_registry_items[] = {
     &subaru_protocol,
     &suzuki_protocol,
     &vw_protocol,
+    &fiat_protocol_v0,
 };
 
 const SubGhzProtocolRegistry protopirate_protocol_registry = {
