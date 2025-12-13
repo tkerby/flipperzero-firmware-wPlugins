@@ -40,8 +40,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [LEGO Dimensions Toy Pad v0.5 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
 - [ESP Flasher: Bump Marauder v1.9.0 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.9.0)
 - UL: [Sub-GHz: SecPlus v1 and v2 fixes (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/3c126874c4bb303f7d675022d6a7c4ff9d1f49f8)
-- UL: [NFC: Mf Clasic Updates (By noproto)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/1a31d3b7e5c4d521127b9e34ebc0e92da7580ed9)
-- Updated: [Mfkey v4.0 (By noproto)](https://github.com/noproto/FlipperMfkey)
+- [NFC: Keys found in key cache are now used in Nested attacks, deleting key cache is no longer required (By noproto)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/1a31d3b7e5c4d521127b9e34ebc0e92da7580ed9)
+- Updated: [Mfkey v4.0 (By noproto)](https://github.com/noproto/FlipperMfkey) MIFARE Classic Static Encrypted Nested attacks run 10x faster (By noproto)
+- OFW: PR: [Added Support for MIFARE Plus 2K Cards in SL1 Mode #4316 (By LuemmelSec)](https://github.com/flipperdevices/flipperzero-firmware/pull/4316)
 
 <a name="release">
 
