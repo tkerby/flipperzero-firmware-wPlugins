@@ -243,7 +243,11 @@ bool ami_tool_scene_read_on_event(void* context, SceneManagerEvent event) {
             }
             return true;
         case AmiToolEventInfoActionSaveToStorage:
-            ami_tool_info_show_action_message(app, "Save to storage is not available yet.");
+            if(!ami_tool_info_save_to_storage(app)) {
+                ami_tool_info_show_action_message(
+                    app,
+                    "Unable to save Amiibo.\nRead or generate one first\nand check storage access.");
+            }
             return true;
         default:
             break;

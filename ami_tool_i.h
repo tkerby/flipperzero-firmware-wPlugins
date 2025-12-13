@@ -224,6 +224,7 @@ bool ami_tool_info_start_emulation(AmiToolApp* app);
 void ami_tool_info_stop_emulation(AmiToolApp* app);
 bool ami_tool_info_change_uid(AmiToolApp* app);
 bool ami_tool_info_write_to_tag(AmiToolApp* app);
+bool ami_tool_info_save_to_storage(AmiToolApp* app);
 void ami_tool_info_handle_write_event(AmiToolApp* app, AmiToolCustomEvent event);
 bool ami_tool_info_request_write_cancel(AmiToolApp* app);
 void ami_tool_info_abort_write(AmiToolApp* app);

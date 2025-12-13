@@ -8,10 +8,13 @@
 #include <nfc/nfc.h>
 #include <nfc/nfc_listener.h>
 #include <nfc/protocols/nfc_generic_event.h>
+#include <nfc/nfc_device.h>
 #include <furi_hal_nfc.h>
 
 #define AMI_TOOL_INFO_READ_BUFFER 96
 #define AMI_TOOL_WRITE_THREAD_STACK_SIZE 2048
+#define AMI_TOOL_NFC_FOLDER ANY_PATH("nfc")
+#define AMI_TOOL_NFC_EXTENSION ".nfc"
 
 typedef enum {
     AmiToolInfoActionMenuIndexEmulate,
@@ -46,6 +49,66 @@ bool ami_tool_compute_password_from_uid(
     password->data[2] = 0xAA ^ (uid[3] ^ uid[5]);
     password->data[3] = 0x55 ^ (uid[4] ^ uid[6]);
 
+    return true;
+}
+
+static void ami_tool_info_compact_hex_string(const char* input, char* output, size_t output_size) {
+    if(!output || output_size == 0) {
+        return;
+    }
+    output[0] = '\0';
+    if(!input) {
+        return;
+    }
+
+    size_t index = 0;
+    while(*input && (index + 1) < output_size) {
+        char ch = *input++;
+        if(isalnum((unsigned char)ch)) {
+            output[index++] = (char)toupper((unsigned char)ch);
+        }
+    }
+    output[index] = '\0';
+}
+
+static bool ami_tool_info_format_uid_string(
+    const AmiToolApp* app,
+    char* buffer,
+    size_t buffer_size) {
+    if(!app || !buffer || buffer_size < 3) {
+        return false;
+    }
+
+    size_t uid_len = 0;
+    const uint8_t* uid_ptr = NULL;
+    uint8_t temp_uid[10] = {0};
+
+    if(app->last_uid_valid && app->last_uid_len > 0) {
+        uid_ptr = app->last_uid;
+        uid_len = app->last_uid_len;
+    } else if(app->tag_data) {
+        uid_ptr = mf_ultralight_get_uid(app->tag_data, &uid_len);
+    }
+
+    if(!uid_ptr || uid_len == 0) {
+        return false;
+    }
+
+    // Ensure UID length does not exceed buffer (max 10 bytes -> 20 hex chars)
+    if(uid_len > sizeof(temp_uid)) {
+        uid_len = sizeof(temp_uid);
+    }
+    memcpy(temp_uid, uid_ptr, uid_len);
+
+    size_t required = (uid_len * 2) + 1;
+    if(buffer_size < required) {
+        return false;
+    }
+
+    for(size_t i = 0; i < uid_len; i++) {
+        snprintf(buffer + (i * 2), buffer_size - (i * 2), "%02X", temp_uid[i]);
+    }
+    buffer[uid_len * 2] = '\0';
     return true;
 }
 
@@ -706,6 +769,71 @@ bool ami_tool_info_write_to_tag(AmiToolApp* app) {
 
     furi_thread_start(app->write_thread);
     return true;
+}
+
+bool ami_tool_info_save_to_storage(AmiToolApp* app) {
+    furi_assert(app);
+
+    if(!app->tag_data || !app->tag_data_valid || !app->storage) {
+        return false;
+    }
+
+    char id_hex[32] = {0};
+    if(app->info_last_has_id && app->info_last_id[0] != '\0') {
+        ami_tool_info_compact_hex_string(app->info_last_id, id_hex, sizeof(id_hex));
+    } else if(!ami_tool_extract_amiibo_id(app->tag_data, id_hex, sizeof(id_hex))) {
+        strncpy(id_hex, "AMIIBO", sizeof(id_hex) - 1);
+        id_hex[sizeof(id_hex) - 1] = '\0';
+    }
+    if(id_hex[0] == '\0') {
+        strncpy(id_hex, "AMIIBO", sizeof(id_hex) - 1);
+        id_hex[sizeof(id_hex) - 1] = '\0';
+    }
+
+    char uid_hex[32] = {0};
+    if(!ami_tool_info_format_uid_string(app, uid_hex, sizeof(uid_hex))) {
+        return false;
+    }
+
+    if(!storage_simply_mkdir(app->storage, AMI_TOOL_NFC_FOLDER)) {
+        if(!storage_common_exists(app->storage, AMI_TOOL_NFC_FOLDER)) {
+            return false;
+        }
+    }
+
+    FuriString* path = furi_string_alloc();
+    if(!path) {
+        return false;
+    }
+
+    furi_string_printf(
+        path, "%s/%s-%s%s", AMI_TOOL_NFC_FOLDER, id_hex, uid_hex, AMI_TOOL_NFC_EXTENSION);
+
+    NfcDevice* device = nfc_device_alloc();
+    bool success = false;
+    if(device) {
+        amiibo_configure_rf_interface(app->tag_data);
+        nfc_device_set_data(
+            device, NfcProtocolMfUltralight, (const NfcDeviceData*)app->tag_data);
+        success = nfc_device_save(device, furi_string_get_cstr(path));
+        nfc_device_free(device);
+    }
+
+    if(success) {
+        const char* saved_path = furi_string_get_cstr(path);
+        const char* file_name = strrchr(saved_path, '/');
+        if(file_name && file_name[1] != '\0') {
+            file_name++;
+        } else {
+            file_name = saved_path;
+        }
+        char message[128];
+        snprintf(message, sizeof(message), "Saved Amiibo as\n%s", file_name);
+        ami_tool_info_show_action_message(app, message);
+    }
+
+    furi_string_free(path);
+    return success;
 }
 
 static void ami_tool_info_actions_submenu_callback(void* context, uint32_t index) {
