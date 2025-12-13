@@ -40,7 +40,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [LEGO Dimensions Toy Pad v0.5 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
 - [ESP Flasher: Bump Marauder v1.9.0 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.9.0)
 - UL: [Sub-GHz: SecPlus v1 and v2 fixes (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/3c126874c4bb303f7d675022d6a7c4ff9d1f49f8)
-- UL: [Mf Clasic Updates (By noproto)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/bd6661a77277f9128e7fc449851eae56ce5cbbf7)
+- UL: [NFC: Mf Clasic Updates (By noproto)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/1a31d3b7e5c4d521127b9e34ebc0e92da7580ed9)
 - Updated: [Mfkey v4.0 (By noproto)](https://github.com/noproto/FlipperMfkey)
 
 <a name="release">
