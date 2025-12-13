@@ -211,7 +211,7 @@ static inline const uint8_t* amiibo_bytes_const(const MfUltralightData* tag_data
     return &tag_data->page[0].data[0];
 }
 
-static void amiibo_configure_rf_interface(MfUltralightData* tag_data) {
+void amiibo_configure_rf_interface(MfUltralightData* tag_data) {
     if(!tag_data) {
         return;
     }
@@ -230,7 +230,6 @@ static void amiibo_configure_rf_interface(MfUltralightData* tag_data) {
     if(iso) {
         static const uint8_t atqa[2] = {0x44, 0x00};
         iso14443_3a_set_atqa(iso, atqa);
-        iso14443_3a_set_sak(iso, 0x04);
     }
 }
 

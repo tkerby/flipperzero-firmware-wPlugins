@@ -239,6 +239,7 @@ RfidxStatus amiibo_sign_payload(
     const DerivedKey* data_key,
     MfUltralightData* tag_data);
 RfidxStatus amiibo_format_dump(MfUltralightData* tag_data, Ntag21xMetadataHeader* header);
+void amiibo_configure_rf_interface(MfUltralightData* tag_data);
 RfidxStatus amiibo_generate(
     const uint8_t* uuid,
     MfUltralightData* tag_data,

@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <input/input.h>
+#include <nfc/nfc.h>
+#include <nfc/nfc_listener.h>
+#include <nfc/protocols/nfc_generic_event.h>
 
 #define AMI_TOOL_INFO_READ_BUFFER 96
 
@@ -471,11 +474,19 @@ static bool ami_tool_info_write_password_pages(
     return true;
 }
 
+static NfcCommand amiibo_emulation_cb(NfcGenericEvent event, void* context) {
+    (void)event;
+    (void)context;
+    return NfcCommandContinue; // keep the listener alive
+}
+
 bool ami_tool_info_start_emulation(AmiToolApp* app) {
     furi_assert(app);
     if(!app->tag_data || !app->tag_data_valid || !app->nfc) {
         return false;
     }
+
+    amiibo_configure_rf_interface(app->tag_data);
 
     MfUltralightAuthPassword password = {0};
     if(app->tag_password_valid) {
@@ -498,7 +509,7 @@ bool ami_tool_info_start_emulation(AmiToolApp* app) {
     if(!app->emulation_listener) {
         return false;
     }
-    nfc_listener_start(app->emulation_listener, NULL, NULL);
+    nfc_listener_start(app->emulation_listener, amiibo_emulation_cb, app);
 
     furi_string_set(
         app->text_box_store,
