@@ -7,7 +7,6 @@
 
 #include "usb/save_toypad.h"
 
-// Our application menu has 3 items.  You can add more items if you want.
 typedef enum {
     EmulateToyPadSubmenuIndex,
     SettingsSubmenuIndex,
@@ -373,6 +372,8 @@ static void ldtoypad_app_free(LDToyPadApp* app) {
     submenu_free(app->submenu_favorites_selection);
 
     free_saved_submenu(app);
+
+    view_dispatcher_free(app->view_dispatcher);
 
     furi_record_close(RECORD_GUI);
 

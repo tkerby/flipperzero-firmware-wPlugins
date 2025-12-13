@@ -7,8 +7,7 @@
 extern "C" {
 #endif
 
-#define MAX_FAVORITES       100
-#define FILE_NAME_FAVORITES "favs.bin"
+#define MAX_FAVORITES 100
 
 extern int favorite_ids[MAX_FAVORITES];
 extern int num_favorites;
