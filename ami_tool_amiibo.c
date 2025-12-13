@@ -51,6 +51,34 @@
 #define AMIIBO_SIGNING_BUFFER_SIZE (480U)
 #define AMIIBO_MAX_SEED_SIZE (480U)
 
+static const uint8_t amiibo_ntag215_atqa[2] = {0x44, 0x00};
+static const uint8_t amiibo_ntag215_sak = 0x00;
+static const MfUltralightVersion amiibo_ntag215_version = {
+    .header = 0x00,
+    .vendor_id = 0x04,
+    .prod_type = 0x04,
+    .prod_subtype = 0x02,
+    .prod_ver_major = 0x01,
+    .prod_ver_minor = 0x00,
+    .storage_size = 0x11,
+    .protocol_type = 0x03,
+};
+static const uint8_t amiibo_ntag215_signature[NTAG_SIGNATURE_SIZE] = {0};
+
+static void amiibo_apply_ntag215_metadata(MfUltralightData* tag_data) {
+    if(!tag_data) {
+        return;
+    }
+
+    tag_data->version = amiibo_ntag215_version;
+    memcpy(tag_data->signature.data, amiibo_ntag215_signature, sizeof(amiibo_ntag215_signature));
+
+    for(size_t i = 0; i < MF_ULTRALIGHT_COUNTER_NUM; i++) {
+        tag_data->counter[i].counter = 0;
+        tag_data->tearing_flag[i].data = 0x00;
+    }
+}
+
 static size_t amiibo_strnlen_safe(const char* str, size_t max_len) {
     size_t len = 0;
     if(!str) {
@@ -215,6 +243,11 @@ void amiibo_configure_rf_interface(MfUltralightData* tag_data) {
     if(!tag_data) {
         return;
     }
+
+    if(tag_data->version.vendor_id == 0 && tag_data->version.storage_size == 0) {
+        amiibo_apply_ntag215_metadata(tag_data);
+    }
+
     uint8_t* raw = amiibo_bytes(tag_data);
     uint8_t uid[ISO14443_3A_UID_7_BYTES];
     uid[0] = raw[0];
@@ -228,8 +261,8 @@ void amiibo_configure_rf_interface(MfUltralightData* tag_data) {
 
     Iso14443_3aData* iso = mf_ultralight_get_base_data(tag_data);
     if(iso) {
-        static const uint8_t atqa[2] = {0x44, 0x00};
-        iso14443_3a_set_atqa(iso, atqa);
+        iso14443_3a_set_atqa(iso, amiibo_ntag215_atqa);
+        iso14443_3a_set_sak(iso, amiibo_ntag215_sak);
     }
 }
 
@@ -534,6 +567,8 @@ RfidxStatus amiibo_format_dump(MfUltralightData* tag_data, Ntag21xMetadataHeader
     raw[AMIIBO_OFFSET_CONFIG + 14] = 0x00;
     raw[AMIIBO_OFFSET_CONFIG + 15] = 0x00;
     memset(raw + AMIIBO_OFFSET_AUTH_MAGIC, 0, AMIIBO_AUTH_MAGIC_SIZE);
+
+    amiibo_apply_ntag215_metadata(tag_data);
 
     if(header) {
         memset(header, 0, sizeof(*header));
