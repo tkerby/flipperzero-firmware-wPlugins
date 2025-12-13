@@ -5,6 +5,7 @@
 #include <mbedtls/aes.h>
 #include <string.h>
 #include <stdlib.h>
+#include <nfc/protocols/iso14443_3a/iso14443_3a.h>
 
 #define AMIIBO_PAGE_COUNT (135U)
 #define AMIIBO_TOTAL_BYTES (AMIIBO_PAGE_COUNT * MF_ULTRALIGHT_PAGE_SIZE)
@@ -208,6 +209,29 @@ static inline uint8_t* amiibo_bytes(MfUltralightData* tag_data) {
 
 static inline const uint8_t* amiibo_bytes_const(const MfUltralightData* tag_data) {
     return &tag_data->page[0].data[0];
+}
+
+static void amiibo_configure_rf_interface(MfUltralightData* tag_data) {
+    if(!tag_data) {
+        return;
+    }
+    uint8_t* raw = amiibo_bytes(tag_data);
+    uint8_t uid[ISO14443_3A_UID_7_BYTES];
+    uid[0] = raw[0];
+    uid[1] = raw[1];
+    uid[2] = raw[2];
+    uid[3] = raw[4];
+    uid[4] = raw[5];
+    uid[5] = raw[6];
+    uid[6] = raw[7];
+    mf_ultralight_set_uid(tag_data, uid, sizeof(uid));
+
+    Iso14443_3aData* iso = mf_ultralight_get_base_data(tag_data);
+    if(iso) {
+        static const uint8_t atqa[2] = {0x44, 0x00};
+        iso14443_3a_set_atqa(iso, atqa);
+        iso14443_3a_set_sak(iso, 0x04);
+    }
 }
 
 static bool amiibo_has_full_dump(const MfUltralightData* tag_data) {
@@ -552,6 +576,7 @@ RfidxStatus amiibo_generate(
         return status;
     }
 
+    amiibo_configure_rf_interface(tag_data);
     amiibo_initialize_user_area(raw, uuid);
 
     return RFIDX_OK;
