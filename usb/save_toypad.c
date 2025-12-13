@@ -10,10 +10,12 @@
 
 #define FILEPATH_SIZE          128
 #define FILE_NAME_LEN_MAX      256
+#define MAX_FAVORITES          100
 #define TOKEN_FILE_EXTENSION   ".toy"
 #define TOKENS_DIR             "tokens"
 #define TOYPADS_DIR            "toypads"
 #define TOYPADS_FILE_EXTENSION ".toypad"
+#define FILE_NAME_FAVORITES    "favs.bin"
 
 int favorite_ids[MAX_FAVORITES];
 int num_favorites = 0;
