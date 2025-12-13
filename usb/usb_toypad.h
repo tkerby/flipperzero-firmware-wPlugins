@@ -43,10 +43,6 @@ extern ToyPadEmu* emulator;
 
 extern FuriHalUsbInterface usb_hid_ldtoypad;
 
-char* get_debug_text();
-
-void set_debug_text(char* text);
-
 usbd_device* get_usb_device();
 
 bool ToyPadEmu_remove(int index);

@@ -9,6 +9,7 @@
 #include "../tea.h"
 #include "../burtle.h"
 #include "../minifigures.h"
+#include "../debug.h"
 #include "save_toypad.h"
 #include "bytes.h"
 #include "descriptors.h"
@@ -46,16 +47,6 @@ int get_connected_status() {
 }
 void set_connected_status(int status) {
     connected_status = status;
-}
-
-char debug_text[64] = " ";
-
-void set_debug_text(char* text) {
-    snprintf(debug_text, sizeof(debug_text), "%s", text);
-}
-
-char* get_debug_text() {
-    return debug_text;
 }
 
 // Function to calculate checksum
@@ -109,22 +100,7 @@ static usbd_respond hid_ep_config(usbd_device* dev, uint8_t cfg);
 static usbd_respond hid_control(usbd_device* dev, usbd_ctlreq* req, usbd_rqc_callback* callback);
 static usbd_device* usb_dev;
 static bool hid_connected = false;
-static HidStateCallback callback;
-static void* cb_ctx;
 static bool boot_protocol = false;
-
-void furi_hal_hid_set_state_callback(HidStateCallback cb, void* ctx) {
-    if(callback != NULL) {
-        if(hid_connected == true) callback(false, cb_ctx);
-    }
-
-    callback = cb;
-    cb_ctx = ctx;
-
-    if(callback != NULL) {
-        if(hid_connected == true) callback(true, cb_ctx);
-    }
-}
 
 static void* hid_set_string_descr(char* str) {
     furi_assert(str);
@@ -330,9 +306,6 @@ static void hid_on_wakeup(usbd_device* dev) {
     UNUSED(dev);
     if(!hid_connected) {
         hid_connected = true;
-        if(callback != NULL) {
-            callback(true, cb_ctx);
-        }
     }
 }
 
@@ -340,9 +313,6 @@ static void hid_on_suspend(usbd_device* dev) {
     UNUSED(dev);
     if(hid_connected) {
         hid_connected = false;
-        if(callback != NULL) {
-            callback(false, cb_ctx);
-        }
         connected_status =
             ConnectedStatusCleanupWanted; // disconnected, needs cleanup outside of the ISR context
     }
@@ -392,7 +362,7 @@ void hid_out_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
 
     switch(request.cmd) {
     case CMD_WAKE:
-        sprintf(debug_text, "CMD_WAKE");
+        set_debug_text("CMD_WAKE");
 
         // From: https://github.com/AlinaNova21/node-ld/blob/f54b177d2418432688673aa07c54466d2e6041af/src/lib/ToyPadEmu.js#L139
         uint8_t wake_payload[13] = {
@@ -406,7 +376,7 @@ void hid_out_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
 
         break;
     case CMD_READ:
-        sprintf(debug_text, "CMD_READ");
+        set_debug_text("CMD_READ");
 
         int ind = request.payload[0];
         int page = request.payload[1];
@@ -427,9 +397,7 @@ void hid_out_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
 
         break;
     case CMD_MODEL:
-        if(!strstr(debug_text, "CMD_MODEL")) {
-            snprintf(debug_text + strlen(debug_text), sizeof(debug_text), " CMD_MODEL");
-        }
+        set_debug_text("CMD_MODEL");
 
         tea_decrypt(request.payload, emulator->tea_key, request.payload);
         int index = request.payload[0];
@@ -458,7 +426,7 @@ void hid_out_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
         }
         break;
     case CMD_SEED:
-        sprintf(debug_text, "CMD_SEED");
+        set_debug_text("CMD_SEED");
 
         // decrypt the request.payload with the TEA
         tea_decrypt(request.payload, emulator->tea_key, request.payload);
@@ -479,7 +447,7 @@ void hid_out_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
 
         break;
     case CMD_WRITE:
-        sprintf(debug_text, "CMD_WRITE");
+        set_debug_text("CMD_WRITE");
 
         // Extract index, page, and data
         ind = request.payload[0];
@@ -506,7 +474,7 @@ void hid_out_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
 
         break;
     case CMD_CHAL:
-        sprintf(debug_text, "CMD_CHAL");
+        set_debug_text("CMD_CHAL");
 
         // decrypt the request.payload with the TEA
         tea_decrypt(request.payload, emulator->tea_key, request.payload);
@@ -533,45 +501,43 @@ void hid_out_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
 
         break;
     case CMD_COL:
-        sprintf(debug_text, "CMD_COL");
+        set_debug_text("CMD_COL");
         break;
     case CMD_GETCOL:
-        sprintf(debug_text, "CMD_GETCOL");
+        set_debug_text("CMD_GETCOL");
         break;
     case CMD_FADE:
-        sprintf(debug_text, "CMD_FADE");
+        set_debug_text("CMD_FADE");
         break;
     case CMD_FLASH:
-        sprintf(debug_text, "CMD_FLASH");
+        set_debug_text("CMD_FLASH");
         break;
     case CMD_FADRD:
-        sprintf(debug_text, "CMD_FADRD");
+        set_debug_text("CMD_FADRD");
         break;
     case CMD_FADAL:
-        if(!strstr(debug_text, "CMD_FADAL")) {
-            snprintf(debug_text + strlen(debug_text), sizeof(debug_text), " CMD_FADAL");
-        }
+        set_debug_text("CMD_FADAL");
         break;
     case CMD_FLSAL:
-        sprintf(debug_text, "CMD_FLSAL");
+        set_debug_text("CMD_FLSAL");
         break;
     case CMD_COLAL:
-        sprintf(debug_text, "CMD_COLAL");
+        set_debug_text("CMD_COLAL");
         break;
     case CMD_TGLST:
-        sprintf(debug_text, "CMD_TGLST");
+        set_debug_text("CMD_TGLST");
         break;
     case CMD_PWD:
-        sprintf(debug_text, "CMD_PWD");
+        set_debug_text("CMD_PWD");
         break;
     case CMD_ACTIVE:
-        sprintf(debug_text, "CMD_ACTIVE");
+        set_debug_text("CMD_ACTIVE");
         break;
     case CMD_LEDSQ:
-        sprintf(debug_text, "CMD_LEDSQ");
+        set_debug_text("CMD_LEDSQ");
         break;
     default:
-        sprintf(debug_text, "Not a valid command");
+        set_debug_text("Invalid CMD");
         return;
     }
 
@@ -581,7 +547,7 @@ void hid_out_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
         return;
     }
     if(response.payload_len > HID_EP_SZ) {
-        sprintf(debug_text, "Payload too big");
+        set_debug_text("Payload too large");
         return;
     }
 
@@ -592,7 +558,7 @@ void hid_out_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
     int res_len = build_frame(&response.frame, res_buf);
 
     if(res_len <= 0) {
-        sprintf(debug_text, "res_len is 0");
+        set_debug_text("Invalid response");
         return;
     }
 

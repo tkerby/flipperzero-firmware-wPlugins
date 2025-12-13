@@ -5,3 +5,5 @@ dist/*
 .editorconfig
 .env
 .ufbt
+.idea
+.DS_Store
