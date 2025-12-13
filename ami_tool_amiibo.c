@@ -106,6 +106,20 @@ static void amiibo_store_uid_copy(uint8_t* raw) {
     memcpy(raw + AMIIBO_OFFSET_UID_COPY + 4, raw + 4, 4);
 }
 
+static void amiibo_apply_uid_bytes(uint8_t* raw, const uint8_t* uid) {
+    if(!raw || !uid) {
+        return;
+    }
+    raw[0] = uid[0];
+    raw[1] = uid[1];
+    raw[2] = uid[2];
+    raw[4] = uid[3];
+    raw[5] = uid[4];
+    raw[6] = uid[5];
+    raw[7] = uid[6];
+    amiibo_update_uid_checksums(raw);
+}
+
 static const uint32_t amiibo_crc32_table[256] = {
     0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA, 0x076DC419, 0x706AF48F, 0xE963A535,
     0x9E6495A3, 0x0EDB8832, 0x79DCB8A4, 0xE0D5E91E, 0x97D2D988, 0x09B64C2B, 0x7EB17CBD,
@@ -296,17 +310,18 @@ static void amiibo_derive_step(
 static RfidxStatus amiibo_randomize_uid(uint8_t* raw) {
     if(!raw) return RFIDX_ARGUMENT_ERROR;
 
-    raw[0] = 0x04;
+    uint8_t uid[7];
+    uid[0] = 0x04;
     uint8_t buffer[6];
     furi_hal_random_fill_buf(buffer, sizeof(buffer));
 
-    raw[1] = buffer[0];
-    raw[2] = buffer[1];
+    uid[1] = buffer[0];
+    uid[2] = buffer[1];
 
     for(size_t i = 0; i < 4; i++) {
-        raw[4 + i] = buffer[i + 2];
+        uid[3 + i] = buffer[i + 2];
     }
-    amiibo_update_uid_checksums(raw);
+    amiibo_apply_uid_bytes(raw, uid);
 
     return RFIDX_OK;
 }
@@ -316,6 +331,25 @@ static void amiibo_calculate_password(const uint8_t* manufacturer, uint8_t* pass
     password_out[1] = manufacturer[2] ^ manufacturer[5] ^ 0x55;
     password_out[2] = manufacturer[4] ^ manufacturer[6] ^ 0xAA;
     password_out[3] = manufacturer[5] ^ manufacturer[7] ^ 0x55;
+}
+
+static void amiibo_finalize_uid_update(MfUltralightData* tag_data) {
+    if(!tag_data) {
+        return;
+    }
+    uint8_t* raw = amiibo_bytes(tag_data);
+    amiibo_store_uid_copy(raw);
+
+    uint8_t password[4];
+    amiibo_calculate_password(raw, password);
+    memcpy(raw + AMIIBO_OFFSET_CONFIG + 8, password, sizeof(password));
+    raw[AMIIBO_OFFSET_CONFIG + 12] = 0x80;
+    raw[AMIIBO_OFFSET_CONFIG + 13] = 0x80;
+    raw[AMIIBO_OFFSET_CONFIG + 14] = 0x00;
+    raw[AMIIBO_OFFSET_CONFIG + 15] = 0x00;
+
+    amiibo_write_checksums(raw);
+    amiibo_configure_rf_interface(tag_data);
 }
 
 RfidxStatus amiibo_derive_key(
@@ -594,14 +628,22 @@ RfidxStatus amiibo_change_uid(MfUltralightData* tag_data) {
         return status;
     }
 
-    amiibo_store_uid_copy(raw);
+    amiibo_finalize_uid_update(tag_data);
 
-    uint8_t password[4];
-    amiibo_calculate_password(raw, password);
-    memcpy(raw + AMIIBO_OFFSET_CONFIG + 8, password, sizeof(password));
+    return RFIDX_OK;
+}
 
-    amiibo_write_checksums(raw);
-    amiibo_configure_rf_interface(tag_data);
+RfidxStatus amiibo_set_uid(MfUltralightData* tag_data, const uint8_t* uid, size_t uid_len) {
+    if(!tag_data || !uid || uid_len < 7) {
+        return RFIDX_ARGUMENT_ERROR;
+    }
+    if(!amiibo_has_full_dump(tag_data)) {
+        return RFIDX_ARGUMENT_ERROR;
+    }
+
+    uint8_t* raw = amiibo_bytes(tag_data);
+    amiibo_apply_uid_bytes(raw, uid);
+    amiibo_finalize_uid_update(tag_data);
 
     return RFIDX_OK;
 }

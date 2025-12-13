@@ -125,6 +125,10 @@ typedef enum {
     AmiToolEventInfoActionChangeUid,
     AmiToolEventInfoActionWriteTag,
     AmiToolEventInfoActionSaveToStorage,
+    AmiToolEventInfoWriteStarted,
+    AmiToolEventInfoWriteSuccess,
+    AmiToolEventInfoWriteFailed,
+    AmiToolEventInfoWriteCancelled,
 } AmiToolCustomEvent;
 
 typedef enum {
@@ -176,6 +180,11 @@ struct AmiToolApp {
     bool info_last_from_read;
     bool info_last_has_id;
     char info_last_id[17];
+    FuriThread* write_thread;
+    bool write_in_progress;
+    bool write_cancel_requested;
+    bool write_waiting_for_tag;
+    char write_result_message[96];
 
     Nfc* nfc;
     FuriThread* read_thread;
@@ -214,6 +223,10 @@ void ami_tool_info_show_action_message(AmiToolApp* app, const char* message);
 bool ami_tool_info_start_emulation(AmiToolApp* app);
 void ami_tool_info_stop_emulation(AmiToolApp* app);
 bool ami_tool_info_change_uid(AmiToolApp* app);
+bool ami_tool_info_write_to_tag(AmiToolApp* app);
+void ami_tool_info_handle_write_event(AmiToolApp* app, AmiToolCustomEvent event);
+bool ami_tool_info_request_write_cancel(AmiToolApp* app);
+void ami_tool_info_abort_write(AmiToolApp* app);
 bool ami_tool_compute_password_from_uid(
     const uint8_t* uid,
     size_t uid_len,
@@ -248,6 +261,7 @@ RfidxStatus amiibo_sign_payload(
     MfUltralightData* tag_data);
 RfidxStatus amiibo_format_dump(MfUltralightData* tag_data, Ntag21xMetadataHeader* header);
 RfidxStatus amiibo_change_uid(MfUltralightData* tag_data);
+RfidxStatus amiibo_set_uid(MfUltralightData* tag_data, const uint8_t* uid, size_t uid_len);
 void amiibo_configure_rf_interface(MfUltralightData* tag_data);
 RfidxStatus amiibo_generate(
     const uint8_t* uuid,

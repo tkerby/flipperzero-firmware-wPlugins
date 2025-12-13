@@ -8,8 +8,10 @@
 #include <nfc/nfc.h>
 #include <nfc/nfc_listener.h>
 #include <nfc/protocols/nfc_generic_event.h>
+#include <furi_hal_nfc.h>
 
 #define AMI_TOOL_INFO_READ_BUFFER 96
+#define AMI_TOOL_WRITE_THREAD_STACK_SIZE 2048
 
 typedef enum {
     AmiToolInfoActionMenuIndexEmulate,
@@ -24,6 +26,12 @@ static void ami_tool_info_show_widget_text(AmiToolApp* app, const char* text);
 static bool ami_tool_info_write_password_pages(
     AmiToolApp* app,
     const MfUltralightAuthPassword* password);
+static int32_t ami_tool_info_write_worker(void* context);
+static void ami_tool_info_write_send_event(
+    AmiToolApp* app,
+    AmiToolCustomEvent event,
+    const char* message);
+static const char* ami_tool_info_error_to_string(MfUltralightError error);
 
 bool ami_tool_compute_password_from_uid(
     const uint8_t* uid,
@@ -39,6 +47,23 @@ bool ami_tool_compute_password_from_uid(
     password->data[3] = 0x55 ^ (uid[4] ^ uid[6]);
 
     return true;
+}
+
+static const char* ami_tool_info_error_to_string(MfUltralightError error) {
+    switch(error) {
+    case MfUltralightErrorNone:
+        return "No error";
+    case MfUltralightErrorNotPresent:
+        return "Tag not present";
+    case MfUltralightErrorProtocol:
+        return "Protocol error";
+    case MfUltralightErrorAuth:
+        return "Authentication failed";
+    case MfUltralightErrorTimeout:
+        return "Timed out";
+    default:
+        return "Unknown error";
+    }
 }
 
 static bool ami_tool_info_lookup_entry(
@@ -419,9 +444,10 @@ bool ami_tool_extract_amiibo_id(
     return true;
 }
 
-bool ami_tool_info_change_uid(AmiToolApp* app) {
-    furi_assert(app);
-
+static bool ami_tool_info_rebuild_dump_for_uid(
+    AmiToolApp* app,
+    const uint8_t* uid,
+    size_t uid_len) {
     if(!app->tag_data || !app->tag_data_valid) {
         return false;
     }
@@ -437,42 +463,40 @@ bool ami_tool_info_change_uid(AmiToolApp* app) {
     const DumpedKeys* keys = (const DumpedKeys*)app->retail_key;
     DerivedKey old_data_key = {0};
     DerivedKey old_tag_key = {0};
+    DerivedKey new_data_key = {0};
+    DerivedKey new_tag_key = {0};
     DerivedKey* cleanup_key = &old_data_key;
-    RfidxStatus status = amiibo_derive_key(&keys->data, app->tag_data, &old_data_key);
-    if(status != RFIDX_OK) {
+
+    if(amiibo_derive_key(&keys->data, app->tag_data, &old_data_key) != RFIDX_OK) {
         return false;
     }
-    status = amiibo_derive_key(&keys->tag, app->tag_data, &old_tag_key);
-    if(status != RFIDX_OK) {
+    if(amiibo_derive_key(&keys->tag, app->tag_data, &old_tag_key) != RFIDX_OK) {
         return false;
     }
 
     bool decrypted = false;
-    status = amiibo_cipher(&old_data_key, app->tag_data);
-    if(status != RFIDX_OK) {
+    if(amiibo_cipher(&old_data_key, app->tag_data) != RFIDX_OK) {
         return false;
     }
     decrypted = true;
 
-    status = amiibo_change_uid(app->tag_data);
+    RfidxStatus status;
+    if(uid && uid_len >= 7) {
+        status = amiibo_set_uid(app->tag_data, uid, uid_len);
+    } else {
+        status = amiibo_change_uid(app->tag_data);
+    }
     if(status != RFIDX_OK) {
         goto cleanup;
     }
 
-    DerivedKey new_data_key = {0};
-    DerivedKey new_tag_key = {0};
-
-    status = amiibo_derive_key(&keys->data, app->tag_data, &new_data_key);
-    if(status != RFIDX_OK) goto cleanup;
-    status = amiibo_derive_key(&keys->tag, app->tag_data, &new_tag_key);
-    if(status != RFIDX_OK) goto cleanup;
+    if(amiibo_derive_key(&keys->data, app->tag_data, &new_data_key) != RFIDX_OK) goto cleanup;
+    if(amiibo_derive_key(&keys->tag, app->tag_data, &new_tag_key) != RFIDX_OK) goto cleanup;
     cleanup_key = &new_data_key;
 
-    status = amiibo_sign_payload(&new_tag_key, &new_data_key, app->tag_data);
-    if(status != RFIDX_OK) goto cleanup;
+    if(amiibo_sign_payload(&new_tag_key, &new_data_key, app->tag_data) != RFIDX_OK) goto cleanup;
 
-    status = amiibo_cipher(&new_data_key, app->tag_data);
-    if(status != RFIDX_OK) {
+    if(amiibo_cipher(&new_data_key, app->tag_data) != RFIDX_OK) {
         decrypted = true;
         goto cleanup;
     }
@@ -481,11 +505,11 @@ bool ami_tool_info_change_uid(AmiToolApp* app) {
     amiibo_configure_rf_interface(app->tag_data);
 
     if(app->tag_data->pages_total >= 2) {
-        uint8_t uid[7];
-        memcpy(uid, app->tag_data->page[0].data, 3);
-        memcpy(uid + 3, app->tag_data->page[1].data, 4);
-        ami_tool_store_uid(app, uid, sizeof(uid));
-        if(ami_tool_compute_password_from_uid(uid, sizeof(uid), &app->tag_password)) {
+        uint8_t new_uid[7];
+        memcpy(new_uid, app->tag_data->page[0].data, 3);
+        memcpy(new_uid + 3, app->tag_data->page[1].data, 4);
+        ami_tool_store_uid(app, new_uid, sizeof(new_uid));
+        if(ami_tool_compute_password_from_uid(new_uid, sizeof(new_uid), &app->tag_password)) {
             app->tag_password_valid = true;
         } else {
             app->tag_password_valid = false;
@@ -493,17 +517,195 @@ bool ami_tool_info_change_uid(AmiToolApp* app) {
         }
     }
 
-    const char* id_arg = app->info_last_has_id ? app->info_last_id : NULL;
-    ami_tool_info_show_page(app, id_arg, app->info_last_from_read);
-
     return true;
 
 cleanup:
     if(decrypted) {
         amiibo_cipher(cleanup_key, app->tag_data);
+        amiibo_configure_rf_interface(app->tag_data);
     }
-    amiibo_configure_rf_interface(app->tag_data);
     return false;
+}
+
+bool ami_tool_info_change_uid(AmiToolApp* app) {
+    furi_assert(app);
+
+    if(!ami_tool_info_rebuild_dump_for_uid(app, NULL, 0)) {
+        return false;
+    }
+
+    const char* id_arg = app->info_last_has_id ? app->info_last_id : NULL;
+    ami_tool_info_show_page(app, id_arg, app->info_last_from_read);
+
+    return true;
+}
+
+static int32_t ami_tool_info_write_worker(void* context) {
+    AmiToolApp* app = context;
+    MfUltralightData* target = mf_ultralight_alloc();
+    if(!target) {
+        ami_tool_info_write_send_event(
+            app, AmiToolEventInfoWriteFailed, "Unable to allocate tag buffer.");
+        return 0;
+    }
+
+    while(true) {
+        if(app->write_cancel_requested) {
+            ami_tool_info_write_send_event(
+                app, AmiToolEventInfoWriteCancelled, "Write cancelled.");
+            goto cleanup;
+        }
+
+        MfUltralightError error = mf_ultralight_poller_sync_read_card(app->nfc, target, NULL);
+        if(error == MfUltralightErrorNone) {
+            break;
+        }
+        if((error == MfUltralightErrorNotPresent) || (error == MfUltralightErrorTimeout)) {
+            furi_delay_ms(100);
+            continue;
+        }
+
+        char message[96];
+        snprintf(
+            message,
+            sizeof(message),
+            "Unable to read tag: %s",
+            ami_tool_info_error_to_string(error));
+        ami_tool_info_write_send_event(app, AmiToolEventInfoWriteFailed, message);
+        goto cleanup;
+    }
+
+    if(app->write_cancel_requested) {
+        ami_tool_info_write_send_event(app, AmiToolEventInfoWriteCancelled, "Write cancelled.");
+        goto cleanup;
+    }
+
+    if(target->type != MfUltralightTypeNTAG215) {
+        ami_tool_info_write_send_event(
+            app, AmiToolEventInfoWriteFailed, "Detected tag is not an NTAG215.");
+        goto cleanup;
+    }
+
+    size_t target_uid_len = 0;
+    const uint8_t* target_uid = mf_ultralight_get_uid(target, &target_uid_len);
+    if(!target_uid || target_uid_len < 7) {
+        ami_tool_info_write_send_event(
+            app, AmiToolEventInfoWriteFailed, "Unable to read tag UID.");
+        goto cleanup;
+    }
+
+    if(!ami_tool_info_rebuild_dump_for_uid(app, target_uid, target_uid_len)) {
+        ami_tool_info_write_send_event(
+            app,
+            AmiToolEventInfoWriteFailed,
+            "Failed to prepare Amiibo data. Install key_retail.bin and try again.");
+        goto cleanup;
+    }
+
+    app->write_waiting_for_tag = false;
+    ami_tool_info_write_send_event(app, AmiToolEventInfoWriteStarted, NULL);
+
+    size_t total_pages = app->tag_data->pages_total;
+    if(target->pages_total < total_pages) {
+        total_pages = target->pages_total;
+    }
+    if(total_pages <= 4) {
+        ami_tool_info_write_send_event(
+            app, AmiToolEventInfoWriteFailed, "Detected tag does not have enough pages.");
+        goto cleanup;
+    }
+
+    const uint16_t first_data_page = 4;
+    const uint16_t tail_start_page = (total_pages > 5) ? (total_pages - 5) : total_pages;
+    MfUltralightError write_error = MfUltralightErrorNone;
+
+    for(uint16_t page = first_data_page; page < tail_start_page; page++) {
+        write_error =
+            mf_ultralight_poller_sync_write_page(app->nfc, page, &app->tag_data->page[page]);
+        if(write_error != MfUltralightErrorNone) {
+            char message[96];
+            snprintf(
+                message,
+                sizeof(message),
+                "Write failed at page %u: %s",
+                page,
+                ami_tool_info_error_to_string(write_error));
+            ami_tool_info_write_send_event(app, AmiToolEventInfoWriteFailed, message);
+            goto cleanup;
+        }
+    }
+
+    for(uint16_t page = tail_start_page; page < total_pages; page++) {
+        write_error =
+            mf_ultralight_poller_sync_write_page(app->nfc, page, &app->tag_data->page[page]);
+        if(write_error != MfUltralightErrorNone) {
+            char message[96];
+            snprintf(
+                message,
+                sizeof(message),
+                "Config write failed (%u): %s",
+                page,
+                ami_tool_info_error_to_string(write_error));
+            ami_tool_info_write_send_event(app, AmiToolEventInfoWriteFailed, message);
+            goto cleanup;
+        }
+    }
+
+    write_error = mf_ultralight_poller_sync_write_page(app->nfc, 3, &app->tag_data->page[3]);
+    if(write_error != MfUltralightErrorNone) {
+        char message[96];
+        snprintf(
+            message,
+            sizeof(message),
+            "Lock bits write failed: %s",
+            ami_tool_info_error_to_string(write_error));
+        ami_tool_info_write_send_event(app, AmiToolEventInfoWriteFailed, message);
+        goto cleanup;
+    }
+
+    ami_tool_info_write_send_event(app, AmiToolEventInfoWriteSuccess, NULL);
+
+cleanup:
+    mf_ultralight_free(target);
+    return 0;
+}
+
+bool ami_tool_info_write_to_tag(AmiToolApp* app) {
+    furi_assert(app);
+
+    if(!app->tag_data || !app->tag_data_valid || !app->nfc) {
+        return false;
+    }
+    if(app->write_in_progress) {
+        return false;
+    }
+
+    ami_tool_info_stop_emulation(app);
+
+    furi_string_set(
+        app->text_box_store,
+        "Write Amiibo\n\nPlace an NTAG215 tag on the back of the Flipper.\nPress Back to cancel.");
+    text_box_reset(app->text_box);
+    text_box_set_text(app->text_box, furi_string_get_cstr(app->text_box_store));
+    view_dispatcher_switch_to_view(app->view_dispatcher, AmiToolViewTextBox);
+
+    app->info_actions_visible = false;
+    app->info_action_message_visible = false;
+    app->write_cancel_requested = false;
+    app->write_waiting_for_tag = true;
+    app->write_in_progress = true;
+    app->write_result_message[0] = '\0';
+
+    app->write_thread = furi_thread_alloc_ex(
+        "AmiToolWrite", AMI_TOOL_WRITE_THREAD_STACK_SIZE, ami_tool_info_write_worker, app);
+    if(!app->write_thread) {
+        app->write_in_progress = false;
+        app->write_waiting_for_tag = false;
+        return false;
+    }
+
+    furi_thread_start(app->write_thread);
+    return true;
 }
 
 static void ami_tool_info_actions_submenu_callback(void* context, uint32_t index) {
@@ -577,6 +779,20 @@ void ami_tool_info_show_action_message(AmiToolApp* app, const char* message) {
     app->info_action_message_visible = true;
     app->info_actions_visible = false;
     app->info_emulation_active = false;
+}
+
+static void ami_tool_info_write_send_event(
+    AmiToolApp* app,
+    AmiToolCustomEvent event,
+    const char* message) {
+    if(!app) return;
+    if(message) {
+        strncpy(app->write_result_message, message, sizeof(app->write_result_message) - 1);
+        app->write_result_message[sizeof(app->write_result_message) - 1] = '\0';
+    } else {
+        app->write_result_message[0] = '\0';
+    }
+    view_dispatcher_send_custom_event(app->view_dispatcher, event);
 }
 
 static bool ami_tool_info_write_password_pages(
@@ -662,4 +878,84 @@ void ami_tool_info_stop_emulation(AmiToolApp* app) {
         app->emulation_listener = NULL;
     }
     app->info_emulation_active = false;
+}
+
+void ami_tool_info_handle_write_event(AmiToolApp* app, AmiToolCustomEvent event) {
+    if(!app) {
+        return;
+    }
+
+    if(event != AmiToolEventInfoWriteStarted && app->write_thread) {
+        furi_thread_join(app->write_thread);
+        furi_thread_free(app->write_thread);
+        app->write_thread = NULL;
+    }
+
+    switch(event) {
+    case AmiToolEventInfoWriteStarted:
+        app->write_waiting_for_tag = false;
+        furi_string_set(app->text_box_store, "Writing Amiibo...\nDo not remove the tag.");
+        text_box_reset(app->text_box);
+        text_box_set_text(app->text_box, furi_string_get_cstr(app->text_box_store));
+        view_dispatcher_switch_to_view(app->view_dispatcher, AmiToolViewTextBox);
+        break;
+    case AmiToolEventInfoWriteSuccess: {
+        app->write_in_progress = false;
+        app->write_waiting_for_tag = false;
+        app->write_cancel_requested = false;
+        const char* id_arg = app->info_last_has_id ? app->info_last_id : NULL;
+        ami_tool_info_show_page(app, id_arg, app->info_last_from_read);
+        break;
+    }
+    case AmiToolEventInfoWriteFailed:
+    case AmiToolEventInfoWriteCancelled: {
+        app->write_in_progress = false;
+        app->write_waiting_for_tag = false;
+        app->write_cancel_requested = false;
+        const char* message = app->write_result_message[0] != '\0'
+                                  ? app->write_result_message
+                                  : ((event == AmiToolEventInfoWriteCancelled) ? "Write cancelled."
+                                                                               : "Unable to write tag.");
+        ami_tool_info_show_action_message(app, message);
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+bool ami_tool_info_request_write_cancel(AmiToolApp* app) {
+    if(!app || !app->write_in_progress || !app->write_waiting_for_tag ||
+       app->write_cancel_requested) {
+        return false;
+    }
+
+    app->write_cancel_requested = true;
+    furi_string_set(app->text_box_store, "Cancelling write...\nPlease wait.");
+    text_box_reset(app->text_box);
+    text_box_set_text(app->text_box, furi_string_get_cstr(app->text_box_store));
+    view_dispatcher_switch_to_view(app->view_dispatcher, AmiToolViewTextBox);
+    furi_hal_nfc_abort();
+    return true;
+}
+
+void ami_tool_info_abort_write(AmiToolApp* app) {
+    if(!app || !app->write_in_progress) {
+        return;
+    }
+
+    if(app->write_waiting_for_tag && !app->write_cancel_requested) {
+        app->write_cancel_requested = true;
+        furi_hal_nfc_abort();
+    }
+
+    if(app->write_thread) {
+        furi_thread_join(app->write_thread);
+        furi_thread_free(app->write_thread);
+        app->write_thread = NULL;
+    }
+
+    app->write_in_progress = false;
+    app->write_waiting_for_tag = false;
+    app->write_cancel_requested = false;
 }

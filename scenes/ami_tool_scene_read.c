@@ -201,6 +201,12 @@ bool ami_tool_scene_read_on_event(void* context, SceneManagerEvent event) {
 
     if(event.type == SceneManagerEventTypeCustom) {
         switch(event.event) {
+        case AmiToolEventInfoWriteStarted:
+        case AmiToolEventInfoWriteSuccess:
+        case AmiToolEventInfoWriteFailed:
+        case AmiToolEventInfoWriteCancelled:
+            ami_tool_info_handle_write_event(app, event.event);
+            return true;
         case AmiToolEventReadSuccess:
             ami_tool_scene_read_stop_thread(app);
             app->read_scene_active = false;
@@ -230,7 +236,11 @@ bool ami_tool_scene_read_on_event(void* context, SceneManagerEvent event) {
             }
             return true;
         case AmiToolEventInfoActionWriteTag:
-            ami_tool_info_show_action_message(app, "Write to tag is not available yet.");
+            if(!ami_tool_info_write_to_tag(app)) {
+                ami_tool_info_show_action_message(
+                    app,
+                    "Unable to write tag.\nUse a blank NTAG215 and make\nsure key_retail.bin is installed.");
+            }
             return true;
         case AmiToolEventInfoActionSaveToStorage:
             ami_tool_info_show_action_message(app, "Save to storage is not available yet.");
@@ -239,6 +249,12 @@ bool ami_tool_scene_read_on_event(void* context, SceneManagerEvent event) {
             break;
         }
     } else if(event.type == SceneManagerEventTypeBack) {
+        if(app->write_in_progress) {
+            if(app->write_waiting_for_tag) {
+                ami_tool_info_request_write_cancel(app);
+            }
+            return true;
+        }
         if(app->info_emulation_active) {
             ami_tool_info_stop_emulation(app);
             ami_tool_info_show_actions_menu(app);
@@ -268,6 +284,7 @@ void ami_tool_scene_read_on_exit(void* context) {
     furi_hal_nfc_abort();
     ami_tool_scene_read_stop_thread(app);
     ami_tool_info_stop_emulation(app);
+    ami_tool_info_abort_write(app);
     app->info_actions_visible = false;
     app->info_action_message_visible = false;
 }

@@ -59,6 +59,11 @@ AmiToolApp* ami_tool_alloc(void) {
     app->info_last_from_read = false;
     app->info_last_has_id = false;
     memset(app->info_last_id, 0, sizeof(app->info_last_id));
+    app->write_thread = NULL;
+    app->write_in_progress = false;
+    app->write_cancel_requested = false;
+    app->write_waiting_for_tag = false;
+    memset(app->write_result_message, 0, sizeof(app->write_result_message));
 
     /* Storage (for assets) */
     app->storage = furi_record_open(RECORD_STORAGE);
@@ -100,6 +105,7 @@ AmiToolApp* ami_tool_alloc(void) {
 void ami_tool_free(AmiToolApp* app) {
     furi_assert(app);
     ami_tool_info_stop_emulation(app);
+    ami_tool_info_abort_write(app);
 
     /* Remove views from dispatcher */
     view_dispatcher_remove_view(app->view_dispatcher, AmiToolViewMenu);
