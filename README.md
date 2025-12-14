@@ -81,6 +81,7 @@ All data destroyed. No recovery. By design.
 - **Email** — Contact email
 - **Discord** — Your tag
 - **Signal** — Phone number
+- **Telegram** — Username
 - **Notes** — Whatever you want
 - **Flair** — ASCII art icon
 
