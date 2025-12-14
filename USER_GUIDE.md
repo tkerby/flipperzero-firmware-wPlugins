@@ -151,6 +151,7 @@ Fields:
 - **Email** — Contact email
 - **Discord** — Discord tag
 - **Signal** — Phone number
+- **Telegram** — Telegram username
 - **Notes** — Anything else
 - **Flair** — ASCII art icon
 
