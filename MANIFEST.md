@@ -94,6 +94,7 @@ typedef struct {
     char email[64];
     char discord[40];
     char signal[20];
+    char telegram[40];
     char notes[128];
     GhostFlair flair;
 } GhostCard;
@@ -122,6 +123,7 @@ n=name
 e=email
 d=discord
 s=signal
+g=telegram
 t=notes
 f=flair
 ```
@@ -189,7 +191,9 @@ void ghost_nfc_receive_stop(app);
 - NFC tap-to-share (NTAG215 emulation)
 - NFC tap-to-receive
 - Configurable wipe threshold (3/5/7/10)
+- Telegram field added
 - Melting ghost animation on wipe
+- UI cleanup (cleaner headers, ghost branding)
 - Clean documentation
 
 ### 0.5.1
