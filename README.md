@@ -29,6 +29,7 @@ The following contributors are recognized for helping us keep open sourced proje
 
 ### **Protocol Magic**
 
+- DoobTheGoober
 - L0rdDiakon
 - RocketGod
 - Skorp
