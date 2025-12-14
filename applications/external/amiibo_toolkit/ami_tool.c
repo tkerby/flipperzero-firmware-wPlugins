@@ -244,9 +244,11 @@ AmiToolRetailKeyStatus ami_tool_load_retail_key(AmiToolApp* app) {
     }
 
     AmiToolRetailKeyStatus status = AmiToolRetailKeyStatusStorageError;
-    const char* path = AMI_TOOL_RETAIL_KEY_FILENAME;
+    FuriString* path = furi_string_alloc();
+    furi_string_printf(
+        path, "%s%s%s", "/ext/apps_data/weebo/", AMI_TOOL_RETAIL_KEY_FILENAME, ".bin");
 
-    if(storage_file_open(file, path, FSAM_READ, FSOM_OPEN_EXISTING)) {
+    if(storage_file_open(file, furi_string_get_cstr(path), FSAM_READ, FSOM_OPEN_EXISTING)) {
         size_t read = storage_file_read(file, app->retail_key, sizeof(app->retail_key));
         if(read == AMI_TOOL_RETAIL_KEY_SIZE) {
             uint8_t extra = 0;
@@ -269,6 +271,7 @@ AmiToolRetailKeyStatus ami_tool_load_retail_key(AmiToolApp* app) {
         status = AmiToolRetailKeyStatusNotFound;
     }
 
+    furi_string_free(path);
     storage_file_free(file);
     return status;
 }

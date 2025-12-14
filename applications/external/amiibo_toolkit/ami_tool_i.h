@@ -18,7 +18,7 @@
 #include <furi_hal_random.h>
 
 #define AMI_TOOL_RETAIL_KEY_SIZE                (160U)
-#define AMI_TOOL_RETAIL_KEY_FILENAME            "/ext/nfc/key_retail.bin"
+#define AMI_TOOL_RETAIL_KEY_FILENAME            "key_retail"
 #define AMI_TOOL_GENERATE_MAX_AMIIBO_PAGE_ITEMS (32U)
 #define AMI_TOOL_SAVED_MAX_PAGE_ITEMS           (12U)
 #define AMI_TOOL_NFC_FOLDER                     ANY_PATH("nfc")

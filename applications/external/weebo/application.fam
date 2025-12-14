@@ -2,6 +2,7 @@ App(
     appid="weebo",
     name="Weebo",
     apptype=FlipperAppType.EXTERNAL,
+    targets=["f7"],
     entry_point="weebo_app",
     stack_size=5 * 1024,
     fap_icon="weebo.png",
