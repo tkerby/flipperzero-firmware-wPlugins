@@ -11,12 +11,13 @@
 #include <nfc/nfc_device.h>
 #include <furi_hal_nfc.h>
 
-#define AMI_TOOL_INFO_READ_BUFFER        96
+#define AMI_TOOL_INFO_READ_BUFFER 96
 #define AMI_TOOL_WRITE_THREAD_STACK_SIZE 2048
-#define AMI_TOOL_NFC_EXTENSION           ".nfc"
+#define AMI_TOOL_NFC_EXTENSION ".nfc"
 
 typedef enum {
     AmiToolInfoActionMenuIndexEmulate,
+    AmiToolInfoActionMenuIndexUsageInfo,
     AmiToolInfoActionMenuIndexChangeUid,
     AmiToolInfoActionMenuIndexWriteTag,
     AmiToolInfoActionMenuIndexSaveToStorage,
@@ -25,11 +26,24 @@ typedef enum {
 static void ami_tool_info_widget_callback(GuiButtonType result, InputType type, void* context);
 static void ami_tool_info_actions_submenu_callback(void* context, uint32_t index);
 static void ami_tool_info_show_widget_text(AmiToolApp* app, const char* text);
-static bool
-    ami_tool_info_write_password_pages(AmiToolApp* app, const MfUltralightAuthPassword* password);
+static void ami_tool_usage_clear(AmiToolApp* app);
+static bool ami_tool_usage_lookup_entry(
+    AmiToolApp* app,
+    const char* id_hex,
+    FuriString* result,
+    bool* asset_error);
+static bool ami_tool_usage_parse_entries(AmiToolApp* app, const char* entry_line);
+static void ami_tool_info_show_usage_page(AmiToolApp* app);
+static void ami_tool_usage_button_callback(GuiButtonType result, InputType type, void* context);
+static bool ami_tool_usage_is_true(const char* text);
+static bool ami_tool_info_write_password_pages(
+    AmiToolApp* app,
+    const MfUltralightAuthPassword* password);
 static int32_t ami_tool_info_write_worker(void* context);
-static void
-    ami_tool_info_write_send_event(AmiToolApp* app, AmiToolCustomEvent event, const char* message);
+static void ami_tool_info_write_send_event(
+    AmiToolApp* app,
+    AmiToolCustomEvent event,
+    const char* message);
 static const char* ami_tool_info_error_to_string(MfUltralightError error);
 
 bool ami_tool_compute_password_from_uid(
@@ -67,8 +81,10 @@ static void ami_tool_info_compact_hex_string(const char* input, char* output, si
     output[index] = '\0';
 }
 
-static bool
-    ami_tool_info_format_uid_string(const AmiToolApp* app, char* buffer, size_t buffer_size) {
+static bool ami_tool_info_format_uid_string(
+    const AmiToolApp* app,
+    char* buffer,
+    size_t buffer_size) {
     if(!app || !buffer || buffer_size < 3) {
         return false;
     }
@@ -220,6 +236,327 @@ static bool ami_tool_info_lookup_entry(
     return found;
 }
 
+static void ami_tool_usage_clear(AmiToolApp* app) {
+    if(!app) return;
+    if(app->usage_entries) {
+        free(app->usage_entries);
+        app->usage_entries = NULL;
+    }
+    if(app->usage_raw_data) {
+        free(app->usage_raw_data);
+        app->usage_raw_data = NULL;
+    }
+    app->usage_entries_capacity = 0;
+    app->usage_page_index = 0;
+    app->usage_page_count = 0;
+    app->usage_info_visible = false;
+    app->usage_nav_pending = false;
+}
+
+static bool ami_tool_usage_lookup_entry(
+    AmiToolApp* app,
+    const char* id_hex,
+    FuriString* result,
+    bool* asset_error) {
+    furi_assert(app);
+    furi_assert(result);
+    if(asset_error) {
+        *asset_error = false;
+    }
+
+    if(!app->storage || !id_hex || id_hex[0] == '\0') {
+        if(asset_error && !app->storage) {
+            *asset_error = true;
+        }
+        return false;
+    }
+
+    const size_t id_len = strlen(id_hex);
+    if(id_len == 0) {
+        return false;
+    }
+
+    char* id_lower = malloc(id_len + 1);
+    if(!id_lower) {
+        return false;
+    }
+    for(size_t i = 0; i < id_len; i++) {
+        id_lower[i] = (char)tolower((unsigned char)id_hex[i]);
+    }
+    id_lower[id_len] = '\0';
+
+    bool found = false;
+    File* file = storage_file_alloc(app->storage);
+    if(!file) {
+        if(asset_error) {
+            *asset_error = true;
+        }
+        free(id_lower);
+        return false;
+    }
+
+    FuriString* line = furi_string_alloc();
+
+    if(storage_file_open(file, APP_ASSETS_PATH("amiibo_usage.dat"), FSAM_READ, FSOM_OPEN_EXISTING)) {
+        bool in_data_section = false;
+        uint8_t buffer[AMI_TOOL_INFO_READ_BUFFER];
+
+        while(true) {
+            size_t read = storage_file_read(file, buffer, sizeof(buffer));
+            if(read == 0) break;
+
+            for(size_t i = 0; i < read; i++) {
+                char ch = (char)buffer[i];
+                if(ch == '\r') continue;
+
+                if(ch == '\n') {
+                    if(in_data_section && !furi_string_empty(line)) {
+                        const char* raw = furi_string_get_cstr(line);
+                        if(strncmp(raw, id_lower, id_len) == 0 && raw[id_len] == ':') {
+                            furi_string_set(result, line);
+                            found = true;
+                            break;
+                        }
+                    } else if(furi_string_empty(line)) {
+                        in_data_section = true;
+                    }
+                    furi_string_reset(line);
+                } else {
+                    furi_string_push_back(line, ch);
+                }
+            }
+
+            if(found) break;
+        }
+
+        if(!found && in_data_section && !furi_string_empty(line)) {
+            const char* raw = furi_string_get_cstr(line);
+            if(strncmp(raw, id_lower, id_len) == 0 && raw[id_len] == ':') {
+                furi_string_set(result, line);
+                found = true;
+            }
+        }
+
+        storage_file_close(file);
+    } else {
+        if(asset_error) {
+            *asset_error = true;
+        }
+    }
+
+    furi_string_free(line);
+    storage_file_free(file);
+    free(id_lower);
+    return found;
+}
+
+static bool ami_tool_usage_is_true(const char* text) {
+    if(!text || text[0] == '\0') {
+        return false;
+    }
+    return (text[0] == 'T') || (text[0] == 't');
+}
+
+static bool ami_tool_usage_parse_entries(AmiToolApp* app, const char* entry_line) {
+    furi_assert(app);
+    if(!entry_line || entry_line[0] == '\0') {
+        return false;
+    }
+
+    const char* data = strchr(entry_line, ':');
+    if(!data) {
+        return false;
+    }
+    data++;
+    while(*data == ' ') {
+        data++;
+    }
+    if(*data == '\0') {
+        return false;
+    }
+
+    size_t data_len = strlen(data);
+    char* raw = malloc(data_len + 1);
+    if(!raw) {
+        return false;
+    }
+    memcpy(raw, data, data_len + 1);
+    while(data_len > 0 && (raw[data_len - 1] == '\n' || raw[data_len - 1] == '\r')) {
+        raw[data_len - 1] = '\0';
+        data_len--;
+    }
+
+    AmiToolUsageEntry* entries = NULL;
+    size_t capacity = 0;
+    size_t count = 0;
+
+    char* cursor = raw;
+    while(cursor && *cursor) {
+        char* segment = cursor;
+        char* pipe = strchr(cursor, '|');
+        if(pipe) {
+            *pipe = '\0';
+            cursor = pipe + 1;
+        } else {
+            cursor = NULL;
+        }
+
+        if(segment[0] == '\0') {
+            continue;
+        }
+
+        char* platform = segment;
+        char* sep = strchr(platform, '^');
+        if(!sep) {
+            continue;
+        }
+        *sep = '\0';
+        char* game = sep + 1;
+        sep = strchr(game, '^');
+        if(!sep) {
+            continue;
+        }
+        *sep = '\0';
+        char* usage_cursor = sep + 1;
+        if(*usage_cursor == '\0') {
+            continue;
+        }
+
+        while(usage_cursor && *usage_cursor) {
+            char* next_usage = strchr(usage_cursor, '^');
+            if(next_usage) {
+                *next_usage = '\0';
+            }
+
+            char* write_flag = strrchr(usage_cursor, '*');
+            char* writable_text = NULL;
+            if(write_flag) {
+                *write_flag = '\0';
+                writable_text = write_flag + 1;
+            }
+            bool writable = ami_tool_usage_is_true(writable_text);
+            bool has_usage = usage_cursor[0] != '\0';
+            const char* usage_text = has_usage ? usage_cursor : NULL;
+
+            if(count == capacity) {
+                size_t new_capacity = capacity ? capacity * 2 : 8;
+                AmiToolUsageEntry* new_entries =
+                    realloc(entries, new_capacity * sizeof(AmiToolUsageEntry));
+                if(!new_entries) {
+                    free(entries);
+                    free(raw);
+                    return false;
+                }
+                entries = new_entries;
+                capacity = new_capacity;
+            }
+
+            AmiToolUsageEntry* entry = &entries[count++];
+            entry->platform = platform;
+            entry->game = game;
+            entry->usage = has_usage ? (char*)usage_text : NULL;
+            entry->has_usage = has_usage;
+            entry->writable = writable;
+
+            if(next_usage) {
+                usage_cursor = next_usage + 1;
+                if(*usage_cursor == '\0') {
+                    usage_cursor = NULL;
+                }
+            } else {
+                usage_cursor = NULL;
+            }
+        }
+    }
+
+    if(count == 0) {
+        free(entries);
+        free(raw);
+        return false;
+    }
+
+    app->usage_entries = entries;
+    app->usage_entries_capacity = capacity;
+    app->usage_raw_data = raw;
+    app->usage_page_index = 0;
+    app->usage_page_count = count;
+
+    return true;
+}
+
+static void ami_tool_info_show_usage_page(AmiToolApp* app) {
+    furi_assert(app);
+    widget_reset(app->info_widget);
+
+    if(!app->usage_entries || app->usage_page_count == 0) {
+        widget_add_text_scroll_element(
+            app->info_widget, 2, 0, 124, 60, "No usage data available for this Amiibo.");
+        view_dispatcher_switch_to_view(app->view_dispatcher, AmiToolViewInfo);
+        app->usage_info_visible = true;
+        app->info_actions_visible = false;
+        app->info_action_message_visible = false;
+        app->usage_nav_pending = false;
+        return;
+    }
+
+    if(app->usage_page_index >= app->usage_page_count) {
+        app->usage_page_index = app->usage_page_count - 1;
+    }
+
+    AmiToolUsageEntry* entry = &app->usage_entries[app->usage_page_index];
+    furi_string_reset(app->text_box_store);
+    furi_string_cat_printf(app->text_box_store, "\e#Usage Info %u/%u\n\n", (unsigned)(app->usage_page_index + 1), (unsigned)app->usage_page_count);
+    furi_string_cat_printf(app->text_box_store, "Game: %s\n", entry->game);
+    if(entry->has_usage && entry->usage && entry->usage[0] != '\0') {
+        furi_string_cat(app->text_box_store, "Usage: ");
+        furi_string_cat(app->text_box_store, entry->usage);
+        furi_string_push_back(app->text_box_store, '\n');
+    }
+    furi_string_cat_printf(
+        app->text_box_store, "Writable: %s\n", entry->writable ? "Yes" : "No");
+
+    widget_add_text_scroll_element(
+        app->info_widget, 2, 0, 124, 60, furi_string_get_cstr(app->text_box_store));
+
+    if(app->usage_page_index > 0) {
+        widget_add_button_element(
+            app->info_widget, GuiButtonTypeLeft, "Prev", ami_tool_usage_button_callback, app);
+    }
+    if((app->usage_page_index + 1) < app->usage_page_count) {
+        widget_add_button_element(
+            app->info_widget, GuiButtonTypeRight, "Next", ami_tool_usage_button_callback, app);
+    }
+
+    view_dispatcher_switch_to_view(app->view_dispatcher, AmiToolViewInfo);
+    app->usage_info_visible = true;
+    app->info_actions_visible = false;
+    app->info_action_message_visible = false;
+    app->usage_nav_pending = false;
+}
+
+static void ami_tool_usage_button_callback(GuiButtonType result, InputType type, void* context) {
+    if(type != InputTypeShort) {
+        return;
+    }
+    AmiToolApp* app = context;
+    if(!app || app->usage_nav_pending) {
+        return;
+    }
+    app->usage_nav_pending = true;
+
+    AmiToolCustomEvent event = 0;
+    if(result == GuiButtonTypeLeft) {
+        event = AmiToolEventUsagePrevPage;
+    } else if(result == GuiButtonTypeRight) {
+        event = AmiToolEventUsageNextPage;
+    } else {
+        app->usage_nav_pending = false;
+        return;
+    }
+
+    view_dispatcher_send_custom_event(app->view_dispatcher, event);
+}
+
 static void ami_tool_info_append_uid(AmiToolApp* app, FuriString* target) {
     if(!target || !app || !app->last_uid_valid || app->last_uid_len == 0) {
         return;
@@ -302,8 +639,7 @@ static void ami_tool_info_format_entry(
         return;
     }
     data++; // skip ':'
-    while(*data == ' ')
-        data++;
+    while(*data == ' ') data++;
 
     size_t data_len = strlen(data);
     char* temp = malloc(data_len + 1);
@@ -397,6 +733,7 @@ static void ami_tool_info_show_text_info(AmiToolApp* app, const char* message) {
     text_box_reset(app->text_box);
     text_box_set_text(app->text_box, furi_string_get_cstr(app->text_box_store));
     view_dispatcher_switch_to_view(app->view_dispatcher, AmiToolViewTextBox);
+    app->usage_info_visible = false;
 }
 
 static void ami_tool_info_widget_callback(GuiButtonType result, InputType type, void* context) {
@@ -414,10 +751,19 @@ static void ami_tool_info_show_widget_text(AmiToolApp* app, const char* text) {
     widget_add_button_element(
         app->info_widget, GuiButtonTypeCenter, "OK", ami_tool_info_widget_callback, app);
     view_dispatcher_switch_to_view(app->view_dispatcher, AmiToolViewInfo);
+    app->usage_info_visible = false;
 }
 
 void ami_tool_info_show_page(AmiToolApp* app, const char* id_hex, bool from_read) {
     furi_assert(app);
+
+    bool same_id = false;
+    if(id_hex && id_hex[0] != '\0' && app->info_last_has_id) {
+        same_id = (strncmp(app->info_last_id, id_hex, sizeof(app->info_last_id)) == 0);
+    }
+    if(!same_id) {
+        ami_tool_usage_clear(app);
+    }
 
     app->info_last_from_read = from_read;
     if(id_hex && id_hex[0] != '\0') {
@@ -431,7 +777,8 @@ void ami_tool_info_show_page(AmiToolApp* app, const char* id_hex, bool from_read
 
     if(!app->tag_data || !app->tag_data_valid) {
         ami_tool_info_show_text_info(
-            app, "No Amiibo dump available.\nRead a tag or generate one, then try again.");
+            app,
+            "No Amiibo dump available.\nRead a tag or generate one, then try again.");
         return;
     }
 
@@ -475,7 +822,8 @@ void ami_tool_info_show_page(AmiToolApp* app, const char* id_hex, bool from_read
                     id_hex);
             } else {
                 furi_string_cat(
-                    app->text_box_store, "No Amiibo ID provided.\nUnable to display details.");
+                    app->text_box_store,
+                    "No Amiibo ID provided.\nUnable to display details.");
             }
         }
         ami_tool_info_append_uid(app, app->text_box_store);
@@ -483,6 +831,81 @@ void ami_tool_info_show_page(AmiToolApp* app, const char* id_hex, bool from_read
     }
 
     furi_string_free(entry);
+}
+
+bool ami_tool_info_show_usage(AmiToolApp* app) {
+    furi_assert(app);
+
+    if(!app->info_last_has_id || app->info_last_id[0] == '\0') {
+        ami_tool_info_show_action_message(
+            app, "Usage data requires a valid Amiibo ID.\nRead or generate one first.");
+        return false;
+    }
+
+    if(app->usage_entries && app->usage_page_count > 0) {
+        ami_tool_info_show_usage_page(app);
+        return true;
+    }
+
+    ami_tool_usage_clear(app);
+
+    FuriString* entry = furi_string_alloc();
+    bool asset_error = false;
+    bool found = ami_tool_usage_lookup_entry(app, app->info_last_id, entry, &asset_error);
+    bool success = false;
+
+    if(found) {
+        success = ami_tool_usage_parse_entries(app, furi_string_get_cstr(entry));
+        if(success) {
+            ami_tool_info_show_usage_page(app);
+        }
+    }
+
+    if(!success) {
+        if(asset_error) {
+            ami_tool_info_show_action_message(
+                app, "Unable to open amiibo_usage.dat.\nInstall or update the assets.");
+        } else if(!found) {
+            ami_tool_info_show_action_message(
+                app, "No usage info is available for this Amiibo.");
+        } else {
+            ami_tool_info_show_action_message(
+                app, "Usage data is invalid.\nInstall or update the assets.");
+        }
+    }
+
+    furi_string_free(entry);
+    return success;
+}
+
+void ami_tool_info_refresh_current_page(AmiToolApp* app) {
+    if(!app) return;
+    const char* id_arg = app->info_last_has_id ? app->info_last_id : NULL;
+    ami_tool_info_show_page(app, id_arg, app->info_last_from_read);
+}
+
+void ami_tool_info_navigate_usage(AmiToolApp* app, int32_t delta) {
+    if(!app) {
+        return;
+    }
+    if(!app->usage_entries || app->usage_page_count == 0 || delta == 0) {
+        app->usage_nav_pending = false;
+        return;
+    }
+
+    int32_t new_index = (int32_t)app->usage_page_index + delta;
+    if(new_index < 0) {
+        new_index = 0;
+    } else if(new_index >= (int32_t)app->usage_page_count) {
+        new_index = (int32_t)app->usage_page_count - 1;
+    }
+
+    if(new_index != (int32_t)app->usage_page_index) {
+        app->usage_page_index = (size_t)new_index;
+        ami_tool_info_show_usage_page(app);
+    } else {
+        app->usage_nav_pending = false;
+    }
 }
 
 void ami_tool_store_uid(AmiToolApp* app, const uint8_t* uid, size_t len) {
@@ -506,6 +929,7 @@ void ami_tool_clear_cached_tag(AmiToolApp* app) {
     ami_tool_info_stop_emulation(app);
     app->info_actions_visible = false;
     app->info_action_message_visible = false;
+    ami_tool_usage_clear(app);
     app->tag_data_valid = false;
     if(app->tag_data) {
         mf_ultralight_reset(app->tag_data);
@@ -514,7 +938,10 @@ void ami_tool_clear_cached_tag(AmiToolApp* app) {
     memset(&app->tag_password, 0, sizeof(app->tag_password));
 }
 
-bool ami_tool_extract_amiibo_id(const MfUltralightData* tag_data, char* buffer, size_t buffer_size) {
+bool ami_tool_extract_amiibo_id(
+    const MfUltralightData* tag_data,
+    char* buffer,
+    size_t buffer_size) {
     if(!tag_data || !buffer || buffer_size < 17) {
         return false;
     }
@@ -537,8 +964,10 @@ bool ami_tool_extract_amiibo_id(const MfUltralightData* tag_data, char* buffer, 
     return true;
 }
 
-static bool
-    ami_tool_info_rebuild_dump_for_uid(AmiToolApp* app, const uint8_t* uid, size_t uid_len) {
+static bool ami_tool_info_rebuild_dump_for_uid(
+    AmiToolApp* app,
+    const uint8_t* uid,
+    size_t uid_len) {
     if(!app->tag_data || !app->tag_data_valid) {
         return false;
     }
@@ -782,6 +1211,7 @@ bool ami_tool_info_write_to_tag(AmiToolApp* app) {
 
     app->info_actions_visible = false;
     app->info_action_message_visible = false;
+    app->usage_info_visible = false;
     app->write_cancel_requested = false;
     app->write_waiting_for_tag = true;
     app->write_in_progress = true;
@@ -841,7 +1271,8 @@ bool ami_tool_info_save_to_storage(AmiToolApp* app) {
     bool success = false;
     if(device) {
         amiibo_configure_rf_interface(app->tag_data);
-        nfc_device_set_data(device, NfcProtocolMfUltralight, (const NfcDeviceData*)app->tag_data);
+        nfc_device_set_data(
+            device, NfcProtocolMfUltralight, (const NfcDeviceData*)app->tag_data);
         success = nfc_device_save(device, furi_string_get_cstr(path));
         nfc_device_free(device);
     }
@@ -870,6 +1301,9 @@ static void ami_tool_info_actions_submenu_callback(void* context, uint32_t index
     case AmiToolInfoActionMenuIndexEmulate:
         event = AmiToolEventInfoActionEmulate;
         break;
+    case AmiToolInfoActionMenuIndexUsageInfo:
+        event = AmiToolEventInfoActionUsage;
+        break;
     case AmiToolInfoActionMenuIndexChangeUid:
         event = AmiToolEventInfoActionChangeUid;
         break;
@@ -897,6 +1331,12 @@ void ami_tool_info_show_actions_menu(AmiToolApp* app) {
         app);
     submenu_add_item(
         app->submenu,
+        "Usage Info",
+        AmiToolInfoActionMenuIndexUsageInfo,
+        ami_tool_info_actions_submenu_callback,
+        app);
+    submenu_add_item(
+        app->submenu,
         "Change UID",
         AmiToolInfoActionMenuIndexChangeUid,
         ami_tool_info_actions_submenu_callback,
@@ -917,6 +1357,7 @@ void ami_tool_info_show_actions_menu(AmiToolApp* app) {
     view_dispatcher_switch_to_view(app->view_dispatcher, AmiToolViewMenu);
     app->info_actions_visible = true;
     app->info_action_message_visible = false;
+    app->usage_info_visible = false;
 }
 
 void ami_tool_info_show_action_message(AmiToolApp* app, const char* message) {
@@ -934,10 +1375,13 @@ void ami_tool_info_show_action_message(AmiToolApp* app, const char* message) {
     app->info_action_message_visible = true;
     app->info_actions_visible = false;
     app->info_emulation_active = false;
+    app->usage_info_visible = false;
 }
 
-static void
-    ami_tool_info_write_send_event(AmiToolApp* app, AmiToolCustomEvent event, const char* message) {
+static void ami_tool_info_write_send_event(
+    AmiToolApp* app,
+    AmiToolCustomEvent event,
+    const char* message) {
     if(!app) return;
     if(message) {
         strncpy(app->write_result_message, message, sizeof(app->write_result_message) - 1);
@@ -948,8 +1392,9 @@ static void
     view_dispatcher_send_custom_event(app->view_dispatcher, event);
 }
 
-static bool
-    ami_tool_info_write_password_pages(AmiToolApp* app, const MfUltralightAuthPassword* password) {
+static bool ami_tool_info_write_password_pages(
+    AmiToolApp* app,
+    const MfUltralightAuthPassword* password) {
     if(!app || !app->tag_data || !password) {
         return false;
     }
@@ -984,9 +1429,9 @@ bool ami_tool_info_start_emulation(AmiToolApp* app) {
     MfUltralightAuthPassword password = {0};
     if(app->tag_password_valid) {
         password = app->tag_password;
-    } else if(
-        app->last_uid_valid &&
-        ami_tool_compute_password_from_uid(app->last_uid, app->last_uid_len, &password)) {
+    } else if(app->last_uid_valid &&
+              ami_tool_compute_password_from_uid(
+                  app->last_uid, app->last_uid_len, &password)) {
         /* password derived successfully */
     } else {
         return false;
@@ -997,8 +1442,8 @@ bool ami_tool_info_start_emulation(AmiToolApp* app) {
     }
 
     ami_tool_info_stop_emulation(app);
-    app->emulation_listener =
-        nfc_listener_alloc(app->nfc, NfcProtocolMfUltralight, (const NfcDeviceData*)app->tag_data);
+    app->emulation_listener = nfc_listener_alloc(
+        app->nfc, NfcProtocolMfUltralight, (const NfcDeviceData*)app->tag_data);
     if(!app->emulation_listener) {
         return false;
     }
@@ -1016,6 +1461,7 @@ bool ami_tool_info_start_emulation(AmiToolApp* app) {
     app->info_emulation_active = true;
     app->info_actions_visible = false;
     app->info_action_message_visible = false;
+    app->usage_info_visible = false;
 
     return true;
 }
@@ -1064,11 +1510,10 @@ void ami_tool_info_handle_write_event(AmiToolApp* app, AmiToolCustomEvent event)
         app->write_in_progress = false;
         app->write_waiting_for_tag = false;
         app->write_cancel_requested = false;
-        const char* message = app->write_result_message[0] != '\0' ?
-                                  app->write_result_message :
-                                  ((event == AmiToolEventInfoWriteCancelled) ?
-                                       "Write cancelled." :
-                                       "Unable to write tag.");
+        const char* message = app->write_result_message[0] != '\0'
+                                  ? app->write_result_message
+                                  : ((event == AmiToolEventInfoWriteCancelled) ? "Write cancelled."
+                                                                               : "Unable to write tag.");
         ami_tool_info_show_action_message(app, message);
         break;
     }

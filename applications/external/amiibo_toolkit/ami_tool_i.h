@@ -25,6 +25,14 @@
 
 typedef struct AmiToolApp AmiToolApp;
 
+typedef struct {
+    char* platform;
+    char* game;
+    char* usage;
+    bool has_usage;
+    bool writable;
+} AmiToolUsageEntry;
+
 typedef enum {
     RfidxStatusOk = 0,
     RfidxStatusDrngError,
@@ -124,6 +132,7 @@ typedef enum {
     AmiToolEventReadError,
     AmiToolEventInfoShowActions,
     AmiToolEventInfoActionEmulate,
+    AmiToolEventInfoActionUsage,
     AmiToolEventInfoActionChangeUid,
     AmiToolEventInfoActionWriteTag,
     AmiToolEventInfoActionSaveToStorage,
@@ -131,6 +140,8 @@ typedef enum {
     AmiToolEventInfoWriteSuccess,
     AmiToolEventInfoWriteFailed,
     AmiToolEventInfoWriteCancelled,
+    AmiToolEventUsagePrevPage,
+    AmiToolEventUsageNextPage,
 } AmiToolCustomEvent;
 
 typedef enum {
@@ -179,6 +190,7 @@ struct AmiToolApp {
     bool info_actions_visible;
     bool info_action_message_visible;
     bool info_emulation_active;
+    bool usage_info_visible;
     bool info_last_from_read;
     bool info_last_has_id;
     char info_last_id[17];
@@ -200,6 +212,13 @@ struct AmiToolApp {
     size_t last_uid_len;
     bool last_uid_valid;
     NfcListener* emulation_listener;
+
+    size_t usage_page_index;
+    size_t usage_page_count;
+    size_t usage_entries_capacity;
+    AmiToolUsageEntry* usage_entries;
+    char* usage_raw_data;
+    bool usage_nav_pending;
 
     AmiToolGenerateState generate_state;
     AmiToolGenerateState generate_return_state;
@@ -234,6 +253,9 @@ void ami_tool_info_stop_emulation(AmiToolApp* app);
 bool ami_tool_info_change_uid(AmiToolApp* app);
 bool ami_tool_info_write_to_tag(AmiToolApp* app);
 bool ami_tool_info_save_to_storage(AmiToolApp* app);
+bool ami_tool_info_show_usage(AmiToolApp* app);
+void ami_tool_info_refresh_current_page(AmiToolApp* app);
+void ami_tool_info_navigate_usage(AmiToolApp* app, int32_t delta);
 bool ami_tool_info_get_name_for_id(AmiToolApp* app, const char* id_hex, FuriString* out_name);
 void ami_tool_info_handle_write_event(AmiToolApp* app, AmiToolCustomEvent event);
 bool ami_tool_info_request_write_cancel(AmiToolApp* app);

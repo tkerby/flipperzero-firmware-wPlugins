@@ -10,7 +10,7 @@ App(
     fap_libs=["mbedtls"],
     fap_category="NFC",
     fap_author="Firefox2100",
-    fap_weburl="https://github.com/Firefox2100/ami_tool",
+    fap_weburl="https://github.com/Firefox2100/flipper-amiibo-toolkit",
     fap_version="1.0",
     fap_description="An Amiibo toolkit for Flipper Zero",
 )

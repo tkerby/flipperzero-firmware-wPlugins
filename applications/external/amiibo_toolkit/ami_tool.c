@@ -56,6 +56,7 @@ AmiToolApp* ami_tool_alloc(void) {
     app->info_actions_visible = false;
     app->info_action_message_visible = false;
     app->info_emulation_active = false;
+    app->usage_info_visible = false;
     app->info_last_from_read = false;
     app->info_last_has_id = false;
     memset(app->info_last_id, 0, sizeof(app->info_last_id));
@@ -84,6 +85,12 @@ AmiToolApp* ami_tool_alloc(void) {
     app->last_uid_len = 0;
     app->last_uid_valid = false;
     app->emulation_listener = NULL;
+    app->usage_page_index = 0;
+    app->usage_page_count = 0;
+    app->usage_entries_capacity = 0;
+    app->usage_entries = NULL;
+    app->usage_raw_data = NULL;
+    app->usage_nav_pending = false;
 
     /* Generate scene state */
     app->generate_state = AmiToolGenerateStateRootMenu;
@@ -115,6 +122,18 @@ void ami_tool_free(AmiToolApp* app) {
     furi_assert(app);
     ami_tool_info_stop_emulation(app);
     ami_tool_info_abort_write(app);
+    if(app->usage_entries) {
+        free(app->usage_entries);
+        app->usage_entries = NULL;
+    }
+    if(app->usage_raw_data) {
+        free(app->usage_raw_data);
+        app->usage_raw_data = NULL;
+    }
+    app->usage_entries_capacity = 0;
+    app->usage_page_count = 0;
+    app->usage_page_index = 0;
+    app->usage_nav_pending = false;
 
     /* Remove views from dispatcher */
     view_dispatcher_remove_view(app->view_dispatcher, AmiToolViewMenu);

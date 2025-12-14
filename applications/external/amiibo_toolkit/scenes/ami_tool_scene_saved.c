@@ -368,6 +368,9 @@ bool ami_tool_scene_saved_on_event(void* context, SceneManagerEvent event) {
                     app, "Unable to start emulation.\nLoad a saved Amiibo first.");
             }
             return true;
+        case AmiToolEventInfoActionUsage:
+            ami_tool_info_show_usage(app);
+            return true;
         case AmiToolEventInfoActionChangeUid:
             if(!ami_tool_info_change_uid(app)) {
                 ami_tool_info_show_action_message(
@@ -387,6 +390,12 @@ bool ami_tool_scene_saved_on_event(void* context, SceneManagerEvent event) {
                     app, "Unable to save Amiibo.\nLoad one first and check storage access.");
             }
             return true;
+        case AmiToolEventUsagePrevPage:
+            ami_tool_info_navigate_usage(app, -1);
+            return true;
+        case AmiToolEventUsageNextPage:
+            ami_tool_info_navigate_usage(app, 1);
+            return true;
         default:
             break;
         }
@@ -402,13 +411,18 @@ bool ami_tool_scene_saved_on_event(void* context, SceneManagerEvent event) {
             ami_tool_info_show_actions_menu(app);
             return true;
         }
+        if(app->usage_info_visible) {
+            app->usage_info_visible = false;
+            ami_tool_info_show_actions_menu(app);
+            return true;
+        }
         if(app->info_action_message_visible) {
             ami_tool_info_show_actions_menu(app);
             return true;
         }
         if(app->info_actions_visible) {
             app->info_actions_visible = false;
-            view_dispatcher_switch_to_view(app->view_dispatcher, AmiToolViewInfo);
+            ami_tool_info_refresh_current_page(app);
             return true;
         }
         if(app->saved_info_visible) {
