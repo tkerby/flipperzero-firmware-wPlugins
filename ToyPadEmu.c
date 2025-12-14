@@ -115,8 +115,8 @@ void ToyPadEmu_remove_old_token(Token* token) {
                             break;
                         }
                     }
+                    furi_delay_ms(TOKEN_DELAY_TIME); // wait for the token to be removed
                 }
-                furi_delay_ms(TOKEN_DELAY_TIME); // wait for the token to be removed
                 break;
             }
         }
