@@ -11,9 +11,9 @@
 #include <nfc/nfc_device.h>
 #include <furi_hal_nfc.h>
 
-#define AMI_TOOL_INFO_READ_BUFFER 96
+#define AMI_TOOL_INFO_READ_BUFFER        96
 #define AMI_TOOL_WRITE_THREAD_STACK_SIZE 2048
-#define AMI_TOOL_NFC_EXTENSION ".nfc"
+#define AMI_TOOL_NFC_EXTENSION           ".nfc"
 
 typedef enum {
     AmiToolInfoActionMenuIndexEmulate,
@@ -25,14 +25,11 @@ typedef enum {
 static void ami_tool_info_widget_callback(GuiButtonType result, InputType type, void* context);
 static void ami_tool_info_actions_submenu_callback(void* context, uint32_t index);
 static void ami_tool_info_show_widget_text(AmiToolApp* app, const char* text);
-static bool ami_tool_info_write_password_pages(
-    AmiToolApp* app,
-    const MfUltralightAuthPassword* password);
+static bool
+    ami_tool_info_write_password_pages(AmiToolApp* app, const MfUltralightAuthPassword* password);
 static int32_t ami_tool_info_write_worker(void* context);
-static void ami_tool_info_write_send_event(
-    AmiToolApp* app,
-    AmiToolCustomEvent event,
-    const char* message);
+static void
+    ami_tool_info_write_send_event(AmiToolApp* app, AmiToolCustomEvent event, const char* message);
 static const char* ami_tool_info_error_to_string(MfUltralightError error);
 
 bool ami_tool_compute_password_from_uid(
@@ -70,10 +67,8 @@ static void ami_tool_info_compact_hex_string(const char* input, char* output, si
     output[index] = '\0';
 }
 
-static bool ami_tool_info_format_uid_string(
-    const AmiToolApp* app,
-    char* buffer,
-    size_t buffer_size) {
+static bool
+    ami_tool_info_format_uid_string(const AmiToolApp* app, char* buffer, size_t buffer_size) {
     if(!app || !buffer || buffer_size < 3) {
         return false;
     }
@@ -307,7 +302,8 @@ static void ami_tool_info_format_entry(
         return;
     }
     data++; // skip ':'
-    while(*data == ' ') data++;
+    while(*data == ' ')
+        data++;
 
     size_t data_len = strlen(data);
     char* temp = malloc(data_len + 1);
@@ -435,8 +431,7 @@ void ami_tool_info_show_page(AmiToolApp* app, const char* id_hex, bool from_read
 
     if(!app->tag_data || !app->tag_data_valid) {
         ami_tool_info_show_text_info(
-            app,
-            "No Amiibo dump available.\nRead a tag or generate one, then try again.");
+            app, "No Amiibo dump available.\nRead a tag or generate one, then try again.");
         return;
     }
 
@@ -480,8 +475,7 @@ void ami_tool_info_show_page(AmiToolApp* app, const char* id_hex, bool from_read
                     id_hex);
             } else {
                 furi_string_cat(
-                    app->text_box_store,
-                    "No Amiibo ID provided.\nUnable to display details.");
+                    app->text_box_store, "No Amiibo ID provided.\nUnable to display details.");
             }
         }
         ami_tool_info_append_uid(app, app->text_box_store);
@@ -520,10 +514,7 @@ void ami_tool_clear_cached_tag(AmiToolApp* app) {
     memset(&app->tag_password, 0, sizeof(app->tag_password));
 }
 
-bool ami_tool_extract_amiibo_id(
-    const MfUltralightData* tag_data,
-    char* buffer,
-    size_t buffer_size) {
+bool ami_tool_extract_amiibo_id(const MfUltralightData* tag_data, char* buffer, size_t buffer_size) {
     if(!tag_data || !buffer || buffer_size < 17) {
         return false;
     }
@@ -546,10 +537,8 @@ bool ami_tool_extract_amiibo_id(
     return true;
 }
 
-static bool ami_tool_info_rebuild_dump_for_uid(
-    AmiToolApp* app,
-    const uint8_t* uid,
-    size_t uid_len) {
+static bool
+    ami_tool_info_rebuild_dump_for_uid(AmiToolApp* app, const uint8_t* uid, size_t uid_len) {
     if(!app->tag_data || !app->tag_data_valid) {
         return false;
     }
@@ -852,8 +841,7 @@ bool ami_tool_info_save_to_storage(AmiToolApp* app) {
     bool success = false;
     if(device) {
         amiibo_configure_rf_interface(app->tag_data);
-        nfc_device_set_data(
-            device, NfcProtocolMfUltralight, (const NfcDeviceData*)app->tag_data);
+        nfc_device_set_data(device, NfcProtocolMfUltralight, (const NfcDeviceData*)app->tag_data);
         success = nfc_device_save(device, furi_string_get_cstr(path));
         nfc_device_free(device);
     }
@@ -948,10 +936,8 @@ void ami_tool_info_show_action_message(AmiToolApp* app, const char* message) {
     app->info_emulation_active = false;
 }
 
-static void ami_tool_info_write_send_event(
-    AmiToolApp* app,
-    AmiToolCustomEvent event,
-    const char* message) {
+static void
+    ami_tool_info_write_send_event(AmiToolApp* app, AmiToolCustomEvent event, const char* message) {
     if(!app) return;
     if(message) {
         strncpy(app->write_result_message, message, sizeof(app->write_result_message) - 1);
@@ -962,9 +948,8 @@ static void ami_tool_info_write_send_event(
     view_dispatcher_send_custom_event(app->view_dispatcher, event);
 }
 
-static bool ami_tool_info_write_password_pages(
-    AmiToolApp* app,
-    const MfUltralightAuthPassword* password) {
+static bool
+    ami_tool_info_write_password_pages(AmiToolApp* app, const MfUltralightAuthPassword* password) {
     if(!app || !app->tag_data || !password) {
         return false;
     }
@@ -999,9 +984,9 @@ bool ami_tool_info_start_emulation(AmiToolApp* app) {
     MfUltralightAuthPassword password = {0};
     if(app->tag_password_valid) {
         password = app->tag_password;
-    } else if(app->last_uid_valid &&
-              ami_tool_compute_password_from_uid(
-                  app->last_uid, app->last_uid_len, &password)) {
+    } else if(
+        app->last_uid_valid &&
+        ami_tool_compute_password_from_uid(app->last_uid, app->last_uid_len, &password)) {
         /* password derived successfully */
     } else {
         return false;
@@ -1012,8 +997,8 @@ bool ami_tool_info_start_emulation(AmiToolApp* app) {
     }
 
     ami_tool_info_stop_emulation(app);
-    app->emulation_listener = nfc_listener_alloc(
-        app->nfc, NfcProtocolMfUltralight, (const NfcDeviceData*)app->tag_data);
+    app->emulation_listener =
+        nfc_listener_alloc(app->nfc, NfcProtocolMfUltralight, (const NfcDeviceData*)app->tag_data);
     if(!app->emulation_listener) {
         return false;
     }
@@ -1079,10 +1064,11 @@ void ami_tool_info_handle_write_event(AmiToolApp* app, AmiToolCustomEvent event)
         app->write_in_progress = false;
         app->write_waiting_for_tag = false;
         app->write_cancel_requested = false;
-        const char* message = app->write_result_message[0] != '\0'
-                                  ? app->write_result_message
-                                  : ((event == AmiToolEventInfoWriteCancelled) ? "Write cancelled."
-                                                                               : "Unable to write tag.");
+        const char* message = app->write_result_message[0] != '\0' ?
+                                  app->write_result_message :
+                                  ((event == AmiToolEventInfoWriteCancelled) ?
+                                       "Write cancelled." :
+                                       "Unable to write tag.");
         ami_tool_info_show_action_message(app, message);
         break;
     }

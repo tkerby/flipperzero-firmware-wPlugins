@@ -22,6 +22,7 @@ AmiToolApp* ami_tool_alloc(void) {
 
     /* View dispatcher */
     app->view_dispatcher = view_dispatcher_alloc();
+    view_dispatcher_enable_queue(app->view_dispatcher);
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_custom_event_callback(
         app->view_dispatcher, ami_tool_custom_event_callback);
@@ -32,8 +33,7 @@ AmiToolApp* ami_tool_alloc(void) {
 
     /* GUI record and attach */
     app->gui = furi_record_open(RECORD_GUI);
-    view_dispatcher_attach_to_gui(
-        app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
+    view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
 
     /* Submenu (main menu view) */
     app->submenu = submenu_alloc();
@@ -244,7 +244,7 @@ AmiToolRetailKeyStatus ami_tool_load_retail_key(AmiToolApp* app) {
     }
 
     AmiToolRetailKeyStatus status = AmiToolRetailKeyStatusStorageError;
-    const char* path = APP_DATA_PATH(AMI_TOOL_RETAIL_KEY_FILENAME);
+    const char* path = AMI_TOOL_RETAIL_KEY_FILENAME;
 
     if(storage_file_open(file, path, FSAM_READ, FSOM_OPEN_EXISTING)) {
         size_t read = storage_file_read(file, app->retail_key, sizeof(app->retail_key));
