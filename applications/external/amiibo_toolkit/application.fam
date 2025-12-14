@@ -1,0 +1,18 @@
+# For details & more options, see documentation/AppManifests.md in firmware repo
+
+App(
+    appid="ami_tool",  # Must be unique
+    name="Amiibo Toolkit",  # Displayed in menus
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="ami_tool_app",
+    requires=["gui"],
+    stack_size=2 * 1024,
+    fap_category="NFC",
+    fap_icon="ami_tool.png",  # 10x10 1-bit PNG
+    fap_description="An Amiibo toolkit for Flipper Zero",
+    fap_author="Firefox2100",
+    fap_weburl="https://github.com/Firefox2100/ami_tool",
+    fap_icon_assets="images",
+    fap_file_assets="files",
+    fap_libs=["mbedtls"],
+)
