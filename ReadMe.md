@@ -35,7 +35,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Sub-GHz Remote v1.8 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote)
 - UL: [Sub-GHz OFEX support for SecPlus v1 and v2, various fixes (By Dmitry422 & xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/a9d4bc3401672151d45e26b2cc93bd9c4fc3fd0f)
 - Removed: [Kia Encoder #691 (By letvinov28)](https://github.com/DarkFlippers/unleashed-firmware/pull/691) Let me know if you tested this and think it works better with it.
-- Updated: [ProtoPirate WIP v1.1 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - Updated: [NFC Playlist v3.4 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
 - Updated: [LEGO Dimensions Toy Pad v0.5 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
 - [ESP Flasher: Bump Marauder v1.9.0 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.9.0)
@@ -45,6 +44,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: PR: [Added Support for MIFARE Plus 2K Cards in SL1 Mode #4316 (By LuemmelSec)](https://github.com/flipperdevices/flipperzero-firmware/pull/4316)
 - Updated: [FlipSocial v2.0.5 (By jblanked)](https://github.com/jblanked/FlipSocial)
 - Added: [Amiibo Toolkit v1.0 (By Firefox2100)](https://github.com/Firefox2100/ami_tool)
+- Added: [FlipTelegram v1.0 (By jblanked)](https://github.com/jblanked/FlipTelegram) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- Updated: [ProtoPirate WIP v1.1 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate) [add support for fiatv0 (By CharlesTheGreat77)](https://github.com/RocketGod-git/ProtoPirate/pull/6)
 
 <a name="release">
 
@@ -504,6 +505,7 @@ $ ./fbt dolphin_ext
 - [Flipper Printer v1.0 (By alxcrt)](https://github.com/alxcrt/flipper-zero-thermal-printer) `Req: T7-US thermal printer module`
 - [FlipRPI v1.0 (By jblanked)](https://github.com/jblanked/FlipRPI) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - [FlipSocial v2.0.5 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- [FlipTelegram v1.0 (By jblanked)](https://github.com/jblanked/FlipTelegram) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - [FlipTrader v1.1.2 (By jblanked)](https://github.com/jblanked/FlipTrader) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - [FlipWeather v1.2 (By jblanked)](https://github.com/jblanked/FlipWeather) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - [FlipWifi v1.6.3 (By jblanked)](https://github.com/jblanked/FlipWiFi) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)

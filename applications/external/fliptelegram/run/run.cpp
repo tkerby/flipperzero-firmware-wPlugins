@@ -1,26 +1,31 @@
 #include "run/run.hpp"
 #include "app.hpp"
 
-FlipTelegramRun::FlipTelegramRun(void *appContext) : appContext(appContext), currentMenuIndex(RUN_MENU_KEYBOARD), currentView(RUN_MENU_MAIN), inputHeld(false), lastInput(InputKeyMAX),
-                                                     messageStatus(MessageKeyboard), shouldDebounce(false), shouldReturnToMenu(false), viewingStatus(ViewingWaiting),
-                                                     messageCount(0), currentMessageIndex(0), currentScrollLine(0)
-{
+FlipTelegramRun::FlipTelegramRun(void* appContext)
+    : appContext(appContext)
+    , currentMenuIndex(RUN_MENU_KEYBOARD)
+    , currentView(RUN_MENU_MAIN)
+    , inputHeld(false)
+    , lastInput(InputKeyMAX)
+    , messageStatus(MessageKeyboard)
+    , shouldDebounce(false)
+    , shouldReturnToMenu(false)
+    , viewingStatus(ViewingWaiting)
+    , messageCount(0)
+    , currentMessageIndex(0)
+    , currentScrollLine(0) {
 }
 
-FlipTelegramRun::~FlipTelegramRun()
-{
+FlipTelegramRun::~FlipTelegramRun() {
     // nothing to do
 }
 
-void FlipTelegramRun::debounceInput()
-{
+void FlipTelegramRun::debounceInput() {
     static uint8_t debounceCounter = 0;
-    if (shouldDebounce)
-    {
+    if(shouldDebounce) {
         lastInput = InputKeyMAX;
         debounceCounter++;
-        if (debounceCounter < 2)
-        {
+        if(debounceCounter < 2) {
             return;
         }
         debounceCounter = 0;
@@ -29,10 +34,8 @@ void FlipTelegramRun::debounceInput()
     }
 }
 
-void FlipTelegramRun::drawFeed(Canvas *canvas)
-{
-    if (messageCount > 0)
-    {
+void FlipTelegramRun::drawFeed(Canvas* canvas) {
+    if(messageCount > 0) {
         canvas_clear(canvas);
         canvas_set_font(canvas, FontSecondary);
 
@@ -43,16 +46,13 @@ void FlipTelegramRun::drawFeed(Canvas *canvas)
         const int LINE_HEIGHT = 10;
 
         // Loop through cached messages
-        for (int msgIdx = 0; msgIdx < messageCount && msgIdx < MAX_CACHED_MESSAGES; msgIdx++)
-        {
-            const char *username = cachedMessages[msgIdx].username;
-            const char *text = cachedMessages[msgIdx].text;
+        for(int msgIdx = 0; msgIdx < messageCount && msgIdx < MAX_CACHED_MESSAGES; msgIdx++) {
+            const char* username = cachedMessages[msgIdx].username;
+            const char* text = cachedMessages[msgIdx].text;
 
-            if (username[0] != '\0' && text[0] != '\0')
-            {
+            if(username[0] != '\0' && text[0] != '\0') {
                 // Username line
-                if (currentLine >= currentScrollLine && displayLine < SCREEN_MAX_LINES)
-                {
+                if(currentLine >= currentScrollLine && displayLine < SCREEN_MAX_LINES) {
                     char userLine[32];
                     snprintf(userLine, sizeof(userLine), "@%s:", username);
                     canvas_draw_str(canvas, 2, START_Y + (displayLine * LINE_HEIGHT), userLine);
@@ -63,25 +63,21 @@ void FlipTelegramRun::drawFeed(Canvas *canvas)
                 // Text lines (word wrap)
                 int textLen = strlen(text);
                 int textPos = 0;
-                while (textPos < textLen && displayLine <= SCREEN_MAX_LINES)
-                {
+                while(textPos < textLen && displayLine <= SCREEN_MAX_LINES) {
                     char line[SCREEN_MAX_CHARS_PER_LINE + 1];
                     int lineLen = 0;
                     int lastSpace = -1;
 
                     // Build line with word wrap
-                    while (lineLen < SCREEN_MAX_CHARS_PER_LINE && textPos < textLen)
-                    {
-                        if (text[textPos] == ' ')
-                        {
+                    while(lineLen < SCREEN_MAX_CHARS_PER_LINE && textPos < textLen) {
+                        if(text[textPos] == ' ') {
                             lastSpace = lineLen;
                         }
                         line[lineLen++] = text[textPos++];
                     }
 
                     // If we didn't reach end and last char isn't space, backtrack to last space
-                    if (textPos < textLen && lastSpace > 0)
-                    {
+                    if(textPos < textLen && lastSpace > 0) {
                         textPos -= (lineLen - lastSpace);
                         lineLen = lastSpace;
                     }
@@ -89,8 +85,7 @@ void FlipTelegramRun::drawFeed(Canvas *canvas)
                     line[lineLen] = '\0';
 
                     // Draw if within visible range
-                    if (currentLine >= currentScrollLine && displayLine < SCREEN_MAX_LINES)
-                    {
+                    if(currentLine >= currentScrollLine && displayLine < SCREEN_MAX_LINES) {
                         canvas_draw_str(canvas, 6, START_Y + (displayLine * LINE_HEIGHT), line);
                         displayLine++;
                     }
@@ -101,22 +96,23 @@ void FlipTelegramRun::drawFeed(Canvas *canvas)
                 currentLine++;
             }
         }
-    }
-    else
-    {
+    } else {
         canvas_set_font(canvas, FontSecondary);
         canvas_draw_str(canvas, 0, 10, "No messages found!");
     }
 }
 
-void FlipTelegramRun::drawMainMenuView(Canvas *canvas)
-{
-    const char *menuItems[] = {"Send", "View"};
+void FlipTelegramRun::drawMainMenuView(Canvas* canvas) {
+    const char* menuItems[] = {"Send", "View"};
     drawMenu(canvas, (uint8_t)currentMenuIndex, menuItems, 2);
 }
 
-void FlipTelegramRun::drawMenu(Canvas *canvas, uint8_t selectedIndex, const char **menuItems, uint8_t menuCount, const char *title)
-{
+void FlipTelegramRun::drawMenu(
+    Canvas* canvas,
+    uint8_t selectedIndex,
+    const char** menuItems,
+    uint8_t menuCount,
+    const char* title) {
     canvas_clear(canvas);
 
     // Draw title
@@ -129,20 +125,19 @@ void FlipTelegramRun::drawMenu(Canvas *canvas, uint8_t selectedIndex, const char
     canvas_draw_line(canvas, title_x, 14, title_x + title_width, 14);
 
     // Draw decorative horizontal pattern
-    for (int i = 0; i < 128; i += 4)
-    {
+    for(int i = 0; i < 128; i += 4) {
         canvas_draw_dot(canvas, i, 18);
     }
 
     // Menu items with word wrapping
     canvas_set_font_custom(canvas, FONT_SIZE_MEDIUM);
-    const char *currentItem = menuItems[selectedIndex];
+    const char* currentItem = menuItems[selectedIndex];
 
     const int box_padding = 10;
     const int box_width = 108;
     const int usable_width = box_width - (box_padding * 2); // Text area inside box
-    const int line_height = 8;                              // Typical line height for medium font
-    const int max_lines = 2;                                // Maximum lines to prevent overflow
+    const int line_height = 8; // Typical line height for medium font
+    const int max_lines = 2; // Maximum lines to prevent overflow
 
     int menu_y = 40;
 
@@ -151,22 +146,20 @@ void FlipTelegramRun::drawMenu(Canvas *canvas, uint8_t selectedIndex, const char
     int line_count = 0;
 
     // word wrap
-    const char *text = currentItem;
+    const char* text = currentItem;
     int text_len = strlen(text);
     int current_pos = 0;
 
-    while (current_pos < text_len && line_count < max_lines)
-    {
+    while(current_pos < text_len && line_count < max_lines) {
         int line_start = current_pos;
         int last_space = -1;
         int current_width = 0;
         int char_pos = 0;
 
         // Find how much text fits on this line
-        while (current_pos < text_len && char_pos < 63) // Leave room for null terminator
+        while(current_pos < text_len && char_pos < 63) // Leave room for null terminator
         {
-            if (text[current_pos] == ' ')
-            {
+            if(text[current_pos] == ' ') {
                 last_space = char_pos;
             }
 
@@ -177,17 +170,13 @@ void FlipTelegramRun::drawMenu(Canvas *canvas, uint8_t selectedIndex, const char
             lines[line_count][char_pos] = '\0'; // Temporary null terminator
             current_width = canvas_string_width(canvas, lines[line_count]);
 
-            if (current_width > usable_width)
-            {
+            if(current_width > usable_width) {
                 // Text is too wide, need to break
-                if (last_space > 0)
-                {
+                if(last_space > 0) {
                     // Break at last space
                     lines[line_count][last_space] = '\0';
                     current_pos = line_start + last_space + 1; // Skip the space
-                }
-                else
-                {
+                } else {
                     // No space found, break at previous character
                     char_pos--;
                     lines[line_count][char_pos] = '\0';
@@ -200,8 +189,7 @@ void FlipTelegramRun::drawMenu(Canvas *canvas, uint8_t selectedIndex, const char
         }
 
         // If we reached end of text
-        if (current_pos >= text_len)
-        {
+        if(current_pos >= text_len) {
             lines[line_count][char_pos] = '\0';
         }
 
@@ -209,29 +197,23 @@ void FlipTelegramRun::drawMenu(Canvas *canvas, uint8_t selectedIndex, const char
     }
 
     // If there's still more text and we're at max lines, add ellipsis
-    if (current_pos < text_len && line_count == max_lines)
-    {
+    if(current_pos < text_len && line_count == max_lines) {
         int last_line = line_count - 1;
         int line_len = strlen(lines[last_line]);
-        if (line_len > 3)
-        {
+        if(line_len > 3) {
             strcpy(&lines[last_line][line_len - 3], "...");
         }
     }
 
     // Calculate box height based on number of lines, but keep minimum height
     int box_height = (line_count * line_height) + 8;
-    if (box_height < 16)
-        box_height = 16;
+    if(box_height < 16) box_height = 16;
 
     // Dynamic box positioning based on content height
     int box_y_offset;
-    if (line_count > 1)
-    {
+    if(line_count > 1) {
         box_y_offset = -22;
-    }
-    else
-    {
+    } else {
         box_y_offset = -12;
     }
 
@@ -240,8 +222,7 @@ void FlipTelegramRun::drawMenu(Canvas *canvas, uint8_t selectedIndex, const char
     canvas_set_color(canvas, ColorWhite);
 
     // Draw each line of text centered
-    for (int i = 0; i < line_count; i++)
-    {
+    for(int i = 0; i < line_count; i++) {
         int line_width = canvas_string_width(canvas, lines[i]);
         int line_x = (128 - line_width) / 2;
         int text_y_offset = (line_count > 1) ? -18 : -4;
@@ -252,12 +233,10 @@ void FlipTelegramRun::drawMenu(Canvas *canvas, uint8_t selectedIndex, const char
     canvas_set_color(canvas, ColorBlack);
 
     // Draw navigation arrows
-    if (selectedIndex > 0)
-    {
+    if(selectedIndex > 0) {
         canvas_draw_str(canvas, 2, menu_y + 4, "<");
     }
-    if (selectedIndex < (menuCount - 1))
-    {
+    if(selectedIndex < (menuCount - 1)) {
         canvas_draw_str(canvas, 122, menu_y + 4, ">");
     }
 
@@ -265,25 +244,18 @@ void FlipTelegramRun::drawMenu(Canvas *canvas, uint8_t selectedIndex, const char
     const int dots_spacing = 6;
     int indicator_y = 52;
 
-    if (menuCount <= MAX_DOTS)
-    {
+    if(menuCount <= MAX_DOTS) {
         // Show all dots if they fit
         int dots_start_x = (128 - (menuCount * dots_spacing)) / 2;
-        for (int i = 0; i < menuCount; i++)
-        {
+        for(int i = 0; i < menuCount; i++) {
             int dot_x = dots_start_x + (i * dots_spacing);
-            if (i == selectedIndex)
-            {
+            if(i == selectedIndex) {
                 canvas_draw_box(canvas, dot_x, indicator_y, 4, 4);
-            }
-            else
-            {
+            } else {
                 canvas_draw_frame(canvas, dot_x, indicator_y, 4, 4);
             }
         }
-    }
-    else
-    {
+    } else {
         canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
         char position_text[16];
         snprintf(position_text, sizeof(position_text), "%d/%d", selectedIndex + 1, menuCount);
@@ -301,18 +273,15 @@ void FlipTelegramRun::drawMenu(Canvas *canvas, uint8_t selectedIndex, const char
     }
 
     // Draw decorative bottom pattern
-    for (int i = 0; i < 128; i += 4)
-    {
+    for(int i = 0; i < 128; i += 4) {
         canvas_draw_dot(canvas, i, 58);
     }
 }
 
-void FlipTelegramRun::drawMessageView(Canvas *canvas)
-{
+void FlipTelegramRun::drawMessageView(Canvas* canvas) {
     canvas_set_font(canvas, FontPrimary);
     static bool loadingStarted = false;
-    switch (messageStatus)
-    {
+    switch(messageStatus) {
     case MessageSuccess:
         canvas_draw_str(canvas, 0, 10, "Message sent!");
         break;
@@ -323,61 +292,47 @@ void FlipTelegramRun::drawMessageView(Canvas *canvas)
         canvas_draw_str(canvas, 0, 60, "Chat Id, and try again later!");
         break;
     case MessageKeyboard:
-        if (!keyboard)
-        {
+        if(!keyboard) {
             keyboard = std::make_unique<Keyboard>();
         }
-        if (keyboard)
-        {
+        if(keyboard) {
             keyboard->draw(canvas, "Enter message:");
         }
         break;
     case MessageSending:
-        if (!loadingStarted)
-        {
-            if (!loading)
-            {
+        if(!loadingStarted) {
+            if(!loading) {
                 loading = std::make_unique<Loading>(canvas);
             }
             loadingStarted = true;
-            if (loading)
-            {
+            if(loading) {
                 loading->setText("Sending...");
             }
         }
-        if (!this->httpRequestIsFinished())
-        {
-            if (loading)
-            {
+        if(!this->httpRequestIsFinished()) {
+            if(loading) {
                 loading->animate();
             }
-        }
-        else
-        {
-            if (loading)
-            {
+        } else {
+            if(loading) {
                 loading->stop();
             }
             loadingStarted = false;
-            FlipTelegramApp *app = static_cast<FlipTelegramApp *>(appContext);
-            if (app->getHttpState() == ISSUE)
-            {
+            FlipTelegramApp* app = static_cast<FlipTelegramApp*>(appContext);
+            if(app->getHttpState() == ISSUE) {
                 messageStatus = MessageRequestError;
                 return;
             }
-            char *response = (char *)malloc(16); // load the first 16 bytes of the response
-            if (response && app->loadChar("message", response, 16) && strstr(response, "\"ok\":true") != NULL)
-            {
+            char* response = (char*)malloc(16); // load the first 16 bytes of the response
+            if(response && app->loadChar("message", response, 16) &&
+               strstr(response, "\"ok\":true") != NULL) {
                 messageStatus = MessageSuccess;
-            }
-            else
-            {
+            } else {
                 FURI_LOG_E(TAG, "Failed to send message or invalid response");
                 FURI_LOG_E(TAG, "Response: %s", response ? response : "NULL");
                 messageStatus = MessageRequestError;
             }
-            if (response)
-            {
+            if(response) {
                 free(response);
             }
         }
@@ -388,12 +343,10 @@ void FlipTelegramRun::drawMessageView(Canvas *canvas)
     }
 }
 
-void FlipTelegramRun::drawViewingView(Canvas *canvas)
-{
+void FlipTelegramRun::drawViewingView(Canvas* canvas) {
     canvas_set_font(canvas, FontPrimary);
     static bool loadingStarted = false;
-    switch (viewingStatus)
-    {
+    switch(viewingStatus) {
     case ViewingSuccess:
         drawFeed(canvas);
         break;
@@ -404,81 +357,66 @@ void FlipTelegramRun::drawViewingView(Canvas *canvas)
         canvas_draw_str(canvas, 0, 60, "and try again later!");
         break;
     case ViewingWaiting:
-        if (!loadingStarted)
-        {
-            if (!fetchTelegramMessages())
-            {
+        if(!loadingStarted) {
+            if(!fetchTelegramMessages()) {
                 viewingStatus = ViewingRequestError;
                 return;
             }
-            if (!loading)
-            {
+            if(!loading) {
                 loading = std::make_unique<Loading>(canvas);
             }
             loadingStarted = true;
-            if (loading)
-            {
+            if(loading) {
                 loading->setText("Fetching...");
             }
         }
-        if (!this->httpRequestIsFinished())
-        {
-            if (loading)
-            {
+        if(!this->httpRequestIsFinished()) {
+            if(loading) {
                 loading->animate();
             }
-        }
-        else
-        {
-            if (loading)
-            {
+        } else {
+            if(loading) {
                 loading->stop();
             }
             loadingStarted = false;
-            FlipTelegramApp *app = static_cast<FlipTelegramApp *>(appContext);
-            if (app->getHttpState() == ISSUE)
-            {
+            FlipTelegramApp* app = static_cast<FlipTelegramApp*>(appContext);
+            if(app->getHttpState() == ISSUE) {
                 viewingStatus = ViewingRequestError;
                 return;
             }
-            char *response = (char *)malloc(16); // load the first 16 bytes of the response
-            if (!response || !app->loadChar("messages", response, 16) || strstr(response, "\"ok\":true") == NULL)
-            {
+            char* response = (char*)malloc(16); // load the first 16 bytes of the response
+            if(!response || !app->loadChar("messages", response, 16) ||
+               strstr(response, "\"ok\":true") == NULL) {
                 FURI_LOG_E(TAG, "Failed to fetch messages or invalid response");
                 FURI_LOG_E(TAG, "Response: %s", response ? response : "NULL");
-                if (response)
-                {
+                if(response) {
                     free(response);
                 }
                 viewingStatus = ViewingRequestError;
                 return;
             }
-            if (response)
-            {
+            if(response) {
                 free(response);
             }
 
             // Clear cached messages first
             messageCount = 0;
-            for (int i = 0; i < MAX_CACHED_MESSAGES; i++)
-            {
+            for(int i = 0; i < MAX_CACHED_MESSAGES; i++) {
                 cachedMessages[i].username[0] = '\0';
                 cachedMessages[i].text[0] = '\0';
             }
 
             // Allocate buffer for chunked reading (chunk + carry-over space)
-            char *chunk = (char *)malloc(PARSING_CHUNK_SIZE + CARRYOVER_BUFFER_SIZE + 1);
-            if (!chunk)
-            {
+            char* chunk = (char*)malloc(PARSING_CHUNK_SIZE + CARRYOVER_BUFFER_SIZE + 1);
+            if(!chunk) {
                 FURI_LOG_E(TAG, "Failed to allocate chunk buffer");
                 viewingStatus = ViewingParseError;
                 return;
             }
 
             // Allocate carry-over buffer for incomplete data at chunk boundaries
-            char *carryover = (char *)malloc(CARRYOVER_BUFFER_SIZE + 1);
-            if (!carryover)
-            {
+            char* carryover = (char*)malloc(CARRYOVER_BUFFER_SIZE + 1);
+            if(!carryover) {
                 FURI_LOG_E(TAG, "Failed to allocate carryover buffer");
                 free(chunk);
                 viewingStatus = ViewingParseError;
@@ -490,18 +428,17 @@ void FlipTelegramRun::drawViewingView(Canvas *canvas)
             messageCount = 0;
 
             // Process file chunk by chunk
-            for (uint8_t iteration = 0; iteration < PARSING_MAX_CHUNKS && messageCount < MAX_CACHED_MESSAGES; iteration++)
-            {
+            for(uint8_t iteration = 0;
+                iteration < PARSING_MAX_CHUNKS && messageCount < MAX_CACHED_MESSAGES;
+                iteration++) {
                 // Start with carryover from previous chunk
-                if (carryoverLen > 0)
-                {
+                if(carryoverLen > 0) {
                     memcpy(chunk, carryover, carryoverLen);
                 }
 
                 // Read new chunk data after the carryover
-                char *tempChunk = (char *)malloc(PARSING_CHUNK_SIZE + 1);
-                if (!tempChunk)
-                {
+                char* tempChunk = (char*)malloc(PARSING_CHUNK_SIZE + 1);
+                if(!tempChunk) {
                     FURI_LOG_E(TAG, "Failed to allocate temp chunk buffer");
                     free(chunk);
                     free(carryover);
@@ -509,10 +446,13 @@ void FlipTelegramRun::drawViewingView(Canvas *canvas)
                     return;
                 }
 
-                bool chunkLoadSuccess = app->loadFileChunk(STORAGE_EXT_PATH_PREFIX "/apps_data/flip_telegram/data/messages.txt", tempChunk, PARSING_CHUNK_SIZE, iteration);
+                bool chunkLoadSuccess = app->loadFileChunk(
+                    STORAGE_EXT_PATH_PREFIX "/apps_data/flip_telegram/data/messages.txt",
+                    tempChunk,
+                    PARSING_CHUNK_SIZE,
+                    iteration);
 
-                if (!chunkLoadSuccess && iteration == 0)
-                {
+                if(!chunkLoadSuccess && iteration == 0) {
                     FURI_LOG_E(TAG, "Failed to load first chunk");
                     free(chunk);
                     free(carryover);
@@ -524,8 +464,7 @@ void FlipTelegramRun::drawViewingView(Canvas *canvas)
                 size_t tempLen = strlen(tempChunk);
 
                 // If no data was loaded and no carryover, we're done
-                if (tempLen == 0 && carryoverLen == 0)
-                {
+                if(tempLen == 0 && carryoverLen == 0) {
                     free(tempChunk);
                     break;
                 }
@@ -542,63 +481,55 @@ void FlipTelegramRun::drawViewingView(Canvas *canvas)
                 carryover[0] = '\0';
 
                 // Look for username and text patterns in this chunk
-                char *pos = chunk;
-                char *lastProcessed = chunk;
-                char *lastIncompleteUsername = NULL;
+                char* pos = chunk;
+                char* lastProcessed = chunk;
+                char* lastIncompleteUsername = NULL;
 
                 int messagesFoundThisChunk = 0;
 
-                while (pos < chunk + chunkLen && messageCount < MAX_CACHED_MESSAGES)
-                {
+                while(pos < chunk + chunkLen && messageCount < MAX_CACHED_MESSAGES) {
                     // Find "username" field
-                    char *username_key = strstr(pos, "\"username\":\"");
-                    if (!username_key)
-                    {
+                    char* username_key = strstr(pos, "\"username\":\"");
+                    if(!username_key) {
                         break;
                     }
 
                     // Extract username
-                    char *username_start = username_key + 12; // Skip "username":"
-                    char *username_end = strchr(username_start, '"');
-                    if (!username_end || username_end >= chunk + chunkLen)
-                    {
+                    char* username_start = username_key + 12; // Skip "username":"
+                    char* username_end = strchr(username_start, '"');
+                    if(!username_end || username_end >= chunk + chunkLen) {
                         // Username might be incomplete at chunk boundary
                         lastIncompleteUsername = username_key;
                         break;
                     }
 
-                    if (username_end - username_start >= MAX_USERNAME_LEN)
-                    {
+                    if(username_end - username_start >= MAX_USERNAME_LEN) {
                         pos = username_key + 1;
                         continue;
                     }
 
                     // Look for "text" field after username
-                    char *search_start = username_end;
-                    char *search_end = username_end + 500; // Search next 500 chars for text
-                    if (search_end > chunk + chunkLen)
-                        search_end = chunk + chunkLen;
+                    char* search_start = username_end;
+                    char* search_end = username_end + 500; // Search next 500 chars for text
+                    if(search_end > chunk + chunkLen) search_end = chunk + chunkLen;
 
-                    char *text_key = strstr(search_start, "\"text\":\"");
-                    if (!text_key || text_key >= search_end)
-                    {
+                    char* text_key = strstr(search_start, "\"text\":\"");
+                    if(!text_key || text_key >= search_end) {
                         // Text field might be in next chunk, save from username start
                         lastIncompleteUsername = username_key;
                         break;
                     }
 
                     // Extract text
-                    char *text_start = text_key + 8; // Skip "text":"
-                    char *text_end = strchr(text_start, '"');
-                    if (!text_end || text_end >= chunk + chunkLen)
-                    {
+                    char* text_start = text_key + 8; // Skip "text":"
+                    char* text_end = strchr(text_start, '"');
+                    if(!text_end || text_end >= chunk + chunkLen) {
                         // Text might be incomplete at chunk boundary
                         lastIncompleteUsername = username_key;
                         break;
                     }
 
-                    if (text_end - text_start >= MAX_TEXT_LEN)
-                    {
+                    if(text_end - text_start >= MAX_TEXT_LEN) {
                         pos = username_key + 1;
                         continue;
                     }
@@ -606,8 +537,18 @@ void FlipTelegramRun::drawViewingView(Canvas *canvas)
                     // Copy username and text to cached message
                     size_t username_len = username_end - username_start;
                     size_t text_len = text_end - text_start;
-                    snprintf(cachedMessages[messageCount].username, MAX_USERNAME_LEN, "%.*s", (int)username_len, username_start);
-                    snprintf(cachedMessages[messageCount].text, MAX_TEXT_LEN, "%.*s", (int)text_len, text_start);
+                    snprintf(
+                        cachedMessages[messageCount].username,
+                        MAX_USERNAME_LEN,
+                        "%.*s",
+                        (int)username_len,
+                        username_start);
+                    snprintf(
+                        cachedMessages[messageCount].text,
+                        MAX_TEXT_LEN,
+                        "%.*s",
+                        (int)text_len,
+                        text_start);
 
                     messagesFoundThisChunk++;
                     messageCount++;
@@ -617,21 +558,18 @@ void FlipTelegramRun::drawViewingView(Canvas *canvas)
 
                 // Save unprocessed tail to carryover buffer if there's an incomplete message
                 // or if we haven't processed everything in this chunk
-                if (lastProcessed < chunk + chunkLen)
-                {
+                if(lastProcessed < chunk + chunkLen) {
                     // If we found an incomplete message, carry over from there
-                    char *carryStartPoint = lastIncompleteUsername ? lastIncompleteUsername : lastProcessed;
+                    char* carryStartPoint = lastIncompleteUsername ? lastIncompleteUsername :
+                                                                     lastProcessed;
                     size_t remainingLen = (chunk + chunkLen) - carryStartPoint;
 
                     // Only carry over if there's data and it fits in carryover buffer
-                    if (remainingLen > 0 && remainingLen < CARRYOVER_BUFFER_SIZE)
-                    {
+                    if(remainingLen > 0 && remainingLen < CARRYOVER_BUFFER_SIZE) {
                         memcpy(carryover, carryStartPoint, remainingLen);
                         carryover[remainingLen] = '\0';
                         carryoverLen = remainingLen;
-                    }
-                    else if (remainingLen >= CARRYOVER_BUFFER_SIZE)
-                    {
+                    } else if(remainingLen >= CARRYOVER_BUFFER_SIZE) {
                         // If remaining data is too large, just carry the max we can
                         memcpy(carryover, carryStartPoint, CARRYOVER_BUFFER_SIZE - 1);
                         carryover[CARRYOVER_BUFFER_SIZE - 1] = '\0';
@@ -640,60 +578,51 @@ void FlipTelegramRun::drawViewingView(Canvas *canvas)
                 }
 
                 // If we reached EOF, break after processing this chunk
-                if (!chunkLoadSuccess)
-                {
+                if(!chunkLoadSuccess) {
                     break;
                 }
             }
 
             // Process any remaining data in carryover buffer (last message in file)
-            if (carryoverLen > 0 && messageCount < MAX_CACHED_MESSAGES)
-            {
-                char *pos = carryover;
-                while (pos < carryover + carryoverLen && messageCount < MAX_CACHED_MESSAGES)
-                {
+            if(carryoverLen > 0 && messageCount < MAX_CACHED_MESSAGES) {
+                char* pos = carryover;
+                while(pos < carryover + carryoverLen && messageCount < MAX_CACHED_MESSAGES) {
                     // Find "username" field
-                    char *username_key = strstr(pos, "\"username\":\"");
-                    if (!username_key)
-                    {
+                    char* username_key = strstr(pos, "\"username\":\"");
+                    if(!username_key) {
                         break;
                     }
 
                     // Extract username
-                    char *username_start = username_key + 12;
-                    char *username_end = strchr(username_start, '"');
-                    if (!username_end)
-                    {
+                    char* username_start = username_key + 12;
+                    char* username_end = strchr(username_start, '"');
+                    if(!username_end) {
                         FURI_LOG_W(TAG, "Username not terminated in carryover");
                         break;
                     }
 
-                    if (username_end - username_start >= MAX_USERNAME_LEN)
-                    {
+                    if(username_end - username_start >= MAX_USERNAME_LEN) {
                         pos = username_key + 1;
                         continue;
                     }
 
                     // Look for "text" field after username
-                    char *text_key = strstr(username_end, "\"text\":\"");
-                    if (!text_key)
-                    {
+                    char* text_key = strstr(username_end, "\"text\":\"");
+                    if(!text_key) {
                         FURI_LOG_W(TAG, "No text field found after username in carryover");
                         pos = username_key + 1;
                         continue;
                     }
 
                     // Extract text
-                    char *text_start = text_key + 8;
-                    char *text_end = strchr(text_start, '"');
-                    if (!text_end)
-                    {
+                    char* text_start = text_key + 8;
+                    char* text_end = strchr(text_start, '"');
+                    if(!text_end) {
                         FURI_LOG_W(TAG, "Text not terminated in carryover");
                         break;
                     }
 
-                    if (text_end - text_start >= MAX_TEXT_LEN)
-                    {
+                    if(text_end - text_start >= MAX_TEXT_LEN) {
                         pos = username_key + 1;
                         continue;
                     }
@@ -701,8 +630,18 @@ void FlipTelegramRun::drawViewingView(Canvas *canvas)
                     // Copy username and text to cached message
                     size_t username_len = username_end - username_start;
                     size_t text_len = text_end - text_start;
-                    snprintf(cachedMessages[messageCount].username, MAX_USERNAME_LEN, "%.*s", (int)username_len, username_start);
-                    snprintf(cachedMessages[messageCount].text, MAX_TEXT_LEN, "%.*s", (int)text_len, text_start);
+                    snprintf(
+                        cachedMessages[messageCount].username,
+                        MAX_USERNAME_LEN,
+                        "%.*s",
+                        (int)username_len,
+                        username_start);
+                    snprintf(
+                        cachedMessages[messageCount].text,
+                        MAX_TEXT_LEN,
+                        "%.*s",
+                        (int)text_len,
+                        text_start);
 
                     messageCount++;
                     pos = text_end + 1;
@@ -724,23 +663,19 @@ void FlipTelegramRun::drawViewingView(Canvas *canvas)
     }
 }
 
-bool FlipTelegramRun::fetchTelegramMessages()
-{
-    FlipTelegramApp *app = static_cast<FlipTelegramApp *>(appContext);
-    if (!app)
-    {
+bool FlipTelegramRun::fetchTelegramMessages() {
+    FlipTelegramApp* app = static_cast<FlipTelegramApp*>(appContext);
+    if(!app) {
         FURI_LOG_E(TAG, "fetchTelegramMessages: App context is NULL");
         return false;
     }
     char token[64];
-    if (!app->loadChar("token", token, sizeof(token)))
-    {
+    if(!app->loadChar("token", token, sizeof(token))) {
         FURI_LOG_E(TAG, "Bot token not set");
         return false;
     }
-    char *requestUrl = (char *)malloc(128);
-    if (!requestUrl)
-    {
+    char* requestUrl = (char*)malloc(128);
+    if(!requestUrl) {
         FURI_LOG_E(TAG, "Failed to allocate memory for request URL");
         return false;
     }
@@ -750,11 +685,9 @@ bool FlipTelegramRun::fetchTelegramMessages()
     return success;
 }
 
-bool FlipTelegramRun::httpRequestIsFinished()
-{
-    FlipTelegramApp *app = static_cast<FlipTelegramApp *>(appContext);
-    if (!app)
-    {
+bool FlipTelegramRun::httpRequestIsFinished() {
+    FlipTelegramApp* app = static_cast<FlipTelegramApp*>(appContext);
+    if(!app) {
         FURI_LOG_E(TAG, "httpRequestIsFinished: App context is NULL");
         return true;
     }
@@ -762,53 +695,46 @@ bool FlipTelegramRun::httpRequestIsFinished()
     return state == IDLE || state == ISSUE || state == INACTIVE;
 }
 
-bool FlipTelegramRun::sendTelegramMessage(const char *text)
-{
-    FlipTelegramApp *app = static_cast<FlipTelegramApp *>(appContext);
-    if (!app)
-    {
+bool FlipTelegramRun::sendTelegramMessage(const char* text) {
+    FlipTelegramApp* app = static_cast<FlipTelegramApp*>(appContext);
+    if(!app) {
         FURI_LOG_E(TAG, "httpRequestIsFinished: App context is NULL");
         return false;
     }
     char token[64];
     char chat[64];
-    if (!app->loadChar("token", token, sizeof(token)))
-    {
+    if(!app->loadChar("token", token, sizeof(token))) {
         FURI_LOG_E(TAG, "Bot token not set");
         return false;
     }
-    if (!app->loadChar("chat_id", chat, sizeof(chat)))
-    {
+    if(!app->loadChar("chat_id", chat, sizeof(chat))) {
         FURI_LOG_E(TAG, "Chat ID not set");
         return false;
     }
-    char *requestUrl = (char *)malloc(128);
-    if (!requestUrl)
-    {
+    char* requestUrl = (char*)malloc(128);
+    if(!requestUrl) {
         FURI_LOG_E(TAG, "Failed to allocate memory for request URL");
         return false;
     }
-    char *payload = (char *)malloc(256);
-    if (!payload)
-    {
+    char* payload = (char*)malloc(256);
+    if(!payload) {
         FURI_LOG_E(TAG, "Failed to allocate memory for payload");
         free(requestUrl);
         return false;
     }
     snprintf(payload, 256, "{\"chat_id\":\"%s\",\"text\":\"%s\"}", chat, text);
     snprintf(requestUrl, 128, "%s/bot%s/sendMessage", "https://api.telegram.org", token);
-    bool success = app->httpRequestAsync("message.txt", requestUrl, POST, "{\"Content-Type\":\"application/json\"}", payload);
+    bool success = app->httpRequestAsync(
+        "message.txt", requestUrl, POST, "{\"Content-Type\":\"application/json\"}", payload);
     free(requestUrl);
     free(payload);
     return success;
 }
 
-void FlipTelegramRun::updateDraw(Canvas *canvas)
-{
+void FlipTelegramRun::updateDraw(Canvas* canvas) {
     canvas_clear(canvas);
 
-    switch (currentView)
-    {
+    switch(currentView) {
     case RUN_MENU_MAIN:
         drawMainMenuView(canvas);
         break;
@@ -824,16 +750,12 @@ void FlipTelegramRun::updateDraw(Canvas *canvas)
     }
 }
 
-void FlipTelegramRun::updateInput(InputEvent *event)
-{
+void FlipTelegramRun::updateInput(InputEvent* event) {
     lastInput = event->key;
     debounceInput();
-    switch (currentView)
-    {
-    case RUN_MENU_MAIN:
-    {
-        switch (lastInput)
-        {
+    switch(currentView) {
+    case RUN_MENU_MAIN: {
+        switch(lastInput) {
         case InputKeyDown:
         case InputKeyRight:
             shouldDebounce = true;
@@ -846,12 +768,9 @@ void FlipTelegramRun::updateInput(InputEvent *event)
             break;
         case InputKeyOk:
             shouldDebounce = true;
-            if (currentMenuIndex == RUN_MENU_KEYBOARD)
-            {
+            if(currentMenuIndex == RUN_MENU_KEYBOARD) {
                 currentView = RUN_MENU_KEYBOARD;
-            }
-            else if (currentMenuIndex == RUN_MENU_VIEW)
-            {
+            } else if(currentMenuIndex == RUN_MENU_VIEW) {
                 currentView = RUN_MENU_VIEW;
             }
             break;
@@ -865,27 +784,21 @@ void FlipTelegramRun::updateInput(InputEvent *event)
         break;
     }
     case RUN_MENU_KEYBOARD:
-        if (messageStatus == MessageKeyboard)
-        {
-            if (keyboard)
-            {
-                if (keyboard->handleInput(lastInput))
-                {
+        if(messageStatus == MessageKeyboard) {
+            if(keyboard) {
+                if(keyboard->handleInput(lastInput)) {
                     messageStatus = MessageSending;
                     sendTelegramMessage(keyboard->getText());
                 }
-                if (lastInput != InputKeyMAX)
-                {
+                if(lastInput != InputKeyMAX) {
                     shouldDebounce = true;
                 }
             }
         }
-        if (lastInput == InputKeyBack)
-        {
+        if(lastInput == InputKeyBack) {
             messageStatus = MessageKeyboard;
             shouldDebounce = true;
-            if (keyboard)
-            {
+            if(keyboard) {
                 keyboard->clearText();
                 keyboard.reset();
             }
@@ -893,18 +806,15 @@ void FlipTelegramRun::updateInput(InputEvent *event)
         }
         break;
     case RUN_MENU_VIEW:
-        if (viewingStatus == ViewingSuccess && messageCount > 0)
-        {
-            switch (lastInput)
-            {
+        if(viewingStatus == ViewingSuccess && messageCount > 0) {
+            switch(lastInput) {
             case InputKeyDown:
                 shouldDebounce = true;
                 currentScrollLine++;
                 break;
             case InputKeyUp:
                 shouldDebounce = true;
-                if (currentScrollLine > 0)
-                {
+                if(currentScrollLine > 0) {
                     currentScrollLine--;
                 }
                 break;
@@ -917,9 +827,7 @@ void FlipTelegramRun::updateInput(InputEvent *event)
             default:
                 break;
             }
-        }
-        else if (lastInput == InputKeyBack)
-        {
+        } else if(lastInput == InputKeyBack) {
             currentView = RUN_MENU_MAIN;
             currentScrollLine = 0;
             shouldDebounce = true;
