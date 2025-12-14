@@ -24,21 +24,6 @@ LDToyPadSceneEmulate* toypadscene_instance;
 
 FuriHalUsbInterface* usb_mode_prev = NULL;
 
-// Selection box icon
-const uint8_t I_selectionBox[] = {0xf8, 0xff, 0x00, 0x06, 0x00, 0x01, 0x03, 0x00, 0x02, 0x03, 0x00,
-                                  0x02, 0x03, 0x00, 0x02, 0x03, 0x00, 0x02, 0x03, 0x00, 0x02, 0x03,
-                                  0x00, 0x02, 0x03, 0x00, 0x02, 0x03, 0x00, 0x02, 0x03, 0x00, 0x02,
-                                  0x03, 0x00, 0x02, 0x03, 0x00, 0x02, 0x03, 0x00, 0x02, 0x03, 0x00,
-                                  0x02, 0x07, 0x00, 0x03, 0xfe, 0xff, 0x01, 0xfc, 0xff, 0x00};
-
-//  Selection circle icon
-const uint8_t I_selectionCircle[] = {0x80, 0x7f, 0x00, 0xf0, 0xff, 0x03, 0xf8, 0xc0, 0x07,
-                                     0x3c, 0x00, 0x0f, 0x0c, 0x00, 0x0c, 0x06, 0x00, 0x18,
-                                     0x07, 0x00, 0x38, 0x07, 0x00, 0x38, 0x03, 0x00, 0x30,
-                                     0x03, 0x00, 0x30, 0x07, 0x00, 0x38, 0x06, 0x00, 0x18,
-                                     0x06, 0x00, 0x18, 0x3e, 0x00, 0x1f, 0xf8, 0xc0, 0x07,
-                                     0xf0, 0xff, 0x03, 0x80, 0x7f, 0x00};
-
 struct LDToyPadSceneEmulate {
     View* view;
 
@@ -360,11 +345,11 @@ static void ldtoypad_scene_emulate_draw_render_callback(Canvas* canvas, void* co
     uint8_t x = boxInfo[selectedBox].x;
     uint8_t y = boxInfo[selectedBox].y;
 
-    // Check if the selectedBox is 1 (circle) and draw the circle, This is hardcoded for now.
+    // Check if the selectedBox is 1 (circle) and draw the circle.
     if(selectedBox == 1) {
-        canvas_draw_xbm(canvas, x, y, 22, 17, I_selectionCircle); // Draw highlighted circle
+        canvas_draw_icon(canvas, x, y, &I_circle);
     } else {
-        canvas_draw_xbm(canvas, x, y, 18, 18, I_selectionBox); // Draw highlighted box
+        canvas_draw_icon(canvas, x, y, &I_box);
     }
 
     int token_selected = 0;
@@ -602,9 +587,8 @@ LDToyPadSceneEmulate* ldtoypad_scene_emulate_alloc(LDToyPadApp* new_app) {
 void ldtoypad_scene_emulate_free(LDToyPadSceneEmulate* ldtoypad_emulate_view) {
     furi_assert(ldtoypad_emulate_view);
     view_free(ldtoypad_emulate_view->view);
-    // view_free(submenu_get_view(selectionMenu));
 
-    // // Change back profile
+    // Change back profile
     if(usb_mode_prev != NULL) {
         furi_hal_usb_set_config(usb_mode_prev, NULL);
     }
