@@ -7,7 +7,7 @@
 
 #include "usb/save_toypad.h"
 
-#include "ToypadEmu.h"
+#include "ToyPadEmu.h"
 
 typedef enum {
     EmulateToyPadSubmenuIndex,

@@ -6,7 +6,7 @@
 #include <furi.h>
 
 #define MAX_TOKENS 7
-#define NUM_BOXES  7 // the number of boxes (7 boxes always)
+#define NUM_BOXES  7 // The number of boxes (7 boxes always)
 
 #ifdef __cplusplus
 extern "C" {

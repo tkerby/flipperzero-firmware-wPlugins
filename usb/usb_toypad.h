@@ -4,7 +4,7 @@
 #include <pthread.h>
 
 #include "frame.h"
-#include "ToypadEmu.h"
+#include "ToyPadEmu.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -1,4 +1,4 @@
-#include "ToypadEmu.h"
+#include "ToyPadEmu.h"
 
 #include <dolphin/dolphin.h>
 

@@ -15,7 +15,7 @@
 
 #include "minifigures.h"
 #include "debug.h"
-#include "../ToypadEmu.h"
+#include "../ToyPadEmu.h"
 #include "usb/save_toypad.h"
 
 LDToyPadApp* app;
