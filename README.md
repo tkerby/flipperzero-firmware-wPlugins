@@ -1,216 +1,163 @@
 # 👻 GhostBook
 
-<p align="center">
-  <img src="images/banner.png" alt="GhostBook Banner" width="600">
-</p>
-
-<h2 align="center">
-  🔐 YOUR CONTACTS. ENCRYPTED. UNTRACEABLE. 🔐
-</h2>
-
-<p align="center">
-  <a href="#features">Features</a> •
-  <a href="#security">Security</a> •
-  <a href="#install">Install</a> •
-  <a href="#demo">Demo</a>
-</p>
+### Your contacts. Encrypted. Tap to share.
 
 ---
 
-## 🎯 The Problem
+## The Problem
 
-You're at a con. A meetup. A party. Someone asks for your contact info.
+You meet someone at a con, a meetup, a party. They want your contact info.
 
-Do you:
-- 📱 Hand over your phone? (awkward)
-- 📝 Write it on paper? (loses it)
-- 💬 Spell out your Discord? (they type it wrong)
+You could:
+- Hand over your phone (awkward)
+- Spell out your Discord (they'll typo it)
+- Write it on paper (they'll lose it)
 
 **There has to be a better way.**
 
 ---
 
-## 💡 The Solution
+## The Solution
 
-<h3 align="center">
-  TAP. SHARE. DISAPPEAR.
-</h3>
+**Tap. Share. Done.**
 
-**GhostBook** turns your Flipper Zero into an encrypted contact card that you tap to share.
+GhostBook turns your Flipper Zero into an encrypted digital business card.
 
 ```
-┌─────────────────────────┐
-│   >> GhostBook <<       │
-│   ═══════════════       │
-│   @yourhandle (o_o)     │
-│   ───────────────       │
-│   Name: Ghost           │
-│   Discord: ghost#1337   │
-│   Signal: encrypted     │
-│   ───────────────       │
-│   [TAP TO SHARE]        │
-└─────────────────────────┘
+┌────────────────────────┐
+│    >> GhostBook <<     │
+│    ================    │
+│    @yourhandle (o_o)   │
+│    ----------------    │
+│    Name: Ghost         │
+│    Discord: ghost#1337 │
+│                        │
+│    [Hold to share]     │
+└────────────────────────┘
 ```
 
 ---
 
-## ✨ Features
+## How It Works
 
-### 🔒 PARANOID-LEVEL SECURITY
+**Share:** Your Flipper emulates an NFC tag containing your encrypted card. Hold it near another Flipper running GhostBook.
 
-Choose your passcode length:
+**Receive:** Scan for nearby cards. One tap, saved to contacts.
 
-| Level | Crack Time |
-|-------|------------|
-| Standard (6) | Minutes |
-| Enhanced (8) | Days |
-| **PARANOID (10)** | **MONTHS** |
-
-### 💀 AUTO-DESTRUCT
-
-**5 wrong passcodes = EVERYTHING WIPED**
-
-No recovery. No backdoor. No mercy.
-
-### 🎭 STAY ANONYMOUS
-
-- No accounts
-- No cloud
-- No tracking
-- No BS
-
-### 📇 STORE EVERYTHING
-
-```
-@handle ✓    Discord ✓
-Name ✓       Signal ✓  
-Email ✓      Notes ✓
-```
+**Protect:** Wrong passcode too many times? Everything melts.
 
 ---
 
-## 🛡️ Security That Actually Works
+## Security That Bites Back
 
-<table>
-<tr>
-<td width="50%">
+| Feature | What It Does |
+|---------|--------------|
+| 6-10 Button Passcode | 46K to 60M combinations |
+| Auto-Wipe | 3/5/7/10 wrong attempts = gone |
+| 256-bit Encryption | Military-grade protection |
+| 10K Iterations | Brute force? Good luck. |
+| No Cloud | Your data never leaves your device |
 
-### What We Do
+### The Wipe
 
-- 256-bit encryption
-- 10,000 iteration key stretching
-- Unique salt per device
+Enter the wrong passcode too many times and watch your ghost melt:
+
+```
+!! I'M MELTING !!        !! MELTING... !!        !! GOODBYE !!
+
+    (o_o)                    (x_-)                   . . .
+    /| |\        →          ~~~~~        →
+     | |
+```
+
+All data destroyed. No recovery. By design.
+
+---
+
+## What You Can Store
+
+- **@Handle** — Your username
+- **Name** — Real name (optional)
+- **Email** — Contact email
+- **Discord** — Your tag
+- **Signal** — Phone number
+- **Notes** — Whatever you want
+- **Flair** — ASCII art icon
+
+---
+
+## Quick Start
+
+1. Install `ghostbook.fap` on your Flipper
+2. Choose security level (passcode length)
+3. Choose wipe threshold (attempts allowed)
+4. Create your passcode
+5. Fill in your profile
+6. Start sharing
+
+---
+
+## For The Security-Minded
+
+**On-device protection:**
+- Passcode never stored (only hash)
+- Wipe happens on the Flipper itself
+- No way to extract passcode from files
+
+**Offline attack resistance:**
+- Unique 16-byte salt per device
+- 10,000 hash iterations
 - Random IV per encryption
-- Auto-wipe after 5 failures
 
-</td>
-<td width="50%">
-
-### What We Don't Do
-
-- Store your passcode (ever)
-- Phone home
-- Create backdoors
-- Trust anyone
-- Compromise
-
-</td>
-</tr>
-</table>
+**Threat model:**
+- ✅ Casual snooping
+- ✅ Lost/stolen device
+- ✅ Nosy friends
+- ⚠️ Determined attacker with your SD card
+- ❌ Nation-state actors (use Signal)
 
 ---
 
-## 📦 Install in 30 Seconds
+## Why GhostBook?
 
-```bash
-# Download
-wget github.com/digitard/ghostbook/releases/latest/ghostbook.fap
-
-# Copy to Flipper
-cp ghostbook.fap /your/flipper/sd/apps/NFC/
-
-# Launch
-Apps → NFC → GhostBook
-
-# Done.
-```
-
----
-
-## 🎬 Demo
-
-<p align="center">
-  <em>[ GIF of app in action would go here ]</em>
-</p>
-
-### First Boot
-1. Choose security level
-2. Create passcode (any 6-10 buttons)
-3. Confirm passcode
-4. You're in!
-
-### Sharing
-1. Open GhostBook
-2. Enter passcode
-3. Tap Share
-4. Bump Flippers
-5. Done - they have your card
-
----
-
-## 🌟 Why GhostBook?
-
-| Feature | GhostBook | Business Card | Phone Contact |
-|---------|:---------:|:-------------:|:-------------:|
+| | GhostBook | Business Card | Phone |
+|-|:---------:|:-------------:|:-----:|
 | Encrypted | ✅ | ❌ | ❌ |
-| Auto-destruct | ✅ | ❌ | ❌ |
-| Tap to share | ✅ | ❌ | 🤷 |
+| Auto-wipe | ✅ | ❌ | ❌ |
+| Tap to share | ✅ | ❌ | Maybe |
 | Works offline | ✅ | ✅ | ❌ |
-| Looks cool | ✅ | ❌ | ❌ |
 | Hacker cred | ✅✅✅ | ❌ | ❌ |
 
 ---
 
-## 🚀 Roadmap
+## Get It
 
-- [x] **v0.5** - Core app, encryption, security levels
-- [ ] **v0.6** - NFC tap-to-share
-- [ ] **v0.7** - QR code display
-- [ ] **v0.8** - Encrypted backup
-- [ ] **v1.0** - Full release
+**Download:** [Releases](https://github.com/digitard/ghostbook/releases)
 
----
-
-## 💬 Community
-
-Found a bug? Have an idea? Want to contribute?
-
-- **Issues:** [GitHub Issues](https://github.com/digitard/ghostbook/issues)
-- **PRs:** Always welcome
-- **Discord:** Coming soon
+**Build:**
+```bash
+git clone https://github.com/digitard/ghostbook
+cd ghostbook && ufbt && ufbt launch
+```
 
 ---
 
-## 👤 Author
+## Version 0.6.0
 
-Built with 💀 by **Digi** ([@digitard](https://github.com/digitard))
-
----
-
-<p align="center">
-  <img src="images/ghost.png" alt="Ghost" width="100">
-</p>
-
-<h3 align="center">
-  TRUST NO ONE. LEAVE NOTHING.
-</h3>
-
-<p align="center">
-  <code>~#!~ (o_o) ~#!~</code>
-</p>
+- ✅ NFC tap-to-share (NTAG215 emulation)
+- ✅ NFC tap-to-receive
+- ✅ Variable passcode (6-10 buttons)
+- ✅ Configurable wipe threshold
+- ✅ Melting ghost animation
+- ✅ Encrypted storage
+- ✅ vCard/CSV export
 
 ---
 
-<p align="center">
-  <strong>⭐ Star this repo if you believe in privacy ⭐</strong>
-</p>
+**Built by Digi** — [@digitard](https://github.com/digitard)
+
+*Trust no one. Leave nothing.*
+
+```
+(o_o)
+```
