@@ -1,5 +1,7 @@
 #include "frame.h"
 
+static void calculate_checksum(uint8_t* buf, int length, int place);
+
 // Function to parse a Frame from a buffer
 void parse_frame(Frame* frame, unsigned char* buf, int len) {
     UNUSED(len);
@@ -44,4 +46,20 @@ int build_response(Response* response, unsigned char* buf) {
     response->frame.payload[0] = response->cid;
     memcpy(response->frame.payload + 1, response->payload, response->payload_len);
     return build_frame(&response->frame, buf);
+}
+
+static void calculate_checksum(uint8_t* buf, int length, int place) {
+    uint8_t checksum = 0;
+
+    if(place == -1) {
+        place = length;
+    }
+
+    // Calculate checksum (up to 'length')
+    for(int i = 0; i < length; i++) {
+        checksum = (checksum + buf[i]) % 256;
+    }
+
+    // Assign checksum to the last position
+    buf[place] = checksum;
 }

@@ -2,6 +2,7 @@
 
 #include "../ldtoypad.h"
 #include "../views/EmulateToyPad_scene.h"
+#include "../ToypadEmu.h"
 
 #ifdef __cplusplus
 extern "C" {
