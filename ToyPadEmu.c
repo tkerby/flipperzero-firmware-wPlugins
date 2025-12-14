@@ -205,7 +205,7 @@ void ToyPadEmu_remove_all_tokens() {
         }
     }
     // Clear the box info
-    ToyPadEmu_clear(emulator);
+    ToyPadEmu_clear();
 }
 
 void ToyPadEmu_place_tokens(Token* tokens[MAX_TOKENS], BoxInfo boxes[NUM_BOXES]) {

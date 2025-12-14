@@ -300,8 +300,7 @@ static void ldtoypad_scene_emulate_draw_render_callback(Canvas* canvas, void* co
     }
 
     if(get_connected_status() == ConnectedStatusCleanupWanted) {
-        ToyPadEmu_clear(
-            emulator); // Clear the emulator if the USB is disconnected, this needs to be here because I cannot call this from the USB's ISR context.
+        ToyPadEmu_clear(); // Clear the emulator if the USB is disconnected, this needs to be here because I cannot call this from the USB's ISR context.
         set_connected_status(
             ConnectedStatusDisconnected); // Set the connected status to 0 (disconnected)
     }
@@ -314,7 +313,7 @@ static void ldtoypad_scene_emulate_draw_render_callback(Canvas* canvas, void* co
             SelectionMinifigure; // Set the minifigure box selected as this is the most commonnly used at start of the app.
 
         // reset the filled boxes
-        ToyPadEmu_clear(emulator);
+        ToyPadEmu_clear();
 
         // Give dolphin some xp for connecting the toypad
         dolphin_deed(DolphinDeedPluginStart);
