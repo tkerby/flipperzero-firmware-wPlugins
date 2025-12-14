@@ -280,8 +280,8 @@ static void create_uid(Token* token, int id) {
         // Generate UID for a minfig, that is always the same for your Flipper Zero
         for(int i = 1; i <= 5; i++) {
             // Combine id, version_name, and index for a hash
-            token->uid[i] = (uint8_t)((id >> (i * 5)) ^ version_name[i % sizeof(version_name)] ^
-                                      (uint8_t)(count * 37));
+            token->uid[i] =
+                (uint8_t)((id * 31 + count * 17 + version_name[i % sizeof(version_name)]) % 256);
         }
     }
 
