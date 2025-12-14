@@ -80,7 +80,7 @@ uint8_t ToyPadEmu_get_token_count();
  * @param      selectedBox  The box to place the token in
  * @return     true if successful, false otherwise
  */
-bool ToyPadEmu_place_token(Token* token, int selectedBox);
+bool ToyPadEmu_place(Token* token, int selectedBox);
 
 /**
  * @brief      Place multiple tokens on the toypad emulator according to the box info.

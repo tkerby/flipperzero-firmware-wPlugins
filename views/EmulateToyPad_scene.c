@@ -332,7 +332,7 @@ static void ldtoypad_scene_emulate_draw_render_callback(Canvas* canvas, void* co
         Token* token = is_vehicle ? createVehicle(id, (uint32_t[]){0, 0}) : createCharacter(id);
         if(!token) return; // Handle allocation failure
 
-        ToyPadEmu_place_token(token, selectedBox);
+        ToyPadEmu_place(token, selectedBox);
     }
 
     canvas_clear(canvas);
@@ -638,7 +638,7 @@ void saved_token_submenu_callback(void* context, uint32_t index) {
                 // set the token to the selected index
                 Token* token = load_saved_token((char*)furi_string_get_cstr(filepath));
                 if(token != NULL) {
-                    ToyPadEmu_place_token(token, selectedBox);
+                    ToyPadEmu_place(token, selectedBox);
                 }
             }
             model->show_placement_selection_screen = false;

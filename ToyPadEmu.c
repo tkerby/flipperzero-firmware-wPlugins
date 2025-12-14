@@ -125,7 +125,7 @@ void ToyPadEmu_remove_old_token(Token* token) {
 
 static void selectedBox_to_pad(Token* const token, int selectedBox);
 
-bool ToyPadEmu_place_token(Token* token, int selectedBox) {
+bool ToyPadEmu_place(Token* token, int selectedBox) {
     ToyPadEmu_remove_old_token(token); // Remove old token if it exists by UID
 
     // Find an empty slot or use the next available index
@@ -200,8 +200,9 @@ void ToyPadEmu_remove_all_tokens() {
     // Remove all tokens from the toypad by ToyPadEmu_remove with waiting between each removal
     for(int i = 0; i < MAX_TOKENS; i++) {
         if(emulator->tokens[i] != NULL) {
-            ToyPadEmu_remove(i);
-            furi_delay_ms(TOKEN_DELAY_TIME); // wait for the token to be removed
+            if(ToyPadEmu_remove(i)) {
+                furi_delay_ms(TOKEN_DELAY_TIME); // wait for the token to be removed
+            }
         }
     }
     // Clear the box info
@@ -221,7 +222,7 @@ void ToyPadEmu_place_tokens(Token* tokens[MAX_TOKENS], BoxInfo boxes[NUM_BOXES])
             // Find the box for this token
             for(int j = 0; j < NUM_BOXES; j++) {
                 if(boxes[j].index == i) {
-                    if(ToyPadEmu_place_token(tokens[i], j)) {
+                    if(ToyPadEmu_place(tokens[i], j)) {
                         furi_delay_ms(TOKEN_DELAY_TIME);
                     }
                     break;
