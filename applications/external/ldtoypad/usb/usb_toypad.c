@@ -39,40 +39,12 @@
 #define USB_EP0_SIZE 64
 PLACE_IN_SECTION("MB_MEM2") static uint32_t ubuf[0x20];
 
-ToyPadEmu* emulator;
-
-int connected_status = ConnectedStatusDisconnected;
-int get_connected_status() {
+static uint8_t connected_status = ConnectedStatusDisconnected;
+uint8_t get_connected_status() {
     return connected_status;
 }
-void set_connected_status(int status) {
-    connected_status = status;
-}
-
-// Function to calculate checksum
-void calculate_checksum(uint8_t* buf, int length, int place) {
-    uint8_t checksum = 0;
-
-    if(place == -1) {
-        place = length;
-    }
-
-    // Calculate checksum (up to 'length')
-    for(int i = 0; i < length; i++) {
-        checksum = (checksum + buf[i]) % 256;
-    }
-
-    // Assign checksum to the last position
-    buf[place] = checksum;
-}
-
-Token* find_token_by_index(ToyPadEmu* emulator, int index) {
-    for(int i = 0; i < MAX_TOKENS; i++) {
-        if(emulator->tokens[i] != NULL && emulator->tokens[i]->index == index) {
-            return emulator->tokens[i];
-        }
-    }
-    return NULL;
+void set_connected_status(enum ConnectedStatus status) {
+    connected_status = (uint8_t)status;
 }
 
 static void hid_init(usbd_device* dev, FuriHalUsbInterface* intf, void* ctx);
@@ -120,112 +92,6 @@ usbd_device* get_usb_device() {
 }
 
 Burtle* burtle; // Define the Burtle object
-
-void create_uid(Token* token, int id) {
-    char version_name[7];
-    snprintf(version_name, sizeof(version_name), "%s", furi_hal_version_get_name_ptr());
-
-    token->uid[0] = 0x04; // uid always 0x04
-
-    // when token is a vehicle we want a random uid for upgrades etc when creating a new vehicle
-    if(!token->id) {
-        for(int i = 1; i <= 5; i++) {
-            token->uid[i] = rand() % 256;
-        }
-    } else {
-        int count = get_token_count_of_specific_id(id);
-
-        // Generate UID for a minfig, that is always the same for your Flipper Zero
-        for(int i = 1; i <= 5; i++) {
-            // Combine id, version_name, and index for a hash
-            token->uid[i] =
-                (uint8_t)((id * 31 + count * 17 + version_name[i % sizeof(version_name)]) % 256);
-        }
-    }
-
-    token->uid[6] = 0x80; // last uid byte always 0x80
-}
-
-Token* createCharacter(int id) {
-    Token* token = (Token*)malloc(sizeof(Token)); // Allocate memory for the token
-
-    token->id = id; // Set the ID
-
-    create_uid(token, id); // Create the UID
-
-    // convert the name to a string
-    snprintf(token->name, sizeof(token->name), "%s", get_minifigure_name(id));
-
-    return token; // Return the created token
-}
-
-Token* createVehicle(int id, uint32_t upgrades[2]) {
-    Token* token = (Token*)malloc(sizeof(Token));
-
-    // Initialize the token data to zero
-    memset(token, 0, sizeof(Token));
-
-    // Dont set an ID for vehicles, it is in the token buffer already, we can use this to see if it is an minfig or vehicle by checking if the ID set or not
-
-    // Generate a random UID and store it
-    create_uid(token, id);
-
-    // Write the upgrades and ID to the token data
-    writeUInt32LE(&token->token[0x23 * 4], upgrades[0], 0); // Upgrades[0]
-    writeUInt16LE(&token->token[0x24 * 4], id, 0); // ID
-    writeUInt32LE(&token->token[0x25 * 4], upgrades[1], 0); // Upgrades[1]
-    writeUInt16BE(&token->token[0x26 * 4], 1, 0); // Constant value 1 (Big Endian)
-
-    snprintf(token->name, sizeof(token->name), "%s", get_vehicle_name(id));
-
-    return token;
-}
-
-// Remove a token
-bool ToyPadEmu_remove(int index) {
-    if(index < 0 || index >= MAX_TOKENS || emulator->tokens[index] == NULL) {
-        return false; // Invalid index or already removed
-    }
-
-    // Send removal command (assuming this is already implemented)
-    unsigned char buffer[32] = {0};
-    buffer[0] = FRAME_TYPE_REQUEST; // Magic number
-    buffer[1] = 0x0b; // Size
-    buffer[2] = emulator->tokens[index]->pad; // Pad number
-    buffer[3] = 0x00;
-    buffer[4] = index; // Index of token to remove
-    buffer[5] = 0x01; // Tag removed (not placed)
-    memcpy(&buffer[6], emulator->tokens[index]->uid, 7); // UID
-    buffer[13] = generate_checksum(buffer, 13);
-
-    usbd_ep_write(get_usb_device(), HID_EP_IN, buffer, sizeof(buffer));
-
-    if(emulator->tokens[index] != NULL) {
-        // Free the token and clear the slot
-        free(emulator->tokens[index]);
-    }
-
-    emulator->tokens[index] = NULL;
-
-    return true;
-}
-
-void ToyPadEmu_clear() {
-    // clear the tokens on the emulator and free the memory
-    for(int i = 0; i < MAX_TOKENS; i++) {
-        if(emulator->tokens[i] != NULL) {
-            free(emulator->tokens[i]);
-            emulator->tokens[i] = NULL;
-        }
-    }
-    memset(emulator->tokens, 0, sizeof(emulator->tokens));
-
-    // clear all box info
-    for(int i = 0; i < NUM_BOXES; i++) {
-        boxInfo[i].isFilled = false;
-        boxInfo[i].index = -1; // Reset index
-    }
-}
 
 static void hid_init(usbd_device* dev, FuriHalUsbInterface* intf, void* ctx) {
     UNUSED(intf);
@@ -388,7 +254,7 @@ void hid_out_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
         response.payload[0] = 0;
 
         // Find the token that matches the ind
-        token = find_token_by_index(emulator, ind);
+        token = ToyPadEmu_find_token_by_index(ind);
 
         if(token) {
             int start = page * 4;
@@ -406,12 +272,12 @@ void hid_out_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
         writeUInt32BE(buf, conf, 4);
         token = NULL;
 
-        token = find_token_by_index(emulator, index);
+        token = ToyPadEmu_find_token_by_index(index);
 
         memset(response.payload, 0, sizeof(response.payload));
 
         if(token) {
-            if(token->id) {
+            if(is_minifig(token)) {
                 response.payload[0] = 0x00;
                 writeUInt32LE(buf, token->id, 0);
                 tea_encrypt(buf, emulator->tea_key, response.payload + 1);
@@ -455,7 +321,7 @@ void hid_out_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
         uint8_t* data = request.payload + 2;
 
         // Find the token
-        Token* token = find_token_by_index(emulator, ind);
+        Token* token = ToyPadEmu_find_token_by_index(ind);
         if(token) {
             // Copy 4 bytes of data to token->token at offset 4 * page
             if(page >= 0 && page < 64) {
@@ -541,11 +407,6 @@ void hid_out_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
         return;
     }
 
-    // check if the response is empty
-    if(sizeof(response.payload) == 0) {
-        // sprintf(debug_text, "Empty payload_len");
-        return;
-    }
     if(response.payload_len > HID_EP_SZ) {
         set_debug_text("Payload too large");
         return;
@@ -554,8 +415,7 @@ void hid_out_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
     // Make the response
     unsigned char res_buf[HID_EP_SZ];
 
-    build_response(&response, res_buf);
-    int res_len = build_frame(&response.frame, res_buf);
+    int res_len = build_response(&response, res_buf);
 
     if(res_len <= 0) {
         set_debug_text("Invalid response");

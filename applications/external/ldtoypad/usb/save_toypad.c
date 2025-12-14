@@ -7,8 +7,6 @@
 #include "../minifigures.h"
 #include "../debug.h"
 
-#define TAG "LDToyPad"
-
 #define FILEPATH_SIZE          128
 #define FILE_NAME_LEN_MAX      256
 #define TOKEN_FILE_EXTENSION   ".toy"
@@ -21,13 +19,13 @@ int favorite_ids[MAX_FAVORITES];
 int num_favorites = 0;
 
 // Utility: Alloc file and storage
-File* alloc_file(Storage** storage) {
+static File* alloc_file(Storage** storage) {
     *storage = furi_record_open(RECORD_STORAGE);
     return storage_file_alloc(*storage);
 }
 
 // Utility: Open file with mode
-bool open_file(File* file, const char* filename, bool write_mode) {
+static bool open_file(File* file, const char* filename, bool write_mode) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     if(!storage) return false;
 
@@ -41,13 +39,13 @@ bool open_file(File* file, const char* filename, bool write_mode) {
 }
 
 // Utility: Close + free
-void file_close_and_free(File* file) {
+static void file_close_and_free(File* file) {
     storage_file_close(file);
     storage_file_free(file);
 }
 
 // Utility: Binary write
-bool save_binary_to_file(const void* data, size_t size, const char* filename) {
+static bool save_binary_to_file(const void* data, size_t size, const char* filename) {
     Storage* storage;
     File* file = alloc_file(&storage);
 
@@ -67,7 +65,7 @@ bool save_binary_to_file(const void* data, size_t size, const char* filename) {
 }
 
 // Utility: Binary read
-bool load_binary_from_file(void* data, size_t size, const char* filename) {
+static bool load_binary_from_file(void* data, size_t size, const char* filename) {
     Storage* storage;
     File* file = alloc_file(&storage);
 
@@ -95,7 +93,7 @@ bool save_favorites(void) {
             save_binary_to_file(favorite_ids, sizeof(int) * num_favorites, filename));
 }
 
-void cleanup_favorites() {
+static void cleanup_favorites() {
     // Remove unkown / favorites from the list / file
     uint8_t cleaned_favorites = 0;
     for(uint8_t i = 0; i < num_favorites; i++) {
@@ -185,7 +183,7 @@ bool is_favorite(int id) {
 }
 
 // Token Directory
-bool make_token_dir(Storage* storage) {
+static bool make_token_dir(Storage* storage) {
     return storage_simply_mkdir(storage, APP_DATA_PATH(TOKENS_DIR));
 }
 
@@ -291,7 +289,7 @@ Token* load_saved_token(char* filepath) {
 }
 
 // filename to toypads path
-void fn_to_toypads_fp(char* filename, char* fullpath) {
+static void fn_to_toypads_fp(char* filename, char* fullpath) {
     snprintf(
         fullpath,
         FILEPATH_SIZE,
@@ -301,12 +299,13 @@ void fn_to_toypads_fp(char* filename, char* fullpath) {
         TOYPADS_FILE_EXTENSION);
 }
 
-void mkdir_toypads(void) {
+static void mkdir_toypads(void) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     storage_simply_mkdir(storage, APP_DATA_PATH(TOYPADS_DIR));
     furi_record_close(RECORD_STORAGE);
 }
 
+// Toypad DTO (Data Transfer Object)
 typedef struct {
     Token tokens[MAX_TOKENS];
     BoxInfo boxes[NUM_BOXES];

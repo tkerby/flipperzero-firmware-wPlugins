@@ -7,6 +7,8 @@
 
 #include "usb/save_toypad.h"
 
+#include "ToyPadEmu.h"
+
 typedef enum {
     EmulateToyPadSubmenuIndex,
     SettingsSubmenuIndex,
@@ -98,12 +100,9 @@ static void ldtoypad_setting_minifig_only_mode_change(VariableItem* item) {
 }
 
 static void ldtoypad_setting_quick_switching_mode_change(VariableItem* item) {
-    LDToyPadApp* app = variable_item_get_context(item);
     uint8_t index = variable_item_get_current_value_index(item);
     variable_item_set_current_value_text(item, setting_no_yes[index]);
-    LDToyPadSceneEmulateModel* model =
-        view_get_model(ldtoypad_scene_emulate_get_view(app->view_scene_emulate));
-    model->quick_swap = index;
+    quick_swap = index;
 }
 
 static uint32_t minifigures_submenu_previous_callback(void* context) {
