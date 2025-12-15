@@ -11,6 +11,7 @@
 static const char *credits[] = {
     "",
     "-=> Protocol Magic by",
+    "DoobTheGoober",
     "L0rdDiakon",
     "RocketGod",
     "Skorp",
