@@ -44,9 +44,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipSocial v2.0.5 (By jblanked)](https://github.com/jblanked/FlipSocial)
 - Added: [Amiibo Toolkit v1.0 (By Firefox2100)](https://github.com/Firefox2100/ami_tool)
 - Added: [FlipTelegram v1.0 (By jblanked)](https://github.com/jblanked/FlipTelegram) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [ProtoPirate WIP v1.1 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate) [add support for fiatv0 (By yougz/doob/CharlesTheGreat77)](https://github.com/RocketGod-git/ProtoPirate/pull/6)
 - Updated: [Amiibo Toolkit v1.0 (By Firefox2100)](https://github.com/Firefox2100/ami_tool)
 - Updated: [LEGO Dimensions Toy Pad v0.5 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
+- Updated: [ProtoPirate WIP v1.1 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate) [add support for fiatv0 (By yougz/doob/CharlesTheGreat77)](https://github.com/RocketGod-git/ProtoPirate/pull/6)
 
 <a name="release">
 
