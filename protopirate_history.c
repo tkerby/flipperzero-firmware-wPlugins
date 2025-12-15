@@ -105,6 +105,19 @@ bool protopirate_history_add_to_history(
 
     // Serialize to flipper format
     subghz_protocol_decoder_base_serialize(decoder_base, item->flipper_format, preset);
+    
+    // Debug: Log what we're adding to history
+    flipper_format_rewind(item->flipper_format);
+    uint32_t debug_bit_count;
+    FuriString* debug_protocol = furi_string_alloc();
+    if (flipper_format_read_string(item->flipper_format, "Protocol", debug_protocol)) {
+        FURI_LOG_I(TAG, "History add - Protocol: %s", furi_string_get_cstr(debug_protocol));
+    }
+    flipper_format_rewind(item->flipper_format);
+    if (flipper_format_read_uint32(item->flipper_format, "Bit", &debug_bit_count, 1)) {
+        FURI_LOG_I(TAG, "History add - Bit count: %lu", debug_bit_count);
+    }
+    furi_string_free(debug_protocol);
 
     furi_string_free(text);
 
@@ -166,8 +179,6 @@ SubGhzProtocolDecoderBase*
     protopirate_history_get_decoder_base(ProtoPirateHistory* instance, uint16_t idx) {
     UNUSED(instance);
     UNUSED(idx);
-    // This would need the environment to recreate the decoder
-    // For now, return NULL - use get_text_item instead
     return NULL;
 }
 

@@ -130,15 +130,15 @@ ProtoPirateApp *protopirate_app_alloc()
     app->txrx->radio_device = 
         radio_device_loader_set(NULL, SubGhzRadioDeviceTypeExternalCC1101);
 
-    if(!app->txrx->radio_device) {
-        FURI_LOG_W(TAG, "External CC1101 not found, using internal CC1101.");
+    if(!app->txrx->radio_device || !subghz_devices_is_connect(app->txrx->radio_device)) {
+        FURI_LOG_W(TAG, "External CC1101 not found or failed, using internal CC1101.");
         app->txrx->radio_device = 
             radio_device_loader_set(NULL, SubGhzRadioDeviceTypeInternal);
         if(!app->txrx->radio_device) {
             FURI_LOG_E(TAG, "Failed to initialize internal CC1101.");
         }
     } else {
-        FURI_LOG_I(TAG, "External CC1101 detected and initialized.");
+        FURI_LOG_I(TAG, "CC1101 initialized successfully.");
     }
 
     if (!app->txrx->radio_device)

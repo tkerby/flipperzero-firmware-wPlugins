@@ -112,6 +112,7 @@ bool protopirate_storage_save_capture(
         if (flipper_format_read_uint32(flipper_format, "Bit", &uint32_value, 1))
         {
             flipper_format_write_uint32(save_file, "Bit", &uint32_value, 1);
+            FURI_LOG_I(TAG, "Saving Bit count: %lu", uint32_value);
         }
 
         // Key data - could be hex string or uint32 array
@@ -280,6 +281,22 @@ bool protopirate_storage_save_capture(
         {
             flipper_format_write_uint32(save_file, "BS", &uint32_value, 1);
         }
+
+        // Debug: Log what we saved
+        flipper_format_rewind(save_file);
+        FuriString *debug_str = furi_string_alloc();
+        uint32_t debug_bits;
+        uint32_t debug_version;
+        flipper_format_read_header(save_file, debug_str, &debug_version);
+        if (flipper_format_read_string(save_file, "Protocol", debug_str)) {
+            FURI_LOG_I(TAG, "Saved Protocol: %s", furi_string_get_cstr(debug_str));
+        }
+        flipper_format_rewind(save_file);
+        flipper_format_read_header(save_file, debug_str, &debug_version);
+        if (flipper_format_read_uint32(save_file, "Bit", &debug_bits, 1)) {
+            FURI_LOG_I(TAG, "Saved Bit count: %lu", debug_bits);
+        }
+        furi_string_free(debug_str);
 
         furi_string_free(string_value);
 
