@@ -24,6 +24,9 @@
 #include "sensor/ina226_driver.h"
 #include "sensor/ina228_driver.h"
 
+#define TICK_EVENT_PERIOD    5 // Sensor read period in ms
+#define SCREEN_UPDATE_PERIOD 200 // Screen update period in ms
+
 static bool app_custom_event_callback(void* context, uint32_t event) {
     App* app = (App*)context;
     furi_assert(app != NULL);
@@ -63,6 +66,8 @@ static void app_tick_event_callback(void* context) {
     App* app = (App*)context;
     furi_assert(app != NULL);
 
+    static int tick_counter = 1;
+
     if(app->sensor != NULL) {
         app->sensor->tick(app->sensor);
 
@@ -79,12 +84,16 @@ static void app_tick_event_callback(void* context) {
 
             if(app->datalog != NULL) {
                 datalog_append_record(app->datalog, &sensor_state);
-                datalog_screen_update(app->datalog_screen, app->datalog);
+                // datalog_screen_update(app->datalog_screen, app->datalog);
             }
         }
     }
 
-    scene_manager_handle_tick_event(app->scene_manager);
+    if(--tick_counter == 0) {
+        tick_counter = SCREEN_UPDATE_PERIOD / TICK_EVENT_PERIOD;
+        scene_manager_handle_tick_event(app->scene_manager);
+        datalog_screen_update(app->datalog_screen, app->datalog);
+    }
 }
 
 void app_restart_sensor_driver(App* app) {
@@ -186,7 +195,8 @@ static App* app_alloc() {
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_custom_event_callback(app->view_dispatcher, app_custom_event_callback);
     view_dispatcher_set_navigation_event_callback(app->view_dispatcher, app_back_event_callback);
-    view_dispatcher_set_tick_event_callback(app->view_dispatcher, app_tick_event_callback, 10);
+    view_dispatcher_set_tick_event_callback(
+        app->view_dispatcher, app_tick_event_callback, TICK_EVENT_PERIOD);
 
     // Attach view dispatcher to the GUI
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
