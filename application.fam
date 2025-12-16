@@ -10,5 +10,5 @@ App(
     fap_description="Flipper Zero Telegram Client", 
     fap_author="JBlanked",
     fap_weburl="https://github.com/jblanked/FlipTelegram",
-    fap_version="1.0",
+    fap_version="1.0.1",
 )
