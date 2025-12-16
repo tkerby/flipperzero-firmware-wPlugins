@@ -488,35 +488,45 @@ void FlipTelegramRun::drawViewingView(Canvas* canvas) {
                 int messagesFoundThisChunk = 0;
 
                 while(pos < chunk + chunkLen && messageCount < MAX_CACHED_MESSAGES) {
-                    // Find "username" field
+                    // Try to find "username" field first, then fall back to "title"
                     char* username_key = strstr(pos, "\"username\":\"");
-                    if(!username_key) {
+                    char* title_key = NULL;
+                    char* name_start = NULL;
+                    char* name_end = NULL;
+
+                    if(username_key) {
+                        // Extract username
+                        name_start = username_key + 12; // Skip "username":"
+                    } else {
+                        // No username found, try title
+                        title_key = strstr(pos, "\"title\":\"");
+                        if(!title_key) {
+                            break;
+                        }
+                        name_start = title_key + 9; // Skip "title":"
+                    }
+
+                    name_end = strchr(name_start, '"');
+                    if(!name_end || name_end >= chunk + chunkLen) {
+                        // Name might be incomplete at chunk boundary
+                        lastIncompleteUsername = username_key ? username_key : title_key;
                         break;
                     }
 
-                    // Extract username
-                    char* username_start = username_key + 12; // Skip "username":"
-                    char* username_end = strchr(username_start, '"');
-                    if(!username_end || username_end >= chunk + chunkLen) {
-                        // Username might be incomplete at chunk boundary
-                        lastIncompleteUsername = username_key;
-                        break;
-                    }
-
-                    if(username_end - username_start >= MAX_USERNAME_LEN) {
-                        pos = username_key + 1;
+                    if(name_end - name_start >= MAX_USERNAME_LEN) {
+                        pos = (username_key ? username_key : title_key) + 1;
                         continue;
                     }
 
-                    // Look for "text" field after username
-                    char* search_start = username_end;
-                    char* search_end = username_end + 500; // Search next 500 chars for text
+                    // Look for "text" field after username/title
+                    char* search_start = name_end;
+                    char* search_end = name_end + 500; // Search next 500 chars for text
                     if(search_end > chunk + chunkLen) search_end = chunk + chunkLen;
 
                     char* text_key = strstr(search_start, "\"text\":\"");
                     if(!text_key || text_key >= search_end) {
-                        // Text field might be in next chunk, save from username start
-                        lastIncompleteUsername = username_key;
+                        // Text field might be in next chunk, save from username/title start
+                        lastIncompleteUsername = username_key ? username_key : title_key;
                         break;
                     }
 
@@ -525,24 +535,24 @@ void FlipTelegramRun::drawViewingView(Canvas* canvas) {
                     char* text_end = strchr(text_start, '"');
                     if(!text_end || text_end >= chunk + chunkLen) {
                         // Text might be incomplete at chunk boundary
-                        lastIncompleteUsername = username_key;
+                        lastIncompleteUsername = username_key ? username_key : title_key;
                         break;
                     }
 
                     if(text_end - text_start >= MAX_TEXT_LEN) {
-                        pos = username_key + 1;
+                        pos = (username_key ? username_key : title_key) + 1;
                         continue;
                     }
 
-                    // Copy username and text to cached message
-                    size_t username_len = username_end - username_start;
+                    // Copy username/title and text to cached message
+                    size_t name_len = name_end - name_start;
                     size_t text_len = text_end - text_start;
                     snprintf(
                         cachedMessages[messageCount].username,
                         MAX_USERNAME_LEN,
                         "%.*s",
-                        (int)username_len,
-                        username_start);
+                        (int)name_len,
+                        name_start);
                     snprintf(
                         cachedMessages[messageCount].text,
                         MAX_TEXT_LEN,
@@ -587,30 +597,40 @@ void FlipTelegramRun::drawViewingView(Canvas* canvas) {
             if(carryoverLen > 0 && messageCount < MAX_CACHED_MESSAGES) {
                 char* pos = carryover;
                 while(pos < carryover + carryoverLen && messageCount < MAX_CACHED_MESSAGES) {
-                    // Find "username" field
+                    // Try to find "username" field first, then fall back to "title"
                     char* username_key = strstr(pos, "\"username\":\"");
-                    if(!username_key) {
+                    char* title_key = NULL;
+                    char* name_start = NULL;
+                    char* name_end = NULL;
+
+                    if(username_key) {
+                        // Extract username
+                        name_start = username_key + 12; // Skip "username":"
+                    } else {
+                        // No username found, try title
+                        title_key = strstr(pos, "\"title\":\"");
+                        if(!title_key) {
+                            break;
+                        }
+                        name_start = title_key + 9; // Skip "title":"
+                    }
+
+                    name_end = strchr(name_start, '"');
+                    if(!name_end) {
+                        FURI_LOG_W(TAG, "Name not terminated in carryover");
                         break;
                     }
 
-                    // Extract username
-                    char* username_start = username_key + 12;
-                    char* username_end = strchr(username_start, '"');
-                    if(!username_end) {
-                        FURI_LOG_W(TAG, "Username not terminated in carryover");
-                        break;
-                    }
-
-                    if(username_end - username_start >= MAX_USERNAME_LEN) {
-                        pos = username_key + 1;
+                    if(name_end - name_start >= MAX_USERNAME_LEN) {
+                        pos = (username_key ? username_key : title_key) + 1;
                         continue;
                     }
 
-                    // Look for "text" field after username
-                    char* text_key = strstr(username_end, "\"text\":\"");
+                    // Look for "text" field after username/title
+                    char* text_key = strstr(name_end, "\"text\":\"");
                     if(!text_key) {
-                        FURI_LOG_W(TAG, "No text field found after username in carryover");
-                        pos = username_key + 1;
+                        FURI_LOG_W(TAG, "No text field found after name in carryover");
+                        pos = (username_key ? username_key : title_key) + 1;
                         continue;
                     }
 
@@ -623,19 +643,19 @@ void FlipTelegramRun::drawViewingView(Canvas* canvas) {
                     }
 
                     if(text_end - text_start >= MAX_TEXT_LEN) {
-                        pos = username_key + 1;
+                        pos = (username_key ? username_key : title_key) + 1;
                         continue;
                     }
 
-                    // Copy username and text to cached message
-                    size_t username_len = username_end - username_start;
+                    // Copy username/title and text to cached message
+                    size_t name_len = name_end - name_start;
                     size_t text_len = text_end - text_start;
                     snprintf(
                         cachedMessages[messageCount].username,
                         MAX_USERNAME_LEN,
                         "%.*s",
-                        (int)username_len,
-                        username_start);
+                        (int)name_len,
+                        name_start);
                     snprintf(
                         cachedMessages[messageCount].text,
                         MAX_TEXT_LEN,
