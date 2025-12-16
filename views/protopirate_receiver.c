@@ -4,6 +4,7 @@
 #include <input/input.h>
 #include <gui/elements.h>
 #include <furi.h>
+#include <math.h>
 
 #define FRAME_HEIGHT 12
 #define MAX_LEN_PX   112
@@ -34,6 +35,7 @@ typedef struct {
     bool external_radio;
     ProtoPirateLock lock;
     uint8_t lock_count;
+    uint8_t animation_frame;
 } ProtoPirateReceiverModel;
 
 void protopirate_view_receiver_set_rssi(ProtoPirateReceiver* receiver, float rssi) {
@@ -133,26 +135,13 @@ static void protopirate_view_receiver_draw_frame(Canvas* canvas, uint16_t idx, b
     canvas_draw_dot(canvas, scrollbar ? 121 : 126, (0 + idx * FRAME_HEIGHT) + 11);
 }
 
-static void protopirate_view_receiver_draw_rssi(Canvas* canvas, ProtoPirateReceiverModel* model) {
-    uint8_t x = 58;
-    uint8_t y = 51;
-    float rssi = model->rssi;
-
-    if(rssi >= -60.0f) {
-        canvas_draw_box(canvas, x + 8, y + 2, 4, 5);
-    }
-    if(rssi >= -70.0f) {
-        canvas_draw_box(canvas, x + 4, y + 4, 4, 3);
-    }
-    if(rssi >= -80.0f) {
-        canvas_draw_box(canvas, x, y + 6, 4, 1);
-    }
-}
-
 void protopirate_view_receiver_draw(Canvas* canvas, ProtoPirateReceiverModel* model) {
     canvas_clear(canvas);
     canvas_set_color(canvas, ColorBlack);
     canvas_set_font(canvas, FontSecondary);
+
+    // Increment animation frame
+    model->animation_frame = (model->animation_frame + 1) % 96;
 
     size_t item_count = ProtoPirateReceiverMenuItemArray_size(model->history_item_arr);
     bool scrollbar = item_count > MENU_ITEMS;
@@ -161,6 +150,7 @@ void protopirate_view_receiver_draw(Canvas* canvas, ProtoPirateReceiverModel* mo
     str_buff = furi_string_alloc();
 
     if(item_count > 0) {
+        // Draw received items list
         size_t shift_position = model->list_offset;
 
         for(size_t i = 0; i < MIN(item_count, MENU_ITEMS); i++) {
@@ -184,34 +174,158 @@ void protopirate_view_receiver_draw(Canvas* canvas, ProtoPirateReceiverModel* mo
             elements_scrollbar_pos(canvas, 128, 0, 49, shift_position, item_count);
         }
     } else {
-        canvas_draw_str_aligned(canvas, 64, 14, AlignCenter, AlignCenter, "ProtoPirate");
-        canvas_draw_str_aligned(canvas, 64, 26, AlignCenter, AlignCenter, "Waiting for signal...");
-        canvas_draw_str_aligned(canvas, 64, 38, AlignCenter, AlignCenter, "<- to Config");
+        // Cool animated radar with expanding dots
+        int center_x = 64;
+        int center_y = 22;
+        
+        // Three waves of expanding circles with different speeds
+        for(int wave = 0; wave < 3; wave++) {
+            // Calculate radius for this wave with offset
+            int base_radius = ((model->animation_frame + wave * 32) % 96) / 3;
+            
+            if(base_radius < 28) {
+                // Calculate fade based on distance from center
+                int dot_density = 24 - (base_radius / 2);
+                
+                // Draw circle with dots
+                for(int angle = 0; angle < 360; angle += (360 / dot_density)) {
+                    float rad = (angle + wave * 15) * 3.14159 / 180.0;
+                    int x = center_x + base_radius * cosf(rad);
+                    int y = center_y + base_radius * sinf(rad);
+                    
+                    // Only draw if within bounds and create fade effect
+                    if(x > 0 && x < 128 && y > 0 && y < 48) {
+                        // Dots get smaller/fade as they expand
+                        if(base_radius < 10) {
+                            canvas_draw_dot(canvas, x, y);
+                            // Double dot for inner circles for brightness
+                            if(base_radius < 5) {
+                                canvas_draw_dot(canvas, x+1, y);
+                            }
+                        } else if(base_radius < 20) {
+                            // Skip some dots for fade effect
+                            if(angle % 30 == 0) {
+                                canvas_draw_dot(canvas, x, y);
+                            }
+                        } else {
+                            // Very sparse dots at edge
+                            if(angle % 60 == 0) {
+                                canvas_draw_dot(canvas, x, y);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Static guide circles (very faint)
+        for(int angle = 0; angle < 360; angle += 45) {
+            float rad = angle * 3.14159 / 180.0;
+            canvas_draw_dot(canvas, center_x + 15 * cosf(rad), center_y + 15 * sinf(rad));
+        }
+        
+        // Rotating sweep line with glow effect
+        float sweep_angle = (model->animation_frame * 3.75) * 3.14159 / 180.0;
+        
+        // Main sweep line
+        int sweep_x = center_x + 22 * cosf(sweep_angle);
+        int sweep_y = center_y + 22 * sinf(sweep_angle);
+        canvas_draw_line(canvas, center_x, center_y, sweep_x, sweep_y);
+        
+        // Sweep "glow" - additional lines at slight offsets
+        float glow_angle1 = sweep_angle - 0.05;
+        float glow_angle2 = sweep_angle + 0.05;
+        canvas_draw_line(canvas, center_x, center_y, 
+                         center_x + 20 * cosf(glow_angle1), 
+                         center_y + 20 * sinf(glow_angle1));
+        canvas_draw_line(canvas, center_x, center_y,
+                         center_x + 20 * cosf(glow_angle2),
+                         center_y + 20 * sinf(glow_angle2));
+        
+        // Sweep trail (fading dots)
+        for(int i = 1; i <= 12; i++) {
+            float trail_angle = sweep_angle - (i * 0.15);
+            int trail_radius = 22 - i;
+            if(trail_radius > 0) {
+                int trail_x = center_x + trail_radius * cosf(trail_angle);
+                int trail_y = center_y + trail_radius * sinf(trail_angle);
+                // Only draw every other dot in trail for fade effect
+                if(i % 2 == 0 || i < 4) {
+                    canvas_draw_dot(canvas, trail_x, trail_y);
+                }
+            }
+        }
+        
+        // Pulsing center
+        int pulse = (model->animation_frame % 32);
+        if(pulse < 16) {
+            canvas_draw_disc(canvas, center_x, center_y, 2);
+        } else {
+            canvas_draw_circle(canvas, center_x, center_y, 2);
+        }
+        if(pulse < 8 || (pulse > 16 && pulse < 24)) {
+            canvas_draw_dot(canvas, center_x, center_y);
+        }
+        
+        // Left-aligned config hint
+        canvas_set_font(canvas, FontSecondary);
+        canvas_draw_str(canvas, 2, 45, "< Config");
     }
 
     furi_string_free(str_buff);
 
+    // Status bar separator
     canvas_set_color(canvas, ColorBlack);
     canvas_draw_line(canvas, 0, 48, 127, 48);
 
     // Draw status bar
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str(canvas, 2, 58, furi_string_get_cstr(model->frequency_str));
-    canvas_draw_str(canvas, 40, 58, furi_string_get_cstr(model->preset_str));
+    
+    // Activity indicator - pulsing when receiving
+    if(model->rssi > -90) {
+        int pulse = model->animation_frame % 16;
+        if(pulse < 8) {
+            canvas_draw_disc(canvas, 2, 54, 1);
+        }
+    }
+    
+    // Frequency
+    canvas_draw_str(canvas, 5, 58, furi_string_get_cstr(model->frequency_str));
+    
+    // Preset
+    canvas_draw_str(canvas, 44, 58, furi_string_get_cstr(model->preset_str));
+    
+    // History counter
     canvas_draw_str_aligned(
-        canvas, 110, 58, AlignCenter, AlignBottom, furi_string_get_cstr(model->history_stat_str));
+        canvas, 108, 58, AlignCenter, AlignBottom, furi_string_get_cstr(model->history_stat_str));
 
-    // Draw RSSI
-    protopirate_view_receiver_draw_rssi(canvas, model);
+    // Draw RSSI indicator with animation
+    uint8_t x = 70;
+    uint8_t y = 51;
+    float rssi = model->rssi;
 
-    // Draw external radio indicator if needed
-    if(model->external_radio) {
-        canvas_draw_str(canvas, 100, 58, "Ext");
+    if(rssi >= -80.0f) {
+        canvas_draw_box(canvas, x, y + 5, 3, 2);
+    }
+    if(rssi >= -70.0f) {
+        canvas_draw_box(canvas, x + 4, y + 3, 3, 4);
+    }
+    if(rssi >= -60.0f) {
+        canvas_draw_box(canvas, x + 8, y + 1, 3, 6);
+        // Pulse effect for strong signal
+        if(model->animation_frame % 24 < 12) {
+            canvas_draw_frame(canvas, x + 7, y, 5, 8);
+        }
     }
 
-    // Draw lock indicator
+    // External radio indicator
+    if(model->external_radio) {
+        canvas_draw_str(canvas, 116, 58, "E");
+    }
+
+    // Lock indicator
     if(model->lock == ProtoPirateLockOn) {
-        canvas_draw_str(canvas, 119, 58, "L");
+        canvas_draw_str(canvas, 122, 58, "L");
     }
 }
 
@@ -367,6 +481,7 @@ ProtoPirateReceiver* protopirate_view_receiver_alloc() {
             model->external_radio = false;
             model->lock = ProtoPirateLockOff;
             model->lock_count = 0;
+            model->animation_frame = 0;
         },
         true);
 
