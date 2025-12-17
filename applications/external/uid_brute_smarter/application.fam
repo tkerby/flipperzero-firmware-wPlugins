@@ -9,11 +9,12 @@ App(
         "uid_brute_smarter.c",
         "pattern_engine.c",
         "scenes/uid_brute_smarter_scene_about.c",
+        #  "version.c",
     ],
     fap_icon="icon_10x10.png",
     fap_category="NFC",
     fap_author="fbettag",
     fap_weburl="https://github.com/fbettag/uid_brute_smarter",
-    fap_version="1.0",
+    fap_version="1.1",
     fap_description="Enhanced UID brute-force with key management",
 )

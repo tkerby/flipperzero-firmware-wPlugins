@@ -1,4 +1,5 @@
 #include "uid_brute_smarter_scene_about.h"
+// #include "../version.h"
 #include <gui/elements.h>
 #include <gui/view_dispatcher.h>
 #include <furi.h>
@@ -195,12 +196,15 @@ static void uid_brute_smarter_scene_about_draw_callback(Canvas* canvas, void* co
 
     // Draw white box behind text for perfect readability
     canvas_set_color(canvas, ColorWhite);
-    canvas_draw_box(canvas, 18, 30, 92, 18);
+    canvas_draw_box(canvas, 18, 28, 92, 26);
     canvas_set_color(canvas, ColorBlack);
 
     // Draw the GitHub URL centered
-    canvas_draw_str_aligned(canvas, 64, 35, AlignCenter, AlignCenter, "github.com/fbettag/");
-    canvas_draw_str_aligned(canvas, 64, 43, AlignCenter, AlignCenter, "uid_brute_smarter");
+    canvas_draw_str_aligned(canvas, 64, 33, AlignCenter, AlignCenter, "github.com/fbettag/");
+    canvas_draw_str_aligned(canvas, 64, 41, AlignCenter, AlignCenter, "uid_brute_smarter");
+
+    // Draw version below (from version.c)
+    canvas_draw_str_aligned(canvas, 64, 50, AlignCenter, AlignCenter, FAP_VERSION);
 }
 
 static bool uid_brute_smarter_scene_about_input_callback(InputEvent* event, void* context) {

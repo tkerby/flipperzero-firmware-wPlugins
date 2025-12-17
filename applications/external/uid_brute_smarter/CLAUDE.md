@@ -21,6 +21,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # From Momentum-Firmware root directory
 cd /Users/fbettag/src/flipperzero/Momentum-Firmware
 
+# Generate version file (shows git version on about screen)
+cd applications_user/uid_brute_smarter
+git describe --tags --always --dirty > VERSION
+echo "const char* APP_VERSION_STR = \"$(cat VERSION)\";" > version.c
+echo "extern const char* APP_VERSION_STR;" > version.h
+cd ../..
+
 # Build the app
 ./fbt fap_uid_brute_smarter
 
