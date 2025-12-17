@@ -11,5 +11,5 @@ App(
     fap_author="fbettag",
     fap_version="1.0",
     fap_weburl="https://github.com/fbettag/uid_brute_smarter",
-    sources=["uid_brute_smarter.c", "pattern_engine.c"],
+    sources=["uid_brute_smarter.c", "pattern_engine.c", "scenes/uid_brute_smarter_scene_about.c"],
 )
