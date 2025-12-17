@@ -50,6 +50,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipTelegram v1.0.1 (By jblanked)](https://github.com/jblanked/FlipTelegram) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Default/Minimal Build Updated to include Holiday / Winter animations.
 - [Patreon Build Update](https://www.patreon.com/RogueMaster/membership): ManifestSwitcher Build Updated to include Holiday / Winter animations in Minimal selection.
+- Added: [PC Monitor USB v1.0 (By DonJulve & TheSainEyereg)](https://github.com/TheSainEyereg/flipper-pc-monitor) `Req: [Backend](https://github.com/DonJulve/Flipper-Zero-PC-Monitor-USB-Backend)`
 
 <a name="release">
 
@@ -674,6 +675,7 @@ $ ./fbt dolphin_ext
 - [Password Manager v1.2 (By Rrycbarm)](https://github.com/Rrycbarm/flipperZeroPasswordManager)
 - [Passy v1.4 (By bettse)](https://github.com/bettse/passy)
 - [PC Monitor v1.1.3 (By TheSainEyereg)](https://github.com/TheSainEyereg/flipper-pc-monitor) `Req: [Backend](https://github.com/TheSainEyereg/flipper-pc-monitor-backend)`
+- [PC Monitor USB v1.0 (By DonJulve & TheSainEyereg)](https://github.com/TheSainEyereg/flipper-pc-monitor) `Req: [Backend](https://github.com/DonJulve/Flipper-Zero-PC-Monitor-USB-Backend)`
 - [Pet a Dolphin v1.2 (By ugeneSmile)](https://github.com/EugeneSmile/PetADolphin)
 - [Pet Your Dolphin v0.1 (By dwight9339)](https://github.com/dwight9339/pet_your_dolphin)
 - [pForth (By twisted-pear)](https://github.com/twisted-pear/f0forth)
