@@ -1,4 +1,5 @@
 #include "uid_brute_smarter_scene_about.h"
+#include "../version.h"
 #include <gui/elements.h>
 #include <gui/view_dispatcher.h>
 #include <furi.h>
@@ -6,11 +7,6 @@
 
 #define ANIMATION_FRAMES 12
 #define ANIMATION_SPEED_MS 200
-
-// APP_VERSION is defined at compile time from git describe
-#ifndef APP_VERSION
-#define APP_VERSION "v1.0-unknown"
-#endif
 
 // Particle system for cool effects
 #define MAX_PARTICLES 8
@@ -206,8 +202,8 @@ static void uid_brute_smarter_scene_about_draw_callback(Canvas* canvas, void* co
     canvas_draw_str_aligned(canvas, 64, 33, AlignCenter, AlignCenter, "github.com/fbettag/");
     canvas_draw_str_aligned(canvas, 64, 41, AlignCenter, AlignCenter, "uid_brute_smarter");
 
-    // Draw version below
-    canvas_draw_str_aligned(canvas, 64, 50, AlignCenter, AlignCenter, APP_VERSION);
+    // Draw version below (from version.c)
+    canvas_draw_str_aligned(canvas, 64, 50, AlignCenter, AlignCenter, APP_VERSION_STR);
 }
 
 static bool uid_brute_smarter_scene_about_input_callback(InputEvent* event, void* context) {

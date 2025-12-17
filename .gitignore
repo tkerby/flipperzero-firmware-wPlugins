@@ -80,4 +80,6 @@ tests/debug_*
 tests/simple_*
 tests/test_*
 tests/unit/debug_test
-tests/unit/test_*
+tests/unit/test_*version.c
+version.h
+VERSION
