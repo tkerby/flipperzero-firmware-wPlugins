@@ -113,7 +113,7 @@ jobs:
       run: |
         # Create the applications_user directory if it doesn't exist
         mkdir -p momentum-firmware/applications_user/uid_brute_smarter
-        
+
         # Copy only the necessary files
         cp uid_brute_smarter/*.c momentum-firmware/applications_user/uid_brute_smarter/
         cp uid_brute_smarter/*.h momentum-firmware/applications_user/uid_brute_smarter/
@@ -121,6 +121,7 @@ jobs:
         cp uid_brute_smarter/*.png momentum-firmware/applications_user/uid_brute_smarter/ 2>/dev/null || true
         cp -r uid_brute_smarter/assets momentum-firmware/applications_user/uid_brute_smarter/ 2>/dev/null || true
         cp -r uid_brute_smarter/views momentum-firmware/applications_user/uid_brute_smarter/ 2>/dev/null || true
+        cp -r uid_brute_smarter/scenes momentum-firmware/applications_user/uid_brute_smarter/ 2>/dev/null || true
         
     - name: Build application
       run: |
