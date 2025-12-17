@@ -109,6 +109,15 @@ jobs:
           protobuf-compiler \
           ccache
           
+    - name: Generate version files
+      run: |
+        cd uid_brute_smarter
+        VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "v1.0-ci")
+        echo "$VERSION" > VERSION
+        echo "const char* APP_VERSION_STR = \"$VERSION\";" > version.c
+        echo "extern const char* APP_VERSION_STR;" > version.h
+        cd ..
+
     - name: Install app to firmware
       run: |
         # Create the applications_user directory if it doesn't exist
