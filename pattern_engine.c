@@ -57,6 +57,36 @@
 static const uint32_t common_k_values[] = {16, 32, 64, 100, 256};
 static const uint8_t common_k_count = 5;
 
+bool pattern_engine_detect_bitmask(const uint32_t* uids, uint8_t count, PatternResult* result) {
+    uint32_t and_mask = 0xFFFFFFFF;
+    uint32_t or_mask = 0x00000000;
+
+    for(uint8_t i = 0; i < count; i++) {
+        and_mask &= uids[i];
+        or_mask |= uids[i];
+    }
+
+    uint32_t bitmask = and_mask ^ or_mask;
+
+    if(bitmask != 0 && (bitmask & (bitmask - 1)) != 0) {
+        result->type = PatternBitmask;
+        result->start_uid = and_mask;
+        result->end_uid = or_mask;
+        result->step = 1;
+        result->bitmask = bitmask;
+        result->range_size = 0;
+        for(uint8_t i = 0; i < 32; i++) {
+            if((bitmask >> i) & 1) {
+                result->range_size++;
+            }
+        }
+        result->range_size = 1 << result->range_size;
+        return true;
+    }
+
+    return false;
+}
+
 bool pattern_engine_detect(const uint32_t* uids, uint8_t count, PatternResult* result) {
     furi_assert(uids);
     furi_assert(result);
@@ -173,6 +203,10 @@ bool pattern_engine_detect(const uint32_t* uids, uint8_t count, PatternResult* r
         result->range_size = (result->end_uid - result->start_uid) + 1;
         return true;
     }
+
+    if(pattern_engine_detect_bitmask(uids, count, result)) {
+        return true;
+    }
     
     // Unknown pattern - expand around min/max values with constraints
     result->type = PatternUnknown;
@@ -249,40 +283,63 @@ bool pattern_engine_build_range(
     }
     
     *actual_size = 0;
-    uint32_t current = result->start_uid;
     
-    // Safety check: ensure we don't overflow the range buffer
-    uint16_t max_iterations = MIN(range_size, result->range_size);
-    FURI_LOG_D(TAG, "[BUILD_RANGE] Max iterations: %d", max_iterations);
+    if(result->type == PatternBitmask) {
+        uint32_t base = result->start_uid;
+        uint32_t bitmask = result->bitmask;
+        uint32_t i = 0;
+        
+        while(i < result->range_size && *actual_size < range_size) {
+            uint32_t current_uid = base;
+            uint32_t temp = i;
+            for(uint8_t j = 0; j < 32; j++) {
+                if((bitmask >> j) & 1) {
+                    if(temp & 1) {
+                        current_uid |= (1 << j);
+                    }
+                    temp >>= 1;
+                }
+            }
+            range[*actual_size] = current_uid;
+            (*actual_size)++;
+            i++;
+        }
+    } else {
+        uint32_t current = result->start_uid;
     
-    while(current <= result->end_uid && *actual_size < max_iterations) {
-        // Additional bounds checking
-        if(*actual_size >= range_size) {
-            FURI_LOG_W(TAG, "[BUILD_RANGE] Reached range_size limit: %d", range_size);
-            break;
-        }
+        // Safety check: ensure we don't overflow the range buffer
+        uint16_t max_iterations = MIN(range_size, result->range_size);
+        FURI_LOG_D(TAG, "[BUILD_RANGE] Max iterations: %d", max_iterations);
         
-        range[*actual_size] = current;
-        (*actual_size)++;
-        
-        // Check for overflow before adding step
-        if(current > (UINT32_MAX - result->step)) {
-            FURI_LOG_W(TAG, "[BUILD_RANGE] UID overflow prevented at %08lX", current);
-            break;
-        }
-        
-        current += result->step;
-        
-        // Additional safety check to prevent infinite loops
-        if(*actual_size >= MAX_RANGE_SIZE) {
-            FURI_LOG_W(TAG, "[BUILD_RANGE] Reached MAX_RANGE_SIZE limit");
-            break;
-        }
-        
-        // Log progress every 50 iterations
-        if(*actual_size % 50 == 0) {
-            FURI_LOG_D(TAG, "[BUILD_RANGE] Progress: %d/%d, current=%08lX", 
-                      *actual_size, max_iterations, current);
+        while(current <= result->end_uid && *actual_size < max_iterations) {
+            // Additional bounds checking
+            if(*actual_size >= range_size) {
+                FURI_LOG_W(TAG, "[BUILD_RANGE] Reached range_size limit: %d", range_size);
+                break;
+            }
+            
+            range[*actual_size] = current;
+            (*actual_size)++;
+            
+            // Check for overflow before adding step
+            if(current > (UINT32_MAX - result->step)) {
+                FURI_LOG_W(TAG, "[BUILD_RANGE] UID overflow prevented at %08lX", current);
+                break;
+            }
+            
+            current += result->step;
+            
+            // Additional safety check to prevent infinite loops
+            if(*actual_size >= MAX_RANGE_SIZE) {
+                FURI_LOG_W(TAG, "[BUILD_RANGE] Reached MAX_RANGE_SIZE limit");
+                break;
+            }
+            
+            // Log progress every 50 iterations
+            if(*actual_size % 50 == 0) {
+                FURI_LOG_D(TAG, "[BUILD_RANGE] Progress: %d/%d, current=%08lX", 
+                        *actual_size, max_iterations, current);
+            }
         }
     }
     
@@ -302,6 +359,8 @@ const char* pattern_engine_get_name(PatternType type) {
             return "+K Linear";
         case PatternLe16:
             return "16-bit LE Counter";
+        case PatternBitmask:
+            return "Bitmask";
         case PatternUnknown:
         default:
             return "Unknown (±256)";

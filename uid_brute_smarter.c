@@ -54,12 +54,12 @@
 
 // Debug logging macros
 #define DEBUG_LOG(fmt, ...) FURI_LOG_I(TAG, fmt, ##__VA_ARGS__)
+#define INFO_LOG(fmt, ...) FURI_LOG_I(TAG, fmt, ##__VA_ARGS__)
 #define ERROR_LOG(fmt, ...) FURI_LOG_E(TAG, fmt, ##__VA_ARGS__)
 #define WARN_LOG(fmt, ...) FURI_LOG_W(TAG, fmt, ##__VA_ARGS__)
 
 // Configuration constants
 #define MAX_UIDS 5
-#define MAX_RANGE_SIZE 1000
 #define DEFAULT_DELAY_MS 500
 #define DEFAULT_PAUSE_EVERY 0
 #define DEFAULT_PAUSE_DURATION_S 3
@@ -104,6 +104,7 @@ typedef struct {
     uint32_t end_uid;
     uint32_t step;
     uint32_t current_uid;
+    uint32_t bitmask;  // For bitmask patterns
     uint32_t delay_ms;
     uint32_t pause_every;
     uint32_t pause_duration_s;
@@ -111,6 +112,7 @@ typedef struct {
     bool should_stop;
     uint32_t total_attempts;
     uint32_t pause_counter;
+    uint32_t total_range_size;  // Total UIDs in the range (for progress display)
 } UidBruteSmartApp;
 
 typedef enum {
@@ -146,14 +148,13 @@ typedef struct {
     
     // Simple timer-based brute force (no threading)
     FuriTimer* brute_timer;
-    uint32_t* uid_range;  // Generated range of UIDs to bruteforce
-    uint16_t range_size;  // Size of the range
-    uint16_t current_index;  // Current position in range
+    uint32_t current_iteration;  // Current iteration counter (replaces current_index)
     NfcListener* listener;  // Current NFC listener
     uint32_t last_emulation_time;  // Timestamp of last emulation start
     uint8_t nfc_retry_count;  // NFC operation retry counter
     bool is_view_transitioning;  // Flag to prevent race conditions during view changes
     uint32_t last_key_event_time;  // Timestamp of last key event for debouncing
+    char brute_header[32];  // Buffer for brute force header text with pattern name
 } UidBruteSmarter;
 
 // Forward declarations
@@ -169,6 +170,59 @@ static void uid_brute_smarter_emulate_uid(UidBruteSmarter* instance, uint32_t ui
 static void uid_brute_smarter_safe_switch_view(UidBruteSmarter* instance, UidBruteSmarterView view);
 static bool uid_brute_smarter_is_key_debounced(UidBruteSmarter* instance);
 static uint32_t uid_brute_smarter_about_back_callback(void* context);
+static uint32_t uid_brute_smarter_calculate_uid(UidBruteSmarter* instance, uint32_t iteration);
+
+// Calculate UID on-the-fly based on pattern and iteration number
+static uint32_t uid_brute_smarter_calculate_uid(UidBruteSmarter* instance, uint32_t iteration) {
+    if(!instance || !instance->app) {
+        return 0;
+    }
+
+    UidBruteSmartApp* app = instance->app;
+
+    switch(app->pattern) {
+        case PatternInc1:
+        case PatternUnknown:
+            // Simple linear increment by 1
+            return app->start_uid + iteration;
+
+        case PatternIncK:
+            // Linear increment by step (K)
+            return app->start_uid + (iteration * app->step);
+
+        case PatternLe16:
+            // 16-bit little-endian counter (lower 16 bits increment)
+            {
+                uint32_t base = app->start_uid & 0xFFFF0000;
+                uint32_t offset = (app->start_uid & 0x0000FFFF) + iteration;
+                return base | (offset & 0xFFFF);
+            }
+
+        case PatternBitmask:
+            // Bitmask pattern - iterate through bit combinations
+            {
+                uint32_t base = app->start_uid;
+                uint32_t bitmask = app->bitmask;
+                uint32_t current_uid = base;
+                uint32_t temp = iteration;
+
+                // Set bits according to iteration value
+                for(uint8_t i = 0; i < 32; i++) {
+                    if((bitmask >> i) & 1) {
+                        if(temp & 1) {
+                            current_uid |= (1 << i);
+                        }
+                        temp >>= 1;
+                    }
+                }
+                return current_uid;
+            }
+
+        default:
+            ERROR_LOG("[CALC_UID] Unknown pattern type: %d", app->pattern);
+            return app->start_uid;
+    }
+}
 
 static bool uid_brute_smarter_is_key_debounced(UidBruteSmarter* instance) {
     if(!instance) return false;
@@ -288,15 +342,6 @@ static void uid_brute_smarter_free(UidBruteSmarter* instance) {
         nfc_listener_stop(instance->listener);
         nfc_listener_free(instance->listener);
         instance->listener = NULL;
-    }
-    
-    // Free UID range if allocated
-    if(instance->uid_range) {
-        DEBUG_LOG("[FREE] Freeing UID range");
-        free(instance->uid_range);
-        instance->uid_range = NULL;
-        instance->range_size = 0;
-        instance->current_index = 0;
     }
     
     // Free loaded key memory with validation
@@ -777,25 +822,25 @@ static void uid_brute_smarter_timer_callback(void* context) {
         return;
     }
     
-    DEBUG_LOG("[TIMER] Context valid, is_running=%d, should_stop=%d, index=%d/%d", 
-              instance->app->is_running, 
+    DEBUG_LOG("[TIMER] Context valid, is_running=%d, should_stop=%d, iteration=%lu/%lu",
+              instance->app->is_running,
               instance->app->should_stop,
-              instance->current_index,
-              instance->range_size);
-    
+              instance->current_iteration,
+              instance->app->total_range_size);
+
     // Additional safety: Check if we're still in brute force view
     if(!instance->app->is_running) {
         DEBUG_LOG("[TIMER] App not running, stopping timer");
         furi_timer_stop(instance->brute_timer);
         return;
     }
-    
+
     // Check if we should stop
     if(instance->app->should_stop) {
         DEBUG_LOG("[TIMER] Stop requested, cleaning up");
         furi_timer_stop(instance->brute_timer);
         instance->app->is_running = false;
-        
+
         // Clean up NFC resources
         if(instance->listener) {
             nfc_listener_stop(instance->listener);
@@ -805,29 +850,18 @@ static void uid_brute_smarter_timer_callback(void* context) {
         if(instance->nfc_device) {
             nfc_device_clear(instance->nfc_device);
         }
-        
-        // Don't free timer here - it will be freed later
-        // Timer cannot free itself from within its own callback
-        
-        // Free UID range
-        if(instance->uid_range) {
-            free(instance->uid_range);
-            instance->uid_range = NULL;
-            instance->range_size = 0;
-            instance->current_index = 0;
-        }
-        
+
         // Go directly back to menu
         uid_brute_smarter_safe_switch_view(instance, UidBruteSmarterViewMenu);
         return;
     }
-    
+
     // Check if we've completed all UIDs
-    if(instance->current_index >= instance->range_size) {
+    if(instance->current_iteration >= instance->app->total_range_size) {
         DEBUG_LOG("[TIMER] Brute force complete");
         furi_timer_stop(instance->brute_timer);
         instance->app->is_running = false;
-        
+
         // Clean up NFC resources
         if(instance->listener) {
             nfc_listener_stop(instance->listener);
@@ -837,18 +871,7 @@ static void uid_brute_smarter_timer_callback(void* context) {
         if(instance->nfc_device) {
             nfc_device_clear(instance->nfc_device);
         }
-        
-        // Don't free timer here - it will be freed later
-        // Timer cannot free itself from within its own callback
-        
-        // Free UID range
-        if(instance->uid_range) {
-            free(instance->uid_range);
-            instance->uid_range = NULL;
-            instance->range_size = 0;
-            instance->current_index = 0;
-        }
-        
+
         // Show completion popup then go back to menu
         popup_set_header(instance->popup, "Complete", 64, 20, AlignCenter, AlignTop);
         popup_set_text(instance->popup, "Brute force finished", 64, 40, AlignCenter, AlignCenter);
@@ -857,37 +880,29 @@ static void uid_brute_smarter_timer_callback(void* context) {
         uid_brute_smarter_safe_switch_view(instance, UidBruteSmarterViewMenu);
         return;
     }
-    
-    // Validate array bounds before accessing
-    if(instance->current_index >= instance->range_size || !instance->uid_range) {
-        ERROR_LOG("[TIMER] Invalid index or null range: %d/%d", instance->current_index, instance->range_size);
-        furi_timer_stop(instance->brute_timer);
-        instance->app->is_running = false;
-        return;
-    }
-    
-    // Process current UID
-    uint32_t current_uid = instance->uid_range[instance->current_index];
+
+    // Calculate current UID on-the-fly (no pre-generated array!)
+    uint32_t current_uid = uid_brute_smarter_calculate_uid(instance, instance->current_iteration);
     instance->app->current_uid = current_uid;
-    
-    DEBUG_LOG("[TIMER] Processing UID %08lX (index %d/%d)", 
-              current_uid, instance->current_index + 1, instance->range_size);
-    
+
+    DEBUG_LOG("[TIMER] Processing UID %08lX (iteration %lu/%lu)",
+              current_uid, instance->current_iteration + 1, instance->app->total_range_size);
+
     // Update progress display with 3-line format
     char progress_text[64];
-    snprintf(progress_text, sizeof(progress_text), 
-        "UID: %08lX  %d/%d", 
-        current_uid, 
-        instance->current_index + 1, 
-        instance->range_size);
+    snprintf(progress_text, sizeof(progress_text),
+        "UID: %08lX  %lu/%lu",
+        current_uid,
+        instance->current_iteration + 1,
+        instance->app->total_range_size);
     dialog_ex_set_text(instance->dialog_ex, progress_text, 64, 32, AlignCenter, AlignCenter);
-    
+
     // Emulate this UID with timeout protection
     instance->last_emulation_time = furi_get_tick();
     uid_brute_smarter_emulate_uid(instance, current_uid);
-    
+
     // Move to next UID
-    instance->current_index++;
+    instance->current_iteration++;
     instance->app->total_attempts++;
     
     // Handle pause logic
@@ -1020,38 +1035,48 @@ static void uid_brute_smarter_start_brute_force(UidBruteSmarter* instance) {
     PatternResult result;
     if(!pattern_engine_detect(instance->app->uids, instance->app->uid_count, &result)) {
         ERROR_LOG("[START_BRUTE] Pattern detection failed");
+        dialog_ex_set_header(instance->dialog_ex, "Error", 64, 10, AlignCenter, AlignTop);
+        dialog_ex_set_text(instance->dialog_ex, "Pattern detection failed!\nCheck loaded cards", 64, 32, AlignCenter, AlignCenter);
+        dialog_ex_set_center_button_text(instance->dialog_ex, "OK");
+        dialog_ex_set_context(instance->dialog_ex, instance);
+        dialog_ex_set_result_callback(instance->dialog_ex, NULL);
+        view_set_previous_callback(dialog_ex_get_view(instance->dialog_ex), uid_brute_smarter_brute_back_callback);
+        uid_brute_smarter_safe_switch_view(instance, UidBruteSmarterViewBrute);
         return;
     }
-    
-    if(instance->uid_range) {
-        free(instance->uid_range);
-        instance->uid_range = NULL;
-    }
-    
-    if(result.range_size == 0 || result.range_size > MAX_RANGE_SIZE) {
-        ERROR_LOG("[START_BRUTE] Invalid range size: %lu", result.range_size);
+
+    if(result.range_size == 0) {
+        ERROR_LOG("[START_BRUTE] Invalid range size: 0");
+        dialog_ex_set_header(instance->dialog_ex, "Error", 64, 10, AlignCenter, AlignTop);
+        dialog_ex_set_text(instance->dialog_ex, "Invalid range size: 0\nCheck loaded cards", 64, 32, AlignCenter, AlignCenter);
+        dialog_ex_set_center_button_text(instance->dialog_ex, "OK");
+        dialog_ex_set_context(instance->dialog_ex, instance);
+        dialog_ex_set_result_callback(instance->dialog_ex, NULL);
+        view_set_previous_callback(dialog_ex_get_view(instance->dialog_ex), uid_brute_smarter_brute_back_callback);
+        uid_brute_smarter_safe_switch_view(instance, UidBruteSmarterViewBrute);
         return;
     }
-    
-    instance->uid_range = malloc(result.range_size * sizeof(uint32_t));
-    if(!instance->uid_range) {
-        ERROR_LOG("[START_BRUTE] Failed to allocate UID range");
-        return;
-    }
-    
-    if(!pattern_engine_build_range(&result, instance->uid_range, result.range_size, &instance->range_size)) {
-        ERROR_LOG("[START_BRUTE] Failed to build range");
-        free(instance->uid_range);
-        instance->uid_range = NULL;
-        return;
-    }
-    
-    instance->current_index = 0;
+
+    // Store pattern info for on-the-fly UID calculation (no pre-generation!)
+    instance->app->pattern = result.type;
+    instance->app->start_uid = result.start_uid;
+    instance->app->end_uid = result.end_uid;
+    instance->app->step = result.step;
+    instance->app->bitmask = result.bitmask;
+    instance->app->total_range_size = result.range_size;
+
+    INFO_LOG("[START_BRUTE] Pattern: %s, Range: %08lX-%08lX, Step: %lu, Size: %lu UIDs",
+             pattern_engine_get_name(result.type),
+             result.start_uid, result.end_uid, result.step, result.range_size);
+
+    instance->current_iteration = 0;
     instance->app->should_stop = false;
     instance->app->total_attempts = 0;
     instance->app->pause_counter = 0;
-    
-    dialog_ex_set_header(instance->dialog_ex, "Brute Force", 64, 10, AlignCenter, AlignTop);
+
+    // Set header with pattern name
+    snprintf(instance->brute_header, sizeof(instance->brute_header), "BF: %s", pattern_engine_get_name(result.type));
+    dialog_ex_set_header(instance->dialog_ex, instance->brute_header, 64, 10, AlignCenter, AlignTop);
     dialog_ex_set_text(instance->dialog_ex, "Starting...", 64, 32, AlignCenter, AlignCenter);
     dialog_ex_set_center_button_text(instance->dialog_ex, "Stop");
     dialog_ex_set_context(instance->dialog_ex, instance);
@@ -1062,8 +1087,13 @@ static void uid_brute_smarter_start_brute_force(UidBruteSmarter* instance) {
     instance->brute_timer = furi_timer_alloc(uid_brute_smarter_timer_callback, FuriTimerTypePeriodic, instance);
     if(!instance->brute_timer) {
         ERROR_LOG("[START_BRUTE] Failed to allocate timer");
-        free(instance->uid_range);
-        instance->uid_range = NULL;
+        dialog_ex_set_header(instance->dialog_ex, "Error", 64, 10, AlignCenter, AlignTop);
+        dialog_ex_set_text(instance->dialog_ex, "Timer allocation failed!\nRestart app", 64, 32, AlignCenter, AlignCenter);
+        dialog_ex_set_center_button_text(instance->dialog_ex, "OK");
+        dialog_ex_set_context(instance->dialog_ex, instance);
+        dialog_ex_set_result_callback(instance->dialog_ex, NULL);
+        view_set_previous_callback(dialog_ex_get_view(instance->dialog_ex), uid_brute_smarter_brute_back_callback);
+        uid_brute_smarter_safe_switch_view(instance, UidBruteSmarterViewBrute);
         return;
     }
     
@@ -1170,18 +1200,9 @@ static uint32_t uid_brute_smarter_brute_back_callback(void* context) {
         nfc_device_clear(instance->nfc_device);
         DEBUG_LOG("[BACK] NFC device state cleared");
     }
-    
-    // Free UID range if allocated
-    if(instance->uid_range) {
-        free(instance->uid_range);
-        instance->uid_range = NULL;
-        instance->range_size = 0;
-        instance->current_index = 0;
-        DEBUG_LOG("[BACK] UID range freed");
-    }
-    
+
     DEBUG_LOG("[BACK] Brute force stopped, returning to menu");
-    
+
     // Return to main menu
     return UidBruteSmarterViewMenu;
 }

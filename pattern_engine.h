@@ -42,7 +42,8 @@ typedef enum {
     PatternUnknown,
     PatternInc1,
     PatternIncK,
-    PatternLe16
+    PatternLe16,
+    PatternBitmask
 } PatternType;
 
 typedef struct {
@@ -51,6 +52,7 @@ typedef struct {
     uint32_t end_uid;
     uint32_t step;
     uint32_t range_size;
+    uint32_t bitmask;
 } PatternResult;
 
 /**
