@@ -52,6 +52,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Patreon Build Update](https://www.patreon.com/RogueMaster/membership): ManifestSwitcher Build Updated to include Holiday / Winter animations in Minimal selection.
 - Added: [PC Monitor USB v1.0 (By DonJulve & TheSainEyereg)](https://github.com/DonJulve/Flipper-Zero-PC-Monitor-USB) `Req: [Backend](https://github.com/DonJulve/Flipper-Zero-PC-Monitor-USB-Backend)`
 - Fix for Happy Holidays animation.
+- Updated: [UID Brute Smarter v1.0 (By fbettag)](https://github.com/fbettag/uid_brute_smarter)
 
 <a name="release">
 
