@@ -2,11 +2,13 @@
 // Application ID: mitzi_windbreak
 // Entry point: fart_main
 
-#include <furi.h>
-#include <gui/gui.h>
-#include <input/input.h>
+#include <furi.h> // Flipper Universal Registry Implementation = Core OS functionality
+#include <gui/gui.h> // GUI system
+#include <input/input.h> // Input handling (buttons)
 #include <notification/notification_messages.h>
-#include <furi_hal_speaker.h>
+#include <furi_hal_speaker.h> // sound output
+#include <gui/elements.h> // to access button drawing functions
+#include "windbreak_icons.h" // Custom icon definitions
 
 #define TAG "Windbreak"
 
@@ -25,7 +27,7 @@ typedef struct {
     uint8_t length;       // 1-5: 1=short, 5=long
     uint8_t pitch;        // 1-5: 1=low, 5=high
     uint8_t bubbliness;   // 1-5: 1=smooth, 5=bubbly
-    uint8_t selected;     // Currently selected parameter (0-4)
+    uint8_t selected;     // Currently selected parameter (0-3)
     bool playing;         // Is sound currently playing
 } FartState;
 
@@ -38,8 +40,9 @@ typedef struct {
 
 // Convert parameter value to frequency
 static float get_base_frequency(uint8_t pitch) {
-    // Lower pitches for fart sounds (50-250 Hz range)
-    return 50.0f + (pitch - 1) * 50.0f;
+    // Logarithmic scale from 16 Hz to 16768 Hz
+    // pitch 1->16Hz, 2->63Hz, 3->250Hz, 4->1000Hz, 5->4000Hz (approx)
+    return 16.0f * powf(4.0f, (pitch - 1));
 }
 
 // Get duration in milliseconds
@@ -48,13 +51,14 @@ static uint32_t get_duration_ms(uint8_t length) {
 }
 
 // Play a fart sound with given parameters
-static void play_fart(FartState* state) {
+static void play_fart(FartState* state, NotificationApp* notifications) {
     if(!furi_hal_speaker_acquire(1000)) {
         FURI_LOG_E(TAG, "Could not acquire speaker");
         return;
     }
 
     state->playing = true;
+	notification_message(notifications, &sequence_set_red_255); // turn on status LED
     
     float base_freq = get_base_frequency(state->pitch);
     uint32_t duration = get_duration_ms(state->length);
@@ -109,7 +113,8 @@ static void play_fart(FartState* state) {
     
     furi_hal_speaker_stop();
     furi_hal_speaker_release();
-    state->playing = false;
+    notification_message(notifications, &sequence_reset_rgb); // Turn of status LED
+	state->playing = false;
 }
 
 // Render callback for GUI
@@ -119,12 +124,21 @@ static void fart_render_callback(Canvas* canvas, void* ctx) {
     
     canvas_clear(canvas);
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str(canvas, 2, 10, "Fart Generator");
+	canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);	
+	canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Windbreak");
     
     canvas_set_font(canvas, FontSecondary);
-    
+    canvas_draw_str_aligned(canvas, 110, 1, AlignLeft, AlignTop, "v0.1");
+	
+	canvas_set_font_direction(canvas, CanvasDirectionBottomToTop); // Set text rotation to 90 degrees 
+	canvas_draw_str(canvas, 128, 47, "2025-12");		
+	canvas_set_font_direction(canvas, CanvasDirectionLeftToRight); // Reset to normal text direction
+	canvas_draw_str_aligned(canvas, 1, 57, AlignLeft, AlignTop, "Back: exit");
+	canvas_draw_str_aligned(canvas, 99, 57, AlignLeft, AlignTop, "f418.eu");
+	elements_button_center(canvas, "Fart");
+	
     char buffer[64];
-    uint8_t y = 22;
+    uint8_t y = 19;
     
     // Draw parameters
     const char* params[] = {"Wet/Dry", "Length", "Pitch", "Bubbles"};
@@ -134,7 +148,7 @@ static void fart_render_callback(Canvas* canvas, void* ctx) {
         app->state->pitch,
         app->state->bubbliness
     };
-    
+    // Render parameter name and value
     for(uint8_t i = 0; i < 4; i++) {
         snprintf(buffer, sizeof(buffer), "%s: %d", params[i], values[i]);
         
@@ -144,24 +158,16 @@ static void fart_render_callback(Canvas* canvas, void* ctx) {
         
         canvas_draw_str(canvas, 10, y, buffer);
         
-        // Draw bar indicator
-        uint8_t bar_x = 70;
+        // Draw bar indicators to display the values of the various parameters
+        uint8_t bar_x = 66;
+		uint8_t bar_y = 7; 
         uint8_t bar_width = values[i] * 10;
-        canvas_draw_frame(canvas, bar_x, y - 6, 52, 8);
-        canvas_draw_box(canvas, bar_x + 1, y - 5, bar_width, 6);
+        canvas_draw_frame(canvas, bar_x, y - bar_y - 1, 52, 8);
+        canvas_draw_box(canvas, bar_x + 1, y - bar_y, bar_width, 6);
         
-        y += 11;
+        y += 10;
     }
-    
-    // Instructions
-    canvas_draw_str(canvas, 2, y + 5, app->state->selected == 4 ? ">OK: PLAY" : " OK: PLAY");
-    canvas_draw_str(canvas, 2, y + 15, "Up/Dn: Navigate");
-    canvas_draw_str(canvas, 2, y + 23, "Lt/Rt: Adjust");
-    
-    if(app->state->playing) {
-        canvas_draw_str(canvas, 40, 10, "PLAYING!");
-    }
-    
+       
     furi_mutex_release(app->mutex);
 }
 
@@ -220,7 +226,7 @@ int32_t fart_main(void* p) {
                         break;
                         
                     case InputKeyDown:
-                        if(app->state->selected < 4) {
+                        if(app->state->selected < 3) {
                             app->state->selected++;
                         }
                         break;
@@ -258,9 +264,8 @@ int32_t fart_main(void* p) {
                                 app->state->bubbliness);
                             // Play fart in separate thread to not block UI
                             furi_mutex_release(app->mutex);
-                            play_fart(app->state);
+                            play_fart(app->state, app-> notifications);
                             furi_mutex_acquire(app->mutex, FuriWaitForever);
-                            notification_message(app->notifications, &sequence_success);
                         }
                         break;
                         
