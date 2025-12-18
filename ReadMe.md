@@ -53,6 +53,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [PC Monitor USB v1.0 (By DonJulve & TheSainEyereg)](https://github.com/DonJulve/Flipper-Zero-PC-Monitor-USB) `Req: [Backend](https://github.com/DonJulve/Flipper-Zero-PC-Monitor-USB-Backend)`
 - Fix for Happy Holidays animation.
 - Updated: [UID Brute Smarter v1.1 (By fbettag)](https://github.com/fbettag/uid_brute_smarter)
+- Added: [Fart Sound Generator v0.1 (By fgreil)](https://github.com/fgreil/mitzi-windbreak)
 
 <a name="release">
 
@@ -310,6 +311,7 @@ $ ./fbt dolphin_ext
 - [DVD Screensaver v1.1 (By shantih19)](https://github.com/shantih19/flipper_dvd_screensaver)
 - [Etch-A-Sketch (By SimplyMinimal)](https://github.com/SimplyMinimal/FlipperZero-Etch-A-Sketch)
 - [Executor Keychain v0.1 (By EstebanFuentealba)](https://github.com/EstebanFuentealba/Flipper-Keyller)
+- [Fart Sound Generator v0.1 (By fgreil)](https://github.com/fgreil/mitzi-windbreak)
 - [Fighter Jet v0.1.1 (By Erbonator3000)](https://github.com/Erbonator3000/flipper-fighter-jet)
 - [Five Nights at Flippers v1.3 (By sillygir1)](https://github.com/sillygir1/flipperzero-fnaf)
 - [Flappy Bird v1.5 (By DroomOne)](https://github.com/DroomOne/flipperzero-firmware/tree/dev/applications/flappy_bird)
