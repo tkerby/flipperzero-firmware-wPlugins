@@ -1,6 +1,6 @@
 # mitzi-windbreak
+![Screenshot of main screen](screenshots/MainScreen.png)
 Flipper Zero App to generate interesting noises 💨
-![Logo](screenhots/MainScreen.png)
 
 ## Usage
 
