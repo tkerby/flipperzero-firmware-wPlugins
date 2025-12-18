@@ -1,4 +1,3 @@
-
 App(
      # Unique identifier used by the build system (must be unique across firmware).
     appid="mitzi_windbreak",
@@ -36,6 +35,9 @@ App(
 
     # Path to the app icon displayed in the menu
     fap_icon_assets="images",
+	
+    # Symbol name for generated icon header (generates windbreak_icons.h)
+    fap_icon_assets_symbol="windbreak",
  
     # Available categories: Main, GPIO, Sub-GHz, RFID, NFC, Infrared, Misc, Games, Tools, Settings, USB
     fap_category="Misc",
