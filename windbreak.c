@@ -12,16 +12,19 @@
 
 #define TAG "Windbreak"
 
+// Event types for the message queue
 typedef enum {
     EventTypeTick,
     EventTypeKey,
 } EventType;
 
+// Event structure passed through the queue
 typedef struct {
     EventType type;
     InputEvent input;
 } FartEvent;
 
+// Application state holding all sound parameters
 typedef struct {
     uint8_t wet_dry;      // 1-5: 1=wet, 5=dry
     uint8_t length;       // 1-5: 1=short, 5=long
@@ -31,6 +34,7 @@ typedef struct {
     bool playing;         // Is sound currently playing
 } FartState;
 
+// Main application context
 typedef struct {
     FartState* state;
     FuriMutex* mutex;
@@ -38,14 +42,15 @@ typedef struct {
     NotificationApp* notifications;
 } FartApp;
 
-// Convert parameter value to frequency
+// Convert parameter value to frequency using logarithmic scale
+// Returns frequency range from 50 Hz to 800 Hz
 static float get_base_frequency(uint8_t pitch) {
-    // Logarithmic scale from 16 Hz to 16768 Hz
-    // pitch 1->16Hz, 2->63Hz, 3->250Hz, 4->1000Hz, 5->4000Hz (approx)
-    return 16.0f * powf(4.0f, (pitch - 1));
+    // Logarithmic scale from 50 Hz to 800 Hz
+    // pitch 1->50Hz, 2->94Hz, 3->178Hz, 4->336Hz, 5->800Hz (approx)
+    return 50.0f * powf(2.0f, (pitch - 1) * 1.0f);
 }
 
-// Get duration in milliseconds
+// Get duration in milliseconds based on length parameter
 static uint32_t get_duration_ms(uint8_t length) {
     return 100 + (length - 1) * 200; // 100ms to 900ms
 }
@@ -58,7 +63,9 @@ static void play_fart(FartState* state, NotificationApp* notifications) {
     }
 
     state->playing = true;
-	notification_message(notifications, &sequence_set_red_255); // turn on status LED
+    
+    // Set LED to red during playback (closest to brown available)
+    notification_message(notifications, &sequence_set_only_red_255);
     
     float base_freq = get_base_frequency(state->pitch);
     uint32_t duration = get_duration_ms(state->length);
@@ -76,10 +83,11 @@ static void play_fart(FartState* state, NotificationApp* notifications) {
     
     float current_freq = base_freq;
     
+    // Main synthesis loop
     while(elapsed < duration) {
         elapsed = furi_get_tick() - start_time;
         
-        // Apply envelope (fade in/out)
+        // Apply envelope (fade in/out) for natural sound
         float envelope = 1.0f;
         if(elapsed < 50) {
             envelope = (float)elapsed / 50.0f; // Attack
@@ -87,7 +95,7 @@ static void play_fart(FartState* state, NotificationApp* notifications) {
             envelope = (float)(duration - elapsed) / 100.0f; // Release
         }
         
-        // Change frequency for bubbliness
+        // Change frequency for bubbliness effect
         if(elapsed - last_bubble > bubble_interval) {
             // Random frequency variation
             uint32_t random_val = random() % 100;
@@ -99,8 +107,8 @@ static void play_fart(FartState* state, NotificationApp* notifications) {
             current_freq -= drift;
             
             // Clamp frequency to reasonable range
-            if(current_freq < 30.0f) current_freq = 30.0f;
-            if(current_freq > 500.0f) current_freq = 500.0f;
+            if(current_freq < 50.0f) current_freq = 50.0f;
+            if(current_freq > 800.0f) current_freq = 800.0f;
             
             last_bubble = elapsed;
         }
@@ -113,16 +121,18 @@ static void play_fart(FartState* state, NotificationApp* notifications) {
     
     furi_hal_speaker_stop();
     furi_hal_speaker_release();
-    notification_message(notifications, &sequence_reset_rgb); // Turn of status LED
+    notification_message(notifications, &sequence_reset_rgb); // Turn off LED
 	state->playing = false;
 }
 
-// Render callback for GUI
+// Render callback for GUI - draws the interface
 static void fart_render_callback(Canvas* canvas, void* ctx) {
     FartApp* app = ctx;
     furi_mutex_acquire(app->mutex, FuriWaitForever);
     
     canvas_clear(canvas);
+    
+    // Draw header with icon and title
     canvas_set_font(canvas, FontPrimary);
 	canvas_draw_icon(canvas, 1, 1, &I_icon_10x10);	
 	canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Windbreak");
@@ -130,9 +140,12 @@ static void fart_render_callback(Canvas* canvas, void* ctx) {
     canvas_set_font(canvas, FontSecondary);
     canvas_draw_str_aligned(canvas, 110, 1, AlignLeft, AlignTop, "v0.1");
 	
-	canvas_set_font_direction(canvas, CanvasDirectionBottomToTop); // Set text rotation to 90 degrees 
+    // Draw date rotated 90 degrees on right edge
+	canvas_set_font_direction(canvas, CanvasDirectionBottomToTop);
 	canvas_draw_str(canvas, 128, 47, "2025-12");		
-	canvas_set_font_direction(canvas, CanvasDirectionLeftToRight); // Reset to normal text direction
+	canvas_set_font_direction(canvas, CanvasDirectionLeftToRight);
+    
+    // Draw footer text and button
 	canvas_draw_str_aligned(canvas, 1, 57, AlignLeft, AlignTop, "Back: exit");
 	canvas_draw_str_aligned(canvas, 99, 57, AlignLeft, AlignTop, "f418.eu");
 	elements_button_center(canvas, "Fart");
@@ -140,7 +153,7 @@ static void fart_render_callback(Canvas* canvas, void* ctx) {
     char buffer[64];
     uint8_t y = 19;
     
-    // Draw parameters
+    // Draw parameters with selection indicator and bar graphs
     const char* params[] = {"Wet/Dry", "Length", "Pitch", "Bubbles"};
     uint8_t values[] = {
         app->state->wet_dry,
@@ -148,17 +161,18 @@ static void fart_render_callback(Canvas* canvas, void* ctx) {
         app->state->pitch,
         app->state->bubbliness
     };
-    // Render parameter name and value
+    
     for(uint8_t i = 0; i < 4; i++) {
         snprintf(buffer, sizeof(buffer), "%s: %d", params[i], values[i]);
         
+        // Draw selection indicator
         if(app->state->selected == i) {
             canvas_draw_str(canvas, 0, y, ">");
         }
         
         canvas_draw_str(canvas, 10, y, buffer);
         
-        // Draw bar indicators to display the values of the various parameters
+        // Draw bar indicators to display the values
         uint8_t bar_x = 66;
 		uint8_t bar_y = 7; 
         uint8_t bar_width = values[i] * 10;
@@ -171,7 +185,7 @@ static void fart_render_callback(Canvas* canvas, void* ctx) {
     furi_mutex_release(app->mutex);
 }
 
-// Input callback
+// Input callback - queues input events for processing
 static void fart_input_callback(InputEvent* input_event, void* ctx) {
     FartApp* app = ctx;
     FartEvent event = {.type = EventTypeKey, .input = *input_event};
@@ -184,14 +198,14 @@ int32_t fart_main(void* p) {
     
     FURI_LOG_I(TAG, "Windbreak fart generator starting...");
     
-    // Allocate app structure
+    // Allocate app structure and resources
     FartApp* app = malloc(sizeof(FartApp));
     app->state = malloc(sizeof(FartState));
     app->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
     app->event_queue = furi_message_queue_alloc(8, sizeof(FartEvent));
     app->notifications = furi_record_open(RECORD_NOTIFICATION);
     
-    // Initialize default state
+    // Initialize default state - middle values for all parameters
     app->state->wet_dry = 3;
     app->state->length = 3;
     app->state->pitch = 2;
@@ -213,6 +227,7 @@ int32_t fart_main(void* p) {
     bool running = true;
     
     while(running) {
+        // Wait for events with 100ms timeout
         if(furi_message_queue_get(app->event_queue, &event, 100) == FuriStatusOk) {
             if(event.type == EventTypeKey) {
                 if(event.input.type == InputTypePress || event.input.type == InputTypeRepeat) {
@@ -220,18 +235,21 @@ int32_t fart_main(void* p) {
                     
                     switch(event.input.key) {
                     case InputKeyUp:
+                        // Navigate up through parameters
                         if(app->state->selected > 0) {
                             app->state->selected--;
                         }
                         break;
                         
                     case InputKeyDown:
+                        // Navigate down through parameters
                         if(app->state->selected < 3) {
                             app->state->selected++;
                         }
                         break;
                         
                     case InputKeyRight:
+                        // Increase selected parameter value
                         if(app->state->selected < 4) {
                             uint8_t* param = NULL;
                             switch(app->state->selected) {
@@ -245,6 +263,7 @@ int32_t fart_main(void* p) {
                         break;
                         
                     case InputKeyLeft:
+                        // Decrease selected parameter value
                         if(app->state->selected < 4) {
                             uint8_t* param = NULL;
                             switch(app->state->selected) {
@@ -258,18 +277,20 @@ int32_t fart_main(void* p) {
                         break;
                         
                     case InputKeyOk:
+                        // Play the fart sound (if not already playing)
                         if(!app->state->playing) {
                             FURI_LOG_I(TAG, "Playing fart: W/D=%d L=%d P=%d B=%d",
                                 app->state->wet_dry, app->state->length, app->state->pitch,
                                 app->state->bubbliness);
                             // Play fart in separate thread to not block UI
                             furi_mutex_release(app->mutex);
-                            play_fart(app->state, app-> notifications);
+                            play_fart(app->state, app->notifications);
                             furi_mutex_acquire(app->mutex, FuriWaitForever);
                         }
                         break;
                         
                     case InputKeyBack:
+                        // Exit the application
                         FURI_LOG_I(TAG, "Exit requested");
                         running = false;
                         break;
@@ -287,7 +308,7 @@ int32_t fart_main(void* p) {
     
     FURI_LOG_I(TAG, "Cleaning up...");
     
-    // Cleanup
+    // Cleanup all resources
     gui_remove_view_port(gui, view_port);
     view_port_free(view_port);
     furi_record_close(RECORD_GUI);
