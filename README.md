@@ -43,21 +43,27 @@ UID Brute Smarter is a security research tool for authorized penetration testing
 ### Prerequisites
 - Flipper Zero with [Momentum Firmware](https://github.com/Next-Flip/Momentum-Firmware)
 - USB cable for installation.
+- This repository cloned into `Momentum-Firmware/applications_user/uid_brute_smarter`.
 
 ### Installation
 
 #### Method 1: Direct Installation (Recommended)
 ```bash
-# Clone the repository
-git clone https://github.com/fbettag/uid_brute_smarter.git
-cd uid_brute_smarter
+# Clone Momentum Firmware and place UID Brute Smarter inside applications_user
+git clone https://github.com/Next-Flip/Momentum-Firmware.git
+cd Momentum-Firmware
+git clone https://github.com/fbettag/uid_brute_smarter.git applications_user/uid_brute_smarter
 
 # Build and install directly to a connected Flipper
-./fbt launch APPSRC=uid_brute_smarter
+./fbt launch APPSRC=applications_user/uid_brute_smarter
 ```
 
 #### Method 2: Manual Build
 ```bash
+git clone https://github.com/Next-Flip/Momentum-Firmware.git
+cd Momentum-Firmware
+git clone https://github.com/fbettag/uid_brute_smarter.git applications_user/uid_brute_smarter
+
 # Build the application
 ./fbt fap_uid_brute_smarter
 ```
