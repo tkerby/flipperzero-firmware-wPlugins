@@ -24,9 +24,8 @@ typedef struct {
     uint8_t wet_dry;      // 1-5: 1=wet, 5=dry
     uint8_t length;       // 1-5: 1=short, 5=long
     uint8_t pitch;        // 1-5: 1=low, 5=high
-    uint8_t intensity;    // 1-5: 1=soft, 5=loud
     uint8_t bubbliness;   // 1-5: 1=smooth, 5=bubbly
-    uint8_t selected;     // Currently selected parameter (0-5)
+    uint8_t selected;     // Currently selected parameter (0-4)
     bool playing;         // Is sound currently playing
 } FartState;
 
@@ -48,11 +47,6 @@ static uint32_t get_duration_ms(uint8_t length) {
     return 100 + (length - 1) * 200; // 100ms to 900ms
 }
 
-// Get volume (0.0 to 1.0)
-static float get_volume(uint8_t intensity) {
-    return 0.2f + (intensity - 1) * 0.2f; // 0.2 to 1.0
-}
-
 // Play a fart sound with given parameters
 static void play_fart(FartState* state) {
     if(!furi_hal_speaker_acquire(1000)) {
@@ -64,7 +58,7 @@ static void play_fart(FartState* state) {
     
     float base_freq = get_base_frequency(state->pitch);
     uint32_t duration = get_duration_ms(state->length);
-    float volume = get_volume(state->intensity);
+    float volume = 0.8f;  // Fixed volume at 80%
     
     // Wetness affects frequency variation (wet = more wobble)
     float wet_variation = (6 - state->wet_dry) * 10.0f;
@@ -92,7 +86,8 @@ static void play_fart(FartState* state) {
         // Change frequency for bubbliness
         if(elapsed - last_bubble > bubble_interval) {
             // Random frequency variation
-            float variation = ((float)(furi_hal_random_get() % 100) / 100.0f - 0.5f) * 2.0f;
+            uint32_t random_val = random() % 100;
+            float variation = ((float)random_val / 100.0f - 0.5f) * 2.0f;
             current_freq = base_freq + (variation * wet_variation);
             
             // Add some pitch drift downward over time (natural fart behavior)
@@ -132,16 +127,15 @@ static void fart_render_callback(Canvas* canvas, void* ctx) {
     uint8_t y = 22;
     
     // Draw parameters
-    const char* params[] = {"Wet/Dry", "Length", "Pitch", "Intensity", "Bubbles"};
+    const char* params[] = {"Wet/Dry", "Length", "Pitch", "Bubbles"};
     uint8_t values[] = {
         app->state->wet_dry,
         app->state->length,
         app->state->pitch,
-        app->state->intensity,
         app->state->bubbliness
     };
     
-    for(uint8_t i = 0; i < 5; i++) {
+    for(uint8_t i = 0; i < 4; i++) {
         snprintf(buffer, sizeof(buffer), "%s: %d", params[i], values[i]);
         
         if(app->state->selected == i) {
@@ -160,7 +154,7 @@ static void fart_render_callback(Canvas* canvas, void* ctx) {
     }
     
     // Instructions
-    canvas_draw_str(canvas, 2, y + 5, app->state->selected == 5 ? ">OK: PLAY" : " OK: PLAY");
+    canvas_draw_str(canvas, 2, y + 5, app->state->selected == 4 ? ">OK: PLAY" : " OK: PLAY");
     canvas_draw_str(canvas, 2, y + 15, "Up/Dn: Navigate");
     canvas_draw_str(canvas, 2, y + 23, "Lt/Rt: Adjust");
     
@@ -195,7 +189,6 @@ int32_t fart_main(void* p) {
     app->state->wet_dry = 3;
     app->state->length = 3;
     app->state->pitch = 2;
-    app->state->intensity = 3;
     app->state->bubbliness = 3;
     app->state->selected = 0;
     app->state->playing = false;
@@ -227,34 +220,32 @@ int32_t fart_main(void* p) {
                         break;
                         
                     case InputKeyDown:
-                        if(app->state->selected < 5) {
+                        if(app->state->selected < 4) {
                             app->state->selected++;
                         }
                         break;
                         
                     case InputKeyRight:
-                        if(app->state->selected < 5) {
+                        if(app->state->selected < 4) {
                             uint8_t* param = NULL;
                             switch(app->state->selected) {
                             case 0: param = &app->state->wet_dry; break;
                             case 1: param = &app->state->length; break;
                             case 2: param = &app->state->pitch; break;
-                            case 3: param = &app->state->intensity; break;
-                            case 4: param = &app->state->bubbliness; break;
+                            case 3: param = &app->state->bubbliness; break;
                             }
                             if(param && *param < 5) (*param)++;
                         }
                         break;
                         
                     case InputKeyLeft:
-                        if(app->state->selected < 5) {
+                        if(app->state->selected < 4) {
                             uint8_t* param = NULL;
                             switch(app->state->selected) {
                             case 0: param = &app->state->wet_dry; break;
                             case 1: param = &app->state->length; break;
                             case 2: param = &app->state->pitch; break;
-                            case 3: param = &app->state->intensity; break;
-                            case 4: param = &app->state->bubbliness; break;
+                            case 3: param = &app->state->bubbliness; break;
                             }
                             if(param && *param > 1) (*param)--;
                         }
@@ -262,9 +253,9 @@ int32_t fart_main(void* p) {
                         
                     case InputKeyOk:
                         if(!app->state->playing) {
-                            FURI_LOG_I(TAG, "Playing fart: W/D=%d L=%d P=%d I=%d B=%d",
+                            FURI_LOG_I(TAG, "Playing fart: W/D=%d L=%d P=%d B=%d",
                                 app->state->wet_dry, app->state->length, app->state->pitch,
-                                app->state->intensity, app->state->bubbliness);
+                                app->state->bubbliness);
                             // Play fart in separate thread to not block UI
                             furi_mutex_release(app->mutex);
                             play_fart(app->state);
