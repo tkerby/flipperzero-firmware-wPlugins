@@ -1,5 +1,6 @@
 # mitzi-windbreak
-![Screenshot of main screen](screenshots/MainScreen.png)
+<img alt="Main Mancala Screen"  src="screenshots/MainScreen.png" width="40%" />
+
 Flipper Zero App to generate interesting noises 💨
 
 ## Usage
