@@ -7,7 +7,6 @@ Flipper Zero App to generate intersting noises 💨
    - **Wet/Dry**: Controls frequency variation - wet farts have more wobble, dry farts are more stable
    - **Length**: Duration from short (100ms) to long (900ms)
    - **Pitch**: Base frequency from low rumbles (50Hz) to higher squeaks (250Hz)
-   - **Intensity**: Volume/loudness level
    - **Bubbliness**: How often the sound modulates (smooth to very bubbly)
 3. **Adjust**: Use Left/Right buttons to change the value (1-5)
 4. **Play**: Press OK button to play the fart with current settings
