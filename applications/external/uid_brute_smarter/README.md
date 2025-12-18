@@ -40,33 +40,6 @@ UID Brute Smarter is a security research tool for authorized penetration testing
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Flipper Zero with [Momentum Firmware](https://github.com/Next-Flip/Momentum-Firmware)
-- USB cable for installation.
-
-### Installation
-
-#### Method 1: Direct Installation (Recommended)
-```bash
-# Clone the repository
-git clone https://github.com/fbettag/uid_brute_smarter.git
-cd uid_brute_smarter
-
-# Build and install directly to a connected Flipper
-./fbt launch APPSRC=uid_brute_smarter
-```
-
-#### Method 2: Manual Build
-```bash
-# Build the application
-./fbt fap_uid_brute_smarter
-```
-
-#### Method 3: Pre-built Release
-1. Download the latest `.fap` file from [Releases](../../releases)
-2. Copy to Flipper Zero via USB or qFlipper.
-3. Launch from **Apps → NFC → UID Brute Smarter**
-
 ## 📖 Usage Guide
 
 1. **Authorization**: Ensure you have **explicit written authorization** for target systems.
