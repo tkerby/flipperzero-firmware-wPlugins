@@ -35,10 +35,10 @@
 #define TAG "GhostBook"
 
 // File paths
-#define GHOSTBOOK_FOLDER        APP_DATA_PATH("")
-#define GHOSTBOOK_AUTH_FILE     APP_DATA_PATH(".auth")
-#define GHOSTBOOK_PROFILE       APP_DATA_PATH("profile.enc")
-#define GHOSTBOOK_CONTACTS_DIR  APP_DATA_PATH("contacts")
+#define GHOSTBOOK_FOLDER       APP_DATA_PATH("")
+#define GHOSTBOOK_AUTH_FILE    APP_DATA_PATH(".auth")
+#define GHOSTBOOK_PROFILE      APP_DATA_PATH("profile.enc")
+#define GHOSTBOOK_CONTACTS_DIR APP_DATA_PATH("contacts")
 
 // Security settings
 #define MIN_PASSCODE_LENGTH     6
@@ -71,10 +71,10 @@ typedef enum {
 
 // Scenes
 typedef enum {
-    GhostSceneLock,         // Passcode entry
-    GhostSceneSecuritySetup,// First-time security level selection
-    GhostSceneWipeSetup,    // First-time wipe threshold selection
-    GhostSceneSetup,        // First-time passcode setup
+    GhostSceneLock, // Passcode entry
+    GhostSceneSecuritySetup, // First-time security level selection
+    GhostSceneWipeSetup, // First-time wipe threshold selection
+    GhostSceneSetup, // First-time passcode setup
     GhostSceneSetupConfirm, // Confirm new passcode
     GhostSceneMain,
     GhostSceneView,
@@ -93,7 +93,7 @@ typedef enum {
     GhostSceneContactView,
     GhostSceneExport,
     GhostSceneAbout,
-    GhostSceneWiped,        // Show wipe message
+    GhostSceneWiped, // Show wipe message
     GhostSceneNum,
 } GhostScene;
 
@@ -103,7 +103,7 @@ typedef enum {
     GhostViewWidget,
     GhostViewTextInput,
     GhostViewPopup,
-    GhostViewPasscode,      // Custom passcode view
+    GhostViewPasscode, // Custom passcode view
 } GhostView;
 
 // Flair types
@@ -141,10 +141,10 @@ typedef struct {
 // Authentication data (stored hashed)
 typedef struct {
     uint8_t salt[SALT_LENGTH];
-    uint8_t passcode_hash[32];  // Hash of salt+passcode
+    uint8_t passcode_hash[32]; // Hash of salt+passcode
     uint8_t failed_attempts;
-    uint8_t passcode_length;    // 6-10 buttons
-    uint8_t max_attempts;       // 3, 5, 7, or 10
+    uint8_t passcode_length; // 6-10 buttons
+    uint8_t max_attempts; // 3, 5, 7, or 10
     bool initialized;
 } GhostAuth;
 
@@ -155,14 +155,14 @@ typedef struct {
     Storage* storage;
     NotificationApp* notif;
     ViewDispatcher* view;
-    
+
     // GUI modules
     Submenu* submenu;
     Widget* widget;
     TextInput* text_input;
     Popup* popup;
     View* passcode_view;
-    
+
     // NFC
     Nfc* nfc;
     NfcListener* nfc_listener;
@@ -171,20 +171,20 @@ typedef struct {
     bool nfc_active;
     GhostCard received_card;
     bool card_received;
-    
+
     // Security
     GhostAuth auth;
     uint8_t passcode_input[MAX_PASSCODE_LENGTH];
     uint8_t passcode_pos;
-    uint8_t setup_passcode[MAX_PASSCODE_LENGTH];  // For setup confirmation
-    uint8_t setup_length;                          // Selected length during setup
-    uint8_t setup_max_attempts;                    // Selected wipe threshold during setup
-    uint8_t derived_key[KEY_LENGTH];               // Derived from passcode
+    uint8_t setup_passcode[MAX_PASSCODE_LENGTH]; // For setup confirmation
+    uint8_t setup_length; // Selected length during setup
+    uint8_t setup_max_attempts; // Selected wipe threshold during setup
+    uint8_t derived_key[KEY_LENGTH]; // Derived from passcode
     bool unlocked;
-    
+
     // State
     GhostScene current_scene;
-    
+
     // Data
     GhostCard my_card;
     GhostContact* contacts;
@@ -195,9 +195,23 @@ typedef struct {
 } GhostApp;
 
 // Crypto functions
-void ghost_derive_key(const uint8_t* passcode, uint8_t passcode_len, const uint8_t* salt, uint8_t* key_out);
-bool ghost_encrypt_data(const uint8_t* key, const uint8_t* plain, size_t plain_len, uint8_t* cipher, size_t* cipher_len);
-bool ghost_decrypt_data(const uint8_t* key, const uint8_t* cipher, size_t cipher_len, uint8_t* plain, size_t* plain_len);
+void ghost_derive_key(
+    const uint8_t* passcode,
+    uint8_t passcode_len,
+    const uint8_t* salt,
+    uint8_t* key_out);
+bool ghost_encrypt_data(
+    const uint8_t* key,
+    const uint8_t* plain,
+    size_t plain_len,
+    uint8_t* cipher,
+    size_t* cipher_len);
+bool ghost_decrypt_data(
+    const uint8_t* key,
+    const uint8_t* cipher,
+    size_t cipher_len,
+    uint8_t* plain,
+    size_t* plain_len);
 
 // NFC functions
 void ghost_nfc_share_start(GhostApp* app);

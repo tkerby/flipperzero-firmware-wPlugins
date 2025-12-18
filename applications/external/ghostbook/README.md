@@ -1,164 +1,106 @@
 # 👻 GhostBook
 
-### Your contacts. Encrypted. Tap to share.
+**Encrypted NFC Contact Sharing for Flipper Zero**
 
----
+Share your contact info with a tap. Protected by passcode. Auto-wipes on failed attempts.
 
-## The Problem
+## Features
 
-You meet someone at a con, a meetup, a party. They want your contact info.
+- **NFC Tap-to-Share** — Emulates NTAG215, works with other Flippers
+- **Variable Passcode** — 6-10 button combinations (46K to 60M possibilities)
+- **Configurable Auto-Wipe** — 3, 5, 7, or 10 attempts before destruction
+- **AES-class Encryption** — 256-bit keys with 10,000 iteration stretching
+- **Animated Wipe Screen** — Dramatic melting ghost sequence
 
-You could:
-- Hand over your phone (awkward)
-- Spell out your Discord (they'll typo it)
-- Write it on paper (they'll lose it)
+## Installation
 
-**There has to be a better way.**
-
----
-
-## The Solution
-
-**Tap. Share. Done.**
-
-GhostBook turns your Flipper Zero into an encrypted digital business card.
-
+Download `ghostbook.fap` from Releases and copy to:
 ```
-┌────────────────────────┐
-│    >> GhostBook <<     │
-│    ================    │
-│    @yourhandle (o_o)   │
-│    ----------------    │
-│    Name: Ghost         │
-│    Discord: ghost#1337 │
-│                        │
-│    [Hold to share]     │
-└────────────────────────┘
+SD Card/apps/NFC/ghostbook.fap
 ```
 
----
-
-## How It Works
-
-**Share:** Your Flipper emulates an NFC tag containing your encrypted card. Hold it near another Flipper running GhostBook.
-
-**Receive:** Scan for nearby cards. One tap, saved to contacts.
-
-**Protect:** Wrong passcode too many times? Everything melts.
-
----
-
-## Security That Bites Back
-
-| Feature | What It Does |
-|---------|--------------|
-| 6-10 Button Passcode | 46K to 60M combinations |
-| Auto-Wipe | 3/5/7/10 wrong attempts = gone |
-| 256-bit Encryption | Military-grade protection |
-| 10K Iterations | Brute force? Good luck. |
-| No Cloud | Your data never leaves your device |
-
-### The Wipe
-
-Enter the wrong passcode too many times and watch your ghost melt:
-
-```
-!! I'M MELTING !!        !! MELTING... !!        !! GOODBYE !!
-
-    (o_o)                    (x_-)                   . . .
-    /| |\        →          ~~~~~        →
-     | |
-```
-
-All data destroyed. No recovery. By design.
-
----
-
-## What You Can Store
-
-- **@Handle** — Your username
-- **Name** — Real name (optional)
-- **Email** — Contact email
-- **Discord** — Your tag
-- **Signal** — Phone number
-- **Telegram** — Username
-- **Notes** — Whatever you want
-- **Flair** — ASCII art icon
-
----
-
-## Quick Start
-
-1. Install `ghostbook.fap` on your Flipper
-2. Choose security level (passcode length)
-3. Choose wipe threshold (attempts allowed)
-4. Create your passcode
-5. Fill in your profile
-6. Start sharing
-
----
-
-## For The Security-Minded
-
-**On-device protection:**
-- Passcode never stored (only hash)
-- Wipe happens on the Flipper itself
-- No way to extract passcode from files
-
-**Offline attack resistance:**
-- Unique 16-byte salt per device
-- 10,000 hash iterations
-- Random IV per encryption
-
-**Threat model:**
-- ✅ Casual snooping
-- ✅ Lost/stolen device
-- ✅ Nosy friends
-- ⚠️ Determined attacker with your SD card
-- ❌ Nation-state actors (use Signal)
-
----
-
-## Why GhostBook?
-
-| | GhostBook | Business Card | Phone |
-|-|:---------:|:-------------:|:-----:|
-| Encrypted | ✅ | ❌ | ❌ |
-| Auto-wipe | ✅ | ❌ | ❌ |
-| Tap to share | ✅ | ❌ | Maybe |
-| Works offline | ✅ | ✅ | ❌ |
-| Hacker cred | ✅✅✅ | ❌ | ❌ |
-
----
-
-## Get It
-
-**Download:** [Releases](https://github.com/digitard/ghostbook/releases)
-
-**Build:**
+Or build from source:
 ```bash
-git clone https://github.com/digitard/ghostbook
-cd ghostbook && ufbt && ufbt launch
+cd ghostbook
+ufbt
+ufbt launch
 ```
 
----
+## First-Time Setup
 
-## Version 0.6.0
+1. **Security Level** — Choose passcode length (6-10 buttons)
+2. **Wipe Threshold** — Choose attempts before auto-wipe (3/5/7/10)
+3. **Create Passcode** — Enter button sequence (UP/DOWN/LEFT/RIGHT/OK/BACK)
+4. **Confirm Passcode** — Enter again to verify
 
-- ✅ NFC tap-to-share (NTAG215 emulation)
-- ✅ NFC tap-to-receive
-- ✅ Variable passcode (6-10 buttons)
-- ✅ Configurable wipe threshold
-- ✅ Melting ghost animation
-- ✅ Encrypted storage
-- ✅ vCard/CSV export
+## Usage
 
----
+### Sharing Your Card
+1. Main Menu → **Tap Share**
+2. Hold Flipper near another device
+3. Cyan LED blinks while broadcasting
+4. Press BACK to stop
 
-**Built by Digi** — [@digitard](https://github.com/digitard)
+### Receiving Cards
+1. Main Menu → **Tap Receive**
+2. Hold near a sharing Flipper
+3. Card auto-saves on successful read
+4. Press BACK to cancel
 
-*Trust no one. Leave nothing.*
+### Managing Contacts
+- **View Card** — See your profile
+- **Edit Profile** — Modify your info
+- **Contacts** — Browse received cards
+- **Export** — vCard or CSV format
+
+## Security
+
+| Setting | Options | Notes |
+|---------|---------|-------|
+| Passcode Length | 6-10 buttons | More = harder to crack |
+| Wipe Threshold | 3/5/7/10 attempts | Fewer = more secure |
+| Key Stretching | 10,000 iterations | Slows offline attacks |
+| Encryption | 256-bit derived key | Per-file random IV |
+
+### What Happens on Wipe
+
+After exceeding failed attempts:
+1. Animated melting ghost sequence
+2. All data permanently deleted
+3. Auth, profile, and contacts destroyed
+4. No recovery possible
+
+## Card Fields
+
+| Field | Max Length |
+|-------|------------|
+| @Handle | 32 chars |
+| Name | 48 chars |
+| Email | 64 chars |
+| Discord | 40 chars |
+| Signal | 20 chars |
+| Telegram | 40 chars |
+| Notes | 128 chars |
+| Flair | 8 options |
+
+## File Locations
 
 ```
-(o_o)
+apps_data/ghostbook/
+├── .auth              # Passcode hash, salt, settings
+├── profile.enc        # Your encrypted card
+└── contacts/          # Received cards (encrypted)
+    └── *.enc
 ```
+
+## Version
+
+**0.6.0** — NFC sharing, configurable wipe, Telegram field, UI cleanup
+
+## Author
+
+**Digi** — [github.com/digitard](https://github.com/digitard)
+
+## License
+
+MIT
