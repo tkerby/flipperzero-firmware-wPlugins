@@ -1,3 +1,0 @@
-Simple 10x10 icon placeholder
-This should be converted to a proper PNG icon
-For now, this serves as a placeholder
