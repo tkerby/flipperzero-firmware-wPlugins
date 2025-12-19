@@ -55,6 +55,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [UID Brute Smarter v1.1 (By fbettag)](https://github.com/fbettag/uid_brute_smarter)
 - Added: [Fart Sound Generator v0.1 (By fgreil)](https://github.com/fgreil/mitzi-windbreak)
 - Added: [GhostBook v0.6 (By digitard)](https://github.com/digitard/ghostbook)
+- [BadUSB: feat: Add NFC BLE pairing emulation #1154 (By phra)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1154)
 
 <a name="release">
 
@@ -159,6 +160,7 @@ $ ./fbt dolphin_ext
 - BadUSB: [Assets for CVE-2024-1086 on LINUX targets (By hed0rah & ComradeOrion)](https://github.com/Notselwyn/CVE-2024-1086)
 - BadUSB: Assets for Kiosk Evasion (By nocomp) and Wifi Stealer (By 7h30th3r0n3)
 - BadUSB: Assets for RickRoll, RogueMaster GitHub and RogueMaster Patreon
+- BadUSB: [feat: Add NFC BLE pairing emulation #1154 (By phra)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1154)
 - Bluetooth Remote: [Add camera control mode to bluetooth remote app. #2336 (By LoganMD)](https://github.com/flipperdevices/flipperzero-firmware/pull/2336)
 - Desktop: Desktop icons are now dynamic, and visibility can be changed in CFW Settings => Interface => Desktop [(By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/527)
 - Desktop: Exclude icons on the left and show minimal battery [Thanks to skizzophrenic/Talking-Sasquach](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/360)
