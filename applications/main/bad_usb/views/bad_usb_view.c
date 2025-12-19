@@ -315,12 +315,7 @@ void bad_usb_view_set_interface(BadUsb* instance, BadUsbHidInterface interface) 
 void bad_usb_view_set_nfc_status(BadUsb* instance, bool nfc_active) {
     furi_assert(instance);
     with_view_model(
-        instance->view,
-        BadUsbModel * model,
-        {
-            model->nfc_active = nfc_active;
-        },
-        true);
+        instance->view, BadUsbModel * model, { model->nfc_active = nfc_active; }, true);
 }
 
 bool bad_usb_view_is_idle_state(BadUsb* bad_usb) {

@@ -12,6 +12,17 @@
 
 #define TAG "Windbreak"
 
+// Custom character mixing "/" and "|"
+const uint8_t slash_pipe_char[7] = {
+    0b00011, // Row 1: top right
+    0b00110, // Row 2: moving left
+    0b01100, // Row 3: center
+    0b01100, // Row 4: vertical hold
+    0b11000, // Row 5: moving left
+    0b10000, // Row 6: bottom left
+    0b10000 // Row 7: bottom left
+};
+
 // Event types for the message queue
 typedef enum {
     EventTypeTick,
@@ -82,7 +93,6 @@ static void play_fart(FartState* state, NotificationApp* notifications) {
     uint32_t last_bubble = 0;
 
     float current_freq = base_freq;
-
     // Main synthesis loop
     while(elapsed < duration) {
         elapsed = furi_get_tick() - start_time;
@@ -97,26 +107,44 @@ static void play_fart(FartState* state, NotificationApp* notifications) {
 
         // Change frequency for bubbliness effect
         if(elapsed - last_bubble > bubble_interval) {
-            // Random frequency variation
+            // Random frequency variation (increased for more erratic wobble)
             uint32_t random_val = random() % 100;
-            float variation = ((float)random_val / 100.0f - 0.5f) * 2.0f;
+            float variation = ((float)random_val / 100.0f - 0.5f) * 4.0f;
             current_freq = base_freq + (variation * wet_variation);
 
-            // Add some pitch drift downward over time (natural fart behavior)
-            float drift = (float)elapsed / (float)duration * 20.0f;
+            // Add non-linear pitch drift downward (faster at the end)
+            float drift_factor = (float)elapsed / (float)duration;
+            float drift = drift_factor * drift_factor * 40.0f;
             current_freq -= drift;
+
+            // Occasional squeaks
+            if(random() % 100 < 5) {
+                current_freq += 200.0f;
+            }
 
             // Clamp frequency to reasonable range
             if(current_freq < 50.0f) current_freq = 50.0f;
-            if(current_freq > 800.0f) current_freq = 800.0f;
+            if(current_freq > 2500.0f) current_freq = 2500.0f;
 
             last_bubble = elapsed;
         }
 
-        // Play tone with current frequency and envelope
-        furi_hal_speaker_start(current_freq, volume * envelope);
+        // Add sputtering effect - randomly skip some tone bursts
+        if(random() % 100 > 20) {
+            // Play main frequency with harmonic complexity
+            float rumble_freq = current_freq * 0.5f;
 
-        furi_delay_ms(5); // Small delay for tone stability
+            // Play fundamental frequency
+            furi_hal_speaker_start(current_freq, volume * envelope * 0.6f);
+            furi_delay_ms(2);
+
+            // Play lower rumble frequency for richness
+            furi_hal_speaker_start(rumble_freq, volume * envelope * 0.4f);
+            furi_delay_ms(3);
+        } else {
+            // Silence for sputtering effect
+            furi_delay_ms(5);
+        }
     }
 
     furi_hal_speaker_stop();
@@ -138,7 +166,7 @@ static void fart_render_callback(Canvas* canvas, void* ctx) {
     canvas_draw_str_aligned(canvas, 12, 1, AlignLeft, AlignTop, "Windbreak");
 
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str_aligned(canvas, 110, 1, AlignLeft, AlignTop, "v0.1");
+    canvas_draw_str_aligned(canvas, 110, 1, AlignLeft, AlignTop, "v0.2");
 
     // Draw date rotated 90 degrees on right edge
     canvas_set_font_direction(canvas, CanvasDirectionBottomToTop);
@@ -147,35 +175,37 @@ static void fart_render_callback(Canvas* canvas, void* ctx) {
 
     // Draw footer text and button
     canvas_draw_str_aligned(canvas, 1, 57, AlignLeft, AlignTop, "Back: exit");
-    canvas_draw_str_aligned(canvas, 99, 57, AlignLeft, AlignTop, "f418.eu");
+    // canvas_draw_str_aligned(canvas, 127, 50, AlignRight, AlignTop, "f418.eu/");
+    canvas_draw_str_aligned(canvas, 127, 57, AlignRight, AlignTop, "f418.eu");
     elements_button_center(canvas, "Fart");
 
-    char buffer[64];
+    char str_buffer[64];
     uint8_t y = 19;
 
     // Draw parameters with selection indicator and bar graphs
-    const char* params[] = {"Wet/Dry", "Length", "Pitch", "Bubbles"};
+    const char* params[] = {"Wet/Dry", "Length", "Pitch", "Bubbliness"};
+    const Icon* icons[] = {&I_humidity_10x10, &I_length_10x10, &I_pitch_10x10, &I_bubbles_10x10};
+
     uint8_t values[] = {
         app->state->wet_dry, app->state->length, app->state->pitch, app->state->bubbliness};
-
+    uint8_t increment_y = 10;
+    uint8_t increment_x = 8;
+    uint8_t box_width = increment_x * 5 + 2;
     for(uint8_t i = 0; i < 4; i++) {
-        snprintf(buffer, sizeof(buffer), "%s: %d", params[i], values[i]);
+        snprintf(str_buffer, sizeof(str_buffer), "%s %d", params[i], values[i]);
+        if(app->state->selected == i) canvas_draw_str(canvas, 0, y, ">"); // Selection indicator
+        canvas_draw_str(canvas, 6, y, str_buffer);
 
-        // Draw selection indicator
-        if(app->state->selected == i) {
-            canvas_draw_str(canvas, 0, y, ">");
-        }
-
-        canvas_draw_str(canvas, 10, y, buffer);
-
-        // Draw bar indicators to display the values
-        uint8_t bar_x = 66;
+        // Draw bar indicator i to display the value
+        uint8_t bar_x = 75;
         uint8_t bar_y = 7;
-        uint8_t bar_width = values[i] * 10;
-        canvas_draw_frame(canvas, bar_x, y - bar_y - 1, 52, 8);
-        canvas_draw_box(canvas, bar_x + 1, y - bar_y, bar_width, 6);
 
-        y += 10;
+        canvas_draw_icon(canvas, bar_x - 11, y - bar_y - 1, icons[i]);
+        uint8_t bar_fill = values[i] * increment_x;
+        canvas_draw_frame(canvas, bar_x, y - bar_y - 1, box_width, 8); // outer box
+        canvas_draw_box(canvas, bar_x + 1, y - bar_y, bar_fill, 6); // actual value
+
+        y += increment_y;
     }
 
     furi_mutex_release(app->mutex);
@@ -201,10 +231,10 @@ int32_t fart_main(void* p) {
     app->event_queue = furi_message_queue_alloc(8, sizeof(FartEvent));
     app->notifications = furi_record_open(RECORD_NOTIFICATION);
 
-    // Initialize default state - middle values for all parameters
+    // Initialize default state
     app->state->wet_dry = 3;
-    app->state->length = 3;
-    app->state->pitch = 2;
+    app->state->length = 4;
+    app->state->pitch = 1;
     app->state->bubbliness = 3;
     app->state->selected = 0;
     app->state->playing = false;

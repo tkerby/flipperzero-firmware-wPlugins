@@ -70,13 +70,13 @@ void bad_usb_scene_config_ble_nfc_pairing_callback(VariableItem* item) {
     bool value = variable_item_get_current_value_index(item);
     bad_usb->nfc_pairing_enabled = value;
     variable_item_set_current_value_text(item, value ? "ON" : "OFF");
-    
+
     // Update NFC emulation state immediately
     if(bad_usb->interface == BadUsbHidInterfaceBle) {
         Bt* bt = furi_record_open(RECORD_BT);
         BtStatus bt_status = bt_get_status(bt);
         furi_record_close(RECORD_BT);
-        
+
         if(bt_status != BtStatusConnected) {
             if(value) {
                 // Enabled: start NFC pairing

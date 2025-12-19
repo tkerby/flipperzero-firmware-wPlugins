@@ -1,7 +1,7 @@
 # mitzi-windbreak
 <img alt="Main Mancala Screen"  src="screenshots/MainScreen.png" width="40%" />
 
-Flipper Zero App to generate interesting noises 💨
+Flipper Zero App to generate interesting noises. This a bit juvenile sound app allows your Flipper to break winds with adjustable parameters 💨 
 
 ## Usage
 
@@ -13,6 +13,10 @@ Flipper Zero App to generate interesting noises 💨
 3. **Adjust**: Use Left/Right buttons to change the value (1-5)
 4. **Play**: Press OK button to play the fart with current settings
 5. **Exit**: Press Back button
+
+## Background
+Inspiration was an old C=64-programme written some decades ago to get acquainted to the SID sound chip &mdash; see [C=64-wiki in German](https://www.c64-wiki.de/wiki/SID) for details on the chip.
+The legendary [C=64 Fart Machine](https://www.youtube.com/watch?v=nVqwgafmW7c) was much more advanced than my BASIC code back then, but gives you an idea what you can do with 3 voices and 4 waveforms on the "bread box".
 
 ## Version history
 See [changelog.md](changelog.md)

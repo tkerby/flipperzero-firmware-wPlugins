@@ -59,7 +59,7 @@ bool bad_usb_scene_config_ble_mac_on_event(void* context, SceneManagerEvent even
                 bad_usb->user_hid_cfg.ble.mac,
                 bad_usb->ble_mac_buf,
                 sizeof(bad_usb->user_hid_cfg.ble.mac));
-            
+
             // CRITICAL: Regenerate NFC tag with new MAC address
             // The tag must be refreshed to reflect the new MAC and update the UID
             if(bad_usb->interface == BadUsbHidInterfaceBle && bad_usb->nfc_pairing_enabled) {
@@ -67,7 +67,7 @@ bool bad_usb_scene_config_ble_mac_on_event(void* context, SceneManagerEvent even
                 Bt* bt = furi_record_open(RECORD_BT);
                 BtStatus bt_status = bt_get_status(bt);
                 furi_record_close(RECORD_BT);
-                
+
                 if(bt_status != BtStatusConnected) {
                     // Not connected, restart NFC to refresh tag
                     bad_usb_nfc_pairing_stop(bad_usb);

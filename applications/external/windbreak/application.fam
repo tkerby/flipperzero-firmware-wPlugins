@@ -10,6 +10,6 @@ App(
     fap_category="Media",
     fap_author="F. Greil",
     fap_weburl="https://github.com/fgreil/mitzi-windbreak",
-    fap_version=(0, 1, 0),
+    fap_version=(0, 2, 0),
     fap_description="A simple app that produces a flatulent sound effect for light relief and to improve your morale during breaks.",
 )

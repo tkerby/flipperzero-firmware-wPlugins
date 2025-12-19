@@ -43,7 +43,8 @@ void bad_usb_nfc_pairing_stop(BadUsbApp* app) {
 }
 
 // Correct helper implementation
-static void bad_usb_nfc_generate_pairing_data(MfUltralightData* data, const uint8_t* mac_override) {
+static void
+    bad_usb_nfc_generate_pairing_data(MfUltralightData* data, const uint8_t* mac_override) {
     // Prepare a flat buffer then copy to pages
     uint8_t ndef_buf[64] = {0};
     uint8_t i = 0;
@@ -77,49 +78,53 @@ static void bad_usb_nfc_generate_pairing_data(MfUltralightData* data, const uint
         FURI_LOG_I(TAG, "NFC Pairing: Using Default MAC");
     }
 
-    FURI_LOG_I(TAG, "NFC MAC: %02X:%02X:%02X:%02X:%02X:%02X", 
-        mac_buf[0], mac_buf[1], mac_buf[2], mac_buf[3], mac_buf[4], mac_buf[5]);
-
+    FURI_LOG_I(
+        TAG,
+        "NFC MAC: %02X:%02X:%02X:%02X:%02X:%02X",
+        mac_buf[0],
+        mac_buf[1],
+        mac_buf[2],
+        mac_buf[3],
+        mac_buf[4],
+        mac_buf[5]);
 
     // --- 2. Initialize Usage Structures ---
     // Save pointer to allocated ISO struct BEFORE clearing parent struct
     iso_ptr = data->iso14443_3a_data;
-    
+
     // Clear parent struct
     memset(data, 0, sizeof(MfUltralightData));
-    
+
     // Restore pointer and clear ISO struct
     data->iso14443_3a_data = iso_ptr;
     memset(data->iso14443_3a_data, 0, sizeof(Iso14443_3aData));
-
 
     // --- 3. Dynamic UID Generation ---
     // We bind the UID to the MAC address to ensure phone cache invalidation.
     // Fixed prefix: 0x04 (NXP), 0x11, 0x22
     // Variable suffix: MAC[2..5]
-    
+
     uint8_t uid[7];
     uid[0] = 0x04; // NXP
     uid[1] = 0x11; // Random prefix
     uid[2] = 0x22; // Random prefix
-    uid[3] = mac_buf[2]; 
+    uid[3] = mac_buf[2];
     uid[4] = mac_buf[3];
     uid[5] = mac_buf[4];
-    uid[6] = mac_buf[5]; 
-    
+    uid[6] = mac_buf[5];
+
     // Calculate Checksums
     // BCC0 = 0x88 ^ UID0 ^ UID1 ^ UID2
     uint8_t bcc0 = 0x88 ^ uid[0] ^ uid[1] ^ uid[2];
     // BCC1 = UID3 ^ UID4 ^ UID5 ^ UID6
     uint8_t bcc1 = uid[3] ^ uid[4] ^ uid[5] ^ uid[6];
 
-
     // --- 4. Populate Data ---
 
     // Set ISO14443-3A params for Anti-Collision
     data->type = MfUltralightTypeNTAG215; // Match version 0x11 size
     data->pages_total = 135; // NTAG215 Size
-    data->pages_read = 135;  // Simulate full read
+    data->pages_read = 135; // Simulate full read
 
     // Populate ISO14443-3A Data
     data->iso14443_3a_data->uid_len = 7;
@@ -143,38 +148,41 @@ static void bad_usb_nfc_generate_pairing_data(MfUltralightData* data, const uint
 
     // Populate Pages
     // Page 0: UID0, UID1, UID2, BCC0
-    data->page[0].data[0] = uid[0]; 
-    data->page[0].data[1] = uid[1]; 
-    data->page[0].data[2] = uid[2]; 
-    data->page[0].data[3] = bcc0; 
+    data->page[0].data[0] = uid[0];
+    data->page[0].data[1] = uid[1];
+    data->page[0].data[2] = uid[2];
+    data->page[0].data[3] = bcc0;
 
     // Page 1: UID3, UID4, UID5, UID6
-    data->page[1].data[0] = uid[3]; 
-    data->page[1].data[1] = uid[4]; 
-    data->page[1].data[2] = uid[5]; 
+    data->page[1].data[0] = uid[3];
+    data->page[1].data[1] = uid[4];
+    data->page[1].data[2] = uid[5];
     data->page[1].data[3] = uid[6];
-    
-    // Page 2: BCC1, Internal, Lock0, Lock1
-    data->page[2].data[0] = bcc1; 
-    data->page[2].data[1] = 0x48; 
-    data->page[2].data[2] = 0x00; 
-    data->page[2].data[3] = 0x00;
-    
-    // Page 3: OTP
-    data->page[3].data[0] = 0xE1; data->page[3].data[1] = 0x10; data->page[3].data[2] = 0x06; data->page[3].data[3] = 0x00; // CC capability container
 
+    // Page 2: BCC1, Internal, Lock0, Lock1
+    data->page[2].data[0] = bcc1;
+    data->page[2].data[1] = 0x48;
+    data->page[2].data[2] = 0x00;
+    data->page[2].data[3] = 0x00;
+
+    // Page 3: OTP
+    data->page[3].data[0] = 0xE1;
+    data->page[3].data[1] = 0x10;
+    data->page[3].data[2] = 0x06;
+    data->page[3].data[3] = 0x00; // CC capability container
 
     // NDEF Message starting at Page 4
     // 03 2B: NDEF Message (03), Length (43 bytes = 0x2B)
-    ndef_buf[i++] = 0x03; ndef_buf[i++] = 0x2B;
+    ndef_buf[i++] = 0x03;
+    ndef_buf[i++] = 0x2B;
     // D2: MB=1, ME=1, CF=0, SR=1, IL=0, TNF=2 (MIME)
-    ndef_buf[i++] = 0xD2; 
+    ndef_buf[i++] = 0xD2;
     // 20: Type Length (32 bytes)
-    ndef_buf[i++] = 0x20; 
-    
+    ndef_buf[i++] = 0x20;
+
     // 08: Payload Length (8 bytes)
-    ndef_buf[i++] = 0x08; 
-    
+    ndef_buf[i++] = 0x08;
+
     // Type: "application/vnd.bluetooth.ep.oob"
     const char* type_str = "application/vnd.bluetooth.ep.oob";
     memcpy(&ndef_buf[i], type_str, 32);
@@ -182,8 +190,9 @@ static void bad_usb_nfc_generate_pairing_data(MfUltralightData* data, const uint
 
     // Payload
     // 08 00 (OOB Data Len + Unused)
-    ndef_buf[i++] = 0x08; ndef_buf[i++] = 0x00;
-    
+    ndef_buf[i++] = 0x08;
+    ndef_buf[i++] = 0x00;
+
     // Copy MAC (Reverse Order for Little Endian NFC payload)
     // NFC OOB expects LSB first.
     for(int j = 5; j >= 0; j--) {
@@ -207,11 +216,11 @@ void bad_usb_nfc_pairing_start(BadUsbApp* app) {
 
     app->nfc_listener = nfc_listener_alloc(app->nfc, NfcProtocolMfUltralight, app->nfc_data);
     nfc_listener_start(app->nfc_listener, NULL, NULL);
-    
+
     // Visual indication check
     FURI_LOG_I(TAG, "Starting NFC Pairing Emulation");
     notification_message(app->notifications, &sequence_set_blue_255);
-    
+
     // Update GUI
     bad_usb_view_set_nfc_status(app->bad_usb_view, true);
 }
@@ -225,14 +234,14 @@ static void bad_usb_app_tick_event_callback(void* context) {
         bool connected = (bt_get_status(app->bt) == BtStatusConnected);
         // FURI_LOG_I(TAG, "Tick: Connected=%d, Listener=%p", connected, app->nfc_listener);
         if(connected && app->nfc_listener) {
-             FURI_LOG_I(TAG, "Stopping NFC (Connected)");
-             bad_usb_nfc_pairing_stop(app);
-             notification_message(app->notifications, &sequence_reset_blue);
+            FURI_LOG_I(TAG, "Stopping NFC (Connected)");
+            bad_usb_nfc_pairing_stop(app);
+            notification_message(app->notifications, &sequence_reset_blue);
         } else if(!connected && !app->nfc_listener) {
-             FURI_LOG_I(TAG, "Starting NFC (Disconnected)");
-             if(app->nfc_pairing_enabled) {
-                 bad_usb_nfc_pairing_start(app);
-             }
+            FURI_LOG_I(TAG, "Starting NFC (Disconnected)");
+            if(app->nfc_pairing_enabled) {
+                bad_usb_nfc_pairing_start(app);
+            }
         }
     }
 }
@@ -514,7 +523,7 @@ void bad_usb_app_free(BadUsbApp* app) {
         bad_usb_script_close(app->bad_usb_script);
         app->bad_usb_script = NULL;
     }
-    
+
     bad_usb_nfc_pairing_stop(app);
     notification_message(app->notifications, &sequence_reset_blue);
     nfc_free(app->nfc);
