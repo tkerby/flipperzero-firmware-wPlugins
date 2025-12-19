@@ -2,7 +2,7 @@
 
 An Amiibo toolkit app for Flipper Zero.
 
-This project is in early development. Features may be incomplete or unstable.
+This project is usable but still in development. Ensure you back up all important data and avoid using it with another experimental setup, like Amiibo Link writing, to prevent damage or data loss.
 
 ## Features
 
