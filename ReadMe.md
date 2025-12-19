@@ -3,7 +3,7 @@
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://lh3.googleusercontent.com/d/1iYQlRQXM7nA4IAdcPwvcKRSTCMoi8tug' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM1209-1429-0.420.0-5f9369d.tgz&channel=RM1209-1429-0.420.0-5f9369d&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM1219-1645-0.420.0-36447da.tgz&channel=RM1219-1645-0.420.0-36447da&version=0.420.0&target=f7)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -30,33 +30,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-12-19 16:00 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-12-19 16:00 EST`
-- Updated: [Passy v1.4 (By bettse)](https://github.com/bettse/passy)
-- Added: [ProtoPirate WIP v1.1 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
-- Updated: [Sub-GHz Remote v1.8 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote)
-- UL: [Sub-GHz OFEX support for SecPlus v1 and v2, various fixes (By Dmitry422 & xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/a9d4bc3401672151d45e26b2cc93bd9c4fc3fd0f)
-- Removed: [Kia Encoder #691 (By letvinov28)](https://github.com/DarkFlippers/unleashed-firmware/pull/691) Let me know if you tested this and think it works better with it.
-- Updated: [NFC Playlist v3.4 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
-- [ESP Flasher: Bump Marauder v1.9.0 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.9.0)
-- UL: [Sub-GHz: SecPlus v1 and v2 fixes (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/3c126874c4bb303f7d675022d6a7c4ff9d1f49f8)
-- [NFC: Keys found in key cache are now used in Nested attacks, deleting key cache is no longer required (By noproto)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/1a31d3b7e5c4d521127b9e34ebc0e92da7580ed9)
-- Updated: [Mfkey v4.0 (By noproto)](https://github.com/noproto/FlipperMfkey) MIFARE Classic Static Encrypted Nested attacks run 10x faster (By noproto)
-- OFW: PR: [Added Support for MIFARE Plus 2K Cards in SL1 Mode #4316 (By LuemmelSec)](https://github.com/flipperdevices/flipperzero-firmware/pull/4316)
-- Updated: [FlipSocial v2.0.5 (By jblanked)](https://github.com/jblanked/FlipSocial)
-- Added: [Amiibo Toolkit v1.0 (By Firefox2100)](https://github.com/Firefox2100/ami_tool)
-- Added: [FlipTelegram v1.0 (By jblanked)](https://github.com/jblanked/FlipTelegram) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [LEGO Dimensions Toy Pad v0.5 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
-- Updated: [Amiibo Toolkit v1.0 (By Firefox2100)](https://github.com/Firefox2100/ami_tool)
-- Updated: [ProtoPirate WIP v1.1 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate) [add support for fiatv0 (By yougz/doob/CharlesTheGreat77)](https://github.com/RocketGod-git/ProtoPirate/pull/6)
-- Updated: [FlipTelegram v1.0.1 (By jblanked)](https://github.com/jblanked/FlipTelegram) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Default/Minimal Build Updated to include Holiday / Winter animations.
-- [Patreon Build Update](https://www.patreon.com/RogueMaster/membership): ManifestSwitcher Build Updated to include Holiday / Winter animations in Minimal selection.
-- Added: [PC Monitor USB v1.0 (By DonJulve & TheSainEyereg)](https://github.com/DonJulve/Flipper-Zero-PC-Monitor-USB) `Req: [Backend](https://github.com/DonJulve/Flipper-Zero-PC-Monitor-USB-Backend)`
-- Fix for Happy Holidays animation.
-- Updated: [UID Brute Smarter v1.1 (By fbettag)](https://github.com/fbettag/uid_brute_smarter)
-- Added: [Fart Sound Generator v0.1 (By fgreil)](https://github.com/fgreil/mitzi-windbreak)
-- Added: [GhostBook v0.6 (By digitard)](https://github.com/digitard/ghostbook)
-- [BadUSB: feat: Add NFC BLE pairing emulation #1154 (By phra)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1154)
-- Updated: [Fart Sound Generator v0.2 (By fgreil)](https://github.com/fgreil/mitzi-windbreak)
 
 <a name="release">
 
@@ -827,4 +800,4 @@ $ ./fbt dolphin_ext
 - Have a new app? Submit GitHub link to me on Discord for a special reward (if I add it to RM Firmware).
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM1209-1429-0.420.0-5f9369d.tgz&channel=RM1209-1429-0.420.0-5f9369d&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM1219-1645-0.420.0-36447da.tgz&channel=RM1219-1645-0.420.0-36447da&version=0.420.0&target=f7)
