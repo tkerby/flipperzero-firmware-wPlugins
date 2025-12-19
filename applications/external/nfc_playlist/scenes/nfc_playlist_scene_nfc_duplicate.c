@@ -60,7 +60,7 @@ bool nfc_playlist_nfc_duplicate_scene_on_event(void* context, SceneManagerEvent 
                 FuriString* tmp_str = furi_string_alloc();
 
                 while(stream_read_line(stream, line)) {
-                    furi_string_cat_printf(tmp_str, "%s", furi_string_get_cstr(line));
+                    furi_string_cat(tmp_str, furi_string_get_cstr(line));
                 }
                 furi_string_free(line);
 
