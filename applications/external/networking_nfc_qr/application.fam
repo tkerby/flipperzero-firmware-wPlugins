@@ -2,7 +2,6 @@ App(
     appid="networking_nfc_qr",
     name="Networking NFC + QR",
     apptype=FlipperAppType.EXTERNAL,
-    targets=["f7"],
     entry_point="networking_nfc_qr_app_entry",
     stack_size=16 * 1024,
     fap_icon="icons/qrcode_10px.png",

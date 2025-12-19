@@ -2,7 +2,6 @@ App(
     appid="fire_string",
     name="Fire String",
     apptype=FlipperAppType.EXTERNAL,
-    targets=["f7"],
     entry_point="fire_string_app",
     stack_size=2 * 1024,
     fap_icon="fire_string.png",

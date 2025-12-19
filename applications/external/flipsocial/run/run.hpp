@@ -44,13 +44,6 @@ typedef enum {
     RegistrationRequestError = 2, // Request error
     RegistrationNotStarted = 3, // Registration not started
     RegistrationWaiting = 4, // Waiting for response
-    RegistrationErrorAllOneLetter = 5, // Error: All one letter username/password
-    RegistrationErrorAllNumbers = 6, // Error: All numbers username/password
-    RegistrationErrorUsernameTooLong = 7, // Error: Username too long
-    RegistrationErrorUsernameTooShort = 8, // Error: Username too short
-    RegistrationErrorPasswordTooLong = 9, // Error: Password too long
-    RegistrationErrorPasswordTooShort = 10, // Error: Password too short
-    RegistrationErrorUsernameNotAllowed = 11, // Error: Username not allowed
 } RegistrationStatus;
 
 typedef enum {
@@ -187,9 +180,7 @@ class FlipSocialRun {
         char* message,
         char* flipped,
         char* flips,
-        char* date_created,
-        char* comments,
-        bool isComment = false); // draw a single feed item
+        char* date_created); // draw a single feed item
     void drawFeedMessage(
         Canvas* canvas,
         const char* user_message,

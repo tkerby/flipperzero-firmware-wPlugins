@@ -2,13 +2,13 @@
 
 #include "../ldtoypad.h"
 #include "../views/EmulateToyPad_scene.h"
-#include "../ToyPadEmu.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define MAX_FAVORITES 100
+#define MAX_FAVORITES       100
+#define FILE_NAME_FAVORITES "favs.bin"
 
 extern int favorite_ids[MAX_FAVORITES];
 extern int num_favorites;

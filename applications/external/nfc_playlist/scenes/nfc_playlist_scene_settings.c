@@ -293,21 +293,24 @@ bool nfc_playlist_settings_scene_on_event(void* context, SceneManagerEvent event
     bool consumed = false;
     if(event.type == SceneManagerEventTypeCustom) {
         switch(event.event) {
-        case NfcPlaylistSettings_SaveSettings:
+        case NfcPlaylistSettings_SaveSettings: {
             nfc_playlist_save_settings(nfc_playlist);
             consumed = true;
             break;
-        case NfcPlaylistSettings_ReloadSettings:
+        }
+        case NfcPlaylistSettings_ReloadSettings: {
             nfc_playlist_load_settings(nfc_playlist);
             nfc_playlist_settings_update_view(nfc_playlist);
             consumed = true;
             break;
-        case NfcPlaylistSettings_DeleteSettings:
+        }
+        case NfcPlaylistSettings_DeleteSettings: {
             nfc_playlist_delete_settings(nfc_playlist);
             nfc_playlist_settings_update_view(nfc_playlist);
             consumed = true;
             break;
-        case NfcPlaylistSettings_Reset:
+        }
+        case NfcPlaylistSettings_Reset: {
             nfc_playlist->worker_info.settings->emulate_timeout = default_emulate_timeout;
             nfc_playlist->worker_info.settings->emulate_delay = default_emulate_delay;
             nfc_playlist->worker_info.settings->emulate_led_indicator =
@@ -316,9 +319,12 @@ bool nfc_playlist_settings_scene_on_event(void* context, SceneManagerEvent event
             nfc_playlist->worker_info.settings->loop = default_loop;
             nfc_playlist->worker_info.settings->time_controls = default_time_controls;
             nfc_playlist->worker_info.settings->user_controls = default_user_controls;
+
             nfc_playlist_settings_update_view(nfc_playlist);
+
             consumed = true;
             break;
+        }
         default:
             break;
         }

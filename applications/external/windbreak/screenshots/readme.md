@@ -1,1 +1,0 @@
-# Original qFlipper screenshots

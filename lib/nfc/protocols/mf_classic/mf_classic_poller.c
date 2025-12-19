@@ -135,22 +135,6 @@ NfcCommand mf_classic_poller_handler_detect_type(MfClassicPoller* instance) {
             instance->current_type_check = MfClassicType4k;
             FURI_LOG_D(TAG, "4K detected");
         } else {
-            instance->current_type_check = MfClassicTypePlus2k;
-        }
-    } else if(instance->current_type_check == MfClassicTypePlus2k) {
-        // Second-last block in sector 16, which may exist if said sector is not in SL3 mode
-        MfClassicError error =
-            mf_classic_poller_get_nt(instance, 66, MfClassicKeyTypeA, NULL, false);
-        if(error != MfClassicErrorNone) {
-            // If sector 16 is locked/SL3, try sector 17 as well before falling back
-            error = mf_classic_poller_get_nt(instance, 70, MfClassicKeyTypeA, NULL, false);
-        }
-        if(error == MfClassicErrorNone) {
-            instance->data->type = MfClassicTypePlus2k;
-            instance->state = MfClassicPollerStateStart;
-            instance->current_type_check = MfClassicType4k;
-            FURI_LOG_D(TAG, "Plus 2K detected");
-        } else {
             instance->current_type_check = MfClassicType1k;
         }
     } else if(instance->current_type_check == MfClassicType1k) {
@@ -173,20 +157,17 @@ NfcCommand mf_classic_poller_handler_detect_type(MfClassicPoller* instance) {
 NfcCommand mf_classic_poller_handler_start(MfClassicPoller* instance) {
     NfcCommand command = NfcCommandContinue;
 
-    instance->sectors_total = mf_classic_get_scannable_sectors_num(instance->data->type);
+    instance->sectors_total = mf_classic_get_total_sectors_num(instance->data->type);
     memset(&instance->mode_ctx, 0, sizeof(MfClassicPollerModeContext));
 
     instance->mfc_event.type = MfClassicPollerEventTypeRequestMode;
     command = instance->callback(instance->general_event, instance->context);
 
-    if(instance->mfc_event_data.poller_mode.mode == MfClassicPollerModeDictAttackStandard ||
-       instance->mfc_event_data.poller_mode.mode == MfClassicPollerModeDictAttackCUID) {
+    if(instance->mfc_event_data.poller_mode.mode == MfClassicPollerModeDictAttackStandard) {
         mf_classic_copy(instance->data, instance->mfc_event_data.poller_mode.data);
-        instance->mode_ctx.dict_attack_ctx.mode = instance->mfc_event_data.poller_mode.mode;
         instance->state = MfClassicPollerStateRequestKey;
     } else if(instance->mfc_event_data.poller_mode.mode == MfClassicPollerModeDictAttackEnhanced) {
         mf_classic_copy(instance->data, instance->mfc_event_data.poller_mode.data);
-        instance->mode_ctx.dict_attack_ctx.mode = instance->mfc_event_data.poller_mode.mode;
         instance->state = MfClassicPollerStateAnalyzeBackdoor;
     } else if(instance->mfc_event_data.poller_mode.mode == MfClassicPollerModeRead) {
         instance->state = MfClassicPollerStateRequestReadSector;
@@ -609,22 +590,7 @@ NfcCommand mf_classic_poller_handler_analyze_backdoor(MfClassicPoller* instance)
        (error == MfClassicErrorProtocol || error == MfClassicErrorTimeout)) {
         FURI_LOG_D(TAG, "No backdoor identified");
         dict_attack_ctx->backdoor = MfClassicBackdoorNone;
-
-        // Check if any keys were cached - if so, go directly to nested attack
-        bool has_cached_keys = false;
-        for(uint8_t sector = 0; sector < instance->sectors_total; sector++) {
-            if(mf_classic_is_key_found(instance->data, sector, MfClassicKeyTypeA) ||
-               mf_classic_is_key_found(instance->data, sector, MfClassicKeyTypeB)) {
-                has_cached_keys = true;
-                break;
-            }
-        }
-
-        if(has_cached_keys) {
-            instance->state = MfClassicPollerStateNestedController;
-        } else {
-            instance->state = MfClassicPollerStateRequestKey;
-        }
+        instance->state = MfClassicPollerStateRequestKey;
     } else if(error == MfClassicErrorNone) {
         FURI_LOG_I(TAG, "Backdoor identified: v%d", backdoor_version);
         dict_attack_ctx->backdoor = mf_classic_backdoor_keys[next_key_index].type;
@@ -721,15 +687,7 @@ NfcCommand mf_classic_poller_handler_request_key(MfClassicPoller* instance) {
     command = instance->callback(instance->general_event, instance->context);
     if(instance->mfc_event_data.key_request_data.key_provided) {
         dict_attack_ctx->current_key = instance->mfc_event_data.key_request_data.key;
-        dict_attack_ctx->requested_key_type = instance->mfc_event_data.key_request_data.key_type;
-
-        // In CUID mode, go directly to the appropriate Auth state based on key_type
-        if(dict_attack_ctx->mode == MfClassicPollerModeDictAttackCUID &&
-           dict_attack_ctx->requested_key_type == MfClassicKeyTypeB) {
-            instance->state = MfClassicPollerStateAuthKeyB;
-        } else {
-            instance->state = MfClassicPollerStateAuthKeyA;
-        }
+        instance->state = MfClassicPollerStateAuthKeyA;
     } else {
         instance->state = MfClassicPollerStateNextSector;
     }
@@ -743,12 +701,7 @@ NfcCommand mf_classic_poller_handler_auth_a(MfClassicPoller* instance) {
 
     if(mf_classic_is_key_found(
            instance->data, dict_attack_ctx->current_sector, MfClassicKeyTypeA)) {
-        // In CUID mode, skip directly to RequestKey since we test keys by specific type
-        if(dict_attack_ctx->mode == MfClassicPollerModeDictAttackCUID) {
-            instance->state = MfClassicPollerStateRequestKey;
-        } else {
-            instance->state = MfClassicPollerStateAuthKeyB;
-        }
+        instance->state = MfClassicPollerStateAuthKeyB;
     } else {
         uint8_t block = mf_classic_get_first_block_num_of_sector(dict_attack_ctx->current_sector);
         uint64_t key =
@@ -769,12 +722,7 @@ NfcCommand mf_classic_poller_handler_auth_a(MfClassicPoller* instance) {
             instance->state = MfClassicPollerStateReadSector;
         } else {
             mf_classic_poller_halt(instance);
-            // In CUID mode, skip directly to RequestKey since we test keys by specific type
-            if(dict_attack_ctx->mode == MfClassicPollerModeDictAttackCUID) {
-                instance->state = MfClassicPollerStateRequestKey;
-            } else {
-                instance->state = MfClassicPollerStateAuthKeyB;
-            }
+            instance->state = MfClassicPollerStateAuthKeyB;
         }
     }
 
@@ -787,11 +735,8 @@ NfcCommand mf_classic_poller_handler_auth_b(MfClassicPoller* instance) {
 
     if(mf_classic_is_key_found(
            instance->data, dict_attack_ctx->current_sector, MfClassicKeyTypeB)) {
-        // In CUID mode, just request next key since we iterate by key_idx
-        if(dict_attack_ctx->mode == MfClassicPollerModeDictAttackCUID) {
-            instance->state = MfClassicPollerStateRequestKey;
-        } else if(mf_classic_is_key_found(
-                      instance->data, dict_attack_ctx->current_sector, MfClassicKeyTypeA)) {
+        if(mf_classic_is_key_found(
+               instance->data, dict_attack_ctx->current_sector, MfClassicKeyTypeA)) {
             instance->state = MfClassicPollerStateNextSector;
         } else {
             instance->state = MfClassicPollerStateRequestKey;
@@ -829,20 +774,12 @@ NfcCommand mf_classic_poller_handler_next_sector(MfClassicPoller* instance) {
     MfClassicPollerDictAttackContext* dict_attack_ctx = &instance->mode_ctx.dict_attack_ctx;
 
     dict_attack_ctx->current_sector++;
-
     if(dict_attack_ctx->current_sector == instance->sectors_total) {
         instance->state = MfClassicPollerStateSuccess;
     } else {
         instance->mfc_event.type = MfClassicPollerEventTypeNextSector;
         instance->mfc_event_data.next_sector_data.current_sector = dict_attack_ctx->current_sector;
         command = instance->callback(instance->general_event, instance->context);
-
-        // In CUID mode, NFC app manages sector based on key_idx - read it back
-        if(dict_attack_ctx->mode == MfClassicPollerModeDictAttackCUID) {
-            dict_attack_ctx->current_sector =
-                instance->mfc_event_data.next_sector_data.current_sector;
-        }
-
         instance->state = MfClassicPollerStateRequestKey;
     }
 

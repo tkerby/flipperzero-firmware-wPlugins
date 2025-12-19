@@ -32,7 +32,6 @@ GamesMenuList Version 0
 /ext/apps/Games/eightball.fap
 /ext/apps/Games/etchasketch.fap
 /ext/apps/Games/executor_keychain.fap
-/ext/apps/Media/fart.fap
 /ext/apps/Games/five_nights_at_flippers.fap
 /ext/apps/Games/flight_assault.fap
 /ext/apps/Games/flipper_hero.fap

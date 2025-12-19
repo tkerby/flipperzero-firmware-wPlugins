@@ -21,13 +21,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # From Momentum-Firmware root directory
 cd /Users/fbettag/src/flipperzero/Momentum-Firmware
 
-# Generate version file (shows git version on about screen)
-cd applications_user/uid_brute_smarter
-git describe --tags --always --dirty > VERSION
-echo "const char* APP_VERSION_STR = \"$(cat VERSION)\";" > version.c
-echo "extern const char* APP_VERSION_STR;" > version.h
-cd ../..
-
 # Build the app
 ./fbt fap_uid_brute_smarter
 
@@ -131,23 +124,3 @@ applications_user/uid_brute_smarter/
 - Use `./fbt` commands, not direct compilation
 - Test memory allocation/deallocation thoroughly
 - Follow Flipper Zero UI conventions for consistency
-
-## Tested Firmware Versions
-
-### Latest Tested: Momentum Firmware (Dev Branch)
-- **Commit**: `98a1a3de6d42e0735d1cb3fe837f55e3b54ba815`
-- **Date**: 2025-12-10
-- **API Version**: 87.1
-- **Status**: ✅ Fully compatible
-- **Features Tested**:
-  - About screen with morphing ASCII animation and particle system
-  - NFC card loading and management
-  - Pattern detection and brute force functionality
-  - All menu navigation and UI interactions
-
-### Compatibility Notes
-- This is a **C application** (not JavaScript)
-- **Not affected** by JS SDK 1.0 breaking changes (gui/submenu, gui/widget)
-- Uses stable NFC C APIs: `nfc_listener`, `nfc_device`, `iso14443_3a`
-- No backward compatibility code required for recent Momentum updates
-- Clean build confirmed with latest dev branch
