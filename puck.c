@@ -14,11 +14,14 @@
 #include "puck_icons.h" // Custom icon definitions, header file is auto-magically generated
 
 // Maze configuration - defines the logical grid structure
-#define MAZE_WIDTH 29   // Number of cells horizontally
-#define MAZE_HEIGHT 9   // Number of cells vertically
-#define CELL_SIZE 4     // Pixels per cell (to be adjusted based on actual maze layout)
+#define MAZE_WIDTH 15   // Number of cells horizontally
+#define MAZE_HEIGHT 7   // Number of cells vertically
+#define CELL_PITCH 8    // Pixel pitch betweencorridor centers (1px wall + 7px corridor) 
 #define OFFSET_X 0      // Horizontal offset for maze rendering
 #define OFFSET_Y 0      // Vertical offset for maze rendering
+
+#define PAC_MOVE_MS 60
+#define GHOST_MOVE_MS 90
 
 #define DOT_PITCH 8
 #define DOT_CX    4
@@ -47,6 +50,25 @@ typedef enum {
     DirRight    // Moving right
 } Direction;
 
+// Movement connectivity bitmask (Von Neumann neighborhood)
+enum {
+    MV_N = 1 << 0,
+    MV_E = 1 << 1,
+    MV_S = 1 << 2,
+    MV_W = 1 << 3,
+};
+
+static inline uint8_t dir_to_mask(Direction d) {
+    switch(d) {
+        case DirUp: return MV_N;
+        case DirRight: return MV_E;
+        case DirDown: return MV_S;
+        case DirLeft: return MV_W;
+        default: return 0;
+    }
+}
+
+
 // Base entity structure for all moving objects (Puck and ghosts)
 typedef struct {
     float x;                // X position in grid coordinates (can be fractional for smooth movement)
@@ -66,28 +88,58 @@ typedef struct {
 
 // Complete game state
 typedef struct {
-    Entity pacgirl;              // The player character (Puck)
-    Ghost ghosts[3];            // Three ghost enemies
-    uint8_t maze[MAZE_HEIGHT][MAZE_WIDTH];  // Maze layout: 1=wall, 0=empty, 2=dot, 3=power pill
-    uint16_t dots_remaining;    // Number of dots left to collect
-    uint16_t score;             // Current score
-    GameState state;            // Current game state (running/win/game over)
-    uint32_t power_pill_timer;  // Tick when last power pill was eaten
-    bool power_mode;            // True when power pill effect is active
+    Entity pacgirl;            // The player character (Puck aka pac-girl)
+    Ghost ghosts[3];           // Three ghost enemies
+    uint8_t conn[MAZE_HEIGHT][MAZE_WIDTH];      // Movement connectivity bitmask per cell (M_N/M_E/M_S/M_W)
+    uint8_t pellets[MAZE_HEIGHT][MAZE_WIDTH];   // 0=none, 1=dot, 2=power pill
+    uint16_t dots_remaining;   // Number of dots left to collect
+    uint16_t score;            // Current score
+    GameState state;           // Current game state (running/win/game over)
+    uint32_t power_pill_timer; // Tick when last power pill was eaten
+    bool power_mode;           // True when power pill effect is active
+	volatile bool* running;    // allows input_callback() to exit main loop
 } GameData;
 
-// Maze layout (1 = wall, 0 = path, 2 = dot, 3 = power pill)
-// This defines the collision/gameplay grid, while the visual maze comes from maze.png
-static const uint8_t initial_maze[MAZE_HEIGHT][MAZE_WIDTH] = {
-    {1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1},
-    {1,3,2,2,2,2,2,2,2,2, 2,2,2,1,2,2,2,2,2, 2,2,2,2,2,2,2,2,3,1},
-    {1,2,1,1,1,2,1,1,1,1, 1,1,2,1,2,1,1,1,1, 1,1,2,1,1,1,2,1,2,1},
-    {1,2,1,1,1,2,1,1,1,1, 1,1,2,1,2,1,1,1,1, 1,1,2,1,1,1,2,1,2,1},
-    {1,2,2,2,2,2,2,2,2,2, 2,2,2,2,2,2,2,2,2, 2,2,2,2,2,2,2,2,2,1},
-    {1,2,1,1,1,2,1,2,1,1, 1,1,1,1,1,1,1,1,1, 2,1,2,1,1,1,2,1,2,1},
-    {1,2,2,2,2,2,1,2,2,2, 2,2,2,1,2,2,2,2,2, 2,1,2,2,2,2,2,2,2,1},
-    {1,3,2,2,2,2,2,2,2,2, 2,2,2,2,2,2,2,2,2, 2,2,2,2,2,2,2,2,3,1},
-    {1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1}
+// Maze layout
+static const uint8_t initial_conn[MAZE_HEIGHT][MAZE_WIDTH] = {
+    {6, 10, 12,  6, 10, 10, 10, 10, 10, 10, 10, 12,  6, 10, 12},
+    {5,  6, 11, 11, 10, 10, 12,  6, 10, 10, 10, 11, 11, 12,  5},
+    {5,  7, 14, 10, 10, 14, 11, 15, 10, 14, 10, 10, 14, 13,  5},
+    {7, 13,  5,  2, 10, 13,  2, 11,  8,  7, 10,  8,  5,  7, 13},
+    {5,  5,  3, 10, 10, 15, 10, 10, 10, 15, 10, 10,  9,  5,  5},
+    {5,  3, 14, 10, 10, 11, 12,  6, 10, 11, 10, 10, 14,  9,  5},
+    {3, 10, 11, 10, 10, 10, 11, 11, 10, 10, 10, 10, 11, 10,  9},
+};
+/* Decimal | Binary | Directions allowed
+ * --------+--------+--------------------
+ *   0     | 0000   | none       (unreachable / wall)
+ *   1     | 0001   | N
+ *   2     | 0010   | E
+ *   3     | 0011   | N, E       (bottom left corner)
+ *   4     | 0100   | S
+ *   5     | 0101   | N, S       (vertical corridor)
+ *   6     | 0110   | E, S       (top left corner)
+ *   7     | 0111   | N, E, S    
+ *   8     | 1000   | W
+ *   9     | 1001   | N, W       (bottom right corner)
+ *  10     | 1010   | E, W       (horizontal corridor)
+ *  11     | 1011   | N, E, W
+ *  12     | 1100   | S, W       (top right corner)
+ *  13     | 1101   | N, S, W
+ *  14     | 1110   | E, S, W
+ *  15     | 1111   | N, E, S, W (4-way intersection)
+*/
+
+// Collectible layout for the maze. NB: These are logical cells, not pixel!
+// 0 = no pellet, normal dot, power pill
+static const uint8_t initial_pellets[MAZE_HEIGHT][MAZE_WIDTH] = {
+    {2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2},
 };
 
 static inline bool point_in_rect(int x, int y, int x0, int y0, int x1, int y1) {
@@ -96,22 +148,23 @@ static inline bool point_in_rect(int x, int y, int x0, int y0, int x1, int y1) {
 
 // --- Initialize or reset the game to starting state -----
 static void game_init(GameData* game) {
-    // Copy the initial maze layout into game state
-    memcpy(game->maze, initial_maze, sizeof(initial_maze));
+    // Initial maze layout 
+    memcpy(game->conn, initial_conn, sizeof(initial_conn));
+    memcpy(game->pellets, initial_pellets, sizeof(initial_pellets));
     
     // Count total dots and power pills for win condition
     game->dots_remaining = 0;
     for(int y = 0; y < MAZE_HEIGHT; y++) {
         for(int x = 0; x < MAZE_WIDTH; x++) {
-            if(game->maze[y][x] == 2 || game->maze[y][x] == 3) {
+            if(game->pellets[y][x] == 1 || game->pellets[y][x] == 2) {
                 game->dots_remaining++;
             }
         }
     }
     
     // Initialize Puck (player) at starting position
-    game->pacgirl.x = 14.0f;  // Center-ish horizontal position
-    game->pacgirl.y = 7.0f;   // Near bottom of maze
+    game->pacgirl.x = 7.0f;  // Center-ish horizontal position
+    game->pacgirl.y = 6.0f;   // Near bottom of maze
     game->pacgirl.dir = DirNone;
     game->pacgirl.next_dir = DirNone;
     game->pacgirl.anim_frame = 0;
@@ -119,8 +172,9 @@ static void game_init(GameData* game) {
     
     // Initialize the three ghosts at starting positions
     for(int i = 0; i < 3; i++) {
-        game->ghosts[i].entity.x = 12.0f + i * 2;  // Space them horizontally
-        game->ghosts[i].entity.y = 4.0f;           // Middle area of maze
+		// Start ghosts inside the ghost house (roughly centered)
+        game->ghosts[i].entity.x = 6.0f + i;  // Space them horizontally
+        game->ghosts[i].entity.y = 3.0f;      
         game->ghosts[i].entity.dir = DirRight;
         game->ghosts[i].entity.next_dir = DirRight;
         game->ghosts[i].entity.anim_frame = 0;
@@ -136,19 +190,25 @@ static void game_init(GameData* game) {
     game->power_pill_timer = 0;
 }
 
-/**
- * Check if a grid position is valid (not a wall, within bounds)
- * @param game Game state
- * @param x Grid X coordinate
- * @param y Grid Y coordinate
- * @return true if position is walkable, false if wall or out of bounds
- */
-static bool is_valid_position(GameData* game, int x, int y) {
-    if(x < 0 || x >= MAZE_WIDTH || y < 0 || y >= MAZE_HEIGHT) {
-        return false;
-    }
-    return game->maze[y][x] != 1;  // 1 = wall
+static void game_restart(GameData* game) {
+    game_init(game);
+    game->state = GameStateRunning;
 }
+
+static inline bool in_bounds(int x, int y) {
+    return (x >= 0 && x < MAZE_WIDTH && y >= 0 && y < MAZE_HEIGHT);
+}
+
+/**
+ * Check whether an entity can move out of cell (x,y) in direction dir,
+ * based on the precomputed connectivity bitmask.
+ */
+static bool can_move_from(GameData* game, int x, int y, Direction dir) {
+    if(!in_bounds(x, y)) return false;
+    uint8_t m = dir_to_mask(dir);
+    if(m == 0) return false;
+    return (game->conn[y][x] & m) != 0;
+ }
 
 /**
  * Calculate next position based on current position and direction
@@ -164,19 +224,19 @@ static void get_next_position(float x, float y, Direction dir, float* next_x, fl
     *next_y = y;
     
     // Apply movement delta based on direction
-    // 0.15f is the movement speed per update
+    // Movement speed per update (fractional cells)
     switch(dir) {
         case DirUp:
-            *next_y = y - 0.15f;
+            *next_y = y - 0.25f;
             break;
         case DirDown:
-            *next_y = y + 0.15f;
+            *next_y = y + 0.25f;
             break;
         case DirLeft:
-            *next_x = x - 0.15f;
+            *next_x = x - 0.25f;
             break;
         case DirRight:
-            *next_x = x + 0.15f;
+            *next_x = x + 0.25f;
             break;
         default:
             break;
@@ -198,23 +258,22 @@ static void update_pacgirl(GameData* game, uint32_t tick) {
     // Try to change direction if a new direction was queued
     // This allows buffering input for smoother corner turning
     if(pacgirl->next_dir != DirNone) {
-        float next_x, next_y;
-        get_next_position(pacgirl->x, pacgirl->y, pacgirl->next_dir, &next_x, &next_y);
-        
-        // Only change direction if the new direction is valid (not into a wall)
-        if(is_valid_position(game, (int)(next_x + 0.5f), (int)(next_y + 0.5f))) {
+        int cx = (int)(pacgirl->x + 0.5f);
+        int cy = (int)(pacgirl->y + 0.5f);
+        if(can_move_from(game, cx, cy, pacgirl->next_dir)) {
             pacgirl->dir = pacgirl->next_dir;
             pacgirl->next_dir = DirNone;
         }
     }
     
-    // Move every 50 ticks (controls Puck's speed)
-    if(tick - pacgirl->last_move > 50) {
-        float next_x, next_y;
-        get_next_position(pacgirl->x, pacgirl->y, pacgirl->dir, &next_x, &next_y);
-        
-        // Only move if next position is valid
-        if(is_valid_position(game, (int)(next_x + 0.5f), (int)(next_y + 0.5f))) {
+    // Move on a real-time cadence (ms)
+    if(tick - pacgirl->last_move > PAC_MOVE_MS) {
+        int cx = (int)(pacgirl->x + 0.5f);
+        int cy = (int)(pacgirl->y + 0.5f);
+        if(can_move_from(game, cx, cy, pacgirl->dir)) {
+            float next_x, next_y;
+            get_next_position(pacgirl->x, pacgirl->y, pacgirl->dir, &next_x, &next_y);
+
             pacgirl->x = next_x;
             pacgirl->y = next_y;
             
@@ -227,14 +286,14 @@ static void update_pacgirl(GameData* game, uint32_t tick) {
             int grid_y = (int)(pacgirl->y + 0.5f);
             
             // Collect regular dot
-            if(game->maze[grid_y][grid_x] == 2) {
-                game->maze[grid_y][grid_x] = 0;  // Remove dot
+            if(game->pellets[grid_y][grid_x] == 1) {
+                game->pellets[grid_y][grid_x] = 0;  // Remove dot
                 game->dots_remaining--;
                 game->score += 10;
             } 
             // Collect power pill
-            else if(game->maze[grid_y][grid_x] == 3) {
-                game->maze[grid_y][grid_x] = 0;  // Remove power pill
+            else if(game->pellets[grid_y][grid_x] == 2) {
+                game->pellets[grid_y][grid_x] = 0;  // Remove power pill
                 game->dots_remaining--;
                 game->score += 50;
                 game->power_mode = true;
@@ -269,92 +328,89 @@ static void update_pacgirl(GameData* game, uint32_t tick) {
  */
 static void update_ghost(GameData* game, Ghost* ghost, uint32_t tick) {
     Entity* entity = &ghost->entity;
-    
+
     // Check if eatable timer has expired (5 seconds = 5000ms)
     if(ghost->eatable && (tick - ghost->eatable_timer > 5000)) {
         ghost->eatable = false;
     }
-    
+
     // Check if power mode has expired
-    if(tick - game->power_pill_timer > 5000) {
+    if(game->power_mode && (tick - game->power_pill_timer > 5000)) {
         game->power_mode = false;
     }
-    
-    // Move ghost every 80 ticks (slightly slower than Puck)
-    if(tick - entity->last_move > 80) {
-        // Simple AI: evaluate all four directions and pick the best
+
+    // Move ghost on a real-time cadence (ms)
+    if(tick - entity->last_move > GHOST_MOVE_MS) {
         Direction possible_dirs[4] = {DirUp, DirDown, DirLeft, DirRight};
         Direction best_dir = entity->dir;
-        float best_dist = 1000.0f;
-        
-        // Try each direction and find the one that gets closest to (or furthest from) Puck
+        float best_dist = ghost->eatable ? -1.0f : 1e9f;
+
+        int cx = (int)(entity->x + 0.5f);
+        int cy = (int)(entity->y + 0.5f);
+
+        // Pick best direction based on squared distance
         for(int i = 0; i < 4; i++) {
-            float next_x, next_y;
-            get_next_position(entity->x, entity->y, possible_dirs[i], &next_x, &next_y);
-            
-            // Only consider valid moves (not into walls)
-            if(is_valid_position(game, (int)(next_x + 0.5f), (int)(next_y + 0.5f))) {
-                // Calculate distance to Puck using simple distance formula
-                float dx = next_x - game->pacgirl.x;
-                float dy = next_y - game->pacgirl.y;
-                float dist = dx * dx + dy * dy;  // Squared distance (avoid sqrt for speed)
-                
-                if(ghost->eatable) {
-                    // When eatable, run away - pick direction with largest distance
-                    if(dist > best_dist) {
-                        best_dist = dist;
-                        best_dir = possible_dirs[i];
-                    }
-                } else {
-                    // When normal, chase - pick direction with smallest distance
-                    if(dist < best_dist) {
-                        best_dist = dist;
-                        best_dir = possible_dirs[i];
-                    }
+            Direction d = possible_dirs[i];
+
+            if(!can_move_from(game, cx, cy, d)) continue;
+
+            float nx, ny;
+            get_next_position(entity->x, entity->y, d, &nx, &ny);
+
+            float dx = nx - game->pacgirl.x;
+            float dy = ny - game->pacgirl.y;
+            float dist = dx * dx + dy * dy;
+
+            if(ghost->eatable) {
+                // Flee: maximize distance
+                if(dist > best_dist) {
+                    best_dist = dist;
+                    best_dir = d;
+                }
+            } else {
+                // Chase: minimize distance
+                if(dist < best_dist) {
+                    best_dist = dist;
+                    best_dir = d;
                 }
             }
         }
-        
-        entity->dir = best_dir;
-        
-        // Actually move in the chosen direction
-        float next_x, next_y;
-        get_next_position(entity->x, entity->y, entity->dir, &next_x, &next_y);
-        
-        if(is_valid_position(game, (int)(next_x + 0.5f), (int)(next_y + 0.5f))) {
-            entity->x = next_x;
-            entity->y = next_y;
-            
-            // Handle screen wrap-around
-            if(entity->x < 0) entity->x = MAZE_WIDTH - 1;
-            if(entity->x >= MAZE_WIDTH) entity->x = 0;
-            
-            // Cycle through animation frames (0, 1)
-            entity->anim_frame = (entity->anim_frame + 1) % 2;
+
+        // Move once in the chosen direction (still validate)
+        if(can_move_from(game, cx, cy, best_dir)) {
+            float nx, ny;
+            get_next_position(entity->x, entity->y, best_dir, &nx, &ny);
+            entity->x = nx;
+            entity->y = ny;
+            entity->dir = best_dir;
+
+            // Animation frame toggle (0/1)
+            entity->anim_frame = (entity->anim_frame + 1) & 1;
         }
-        
+
         entity->last_move = tick;
     }
-    
-    // Check collision with Puck
+
+    // Collision with Puck
     float dx = entity->x - game->pacgirl.x;
     float dy = entity->y - game->pacgirl.y;
     float dist = dx * dx + dy * dy;
-    
-    // Collision threshold: 0.5 squared distance units
+
     if(dist < 0.5f) {
         if(ghost->eatable) {
-            // Ghost was eaten - respawn at center
-            entity->x = 14.0f;
-            entity->y = 4.0f;
+            // Respawn ghost back to the house-ish area (stay within 15x7)
+            entity->x = 7.0f;
+            entity->y = 3.0f;
             ghost->eatable = false;
-            game->score += 200;  // Bonus points for eating ghost
+            game->score += 200;
         } else {
-            // Puck was caught - game over
             game->state = GameStateGameOver;
         }
     }
 }
+    
+	
+	
 
 /**
  * Draw callback - renders the entire game screen
@@ -364,7 +420,7 @@ static void update_ghost(GameData* game, Ghost* ghost, uint32_t tick) {
  */
 static void draw_callback(Canvas* canvas, void* ctx) {
     GameData* game = (GameData*)ctx;
-    
+	
     // Clear screen and set up drawing context
     canvas_clear(canvas);
     canvas_set_color(canvas, ColorBlack);
@@ -377,28 +433,17 @@ static void draw_callback(Canvas* canvas, void* ctx) {
     // Uses text rendering: "." for dots, "*" for power pills
     for(int y = 0; y < MAZE_HEIGHT; y++) {
         for(int x = 0; x < MAZE_WIDTH; x++) {
-			if(game->maze[y][x] != 2 && game->maze[y][x] != 3) continue;
-			/*
-             * Map logical (x,y) into the 128x64 dot lattice.
-             * We scale to [0..15] tiles in X and [0..7] tiles in Y, then place
-             * the dot at the center of that 8x8 tile.
-             *
-             * This makes dots align with corridors even if the gameplay grid
-             * is not yet a perfect match for the bitmap.
-             */
-            int tile_x = (x * 16) / MAZE_WIDTH;   // 0..15
-            int tile_y = (y * 8)  / MAZE_HEIGHT;  // 0..7
-
-            int cx = OFFSET_X + tile_x * DOT_PITCH + DOT_CX;
-            int cy = OFFSET_Y + tile_y * DOT_PITCH + DOT_CY;
-
+			if(game->pellets[y][x] == 0) continue;
+            // Map cell (x,y) to pixel center based on the bitmap maze pitch (8 px)
+            int cx = OFFSET_X + 1 + x * DOT_PITCH + DOT_CX;
+            int cy = OFFSET_Y + 1 + y * DOT_PITCH + DOT_CY;
             // Skip the ghost house area so dots don't appear inside the box.
             if(point_in_rect(cx, cy, OFFSET_X + GHOST_BOX_X0, OFFSET_Y + GHOST_BOX_Y0,
                                    OFFSET_X + GHOST_BOX_X1, OFFSET_Y + GHOST_BOX_Y1)) {
                 continue;
             }
 
-            if(game->maze[y][x] == 2) {
+            if(game->pellets[y][x] == 1) {
                 // Regular dot: small filled circle
                 canvas_draw_disc(canvas, cx, cy, 1);
             } else {
@@ -413,8 +458,8 @@ static void draw_callback(Canvas* canvas, void* ctx) {
     for(int i = 0; i < 3; i++) {
         Ghost* ghost = &game->ghosts[i];
         // Convert grid coordinates to pixel coordinates, centered on 7x7 icon
-        int px = OFFSET_X + (int)(ghost->entity.x * CELL_SIZE) - 3;
-        int py = OFFSET_Y + (int)(ghost->entity.y * CELL_SIZE) - 3;
+        int px = OFFSET_X + (int)(1 + ghost->entity.x * CELL_PITCH + 4) - 3;
+        int py = OFFSET_Y + (int)(1 + ghost->entity.y * CELL_PITCH + 4) - 3;
         
         // Select icon based on state (eatable vs normal) and animation frame
         const Icon* ghost_icon = NULL;
@@ -434,10 +479,9 @@ static void draw_callback(Canvas* canvas, void* ctx) {
         canvas_draw_icon(canvas, px, py, ghost_icon);
     }
     
-    // Draw Pac-Man (Puck)
-    // Convert grid coordinates to pixel coordinates, centered on 7x7 icon
-    int px = OFFSET_X + (int)(game->pacgirl.x * CELL_SIZE) - 3;
-    int py = OFFSET_Y + (int)(game->pacgirl.y * CELL_SIZE) - 3;
+    // Draw Puck: Convert grid coordinates to pixel coordinates, centered on 7x7 icon
+    int px = OFFSET_X + (int)(1 + game->pacgirl.x * CELL_PITCH + 4) - 3;
+    int py = OFFSET_Y + (int)(1 + game->pacgirl.y * CELL_PITCH + 4) - 3;
     
     // Select icon based on direction and animation frame (open/closed mouth)
     const Icon* puck_icon;
@@ -463,9 +507,12 @@ static void draw_callback(Canvas* canvas, void* ctx) {
     // Draw game over / win messages
     if(game->state == GameStateWin) {
         canvas_draw_str(canvas, 40, 32, "YOU WIN!");
+		elements_button_center(canvas, "Play again");
     } else if(game->state == GameStateGameOver) {
         canvas_draw_str(canvas, 35, 32, "GAME OVER");
+		elements_button_center(canvas, "Play again");
     }
+	
 }
 
 /**
@@ -508,11 +555,29 @@ int32_t pacgrl_main(void* p) {
     // Main game loop
     InputEvent event;
     bool running = true;
-    uint32_t tick = 0;  // Game tick counter for timing
+	game->running = &running;
+    uint32_t tick = furi_get_tick();  
     
     while(running) {
+		tick = furi_get_tick();
         // Check for input events with 10ms timeout
         if(furi_message_queue_get(event_queue, &event, 10) == FuriStatusOk) {
+			// Back always exits, regardless of game state
+			if(event.key == InputKeyBack &&
+			   (event.type == InputTypePress ||
+				event.type == InputTypeRepeat ||
+				event.type == InputTypeLong)) {
+				running = false;
+				break;
+			}
+			// OK restarts game from GAME OVER
+			if((game->state == GameStateGameOver || game->state == GameStateWin) &&
+			   event.key == InputKeyOk &&
+			   event.type == InputTypePress) {
+				game_restart(game);
+				continue;
+			}
+					
             if(event.type == InputTypePress || event.type == InputTypeRepeat) {
                 if(event.key == InputKeyBack) {
                     // Back button exits the game
@@ -555,8 +620,6 @@ int32_t pacgrl_main(void* p) {
                 update_ghost(game, &game->ghosts[i], tick);
             }
         }
-        
-        tick++;  // Increment game tick
         view_port_update(view_port);  // Request screen redraw
     }
     
