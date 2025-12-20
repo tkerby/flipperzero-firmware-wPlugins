@@ -172,11 +172,11 @@ static void game_init(GameData* game) {
     
     // Initialize the three ghosts at starting positions
     for(int i = 0; i < 3; i++) {
-		// Start ghosts inside the ghost house (roughly centered)
-        game->ghosts[i].entity.x = 6.0f + i;  // Space them horizontally
-        game->ghosts[i].entity.y = 3.0f;      
-        game->ghosts[i].entity.dir = DirRight;
-        game->ghosts[i].entity.next_dir = DirRight;
+		// Start ghosts in the three spawn cells (7,4), (8,4), (9,4)
+        game->ghosts[i].entity.x = 7.0f + i;  // 7, 8, 9
+        game->ghosts[i].entity.y = 4.0f;
+        game->ghosts[i].entity.dir = DirUp;       // sensible default for leaving
+        game->ghosts[i].entity.next_dir = DirUp;
         game->ghosts[i].entity.anim_frame = 0;
         game->ghosts[i].entity.last_move = 0;
         game->ghosts[i].eatable = false;
@@ -347,6 +347,33 @@ static void update_ghost(GameData* game, Ghost* ghost, uint32_t tick) {
 
         int cx = (int)(entity->x + 0.5f);
         int cy = (int)(entity->y + 0.5f);
+		
+        // Release rule: while on spawn row y==4, try to leave the box.
+        // 1) If Up is possible, take it.
+        // 2) Otherwise, drift horizontally toward the center (x==8) to find the exit.
+        if(cy == 4) {
+            Direction d = DirNone;
+            if(can_move_from(game, cx, cy, DirUp)) {
+                d = DirUp;
+            } else if(cx < 8 && can_move_from(game, cx, cy, DirRight)) {
+                d = DirRight;
+            } else if(cx > 8 && can_move_from(game, cx, cy, DirLeft)) {
+                d = DirLeft;
+            }
+
+            if(d != DirNone) {
+                float nx, ny;
+                get_next_position(entity->x, entity->y, d, &nx, &ny);
+                entity->x = nx;
+                entity->y = ny;
+                entity->dir = d;
+                entity->anim_frame = (entity->anim_frame + 1) & 1;
+                entity->last_move = tick;
+                return;
+            }
+        }
+
+		
 
         // Pick best direction based on squared distance
         for(int i = 0; i < 4; i++) {
@@ -551,7 +578,7 @@ static void input_callback(InputEvent* input_event, void* ctx) {
  * @param p Parameter (unused)
  * @return Exit code
  */
-int32_t pacgrl_main(void* p) {
+int32_t puckgirl_main(void* p) {
     UNUSED(p);
     
     // Allocate game data structure

@@ -3,7 +3,7 @@ App(
     appid="mitzi_puck",
 
     # What users will see when browsing apps
-    name="Puck",
+    name="Puck girl",
 
     # Description for the Flipper Application catalogue
     fap_description="A maze chase game where you control a little pie-shape girl to eat all the dots while avoiding be eaten by three ghosts",
@@ -11,16 +11,16 @@ App(
     # Application type - EXTERNAL means it's a .fap file loaded from SD card
     apptype=FlipperAppType.EXTERNAL,
     
-    # The C function that starts the app, i.a.w. the main C file must contain: int32_t pacgrl_main(void* p) { ... }
-    entry_point="pacgrl_main",
+    # The C function that starts the app, i.a.w. the main C file must contain: int32_t puckgirl_main(void* p) { ... }
+    entry_point="puckgirl_main",
 
     # Preprocessor definitions added during compilation
     cdefines=["APP_PUCK"],
 	
     sources=["puck.c"],
 
-	 fap_author="Me",
-    fap_weburl="https://github.com/me/mitzi-puck",
+	 fap_author="F Greil",
+    fap_weburl="https://github.com/fgreil/mitzi-puck",
 
     # List of system modules this app depends on
     # "gui" ensures the graphical user interface system is available. 
