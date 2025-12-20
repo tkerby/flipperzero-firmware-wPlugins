@@ -409,7 +409,25 @@ static void update_ghost(GameData* game, Ghost* ghost, uint32_t tick) {
     }
 }
     
-	
+static void draw_simple_modal(Canvas* canvas, const char* text) {
+    const int box_w = 78;
+    const int box_h = 20;
+    const int box_x = (128 - box_w) / 2;
+    const int box_y = 20;
+
+    // White filled rectangle
+    canvas_set_color(canvas, ColorWhite);
+    canvas_draw_box(canvas, box_x, box_y, box_w, box_h);
+
+    // Black border
+    canvas_set_color(canvas, ColorBlack);
+    canvas_draw_frame(canvas, box_x, box_y, box_w, box_h);
+
+    // Text inside
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str(canvas, box_x + 8, box_y + 14, text);
+}
+
 	
 
 /**
@@ -506,11 +524,11 @@ static void draw_callback(Canvas* canvas, void* ctx) {
     
     // Draw game over / win messages
     if(game->state == GameStateWin) {
-        canvas_draw_str(canvas, 40, 32, "YOU WIN!");
-		elements_button_center(canvas, "Play again");
+        draw_simple_modal(canvas, "YOU WIN!");
+		elements_button_center(canvas, "OK");
     } else if(game->state == GameStateGameOver) {
-        canvas_draw_str(canvas, 35, 32, "GAME OVER");
-		elements_button_center(canvas, "Play again");
+        draw_simple_modal(canvas, "GAME OVER");
+		elements_button_center(canvas, "OK");
     }
 	
 }
