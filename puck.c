@@ -384,21 +384,17 @@ static void draw_callback(Canvas* canvas, void* ctx) {
         // Select icon based on state (eatable vs normal) and animation frame
         const Icon* ghost_icon;
         if(ghost->eatable) {
-            // Blue/eatable ghost animation
-            switch(ghost->entity.anim_frame) {
+            // Blue/eatable ghost animation          
+            switch(ghost->entity.anim_frame & 1) {
                 case 0: ghost_icon = &I_prey_1; break;
-                case 1: ghost_icon = &I_prey_2; break;
-                case 2: ghost_icon = &I_prey_3; break;
-                default: ghost_icon = &I_prey_1; break;
+                default: ghost_icon = &I_prey_2; break;
             }
         } else {
             // Normal ghost animation
-            switch(ghost->entity.anim_frame) {
+            switch(ghost->entity.anim_frame & 1) {
                 case 0: ghost_icon = &I_monster_1; break;
-                case 1: ghost_icon = &I_monster_2; break;
-                case 2: ghost_icon = &I_monster_3; break;
-                default: ghost_icon = &I_monster_1; break;
-            }
+                default: ghost_icon = &I_monster_2; break;
+            }}
         }
         canvas_draw_icon(canvas, px, py, ghost_icon);
     }
