@@ -22,17 +22,18 @@ def fetch_json(url: str) -> dict:
     :rtype: dict
     """
     response = requests.get(url)
-
     response.raise_for_status()
-
     return response.json()
 
 
-def process_amiibo_data(amiibo_data: dict):
+def process_amiibo_data(amiibo_data: dict) -> dict[str, str]:
     """
     Process the Amiibo data and convert it into asset files.
+
     :param amiibo_data: The Amiibo data as a dictionary.
     :type amiibo_data: dict
+    :return: Mapping of amiibo_id_clean -> amiibo_name (for sorting elsewhere).
+    :rtype: dict[str, str]
     """
     amiibos = amiibo_data.get("amiibos", {})
     amiibo_series = amiibo_data.get("amiibo_series", {})
@@ -40,12 +41,17 @@ def process_amiibo_data(amiibo_data: dict):
     types = amiibo_data.get("types", {})
     characters = amiibo_data.get("characters", {})
 
-    amiibo_strs = {}
-    amiibo_mapping_strs = {}
+    amiibo_strs: dict[str, str] = {}
+    amiibo_mapping_strs: dict[str, str] = {}
+    amiibo_id_to_name: dict[str, str] = {}
 
     for amiibo_id, amiibo in amiibos.items():
         amiibo_id_clean = amiibo_id[2:]  # Remove "0x" prefix
         name = amiibo.get("name", "Unknown")
+
+        # Save for later sorting (e.g. game mapping files)
+        amiibo_id_to_name[amiibo_id_clean] = name
+
         character = characters.get(f"0x{amiibo_id_clean[0:4]}", "Unknown")
         amiibo_series_name = amiibo_series.get(f"0x{amiibo_id_clean[12:14]}", "Unknown")
         game_series_name = game_series.get(f"0x{amiibo_id_clean[0:3]}", "Unknown")
@@ -62,6 +68,7 @@ def process_amiibo_data(amiibo_data: dict):
         )
         amiibo_mapping_strs[name] = amiibo_id_clean
 
+    # Already sorted as you had
     amiibo_strs = dict(sorted(amiibo_strs.items()))
     amiibo_mapping_strs = dict(sorted(amiibo_mapping_strs.items()))
 
@@ -83,16 +90,12 @@ def process_amiibo_data(amiibo_data: dict):
         for amiibo_name, amiibo_id in amiibo_mapping_strs.items():
             amiibo_name_file.write(f"{amiibo_name}: {amiibo_id}\n")
 
+    return amiibo_id_to_name
+
 
 def _generate_usage_string(info: dict, platform: str) -> str:
     """
     Generate a usage string for a given platform from the provided info.
-    :param info: The usage info as a dictionary.
-    :type info: dict
-    :param platform: The platform name.
-    :type platform: str
-    :return: The generated usage string.
-    :rtype: str
     """
     usage_str = f"{platform}^{info['gameName']}"
 
@@ -103,166 +106,142 @@ def _generate_usage_string(info: dict, platform: str) -> str:
     return usage_str
 
 
-def process_games_info_data(games_info_data: dict):
+def _sort_ids_by_amiibo_name(
+    amiibo_ids: list[str], amiibo_id_to_name: dict[str, str]
+) -> list[str]:
     """
-    Process the games info data and convert it into asset files.
-    :param games_info_data: The games info data as a dictionary.
-    :type games_info_data: dict
+    Sort amiibo IDs by their amiibo name (stable fallback to ID).
     """
-    games_3ds = {}
-    games_wii_u = {}
-    games_switch = {}
-    games_switch2 = {}
+    return sorted(
+        amiibo_ids,
+        key=lambda aid: (amiibo_id_to_name.get(aid, "").casefold(), aid.casefold()),
+    )
+
+
+def _write_game_files(
+    console: str,
+    games_map: dict[str, list[str]],
+    amiibo_id_to_name: dict[str, str],
+):
+    """
+    Write both game list and mapping files for a given console, fully sorted.
+    """
+    # Ensure each game's amiibo ID list is sorted by amiibo name
+    for game_name, ids in games_map.items():
+        games_map[game_name] = _sort_ids_by_amiibo_name(ids, amiibo_id_to_name)
+
+    # Sort games by name for deterministic UI streaming
+    sorted_game_names = sorted(games_map.keys(), key=lambda n: n.casefold())
+
+    with open(f"files/game_{console.lower()}.dat", "w") as games_file:
+        games_file.write("Filetype: AmiTool Games DB\n")
+        games_file.write("Version: 1\n")
+        games_file.write(f"Console: {console}\n")
+        games_file.write(f"GameCount: {len(games_map)}\n")
+        games_file.write("\n")
+
+        for game_name in sorted_game_names:
+            games_file.write(f"{game_name}\n")
+
+    with open(f"files/game_{console.lower()}_mapping.dat", "w") as mapping_file:
+        mapping_file.write("Filetype: AmiTool Games Mapping DB\n")
+        mapping_file.write("Version: 1\n")
+        mapping_file.write(f"Console: {console}\n")
+        mapping_file.write(f"GameCount: {len(games_map)}\n")
+        mapping_file.write("\n")
+
+        for game_name in sorted_game_names:
+            mapping_file.write(f"{game_name}: {'|'.join(games_map[game_name])}\n")
+
+
+def process_games_info_data(games_info_data: dict, amiibo_id_to_name: dict[str, str]):
+    """
+    Process the games info data and convert it into asset files, with full alphabetical sorting.
+
+    - Games are sorted by game name.
+    - Amiibo IDs in mapping files are sorted by amiibo name (from amiibo.json).
+    - amiibo_usage.dat entries are sorted by amiibo name; per-amiibo usage entries by platform, then game name.
+    """
+    games_3ds: dict[str, list[str]] = {}
+    games_wii_u: dict[str, list[str]] = {}
+    games_switch: dict[str, list[str]] = {}
+    games_switch2: dict[str, list[str]] = {}
+
+    usage_lines: list[tuple[str, str, str]] = []
+    # tuple: (sort_key_name_casefold, amiibo_id_clean, "amiibo_id_clean: ...")
+
+    for amiibo_id, game_info in games_info_data.get("amiibos", {}).items():
+        amiibo_id_clean = amiibo_id[2:]  # Remove "0x" prefix
+        amiibo_name = amiibo_id_to_name.get(amiibo_id_clean, "Unknown")
+
+        # Build usage entries, sorted later
+        usage_entries: list[tuple[str, str, str]] = []  # (platform, gameName, usageStr)
+
+        for info_3ds in game_info.get("games3DS", []):
+            games_3ds.setdefault(info_3ds["gameName"], []).append(amiibo_id_clean)
+            usage_entries.append(
+                ("3DS", info_3ds["gameName"], _generate_usage_string(info_3ds, "3DS"))
+            )
+
+        for info_wii_u in game_info.get("gamesWiiU", []):
+            games_wii_u.setdefault(info_wii_u["gameName"], []).append(amiibo_id_clean)
+            usage_entries.append(
+                (
+                    "WiiU",
+                    info_wii_u["gameName"],
+                    _generate_usage_string(info_wii_u, "WiiU"),
+                )
+            )
+
+        for info_switch in game_info.get("gamesSwitch", []):
+            games_switch.setdefault(info_switch["gameName"], []).append(amiibo_id_clean)
+            usage_entries.append(
+                (
+                    "Switch",
+                    info_switch["gameName"],
+                    _generate_usage_string(info_switch, "Switch"),
+                )
+            )
+
+        for info_switch2 in game_info.get("gamesSwitch2", []):
+            games_switch2.setdefault(info_switch2["gameName"], []).append(
+                amiibo_id_clean
+            )
+            usage_entries.append(
+                (
+                    "Switch2",
+                    info_switch2["gameName"],
+                    _generate_usage_string(info_switch2, "Switch2"),
+                )
+            )
+
+        usage_entries.sort(key=lambda t: (t[0].casefold(), t[1].casefold()))
+        usage_str = "|".join(u[2] for u in usage_entries)
+        usage_lines.append(
+            (
+                amiibo_name.casefold(),
+                amiibo_id_clean,
+                f"{amiibo_id_clean}: {usage_str}\n",
+            )
+        )
+
+    # Sort amiibo_usage.dat by amiibo name (then ID for stability)
+    usage_lines.sort(key=lambda t: (t[0], t[1].casefold()))
 
     with open("files/amiibo_usage.dat", "w") as usage_file:
-        # Write headers
         usage_file.write("Filetype: AmiTool Usage DB\n")
         usage_file.write("Version: 1\n")
         usage_file.write(f"AmiiboCount: {len(games_info_data.get('amiibos', {}))}\n")
         usage_file.write("\n")
 
-        # Write each Amiibo usage entry
-        for amiibo_id, game_info in games_info_data.get("amiibos", {}).items():
-            amiibo_id_clean = amiibo_id[2:]  # Remove "0x" prefix
-            usage_strs = []
+        for _, __, line in usage_lines:
+            usage_file.write(line)
 
-            for info_3ds in game_info.get("games3DS", []):
-                if info_3ds["gameName"] not in games_3ds:
-                    games_3ds[info_3ds["gameName"]] = [
-                        amiibo_id_clean,
-                    ]
-                else:
-                    games_3ds[info_3ds["gameName"]].append(amiibo_id_clean)
-
-                usage_strs.append(_generate_usage_string(info_3ds, "3DS"))
-
-            for info_wii_u in game_info.get("gamesWiiU", []):
-                if info_wii_u["gameName"] not in games_wii_u:
-                    games_wii_u[info_wii_u["gameName"]] = [
-                        amiibo_id_clean,
-                    ]
-                else:
-                    games_wii_u[info_wii_u["gameName"]].append(amiibo_id_clean)
-
-                usage_strs.append(_generate_usage_string(info_wii_u, "WiiU"))
-
-            for info_switch in game_info.get("gamesSwitch", []):
-                if info_switch["gameName"] not in games_switch:
-                    games_switch[info_switch["gameName"]] = [
-                        amiibo_id_clean,
-                    ]
-                else:
-                    games_switch[info_switch["gameName"]].append(amiibo_id_clean)
-
-                usage_strs.append(_generate_usage_string(info_switch, "Switch"))
-
-            for info_switch2 in game_info.get("gamesSwitch2", []):
-                if info_switch2["gameName"] not in games_switch2:
-                    games_switch2[info_switch2["gameName"]] = [
-                        amiibo_id_clean,
-                    ]
-                else:
-                    games_switch2[info_switch2["gameName"]].append(amiibo_id_clean)
-
-                usage_strs.append(_generate_usage_string(info_switch2, "Switch2"))
-
-            usage_file.write(f"{amiibo_id_clean}: {'|'.join(usage_strs)}\n")
-
-    with open("files/game_3ds.dat", "w") as games_3ds_file:
-        # Write headers
-        games_3ds_file.write("Filetype: AmiTool Games DB\n")
-        games_3ds_file.write("Version: 1\n")
-        games_3ds_file.write("Console: 3DS\n")
-        games_3ds_file.write(f"GameCount: {len(games_3ds)}\n")
-        games_3ds_file.write("\n")
-
-        # Write each game entry
-        for game_name in games_3ds.keys():
-            games_3ds_file.write(f"{game_name}\n")
-
-    with open("files/game_3ds_mapping.dat", "w") as games_3ds_file:
-        # Write headers
-        games_3ds_file.write("Filetype: AmiTool Games Mapping DB\n")
-        games_3ds_file.write("Version: 1\n")
-        games_3ds_file.write("Console: 3DS\n")
-        games_3ds_file.write(f"GameCount: {len(games_3ds)}\n")
-        games_3ds_file.write("\n")
-
-        # Write each game entry
-        for game_name, amiibo_ids in games_3ds.items():
-            games_3ds_file.write(f"{game_name}: {'|'.join(amiibo_ids)}\n")
-
-    with open("files/game_wii_u.dat", "w") as games_wii_u_file:
-        # Write headers
-        games_wii_u_file.write("Filetype: AmiTool Games DB\n")
-        games_wii_u_file.write("Version: 1\n")
-        games_wii_u_file.write("Console: WiiU\n")
-        games_wii_u_file.write(f"GameCount: {len(games_wii_u)}\n")
-        games_wii_u_file.write("\n")
-
-        # Write each game entry
-        for game_name in games_wii_u.keys():
-            games_wii_u_file.write(f"{game_name}\n")
-
-    with open("files/game_wii_u_mapping.dat", "w") as games_wii_u_file:
-        # Write headers
-        games_wii_u_file.write("Filetype: AmiTool Games Mapping DB\n")
-        games_wii_u_file.write("Version: 1\n")
-        games_wii_u_file.write("Console: WiiU\n")
-        games_wii_u_file.write(f"GameCount: {len(games_wii_u)}\n")
-        games_wii_u_file.write("\n")
-
-        # Write each game entry
-        for game_name, amiibo_ids in games_wii_u.items():
-            games_wii_u_file.write(f"{game_name}: {'|'.join(amiibo_ids)}\n")
-
-    with open("files/game_switch.dat", "w") as games_switch_file:
-        # Write headers
-        games_switch_file.write("Filetype: AmiTool Games DB\n")
-        games_switch_file.write("Version: 1\n")
-        games_switch_file.write("Console: Switch\n")
-        games_switch_file.write(f"GameCount: {len(games_switch)}\n")
-        games_switch_file.write("\n")
-
-        # Write each game entry
-        for game_name in games_switch.keys():
-            games_switch_file.write(f"{game_name}\n")
-
-    with open("files/game_switch_mapping.dat", "w") as games_switch_file:
-        # Write headers
-        games_switch_file.write("Filetype: AmiTool Games Mapping DB\n")
-        games_switch_file.write("Version: 1\n")
-        games_switch_file.write("Console: Switch\n")
-        games_switch_file.write(f"GameCount: {len(games_switch)}\n")
-        games_switch_file.write("\n")
-
-        # Write each game entry
-        for game_name, amiibo_ids in games_switch.items():
-            games_switch_file.write(f"{game_name}: {'|'.join(amiibo_ids)}\n")
-
-    with open("files/game_switch2.dat", "w") as games_switch2_file:
-        # Write headers
-        games_switch2_file.write("Filetype: AmiTool Games DB\n")
-        games_switch2_file.write("Version: 1\n")
-        games_switch2_file.write("Console: Switch2\n")
-        games_switch2_file.write(f"GameCount: {len(games_switch2)}\n")
-        games_switch2_file.write("\n")
-
-        # Write each game entry
-        for game_name in games_switch2.keys():
-            games_switch2_file.write(f"{game_name}\n")
-
-    with open("files/game_switch2_mapping.dat", "w") as games_switch2_file:
-        # Write headers
-        games_switch2_file.write("Filetype: AmiTool Games Mapping DB\n")
-        games_switch2_file.write("Version: 1\n")
-        games_switch2_file.write("Console: Switch2\n")
-        games_switch2_file.write(f"GameCount: {len(games_switch2)}\n")
-        games_switch2_file.write("\n")
-
-        # Write each game entry
-        for game_name, amiibo_ids in games_switch2.items():
-            games_switch2_file.write(f"{game_name}: {'|'.join(amiibo_ids)}\n")
+    # Write game list + mapping files, fully sorted
+    _write_game_files("3DS", games_3ds, amiibo_id_to_name)
+    _write_game_files("WiiU", games_wii_u, amiibo_id_to_name)
+    _write_game_files("Switch", games_switch, amiibo_id_to_name)
+    _write_game_files("Switch2", games_switch2, amiibo_id_to_name)
 
 
 def main():
@@ -272,8 +251,8 @@ def main():
     amiibo_data = fetch_json(AMIIBO_JSON_URL)
     games_info_data = fetch_json(GAMES_INFO_JSON_URL)
 
-    process_amiibo_data(amiibo_data)
-    process_games_info_data(games_info_data)
+    amiibo_id_to_name = process_amiibo_data(amiibo_data)
+    process_games_info_data(games_info_data, amiibo_id_to_name)
 
 
 if __name__ == "__main__":

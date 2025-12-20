@@ -945,7 +945,7 @@ static bool ami_tool_scene_generate_iterate_games(
         path = APP_ASSETS_PATH("game_3ds.dat");
         break;
     case AmiToolGeneratePlatformWiiU:
-        path = APP_ASSETS_PATH("game_wii_u.dat");
+        path = APP_ASSETS_PATH("game_wiiu.dat");
         break;
     case AmiToolGeneratePlatformSwitch:
         path = APP_ASSETS_PATH("game_switch.dat");
@@ -1002,7 +1002,7 @@ static const char* ami_tool_scene_generate_platform_mapping_path(AmiToolGenerate
     case AmiToolGeneratePlatform3DS:
         return APP_ASSETS_PATH("game_3ds_mapping.dat");
     case AmiToolGeneratePlatformWiiU:
-        return APP_ASSETS_PATH("game_wii_u_mapping.dat");
+        return APP_ASSETS_PATH("game_wiiu_mapping.dat");
     case AmiToolGeneratePlatformSwitch:
         return APP_ASSETS_PATH("game_switch_mapping.dat");
     case AmiToolGeneratePlatformSwitch2:
