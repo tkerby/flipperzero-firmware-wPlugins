@@ -30,7 +30,7 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-12-19 16:00 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-12-19 16:00 EST`
-- Updated: [Amiibo Toolkit v0.1 (By Firefox2100)](https://github.com/Firefox2100/ami_tool)
+- Updated: [Amiibo Toolkit v0.1 (By Firefox2100)](https://github.com/Firefox2100/ami_tool) (Version Only)
 
 <a name="release">
 
