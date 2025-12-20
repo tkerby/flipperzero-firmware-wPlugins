@@ -10,22 +10,38 @@
 #include <input/input.h> // Input handling (buttons)
 #include <stdlib.h> // Standard library functions
 #include <string.h> // memcpy/memset
+#include <math.h>   // roundf/floorf/fabsf/lroundf
 #include <gui/elements.h> // to access button drawing functions
 #include "puck_icons.h" // Custom icon definitions, header file is auto-magically generated
 
 // Maze configuration - defines the logical grid structure
 #define MAZE_WIDTH 15   // Number of cells horizontally
 #define MAZE_HEIGHT 7   // Number of cells vertically
-#define CELL_PITCH 8    // Pixel pitch betweencorridor centers (1px wall + 7px corridor) 
+#define CELL_PITCH 8    // Pixel pitch between corridor centers (1px wall + 7px corridor) 
 #define OFFSET_X 0      // Horizontal offset for maze rendering
 #define OFFSET_Y 0      // Vertical offset for maze rendering
 
+// Movement timing (milliseconds per tile advancement)
 #define PAC_MOVE_MS 60
 #define GHOST_MOVE_MS 90
 
+// Dot rendering offsets
 #define DOT_PITCH 8
 #define DOT_CX    4
 #define DOT_CY    4
+
+// Game balance constants
+#define MOVEMENT_SPEED 0.25f        // Fractional tiles per movement update
+#define TILE_CENTER_TOLERANCE 0.05f // How close to center counts as "centered"
+#define COLLISION_DISTANCE 0.5f     // Distance threshold for Puck/ghost collision
+#define POWER_PILL_DURATION_MS 5000 // How long power pills last (5 seconds)
+#define PATROL_CHASE_DISTANCE 25.0f // Squared distance threshold for patroller to chase
+#define PATROL_CORNER_CYCLE_MS 3000 // Time at each corner during patrol
+
+// Scoring values
+#define SCORE_DOT 10
+#define SCORE_POWER_PILL 50
+#define SCORE_GHOST 200
 
 // Game states
 typedef enum {
@@ -61,14 +77,13 @@ static inline uint8_t dir_to_mask(Direction d) {
     }
 }
 
-
 // Base entity structure for all moving objects (Puck and ghosts)
 typedef struct {
     float x;                // X position in grid coordinates (can be fractional for smooth movement)
     float y;                // Y position in grid coordinates
     Direction dir;          // Current direction of movement
     Direction next_dir;     // Queued direction (for smoother turning)
-    uint8_t anim_frame;     // Current animation frame (0-2 for ghosts, 0-1 for Puck)
+    uint8_t anim_frame;     // Current animation frame (0-1 for all entities)
     uint32_t last_move;     // Tick timestamp of last movement (for timing)
 } Entity;
 
@@ -77,21 +92,22 @@ typedef struct {
     Entity entity;          // Base entity data (position, direction, etc.)
     bool eatable;           // True when ghost can be eaten (after power pill)
     uint32_t eatable_timer; // Tick when ghost became eatable (for timeout)
-	uint8_t id;             // Ghost personality: 0=chaser, 1=ambusher, 2=patroller
+    uint8_t id;             // Ghost personality: 0=chaser, 1=ambusher, 2=patroller
 } Ghost;
 
 // Complete game state
 typedef struct {
     Entity pacgirl;            // The player character (Puck aka pac-girl)
     Ghost ghosts[3];           // Three ghost enemies
-    uint8_t conn[MAZE_HEIGHT][MAZE_WIDTH];      // Movement connectivity bitmask per cell (M_N/M_E/M_S/M_W)
+    uint8_t conn[MAZE_HEIGHT][MAZE_WIDTH];      // Movement connectivity bitmask per cell (MV_N/MV_E/MV_S/MV_W)
     uint8_t pellets[MAZE_HEIGHT][MAZE_WIDTH];   // 0=none, 1=dot, 2=power pill
     uint16_t dots_remaining;   // Number of dots left to collect
     uint16_t score;            // Current score
     GameState state;           // Current game state (running/win/game over)
     uint32_t power_pill_timer; // Tick when last power pill was eaten
     bool power_mode;           // True when power pill effect is active
-	volatile bool* running;    // allows input_callback() to exit main loop
+    bool step_mode;            // T: single press moves to next tile and then stops, F: holding cursor continues movement
+    uint8_t step_tiles_remaining;
 } GameData;
 
 // Maze layout
@@ -124,8 +140,8 @@ static const uint8_t initial_conn[MAZE_HEIGHT][MAZE_WIDTH] = {
  *  15     | 1111   | N, E, S, W (4-way intersection)
 */
 
-// Collectible layout for the maze. NB: These are logical cells, not pixel!
-// 0 = no pellet, normal dot, power pill
+// Collectible layout for the maze. NB: These are logical cells, not pixels!
+// 0 = no pellet, 1 = normal dot, 2 = power pill
 static const uint8_t initial_pellets[MAZE_HEIGHT][MAZE_WIDTH] = {
     {2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2},
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
@@ -158,15 +174,17 @@ static void game_init(GameData* game) {
     
     // Initialize Puck (player) at starting position
     game->pacgirl.x = 7.0f;  // Center-ish horizontal position
-    game->pacgirl.y = 6.0f;   // Near bottom of maze
+    game->pacgirl.y = 6.0f;  // Near bottom of maze
     game->pacgirl.dir = DirNone;
     game->pacgirl.next_dir = DirNone;
     game->pacgirl.anim_frame = 0;
     game->pacgirl.last_move = 0;
+    game->step_mode = false;
+    game->step_tiles_remaining = 0;
     
     // Initialize the three ghosts at starting positions
     for(int i = 0; i < 3; i++) {
-		// Start ghosts in the three spawn cells (7,4), (8,4), (9,4)
+        // Start ghosts in the three spawn cells (7,4), (8,4), (9,4)
         game->ghosts[i].entity.x = 7.0f + i;  // 7, 8, 9
         game->ghosts[i].entity.y = 4.0f;
         game->ghosts[i].entity.dir = DirUp;       // sensible default for leaving
@@ -175,7 +193,7 @@ static void game_init(GameData* game) {
         game->ghosts[i].entity.last_move = 0;
         game->ghosts[i].eatable = false;
         game->ghosts[i].eatable_timer = 0;
-		game->ghosts[i].id = i; // ghost personality
+        game->ghosts[i].id = i; // ghost personality
     }
     
     // Reset game state
@@ -194,20 +212,43 @@ static inline bool in_bounds(int x, int y) {
     return (x >= 0 && x < MAZE_WIDTH && y >= 0 && y < MAZE_HEIGHT);
 }
 
-// Convert a fractional grid coordinate into a SAFE cell index.
-// We round to nearest cell (x+0.5), then clamp to [0..MAZE_WIDTH-1] / [0..MAZE_HEIGHT-1].
+// Convert a fractional grid coordinate into a SAFE cell index using CENTER-BASED rounding.
+// This treats integer positions as tile centers and greatly reduces boundary flapping.
 static inline int cell_x_from_float(float x) {
-    int cx = (int) x;
+    int cx = (int) floorf(x + 0.5f);
     if(cx < 0) cx = 0;
     if(cx >= MAZE_WIDTH) cx = MAZE_WIDTH - 1;
     return cx;
 }
 
 static inline int cell_y_from_float(float y) {
-    int cy = (int) y;
+    int cy = (int) floorf(y + 0.5f);
     if(cy < 0) cy = 0;
     if(cy >= MAZE_HEIGHT) cy = MAZE_HEIGHT - 1;
     return cy;
+}
+
+static inline bool near_tile_center(float v) {
+    float r = roundf(v);
+    return fabsf(v - r) < TILE_CENTER_TOLERANCE;
+}
+
+static inline bool at_tile_center(float x, float y) {
+    return near_tile_center(x) && near_tile_center(y);
+}
+
+static inline float snap_to_center(float v) {
+    return roundf(v);
+}
+
+static inline Direction reverse_dir(Direction d) {
+    switch(d) {
+        case DirUp: return DirDown;
+        case DirDown: return DirUp;
+        case DirLeft: return DirRight;
+        case DirRight: return DirLeft;
+        default: return DirNone;
+    }
 }
 
 /**
@@ -219,7 +260,7 @@ static bool can_move_from(GameData* game, int x, int y, Direction dir) {
     uint8_t m = dir_to_mask(dir);
     if(m == 0) return false;
     return (game->conn[y][x] & m) != 0;
- }
+}
 
 /**
  * Calculate next position based on current position and direction
@@ -235,19 +276,18 @@ static void get_next_position(float x, float y, Direction dir, float* next_x, fl
     *next_y = y;
     
     // Apply movement delta based on direction
-    // Movement speed per update (fractional cells)
     switch(dir) {
         case DirUp:
-            *next_y = y - 0.25f;
+            *next_y = y - MOVEMENT_SPEED;
             break;
         case DirDown:
-            *next_y = y + 0.25f;
+            *next_y = y + MOVEMENT_SPEED;
             break;
         case DirLeft:
-            *next_x = x - 0.25f;
+            *next_x = x - MOVEMENT_SPEED;
             break;
         case DirRight:
-            *next_x = x + 0.25f;
+            *next_x = x + MOVEMENT_SPEED;
             break;
         default:
             break;
@@ -266,22 +306,51 @@ static void get_next_position(float x, float y, Direction dir, float* next_x, fl
 static void update_pacgirl(GameData* game, uint32_t tick) {
     Entity* pacgirl = &game->pacgirl;
     
-    // Try to change direction if a new direction was queued
-    // This allows buffering input for smoother corner turning
-    if(pacgirl->next_dir != DirNone) {
-		int cx = cell_x_from_float(pacgirl->x);
+    // Only turn / start moving at tile centers (center-locked turning).
+    // This eliminates corner jitter and makes movement arcade-like.
+    bool centered = at_tile_center(pacgirl->x, pacgirl->y);
+    if(centered) {
+        // Snap to perfect center to avoid accumulating float drift.
+        pacgirl->x = snap_to_center(pacgirl->x);
+        pacgirl->y = snap_to_center(pacgirl->y);
+
+        int cx = cell_x_from_float(pacgirl->x);
         int cy = cell_y_from_float(pacgirl->y);
-        if(can_move_from(game, cx, cy, pacgirl->next_dir)) {
+
+        // Apply buffered turn if possible.
+        if(pacgirl->next_dir != DirNone && can_move_from(game, cx, cy, pacgirl->next_dir)) {
+            // Snap orthogonal axis on turns to avoid visual "wiggle".
+            if(pacgirl->next_dir == DirLeft || pacgirl->next_dir == DirRight) {
+                pacgirl->y = snap_to_center(pacgirl->y);
+            } else if(pacgirl->next_dir == DirUp || pacgirl->next_dir == DirDown) {
+                pacgirl->x = snap_to_center(pacgirl->x);
+            }
             pacgirl->dir = pacgirl->next_dir;
             pacgirl->next_dir = DirNone;
+        }
+
+        // If we are stopped and have a valid buffered direction, start moving.
+        if(pacgirl->dir == DirNone && pacgirl->next_dir == DirNone) {
+            // No-op: waiting for input.
         }
     }
     
     // Move on a real-time cadence (ms)
     if(tick - pacgirl->last_move > PAC_MOVE_MS) {
+        // If step mode has finished, ensure we stop cleanly at center.
+        if(game->step_mode && game->step_tiles_remaining == 0) {
+            pacgirl->dir = DirNone;
+        }
         int cx = cell_x_from_float(pacgirl->x);
         int cy = cell_y_from_float(pacgirl->y);
-        if(can_move_from(game, cx, cy, pacgirl->dir)) {
+
+        // If we're centered and current direction is blocked, stop (Pac-Man behavior).
+        if(at_tile_center(pacgirl->x, pacgirl->y) && pacgirl->dir != DirNone &&
+           !can_move_from(game, cx, cy, pacgirl->dir)) {
+            pacgirl->dir = DirNone;
+        }
+
+        if(pacgirl->dir != DirNone && can_move_from(game, cx, cy, pacgirl->dir)) {
             float next_x, next_y;
             get_next_position(pacgirl->x, pacgirl->y, pacgirl->dir, &next_x, &next_y);
 
@@ -300,13 +369,13 @@ static void update_pacgirl(GameData* game, uint32_t tick) {
             if(game->pellets[grid_y][grid_x] == 1) {
                 game->pellets[grid_y][grid_x] = 0;  // Remove dot
                 game->dots_remaining--;
-                game->score += 10;
+                game->score += SCORE_DOT;
             } 
             // Collect power pill
             else if(game->pellets[grid_y][grid_x] == 2) {
                 game->pellets[grid_y][grid_x] = 0;  // Remove power pill
                 game->dots_remaining--;
-                game->score += 50;
+                game->score += SCORE_POWER_PILL;
                 game->power_mode = true;
                 game->power_pill_timer = tick;
                 
@@ -318,7 +387,19 @@ static void update_pacgirl(GameData* game, uint32_t tick) {
             }
             
             // Alternate animation frame (closed/open mouth)
-            pacgirl->anim_frame = (pacgirl->anim_frame + 1) % 2;
+            pacgirl->anim_frame = (pacgirl->anim_frame + 1) & 1;
+            
+            // Step-mode accounting: decrement once per tile center reached.
+            // We treat arriving at center as completion of a tile.
+            if(game->step_mode && game->step_tiles_remaining > 0 && at_tile_center(pacgirl->x, pacgirl->y)) {
+                game->step_tiles_remaining--;
+                if(game->step_tiles_remaining == 0) {
+                    // Stop at the exact center.
+                    pacgirl->x = snap_to_center(pacgirl->x);
+                    pacgirl->y = snap_to_center(pacgirl->y);
+                    pacgirl->dir = DirNone;
+                }
+            }
         }
         
         pacgirl->last_move = tick;
@@ -327,6 +408,30 @@ static void update_pacgirl(GameData* game, uint32_t tick) {
     // Check win condition - all dots collected
     if(game->dots_remaining == 0) {
         game->state = GameStateWin;
+    }
+}
+
+/**
+ * Check for collision between ghost and Puck, handle eat/death
+ * @param game Game state
+ * @param ghost The ghost to check
+ */
+static void check_ghost_collision(GameData* game, Ghost* ghost) {
+    Entity* entity = &ghost->entity;
+    float dx = entity->x - game->pacgirl.x;
+    float dy = entity->y - game->pacgirl.y;
+    float dist = dx * dx + dy * dy;
+
+    if(dist < COLLISION_DISTANCE) {
+        if(ghost->eatable) {
+            // Respawn ghost back to spawn area (matching initial spawn at y=4)
+            entity->x = 7.0f + ghost->id;
+            entity->y = 4.0f;
+            ghost->eatable = false;
+            game->score += SCORE_GHOST;
+        } else {
+            game->state = GameStateGameOver;
+        }
     }
 }
 
@@ -340,18 +445,26 @@ static void update_pacgirl(GameData* game, uint32_t tick) {
 static void update_ghost(GameData* game, Ghost* ghost, uint32_t tick) {
     Entity* entity = &ghost->entity;
 
-    // Check if eatable timer has expired (5 seconds = 5000ms)
-    if(ghost->eatable && (tick - ghost->eatable_timer > 5000)) {
+    // Check if eatable timer has expired
+    if(ghost->eatable && (tick - ghost->eatable_timer > POWER_PILL_DURATION_MS)) {
         ghost->eatable = false;
     }
 
     // Check if power mode has expired
-    if(game->power_mode && (tick - game->power_pill_timer > 5000)) {
+    if(game->power_mode && (tick - game->power_pill_timer > POWER_PILL_DURATION_MS)) {
         game->power_mode = false;
     }
 
     // Move ghost on a real-time cadence (ms)
     if(tick - entity->last_move > GHOST_MOVE_MS) {
+        // Ghosts should only choose direction at tile centers.
+        // Between centers, they keep moving in the current direction, preventing jitter/stalls.
+        bool centered = at_tile_center(entity->x, entity->y);
+        if(centered) {
+            entity->x = snap_to_center(entity->x);
+            entity->y = snap_to_center(entity->y);
+        }
+        
         // Calculate target based on ghost personality
         float target_x = game->pacgirl.x;
         float target_y = game->pacgirl.y;
@@ -367,27 +480,39 @@ static void update_ghost(GameData* game, Ghost* ghost, uint32_t tick) {
                     else if(game->pacgirl.dir == DirRight) target_x += 2.0f;
                     break;
                 case 2: { // Patroller - cycles corners
-					float dx = entity->x - game->pacgirl.x;
-					float dy = entity->y - game->pacgirl.y;
-					if(dx*dx + dy*dy < 25.0f) { // Within 5 cells, chase
-						// target stays at pacgirl position
-					} else { // Far away, patrol corners
-						int corner = ((int)(tick / 3000)) % 4;
-						target_x = (corner & 1) ? 14.0f : 0.0f;
-						target_y = (corner & 2) ? 6.0f : 0.0f;
-					}
+                    float dx = entity->x - game->pacgirl.x;
+                    float dy = entity->y - game->pacgirl.y;
+                    if(dx*dx + dy*dy < PATROL_CHASE_DISTANCE) { // Within threshold, chase
+                        // target stays at pacgirl position
+                    } else { // Far away, patrol corners
+                        int corner = ((int)(tick / PATROL_CORNER_CYCLE_MS)) % 4;
+                        target_x = (corner & 1) ? 14.0f : 0.0f;
+                        target_y = (corner & 2) ? 6.0f : 0.0f;
+                    }
+                    break;
                 }
             }
         }
-		
-        Direction possible_dirs[4] = {DirUp, DirDown, DirLeft, DirRight};
-        Direction best_dir = entity->dir;
-        float best_dist = ghost->eatable ? -1.0f : 1e9f;
-
-		int cx = cell_x_from_float(entity->x);
+        
+        int cx = cell_x_from_float(entity->x);
         int cy = cell_y_from_float(entity->y);
         
-		// Release rule: while on spawn row y==4, try to leave the box.
+        // If not at center, just continue in the current direction if possible.
+        // If somehow blocked mid-tile (should be rare), we will fall through next tick at center.
+        if(!centered) {
+            if(can_move_from(game, cx, cy, entity->dir)) {
+                float nx, ny;
+                get_next_position(entity->x, entity->y, entity->dir, &nx, &ny);
+                entity->x = nx;
+                entity->y = ny;
+                entity->anim_frame = (entity->anim_frame + 1) & 1;
+            }
+            entity->last_move = tick;
+            check_ghost_collision(game, ghost);
+            return;
+        }
+        
+        // Release rule: while on spawn row y==4, try to leave the box.
         // If Up is possible, take it. Otherwise, drift horizontally toward the center (x==8).
         if(cy == 4) {
             Direction d = DirNone;
@@ -411,14 +536,16 @@ static void update_ghost(GameData* game, Ghost* ghost, uint32_t tick) {
             }
         }
 
-		
+        Direction possible_dirs[4] = {DirUp, DirDown, DirLeft, DirRight};
+        Direction best_dir = DirNone;
+        float best_dist = ghost->eatable ? -1.0f : 1e9f;
+        Direction rev = reverse_dir(entity->dir);
 
-        // Pick best direction based on squared distance
+        // Pick best direction at center; DO NOT reverse unless forced (dead-end).
         for(int i = 0; i < 4; i++) {
             Direction d = possible_dirs[i];
-
             if(!can_move_from(game, cx, cy, d)) continue;
-
+            if(d == rev) continue; // no-reverse rule
             float nx, ny;
             get_next_position(entity->x, entity->y, d, &nx, &ny);
 
@@ -440,9 +567,14 @@ static void update_ghost(GameData* game, Ghost* ghost, uint32_t tick) {
                 }
             }
         }
+        
+        // If no non-reverse direction exists, we must reverse (dead end).
+        if(best_dir == DirNone) {
+            if(can_move_from(game, cx, cy, rev)) best_dir = rev;
+        }
 
         // Move once in the chosen direction (still validate)
-        if(can_move_from(game, cx, cy, best_dir)) {
+        if(best_dir != DirNone && can_move_from(game, cx, cy, best_dir)) {
             float nx, ny;
             get_next_position(entity->x, entity->y, best_dir, &nx, &ny);
             entity->x = nx;
@@ -456,24 +588,10 @@ static void update_ghost(GameData* game, Ghost* ghost, uint32_t tick) {
         entity->last_move = tick;
     }
 
-    // Collision with Puck
-    float dx = entity->x - game->pacgirl.x;
-    float dy = entity->y - game->pacgirl.y;
-    float dist = dx * dx + dy * dy;
-
-    if(dist < 0.5f) {
-        if(ghost->eatable) {
-            // Respawn ghost back to the house-ish area (stay within 15x7)
-            entity->x = 7.0f;
-            entity->y = 3.0f;
-            ghost->eatable = false;
-            game->score += 200;
-        } else {
-            game->state = GameStateGameOver;
-        }
-    }
+    // Always check collision after movement logic
+    check_ghost_collision(game, ghost);
 }
-    
+
 static void draw_simple_modal(Canvas* canvas, const char* text) {
     const int box_w = 78;
     const int box_h = 20;
@@ -493,8 +611,6 @@ static void draw_simple_modal(Canvas* canvas, const char* text) {
     canvas_draw_str(canvas, box_x + 8, box_y + 14, text);
 }
 
-	
-
 /**
  * Draw callback - renders the entire game screen
  * Called by the GUI system whenever the screen needs to update
@@ -503,23 +619,23 @@ static void draw_simple_modal(Canvas* canvas, const char* text) {
  */
 static void draw_callback(Canvas* canvas, void* ctx) {
     GameData* game = (GameData*)ctx;
-	
+    
     // Clear screen and set up drawing context
     canvas_clear(canvas);
     canvas_set_color(canvas, ColorBlack);
-	
+    
     canvas_set_font(canvas, FontSecondary);
     
     // Draw the background maze image
     canvas_draw_icon(canvas, OFFSET_X, OFFSET_Y, &I_maze);
-	
-	canvas_draw_str_aligned(canvas, 128, 64, AlignRight, AlignBottom, "v0.1");
-	    
+    
+    canvas_draw_str_aligned(canvas, 128, 64, AlignRight, AlignBottom, "v0.1");
+        
     // Draw dots and power pills on top of the maze background
-    // Uses text rendering: "." for dots, "*" for power pills
+    // Uses small/large filled circles for dots/pills
     for(int y = 0; y < MAZE_HEIGHT; y++) {
         for(int x = 0; x < MAZE_WIDTH; x++) {
-			if(game->pellets[y][x] == 0) continue;
+            if(game->pellets[y][x] == 0) continue;
             // Map cell (x,y) to pixel center based on the bitmap maze pitch (8 px)
             int cx = OFFSET_X + 1 + x * DOT_PITCH + DOT_CX;
             int cy = OFFSET_Y + 1 + y * DOT_PITCH + DOT_CY;
@@ -530,7 +646,6 @@ static void draw_callback(Canvas* canvas, void* ctx) {
                 // Power pill: slightly larger filled circle
                 canvas_draw_disc(canvas, cx, cy, 2);
             }
-
         }
     }
     
@@ -538,9 +653,8 @@ static void draw_callback(Canvas* canvas, void* ctx) {
     for(int i = 0; i < 3; i++) {
         Ghost* ghost = &game->ghosts[i];
         // Convert grid coordinates to pixel coordinates, centered on 7x7 icon
-        int px = OFFSET_X + (int)(1 + ghost->entity.x * CELL_PITCH + 4) - 3;
-        int py = OFFSET_Y + (int)(1 + ghost->entity.y * CELL_PITCH + 4) - 3;
-        
+        int px = OFFSET_X + (int)lroundf(1 + ghost->entity.x * CELL_PITCH + 4) - 3;
+        int py = OFFSET_Y + (int)lroundf(1 + ghost->entity.y * CELL_PITCH + 4) - 3;  
         // Select icon based on state (eatable vs normal) and animation frame
         const Icon* ghost_icon = NULL;
         if(ghost->eatable) {
@@ -559,9 +673,9 @@ static void draw_callback(Canvas* canvas, void* ctx) {
         canvas_draw_icon(canvas, px, py, ghost_icon);
     }
     
-    // Draw Puck: Convert grid coordinates to pixel coordinates, centered on 7x7 icon
-    int px = OFFSET_X + (int)(1 + game->pacgirl.x * CELL_PITCH + 4) - 3;
-    int py = OFFSET_Y + (int)(1 + game->pacgirl.y * CELL_PITCH + 4) - 3;
+    // Draw Puck girl: Convert grid coordinates to pixel coordinates, centered on 7x7 icon
+    int px = OFFSET_X + (int)lroundf(1 + game->pacgirl.x * CELL_PITCH + 4) - 3;
+    int py = OFFSET_Y + (int)lroundf(1 + game->pacgirl.y * CELL_PITCH + 4) - 3;
     
     // Select icon based on direction and animation frame (open/closed mouth)
     const Icon* puck_icon;
@@ -579,20 +693,19 @@ static void draw_callback(Canvas* canvas, void* ctx) {
     }
     canvas_draw_icon(canvas, px, py, puck_icon);
     
-    // Draw score at top of screen
+    // Draw score at bottom left of screen
     char score_str[32];
-    snprintf(score_str, sizeof(score_str), "# %d", game->score);
+    snprintf(score_str, sizeof(score_str), "Score: %d", game->score);
     canvas_draw_str(canvas, 1, 64, score_str);
     
     // Draw game over / win messages
     if(game->state == GameStateWin) {
         draw_simple_modal(canvas, "YOU WIN!");
-		elements_button_center(canvas, "OK");
+        elements_button_center(canvas, "OK");
     } else if(game->state == GameStateGameOver) {
         draw_simple_modal(canvas, "GAME OVER");
-		elements_button_center(canvas, "OK");
+        elements_button_center(canvas, "OK");
     }
-	
 }
 
 /**
@@ -608,6 +721,20 @@ static void input_callback(InputEvent* input_event, void* ctx) {
 }
 
 /**
+ * Configure step mode based on input type
+ * Single press = move one tile and stop, Hold/Repeat = continuous movement
+ */
+static inline void set_step_mode(GameData* game, InputType type) {
+    if(type == InputTypePress) {
+        game->step_mode = true;
+        game->step_tiles_remaining = 1;
+    } else { // Repeat => hold
+        game->step_mode = false;
+        game->step_tiles_remaining = 0;
+    }
+}
+
+/**
  * Main app entry point
  * Sets up the game, handles the main loop, and cleans up
  * @param p Parameter (unused)
@@ -616,8 +743,11 @@ static void input_callback(InputEvent* input_event, void* ctx) {
 int32_t puckgirl_main(void* p) {
     UNUSED(p);
     
-    // Allocate game data structure
+    // Allocate game data structure with error checking
     GameData* game = malloc(sizeof(GameData));
+    if(!game) {
+        return -1; // Allocation failed, exit gracefully
+    }
     game_init(game);
     
     // Create event queue for input handling
@@ -635,14 +765,12 @@ int32_t puckgirl_main(void* p) {
     // Main game loop
     InputEvent event;
     bool running = true;
-	game->running = &running;
     uint32_t tick = furi_get_tick();  
     
     while(running) {
-		tick = furi_get_tick();
+        tick = furi_get_tick();
         // Check for input events with 10ms timeout
         if(furi_message_queue_get(event_queue, &event, 10) == FuriStatusOk) {
-				
             if(event.type == InputTypePress || event.type == InputTypeRepeat) {
                 if(event.key == InputKeyBack) {
                     // Back button exits the game
@@ -652,15 +780,19 @@ int32_t puckgirl_main(void* p) {
                     switch(event.key) {
                         case InputKeyUp:
                             game->pacgirl.next_dir = DirUp;
+                            set_step_mode(game, event.type);
                             break;
                         case InputKeyDown:
                             game->pacgirl.next_dir = DirDown;
+                            set_step_mode(game, event.type);
                             break;
                         case InputKeyLeft:
                             game->pacgirl.next_dir = DirLeft;
+                            set_step_mode(game, event.type);
                             break;
                         case InputKeyRight:
                             game->pacgirl.next_dir = DirRight;
+                            set_step_mode(game, event.type);
                             break;
                         default:
                             break;
