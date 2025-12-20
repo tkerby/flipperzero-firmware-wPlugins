@@ -1,6 +1,9 @@
 # mitzi-puck
 <img alt="Main Puck Girl Screen"  src="screenshots/MainScreen.png" width="40%" />
-A simple Flipper Zero pac-man app
+A simple Flipper Zero pac-man app.
+
+## Disclaimer
+Heavy testing needed (as of 2025-12-20)!
 
 ## Usage
 - **Arrow Keys**: Move Puck-girl through the maze
