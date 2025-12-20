@@ -199,6 +199,22 @@ static inline bool in_bounds(int x, int y) {
     return (x >= 0 && x < MAZE_WIDTH && y >= 0 && y < MAZE_HEIGHT);
 }
 
+// Convert a fractional grid coordinate into a SAFE cell index.
+// We round to nearest cell (x+0.5), then clamp to [0..MAZE_WIDTH-1] / [0..MAZE_HEIGHT-1].
+static inline int cell_x_from_float(float x) {
+    int cx = (int)(x + 0.5f);
+    if(cx < 0) cx = 0;
+    if(cx >= MAZE_WIDTH) cx = MAZE_WIDTH - 1;
+    return cx;
+}
+
+static inline int cell_y_from_float(float y) {
+    int cy = (int)(y + 0.5f);
+    if(cy < 0) cy = 0;
+    if(cy >= MAZE_HEIGHT) cy = MAZE_HEIGHT - 1;
+    return cy;
+}
+
 /**
  * Check whether an entity can move out of cell (x,y) in direction dir,
  * based on the precomputed connectivity bitmask.
@@ -258,8 +274,8 @@ static void update_pacgirl(GameData* game, uint32_t tick) {
     // Try to change direction if a new direction was queued
     // This allows buffering input for smoother corner turning
     if(pacgirl->next_dir != DirNone) {
-        int cx = (int)(pacgirl->x + 0.5f);
-        int cy = (int)(pacgirl->y + 0.5f);
+		int cx = cell_x_from_float(pacgirl->x);
+        int cy = cell_y_from_float(pacgirl->y);
         if(can_move_from(game, cx, cy, pacgirl->next_dir)) {
             pacgirl->dir = pacgirl->next_dir;
             pacgirl->next_dir = DirNone;
@@ -268,8 +284,8 @@ static void update_pacgirl(GameData* game, uint32_t tick) {
     
     // Move on a real-time cadence (ms)
     if(tick - pacgirl->last_move > PAC_MOVE_MS) {
-        int cx = (int)(pacgirl->x + 0.5f);
-        int cy = (int)(pacgirl->y + 0.5f);
+        int cx = cell_x_from_float(pacgirl->x);
+        int cy = cell_y_from_float(pacgirl->y);
         if(can_move_from(game, cx, cy, pacgirl->dir)) {
             float next_x, next_y;
             get_next_position(pacgirl->x, pacgirl->y, pacgirl->dir, &next_x, &next_y);
@@ -282,9 +298,9 @@ static void update_pacgirl(GameData* game, uint32_t tick) {
             if(pacgirl->x >= MAZE_WIDTH) pacgirl->x = 0;
             
             // Check for collectibles at current grid position
-            int grid_x = (int)(pacgirl->x + 0.5f);  // Round to nearest grid cell
-            int grid_y = (int)(pacgirl->y + 0.5f);
-            
+            int grid_x = cell_x_from_float(pacgirl->x);
+            int grid_y = cell_y_from_float(pacgirl->y);
+
             // Collect regular dot
             if(game->pellets[grid_y][grid_x] == 1) {
                 game->pellets[grid_y][grid_x] = 0;  // Remove dot
@@ -345,12 +361,11 @@ static void update_ghost(GameData* game, Ghost* ghost, uint32_t tick) {
         Direction best_dir = entity->dir;
         float best_dist = ghost->eatable ? -1.0f : 1e9f;
 
-        int cx = (int)(entity->x + 0.5f);
-        int cy = (int)(entity->y + 0.5f);
-		
-        // Release rule: while on spawn row y==4, try to leave the box.
-        // 1) If Up is possible, take it.
-        // 2) Otherwise, drift horizontally toward the center (x==8) to find the exit.
+		int cx = cell_x_from_float(entity->x);
+        int cy = cell_y_from_float(entity->y);
+        
+		// Release rule: while on spawn row y==4, try to leave the box.
+        // If Up is possible, take it. Otherwise, drift horizontally toward the center (x==8).
         if(cy == 4) {
             Direction d = DirNone;
             if(can_move_from(game, cx, cy, DirUp)) {
