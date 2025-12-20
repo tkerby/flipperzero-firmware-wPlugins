@@ -27,7 +27,8 @@ Encoders: **Coming Soon**
 ## **Credits**
 
 The following contributors are recognized for helping us keep open sourced projects and the freeware community alive.
-Alphabetical order 😎
+
+In alphabetical order 😎
 
 ### **Protocol Magic**
 
