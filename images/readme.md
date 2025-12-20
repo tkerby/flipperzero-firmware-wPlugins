@@ -15,8 +15,6 @@ images/
     ├── puck_d_c_7x7.png    # Puck down closed
     ├── monster_1.png       # Normal ghost frame 1
     ├── monster_2.png       # Normal ghost frame 2
-    ├── monster_3.png       # Normal ghost frame 3
     ├── prey_1.png          # Eatable ghost frame 1
-    ├── prey_2.png          # Eatable ghost frame 2
-    └── prey_3.png          # Eatable ghost frame 3
+    └── prey_2.png          # Eatable ghost frame 2
 ```
