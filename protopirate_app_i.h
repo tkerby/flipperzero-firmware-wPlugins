@@ -20,6 +20,7 @@
 #include <lib/subghz/receiver.h>
 #include <lib/subghz/transmitter.h>
 #include <lib/subghz/devices/devices.h>
+#include <dialogs/dialogs.h>
 
 typedef struct ProtoPirateApp ProtoPirateApp;
 
