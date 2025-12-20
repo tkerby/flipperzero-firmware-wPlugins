@@ -27,13 +27,6 @@
 #define DOT_CX    4
 #define DOT_CY    4
 
-// Ghost house / central box exclusion zone in *pixel coordinates*.
-#define GHOST_BOX_X0 40
-#define GHOST_BOX_Y0 24
-#define GHOST_BOX_X1 88
-#define GHOST_BOX_Y1 40
-
-
 // Game states
 typedef enum {
     GameStateRunning,   // Game is actively being played
@@ -202,14 +195,14 @@ static inline bool in_bounds(int x, int y) {
 // Convert a fractional grid coordinate into a SAFE cell index.
 // We round to nearest cell (x+0.5), then clamp to [0..MAZE_WIDTH-1] / [0..MAZE_HEIGHT-1].
 static inline int cell_x_from_float(float x) {
-    int cx = (int)(x + 0.5f);
+    int cx = (int) x;
     if(cx < 0) cx = 0;
     if(cx >= MAZE_WIDTH) cx = MAZE_WIDTH - 1;
     return cx;
 }
 
 static inline int cell_y_from_float(float y) {
-    int cy = (int)(y + 0.5f);
+    int cy = (int) y;
     if(cy < 0) cy = 0;
     if(cy >= MAZE_HEIGHT) cy = MAZE_HEIGHT - 1;
     return cy;
@@ -486,9 +479,11 @@ static void draw_callback(Canvas* canvas, void* ctx) {
     canvas_set_color(canvas, ColorBlack);
     canvas_set_font(canvas, FontSecondary);
     
-    // Draw the background maze image (128x64 pixels)
+    // Draw the background maze image
     canvas_draw_icon(canvas, OFFSET_X, OFFSET_Y, &I_maze);
-    
+	
+	canvas_draw_str_aligned(canvas, 128, 64, AlignRight, AlignBottom, "v0.1");
+	    
     // Draw dots and power pills on top of the maze background
     // Uses text rendering: "." for dots, "*" for power pills
     for(int y = 0; y < MAZE_HEIGHT; y++) {
@@ -497,12 +492,6 @@ static void draw_callback(Canvas* canvas, void* ctx) {
             // Map cell (x,y) to pixel center based on the bitmap maze pitch (8 px)
             int cx = OFFSET_X + 1 + x * DOT_PITCH + DOT_CX;
             int cy = OFFSET_Y + 1 + y * DOT_PITCH + DOT_CY;
-            // Skip the ghost house area so dots don't appear inside the box.
-            if(point_in_rect(cx, cy, OFFSET_X + GHOST_BOX_X0, OFFSET_Y + GHOST_BOX_Y0,
-                                   OFFSET_X + GHOST_BOX_X1, OFFSET_Y + GHOST_BOX_Y1)) {
-                continue;
-            }
-
             if(game->pellets[y][x] == 1) {
                 // Regular dot: small filled circle
                 canvas_draw_disc(canvas, cx, cy, 1);
@@ -561,7 +550,7 @@ static void draw_callback(Canvas* canvas, void* ctx) {
     
     // Draw score at top of screen
     char score_str[32];
-    snprintf(score_str, sizeof(score_str), "Score: %d", game->score);
+    snprintf(score_str, sizeof(score_str), "# %d", game->score);
     canvas_draw_str(canvas, 1, 64, score_str);
     
     // Draw game over / win messages
@@ -622,22 +611,7 @@ int32_t puckgirl_main(void* p) {
 		tick = furi_get_tick();
         // Check for input events with 10ms timeout
         if(furi_message_queue_get(event_queue, &event, 10) == FuriStatusOk) {
-			// Back always exits, regardless of game state
-			if(event.key == InputKeyBack &&
-			   (event.type == InputTypePress ||
-				event.type == InputTypeRepeat ||
-				event.type == InputTypeLong)) {
-				running = false;
-				break;
-			}
-			// OK restarts game from GAME OVER
-			if((game->state == GameStateGameOver || game->state == GameStateWin) &&
-			   event.key == InputKeyOk &&
-			   event.type == InputTypePress) {
-				game_restart(game);
-				continue;
-			}
-					
+				
             if(event.type == InputTypePress || event.type == InputTypeRepeat) {
                 if(event.key == InputKeyBack) {
                     // Back button exits the game
@@ -657,17 +631,13 @@ int32_t puckgirl_main(void* p) {
                         case InputKeyRight:
                             game->pacgirl.next_dir = DirRight;
                             break;
-                        case InputKeyOk:
-                            // OK button during gameplay restarts
-                            game_init(game);
-                            break;
                         default:
                             break;
                     }
                 } else {
-                    // Game is over - OK button restarts
+                    // Game is over or won - OK button restarts
                     if(event.key == InputKeyOk) {
-                        game_init(game);
+                        game_restart(game);
                     }
                 }
             }
