@@ -49,7 +49,7 @@ typedef struct {
  * @brief      Get the singleton instance of the ToyPadEmu
  * @return     The ToyPadEmu instance pointer
  */
-ToyPadEmu* get_ToyPadEmu_inst();
+extern ToyPadEmu* emulator;
 
 /**
  * @brief      Remove a token from the toypad emulator
@@ -119,6 +119,11 @@ static inline bool is_vehicle(const Token* token) {
 static inline bool is_minifig(const Token* token) {
     return token->id != 0;
 }
+
+/**
+ * @brief      Free the ToyPadEmu instance and its resources.
+ */
+void ToyPadEmu_free();
 
 /**
  * @brief      Get a token from the ToyPad emulator by its array slot index.

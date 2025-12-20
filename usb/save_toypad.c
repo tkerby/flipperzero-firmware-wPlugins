@@ -7,14 +7,6 @@
 #include "../minifigures.h"
 #include "../debug.h"
 
-#define FILEPATH_SIZE          128
-#define FILE_NAME_LEN_MAX      256
-#define TOKEN_FILE_EXTENSION   ".toy"
-#define TOKENS_DIR             "tokens"
-#define TOYPADS_DIR            "toypads"
-#define TOYPADS_FILE_EXTENSION ".toypad"
-#define FILE_NAME_FAVORITES    "favs.bin"
-
 int favorite_ids[MAX_FAVORITES];
 int num_favorites = 0;
 
@@ -84,51 +76,6 @@ static bool load_binary_from_file(void* data, size_t size, const char* filename)
     return success;
 }
 
-bool save_favorites(void) {
-    char filename[FILEPATH_SIZE];
-    snprintf(filename, sizeof(filename), "%s", APP_DATA_PATH(FILE_NAME_FAVORITES));
-
-    return save_binary_to_file(&num_favorites, sizeof(int), filename) &&
-           (num_favorites == 0 ||
-            save_binary_to_file(favorite_ids, sizeof(int) * num_favorites, filename));
-}
-
-static void cleanup_favorites() {
-    // Remove unkown / favorites from the list / file
-    uint8_t cleaned_favorites = 0;
-    for(uint8_t i = 0; i < num_favorites; i++) {
-        if(favorite_ids[i] <= 0 || favorite_ids[i] > 999 ||
-           strcmp(get_minifigure_name(favorite_ids[i]), "?") == 0) {
-            // Invalid, remove it
-            for(uint8_t j = i; j < num_favorites - 1; j++) {
-                favorite_ids[j] = favorite_ids[j + 1];
-            }
-            num_favorites--;
-            cleaned_favorites++;
-            i--; // Check the new item at this index
-        }
-    }
-    if(cleaned_favorites > 0) {
-        save_favorites(); // Save the cleaned favorites
-    }
-}
-
-// Favorites
-void load_favorites(void) {
-    char filename[FILEPATH_SIZE];
-    snprintf(filename, sizeof(filename), "%s", APP_DATA_PATH(FILE_NAME_FAVORITES));
-
-    num_favorites = 0;
-    if(!load_binary_from_file(&num_favorites, sizeof(int), filename)) return;
-    if(num_favorites > MAX_FAVORITES) num_favorites = MAX_FAVORITES;
-
-    if(num_favorites > 0) {
-        load_binary_from_file(favorite_ids, sizeof(int) * num_favorites, filename);
-
-        cleanup_favorites(); // Clean up any invalid favorites
-    }
-}
-
 void fill_favorites_submenu(LDToyPadApp* app) {
     submenu_reset(app->submenu_favorites_selection);
     load_favorites();
@@ -145,41 +92,6 @@ void fill_favorites_submenu(LDToyPadApp* app) {
     }
 
     submenu_set_header(app->submenu_favorites_selection, "Select a favorite");
-}
-
-bool favorite(int id, LDToyPadApp* app) {
-    if(num_favorites >= MAX_FAVORITES) return false;
-
-    favorite_ids[num_favorites++] = id;
-    submenu_add_item(
-        app->submenu_favorites_selection,
-        get_minifigure_name(id),
-        id,
-        minifigures_submenu_callback,
-        app);
-    return save_favorites();
-}
-
-bool unfavorite(int id, LDToyPadApp* app) {
-    for(int i = 0; i < num_favorites; i++) {
-        if(favorite_ids[i] == id) {
-            for(int j = i; j < num_favorites - 1; j++) {
-                favorite_ids[j] = favorite_ids[j + 1];
-            }
-            num_favorites--;
-            save_favorites();
-            fill_favorites_submenu(app);
-            return true;
-        }
-    }
-    return false;
-}
-
-bool is_favorite(int id) {
-    for(int i = 0; i < num_favorites; i++) {
-        if(favorite_ids[i] == id) return true;
-    }
-    return false;
 }
 
 // Token Directory
@@ -346,6 +258,124 @@ bool load_saved_toypad(Token* tokens[MAX_TOKENS], BoxInfo boxes[NUM_BOXES], char
         }
         memcpy(boxes, state.boxes, sizeof(BoxInfo) * NUM_BOXES);
         return true;
+    }
+    return false;
+}
+
+static File* open_favorites_file(Storage** storage, bool write_mode) {
+    *storage = furi_record_open(RECORD_STORAGE);
+    if(!*storage) return NULL;
+
+    File* file = storage_file_alloc(*storage);
+    if(!file) {
+        furi_record_close(RECORD_STORAGE);
+        return NULL;
+    }
+
+    if(!storage_file_open(
+           file,
+           APP_DATA_PATH(FILE_NAME_FAVORITES),
+           write_mode ? FSAM_WRITE : FSAM_READ,
+           write_mode ? FSOM_CREATE_ALWAYS : FSOM_OPEN_EXISTING)) {
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return NULL;
+    }
+
+    return file;
+}
+
+bool save_favorites(void) {
+    Storage* storage;
+    File* file = open_favorites_file(&storage, true);
+    if(!file) {
+        set_debug_text("Fail open favorites file for writing");
+        return false;
+    }
+
+    bool success = storage_file_write(file, &num_favorites, sizeof(int)) &&
+                   storage_file_write(file, favorite_ids, sizeof(int) * num_favorites);
+
+    storage_file_close(file);
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
+
+    if(!success) set_debug_text("Fail write favorites file");
+    return success;
+}
+
+static void cleanup_favorites(void) {
+    if(num_favorites == 0) return;
+
+    int write_index = 0;
+    for(int read_index = 0; read_index < num_favorites; read_index++) {
+        int id = favorite_ids[read_index];
+        if(id > 0 && id <= 999 && strcmp(get_minifigure_name(id), "?") != 0) {
+            favorite_ids[write_index++] = id;
+        }
+    }
+
+    if(write_index != num_favorites) {
+        num_favorites = write_index;
+        save_favorites();
+    }
+}
+
+void load_favorites(void) {
+    num_favorites = 0;
+
+    Storage* storage;
+    File* file = open_favorites_file(&storage, false);
+    if(!file) return;
+
+    // Read num_favorites
+    if(storage_file_read(file, &num_favorites, sizeof(int))) {
+        if(num_favorites > MAX_FAVORITES) num_favorites = MAX_FAVORITES;
+
+        // Read the favorite_ids array
+        storage_file_read(file, favorite_ids, sizeof(int) * num_favorites);
+    } else {
+        num_favorites = 0; // File may be empty/corrupt
+    }
+
+    storage_file_close(file);
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
+
+    cleanup_favorites();
+}
+
+bool favorite(int id, LDToyPadApp* app) {
+    if(num_favorites >= MAX_FAVORITES || is_favorite(id)) return false;
+
+    favorite_ids[num_favorites++] = id;
+    submenu_add_item(
+        app->submenu_favorites_selection,
+        get_minifigure_name(id),
+        id,
+        minifigures_submenu_callback,
+        app);
+    return save_favorites();
+}
+
+bool unfavorite(int id, LDToyPadApp* app) {
+    for(int i = 0; i < num_favorites; i++) {
+        if(favorite_ids[i] == id) {
+            for(int j = i; j < num_favorites - 1; j++)
+                favorite_ids[j] = favorite_ids[j + 1];
+
+            num_favorites--;
+            save_favorites();
+            fill_favorites_submenu(app);
+            return true;
+        }
+    }
+    return false;
+}
+
+bool is_favorite(int id) {
+    for(int i = 0; i < num_favorites; i++) {
+        if(favorite_ids[i] == id) return true;
     }
     return false;
 }

@@ -321,8 +321,6 @@ static LDToyPadApp* ldtoypad_app_alloc() {
     LDToyPadApp* app = (LDToyPadApp*)malloc(sizeof(LDToyPadApp));
     Gui* gui = furi_record_open(RECORD_GUI);
 
-    load_favorites();
-
     ldtoypad_setup_dispatcher(app, gui);
     ldtoypad_setup_main_menu(app);
     ldtoypad_setup_settings(app);
@@ -378,6 +376,8 @@ static void ldtoypad_app_free(LDToyPadApp* app) {
     //app->notification = NULL;
 
     free(app);
+
+    ToyPadEmu_free();
 }
 
 /**

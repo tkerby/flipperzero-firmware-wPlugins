@@ -105,12 +105,17 @@ bool ldtoypad_scene_emulate_input_callback(InputEvent* event, void* context) {
                                 if(id) {
                                     // check if the minifigure is already a favorite then unfavorite it
                                     if(is_favorite(id)) {
-                                        unfavorite(id, app);
-                                        set_debug_text("Minifigure removed from favorites");
+                                        if(unfavorite(id, app)) {
+                                            set_debug_text("Minifigure removed from favs");
+                                        } else {
+                                            set_debug_text("Error removing from favs");
+                                        }
                                     } else {
-                                        // save the minifigure to favorites
-                                        favorite(id, app);
-                                        set_debug_text("Minifigure added to favorites");
+                                        if(favorite(id, app)) {
+                                            set_debug_text("Minifigure added to favs");
+                                        } else {
+                                            set_debug_text("Error adding to favs");
+                                        }
                                     }
                                 }
                             }
@@ -174,6 +179,8 @@ bool ldtoypad_scene_emulate_input_callback(InputEvent* event, void* context) {
                         break;
                     case InputKeyDown:
                         load_saved_state();
+                        // view_dispatcher_switch_to_view(app->view_dispatcher, ViewFileBrowser);
+                        // return true;
                         break;
                     case InputKeyBack:
                         model->back_long_pressed = true;
@@ -592,17 +599,8 @@ void ldtoypad_scene_emulate_free(LDToyPadSceneEmulate* ldtoypad_emulate_view) {
     if(usb_mode_prev != NULL) {
         furi_hal_usb_set_config(usb_mode_prev, NULL);
     }
-    free(usb_mode_prev);
 
     free(ldtoypad_emulate_view);
-
-    // free all the tokens ( needs a better solution later )
-    for(int i = 0; i < MAX_TOKENS; i++) {
-        if(emulator->tokens[i] != NULL) {
-            free(emulator->tokens[i]);
-        }
-    }
-    free(emulator);
 }
 
 View* ldtoypad_scene_emulate_get_view(LDToyPadSceneEmulate* instance) {
