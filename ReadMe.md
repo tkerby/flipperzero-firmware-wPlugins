@@ -30,6 +30,7 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-12-19 16:00 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-12-19 16:00 EST`
+- Updated: [Amiibo Toolkit v0.1 (By Firefox2100)](https://github.com/Firefox2100/ami_tool)
 
 <a name="release">
 
@@ -385,7 +386,7 @@ $ ./fbt dolphin_ext
 ## Apps / Plugins
 
 - [Air Level v1.0 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/vgm/air_level) `Req: Video Game Module By Flipper Devices`
-- [Amiibo Toolkit v1.0 (By Firefox2100)](https://github.com/Firefox2100/ami_tool)
+- [Amiibo Toolkit v0.1 (By Firefox2100)](https://github.com/Firefox2100/ami_tool)
 - [Amusement IC v0.1 (By object-Object)](https://github.com/object-Object/flip_aic)
 - [Analog Clock v1.2 (By scrolltex)](https://github.com/scrolltex/flipper_analog_clock)
 - [Analog Output v0.1 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/gpio/dac)
