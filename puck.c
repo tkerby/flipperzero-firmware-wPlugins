@@ -77,6 +77,7 @@ typedef struct {
     Entity entity;          // Base entity data (position, direction, etc.)
     bool eatable;           // True when ghost can be eaten (after power pill)
     uint32_t eatable_timer; // Tick when ghost became eatable (for timeout)
+	uint8_t id;             // Ghost personality: 0=chaser, 1=ambusher, 2=patroller
 } Ghost;
 
 // Complete game state
@@ -174,6 +175,7 @@ static void game_init(GameData* game) {
         game->ghosts[i].entity.last_move = 0;
         game->ghosts[i].eatable = false;
         game->ghosts[i].eatable_timer = 0;
+		game->ghosts[i].id = i; // ghost personality
     }
     
     // Reset game state
@@ -350,6 +352,34 @@ static void update_ghost(GameData* game, Ghost* ghost, uint32_t tick) {
 
     // Move ghost on a real-time cadence (ms)
     if(tick - entity->last_move > GHOST_MOVE_MS) {
+        // Calculate target based on ghost personality
+        float target_x = game->pacgirl.x;
+        float target_y = game->pacgirl.y;
+        
+        if(!ghost->eatable) {
+            switch(ghost->id) {
+                case 0: // Direct chaser
+                    break;
+                case 1: // Ambusher - target 2 cells ahead
+                    if(game->pacgirl.dir == DirUp) target_y -= 2.0f;
+                    else if(game->pacgirl.dir == DirDown) target_y += 2.0f;
+                    else if(game->pacgirl.dir == DirLeft) target_x -= 2.0f;
+                    else if(game->pacgirl.dir == DirRight) target_x += 2.0f;
+                    break;
+                case 2: { // Patroller - cycles corners
+					float dx = entity->x - game->pacgirl.x;
+					float dy = entity->y - game->pacgirl.y;
+					if(dx*dx + dy*dy < 25.0f) { // Within 5 cells, chase
+						// target stays at pacgirl position
+					} else { // Far away, patrol corners
+						int corner = ((int)(tick / 3000)) % 4;
+						target_x = (corner & 1) ? 14.0f : 0.0f;
+						target_y = (corner & 2) ? 6.0f : 0.0f;
+					}
+                }
+            }
+        }
+		
         Direction possible_dirs[4] = {DirUp, DirDown, DirLeft, DirRight};
         Direction best_dir = entity->dir;
         float best_dist = ghost->eatable ? -1.0f : 1e9f;
@@ -392,8 +422,8 @@ static void update_ghost(GameData* game, Ghost* ghost, uint32_t tick) {
             float nx, ny;
             get_next_position(entity->x, entity->y, d, &nx, &ny);
 
-            float dx = nx - game->pacgirl.x;
-            float dy = ny - game->pacgirl.y;
+            float dx = nx - target_x;
+            float dy = ny - target_y;
             float dist = dx * dx + dy * dy;
 
             if(ghost->eatable) {
@@ -477,6 +507,7 @@ static void draw_callback(Canvas* canvas, void* ctx) {
     // Clear screen and set up drawing context
     canvas_clear(canvas);
     canvas_set_color(canvas, ColorBlack);
+	
     canvas_set_font(canvas, FontSecondary);
     
     // Draw the background maze image
