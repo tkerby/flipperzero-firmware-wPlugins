@@ -3,7 +3,7 @@
 A simple Flipper Zero pac-man app.
 
 ## Outlook
-In the classic game, each ghost has distinct personality: one targets directly, one ambushes, one patrols. Our ghosts are still clustering. 
+Like in the classic game, each ghost has distinct personality: one targets directly, one ambushes, one patrols. Our ghosts are still clustering somehow :-( 
 
 ## Usage
 - **Arrow Keys**: Move Puck-girl through the maze
