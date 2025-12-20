@@ -27,6 +27,7 @@ Encoders: **Coming Soon**
 ## **Credits**
 
 The following contributors are recognized for helping us keep open sourced projects and the freeware community alive.
+Alphabetical order 😎
 
 ### **Protocol Magic**
 
@@ -41,9 +42,9 @@ The following contributors are recognized for helping us keep open sourced proje
 
 ### **App Development**
 
+- MMX
 - RocketGod
 - Skorp - Thanks, I sneaked a lot from Weather App!
-- MMX
 - Vadim's Radio Driver
 
 ### **Reverse Engineering Support**
