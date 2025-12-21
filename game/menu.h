@@ -32,14 +32,14 @@ void drawTitleScreen()
 void stateMenuIntro()
 {
   globalCounter++;
-  if (globalCounter < 160)
+  if (globalCounter < 60)
   {
     sprites.drawSelfMasked(34, 4, T_arg, 0);
   }
   else
   {
     drawTitleScreen();
-    if ((globalCounter > 250) || arduboy.justPressed(A_BUTTON | B_BUTTON))
+    if ((globalCounter > 120))
     {
       gameState = STATE_MENU_MAIN;
       sound.tone(425, 20);

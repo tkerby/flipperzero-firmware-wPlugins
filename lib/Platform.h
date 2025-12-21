@@ -9,10 +9,6 @@ public:
 	static void SetLED(uint8_t r, uint8_t g, uint8_t b);
 	static uint8_t* GetScreenBuffer(); 
 
-	static void PlaySound(const uint16_t* audioPattern);
-	static bool IsAudioEnabled();
-	static void SetAudioEnabled(bool isEnabled);
-
 	static void ExpectLoadDelay();
 	
 	static void FillScreen(uint8_t col);

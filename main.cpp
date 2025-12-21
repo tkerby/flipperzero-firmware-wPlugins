@@ -10,10 +10,11 @@
 #define COLOUR_WHITE     1
 #define COLOUR_BLACK     0
 #define TONES_END        0x8000
-#define TARGET_FRAMERATE 60
+
+#define TARGET_FRAMERATE 60 // эмулируемый
+#define DISPLAY_FPS      15 // выводимый чтобы не грузить систему
 #define GAME_ID          34
 
-#include "lib/Platform.h"
 #include "lib/Arduboy2.h"
 #include "lib/Arduino.h"
 #include "game/globals.h"
@@ -45,389 +46,68 @@ static void game_setup() {
     arduboy.boot();
     arduboy.audio.begin();
     arduboy.bootLogoSpritesSelfMasked();
-    arduboy.setFrameRate(TARGET_FRAMERATE);   // как в оригинальном .ino
+    arduboy.setFrameRate(TARGET_FRAMERATE);
     loadSetEEPROM();
     arduboy.pollButtons();
     arduboy.clear();
-    mainGameLoop[gameState]();   // рисует в screen_buffer через Platform
-    arduboy.display();    
-}
-
-// Один “тик” игры = бывший loop() из .ino
-static void game_loop_tick() {
-    if(!(arduboy.nextFrame())) return;
-
-    if(gameState < STATE_GAME_NEXT_LEVEL && arduboy.everyXFrames(10)) {
-        sparkleFrames = (sparkleFrames+1) % 5;
-    }
-
-    arduboy.pollButtons();
-    arduboy.clear();
-
-    // вызов state-функции
     mainGameLoop[gameState]();
-
     arduboy.display();
 }
 
+static void game_loop_tick() {
+    arduboy.pollButtons();
+    if(!(arduboy.nextFrame())) return;
+    if(gameState < STATE_GAME_NEXT_LEVEL && arduboy.everyXFrames(10)) {
+        sparkleFrames = (sparkleFrames + 1) % 5;
+    }
+    arduboy.clear();
+    mainGameLoop[gameState]();
+    arduboy.display();
+}
 
 #define DISPLAY_WIDTH  128
 #define DISPLAY_HEIGHT 64
 #define BUFFER_SIZE    (DISPLAY_WIDTH * DISPLAY_HEIGHT / 8)
-#define FRAME_TIME_MS  (1000 / TARGET_FRAMERATE)
-#define MAX_FRAME_SKIP 3
+
+typedef enum {
+    EvRenderTick = 1,
+    EvExit = 2,
+} AppEvent;
 
 typedef struct {
-    FuriMutex* game_mutex;
-    FuriMutex* swap_mutex;
-    FuriTimer* timer;
-    uint32_t last_tick;
-    int16_t tick_accum;
+    FuriMutex* game_mutex;   // защищает screen_buffer + игровую логику
+    FuriMutex* swap_mutex;   // защищает xbm_front swap
+
+    // Таймер ТОЛЬКО ДЛЯ "пора рисовать" (без конвертации)
+    FuriTimer* render_timer;
+
+    // Игровой поток для физики 100 Гц
+    FuriThread* game_thread;
+
+    // Очередь событий (UI поток ждёт здесь)
+    FuriMessageQueue* queue;
+
+    // Arduboy page buffer
     uint8_t screen_buffer[BUFFER_SIZE];
+
+    // XBM double buffer
     uint8_t xbm_a[BUFFER_SIZE];
     uint8_t xbm_b[BUFFER_SIZE];
     volatile uint8_t* xbm_front;
-    uint8_t input_state;
-    bool audio_enabled;
+
+    // input_state дергается из Arduboy2Base::FlipperInputCallback
+    volatile uint8_t input_state;
+
+    // Флаг: есть новый кадр (логика изменила screen_buffer)
+    volatile bool frame_dirty;
+
+    // Выход
     volatile bool exit_requested;
-    volatile bool game_updated;
-    volatile bool in_timer;
 } FlipperState;
 
 static FlipperState* g_state = NULL;
-typedef struct {
-    const uint16_t* pattern;
-} SoundRequest;
-
-static FuriMessageQueue* g_sound_queue = NULL;
-static FuriThread* g_sound_thread = NULL;
-static volatile bool g_sound_thread_running = false;
-static const float kSoundVolume = 1.0f;
-static const uint32_t kToneTickHz = 850;
-
-static inline uint32_t arduboy_ticks_to_ms(uint16_t ticks) {
-    return (uint32_t)((ticks * 1000u + (kToneTickHz / 2)) / kToneTickHz);
-}
-
-static int32_t sound_thread_fn(void* /*ctx*/) {
-    SoundRequest req;
-    while(g_sound_thread_running) {
-        if(furi_message_queue_get(g_sound_queue, &req, 50) != FuriStatusOk) {
-            continue;
-        }
-
-        if(!g_state || !g_state->audio_enabled || !req.pattern) {
-            continue;
-        }
-
-        if(!furi_hal_speaker_acquire(50)) {
-            continue;
-        }
-
-        const uint16_t* p = req.pattern;
-
-        while(g_sound_thread_running && g_state && g_state->audio_enabled) {
-            SoundRequest new_req;
-            if(furi_message_queue_get(g_sound_queue, &new_req, 0) == FuriStatusOk) {
-                p = new_req.pattern ? new_req.pattern : p;
-            }
-
-            uint16_t freq = *p++;
-            if(freq == TONES_END) {
-                break;
-            }
-
-            uint16_t dur_ticks = *p++;
-            uint32_t dur_ms = arduboy_ticks_to_ms(dur_ticks);
-            if(dur_ms == 0) dur_ms = 1;
-            if(freq == 0) {
-                furi_hal_speaker_stop();
-                furi_delay_ms(dur_ms);
-            } else {
-                furi_hal_speaker_start((float)freq, kSoundVolume);
-                furi_delay_ms(dur_ms);
-                furi_hal_speaker_stop();
-            }
-        }
-
-        furi_hal_speaker_stop();
-        furi_hal_speaker_release();
-    }
-
-    if(furi_hal_speaker_is_mine()) {
-        furi_hal_speaker_stop();
-        furi_hal_speaker_release();
-    }
-
-    return 0;
-}
-
-static void sound_system_init() {
-    if(g_sound_queue || g_sound_thread) return;
-    g_sound_queue = furi_message_queue_alloc(4, sizeof(SoundRequest));
-    g_sound_thread = furi_thread_alloc();
-    furi_thread_set_name(g_sound_thread, "GameSound");
-    furi_thread_set_stack_size(g_sound_thread, 1024);
-    furi_thread_set_priority(g_sound_thread, FuriThreadPriorityNormal);
-    furi_thread_set_callback(g_sound_thread, sound_thread_fn);
-    g_sound_thread_running = true;
-    furi_thread_start(g_sound_thread);
-}
-
-static void sound_system_deinit() {
-    if(!g_sound_thread) return;
-    g_sound_thread_running = false;
-    furi_thread_join(g_sound_thread);
-    furi_thread_free(g_sound_thread);
-    g_sound_thread = NULL;
-    if(g_sound_queue) {
-        furi_message_queue_free(g_sound_queue);
-        g_sound_queue = NULL;
-    }
-}
-
-// ---------------- Platform API ----------------
-
-void Platform::PlaySound(const uint16_t* audioPattern) {
-    if(!g_state) return;
-    if(!g_state->audio_enabled) return;
-    if(!audioPattern) return;
-    if(!g_sound_queue) return;
-
-    SoundRequest req = {.pattern = audioPattern};
-    if(furi_message_queue_put(g_sound_queue, &req, 0) != FuriStatusOk) {
-        SoundRequest dummy;
-        (void)furi_message_queue_get(g_sound_queue, &dummy, 0);
-        (void)furi_message_queue_put(g_sound_queue, &req, 0);
-    }
-}
-
-bool Platform::IsAudioEnabled() {
-    return g_state && g_state->audio_enabled;
-}
-
-void Platform::SetAudioEnabled(bool enabled) {
-    if(!g_state) return;
-
-    bool was_enabled = g_state->audio_enabled;
-    g_state->audio_enabled = enabled;
-
-    if(enabled && !was_enabled) {
-        sound_system_init();
-    } else if(!enabled && was_enabled) {
-        sound_system_deinit();
-    }
-}
-
-uint8_t Platform::GetInput() {
-    return g_state ? g_state->input_state : 0;
-}
-
-void Platform::ExpectLoadDelay() {
-    if(g_state) {
-        g_state->last_tick = furi_get_tick();
-        g_state->tick_accum = 0;
-    }
-}
-
-void Platform::SetLED(uint8_t r, uint8_t g, uint8_t b) {
-    NotificationApp* n = (NotificationApp*)furi_record_open(RECORD_NOTIFICATION);
-    if(r)
-        notification_message(n, &sequence_set_red_255);
-    else
-        notification_message(n, &sequence_reset_red);
-    if(g)
-        notification_message(n, &sequence_set_green_255);
-    else
-        notification_message(n, &sequence_reset_green);
-    if(b)
-        notification_message(n, &sequence_set_blue_255);
-    else
-        notification_message(n, &sequence_reset_blue);
-    furi_record_close(RECORD_NOTIFICATION);
-}
-
-static inline void set_pixel(int16_t x, int16_t y, bool color) {
-    if(!g_state) return;
-    if(x < 0 || y < 0 || x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) return;
-
-    uint16_t idx = x + (y >> 3) * DISPLAY_WIDTH;
-    uint8_t mask = 1 << (y & 7);
-
-    if(color)
-        g_state->screen_buffer[idx] |= mask;
-    else
-        g_state->screen_buffer[idx] &= ~mask;
-}
-
-void Platform::PutPixel(uint8_t x, uint8_t y, uint8_t color) {
-    set_pixel(x, y, color);
-}
-
-void Platform::FillScreen(uint8_t color) {
-    if(!g_state) return;
-    memset(g_state->screen_buffer, color ? 0xFF : 0x00, BUFFER_SIZE);
-}
-
-uint8_t* Platform::GetScreenBuffer() {
-    return g_state ? g_state->screen_buffer : NULL;
-}
-
-void Platform::DrawVLine(uint8_t x, int8_t y0, int8_t y1, uint8_t pattern) {
-    if(y0 > y1) {
-        int8_t temp = y0;
-        y0 = y1;
-        y1 = temp;
-    }
-
-    for(int y = y0; y <= y1; y++) {
-        if(pattern & (1 << (y & 7))) {
-            set_pixel(x, y, 1);
-        }
-    }
-}
-
-void Platform::DrawBitmap(int16_t x, int16_t y, const uint8_t* bmp) {
-    if(!bmp) return;
-
-    uint8_t w = bmp[0];
-    uint8_t h = bmp[1];
-    const uint8_t* data = bmp + 2;
-
-    uint8_t pages = (h + 7) >> 3;
-
-    for(uint8_t page = 0; page < pages; page++) {
-        for(uint8_t i = 0; i < w; i++) {
-            uint8_t byte = data[i + page * w];
-
-            for(uint8_t b = 0; b < 8; b++) {
-                uint8_t py = page * 8 + b;
-                if(py >= h) break;
-
-                if(byte & (1 << b)) {
-                    set_pixel(x + i, y + py, COLOUR_WHITE);
-                }
-            }
-        }
-    }
-}
-
-void Platform::DrawSolidBitmap(int16_t x, int16_t y, const uint8_t* bmp) {
-    if(!bmp) return;
-
-    uint8_t w = bmp[0];
-    uint8_t h = bmp[1];
-    const uint8_t* data = bmp + 2;
-
-    uint8_t pages = (h + 7) >> 3;
-
-    for(uint8_t page = 0; page < pages; page++) {
-        for(uint8_t i = 0; i < w; i++) {
-            uint8_t byte = data[i + page * w];
-
-            for(uint8_t b = 0; b < 8; b++) {
-                uint8_t py = page * 8 + b;
-                if(py >= h) break;
-
-                bool pixel = byte & (1 << b);
-                set_pixel(x + i, y + py, pixel ? COLOUR_WHITE : COLOUR_BLACK);
-            }
-        }
-    }
-}
-
-void Platform::DrawSprite(int16_t x, int16_t y, const uint8_t* bmp, uint8_t frame) {
-    if(!bmp) return;
-
-    uint8_t w = bmp[0];
-    uint8_t h = bmp[1];
-    uint8_t pages = (h + 7) >> 3;
-    uint16_t frame_size = w * pages;
-
-    const uint8_t* data = bmp + 2 + (uint32_t)frame * frame_size * 2;
-
-    for(uint8_t page = 0; page < pages; page++) {
-        for(uint8_t i = 0; i < w; i++) {
-            uint16_t idx = (i + page * w) * 2;
-            uint8_t s = data[idx + 0];
-            uint8_t m = data[idx + 1];
-
-            for(uint8_t b = 0; b < 8; b++) {
-                uint8_t py = page * 8 + b;
-                if(py >= h) break;
-
-                uint8_t bit = 1 << b;
-                if(m & bit) {
-                    set_pixel(x + i, y + py, (s & bit) ? COLOUR_WHITE : COLOUR_BLACK);
-                }
-            }
-        }
-    }
-}
-
-void Platform::DrawSprite(
-    int16_t x,
-    int16_t y,
-    const uint8_t* bmp,
-    const uint8_t* mask,
-    uint8_t frame,
-    uint8_t mask_frame) {
-    if(!bmp) return;
-
-    uint8_t w = bmp[0];
-    uint8_t h = bmp[1];
-    uint8_t pages = (h + 7) >> 3;
-    uint16_t frame_size = w * pages;
-
-    const uint8_t* sprite_data = bmp + 2 + (uint32_t)frame * frame_size;
-
-    if(mask) {
-        const uint8_t* mask_data = mask + (uint32_t)mask_frame * frame_size;
-
-        for(uint8_t page = 0; page < pages; page++) {
-            for(uint8_t i = 0; i < w; i++) {
-                uint8_t s = sprite_data[i + page * w];
-                uint8_t m = mask_data[i + page * w];
-
-                for(uint8_t b = 0; b < 8; b++) {
-                    uint8_t py = page * 8 + b;
-                    if(py >= h) break;
-
-                    uint8_t bit = 1 << b;
-                    if(m & bit) {
-                        set_pixel(x + i, y + py, (s & bit) ? COLOUR_WHITE : COLOUR_BLACK);
-                    }
-                }
-            }
-        }
-    } else {
-        const uint8_t* data = bmp + 2 + (uint32_t)frame * frame_size * 2;
-
-        for(uint8_t page = 0; page < pages; page++) {
-            for(uint8_t i = 0; i < w; i++) {
-                uint16_t idx = (i + page * w) * 2;
-                uint8_t s = data[idx + 0];
-                uint8_t m = data[idx + 1];
-
-                for(uint8_t b = 0; b < 8; b++) {
-                    uint8_t py = page * 8 + b;
-                    if(py >= h) break;
-
-                    uint8_t bit = 1 << b;
-                    if(m & bit) {
-                        set_pixel(x + i, y + py, (s & bit) ? COLOUR_WHITE : COLOUR_BLACK);
-                    }
-                }
-            }
-        }
-    }
-}
 
 // ---------------- Fast convert (page buffer -> XBM) ----------------
-//
-// dst: XBM buffer (строки, ширина 128 => 16 байт/строку)
-// screen: page-формат (как у тебя): idx = x + page*128, бит = y%8
-//
 static void convert_screen_to_xbm_into(const uint8_t* screen, uint8_t* dst) {
     constexpr int XBM_STRIDE = DISPLAY_WIDTH / 8;
     for(int page = 0; page < DISPLAY_HEIGHT / 8; page++) {
@@ -460,114 +140,14 @@ static void convert_screen_to_xbm_into(const uint8_t* screen, uint8_t* dst) {
     }
 }
 
-// ---------------- Callbacks ----------------
-
-static void timer_callback(void* ctx) {
-    FlipperState* state = (FlipperState*)ctx;
-    if(!state) return;
-    if(state->in_timer) return;
-    state->in_timer = true;
-    uint32_t now = furi_get_tick();
-    uint32_t delta_ticks = now - state->last_tick;
-    state->last_tick = now;
-
-    int16_t delta_ms = (int16_t)(delta_ticks * 1000 / furi_kernel_get_tick_frequency());
-    state->tick_accum += delta_ms;
-
-    if(state->tick_accum > FRAME_TIME_MS * MAX_FRAME_SKIP) {
-        state->tick_accum = FRAME_TIME_MS;
-    }
-
-    if(furi_mutex_acquire(state->game_mutex, 0) != FuriStatusOk) {
-        state->in_timer = false;
-        return;
-    }
-
-    bool did_tick = false;
-    while(state->tick_accum >= FRAME_TIME_MS) {
-        state->tick_accum -= FRAME_TIME_MS;
-        game_loop_tick();
-        did_tick = true;
-    }
-
-    bool need_draw = did_tick || state->game_updated;
-    if(need_draw) {
-        state->game_updated = false;
-    }
-
-    furi_mutex_release(state->game_mutex);
-    if(need_draw) {
-        uint8_t* front = (uint8_t*)state->xbm_front;
-        uint8_t* back = (front == state->xbm_a) ? state->xbm_b : state->xbm_a;
-        convert_screen_to_xbm_into(state->screen_buffer, back);
-        if(furi_mutex_acquire(state->swap_mutex, 0) == FuriStatusOk) {
-            state->xbm_front = back;
-            furi_mutex_release(state->swap_mutex);
-        }
-    }
-    state->in_timer = false;
-}
-
-static void input_callback(InputEvent* event, void* ctx) {
-    FlipperState* state = (FlipperState*)ctx;
-    if(!state || !event) return;
-    furi_mutex_acquire(state->game_mutex, FuriWaitForever);
-    if(event->type == InputTypePress || event->type == InputTypeRepeat) {
-        switch(event->key) {
-        case InputKeyUp:
-            state->input_state |= INPUT_UP;
-            break;
-        case InputKeyDown:
-            state->input_state |= INPUT_DOWN;
-            break;
-        case InputKeyLeft:
-            state->input_state |= INPUT_LEFT;
-            break;
-        case InputKeyRight:
-            state->input_state |= INPUT_RIGHT;
-            break;
-        case InputKeyOk:
-            state->input_state |= INPUT_B;
-            break;
-        case InputKeyBack:
-            state->input_state |= INPUT_A;
-            break;
-        default:
-            break;
-        }
-    } else if(event->type == InputTypeRelease) {
-        switch(event->key) {
-        case InputKeyUp:
-            state->input_state &= ~INPUT_UP;
-            break;
-        case InputKeyDown:
-            state->input_state &= ~INPUT_DOWN;
-            break;
-        case InputKeyLeft:
-            state->input_state &= ~INPUT_LEFT;
-            break;
-        case InputKeyRight:
-            state->input_state &= ~INPUT_RIGHT;
-            break;
-        case InputKeyOk:
-            state->input_state &= ~INPUT_B;
-            break;
-        case InputKeyBack:
-            state->input_state &= ~INPUT_A;
-            break;
-        default:
-            break;
-        }
-    }
-
-    furi_mutex_release(state->game_mutex);
-}
-
+// ---------------- Render callback (GUI thread) ----------------
 static void render_callback(Canvas* canvas, void* ctx) {
     FlipperState* state = (FlipperState*)ctx;
     if(!state || !canvas) return;
+
     const uint8_t* frame;
 
+    // Стараемся взять swap_mutex, но если не получилось — читаем без него
     if(furi_mutex_acquire(state->swap_mutex, 0) == FuriStatusOk) {
         frame = (const uint8_t*)state->xbm_front;
         furi_mutex_release(state->swap_mutex);
@@ -578,8 +158,43 @@ static void render_callback(Canvas* canvas, void* ctx) {
     canvas_draw_xbm(canvas, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, frame);
 }
 
-// ---------------- App entry ----------------
+// ---------------- Render timer: только шлёт событие ----------------
+static void render_timer_callback(void* ctx) {
+    FlipperState* state = (FlipperState*)ctx;
+    if(!state || !state->queue) return;
 
+    AppEvent ev = EvRenderTick;
+
+    // НЕ блокируемся: если очередь заполнена — пропустим тик рендера
+    // (это ок: мы не хотим душить систему)
+    furi_message_queue_put(state->queue, &ev, 0);
+}
+
+// ---------------- Game thread: фиксированный тик 100 Гц, без конвертации ----------------
+static int32_t game_thread_fn(void* ctx) {
+    FlipperState* state = (FlipperState*)ctx;
+    if(!state) return 0;
+
+    const uint32_t hz = furi_kernel_get_tick_frequency();
+    const uint32_t period_ticks = (TARGET_FRAMERATE > 0) ? (hz / TARGET_FRAMERATE) : 1;
+    uint32_t next = furi_get_tick();
+
+    while(!state->exit_requested) {
+        // Ровный периодический тик без busy-loop
+        next += (period_ticks > 0 ? period_ticks : 1);
+        furi_delay_until_tick(next);
+
+        // Игровая логика под мьютексом, чтобы не рвать screen_buffer
+        furi_mutex_acquire(state->game_mutex, FuriWaitForever);
+        game_loop_tick();
+        state->frame_dirty = true;
+        furi_mutex_release(state->game_mutex);
+    }
+
+    return 0;
+}
+
+// ---------------- App entry ----------------
 extern "C" int32_t mybl_app(void* p) {
     UNUSED(p);
 
@@ -589,56 +204,128 @@ extern "C" int32_t mybl_app(void* p) {
 
     g_state->game_mutex = furi_mutex_alloc(FuriMutexTypeNormal);
     g_state->swap_mutex = furi_mutex_alloc(FuriMutexTypeNormal);
-    if(!g_state->game_mutex || !g_state->swap_mutex) {
-        if(g_state->game_mutex) furi_mutex_free(g_state->game_mutex);
+    g_state->queue = furi_message_queue_alloc(8, sizeof(AppEvent)); // маленькая очередь событий
+
+    if(!g_state->game_mutex || !g_state->swap_mutex || !g_state->queue) {
+        if(g_state->queue) furi_message_queue_free(g_state->queue);
         if(g_state->swap_mutex) furi_mutex_free(g_state->swap_mutex);
+        if(g_state->game_mutex) furi_mutex_free(g_state->game_mutex);
         free(g_state);
         g_state = NULL;
         return -1;
     }
 
-    g_state->audio_enabled = false;
-    g_state->last_tick = furi_get_tick();
-    g_state->tick_accum = 0;
-    g_state->game_updated = true;
-    g_state->in_timer = false;
+    g_state->exit_requested = false;
+    g_state->frame_dirty = true;
+
+    memset(g_state->screen_buffer, 0x00, BUFFER_SIZE);
     memset(g_state->xbm_a, 0x00, BUFFER_SIZE);
     memset(g_state->xbm_b, 0x00, BUFFER_SIZE);
     g_state->xbm_front = g_state->xbm_a;
 
+    // Первичная конвертация пустого буфера
     convert_screen_to_xbm_into(g_state->screen_buffer, (uint8_t*)g_state->xbm_front);
 
+    // Arduboy init
+    arduboy.begin(g_state->screen_buffer, &g_state->input_state, g_state->game_mutex);
+    Sprites::setArduboy(&arduboy);
+
+    // Viewport
     ViewPort* view_port = view_port_alloc();
     view_port_draw_callback_set(view_port, render_callback, g_state);
-    view_port_input_callback_set(view_port, input_callback, g_state);
+    view_port_input_callback_set(view_port, Arduboy2Base::FlipperInputCallback, arduboy.inputContext());
 
     Gui* gui = (Gui*)furi_record_open(RECORD_GUI);
     gui_add_view_port(gui, view_port, GuiLayerFullscreen);
 
+    // Setup game once
     furi_mutex_acquire(g_state->game_mutex, FuriWaitForever);
     game_setup();
-    g_state->game_updated = true;
+    g_state->frame_dirty = true;
     furi_mutex_release(g_state->game_mutex);
 
-    g_state->timer = furi_timer_alloc(timer_callback, FuriTimerTypePeriodic, g_state);
-    furi_timer_start(g_state->timer, furi_kernel_get_tick_frequency() / TARGET_FRAMERATE);
+    // Start game thread (physics)
+    g_state->game_thread = furi_thread_alloc();
+    furi_thread_set_name(g_state->game_thread, "ArduboyGame");
+    furi_thread_set_stack_size(g_state->game_thread, 4096);
+    furi_thread_set_context(g_state->game_thread, g_state);
+    furi_thread_set_callback(g_state->game_thread, game_thread_fn);
+    furi_thread_start(g_state->game_thread);
 
+    // Start render timer: только событие, без конвертации
+    g_state->render_timer = furi_timer_alloc(render_timer_callback, FuriTimerTypePeriodic, g_state);
+    const uint32_t tick_hz = furi_kernel_get_tick_frequency();
+    uint32_t render_period = 1;
+    if(DISPLAY_FPS > 0) {
+        render_period = tick_hz / DISPLAY_FPS;
+        if(render_period == 0) render_period = 1;
+    }
+    furi_timer_start(g_state->render_timer, render_period);
+
+    // ---------- UI loop: блокируется на очереди ----------
     while(!g_state->exit_requested) {
-        view_port_update(view_port);
-        furi_delay_ms(100); // не трогаем
+        AppEvent ev;
+        FuriStatus st = furi_message_queue_get(g_state->queue, &ev, FuriWaitForever);
+        if(st != FuriStatusOk) continue;
+
+        if(ev == EvExit) {
+            g_state->exit_requested = true;
+            break;
+        }
+
+        if(ev == EvRenderTick) {
+            // Если логика ничего не меняла — можно вообще пропустить
+            if(!g_state->frame_dirty) {
+                // даже без конвертации можно иногда делать update, но обычно не нужно
+                continue;
+            }
+
+            // Конвертация ТОЛЬКО НА DISPLAY_FPS (10..30 Гц)
+            // И под game_mutex, чтобы screen_buffer не рвался
+            furi_mutex_acquire(g_state->game_mutex, FuriWaitForever);
+            g_state->frame_dirty = false;
+
+            uint8_t* front = (uint8_t*)g_state->xbm_front;
+            uint8_t* back  = (front == g_state->xbm_a) ? g_state->xbm_b : g_state->xbm_a;
+
+            convert_screen_to_xbm_into(g_state->screen_buffer, back);
+            furi_mutex_release(g_state->game_mutex);
+
+            // swap front buffer
+            furi_mutex_acquire(g_state->swap_mutex, FuriWaitForever);
+            g_state->xbm_front = back;
+            furi_mutex_release(g_state->swap_mutex);
+
+            // попросили GUI перерисовать viewport (это НЕ рисование, а запрос)
+            view_port_update(view_port);
+        }
     }
 
-    Platform::SetAudioEnabled(false);
+    // ---------- Shutdown ----------
+    arduboy_tone_sound_system_deinit();
 
-    furi_timer_stop(g_state->timer);
-    furi_timer_free(g_state->timer);
+    if(g_state->render_timer) {
+        furi_timer_stop(g_state->render_timer);
+        furi_timer_free(g_state->render_timer);
+        g_state->render_timer = NULL;
+    }
+
+    if(g_state->game_thread) {
+        // Сигналим выход и ждём поток
+        g_state->exit_requested = true;
+        furi_thread_join(g_state->game_thread);
+        furi_thread_free(g_state->game_thread);
+        g_state->game_thread = NULL;
+    }
 
     gui_remove_view_port(gui, view_port);
     view_port_free(view_port);
     furi_record_close(RECORD_GUI);
 
-    furi_mutex_free(g_state->swap_mutex);
-    furi_mutex_free(g_state->game_mutex);
+    if(g_state->queue) furi_message_queue_free(g_state->queue);
+    if(g_state->swap_mutex) furi_mutex_free(g_state->swap_mutex);
+    if(g_state->game_mutex) furi_mutex_free(g_state->game_mutex);
+
     free(g_state);
     g_state = NULL;
 
