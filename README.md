@@ -8,11 +8,7 @@ Like in the classic game, each ghost has distinct personality: one targets direc
 - **OK Button**: Restart game (when game over or won)
 - **Back Button**: Pauses game or (when held) exits
 
-Further features:
-- Score tracking and lives system
-- Animated sprites for player and ghosts
-
-Scores are as follows:
+## Scores
 - 10 points for normal dot
 - 50 for power pills
 - 200 for eating ghosts
