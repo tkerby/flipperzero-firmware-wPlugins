@@ -543,16 +543,36 @@ RfidxStatus amiibo_prepare_blank_tag(MfUltralightData* tag_data) {
     uint8_t* raw = amiibo_bytes(tag_data);
     memset(raw, 0, AMIIBO_TOTAL_BYTES);
 
-    static const uint8_t capability_defaults[4] = {0xE1, 0x10, 0x0F, 0x00};
+    static const uint8_t capability_defaults[4] = {0xE1, 0x10, 0x3E, 0x00};
     memcpy(raw + AMIIBO_OFFSET_CAPABILITY, capability_defaults, sizeof(capability_defaults));
-    raw[9] = 0x48;
-    raw[10] = 0x00;
-    raw[11] = 0x00;
+    static const uint8_t otp_defaults[4] = {0x03, 0x00, 0xFE, 0x00};
+    memcpy(tag_data->page[4].data, otp_defaults, sizeof(otp_defaults));
+    static const uint8_t dynamic_lock_defaults[4] = {0x00, 0x00, 0x00, 0xBD};
+    size_t dynamic_lock_page = tag_data->pages_total - 5;
+    memcpy(
+        tag_data->page[dynamic_lock_page].data,
+        dynamic_lock_defaults,
+        sizeof(dynamic_lock_defaults));
+    raw[AMIIBO_OFFSET_RESERVED] = 0x00;
 
     RfidxStatus status = amiibo_randomize_uid(raw);
     if(status != RFIDX_OK) {
         return status;
     }
+
+    MfUltralightConfigPages* config =
+        (MfUltralightConfigPages*)(raw + AMIIBO_OFFSET_CONFIG);
+    memset(config, 0, sizeof(*config));
+    config->mirror.value = 0x04;
+    config->rfui1 = 0x00;
+    config->mirror_page = 0x00;
+    config->auth0 = 0xFF;
+    config->access.value = 0x00;
+    config->vctid = 0x05;
+    memset(config->rfui2, 0x00, sizeof(config->rfui2));
+    memset(config->password.data, 0xFF, sizeof(config->password.data));
+    memset(config->pack.data, 0x00, sizeof(config->pack.data));
+    memset(config->rfui3, 0x00, sizeof(config->rfui3));
 
     size_t password_page = tag_data->pages_total - 2;
     size_t pack_page = tag_data->pages_total - 1;

@@ -1421,8 +1421,20 @@ static bool ami_tool_info_write_password_pages(
 }
 
 static NfcCommand amiibo_emulation_cb(NfcGenericEvent event, void* context) {
-    (void)event;
-    (void)context;
+    AmiToolApp* app = context;
+
+    if(event.protocol == NfcProtocolInvalid && event.event_data && app) {
+        const NfcEvent* nfc_event = event.event_data;
+        if((nfc_event->type == NfcEventTypeFieldOff) && app->amiibo_link_active &&
+           app->amiibo_link_waiting_for_completion) {
+            app->amiibo_link_waiting_for_completion = false;
+            app->amiibo_link_completion_pending = false;
+            app->amiibo_link_last_change_tick = 0;
+            view_dispatcher_send_custom_event(
+                app->view_dispatcher, AmiToolEventAmiiboLinkWriteComplete);
+        }
+    }
+
     return NfcCommandContinue; // keep the listener alive
 }
 

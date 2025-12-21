@@ -144,6 +144,7 @@ typedef enum {
     AmiToolEventInfoWriteCancelled,
     AmiToolEventUsagePrevPage,
     AmiToolEventUsageNextPage,
+    AmiToolEventAmiiboLinkWriteComplete,
 } AmiToolCustomEvent;
 
 typedef enum {
@@ -240,6 +241,18 @@ struct AmiToolApp {
     FuriString* saved_page_display[AMI_TOOL_SAVED_MAX_PAGE_ITEMS];
     FuriString* saved_page_paths[AMI_TOOL_SAVED_MAX_PAGE_ITEMS];
     FuriString* saved_page_ids[AMI_TOOL_SAVED_MAX_PAGE_ITEMS];
+
+    bool amiibo_link_active;
+    bool amiibo_link_waiting_for_completion;
+    uint32_t amiibo_link_initial_hash;
+    uint32_t amiibo_link_last_hash;
+    uint32_t amiibo_link_last_change_tick;
+    bool amiibo_link_completion_pending;
+    uint8_t amiibo_link_current_auth0;
+    uint8_t amiibo_link_pending_auth0;
+    bool amiibo_link_auth0_override_active;
+    bool amiibo_link_access_snapshot_valid;
+    uint8_t amiibo_link_access_snapshot[MF_ULTRALIGHT_PAGE_SIZE];
 };
 
 /* Scene handlers table */

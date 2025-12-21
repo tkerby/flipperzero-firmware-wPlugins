@@ -116,6 +116,18 @@ AmiToolApp* ami_tool_alloc(void) {
         app->saved_page_ids[i] = furi_string_alloc();
     }
 
+    app->amiibo_link_active = false;
+    app->amiibo_link_waiting_for_completion = false;
+    app->amiibo_link_initial_hash = 0;
+    app->amiibo_link_last_hash = 0;
+    app->amiibo_link_last_change_tick = 0;
+    app->amiibo_link_completion_pending = false;
+    app->amiibo_link_current_auth0 = 0xFF;
+    app->amiibo_link_pending_auth0 = 0xFF;
+    app->amiibo_link_auth0_override_active = false;
+    app->amiibo_link_access_snapshot_valid = false;
+    memset(app->amiibo_link_access_snapshot, 0, sizeof(app->amiibo_link_access_snapshot));
+
     return app;
 }
 
