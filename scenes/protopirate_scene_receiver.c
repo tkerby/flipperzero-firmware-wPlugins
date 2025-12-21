@@ -2,7 +2,6 @@
 #include "../protopirate_app_i.h"
 #include "../helpers/protopirate_storage.h"
 #include <notification/notification_messages.h>
-#include <furi_hal_rtc.h>
 
 #define TAG                     "ProtoPirateSceneRx"
 #define KIA_DISPLAY_HISTORY_MAX 50
@@ -17,6 +16,9 @@ static void protopirate_scene_receiver_update_statusbar(void* context) {
     FuriString* history_stat_str = furi_string_alloc();
 
     protopirate_get_frequency_modulation(app, frequency_str, modulation_str);
+
+    // Check if using external radio
+    bool is_external = radio_device_loader_is_external(app->txrx->radio_device);
 
     // Show auto-save indicator in the history count area
     if(app->auto_save) {
@@ -33,12 +35,13 @@ static void protopirate_scene_receiver_update_statusbar(void* context) {
             KIA_DISPLAY_HISTORY_MAX);
     }
 
+    // Pass actual external radio status
     protopirate_view_receiver_add_data_statusbar(
         app->protopirate_receiver,
         furi_string_get_cstr(frequency_str),
         furi_string_get_cstr(modulation_str),
         furi_string_get_cstr(history_stat_str),
-        false);
+        is_external);  // <-- Now correctly passes external status
 
     furi_string_free(frequency_str);
     furi_string_free(modulation_str);
@@ -90,7 +93,7 @@ static void protopirate_scene_receiver_callback(
                     furi_string_set_str(protocol, "Unknown");
                 }
                 
-                // Clean protocol name for filename (replace / with _)
+                // Clean protocol name for filename
                 furi_string_replace_all(protocol, "/", "_");
                 furi_string_replace_all(protocol, " ", "_");
                 
@@ -98,7 +101,6 @@ static void protopirate_scene_receiver_callback(
                 if(protopirate_storage_save_capture(
                     ff, furi_string_get_cstr(protocol), saved_path)) {
                     FURI_LOG_I(TAG, "Auto-saved: %s", furi_string_get_cstr(saved_path));
-                    // Double vibro to indicate auto-save
                     notification_message(app->notifications, &sequence_double_vibro);
                 } else {
                     FURI_LOG_E(TAG, "Auto-save failed");
@@ -127,7 +129,13 @@ static void protopirate_scene_receiver_callback(
 void protopirate_scene_receiver_on_enter(void* context) {
     ProtoPirateApp* app = context;
 
+    // Log which radio device is being used
+    bool is_external = radio_device_loader_is_external(app->txrx->radio_device);
+    const char* device_name = subghz_devices_get_name(app->txrx->radio_device);
+    
     FURI_LOG_I(TAG, "=== ENTERING RECEIVER SCENE ===");
+    FURI_LOG_I(TAG, "Radio device: %s", device_name ? device_name : "NULL");
+    FURI_LOG_I(TAG, "Is External: %s", is_external ? "YES" : "NO");
     FURI_LOG_I(TAG, "Frequency: %lu Hz", app->txrx->preset->frequency);
     FURI_LOG_I(TAG, "Modulation: %s", furi_string_get_cstr(app->txrx->preset->name));
     FURI_LOG_I(TAG, "Auto-save: %s", app->auto_save ? "ON" : "OFF");
@@ -222,10 +230,20 @@ bool protopirate_scene_receiver_on_event(void* context, SceneManagerEvent event)
             protopirate_scene_receiver_update_statusbar(app);
         }
 
-        // Update RSSI
+        // Update RSSI from the correct radio device
         if(app->txrx->txrx_state == ProtoPirateTxRxStateRx) {
             float rssi = subghz_devices_get_rssi(app->txrx->radio_device);
             protopirate_view_receiver_set_rssi(app->protopirate_receiver, rssi);
+            
+            // Debug: Log RSSI periodically (every ~5 seconds)
+            static uint8_t rssi_log_counter = 0;
+            if(++rssi_log_counter >= 50) {
+                bool is_ext = radio_device_loader_is_external(app->txrx->radio_device);
+                FURI_LOG_D(TAG, "RSSI: %.1f dBm (%s)", 
+                    (double)rssi, 
+                    is_ext ? "EXT" : "INT");
+                rssi_log_counter = 0;
+            }
         }
 
         consumed = true;
