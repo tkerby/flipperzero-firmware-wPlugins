@@ -35,5 +35,5 @@ App(
     fap_category="Tools",
 
     # Version number
-    fap_version=(0,1,0)
+    fap_version=(0,2,0)
 )
