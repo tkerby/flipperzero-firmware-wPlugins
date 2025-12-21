@@ -10,5 +10,10 @@ Like in the classic game, each ghost has distinct personality: one targets direc
 - **OK Button**: Restart game (when game over or won)
 - **Back Button**: Exit game
 
+Scores are as follows:
+- 10 points for normal dot
+- 50 for power pills
+- 200 for eating ghosts
+
 ## Version history
 See [changelog.md](changelog.md)
