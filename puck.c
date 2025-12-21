@@ -29,8 +29,9 @@
 
 // Game constants
 #define MAX_GHOSTS 2
-#define POWER_DURATION 150  // Ticks (about 5 seconds at 30 FPS)
-#define GHOST_SPEED 10      // Move every N ticks (higher number means slower)
+#define POWER_DURATION 180  // Ticks (150 ticks is about 5 seconds at 30 FPS)
+#define GHOST_SPEED 12      // Move every N ticks (higher number means slower)
+#define PREY_SPEED 18       // Move every N ticks when ghosts are eatable (slower)
 #define ANIMATION_SPEED 5   // Animation frame every N ticks
 
 // Patrol ghost behavior
@@ -101,12 +102,32 @@ static const uint8_t initial_conn[MAZE_HEIGHT][MAZE_WIDTH] = {
     {5,  6, 11, 11, 10, 12,  6, 10, 11, 11, 12,  5},
     {5,  7, 14, 10, 14, 15, 15, 14, 10, 14, 13,  5},
     {7, 13,  5,  2, 13,  3,  9,  7,  8,  5,  7, 13},
-    {5,  5,  3, 14, 15, 10, 10, 15, 14,  9,  5,  5},
-    {5,  3, 14, 10, 11, 12,  6, 11, 10, 14,  9,  5},
-    {2, 10, 10, 10, 10, 11, 11, 10, 10, 10, 10,  8},
+    {5,  5,  3, 10, 15, 10, 10, 15, 10,  9,  5,  5},
+    {5,  3, 10, 10, 11, 12,  6, 11, 10, 10,  9,  5},
+    {3, 10, 10, 10, 10, 11, 11, 10, 10, 10, 10,  9},
 };
+/* Decimal | Binary | Directions allowed (also in words)
+ * --------+--------+-------------------------------------------
+ *   0     | 0000   | none       (unreachable / wall)
+ *   1     | 0001   | N
+ *   2     | 0010   | E
+ *   3     | 0011   | N, E       (bottom left corner)
+ *   4     | 0100   | S
+ *   5     | 0101   | N, S       (vertical corridor)
+ *   6     | 0110   | E, S       (top left corner)
+ *   7     | 0111   | N, E, S    (T-intersection left closed)
+ *   8     | 1000   | W
+ *   9     | 1001   | N, W       (bottom right corner)
+ *  10     | 1010   | E, W       (horizontal corridor)
+ *  11     | 1011   | N, E, W    (T-intersection bottom closed)
+ *  12     | 1100   | S, W       (top right corner)
+ *  13     | 1101   | N, S, W    (T-intersection right closed)
+ *  14     | 1110   | E, S, W    (T-intersection top closed)
+ *  15     | 1111   | N, E, S, W (4-way intersection)
+*/
 
-// Collectible pellets
+// Collectible pellets for the maze. NB: These are logical cells, not pixels!
+// 0 = no pellet, 1 = normal dot, 2 = power pill
 static const uint8_t initial_pellets[MAZE_HEIGHT][MAZE_WIDTH] = {
     {2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2},
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
@@ -116,6 +137,7 @@ static const uint8_t initial_pellets[MAZE_HEIGHT][MAZE_WIDTH] = {
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
     {2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2},
 };
+
 
 // Check if movement is allowed in a direction
 static bool can_move(GameContext* ctx, uint8_t x, uint8_t y, Direction dir) {
@@ -166,6 +188,60 @@ static uint8_t count_dots(GameContext* ctx) {
         }
     }
     return count;
+}
+
+// Check if maze connectivity is consistent (bidirectional)
+// Returns true if consistent, false if errors found (logs to console)
+static bool check_maze_consistency(void) {
+    bool consistent = true;
+    
+    for(uint8_t y = 0; y < MAZE_HEIGHT; y++) {
+        for(uint8_t x = 0; x < MAZE_WIDTH; x++) {
+            uint8_t conn = initial_conn[y][x];
+            
+            // Check NORTH connection
+            if((conn & DIR_NORTH) && y > 0) {
+                if(!(initial_conn[y-1][x] & DIR_SOUTH)) {
+                    FURI_LOG_E("MAZE", "Inconsistency at (%d,%d): has NORTH but (%d,%d) lacks SOUTH", 
+                               x, y, x, y-1);
+                    consistent = false;
+                }
+            }
+            
+            // Check SOUTH connection
+            if((conn & DIR_SOUTH) && y < MAZE_HEIGHT - 1) {
+                if(!(initial_conn[y+1][x] & DIR_NORTH)) {
+                    FURI_LOG_E("MAZE", "Inconsistency at (%d,%d): has SOUTH but (%d,%d) lacks NORTH", 
+                               x, y, x, y+1);
+                    consistent = false;
+                }
+            }
+            
+            // Check EAST connection
+            if((conn & DIR_EAST) && x < MAZE_WIDTH - 1) {
+                if(!(initial_conn[y][x+1] & DIR_WEST)) {
+                    FURI_LOG_E("MAZE", "Inconsistency at (%d,%d): has EAST but (%d,%d) lacks WEST", 
+                               x, y, x+1, y);
+                    consistent = false;
+                }
+            }
+            
+            // Check WEST connection
+            if((conn & DIR_WEST) && x > 0) {
+                if(!(initial_conn[y][x-1] & DIR_EAST)) {
+                    FURI_LOG_E("MAZE", "Inconsistency at (%d,%d): has WEST but (%d,%d) lacks EAST", 
+                               x, y, x-1, y);
+                    consistent = false;
+                }
+            }
+        }
+    }
+    
+    if(consistent) {
+        FURI_LOG_I("MAZE", "Maze connectivity is consistent!");
+    }
+    
+    return consistent;
 }
 
 // Initialize game
@@ -382,8 +458,11 @@ static void game_update(GameContext* ctx) {
     }
     
     // Update ghosts
-    if(ctx->tick % GHOST_SPEED == 0) {
-        for(int i = 0; i < MAX_GHOSTS; i++) {
+    for(int i = 0; i < MAX_GHOSTS; i++) {
+        // Use slower speed when vulnerable
+        uint8_t speed = ctx->ghosts[i].vulnerable ? PREY_SPEED : GHOST_SPEED;
+        
+        if(ctx->tick % speed == 0) {
             update_ghost(ctx, &ctx->ghosts[i], i);
         }
     }
@@ -423,9 +502,9 @@ static void draw_entity(Canvas* canvas, Entity* e, const Icon* icon) {
 
 // Draw modal dialog box with text
 static void draw_simple_modal(Canvas* canvas, const char* text) {
-    const int box_w = 78;
+    const int box_w = 68;
     const int box_h = 20;
-    const int box_x = (128 - box_w) / 2;
+    const int box_x = (9 * MAZE_WIDTH - box_w) / 2;
     const int box_y = 20;
     // White filled rectangle
     canvas_set_color(canvas, ColorWhite);
@@ -435,7 +514,7 @@ static void draw_simple_modal(Canvas* canvas, const char* text) {
     canvas_draw_frame(canvas, box_x, box_y, box_w, box_h);
     // Text inside
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str(canvas, box_x + 8, box_y + 14, text);
+    canvas_draw_str(canvas, box_x + 2, box_y + 14, text);
 }
 
 // Render callback
@@ -490,10 +569,18 @@ static void render_callback(Canvas* canvas, void* ctx_void) {
     }
     
     // Draw Score
-	canvas_draw_str_aligned(canvas, 99, 32, AlignLeft, AlignBottom, "Score:");	
+	canvas_draw_str_aligned(canvas, 99, 31, AlignLeft, AlignBottom, "Score:");	
     char buf[32];
     snprintf(buf, sizeof(buf), "%05lu", ctx->score);
-    canvas_draw_str(canvas, 99, 40, buf);
+    canvas_draw_str(canvas, 99, 39, buf);
+	
+    // Draw power-up countdown (if active)
+    if(ctx->power_timer > 0) {
+        uint8_t seconds = (ctx->power_timer + 29) / 30;  // Round up
+        snprintf(buf, sizeof(buf), "P: %u s", seconds);
+        canvas_draw_str(canvas, 99, 47, buf);
+    }
+	
     
     // Draw lives (always show 3 hearts: full for remaining lives, empty for lost)
     for(uint8_t i = 0; i < 3; i++) {
@@ -503,9 +590,11 @@ static void render_callback(Canvas* canvas, void* ctx_void) {
             canvas_draw_icon(canvas, 99 + i * 8, 15, &I_heart_7x7);
         }
     }
+	// Version info
+    canvas_draw_str_aligned(canvas, 99, 55, AlignLeft, AlignBottom, "v0.2");    
 	// Draw navigation hint
 	canvas_draw_icon(canvas, 121, 57, &I_back);
-	canvas_draw_str_aligned(canvas, 121, 63, AlignRight, AlignBottom, "Break");	
+	canvas_draw_str_aligned(canvas, 121, 63, AlignRight, AlignBottom, "Pause");	
 	
     // Draw game state messages
     if(ctx->state == STATE_PAUSED) {
@@ -516,25 +605,16 @@ static void render_callback(Canvas* canvas, void* ctx_void) {
         elements_button_center(canvas, "OK");
     } else if(ctx->state == STATE_GAME_OVER) {
         draw_simple_modal(canvas, "GAME OVER");
-        // Show final score below modal
-        canvas_set_font(canvas, FontSecondary);
-        snprintf(buf, sizeof(buf), "Score: %lu", ctx->score);
-        canvas_draw_str_aligned(canvas, 64, 45, AlignCenter, AlignTop, buf);
-        elements_button_center(canvas, "OK");
+        elements_button_center(canvas, "Restart");
     } else if(ctx->state == STATE_WIN) {
         draw_simple_modal(canvas, "YOU WIN!");
-        // Show final score below modal
-        canvas_set_font(canvas, FontSecondary);
-        snprintf(buf, sizeof(buf), "Score: %lu", ctx->score);
-        canvas_draw_str_aligned(canvas, 64, 45, AlignCenter, AlignTop, buf);
-        elements_button_center(canvas, "OK");
+        elements_button_center(canvas, "Restart");
     }
     
     furi_mutex_release(ctx->mutex);
 }
 
 // Input callback
-// Button behavior:
 // - Back short press: Pause/unpause
 // - Back long press: Exit game
 // - OK: Resume from pause, continue after death, restart after game over/win
@@ -620,8 +700,10 @@ static void timer_callback(void* ctx_void) {
 // Main entry point
 int32_t puckgirl_main(void* p) {
     UNUSED(p);
+    // Check maze consistency at startup
+    check_maze_consistency();
     
-    GameContext* ctx = malloc(sizeof(GameContext));
+	GameContext* ctx = malloc(sizeof(GameContext));
     ctx->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
     
     game_init(ctx);
