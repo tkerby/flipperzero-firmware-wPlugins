@@ -1,6 +1,5 @@
 App(
     appid="ami_tool",
-    version="0.1",
     name="Amiibo Toolkit",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="ami_tool_app",
@@ -13,4 +12,5 @@ App(
     fap_weburl="https://github.com/Firefox2100/flipper-amiibo-toolkit",
     fap_file_assets="files",
     fap_libs=["mbedtls"],
+    fap_version="0.1.0",
 )
