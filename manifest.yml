@@ -17,3 +17,5 @@ changelog: "@changelog.md"
 ## Unmodified screenshots from qFlipper
 screenshots:
   - screenshots/MainScreen.png
+  - screenshots/MitziPuckgirlPower.png
+  - screenshots/MitziPuckgirlWin.png
