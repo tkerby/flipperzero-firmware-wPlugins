@@ -15,7 +15,7 @@
 #include "puck_icons.h" // Custom icon definitions, header file is auto-magically generated
 
 // Maze configuration - defines the logical grid structure
-#define MAZE_WIDTH 15   // Number of cells horizontally
+#define MAZE_WIDTH 12   // Number of cells horizontally
 #define MAZE_HEIGHT 7   // Number of cells vertically
 #define CELL_PITCH 8    // Pixel pitch between corridor centers (1px wall + 7px corridor) 
 #define OFFSET_X 0      // Horizontal offset for maze rendering
@@ -486,8 +486,8 @@ static void update_ghost(GameData* game, Ghost* ghost, uint32_t tick) {
                         // target stays at pacgirl position
                     } else { // Far away, patrol corners
                         int corner = ((int)(tick / PATROL_CORNER_CYCLE_MS)) % 4;
-                        target_x = (corner & 1) ? 14.0f : 0.0f;
-                        target_y = (corner & 2) ? 6.0f : 0.0f;
+                        target_x = (corner & 1) ? (float)(MAZE_WIDTH - 1) : 0.0f;
+                        target_y = (corner & 2) ? (float)(MAZE_HEIGHT - 1): 0.0f;
                     }
                     break;
                 }
