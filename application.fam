@@ -1,5 +1,6 @@
 App(
     appid="ami_tool",
+    version="0.1",
     name="Amiibo Toolkit",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="ami_tool_app",
