@@ -4,6 +4,7 @@
 
 - Added multiple status display animations from @tototo31
 - Added IR Dazzler menu option
+- Added new commands
 
 ## v1.6.0
 
