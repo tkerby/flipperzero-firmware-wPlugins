@@ -25,12 +25,63 @@ typedef struct {
     FuriMessageQueue* input_queue;  // Queue for handling input events
     ViewPort* view_port;            // ViewPort for rendering UI
     Gui* gui;                       // GUI instance
-    uint8_t current_screen;        
+    uint8_t current_screen;
+    int selected_week_offset;       // Offset from current week (-1, 0, 1, etc.)
+    int selected_day;               // Selected day of week (0=Mon, 6=Sun)
 } AppState;
 
 // =============================================================================
 // HELPER FUNCTIONS
 // =============================================================================
+
+// Calculate absolute date from base date plus week offset
+void calculate_date_with_offset(DateTime* base_datetime, int week_offset, DateTime* result_datetime) {
+    // Days in each month
+    int days_in_month[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    
+    // Copy base date
+    result_datetime->year = base_datetime->year;
+    result_datetime->month = base_datetime->month;
+    result_datetime->day = base_datetime->day;
+    result_datetime->hour = base_datetime->hour;
+    result_datetime->minute = base_datetime->minute;
+    result_datetime->second = base_datetime->second;
+    result_datetime->weekday = base_datetime->weekday;
+    
+    // Add week offset (in days)
+    int day_offset = week_offset * 7;
+    int new_day = result_datetime->day + day_offset;
+    
+    // Adjust for month/year boundaries
+    while (new_day < 1 || new_day > days_in_month[result_datetime->month - 1]) {
+        // Check for leap year
+        if ((result_datetime->year % 4 == 0 && result_datetime->year % 100 != 0) || 
+            (result_datetime->year % 400 == 0)) {
+            days_in_month[1] = 29;
+        } else {
+            days_in_month[1] = 28;
+        }
+        
+        if (new_day < 1) {
+            result_datetime->month--;
+            if (result_datetime->month < 1) {
+                result_datetime->month = 12;
+                result_datetime->year--;
+            }
+            new_day += days_in_month[result_datetime->month - 1];
+        } else if (new_day > days_in_month[result_datetime->month - 1]) {
+            new_day -= days_in_month[result_datetime->month - 1];
+            result_datetime->month++;
+            if (result_datetime->month > 12) {
+                result_datetime->month = 1;
+                result_datetime->year++;
+            }
+        }
+    }
+    
+    result_datetime->day = new_day;
+}
+
 void get_week_days(int year, int month, int day, int week_offset, char out[7][4]) {
     // Simple day-of-week calculation using Zeller's congruence (modified for Monday=0)
     int m = month;
@@ -100,14 +151,19 @@ int get_iso_week_number(int year, int month, int day) {
 // =============================================================================
 // SCREEN DRAWING FUNCTIONS
 // =============================================================================
-static void draw_screen_splash(Canvas* canvas, DateTime* datetime) {
+static void draw_screen_splash(Canvas* canvas, DateTime* datetime, AppState* state) {
 	char buffer[64]; // buffer for string concatination
+	
+	// Calculate the reference date based on selected week offset
+	DateTime ref_datetime;
+	calculate_date_with_offset(datetime, state->selected_week_offset, &ref_datetime);
+	
 	canvas_draw_icon(canvas, 1, 1, &I_splash); // 51 is a pixel above the buttons
     canvas_draw_icon(canvas, 1, -1, &I_icon_10x10);
  	canvas_set_color(canvas, ColorBlack);
     canvas_set_font(canvas, FontPrimary);
-	// Display current date as title in bold font face
-    snprintf(buffer, sizeof(buffer), "Week of %04d-%02d-%02d",datetime->year, datetime->month, datetime->day);
+	// Display selected week date as title in bold font face
+    snprintf(buffer, sizeof(buffer), "Week of %04d-%02d-%02d", ref_datetime.year, ref_datetime.month, ref_datetime.day);
     canvas_draw_str_aligned(canvas, 13, 1, AlignLeft, AlignTop, buffer);
     canvas_set_font(canvas, FontSecondary);
 	// Write day names
@@ -116,77 +172,119 @@ static void draw_screen_splash(Canvas* canvas, DateTime* datetime) {
 		canvas_draw_str_aligned(canvas, 3 + i * 18, 12, AlignLeft, AlignTop, days[i]);
 	}
 	canvas_set_color(canvas, ColorBlack);
-	// Print previous week's day numbers
+	
+	// Print previous week's day numbers (relative to selected week)
 	char days_prev_week[7][4]; // output array to be populated by next function call
-	get_week_days(datetime->year, datetime->month, datetime->day, -1, days_prev_week);
+	get_week_days(ref_datetime.year, ref_datetime.month, ref_datetime.day, -1, days_prev_week);
 	for(int i = 0; i < 7; i++) {
 		canvas_draw_str_aligned(canvas, 18 + i*18, 22, AlignRight, AlignTop, days_prev_week[i]);
 	};
 	
-	// Print current week day numbers
+	// Print current/selected week day numbers
 	char days_current_week[7][4]; // output array to be populated by next function call
-	get_week_days(datetime->year, datetime->month, datetime->day, 0, days_current_week);
+	get_week_days(ref_datetime.year, ref_datetime.month, ref_datetime.day, 0, days_current_week);
+	
+	// Calculate actual current day position for indicator (if in this week)
+	int actual_current_col = -1;
+	if (state->selected_week_offset == 0) {
+		actual_current_col = (datetime->weekday + 6) % 7;  // Convert Sun=0 to Mon=0
+	}
+	
 	for(int i = 0; i < 7; i++) {
-		// Highlight current day with inverted colors
-		int highlight_col = (datetime->weekday + 6) % 7;  // Convert Sun=0 to Mon=0
-		if(i == highlight_col) {
+		// Draw cursor box for selected day
+		if(i == state->selected_day) {
 			canvas_draw_box(canvas, 2 + i*18, 30, 18, 11);  // Draw filled black box
 			canvas_set_color(canvas, ColorWhite);  // Switch to white for text
 		}
+		// Make actual current day bold (if different from cursor)
+		else if(i == actual_current_col) {
+			canvas_set_font(canvas, FontPrimary);  // Switch to bold font
+		}
+		
 		canvas_draw_str_aligned(canvas, 18 + i*18, 32, AlignRight, AlignTop, days_current_week[i]);
-		if(i == highlight_col) {
+		
+		if(i == state->selected_day) {
 			canvas_set_color(canvas, ColorBlack);  // Switch back to black
 		}
+		// Reset font if we made it bold
+		else if(i == actual_current_col) {
+			canvas_set_font(canvas, FontSecondary);  // Reset to normal font
+		}
 	}
-	// Print next week day numbers
+	
+	// Print next week day numbers (relative to selected week)
 	char days_next_week[7][4]; // output array
-	get_week_days(datetime->year, datetime->month, datetime->day, 1, days_next_week);
+	get_week_days(ref_datetime.year, ref_datetime.month, ref_datetime.day, 1, days_next_week);
 	for(int i = 0; i < 7; i++) {
 		canvas_draw_str_aligned(canvas, 18 + i*18, 42, AlignRight, AlignTop, days_next_week[i]);
 	};
+	
 	// Week number
-	int week_num = get_iso_week_number(datetime->year, datetime->month, datetime->day);
+	int week_num = get_iso_week_number(ref_datetime.year, ref_datetime.month, ref_datetime.day);
 	snprintf(buffer, sizeof(buffer), "Week# %02d", week_num);
 	canvas_draw_str_aligned(canvas, 1, 64, AlignLeft, AlignBottom, buffer);
+	
 	// Version info
-    canvas_draw_str_aligned(canvas, 128, 58, AlignRight, AlignBottom, "v0.1");    
+    canvas_draw_str_aligned(canvas, 128, 58, AlignRight, AlignBottom, "v0.2");    
+    
     // Draw button hints at bottom using elements library
     elements_button_center(canvas, "OK"); // for the OK button
 }
 
-static void draw_screen_weeks(Canvas* canvas, DateTime* datetime) {
-	char buffer[64]; // buffer for string concatination
+static void draw_screen_weeks(Canvas* canvas, DateTime* datetime, AppState* state) {
+	char buffer[64]; // buffer for string concatenation
+	
+	// Calculate the selected date
+	DateTime selected_datetime;
+	calculate_date_with_offset(datetime, state->selected_week_offset, &selected_datetime);
+	
+	// Get the start of the selected week
+	char days_selected_week[7][4];
+	get_week_days(selected_datetime.year, selected_datetime.month, selected_datetime.day, 0, days_selected_week);
+	
+	// Adjust to get the actual selected day's date
+	int selected_day_num = atoi(days_selected_week[state->selected_day]);
+	
+	canvas_set_color(canvas, ColorBlack);
     canvas_set_font(canvas, FontPrimary);
-	char days_current_week[7][4]; // output array to be populated by next function call
-	get_week_days(datetime->year, datetime->month, datetime->day, 0, days_current_week);
-	for(int i = 0; i < 7; i++) {
-		// Highlight current day with inverted colors
-		int highlight_col = (datetime->weekday + 6) % 7;  // Convert Sun=0 to Mon=0
-		if(i == highlight_col) {
-			canvas_draw_box(canvas, 2 + i*18, 1, 18, 11);  // Draw filled black box
-			canvas_set_color(canvas, ColorWhite);  // Switch to white for text
-		}
-		canvas_draw_str_aligned(canvas, 18 + i*18, 2, AlignRight, AlignTop, days_current_week[i]);
-		if(i == highlight_col) {
-			canvas_set_color(canvas, ColorBlack);  // Switch back to black
-		}
-	}	
-	canvas_draw_line(canvas, 0, 0, 127, 0);  // upper line of header
+	
+	// Draw title with selected date
+	snprintf(buffer, sizeof(buffer), "Plan for %s %04d-%02d-%02d", 
+	         days[state->selected_day], 
+	         selected_datetime.year, 
+	         selected_datetime.month, 
+	         selected_day_num);
+	canvas_draw_str_aligned(canvas, 64, 2, AlignCenter, AlignTop, buffer);
+	
+	// Draw header and footer lines
+	// canvas_draw_line(canvas, 0, 0, 127, 0);   // upper line of header
 	canvas_draw_line(canvas, 0, 11, 127, 11); // lower line of header
 	canvas_draw_line(canvas, 0, 63, 127, 63); // footer line
-	canvas_draw_line(canvas, 91, 0, 91, 63); // vertical weekend separator
-	// int dy = canvas_current_font_height(canvas);
-	int dy = 17;
-	for(uint8_t y = 11; y <= 61; y += dy) {
-		canvas_draw_line(canvas, 8, y, 127, y);
-	}
-	// Print month
-	canvas_set_font(canvas, FontSecondary);
-	snprintf(buffer, sizeof(buffer), "%04d-%02d",datetime->year, datetime->month);
-	canvas_set_font_direction(canvas, CanvasDirectionBottomToTop); // Set text rotation to 90 degrees 
-	canvas_draw_str(canvas, 7, 61, buffer);		
-	canvas_set_font_direction(canvas, CanvasDirectionLeftToRight); // Reset to normal text direction
 	
+	// Time slots header (X axis)
+	canvas_set_font(canvas, FontSecondary);
+	const char* time_slots[] = {"08", "10", "12", "14", "16", "18", "20"};
+	int slot_width = 19;
+	
+	for(int i = 0; i < 7; i++) {
+		int x = i * slot_width;
+		// Draw hours
+		canvas_draw_str(canvas, x, 20, time_slots[i]);
+		// Draw vertical grid lines
+		// if (i > 0) canvas_draw_line(canvas, x - 1, 11, x - 1, 63);
+	}
+	
+	// Draw horizontal time grid
+	int y_start = 25;
+	int row_height = 13;
+	for(int row = 0; row < 3; row++) {
+		int y = y_start + row * row_height;
+		canvas_draw_line(canvas, 0, y, 127, y);
+	}
+	
+	// Placeholder text for tasks/events
+	canvas_set_font(canvas, FontSecondary);
+	canvas_draw_str_aligned(canvas, 64, 28, AlignCenter, AlignTop, "No events available");
 }
 
 // =============================================================================
@@ -202,10 +300,10 @@ void draw_callback(Canvas* canvas, void* context) {
 	
     switch (state -> current_screen) {
 		case ScreenSplash: // Splash screen ===================================
-            draw_screen_splash(canvas, &datetime);
+            draw_screen_splash(canvas, &datetime, state);
 			break;	
 		case ScreenWeekView: // Week View ====================================
-            draw_screen_weeks(canvas, &datetime);
+            draw_screen_weeks(canvas, &datetime, state);
 			break;	
     }
 }
@@ -223,6 +321,14 @@ int32_t cal_weeks_main(void* p) {
   UNUSED(p);
   AppState app; // Application state struct
   app.current_screen = ScreenSplash;  // Start on splash screen
+  app.selected_week_offset = 0;       // Start with current week
+  app.selected_day = 0;               // Start with Monday
+  
+  // Initialize selected_day to current day
+  DateTime datetime;
+  furi_hal_rtc_get_datetime(&datetime);
+  app.selected_day = (datetime.weekday + 6) % 7;  // Convert Sun=0 to Mon=0
+  
   app.input_queue = furi_message_queue_alloc(8, sizeof(InputEvent));
   app.view_port = view_port_alloc(); // for rendering
   
@@ -240,47 +346,85 @@ int32_t cal_weeks_main(void* p) {
       furi_check(
           furi_message_queue_get(app.input_queue, &input, FuriWaitForever) == FuriStatusOk);
 			
-		
     // Handle button presses and holds based on selected screen
-    switch(input.key) {
-		case InputKeyUp:
-				break;
-		case InputKeyDown:
-		    break;
-		case InputKeyLeft:
-		case InputKeyRight:
-				break;
-		case InputKeyOk:
-				if (input.type == InputTypePress){
-					switch (app.current_screen) {
-						case ScreenSplash:
-							app.current_screen = ScreenWeekView;   
-						break;
-					}
-					break;
-				}
-				break;
-			case InputKeyBack:
-			default:
-				if((input.type == InputTypePress) && (app.current_screen = ScreenWeekView)){
-					app.current_screen = ScreenSplash;
-				};
-				if(input.type == InputTypeLong) {
-					exit_loop = 1;  // Exit app after long press
-				}
-				break;
-		}
-		// Exit main app loop if exit flag is set
-        if(exit_loop) break; 
-		// Trigger screen redraw
-		view_port_update(app.view_port);
+    if(input.type == InputTypePress) {
+        switch(input.key) {
+            case InputKeyUp:
+                if(app.current_screen == ScreenSplash) {
+                    // Shift to previous week
+                    app.selected_week_offset--;
+                }
+                break;
+                
+            case InputKeyDown:
+                if(app.current_screen == ScreenSplash) {
+                    // Shift to next week
+                    app.selected_week_offset++;
+                }
+                break;
+                
+            case InputKeyLeft:
+                if(app.current_screen == ScreenSplash) {
+                    // Move cursor left (with wrapping)
+                    app.selected_day--;
+                    if(app.selected_day < 0) {
+                        app.selected_day = 6; // Wrap to Sunday
+                    }
+                }
+                break;
+                
+            case InputKeyRight:
+                if(app.current_screen == ScreenSplash) {
+                    // Move cursor right (with wrapping)
+                    app.selected_day++;
+                    if(app.selected_day > 6) {
+                        app.selected_day = 0; // Wrap to Monday
+                    }
+                }
+                break;
+                
+            case InputKeyOk:
+                switch (app.current_screen) {
+                    case ScreenSplash:
+                        app.current_screen = ScreenWeekView;   
+                        break;
+                    case ScreenWeekView:
+                        // Could add functionality here
+                        break;
+                }
+                break;
+                
+            case InputKeyBack:
+                if(app.current_screen == ScreenWeekView) {
+                    app.current_screen = ScreenSplash;
+                } else if(app.current_screen == ScreenSplash) {
+                    // Reset to current week and today
+                    app.selected_week_offset = 0;
+                    DateTime current_datetime;
+                    furi_hal_rtc_get_datetime(&current_datetime);
+                    app.selected_day = (current_datetime.weekday + 6) % 7;  // Convert Sun=0 to Mon=0
+                 }
+                break;
+                
+            default:
+                break;
+        }
+    } else if(input.type == InputTypeLong && input.key == InputKeyBack) {
+        exit_loop = 1;  // Exit app after long press of Back
     }
+    
+    // Exit main app loop if exit flag is set
+    if(exit_loop) break; 
+    
+    // Trigger screen redraw
+    view_port_update(app.view_port);
+  }
 
-    // Cleanup: Free all allocated resources
-    view_port_enabled_set(app.view_port, false);
-    gui_remove_view_port(app.gui, app.view_port);
-    furi_record_close("gui");
-    view_port_free(app.view_port);
-	furi_message_queue_free(app.input_queue);
-    return 0;
+  // Cleanup: Free all allocated resources
+  view_port_enabled_set(app.view_port, false);
+  gui_remove_view_port(app.gui, app.view_port);
+  furi_record_close("gui");
+  view_port_free(app.view_port);
+  furi_message_queue_free(app.input_queue);
+  return 0;
 }
