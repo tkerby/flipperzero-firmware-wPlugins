@@ -1,5 +1,5 @@
 # mitzi-windbreak
-<img alt="Main Mancala Screen"  src="screenshots/MainScreen.png" width="40%" />
+<img alt="Main Wind Break Screen"  src="screenshots/MainScreen.png" width="40%" />
 
 Flipper Zero App to generate interesting noises. This a bit juvenile sound app allows your Flipper to break winds with adjustable parameters 💨 
 
