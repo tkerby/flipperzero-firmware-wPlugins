@@ -1,5 +1,5 @@
 /**
- * Puck - A Pac-Man style maze chase game for Flipper Zero
+ * Puck - A Pac-Man style nn chase game for Flipper Zero
  * 
  * Control a pie-shaped character (Puck girl) through a maze, eating dots while
  * avoiding three ghosts. Power pills make ghosts temporarily eatable.
@@ -10,23 +10,27 @@
 #include <input/input.h> // Input handling (buttons)
 #include <stdlib.h> // Standard library functions
 #include <gui/elements.h> // to access button drawing functions
+#include <string.h>
+#include <stdio.h>
+#include <inttypes.h>
 #include "puck_icons.h" // Custom icon definitions, header file is auto-magically generated
 
 // Maze dimensions
+#define PLAYER_START_X 7 
+#define PLAYER_START_Y 6 // counting from bottom to top
 #define MAZE_WIDTH 12
 #define MAZE_HEIGHT 7
 #define CELL_SIZE 8  // 7px corridor + 1px wall
 // Offsets to position game on screen (128x64 display, maze is 97x57 pixels)
 // To center: OFFSET_X = (128-97)/2 = 15, OFFSET_Y = (64-57)/2 = 3
 // Note: HUD (score/lives) is drawn at x=100, adjust if using large X offset
-#define OFFSET_X 1   // Horizontal offset for entire game area
-#define OFFSET_Y 1   // Vertical offset for entire game area
+#define OFFSET_X 2   // Horizontal offset for entire game area
+#define OFFSET_Y 2   // Vertical offset for entire game area
 
 // Game constants
-#define INITIAL_LIVES 3
 #define MAX_GHOSTS 2
 #define POWER_DURATION 150  // Ticks (about 5 seconds at 30 FPS)
-#define GHOST_SPEED 8       // Move every N ticks (was 2, now 8 for slower ghosts)
+#define GHOST_SPEED 10      // Move every N ticks (higher number means slower)
 #define ANIMATION_SPEED 5   // Animation frame every N ticks
 
 // Patrol ghost behavior
@@ -171,8 +175,8 @@ static void game_init(GameContext* ctx) {
     memcpy(ctx->pellets, initial_pellets, sizeof(initial_pellets));
     
     // Initialize player (bottom left)
-    ctx->player.x = 0;
-    ctx->player.y = MAZE_HEIGHT - 1;
+	ctx->player.x = PLAYER_START_X;
+	ctx->player.y = PLAYER_START_Y;
     ctx->player.dir = DIR_EAST;
     ctx->player.moving = false;
     
@@ -189,7 +193,7 @@ static void game_init(GameContext* ctx) {
     }
     
     ctx->score = 0;
-    ctx->lives = INITIAL_LIVES;
+    ctx->lives = 3; // Initial lives
     ctx->dots_remaining = count_dots(ctx);
     ctx->power_timer = 0;
     ctx->tick = 0;
@@ -200,8 +204,8 @@ static void game_init(GameContext* ctx) {
 
 // Reset level (after death)
 static void reset_positions(GameContext* ctx) {
-    ctx->player.x = 0;
-    ctx->player.y = MAZE_HEIGHT - 1;
+	ctx->player.x = PLAYER_START_X;
+	ctx->player.y = PLAYER_START_Y;
     ctx->player.dir = DIR_EAST;
     ctx->player.moving = false;
     
@@ -443,7 +447,7 @@ static void render_callback(Canvas* canvas, void* ctx_void) {
     canvas_set_font(canvas, FontSecondary);
     
     // Draw the background maze image
-    canvas_draw_icon(canvas, OFFSET_X, OFFSET_Y, &I_maze);
+    canvas_draw_icon(canvas, 1, 1, &I_maze);
     
     // Draw pellets on top of maze
     draw_pellets(canvas, ctx);
@@ -486,15 +490,23 @@ static void render_callback(Canvas* canvas, void* ctx_void) {
     }
     
     // Draw Score
+	canvas_draw_str_aligned(canvas, 99, 32, AlignLeft, AlignBottom, "Score:");	
     char buf[32];
-    snprintf(buf, sizeof(buf), "#: %lu", ctx->score);
-    canvas_draw_str(canvas, 100, 40, buf);
+    snprintf(buf, sizeof(buf), "%05lu", ctx->score);
+    canvas_draw_str(canvas, 99, 40, buf);
     
-    // Draw lives
-    for(uint8_t i = 0; i < ctx->lives; i++) {
-        canvas_draw_icon(canvas, 100 + i * 8, 50, &I_heart_7x7);
+    // Draw lives (always show 3 hearts: full for remaining lives, empty for lost)
+    for(uint8_t i = 0; i < 3; i++) {
+        if(i < ctx->lives) {
+            canvas_draw_icon(canvas, 99 + i * 8, 15, &I_heart_full_7x7);
+        } else {
+            canvas_draw_icon(canvas, 99 + i * 8, 15, &I_heart_7x7);
+        }
     }
-    
+	// Draw navigation hint
+	canvas_draw_icon(canvas, 121, 57, &I_back);
+	canvas_draw_str_aligned(canvas, 121, 63, AlignRight, AlignBottom, "Break");	
+	
     // Draw game state messages
     if(ctx->state == STATE_PAUSED) {
         // No modal for pause, just show button hint
