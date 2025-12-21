@@ -112,16 +112,16 @@ typedef struct {
 
 // Maze layout
 static const uint8_t initial_conn[MAZE_HEIGHT][MAZE_WIDTH] = {
-    {6, 10, 12,  6, 10, 10, 10, 10, 10, 10, 10, 12,  6, 10, 12},
-    {5,  6, 11, 11, 10, 10, 12,  6, 10, 10, 10, 11, 11, 12,  5},
-    {5,  7, 14, 10, 10, 14, 11, 15, 10, 14, 10, 10, 14, 13,  5},
-    {7, 13,  5,  2, 10, 13,  2, 11,  8,  7, 10,  8,  5,  7, 13},
-    {5,  5,  3, 10, 10, 15, 10, 10, 10, 15, 10, 10,  9,  5,  5},
-    {5,  3, 14, 10, 10, 11, 12,  6, 10, 11, 10, 10, 14,  9,  5},
-    {3, 10, 11, 10, 10, 10, 11, 11, 10, 10, 10, 10, 11, 10,  9},
+    {6, 10, 12,  6, 10, 10, 10, 10, 12,  6, 10, 12},
+    {5,  6, 11, 11, 10, 12,  6, 10, 11, 11, 12,  5},
+    {5,  7, 14, 10, 14, 15, 15, 14, 10, 14, 13,  5},
+    {7, 13,  5,  2, 13,  3,  9,  7,  8,  5,  7, 13},
+    {5,  5,  3, 10, 15, 10, 10, 15, 10,  9,  5,  5},
+    {5,  3, 14, 10, 11, 12,  6, 11, 10, 14,  9,  5},
+    {3, 10, 10, 10, 10, 11, 11, 10, 10, 10, 10,  9},
 };
-/* Decimal | Binary | Directions allowed
- * --------+--------+--------------------
+/* Decimal | Binary | Directions allowed (also in words)
+ * --------+--------+-------------------------------------------
  *   0     | 0000   | none       (unreachable / wall)
  *   1     | 0001   | N
  *   2     | 0010   | E
@@ -129,27 +129,27 @@ static const uint8_t initial_conn[MAZE_HEIGHT][MAZE_WIDTH] = {
  *   4     | 0100   | S
  *   5     | 0101   | N, S       (vertical corridor)
  *   6     | 0110   | E, S       (top left corner)
- *   7     | 0111   | N, E, S    
+ *   7     | 0111   | N, E, S    (T-intersection left closed)
  *   8     | 1000   | W
  *   9     | 1001   | N, W       (bottom right corner)
  *  10     | 1010   | E, W       (horizontal corridor)
- *  11     | 1011   | N, E, W
+ *  11     | 1011   | N, E, W    (T-intersection bottom closed)
  *  12     | 1100   | S, W       (top right corner)
- *  13     | 1101   | N, S, W
- *  14     | 1110   | E, S, W
+ *  13     | 1101   | N, S, W    (T-intersection right closed)
+ *  14     | 1110   | E, S, W    (T-intersection top closed)
  *  15     | 1111   | N, E, S, W (4-way intersection)
 */
 
 // Collectible layout for the maze. NB: These are logical cells, not pixels!
 // 0 = no pellet, 1 = normal dot, 2 = power pill
 static const uint8_t initial_pellets[MAZE_HEIGHT][MAZE_WIDTH] = {
-    {2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2},
+    {2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2},
 };
 
 static inline bool point_in_rect(int x, int y, int x0, int y0, int x1, int y1) {
