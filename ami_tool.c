@@ -81,6 +81,8 @@ AmiToolApp* ami_tool_alloc(void) {
     app->tag_data_valid = false;
     memset(&app->tag_password, 0, sizeof(app->tag_password));
     app->tag_password_valid = false;
+    memset(app->tag_pack, 0, sizeof(app->tag_pack));
+    app->tag_pack_valid = false;
     memset(app->last_uid, 0, sizeof(app->last_uid));
     app->last_uid_len = 0;
     app->last_uid_valid = false;

@@ -529,3 +529,37 @@ RfidxStatus amiibo_generate(
 
     return RFIDX_OK;
 }
+
+RfidxStatus amiibo_prepare_blank_tag(MfUltralightData* tag_data) {
+    if(!tag_data) {
+        return RFIDX_ARGUMENT_ERROR;
+    }
+
+    mf_ultralight_reset(tag_data);
+    tag_data->type = MfUltralightTypeNTAG215;
+    tag_data->pages_total = AMIIBO_PAGE_COUNT;
+    tag_data->pages_read = AMIIBO_PAGE_COUNT;
+
+    uint8_t* raw = amiibo_bytes(tag_data);
+    memset(raw, 0, AMIIBO_TOTAL_BYTES);
+
+    static const uint8_t capability_defaults[4] = {0xE1, 0x10, 0x0F, 0x00};
+    memcpy(raw + AMIIBO_OFFSET_CAPABILITY, capability_defaults, sizeof(capability_defaults));
+    raw[9] = 0x48;
+    raw[10] = 0x00;
+    raw[11] = 0x00;
+
+    RfidxStatus status = amiibo_randomize_uid(raw);
+    if(status != RFIDX_OK) {
+        return status;
+    }
+
+    size_t password_page = tag_data->pages_total - 2;
+    size_t pack_page = tag_data->pages_total - 1;
+    memset(tag_data->page[password_page].data, 0xFF, MF_ULTRALIGHT_PAGE_SIZE);
+    memset(tag_data->page[pack_page].data, 0x00, MF_ULTRALIGHT_PAGE_SIZE);
+
+    amiibo_configure_rf_interface(tag_data);
+
+    return RFIDX_OK;
+}

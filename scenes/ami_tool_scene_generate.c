@@ -165,6 +165,9 @@ static bool ami_tool_scene_generate_prepare_dump(AmiToolApp* app, const char* id
         app->tag_password_valid = false;
         memset(&app->tag_password, 0, sizeof(app->tag_password));
     }
+    static const uint8_t default_pack[4] = {0x80, 0x80, 0x00, 0x00};
+    memcpy(app->tag_pack, default_pack, sizeof(default_pack));
+    app->tag_pack_valid = true;
 
     app->tag_data_valid = true;
     return true;

@@ -4,6 +4,7 @@
 typedef enum {
     AmiToolMainMenuIndexRead,
     AmiToolMainMenuIndexGenerate,
+    AmiToolMainMenuIndexAmiiboLink,
     AmiToolMainMenuIndexSaved,
     AmiToolMainMenuIndexExit,
 } AmiToolMainMenuIndex;
@@ -53,6 +54,9 @@ static void ami_tool_scene_main_menu_submenu_callback(void* context, uint32_t in
     case AmiToolMainMenuIndexGenerate:
         view_dispatcher_send_custom_event(app->view_dispatcher, AmiToolEventMainMenuGenerate);
         break;
+    case AmiToolMainMenuIndexAmiiboLink:
+        view_dispatcher_send_custom_event(app->view_dispatcher, AmiToolEventMainMenuAmiiboLink);
+        break;
     case AmiToolMainMenuIndexSaved:
         view_dispatcher_send_custom_event(app->view_dispatcher, AmiToolEventMainMenuSaved);
         break;
@@ -81,6 +85,13 @@ void ami_tool_scene_main_menu_on_enter(void* context) {
         app->submenu,
         "Generate",
         AmiToolMainMenuIndexGenerate,
+        ami_tool_scene_main_menu_submenu_callback,
+        app);
+
+    submenu_add_item(
+        app->submenu,
+        "Amiibo Link",
+        AmiToolMainMenuIndexAmiiboLink,
         ami_tool_scene_main_menu_submenu_callback,
         app);
 
@@ -116,6 +127,9 @@ bool ami_tool_scene_main_menu_on_event(void* context, SceneManagerEvent event) {
             return true;
         case AmiToolEventMainMenuSaved:
             scene_manager_next_scene(app->scene_manager, AmiToolSceneSaved);
+            return true;
+        case AmiToolEventMainMenuAmiiboLink:
+            scene_manager_next_scene(app->scene_manager, AmiToolSceneAmiiboLink);
             return true;
         case AmiToolEventMainMenuExit:
             scene_manager_stop(app->scene_manager);

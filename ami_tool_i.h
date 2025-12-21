@@ -96,6 +96,7 @@ typedef enum {
     AmiToolSceneRead,
     AmiToolSceneGenerate,
     AmiToolSceneSaved,
+    AmiToolSceneAmiiboLink,
     AmiToolSceneCount,
 } AmiToolScene;
 
@@ -126,6 +127,7 @@ typedef enum {
     AmiToolEventMainMenuRead,
     AmiToolEventMainMenuGenerate,
     AmiToolEventMainMenuSaved,
+    AmiToolEventMainMenuAmiiboLink,
     AmiToolEventMainMenuExit,
     AmiToolEventReadSuccess,
     AmiToolEventReadWrongType,
@@ -208,6 +210,8 @@ struct AmiToolApp {
     bool tag_data_valid;
     MfUltralightAuthPassword tag_password;
     bool tag_password_valid;
+    uint8_t tag_pack[4];
+    bool tag_pack_valid;
     uint8_t last_uid[10];
     size_t last_uid_len;
     bool last_uid_valid;
@@ -300,3 +304,4 @@ RfidxStatus amiibo_generate(
     const uint8_t* uuid,
     MfUltralightData* tag_data,
     Ntag21xMetadataHeader* header);
+RfidxStatus amiibo_prepare_blank_tag(MfUltralightData* tag_data);
