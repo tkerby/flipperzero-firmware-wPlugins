@@ -56,6 +56,7 @@ struct ProtoPirateApp
     SubGhzSetting *setting;
     ProtoPirateLock lock;
     FuriString *loaded_file_path;
+    bool auto_save;
 };
 
 void protopirate_preset_init(

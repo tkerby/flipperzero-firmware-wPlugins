@@ -116,6 +116,9 @@ ProtoPirateApp *protopirate_app_alloc()
     // Create environment with our custom protocols
     app->txrx->environment = subghz_environment_alloc();
 
+    // Autosave disabled by default
+    app->auto_save = false;
+
     FURI_LOG_I(TAG, "Registering %zu ProtoPirate protocols", protopirate_protocol_registry.size);
     subghz_environment_set_protocol_registry(
         app->txrx->environment, (void *)&protopirate_protocol_registry);
