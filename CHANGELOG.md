@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.6.2
+
+- Close dialogs record during cleanup to avoid leaks
+- Added Aerial Detection and Spoofing commands
+
 ## v1.6.1
 
 - Added multiple status display animations from @tototo31
