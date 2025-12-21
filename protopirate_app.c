@@ -4,6 +4,7 @@
 #include <furi.h>
 #include <furi_hal.h>
 #include "protocols/protocol_items.h"
+#include "helpers/protopirate_settings.h"
 
 #define TAG "ProtoPirateApp"
 
@@ -94,6 +95,13 @@ ProtoPirateApp *protopirate_app_alloc()
     app->loaded_file_path = NULL;
     subghz_setting_load(app->setting, EXT_PATH("subghz/assets/setting_user"));
 
+    // Load saved settings
+    ProtoPirateSettings settings;
+    protopirate_settings_load(&settings);
+    
+    // Apply auto-save setting
+    app->auto_save = settings.auto_save;
+
     // Init Worker & Protocol & History
     app->lock = ProtoPirateLockOff;
     app->txrx = malloc(sizeof(ProtoPirateTxRx));
@@ -102,10 +110,42 @@ ProtoPirateApp *protopirate_app_alloc()
     app->txrx->txrx_state = ProtoPirateTxRxStateIDLE;
     app->txrx->rx_key_state = ProtoPirateRxKeyStateIDLE;
 
-    protopirate_preset_init(
-        app, "AM650", subghz_setting_get_default_frequency(app->setting), NULL, 0);
+    // Apply loaded frequency and preset, with validation
+    uint32_t frequency = settings.frequency;
+    uint8_t preset_index = settings.preset_index;
+    
+    // Validate frequency - check if it exists in settings
+    bool frequency_valid = false;
+    for(size_t i = 0; i < subghz_setting_get_frequency_count(app->setting); i++) {
+        if(subghz_setting_get_frequency(app->setting, i) == frequency) {
+            frequency_valid = true;
+            break;
+        }
+    }
+    if(!frequency_valid) {
+        frequency = subghz_setting_get_default_frequency(app->setting);
+        FURI_LOG_W(TAG, "Saved frequency invalid, using default: %lu", frequency);
+    }
+    
+    // Validate preset index
+    if(preset_index >= subghz_setting_get_preset_count(app->setting)) {
+        preset_index = 0;
+        FURI_LOG_W(TAG, "Saved preset index invalid, using default");
+    }
+    
+    // Get preset name and data
+    const char* preset_name = subghz_setting_get_preset_name(app->setting, preset_index);
+    uint8_t* preset_data = subghz_setting_get_preset_data(app->setting, preset_index);
+    size_t preset_data_size = subghz_setting_get_preset_data_size(app->setting, preset_index);
+    
+    FURI_LOG_I(TAG, "Applying settings: freq=%lu, preset=%s, auto_save=%d, hopping=%d",
+        frequency, preset_name, settings.auto_save, settings.hopping_enabled);
+    
+    protopirate_preset_init(app, preset_name, frequency, preset_data, preset_data_size);
 
-    app->txrx->hopper_state = ProtoPirateHopperStateOFF;
+    // Apply hopping state from settings
+    app->txrx->hopper_state = settings.hopping_enabled ? 
+        ProtoPirateHopperStateRunning : ProtoPirateHopperStateOFF;
     app->txrx->hopper_idx_frequency = 0;
     app->txrx->hopper_timeout = 0;
     app->txrx->idx_menu_chosen = 0;
@@ -115,9 +155,6 @@ ProtoPirateApp *protopirate_app_alloc()
 
     // Create environment with our custom protocols
     app->txrx->environment = subghz_environment_alloc();
-
-    // Autosave disabled by default
-    app->auto_save = false;
 
     FURI_LOG_I(TAG, "Registering %zu ProtoPirate protocols", protopirate_protocol_registry.size);
     subghz_environment_set_protocol_registry(
@@ -178,6 +215,27 @@ void protopirate_app_free(ProtoPirateApp *app)
     furi_assert(app);
 
     FURI_LOG_I(TAG, "Freeing ProtoPirate Decoder App");
+
+    // Save settings before exiting
+    ProtoPirateSettings settings;
+    settings.frequency = app->txrx->preset->frequency;
+    settings.auto_save = app->auto_save;
+    settings.hopping_enabled = (app->txrx->hopper_state != ProtoPirateHopperStateOFF);
+    
+    // Find current preset index
+    settings.preset_index = 0;
+    const char* current_preset = furi_string_get_cstr(app->txrx->preset->name);
+    for(uint8_t i = 0; i < subghz_setting_get_preset_count(app->setting); i++) {
+        if(strcmp(subghz_setting_get_preset_name(app->setting, i), current_preset) == 0) {
+            settings.preset_index = i;
+            break;
+        }
+    }
+    
+    FURI_LOG_I(TAG, "Saving settings: freq=%lu, preset=%u, auto_save=%d, hopping=%d",
+        settings.frequency, settings.preset_index, settings.auto_save, settings.hopping_enabled);
+    
+    protopirate_settings_save(&settings);
 
     // Make sure we're not receiving
     if (app->txrx->txrx_state == ProtoPirateTxRxStateRx)
