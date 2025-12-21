@@ -250,15 +250,19 @@ static void draw_screen_splash(Canvas* canvas, DateTime* datetime, AppState* sta
 	};
 	// Navigation hint
 	canvas_draw_icon(canvas, 1, 55, &I_arrows);
-	canvas_draw_str_aligned(canvas, 11, 63, AlignLeft, AlignBottom, "Choose");	
-	canvas_draw_icon(canvas, 95, 55, &I_back);
-	canvas_draw_str_aligned(canvas, 128, 62, AlignRight, AlignBottom, "Today");	
-	
+	canvas_draw_str_aligned(canvas, 11, 63, AlignLeft, AlignBottom, "Choose");
+	// Only show "Today" hint if cursor is not already on today
+	int today_day = (datetime->weekday + 6) % 7;
+			canvas_draw_icon(canvas, 121, 55, &I_back);
+	if (state->selected_week_offset != 0 || state->selected_day != today_day) {	
+		canvas_draw_str_aligned(canvas, 120, 62, AlignRight, AlignBottom, "Today");	
+	} else {
+	    canvas_draw_str_aligned(canvas, 120, 62, AlignRight, AlignBottom, "Hold: exit");	
+	}
 	// Version info
     canvas_draw_str_aligned(canvas, 105, 1, AlignRight, AlignTop, "v0.2");    
-    
-    // Draw button hints at bottom using elements library
-    elements_button_center(canvas, "Select"); // for the OK button
+    // Draw OK button using elements library
+    elements_button_center(canvas, "OK"); // for the OK button
 }
 
 static void draw_screen_weeks(Canvas* canvas, DateTime* datetime, AppState* state) {
