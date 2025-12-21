@@ -11,7 +11,7 @@
 
 #define TAG "cal-weeks" // Tag for logging purposes
 
-extern const Icon I_icon_10x10, I_splash;
+extern const Icon I_icon_10x10, I_arrows, I_back, I_splash;
 
 const char* days[] = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
 
@@ -148,6 +148,26 @@ int get_iso_week_number(int year, int month, int day) {
     return week;
 }
 
+// Helper function to determine if today appears in a week with given offset
+// Returns column index (0-6) if today is in that week, -1 otherwise
+int get_today_column(DateTime* today, DateTime* ref_date, int week_offset) {
+    int ref_wday = (ref_date->weekday + 6) % 7;  // Day of week for reference date (Mon=0)
+    
+    // Calculate approximate day difference (sufficient for week-range checking)
+    int days_diff = (today->year - ref_date->year) * 365 + 
+                    (today->month - ref_date->month) * 30 + 
+                    (today->day - ref_date->day);
+    
+    // Adjust for the week offset
+    int week_start = week_offset * 7 - ref_wday;
+    int week_end = week_start + 6;
+    
+    if (days_diff >= week_start && days_diff <= week_end) {
+        return (days_diff - week_start);
+    }
+    return -1;
+}
+
 // =============================================================================
 // SCREEN DRAWING FUNCTIONS
 // =============================================================================
@@ -159,11 +179,12 @@ static void draw_screen_splash(Canvas* canvas, DateTime* datetime, AppState* sta
 	calculate_date_with_offset(datetime, state->selected_week_offset, &ref_datetime);
 	
 	canvas_draw_icon(canvas, 1, 1, &I_splash); // 51 is a pixel above the buttons
-    canvas_draw_icon(canvas, 1, -1, &I_icon_10x10);
+    canvas_draw_icon(canvas, 1, -1, &I_icon_10x10); // App icon 
  	canvas_set_color(canvas, ColorBlack);
     canvas_set_font(canvas, FontPrimary);
-	// Display selected week date as title in bold font face
-    snprintf(buffer, sizeof(buffer), "Week of %04d-%02d-%02d", ref_datetime.year, ref_datetime.month, ref_datetime.day);
+	// Display selected week number and year as title
+	int week_num = get_iso_week_number(ref_datetime.year, ref_datetime.month, ref_datetime.day);
+    snprintf(buffer, sizeof(buffer), "%04d Week %02d", ref_datetime.year, week_num);
     canvas_draw_str_aligned(canvas, 13, 1, AlignLeft, AlignTop, buffer);
     canvas_set_font(canvas, FontSecondary);
 	// Write day names
@@ -174,21 +195,23 @@ static void draw_screen_splash(Canvas* canvas, DateTime* datetime, AppState* sta
 	canvas_set_color(canvas, ColorBlack);
 	
 	// Print previous week's day numbers (relative to selected week)
+	int prev_week_today_col = get_today_column(datetime, &ref_datetime, -1);
 	char days_prev_week[7][4]; // output array to be populated by next function call
 	get_week_days(ref_datetime.year, ref_datetime.month, ref_datetime.day, -1, days_prev_week);
 	for(int i = 0; i < 7; i++) {
+		if(i == prev_week_today_col) {
+			canvas_set_font(canvas, FontPrimary);  // Bold font if today is in this week
+		}
 		canvas_draw_str_aligned(canvas, 18 + i*18, 22, AlignRight, AlignTop, days_prev_week[i]);
+		if(i == prev_week_today_col) {
+			canvas_set_font(canvas, FontSecondary);  // Back to normal font
+		}
 	};
 	
 	// Print current/selected week day numbers
 	char days_current_week[7][4]; // output array to be populated by next function call
 	get_week_days(ref_datetime.year, ref_datetime.month, ref_datetime.day, 0, days_current_week);
-	
-	// Calculate actual current day position for indicator (if in this week)
-	int actual_current_col = -1;
-	if (state->selected_week_offset == 0) {
-		actual_current_col = (datetime->weekday + 6) % 7;  // Convert Sun=0 to Mon=0
-	}
+	int current_week_today_col = get_today_column(datetime, &ref_datetime, 0);			
 	
 	for(int i = 0; i < 7; i++) {
 		// Draw cursor box for selected day
@@ -196,8 +219,8 @@ static void draw_screen_splash(Canvas* canvas, DateTime* datetime, AppState* sta
 			canvas_draw_box(canvas, 2 + i*18, 30, 18, 11);  // Draw filled black box
 			canvas_set_color(canvas, ColorWhite);  // Switch to white for text
 		}
-		// Make actual current day bold (if different from cursor)
-		else if(i == actual_current_col) {
+		// Make actual current day bold
+		if(i == current_week_today_col) {
 			canvas_set_font(canvas, FontPrimary);  // Switch to bold font
 		}
 		
@@ -207,28 +230,35 @@ static void draw_screen_splash(Canvas* canvas, DateTime* datetime, AppState* sta
 			canvas_set_color(canvas, ColorBlack);  // Switch back to black
 		}
 		// Reset font if we made it bold
-		else if(i == actual_current_col) {
+		if(i == current_week_today_col) {
 			canvas_set_font(canvas, FontSecondary);  // Reset to normal font
 		}
 	}
 	
-	// Print next week day numbers (relative to selected week)
+	// Print week day numbers of succeeding week (relative to selected week)
+	int next_week_today_col = get_today_column(datetime, &ref_datetime, 1);
 	char days_next_week[7][4]; // output array
 	get_week_days(ref_datetime.year, ref_datetime.month, ref_datetime.day, 1, days_next_week);
 	for(int i = 0; i < 7; i++) {
+		if(i == next_week_today_col) {
+			canvas_set_font(canvas, FontPrimary);  // Bold for today
+		}
 		canvas_draw_str_aligned(canvas, 18 + i*18, 42, AlignRight, AlignTop, days_next_week[i]);
+		if(i == next_week_today_col) {
+			canvas_set_font(canvas, FontSecondary);  // Back to normal
+		}
 	};
-	
-	// Week number
-	int week_num = get_iso_week_number(ref_datetime.year, ref_datetime.month, ref_datetime.day);
-	snprintf(buffer, sizeof(buffer), "Week# %02d", week_num);
-	canvas_draw_str_aligned(canvas, 1, 64, AlignLeft, AlignBottom, buffer);
+	// Navigation hint
+	canvas_draw_icon(canvas, 1, 55, &I_arrows);
+	canvas_draw_str_aligned(canvas, 11, 63, AlignLeft, AlignBottom, "Choose");	
+	canvas_draw_icon(canvas, 95, 55, &I_back);
+	canvas_draw_str_aligned(canvas, 128, 62, AlignRight, AlignBottom, "Today");	
 	
 	// Version info
-    canvas_draw_str_aligned(canvas, 128, 58, AlignRight, AlignBottom, "v0.2");    
+    canvas_draw_str_aligned(canvas, 105, 1, AlignRight, AlignTop, "v0.2");    
     
     // Draw button hints at bottom using elements library
-    elements_button_center(canvas, "OK"); // for the OK button
+    elements_button_center(canvas, "Select"); // for the OK button
 }
 
 static void draw_screen_weeks(Canvas* canvas, DateTime* datetime, AppState* state) {
@@ -257,9 +287,9 @@ static void draw_screen_weeks(Canvas* canvas, DateTime* datetime, AppState* stat
 	canvas_draw_str_aligned(canvas, 64, 2, AlignCenter, AlignTop, buffer);
 	
 	// Draw header and footer lines
-	// canvas_draw_line(canvas, 0, 0, 127, 0);   // upper line of header
-	canvas_draw_line(canvas, 0, 11, 127, 11); // lower line of header
-	canvas_draw_line(canvas, 0, 63, 127, 63); // footer line
+	canvas_draw_line(canvas, 0, 11, 127, 11);   // upper line of header
+	canvas_draw_line(canvas, 0, 21, 127, 21); // lower line of header
+	// canvas_draw_line(canvas, 0, 63, 127, 63); // footer line
 	
 	// Time slots header (X axis)
 	canvas_set_font(canvas, FontSecondary);
@@ -275,7 +305,7 @@ static void draw_screen_weeks(Canvas* canvas, DateTime* datetime, AppState* stat
 	}
 	
 	// Draw horizontal time grid
-	int y_start = 25;
+	int y_start = 23;
 	int row_height = 13;
 	for(int row = 0; row < 3; row++) {
 		int y = y_start + row * row_height;
@@ -284,7 +314,10 @@ static void draw_screen_weeks(Canvas* canvas, DateTime* datetime, AppState* stat
 	
 	// Placeholder text for tasks/events
 	canvas_set_font(canvas, FontSecondary);
-	canvas_draw_str_aligned(canvas, 64, 28, AlignCenter, AlignTop, "No events available");
+	canvas_draw_str_aligned(canvas, 64, 26, AlignCenter, AlignTop, "No events available");
+	
+	canvas_draw_icon(canvas, 1, 55, &I_back);
+	canvas_draw_str_aligned(canvas, 11, 62, AlignLeft, AlignBottom, "Choose other day");	
 }
 
 // =============================================================================
