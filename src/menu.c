@@ -342,6 +342,41 @@ static const MenuCommand wifi_scanning_commands[] = {
                         "- Requires network connectivity\n\n",
     },
     {
+        .label = "Full Environment Sweep",
+        .command = "sweep\n",
+        .details_header = "Environment Sweep",
+        .details_text = "Full sweep: WiFi APs, stations,\n"
+                        "and BLE devices.\n"
+                        "Saves CSV report to SD.\n"
+                        "Uses default timing for scan.\n",
+    },
+    {
+        .label = "Combined AP+STA Scan",
+        .command = "scanall",
+        .needs_input = true,
+        .input_text = "Seconds",
+        .details_header = "Scan All",
+        .details_text = "Combined AP and station scan\n"
+                        "with summary report.\n"
+                        "Optionally specify duration.\n",
+    },
+    {
+        .label = "Track Selected AP",
+        .command = "trackap\n",
+        .details_header = "Track AP Signal",
+        .details_text = "Track selected AP signal\n"
+                        "strength (RSSI) in real-time.\n"
+                        "Select an AP first.\n",
+    },
+    {
+        .label = "Track Selected Station",
+        .command = "tracksta\n",
+        .details_header = "Track Station Signal",
+        .details_text = "Track selected station signal\n"
+                        "strength (RSSI) in real-time.\n"
+                        "Select a station first.\n",
+    },
+    {
         .label = "Stop Listen Probes",
         .command = "listenprobes stop\n",
         .details_header = "Stop Listening",
@@ -785,6 +820,18 @@ static const MenuCommand wifi_settings_commands[] = {
                         "brightness level.",
     },
     {
+        .label = "Set RGB LED Count",
+        .command = "setrgbcount",
+        .needs_input = true,
+        .input_text = "1-512",
+        .details_header = "Set RGB LED Count",
+        .details_text = "Set the number of RGB LEDs\n"
+                        "connected (1-512).\n"
+                        "Effects will span the correct\n"
+                        "length. Reinitializes if pins\n"
+                        "are already configured.\n",
+    },
+    {
         .label = "Settings List",
         .command = "settings list\n",
         .details_header = "List Settings",
@@ -1007,6 +1054,48 @@ static const MenuCommand ble_scanning_commands[] = {
         .details_text = "Select a Flipper by number to track RSSI strength.",
     },
     {
+        .label = "Scan GATT Devices",
+        .command = "blescan -g\n",
+        .details_header = "GATT Device Scanner",
+        .details_text = "Scan for connectable BLE\n"
+                        "devices for GATT enumeration.\n"
+                        "Shows device addresses and\n"
+                        "connection capability.\n",
+    },
+    {
+        .label = "List GATT Devices",
+        .command = "listgatt\n",
+        .details_header = "List GATT Devices",
+        .details_text = "List discovered GATT devices\n"
+                        "with tracker type detection.\n",
+    },
+    {
+        .label = "Select GATT Device",
+        .command = "selectgatt",
+        .needs_input = true,
+        .input_text = "Device Index",
+        .details_header = "Select GATT Device",
+        .details_text = "Select a GATT device by index\n"
+                        "for enumeration or tracking.\n",
+    },
+    {
+        .label = "Enumerate GATT Services",
+        .command = "enumgatt\n",
+        .details_header = "Enumerate GATT",
+        .details_text = "Connect to selected device\n"
+                        "and enumerate its GATT\n"
+                        "services, characteristics,\n"
+                        "and descriptors.\n",
+    },
+    {
+        .label = "Track GATT Device",
+        .command = "trackgatt\n",
+        .details_header = "Track GATT Device",
+        .details_text = "Track selected GATT device\n"
+                        "using real-time RSSI signal\n"
+                        "strength monitoring.\n",
+    },
+    {
         .label = "View All BLE Traffic",
         .command = "blescan -r\n",
         .details_header = "BLE Raw Traffic",
@@ -1091,6 +1180,25 @@ static const MenuCommand gps_commands[] = {
                         "- Altitude & Speed\n"
                         "- Direction & Quality\n"
                         "- Satellite Status\n",
+    },
+    {
+        .label = "Set GPS Pin",
+        .command = "gpspin",
+        .needs_input = true,
+        .input_text = "Pin Number",
+        .details_header = "Set GPS RX Pin",
+        .details_text = "Set the GPS RX pin for\n"
+                        "external GPS modules.\n"
+                        "Setting persists to NVS.\n"
+                        "Restart GPS commands to apply.\n",
+    },
+    {
+        .label = "View GPS Pin",
+        .command = "gpspin\n",
+        .details_header = "View GPS RX Pin",
+        .details_text = "Shows current GPS RX pin\n"
+                        "configuration for external\n"
+                        "GPS modules.\n",
     },
     {
         .label = "Start Wardriving",
@@ -1903,7 +2011,8 @@ static bool handle_ir_command_feedback_ex(
                 char* tag = strstr(line, "IR_DAZZLER:");
                 if(tag) {
                     const char* code = tag + 11; // skip "IR_DAZZLER:"
-                    while(*code == ' ' || *code == '\t') code++;
+                    while(*code == ' ' || *code == '\t')
+                        code++;
 
                     if(strncmp(code, "STARTED", 7) == 0) {
                         strncpy(message, "Dazzler started successfully", sizeof(message) - 1);
@@ -1916,11 +2025,7 @@ static bool handle_ir_command_feedback_ex(
                     } else if(strncmp(code, "NOT_RUNNING", 11) == 0) {
                         strncpy(message, "Dazzler is not running", sizeof(message) - 1);
                     } else {
-                        snprintf(
-                            message,
-                            sizeof(message),
-                            "Dazzler: %.64s",
-                            code);
+                        snprintf(message, sizeof(message), "Dazzler: %.64s", code);
                     }
                     message[sizeof(message) - 1] = '\0';
                     start = timeout_ms + start;

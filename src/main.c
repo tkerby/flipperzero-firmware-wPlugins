@@ -118,9 +118,9 @@ int32_t ghost_esp_app(void* p) {
     state->text_box = text_box_alloc();
     state->settings_menu = variable_item_list_alloc();
     state->text_input = text_input_alloc();
- #ifdef HAS_MOMENTUM_SUPPORT
+#ifdef HAS_MOMENTUM_SUPPORT
     if(state->text_input) text_input_show_illegal_symbols(state->text_input, true);
- #endif
+#endif
     state->confirmation_view = confirmation_view_alloc();
     state->settings_actions_menu = submenu_alloc();
 
