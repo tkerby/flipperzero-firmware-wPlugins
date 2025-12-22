@@ -340,28 +340,20 @@ static void draw_screen_day(Canvas* canvas, DateTime* datetime, AppState* state)
 		canvas_draw_str(canvas, x, 20, time_slots[i]);
 	}
 	
-	// Draw horizontal time grid
-	int y_start = 23;
-	int row_height = 13;
-	for(int row = 0; row < 3; row++) {
-		int y = y_start + row * row_height;
-		canvas_draw_line(canvas, 0, y, WEEK_VIEW_MAX_X, y);
-	}
-	
-	// Draw events as 3-pixel high boxes in the grid area
+	// Draw events as 7-pixel high boxes in the grid area
 	if(state->events && state->events->count > 0) {
 		int y_pos = 24;  // Start just below first grid line
-		int max_events = (60 - y_pos) / 4; // Calculate how many events fit (3px box + 1px gap)
+		int max_events = (60 - y_pos) / 8; // Calculate how many events fit (3px box + 1px gap)
 		
 		for(size_t i = 0; i < state->events->count && i < (size_t)max_events; i++) {
 			CalendarEvent* event = &state->events->events[i];
 			
 			// Draw event box (filled if selected, frame if not)
 			if((int)i == state->selected_event) {
-				canvas_draw_box(canvas, 1, y_pos, WEEK_VIEW_MAX_X - 1, 3);
+				canvas_draw_box(canvas, 1, y_pos, WEEK_VIEW_MAX_X - 1, 7);
 				canvas_set_color(canvas, ColorWhite);
 			} else {
-				canvas_draw_frame(canvas, 1, y_pos, WEEK_VIEW_MAX_X - 1, 3);
+				canvas_draw_frame(canvas, 1, y_pos, WEEK_VIEW_MAX_X - 1, 7);
 			}
 			
 			// Format event text: show time and title, with asterisk for all-day events
@@ -390,7 +382,7 @@ static void draw_screen_day(Canvas* canvas, DateTime* datetime, AppState* state)
 				canvas_set_color(canvas, ColorBlack);
 			}
 			
-			y_pos += 4; // Move down for next event (3px box + 1px gap)
+			y_pos += 7; // Move down for next event (7px box + 1px gap)
 		}
 	} else {
 		// No events to show
@@ -414,7 +406,10 @@ static void draw_screen_day(Canvas* canvas, DateTime* datetime, AppState* state)
 	// Draw navigation hints at bottom
 	canvas_draw_icon(canvas, 1, 55, &I_back);
 	canvas_draw_str_aligned(canvas, 11, 62, AlignLeft, AlignBottom, "Back");
-	elements_button_center(canvas, "Details");
+	// Only show "Details" button when calendar icon is selected
+	if(state->selected_day_menu == 1) {
+		elements_button_center(canvas, "Details");
+	}
 }
 
 static void draw_screen_event_detail(Canvas* canvas, DateTime* datetime, AppState* state) {
