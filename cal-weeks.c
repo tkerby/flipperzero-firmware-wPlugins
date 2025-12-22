@@ -4,6 +4,7 @@
 #include <stdint.h> // Standard integer types
 #include <stdlib.h> // Standard library functions
 #include <gui/elements.h> // to access button drawing functions
+#include <dialogs/dialogs.h> // for the file-open-dialog
 #include <stdio.h>
 #include <string.h>
 #include <storage/storage.h>
@@ -17,6 +18,8 @@
 #define WEEK_VIEW_CENTER (WEEK_VIEW_WIDTH / 2)
 #define WEEK_VIEW_SLOT_WIDTH 17
 #define WEEK_VIEW_MAX_X (WEEK_VIEW_WIDTH - 1)
+#define DAY_MENU_ITEMS 2  // Number of menu items on the screen "day view"
+#define CAL_WEEKS_DATA_PATH "/ext/apps_data/cal_weeks" // Default app data directory
 
 extern const Icon I_icon_10x10, I_arrows, I_back, I_folder, I_splash;
 
@@ -35,6 +38,8 @@ typedef struct {
     uint8_t current_screen;
     int selected_week_offset;       // Offset from current week (-1, 0, 1, etc.)
     int selected_day;               // Selected day of week (0=Mon, 6=Sun)
+	int selected_day_menu;          // Selected menu item in day view (0=folder, 1=calendar)
+	FuriString* selected_file_path; // Path to selected file
 } AppState;
 
 // =============================================================================
@@ -178,6 +183,18 @@ int get_today_column(DateTime* today, DateTime* ref_date, int week_offset) {
 // =============================================================================
 // SCREEN DRAWING FUNCTIONS
 // =============================================================================
+// Helper function to draw a menu item icon with optional selection highlight
+static void draw_menu_item(Canvas* canvas, int x, int y, const Icon* icon, bool selected) {
+    if(selected) {
+        canvas_draw_frame(canvas, x, y, 12, 12);
+        canvas_invert_color(canvas);
+    }
+    canvas_draw_icon(canvas, x + 1, y + 1, icon);
+    if(selected) {
+        canvas_invert_color(canvas);
+    }
+}
+
 static void draw_screen_splash(Canvas* canvas, DateTime* datetime, AppState* state) {
 	char buffer[64]; // buffer for string concatination
 	
@@ -274,11 +291,9 @@ static void draw_screen_splash(Canvas* canvas, DateTime* datetime, AppState* sta
 
 static void draw_screen_day(Canvas* canvas, DateTime* datetime, AppState* state) {
 	char buffer[64]; // buffer for string concatenation
-	// Menu entry "Open" selected
-    canvas_draw_frame(canvas, 116, 0, 12, 12); // Draw frame around the icon
-	canvas_invert_color(canvas);
-	canvas_draw_icon(canvas, 117, 1, &I_folder); // Icon "open file" 
-	canvas_invert_color(canvas); // Restore normal mode
+	// Draw menu items
+	draw_menu_item(canvas, 116, 0, &I_folder, state->selected_day_menu == 0);
+	draw_menu_item(canvas, 116, 13, &I_icon_10x10, state->selected_day_menu == 1);
 	
 	// Calculate the selected date
 	DateTime selected_datetime;
@@ -326,10 +341,21 @@ static void draw_screen_day(Canvas* canvas, DateTime* datetime, AppState* state)
 		canvas_draw_line(canvas, 0, y, WEEK_VIEW_MAX_X, y);
 	}
 	
-	// Placeholder text for tasks/events
+	// Placeholder text for tasks/events/file-name
 	canvas_set_font(canvas, FontSecondary);
-	canvas_draw_str_aligned(canvas, WEEK_VIEW_CENTER, 26, AlignCenter, AlignTop, "No events available");
-	
+	if(furi_string_size(state->selected_file_path) > 0) {
+		// Extract filename from path
+		const char* full_path = furi_string_get_cstr(state->selected_file_path);
+		const char* filename = strrchr(full_path, '/');
+		if(filename) {
+			filename++; // Skip the '/'
+		} else {
+			filename = full_path;
+		}
+		canvas_draw_str_aligned(canvas, WEEK_VIEW_CENTER, 26, AlignCenter, AlignTop, filename);
+	} else {
+		canvas_draw_str_aligned(canvas, WEEK_VIEW_CENTER, 26, AlignCenter, AlignTop, "No events available");
+	}
 	canvas_draw_icon(canvas, 1, 55, &I_back);
 	canvas_draw_str_aligned(canvas, 11, 62, AlignLeft, AlignBottom, "Choose other day");	
 }
@@ -370,6 +396,16 @@ int32_t cal_weeks_main(void* p) {
   app.current_screen = ScreenSplash;  // Start on splash screen
   app.selected_week_offset = 0;       // Start with current week
   app.selected_day = 0;               // Start with Monday
+  app.selected_day_menu = 0;          // Start with folder selected
+  app.selected_file_path = furi_string_alloc(); // Allocate string for file path
+  
+  // Ensure app data directory exists
+  Storage* storage = furi_record_open(RECORD_STORAGE);
+  if(!storage_dir_exists(storage, CAL_WEEKS_DATA_PATH)) {
+      FURI_LOG_I(TAG, "Creating app data directory: %s", CAL_WEEKS_DATA_PATH);
+      storage_simply_mkdir(storage, CAL_WEEKS_DATA_PATH);
+  }
+  furi_record_close(RECORD_STORAGE); 
   
   // Initialize selected_day to current day
   DateTime datetime;
@@ -400,13 +436,19 @@ int32_t cal_weeks_main(void* p) {
                 if(app.current_screen == ScreenSplash) {
                     // Shift to previous week
                     app.selected_week_offset--;
-                }
+                } else if(app.current_screen == ScreenDayView) {
+                    // Move menu selection up (with wrapping)
+                    app.selected_day_menu = (app.selected_day_menu - 1 + DAY_MENU_ITEMS) % DAY_MENU_ITEMS;
+				}
                 break;
                 
             case InputKeyDown:
                 if(app.current_screen == ScreenSplash) {
                     // Shift to next week
                     app.selected_week_offset++;
+                } else if(app.current_screen == ScreenDayView) {
+                    // Move menu selection down (with wrapping)
+                    app.selected_day_menu = (app.selected_day_menu + 1) % DAY_MENU_ITEMS;
                 }
                 break;
                 
@@ -433,10 +475,22 @@ int32_t cal_weeks_main(void* p) {
             case InputKeyOk:
                 switch (app.current_screen) {
                     case ScreenSplash:
-                        app.current_screen = ScreenDayView;   
+                        app.current_screen = ScreenDayView; 
                         break;
                     case ScreenDayView:
-                        // Could add functionality here
+                        if(app.selected_day_menu == 0) {
+                            // Open file browser
+                            DialogsApp* dialogs = furi_record_open(RECORD_DIALOGS);
+							FuriString* start_path = furi_string_alloc_set_str(CAL_WEEKS_DATA_PATH);
+                            DialogsFileBrowserOptions browser_options;
+                            dialog_file_browser_set_basic_options(&browser_options, ".txt", &I_icon_10x10);
+                            bool result = dialog_file_browser_show(dialogs, app.selected_file_path, start_path, &browser_options);
+                            furi_string_free(start_path);
+                            furi_record_close(RECORD_DIALOGS);
+                            if(!result) {
+                                furi_string_reset(app.selected_file_path); // Clear if cancelled
+                            }
+                        }				
                         break;
                 }
                 break;
@@ -473,5 +527,6 @@ int32_t cal_weeks_main(void* p) {
   furi_record_close("gui");
   view_port_free(app.view_port);
   furi_message_queue_free(app.input_queue);
+  furi_string_free(app.selected_file_path);
   return 0;
 }
