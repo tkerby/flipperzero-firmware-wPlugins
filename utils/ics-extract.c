@@ -1,3 +1,6 @@
+#include <furi.h>
+#include <furi_hal_rtc.h>
+#include <storage/storage.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>

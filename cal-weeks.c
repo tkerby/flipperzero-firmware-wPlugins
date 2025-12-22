@@ -9,7 +9,7 @@
 #include <string.h>
 #include <storage/storage.h>
 #include <furi_hal_rtc.h> // for getting the current date
-#include "utils/ics_extract.c" // include ICS parser
+#include "utils/ics-extract.h" // ICS parser header
 
 #define TAG "cal-weeks" // Tag for logging purposes
 
@@ -418,10 +418,12 @@ static void draw_screen_day(Canvas* canvas, DateTime* datetime, AppState* state)
 }
 
 static void draw_screen_event_detail(Canvas* canvas, DateTime* datetime, AppState* state) {
+	UNUSED(datetime);  // Mark parameter as intentionally unused
 	if(!state->events || state->selected_event >= (int)state->events->count) return;
 	
 	CalendarEvent* event = &state->events->events[state->selected_event];
 	char buffer[64];
+	canvas_set_color(canvas, ColorBlack);
 	canvas_set_color(canvas, ColorBlack);
 	canvas_set_font(canvas, FontPrimary);
 	// Title
@@ -627,6 +629,7 @@ int32_t cal_weeks_main(void* p) {
                             furi_record_close(RECORD_DIALOGS);
                             if(!result) {
                                 furi_string_reset(app.selected_file_path); // Clear if cancelled
+							}
 						} else if(app.selected_day_menu == 1) {
                             // Show event details
                             if(app.events && app.events->count > 0) {
@@ -641,11 +644,11 @@ int32_t cal_weeks_main(void* p) {
                 break;
                 
             case InputKeyBack:
-                if(app.current_screen == ScreenDayView) {
+				if(app.current_screen == ScreenEventDetail) {	
+                   app.current_screen = ScreenDayView;
+               } else if(app.current_screen == ScreenDayView) {
                     app.current_screen = ScreenSplash;
                 } else if(app.current_screen == ScreenSplash) {
-				} else if(app.current_screen == ScreenEventDetail) {
-                    app.current_screen = ScreenDayView;
                     // Reset to current week and today
                     app.selected_week_offset = 0;
                     DateTime current_datetime;
