@@ -342,6 +342,41 @@ static const MenuCommand wifi_scanning_commands[] = {
                         "- Requires network connectivity\n\n",
     },
     {
+        .label = "Full Environment Sweep",
+        .command = "sweep\n",
+        .details_header = "Environment Sweep",
+        .details_text = "Full sweep: WiFi APs, stations,\n"
+                        "and BLE devices.\n"
+                        "Saves CSV report to SD.\n"
+                        "Uses default timing for scan.\n",
+    },
+    {
+        .label = "Combined AP+STA Scan",
+        .command = "scanall",
+        .needs_input = true,
+        .input_text = "Seconds",
+        .details_header = "Scan All",
+        .details_text = "Combined AP and station scan\n"
+                        "with summary report.\n"
+                        "Optionally specify duration.\n",
+    },
+    {
+        .label = "Track Selected AP",
+        .command = "trackap\n",
+        .details_header = "Track AP Signal",
+        .details_text = "Track selected AP signal\n"
+                        "strength (RSSI) in real-time.\n"
+                        "Select an AP first.\n",
+    },
+    {
+        .label = "Track Selected Station",
+        .command = "tracksta\n",
+        .details_header = "Track Station Signal",
+        .details_text = "Track selected station signal\n"
+                        "strength (RSSI) in real-time.\n"
+                        "Select a station first.\n",
+    },
+    {
         .label = "Stop Listen Probes",
         .command = "listenprobes stop\n",
         .details_header = "Stop Listening",
@@ -785,6 +820,18 @@ static const MenuCommand wifi_settings_commands[] = {
                         "brightness level.",
     },
     {
+        .label = "Set RGB LED Count",
+        .command = "setrgbcount",
+        .needs_input = true,
+        .input_text = "1-512",
+        .details_header = "Set RGB LED Count",
+        .details_text = "Set the number of RGB LEDs\n"
+                        "connected (1-512).\n"
+                        "Effects will span the correct\n"
+                        "length. Reinitializes if pins\n"
+                        "are already configured.\n",
+    },
+    {
         .label = "Settings List",
         .command = "settings list\n",
         .details_header = "List Settings",
@@ -1007,6 +1054,48 @@ static const MenuCommand ble_scanning_commands[] = {
         .details_text = "Select a Flipper by number to track RSSI strength.",
     },
     {
+        .label = "Scan GATT Devices",
+        .command = "blescan -g\n",
+        .details_header = "GATT Device Scanner",
+        .details_text = "Scan for connectable BLE\n"
+                        "devices for GATT enumeration.\n"
+                        "Shows device addresses and\n"
+                        "connection capability.\n",
+    },
+    {
+        .label = "List GATT Devices",
+        .command = "listgatt\n",
+        .details_header = "List GATT Devices",
+        .details_text = "List discovered GATT devices\n"
+                        "with tracker type detection.\n",
+    },
+    {
+        .label = "Select GATT Device",
+        .command = "selectgatt",
+        .needs_input = true,
+        .input_text = "Device Index",
+        .details_header = "Select GATT Device",
+        .details_text = "Select a GATT device by index\n"
+                        "for enumeration or tracking.\n",
+    },
+    {
+        .label = "Enumerate GATT Services",
+        .command = "enumgatt\n",
+        .details_header = "Enumerate GATT",
+        .details_text = "Connect to selected device\n"
+                        "and enumerate its GATT\n"
+                        "services, characteristics,\n"
+                        "and descriptors.\n",
+    },
+    {
+        .label = "Track GATT Device",
+        .command = "trackgatt\n",
+        .details_header = "Track GATT Device",
+        .details_text = "Track selected GATT device\n"
+                        "using real-time RSSI signal\n"
+                        "strength monitoring.\n",
+    },
+    {
         .label = "View All BLE Traffic",
         .command = "blescan -r\n",
         .details_header = "BLE Raw Traffic",
@@ -1093,6 +1182,25 @@ static const MenuCommand gps_commands[] = {
                         "- Satellite Status\n",
     },
     {
+        .label = "Set GPS Pin",
+        .command = "gpspin",
+        .needs_input = true,
+        .input_text = "Pin Number",
+        .details_header = "Set GPS RX Pin",
+        .details_text = "Set the GPS RX pin for\n"
+                        "external GPS modules.\n"
+                        "Setting persists to NVS.\n"
+                        "Restart GPS commands to apply.\n",
+    },
+    {
+        .label = "View GPS Pin",
+        .command = "gpspin\n",
+        .details_header = "View GPS RX Pin",
+        .details_text = "Shows current GPS RX pin\n"
+                        "configuration for external\n"
+                        "GPS modules.\n",
+    },
+    {
         .label = "Start Wardriving",
         .command = "startwd\n",
         .capture_prefix = "wardrive_wifi",
@@ -1134,6 +1242,110 @@ static const MenuCommand gps_commands[] = {
                         "- GPS Info Updates\n"
                         "- WiFi Wardriving\n"
                         "- BLE Wardriving\n",
+    },
+};
+
+// Aerial Detector menu command definitions - all in one menu
+static const MenuCommand aerial_commands[] = {
+    {
+        .label = "Start Scan (30s)",
+        .command = "aerialscan 30\n",
+        .details_header = "Scan for Drones",
+        .details_text = "Scans for aerial devices:\n"
+                        "- OpenDroneID (WiFi/BLE)\n"
+                        "- DJI drones\n"
+                        "- Drone networks\n"
+                        "Phase 1: WiFi (all channels)\n"
+                        "Phase 2: BLE\n"
+                        "Duration: 30 seconds\n",
+    },
+    {
+        .label = "Quick Scan (15s)",
+        .command = "aerialscan 15\n",
+        .details_header = "Quick Scan",
+        .details_text = "Fast 15 second scan for\n"
+                        "nearby aerial devices.\n",
+    },
+    {
+        .label = "Extended Scan (60s)",
+        .command = "aerialscan 60\n",
+        .details_header = "Extended Scan",
+        .details_text = "Extended 60 second scan\n"
+                        "for maximum coverage.\n",
+    },
+    {
+        .label = "List Detected Drones",
+        .command = "aeriallist\n",
+        .details_header = "Detected Devices",
+        .details_text = "Lists all detected aerial\n"
+                        "devices with:\n"
+                        "- Device ID & Type\n"
+                        "- GPS coordinates\n"
+                        "- Altitude & Speed\n"
+                        "- Operator location\n"
+                        "- RSSI signal\n",
+    },
+    {
+        .label = "Track Drone by Index",
+        .command = "aerialtrack",
+        .needs_input = true,
+        .input_text = "Device Index",
+        .details_header = "Track Drone",
+        .details_text = "Track specific drone by\n"
+                        "index from aeriallist.\n"
+                        "Shows real-time updates\n"
+                        "for selected device.\n",
+    },
+    {
+        .label = "Track Drone by MAC",
+        .command = "aerialtrack",
+        .needs_input = true,
+        .input_text = "MAC Address",
+        .details_header = "Track by MAC",
+        .details_text = "Track specific drone by\n"
+                        "MAC address.\n"
+                        "Format: aa:bb:cc:dd:ee:ff\n",
+    },
+    {
+        .label = "Spoof Test Drone",
+        .command = "aerialspoof\n",
+        .details_header = "Test Spoof",
+        .details_text = "Broadcasts test RemoteID:\n"
+                        "ID: GHOST-TEST\n"
+                        "Location: San Francisco\n"
+                        "Altitude: 100m\n"
+                        "Status: Airborne\n\n"
+                        "Note: WiFi suspended\n"
+                        "during BLE broadcast\n",
+    },
+    {
+        .label = "Custom Spoof",
+        .command = "aerialspoof",
+        .needs_input = true,
+        .input_text = "ID Lat Lon Alt",
+        .details_header = "Custom Spoof",
+        .details_text = "Broadcast custom RemoteID.\n"
+                        "Format:\n"
+                        "DRONE-ID lat lon alt\n\n"
+                        "Example:\n"
+                        "GHOST-1 40.7128 -74.0060 100\n",
+    },
+    {
+        .label = "Stop Spoofing",
+        .command = "aerialspoofstop\n",
+        .details_header = "Stop Spoofing",
+        .details_text = "Stops RemoteID broadcast\n"
+                        "and restores WiFi.\n",
+    },
+    {
+        .label = "Stop All",
+        .command = "aerialstop\n",
+        .details_header = "Stop All Operations",
+        .details_text = "Stops all active aerial\n"
+                        "operations including:\n"
+                        "- Scanning\n"
+                        "- Tracking\n"
+                        "- Spoofing\n",
     },
 };
 
@@ -2580,14 +2792,17 @@ static void show_menu(
     case 3: // GPS
         last_index = state->last_gps_index;
         break;
+    case 15: // Aerial
+        last_index = state->last_aerial_category_index;
+        break;
     }
     if(last_index < command_count) {
         submenu_set_selected_item(menu, last_index);
     }
 
+    state->previous_view = state->current_view;
     view_dispatcher_switch_to_view(state->view_dispatcher, view_id);
     state->current_view = view_id;
-    state->previous_view = view_id;
 }
 
 // Menu display functions
@@ -2713,12 +2928,23 @@ void show_wifi_menu(AppState* state) {
     submenu_add_item(state->wifi_menu, "Packet Capture > ", 1, submenu_callback, state);
     submenu_add_item(state->wifi_menu, "Attacks > ", 2, submenu_callback, state);
     submenu_add_item(state->wifi_menu, "Evil Portal & Network >", 3, submenu_callback, state);
-    submenu_add_item(state->wifi_menu, wifi_stop_command.label, 4, submenu_callback, state);
+    submenu_add_item(state->wifi_menu, "Aerial Detector >", 4, submenu_callback, state);
+    submenu_add_item(state->wifi_menu, wifi_stop_command.label, 5, submenu_callback, state);
     // Restore last selected WiFi category
     submenu_set_selected_item(state->wifi_menu, state->last_wifi_category_index);
 
     view_dispatcher_switch_to_view(state->view_dispatcher, 1);
     state->current_view = 1;
+}
+
+void show_aerial_menu(AppState* state) {
+    show_menu(
+        state,
+        aerial_commands,
+        COUNT_OF(aerial_commands),
+        "Aerial Detector:",
+        state->aerial_menu,
+        15);
 }
 
 void show_ble_menu(AppState* state) {
@@ -2815,6 +3041,13 @@ void handle_ble_menu(AppState* state, uint32_t index) {
     }
 }
 
+void handle_aerial_menu(AppState* state, uint32_t index) {
+    if(index < COUNT_OF(aerial_commands)) {
+        state->last_aerial_category_index = index;
+        execute_menu_command(state, &aerial_commands[index]);
+    }
+}
+
 void handle_gps_menu(AppState* state, uint32_t index) {
     if(index < COUNT_OF(gps_commands)) {
         state->last_gps_index = index; // Save the selection
@@ -2892,6 +3125,10 @@ void submenu_callback(void* context, uint32_t index) {
             show_wifi_network_menu(state);
             break;
         case 4:
+            show_aerial_menu(state);
+            state->last_aerial_category_index = 0;
+            break;
+        case 5:
             execute_menu_command(state, &wifi_stop_command);
             break;
         }
@@ -2921,6 +3158,9 @@ void submenu_callback(void* context, uint32_t index) {
     case 21:
     case 22:
         handle_ble_menu(state, index);
+        break;
+    case 15:
+        handle_aerial_menu(state, index);
         break;
     case 31:
         if(index < state->ir_remote_count) {
@@ -3112,6 +3352,10 @@ bool back_event_callback(void* context) {
                 show_gps_menu(state);
                 submenu_set_selected_item(state->gps_menu, state->last_gps_index);
                 break;
+            case 15:
+                show_aerial_menu(state);
+                submenu_set_selected_item(state->aerial_menu, state->last_aerial_category_index);
+                break;
             case 30:
                 show_ir_menu(state);
                 submenu_set_selected_item(state->ir_menu, state->last_ir_index);
@@ -3167,9 +3411,9 @@ bool back_event_callback(void* context) {
         show_main_menu(state);
         state->current_view = 0;
     }
-    // Handle WiFi sub-category menus
-    else if(current_view >= 10 && current_view <= 14) {
-        if(state->came_from_settings) {
+    // Handle WiFi sub-category menus (including aerial 15)
+    else if((current_view >= 10 && current_view <= 15)) {
+        if(state->came_from_settings && current_view >= 10 && current_view <= 14) {
             // came from settings hardware menu; return to settings actions
             view_dispatcher_switch_to_view(state->view_dispatcher, 8);
             state->current_view = 8;
@@ -3405,6 +3649,11 @@ static bool menu_input_handler(InputEvent* event, void* context) {
         commands = wifi_settings_commands;
         commands_count = COUNT_OF(wifi_settings_commands);
         break;
+    case 15:
+        current_menu = state->aerial_menu;
+        commands = aerial_commands;
+        commands_count = COUNT_OF(aerial_commands);
+        break;
     case 40:
         current_menu = state->status_idle_menu;
         commands = status_idle_commands;
@@ -3480,6 +3729,8 @@ static bool menu_input_handler(InputEvent* event, void* context) {
                         }
                     } else if(state->current_view == 3) {
                         state->last_gps_index = current_index;
+                    } else if(state->current_view == 15) {
+                        state->last_aerial_category_index = current_index;
                     }
                     execute_menu_command(state, &commands[current_index]);
                 }
@@ -3491,6 +3742,12 @@ static bool menu_input_handler(InputEvent* event, void* context) {
             if(state->current_view == 40) {
                 view_dispatcher_switch_to_view(state->view_dispatcher, 8);
                 state->current_view = 8;
+            }
+            // Back from aerial menu returns to WiFi categories
+            else if(state->current_view == 15) {
+                show_wifi_menu(state);
+                submenu_set_selected_item(state->wifi_menu, state->last_wifi_category_index);
+                state->current_view = 1;
             }
             // Back from WiFi subcategory menus returns to WiFi categories (or settings)
             else if(state->current_view >= 10 && state->current_view <= 14) {

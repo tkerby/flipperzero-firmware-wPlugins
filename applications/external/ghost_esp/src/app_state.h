@@ -57,6 +57,7 @@ struct AppState {
     Submenu* ble_scanning_menu;
     Submenu* ble_capture_menu;
     Submenu* ble_attack_menu;
+    Submenu* aerial_menu;
     Submenu* gps_menu;
     Submenu* ir_menu;
     Submenu* ir_remotes_menu;
@@ -94,6 +95,7 @@ struct AppState {
     uint32_t last_ble_scanning_index;
     uint32_t last_ble_capture_index;
     uint32_t last_ble_attack_index;
+    uint32_t last_aerial_category_index;
     uint32_t last_gps_index;
     uint32_t last_ir_index;
     uint32_t ir_current_remote_index;
