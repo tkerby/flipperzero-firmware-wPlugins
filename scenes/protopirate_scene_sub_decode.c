@@ -491,6 +491,36 @@ static bool protopirate_process_raw_chunk(ProtoPirateApp* app, SubDecodeContext*
         ctx->decode_success = true;
         ctx->can_save = true;
         
+        // Serialize the decoded data BEFORE freeing the decoder
+        ctx->save_data = flipper_format_string_alloc();
+        if(ctx->current_protocol->decoder->serialize) {
+            // Create a temporary preset for serialization
+            SubGhzRadioPreset temp_preset;
+            temp_preset.frequency = ctx->frequency;
+            temp_preset.name = furi_string_alloc_set("AM650");
+            temp_preset.data = NULL;
+            temp_preset.data_size = 0;
+            
+            SubGhzProtocolStatus status = ctx->current_protocol->decoder->serialize(
+                ctx->current_decoder, ctx->save_data, &temp_preset);
+            
+            if(status != SubGhzProtocolStatusOk) {
+                FURI_LOG_W(TAG, "RAW serialize failed: %d", status);
+                flipper_format_free(ctx->save_data);
+                ctx->save_data = NULL;
+                ctx->can_save = false;
+            } else {
+                FURI_LOG_I(TAG, "RAW serialize success for %s", ctx->current_protocol->name);
+            }
+            
+            furi_string_free(temp_preset.name);
+        } else {
+            FURI_LOG_W(TAG, "Protocol %s has no serialize function", ctx->current_protocol->name);
+            flipper_format_free(ctx->save_data);
+            ctx->save_data = NULL;
+            ctx->can_save = false;
+        }
+        
         ctx->current_protocol->decoder->free(ctx->current_decoder);
         ctx->current_decoder = NULL;
         return true;
@@ -588,27 +618,32 @@ bool protopirate_scene_sub_decode_on_event(void* context, SceneManagerEvent even
             if(ctx->save_data) {
                 FuriString* protocol = furi_string_alloc();
                 flipper_format_rewind(ctx->save_data);
+                               
                 if(!flipper_format_read_string(ctx->save_data, "Protocol", protocol)) {
                     furi_string_set_str(protocol, "Unknown");
+                    FURI_LOG_W(TAG, "Could not read Protocol from save_data");
                 }
                 
                 // Clean protocol name for filename
                 furi_string_replace_all(protocol, "/", "_");
                 furi_string_replace_all(protocol, " ", "_");
                 
+                FURI_LOG_I(TAG, "Saving as protocol: %s", furi_string_get_cstr(protocol));
+                
                 FuriString* saved_path = furi_string_alloc();
                 if(protopirate_storage_save_capture(
                     ctx->save_data, furi_string_get_cstr(protocol), saved_path)) {
-                    FURI_LOG_I(TAG, "Saved: %s", furi_string_get_cstr(saved_path));
+                    FURI_LOG_I(TAG, "Saved to: %s", furi_string_get_cstr(saved_path));
                     notification_message(app->notifications, &sequence_success);
                 } else {
-                    FURI_LOG_E(TAG, "Save failed");
+                    FURI_LOG_E(TAG, "Save failed!");
                     notification_message(app->notifications, &sequence_error);
                 }
                 
                 furi_string_free(protocol);
                 furi_string_free(saved_path);
             } else {
+                FURI_LOG_E(TAG, "save_data is NULL, cannot save");
                 notification_message(app->notifications, &sequence_error);
             }
             consumed = true;
