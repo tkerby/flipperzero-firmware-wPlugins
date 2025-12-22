@@ -938,6 +938,8 @@ void ami_tool_clear_cached_tag(AmiToolApp* app) {
     memset(&app->tag_password, 0, sizeof(app->tag_password));
     app->tag_pack_valid = false;
     memset(app->tag_pack, 0, sizeof(app->tag_pack));
+    app->amiibo_link_completion_marker_valid = false;
+    memset(app->amiibo_link_completion_marker, 0, sizeof(app->amiibo_link_completion_marker));
 }
 
 bool ami_tool_extract_amiibo_id(
@@ -1421,20 +1423,8 @@ static bool ami_tool_info_write_password_pages(
 }
 
 static NfcCommand amiibo_emulation_cb(NfcGenericEvent event, void* context) {
-    AmiToolApp* app = context;
-
-    if(event.protocol == NfcProtocolInvalid && event.event_data && app) {
-        const NfcEvent* nfc_event = event.event_data;
-        if((nfc_event->type == NfcEventTypeFieldOff) && app->amiibo_link_active &&
-           app->amiibo_link_waiting_for_completion) {
-            app->amiibo_link_waiting_for_completion = false;
-            app->amiibo_link_completion_pending = false;
-            app->amiibo_link_last_change_tick = 0;
-            view_dispatcher_send_custom_event(
-                app->view_dispatcher, AmiToolEventAmiiboLinkWriteComplete);
-        }
-    }
-
+    UNUSED(event);
+    UNUSED(context);
     return NfcCommandContinue; // keep the listener alive
 }
 

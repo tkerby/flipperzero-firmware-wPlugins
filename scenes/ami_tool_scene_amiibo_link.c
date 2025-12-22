@@ -1,14 +1,21 @@
 #include "ami_tool_i.h"
+#include <input/input.h>
 #include <string.h>
 
-#define AMI_TOOL_AMIIBO_LINK_COMPLETION_DELAY_MS (1000U)
+#define AMI_TOOL_AMIIBO_LINK_COMPLETION_PAGE (129U)
 
 static void ami_tool_scene_amiibo_link_handle_completion(AmiToolApp* app);
-static uint32_t ami_tool_scene_amiibo_link_hash(const AmiToolApp* app);
-static void ami_tool_scene_amiibo_link_check_completion(AmiToolApp* app);
 static void ami_tool_scene_amiibo_link_reset_config_tracking(AmiToolApp* app);
 static void ami_tool_scene_amiibo_link_monitor_config(AmiToolApp* app);
 static void ami_tool_scene_amiibo_link_restore_pending_auth0(AmiToolApp* app);
+static bool ami_tool_scene_amiibo_link_regenerate_template(AmiToolApp* app);
+static void ami_tool_scene_amiibo_link_capture_completion_marker(AmiToolApp* app);
+static bool ami_tool_scene_amiibo_link_marker_written(const AmiToolApp* app);
+static void ami_tool_scene_amiibo_link_sync_listener_data(AmiToolApp* app);
+static void ami_tool_scene_amiibo_link_ready_button_callback(
+    GuiButtonType result,
+    InputType type,
+    void* context);
 
 static size_t ami_tool_scene_amiibo_link_config_start_page(const AmiToolApp* app) {
     if(!app || !app->tag_data || app->tag_data->pages_total < 4) {
@@ -42,6 +49,9 @@ static void ami_tool_scene_amiibo_link_monitor_config(AmiToolApp* app) {
     if(!app || !app->tag_data || app->tag_data->pages_total < 4) {
         return;
     }
+
+    /* Keep local tag cache synced with listener writes before inspecting config */
+    ami_tool_scene_amiibo_link_sync_listener_data(app);
 
     size_t config_start = ami_tool_scene_amiibo_link_config_start_page(app);
     uint8_t* config_page = app->tag_data->page[config_start].data;
@@ -100,12 +110,135 @@ static void ami_tool_scene_amiibo_link_show_text(AmiToolApp* app, const char* me
 }
 
 static void ami_tool_scene_amiibo_link_show_ready(AmiToolApp* app) {
-    ami_tool_scene_amiibo_link_show_text(
-        app,
+    if(!app) {
+        return;
+    }
+    static const char* ready_text =
         "Amiibo Link\n\n"
         "Flipper is emulating a blank NTAG215.\n"
-        "Use compatible application to write data.\n"
-        "Press Back to stop.");
+        "Use a compatible app to write data.\n"
+        "Press OK once writing is complete.\n"
+        "Press Back to stop.";
+    widget_reset(app->info_widget);
+    widget_add_text_scroll_element(app->info_widget, 2, 0, 124, 60, ready_text);
+    widget_add_button_element(
+        app->info_widget,
+        GuiButtonTypeCenter,
+        "OK",
+        ami_tool_scene_amiibo_link_ready_button_callback,
+        app);
+    view_dispatcher_switch_to_view(app->view_dispatcher, AmiToolViewInfo);
+    app->usage_info_visible = false;
+}
+
+static void ami_tool_scene_amiibo_link_ready_button_callback(
+    GuiButtonType result,
+    InputType type,
+    void* context) {
+    AmiToolApp* app = context;
+    if(!app) {
+        return;
+    }
+    if((result == GuiButtonTypeCenter) && (type == InputTypeShort)) {
+        view_dispatcher_send_custom_event(
+            app->view_dispatcher, AmiToolEventAmiiboLinkWriteComplete);
+    }
+}
+
+static bool ami_tool_scene_amiibo_link_regenerate_template(AmiToolApp* app) {
+    if(!app || !app->tag_data || !app->tag_data_valid) {
+        return false;
+    }
+
+    MfUltralightData* tag = app->tag_data;
+    if(tag->pages_total < 8) {
+        return false;
+    }
+
+    uint8_t* page2 = tag->page[2].data;
+    page2[1] = 0x48;
+    page2[2] = 0x0F;
+    page2[3] = 0xE0;
+
+    static const uint8_t capability_defaults[4] = {0xF1, 0x10, 0xFF, 0xEE};
+    memcpy(tag->page[3].data, capability_defaults, sizeof(capability_defaults));
+
+    tag->page[4].data[0] = 0xA5;
+
+    if(tag->pages_total < 5) {
+        return false;
+    }
+    static const uint8_t dynamic_lock_defaults[4] = {0x01, 0x00, 0x0F, 0xBD};
+    size_t dynamic_lock_page = tag->pages_total - 5;
+    memcpy(tag->page[dynamic_lock_page].data, dynamic_lock_defaults, sizeof(dynamic_lock_defaults));
+
+    size_t config_start = ami_tool_scene_amiibo_link_config_start_page(app);
+    if(config_start == 0 || (config_start + 3) >= tag->pages_total) {
+        return false;
+    }
+    static const uint8_t cfg0[4] = {0x00, 0x00, 0x00, 0x04};
+    static const uint8_t cfg1[4] = {0x5F, 0x00, 0x00, 0x00};
+    memcpy(tag->page[config_start].data, cfg0, sizeof(cfg0));
+    memcpy(tag->page[config_start + 1].data, cfg1, sizeof(cfg1));
+
+    size_t uid_len = 0;
+    const uint8_t* uid = mf_ultralight_get_uid(tag, &uid_len);
+    MfUltralightAuthPassword password = {0};
+    if(!ami_tool_compute_password_from_uid(uid, uid_len, &password)) {
+        return false;
+    }
+    memcpy(tag->page[config_start + 2].data, password.data, sizeof(password.data));
+    app->tag_password = password;
+    app->tag_password_valid = true;
+
+    static const uint8_t pack_defaults[4] = {0x80, 0x80, 0x00, 0x00};
+    memcpy(tag->page[config_start + 3].data, pack_defaults, sizeof(pack_defaults));
+    memcpy(app->tag_pack, pack_defaults, sizeof(app->tag_pack));
+    app->tag_pack_valid = true;
+
+    amiibo_configure_rf_interface(tag);
+    return true;
+}
+
+static void ami_tool_scene_amiibo_link_capture_completion_marker(AmiToolApp* app) {
+    if(!app || !app->tag_data) {
+        return;
+    }
+    if(app->tag_data->pages_total <= AMI_TOOL_AMIIBO_LINK_COMPLETION_PAGE) {
+        app->amiibo_link_completion_marker_valid = false;
+        return;
+    }
+    memcpy(
+        app->amiibo_link_completion_marker,
+        app->tag_data->page[AMI_TOOL_AMIIBO_LINK_COMPLETION_PAGE].data,
+        MF_ULTRALIGHT_PAGE_SIZE);
+    app->amiibo_link_completion_marker_valid = true;
+}
+
+static bool ami_tool_scene_amiibo_link_marker_written(const AmiToolApp* app) {
+    if(!app || !app->tag_data || !app->amiibo_link_completion_marker_valid) {
+        return false;
+    }
+    if(app->tag_data->pages_total <= AMI_TOOL_AMIIBO_LINK_COMPLETION_PAGE) {
+        return false;
+    }
+    return memcmp(
+               app->tag_data->page[AMI_TOOL_AMIIBO_LINK_COMPLETION_PAGE].data,
+               app->amiibo_link_completion_marker,
+               MF_ULTRALIGHT_PAGE_SIZE) != 0;
+}
+
+static void ami_tool_scene_amiibo_link_sync_listener_data(AmiToolApp* app) {
+    if(!app || !app->tag_data || !app->emulation_listener) {
+        return;
+    }
+    const NfcDeviceData* device =
+        nfc_listener_get_data(app->emulation_listener, NfcProtocolMfUltralight);
+    if(!device) {
+        return;
+    }
+    const MfUltralightData* listener_data = (const MfUltralightData*)device;
+    mf_ultralight_copy(app->tag_data, listener_data);
 }
 
 static bool ami_tool_scene_amiibo_link_prepare(AmiToolApp* app) {
@@ -138,11 +271,8 @@ static bool ami_tool_scene_amiibo_link_prepare(AmiToolApp* app) {
     memcpy(app->tag_pack, blank_pack, sizeof(app->tag_pack));
     app->tag_pack_valid = true;
 
-    app->amiibo_link_initial_hash = ami_tool_scene_amiibo_link_hash(app);
-    app->amiibo_link_last_hash = app->amiibo_link_initial_hash;
-    app->amiibo_link_last_change_tick = 0;
-    app->amiibo_link_completion_pending = false;
     ami_tool_scene_amiibo_link_reset_config_tracking(app);
+    ami_tool_scene_amiibo_link_capture_completion_marker(app);
 
     return true;
 }
@@ -153,8 +283,6 @@ static bool ami_tool_scene_amiibo_link_start_session(AmiToolApp* app) {
             app, "Amiibo Link\n\nUnable to prepare memory.\nPress Back to exit.");
         app->amiibo_link_active = false;
         app->amiibo_link_waiting_for_completion = false;
-        app->amiibo_link_completion_pending = false;
-        app->amiibo_link_last_change_tick = 0;
         return false;
     }
 
@@ -163,51 +291,21 @@ static bool ami_tool_scene_amiibo_link_start_session(AmiToolApp* app) {
             app, "Amiibo Link\n\nUnable to start emulation.\nPress Back to exit.");
         app->amiibo_link_active = false;
         app->amiibo_link_waiting_for_completion = false;
-        app->amiibo_link_completion_pending = false;
-        app->amiibo_link_last_change_tick = 0;
         return false;
     }
 
     app->amiibo_link_active = true;
     app->amiibo_link_waiting_for_completion = true;
-    app->amiibo_link_completion_pending = false;
-    app->amiibo_link_last_change_tick = 0;
-    app->amiibo_link_last_hash = app->amiibo_link_initial_hash;
     ami_tool_scene_amiibo_link_show_ready(app);
     return true;
 }
 
-static bool ami_tool_scene_amiibo_link_get_valid_id(
-    AmiToolApp* app,
-    char* id_hex,
-    size_t buffer_size) {
-    if(!ami_tool_extract_amiibo_id(app->tag_data, id_hex, buffer_size)) {
-        return false;
-    }
-    if(strlen(id_hex) != 16) {
-        return false;
-    }
-    bool all_zero = true;
-    for(size_t i = 0; i < 16; i++) {
-        if(id_hex[i] != '0') {
-            all_zero = false;
-            break;
-        }
-    }
-    return !all_zero;
-}
-
 static bool ami_tool_scene_amiibo_link_finalize(AmiToolApp* app) {
-    if(!app || !app->tag_data || !app->tag_data_valid || !app->last_uid_valid) {
+    if(!app || !app->tag_data || !app->tag_data_valid) {
         return false;
     }
 
     ami_tool_info_stop_emulation(app);
-
-    if(amiibo_set_uid(app->tag_data, app->last_uid, app->last_uid_len) != RFIDX_OK) {
-        return false;
-    }
-
     amiibo_configure_rf_interface(app->tag_data);
 
     if(app->tag_data->pages_total < 2) {
@@ -216,103 +314,78 @@ static bool ami_tool_scene_amiibo_link_finalize(AmiToolApp* app) {
 
     size_t password_page = app->tag_data->pages_total - 2;
     size_t pack_page = app->tag_data->pages_total - 1;
-    memcpy(app->tag_password.data, app->tag_data->page[password_page].data, sizeof(app->tag_password.data));
+    memcpy(
+        app->tag_password.data,
+        app->tag_data->page[password_page].data,
+        sizeof(app->tag_password.data));
     app->tag_password_valid = true;
     memcpy(app->tag_pack, app->tag_data->page[pack_page].data, sizeof(app->tag_pack));
     app->tag_pack_valid = true;
 
-    char id_hex[17] = {0};
-    if(!ami_tool_scene_amiibo_link_get_valid_id(app, id_hex, sizeof(id_hex))) {
-        return false;
+    size_t uid_len = 0;
+    const uint8_t* uid = mf_ultralight_get_uid(app->tag_data, &uid_len);
+    if(uid && uid_len > 0) {
+        ami_tool_store_uid(app, uid, uid_len);
     }
 
-    ami_tool_store_uid(app, app->last_uid, app->last_uid_len);
-    ami_tool_info_show_page(app, id_hex, true);
+    char id_hex[17] = {0};
+    const char* id_arg = NULL;
+    if(ami_tool_extract_amiibo_id(app->tag_data, id_hex, sizeof(id_hex))) {
+        id_arg = id_hex;
+    }
+
+    ami_tool_info_show_page(app, id_arg, true);
     return true;
 }
 
-static uint32_t ami_tool_scene_amiibo_link_hash(const AmiToolApp* app) {
-    if(!app || !app->tag_data || app->tag_data->pages_total == 0) {
-        return 0;
-    }
-
-    uint32_t hash = 0;
-    const size_t start_page = 4;
-    size_t end_page = app->tag_data->pages_total;
-    if(end_page > 4) {
-        end_page -= 4;
-    }
-    for(size_t page = start_page; page < end_page; page++) {
-        const uint8_t* data = app->tag_data->page[page].data;
-        for(size_t i = 0; i < MF_ULTRALIGHT_PAGE_SIZE; i++) {
-            hash = (hash * 131) ^ data[i];
-        }
-    }
-    return hash;
-}
-
-static void ami_tool_scene_amiibo_link_check_completion(AmiToolApp* app) {
-    if(!app || !app->amiibo_link_waiting_for_completion) {
+static void ami_tool_scene_amiibo_link_handle_completion(AmiToolApp* app) {
+    if(!app || !app->amiibo_link_active || !app->amiibo_link_waiting_for_completion) {
         return;
     }
 
-    uint32_t current_hash = ami_tool_scene_amiibo_link_hash(app);
-    if(current_hash != app->amiibo_link_last_hash) {
-        app->amiibo_link_last_hash = current_hash;
-        app->amiibo_link_last_change_tick = furi_get_tick();
-    }
-    if(current_hash == app->amiibo_link_initial_hash) {
-        return;
-    }
+    ami_tool_scene_amiibo_link_sync_listener_data(app);
 
-    char id_hex[17] = {0};
-    if(!ami_tool_scene_amiibo_link_get_valid_id(app, id_hex, sizeof(id_hex))) {
-        return;
-    }
-
-    if(!app->amiibo_link_completion_pending) {
-        app->amiibo_link_completion_pending = true;
-        if(app->amiibo_link_last_change_tick == 0) {
-            app->amiibo_link_last_change_tick = furi_get_tick();
-        }
-        return;
-    }
-
-    if(app->amiibo_link_last_change_tick == 0) {
-        return;
-    }
-
-    uint32_t now = furi_get_tick();
-    uint32_t delay_ticks = furi_ms_to_ticks(AMI_TOOL_AMIIBO_LINK_COMPLETION_DELAY_MS);
-    if((now - app->amiibo_link_last_change_tick) < delay_ticks) {
+    if(!ami_tool_scene_amiibo_link_marker_written(app)) {
+        ami_tool_scene_amiibo_link_show_text(
+            app,
+            "Amiibo Link\n\nNo data changes detected.\n"
+            "Ensure the writing app finishes\nbefore pressing OK.");
         return;
     }
 
     app->amiibo_link_waiting_for_completion = false;
-    app->amiibo_link_completion_pending = false;
-    ami_tool_scene_amiibo_link_handle_completion(app);
-}
+    ami_tool_scene_amiibo_link_restore_pending_auth0(app);
 
-static void ami_tool_scene_amiibo_link_handle_completion(AmiToolApp* app) {
-    if(!app) {
+    if(!ami_tool_scene_amiibo_link_regenerate_template(app)) {
+        ami_tool_scene_amiibo_link_show_text(
+            app,
+            "Amiibo Link\n\nUnable to rebuild Amiibo config.\n"
+            "Press Back to exit.");
+        ami_tool_info_stop_emulation(app);
+        app->amiibo_link_active = false;
         return;
     }
-
-    ami_tool_scene_amiibo_link_restore_pending_auth0(app);
-    app->amiibo_link_completion_pending = false;
-    app->amiibo_link_last_change_tick = 0;
 
     bool success = ami_tool_scene_amiibo_link_finalize(app);
     if(success) {
         app->amiibo_link_active = false;
-        app->amiibo_link_waiting_for_completion = false;
         return;
     }
 
-    ami_tool_scene_amiibo_link_show_text(
-        app,
+    const char* failure_template =
         "Amiibo Link\n\nNo valid Amiibo data detected.\n"
-        "Hold the phone in place and try again.");
+        "Detected ID: %s\n"
+        "Let the app finish writing and press OK again.";
+    char id_hex[17] = {0};
+    const char* detected_id = "Unknown";
+    if(ami_tool_extract_amiibo_id(app->tag_data, id_hex, sizeof(id_hex))) {
+        detected_id = id_hex;
+    }
+    FuriString* message = furi_string_alloc_set(failure_template);
+    furi_string_replace_all_str(message, "%s", detected_id);
+    ami_tool_scene_amiibo_link_show_text(app, furi_string_get_cstr(message));
+    furi_string_free(message);
+    app->amiibo_link_active = false;
 
     if(!ami_tool_scene_amiibo_link_start_session(app)) {
         ami_tool_scene_amiibo_link_show_text(
@@ -383,7 +456,6 @@ bool ami_tool_scene_amiibo_link_on_event(void* context, SceneManagerEvent event)
     } else if(event.type == SceneManagerEventTypeTick) {
         if(app->amiibo_link_active && app->amiibo_link_waiting_for_completion) {
             ami_tool_scene_amiibo_link_monitor_config(app);
-            ami_tool_scene_amiibo_link_check_completion(app);
             return true;
         }
     } else if(event.type == SceneManagerEventTypeBack) {
@@ -398,8 +470,6 @@ bool ami_tool_scene_amiibo_link_on_event(void* context, SceneManagerEvent event)
             if(app->amiibo_link_active) {
                 app->amiibo_link_active = false;
                 app->amiibo_link_waiting_for_completion = false;
-                app->amiibo_link_completion_pending = false;
-                app->amiibo_link_last_change_tick = 0;
                 ami_tool_scene_amiibo_link_restore_pending_auth0(app);
                 return false;
             }
@@ -422,8 +492,6 @@ bool ami_tool_scene_amiibo_link_on_event(void* context, SceneManagerEvent event)
         }
         app->amiibo_link_active = false;
         app->amiibo_link_waiting_for_completion = false;
-        app->amiibo_link_completion_pending = false;
-        app->amiibo_link_last_change_tick = 0;
         ami_tool_scene_amiibo_link_restore_pending_auth0(app);
         ami_tool_info_stop_emulation(app);
         return false;
@@ -440,8 +508,4 @@ void ami_tool_scene_amiibo_link_on_exit(void* context) {
     app->info_action_message_visible = false;
     app->amiibo_link_active = false;
     app->amiibo_link_waiting_for_completion = false;
-    app->amiibo_link_initial_hash = 0;
-    app->amiibo_link_last_hash = 0;
-    app->amiibo_link_last_change_tick = 0;
-    app->amiibo_link_completion_pending = false;
 }

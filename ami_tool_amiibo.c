@@ -543,6 +543,7 @@ RfidxStatus amiibo_prepare_blank_tag(MfUltralightData* tag_data) {
     uint8_t* raw = amiibo_bytes(tag_data);
     memset(raw, 0, AMIIBO_TOTAL_BYTES);
 
+    raw[9] = 0x48;
     static const uint8_t capability_defaults[4] = {0xE1, 0x10, 0x3E, 0x00};
     memcpy(raw + AMIIBO_OFFSET_CAPABILITY, capability_defaults, sizeof(capability_defaults));
     static const uint8_t otp_defaults[4] = {0x03, 0x00, 0xFE, 0x00};

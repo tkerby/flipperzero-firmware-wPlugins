@@ -127,6 +127,8 @@ AmiToolApp* ami_tool_alloc(void) {
     app->amiibo_link_auth0_override_active = false;
     app->amiibo_link_access_snapshot_valid = false;
     memset(app->amiibo_link_access_snapshot, 0, sizeof(app->amiibo_link_access_snapshot));
+    app->amiibo_link_completion_marker_valid = false;
+    memset(app->amiibo_link_completion_marker, 0, sizeof(app->amiibo_link_completion_marker));
 
     return app;
 }

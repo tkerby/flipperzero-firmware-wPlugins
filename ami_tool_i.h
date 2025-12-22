@@ -253,6 +253,8 @@ struct AmiToolApp {
     bool amiibo_link_auth0_override_active;
     bool amiibo_link_access_snapshot_valid;
     uint8_t amiibo_link_access_snapshot[MF_ULTRALIGHT_PAGE_SIZE];
+    bool amiibo_link_completion_marker_valid;
+    uint8_t amiibo_link_completion_marker[MF_ULTRALIGHT_PAGE_SIZE];
 };
 
 /* Scene handlers table */
