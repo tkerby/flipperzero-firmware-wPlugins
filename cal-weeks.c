@@ -11,13 +11,20 @@
 
 #define TAG "cal-weeks" // Tag for logging purposes
 
-extern const Icon I_icon_10x10, I_arrows, I_back, I_splash;
+// Layout constants for week view screen
+#define WEEK_VIEW_RIGHT_MARGIN 10
+#define WEEK_VIEW_WIDTH (128 - WEEK_VIEW_RIGHT_MARGIN)
+#define WEEK_VIEW_CENTER (WEEK_VIEW_WIDTH / 2)
+#define WEEK_VIEW_SLOT_WIDTH 17
+#define WEEK_VIEW_MAX_X (WEEK_VIEW_WIDTH - 1)
+
+extern const Icon I_icon_10x10, I_arrows, I_back, I_folder, I_splash;
 
 const char* days[] = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
 
 typedef enum {
    ScreenSplash,
-   ScreenWeekView
+   ScreenDayView
 } AppScreen;
 
 // Main application structure
@@ -265,8 +272,9 @@ static void draw_screen_splash(Canvas* canvas, DateTime* datetime, AppState* sta
     elements_button_center(canvas, "OK"); // for the OK button
 }
 
-static void draw_screen_weeks(Canvas* canvas, DateTime* datetime, AppState* state) {
+static void draw_screen_day(Canvas* canvas, DateTime* datetime, AppState* state) {
 	char buffer[64]; // buffer for string concatenation
+	canvas_draw_icon(canvas, 118, -1, &I_folder); // Icon "open file" 
 	
 	// Calculate the selected date
 	DateTime selected_datetime;
@@ -283,25 +291,23 @@ static void draw_screen_weeks(Canvas* canvas, DateTime* datetime, AppState* stat
     canvas_set_font(canvas, FontPrimary);
 	
 	// Draw title with selected date
-	snprintf(buffer, sizeof(buffer), "Plan for %s %04d-%02d-%02d", 
+	snprintf(buffer, sizeof(buffer), "%s, %04d-%02d-%02d", 
 	         days[state->selected_day], 
 	         selected_datetime.year, 
 	         selected_datetime.month, 
 	         selected_day_num);
-	canvas_draw_str_aligned(canvas, 64, 2, AlignCenter, AlignTop, buffer);
+	canvas_draw_str_aligned(canvas, 1, 1, AlignLeft, AlignTop, buffer);
 	
 	// Draw header and footer lines
-	canvas_draw_line(canvas, 0, 11, 127, 11);   // upper line of header
-	canvas_draw_line(canvas, 0, 21, 127, 21); // lower line of header
-	// canvas_draw_line(canvas, 0, 63, 127, 63); // footer line
+	canvas_draw_line(canvas, 0, 11, WEEK_VIEW_MAX_X, 11); // upper line of header
+	canvas_draw_line(canvas, 0, 21, WEEK_VIEW_MAX_X, 21); // lower line of header
 	
 	// Time slots header (X axis)
 	canvas_set_font(canvas, FontSecondary);
 	const char* time_slots[] = {"08", "10", "12", "14", "16", "18", "20"};
-	int slot_width = 19;
 	
 	for(int i = 0; i < 7; i++) {
-		int x = i * slot_width;
+		int x = i * WEEK_VIEW_SLOT_WIDTH;
 		// Draw hours
 		canvas_draw_str(canvas, x, 20, time_slots[i]);
 		// Draw vertical grid lines
@@ -313,12 +319,12 @@ static void draw_screen_weeks(Canvas* canvas, DateTime* datetime, AppState* stat
 	int row_height = 13;
 	for(int row = 0; row < 3; row++) {
 		int y = y_start + row * row_height;
-		canvas_draw_line(canvas, 0, y, 127, y);
+		canvas_draw_line(canvas, 0, y, WEEK_VIEW_MAX_X, y);
 	}
 	
 	// Placeholder text for tasks/events
 	canvas_set_font(canvas, FontSecondary);
-	canvas_draw_str_aligned(canvas, 64, 26, AlignCenter, AlignTop, "No events available");
+	canvas_draw_str_aligned(canvas, WEEK_VIEW_CENTER, 26, AlignCenter, AlignTop, "No events available");
 	
 	canvas_draw_icon(canvas, 1, 55, &I_back);
 	canvas_draw_str_aligned(canvas, 11, 62, AlignLeft, AlignBottom, "Choose other day");	
@@ -336,11 +342,11 @@ void draw_callback(Canvas* canvas, void* context) {
     furi_hal_rtc_get_datetime(&datetime);
 	
     switch (state -> current_screen) {
-		case ScreenSplash: // Splash screen ===================================
+		case ScreenSplash: // Weeks screen =====================================
             draw_screen_splash(canvas, &datetime, state);
 			break;	
-		case ScreenWeekView: // Week View ====================================
-            draw_screen_weeks(canvas, &datetime, state);
+		case ScreenDayView: // Day View ========================================
+            draw_screen_day(canvas, &datetime, state);
 			break;	
     }
 }
@@ -423,16 +429,16 @@ int32_t cal_weeks_main(void* p) {
             case InputKeyOk:
                 switch (app.current_screen) {
                     case ScreenSplash:
-                        app.current_screen = ScreenWeekView;   
+                        app.current_screen = ScreenDayView;   
                         break;
-                    case ScreenWeekView:
+                    case ScreenDayView:
                         // Could add functionality here
                         break;
                 }
                 break;
                 
             case InputKeyBack:
-                if(app.current_screen == ScreenWeekView) {
+                if(app.current_screen == ScreenDayView) {
                     app.current_screen = ScreenSplash;
                 } else if(app.current_screen == ScreenSplash) {
                     // Reset to current week and today
