@@ -9,6 +9,7 @@
 #include <string.h>
 #include <storage/storage.h>
 #include <furi_hal_rtc.h> // for getting the current date
+#include "utils/ics_extract.c" // include ICS parser
 
 #define TAG "cal-weeks" // Tag for logging purposes
 
@@ -27,7 +28,8 @@ const char* days[] = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
 
 typedef enum {
    ScreenSplash,
-   ScreenDayView
+   ScreenDayView,
+   ScreenEventDetail
 } AppScreen;
 
 // Main application structure
@@ -40,6 +42,8 @@ typedef struct {
     int selected_day;               // Selected day of week (0=Mon, 6=Sun)
 	int selected_day_menu;          // Selected menu item in day view (0=folder, 1=calendar)
 	FuriString* selected_file_path; // Path to selected file
+	CalendarEventList* events;      // List of events for selected day
+	int selected_event;             // Selected event index
 } AppState;
 
 // =============================================================================
@@ -289,11 +293,17 @@ static void draw_screen_splash(Canvas* canvas, DateTime* datetime, AppState* sta
     elements_button_center(canvas, "OK"); // for the OK button
 }
 
-static void draw_screen_day(Canvas* canvas, DateTime* datetime, AppState* state) {
-	char buffer[64]; // buffer for string concatenation
-	// Draw menu items
+// Helper function to draw the right-side navigation menu
+static void draw_day_view_menu(Canvas* canvas, AppState* state) {
 	draw_menu_item(canvas, 116, 0, &I_folder, state->selected_day_menu == 0);
 	draw_menu_item(canvas, 116, 13, &I_icon_10x10, state->selected_day_menu == 1);
+}
+
+static void draw_screen_day(Canvas* canvas, DateTime* datetime, AppState* state) {
+	char buffer[64]; // buffer for string concatenation
+	
+	// Draw navigation menu items on the right
+	draw_day_view_menu(canvas, state);
 	
 	// Calculate the selected date
 	DateTime selected_datetime;
@@ -307,7 +317,7 @@ static void draw_screen_day(Canvas* canvas, DateTime* datetime, AppState* state)
 	int selected_day_num = atoi(days_selected_week[state->selected_day]);
 	
 	canvas_set_color(canvas, ColorBlack);
-    canvas_set_font(canvas, FontPrimary);
+	canvas_set_font(canvas, FontPrimary);
 	
 	// Draw title with selected date
 	snprintf(buffer, sizeof(buffer), "%s, %04d-%02d-%02d", 
@@ -317,9 +327,8 @@ static void draw_screen_day(Canvas* canvas, DateTime* datetime, AppState* state)
 	         selected_day_num);
 	canvas_draw_str_aligned(canvas, 1, 1, AlignLeft, AlignTop, buffer);
 	
-	// Draw header and footer lines
+	// Draw header line
 	canvas_draw_line(canvas, 0, 11, WEEK_VIEW_MAX_X, 11); // upper line of header
-	canvas_draw_line(canvas, 0, 21, WEEK_VIEW_MAX_X, 21); // lower line of header
 	
 	// Time slots header (X axis)
 	canvas_set_font(canvas, FontSecondary);
@@ -329,8 +338,6 @@ static void draw_screen_day(Canvas* canvas, DateTime* datetime, AppState* state)
 		int x = i * WEEK_VIEW_SLOT_WIDTH;
 		// Draw hours
 		canvas_draw_str(canvas, x, 20, time_slots[i]);
-		// Draw vertical grid lines
-		// if (i > 0) canvas_draw_line(canvas, x - 1, 11, x - 1, 63);
 	}
 	
 	// Draw horizontal time grid
@@ -341,23 +348,111 @@ static void draw_screen_day(Canvas* canvas, DateTime* datetime, AppState* state)
 		canvas_draw_line(canvas, 0, y, WEEK_VIEW_MAX_X, y);
 	}
 	
-	// Placeholder text for tasks/events/file-name
-	canvas_set_font(canvas, FontSecondary);
-	if(furi_string_size(state->selected_file_path) > 0) {
-		// Extract filename from path
-		const char* full_path = furi_string_get_cstr(state->selected_file_path);
-		const char* filename = strrchr(full_path, '/');
-		if(filename) {
-			filename++; // Skip the '/'
-		} else {
-			filename = full_path;
+	// Draw events as 3-pixel high boxes in the grid area
+	if(state->events && state->events->count > 0) {
+		int y_pos = 24;  // Start just below first grid line
+		int max_events = (60 - y_pos) / 4; // Calculate how many events fit (3px box + 1px gap)
+		
+		for(size_t i = 0; i < state->events->count && i < (size_t)max_events; i++) {
+			CalendarEvent* event = &state->events->events[i];
+			
+			// Draw event box (filled if selected, frame if not)
+			if((int)i == state->selected_event) {
+				canvas_draw_box(canvas, 1, y_pos, WEEK_VIEW_MAX_X - 1, 3);
+				canvas_set_color(canvas, ColorWhite);
+			} else {
+				canvas_draw_frame(canvas, 1, y_pos, WEEK_VIEW_MAX_X - 1, 3);
+			}
+			
+			// Format event text: show time and title, with asterisk for all-day events
+			if(event->all_day) {
+				snprintf(buffer, sizeof(buffer), "* %s", 
+				         furi_string_get_cstr(event->summary));
+			} else {
+				snprintf(buffer, sizeof(buffer), "%02d:%02d %s", 
+				         event->start_time.hour, event->start_time.minute,
+				         furi_string_get_cstr(event->summary));
+			}
+			
+			// Truncate if too long to fit on screen
+			if(strlen(buffer) > 18) {
+				buffer[15] = '.';
+				buffer[16] = '.';
+				buffer[17] = '.';
+				buffer[18] = '\0';
+			}
+			
+			// Draw the event text inside/beside the box
+			canvas_draw_str_aligned(canvas, 3, y_pos, AlignLeft, AlignTop, buffer);
+			
+			// Restore black color if we inverted for selection
+			if((int)i == state->selected_event) {
+				canvas_set_color(canvas, ColorBlack);
+			}
+			
+			y_pos += 4; // Move down for next event (3px box + 1px gap)
 		}
-		canvas_draw_str_aligned(canvas, WEEK_VIEW_CENTER, 26, AlignCenter, AlignTop, filename);
 	} else {
-		canvas_draw_str_aligned(canvas, WEEK_VIEW_CENTER, 26, AlignCenter, AlignTop, "No events available");
+		// No events to show
+		canvas_set_font(canvas, FontSecondary);
+		if(furi_string_size(state->selected_file_path) > 0) {
+			// Show filename if a file is loaded
+			const char* full_path = furi_string_get_cstr(state->selected_file_path);
+			const char* filename = strrchr(full_path, '/');
+			if(filename) {
+				filename++; // Skip the '/'
+			} else {
+				filename = full_path;
+			}
+			canvas_draw_str_aligned(canvas, WEEK_VIEW_CENTER, 35, AlignCenter, AlignTop, filename);
+			canvas_draw_str_aligned(canvas, WEEK_VIEW_CENTER, 44, AlignCenter, AlignTop, "No events on this day");
+		} else {
+			canvas_draw_str_aligned(canvas, WEEK_VIEW_CENTER, 35, AlignCenter, AlignTop, "No file loaded");
+		}
+	}
+	
+	// Draw navigation hints at bottom
+	canvas_draw_icon(canvas, 1, 55, &I_back);
+	canvas_draw_str_aligned(canvas, 11, 62, AlignLeft, AlignBottom, "Back");
+	elements_button_center(canvas, "Details");
+}
+
+static void draw_screen_event_detail(Canvas* canvas, DateTime* datetime, AppState* state) {
+	if(!state->events || state->selected_event >= (int)state->events->count) return;
+	
+	CalendarEvent* event = &state->events->events[state->selected_event];
+	char buffer[64];
+	canvas_set_color(canvas, ColorBlack);
+	canvas_set_font(canvas, FontPrimary);
+	// Title
+	canvas_draw_str_aligned(canvas, 1, 1, AlignLeft, AlignTop, 
+	                        furi_string_get_cstr(event->summary));
+	canvas_draw_line(canvas, 0, 11, 127, 11);
+	canvas_set_font(canvas, FontSecondary);
+	// Time
+	if(event->all_day) {
+		snprintf(buffer, sizeof(buffer), "All day");
+	} else {
+		snprintf(buffer, sizeof(buffer), "%02d:%02d - %02d:%02d",
+		         event->start_time.hour, event->start_time.minute,
+		         event->end_time.hour, event->end_time.minute);
+	}
+	canvas_draw_str_aligned(canvas, 1, 14, AlignLeft, AlignTop, buffer);
+	// Location
+	if(furi_string_size(event->location) > 0) {
+		canvas_draw_str_aligned(canvas, 1, 24, AlignLeft, AlignTop, "Location:");
+		canvas_draw_str_aligned(canvas, 1, 32, AlignLeft, AlignTop, 
+		                        furi_string_get_cstr(event->location));
+	}
+	// Description (truncated)
+	if(furi_string_size(event->description) > 0) {
+		canvas_draw_str_aligned(canvas, 1, 44, AlignLeft, AlignTop, "Details:");
+		// Simple truncation - just show first line
+		const char* desc = furi_string_get_cstr(event->description);
+		canvas_draw_str_aligned(canvas, 1, 52, AlignLeft, AlignTop, desc);
 	}
 	canvas_draw_icon(canvas, 1, 55, &I_back);
-	canvas_draw_str_aligned(canvas, 11, 62, AlignLeft, AlignBottom, "Choose other day");	
+	canvas_draw_str_aligned(canvas, 11, 62, AlignLeft, AlignBottom, "Back");
 }
 
 // =============================================================================
@@ -377,7 +472,10 @@ void draw_callback(Canvas* canvas, void* context) {
 			break;	
 		case ScreenDayView: // Day View ========================================
             draw_screen_day(canvas, &datetime, state);
-			break;	
+			break;
+		case ScreenEventDetail: // Event Detail =================================
+            draw_screen_event_detail(canvas, &datetime, state);
+			break;
     }
 }
 
@@ -398,6 +496,8 @@ int32_t cal_weeks_main(void* p) {
   app.selected_day = 0;               // Start with Monday
   app.selected_day_menu = 0;          // Start with folder selected
   app.selected_file_path = furi_string_alloc(); // Allocate string for file path
+  app.events = NULL;                  // No events loaded initially
+  app.selected_event = 0;             // Start with first event
   
   // Ensure app data directory exists
   Storage* storage = furi_record_open(RECORD_STORAGE);
@@ -437,8 +537,13 @@ int32_t cal_weeks_main(void* p) {
                     // Shift to previous week
                     app.selected_week_offset--;
                 } else if(app.current_screen == ScreenDayView) {
-                    // Move menu selection up (with wrapping)
-                    app.selected_day_menu = (app.selected_day_menu - 1 + DAY_MENU_ITEMS) % DAY_MENU_ITEMS;
+                    // Select previous event
+                    if(app.events && app.events->count > 0) {
+                        app.selected_event--;
+                        if(app.selected_event < 0) {
+                            app.selected_event = app.events->count - 1;
+                        }
+                    }
 				}
                 break;
                 
@@ -447,8 +552,13 @@ int32_t cal_weeks_main(void* p) {
                     // Shift to next week
                     app.selected_week_offset++;
                 } else if(app.current_screen == ScreenDayView) {
-                    // Move menu selection down (with wrapping)
-                    app.selected_day_menu = (app.selected_day_menu + 1) % DAY_MENU_ITEMS;
+                    // Select next event
+                    if(app.events && app.events->count > 0) {
+                        app.selected_event++;
+                        if(app.selected_event >= (int)app.events->count) {
+                            app.selected_event = 0;
+                        }
+                    }
                 }
                 break;
                 
@@ -459,6 +569,9 @@ int32_t cal_weeks_main(void* p) {
                     if(app.selected_day < 0) {
                         app.selected_day = 6; // Wrap to Sunday
                     }
+				} else if(app.current_screen == ScreenDayView) {
+                    // Move menu selection up (with wrapping)
+                    app.selected_day_menu = (app.selected_day_menu - 1 + DAY_MENU_ITEMS) % DAY_MENU_ITEMS;	
                 }
                 break;
                 
@@ -469,12 +582,36 @@ int32_t cal_weeks_main(void* p) {
                     if(app.selected_day > 6) {
                         app.selected_day = 0; // Wrap to Monday
                     }
-                }
+                } else if(app.current_screen == ScreenDayView) {
+                    // Move menu selection down (with wrapping)
+                    app.selected_day_menu = (app.selected_day_menu + 1) % DAY_MENU_ITEMS;
+				}
                 break;
                 
             case InputKeyOk:
                 switch (app.current_screen) {
                     case ScreenSplash:
+                        // Load events for selected day
+                        if(app.events) {
+                            calendar_event_list_free(app.events);
+                        }
+                        
+                        DateTime selected_date;
+                        calculate_date_with_offset(&datetime, app.selected_week_offset, &selected_date);
+                        char days_week[7][4];
+                        get_week_days(selected_date.year, selected_date.month, selected_date.day, 0, days_week);
+                        
+                        DateTime day_start = selected_date;
+                        day_start.day = atoi(days_week[app.selected_day]);
+                        day_start.hour = 0;
+                        day_start.minute = 0;
+                        
+                        DateTime day_end = day_start;
+                        day_end.hour = 23;
+                        day_end.minute = 59;
+                        
+                        app.events = extract_calendar_events(furi_string_get_cstr(app.selected_file_path), &day_start, &day_end);
+                        app.selected_event = 0;
                         app.current_screen = ScreenDayView; 
                         break;
                     case ScreenDayView:
@@ -490,8 +627,15 @@ int32_t cal_weeks_main(void* p) {
                             furi_record_close(RECORD_DIALOGS);
                             if(!result) {
                                 furi_string_reset(app.selected_file_path); // Clear if cancelled
+						} else if(app.selected_day_menu == 1) {
+                            // Show event details
+                            if(app.events && app.events->count > 0) {
+                                app.current_screen = ScreenEventDetail;
                             }
                         }				
+                        break;
+                    case ScreenEventDetail:
+                        app.current_screen = ScreenDayView;
                         break;
                 }
                 break;
@@ -500,6 +644,8 @@ int32_t cal_weeks_main(void* p) {
                 if(app.current_screen == ScreenDayView) {
                     app.current_screen = ScreenSplash;
                 } else if(app.current_screen == ScreenSplash) {
+				} else if(app.current_screen == ScreenEventDetail) {
+                    app.current_screen = ScreenDayView;
                     // Reset to current week and today
                     app.selected_week_offset = 0;
                     DateTime current_datetime;
@@ -529,5 +675,8 @@ int32_t cal_weeks_main(void* p) {
   view_port_free(app.view_port);
   furi_message_queue_free(app.input_queue);
   furi_string_free(app.selected_file_path);
+  if(app.events) {
+      calendar_event_list_free(app.events);
+  }
   return 0;
 }
