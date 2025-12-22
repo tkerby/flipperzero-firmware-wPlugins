@@ -23,7 +23,6 @@ And other combinations of the above features.
 This app is not yet available in the official Flipper Zero app store. Instead, you can install it manually by following these steps:
 
 - Download the latest release from the [Releases](https://github.com/Firefox2100/flipper-amiibo-toolkit/releases) page.
-- Extract the downloaded ZIP file.
 - Copy the `ami_tool.fap` file to the NFC apps directory on your Flipper Zero's storage (usually located at `/apps/NFC/` in SD card).
 - Restart your Flipper Zero to load the new app.
 

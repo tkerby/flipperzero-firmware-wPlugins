@@ -293,6 +293,11 @@ static bool ami_tool_scene_saved_load_entry(AmiToolApp* app, size_t index) {
         }
         mf_ultralight_copy(app->tag_data, data);
         app->tag_data_valid = true;
+        if(app->tag_data->pages_total > 0) {
+            size_t pack_page = app->tag_data->pages_total - 1;
+            memcpy(app->tag_pack, app->tag_data->page[pack_page].data, sizeof(app->tag_pack));
+            app->tag_pack_valid = true;
+        }
 
         size_t uid_len = 0;
         const uint8_t* uid = mf_ultralight_get_uid(app->tag_data, &uid_len);

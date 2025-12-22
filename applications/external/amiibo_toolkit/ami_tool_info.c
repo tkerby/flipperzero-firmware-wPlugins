@@ -933,6 +933,10 @@ void ami_tool_clear_cached_tag(AmiToolApp* app) {
     }
     app->tag_password_valid = false;
     memset(&app->tag_password, 0, sizeof(app->tag_password));
+    app->tag_pack_valid = false;
+    memset(app->tag_pack, 0, sizeof(app->tag_pack));
+    app->amiibo_link_completion_marker_valid = false;
+    memset(app->amiibo_link_completion_marker, 0, sizeof(app->amiibo_link_completion_marker));
 }
 
 bool ami_tool_extract_amiibo_id(const MfUltralightData* tag_data, char* buffer, size_t buffer_size) {
@@ -1393,16 +1397,22 @@ static bool
     size_t pack_page = app->tag_data->pages_total - 1;
     memcpy(app->tag_data->page[password_page].data, password->data, sizeof(password->data));
     uint8_t* pack = app->tag_data->page[pack_page].data;
-    pack[0] = 0x80;
-    pack[1] = 0x80;
-    pack[2] = 0x00;
-    pack[3] = 0x00;
+    if(app->tag_pack_valid) {
+        memcpy(pack, app->tag_pack, sizeof(app->tag_pack));
+    } else {
+        pack[0] = 0x80;
+        pack[1] = 0x80;
+        pack[2] = 0x00;
+        pack[3] = 0x00;
+    }
+    memcpy(app->tag_pack, pack, sizeof(app->tag_pack));
+    app->tag_pack_valid = true;
     return true;
 }
 
 static NfcCommand amiibo_emulation_cb(NfcGenericEvent event, void* context) {
-    (void)event;
-    (void)context;
+    UNUSED(event);
+    UNUSED(context);
     return NfcCommandContinue; // keep the listener alive
 }
 

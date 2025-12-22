@@ -157,6 +157,14 @@ static int32_t ami_tool_scene_read_worker(void* context) {
                 if(app->tag_data) {
                     mf_ultralight_copy(app->tag_data, data);
                     app->tag_data_valid = true;
+                    if(app->tag_data->pages_total > 0) {
+                        size_t pack_page = app->tag_data->pages_total - 1;
+                        memcpy(
+                            app->tag_pack,
+                            app->tag_data->page[pack_page].data,
+                            sizeof(app->tag_pack));
+                        app->tag_pack_valid = true;
+                    }
                 }
                 ami_tool_store_uid(app, result.uid, result.uid_len);
 

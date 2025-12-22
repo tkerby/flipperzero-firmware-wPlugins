@@ -81,6 +81,8 @@ AmiToolApp* ami_tool_alloc(void) {
     app->tag_data_valid = false;
     memset(&app->tag_password, 0, sizeof(app->tag_password));
     app->tag_password_valid = false;
+    memset(app->tag_pack, 0, sizeof(app->tag_pack));
+    app->tag_pack_valid = false;
     memset(app->last_uid, 0, sizeof(app->last_uid));
     app->last_uid_len = 0;
     app->last_uid_valid = false;
@@ -113,6 +115,20 @@ AmiToolApp* ami_tool_alloc(void) {
         app->saved_page_paths[i] = furi_string_alloc();
         app->saved_page_ids[i] = furi_string_alloc();
     }
+
+    app->amiibo_link_active = false;
+    app->amiibo_link_waiting_for_completion = false;
+    app->amiibo_link_initial_hash = 0;
+    app->amiibo_link_last_hash = 0;
+    app->amiibo_link_last_change_tick = 0;
+    app->amiibo_link_completion_pending = false;
+    app->amiibo_link_current_auth0 = 0xFF;
+    app->amiibo_link_pending_auth0 = 0xFF;
+    app->amiibo_link_auth0_override_active = false;
+    app->amiibo_link_access_snapshot_valid = false;
+    memset(app->amiibo_link_access_snapshot, 0, sizeof(app->amiibo_link_access_snapshot));
+    app->amiibo_link_completion_marker_valid = false;
+    memset(app->amiibo_link_completion_marker, 0, sizeof(app->amiibo_link_completion_marker));
 
     return app;
 }
@@ -263,9 +279,15 @@ AmiToolRetailKeyStatus ami_tool_load_retail_key(AmiToolApp* app) {
     }
 
     AmiToolRetailKeyStatus status = AmiToolRetailKeyStatusStorageError;
+
+    if(storage_common_exists(app->storage, "/ext/apps_data/weebo/key_retail.bin")) {
+        storage_common_copy(app->storage, "/ext/apps_data/weebo/key_retail.bin", "/ext/nfc/assets/key_retail.bin");
+        storage_common_remove(app->storage, "/ext/apps_data/weebo/key_retail.bin");
+    }
+
     FuriString* path = furi_string_alloc();
     furi_string_printf(
-        path, "%s%s%s", "/ext/apps_data/weebo/", AMI_TOOL_RETAIL_KEY_FILENAME, ".bin");
+        path, "%s%s", "/ext/nfc/assets/", AMI_TOOL_RETAIL_KEY_FILENAME);
 
     if(storage_file_open(file, furi_string_get_cstr(path), FSAM_READ, FSOM_OPEN_EXISTING)) {
         size_t read = storage_file_read(file, app->retail_key, sizeof(app->retail_key));

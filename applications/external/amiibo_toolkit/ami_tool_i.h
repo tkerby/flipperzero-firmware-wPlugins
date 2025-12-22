@@ -18,7 +18,7 @@
 #include <furi_hal_random.h>
 
 #define AMI_TOOL_RETAIL_KEY_SIZE                (160U)
-#define AMI_TOOL_RETAIL_KEY_FILENAME            "key_retail"
+#define AMI_TOOL_RETAIL_KEY_FILENAME            "key_retail.bin"
 #define AMI_TOOL_GENERATE_MAX_AMIIBO_PAGE_ITEMS (32U)
 #define AMI_TOOL_SAVED_MAX_PAGE_ITEMS           (12U)
 #define AMI_TOOL_NFC_FOLDER                     ANY_PATH("nfc")
@@ -96,6 +96,7 @@ typedef enum {
     AmiToolSceneRead,
     AmiToolSceneGenerate,
     AmiToolSceneSaved,
+    AmiToolSceneAmiiboLink,
     AmiToolSceneCount,
 } AmiToolScene;
 
@@ -126,6 +127,7 @@ typedef enum {
     AmiToolEventMainMenuRead,
     AmiToolEventMainMenuGenerate,
     AmiToolEventMainMenuSaved,
+    AmiToolEventMainMenuAmiiboLink,
     AmiToolEventMainMenuExit,
     AmiToolEventReadSuccess,
     AmiToolEventReadWrongType,
@@ -142,6 +144,7 @@ typedef enum {
     AmiToolEventInfoWriteCancelled,
     AmiToolEventUsagePrevPage,
     AmiToolEventUsageNextPage,
+    AmiToolEventAmiiboLinkWriteComplete,
 } AmiToolCustomEvent;
 
 typedef enum {
@@ -208,6 +211,8 @@ struct AmiToolApp {
     bool tag_data_valid;
     MfUltralightAuthPassword tag_password;
     bool tag_password_valid;
+    uint8_t tag_pack[4];
+    bool tag_pack_valid;
     uint8_t last_uid[10];
     size_t last_uid_len;
     bool last_uid_valid;
@@ -236,6 +241,20 @@ struct AmiToolApp {
     FuriString* saved_page_display[AMI_TOOL_SAVED_MAX_PAGE_ITEMS];
     FuriString* saved_page_paths[AMI_TOOL_SAVED_MAX_PAGE_ITEMS];
     FuriString* saved_page_ids[AMI_TOOL_SAVED_MAX_PAGE_ITEMS];
+
+    bool amiibo_link_active;
+    bool amiibo_link_waiting_for_completion;
+    uint32_t amiibo_link_initial_hash;
+    uint32_t amiibo_link_last_hash;
+    uint32_t amiibo_link_last_change_tick;
+    bool amiibo_link_completion_pending;
+    uint8_t amiibo_link_current_auth0;
+    uint8_t amiibo_link_pending_auth0;
+    bool amiibo_link_auth0_override_active;
+    bool amiibo_link_access_snapshot_valid;
+    uint8_t amiibo_link_access_snapshot[MF_ULTRALIGHT_PAGE_SIZE];
+    bool amiibo_link_completion_marker_valid;
+    uint8_t amiibo_link_completion_marker[MF_ULTRALIGHT_PAGE_SIZE];
 };
 
 /* Scene handlers table */
@@ -295,3 +314,4 @@ RfidxStatus amiibo_set_uid(MfUltralightData* tag_data, const uint8_t* uid, size_
 void amiibo_configure_rf_interface(MfUltralightData* tag_data);
 RfidxStatus
     amiibo_generate(const uint8_t* uuid, MfUltralightData* tag_data, Ntag21xMetadataHeader* header);
+RfidxStatus amiibo_prepare_blank_tag(MfUltralightData* tag_data);

@@ -165,6 +165,9 @@ static bool ami_tool_scene_generate_prepare_dump(AmiToolApp* app, const char* id
         app->tag_password_valid = false;
         memset(&app->tag_password, 0, sizeof(app->tag_password));
     }
+    static const uint8_t default_pack[4] = {0x80, 0x80, 0x00, 0x00};
+    memcpy(app->tag_pack, default_pack, sizeof(default_pack));
+    app->tag_pack_valid = true;
 
     app->tag_data_valid = true;
     return true;
@@ -934,7 +937,7 @@ static bool ami_tool_scene_generate_iterate_games(
         path = APP_ASSETS_PATH("game_3ds.dat");
         break;
     case AmiToolGeneratePlatformWiiU:
-        path = APP_ASSETS_PATH("game_wii_u.dat");
+        path = APP_ASSETS_PATH("game_wiiu.dat");
         break;
     case AmiToolGeneratePlatformSwitch:
         path = APP_ASSETS_PATH("game_switch.dat");
@@ -992,7 +995,7 @@ static const char*
     case AmiToolGeneratePlatform3DS:
         return APP_ASSETS_PATH("game_3ds_mapping.dat");
     case AmiToolGeneratePlatformWiiU:
-        return APP_ASSETS_PATH("game_wii_u_mapping.dat");
+        return APP_ASSETS_PATH("game_wiiu_mapping.dat");
     case AmiToolGeneratePlatformSwitch:
         return APP_ASSETS_PATH("game_switch_mapping.dat");
     case AmiToolGeneratePlatformSwitch2:
