@@ -12,7 +12,7 @@
 #define TAG "cal-weeks" // Tag for logging purposes
 
 // Layout constants for week view screen
-#define WEEK_VIEW_RIGHT_MARGIN 10
+#define WEEK_VIEW_RIGHT_MARGIN 11
 #define WEEK_VIEW_WIDTH (128 - WEEK_VIEW_RIGHT_MARGIN)
 #define WEEK_VIEW_CENTER (WEEK_VIEW_WIDTH / 2)
 #define WEEK_VIEW_SLOT_WIDTH 17
@@ -274,7 +274,11 @@ static void draw_screen_splash(Canvas* canvas, DateTime* datetime, AppState* sta
 
 static void draw_screen_day(Canvas* canvas, DateTime* datetime, AppState* state) {
 	char buffer[64]; // buffer for string concatenation
-	canvas_draw_icon(canvas, 118, -1, &I_folder); // Icon "open file" 
+	// Menu entry "Open" selected
+    canvas_draw_frame(canvas, 116, 0, 12, 12); // Draw frame around the icon
+	canvas_invert_color(canvas);
+	canvas_draw_icon(canvas, 117, 1, &I_folder); // Icon "open file" 
+	canvas_invert_color(canvas); // Restore normal mode
 	
 	// Calculate the selected date
 	DateTime selected_datetime;
