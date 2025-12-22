@@ -624,7 +624,31 @@ int32_t cal_weeks_main(void* p) {
                             furi_record_close(RECORD_DIALOGS);
                             if(!result) {
                                 furi_string_reset(app.selected_file_path); // Clear if cancelled
-							}
+							} else {
+                                // Reload events from newly selected file
+                                if(app.events) {
+                                    calendar_event_list_free(app.events);
+                                }
+                                
+                                DateTime selected_date;
+                                calculate_date_with_offset(&datetime, app.selected_week_offset, &selected_date);
+                                char days_week[7][4];
+                                get_week_days(selected_date.year, selected_date.month, selected_date.day, 0, days_week);
+                                
+                                DateTime day_start = selected_date;
+                                day_start.day = atoi(days_week[app.selected_day]);
+                                day_start.hour = 0;
+                                day_start.minute = 0;
+								
+								DateTime day_end = day_start;
+                                day_end.hour = 23;
+                                day_end.minute = 59;
+                                
+                                app.events = extract_calendar_events(furi_string_get_cstr(app.selected_file_path), &day_start, &day_end);
+                                app.selected_event = 0;
+
+                                app.selected_event = 0;
+                             }		
 						} else if(app.selected_day_menu == 1) {
                             // Show event details
                             if(app.events && app.events->count > 0) {
