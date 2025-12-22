@@ -1,6 +1,7 @@
 // scenes/protopirate_scene_sub_decode.c
 #include "../protopirate_app_i.h"
 #include "../protocols/protocol_items.h"
+#include "../helpers/protopirate_storage.h"
 #include <dialogs/dialogs.h>
 #include <ctype.h>
 #include <math.h>
@@ -55,9 +56,19 @@ typedef struct {
     // Callback context
     bool callback_fired;
     FuriString* decoded_string;
+
+    // For saving - keep a copy of the flipper format data
+    FlipperFormat* save_data;
+    bool can_save;
 } SubDecodeContext;
 
 static SubDecodeContext* g_decode_ctx = NULL;
+
+// Forward declaration
+static void protopirate_scene_sub_decode_widget_callback(
+    GuiButtonType result,
+    InputType type,
+    void* context);
 
 // Callback when decoder successfully decodes
 static void protopirate_decode_callback(SubGhzProtocolDecoderBase* decoder_base, void* context) {
@@ -495,6 +506,37 @@ static bool protopirate_process_raw_chunk(ProtoPirateApp* app, SubDecodeContext*
             (ctx->frequency % 1000000) / 10000,
             furi_string_get_cstr(ctx->decoded_string));
         ctx->decode_success = true;
+        ctx->can_save = true;
+
+        // Serialize the decoded data BEFORE freeing the decoder
+        ctx->save_data = flipper_format_string_alloc();
+        if(ctx->current_protocol->decoder->serialize) {
+            // Create a temporary preset for serialization
+            SubGhzRadioPreset temp_preset;
+            temp_preset.frequency = ctx->frequency;
+            temp_preset.name = furi_string_alloc_set("AM650");
+            temp_preset.data = NULL;
+            temp_preset.data_size = 0;
+
+            SubGhzProtocolStatus status = ctx->current_protocol->decoder->serialize(
+                ctx->current_decoder, ctx->save_data, &temp_preset);
+
+            if(status != SubGhzProtocolStatusOk) {
+                FURI_LOG_W(TAG, "RAW serialize failed: %d", status);
+                flipper_format_free(ctx->save_data);
+                ctx->save_data = NULL;
+                ctx->can_save = false;
+            } else {
+                FURI_LOG_I(TAG, "RAW serialize success for %s", ctx->current_protocol->name);
+            }
+
+            furi_string_free(temp_preset.name);
+        } else {
+            FURI_LOG_W(TAG, "Protocol %s has no serialize function", ctx->current_protocol->name);
+            flipper_format_free(ctx->save_data);
+            ctx->save_data = NULL;
+            ctx->can_save = false;
+        }
 
         ctx->current_protocol->decoder->free(ctx->current_decoder);
         ctx->current_decoder = NULL;
@@ -528,6 +570,20 @@ static void close_file_handles(SubDecodeContext* ctx) {
     }
 }
 
+// Widget callback for save button
+static void protopirate_scene_sub_decode_widget_callback(
+    GuiButtonType result,
+    InputType type,
+    void* context) {
+    ProtoPirateApp* app = context;
+    if(type == InputTypeShort) {
+        if(result == GuiButtonTypeRight) {
+            view_dispatcher_send_custom_event(
+                app->view_dispatcher, ProtoPirateCustomEventSubDecodeSave);
+        }
+    }
+}
+
 void protopirate_scene_sub_decode_on_enter(void* context) {
     ProtoPirateApp* app = context;
 
@@ -539,6 +595,8 @@ void protopirate_scene_sub_decode_on_enter(void* context) {
     g_decode_ctx->error_info = furi_string_alloc();
     g_decode_ctx->decoded_string = furi_string_alloc();
     g_decode_ctx->state = DecodeStateIdle;
+    g_decode_ctx->can_save = false;
+    g_decode_ctx->save_data = NULL;
 
     DialogsFileBrowserOptions browser_options;
     dialog_file_browser_set_basic_options(&browser_options, ".sub", NULL);
@@ -571,6 +629,45 @@ bool protopirate_scene_sub_decode_on_event(void* context, SceneManagerEvent even
     SubDecodeContext* ctx = g_decode_ctx;
 
     if(!ctx) return false;
+
+    if(event.type == SceneManagerEventTypeCustom) {
+        if(event.event == ProtoPirateCustomEventSubDecodeSave) {
+            // Save the file
+            if(ctx->save_data) {
+                FuriString* protocol = furi_string_alloc();
+                flipper_format_rewind(ctx->save_data);
+
+                if(!flipper_format_read_string(ctx->save_data, "Protocol", protocol)) {
+                    furi_string_set_str(protocol, "Unknown");
+                    FURI_LOG_W(TAG, "Could not read Protocol from save_data");
+                }
+
+                // Clean protocol name for filename
+                furi_string_replace_all(protocol, "/", "_");
+                furi_string_replace_all(protocol, " ", "_");
+
+                FURI_LOG_I(TAG, "Saving as protocol: %s", furi_string_get_cstr(protocol));
+
+                FuriString* saved_path = furi_string_alloc();
+                if(protopirate_storage_save_capture(
+                       ctx->save_data, furi_string_get_cstr(protocol), saved_path)) {
+                    FURI_LOG_I(TAG, "Saved to: %s", furi_string_get_cstr(saved_path));
+                    notification_message(app->notifications, &sequence_success);
+                } else {
+                    FURI_LOG_E(TAG, "Save failed!");
+                    notification_message(app->notifications, &sequence_error);
+                }
+
+                furi_string_free(protocol);
+                furi_string_free(saved_path);
+            } else {
+                FURI_LOG_E(TAG, "save_data is NULL, cannot save");
+                notification_message(app->notifications, &sequence_error);
+            }
+            consumed = true;
+        }
+        return consumed;
+    }
 
     if(event.type == SceneManagerEventTypeTick) {
         consumed = true;
@@ -740,6 +837,7 @@ bool protopirate_scene_sub_decode_on_event(void* context, SceneManagerEvent even
             const char* proto_name = furi_string_get_cstr(ctx->protocol_name);
             bool decoded = false;
             SubGhzProtocolStatus last_status = SubGhzProtocolStatusOk;
+            bool partial_decode = false;
 
             // Find matching protocol
             const SubGhzProtocol* custom_protocol = NULL;
@@ -776,6 +874,66 @@ bool protopirate_scene_sub_decode_on_event(void* context, SceneManagerEvent even
                         furi_string_free(dec_str);
                         decoded = true;
                         ctx->decode_success = true;
+                        ctx->can_save = true;
+
+                        // Copy the file data for saving
+                        ctx->save_data = flipper_format_string_alloc();
+                        flipper_format_rewind(ctx->ff);
+                        custom_protocol->decoder->serialize(
+                            decoder, ctx->save_data, app->txrx->preset);
+                    } else if(last_status == SubGhzProtocolStatusErrorValueBitCount) {
+                        // Bit count mismatch - try to still show data
+                        FURI_LOG_W(TAG, "Bit count mismatch, attempting partial decode");
+                        FuriString* dec_str = furi_string_alloc();
+                        custom_protocol->decoder->get_string(decoder, dec_str);
+
+                        if(furi_string_size(dec_str) > 0) {
+                            const char* fname = furi_string_get_cstr(ctx->file_path);
+                            const char* short_name = strrchr(fname, '/');
+                            if(short_name)
+                                short_name++;
+                            else
+                                short_name = fname;
+
+                            furi_string_printf(
+                                ctx->result,
+                                "File: %s\n"
+                                "WARNING: Bit count mismatch\n\n%s",
+                                short_name,
+                                furi_string_get_cstr(dec_str));
+                            partial_decode = true;
+                            ctx->decode_success = true;
+                            ctx->can_save = true;
+
+                            // Copy the file for saving (original file data)
+                            ctx->save_data = flipper_format_string_alloc();
+                            flipper_format_rewind(ctx->ff);
+
+                            // Read entire file into save_data
+                            FuriString* header = furi_string_alloc();
+                            uint32_t ver;
+                            flipper_format_read_header(ctx->ff, header, &ver);
+                            flipper_format_write_header_cstr(
+                                ctx->save_data, furi_string_get_cstr(header), ver);
+                            furi_string_free(header);
+
+                            // Copy key fields
+                            uint32_t freq = ctx->frequency;
+                            flipper_format_write_uint32(ctx->save_data, "Frequency", &freq, 1);
+
+                            flipper_format_rewind(ctx->ff);
+                            FuriString* preset = furi_string_alloc();
+                            uint32_t dummy;
+                            flipper_format_read_header(ctx->ff, preset, &dummy);
+                            if(flipper_format_read_string(ctx->ff, "Preset", preset)) {
+                                flipper_format_write_string(ctx->save_data, "Preset", preset);
+                            }
+                            furi_string_free(preset);
+
+                            flipper_format_write_string_cstr(
+                                ctx->save_data, "Protocol", proto_name);
+                        }
+                        furi_string_free(dec_str);
                     } else {
                         FURI_LOG_W(TAG, "Custom decoder failed: %d", last_status);
                     }
@@ -783,7 +941,7 @@ bool protopirate_scene_sub_decode_on_event(void* context, SceneManagerEvent even
                 }
             }
 
-            if(!decoded) {
+            if(!decoded && !partial_decode) {
                 SubGhzProtocolDecoderBase* decoder =
                     subghz_receiver_search_decoder_base_by_name(app->txrx->receiver, proto_name);
 
@@ -810,13 +968,37 @@ bool protopirate_scene_sub_decode_on_event(void* context, SceneManagerEvent even
                         furi_string_free(dec_str);
                         decoded = true;
                         ctx->decode_success = true;
+                    } else if(last_status == SubGhzProtocolStatusErrorValueBitCount) {
+                        // Bit count mismatch - try to still show data
+                        FURI_LOG_W(TAG, "Bit count mismatch (base), attempting partial decode");
+                        FuriString* dec_str = furi_string_alloc();
+                        subghz_protocol_decoder_base_get_string(decoder, dec_str);
+
+                        if(furi_string_size(dec_str) > 0) {
+                            const char* fname = furi_string_get_cstr(ctx->file_path);
+                            const char* short_name = strrchr(fname, '/');
+                            if(short_name)
+                                short_name++;
+                            else
+                                short_name = fname;
+
+                            furi_string_printf(
+                                ctx->result,
+                                "File: %s\n"
+                                "WARNING: Bit count mismatch\n\n%s",
+                                short_name,
+                                furi_string_get_cstr(dec_str));
+                            partial_decode = true;
+                            ctx->decode_success = true;
+                        }
+                        furi_string_free(dec_str);
                     } else {
                         FURI_LOG_W(TAG, "App receiver failed: %d", last_status);
                     }
                 }
             }
 
-            if(!decoded) {
+            if(!decoded && !partial_decode) {
                 const char* fname = furi_string_get_cstr(ctx->file_path);
                 const char* short_name = strrchr(fname, '/');
                 if(short_name)
@@ -878,7 +1060,18 @@ bool protopirate_scene_sub_decode_on_event(void* context, SceneManagerEvent even
             if(ctx->result_display_counter >= SUCCESS_DISPLAY_TICKS) {
                 widget_reset(app->widget);
                 widget_add_text_scroll_element(
-                    app->widget, 0, 0, 128, 64, furi_string_get_cstr(ctx->result));
+                    app->widget, 0, 0, 128, 54, furi_string_get_cstr(ctx->result));
+
+                // Add save button if we can save
+                if(ctx->can_save) {
+                    widget_add_button_element(
+                        app->widget,
+                        GuiButtonTypeRight,
+                        "Save",
+                        protopirate_scene_sub_decode_widget_callback,
+                        app);
+                }
+
                 view_dispatcher_switch_to_view(app->view_dispatcher, ProtoPirateViewWidget);
                 ctx->state = DecodeStateDone;
             }
@@ -918,6 +1111,9 @@ void protopirate_scene_sub_decode_on_exit(void* context) {
         }
         if(g_decode_ctx->raw_samples) {
             free(g_decode_ctx->raw_samples);
+        }
+        if(g_decode_ctx->save_data) {
+            flipper_format_free(g_decode_ctx->save_data);
         }
         furi_string_free(g_decode_ctx->file_path);
         furi_string_free(g_decode_ctx->protocol_name);

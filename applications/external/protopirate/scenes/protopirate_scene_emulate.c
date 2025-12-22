@@ -20,51 +20,87 @@ static EmulateContext* emulate_context = NULL;
 
 static uint8_t
     protopirate_get_button_for_protocol(const char* protocol, InputKey key, uint8_t original) {
-    // Map D-pad to common car buttons
-    // Protocol-specific mappings
-
-    if(strstr(protocol, "Ford") || strstr(protocol, "Kia") || strstr(protocol, "Subaru")) {
+    // Kia/Hyundai (all versions)
+    if(strstr(protocol, "Kia")) {
         switch(key) {
         case InputKeyUp:
-            return 0x1; // Unlock
-        case InputKeyDown:
-            return 0x2; // Lock
-        case InputKeyLeft:
-            return 0x8; // Trunk
-        case InputKeyRight:
-            return 0x4; // Panic
+            return 0x1; // Lock
         case InputKeyOk:
-            return original; // Original button
+            return 0x2; // Unlock
+        case InputKeyDown:
+            return 0x3; // Trunk
+        case InputKeyLeft:
+            return 0x4; // Panic
+        case InputKeyRight:
+            return 0x8; // Horn/Lights?
         default:
             return original;
         }
-    } else if(strstr(protocol, "Suzuki")) {
+    }
+    // VW
+    else if(strstr(protocol, "VW")) {
         switch(key) {
         case InputKeyUp:
+            return 0x2; // Lock
+        case InputKeyOk:
+            return 0x1; // Unlock
+        case InputKeyDown:
+            return 0x4; // Trunk
+        case InputKeyLeft:
+            return 0x8; // Panic
+        case InputKeyRight:
+            return 0x3; // Un+Lk combo
+        default:
+            return original;
+        }
+    }
+    // Suzuki
+    else if(strstr(protocol, "Suzuki")) {
+        switch(key) {
+        case InputKeyUp:
+            return 0x3; // Lock
+        case InputKeyOk:
             return 0x4; // Unlock
         case InputKeyDown:
-            return 0x3; // Lock
-        case InputKeyLeft:
             return 0x2; // Trunk
-        case InputKeyRight:
+        case InputKeyLeft:
             return 0x1; // Panic
-        case InputKeyOk:
+        case InputKeyRight:
             return original;
         default:
             return original;
         }
-    } else if(strstr(protocol, "VW")) {
+    }
+    // Ford - (needs testing)
+    else if(strstr(protocol, "Ford")) {
         switch(key) {
         case InputKeyUp:
-            return 0x1; // Unlock
-        case InputKeyDown:
-            return 0x2; // Lock
-        case InputKeyLeft:
-            return 0x4; // Trunk
-        case InputKeyRight:
-            return 0x8; // Panic
+            return 0x1; // Lock?
         case InputKeyOk:
+            return 0x2; // Unlock?
+        case InputKeyDown:
+            return 0x4; // Trunk?
+        case InputKeyLeft:
+            return 0x8; // Panic?
+        case InputKeyRight:
+            return 0x3; // ?
+        default:
             return original;
+        }
+    }
+    // Subaru - (needs testing)
+    else if(strstr(protocol, "Subaru")) {
+        switch(key) {
+        case InputKeyUp:
+            return 0x1; // Lock?
+        case InputKeyOk:
+            return 0x2; // Unlock?
+        case InputKeyDown:
+            return 0x3; // Trunk?
+        case InputKeyLeft:
+            return 0x4; // Panic?
+        case InputKeyRight:
+            return 0x8; // ?
         default:
             return original;
         }
@@ -142,15 +178,15 @@ static void protopirate_emulate_draw_callback(Canvas* canvas, void* context) {
     canvas_set_font(canvas, FontSecondary);
 
     // Row 1
-    canvas_draw_str(canvas, 2, 44, "^Unlock");
-    canvas_draw_str(canvas, 95, 44, "<Trunk");
+    canvas_draw_str(canvas, 2, 44, "^Lock");
+    canvas_draw_str(canvas, 95, 44, "<Panic");
 
     // Row 2
-    canvas_draw_str(canvas, 2, 53, "vLock");
-    canvas_draw_str(canvas, 95, 53, ">Panic");
+    canvas_draw_str(canvas, 2, 53, "vTrunk");
+    canvas_draw_str(canvas, 95, 53, ">0x8");
 
     // OK at bottom center
-    canvas_draw_str_aligned(canvas, 64, 62, AlignCenter, AlignBottom, "[OK]Orig");
+    canvas_draw_str_aligned(canvas, 64, 62, AlignCenter, AlignBottom, "[OK]Unlock");
 
     // Transmitting overlay
     if(emulate_context->is_transmitting) {

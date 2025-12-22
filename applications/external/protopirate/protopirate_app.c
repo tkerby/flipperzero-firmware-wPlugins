@@ -5,6 +5,7 @@
 #include <furi_hal.h>
 #include "protocols/protocol_items.h"
 #include "helpers/protopirate_settings.h"
+#include "helpers/protopirate_storage.h"
 
 #define TAG "ProtoPirateApp"
 
@@ -213,6 +214,9 @@ void protopirate_app_free(ProtoPirateApp* app) {
     furi_assert(app);
 
     FURI_LOG_I(TAG, "Freeing ProtoPirate Decoder App");
+
+    // Free the storage file list cache
+    protopirate_storage_free_file_list();
 
     // Save settings before exiting
     ProtoPirateSettings settings;

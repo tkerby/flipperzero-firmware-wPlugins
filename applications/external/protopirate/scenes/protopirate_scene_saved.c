@@ -2,6 +2,8 @@
 #include "../protopirate_app_i.h"
 #include "../helpers/protopirate_storage.h"
 
+#define TAG "ProtoPirateSceneSaved"
+
 typedef enum {
     SubmenuIndexBack = 0xFF,
 } SavedMenuIndex;
@@ -17,7 +19,10 @@ void protopirate_scene_saved_on_enter(void* context) {
     submenu_reset(app->submenu);
     submenu_set_header(app->submenu, "Saved Captures");
 
+    FURI_LOG_I(TAG, "Entering saved captures scene");
+
     uint32_t file_count = protopirate_storage_get_file_count();
+    FURI_LOG_I(TAG, "File count: %lu", file_count);
 
     if(file_count == 0) {
         submenu_add_item(
@@ -32,6 +37,7 @@ void protopirate_scene_saved_on_enter(void* context) {
 
         for(uint32_t i = 0; i < file_count && i < 50; i++) {
             if(protopirate_storage_get_file_by_index(i, path, name)) {
+                FURI_LOG_D(TAG, "Adding menu item: %s", furi_string_get_cstr(name));
                 submenu_add_item(
                     app->submenu,
                     furi_string_get_cstr(name),
@@ -62,6 +68,8 @@ bool protopirate_scene_saved_on_event(void* context, SceneManagerEvent event) {
             FuriString* name = furi_string_alloc();
 
             if(protopirate_storage_get_file_by_index(event.event, path, name)) {
+                FURI_LOG_I(TAG, "Loading file: %s", furi_string_get_cstr(path));
+
                 // Store path for the info scene to use
                 if(app->loaded_file_path) {
                     furi_string_free(app->loaded_file_path);

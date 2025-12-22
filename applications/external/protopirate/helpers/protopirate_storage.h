@@ -22,3 +22,4 @@ bool protopirate_storage_get_file_by_index(
     FuriString* out_name);
 bool protopirate_storage_delete_file(const char* file_path);
 FlipperFormat* protopirate_storage_load_file(const char* file_path);
+void protopirate_storage_free_file_list(void);
