@@ -34,7 +34,12 @@ void protopirate_history_free(ProtoPirateHistory* instance) {
         ProtoPirateHistoryItem* item = ProtoPirateHistoryItemArray_get(instance->data, i);
         furi_string_free(item->item_str);
         flipper_format_free(item->flipper_format);
-        free(item->preset);
+        if(item->preset) {
+            if(item->preset->name) {
+                furi_string_free(item->preset->name);
+            }
+            free(item->preset);
+        }
     }
     ProtoPirateHistoryItemArray_clear(instance->data);
     free(instance);
@@ -46,7 +51,12 @@ void protopirate_history_reset(ProtoPirateHistory* instance) {
         ProtoPirateHistoryItem* item = ProtoPirateHistoryItemArray_get(instance->data, i);
         furi_string_free(item->item_str);
         flipper_format_free(item->flipper_format);
-        free(item->preset);
+        if(item->preset) {
+            if(item->preset->name) {
+                furi_string_free(item->preset->name);
+            }
+            free(item->preset);
+        }
     }
     ProtoPirateHistoryItemArray_reset(instance->data);
     instance->last_index = 0;
@@ -62,6 +72,25 @@ uint16_t protopirate_history_get_last_index(ProtoPirateHistory* instance) {
     return instance->last_index;
 }
 
+// Helper function to free a single history item's resources
+static void protopirate_history_item_free(ProtoPirateHistoryItem* item) {
+    if(item->item_str) {
+        furi_string_free(item->item_str);
+        item->item_str = NULL;
+    }
+    if(item->flipper_format) {
+        flipper_format_free(item->flipper_format);
+        item->flipper_format = NULL;
+    }
+    if(item->preset) {
+        if(item->preset->name) {
+            furi_string_free(item->preset->name);
+        }
+        free(item->preset);
+        item->preset = NULL;
+    }
+}
+
 bool protopirate_history_add_to_history(
     ProtoPirateHistory* instance,
     void* context,
@@ -69,16 +98,24 @@ bool protopirate_history_add_to_history(
     furi_assert(instance);
     furi_assert(context);
 
-    if(ProtoPirateHistoryItemArray_size(instance->data) >= KIA_HISTORY_MAX) {
-        return false;
-    }
-
     SubGhzProtocolDecoderBase* decoder_base = context;
+    
+    // Check for duplicate (same hash within 500ms)
     if((instance->code_last_hash_data ==
         subghz_protocol_decoder_base_get_hash_data(decoder_base)) &&
        ((furi_get_tick() - instance->last_update_timestamp) < 500)) {
         instance->last_update_timestamp = furi_get_tick();
         return false;
+    }
+
+    // If history is full, remove the oldest entry
+    if(ProtoPirateHistoryItemArray_size(instance->data) >= KIA_HISTORY_MAX) {
+        ProtoPirateHistoryItem* oldest = ProtoPirateHistoryItemArray_get(instance->data, 0);
+        if(oldest) {
+            protopirate_history_item_free(oldest);
+        }
+        ProtoPirateHistoryItemArray_pop_at(NULL, instance->data, 0);
+        FURI_LOG_D(TAG, "History full, removed oldest entry");
     }
 
     instance->code_last_hash_data = subghz_protocol_decoder_base_get_hash_data(decoder_base);
@@ -123,7 +160,9 @@ bool protopirate_history_add_to_history(
 
     instance->last_index++;
 
-    FURI_LOG_I(TAG, "Added item %u to history", instance->last_index);
+    FURI_LOG_I(TAG, "Added item %u to history (size: %zu)", 
+               instance->last_index, 
+               ProtoPirateHistoryItemArray_size(instance->data));
 
     return true;
 }
