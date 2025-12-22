@@ -483,7 +483,8 @@ int32_t cal_weeks_main(void* p) {
                             DialogsApp* dialogs = furi_record_open(RECORD_DIALOGS);
 							FuriString* start_path = furi_string_alloc_set_str(CAL_WEEKS_DATA_PATH);
                             DialogsFileBrowserOptions browser_options;
-                            dialog_file_browser_set_basic_options(&browser_options, ".txt", &I_icon_10x10);
+                            dialog_file_browser_set_basic_options(&browser_options, ".ics", &I_icon_10x10);
+							browser_options.hide_ext = false; // Show file extensions
                             bool result = dialog_file_browser_show(dialogs, app.selected_file_path, start_path, &browser_options);
                             furi_string_free(start_path);
                             furi_record_close(RECORD_DIALOGS);
