@@ -21,8 +21,6 @@ enum ConnectedStatus {
     ConnectedStatusCleanupWanted = 3
 };
 
-extern ToyPadEmu* emulator;
-
 extern FuriHalUsbInterface usb_hid_ldtoypad;
 
 usbd_device* get_usb_device();

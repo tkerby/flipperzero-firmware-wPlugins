@@ -164,8 +164,7 @@ static void hid_deinit(usbd_device* dev) {
 
     free(burtle);
 
-    connected_status =
-        ConnectedStatusCleanupWanted; // disconnected, needs cleanup outside of the ISR context
+    connected_status = ConnectedStatusDisconnected;
 }
 
 static void hid_on_wakeup(usbd_device* dev) {
