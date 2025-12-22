@@ -10,6 +10,8 @@
 #include <input/input.h> // Input handling (buttons)
 #include <stdlib.h> // Standard library functions
 #include <gui/elements.h> // to access button drawing functions
+#include <notification/notification_messages.h> // for haptic feedback
+#include <furi_hal_speaker.h> // for sound output
 #include <string.h>
 #include <stdio.h>
 #include <inttypes.h>
@@ -94,6 +96,7 @@ typedef struct {
     bool anim_frame;    // Animation toggle
     bool running;       // Game is running (set to false to exit)
     FuriMutex* mutex;
+	NotificationApp* notifications;
 } GameContext;
 
 // Maze layout
@@ -154,6 +157,55 @@ static Direction opposite_dir(Direction dir) {
     case DIR_WEST: return DIR_EAST;
     default: return DIR_NONE;
     }
+}
+
+// Play ghost eaten sound (crunching/eating effect)
+static void play_ghost_eaten_sound(void) {
+    if(!furi_hal_speaker_acquire(1000)) {
+        return; // Failed to acquire speaker
+    }
+    
+    // IMPACT - brief mid-high frequency click
+    furi_hal_speaker_start(2500, 1.0f);
+    furi_delay_ms(2);
+    
+    // FRACTURE + CRACKLES - rapid frequency changes simulate noisy crunch
+    for(int i = 0; i < 8; i++) {
+        // Varying frequencies 800-3200 Hz for chaotic crunch effect
+        uint32_t freq = 800 + (i * 300) % 2400;
+        furi_hal_speaker_start(freq, 0.7f);
+        furi_delay_ms(5 + (i % 3) * 3); // Varying durations: 5, 8, 11 ms
+        
+        furi_hal_speaker_stop();
+        furi_delay_ms(2); // Brief gap between crackles
+    }
+    
+    // JAW - low rumble
+    furi_hal_speaker_start(150, 0.3f);
+    furi_delay_ms(30);
+    
+    furi_hal_speaker_stop();
+    furi_hal_speaker_release();
+}
+
+
+// Play power pill collection sound (Mario coin-style)
+static void play_power_sound(void) {
+    if(!furi_hal_speaker_acquire(1000)) {
+        return; // Failed to acquire speaker
+    }
+    
+    // Note 1: E6 (~1319 Hz) for 100ms
+    furi_hal_speaker_start(1319, 1.0f);
+    furi_delay_ms(100);
+    
+    // Note 2: G6 (~1568 Hz) for 40ms
+    furi_hal_speaker_start(1568, 1.0f);
+    furi_delay_ms(40);
+    
+    // Stop and release
+    furi_hal_speaker_stop();
+    furi_hal_speaker_release();
 }
 
 // Move entity in a direction
@@ -404,6 +456,7 @@ static void check_collisions(GameContext* ctx) {
                     ctx->ghosts[i].vulnerable = true;
                 }
             }
+			play_power_sound();
         }
     }
     
@@ -417,9 +470,11 @@ static void check_collisions(GameContext* ctx) {
             if(ctx->ghosts[i].vulnerable) {
                 // Eat ghost
                 ctx->ghosts[i].alive = false;
+				play_ghost_eaten_sound();
                 ctx->score += 200;
             } else {
                 // Player dies
+				notification_message(ctx->notifications, &sequence_single_vibro);
                 ctx->lives--;
                 if(ctx->lives == 0) {
                     ctx->state = STATE_GAME_OVER;
@@ -452,6 +507,14 @@ static void game_update(GameContext* ctx) {
         ctx->power_timer--;
         if(ctx->power_timer == 0) {
             for(int i = 0; i < MAX_GHOSTS; i++) {
+				// Respawn dead ghosts in ghost house
+                if(!ctx->ghosts[i].alive) {
+                    ctx->ghosts[i].alive = true;
+                    ctx->ghosts[i].entity.x = 5 + i;
+                    ctx->ghosts[i].entity.y = 3;
+                    ctx->ghosts[i].entity.dir = DIR_EAST;
+                    ctx->ghosts[i].last_dir = DIR_EAST;
+                }
                 ctx->ghosts[i].vulnerable = false;
             }
         }
@@ -591,7 +654,7 @@ static void render_callback(Canvas* canvas, void* ctx_void) {
         }
     }
 	// Version info
-    canvas_draw_str_aligned(canvas, 99, 55, AlignLeft, AlignBottom, "v0.2");    
+    canvas_draw_str_aligned(canvas, 99, 55, AlignLeft, AlignBottom, "v0.3");    
 	// Draw navigation hint
 	canvas_draw_icon(canvas, 121, 57, &I_back);
 	canvas_draw_str_aligned(canvas, 121, 63, AlignRight, AlignBottom, "Pause");	
@@ -705,7 +768,7 @@ int32_t puckgirl_main(void* p) {
     
 	GameContext* ctx = malloc(sizeof(GameContext));
     ctx->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
-    
+	ctx->notifications = furi_record_open(RECORD_NOTIFICATION);
     game_init(ctx);
     
     // Setup GUI
@@ -731,6 +794,7 @@ int32_t puckgirl_main(void* p) {
     gui_remove_view_port(gui, view_port);
     view_port_free(view_port);
     furi_record_close(RECORD_GUI);
+	furi_record_close(RECORD_NOTIFICATION);
     furi_mutex_free(ctx->mutex);
     free(ctx);
     
