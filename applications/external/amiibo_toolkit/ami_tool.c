@@ -281,13 +281,13 @@ AmiToolRetailKeyStatus ami_tool_load_retail_key(AmiToolApp* app) {
     AmiToolRetailKeyStatus status = AmiToolRetailKeyStatusStorageError;
 
     if(storage_common_exists(app->storage, "/ext/apps_data/weebo/key_retail.bin")) {
-        storage_common_copy(app->storage, "/ext/apps_data/weebo/key_retail.bin", "/ext/nfc/assets/key_retail.bin");
+        storage_common_copy(
+            app->storage, "/ext/apps_data/weebo/key_retail.bin", "/ext/nfc/assets/key_retail.bin");
         storage_common_remove(app->storage, "/ext/apps_data/weebo/key_retail.bin");
     }
 
     FuriString* path = furi_string_alloc();
-    furi_string_printf(
-        path, "%s%s", "/ext/nfc/assets/", AMI_TOOL_RETAIL_KEY_FILENAME);
+    furi_string_printf(path, "%s%s", "/ext/nfc/assets/", AMI_TOOL_RETAIL_KEY_FILENAME);
 
     if(storage_file_open(file, furi_string_get_cstr(path), FSAM_READ, FSOM_OPEN_EXISTING)) {
         size_t read = storage_file_read(file, app->retail_key, sizeof(app->retail_key));

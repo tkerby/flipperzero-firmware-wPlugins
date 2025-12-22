@@ -20,13 +20,13 @@ bool weebo_load_key_retail(Weebo* weebo) {
     Stream* stream = file_stream_alloc(storage);
 
     if(storage_common_exists(storage, "/ext/apps_data/weebo/key_retail.bin")) {
-        storage_common_copy(storage, "/ext/apps_data/weebo/key_retail.bin", "/ext/nfc/assets/key_retail.bin");
+        storage_common_copy(
+            storage, "/ext/apps_data/weebo/key_retail.bin", "/ext/nfc/assets/key_retail.bin");
         storage_common_remove(storage, "/ext/apps_data/weebo/key_retail.bin");
     }
 
     do {
-        furi_string_printf(
-            path, "/ext/nfc/assets/%s%s", WEEBO_KEY_RETAIL_FILENAME, ".bin");
+        furi_string_printf(path, "/ext/nfc/assets/%s%s", WEEBO_KEY_RETAIL_FILENAME, ".bin");
 
         bool opened =
             file_stream_open(stream, furi_string_get_cstr(path), FSAM_READ, FSOM_OPEN_EXISTING);
