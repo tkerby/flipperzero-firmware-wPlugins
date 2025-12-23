@@ -1,8 +1,8 @@
 #include "kia_v3_v4.h"
+#include "keys.h"
 
 #define TAG "KiaV3V4"
 
-static const uint64_t kia_mf_key = 0xA8F5DFFC8DAA5CDB;
 static const char *kia_version_names[] = {"Kia V4", "Kia V3"};
 
 static const SubGhzBlockConst kia_protocol_v3_v4_const = {
@@ -116,7 +116,7 @@ static bool kia_v3_v4_process_buffer(SubGhzProtocolDecoderKiaV3V4 *instance)
     uint8_t our_serial_lsb = serial & 0xFF;
 
     // Decrypt
-    uint32_t decrypted = keeloq_common_decrypt(encrypted, kia_mf_key);
+    uint32_t decrypted = keeloq_common_decrypt(encrypted, get_kia_mf_key());
     uint8_t dec_btn = (decrypted >> 28) & 0x0F;
     uint8_t dec_serial_lsb = (decrypted >> 16) & 0xFF;
 
