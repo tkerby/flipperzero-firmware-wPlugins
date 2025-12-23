@@ -105,6 +105,7 @@ GamesMenuList Version 0
 /ext/apps/Games/stratagem.fap
 /ext/apps/Games/sudoku.fap
 /ext/apps/Games/super_chip.fap
+/ext/apps/Games/swimmy_fish.fap
 /ext/apps/Games/tama_p1.fap
 /ext/apps/Games/tanks.fap
 /ext/apps/Games/tarot.fap

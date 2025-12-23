@@ -36,6 +36,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [LEGO Dimensions Toy Pad v0.5 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
 - Added: [Mystic Balloon v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperMysticBalloon)
 - Added: [Catacombs Of The Damned v2.0 (By apfxtech)](https://github.com/apfxtech/FlipperCatacombs)
+- Added: [Swimmy Fish v2.0 (By Invizabel)](https://github.com/Invizabel/fish)
 
 <a name="release">
 
@@ -369,6 +370,7 @@ $ ./fbt dolphin_ext
 - [Strategem Zero v0.1 (By nymda)](https://github.com/nymda/StratagemZero)
 - [Sudoku v1.2 (By profelis)](https://github.com/profelis/fz-sudoku)
 - [SUPER-CHIP Emulator (By Milk-Cool)](https://github.com/Milk-Cool/fz-schip)
+- [Swimmy Fish v2.0 (By Invizabel)](https://github.com/Invizabel/fish)
 - [T-Rex Runner v1.4 (By Rrycbarm)](https://github.com/Rrycbarm/t-rex-runner)
 - [TAMA P1: Save State & Layout Update (By DroomOne)](https://github.com/DroomOne/flipperzero-tamagotch-p1)
 - [Tanks v1.4 (By Alexgr13)](https://github.com/alexgr13/flipperzero-firmware/tree/fork/dev/applications/tanks-game)
