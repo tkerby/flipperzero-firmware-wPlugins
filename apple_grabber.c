@@ -6,7 +6,7 @@
 
 #include <apple_grabber_icons.h>
 
-#define MOVE 261.63f //C middle note from Piano
+#define CATCH 261.63f //C middle note from Piano
 #define PROJECTILES 4 //Number of apples per round
 
 // Screensize 128 p x 64 p
@@ -80,6 +80,7 @@ AppleGame* apple_allocation(int game_speed, int player_speed){
     AP->event_queue = furi_message_queue_alloc(1, sizeof(InputEvent));
 
     AP->view_port = view_port_alloc();
+    view_port_set_orientation(AP->view_port, ViewPortOrientationVertical);
     view_port_draw_callback_set(AP->view_port, draw_cb, AP);
     view_port_input_callback_set(AP->view_port, input_cb, AP);
 
@@ -96,13 +97,13 @@ AppleGame* apple_allocation(int game_speed, int player_speed){
 
     AP->player = malloc(sizeof(Entity));
 
-    AP->player->x = 64;
-    AP->player->y = 49;
+    AP->player->x = 113;
+    AP->player->y = 32;
 
     for(int i = 0; i < PROJECTILES; i++){
         apples[i] = malloc(sizeof(Projectile));
-        apples[i]->coordinate.y = -rand() % 100;
-        apples[i]->coordinate.x = rand() % 123;
+        apples[i]->coordinate.y = rand() % 59;
+        apples[i]->coordinate.x = -rand() % 128;
         apples[i]->playing = true;
     }
 
@@ -118,26 +119,31 @@ void draw_cb(Canvas* canvas, void* ap_pointer) {
 
     
     if(playing == false){
-        canvas_draw_frame(canvas, 0, 0, 128, 64);
-        canvas_draw_str(canvas, 40, 10, "AppleGame");
-        canvas_draw_str(canvas, 10, 20, "Press OK button to start");
-        canvas_draw_str(canvas, 20, 30, "Use arrows to move");
+        canvas_draw_frame(canvas, 0, 0, 64, 128);
+        canvas_draw_str_aligned(canvas, 32, 10, AlignCenter, AlignCenter, "AppleGame");
+        canvas_draw_str_aligned(canvas, 32, 30, AlignCenter, AlignCenter, "Press OK");
+        canvas_draw_str_aligned(canvas, 32, 40, AlignCenter, AlignCenter, "to start");
+        canvas_draw_str_aligned(canvas, 32, 60, AlignCenter, AlignCenter, "Use arrows");
+        canvas_draw_str_aligned(canvas, 32, 70, AlignCenter, AlignCenter, "to move");
     }
     else if(score != EXIT){
-        canvas_draw_frame(canvas, 0, 0, 128, 64);
+        canvas_draw_frame(canvas, 0, 0, 64, 128);
         if(score == WIN){
-            canvas_draw_str(canvas, 10, 20, "You Won!!");
+            canvas_draw_str_aligned(canvas, 32, 10, AlignCenter, AlignCenter, "You Won!!");
         }
         else{
-            canvas_draw_str(canvas, 10, 20, "You Lost :(");
+            canvas_draw_str_aligned(canvas, 32, 10, AlignCenter, AlignCenter, "You Lost :(");
         }
-        
+        canvas_draw_str_aligned(canvas, 32, 30, AlignCenter, AlignCenter, "Press OK");
+        canvas_draw_str_aligned(canvas, 32, 40, AlignCenter, AlignCenter, "to retry");
+        canvas_draw_str_aligned(canvas, 32, 60, AlignCenter, AlignCenter, "Press return");
+        canvas_draw_str_aligned(canvas, 32, 70, AlignCenter, AlignCenter, "to exit");
     }
     else{
-        canvas_draw_icon(canvas, AP->player->x, AP->player->y, player);
+        canvas_draw_icon(canvas, AP->player->y, AP->player->x, player);
         for(int i = 0; i < PROJECTILES; i++){
             if(apples[i]->playing == true){
-                canvas_draw_icon(canvas, apples[i]->coordinate.x, apples[i]->coordinate.y, apple);
+                canvas_draw_icon(canvas, apples[i]->coordinate.y, apples[i]->coordinate.x, apple);
             }
         }
     }
@@ -166,141 +172,128 @@ int32_t apple_grabber_app(void* p) {
     
     InputEvent event;
 
-    AppleGame* AP = apple_allocation(1,1);
-    bool running = true;
+    AppleGame* AP = apple_allocation(1,1);    
+    bool game_stop = false;
 
-    //Playing phase
-    while(running){
-        FuriStatus status = furi_message_queue_get(AP->event_queue, &event, FuriWaitForever);
-        furi_check(furi_mutex_acquire(AP->model_mutex, FuriWaitForever) == FuriStatusOk);
-        float volume = 1.0f;
-        if(status == FuriStatusOk) {
-            if(event.type == InputTypePress) {
-                switch(event.key) {
-                case InputKeyUp:
-                    if(furi_hal_speaker_is_mine() || furi_hal_speaker_acquire(1000)) {
-                        furi_hal_speaker_start(MOVE, volume);
-                    }
-                    break;
-                case InputKeyDown:
-                    if(furi_hal_speaker_is_mine() || furi_hal_speaker_acquire(1000)) {
-                        furi_hal_speaker_start(MOVE, volume);
-                    }
-                    break;
-                case InputKeyLeft:
-                    AP->player->x -= 4 * game_speed;
-                    if(furi_hal_speaker_is_mine() || furi_hal_speaker_acquire(1000)) {
-                        furi_hal_speaker_start(MOVE, volume);
-                    }
-                    break;
-                case InputKeyRight:
-                    AP->player->x += 4 * game_speed;
-                    if(furi_hal_speaker_is_mine() || furi_hal_speaker_acquire(1000)) {
-                        furi_hal_speaker_start(MOVE, volume);
-                    }
-                    break;
-                case InputKeyOk:
-                    if (playing == false){
-                        playing = true;
-                    }
-                    break;
-                case InputKeyBack:
-                    running = false;
-                    break;
-                default:
-                    break;
-                }
-            } else if(event.type == InputTypeRelease) {
-                if(furi_hal_speaker_is_mine()) {
-                    furi_hal_speaker_stop();
-                    furi_hal_speaker_release();
-                }
-            } else if(event.type == InputTypeRepeat){
-                switch(event.key){
-                case InputKeyLeft:
-                    AP->player->x -= 4 * game_speed;
-                    if(furi_hal_speaker_is_mine() || furi_hal_speaker_acquire(1000)) {
-                        furi_hal_speaker_start(MOVE, volume);
-                    }
-                    break;
-                case InputKeyRight:
-                    AP->player->x += 4 * game_speed;
-                    if(furi_hal_speaker_is_mine() || furi_hal_speaker_acquire(1000)) {
-                        furi_hal_speaker_start(MOVE, volume);
-                    }
-                    break;
-                default:
-                    break;
-                }
-            } else if(event.type == InputTypeMAX && playing){
-                bool apples_remaining = false;
-                for(int i = 0; i < PROJECTILES; i++){
-                    if (apples[i]->playing){
-                        if(apples[i]->coordinate.y > 45 && apples[i]->coordinate.x >= AP->player->x && apples[i]->coordinate.x <= (AP->player->x + 10)){
-                            apples[i]->playing = false;
+    while(game_stop == false){
+        //Playing phase
+        playing = false;
+        bool running = true;
+        while(running){
+            FuriStatus status = furi_message_queue_get(AP->event_queue, &event, FuriWaitForever);
+            furi_check(furi_mutex_acquire(AP->model_mutex, FuriWaitForever) == FuriStatusOk);
+            float volume = 1.0f;
+            
+            if(status == FuriStatusOk) {
+                if(event.type == InputTypePress) {
+                    switch(event.key) {
+                    case InputKeyUp:
+                        break;
+                    case InputKeyDown:
+                        break;
+                    case InputKeyRight:
+                        AP->player->y += 8;
+                        break;
+                    case InputKeyLeft:
+                        AP->player->y -= 8;
+                        break;
+                    case InputKeyOk:
+                        if (playing == false){
+                            playing = true;
                         }
-                        if(apples[i]->coordinate.y > 64){
-                            score = LOSE;
-                            running = false;
-                        }
-                        else{
-                            apples_remaining = true;
-                            apples[i]->coordinate.y += game_speed;
-                        }
+                        break;
+                    case InputKeyBack:
+                        running = false;
+                        game_stop = true;
+                        break;
+                    default:
+                        break;
                     }
-                }
-                
-                // If apples are caught, place them again
-                if(apples_remaining == false){
+                } else if(event.type == InputTypeRelease) {
+                    
+                } else if(event.type == InputTypeMAX && playing){
+                    if(furi_hal_speaker_is_mine()) {
+                        furi_hal_speaker_stop();
+                        furi_hal_speaker_release();
+                    }
+                    bool apples_remaining = false;
                     for(int i = 0; i < PROJECTILES; i++){
-                        apples[i]->coordinate.y = -40 -rand() % 80;
-                        apples[i]->coordinate.x = rand() % 123;
-                        apples[i]->playing = true;
+                        if (apples[i]->playing){
+                            if(apples[i]->coordinate.x > 113 && apples[i]->coordinate.y >= AP->player->y && apples[i]->coordinate.y <= (AP->player->y + 10)){
+                                apples[i]->playing = false;
+                                if(furi_hal_speaker_is_mine() || furi_hal_speaker_acquire(1000)) {
+                                    furi_hal_speaker_start(CATCH, volume);
+                                }
+                            }
+                            if(apples[i]->coordinate.x > 128){
+                                score = LOSE;
+                                running = false;
+                            }
+                            else{
+                                apples_remaining = true;
+                                apples[i]->coordinate.x += game_speed;
+                            }
+                        }
                     }
-                    game_speed += 1;
+                    
+                    // If apples are caught, place them again
+                    if(apples_remaining == false){
+                        for(int i = 0; i < PROJECTILES; i++){
+                            apples[i]->coordinate.y = rand() % 59;
+                            apples[i]->coordinate.x = -32 - rand() % 128;
+                            apples[i]->playing = true;
+                        }
+                        game_speed += 2;
+                    }
                 }
             }
-        }
-        if(AP->player->x > 118){
-            AP->player->x = 118;
-        }
-        else if(AP->player->x < 0){
-            AP->player->x = 0;
-        }
-        if(game_speed == 4){
-            score = WIN;
-            running = false;
+            if(AP->player->y > 54){
+                AP->player->y = 54;
+            }
+            else if(AP->player->y < 0){
+                AP->player->y = 0;
+            }
+            if(game_speed > 7){
+                score = WIN;
+                running = false;
+            }
+
+            furi_mutex_release(AP->model_mutex);
+            view_port_update(AP->view_port);
         }
 
-        furi_mutex_release(AP->model_mutex);
-        view_port_update(AP->view_port);
-    }
-
-    //End result phase
-    while(score != EXIT){
-        FuriStatus status = furi_message_queue_get(AP->event_queue, &event, FuriWaitForever);
-        furi_check(furi_mutex_acquire(AP->model_mutex, FuriWaitForever) == FuriStatusOk);
-        if(status == FuriStatusOk) {
-            if(event.type == InputTypePress) {
-                switch(event.key) {
-                case InputKeyOk:
-                    score = EXIT;
-                    break;
-                case InputKeyBack:
-                    score = EXIT;
-                    break;
-                default:
-                    break;
-                }
-            } else if(event.type == InputTypeRelease) {
-                if(furi_hal_speaker_is_mine()) {
-                    furi_hal_speaker_stop();
-                    furi_hal_speaker_release();
+        //End result phase
+        while(score != EXIT){
+            if(furi_hal_speaker_is_mine()) {
+                furi_hal_speaker_stop();
+                furi_hal_speaker_release();
+            }
+            FuriStatus status = furi_message_queue_get(AP->event_queue, &event, FuriWaitForever);
+            furi_check(furi_mutex_acquire(AP->model_mutex, FuriWaitForever) == FuriStatusOk);
+            if(status == FuriStatusOk) {
+                if(event.type == InputTypePress) {
+                    switch(event.key) {
+                    case InputKeyOk:
+                        score = EXIT;
+                        for(int i = 0; i < PROJECTILES; i++){
+                            apples[i]->coordinate.y = rand() % 59;
+                            apples[i]->coordinate.x = -32 - rand() % 128;
+                            apples[i]->playing = true;
+                        }
+                        game_speed = 1;
+                        break;
+                    case InputKeyBack:
+                        score = EXIT;
+                        game_stop = true;
+                        break;
+                    default:
+                        break;
+                    }
                 }
             }
+            furi_mutex_release(AP->model_mutex);
+            view_port_update(AP->view_port);
         }
-        furi_mutex_release(AP->model_mutex);
-        view_port_update(AP->view_port);
     }
 
     free_apple_game(AP);
