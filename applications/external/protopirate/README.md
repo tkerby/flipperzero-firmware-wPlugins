@@ -19,34 +19,52 @@ Decoders:
 - Suzuki
 - Volkswagen (VW)
 
-Encoders: **Coming Soon**
-- KIA V0
-  
----
+Encoders:
+
+- KIA V0 ✅
+- More Coming Soon
+
+## **Features**
+
+### 📡 Protocol Receiver
+
+Real-time signal capture and decoding with animated radar display. Supports frequency hopping.
+
+### 📂 Sub Decode
+
+Load and analyze existing `.sub` files from your SD card. Browse `/ext/subghz/` to decode previously captured signals.
+
+### ⏱️ Timing Tuner
+
+Tool for protocol developers to compare real fob signal timing against protocol definitions.
+
+- **Protocol Definition**: Expected short/long pulse durations and tolerance
+- **Received Signal**: Measured timing from real fob (avg, min, max, sample count)
+- **Analysis**: Difference from expected, jitter measurements
+- **Conclusion**: Whether timing matches or needs adjustment with specific recommendations
 
 ## **Credits**
 
 The following contributors are recognized for helping us keep open sourced projects and the freeware community alive.
 
-In alphabetical order 😎
+### **App Development**
+
+- RocketGod
+- MMX
+- Skorp - Thanks, I sneaked a lot from Weather App!
+- Vadim's Radio Driver
 
 ### **Protocol Magic**
 
-- DoobTheGoober
 - L0rdDiakon
+- YougZ
 - RocketGod
+- DoobTheGoober
 - Skorp
 - Slackware
 - Trikk
 - Wootini
-- YougZ
-
-### **App Development**
-
-- MMX
-- RocketGod
-- Skorp - Thanks, I sneaked a lot from Weather App!
-- Vadim's Radio Driver
+- Li0ard
 
 ### **Reverse Engineering Support**
 
@@ -56,8 +74,7 @@ In alphabetical order 😎
 - RocketGod
 - Slackware
 - Trikk
-
----
+- Li0ard
 
 ## **Community & Support**
 
