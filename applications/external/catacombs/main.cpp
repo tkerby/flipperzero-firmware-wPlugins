@@ -17,9 +17,9 @@
 #include "game/Defines.h"
 #include "game/Sounds.h"
 
-#define DISPLAY_WIDTH 128
-#define DISPLAY_HEIGHT 64
-#define BUFFER_SIZE (DISPLAY_WIDTH * DISPLAY_HEIGHT / 8)
+#define DISPLAY_WIDTH    128
+#define DISPLAY_HEIGHT   64
+#define BUFFER_SIZE      (DISPLAY_WIDTH * DISPLAY_HEIGHT / 8)
 #define TARGET_FRAMERATE 30
 
 typedef struct {
@@ -138,8 +138,10 @@ void Platform::SetAudioEnabled(bool enabled) {
     if(!g_state) return;
     bool was_enabled = g_state->audio_enabled;
     g_state->audio_enabled = enabled;
-    if(enabled && !was_enabled) sound_system_init();
-    else if(!enabled && was_enabled) sound_system_deinit();
+    if(enabled && !was_enabled)
+        sound_system_init();
+    else if(!enabled && was_enabled)
+        sound_system_deinit();
 }
 
 uint8_t Platform::GetInput() {
@@ -151,12 +153,18 @@ void Platform::ExpectLoadDelay() {
 
 void Platform::SetLED(uint8_t r, uint8_t g, uint8_t b) {
     NotificationApp* n = (NotificationApp*)furi_record_open(RECORD_NOTIFICATION);
-    if(r) notification_message(n, &sequence_set_red_255);
-    else notification_message(n, &sequence_reset_red);
-    if(g) notification_message(n, &sequence_set_green_255);
-    else notification_message(n, &sequence_reset_green);
-    if(b) notification_message(n, &sequence_set_blue_255);
-    else notification_message(n, &sequence_reset_blue);
+    if(r)
+        notification_message(n, &sequence_set_red_255);
+    else
+        notification_message(n, &sequence_reset_red);
+    if(g)
+        notification_message(n, &sequence_set_green_255);
+    else
+        notification_message(n, &sequence_reset_green);
+    if(b)
+        notification_message(n, &sequence_set_blue_255);
+    else
+        notification_message(n, &sequence_reset_blue);
     furi_record_close(RECORD_NOTIFICATION);
 }
 
@@ -164,8 +172,10 @@ static inline void set_pixel(int16_t x, int16_t y, bool color) {
     if(!g_state || x < 0 || y < 0 || x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) return;
     uint16_t idx = (uint16_t)(x + (y >> 3) * DISPLAY_WIDTH);
     uint8_t mask = (uint8_t)(1u << (y & 7));
-    if(color) g_state->screen_buffer[idx] |= mask;
-    else g_state->screen_buffer[idx] &= (uint8_t)~mask;
+    if(color)
+        g_state->screen_buffer[idx] |= mask;
+    else
+        g_state->screen_buffer[idx] &= (uint8_t)~mask;
 }
 
 void Platform::PutPixel(uint8_t x, uint8_t y, uint8_t color) {
@@ -287,39 +297,63 @@ static void input_callback(InputEvent* event, void* ctx) {
 
     if(event->type == InputTypePress) {
         switch(event->key) {
-        case InputKeyUp: state->input_state |= INPUT_UP; break;
-        case InputKeyDown: state->input_state |= INPUT_DOWN; break;
-        case InputKeyLeft: state->input_state |= INPUT_LEFT; break;
-        case InputKeyRight: state->input_state |= INPUT_RIGHT; break;
-        case InputKeyOk: state->input_state |= INPUT_B; break;
+        case InputKeyUp:
+            state->input_state |= INPUT_UP;
+            break;
+        case InputKeyDown:
+            state->input_state |= INPUT_DOWN;
+            break;
+        case InputKeyLeft:
+            state->input_state |= INPUT_LEFT;
+            break;
+        case InputKeyRight:
+            state->input_state |= INPUT_RIGHT;
+            break;
+        case InputKeyOk:
+            state->input_state |= INPUT_B;
+            break;
         case InputKeyBack:
             state->back_hold_active = true;
             state->back_hold_handled = false;
             state->back_hold_start = furi_get_tick();
             break;
-        default: break;
+        default:
+            break;
         }
     } else if(event->type == InputTypeRepeat) {
         if(event->key == InputKeyBack && state->back_hold_active && !state->back_hold_handled) {
             uint32_t held_ms = furi_get_tick() - state->back_hold_start;
             if(held_ms >= HOLD_TIME_MS) {
                 state->back_hold_handled = true;
-                if(Game::IsInMenu()) state->exit_requested = true;
-                else Game::GoToMenu();
+                if(Game::IsInMenu())
+                    state->exit_requested = true;
+                else
+                    Game::GoToMenu();
             }
         }
     } else if(event->type == InputTypeRelease) {
         switch(event->key) {
-        case InputKeyUp: state->input_state &= ~INPUT_UP; break;
-        case InputKeyDown: state->input_state &= ~INPUT_DOWN; break;
-        case InputKeyLeft: state->input_state &= ~INPUT_LEFT; break;
-        case InputKeyRight: state->input_state &= ~INPUT_RIGHT; break;
-        case InputKeyOk: state->input_state &= ~INPUT_B; break;
+        case InputKeyUp:
+            state->input_state &= ~INPUT_UP;
+            break;
+        case InputKeyDown:
+            state->input_state &= ~INPUT_DOWN;
+            break;
+        case InputKeyLeft:
+            state->input_state &= ~INPUT_LEFT;
+            break;
+        case InputKeyRight:
+            state->input_state &= ~INPUT_RIGHT;
+            break;
+        case InputKeyOk:
+            state->input_state &= ~INPUT_B;
+            break;
         case InputKeyBack:
             state->back_hold_active = false;
             state->back_hold_handled = false;
             break;
-        default: break;
+        default:
+            break;
         }
     }
 }

@@ -1,13 +1,12 @@
 #pragma once
 #include <stdint.h>
 
-class Menu
-{
+class Menu {
 public:
     void Init();
     void Draw();
     void Tick();
-	
+
     void TickEnteringLevel();
     void DrawEnteringLevel();
 
@@ -19,11 +18,10 @@ public:
 
 private:
     uint8_t selection = 0;
-    uint8_t topIndex  = 0;
+    uint8_t topIndex = 0;
     uint8_t cursorPos = 0;
 
-    union
-    {
+    union {
         uint16_t timer;
         uint16_t fizzleFade;
     };

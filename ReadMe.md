@@ -34,6 +34,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Weebo v0.3 (By bettse)](https://github.com/bettse/weebo) `Req: key_retail.bin on SD card /nfc/assets` (Amiibo Remixer)
 - Updated: [Ghost ESP v1.6.2 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32`
 - Updated: [LEGO Dimensions Toy Pad v0.5 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
+- Added: [Catacombs Of The Damned v1.1 (By apfxtech)](https://github.com/apfxtech/FlipperCatacombs)
 
 <a name="release">
 
@@ -272,6 +273,7 @@ $ ./fbt dolphin_ext
 - [Bomberduck v1.2 (By leo-need-more-coffee)](https://github.com/leo-need-more-coffee/flipperzero-bomberduck)
 - [Bomberfox v1.0 (By ashleyhuxley)](https://github.com/ashleyhuxley/bomber)
 - [CarJacker v1.0 (By RocketGod-git)](https://github.com/RocketGod-git/Flipper-Zero-CarJacker)
+- [Catacombs Of The Damned v1.1 (By apfxtech)](https://github.com/apfxtech/FlipperCatacombs)
 - [Cells Lab v0.1 (By PilotOfAsuka)](https://github.com/PilotOfAsuka/Cells-lab-on-Flipper-Zero)
 - [Chess v1.12 (By xtruan)](https://github.com/xtruan/flipper-chess)
 - [Chess Clock (By ihatecsv)](https://github.com/ihatecsv/flipper_chess_clock)
