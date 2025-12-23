@@ -2,9 +2,9 @@ sourcecode:
   type: git
   location:
     origin: https://github.com/apfxtech/FlipperMysticBalloon.git
-    commit_sha: 613991775f71e1566bb7c3927682ee8a70a3188c
+    commit_sha: 40e3741f516ed06fef4437174b39285904648a1f
 
-short_description: A simple fly-platformer where the character hovers through levels using balloons, ported to Flipper Zero..
+short_description: A simple fly-platformer where the character hovers through levels using balloons, ported to Flipper Zero.
 description: "@APPSTORE.md"
 changelog: "@CHANGELOG.md"
 screenshots:

@@ -2,6 +2,7 @@
 
 #include "Arduino.h"
 #include "ArduboyTones.h"
+#include "EEPROM.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
@@ -56,43 +57,6 @@ extern "C" {
 #ifndef EEPROM_STORAGE_SPACE_START
 #define EEPROM_STORAGE_SPACE_START 0
 #endif
-
-struct EEPROMClass {
-    static constexpr int kSize = 512;
-
-    uint8_t read(int addr) {
-        if(addr < 0 || addr >= kSize) return 0;
-        return mem_[addr];
-    }
-
-    void write(int addr, uint8_t v) {
-        if(addr < 0 || addr >= kSize) return;
-        mem_[addr] = v;
-    }
-
-    template <typename T>
-    void put(int addr, const T& value) {
-        const uint8_t* src = reinterpret_cast<const uint8_t*>(&value);
-        for(size_t i = 0; i < sizeof(T); i++)
-            write(addr + (int)i, src[i]);
-        commit();
-    }
-
-    template <typename T>
-    void get(int addr, T& value) {
-        uint8_t* dst = reinterpret_cast<uint8_t*>(&value);
-        for(size_t i = 0; i < sizeof(T); i++)
-            dst[i] = read(addr + (int)i);
-    }
-
-    void commit() {
-    }
-
-private:
-    uint8_t mem_[kSize] = {0};
-};
-
-inline EEPROMClass EEPROM;
 
 class Arduboy2Base {
 public:
