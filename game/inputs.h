@@ -68,7 +68,7 @@ void checkInputs()
   if (arduboy.pressed(A_BUTTON))
   {
     if (arduboy.pressed(DOWN_BUTTON))
-      gameState = STATE_MENU_MAIN;
+      gameState = STATE_MENU_INTRO;
     else //if (!kid.isBalloon)
     {
       kid.isBalloon = false;

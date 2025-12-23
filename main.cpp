@@ -1,3 +1,11 @@
+/*
+  Mystic Balloon          http://www.team-arg.org/mybl-manual.html
+  Arduboy version 1.7.2   http://www.team-arg.org/mybl-downloads.html
+  MADE by TEAM a.r.g.     http://www.team-arg.org/more-about.html
+  Game License: MIT       https://opensource.org/licenses/MIT
+  2016-2018 - GAVENO - CastPixel - JO3RI - Martian220
+*/
+
 #include <furi.h>
 #include <furi_hal.h>
 #include <gui/gui.h>
