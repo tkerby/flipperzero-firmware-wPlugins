@@ -39,6 +39,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Swimmy Fish v2.0 (By Invizabel)](https://github.com/Invizabel/fish)
 - Updated: [Mystic Balloon v1.2 (By apfxtech)](https://github.com/apfxtech/FlipperMysticBalloon)
 - Updated: [Calendar of weeks v0.1 (By fgreil)](https://github.com/fgreil/mitzi-cal-weeks)
+- Updated: [Apple Grabber v0.1 (By d7d8)](https://github.com/d7d8/apple-grabber)
 
 <a name="release">
 
