@@ -15,3 +15,21 @@
 #include "vw.h"
 
 extern const SubGhzProtocolRegistry protopirate_protocol_registry;
+
+// Timing information for protocol analysis
+typedef struct {
+    const char* name;
+    uint32_t te_short;
+    uint32_t te_long;
+    uint32_t te_delta;
+    uint32_t min_count_bit;
+} ProtoPirateProtocolTiming;
+
+// Get timing info for a protocol by name (returns NULL if not found)
+const ProtoPirateProtocolTiming* protopirate_get_protocol_timing(const char* protocol_name);
+
+// Get timing info by index (for iteration)
+const ProtoPirateProtocolTiming* protopirate_get_protocol_timing_by_index(size_t index);
+
+// Get number of protocols with timing info
+size_t protopirate_get_protocol_timing_count(void);
