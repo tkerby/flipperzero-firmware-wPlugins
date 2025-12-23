@@ -37,6 +37,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Mystic Balloon v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperMysticBalloon)
 - Added: [Catacombs Of The Damned v2.0 (By apfxtech)](https://github.com/apfxtech/FlipperCatacombs)
 - Added: [Swimmy Fish v2.0 (By Invizabel)](https://github.com/Invizabel/fish)
+- Updated: [Mystic Balloon v1.2 (By apfxtech)](https://github.com/apfxtech/FlipperMysticBalloon)
 
 <a name="release">
 
@@ -333,7 +334,7 @@ $ ./fbt dolphin_ext
 - [Morse Master v1.1 (By w84death)](https://github.com/w84death/morse-master)
 - [MTP WIP v1.0 (By Alex4386)](https://github.com/Alex4386/f0-mtp)
 - [Multi Counter v1.1 (By JadePossible)](https://github.com/JadePossible/Flipper-Multi-Counter)
-- [Mystic Balloon v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperMysticBalloon)
+- [Mystic Balloon v1.2 (By apfxtech)](https://github.com/apfxtech/FlipperMysticBalloon)
 - [Nah 2 da Nah Nah Nah v0.2 (By DigiMancer3D)](https://github.com/DigiMancer3D/nah2nah3)
 - [Network Defender v1.1 (By w84death)](https://github.com/w84death/flipper-zero-apps)
 - [Nu Pogodi! (Ну, погоди!) v1.3 (By sionyx)](https://github.com/sionyx/flipper_nupogodi)

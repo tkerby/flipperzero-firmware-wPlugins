@@ -3,62 +3,41 @@
 #include <stddef.h>
 #include <string.h>
 
-// EEPROM совместимость: RAM-эмуляция
+#include <furi.h>
+#include <storage/storage.h>
+
 class EEPROMClass {
 public:
-    // Обычно для Arduboy хватает 512-1024 байт
     static constexpr int kSize = 1024;
 
-    EEPROMClass() = default;
+    EEPROMClass();
 
-    // Сколько байт доступно
+    // autosave_interval_ms: 0 = только ручной commit()
+    void begin(const char* path = "/ext/eeprom.bin", uint32_t autosave_interval_ms = 0);
+
     int length() const { return kSize; }
 
-    // Прочитать байт
-    uint8_t read(int addr) const {
-        if(addr < 0 || addr >= kSize) return 0;
-        return mem_[addr];
-    }
+    uint8_t read(int addr) const;
+    void write(int addr, uint8_t value);
+    void update(int addr, uint8_t value);
 
-    // Записать байт (без commit)
-    void write(int addr, uint8_t value) {
-        if(addr < 0 || addr >= kSize) return;
-        mem_[addr] = value;
-        dirty_ = true;
-    }
-
-    // Arduino EEPROM.update: пишет только если отличается
-    void update(int addr, uint8_t value) {
-        if(addr < 0 || addr >= kSize) return;
-        if(mem_[addr] != value) {
-            mem_[addr] = value;
-            dirty_ = true;
-        }
-    }
-
-    // Прочитать структуру/тип
     template<typename T>
     T& get(int addr, T& out) const {
-        if(addr < 0 || addr + (int)sizeof(T) > kSize) {
-            // если вышли за границы — просто оставим out как есть
-            return out;
-        }
+        ensureLoaded_();
+        if(addr < 0 || addr + (int)sizeof(T) > kSize) return out;
         memcpy(&out, mem_ + addr, sizeof(T));
         return out;
     }
 
-    // Записать структуру/тип (и commit внутри НЕ делает — как в Arduino обычно)
     template<typename T>
     const T& put(int addr, const T& in) {
-        if(addr < 0 || addr + (int)sizeof(T) > kSize) {
-            return in;
-        }
+        ensureLoaded_();
+        if(addr < 0 || addr + (int)sizeof(T) > kSize) return in;
 
-        // put обычно пишет байты и ставит dirty только если реально поменялось
         bool changed = false;
         const uint8_t* src = reinterpret_cast<const uint8_t*>(&in);
         for(size_t i = 0; i < sizeof(T); i++) {
-            const int a = addr + (int)i;
+            int a = addr + (int)i;
             if(mem_[a] != src[i]) {
                 mem_[a] = src[i];
                 changed = true;
@@ -68,25 +47,31 @@ public:
         return in;
     }
 
-    // Очистить (удобно для дебага)
-    void clear(uint8_t value = 0) {
-        memset(mem_, value, sizeof(mem_));
-        dirty_ = true;
-    }
+    void clear(uint8_t value = 0);
 
-    // “Сохранить”. В RAM-only версии — просто сбрасываем dirty.
-    // Если хочешь реальное сохранение на Flipper (файл в appdata),
-    // сюда вставим Storage API.
-    void commit() {
-        dirty_ = false;
-    }
+    // вызывать раз в кадр/тик, чтобы работал автосейв
+    void tick();
+
+    // ручной flush (и можно звать при выходе). true если успешно записало
+    bool commit();
 
     bool isDirty() const { return dirty_; }
 
 private:
-    uint8_t mem_[kSize] = {0};
-    bool dirty_ = false;
+    void ensureLoaded_() const;
+    bool writeFile_() const;
+    static uint32_t now_ms_();
+
+private:
+    mutable uint8_t mem_[kSize];
+    mutable bool loaded_;
+    mutable bool dirty_;
+
+    mutable char file_path_[64];
+
+    mutable uint32_t autosave_interval_ms_;
+    mutable uint32_t last_autosave_ms_;
 };
 
-// Глобальный объект как на Arduino
-static EEPROMClass EEPROM;
+// только объявление!
+extern EEPROMClass EEPROM;

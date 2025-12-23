@@ -1,3 +1,11 @@
+/*
+  Mystic Balloon          http://www.team-arg.org/mybl-manual.html
+  Arduboy version 1.7.2   http://www.team-arg.org/mybl-downloads.html
+  MADE by TEAM a.r.g.     http://www.team-arg.org/more-about.html
+  Game License: MIT       https://opensource.org/licenses/MIT
+  2016-2018 - GAVENO - CastPixel - JO3RI - Martian220
+*/
+
 #include <furi.h>
 #include <furi_hal.h>
 #include <gui/gui.h>
@@ -12,11 +20,10 @@
 #define TONES_END    0x8000
 
 #define TARGET_FRAMERATE 50
-#define DISPLAY_FPS      16
 #define GAME_ID          34
 
-#ifndef HOLD_AB_TO_EXIT_FRAMES
-#define HOLD_AB_TO_EXIT_FRAMES 50
+#ifndef HOLD_TO_EXIT_FRAMES
+#define HOLD_TO_EXIT_FRAMES 30
 #endif
 
 #include "lib/Arduboy2.h"
@@ -52,123 +59,50 @@ static FunctionPointer mainGameLoop[] = {
 
 typedef struct {
     uint8_t screen_buffer[BUFFER_SIZE];
-    uint8_t xbm_buffers[2][BUFFER_SIZE];
+    uint8_t front_buffer[BUFFER_SIZE];
 
-    FuriMutex* mutex;
-    ViewPort* view_port;
+    Gui* gui;
+    Canvas* canvas;
     FuriTimer* timer;
-
-    volatile uint8_t xbm_read_idx;
+    FuriMutex* fb_mutex;
+    FuriMutex* game_mutex;
+    FuriPubSub* input_events;
+    FuriPubSubSubscription* input_sub;
     volatile uint8_t input_state;
     volatile bool exit_requested;
+    volatile bool in_frame;
+    volatile bool invert_frame;
 } FlipperState;
 
 static FlipperState* g_state = NULL;
+static void framebuffer_commit_callback(
+    uint8_t* data,
+    size_t size,
+    CanvasOrientation orientation,
+    void* context) {
+    FlipperState* state = (FlipperState*)context;
+    if(!state || !data) return;
+    if(size < BUFFER_SIZE) return;
+    (void)orientation;
 
-static inline void convert_screen_fast(const uint8_t* screen, uint8_t* dst) {
-    const int XBM_STRIDE = DISPLAY_WIDTH / 8;
+    if(furi_mutex_acquire(state->fb_mutex, 0) != FuriStatusOk) return;
 
-    for(int page = 0; page < 8; page++) {
-        const int page_offset = page * DISPLAY_WIDTH;
-        const int y_base = page * 8;
-
-        for(int x = 0; x < DISPLAY_WIDTH; x += 16) {
-            uint8_t c[16];
-            for(int i = 0; i < 16; i++) {
-                c[i] = screen[page_offset + x + i] ^ 0xFF;
-            }
-
-            const int dst_xbyte = x / 8;
-            int d = (y_base * XBM_STRIDE) + dst_xbyte;
-
-            dst[d] = (c[0] & 1) | ((c[1] & 1) << 1) | ((c[2] & 1) << 2) | ((c[3] & 1) << 3) |
-                     ((c[4] & 1) << 4) | ((c[5] & 1) << 5) | ((c[6] & 1) << 6) | ((c[7] & 1) << 7);
-            dst[d + 1] = (c[8] & 1) | ((c[9] & 1) << 1) | ((c[10] & 1) << 2) | ((c[11] & 1) << 3) |
-                         ((c[12] & 1) << 4) | ((c[13] & 1) << 5) | ((c[14] & 1) << 6) |
-                         ((c[15] & 1) << 7);
-            d += XBM_STRIDE;
-
-            dst[d] = ((c[0] >> 1) & 1) | (((c[1] >> 1) & 1) << 1) | (((c[2] >> 1) & 1) << 2) |
-                     (((c[3] >> 1) & 1) << 3) | (((c[4] >> 1) & 1) << 4) |
-                     (((c[5] >> 1) & 1) << 5) | (((c[6] >> 1) & 1) << 6) |
-                     (((c[7] >> 1) & 1) << 7);
-            dst[d + 1] = ((c[8] >> 1) & 1) | (((c[9] >> 1) & 1) << 1) | (((c[10] >> 1) & 1) << 2) |
-                         (((c[11] >> 1) & 1) << 3) | (((c[12] >> 1) & 1) << 4) |
-                         (((c[13] >> 1) & 1) << 5) | (((c[14] >> 1) & 1) << 6) |
-                         (((c[15] >> 1) & 1) << 7);
-            d += XBM_STRIDE;
-
-            dst[d] = ((c[0] >> 2) & 1) | (((c[1] >> 2) & 1) << 1) | (((c[2] >> 2) & 1) << 2) |
-                     (((c[3] >> 2) & 1) << 3) | (((c[4] >> 2) & 1) << 4) |
-                     (((c[5] >> 2) & 1) << 5) | (((c[6] >> 2) & 1) << 6) |
-                     (((c[7] >> 2) & 1) << 7);
-            dst[d + 1] = ((c[8] >> 2) & 1) | (((c[9] >> 2) & 1) << 1) | (((c[10] >> 2) & 1) << 2) |
-                         (((c[11] >> 2) & 1) << 3) | (((c[12] >> 2) & 1) << 4) |
-                         (((c[13] >> 2) & 1) << 5) | (((c[14] >> 2) & 1) << 6) |
-                         (((c[15] >> 2) & 1) << 7);
-            d += XBM_STRIDE;
-
-            dst[d] = ((c[0] >> 3) & 1) | (((c[1] >> 3) & 1) << 1) | (((c[2] >> 3) & 1) << 2) |
-                     (((c[3] >> 3) & 1) << 3) | (((c[4] >> 3) & 1) << 4) |
-                     (((c[5] >> 3) & 1) << 5) | (((c[6] >> 3) & 1) << 6) |
-                     (((c[7] >> 3) & 1) << 7);
-            dst[d + 1] = ((c[8] >> 3) & 1) | (((c[9] >> 3) & 1) << 1) | (((c[10] >> 3) & 1) << 2) |
-                         (((c[11] >> 3) & 1) << 3) | (((c[12] >> 3) & 1) << 4) |
-                         (((c[13] >> 3) & 1) << 5) | (((c[14] >> 3) & 1) << 6) |
-                         (((c[15] >> 3) & 1) << 7);
-            d += XBM_STRIDE;
-
-            dst[d] = ((c[0] >> 4) & 1) | (((c[1] >> 4) & 1) << 1) | (((c[2] >> 4) & 1) << 2) |
-                     (((c[3] >> 4) & 1) << 3) | (((c[4] >> 4) & 1) << 4) |
-                     (((c[5] >> 4) & 1) << 5) | (((c[6] >> 4) & 1) << 6) |
-                     (((c[7] >> 4) & 1) << 7);
-            dst[d + 1] = ((c[8] >> 4) & 1) | (((c[9] >> 4) & 1) << 1) | (((c[10] >> 4) & 1) << 2) |
-                         (((c[11] >> 4) & 1) << 3) | (((c[12] >> 4) & 1) << 4) |
-                         (((c[13] >> 4) & 1) << 5) | (((c[14] >> 4) & 1) << 6) |
-                         (((c[15] >> 4) & 1) << 7);
-            d += XBM_STRIDE;
-
-            dst[d] = ((c[0] >> 5) & 1) | (((c[1] >> 5) & 1) << 1) | (((c[2] >> 5) & 1) << 2) |
-                     (((c[3] >> 5) & 1) << 3) | (((c[4] >> 5) & 1) << 4) |
-                     (((c[5] >> 5) & 1) << 5) | (((c[6] >> 5) & 1) << 6) |
-                     (((c[7] >> 5) & 1) << 7);
-            dst[d + 1] = ((c[8] >> 5) & 1) | (((c[9] >> 5) & 1) << 1) | (((c[10] >> 5) & 1) << 2) |
-                         (((c[11] >> 5) & 1) << 3) | (((c[12] >> 5) & 1) << 4) |
-                         (((c[13] >> 5) & 1) << 5) | (((c[14] >> 5) & 1) << 6) |
-                         (((c[15] >> 5) & 1) << 7);
-            d += XBM_STRIDE;
-
-            dst[d] = ((c[0] >> 6) & 1) | (((c[1] >> 6) & 1) << 1) | (((c[2] >> 6) & 1) << 2) |
-                     (((c[3] >> 6) & 1) << 3) | (((c[4] >> 6) & 1) << 4) |
-                     (((c[5] >> 6) & 1) << 5) | (((c[6] >> 6) & 1) << 6) |
-                     (((c[7] >> 6) & 1) << 7);
-            dst[d + 1] = ((c[8] >> 6) & 1) | (((c[9] >> 6) & 1) << 1) | (((c[10] >> 6) & 1) << 2) |
-                         (((c[11] >> 6) & 1) << 3) | (((c[12] >> 6) & 1) << 4) |
-                         (((c[13] >> 6) & 1) << 5) | (((c[14] >> 6) & 1) << 6) |
-                         (((c[15] >> 6) & 1) << 7);
-            d += XBM_STRIDE;
-
-            dst[d] = ((c[0] >> 7) & 1) | (((c[1] >> 7) & 1) << 1) | (((c[2] >> 7) & 1) << 2) |
-                     (((c[3] >> 7) & 1) << 3) | (((c[4] >> 7) & 1) << 4) |
-                     (((c[5] >> 7) & 1) << 5) | (((c[6] >> 7) & 1) << 6) |
-                     (((c[7] >> 7) & 1) << 7);
-            dst[d + 1] = ((c[8] >> 7) & 1) | (((c[9] >> 7) & 1) << 1) | (((c[10] >> 7) & 1) << 2) |
-                         (((c[11] >> 7) & 1) << 3) | (((c[12] >> 7) & 1) << 4) |
-                         (((c[13] >> 7) & 1) << 5) | (((c[14] >> 7) & 1) << 6) |
-                         (((c[15] >> 7) & 1) << 7);
-        }
+    const uint8_t* src = state->front_buffer;
+    for(size_t i = 0; i < BUFFER_SIZE; i++) {
+        data[i] = (uint8_t)(src[i] ^ 0xFF);
     }
+
+    furi_mutex_release(state->fb_mutex);
 }
 
-static void render_callback(Canvas* canvas, void* ctx) {
-    FlipperState* state = (FlipperState*)ctx;
-    if(!state || !canvas) return;
-
-    uint8_t idx = state->xbm_read_idx;
-    canvas_draw_xbm(canvas, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, state->xbm_buffers[idx]);
+static void input_events_callback(const void* value, void* ctx) {
+    if(!value || !ctx) return;
+    InputEvent* e = (InputEvent*)value;
+    Arduboy2Base::FlipperInputCallback(e, ctx);
 }
 
 static void game_setup() {
+    EEPROM.begin("/ext/eeprom.bin", 2500);
     arduboy.boot();
     arduboy.audio.begin();
     arduboy.bootLogoSpritesSelfMasked();
@@ -180,21 +114,22 @@ static void game_setup() {
     arduboy.display();
 }
 
+static uint8_t exit_hold_frames = 0;
 static void game_loop_tick() {
     arduboy.pollButtons();
     if(!(arduboy.nextFrame())) return;
 
-    static uint16_t ab_hold = 0;
-    const bool ab_pressed = arduboy.pressed(A_BUTTON) && arduboy.pressed(B_BUTTON);
-
-    if(ab_pressed) {
-        if(ab_hold < 0xFFFF) ab_hold++;
-        if(ab_hold >= HOLD_AB_TO_EXIT_FRAMES) {
-            if(g_state) g_state->exit_requested = true;
-            ab_hold = 0;
+    if(gameState < 6) {
+        if(arduboy.pressed(A_BUTTON)) {
+            if(exit_hold_frames < HOLD_TO_EXIT_FRAMES) {
+                exit_hold_frames++;
+            } else {
+                EEPROM.commit();
+                if(g_state) g_state->exit_requested = true;
+            }
+        } else {
+            exit_hold_frames = 0;
         }
-    } else {
-        ab_hold = 0;
     }
 
     if(gameState < STATE_GAME_NEXT_LEVEL && arduboy.everyXFrames(10)) {
@@ -210,26 +145,21 @@ static void timer_callback(void* ctx) {
     FlipperState* state = (FlipperState*)ctx;
     if(!state) return;
 
-    static uint32_t logic_counter = 0;
-    const uint32_t convert_ratio = TARGET_FRAMERATE / DISPLAY_FPS;
-
-    if(furi_mutex_acquire(state->mutex, 0) != FuriStatusOk) return;
-
-    game_loop_tick();
-    logic_counter++;
-
-    if(logic_counter >= convert_ratio) {
-        uint8_t read_idx = state->xbm_read_idx;
-        uint8_t write_idx = 1 - read_idx;
-
-        convert_screen_fast(state->screen_buffer, state->xbm_buffers[write_idx]);
-        state->xbm_read_idx = write_idx;
-
-        view_port_update(state->view_port);
-        logic_counter = 0;
+    if(state->in_frame) return;
+    state->in_frame = true;
+    if(furi_mutex_acquire(state->game_mutex, 0) != FuriStatusOk) {
+        state->in_frame = false;
+        return;
     }
 
-    furi_mutex_release(state->mutex);
+    game_loop_tick();
+    state->invert_frame = false;
+    furi_mutex_acquire(state->fb_mutex, FuriWaitForever);
+    memcpy(state->front_buffer, state->screen_buffer, BUFFER_SIZE);
+    furi_mutex_release(state->fb_mutex);
+    canvas_commit(state->canvas);
+    furi_mutex_release(state->game_mutex);
+    state->in_frame = false;
 }
 
 extern "C" int32_t mybl_app(void* p) {
@@ -239,44 +169,46 @@ extern "C" int32_t mybl_app(void* p) {
     if(!g_state) return -1;
     memset(g_state, 0, sizeof(FlipperState));
 
-    g_state->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
-    if(!g_state->mutex) {
+    g_state->fb_mutex = furi_mutex_alloc(FuriMutexTypeNormal);
+    g_state->game_mutex = furi_mutex_alloc(FuriMutexTypeNormal);
+    if(!g_state->fb_mutex || !g_state->game_mutex) {
+        if(g_state->fb_mutex) furi_mutex_free(g_state->fb_mutex);
+        if(g_state->game_mutex) furi_mutex_free(g_state->game_mutex);
         free(g_state);
         g_state = NULL;
         return -1;
     }
 
     g_state->exit_requested = false;
-    g_state->xbm_read_idx = 0;
+    g_state->invert_frame = false;
+
     memset(g_state->screen_buffer, 0x00, BUFFER_SIZE);
-    memset(g_state->xbm_buffers, 0x00, sizeof(g_state->xbm_buffers));
+    memset(g_state->front_buffer, 0x00, BUFFER_SIZE);
 
-    convert_screen_fast(g_state->screen_buffer, g_state->xbm_buffers[0]);
-
-    arduboy.begin(g_state->screen_buffer, &g_state->input_state, g_state->mutex);
+    arduboy.begin(g_state->screen_buffer, &g_state->input_state, g_state->game_mutex);
     Sprites::setArduboy(&arduboy);
+    g_state->gui = (Gui*)furi_record_open(RECORD_GUI);
+    gui_add_framebuffer_callback(g_state->gui, framebuffer_commit_callback, g_state);
+    g_state->canvas = gui_direct_draw_acquire(g_state->gui);
+    g_state->input_events = (FuriPubSub*)furi_record_open(RECORD_INPUT_EVENTS);
+    g_state->input_sub = furi_pubsub_subscribe(
+        g_state->input_events, input_events_callback, arduboy.inputContext());
 
-    g_state->view_port = view_port_alloc();
-    view_port_draw_callback_set(g_state->view_port, render_callback, g_state);
-    view_port_input_callback_set(
-        g_state->view_port, Arduboy2Base::FlipperInputCallback, arduboy.inputContext());
-
-    Gui* gui = (Gui*)furi_record_open(RECORD_GUI);
-    gui_add_view_port(gui, g_state->view_port, GuiLayerFullscreen);
-
-    furi_mutex_acquire(g_state->mutex, FuriWaitForever);
+    furi_mutex_acquire(g_state->game_mutex, FuriWaitForever);
     game_setup();
-    convert_screen_fast(g_state->screen_buffer, g_state->xbm_buffers[0]);
-    furi_mutex_release(g_state->mutex);
-
+    furi_mutex_acquire(g_state->fb_mutex, FuriWaitForever);
+    memcpy(g_state->front_buffer, g_state->screen_buffer, BUFFER_SIZE);
+    furi_mutex_release(g_state->fb_mutex);
+    canvas_commit(g_state->canvas);
+    furi_mutex_release(g_state->game_mutex);
     g_state->timer = furi_timer_alloc(timer_callback, FuriTimerTypePeriodic, g_state);
     const uint32_t tick_hz = furi_kernel_get_tick_frequency();
-    uint32_t period = tick_hz / TARGET_FRAMERATE;
+    uint32_t period = (tick_hz + (TARGET_FRAMERATE / 2)) / TARGET_FRAMERATE;
     if(period == 0) period = 1;
     furi_timer_start(g_state->timer, period);
 
     while(!g_state->exit_requested) {
-        furi_delay_ms(100);
+        furi_delay_ms(50);
     }
 
     arduboy_tone_sound_system_deinit();
@@ -284,13 +216,36 @@ extern "C" int32_t mybl_app(void* p) {
     if(g_state->timer) {
         furi_timer_stop(g_state->timer);
         furi_timer_free(g_state->timer);
+        g_state->timer = NULL;
     }
 
-    gui_remove_view_port(gui, g_state->view_port);
-    view_port_free(g_state->view_port);
-    furi_record_close(RECORD_GUI);
+    if(g_state->input_sub) {
+        furi_pubsub_unsubscribe(g_state->input_events, g_state->input_sub);
+        g_state->input_sub = NULL;
+    }
 
-    if(g_state->mutex) furi_mutex_free(g_state->mutex);
+    if(g_state->input_events) {
+        furi_record_close(RECORD_INPUT_EVENTS);
+        g_state->input_events = NULL;
+    }
+
+    if(g_state->gui) {
+        gui_direct_draw_release(g_state->gui);
+        gui_remove_framebuffer_callback(g_state->gui, framebuffer_commit_callback, g_state);
+        furi_record_close(RECORD_GUI);
+        g_state->gui = NULL;
+        g_state->canvas = NULL;
+    }
+
+    if(g_state->fb_mutex) {
+        furi_mutex_free(g_state->fb_mutex);
+        g_state->fb_mutex = NULL;
+    }
+    if(g_state->game_mutex) {
+        furi_mutex_free(g_state->game_mutex);
+        g_state->game_mutex = NULL;
+    }
+
     free(g_state);
     g_state = NULL;
 

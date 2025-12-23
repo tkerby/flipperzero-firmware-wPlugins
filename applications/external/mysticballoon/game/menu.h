@@ -34,14 +34,10 @@ void drawTitleScreen() {
 
 void stateMenuIntro() {
     globalCounter++;
-    if(globalCounter < 60) {
-        sprites.drawSelfMasked(34, 4, T_arg, 0);
-    } else {
-        drawTitleScreen();
-        if((globalCounter > 120)) {
-            gameState = STATE_MENU_MAIN;
-            sound.tone(425, 20);
-        }
+    drawTitleScreen();
+    if((globalCounter > 60)) {
+        gameState = STATE_MENU_MAIN;
+        sound.tone(425, 20);
     }
 }
 

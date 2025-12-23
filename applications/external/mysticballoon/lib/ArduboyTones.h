@@ -8,7 +8,7 @@
 #endif
 
 #ifndef ARDUBOY_TONES_TICK_HZ
-#define ARDUBOY_TONES_TICK_HZ 850u
+#define ARDUBOY_TONES_TICK_HZ 780u
 #endif
 
 // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ДЛЯ ЗВУКОВОЙ СИСТЕМЫ (КАК В PLATFORM)
