@@ -19,7 +19,7 @@
 #define WEEK_VIEW_CENTER (WEEK_VIEW_WIDTH / 2)
 #define WEEK_VIEW_SLOT_WIDTH 17
 #define WEEK_VIEW_MAX_X (WEEK_VIEW_WIDTH - 1)
-#define EVENT_BOX_HEIGHT 12  // Height of event boxes in day view
+#define EVENT_BOX_HEIGHT 16  // Height of event boxes in day view
 #define DAY_MENU_ITEMS 2  // Number of menu items on the screen "day view"
 #define CAL_WEEKS_DATA_PATH "/ext/apps_data/cal_weeks" // Default app data directory
 
@@ -343,35 +343,24 @@ static void draw_screen_day(Canvas* canvas, DateTime* datetime, AppState* state)
 			if((int)i == state->selected_event) {
 				canvas_draw_box(canvas, 1, y_pos, WEEK_VIEW_MAX_X - 1, EVENT_BOX_HEIGHT);
 				canvas_set_color(canvas, ColorWhite);
-			} else {
-				canvas_draw_frame(canvas, 1, y_pos, WEEK_VIEW_MAX_X - 1, EVENT_BOX_HEIGHT);
-			}
-			
+			} 			
 			// Format event text: show start-end time and title, or "Day." in bold for all-day events
 			if(event->all_day) {
 				canvas_set_font(canvas, FontPrimary);  // Bold font for "Day."
-				canvas_draw_str_aligned(canvas, 3, y_pos + 1, AlignLeft, AlignTop, "Day.");
+				canvas_draw_str_aligned(canvas, 2, y_pos + 1, AlignLeft, AlignTop, "Day.");
 				canvas_set_font(canvas, FontSecondary);  // Back to normal font
 				snprintf(buffer, sizeof(buffer), "%s", 
 				         furi_string_get_cstr(event->summary));
-				canvas_draw_str_aligned(canvas, 3, y_pos + 7, AlignLeft, AlignTop, buffer);
+				canvas_draw_str_aligned(canvas, 2, y_pos + 7, AlignLeft, AlignTop, buffer);
 				buffer[0] = '\0';  // Clear buffer so we don't draw again below
 			} else { // Construct text line
-				snprintf(buffer, sizeof(buffer), "%02d:%02d-%02d:%02d %s", 
-				         event->start_time.hour, event->start_time.minute,
-						 event->end_time.hour, event->end_time.minute,
-				         furi_string_get_cstr(event->summary));
-			}
-			
-			// Truncate name if too long to fit on screen
-			if(strlen(buffer) > 25) {
-				buffer[23] = '.';
-				buffer[24] = '.';
-				buffer[25] = '\0';
-			}
-			// Draw the event text inside the box (if not already drawn for all-day)
-			if(buffer[0] != '\0') {
-				canvas_draw_str_aligned(canvas, 3, y_pos + 1, AlignLeft, AlignTop, buffer);
+				snprintf(buffer, sizeof(buffer), "%02d:%02d", 
+					event->start_time.hour, event->start_time.minute);
+				canvas_draw_str_aligned(canvas, 30, y_pos + 1, AlignRight, AlignTop, buffer);
+				snprintf(buffer, sizeof(buffer), "-%02d:%02d", 
+					event->end_time.hour, event->end_time.minute);
+				canvas_draw_str_aligned(canvas, 30, y_pos + 9, AlignRight, AlignTop, buffer);
+				canvas_draw_str_aligned(canvas, 32, y_pos + 1, AlignLeft, AlignTop, furi_string_get_cstr(event->summary));
 			}
 			
 			// Restore black color if we inverted for selection
