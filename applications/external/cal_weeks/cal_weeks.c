@@ -15,11 +15,12 @@
 #define TAG "cal-weeks" // Tag for logging purposes
 
 // Layout constants for week view screen
-#define WEEK_VIEW_RIGHT_MARGIN 11
+#define WEEK_VIEW_RIGHT_MARGIN 0
 #define WEEK_VIEW_WIDTH        (128 - WEEK_VIEW_RIGHT_MARGIN)
 #define WEEK_VIEW_CENTER       (WEEK_VIEW_WIDTH / 2)
 #define WEEK_VIEW_SLOT_WIDTH   17
 #define WEEK_VIEW_MAX_X        (WEEK_VIEW_WIDTH - 1)
+#define EVENT_BOX_HEIGHT       12 // Height of event boxes in day view
 #define DAY_MENU_ITEMS         2 // Number of menu items on the screen "day view"
 #define CAL_WEEKS_DATA_PATH    "/ext/apps_data/cal_weeks" // Default app data directory
 
@@ -297,8 +298,8 @@ static void draw_screen_splash(Canvas* canvas, DateTime* datetime, AppState* sta
 
 // Helper function to draw the right-side navigation menu
 static void draw_day_view_menu(Canvas* canvas, AppState* state) {
-    draw_menu_item(canvas, 116, 0, &I_folder, state->selected_day_menu == 0);
-    draw_menu_item(canvas, 116, 13, &I_icon_10x10, state->selected_day_menu == 1);
+    draw_menu_item(canvas, 103, 0, &I_folder, state->selected_day_menu == 0);
+    draw_menu_item(canvas, 116, 0, &I_icon_10x10, state->selected_day_menu == 1);
 }
 
 static void draw_screen_day(Canvas* canvas, DateTime* datetime, AppState* state) {
@@ -336,66 +337,63 @@ static void draw_screen_day(Canvas* canvas, DateTime* datetime, AppState* state)
         selected_datetime.month,
         selected_day_num);
     canvas_draw_str_aligned(canvas, 1, 1, AlignLeft, AlignTop, buffer);
-
-    // Draw header line
-    canvas_draw_line(canvas, 0, 11, WEEK_VIEW_MAX_X, 11); // upper line of header
-
-    // Time slots header (X axis)
     canvas_set_font(canvas, FontSecondary);
-    const char* time_slots[] = {"08", "10", "12", "14", "16", "18", "20"};
+    // Draw header line
+    canvas_draw_line(canvas, 0, 11, 128, 11); // upper line of header
 
-    for(int i = 0; i < 7; i++) {
-        int x = i * WEEK_VIEW_SLOT_WIDTH;
-        // Draw hours
-        canvas_draw_str(canvas, x, 20, time_slots[i]);
-    }
-
-    // Draw events as 7-pixel high boxes in the grid area
+    // Draw events as boxes in the grid area
     if(state->events && state->events->count > 0) {
-        int y_pos = 24; // Start just below first grid line
-        int max_events = (60 - y_pos) / 8; // Calculate how many events fit (3px box + 1px gap)
+        int y_pos = 13; // Start just below first grid line
+        int max_events = (60 - y_pos) / (EVENT_BOX_HEIGHT + 1); // Calculate how many events fit
 
         for(size_t i = 0; i < state->events->count && i < (size_t)max_events; i++) {
             CalendarEvent* event = &state->events->events[i];
 
             // Draw event box (filled if selected, frame if not)
             if((int)i == state->selected_event) {
-                canvas_draw_box(canvas, 1, y_pos, WEEK_VIEW_MAX_X - 1, 7);
+                canvas_draw_box(canvas, 1, y_pos, WEEK_VIEW_MAX_X - 1, EVENT_BOX_HEIGHT);
                 canvas_set_color(canvas, ColorWhite);
             } else {
-                canvas_draw_frame(canvas, 1, y_pos, WEEK_VIEW_MAX_X - 1, 7);
+                canvas_draw_frame(canvas, 1, y_pos, WEEK_VIEW_MAX_X - 1, EVENT_BOX_HEIGHT);
             }
 
-            // Format event text: show time and title, with asterisk for all-day events
+            // Format event text: show start-end time and title, or "Day." in bold for all-day events
             if(event->all_day) {
-                snprintf(buffer, sizeof(buffer), "* %s", furi_string_get_cstr(event->summary));
-            } else {
+                canvas_set_font(canvas, FontPrimary); // Bold font for "Day."
+                canvas_draw_str_aligned(canvas, 3, y_pos + 1, AlignLeft, AlignTop, "Day.");
+                canvas_set_font(canvas, FontSecondary); // Back to normal font
+                snprintf(buffer, sizeof(buffer), "%s", furi_string_get_cstr(event->summary));
+                canvas_draw_str_aligned(canvas, 3, y_pos + 7, AlignLeft, AlignTop, buffer);
+                buffer[0] = '\0'; // Clear buffer so we don't draw again below
+            } else { // Construct text line
                 snprintf(
                     buffer,
                     sizeof(buffer),
-                    "%02d:%02d %s",
+                    "%02d:%02d-%02d:%02d %s",
                     event->start_time.hour,
                     event->start_time.minute,
+                    event->end_time.hour,
+                    event->end_time.minute,
                     furi_string_get_cstr(event->summary));
             }
 
-            // Truncate if too long to fit on screen
-            if(strlen(buffer) > 18) {
-                buffer[15] = '.';
-                buffer[16] = '.';
-                buffer[17] = '.';
-                buffer[18] = '\0';
+            // Truncate name if too long to fit on screen
+            if(strlen(buffer) > 25) {
+                buffer[23] = '.';
+                buffer[24] = '.';
+                buffer[25] = '\0';
             }
-
-            // Draw the event text inside/beside the box
-            canvas_draw_str_aligned(canvas, 3, y_pos, AlignLeft, AlignTop, buffer);
+            // Draw the event text inside the box (if not already drawn for all-day)
+            if(buffer[0] != '\0') {
+                canvas_draw_str_aligned(canvas, 3, y_pos + 1, AlignLeft, AlignTop, buffer);
+            }
 
             // Restore black color if we inverted for selection
             if((int)i == state->selected_event) {
                 canvas_set_color(canvas, ColorBlack);
             }
 
-            y_pos += 7; // Move down for next event (7px box + 1px gap)
+            y_pos += EVENT_BOX_HEIGHT + 1; // Move down for next event
         }
     } else {
         // No events to show
