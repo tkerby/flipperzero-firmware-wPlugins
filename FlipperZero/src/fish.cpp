@@ -6,7 +6,7 @@
 
 int SCORE = 0;
 int SCORE_BONUS = 1;
-int HIGH_SCORE = 100;
+int HIGH_SCORE = 10;
 char score_str[16];
 
 int player_x = 6;
@@ -67,7 +67,7 @@ void collide_rect()
         player_y = 28;
 
         SCORE_BONUS = 1;
-        HIGH_SCORE = 100;
+        HIGH_SCORE = 10;
 
         SCORE = 0;
     }
@@ -124,12 +124,13 @@ void draw_kelp(Canvas* canvas)
         }
     }
 
-    kelp_x -= SCORE_BONUS;
+    kelp_x -= SCORE_BONUS + 1;
 
-    if (kelp_x <= -16)
+    if (kelp_x <= -8)
     {
         kelp_x = 124;
         is_random_kelp = true;
+        SCORE += 1;
     }
 }
 
@@ -159,12 +160,13 @@ void draw_jellyfish(Canvas* canvas)
         }
     }
 
-    jellyfish_x -= SCORE_BONUS;
+    jellyfish_x -= SCORE_BONUS + 1;
 
-    if (jellyfish_x <= -16)
+    if (jellyfish_x <= -8)
     {
         jellyfish_x = 124;
         is_random_jellyfish = true;
+        SCORE += 1;
     }
 }
 
@@ -206,12 +208,10 @@ static void draw_callback(Canvas* canvas, void* context)
 
     snprintf(score_str, sizeof(score_str), "%dx", SCORE_BONUS);
     canvas_draw_str(canvas,2,64,score_str);
-    
-    SCORE += SCORE_BONUS;
 
     if (SCORE >= HIGH_SCORE)
     {
-        HIGH_SCORE += 100;
+        HIGH_SCORE += 10;
         SCORE_BONUS += 1;
     }
 
