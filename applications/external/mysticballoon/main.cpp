@@ -7,9 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define COLOUR_WHITE     1
-#define COLOUR_BLACK     0
-#define TONES_END        0x8000
+#define COLOUR_WHITE 1
+#define COLOUR_BLACK 0
+#define TONES_END    0x8000
 
 #define TARGET_FRAMERATE 50
 #define DISPLAY_FPS      16
@@ -53,11 +53,11 @@ static FunctionPointer mainGameLoop[] = {
 typedef struct {
     uint8_t screen_buffer[BUFFER_SIZE];
     uint8_t xbm_buffers[2][BUFFER_SIZE];
-    
+
     FuriMutex* mutex;
     ViewPort* view_port;
     FuriTimer* timer;
-    
+
     volatile uint8_t xbm_read_idx;
     volatile uint8_t input_state;
     volatile bool exit_requested;
@@ -67,66 +67,95 @@ static FlipperState* g_state = NULL;
 
 static inline void convert_screen_fast(const uint8_t* screen, uint8_t* dst) {
     const int XBM_STRIDE = DISPLAY_WIDTH / 8;
-    
+
     for(int page = 0; page < 8; page++) {
         const int page_offset = page * DISPLAY_WIDTH;
         const int y_base = page * 8;
-        
+
         for(int x = 0; x < DISPLAY_WIDTH; x += 16) {
             uint8_t c[16];
             for(int i = 0; i < 16; i++) {
                 c[i] = screen[page_offset + x + i] ^ 0xFF;
             }
-            
+
             const int dst_xbyte = x / 8;
             int d = (y_base * XBM_STRIDE) + dst_xbyte;
-            
+
             dst[d] = (c[0] & 1) | ((c[1] & 1) << 1) | ((c[2] & 1) << 2) | ((c[3] & 1) << 3) |
                      ((c[4] & 1) << 4) | ((c[5] & 1) << 5) | ((c[6] & 1) << 6) | ((c[7] & 1) << 7);
             dst[d + 1] = (c[8] & 1) | ((c[9] & 1) << 1) | ((c[10] & 1) << 2) | ((c[11] & 1) << 3) |
-                         ((c[12] & 1) << 4) | ((c[13] & 1) << 5) | ((c[14] & 1) << 6) | ((c[15] & 1) << 7);
+                         ((c[12] & 1) << 4) | ((c[13] & 1) << 5) | ((c[14] & 1) << 6) |
+                         ((c[15] & 1) << 7);
             d += XBM_STRIDE;
-            
-            dst[d] = ((c[0] >> 1) & 1) | (((c[1] >> 1) & 1) << 1) | (((c[2] >> 1) & 1) << 2) | (((c[3] >> 1) & 1) << 3) |
-                     (((c[4] >> 1) & 1) << 4) | (((c[5] >> 1) & 1) << 5) | (((c[6] >> 1) & 1) << 6) | (((c[7] >> 1) & 1) << 7);
-            dst[d + 1] = ((c[8] >> 1) & 1) | (((c[9] >> 1) & 1) << 1) | (((c[10] >> 1) & 1) << 2) | (((c[11] >> 1) & 1) << 3) |
-                         (((c[12] >> 1) & 1) << 4) | (((c[13] >> 1) & 1) << 5) | (((c[14] >> 1) & 1) << 6) | (((c[15] >> 1) & 1) << 7);
+
+            dst[d] = ((c[0] >> 1) & 1) | (((c[1] >> 1) & 1) << 1) | (((c[2] >> 1) & 1) << 2) |
+                     (((c[3] >> 1) & 1) << 3) | (((c[4] >> 1) & 1) << 4) |
+                     (((c[5] >> 1) & 1) << 5) | (((c[6] >> 1) & 1) << 6) |
+                     (((c[7] >> 1) & 1) << 7);
+            dst[d + 1] = ((c[8] >> 1) & 1) | (((c[9] >> 1) & 1) << 1) | (((c[10] >> 1) & 1) << 2) |
+                         (((c[11] >> 1) & 1) << 3) | (((c[12] >> 1) & 1) << 4) |
+                         (((c[13] >> 1) & 1) << 5) | (((c[14] >> 1) & 1) << 6) |
+                         (((c[15] >> 1) & 1) << 7);
             d += XBM_STRIDE;
-            
-            dst[d] = ((c[0] >> 2) & 1) | (((c[1] >> 2) & 1) << 1) | (((c[2] >> 2) & 1) << 2) | (((c[3] >> 2) & 1) << 3) |
-                     (((c[4] >> 2) & 1) << 4) | (((c[5] >> 2) & 1) << 5) | (((c[6] >> 2) & 1) << 6) | (((c[7] >> 2) & 1) << 7);
-            dst[d + 1] = ((c[8] >> 2) & 1) | (((c[9] >> 2) & 1) << 1) | (((c[10] >> 2) & 1) << 2) | (((c[11] >> 2) & 1) << 3) |
-                         (((c[12] >> 2) & 1) << 4) | (((c[13] >> 2) & 1) << 5) | (((c[14] >> 2) & 1) << 6) | (((c[15] >> 2) & 1) << 7);
+
+            dst[d] = ((c[0] >> 2) & 1) | (((c[1] >> 2) & 1) << 1) | (((c[2] >> 2) & 1) << 2) |
+                     (((c[3] >> 2) & 1) << 3) | (((c[4] >> 2) & 1) << 4) |
+                     (((c[5] >> 2) & 1) << 5) | (((c[6] >> 2) & 1) << 6) |
+                     (((c[7] >> 2) & 1) << 7);
+            dst[d + 1] = ((c[8] >> 2) & 1) | (((c[9] >> 2) & 1) << 1) | (((c[10] >> 2) & 1) << 2) |
+                         (((c[11] >> 2) & 1) << 3) | (((c[12] >> 2) & 1) << 4) |
+                         (((c[13] >> 2) & 1) << 5) | (((c[14] >> 2) & 1) << 6) |
+                         (((c[15] >> 2) & 1) << 7);
             d += XBM_STRIDE;
-            
-            dst[d] = ((c[0] >> 3) & 1) | (((c[1] >> 3) & 1) << 1) | (((c[2] >> 3) & 1) << 2) | (((c[3] >> 3) & 1) << 3) |
-                     (((c[4] >> 3) & 1) << 4) | (((c[5] >> 3) & 1) << 5) | (((c[6] >> 3) & 1) << 6) | (((c[7] >> 3) & 1) << 7);
-            dst[d + 1] = ((c[8] >> 3) & 1) | (((c[9] >> 3) & 1) << 1) | (((c[10] >> 3) & 1) << 2) | (((c[11] >> 3) & 1) << 3) |
-                         (((c[12] >> 3) & 1) << 4) | (((c[13] >> 3) & 1) << 5) | (((c[14] >> 3) & 1) << 6) | (((c[15] >> 3) & 1) << 7);
+
+            dst[d] = ((c[0] >> 3) & 1) | (((c[1] >> 3) & 1) << 1) | (((c[2] >> 3) & 1) << 2) |
+                     (((c[3] >> 3) & 1) << 3) | (((c[4] >> 3) & 1) << 4) |
+                     (((c[5] >> 3) & 1) << 5) | (((c[6] >> 3) & 1) << 6) |
+                     (((c[7] >> 3) & 1) << 7);
+            dst[d + 1] = ((c[8] >> 3) & 1) | (((c[9] >> 3) & 1) << 1) | (((c[10] >> 3) & 1) << 2) |
+                         (((c[11] >> 3) & 1) << 3) | (((c[12] >> 3) & 1) << 4) |
+                         (((c[13] >> 3) & 1) << 5) | (((c[14] >> 3) & 1) << 6) |
+                         (((c[15] >> 3) & 1) << 7);
             d += XBM_STRIDE;
-            
-            dst[d] = ((c[0] >> 4) & 1) | (((c[1] >> 4) & 1) << 1) | (((c[2] >> 4) & 1) << 2) | (((c[3] >> 4) & 1) << 3) |
-                     (((c[4] >> 4) & 1) << 4) | (((c[5] >> 4) & 1) << 5) | (((c[6] >> 4) & 1) << 6) | (((c[7] >> 4) & 1) << 7);
-            dst[d + 1] = ((c[8] >> 4) & 1) | (((c[9] >> 4) & 1) << 1) | (((c[10] >> 4) & 1) << 2) | (((c[11] >> 4) & 1) << 3) |
-                         (((c[12] >> 4) & 1) << 4) | (((c[13] >> 4) & 1) << 5) | (((c[14] >> 4) & 1) << 6) | (((c[15] >> 4) & 1) << 7);
+
+            dst[d] = ((c[0] >> 4) & 1) | (((c[1] >> 4) & 1) << 1) | (((c[2] >> 4) & 1) << 2) |
+                     (((c[3] >> 4) & 1) << 3) | (((c[4] >> 4) & 1) << 4) |
+                     (((c[5] >> 4) & 1) << 5) | (((c[6] >> 4) & 1) << 6) |
+                     (((c[7] >> 4) & 1) << 7);
+            dst[d + 1] = ((c[8] >> 4) & 1) | (((c[9] >> 4) & 1) << 1) | (((c[10] >> 4) & 1) << 2) |
+                         (((c[11] >> 4) & 1) << 3) | (((c[12] >> 4) & 1) << 4) |
+                         (((c[13] >> 4) & 1) << 5) | (((c[14] >> 4) & 1) << 6) |
+                         (((c[15] >> 4) & 1) << 7);
             d += XBM_STRIDE;
-            
-            dst[d] = ((c[0] >> 5) & 1) | (((c[1] >> 5) & 1) << 1) | (((c[2] >> 5) & 1) << 2) | (((c[3] >> 5) & 1) << 3) |
-                     (((c[4] >> 5) & 1) << 4) | (((c[5] >> 5) & 1) << 5) | (((c[6] >> 5) & 1) << 6) | (((c[7] >> 5) & 1) << 7);
-            dst[d + 1] = ((c[8] >> 5) & 1) | (((c[9] >> 5) & 1) << 1) | (((c[10] >> 5) & 1) << 2) | (((c[11] >> 5) & 1) << 3) |
-                         (((c[12] >> 5) & 1) << 4) | (((c[13] >> 5) & 1) << 5) | (((c[14] >> 5) & 1) << 6) | (((c[15] >> 5) & 1) << 7);
+
+            dst[d] = ((c[0] >> 5) & 1) | (((c[1] >> 5) & 1) << 1) | (((c[2] >> 5) & 1) << 2) |
+                     (((c[3] >> 5) & 1) << 3) | (((c[4] >> 5) & 1) << 4) |
+                     (((c[5] >> 5) & 1) << 5) | (((c[6] >> 5) & 1) << 6) |
+                     (((c[7] >> 5) & 1) << 7);
+            dst[d + 1] = ((c[8] >> 5) & 1) | (((c[9] >> 5) & 1) << 1) | (((c[10] >> 5) & 1) << 2) |
+                         (((c[11] >> 5) & 1) << 3) | (((c[12] >> 5) & 1) << 4) |
+                         (((c[13] >> 5) & 1) << 5) | (((c[14] >> 5) & 1) << 6) |
+                         (((c[15] >> 5) & 1) << 7);
             d += XBM_STRIDE;
-            
-            dst[d] = ((c[0] >> 6) & 1) | (((c[1] >> 6) & 1) << 1) | (((c[2] >> 6) & 1) << 2) | (((c[3] >> 6) & 1) << 3) |
-                     (((c[4] >> 6) & 1) << 4) | (((c[5] >> 6) & 1) << 5) | (((c[6] >> 6) & 1) << 6) | (((c[7] >> 6) & 1) << 7);
-            dst[d + 1] = ((c[8] >> 6) & 1) | (((c[9] >> 6) & 1) << 1) | (((c[10] >> 6) & 1) << 2) | (((c[11] >> 6) & 1) << 3) |
-                         (((c[12] >> 6) & 1) << 4) | (((c[13] >> 6) & 1) << 5) | (((c[14] >> 6) & 1) << 6) | (((c[15] >> 6) & 1) << 7);
+
+            dst[d] = ((c[0] >> 6) & 1) | (((c[1] >> 6) & 1) << 1) | (((c[2] >> 6) & 1) << 2) |
+                     (((c[3] >> 6) & 1) << 3) | (((c[4] >> 6) & 1) << 4) |
+                     (((c[5] >> 6) & 1) << 5) | (((c[6] >> 6) & 1) << 6) |
+                     (((c[7] >> 6) & 1) << 7);
+            dst[d + 1] = ((c[8] >> 6) & 1) | (((c[9] >> 6) & 1) << 1) | (((c[10] >> 6) & 1) << 2) |
+                         (((c[11] >> 6) & 1) << 3) | (((c[12] >> 6) & 1) << 4) |
+                         (((c[13] >> 6) & 1) << 5) | (((c[14] >> 6) & 1) << 6) |
+                         (((c[15] >> 6) & 1) << 7);
             d += XBM_STRIDE;
-            
-            dst[d] = ((c[0] >> 7) & 1) | (((c[1] >> 7) & 1) << 1) | (((c[2] >> 7) & 1) << 2) | (((c[3] >> 7) & 1) << 3) |
-                     (((c[4] >> 7) & 1) << 4) | (((c[5] >> 7) & 1) << 5) | (((c[6] >> 7) & 1) << 6) | (((c[7] >> 7) & 1) << 7);
-            dst[d + 1] = ((c[8] >> 7) & 1) | (((c[9] >> 7) & 1) << 1) | (((c[10] >> 7) & 1) << 2) | (((c[11] >> 7) & 1) << 3) |
-                         (((c[12] >> 7) & 1) << 4) | (((c[13] >> 7) & 1) << 5) | (((c[14] >> 7) & 1) << 6) | (((c[15] >> 7) & 1) << 7);
+
+            dst[d] = ((c[0] >> 7) & 1) | (((c[1] >> 7) & 1) << 1) | (((c[2] >> 7) & 1) << 2) |
+                     (((c[3] >> 7) & 1) << 3) | (((c[4] >> 7) & 1) << 4) |
+                     (((c[5] >> 7) & 1) << 5) | (((c[6] >> 7) & 1) << 6) |
+                     (((c[7] >> 7) & 1) << 7);
+            dst[d + 1] = ((c[8] >> 7) & 1) | (((c[9] >> 7) & 1) << 1) | (((c[10] >> 7) & 1) << 2) |
+                         (((c[11] >> 7) & 1) << 3) | (((c[12] >> 7) & 1) << 4) |
+                         (((c[13] >> 7) & 1) << 5) | (((c[14] >> 7) & 1) << 6) |
+                         (((c[15] >> 7) & 1) << 7);
         }
     }
 }
@@ -134,7 +163,7 @@ static inline void convert_screen_fast(const uint8_t* screen, uint8_t* dst) {
 static void render_callback(Canvas* canvas, void* ctx) {
     FlipperState* state = (FlipperState*)ctx;
     if(!state || !canvas) return;
-    
+
     uint8_t idx = state->xbm_read_idx;
     canvas_draw_xbm(canvas, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, state->xbm_buffers[idx]);
 }
@@ -157,7 +186,7 @@ static void game_loop_tick() {
 
     static uint16_t ab_hold = 0;
     const bool ab_pressed = arduboy.pressed(A_BUTTON) && arduboy.pressed(B_BUTTON);
-    
+
     if(ab_pressed) {
         if(ab_hold < 0xFFFF) ab_hold++;
         if(ab_hold >= HOLD_AB_TO_EXIT_FRAMES) {
@@ -180,26 +209,26 @@ static void game_loop_tick() {
 static void timer_callback(void* ctx) {
     FlipperState* state = (FlipperState*)ctx;
     if(!state) return;
-    
+
     static uint32_t logic_counter = 0;
     const uint32_t convert_ratio = TARGET_FRAMERATE / DISPLAY_FPS;
-    
+
     if(furi_mutex_acquire(state->mutex, 0) != FuriStatusOk) return;
-    
+
     game_loop_tick();
     logic_counter++;
-    
+
     if(logic_counter >= convert_ratio) {
         uint8_t read_idx = state->xbm_read_idx;
         uint8_t write_idx = 1 - read_idx;
-        
+
         convert_screen_fast(state->screen_buffer, state->xbm_buffers[write_idx]);
         state->xbm_read_idx = write_idx;
-        
+
         view_port_update(state->view_port);
         logic_counter = 0;
     }
-    
+
     furi_mutex_release(state->mutex);
 }
 
@@ -229,7 +258,8 @@ extern "C" int32_t mybl_app(void* p) {
 
     g_state->view_port = view_port_alloc();
     view_port_draw_callback_set(g_state->view_port, render_callback, g_state);
-    view_port_input_callback_set(g_state->view_port, Arduboy2Base::FlipperInputCallback, arduboy.inputContext());
+    view_port_input_callback_set(
+        g_state->view_port, Arduboy2Base::FlipperInputCallback, arduboy.inputContext());
 
     Gui* gui = (Gui*)furi_record_open(RECORD_GUI);
     gui_add_view_port(gui, g_state->view_port, GuiLayerFullscreen);

@@ -68,6 +68,7 @@ GamesMenuList Version 0
 /ext/apps/Games/montyhall.fap
 /ext/apps/Games/morse_master.fap
 /ext/apps/Games/multi_counter.fap
+/ext/apps/Games/myblab.fap
 /ext/apps/Games/nah2nah3.fap
 /ext/apps/Games/nu_pogodi.fap
 /ext/apps/Games/p1x_adventure.fap

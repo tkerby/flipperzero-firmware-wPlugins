@@ -35,6 +35,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Ghost ESP v1.6.2 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32`
 - Updated: [LEGO Dimensions Toy Pad v0.5 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
 - Added: [Catacombs Of The Damned v1.1 (By apfxtech)](https://github.com/apfxtech/FlipperCatacombs)
+- Added: [Mystic Balloon v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperMysticBalloon)
 
 <a name="release">
 
@@ -331,6 +332,7 @@ $ ./fbt dolphin_ext
 - [Morse Master v1.1 (By w84death)](https://github.com/w84death/morse-master)
 - [MTP WIP v1.0 (By Alex4386)](https://github.com/Alex4386/f0-mtp)
 - [Multi Counter v1.1 (By JadePossible)](https://github.com/JadePossible/Flipper-Multi-Counter)
+- [Mystic Balloon v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperMysticBalloon)
 - [Nah 2 da Nah Nah Nah v0.2 (By DigiMancer3D)](https://github.com/DigiMancer3D/nah2nah3)
 - [Network Defender v1.1 (By w84death)](https://github.com/w84death/flipper-zero-apps)
 - [Nu Pogodi! (Ну, погоди!) v1.3 (By sionyx)](https://github.com/sionyx/flipper_nupogodi)
