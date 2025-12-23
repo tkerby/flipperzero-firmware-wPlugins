@@ -3,11 +3,6 @@ This **Calendar of week** is an application for the Flipper Zero that displays a
 
 <img alt="Flipper Zero screenshot"  src="screenshots/mitzi-cal-weeks-2025-12-07.png" width="33%" />&nbsp;<img alt="Flipper Zero screenshot"  src="screenshots/mitzi-cal-weeks-day-view.png" width="33%" />&nbsp;<img alt="Flipper Zero screenshot"  src="screenshots/mitzi-cal-weeks-day-details.png" width="33%" />
 
-## Usage
-
-- **OK Button** exits the application (for now)
-- **Back Button (Long Press)** exits the application
-
 ## Background
 We are using [Zeller's congruence algorithm](https://en.wikipedia.org/wiki/Zeller%27s_congruence) to calculate the day of the week for any given date. It properly handles:
 - Month and year boundaries
