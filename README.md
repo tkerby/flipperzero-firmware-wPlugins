@@ -8,7 +8,7 @@ Like in the classic game, each ghost has distinct personality: one targets direc
 - **OK Button**: Restart game (when game over or won)
 - **Back Button**: Pauses game or (when held) exits
 
-On the right, the user can track the lives of puck-girl &mdash; initially thera are 3 filled hearts which become empty for each death of puck-girl. Underneath, there is a score-tracker. The theoretically maximal possible high-score is `4*2*200+4*50+ (12*7-2-4)*10 = 2580` &mdash; if the users kills both ghosts in each power-up phase. 
+On the right, the user can track the lives of puck-girl &mdash; initially there are 3 filled hearts which become empty for each death of puck-girl. Underneath, there is a score-tracker. The theoretically maximal possible high-score is `4*2*200+4*50+ (12*7-2-4)*10 = 2580` &mdash; if the users kills both ghosts in each power-up phase. 
 
 ### Scores
 - 10 points for normal dot
