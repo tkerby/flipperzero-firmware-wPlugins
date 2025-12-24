@@ -46,6 +46,7 @@ typedef struct {
 	FuriString* selected_file_path; // Path to selected file
 	CalendarEventList* events;      // List of events for selected day
 	int selected_event;             // Selected event index
+	bool parsing_error;             // Flag for ICS parsing errors
 } AppState;
 
 // =============================================================================
@@ -149,13 +150,12 @@ void get_week_days(int year, int month, int day, int week_offset, char out[7][4]
 }
 
 int get_iso_week_number(int year, int month, int day) {
-    // Simple ISO 8601 week number calculation
+    // ISO 8601 week number calculation
     int days_in_month[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
     if ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)) {
         days_in_month[1] = 29;
     }
-    
-    // Calculate day of year
+    // Calculate day of year for the given date
     int day_of_year = day;
     for(int i = 0; i < month - 1; i++) {
         day_of_year += days_in_month[i];
@@ -166,52 +166,58 @@ int get_iso_week_number(int year, int month, int day) {
     return week;
 }
 
-// Convert date to days since epoch (Jan 1, 2000)
-static int date_to_days(int year, int month, int day) {
-    int days_in_month[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-    
-    // Count years since 2000
-    int total_days = (year - 2000) * 365;
-    
-    // Add leap days
-    for(int y = 2000; y < year; y++) {
-        if((y % 4 == 0 && y % 100 != 0) || (y % 400 == 0)) {
-            total_days++;
-        }
-    }
-    
-    // Add days for months
-    if((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)) {
-        days_in_month[1] = 29;
-    }
-    for(int m = 0; m < month - 1; m++) {
-        total_days += days_in_month[m];
-    }
-    
-    // Add days
-    total_days += day;
-    
-    return total_days;
-}
-
-
 // Helper function to determine if today appears in a week with given offset
 // Returns column index (0-6) if today is in that week, -1 otherwise
 int get_today_column(DateTime* today, DateTime* ref_date, int week_offset) {
-    int ref_wday = (ref_date->weekday + 6) % 7;  // Day of week for reference date (Mon=0)
+    // Get the 7 days of the target week
+    char days_week[7][4];
+    get_week_days(ref_date->year, ref_date->month, ref_date->day, week_offset, days_week);
     
-    // Calculate exact day difference
-    int today_days = date_to_days(today->year, today->month, today->day);
-    int ref_days = date_to_days(ref_date->year, ref_date->month, ref_date->day);
-    int days_diff = today_days - ref_days;
+    // Calculate the start of the week (Monday)
+    DateTime week_start;
+    calculate_date_with_offset(ref_date, week_offset, &week_start);
     
-    // Adjust for the week offset
-    int week_start = week_offset * 7 - ref_wday;
-    int week_end = week_start + 6;
+    int ref_wday = (week_start.weekday + 6) % 7;  // Monday=0
     
-    if (days_diff >= week_start && days_diff <= week_end) {
-        return (days_diff - week_start);
+    // Adjust week_start to actually be Monday
+    int days_in_month[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    if((week_start.year % 4 == 0 && week_start.year % 100 != 0) || 
+       (week_start.year % 400 == 0)) {
+        days_in_month[1] = 29;
     }
+    
+    int curr_day = week_start.day - ref_wday;
+    int curr_month = week_start.month;
+    int curr_year = week_start.year;
+    
+    if(curr_day < 1) {
+        curr_month--;
+        if(curr_month < 1) {
+            curr_month = 12;
+            curr_year--;
+        }
+        curr_day += days_in_month[curr_month - 1];
+    }
+    
+    // Check each day of the week
+    for(int i = 0; i < 7; i++) {
+        if(today->year == curr_year && 
+           today->month == curr_month && 
+           today->day == curr_day) {
+            return i;
+        }
+        
+        // Move to next day
+        curr_day++;
+        if(curr_day > days_in_month[curr_month - 1]) {
+            curr_day = 1;
+            curr_month++;
+            if(curr_month > 12) {
+                curr_month = 1;
+                curr_year++;
+            }
+        }
+    }    
     return -1;
 }
 
@@ -252,10 +258,11 @@ static void draw_screen_splash(Canvas* canvas, DateTime* datetime, AppState* sta
 	canvas_draw_icon(canvas, 1, 1, &I_splash); // 51 is a pixel above the buttons
 	// Highlight app icon if selected
 	if(state->selected_day == -1) {
-		canvas_draw_box(canvas, 1, -1, 10, 10);
-		canvas_set_color(canvas, ColorWhite);
+		canvas_draw_frame(canvas, 0, -2, 12, 12);  // 1px frame around icon
+		canvas_draw_box(canvas, 1, -1, 10, 10); // black box
+		canvas_set_color(canvas, ColorWhite); // icon will be draw inverted now
 	}
-    canvas_draw_icon(canvas, 1, -1, &I_icon_10x10); // App icon 
+    canvas_draw_icon(canvas, 1, 0, &I_icon_10x10); // App icon 
  	canvas_set_color(canvas, ColorBlack);
     canvas_set_font(canvas, FontPrimary);
 	// Display selected week number and year as title
@@ -420,7 +427,11 @@ static void draw_screen_day(Canvas* canvas, DateTime* datetime, AppState* state)
 	} else {
 		// No events to show
 		canvas_set_font(canvas, FontSecondary);
-		if(furi_string_size(state->selected_file_path) > 0) {
+		if(state->parsing_error) {
+			canvas_draw_str_aligned(canvas, WEEK_VIEW_CENTER, 35, AlignCenter, AlignTop, "Error parsing file!");
+			canvas_draw_str_aligned(canvas, WEEK_VIEW_CENTER, 44, AlignCenter, AlignTop, "Check ICS format");
+			state->parsing_error = false;  // Reset flag
+		} else if(furi_string_size(state->selected_file_path) > 0) {
 			// Show filename if a file is loaded
 			const char* full_path = furi_string_get_cstr(state->selected_file_path);
 			const char* filename = strrchr(full_path, '/');
@@ -531,6 +542,7 @@ int32_t cal_weeks_main(void* p) {
   app.selected_file_path = furi_string_alloc(); // Allocate string for file path
   app.events = NULL;                  // No events loaded initially
   app.selected_event = 0;             // Start with first event
+  app.parsing_error = false;          // No parsing error initially
   
   // Ensure app data directory exists
   Storage* storage = furi_record_open(RECORD_STORAGE);
@@ -649,6 +661,11 @@ int32_t cal_weeks_main(void* p) {
                         
                         app.events = extract_calendar_events(furi_string_get_cstr(app.selected_file_path), &day_start, &day_end);
                         app.selected_event = 0;
+                        // Check for parsing errors
+                        if(!app.events && furi_string_size(app.selected_file_path) > 0) {
+                            app.parsing_error = true;
+                        }
+						
                         app.current_screen = ScreenDayView; 
                         break;
                     case ScreenDayView:
@@ -686,6 +703,10 @@ int32_t cal_weeks_main(void* p) {
                                 
                                 app.events = extract_calendar_events(furi_string_get_cstr(app.selected_file_path), &day_start, &day_end);
                                 app.selected_event = 0;
+                                // Check for parsing errors
+                                if(!app.events) {
+                                    app.parsing_error = true;
+                                }
 
                                 app.selected_event = 0;
                              }		
