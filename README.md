@@ -1,6 +1,6 @@
 # mitzi-puck
 <img alt="Main Puck Girl Screen"  src="screenshots/MainScreen.png" width="40%" />
-A simple Flipper Zero arcade chase game. The player controls a pie-shaped character ("Puck girl") through a maze, collecting dots while avoiding ghosts. Ppower pills temporarily make ghosts vulnerable.
+A simple Flipper Zero arcade chase game. The player controls a pie-shaped character ("Puck girl") through a maze, collecting dots while avoiding ghosts. Power pills temporarily make ghosts vulnerable.
 Like in the classic game, each ghost has distinct personality: one targets directly, another one patrols. 
 
 ## Usage
@@ -8,10 +8,12 @@ Like in the classic game, each ghost has distinct personality: one targets direc
 - **OK Button**: Restart game (when game over or won)
 - **Back Button**: Pauses game or (when held) exits
 
-## Scores
+On the right, the user can track the lives of puck-girl &mdash; initially thera are 3 filled hearts which become empty for each death of puck-girl. Underneath, there is a score-tracker. The theoretically maximal possible high-score is `4*2*200+4*50+ (12*7-2-4)*10 = 2580` &mdash; if the users kills both ghosts in each power-up phase. 
+
+### Scores
 - 10 points for normal dot
 - 50 for power pills
-- 200 for eating ghosts
+- 200 for eating a ghost - ghosts respawn after the power-up-period of 5s
 
 ## Remarks on the implementation
 Drawing of the screen occurs back to front:
