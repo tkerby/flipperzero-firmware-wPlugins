@@ -49,12 +49,12 @@ const unsigned char PROGMEM npcData[] =
   // ===============
   // 100, 100, 0B00000000
   //             ||||||||
-  //             |||||||└->  0 -\
+  //             |||||||└->  0 -
   //             ||||||└-->  1   | type of body, 8 possibilities
   //             |||||└--->  2 -/
   //             ||||└---->  3 reserved
   //             |||└----->  4 reserved
-  //             ||└------>  5 -\
+  //             ||└------>  5 -
   //             |└------->  6   | type of head, 8 possibilities
   //             └-------->  7 -/
 

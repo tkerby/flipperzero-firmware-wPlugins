@@ -54,13 +54,57 @@ extern "C" {
 #define INPUT_B B_BUTTON
 #endif
 
-#ifndef EEPROM_STORAGE_SPACE_START
-#define EEPROM_STORAGE_SPACE_START 0
-#endif
+#define ARDUBOY_LIB_VER               60000
+#define ARDUBOY_UNIT_NAME_LEN         6
+#define ARDUBOY_UNIT_NAME_BUFFER_SIZE (ARDUBOY_UNIT_NAME_LEN + 1)
+#define EEPROM_STORAGE_SPACE_START    16
+#define BLACK                         0
+#define WHITE                         1
+#define INVERT                        2
+#define CLEAR_BUFFER                  true
+
+struct Rect {
+    int x; /**< The X coordinate of the top left corner */
+    int y; /**< The Y coordinate of the top left corner */
+    int width; /**< The width of the rectangle */
+    int height; /**< The height of the rectangle */
+
+    Rect() = default;
+    constexpr Rect(int x, int y, int width, int height)
+        : x(x)
+        , y(y)
+        , width(width)
+        , height(height) {
+    }
+};
+
+struct Point {
+    int x;
+    int y;
+    Point() = default;
+    constexpr Point(int x, int y)
+        : x(x)
+        , y(y) {
+    }
+};
 
 class Arduboy2Base {
 public:
     ArduboyAudio audio;
+
+    void exitToBootloader(){}
+
+    bool collide(Point point, Rect rect) {
+        return (
+            (point.x >= rect.x) && (point.x < rect.x + rect.width) && (point.y >= rect.y) &&
+            (point.y < rect.y + rect.height));
+    }
+
+    bool collide(Rect rect1, Rect rect2) {
+        return !(
+            rect2.x >= rect1.x + rect1.width || rect2.x + rect2.width <= rect1.x ||
+            rect2.y >= rect1.y + rect1.height || rect2.y + rect2.height <= rect1.y);
+    }
 
     struct InputContext {
         volatile uint8_t* input_state = nullptr;
@@ -237,7 +281,7 @@ public:
         blitPlusMask_(x, y, data, w, h);
     }
 
-        // Bresenham circle (outline). color: 0/1
+    // Bresenham circle (outline). color: 0/1
     void drawCircle(int16_t x0, int16_t y0, int16_t r, uint8_t color) {
         if(r <= 0) return;
 
@@ -264,7 +308,6 @@ public:
             }
         }
     }
-
 
     // drawSprite: если mask != nullptr, то mask чисто "маска байтами"
     // если mask == nullptr — трактуем bmp как plusmask (совместимость со старым портом)
@@ -322,180 +365,185 @@ public:
     }
 
 private:
-   // ---- helpers ----
-static inline uint8_t page_mask_(int16_t p, int16_t pages, int16_t h) {
-    // mask of valid bits in the source byte for page p
-    if(p != pages - 1) return 0xFF;
-    int16_t rem = (h & 7);
-    if(rem == 0) return 0xFF;
-    return (uint8_t)((1u << rem) - 1u);
-}
+    // ---- helpers ----
+    static inline uint8_t page_mask_(int16_t p, int16_t pages, int16_t h) {
+        // mask of valid bits in the source byte for page p
+        if(p != pages - 1) return 0xFF;
+        int16_t rem = (h & 7);
+        if(rem == 0) return 0xFF;
+        return (uint8_t)((1u << rem) - 1u);
+    }
 
-void blitSelfMasked_(int16_t x, int16_t y, const uint8_t* src, int16_t w, int16_t h) {
-    if(w <= 0 || h <= 0) return;
-    const int16_t yOffset = (y & 7);
-    const int16_t sRow = y >> 3;
-    const int16_t pages = (h + 7) >> 3;
+    void blitSelfMasked_(int16_t x, int16_t y, const uint8_t* src, int16_t w, int16_t h) {
+        if(w <= 0 || h <= 0) return;
+        const int16_t yOffset = (y & 7);
+        const int16_t sRow = y >> 3;
+        const int16_t pages = (h + 7) >> 3;
 
-    for(int16_t i = 0; i < w; i++) {
-        int16_t sx = x + i;
-        if(sx < 0 || sx >= WIDTH) continue;
+        for(int16_t i = 0; i < w; i++) {
+            int16_t sx = x + i;
+            if(sx < 0 || sx >= WIDTH) continue;
 
-        for(int16_t p = 0; p < pages; p++) {
-            uint8_t b = pgm_read_byte(src + i + p * w);
-            b &= page_mask_(p, pages, h);
+            for(int16_t p = 0; p < pages; p++) {
+                uint8_t b = pgm_read_byte(src + i + p * w);
+                b &= page_mask_(p, pages, h);
 
-            int16_t row = sRow + p;
+                int16_t row = sRow + p;
 
-            if(yOffset == 0) {
-                if(row >= 0 && row < (HEIGHT >> 3)) {
-                    sBuffer_[row * WIDTH + sx] |= b;
-                }
-            } else {
-                if(row >= 0 && row < (HEIGHT >> 3)) {
-                    sBuffer_[row * WIDTH + sx] |= (uint8_t)(b << yOffset);
-                }
-                if((row + 1) >= 0 && (row + 1) < (HEIGHT >> 3)) {
-                    sBuffer_[(row + 1) * WIDTH + sx] |= (uint8_t)(b >> (8 - yOffset));
+                if(yOffset == 0) {
+                    if(row >= 0 && row < (HEIGHT >> 3)) {
+                        sBuffer_[row * WIDTH + sx] |= b;
+                    }
+                } else {
+                    if(row >= 0 && row < (HEIGHT >> 3)) {
+                        sBuffer_[row * WIDTH + sx] |= (uint8_t)(b << yOffset);
+                    }
+                    if((row + 1) >= 0 && (row + 1) < (HEIGHT >> 3)) {
+                        sBuffer_[(row + 1) * WIDTH + sx] |= (uint8_t)(b >> (8 - yOffset));
+                    }
                 }
             }
         }
     }
-}
 
-void blitOverwrite_(int16_t x, int16_t y, const uint8_t* src, int16_t w, int16_t h) {
-    if(w <= 0 || h <= 0) return;
-    const int16_t yOffset = (y & 7);
-    const int16_t sRow = y >> 3;
-    const int16_t pages = (h + 7) >> 3;
+    void blitOverwrite_(int16_t x, int16_t y, const uint8_t* src, int16_t w, int16_t h) {
+        if(w <= 0 || h <= 0) return;
+        const int16_t yOffset = (y & 7);
+        const int16_t sRow = y >> 3;
+        const int16_t pages = (h + 7) >> 3;
 
-    for(int16_t i = 0; i < w; i++) {
-        int16_t sx = x + i;
-        if(sx < 0 || sx >= WIDTH) continue;
+        for(int16_t i = 0; i < w; i++) {
+            int16_t sx = x + i;
+            if(sx < 0 || sx >= WIDTH) continue;
 
-        for(int16_t p = 0; p < pages; p++) {
-            uint8_t b = pgm_read_byte(src + i + p * w);
-            uint8_t srcMask = page_mask_(p, pages, h);
-            b &= srcMask;
+            for(int16_t p = 0; p < pages; p++) {
+                uint8_t b = pgm_read_byte(src + i + p * w);
+                uint8_t srcMask = page_mask_(p, pages, h);
+                b &= srcMask;
 
-            int16_t row = sRow + p;
+                int16_t row = sRow + p;
 
-            if(yOffset == 0) {
-                if(row >= 0 && row < (HEIGHT >> 3)) {
-                    // true overwrite for this page
-                    sBuffer_[row * WIDTH + sx] = b;
-                }
-            } else {
-                // Dest masks are based on which bits of the source are valid,
-                // shifted into their destination rows.
-                uint8_t lo = (uint8_t)(b << yOffset);
-                uint8_t hi = (uint8_t)(b >> (8 - yOffset));
+                if(yOffset == 0) {
+                    if(row >= 0 && row < (HEIGHT >> 3)) {
+                        // true overwrite for this page
+                        sBuffer_[row * WIDTH + sx] = b;
+                    }
+                } else {
+                    // Dest masks are based on which bits of the source are valid,
+                    // shifted into their destination rows.
+                    uint8_t lo = (uint8_t)(b << yOffset);
+                    uint8_t hi = (uint8_t)(b >> (8 - yOffset));
 
-                uint8_t maskLo = (uint8_t)(srcMask << yOffset);
-                uint8_t maskHi = (uint8_t)(srcMask >> (8 - yOffset));
+                    uint8_t maskLo = (uint8_t)(srcMask << yOffset);
+                    uint8_t maskHi = (uint8_t)(srcMask >> (8 - yOffset));
 
-                if(row >= 0 && row < (HEIGHT >> 3)) {
-                    uint8_t* dst = &sBuffer_[row * WIDTH + sx];
-                    *dst = (uint8_t)((*dst & (uint8_t)~maskLo) | (lo & maskLo));
-                }
-                if((row + 1) >= 0 && (row + 1) < (HEIGHT >> 3)) {
-                    uint8_t* dst2 = &sBuffer_[(row + 1) * WIDTH + sx];
-                    *dst2 = (uint8_t)((*dst2 & (uint8_t)~maskHi) | (hi & maskHi));
-                }
-            }
-        }
-    }
-}
-
-void blitPlusMask_(int16_t x, int16_t y, const uint8_t* srcPairs, int16_t w, int16_t h) {
-    if(w <= 0 || h <= 0) return;
-    const int16_t yOffset = (y & 7);
-    const int16_t sRow = y >> 3;
-    const int16_t pages = (h + 7) >> 3;
-
-    for(int16_t i = 0; i < w; i++) {
-        int16_t sx = x + i;
-        if(sx < 0 || sx >= WIDTH) continue;
-
-        for(int16_t p = 0; p < pages; p++) {
-            const uint16_t idx = (uint16_t)(i + p * w) * 2u;
-            uint8_t s = pgm_read_byte(srcPairs + idx + 0);
-            uint8_t m = pgm_read_byte(srcPairs + idx + 1);
-
-            uint8_t srcMask = page_mask_(p, pages, h);
-            s &= srcMask;
-            m &= srcMask;
-
-            int16_t row = sRow + p;
-
-            if(yOffset == 0) {
-                if(row >= 0 && row < (HEIGHT >> 3)) {
-                    uint8_t* dst = &sBuffer_[row * WIDTH + sx];
-                    *dst = (uint8_t)((*dst & (uint8_t)~m) | (s & m));
-                }
-            } else {
-                uint8_t slo = (uint8_t)(s << yOffset);
-                uint8_t shi = (uint8_t)(s >> (8 - yOffset));
-                uint8_t mlo = (uint8_t)(m << yOffset);
-                uint8_t mhi = (uint8_t)(m >> (8 - yOffset));
-
-                if(row >= 0 && row < (HEIGHT >> 3)) {
-                    uint8_t* dst = &sBuffer_[row * WIDTH + sx];
-                    *dst = (uint8_t)((*dst & (uint8_t)~mlo) | (slo & mlo));
-                }
-                if((row + 1) >= 0 && (row + 1) < (HEIGHT >> 3)) {
-                    uint8_t* dst2 = &sBuffer_[(row + 1) * WIDTH + sx];
-                    *dst2 = (uint8_t)((*dst2 & (uint8_t)~mhi) | (shi & mhi));
+                    if(row >= 0 && row < (HEIGHT >> 3)) {
+                        uint8_t* dst = &sBuffer_[row * WIDTH + sx];
+                        *dst = (uint8_t)((*dst & (uint8_t)~maskLo) | (lo & maskLo));
+                    }
+                    if((row + 1) >= 0 && (row + 1) < (HEIGHT >> 3)) {
+                        uint8_t* dst2 = &sBuffer_[(row + 1) * WIDTH + sx];
+                        *dst2 = (uint8_t)((*dst2 & (uint8_t)~maskHi) | (hi & maskHi));
+                    }
                 }
             }
         }
     }
-}
 
-void blitExternalMask_(int16_t x, int16_t y, const uint8_t* sprite, const uint8_t* mask, int16_t w, int16_t h) {
-    if(w <= 0 || h <= 0) return;
-    const int16_t yOffset = (y & 7);
-    const int16_t sRow = y >> 3;
-    const int16_t pages = (h + 7) >> 3;
+    void blitPlusMask_(int16_t x, int16_t y, const uint8_t* srcPairs, int16_t w, int16_t h) {
+        if(w <= 0 || h <= 0) return;
+        const int16_t yOffset = (y & 7);
+        const int16_t sRow = y >> 3;
+        const int16_t pages = (h + 7) >> 3;
 
-    for(int16_t i = 0; i < w; i++) {
-        int16_t sx = x + i;
-        if(sx < 0 || sx >= WIDTH) continue;
+        for(int16_t i = 0; i < w; i++) {
+            int16_t sx = x + i;
+            if(sx < 0 || sx >= WIDTH) continue;
 
-        for(int16_t p = 0; p < pages; p++) {
-            uint8_t s = pgm_read_byte(sprite + i + p * w);
-            uint8_t m = pgm_read_byte(mask + i + p * w);
+            for(int16_t p = 0; p < pages; p++) {
+                const uint16_t idx = (uint16_t)(i + p * w) * 2u;
+                uint8_t s = pgm_read_byte(srcPairs + idx + 0);
+                uint8_t m = pgm_read_byte(srcPairs + idx + 1);
 
-            uint8_t srcMask = page_mask_(p, pages, h);
-            s &= srcMask;
-            m &= srcMask;
+                uint8_t srcMask = page_mask_(p, pages, h);
+                s &= srcMask;
+                m &= srcMask;
 
-            int16_t row = sRow + p;
+                int16_t row = sRow + p;
 
-            if(yOffset == 0) {
-                if(row >= 0 && row < (HEIGHT >> 3)) {
-                    uint8_t* dst = &sBuffer_[row * WIDTH + sx];
-                    *dst = (uint8_t)((*dst & (uint8_t)~m) | (s & m));
-                }
-            } else {
-                uint8_t slo = (uint8_t)(s << yOffset);
-                uint8_t shi = (uint8_t)(s >> (8 - yOffset));
-                uint8_t mlo = (uint8_t)(m << yOffset);
-                uint8_t mhi = (uint8_t)(m >> (8 - yOffset));
+                if(yOffset == 0) {
+                    if(row >= 0 && row < (HEIGHT >> 3)) {
+                        uint8_t* dst = &sBuffer_[row * WIDTH + sx];
+                        *dst = (uint8_t)((*dst & (uint8_t)~m) | (s & m));
+                    }
+                } else {
+                    uint8_t slo = (uint8_t)(s << yOffset);
+                    uint8_t shi = (uint8_t)(s >> (8 - yOffset));
+                    uint8_t mlo = (uint8_t)(m << yOffset);
+                    uint8_t mhi = (uint8_t)(m >> (8 - yOffset));
 
-                if(row >= 0 && row < (HEIGHT >> 3)) {
-                    uint8_t* dst = &sBuffer_[row * WIDTH + sx];
-                    *dst = (uint8_t)((*dst & (uint8_t)~mlo) | (slo & mlo));
-                }
-                if((row + 1) >= 0 && (row + 1) < (HEIGHT >> 3)) {
-                    uint8_t* dst2 = &sBuffer_[(row + 1) * WIDTH + sx];
-                    *dst2 = (uint8_t)((*dst2 & (uint8_t)~mhi) | (shi & mhi));
+                    if(row >= 0 && row < (HEIGHT >> 3)) {
+                        uint8_t* dst = &sBuffer_[row * WIDTH + sx];
+                        *dst = (uint8_t)((*dst & (uint8_t)~mlo) | (slo & mlo));
+                    }
+                    if((row + 1) >= 0 && (row + 1) < (HEIGHT >> 3)) {
+                        uint8_t* dst2 = &sBuffer_[(row + 1) * WIDTH + sx];
+                        *dst2 = (uint8_t)((*dst2 & (uint8_t)~mhi) | (shi & mhi));
+                    }
                 }
             }
         }
     }
-}
 
+    void blitExternalMask_(
+        int16_t x,
+        int16_t y,
+        const uint8_t* sprite,
+        const uint8_t* mask,
+        int16_t w,
+        int16_t h) {
+        if(w <= 0 || h <= 0) return;
+        const int16_t yOffset = (y & 7);
+        const int16_t sRow = y >> 3;
+        const int16_t pages = (h + 7) >> 3;
+
+        for(int16_t i = 0; i < w; i++) {
+            int16_t sx = x + i;
+            if(sx < 0 || sx >= WIDTH) continue;
+
+            for(int16_t p = 0; p < pages; p++) {
+                uint8_t s = pgm_read_byte(sprite + i + p * w);
+                uint8_t m = pgm_read_byte(mask + i + p * w);
+
+                uint8_t srcMask = page_mask_(p, pages, h);
+                s &= srcMask;
+                m &= srcMask;
+
+                int16_t row = sRow + p;
+
+                if(yOffset == 0) {
+                    if(row >= 0 && row < (HEIGHT >> 3)) {
+                        uint8_t* dst = &sBuffer_[row * WIDTH + sx];
+                        *dst = (uint8_t)((*dst & (uint8_t)~m) | (s & m));
+                    }
+                } else {
+                    uint8_t slo = (uint8_t)(s << yOffset);
+                    uint8_t shi = (uint8_t)(s >> (8 - yOffset));
+                    uint8_t mlo = (uint8_t)(m << yOffset);
+                    uint8_t mhi = (uint8_t)(m >> (8 - yOffset));
+
+                    if(row >= 0 && row < (HEIGHT >> 3)) {
+                        uint8_t* dst = &sBuffer_[row * WIDTH + sx];
+                        *dst = (uint8_t)((*dst & (uint8_t)~mlo) | (slo & mlo));
+                    }
+                    if((row + 1) >= 0 && (row + 1) < (HEIGHT >> 3)) {
+                        uint8_t* dst2 = &sBuffer_[(row + 1) * WIDTH + sx];
+                        *dst2 = (uint8_t)((*dst2 & (uint8_t)~mhi) | (shi & mhi));
+                    }
+                }
+            }
+        }
+    }
 
     // ---------- misc ----------
     static uint32_t millis_flipper_() {

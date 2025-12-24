@@ -1,55 +1,23 @@
-#ifndef _ATMLIB_H_
-#define _ATMLIB_H_
-#include <stddef.h>
-#include <inttypes.h>
-#include <Arduino.h>
+#pragma once
 
-#define CH_ZERO             0
-#define CH_ONE              1
-#define CH_TWO              2
-#define CH_THREE            3
+#include <stdint.h>
 
-extern byte trackCount;
-extern const word *trackList;
-extern const byte *trackBase;
-extern uint8_t pcm;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-extern bool half;
-
-class ATMsynth {
-
-  public:
-    ATMsynth() {};
-
-    // Load and play specified song
-    static void play(const byte *song);
-
-    // Play or Pause playback
-    static void playPause();
-
-    // Stop playback (unloads song)
-    static void stop();
-
-    static void muteChannel(byte ch);
-
-    static void unMuteChannel(byte ch);
-};
-
-
-// oscillator structure
+// Минимальный Arduino-совместимый интерфейс
 typedef struct {
-  uint8_t  vol;
-  uint16_t freq;
-  uint16_t phase;
-} osc_t;
+    void (*play)(const uint8_t* song);
+    void (*stop)(void);
+    void (*playPause)(void);
+    void (*muteChannel)(uint8_t ch);
+    void (*unMuteChannel)(uint8_t ch);
+} ATMsynth;
 
-typedef osc_t Oscillator;
+// Глобальный объект, который ожидает твой код: ATM.play(...), ATM.stop(), ...
+extern ATMsynth ATM;
 
-extern osc_t osc[4];
-
-
-uint16_t read_vle(const byte **pp);
-static inline const byte *getTrackPointer(byte track);
-
-extern void ATM_playroutine() asm("ATM_playroutine");
+#ifdef __cplusplus
+}
 #endif

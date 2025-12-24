@@ -75,7 +75,7 @@ static void input_events_callback(const void* value, void* ctx) {
 
 
 typedef void (*FunctionPointer) ();
-const FunctionPointer PROGMEM mainGameLoop[] = {
+const FunctionPointer mainGameLoop[] = {
   stateMenuIntro,
   stateMenuMain,
   stateMenuContinue,
@@ -123,7 +123,8 @@ static void game_loop_tick() {
   drawTiles();
   updateEyes();
   
-  ((FunctionPointer) pgm_read_word(&mainGameLoop[gameState]))();
+  mainGameLoop[gameState]();
+
   checkInputs();
   if (question) drawQuestion();
   if (yesNo) drawYesNo();
