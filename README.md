@@ -15,7 +15,9 @@ Flipper Zero application for controlling HTW air conditioners via infrared.
 
 ## Screenshots
 
-*Coming soon*
+| Main Screen | Timer | Settings |
+|:-----------:|:-----:|:--------:|
+| ![Main](docs/screenshots/main.png) | ![Timer](docs/screenshots/timer.png) | ![Settings](docs/screenshots/settings.png) |
 
 ## Building
 
@@ -92,13 +94,18 @@ htw_ac_remote/
 ├── htw_state.c              # State management and persistence
 ├── htw_state.h              # State structures
 ├── htw_ac_remote.png        # App icon (10x10)
-└── views/
-    ├── htw_main_view.c      # Main screen UI
-    ├── htw_main_view.h
-    ├── htw_timer_view.c     # Timer configuration UI
-    ├── htw_timer_view.h
-    ├── htw_setup_view.c     # Settings UI
-    └── htw_setup_view.h
+├── HTW_AC.ir                # IR signal library (150 commands)
+├── views/
+│   ├── htw_main_view.c      # Main screen UI
+│   ├── htw_main_view.h
+│   ├── htw_timer_view.c     # Timer configuration UI
+│   ├── htw_timer_view.h
+│   ├── htw_setup_view.c     # Settings UI
+│   └── htw_setup_view.h
+└── docs/
+    ├── ARCHITECTURE.md      # System architecture
+    ├── PROTOCOL.md          # IR protocol specification
+    └── screenshots/         # App screenshots
 ```
 
 ## IR Protocol
