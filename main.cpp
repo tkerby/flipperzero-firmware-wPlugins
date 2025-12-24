@@ -73,6 +73,12 @@ static void input_events_callback(const void* value, void* ctx) {
 #include "game/enemies.h"
 #include "game/battles.h"
 
+Arduboy2Base* arduboy_ptr = nullptr;
+Sprites* sprites_ptr = nullptr;
+
+alignas(Arduboy2Base) static uint8_t arduboy_storage[sizeof(Arduboy2Base)];
+alignas(Sprites) static uint8_t sprites_storage[sizeof(Sprites)];
+
 
 typedef void (*FunctionPointer) ();
 const FunctionPointer mainGameLoop[] = {
@@ -110,7 +116,7 @@ const FunctionPointer mainGameLoop[] = {
 static void game_setup() {
   arduboy.boot();
   arduboy.audio.begin();
-  ATM.play(titleSong);
+  //ATM.play(titleSong);
   arduboy.setFrameRate(60);                                 // set the frame rate of the game at 60 fps
 }
 
@@ -203,7 +209,8 @@ static void timer_callback(void* ctx) {
     apply_ghost_compensation(state);
     furi_mutex_release(state->fb_mutex);
 
-    canvas_commit(state->canvas);
+    if(g_state->canvas) canvas_commit(g_state->canvas);
+
 
     furi_mutex_release(state->game_mutex);
     state->in_frame = false;
@@ -215,6 +222,9 @@ extern "C" int32_t mybl_app(void* p) {
     g_state = (FlipperState*)malloc(sizeof(FlipperState));
     if(!g_state) return -1;
     memset(g_state, 0, sizeof(FlipperState));
+    arduboy_ptr = new(arduboy_storage) Arduboy2Base();
+sprites_ptr = new(sprites_storage) Sprites();
+
 
     g_state->fb_mutex = furi_mutex_alloc(FuriMutexTypeNormal);
     g_state->game_mutex = furi_mutex_alloc(FuriMutexTypeNormal);
@@ -258,7 +268,7 @@ extern "C" int32_t mybl_app(void* p) {
     apply_ghost_compensation(g_state);
     furi_mutex_release(g_state->fb_mutex);
 
-    canvas_commit(g_state->canvas);
+    if(g_state->canvas) canvas_commit(g_state->canvas);
     furi_mutex_release(g_state->game_mutex);
 
     // Таймер на 30 FPS

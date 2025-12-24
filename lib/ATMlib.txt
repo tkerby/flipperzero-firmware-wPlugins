@@ -1,4 +1,4 @@
-#include "ATMlib.h"
+#include "//ATMlib.h"
 
 #include <furi.h>
 #include <furi_hal.h>
@@ -6,7 +6,7 @@
 
 #include <string.h>
 
-#define ATM_CH_COUNT 4
+#define //ATM_CH_COUNT 4
 
 // ------------------------------ Note table ----------------------------------
 static const uint16_t noteTable[64] = {
@@ -66,7 +66,7 @@ typedef struct {
 
 } atm_ch_t;
 
-static atm_ch_t channel[ATM_CH_COUNT];
+static atm_ch_t channel[//ATM_CH_COUNT];
 
 static FuriTimer* atm_timer = NULL;
 static bool atm_playing = false;
@@ -129,7 +129,7 @@ static void output_update(void) {
 
 // --------------------------- tracker engine ---------------------------------
 static void atm_playroutine(void) {
-    for(uint8_t n = 0; n < ATM_CH_COUNT; n++) {
+    for(uint8_t n = 0; n < //ATM_CH_COUNT; n++) {
         atm_ch_t* ch = &channel[n];
 
         if(ch->reConfig) {
@@ -316,7 +316,7 @@ static void atm_playroutine(void) {
                         if(tickRate < 1) tickRate = 1;
                         break;
                     case 94:
-                        for(uint8_t i = 0; i < ATM_CH_COUNT; i++) channel[i].repeatPoint = *ch->ptr++;
+                        for(uint8_t i = 0; i < //ATM_CH_COUNT; i++) channel[i].repeatPoint = *ch->ptr++;
                         break;
                     case 95:
                         // stop channel: clear active bit
@@ -377,11 +377,11 @@ static void atm_playroutine(void) {
         // End-of-song handling: if all inactive
         if((ChannelActiveMute & 0xF0) == 0) {
             uint8_t repeatSong = 0;
-            for(uint8_t j = 0; j < ATM_CH_COUNT; j++)
+            for(uint8_t j = 0; j < //ATM_CH_COUNT; j++)
                 repeatSong = (uint8_t)(repeatSong + channel[j].repeatPoint);
 
             if(repeatSong) {
-                for(uint8_t k = 0; k < ATM_CH_COUNT; k++) {
+                for(uint8_t k = 0; k < //ATM_CH_COUNT; k++) {
                     channel[k].ptr = getTrackPointer(channel[k].repeatPoint);
                     channel[k].track = channel[k].repeatPoint;
                     channel[k].delay = 0;
@@ -455,7 +455,7 @@ static void atm_internal_play(const uint8_t* song) {
 
     trackBase = song + 4;
 
-    for(uint8_t n = 0; n < ATM_CH_COUNT; n++) {
+    for(uint8_t n = 0; n < //ATM_CH_COUNT; n++) {
         uint8_t start_track = *song++;
         channel[n].ptr = getTrackPointer(start_track);
         channel[n].track = start_track;
@@ -474,15 +474,15 @@ static void atm_internal_play(const uint8_t* song) {
 }
 
 // ----------------------------- API facade -----------------------------------
-static void ATM_play_impl(const uint8_t* song) {
+static void //ATM_play_impl(const uint8_t* song) {
     atm_internal_play(song);
 }
 
-static void ATM_stop_impl(void) {
+static void //ATM_stop_impl(void) {
     atm_internal_stop();
 }
 
-static void ATM_playPause_impl(void) {
+static void //ATM_playPause_impl(void) {
     if(!atm_timer) return;
 
     if(atm_playing) {
@@ -495,26 +495,26 @@ static void ATM_playPause_impl(void) {
     }
 }
 
-static void ATM_mute_impl(uint8_t ch) {
-    if(ch < ATM_CH_COUNT) ChannelActiveMute |= (1u << ch);
+static void //ATM_mute_impl(uint8_t ch) {
+    if(ch < //ATM_CH_COUNT) ChannelActiveMute |= (1u << ch);
 }
 
-static void ATM_unmute_impl(uint8_t ch) {
-    if(ch < ATM_CH_COUNT) ChannelActiveMute &= (uint8_t)(~(1u << ch));
+static void //ATM_unmute_impl(uint8_t ch) {
+    if(ch < //ATM_CH_COUNT) ChannelActiveMute &= (uint8_t)(~(1u << ch));
 }
 
-static void ATM_setvol_impl(float v) {
+static void //ATM_setvol_impl(float v) {
     if(v < 0.0f) v = 0.0f;
     if(v > 1.0f) v = 1.0f;
     master_volume = v;
 }
 
-// Global object expected by your code: ATM.play(), ATM.stop(), ...
-ATMsynth ATM = {
-    .play = ATM_play_impl,
-    .stop = ATM_stop_impl,
-    .playPause = ATM_playPause_impl,
-    .muteChannel = ATM_mute_impl,
-    .unMuteChannel = ATM_unmute_impl,
-    .setVolume = ATM_setvol_impl,
+// Global object expected by your code: //ATM.play(), //ATM.stop(), ...
+//ATMsynth //ATM = {
+    .play = //ATM_play_impl,
+    .stop = //ATM_stop_impl,
+    .playPause = //ATM_playPause_impl,
+    .muteChannel = //ATM_mute_impl,
+    .unMuteChannel = //ATM_unmute_impl,
+    .setVolume = //ATM_setvol_impl,
 };
