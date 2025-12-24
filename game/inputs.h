@@ -368,6 +368,7 @@ void checkInputs()
                   battleProgress = BATTLE_NOMANA;
                   break;
                 }
+              [[fallthrough]];
               case BATTLE_ATTACK:
                 attackType = state;
                 if (playerFirst)
@@ -398,6 +399,7 @@ void checkInputs()
           if (textReset) battleProgress = BATTLE_ENEMY_TURN;
           break;
       }
+    [[fallthrough]];
     case STATE_GAME_INN:
     if (arduboy.justPressed(B_BUTTON))
     {

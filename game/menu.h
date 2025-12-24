@@ -35,7 +35,7 @@ void stateMenuIntro()
     sprites.drawSelfMasked(16, 24, titleText, 0);
     sprites.drawSelfMasked(61, 48, titleSword, 0);
     //if (frameBoolean)
-    if (arduboy.frameCount % 100 < 50)
+    if (arduboy.frameCount() % 100 < 50)
     {
       sprites.drawErase(61, 52, titleStartMask, 0);
       fillWithWord(0, 148);

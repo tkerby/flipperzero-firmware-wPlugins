@@ -23,23 +23,6 @@ typedef uint16_t word;
 #define PROGMEM
 #endif
 
-#ifndef pgm_read_byte
-static inline uint8_t pgm_read_byte(const void* p) {
-    return *(const uint8_t*)p;
-}
-#endif
-
-#ifndef pgm_read_word
-static inline uint16_t pgm_read_word(const void* p) {
-    return *(const uint16_t*)p;
-}
-#endif
-
-#ifndef pgm_read_dword
-static inline uint32_t pgm_read_dword(const void* p) {
-    return *(const uint32_t*)p;
-}
-#endif
 
 
 // --- Common Arduino macros ---
@@ -47,17 +30,57 @@ static inline uint32_t pgm_read_dword(const void* p) {
 #define F(x) (x)
 #endif
 
-// #ifndef min
-// #define min(a,b) (( (a) < (b) ) ? (a) : (b))
-// #endif
+#ifndef min
+#define min(a,b) (( (a) < (b) ) ? (a) : (b))
+#endif
 
-// #ifndef max
-// #define max(a,b) (( (a) > (b) ) ? (a) : (b))
-// #endif
+#ifndef max
+#define max(a,b) (( (a) > (b) ) ? (a) : (b))
+#endif
 
 // #ifndef abs
 // #define abs(x) (( (x) < 0 ) ? -(x) : (x))
 // #endif
+
+#ifndef _BV
+#define _BV(bit) (1U << (bit))
+#endif
+
+#ifndef bitRead
+#define bitRead(value, bit) (((value) >> (bit)) & 0x1U)
+#endif
+
+#ifndef bitSet
+#define bitSet(value, bit) ((value) |= (uint8_t)_BV(bit))
+#endif
+
+#ifndef bitClear
+#define bitClear(value, bit) ((value) &= (uint8_t)~_BV(bit))
+#endif
+
+#ifndef pgm_read_byte
+#define pgm_read_byte(addr) (*(const uint8_t*)(addr))
+#endif
+
+static inline uint16_t pgm_read_word_safe(const void* addr) {
+    uint16_t v;
+    memcpy(&v, addr, sizeof(v));   // не требует выравнивания
+    return v;
+}
+static inline uint32_t pgm_read_dword_safe(const void* addr) {
+    uint32_t v;
+    memcpy(&v, addr, sizeof(v));
+    return v;
+}
+
+#ifndef pgm_read_word
+#define pgm_read_word(addr) pgm_read_word_safe((const void*)(addr))
+#endif
+
+// если где-то используется pgm_read_dword:
+#ifndef pgm_read_dword
+#define pgm_read_dword(addr) pgm_read_dword_safe((const void*)(addr))
+#endif
 
 uint32_t millis(void);
 uint32_t micros(void);
