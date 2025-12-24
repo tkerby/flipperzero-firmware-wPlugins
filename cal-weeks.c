@@ -166,15 +166,44 @@ int get_iso_week_number(int year, int month, int day) {
     return week;
 }
 
+// Convert date to days since epoch (Jan 1, 2000)
+static int date_to_days(int year, int month, int day) {
+    int days_in_month[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    
+    // Count years since 2000
+    int total_days = (year - 2000) * 365;
+    
+    // Add leap days
+    for(int y = 2000; y < year; y++) {
+        if((y % 4 == 0 && y % 100 != 0) || (y % 400 == 0)) {
+            total_days++;
+        }
+    }
+    
+    // Add days for months
+    if((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)) {
+        days_in_month[1] = 29;
+    }
+    for(int m = 0; m < month - 1; m++) {
+        total_days += days_in_month[m];
+    }
+    
+    // Add days
+    total_days += day;
+    
+    return total_days;
+}
+
+
 // Helper function to determine if today appears in a week with given offset
 // Returns column index (0-6) if today is in that week, -1 otherwise
 int get_today_column(DateTime* today, DateTime* ref_date, int week_offset) {
     int ref_wday = (ref_date->weekday + 6) % 7;  // Day of week for reference date (Mon=0)
     
-    // Calculate approximate day difference (sufficient for week-range checking)
-    int days_diff = (today->year - ref_date->year) * 365 + 
-                    (today->month - ref_date->month) * 30 + 
-                    (today->day - ref_date->day);
+    // Calculate exact day difference
+    int today_days = date_to_days(today->year, today->month, today->day);
+    int ref_days = date_to_days(ref_date->year, ref_date->month, ref_date->day);
+    int days_diff = today_days - ref_days;
     
     // Adjust for the week offset
     int week_start = week_offset * 7 - ref_wday;
