@@ -9,26 +9,26 @@ extern "C" {
 #endif
 
 // IR Protocol timing constants (microseconds)
-#define HTW_IR_CARRIER_FREQ   38000
-#define HTW_IR_DUTY_CYCLE     0.33f
+#define HTW_IR_CARRIER_FREQ 38000
+#define HTW_IR_DUTY_CYCLE   0.33f
 
-#define HTW_IR_LEAD_MARK      4400
-#define HTW_IR_LEAD_SPACE     4380
-#define HTW_IR_BIT_MARK       560
-#define HTW_IR_BIT0_SPACE     510
-#define HTW_IR_BIT1_SPACE     1590
-#define HTW_IR_STOP_MARK      560
-#define HTW_IR_GAP            5180
+#define HTW_IR_LEAD_MARK  4400
+#define HTW_IR_LEAD_SPACE 4380
+#define HTW_IR_BIT_MARK   560
+#define HTW_IR_BIT0_SPACE 510
+#define HTW_IR_BIT1_SPACE 1590
+#define HTW_IR_STOP_MARK  560
+#define HTW_IR_GAP        5180
 
 // Frame structure: Leader + 48 bits + Stop + Gap + Leader + 48 bits + Stop
 // Each bit = Mark + Space, so 48 bits = 96 timings
 // Total per frame: 2 (leader) + 96 (bits) + 1 (stop) + 1 (gap) = 100 timings
 // Two frames: 100 + 100 - 1 (no final gap) = 199 timings max
-#define HTW_IR_MAX_TIMINGS    200
+#define HTW_IR_MAX_TIMINGS 200
 
 // Temperature range
-#define HTW_TEMP_MIN          17
-#define HTW_TEMP_MAX          30
+#define HTW_TEMP_MIN 17
+#define HTW_TEMP_MAX 30
 
 // Timer steps count (34 values from 0.5h to 24h)
 #define HTW_TIMER_STEPS_COUNT 34
@@ -91,10 +91,7 @@ bool htw_ir_encode_state(
  * @param timings_count Output: number of timings written
  * @return true on success
  */
-bool htw_ir_encode_toggle(
-    HtwToggle toggle,
-    uint32_t* timings,
-    size_t* timings_count);
+bool htw_ir_encode_toggle(HtwToggle toggle, uint32_t* timings, size_t* timings_count);
 
 /**
  * Encode Timer ON command

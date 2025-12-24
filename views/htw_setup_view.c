@@ -17,13 +17,7 @@ struct HtwSetupView {
 };
 
 // Helper: Draw toggle switch
-static void draw_toggle_switch(
-    Canvas* canvas,
-    int16_t x,
-    int16_t y,
-    bool value,
-    bool focused) {
-
+static void draw_toggle_switch(Canvas* canvas, int16_t x, int16_t y, bool value, bool focused) {
     int16_t sw_w = 36;
     int16_t sw_h = 16;
 
@@ -101,15 +95,15 @@ static bool htw_setup_view_input(InputEvent* event, void* context) {
         {
             if(event->type == InputTypeShort) {
                 switch(event->key) {
-                    case InputKeyLeft:
-                    case InputKeyRight:
-                    case InputKeyOk:
-                        // Toggle save_state
-                        m->state->save_state = !m->state->save_state;
-                        consumed = true;
-                        break;
-                    default:
-                        break;
+                case InputKeyLeft:
+                case InputKeyRight:
+                case InputKeyOk:
+                    // Toggle save_state
+                    m->state->save_state = !m->state->save_state;
+                    consumed = true;
+                    break;
+                default:
+                    break;
                 }
             }
         },
@@ -128,11 +122,7 @@ HtwSetupView* htw_setup_view_alloc(void) {
     view_set_input_callback(view->view, htw_setup_view_input);
     view_set_orientation(view->view, ViewOrientationVertical);
 
-    with_view_model(
-        view->view,
-        HtwSetupViewModel * m,
-        { m->state = NULL; },
-        true);
+    with_view_model(view->view, HtwSetupViewModel * m, { m->state = NULL; }, true);
 
     return view;
 }
@@ -149,9 +139,5 @@ View* htw_setup_view_get_view(HtwSetupView* view) {
 }
 
 void htw_setup_view_set_state(HtwSetupView* view, HtwState* state) {
-    with_view_model(
-        view->view,
-        HtwSetupViewModel * m,
-        { m->state = state; },
-        true);
+    with_view_model(view->view, HtwSetupViewModel * m, { m->state = state; }, true);
 }

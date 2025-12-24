@@ -9,8 +9,8 @@
 #define SCREEN_HEIGHT 128
 
 // Standard button width for toggle buttons
-#define BTN_WIDTH     30
-#define BTN_HEIGHT    12
+#define BTN_WIDTH  30
+#define BTN_HEIGHT 12
 
 // Focus items enumeration
 typedef enum {
@@ -70,7 +70,6 @@ static void draw_selector_button(
     const char* label,
     const char* value,
     bool focused) {
-
     // Label above button
     canvas_set_font(canvas, FontSecondary);
     canvas_draw_str_aligned(canvas, x + w / 2, y, AlignCenter, AlignTop, label);
@@ -97,7 +96,6 @@ static void draw_temperature(
     bool focus_down,
     bool focus_up,
     bool can_change) {
-
     char temp_str[8];
     snprintf(temp_str, sizeof(temp_str), "%d", temp);
 
@@ -131,13 +129,8 @@ static void draw_temperature(
 }
 
 // Helper: Draw standard toggle button
-static void draw_toggle_btn(
-    Canvas* canvas,
-    int16_t x,
-    int16_t y,
-    const char* label,
-    bool focused) {
-
+static void
+    draw_toggle_btn(Canvas* canvas, int16_t x, int16_t y, const char* label, bool focused) {
     canvas_set_font(canvas, FontSecondary);
 
     if(focused) {
@@ -152,13 +145,8 @@ static void draw_toggle_btn(
 }
 
 // Helper: Draw menu button at position
-static void draw_menu_btn_at(
-    Canvas* canvas,
-    int16_t x,
-    int16_t y,
-    const char* label,
-    bool focused) {
-
+static void
+    draw_menu_btn_at(Canvas* canvas, int16_t x, int16_t y, const char* label, bool focused) {
     canvas_set_font(canvas, FontSecondary);
 
     if(focused) {
@@ -173,11 +161,7 @@ static void draw_menu_btn_at(
 }
 
 // Helper: Draw menu button centered
-static void draw_menu_btn(
-    Canvas* canvas,
-    int16_t y,
-    const char* label,
-    bool focused) {
+static void draw_menu_btn(Canvas* canvas, int16_t y, const char* label, bool focused) {
     draw_menu_btn_at(canvas, 32 - BTN_WIDTH / 2, y, label, focused);
 }
 
@@ -194,14 +178,14 @@ static void draw_logo(Canvas* canvas, int16_t y, bool sending, int frame) {
         int phase = frame % 6;
         int num_arrows;
         if(phase <= 3) {
-            num_arrows = phase;  // 0, 1, 2, 3
+            num_arrows = phase; // 0, 1, 2, 3
         } else {
-            num_arrows = 6 - phase;  // 2, 1
+            num_arrows = 6 - phase; // 2, 1
         }
 
         // Left side: arrows pointing right (>) towards HTW
         for(int i = 0; i < num_arrows; i++) {
-            int x = 4 + i * 4;  // 4, 8, 12 (from edge towards center)
+            int x = 4 + i * 4; // 4, 8, 12 (from edge towards center)
             // Draw > shape: tip points right
             canvas_draw_line(canvas, x, center_y - 2, x + 3, center_y);
             canvas_draw_line(canvas, x, center_y + 2, x + 3, center_y);
@@ -209,7 +193,7 @@ static void draw_logo(Canvas* canvas, int16_t y, bool sending, int frame) {
 
         // Right side: arrows pointing left (<) towards HTW
         for(int i = 0; i < num_arrows; i++) {
-            int x = 60 - i * 4;  // 60, 56, 52 (from edge towards center)
+            int x = 60 - i * 4; // 60, 56, 52 (from edge towards center)
             // Draw < shape: tip points left
             canvas_draw_line(canvas, x, center_y - 2, x - 3, center_y);
             canvas_draw_line(canvas, x, center_y + 2, x - 3, center_y);
@@ -224,10 +208,10 @@ static void htw_main_view_draw(Canvas* canvas, void* model) {
     canvas_clear(canvas);
 
     // Row 1: Mode and Fan with labels above (y=0)
-    draw_selector_button(canvas, 1, 0, 30, "Mode",
-        htw_ir_get_mode_name(m->state->mode), m->focus == FocusMode);
-    draw_selector_button(canvas, 33, 0, 30, "Fan",
-        htw_ir_get_fan_name(m->state->fan), m->focus == FocusFan);
+    draw_selector_button(
+        canvas, 1, 0, 30, "Mode", htw_ir_get_mode_name(m->state->mode), m->focus == FocusMode);
+    draw_selector_button(
+        canvas, 33, 0, 30, "Fan", htw_ir_get_fan_name(m->state->fan), m->focus == FocusFan);
 
     // Row 2: Temperature (y=26)
     bool can_temp = htw_state_can_change_temp(m->state);
@@ -235,8 +219,13 @@ static void htw_main_view_draw(Canvas* canvas, void* model) {
         canvas_set_font(canvas, FontBigNumbers);
         canvas_draw_str_aligned(canvas, 32, 26, AlignCenter, AlignTop, "--");
     } else {
-        draw_temperature(canvas, 26, m->state->temp,
-            m->focus == FocusTempDown, m->focus == FocusTempUp, can_temp);
+        draw_temperature(
+            canvas,
+            26,
+            m->state->temp,
+            m->focus == FocusTempDown,
+            m->focus == FocusTempUp,
+            can_temp);
     }
 
     // Row 3: Toggle buttons - Swing, Turbo (y=46)
@@ -282,11 +271,7 @@ static void htw_main_view_debounce_callback(void* context) {
 
 // Schedule debounced state send
 static void schedule_state_send(HtwMainView* view) {
-    with_view_model(
-        view->view,
-        HtwMainViewModel * m,
-        { m->state_pending = true; },
-        false);
+    with_view_model(view->view, HtwMainViewModel * m, { m->state_pending = true; }, false);
 
     furi_timer_stop(view->debounce_timer);
     furi_timer_start(view->debounce_timer, HTW_SEND_DEBOUNCE_MS);
@@ -321,151 +306,151 @@ static bool htw_main_view_input(InputEvent* event, void* context) {
         {
             if(event->type == InputTypeShort || event->type == InputTypeRepeat) {
                 switch(event->key) {
-                    case InputKeyLeft:
-                        // Navigation only
-                        if(m->focus == FocusFan) {
-                            m->focus = FocusMode;
-                        } else if(m->focus == FocusTempUp) {
-                            m->focus = FocusTempDown;
-                        } else if(m->focus == FocusTurbo) {
-                            m->focus = FocusSwing;
-                        } else if(m->focus == FocusLed) {
-                            m->focus = FocusFresh;
-                        } else if(m->focus == FocusTimer) {
-                            m->focus = FocusClean;
-                        }
-                        consumed = true;
-                        break;
+                case InputKeyLeft:
+                    // Navigation only
+                    if(m->focus == FocusFan) {
+                        m->focus = FocusMode;
+                    } else if(m->focus == FocusTempUp) {
+                        m->focus = FocusTempDown;
+                    } else if(m->focus == FocusTurbo) {
+                        m->focus = FocusSwing;
+                    } else if(m->focus == FocusLed) {
+                        m->focus = FocusFresh;
+                    } else if(m->focus == FocusTimer) {
+                        m->focus = FocusClean;
+                    }
+                    consumed = true;
+                    break;
 
-                    case InputKeyRight:
-                        // Navigation only
-                        if(m->focus == FocusMode) {
-                            m->focus = FocusFan;
-                        } else if(m->focus == FocusTempDown) {
-                            m->focus = FocusTempUp;
-                        } else if(m->focus == FocusSwing) {
-                            m->focus = FocusTurbo;
-                        } else if(m->focus == FocusFresh) {
-                            m->focus = FocusLed;
-                        } else if(m->focus == FocusClean) {
-                            m->focus = FocusTimer;
-                        }
-                        consumed = true;
-                        break;
+                case InputKeyRight:
+                    // Navigation only
+                    if(m->focus == FocusMode) {
+                        m->focus = FocusFan;
+                    } else if(m->focus == FocusTempDown) {
+                        m->focus = FocusTempUp;
+                    } else if(m->focus == FocusSwing) {
+                        m->focus = FocusTurbo;
+                    } else if(m->focus == FocusFresh) {
+                        m->focus = FocusLed;
+                    } else if(m->focus == FocusClean) {
+                        m->focus = FocusTimer;
+                    }
+                    consumed = true;
+                    break;
 
-                    case InputKeyUp:
-                        // Preserve column position when navigating up
-                        if(m->focus == FocusMode || m->focus == FocusFan) {
-                            // Already at top, do nothing
-                        } else if(m->focus == FocusTempDown) {
-                            m->focus = FocusMode;
-                        } else if(m->focus == FocusTempUp) {
-                            m->focus = FocusFan;
-                        } else if(m->focus == FocusSwing) {
-                            m->focus = FocusTempDown;
-                        } else if(m->focus == FocusTurbo) {
-                            m->focus = FocusTempUp;
-                        } else if(m->focus == FocusFresh) {
-                            m->focus = FocusSwing;
-                        } else if(m->focus == FocusLed) {
-                            m->focus = FocusTurbo;
-                        } else if(m->focus == FocusClean) {
-                            m->focus = FocusFresh;
-                        } else if(m->focus == FocusTimer) {
-                            m->focus = FocusLed;
-                        } else if(m->focus == FocusSetup) {
-                            m->focus = FocusClean;
-                        }
-                        consumed = true;
-                        break;
+                case InputKeyUp:
+                    // Preserve column position when navigating up
+                    if(m->focus == FocusMode || m->focus == FocusFan) {
+                        // Already at top, do nothing
+                    } else if(m->focus == FocusTempDown) {
+                        m->focus = FocusMode;
+                    } else if(m->focus == FocusTempUp) {
+                        m->focus = FocusFan;
+                    } else if(m->focus == FocusSwing) {
+                        m->focus = FocusTempDown;
+                    } else if(m->focus == FocusTurbo) {
+                        m->focus = FocusTempUp;
+                    } else if(m->focus == FocusFresh) {
+                        m->focus = FocusSwing;
+                    } else if(m->focus == FocusLed) {
+                        m->focus = FocusTurbo;
+                    } else if(m->focus == FocusClean) {
+                        m->focus = FocusFresh;
+                    } else if(m->focus == FocusTimer) {
+                        m->focus = FocusLed;
+                    } else if(m->focus == FocusSetup) {
+                        m->focus = FocusClean;
+                    }
+                    consumed = true;
+                    break;
 
-                    case InputKeyDown:
-                        // Preserve column position when navigating down
-                        if(m->focus == FocusMode) {
-                            m->focus = FocusTempDown;
-                        } else if(m->focus == FocusFan) {
-                            m->focus = FocusTempUp;
-                        } else if(m->focus == FocusTempDown) {
-                            m->focus = FocusSwing;
-                        } else if(m->focus == FocusTempUp) {
-                            m->focus = FocusTurbo;
-                        } else if(m->focus == FocusSwing) {
-                            m->focus = FocusFresh;
-                        } else if(m->focus == FocusTurbo) {
-                            m->focus = FocusLed;
-                        } else if(m->focus == FocusFresh) {
-                            m->focus = FocusClean;
-                        } else if(m->focus == FocusLed) {
-                            m->focus = FocusTimer;
-                        } else if(m->focus == FocusClean || m->focus == FocusTimer) {
-                            m->focus = FocusSetup;
-                        }
-                        // Setup is at bottom, do nothing
-                        consumed = true;
-                        break;
+                case InputKeyDown:
+                    // Preserve column position when navigating down
+                    if(m->focus == FocusMode) {
+                        m->focus = FocusTempDown;
+                    } else if(m->focus == FocusFan) {
+                        m->focus = FocusTempUp;
+                    } else if(m->focus == FocusTempDown) {
+                        m->focus = FocusSwing;
+                    } else if(m->focus == FocusTempUp) {
+                        m->focus = FocusTurbo;
+                    } else if(m->focus == FocusSwing) {
+                        m->focus = FocusFresh;
+                    } else if(m->focus == FocusTurbo) {
+                        m->focus = FocusLed;
+                    } else if(m->focus == FocusFresh) {
+                        m->focus = FocusClean;
+                    } else if(m->focus == FocusLed) {
+                        m->focus = FocusTimer;
+                    } else if(m->focus == FocusClean || m->focus == FocusTimer) {
+                        m->focus = FocusSetup;
+                    }
+                    // Setup is at bottom, do nothing
+                    consumed = true;
+                    break;
 
-                    case InputKeyOk:
-                        switch(m->focus) {
-                            case FocusMode:
-                                htw_state_mode_next(m->state);
-                                schedule_state_send(view);
-                                break;
-                            case FocusFan:
-                                if(htw_state_can_change_fan(m->state)) {
-                                    htw_state_fan_next(m->state);
-                                    schedule_state_send(view);
-                                }
-                                break;
-                            case FocusTempDown:
-                                if(htw_state_can_change_temp(m->state)) {
-                                    htw_state_temp_down(m->state);
-                                    schedule_state_send(view);
-                                }
-                                break;
-                            case FocusTempUp:
-                                if(htw_state_can_change_temp(m->state)) {
-                                    htw_state_temp_up(m->state);
-                                    schedule_state_send(view);
-                                }
-                                break;
-                            case FocusSwing:
-                                htw_state_toggle(m->state, HtwToggleSwing);
-                                send_toggle_immediate(view, HtwToggleSwing);
-                                break;
-                            case FocusTurbo:
-                                htw_state_toggle(m->state, HtwToggleTurbo);
-                                send_toggle_immediate(view, HtwToggleTurbo);
-                                break;
-                            case FocusFresh:
-                                htw_state_toggle(m->state, HtwToggleFresh);
-                                send_toggle_immediate(view, HtwToggleFresh);
-                                break;
-                            case FocusLed:
-                                htw_state_toggle(m->state, HtwToggleLed);
-                                send_toggle_immediate(view, HtwToggleLed);
-                                break;
-                            case FocusClean:
-                                htw_state_toggle(m->state, HtwToggleClean);
-                                send_toggle_immediate(view, HtwToggleClean);
-                                break;
-                            case FocusTimer:
-                                if(view->timer_callback) {
-                                    view->timer_callback(view->timer_context);
-                                }
-                                break;
-                            case FocusSetup:
-                                if(view->setup_callback) {
-                                    view->setup_callback(view->setup_context);
-                                }
-                                break;
-                            default:
-                                break;
-                        }
-                        consumed = true;
+                case InputKeyOk:
+                    switch(m->focus) {
+                    case FocusMode:
+                        htw_state_mode_next(m->state);
+                        schedule_state_send(view);
                         break;
-
+                    case FocusFan:
+                        if(htw_state_can_change_fan(m->state)) {
+                            htw_state_fan_next(m->state);
+                            schedule_state_send(view);
+                        }
+                        break;
+                    case FocusTempDown:
+                        if(htw_state_can_change_temp(m->state)) {
+                            htw_state_temp_down(m->state);
+                            schedule_state_send(view);
+                        }
+                        break;
+                    case FocusTempUp:
+                        if(htw_state_can_change_temp(m->state)) {
+                            htw_state_temp_up(m->state);
+                            schedule_state_send(view);
+                        }
+                        break;
+                    case FocusSwing:
+                        htw_state_toggle(m->state, HtwToggleSwing);
+                        send_toggle_immediate(view, HtwToggleSwing);
+                        break;
+                    case FocusTurbo:
+                        htw_state_toggle(m->state, HtwToggleTurbo);
+                        send_toggle_immediate(view, HtwToggleTurbo);
+                        break;
+                    case FocusFresh:
+                        htw_state_toggle(m->state, HtwToggleFresh);
+                        send_toggle_immediate(view, HtwToggleFresh);
+                        break;
+                    case FocusLed:
+                        htw_state_toggle(m->state, HtwToggleLed);
+                        send_toggle_immediate(view, HtwToggleLed);
+                        break;
+                    case FocusClean:
+                        htw_state_toggle(m->state, HtwToggleClean);
+                        send_toggle_immediate(view, HtwToggleClean);
+                        break;
+                    case FocusTimer:
+                        if(view->timer_callback) {
+                            view->timer_callback(view->timer_context);
+                        }
+                        break;
+                    case FocusSetup:
+                        if(view->setup_callback) {
+                            view->setup_callback(view->setup_context);
+                        }
+                        break;
                     default:
                         break;
+                    }
+                    consumed = true;
+                    break;
+
+                default:
+                    break;
                 }
             }
         },
@@ -484,8 +469,8 @@ HtwMainView* htw_main_view_alloc(void) {
     view_set_input_callback(view->view, htw_main_view_input);
     view_set_orientation(view->view, ViewOrientationVertical);
 
-    view->debounce_timer = furi_timer_alloc(
-        htw_main_view_debounce_callback, FuriTimerTypeOnce, view);
+    view->debounce_timer =
+        furi_timer_alloc(htw_main_view_debounce_callback, FuriTimerTypeOnce, view);
 
     with_view_model(
         view->view,
@@ -518,11 +503,7 @@ View* htw_main_view_get_view(HtwMainView* view) {
 }
 
 void htw_main_view_set_state(HtwMainView* view, HtwState* state) {
-    with_view_model(
-        view->view,
-        HtwMainViewModel * m,
-        { m->state = state; },
-        true);
+    with_view_model(view->view, HtwMainViewModel * m, { m->state = state; }, true);
 }
 
 void htw_main_view_set_send_callback(

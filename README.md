@@ -1,5 +1,7 @@
 # HTW AC Remote for Flipper Zero
 
+[![CI](https://github.com/sokogen/flipperzero-htw-ac-remote/actions/workflows/ci.yml/badge.svg)](https://github.com/sokogen/flipperzero-htw-ac-remote/actions/workflows/ci.yml)
+
 Flipper Zero application for controlling HTW air conditioners via infrared.
 
 ## Features

@@ -43,7 +43,7 @@ typedef struct {
     uint8_t timer_off_step;
 
     // Settings
-    bool save_state;  // Whether to persist state across app restarts
+    bool save_state; // Whether to persist state across app restarts
 } HtwState;
 
 /**

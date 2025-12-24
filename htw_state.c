@@ -6,7 +6,7 @@
 #include <string.h>
 
 // Magic for saved struct validation
-#define HTW_STATE_MAGIC 0x48545753  // "HTWS"
+#define HTW_STATE_MAGIC 0x48545753 // "HTWS"
 
 HtwState* htw_state_alloc(void) {
     HtwState* state = malloc(sizeof(HtwState));
@@ -30,7 +30,7 @@ void htw_state_reset(HtwState* state) {
     state->swing = false;
     state->turbo = false;
     state->fresh = false;
-    state->led = true;  // LED usually on by default
+    state->led = true; // LED usually on by default
     state->clean = false;
 
     state->timer_on_step = 0;
@@ -62,19 +62,15 @@ bool htw_state_load(HtwState* state) {
 
         if(storage_file_read(file, &magic, sizeof(magic)) == sizeof(magic) &&
            storage_file_read(file, &version, sizeof(version)) == sizeof(version)) {
-
             if(magic == HTW_STATE_MAGIC && version == HTW_STATE_FILE_VERSION) {
                 // Read state data
                 HtwState temp_state;
                 if(storage_file_read(file, &temp_state, sizeof(HtwState)) == sizeof(HtwState)) {
                     // Validate loaded data
-                    if(temp_state.mode < HtwModeCount &&
-                       temp_state.fan < HtwFanCount &&
-                       temp_state.temp >= HTW_TEMP_MIN &&
-                       temp_state.temp <= HTW_TEMP_MAX &&
+                    if(temp_state.mode < HtwModeCount && temp_state.fan < HtwFanCount &&
+                       temp_state.temp >= HTW_TEMP_MIN && temp_state.temp <= HTW_TEMP_MAX &&
                        temp_state.timer_on_step <= HTW_TIMER_STEPS_COUNT &&
                        temp_state.timer_off_step <= HTW_TIMER_STEPS_COUNT) {
-
                         // Check save_state setting
                         if(temp_state.save_state) {
                             // Copy all data
@@ -121,7 +117,6 @@ bool htw_state_save(HtwState* state) {
 
         if(storage_file_write(file, &magic, sizeof(magic)) == sizeof(magic) &&
            storage_file_write(file, &version, sizeof(version)) == sizeof(version)) {
-
             if(state->save_state) {
                 // Save full state
                 success = storage_file_write(file, state, sizeof(HtwState)) == sizeof(HtwState);
@@ -130,7 +125,8 @@ bool htw_state_save(HtwState* state) {
                 HtwState temp_state;
                 htw_state_reset(&temp_state);
                 temp_state.save_state = false;
-                success = storage_file_write(file, &temp_state, sizeof(HtwState)) == sizeof(HtwState);
+                success = storage_file_write(file, &temp_state, sizeof(HtwState)) ==
+                          sizeof(HtwState);
             }
         }
     }
@@ -188,23 +184,23 @@ void htw_state_toggle(HtwState* state, HtwToggle toggle) {
     if(!state) return;
 
     switch(toggle) {
-        case HtwToggleSwing:
-            state->swing = !state->swing;
-            break;
-        case HtwToggleLed:
-            state->led = !state->led;
-            break;
-        case HtwToggleTurbo:
-            state->turbo = !state->turbo;
-            break;
-        case HtwToggleFresh:
-            state->fresh = !state->fresh;
-            break;
-        case HtwToggleClean:
-            state->clean = !state->clean;
-            break;
-        default:
-            break;
+    case HtwToggleSwing:
+        state->swing = !state->swing;
+        break;
+    case HtwToggleLed:
+        state->led = !state->led;
+        break;
+    case HtwToggleTurbo:
+        state->turbo = !state->turbo;
+        break;
+    case HtwToggleFresh:
+        state->fresh = !state->fresh;
+        break;
+    case HtwToggleClean:
+        state->clean = !state->clean;
+        break;
+    default:
+        break;
     }
 }
 
@@ -215,13 +211,13 @@ void htw_state_timer_on_cycle(HtwState* state, bool forward) {
         if(state->timer_on_step < HTW_TIMER_STEPS_COUNT) {
             state->timer_on_step++;
         } else {
-            state->timer_on_step = 0;  // Wrap to off
+            state->timer_on_step = 0; // Wrap to off
         }
     } else {
         if(state->timer_on_step > 0) {
             state->timer_on_step--;
         } else {
-            state->timer_on_step = HTW_TIMER_STEPS_COUNT;  // Wrap to max
+            state->timer_on_step = HTW_TIMER_STEPS_COUNT; // Wrap to max
         }
     }
 }

@@ -88,7 +88,7 @@ static void htw_app_transmit_ir(HtwApp* app) {
         HTW_IR_DUTY_CYCLE);
 
     infrared_worker_tx_start(app->ir_worker);
-    furi_delay_ms(300);  // Wait for transmission
+    furi_delay_ms(300); // Wait for transmission
     infrared_worker_tx_stop(app->ir_worker);
 
     // Notification
@@ -135,7 +135,7 @@ static void htw_app_send_timer_off_ir(HtwApp* app) {
     if(app->state->timer_off_step == 0) return;
 
     HtwMode mode = app->state->mode;
-    if(mode == HtwModeOff) mode = HtwModeCool;  // Default for timer off
+    if(mode == HtwModeOff) mode = HtwModeCool; // Default for timer off
 
     if(htw_ir_encode_timer_off(
            mode,
@@ -157,7 +157,7 @@ static bool htw_app_back_callback(void* context) {
         return true;
     }
 
-    return false;  // Exit app
+    return false; // Exit app
 }
 
 // App lifecycle
@@ -207,12 +207,11 @@ static HtwApp* htw_app_alloc(void) {
     app->ir_worker = infrared_worker_alloc();
     app->ir_timings_count = 0;
     infrared_worker_tx_set_get_signal_callback(
-        app->ir_worker,
-        infrared_worker_tx_get_signal_steady_callback,
-        app);
+        app->ir_worker, infrared_worker_tx_get_signal_steady_callback, app);
 
     // Animation timer
-    app->send_timer = furi_timer_alloc(htw_app_send_animation_callback, FuriTimerTypePeriodic, app);
+    app->send_timer =
+        furi_timer_alloc(htw_app_send_animation_callback, FuriTimerTypePeriodic, app);
     app->is_sending = false;
 
     return app;

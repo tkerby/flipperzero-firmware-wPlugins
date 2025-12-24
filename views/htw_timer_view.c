@@ -49,7 +49,6 @@ static void draw_timer_selector(
     const char* label,
     const char* value,
     bool focused) {
-
     // Label
     canvas_set_font(canvas, FontSecondary);
     canvas_draw_str_aligned(canvas, 32, y, AlignCenter, AlignTop, label);
@@ -69,7 +68,8 @@ static void draw_timer_selector(
         // Draw arrows centered vertically
         canvas_set_font(canvas, FontSecondary);
         canvas_draw_str_aligned(canvas, box_x + 6, center_y, AlignCenter, AlignCenter, "<");
-        canvas_draw_str_aligned(canvas, box_x + box_w - 6, center_y, AlignCenter, AlignCenter, ">");
+        canvas_draw_str_aligned(
+            canvas, box_x + box_w - 6, center_y, AlignCenter, AlignCenter, ">");
 
         // Draw value centered
         canvas_set_font(canvas, FontPrimary);
@@ -125,55 +125,55 @@ static bool htw_timer_view_input(InputEvent* event, void* context) {
         {
             if(event->type == InputTypeShort || event->type == InputTypeRepeat) {
                 switch(event->key) {
-                    case InputKeyUp:
-                        if(m->focus == TimerFocusOff) {
-                            m->focus = TimerFocusOn;
-                        }
-                        consumed = true;
-                        break;
+                case InputKeyUp:
+                    if(m->focus == TimerFocusOff) {
+                        m->focus = TimerFocusOn;
+                    }
+                    consumed = true;
+                    break;
 
-                    case InputKeyDown:
-                        if(m->focus == TimerFocusOn) {
-                            m->focus = TimerFocusOff;
-                        }
-                        consumed = true;
-                        break;
+                case InputKeyDown:
+                    if(m->focus == TimerFocusOn) {
+                        m->focus = TimerFocusOff;
+                    }
+                    consumed = true;
+                    break;
 
-                    case InputKeyLeft:
-                        if(m->focus == TimerFocusOn) {
-                            htw_state_timer_on_cycle(m->state, false);
-                        } else if(m->focus == TimerFocusOff) {
-                            htw_state_timer_off_cycle(m->state, false);
-                        }
-                        consumed = true;
-                        break;
+                case InputKeyLeft:
+                    if(m->focus == TimerFocusOn) {
+                        htw_state_timer_on_cycle(m->state, false);
+                    } else if(m->focus == TimerFocusOff) {
+                        htw_state_timer_off_cycle(m->state, false);
+                    }
+                    consumed = true;
+                    break;
 
-                    case InputKeyRight:
-                        if(m->focus == TimerFocusOn) {
-                            htw_state_timer_on_cycle(m->state, true);
-                        } else if(m->focus == TimerFocusOff) {
-                            htw_state_timer_off_cycle(m->state, true);
-                        }
-                        consumed = true;
-                        break;
+                case InputKeyRight:
+                    if(m->focus == TimerFocusOn) {
+                        htw_state_timer_on_cycle(m->state, true);
+                    } else if(m->focus == TimerFocusOff) {
+                        htw_state_timer_off_cycle(m->state, true);
+                    }
+                    consumed = true;
+                    break;
 
-                    case InputKeyOk:
-                        // Send timer command directly from selector
-                        if(m->focus == TimerFocusOn && m->state->timer_on_step > 0) {
-                            if(view->send_callback) {
-                                view->send_callback(HtwTimerCommandOn, view->send_context);
-                            }
-                        } else if(m->focus == TimerFocusOff && m->state->timer_off_step > 0) {
-                            if(view->send_callback) {
-                                view->send_callback(HtwTimerCommandOff, view->send_context);
-                            }
+                case InputKeyOk:
+                    // Send timer command directly from selector
+                    if(m->focus == TimerFocusOn && m->state->timer_on_step > 0) {
+                        if(view->send_callback) {
+                            view->send_callback(HtwTimerCommandOn, view->send_context);
                         }
-                        // If value is Off (0), do nothing - no cancel command in protocol
-                        consumed = true;
-                        break;
+                    } else if(m->focus == TimerFocusOff && m->state->timer_off_step > 0) {
+                        if(view->send_callback) {
+                            view->send_callback(HtwTimerCommandOff, view->send_context);
+                        }
+                    }
+                    // If value is Off (0), do nothing - no cancel command in protocol
+                    consumed = true;
+                    break;
 
-                    default:
-                        break;
+                default:
+                    break;
                 }
             }
         },
@@ -216,11 +216,7 @@ View* htw_timer_view_get_view(HtwTimerView* view) {
 }
 
 void htw_timer_view_set_state(HtwTimerView* view, HtwState* state) {
-    with_view_model(
-        view->view,
-        HtwTimerViewModel * m,
-        { m->state = state; },
-        true);
+    with_view_model(view->view, HtwTimerViewModel * m, { m->state = state; }, true);
 }
 
 void htw_timer_view_set_send_callback(
