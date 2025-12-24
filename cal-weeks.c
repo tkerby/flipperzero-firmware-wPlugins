@@ -30,7 +30,8 @@ const char* days[] = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
 typedef enum {
    ScreenSplash,
    ScreenDayView,
-   ScreenEventDetail
+   ScreenEventDetail,
+   ScreenConfig
 } AppScreen;
 
 // Main application structure
@@ -200,6 +201,18 @@ static void draw_menu_item(Canvas* canvas, int x, int y, const Icon* icon, bool 
     }
 }
 
+static void draw_screen_config(Canvas* canvas) {
+    canvas_set_color(canvas, ColorBlack);
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str_aligned(canvas, 64, 1, AlignCenter, AlignTop, "Configuration");
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_line(canvas, 0, 11, 127, 11);
+    canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignTop, "No settings yet");
+    // Navigation hints
+    canvas_draw_icon(canvas, 1, 55, &I_back);
+    canvas_draw_str_aligned(canvas, 11, 62, AlignLeft, AlignBottom, "Back");
+}
+
 static void draw_screen_splash(Canvas* canvas, DateTime* datetime, AppState* state) {
 	char buffer[64]; // buffer for string concatination
 	
@@ -208,6 +221,11 @@ static void draw_screen_splash(Canvas* canvas, DateTime* datetime, AppState* sta
 	calculate_date_with_offset(datetime, state->selected_week_offset, &ref_datetime);
 	
 	canvas_draw_icon(canvas, 1, 1, &I_splash); // 51 is a pixel above the buttons
+	// Highlight app icon if selected
+	if(state->selected_day == -1) {
+		canvas_draw_box(canvas, 1, -1, 10, 10);
+		canvas_set_color(canvas, ColorWhite);
+	}
     canvas_draw_icon(canvas, 1, -1, &I_icon_10x10); // App icon 
  	canvas_set_color(canvas, ColorBlack);
     canvas_set_font(canvas, FontPrimary);
@@ -459,6 +477,9 @@ void draw_callback(Canvas* canvas, void* context) {
 		case ScreenEventDetail: // Event Detail =================================
             draw_screen_event_detail(canvas, &datetime, state);
 			break;
+		case ScreenConfig: // Configuration ====================================
+			draw_screen_config(canvas);
+			break;
     }
 }
 
@@ -547,10 +568,10 @@ int32_t cal_weeks_main(void* p) {
                 
             case InputKeyLeft:
                 if(app.current_screen == ScreenSplash) {
-                    // Move cursor left (with wrapping)
+                    // Move cursor left (no wrapping)
                     app.selected_day--;
-                    if(app.selected_day < 0) {
-                        app.selected_day = 6; // Wrap to Sunday
+                    if(app.selected_day < -1) {
+                        app.selected_day++;
                     }
 				} else if(app.current_screen == ScreenDayView) {
                     // Move menu selection up (with wrapping)
@@ -560,10 +581,10 @@ int32_t cal_weeks_main(void* p) {
                 
             case InputKeyRight:
                 if(app.current_screen == ScreenSplash) {
-                    // Move cursor right (with wrapping)
+                    // Move cursor right (no wrapping)
                     app.selected_day++;
                     if(app.selected_day > 6) {
-                        app.selected_day = 0; // Wrap to Monday
+                        app.selected_day--;
                     }
                 } else if(app.current_screen == ScreenDayView) {
                     // Move menu selection down (with wrapping)
@@ -574,6 +595,10 @@ int32_t cal_weeks_main(void* p) {
             case InputKeyOk:
                 switch (app.current_screen) {
                     case ScreenSplash:
+						if(app.selected_day == -1) {
+							app.current_screen = ScreenConfig;
+							break;
+						}
                         // Load events for selected day
                         if(app.events) {
                             calendar_event_list_free(app.events);
@@ -649,9 +674,11 @@ int32_t cal_weeks_main(void* p) {
                 break;
                 
             case InputKeyBack:
-				if(app.current_screen == ScreenEventDetail) {	
+				if(app.current_screen == ScreenConfig) {
+					app.current_screen = ScreenSplash;			
+				} else if(app.current_screen == ScreenEventDetail) {	
                    app.current_screen = ScreenDayView;
-               } else if(app.current_screen == ScreenDayView) {
+                } else if(app.current_screen == ScreenDayView) {
                     app.current_screen = ScreenSplash;
                 } else if(app.current_screen == ScreenSplash) {
                     // Reset to current week and today
