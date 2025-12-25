@@ -42,6 +42,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [ProtoPirate WIP v1.4 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - Revert: OFW: PR: [Added Support for MIFARE Plus 2K Cards in SL1 Mode #4316 (By LuemmelSec)](https://github.com/flipperdevices/flipperzero-firmware/pull/4316)
 - Updated: [Calendar of weeks v0.1 (By fgreil)](https://github.com/fgreil/mitzi-cal-weeks)
+- Updated: [Catacombs Of The Damned v2.0 (By apfxtech)](https://github.com/apfxtech/FlipperCatacombs)
 
 <a name="release">
 

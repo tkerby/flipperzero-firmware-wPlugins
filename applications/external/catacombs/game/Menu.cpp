@@ -4,6 +4,7 @@
 #include "game/Font.h"
 #include "game/Game.h"
 #include "game/Draw.h"
+#include "game/Textures.h"
 #include "game/Generated/SpriteTypes.h"
 
 namespace {
@@ -265,29 +266,57 @@ void Menu::DrawGameOver() {
 
 #include <stdio.h>
 
-void Menu::FadeOut() {
-    constexpr uint16_t toggleMask = 0x1f6e;
-    constexpr int fizzlesPerFrame = 255;
-    constexpr uint16_t startValue = 1;
-
-    if(fizzleFade == 0) {
-        fizzleFade = startValue;
+static inline void DrawEraseTile8x8(int16_t x, int16_t y, const uint8_t* frame8bytes) {
+    // frame8bytes: 8 байт, каждый байт = строка 8 пикселей (бит7 слева)
+    for(uint8_t row = 0; row < 8; row++) {
+        uint8_t rowMask = pgm_read_byte(frame8bytes + row);
+        while(rowMask) {
+            uint8_t b = (uint8_t)__builtin_ctz((unsigned)rowMask); // индекс младшего 1-бита
+            uint8_t col = 7 - b; // т.к. у нас бит7 = левый пиксель
+            Platform::PutPixel(x + col, y + row, COLOUR_WHITE); // "erase"
+            rowMask &= (uint8_t)(rowMask - 1);
+        }
     }
+}
 
-    for(int n = 0; n < fizzlesPerFrame; n++) {
-        bool lsb = (fizzleFade & 1) != 0;
-        fizzleFade >>= 1;
-        if(lsb) {
-            fizzleFade ^= toggleMask;
+void Menu::DrawTransitionFrame(uint8_t frameIndex) {
+    // достаём указатель на нужный кадр (после w,h)
+    const uint8_t w = pgm_read_byte(transitionSet + 0); // 8
+    const uint8_t h = pgm_read_byte(transitionSet + 1); // 8
+    (void)w;
+    (void)h;
+
+    const uint8_t* framePtr = transitionSet + 2 + (uint16_t)frameIndex * 8;
+
+    // как в showFadeOutIn(): старт снизу-справа и идём влево, потом строкой выше
+    int16_t tileX = 120;
+    int16_t tileY = 56;
+
+    // важно: у тебя в примере условие было странное (while <= 64 и tileY -= 8)
+    // правильный вариант для экрана 64px: y = 56..0
+    while(true) {
+        DrawEraseTile8x8(tileX, tileY, framePtr);
+
+        tileX -= 8;
+        if(tileX < 0) {
+            tileX = 120;
+            tileY -= 8;
+            if(tileY < 0) break;
         }
+    }
+}
 
-        uint8_t x = (uint8_t)(fizzleFade & 0x7f);
-        uint8_t y = (uint8_t)(fizzleFade >> 7);
-        Platform::PutPixel(x, y, COLOUR_WHITE);
+void Menu::FadeOut() {
+    static uint8_t timer = 0; // 0..29
+    constexpr uint8_t totalTime = 32; // 1 секунда
+    constexpr uint8_t totalFrames = 8; // 0..7
 
-        if(fizzleFade == startValue) {
-            Game::SwitchState(Game::State::GameOver);
-            return;
-        }
+    uint8_t frameIndex = (uint16_t)timer * totalFrames / totalTime;
+    if(frameIndex > totalFrames - 1) frameIndex = totalFrames - 1;
+    DrawTransitionFrame(frameIndex);
+    timer++;
+    if(timer >= totalTime - totalTime / totalFrames) {
+        timer = 0;
+        Game::SwitchState(Game::State::GameOver);
     }
 }
