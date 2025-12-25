@@ -1,3 +1,6 @@
+v0.2.0:
+added blank NTAG 215 tag emulation feature.
+
 v0.1.0:
 sorted the menu items in the Flipper app for better usability.
 

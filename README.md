@@ -9,12 +9,13 @@ This project is usable but still in development. Ensure you back up all importan
 Designed as a general-purpose Amiibo toolkit for Flipper Zero, this app aims to provide the following features:
 
 - **Reading Amiibo NFC tags**: Read data from physical Amiibo NFC tags and store it on the Flipper Zero.
-- **Reading Amiibo data files**: Load Amiibo data files (in Flipper Zero's `.nfc` format) from the Flipper Zero's storage.
 - **Displaying Amiibo information**: Show detailed information about the Amiibo, including character name, series, type, usage, and other metadata. This information is sourced from the AmiiboAPI (https://amiiboapi.com/).
 - **Emulating Amiibo NFC tags**: Emulate the loaded Amiibo data, allowing the Flipper Zero to function as the corresponding Amiibo NFC tag.
 - **Writing Amiibo data to NFC tags**: Write currently loaded Amiibo data to blank NTAG 215 tags compatible with Amiibo.
 - **Generating Amiibo data**: Create a synthetic Amiibo data structure based on selected character.  The result would be a blank Amiibo data file that can be written to a blank NTAG 215 tag.
 - **Randomising the unique identifier (UID)**: Modify the UID of the loaded Amiibo data to a random valid value, allowing one tag to be used as multiple different Amiibo.
+- **Emulating a blank tag**: Emulate a blank NTAG 215 tag that can be written into with other devices.
+- **Saving and loading Amiibo data files**: Store generated or read Amiibo data files on the Flipper Zero's storage for later use.
 
 And other combinations of the above features.
 
