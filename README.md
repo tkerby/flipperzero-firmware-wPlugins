@@ -10,9 +10,9 @@ ListEM brings advanced list generating (previously done via my python script) st
 ## 📸 Screenshots
 
 <p align="center">
-  <img src="screenshots/main.jpg" width="220">
-  <img src="screenshots/prefix.jpg" width="220">
-  <img src="screenshots/progress.jpg" width="220">
+  <img src="screenshots/main_menu.jpg" width="220">
+  <img src="screenshots/prefix_select.jpg" width="220">
+  <img src="screenshots/generating.jpg" width="220">
 </p>
 
 ---
