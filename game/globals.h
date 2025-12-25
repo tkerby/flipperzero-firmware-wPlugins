@@ -3,7 +3,7 @@
 
 #include "lib/Arduino.h"
 #include "lib/Arduboy2.h"
-#include "lib///ATMlib.h"
+#include "lib/ATMlib.h"
 #include "bitmaps.h"
 
 #define EEPROM_START 16
@@ -134,8 +134,6 @@ extern Arduboy2Base* arduboy_ptr;
 extern Sprites* sprites_ptr;
 #define arduboy  (*arduboy_ptr)
 #define sprites (*sprites_ptr)
-
-//ATMsynth //ATM;
 
 byte gameState = STATE_MENU_INTRO; // start the game with the TEAM a.r.g. logo
 byte previousGameState = STATE_MENU_INTRO;
