@@ -7,6 +7,19 @@ ListEM brings advanced list generating (previously done via my python script) st
 
 ---
 
+## 📸 Screenshots
+
+### Main Screen
+![Main Screen](screenshots/main_menu.png)
+
+### Prefix Selection
+![Prefix Selection](screenshots/prefix_select.png)
+
+### Generation Progress
+![Generating](screenshots/generating.png)
+
+---
+
 ## ✨ Features
 
 - ✅ Supports **28 protocols**  
