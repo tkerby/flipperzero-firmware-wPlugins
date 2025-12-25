@@ -1,5 +1,6 @@
 #include "run/sprites.hpp"
 #include "run/assets.hpp"
+#include "run/run.hpp"
 #include <math.h>
 
 Sprite::Sprite(const char *name, EntityType type, Vector position, Vector endPosition, float move_timer, float speed, float attack_timer, float strength, float health)
@@ -125,6 +126,8 @@ void Sprite::collision(Entity *other, Game *game)
                 position_changed = true;
                 position_set(old_position);
             }
+
+            this->syncMultiplayerState(false, other);
         }
     }
     // Handle Enemy Attacking Player (enemy facing player)
@@ -145,6 +148,8 @@ void Sprite::collision(Entity *other, Game *game)
                 other->state = ENTITY_ATTACKED;
                 other->position_set(other->old_position);
             }
+
+            this->syncMultiplayerState(false, other);
         }
     }
 
@@ -224,6 +229,20 @@ void Sprite::render(Draw *canvas, Game *game)
 
     // draw health of enemy
     drawUsername(position, game);
+}
+
+void Sprite::syncMultiplayerState(bool hostOnly, Entity *other)
+{
+    if (!flipWorldRun || (!flipWorldRun->isPvEMode) || (hostOnly && !flipWorldRun->isLobbyHost))
+    {
+        return;
+    }
+
+    flipWorldRun->syncMultiplayerEntity(this);
+    if (other)
+    {
+        flipWorldRun->syncMultiplayerEntity(other);
+    }
 }
 
 void Sprite::update(Game *game)
@@ -327,6 +346,11 @@ void Sprite::update(Game *game)
 
         // Set the new position
         position_set(new_pos);
+
+        if (this->hasChangedPosition())
+        {
+            this->syncMultiplayerState();
+        }
 
         // Check if the enemy has reached or surpassed the target_position
         bool reached_x = fabs(new_pos.x - target_position.x) < 1;

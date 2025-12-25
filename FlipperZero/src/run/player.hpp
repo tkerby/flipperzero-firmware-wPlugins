@@ -112,6 +112,7 @@ public:
     bool setHttpState(HTTPState state);                                            // Set the HTTP state
     void setInputKey(InputKey key) { lastInput = key; }                            // Set the last input key pressed
     bool shouldLeaveGame() const noexcept { return leaveGame == ToggleOn; }        // Check if the player wants to leave the game
+    void syncMultiplayerState();                                                   // Sync multiplayer state
     void update(Game *game) override;                                              // update callback for the player
     void userRequest(RequestType requestType);                                     // Send a user request to the server based on the request type
 
@@ -135,6 +136,7 @@ private:
     LobbiesStatus lobbiesStatus = LobbiesNotStarted;                // Current lobbies status
     int lobbyCount = 0;                                             // Number of lobbies loaded
     LoginStatus loginStatus = LoginNotStarted;                      // Current login status
+    float old_xp = 0.0f;                                            // previous xp value for tracking changes
     uint8_t rainFrame = 0;                                          // frame counter for rain effect
     RegistrationStatus registrationStatus = RegistrationNotStarted; // Current registration status
     float systemMenuDebounceTimer = 0.0f;                           // debounce timer for system menu input
