@@ -124,6 +124,8 @@ public:
         float view_height) const;
     void update3DSpritePosition();
 
+    bool hasChangedPosition() const; // Check if the entity's position has changed
+
 private:
     // Internal 3D sprite management
     void create3DSprite(
