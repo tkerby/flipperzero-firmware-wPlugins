@@ -22,6 +22,7 @@
 
 #include "lib/Arduboy2.h"
 #include "lib/Arduino.h"
+#include "lib/ATMlib.h"
 
 #define DISPLAY_WIDTH  128
 #define DISPLAY_HEIGHT 64
@@ -114,9 +115,12 @@ const FunctionPointer mainGameLoop[] = {
 };
 
 static void game_setup() {
+atm_system_init();
+ATM.setVolume(1.0f);
+
   arduboy.boot();
-  arduboy.audio.begin();
-  //ATM.play(titleSong);
+  //arduboy.audio.begin();
+  ATM.play(titleSong);
   arduboy.setFrameRate(60);                                 // set the frame rate of the game at 60 fps
 }
 
@@ -282,7 +286,7 @@ sprites_ptr = new(sprites_storage) Sprites();
         furi_delay_ms(50);
     }
 
-    arduboy_tone_sound_system_deinit();
+    atm_system_deinit();
 
     if(g_state->timer) {
         furi_timer_stop(g_state->timer);
