@@ -25,6 +25,9 @@ typedef struct {
     // Current mode (including Off)
     HtwMode mode;
 
+    // Last active mode (not Off) - used for Timer OFF when AC is off
+    HtwMode last_active_mode;
+
     // Fan speed
     HtwFan fan;
 

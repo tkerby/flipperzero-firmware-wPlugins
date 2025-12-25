@@ -1,6 +1,8 @@
 #include "htw_ir_protocol.h"
 #include <string.h>
 
+_Static_assert(HTW_IR_MAX_TIMINGS >= 199, "HTW_IR_MAX_TIMINGS too small for protocol");
+
 // Temperature codes (non-linear mapping 17-30°C)
 // Index 0 = 17°C, Index 13 = 30°C
 static const uint8_t TEMP_CODES[14] = {
