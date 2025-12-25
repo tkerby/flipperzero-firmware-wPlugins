@@ -13,7 +13,7 @@
 
 // ====== НАСТРОЙКИ ======
 #define TARGET_FRAMERATE         30
-#define ARDUBOY_FRAMERATE        60
+#define ARDUBOY_FRAMERATE        90
 #define GHOST_COMPENSATION_LEVEL 0
 
 #ifndef HOLD_TO_EXIT_FRAMES
@@ -116,7 +116,6 @@ const FunctionPointer mainGameLoop[] = {
 
 static void game_setup() {
 atm_system_init();
-ATM.setVolume(1.0f);
 
   arduboy.boot();
   //arduboy.audio.begin();
@@ -159,7 +158,7 @@ static void framebuffer_commit_callback(
     const uint8_t* src = state->front_buffer;
 
     for(size_t i = 0; i < BUFFER_SIZE; i++) {
-        if(gameState > 6) {
+        if(gameState < 6) {
             data[i] = (uint8_t)(src[i] ^ 0x00);
         } else {
             data[i] = (uint8_t)(src[i] ^ 0xFF);
