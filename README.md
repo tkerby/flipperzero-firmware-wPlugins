@@ -9,14 +9,11 @@ ListEM brings advanced list generating (previously done via my python script) st
 
 ## 📸 Screenshots
 
-### Main Screen
-![Main Screen](screenshots/main_menu.jpg)
-
-### Prefix Selection
-![Prefix Selection](screenshots/prefix_select.jpg)
-
-### Generation Progress
-![Generating](screenshots/generating.jpg)
+<p align="center">
+  <img src="screenshots/main.jpg" width="220">
+  <img src="screenshots/prefix.jpg" width="220">
+  <img src="screenshots/progress.jpg" width="220">
+</p>
 
 ---
 
