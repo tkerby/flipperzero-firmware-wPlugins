@@ -236,10 +236,10 @@ static void draw(Canvas* c, void* ctx) {
     canvas_clear(c);
 
     if(s->splash) {
-        canvas_draw_str(c, 28, 30, "MADE BY");
-        canvas_draw_str(c, 24, 46, "   CLAWZ");
-        canvas_draw_str(c, 25, 46, "   CLAWZ");
-        canvas_draw_str(c, 24, 47, "   CLAWZ");
+        canvas_draw_str(c, 28, 30, "ListEM by");
+        canvas_draw_str(c, 24, 46, "   CLAWZMAN");
+        canvas_draw_str(c, 25, 46, "   CLAWZMAN");
+        canvas_draw_str(c, 24, 47, "   CLAWZMAN");
         return;
     }
 
