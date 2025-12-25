@@ -1,4 +1,5 @@
 #include "htw_ac_remote.h"
+#include <furi.h>
 #include <furi_hal_infrared.h>
 #include <infrared_worker.h>
 
@@ -56,6 +57,11 @@ static void htw_app_on_timer_send(HtwTimerCommand cmd, void* context) {
     }
 }
 
+static void htw_app_tx_stop_callback(void* context) {
+    HtwApp* app = context;
+    infrared_worker_tx_stop(app->ir_worker);
+}
+
 static void htw_app_send_animation_callback(void* context) {
     HtwApp* app = context;
 
@@ -74,6 +80,10 @@ static void htw_app_send_animation_callback(void* context) {
 static void htw_app_transmit_ir(HtwApp* app) {
     if(app->ir_timings_count == 0) return;
 
+    // Stop any in-progress TX before starting a new one
+    furi_timer_stop(app->ir_tx_stop_timer);
+    infrared_worker_tx_stop(app->ir_worker);
+
     htw_main_view_start_sending(app->main_view);
     app->is_sending = true;
     app->anim_frame = 0;
@@ -88,8 +98,13 @@ static void htw_app_transmit_ir(HtwApp* app) {
         HTW_IR_DUTY_CYCLE);
 
     infrared_worker_tx_start(app->ir_worker);
-    furi_delay_ms(300); // Wait for transmission
-    infrared_worker_tx_stop(app->ir_worker);
+
+    uint32_t total_us = 0;
+    for(size_t i = 0; i < app->ir_timings_count; i++) {
+        total_us += app->ir_timings[i];
+    }
+    uint32_t delay_ms = (total_us + 999) / 1000 + 20;
+    furi_timer_start(app->ir_tx_stop_timer, delay_ms);
 
     // Notification
     notification_message(app->notifications, &sequence_blink_cyan_100);
@@ -107,12 +122,16 @@ static void htw_app_send_ir(HtwApp* app) {
            app->ir_timings,
            &app->ir_timings_count)) {
         htw_app_transmit_ir(app);
+    } else {
+        notification_message(app->notifications, &sequence_error);
     }
 }
 
 static void htw_app_send_toggle_ir(HtwApp* app, HtwToggle toggle) {
     if(htw_ir_encode_toggle(toggle, app->ir_timings, &app->ir_timings_count)) {
         htw_app_transmit_ir(app);
+    } else {
+        notification_message(app->notifications, &sequence_error);
     }
 }
 
@@ -128,14 +147,19 @@ static void htw_app_send_timer_on_ir(HtwApp* app) {
            app->ir_timings,
            &app->ir_timings_count)) {
         htw_app_transmit_ir(app);
+    } else {
+        notification_message(app->notifications, &sequence_error);
     }
 }
 
 static void htw_app_send_timer_off_ir(HtwApp* app) {
     if(app->state->timer_off_step == 0) return;
 
+    // Use last active mode if AC is currently off
     HtwMode mode = app->state->mode;
-    if(mode == HtwModeOff) mode = HtwModeCool; // Default for timer off
+    if(mode == HtwModeOff) {
+        mode = app->state->last_active_mode;
+    }
 
     if(htw_ir_encode_timer_off(
            mode,
@@ -144,6 +168,8 @@ static void htw_app_send_timer_off_ir(HtwApp* app) {
            app->ir_timings,
            &app->ir_timings_count)) {
         htw_app_transmit_ir(app);
+    } else {
+        notification_message(app->notifications, &sequence_error);
     }
 }
 
@@ -163,6 +189,7 @@ static bool htw_app_back_callback(void* context) {
 // App lifecycle
 static HtwApp* htw_app_alloc(void) {
     HtwApp* app = malloc(sizeof(HtwApp));
+    furi_assert(app);
 
     // State
     app->state = htw_state_alloc();
@@ -205,6 +232,7 @@ static HtwApp* htw_app_alloc(void) {
 
     // IR worker
     app->ir_worker = infrared_worker_alloc();
+    furi_assert(app->ir_worker);
     app->ir_timings_count = 0;
     infrared_worker_tx_set_get_signal_callback(
         app->ir_worker, infrared_worker_tx_get_signal_steady_callback, app);
@@ -212,6 +240,7 @@ static HtwApp* htw_app_alloc(void) {
     // Animation timer
     app->send_timer =
         furi_timer_alloc(htw_app_send_animation_callback, FuriTimerTypePeriodic, app);
+    app->ir_tx_stop_timer = furi_timer_alloc(htw_app_tx_stop_callback, FuriTimerTypeOnce, app);
     app->is_sending = false;
 
     return app;
@@ -224,6 +253,8 @@ static void htw_app_free(HtwApp* app) {
     // Stop timer
     furi_timer_stop(app->send_timer);
     furi_timer_free(app->send_timer);
+    furi_timer_stop(app->ir_tx_stop_timer);
+    furi_timer_free(app->ir_tx_stop_timer);
 
     // IR worker
     infrared_worker_free(app->ir_worker);

@@ -42,7 +42,10 @@ typedef struct {
     // Animation timer
     FuriTimer* send_timer;
     bool is_sending;
-    int anim_frame;
+    uint8_t anim_frame;
+
+    // IR stop timer (non-blocking TX stop)
+    FuriTimer* ir_tx_stop_timer;
 
     // Current view tracking
     HtwViewId current_view;
