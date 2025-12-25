@@ -7,6 +7,7 @@
 extern "C" {
 #endif
 
+
 // Arduino-совместимые типы
 typedef uint8_t byte;
 typedef uint16_t word;
@@ -63,7 +64,6 @@ public:
     static void stop();
     static void muteChannel(byte ch);
     static void unMuteChannel(byte ch);
-    static void setVolume(float v); // 0..1
 
     static void systemInit();
     static void systemDeinit();
