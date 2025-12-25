@@ -10,13 +10,13 @@ ListEM brings advanced list generating (previously done via my python script) st
 ## 📸 Screenshots
 
 ### Main Screen
-![Main Screen](screenshots/main_menu.png)
+![Main Screen](screenshots/main_menu.jpg)
 
 ### Prefix Selection
-![Prefix Selection](screenshots/prefix_select.png)
+![Prefix Selection](screenshots/prefix_select.jpg)
 
 ### Generation Progress
-![Generating](screenshots/generating.png)
+![Generating](screenshots/generating.jpg)
 
 ---
 
