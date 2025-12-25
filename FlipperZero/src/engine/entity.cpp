@@ -97,6 +97,11 @@ void Entity::collision(Entity *other, Game *game)
     }
 }
 
+bool Entity::hasChangedPosition() const
+{
+    return (this->position.x != this->old_position.x) || (this->position.y != this->old_position.y);
+}
+
 Vector Entity::position_get()
 {
     return this->position;
@@ -342,6 +347,7 @@ void Entity::fillTriangle(Draw *const draw, Vector p1, Vector p2, Vector p3) con
     if (y1 == y3)
         return;
 
+    Vector triangleVect = {0, 0};
     // Fill the triangle using horizontal scanlines
     for (int y = y1; y <= y3; y++)
     {
@@ -426,7 +432,9 @@ void Entity::fillTriangle(Draw *const draw, Vector p1, Vector p2, Vector p3) con
 
             for (int x = start_x; x <= end_x; x++)
             {
-                draw->drawPixel(Vector(x, y), ColorBlack);
+                triangleVect.x = x;
+                triangleVect.y = y;
+                draw->drawPixel(triangleVect, ColorBlack);
             }
         }
     }

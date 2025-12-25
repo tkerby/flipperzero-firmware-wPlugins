@@ -82,7 +82,7 @@ bool Player::areAllEnemiesDead(Game *game)
 void Player::checkForLevelCompletion(Game *game)
 {
     // Only check for level completion if we're in the game view and the game is running
-    if (!flipWorldRun || !flipWorldRun->isRunning() || currentMainView != GameViewGame)
+    if (!flipWorldRun || !flipWorldRun->isRunning() || currentMainView != GameViewGame || !this->hasChangedPosition())
     {
         return;
     }
@@ -136,6 +136,9 @@ void Player::checkForLevelCompletion(Game *game)
 
             // Switch to the next level
             flipWorldRun->getEngine()->getGame()->level_switch((int)nextLevelIndex);
+
+            // send level notice
+            flipWorldRun->syncMultiplayerLevel();
 
             // Set the icon group for the new level
             flipWorldRun->setIconGroup(nextLevelIndex);
@@ -1367,6 +1370,16 @@ bool Player::setHttpState(HTTPState state)
     return app->setHttpState(state);
 }
 
+void Player::syncMultiplayerState()
+{
+    if (!flipWorldRun)
+    {
+        return;
+    }
+
+    flipWorldRun->syncMultiplayerEntity(this);
+}
+
 void Player::update(Game *game)
 {
     // Update debounce timer
@@ -1486,6 +1499,7 @@ void Player::update(Game *game)
         if (!hasCollision)
         {
             position_set(newPos);
+            syncMultiplayerState();
         }
         // If there's a collision, we simply don't move (stay at current position)
     }
@@ -1512,6 +1526,11 @@ void Player::update(Game *game)
 
 void Player::updateStats()
 {
+    if (this->xp == this->old_xp)
+    {
+        return; // No change in XP, no need to update stats
+    }
+
     // Determine the player's level based on XP
     level = 1;
     uint32_t xp_required = 100; // Base XP for level 2
@@ -1525,6 +1544,8 @@ void Player::updateStats()
     // Update strength and max health based on the new level
     strength = 10 + (level * 1);           // 1 strength per level
     max_health = 100 + ((level - 1) * 10); // 10 health per level
+
+    this->old_xp = this->xp;
 }
 
 void Player::userRequest(RequestType requestType)

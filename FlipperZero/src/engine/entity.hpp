@@ -122,6 +122,8 @@ public:
     void render3DSprite(Draw *draw, Vector player_pos, Vector player_dir, Vector player_plane, float view_height) const;
     void update3DSpritePosition();
 
+    bool hasChangedPosition() const; // Check if the entity's position has changed
+
 private:
     // Internal 3D sprite management
     void create3DSprite(Sprite3DType type, float height = 2.0f, float width = 1.0f, float rotation = 0.0f);
