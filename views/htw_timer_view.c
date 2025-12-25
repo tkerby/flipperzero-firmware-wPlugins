@@ -158,6 +158,10 @@ static bool htw_timer_view_input(InputEvent* event, void* context) {
                     break;
 
                 case InputKeyOk:
+                    if(event->type != InputTypeShort) {
+                        consumed = true;
+                        break;
+                    }
                     // Send timer command directly from selector
                     if(m->focus == TimerFocusOn && m->state->timer_on_step > 0) {
                         if(view->send_callback) {

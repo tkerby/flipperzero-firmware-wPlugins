@@ -4,10 +4,6 @@
 #include <gui/elements.h>
 #include <stdlib.h>
 
-// UI Layout constants (64x128 vertical screen)
-#define SCREEN_WIDTH  64
-#define SCREEN_HEIGHT 128
-
 // Standard button width for toggle buttons
 #define BTN_WIDTH  30
 #define BTN_HEIGHT 12
@@ -207,15 +203,21 @@ static void htw_main_view_draw(Canvas* canvas, void* model) {
 
     canvas_clear(canvas);
 
+    const char* fan_value = htw_ir_get_fan_name(m->state->fan);
+    if(m->state->mode == HtwModeOff) {
+        fan_value = "--";
+    } else if(!htw_state_can_change_fan(m->state)) {
+        fan_value = "Auto";
+    }
+
     // Row 1: Mode and Fan with labels above (y=0)
     draw_selector_button(
         canvas, 1, 0, 30, "Mode", htw_ir_get_mode_name(m->state->mode), m->focus == FocusMode);
-    draw_selector_button(
-        canvas, 33, 0, 30, "Fan", htw_ir_get_fan_name(m->state->fan), m->focus == FocusFan);
+    draw_selector_button(canvas, 33, 0, 30, "Fan", fan_value, m->focus == FocusFan);
 
     // Row 2: Temperature (y=26)
     bool can_temp = htw_state_can_change_temp(m->state);
-    if(m->state->mode == HtwModeFan) {
+    if(m->state->mode == HtwModeFan || m->state->mode == HtwModeOff) {
         canvas_set_font(canvas, FontBigNumbers);
         canvas_draw_str_aligned(canvas, 32, 26, AlignCenter, AlignTop, "--");
     } else {
@@ -390,6 +392,10 @@ static bool htw_main_view_input(InputEvent* event, void* context) {
                     break;
 
                 case InputKeyOk:
+                    if(event->type != InputTypeShort) {
+                        consumed = true;
+                        break;
+                    }
                     switch(m->focus) {
                     case FocusMode:
                         htw_state_mode_next(m->state);
