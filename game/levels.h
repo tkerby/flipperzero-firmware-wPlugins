@@ -198,7 +198,7 @@ void drawGrid() {
 
 void windNoise()
 {
-  if (arduboy.everyXFrames(2)) sound.tone(320 + arduino_random(20), 30);
+  if (arduboy.everyXFrames(2)) sound.tone(320 + random(20), 30);
 }
 
 void kidHurt()
@@ -381,7 +381,7 @@ void checkCollisions()
           kid.speed.x = max(kid.speed.x - FAN_POWER, -MAX_XSPEED_FAN);
         }
         //kid.speed.y = min(kid.speed.y + FAN_POWER, MAX_YSPEED);
-        //if (arduboy.everyXFrames(3)) sound.tone(330 + arduino_random(20), 30);
+        //if (arduboy.everyXFrames(3)) sound.tone(330 + random(20), 30);
         windNoise();
         //kid.actualpos.y -= FAN_POWER;
       }

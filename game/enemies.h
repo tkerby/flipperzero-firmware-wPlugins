@@ -77,7 +77,7 @@ void enemiesInit()
     // Fans
     fans[i].pos = vec2(0, 0);
     for (byte a = 0; a < MAX_FAN_PARTICLES; ++a)
-      fans[i].particles[a] = vec2(arduino_random(16), arduino_random(16));
+      fans[i].particles[a] = vec2(random(16), random(16));
     fans[i].height = 0;
     fans[i].active = false;
     fans[i].dir = FAN_UP;
@@ -251,7 +251,7 @@ void enemiesUpdate()
           // Update Particles
           fans[i].particles[a].y =
             (fans[i].particles[a].y < (fans[i].height)) ?
-            fans[i].particles[a].y + 6 : arduino_random((fans[i].height) >> 2);
+            fans[i].particles[a].y + 6 : random((fans[i].height) >> 2);
 
           // Draw particles
           switch (fans[i].dir)
