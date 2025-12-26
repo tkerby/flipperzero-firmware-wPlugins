@@ -11,7 +11,7 @@ static const SubGhzBlockConst subghz_protocol_kia_const = {
 
 // Multi-burst configuration
 #define KIA_TOTAL_BURSTS 2
-#define KIA_INTER_BURST_GAP_US 25000    // 25ms gap between bursts
+#define KIA_INTER_BURST_GAP_US 25000
 
 struct SubGhzProtocolDecoderKIA
 {
@@ -102,7 +102,7 @@ static uint8_t kia_crc8(uint8_t* data, size_t len) {
 
 /**
  * Calculate CRC for the Kia data packet
- * CRC is calculated over bits 8-55 (6 bytes): button, serial, counter
+ * CRC is calculated over bits 8-55 (6 bytes)
  */
 static uint8_t kia_calculate_crc(uint64_t data) {
     uint8_t crc_data[6];
@@ -130,7 +130,10 @@ static bool kia_verify_crc(uint64_t data) {
     return (received_crc == calculated_crc);
 }
 
-// Encoder implementation
+// ============================================================================
+// ENCODER IMPLEMENTATION
+// ============================================================================
+
 void *subghz_protocol_encoder_kia_alloc(SubGhzEnvironment *environment)
 {
     UNUSED(environment);
@@ -378,25 +381,6 @@ LevelDuration subghz_protocol_encoder_kia_yield(void *context)
         return level_duration_make(false, KIA_INTER_BURST_GAP_US);
     }
     
-    // 32 preamble + 2 sync + 120 data + 1 trailing = 155 transitions per burst
-    if (instance->preamble_count >= 155) {
-        instance->current_burst++;
-        
-        if (instance->current_burst >= KIA_TOTAL_BURSTS) {
-            // All bursts complete
-            instance->is_running = false;
-            instance->preamble_count = 0;
-            instance->current_burst = 0;
-            FURI_LOG_I(TAG, "All %d bursts transmitted", KIA_TOTAL_BURSTS);
-            return level_duration_reset();
-        }
-        
-        // More bursts to send - queue gap
-        instance->sending_gap = true;
-        // Return trailing edge, gap will be sent next yield
-        return level_duration_make(true, subghz_protocol_kia_const.te_long * 2);
-    }
-    
     LevelDuration result;
     
     // Preamble: 32 transitions (16 short-short pairs)
@@ -412,21 +396,38 @@ LevelDuration subghz_protocol_encoder_kia_yield(void *context)
     else if (instance->preamble_count == 33) {
         result = level_duration_make(false, subghz_protocol_kia_const.te_long);
     }
-    // Data bits: 60 bits (120 transitions, counts 34-153)
-    else if (instance->preamble_count < 154) {
+    // Data bits: 59 bits (118 transitions, counts 34-151)
+    else if (instance->preamble_count < 152) {
         uint32_t data_transition = instance->preamble_count - 34;
         uint32_t bit_num = data_transition / 2;
         bool is_high = (data_transition % 2) == 0;
         
-        uint64_t bit_mask = 1ULL << (59 - bit_num);
+        // Send bits 58-0 (59 bits), MSB first
+        uint64_t bit_mask = 1ULL << (58 - bit_num);
         uint8_t current_bit = (instance->generic.data & bit_mask) ? 1 : 0;
         
         uint32_t duration = current_bit ? subghz_protocol_kia_const.te_long : subghz_protocol_kia_const.te_short;
         result = level_duration_make(is_high, duration);
     }
-    // Trailing HIGH pulse (count 154)
-    else {
+    // Trailing HIGH pulse (count 152)
+    else if (instance->preamble_count == 152) {
         result = level_duration_make(true, subghz_protocol_kia_const.te_long * 2);
+    }
+    // After trailing (count 153) - check if more bursts needed
+    else {
+        instance->current_burst++;
+        
+        if (instance->current_burst >= KIA_TOTAL_BURSTS) {
+            instance->is_running = false;
+            instance->preamble_count = 0;
+            instance->current_burst = 0;
+            FURI_LOG_I(TAG, "All %d bursts transmitted", KIA_TOTAL_BURSTS);
+            return level_duration_reset();
+        }
+        
+        instance->sending_gap = true;
+        instance->preamble_count = 0;
+        return level_duration_make(false, KIA_INTER_BURST_GAP_US);
     }
     
     instance->preamble_count++;
@@ -489,7 +490,10 @@ uint8_t subghz_protocol_encoder_kia_get_button(void *context)
     return instance->button;
 }
 
-// Decoder implementation
+// ============================================================================
+// DECODER IMPLEMENTATION
+// ============================================================================
+
 void *subghz_protocol_decoder_kia_alloc(SubGhzEnvironment *environment)
 {
     UNUSED(environment);
@@ -528,6 +532,7 @@ void subghz_protocol_decoder_kia_feed(void *context, bool level, uint32_t durati
             instance->header_count = 0;
         }
         break;
+        
     case KIADecoderStepCheckPreambula:
         if (level)
         {
@@ -570,15 +575,16 @@ void subghz_protocol_decoder_kia_feed(void *context, bool level, uint32_t durati
             instance->decoder.parser_step = KIADecoderStepReset;
         }
         break;
+        
     case KIADecoderStepSaveDuration:
         if (level)
         {
-            if (duration >=
-                (subghz_protocol_kia_const.te_long + subghz_protocol_kia_const.te_delta * 2UL))
+            if (duration >= (subghz_protocol_kia_const.te_long + subghz_protocol_kia_const.te_delta * 2UL))
             {
+                // End of transmission detected
                 instance->decoder.parser_step = KIADecoderStepReset;
-                if (instance->decoder.decode_count_bit ==
-                    subghz_protocol_kia_const.min_count_bit_for_found)
+                
+                if (instance->decoder.decode_count_bit == subghz_protocol_kia_const.min_count_bit_for_found)
                 {
                     instance->generic.data = instance->decoder.decode_data;
                     instance->generic.data_count_bit = instance->decoder.decode_count_bit;
@@ -596,6 +602,7 @@ void subghz_protocol_decoder_kia_feed(void *context, bool level, uint32_t durati
                 {
                     FURI_LOG_E(TAG, "Incomplete signal: only %u bits", instance->decoder.decode_count_bit);
                 }
+                
                 instance->decoder.decode_data = 0;
                 instance->decoder.decode_count_bit = 0;
                 break;
@@ -611,6 +618,7 @@ void subghz_protocol_decoder_kia_feed(void *context, bool level, uint32_t durati
             instance->decoder.parser_step = KIADecoderStepReset;
         }
         break;
+        
     case KIADecoderStepCheckDuration:
         if (!level)
         {
@@ -702,8 +710,7 @@ SubGhzProtocolStatus subghz_protocol_decoder_kia_serialize(
     return ret;
 }
 
-SubGhzProtocolStatus
-subghz_protocol_decoder_kia_deserialize(void *context, FlipperFormat *flipper_format)
+SubGhzProtocolStatus subghz_protocol_decoder_kia_deserialize(void *context, FlipperFormat *flipper_format)
 {
     furi_assert(context);
     SubGhzProtocolDecoderKIA *instance = context;
