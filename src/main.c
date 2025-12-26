@@ -75,10 +75,10 @@ int32_t ghost_esp_app(void* p) {
     state->previous_view = 0;
     state->came_from_settings = false;
 
-    // Initialize essential text buffers with minimal size
-    state->textBoxBuffer = malloc(TEXT_BOX_STORE_SIZE);
+    // Initialize essential text buffer (shared log/view buffer)
+    state->textBoxBuffer = malloc(TEXT_LOG_BUFFER_SIZE);
     if(state->textBoxBuffer) {
-        memset(state->textBoxBuffer, 0, TEXT_BOX_STORE_SIZE);
+        memset(state->textBoxBuffer, 0, TEXT_LOG_BUFFER_SIZE);
     }
     state->buffer_length = 0;
     state->input_buffer = malloc(INPUT_BUFFER_SIZE);

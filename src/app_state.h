@@ -110,6 +110,9 @@ struct AppState {
     bool ir_file_buttons_mode;
     uint8_t* ir_file_buffer;
     size_t ir_file_buffer_size;
+    char ir_file_path[128];
+    size_t ir_signal_block_offsets[64];
+    size_t ir_signal_block_lengths[64];
     char* input_buffer;
     const char* uart_command;
     char* textBoxBuffer;

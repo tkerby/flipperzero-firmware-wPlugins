@@ -100,7 +100,7 @@ static bool handle_ir_command_feedback_ex(
     bool send_cmd,
     bool reset_buffers);
 static bool handle_ir_command_feedback(AppState* state, const char* cmd);
-static bool ir_parse_buttons_from_ir_buffer(AppState* state, const uint8_t* buf, size_t len);
+static bool ir_index_buttons_from_file(AppState* state);
 static void ir_send_button_from_file(AppState* state, uint32_t button_index);
 
 // Sniff command definitions
@@ -1579,6 +1579,133 @@ static bool ir_query_and_parse_show(AppState* state, uint32_t remote_index) {
     return state->ir_signal_count > 0;
 }
 
+// Stream/index .ir file without holding entire file in RAM
+static bool ir_index_buttons_from_file(AppState* state) {
+    if(!state || !state->ir_file_path[0]) return false;
+
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    File* file = storage_file_alloc(storage);
+    bool ok = false;
+
+    do {
+        if(!storage_file_open(file, state->ir_file_path, FSAM_READ, FSOM_OPEN_EXISTING)) break;
+
+        const size_t buf_size = 512;
+        uint8_t buf[buf_size];
+        size_t global_offset = 0;
+        bool in_block = false;
+        size_t block_start = 0;
+
+        state->ir_signal_count = 0;
+
+        while(true) {
+            uint16_t read = storage_file_read(file, buf, buf_size);
+            if(read == 0) break;
+
+            size_t pos = 0;
+            while(pos < read && state->ir_signal_count < COUNT_OF(state->ir_signals)) {
+                // Consume whitespace
+                while(pos < read &&
+                      (buf[pos] == '\r' || buf[pos] == '\n' || buf[pos] == ' ' || buf[pos] == '\t')) {
+                    if(buf[pos] == '\n' || buf[pos] == '\r') {
+                        if(in_block) {
+                            // Potential end of block handled when we see next header
+                        }
+                    }
+                    pos++;
+                    global_offset++;
+                }
+                if(pos >= read) break;
+
+                // Skip comments
+                if(buf[pos] == '#') {
+                    while(pos < read && buf[pos] != '\n' && buf[pos] != '\r') {
+                        pos++;
+                        global_offset++;
+                    }
+                    continue;
+                }
+
+                // Detect "name:" start
+                const char name_hdr[] = "name:";
+                if(read - pos >= sizeof(name_hdr) - 1 &&
+                   memcmp(buf + pos, name_hdr, sizeof(name_hdr) - 1) == 0) {
+                    // If we were already in a block, close it at current global_offset
+                    if(in_block && state->ir_signal_count > 0) {
+                        state->ir_signal_block_lengths[state->ir_signal_count - 1] =
+                            (global_offset) - state->ir_signal_block_offsets[state->ir_signal_count - 1];
+                    }
+
+                    in_block = true;
+                    block_start = global_offset;
+
+                    // Parse name on this line to populate label
+                    size_t line_end = pos;
+                    while(line_end < read && buf[line_end] != '\n' && buf[line_end] != '\r') line_end++;
+
+                    size_t val_start = pos + (sizeof(name_hdr) - 1);
+                    while(val_start < line_end && (buf[val_start] == ' ' || buf[val_start] == '\t')) {
+                        val_start++;
+                    }
+                    size_t val_end = line_end;
+                    while(val_end > val_start &&
+                          (buf[val_end - 1] == ' ' || buf[val_end - 1] == '\t')) {
+                        val_end--;
+                    }
+
+                    if(state->ir_signal_count < COUNT_OF(state->ir_signals)) {
+                        IrSignalEntry* e = &state->ir_signals[state->ir_signal_count];
+                        size_t name_len = (val_end > val_start) ? (val_end - val_start) : 0;
+                        if(name_len >= sizeof(e->name)) name_len = sizeof(e->name) - 1;
+                        if(name_len > 0) {
+                            memcpy(e->name, buf + val_start, name_len);
+                            e->name[name_len] = '\0';
+                        } else {
+                            e->name[0] = '\0';
+                        }
+                        e->index = state->ir_signal_count; // use slot index
+                        e->proto[0] = '\0';
+
+                        state->ir_signal_block_offsets[state->ir_signal_count] = block_start;
+                        state->ir_signal_block_lengths[state->ir_signal_count] = 0; // temp
+                        state->ir_signal_count++;
+                    }
+
+                    global_offset += (line_end - pos);
+                    pos = line_end;
+                    continue;
+                }
+
+                // Detect end of block by seeing next header in subsequent iterations
+                // Consume rest of line
+                while(pos < read && buf[pos] != '\n' && buf[pos] != '\r') {
+                    pos++;
+                    global_offset++;
+                }
+            }
+        }
+
+        // Close last block length if open
+        if(in_block && state->ir_signal_count > 0) {
+            uint64_t file_size = storage_file_size(file);
+            state->ir_signal_block_lengths[state->ir_signal_count - 1] =
+                (size_t)file_size - state->ir_signal_block_offsets[state->ir_signal_count - 1];
+        }
+
+        ok = state->ir_signal_count > 0;
+    } while(false);
+
+    if(file) {
+        storage_file_close(file);
+        storage_file_free(file);
+    }
+    if(storage) {
+        furi_record_close(RECORD_STORAGE);
+    }
+
+    return ok;
+}
+
 static bool ir_query_and_parse_universals(AppState* state) {
     if(!state || !state->uart_context) return false;
 
@@ -1725,77 +1852,6 @@ static bool ir_query_and_parse_universal_buttons(AppState* state, const char* fi
 
     bool result = state->ir_signal_count > 0;
     return result;
-}
-
-static bool ir_parse_buttons_from_ir_buffer(AppState* state, const uint8_t* buf, size_t len) {
-    if(!state || !buf || len == 0) return false;
-
-    state->ir_signal_count = 0;
-
-    size_t pos = 0;
-    while(pos < len && state->ir_signal_count < COUNT_OF(state->ir_signals)) {
-        while(pos < len &&
-              (buf[pos] == '\r' || buf[pos] == '\n' || buf[pos] == ' ' || buf[pos] == '\t')) {
-            pos++;
-        }
-
-        if(pos >= len) break;
-
-        if(buf[pos] == '#') {
-            while(pos < len && buf[pos] != '\n' && buf[pos] != '\r')
-                pos++;
-            continue;
-        }
-
-        if(len - pos >= 9 && memcmp(buf + pos, "Filetype:", 9) == 0) {
-            while(pos < len && buf[pos] != '\n' && buf[pos] != '\r')
-                pos++;
-            continue;
-        }
-        if(len - pos >= 8 && memcmp(buf + pos, "Version:", 8) == 0) {
-            while(pos < len && buf[pos] != '\n' && buf[pos] != '\r')
-                pos++;
-            continue;
-        }
-
-        if(len - pos >= 5 && memcmp(buf + pos, "name:", 5) == 0) {
-            size_t line_start = pos;
-            size_t line_end = pos;
-            while(line_end < len && buf[line_end] != '\n' && buf[line_end] != '\r')
-                line_end++;
-
-            size_t val_start = pos + 5;
-            while(val_start < line_end && (buf[val_start] == ' ' || buf[val_start] == '\t')) {
-                val_start++;
-            }
-            size_t val_end = line_end;
-            while(val_end > val_start && (buf[val_end - 1] == ' ' || buf[val_end - 1] == '\t')) {
-                val_end--;
-            }
-
-            IrSignalEntry* e = &state->ir_signals[state->ir_signal_count];
-            size_t name_len = (val_end > val_start) ? (val_end - val_start) : 0;
-            if(name_len >= sizeof(e->name)) name_len = sizeof(e->name) - 1;
-            if(name_len > 0) {
-                memcpy(e->name, buf + val_start, name_len);
-                e->name[name_len] = '\0';
-            } else {
-                e->name[0] = '\0';
-            }
-
-            e->index = (uint32_t)line_start;
-            e->proto[0] = '\0';
-
-            state->ir_signal_count++;
-            pos = line_end;
-            continue;
-        }
-
-        while(pos < len && buf[pos] != '\n' && buf[pos] != '\r')
-            pos++;
-    }
-
-    return state->ir_signal_count > 0;
 }
 
 static void ir_show_remotes_menu(AppState* state) {
@@ -2409,24 +2465,17 @@ static void send_ir_file(AppState* state) {
         return;
     }
 
-    if(!ir_data || ir_size == 0) {
-        if(ir_data) free(ir_data);
-        return;
-    }
-
+    // Clear any cached buffer; we stream now
     if(state->ir_file_buffer) {
-        free(state->ir_file_buffer);
-    }
-
-    state->ir_file_buffer = ir_data;
-    state->ir_file_buffer_size = ir_size;
-    state->ir_universal_buttons_mode = false;
-    state->ir_file_buttons_mode = true;
-
-    if(!ir_parse_buttons_from_ir_buffer(state, state->ir_file_buffer, state->ir_file_buffer_size)) {
         free(state->ir_file_buffer);
         state->ir_file_buffer = NULL;
         state->ir_file_buffer_size = 0;
+    }
+
+    state->ir_universal_buttons_mode = false;
+    state->ir_file_buttons_mode = true;
+
+    if(!ir_index_buttons_from_file(state)) {
         state->ir_file_buttons_mode = false;
         ir_show_error(state, "No IR buttons found.");
         return;
@@ -2436,59 +2485,48 @@ static void send_ir_file(AppState* state) {
 }
 
 static void ir_send_button_from_file(AppState* state, uint32_t button_index) {
-    if(!state || !state->uart_context || !state->ir_file_buffer) return;
+    if(!state || !state->uart_context) return;
     if(button_index >= state->ir_signal_count) return;
+    if(!state->ir_file_path[0]) return;
 
-    IrSignalEntry* sig = &state->ir_signals[button_index];
-    size_t start = sig->index;
-    if(start >= state->ir_file_buffer_size) return;
+    size_t start = state->ir_signal_block_offsets[button_index];
+    size_t payload_len = state->ir_signal_block_lengths[button_index];
+    if(payload_len == 0) return;
 
-    const uint8_t* buf = state->ir_file_buffer;
-    size_t len = state->ir_file_buffer_size;
-
-    size_t pos = start;
-    size_t block_end = start;
-    bool first_line = true;
-
-    while(pos < len) {
-        size_t line_start = pos;
-        size_t line_end = line_start;
-        while(line_end < len && buf[line_end] != '\n' && buf[line_end] != '\r')
-            line_end++;
-
-        size_t t = line_start;
-        while(t < line_end && (buf[t] == ' ' || buf[t] == '\t'))
-            t++;
-
-        if(!first_line) {
-            if(t < line_end) {
-                if(buf[t] == '#') break;
-                if(line_end - t >= 5 && memcmp(buf + t, "name:", 5) == 0) break;
-            }
-        }
-
-        block_end = line_end;
-        while(block_end < len && (buf[block_end] == '\n' || buf[block_end] == '\r'))
-            block_end++;
-
-        pos = block_end;
-        first_line = false;
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    File* file = storage_file_alloc(storage);
+    if(!storage_file_open(file, state->ir_file_path, FSAM_READ, FSOM_OPEN_EXISTING)) {
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return;
     }
 
-    if(block_end <= start) return;
+    storage_file_seek(file, start, true);
 
-    size_t payload_len = block_end - start;
+    const size_t chunk = 512;
+    uint8_t buf[chunk];
     const char* ir_begin_marker = "[IR/BEGIN]";
     const char* ir_close_marker = "[IR/CLOSE]";
 
     uart_reset_text_buffers(state->uart_context);
     uart_send(state->uart_context, (const uint8_t*)ir_begin_marker, 10);
     uart_send(state->uart_context, (const uint8_t*)"\n", 1);
-    uart_send(state->uart_context, buf + start, payload_len);
+    size_t remaining = payload_len;
+    while(remaining > 0) {
+        size_t to_read = (remaining > chunk) ? chunk : remaining;
+        uint16_t read = storage_file_read(file, buf, (uint16_t)to_read);
+        if(read == 0) break;
+        uart_send(state->uart_context, buf, read);
+        remaining -= read;
+    }
     uart_send(state->uart_context, (const uint8_t*)ir_close_marker, 10);
     uart_send(state->uart_context, (const uint8_t*)"\n", 1);
 
     handle_ir_command_feedback_ex(state, "ir inline", false, false);
+
+    storage_file_close(file);
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
 }
 
 static void send_evil_portal_html(AppState* state) {
