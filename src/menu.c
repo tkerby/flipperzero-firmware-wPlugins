@@ -1605,8 +1605,8 @@ static bool ir_index_buttons_from_file(AppState* state) {
             size_t pos = 0;
             while(pos < read && state->ir_signal_count < COUNT_OF(state->ir_signals)) {
                 // Consume whitespace
-                while(pos < read &&
-                      (buf[pos] == '\r' || buf[pos] == '\n' || buf[pos] == ' ' || buf[pos] == '\t')) {
+                while(pos < read && (buf[pos] == '\r' || buf[pos] == '\n' || buf[pos] == ' ' ||
+                                     buf[pos] == '\t')) {
                     if(buf[pos] == '\n' || buf[pos] == '\r') {
                         if(in_block) {
                             // Potential end of block handled when we see next header
@@ -1633,7 +1633,8 @@ static bool ir_index_buttons_from_file(AppState* state) {
                     // If we were already in a block, close it at current global_offset
                     if(in_block && state->ir_signal_count > 0) {
                         state->ir_signal_block_lengths[state->ir_signal_count - 1] =
-                            (global_offset) - state->ir_signal_block_offsets[state->ir_signal_count - 1];
+                            (global_offset)-state
+                                ->ir_signal_block_offsets[state->ir_signal_count - 1];
                     }
 
                     in_block = true;
@@ -1641,10 +1642,12 @@ static bool ir_index_buttons_from_file(AppState* state) {
 
                     // Parse name on this line to populate label
                     size_t line_end = pos;
-                    while(line_end < read && buf[line_end] != '\n' && buf[line_end] != '\r') line_end++;
+                    while(line_end < read && buf[line_end] != '\n' && buf[line_end] != '\r')
+                        line_end++;
 
                     size_t val_start = pos + (sizeof(name_hdr) - 1);
-                    while(val_start < line_end && (buf[val_start] == ' ' || buf[val_start] == '\t')) {
+                    while(val_start < line_end &&
+                          (buf[val_start] == ' ' || buf[val_start] == '\t')) {
                         val_start++;
                     }
                     size_t val_end = line_end;
@@ -2988,7 +2991,13 @@ void show_wifi_menu(AppState* state) {
 }
 
 void show_aerial_menu(AppState* state) {
-    show_menu(state, aerial_commands, COUNT_OF(aerial_commands), "Aerial Detector:", state->aerial_menu, 15);
+    show_menu(
+        state,
+        aerial_commands,
+        COUNT_OF(aerial_commands),
+        "Aerial Detector:",
+        state->aerial_menu,
+        15);
 }
 
 void show_ble_menu(AppState* state) {
@@ -3004,7 +3013,6 @@ void show_ble_menu(AppState* state) {
     view_dispatcher_switch_to_view(state->view_dispatcher, 2);
     state->current_view = 2;
 }
-
 
 void show_gps_menu(AppState* state) {
     state->came_from_settings = false;

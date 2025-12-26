@@ -189,7 +189,8 @@ int32_t ghost_esp_app(void* p) {
         if(state->gps_menu)
             view_dispatcher_add_view(state->view_dispatcher, 3, submenu_get_view(state->gps_menu));
         if(state->aerial_menu)
-            view_dispatcher_add_view(state->view_dispatcher, 15, submenu_get_view(state->aerial_menu));
+            view_dispatcher_add_view(
+                state->view_dispatcher, 15, submenu_get_view(state->aerial_menu));
         if(state->settings_menu)
             view_dispatcher_add_view(
                 state->view_dispatcher, 4, variable_item_list_get_view(state->settings_menu));
