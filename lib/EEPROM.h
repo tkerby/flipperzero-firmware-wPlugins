@@ -124,7 +124,7 @@ private:
         if(loaded_) return;
 
         if(file_path_[0] == '\0') {
-            strncpy(file_path_, "/ext/apps_data/eeprom.bin", sizeof(file_path_) - 1);
+            strncpy(file_path_, EEPROM_LIB_PATH, sizeof(file_path_) - 1);
             file_path_[sizeof(file_path_) - 1] = '\0';
         }
 
