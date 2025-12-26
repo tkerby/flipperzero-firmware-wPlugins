@@ -102,7 +102,6 @@ static void input_events_callback(const void* value, void* ctx) {
 }
 
 static void game_setup() {
-    EEPROM.begin("/ext/eeprom.bin", 2500);
     arduboy.boot();
     arduboy.audio.begin();
     arduboy.bootLogoSpritesSelfMasked();
