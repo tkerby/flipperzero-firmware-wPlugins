@@ -1,5 +1,0 @@
-docs_raw
-dist/
-.vscode/
-generate_ir.py
-__pycache__/
