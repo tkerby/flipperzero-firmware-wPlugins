@@ -217,7 +217,7 @@ static void timer_callback(void* ctx) {
     state->in_frame = false;
 }
 
-extern "C" int32_t mybl_app(void* p) {
+extern "C" int32_t arduboy_app(void* p) {
     UNUSED(p);
 
     g_state = (FlipperState*)malloc(sizeof(FlipperState));
