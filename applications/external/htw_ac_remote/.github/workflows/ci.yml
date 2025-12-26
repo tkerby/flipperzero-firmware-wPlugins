@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint
+        uses: flipperdevices/flipperzero-ufbt-action@v0.1
+        with:
+          sdk-channel: release
+          task: lint
+
+      - name: Build FAP
+        uses: flipperdevices/flipperzero-ufbt-action@v0.1
+        id: build
+        with:
+          skip-setup: true
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: htw_ac_remote-${{ steps.build.outputs.suffix }}
+          path: ${{ steps.build.outputs.fap-artifacts }}
