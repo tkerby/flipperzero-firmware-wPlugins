@@ -31,19 +31,19 @@ This software is for experimental purposes only and is not meant for any illegal
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-12-23 17:51 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-12-23 17:51 EST`
 - Updated: [Weebo v0.3 (By bettse)](https://github.com/bettse/weebo) `Req: key_retail.bin on SD card /nfc/assets` (Amiibo Remixer)
-- Updated: [Ghost ESP v1.6.2 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32`
 - Updated: [LEGO Dimensions Toy Pad v0.5 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
 - Added: [Mystic Balloon v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperMysticBalloon)
 - Added: [Catacombs Of The Damned v2.0 (By apfxtech)](https://github.com/apfxtech/FlipperCatacombs)
 - Added: [Swimmy Fish v2.0 (By Invizabel)](https://github.com/Invizabel/fish)
 - Updated: [Mystic Balloon v1.2 (By apfxtech)](https://github.com/apfxtech/FlipperMysticBalloon)
 - Updated: [Apple Grabber v0.1 (By d7d8)](https://github.com/d7d8/apple-grabber)
-- Updated: [ProtoPirate WIP v1.4 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - Revert: OFW: PR: [Added Support for MIFARE Plus 2K Cards in SL1 Mode #4316 (By LuemmelSec)](https://github.com/flipperdevices/flipperzero-firmware/pull/4316)
 - Updated: [Calendar of weeks v0.1 (By fgreil)](https://github.com/fgreil/mitzi-cal-weeks)
 - Updated: [Catacombs Of The Damned v2.0 (By apfxtech)](https://github.com/apfxtech/FlipperCatacombs)
 - Updated: [Amiibo Toolkit v0.2 (By Firefox2100)](https://github.com/Firefox2100/ami_tool) `Req: key_retail.bin on SD card /nfc/assets`
 - Updated: [FlipWorld v1.0.3 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- Updated: [ProtoPirate WIP v1.4 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
+- Updated: [Ghost ESP v1.6.2 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32`
 
 <a name="release">
 

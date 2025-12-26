@@ -4,6 +4,8 @@
 
 - Close dialogs record during cleanup to avoid leaks
 - Added Aerial Detection and Spoofing commands
+- Improved IR memory handling to prevent "File too large" errors
+- Optimised the text view to hold more data before discarding
 
 ## v1.6.1
 

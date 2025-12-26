@@ -22,6 +22,7 @@ uint32_t g_uart_callback_count = 0;
 #define BUFFER_CLEAR_SIZE      128
 #define BUFFER_RESIZE_CHUNK    1024
 #define TEXT_SCROLL_GUARD_SIZE 64
+#define TEXT_TRUNCATE_FRACTION 6
 
 typedef enum {
     MARKER_STATE_IDLE,
@@ -29,38 +30,46 @@ typedef enum {
     MARKER_STATE_CLOSE
 } MarkerState;
 
-static TextBufferManager* text_buffer_alloc(char* view_buffer) {
-    if(!view_buffer) return NULL;
+static TextBufferManager* text_buffer_alloc(char* backing_buffer) {
+    if(!backing_buffer) return NULL;
 
     TextBufferManager* manager = malloc(sizeof(TextBufferManager));
     if(!manager) return NULL;
 
-    manager->ring_buffer = malloc(RING_BUFFER_SIZE);
-    manager->view_buffer = view_buffer;
+    manager->buffer = backing_buffer;
+    manager->capacity = TEXT_LOG_BUFFER_SIZE;
+    manager->length = 0;
+    manager->view_buffer_len = 0;
+    manager->view_offset = 0;
     manager->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
 
-    if(!manager->ring_buffer || !manager->mutex) {
-        free(manager->ring_buffer);
-        if(manager->mutex) furi_mutex_free(manager->mutex);
+    if(!manager->mutex) {
         free(manager);
         return NULL;
     }
 
-    manager->ring_read_index = 0;
-    manager->ring_write_index = 0;
-    manager->view_buffer_len = 0;
-    manager->buffer_full = false;
-
-    memset(manager->ring_buffer, 0, RING_BUFFER_SIZE);
-    memset(manager->view_buffer, 0, VIEW_BUFFER_SIZE);
-
+    memset(manager->buffer, 0, manager->capacity);
     return manager;
 }
 static void text_buffer_free(TextBufferManager* manager) {
     if(!manager) return;
     if(manager->mutex) furi_mutex_free(manager->mutex);
-    free(manager->ring_buffer);
     free(manager);
+}
+
+static void text_buffer_truncate_oldest(TextBufferManager* manager) {
+    if(manager->length < manager->capacity / TEXT_TRUNCATE_FRACTION) return;
+
+    size_t keep = manager->capacity - (manager->capacity / TEXT_TRUNCATE_FRACTION);
+    if(keep > manager->length) keep = manager->length;
+
+    size_t shift = manager->length - keep;
+    if(shift > 0 && keep > 0) {
+        memmove(manager->buffer, manager->buffer + shift, keep);
+    }
+
+    manager->length = keep;
+    manager->buffer[manager->length] = '\0';
 }
 
 static void text_buffer_add(TextBufferManager* manager, const char* data, size_t len) {
@@ -71,14 +80,16 @@ static void text_buffer_add(TextBufferManager* manager, const char* data, size_t
         return;
     }
 
-    for(size_t i = 0; i < len; i++) {
-        manager->ring_buffer[manager->ring_write_index] = data[i];
-        manager->ring_write_index = (manager->ring_write_index + 1) % RING_BUFFER_SIZE;
+    if(manager->length + len >= manager->capacity) {
+        text_buffer_truncate_oldest(manager);
+    }
 
-        if(manager->ring_write_index == manager->ring_read_index) {
-            manager->ring_read_index = (manager->ring_read_index + 1) % RING_BUFFER_SIZE;
-            manager->buffer_full = true;
-        }
+    size_t space = manager->capacity - manager->length - 1;
+    size_t to_copy = (len > space) ? space : len;
+    if(to_copy > 0) {
+        memcpy(manager->buffer + manager->length, data, to_copy);
+        manager->length += to_copy;
+        manager->buffer[manager->length] = '\0';
     }
 
     furi_mutex_release(manager->mutex);
@@ -90,12 +101,10 @@ void uart_reset_text_buffers(UartContext* uart) {
         return;
     }
 
-    memset(uart->text_manager->ring_buffer, 0, RING_BUFFER_SIZE);
-    memset(uart->text_manager->view_buffer, 0, VIEW_BUFFER_SIZE);
-    uart->text_manager->ring_read_index = 0;
-    uart->text_manager->ring_write_index = 0;
-    uart->text_manager->buffer_full = false;
+    memset(uart->text_manager->buffer, 0, uart->text_manager->capacity);
+    uart->text_manager->length = 0;
     uart->text_manager->view_buffer_len = 0;
+    uart->text_manager->view_offset = 0;
 
     furi_mutex_release(uart->text_manager->mutex);
 }
@@ -110,12 +119,18 @@ bool uart_copy_text_buffer(UartContext* uart, char* out, size_t out_size, size_t
     }
 
     size_t len = uart->text_manager->view_buffer_len;
+    size_t offset = uart->text_manager->view_offset;
     if(len >= out_size) {
         len = out_size - 1;
     }
 
     if(len > 0) {
-        memcpy(out, uart->text_manager->view_buffer, len);
+        size_t end = offset + len;
+        if(end >= uart->text_manager->capacity) end = uart->text_manager->capacity - 1;
+        char saved = uart->text_manager->buffer[end];
+        uart->text_manager->buffer[end] = '\0';
+        memcpy(out, uart->text_manager->buffer + offset, len);
+        uart->text_manager->buffer[end] = saved;
     }
     out[len] = '\0';
     if(out_len) *out_len = len;
@@ -136,21 +151,18 @@ bool uart_copy_text_buffer_tail(UartContext* uart, char* out, size_t out_size, s
     }
 
     TextBufferManager* mgr = uart->text_manager;
-    size_t available;
-    if(mgr->buffer_full) {
-        available = RING_BUFFER_SIZE;
-    } else if(mgr->ring_write_index >= mgr->ring_read_index) {
-        available = mgr->ring_write_index - mgr->ring_read_index;
-    } else {
-        available = RING_BUFFER_SIZE - mgr->ring_read_index + mgr->ring_write_index;
-    }
+    size_t available = mgr->length;
 
     size_t copy_size = (available >= out_size) ? (out_size - 1) : available;
-    size_t skip = (available > copy_size) ? (available - copy_size) : 0;
-    size_t start = (mgr->ring_read_index + skip) % RING_BUFFER_SIZE;
+    size_t start = (available > copy_size) ? (available - copy_size) : 0;
 
-    for(size_t i = 0; i < copy_size; i++) {
-        out[i] = mgr->ring_buffer[(start + i) % RING_BUFFER_SIZE];
+    if(copy_size > 0) {
+        size_t end = start + copy_size;
+        if(end >= mgr->capacity) end = mgr->capacity - 1;
+        char saved = mgr->buffer[end];
+        mgr->buffer[end] = '\0';
+        memcpy(out, mgr->buffer + start, copy_size);
+        mgr->buffer[end] = saved;
     }
     out[copy_size] = '\0';
     if(out_len) *out_len = copy_size;
@@ -164,41 +176,32 @@ static void text_buffer_update_view(TextBufferManager* manager, bool view_from_s
 
     furi_mutex_acquire(manager->mutex, FuriWaitForever);
 
-    // Calculate available data
-    size_t available;
-    if(manager->buffer_full) {
-        available = RING_BUFFER_SIZE;
-    } else if(manager->ring_write_index >= manager->ring_read_index) {
-        available = manager->ring_write_index - manager->ring_read_index;
-    } else {
-        available = RING_BUFFER_SIZE - manager->ring_read_index + manager->ring_write_index;
-    }
-
-    // Limit to view buffer size
+    size_t available = manager->length;
     size_t copy_size = (available > VIEW_BUFFER_SIZE - 1) ? VIEW_BUFFER_SIZE - 1 : available;
 
-    // Choose starting point based on view preference
-    size_t start;
-    if(view_from_start) {
-        // Start from oldest data
-        start = manager->ring_read_index;
-    } else {
-        // Start from newest data that will fit in view
-        size_t data_to_skip = available > copy_size ? available - copy_size : 0;
-        start = (manager->ring_read_index + data_to_skip) % RING_BUFFER_SIZE;
+    size_t start = 0;
+    if(!view_from_start && available > copy_size) {
+        start = available - copy_size;
     }
 
-    // Copy data to view buffer
-    size_t j = 0;
-    for(size_t i = 0; i < copy_size; i++) {
-        size_t idx = (start + i) % RING_BUFFER_SIZE;
-        manager->view_buffer[j++] = manager->ring_buffer[idx];
-    }
-
-    manager->view_buffer[j] = '\0';
-    manager->view_buffer_len = j;
+    manager->view_offset = start;
+    manager->view_buffer_len = copy_size;
 
     furi_mutex_release(manager->mutex);
+}
+
+static char text_buffer_mark_view_terminator(TextBufferManager* manager) {
+    size_t end = manager->view_offset + manager->view_buffer_len;
+    if(end >= manager->capacity) end = manager->capacity - 1;
+    char saved = manager->buffer[end];
+    manager->buffer[end] = '\0';
+    return saved;
+}
+
+static void text_buffer_restore_view_terminator(TextBufferManager* manager, char saved_char) {
+    size_t end = manager->view_offset + manager->view_buffer_len;
+    if(end >= manager->capacity) end = manager->capacity - 1;
+    manager->buffer[end] = saved_char;
 }
 static void
     uart_rx_callback(FuriHalSerialHandle* handle, FuriHalSerialRxEvent event, void* context) {
@@ -389,9 +392,14 @@ void handle_uart_rx_data(uint8_t* buf, size_t len, void* context) {
 
         bool view_from_start = state->settings.view_logs_from_start_index;
         if(state->text_box) {
-            text_box_set_text(state->text_box, state->uart_context->text_manager->view_buffer);
+            TextBufferManager* mgr = state->uart_context->text_manager;
+            furi_mutex_acquire(mgr->mutex, FuriWaitForever);
+            char saved = text_buffer_mark_view_terminator(mgr);
+            text_box_set_text(state->text_box, mgr->buffer + mgr->view_offset);
             text_box_set_focus(
                 state->text_box, view_from_start ? TextBoxFocusStart : TextBoxFocusEnd);
+            text_buffer_restore_view_terminator(mgr, saved);
+            furi_mutex_release(mgr->mutex);
         }
     }
 }
@@ -474,8 +482,13 @@ void update_text_box_view(AppState* state) {
         state->uart_context->text_manager, state->settings.view_logs_from_start_index);
 
     bool view_from_start = state->settings.view_logs_from_start_index;
-    text_box_set_text(state->text_box, state->uart_context->text_manager->view_buffer);
+    TextBufferManager* mgr = state->uart_context->text_manager;
+    furi_mutex_acquire(mgr->mutex, FuriWaitForever);
+    char saved = text_buffer_mark_view_terminator(mgr);
+    text_box_set_text(state->text_box, mgr->buffer + mgr->view_offset);
     text_box_set_focus(state->text_box, view_from_start ? TextBoxFocusStart : TextBoxFocusEnd);
+    text_buffer_restore_view_terminator(mgr, saved);
+    furi_mutex_release(mgr->mutex);
 }
 UartContext* uart_init(AppState* state) {
     uint32_t start_time = furi_get_tick();
@@ -548,7 +561,7 @@ UartContext* uart_init(AppState* state) {
     uart->rx_thread = furi_thread_alloc();
     if(uart->rx_thread) {
         furi_thread_set_name(uart->rx_thread, "UART_Receive");
-        furi_thread_set_stack_size(uart->rx_thread, 2048);
+        furi_thread_set_stack_size(uart->rx_thread, 4096);
         furi_thread_set_context(uart->rx_thread, uart);
         furi_thread_set_callback(uart->rx_thread, uart_worker);
         furi_thread_start(uart->rx_thread);
@@ -677,12 +690,10 @@ bool uart_is_esp_connected(UartContext* uart) {
 
     // Clear and reset buffers atomically
     furi_mutex_acquire(uart->text_manager->mutex, FuriWaitForever);
-    memset(uart->text_manager->ring_buffer, 0, RING_BUFFER_SIZE);
-    memset(uart->text_manager->view_buffer, 0, VIEW_BUFFER_SIZE);
-    uart->text_manager->ring_read_index = 0;
-    uart->text_manager->ring_write_index = 0;
-    uart->text_manager->buffer_full = false;
+    memset(uart->text_manager->buffer, 0, uart->text_manager->capacity);
+    uart->text_manager->length = 0;
     uart->text_manager->view_buffer_len = 0;
+    uart->text_manager->view_offset = 0;
     furi_mutex_release(uart->text_manager->mutex);
 
     // Re-enable callbacks with clean state
@@ -710,13 +721,7 @@ bool uart_is_esp_connected(UartContext* uart) {
         while(furi_get_tick() - start_time < CMD_TIMEOUT_MS) {
             furi_mutex_acquire(uart->text_manager->mutex, FuriWaitForever);
 
-            size_t available =
-                uart->text_manager->buffer_full ?
-                    RING_BUFFER_SIZE :
-                (uart->text_manager->ring_write_index >= uart->text_manager->ring_read_index) ?
-                    uart->text_manager->ring_write_index - uart->text_manager->ring_read_index :
-                    RING_BUFFER_SIZE - uart->text_manager->ring_read_index +
-                        uart->text_manager->ring_write_index;
+            size_t available = uart->text_manager->length;
 
             if(available > 0) {
                 connected = true;
@@ -781,9 +786,12 @@ bool uart_receive_data(
 
         if(state->text_box) {
             bool view_from_start = state->settings.view_logs_from_start_index;
-            text_box_set_text(state->text_box, uart->text_manager->view_buffer);
+            TextBufferManager* mgr = state->uart_context->text_manager;
+            char saved = text_buffer_mark_view_terminator(mgr);
+            text_box_set_text(state->text_box, mgr->buffer + mgr->view_offset);
             text_box_set_focus(
                 state->text_box, view_from_start ? TextBoxFocusStart : TextBoxFocusEnd);
+            text_buffer_restore_view_terminator(mgr, saved);
         }
     } else if(state->text_box) {
         const char* hint = "Press Right to resume.\nPress OK to STOP.\n";

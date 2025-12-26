@@ -17,7 +17,7 @@
 #define UART_CH_GPS (cfw_settings.uart_nmea_channel)
 #define BAUDRATE    (115200)
 
-#define TEXT_BOX_STORE_SIZE           (8 * 1024) // 8KB text box buffer size
+#define TEXT_BOX_STORE_SIZE           (12 * 1024) // 12KB text box buffer size
 #define RX_BUF_SIZE                   2048
 #define PCAP_BUF_SIZE                 4096
 #define STORAGE_BUF_SIZE              4096
@@ -27,8 +27,9 @@
 #define GHOST_ESP_APP_FOLDER_LOGS     "/ext/apps_data/ghost_esp/logs"
 #define GHOST_ESP_APP_SETTINGS_FILE   "/ext/apps_data/ghost_esp/settings.ini"
 #define ESP_CHECK_TIMEOUT_MS          100
-#define VIEW_BUFFER_SIZE              TEXT_BOX_STORE_SIZE
 #define RING_BUFFER_SIZE              (4 * 1024) // 4KB for incoming data
+#define TEXT_LOG_BUFFER_SIZE          (TEXT_BOX_STORE_SIZE + RING_BUFFER_SIZE) // reuse total 16KB
+#define VIEW_BUFFER_SIZE              TEXT_LOG_BUFFER_SIZE
 #define PCAP_GLOBAL_HEADER_SIZE       24
 #define PCAP_PACKET_HEADER_SIZE       16
 #define PCAP_TEMP_BUFFER_SIZE         4096
@@ -37,12 +38,11 @@ void update_text_box_view(AppState* state);
 void handle_uart_rx_data(uint8_t* buf, size_t len, void* context);
 
 typedef struct {
-    char* ring_buffer; // Ring buffer for incoming data
-    char* view_buffer; // Buffer for current view
-    size_t ring_read_index; // Read position in ring buffer
-    size_t ring_write_index; // Write position in ring buffer
+    char* buffer; // Shared text buffer
+    size_t length; // Current length of content
+    size_t capacity; // Total buffer capacity
     size_t view_buffer_len; // Length of current view content
-    bool buffer_full; // Ring buffer state
+    size_t view_offset; // Offset into buffer for current view
     FuriMutex* mutex; // Synchronization mutex
 } TextBufferManager;
 
