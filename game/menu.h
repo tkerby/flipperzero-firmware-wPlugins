@@ -21,7 +21,7 @@ void stateMenuIntro()
     textRollAmount = 0;
     globalCounter++;
   }
-  else */if (globalCounter < 254)
+  else */if (globalCounter < 60)
   {
     fillWithSentence(2);
     drawTextBox(31, 17, WHITE);

@@ -2,7 +2,7 @@ sourcecode:
   type: git
   location:
     origin: https://github.com/apfxtech/FlipperArduventure.git
-    commit_sha: 30411036699568ed8e89239811d781bed7fbd779
+    commit_sha: 3c372fd0f3f918c66fa658c322eb66492da190c1
 
 short_description: A simple fly-platformer where the character hovers through levels using balloons, ported to Flipper Zero.
 description: "@APPSTORE.md"
