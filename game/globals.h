@@ -132,7 +132,7 @@ const byte MAGIC_COST[] = {4, 5, 7, 9};
 // Sprites sprites;
 extern Arduboy2Base* arduboy_ptr;
 extern Sprites* sprites_ptr;
-#define arduboy  (*arduboy_ptr)
+#define arduboy (*arduboy_ptr)
 #define sprites (*sprites_ptr)
 
 byte gameState = STATE_MENU_INTRO; // start the game with the TEAM a.r.g. logo

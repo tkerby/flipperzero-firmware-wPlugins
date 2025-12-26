@@ -59,7 +59,7 @@ void checkInputs()
       else if (arduboy.justPressed(DOWN_BUTTON) && (cursorY < 6)) cursorY++;
       else if (arduboy.justPressed(B_BUTTON))
       {
-        if (cursorY == 6) gameState = STATE_REBOOT;
+        if (cursorY == 6) arduboy.exitToBootloader();
         else gameState = cursorY;
         clearCursor();
       }

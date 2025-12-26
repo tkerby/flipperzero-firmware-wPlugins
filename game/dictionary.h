@@ -671,8 +671,8 @@ PROGMEM const unsigned char library[] =
   7,
   16, 18, 5, 19, 5, 14, 20,
   // PLACE 209 : UPLOAD
-  6,
-  21, 16, 12, 15, 1, 4,
+  5,
+  SPACE, 5, 24, 9, 20, 
   // PLACE 210 : CONNECT
   7,
   3, 15, 14, 14, 5, 3, 20,
