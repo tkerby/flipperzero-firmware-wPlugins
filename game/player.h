@@ -392,6 +392,7 @@ void saveGame() {
     firstGame = false;
     EEPROM.write(EEPROM_START, GAME_ID);
     EEPROM.put(EEPROM_START + 1, player);
+    EEPROM.commit();
 }
 
 void loadGame() {

@@ -12,8 +12,7 @@
 #define TONES_END    0x8000
 
 // ====== НАСТРОЙКИ ======
-#define TARGET_FRAMERATE         30
-#define ARDUBOY_FRAMERATE        90
+#define TARGET_FRAMERATE         60
 #define GHOST_COMPENSATION_LEVEL 0
 
 #ifndef HOLD_TO_EXIT_FRAMES
@@ -115,10 +114,9 @@ const FunctionPointer mainGameLoop[] = {
 };
 
 static void game_setup() {
-atm_system_init();
-
+  atm_system_init();
   arduboy.boot();
-  //arduboy.audio.begin();
+  arduboy.audio.begin();
   ATM.play(titleSong);
   arduboy.setFrameRate(60);                                 // set the frame rate of the game at 60 fps
 }
@@ -252,7 +250,7 @@ sprites_ptr = new(sprites_storage) Sprites();
     memset(g_state->prev2_buffer, 0x00, BUFFER_SIZE);
 #endif
 
-    arduboy.begin(g_state->screen_buffer, &g_state->input_state, g_state->game_mutex);
+    arduboy.begin(g_state->screen_buffer, &g_state->input_state, g_state->game_mutex, &g_state->exit_requested);
     Sprites::setArduboy(&arduboy);
 
     g_state->gui = (Gui*)furi_record_open(RECORD_GUI);
@@ -282,10 +280,12 @@ sprites_ptr = new(sprites_storage) Sprites();
     furi_timer_start(g_state->timer, period);
 
     while(!g_state->exit_requested) {
+        atm_set_enabled(arduboy.audio.enabled());
         furi_delay_ms(50);
     }
-
+    
     atm_system_deinit();
+    arduboy_tone_sound_system_deinit();
 
     if(g_state->timer) {
         furi_timer_stop(g_state->timer);

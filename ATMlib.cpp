@@ -1,4 +1,3 @@
-// ATMlib.cpp
 #include "lib/ATMlib.h"
 
 #include <string.h>
@@ -7,83 +6,68 @@
 #include <stm32wbxx_ll_tim.h>
 #include <stm32wbxx_ll_dma.h>
 
-// ---------------------------
-// Engine state (public globals)
-// ---------------------------
 uint8_t trackCount = 0;
-uint8_t tickRate   = 25;
+uint8_t tickRate = 25;
 const uint16_t* trackList = NULL;
-const uint8_t*  trackBase = NULL;
+const uint8_t* trackBase = NULL;
 
-uint8_t  pcm = 128;
+uint8_t pcm = 128;
 uint16_t cia = 1;
 uint16_t cia_count = 1;
 
 osc_t osc[4];
 
-// ---------------------------
-// Mute/active bitmap (same layout)
-// bits 0..3 = muted flags, bits 4..7 = channel active flags
-// ---------------------------
 static uint8_t ChannelActiveMute = 0b11110000;
 
-// ---------------------------
-// Note table (same values)
-// ---------------------------
-static const uint16_t noteTable[64] = {
-    0, 262, 277, 294, 311, 330, 349, 370, 392, 415, 440, 466, 494, 523, 554, 587,
-    622, 659, 698, 740, 784, 831, 880, 932, 988, 1047, 1109, 1175, 1245, 1319, 1397, 1480,
-    1568, 1661, 1760, 1865, 1976, 2093, 2217, 2349, 2489, 2637, 2794, 2960, 3136, 3322, 3520, 3729,
-    3951, 4186, 4435, 4699, 4978, 5274, 5588, 5920, 6272, 6645, 7040, 7459, 7902, 8372, 8870, 9397
-};
+static const uint16_t noteTable[64] = {0,    262,  277,  294,  311,  330,  349,  370,  392,  415,
+                                       440,  466,  494,  523,  554,  587,  622,  659,  698,  740,
+                                       784,  831,  880,  932,  988,  1047, 1109, 1175, 1245, 1319,
+                                       1397, 1480, 1568, 1661, 1760, 1865, 1976, 2093, 2217, 2349,
+                                       2489, 2637, 2794, 2960, 3136, 3322, 3520, 3729, 3951, 4186,
+                                       4435, 4699, 4978, 5274, 5588, 5920, 6272, 6645, 7040, 7459,
+                                       7902, 8372, 8870, 9397};
 
-// ---------------------------
-// Track interpreter state
-// ---------------------------
 struct ch_t {
     const uint8_t* ptr;
     uint8_t note;
 
     uint16_t stackPointer[7];
-    uint8_t  stackCounter[7];
-    uint8_t  stackTrack[7];
+    uint8_t stackCounter[7];
+    uint8_t stackTrack[7];
 
-    uint8_t  stackIndex;
-    uint8_t  repeatPoint;
+    uint8_t stackIndex;
+    uint8_t repeatPoint;
 
     uint16_t delay;
-    uint8_t  counter;
-    uint8_t  track;
+    uint8_t counter;
+    uint8_t track;
 
     uint16_t freq;
-    uint8_t  vol;
+    uint8_t vol;
 
-    int8_t   volFreSlide;
-    uint8_t  volFreConfig;
-    uint8_t  volFreCount;
+    int8_t volFreSlide;
+    uint8_t volFreConfig;
+    uint8_t volFreCount;
 
-    uint8_t  arpNotes;
-    uint8_t  arpTiming;
-    uint8_t  arpCount;
+    uint8_t arpNotes;
+    uint8_t arpTiming;
+    uint8_t arpCount;
 
-    uint8_t  reConfig;
-    uint8_t  reCount;
+    uint8_t reConfig;
+    uint8_t reCount;
 
-    int8_t   transConfig;
+    int8_t transConfig;
 
-    uint8_t  treviDepth;
-    uint8_t  treviConfig;
-    uint8_t  treviCount;
+    uint8_t treviDepth;
+    uint8_t treviConfig;
+    uint8_t treviCount;
 
-    int8_t   glisConfig;
-    uint8_t  glisCount;
+    int8_t glisConfig;
+    uint8_t glisCount;
 };
 
 static ch_t channel_state[4];
 
-// ---------------------------
-// Helpers: read VLE + track pointer
-// ---------------------------
 static uint16_t read_vle(const uint8_t** pp) {
     uint16_t q = 0;
     uint8_t d;
@@ -96,7 +80,6 @@ static uint16_t read_vle(const uint8_t** pp) {
 }
 
 static inline const uint8_t* getTrackPointer(uint8_t track) {
-    // trackList is uint16_t[] offsets from trackBase
     return trackBase + trackList[track];
 }
 
@@ -106,53 +89,36 @@ static inline uint16_t read_u16_le(const uint8_t** pp) {
     return (uint16_t)(lo | (hi << 8));
 }
 
-// ---------------------------
-// DMA PWM audio backend (TIM16 CH1 -> CCR1)
-// Carrier 62.5kHz: 64MHz/(PSC+1)/(ARR+1)
-// ARR=255, PSC=3 => 64e6/4/256 = 62500
-// Logical sample rate = 31250 (each value duplicated twice)
-// ---------------------------
 static constexpr uint32_t ATM_PWM_ARR = 255;
 static constexpr uint32_t ATM_PWM_PSC = 3;
 static constexpr uint32_t ATM_LOGICAL_HZ = 31250;
 
-// 1:1 with AVR timing:
-// AVR uses cia = 15625/tickRate while audio updates at 31250 logical.
-// => call playroutine every (15625/tickRate) logical samples.
 static inline uint32_t tick_div_from_rate(uint8_t tr) {
     if(tr < 1) tr = 1;
     return (uint32_t)(ATM_LOGICAL_HZ / (uint32_t)tr);
 }
 
-
-// Buffer sizes
 static constexpr size_t ATM_LOGICAL_SAMPLES_PER_HALF = 128;
-static constexpr size_t ATM_DMA_SAMPLES_PER_HALF     = ATM_LOGICAL_SAMPLES_PER_HALF * 2;
-static constexpr size_t ATM_DMA_TOTAL                = ATM_DMA_SAMPLES_PER_HALF * 2;
+static constexpr size_t ATM_DMA_SAMPLES_PER_HALF = ATM_LOGICAL_SAMPLES_PER_HALF * 2;
+static constexpr size_t ATM_DMA_TOTAL = ATM_DMA_SAMPLES_PER_HALF * 2;
 
-// DMA buffer (32-bit writes to CCR1)
 static uint32_t dma_buf[ATM_DMA_TOTAL];
 
-// Flags
-static bool  atm_running = false;
-static bool  atm_paused  = false;
+static bool atm_running = false;
+static bool atm_paused = false;
 static float atm_master_volume = 1.0f;
 
-// Tick scheduling
 static uint32_t atm_tick_div = 0;
 static uint32_t atm_tick_acc = 0;
 static uint32_t atm_tick_pending = 0;
 
-// Thread infra
 static FuriThread* atm_thread = NULL;
 static FuriMessageQueue* atm_cmd_q = NULL;
 static void dma_isr(void* ctx);
 
-// ---------------------------
-// Render one logical sample (0..255) – same mixer math as AVR C ISR
-// ---------------------------
+static uint8_t atm_audio_enabled = 1;
+
 static inline uint8_t atm_render_logical_sample_u8() {
-    // triangle
     osc[2].phase = (uint16_t)(osc[2].phase + osc[2].freq);
     int8_t phase2 = (int8_t)(osc[2].phase >> 8);
     if(phase2 < 0) phase2 = (int8_t)(~phase2);
@@ -160,19 +126,16 @@ static inline uint8_t atm_render_logical_sample_u8() {
     phase2 = (int8_t)(phase2 - 128);
     int8_t vol = (int8_t)((((int16_t)phase2 * (int8_t)osc[2].vol) << 1) >> 8);
 
-    // pulse
     osc[0].phase = (uint16_t)(osc[0].phase + osc[0].freq);
     int8_t vol0 = (int8_t)osc[0].vol;
     if(osc[0].phase >= 0xC000) vol0 = (int8_t)(-vol0);
     vol = (int8_t)(vol + vol0);
 
-    // square
     osc[1].phase = (uint16_t)(osc[1].phase + osc[1].freq);
     int8_t vol1 = (int8_t)osc[1].vol;
     if(osc[1].phase & 0x8000) vol1 = (int8_t)(-vol1);
     vol = (int8_t)(vol + vol1);
 
-    // noise LFSR
     uint16_t freq = osc[3].freq;
     freq <<= 1;
     if(freq & 0x8000) freq ^= 1;
@@ -185,14 +148,12 @@ static inline uint8_t atm_render_logical_sample_u8() {
 
     int16_t out = (int16_t)vol + (int16_t)pcm;
 
-    // master volume around 128
     float centered = (float)(out - 128);
     centered *= atm_master_volume;
     int16_t outv = (int16_t)(128.0f + centered);
     if(outv < 0) outv = 0;
     if(outv > 255) outv = 255;
 
-    // tick accumulate -> pending playroutine calls
     atm_tick_acc++;
     if(atm_tick_acc >= atm_tick_div) {
         atm_tick_acc = 0;
@@ -204,8 +165,9 @@ static inline uint8_t atm_render_logical_sample_u8() {
 
 static inline void atm_fill_half(size_t half_index) {
     uint32_t* dst = dma_buf + (half_index * ATM_DMA_SAMPLES_PER_HALF);
+    const uint8_t en = __atomic_load_n(&atm_audio_enabled, __ATOMIC_RELAXED);
     for(size_t i = 0; i < ATM_LOGICAL_SAMPLES_PER_HALF; i++) {
-        uint8_t s = atm_paused ? 128 : atm_render_logical_sample_u8();
+        uint8_t s = (!en || atm_paused) ? 128 : atm_render_logical_sample_u8();
         uint32_t duty = (uint32_t)s;
         if(duty > ATM_PWM_ARR) duty = ATM_PWM_ARR;
         dst[i * 2 + 0] = duty;
@@ -213,14 +175,11 @@ static inline void atm_fill_half(size_t half_index) {
     }
 }
 
-// ---------------------------
-// TIM16 + DMA start/stop
-// ---------------------------
 static void tim16_dma_start() {
     furi_check(furi_hal_speaker_is_mine());
 
-    // init buffer to mid
-    for(size_t i = 0; i < ATM_DMA_TOTAL; i++) dma_buf[i] = 128;
+    for(size_t i = 0; i < ATM_DMA_TOTAL; i++)
+        dma_buf[i] = 128;
 
     atm_tick_acc = 0;
     __atomic_store_n(&atm_tick_pending, 0, __ATOMIC_RELAXED);
@@ -228,7 +187,6 @@ static void tim16_dma_start() {
     atm_fill_half(0);
     atm_fill_half(1);
 
-    // TIM16 PWM setup
     LL_TIM_DisableAllOutputs(TIM16);
     LL_TIM_DisableCounter(TIM16);
 
@@ -244,20 +202,19 @@ static void tim16_dma_start() {
     LL_TIM_CC_EnableChannel(TIM16, LL_TIM_CHANNEL_CH1);
     LL_TIM_EnableAllOutputs(TIM16);
 
-    // DMA config
     LL_DMA_InitTypeDef dma_init;
     memset(&dma_init, 0, sizeof(dma_init));
-    dma_init.Direction               = LL_DMA_DIRECTION_MEMORY_TO_PERIPH;
-    dma_init.PeriphOrM2MSrcAddress   = (uint32_t)&TIM16->CCR1;
-    dma_init.PeriphOrM2MSrcIncMode   = LL_DMA_PERIPH_NOINCREMENT;
-    dma_init.PeriphOrM2MSrcDataSize  = LL_DMA_PDATAALIGN_WORD;
-    dma_init.MemoryOrM2MDstAddress   = (uint32_t)dma_buf;
-    dma_init.MemoryOrM2MDstIncMode   = LL_DMA_MEMORY_INCREMENT;
-    dma_init.MemoryOrM2MDstDataSize  = LL_DMA_MDATAALIGN_WORD;
-    dma_init.Mode                    = LL_DMA_MODE_CIRCULAR;
-    dma_init.NbData                  = ATM_DMA_TOTAL;
-    dma_init.Priority                = LL_DMA_PRIORITY_HIGH;
-    dma_init.PeriphRequest           = LL_DMAMUX_REQ_TIM16_UP;
+    dma_init.Direction = LL_DMA_DIRECTION_MEMORY_TO_PERIPH;
+    dma_init.PeriphOrM2MSrcAddress = (uint32_t)&TIM16->CCR1;
+    dma_init.PeriphOrM2MSrcIncMode = LL_DMA_PERIPH_NOINCREMENT;
+    dma_init.PeriphOrM2MSrcDataSize = LL_DMA_PDATAALIGN_WORD;
+    dma_init.MemoryOrM2MDstAddress = (uint32_t)dma_buf;
+    dma_init.MemoryOrM2MDstIncMode = LL_DMA_MEMORY_INCREMENT;
+    dma_init.MemoryOrM2MDstDataSize = LL_DMA_MDATAALIGN_WORD;
+    dma_init.Mode = LL_DMA_MODE_CIRCULAR;
+    dma_init.NbData = ATM_DMA_TOTAL;
+    dma_init.Priority = LL_DMA_PRIORITY_HIGH;
+    dma_init.PeriphRequest = LL_DMAMUX_REQ_TIM16_UP;
 
     LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_1);
     LL_DMA_Init(DMA1, LL_DMA_CHANNEL_1, &dma_init);
@@ -266,10 +223,7 @@ static void tim16_dma_start() {
     LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_1);
 
     furi_hal_interrupt_set_isr_ex(
-        FuriHalInterruptIdDma1Ch1,
-        FuriHalInterruptPriorityNormal,
-        dma_isr,
-        NULL);
+        FuriHalInterruptIdDma1Ch1, FuriHalInterruptPriorityNormal, dma_isr, NULL);
 
     LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_1);
 
@@ -282,10 +236,7 @@ static void tim16_dma_start() {
 
 static void tim16_dma_stop() {
     furi_hal_interrupt_set_isr_ex(
-        FuriHalInterruptIdDma1Ch1,
-        FuriHalInterruptPriorityNormal,
-        NULL,
-        NULL);
+        FuriHalInterruptIdDma1Ch1, FuriHalInterruptPriorityNormal, NULL, NULL);
 
     LL_TIM_DisableDMAReq_UPDATE(TIM16);
 
@@ -308,16 +259,12 @@ static void dma_isr(void* /*ctx*/) {
     }
 }
 
-// ---------------------------
-// ATM_playroutine – interpreter (ported 1:1, fixed 16-bit reads)
-// ---------------------------
 void ATM_playroutine(void) {
     ch_t* ch;
 
     for(uint8_t n = 0; n < 4; n++) {
         ch = &channel_state[n];
 
-        // Noise retriggering
         if(ch->reConfig) {
             if(ch->reCount >= (ch->reConfig & 0x03)) {
                 osc[n].freq = noteTable[ch->reConfig >> 2];
@@ -327,14 +274,17 @@ void ATM_playroutine(void) {
             }
         }
 
-        // Glissando
         if(ch->glisConfig) {
             if(ch->glisCount >= (uint8_t)(ch->glisConfig & 0x7F)) {
-                if(ch->glisConfig & 0x80) ch->note -= 1;
-                else                      ch->note += 1;
+                if(ch->glisConfig & 0x80)
+                    ch->note -= 1;
+                else
+                    ch->note += 1;
 
-                if(ch->note < 1) ch->note = 1;
-                else if(ch->note > 63) ch->note = 63;
+                if(ch->note < 1)
+                    ch->note = 1;
+                else if(ch->note > 63)
+                    ch->note = 63;
 
                 ch->freq = noteTable[ch->note];
                 ch->glisCount = 0;
@@ -343,14 +293,14 @@ void ATM_playroutine(void) {
             }
         }
 
-        // Volume/Frequency slide
         if(ch->volFreSlide) {
             if(!ch->volFreCount) {
                 int16_t vf = ((ch->volFreConfig & 0x40) ? (int16_t)ch->freq : (int16_t)ch->vol);
                 vf += ch->volFreSlide;
 
                 if(!(ch->volFreConfig & 0x80)) {
-                    if(vf < 0) vf = 0;
+                    if(vf < 0)
+                        vf = 0;
                     else if(ch->volFreConfig & 0x40) {
                         if(vf > 9397) vf = 9397;
                     } else {
@@ -358,22 +308,24 @@ void ATM_playroutine(void) {
                     }
                 }
 
-                if(ch->volFreConfig & 0x40) ch->freq = (uint16_t)vf;
-                else                        ch->vol  = (uint8_t)vf;
+                if(ch->volFreConfig & 0x40)
+                    ch->freq = (uint16_t)vf;
+                else
+                    ch->vol = (uint8_t)vf;
             }
 
             if(ch->volFreCount++ >= (ch->volFreConfig & 0x3F)) ch->volFreCount = 0;
         }
 
-        // Arpeggio / Note Cut
         if(ch->arpNotes && ch->note) {
             if((ch->arpCount & 0x1F) < (ch->arpTiming & 0x1F)) {
                 ch->arpCount++;
             } else {
-                if((ch->arpCount & 0xE0) == 0x00) ch->arpCount = 0x20;
-                else if((ch->arpCount & 0xE0) == 0x20 &&
-                        !(ch->arpTiming & 0x40) &&
-                        (ch->arpNotes != 0xFF))
+                if((ch->arpCount & 0xE0) == 0x00)
+                    ch->arpCount = 0x20;
+                else if(
+                    (ch->arpCount & 0xE0) == 0x20 && !(ch->arpTiming & 0x40) &&
+                    (ch->arpNotes != 0xFF))
                     ch->arpCount = 0x40;
                 else
                     ch->arpCount = 0x00;
@@ -381,10 +333,13 @@ void ATM_playroutine(void) {
                 uint8_t arpNote = ch->note;
 
                 if((ch->arpCount & 0xE0) != 0x00) {
-                    if(ch->arpNotes == 0xFF) arpNote = 0;
-                    else arpNote = (uint8_t)(arpNote + (ch->arpNotes >> 4));
+                    if(ch->arpNotes == 0xFF)
+                        arpNote = 0;
+                    else
+                        arpNote = (uint8_t)(arpNote + (ch->arpNotes >> 4));
                 }
-                if((ch->arpCount & 0xE0) == 0x40) arpNote = (uint8_t)(arpNote + (ch->arpNotes & 0x0F));
+                if((ch->arpCount & 0xE0) == 0x40)
+                    arpNote = (uint8_t)(arpNote + (ch->arpNotes & 0x0F));
 
                 int16_t idx = (int16_t)arpNote + (int16_t)ch->transConfig;
                 if(idx < 0) idx = 0;
@@ -393,26 +348,29 @@ void ATM_playroutine(void) {
             }
         }
 
-        // Tremolo / Vibrato
         if(ch->treviDepth) {
             int16_t vt = ((ch->treviConfig & 0x40) ? (int16_t)ch->freq : (int16_t)ch->vol);
             vt = (ch->treviCount & 0x80) ? (vt + ch->treviDepth) : (vt - ch->treviDepth);
 
-            if(vt < 0) vt = 0;
+            if(vt < 0)
+                vt = 0;
             else if(ch->treviConfig & 0x40) {
                 if(vt > 9397) vt = 9397;
             } else {
                 if(vt > 63) vt = 63;
             }
 
-            if(ch->treviConfig & 0x40) ch->freq = (uint16_t)vt;
-            else                        ch->vol  = (uint8_t)vt;
+            if(ch->treviConfig & 0x40)
+                ch->freq = (uint16_t)vt;
+            else
+                ch->vol = (uint8_t)vt;
 
-            if((ch->treviCount & 0x1F) < (ch->treviConfig & 0x1F)) ch->treviCount++;
-            else ch->treviCount = (ch->treviCount & 0x80) ? 0 : 0x80;
+            if((ch->treviCount & 0x1F) < (ch->treviConfig & 0x1F))
+                ch->treviCount++;
+            else
+                ch->treviCount = (ch->treviCount & 0x80) ? 0 : 0x80;
         }
 
-        // Delay handling
         if(ch->delay) {
             if(ch->delay != 0xFFFF) ch->delay--;
         } else {
@@ -432,100 +390,107 @@ void ATM_playroutine(void) {
                     if(ch->arpTiming & 0x20) ch->arpCount = 0;
                 } else if(cmd < 160) {
                     switch(cmd - 64) {
-                    case 0: // volume
+                    case 0:
                         ch->vol = *ch->ptr++;
                         ch->reCount = ch->vol;
                         break;
 
-                    case 1: case 4: // slide simple
-                        ch->volFreSlide  = (int8_t)(*ch->ptr++);
+                    case 1:
+                    case 4:
+                        ch->volFreSlide = (int8_t)(*ch->ptr++);
                         ch->volFreConfig = ((cmd - 64) == 1) ? 0x00 : 0x40;
                         break;
 
-                    case 2: case 5: // slide advanced
-                        ch->volFreSlide  = (int8_t)(*ch->ptr++);
+                    case 2:
+                    case 5:
+                        ch->volFreSlide = (int8_t)(*ch->ptr++);
                         ch->volFreConfig = *ch->ptr++;
                         break;
 
-                    case 3: case 6: // slide off
+                    case 3:
+                    case 6:
                         ch->volFreSlide = 0;
                         break;
 
-                    case 7: // arpeggio
-                        ch->arpNotes  = *ch->ptr++;
+                    case 7:
+                        ch->arpNotes = *ch->ptr++;
                         ch->arpTiming = *ch->ptr++;
                         break;
 
-                    case 8: // arpeggio off
+                    case 8:
                         ch->arpNotes = 0;
                         break;
 
-                    case 9: // retrig on
+                    case 9:
                         ch->reConfig = *ch->ptr++;
                         break;
 
-                    case 10: // retrig off
+                    case 10:
                         ch->reConfig = 0;
                         break;
 
-                    case 11: // add transpose
+                    case 11:
                         ch->transConfig = (int8_t)(ch->transConfig + (int8_t)(*ch->ptr++));
                         break;
 
-                    case 12: // set transpose
+                    case 12:
                         ch->transConfig = (int8_t)(*ch->ptr++);
                         break;
 
-                    case 13: // transpose off
+                    case 13:
                         ch->transConfig = 0;
                         break;
 
-                    case 14: case 16: { // tre/vib on (FIXED READS)
+                    case 14:
+                    case 16: {
                         uint16_t depth_w = read_u16_le(&ch->ptr);
-                        uint16_t cfg_w   = read_u16_le(&ch->ptr);
-                        ch->treviDepth  = (uint8_t)(depth_w & 0xFF);
-                        ch->treviConfig = (uint8_t)((cfg_w & 0xFF) + (((cmd - 64) == 14) ? 0x00 : 0x40));
+                        uint16_t cfg_w = read_u16_le(&ch->ptr);
+                        ch->treviDepth = (uint8_t)(depth_w & 0xFF);
+                        ch->treviConfig =
+                            (uint8_t)((cfg_w & 0xFF) + (((cmd - 64) == 14) ? 0x00 : 0x40));
                         break;
                     }
 
-                    case 15: case 17: // tre/vib off
+                    case 15:
+                    case 17:
                         ch->treviDepth = 0;
                         break;
 
-                    case 18: // gliss on
+                    case 18:
                         ch->glisConfig = (int8_t)(*ch->ptr++);
                         break;
 
-                    case 19: // gliss off
+                    case 19:
                         ch->glisConfig = 0;
                         break;
 
-                    case 20: // note cut on
+                    case 20:
                         ch->arpNotes = 0xFF;
                         ch->arpTiming = *ch->ptr++;
                         break;
 
-                    case 21: // note cut off
+                    case 21:
                         ch->arpNotes = 0;
                         break;
 
-                    case 92: // add tempo
+                    case 92:
                         tickRate = (uint8_t)(tickRate + *ch->ptr++);
                         if(tickRate < 1) tickRate = 1;
                         atm_tick_div = tick_div_from_rate(tickRate);
                         break;
 
-                    case 93: // set tempo
+                    case 93:
                         tickRate = *ch->ptr++;
                         if(tickRate < 1) tickRate = 1;
                         atm_tick_div = tick_div_from_rate(tickRate);
                         break;
 
-                    case 94: // goto advanced
-                        for(uint8_t i = 0; i < 4; i++) channel_state[i].repeatPoint = *ch->ptr++;
+                    case 94:
+                        for(uint8_t i = 0; i < 4; i++)
+                            channel_state[i].repeatPoint = *ch->ptr++;
                         break;
 
-                    case 95: // stop channel
+                    case 95:
                         ChannelActiveMute = (uint8_t)(ChannelActiveMute ^ (1 << (n + 4)));
                         ch->vol = 0;
                         ch->delay = 0xFFFF;
@@ -540,11 +505,11 @@ void ATM_playroutine(void) {
                     ch->delay = (uint16_t)(read_vle(&ch->ptr) + 65);
                 } else if(cmd == 252 || cmd == 253) {
                     uint8_t new_counter = (cmd == 252) ? 0 : *ch->ptr++;
-                    uint8_t new_track   = *ch->ptr++;
+                    uint8_t new_track = *ch->ptr++;
 
                     if(new_track != ch->track) {
                         ch->stackCounter[ch->stackIndex] = ch->counter;
-                        ch->stackTrack[ch->stackIndex]   = ch->track;
+                        ch->stackTrack[ch->stackIndex] = ch->track;
                         ch->stackPointer[ch->stackIndex] = (uint16_t)(ch->ptr - trackBase);
                         ch->stackIndex++;
                         ch->track = new_track;
@@ -562,37 +527,35 @@ void ATM_playroutine(void) {
                             ch->stackIndex--;
                             ch->ptr = ch->stackPointer[ch->stackIndex] + trackBase;
                             ch->counter = ch->stackCounter[ch->stackIndex];
-                            ch->track   = ch->stackTrack[ch->stackIndex];
+                            ch->track = ch->stackTrack[ch->stackIndex];
                         }
                     }
                 } else if(cmd == 255) {
                     ch->ptr += read_vle(&ch->ptr);
                 } else {
-                    // reserved 225..251 ignore
                 }
             } while(ch->delay == 0);
 
             if(ch->delay != 0xFFFF) ch->delay--;
         }
 
-        // Apply to oscillators if not muted
         if(!(ChannelActiveMute & (1 << n))) {
             if(n == 3) {
                 osc[n].vol = (uint8_t)(ch->vol >> 1);
             } else {
                 osc[n].freq = ch->freq;
-                osc[n].vol  = ch->vol;
+                osc[n].vol = ch->vol;
             }
         }
 
-        // If all channels inactive -> stop or repeat
         if(!(ChannelActiveMute & 0xF0)) {
             uint8_t repeatSong = 0;
-            for(uint8_t j = 0; j < 4; j++) repeatSong = (uint8_t)(repeatSong + channel_state[j].repeatPoint);
+            for(uint8_t j = 0; j < 4; j++)
+                repeatSong = (uint8_t)(repeatSong + channel_state[j].repeatPoint);
 
             if(repeatSong) {
                 for(uint8_t k = 0; k < 4; k++) {
-                    channel_state[k].ptr   = getTrackPointer(channel_state[k].repeatPoint);
+                    channel_state[k].ptr = getTrackPointer(channel_state[k].repeatPoint);
                     channel_state[k].delay = 0;
                 }
                 ChannelActiveMute = 0b11110000;
@@ -603,9 +566,6 @@ void ATM_playroutine(void) {
     }
 }
 
-// ---------------------------
-// Worker thread: owns speaker + runs playroutine
-// ---------------------------
 enum AtmCmdType : uint8_t {
     AtmCmdPlay,
     AtmCmdStop,
@@ -613,14 +573,21 @@ enum AtmCmdType : uint8_t {
     AtmCmdMute,
     AtmCmdUnmute,
     AtmCmdSetVolume,
+    AtmCmdQuit,
 };
 
 struct AtmCmd {
     AtmCmdType type;
     union {
-        struct { const uint8_t* song; } play;
-        struct { uint8_t ch; } ch;
-        struct { float v; } vol;
+        struct {
+            const uint8_t* song;
+        } play;
+        struct {
+            uint8_t ch;
+        } ch;
+        struct {
+            float v;
+        } vol;
     } u;
 };
 
@@ -648,6 +615,21 @@ static int32_t atm_thread_fn(void* /*ctx*/) {
                 memset(channel_state, 0, sizeof(channel_state));
                 ChannelActiveMute = 0b11110000;
                 continue;
+            }
+
+            if(cmd.type == AtmCmdQuit) {
+                atm_running = false;
+                atm_paused = false;
+
+                if(speaker_owned) {
+                    tim16_dma_stop();
+                    furi_hal_speaker_release();
+                    speaker_owned = false;
+                }
+
+                memset(channel_state, 0, sizeof(channel_state));
+                ChannelActiveMute = 0b11110000;
+                break;
             }
 
             if(cmd.type == AtmCmdTogglePause) {
@@ -685,11 +667,10 @@ static int32_t atm_thread_fn(void* /*ctx*/) {
                 osc[3].freq = 0x0001;
                 channel_state[3].freq = 0x0001;
 
-                // Song header parse (same layout)
                 trackCount = *song++;
-                trackList  = (const uint16_t*)song;
-                song      += (trackCount << 1);
-                trackBase  = song + 4;
+                trackList = (const uint16_t*)song;
+                song += (trackCount << 1);
+                trackBase = song + 4;
 
                 for(uint8_t n = 0; n < 4; n++) {
                     channel_state[n].ptr = getTrackPointer(*song++);
@@ -698,7 +679,8 @@ static int32_t atm_thread_fn(void* /*ctx*/) {
                 atm_running = true;
                 atm_paused = false;
 
-                if(!speaker_owned) {
+                const uint8_t en = __atomic_load_n(&atm_audio_enabled, __ATOMIC_RELAXED);
+                if(en && !speaker_owned) {
                     if(furi_hal_speaker_acquire(200)) {
                         speaker_owned = true;
                         tim16_dma_start();
@@ -710,8 +692,24 @@ static int32_t atm_thread_fn(void* /*ctx*/) {
             }
         }
 
-        // Run playroutine based on pending ticks
-        if(atm_running && !atm_paused) {
+        const uint8_t en = __atomic_load_n(&atm_audio_enabled, __ATOMIC_RELAXED);
+
+        if(!en) {
+            if(speaker_owned) {
+                tim16_dma_stop();
+                furi_hal_speaker_release();
+                speaker_owned = false;
+            }
+        } else {
+            if(atm_running && !speaker_owned) {
+                if(furi_hal_speaker_acquire(200)) {
+                    speaker_owned = true;
+                    tim16_dma_start();
+                }
+            }
+        }
+
+        if(atm_running && en && !atm_paused) {
             uint32_t pending = __atomic_load_n(&atm_tick_pending, __ATOMIC_RELAXED);
             if(pending) {
                 __atomic_fetch_sub(&atm_tick_pending, 1, __ATOMIC_RELAXED);
@@ -719,11 +717,9 @@ static int32_t atm_thread_fn(void* /*ctx*/) {
             }
         }
     }
+    return 0;
 }
 
-// ---------------------------
-// Public API
-// ---------------------------
 ATMsynth ATM;
 
 void ATMsynth::systemInit() {
@@ -739,7 +735,21 @@ void ATMsynth::systemInit() {
 }
 
 void ATMsynth::systemDeinit() {
-    stop();
+    AtmCmd c{};
+    c.type = AtmCmdQuit;
+    furi_message_queue_put(atm_cmd_q, &c, FuriWaitForever);
+    tim16_dma_stop();
+
+    if(furi_hal_speaker_is_mine()) {
+        furi_hal_speaker_release();
+    }
+
+    __atomic_store_n(&atm_tick_pending, 0, __ATOMIC_RELAXED);
+    furi_thread_join(atm_thread);
+    furi_thread_free(atm_thread);
+    furi_message_queue_free(atm_cmd_q);
+    atm_cmd_q = NULL;
+    atm_thread = NULL;
 }
 
 void ATMsynth::play(const uint8_t* song) {
@@ -775,6 +785,16 @@ void ATMsynth::unMuteChannel(uint8_t ch) {
     push_cmd(c);
 }
 
-// C wrappers
-void atm_system_init(void) { ATMsynth::systemInit(); }
-void atm_system_deinit(void) { ATMsynth::systemDeinit(); }
+void ATMsynth::setEnabled(bool en) {
+    __atomic_store_n(&atm_audio_enabled, en ? 1 : 0, __ATOMIC_RELAXED);
+}
+
+void atm_system_init(void) {
+    ATMsynth::systemInit();
+}
+void atm_system_deinit(void) {
+    ATMsynth::systemDeinit();
+}
+void atm_set_enabled(uint8_t en) {
+    ATMsynth::setEnabled(en != 0);
+}
