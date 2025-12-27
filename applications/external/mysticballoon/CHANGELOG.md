@@ -1,3 +1,6 @@
+v2.0:
+eeprom sync
+
 v1.2:
 Key remap
 

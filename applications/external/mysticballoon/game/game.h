@@ -89,6 +89,7 @@ void stateGameNextLevel() {
     EEPROM.put(OFFSET_LEVEL, level);
     EEPROM.put(OFFSET_COINS, totalCoins);
     EEPROM.put(OFFSET_SCORE, scorePlayer);
+    EEPROM.commit();
 
     //if (nextLevelIsVisible)
     //{

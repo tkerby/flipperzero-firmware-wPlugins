@@ -77,7 +77,7 @@ void setKid() {
 #endif
     kid.balloonOffset = 0;
     for(byte i = 0; i < PLAYER_PARTICLES; ++i)
-        kid.particles[i] = vec2(arduino_random(16), arduino_random(16));
+        kid.particles[i] = vec2(random(16), random(16));
 }
 
 void checkKid() {
@@ -213,7 +213,7 @@ void checkKid() {
 
     kid.pos = (kid.actualpos >> FIXED_POINT);
 
-    if(kid.isSucking) windNoise(); //sound.tone(300 + arduino_random(10), 20);
+    if(kid.isSucking) windNoise(); //sound.tone(300 + random(10), 20);
 }
 
 /*  updateCamera()
@@ -297,7 +297,7 @@ void drawKid() {
                 kid.particles[i].x -= 2;
                 if(kid.particles[i].x < 0) {
                     kid.particles[i].x = 16;
-                    kid.particles[i].y = -4 + arduino_random(13);
+                    kid.particles[i].y = -4 + random(13);
                 }
 
                 // Draw
