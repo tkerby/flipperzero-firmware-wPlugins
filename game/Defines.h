@@ -47,11 +47,10 @@ using uint24_t = __uint24;
 
 #include <stdio.h>
 #define WARNING(msg, ...) printf((msg), __VA_ARGS__)
-#define ERROR(msg) printf(msg)
+#define PLATFORM_ERROR(msg) printf(msg)
 #else
-#include <avr/pgmspace.h>
+//#include <avr/pgmspace.h>
 #define WARNING(msg, ...)
-#define pgm_read_ptr(x) pgm_read_word(x)
 
 #endif
 // end
@@ -127,6 +126,10 @@ using uint24_t = __uint24;
 #define FONT_GLYPH_BYTE_SIZE 2
 
 #define STREAM_BUFFER_SIZE 64
+
+#ifndef TARGET_FRAMERATE
 #define TARGET_FRAMERATE 25
+#endif
+
 
 #endif

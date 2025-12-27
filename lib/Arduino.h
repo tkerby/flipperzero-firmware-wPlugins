@@ -1,6 +1,6 @@
 #pragma once
 /*
- * arduino_compat.h
+ * lib/Arduino.h
  *
  * Минимальная Arduino-совместимость для Flipper Zero (Furi):
  * - базовые Arduino-типы и макросы
@@ -30,6 +30,10 @@ typedef uint8_t  byte;
 typedef bool     boolean;
 typedef uint16_t word;
 
+#ifndef __uint24
+typedef uint32_t __uint24;
+#endif
+
 #ifndef NULL
 #define NULL 0
 #endif
@@ -42,9 +46,38 @@ typedef uint16_t word;
 #define PROGMEM
 #endif
 
+#ifndef F_CPU
+#define F_CPU 64000000UL
+#endif
+
+#ifndef bitWrite
+#define bitWrite(value, bit, bitvalue) \
+    do { if(bitvalue) bitSet(value, bit); else bitClear(value, bit); } while(0)
+#endif
+
+
 #ifndef pgm_read_byte
 #define pgm_read_byte(addr) (*(const uint8_t*)(addr))
 #endif
+
+#ifndef PSTR
+#define PSTR(x) (x)
+#endif
+
+#ifndef strlen_P
+#define strlen_P(s) strlen((const char*)(s))
+#endif
+
+static inline void* pgm_read_ptr_safe(const void* addr) {
+    void* p;
+    memcpy(&p, addr, sizeof(p));
+    return p;
+}
+
+#ifndef pgm_read_ptr
+#define pgm_read_ptr(addr) pgm_read_ptr_safe((const void*)(addr))
+#endif
+
 
 /* Безопасное чтение 16/32 бит без требований к выравниванию */
 static inline uint16_t pgm_read_word_safe(const void* addr) {

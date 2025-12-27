@@ -19,6 +19,8 @@ extern "C" {
 }
 #endif
 
+using uint24_t = uint32_t;
+
 #ifndef WIDTH
 #define WIDTH 128
 #endif
@@ -106,7 +108,7 @@ public:
         FuriMutex* game_mutex,
         volatile bool* exit_requested)
     {
-        sBuffer_ = screen_buffer;
+        sBuffer = screen_buffer;
         input_state_ = input_state;
         input_ctx_.input_state = input_state_;
         game_mutex_ = game_mutex;
@@ -217,10 +219,10 @@ public:
     }
 
     uint8_t* getBuffer() {
-        return sBuffer_;
+        return sBuffer;
     }
     const uint8_t* getBuffer() const {
-        return sBuffer_;
+        return sBuffer;
     }
 
     void clear() {
@@ -228,18 +230,18 @@ public:
     }
 
     void fillScreen(uint8_t color) {
-        if(!sBuffer_) return;
-        memset(sBuffer_, color ? 0xFF : 0x00, (WIDTH * HEIGHT) / 8);
+        if(!sBuffer) return;
+        memset(sBuffer, color ? 0xFF : 0x00, (WIDTH * HEIGHT) / 8);
     }
 
     void display() {
     }
 
     void drawPixel(int16_t x, int16_t y, uint8_t color) {
-        if(!sBuffer_) return;
+        if(!sBuffer) return;
         if((uint16_t)x >= (uint16_t)WIDTH || (uint16_t)y >= (uint16_t)HEIGHT) return;
 
-        uint8_t* dst = &sBuffer_[(uint16_t)x + (uint16_t)((y >> 3) * WIDTH)];
+        uint8_t* dst = &sBuffer[(uint16_t)x + (uint16_t)((y >> 3) * WIDTH)];
         const uint8_t mask = (uint8_t)(1u << (y & 7));
         if(color)
             *dst |= mask;
@@ -248,7 +250,7 @@ public:
     }
 
     void drawBitmapFrame(int16_t x, int16_t y, const uint8_t* bmp, uint8_t frame) {
-        if(!bmp || !sBuffer_) return;
+        if(!bmp || !sBuffer) return;
         const int16_t w = (int16_t)pgm_read_byte(bmp + 0);
         const int16_t h = (int16_t)pgm_read_byte(bmp + 1);
         const int16_t pages = (h + 7) >> 3;
@@ -258,7 +260,7 @@ public:
     }
 
     void drawSolidBitmapFrame(int16_t x, int16_t y, const uint8_t* bmp, uint8_t frame) {
-        if(!bmp || !sBuffer_) return;
+        if(!bmp || !sBuffer) return;
         const int16_t w = (int16_t)pgm_read_byte(bmp + 0);
         const int16_t h = (int16_t)pgm_read_byte(bmp + 1);
         const int16_t pages = (h + 7) >> 3;
@@ -268,7 +270,7 @@ public:
     }
 
     void drawPlusMask(int16_t x, int16_t y, const uint8_t* plusmask, uint8_t frame) {
-        if(!plusmask || !sBuffer_) return;
+        if(!plusmask || !sBuffer) return;
         const int16_t w = (int16_t)pgm_read_byte(plusmask + 0);
         const int16_t h = (int16_t)pgm_read_byte(plusmask + 1);
         const int16_t pages = (h + 7) >> 3;
@@ -310,7 +312,7 @@ public:
         const uint8_t* mask,
         uint8_t frame,
         uint8_t mask_frame) {
-        if(!bmp || !sBuffer_) return;
+        if(!bmp || !sBuffer) return;
 
         const int16_t w = (int16_t)pgm_read_byte(bmp + 0);
         const int16_t h = (int16_t)pgm_read_byte(bmp + 1);
@@ -369,6 +371,7 @@ public:
     // Flash the RGB led during the boot logo
   static constexpr uint8_t sysFlagShowLogoLEDsBit = 2;
   static constexpr uint8_t sysFlagShowLogoLEDsMask = _BV(sysFlagShowLogoLEDsBit);
+uint8_t* sBuffer = nullptr;
 
 private:
     volatile bool* exit_requested_ = nullptr;
@@ -395,7 +398,7 @@ private:
             const uint8_t* col = src + i;
             if(yOffset == 0) {
                 int16_t row = sRow;
-                uint8_t* dst = sBuffer_ + row * WIDTH + sx;
+                uint8_t* dst = sBuffer + row * WIDTH + sx;
                 for(int16_t p = 0; p < pages; p++, row++, col += w) {
                     if((uint16_t)row >= (uint16_t)maxRow) continue;
                     uint8_t b = pgm_read_byte(col);
@@ -412,11 +415,11 @@ private:
                     const uint8_t hi = (uint8_t)(b >> (8 - yOffset));
 
                     if((uint16_t)row < (uint16_t)maxRow) {
-                        sBuffer_[row * WIDTH + sx] |= lo;
+                        sBuffer[row * WIDTH + sx] |= lo;
                     }
                     const int16_t row2 = (int16_t)(row + 1);
                     if((uint16_t)row2 < (uint16_t)maxRow) {
-                        sBuffer_[row2 * WIDTH + sx] |= hi;
+                        sBuffer[row2 * WIDTH + sx] |= hi;
                     }
                 }
             }
@@ -442,7 +445,7 @@ private:
                     if((uint16_t)row >= (uint16_t)maxRow) continue;
                     uint8_t b = pgm_read_byte(col);
                     b &= page_mask_(p, pages, h);
-                    sBuffer_[row * WIDTH + sx] = b;
+                    sBuffer[row * WIDTH + sx] = b;
                 }
             } else {
                 for(int16_t p = 0; p < pages; p++, col += w) {
@@ -458,12 +461,12 @@ private:
                     const uint8_t maskHi = (uint8_t)(srcMask >> (8 - yOffset));
 
                     if((uint16_t)row < (uint16_t)maxRow) {
-                        uint8_t* dst = &sBuffer_[row * WIDTH + sx];
+                        uint8_t* dst = &sBuffer[row * WIDTH + sx];
                         *dst = (uint8_t)((*dst & (uint8_t)~maskLo) | (lo & maskLo));
                     }
                     const int16_t row2 = (int16_t)(row + 1);
                     if((uint16_t)row2 < (uint16_t)maxRow) {
-                        uint8_t* dst2 = &sBuffer_[row2 * WIDTH + sx];
+                        uint8_t* dst2 = &sBuffer[row2 * WIDTH + sx];
                         *dst2 = (uint8_t)((*dst2 & (uint8_t)~maskHi) | (hi & maskHi));
                     }
                 }
@@ -496,7 +499,7 @@ private:
 
                 if(yOffset == 0) {
                     if((uint16_t)row < (uint16_t)maxRow) {
-                        uint8_t* dst = &sBuffer_[row * WIDTH + sx];
+                        uint8_t* dst = &sBuffer[row * WIDTH + sx];
                         *dst = (uint8_t)((*dst & (uint8_t)~m) | (s & m));
                     }
                 } else {
@@ -506,12 +509,12 @@ private:
                     const uint8_t mhi = (uint8_t)(m >> (8 - yOffset));
 
                     if((uint16_t)row < (uint16_t)maxRow) {
-                        uint8_t* dst = &sBuffer_[row * WIDTH + sx];
+                        uint8_t* dst = &sBuffer[row * WIDTH + sx];
                         *dst = (uint8_t)((*dst & (uint8_t)~mlo) | (slo & mlo));
                     }
                     const int16_t row2 = (int16_t)(row + 1);
                     if((uint16_t)row2 < (uint16_t)maxRow) {
-                        uint8_t* dst2 = &sBuffer_[row2 * WIDTH + sx];
+                        uint8_t* dst2 = &sBuffer[row2 * WIDTH + sx];
                         *dst2 = (uint8_t)((*dst2 & (uint8_t)~mhi) | (shi & mhi));
                     }
                 }
@@ -551,7 +554,7 @@ private:
                     s &= srcMask;
                     m &= srcMask;
 
-                    uint8_t* dst = &sBuffer_[row * WIDTH + sx];
+                    uint8_t* dst = &sBuffer[row * WIDTH + sx];
                     *dst = (uint8_t)((*dst & (uint8_t)~m) | (s & m));
                 }
             } else {
@@ -571,12 +574,12 @@ private:
                     const uint8_t mhi = (uint8_t)(m >> (8 - yOffset));
 
                     if((uint16_t)row < (uint16_t)maxRow) {
-                        uint8_t* dst = &sBuffer_[row * WIDTH + sx];
+                        uint8_t* dst = &sBuffer[row * WIDTH + sx];
                         *dst = (uint8_t)((*dst & (uint8_t)~mlo) | (slo & mlo));
                     }
                     const int16_t row2 = (int16_t)(row + 1);
                     if((uint16_t)row2 < (uint16_t)maxRow) {
-                        uint8_t* dst2 = &sBuffer_[row2 * WIDTH + sx];
+                        uint8_t* dst2 = &sBuffer[row2 * WIDTH + sx];
                         *dst2 = (uint8_t)((*dst2 & (uint8_t)~mhi) | (shi & mhi));
                     }
                 }
@@ -605,7 +608,6 @@ private:
     FuriMutex* game_mutex_ = nullptr;
     bool external_timing_ = false;
 
-    uint8_t* sBuffer_ = nullptr;
     volatile uint8_t* input_state_ = nullptr;
     InputContext input_ctx_{};
 

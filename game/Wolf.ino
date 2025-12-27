@@ -1,5 +1,5 @@
 #include <Arduboy2.h>       
-#include <ArduboyFX.h>      
+#include "lib/ArduboyFX.h"      
 #include "game/ArduboyTonesFX.h"
 
 #include "game/Engine.h"

@@ -12,13 +12,13 @@
 #define TONES_END    0x8000
 
 // ====== НАСТРОЙКИ ======
-#define TARGET_FRAMERATE         60
 #define GHOST_COMPENSATION_LEVEL 0
 
 #ifndef HOLD_TO_EXIT_FRAMES
 #define HOLD_TO_EXIT_FRAMES 30
 #endif
 
+#include "game/Defines.h"
 #include "lib/Arduboy2.h"
 #include "lib/Arduino.h"
 #include "lib/ATMlib.h"
@@ -59,86 +59,76 @@ static void input_events_callback(const void* value, void* ctx) {
     Arduboy2Base::FlipperInputCallback(e, ctx);
 }
 
-#define GAME_ID 46
+#include "lib/Arduboy2.h"       
+#include "lib/ArduboyFX.h"      
+#include "game/ArduboyTonesFX.h"
 
-#include "game/globals.h"
-#include "game/songs.h"
-#include "game/menu.h"
-#include "game/game.h"
-#include "game/inputs.h"
-#include "game/text.h"
-#include "game/inventory.h"
-#include "game/items.h"
-#include "game/player.h"
-#include "game/enemies.h"
-#include "game/battles.h"
+#include "game/Engine.h"
+#include "game/Generated/fxdata.h"
+#include "game/ArduboyPlatform.h"
+#include "game/Generated/Data_Audio.h"
 
-Arduboy2Base* arduboy_ptr = nullptr;
-Sprites* sprites_ptr = nullptr;
+Arduboy2Base arduboy;
 
-alignas(Arduboy2Base) static uint8_t arduboy_storage[sizeof(Arduboy2Base)];
-alignas(Sprites) static uint8_t sprites_storage[sizeof(Sprites)];
+uint16_t audioBuffer[32];
+ArduboyTonesFX sound(arduboy.audio.enabled(), audioBuffer, 32);
 
+unsigned long lastTimingSample;
 
-typedef void (*FunctionPointer) ();
-const FunctionPointer mainGameLoop[] = {
-  stateMenuIntro,
-  stateMenuMain,
-  stateMenuContinue,
-  stateMenuNew,
-  stateMenuSound,
-  stateMenuCredits,
-  stateGamePlaying,
-  stateGameInventory,
-  stateGameEquip,
-  stateGameStats,
-  stateGameMap,
-  stateGameOver,
-  showSubMenuStuff,
-  showSubMenuStuff,
-  showSubMenuStuff,
-  showSubMenuStuff,
-  walkingThroughDoor,
-  stateGameBattle,
-  stateGameBoss,
-  stateGameIntro,
-  stateGameNew,
-  stateGameSaveSoundEnd,
-  stateGameSaveSoundEnd,
-  stateGameSaveSoundEnd,
-  stateGameObjects,
-  stateGameShop,
-  stateGameInn,
-  battleGiveRewards,
-  stateMenuReboot,
-};
-
-static void game_setup() {
-  atm_system_init();
-  arduboy.boot();
-  arduboy.audio.begin();
-  ATM.play(titleSong);
-  arduboy.setFrameRate(60);                                 // set the frame rate of the game at 60 fps
+void ArduboyPlatform::playSound(uint8_t id)
+{
+	sound.tonesFromFX((uint24_t)((uint32_t) Data_audio + (uint32_t)(pgm_read_word(&Data_AudioPatterns[id]))));
 }
 
+static void game_setup() {
+  arduboy.boot();
+  //arduboy.flashlight();
+  //arduboy.systemButtons();
+  //arduboy.bootLogo();
+  arduboy.setFrameRate(TARGET_FRAMERATE);
+  arduboy.audio.begin();
+
+  FX::begin(FX_DATA_PAGE, FX_SAVE_PAGE);    
+  engine.init();
+}
 
 static void game_loop_tick() {
-  if (!(arduboy.nextFrame())) return;
-  //arduboy.fillScreen(1);
-  arduboy.pollButtons();
-  //arduboy.clear();
-  drawTiles();
-  updateEyes();
+  static int16_t tickAccum = 0;
+  unsigned long timingSample = millis();
+  tickAccum += (timingSample - lastTimingSample);
+  lastTimingSample = timingSample;
   
-  mainGameLoop[gameState]();
+  if (!arduboy.nextFrame()) return; 
+ 
+  sound.fillBufferFromFX();
+  Platform.update();
 
-  checkInputs();
-  if (question) drawQuestion();
-  if (yesNo) drawYesNo();
-  if (flashBlack) flashScreen(BLACK);     // Set in battleStart
-  else if (flashWhite) flashScreen(WHITE);
-  //Serial.write(arduboy.getBuffer(), 128 * 64 / 8);
-  arduboy.display();
+  constexpr int16_t frameDuration = 1000 / TARGET_FRAMERATE;
+  while(tickAccum > frameDuration)
+  {
+    engine.update();
+	tickAccum -= frameDuration;
+  }
+	
+  engine.draw();
+
+  if(engine.gameState == GameState_Playing && engine.renderer.damageIndicator < 0)
+  {
+    uint8_t brightness = -engine.renderer.damageIndicator * 5;
+    arduboy.setRGBled(brightness, brightness, brightness);
+  }
+  else if(engine.gameState == GameState_Playing && engine.renderer.damageIndicator > 0)
+  {
+    uint8_t brightness = engine.renderer.damageIndicator * 51;
+    arduboy.setRGBled(brightness, 0, 0);
+  }
+  else
+  {
+    arduboy.setRGBled(0, 0, 0);
+  }  
+  
+//   FX::display();
+  //FX::display(CLEAR_BUFFER); // Using CLEAR_BUFFER will clear the display buffer after it is displayed
 }
 
 static void framebuffer_commit_callback(
@@ -156,11 +146,9 @@ static void framebuffer_commit_callback(
     const uint8_t* src = state->front_buffer;
 
     for(size_t i = 0; i < BUFFER_SIZE; i++) {
-        if(gameState < 6) {
-            data[i] = (uint8_t)(src[i] ^ 0x00);
-        } else {
+  
             data[i] = (uint8_t)(src[i] ^ 0xFF);
-        }
+        
     }
 
     furi_mutex_release(state->fb_mutex);
@@ -223,8 +211,6 @@ extern "C" int32_t arduboy_app(void* p) {
     g_state = (FlipperState*)malloc(sizeof(FlipperState));
     if(!g_state) return -1;
     memset(g_state, 0, sizeof(FlipperState));
-    arduboy_ptr = new(arduboy_storage) Arduboy2Base();
-sprites_ptr = new(sprites_storage) Sprites();
 
 
     g_state->fb_mutex = furi_mutex_alloc(FuriMutexTypeNormal);

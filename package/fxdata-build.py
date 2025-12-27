@@ -284,7 +284,7 @@ while lineNr < len(lines):
         elif t == 6: bytes += rawData(part)
         elif t == 7: bytes += part.encode('utf-8').decode('unicode_escape').encode('utf-8') + b'\x00'
         else:
-          sys.stderr.write('ERROR in line {}: unsupported string for type\n'.format(lineNr))
+          sys.stderr.write('PLATFORM_ERROR in line {}: unsupported string for type\n'.format(lineNr))
           sys.exit(-1)
       #handle values
       elif part[:1].isnumeric() or (part[:1] == '-' and part[1:2].isnumeric()):
@@ -309,7 +309,7 @@ while lineNr < len(lines):
           elif part[j].isalnum() or part[j] == '_':
             label += part[j]
           else:
-            sys.stderr.write('ERROR in line {}: Bad label: {}\n'.format(lineNr,label))
+            sys.stderr.write('PLATFORM_ERROR in line {}: Bad label: {}\n'.format(lineNr,label))
             sys.exit(-1)
         if (label != '') and (i < len(parts) - 1) and (parts[i+1][:1] == '='):
           addLabel(label,len(bytes))
@@ -335,10 +335,10 @@ while lineNr < len(lines):
               label = ''
               break
         if label != '':
-          sys.stderr.write('ERROR in line {}: Undefined symbol: {}\n'.format(lineNr,label))
+          sys.stderr.write('PLATFORM_ERROR in line {}: Undefined symbol: {}\n'.format(lineNr,label))
           sys.exit(-1)
       elif len(part) > 0:
-        sys.stderr.write('ERROR unable to parse {} in element: {}\n'.format(part,str(parts)))
+        sys.stderr.write('PLATFORM_ERROR unable to parse {} in element: {}\n'.format(part,str(parts)))
         sys.exit(-1)
   lineNr += 1
 

@@ -8,7 +8,7 @@
 #include <stddef.h>
 
 // For ARDUINO_ARCH_AVR, PORTD, ...
-#include <Arduino.h>
+#include "lib/Arduino.h"
 
 // For Arduboy2Base::sBuffer, WIDTH, HEIGHT, CS_PORT ...
 #include <Arduboy2.h>

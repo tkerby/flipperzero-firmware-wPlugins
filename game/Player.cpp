@@ -76,8 +76,6 @@ void Player::update()
 
 		int16_t movement = MOVEMENT;
 		int16_t turn = 0;
-		int16_t oldX = x;
-		int16_t oldZ = z;
 		int16_t deltaX = 0, deltaZ = 0;
     
 		updateWeapon();

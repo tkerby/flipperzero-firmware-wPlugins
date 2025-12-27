@@ -78,10 +78,10 @@ void Renderer::drawSprite2D(uint8_t id, int16_t x, int16_t y)
 			switch (pixel)
 			{
 			case 1:
-				drawPixel(i + x, y + j, 1);
+				arduboy.drawPixel(i + x, y + j, 1);
 				break;
 			case 2:
-				drawPixel(i + x, y + j, 0);
+				arduboy.drawPixel(i + x, y + j, 0);
 				break;
 			}
 		}
@@ -135,10 +135,10 @@ void Renderer::drawWeapon()
 			switch(pixel)
 			{
 			case 1:
-				drawPixel(i + x, DISPLAYHEIGHT - frameHeight + j, 1);
+				arduboy.drawPixel(i + x, DISPLAYHEIGHT - frameHeight + j, 1);
 				break;
 			case 2:
-				drawPixel(i + x, DISPLAYHEIGHT - frameHeight + j, 0);
+				arduboy.drawPixel(i + x, DISPLAYHEIGHT - frameHeight + j, 0);
 				break;
 			}
 		}
@@ -241,7 +241,7 @@ void Renderer::drawBox(int16_t x, int16_t y, int16_t w, int16_t h, uint8_t colou
 	{
 		for (int i = 0; i < w; i++)
 		{
-			drawPixel(x + i, y, colour);
+			arduboy.drawPixel(x + i, y, colour);
 		}
 		y++;
 		h--;
@@ -661,7 +661,7 @@ void Renderer::drawCell(int8_t cellX, int8_t cellZ)
 
 bool renderingVerticalWall = false;
 
-/*inline*/ void Renderer::drawStrip(int16_t x, int16_t w, int8_t u, uint8_t textureId)
+/*inline*/ void Renderer::drawStrip(int16_t x, int16_t w, int8_t, uint8_t)
 {
 	int halfW = w >> 1;
 	int y1 = (HALF_DISPLAYHEIGHT) - halfW;
@@ -1265,7 +1265,6 @@ void Renderer::drawQueuedSprite(uint8_t id)
 	int16_t sx2 = sx1 + dx;
 	int16_t uerror = dx;
 	int8_t u = 0;
-	int8_t lastU = 0;
 	int8_t du = frameWidth, ustep = 1;
 	int8_t v;
 	bool outline = false;
@@ -1319,7 +1318,7 @@ void Renderer::drawQueuedSprite(uint8_t id)
 
 					if (outline)
 					{
-						drawPixel(x, y, outlineColour);
+						arduboy.drawPixel(x, y, outlineColour);
 						outline = false;
 					}
 					else
@@ -1378,7 +1377,6 @@ void Renderer::drawQueuedSprite(uint8_t id)
 		}
 
 		uerror -= du;
-		lastU = u;
 
 		if(dx > 0)
 		{
@@ -1402,7 +1400,7 @@ void Renderer::drawGlyph(char glyph, uint8_t x, uint8_t y, uint8_t colour)
 		for(int j = 0; j < FONT_HEIGHT; j++)
 		{
 			uint8_t col = (read & readMask) ? 0 : 1;
-			drawPixel(x + i, y + j, colour ^ col);
+			arduboy.drawPixel(x + i, y + j, colour ^ col);
 			readMask <<= 1;
 			if(readMask == 0)
 			{

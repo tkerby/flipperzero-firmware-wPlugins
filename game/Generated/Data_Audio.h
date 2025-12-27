@@ -1,3 +1,5 @@
+#include "lib/Arduino.h"
+
 #define NUM_AUDIO_PATTERNS 87
 const uint16_t Data_AudioPatterns[] PROGMEM = {
 	0,

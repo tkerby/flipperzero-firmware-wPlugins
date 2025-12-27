@@ -2,7 +2,7 @@
 #define PLATFORM_H_
 
 #include <stdint.h>
-
+#include "lib/Arduboy2.h"
 #include "game/Defines.h"
 
 #define INPUT_BIT(x) (1 << (x))
