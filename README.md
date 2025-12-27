@@ -14,6 +14,7 @@ and the solver will try to reach it using + − × ÷.
 ## Build
 
 ufbt build
+
 ufbt launch
 
 ## License
