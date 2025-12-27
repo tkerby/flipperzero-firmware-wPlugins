@@ -16,6 +16,12 @@ struct JedecID {
     uint8_t size;
 };
 
+#if defined(__GNUC__) || defined(__clang__)
+#define FX_ALWAYS_INLINE __attribute__((always_inline)) inline
+#else
+#define FX_ALWAYS_INLINE inline
+#endif
+
 class FX {
 public:
     static uint16_t programDataPage;
@@ -100,8 +106,8 @@ private:
     static bool allocCaches_();
     static void freeCaches_();
 
-    static uint32_t alignDown_(uint32_t v, uint32_t a);
-    static uint32_t alignUp_(uint32_t v, uint32_t a);
+    static FX_ALWAYS_INLINE uint32_t alignDown_(uint32_t v, uint32_t a);
+    static FX_ALWAYS_INLINE uint32_t alignUp_(uint32_t v, uint32_t a);
 
     static bool dataEnsurePageIndex_(uint32_t abs_off, uint8_t* out_index);
     static bool dataReadSpanCached_(uint32_t abs_off, uint8_t* out, size_t len);
@@ -109,8 +115,12 @@ private:
     static bool dataPageHas_(uint32_t base);
     static bool dataLoadPage_(uint32_t base, uint8_t page_i);
     static uint8_t dataPickVictim_();
-
     static void dataMaybePrefetch_(uint32_t base);
+
+    static FX_ALWAYS_INLINE void dataStreamReset_();
+    static FX_ALWAYS_INLINE bool dataStreamEnsureAbs_(uint32_t abs_off);
+    static FX_ALWAYS_INLINE uint8_t dataStreamReadU8_();
+    static FX_ALWAYS_INLINE bool dataStreamReadN_(uint8_t* out, size_t n);
 
     static void saveEnsureLoaded_();
     static uint16_t readSaveU16BE_(uint16_t off);
@@ -152,4 +162,11 @@ private:
     static uint8_t* save_ram_;
     static bool save_loaded_;
     static bool save_dirty_;
+
+    static uint8_t  stream_page_i_;
+    static uint32_t stream_base_;
+    static uint16_t stream_len_;
+    static uint32_t stream_abs_;
+    static uint8_t* stream_ptr_;
+    static bool     stream_valid_;
 };

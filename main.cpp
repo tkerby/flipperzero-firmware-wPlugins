@@ -7,66 +7,38 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define COLOUR_WHITE 1
-#define COLOUR_BLACK 0
-#define TONES_END    0x8000
-
-// ====== НАСТРОЙКИ ======
-#define GHOST_COMPENSATION_LEVEL 0
-
-#ifndef HOLD_TO_EXIT_FRAMES
-#define HOLD_TO_EXIT_FRAMES 30
-#endif
-
 #include "game/Defines.h"
 #include "lib/Arduboy2.h"
 #include "lib/Arduino.h"
-#include "lib/ATMlib.h"
 
-#define DISPLAY_WIDTH  128 
-#define DISPLAY_HEIGHT 64
-#define BUFFER_SIZE    (DISPLAY_WIDTH * DISPLAY_HEIGHT / 8)
-
-typedef struct {
-    uint8_t screen_buffer[BUFFER_SIZE];
-    uint8_t front_buffer[BUFFER_SIZE];
-
-#if (GHOST_COMPENSATION_LEVEL >= 1)
-    uint8_t prev_buffer[BUFFER_SIZE];
-#endif
-#if (GHOST_COMPENSATION_LEVEL >= 2)
-    uint8_t prev2_buffer[BUFFER_SIZE];
-#endif
-
-    Gui* gui;
-    Canvas* canvas;
-    FuriTimer* timer;
-    FuriMutex* fb_mutex;
-    FuriMutex* game_mutex;
-    FuriPubSub* input_events;
-    FuriPubSubSubscription* input_sub;
-    volatile uint8_t input_state;
-    volatile bool exit_requested;
-    volatile bool in_frame;
-    volatile bool invert_frame;
-} FlipperState;
-
-static FlipperState* g_state = NULL;
-
-static void input_events_callback(const void* value, void* ctx) {
-    if(!value || !ctx) return;
-    InputEvent* e = (InputEvent*)value;
-    Arduboy2Base::FlipperInputCallback(e, ctx);
-}
-
-#include "lib/Arduboy2.h"       
-#include "lib/ArduboyFX.h"      
+#include "lib/ArduboyFX.h"
 #include "game/ArduboyTonesFX.h"
 
 #include "game/Engine.h"
 #include "game/Generated/fxdata.h"
 #include "game/ArduboyPlatform.h"
 #include "game/Generated/Data_Audio.h"
+
+#define DISPLAY_WIDTH  128
+#define DISPLAY_HEIGHT 64
+#define BUFFER_SIZE    (DISPLAY_WIDTH * DISPLAY_HEIGHT / 8)
+
+typedef struct {
+    uint8_t screen_buffer[BUFFER_SIZE];
+
+    Gui* gui;
+    Canvas* canvas;
+
+    FuriMutex* game_mutex;
+
+    FuriPubSub* input_events;
+    FuriPubSubSubscription* input_sub;
+
+    volatile uint8_t input_state;
+    volatile bool exit_requested;
+} FlipperState;
+
+static FlipperState* g_state = NULL;
 
 Arduboy2Base arduboy;
 
@@ -75,61 +47,15 @@ ArduboyTonesFX sound(arduboy.audio.enabled(), audioBuffer, 32);
 
 unsigned long lastTimingSample;
 
-void ArduboyPlatform::playSound(uint8_t id)
-{
-	sound.tonesFromFX((uint24_t)((uint32_t) Data_audio + (uint32_t)(pgm_read_word(&Data_AudioPatterns[id]))));
+static void input_events_callback(const void* value, void* ctx) {
+    if(!value || !ctx) return;
+    InputEvent* e = (InputEvent*)value;
+    Arduboy2Base::FlipperInputCallback(e, ctx);
 }
 
-static void game_setup() {
-  arduboy.boot();
-  //arduboy.flashlight();
-  //arduboy.systemButtons();
-  //arduboy.bootLogo();
-  arduboy.setFrameRate(TARGET_FRAMERATE);
-  arduboy.audio.begin();
-
-  FX::setCacheConfig(8192, 6); 
-  FX::begin(0, 0);
-  engine.init();
-}
-
-static void game_loop_tick() {
-  static int16_t tickAccum = 0;
-  unsigned long timingSample = millis();
-  tickAccum += (timingSample - lastTimingSample);
-  lastTimingSample = timingSample;
-  
-  if (!arduboy.nextFrame()) return; 
- 
-  sound.fillBufferFromFX();
-  Platform.update();
-
-  constexpr int16_t frameDuration = 1000 / TARGET_FRAMERATE;
-  while(tickAccum > frameDuration)
-  {
-    engine.update();
-	tickAccum -= frameDuration;
-  }
-	
-  engine.draw();
-
-  if(engine.gameState == GameState_Playing && engine.renderer.damageIndicator < 0)
-  {
-    uint8_t brightness = -engine.renderer.damageIndicator * 5;
-    arduboy.setRGBled(brightness, brightness, brightness);
-  }
-  else if(engine.gameState == GameState_Playing && engine.renderer.damageIndicator > 0)
-  {
-    uint8_t brightness = engine.renderer.damageIndicator * 51;
-    arduboy.setRGBled(brightness, 0, 0);
-  }
-  else
-  {
-    arduboy.setRGBled(0, 0, 0);
-  }  
-  
-//   FX::display();
-  //FX::display(CLEAR_BUFFER); // Using CLEAR_BUFFER will clear the display buffer after it is displayed
+void ArduboyPlatform::playSound(uint8_t id) {
+    sound.tonesFromFX(
+        (uint24_t)((uint32_t)Data_audio + (uint32_t)(pgm_read_word(&Data_AudioPatterns[id]))));
 }
 
 static void framebuffer_commit_callback(
@@ -142,68 +68,10 @@ static void framebuffer_commit_callback(
     if(size < BUFFER_SIZE) return;
     (void)orientation;
 
-    if(furi_mutex_acquire(state->fb_mutex, 0) != FuriStatusOk) return;
-
-    const uint8_t* src = state->front_buffer;
-
+    const uint8_t* src = state->screen_buffer;
     for(size_t i = 0; i < BUFFER_SIZE; i++) {
-  
-            data[i] = (uint8_t)(src[i] ^ 0xFF);
-        
+        data[i] = (uint8_t)(src[i] ^ 0xFF);
     }
-
-    furi_mutex_release(state->fb_mutex);
-}
-
-static void apply_ghost_compensation(FlipperState* state) {
-#if (GHOST_COMPENSATION_LEVEL == 0)
-    memcpy(state->front_buffer, state->screen_buffer, BUFFER_SIZE);
-
-#elif (GHOST_COMPENSATION_LEVEL == 1)
-    // front = current OR prev  (объект держится 2 кадра по сути: текущий + предыдущий)
-    for(size_t i = 0; i < BUFFER_SIZE; i++) {
-        state->front_buffer[i] = (uint8_t)(state->screen_buffer[i] | state->prev_buffer[i]);
-    }
-    // сдвигаем историю
-    memcpy(state->prev_buffer, state->screen_buffer, BUFFER_SIZE);
-
-#elif (GHOST_COMPENSATION_LEVEL >= 2)
-    // front = current OR prev OR prev2 (ещё сильнее удержание)
-    for(size_t i = 0; i < BUFFER_SIZE; i++) {
-        state->front_buffer[i] =
-            (uint8_t)(state->screen_buffer[i] | state->prev_buffer[i] | state->prev2_buffer[i]);
-    }
-    memcpy(state->prev2_buffer, state->prev_buffer, BUFFER_SIZE);
-    memcpy(state->prev_buffer, state->screen_buffer, BUFFER_SIZE);
-#endif
-}
-
-static void timer_callback(void* ctx) {
-    FlipperState* state = (FlipperState*)ctx;
-    if(!state) return;
-
-    if(state->in_frame) return;
-    state->in_frame = true;
-
-    if(furi_mutex_acquire(state->game_mutex, 0) != FuriStatusOk) {
-        state->in_frame = false;
-        return;
-    }
-
-    game_loop_tick();
-
-    state->invert_frame = false;
-
-    // Критично: защита fb + применение компенсации
-    furi_mutex_acquire(state->fb_mutex, FuriWaitForever);
-    apply_ghost_compensation(state);
-    furi_mutex_release(state->fb_mutex);
-
-    if(g_state->canvas) canvas_commit(g_state->canvas);
-
-
-    furi_mutex_release(state->game_mutex);
-    state->in_frame = false;
 }
 
 extern "C" int32_t arduboy_app(void* p) {
@@ -213,31 +81,23 @@ extern "C" int32_t arduboy_app(void* p) {
     if(!g_state) return -1;
     memset(g_state, 0, sizeof(FlipperState));
 
-
-    g_state->fb_mutex = furi_mutex_alloc(FuriMutexTypeNormal);
     g_state->game_mutex = furi_mutex_alloc(FuriMutexTypeNormal);
-    if(!g_state->fb_mutex || !g_state->game_mutex) {
-        if(g_state->fb_mutex) furi_mutex_free(g_state->fb_mutex);
-        if(g_state->game_mutex) furi_mutex_free(g_state->game_mutex);
+    if(!g_state->game_mutex) {
         free(g_state);
         g_state = NULL;
         return -1;
     }
 
     g_state->exit_requested = false;
-    g_state->invert_frame = false;
-
+    g_state->input_state = 0;
     memset(g_state->screen_buffer, 0x00, BUFFER_SIZE);
-    memset(g_state->front_buffer, 0x00, BUFFER_SIZE);
 
-#if (GHOST_COMPENSATION_LEVEL >= 1)
-    memset(g_state->prev_buffer, 0x00, BUFFER_SIZE);
-#endif
-#if (GHOST_COMPENSATION_LEVEL >= 2)
-    memset(g_state->prev2_buffer, 0x00, BUFFER_SIZE);
-#endif
+    arduboy.begin(
+        g_state->screen_buffer,
+        &g_state->input_state,
+        g_state->game_mutex,
+        &g_state->exit_requested);
 
-    arduboy.begin(g_state->screen_buffer, &g_state->input_state, g_state->game_mutex, &g_state->exit_requested);
     Sprites::setArduboy(&arduboy);
 
     g_state->gui = (Gui*)furi_record_open(RECORD_GUI);
@@ -248,37 +108,69 @@ extern "C" int32_t arduboy_app(void* p) {
     g_state->input_sub = furi_pubsub_subscribe(
         g_state->input_events, input_events_callback, arduboy.inputContext());
 
-    // Setup game and do one initial draw
     furi_mutex_acquire(g_state->game_mutex, FuriWaitForever);
-    game_setup();
 
-    furi_mutex_acquire(g_state->fb_mutex, FuriWaitForever);
-    apply_ghost_compensation(g_state);
-    furi_mutex_release(g_state->fb_mutex);
+    arduboy.boot();
+    arduboy.setFrameRate(TARGET_FRAMERATE);
+    arduboy.audio.begin();
 
-    if(g_state->canvas) canvas_commit(g_state->canvas);
+    FX::setCacheConfig(8192, 6);
+    (void)FX::begin(0, 0);
+
+    engine.init();
+
+    lastTimingSample = millis();
+    {
+        engine.update();
+        engine.draw();
+        arduboy.setRGBled(0, 0, 0);
+        if(g_state->canvas) canvas_commit(g_state->canvas);
+    }
+
     furi_mutex_release(g_state->game_mutex);
 
-    // Таймер на 30 FPS
-    g_state->timer = furi_timer_alloc(timer_callback, FuriTimerTypePeriodic, g_state);
-    const uint32_t tick_hz = furi_kernel_get_tick_frequency();
-    uint32_t period = (tick_hz + (TARGET_FRAMERATE / 2)) / TARGET_FRAMERATE;
-    if(period == 0) period = 1;
-    furi_timer_start(g_state->timer, period);
+    int16_t tickAccum = 0;
+    const int16_t frameDuration = (int16_t)(1000 / TARGET_FRAMERATE);
 
     while(!g_state->exit_requested) {
-        atm_set_enabled(arduboy.audio.enabled());
-        furi_delay_ms(50);
-    }
-    
-    atm_system_deinit();
-    arduboy_tone_sound_system_deinit();
+        if(furi_mutex_acquire(g_state->game_mutex, 0) == FuriStatusOk) {
+            const unsigned long now = millis();
+            tickAccum += (int16_t)(now - lastTimingSample);
+            lastTimingSample = now;
 
-    if(g_state->timer) {
-        furi_timer_stop(g_state->timer);
-        furi_timer_free(g_state->timer);
-        g_state->timer = NULL;
+            if(arduboy.nextFrame()) {
+                sound.fillBufferFromFX();
+                Platform.update();
+
+                while(tickAccum > frameDuration) {
+                    engine.update();
+                    tickAccum -= frameDuration;
+                }
+
+                engine.draw();
+
+                if(engine.gameState == GameState_Playing && engine.renderer.damageIndicator < 0) {
+                    uint8_t b = (uint8_t)(-engine.renderer.damageIndicator * 5);
+                    arduboy.setRGBled(b, b, b);
+                } else if(engine.gameState == GameState_Playing && engine.renderer.damageIndicator > 0) {
+                    uint8_t b = (uint8_t)(engine.renderer.damageIndicator * 51);
+                    arduboy.setRGBled(b, 0, 0);
+                } else {
+                    arduboy.setRGBled(0, 0, 0);
+                }
+
+                if(g_state->canvas) canvas_commit(g_state->canvas);
+            }
+
+            furi_mutex_release(g_state->game_mutex);
+        }
+
+        furi_delay_ms(1);
     }
+
+    arduboy_tone_sound_system_deinit();
+    FX::commitSave();
+    FX::end();
 
     if(g_state->input_sub) {
         furi_pubsub_unsubscribe(g_state->input_events, g_state->input_sub);
@@ -298,10 +190,6 @@ extern "C" int32_t arduboy_app(void* p) {
         g_state->canvas = NULL;
     }
 
-    if(g_state->fb_mutex) {
-        furi_mutex_free(g_state->fb_mutex);
-        g_state->fb_mutex = NULL;
-    }
     if(g_state->game_mutex) {
         furi_mutex_free(g_state->game_mutex);
         g_state->game_mutex = NULL;
