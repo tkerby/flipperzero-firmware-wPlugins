@@ -69,7 +69,8 @@ SubGhzProtocolStatus ws_protocol_decoder_lacrosse_tx141bv3_serialize(
  * @param flipper_format Pointer to a FlipperFormat instance
  * @return status
  */
-SubGhzProtocolStatus ws_protocol_decoder_lacrosse_tx141bv3_deserialize(void* context, FlipperFormat* flipper_format);
+SubGhzProtocolStatus
+    ws_protocol_decoder_lacrosse_tx141bv3_deserialize(void* context, FlipperFormat* flipper_format);
 
 /**
  * Getting a textual representation of the received data.
