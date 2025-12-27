@@ -11,6 +11,7 @@
 #include "acurite_986.h"
 #include "lacrosse_tx.h"
 #include "lacrosse_tx141thbv2.h"
+#include "lacrosse_tx141bv3.h" // Lacrosse v3 support (FatherDivine)
 #include "oregon2.h"
 #include "oregon3.h"
 #include "acurite_592txr.h"
