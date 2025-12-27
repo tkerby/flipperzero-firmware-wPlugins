@@ -2653,8 +2653,8 @@ void FlipDownloaderRun::updateInput(InputEvent *event)
         }
 
         // Get current selected index and menu count based on current view
-        uint8_t *currentSelectedIndex;
-        uint8_t menuCount;
+        // uint8_t *currentSelectedIndex;
+        // uint8_t menuCount;
 
         switch (currentView)
         {
