@@ -11,6 +11,7 @@ App(
     fap_author="Clawzman",
     fap_weburl="https://github.com/Clawzman/Flipper_ListEM",
     fap_category="Tools",
-    fap_icon="listem_10px.png",
+    fap_icon="icon.png",
     fap_icon_assets="images",
 )
+
