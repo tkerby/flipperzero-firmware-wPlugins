@@ -8,6 +8,7 @@ const SubGhzProtocol* protopirate_protocol_registry_items[] = {
     &kia_protocol_v3_v4,
     &kia_protocol_v5,
     &ford_protocol_v0,
+    &fiat_protocol_v0,
     &subaru_protocol,
     &suzuki_protocol,
     &vw_protocol,
@@ -65,6 +66,14 @@ static const ProtoPirateProtocolTiming protocol_timings[] = {
         .name = "Ford V0",
         .te_short = 250,
         .te_long = 500,
+        .te_delta = 100,
+        .min_count_bit = 64,
+    },
+    // Fiat V0: Manchester 200/400µs
+    {
+        .name = "Fiat V0",
+        .te_short = 200,
+        .te_long = 400,
         .te_delta = 100,
         .min_count_bit = 64,
     },
@@ -133,6 +142,11 @@ const ProtoPirateProtocolTiming* protopirate_get_protocol_timing(const char* pro
         
         // Match Ford
         if(strstr(protocol_name, "Ford") != NULL && strstr(protocol_timings[i].name, "Ford") != NULL) {
+            return &protocol_timings[i];
+        }
+        
+        // Match Fiat
+        if(strstr(protocol_name, "Fiat") != NULL && strstr(protocol_timings[i].name, "Fiat") != NULL) {
             return &protocol_timings[i];
         }
         
