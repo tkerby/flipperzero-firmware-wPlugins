@@ -13,7 +13,7 @@ public:
     EEPROMClass();
 
     // autosave_interval_ms: 0 = только ручной commit()
-    void begin(const char* path = "/ext/eeprom.bin", uint32_t autosave_interval_ms = 0);
+    void begin(const char* path = "/ext/apps_data/eeprom.bin", uint32_t autosave_interval_ms = 0);
 
     int length() const { return kSize; }
 
