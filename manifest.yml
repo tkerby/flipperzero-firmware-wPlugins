@@ -5,6 +5,11 @@ category: Tools
 version: 1.0
 short_description: Generates wordlists for RFID, NFC, and iButton testing.
 
+screenshots:
+  - 'screenshots/main_menu.jpg'
+  - 'screenshots/prefix_select.jpg'
+  - 'screenshots/generating.jpg'
+
 description: '@./README.md'
 changelog: '@./CHANGELOG.md'
 
