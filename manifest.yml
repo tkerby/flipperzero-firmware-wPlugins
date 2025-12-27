@@ -3,7 +3,7 @@ name: ListEM
 author: Clawzman
 category: Tools
 version: 1.0
-short_description: Generates wordlists for RFID, NFC, and iButton testing.
+short_description: Generates wordlists for RFID, NFC, and iButton Fuzzer.
 
 screenshots:
   - 'screenshots/main_menu.jpg'
