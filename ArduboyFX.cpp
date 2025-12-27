@@ -12,8 +12,8 @@ File*    FX::save_ = nullptr;
 bool FX::data_opened_ = false;
 bool FX::save_opened_ = false;
 
-char FX::data_path_[FX::kPathMax] = "/ext/fxdata.bin";
-char FX::save_path_[FX::kPathMax] = "/ext/fxdata-save.bin";
+char FX::data_path_[FX::kPathMax] = "/ext/apps_data/fxdata.bin";
+char FX::save_path_[FX::kPathMax] = "/ext/apps_data/fxdata-save.bin";
 
 FX::Domain FX::domain_ = FX::Domain::Data;
 uint32_t   FX::cur_abs_ = 0;
