@@ -4,7 +4,6 @@
 #include <furi_hal.h>
 #include "ArduboyTonesPitches.h"
 #include "EEPROM.h"
-#include "Arduboy2.h"
 
 #ifndef TONES_END
 #define TONES_END 0x8000
@@ -253,6 +252,8 @@ public:
     }
 };
 
+#include "Arduboy2.h"
+
 class ArduboyTones {
 public:
     explicit ArduboyTones(bool /*enabled*/) {
@@ -350,8 +351,7 @@ public:
         tones(inline_patterns2_[i]);
     }
 
-    void
-        tone(uint16_t f1, uint16_t d1_ms, uint16_t f2, uint16_t d2_ms, uint16_t f3, uint16_t d3_ms) {
+    void tone(uint16_t f1, uint16_t d1_ms, uint16_t f2, uint16_t d2_ms, uint16_t f3, uint16_t d3_ms) {
         if(!g_arduboy_audio_enabled) return;
 
         uint16_t t1 = ms_to_ticks16_(d1_ms);

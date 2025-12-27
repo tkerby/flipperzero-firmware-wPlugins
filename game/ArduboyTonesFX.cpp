@@ -25,6 +25,9 @@ ArduboyTonesFX::ArduboyTonesFX(bool (*outEn)())
 
     tonesPlaying_ = false;
     toneMode_ = TONES_MODE_NORMAL;
+
+    head_ = 0;
+    tail_ = -1;
 }
 
 ArduboyTonesFX::ArduboyTonesFX(bool (*outEn)(), uint16_t* tonesArray, uint8_t tonesArrayLen)
@@ -45,6 +48,9 @@ ArduboyTonesFX::ArduboyTonesFX(bool (*outEn)(), uint16_t* tonesArray, uint8_t to
 
     tonesPlaying_ = false;
     toneMode_ = TONES_MODE_NORMAL;
+
+    head_ = 0;
+    tail_ = -1;
 }
 
 ArduboyTonesFX::ArduboyTonesFX(bool (*outEn)(), uint16_t* tonesArray, int tonesArrayLen)
@@ -63,6 +69,9 @@ ArduboyTonesFX::ArduboyTonesFX(bool enabled)
 
     tonesPlaying_ = false;
     toneMode_ = TONES_MODE_NORMAL;
+
+    head_ = 0;
+    tail_ = -1;
 }
 
 ArduboyTonesFX::ArduboyTonesFX(bool enabled, uint16_t* tonesArray, uint8_t tonesArrayLen)
@@ -83,6 +92,9 @@ ArduboyTonesFX::ArduboyTonesFX(bool enabled, uint16_t* tonesArray, uint8_t tones
 
     tonesPlaying_ = false;
     toneMode_ = TONES_MODE_NORMAL;
+
+    head_ = 0;
+    tail_ = -1;
 }
 
 ArduboyTonesFX::ArduboyTonesFX(bool enabled, uint16_t* tonesArray, int tonesArrayLen)
@@ -150,7 +162,7 @@ void ArduboyTonesFX::tonesFromFX(uint24_t tones_address) {
     tonesFX_Curr_ = tones_address;
 
     head_ = 0;
-    tail_ = -1;
+    tail_ = 0;
     tonesPlaying_ = true;
 
     fillBufferFromFX_();
@@ -164,8 +176,7 @@ void ArduboyTonesFX::tonesFromFX(uint24_t tones_address) {
 void ArduboyTonesFX::fillBufferFromFX_() {
     if(!tonesPlaying_) return;
     if(ring_len_ < 4) return;
-
-    if(tail_ == -1) tail_ = 0;
+    if(tail_ < 0) tail_ = 0;
 
     uint8_t head = head_;
     const uint8_t len = ring_len_;
@@ -173,15 +184,18 @@ void ArduboyTonesFX::fillBufferFromFX_() {
 
     FX::seekData(tonesFX_Curr_);
 
-    while(((uint8_t)((head + 1u) % len)) != tail) {
+    for(;;) {
+        uint8_t next = (uint8_t)(head + 1u);
+        if(next >= len) next = 0;
+        if(next == tail) break;
+
         uint16_t t = readU16LEFromFX_();
         ring_[head] = t;
-        head = (uint8_t)((head + 1u) % len);
+        head = next;
         tonesFX_Curr_ = (uint24_t)(tonesFX_Curr_ + 2u);
 
         if(t == TONES_REPEAT) {
             tonesFX_Curr_ = tonesFX_Start_;
-            FX::readEnd();
             FX::seekData(tonesFX_Curr_);
         }
 
@@ -189,7 +203,6 @@ void ArduboyTonesFX::fillBufferFromFX_() {
     }
 
     head_ = head;
-    FX::readEnd();
 }
 
 bool ArduboyTonesFX::buildAndPlayFromRing_() {
@@ -209,7 +222,10 @@ bool ArduboyTonesFX::buildAndPlayFromRing_() {
 
     while(t != head && (uint16_t)(out_i + 1u) < out_cap) {
         uint16_t w = ring_[t];
-        t = (uint8_t)((t + 1u) % len);
+        uint8_t next = (uint8_t)(t + 1u);
+        if(next >= len) next = 0;
+        t = next;
+
         linear_[out_i++] = w;
 
         if(w == TONES_END) break;
@@ -219,11 +235,8 @@ bool ArduboyTonesFX::buildAndPlayFromRing_() {
     if(out_i == 0) return false;
 
     if(linear_[out_i - 1u] != TONES_END) {
-        if(out_i < out_cap) {
-            linear_[out_i++] = TONES_END;
-        } else {
-            linear_[out_cap - 1u] = TONES_END;
-        }
+        if(out_i < out_cap) linear_[out_i++] = TONES_END;
+        else linear_[out_cap - 1u] = TONES_END;
     }
 
     tail_ = (int16_t)t;

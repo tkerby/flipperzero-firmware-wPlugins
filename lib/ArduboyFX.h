@@ -71,6 +71,9 @@ public:
     static void eraseSaveBlock(uint16_t page = 0);
     static void waitWhileBusy();
 
+    static void commitSave();
+    static void warmUpData(uint24_t address, size_t length);
+
     static uint8_t writeByte(uint8_t data);
     static uint8_t readByte();
     static void writeCommand(uint8_t command);
@@ -79,28 +82,43 @@ public:
     static void writeEnable();
     static void seekCommand(uint8_t command, uint24_t address);
 
+    static void setCacheConfig(uint32_t page_size, uint8_t pages);
+
 private:
     enum class Domain : uint8_t { Data, Save };
 
     static bool ensureStorage_();
     static bool openData_();
     static bool openSave_();
-    static void closeFiles_();
 
     static uint32_t absDataOffset_(uint24_t address);
 
+    static bool fileFill_(File* f, uint8_t value, size_t len);
     static bool fileReadAt_(File* f, uint32_t off, void* out, size_t len);
     static bool fileWriteAt_(File* f, uint32_t off, const void* in, size_t len);
-    static bool fileFill_(File* f, uint8_t value, size_t len);
 
-    static bool ioRefill_();
+    static bool allocCaches_();
+    static void freeCaches_();
 
+    static uint32_t alignDown_(uint32_t v, uint32_t a);
+    static uint32_t alignUp_(uint32_t v, uint32_t a);
+
+    static bool dataEnsurePageIndex_(uint32_t abs_off, uint8_t* out_index);
+    static bool dataReadSpanCached_(uint32_t abs_off, uint8_t* out, size_t len);
+
+    static bool dataPageHas_(uint32_t base);
+    static bool dataLoadPage_(uint32_t base, uint8_t page_i);
+    static uint8_t dataPickVictim_();
+
+    static void dataMaybePrefetch_(uint32_t base);
+
+    static void saveEnsureLoaded_();
     static uint16_t readSaveU16BE_(uint16_t off);
     static void     writeSaveU16BE_(uint16_t off, uint16_t v);
 
 private:
     static constexpr uint16_t kSaveBlockSize = 4096;
-    static constexpr size_t   kIOBufSize = 512;
+    static constexpr uint16_t kPathMax = 64;
 
     static Storage* storage_;
     static File* data_;
@@ -108,13 +126,30 @@ private:
     static bool data_opened_;
     static bool save_opened_;
 
-    static char data_path_[128];
-    static char save_path_[128];
+    static char data_path_[kPathMax];
+    static char save_path_[kPathMax];
 
     static Domain domain_;
     static uint32_t cur_abs_;
 
-    static uint8_t  io_buf_[kIOBufSize];
-    static uint16_t io_pos_;
-    static uint16_t io_len_;
+    static uint32_t page_size_;
+    static uint8_t  cache_pages_;
+
+    static uint8_t*  cache_mem_;
+    static uint32_t* cache_base_;
+    static uint16_t* cache_len_;
+    static uint32_t* cache_age_;
+    static uint8_t*  cache_valid_;
+    static uint32_t  cache_age_ctr_;
+
+    static uint8_t last_hit_;
+    static uint32_t last_base_;
+    static uint8_t seq_score_;
+
+    static uint32_t data_file_pos_;
+    static bool data_file_pos_valid_;
+
+    static uint8_t* save_ram_;
+    static bool save_loaded_;
+    static bool save_dirty_;
 };

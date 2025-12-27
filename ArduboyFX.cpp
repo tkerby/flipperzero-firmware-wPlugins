@@ -1,5 +1,6 @@
 // ArduboyFX.cpp
 #include "lib/ArduboyFX.h"
+#include <stdlib.h>
 
 uint16_t FX::programDataPage = 0;
 uint16_t FX::programSavePage = 0;
@@ -11,15 +12,46 @@ File*    FX::save_ = nullptr;
 bool FX::data_opened_ = false;
 bool FX::save_opened_ = false;
 
-char FX::data_path_[128] = "/ext/fxdata.bin";
-char FX::save_path_[128] = "/ext/fxdata-save.bin";
+char FX::data_path_[FX::kPathMax] = "/ext/fxdata.bin";
+char FX::save_path_[FX::kPathMax] = "/ext/fxdata-save.bin";
 
 FX::Domain FX::domain_ = FX::Domain::Data;
 uint32_t   FX::cur_abs_ = 0;
 
-uint8_t  FX::io_buf_[FX::kIOBufSize];
-uint16_t FX::io_pos_ = 0;
-uint16_t FX::io_len_ = 0;
+uint32_t FX::page_size_ = 2048;
+uint8_t  FX::cache_pages_ = 16;
+
+uint8_t*  FX::cache_mem_ = nullptr;
+uint32_t* FX::cache_base_ = nullptr;
+uint16_t* FX::cache_len_ = nullptr;
+uint32_t* FX::cache_age_ = nullptr;
+uint8_t*  FX::cache_valid_ = nullptr;
+uint32_t  FX::cache_age_ctr_ = 1;
+
+uint8_t FX::last_hit_ = 0xFF;
+uint32_t FX::last_base_ = 0;
+uint8_t FX::seq_score_ = 0;
+
+uint32_t FX::data_file_pos_ = 0;
+bool FX::data_file_pos_valid_ = false;
+
+uint8_t* FX::save_ram_ = nullptr;
+bool FX::save_loaded_ = false;
+bool FX::save_dirty_ = false;
+
+static inline uint32_t fx_min_u32(uint32_t a, uint32_t b) { return a < b ? a : b; }
+static inline size_t fx_min_sz(size_t a, size_t b) { return a < b ? a : b; }
+
+uint32_t FX::alignDown_(uint32_t v, uint32_t a) { return a ? (v & ~(a - 1u)) : v; }
+uint32_t FX::alignUp_(uint32_t v, uint32_t a) { return a ? ((v + (a - 1u)) & ~(a - 1u)) : v; }
+
+void FX::setCacheConfig(uint32_t page_size, uint8_t pages) {
+    if(page_size < 512) page_size = 512;
+    page_size = alignUp_(page_size, 512);
+    if(pages < 2) pages = 2;
+    page_size_ = page_size;
+    cache_pages_ = pages;
+}
 
 void FX::setPaths(const char* data_bin_path, const char* save_path) {
     if(data_bin_path && *data_bin_path) {
@@ -50,13 +82,14 @@ bool FX::openData_() {
     if(!data_) return false;
     if(!storage_file_open(data_, data_path_, FSAM_READ, FSOM_OPEN_EXISTING)) return false;
     data_opened_ = true;
+    data_file_pos_valid_ = false;
     return true;
 }
 
 bool FX::fileFill_(File* f, uint8_t value, size_t len) {
     if(!f) return false;
     if(!storage_file_seek(f, 0, true)) return false;
-    uint8_t buf[64];
+    uint8_t buf[256];
     memset(buf, value, sizeof(buf));
     size_t remain = len;
     while(remain) {
@@ -95,26 +128,103 @@ bool FX::openSave_() {
         if(!storage_file_open(save_, save_path_, FSAM_WRITE, FSOM_CREATE_ALWAYS)) return false;
         save_opened_ = true;
         if(!fileFill_(save_, 0xFF, kSaveBlockSize)) return false;
+
+        storage_file_close(save_);
+        save_opened_ = false;
+
+        if(!storage_file_open(save_, save_path_, FSAM_READ_WRITE, FSOM_OPEN_EXISTING)) return false;
+        save_opened_ = true;
     }
 
     return true;
 }
 
-void FX::closeFiles_() {
-    if(data_) storage_file_close(data_);
-    if(save_) storage_file_close(save_);
-    data_opened_ = false;
-    save_opened_ = false;
+void FX::freeCaches_() {
+    if(cache_mem_) { free(cache_mem_); cache_mem_ = nullptr; }
+    if(cache_base_) { free(cache_base_); cache_base_ = nullptr; }
+    if(cache_len_) { free(cache_len_); cache_len_ = nullptr; }
+    if(cache_age_) { free(cache_age_); cache_age_ = nullptr; }
+    if(cache_valid_) { free(cache_valid_); cache_valid_ = nullptr; }
+    if(save_ram_) { free(save_ram_); save_ram_ = nullptr; }
+    save_loaded_ = false;
+    save_dirty_ = false;
+    last_hit_ = 0xFF;
+    last_base_ = 0;
+    seq_score_ = 0;
+    data_file_pos_valid_ = false;
+    data_file_pos_ = 0;
+}
+
+bool FX::allocCaches_() {
+    freeCaches_();
+
+    cache_mem_ = (uint8_t*)malloc((size_t)page_size_ * (size_t)cache_pages_);
+    cache_base_ = (uint32_t*)malloc(sizeof(uint32_t) * cache_pages_);
+    cache_len_ = (uint16_t*)malloc(sizeof(uint16_t) * cache_pages_);
+    cache_age_ = (uint32_t*)malloc(sizeof(uint32_t) * cache_pages_);
+    cache_valid_ = (uint8_t*)malloc(sizeof(uint8_t) * cache_pages_);
+    save_ram_ = (uint8_t*)malloc(kSaveBlockSize);
+
+    if(!cache_mem_ || !cache_base_ || !cache_len_ || !cache_age_ || !cache_valid_ || !save_ram_) {
+        freeCaches_();
+        return false;
+    }
+
+    for(uint8_t i = 0; i < cache_pages_; i++) {
+        cache_valid_[i] = 0;
+        cache_base_[i] = 0;
+        cache_len_[i] = 0;
+        cache_age_[i] = 0;
+    }
+    cache_age_ctr_ = 1;
+    last_hit_ = 0xFF;
+    last_base_ = 0;
+    seq_score_ = 0;
+
+    memset(save_ram_, 0xFF, kSaveBlockSize);
+    save_loaded_ = false;
+    save_dirty_ = false;
+
+    data_file_pos_valid_ = false;
+    data_file_pos_ = 0;
+
+    return true;
+}
+
+uint32_t FX::absDataOffset_(uint24_t address) {
+    return (uint32_t)address + ((uint32_t)programDataPage << 8);
+}
+
+void FX::saveEnsureLoaded_() {
+    if(save_loaded_) return;
+    if(!save_opened_ || !save_ram_) return;
+
+    if(!fileReadAt_(save_, 0, save_ram_, kSaveBlockSize)) {
+        memset(save_ram_, 0xFF, kSaveBlockSize);
+    }
+    save_loaded_ = true;
+    save_dirty_ = false;
+}
+
+void FX::commitSave() {
+    if(!save_opened_) return;
+    saveEnsureLoaded_();
+    if(!save_dirty_) return;
+    (void)fileWriteAt_(save_, 0, save_ram_, kSaveBlockSize);
+    save_dirty_ = false;
 }
 
 bool FX::begin() {
     if(!ensureStorage_()) return false;
     if(!openData_()) return false;
     if(!openSave_()) return false;
+    if(!allocCaches_()) return false;
+
     domain_ = Domain::Data;
     cur_abs_ = 0;
-    io_pos_ = 0;
-    io_len_ = 0;
+
+    saveEnsureLoaded_();
+
     return true;
 }
 
@@ -147,7 +257,14 @@ void FX::end() {
         furi_record_close(RECORD_STORAGE);
         storage_ = nullptr;
     }
+
+    freeCaches_();
 }
+
+void FX::readJedecID(JedecID& id) { id.manufacturer = 0; id.device = 0; id.size = 0; }
+void FX::readJedecID(JedecID* id) { if(id) readJedecID(*id); }
+bool FX::detect() { uint8_t b; return data_opened_ ? fileReadAt_(data_, 0, &b, 1) : false; }
+void FX::noFXReboot() {}
 
 uint8_t FX::writeByte(uint8_t data) { return data; }
 uint8_t FX::readByte() { return 0; }
@@ -157,34 +274,130 @@ void FX::sleep() {}
 void FX::writeEnable() {}
 void FX::seekCommand(uint8_t, uint24_t) {}
 
-void FX::readJedecID(JedecID& id) {
-    id.manufacturer = 0;
-    id.device = 0;
-    id.size = 0;
+bool FX::dataPageHas_(uint32_t base) {
+    if(last_hit_ != 0xFF && cache_valid_[last_hit_] && cache_base_[last_hit_] == base) return true;
+    for(uint8_t i = 0; i < cache_pages_; i++) {
+        if(cache_valid_[i] && cache_base_[i] == base) { last_hit_ = i; return true; }
+    }
+    return false;
 }
 
-void FX::readJedecID(JedecID* id) {
-    if(id) readJedecID(*id);
+uint8_t FX::dataPickVictim_() {
+    uint8_t victim = 0;
+    uint32_t best_age = 0xFFFFFFFFu;
+    for(uint8_t i = 0; i < cache_pages_; i++) {
+        if(!cache_valid_[i]) return i;
+        uint32_t a = cache_age_[i];
+        if(a < best_age) { best_age = a; victim = i; }
+    }
+    return victim;
 }
 
-bool FX::detect() {
+bool FX::dataLoadPage_(uint32_t base, uint8_t page_i) {
     if(!data_opened_ && !openData_()) return false;
-    uint8_t b;
-    return fileReadAt_(data_, 0, &b, 1);
+    if(!data_) return false;
+
+    if(!data_file_pos_valid_ || data_file_pos_ != base) {
+        if(!storage_file_seek(data_, base, true)) return false;
+        data_file_pos_ = base;
+        data_file_pos_valid_ = true;
+    }
+
+    uint8_t* dst = cache_mem_ + ((size_t)page_i * (size_t)page_size_);
+    size_t r = storage_file_read(data_, dst, page_size_);
+    if(r == 0) return false;
+
+    data_file_pos_ += (uint32_t)r;
+
+    cache_valid_[page_i] = 1;
+    cache_base_[page_i] = base;
+    cache_len_[page_i] = (uint16_t)r;
+    cache_age_[page_i] = cache_age_ctr_++;
+    last_hit_ = page_i;
+
+    return true;
 }
 
-void FX::noFXReboot() {}
+void FX::dataMaybePrefetch_(uint32_t base) {
+    if(cache_pages_ < 2) return;
+    if(seq_score_ < 2) return;
 
-uint32_t FX::absDataOffset_(uint24_t address) {
-    return (uint32_t)address + ((uint32_t)programDataPage << 8);
+    uint32_t next_base = base + page_size_;
+    if(dataPageHas_(next_base)) return;
+
+    uint8_t victim = dataPickVictim_();
+    if(cache_valid_[victim] && cache_base_[victim] == base) return;
+
+    (void)dataLoadPage_(next_base, victim);
+}
+
+bool FX::dataEnsurePageIndex_(uint32_t abs_off, uint8_t* out_index) {
+    if(!cache_mem_ || !out_index) return false;
+
+    uint32_t base = alignDown_(abs_off, page_size_);
+
+    if(last_hit_ != 0xFF && cache_valid_[last_hit_] && cache_base_[last_hit_] == base) {
+        cache_age_[last_hit_] = cache_age_ctr_++;
+        *out_index = last_hit_;
+        if(base == last_base_ + page_size_) { if(seq_score_ < 255) seq_score_++; } else seq_score_ = 0;
+        last_base_ = base;
+        dataMaybePrefetch_(base);
+        return true;
+    }
+
+    for(uint8_t i = 0; i < cache_pages_; i++) {
+        if(cache_valid_[i] && cache_base_[i] == base) {
+            cache_age_[i] = cache_age_ctr_++;
+            last_hit_ = i;
+            *out_index = i;
+            if(base == last_base_ + page_size_) { if(seq_score_ < 255) seq_score_++; } else seq_score_ = 0;
+            last_base_ = base;
+            dataMaybePrefetch_(base);
+            return true;
+        }
+    }
+
+    uint8_t victim = dataPickVictim_();
+    if(!dataLoadPage_(base, victim)) return false;
+
+    *out_index = victim;
+
+    if(base == last_base_ + page_size_) { if(seq_score_ < 255) seq_score_++; } else seq_score_ = 0;
+    last_base_ = base;
+    dataMaybePrefetch_(base);
+
+    return true;
+}
+
+bool FX::dataReadSpanCached_(uint32_t abs_off, uint8_t* out, size_t len) {
+    if(!out || len == 0) return true;
+
+    while(len) {
+        uint8_t page_i = 0xFF;
+        if(!dataEnsurePageIndex_(abs_off, &page_i)) return false;
+
+        uint32_t base = cache_base_[page_i];
+        uint32_t idx  = abs_off - base;
+
+        uint16_t plen = cache_len_[page_i];
+        if(idx >= plen) return false;
+
+        size_t avail = (size_t)plen - (size_t)idx;
+        size_t take = fx_min_sz(len, avail);
+
+        const uint8_t* src = cache_mem_ + ((size_t)page_i * (size_t)page_size_) + idx;
+        memcpy(out, src, take);
+
+        out += take;
+        abs_off += (uint32_t)take;
+        len -= take;
+    }
+    return true;
 }
 
 void FX::seekData(uint24_t address) {
     domain_ = Domain::Data;
     cur_abs_ = absDataOffset_(address);
-    io_pos_ = 0;
-    io_len_ = 0;
-    storage_file_seek(data_, cur_abs_, true);
 }
 
 void FX::seekDataArray(uint24_t address, uint8_t index, uint8_t offset, uint8_t elementSize) {
@@ -196,48 +409,25 @@ void FX::seekDataArray(uint24_t address, uint8_t index, uint8_t offset, uint8_t 
 void FX::seekSave(uint24_t address) {
     domain_ = Domain::Save;
     cur_abs_ = (uint32_t)address;
-    io_pos_ = 0;
-    io_len_ = 0;
-    storage_file_seek(save_, cur_abs_, true);
-}
-
-bool FX::ioRefill_() {
-    File* f = (domain_ == Domain::Data) ? data_ : save_;
-    if(!f) return false;
-
-    size_t want = kIOBufSize;
-    if(domain_ == Domain::Save) {
-        if(cur_abs_ >= kSaveBlockSize) return false;
-        uint32_t remain = kSaveBlockSize - cur_abs_;
-        if(remain < want) want = remain;
-    }
-
-    io_len_ = (uint16_t)storage_file_read(f, io_buf_, want);
-    io_pos_ = 0;
-    return io_len_ != 0;
+    saveEnsureLoaded_();
 }
 
 uint8_t FX::readPendingUInt8() {
-    if(domain_ == Domain::Save && cur_abs_ >= kSaveBlockSize) {
+    if(domain_ == Domain::Data) {
+        uint8_t v = 0xFF;
+        (void)dataReadSpanCached_(cur_abs_, &v, 1);
         cur_abs_++;
-        return 0xFF;
+        return v;
     }
 
-    if(io_pos_ >= io_len_) {
-        if(!ioRefill_()) {
-            cur_abs_++;
-            return 0xFF;
-        }
-    }
-
-    uint8_t v = io_buf_[io_pos_++];
+    saveEnsureLoaded_();
+    uint8_t v = 0xFF;
+    if(save_ram_ && cur_abs_ < kSaveBlockSize) v = save_ram_[cur_abs_];
     cur_abs_++;
     return v;
 }
 
-uint8_t FX::readPendingLastUInt8() {
-    return readEnd();
-}
+uint8_t FX::readPendingLastUInt8() { return readEnd(); }
 
 uint16_t FX::readPendingUInt16() {
     uint16_t hi = readPendingUInt8();
@@ -245,9 +435,7 @@ uint16_t FX::readPendingUInt16() {
     return (hi << 8) | lo;
 }
 
-uint16_t FX::readPendingLastUInt16() {
-    return readPendingUInt16();
-}
+uint16_t FX::readPendingLastUInt16() { return readPendingUInt16(); }
 
 uint24_t FX::readPendingUInt24() {
     uint32_t b2 = readPendingUInt8();
@@ -256,9 +444,7 @@ uint24_t FX::readPendingUInt24() {
     return (b2 << 16) | (b1 << 8) | b0;
 }
 
-uint24_t FX::readPendingLastUInt24() {
-    return readPendingUInt24();
-}
+uint24_t FX::readPendingLastUInt24() { return readPendingUInt24(); }
 
 uint32_t FX::readPendingUInt32() {
     uint32_t b3 = readPendingUInt8();
@@ -268,23 +454,28 @@ uint32_t FX::readPendingUInt32() {
     return (b3 << 24) | (b2 << 16) | (b1 << 8) | b0;
 }
 
-uint32_t FX::readPendingLastUInt32() {
-    return readPendingUInt32();
-}
+uint32_t FX::readPendingLastUInt32() { return readPendingUInt32(); }
 
 void FX::readBytes(uint8_t* buffer, size_t length) {
-    for(size_t i = 0; i < length; i++) buffer[i] = readPendingUInt8();
+    if(!buffer || length == 0) return;
+
+    if(domain_ == Domain::Data) {
+        (void)dataReadSpanCached_(cur_abs_, buffer, length);
+        cur_abs_ += (uint32_t)length;
+        return;
+    }
+
+    saveEnsureLoaded_();
+    size_t i = 0;
+    while(i < length) {
+        uint32_t off = cur_abs_++;
+        buffer[i++] = (save_ram_ && off < kSaveBlockSize) ? save_ram_[off] : 0xFF;
+    }
 }
 
-void FX::readBytesEnd(uint8_t* buffer, size_t length) {
-    if(length == 0) return;
-    for(size_t i = 0; i + 1 < length; i++) buffer[i] = readPendingUInt8();
-    buffer[length - 1] = readEnd();
-}
+void FX::readBytesEnd(uint8_t* buffer, size_t length) { readBytes(buffer, length); }
 
-uint8_t FX::readEnd() {
-    return readPendingUInt8();
-}
+uint8_t FX::readEnd() { return readPendingUInt8(); }
 
 void FX::readDataBytes(uint24_t address, uint8_t* buffer, size_t length) {
     seekData(address);
@@ -323,38 +514,45 @@ uint32_t FX::readIndexedUInt32(uint24_t address, uint8_t index) {
 }
 
 uint16_t FX::readSaveU16BE_(uint16_t off) {
-    uint8_t b[2] = {0xFF, 0xFF};
-    if(off + 1 < kSaveBlockSize) (void)fileReadAt_(save_, off, b, 2);
-    return ((uint16_t)b[0] << 8) | b[1];
+    saveEnsureLoaded_();
+    if(!save_ram_ || off + 1 >= kSaveBlockSize) return 0xFFFF;
+    return ((uint16_t)save_ram_[off] << 8) | save_ram_[off + 1];
 }
 
 void FX::writeSaveU16BE_(uint16_t off, uint16_t v) {
-    uint8_t b[2] = {(uint8_t)(v >> 8), (uint8_t)(v & 0xFF)};
-    if(off + 1 < kSaveBlockSize) (void)fileWriteAt_(save_, off, b, 2);
+    saveEnsureLoaded_();
+    if(!save_ram_ || off + 1 >= kSaveBlockSize) return;
+    save_ram_[off] = (uint8_t)(v >> 8);
+    save_ram_[off + 1] = (uint8_t)(v & 0xFF);
+    save_dirty_ = true;
 }
 
 void FX::waitWhileBusy() {}
 
 void FX::eraseSaveBlock(uint16_t) {
-    (void)fileFill_(save_, 0xFF, kSaveBlockSize);
+    saveEnsureLoaded_();
+    if(!save_ram_) return;
+    memset(save_ram_, 0xFF, kSaveBlockSize);
+    save_dirty_ = true;
 }
 
 uint8_t FX::loadGameState(uint8_t* gameState, size_t size) {
     if(!gameState || size == 0) return 0;
+    saveEnsureLoaded_();
+    if(!save_ram_) return 0;
 
     uint16_t addr = 0;
     uint8_t loaded = 0;
 
     while(true) {
         if(addr + 2 > kSaveBlockSize) break;
-
         uint16_t s = readSaveU16BE_(addr);
         if(s != (uint16_t)size) break;
 
         uint32_t next = (uint32_t)addr + 2u + (uint32_t)size;
         if(next > kSaveBlockSize) break;
 
-        (void)fileReadAt_(save_, addr + 2, gameState, size);
+        memcpy(gameState, &save_ram_[addr + 2], size);
         loaded = 1;
         addr = (uint16_t)next;
     }
@@ -364,18 +562,18 @@ uint8_t FX::loadGameState(uint8_t* gameState, size_t size) {
 
 void FX::saveGameState(const uint8_t* gameState, size_t size) {
     if(!gameState || size == 0) return;
+    saveEnsureLoaded_();
+    if(!save_ram_) return;
 
     uint16_t addr = 0;
 
     while(true) {
         if(addr + 2 > kSaveBlockSize) { addr = 0; break; }
-
         uint16_t s = readSaveU16BE_(addr);
         if(s != (uint16_t)size) break;
 
         uint32_t next = (uint32_t)addr + 2u + (uint32_t)size;
         if(next > kSaveBlockSize) { addr = 0; break; }
-
         addr = (uint16_t)next;
     }
 
@@ -386,5 +584,21 @@ void FX::saveGameState(const uint8_t* gameState, size_t size) {
     }
 
     writeSaveU16BE_(addr, (uint16_t)size);
-    (void)fileWriteAt_(save_, addr + 2, gameState, size);
+    memcpy(&save_ram_[addr + 2], gameState, size);
+    save_dirty_ = true;
+}
+
+void FX::warmUpData(uint24_t address, size_t length) {
+    if(!data_opened_ && !openData_()) return;
+    if(page_size_ == 0) return;
+
+    uint32_t abs = absDataOffset_(address);
+    uint32_t end = abs + (uint32_t)length;
+    uint32_t p = alignDown_(abs, page_size_);
+
+    while(p < end) {
+        uint8_t page_i = 0xFF;
+        (void)dataEnsurePageIndex_(p, &page_i);
+        p += page_size_;
+    }
 }

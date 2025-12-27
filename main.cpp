@@ -88,6 +88,7 @@ static void game_setup() {
   arduboy.setFrameRate(TARGET_FRAMERATE);
   arduboy.audio.begin();
 
+  FX::setCacheConfig(8192, 6); 
   FX::begin(0, 0);
   engine.init();
 }
