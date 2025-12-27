@@ -1,6 +1,6 @@
+// ArduboyFX.cpp
 #include "lib/ArduboyFX.h"
 
-// ---------------- static storage ----------------
 uint16_t FX::programDataPage = 0;
 uint16_t FX::programSavePage = 0;
 
@@ -11,13 +11,16 @@ File*    FX::save_ = nullptr;
 bool FX::data_opened_ = false;
 bool FX::save_opened_ = false;
 
-char FX::data_path_[128] = "/ext/fxdata-data.bin";
-char FX::save_path_[128] = "/ext/fxdata-ave.bin";
+char FX::data_path_[128] = "/ext/fxdata.bin";
+char FX::save_path_[128] = "/ext/fxdata-save.bin";
 
 FX::Domain FX::domain_ = FX::Domain::Data;
 uint32_t   FX::cur_abs_ = 0;
 
-// ---------------- path config ----------------
+uint8_t  FX::io_buf_[FX::kIOBufSize];
+uint16_t FX::io_pos_ = 0;
+uint16_t FX::io_len_ = 0;
+
 void FX::setPaths(const char* data_bin_path, const char* save_path) {
     if(data_bin_path && *data_bin_path) {
         strncpy(data_path_, data_bin_path, sizeof(data_path_) - 1);
@@ -29,13 +32,10 @@ void FX::setPaths(const char* data_bin_path, const char* save_path) {
     }
 }
 
-// ---------------- lifecycle ----------------
 bool FX::ensureStorage_() {
     if(storage_) return true;
-
     storage_ = (Storage*)furi_record_open(RECORD_STORAGE);
     if(!storage_) return false;
-
     data_ = storage_file_alloc(storage_);
     save_ = storage_file_alloc(storage_);
     if(!data_ || !save_) {
@@ -48,40 +48,52 @@ bool FX::ensureStorage_() {
 bool FX::openData_() {
     if(data_opened_) return true;
     if(!data_) return false;
-
-    if(!storage_file_open(data_, data_path_, FSAM_READ, FSOM_OPEN_EXISTING)) {
-        return false;
-    }
+    if(!storage_file_open(data_, data_path_, FSAM_READ, FSOM_OPEN_EXISTING)) return false;
     data_opened_ = true;
     return true;
+}
+
+bool FX::fileFill_(File* f, uint8_t value, size_t len) {
+    if(!f) return false;
+    if(!storage_file_seek(f, 0, true)) return false;
+    uint8_t buf[64];
+    memset(buf, value, sizeof(buf));
+    size_t remain = len;
+    while(remain) {
+        size_t chunk = remain > sizeof(buf) ? sizeof(buf) : remain;
+        if(storage_file_write(f, buf, chunk) != chunk) return false;
+        remain -= chunk;
+    }
+    return true;
+}
+
+bool FX::fileReadAt_(File* f, uint32_t off, void* out, size_t len) {
+    if(!f) return false;
+    if(!storage_file_seek(f, off, true)) return false;
+    return storage_file_read(f, out, len) == len;
+}
+
+bool FX::fileWriteAt_(File* f, uint32_t off, const void* in, size_t len) {
+    if(!f) return false;
+    if(!storage_file_seek(f, off, true)) return false;
+    return storage_file_write(f, in, len) == len;
 }
 
 bool FX::openSave_() {
     if(save_opened_) return true;
     if(!save_) return false;
 
-    // RW, создать если нет
-    if(!storage_file_open(save_, save_path_, FSAM_READ_WRITE, FSOM_OPEN_ALWAYS)) {
-        return false;
-    }
+    if(!storage_file_open(save_, save_path_, FSAM_READ_WRITE, FSOM_OPEN_ALWAYS)) return false;
     save_opened_ = true;
 
-    // Гарантируем "erase-sector" размер 4096 и заполнение 0xFF.
-    // Самый надёжный вариант: если файл пустой или не 4096 — пересоздать.
-    // Проверка size в разных SDK может отличаться, поэтому делаем консервативно:
-    // читаем 1 байт в конце — если не выходит, пересоздадим.
     uint8_t tmp = 0;
-    bool ok_tail = fileRead_(save_, kSaveBlockSize - 1, &tmp, 1);
-
+    bool ok_tail = fileReadAt_(save_, kSaveBlockSize - 1, &tmp, 1);
     if(!ok_tail) {
         storage_file_close(save_);
         save_opened_ = false;
 
-        if(!storage_file_open(save_, save_path_, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
-            return false;
-        }
+        if(!storage_file_open(save_, save_path_, FSAM_WRITE, FSOM_CREATE_ALWAYS)) return false;
         save_opened_ = true;
-
         if(!fileFill_(save_, 0xFF, kSaveBlockSize)) return false;
     }
 
@@ -99,6 +111,10 @@ bool FX::begin() {
     if(!ensureStorage_()) return false;
     if(!openData_()) return false;
     if(!openSave_()) return false;
+    domain_ = Domain::Data;
+    cur_abs_ = 0;
+    io_pos_ = 0;
+    io_len_ = 0;
     return true;
 }
 
@@ -133,7 +149,6 @@ void FX::end() {
     }
 }
 
-// ---------------- compat stubs ----------------
 uint8_t FX::writeByte(uint8_t data) { return data; }
 uint8_t FX::readByte() { return 0; }
 void FX::writeCommand(uint8_t) {}
@@ -147,65 +162,32 @@ void FX::readJedecID(JedecID& id) {
     id.device = 0;
     id.size = 0;
 }
+
 void FX::readJedecID(JedecID* id) {
     if(id) readJedecID(*id);
 }
 
 bool FX::detect() {
-    // Опциональная сигнатура как в исходнике (0x4152 = 'A''R')
-    uint8_t b[2];
-    if(!fileRead_(data_, 0, b, 2)) return false;
-    uint16_t v = ((uint16_t)b[0] << 8) | b[1];
-    return v == 0x4152;
+    if(!data_opened_ && !openData_()) return false;
+    uint8_t b;
+    return fileReadAt_(data_, 0, &b, 1);
 }
 
-void FX::noFXReboot() {
-    // На Flipper bootloader не нужен — оставляем заглушкой
-}
+void FX::noFXReboot() {}
 
-// ---------------- file helpers ----------------
 uint32_t FX::absDataOffset_(uint24_t address) {
     return (uint32_t)address + ((uint32_t)programDataPage << 8);
 }
 
-bool FX::fileRead_(File* f, uint32_t off, void* out, size_t len) {
-    if(!f) return false;
-    if(!storage_file_seek(f, off, true)) return false;
-    size_t r = storage_file_read(f, out, len);
-    return r == len;
-}
-
-bool FX::fileWrite_(File* f, uint32_t off, const void* in, size_t len) {
-    if(!f) return false;
-    if(!storage_file_seek(f, off, true)) return false;
-    size_t w = storage_file_write(f, in, len);
-    return w == len;
-}
-
-bool FX::fileFill_(File* f, uint8_t value, size_t len) {
-    if(!f) return false;
-    if(!storage_file_seek(f, 0, true)) return false;
-
-    uint8_t buf[64];
-    memset(buf, value, sizeof(buf));
-
-    size_t remain = len;
-    while(remain) {
-        size_t chunk = remain > sizeof(buf) ? sizeof(buf) : remain;
-        if(storage_file_write(f, buf, chunk) != chunk) return false;
-        remain -= chunk;
-    }
-    return true;
-}
-
-// ---------------- seek ----------------
 void FX::seekData(uint24_t address) {
     domain_ = Domain::Data;
     cur_abs_ = absDataOffset_(address);
+    io_pos_ = 0;
+    io_len_ = 0;
+    storage_file_seek(data_, cur_abs_, true);
 }
 
 void FX::seekDataArray(uint24_t address, uint8_t index, uint8_t offset, uint8_t elementSize) {
-    // как в оригинале: size 0 => 256
     uint32_t add = (elementSize == 0) ? (uint32_t)index * 256u : (uint32_t)index * (uint32_t)elementSize;
     add += offset;
     seekData(address + add);
@@ -213,27 +195,44 @@ void FX::seekDataArray(uint24_t address, uint8_t index, uint8_t offset, uint8_t 
 
 void FX::seekSave(uint24_t address) {
     domain_ = Domain::Save;
-    cur_abs_ = (uint32_t)address; // offset внутри 4KB save блока
+    cur_abs_ = (uint32_t)address;
+    io_pos_ = 0;
+    io_len_ = 0;
+    storage_file_seek(save_, cur_abs_, true);
 }
 
-// ---------------- pending read core ----------------
-uint8_t FX::readPendingUInt8() {
-    uint8_t v = 0xFF;
+bool FX::ioRefill_() {
+    File* f = (domain_ == Domain::Data) ? data_ : save_;
+    if(!f) return false;
 
-    if(domain_ == Domain::Data) {
-        (void)fileRead_(data_, cur_abs_, &v, 1);
-        cur_abs_++;
-        return v;
-    } else {
-        // Save: читаем из 4KB файла
-        if(cur_abs_ < kSaveBlockSize) {
-            (void)fileRead_(save_, cur_abs_, &v, 1);
-        } else {
-            v = 0xFF;
-        }
-        cur_abs_++;
-        return v;
+    size_t want = kIOBufSize;
+    if(domain_ == Domain::Save) {
+        if(cur_abs_ >= kSaveBlockSize) return false;
+        uint32_t remain = kSaveBlockSize - cur_abs_;
+        if(remain < want) want = remain;
     }
+
+    io_len_ = (uint16_t)storage_file_read(f, io_buf_, want);
+    io_pos_ = 0;
+    return io_len_ != 0;
+}
+
+uint8_t FX::readPendingUInt8() {
+    if(domain_ == Domain::Save && cur_abs_ >= kSaveBlockSize) {
+        cur_abs_++;
+        return 0xFF;
+    }
+
+    if(io_pos_ >= io_len_) {
+        if(!ioRefill_()) {
+            cur_abs_++;
+            return 0xFF;
+        }
+    }
+
+    uint8_t v = io_buf_[io_pos_++];
+    cur_abs_++;
+    return v;
 }
 
 uint8_t FX::readPendingLastUInt8() {
@@ -284,11 +283,9 @@ void FX::readBytesEnd(uint8_t* buffer, size_t length) {
 }
 
 uint8_t FX::readEnd() {
-    // На Flipper "end transaction" не нужен — просто читаем
     return readPendingUInt8();
 }
 
-// ---------------- convenience data/save bytes ----------------
 void FX::readDataBytes(uint24_t address, uint8_t* buffer, size_t length) {
     seekData(address);
     readBytesEnd(buffer, length);
@@ -305,7 +302,6 @@ void FX::readDataArray(uint24_t address, uint8_t index, uint8_t offset, uint8_t 
     readBytesEnd(buffer, length);
 }
 
-// ---------------- indexed reads ----------------
 uint8_t FX::readIndexedUInt8(uint24_t address, uint8_t index) {
     seekDataArray(address, index, 0, sizeof(uint8_t));
     return readEnd();
@@ -326,38 +322,29 @@ uint32_t FX::readIndexedUInt32(uint24_t address, uint8_t index) {
     return readPendingLastUInt32();
 }
 
-// ---------------- save block helpers ----------------
 uint16_t FX::readSaveU16BE_(uint16_t off) {
     uint8_t b[2] = {0xFF, 0xFF};
-    if(off + 1 < kSaveBlockSize) {
-        (void)fileRead_(save_, off, b, 2);
-    }
+    if(off + 1 < kSaveBlockSize) (void)fileReadAt_(save_, off, b, 2);
     return ((uint16_t)b[0] << 8) | b[1];
 }
 
 void FX::writeSaveU16BE_(uint16_t off, uint16_t v) {
     uint8_t b[2] = {(uint8_t)(v >> 8), (uint8_t)(v & 0xFF)};
-    if(off + 1 < kSaveBlockSize) {
-        (void)fileWrite_(save_, off, b, 2);
-    }
+    if(off + 1 < kSaveBlockSize) (void)fileWriteAt_(save_, off, b, 2);
 }
 
-void FX::waitWhileBusy() {
-    // no-op
-}
+void FX::waitWhileBusy() {}
 
-void FX::eraseSaveBlock(uint16_t /*page*/) {
+void FX::eraseSaveBlock(uint16_t) {
     (void)fileFill_(save_, 0xFF, kSaveBlockSize);
 }
 
-// ---------------- GameState (как ArduboyFX по логике) ----------------
 uint8_t FX::loadGameState(uint8_t* gameState, size_t size) {
     if(!gameState || size == 0) return 0;
 
     uint16_t addr = 0;
     uint8_t loaded = 0;
 
-    // Читаем "самый последний валидный" блок того же size
     while(true) {
         if(addr + 2 > kSaveBlockSize) break;
 
@@ -367,8 +354,7 @@ uint8_t FX::loadGameState(uint8_t* gameState, size_t size) {
         uint32_t next = (uint32_t)addr + 2u + (uint32_t)size;
         if(next > kSaveBlockSize) break;
 
-        // читаем payload
-        (void)fileRead_(save_, addr + 2, gameState, size);
+        (void)fileReadAt_(save_, addr + 2, gameState, size);
         loaded = 1;
         addr = (uint16_t)next;
     }
@@ -379,7 +365,6 @@ uint8_t FX::loadGameState(uint8_t* gameState, size_t size) {
 void FX::saveGameState(const uint8_t* gameState, size_t size) {
     if(!gameState || size == 0) return;
 
-    // найти конец цепочки предыдущих сейвов (того же размера)
     uint16_t addr = 0;
 
     while(true) {
@@ -394,17 +379,12 @@ void FX::saveGameState(const uint8_t* gameState, size_t size) {
         addr = (uint16_t)next;
     }
 
-    // как в оригинале: последние 2 байта 4KB всегда "не используем"
-    // => доступно максимум 4094 байта под записи
     if(((uint32_t)addr + 2u + (uint32_t)size) > 4094u) {
         eraseSaveBlock(0);
         waitWhileBusy();
         addr = 0;
     }
 
-    // write header + data
     writeSaveU16BE_(addr, (uint16_t)size);
-    (void)fileWrite_(save_, addr + 2, gameState, size);
-
-    // при желании можно storage_file_sync(save_) если в твоём SDK доступно
+    (void)fileWriteAt_(save_, addr + 2, gameState, size);
 }
