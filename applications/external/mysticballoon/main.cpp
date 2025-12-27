@@ -102,7 +102,6 @@ static void input_events_callback(const void* value, void* ctx) {
 }
 
 static void game_setup() {
-    EEPROM.begin("/ext/eeprom.bin", 2500);
     arduboy.boot();
     arduboy.audio.begin();
     arduboy.bootLogoSpritesSelfMasked();
@@ -185,7 +184,7 @@ extern "C" int32_t mybl_app(void* p) {
     memset(g_state->screen_buffer, 0x00, BUFFER_SIZE);
     memset(g_state->front_buffer, 0x00, BUFFER_SIZE);
 
-    arduboy.begin(g_state->screen_buffer, &g_state->input_state, g_state->game_mutex);
+    arduboy.begin(g_state->screen_buffer, &g_state->input_state, g_state->game_mutex, &g_state->exit_requested);
     Sprites::setArduboy(&arduboy);
     g_state->gui = (Gui*)furi_record_open(RECORD_GUI);
     gui_add_framebuffer_callback(g_state->gui, framebuffer_commit_callback, g_state);
