@@ -357,7 +357,7 @@ int32_t rfid_fuzzer_app(void* p) {
         .proto = 0,
         .count = 30000,
         .run = true,
-        .splash = true,
+        .splash = false,
         .splash_timeout = furi_get_tick() + 2000,
     };
 
