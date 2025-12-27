@@ -46,6 +46,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [HTW AC Remote v1.1 (By sokogen)](https://github.com/sokogen/flipperzero-htw-ac-remote)
 - Updated: [Catacombs Of The Damned v2.0 (By apfxtech)](https://github.com/apfxtech/FlipperCatacombs)
 - Updated: [Mystic Balloon v2.0 (By apfxtech)](https://github.com/apfxtech/FlipperMysticBalloon)
+- Added: [Arduventure v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperArduventure)
 
 <a name="release">
 
@@ -276,6 +277,7 @@ $ ./fbt dolphin_ext
 - [Air Arkanoid  v1.1 (By DrZlo13)](https://github.com/flipperdevices/flipperzero-good-faps/pull/141) `Req: Video Game Module By Flipper Devices`
 - [Air Labyrinth v0.1 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/vgm/apps/air_labyrinth) `Req: Video Game Module By Flipper Devices`
 - [Apple Grabber v0.1 (By d7d8)](https://github.com/d7d8/apple-grabber)
+- [Arduventure v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperArduventure)
 - [Arkanoid v1.2 (By gotnull)](https://github.com/gotnull/flipperzero-firmware-wPlugins)
 - [Asteroids v1.2 (By antirez)](https://github.com/antirez/flipper-asteroids)
 - [Banana v0.4 (By DrEverr)](https://github.com/DrEverr/FlipperApps)

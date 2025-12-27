@@ -643,7 +643,7 @@ static int32_t atm_thread_fn(void* /*ctx*/) {
             }
 
             if(cmd.type == AtmCmdUnmute) {
-                ChannelActiveMute = (uint8_t)(ChannelActiveMute & (uint8_t)~(1 << cmd.u.ch.ch));
+                ChannelActiveMute = (uint8_t)(ChannelActiveMute & (uint8_t) ~(1 << cmd.u.ch.ch));
                 continue;
             }
 
