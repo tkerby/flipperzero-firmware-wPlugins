@@ -7,8 +7,8 @@ App(
     fap_category="Games",
     fap_version="0.1",
     fap_icon="icon.png",
-    fap_description="Apple grabber game",
+    fap_description="Apple grabber game, default mode is vertical",
     fap_author="Julio Rodriguez",
-    # fap_weburl="https://github.com/user/test",
+    fap_weburl="https://github.com/d7d8/apple-grabber",
     fap_icon_assets="images", 
 )
