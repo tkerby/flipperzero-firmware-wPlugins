@@ -29,6 +29,8 @@ private:
     static const size_t MAX_TEXT_SIZE = 256;     // Maximum size of text input buffer
     KeyboardMode mode;                           // Current keyboard mode
     char text_buffer[MAX_TEXT_SIZE];             // internal buffer for text input
+    uint8_t text_cursor;                         // position in text buffer
+    bool text_edit_mode;                         // true when editing text position, false when navigating keyboard
     //
     void clampCursorToValidPosition();                                            // Ensure cursor is within valid bounds of the current keyboard layout
     const char (*getCurrentKeyboard())[11];                                       // Get the current keyboard layout based on mode
@@ -53,6 +55,8 @@ public:
     uint8_t getCursorY() const { return cursor_y; }                         // get current cursor Y position
     KeyboardMode getMode() const { return mode; }                           // get current keyboard mode
     const char *getText() const;                                            // get current text input
+    uint8_t getTextCursor() const { return text_cursor; }                   // get current text cursor position
+    bool getTextEditMode() const { return text_edit_mode; }                 // check if in text edit mode
     size_t getTextLength() const;                                           // get length of current text input
     bool handleInput(InputEvent *event);                                    // handle input from the user (pass input key here)
     void reset();                                                           // reset keyboard state
