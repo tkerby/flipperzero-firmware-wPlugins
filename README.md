@@ -13,6 +13,3 @@ A high-fidelity slot machine for your Flipper Zero. When you're bored and feelin
 * **Fair Math:** Uses a PCG32 random number generator for authentic reel behavior.
 * **Tactile Feedback:** Feel the "click" of the reels and the pulse of a big win.
 * **Secrets:** Keep an eye out for hidden button combinations that may unlock special behaviors...
-
----
-*Made by vh8t. For entertainment purposes only.*
