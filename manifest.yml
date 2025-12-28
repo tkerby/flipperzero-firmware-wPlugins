@@ -3,10 +3,10 @@ sourcecode:
   location:
     origin: https://github.com/vh8t/flipperzero-slots
     commit_sha: 47134466bc73d02e4d5e84bcc67c3a66d8c6a0f7
-  description: "@README.md"
-  changelog: "@CHANGELOG.md"
-  screenshots:
-    - "./screenshots/screenshot-1.png"
-    - "./screenshots/screenshot-2.png"
-    - "./screenshots/screenshot-3.png"
-    - "./screenshots/screenshot-4.png"
+description: "@README.md"
+changelog: "@CHANGELOG.md"
+screenshots:
+  - "./screenshots/screenshot-1.png"
+  - "./screenshots/screenshot-2.png"
+  - "./screenshots/screenshot-3.png"
+  - "./screenshots/screenshot-4.png"
