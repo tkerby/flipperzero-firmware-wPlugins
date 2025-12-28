@@ -112,7 +112,6 @@ class FlipDownloaderRun {
     void drawMenuESP32(Canvas* canvasx); // Draw the firmware menu
     void drawMenuVGM(Canvas* canvasx); // Draw the VGM menu
     void drawApps(Canvas* canvas); // Draw the apps view
-    void drawGitHubInput(Canvas* canvas); // Draw GitHub input screen
     void drawGitHubProgress(Canvas* canvas); // Draw GitHub download progress
     bool downloadApp(
         const char* appId,

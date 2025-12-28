@@ -26,6 +26,8 @@ private:
     static const size_t MAX_TEXT_SIZE = 256; // Maximum size of text input buffer
     KeyboardMode mode; // Current keyboard mode
     char text_buffer[MAX_TEXT_SIZE]; // internal buffer for text input
+    uint8_t text_cursor; // position in text buffer
+    bool text_edit_mode; // true when editing text position, false when navigating keyboard
     //
     void
         clampCursorToValidPosition(); // Ensure cursor is within valid bounds of the current keyboard layout
@@ -34,6 +36,10 @@ private:
     size_t getStringLength(
         const char* str,
         size_t max_size); // Get the length of a string, respecting max size
+    bool handleInput(
+        InputEvent* event,
+        char* target_buffer,
+        size_t target_size); // handle input and store result in target buffer
 
 public:
     Keyboard();
@@ -52,6 +58,7 @@ public:
     bool getCapsLock() const {
         return caps_lock;
     } // check if caps lock is enabled
+    char getCurrentChar(bool long_press); // get character at current cursor position
     uint8_t getCursorX() const {
         return cursor_x;
     } // get current cursor X position
@@ -62,12 +69,14 @@ public:
         return mode;
     } // get current keyboard mode
     const char* getText() const; // get current text input
+    uint8_t getTextCursor() const {
+        return text_cursor;
+    } // get current text cursor position
+    bool getTextEditMode() const {
+        return text_edit_mode;
+    } // check if in text edit mode
     size_t getTextLength() const; // get length of current text input
-    bool handleInput(uint8_t key); // handle input from the user (pass input key here)
-    bool handleInput(
-        uint8_t key,
-        char* target_buffer,
-        size_t target_size); // handle input and store result in target buffer
+    bool handleInput(InputEvent* event); // handle input from the user (pass input key here)
     void reset(); // reset keyboard state
     void resetText(); // reset text input buffer
     void setText(const char* text); // set text input buffer to a specific string

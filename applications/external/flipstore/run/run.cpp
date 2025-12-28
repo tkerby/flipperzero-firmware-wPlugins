@@ -2506,7 +2506,7 @@ void FlipDownloaderRun::updateDraw(Canvas* canvas) {
 }
 
 void FlipDownloaderRun::updateInput(InputEvent* event) {
-    if(event->type == InputTypePress) {
+    if(event->type == InputTypeShort || event->type == InputTypeLong) {
         //  download progress view - only allow back button
         if(currentView == RunViewDownloadProgress) {
             switch(event->key) {
@@ -2538,8 +2538,8 @@ void FlipDownloaderRun::updateInput(InputEvent* event) {
         }
 
         // Get current selected index and menu count based on current view
-        uint8_t* currentSelectedIndex;
-        uint8_t menuCount;
+        uint8_t* currentSelectedIndex = 0;
+        uint8_t menuCount = 0;
 
         switch(currentView) {
         case RunViewMainMenu:
@@ -2588,7 +2588,7 @@ void FlipDownloaderRun::updateInput(InputEvent* event) {
 
                     default:
                         if(keyboard) {
-                            if(keyboard->handleInput(event->key)) {
+                            if(keyboard->handleInput(event)) {
                                 // Handle successful input
                                 if(currentView == RunViewGitHubAuthor) {
                                     // Move to repo input
