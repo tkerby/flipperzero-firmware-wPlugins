@@ -1,9 +1,13 @@
+// lib/ArduboyTones.h
 #pragma once
 #include <stdint.h>
 #include <furi.h>
 #include <furi_hal.h>
+
 #include "ArduboyTonesPitches.h"
 #include "EEPROM.h"
+
+using uint24_t = uint32_t;
 
 #ifndef TONES_END
 #define TONES_END 0x8000
@@ -242,7 +246,7 @@ public:
         }
     }
 
-    bool enabled() const {
+    static bool enabled() {
         return g_arduboy_audio_enabled;
     }
 
@@ -252,17 +256,12 @@ public:
     }
 };
 
-#include "Arduboy2.h"
-
 class ArduboyTones {
 public:
-    explicit ArduboyTones(bool /*enabled*/) {
-    }
-    ArduboyTones() {
-    }
+    explicit ArduboyTones(bool /*enabled*/) {}
+    ArduboyTones() {}
 
-    void attachAudio(ArduboyAudio* /*audio*/) {
-    }
+    void attachAudio(ArduboyAudio* /*audio*/) {}
 
     void begin() {
         g_arduboy_audio_enabled = true;
@@ -372,8 +371,7 @@ public:
         tones(inline_patterns3_[i]);
     }
 
-    static void nextTone() {
-    }
+    static void nextTone() {}
 
 private:
     static inline uint16_t ms_to_ticks16_(uint16_t ms) {

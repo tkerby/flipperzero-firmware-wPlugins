@@ -2,73 +2,73 @@
 #pragma once
 
 #include <stdint.h>
-#include <stddef.h>
-#include "lib/ArduboyFX.h"
-#include "lib/ArduboyTones.h"
+#include <stdbool.h>
 
-#ifndef ARDUBOY_TONES_FX_DEFAULT_BUF_LEN
-#define ARDUBOY_TONES_FX_DEFAULT_BUF_LEN 64
+#include "lib/Arduino.h"
+#include "lib/ArduboyTones.h"
+#include "lib/ArduboyFX.h"
+
+#define VOLUME_IN_TONE         0
+#define VOLUME_ALWAYS_NORMAL   1
+#define VOLUME_ALWAYS_HIGH     2
+
+#ifndef ARDUBOY_TONESFX_MAX_WORDS
+#define ARDUBOY_TONESFX_MAX_WORDS 512
 #endif
 
-class ArduboyTonesFX : public ArduboyTones {
+class ArduboyTonesFX {
 public:
-    ArduboyTonesFX(bool (*outEn)());
-    ArduboyTonesFX(bool (*outEn)(), uint16_t* tonesArray, uint8_t tonesArrayLen);
-    ArduboyTonesFX(bool (*outEn)(), uint16_t* tonesArray, int tonesArrayLen);
+    static bool (*outputEnabled)();
+    static bool outputEnabledFixed;
 
-    ArduboyTonesFX(bool enabled = true);
-    ArduboyTonesFX(bool enabled, uint16_t* tonesArray, uint8_t tonesArrayLen);
-    ArduboyTonesFX(bool enabled, uint16_t* tonesArray, int tonesArrayLen);
+    ArduboyTonesFX(boolean (*outEn)());
+    ArduboyTonesFX(boolean (*outEn)(), uint16_t* tonesArray, uint8_t tonesArrayLen);
 
-    void volumeMode(uint8_t mode);
-    bool playing();
+    static void attachTones(ArduboyTones* backend);
 
-    void noTone();
+    static void tone(uint16_t freq, uint16_t dur = 0);
+    static void tone(uint16_t f1, uint16_t d1, uint16_t f2, uint16_t d2);
+    static void tone(uint16_t f1, uint16_t d1, uint16_t f2, uint16_t d2,
+                     uint16_t f3, uint16_t d3);
 
-    void tone(uint16_t freq, uint16_t dur = 0);
-    void tone(uint16_t f1, uint16_t d1, uint16_t f2, uint16_t d2);
-    void tone(uint16_t f1, uint16_t d1, uint16_t f2, uint16_t d2, uint16_t f3, uint16_t d3);
+    static void tones(const uint16_t* pattern);
+    static void tonesInRAM(uint16_t* pattern);
+    static void tonesFromFX(uint32_t fx_addr);
 
-    void tones(const uint16_t* pattern);
-    void tonesInRAM(uint16_t* pattern);
-
-    void tonesFromFX(uint24_t tones_address);
-    void fillBufferFromFX();
+    static void noTone();
+    static void volumeMode(uint8_t mode);
+    static bool playing();
 
 private:
-    enum : uint8_t { TONES_MODE_NORMAL = 0, TONES_MODE_FX = 1 };
+    static ArduboyTones* tonesBackend;
+    static ArduboyTones  tonesBackendInternal;
+    static bool backendBegun;
 
-    bool enabled_() const;
+    static uint16_t toneSequence[MAX_TONES * 2 + 1];
+    static uint16_t seqBuffer[ARDUBOY_TONESFX_MAX_WORDS];
 
-    static inline uint16_t readU16LEFromFX_() {
-        uint16_t lo = FX::readPendingUInt8();
-        uint16_t hi = FX::readPendingUInt8();
-        return (hi << 8) | lo;
+    static inline bool isOutputEnabledNow() {
+        if(outputEnabled) return outputEnabled();
+        return outputEnabledFixed;
     }
 
-    void fillBufferFromFX_();
-    bool buildAndPlayFromRing_();
+    static inline void ensureBackend() {
+        if(!tonesBackend) tonesBackend = &tonesBackendInternal;
+        if(!backendBegun) {
+            tonesBackend->begin();
+            backendBegun = true;
+        }
+    }
 
-private:
-    ArduboyTones tones_;
+    static inline uint16_t dur1024_to_ticks(uint16_t dur1024) {
+        if(dur1024 == 0) return 0;
+        uint32_t ticks = (uint32_t)dur1024 * (uint32_t)ARDUBOY_TONES_TICK_HZ + 512u;
+        ticks >>= 10;
+        if(ticks == 0) ticks = 1;
+        if(ticks > 0xFFFFu) ticks = 0xFFFFu;
+        return (uint16_t)ticks;
+    }
 
-    bool (*outEn_)() = nullptr;
-    bool enabled_value_ = true;
-
-    uint16_t internal_ring_[ARDUBOY_TONES_FX_DEFAULT_BUF_LEN];
-    uint16_t* ring_ = nullptr;
-    uint8_t ring_len_ = 0;
-
-    uint16_t internal_linear_[ARDUBOY_TONES_FX_DEFAULT_BUF_LEN + 1];
-    uint16_t* linear_ = nullptr;
-    uint16_t linear_cap_ = 0;
-
-    volatile uint8_t head_ = 0;
-    volatile int16_t tail_ = -1;
-
-    bool tonesPlaying_ = false;
-    uint8_t toneMode_ = TONES_MODE_NORMAL;
-
-    uint24_t tonesFX_Start_ = 0;
-    uint24_t tonesFX_Curr_ = 0;
+    static uint16_t copyPattern(const uint16_t* src, bool progmem);
+    static uint16_t decodeFx(uint32_t fx_addr);
 };

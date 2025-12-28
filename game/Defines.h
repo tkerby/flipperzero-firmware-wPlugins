@@ -128,7 +128,7 @@ using uint24_t = __uint24;
 #define STREAM_BUFFER_SIZE 64
 
 #ifndef TARGET_FRAMERATE
-#define TARGET_FRAMERATE 25
+#define TARGET_FRAMERATE 20
 #endif
 
 

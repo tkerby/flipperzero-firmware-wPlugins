@@ -43,7 +43,7 @@ static FlipperState* g_state = NULL;
 Arduboy2Base arduboy;
 
 uint16_t audioBuffer[32];
-ArduboyTonesFX sound(arduboy.audio.enabled(), audioBuffer, 32);
+ArduboyTonesFX sound(arduboy.audio.enabled, audioBuffer, 32);
 
 unsigned long lastTimingSample;
 
@@ -54,8 +54,7 @@ static void input_events_callback(const void* value, void* ctx) {
 }
 
 void ArduboyPlatform::playSound(uint8_t id) {
-    sound.tonesFromFX(
-        (uint24_t)((uint32_t)Data_audio + (uint32_t)(pgm_read_word(&Data_AudioPatterns[id]))));
+    sound.tonesFromFX((uint24_t)((uint32_t)Data_audio + (uint32_t)(pgm_read_word(&Data_AudioPatterns[id]))));
 }
 
 static void framebuffer_commit_callback(
@@ -113,6 +112,7 @@ extern "C" int32_t arduboy_app(void* p) {
     arduboy.boot();
     arduboy.setFrameRate(TARGET_FRAMERATE);
     arduboy.audio.begin();
+    arduboy.audio.on();
 
     FX::setCacheConfig(8192, 6);
     (void)FX::begin(0, 0);
@@ -139,7 +139,7 @@ extern "C" int32_t arduboy_app(void* p) {
             lastTimingSample = now;
 
             if(arduboy.nextFrame()) {
-                sound.fillBufferFromFX();
+                //sound.poll();
                 Platform.update();
 
                 while(tickAccum > frameDuration) {
@@ -164,7 +164,7 @@ extern "C" int32_t arduboy_app(void* p) {
 
             furi_mutex_release(g_state->game_mutex);
         }
-
+        //ArduboyTonesFX::poll(); 
         furi_delay_ms(1);
     }
 

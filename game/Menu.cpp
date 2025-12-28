@@ -151,6 +151,11 @@ void Menu::loadSelectedSave()
 void Menu::toggleSound()
 {
 	Platform.setMuted(!Platform.isMuted());
+	if (Platform.isMuted()){
+		arduboy.audio.off();
+	} else {
+		arduboy.audio.on();
+	}
 }
 
 void Menu::chooseNewSlot()
