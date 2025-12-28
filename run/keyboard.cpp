@@ -189,6 +189,28 @@ void Keyboard::draw(Canvas *canvas, const char *title, const char *current_text)
     canvas_draw_str(canvas, 50, 64, title);
 }
 
+char Keyboard::getCurrentChar(bool long_press)
+{
+    const char (*keyboard)[11] = getCurrentKeyboard();
+    char ch = keyboard[cursor_y][cursor_x];
+    /* if long press,
+      - return uppercase version if in lowercase mode
+      - return lowercase version if in uppercase mode
+    */
+    if (long_press)
+    {
+        if (mode == KEYBOARD_LOWERCASE && ch >= 'a' && ch <= 'z')
+        {
+            ch = ch - ('a' - 'A');
+        }
+        else if (mode == KEYBOARD_UPPERCASE && ch >= 'A' && ch <= 'Z')
+        {
+            ch = ch + ('a' - 'A');
+        }
+    }
+    return ch;
+}
+
 const char (*Keyboard::getCurrentKeyboard())[11]
 {
     switch (mode)
@@ -250,15 +272,15 @@ const char Keyboard::keyboard_numbers[3][11] = {
     {'@', '#', '$', '%', '&', '*', '+', '=', '?', '!', '\0'},
     {'(', ')', '[', ']', '{', '}', '<', '>', '|', '\\', '\0'}};
 
-bool Keyboard::handleInput(uint8_t key)
+bool Keyboard::handleInput(InputEvent *event)
 {
-    return handleInput(key, text_buffer, MAX_TEXT_SIZE);
+    return handleInput(event, text_buffer, MAX_TEXT_SIZE);
 }
 
-bool Keyboard::handleInput(uint8_t key, char *target_buffer, size_t target_size)
+bool Keyboard::handleInput(InputEvent *event, char *target_buffer, size_t target_size)
 {
     const char (*keyboard)[11] = getCurrentKeyboard();
-
+    const uint8_t key = event->key;
     switch (key)
     {
     case InputKeyLeft:
@@ -411,8 +433,9 @@ bool Keyboard::handleInput(uint8_t key, char *target_buffer, size_t target_size)
             }
         }
         else
-        { // Main keyboard area
-            char ch = keyboard[cursor_y][cursor_x];
+        {
+            // Main keyboard area
+            char ch = getCurrentChar(event->type == InputTypeLong);
             if (ch != '\0')
             {
                 size_t len = getStringLength(target_buffer, target_size);
