@@ -8,6 +8,15 @@ I am not a C developer, and I don't know Flipper development. I managed to patch
 
 I have made no changes to the signal logic or other ProtoView features (well, unless inadvertently). I do not have the competency to add support for TPMS transmitters that are not already supported by ProtoView, so please don't ask.
 
+## Screenshots
+
+<table>
+  <tr>
+    <td><img src="./img/1.png" alt="Screenshot1" width="300"/></td>
+    <td><img src="./img/2.png" alt="Screenshot2" width="300"/></td>
+  </tr>
+</table>
+
 ## Basic usage
 
 The new page is located two clicks to the right of the regular startup page. Until tyres are detected, it will show a few lines of information.
@@ -39,4 +48,6 @@ I attempted to make the file read automatically on startup, but the natural plac
 
 ## Compilation
 
-You should be able to compile this by installing [uFBT](https://github.com/flipperdevices/flipperzero-ufbt) and running the command `ufbt` in the root of the source folder.
+You should be able to compile this by installing [uFBT](https://github.com/flipperdevices/flipperzero-ufbt) and running the command `ufbt` in the root of the source folder. `ubft launch` should compile, install and launch.
+
+If you get a "compiled for too new version" type warning on starting the app, `ufbt update --branch=1.3.4` should put your uFBT on the branch matching Momentum 011.

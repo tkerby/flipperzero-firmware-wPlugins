@@ -51,6 +51,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FZ nRF24 Jammer v1.4 (By W0rthlessS0ul)](https://github.com/W0rthlessS0ul/FZ_nRF24_jammer)
 - Revert: [Updated Ventra NFC Protocol w/ StopID Parsing, Weather Station: Added support for LaCrosse X141-BV3 #1156 (By FatherDivine)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1156)
 - Updated: [FlipDownloader v1.3.5 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- Updated: [Protocol Visualizer v1.3 (By antirez)](https://github.com/antirez/protoview)
 
 <a name="release">
 
