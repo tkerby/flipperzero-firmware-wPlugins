@@ -2,7 +2,7 @@ sourcecode:
   type: git
   location:
     origin: https://github.com/vh8t/flipperzero-slots
-    commit_sha: 47134466bc73d02e4d5e84bcc67c3a66d8c6a0f7
+    commit_sha: 24b38deba518a23b21ff3d77392ff8c4568d3bab
 description: "@README.md"
 changelog: "@CHANGELOG.md"
 screenshots:
