@@ -1,4 +1,4 @@
-# Bzz Bzz - Rhythm-Matching Game for Flipper Zero
+# BzzBzz - Rhythm-Matching Game for Flipper Zero
 
 ![Startscreen](https://github.com/ikiruneo/BzzBzz/blob/main/screenshots/screenshot1.png?raw=true "Startscreen")
 
