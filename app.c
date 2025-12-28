@@ -172,7 +172,8 @@ ProtoViewApp* protoview_app_alloc() {
     app->txrx->last_g0_value = false;
 
     app->frequency = subghz_setting_get_default_frequency(app->setting);
-    app->modulation = 0; /* Defaults to ProtoViewModulations[0]. */
+    //app->modulation = 0; /* Defaults to ProtoViewModulations[0]. */
+    app->modulation = 4; /* Default to TPMS 1 (FSK) */
 
     // Init & set radio_device
     subghz_devices_init();
