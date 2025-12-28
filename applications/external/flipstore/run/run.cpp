@@ -3100,7 +3100,7 @@ void FlipDownloaderRun::updateInput(InputEvent* event) {
         switch(currentView) {
         case RunViewMainMenu:
             currentSelectedIndex = &selectedIndexMain;
-            menuCount = 4;
+            menuCount = 5;
             break;
         case RunViewCatalog:
             currentSelectedIndex = &selectedIndexCatalog;
