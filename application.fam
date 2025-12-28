@@ -1,0 +1,16 @@
+# For details & more options, see documentation/AppManifests.md in firmware repo
+
+App(
+    appid="bzzbzz",  # Must be unique
+    name="BzzBzz",  # Displayed in menus
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="bzzbzz_app",
+    stack_size=2 * 1024,
+    fap_category="Games",
+    fap_version="0.2",
+    fap_icon="bzz_bzz.png",  # 10x10 1-bit PNG
+    fap_description="Rhythm matching game where you repeat vibration patterns",
+    fap_author="Koray Er",
+    # fap_weburl="https://github.com/ikiruneo/BzzBzz",  # Add your actual repository URL when published
+    fap_icon_assets="images",  # Image assets to compile for this application
+)
