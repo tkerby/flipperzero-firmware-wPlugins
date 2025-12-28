@@ -48,6 +48,9 @@ public:
 	void enterNextLevel();
 	Actor* spawnActor(uint8_t spawnId, uint8_t actorType, int8_t cellX, int8_t cellZ);
 	void fadeTransition();
+
+	bool inGame();
+	void exitToMenu();
 	
 	Renderer renderer;
 	Player player;

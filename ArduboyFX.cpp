@@ -12,8 +12,8 @@ File*    FX::save_ = nullptr;
 bool FX::data_opened_ = false;
 bool FX::save_opened_ = false;
 
-char FX::data_path_[FX::kPathMax] = "/ext/apps_data/fxdata.bin";
-char FX::save_path_[FX::kPathMax] = "/ext/apps_data/fxdata-save.bin";
+char FX::data_path_[FX::kPathMax] = "/ext/apps_data/wolf/data.bin";
+char FX::save_path_[FX::kPathMax] = "/ext/apps_data/wolf/save.bin";
 
 FX::Domain FX::domain_ = FX::Domain::Data;
 uint32_t   FX::cur_abs_ = 0;
@@ -34,10 +34,6 @@ uint8_t  FX::seq_score_ = 0;
 
 uint32_t FX::data_file_pos_ = 0;
 bool     FX::data_file_pos_valid_ = false;
-
-uint8_t* FX::save_ram_ = nullptr;
-bool     FX::save_loaded_ = false;
-bool     FX::save_dirty_ = false;
 
 uint8_t  FX::stream_page_i_ = 0xFF;
 uint32_t FX::stream_base_ = 0;
@@ -152,10 +148,6 @@ void FX::freeCaches_() {
     if(cache_len_) { free(cache_len_); cache_len_ = nullptr; }
     if(cache_age_) { free(cache_age_); cache_age_ = nullptr; }
     if(cache_valid_) { free(cache_valid_); cache_valid_ = nullptr; }
-    if(save_ram_) { free(save_ram_); save_ram_ = nullptr; }
-
-    save_loaded_ = false;
-    save_dirty_ = false;
 
     last_hit_ = 0xFF;
     last_base_ = 0;
@@ -172,14 +164,13 @@ void FX::freeCaches_() {
 bool FX::allocCaches_() {
     freeCaches_();
 
-    cache_mem_ = (uint8_t*)malloc((size_t)page_size_ * (size_t)cache_pages_);
-    cache_base_ = (uint32_t*)malloc(sizeof(uint32_t) * cache_pages_);
-    cache_len_  = (uint16_t*)malloc(sizeof(uint16_t) * cache_pages_);
-    cache_age_  = (uint32_t*)malloc(sizeof(uint32_t) * cache_pages_);
-    cache_valid_= (uint8_t*)malloc(sizeof(uint8_t) * cache_pages_);
-    save_ram_   = (uint8_t*)malloc(kSaveBlockSize);
+    cache_mem_   = (uint8_t*)malloc((size_t)page_size_ * (size_t)cache_pages_);
+    cache_base_  = (uint32_t*)malloc(sizeof(uint32_t) * cache_pages_);
+    cache_len_   = (uint16_t*)malloc(sizeof(uint16_t) * cache_pages_);
+    cache_age_   = (uint32_t*)malloc(sizeof(uint32_t) * cache_pages_);
+    cache_valid_ = (uint8_t*)malloc(sizeof(uint8_t) * cache_pages_);
 
-    if(!cache_mem_ || !cache_base_ || !cache_len_ || !cache_age_ || !cache_valid_ || !save_ram_) {
+    if(!cache_mem_ || !cache_base_ || !cache_len_ || !cache_age_ || !cache_valid_) {
         freeCaches_();
         return false;
     }
@@ -196,10 +187,6 @@ bool FX::allocCaches_() {
     last_base_ = 0;
     seq_score_ = 0;
 
-    memset(save_ram_, 0xFF, kSaveBlockSize);
-    save_loaded_ = false;
-    save_dirty_ = false;
-
     data_file_pos_valid_ = false;
     data_file_pos_ = 0;
 
@@ -214,23 +201,7 @@ uint32_t FX::absDataOffset_(uint32_t address) {
     return address + ((uint32_t)programDataPage << 8);
 }
 
-void FX::saveEnsureLoaded_() {
-    if(save_loaded_) return;
-    if(!save_opened_ || !save_ram_) return;
-
-    if(!fileReadAt_(save_, 0, save_ram_, kSaveBlockSize)) {
-        memset(save_ram_, 0xFF, kSaveBlockSize);
-    }
-    save_loaded_ = true;
-    save_dirty_ = false;
-}
-
-void FX::commitSave() {
-    if(!save_opened_) return;
-    saveEnsureLoaded_();
-    if(!save_dirty_) return;
-    (void)fileWriteAt_(save_, 0, save_ram_, kSaveBlockSize);
-    save_dirty_ = false;
+void FX::commit() {
 }
 
 bool FX::begin() {
@@ -242,9 +213,7 @@ bool FX::begin() {
     domain_ = Domain::Data;
     cur_abs_ = 0;
 
-    saveEnsureLoaded_();
     streamReset_();
-
     pending_valid_ = false;
     pending_byte_ = 0xFF;
 
@@ -470,9 +439,8 @@ void FX::primePendingData_() {
 
 void FX::primePendingSave_() {
     pending_valid_ = false;
-    saveEnsureLoaded_();
     uint8_t v = 0xFF;
-    if(save_ram_ && cur_abs_ < (uint32_t)kSaveBlockSize) v = save_ram_[cur_abs_];
+    if(save_opened_ && save_ && cur_abs_ < (uint32_t)kSaveBlockSize) (void)fileReadAt_(save_, cur_abs_, &v, 1);
     pending_byte_ = v;
     pending_valid_ = true;
     cur_abs_++;
@@ -505,9 +473,8 @@ uint8_t FX::readPendingUInt8() {
     uint8_t out = pending_byte_;
 
     if(domain_ == Domain::Save) {
-        saveEnsureLoaded_();
         uint8_t v = 0xFF;
-        if(save_ram_ && cur_abs_ < (uint32_t)kSaveBlockSize) v = save_ram_[cur_abs_];
+        if(save_opened_ && save_ && cur_abs_ < (uint32_t)kSaveBlockSize) (void)fileReadAt_(save_, cur_abs_, &v, 1);
         pending_byte_ = v;
         pending_valid_ = true;
         cur_abs_++;
@@ -627,30 +594,29 @@ uint32_t FX::readIndexedUInt32(uint32_t address, uint8_t index) {
 }
 
 uint16_t FX::readSaveU16BE_(uint16_t off) {
-    saveEnsureLoaded_();
-    if(!save_ram_ || (uint32_t)off + 1u >= (uint32_t)kSaveBlockSize) return 0xFFFF;
-    return ((uint16_t)save_ram_[off] << 8) | save_ram_[off + 1];
+    if(!save_opened_ || !save_) return 0xFFFF;
+    if((uint32_t)off + 1u >= (uint32_t)kSaveBlockSize) return 0xFFFF;
+    uint8_t b[2] = {0xFF, 0xFF};
+    if(!fileReadAt_(save_, off, b, 2)) return 0xFFFF;
+    return ((uint16_t)b[0] << 8) | b[1];
 }
 
 void FX::writeSaveU16BE_(uint16_t off, uint16_t v) {
-    saveEnsureLoaded_();
-    if(!save_ram_ || (uint32_t)off + 1u >= (uint32_t)kSaveBlockSize) return;
-    save_ram_[off] = (uint8_t)(v >> 8);
-    save_ram_[off + 1] = (uint8_t)(v & 0xFF);
-    save_dirty_ = true;
+    if(!save_opened_ || !save_) return;
+    if((uint32_t)off + 1u >= (uint32_t)kSaveBlockSize) return;
+    uint8_t b[2] = {(uint8_t)(v >> 8), (uint8_t)(v & 0xFF)};
+    (void)fileWriteAt_(save_, off, b, 2);
 }
 
 void FX::eraseSaveBlock(uint16_t) {
-    saveEnsureLoaded_();
-    if(!save_ram_) return;
-    memset(save_ram_, 0xFF, kSaveBlockSize);
-    save_dirty_ = true;
+    if(!save_opened_ || !save_) return;
+    (void)storage_file_seek(save_, 0, true);
+    (void)fileFill_(save_, 0xFF, kSaveBlockSize);
 }
 
 uint8_t FX::loadGameState(uint8_t* gameState, size_t size) {
     if(!gameState || size == 0) return 0;
-    saveEnsureLoaded_();
-    if(!save_ram_) return 0;
+    if(!save_opened_ || !save_) return 0;
 
     uint16_t addr = 0;
     uint8_t loaded = 0;
@@ -663,7 +629,7 @@ uint8_t FX::loadGameState(uint8_t* gameState, size_t size) {
         uint32_t next = (uint32_t)addr + 2u + (uint32_t)size;
         if(next > (uint32_t)kSaveBlockSize) break;
 
-        memcpy(gameState, &save_ram_[addr + 2], size);
+        if(!fileReadAt_(save_, (uint32_t)addr + 2u, gameState, size)) break;
         loaded = 1;
         addr = (uint16_t)next;
     }
@@ -673,8 +639,7 @@ uint8_t FX::loadGameState(uint8_t* gameState, size_t size) {
 
 void FX::saveGameState(const uint8_t* gameState, size_t size) {
     if(!gameState || size == 0) return;
-    saveEnsureLoaded_();
-    if(!save_ram_) return;
+    if(!save_opened_ || !save_) return;
 
     uint16_t addr = 0;
 
@@ -694,8 +659,7 @@ void FX::saveGameState(const uint8_t* gameState, size_t size) {
     }
 
     writeSaveU16BE_(addr, (uint16_t)size);
-    memcpy(&save_ram_[addr + 2], gameState, size);
-    save_dirty_ = true;
+    (void)fileWriteAt_(save_, (uint32_t)addr + 2u, gameState, size);
 }
 
 void FX::warmUpData(uint32_t address, size_t length) {

@@ -13,13 +13,11 @@
 
 #include "lib/ArduboyFX.h"
 #include "game/ArduboyTonesFX.h"
-
 #include "game/Engine.h"
 #include "game/Generated/fxdata.h"
 #include "game/ArduboyPlatform.h"
 #include "game/Generated/Data_Audio.h"
-
-// lib/ArduboyTonesSingleton.cpp
+#include "game/Engine.h"
 #include "lib/ArduboyTones.h"
 
 FuriMessageQueue* g_arduboy_sound_queue = NULL;
@@ -33,10 +31,10 @@ volatile uint8_t g_arduboy_volume_mode = VOLUME_IN_TONE;
 volatile bool g_arduboy_force_high = false;
 volatile bool g_arduboy_force_norm = false;
 
-
-#define DISPLAY_WIDTH  128
-#define DISPLAY_HEIGHT 64
-#define BUFFER_SIZE    (DISPLAY_WIDTH * DISPLAY_HEIGHT / 8)
+#define DISPLAY_WIDTH       128
+#define DISPLAY_HEIGHT      64
+#define BUFFER_SIZE         (DISPLAY_WIDTH * DISPLAY_HEIGHT / 8)
+#define HOLD_TO_EXIT_FRAMES 15
 
 typedef struct {
     uint8_t screen_buffer[BUFFER_SIZE];
@@ -69,7 +67,8 @@ static void input_events_callback(const void* value, void* ctx) {
 }
 
 void ArduboyPlatform::playSound(uint8_t id) {
-    sound.tonesFromFX((uint24_t)((uint32_t)Data_audio + (uint32_t)(pgm_read_word(&Data_AudioPatterns[id]))));
+    sound.tonesFromFX(
+        (uint24_t)((uint32_t)Data_audio + (uint32_t)(pgm_read_word(&Data_AudioPatterns[id]))));
 }
 
 static void framebuffer_commit_callback(
@@ -88,6 +87,7 @@ static void framebuffer_commit_callback(
     }
 }
 
+static uint8_t exit_hold_frames = 0;
 extern "C" int32_t arduboy_app(void* p) {
     UNUSED(p);
 
@@ -155,8 +155,26 @@ extern "C" int32_t arduboy_app(void* p) {
             lastTimingSample = now;
 
             if(arduboy.nextFrame()) {
-                //sound.poll();
                 Platform.update();
+                const uint8_t in = Platform.readInput();
+                const bool inGame = engine.inGame();
+                const bool exitComboMenu = (in & Input_Btn_A);
+                const bool exitComboGame = ((in & Input_Btn_A) && (in & Input_Dpad_Down));
+                const bool exitCombo = inGame ? exitComboGame : exitComboMenu;
+                if(exitCombo) {
+                    if(exit_hold_frames < HOLD_TO_EXIT_FRAMES) exit_hold_frames++;
+                    if(exit_hold_frames >= HOLD_TO_EXIT_FRAMES) {
+                        exit_hold_frames = 0;
+
+                        if(inGame) {
+                            engine.exitToMenu(); 
+                        } else {
+                            g_state->exit_requested = true; 
+                        }
+                    }
+                } else {
+                    exit_hold_frames = 0;
+                }
 
                 while(tickAccum > frameDuration) {
                     engine.update();
@@ -168,7 +186,8 @@ extern "C" int32_t arduboy_app(void* p) {
                 if(engine.gameState == GameState_Playing && engine.renderer.damageIndicator < 0) {
                     uint8_t b = (uint8_t)(-engine.renderer.damageIndicator * 5);
                     arduboy.setRGBled(b, b, b);
-                } else if(engine.gameState == GameState_Playing && engine.renderer.damageIndicator > 0) {
+                } else if(
+                    engine.gameState == GameState_Playing && engine.renderer.damageIndicator > 0) {
                     uint8_t b = (uint8_t)(engine.renderer.damageIndicator * 51);
                     arduboy.setRGBled(b, 0, 0);
                 } else {
@@ -180,13 +199,12 @@ extern "C" int32_t arduboy_app(void* p) {
 
             furi_mutex_release(g_state->game_mutex);
         }
-        //ArduboyTonesFX::poll(); 
         furi_delay_ms(1);
     }
 
     arduboy.audio.saveOnOff();
     arduboy_tone_sound_system_deinit();
-    FX::commitSave();
+    FX::commit();
     FX::end();
 
     if(g_state->input_sub) {

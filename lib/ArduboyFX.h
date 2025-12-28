@@ -62,7 +62,7 @@ public:
     static uint32_t readIndexedUInt24(uint32_t address, uint8_t index);
     static uint32_t readIndexedUInt32(uint32_t address, uint8_t index);
 
-    static void commitSave();
+    static void commit();
     static void eraseSaveBlock(uint16_t block);
     static uint8_t loadGameState(uint8_t* gameState, size_t size);
     static void saveGameState(const uint8_t* gameState, size_t size);
@@ -104,10 +104,6 @@ private:
     static uint32_t data_file_pos_;
     static bool     data_file_pos_valid_;
 
-    static uint8_t* save_ram_;
-    static bool     save_loaded_;
-    static bool     save_dirty_;
-
     static uint8_t  stream_page_i_;
     static uint32_t stream_base_;
     static uint16_t stream_len_;
@@ -133,8 +129,6 @@ private:
     static bool allocCaches_();
 
     static uint32_t absDataOffset_(uint32_t address);
-
-    static void saveEnsureLoaded_();
 
     static void streamReset_();
     static bool streamEnsureAbs_(uint32_t abs_off);

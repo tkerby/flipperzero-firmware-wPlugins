@@ -9,6 +9,7 @@ public:
 	void init();
 	void draw();
 	void update();
+	void goMain();
 
 	const MenuData* currentMenu;
 	int8_t currentSelection;

@@ -612,3 +612,5 @@ void Menu::switchMenu(const MenuData* const newMenu)
 	debounceInput = true;
 	engine.fadeTransition();
 }
+
+void Menu::goMain() { switchMenu(Menu_Main); }
