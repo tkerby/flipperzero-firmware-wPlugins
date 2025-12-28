@@ -9,6 +9,6 @@ App(
     fap_category="GPIO/ESP32",
     fap_author="JBlanked",
     fap_weburl="https://github.com/jblanked/FlipDownloader",
-    fap_version="1.3.4",
+    fap_version="1.3.5",
     fap_description="Download apps and assets via WiFi directly to your Flipper Zero",
 )

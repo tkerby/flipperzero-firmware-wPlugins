@@ -50,7 +50,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [ProtoPirate WIP v1.4 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - Updated: [FZ nRF24 Jammer v1.4 (By W0rthlessS0ul)](https://github.com/W0rthlessS0ul/FZ_nRF24_jammer)
 - Revert: [Updated Ventra NFC Protocol w/ StopID Parsing, Weather Station: Added support for LaCrosse X141-BV3 #1156 (By FatherDivine)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1156)
-- Updated: [FlipDownloader v1.3.4 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- Updated: [FlipDownloader v1.3.5 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 
 <a name="release">
 
@@ -510,7 +510,7 @@ $ ./fbt dolphin_ext
 - [Fire String v1.3 (By RyanAboueljoud)](https://github.com/RyanAboueljoud/Fire-String)
 - [Flame RNG v0.3 (By OrionW06)](https://github.com/OrionW06/Flame-RNG)
 - [Flashlight v1.2 (By xMasterX)](https://github.com/xMasterX/flipper-flashlight)
-- [FlipDownloader v1.3.4 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- [FlipDownloader v1.3.5 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - [FlipLibrary v1.4 (By jblanked)](https://github.com/jblanked/FlipLibrary) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - [FlipMap v0.2.2 (By jblanked)](https://github.com/jblanked/FlipMap) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - [Flipper Blackhat v0.4 (By o7-machinehum)](https://github.com/o7-machinehum/flipper-blackhat-app) `Req: Blackhat Board` with [Blackhat OS](https://github.com/o7-machinehum/flipper-blackhat-os)
