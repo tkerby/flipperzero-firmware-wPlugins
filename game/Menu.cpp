@@ -150,12 +150,11 @@ void Menu::loadSelectedSave()
 
 void Menu::toggleSound()
 {
-	Platform.setMuted(!Platform.isMuted());
-	if (Platform.isMuted()){
-		arduboy.audio.off();
-	} else {
-		arduboy.audio.on();
-	}
+    if (arduboy.audio.enabled()) {
+        arduboy.audio.off();
+    } else {
+        arduboy.audio.on();
+    }
 }
 
 void Menu::chooseNewSlot()
@@ -363,10 +362,10 @@ void Menu::draw()
 
 		if(text == Str_Sound)
 		{
-			if(Platform.isMuted())
-				engine.renderer.drawString(Str_Off, 40, y, 0);
-			else
+			if(arduboy.audio.enabled())
 				engine.renderer.drawString(Str_On, 40, y, 0);
+			else
+				engine.renderer.drawString(Str_Off, 40, y, 0);
 		}
 		index += 2;
 		y += itemSpacing;

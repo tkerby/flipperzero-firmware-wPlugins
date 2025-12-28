@@ -21,11 +21,4 @@ void ArduboyPlatform::update()
 
     if(raw & INPUT_A)     inputState |= Input_Btn_A;
     if(raw & INPUT_B)     inputState |= Input_Btn_B;
-
-    const bool wantAudioEnabled = !m_isMuted;
-    if(arduboy.audio.enabled() != wantAudioEnabled)
-    {
-        if(wantAudioEnabled) arduboy.audio.on();
-        else                 arduboy.audio.off();
-    }
 }

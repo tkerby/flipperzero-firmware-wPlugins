@@ -184,6 +184,7 @@ extern "C" int32_t arduboy_app(void* p) {
         furi_delay_ms(1);
     }
 
+    arduboy.audio.saveOnOff();
     arduboy_tone_sound_system_deinit();
     FX::commitSave();
     FX::end();
