@@ -6,7 +6,7 @@ sourcecode:
   description: "@README.md"
   changelog: "@CHANGELOG.md"
   screenshots:
-    - ./catalog/screenshot-1.png
-    - ./catalog/screenshot-2.png
-    - ./catalog/screenshot-3.png
-    - ./catalog/screenshot-4.png
+    - ./screenshots/screenshot-1.png
+    - ./screenshots/screenshot-2.png
+    - ./screenshots/screenshot-3.png
+    - ./screenshots/screenshot-4.png
