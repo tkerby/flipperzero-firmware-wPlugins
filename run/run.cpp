@@ -2611,7 +2611,7 @@ void FlipDownloaderRun::updateDraw(Canvas *canvas)
 
 void FlipDownloaderRun::updateInput(InputEvent *event)
 {
-    if (event->type == InputTypePress)
+    if (event->type == InputTypeShort || event->type == InputTypeLong)
     {
         //  download progress view - only allow back button
         if (currentView == RunViewDownloadProgress)
@@ -2712,7 +2712,7 @@ void FlipDownloaderRun::updateInput(InputEvent *event)
                     default:
                         if (keyboard)
                         {
-                            if (keyboard->handleInput(event->key))
+                            if (keyboard->handleInput(event))
                             {
                                 // Handle successful input
                                 if (currentView == RunViewGitHubAuthor)
