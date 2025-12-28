@@ -1,3 +1,7 @@
-# Mystic Balloon
+# Wolfenduino
 
-This project is a [port](https://github.com/apfxtech/FlipperArduventure.git) of the original [Mystic Balloon](https://github.com/Team-ARG-Museum/ID-46-Arduventure.git) project. The main goal of this fork is to port the game from the Arduboy console to **Flipper Zero**.
+* 10 Levels based on the shareware episode 'Escape from Wolfenstein'
+* Enemies, weapons and secret push walls, all based on the original game
+* Four difficulty levels
+* An auto-save system that saves your progress at the end of each level
+* A high score table

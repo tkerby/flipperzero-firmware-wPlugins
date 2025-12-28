@@ -1,14 +1,24 @@
 # Wolfenduino
+![alt text](package/Package/banner.png)
 Wolfenduino is a demake of id software's Wolfenstein 3D for the Arduboy FX. 
 
-![output](https://github.com/jhhoward/WolfenduinoFX/assets/1665740/50906f2e-36a5-462a-9e71-3bccf1e7c3c8)
+This project is a [port](https://github.com/apfxtech/FlipperWolfenstein.git) of the original [WolfenduinoFX](https://github.com/jhhoward/WolfenduinoFX.git) project. The main goal of this fork is to port the game from the Arduboy console to **Flipper Zero**.
+
+![s1](package/screenshots/screen1.png)
+![s2](package/screenshots/screen4.png)
+![s3](package/screenshots/screen5.png)
+![s3](package/screenshots/screen7.png)
+
 
 ## Features
+
 * 10 Levels based on the shareware episode 'Escape from Wolfenstein'
 * Enemies, weapons and secret push walls, all based on the original game
 * Four difficulty levels
 * An auto-save system that saves your progress at the end of each level
 * A high score table
+
+![output](package/demo.gif)
 
 ## Controls
 ![image](https://github.com/jhhoward/WolfenduinoFX/assets/1665740/c890d597-0de5-4cfd-bd5a-8d0697776a30)
@@ -17,15 +27,3 @@ Wolfenduino is a demake of id software's Wolfenstein 3D for the Arduboy FX.
 * Hold A to strafe
 * Double tap A to switch between weapons
 
-## Building
-You can build from source using the Arduino IDE. To build you will also need the following libraries:
-* [Arduboy2](https://github.com/MLXXXp/Arduboy2)
-* [ArduboyFX](https://github.com/MrBlinky/ArduboyFX)
-
-## Playing
-Check the [releases](https://github.com/jhhoward/WolfenduinoFX/releases) page for the latest binaries. You will need to install both the HEX code file and BIN data file to play.
-
-## Video demo
-You can watch a video of Wolfenduino running on actual hardware here:
-
-[![Video demo](https://img.youtube.com/vi/gl89uwLA_j8/0.jpg)](https://www.youtube.com/watch?v=gl89uwLA_j8 "Video demo")
