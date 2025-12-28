@@ -221,7 +221,7 @@ bool FlipDownloaderRun::downloadFile(FlipDownloaderDownloadLink link)
         return app->httpDownloadFile(savePath, "https://raw.githubusercontent.com/FZEEFlasher/fzeeflasher.github.io/main/resources/STATIC/M/FLIPDEV/esp32_marauder.ino.partitions.bin");
         break;
     case DownloadLinkFirmwareMarauderLink3:
-        return app->httpDownloadFile(savePath, "https://raw.githubusercontent.com/jblanked/fzeeflasher.github.io/main/resources/CURRENT/esp32_marauder_v1_6_2_20250531_flipper.bin");
+        return app->httpDownloadFile(savePath, "https://raw.githubusercontent.com/jblanked/fzeeflasher.github.io/main/resources/CURRENT/esp32_marauder_v1_9_0_20251213_flipper.bin");
         break;
         // FlipperHTTP (ESP32)
     case DownloadLinkFirmwareFlipperHTTPLink1:
