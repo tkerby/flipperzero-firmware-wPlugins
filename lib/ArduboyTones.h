@@ -45,20 +45,18 @@ typedef struct {
     const uint16_t* pattern;
 } ArduboyToneSoundRequest;
 
-static FuriMessageQueue* g_arduboy_sound_queue = NULL;
-static FuriThread* g_arduboy_sound_thread = NULL;
-static volatile bool g_arduboy_sound_thread_running = false;
-static volatile bool g_arduboy_audio_enabled = false;
+extern FuriMessageQueue* g_arduboy_sound_queue;
+extern FuriThread* g_arduboy_sound_thread;
+extern volatile bool g_arduboy_sound_thread_running;
+extern volatile bool g_arduboy_audio_enabled;
+extern volatile bool g_arduboy_tones_playing;
+extern volatile uint8_t g_arduboy_volume_mode;
+extern volatile bool g_arduboy_force_high;
+extern volatile bool g_arduboy_force_norm;
 
-static volatile bool g_arduboy_tones_playing = false;
-
-static volatile uint8_t g_arduboy_volume_mode = VOLUME_IN_TONE;
-static volatile bool g_arduboy_force_high = false;
-static volatile bool g_arduboy_force_norm = false;
-
-static const float kArduboyToneSoundVolumeNormal = 1.0f;
-static const float kArduboyToneSoundVolumeHigh = 1.0f;
-static const uint32_t kArduboyToneToneTickHz = ARDUBOY_TONES_TICK_HZ;
+static constexpr float kArduboyToneSoundVolumeNormal = 1.0f;
+static constexpr float kArduboyToneSoundVolumeHigh = 1.0f;
+static constexpr uint32_t kArduboyToneToneTickHz = ARDUBOY_TONES_TICK_HZ;
 
 static inline uint32_t arduboy_tone_ticks_to_ms(uint16_t ticks) {
     return (uint32_t)((ticks * 1000u + (kArduboyToneToneTickHz / 2)) / kArduboyToneToneTickHz);

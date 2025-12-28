@@ -19,6 +19,21 @@
 #include "game/ArduboyPlatform.h"
 #include "game/Generated/Data_Audio.h"
 
+// lib/ArduboyTonesSingleton.cpp
+#include "lib/ArduboyTones.h"
+
+FuriMessageQueue* g_arduboy_sound_queue = NULL;
+FuriThread* g_arduboy_sound_thread = NULL;
+volatile bool g_arduboy_sound_thread_running = false;
+volatile bool g_arduboy_audio_enabled = false;
+
+volatile bool g_arduboy_tones_playing = false;
+
+volatile uint8_t g_arduboy_volume_mode = VOLUME_IN_TONE;
+volatile bool g_arduboy_force_high = false;
+volatile bool g_arduboy_force_norm = false;
+
+
 #define DISPLAY_WIDTH  128
 #define DISPLAY_HEIGHT 64
 #define BUFFER_SIZE    (DISPLAY_WIDTH * DISPLAY_HEIGHT / 8)
@@ -43,7 +58,7 @@ static FlipperState* g_state = NULL;
 Arduboy2Base arduboy;
 
 uint16_t audioBuffer[32];
-ArduboyTonesFX sound(arduboy.audio.enabled, audioBuffer, 32);
+ArduboyTonesFX sound(audioBuffer, 32);
 
 unsigned long lastTimingSample;
 
@@ -113,6 +128,7 @@ extern "C" int32_t arduboy_app(void* p) {
     arduboy.setFrameRate(TARGET_FRAMERATE);
     arduboy.audio.begin();
     arduboy.audio.on();
+    //sound.begin();
 
     FX::setCacheConfig(8192, 6);
     (void)FX::begin(0, 0);

@@ -1,4 +1,4 @@
-// ArduboyTonesFX.h
+// game/ArduboyTonesFX.h
 #pragma once
 
 #include <stdint.h>
@@ -8,21 +8,14 @@
 #include "lib/ArduboyTones.h"
 #include "lib/ArduboyFX.h"
 
-#define VOLUME_IN_TONE         0
-#define VOLUME_ALWAYS_NORMAL   1
-#define VOLUME_ALWAYS_HIGH     2
-
 #ifndef ARDUBOY_TONESFX_MAX_WORDS
 #define ARDUBOY_TONESFX_MAX_WORDS 512
 #endif
 
 class ArduboyTonesFX {
 public:
-    static bool (*outputEnabled)();
-    static bool outputEnabledFixed;
-
-    ArduboyTonesFX(boolean (*outEn)());
-    ArduboyTonesFX(boolean (*outEn)(), uint16_t* tonesArray, uint8_t tonesArrayLen);
+    ArduboyTonesFX();
+    ArduboyTonesFX(uint16_t* tonesArray, uint8_t tonesArrayLen);
 
     static void attachTones(ArduboyTones* backend);
 
@@ -42,22 +35,16 @@ public:
 private:
     static ArduboyTones* tonesBackend;
     static ArduboyTones  tonesBackendInternal;
-    static bool backendBegun;
 
     static uint16_t toneSequence[MAX_TONES * 2 + 1];
     static uint16_t seqBuffer[ARDUBOY_TONESFX_MAX_WORDS];
 
     static inline bool isOutputEnabledNow() {
-        if(outputEnabled) return outputEnabled();
-        return outputEnabledFixed;
+        return ArduboyAudio::enabled();
     }
 
-    static inline void ensureBackend() {
+    static inline void ensureBackendPointer() {
         if(!tonesBackend) tonesBackend = &tonesBackendInternal;
-        if(!backendBegun) {
-            tonesBackend->begin();
-            backendBegun = true;
-        }
     }
 
     static inline uint16_t dur1024_to_ticks(uint16_t dur1024) {

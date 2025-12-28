@@ -1,23 +1,17 @@
-// ArduboyTonesFX.cpp
+// game/ArduboyTonesFX.cpp
 #include "game/ArduboyTonesFX.h"
-
-bool (*ArduboyTonesFX::outputEnabled)() = nullptr;
-bool ArduboyTonesFX::outputEnabledFixed = false;
 
 ArduboyTones* ArduboyTonesFX::tonesBackend = nullptr;
 ArduboyTones  ArduboyTonesFX::tonesBackendInternal;
-bool ArduboyTonesFX::backendBegun = false;
 
 uint16_t ArduboyTonesFX::toneSequence[MAX_TONES * 2 + 1] = {0};
 uint16_t ArduboyTonesFX::seqBuffer[ARDUBOY_TONESFX_MAX_WORDS] = {0};
 
-ArduboyTonesFX::ArduboyTonesFX(boolean (*outEn)()) {
-    outputEnabled = outEn;
+ArduboyTonesFX::ArduboyTonesFX() {
     toneSequence[MAX_TONES * 2] = TONES_END;
 }
 
-ArduboyTonesFX::ArduboyTonesFX(boolean (*outEn)(), uint16_t*, uint8_t) {
-    outputEnabled = outEn;
+ArduboyTonesFX::ArduboyTonesFX(uint16_t* /*tonesArray*/, uint8_t /*tonesArrayLen*/) {
     toneSequence[MAX_TONES * 2] = TONES_END;
 }
 
@@ -27,7 +21,7 @@ void ArduboyTonesFX::attachTones(ArduboyTones* backend) {
 
 void ArduboyTonesFX::tone(uint16_t freq, uint16_t dur) {
     if(!isOutputEnabledNow()) return;
-    ensureBackend();
+    ensureBackendPointer();
 
     toneSequence[0] = freq;
     toneSequence[1] = dur1024_to_ticks(dur);
@@ -38,7 +32,7 @@ void ArduboyTonesFX::tone(uint16_t freq, uint16_t dur) {
 
 void ArduboyTonesFX::tone(uint16_t f1, uint16_t d1, uint16_t f2, uint16_t d2) {
     if(!isOutputEnabledNow()) return;
-    ensureBackend();
+    ensureBackendPointer();
 
     toneSequence[0] = f1; toneSequence[1] = dur1024_to_ticks(d1);
     toneSequence[2] = f2; toneSequence[3] = dur1024_to_ticks(d2);
@@ -50,7 +44,7 @@ void ArduboyTonesFX::tone(uint16_t f1, uint16_t d1, uint16_t f2, uint16_t d2) {
 void ArduboyTonesFX::tone(uint16_t f1, uint16_t d1, uint16_t f2, uint16_t d2,
                           uint16_t f3, uint16_t d3) {
     if(!isOutputEnabledNow()) return;
-    ensureBackend();
+    ensureBackendPointer();
 
     toneSequence[0] = f1; toneSequence[1] = dur1024_to_ticks(d1);
     toneSequence[2] = f2; toneSequence[3] = dur1024_to_ticks(d2);
@@ -75,7 +69,7 @@ uint16_t ArduboyTonesFX::copyPattern(const uint16_t* src, bool progmem) {
     }
 
     if(out == 0 || seqBuffer[out - 1] != TONES_END) {
-        seqBuffer[(out < ARDUBOY_TONESFX_MAX_WORDS) ? out : ARDUBOY_TONESFX_MAX_WORDS - 1] = TONES_END;
+        seqBuffer[(out < ARDUBOY_TONESFX_MAX_WORDS) ? out : (ARDUBOY_TONESFX_MAX_WORDS - 1)] = TONES_END;
     }
 
     return out;
@@ -83,8 +77,8 @@ uint16_t ArduboyTonesFX::copyPattern(const uint16_t* src, bool progmem) {
 
 void ArduboyTonesFX::tones(const uint16_t* pattern) {
     if(!isOutputEnabledNow()) return;
-    ensureBackend();
     if(!pattern) return;
+    ensureBackendPointer();
 
     copyPattern(pattern, true);
     tonesBackend->tonesInRAM(seqBuffer);
@@ -92,8 +86,8 @@ void ArduboyTonesFX::tones(const uint16_t* pattern) {
 
 void ArduboyTonesFX::tonesInRAM(uint16_t* pattern) {
     if(!isOutputEnabledNow()) return;
-    ensureBackend();
     if(!pattern) return;
+    ensureBackendPointer();
 
     copyPattern(pattern, false);
     tonesBackend->tonesInRAM(seqBuffer);
@@ -119,7 +113,7 @@ uint16_t ArduboyTonesFX::decodeFx(uint32_t fx_addr) {
     FX::readEnd();
 
     if(out == 0 || seqBuffer[out - 1] != TONES_END) {
-        seqBuffer[(out < ARDUBOY_TONESFX_MAX_WORDS) ? out : ARDUBOY_TONESFX_MAX_WORDS - 1] = TONES_END;
+        seqBuffer[(out < ARDUBOY_TONESFX_MAX_WORDS) ? out : (ARDUBOY_TONESFX_MAX_WORDS - 1)] = TONES_END;
     }
 
     return out;
@@ -127,7 +121,7 @@ uint16_t ArduboyTonesFX::decodeFx(uint32_t fx_addr) {
 
 void ArduboyTonesFX::tonesFromFX(uint32_t fx_addr) {
     if(!isOutputEnabledNow()) return;
-    ensureBackend();
+    ensureBackendPointer();
 
     decodeFx(fx_addr);
     tonesBackend->tonesInRAM(seqBuffer);
