@@ -12,11 +12,11 @@
 #include <bzzbzz_icons.h>
 
 // Game constants
-#define PATTERN_LENGTH 5
-#define VIBRATION_DURATION 10 // ms - extremely short vibration
-#define PAUSE_DURATION_1 200 // ms - first possible pause duration
-#define PAUSE_DURATION_2 500 // ms - second possible pause duration
-#define PAUSE_DURATION_3 800 // ms - third possible pause duration
+#define PATTERN_LENGTH        5
+#define VIBRATION_DURATION    10 // ms - extremely short vibration
+#define PAUSE_DURATION_1      200 // ms - first possible pause duration
+#define PAUSE_DURATION_2      500 // ms - second possible pause duration
+#define PAUSE_DURATION_3      800 // ms - third possible pause duration
 #define GAME_MESSAGE_DURATION 1000 // ms
 
 // Game states
@@ -34,24 +34,26 @@ typedef struct {
     FuriMutex* mutex;
 
     // Game state
-    uint32_t pattern[PATTERN_LENGTH - 1];  // Store timing intervals in ms (4 intervals for 5 vibrations)
+    uint32_t
+        pattern[PATTERN_LENGTH - 1]; // Store timing intervals in ms (4 intervals for 5 vibrations)
     uint8_t current_input_index;
     uint32_t correct_in_a_row;
     uint32_t total_correct;
-    uint32_t hi_score;             // Track highest streak achieved
-    uint32_t pattern_start_time;  // To track when pattern started
-    uint32_t last_input_time;     // To track last OK press
-    uint32_t last_pattern_time;   // To track when pattern was last shown for timeout
-    bool timeout_replay_occurred;  // Flag to track if timeout replay has already occurred since last user input
-    uint32_t input_times[PATTERN_LENGTH];  // Store when user pressed OK (for evaluation after 5 presses)
-    uint8_t pattern_reveal_index;  // Track which pattern element is currently being revealed
-    bool pattern_revealed[PATTERN_LENGTH];  // Track which pattern elements have been revealed
-    ViewPort* view_port;           // For immediate UI updates
+    uint32_t hi_score; // Track highest streak achieved
+    uint32_t pattern_start_time; // To track when pattern started
+    uint32_t last_input_time; // To track last OK press
+    uint32_t last_pattern_time; // To track when pattern was last shown for timeout
+    bool timeout_replay_occurred; // Flag to track if timeout replay has already occurred since last user input
+    uint32_t
+        input_times[PATTERN_LENGTH]; // Store when user pressed OK (for evaluation after 5 presses)
+    uint8_t pattern_reveal_index; // Track which pattern element is currently being revealed
+    bool pattern_revealed[PATTERN_LENGTH]; // Track which pattern elements have been revealed
+    ViewPort* view_port; // For immediate UI updates
     GameState state;
 
     // UI elements
     char status_text[64];
-    float last_accuracy;  // Accuracy percentage of the last pattern match attempt
+    float last_accuracy; // Accuracy percentage of the last pattern match attempt
 } VibrationGameContext;
 
 // Input event structure
@@ -73,7 +75,7 @@ int32_t bzzbzz_app(void* p) {
     UNUSED(p);
 
     VibrationGameContext* context = malloc(sizeof(VibrationGameContext));
-    if (!context) {
+    if(!context) {
         return -1;
     }
 
@@ -113,7 +115,8 @@ int32_t bzzbzz_app(void* p) {
     gui_add_view_port(context->gui, view_port, GuiLayerFullscreen);
 
     // Main game loop
-    FuriTimer* timer = furi_timer_alloc(vibration_game_update_timer_callback, FuriTimerTypePeriodic, context);
+    FuriTimer* timer =
+        furi_timer_alloc(vibration_game_update_timer_callback, FuriTimerTypePeriodic, context);
     furi_timer_start(timer, 500); // Check every 500ms for timeout
 
     // Wait for user to start the game
@@ -131,8 +134,10 @@ int32_t bzzbzz_app(void* p) {
             play_vibration_pattern(context);
             furi_mutex_acquire(context->mutex, FuriWaitForever);
             // Update state after playing the pattern and record start time for input
-            context->pattern_start_time = furi_get_tick(); // Start timing from when pattern finishes
-            context->last_pattern_time = context->pattern_start_time; // Record when pattern was shown
+            context->pattern_start_time =
+                furi_get_tick(); // Start timing from when pattern finishes
+            context->last_pattern_time =
+                context->pattern_start_time; // Record when pattern was shown
             context->last_input_time = context->pattern_start_time; // Reset timeout from now
             context->state = GameStateWaitingForInput;
             strcpy(context->status_text, "Repeat the pattern.");
@@ -181,7 +186,7 @@ static void vibration_game_render_callback(Canvas* canvas, void* ctx) {
         canvas_draw_icon(canvas, 0, 0, &I_game); // game.png as background
 
         // Draw labels: STEP at top, ACC% at middle, CURRENT at bottom (left aligned)
-        canvas_set_font(canvas, FontSecondary);  // Regular font
+        canvas_set_font(canvas, FontSecondary); // Regular font
         canvas_draw_str_aligned(canvas, 0, 0, AlignLeft, AlignTop, "STEP");
         canvas_draw_str_aligned(canvas, 0, 33, AlignLeft, AlignTop, "ACC%");
         canvas_draw_str_aligned(canvas, 128, 33, AlignRight, AlignTop, "BEST");
@@ -190,19 +195,19 @@ static void vibration_game_render_callback(Canvas* canvas, void* ctx) {
         // Draw accuracy percentage in the middle left area
         char accuracy_text[16];
         snprintf(accuracy_text, sizeof(accuracy_text), "%02d", (int)context->last_accuracy);
-        canvas_set_font(canvas, FontBigNumbers);  // Regular font
+        canvas_set_font(canvas, FontBigNumbers); // Regular font
         canvas_draw_str_aligned(canvas, 0, 44, AlignLeft, AlignTop, accuracy_text);
-        
+
         // Draw hi score in the top left corner in "xx" format
         char hi_score_text[16];
         snprintf(hi_score_text, sizeof(hi_score_text), "%02lu", context->hi_score);
-        canvas_set_font(canvas, FontBigNumbers);  // Use smaller font
+        canvas_set_font(canvas, FontBigNumbers); // Use smaller font
         canvas_draw_str_aligned(canvas, 128, 44, AlignRight, AlignTop, hi_score_text);
 
         // Draw current streak in the bottom left corner in "xx" format
         char streak_text[16];
         snprintf(streak_text, sizeof(streak_text), "%02lu", context->correct_in_a_row);
-        canvas_set_font(canvas, FontBigNumbers);  // Use big number font
+        canvas_set_font(canvas, FontBigNumbers); // Use big number font
         canvas_draw_str_aligned(canvas, 128, 12, AlignRight, AlignTop, streak_text);
 
         // Draw analog speedometer-style indicator for current input progress
@@ -218,24 +223,24 @@ static void vibration_game_render_callback(Canvas* canvas, void* ctx) {
         bool draw_indicator = true;
 
         switch(context->current_input_index) {
-            case 0: // Start at step 5 position initially
-                angle_rad = 0.0f; // 0 degrees (12 o'clock)
-                break;
-            case 1: // -180 degrees - 6 o'clock
-                angle_rad = -M_PI; // -180 degrees
-                break;
-            case 2: // -135 degrees - between 6 and 9 o'clock
-                angle_rad = -3 * M_PI / 4.0f; // -135 degrees
-                break;
-            case 3: // -90 degrees - 9 o'clock
-                angle_rad = -M_PI / 2.0f; // -90 degrees
-                break;
-            case 4: // -45 degrees - between 9 and 12 o'clock
-                angle_rad = -M_PI / 4.0f; // -45 degrees
-                break;
-            case 5: // 0 degrees - 12 o'clock - stays until pattern done
-                angle_rad = 0.0f; // 0 degrees
-                break;
+        case 0: // Start at step 5 position initially
+            angle_rad = 0.0f; // 0 degrees (12 o'clock)
+            break;
+        case 1: // -180 degrees - 6 o'clock
+            angle_rad = -M_PI; // -180 degrees
+            break;
+        case 2: // -135 degrees - between 6 and 9 o'clock
+            angle_rad = -3 * M_PI / 4.0f; // -135 degrees
+            break;
+        case 3: // -90 degrees - 9 o'clock
+            angle_rad = -M_PI / 2.0f; // -90 degrees
+            break;
+        case 4: // -45 degrees - between 9 and 12 o'clock
+            angle_rad = -M_PI / 4.0f; // -45 degrees
+            break;
+        case 5: // 0 degrees - 12 o'clock - stays until pattern done
+            angle_rad = 0.0f; // 0 degrees
+            break;
         }
 
         // Always draw the indicator (no hidden state)
@@ -255,7 +260,6 @@ static void vibration_game_render_callback(Canvas* canvas, void* ctx) {
     furi_mutex_release(context->mutex);
 }
 
-
 // Input callback - handles button presses
 static void vibration_game_input_callback(InputEvent* input_event, void* ctx) {
     VibrationGameContext* context = (VibrationGameContext*)ctx;
@@ -263,11 +267,9 @@ static void vibration_game_input_callback(InputEvent* input_event, void* ctx) {
     furi_mutex_acquire(context->mutex, FuriWaitForever);
 
     if(input_event->type == InputTypeShort) {
-        if(input_event->key == InputKeyOk ||
-                  input_event->key == InputKeyUp ||
-                  input_event->key == InputKeyLeft ||
-                  input_event->key == InputKeyRight ||
-                  input_event->key == InputKeyDown) {
+        if(input_event->key == InputKeyOk || input_event->key == InputKeyUp ||
+           input_event->key == InputKeyLeft || input_event->key == InputKeyRight ||
+           input_event->key == InputKeyDown) {
             // All buttons (OK, Up, Left, Right, Down) can be used for input
             if(context->state == GameStateIdle) {
                 // Only OK button starts the game from idle state
@@ -278,15 +280,15 @@ static void vibration_game_input_callback(InputEvent* input_event, void* ctx) {
                         // Randomly select one of the three fixed pause durations
                         int random_choice = rand() % 3;
                         switch(random_choice) {
-                            case 0:
-                                context->pattern[i] = PAUSE_DURATION_1; // 200ms
-                                break;
-                            case 1:
-                                context->pattern[i] = PAUSE_DURATION_2; // 500ms
-                                break;
-                            case 2:
-                                context->pattern[i] = PAUSE_DURATION_3; // 800ms
-                                break;
+                        case 0:
+                            context->pattern[i] = PAUSE_DURATION_1; // 200ms
+                            break;
+                        case 1:
+                            context->pattern[i] = PAUSE_DURATION_2; // 500ms
+                            break;
+                        case 2:
+                            context->pattern[i] = PAUSE_DURATION_3; // 800ms
+                            break;
                         }
                     }
                     reset_pattern_state(context);
@@ -303,7 +305,8 @@ static void vibration_game_input_callback(InputEvent* input_event, void* ctx) {
                     context->input_times[context->current_input_index] = current_time;
                     context->current_input_index++;
                     context->last_input_time = current_time;
-                    context->timeout_replay_occurred = false; // Reset timeout replay flag on user input
+                    context->timeout_replay_occurred =
+                        false; // Reset timeout replay flag on user input
 
                     if(context->current_input_index < PATTERN_LENGTH) {
                         // Still collecting inputs, don't evaluate yet
@@ -314,11 +317,13 @@ static void vibration_game_input_callback(InputEvent* input_event, void* ctx) {
                         // Evaluate each interval between consecutive presses
                         for(int i = 0; i < PATTERN_LENGTH - 1; i++) {
                             // Calculate the actual time between this press and the next
-                            uint32_t actual_interval = context->input_times[i + 1] - context->input_times[i];
+                            uint32_t actual_interval =
+                                context->input_times[i + 1] - context->input_times[i];
                             uint32_t expected_interval = context->pattern[i];
 
                             // Calculate 40% tolerance
-                            uint32_t tolerance = (expected_interval * 40) / 100; // 40% of the expected interval
+                            uint32_t tolerance =
+                                (expected_interval * 40) / 100; // 40% of the expected interval
 
                             // Check if actual interval is within tolerance of expected interval
                             if(actual_interval < expected_interval - tolerance ||
@@ -333,22 +338,28 @@ static void vibration_game_input_callback(InputEvent* input_event, void* ctx) {
                         int valid_intervals = 0;
 
                         for(int i = 0; i < PATTERN_LENGTH - 1; i++) {
-                            uint32_t actual_interval = context->input_times[i + 1] - context->input_times[i];
+                            uint32_t actual_interval =
+                                context->input_times[i + 1] - context->input_times[i];
                             uint32_t expected_interval = context->pattern[i];
 
                             // Calculate percentage difference (0% = completely wrong, 100% = perfect)
                             if(expected_interval > 0) {
-                                int32_t difference = abs((int32_t)(actual_interval - expected_interval));
+                                int32_t difference =
+                                    abs((int32_t)(actual_interval - expected_interval));
                                 // Use a more realistic accuracy calculation based on timing precision
                                 // A perfect match is 100%, but small errors reduce accuracy significantly
-                                float accuracy = fmaxf(0.0f, 100.0f - ((float)difference / (float)expected_interval) * 200.0f);
+                                float accuracy = fmaxf(
+                                    0.0f,
+                                    100.0f -
+                                        ((float)difference / (float)expected_interval) * 200.0f);
                                 total_accuracy += accuracy;
                                 valid_intervals++;
                             }
                         }
 
                         if(valid_intervals > 0) {
-                            context->last_accuracy = total_accuracy / valid_intervals; // Average accuracy
+                            context->last_accuracy =
+                                total_accuracy / valid_intervals; // Average accuracy
                         } else {
                             context->last_accuracy = 0.0f;
                         }
@@ -371,21 +382,22 @@ static void vibration_game_input_callback(InputEvent* input_event, void* ctx) {
                                 // Randomly select one of the three fixed pause durations
                                 int random_choice = rand() % 3;
                                 switch(random_choice) {
-                                    case 0:
-                                        context->pattern[i] = PAUSE_DURATION_1; // 200ms
-                                        break;
-                                    case 1:
-                                        context->pattern[i] = PAUSE_DURATION_2; // 500ms
-                                        break;
-                                    case 2:
-                                        context->pattern[i] = PAUSE_DURATION_3; // 800ms
-                                        break;
+                                case 0:
+                                    context->pattern[i] = PAUSE_DURATION_1; // 200ms
+                                    break;
+                                case 1:
+                                    context->pattern[i] = PAUSE_DURATION_2; // 500ms
+                                    break;
+                                case 2:
+                                    context->pattern[i] = PAUSE_DURATION_3; // 800ms
+                                    break;
                                 }
                             }
 
                             reset_pattern_state(context); // Reset for next pattern
                             context->state = GameStateShowingPattern;
-                            context->last_pattern_time = furi_get_tick(); // Record when pattern was shown
+                            context->last_pattern_time =
+                                furi_get_tick(); // Record when pattern was shown
                             strcpy(context->status_text, "Watch the pattern.");
                         } else {
                             // Incorrect timing - repeat the same pattern
@@ -399,13 +411,15 @@ static void vibration_game_input_callback(InputEvent* input_event, void* ctx) {
                             furi_mutex_release(context->mutex);
                             // Create an error vibration pattern: multiple quick vibrations
                             for(int i = 0; i < 3; i++) {
-                                notification_message(context->notification, &sequence_single_vibro);
+                                notification_message(
+                                    context->notification, &sequence_single_vibro);
                                 furi_delay_ms(100); // Short pause between vibrations
                             }
                             furi_mutex_acquire(context->mutex, FuriWaitForever);
 
                             context->state = GameStateShowingPattern;
-                            context->last_pattern_time = furi_get_tick(); // Record when pattern was shown
+                            context->last_pattern_time =
+                                furi_get_tick(); // Record when pattern was shown
                             strcpy(context->status_text, "Watch again.");
                         }
                     }
@@ -434,7 +448,7 @@ static void play_vibration_pattern(VibrationGameContext* context) {
 
     // For the remaining 4 vibrations, wait for the pattern interval then vibrate
     for(int i = 0; i < PATTERN_LENGTH - 1; i++) {
-        furi_delay_ms(context->pattern[i]);  // Wait for the timing interval
+        furi_delay_ms(context->pattern[i]); // Wait for the timing interval
         // Play the next vibration
         notification_message(context->notification, &sequence_single_vibro);
         furi_delay_ms(VIBRATION_DURATION);
@@ -451,7 +465,6 @@ static void reset_pattern_state(VibrationGameContext* context) {
     }
 }
 
-
 // Function to check for timeout and update game state accordingly
 static void check_timeout_and_update(VibrationGameContext* context) {
     furi_mutex_acquire(context->mutex, FuriWaitForever);
@@ -464,20 +477,24 @@ static void check_timeout_and_update(VibrationGameContext* context) {
 
         // Use 5000 ms = 5 seconds (approximately 5000 ticks)
         // Only replay if timeout hasn't already occurred since last user input
-        if(time_since_last_input > 5000 && time_since_last_pattern > 5000 && !context->timeout_replay_occurred) {
+        if(time_since_last_input > 5000 && time_since_last_pattern > 5000 &&
+           !context->timeout_replay_occurred) {
             // Reset the user's input progress immediately to clear the filled circles
             context->current_input_index = 0;
             view_port_update(context->view_port); // Force immediate UI update to clear the circles
 
             // Play the pattern directly without changing state to avoid double-play in main loop
             furi_mutex_release(context->mutex);
-            furi_delay_ms(1000); // Wait 1 second before showing the pattern for a more relaxed experience
+            furi_delay_ms(
+                1000); // Wait 1 second before showing the pattern for a more relaxed experience
             play_vibration_pattern(context);
             furi_mutex_acquire(context->mutex, FuriWaitForever);
 
             // Update state after playing the pattern and record start time for input
-            context->pattern_start_time = furi_get_tick(); // Start timing from when pattern finishes
-            context->last_pattern_time = context->pattern_start_time; // Record when pattern was shown
+            context->pattern_start_time =
+                furi_get_tick(); // Start timing from when pattern finishes
+            context->last_pattern_time =
+                context->pattern_start_time; // Record when pattern was shown
             context->timeout_replay_occurred = true; // Mark that timeout replay has occurred
             context->state = GameStateWaitingForInput;
             context->last_input_time = context->pattern_start_time; // Reset timeout from now
