@@ -23,6 +23,7 @@ GamesMenuList Version 0
 /ext/apps/Games/cognizantflipper.fap
 /ext/apps/Games/color_guess.fap
 /ext/apps/Games/connect_wires.fap
+/ext/apps/Games/countdown.fap
 /ext/apps/Games/crossy_road.fap
 /ext/apps/Games/deadzone.fap
 /ext/apps/Games/dice_rm.fap

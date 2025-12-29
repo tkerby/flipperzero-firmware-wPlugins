@@ -52,6 +52,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Revert: [Updated Ventra NFC Protocol w/ StopID Parsing, Weather Station: Added support for LaCrosse X141-BV3 #1156 (By FatherDivine)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1156)
 - Updated: [FlipDownloader v1.3.5 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [Protocol Visualizer v1.3 (By antirez)](https://github.com/antirez/protoview)
+- Added: [CountDown v1.0 (By sistemasorp)](https://github.com/sistemasorp/flipper-countdown)
 
 <a name="release">
 
@@ -300,6 +301,7 @@ $ ./fbt dolphin_ext
 - [Cognizant Flipper v1.0 (By TunnelDog)](https://github.com/TunnelDog/Cognizant-Flipper)
 - [Color Guess v1.6 (By leedave)](https://github.com/leedave/Leeds-Flipper-Zero-Applications)
 - [Connect Wires v1.2 (By AlexTaran)](https://github.com/AlexTaran/flipperzero)
+- [CountDown v1.0 (By sistemasorp)](https://github.com/sistemasorp/flipper-countdown)
 - [Crossy Road v1.0 (By Mikael098)](https://github.com/Mikael098/CrossyRoad-FlipperZero-)
 - [DeadZone v0.2 (By retrooper)](https://github.com/retrooper/deadzone)
 - [Devilliers Platformer v0.1 (By adevil5)](https://github.com/adevil5/flipper-platformer-game)
