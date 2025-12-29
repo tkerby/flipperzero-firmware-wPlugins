@@ -17,11 +17,13 @@ I have made no changes to the signal logic or other ProtoView features (well, un
   </tr>
 </table>
 
-## Basic usage
+## Usage
 
 The new page is located two clicks to the right of the regular startup page. Until tyres are detected, it will show a few lines of information.
 
 The list can contain a maximum of 30 tyres, with 6 displayed on each screen. Readings are updated as new values are received. Up and down will scroll through the pages. Long OK will clear the history. Short OK will attempt to read the favorites file, long UP will switch between filtered and unfiltered mode (see below), long DOWN will switch between showing native units of pressure or bar.
+
+Each line will be prefixed with the car's make: (T)oyota, (R)enault, (F)ord, (C)itroen.
 
 ## Favorites file
 
@@ -40,11 +42,11 @@ TD4D546,G532548,T553456;
 (technically you should be able to do whatever you like after the first line, just make sure there is at least a blank second line)
 ```
 
-The filename must be tyrelist.txt and placed in apps_data\protoviewtpms on the SD card. There is no requirement for this file to exist, if you don't need it don't make one.
+The filename must be tyrelist.txt and placed in apps_data\protoviewtpms on the SD card. There is no requirement for this file to exist, if you don't need it don't make one. IDs located in this file will be prefixed with an asterisk in the list.
 
-IDs located in this file will be prefixed with an asterisk instead of "ID" in the list. Holding UP will switch to filtering mode, with only detected tyre IDs that are present in the file being displayed.
+Holding UP will switch to filtered mode, with only detected tyre IDs that are present in the file being displayed.
 
-I attempted to make the file read automatically on startup, but the natural places for me to put it was all in the main event loop and that caused viewport locking. I didn't want to spend time on trying to move it out of the loop, so instead it is read by a single OK click. This can be done at any time, if tyres have already been detected and placed in the list they will be checked and updated accordingly if they exist in the file.
+I attempted to make the file read automatically on startup, but the natural places for me to put it was all in the main event loop and that caused viewport locking, so instead it is read by a single OK click. This can be done at any time, if tyres have already been detected and placed in the list they will be checked and updated accordingly if they exist in the file.
 
 ## Compilation
 
