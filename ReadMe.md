@@ -55,6 +55,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [CountDown v1.0 (By sistemasorp)](https://github.com/sistemasorp/flipper-countdown)
 - Added: [ListEM v1.0 (By Clawzman)](https://github.com/Clawzman/Flipper_ListEM)
 - Added: [BzzBzz v0.2 (By ikiruneo)](https://github.com/ikiruneo/BzzBzz)
+- Added: [Slots v1.0 (By vh8t)](https://github.com/vh8t/flipper-slots)
 
 <a name="release">
 
@@ -381,6 +382,7 @@ $ ./fbt dolphin_ext
 - [Secret Toggle (By nostrumuva)](https://github.com/nostrumuva/secret_toggle)
 - [Simon Says v0.2 (By SimplyMinimal)](https://github.com/SimplyMinimal/FlipperZero-SimonSays)
 - [Slot Machine v1.3 (By Daniel-dev-s)](https://github.com/Daniel-dev-s/flipperzero-slots)
+- [Slots v1.0 (By vh8t)](https://github.com/vh8t/flipper-slots)
 - [Snake v1.7 (By OlegSchwann)-OFW](https://github.com/flipperdevices/flipperzero-firmware/pull/829)
 - [Snake 2.0 v2.3 (By Willzvul)](https://github.com/Willzvul/Snake_2.0/)
 - [Solitaire v2.0.2 (By doofy-dev)](https://github.com/doofy-dev/flipper_solitaire)

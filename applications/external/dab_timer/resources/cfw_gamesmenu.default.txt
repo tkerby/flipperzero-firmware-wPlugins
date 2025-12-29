@@ -99,6 +99,7 @@ GamesMenuList Version 0
 /ext/apps/Games/secret_toggle.fap
 /ext/apps/Games/simon_says.fap
 /ext/apps/Games/slotmachine.fap
+/ext/apps/Games/slots.fap
 /ext/apps/Games/snake.fap
 /ext/apps/Games/snake20.fap
 /ext/apps/Games/sokoban.fap
