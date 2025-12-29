@@ -9,6 +9,6 @@ App(
     fap_category="Games",
     fap_author="Koray Er",
     fap_weburl="https://github.com/ikiruneo/BzzBzz",
-    fap_version="0.2",
+    fap_version="0.3",
     fap_description="Haptic rhythm-matching game",
 )

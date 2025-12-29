@@ -56,6 +56,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [ListEM v1.0 (By Clawzman)](https://github.com/Clawzman/Flipper_ListEM)
 - Added: [BzzBzz v0.2 (By ikiruneo)](https://github.com/ikiruneo/BzzBzz)
 - Added: [Slots v1.0 (By vh8t)](https://github.com/vh8t/flipper-slots)
+- Updated: [BzzBzz v0.3 (By ikiruneo)](https://github.com/ikiruneo/BzzBzz)
 
 <a name="release">
 
@@ -294,7 +295,7 @@ $ ./fbt dolphin_ext
 - [BlackJack v1.1 (By teeebor)](https://github.com/teeebor/flipper_games)
 - [Bomberduck v1.2 (By leo-need-more-coffee)](https://github.com/leo-need-more-coffee/flipperzero-bomberduck)
 - [Bomberfox v1.0 (By ashleyhuxley)](https://github.com/ashleyhuxley/bomber)
-- [BzzBzz v0.2 (By ikiruneo)](https://github.com/ikiruneo/BzzBzz)
+- [BzzBzz v0.3 (By ikiruneo)](https://github.com/ikiruneo/BzzBzz)
 - [CarJacker v1.0 (By RocketGod-git)](https://github.com/RocketGod-git/Flipper-Zero-CarJacker)
 - [Catacombs Of The Damned v2.1 (By apfxtech)](https://github.com/apfxtech/FlipperCatacombs)
 - [Cells Lab v0.1 (By PilotOfAsuka)](https://github.com/PilotOfAsuka/Cells-lab-on-Flipper-Zero)
