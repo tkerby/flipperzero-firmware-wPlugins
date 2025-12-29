@@ -27,69 +27,69 @@ typedef struct {
 /* ===================== PREFIX TABLES ===================== */
 
 /* RFID */
-static const uint8_t P_EM4100[]  = {0x00,0x01,0x02,0x03};
-static const uint8_t P_HID[]     = {0xA0,0xB0,0xC0};
-static const uint8_t P_INDALA[]  = {0x20,0x21,0x22};
-static const uint8_t P_IOPROX[]  = {0x20,0x21,0x22};
-static const uint8_t P_PAC[]     = {0xE0};
-static const uint8_t P_PARADOX[] = {0xA0,0xC0};
-static const uint8_t P_VIKING[]  = {0x40,0x50};
+static const uint8_t P_EM4100[] = {0x00, 0x01, 0x02, 0x03};
+static const uint8_t P_HID[] = {0xA0, 0xB0, 0xC0};
+static const uint8_t P_INDALA[] = {0x20, 0x21, 0x22};
+static const uint8_t P_IOPROX[] = {0x20, 0x21, 0x22};
+static const uint8_t P_PAC[] = {0xE0};
+static const uint8_t P_PARADOX[] = {0xA0, 0xC0};
+static const uint8_t P_VIKING[] = {0x40, 0x50};
 static const uint8_t P_PYRAMID[] = {0x80};
-static const uint8_t P_KERI[]    = {0x60};
-static const uint8_t P_H10301[]  = {0xF0,0xF1};
-static const uint8_t P_JABLO[]   = {0x02};
+static const uint8_t P_KERI[] = {0x60};
+static const uint8_t P_H10301[] = {0xF0, 0xF1};
+static const uint8_t P_JABLO[] = {0x02};
 static const uint8_t P_ELECTRA[] = {0x01};
-static const uint8_t P_IDTECK[]  = {0x0A};
-static const uint8_t P_GALL[]    = {0x20,0x30};
+static const uint8_t P_IDTECK[] = {0x0A};
+static const uint8_t P_GALL[] = {0x20, 0x30};
 
 /* NFC */
-static const uint8_t P_MIFARE[]  = {0x04,0x08,0x12};
-static const uint8_t P_UL[]      = {0x04};
-static const uint8_t P_ICLASS[]  = {0xEC};
+static const uint8_t P_MIFARE[] = {0x04, 0x08, 0x12};
+static const uint8_t P_UL[] = {0x04};
+static const uint8_t P_ICLASS[] = {0xEC};
 
 /* iButton */
-static const uint8_t P_DALLAS[]  = {0x01,0x02};
+static const uint8_t P_DALLAS[] = {0x01, 0x02};
 
 /* ===================== PROTOCOL LIST ===================== */
 
 static const Protocol protocols[] = {
-/* RFID */
-{"EM4100",5,0xFFFFFFFFFF,ProtocolRFID,P_EM4100,4},
-{"HID Prox",6,0xFFFFFFFFFFFF,ProtocolRFID,P_HID,3},
-{"Indala",4,0xFFFFFFFF,ProtocolRFID,P_INDALA,3},
-{"IoProx",4,0xFFFFFFFF,ProtocolRFID,P_IOPROX,3},
-{"PAC/Stanley",4,0xFFFFFFFF,ProtocolRFID,P_PAC,1},
-{"Paradox",6,0xFFFFFFFFFFFF,ProtocolRFID,P_PARADOX,2},
-{"Viking",4,0xFFFFFFFF,ProtocolRFID,P_VIKING,2},
-{"Pyramid",4,0xFFFFFFFF,ProtocolRFID,P_PYRAMID,1},
-{"Keri",4,0xFFFFFFFF,ProtocolRFID,P_KERI,1},
-{"Nexwatch",8,0xFFFFFFFFFFFFFFFF,ProtocolRFID,NULL,0},
-{"H10301",3,0xFFFFFF,ProtocolRFID,P_H10301,2},
-{"Jablotron",5,0xFFFFFFFFFF,ProtocolRFID,P_JABLO,1},
-{"Electra",8,0xFFFFFFFFFFFFFFFF,ProtocolRFID,P_ELECTRA,1},
-{"IDTeck",8,0xFFFFFFFFFFFFFFFF,ProtocolRFID,P_IDTECK,1},
-{"Gallagher",8,0xFFFFFFFFFFFFFFFF,ProtocolRFID,P_GALL,2},
+    /* RFID */
+    {"EM4100", 5, 0xFFFFFFFFFF, ProtocolRFID, P_EM4100, 4},
+    {"HID Prox", 6, 0xFFFFFFFFFFFF, ProtocolRFID, P_HID, 3},
+    {"Indala", 4, 0xFFFFFFFF, ProtocolRFID, P_INDALA, 3},
+    {"IoProx", 4, 0xFFFFFFFF, ProtocolRFID, P_IOPROX, 3},
+    {"PAC/Stanley", 4, 0xFFFFFFFF, ProtocolRFID, P_PAC, 1},
+    {"Paradox", 6, 0xFFFFFFFFFFFF, ProtocolRFID, P_PARADOX, 2},
+    {"Viking", 4, 0xFFFFFFFF, ProtocolRFID, P_VIKING, 2},
+    {"Pyramid", 4, 0xFFFFFFFF, ProtocolRFID, P_PYRAMID, 1},
+    {"Keri", 4, 0xFFFFFFFF, ProtocolRFID, P_KERI, 1},
+    {"Nexwatch", 8, 0xFFFFFFFFFFFFFFFF, ProtocolRFID, NULL, 0},
+    {"H10301", 3, 0xFFFFFF, ProtocolRFID, P_H10301, 2},
+    {"Jablotron", 5, 0xFFFFFFFFFF, ProtocolRFID, P_JABLO, 1},
+    {"Electra", 8, 0xFFFFFFFFFFFFFFFF, ProtocolRFID, P_ELECTRA, 1},
+    {"IDTeck", 8, 0xFFFFFFFFFFFFFFFF, ProtocolRFID, P_IDTECK, 1},
+    {"Gallagher", 8, 0xFFFFFFFFFFFFFFFF, ProtocolRFID, P_GALL, 2},
 
-/* NFC */
-{"MIFARE Classic 1K",4,0xFFFFFFFF,ProtocolNFC,P_MIFARE,3},
-{"MIFARE Classic 4K",4,0xFFFFFFFF,ProtocolNFC,P_MIFARE,3},
-{"MIFARE Ultralight",7,0xFFFFFFFFFFFFFF,ProtocolNFC,P_UL,1},
-{"DESFire EV1",16,0,ProtocolNFC,NULL,0},
-{"iCLASS",8,0xFFFFFFFFFFFFFFFF,ProtocolNFC,P_ICLASS,1},
-{"FeliCa",8,0xFFFFFFFFFFFFFFFF,ProtocolNFC,NULL,0},
+    /* NFC */
+    {"MIFARE Classic 1K", 4, 0xFFFFFFFF, ProtocolNFC, P_MIFARE, 3},
+    {"MIFARE Classic 4K", 4, 0xFFFFFFFF, ProtocolNFC, P_MIFARE, 3},
+    {"MIFARE Ultralight", 7, 0xFFFFFFFFFFFFFF, ProtocolNFC, P_UL, 1},
+    {"DESFire EV1", 16, 0, ProtocolNFC, NULL, 0},
+    {"iCLASS", 8, 0xFFFFFFFFFFFFFFFF, ProtocolNFC, P_ICLASS, 1},
+    {"FeliCa", 8, 0xFFFFFFFFFFFFFFFF, ProtocolNFC, NULL, 0},
 
-/* iButton */
-{"Dallas DS1990",8,0xFFFFFFFFFFFFFFFF,ProtocolIButton,P_DALLAS,2},
-{"Cyfral",2,0xFFFF,ProtocolIButton,NULL,0},
-{"Metacom",4,0xFFFFFFFF,ProtocolIButton,NULL,0},
-{"Maxim iButton",8,0xFFFFFFFFFFFFFFFF,ProtocolIButton,NULL,0},
-{"Keypad/Access Control",8,0xFFFFFFFFFFFFFFFF,ProtocolIButton,NULL,0},
-{"Temperature",8,0xFFFFFFFFFFFFFFFF,ProtocolIButton,NULL,0},
-{"Custom iButton",8,0xFFFFFFFFFFFFFFFF,ProtocolIButton,NULL,0},
+    /* iButton */
+    {"Dallas DS1990", 8, 0xFFFFFFFFFFFFFFFF, ProtocolIButton, P_DALLAS, 2},
+    {"Cyfral", 2, 0xFFFF, ProtocolIButton, NULL, 0},
+    {"Metacom", 4, 0xFFFFFFFF, ProtocolIButton, NULL, 0},
+    {"Maxim iButton", 8, 0xFFFFFFFFFFFFFFFF, ProtocolIButton, NULL, 0},
+    {"Keypad/Access Control", 8, 0xFFFFFFFFFFFFFFFF, ProtocolIButton, NULL, 0},
+    {"Temperature", 8, 0xFFFFFFFFFFFFFFFF, ProtocolIButton, NULL, 0},
+    {"Custom iButton", 8, 0xFFFFFFFFFFFFFFFF, ProtocolIButton, NULL, 0},
 };
 
-#define PROTOCOL_COUNT (sizeof(protocols)/sizeof(Protocol))
-#define MAX_PREFIXES 4
+#define PROTOCOL_COUNT (sizeof(protocols) / sizeof(Protocol))
+#define MAX_PREFIXES   4
 
 /* ===================== STATE ===================== */
 
@@ -119,7 +119,7 @@ typedef struct {
 
 static const char* base_path(ProtocolType t) {
     if(t == ProtocolRFID) return "/ext/lfrfid_fuzzer/ListEM";
-    if(t == ProtocolNFC)  return "/ext/mifare_fuzzer/ListEM";
+    if(t == ProtocolNFC) return "/ext/mifare_fuzzer/ListEM";
     return "/ext/ibutton_fuzzer/ListEM";
 }
 
@@ -156,14 +156,12 @@ static void generate_internal(const Protocol* p, AppState* s) {
         if(clean[i] == ' ') clean[i] = '_';
 
     char base[160];
-    snprintf(base, sizeof(base), "%s/%s_%s",
-             base_path(p->type), clean, prefix_part);
+    snprintf(base, sizeof(base), "%s/%s_%s", base_path(p->type), clean, prefix_part);
 
     char path[192];
     int idx = 0;
     do {
-        snprintf(path, sizeof(path),
-                 idx ? "%s_%d.txt" : "%s.txt", base, idx);
+        snprintf(path, sizeof(path), idx ? "%s_%d.txt" : "%s.txt", base, idx);
         idx++;
     } while(storage_common_stat(st, path, NULL) == FSE_OK);
 
@@ -181,14 +179,12 @@ static void generate_internal(const Protocol* p, AppState* s) {
             uint8_t n = 0;
 
             for(uint8_t j = 0; j < p->prefix_count; j++)
-                if(s->prefix_snapshot[j])
-                    usable[n++] = p->prefixes[j];
+                if(s->prefix_snapshot[j]) usable[n++] = p->prefixes[j];
 
             uint8_t px = usable[rand() % n];
             uint8_t rem = p->bytes - 1;
             uint64_t r = ((uint64_t)rand() << 32) | rand();
-            id = ((uint64_t)px << (rem * 8)) |
-                 (r & ((1ULL << (rem * 8)) - 1));
+            id = ((uint64_t)px << (rem * 8)) | (r & ((1ULL << (rem * 8)) - 1));
         } else {
             uint64_t r = ((uint64_t)rand() << 32) | rand();
             id = p->max ? (r & p->max) : r;
@@ -225,7 +221,7 @@ static int32_t generate_worker(void* ctx) {
 
 static const char* proto_type_str(ProtocolType t) {
     if(t == ProtocolRFID) return "RFID";
-    if(t == ProtocolNFC)  return "NFC";
+    if(t == ProtocolNFC) return "NFC";
     return "iButton";
 }
 
@@ -255,8 +251,7 @@ static void draw(Canvas* c, void* ctx) {
 
     if(!s->selecting_prefix) {
         char title[64];
-        snprintf(title, sizeof(title),
-                 "%s (%s)", p->name, proto_type_str(p->type));
+        snprintf(title, sizeof(title), "%s (%s)", p->name, proto_type_str(p->type));
 
         canvas_draw_str(c, 2, 12, title);
         canvas_draw_str(c, 3, 12, title); /* fake bold */
@@ -267,21 +262,21 @@ static void draw(Canvas* c, void* ctx) {
 
         canvas_draw_str(c, 2, 38, "Press OK to generate");
 
-        if(p->prefix_count > 0)
-            canvas_draw_str(c, 2, 48, "Hold OK = Prefixes");
+        if(p->prefix_count > 0) canvas_draw_str(c, 2, 48, "Hold OK = Prefixes");
 
-        if(s->list_generated)
-            canvas_draw_str(c, 2, 58, "List Generated");
+        if(s->list_generated) canvas_draw_str(c, 2, 58, "List Generated");
     } else {
         canvas_draw_str(c, 2, 12, "Select Prefixes");
 
         for(uint8_t i = 0; i < p->prefix_count; i++) {
             char line[32];
-            snprintf(line, sizeof(line),
-                     "%c %c 0x%02X",
-                     (i == s->prefix_cursor) ? '>' : ' ',
-                     s->prefix_enabled[s->proto][i] ? 'X' : ' ',
-                     p->prefixes[i]);
+            snprintf(
+                line,
+                sizeof(line),
+                "%c %c 0x%02X",
+                (i == s->prefix_cursor) ? '>' : ' ',
+                s->prefix_enabled[s->proto][i] ? 'X' : ' ',
+                p->prefixes[i]);
             canvas_draw_str(c, 2, 24 + i * 10, line);
         }
     }
@@ -294,16 +289,13 @@ static void input(InputEvent* e, void* ctx) {
     const Protocol* p = &protocols[s->proto];
 
     if(s->splash) {
-        if(e->type == InputTypeShort && e->key == InputKeyOk)
-            s->splash = false;
+        if(e->type == InputTypeShort && e->key == InputKeyOk) s->splash = false;
         return;
     }
 
     if(s->generating) return;
 
-    if(e->type == InputTypeLong &&
-       e->key == InputKeyOk &&
-       p->prefix_count > 0) {
+    if(e->type == InputTypeLong && e->key == InputKeyOk && p->prefix_count > 0) {
         s->selecting_prefix = true;
         s->prefix_cursor = 0;
         return;
@@ -321,9 +313,7 @@ static void input(InputEvent* e, void* ctx) {
         else if(e->key == InputKeyRight)
             s->count += 1000;
         else if(e->key == InputKeyOk) {
-            memcpy(s->prefix_snapshot,
-                   s->prefix_enabled[s->proto],
-                   sizeof(bool) * MAX_PREFIXES);
+            memcpy(s->prefix_snapshot, s->prefix_enabled[s->proto], sizeof(bool) * MAX_PREFIXES);
 
             s->generating = true;
             s->progress = 0;
@@ -369,11 +359,9 @@ int32_t rfid_fuzzer_app(void* p) {
     gui_add_view_port(g, v, GuiLayerFullscreen);
 
     while(s.run) {
-        if(s.splash && furi_get_tick() > s.splash_timeout)
-            s.splash = false;
+        if(s.splash && furi_get_tick() > s.splash_timeout) s.splash = false;
 
-        if(s.list_generated && furi_get_tick() > s.msg_timeout)
-            s.list_generated = false;
+        if(s.list_generated && furi_get_tick() > s.msg_timeout) s.list_generated = false;
 
         view_port_update(v);
         furi_delay_ms(50);
@@ -389,4 +377,3 @@ int32_t rfid_fuzzer_app(void* p) {
     furi_record_close(RECORD_GUI);
     return 0;
 }
-

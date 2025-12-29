@@ -53,6 +53,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipDownloader v1.3.5 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [Protocol Visualizer v1.3 (By antirez)](https://github.com/antirez/protoview)
 - Added: [CountDown v1.0 (By sistemasorp)](https://github.com/sistemasorp/flipper-countdown)
+- Added: [ListEM v1.0 (By Clawzman)](https://github.com/Clawzman/Flipper_ListEM)
 
 <a name="release">
 
@@ -605,6 +606,7 @@ $ ./fbt dolphin_ext
 - [Lightmeter v1.3 (By oleksiikutuzov)](https://github.com/oleksiikutuzov/flipperzero-lightmeter) `Req: BH1750/MAX44009`
 - [Lightning Distance v0.1 (By HyperMuffin12)](https://github.com/HyperMuffin12/Flipper-Lightning-Distance)
 - [Lishi HU66 v0.2 (By evillero)](https://github.com/evillero/lishi_hu66)
+- [ListEM v1.0 (By Clawzman)](https://github.com/Clawzman/Flipper_ListEM)
 - [Logic Analyzer v1.1 (By g3gg0)](https://github.com/g3gg0/flipper-logic_analyzer)
 - [Longwave Clock v0.1 (By m7i-org)](https://github.com/m7i-org/flipper_longwave_clock)
 - [LoRa Relay v1.1.3 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-SX1262-LoRa) `Req: SX1262 By ElectronicCats`
