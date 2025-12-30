@@ -45,7 +45,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [HTW AC Remote v1.1 (By sokogen)](https://github.com/sokogen/flipperzero-htw-ac-remote)
 - Updated: [Mystic Balloon v2.0 (By apfxtech)](https://github.com/apfxtech/FlipperMysticBalloon)
 - Added: [Arduventure v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperArduventure)
-- Updated: [Catacombs Of The Damned v2.1 (By apfxtech)](https://github.com/apfxtech/FlipperCatacombs)
 - [Updated Ventra NFC Protocol w/ StopID Parsing, Weather Station: Added support for LaCrosse X141-BV3 #1156 (By FatherDivine)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1156)
 - Updated: [ProtoPirate WIP v1.4 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - Updated: [FZ nRF24 Jammer v1.4 (By W0rthlessS0ul)](https://github.com/W0rthlessS0ul/FZ_nRF24_jammer)
@@ -60,6 +59,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: PR: [NFC Plugin to identify some hotel systems #4323 (By bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/4323)
 - Updated: [Seos compatible v1.2 (By bettse)](https://gitlab.com/bettse/flipper_seos)
 - Added: [Wolfenduino v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperWolfenstein)
+- Updated: [Catacombs Of The Damned v2.1 (By apfxtech)](https://github.com/apfxtech/FlipperCatacombs)
 
 <a name="release">
 

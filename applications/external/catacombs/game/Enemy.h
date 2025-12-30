@@ -11,7 +11,8 @@ enum class EnemyType : uint8_t {
     Bat,
     Spider,
     NumEnemyTypes,
-    None = NumEnemyTypes
+    None = NumEnemyTypes,
+    Exit,
 };
 
 enum class EnemyState : uint8_t {
