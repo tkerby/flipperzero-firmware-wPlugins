@@ -26,7 +26,7 @@
 #define TONUINO_VERSION 0x02
 
 #define APP_VERSION "1.0.0"
-#define APP_BUILD_NUMBER 40
+#define APP_BUILD_NUMBER 41
 
 typedef enum {
     ModeHoerspiel = 1,

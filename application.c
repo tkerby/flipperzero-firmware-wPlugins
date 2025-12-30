@@ -10,6 +10,9 @@ static void tonuino_rapid_write_update_display(TonuinoApp* app);
 static uint32_t tonuino_exit(void* context);
 static uint32_t tonuino_back_to_menu(void* context);
 
+// Store app pointer for mode selection back button callback
+static TonuinoApp* g_mode_selection_app = NULL;
+
 static const char* mode_names[] = {
     "",
     "Hoerspiel (Random)",
@@ -109,9 +112,12 @@ static void tonuino_submenu_mode_callback(void* context) {
     TonuinoApp* app = context;
     submenu_reset(app->submenu);
     
+    // Store app pointer for back button callback
+    g_mode_selection_app = app;
+    
     view_set_previous_callback(submenu_get_view(app->submenu), tonuino_back_to_menu);
     
-    submenu_add_item(app->submenu, "Back", 0, tonuino_submenu_callback, app);
+    // Don't add "Back" menu item - hardware back button will handle it
     
     char mode_label[64];
     for(int i = 1; i <= ModeRepeatLast; i++) {
@@ -309,10 +315,8 @@ static void tonuino_submenu_read_callback(void* context) {
 static void tonuino_submenu_callback(void* context, uint32_t index) {
     TonuinoApp* app = context;
     
-    if(index == 0) {
-        tonuino_restore_main_menu(app);
-        view_dispatcher_switch_to_view(app->view_dispatcher, 0);
-    } else if(index == 100) {
+    // Index 0 was "Back" - removed, so skip it
+    if(index == 100) {
         tonuino_submenu_folder_callback(context);
     } else if(index == 101) {
         tonuino_submenu_mode_callback(context);
@@ -476,15 +480,20 @@ static uint32_t tonuino_exit(void* context) {
 }
 
 static uint32_t tonuino_back_to_menu(void* context) {
-    // The context passed to previous callbacks for submenu is the view, not the app
-    // But we need the app to restore the menu. Since we can't easily get it,
-    // we'll use a workaround: store app pointer in a way we can retrieve it
-    // Actually, the simplest is to just switch to view 0 and let the "Back" item handle it
-    // But that won't restore the menu...
+    // For submenu mode selection, use stored app pointer
+    TonuinoApp* app = g_mode_selection_app;
     
-    // For submenu, we can't easily get app, so let's just return 0 to go back
-    // The menu restoration will happen when user selects "Back" menu item
-    UNUSED(context);
+    // For other views, try to get app from context
+    if(!app) {
+        app = (TonuinoApp*)context;
+    }
+    
+    if(!app) return VIEW_NONE;
+    
+    // Clear stored pointer
+    g_mode_selection_app = NULL;
+    
+    tonuino_restore_main_menu(app);
     return 0;
 }
 
