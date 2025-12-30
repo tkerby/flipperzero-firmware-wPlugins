@@ -14,8 +14,13 @@ fi
 echo "$BUILD_NUMBER" > "$BUILD_NUMBER_FILE"
 
 sed -i.bak "s/#define APP_BUILD_NUMBER [0-9]*/#define APP_BUILD_NUMBER $BUILD_NUMBER/" "$SCRIPT_DIR/application.h"
-sed -i.bak "s/#define APP_BUILD_NUMBER [0-9]*/#define APP_BUILD_NUMBER $BUILD_NUMBER/" "$FIRMWARE_DIR/application.h"
-rm -f "$SCRIPT_DIR/application.h.bak" "$FIRMWARE_DIR/application.h.bak"
+rm -f "$SCRIPT_DIR/application.h.bak"
+
+echo "Syncing files to firmware directory..."
+cp "$SCRIPT_DIR/application.c" "$FIRMWARE_DIR/application.c"
+cp "$SCRIPT_DIR/application.h" "$FIRMWARE_DIR/application.h"
+cp "$SCRIPT_DIR/application.fam" "$FIRMWARE_DIR/application.fam"
+echo "✓ Files synced"
 
 cd /Users/thomaskekeisen/Projects/flipperzero-firmware-unleashed && ./fbt -c fap_tonuino_writer && ./fbt fap_tonuino_writer 2>&1 | tail -30
 
