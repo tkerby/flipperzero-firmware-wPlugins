@@ -57,6 +57,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [BzzBzz v0.2 (By ikiruneo)](https://github.com/ikiruneo/BzzBzz)
 - Added: [Slots v1.0 (By vh8t)](https://github.com/vh8t/flipper-slots)
 - Updated: [BzzBzz v0.3 (By ikiruneo)](https://github.com/ikiruneo/BzzBzz)
+- OFW: PR: [NFC Plugin to identify some hotel systems #4323 (By bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/4323)
 
 <a name="release">
 
