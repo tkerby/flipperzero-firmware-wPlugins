@@ -1,13 +1,15 @@
 # Wolfenduino
 ![alt text](package/Package/banner.png)
+ 
 Wolfenduino is a demake of id software's Wolfenstein 3D for the Arduboy FX. 
+
+The game recreates the classic shareware episode "Escape from Wolfenstein" with original-style gameplay adapted for portable hardware.
 
 This project is a [port](https://github.com/apfxtech/FlipperWolfenstein.git) of the original [WolfenduinoFX](https://github.com/jhhoward/WolfenduinoFX.git) project. The main goal of this fork is to port the game from the Arduboy console to **Flipper Zero**.
 
 ![s1](package/screenshots/screen1.png)
 ![s2](package/screenshots/screen4.png)
 ![s3](package/screenshots/screen5.png)
-![s3](package/screenshots/screen7.png)
 
 
 ## Features
@@ -21,7 +23,7 @@ This project is a [port](https://github.com/apfxtech/FlipperWolfenstein.git) of 
 ![output](package/demo.gif)
 
 ## Controls
-![image](https://github.com/jhhoward/WolfenduinoFX/assets/1665740/c890d597-0de5-4cfd-bd5a-8d0697776a30)
+![s3](package/screenshots/screen6.png)
 * Use directional pad to move
 * Press B to shoot
 * Hold A to strafe

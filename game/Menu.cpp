@@ -272,7 +272,8 @@ void Menu::draw()
 	{
 		engine.renderer.drawBackground(Data_titleBG);
 		startY += 5;
-		engine.renderer.drawString(PSTR("@JAMESHHOWARD"), DISPLAYWIDTH - 52, DISPLAYHEIGHT - FONT_HEIGHT - 1, 0);
+		engine.renderer.drawString(PSTR("@JAMESHHOWARD"), 	DISPLAYWIDTH - 52, DISPLAYHEIGHT - FONT_HEIGHT - 1, 0);
+		engine.renderer.drawString(PSTR("@APFXTECH"), 		DISPLAYWIDTH - 36, DISPLAYHEIGHT - FONT_HEIGHT * 2 - 2, 0);
 	}
 	else if (currentMenu == Menu_Help)
 	{
