@@ -5,9 +5,8 @@ from collections import defaultdict
 SOURCE_EXT = (".h", ".hpp", ".c", ".cpp")
 
 # ловим: inline / static inline + return type + name(
-INLINE_FUNC_RE = re.compile(
-    r'\b(?:static\s+)?inline\s+[\w:<>\s*&]+\s+(\w+)\s*\('
-)
+INLINE_FUNC_RE = re.compile(r"\b(?:static\s+)?inline\s+[\w:<>\s*&]+\s+(\w+)\s*\(")
+
 
 def read_files(root="."):
     files = []
@@ -47,7 +46,7 @@ def find_inline_functions(files):
 def index_line_starts(text):
     """Вернёт массив индексов начала каждой строки (0-based)"""
     starts = [0]
-    for m in re.finditer(r'\n', text):
+    for m in re.finditer(r"\n", text):
         starts.append(m.end())
     return starts
 
@@ -60,7 +59,11 @@ def pos_to_line_col(line_starts, pos):
     lo, hi = 0, len(line_starts) - 1
     while lo <= hi:
         mid = (lo + hi) // 2
-        if line_starts[mid] <= pos < (line_starts[mid + 1] if mid + 1 < len(line_starts) else 10**18):
+        if (
+            line_starts[mid]
+            <= pos
+            < (line_starts[mid + 1] if mid + 1 < len(line_starts) else 10**18)
+        ):
             line = mid + 1
             col = pos - line_starts[mid] + 1
             return line, col
@@ -79,7 +82,7 @@ def is_probably_declaration_line(line):
     if "inline" in line:
         return True
     # типичный вид определения: name(...) {
-    if re.search(r'\b\w+\s*\([^;]*\)\s*\{', line):
+    if re.search(r"\b\w+\s*\([^;]*\)\s*\{", line):
         return True
     return False
 
@@ -91,10 +94,7 @@ def find_calls(files, func_names):
     calls = defaultdict(list)
 
     # заранее компилируем regex для каждого имени
-    call_res = {
-        name: re.compile(rf'\b{re.escape(name)}\s*\(')
-        for name in func_names
-    }
+    call_res = {name: re.compile(rf"\b{re.escape(name)}\s*\(") for name in func_names}
 
     for path in files:
         try:
@@ -103,8 +103,8 @@ def find_calls(files, func_names):
 
             # Чтобы не ловить в комментариях — грубо вырежем // и /* */
             # (не идеальный парсер, но снижает шум)
-            scrubbed = re.sub(r'//.*', '', text)
-            scrubbed = re.sub(r'/\*.*?\*/', '', scrubbed, flags=re.S)
+            scrubbed = re.sub(r"//.*", "", text)
+            scrubbed = re.sub(r"/\*.*?\*/", "", scrubbed, flags=re.S)
 
             for name, cre in call_res.items():
                 for m in cre.finditer(scrubbed):
@@ -113,7 +113,7 @@ def find_calls(files, func_names):
 
                     # вытащим строку для эвристики (не считать объявление)
                     line_start = line_starts[line - 1]
-                    line_end = scrubbed.find('\n', line_start)
+                    line_end = scrubbed.find("\n", line_start)
                     if line_end == -1:
                         line_end = len(scrubbed)
                     line_text = scrubbed[line_start:line_end]
@@ -140,8 +140,10 @@ def main():
     # 2) Печатаем вызовы inline-функций в формате VS Code
     for name in sorted(calls.keys()):
         decl_path, decl_line, decl_col = inline_funcs[name]
-        for (path, line, col) in calls[name]:
-            print(f"{path}:{line}:{col}: calls inline '{name}' (defined at {decl_path}:{decl_line}:{decl_col})")
+        for path, line, col in calls[name]:
+            print(
+                f"{path}:{line}:{col}: calls inline '{name}' (defined at {decl_path}:{decl_line}:{decl_col})"
+            )
 
 
 if __name__ == "__main__":

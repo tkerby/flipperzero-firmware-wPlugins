@@ -294,12 +294,12 @@ void seos_characteristic_att_notify_chunk(SeosAtt* seos_att, uint16_t handle, Bi
     const uint16_t size = bit_buffer_get_size_bytes(payload);
 
     uint16_t num_chunks = size / BLE_CHUNK_SIZE;
-    if (size % BLE_CHUNK_SIZE) num_chunks++;
+    if(size % BLE_CHUNK_SIZE) num_chunks++;
 
-    for (uint16_t i=0; i<num_chunks; i++) {
+    for(uint16_t i = 0; i < num_chunks; i++) {
         uint8_t flags = 0;
-        if (i == 0) flags |= BLE_FLAG_SOM;
-        if (i == num_chunks-1) flags |= BLE_FLAG_EOM;
+        if(i == 0) flags |= BLE_FLAG_SOM;
+        if(i == num_chunks - 1) flags |= BLE_FLAG_EOM;
         // Add number of remaining chunks to lower nybble
         flags |= (num_chunks - 1 - i) & 0x0F;
 
@@ -337,25 +337,28 @@ void seos_characteristic_write_request(void* context, BitBuffer* attribute_value
     if((flags & BLE_FLAG_SOM) == BLE_FLAG_SOM) {
         bit_buffer_reset(seos_characteristic->rx_buffer);
     } else {
-        if (bit_buffer_get_size_bytes(seos_characteristic->rx_buffer) == 0) {
+        if(bit_buffer_get_size_bytes(seos_characteristic->rx_buffer) == 0) {
             FURI_LOG_W(TAG, "Expected start of BLE packet");
             return;
         }
     }
 
     bit_buffer_append_bytes(seos_characteristic->rx_buffer, data + 1, len - 1);
-    
+
     // Only parse if end-of-message flag found
     if((flags & BLE_FLAG_EOM) == BLE_FLAG_EOM) return;
 
     if(seos_characteristic->flow_mode == FLOW_READER) {
-        seos_characteristic_reader_flow(seos_characteristic, seos_characteristic->rx_buffer, payload);
+        seos_characteristic_reader_flow(
+            seos_characteristic, seos_characteristic->rx_buffer, payload);
     } else if(seos_characteristic->flow_mode == FLOW_CRED) {
-        seos_characteristic_cred_flow(seos_characteristic, seos_characteristic->rx_buffer, payload);
+        seos_characteristic_cred_flow(
+            seos_characteristic, seos_characteristic->rx_buffer, payload);
     }
 
     if(bit_buffer_get_size_bytes(payload) > 0) {
-        seos_characteristic_att_notify_chunk(seos_characteristic->seos_att, seos_characteristic->handle, payload);
+        seos_characteristic_att_notify_chunk(
+            seos_characteristic->seos_att, seos_characteristic->handle, payload);
     }
 
     bit_buffer_free(payload);
@@ -382,7 +385,8 @@ void seos_characteristic_on_subscribe(void* context, uint16_t handle) {
     bit_buffer_append_bytes(tx, standard_seos_aid, sizeof(standard_seos_aid));
     seos_log_bitbuffer(TAG, "initial select", tx);
 
-    seos_characteristic_att_notify_chunk(seos_characteristic->seos_att, seos_characteristic->handle, tx);
+    seos_characteristic_att_notify_chunk(
+        seos_characteristic->seos_att, seos_characteristic->handle, tx);
     seos_characteristic->phase = SELECT_AID;
     bit_buffer_free(tx);
 }

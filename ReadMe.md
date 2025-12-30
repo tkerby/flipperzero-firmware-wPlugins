@@ -59,6 +59,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [BzzBzz v0.3 (By ikiruneo)](https://github.com/ikiruneo/BzzBzz)
 - OFW: PR: [NFC Plugin to identify some hotel systems #4323 (By bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/4323)
 - Updated: [Seos compatible v1.2 (By bettse)](https://gitlab.com/bettse/flipper_seos)
+- Added: [Wolfenduino v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperWolfenstein)
 
 <a name="release">
 
@@ -413,6 +414,7 @@ $ ./fbt dolphin_ext
 - [Video Poker v1.2 (By PixlEmly)](https://github.com/PixlEmly/flipperzero-firmware-testing/blob/420/applications/VideoPoker/poker.c)
 - [VL6180X Pong v0.1 (By kdiller713)](https://github.com/kdiller713/public-FlipperApps/tree/main/vl6180x_pong) `Req: Adafruit VL6180X`
 - [Wave v0.2 (By Sladkisnovraper)](https://github.com/Sladkisnovraper/Wave-game-for-Flipper-Zero)
+- [Wolfenduino v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperWolfenstein)
 - [Yappy Invaders (By dagnazty)](https://github.com/dagnazty/Yappy_Invaders)
 - [Yatzee v1.2 (By emfleak)](https://github.com/emfleak/flipperzero-yatzee)
 - [Zero v1.4 (By Racso)](https://github.com/Racso/fzero-apps)

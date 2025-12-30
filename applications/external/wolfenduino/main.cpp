@@ -165,9 +165,9 @@ extern "C" int32_t arduboy_app(void* p) {
                         exit_hold_frames = 0;
 
                         if(inGame) {
-                            engine.exitToMenu(); 
+                            engine.exitToMenu();
                         } else {
-                            g_state->exit_requested = true; 
+                            g_state->exit_requested = true;
                         }
                     }
                 } else {

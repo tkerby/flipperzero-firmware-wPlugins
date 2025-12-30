@@ -125,6 +125,7 @@ GamesMenuList Version 0
 /ext/apps/GPIO/VGM/video_game_module_tool.fap
 /ext/apps/Games/videopoker.fap
 /ext/apps/Games/wave.fap
+/ext/apps/Games/wolfenduino.fap
 /ext/apps/Games/yapinvaders.fap
 /ext/apps/Games/yatzee.fap
 /ext/apps/Games/zero.fap
