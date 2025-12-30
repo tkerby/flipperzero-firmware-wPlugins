@@ -1,0 +1,15 @@
+App(
+    appid="tonuino_writer",
+    name="TonUINO Writer",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="tonuino_app",
+    cdefines=["APPLICATION"],
+    requires=[
+        "gui",
+        "notification",
+        "nfc",
+    ],
+    stack_size=2 * 1024,
+)
+
+

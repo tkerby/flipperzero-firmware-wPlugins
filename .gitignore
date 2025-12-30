@@ -1,0 +1,35 @@
+# Build artifacts
+build/
+*.o
+*.elf
+*.fap
+*.d
+*.a
+*.so
+
+# Backup files
+*.bak
+*.swp
+*~
+
+# IDE files
+.vscode/
+.idea/
+*.code-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+*.tmp
+
+# Firmware directory (if symlinked)
+flipperzero-firmware-unleashed/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs
+*.log
+
