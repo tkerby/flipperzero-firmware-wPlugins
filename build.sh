@@ -19,3 +19,17 @@ rm -f "$SCRIPT_DIR/application.h.bak" "$FIRMWARE_DIR/application.h.bak"
 
 cd /Users/thomaskekeisen/Projects/flipperzero-firmware-unleashed && ./fbt -c fap_tonuino_writer && ./fbt fap_tonuino_writer 2>&1 | tail -30
 
+FAP_FILE="/Users/thomaskekeisen/Projects/flipperzero-firmware-unleashed/build/f7-firmware-D/.extapps/tonuino_writer.fap"
+
+if [ -f "$FAP_FILE" ]; then
+    echo ""
+    echo "Installing app to Flipper Zero..."
+    cd /Users/thomaskekeisen/Projects/flipperzero-firmware-unleashed && ./fbt launch APPSRC=tonuino_writer 2>&1 | tail -10
+    if [ $? -eq 0 ]; then
+        echo "✓ Successfully installed app to Flipper Zero"
+    else
+        echo "✗ Failed to install app (make sure Flipper Zero is connected)"
+        echo "FAP file location: $FAP_FILE"
+        echo "You can manually copy it to: /ext/apps/Tools/ on your Flipper Zero"
+    fi
+fi
