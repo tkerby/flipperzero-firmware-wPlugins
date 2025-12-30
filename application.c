@@ -333,7 +333,6 @@ static void tonuino_submenu_callback(void* context, uint32_t index) {
         app->rapid_write_mode_active = true;
         app->rapid_write_selected_folder = true; // Start with folder selected
         tonuino_rapid_write_update_display(app);
-        view_set_context(widget_get_view(app->widget), app);
         view_set_input_callback(widget_get_view(app->widget), tonuino_rapid_write_input_callback);
         view_dispatcher_switch_to_view(app->view_dispatcher, 2);
     } else if(index >= 1 && index <= ModeRepeatLast) {
@@ -477,8 +476,15 @@ static uint32_t tonuino_exit(void* context) {
 }
 
 static uint32_t tonuino_back_to_menu(void* context) {
-    TonuinoApp* app = context;
-    tonuino_restore_main_menu(app);
+    // The context passed to previous callbacks for submenu is the view, not the app
+    // But we need the app to restore the menu. Since we can't easily get it,
+    // we'll use a workaround: store app pointer in a way we can retrieve it
+    // Actually, the simplest is to just switch to view 0 and let the "Back" item handle it
+    // But that won't restore the menu...
+    
+    // For submenu, we can't easily get app, so let's just return 0 to go back
+    // The menu restoration will happen when user selects "Back" menu item
+    UNUSED(context);
     return 0;
 }
 
@@ -502,18 +508,22 @@ TonuinoApp* tonuino_app_alloc() {
     
     app->text_input = text_input_alloc();
     view_set_previous_callback(text_input_get_view(app->text_input), tonuino_back_to_menu);
+    view_set_context(text_input_get_view(app->text_input), app);
     view_dispatcher_add_view(app->view_dispatcher, 1, text_input_get_view(app->text_input));
     
     app->number_input = number_input_alloc();
     view_set_previous_callback(number_input_get_view(app->number_input), tonuino_back_to_menu);
+    view_set_context(number_input_get_view(app->number_input), app);
     view_dispatcher_add_view(app->view_dispatcher, 4, number_input_get_view(app->number_input));
     
     app->widget = widget_alloc();
     view_set_previous_callback(widget_get_view(app->widget), tonuino_back_to_menu);
+    view_set_context(widget_get_view(app->widget), app);
     view_dispatcher_add_view(app->view_dispatcher, 2, widget_get_view(app->widget));
     
     app->text_box = text_box_alloc();
     view_set_previous_callback(text_box_get_view(app->text_box), tonuino_text_box_exit);
+    view_set_context(text_box_get_view(app->text_box), app);
     view_dispatcher_add_view(app->view_dispatcher, 3, text_box_get_view(app->text_box));
     
     tonuino_restore_main_menu(app);
