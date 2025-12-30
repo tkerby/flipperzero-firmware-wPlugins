@@ -26,7 +26,7 @@
 #define TONUINO_VERSION 0x02
 
 #define APP_VERSION "1.0.0"
-#define APP_BUILD_NUMBER 28
+#define APP_BUILD_NUMBER 31
 
 typedef enum {
     ModeHoerspiel = 1,
@@ -75,6 +75,8 @@ typedef struct {
     char read_text_buffer[512];
     bool rapid_write_mode_active;
     bool rapid_write_selected_folder; // true = folder selected, false = mode selected
+    char rapid_write_status_message[32]; // Temporary status message (Success/Error)
+    uint32_t rapid_write_status_timeout; // Timestamp when to clear the message
 } TonuinoApp;
 
 TonuinoApp* tonuino_app_alloc();

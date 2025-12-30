@@ -163,26 +163,52 @@ static void tonuino_show_waiting_screen(TonuinoApp* app, const char* message) {
 
 static void tonuino_submenu_write_callback(void* context) {
     TonuinoApp* app = context;
-    tonuino_show_waiting_screen(app, "Waiting for card...");
     
-    if(tonuino_write_card(app)) {
-        notification_message(app->notifications, &sequence_success);
-        widget_reset(app->widget);
-        widget_add_string_element(
-            app->widget, 64, 32, AlignCenter, AlignCenter, FontPrimary, "Card Written!");
-        widget_add_button_element(
-            app->widget, GuiButtonTypeLeft, "Back", tonuino_widget_callback, app);
-        view_dispatcher_switch_to_view(app->view_dispatcher, 2);
+    // Check if we're in rapid write mode
+    if(app->rapid_write_mode_active) {
+        // Show waiting screen briefly
+        tonuino_show_waiting_screen(app, "Waiting for card...");
+        
+        if(tonuino_write_card(app)) {
+            notification_message(app->notifications, &sequence_success);
+            // Set success message and restore rapid write display
+            snprintf(app->rapid_write_status_message, sizeof(app->rapid_write_status_message), "Success");
+            app->rapid_write_status_timeout = furi_get_tick() + furi_ms_to_ticks(2000);
+            tonuino_rapid_write_update_display(app);
+            // Ensure we're still on the widget view
+            view_dispatcher_switch_to_view(app->view_dispatcher, 2);
+        } else {
+            notification_message(app->notifications, &sequence_error);
+            // Set error message and restore rapid write display
+            snprintf(app->rapid_write_status_message, sizeof(app->rapid_write_status_message), "Error");
+            app->rapid_write_status_timeout = furi_get_tick() + furi_ms_to_ticks(2000);
+            tonuino_rapid_write_update_display(app);
+            // Ensure we're still on the widget view
+            view_dispatcher_switch_to_view(app->view_dispatcher, 2);
+        }
     } else {
-        notification_message(app->notifications, &sequence_error);
-        widget_reset(app->widget);
-        widget_add_string_element(
-            app->widget, 64, 32, AlignCenter, AlignCenter, FontPrimary, "Write Failed!");
-        widget_add_string_element(
-            app->widget, 64, 44, AlignCenter, AlignCenter, FontSecondary, "Card not detected");
-        widget_add_button_element(
-            app->widget, GuiButtonTypeLeft, "Back", tonuino_widget_callback, app);
-        view_dispatcher_switch_to_view(app->view_dispatcher, 2);
+        // Normal write mode - show full overlay
+        tonuino_show_waiting_screen(app, "Waiting for card...");
+        
+        if(tonuino_write_card(app)) {
+            notification_message(app->notifications, &sequence_success);
+            widget_reset(app->widget);
+            widget_add_string_element(
+                app->widget, 64, 32, AlignCenter, AlignCenter, FontPrimary, "Card Written!");
+            widget_add_button_element(
+                app->widget, GuiButtonTypeLeft, "Back", tonuino_widget_callback, app);
+            view_dispatcher_switch_to_view(app->view_dispatcher, 2);
+        } else {
+            notification_message(app->notifications, &sequence_error);
+            widget_reset(app->widget);
+            widget_add_string_element(
+                app->widget, 64, 32, AlignCenter, AlignCenter, FontPrimary, "Write Failed!");
+            widget_add_string_element(
+                app->widget, 64, 44, AlignCenter, AlignCenter, FontSecondary, "Card not detected");
+            widget_add_button_element(
+                app->widget, GuiButtonTypeLeft, "Back", tonuino_widget_callback, app);
+            view_dispatcher_switch_to_view(app->view_dispatcher, 2);
+        }
     }
 }
 
@@ -343,6 +369,11 @@ static bool tonuino_rapid_write_input_callback(InputEvent* event, void* context)
     TonuinoApp* app = context;
     
     if(event->type == InputTypeShort) {
+        // Check if status message should be cleared on any input (except OK which triggers write)
+        if(app->rapid_write_status_message[0] != '\0' && event->key != InputKeyOk) {
+            app->rapid_write_status_message[0] = '\0';
+            tonuino_rapid_write_update_display(app);
+        }
         if(event->key == InputKeyLeft) {
             if(app->rapid_write_selected_folder) {
                 // Decrement folder
@@ -386,8 +417,6 @@ static bool tonuino_rapid_write_input_callback(InputEvent* event, void* context)
             return true;
         } else if(event->key == InputKeyOk) {
             // OK button triggers write
-            app->rapid_write_mode_active = false;
-            view_set_input_callback(widget_get_view(app->widget), NULL);
             tonuino_submenu_write_callback(context);
             return true;
         }
@@ -397,6 +426,12 @@ static bool tonuino_rapid_write_input_callback(InputEvent* event, void* context)
 
 static void tonuino_rapid_write_update_display(TonuinoApp* app) {
     widget_reset(app->widget);
+    
+    // Check if status message should be cleared
+    if(app->rapid_write_status_message[0] != '\0' && 
+       furi_get_tick() >= app->rapid_write_status_timeout) {
+        app->rapid_write_status_message[0] = '\0';
+    }
     
     char buffer[128];
     const char* mode_str;
@@ -422,11 +457,18 @@ static void tonuino_rapid_write_update_display(TonuinoApp* app) {
     }
     widget_add_string_element(app->widget, 64, 24, AlignCenter, AlignTop, FontSecondary, buffer);
     
+    // Display status message or "OK = Write" prompt
+    if(app->rapid_write_status_message[0] != '\0') {
+        widget_add_string_element(
+            app->widget, 64, 50, AlignCenter, AlignTop, FontSecondary, app->rapid_write_status_message);
+    } else {
+        widget_add_string_element(
+            app->widget, 64, 50, AlignCenter, AlignTop, FontSecondary, "OK = Write");
+    }
+    
     // Buttons
     widget_add_button_element(
         app->widget, GuiButtonTypeLeft, "Back", tonuino_widget_callback, app);
-    widget_add_string_element(
-        app->widget, 64, 50, AlignCenter, AlignTop, FontSecondary, "OK = Write");
 }
 
 static uint32_t tonuino_exit(void* context) {
@@ -484,6 +526,8 @@ TonuinoApp* tonuino_app_alloc() {
     app->card_ready = false;
     app->rapid_write_mode_active = false;
     app->rapid_write_selected_folder = true;
+    app->rapid_write_status_message[0] = '\0';
+    app->rapid_write_status_timeout = 0;
     
     return app;
 }
