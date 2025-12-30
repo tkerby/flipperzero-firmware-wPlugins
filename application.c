@@ -384,6 +384,12 @@ static bool tonuino_rapid_write_input_callback(InputEvent* event, void* context)
             app->rapid_write_selected_folder = !app->rapid_write_selected_folder;
             tonuino_rapid_write_update_display(app);
             return true;
+        } else if(event->key == InputKeyOk) {
+            // OK button triggers write
+            app->rapid_write_mode_active = false;
+            view_set_input_callback(widget_get_view(app->widget), NULL);
+            tonuino_submenu_write_callback(context);
+            return true;
         }
     }
     return false;
@@ -419,8 +425,8 @@ static void tonuino_rapid_write_update_display(TonuinoApp* app) {
     // Buttons
     widget_add_button_element(
         app->widget, GuiButtonTypeLeft, "Back", tonuino_widget_callback, app);
-    widget_add_button_element(
-        app->widget, GuiButtonTypeRight, "Write", tonuino_widget_callback, app);
+    widget_add_string_element(
+        app->widget, 64, 50, AlignCenter, AlignTop, FontSecondary, "OK = Write");
 }
 
 static uint32_t tonuino_exit(void* context) {
