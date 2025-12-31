@@ -20,6 +20,13 @@ echo "Syncing files to firmware directory..."
 cp "$SCRIPT_DIR/application.c" "$FIRMWARE_DIR/application.c"
 cp "$SCRIPT_DIR/application.h" "$FIRMWARE_DIR/application.h"
 cp "$SCRIPT_DIR/application.fam" "$FIRMWARE_DIR/application.fam"
+cp "$SCRIPT_DIR/tonuino_nfc.c" "$FIRMWARE_DIR/tonuino_nfc.c"
+cp "$SCRIPT_DIR/tonuino_nfc.h" "$FIRMWARE_DIR/tonuino_nfc.h"
+
+# Sync scenes directory
+mkdir -p "$FIRMWARE_DIR/scenes"
+cp "$SCRIPT_DIR/scenes"/*.c "$FIRMWARE_DIR/scenes/"
+cp "$SCRIPT_DIR/scenes"/*.h "$FIRMWARE_DIR/scenes/"
 echo "✓ Files synced"
 
 cd /Users/thomaskekeisen/Projects/flipperzero-firmware-unleashed && ./fbt -c fap_tonuino_writer && ./fbt fap_tonuino_writer 2>&1 | tail -30

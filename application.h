@@ -5,8 +5,8 @@
 #include <gui/gui.h>
 #include <gui/view.h>
 #include <gui/view_dispatcher.h>
+#include <gui/scene_manager.h>
 #include <gui/modules/submenu.h>
-#include <gui/modules/text_input.h>
 #include <gui/modules/widget.h>
 #include <gui/modules/text_box.h>
 #include <gui/modules/number_input.h>
@@ -25,8 +25,8 @@
 #define TONUINO_BOX_ID_3 0x47
 #define TONUINO_VERSION 0x02
 
-#define APP_VERSION "1.0.0"
-#define APP_BUILD_NUMBER 41
+#define APP_VERSION "2.0.0"
+#define APP_BUILD_NUMBER 67
 
 typedef enum {
     ModeHoerspiel = 1,
@@ -53,35 +53,29 @@ typedef struct {
 } TonuinoCard;
 
 typedef enum {
-    TonuinoInputTypeFolder,
-    TonuinoInputTypeSpecial1,
-    TonuinoInputTypeSpecial2,
-} TonuinoInputType;
+    TonuinoViewSubmenu,
+    TonuinoViewNumberInput,
+    TonuinoViewWidget,
+    TonuinoViewTextBox,
+    TonuinoViewCount,
+} TonuinoViewId;
 
 typedef struct {
     Gui* gui;
+    SceneManager* scene_manager;
     ViewDispatcher* view_dispatcher;
     Submenu* submenu;
-    TextInput* text_input;
     NumberInput* number_input;
-    Widget* widget;
+    Widget* widget;  // CRITICAL: All scenes using Widget MUST call widget_reset() in on_enter
     TextBox* text_box;
     NotificationApp* notifications;
-    
+
     TonuinoCard card_data;
-    bool card_ready;
-    TonuinoInputType current_input_type;
     char text_buffer[32];
     char read_text_buffer[512];
-    bool rapid_write_mode_active;
-    bool rapid_write_selected_folder; // true = folder selected, false = mode selected
-    char rapid_write_status_message[32]; // Temporary status message (Success/Error)
-    uint32_t rapid_write_status_timeout; // Timestamp when to clear the message
 } TonuinoApp;
 
 TonuinoApp* tonuino_app_alloc();
 void tonuino_app_free(TonuinoApp* app);
 void tonuino_build_card_data(TonuinoApp* app);
-bool tonuino_write_card(TonuinoApp* app);
-bool tonuino_read_card(TonuinoApp* app);
 

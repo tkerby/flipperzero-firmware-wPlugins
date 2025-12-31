@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(cat:*)",
+      "Bash(./build.sh:*)",
+      "Bash(ls:*)",
+      "Bash(./fbt fap_tonuino_writer:*)",
+      "Bash(./fbt:*)"
+    ]
+  }
+}
