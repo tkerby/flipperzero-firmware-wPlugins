@@ -22,6 +22,7 @@ cp "$SCRIPT_DIR/application.h" "$FIRMWARE_DIR/application.h"
 cp "$SCRIPT_DIR/application.fam" "$FIRMWARE_DIR/application.fam"
 cp "$SCRIPT_DIR/tonuino_nfc.c" "$FIRMWARE_DIR/tonuino_nfc.c"
 cp "$SCRIPT_DIR/tonuino_nfc.h" "$FIRMWARE_DIR/tonuino_nfc.h"
+cp "$SCRIPT_DIR/icon.png" "$FIRMWARE_DIR/icon.png"
 
 # Sync scenes directory
 mkdir -p "$FIRMWARE_DIR/scenes"

@@ -6,6 +6,7 @@
 #include <stdio.h>
 
 static bool tonuino_back_event_callback(void* context);
+static void tonuino_tick_event_callback(void* context);
 
 void tonuino_build_card_data(TonuinoApp* app) {
     app->card_data.box_id[0] = TONUINO_BOX_ID_0;
@@ -27,6 +28,11 @@ static bool tonuino_back_event_callback(void* context) {
     return scene_manager_handle_back_event(app->scene_manager);
 }
 
+static void tonuino_tick_event_callback(void* context) {
+    TonuinoApp* app = context;
+    scene_manager_handle_tick_event(app->scene_manager);
+}
+
 TonuinoApp* tonuino_app_alloc() {
     TonuinoApp* app = malloc(sizeof(TonuinoApp));
 
@@ -38,6 +44,7 @@ TonuinoApp* tonuino_app_alloc() {
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_navigation_event_callback(app->view_dispatcher, tonuino_back_event_callback);
+    view_dispatcher_set_tick_event_callback(app->view_dispatcher, tonuino_tick_event_callback, 100);
 
     // Initialize SceneManager
     app->scene_manager = scene_manager_alloc(&tonuino_scene_handlers, app);

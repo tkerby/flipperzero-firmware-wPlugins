@@ -15,6 +15,8 @@ typedef enum {
 
 static void tonuino_scene_main_menu_callback(void* context, uint32_t index) {
     TonuinoApp* app = context;
+    // Save selected index before navigating away
+    scene_manager_set_scene_state(app->scene_manager, TonuinoSceneMainMenu, index);
     scene_manager_handle_custom_event(app->scene_manager, index);
 }
 
@@ -53,6 +55,10 @@ void tonuino_scene_main_menu_on_enter(void* context) {
         app);
     submenu_add_item(
         app->submenu, "About", SceneMainMenuItemAbout, tonuino_scene_main_menu_callback, app);
+
+    // Restore previously selected item
+    uint32_t selected_item = scene_manager_get_scene_state(app->scene_manager, TonuinoSceneMainMenu);
+    submenu_set_selected_item(app->submenu, selected_item);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, TonuinoViewSubmenu);
 }
