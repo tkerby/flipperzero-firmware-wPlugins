@@ -1,35 +1,26 @@
 # Build artifacts
-build/
 *.o
+*.d
 *.elf
 *.fap
-*.d
-*.a
-*.so
+*.impsyms
+build/
+.extapps/
 
-# Backup files
-*.bak
-*.swp
-*~
-
-# IDE files
+# Editor files
 .vscode/
 .idea/
-*.code-workspace
+*.swp
+*.swo
+*~
 
 # OS files
 .DS_Store
 Thumbs.db
-*.tmp
 
-# Firmware directory (if symlinked)
-flipperzero-firmware-unleashed/
+# Backup files
+*.bak
+*~
 
-# Python cache
-__pycache__/
-*.pyc
-*.pyo
-
-# Logs
-*.log
-
+# Build number tracking (optional - include if you want to track it)
+# build_number.txt
