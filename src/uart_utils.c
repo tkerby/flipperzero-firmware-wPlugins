@@ -512,7 +512,7 @@ UartContext* uart_init(AppState* state) {
     // Initialize rx stream
     uart->rx_stream = furi_stream_buffer_alloc(RX_BUF_SIZE, 1);
     uart->pcap_stream = NULL; // Allocate on demand
-    uart->csv_stream = NULL;  // Allocate on demand
+    uart->csv_stream = NULL; // Allocate on demand
 
     if(!uart->rx_stream) {
         FURI_LOG_E("UART", "Failed to allocate rx stream buffer");
@@ -794,7 +794,7 @@ bool uart_receive_data(
         "[INIT] uart_receive_data: AFTER reset pcap=%d csv=%d (should be 0 0)",
         uart->pcap,
         uart->csv);
-    
+
     // Stop RX briefly to safely reconfigure streams
     if(uart->is_serial_active) {
         furi_hal_serial_async_rx_stop(uart->serial_handle);

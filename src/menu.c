@@ -2279,7 +2279,8 @@ static bool handle_ir_command_feedback_ex(
 
                     if(saw_ok && summary[0] && !message[0]) {
                         // Truncate summary if needed to prevent buffer overflow when combining
-                        size_t max_len = sizeof(state->confirmation_message) - 10; // Reserve space for "Send OK\n"
+                        size_t max_len = sizeof(state->confirmation_message) -
+                                         10; // Reserve space for "Send OK\n"
                         if(strlen(summary) > max_len) {
                             summary[max_len] = '\0';
                         }
