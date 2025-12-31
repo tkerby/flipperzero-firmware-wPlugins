@@ -50,3 +50,9 @@ corresponding protocol folders (mifare_fuzzer, lfrfid_fuzzer, ibutton_fuzzer) un
 
 - ⚠️ **Cautious!**
   - *USE ON AUTHORIZED EQUPMENTS ONLY* 
+
+---
+
+Source: https://github.com/Clawzman/Flipper_ListEM
+
+---
