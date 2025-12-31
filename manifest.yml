@@ -9,8 +9,7 @@ category: NFC
 source_code: https://github.com/blaues0cke/tonuino-flipper-zero
 
 # Commit SHA reference - use the commit hash from your repository
-# Will be updated after first push
-commit: main
+commit: 85837ab
 
 # Application metadata
 name: TonUINO Writer
