@@ -70,7 +70,8 @@ struct AppState {
     FuriMutex* buffer_mutex;
     // UART Context
     UartContext* uart_context;
-    FilterConfig* filter_config;
+    // FilterConfig is small enough to embed directly
+    FilterConfig filter_config;
 
     // Settings
     Settings settings;
@@ -121,5 +122,7 @@ struct AppState {
     size_t buffer_size;
     uint8_t connect_input_stage;
     char connect_ssid[128];
+    char confirmation_message[256];
     bool came_from_settings;
+    void* active_confirm_context; // To track confirmation context for cleanup
 };

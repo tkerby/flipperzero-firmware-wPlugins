@@ -40,7 +40,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Calendar of weeks v0.1 (By fgreil)](https://github.com/fgreil/mitzi-cal-weeks)
 - Updated: [Amiibo Toolkit v0.2 (By Firefox2100)](https://github.com/Firefox2100/ami_tool) `Req: key_retail.bin on SD card /nfc/assets`
 - Updated: [FlipWorld v1.0.3 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [Ghost ESP v1.6.2 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32`
 - Added: [CAN Tools v1.0 (By MatthewKuKanich)](https://github.com/MatthewKuKanich/FlipperCANTools)
 - Added: [HTW AC Remote v1.1 (By sokogen)](https://github.com/sokogen/flipperzero-htw-ac-remote)
 - Updated: [Mystic Balloon v2.0 (By apfxtech)](https://github.com/apfxtech/FlipperMysticBalloon)
@@ -61,6 +60,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Wolfenduino v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperWolfenstein)
 - Updated: [Free Roam v0.4 (By jblanked)](https://github.com/jblanked/Free-Roam) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [Catacombs Of The Damned v2.1 (By apfxtech)](https://github.com/apfxtech/FlipperCatacombs)
+- Updated: [Ghost ESP v1.6.3 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32`
 
 <a name="release">
 
@@ -564,7 +564,7 @@ $ ./fbt dolphin_ext
 - [GB Printer v0.5 (By kbembedded)](https://github.com/kbembedded/flipper-gb-printer) `Req: GB Link Cable / Malveke`
 - [Gemini IA v1.1 (By d4rks1d33 & jamisonderek)](https://github.com/d4rks1d33/Gemini-Flipper)
 - [Genie Recorder v3.1 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/subghz/apps/genie-recorder)
-- [Ghost ESP v1.6.2 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
+- [Ghost ESP v1.6.3 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
 - [GnomishTool v1.0 (By Andreeved88)](https://github.com/Andreeved88/GnomishTool)
 - [GhostBook v0.6 (By digitard)](https://github.com/digitard/ghostbook)
 - [Govee Control v0.1 (By devdotbo)](https://github.com/devdotbo/GlowFin)

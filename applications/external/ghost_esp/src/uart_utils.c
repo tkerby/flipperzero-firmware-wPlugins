@@ -17,7 +17,6 @@ uint32_t g_uart_callback_count = 0;
 #define AP_LIST_TIMEOUT_MS     5000
 #define INITIAL_BUFFER_SIZE    2048
 #define BUFFER_GROWTH_FACTOR   1.5
-#define MAX_BUFFER_SIZE        (8 * 1024) // 8KB max
 #define MUTEX_TIMEOUT_MS       2500
 #define BUFFER_CLEAR_SIZE      128
 #define BUFFER_RESIZE_CHUNK    1024
@@ -510,13 +509,13 @@ UartContext* uart_init(AppState* state) {
     uart->pcap_buf_len = 0;
     uart->pcap_flush_pending = false;
 
-    // Initialize rx/pcap/csv streams
+    // Initialize rx stream
     uart->rx_stream = furi_stream_buffer_alloc(RX_BUF_SIZE, 1);
-    uart->pcap_stream = furi_stream_buffer_alloc(PCAP_BUF_SIZE, 1);
-    uart->csv_stream = furi_stream_buffer_alloc(RX_BUF_SIZE, 1);
+    uart->pcap_stream = NULL; // Allocate on demand
+    uart->csv_stream = NULL; // Allocate on demand
 
-    if(!uart->rx_stream || !uart->pcap_stream || !uart->csv_stream) {
-        FURI_LOG_E("UART", "Failed to allocate stream buffers");
+    if(!uart->rx_stream) {
+        FURI_LOG_E("UART", "Failed to allocate rx stream buffer");
         uart_free(uart);
         return NULL;
     }
@@ -739,6 +738,33 @@ bool uart_is_esp_connected(UartContext* uart) {
     return connected;
 }
 
+void uart_cleanup_capture_streams(UartContext* uart) {
+    if(!uart) return;
+
+    if(uart->is_serial_active) {
+        furi_hal_serial_async_rx_stop(uart->serial_handle);
+    }
+
+    if(uart->pcap_stream) {
+        furi_stream_buffer_free(uart->pcap_stream);
+        uart->pcap_stream = NULL;
+        FURI_LOG_I("UART", "Freed PCAP stream on exit");
+    }
+    if(uart->csv_stream) {
+        furi_stream_buffer_free(uart->csv_stream);
+        uart->csv_stream = NULL;
+        FURI_LOG_I("UART", "Freed CSV stream on exit");
+    }
+
+    uart->pcap = false;
+    uart->csv = false;
+    uart->pcap_flush_pending = false;
+
+    if(uart->is_serial_active) {
+        furi_hal_serial_async_rx_start(uart->serial_handle, uart_rx_callback, uart, false);
+    }
+}
+
 bool uart_receive_data(
     UartContext* uart,
     ViewDispatcher* view_dispatcher,
@@ -768,8 +794,51 @@ bool uart_receive_data(
         "[INIT] uart_receive_data: AFTER reset pcap=%d csv=%d (should be 0 0)",
         uart->pcap,
         uart->csv);
-    furi_stream_buffer_reset(uart->pcap_stream);
-    furi_stream_buffer_reset(uart->csv_stream);
+
+    // Stop RX briefly to safely reconfigure streams
+    if(uart->is_serial_active) {
+        furi_hal_serial_async_rx_stop(uart->serial_handle);
+    }
+
+    // Reset or free streams
+    if(uart->pcap_stream) {
+        furi_stream_buffer_reset(uart->pcap_stream);
+    }
+    if(uart->csv_stream) {
+        furi_stream_buffer_reset(uart->csv_stream);
+    }
+
+    // Check if we need to allocate streams
+    if(extension && strlen(extension) > 0) {
+        if(strcmp(extension, "pcap") == 0) {
+            if(!uart->pcap_stream) {
+                uart->pcap_stream = furi_stream_buffer_alloc(PCAP_BUF_SIZE, 1);
+                FURI_LOG_I("UART", "Allocated PCAP stream");
+            }
+        } else if(strcmp(extension, "csv") == 0) {
+            if(!uart->csv_stream) {
+                uart->csv_stream = furi_stream_buffer_alloc(RX_BUF_SIZE, 1);
+                FURI_LOG_I("UART", "Allocated CSV stream");
+            }
+        }
+    } else {
+        // If not capturing, we can free unused streams to save memory
+        if(uart->pcap_stream) {
+            furi_stream_buffer_free(uart->pcap_stream);
+            uart->pcap_stream = NULL;
+            FURI_LOG_I("UART", "Freed PCAP stream");
+        }
+        if(uart->csv_stream) {
+            furi_stream_buffer_free(uart->csv_stream);
+            uart->csv_stream = NULL;
+            FURI_LOG_I("UART", "Freed CSV stream");
+        }
+    }
+
+    // Restart RX if it was active
+    if(uart->is_serial_active) {
+        furi_hal_serial_async_rx_start(uart->serial_handle, uart_rx_callback, uart, false);
+    }
 
     g_uart_rx_session_bytes = 0;
     g_uart_rx_session_started = false;
