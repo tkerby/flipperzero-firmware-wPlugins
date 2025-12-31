@@ -1,6 +1,8 @@
 #pragma once
 
 #include <stdint.h>
+#include <furi.h>
+#include <furi_hal.h>
 #if defined(_WIN32)
 #include <math.h>
 #endif
@@ -34,5 +36,10 @@ inline int16_t FixedCos(uint8_t angle) {
     return pgm_read_word(&sinTable[FIXED_ANGLE_WRAP(FIXED_ANGLE_90 - angle)]);
 }
 
-uint16_t Random();
+// uint16_t Random();
 void SeedRandom(uint16_t seed);
+
+inline uint16_t Random() {
+    uint32_t r = furi_hal_random_get();
+    return (uint16_t)(r ^ (r >> 16));
+}
