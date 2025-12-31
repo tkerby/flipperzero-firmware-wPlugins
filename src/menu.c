@@ -2603,6 +2603,9 @@ static void send_evil_portal_html(AppState* state) {
 
             free(the_html);
         }
+    } else {
+        // Only free if read failed but buffer was allocated (unlikely but safe)
+        if(the_html) free(the_html);
     }
 }
 
@@ -2696,6 +2699,7 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
             state->confirmation_view, confirmation_cancel_callback, cmd_ctx);
 
         view_dispatcher_switch_to_view(state->view_dispatcher, 7);
+        state->current_view = 7;
         return;
     }
 

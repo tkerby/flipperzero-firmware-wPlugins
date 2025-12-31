@@ -26,7 +26,6 @@
 #define TEXT_BOX_STORE_SIZE           (12 * 1024) // 12KB text box buffer size
 #define RX_BUF_SIZE                   2048
 #define PCAP_BUF_SIZE                 4096
-#define STORAGE_BUF_SIZE              4096
 #define GHOST_ESP_APP_FOLDER          "/ext/apps_data/ghost_esp"
 #define GHOST_ESP_APP_FOLDER_PCAPS    "/ext/apps_data/ghost_esp/pcaps"
 #define GHOST_ESP_APP_FOLDER_WARDRIVE "/ext/apps_data/ghost_esp/wardrive"
@@ -38,7 +37,6 @@
 #define VIEW_BUFFER_SIZE              TEXT_LOG_BUFFER_SIZE
 #define PCAP_GLOBAL_HEADER_SIZE       24
 #define PCAP_PACKET_HEADER_SIZE       16
-#define PCAP_TEMP_BUFFER_SIZE         4096
 
 void update_text_box_view(AppState* state);
 void handle_uart_rx_data(uint8_t* buf, size_t len, void* context);
@@ -93,7 +91,6 @@ typedef struct UartContext {
     UartStorageContext* storageContext;
     bool is_serial_active;
     TextBufferManager* text_manager;
-    uint8_t pcap_rx_buf[RX_BUF_SIZE]; // Buffer for PCAP data
     size_t pcap_buf_len; // Current PCAP buffer length
 } UartContext;
 
