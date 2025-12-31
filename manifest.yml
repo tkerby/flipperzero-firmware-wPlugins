@@ -25,11 +25,14 @@ description: |
 # Icon should be 10x10px PNG in your repository
 icon: icon.png
 
-# TODO: Add screenshots to your repository and list them here
-# screenshots:
-#   - screenshots/main_menu.png
-#   - screenshots/write_card.png
-#   - screenshots/rapid_write.png
+# Screenshots showing key features
+screenshots:
+  - screenshots/01_main_menu.png
+  - screenshots/02_set_folder.png
+  - screenshots/03_set_mode.png
+  - screenshots/05_view_card.png
+  - screenshots/06_write_waiting.png
+  - screenshots/09_rapid_write.png
 
 # Application version
 version: 2.0.0
