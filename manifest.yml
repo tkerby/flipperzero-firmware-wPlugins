@@ -6,12 +6,11 @@ id: tonuino_writer
 category: NFC
 
 # GitHub repository information
-# TODO: Replace with your actual GitHub repository URL
-source_code: https://github.com/YOUR_USERNAME/tonuino-flipper-zero
+source_code: https://github.com/blaues0cke/tonuino-flipper-zero
 
 # Commit SHA reference - use the commit hash from your repository
-# TODO: Update with actual commit SHA after first push
-commit: YOUR_COMMIT_SHA_HERE
+# Will be updated after first push
+commit: main
 
 # Application metadata
 name: TonUINO Writer
@@ -38,9 +37,8 @@ screenshots:
 version: 2.0.0
 
 # Author information
-# TODO: Update with your information
-author: YOUR_NAME
-author_github: YOUR_GITHUB_USERNAME
+author: Thomas Kekeisen-Schanz
+author_github: blaues0cke
 
 # Optional: Project homepage
 # webpage: https://www.tonuino.de
