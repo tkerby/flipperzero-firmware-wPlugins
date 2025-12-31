@@ -378,6 +378,11 @@ int32_t ghost_esp_app(void* p) {
     if(state && state->textBoxBuffer) free(state->textBoxBuffer);
     if(state && state->filter_config) free(state->filter_config);
     if(state && state->ir_file_buffer) free(state->ir_file_buffer);
+    if(state && state->active_confirm_context) {
+        FURI_LOG_I("Ghost_ESP", "Freeing active confirmation context...");
+        free(state->active_confirm_context);
+        state->active_confirm_context = NULL;
+    }
     FURI_LOG_I("Ghost_ESP", "Buffers freed.");
 
     // Final state cleanup

@@ -1999,7 +1999,7 @@ static void confirmation_ok_callback(void* context) {
 
             if(!file_opened) {
                 FURI_LOG_E("Capture", "Failed to open PCAP file. Aborting capture command.");
-                free(cmd_ctx);
+                confirmation_cancel_callback(cmd_ctx);
                 return;
             }
 
@@ -2019,12 +2019,14 @@ static void confirmation_ok_callback(void* context) {
                 ""); // No capture files needed
         }
     }
+    if(cmd_ctx->state) cmd_ctx->state->active_confirm_context = NULL;
     free(cmd_ctx);
 }
 
 static void confirmation_cancel_callback(void* context) {
     MenuCommandContext* cmd_ctx = context;
     if(cmd_ctx && cmd_ctx->state) {
+        cmd_ctx->state->active_confirm_context = NULL;
         switch(cmd_ctx->state->previous_view) {
         case 1:
             show_wifi_menu(cmd_ctx->state);
@@ -2141,7 +2143,7 @@ static bool handle_ir_command_feedback_ex(
     char buffer[512];
     char raw_buffer[512];
     size_t len = 0;
-    char message[128];
+    char* message = state->confirmation_message;
     char summary[96];
     message[0] = '\0';
     summary[0] = '\0';
@@ -2178,19 +2180,31 @@ static bool handle_ir_command_feedback_ex(
                         code++;
 
                     if(strncmp(code, "STARTED", 7) == 0) {
-                        strncpy(message, "Dazzler started successfully", sizeof(message) - 1);
+                        strncpy(
+                            message,
+                            "Dazzler started successfully",
+                            sizeof(state->confirmation_message) - 1);
                     } else if(strncmp(code, "FAILED", 6) == 0) {
-                        strncpy(message, "Dazzler failed", sizeof(message) - 1);
+                        strncpy(
+                            message, "Dazzler failed", sizeof(state->confirmation_message) - 1);
                     } else if(strncmp(code, "ALREADY_RUNNING", 15) == 0) {
-                        strncpy(message, "Dazzler is already running", sizeof(message) - 1);
+                        strncpy(
+                            message,
+                            "Dazzler is already running",
+                            sizeof(state->confirmation_message) - 1);
                     } else if(strncmp(code, "STOPPING", 8) == 0) {
-                        strncpy(message, "Stopped dazzler.", sizeof(message) - 1);
+                        strncpy(
+                            message, "Stopped dazzler.", sizeof(state->confirmation_message) - 1);
                     } else if(strncmp(code, "NOT_RUNNING", 11) == 0) {
-                        strncpy(message, "Dazzler is not running", sizeof(message) - 1);
+                        strncpy(
+                            message,
+                            "Dazzler is not running",
+                            sizeof(state->confirmation_message) - 1);
                     } else {
-                        snprintf(message, sizeof(message), "Dazzler: %.64s", code);
+                        snprintf(
+                            message, sizeof(state->confirmation_message), "Dazzler: %.64s", code);
                     }
-                    message[sizeof(message) - 1] = '\0';
+                    message[sizeof(state->confirmation_message) - 1] = '\0';
                     start = timeout_ms + start;
                     break;
                 }
@@ -2264,7 +2278,12 @@ static bool handle_ir_command_feedback_ex(
                     }
 
                     if(saw_ok && summary[0] && !message[0]) {
-                        snprintf(message, sizeof(message), "Send OK%s%s", "\n", summary);
+                        snprintf(
+                            message,
+                            sizeof(state->confirmation_message),
+                            "Send OK%s%s",
+                            "\n",
+                            summary);
                         start = timeout_ms + start;
                         break;
                     }
@@ -2273,8 +2292,8 @@ static bool handle_ir_command_feedback_ex(
             }
 
             if(is_inline && strstr(line, "IR inline parse failed")) {
-                strncpy(message, "Inline parse failed", sizeof(message) - 1);
-                message[sizeof(message) - 1] = '\0';
+                strncpy(message, "Inline parse failed", sizeof(state->confirmation_message) - 1);
+                message[sizeof(state->confirmation_message) - 1] = '\0';
                 start = timeout_ms + start;
                 break;
             }
@@ -2284,45 +2303,61 @@ static bool handle_ir_command_feedback_ex(
                    strstr(line, "status OK") || strstr(line, "ir signal transmission complete")) {
                     saw_ok = true;
                     if(summary[0]) {
-                        snprintf(message, sizeof(message), "Send OK%s%s", "\n", summary);
+                        snprintf(
+                            message,
+                            sizeof(state->confirmation_message),
+                            "Send OK%s%s",
+                            "\n",
+                            summary);
                         start = timeout_ms + start;
                         break;
                     }
                 }
                 if(strstr(line, "send FAIL") || strstr(line, "status: FAIL") ||
                    strstr(line, "status FAIL") || strstr(line, "status: ERROR")) {
-                    strncpy(message, "Send failed", sizeof(message) - 1);
-                    message[sizeof(message) - 1] = '\0';
+                    strncpy(message, "Send failed", sizeof(state->confirmation_message) - 1);
+                    message[sizeof(state->confirmation_message) - 1] = '\0';
                     start = timeout_ms + start;
                     break;
                 }
                 if(strstr(line, "failed to read list")) {
-                    strncpy(message, "Failed to read list", sizeof(message) - 1);
-                    message[sizeof(message) - 1] = '\0';
+                    strncpy(
+                        message, "Failed to read list", sizeof(state->confirmation_message) - 1);
+                    message[sizeof(state->confirmation_message) - 1] = '\0';
                     start = timeout_ms + start;
                     break;
                 }
                 if(strstr(line, "no signals in")) {
-                    strncpy(message, "No signals in list", sizeof(message) - 1);
-                    message[sizeof(message) - 1] = '\0';
+                    strncpy(
+                        message, "No signals in list", sizeof(state->confirmation_message) - 1);
+                    message[sizeof(state->confirmation_message) - 1] = '\0';
                     start = timeout_ms + start;
                     break;
                 }
                 if(strstr(line, "remote index out of range")) {
-                    strncpy(message, "Remote index out of range", sizeof(message) - 1);
-                    message[sizeof(message) - 1] = '\0';
+                    strncpy(
+                        message,
+                        "Remote index out of range",
+                        sizeof(state->confirmation_message) - 1);
+                    message[sizeof(state->confirmation_message) - 1] = '\0';
                     start = timeout_ms + start;
                     break;
                 }
                 if(strstr(line, "index out of range")) {
-                    strncpy(message, "Button index out of range", sizeof(message) - 1);
-                    message[sizeof(message) - 1] = '\0';
+                    strncpy(
+                        message,
+                        "Button index out of range",
+                        sizeof(state->confirmation_message) - 1);
+                    message[sizeof(state->confirmation_message) - 1] = '\0';
                     start = timeout_ms + start;
                     break;
                 }
                 if(strstr(line, "invalid universal index")) {
-                    strncpy(message, "Invalid universal index", sizeof(message) - 1);
-                    message[sizeof(message) - 1] = '\0';
+                    strncpy(
+                        message,
+                        "Invalid universal index",
+                        sizeof(state->confirmation_message) - 1);
+                    message[sizeof(state->confirmation_message) - 1] = '\0';
                     start = timeout_ms + start;
                     break;
                 }
@@ -2331,28 +2366,37 @@ static bool handle_ir_command_feedback_ex(
                     strncpy(
                         message,
                         "Universal send already running; use 'stop' to cancel.",
-                        sizeof(message) - 1);
-                    message[sizeof(message) - 1] = '\0';
+                        sizeof(state->confirmation_message) - 1);
+                    message[sizeof(state->confirmation_message) - 1] = '\0';
                     start = timeout_ms + start;
                     break;
                 }
                 if(strstr(line, "universal sendall started")) {
                 }
                 if(strstr(line, "no builtin signals named")) {
-                    strncpy(message, "No builtin signals with that name.", sizeof(message) - 1);
-                    message[sizeof(message) - 1] = '\0';
+                    strncpy(
+                        message,
+                        "No builtin signals with that name.",
+                        sizeof(state->confirmation_message) - 1);
+                    message[sizeof(state->confirmation_message) - 1] = '\0';
                     start = timeout_ms + start;
                     break;
                 }
                 if(strstr(line, "no signals named")) {
-                    strncpy(message, "No file signals with that name.", sizeof(message) - 1);
-                    message[sizeof(message) - 1] = '\0';
+                    strncpy(
+                        message,
+                        "No file signals with that name.",
+                        sizeof(state->confirmation_message) - 1);
+                    message[sizeof(state->confirmation_message) - 1] = '\0';
                     start = timeout_ms + start;
                     break;
                 }
                 if(strstr(line, "universal sendall finished")) {
-                    strncpy(message, "Universal send finished.", sizeof(message) - 1);
-                    message[sizeof(message) - 1] = '\0';
+                    strncpy(
+                        message,
+                        "Universal send finished.",
+                        sizeof(state->confirmation_message) - 1);
+                    message[sizeof(state->confirmation_message) - 1] = '\0';
                     confirmation_view_set_header(state->confirmation_view, "Universal send");
                     confirmation_view_set_text(state->confirmation_view, message);
                     confirmation_view_set_ok_callback(
@@ -2363,8 +2407,11 @@ static bool handle_ir_command_feedback_ex(
                     break;
                 }
                 if(strstr(line, "universal sendall stopped")) {
-                    strncpy(message, "Universal send stopped.", sizeof(message) - 1);
-                    message[sizeof(message) - 1] = '\0';
+                    strncpy(
+                        message,
+                        "Universal send stopped.",
+                        sizeof(state->confirmation_message) - 1);
+                    message[sizeof(state->confirmation_message) - 1] = '\0';
                     confirmation_view_set_header(state->confirmation_view, "Universal send");
                     confirmation_view_set_text(state->confirmation_view, message);
                     confirmation_view_set_ok_callback(
@@ -2381,8 +2428,8 @@ static bool handle_ir_command_feedback_ex(
     }
 
     if(!message[0] && saw_ok) {
-        strncpy(message, "Send OK", sizeof(message) - 1);
-        message[sizeof(message) - 1] = '\0';
+        strncpy(message, "Send OK", sizeof(state->confirmation_message) - 1);
+        message[sizeof(state->confirmation_message) - 1] = '\0';
     }
 
     if(message[0]) {
@@ -2640,6 +2687,7 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
         MenuCommandContext* cmd_ctx = malloc(sizeof(MenuCommandContext));
         cmd_ctx->state = state;
         cmd_ctx->command = command;
+        state->active_confirm_context = cmd_ctx;
         confirmation_view_set_header(state->confirmation_view, command->confirm_header);
         confirmation_view_set_text(state->confirmation_view, command->confirm_text);
         confirmation_view_set_ok_callback(
@@ -3344,8 +3392,10 @@ bool back_event_callback(void* context) {
         FURI_LOG_D("Ghost ESP", "Handling text box view exit");
 
         // Cleanup text buffer
+        if(state->uart_context) {
+            uart_reset_text_buffers(state->uart_context);
+        }
         if(state->textBoxBuffer) {
-            state->textBoxBuffer[0] = '\0';
             state->buffer_length = 0;
         }
 

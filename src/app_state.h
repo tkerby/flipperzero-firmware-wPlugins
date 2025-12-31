@@ -121,5 +121,7 @@ struct AppState {
     size_t buffer_size;
     uint8_t connect_input_stage;
     char connect_ssid[128];
+    char confirmation_message[256];
     bool came_from_settings;
+    void* active_confirm_context; // To track confirmation context for cleanup
 };

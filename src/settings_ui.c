@@ -12,11 +12,6 @@
 #include "utils.h"
 #include "callbacks.h"
 
-typedef struct {
-    SettingsUIContext* settings_ui_context;
-    SettingKey key;
-} VariableItemContext;
-
 #define MAX_FILENAME_LEN 256
 #define MAX_PATH_LEN     512
 
@@ -478,11 +473,8 @@ void settings_setup_gui(VariableItemList* list, SettingsUIContext* context) {
             FURI_LOG_D("SettingsSetup", "Added action button: %s", metadata->name);
         } else {
             // Handle regular settings
-            VariableItemContext* item_context = malloc(sizeof(VariableItemContext));
-            if(!item_context) {
-                FURI_LOG_E("SettingsSetup", "Failed to allocate memory for item context");
-                continue;
-            }
+            // Use statically allocated context from SettingsUIContext
+            VariableItemContext* item_context = &context->item_contexts[key];
             item_context->settings_ui_context = context;
             item_context->key = key;
 
@@ -569,6 +561,7 @@ bool settings_custom_event_callback(void* context, uint32_t event_id) {
         SettingsConfirmContext* confirm_ctx = malloc(sizeof(SettingsConfirmContext));
         if(!confirm_ctx) return false;
         confirm_ctx->state = app_state;
+        app_state->active_confirm_context = confirm_ctx;
 
         const char* info_text = "Created by: Spooky\n"
                                 "Updated by:\n"
@@ -577,7 +570,7 @@ bool settings_custom_event_callback(void* context, uint32_t event_id) {
                                 "Built with <3\n"
                                 "github.com/jaylikesbunda/ghost_esp\n\n";
 
-        confirmation_view_set_header(app_state->confirmation_view, "Ghost ESP v1.6.2");
+        confirmation_view_set_header(app_state->confirmation_view, "Ghost ESP v1.6.3");
         confirmation_view_set_text(app_state->confirmation_view, info_text);
 
         // Save current view before switching

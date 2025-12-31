@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.6.3
+
+- Fixed an issue where the text view would be empty
+- Fixed a memory leak when showing the confirmation dialog
+- Fixed a memory leak when opening the settings menu
+- Fixed a potential memory leak on app exit
+
 ## v1.6.2
 
 - Close dialogs record during cleanup to avoid leaks
