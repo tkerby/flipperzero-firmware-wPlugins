@@ -23,7 +23,7 @@
 
 #define BAUDRATE (115200)
 
-#define TEXT_BOX_STORE_SIZE           (12 * 1024) // 12KB text box buffer size
+#define TEXT_BOX_STORE_SIZE           (8 * 1024) // 8KB text box buffer size
 #define RX_BUF_SIZE                   2048
 #define PCAP_BUF_SIZE                 4096
 #define GHOST_ESP_APP_FOLDER          "/ext/apps_data/ghost_esp"
@@ -113,6 +113,7 @@ void uart_storage_safe_cleanup(UartStorageContext* ctx);
 void uart_reset_text_buffers(UartContext* uart);
 bool uart_copy_text_buffer(UartContext* uart, char* out, size_t out_size, size_t* out_len);
 bool uart_copy_text_buffer_tail(UartContext* uart, char* out, size_t out_size, size_t* out_len);
+void uart_cleanup_capture_streams(UartContext* uart);
 
 #endif
 

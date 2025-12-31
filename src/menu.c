@@ -2144,7 +2144,7 @@ static bool handle_ir_command_feedback_ex(
     char raw_buffer[512];
     size_t len = 0;
     char* message = state->confirmation_message;
-    char summary[96];
+    char summary[128];
     message[0] = '\0';
     summary[0] = '\0';
     raw_buffer[0] = '\0';
@@ -2278,6 +2278,11 @@ static bool handle_ir_command_feedback_ex(
                     }
 
                     if(saw_ok && summary[0] && !message[0]) {
+                        // Truncate summary if needed to prevent buffer overflow when combining
+                        size_t max_len = sizeof(state->confirmation_message) - 10; // Reserve space for "Send OK\n"
+                        if(strlen(summary) > max_len) {
+                            summary[max_len] = '\0';
+                        }
                         snprintf(
                             message,
                             sizeof(state->confirmation_message),
@@ -2303,6 +2308,11 @@ static bool handle_ir_command_feedback_ex(
                    strstr(line, "status OK") || strstr(line, "ir signal transmission complete")) {
                     saw_ok = true;
                     if(summary[0]) {
+                        // Truncate summary if needed
+                        size_t max_len = sizeof(state->confirmation_message) - 10;
+                        if(strlen(summary) > max_len) {
+                            summary[max_len] = '\0';
+                        }
                         snprintf(
                             message,
                             sizeof(state->confirmation_message),
@@ -2615,6 +2625,10 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
         return;
     }
     if(strcmp(command->command, "send_ir_file") == 0) {
+        // Ensure capture streams are cleaned up before opening file browser
+        if(state->uart_context) {
+            uart_cleanup_capture_streams(state->uart_context);
+        }
         send_ir_file(state);
         return;
     }
@@ -3395,9 +3409,10 @@ bool back_event_callback(void* context) {
         }
         FURI_LOG_D("Ghost ESP", "Handling text box view exit");
 
-        // Cleanup text buffer
+        // Cleanup text buffer and capture streams
         if(state->uart_context) {
             uart_reset_text_buffers(state->uart_context);
+            uart_cleanup_capture_streams(state->uart_context);
         }
         if(state->textBoxBuffer) {
             state->buffer_length = 0;

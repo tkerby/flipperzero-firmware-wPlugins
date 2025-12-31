@@ -738,6 +738,33 @@ bool uart_is_esp_connected(UartContext* uart) {
     return connected;
 }
 
+void uart_cleanup_capture_streams(UartContext* uart) {
+    if(!uart) return;
+
+    if(uart->is_serial_active) {
+        furi_hal_serial_async_rx_stop(uart->serial_handle);
+    }
+
+    if(uart->pcap_stream) {
+        furi_stream_buffer_free(uart->pcap_stream);
+        uart->pcap_stream = NULL;
+        FURI_LOG_I("UART", "Freed PCAP stream on exit");
+    }
+    if(uart->csv_stream) {
+        furi_stream_buffer_free(uart->csv_stream);
+        uart->csv_stream = NULL;
+        FURI_LOG_I("UART", "Freed CSV stream on exit");
+    }
+
+    uart->pcap = false;
+    uart->csv = false;
+    uart->pcap_flush_pending = false;
+
+    if(uart->is_serial_active) {
+        furi_hal_serial_async_rx_start(uart->serial_handle, uart_rx_callback, uart, false);
+    }
+}
+
 bool uart_receive_data(
     UartContext* uart,
     ViewDispatcher* view_dispatcher,

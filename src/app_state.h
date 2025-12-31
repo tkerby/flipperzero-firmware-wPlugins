@@ -70,7 +70,8 @@ struct AppState {
     FuriMutex* buffer_mutex;
     // UART Context
     UartContext* uart_context;
-    FilterConfig* filter_config;
+    // FilterConfig is small enough to embed directly
+    FilterConfig filter_config;
 
     // Settings
     Settings settings;

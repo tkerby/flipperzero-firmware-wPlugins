@@ -211,9 +211,7 @@ bool settings_set(Settings* settings, SettingKey key, uint8_t value, void* conte
                 SettingsUIContext* settings_context = (SettingsUIContext*)context;
                 if(settings_context->context) {
                     AppState* app_state = (AppState*)settings_context->context;
-                    if(app_state->filter_config) {
-                        app_state->filter_config->enabled = value;
-                    }
+                    app_state->filter_config.enabled = value;
                 }
             }
             changed = true;
