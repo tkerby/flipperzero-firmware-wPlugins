@@ -59,8 +59,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: PR: [NFC Plugin to identify some hotel systems #4323 (By bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/4323)
 - Updated: [Seos compatible v1.2 (By bettse)](https://gitlab.com/bettse/flipper_seos)
 - Added: [Wolfenduino v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperWolfenstein)
-- Updated: [Catacombs Of The Damned v2.1 (By apfxtech)](https://github.com/apfxtech/FlipperCatacombs)
 - Updated: [Free Roam v0.4 (By jblanked)](https://github.com/jblanked/Free-Roam) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- Updated: [Catacombs Of The Damned v2.1 (By apfxtech)](https://github.com/apfxtech/FlipperCatacombs)
 
 <a name="release">
 
