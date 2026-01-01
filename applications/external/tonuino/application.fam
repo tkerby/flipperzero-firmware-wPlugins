@@ -11,5 +11,3 @@ App(
     fap_version="2.0.0",
     fap_description="NFC card writer for TonUINO audio boxes",
 )
-
-
