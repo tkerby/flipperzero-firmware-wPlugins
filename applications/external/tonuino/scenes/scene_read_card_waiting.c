@@ -17,8 +17,7 @@ static void tonuino_scene_read_card_waiting_widget_callback(
     void* context) {
     TonuinoApp* app = context;
     if(type == InputTypeShort && result == GuiButtonTypeLeft) {
-        view_dispatcher_send_custom_event(
-            app->view_dispatcher, ReadCardWaitingEventCancel);
+        view_dispatcher_send_custom_event(app->view_dispatcher, ReadCardWaitingEventCancel);
     }
 }
 
@@ -96,13 +95,7 @@ bool tonuino_scene_read_card_waiting_on_event(void* context, SceneManagerEvent e
                     FontSecondary,
                     "No TonUINO data");
                 widget_add_string_element(
-                    app->widget,
-                    64,
-                    46,
-                    AlignCenter,
-                    AlignCenter,
-                    FontSecondary,
-                    "found on card");
+                    app->widget, 64, 46, AlignCenter, AlignCenter, FontSecondary, "found on card");
                 widget_add_string_element(
                     app->widget,
                     64,

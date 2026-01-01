@@ -26,7 +26,11 @@ void tonuino_scene_main_menu_on_enter(void* context) {
     submenu_reset(app->submenu);
 
     submenu_add_item(
-        app->submenu, "Set Folder", SceneMainMenuItemSetFolder, tonuino_scene_main_menu_callback, app);
+        app->submenu,
+        "Set Folder",
+        SceneMainMenuItemSetFolder,
+        tonuino_scene_main_menu_callback,
+        app);
     submenu_add_item(
         app->submenu, "Set Mode", SceneMainMenuItemSetMode, tonuino_scene_main_menu_callback, app);
     submenu_add_item(
@@ -42,11 +46,23 @@ void tonuino_scene_main_menu_on_enter(void* context) {
         tonuino_scene_main_menu_callback,
         app);
     submenu_add_item(
-        app->submenu, "View Card", SceneMainMenuItemViewCard, tonuino_scene_main_menu_callback, app);
+        app->submenu,
+        "View Card",
+        SceneMainMenuItemViewCard,
+        tonuino_scene_main_menu_callback,
+        app);
     submenu_add_item(
-        app->submenu, "Read Card", SceneMainMenuItemReadCard, tonuino_scene_main_menu_callback, app);
+        app->submenu,
+        "Read Card",
+        SceneMainMenuItemReadCard,
+        tonuino_scene_main_menu_callback,
+        app);
     submenu_add_item(
-        app->submenu, "Write Card", SceneMainMenuItemWriteCard, tonuino_scene_main_menu_callback, app);
+        app->submenu,
+        "Write Card",
+        SceneMainMenuItemWriteCard,
+        tonuino_scene_main_menu_callback,
+        app);
     submenu_add_item(
         app->submenu,
         "Rapid Write",
@@ -57,7 +73,8 @@ void tonuino_scene_main_menu_on_enter(void* context) {
         app->submenu, "About", SceneMainMenuItemAbout, tonuino_scene_main_menu_callback, app);
 
     // Restore previously selected item
-    uint32_t selected_item = scene_manager_get_scene_state(app->scene_manager, TonuinoSceneMainMenu);
+    uint32_t selected_item =
+        scene_manager_get_scene_state(app->scene_manager, TonuinoSceneMainMenu);
     submenu_set_selected_item(app->submenu, selected_item);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, TonuinoViewSubmenu);

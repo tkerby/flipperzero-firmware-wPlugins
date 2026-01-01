@@ -8,7 +8,9 @@ void tonuino_scene_about_on_enter(void* context) {
     text_box_reset(app->text_box);
 
     char about_text[512];
-    snprintf(about_text, sizeof(about_text),
+    snprintf(
+        about_text,
+        sizeof(about_text),
         "TonUINO Writer\n"
         "for Flipper Zero\n\n"
         "Version: %s\n"
@@ -17,7 +19,8 @@ void tonuino_scene_about_on_enter(void* context) {
         "Kekeisen-Schanz\n\n"
         "https://thomaskekeisen.de\n"
         "https://bastelsaal.de",
-        APP_VERSION, APP_BUILD_NUMBER);
+        APP_VERSION,
+        APP_BUILD_NUMBER);
 
     text_box_set_text(app->text_box, about_text);
     text_box_set_font(app->text_box, TextBoxFontText);

@@ -25,11 +25,10 @@ bool tonuino_read_card(TonuinoApp* app) {
                 nfc, block_num, &default_key, MfClassicKeyTypeA, &block);
 
             if(error == MfClassicErrorNone) {
-                if(block.data[0] == TONUINO_BOX_ID_0 &&
-                   block.data[1] == TONUINO_BOX_ID_1 &&
-                   block.data[2] == TONUINO_BOX_ID_2 &&
-                   block.data[3] == TONUINO_BOX_ID_3) {
-                    if(block.data[5] <= 99 && block.data[6] >= 1 && block.data[6] <= ModeRepeatLast) {
+                if(block.data[0] == TONUINO_BOX_ID_0 && block.data[1] == TONUINO_BOX_ID_1 &&
+                   block.data[2] == TONUINO_BOX_ID_2 && block.data[3] == TONUINO_BOX_ID_3) {
+                    if(block.data[5] <= 99 && block.data[6] >= 1 &&
+                       block.data[6] <= ModeRepeatLast) {
                         memcpy(&app->card_data.box_id[0], &block.data[0], 4);
                         app->card_data.version = block.data[4];
                         app->card_data.folder = block.data[5];
@@ -86,8 +85,8 @@ bool tonuino_write_card(TonuinoApp* app) {
     bool success = false;
 
     for(int retry = 0; retry < 20; retry++) {
-        error = mf_classic_poller_sync_write_block(
-            nfc, 4, &default_key, MfClassicKeyTypeA, &block);
+        error =
+            mf_classic_poller_sync_write_block(nfc, 4, &default_key, MfClassicKeyTypeA, &block);
 
         if(error == MfClassicErrorNone) {
             success = true;
@@ -129,11 +128,10 @@ int32_t tonuino_read_card_worker(void* context) {
                 nfc, block_num, &default_key, MfClassicKeyTypeA, &block);
 
             if(error == MfClassicErrorNone) {
-                if(block.data[0] == TONUINO_BOX_ID_0 &&
-                   block.data[1] == TONUINO_BOX_ID_1 &&
-                   block.data[2] == TONUINO_BOX_ID_2 &&
-                   block.data[3] == TONUINO_BOX_ID_3) {
-                    if(block.data[5] <= 99 && block.data[6] >= 1 && block.data[6] <= ModeRepeatLast) {
+                if(block.data[0] == TONUINO_BOX_ID_0 && block.data[1] == TONUINO_BOX_ID_1 &&
+                   block.data[2] == TONUINO_BOX_ID_2 && block.data[3] == TONUINO_BOX_ID_3) {
+                    if(block.data[5] <= 99 && block.data[6] >= 1 &&
+                       block.data[6] <= ModeRepeatLast) {
                         memcpy(&app->card_data.box_id[0], &block.data[0], 4);
                         app->card_data.version = block.data[4];
                         app->card_data.folder = block.data[5];
@@ -197,8 +195,8 @@ int32_t tonuino_write_card_worker(void* context) {
     bool success = false;
 
     for(int retry = 0; retry < 20 && !ctx->cancel_flag; retry++) {
-        error = mf_classic_poller_sync_write_block(
-            nfc, 4, &default_key, MfClassicKeyTypeA, &block);
+        error =
+            mf_classic_poller_sync_write_block(nfc, 4, &default_key, MfClassicKeyTypeA, &block);
 
         if(error == MfClassicErrorNone) {
             success = true;

@@ -32,7 +32,8 @@ void tonuino_scene_set_mode_on_enter(void* context) {
     // Add mode items with current mode highlighted
     char mode_label[64];
     for(int i = 1; i <= ModeRepeatLast; i++) {
-        if(i == app->card_data.mode && app->card_data.mode >= 1 && app->card_data.mode <= ModeRepeatLast) {
+        if(i == app->card_data.mode && app->card_data.mode >= 1 &&
+           app->card_data.mode <= ModeRepeatLast) {
             snprintf(mode_label, sizeof(mode_label), "* %s", mode_names[i]);
         } else {
             snprintf(mode_label, sizeof(mode_label), "  %s", mode_names[i]);
@@ -41,7 +42,8 @@ void tonuino_scene_set_mode_on_enter(void* context) {
     }
 
     // Restore cursor position if we've been here before
-    uint32_t selected_item = scene_manager_get_scene_state(app->scene_manager, TonuinoSceneSetMode);
+    uint32_t selected_item =
+        scene_manager_get_scene_state(app->scene_manager, TonuinoSceneSetMode);
     if(selected_item == 0 && app->card_data.mode >= 1 && app->card_data.mode <= ModeRepeatLast) {
         // First time entering or state was 0: use current mode
         selected_item = app->card_data.mode - 1;

@@ -18,7 +18,7 @@ static const char* mode_names[] = {
 };
 
 typedef struct {
-    bool selected_folder;       // true = folder, false = mode
+    bool selected_folder; // true = folder, false = mode
     char status_message[32];
     uint32_t status_timeout;
 } RapidWriteState;
@@ -144,8 +144,7 @@ void tonuino_scene_rapid_write_on_enter(void* context) {
     state->selected_folder = true;
     state->status_message[0] = '\0';
     state->status_timeout = 0;
-    scene_manager_set_scene_state(
-        app->scene_manager, TonuinoSceneRapidWrite, (uint32_t)state);
+    scene_manager_set_scene_state(app->scene_manager, TonuinoSceneRapidWrite, (uint32_t)state);
 
     // CRITICAL: Reset widget state before use
     widget_reset(app->widget);

@@ -17,8 +17,7 @@ static void tonuino_scene_write_card_waiting_widget_callback(
     void* context) {
     TonuinoApp* app = context;
     if(type == InputTypeShort && result == GuiButtonTypeLeft) {
-        view_dispatcher_send_custom_event(
-            app->view_dispatcher, WriteCardWaitingEventCancel);
+        view_dispatcher_send_custom_event(app->view_dispatcher, WriteCardWaitingEventCancel);
     }
 }
 

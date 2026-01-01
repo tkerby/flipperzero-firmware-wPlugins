@@ -19,13 +19,13 @@
 #include <lib/nfc/protocols/mf_classic/mf_classic.h>
 
 #define TONUINO_CARD_SIZE 16
-#define TONUINO_BOX_ID_0 0x13
-#define TONUINO_BOX_ID_1 0x37
-#define TONUINO_BOX_ID_2 0xB3
-#define TONUINO_BOX_ID_3 0x47
-#define TONUINO_VERSION 0x02
+#define TONUINO_BOX_ID_0  0x13
+#define TONUINO_BOX_ID_1  0x37
+#define TONUINO_BOX_ID_2  0xB3
+#define TONUINO_BOX_ID_3  0x47
+#define TONUINO_VERSION   0x02
 
-#define APP_VERSION "2.0.0"
+#define APP_VERSION      "2.0.0"
 #define APP_BUILD_NUMBER 82
 
 typedef enum {
@@ -66,7 +66,7 @@ typedef struct {
     ViewDispatcher* view_dispatcher;
     Submenu* submenu;
     NumberInput* number_input;
-    Widget* widget;  // CRITICAL: All scenes using Widget MUST call widget_reset() in on_enter
+    Widget* widget; // CRITICAL: All scenes using Widget MUST call widget_reset() in on_enter
     TextBox* text_box;
     NotificationApp* notifications;
 
@@ -78,4 +78,3 @@ typedef struct {
 TonuinoApp* tonuino_app_alloc();
 void tonuino_app_free(TonuinoApp* app);
 void tonuino_build_card_data(TonuinoApp* app);
-

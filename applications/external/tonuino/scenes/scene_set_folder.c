@@ -14,12 +14,7 @@ void tonuino_scene_set_folder_on_enter(void* context) {
 
     number_input_set_header_text(app->number_input, "Enter Folder");
     number_input_set_result_callback(
-        app->number_input,
-        tonuino_scene_set_folder_callback,
-        app,
-        app->card_data.folder,
-        1,
-        99);
+        app->number_input, tonuino_scene_set_folder_callback, app, app->card_data.folder, 1, 99);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, TonuinoViewNumberInput);
 }

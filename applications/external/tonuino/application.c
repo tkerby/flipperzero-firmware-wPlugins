@@ -41,10 +41,13 @@ TonuinoApp* tonuino_app_alloc() {
 
     // Initialize ViewDispatcher
     app->view_dispatcher = view_dispatcher_alloc();
+    view_dispatcher_enable_queue(app->view_dispatcher);
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
-    view_dispatcher_set_navigation_event_callback(app->view_dispatcher, tonuino_back_event_callback);
-    view_dispatcher_set_tick_event_callback(app->view_dispatcher, tonuino_tick_event_callback, 100);
+    view_dispatcher_set_navigation_event_callback(
+        app->view_dispatcher, tonuino_back_event_callback);
+    view_dispatcher_set_tick_event_callback(
+        app->view_dispatcher, tonuino_tick_event_callback, 100);
 
     // Initialize SceneManager
     app->scene_manager = scene_manager_alloc(&tonuino_scene_handlers, app);
@@ -52,27 +55,19 @@ TonuinoApp* tonuino_app_alloc() {
     // Allocate views
     app->submenu = submenu_alloc();
     view_dispatcher_add_view(
-        app->view_dispatcher,
-        TonuinoViewSubmenu,
-        submenu_get_view(app->submenu));
+        app->view_dispatcher, TonuinoViewSubmenu, submenu_get_view(app->submenu));
 
     app->number_input = number_input_alloc();
     view_dispatcher_add_view(
-        app->view_dispatcher,
-        TonuinoViewNumberInput,
-        number_input_get_view(app->number_input));
+        app->view_dispatcher, TonuinoViewNumberInput, number_input_get_view(app->number_input));
 
     app->widget = widget_alloc();
     view_dispatcher_add_view(
-        app->view_dispatcher,
-        TonuinoViewWidget,
-        widget_get_view(app->widget));
+        app->view_dispatcher, TonuinoViewWidget, widget_get_view(app->widget));
 
     app->text_box = text_box_alloc();
     view_dispatcher_add_view(
-        app->view_dispatcher,
-        TonuinoViewTextBox,
-        text_box_get_view(app->text_box));
+        app->view_dispatcher, TonuinoViewTextBox, text_box_get_view(app->text_box));
 
     // Initialize card data
     tonuino_build_card_data(app);
@@ -121,4 +116,3 @@ int32_t tonuino_app(void* p) {
     tonuino_app_free(app);
     return 0;
 }
-

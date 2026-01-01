@@ -21,10 +21,8 @@ typedef enum {
     SceneViewCardEventWrite,
 } SceneViewCardEvent;
 
-static void tonuino_scene_view_card_widget_callback(
-    GuiButtonType result,
-    InputType type,
-    void* context) {
+static void
+    tonuino_scene_view_card_widget_callback(GuiButtonType result, InputType type, void* context) {
     TonuinoApp* app = context;
 
     if(type == InputTypeShort) {
