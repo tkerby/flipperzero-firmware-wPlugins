@@ -174,11 +174,9 @@ class FlipSocialRun {
     uint8_t postIndex; // index of the post in the Post submenu
     PostStatus postStatus; // current post status
     RegistrationStatus registrationStatus; // current registration status
-    bool shouldDebounce; // flag to debounce input
     bool shouldReturnToMenu; // Flag to signal return to menu
     UserInfoStatus userInfoStatus; // current user info status
     //
-    void debounceInput(); // debounce input to prevent multiple triggers
     void drawCommentsView(Canvas* canvas); // draw the comments view
     void drawExploreView(Canvas* canvas); // draw the explore view
     void drawFeedItem(
@@ -216,6 +214,7 @@ class FlipSocialRun {
         char* buffer,
         size_t buffer_size); // get the selected post at the specified postIndex
     bool httpRequestIsFinished(); // check if the HTTP request is finished
+    void loadKeyboardSuggestions(); // load suggestions into the keyboard autocomplete
     void
         updateFeedItemFlipStatus(); // update the flip status of the current feed item in cached data
     void userRequest(

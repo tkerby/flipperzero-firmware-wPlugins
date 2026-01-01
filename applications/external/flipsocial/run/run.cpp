@@ -26,7 +26,6 @@ FlipSocialRun::FlipSocialRun(void* appContext)
     , messageUserIndex(0)
     , postStatus(PostChoose)
     , registrationStatus(RegistrationNotStarted)
-    , shouldDebounce(false)
     , shouldReturnToMenu(false)
     , userInfoStatus(UserInfoNotStarted) {
     char* loginStatusStr = (char*)malloc(64);
@@ -49,24 +48,14 @@ FlipSocialRun::FlipSocialRun(void* appContext)
         feedItemFlipOverride[i] = false;
         feedItemFlipOverrideActive[i] = false;
     }
+
+    // init keyboard so we can add our suggestions
+    keyboard = std::make_unique<Keyboard>();
+    this->loadKeyboardSuggestions();
 }
 
 FlipSocialRun::~FlipSocialRun() {
     // nothing to do
-}
-
-void FlipSocialRun::debounceInput() {
-    static uint8_t debounceCounter = 0;
-    if(shouldDebounce) {
-        lastInput = InputKeyMAX;
-        debounceCounter++;
-        if(debounceCounter < 2) {
-            return;
-        }
-        debounceCounter = 0;
-        shouldDebounce = false;
-        inputHeld = false;
-    }
 }
 
 void FlipSocialRun::drawCommentsView(Canvas* canvas) {
@@ -255,6 +244,7 @@ void FlipSocialRun::drawCommentsView(Canvas* canvas) {
     case CommentsKeyboard:
         if(!keyboard) {
             keyboard = std::make_unique<Keyboard>();
+            this->loadKeyboardSuggestions();
         }
         if(keyboard) {
             keyboard->draw(canvas, "Comment:");
@@ -409,6 +399,7 @@ void FlipSocialRun::drawExploreView(Canvas* canvas) {
     case ExploreKeyboardUsers:
         if(!keyboard) {
             keyboard = std::make_unique<Keyboard>();
+            this->loadKeyboardSuggestions();
         }
         if(keyboard) {
             keyboard->draw(canvas, "Enter text:");
@@ -417,6 +408,7 @@ void FlipSocialRun::drawExploreView(Canvas* canvas) {
     case ExploreKeyboardMessage:
         if(!keyboard) {
             keyboard = std::make_unique<Keyboard>();
+            this->loadKeyboardSuggestions();
         }
         if(keyboard) {
             keyboard->draw(canvas, "Enter message:");
@@ -1227,6 +1219,7 @@ void FlipSocialRun::drawMessagesView(Canvas* canvas) {
     case MessagesKeyboard:
         if(!keyboard) {
             keyboard = std::make_unique<Keyboard>();
+            this->loadKeyboardSuggestions();
         }
         if(keyboard) {
             keyboard->draw(canvas, "Enter reply:");
@@ -1443,6 +1436,7 @@ void FlipSocialRun::drawPostView(Canvas* canvas) {
     case PostKeyboard:
         if(!keyboard) {
             keyboard = std::make_unique<Keyboard>();
+            this->loadKeyboardSuggestions();
         }
         if(keyboard) {
             keyboard->draw(canvas, "Enter post:");
@@ -2024,6 +2018,34 @@ bool FlipSocialRun::httpRequestIsFinished() {
     return state == IDLE || state == ISSUE || state == INACTIVE;
 }
 
+void FlipSocialRun::loadKeyboardSuggestions() {
+    // Standard words for autocomplete
+    if(keyboard) {
+        keyboard->addSuggestion("the");
+        keyboard->addSuggestion("that");
+        keyboard->addSuggestion("hi");
+        keyboard->addSuggestion("hey");
+        keyboard->addSuggestion("help");
+        keyboard->addSuggestion("hello");
+        keyboard->addSuggestion("how");
+        keyboard->addSuggestion("hack");
+        keyboard->addSuggestion("what");
+        keyboard->addSuggestion("JBlanked");
+        keyboard->addSuggestion("flip");
+        keyboard->addSuggestion("flipper");
+        keyboard->addSuggestion("yooo");
+        keyboard->addSuggestion("everyone");
+        keyboard->addSuggestion("anyone");
+        keyboard->addSuggestion("good");
+        keyboard->addSuggestion("great");
+        keyboard->addSuggestion("morning");
+        keyboard->addSuggestion("night");
+        keyboard->addSuggestion("message");
+        keyboard->addSuggestion("awesome");
+        keyboard->addSuggestion("FlipperHTTP");
+    }
+}
+
 void FlipSocialRun::updateFeedItemFlipStatus() {
     FlipSocialApp* app = static_cast<FlipSocialApp*>(appContext);
     if(!app) {
@@ -2149,7 +2171,6 @@ void FlipSocialRun::updateDraw(Canvas* canvas) {
 
 void FlipSocialRun::updateInput(InputEvent* event) {
     lastInput = event->key;
-    debounceInput();
     switch(currentView) {
     case SocialViewMenu: {
         switch(lastInput) {
@@ -2163,26 +2184,20 @@ void FlipSocialRun::updateInput(InputEvent* event) {
                 currentMenuIndex = SocialViewFeed;
             } else if(currentMenuIndex == SocialViewMessageUsers) {
                 currentMenuIndex = SocialViewPost;
-                shouldDebounce = true;
             } else if(currentMenuIndex == SocialViewExplore) {
                 currentMenuIndex = SocialViewMessageUsers;
-                shouldDebounce = true;
             } else if(currentMenuIndex == SocialViewProfile) {
                 currentMenuIndex = SocialViewExplore;
-                shouldDebounce = true;
             }
             break;
         case InputKeyUp:
         case InputKeyRight:
             if(currentMenuIndex == SocialViewFeed) {
                 currentMenuIndex = SocialViewPost;
-                shouldDebounce = true;
             } else if(currentMenuIndex == SocialViewPost) {
                 currentMenuIndex = SocialViewMessageUsers;
-                shouldDebounce = true;
             } else if(currentMenuIndex == SocialViewMessageUsers) {
                 currentMenuIndex = SocialViewExplore;
-                shouldDebounce = true;
             } else if(currentMenuIndex == SocialViewExplore) {
                 currentMenuIndex = SocialViewProfile;
             }
@@ -2191,19 +2206,19 @@ void FlipSocialRun::updateInput(InputEvent* event) {
             switch(currentMenuIndex) {
             case SocialViewFeed:
                 currentView = SocialViewFeed;
-                shouldDebounce = true;
+
                 break;
             case SocialViewPost:
                 currentView = SocialViewPost;
-                shouldDebounce = true;
+
                 break;
             case SocialViewMessageUsers:
                 currentView = SocialViewMessageUsers;
-                shouldDebounce = true;
+
                 break;
             case SocialViewExplore:
                 currentView = SocialViewExplore;
-                shouldDebounce = true;
+
                 break;
             case SocialViewProfile:
                 if(userInfoStatus == UserInfoNotStarted ||
@@ -2214,7 +2229,7 @@ void FlipSocialRun::updateInput(InputEvent* event) {
                 } else if(userInfoStatus == UserInfoSuccess) {
                     currentView = SocialViewProfile;
                 }
-                shouldDebounce = true;
+
                 break;
             default:
                 break;
@@ -2229,7 +2244,7 @@ void FlipSocialRun::updateInput(InputEvent* event) {
         switch(lastInput) {
         case InputKeyBack:
             currentView = SocialViewMenu;
-            shouldDebounce = true;
+
             feedItemIndex = 0;
             break;
         case InputKeyDown:
@@ -2237,12 +2252,11 @@ void FlipSocialRun::updateInput(InputEvent* event) {
             currentView = SocialViewComments;
             commentsStatus = CommentsNotStarted;
             commentsIndex = 0;
-            shouldDebounce = true;
+
             break;
         case InputKeyLeft:
             if(feedItemIndex > 0) {
                 feedItemIndex--;
-                shouldDebounce = true;
             } else {
                 // If at the start of the feed, show previous page
                 if(feedStatus == FeedSuccess && feedIteration > 1) {
@@ -2259,7 +2273,6 @@ void FlipSocialRun::updateInput(InputEvent* event) {
         case InputKeyRight:
             if(feedItemIndex < (MAX_FEED_ITEMS - 1)) {
                 feedItemIndex++;
-                shouldDebounce = true;
             } else {
                 // If at the end of the feed, request next page
                 if(feedStatus == FeedSuccess) {
@@ -2278,7 +2291,7 @@ void FlipSocialRun::updateInput(InputEvent* event) {
             userRequest(RequestTypeFlipPost);
             // Immediately update the cached feed data to reflect the flip
             updateFeedItemFlipStatus();
-            shouldDebounce = true;
+
             break;
         default:
             break;
@@ -2288,19 +2301,18 @@ void FlipSocialRun::updateInput(InputEvent* event) {
     case SocialViewPost: {
         if(postStatus == PostKeyboard) {
             if(keyboard) {
-                if(keyboard->handleInput(lastInput)) {
+                if(keyboard->handleInput(event)) {
                     FlipSocialApp* app = static_cast<FlipSocialApp*>(appContext);
                     app->saveChar("new_feed_post", keyboard->getText());
                     postStatus = PostWaiting;
                     userRequest(RequestTypePost);
                 }
                 if(lastInput != InputKeyMAX) {
-                    shouldDebounce = true;
                 }
             }
             if(lastInput == InputKeyBack) {
                 postStatus = PostChoose;
-                shouldDebounce = true;
+
                 if(keyboard) {
                     keyboard->clearText();
                     keyboard.reset();
@@ -2310,27 +2322,25 @@ void FlipSocialRun::updateInput(InputEvent* event) {
             switch(lastInput) {
             case InputKeyBack:
                 currentView = SocialViewMenu;
-                shouldDebounce = true;
+
                 break;
             case InputKeyLeft:
             case InputKeyDown:
                 if(postIndex > 0) {
                     postIndex--;
-                    shouldDebounce = true;
                 }
                 break;
             case InputKeyRight:
             case InputKeyUp:
                 if(postIndex < (MAX_PRE_SAVED_MESSAGES - 1)) {
                     postIndex++;
-                    shouldDebounce = true;
                 }
                 break;
             case InputKeyOk:
                 if(postIndex == 0) // New Post
                 {
                     postStatus = PostKeyboard;
-                    shouldDebounce = true;
+
                     if(keyboard) {
                         keyboard->clearText();
                         keyboard.reset();
@@ -2340,17 +2350,17 @@ void FlipSocialRun::updateInput(InputEvent* event) {
                     if(!selectedPost) {
                         FURI_LOG_E(TAG, "updateInput: Failed to allocate memory for selectedPost");
                         postStatus = PostParseError;
-                        shouldDebounce = true;
+
                         return;
                     }
                     if(getSelectedPost(selectedPost, 128)) {
                         if(!keyboard) {
                             keyboard = std::make_unique<Keyboard>();
+                            this->loadKeyboardSuggestions();
                         }
                         if(keyboard) {
                             keyboard->setText(selectedPost);
                             postStatus = PostKeyboard;
-                            shouldDebounce = true;
                         }
                     }
                     free(selectedPost);
@@ -2366,25 +2376,23 @@ void FlipSocialRun::updateInput(InputEvent* event) {
         switch(lastInput) {
         case InputKeyBack:
             currentView = SocialViewMenu;
-            shouldDebounce = true;
+
             break;
         case InputKeyLeft:
         case InputKeyDown:
             if(messageUserIndex > 0) {
                 messageUserIndex--;
-                shouldDebounce = true;
             }
             break;
         case InputKeyRight:
         case InputKeyUp:
             if(messageUserIndex < (MAX_MESSAGE_USERS - 1)) {
                 messageUserIndex++;
-                shouldDebounce = true;
             }
             break;
         case InputKeyOk:
             currentView = SocialViewMessages;
-            shouldDebounce = true;
+
             break;
         default:
             break;
@@ -2394,19 +2402,18 @@ void FlipSocialRun::updateInput(InputEvent* event) {
     case SocialViewMessages: {
         if(messagesStatus == MessagesKeyboard) {
             if(keyboard) {
-                if(keyboard->handleInput(lastInput)) {
+                if(keyboard->handleInput(event)) {
                     FlipSocialApp* app = static_cast<FlipSocialApp*>(appContext);
                     app->saveChar("message_to_user", keyboard->getText());
                     messagesStatus = MessagesSending;
                     userRequest(RequestTypeMessageSend);
                 }
                 if(lastInput != InputKeyMAX) {
-                    shouldDebounce = true;
                 }
             }
             if(lastInput == InputKeyBack) {
                 messagesStatus = MessagesSuccess;
-                shouldDebounce = true;
+
                 if(keyboard) {
                     keyboard->clearText();
                     keyboard.reset();
@@ -2418,14 +2425,13 @@ void FlipSocialRun::updateInput(InputEvent* event) {
                 currentView = SocialViewMessageUsers;
                 messagesStatus = MessagesNotStarted;
                 messagesIndex = 0;
-                shouldDebounce = true;
+
                 break;
             case InputKeyLeft:
             case InputKeyDown:
                 // Navigate to previous message
                 if(messagesIndex > 0) {
                     messagesIndex--;
-                    shouldDebounce = true;
                 }
                 break;
             case InputKeyRight:
@@ -2433,12 +2439,11 @@ void FlipSocialRun::updateInput(InputEvent* event) {
                 // Navigate to next message
                 if(messagesIndex < (MAX_MESSAGES - 1)) {
                     messagesIndex++;
-                    shouldDebounce = true;
                 }
                 break;
             case InputKeyOk:
                 messagesStatus = MessagesKeyboard;
-                shouldDebounce = true;
+
                 return;
             default:
                 break;
@@ -2449,7 +2454,7 @@ void FlipSocialRun::updateInput(InputEvent* event) {
     case SocialViewExplore: {
         if(exploreStatus == ExploreKeyboardUsers) {
             if(keyboard) {
-                if(keyboard->handleInput(lastInput)) {
+                if(keyboard->handleInput(event)) {
                     FlipSocialApp* app = static_cast<FlipSocialApp*>(appContext);
                     app->saveChar("explore_keyword", keyboard->getText());
                     exploreStatus = ExploreWaiting;
@@ -2457,14 +2462,13 @@ void FlipSocialRun::updateInput(InputEvent* event) {
                     userRequest(RequestTypeExplore);
                 }
                 if(lastInput != InputKeyMAX) {
-                    shouldDebounce = true;
                 }
             }
             if(lastInput == InputKeyBack) {
                 currentView = SocialViewMenu;
                 exploreStatus = ExploreKeyboardUsers;
                 exploreIndex = 0;
-                shouldDebounce = true;
+
                 if(keyboard) {
                     keyboard->clearText();
                     keyboard.reset();
@@ -2472,19 +2476,18 @@ void FlipSocialRun::updateInput(InputEvent* event) {
             }
         } else if(exploreStatus == ExploreKeyboardMessage) {
             if(keyboard) {
-                if(keyboard->handleInput(lastInput)) {
+                if(keyboard->handleInput(event)) {
                     FlipSocialApp* app = static_cast<FlipSocialApp*>(appContext);
                     app->saveChar("message_to_user", keyboard->getText());
                     exploreStatus = ExploreSending;
                     userRequest(RequestTypeMessageSend);
                 }
                 if(lastInput != InputKeyMAX) {
-                    shouldDebounce = true;
                 }
             }
             if(lastInput == InputKeyBack) {
                 exploreStatus = ExploreSuccess;
-                shouldDebounce = true;
+
                 if(keyboard) {
                     keyboard->clearText();
                     keyboard.reset();
@@ -2496,7 +2499,7 @@ void FlipSocialRun::updateInput(InputEvent* event) {
                 currentView = SocialViewMenu;
                 exploreStatus = ExploreKeyboardUsers;
                 exploreIndex = 0;
-                shouldDebounce = true;
+
                 if(keyboard) {
                     keyboard->clearText();
                     keyboard.reset();
@@ -2506,19 +2509,17 @@ void FlipSocialRun::updateInput(InputEvent* event) {
             case InputKeyDown:
                 if(exploreIndex > 0) {
                     exploreIndex--;
-                    shouldDebounce = true;
                 }
                 break;
             case InputKeyRight:
             case InputKeyUp:
                 if(exploreIndex < (MAX_EXPLORE_USERS - 1)) {
                     exploreIndex++;
-                    shouldDebounce = true;
                 }
                 break;
             case InputKeyOk:
                 exploreStatus = ExploreKeyboardMessage;
-                shouldDebounce = true;
+
                 if(keyboard) {
                     keyboard->clearText();
                     keyboard.reset();
@@ -2534,20 +2535,18 @@ void FlipSocialRun::updateInput(InputEvent* event) {
         switch(lastInput) {
         case InputKeyBack:
             currentView = SocialViewMenu;
-            shouldDebounce = true;
+
             break;
         case InputKeyLeft:
         case InputKeyDown:
             if(currentProfileElement > 0) {
                 currentProfileElement--;
-                shouldDebounce = true;
             }
             break;
         case InputKeyRight:
         case InputKeyUp:
             if(currentProfileElement < (ProfileElementMAX - 1)) {
                 currentProfileElement++;
-                shouldDebounce = true;
             }
             break;
         default:
@@ -2558,19 +2557,18 @@ void FlipSocialRun::updateInput(InputEvent* event) {
     case SocialViewComments: {
         if(commentsStatus == CommentsKeyboard) {
             if(keyboard) {
-                if(keyboard->handleInput(lastInput)) {
+                if(keyboard->handleInput(event)) {
                     FlipSocialApp* app = static_cast<FlipSocialApp*>(appContext);
                     app->saveChar("new_comment", keyboard->getText());
                     commentsStatus = CommentsSending;
                     userRequest(RequestTypeCommentPost);
                 }
                 if(lastInput != InputKeyMAX) {
-                    shouldDebounce = true;
                 }
             }
             if(lastInput == InputKeyBack) {
                 commentsStatus = CommentsSuccess;
-                shouldDebounce = true;
+
                 if(keyboard) {
                     keyboard->clearText();
                     keyboard.reset();
@@ -2581,18 +2579,16 @@ void FlipSocialRun::updateInput(InputEvent* event) {
             case InputKeyBack:
                 currentView = SocialViewFeed;
                 commentIsValid = false;
-                shouldDebounce = true;
+
                 break;
             case InputKeyLeft:
                 if(commentsIndex > 0) {
                     commentsIndex--;
-                    shouldDebounce = true;
                 }
                 break;
             case InputKeyRight:
                 if(commentsIndex < (MAX_COMMENTS - 1)) {
                     commentsIndex++;
-                    shouldDebounce = true;
                 }
                 break;
             case InputKeyDown:
@@ -2600,19 +2596,20 @@ void FlipSocialRun::updateInput(InputEvent* event) {
                 commentsStatus = CommentsKeyboard;
                 if(!keyboard) {
                     keyboard = std::make_unique<Keyboard>();
+                    this->loadKeyboardSuggestions();
                 }
                 if(keyboard) {
                     keyboard->clearText();
                     keyboard->setText(""); // Start with empty text for reply
                 }
-                shouldDebounce = true;
+
                 break;
             case InputKeyOk:
                 // Flip the current comment
                 if(commentIsValid) {
                     userRequest(RequestTypeCommentFlip);
                 }
-                shouldDebounce = true;
+
                 break;
             default:
                 break;
@@ -2626,7 +2623,6 @@ void FlipSocialRun::updateInput(InputEvent* event) {
         if(lastInput == InputKeyBack) {
             currentView = SocialViewLogin;
             shouldReturnToMenu = true;
-            shouldDebounce = true;
         }
         break;
     }
