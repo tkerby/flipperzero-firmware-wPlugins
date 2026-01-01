@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(cat:*)",
+      "Bash(./build.sh:*)",
+      "Bash(ls:*)",
+      "Bash(./fbt fap_tonuino_writer:*)",
+      "Bash(./fbt:*)",
+      "WebFetch(domain:www.tonuino.de)",
+      "Bash(find:*)",
+      "Bash(python3 -c \"\nimport zipfile\nimport os\n\nfap_path = ''build/f7-firmware-D/.extapps/tonuino_writer.fap''\nif os.path.exists\\(fap_path\\):\n    try:\n        with zipfile.ZipFile\\(fap_path, ''r''\\) as zip_ref:\n            print\\(''FAP contents:''\\)\n            zip_ref.printdir\\(\\)\n    except:\n        print\\(''FAP is not a ZIP file, checking as ELF...''\\)\n        print\\(f''File size: {os.path.getsize\\(fap_path\\)} bytes''\\)\n\")",
+      "WebFetch(domain:developer.flipper.net)",
+      "WebFetch(domain:raw.githubusercontent.com)"
+    ]
+  }
+}

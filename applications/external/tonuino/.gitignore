@@ -1,0 +1,26 @@
+# Build artifacts
+*.o
+*.d
+*.elf
+*.fap
+*.impsyms
+build/
+.extapps/
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*~
+
+# Build number tracking (optional - include if you want to track it)
+# build_number.txt
