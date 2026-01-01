@@ -6,10 +6,11 @@ id: tonuino_writer
 category: NFC
 
 # GitHub repository information
-source_code: https://github.com/Bastelsaal/tonuino-flipper-zero
-
-# Commit SHA reference - use the commit hash from your repository
-commit: 24c99d3
+sourcecode:
+  type: git
+  location:
+    origin: https://github.com/Bastelsaal/tonuino-flipper-zero
+    commit_sha: 2328b9d983c9c5a909df4b7354bf327ec85a11fe
 
 # Application metadata
 name: TonUINO Writer
