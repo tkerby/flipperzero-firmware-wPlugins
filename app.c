@@ -146,7 +146,8 @@ ProtoViewApp* protoview_app_alloc() {
     app->text_input = NULL;
     app->show_text_input = false;
     app->alert_dismiss_time = 0;
-    app->current_view = ViewRawPulses;
+    // app->current_view = ViewRawPulses;
+    app->current_view = ViewInfoList;
     app->view_updating_mutex = furi_mutex_alloc(FuriMutexTypeNormal);
     for(int j = 0; j < ViewLast; j++)
         app->current_subview[j] = 0;
