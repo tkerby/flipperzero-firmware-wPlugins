@@ -29,14 +29,15 @@ public:
         EnteringLevel,
         InGame,
         GameOver,
-        FadeOut
+        FadeOut,
+        TransitionToLevel
     };
 
     static void Init();
     static void Tick();
     static void Draw();
 
-    static bool IsInMenu();
+    static bool InMenu();
     static void GoToMenu();
 
     static void StartGame();

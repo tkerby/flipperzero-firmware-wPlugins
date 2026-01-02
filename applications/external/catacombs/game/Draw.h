@@ -70,38 +70,11 @@ public:
         int8_t y,
         uint8_t halfSize,
         uint8_t inverseCameraDistance,
-        bool invert = false);
+        bool invert = false,
+        uint8_t color = COLOUR_BLACK);
 
-private:
     static int8_t horizonBuffer[DISPLAY_WIDTH];
-    static QueuedDrawable queuedDrawables[MAX_QUEUED_DRAWABLES];
-    static uint8_t numQueuedDrawables;
     static uint8_t numBufferSlicesFilled;
-
-    static void DrawBackground();
-
-#if WITH_IMAGE_TEXTURES
-    static void DrawWallSegment(
-        const uint16_t* texture,
-        int16_t x1,
-        int16_t w1,
-        int16_t x2,
-        int16_t w2,
-        uint8_t u1clip,
-        uint8_t u2clip,
-        bool edgeLeft,
-        bool edgeRight,
-        bool shadeEdge);
-    static void DrawWall(
-        const uint16_t* texture,
-        int16_t x1,
-        int16_t y1,
-        int16_t x2,
-        int16_t y2,
-        bool edgeLeft,
-        bool edgeRight,
-        bool shadeEdge);
-#elif WITH_VECTOR_TEXTURES
     static void DrawWallLine(
         int16_t x1,
         int16_t y1,
@@ -130,24 +103,23 @@ private:
         bool edgeLeft,
         bool edgeRight,
         bool shadeEdge);
-#else
-    static void DrawWallSegment(
-        int16_t x1,
-        int16_t w1,
-        int16_t x2,
-        int16_t w2,
-        bool edgeLeft,
-        bool edgeRight,
-        bool shadeEdge);
-    static void DrawWall(
-        int16_t x1,
-        int16_t y1,
-        int16_t x2,
-        int16_t y2,
-        bool edgeLeft,
-        bool edgeRight,
-        bool shadeEdge);
-#endif
+    static void DrawBackground();
+    static uint8_t numQueuedDrawables;
+
+private:
+    static QueuedDrawable queuedDrawables[MAX_QUEUED_DRAWABLES];
+
+    // #if WITH_IMAGE_TEXTURES
+    // 	static void DrawWallSegment(const uint16_t* texture, int16_t x1, int16_t w1, int16_t x2, int16_t w2, uint8_t u1clip, uint8_t u2clip, bool edgeLeft, bool edgeRight, bool shadeEdge);
+    // 	static void DrawWall(const uint16_t* texture, int16_t x1, int16_t y1, int16_t x2, int16_t y2, bool edgeLeft, bool edgeRight, bool shadeEdge);
+    // #elif WITH_VECTOR_TEXTURES
+    // 	static void DrawWallLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint8_t clipLeft, uint8_t clipRight, uint8_t col);
+    // 	static void DrawWallSegment(const uint8_t* texture, int16_t x1, int16_t w1, int16_t x2, int16_t w2, uint8_t u1clip, uint8_t u2clip, bool edgeLeft, bool edgeRight, bool shadeEdge);
+    // 	static void DrawWall(const uint8_t* texture, int16_t x1, int16_t y1, int16_t x2, int16_t y2, bool edgeLeft, bool edgeRight, bool shadeEdge);
+    // #else
+    // 	static void DrawWallSegment(int16_t x1, int16_t w1, int16_t x2, int16_t w2, bool edgeLeft, bool edgeRight, bool shadeEdge);
+    // 	static void DrawWall(int16_t x1, int16_t y1, int16_t x2, int16_t y2, bool edgeLeft, bool edgeRight, bool shadeEdge);
+    // #endif
     static void DrawFloorLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
     static void DrawFloorLineInner(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
     static void DrawFloorLines();

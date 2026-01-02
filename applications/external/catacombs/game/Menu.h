@@ -88,6 +88,7 @@ public:
 
     void TickEnteringLevel();
     void DrawEnteringLevel();
+    void TransitionToLevel();
 
     void TickGameOver();
     void DrawGameOver();
@@ -96,15 +97,20 @@ public:
     void FadeOut();
 
 private:
-    void SetScore(uint16_t score);
+    using TransitionNextFn = void (*)();
+    static void RunTransition(Menu* menu, uint8_t& t, TransitionNextFn next);
     void DrawTransitionFrame(uint8_t frameIndex);
+
+    void SetScore(uint16_t score);
     void PrintItem(uint8_t idx, uint8_t row);
 
     uint8_t selection = 0;
     uint8_t topIndex = 0;
     uint8_t cursorPos = 0;
+
     uint16_t score_ = 0;
     uint16_t high_ = 0;
+    uint8_t vars_[8] = {0};
 
     union {
         uint16_t timer;

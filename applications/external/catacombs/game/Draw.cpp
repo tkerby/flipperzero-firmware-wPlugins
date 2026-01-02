@@ -11,7 +11,7 @@
 #include "game/Font.h"
 
 #include "game/LUT.h"
-#include "game/Generated/spritedata_inc.h"
+#include "game/Generated/SpriteData.inc.h"
 
 #if WITH_VECTOR_TEXTURES
 #include "game/Textures.h"
@@ -1020,7 +1020,8 @@ void Renderer::DrawScaled(
     int8_t y,
     uint8_t halfSize,
     uint8_t inverseCameraDistance,
-    bool invert) {
+    bool invert,
+    uint8_t color) {
     if(halfSize > MAX_SPRITE_SIZE * 2) {
         return;
     } else if(halfSize > MAX_SPRITE_SIZE) {
@@ -1031,16 +1032,16 @@ void Renderer::DrawScaled(
         DrawScaledInner(data, x, y, halfSize, inverseCameraDistance, 0, invert);
     } else if(halfSize == 2) {
         if(Renderer::wBuffer[x] < inverseCameraDistance) {
-            Platform::PutPixel(x, y, COLOUR_BLACK);
-            Platform::PutPixel(x, y + 1, COLOUR_BLACK);
+            Platform::PutPixel(x, y, color);
+            Platform::PutPixel(x, y + 1, color);
         }
         if(Renderer::wBuffer[x + 1] < inverseCameraDistance) {
-            Platform::PutPixel(x + 1, y, COLOUR_BLACK);
-            Platform::PutPixel(x + 1, y + 1, COLOUR_BLACK);
+            Platform::PutPixel(x + 1, y, color);
+            Platform::PutPixel(x + 1, y + 1, color);
         }
     } else {
         if(Renderer::wBuffer[x] < inverseCameraDistance) {
-            Platform::PutPixel(x, y, COLOUR_BLACK);
+            Platform::PutPixel(x, y, color);
         }
     }
 }

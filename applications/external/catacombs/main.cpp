@@ -303,13 +303,8 @@ static void framebuffer_commit_callback(
     (void)orientation;
     if(furi_mutex_acquire(state->fb_mutex, 0) != FuriStatusOk) return;
     const uint8_t* src = state->front_buffer;
-    bool inv = state->invert_frame;
-    if(!inv) {
-        memcpy(data, src, BUFFER_SIZE);
-    } else {
-        for(size_t i = 0; i < BUFFER_SIZE; i++) {
-            data[i] = (uint8_t)(src[i] ^ 0xFF);
-        }
+    for(size_t i = 0; i < BUFFER_SIZE; i++) {
+        data[i] = (uint8_t)(src[i] ^ 0xFF);
     }
 
     furi_mutex_release(state->fb_mutex);
@@ -354,7 +349,7 @@ static void input_events_callback(const void* value, void* ctx) {
             uint32_t held_ms = furi_get_tick() - state->back_hold_start;
             if(held_ms >= HOLD_TIME_MS) {
                 state->back_hold_handled = true;
-                if(Game::IsInMenu())
+                if(Game::InMenu())
                     state->exit_requested = true;
                 else
                     Game::GoToMenu();
@@ -397,12 +392,9 @@ static void timer_callback(void* ctx) {
     Game::Tick();
     Game::Draw();
 
-    bool inv = !Game::IsInMenu();
-
     // back -> front
     furi_mutex_acquire(state->fb_mutex, FuriWaitForever);
     memcpy(state->front_buffer, state->back_buffer, BUFFER_SIZE);
-    state->invert_frame = inv;
     furi_mutex_release(state->fb_mutex);
 
     canvas_commit(state->canvas);
