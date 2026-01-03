@@ -657,14 +657,17 @@ static void render_callback(Canvas* canvas, void* ctx_void) {
     canvas_draw_str_aligned(canvas, 99, 55, AlignLeft, AlignBottom, "v0.3");    
 	// Draw navigation hint
 	canvas_draw_icon(canvas, 121, 57, &I_back);
-	canvas_draw_str_aligned(canvas, 121, 63, AlignRight, AlignBottom, "Pause");	
+	if(ctx->state == STATE_PAUSED) {
+		canvas_draw_str_aligned(canvas, 120, 63, AlignRight, AlignBottom, "Exit");
+	} else {
+		canvas_draw_str_aligned(canvas, 120, 63, AlignRight, AlignBottom, "Brk");
+	}	
 	
     // Draw game state messages
     if(ctx->state == STATE_PAUSED) {
-        // No modal for pause, just show button hint
-        elements_button_center(canvas, "Resume");
+        elements_button_center(canvas, "Continue");
     } else if(ctx->state == STATE_DIED) {
-        draw_simple_modal(canvas, "OUCH!");
+        draw_simple_modal(canvas, "You died.");
         elements_button_center(canvas, "OK");
     } else if(ctx->state == STATE_GAME_OVER) {
         draw_simple_modal(canvas, "GAME OVER");
@@ -715,12 +718,12 @@ static void input_callback(InputEvent* input, void* ctx_void) {
             }
         }
     } else if(input->type == InputTypeShort) {
-        // Short back button press - pause/unpause
+        // Short back button press - pause or exit
         if(input->key == InputKeyBack) {
             if(ctx->state == STATE_PLAYING) {
                 ctx->state = STATE_PAUSED;
             } else if(ctx->state == STATE_PAUSED) {
-                ctx->state = STATE_PLAYING;
+                ctx->running = false;
             }
         }
     } else if(input->type == InputTypeLong) {
