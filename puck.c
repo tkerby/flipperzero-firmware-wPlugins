@@ -723,7 +723,8 @@ static void input_callback(InputEvent* input, void* ctx_void) {
         if(input->key == InputKeyBack) {
             if(ctx->state == STATE_PLAYING) {
                 ctx->state = STATE_PAUSED;
-            } else if(ctx->state == STATE_PAUSED) {
+            } else if(ctx->state == STATE_PAUSED || ctx->state == STATE_DIED || 
+				ctx->state == STATE_GAME_OVER || ctx->state == STATE_WIN) { 
                 ctx->running = false;
             }
         }
