@@ -64,6 +64,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipSocial v2.0.6 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Added: [TonUINO Writer v2.0 (By Bastelsaal)](https://github.com/Bastelsaal/tonuino-flipper-zero)
 - Updated: [Catacombs Of The Damned v2.2 (By apfxtech)](https://github.com/apfxtech/FlipperCatacombs)
+- Updated: [Protocol Visualizer v1.3 (By antirez)](https://github.com/antirez/protoview)
+- Updated: [MODBUS v1.1.3.1 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-rs485modbus) `Req: Modbus By ElectronicCats`
 
 <a name="release">
 
