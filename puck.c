@@ -657,7 +657,8 @@ static void render_callback(Canvas* canvas, void* ctx_void) {
     canvas_draw_str_aligned(canvas, 99, 55, AlignLeft, AlignBottom, "v0.3");    
 	// Draw navigation hint
 	canvas_draw_icon(canvas, 121, 57, &I_back);
-	if(ctx->state == STATE_PAUSED) {
+	if(ctx->state == STATE_PAUSED || ctx->state == STATE_DIED || 
+	   ctx->state == STATE_GAME_OVER || ctx->state == STATE_WIN) {
 		canvas_draw_str_aligned(canvas, 120, 63, AlignRight, AlignBottom, "Exit");
 	} else {
 		canvas_draw_str_aligned(canvas, 120, 63, AlignRight, AlignBottom, "Brk");
