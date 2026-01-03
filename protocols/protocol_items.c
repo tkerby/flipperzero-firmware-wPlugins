@@ -7,6 +7,7 @@ const SubGhzProtocol* protopirate_protocol_registry_items[] = {
     &kia_protocol_v2,
     &kia_protocol_v3_v4,
     &kia_protocol_v5,
+    &kia_protocol_v6,
     &ford_protocol_v0,
     &fiat_protocol_v0,
     &subaru_protocol,
@@ -60,6 +61,14 @@ static const ProtoPirateProtocolTiming protocol_timings[] = {
         .te_long = 800,
         .te_delta = 150,
         .min_count_bit = 64,
+    },
+    // Kia V6: Manchester 200/400µs
+    {
+        .name = "Kia V6",
+        .te_short = 200,
+        .te_long = 400,
+        .te_delta = 100,
+        .min_count_bit = 144,
     },
     // Ford V0: Manchester 250/500µs
     {
