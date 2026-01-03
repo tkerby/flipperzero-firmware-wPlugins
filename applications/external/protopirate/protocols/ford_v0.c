@@ -356,18 +356,30 @@ void subghz_protocol_decoder_ford_v0_get_string(void* context, FuriString* outpu
     uint32_t code_found_hi = (uint32_t)(instance->key1 >> 32);
     uint32_t code_found_lo = (uint32_t)(instance->key1 & 0xFFFFFFFF);
 
+    const char* button_name = "??";
+    if(instance->button == 0x01) {
+        button_name = "Close";
+    } else if(instance->button == 0x02) {
+        button_name = "Open";
+    } else if(instance->button == 0x04) {
+        button_name = "Trunk";
+    }
+
     furi_string_cat_printf(
         output,
         "%s %dbit\r\n"
-        "Key:%08lX%08lX\r\n"
-        "Sn:%08lX Btn:%02X Cnt:%06lX\r\n"
-        "BS:%02X CRC:%02X\r\n",
+        "Key1:%08lX%08lX\r\n"
+        "Key2:%04X\r\n"
+        "Sn:%08lX Btn:%02X:%s\r\n"
+        "Cnt:%05lX BS:%02X CRC:%02X\r\n",
         instance->generic.protocol_name,
         instance->generic.data_count_bit,
         code_found_hi,
         code_found_lo,
+        instance->key2,
         instance->serial,
         instance->button,
+        button_name,
         instance->count,
         (instance->key2 >> 8) & 0xFF,
         instance->key2 & 0xFF);

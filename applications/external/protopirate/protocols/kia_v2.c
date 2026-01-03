@@ -6,7 +6,7 @@ static const SubGhzBlockConst kia_protocol_v2_const = {
     .te_short = 500,
     .te_long = 1000,
     .te_delta = 150,
-    .min_count_bit_for_found = 51,
+    .min_count_bit_for_found = 53,
 };
 
 struct SubGhzProtocolDecoderKiaV2 {
@@ -15,8 +15,7 @@ struct SubGhzProtocolDecoderKiaV2 {
     SubGhzBlockGeneric generic;
     uint16_t header_count;
 
-    uint8_t raw_bits[20];
-    uint16_t raw_bit_count;
+    ManchesterState manchester_state;
 };
 
 struct SubGhzProtocolEncoderKiaV2 {
@@ -59,66 +58,6 @@ const SubGhzProtocol kia_protocol_v2 = {
     .encoder = &kia_protocol_v2_encoder,
 };
 
-static void kia_v2_add_raw_bit(SubGhzProtocolDecoderKiaV2* instance, bool bit) {
-    if(instance->raw_bit_count < 160) {
-        uint16_t byte_idx = instance->raw_bit_count / 8;
-        uint8_t bit_idx = 7 - (instance->raw_bit_count % 8);
-        if(bit) {
-            instance->raw_bits[byte_idx] |= (1 << bit_idx);
-        } else {
-            instance->raw_bits[byte_idx] &= ~(1 << bit_idx);
-        }
-        instance->raw_bit_count++;
-    }
-}
-
-static inline bool kia_v2_get_raw_bit(SubGhzProtocolDecoderKiaV2* instance, uint16_t idx) {
-    uint16_t byte_idx = idx / 8;
-    uint8_t bit_idx = 7 - (idx % 8);
-    return (instance->raw_bits[byte_idx] >> bit_idx) & 1;
-}
-
-static bool kia_v2_manchester_decode(SubGhzProtocolDecoderKiaV2* instance) {
-    if(instance->raw_bit_count < 100) {
-        return false;
-    }
-
-    uint16_t best_bits = 0;
-    uint64_t best_data = 0;
-
-    for(uint16_t offset = 0; offset < 8; offset++) {
-        uint64_t data = 0;
-        uint16_t decoded_bits = 0;
-
-        for(uint16_t i = offset; i + 1 < instance->raw_bit_count && decoded_bits < 53; i += 2) {
-            bool bit1 = kia_v2_get_raw_bit(instance, i);
-            bool bit2 = kia_v2_get_raw_bit(instance, i + 1);
-
-            uint8_t two_bits = (bit1 << 1) | bit2;
-
-            if(two_bits == 0x02) {
-                data = (data << 1) | 1;
-                decoded_bits++;
-            } else if(two_bits == 0x01) {
-                data = (data << 1);
-                decoded_bits++;
-            } else {
-                break;
-            }
-        }
-
-        if(decoded_bits > best_bits) {
-            best_bits = decoded_bits;
-            best_data = data;
-        }
-    }
-
-    instance->decoder.decode_data = best_data;
-    instance->decoder.decode_count_bit = best_bits;
-
-    return best_bits >= kia_protocol_v2_const.min_count_bit_for_found;
-}
-
 void* kia_protocol_decoder_v2_alloc(SubGhzEnvironment* environment) {
     UNUSED(environment);
     SubGhzProtocolDecoderKiaV2* instance = malloc(sizeof(SubGhzProtocolDecoderKiaV2));
@@ -138,8 +77,9 @@ void kia_protocol_decoder_v2_reset(void* context) {
     SubGhzProtocolDecoderKiaV2* instance = context;
     instance->decoder.parser_step = KiaV2DecoderStepReset;
     instance->header_count = 0;
-    instance->raw_bit_count = 0;
-    memset(instance->raw_bits, 0, sizeof(instance->raw_bits));
+    instance->manchester_state = ManchesterStateMid1;
+    instance->decoder.decode_data = 0;
+    instance->decoder.decode_count_bit = 0;
 }
 
 void kia_protocol_decoder_v2_feed(void* context, bool level, uint32_t duration) {
@@ -152,12 +92,18 @@ void kia_protocol_decoder_v2_feed(void* context, bool level, uint32_t duration) 
                        kia_protocol_v2_const.te_delta)) {
             instance->decoder.parser_step = KiaV2DecoderStepCheckPreamble;
             instance->decoder.te_last = duration;
-            instance->header_count = 1;
+            instance->header_count = 0;
+            manchester_advance(
+                instance->manchester_state,
+                ManchesterEventReset,
+                &instance->manchester_state,
+                NULL);
         }
         break;
 
     case KiaV2DecoderStepCheckPreamble:
-        if(level) {
+        if(level) // HIGH pulse
+        {
             if(DURATION_DIFF(duration, kia_protocol_v2_const.te_long) <
                kia_protocol_v2_const.te_delta) {
                 instance->decoder.te_last = duration;
@@ -165,7 +111,15 @@ void kia_protocol_decoder_v2_feed(void* context, bool level, uint32_t duration) 
             } else if(
                 DURATION_DIFF(duration, kia_protocol_v2_const.te_short) <
                 kia_protocol_v2_const.te_delta) {
-                instance->decoder.te_last = duration;
+                if(instance->header_count >= 100) {
+                    instance->header_count = 0;
+                    instance->decoder.decode_data = 0;
+                    instance->decoder.decode_count_bit = 1;
+                    instance->decoder.parser_step = KiaV2DecoderStepCollectRawBits;
+                    subghz_protocol_blocks_add_bit(&instance->decoder, 1);
+                } else {
+                    instance->decoder.te_last = duration;
+                }
             } else {
                 instance->decoder.parser_step = KiaV2DecoderStepReset;
             }
@@ -173,25 +127,39 @@ void kia_protocol_decoder_v2_feed(void* context, bool level, uint32_t duration) 
             if(DURATION_DIFF(duration, kia_protocol_v2_const.te_long) <
                kia_protocol_v2_const.te_delta) {
                 instance->header_count++;
+                instance->decoder.te_last = duration;
             } else if(
                 DURATION_DIFF(duration, kia_protocol_v2_const.te_short) <
                 kia_protocol_v2_const.te_delta) {
-                if(instance->header_count > 10 &&
-                   DURATION_DIFF(instance->decoder.te_last, kia_protocol_v2_const.te_short) <
-                       kia_protocol_v2_const.te_delta) {
-                    instance->decoder.parser_step = KiaV2DecoderStepCollectRawBits;
-                    instance->raw_bit_count = 0;
-                    memset(instance->raw_bits, 0, sizeof(instance->raw_bits));
-                }
+                instance->decoder.te_last = duration;
             } else {
                 instance->decoder.parser_step = KiaV2DecoderStepReset;
             }
         }
         break;
 
-    case KiaV2DecoderStepCollectRawBits:
-        if(duration > 1500) {
-            if(kia_v2_manchester_decode(instance)) {
+    case KiaV2DecoderStepCollectRawBits: {
+        ManchesterEvent event;
+
+        if(DURATION_DIFF(duration, kia_protocol_v2_const.te_short) <
+           kia_protocol_v2_const.te_delta) {
+            event = level ? ManchesterEventShortLow : ManchesterEventShortHigh;
+        } else if(
+            DURATION_DIFF(duration, kia_protocol_v2_const.te_long) <
+            kia_protocol_v2_const.te_delta) {
+            event = level ? ManchesterEventLongLow : ManchesterEventLongHigh;
+        } else {
+            instance->decoder.parser_step = KiaV2DecoderStepReset;
+            break;
+        }
+
+        bool data_bit;
+        if(manchester_advance(
+               instance->manchester_state, event, &instance->manchester_state, &data_bit)) {
+            instance->decoder.decode_data = (instance->decoder.decode_data << 1) | data_bit;
+            instance->decoder.decode_count_bit++;
+
+            if(instance->decoder.decode_count_bit == 53) {
                 instance->generic.data = instance->decoder.decode_data;
                 instance->generic.data_count_bit = instance->decoder.decode_count_bit;
 
@@ -203,30 +171,15 @@ void kia_protocol_decoder_v2_feed(void* context, bool level, uint32_t duration) 
 
                 if(instance->base.callback)
                     instance->base.callback(&instance->base, instance->base.context);
+
+                instance->decoder.decode_data = 0;
+                instance->decoder.decode_count_bit = 0;
+                instance->header_count = 0;
+                instance->decoder.parser_step = KiaV2DecoderStepReset;
             }
-
-            instance->decoder.parser_step = KiaV2DecoderStepReset;
-            break;
         }
-
-        int num_bits = 0;
-        if(DURATION_DIFF(duration, kia_protocol_v2_const.te_short) <
-           kia_protocol_v2_const.te_delta) {
-            num_bits = 1;
-        } else if(
-            DURATION_DIFF(duration, kia_protocol_v2_const.te_long) <
-            kia_protocol_v2_const.te_delta) {
-            num_bits = 2;
-        } else {
-            instance->decoder.parser_step = KiaV2DecoderStepReset;
-            break;
-        }
-
-        for(int i = 0; i < num_bits; i++) {
-            kia_v2_add_raw_bit(instance, level);
-        }
-
         break;
+    }
     }
 }
 

@@ -30,8 +30,25 @@ void protopirate_scene_receiver_info_on_enter(void* context) {
     furi_string_reset(text);
     protopirate_history_get_text_item(app->txrx->history, text, app->txrx->idx_menu_chosen);
 
+    // Skip the first line (protocol name + Xbits) since it's already shown as the title
+    const char* text_str = furi_string_get_cstr(text);
+    const char* first_newline = strchr(text_str, '\r');
+    if(first_newline) {
+        // Skip \r\n
+        text_str = first_newline + 1;
+        if(*text_str == '\n') {
+            text_str++;
+        }
+    } else {
+        // Try \n only
+        first_newline = strchr(text_str, '\n');
+        if(first_newline) {
+            text_str = first_newline + 1;
+        }
+    }
+
     widget_add_string_multiline_element(
-        app->widget, 0, 14, AlignLeft, AlignTop, FontSecondary, furi_string_get_cstr(text));
+        app->widget, 0, 11, AlignLeft, AlignTop, FontSecondary, text_str);
 
     // Add save button
     widget_add_button_element(

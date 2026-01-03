@@ -5,7 +5,7 @@
 static const SubGhzBlockConst subghz_protocol_subaru_const = {
     .te_short = 800,
     .te_long = 1600,
-    .te_delta = 250,
+    .te_delta = 200,
     .min_count_bit_for_found = 64,
 };
 
@@ -228,7 +228,7 @@ void subghz_protocol_decoder_subaru_feed(void* context, bool level, uint32_t dur
 
     case SubaruDecoderStepSaveDuration:
         if(level) {
-            // HIGH pulse duration encodes the bit:
+            // HIGH pulse duration encodes the bit :
             // Short HIGH (~800µs) = 1
             // Long HIGH (~1600µs) = 0
             if(DURATION_DIFF(duration, subghz_protocol_subaru_const.te_short) <

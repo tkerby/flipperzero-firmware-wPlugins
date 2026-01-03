@@ -19,11 +19,34 @@ bool protopirate_storage_init() {
     return result;
 }
 
+// Sanitize protocol name for use as filename
+static void sanitize_filename(const char* input, char* output, size_t output_size) {
+    size_t i = 0;
+    size_t j = 0;
+    while(input[i] != '\0' && j < output_size - 1) {
+        char c = input[i];
+        // Replace characters that are invalid in filenames
+        if(c == '/' || c == '\\' || c == ':' || c == '*' || c == '?' || c == '"' || c == '<' ||
+           c == '>' || c == '|') {
+            output[j] = '_';
+        } else {
+            output[j] = c;
+        }
+        i++;
+        j++;
+    }
+    output[j] = '\0';
+}
+
 bool protopirate_storage_get_next_filename(const char* protocol_name, FuriString* out_filename) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     FuriString* temp_path = furi_string_alloc();
     uint32_t index = 0;
     bool found = false;
+
+    // Sanitize protocol name for filename
+    char safe_name[64];
+    sanitize_filename(protocol_name, safe_name, sizeof(safe_name));
 
     // Find next available index
     while(!found && index < 999) {
@@ -31,7 +54,7 @@ bool protopirate_storage_get_next_filename(const char* protocol_name, FuriString
             temp_path,
             "%s/%s_%03lu%s",
             PROTOPIRATE_APP_FOLDER,
-            protocol_name,
+            safe_name,
             index,
             PROTOPIRATE_APP_EXTENSION);
 

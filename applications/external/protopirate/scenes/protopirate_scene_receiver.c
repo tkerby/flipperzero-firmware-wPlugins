@@ -80,6 +80,10 @@ static void protopirate_scene_receiver_callback(
 
         furi_string_free(item_name);
 
+        // Auto-scroll to the last detected signal
+        uint16_t last_index = protopirate_history_get_item(app->txrx->history) - 1;
+        protopirate_view_receiver_set_idx_menu(app->protopirate_receiver, last_index);
+
         // Auto-save if enabled
         if(app->auto_save) {
             FlipperFormat* ff = protopirate_history_get_raw_data(
