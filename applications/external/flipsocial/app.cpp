@@ -493,7 +493,7 @@ int32_t main_flip_social(void* p) {
     app.saveChar("app_version", VERSION);
 
     // check if update is available from lab.flipper.net
-    app.updateApp();
+    // app.updateApp();
 
     // Run the app
     app.runDispatcher();
