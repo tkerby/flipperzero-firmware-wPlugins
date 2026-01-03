@@ -9,7 +9,7 @@ static const SubGhzBlockConst kia_protocol_v3_v4_const = {
     .te_short = 400,
     .te_long = 800,
     .te_delta = 150,
-    .min_count_bit_for_found = 64,
+    .min_count_bit_for_found = 68,
 };
 
 typedef struct SubGhzProtocolDecoderKiaV3V4
@@ -25,7 +25,8 @@ typedef struct SubGhzProtocolDecoderKiaV3V4
 
     uint32_t encrypted;
     uint32_t decrypted;
-    uint8_t version; // 0 = V4, 1 = V3
+    uint8_t crc;      // 4-bit CRC from decrypted data (bits 24-27)
+    uint8_t version;  // 0 = V4, 1 = V3
 } SubGhzProtocolDecoderKiaV3V4;
 
 typedef struct SubGhzProtocolEncoderKiaV3V4
@@ -88,7 +89,7 @@ static void kia_v3_v4_add_raw_bit(SubGhzProtocolDecoderKiaV3V4 *instance, bool b
 
 static bool kia_v3_v4_process_buffer(SubGhzProtocolDecoderKiaV3V4 *instance)
 {
-    if (instance->raw_bit_count < 64)
+    if (instance->raw_bit_count < 68)
     {
         return false;
     }
@@ -104,6 +105,9 @@ static bool kia_v3_v4_process_buffer(SubGhzProtocolDecoderKiaV3V4 *instance)
             b[i] = ~b[i];
         }
     }
+
+
+    uint8_t crc = (b[8] >> 4) & 0x0F;
 
     // Extract fields
     uint32_t encrypted = ((uint32_t)reverse8(b[3]) << 24) | ((uint32_t)reverse8(b[2]) << 16) |
@@ -129,6 +133,7 @@ static bool kia_v3_v4_process_buffer(SubGhzProtocolDecoderKiaV3V4 *instance)
     // Valid decode - version determined by sync type
     instance->encrypted = encrypted;
     instance->decrypted = decrypted;
+    instance->crc = crc;
     instance->generic.serial = serial;
     instance->generic.btn = btn;
     instance->generic.cnt = decrypted & 0xFFFF;
@@ -138,7 +143,7 @@ static bool kia_v3_v4_process_buffer(SubGhzProtocolDecoderKiaV3V4 *instance)
                         ((uint64_t)b[3] << 32) | ((uint64_t)b[4] << 24) | ((uint64_t)b[5] << 16) |
                         ((uint64_t)b[6] << 8) | (uint64_t)b[7];
     instance->generic.data = key_data;
-    instance->generic.data_count_bit = 64;
+    instance->generic.data_count_bit = 68;
 
     return true;
 }
@@ -194,6 +199,7 @@ void kia_protocol_decoder_v3_v4_reset(void *context)
     instance->decoder.parser_step = KiaV3V4DecoderStepReset;
     instance->header_count = 0;
     instance->raw_bit_count = 0;
+    instance->crc = 0;
     memset(instance->raw_bits, 0, sizeof(instance->raw_bits));
 }
 
@@ -358,6 +364,9 @@ SubGhzProtocolStatus kia_protocol_decoder_v3_v4_serialize(
 
         uint32_t temp = instance->version;
         flipper_format_write_uint32(flipper_format, "Version", &temp, 1);
+
+        temp = instance->crc;
+        flipper_format_write_uint32(flipper_format, "CRC", &temp, 1);
     }
 
     return ret;
@@ -368,8 +377,44 @@ kia_protocol_decoder_v3_v4_deserialize(void *context, FlipperFormat *flipper_for
 {
     furi_assert(context);
     SubGhzProtocolDecoderKiaV3V4 *instance = context;
-    return subghz_block_generic_deserialize_check_count_bit(
-        &instance->generic, flipper_format, kia_protocol_v3_v4_const.min_count_bit_for_found);
+
+    SubGhzProtocolStatus ret = subghz_block_generic_deserialize_check_count_bit(
+        &instance->generic, flipper_format, 64);
+
+    if (ret == SubGhzProtocolStatusOk)
+    {
+        uint32_t temp = 0;
+
+        if (flipper_format_read_uint32(flipper_format, "Encrypted", &temp, 1))
+        {
+            instance->encrypted = temp;
+        }
+        if (flipper_format_read_uint32(flipper_format, "Decrypted", &temp, 1))
+        {
+            instance->decrypted = temp;
+        }
+        if (flipper_format_read_uint32(flipper_format, "Version", &temp, 1))
+        {
+            instance->version = (uint8_t)temp;
+        }
+        if (flipper_format_read_uint32(flipper_format, "CRC", &temp, 1))
+        {
+            instance->crc = (uint8_t)temp;
+        }
+    }
+
+    return ret;
+}
+
+// Compute Yek (bit-reversed key)
+static uint64_t compute_yek(uint64_t key)
+{
+    uint64_t yek = 0;
+    for (int i = 0; i < 64; i++)
+    {
+        yek |= ((key >> i) & 1) << (63 - i);
+    }
+    return yek;
 }
 
 void kia_protocol_decoder_v3_v4_get_string(void *context, FuriString *output)
@@ -377,18 +422,52 @@ void kia_protocol_decoder_v3_v4_get_string(void *context, FuriString *output)
     furi_assert(context);
     SubGhzProtocolDecoderKiaV3V4 *instance = context;
 
-    furi_string_cat_printf(
-        output,
-        "%s %dbit\r\n"
-        "Key:%016llX\r\n"
-        "Sn:%07lX Btn:%X Cnt:%04lX\r\n"
-        "Enc:%08lX Dec:%08lX\r\n",
-        kia_version_names[instance->version],
-        instance->generic.data_count_bit,
-        instance->generic.data,
-        instance->generic.serial,
-        instance->generic.btn,
-        instance->generic.cnt,
-        instance->encrypted,
-        instance->decrypted);
+
+    uint64_t yek = compute_yek(instance->generic.data);
+    uint32_t key_hi = (uint32_t)(instance->generic.data >> 32);
+    uint32_t key_lo = (uint32_t)(instance->generic.data & 0xFFFFFFFF);
+    uint32_t yek_hi = (uint32_t)(yek >> 32);
+    uint32_t yek_lo = (uint32_t)(yek & 0xFFFFFFFF);
+
+    if (instance->version == 0)
+    {
+        furi_string_cat_printf(
+            output,
+            "%s %dbit\r\n"
+            "Key:%08lX%08lX\r\n"
+            "Yek:%08lX%08lX\r\n"
+            "Serial:%07lX Btn:%01X CRC:%01X\r\n"
+            "Decr:%08lX Cnt:%04lX\r\n",
+            kia_version_names[instance->version],
+            instance->generic.data_count_bit,
+            key_hi,
+            key_lo,
+            yek_hi,
+            yek_lo,
+            instance->generic.serial,
+            instance->generic.btn,
+            instance->crc,
+            instance->decrypted,
+            instance->generic.cnt);
+    }
+    else
+    {
+        furi_string_cat_printf(
+            output,
+            "%s %dbit\r\n"
+            "Key:%08lX%08lX\r\n"
+            "Yek:%08lX%08lX\r\n"
+            "Serial:%07lX Btn:%01X\r\n"
+            "Decr:%08lX Cnt:%04lX\r\n",
+            kia_version_names[instance->version],
+            instance->generic.data_count_bit,
+            key_hi,
+            key_lo,
+            yek_hi,
+            yek_lo,
+            instance->generic.serial,
+            instance->generic.btn,
+            instance->decrypted,
+            instance->generic.cnt);
+    }
 }

@@ -77,8 +77,11 @@ static void protopirate_view_receiver_update_offset(ProtoPirateReceiver* receive
 
             if(item_count < MENU_ITEMS) {
                 model->list_offset = 0;
-            } else if(model->list_offset > (item_count - MENU_ITEMS)) {
-                model->list_offset = item_count - MENU_ITEMS;
+            } else {
+                size_t max_offset = item_count - MENU_ITEMS;
+                if(model->list_offset > max_offset) {
+                    model->list_offset = max_offset;
+                }
             }
         },
         true);
@@ -179,7 +182,14 @@ void protopirate_view_receiver_draw(Canvas* canvas, ProtoPirateReceiverModel* mo
         }
 
         if(scrollbar) {
-            elements_scrollbar_pos(canvas, 128, 0, 49, shift_position, item_count);
+            // Calculate maximum scroll position
+            size_t max_scroll = item_count > MENU_ITEMS ? item_count - MENU_ITEMS : 0;
+            size_t scroll_pos = shift_position;
+            if(scroll_pos > max_scroll) {
+                scroll_pos = max_scroll;
+            }
+            size_t scrollable_total = max_scroll > 0 ? max_scroll + 1 : 1;
+            elements_scrollbar_pos(canvas, 128, 0, 49, scroll_pos, scrollable_total);
         }
     } else {
         // Cool animated radar with expanding dots
@@ -363,7 +373,7 @@ bool protopirate_view_receiver_input(InputEvent* event, void* context) {
             },
             true);
         consumed = true;
-    } else if(event->type == InputTypeShort) {
+    } else if(event->type == InputTypeShort || event->type == InputTypeLong || event->type == InputTypeRepeat) {
         switch(event->key) {
         case InputKeyUp:
             with_view_model(

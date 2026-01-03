@@ -77,12 +77,12 @@ static const ProtoPirateProtocolTiming protocol_timings[] = {
         .te_delta = 100,
         .min_count_bit = 64,
     },
-    // Subaru: PWM 800/1600µs
+    // Subaru: PPM 800/1600µs
     {
         .name = "Subaru",
         .te_short = 800,
         .te_long = 1600,
-        .te_delta = 250,
+        .te_delta = 200,
         .min_count_bit = 64,
     },
     // Suzuki: PWM 250/500µs

@@ -184,18 +184,21 @@ void protopirate_history_get_text_item_menu(
     // Get just the first line for the menu
     const char* str = furi_string_get_cstr(item->item_str);
     const char* newline = strchr(str, '\r');
+    size_t len = 0;
     if(newline) {
-        size_t len = newline - str;
-        furi_string_set_strn(output, str, len);
+        len = newline - str;
     } else {
         newline = strchr(str, '\n');
         if(newline) {
-            size_t len = newline - str;
-            furi_string_set_strn(output, str, len);
+            len = newline - str;
         } else {
-            furi_string_set(output, item->item_str);
+            len = furi_string_size(item->item_str);
         }
     }
+
+    // Add index prefix
+    uint16_t display_idx = idx + 1;
+    furi_string_printf(output, "%u. %.*s", display_idx, (int)len, str);
 }
 
 void protopirate_history_get_text_item(

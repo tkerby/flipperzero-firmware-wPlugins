@@ -5,12 +5,12 @@
 static const SubGhzBlockConst subghz_protocol_suzuki_const = {
     .te_short = 250,
     .te_long = 500,
-    .te_delta = 100,
+    .te_delta = 99,
     .min_count_bit_for_found = 64,
 };
 
 #define SUZUKI_GAP_TIME 2000
-#define SUZUKI_GAP_DELTA 400
+#define SUZUKI_GAP_DELTA 399
 
 typedef struct SubGhzProtocolDecoderSuzuki
 {
@@ -18,10 +18,6 @@ typedef struct SubGhzProtocolDecoderSuzuki
     SubGhzBlockDecoder decoder;
     SubGhzBlockGeneric generic;
 
-    uint32_t te_last;
-    uint32_t data_low;
-    uint32_t data_high;
-    uint8_t data_count_bit;
     uint16_t header_count;
 } SubGhzProtocolDecoderSuzuki;
 
@@ -35,9 +31,14 @@ typedef struct SubGhzProtocolEncoderSuzuki
 typedef enum
 {
     SuzukiDecoderStepReset = 0,
-    SuzukiDecoderStepFoundStartPulse,
-    SuzukiDecoderStepSaveDuration,
+    SuzukiDecoderStepCountPreamble = 1,
+    SuzukiDecoderStepDecodeData = 2,
 } SuzukiDecoderStep;
+
+static void suzuki_add_bit(SubGhzProtocolDecoderSuzuki* instance, uint8_t bit) {
+    instance->decoder.decode_data = (instance->decoder.decode_data << 1) | bit;
+    instance->decoder.decode_count_bit++;
+}
 
 const SubGhzProtocolDecoder subghz_protocol_suzuki_decoder = {
     .alloc = subghz_protocol_decoder_suzuki_alloc,
@@ -66,13 +67,6 @@ const SubGhzProtocol suzuki_protocol = {
     .encoder = &subghz_protocol_suzuki_encoder,
 };
 
-static void suzuki_add_bit(SubGhzProtocolDecoderSuzuki *instance, uint32_t bit)
-{
-    uint32_t carry = instance->data_low >> 31;
-    instance->data_low = (instance->data_low << 1) | bit;
-    instance->data_high = (instance->data_high << 1) | carry;
-    instance->data_count_bit++;
-}
 
 void *subghz_protocol_decoder_suzuki_alloc(SubGhzEnvironment *environment)
 {
@@ -95,10 +89,6 @@ void subghz_protocol_decoder_suzuki_reset(void *context)
     furi_assert(context);
     SubGhzProtocolDecoderSuzuki *instance = context;
     instance->decoder.parser_step = SuzukiDecoderStepReset;
-    instance->header_count = 0;
-    instance->data_count_bit = 0;
-    instance->data_low = 0;
-    instance->data_high = 0;
 }
 
 void subghz_protocol_decoder_suzuki_feed(void *context, bool level, uint32_t duration)
@@ -109,105 +99,130 @@ void subghz_protocol_decoder_suzuki_feed(void *context, bool level, uint32_t dur
     switch (instance->decoder.parser_step)
     {
     case SuzukiDecoderStepReset:
-        // Wait for short HIGH pulse (~250µs) to start preamble
+        // Wait for HIGH pulse (~250µs) to start preamble
         if (!level)
+        {
             return;
+        }
 
         if (DURATION_DIFF(duration, subghz_protocol_suzuki_const.te_short) > subghz_protocol_suzuki_const.te_delta)
         {
             return;
         }
 
-        instance->data_low = 0;
-        instance->data_high = 0;
-        instance->decoder.parser_step = SuzukiDecoderStepFoundStartPulse;
+        instance->decoder.decode_data = 0;
+        instance->decoder.decode_count_bit = 0;
+        instance->decoder.parser_step = SuzukiDecoderStepCountPreamble;
         instance->header_count = 0;
-        instance->data_count_bit = 0;
         break;
 
-    case SuzukiDecoderStepFoundStartPulse:
+    case SuzukiDecoderStepCountPreamble:
         if (level)
         {
             // HIGH pulse
-            if (instance->header_count < 257)
-            {
-                // Still in preamble - just count
-                return;
-            }
 
-            // After preamble, look for long HIGH to start data
-            if (DURATION_DIFF(duration, subghz_protocol_suzuki_const.te_long) < subghz_protocol_suzuki_const.te_delta)
+            if (instance->header_count >= 300)
             {
-                instance->decoder.parser_step = SuzukiDecoderStepSaveDuration;
-                suzuki_add_bit(instance, 1);
+
+                if (DURATION_DIFF(duration, subghz_protocol_suzuki_const.te_long) <= subghz_protocol_suzuki_const.te_delta)
+                {
+
+                    instance->decoder.parser_step = SuzukiDecoderStepDecodeData;
+                    suzuki_add_bit(instance, 1);
+                }
             }
-            // Ignore short HIGHs after preamble until we see a long one
         }
         else
         {
-            // LOW pulse - count as header if short
-            if (DURATION_DIFF(duration, subghz_protocol_suzuki_const.te_short) < subghz_protocol_suzuki_const.te_delta)
+
+            if (DURATION_DIFF(duration, subghz_protocol_suzuki_const.te_short) <= subghz_protocol_suzuki_const.te_delta)
             {
-                instance->te_last = duration;
+                instance->decoder.te_last = duration;
                 instance->header_count++;
             }
             else
             {
+
                 instance->decoder.parser_step = SuzukiDecoderStepReset;
             }
         }
         break;
 
-    case SuzukiDecoderStepSaveDuration:
+    case SuzukiDecoderStepDecodeData:
+
         if (level)
         {
             // HIGH pulse - determines bit value
-            // Long HIGH (~500µs) = 1, Short HIGH (~250µs) = 0
-            if (DURATION_DIFF(duration, subghz_protocol_suzuki_const.te_long) < subghz_protocol_suzuki_const.te_delta)
+            if (duration < subghz_protocol_suzuki_const.te_long)
             {
-                suzuki_add_bit(instance, 1);
-            }
-            else if (DURATION_DIFF(duration, subghz_protocol_suzuki_const.te_short) < subghz_protocol_suzuki_const.te_delta)
-            {
-                suzuki_add_bit(instance, 0);
+                uint32_t diff_long = 500 - duration;
+                if (diff_long > 99)
+                {
+                    uint32_t diff_short;
+                    if (duration < 250) {
+                        diff_short = 250 - duration;
+                    } else {
+                        diff_short = duration - 250;
+                    }
+                    
+                    if (diff_short <= 99)
+                    {
+
+                        suzuki_add_bit(instance, 0);
+                    }
+                }
+                else
+                {
+
+                    suzuki_add_bit(instance, 1);
+                }
             }
             else
             {
-                instance->decoder.parser_step = SuzukiDecoderStepReset;
+
+                uint32_t diff_long = duration - 500;
+                if (diff_long <= 99)
+                {
+                    suzuki_add_bit(instance, 1);
+                }
             }
-            // Stay in this state for next bit
         }
         else
         {
             // LOW pulse - check for gap (end of transmission)
-            if (DURATION_DIFF(duration, SUZUKI_GAP_TIME) < SUZUKI_GAP_DELTA)
+            uint32_t diff_gap;
+            if (duration < SUZUKI_GAP_TIME) {
+                diff_gap = SUZUKI_GAP_TIME - duration;
+            } else {
+                diff_gap = duration - SUZUKI_GAP_TIME;
+            }
+            
+            if (diff_gap <= SUZUKI_GAP_DELTA)
             {
-                // Gap found - end of transmission
-                if (instance->data_count_bit == 64)
+                if (instance->decoder.decode_count_bit == 64)
                 {
+                    instance->generic.data = instance->decoder.decode_data;
                     instance->generic.data_count_bit = 64;
-                    instance->generic.data = ((uint64_t)instance->data_high << 32) | (uint64_t)instance->data_low;
 
-                    // Check manufacturer nibble (should be 0xF)
-                    uint8_t manufacturer = (instance->data_high >> 28) & 0xF;
-                    if (manufacturer == 0xF)
+                    uint64_t data = instance->generic.data;
+                    uint32_t data_high = (uint32_t)(data >> 32);
+                    uint32_t data_low = (uint32_t)data;
+                    
+                    instance->generic.serial = ((data_high & 0xFFF) << 16) | (data_low >> 16);
+                    
+                    instance->generic.btn = (data_low >> 12) & 0xF;
+                    instance->generic.cnt = (data_high << 4) >> 16;
+
+                    if (instance->base.callback)
                     {
-                        // Extract fields
-                        uint64_t data = instance->generic.data;
-                        uint32_t serial_button = ((instance->data_high & 0xFFF) << 20) | (instance->data_low >> 12);
-                        instance->generic.serial = serial_button >> 4;
-                        instance->generic.btn = serial_button & 0xF;
-                        instance->generic.cnt = (data >> 44) & 0xFFFF;
-
-                        if (instance->base.callback)
-                        {
-                            instance->base.callback(&instance->base, instance->base.context);
-                        }
+                        instance->base.callback(&instance->base, instance->base.context);
                     }
                 }
+
+                instance->decoder.decode_data = 0;
+                instance->decoder.decode_count_bit = 0;
                 instance->decoder.parser_step = SuzukiDecoderStepReset;
             }
-            // Short LOW pulses are ignored - stay in this state
         }
         break;
     }
@@ -218,7 +233,7 @@ uint8_t subghz_protocol_decoder_suzuki_get_hash_data(void *context)
     furi_assert(context);
     SubGhzProtocolDecoderSuzuki *instance = context;
     return subghz_protocol_blocks_get_hash_data(
-        &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
+        &instance->decoder, (instance->generic.data_count_bit / 8) + 1);
 }
 
 SubGhzProtocolStatus subghz_protocol_decoder_suzuki_serialize(

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "kia_generic.h"
+#include <lib/toolbox/manchester_decoder.h>
 
 #define KIA_PROTOCOL_V2_NAME "Kia V2"
 
