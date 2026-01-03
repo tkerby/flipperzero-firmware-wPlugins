@@ -46,8 +46,11 @@ bool seos_reader_request_sio(SeosReader* seos_reader) {
     BitBuffer* rx_buffer = seos_reader->rx_buffer;
     Iso14443_4aError error;
 
+    uint8_t apdu_header[] = {0x0c, 0xcb, 0x3f, 0xff};
+
     uint8_t message[] = {0x5c, 0x02, 0xff, 0x00};
-    secure_messaging_wrap_apdu(secure_messaging, message, sizeof(message), tx_buffer);
+    secure_messaging_wrap_apdu(
+        secure_messaging, message, sizeof(message), apdu_header, sizeof(apdu_header), tx_buffer);
 
     seos_log_bitbuffer(TAG, "NFC transmit", tx_buffer);
     error = iso14443_4a_poller_send_block(iso14443_4a_poller, tx_buffer, rx_buffer);
@@ -79,8 +82,14 @@ void seos_reader_generate_cryptogram(
     SeosCredential* credential,
     AuthParameters* params,
     uint8_t* cryptogram) {
+    uint8_t* master_key = SEOS_ADF1_READ;
+    if(params->key_no == 0x02) {
+        // Write keyslot
+        master_key = SEOS_ADF1_WRITE;
+    }
+
     seos_worker_diversify_key(
-        SEOS_ADF1_READ,
+        master_key,
         credential->diversifier,
         credential->diversifier_len,
         SEOS_ADF_OID,
@@ -91,7 +100,7 @@ void seos_reader_generate_cryptogram(
         true,
         params->priv_key);
     seos_worker_diversify_key(
-        SEOS_ADF1_READ,
+        master_key,
         credential->diversifier,
         credential->diversifier_len,
         SEOS_ADF_OID,
@@ -232,6 +241,14 @@ NfcCommand seos_reader_select_adf(SeosReader* seos_reader) {
         return NfcCommandStop;
     }
     seos_log_bitbuffer(TAG, "NFC response", rx_buffer);
+    if(memcmp(
+           bit_buffer_get_data(rx_buffer) + bit_buffer_get_size_bytes(rx_buffer) - sizeof(success),
+           success,
+           sizeof(success)) != 0) {
+        FURI_LOG_W(TAG, "Non-success response");
+        return NfcCommandStop;
+    }
+
     bit_buffer_reset(tx_buffer);
     return ret;
 }
@@ -352,6 +369,14 @@ NfcCommand seos_reader_general_authenticate_1(SeosReader* seos_reader) {
     bit_buffer_reset(tx_buffer);
 
     seos_log_bitbuffer(TAG, "NFC response", rx_buffer);
+    if(memcmp(
+           bit_buffer_get_data(rx_buffer) + bit_buffer_get_size_bytes(rx_buffer) - sizeof(success),
+           success,
+           sizeof(success)) != 0) {
+        FURI_LOG_W(TAG, "Non-success response");
+        return NfcCommandStop;
+    }
+
     // 7c0a8108018cde7d6049edb09000
 
     uint8_t expected_header[] = {0x7c, 0x0a, 0x81, 0x08};
@@ -393,6 +418,13 @@ NfcCommand seos_reader_general_authenticate_2(SeosReader* seos_reader) {
     bit_buffer_reset(tx_buffer);
 
     seos_log_bitbuffer(TAG, "NFC response", rx_buffer);
+    if(memcmp(
+           bit_buffer_get_data(rx_buffer) + bit_buffer_get_size_bytes(rx_buffer) - sizeof(success),
+           success,
+           sizeof(success)) != 0) {
+        FURI_LOG_W(TAG, "Non-success response");
+        return NfcCommandStop;
+    }
 
     const uint8_t* rx_data = bit_buffer_get_data(rx_buffer);
     if(rx_data[0] != 0x7C || rx_data[2] != 0x82) {
@@ -452,14 +484,14 @@ NfcCommand seos_state_machine(Seos* seos, Iso14443_4aPoller* iso14443_4a_poller)
             credential->adf_oid_len = SEOS_ADF_OID_LEN;
             memcpy(credential->adf_oid, SEOS_ADF_OID, sizeof(credential->adf_oid));
 
-            view_dispatcher_send_custom_event(seos->view_dispatcher, SeosCustomEventReaderSuccess);
+            view_dispatcher_send_custom_event(seos->view_dispatcher, SeosCustomEventPollerSuccess);
         }
 
     } while(false);
 
     // An error occurred
     if(ret == NfcCommandStop) {
-        view_dispatcher_send_custom_event(seos->view_dispatcher, SeosCustomEventReaderError);
+        view_dispatcher_send_custom_event(seos->view_dispatcher, SeosCustomEventPollerError);
     }
     seos_reader_free(seos_reader);
 

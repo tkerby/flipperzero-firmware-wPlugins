@@ -144,7 +144,13 @@ void seos_characteristic_reader_flow(
         SecureMessaging* secure_messaging = seos_characteristic->secure_messaging;
 
         uint8_t message[] = {0x5c, 0x02, 0xff, 0x00};
-        secure_messaging_wrap_apdu(secure_messaging, message, sizeof(message), payload);
+        secure_messaging_wrap_apdu(
+            secure_messaging,
+            message,
+            sizeof(message),
+            secure_messaging_header,
+            sizeof(secure_messaging_header),
+            payload);
         seos_characteristic->phase = REQUEST_SIO;
         view_dispatcher_send_custom_event(
             seos_characteristic->seos->view_dispatcher, SeosCustomEventSIORequested);
@@ -172,7 +178,7 @@ void seos_characteristic_reader_flow(
         FURI_LOG_I(TAG, "SIO Captured, %d bytes", seos_characteristic->credential->sio_len);
 
         Seos* seos = seos_characteristic->seos;
-        view_dispatcher_send_custom_event(seos->view_dispatcher, SeosCustomEventReaderSuccess);
+        view_dispatcher_send_custom_event(seos->view_dispatcher, SeosCustomEventPollerSuccess);
         bit_buffer_free(rx_buffer);
 
         seos_characteristic->phase = SELECT_AID;
