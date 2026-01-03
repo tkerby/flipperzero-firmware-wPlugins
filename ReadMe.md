@@ -67,6 +67,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Catacombs Of The Damned v2.2 (By apfxtech)](https://github.com/apfxtech/FlipperCatacombs)
 - Updated: [ProtoPirate WIP v1.4 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - Updated: [FlipSocial v2.0.7 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- Added: [Puck Girl v0.3 (By fgreil)](https://github.com/fgreil/mitzi-puck)
 
 <a name="release">
 
@@ -378,6 +379,7 @@ $ ./fbt dolphin_ext
 - [Pinball0 v0.5.2 (By rdefeo)](https://github.com/rdefeo/pinball0)
 - [Pocket Battle+ v2.0 (By HermeticCode)](https://github.com/HermeticCode/showdown-current)
 - [Pong v1.3 (By nmrr)](https://github.com/nmrr/flipperzero-pong)
+- [Puck Girl v0.3 (By fgreil)](https://github.com/fgreil/mitzi-puck)
 - [Quadrastic v1.0.2 (By ivanbarsukov)](https://github.com/ivanbarsukov/flipperzero-quadrastic)
 - [Questions v1.1 (By nikilark)](https://github.com/nikilark/flipper_questions)
 - [Race v1.2 (By zyuhel)](https://github.com/zyuhel/flipperzero-racegame)
