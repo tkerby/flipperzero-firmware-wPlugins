@@ -22,7 +22,10 @@ static bool ld2410_validate_checksum(const uint8_t* data, size_t len) {
 }
 */
 
-bool ld2410_parser_push_byte(LD2410Parser* parser, uint8_t byte, LD2410Data* out_data) {
+bool ld2410_human_detector_parser_push_byte(
+    LD2410Parser* parser,
+    uint8_t byte,
+    LD2410Data* out_data) {
     // 1. If header not found, look for F4 F3 F2 F1
     if(!parser->header_found) {
         // Shift buffer to keep looking
