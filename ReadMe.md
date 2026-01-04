@@ -63,13 +63,13 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Protocol Visualizer v1.3 (By antirez)](https://github.com/antirez/protoview)
 - Updated: [MODBUS v1.1.3.1 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-rs485modbus) `Req: Modbus By ElectronicCats`
 - Updated: [Key Copier v1.5 (By zinongli)](https://github.com/zinongli/KeyCopier) [add key profiles for KW5 & SC1 (By H4W9)](https://github.com/zinongli/KeyCopier/pull/38)
-- Updated: [ProtoPirate WIP v1.4 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - Updated: [FlipSocial v2.0.7 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Added: [Puck Girl v0.3 (By fgreil)](https://github.com/fgreil/mitzi-puck)
 - Updated: [Catacombs Of The Damned v2.2 (By apfxtech)](https://github.com/apfxtech/FlipperCatacombs)
 - Updated: [Seos compatible v1.2 (By bettse)](https://gitlab.com/bettse/flipper_seos)
 - [ESP Flasher: Bump Marauder v1.9.1 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.9.1)
 - Added: [LD2410 Human Detector v1.0 (By sistemasorp)](https://github.com/sistemasorp/flipper-ld2410_human_detector)
+- Updated: [ProtoPirate WIP v1.4 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 
 <a name="release">
 
