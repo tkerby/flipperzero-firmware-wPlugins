@@ -13,6 +13,7 @@
 #include <storage/storage.h>           // File system access
 #include <dialogs/dialogs.h>           // File browser and dialog boxes
 #include <notification/notification.h> // Notification system (LED, vibration, etc.)
+#include <ctype.h>                     // Character type functions (tolower, etc.)
 
 
 #define TAG "GuidoPlayer"              // Logging tag for debug output
@@ -97,7 +98,7 @@ static float note_to_frequency(char note_name, int octave, bool sharp) {
     }
     
     float freq = base_freqs[note_index];
-    FURI_LOG_D(TAG, "Base frequency for %c: %.2f Hz", note_name, freq);
+    FURI_LOG_D(TAG, "Base frequency for %c: %.2f Hz", note_name, (double)freq);
     
     // Adjust for octave
     // Each octave doubles (up) or halves (down) the frequency
@@ -111,11 +112,11 @@ static float note_to_frequency(char note_name, int octave, bool sharp) {
     // One semitone = multiply by 2^(1/12) ≈ 1.059463
     if(sharp) {
         freq *= 1.059463;
-        FURI_LOG_D(TAG, "Applied sharp: %.2f Hz", freq);
+        FURI_LOG_D(TAG, "Applied sharp: %.2f Hz", (double)freq);
     }
     
     FURI_LOG_D(TAG, "Final frequency for %c%s%d: %.2f Hz", 
-        note_name, sharp ? "#" : "", octave, freq);
+        note_name, sharp ? "#" : "", octave, (double)freq);
     
     return freq;
 }
@@ -190,24 +191,61 @@ static bool parse_guido_file(Storage* storage, const char* path, GuidoState* sta
     int current_voice = 0; // Start with voice 0 (first staff)
     
     FURI_LOG_I(TAG, "Beginning parse loop...");
+    FURI_LOG_D(TAG, "First 100 chars: %.100s", buffer);
     
     while(*ptr && current_voice < MAX_VOICES) {
-        // Skip whitespace and look for either voice markers or notes
-        while(*ptr && *ptr != '\\' && !(*ptr >= 'a' && *ptr <= 'g')) ptr++;
+        // Skip whitespace, bar lines, commas, and newlines
+        while(*ptr && (*ptr == ' ' || *ptr == '\t' || *ptr == '\n' || 
+                       *ptr == '\r' || *ptr == '|' || *ptr == ',')) {
+            ptr++;
+        }
         
         if(!*ptr) break; // End of file
         
-        // Check for voice/staff marker (e.g., \staff<2>)
-        if(*ptr == '\\' && strncmp(ptr, "\\staff<2>", 9) == 0) {
-            current_voice = 1; // Switch to second voice
-            ptr += 9;
-            FURI_LOG_I(TAG, "Switched to voice 2 (staff 2)");
+        // Skip GUIDO comments (* ... *)
+        if(*ptr == '(' && *(ptr + 1) == '*') {
+            FURI_LOG_D(TAG, "Skipping comment");
+            ptr += 2;
+            // Find end of comment
+            while(*ptr && !(*ptr == '*' && *(ptr + 1) == ')')) {
+                ptr++;
+            }
+            if(*ptr) ptr += 2; // Skip past *)
             continue;
         }
         
+        // Skip opening braces and brackets
+        if(*ptr == '{' || *ptr == '[' || *ptr == ']' || *ptr == '}') {
+            ptr++;
+            continue;
+        }
+        
+        // Check for voice/staff marker (e.g., \staff<2>)
+        if(*ptr == '\\') {
+            if(strncmp(ptr, "\\staff<2>", 9) == 0) {
+                current_voice = 1; // Switch to second voice
+                ptr += 9;
+                FURI_LOG_I(TAG, "Switched to voice 2 (staff 2)");
+                continue;
+            } else if(strncmp(ptr, "\\staff<1>", 9) == 0) {
+                current_voice = 0; // Explicitly set to voice 1
+                ptr += 9;
+                FURI_LOG_I(TAG, "Set to voice 1 (staff 1)");
+                continue;
+            } else {
+                // Skip other GUIDO commands like \title, \composer, \tempo, \key, \meter, \clef
+                FURI_LOG_D(TAG, "Skipping GUIDO command starting with \\");
+                while(*ptr && *ptr != '>' && *ptr != '\n') ptr++;
+                if(*ptr == '>') ptr++;
+                continue;
+            }
+        }
+        
         // Parse a note (format: letter[#]octave/duration)
-        if(*ptr >= 'a' && *ptr <= 'g') {
-            char note_name = *ptr++;
+        if((*ptr >= 'a' && *ptr <= 'g') || (*ptr >= 'A' && *ptr <= 'G')) {
+            char note_name = tolower(*ptr);  // Convert to lowercase
+            ptr++;
+            FURI_LOG_D(TAG, "Found note: %c", note_name);
             bool sharp = false;
             
             // Check for sharp symbol
@@ -241,6 +279,8 @@ static bool parse_guido_file(Storage* storage, const char* path, GuidoState* sta
                     dur_buf[dur_idx++] = *ptr++;
                 }
                 
+                FURI_LOG_D(TAG, "Duration string: %s", dur_buf);
+                
                 // Add note to current voice
                 Voice* voice = &state->voices[current_voice];
                 if(voice->note_count < MAX_NOTES) {
@@ -254,13 +294,16 @@ static bool parse_guido_file(Storage* storage, const char* path, GuidoState* sta
                         note_name,
                         sharp ? "#" : "",
                         octave,
-                        voice->notes[voice->note_count].frequency,
+                        (double)voice->notes[voice->note_count].frequency,
                         voice->notes[voice->note_count].duration_ms);
                     
                     voice->note_count++;
                 } else {
                     FURI_LOG_W(TAG, "Voice %d is full, skipping note", current_voice);
                 }
+            } else {
+                FURI_LOG_W(TAG, "Note %c%d has no duration (next char: '%c'), skipping", 
+                    note_name, octave, *ptr ? *ptr : '?');
             }
         }
     }
@@ -324,7 +367,7 @@ static int32_t playback_thread(void* context) {
                     uint32_t play_duration = note->duration_ms / state->voice_count;
                     
                     FURI_LOG_D(TAG, "Voice %d: Playing %.2f Hz for %lu ms", 
-                        v, note->frequency, play_duration);
+                        v, (double)note->frequency, play_duration);
                     
                     // Acquire speaker (with 1 second timeout)
                     if(furi_hal_speaker_acquire(1000)) {
@@ -592,6 +635,10 @@ int32_t guido_main(void* p) {
                     
                     furi_string_set(state->status, "Stopped");
                 }
+            } else if(event.type == InputTypeLong && event.key == InputKeyBack) {
+                // Handle LONG BACK button press - force exit even during playback
+                FURI_LOG_I(TAG, "Long back button pressed, forcing exit...");
+                running = false;
             }
         }
         

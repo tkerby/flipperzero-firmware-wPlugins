@@ -37,7 +37,7 @@ App(
     fap_icon_assets="images",
 	
 	# Automatically copy assets folder to /ext/apps_data/guido/ on Flipper
-	fap_file_assets="assets",
+	fap_file_assets="data",
 	
     # Symbol name for generated icon header (generates guido_icons.h)
     fap_icon_assets_symbol="guido",
