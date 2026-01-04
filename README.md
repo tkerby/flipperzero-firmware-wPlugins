@@ -31,7 +31,7 @@ Connect the LD2410 module to the Flipper Zero GPIO header as follows:
 
 ## Installation
 
-### Using UFBT (Recommended)
+**Using UFBT (Recommended)**
 
 1.  Clone this repository.
 2.  Connect your Flipper Zero via USB.
