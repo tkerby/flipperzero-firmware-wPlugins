@@ -1,29 +1,18 @@
 /*
  * ============================================================================
  * FLIPPER ZERO - NORTHERN HEMISPHERE STAR MAP SCROLLER
- * ============================================================================
  * 
  * A minimal star map viewer for navigating a polar-projected map of the
  * Northern Hemisphere night sky. The map consists of 50 tiles (5x10 grid)
  * showing stars from magnitude 1-6.
  * 
- * Features:
- * - 640x640px polar projection centered on Polaris
- * - Simple numbered tiles: 00.png to 49.png
- * - CSV-based star annotations
- * - Smooth scrolling with arrow keys
- * - 8px cursor circle for star selection
- * - Real-time annotation display for major stars
- * 
  * Tile Numbering:
  * - Images named 00.png through 49.png
  * - Numbered left-to-right, top-to-bottom
  * - 5 columns × 10 rows
- * - Example: tile 07 = row 1, column 2 (0-indexed)
  * - Center tile: 27 (row 5, col 2) - Polaris location
  * 
  * Author: F Greil
- * License: Open Source
  * ============================================================================
  */
 
@@ -41,12 +30,8 @@
 /* ============================================================================
  * CONFIGURATION CONSTANTS
  * ============================================================================ */
-
-// Display dimensions (Flipper Zero screen)
 #define SCREEN_WIDTH 128                        // Screen width in pixels
 #define SCREEN_HEIGHT 64                        // Screen height in pixels
-
-// Tile dimensions
 #define TILE_WIDTH 128                          // Each tile is 128px wide
 #define TILE_HEIGHT 64                          // Each tile is 64px tall
 
@@ -64,11 +49,12 @@
 #define CAMERA_MAX_Y (MAP_HEIGHT - SCREEN_HEIGHT / 2) // Can scroll 32px below map
 
 // Cursor settings
-#define CURSOR_RADIUS 4                         // Cursor circle radius (8px diameter)
+#define CURSOR_RADIUS 10                       // Cursor circle radius (8px diameter)
 
 // Memory limits
 #define MAX_ANNOTATIONS 200                     // Maximum number of star annotations
 #define MAX_ANNOTATION_LENGTH 64                // Maximum length of star name
+#define MAX_ERROR_MESSAGE 64                    // Maximum length of error message
 
 /* ============================================================================
  * DATA STRUCTURES
@@ -107,30 +93,38 @@ typedef struct {
     
     // Star annotations
     Annotation annotations[MAX_ANNOTATIONS];    // Array of all star annotations
-    int annotation_count;                       // Number of annotations loaded
-    
-    // Current selection state
+    int annotation_count;                       // Number of annotations loaded   
     char current_annotation[MAX_ANNOTATION_LENGTH]; // Currently displayed star name
     bool has_annotation;                        // True if cursor is over a star
-    
-    // Current tile (for preview)
+
     int current_tile;                           // Tile number under cursor
     bool show_tile_name;                        // Toggle for tile name display
+	bool has_error;                             // True if there's an error to display
+    char error_message[MAX_ERROR_MESSAGE];      // Error message to show
 } ScrollerState;
 
 /* ============================================================================
- * HELPER FUNCTIONS - TILE CALCULATIONS
+ * HELPER FUNCTIONS 
  * ============================================================================ */
 
-/**
- * @brief Convert row and column to tile number
- * 
- * Given a row and column, calculates the corresponding tile number.
- * 
- * @param row       Tile row (0-9)
- * @param col       Tile column (0-4)
- * @return          Tile number (0-49)
- */
+static void draw_simple_modal(Canvas* canvas, const char* text) {
+    canvas_set_font(canvas, FontPrimary);
+    const int box_w = canvas_string_width(canvas, text) + 6;
+    const int box_h = 20;
+    const int box_x = 2;
+    const int box_y = 20;
+    // White filled rectangle
+    canvas_set_color(canvas, ColorWhite);
+    canvas_draw_box(canvas, box_x, box_y, box_w, box_h);
+    // Black border
+    canvas_set_color(canvas, ColorBlack);
+    canvas_draw_frame(canvas, box_x, box_y, box_w, box_h);
+    // Text inside
+    canvas_draw_str(canvas, box_x + 3, box_y + 13, text);
+    canvas_set_font(canvas, FontSecondary);
+}
+
+
 static int row_col_to_tile_num(int row, int col) {
     return row * TILE_COLS + col;
 }
@@ -139,7 +133,6 @@ static int row_col_to_tile_num(int row, int col) {
  * @brief Load and draw a tile bitmap from file
  * 
  * Loads a 128x64 monochrome BMP file and draws it to the canvas.
- * BMP files should be 1-bit (monochrome) format.
  * 
  * @param canvas    Canvas to draw on
  * @param tile_num  Tile number (0-49)
@@ -208,8 +201,6 @@ static bool draw_tile_bmp(Canvas* canvas, int tile_num, int x, int y) {
                             int byte_idx = col / 8;
                             int bit_idx = 7 - (col % 8);
                             bool pixel = (row_buffer[byte_idx] >> bit_idx) & 1;
-                            
-                            // Draw pixel (INVERTED: 0 = black, 1 = white in this BMP)
                             if(!pixel) {
                                 canvas_draw_dot(canvas, x + col, y + row);
                             }
@@ -242,7 +233,6 @@ static bool draw_tile_bmp(Canvas* canvas, int tile_num, int x, int y) {
 /* ============================================================================
  * HELPER FUNCTIONS - FILE LOADING
  * ============================================================================ */
-
 /**
  * @brief Load star annotations from CSV file
  * 
@@ -262,6 +252,8 @@ static bool load_annotations(ScrollerState* state, Storage* storage) {
     if(!storage_file_open(file, EXT_PATH("apps_assets/mitzi_scroller/annotations.csv"), FSAM_READ, FSOM_OPEN_EXISTING)) {
         FURI_LOG_E("Scroller", "Failed to open annotations.csv");
         storage_file_free(file);
+		state->has_error = true;
+        snprintf(state->error_message, sizeof(state->error_message), "annotations.csv missing!");	
         return false;
     }
     
@@ -473,16 +465,18 @@ static void scroller_draw_callback(Canvas* canvas, void* ctx) {
     // Draw annotation if present
     if(state->has_annotation) {
         canvas_set_font(canvas, FontSecondary);
-        canvas_set_color(canvas, ColorBlack);
-        
         int text_width = canvas_string_width(canvas, state->current_annotation);
+		canvas_set_color(canvas, ColorWhite);
         canvas_draw_box(canvas, 0, 0, text_width + 4, 10);
-        canvas_set_color(canvas, ColorWhite);
-        canvas_draw_str(canvas, 2, 8, state->current_annotation);
-        
         canvas_set_color(canvas, ColorBlack);
-        canvas_draw_str(canvas, SCREEN_WIDTH - 18, SCREEN_HEIGHT - 2, "OK");
+        canvas_draw_str(canvas, 2, 8, state->current_annotation);
     }
+	
+	// Draw error modal if there's an error
+	if(state->has_error) {
+       draw_simple_modal(canvas, state->error_message);
+	}
+
 }
 
 /**
@@ -499,13 +493,6 @@ static void scroller_input_callback(InputEvent* input_event, void* ctx) {
 /* ============================================================================
  * MAIN APPLICATION ENTRY POINT
  * ============================================================================ */
-
-/**
- * @brief Main application entry point
- * 
- * @param p     Unused parameter (required by Flipper API)
- * @return      Exit code (0 = success)
- */
 int32_t scroller_main(void* p) {
     UNUSED(p);
     
