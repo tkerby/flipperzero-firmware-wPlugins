@@ -32,6 +32,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-01-03 20:58 EST`
 - Updated: [CAN Tools v1.1 (By MatthewKuKanich)](https://github.com/MatthewKuKanich/FlipperCANTools)
 - Updated: [LD2410 Human Detector v1.0 (By sistemasorp)](https://github.com/sistemasorp/flipper-ld2410_human_detector) [add distance visualizer (By MatthewKuKanich)](https://github.com/sistemasorp/flipper-ld2410_human_detector/pull/1)
+- Updated: [T-Union Master (China) v0.1 (By SocialSisterYi)](https://github.com/SocialSisterYi/T-Union_Master)
 
 <a name="release">
 
