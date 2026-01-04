@@ -68,6 +68,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Puck Girl v0.3 (By fgreil)](https://github.com/fgreil/mitzi-puck)
 - Updated: [Catacombs Of The Damned v2.2 (By apfxtech)](https://github.com/apfxtech/FlipperCatacombs)
 - Updated: [Seos compatible v1.2 (By bettse)](https://gitlab.com/bettse/flipper_seos)
+- [ESP Flasher: Bump Marauder v1.9.1 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.9.1)
 
 <a name="release">
 
@@ -835,16 +836,6 @@ $ ./fbt dolphin_ext
 - [XBox360 USB Game Controller v0.2 (By expected-ingot)](https://github.com/expected-ingot/flipper-xinput)
 - [XRemote v1.3 (By kala13x)](https://github.com/kala13x/flipper-xremote)
 - [YuriCable Pro Max v0.4 (By arag0re)](https://github.com/arag0re/fz-yuricable-pro-max)
-
-## COMMENTED OUT / NOT COMPILED DUE TO ISSUES
-
-- If you can fix any of these, DM me on Discord for a surprise reward.
-- [APRS Cln Hello World (By NSV47)](https://github.com/NSV47/APRS_hello_world_clean)
-- [BT Serial (By maybe-hello-world)](https://github.com/maybe-hello-world/fbs)
-- [BT Toy Serial (By maybe-hello-world)](https://github.com/maybe-hello-world/flipper-bp)
-- [SCD30 Carbon Dioxide Sensor (By heimskr)](https://github.com/heimskr/flipperzero-scd30)
-- [TAS Playback (By rcombs)](https://github.com/rcombs/tas-playback)
-- Have a new app? Submit GitHub link to me on Discord for a special reward (if I add it to RM Firmware).
 
 ## Current Bounties $$ (Sorted By Difficulty - Easiest to Hardest)
 
