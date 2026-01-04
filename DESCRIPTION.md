@@ -22,24 +22,10 @@ Connect the LD2410 module to the Flipper Zero GPIO header as follows:
 
 **IMPORTANT: Power Requirements**
 
-*   **On Battery:** You **MUST enable "5V on GPIO"** in the Flipper Zero settings (`GPIO -> 5V on GPIO -> ON`) manually.
+*   **On Battery:** You **MUST enable "5V on GPIO"** in the Flipper Zero settings (GPIO -> 5V on GPIO -> ON) manually.
 *   **On USB:** If connected via USB, the 5V rail is active automatically, so this step is not required.
 
-**Note:** The LD2410 default baud rate is **256000**. If you have changed it, you will need to modify the code (`UART_BAUDRATE` in `ld2410_human_detector_uart.c`) or reset the sensor.
-
-## Installation
-
-**Using UFBT (Recommended)**
-
-1.  Clone this repository.
-2.  Connect your Flipper Zero via USB.
-3.  Run the following command in the project directory:
-
-```bash
-ufbt launch
-```
-
-This will compile the application and launch it immediately on your Flipper Zero.
+**Note:** The LD2410 default baud rate is **256000**. If you have changed it, you will need to modify the code or reset the sensor.
 
 ## Troubleshooting
 
@@ -48,7 +34,3 @@ This will compile the application and launch it immediately on your Flipper Zero
     *   Check your wiring (TX goes to RX, RX goes to TX).
     *   Ensure the sensor is powered.
     *   Verify the baud rate hasn't been changed from the factory default.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
