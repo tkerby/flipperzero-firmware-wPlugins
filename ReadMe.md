@@ -3,7 +3,7 @@
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://lh3.googleusercontent.com/d/1iYQlRQXM7nA4IAdcPwvcKRSTCMoi8tug' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM1219-1645-0.420.0-36447da.tgz&channel=RM1219-1645-0.420.0-36447da&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0103-2116-0.420.0-2631485.tgz&channel=RM0103-2116-0.420.0-2631485&version=0.420.0&target=f7)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -30,46 +30,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2026-01-03 20:58 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-01-03 20:58 EST`
-- Updated: [Weebo v0.3 (By bettse)](https://github.com/bettse/weebo) `Req: key_retail.bin on SD card /nfc/assets` (Amiibo Remixer)
-- Updated: [LEGO Dimensions Toy Pad v0.5 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
-- Added: [Mystic Balloon v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperMysticBalloon)
-- Added: [Catacombs Of The Damned v2.0 (By apfxtech)](https://github.com/apfxtech/FlipperCatacombs)
-- Added: [Swimmy Fish v2.0 (By Invizabel)](https://github.com/Invizabel/fish)
-- Updated: [Apple Grabber v0.1 (By d7d8)](https://github.com/d7d8/apple-grabber)
-- Revert: OFW: PR: [Added Support for MIFARE Plus 2K Cards in SL1 Mode #4316 (By LuemmelSec)](https://github.com/flipperdevices/flipperzero-firmware/pull/4316)
-- Updated: [Calendar of weeks v0.1 (By fgreil)](https://github.com/fgreil/mitzi-cal-weeks)
-- Updated: [Amiibo Toolkit v0.2 (By Firefox2100)](https://github.com/Firefox2100/ami_tool) `Req: key_retail.bin on SD card /nfc/assets`
-- Updated: [FlipWorld v1.0.3 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Added: [CAN Tools v1.0 (By MatthewKuKanich)](https://github.com/MatthewKuKanich/FlipperCANTools)
-- Added: [HTW AC Remote v1.1 (By sokogen)](https://github.com/sokogen/flipperzero-htw-ac-remote)
-- Updated: [Mystic Balloon v2.0 (By apfxtech)](https://github.com/apfxtech/FlipperMysticBalloon)
-- Added: [Arduventure v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperArduventure)
-- [Updated Ventra NFC Protocol w/ StopID Parsing, Weather Station: Added support for LaCrosse X141-BV3 #1156 (By FatherDivine)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1156)
-- Updated: [FZ nRF24 Jammer v1.4 (By W0rthlessS0ul)](https://github.com/W0rthlessS0ul/FZ_nRF24_jammer)
-- Revert: [Updated Ventra NFC Protocol w/ StopID Parsing, Weather Station: Added support for LaCrosse X141-BV3 #1156 (By FatherDivine)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1156)
-- Updated: [FlipDownloader v1.3.5 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [Protocol Visualizer v1.3 (By antirez)](https://github.com/antirez/protoview)
-- Added: [CountDown v1.0 (By sistemasorp)](https://github.com/sistemasorp/flipper-countdown)
-- Added: [ListEM v1.0 (By Clawzman)](https://github.com/Clawzman/Flipper_ListEM)
-- Added: [BzzBzz v0.2 (By ikiruneo)](https://github.com/ikiruneo/BzzBzz)
-- Added: [Slots v1.0 (By vh8t)](https://github.com/vh8t/flipper-slots)
-- Updated: [BzzBzz v0.3 (By ikiruneo)](https://github.com/ikiruneo/BzzBzz)
-- OFW: PR: [NFC Plugin to identify some hotel systems #4323 (By bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/4323)
-- Added: [Wolfenduino v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperWolfenstein)
-- Updated: [Free Roam v0.4 (By jblanked)](https://github.com/jblanked/Free-Roam) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [Ghost ESP v1.6.3 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32`
-- HAPPY NEW YEAR!!!!
-- Added: [TonUINO Writer v2.0 (By Bastelsaal)](https://github.com/Bastelsaal/tonuino-flipper-zero)
-- Updated: [Protocol Visualizer v1.3 (By antirez)](https://github.com/antirez/protoview)
-- Updated: [MODBUS v1.1.3.1 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-rs485modbus) `Req: Modbus By ElectronicCats`
-- Updated: [Key Copier v1.5 (By zinongli)](https://github.com/zinongli/KeyCopier) [add key profiles for KW5 & SC1 (By H4W9)](https://github.com/zinongli/KeyCopier/pull/38)
-- Updated: [FlipSocial v2.0.7 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Added: [Puck Girl v0.3 (By fgreil)](https://github.com/fgreil/mitzi-puck)
-- Updated: [Catacombs Of The Damned v2.2 (By apfxtech)](https://github.com/apfxtech/FlipperCatacombs)
-- Updated: [Seos compatible v1.2 (By bettse)](https://gitlab.com/bettse/flipper_seos)
-- [ESP Flasher: Bump Marauder v1.9.1 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.9.1)
-- Added: [LD2410 Human Detector v1.0 (By sistemasorp)](https://github.com/sistemasorp/flipper-ld2410_human_detector)
-- Updated: [ProtoPirate WIP v1.4 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 
 <a name="release">
 
@@ -844,4 +804,4 @@ $ ./fbt dolphin_ext
 - Have a new app? Submit GitHub link to me on Discord for a special reward (if I add it to RM Firmware).
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM1219-1645-0.420.0-36447da.tgz&channel=RM1219-1645-0.420.0-36447da&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0103-2116-0.420.0-2631485.tgz&channel=RM0103-2116-0.420.0-2631485&version=0.420.0&target=f7)
