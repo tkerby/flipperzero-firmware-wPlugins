@@ -1,7 +1,7 @@
 #include "travel_list.h"
 #include "../view_modules/elements.h"
-#include "assets_icons.h"
 #include "../view_modules/app_elements.h"
+#include "t_union_master_icons.h"
 
 struct TravelListView {
     View* view;
@@ -159,7 +159,8 @@ static void travel_list_view_draw_cb(Canvas* canvas, void* _model) {
                 }
 
                 // 行程属性图标
-                elements_draw_travel_attr_icons(canvas, 2, (item_position * item_height) + item_height - 7, travel, travel_ext);
+                elements_draw_travel_attr_icons(
+                    canvas, 2, (item_position * item_height) + item_height - 7, travel, travel_ext);
 
                 // 线路名+站台名
                 if(furi_string_size(travel_ext->line_name) != 0) {
@@ -229,6 +230,7 @@ static void travel_list_view_draw_cb(Canvas* canvas, void* _model) {
             frame_x + frame_width,
             frame_y + frame_height);
         elements_draw_str_aligned_utf8(canvas, 64, 32, AlignCenter, AlignCenter, "行程记录");
+        canvas_draw_icon(canvas, frame_x + frame_width - 5 - 4, 28, &I_ButtonRight_4x7);
     }
 
     furi_string_free(temp_str);
