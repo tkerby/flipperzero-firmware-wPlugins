@@ -34,6 +34,20 @@ typedef struct {
     InputEvent input;
 } LD2410HumanDetectorEvent;
 
+static int32_t ld2410_human_detector_map_distance_to_y(uint16_t distance_cm) {
+    const int32_t min_cm = 0;
+    const int32_t max_cm = 500;
+    const int32_t top_y = 12;
+    const int32_t bottom_y = 63;
+
+    int32_t clamped = distance_cm;
+    if(clamped < min_cm) clamped = min_cm;
+    if(clamped > max_cm) clamped = max_cm;
+
+    int32_t range = bottom_y - top_y;
+    return bottom_y - (clamped * range) / max_cm;
+}
+
 // UART Callback - runs in worker thread
 static void ld2410_human_detector_uart_callback(LD2410Data* data, void* context) {
     LD2410HumanDetectorApp* app = (LD2410HumanDetectorApp*)context;
@@ -104,6 +118,22 @@ static void ld2410_human_detector_draw_callback(Canvas* canvas, void* context) {
     // Distances
     snprintf(buffer, sizeof(buffer), "Det Dist: %d cm", model.data.detection_distance_cm);
     canvas_draw_str(canvas, 0, 32, buffer);
+
+    int32_t dot_y = ld2410_human_detector_map_distance_to_y(model.data.detection_distance_cm);
+    const int32_t dot_x = 120;
+    for(int32_t dx = 0; dx < 3; dx++) {
+        for(int32_t dy = 0; dy < 3; dy++) {
+            int32_t y = dot_y + dy - 1;
+            if(y >= 12 && y <= 63) {
+                canvas_draw_dot(canvas, dot_x + dx, y);
+            }
+        }
+    }
+
+    for(uint16_t cm = 0; cm <= 500; cm += 100) {
+        int32_t tick_y = ld2410_human_detector_map_distance_to_y(cm);
+        canvas_draw_line(canvas, 119, tick_y, 123, tick_y);
+    }
 
     // Moving Info
     snprintf(
