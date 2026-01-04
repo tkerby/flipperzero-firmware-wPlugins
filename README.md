@@ -76,7 +76,7 @@ T-Union Master（交通卡大师）是基于 [flipper zero](https://flipperzero.
 
 ## 🔨 Building
 
-使用 Flipper Zero SDK 工具（[ufbt](https://github.com/flipperdevices/flipperzero-ufbt)）进行构建，基于[mntm-010](https://github.com/Next-Flip/Momentum-Firmware/releases/tag/mntm-010) 固件开发，需手动指定 SDK 版本
+使用 Flipper Zero SDK 工具（[ufbt](https://github.com/flipperdevices/flipperzero-ufbt)）进行构建，基于[mntm-012](https://github.com/Next-Flip/Momentum-Firmware/releases/tag/mntm-012) 固件开发，需手动指定 SDK 版本
 
 城市 id 数据库及线路站台数据库需要在构建前手动执行脚本生成，构建脚本需要安装依赖库
 

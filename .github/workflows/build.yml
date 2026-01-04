@@ -30,7 +30,7 @@ jobs:
         id: build-app
         with:
           sdk-hw-target: f7
-          sdk-url: "https://github.com/Next-Flip/Momentum-Firmware/releases/download/mntm-010/flipper-z-f7-sdk-mntm-010.zip"
+          sdk-url: "https://github.com/Next-Flip/Momentum-Firmware/releases/download/mntm-012/flipper-z-f7-sdk-mntm-012.zip"
       - name: Upload app artifacts
         uses: actions/upload-artifact@v4
         with:

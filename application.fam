@@ -8,7 +8,7 @@ App(
     fap_category="NFC",
     fap_version="0.1",
     fap_icon="icon.png",
-    fap_description="A tool for query T-Union card and show travel logs",
+    fap_description="A tools for query T-Union info and show travel logs",
     fap_author="SocialSisterYi",
     fap_weburl="https://github.com/SocialSisterYi/T-Union_Master",
     fap_icon_assets="images",
