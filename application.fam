@@ -15,7 +15,7 @@ App(
     entry_point="scroller_main",
 
     # Preprocessor definitions added during compilation
-    cdefines=["APP_PUCK"],
+    cdefines=["APP_SCROLLER"],
 	
     sources=["scroller.c"],
 
