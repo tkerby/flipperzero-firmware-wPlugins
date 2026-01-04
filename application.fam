@@ -39,7 +39,7 @@ App(
 	# Automatically copy assets folder to /ext/apps_data/guido/ on Flipper
 	fap_file_assets="assets",
 	
-    # Symbol name for generated icon header (generates puck_icons.h)
+    # Symbol name for generated icon header (generates guido_icons.h)
     fap_icon_assets_symbol="guido",
  
     # Available categories: Main, GPIO, Sub-GHz, RFID, NFC, Infrared, Misc, Games, Tools, Settings, USB
