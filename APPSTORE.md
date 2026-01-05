@@ -33,18 +33,3 @@ Wolfenduino supports custom assets. You can create and use your own:
 - Audio
 
 This allows full modification of levels, visuals, and sound.
-
-## Project Information
-
-This project is a port of the original WolfenduinoFX project.
-
-Flipper Zero port repository:  
-[https://github.com/apfxtech/FlipperWolfenstein](https://github.com/apfxtech/FlipperWolfenstein)
-
-Original WolfenduinoFX project:  
-[https://github.com/jhhoward/WolfenduinoFX](https://github.com/jhhoward/WolfenduinoFX)
-
-## Disclaimer
-
-Wolfenduino is a non-commercial fan project.  
-Wolfenstein 3D is a trademark of id Software.
