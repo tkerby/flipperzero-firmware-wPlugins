@@ -1,5 +1,5 @@
 App(
-    appid="apfx_arduventure",
+    appid="arduventure",
     name="Arduventure",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="arduboy_app",
