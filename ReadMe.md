@@ -40,6 +40,11 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipSocial v2.0.7 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [Sub-GHz Bruteforcer v4.0 (By Ganapati/xMasterX/derskythe)](https://github.com/derskythe/flipperzero-subbrute/tree/master)
 - Updated: [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader)
+- UL: SubGHz: Cardin S449 full support (with Add manually, and all button codes) (use FSK12K modulation to read the remote) (closes issues #735 #908) (By xMasterX and zero-mega (thanks!))
+- UL: SubGHz: Added new modulation FSK with 12KHz deviation (By xMasterX)
+- UL: SubGHz: KingGates Stylo 4k - Add manually and button switch support + refactoring of encoder (By xMasterX)
+- UL: SubGHz: Stilmatic - button 9 support (two buttons hold simulation) (By xMasterX)
+- UL: SubGHz: Counter editor refactoring (By Dmitry422)
 
 <a name="release">
 
@@ -250,7 +255,7 @@ $ ./fbt dolphin_ext
 - SubGHz: Protocols An-Motors, Keeloq BFT Mitto, Came Atomo, FAAC SLH (Spa), HCS101, Keeloq, Keeloq Common, Nice Flor S, SecPlus v1+v2 and Star Line updates from [Eng1n33r](https://github.com/DarkFlippers/unleashed-firmware) Check out new [instructions](https://github.com/DarkFlippers/unleashed-firmware/blob/dev/documentation/SubGHzRemoteProg.md)
 - SubGHz: [Protocols: Hay21, Hollarm, Marantec24 (static 24 bit) and GangQi (static 34 bit) (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/bc19dbfbda5db4aee1ed39e2ccf29cfa1d8bd508)
 - SubGHz: Protocols Feron (static 32 bit), Keeloq: Dea Mio, Genius Bravo, GSN, HCS101, AN-Motors, JCM Tech, MHouse, Nice Smilo, DTM Neo, FAAC RC,XT, Mutancode, Normstahl, Beninca + Allmatic, Stilmatic, CAME Space, Aprimatic (model TR and similar), Centurion Nova (Many added and updated by the community and xMasterX), IL-100(Smart) (thx Vitaly for RAWs)
-- SubGHz: Protocols Roger (static 28 bit) with add manually support (By xMasterX & mishamyte), V2 Phoenix (Phox) (dynamic 52 bit) (By xMasterX & RocketGod-git) & Marantec (static 49 bit) (add manually support and CRC verify) (By xMasterX & li0ard), Motorline (with add manually support), Rosh, Pecinin, Rossi, Merlin, Steelmate (thanks RocketGod-git)
+- SubGHz: Protocols Roger (static 28 bit) with add manually support (By xMasterX & mishamyte), V2 Phoenix (Phox) (dynamic 52 bit) (By xMasterX & RocketGod-git) & Marantec (static 49 bit) (add manually support and CRC verify) (By xMasterX & li0ard), Motorline (with add manually support), Rosh, Pecinin, Rossi, Merlin, Steelmate (thanks RocketGod-git), Cardin S449 (thanks zero-mega)
 - SubGHz: [Protocols: ReversRB2 / RB2M (static 64 bit) (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/813626c03b426547fa439a291cab08824c374ed3)
 - SubGHz: Region Locked -  To transmit to outside ranges (Unlock), use the CFW Settings or Extend Range app under Applications=>Settings.
 - SubGHz: [Transmit Indicator before Out of Region Frequency Use (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/e24d4a0689db555ae083fec23a471e878adb6cd4)
