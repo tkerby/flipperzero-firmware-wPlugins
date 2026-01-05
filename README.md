@@ -34,6 +34,20 @@ This project is a [port](https://github.com/apfxtech/FlipperWolfenstein.git) of 
 * Press return and down to exit in menu 
 * Press return in menu to exit from game
 
+## Assets
+
+An external assets file is required for normal gameplay.
+
+Download the assets file here:  
+[fxdata.bin](https://github.com/apfxtech/FlipperWolfenstein/raw/refs/heads/main/package/fxdata.bin)
+or from relese.
+
+After downloading, copy the file to the following path on your Flipper Zero:
+
+/ext/apps_data/wolf/fxdata.bin
+
+All other required files will be generated automatically on first launch.
+
 ## ⚠️ Performance Warning ⚠️
 
 This game requires a **significant amount of RAM** and places a **heavy load on the CPU**.
