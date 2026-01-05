@@ -21,10 +21,10 @@ The game features a **save system** that stores unlocked levels and scores, allo
 ## Screenshots
 |                                             |                                             |
 | ------------------------------------------- | ------------------------------------------- |
-| ![screen1](package/screenshots/screen1.png) | ![screen2](package/screenshots/screen2.png) |
-| ![screen3](package/screenshots/screen3.png) | ![screen4](package/screenshots/screen4.png) |
-| ![screen5](package/screenshots/screen5.png) | ![screen6](package/screenshots/screen6.png) |
-| ![screen7](package/screenshots/screen7.png) | ![screen8](package/screenshots/screen8.png) |
-| ![screen9](package/screenshots/screen9.png) | ![screen10](package/screenshots/screen10.png) |
+| ![screen1](Package/screenshots/screen1.png) | ![screen2](Package/screenshots/screen2.png) |
+| ![screen3](Package/screenshots/screen3.png) | ![screen4](Package/screenshots/screen4.png) |
+| ![screen5](Package/screenshots/screen5.png) | ![screen6](Package/screenshots/screen6.png) |
+| ![screen7](Package/screenshots/screen7.png) | ![screen8](Package/screenshots/screen8.png) |
+| ![screen9](Package/screenshots/screen9.png) | ![screen10](Package/screenshots/screen10.png) |
 
 This project is a **fork** of the original [Mystic Balloon](https://github.com/Team-ARG-Museum/ID-34-Mystic-Balloon/) project. The main goal of this fork is to port the game from the Arduboy console to **Flipper Zero**.
