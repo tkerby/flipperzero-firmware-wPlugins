@@ -34,6 +34,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [LD2410 Human Detector v1.0 (By sistemasorp)](https://github.com/sistemasorp/flipper-ld2410_human_detector) [add distance visualizer (By MatthewKuKanich)](https://github.com/sistemasorp/flipper-ld2410_human_detector/pull/1)
 - Updated: [T-Union Master (China) v0.1 (By SocialSisterYi)](https://github.com/SocialSisterYi/T-Union_Master)
 - Updated: [Wolfenduino v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperWolfenstein)
+- [Updated Ventra.c (ventra_parser.fal) w/ StopID parsing (By FatherDivine)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1159)
 
 <a name="release">
 
