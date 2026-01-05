@@ -7,6 +7,8 @@
 
 You need a **geiger counter** board to run this application, this board can be used: https://fr.aliexpress.com/item/1005005983829775.html (**NOT** sponsored)
 
+A dedicated board has been developed and works very well (I’ve tested it myself): https://www.banggood.com/Flipper-Zero-Geiger-Counter-Module-J305-Tube-Radiation-Tester-Beta-Gamma-Testing-Environmental-Monitoring-Random-Number-Generator-p-2039266.html (**NOT** sponsored)
+
 Similar boards on AliExpress may also work
 
 You also need jumper wires to connect the board on the **Flipper Zero**.
@@ -85,7 +87,7 @@ button  | function
 
 If you don't want to build this application, just simply copy **flipper_geiger.fap** on your **Flipper Zero** 
 
-Build has been made with official toolchain (0.102.3), **API Mismatch** error may appear if you are using custom firmware. You can bypass this error but the program may crash.
+Build has been made with official toolchain (1.4.3), **API Mismatch** error may appear if you are using custom firmware. You can bypass this error but the program may crash.
 
 ## Use cases
 
@@ -118,6 +120,10 @@ Measurement of uranium orange pottery:
 Measurement of americium-241 button from a smoke detector (descendants of americium or radioisotope impurities are detected, not americium itself):
 
 <img src="https://github.com/nmrr/flipperzero-geigercounter/blob/main/img/flipper11.png" width=25% height=25%>
+
+Measurement of uranium glass cup:
+
+<img src="https://github.com/nmrr/flipperzero-geigercounter/blob/main/img/ouraline.png" width=25% height=25%>
 
 **A4** GPIO on **A7** GPIO (to test this program without a geiger board):
 
@@ -184,6 +190,10 @@ I maintain another application that uses the **geiger board** to roll dice by us
 [kasiin.top](https://kasiin.top/blog/2025-08-04-flipper_zero_geiger_counter_module/)
 
 <img src="https://github.com/nmrr/flipperzero-geigercounter/blob/main/img/user/4d9fb7d9.jpeg" width=50% height=50%>
+
+A picture of mine showing the dedicated module:
+
+<img src="https://github.com/nmrr/flipperzero-geigercounter/blob/main/img/user/module.jpg" width=50% height=50%>
 
 [Seanclark2409 [YouTube]](https://www.youtube.com/@seanclark2409) (click on the picture to see the video): 
 
