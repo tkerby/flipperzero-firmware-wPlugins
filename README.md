@@ -74,7 +74,7 @@ Build the base firmware once using Flipper Build Tool (`fbt`) to ensure your env
 2. Build the application (FAP file) with:
 
 ```bash
-./fbt fap_apfx_arduventure && mv build/f7-firmware-D/.extapps/apfx_arduventure.fap ./
+./fbt fap_arduventure && mv build/f7-firmware-D/.extapps/arduventure.fap ./
 ```
 
 After a successful build, the resulting `.fap` can be found under the `build/` directory. Copy it to your Flipper Zero SD card into the `apps/` folder.
