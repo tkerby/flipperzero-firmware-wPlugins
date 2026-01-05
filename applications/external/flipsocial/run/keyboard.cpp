@@ -362,13 +362,14 @@ bool Keyboard::handleInput(InputEvent* event, char* target_buffer, size_t target
     const uint8_t key = event->key;
 
     if(key == InputKeyBack && event->type == InputTypeShort) {
-        // delete last character
+        // Delete character to the left of cursor
         size_t text_len = getStringLength(target_buffer, target_size);
-        if(text_len > 0) {
-            target_buffer[text_len - 1] = '\0';
-            if(text_cursor > text_len - 1) {
-                text_cursor = text_len - 1;
+        if(text_len > 0 && text_cursor > 0) {
+            // Shift characters left to remove character before cursor
+            for(size_t i = text_cursor - 1; i < text_len; i++) {
+                target_buffer[i] = target_buffer[i + 1];
             }
+            text_cursor--;
         }
         return false; // keyboard not done yet
     }
