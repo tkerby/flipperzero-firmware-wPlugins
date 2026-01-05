@@ -128,7 +128,6 @@ extern "C" int32_t arduboy_app(void* p) {
     arduboy.setFrameRate(TARGET_FRAMERATE);
     arduboy.audio.begin();
 
-    FX::setCacheConfig(8192, 6);
     (void)FX::begin(0, 0);
 
     engine.init();

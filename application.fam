@@ -1,5 +1,5 @@
 App(
-    appid="apfx_wolfen",
+    appid="wolfenduino",
     name="Wolfenduino",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="arduboy_app",

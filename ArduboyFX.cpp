@@ -18,8 +18,8 @@ char FX::save_path_[FX::kPathMax] = "/ext/apps_data/wolf/fxsave.bin";
 FX::Domain FX::domain_ = FX::Domain::Data;
 uint32_t   FX::cur_abs_ = 0;
 
-uint32_t FX::page_size_ = 2048;
-uint8_t  FX::cache_pages_ = 16;
+uint32_t FX::page_size_ = 4096;
+uint8_t  FX::cache_pages_ = 10;
 
 uint8_t*  FX::cache_mem_ = nullptr;
 uint32_t* FX::cache_base_ = nullptr;
@@ -32,9 +32,6 @@ uint8_t  FX::last_hit_ = 0xFF;
 uint32_t FX::last_base_ = 0;
 uint8_t  FX::seq_score_ = 0;
 
-uint32_t FX::data_file_pos_ = 0;
-bool     FX::data_file_pos_valid_ = false;
-
 uint8_t  FX::stream_page_i_ = 0xFF;
 uint32_t FX::stream_base_ = 0;
 uint16_t FX::stream_len_ = 0;
@@ -46,7 +43,11 @@ bool    FX::pending_valid_ = false;
 uint8_t FX::pending_byte_ = 0xFF;
 
 uint32_t FX::alignDown_(uint32_t v, uint32_t a) { return a ? (v & ~(a - 1u)) : v; }
-uint32_t FX::alignUp_(uint32_t v, uint32_t a) { return a ? ((v + (a - 1u)) & ~(a - 1u)) : v; }
+uint32_t FX::alignUp_(uint32_t v, uint32_t a) { 
+    if(!a) return v;
+    if(v > (UINT32_MAX - (a - 1u))) return UINT32_MAX;
+    return (v + (a - 1u)) & ~(a - 1u);
+}
 
 void FX::setCacheConfig(uint32_t page_size, uint8_t pages) {
     if(page_size < 512) page_size = 512;
@@ -85,7 +86,6 @@ bool FX::openData_() {
     if(!data_) return false;
     if(!storage_file_open(data_, data_path_, FSAM_READ, FSOM_OPEN_EXISTING)) return false;
     data_opened_ = true;
-    data_file_pos_valid_ = false;
     return true;
 }
 
@@ -153,9 +153,6 @@ void FX::freeCaches_() {
     last_base_ = 0;
     seq_score_ = 0;
 
-    data_file_pos_valid_ = false;
-    data_file_pos_ = 0;
-
     streamReset_();
     pending_valid_ = false;
     pending_byte_ = 0xFF;
@@ -186,9 +183,6 @@ bool FX::allocCaches_() {
     last_hit_ = 0xFF;
     last_base_ = 0;
     seq_score_ = 0;
-
-    data_file_pos_valid_ = false;
-    data_file_pos_ = 0;
 
     streamReset_();
     pending_valid_ = false;
@@ -294,17 +288,11 @@ bool FX::dataLoadPage_(uint32_t base, uint8_t page_i) {
     if(!data_opened_ && !openData_()) return false;
     if(!data_) return false;
 
-    if(!data_file_pos_valid_ || data_file_pos_ != base) {
-        if(!storage_file_seek(data_, base, true)) return false;
-        data_file_pos_ = base;
-        data_file_pos_valid_ = true;
-    }
+    if(!storage_file_seek(data_, base, true)) return false;
 
     uint8_t* dst = cache_mem_ + ((size_t)page_i * (size_t)page_size_);
     size_t r = storage_file_read(data_, dst, page_size_);
     if(r == 0) return false;
-
-    data_file_pos_ += (uint32_t)r;
 
     cache_valid_[page_i] = 1;
     cache_base_[page_i] = base;
@@ -317,25 +305,12 @@ bool FX::dataLoadPage_(uint32_t base, uint8_t page_i) {
 
 void FX::dataMaybePrefetch_(uint32_t base) {
     if(cache_pages_ < 2) return;
-    if(seq_score_ < 1) return;
+    if(seq_score_ < 3) return;
 
     uint32_t next1 = base + page_size_;
     if(!dataPageHas_(next1)) {
         uint8_t v = dataPickVictim_();
         if(!(cache_valid_[v] && cache_base_[v] == base)) (void)dataLoadPage_(next1, v);
-    }
-
-    if(cache_pages_ < 3) return;
-    if(seq_score_ < 2) return;
-
-    uint32_t next2 = base + (page_size_ * 2u);
-    if(!dataPageHas_(next2)) {
-        uint8_t v = dataPickVictim_();
-        if(cache_valid_[v]) {
-            uint32_t vb = cache_base_[v];
-            if(vb == base || vb == next1) return;
-        }
-        (void)dataLoadPage_(next2, v);
     }
 }
 
@@ -547,14 +522,87 @@ uint32_t FX::readPendingLastUInt32() {
 
 void FX::readBytes(uint8_t* buffer, size_t length) {
     if(!buffer || length == 0) return;
-    for(size_t i = 0; i < length; i++) buffer[i] = readPendingUInt8();
+    
+    if(domain_ == Domain::Save) {
+        for(size_t i = 0; i < length; i++) buffer[i] = readPendingUInt8();
+        return;
+    }
+    
+    if(!pending_valid_) {
+        primePendingData_();
+    }
+    
+    size_t remain = length;
+    size_t offset = 0;
+    
+    while(remain > 0) {
+        if(!streamEnsureAbsFast_(cur_abs_ - 1)) {
+            for(size_t i = offset; i < length; i++) buffer[i] = readPendingUInt8();
+            return;
+        }
+        
+        uint32_t page_offset = (cur_abs_ - 1) - stream_base_;
+        size_t available = stream_len_ - page_offset;
+        size_t chunk = (remain < available) ? remain : available;
+        
+        memcpy(buffer + offset, stream_ptr_ + page_offset, chunk);
+        
+        offset += chunk;
+        remain -= chunk;
+        cur_abs_ += chunk;
+        stream_abs_ = cur_abs_;
+    }
+    
+    if(remain == 0 && cur_abs_ < 0xFFFFFFFFu) {
+        if(streamEnsureAbsFast_(cur_abs_)) {
+            pending_byte_ = streamReadU8Fast_();
+            pending_valid_ = true;
+            cur_abs_++;
+        } else {
+            pending_byte_ = 0xFF;
+            pending_valid_ = true;
+            cur_abs_++;
+        }
+    }
 }
 
 void FX::readBytesEnd(uint8_t* buffer, size_t length) {
     if(!buffer || length == 0) return;
     if(length == 1) { buffer[0] = readEnd(); return; }
-    for(size_t i = 0; i < length - 1; i++) buffer[i] = readPendingUInt8();
-    buffer[length - 1] = readEnd();
+    
+    if(domain_ == Domain::Save) {
+        for(size_t i = 0; i < length - 1; i++) buffer[i] = readPendingUInt8();
+        buffer[length - 1] = readEnd();
+        return;
+    }
+    
+    if(!pending_valid_) {
+        primePendingData_();
+    }
+    
+    size_t remain = length;
+    size_t offset = 0;
+    
+    while(remain > 0) {
+        if(!streamEnsureAbsFast_(cur_abs_ - 1)) {
+            for(size_t i = offset; i < length - 1; i++) buffer[i] = readPendingUInt8();
+            buffer[length - 1] = readEnd();
+            return;
+        }
+        
+        uint32_t page_offset = (cur_abs_ - 1) - stream_base_;
+        size_t available = stream_len_ - page_offset;
+        size_t chunk = (remain < available) ? remain : available;
+        
+        memcpy(buffer + offset, stream_ptr_ + page_offset, chunk);
+        
+        offset += chunk;
+        remain -= chunk;
+        cur_abs_ += chunk;
+        stream_abs_ = cur_abs_;
+    }
+    
+    pending_valid_ = false;
 }
 
 void FX::readDataBytes(uint32_t address, uint8_t* buffer, size_t length) {
