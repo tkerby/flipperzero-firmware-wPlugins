@@ -1,5 +1,5 @@
 App(
-    appid="apfx_myblab",
+    appid="myblab",
     name="Mystic Balloon",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="mybl_app",
