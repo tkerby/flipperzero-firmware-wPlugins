@@ -7,11 +7,6 @@ The game recreates the classic shareware episode "Escape from Wolfenstein" with 
 
 This project is a [port](https://github.com/apfxtech/FlipperWolfenstein.git) of the original [WolfenduinoFX](https://github.com/jhhoward/WolfenduinoFX.git) project. The main goal of this fork is to port the game from the Arduboy console to **Flipper Zero**.
 
-![s1](package/screenshots/screen1.png)
-![s2](package/screenshots/screen4.png)
-![s3](package/screenshots/screen5.png)
-
-
 ## Features
 
 * 10 Levels based on the shareware episode 'Escape from Wolfenstein'
@@ -22,10 +17,34 @@ This project is a [port](https://github.com/apfxtech/FlipperWolfenstein.git) of 
 
 ![output](package/demo.gif)
 
+
+## Screenshots
+|                                             |                                             |
+| ------------------------------------------- | ------------------------------------------- |
+| ![screen2](package/screenshots/screen1.png) | ![screen3](package/screenshots/screen2.png) |
+| ![screen4](package/screenshots/screen3.png) | ![screen5](package/screenshots/screen4.png) |
+| ![screen6](package/screenshots/screen5.png) | ![screen1](package/screenshots/screen6.png) |
+
 ## Controls
 ![s3](package/screenshots/screen6.png)
 * Use directional pad to move
 * Press B to shoot
 * Hold A to strafe
 * Double tap A to switch between weapons
+* Press return and down to exit in menu 
+* Press return in menu to exit from game
 
+## ⚠️ Performance Warning ⚠️
+
+This game requires a **significant amount of RAM** and places a **heavy load on the CPU**.
+
+For best performance, **do not use USB features** (such as video streaming or debugging) while playing. When USB is active, the processor may not be able to handle both the game logic and the video stream at the same time, which can result in:
+
+- **Severe input lag**
+- **Dropped frames**
+- **Overall unstable or slow gameplay**
+
+### ✅ Recommended Setup
+To ensure smooth performance:
+- **Disconnect USB** and run the game **standalone** during play.
+- If communication is required, **use BLE (Bluetooth Low Energy)** instead of USB, as it has significantly lower impact on CPU performance.
