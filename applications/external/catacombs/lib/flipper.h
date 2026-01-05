@@ -17,7 +17,6 @@ typedef struct {
 
     Gui* gui;
     Canvas* canvas;
-
     FuriMutex* fb_mutex;
 
     volatile uint8_t input_state;

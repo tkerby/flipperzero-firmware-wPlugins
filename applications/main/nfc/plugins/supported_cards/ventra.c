@@ -169,7 +169,8 @@ static bool ventra_lookup_stop_name_str(const char* id_str, char* out_name, size
         const char* csv_id = line;
         const char* csv_name = comma + 1;
 
-        while(*csv_name == ' ' || *csv_name == '\t') csv_name++;
+        while(*csv_name == ' ' || *csv_name == '\t')
+            csv_name++;
 
         if(strcmp(csv_id, id_str) == 0) {
             strncpy(out_name, csv_name, out_size);
@@ -262,16 +263,16 @@ static FuriString* ventra_parse_xact(const MfUltralightData* data, uint8_t blk, 
     // For bus (line == 2): "%c %5d %04d-%02d-%02d %02d:%02d"
     // Else:                "%c %04X %04d-%02d-%02d %02d:%02d"
 
-	// Unified bus/train stop lookup
-	char stop_name[128];
-	bool have_name = false;
-	char id_key[16];
+    // Unified bus/train stop lookup
+    char stop_name[128];
+    bool have_name = false;
+    char id_key[16];
 
-	// Convert locus → lookup key (decimal for bus, hex for train)
-	ventra_format_id(locus, line, id_key, sizeof(id_key));
+    // Convert locus → lookup key (decimal for bus, hex for train)
+    ventra_format_id(locus, line, id_key, sizeof(id_key));
 
-	// Look up the formatted key in the CSV
-	have_name = ventra_lookup_stop_name_str(id_key, stop_name, sizeof(stop_name));
+    // Look up the formatted key in the CSV
+    have_name = ventra_lookup_stop_name_str(id_key, stop_name, sizeof(stop_name));
 
     if(have_name) {
         // Use the CSV name + the exact ID key used for lookup
@@ -283,9 +284,11 @@ static FuriString* ventra_parse_xact(const MfUltralightData* data, uint8_t blk, 
             (line < 3) ? linemap[line] : '?',
             stop_name,
             id_key,
-            dt.year, dt.month, dt.day,
-            dt.hour, dt.minute
-        );
+            dt.year,
+            dt.month,
+            dt.day,
+            dt.hour,
+            dt.minute);
     } else {
         // Fallback to original formatting
         if(line == 2) {
@@ -294,22 +297,26 @@ static FuriString* ventra_parse_xact(const MfUltralightData* data, uint8_t blk, 
                 "%c %u %04d-%02d-%02d %02d:%02d",
                 (line < 3) ? linemap[line] : '?',
                 (unsigned int)locus,
-                dt.year, dt.month, dt.day,
-                dt.hour, dt.minute
-            );
+                dt.year,
+                dt.month,
+                dt.day,
+                dt.hour,
+                dt.minute);
         } else {
             furi_string_printf(
                 ventra_xact_str,
                 "%c %04X %04d-%02d-%02d %02d:%02d",
                 (line < 3) ? linemap[line] : '?',
                 (unsigned int)locus,
-                dt.year, dt.month, dt.day,
-                dt.hour, dt.minute
-            );
+                dt.year,
+                dt.month,
+                dt.day,
+                dt.hour,
+                dt.minute);
         }
     }
 
-        return (ventra_xact_str);
+    return (ventra_xact_str);
 }
 
 static bool ventra_parse(const NfcDevice* device, FuriString* parsed_data) {
@@ -343,7 +350,7 @@ static bool ventra_parse(const NfcDevice* device, FuriString* parsed_data) {
             break;
         case 0x01: // gleamed from a single-use ticket purchased 12-06-2025 (FatherDivine)
             furi_string_cat_printf(ventra_prod_str, "Single");
-            break;    
+            break;
         case 3:
         case 0x3F:
             is_pass = true;
