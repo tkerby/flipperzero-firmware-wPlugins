@@ -45,6 +45,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - UL: SubGHz: KingGates Stylo 4k - Add manually and button switch support + refactoring of encoder (By xMasterX)
 - UL: SubGHz: Stilmatic - button 9 support (two buttons hold simulation) (By xMasterX)
 - UL: SubGHz: Counter editor refactoring (By Dmitry422)
+- Added: [Geometry Dash v0.1 (By goosedev72-projects)](https://github.com/goosedev72-projects/flipperzero-geometryflip)
 
 <a name="release">
 
@@ -318,6 +319,7 @@ $ ./fbt dolphin_ext
 - [Fortune Cookie v0.1 (By evillero)](https://github.com/evillero/fortune_cookie)
 - [Furious Birds v1.1 (By bmstr-ru)](https://github.com/bmstr-ru/furious-birds)
 - [Game of Life v1.3 (By Mad-MO)](https://github.com/Mad-MO/FlipperGoL)
+- [Geometry Dash v0.1 (By goosedev72-projects)](https://github.com/goosedev72-projects/flipperzero-geometryflip)
 - [Groks Adventure v0.15 (By DigiMancer3D)](https://github.com/DigiMancer3D/Groks_Adventure)
 - [Guess The Number v1.3 (By kWAYTV)](https://github.com/kWAYTV/guess-the-number-fz)
 - [Hangman v1.5 (By Evgeny Stepanischev & Eva Stepanischeva)](https://github.com/bolknote/Flipper-Zero-Hangman-Game)

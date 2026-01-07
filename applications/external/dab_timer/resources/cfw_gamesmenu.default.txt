@@ -47,6 +47,7 @@ GamesMenuList Version 0
 /ext/apps/Games/furious_birds.fap
 /ext/apps/Games/game15.fap
 /ext/apps/Games/gameoflife.fap
+/ext/apps/Games/geometry_dash.fap
 /ext/apps/Games/grokadven.fap
 /ext/apps/Games/guess_the_number.fap
 /ext/apps/Games/hangman.fap

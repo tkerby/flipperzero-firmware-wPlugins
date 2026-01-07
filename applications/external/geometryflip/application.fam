@@ -1,6 +1,6 @@
 App(
-    appid="geometry_flip",
-    name="Geometry Flip",
+    appid="geometry_dash",
+    name="Geometry Dash",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="geometry_dash_app",
     stack_size=2 * 1024,
