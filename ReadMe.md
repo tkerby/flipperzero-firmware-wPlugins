@@ -36,7 +36,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Wolfenduino v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperWolfenstein)
 - [Updated Ventra.c (ventra_parser.fal) w/ StopID parsing (By FatherDivine)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1159)
 - Updated: [Catacombs Of The Damned v2.2 (By apfxtech)](https://github.com/apfxtech/FlipperCatacombs)
-- Updated: [FZ nRF24 Jammer v1.4 (By W0rthlessS0ul)](https://github.com/W0rthlessS0ul/FZ_nRF24_jammer)
 - Updated: [FlipSocial v2.0.7 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [Sub-GHz Bruteforcer v4.0 (By Ganapati/xMasterX/derskythe)](https://github.com/derskythe/flipperzero-subbrute/tree/master)
 - Updated: [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader)
@@ -46,6 +45,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - UL: SubGHz: Stilmatic - button 9 support (two buttons hold simulation) (By xMasterX)
 - UL: SubGHz: Counter editor refactoring (By Dmitry422)
 - Added: [Geometry Dash v0.1 (By goosedev72-projects)](https://github.com/goosedev72-projects/flipperzero-geometryflip)
+- Updated: [FZ nRF24 Jammer v1.4 (By W0rthlessS0ul)](https://github.com/W0rthlessS0ul/FZ_nRF24_jammer)
 
 <a name="release">
 
