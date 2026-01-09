@@ -48,6 +48,14 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FZ nRF24 Jammer v1.4 (By W0rthlessS0ul)](https://github.com/W0rthlessS0ul/FZ_nRF24_jammer)
 - Updated: [ESP Flasher v1.8 (By 0xchocolate)](https://github.com/0xchocolate/flipperzero-esp-flasher)
 - Updated: [WiFi (Marauder) v0.7.7 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion) `Req: ESP32` with [ESP32 MARAUDER Firmware](https://github.com/justcallmekoko/ESP32Marauder/releases/latest)
+- [Alutech_at_4n and Nice Flor S protocols acceleration and Debug status for desktop clock (By Dmitry422)](https://github.com/DarkFlippers/unleashed-firmware/pull/942)
+- SubGHz: [Sommer fm2 in Add manually now uses FM12K modulation (Sommer without fm2 tag uses FM476) (try this if regular option doesn't work for you) (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/e97f90529d5735e38971d54b3879fdc515516852)
+- Docs: [Add full list of supported SubGHz protocols and their frequencies/modulations that can be used for reading remotes (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/c6ebfb2c4e9902a31bbfb88f9fcfa4b30d76d487) [Docs Link](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/documentation/SubGHzSupportedSystems.md)
+- SubGHz: [Stilmatic - button 9 support (two buttons hold simulation) (mapped on arrow keys) (By xMasterX)]()
+- SubGHz: [Sommer - last button code 0x6 support (mapped on arrow keys) (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/c5520b7d3325fd8d8b17d66f668a3a321d3a54a4)
+- SubGHz: [Add 390MHz, 430.5MHz to default hopper list (6 elements like in OFW) (works well with Hopper RSSI level set for your enviroment) (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/0e44e56659c3208fc8a2718436b8adb3af710e2e)
+- [Segment clock and HC-SR04 app improvements (By Tyl3rA)](https://github.com/xMasterX/all-the-plugins/pull/201)
+- [Many app updates to add FM12K (By xMasterX)](https://github.com/xMasterX/all-the-plugins/commit/fca96440a66c9fbc9a15cb56f90afe2feb026491#diff-d48125c42269db81f9468bb6aaca2d42030ea5a701d14cf6deb4db378b2ff669)
 
 <a name="release">
 
@@ -728,7 +736,7 @@ $ ./fbt dolphin_ext
 - [SD Card Mounter v0.1 (By aaronjamt)](https://github.com/aaronjamt/flipper_sd_mounters)
 - [SD Info v0.1 (By Sladkisnovraper)](https://github.com/Sladkisnovraper/SD-Info-For-Flipper-Zero)
 - [SD SPI v0.5 (By Gl1tchub)](https://github.com/Gl1tchub/Flipperzero-SD-SPI) `Req: External SD Board`
-- [Segment Clock v0.1 (By Sladkisnovraper)](https://github.com/Sladkisnovraper/Segment-Clock-For-Flipper-Zero)
+- [Segment Clock v1.1 (By Sladkisnovraper)](https://github.com/Sladkisnovraper/Segment-Clock-For-Flipper-Zero)
 - [Sentry Safe v2.0 (By H4ckd4ddy)](https://github.com/H4ckd4ddy/flipperzero-sentry-safe-plugin) ([Pin Out](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/sentry_safe) from [UberGuidoZ](https://github.com/UberGuidoZ/)
 - [Seos compatible v1.2 (By bettse)](https://gitlab.com/bettse/flipper_seos)
 - [SERMA CAN-FD-HS v1.0 (By serma-safety-security)](https://github.com/serma-safety-security/Flipper-Zero-CAN-FD-HS-SW) `Req: SERMA CAN FD GPIO Board`

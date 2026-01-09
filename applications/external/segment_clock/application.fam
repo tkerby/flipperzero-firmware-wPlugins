@@ -9,6 +9,6 @@ App(
     sources=["*.c"],
     fap_author="Sladkisnovraper",
     fap_weburl="https://github.com/Sladkisnovraper/Segment-Clock-For-Flipper-Zero",
-    fap_version="0.1",
+    fap_version="1.1",
     fap_description="Simple segment clock.",
 )
