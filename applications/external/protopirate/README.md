@@ -14,6 +14,7 @@ Decoders:
 - KIA V2
 - KIA V3 / V4
 - KIA V5
+- KIA V6
 - Ford V0
 - Subaru
 - Suzuki
