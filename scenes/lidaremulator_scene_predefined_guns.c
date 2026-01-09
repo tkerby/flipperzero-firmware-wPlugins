@@ -81,7 +81,14 @@ bool lidaremulator_scene_predefined_guns_view_on_event(InputEvent* event, void* 
         furi_hal_light_set(LightGreen,0);
         furi_hal_light_set(LightBlue,255);
 
-        const GpioPin* const pin_led = &gpio_infrared_tx;
+        // Use the configured GPIO pin based on app settings
+        const GpioPin* pin_led;
+        if(lidaremulator->app_state.tx_pin == FuriHalInfraredTxPinExtPA7) {
+            pin_led = &gpio_ext_pa7;  // External GPIO pin A7
+        } else {
+            pin_led = &gpio_infrared_tx;  // Internal IR LED
+        }
+        
         const GpioPin* const pin_ok = &gpio_button_ok;
 
         timing = guns[idx].timing-1;
