@@ -22,7 +22,9 @@ Decoders:
 
 Encoders:
 
-- KIA V0 ✅
+- KIA V0
+- KIA V1
+- KIA V2
 - More Coming Soon
 
 ## **Features**

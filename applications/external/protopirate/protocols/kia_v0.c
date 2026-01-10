@@ -28,11 +28,6 @@ struct SubGhzProtocolEncoderKIA {
     uint32_t serial;
     uint8_t button;
     uint16_t counter;
-
-    bool is_running;
-    size_t preamble_count;
-    uint8_t current_burst;
-    bool sending_gap;
 };
 
 typedef enum {
@@ -139,12 +134,17 @@ void* subghz_protocol_encoder_kia_alloc(SubGhzEnvironment* environment) {
     UNUSED(environment);
     SubGhzProtocolEncoderKIA* instance = malloc(sizeof(SubGhzProtocolEncoderKIA));
     instance->base.protocol = &kia_protocol_v0;
-    instance->is_running = false;
     instance->serial = 0;
     instance->button = 0;
     instance->counter = 0;
-    instance->current_burst = 0;
-    instance->sending_gap = false;
+
+    instance->encoder.size_upload = (32 + 2 + 118 + 1) * KIA_TOTAL_BURSTS + (KIA_TOTAL_BURSTS - 1);
+    instance->encoder.upload = malloc(instance->encoder.size_upload * sizeof(LevelDuration));
+    instance->encoder.repeat =
+        10; // High repeat count for continuous transmission while button is held
+    instance->encoder.front = 0;
+    instance->encoder.is_running = false;
+
     FURI_LOG_I(TAG, "Encoder allocated at %p", instance);
     return instance;
 }
@@ -152,6 +152,9 @@ void* subghz_protocol_encoder_kia_alloc(SubGhzEnvironment* environment) {
 void subghz_protocol_encoder_kia_free(void* context) {
     furi_assert(context);
     SubGhzProtocolEncoderKIA* instance = context;
+    if(instance->encoder.upload) {
+        free(instance->encoder.upload);
+    }
     free(instance);
 }
 
@@ -187,11 +190,54 @@ static void subghz_protocol_encoder_kia_update_data(SubGhzProtocolEncoderKIA* in
         instance->counter,
         crc);
     FURI_LOG_I(TAG, "Full data: 0x%016llX", instance->generic.data);
+}
 
-    // Reset transmission state
-    instance->preamble_count = 0;
-    instance->current_burst = 0;
-    instance->sending_gap = false;
+static void subghz_protocol_encoder_kia_get_upload(SubGhzProtocolEncoderKIA* instance) {
+    furi_assert(instance);
+    size_t index = 0;
+
+    for(uint8_t burst = 0; burst < KIA_TOTAL_BURSTS; burst++) {
+        if(burst > 0) {
+            instance->encoder.upload[index++] = level_duration_make(false, KIA_INTER_BURST_GAP_US);
+        }
+
+        for(int i = 0; i < 32; i++) {
+            bool is_high = (i % 2) == 0;
+            instance->encoder.upload[index++] =
+                level_duration_make(is_high, subghz_protocol_kia_const.te_short);
+        }
+
+        instance->encoder.upload[index++] =
+            level_duration_make(true, subghz_protocol_kia_const.te_long);
+
+        instance->encoder.upload[index++] =
+            level_duration_make(false, subghz_protocol_kia_const.te_long);
+
+        for(uint8_t bit_num = 0; bit_num < 59; bit_num++) {
+            uint64_t bit_mask = 1ULL << (58 - bit_num);
+            uint8_t current_bit = (instance->generic.data & bit_mask) ? 1 : 0;
+
+            uint32_t duration = current_bit ? subghz_protocol_kia_const.te_long :
+                                              subghz_protocol_kia_const.te_short;
+
+            instance->encoder.upload[index++] = level_duration_make(true, duration);
+            instance->encoder.upload[index++] = level_duration_make(false, duration);
+        }
+
+        instance->encoder.upload[index++] =
+            level_duration_make(true, subghz_protocol_kia_const.te_long * 2);
+    }
+
+    instance->encoder.size_upload = index;
+    instance->encoder.front = 0;
+
+    FURI_LOG_I(
+        TAG,
+        "Upload built: %d bursts, size_upload=%zu, data_count_bit=%u, data=0x%016llX",
+        KIA_TOTAL_BURSTS,
+        instance->encoder.size_upload,
+        instance->generic.data_count_bit,
+        instance->generic.data);
 }
 
 SubGhzProtocolStatus
@@ -199,11 +245,9 @@ SubGhzProtocolStatus
     furi_assert(context);
     SubGhzProtocolEncoderKIA* instance = context;
 
-    // Always reset state when deserializing
-    instance->is_running = false;
-    instance->preamble_count = 0;
-    instance->current_burst = 0;
-    instance->sending_gap = false;
+    instance->encoder.is_running = false;
+    instance->encoder.front = 0;
+    instance->encoder.repeat = 10;
 
     SubGhzProtocolStatus res = SubGhzProtocolStatusError;
     do {
@@ -328,17 +372,28 @@ SubGhzProtocolStatus
         // Rebuild data with CRC recalculation
         subghz_protocol_encoder_kia_update_data(instance);
 
-        // Initialize encoder state for transmission
-        instance->is_running = true;
-        instance->preamble_count = 0;
-        instance->current_burst = 0;
-        instance->sending_gap = false;
+        if(!flipper_format_read_uint32(
+               flipper_format, "Repeat", (uint32_t*)&instance->encoder.repeat, 1)) {
+            instance->encoder.repeat = 10;
+            FURI_LOG_D(
+                TAG, "Repeat not found in file, using default 10 for continuous transmission");
+        }
+
+        subghz_protocol_encoder_kia_get_upload(instance);
+
+        instance->encoder.is_running = true;
+        instance->encoder.front = 0;
 
         if(instance->generic.data == 0) {
             FURI_LOG_E(TAG, "Warning: data is 0!");
         }
 
-        FURI_LOG_I(TAG, "Encoder initialized - will send %d bursts", KIA_TOTAL_BURSTS);
+        FURI_LOG_I(
+            TAG,
+            "Encoder initialized - will send %d bursts, repeat=%u, front=%zu",
+            KIA_TOTAL_BURSTS,
+            instance->encoder.repeat,
+            instance->encoder.front);
         FURI_LOG_I(TAG, "Final data to transmit: 0x%016llX", instance->generic.data);
         res = SubGhzProtocolStatusOk;
     } while(false);
@@ -349,82 +404,59 @@ SubGhzProtocolStatus
 void subghz_protocol_encoder_kia_stop(void* context) {
     if(!context) return;
     SubGhzProtocolEncoderKIA* instance = context;
-
-    instance->is_running = false;
-    instance->preamble_count = 0;
-    instance->current_burst = 0;
-    instance->sending_gap = false;
-
-    FURI_LOG_D(TAG, "Encoder stopped and reset");
+    instance->encoder.is_running = false;
+    instance->encoder.front = 0;
 }
 
 LevelDuration subghz_protocol_encoder_kia_yield(void* context) {
     SubGhzProtocolEncoderKIA* instance = context;
 
-    if(!instance || !instance->is_running) {
+    if(!instance || !instance->encoder.upload || instance->encoder.repeat == 0 ||
+       !instance->encoder.is_running) {
+        if(instance) {
+            FURI_LOG_D(
+                TAG,
+                "Encoder yield stopped: repeat=%u, is_running=%d, upload=%p",
+                instance->encoder.repeat,
+                instance->encoder.is_running,
+                instance->encoder.upload);
+            instance->encoder.is_running = false;
+        }
         return level_duration_reset();
     }
 
-    // Handle inter-burst gap
-    if(instance->sending_gap) {
-        instance->sending_gap = false;
-        instance->preamble_count = 0;
-        FURI_LOG_D(TAG, "Starting burst %d", instance->current_burst + 1);
-        return level_duration_make(false, KIA_INTER_BURST_GAP_US);
+    if(instance->encoder.front >= instance->encoder.size_upload) {
+        FURI_LOG_E(
+            TAG,
+            "Encoder front out of bounds: %zu >= %zu",
+            instance->encoder.front,
+            instance->encoder.size_upload);
+        instance->encoder.is_running = false;
+        instance->encoder.front = 0;
+        return level_duration_reset();
     }
 
-    LevelDuration result;
+    LevelDuration ret = instance->encoder.upload[instance->encoder.front];
 
-    // Preamble: 32 transitions (16 short-short pairs)
-    if(instance->preamble_count < 32) {
-        bool is_high = (instance->preamble_count % 2) == 0;
-        result = level_duration_make(is_high, subghz_protocol_kia_const.te_short);
-    }
-    // Sync high
-    else if(instance->preamble_count == 32) {
-        result = level_duration_make(true, subghz_protocol_kia_const.te_long);
-    }
-    // Sync low
-    else if(instance->preamble_count == 33) {
-        result = level_duration_make(false, subghz_protocol_kia_const.te_long);
-    }
-    // Data bits: 59 bits (118 transitions, counts 34-151)
-    else if(instance->preamble_count < 152) {
-        uint32_t data_transition = instance->preamble_count - 34;
-        uint32_t bit_num = data_transition / 2;
-        bool is_high = (data_transition % 2) == 0;
-
-        // Send bits 58-0 (59 bits), MSB first
-        uint64_t bit_mask = 1ULL << (58 - bit_num);
-        uint8_t current_bit = (instance->generic.data & bit_mask) ? 1 : 0;
-
-        uint32_t duration = current_bit ? subghz_protocol_kia_const.te_long :
-                                          subghz_protocol_kia_const.te_short;
-        result = level_duration_make(is_high, duration);
-    }
-    // Trailing HIGH pulse (count 152)
-    else if(instance->preamble_count == 152) {
-        result = level_duration_make(true, subghz_protocol_kia_const.te_long * 2);
-    }
-    // After trailing (count 153) - check if more bursts needed
-    else {
-        instance->current_burst++;
-
-        if(instance->current_burst >= KIA_TOTAL_BURSTS) {
-            instance->is_running = false;
-            instance->preamble_count = 0;
-            instance->current_burst = 0;
-            FURI_LOG_I(TAG, "All %d bursts transmitted", KIA_TOTAL_BURSTS);
-            return level_duration_reset();
-        }
-
-        instance->sending_gap = true;
-        instance->preamble_count = 0;
-        return level_duration_make(false, KIA_INTER_BURST_GAP_US);
+    if(instance->encoder.front < 5 || instance->encoder.front == 0) {
+        FURI_LOG_D(
+            TAG,
+            "Encoder yield[%zu]: repeat=%u, size=%zu, level=%d, duration=%lu",
+            instance->encoder.front,
+            instance->encoder.repeat,
+            instance->encoder.size_upload,
+            level_duration_get_level(ret),
+            level_duration_get_duration(ret));
     }
 
-    instance->preamble_count++;
-    return result;
+    if(++instance->encoder.front == instance->encoder.size_upload) {
+        instance->encoder.repeat--;
+        instance->encoder.front = 0;
+        FURI_LOG_I(
+            TAG, "Encoder completed one cycle, remaining repeat=%u", instance->encoder.repeat);
+    }
+
+    return ret;
 }
 
 /**
@@ -435,7 +467,8 @@ void subghz_protocol_encoder_kia_set_button(void* context, uint8_t button) {
     SubGhzProtocolEncoderKIA* instance = context;
     instance->button = button & 0x0F;
     subghz_protocol_encoder_kia_update_data(instance);
-    FURI_LOG_I(TAG, "Button set to 0x%X, CRC recalculated", instance->button);
+    subghz_protocol_encoder_kia_get_upload(instance);
+    FURI_LOG_I(TAG, "Button set to 0x%X, upload rebuilt with new CRC", instance->button);
 }
 
 /**
@@ -446,7 +479,8 @@ void subghz_protocol_encoder_kia_set_counter(void* context, uint16_t counter) {
     SubGhzProtocolEncoderKIA* instance = context;
     instance->counter = counter;
     subghz_protocol_encoder_kia_update_data(instance);
-    FURI_LOG_I(TAG, "Counter set to 0x%04X, CRC recalculated", instance->counter);
+    subghz_protocol_encoder_kia_get_upload(instance);
+    FURI_LOG_I(TAG, "Counter set to 0x%04X, upload rebuilt with new CRC", instance->counter);
 }
 
 /**
@@ -457,7 +491,9 @@ void subghz_protocol_encoder_kia_increment_counter(void* context) {
     SubGhzProtocolEncoderKIA* instance = context;
     instance->counter++;
     subghz_protocol_encoder_kia_update_data(instance);
-    FURI_LOG_I(TAG, "Counter incremented to 0x%04X, CRC recalculated", instance->counter);
+    subghz_protocol_encoder_kia_get_upload(instance);
+    FURI_LOG_I(
+        TAG, "Counter incremented to 0x%04X, upload rebuilt with new CRC", instance->counter);
 }
 
 /**

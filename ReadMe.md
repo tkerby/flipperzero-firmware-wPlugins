@@ -57,6 +57,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Segment clock and HC-SR04 app improvements (By Tyl3rA)](https://github.com/xMasterX/all-the-plugins/pull/201)
 - [Many app updates to add FM12K (By xMasterX)](https://github.com/xMasterX/all-the-plugins/commit/fca96440a66c9fbc9a15cb56f90afe2feb026491#diff-d48125c42269db81f9468bb6aaca2d42030ea5a701d14cf6deb4db378b2ff669)
 - Updated: [Marmalade v0.1.1 (By RocketGod)](https://github.com/RocketGod-git/flipper-zero-rf-jammer)
+- Updated: [ProtoPirate WIP v1.4 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate) [Fix Kia V1 and add Kia V2 encoder (By zero-mega)](https://github.com/RocketGod-git/ProtoPirate/pull/28)
 
 <a name="release">
 
@@ -254,6 +255,7 @@ $ ./fbt dolphin_ext
 - Settings: Updated HOLD LEFT to go to Secondary Favorite [(By RogueMaster)]
 - Settings: Updated HOLD UP to go to Tertiary Favorite [(By xMasterX; Changed By RogueMaster)]
 - Settings: Updated HOLD DOWN to go to Quaternary Favorite [(By RogueMaster)]
+- SubGHz: [All Supported Protocols](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/documentation/SubGHzSupportedSystems.md)
 - SubGHz: [Add settings to subghz read functionality to allow setting RSSI threshold (raw only) (By PolymerPrints)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/184)
 - SubGHz: Auto Detect Raw in READ action (Needs To Be Enabled In Read Settings) [from perspecdev](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/152)
 - SubGHz: [Beep on TX for SubGHz & Remote (By LeeroysHub)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/ad0a273a71d7701af30df75c9174f3bdc3fd6e4a)
