@@ -26,10 +26,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0105-1715-0.420.0-695c7ac](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0110-1335-0.420.0-a7a8871](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2026-01-05 17:15 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-01-05 17:15 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2026-01-10 13:35 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-01-10 13:35 EST`
 - Updated: [CAN Tools v1.1 (By MatthewKuKanich)](https://github.com/MatthewKuKanich/FlipperCANTools)
 - Updated: [LD2410 Human Detector v1.0 (By sistemasorp)](https://github.com/sistemasorp/flipper-ld2410_human_detector) [add distance visualizer (By MatthewKuKanich)](https://github.com/sistemasorp/flipper-ld2410_human_detector/pull/1)
 - Updated: [T-Union Master (China) v0.1 (By SocialSisterYi)](https://github.com/SocialSisterYi/T-Union_Master)
@@ -51,7 +51,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Alutech_at_4n and Nice Flor S protocols acceleration and Debug status for desktop clock (By Dmitry422)](https://github.com/DarkFlippers/unleashed-firmware/pull/942)
 - SubGHz: [Sommer fm2 in Add manually now uses FM12K modulation (Sommer without fm2 tag uses FM476) (try this if regular option doesn't work for you) (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/e97f90529d5735e38971d54b3879fdc515516852)
 - Docs: [Add full list of supported SubGHz protocols and their frequencies/modulations that can be used for reading remotes (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/c6ebfb2c4e9902a31bbfb88f9fcfa4b30d76d487) [Docs Link](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/documentation/SubGHzSupportedSystems.md)
-- SubGHz: [Stilmatic - button 9 support (two buttons hold simulation) (mapped on arrow keys) (By xMasterX)]()
+- SubGHz: Stilmatic - button 9 support (two buttons hold simulation) (mapped on arrow keys) (By xMasterX)
 - SubGHz: [Sommer - last button code 0x6 support (mapped on arrow keys) (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/c5520b7d3325fd8d8b17d66f668a3a321d3a54a4)
 - SubGHz: [Add 390MHz, 430.5MHz to default hopper list (6 elements like in OFW) (works well with Hopper RSSI level set for your enviroment) (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/0e44e56659c3208fc8a2718436b8adb3af710e2e)
 - [Segment clock and HC-SR04 app improvements (By Tyl3rA)](https://github.com/xMasterX/all-the-plugins/pull/201)
