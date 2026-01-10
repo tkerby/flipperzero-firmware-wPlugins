@@ -56,6 +56,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - SubGHz: [Add 390MHz, 430.5MHz to default hopper list (6 elements like in OFW) (works well with Hopper RSSI level set for your enviroment) (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/0e44e56659c3208fc8a2718436b8adb3af710e2e)
 - [Segment clock and HC-SR04 app improvements (By Tyl3rA)](https://github.com/xMasterX/all-the-plugins/pull/201)
 - [Many app updates to add FM12K (By xMasterX)](https://github.com/xMasterX/all-the-plugins/commit/fca96440a66c9fbc9a15cb56f90afe2feb026491#diff-d48125c42269db81f9468bb6aaca2d42030ea5a701d14cf6deb4db378b2ff669)
+- Updated: [Marmalade v0.1.1 (By RocketGod)](https://github.com/RocketGod-git/flipper-zero-rf-jammer)
 
 <a name="release">
 
