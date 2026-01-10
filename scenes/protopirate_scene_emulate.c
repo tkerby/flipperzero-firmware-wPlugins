@@ -130,17 +130,12 @@ static bool protopirate_emulate_update_data(EmulateContext *ctx, uint8_t button)
 
     // Update button
     uint32_t btn_value = button;
-    if (!flipper_format_update_uint32(ctx->flipper_format, "Btn", &btn_value, 1))
-    {
-        // Try to insert if update failed
-        flipper_format_insert_or_update_uint32(ctx->flipper_format, "Btn", &btn_value, 1);
-    }
+    flipper_format_insert_or_update_uint32(ctx->flipper_format, "Btn", &btn_value, 1);
+    FURI_LOG_I(TAG, "Updated flipper format - Btn: 0x%02X", button);
 
-    // Update counter
-    if (!flipper_format_update_uint32(ctx->flipper_format, "Cnt", &ctx->current_counter, 1))
-    {
-        flipper_format_insert_or_update_uint32(ctx->flipper_format, "Cnt", &ctx->current_counter, 1);
-    }
+
+    flipper_format_insert_or_update_uint32(ctx->flipper_format, "Cnt", &ctx->current_counter, 1);
+    FURI_LOG_I(TAG, "Updated flipper format - Cnt: 0x%03lX", (unsigned long)ctx->current_counter);
 
     return true;
 }
@@ -228,11 +223,10 @@ static bool protopirate_emulate_input_callback(InputEvent *event, void *context)
     if (!ctx)
         return false;
 
-    if (event->type == InputTypePress || event->type == InputTypeRepeat)
+    if (event->type == InputTypePress)
     {
         if (event->key == InputKeyBack)
         {
-            // Exit emulation
             view_dispatcher_send_custom_event(
                 app->view_dispatcher, ProtoPirateCustomEventEmulateExit);
             return true;
@@ -248,7 +242,7 @@ static bool protopirate_emulate_input_callback(InputEvent *event, void *context)
         ctx->current_counter++;
         protopirate_emulate_update_data(ctx, button);
 
-        // Transmit the signal
+        // Start transmission - user can hold as long as they want
         ctx->is_transmitting = true;
         view_dispatcher_send_custom_event(
             app->view_dispatcher, ProtoPirateCustomEventEmulateTransmit);
@@ -257,10 +251,15 @@ static bool protopirate_emulate_input_callback(InputEvent *event, void *context)
     }
     else if (event->type == InputTypeRelease)
     {
-        ctx->is_transmitting = false;
-        view_dispatcher_send_custom_event(
-            app->view_dispatcher, ProtoPirateCustomEventEmulateStop);
-        return true;
+        // Stop transmission immediately on release - simple behavior like main SubGhz app
+        if (ctx && ctx->is_transmitting)
+        {
+            ctx->is_transmitting = false;
+            view_dispatcher_send_custom_event(
+                app->view_dispatcher, ProtoPirateCustomEventEmulateStop);
+            return true;
+        }
+        return false;
     }
 
     return false;
@@ -431,12 +430,27 @@ bool protopirate_scene_emulate_on_event(void *context, SceneManagerEvent event)
                 {
                     FURI_LOG_W(TAG, "Previous transmission still active, stopping it");
                     subghz_devices_stop_async_tx(app->txrx->radio_device);
+                    
+                    // Stop the encoder
+                    if(emulate_context->transmitter) {
+                        subghz_transmitter_stop(emulate_context->transmitter);
+                    }
+                    
                     furi_delay_ms(10);
                     subghz_devices_idle(app->txrx->radio_device);
                     app->txrx->txrx_state = ProtoPirateTxRxStateIDLE;
                 }
 
-                // Re-deserialize the transmitter to reset encoder state
+                flipper_format_rewind(emulate_context->flipper_format);
+                uint32_t verify_btn, verify_cnt;
+                if(flipper_format_read_uint32(emulate_context->flipper_format, "Btn", &verify_btn, 1)) {
+                    FURI_LOG_I(TAG, "Flipper format Btn value before deserialize: 0x%02lX", (unsigned long)verify_btn);
+                }
+                flipper_format_rewind(emulate_context->flipper_format);
+                if(flipper_format_read_uint32(emulate_context->flipper_format, "Cnt", &verify_cnt, 1)) {
+                    FURI_LOG_I(TAG, "Flipper format Cnt value before deserialize: 0x%03lX", (unsigned long)verify_cnt);
+                }
+
                 flipper_format_rewind(emulate_context->flipper_format);
                 SubGhzProtocolStatus status = subghz_transmitter_deserialize(
                     emulate_context->transmitter, emulate_context->flipper_format);
@@ -492,19 +506,8 @@ bool protopirate_scene_emulate_on_event(void *context, SceneManagerEvent event)
                         emulate_context->transmitter))
                     {
                         app->txrx->txrx_state = ProtoPirateTxRxStateTx;
-                        notification_message(app->notifications, &sequence_blink_start_cyan);
                         notification_message(app->notifications, &sequence_single_vibro);
                         FURI_LOG_I(TAG, "Started transmission: freq=%lu, preset=%s", frequency, preset_name);
-                        
-                        furi_delay_ms(100);
-                        
-                        // Stop transmission
-                        subghz_devices_stop_async_tx(app->txrx->radio_device);
-                        subghz_devices_idle(app->txrx->radio_device);
-                        app->txrx->txrx_state = ProtoPirateTxRxStateIDLE;
-                        notification_message(app->notifications, &sequence_blink_stop);
-                        
-                        FURI_LOG_I(TAG, "Transmission complete");
                     } else {
                         FURI_LOG_E(TAG, "Failed to start async TX");
                         notification_message(app->notifications, &sequence_error);
@@ -526,30 +529,33 @@ bool protopirate_scene_emulate_on_event(void *context, SceneManagerEvent event)
 
         case ProtoPirateCustomEventEmulateStop:
             // Stop transmission
+            FURI_LOG_I(TAG, "Stop event received, txrx_state=%d", app->txrx->txrx_state);
+            
             if (app->txrx->txrx_state == ProtoPirateTxRxStateTx)
             {
                 FURI_LOG_I(TAG, "Stopping transmission");
                 
-                // Stop async TX first and wait for it to complete
+                // Stop async TX first
                 subghz_devices_stop_async_tx(app->txrx->radio_device);
-                
-                // Wait a bit for the transmission to actually stop
-                furi_delay_ms(10);
-                
-                // Then idle the device
-                subghz_devices_idle(app->txrx->radio_device);
                 
                 // Stop the encoder
                 if(emulate_context && emulate_context->transmitter) {
                     subghz_transmitter_stop(emulate_context->transmitter);
                 }
                 
-                // Update app state
+                furi_delay_ms(10);
+                
+                subghz_devices_idle(app->txrx->radio_device);
+                
                 app->txrx->txrx_state = ProtoPirateTxRxStateIDLE;
                 
-                // Log the timing stats
-                FURI_LOG_I(TAG, "Transmission stopped");
+                FURI_LOG_I(TAG, "Transmission stopped, state set to IDLE");
             }
+            else
+            {
+                FURI_LOG_W(TAG, "Stop event received but txrx_state is not Tx (%d)", app->txrx->txrx_state);
+            }
+            
             notification_message(app->notifications, &sequence_blink_stop);
             consumed = true;
             break;
@@ -564,6 +570,16 @@ bool protopirate_scene_emulate_on_event(void *context, SceneManagerEvent event)
     {
         // Update display
         view_commit_model(app->view_about, false);
+        
+
+        if (emulate_context && emulate_context->is_transmitting)
+        {
+            if (app->txrx->txrx_state == ProtoPirateTxRxStateTx)
+            {
+                notification_message(app->notifications, &sequence_blink_magenta_10);
+            }
+        }
+        
         consumed = true;
     }
 
@@ -574,7 +590,26 @@ void protopirate_scene_emulate_on_exit(void *context)
 {
     ProtoPirateApp *app = context;
 
-    // Clean up
+    if (app->txrx->txrx_state == ProtoPirateTxRxStateTx)
+    {
+        FURI_LOG_I(TAG, "Stopping transmission on exit");
+        
+        subghz_devices_stop_async_tx(app->txrx->radio_device);
+        
+        if (emulate_context && emulate_context->transmitter) {
+            subghz_transmitter_stop(emulate_context->transmitter);
+        }
+        
+        furi_delay_ms(10);
+        
+        subghz_devices_idle(app->txrx->radio_device);
+        app->txrx->txrx_state = ProtoPirateTxRxStateIDLE;
+    }
+    else if (app->txrx->txrx_state != ProtoPirateTxRxStateIDLE)
+    {
+        protopirate_idle(app);
+    }
+
     if (emulate_context)
     {
         if (emulate_context->transmitter)
@@ -588,12 +623,6 @@ void protopirate_scene_emulate_on_exit(void *context)
         furi_string_free(emulate_context->protocol_name);
         free(emulate_context);
         emulate_context = NULL;
-    }
-
-    // Stop any ongoing transmission
-    if (app->txrx->txrx_state != ProtoPirateTxRxStateIDLE)
-    {
-        protopirate_idle(app);
     }
 
     notification_message(app->notifications, &sequence_blink_stop);
