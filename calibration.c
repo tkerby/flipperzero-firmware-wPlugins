@@ -1,5 +1,7 @@
 #include "calibration.h"
 
+// File format: "dry=XXXX\nwet=XXXX\n"
+
 bool calibration_load(MoistureSensorApp* app) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* file = storage_file_alloc(storage);
@@ -27,6 +29,8 @@ bool calibration_load(MoistureSensorApp* app) {
 
 bool calibration_save(MoistureSensorApp* app) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
+
+    // Ensure app data directory exists
     storage_common_mkdir(storage, APP_DATA_PATH(""));
 
     File* file = storage_file_alloc(storage);

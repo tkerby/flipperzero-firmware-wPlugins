@@ -12,8 +12,11 @@
 #define ADC_SAMPLES             10
 #define CONFIRM_TIMEOUT_MS      1000
 
+// GPIO pin 16 (PC3) for analog sensor input
 #define SENSOR_PIN_NUMBER 16
 
+// Calibration defaults for Capacitive Moisture Sensor v1.2
+// Higher ADC = drier (more resistance), Lower ADC = wetter (less resistance)
 #define ADC_MAX_VALUE   4095
 #define ADC_DRY_DEFAULT 3660
 #define ADC_WET_DEFAULT 1700
@@ -43,17 +46,25 @@ typedef struct {
     const GpioPin* gpio_pin;
     FuriHalAdcChannel adc_channel;
     uint8_t pin_number;
+
+    // Sensor readings (protected by mutex)
     uint16_t raw_adc;
     uint16_t millivolts;
     uint8_t moisture_percent;
+
     bool running;
     FuriMutex* mutex;
     AppState state;
     MenuItem selected_menu_item;
+
+    // Active calibration values used for calculations
     uint16_t cal_dry_value;
     uint16_t cal_wet_value;
+
+    // Temporary values while editing in menu (applied on save)
     uint16_t edit_dry_value;
     uint16_t edit_wet_value;
+
     uint32_t confirm_start_tick;
     const char* confirm_message;
 } MoistureSensorApp;

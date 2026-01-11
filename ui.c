@@ -8,6 +8,7 @@ const char* get_moisture_status(uint8_t percent) {
     return "Very Wet";
 }
 
+// Draw an editable value row with < > arrows when selected
 static void
     draw_value_row(Canvas* canvas, const char* label, uint16_t value, uint8_t y, bool selected) {
     char buf[24];
@@ -74,6 +75,7 @@ static void draw_confirm_overlay(Canvas* canvas, const char* message) {
 void draw_callback(Canvas* canvas, void* ctx) {
     MoistureSensorApp* app = ctx;
 
+    // Copy shared state under mutex to avoid tearing
     furi_mutex_acquire(app->mutex, FuriWaitForever);
     uint16_t mv = app->millivolts;
     uint16_t raw = app->raw_adc;
@@ -88,6 +90,7 @@ void draw_callback(Canvas* canvas, void* ctx) {
 
     canvas_draw_line(canvas, 0, 14, 128, 14);
 
+    // Draw percent value and % sign separately (FontBigNumbers lacks % glyph)
     char num_str[4];
     snprintf(num_str, sizeof(num_str), "%d", percent);
     canvas_set_font(canvas, FontBigNumbers);
@@ -115,6 +118,7 @@ void draw_callback(Canvas* canvas, void* ctx) {
         canvas_draw_box(canvas, 14, 58, bar_width, 5);
     }
 
+    // Show hint for calibration menu (press Left to open)
     if(state == AppStateMain) {
         canvas_set_font(canvas, FontSecondary);
         canvas_draw_str_aligned(canvas, 126, 4, AlignRight, AlignTop, "<");

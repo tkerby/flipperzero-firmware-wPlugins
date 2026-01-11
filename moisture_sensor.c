@@ -2,6 +2,8 @@
 #include "calibration.h"
 #include "ui.h"
 
+// Convert raw ADC reading to moisture percentage (0-100%)
+// ADC values are inverted: higher = drier, lower = wetter
 static uint8_t calculate_moisture_percent(MoistureSensorApp* app, uint16_t raw) {
     if(raw >= app->cal_dry_value) return 0;
     if(raw <= app->cal_wet_value) return 100;
@@ -61,6 +63,8 @@ static uint16_t* get_selected_edit_value(MoistureSensorApp* app) {
 
 static void handle_input_menu(MoistureSensorApp* app, InputEvent* event) {
     uint16_t* edit_val = get_selected_edit_value(app);
+
+    // Long press adjusts by 100, short press by 10
     int16_t step = (event->type == InputTypeLong) ? (ADC_STEP * 10) : ADC_STEP;
 
     switch(event->key) {
@@ -99,6 +103,7 @@ static void input_callback(InputEvent* input_event, void* ctx) {
     furi_message_queue_put(app->event_queue, input_event, FuriWaitForever);
 }
 
+// Read and average multiple ADC samples for stability
 static void read_sensor(MoistureSensorApp* app) {
     uint32_t sum = 0;
     for(uint8_t i = 0; i < ADC_SAMPLES; i++) {
@@ -122,6 +127,7 @@ static MoistureSensorApp* moisture_sensor_app_alloc(void) {
         return NULL;
     }
 
+    // Initialize pointers to NULL for safe cleanup on failure
     app->event_queue = NULL;
     app->mutex = NULL;
     app->adc_handle = NULL;
@@ -160,6 +166,7 @@ static MoistureSensorApp* moisture_sensor_app_alloc(void) {
     app->adc_handle = furi_hal_adc_acquire();
     if(!app->adc_handle) goto cleanup;
 
+    // Configure ADC: 2.5V scale for 3.3V sensor, with oversampling for noise reduction
     furi_hal_adc_configure_ex(
         app->adc_handle,
         FuriHalAdcScale2500,
@@ -218,6 +225,8 @@ int32_t moisture_sensor_app(void* p) {
 
     while(app->running) {
         if(furi_message_queue_get(app->event_queue, &event, 10) == FuriStatusOk) {
+            // In menu: long press only for Left/Right (value adjustment)
+            // Prevents accidental repeated navigation
             bool handle = false;
             if(app->state == AppStateMenu) {
                 if(event.key == InputKeyLeft || event.key == InputKeyRight) {
