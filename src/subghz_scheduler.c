@@ -14,12 +14,25 @@ struct Scheduler {
     char* file_name;
     SchedulerTxMode mode;
     bool timing_mode;
+    bool radio;
 };
 
 Scheduler* scheduler_alloc() {
-    Scheduler* scheduler = malloc(sizeof(Scheduler));
+    Scheduler* scheduler = calloc(1, sizeof(Scheduler));
+    furi_assert(scheduler);
+
+    scheduler->previous_run_time = 0;
+    scheduler->countdown = 0;
     scheduler->tx_delay = SchedulerTxDelay100;
+    scheduler->interval = Interval10Sec;
     scheduler->tx_repeats = 0;
+    scheduler->file_type = SchedulerFileTypeSingle;
+    scheduler->list_count = 1;
+    scheduler->file_name = NULL;
+    scheduler->mode = SchedulerTxModeNormal;
+    scheduler->timing_mode = SchedulerTimingModeRelative;
+    scheduler->radio = 0; // internal by default
+
     return scheduler;
 }
 
@@ -29,6 +42,7 @@ void scheduler_free(Scheduler* scheduler) {
 }
 
 void scheduler_reset(Scheduler* scheduler) {
+    furi_assert(scheduler);
     scheduler->previous_run_time = 0;
     scheduler->countdown = 0;
 }
@@ -62,6 +76,11 @@ void scheduler_set_mode(Scheduler* scheduler, SchedulerTxMode mode) {
 void scheduler_set_tx_delay(Scheduler* scheduler, uint8_t tx_delay) {
     furi_assert(scheduler);
     scheduler->tx_delay = tx_delay_value[tx_delay];
+}
+
+void scheduler_set_radio(Scheduler* scheduler, uint8_t radio) {
+    furi_assert(scheduler);
+    scheduler->radio = radio;
 }
 
 static const char* extract_filename(const char* filepath) {
@@ -146,6 +165,11 @@ SchedulerTxMode scheduler_get_mode(Scheduler* scheduler) {
 uint16_t scheduler_get_tx_delay(Scheduler* scheduler) {
     furi_assert(scheduler);
     return scheduler->tx_delay;
+}
+
+bool scheduler_get_radio(Scheduler* scheduler) {
+    furi_assert(scheduler);
+    return scheduler->radio;
 }
 
 uint8_t scheduler_get_tx_delay_index(Scheduler* scheduler) {

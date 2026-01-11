@@ -32,6 +32,7 @@ struct SchedulerApp {
     SchedulerRunView* run_view;
 
     volatile bool is_transmitting;
+    bool ext_radio_present;
 };
 
 typedef enum {

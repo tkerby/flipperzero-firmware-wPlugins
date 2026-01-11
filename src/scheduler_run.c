@@ -1,13 +1,10 @@
 #include "scheduler_run.h"
 
-#include <lib/subghz/devices/devices.h>
-#include <lib/subghz/devices/cc1101_int/cc1101_int_interconnect.h>
-#include <lib/subghz/transmitter.h>
-#include <lib/subghz/protocols/raw.h>
-#include <applications/drivers/subghz/cc1101_ext/cc1101_ext_interconnect.h>
-
-#include <devices/cc1101_int/cc1101_int_interconnect.h>
 #include <devices/devices.h>
+#include <transmitter.h>
+#include <protocols/raw.h>
+#include <devices/cc1101_int/cc1101_int_interconnect.h>
+#include <applications/drivers/subghz/cc1101_ext/cc1101_ext_interconnect.h>
 
 #include <subghz_protocol_registry.h>
 
@@ -74,6 +71,11 @@ static FuriHalSubGhzPreset scheduler_get_subghz_preset_name(const char* preset_n
     return preset;
 }
 
+static const char* const radio_device_name[RADIO_DEVICE_COUNT] = {
+    SUBGHZ_DEVICE_CC1101_INT_NAME,
+    SUBGHZ_DEVICE_CC1101_EXT_NAME,
+};
+
 static void
     transmit(SchedulerApp* app, const SubGhzDevice* device, SubGhzTransmitter* transmitter) {
     notification_message(app->notifications, &sequence_blink_stop);
@@ -94,7 +96,8 @@ static int32_t scheduler_tx(void* context) {
     SchedulerApp* app = context;
     ScheduleTxRun* tx_run = tx_run_alloc();
 
-    const SubGhzDevice* device = subghz_devices_get_by_name(SUBGHZ_DEVICE_CC1101_INT_NAME);
+    const bool radio = scheduler_get_radio(app->scheduler);
+    const SubGhzDevice* device = subghz_devices_get_by_name(radio_device_name[radio]);
     subghz_devices_begin(device);
     subghz_devices_reset(device);
 
