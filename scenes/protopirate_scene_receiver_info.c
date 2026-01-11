@@ -23,6 +23,8 @@ void protopirate_scene_receiver_info_on_enter(void *context)
     furi_assert(context);
     ProtoPirateApp *app = context;
 
+        widget_reset(app->widget);
+
     FuriString *text;
     text = furi_string_alloc();
 

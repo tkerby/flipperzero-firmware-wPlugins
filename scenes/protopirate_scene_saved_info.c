@@ -111,7 +111,7 @@ void protopirate_scene_saved_info_on_enter(void *context)
 
             furi_string_free(temp_str);
             furi_string_free(info_str);
-            flipper_format_free(ff);
+            protopirate_storage_close_file(ff);
         }
     }
 
