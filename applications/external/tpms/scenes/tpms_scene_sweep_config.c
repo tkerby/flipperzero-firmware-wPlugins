@@ -15,9 +15,10 @@ static const char* sweep_preset_names[] = {
     "AM650",
     "AM270",
     "FM238",
+    "FM12K",
     "FM476",
 };
-#define SWEEP_PRESET_COUNT 4
+#define SWEEP_PRESET_COUNT 5
 
 static void tpms_scene_sweep_config_frequency_changed(VariableItem* item) {
     TPMSApp* app = variable_item_get_context(item);

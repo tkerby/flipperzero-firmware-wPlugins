@@ -20,6 +20,7 @@ static const char* sweep_presets[] = {
     "AM650",
     "AM270",
     "FM238",
+    "FM12K",
     "FM476",
 };
 #define SWEEP_PRESET_COUNT (sizeof(sweep_presets) / sizeof(sweep_presets[0]))
