@@ -1,96 +1,96 @@
-#include <furi.h>
-#include <furi_hal.h>
-#include <furi_hal_resources.h>
-#include <gui/gui.h>
-#include <input/input.h>
-#include <stdlib.h>
+#include "moisture_sensor.h"
+#include "calibration.h"
+#include "ui.h"
 
-#define SENSOR_POLL_INTERVAL_MS 100
-#define ADC_SAMPLES             10
+static uint8_t calculate_moisture_percent(MoistureSensorApp* app, uint16_t raw) {
+    if(raw >= app->cal_dry_value) return 0;
+    if(raw <= app->cal_wet_value) return 100;
 
-// Use pin 16 (PC3) on GPIO header
-#define SENSOR_PIN_NUMBER 16
-
-// Calibration values in raw ADC readings for capacitive moisture sensor v1.2
-#define ADC_DRY_VALUE 3656 // ADC reading when sensor is in dry air
-#define ADC_WET_VALUE 1700 // ADC reading when sensor is submerged in water
-
-typedef struct {
-    FuriMessageQueue* event_queue;
-    ViewPort* view_port;
-    Gui* gui;
-    FuriHalAdcHandle* adc_handle;
-    const GpioPin* gpio_pin;
-    FuriHalAdcChannel adc_channel;
-    uint8_t pin_number;
-    uint16_t raw_adc;
-    uint16_t millivolts;
-    uint8_t moisture_percent;
-    bool running;
-    FuriMutex* mutex;
-} MoistureSensorApp;
-
-static uint8_t calculate_moisture_percent(uint16_t raw) {
-    if(raw >= ADC_DRY_VALUE) return 0;
-    if(raw <= ADC_WET_VALUE) return 100;
-
-    uint32_t range = ADC_DRY_VALUE - ADC_WET_VALUE;
-    uint32_t value = ADC_DRY_VALUE - raw;
+    uint32_t range = app->cal_dry_value - app->cal_wet_value;
+    uint32_t value = app->cal_dry_value - raw;
     return (uint8_t)((value * 100) / range);
 }
 
-static const char* get_moisture_status(uint8_t percent) {
-    if(percent < 20) return "Very Dry";
-    if(percent < 40) return "Dry";
-    if(percent < 60) return "Moist";
-    if(percent < 80) return "Wet";
-    return "Very Wet";
+static void show_confirm(MoistureSensorApp* app, const char* message) {
+    app->confirm_message = message;
+    app->state = AppStateConfirm;
+    app->confirm_start_tick = furi_get_tick();
 }
 
-static void draw_callback(Canvas* canvas, void* ctx) {
-    MoistureSensorApp* app = ctx;
+static void handle_menu_selection(MoistureSensorApp* app) {
+    switch(app->selected_menu_item) {
+    case MenuItemResetDefaults:
+        app->edit_dry_value = ADC_DRY_DEFAULT;
+        app->edit_wet_value = ADC_WET_DEFAULT;
+        show_confirm(app, "Defaults restored!");
+        break;
+    case MenuItemSave:
+        app->cal_dry_value = app->edit_dry_value;
+        app->cal_wet_value = app->edit_wet_value;
+        calibration_save(app);
+        show_confirm(app, "Saved!");
+        break;
+    default:
+        break;
+    }
+}
 
-    furi_mutex_acquire(app->mutex, FuriWaitForever);
-    uint16_t mv = app->millivolts;
-    uint16_t raw = app->raw_adc;
-    uint8_t percent = app->moisture_percent;
-    furi_mutex_release(app->mutex);
+static void handle_input_main(MoistureSensorApp* app, InputEvent* event) {
+    if(event->key == InputKeyBack) {
+        app->running = false;
+    } else if(event->key == InputKeyLeft) {
+        app->state = AppStateMenu;
+        app->selected_menu_item = MenuItemDryValue;
+        app->edit_dry_value = app->cal_dry_value;
+        app->edit_wet_value = app->cal_wet_value;
+    }
+}
 
-    canvas_clear(canvas);
-    canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str_aligned(canvas, 64, 2, AlignCenter, AlignTop, "Moisture Sensor");
+static void adjust_value(uint16_t* value, int16_t delta) {
+    int32_t new_val = (int32_t)*value + delta;
+    if(new_val < 0) new_val = 0;
+    if(new_val > ADC_MAX_VALUE) new_val = ADC_MAX_VALUE;
+    *value = (uint16_t)new_val;
+}
 
-    canvas_draw_line(canvas, 0, 14, 128, 14);
+static uint16_t* get_selected_edit_value(MoistureSensorApp* app) {
+    if(app->selected_menu_item == MenuItemDryValue) return &app->edit_dry_value;
+    if(app->selected_menu_item == MenuItemWetValue) return &app->edit_wet_value;
+    return NULL;
+}
 
-    // Draw moisture percentage (number and % sign separately since FontBigNumbers lacks %)
-    char num_str[4];
-    snprintf(num_str, sizeof(num_str), "%d", percent);
-    canvas_set_font(canvas, FontBigNumbers);
-    uint16_t num_width = canvas_string_width(canvas, num_str);
-    canvas_set_font(canvas, FontPrimary);
-    uint16_t pct_width = canvas_string_width(canvas, "%");
-    uint16_t gap = 2;
-    uint16_t total_width = num_width + gap + pct_width;
-    uint16_t start_x = (128 - total_width) / 2;
-    canvas_set_font(canvas, FontBigNumbers);
-    canvas_draw_str(canvas, start_x, 34, num_str);
-    canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str(canvas, start_x + num_width + gap, 34, "%");
+static void handle_input_menu(MoistureSensorApp* app, InputEvent* event) {
+    uint16_t* edit_val = get_selected_edit_value(app);
+    int16_t step = (event->type == InputTypeLong) ? (ADC_STEP * 10) : ADC_STEP;
 
-    // Draw status text
-    canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str_aligned(canvas, 64, 36, AlignCenter, AlignTop, get_moisture_status(percent));
-
-    // Draw mV and raw ADC values
-    char info_str[32];
-    snprintf(info_str, sizeof(info_str), "%dmV  ADC:%d  Ch:%d", mv, raw, app->adc_channel);
-    canvas_draw_str_aligned(canvas, 64, 48, AlignCenter, AlignTop, info_str);
-
-    // Draw moisture bar
-    uint8_t bar_width = percent;
-    canvas_draw_frame(canvas, 14, 58, 100, 5);
-    if(bar_width > 0) {
-        canvas_draw_box(canvas, 14, 58, bar_width, 5);
+    switch(event->key) {
+    case InputKeyBack:
+        app->state = AppStateMain;
+        break;
+    case InputKeyUp:
+        if(app->selected_menu_item > 0) {
+            app->selected_menu_item--;
+        } else {
+            app->selected_menu_item = MenuItemCount - 1;
+        }
+        break;
+    case InputKeyDown:
+        app->selected_menu_item++;
+        if(app->selected_menu_item >= MenuItemCount) {
+            app->selected_menu_item = 0;
+        }
+        break;
+    case InputKeyLeft:
+        if(edit_val) adjust_value(edit_val, -step);
+        break;
+    case InputKeyRight:
+        if(edit_val) adjust_value(edit_val, step);
+        break;
+    case InputKeyOk:
+        handle_menu_selection(app);
+        break;
+    default:
+        break;
     }
 }
 
@@ -107,7 +107,7 @@ static void read_sensor(MoistureSensorApp* app) {
     }
     uint16_t raw = (uint16_t)(sum / ADC_SAMPLES);
     uint16_t mv = furi_hal_adc_convert_to_voltage(app->adc_handle, raw);
-    uint8_t percent = calculate_moisture_percent(raw);
+    uint8_t percent = calculate_moisture_percent(app, raw);
 
     furi_mutex_acquire(app->mutex, FuriWaitForever);
     app->raw_adc = raw;
@@ -122,7 +122,6 @@ static MoistureSensorApp* moisture_sensor_app_alloc(void) {
         return NULL;
     }
 
-    // Initialize pointers to NULL for safe cleanup on failure
     app->event_queue = NULL;
     app->mutex = NULL;
     app->adc_handle = NULL;
@@ -140,8 +139,17 @@ static MoistureSensorApp* moisture_sensor_app_alloc(void) {
     app->raw_adc = 0;
     app->millivolts = 0;
     app->moisture_percent = 0;
+    app->state = AppStateMain;
+    app->selected_menu_item = MenuItemDryValue;
+    app->cal_dry_value = ADC_DRY_DEFAULT;
+    app->cal_wet_value = ADC_WET_DEFAULT;
+    app->edit_dry_value = ADC_DRY_DEFAULT;
+    app->edit_wet_value = ADC_WET_DEFAULT;
+    app->confirm_start_tick = 0;
+    app->confirm_message = NULL;
 
-    // Get GPIO pin and ADC channel by pin number
+    calibration_load(app);
+
     const GpioPinRecord* pin_record = furi_hal_resources_pin_by_number(SENSOR_PIN_NUMBER);
     if(!pin_record || !pin_record->pin) goto cleanup;
 
@@ -149,7 +157,6 @@ static MoistureSensorApp* moisture_sensor_app_alloc(void) {
     app->adc_channel = pin_record->channel;
     app->pin_number = SENSOR_PIN_NUMBER;
 
-    // Initialize ADC with proper configuration (2500mV scale for 3.3V sensors)
     app->adc_handle = furi_hal_adc_acquire();
     if(!app->adc_handle) goto cleanup;
 
@@ -160,10 +167,8 @@ static MoistureSensorApp* moisture_sensor_app_alloc(void) {
         FuriHalAdcOversample64,
         FuriHalAdcSamplingtime247_5);
 
-    // Configure GPIO pin for analog input
     furi_hal_gpio_init(app->gpio_pin, GpioModeAnalog, GpioPullNo, GpioSpeedVeryHigh);
 
-    // Setup GUI
     app->view_port = view_port_alloc();
     if(!app->view_port) goto cleanup;
 
@@ -213,15 +218,41 @@ int32_t moisture_sensor_app(void* p) {
 
     while(app->running) {
         if(furi_message_queue_get(app->event_queue, &event, 10) == FuriStatusOk) {
-            if(event.type == InputTypePress || event.type == InputTypeLong) {
-                if(event.key == InputKeyBack) {
-                    app->running = false;
+            bool handle = false;
+            if(app->state == AppStateMenu) {
+                if(event.key == InputKeyLeft || event.key == InputKeyRight) {
+                    handle = (event.type == InputTypePress || event.type == InputTypeLong);
+                } else {
+                    handle = (event.type == InputTypePress);
                 }
+            } else {
+                handle = (event.type == InputTypePress || event.type == InputTypeLong);
+            }
+
+            if(handle) {
+                switch(app->state) {
+                case AppStateMain:
+                    handle_input_main(app, &event);
+                    break;
+                case AppStateMenu:
+                    handle_input_menu(app, &event);
+                    break;
+                case AppStateConfirm:
+                    app->state = AppStateMain;
+                    break;
+                }
+                view_port_update(app->view_port);
+            }
+        }
+
+        if(app->state == AppStateConfirm) {
+            if(furi_get_tick() - app->confirm_start_tick >= CONFIRM_TIMEOUT_MS) {
+                app->state = AppStateMain;
+                view_port_update(app->view_port);
             }
         }
 
         uint32_t now = furi_get_tick();
-        // Unsigned subtraction handles tick counter overflow correctly
         if(now - last_poll >= SENSOR_POLL_INTERVAL_MS) {
             last_poll = now;
             read_sensor(app);

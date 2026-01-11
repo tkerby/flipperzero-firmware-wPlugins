@@ -1,4 +1,4 @@
-# Moisture Sensor App for Flipper Zero
+# Moisture Sensor Readings for Flipper Zero
 
 A Flipper Zero application that reads values from a Capacitive Moisture Sensor v1.2.
 
@@ -9,8 +9,9 @@ A Flipper Zero application that reads values from a Capacitive Moisture Sensor v
 - Real-time moisture percentage display (0-100%)
 - Visual moisture bar indicator
 - Status text (Very Dry, Dry, Moist, Wet, Very Wet)
-- Millivolt and raw ADC value display for calibration
+- Millivolt and raw ADC value display
 - Averaged readings for stability
+- In-app calibration menu with persistent storage
 
 ## Hardware Requirements
 
@@ -61,22 +62,15 @@ make clean    # Clean build artifacts
    - Moisture percentage
    - Status indicator
    - Millivolt reading and raw ADC value
-   - Visual bar graph
-4. Press **Back** to exit
+4. Press **Left** to open calibration menu
+5. Press **Back** to exit
 
 ## Calibration
 
-The default calibration values (raw ADC readings) are set for the Capacitive Moisture Sensor v1.2:
+Press **Left** to open the calibration menu:
 
-- `ADC_DRY_VALUE`: 3656 (sensor in dry air)
-- `ADC_WET_VALUE`: 1700 (sensor submerged in water)
+- **Dry** / **Wet** - Adjust ADC values with **Left**/**Right** (±10 per press, ±100 for long press)
+- **Reset** - Restore factory defaults (Dry: 3660, Wet: 1700)
+- **Save** - Save calibration values
 
-To calibrate for your sensor:
-
-1. Run the app with the sensor in dry air, note the ADC value
-2. Submerge the sensor in water (only up to the line), note the ADC value
-3. Update the values in `moisture_sensor.c` and rebuild
-
-## License
-
-MIT
+Calibration values persist across restarts.
