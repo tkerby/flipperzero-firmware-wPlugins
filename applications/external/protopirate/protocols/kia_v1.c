@@ -47,10 +47,12 @@ const SubGhzProtocolDecoder kia_protocol_v1_decoder = {
     .feed = kia_protocol_decoder_v1_feed,
     .reset = kia_protocol_decoder_v1_reset,
 
-    .get_hash_data = kia_protocol_decoder_v1_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = kia_protocol_decoder_v1_get_hash_data,
     .serialize = kia_protocol_decoder_v1_serialize,
     .deserialize = kia_protocol_decoder_v1_deserialize,
     .get_string = kia_protocol_decoder_v1_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder kia_protocol_v1_encoder = {
@@ -546,10 +548,10 @@ void kia_protocol_decoder_v1_feed(void* context, bool level, uint32_t duration) 
     }
 }
 
-uint8_t kia_protocol_decoder_v1_get_hash_data(void* context) {
+uint32_t kia_protocol_decoder_v1_get_hash_data(void* context) {
     furi_assert(context);
     SubGhzProtocolDecoderKiaV1* instance = context;
-    return subghz_protocol_blocks_get_hash_data(
+    return subghz_protocol_blocks_get_hash_data_long(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 

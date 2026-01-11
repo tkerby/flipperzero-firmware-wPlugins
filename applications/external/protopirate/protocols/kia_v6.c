@@ -100,10 +100,12 @@ const SubGhzProtocolDecoder kia_protocol_v6_decoder = {
     .free = kia_protocol_decoder_v6_free,
     .feed = kia_protocol_decoder_v6_feed,
     .reset = kia_protocol_decoder_v6_reset,
-    .get_hash_data = kia_protocol_decoder_v6_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = kia_protocol_decoder_v6_get_hash_data,
     .serialize = kia_protocol_decoder_v6_serialize,
     .deserialize = kia_protocol_decoder_v6_deserialize,
     .get_string = kia_protocol_decoder_v6_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder kia_protocol_v6_encoder = {
@@ -544,12 +546,12 @@ LAB_reset:
     return;
 }
 
-uint8_t kia_protocol_decoder_v6_get_hash_data(void* context) {
+uint32_t kia_protocol_decoder_v6_get_hash_data(void* context) {
     furi_assert(context);
     SubGhzProtocolDecoderKiaV6* instance = context;
 
-    uint8_t hash = 0;
-    uint8_t* data = (uint8_t*)&instance->data_part1_low;
+    uint32_t hash = 0;
+    uint32_t* data = (uint32_t*)&instance->data_part1_low;
     size_t data_size = (instance->bit_count + 7) / 8;
     size_t max_size = (kia_protocol_v6_const.min_count_bit_for_found + 7) / 8;
     if(data_size > max_size) {

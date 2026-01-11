@@ -18,7 +18,7 @@ struct ProtoPirateHistory {
     ProtoPirateHistoryItemArray_t data;
     uint16_t last_index;
     uint32_t last_update_timestamp;
-    uint8_t code_last_hash_data;
+    uint32_t code_last_hash_data;
 };
 
 ProtoPirateHistory* protopirate_history_alloc(void) {
@@ -102,7 +102,7 @@ bool protopirate_history_add_to_history(
 
     // Check for duplicate (same hash within 500ms)
     if((instance->code_last_hash_data ==
-        subghz_protocol_decoder_base_get_hash_data(decoder_base)) &&
+        subghz_protocol_decoder_base_get_hash_data_long(decoder_base)) &&
        ((furi_get_tick() - instance->last_update_timestamp) < 500)) {
         instance->last_update_timestamp = furi_get_tick();
         return false;
@@ -118,7 +118,7 @@ bool protopirate_history_add_to_history(
         FURI_LOG_D(TAG, "History full, removed oldest entry");
     }
 
-    instance->code_last_hash_data = subghz_protocol_decoder_base_get_hash_data(decoder_base);
+    instance->code_last_hash_data = subghz_protocol_decoder_base_get_hash_data_long(decoder_base);
     instance->last_update_timestamp = furi_get_tick();
 
     // Create a new history item

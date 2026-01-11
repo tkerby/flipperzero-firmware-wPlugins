@@ -20,7 +20,7 @@ void* subghz_protocol_decoder_fiat_v0_alloc(SubGhzEnvironment* environment);
 void subghz_protocol_decoder_fiat_v0_free(void* context);
 void subghz_protocol_decoder_fiat_v0_reset(void* context);
 void subghz_protocol_decoder_fiat_v0_feed(void* context, bool level, uint32_t duration);
-uint8_t subghz_protocol_decoder_fiat_v0_get_hash_data(void* context);
+uint32_t subghz_protocol_decoder_fiat_v0_get_hash_data(void* context);
 SubGhzProtocolStatus subghz_protocol_decoder_fiat_v0_serialize(
     void* context,
     FlipperFormat* flipper_format,

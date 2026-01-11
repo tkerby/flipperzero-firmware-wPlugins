@@ -26,7 +26,7 @@ void* kia_protocol_decoder_v6_alloc(SubGhzEnvironment* environment);
 void kia_protocol_decoder_v6_free(void* context);
 void kia_protocol_decoder_v6_reset(void* context);
 void kia_protocol_decoder_v6_feed(void* context, bool level, uint32_t duration);
-uint8_t kia_protocol_decoder_v6_get_hash_data(void* context);
+uint32_t kia_protocol_decoder_v6_get_hash_data(void* context);
 SubGhzProtocolStatus kia_protocol_decoder_v6_serialize(
     void* context,
     FlipperFormat* flipper_format,
