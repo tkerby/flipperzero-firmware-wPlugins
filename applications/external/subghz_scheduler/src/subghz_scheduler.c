@@ -18,9 +18,21 @@ struct Scheduler {
 };
 
 Scheduler* scheduler_alloc() {
-    Scheduler* scheduler = malloc(sizeof(Scheduler));
+    Scheduler* scheduler = calloc(1, sizeof(Scheduler));
+    furi_assert(scheduler);
+
+    scheduler->previous_run_time = 0;
+    scheduler->countdown = 0;
     scheduler->tx_delay = SchedulerTxDelay100;
+    scheduler->interval = Interval10Sec;
     scheduler->tx_repeats = 0;
+    scheduler->file_type = SchedulerFileTypeSingle;
+    scheduler->list_count = 1;
+    scheduler->file_name = NULL;
+    scheduler->mode = SchedulerTxModeNormal;
+    scheduler->timing_mode = SchedulerTimingModeRelative;
+    scheduler->radio = 0; // internal by default
+
     return scheduler;
 }
 
@@ -30,6 +42,7 @@ void scheduler_free(Scheduler* scheduler) {
 }
 
 void scheduler_reset(Scheduler* scheduler) {
+    furi_assert(scheduler);
     scheduler->previous_run_time = 0;
     scheduler->countdown = 0;
 }

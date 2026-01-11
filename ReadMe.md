@@ -59,6 +59,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Marmalade v0.1.1 (By RocketGod)](https://github.com/RocketGod-git/flipper-zero-rf-jammer)
 - Updated: [TPMS Reader v0.2 (By wosk)](https://github.com/wosk/flipperzero-tpms) [Add Schrader SMD3MA4, Schrader EG53MA4, and Abarth 124 (By mslocrian)](https://github.com/wosk/flipperzero-tpms/pull/26)
 - Updated: [ProtoPirate WIP v1.4 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate) [Fix Kia V1 and add Kia V2 encoder (By zero-mega)](https://github.com/RocketGod-git/ProtoPirate/pull/28)
+- Updated: [Sub-GHz Scheduler v2.3 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
 
 <a name="release">
 
