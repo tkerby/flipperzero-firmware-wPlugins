@@ -7,6 +7,11 @@ bool calibration_load(MoistureSensorApp* app) {
     File* file = storage_file_alloc(storage);
     bool success = false;
 
+    if(!file) {
+        furi_record_close(RECORD_STORAGE);
+        return false;
+    }
+
     if(storage_file_open(file, CALIBRATION_FILE_PATH, FSAM_READ, FSOM_OPEN_EXISTING)) {
         char buffer[64];
         uint16_t bytes_read = storage_file_read(file, buffer, sizeof(buffer) - 1);
@@ -36,11 +41,16 @@ bool calibration_save(MoistureSensorApp* app) {
     File* file = storage_file_alloc(storage);
     bool success = false;
 
+    if(!file) {
+        furi_record_close(RECORD_STORAGE);
+        return false;
+    }
+
     if(storage_file_open(file, CALIBRATION_FILE_PATH, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
         char buffer[64];
         int len = snprintf(
             buffer, sizeof(buffer), "dry=%u\nwet=%u\n", app->cal_dry_value, app->cal_wet_value);
-        if(len > 0) {
+        if(len > 0 && (size_t)len < sizeof(buffer)) {
             success = (storage_file_write(file, buffer, len) == (uint16_t)len);
         }
     }

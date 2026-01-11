@@ -5,6 +5,7 @@
 // Convert raw ADC reading to moisture percentage (0-100%)
 // ADC values are inverted: higher = drier, lower = wetter
 static uint8_t calculate_moisture_percent(MoistureSensorApp* app, uint16_t raw) {
+    if(app->cal_dry_value <= app->cal_wet_value) return 0;
     if(raw >= app->cal_dry_value) return 0;
     if(raw <= app->cal_wet_value) return 100;
 
@@ -24,6 +25,9 @@ static void handle_menu_selection(MoistureSensorApp* app) {
     case MenuItemResetDefaults:
         app->edit_dry_value = ADC_DRY_DEFAULT;
         app->edit_wet_value = ADC_WET_DEFAULT;
+        app->cal_dry_value = ADC_DRY_DEFAULT;
+        app->cal_wet_value = ADC_WET_DEFAULT;
+        calibration_save(app);
         show_confirm(app, "Defaults restored!");
         break;
     case MenuItemSave:
