@@ -264,6 +264,9 @@ void protopirate_scene_receiver_on_exit(void* context) {
     if(app->txrx->txrx_state == ProtoPirateTxRxStateRx) {
         protopirate_rx_end(app);
     }
+    
+    // Clear the receiver view menu items
+    protopirate_view_receiver_reset_menu(app->protopirate_receiver);
 }
 
 void protopirate_scene_receiver_view_callback(ProtoPirateCustomEvent event, void* context) {
