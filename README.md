@@ -8,7 +8,7 @@ A Flipper Zero app to send SubGHz signals at a given interval. Individual `*.sub
     <td style="border:0px" width="25%" align="left">
     Schedule intervals selectable: <br>
      <ul>
-       <li>Seconds: 10 & 30</li>
+       <li>Seconds: 1, 2, 5, 10, 30</li>
        <li>Minutes: 1, 2, 5, 10, 20, 30, 45</li>
        <li>Hours: 1, 2, 4, 8, 12, 24</li>
      </ul>
@@ -29,7 +29,7 @@ A Flipper Zero app to send SubGHz signals at a given interval. Individual `*.sub
   <td style="border:0px" width="25%" align="left">
     Data Tx Repeats:<br>
   <ul>
-  <li>x2, x3, x4, x5, x6</li>
+  <li>x1, x2, x3, x4, x5, x6</li>
   </ul>
   </td>
   <td style="border:0px" width="20%"><img src="./screenshots/v2/20min_x3_tx250_immed.png" width="100%"></td>
@@ -60,6 +60,7 @@ A Flipper Zero app to send SubGHz signals at a given interval. Individual `*.sub
       <li>TX mode</li>
       <li>TX interval</li>
       <li>TX Repeats</li>
+      <li>Radio</li>
       <li>Selected file</li>
       <li>TX interval countdown</li>
     </ul>
@@ -98,8 +99,5 @@ Build outputs are found in the `dist` directory for each application.
 - [ ] Add 'alarm' mode, to set specific time for transmission.
 - [ ] Enable interval delays for playlists. For example, turning on a light (playlist index 1), then 4 hours later turning it off (playlist index 2), and run that at another arbitrary interval. This can include custom playlist keys or custom app files.
 - [ ] More visual feedback of current transmission (like `SubGHz Playlist`).
-- [x] Add option to select relative or precise intervals. Intervals are currently relative (from initial start, if the interval is 10 seconds, and the transmission takes 2 seconds, next TX will be 22 seconds later).
 - [ ] Enable quitting from transmission. Currently, if back is pressed during playlist transmission, transmission will complete before exiting to main menu.
-- [x] Update UI from widgets to canvas.
-- [x] Fix long filename overlap.
 - [ ] Options to select notifications on transmit (vibro, backlight, etc).
