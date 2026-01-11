@@ -27,14 +27,12 @@ static void handle_menu_selection(MoistureSensorApp* app) {
         app->edit_wet_value = ADC_WET_DEFAULT;
         app->cal_dry_value = ADC_DRY_DEFAULT;
         app->cal_wet_value = ADC_WET_DEFAULT;
-        calibration_save(app);
-        show_confirm(app, "Defaults restored!");
+        show_confirm(app, calibration_save(app) ? "Defaults restored!" : "Save failed!");
         break;
     case MenuItemSave:
         app->cal_dry_value = app->edit_dry_value;
         app->cal_wet_value = app->edit_wet_value;
-        calibration_save(app);
-        show_confirm(app, "Saved!");
+        show_confirm(app, calibration_save(app) ? "Saved!" : "Save failed!");
         break;
     default:
         break;
