@@ -533,6 +533,25 @@ void protopirate_view_receiver_free(ProtoPirateReceiver* receiver) {
     free(receiver);
 }
 
+void protopirate_view_receiver_reset_menu(ProtoPirateReceiver* receiver) {
+    furi_assert(receiver);
+    with_view_model(
+        receiver->view,
+        ProtoPirateReceiverModel * model,
+        {
+            for(size_t i = 0; i < ProtoPirateReceiverMenuItemArray_size(model->history_item_arr);
+                i++) {
+                ProtoPirateReceiverMenuItem* item =
+                    ProtoPirateReceiverMenuItemArray_get(model->history_item_arr, i);
+                furi_string_free(item->item_str);
+            }
+            ProtoPirateReceiverMenuItemArray_reset(model->history_item_arr);
+            model->history_item = 0;
+            model->list_offset = 0;
+        },
+        false);
+}
+
 View* protopirate_view_receiver_get_view(ProtoPirateReceiver* receiver) {
     furi_assert(receiver);
     return receiver->view;

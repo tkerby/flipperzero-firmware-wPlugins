@@ -142,7 +142,7 @@ void* kia_protocol_encoder_v2_alloc(SubGhzEnvironment* environment) {
     instance->generic.protocol_name = instance->base.protocol->name;
 
     instance->encoder.repeat = 10;
-    instance->encoder.size_upload = 1200;
+    instance->encoder.size_upload = 1300;
     instance->encoder.upload = malloc(instance->encoder.size_upload * sizeof(LevelDuration));
     instance->encoder.is_running = false;
     instance->encoder.front = 0;
