@@ -58,6 +58,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Many app updates to add FM12K (By xMasterX)](https://github.com/xMasterX/all-the-plugins/commit/fca96440a66c9fbc9a15cb56f90afe2feb026491#diff-d48125c42269db81f9468bb6aaca2d42030ea5a701d14cf6deb4db378b2ff669)
 - Updated: [Marmalade v0.1.1 (By RocketGod)](https://github.com/RocketGod-git/flipper-zero-rf-jammer)
 - Updated: [ProtoPirate WIP v1.4 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate) [Fix Kia V1 and add Kia V2 encoder (By zero-mega)](https://github.com/RocketGod-git/ProtoPirate/pull/28)
+- Updated: [TPMS Reader v0.2 (By wosk)](https://github.com/wosk/flipperzero-tpms) [Add Schrader SMD3MA4, Schrader EG53MA4, and Abarth 124 (By mslocrian)](https://github.com/wosk/flipperzero-tpms/pull/26)
 
 <a name="release">
 
@@ -784,7 +785,7 @@ $ ./fbt dolphin_ext
 - [Tone Generator v1.0 (By GEMISIS)](https://github.com/GEMISIS/tone_gen)
 - [TonUINO Writer v2.0 (By Bastelsaal)](https://github.com/Bastelsaal/tonuino-flipper-zero)
 - [Tree Identification v0.0.5 (By fgreil)](https://github.com/fgreil/mitzi-tree-ident)
-- [TPMS Reader (By wosk)](https://github.com/wosk/flipperzero-tpms)
+- [TPMS Reader v0.2 (By wosk)](https://github.com/wosk/flipperzero-tpms)
 - [TuLlave v0.1 (By zqu4rtz)](https://github.com/zqu4rtz/FlipperApp-TuLlave)
 - [Tuning Fork v2.0 (By besya)](https://github.com/besya/flipperzero-tuning-fork)
 - [T-Union Master (China) v0.1 (By SocialSisterYi)](https://github.com/SocialSisterYi/T-Union_Master)
