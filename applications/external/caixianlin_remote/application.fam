@@ -1,0 +1,18 @@
+App(
+    appid="caixianlin_remote",
+    name="Remote for CaiXianlin",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="caixianlin_remote_app",
+    stack_size=4 * 1024,
+    fap_category="Sub-GHz",
+    fap_icon="icon.png",
+    fap_author="Anty",
+    fap_weburl="https://github.com/anty-ce/flipper_zero_caixianlin_remote",
+    fap_version="1.0",
+    fap_description="Remote control for CaiXianlin shock collar via Sub-GHz radio",
+    requires=[
+        "gui",
+        "storage",
+        "subghz",
+    ],
+)
