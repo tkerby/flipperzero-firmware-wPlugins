@@ -28,7 +28,8 @@ void kia_protocol_decoder_v1_get_string(void* context, FuriString* output);
 // Encoder functions
 void* kia_protocol_encoder_v1_alloc(SubGhzEnvironment* environment);
 void kia_protocol_encoder_v1_free(void* context);
-SubGhzProtocolStatus kia_protocol_encoder_v1_deserialize(void* context, FlipperFormat* flipper_format);
+SubGhzProtocolStatus
+    kia_protocol_encoder_v1_deserialize(void* context, FlipperFormat* flipper_format);
 void kia_protocol_encoder_v1_stop(void* context);
 LevelDuration kia_protocol_encoder_v1_yield(void* context);
 

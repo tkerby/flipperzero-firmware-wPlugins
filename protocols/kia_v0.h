@@ -21,7 +21,8 @@ SubGhzProtocolStatus subghz_protocol_decoder_kia_serialize(
     void* context,
     FlipperFormat* flipper_format,
     SubGhzRadioPreset* preset);
-SubGhzProtocolStatus subghz_protocol_decoder_kia_deserialize(void* context, FlipperFormat* flipper_format);
+SubGhzProtocolStatus
+    subghz_protocol_decoder_kia_deserialize(void* context, FlipperFormat* flipper_format);
 void subghz_protocol_decoder_kia_get_string(void* context, FuriString* output);
 
 // Encoder helper functions

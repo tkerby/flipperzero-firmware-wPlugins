@@ -145,7 +145,7 @@ static void protopirate_scene_receiver_config_set_hopping_running(VariableItem* 
 static void protopirate_scene_receiver_config_set_auto_save(VariableItem* item) {
     ProtoPirateApp* app = variable_item_get_context(item);
     uint8_t index = variable_item_get_current_value_index(item);
-    
+
     app->auto_save = (index == 1);
     variable_item_set_current_value_text(item, auto_save_text[index]);
 }
