@@ -6,9 +6,9 @@ A Flipper Zero application that reads values from a Capacitive Moisture Sensor v
 
 ## Screenshots
 
-![Sensor View](https://raw.githubusercontent.com/smallwat3r/flipperzero-moisture-sensor/main/screenshots/sensor.png)
-
-![Calibration Menu](https://raw.githubusercontent.com/smallwat3r/flipperzero-moisture-sensor/main/screenshots/calibration.png)
+| Sensor View | Calibration Menu |
+|-------------|------------------|
+| ![Sensor](https://raw.githubusercontent.com/smallwat3r/flipperzero-moisture-sensor/main/screenshots/sensor.png) | ![Calibration](https://raw.githubusercontent.com/smallwat3r/flipperzero-moisture-sensor/main/screenshots/calibration.png) |
 
 ## Features
 
@@ -22,7 +22,7 @@ A Flipper Zero application that reads values from a Capacitive Moisture Sensor v
 ## Hardware Requirements
 
 - Flipper Zero
-- [Capacitive Moisture Sensor v1.2](https://thepihut.com/products/capacitive-soil-moisture-sensor)
+- Capacitive Moisture Sensor v1.2 ([link](https://thepihut.com/products/capacitive-soil-moisture-sensor))
 
 ## Wiring
 
