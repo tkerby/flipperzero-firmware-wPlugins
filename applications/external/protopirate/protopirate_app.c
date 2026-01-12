@@ -6,7 +6,6 @@
 #include "protocols/protocol_items.h"
 #include "helpers/protopirate_settings.h"
 #include "helpers/protopirate_storage.h"
-#include "protocols/keys.h"
 
 #define TAG "ProtoPirateApp"
 
@@ -162,18 +161,9 @@ ProtoPirateApp* protopirate_app_alloc() {
     // Create environment with our custom protocols
     app->txrx->environment = subghz_environment_alloc();
 
-    // Load keystores
-    subghz_environment_load_keystore(app->txrx->environment, PROTOPIRATE_KEYSTORE_DIR_NAME);
-    subghz_environment_load_keystore(app->txrx->environment, SUBGHZ_KEYSTORE_DIR_NAME);
-    subghz_environment_load_keystore(app->txrx->environment, SUBGHZ_KEYSTORE_DIR_USER_NAME);
-
     FURI_LOG_I(TAG, "Registering %zu ProtoPirate protocols", protopirate_protocol_registry.size);
     subghz_environment_set_protocol_registry(
         app->txrx->environment, (void*)&protopirate_protocol_registry);
-
-    // Load ProtoPirate specific keys
-    protopirate_keys_load(app->txrx->environment);
-    FURI_LOG_I(TAG, "Loaded ProtoPirate secure keys");
 
     // Create receiver
     app->txrx->receiver = subghz_receiver_alloc_init(app->txrx->environment);

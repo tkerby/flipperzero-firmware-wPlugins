@@ -10,7 +10,7 @@
 
 #define SUBGHZ_APP_FOLDER     EXT_PATH("subghz")
 #define SAMPLES_PER_TICK      256
-#define MAX_RAW_SAMPLES       4092
+#define MAX_RAW_SAMPLES       8192
 #define SUCCESS_DISPLAY_TICKS 18
 #define FAILURE_DISPLAY_TICKS 18
 
@@ -1094,7 +1094,7 @@ bool protopirate_scene_sub_decode_on_event(void* context, SceneManagerEvent even
             break;
         }
 
-        view_commit_model(app->view_about, true);
+        view_commit_model(app->view_about, false);
     }
 
     return consumed;

@@ -253,18 +253,13 @@ bool protopirate_storage_save_capture(
 
         // Version
         flipper_format_rewind(flipper_format);
-        if(flipper_format_read_uint32(flipper_format, "KIAVersion", &uint32_value, 1))
-            flipper_format_write_uint32(save_file, "KIAVersion", &uint32_value, 1);
+        if(flipper_format_read_uint32(flipper_format, "Version", &uint32_value, 1))
+            flipper_format_write_uint32(save_file, "Version", &uint32_value, 1);
 
         // BS
         flipper_format_rewind(flipper_format);
         if(flipper_format_read_uint32(flipper_format, "BS", &uint32_value, 1))
             flipper_format_write_uint32(save_file, "BS", &uint32_value, 1);
-
-        // Manufacture name (for StarLine)
-        flipper_format_rewind(flipper_format);
-        if(flipper_format_read_string(flipper_format, "Manufacture", string_value))
-            flipper_format_write_string(save_file, "Manufacture", string_value);
 
         furi_string_free(string_value);
 

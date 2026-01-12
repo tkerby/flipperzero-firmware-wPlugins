@@ -15,21 +15,17 @@ Decoders:
 - KIA V3 / V4
 - KIA V5
 - KIA V6
-- Fiat V0
+- Fiat
 - Ford V0
-- Scher-Khan
-- StarLine
 - Subaru
 - Suzuki
 - Volkswagen (VW)
 
 Encoders:
 
-- Ford V0
 - KIA V0
 - KIA V1
 - KIA V2
-- StarLine
 - More Coming Soon
 
 ## **Features**
