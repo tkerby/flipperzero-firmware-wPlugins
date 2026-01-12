@@ -4,6 +4,12 @@ A Flipper Zero application that reads values from a Capacitive Moisture Sensor v
 
 ![Flipper Zero Moisture Sensor](images/flipper.jpg)
 
+## Screenshots
+
+| Sensor View | Calibration Menu |
+|-------------|------------------|
+| ![Sensor](screenshots/sensor.png) | ![Calibration](screenshots/calibration.png) |
+
 ## Features
 
 - Real-time moisture percentage display (0-100%)
