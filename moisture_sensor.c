@@ -163,7 +163,6 @@ static MoistureSensorApp* moisture_sensor_app_alloc(void) {
 
     app->gpio_pin = pin_record->pin;
     app->adc_channel = pin_record->channel;
-    app->pin_number = SENSOR_PIN_NUMBER;
 
     app->adc_handle = furi_hal_adc_acquire();
     if(!app->adc_handle) goto cleanup;

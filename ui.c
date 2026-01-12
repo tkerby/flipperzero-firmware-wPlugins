@@ -37,7 +37,8 @@ static void draw_menu_row(Canvas* canvas, const char* label, uint8_t y, bool sel
     canvas_draw_str_aligned(canvas, 64, y, AlignCenter, AlignBottom, label);
 }
 
-static void draw_menu_overlay(Canvas* canvas, MoistureSensorApp* app) {
+static void
+    draw_menu_overlay(Canvas* canvas, uint16_t edit_dry, uint16_t edit_wet, MenuItem selected) {
     canvas_set_color(canvas, ColorWhite);
     canvas_draw_box(canvas, 0, 0, 128, 64);
     canvas_set_color(canvas, ColorBlack);
@@ -48,12 +49,10 @@ static void draw_menu_overlay(Canvas* canvas, MoistureSensorApp* app) {
     canvas_draw_line(canvas, 0, 16, 128, 16);
 
     canvas_set_font(canvas, FontSecondary);
-    draw_value_row(
-        canvas, "Dry:", app->edit_dry_value, 27, app->selected_menu_item == MenuItemDryValue);
-    draw_value_row(
-        canvas, "Wet:", app->edit_wet_value, 38, app->selected_menu_item == MenuItemWetValue);
-    draw_menu_row(canvas, "Reset", 49, app->selected_menu_item == MenuItemResetDefaults);
-    draw_menu_row(canvas, "Save", 60, app->selected_menu_item == MenuItemSave);
+    draw_value_row(canvas, "Dry:", edit_dry, 27, selected == MenuItemDryValue);
+    draw_value_row(canvas, "Wet:", edit_wet, 38, selected == MenuItemWetValue);
+    draw_menu_row(canvas, "Reset", 49, selected == MenuItemResetDefaults);
+    draw_menu_row(canvas, "Save", 60, selected == MenuItemSave);
     canvas_set_color(canvas, ColorBlack);
 }
 
@@ -82,6 +81,10 @@ void draw_callback(Canvas* canvas, void* ctx) {
     uint8_t percent = app->moisture_percent;
     AppState state = app->state;
     const char* confirm_msg = app->confirm_message;
+    uint16_t edit_dry = app->edit_dry_value;
+    uint16_t edit_wet = app->edit_wet_value;
+    MenuItem selected = app->selected_menu_item;
+    FuriHalAdcChannel channel = app->adc_channel;
     furi_mutex_release(app->mutex);
 
     canvas_clear(canvas);
@@ -109,7 +112,7 @@ void draw_callback(Canvas* canvas, void* ctx) {
     canvas_draw_str_aligned(canvas, 64, 36, AlignCenter, AlignTop, get_moisture_status(percent));
 
     char info_str[32];
-    snprintf(info_str, sizeof(info_str), "%dmV  ADC:%d  Ch:%d", mv, raw, app->adc_channel);
+    snprintf(info_str, sizeof(info_str), "%dmV  ADC:%d  Ch:%d", mv, raw, channel);
     canvas_draw_str_aligned(canvas, 64, 48, AlignCenter, AlignTop, info_str);
 
     uint8_t bar_width = percent;
@@ -125,7 +128,7 @@ void draw_callback(Canvas* canvas, void* ctx) {
     }
 
     if(state == AppStateMenu) {
-        draw_menu_overlay(canvas, app);
+        draw_menu_overlay(canvas, edit_dry, edit_wet, selected);
     } else if(state == AppStateConfirm && confirm_msg) {
         draw_confirm_overlay(canvas, confirm_msg);
     }

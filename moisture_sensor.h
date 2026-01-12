@@ -45,7 +45,6 @@ typedef struct {
     FuriHalAdcHandle* adc_handle;
     const GpioPin* gpio_pin;
     FuriHalAdcChannel adc_channel;
-    uint8_t pin_number;
 
     // Sensor readings (protected by mutex)
     uint16_t raw_adc;
