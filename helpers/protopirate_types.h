@@ -4,8 +4,7 @@
 #include <furi.h>
 #include <furi_hal.h>
 
-typedef enum
-{
+typedef enum {
     ProtoPirateViewVariableItemList,
     ProtoPirateViewSubmenu,
     ProtoPirateViewWidget,
@@ -14,8 +13,7 @@ typedef enum
     ProtoPirateViewAbout,
 } ProtoPirateView;
 
-typedef enum
-{
+typedef enum {
     // Custom events for views
     ProtoPirateCustomEventViewReceiverOK,
     ProtoPirateCustomEventViewReceiverConfig,
@@ -36,30 +34,26 @@ typedef enum
     ProtoPirateCustomEventSubDecodeSave,
 } ProtoPirateCustomEvent;
 
-typedef enum
-{
+typedef enum {
     ProtoPirateLockOff,
     ProtoPirateLockOn,
 } ProtoPirateLock;
 
-typedef enum
-{
+typedef enum {
     ProtoPirateTxRxStateIDLE,
     ProtoPirateTxRxStateRx,
     ProtoPirateTxRxStateTx,
     ProtoPirateTxRxStateSleep,
 } ProtoPirateTxRxState;
 
-typedef enum
-{
+typedef enum {
     ProtoPirateHopperStateOFF,
     ProtoPirateHopperStateRunning,
     ProtoPirateHopperStatePause,
     ProtoPirateHopperStateRSSITimeOut,
 } ProtoPirateHopperState;
 
-typedef enum
-{
+typedef enum {
     ProtoPirateRxKeyStateIDLE,
     ProtoPirateRxKeyStateBack,
     ProtoPirateRxKeyStateStart,

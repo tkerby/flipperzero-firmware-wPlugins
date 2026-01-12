@@ -3,23 +3,23 @@
 #include <gui/elements.h>
 #include <stdlib.h>
 
-#define CREDITS_START_Y 28
-#define CREDITS_END_Y 52
+#define CREDITS_START_Y    28
+#define CREDITS_END_Y      52
 #define CREDIT_LINE_HEIGHT 10
-#define SCROLL_SPEED 1
+#define SCROLL_SPEED       1
 
-static const char *credits[] = {
+static const char* credits[] = {
     "",
     "-=> App Development by",
     "RocketGod",
     "MMX",
     "Skorp's Weather App",
-    "Vadim's Radio Driver",    
+    "Vadim's Radio Driver",
     "-=> Protocol Magic by",
     "L0rdDiakon",
     "Li0ard",
-    "YougZ",    
-    "DoobTheGoober",    
+    "YougZ",
+    "DoobTheGoober",
     "RocketGod",
     "Skorp",
     "Slackware",
@@ -38,8 +38,7 @@ static const char *credits[] = {
 
 #define CREDITS_COUNT (sizeof(credits) / sizeof(credits[0]))
 
-typedef struct
-{
+typedef struct {
     uint8_t frame;
     uint8_t seed;
     int16_t scroll_offset;
@@ -47,16 +46,13 @@ typedef struct
 
 static GlitchState g_state = {0};
 
-static void draw_noise_pixels(Canvas *canvas, uint8_t density)
-{
-    for (uint8_t i = 0; i < density; i++)
-    {
+static void draw_noise_pixels(Canvas* canvas, uint8_t density) {
+    for(uint8_t i = 0; i < density; i++) {
         canvas_draw_dot(canvas, rand() % 128, rand() % 64);
     }
 }
 
-static void about_draw_callback(Canvas *canvas, void *context)
-{
+static void about_draw_callback(Canvas* canvas, void* context) {
     UNUSED(context);
 
     srand(g_state.seed);
@@ -71,13 +67,12 @@ static void about_draw_callback(Canvas *canvas, void *context)
 
     // Animated TPP decoration (centered)
     canvas_set_font(canvas, FontKeyboard);
-    if (g_state.frame % 8 < 4)
-    {
-        canvas_draw_str_aligned(canvas, 64, 18, AlignCenter, AlignBottom, ">>>=================<<<");
-    }
-    else
-    {
-        canvas_draw_str_aligned(canvas, 64, 18, AlignCenter, AlignBottom, ">>>======[TPP]======<<<");
+    if(g_state.frame % 8 < 4) {
+        canvas_draw_str_aligned(
+            canvas, 64, 18, AlignCenter, AlignBottom, ">>>=================<<<");
+    } else {
+        canvas_draw_str_aligned(
+            canvas, 64, 18, AlignCenter, AlignBottom, ">>>======[TPP]======<<<");
     }
 
     // Draw credits region (clip area)
@@ -87,23 +82,19 @@ static void about_draw_callback(Canvas *canvas, void *context)
     int16_t total_height = CREDITS_COUNT * CREDIT_LINE_HEIGHT;
 
     // Draw scrolling credits
-    for (size_t i = 0; i < CREDITS_COUNT; i++)
-    {
+    for(size_t i = 0; i < CREDITS_COUNT; i++) {
         int16_t y = CREDITS_START_Y + (i * CREDIT_LINE_HEIGHT) - g_state.scroll_offset;
 
         // Wrap around for endless scroll
-        while (y < CREDITS_START_Y - CREDIT_LINE_HEIGHT)
-        {
+        while(y < CREDITS_START_Y - CREDIT_LINE_HEIGHT) {
             y += total_height;
         }
-        while (y > CREDITS_START_Y + total_height)
-        {
+        while(y > CREDITS_START_Y + total_height) {
             y -= total_height;
         }
 
         // Only draw if in visible region
-        if (y >= CREDITS_START_Y - CREDIT_LINE_HEIGHT && y <= CREDITS_END_Y)
-        {
+        if(y >= CREDITS_START_Y - CREDIT_LINE_HEIGHT && y <= CREDITS_END_Y) {
             canvas_draw_str(canvas, x_off, y, credits[i]);
         }
     }
@@ -119,19 +110,17 @@ static void about_draw_callback(Canvas *canvas, void *context)
     canvas_draw_str(canvas, x_off, 10, "ProtoPirate v1.1");
 
     canvas_set_font(canvas, FontKeyboard);
-    if (g_state.frame % 8 < 4)
-    {
-        canvas_draw_str_aligned(canvas, 64, 18, AlignCenter, AlignBottom, ">>>=================<<<");
-    }
-    else
-    {
-        canvas_draw_str_aligned(canvas, 64, 18, AlignCenter, AlignBottom, ">>>======[TPP]======<<<");
+    if(g_state.frame % 8 < 4) {
+        canvas_draw_str_aligned(
+            canvas, 64, 18, AlignCenter, AlignBottom, ">>>=================<<<");
+    } else {
+        canvas_draw_str_aligned(
+            canvas, 64, 18, AlignCenter, AlignBottom, ">>>======[TPP]======<<<");
     }
 
     // Redraw static in header area
     srand(g_state.seed + 1);
-    for (uint8_t i = 0; i < 3; i++)
-    {
+    for(uint8_t i = 0; i < 3; i++) {
         canvas_draw_dot(canvas, rand() % 128, rand() % (CREDITS_START_Y - CREDIT_LINE_HEIGHT));
     }
 
@@ -140,25 +129,22 @@ static void about_draw_callback(Canvas *canvas, void *context)
     canvas_draw_str_aligned(canvas, 127, 62, AlignRight, AlignBottom, "discord.gg/thepirates");
 
     // Rare subtle glitch bar
-    if (rand() % 30 == 0)
-    {
+    if(rand() % 30 == 0) {
         canvas_set_color(canvas, ColorXOR);
         uint8_t y = rand() % 60;
         canvas_draw_box(canvas, 0, y, 128, 2);
     }
 }
 
-static bool about_input_callback(InputEvent *event, void *context)
-{
+static bool about_input_callback(InputEvent* event, void* context) {
     UNUSED(context);
     UNUSED(event);
     return false;
 }
 
-void protopirate_scene_about_on_enter(void *context)
-{
+void protopirate_scene_about_on_enter(void* context) {
     furi_assert(context);
-    ProtoPirateApp *app = context;
+    ProtoPirateApp* app = context;
 
     g_state.frame = 0;
     g_state.seed = furi_get_tick() & 0xFF;
@@ -171,22 +157,18 @@ void protopirate_scene_about_on_enter(void *context)
     view_dispatcher_switch_to_view(app->view_dispatcher, ProtoPirateViewAbout);
 }
 
-bool protopirate_scene_about_on_event(void *context, SceneManagerEvent event)
-{
-    ProtoPirateApp *app = context;
+bool protopirate_scene_about_on_event(void* context, SceneManagerEvent event) {
+    ProtoPirateApp* app = context;
     bool consumed = false;
 
-    if (event.type == SceneManagerEventTypeTick)
-    {
+    if(event.type == SceneManagerEventTypeTick) {
         g_state.frame++;
         g_state.seed = rand();
 
-        if (g_state.frame % 2 == 0)
-        {
+        if(g_state.frame % 2 == 0) {
             g_state.scroll_offset += SCROLL_SPEED;
             int16_t total_height = CREDITS_COUNT * CREDIT_LINE_HEIGHT;
-            if (g_state.scroll_offset >= total_height)
-            {
+            if(g_state.scroll_offset >= total_height) {
                 g_state.scroll_offset = 0;
             }
         }
@@ -198,10 +180,9 @@ bool protopirate_scene_about_on_event(void *context, SceneManagerEvent event)
     return consumed;
 }
 
-void protopirate_scene_about_on_exit(void *context)
-{
+void protopirate_scene_about_on_exit(void* context) {
     furi_assert(context);
-    ProtoPirateApp *app = context;
+    ProtoPirateApp* app = context;
 
     view_set_draw_callback(app->view_about, NULL);
     view_set_input_callback(app->view_about, NULL);

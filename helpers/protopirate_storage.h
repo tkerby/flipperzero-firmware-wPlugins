@@ -5,35 +5,33 @@
 #include <storage/storage.h>
 #include <flipper_format/flipper_format.h>
 
-#define PROTOPIRATE_APP_FOLDER EXT_PATH("subghz/protopirate")
-#define PROTOPIRATE_APP_EXTENSION ".sub"
+#define PROTOPIRATE_APP_FOLDER       EXT_PATH("subghz/protopirate")
+#define PROTOPIRATE_APP_EXTENSION    ".sub"
 #define PROTOPIRATE_APP_FILE_VERSION 1
 
 bool protopirate_storage_init(void);
 
 bool protopirate_storage_save_capture(
-    FlipperFormat *flipper_format,
-    const char *protocol_name,
-    FuriString *out_path);
+    FlipperFormat* flipper_format,
+    const char* protocol_name,
+    FuriString* out_path);
 
-bool protopirate_storage_get_next_filename(
-    const char *protocol_name,
-    FuriString *out_filename);
+bool protopirate_storage_get_next_filename(const char* protocol_name, FuriString* out_filename);
 
 uint32_t protopirate_storage_get_file_count(void);
 
 bool protopirate_storage_get_file_by_index(
-    uint32_t index, 
-    FuriString *out_path, 
-    FuriString *out_name);
+    uint32_t index,
+    FuriString* out_path,
+    FuriString* out_name);
 
-bool protopirate_storage_delete_file(const char *file_path);
+bool protopirate_storage_delete_file(const char* file_path);
 
-FlipperFormat* protopirate_storage_load_file(const char *file_path);
+FlipperFormat* protopirate_storage_load_file(const char* file_path);
 
-void protopirate_storage_close_file(FlipperFormat *flipper_format);
+void protopirate_storage_close_file(FlipperFormat* flipper_format);
 
-bool protopirate_storage_file_exists(const char *file_path);
+bool protopirate_storage_file_exists(const char* file_path);
 
 void protopirate_storage_free_file_list(void);
 
