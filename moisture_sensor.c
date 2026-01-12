@@ -121,11 +121,13 @@ static void read_sensor(MoistureSensorApp* app) {
     }
     uint16_t raw = (uint16_t)(sum / ADC_SAMPLES);
     uint16_t mv = furi_hal_adc_convert_to_voltage(app->adc_handle, raw);
-    uint8_t percent = calculate_moisture_percent(app, raw);
+    bool connected = raw >= SENSOR_MIN_THRESHOLD;
+    uint8_t percent = connected ? calculate_moisture_percent(app, raw) : 0;
 
     furi_mutex_acquire(app->mutex, FuriWaitForever);
     app->raw_adc = raw;
     app->millivolts = mv;
+    app->sensor_connected = connected;
     app->moisture_percent = percent;
     furi_mutex_release(app->mutex);
 }
@@ -154,6 +156,7 @@ static MoistureSensorApp* moisture_sensor_app_alloc(void) {
     app->raw_adc = 0;
     app->millivolts = 0;
     app->moisture_percent = 0;
+    app->sensor_connected = false;
     app->state = AppStateMain;
     app->selected_menu_item = MenuItemDryValue;
     app->cal_dry_value = ADC_DRY_DEFAULT;

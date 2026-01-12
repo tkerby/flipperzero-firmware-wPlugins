@@ -17,10 +17,11 @@
 
 // Calibration defaults for Capacitive Moisture Sensor v1.2
 // Higher ADC = drier (more resistance), Lower ADC = wetter (less resistance)
-#define ADC_MAX_VALUE   4095
-#define ADC_DRY_DEFAULT 3660
-#define ADC_WET_DEFAULT 1700
-#define ADC_STEP        10
+#define ADC_MAX_VALUE        4095
+#define ADC_DRY_DEFAULT      3660
+#define ADC_WET_DEFAULT      1700
+#define ADC_STEP             10
+#define SENSOR_MIN_THRESHOLD 300 // Below this ADC value, sensor is considered disconnected
 
 #define CALIBRATION_FILE_PATH APP_DATA_PATH("calibration.txt")
 
@@ -50,6 +51,7 @@ typedef struct {
     uint16_t raw_adc;
     uint16_t millivolts;
     uint8_t moisture_percent;
+    bool sensor_connected;
 
     bool running;
     FuriMutex* mutex;

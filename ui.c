@@ -79,6 +79,7 @@ void draw_callback(Canvas* canvas, void* ctx) {
     uint16_t mv = app->millivolts;
     uint16_t raw = app->raw_adc;
     uint8_t percent = app->moisture_percent;
+    bool connected = app->sensor_connected;
     AppState state = app->state;
     const char* confirm_msg = app->confirm_message;
     uint16_t edit_dry = app->edit_dry_value;
@@ -93,32 +94,42 @@ void draw_callback(Canvas* canvas, void* ctx) {
 
     canvas_draw_line(canvas, 0, 14, 128, 14);
 
-    // Draw percent value and % sign separately (FontBigNumbers lacks % glyph)
-    char num_str[4];
-    snprintf(num_str, sizeof(num_str), "%d", percent);
-    canvas_set_font(canvas, FontBigNumbers);
-    uint16_t num_width = canvas_string_width(canvas, num_str);
-    canvas_set_font(canvas, FontPrimary);
-    uint16_t pct_width = canvas_string_width(canvas, "%");
-    uint16_t gap = 2;
-    uint16_t total_width = num_width + gap + pct_width;
-    uint16_t start_x = (128 - total_width) / 2;
-    canvas_set_font(canvas, FontBigNumbers);
-    canvas_draw_str(canvas, start_x, 34, num_str);
-    canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str(canvas, start_x + num_width + gap, 34, "%");
-
-    canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str_aligned(canvas, 64, 36, AlignCenter, AlignTop, get_moisture_status(percent));
-
     char info_str[32];
     snprintf(info_str, sizeof(info_str), "%dmV  ADC:%d  Ch:%d", mv, raw, channel);
-    canvas_draw_str_aligned(canvas, 64, 48, AlignCenter, AlignTop, info_str);
 
-    uint8_t bar_width = percent;
-    canvas_draw_frame(canvas, 14, 58, 100, 5);
-    if(bar_width > 0) {
-        canvas_draw_box(canvas, 14, 58, bar_width, 5);
+    if(connected) {
+        // Draw percent value and % sign separately (FontBigNumbers lacks % glyph)
+        char num_str[4];
+        snprintf(num_str, sizeof(num_str), "%d", percent);
+        canvas_set_font(canvas, FontBigNumbers);
+        uint16_t num_width = canvas_string_width(canvas, num_str);
+        canvas_set_font(canvas, FontPrimary);
+        uint16_t pct_width = canvas_string_width(canvas, "%");
+        uint16_t gap = 2;
+        uint16_t total_width = num_width + gap + pct_width;
+        uint16_t start_x = (128 - total_width) / 2;
+        canvas_set_font(canvas, FontBigNumbers);
+        canvas_draw_str(canvas, start_x, 34, num_str);
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str(canvas, start_x + num_width + gap, 34, "%");
+
+        canvas_set_font(canvas, FontSecondary);
+        canvas_draw_str_aligned(
+            canvas, 64, 36, AlignCenter, AlignTop, get_moisture_status(percent));
+
+        canvas_draw_str_aligned(canvas, 64, 48, AlignCenter, AlignTop, info_str);
+
+        uint8_t bar_width = percent;
+        canvas_draw_frame(canvas, 14, 58, 100, 5);
+        if(bar_width > 0) {
+            canvas_draw_box(canvas, 14, 58, bar_width, 5);
+        }
+    } else {
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignTop, "No Sensor");
+        canvas_set_font(canvas, FontSecondary);
+        canvas_draw_str_aligned(canvas, 64, 44, AlignCenter, AlignTop, "Connect to pin 16");
+        canvas_draw_str_aligned(canvas, 64, 54, AlignCenter, AlignTop, info_str);
     }
 
     // Show hint for calibration menu (press Left to open)
