@@ -65,6 +65,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipBoard Signal v3.12 (By jamisonderek)](https://github.com/jamisonderek/flipboard) Added FM12K
 - Updated: [FlipBoard Simon v1.10 (By jamisonderek)](https://github.com/jamisonderek/flipboard) Added FM12K
 - Updated: [ProtoPirate WIP v1.4 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate) [Fix Kia V1 and add Kia V2 encoder (By zero-mega)](https://github.com/RocketGod-git/ProtoPirate/pull/28) Added FM12K [Fix Kia V2 buffer overflow (By grugnoymeme)](https://github.com/RocketGod-git/ProtoPirate/pull/29)
+- Added: [Moisture Sensor v1.0 (By smallwat3r)](https://github.com/smallwat3r/flipperzero-moisture-sensor)
 
 <a name="release">
 
@@ -658,6 +659,7 @@ $ ./fbt dolphin_ext
 - [Mitsubishi AC Remote v1.0 (By achistyakov)](https://github.com/achistyakov/flipperzero-mitsubishi-ac-remote)
 - [MiZip Balance Editor v0.2 (By teohumeau)](https://github.com/teohumeau/MiZipBalanceEditor)
 - [MODBUS v1.1.3.1 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-rs485modbus) `Req: Modbus By ElectronicCats`
+- [Moisture Sensor v1.0 (By smallwat3r)](https://github.com/smallwat3r/flipperzero-moisture-sensor)
 - [Moon Phases v1.0 (By w84death)](https://github.com/w84death/flipper-zero-apps)
 - [Morse Code v1.2 (By wh00hw)](https://github.com/DarkFlippers/unleashed-firmware/pull/144)
 - [Mouse Jacker v1.2 (By mothball187)](https://github.com/mothball187/flipperzero-nrf24/tree/main/mousejacker) [Pin Out from nocomp/Frog/UberGuidoZ](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/mousejacker) `Req: NRF24`

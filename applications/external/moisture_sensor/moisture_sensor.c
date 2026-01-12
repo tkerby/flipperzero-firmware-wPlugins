@@ -51,6 +51,14 @@ static bool view_dispatcher_custom_event_callback(void* context, uint32_t event)
     return scene_manager_handle_custom_event(app->scene_manager, event);
 }
 
+const GpioPinRecord* ms_furi_hal_resources_pin_by_number(uint8_t number) {
+    for(size_t i = 0; i < gpio_pins_count; i++) {
+        const GpioPinRecord* record = &gpio_pins[i];
+        if(record->number == number) return record;
+    }
+    return NULL;
+}
+
 static MoistureSensorApp* moisture_sensor_app_alloc(void) {
     MoistureSensorApp* app = malloc(sizeof(MoistureSensorApp));
     if(!app) return NULL;
@@ -87,7 +95,7 @@ static MoistureSensorApp* moisture_sensor_app_alloc(void) {
     if(!app->mutex) goto error;
 
     // Setup GPIO and ADC
-    const GpioPinRecord* pin_record = furi_hal_resources_pin_by_number(SENSOR_PIN_NUMBER);
+    const GpioPinRecord* pin_record = ms_furi_hal_resources_pin_by_number(SENSOR_PIN_NUMBER);
     if(!pin_record || !pin_record->pin) goto error;
 
     app->gpio_pin = pin_record->pin;
@@ -111,6 +119,7 @@ static MoistureSensorApp* moisture_sensor_app_alloc(void) {
 
     // Allocate view dispatcher
     app->view_dispatcher = view_dispatcher_alloc();
+    view_dispatcher_enable_queue(app->view_dispatcher);
     if(!app->view_dispatcher) goto error;
 
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
