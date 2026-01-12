@@ -58,13 +58,13 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Many app updates to add FM12K (By xMasterX)](https://github.com/xMasterX/all-the-plugins/commit/fca96440a66c9fbc9a15cb56f90afe2feb026491#diff-d48125c42269db81f9468bb6aaca2d42030ea5a701d14cf6deb4db378b2ff669)
 - Updated: [Marmalade v0.1.1 (By RocketGod)](https://github.com/RocketGod-git/flipper-zero-rf-jammer) Added FM12K
 - Updated: [TPMS Reader v0.2 (By wosk)](https://github.com/wosk/flipperzero-tpms) [Add Schrader SMD3MA4, Schrader EG53MA4, and Abarth 124 (By mslocrian)](https://github.com/wosk/flipperzero-tpms/pull/26) Added FM12K
-- Updated: [ProtoPirate WIP v1.4 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate) [Fix Kia V1 and add Kia V2 encoder (By zero-mega)](https://github.com/RocketGod-git/ProtoPirate/pull/28) Added FM12K
 - Updated: [Sub-GHz Remote v1.8 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote) Added FM12K
 - Updated: [Sub-GHz Scheduler v2.3 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler) Added FM12K
 - Updated: [FlipBoard Blinky v3.6 (By jamisonderek)](https://github.com/jamisonderek/flipboard) Added FM12K
 - Updated: [FlipBoard Keyboard v3.9 (By jamisonderek)](https://github.com/jamisonderek/flipboard) Added FM12K
 - Updated: [FlipBoard Signal v3.12 (By jamisonderek)](https://github.com/jamisonderek/flipboard) Added FM12K
 - Updated: [FlipBoard Simon v1.10 (By jamisonderek)](https://github.com/jamisonderek/flipboard) Added FM12K
+- Updated: [ProtoPirate WIP v1.4 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate) [Fix Kia V1 and add Kia V2 encoder (By zero-mega)](https://github.com/RocketGod-git/ProtoPirate/pull/28) Added FM12K [Fix Kia V2 buffer overflow (By grugnoymeme)](https://github.com/RocketGod-git/ProtoPirate/pull/29)
 
 <a name="release">
 
