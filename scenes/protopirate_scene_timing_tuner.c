@@ -6,20 +6,20 @@
 #define TAG "ProtoPirateTimingTuner"
 
 #define MAX_TIMING_SAMPLES 512
-#define VISIBLE_LINES      6
-#define LINE_HEIGHT        9
+#define VISIBLE_LINES 6
+#define LINE_HEIGHT 9
 
 typedef struct {
     // Ring buffer for timing capture
     int32_t samples[MAX_TIMING_SAMPLES];
-    size_t write_idx; // Next write position
-    size_t sample_count; // Total samples captured (may exceed MAX)
-    bool buffer_wrapped; // True if we've wrapped around
-
+    size_t write_idx;      // Next write position
+    size_t sample_count;   // Total samples captured (may exceed MAX)
+    bool buffer_wrapped;   // True if we've wrapped around
+    
     // Timing statistics
     size_t short_count;
     size_t long_count;
-
+    
     // Calculated stats
     int32_t avg_short;
     int32_t avg_long;
@@ -27,11 +27,11 @@ typedef struct {
     int32_t max_short;
     int32_t min_long;
     int32_t max_long;
-
+    
     // Protocol match info
     const char* matched_protocol;
     const ProtoPirateProtocolTiming* timing_info;
-
+    
     // State
     bool is_receiving;
     bool has_match;
@@ -39,7 +39,7 @@ typedef struct {
     float rssi;
     uint8_t scroll_offset;
     uint8_t total_lines;
-
+    
     // App reference for callback
     ProtoPirateApp* app;
 } TimingTunerContext;
@@ -48,71 +48,63 @@ static TimingTunerContext* g_timing_ctx = NULL;
 
 static void calculate_timing_stats(TimingTunerContext* ctx) {
     size_t num_samples = ctx->buffer_wrapped ? MAX_TIMING_SAMPLES : ctx->write_idx;
-
+    
     if(num_samples < 10) {
         FURI_LOG_W(TAG, "Not enough samples: %zu", num_samples);
         return;
     }
-
-    FURI_LOG_I(
-        TAG,
-        "Analyzing %zu samples (total captured: %zu, wrapped: %d)",
-        num_samples,
-        ctx->sample_count,
-        ctx->buffer_wrapped);
-
+    
+    FURI_LOG_I(TAG, "Analyzing %zu samples (total captured: %zu, wrapped: %d)",
+        num_samples, ctx->sample_count, ctx->buffer_wrapped);
+    
     ctx->short_count = 0;
     ctx->long_count = 0;
     ctx->min_short = INT32_MAX;
     ctx->max_short = 0;
     ctx->min_long = INT32_MAX;
     ctx->max_long = 0;
-
+    
     int64_t short_sum = 0;
     int64_t long_sum = 0;
-
+    
     int32_t threshold;
     int32_t min_valid;
     int32_t max_valid;
-
+    
     if(ctx->timing_info) {
         int32_t te_short = (int32_t)ctx->timing_info->te_short;
         int32_t te_long = (int32_t)ctx->timing_info->te_long;
         int32_t te_delta = (int32_t)ctx->timing_info->te_delta;
-
+        
         // Threshold halfway between expected short and long
         threshold = (te_short + te_long) / 2;
-
+        
         // Valid pulse range - use 2x delta as bounds
         min_valid = te_short - (te_delta * 2);
         if(min_valid < 100) min_valid = 100;
         max_valid = te_long + (te_delta * 2);
-
-        FURI_LOG_I(
-            TAG, "Protocol timing: threshold=%ld valid=%ld-%ld", threshold, min_valid, max_valid);
-
+        
+        FURI_LOG_I(TAG, "Protocol timing: threshold=%ld valid=%ld-%ld",
+            threshold, min_valid, max_valid);
+            
     } else {
         // No protocol info - use reasonable defaults
         threshold = 400;
         min_valid = 100;
         max_valid = 1200;
-
-        FURI_LOG_I(
-            TAG,
-            "No protocol ref, using defaults: threshold=%ld valid=%ld-%ld",
-            threshold,
-            min_valid,
-            max_valid);
+        
+        FURI_LOG_I(TAG, "No protocol ref, using defaults: threshold=%ld valid=%ld-%ld",
+            threshold, min_valid, max_valid);
     }
-
+    
     // Analyze all samples in the ring buffer
     for(size_t i = 0; i < num_samples; i++) {
         int32_t dur = ctx->samples[i];
         if(dur < 0) dur = -dur;
-
+        
         // Filter out noise and gaps
         if(dur < min_valid || dur > max_valid) continue;
-
+        
         if(dur < threshold) {
             short_sum += dur;
             ctx->short_count++;
@@ -125,7 +117,7 @@ static void calculate_timing_stats(TimingTunerContext* ctx) {
             if(dur > ctx->max_long) ctx->max_long = dur;
         }
     }
-
+    
     // Calculate averages
     if(ctx->short_count > 0) {
         ctx->avg_short = (int32_t)(short_sum / (int64_t)ctx->short_count);
@@ -134,7 +126,7 @@ static void calculate_timing_stats(TimingTunerContext* ctx) {
         ctx->min_short = 0;
         ctx->max_short = 0;
     }
-
+    
     if(ctx->long_count > 0) {
         ctx->avg_long = (int32_t)(long_sum / (int64_t)ctx->long_count);
     } else {
@@ -142,42 +134,28 @@ static void calculate_timing_stats(TimingTunerContext* ctx) {
         ctx->min_long = 0;
         ctx->max_long = 0;
     }
-
+    
     // Log results
-    FURI_LOG_I(
-        TAG,
-        "MEASURED SHORT: avg=%ld min=%ld max=%ld n=%zu",
-        ctx->avg_short,
-        ctx->min_short,
-        ctx->max_short,
-        ctx->short_count);
-    FURI_LOG_I(
-        TAG,
-        "MEASURED LONG: avg=%ld min=%ld max=%ld n=%zu",
-        ctx->avg_long,
-        ctx->min_long,
-        ctx->max_long,
-        ctx->long_count);
-
+    FURI_LOG_I(TAG, "MEASURED SHORT: avg=%ld min=%ld max=%ld n=%zu",
+        ctx->avg_short, ctx->min_short, ctx->max_short, ctx->short_count);
+    FURI_LOG_I(TAG, "MEASURED LONG: avg=%ld min=%ld max=%ld n=%zu",
+        ctx->avg_long, ctx->min_long, ctx->max_long, ctx->long_count);
+    
     if(ctx->timing_info && ctx->short_count > 0 && ctx->long_count > 0) {
         int32_t short_diff = ctx->avg_short - (int32_t)ctx->timing_info->te_short;
         int32_t long_diff = ctx->avg_long - (int32_t)ctx->timing_info->te_long;
-        FURI_LOG_I(
-            TAG,
-            "DIFFERENCE: short=%+ld long=%+ld (tolerance +/-%lu)",
-            short_diff,
-            long_diff,
-            ctx->timing_info->te_delta);
+        FURI_LOG_I(TAG, "DIFFERENCE: short=%+ld long=%+ld (tolerance +/-%lu)",
+            short_diff, long_diff, ctx->timing_info->te_delta);
     }
 }
 
 static void timing_tuner_draw_listening(Canvas* canvas, TimingTunerContext* ctx) {
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str_aligned(canvas, 64, 2, AlignCenter, AlignTop, "TIMING TUNER");
-
+    
     canvas_set_font(canvas, FontSecondary);
     canvas_draw_str_aligned(canvas, 64, 18, AlignCenter, AlignTop, "Listening for signals...");
-
+    
     int wave_y = 38;
     ctx->animation_frame++;
     for(int x = 0; x < 128; x++) {
@@ -185,7 +163,7 @@ static void timing_tuner_draw_listening(Canvas* canvas, TimingTunerContext* ctx)
         int y_offset = (int)(sinf(phase) * 8.0f);
         canvas_draw_dot(canvas, x, wave_y + y_offset);
     }
-
+    
     canvas_set_font(canvas, FontSecondary);
     char rssi_str[24];
     snprintf(rssi_str, sizeof(rssi_str), "RSSI: %.0f  <:Cfg", (double)ctx->rssi);
@@ -193,8 +171,7 @@ static void timing_tuner_draw_listening(Canvas* canvas, TimingTunerContext* ctx)
 }
 
 // Get a specific line of content
-static bool
-    get_result_line(TimingTunerContext* ctx, uint8_t line_idx, char* buf, size_t buf_size) {
+static bool get_result_line(TimingTunerContext* ctx, uint8_t line_idx, char* buf, size_t buf_size) {
     int32_t short_diff = 0;
     int32_t long_diff = 0;
     bool short_ok = false;
@@ -203,19 +180,18 @@ static bool
     bool long_exact = false;
     int32_t short_jitter = 0;
     int32_t long_jitter = 0;
-
+    
     if(ctx->timing_info) {
         short_diff = ctx->avg_short - (int32_t)ctx->timing_info->te_short;
         long_diff = ctx->avg_long - (int32_t)ctx->timing_info->te_long;
-        short_ok = (ctx->short_count > 0) &&
-                   (abs(short_diff) <= (int32_t)ctx->timing_info->te_delta);
+        short_ok = (ctx->short_count > 0) && (abs(short_diff) <= (int32_t)ctx->timing_info->te_delta);
         long_ok = (ctx->long_count > 0) && (abs(long_diff) <= (int32_t)ctx->timing_info->te_delta);
         short_exact = (abs(short_diff) <= 15);
         long_exact = (abs(long_diff) <= 15);
     }
     short_jitter = ctx->max_short - ctx->min_short;
     long_jitter = ctx->max_long - ctx->min_long;
-
+    
     if(ctx->timing_info) {
         switch(line_idx) {
         case 0:
@@ -412,18 +388,18 @@ static bool
 
 static uint8_t count_result_lines(TimingTunerContext* ctx) {
     if(ctx->timing_info) {
-        return 30; // Lines 0-29
+        return 30;  // Lines 0-29
     } else {
-        return 18; // Lines 0-17
+        return 18;  // Lines 0-17
     }
 }
 
 static void timing_tuner_draw_results(Canvas* canvas, TimingTunerContext* ctx) {
     char line_buf[32];
-
+    
     uint8_t total_lines = count_result_lines(ctx);
     ctx->total_lines = total_lines;
-
+    
     uint8_t max_scroll = 0;
     if(total_lines > VISIBLE_LINES) {
         max_scroll = total_lines - VISIBLE_LINES;
@@ -431,11 +407,11 @@ static void timing_tuner_draw_results(Canvas* canvas, TimingTunerContext* ctx) {
     if(ctx->scroll_offset > max_scroll) {
         ctx->scroll_offset = max_scroll;
     }
-
+    
     // Draw header (protocol name)
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str_aligned(canvas, 64, 0, AlignCenter, AlignTop, ctx->matched_protocol);
-
+    
     // Draw content lines
     canvas_set_font(canvas, FontSecondary);
     uint8_t y = 10;
@@ -446,7 +422,7 @@ static void timing_tuner_draw_results(Canvas* canvas, TimingTunerContext* ctx) {
         }
         y += LINE_HEIGHT;
     }
-
+    
     // Scroll indicators
     if(total_lines > VISIBLE_LINES) {
         if(ctx->scroll_offset > 0) {
@@ -462,10 +438,10 @@ static void timing_tuner_draw_callback(Canvas* canvas, void* context) {
     UNUSED(context);
     TimingTunerContext* ctx = g_timing_ctx;
     if(!ctx) return;
-
+    
     canvas_clear(canvas);
     canvas_set_color(canvas, ColorBlack);
-
+    
     if(!ctx->has_match) {
         timing_tuner_draw_listening(canvas, ctx);
     } else {
@@ -476,7 +452,7 @@ static void timing_tuner_draw_callback(Canvas* canvas, void* context) {
 static bool timing_tuner_input_callback(InputEvent* event, void* context) {
     ProtoPirateApp* app = context;
     bool consumed = false;
-
+    
     if(event->type == InputTypeShort || event->type == InputTypeRepeat) {
         switch(event->key) {
         case InputKeyBack:
@@ -524,7 +500,7 @@ static bool timing_tuner_input_callback(InputEvent* event, void* context) {
             break;
         }
     }
-
+    
     return consumed;
 }
 
@@ -535,20 +511,18 @@ static void timing_tuner_rx_callback(
     UNUSED(receiver);
     ProtoPirateApp* app = context;
     TimingTunerContext* ctx = g_timing_ctx;
-
+    
     if(!ctx || ctx->has_match) return;
-
+    
     const char* protocol_name = decoder_base->protocol->name;
     ctx->matched_protocol = protocol_name;
-
+    
     FURI_LOG_I(TAG, "Matched protocol: %s", protocol_name);
-
+    
     ctx->timing_info = protopirate_get_protocol_timing(protocol_name);
-
+    
     if(ctx->timing_info) {
-        FURI_LOG_I(
-            TAG,
-            "Found timing for %s: short=%lu, long=%lu, delta=%lu",
+        FURI_LOG_I(TAG, "Found timing for %s: short=%lu, long=%lu, delta=%lu",
             ctx->timing_info->name,
             ctx->timing_info->te_short,
             ctx->timing_info->te_long,
@@ -556,31 +530,31 @@ static void timing_tuner_rx_callback(
     } else {
         FURI_LOG_W(TAG, "No timing info found for protocol: %s", protocol_name);
     }
-
+    
     calculate_timing_stats(ctx);
-
+    
     ctx->has_match = true;
     ctx->scroll_offset = 0;
-
+    
     notification_message(app->notifications, &sequence_success);
 }
 
 static void timing_tuner_pair_callback(void* context, bool level, uint32_t duration) {
     UNUSED(context);
     TimingTunerContext* ctx = g_timing_ctx;
-
+    
     if(ctx && !ctx->has_match) {
         // Ring buffer - always write, wrap around if needed
         ctx->samples[ctx->write_idx] = level ? (int32_t)duration : -(int32_t)duration;
         ctx->write_idx++;
         ctx->sample_count++;
-
+        
         if(ctx->write_idx >= MAX_TIMING_SAMPLES) {
             ctx->write_idx = 0;
             ctx->buffer_wrapped = true;
         }
     }
-
+    
     if(ctx && ctx->app && ctx->app->txrx && ctx->app->txrx->receiver) {
         subghz_receiver_decode(ctx->app->txrx->receiver, level, duration);
     }
@@ -588,9 +562,9 @@ static void timing_tuner_pair_callback(void* context, bool level, uint32_t durat
 
 void protopirate_scene_timing_tuner_on_enter(void* context) {
     ProtoPirateApp* app = context;
-
+    
     FURI_LOG_I(TAG, "Entering Timing Tuner");
-
+    
     g_timing_ctx = malloc(sizeof(TimingTunerContext));
     memset(g_timing_ctx, 0, sizeof(TimingTunerContext));
     g_timing_ctx->is_receiving = false;
@@ -603,27 +577,28 @@ void protopirate_scene_timing_tuner_on_enter(void* context) {
     g_timing_ctx->sample_count = 0;
     g_timing_ctx->buffer_wrapped = false;
     g_timing_ctx->app = app;
-
+    
     view_set_draw_callback(app->view_about, timing_tuner_draw_callback);
     view_set_input_callback(app->view_about, timing_tuner_input_callback);
     view_set_context(app->view_about, app);
-
+    
     subghz_receiver_set_rx_callback(app->txrx->receiver, timing_tuner_rx_callback, app);
-
+    
     subghz_worker_set_pair_callback(
-        app->txrx->worker, (SubGhzWorkerPairCallback)timing_tuner_pair_callback);
-
+        app->txrx->worker,
+        (SubGhzWorkerPairCallback)timing_tuner_pair_callback);
+    
     protopirate_begin(app, app->txrx->preset->data);
     protopirate_rx(app, app->txrx->preset->frequency);
     g_timing_ctx->is_receiving = true;
-
+    
     view_dispatcher_switch_to_view(app->view_dispatcher, ProtoPirateViewAbout);
 }
 
 bool protopirate_scene_timing_tuner_on_event(void* context, SceneManagerEvent event) {
     ProtoPirateApp* app = context;
     bool consumed = false;
-
+    
     if(event.type == SceneManagerEventTypeCustom) {
         if(event.event == 0) {
             scene_manager_previous_scene(app->scene_manager);
@@ -640,28 +615,29 @@ bool protopirate_scene_timing_tuner_on_event(void* context, SceneManagerEvent ev
         if(g_timing_ctx && g_timing_ctx->is_receiving && !g_timing_ctx->has_match) {
             g_timing_ctx->rssi = subghz_devices_get_rssi(app->txrx->radio_device);
         }
-        view_commit_model(app->view_about, true);
+        view_commit_model(app->view_about, false);
         consumed = true;
     }
-
+    
     return consumed;
 }
 
 void protopirate_scene_timing_tuner_on_exit(void* context) {
     ProtoPirateApp* app = context;
-
+    
     FURI_LOG_I(TAG, "Exiting Timing Tuner");
-
+    
     if(g_timing_ctx && g_timing_ctx->is_receiving) {
         protopirate_rx_end(app);
     }
-
+    
     subghz_worker_set_pair_callback(
-        app->txrx->worker, (SubGhzWorkerPairCallback)subghz_receiver_decode);
-
+        app->txrx->worker,
+        (SubGhzWorkerPairCallback)subghz_receiver_decode);
+    
     view_set_draw_callback(app->view_about, NULL);
     view_set_input_callback(app->view_about, NULL);
-
+    
     if(g_timing_ctx) {
         free(g_timing_ctx);
         g_timing_ctx = NULL;

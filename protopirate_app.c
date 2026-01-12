@@ -161,7 +161,6 @@ ProtoPirateApp* protopirate_app_alloc() {
 
     // Load keystores
     subghz_environment_load_keystore(app->txrx->environment, PROTOPIRATE_KEYSTORE_DIR_NAME);
-    subghz_environment_load_keystore(app->txrx->environment, SUBGHZ_KEYSTORE_DIR_NAME);
     subghz_environment_load_keystore(app->txrx->environment, SUBGHZ_KEYSTORE_DIR_USER_NAME);
 
     FURI_LOG_I(TAG, "Registering %zu ProtoPirate protocols", protopirate_protocol_registry.size);

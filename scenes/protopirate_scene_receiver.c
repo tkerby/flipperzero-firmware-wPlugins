@@ -41,7 +41,7 @@ static void protopirate_scene_receiver_update_statusbar(void* context) {
         furi_string_get_cstr(frequency_str),
         furi_string_get_cstr(modulation_str),
         furi_string_get_cstr(history_stat_str),
-        is_external); // <-- Now correctly passes external status
+        is_external);  // <-- Now correctly passes external status
 
     furi_string_free(frequency_str);
     furi_string_free(modulation_str);
@@ -87,28 +87,29 @@ static void protopirate_scene_receiver_callback(
         // Auto-save if enabled
         if(app->auto_save) {
             FlipperFormat* ff = protopirate_history_get_raw_data(
-                app->txrx->history, protopirate_history_get_item(app->txrx->history) - 1);
-
+                app->txrx->history, 
+                protopirate_history_get_item(app->txrx->history) - 1);
+            
             if(ff) {
                 FuriString* protocol = furi_string_alloc();
                 flipper_format_rewind(ff);
                 if(!flipper_format_read_string(ff, "Protocol", protocol)) {
                     furi_string_set_str(protocol, "Unknown");
                 }
-
+                
                 // Clean protocol name for filename
                 furi_string_replace_all(protocol, "/", "_");
                 furi_string_replace_all(protocol, " ", "_");
-
+                
                 FuriString* saved_path = furi_string_alloc();
                 if(protopirate_storage_save_capture(
-                       ff, furi_string_get_cstr(protocol), saved_path)) {
+                    ff, furi_string_get_cstr(protocol), saved_path)) {
                     FURI_LOG_I(TAG, "Auto-saved: %s", furi_string_get_cstr(saved_path));
                     notification_message(app->notifications, &sequence_double_vibro);
                 } else {
                     FURI_LOG_E(TAG, "Auto-save failed");
                 }
-
+                
                 furi_string_free(protocol);
                 furi_string_free(saved_path);
             }
@@ -135,7 +136,7 @@ void protopirate_scene_receiver_on_enter(void* context) {
     // Log which radio device is being used
     bool is_external = radio_device_loader_is_external(app->txrx->radio_device);
     const char* device_name = subghz_devices_get_name(app->txrx->radio_device);
-
+    
     FURI_LOG_I(TAG, "=== ENTERING RECEIVER SCENE ===");
     FURI_LOG_I(TAG, "Radio device: %s", device_name ? device_name : "NULL");
     FURI_LOG_I(TAG, "Is External: %s", is_external ? "YES" : "NO");
@@ -200,7 +201,6 @@ bool protopirate_scene_receiver_on_event(void* context, SceneManagerEvent event)
             FURI_LOG_I(TAG, "Selected item %d", idx);
             if(idx < protopirate_history_get_item(app->txrx->history)) {
                 app->txrx->idx_menu_chosen = idx;
-                scene_manager_set_scene_state(app->scene_manager, ProtoPirateSceneReceiver, 1);
                 scene_manager_next_scene(app->scene_manager, ProtoPirateSceneReceiverInfo);
             }
         }
@@ -208,7 +208,6 @@ bool protopirate_scene_receiver_on_event(void* context, SceneManagerEvent event)
             break;
 
         case ProtoPirateCustomEventViewReceiverConfig:
-            scene_manager_set_scene_state(app->scene_manager, ProtoPirateSceneReceiver, 1);
             scene_manager_next_scene(app->scene_manager, ProtoPirateSceneReceiverConfig);
             consumed = true;
             break;
@@ -239,12 +238,14 @@ bool protopirate_scene_receiver_on_event(void* context, SceneManagerEvent event)
         if(app->txrx->txrx_state == ProtoPirateTxRxStateRx) {
             float rssi = subghz_devices_get_rssi(app->txrx->radio_device);
             protopirate_view_receiver_set_rssi(app->protopirate_receiver, rssi);
-
+            
             // Debug: Log RSSI periodically (every ~5 seconds)
             static uint8_t rssi_log_counter = 0;
             if(++rssi_log_counter >= 50) {
                 bool is_ext = radio_device_loader_is_external(app->txrx->radio_device);
-                FURI_LOG_D(TAG, "RSSI: %.1f dBm (%s)", (double)rssi, is_ext ? "EXT" : "INT");
+                FURI_LOG_D(TAG, "RSSI: %.1f dBm (%s)", 
+                    (double)rssi, 
+                    is_ext ? "EXT" : "INT");
                 rssi_log_counter = 0;
             }
         }
@@ -263,13 +264,7 @@ void protopirate_scene_receiver_on_exit(void* context) {
     if(app->txrx->txrx_state == ProtoPirateTxRxStateRx) {
         protopirate_rx_end(app);
     }
-
-    if(scene_manager_get_scene_state(app->scene_manager, ProtoPirateSceneReceiver) == 1) {
-        FURI_LOG_D(TAG, "Switching to info or config scene, not clearing list");
-        // Reset state for next time
-        scene_manager_set_scene_state(app->scene_manager, ProtoPirateSceneReceiver, 0);
-        return;
-    }
+    
     // Clear the receiver view menu items
     protopirate_view_receiver_reset_menu(app->protopirate_receiver);
 }
