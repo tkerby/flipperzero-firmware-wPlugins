@@ -83,8 +83,11 @@ bool moisture_sensor_scene_menu_on_event(void* context, SceneManagerEvent event)
         if(event.event == MoistureSensorEventReset) {
             app->edit_dry_value = ADC_DRY_DEFAULT;
             app->edit_wet_value = ADC_WET_DEFAULT;
+
+            furi_mutex_acquire(app->mutex, FuriWaitForever);
             app->cal_dry_value = ADC_DRY_DEFAULT;
             app->cal_wet_value = ADC_WET_DEFAULT;
+            furi_mutex_release(app->mutex);
 
             if(calibration_save(app)) {
                 show_popup(app, "Defaults restored!", true, &sequence_success);
@@ -97,8 +100,10 @@ bool moisture_sensor_scene_menu_on_event(void* context, SceneManagerEvent event)
             if(app->edit_dry_value <= app->edit_wet_value) {
                 show_popup(app, "Dry must be > Wet!", false, &sequence_error);
             } else {
+                furi_mutex_acquire(app->mutex, FuriWaitForever);
                 app->cal_dry_value = app->edit_dry_value;
                 app->cal_wet_value = app->edit_wet_value;
+                furi_mutex_release(app->mutex);
 
                 if(calibration_save(app)) {
                     show_popup(app, "Saved!", true, &sequence_success);

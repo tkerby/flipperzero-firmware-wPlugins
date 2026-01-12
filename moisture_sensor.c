@@ -26,8 +26,6 @@ static int32_t sensor_thread_callback(void* context) {
         uint16_t mv = furi_hal_adc_convert_to_voltage(app->adc_handle, raw);
 
         furi_mutex_acquire(app->mutex, FuriWaitForever);
-        app->raw_adc = raw;
-        app->millivolts = mv;
         uint16_t cal_dry = app->cal_dry_value;
         uint16_t cal_wet = app->cal_wet_value;
         furi_mutex_release(app->mutex);
@@ -72,8 +70,6 @@ static MoistureSensorApp* moisture_sensor_app_alloc(void) {
     app->running = false;
 
     // Initialize values
-    app->raw_adc = 0;
-    app->millivolts = 0;
     app->cal_dry_value = ADC_DRY_DEFAULT;
     app->cal_wet_value = ADC_WET_DEFAULT;
     app->edit_dry_value = ADC_DRY_DEFAULT;

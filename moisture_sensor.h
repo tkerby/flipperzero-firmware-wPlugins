@@ -78,10 +78,6 @@ typedef struct {
     FuriMutex* mutex;
     bool running;
 
-    // Sensor readings (protected by mutex)
-    uint16_t raw_adc;
-    uint16_t millivolts;
-
     // Calibration values
     uint16_t cal_dry_value;
     uint16_t cal_wet_value;
