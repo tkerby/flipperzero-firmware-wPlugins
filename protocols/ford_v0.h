@@ -25,12 +25,14 @@ SubGhzProtocolStatus subghz_protocol_decoder_ford_v0_serialize(
     void* context,
     FlipperFormat* flipper_format,
     SubGhzRadioPreset* preset);
-SubGhzProtocolStatus subghz_protocol_decoder_ford_v0_deserialize(void* context, FlipperFormat* flipper_format);
+SubGhzProtocolStatus
+    subghz_protocol_decoder_ford_v0_deserialize(void* context, FlipperFormat* flipper_format);
 void subghz_protocol_decoder_ford_v0_get_string(void* context, FuriString* output);
 
 // Encoder functions
 void* subghz_protocol_encoder_ford_v0_alloc(SubGhzEnvironment* environment);
 void subghz_protocol_encoder_ford_v0_free(void* context);
-SubGhzProtocolStatus subghz_protocol_encoder_ford_v0_deserialize(void* context, FlipperFormat* flipper_format);
+SubGhzProtocolStatus
+    subghz_protocol_encoder_ford_v0_deserialize(void* context, FlipperFormat* flipper_format);
 void subghz_protocol_encoder_ford_v0_stop(void* context);
 LevelDuration subghz_protocol_encoder_ford_v0_yield(void* context);

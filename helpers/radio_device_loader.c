@@ -50,7 +50,6 @@ bool radio_device_loader_is_connect_external(const char* name) {
 const SubGhzDevice* radio_device_loader_set(
     const SubGhzDevice* current_radio_device,
     SubGhzRadioDeviceType radio_device_type) {
-
     const SubGhzDevice* radio_device = NULL;
 
     if(radio_device_type == SubGhzRadioDeviceTypeExternalCC1101 &&
@@ -84,21 +83,26 @@ bool radio_device_loader_is_external(const SubGhzDevice* radio_device) {
         FURI_LOG_W(TAG, "is_external called with NULL device");
         return false;
     }
-    
-    const SubGhzDevice* internal_device = subghz_devices_get_by_name(SUBGHZ_DEVICE_CC1101_INT_NAME);
+
+    const SubGhzDevice* internal_device =
+        subghz_devices_get_by_name(SUBGHZ_DEVICE_CC1101_INT_NAME);
     bool is_external = (radio_device != internal_device);
-    
-    FURI_LOG_D(TAG, "is_external check: device=%p, internal=%p, result=%s", 
-        radio_device, internal_device, is_external ? "EXTERNAL" : "INTERNAL");
-    
+
+    FURI_LOG_D(
+        TAG,
+        "is_external check: device=%p, internal=%p, result=%s",
+        radio_device,
+        internal_device,
+        is_external ? "EXTERNAL" : "INTERNAL");
+
     return is_external;
 }
 
 void radio_device_loader_end(const SubGhzDevice* radio_device) {
     furi_assert(radio_device);
-    
+
     radio_device_loader_power_off();
-    
+
     if(radio_device != subghz_devices_get_by_name(SUBGHZ_DEVICE_CC1101_INT_NAME)) {
         subghz_devices_end(radio_device);
         FURI_LOG_I(TAG, "External radio device ended");

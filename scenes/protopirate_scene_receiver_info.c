@@ -5,27 +5,23 @@
 static void protopirate_scene_receiver_info_widget_callback(
     GuiButtonType result,
     InputType type,
-    void *context)
-{
-    ProtoPirateApp *app = context;
-    if (type == InputTypeShort)
-    {
-        if (result == GuiButtonTypeRight)
-        {
+    void* context) {
+    ProtoPirateApp* app = context;
+    if(type == InputTypeShort) {
+        if(result == GuiButtonTypeRight) {
             view_dispatcher_send_custom_event(
                 app->view_dispatcher, ProtoPirateCustomEventReceiverInfoSave);
         }
     }
 }
 
-void protopirate_scene_receiver_info_on_enter(void *context)
-{
+void protopirate_scene_receiver_info_on_enter(void* context) {
     furi_assert(context);
-    ProtoPirateApp *app = context;
+    ProtoPirateApp* app = context;
 
-        widget_reset(app->widget);
+    widget_reset(app->widget);
 
-    FuriString *text;
+    FuriString* text;
     text = furi_string_alloc();
 
     protopirate_history_get_text_item_menu(app->txrx->history, text, app->txrx->idx_menu_chosen);
@@ -69,39 +65,30 @@ void protopirate_scene_receiver_info_on_enter(void *context)
     view_dispatcher_switch_to_view(app->view_dispatcher, ProtoPirateViewWidget);
 }
 
-bool protopirate_scene_receiver_info_on_event(void *context, SceneManagerEvent event)
-{
-    ProtoPirateApp *app = context;
+bool protopirate_scene_receiver_info_on_event(void* context, SceneManagerEvent event) {
+    ProtoPirateApp* app = context;
     bool consumed = false;
 
-    if (event.type == SceneManagerEventTypeCustom)
-    {
-        if (event.event == ProtoPirateCustomEventReceiverInfoSave)
-        {
+    if(event.type == SceneManagerEventTypeCustom) {
+        if(event.event == ProtoPirateCustomEventReceiverInfoSave) {
             // Get the flipper format from history
-            FlipperFormat *ff = protopirate_history_get_raw_data(
-                app->txrx->history, app->txrx->idx_menu_chosen);
+            FlipperFormat* ff =
+                protopirate_history_get_raw_data(app->txrx->history, app->txrx->idx_menu_chosen);
 
-            if (ff)
-            {
+            if(ff) {
                 // Extract protocol name
-                FuriString *protocol = furi_string_alloc();
+                FuriString* protocol = furi_string_alloc();
                 flipper_format_rewind(ff);
-                if (!flipper_format_read_string(ff, "Protocol", protocol))
-                {
+                if(!flipper_format_read_string(ff, "Protocol", protocol)) {
                     furi_string_set_str(protocol, "Unknown");
                 }
 
-                FuriString *saved_path = furi_string_alloc();
-                if (protopirate_storage_save_capture(
-                        ff, furi_string_get_cstr(protocol), saved_path))
-                {
-
+                FuriString* saved_path = furi_string_alloc();
+                if(protopirate_storage_save_capture(
+                       ff, furi_string_get_cstr(protocol), saved_path)) {
                     // Show success notification
                     notification_message(app->notifications, &sequence_success);
-                }
-                else
-                {
+                } else {
                     notification_message(app->notifications, &sequence_error);
                 }
 
@@ -115,9 +102,8 @@ bool protopirate_scene_receiver_info_on_event(void *context, SceneManagerEvent e
     return consumed;
 }
 
-void protopirate_scene_receiver_info_on_exit(void *context)
-{
+void protopirate_scene_receiver_info_on_exit(void* context) {
     furi_assert(context);
-    ProtoPirateApp *app = context;
+    ProtoPirateApp* app = context;
     widget_reset(app->widget);
 }

@@ -3,7 +3,7 @@
 
 #define TAG "KiaV3V4"
 
-static const char *kia_version_names[] = {"Kia V4", "Kia V3"};
+static const char* kia_version_names[] = {"Kia V4", "Kia V3"};
 
 static const SubGhzBlockConst kia_protocol_v3_v4_const = {
     .te_short = 400,
@@ -12,8 +12,7 @@ static const SubGhzBlockConst kia_protocol_v3_v4_const = {
     .min_count_bit_for_found = 68,
 };
 
-typedef struct SubGhzProtocolDecoderKiaV3V4
-{
+typedef struct SubGhzProtocolDecoderKiaV3V4 {
     SubGhzProtocolDecoderBase base;
     SubGhzBlockDecoder decoder;
     SubGhzBlockGeneric generic;
@@ -25,31 +24,27 @@ typedef struct SubGhzProtocolDecoderKiaV3V4
 
     uint32_t encrypted;
     uint32_t decrypted;
-    uint8_t crc;      // 4-bit CRC from decrypted data (bits 24-27)
-    uint8_t version;  // 0 = V4, 1 = V3
+    uint8_t crc; // 4-bit CRC from decrypted data (bits 24-27)
+    uint8_t version; // 0 = V4, 1 = V3
 } SubGhzProtocolDecoderKiaV3V4;
 
-typedef struct SubGhzProtocolEncoderKiaV3V4
-{
+typedef struct SubGhzProtocolEncoderKiaV3V4 {
     SubGhzProtocolEncoderBase base;
     SubGhzProtocolBlockEncoder encoder;
     SubGhzBlockGeneric generic;
 } SubGhzProtocolEncoderKiaV3V4;
 
-typedef enum
-{
+typedef enum {
     KiaV3V4DecoderStepReset = 0,
     KiaV3V4DecoderStepCheckPreamble,
     KiaV3V4DecoderStepCollectRawBits,
 } KiaV3V4DecoderStep;
 
 // KeeLoq decrypt
-static uint32_t keeloq_common_decrypt(uint32_t data, uint64_t key)
-{
+static uint32_t keeloq_common_decrypt(uint32_t data, uint64_t key) {
     uint32_t block = data;
     uint64_t tkey = key;
-    for (int i = 0; i < 528; i++)
-    {
+    for(int i = 0; i < 528; i++) {
         int lutkey = ((block >> 0) & 1) | ((block >> 7) & 2) | ((block >> 17) & 4) |
                      ((block >> 22) & 8) | ((block >> 26) & 16);
         int lsb =
@@ -61,51 +56,40 @@ static uint32_t keeloq_common_decrypt(uint32_t data, uint64_t key)
     return block;
 }
 
-static uint8_t reverse8(uint8_t byte)
-{
+static uint8_t reverse8(uint8_t byte) {
     byte = (byte & 0xF0) >> 4 | (byte & 0x0F) << 4;
     byte = (byte & 0xCC) >> 2 | (byte & 0x33) << 2;
     byte = (byte & 0xAA) >> 1 | (byte & 0x55) << 1;
     return byte;
 }
 
-static void kia_v3_v4_add_raw_bit(SubGhzProtocolDecoderKiaV3V4 *instance, bool bit)
-{
-    if (instance->raw_bit_count < 256)
-    {
+static void kia_v3_v4_add_raw_bit(SubGhzProtocolDecoderKiaV3V4* instance, bool bit) {
+    if(instance->raw_bit_count < 256) {
         uint16_t byte_idx = instance->raw_bit_count / 8;
         uint8_t bit_idx = 7 - (instance->raw_bit_count % 8);
-        if (bit)
-        {
+        if(bit) {
             instance->raw_bits[byte_idx] |= (1 << bit_idx);
-        }
-        else
-        {
+        } else {
             instance->raw_bits[byte_idx] &= ~(1 << bit_idx);
         }
         instance->raw_bit_count++;
     }
 }
 
-static bool kia_v3_v4_process_buffer(SubGhzProtocolDecoderKiaV3V4 *instance)
-{
-    if (instance->raw_bit_count < 68)
-    {
+static bool kia_v3_v4_process_buffer(SubGhzProtocolDecoderKiaV3V4* instance) {
+    if(instance->raw_bit_count < 68) {
         return false;
     }
 
-    uint8_t *b = instance->raw_bits;
+    uint8_t* b = instance->raw_bits;
 
     // For V3-style (long LOW sync), data is inverted
-    if (instance->is_v3_sync)
-    {
+    if(instance->is_v3_sync) {
         uint16_t num_bytes = (instance->raw_bit_count + 7) / 8;
-        for (uint16_t i = 0; i < num_bytes; i++)
-        {
+        for(uint16_t i = 0; i < num_bytes; i++) {
             b[i] = ~b[i];
         }
     }
-
 
     uint8_t crc = (b[8] >> 4) & 0x0F;
 
@@ -125,8 +109,7 @@ static bool kia_v3_v4_process_buffer(SubGhzProtocolDecoderKiaV3V4 *instance)
     uint8_t dec_serial_lsb = (decrypted >> 16) & 0xFF;
 
     // Validate
-    if (dec_btn != btn || dec_serial_lsb != our_serial_lsb)
-    {
+    if(dec_btn != btn || dec_serial_lsb != our_serial_lsb) {
         return false;
     }
 
@@ -176,26 +159,23 @@ const SubGhzProtocol kia_protocol_v3_v4 = {
     .encoder = &kia_protocol_v3_v4_encoder,
 };
 
-void *kia_protocol_decoder_v3_v4_alloc(SubGhzEnvironment *environment)
-{
+void* kia_protocol_decoder_v3_v4_alloc(SubGhzEnvironment* environment) {
     UNUSED(environment);
-    SubGhzProtocolDecoderKiaV3V4 *instance = malloc(sizeof(SubGhzProtocolDecoderKiaV3V4));
+    SubGhzProtocolDecoderKiaV3V4* instance = malloc(sizeof(SubGhzProtocolDecoderKiaV3V4));
     instance->base.protocol = &kia_protocol_v3_v4;
     instance->generic.protocol_name = instance->base.protocol->name;
     return instance;
 }
 
-void kia_protocol_decoder_v3_v4_free(void *context)
-{
+void kia_protocol_decoder_v3_v4_free(void* context) {
     furi_assert(context);
-    SubGhzProtocolDecoderKiaV3V4 *instance = context;
+    SubGhzProtocolDecoderKiaV3V4* instance = context;
     free(instance);
 }
 
-void kia_protocol_decoder_v3_v4_reset(void *context)
-{
+void kia_protocol_decoder_v3_v4_reset(void* context) {
     furi_assert(context);
-    SubGhzProtocolDecoderKiaV3V4 *instance = context;
+    SubGhzProtocolDecoderKiaV3V4* instance = context;
     instance->decoder.parser_step = KiaV3V4DecoderStepReset;
     instance->header_count = 0;
     instance->raw_bit_count = 0;
@@ -203,17 +183,14 @@ void kia_protocol_decoder_v3_v4_reset(void *context)
     memset(instance->raw_bits, 0, sizeof(instance->raw_bits));
 }
 
-void kia_protocol_decoder_v3_v4_feed(void *context, bool level, uint32_t duration)
-{
+void kia_protocol_decoder_v3_v4_feed(void* context, bool level, uint32_t duration) {
     furi_assert(context);
-    SubGhzProtocolDecoderKiaV3V4 *instance = context;
+    SubGhzProtocolDecoderKiaV3V4* instance = context;
 
-    switch (instance->decoder.parser_step)
-    {
+    switch(instance->decoder.parser_step) {
     case KiaV3V4DecoderStepReset:
-        if (level && DURATION_DIFF(duration, kia_protocol_v3_v4_const.te_short) <
-                         kia_protocol_v3_v4_const.te_delta)
-        {
+        if(level && DURATION_DIFF(duration, kia_protocol_v3_v4_const.te_short) <
+                        kia_protocol_v3_v4_const.te_delta) {
             instance->decoder.parser_step = KiaV3V4DecoderStepCheckPreamble;
             instance->decoder.te_last = duration;
             instance->header_count = 1;
@@ -221,113 +198,78 @@ void kia_protocol_decoder_v3_v4_feed(void *context, bool level, uint32_t duratio
         break;
 
     case KiaV3V4DecoderStepCheckPreamble:
-        if (level)
-        {
-            if (DURATION_DIFF(duration, kia_protocol_v3_v4_const.te_short) <
-                kia_protocol_v3_v4_const.te_delta)
-            {
+        if(level) {
+            if(DURATION_DIFF(duration, kia_protocol_v3_v4_const.te_short) <
+               kia_protocol_v3_v4_const.te_delta) {
                 instance->decoder.te_last = duration;
-            }
-            else if (duration > 1000 && duration < 1500)
-            {
+            } else if(duration > 1000 && duration < 1500) {
                 // V4 style: Sync is LONG HIGH
-                if (instance->header_count >= 8)
-                {
+                if(instance->header_count >= 8) {
                     instance->decoder.parser_step = KiaV3V4DecoderStepCollectRawBits;
                     instance->raw_bit_count = 0;
                     instance->is_v3_sync = false;
                     memset(instance->raw_bits, 0, sizeof(instance->raw_bits));
-                }
-                else
-                {
+                } else {
                     instance->decoder.parser_step = KiaV3V4DecoderStepReset;
                 }
-            }
-            else
-            {
+            } else {
                 instance->decoder.parser_step = KiaV3V4DecoderStepReset;
             }
-        }
-        else
-        {
-            if (duration > 1000 && duration < 1500)
-            {
+        } else {
+            if(duration > 1000 && duration < 1500) {
                 // V3 style: Sync is LONG LOW
-                if (instance->header_count >= 8)
-                {
+                if(instance->header_count >= 8) {
                     instance->decoder.parser_step = KiaV3V4DecoderStepCollectRawBits;
                     instance->raw_bit_count = 0;
                     instance->is_v3_sync = true;
                     memset(instance->raw_bits, 0, sizeof(instance->raw_bits));
-                }
-                else
-                {
+                } else {
                     instance->decoder.parser_step = KiaV3V4DecoderStepReset;
                 }
-            }
-            else if (
+            } else if(
                 DURATION_DIFF(duration, kia_protocol_v3_v4_const.te_short) <
                     kia_protocol_v3_v4_const.te_delta &&
                 DURATION_DIFF(instance->decoder.te_last, kia_protocol_v3_v4_const.te_short) <
-                    kia_protocol_v3_v4_const.te_delta)
-            {
+                    kia_protocol_v3_v4_const.te_delta) {
                 instance->header_count++;
-            }
-            else if (duration > 1500)
-            {
+            } else if(duration > 1500) {
                 instance->decoder.parser_step = KiaV3V4DecoderStepReset;
             }
         }
         break;
 
     case KiaV3V4DecoderStepCollectRawBits:
-        if (level)
-        {
-            if (duration > 1000 && duration < 1500)
-            {
+        if(level) {
+            if(duration > 1000 && duration < 1500) {
                 // Next sync pulse (V4 style) - end this packet
-                if (kia_v3_v4_process_buffer(instance))
-                {
-                    if (instance->base.callback)
+                if(kia_v3_v4_process_buffer(instance)) {
+                    if(instance->base.callback)
                         instance->base.callback(&instance->base, instance->base.context);
                 }
                 instance->decoder.parser_step = KiaV3V4DecoderStepReset;
-            }
-            else if (
+            } else if(
                 DURATION_DIFF(duration, kia_protocol_v3_v4_const.te_short) <
-                kia_protocol_v3_v4_const.te_delta)
-            {
+                kia_protocol_v3_v4_const.te_delta) {
                 kia_v3_v4_add_raw_bit(instance, false);
-            }
-            else if (
+            } else if(
                 DURATION_DIFF(duration, kia_protocol_v3_v4_const.te_long) <
-                kia_protocol_v3_v4_const.te_delta)
-            {
+                kia_protocol_v3_v4_const.te_delta) {
                 kia_v3_v4_add_raw_bit(instance, true);
-            }
-            else
-            {
+            } else {
                 instance->decoder.parser_step = KiaV3V4DecoderStepReset;
             }
-        }
-        else
-        {
-            if (duration > 1000 && duration < 1500)
-            {
+        } else {
+            if(duration > 1000 && duration < 1500) {
                 // Next sync pulse (V3 style) - end this packet
-                if (kia_v3_v4_process_buffer(instance))
-                {
-                    if (instance->base.callback)
+                if(kia_v3_v4_process_buffer(instance)) {
+                    if(instance->base.callback)
                         instance->base.callback(&instance->base, instance->base.context);
                 }
                 instance->decoder.parser_step = KiaV3V4DecoderStepReset;
-            }
-            else if (duration > 1500)
-            {
+            } else if(duration > 1500) {
                 // Long gap - end of transmission
-                if (kia_v3_v4_process_buffer(instance))
-                {
-                    if (instance->base.callback)
+                if(kia_v3_v4_process_buffer(instance)) {
+                    if(instance->base.callback)
                         instance->base.callback(&instance->base, instance->base.context);
                 }
                 instance->decoder.parser_step = KiaV3V4DecoderStepReset;
@@ -337,28 +279,25 @@ void kia_protocol_decoder_v3_v4_feed(void *context, bool level, uint32_t duratio
     }
 }
 
-uint8_t kia_protocol_decoder_v3_v4_get_hash_data(void *context)
-{
+uint8_t kia_protocol_decoder_v3_v4_get_hash_data(void* context) {
     furi_assert(context);
-    SubGhzProtocolDecoderKiaV3V4 *instance = context;
+    SubGhzProtocolDecoderKiaV3V4* instance = context;
     return subghz_protocol_blocks_get_hash_data(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 
 SubGhzProtocolStatus kia_protocol_decoder_v3_v4_serialize(
-    void *context,
-    FlipperFormat *flipper_format,
-    SubGhzRadioPreset *preset)
-{
+    void* context,
+    FlipperFormat* flipper_format,
+    SubGhzRadioPreset* preset) {
     furi_assert(context);
-    SubGhzProtocolDecoderKiaV3V4 *instance = context;
+    SubGhzProtocolDecoderKiaV3V4* instance = context;
 
     SubGhzProtocolStatus ret = SubGhzProtocolStatusError;
 
     ret = subghz_block_generic_serialize(&instance->generic, flipper_format, preset);
 
-    if (ret == SubGhzProtocolStatusOk)
-    {
+    if(ret == SubGhzProtocolStatusOk) {
         flipper_format_write_uint32(flipper_format, "Encrypted", &instance->encrypted, 1);
         flipper_format_write_uint32(flipper_format, "Decrypted", &instance->decrypted, 1);
 
@@ -373,32 +312,26 @@ SubGhzProtocolStatus kia_protocol_decoder_v3_v4_serialize(
 }
 
 SubGhzProtocolStatus
-kia_protocol_decoder_v3_v4_deserialize(void *context, FlipperFormat *flipper_format)
-{
+    kia_protocol_decoder_v3_v4_deserialize(void* context, FlipperFormat* flipper_format) {
     furi_assert(context);
-    SubGhzProtocolDecoderKiaV3V4 *instance = context;
+    SubGhzProtocolDecoderKiaV3V4* instance = context;
 
-    SubGhzProtocolStatus ret = subghz_block_generic_deserialize_check_count_bit(
-        &instance->generic, flipper_format, 64);
+    SubGhzProtocolStatus ret =
+        subghz_block_generic_deserialize_check_count_bit(&instance->generic, flipper_format, 64);
 
-    if (ret == SubGhzProtocolStatusOk)
-    {
+    if(ret == SubGhzProtocolStatusOk) {
         uint32_t temp = 0;
 
-        if (flipper_format_read_uint32(flipper_format, "Encrypted", &temp, 1))
-        {
+        if(flipper_format_read_uint32(flipper_format, "Encrypted", &temp, 1)) {
             instance->encrypted = temp;
         }
-        if (flipper_format_read_uint32(flipper_format, "Decrypted", &temp, 1))
-        {
+        if(flipper_format_read_uint32(flipper_format, "Decrypted", &temp, 1)) {
             instance->decrypted = temp;
         }
-        if (flipper_format_read_uint32(flipper_format, "Version", &temp, 1))
-        {
+        if(flipper_format_read_uint32(flipper_format, "Version", &temp, 1)) {
             instance->version = (uint8_t)temp;
         }
-        if (flipper_format_read_uint32(flipper_format, "CRC", &temp, 1))
-        {
+        if(flipper_format_read_uint32(flipper_format, "CRC", &temp, 1)) {
             instance->crc = (uint8_t)temp;
         }
     }
@@ -407,21 +340,17 @@ kia_protocol_decoder_v3_v4_deserialize(void *context, FlipperFormat *flipper_for
 }
 
 // Compute Yek (bit-reversed key)
-static uint64_t compute_yek(uint64_t key)
-{
+static uint64_t compute_yek(uint64_t key) {
     uint64_t yek = 0;
-    for (int i = 0; i < 64; i++)
-    {
+    for(int i = 0; i < 64; i++) {
         yek |= ((key >> i) & 1) << (63 - i);
     }
     return yek;
 }
 
-void kia_protocol_decoder_v3_v4_get_string(void *context, FuriString *output)
-{
+void kia_protocol_decoder_v3_v4_get_string(void* context, FuriString* output) {
     furi_assert(context);
-    SubGhzProtocolDecoderKiaV3V4 *instance = context;
-
+    SubGhzProtocolDecoderKiaV3V4* instance = context;
 
     uint64_t yek = compute_yek(instance->generic.data);
     uint32_t key_hi = (uint32_t)(instance->generic.data >> 32);
@@ -429,8 +358,7 @@ void kia_protocol_decoder_v3_v4_get_string(void *context, FuriString *output)
     uint32_t yek_hi = (uint32_t)(yek >> 32);
     uint32_t yek_lo = (uint32_t)(yek & 0xFFFFFFFF);
 
-    if (instance->version == 0)
-    {
+    if(instance->version == 0) {
         furi_string_cat_printf(
             output,
             "%s %dbit\r\n"
@@ -449,9 +377,7 @@ void kia_protocol_decoder_v3_v4_get_string(void *context, FuriString *output)
             instance->crc,
             instance->decrypted,
             instance->generic.cnt);
-    }
-    else
-    {
+    } else {
         furi_string_cat_printf(
             output,
             "%s %dbit\r\n"
