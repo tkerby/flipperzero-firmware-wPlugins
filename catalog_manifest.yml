@@ -1,0 +1,10 @@
+# Place this in the catalog repository under:
+#   applications/Sub-GHz/caixianlin_remote/manifest.yml
+
+sourcecode:
+  type: git
+  location:
+    origin: https://github.com/anty-ce/flipper_zero_caixianlin_remote
+    commit_sha: REPLACE_WITH_LATEST_COMMIT_SHA
+
+short_description: Remote control for CaiXianlin shock collar via Sub-GHz radio
