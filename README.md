@@ -4,13 +4,9 @@ A Flipper Zero application to control CaiXianlin shock collar.
 
 ![Screenshot](screenshots/0-home-vibrate.png)
 
-> [!WARNING]
-> This application is intended for **educational and research purposes only**.
-> Do not attempt to use it!
+**WARNING:** This application is intended for **educational and research purposes only**.
 
-> [!NOTE]
-> I don't endorse use of these devices on any animals.
-> You do you, but I'd never use this device on an animal.
+**NOTE:** I don't endorse use of these devices on any animals. You do you, but I'd never use this device on an animal.
 
 ## Features
 
@@ -83,27 +79,6 @@ controller, rather than strictly following the protocol as specified in the wiki
 ```c
 checksum = (STATION_ID_high_byte + STATION_ID_low_byte + Channel + Mode + Strength) & 0xFF
 ```
-
-## Building
-
-### Prerequisites
-
-- [uFBT](https://github.com/flipperdevices/flipperzero-ufbt) (Micro Flipper Build Tool)
-
-### Build Commands
-
-```bash
-# Build
-ufbt
-
-# Build and deploy to connected Flipper
-ufbt launch
-```
-
-## Installation
-
-1. Build the app using uFBT, or download from the oficial app catalog
-2. Launch from **Apps → Sub-GHz → CaiXianlin Remote**
 
 ## First Launch
 
