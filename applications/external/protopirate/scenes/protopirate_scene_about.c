@@ -107,7 +107,7 @@ static void about_draw_callback(Canvas* canvas, void* context) {
     // Redraw header over mask
     canvas_set_color(canvas, ColorBlack);
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str(canvas, x_off, 10, "ProtoPirate v1.1");
+    canvas_draw_str(canvas, x_off, 10, "ProtoPirate v" FAP_VERSION);
 
     canvas_set_font(canvas, FontKeyboard);
     if(g_state.frame % 8 < 4) {
