@@ -66,8 +66,10 @@ static uint16_t* get_selected_edit_value(MoistureSensorApp* app) {
 static void handle_input_menu(MoistureSensorApp* app, InputEvent* event) {
     uint16_t* edit_val = get_selected_edit_value(app);
 
-    // Long press adjusts by 100, short press by 10
-    int16_t step = (event->type == InputTypeLong) ? (ADC_STEP * 10) : ADC_STEP;
+    // Long press/repeat adjusts by 100, short press by 10
+    int16_t step = (event->type == InputTypeLong || event->type == InputTypeRepeat) ?
+                       (ADC_STEP * 10) :
+                       ADC_STEP;
 
     switch(event->key) {
     case InputKeyBack:
@@ -226,12 +228,14 @@ int32_t moisture_sensor_app(void* p) {
 
     while(app->running) {
         if(furi_message_queue_get(app->event_queue, &event, 10) == FuriStatusOk) {
-            // In menu: long press only for Left/Right (value adjustment)
+            // In menu: long press and repeat only for Left/Right (value adjustment)
             // Prevents accidental repeated navigation
             bool handle = false;
             if(app->state == AppStateMenu) {
                 if(event.key == InputKeyLeft || event.key == InputKeyRight) {
-                    handle = (event.type == InputTypePress || event.type == InputTypeLong);
+                    handle =
+                        (event.type == InputTypePress || event.type == InputTypeLong ||
+                         event.type == InputTypeRepeat);
                 } else {
                     handle = (event.type == InputTypePress);
                 }

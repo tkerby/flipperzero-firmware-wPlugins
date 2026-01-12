@@ -19,9 +19,12 @@ bool calibration_load(MoistureSensorApp* app) {
             buffer[bytes_read] = '\0';
             uint16_t dry_val, wet_val;
             if(sscanf(buffer, "dry=%hu\nwet=%hu", &dry_val, &wet_val) == 2) {
-                app->cal_dry_value = dry_val;
-                app->cal_wet_value = wet_val;
-                success = true;
+                // Validate: dry must be greater than wet
+                if(dry_val > wet_val) {
+                    app->cal_dry_value = dry_val;
+                    app->cal_wet_value = wet_val;
+                    success = true;
+                }
             }
         }
     }
