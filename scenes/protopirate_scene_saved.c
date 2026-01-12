@@ -107,4 +107,7 @@ void protopirate_scene_saved_on_exit(void *context)
 {
     ProtoPirateApp *app = context;
     submenu_reset(app->submenu);
+    
+    // Free file list cache to save memory
+    protopirate_storage_free_file_list();
 }
