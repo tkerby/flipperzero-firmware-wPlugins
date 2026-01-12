@@ -30,8 +30,7 @@ bool calibration_load(MoistureSensorApp* app) {
         if(!flipper_format_read_uint32(file, "Wet", &wet_val, 1)) break;
 
         // Validate: dry > wet, both within valid ADC range
-        if(dry_val > wet_val && dry_val <= ADC_MAX_VALUE &&
-           wet_val >= SENSOR_MIN_THRESHOLD) {
+        if(dry_val > wet_val && dry_val <= ADC_MAX_VALUE && wet_val >= SENSOR_MIN_THRESHOLD) {
             app->cal_dry_value = (uint16_t)dry_val;
             app->cal_wet_value = (uint16_t)wet_val;
             success = true;
