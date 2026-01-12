@@ -2,8 +2,6 @@
 
 #include <gui/view.h>
 
-#define SENSOR_MIN_THRESHOLD 300
-
 typedef struct SensorView SensorView;
 
 typedef void (*SensorViewMenuCallback)(void* context);

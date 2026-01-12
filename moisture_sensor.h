@@ -23,10 +23,11 @@
 
 // Calibration defaults for Capacitive Moisture Sensor v1.2
 // Higher ADC = drier (more resistance), Lower ADC = wetter (less resistance)
-#define ADC_MAX_VALUE   4095
-#define ADC_DRY_DEFAULT 3650
-#define ADC_WET_DEFAULT 1700
-#define ADC_STEP        50
+#define ADC_MAX_VALUE        4095
+#define ADC_DRY_DEFAULT      3650
+#define ADC_WET_DEFAULT      1700
+#define ADC_STEP             50
+#define SENSOR_MIN_THRESHOLD 300
 
 #define CALIBRATION_FILE_PATH    APP_DATA_PATH("calibration.conf")
 #define CALIBRATION_FILE_TYPE    "Moisture Sensor Calibration"
