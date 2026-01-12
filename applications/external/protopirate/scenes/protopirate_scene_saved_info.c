@@ -9,8 +9,10 @@ static void protopirate_scene_saved_info_widget_callback(
     ProtoPirateApp* app = context;
     if(type == InputTypeShort) {
         if(result == GuiButtonTypeLeft) { // Emulate button
+#ifdef ENABLE_EMULATE_FEATURE
             view_dispatcher_send_custom_event(
                 app->view_dispatcher, ProtoPirateCustomEventSavedInfoEmulate);
+#endif
         } else if(result == GuiButtonTypeRight) { // Delete button
             view_dispatcher_send_custom_event(
                 app->view_dispatcher, ProtoPirateCustomEventSavedInfoDelete);
@@ -76,10 +78,17 @@ void protopirate_scene_saved_info_on_enter(void* context) {
                 furi_string_cat_printf(info_str, "Type: %02X\n", (uint8_t)temp_data);
             }
 
+            flipper_format_rewind(ff);
+            if(flipper_format_read_string(ff, "Manufacture", temp_str)) {
+                furi_string_cat_printf(
+                    info_str, "Manufacture: %s\n", furi_string_get_cstr(temp_str));
+            }
+
             // Add text to the widget
             widget_add_text_scroll_element(
                 app->widget, 0, 0, 128, 50, furi_string_get_cstr(info_str));
 
+#ifdef ENABLE_EMULATE_FEATURE
             // Add buttons
             widget_add_button_element(
                 app->widget,
@@ -87,7 +96,7 @@ void protopirate_scene_saved_info_on_enter(void* context) {
                 "Emulate",
                 protopirate_scene_saved_info_widget_callback,
                 app);
-
+#endif
             widget_add_button_element(
                 app->widget,
                 GuiButtonTypeRight,
@@ -116,11 +125,12 @@ bool protopirate_scene_saved_info_on_event(void* context, SceneManagerEvent even
             }
             consumed = true;
         }
-
+#ifdef ENABLE_EMULATE_FEATURE
         if(event.event == ProtoPirateCustomEventSavedInfoEmulate) {
             scene_manager_next_scene(app->scene_manager, ProtoPirateSceneEmulate);
             consumed = true;
         }
+#endif
     }
 
     return consumed;

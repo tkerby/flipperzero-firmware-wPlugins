@@ -640,7 +640,7 @@ bool protopirate_scene_timing_tuner_on_event(void* context, SceneManagerEvent ev
         if(g_timing_ctx && g_timing_ctx->is_receiving && !g_timing_ctx->has_match) {
             g_timing_ctx->rssi = subghz_devices_get_rssi(app->txrx->radio_device);
         }
-        view_commit_model(app->view_about, false);
+        view_commit_model(app->view_about, true);
         consumed = true;
     }
 

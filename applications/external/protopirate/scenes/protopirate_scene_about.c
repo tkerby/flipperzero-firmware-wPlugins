@@ -107,7 +107,7 @@ static void about_draw_callback(Canvas* canvas, void* context) {
     // Redraw header over mask
     canvas_set_color(canvas, ColorBlack);
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str(canvas, x_off, 10, "ProtoPirate v1.1");
+    canvas_draw_str(canvas, x_off, 10, "ProtoPirate v" FAP_VERSION);
 
     canvas_set_font(canvas, FontKeyboard);
     if(g_state.frame % 8 < 4) {
@@ -173,7 +173,7 @@ bool protopirate_scene_about_on_event(void* context, SceneManagerEvent event) {
             }
         }
 
-        view_commit_model(app->view_about, false);
+        view_commit_model(app->view_about, true);
         consumed = true;
     }
 
