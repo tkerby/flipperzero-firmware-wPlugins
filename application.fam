@@ -10,4 +10,5 @@ App(
     fap_author="smallwat3r",
     fap_version="1.0",
     fap_description="Read values from a capacitive moisture sensor v1.2",
+    fap_weburl="https://github.com/smallwat3r/flipperzero-moisture-sensor",
 )
