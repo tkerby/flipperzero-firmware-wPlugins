@@ -13,7 +13,7 @@
 #include <flipper_format/flipper_format.h>
 #include <stdlib.h>
 
-#include "sensor_view.h"
+#include "views/sensor_view.h"
 
 #define SENSOR_POLL_INTERVAL_MS 100
 #define ADC_SAMPLES             10
