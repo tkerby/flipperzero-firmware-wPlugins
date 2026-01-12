@@ -24,10 +24,47 @@ static const char* get_moisture_status(uint8_t percent) {
     return "Very Wet";
 }
 
+static void draw_sensor_connected(Canvas* canvas, SensorViewModel* m, const char* info_str) {
+    char num_str[4];
+    snprintf(num_str, sizeof(num_str), "%d", m->moisture_percent);
+
+    canvas_set_font(canvas, FontBigNumbers);
+    uint16_t num_width = canvas_string_width(canvas, num_str);
+    canvas_set_font(canvas, FontPrimary);
+    uint16_t pct_width = canvas_string_width(canvas, "%");
+    uint16_t total_width = num_width + 2 + pct_width;
+    uint16_t start_x = (128 - total_width) / 2;
+
+    canvas_set_font(canvas, FontBigNumbers);
+    canvas_draw_str(canvas, start_x, 34, num_str);
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str(canvas, start_x + num_width + 2, 34, "%");
+
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str_aligned(
+        canvas, 64, 36, AlignCenter, AlignTop, get_moisture_status(m->moisture_percent));
+    canvas_draw_str_aligned(canvas, 64, 48, AlignCenter, AlignTop, info_str);
+
+    canvas_draw_frame(canvas, 14, 58, 100, 5);
+    if(m->moisture_percent > 0) {
+        canvas_draw_box(canvas, 14, 58, m->moisture_percent, 5);
+    }
+}
+
+static void draw_sensor_disconnected(Canvas* canvas, const char* info_str) {
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignTop, "No Sensor");
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str_aligned(canvas, 64, 44, AlignCenter, AlignTop, "Connect to pin 16");
+    canvas_draw_str_aligned(canvas, 64, 54, AlignCenter, AlignTop, info_str);
+}
+
 static void sensor_view_draw_callback(Canvas* canvas, void* model) {
     SensorViewModel* m = model;
 
     canvas_clear(canvas);
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str(canvas, 2, 10, "< cfg");
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str_aligned(canvas, 126, 2, AlignRight, AlignTop, "Moisture Sensor");
     canvas_draw_line(canvas, 0, 14, 128, 14);
@@ -37,41 +74,10 @@ static void sensor_view_draw_callback(Canvas* canvas, void* model) {
         info_str, sizeof(info_str), "%dmV  ADC:%d  Ch:%d", m->millivolts, m->raw_adc, m->channel);
 
     if(m->sensor_connected) {
-        char num_str[4];
-        snprintf(num_str, sizeof(num_str), "%d", m->moisture_percent);
-        canvas_set_font(canvas, FontBigNumbers);
-        uint16_t num_width = canvas_string_width(canvas, num_str);
-        canvas_set_font(canvas, FontPrimary);
-        uint16_t pct_width = canvas_string_width(canvas, "%");
-        uint16_t gap = 2;
-        uint16_t total_width = num_width + gap + pct_width;
-        uint16_t start_x = (128 - total_width) / 2;
-        canvas_set_font(canvas, FontBigNumbers);
-        canvas_draw_str(canvas, start_x, 34, num_str);
-        canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, start_x + num_width + gap, 34, "%");
-
-        canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str_aligned(
-            canvas, 64, 36, AlignCenter, AlignTop, get_moisture_status(m->moisture_percent));
-        canvas_draw_str_aligned(canvas, 64, 48, AlignCenter, AlignTop, info_str);
-
-        uint8_t bar_width = m->moisture_percent;
-        canvas_draw_frame(canvas, 14, 58, 100, 5);
-        if(bar_width > 0) {
-            canvas_draw_box(canvas, 14, 58, bar_width, 5);
-        }
+        draw_sensor_connected(canvas, m, info_str);
     } else {
-        canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignTop, "No Sensor");
-        canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str_aligned(canvas, 64, 44, AlignCenter, AlignTop, "Connect to pin 16");
-        canvas_draw_str_aligned(canvas, 64, 54, AlignCenter, AlignTop, info_str);
+        draw_sensor_disconnected(canvas, info_str);
     }
-
-    // Config hint in top left (press Left for menu)
-    canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str(canvas, 2, 10, "< cfg");
 }
 
 static bool sensor_view_input_callback(InputEvent* event, void* context) {
