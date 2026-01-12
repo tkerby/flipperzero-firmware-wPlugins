@@ -66,7 +66,8 @@ const SubGhzProtocol subghz_protocol_revers_rb2 = {
     .name = SUBGHZ_PROTOCOL_REVERSRB2_NAME,
     .type = SubGhzProtocolTypeStatic,
     .flag = SubGhzProtocolFlag_433 | SubGhzProtocolFlag_AM | SubGhzProtocolFlag_Decodable |
-            SubGhzProtocolFlag_Load | SubGhzProtocolFlag_Save | SubGhzProtocolFlag_Send,
+            SubGhzProtocolFlag_Load | SubGhzProtocolFlag_Save | SubGhzProtocolFlag_Send |
+            SubGhzProtocolFlag_ReversRB2,
 
     .decoder = &subghz_protocol_revers_rb2_decoder,
     .encoder = &subghz_protocol_revers_rb2_encoder,
