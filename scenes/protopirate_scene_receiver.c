@@ -200,6 +200,7 @@ bool protopirate_scene_receiver_on_event(void* context, SceneManagerEvent event)
             FURI_LOG_I(TAG, "Selected item %d", idx);
             if(idx < protopirate_history_get_item(app->txrx->history)) {
                 app->txrx->idx_menu_chosen = idx;
+                scene_manager_set_scene_state(app->scene_manager, ProtoPirateSceneReceiver, 1);
                 scene_manager_next_scene(app->scene_manager, ProtoPirateSceneReceiverInfo);
             }
         }
@@ -207,6 +208,7 @@ bool protopirate_scene_receiver_on_event(void* context, SceneManagerEvent event)
             break;
 
         case ProtoPirateCustomEventViewReceiverConfig:
+            scene_manager_set_scene_state(app->scene_manager, ProtoPirateSceneReceiver, 1);
             scene_manager_next_scene(app->scene_manager, ProtoPirateSceneReceiverConfig);
             consumed = true;
             break;
@@ -262,6 +264,12 @@ void protopirate_scene_receiver_on_exit(void* context) {
         protopirate_rx_end(app);
     }
 
+    if(scene_manager_get_scene_state(app->scene_manager, ProtoPirateSceneReceiver) == 1) {
+        FURI_LOG_D(TAG, "Switching to info or config scene, not clearing list");
+        // Reset state for next time
+        scene_manager_set_scene_state(app->scene_manager, ProtoPirateSceneReceiver, 0);
+        return;
+    }
     // Clear the receiver view menu items
     protopirate_view_receiver_reset_menu(app->protopirate_receiver);
 }

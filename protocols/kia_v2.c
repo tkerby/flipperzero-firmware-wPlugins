@@ -486,21 +486,6 @@ uint8_t kia_protocol_decoder_v2_get_hash_data(void* context) {
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 
-static const char* kia_v2_get_short_preset_name(const char* preset_name) {
-    if(!strcmp(preset_name, "FuriHalSubGhzPresetOok270Async")) {
-        return "AM270";
-    } else if(!strcmp(preset_name, "FuriHalSubGhzPresetOok650Async")) {
-        return "AM650";
-    } else if(!strcmp(preset_name, "FuriHalSubGhzPreset2FSKDev238Async")) {
-        return "FM238";
-    } else if(!strcmp(preset_name, "FuriHalSubGhzPreset2FSKDev476Async")) {
-        return "FM476";
-    } else if(!strcmp(preset_name, "FuriHalSubGhzPresetCustom")) {
-        return "CUSTOM";
-    }
-    return preset_name;
-}
-
 SubGhzProtocolStatus kia_protocol_decoder_v2_serialize(
     void* context,
     FlipperFormat* flipper_format,
@@ -516,7 +501,7 @@ SubGhzProtocolStatus kia_protocol_decoder_v2_serialize(
         }
 
         const char* preset_name = furi_string_get_cstr(preset->name);
-        const char* short_preset = kia_v2_get_short_preset_name(preset_name);
+        const char* short_preset = protopirate_get_short_preset_name(preset_name);
         if(!flipper_format_write_string_cstr(flipper_format, "Preset", short_preset)) {
             break;
         }
