@@ -6,6 +6,7 @@
 #include <gui/gui.h>
 #include <input/input.h>
 #include <storage/storage.h>
+#include <flipper_format/flipper_format.h>
 #include <stdlib.h>
 
 #define SENSOR_POLL_INTERVAL_MS 100
@@ -23,7 +24,9 @@
 #define ADC_STEP             10
 #define SENSOR_MIN_THRESHOLD 300 // Below this ADC value, sensor is considered disconnected
 
-#define CALIBRATION_FILE_PATH APP_DATA_PATH("calibration.txt")
+#define CALIBRATION_FILE_PATH    APP_DATA_PATH("calibration.conf")
+#define CALIBRATION_FILE_TYPE    "Moisture Sensor Calibration"
+#define CALIBRATION_FILE_VERSION 1
 
 typedef enum {
     AppStateMain,
