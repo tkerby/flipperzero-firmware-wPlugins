@@ -69,7 +69,7 @@ make clean    # Clean build artifacts
 
 Press **Left** to open the calibration menu:
 
-- **Dry** / **Wet** - Adjust ADC values with **Left**/**Right** (±50 per step)
+- **Dry** / **Wet** - Adjust ADC values (±50 per step)
 - **Reset** - Restore factory defaults (Dry: 3650, Wet: 1700)
 - **Save** - Save calibration values
 
