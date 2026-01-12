@@ -18,7 +18,8 @@ A Flipper Zero application to control CaiXianlin shock collar.
 
 ## Controls
 
-### Main Screen
+**Main Screen:**
+
 | Button           | Action                           |
 |------------------|----------------------------------|
 | **OK (hold)**    | Transmit signal                  |
@@ -27,7 +28,8 @@ A Flipper Zero application to control CaiXianlin shock collar.
 | **Back (short)** | Exit app                         |
 | **Back (hold)**  | Open setup screen                |
 
-### Setup Screen
+**Setup Screen:**
+
 | Button        | Action                         |
 |---------------|--------------------------------|
 | **↑** / **↓** | Navigate menu                  |
