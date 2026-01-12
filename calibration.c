@@ -19,8 +19,9 @@ bool calibration_load(MoistureSensorApp* app) {
             buffer[bytes_read] = '\0';
             uint16_t dry_val, wet_val;
             if(sscanf(buffer, "dry=%hu\nwet=%hu", &dry_val, &wet_val) == 2) {
-                // Validate: dry must be greater than wet
-                if(dry_val > wet_val) {
+                // Validate: dry > wet, both within valid ADC range
+                if(dry_val > wet_val && dry_val <= ADC_MAX_VALUE &&
+                   wet_val >= SENSOR_MIN_THRESHOLD) {
                     app->cal_dry_value = dry_val;
                     app->cal_wet_value = wet_val;
                     success = true;

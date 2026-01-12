@@ -57,7 +57,7 @@ static void handle_input_main(MoistureSensorApp* app, InputEvent* event) {
 
 static void adjust_value(uint16_t* value, int16_t delta) {
     int32_t new_val = (int32_t)*value + delta;
-    if(new_val < 0) new_val = 0;
+    if(new_val < SENSOR_MIN_THRESHOLD) new_val = SENSOR_MIN_THRESHOLD;
     if(new_val > ADC_MAX_VALUE) new_val = ADC_MAX_VALUE;
     *value = (uint16_t)new_val;
 }
