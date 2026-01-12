@@ -14,8 +14,9 @@ static uint8_t calculate_moisture_percent(MoistureSensorApp* app, uint16_t raw) 
     return (uint8_t)((value * 100) / range);
 }
 
-static void show_confirm(MoistureSensorApp* app, const char* message) {
+static void show_confirm(MoistureSensorApp* app, const char* message, bool return_to_menu) {
     app->confirm_message = message;
+    app->confirm_return_to_menu = return_to_menu;
     app->state = AppStateConfirm;
     app->confirm_start_tick = furi_get_tick();
 }
@@ -27,12 +28,16 @@ static void handle_menu_selection(MoistureSensorApp* app) {
         app->edit_wet_value = ADC_WET_DEFAULT;
         app->cal_dry_value = ADC_DRY_DEFAULT;
         app->cal_wet_value = ADC_WET_DEFAULT;
-        show_confirm(app, calibration_save(app) ? "Defaults restored!" : "Save failed!");
+        show_confirm(app, calibration_save(app) ? "Defaults restored!" : "Save failed!", false);
         break;
     case MenuItemSave:
+        if(app->edit_dry_value <= app->edit_wet_value) {
+            show_confirm(app, "Dry must be > Wet!", true);
+            break;
+        }
         app->cal_dry_value = app->edit_dry_value;
         app->cal_wet_value = app->edit_wet_value;
-        show_confirm(app, calibration_save(app) ? "Saved!" : "Save failed!");
+        show_confirm(app, calibration_save(app) ? "Saved!" : "Save failed!", false);
         break;
     default:
         break;
@@ -157,6 +162,7 @@ static MoistureSensorApp* moisture_sensor_app_alloc(void) {
     app->edit_wet_value = ADC_WET_DEFAULT;
     app->confirm_start_tick = 0;
     app->confirm_message = NULL;
+    app->confirm_return_to_menu = false;
 
     calibration_load(app);
 
@@ -252,7 +258,7 @@ int32_t moisture_sensor_app(void* p) {
                     handle_input_menu(app, &event);
                     break;
                 case AppStateConfirm:
-                    app->state = AppStateMain;
+                    app->state = app->confirm_return_to_menu ? AppStateMenu : AppStateMain;
                     break;
                 }
                 view_port_update(app->view_port);
@@ -261,7 +267,7 @@ int32_t moisture_sensor_app(void* p) {
 
         if(app->state == AppStateConfirm) {
             if(furi_get_tick() - app->confirm_start_tick >= CONFIRM_TIMEOUT_MS) {
-                app->state = AppStateMain;
+                app->state = app->confirm_return_to_menu ? AppStateMenu : AppStateMain;
                 view_port_update(app->view_port);
             }
         }

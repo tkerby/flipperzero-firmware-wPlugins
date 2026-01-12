@@ -66,4 +66,5 @@ typedef struct {
 
     uint32_t confirm_start_tick;
     const char* confirm_message;
+    bool confirm_return_to_menu;
 } MoistureSensorApp;
