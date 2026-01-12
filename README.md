@@ -22,7 +22,7 @@ A Flipper Zero application that reads values from a Capacitive Moisture Sensor v
 ## Hardware Requirements
 
 - Flipper Zero
-- Capacitive Moisture Sensor v1.2 ([link](https://thepihut.com/products/capacitive-soil-moisture-sensor))
+- [Capacitive Moisture Sensor v1.2](https://thepihut.com/products/capacitive-soil-moisture-sensor)
 
 ## Wiring
 
