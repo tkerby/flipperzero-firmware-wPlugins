@@ -1,8 +1,7 @@
 // scenes/protopirate_scene_start.c
 #include "../protopirate_app_i.h"
 
-typedef enum
-{
+typedef enum {
     SubmenuIndexProtoPirateReceiver,
     SubmenuIndexProtoPirateSaved,
     SubmenuIndexProtoPirateReceiverConfig,
@@ -11,17 +10,15 @@ typedef enum
     SubmenuIndexProtoPirateAbout,
 } SubmenuIndex;
 
-static void protopirate_scene_start_submenu_callback(void *context, uint32_t index)
-{
+static void protopirate_scene_start_submenu_callback(void* context, uint32_t index) {
     furi_assert(context);
-    ProtoPirateApp *app = context;
+    ProtoPirateApp* app = context;
     view_dispatcher_send_custom_event(app->view_dispatcher, index);
 }
 
-void protopirate_scene_start_on_enter(void *context)
-{
+void protopirate_scene_start_on_enter(void* context) {
     furi_assert(context);
-    ProtoPirateApp *app = context;
+    ProtoPirateApp* app = context;
 
     submenu_add_item(
         app->submenu,
@@ -71,41 +68,28 @@ void protopirate_scene_start_on_enter(void *context)
     view_dispatcher_switch_to_view(app->view_dispatcher, ProtoPirateViewSubmenu);
 }
 
-bool protopirate_scene_start_on_event(void *context, SceneManagerEvent event)
-{
+bool protopirate_scene_start_on_event(void* context, SceneManagerEvent event) {
     furi_assert(context);
-    ProtoPirateApp *app = context;
+    ProtoPirateApp* app = context;
     bool consumed = false;
 
-    if (event.type == SceneManagerEventTypeCustom)
-    {
-        if (event.event == SubmenuIndexProtoPirateAbout)
-        {
+    if(event.type == SceneManagerEventTypeCustom) {
+        if(event.event == SubmenuIndexProtoPirateAbout) {
             scene_manager_next_scene(app->scene_manager, ProtoPirateSceneAbout);
             consumed = true;
-        }
-        else if (event.event == SubmenuIndexProtoPirateReceiver)
-        {
+        } else if(event.event == SubmenuIndexProtoPirateReceiver) {
             scene_manager_next_scene(app->scene_manager, ProtoPirateSceneReceiver);
             consumed = true;
-        }
-        else if (event.event == SubmenuIndexProtoPirateSaved)
-        {
+        } else if(event.event == SubmenuIndexProtoPirateSaved) {
             scene_manager_next_scene(app->scene_manager, ProtoPirateSceneSaved);
             consumed = true;
-        }
-        else if (event.event == SubmenuIndexProtoPirateReceiverConfig)
-        {
+        } else if(event.event == SubmenuIndexProtoPirateReceiverConfig) {
             scene_manager_next_scene(app->scene_manager, ProtoPirateSceneReceiverConfig);
             consumed = true;
-        }
-        else if (event.event == SubmenuIndexProtoPirateSubDecode)
-        {
+        } else if(event.event == SubmenuIndexProtoPirateSubDecode) {
             scene_manager_next_scene(app->scene_manager, ProtoPirateSceneSubDecode);
             consumed = true;
-        }
-        else if (event.event == SubmenuIndexProtoPirateTimingTuner)
-        {
+        } else if(event.event == SubmenuIndexProtoPirateTimingTuner) {
             scene_manager_next_scene(app->scene_manager, ProtoPirateSceneTimingTuner);
             consumed = true;
         }
@@ -115,9 +99,8 @@ bool protopirate_scene_start_on_event(void *context, SceneManagerEvent event)
     return consumed;
 }
 
-void protopirate_scene_start_on_exit(void *context)
-{
+void protopirate_scene_start_on_exit(void* context) {
     furi_assert(context);
-    ProtoPirateApp *app = context;
+    ProtoPirateApp* app = context;
     submenu_reset(app->submenu);
 }

@@ -99,7 +99,7 @@ bool protopirate_history_add_to_history(
     furi_assert(context);
 
     SubGhzProtocolDecoderBase* decoder_base = context;
-    
+
     // Check for duplicate (same hash within 500ms)
     if((instance->code_last_hash_data ==
         subghz_protocol_decoder_base_get_hash_data(decoder_base)) &&
@@ -142,16 +142,16 @@ bool protopirate_history_add_to_history(
 
     // Serialize to flipper format
     subghz_protocol_decoder_base_serialize(decoder_base, item->flipper_format, preset);
-    
+
     // Debug: Log what we're adding to history
     flipper_format_rewind(item->flipper_format);
     uint32_t debug_bit_count;
     FuriString* debug_protocol = furi_string_alloc();
-    if (flipper_format_read_string(item->flipper_format, "Protocol", debug_protocol)) {
+    if(flipper_format_read_string(item->flipper_format, "Protocol", debug_protocol)) {
         FURI_LOG_I(TAG, "History add - Protocol: %s", furi_string_get_cstr(debug_protocol));
     }
     flipper_format_rewind(item->flipper_format);
-    if (flipper_format_read_uint32(item->flipper_format, "Bit", &debug_bit_count, 1)) {
+    if(flipper_format_read_uint32(item->flipper_format, "Bit", &debug_bit_count, 1)) {
         FURI_LOG_I(TAG, "History add - Bit count: %lu", debug_bit_count);
     }
     furi_string_free(debug_protocol);
@@ -160,9 +160,11 @@ bool protopirate_history_add_to_history(
 
     instance->last_index++;
 
-    FURI_LOG_I(TAG, "Added item %u to history (size: %zu)", 
-               instance->last_index, 
-               ProtoPirateHistoryItemArray_size(instance->data));
+    FURI_LOG_I(
+        TAG,
+        "Added item %u to history (size: %zu)",
+        instance->last_index,
+        ProtoPirateHistoryItemArray_size(instance->data));
 
     return true;
 }

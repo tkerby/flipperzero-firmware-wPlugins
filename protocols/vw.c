@@ -9,8 +9,7 @@ static const SubGhzBlockConst subghz_protocol_vw_const = {
     .min_count_bit_for_found = 80,
 };
 
-typedef struct SubGhzProtocolDecoderVw
-{
+typedef struct SubGhzProtocolDecoderVw {
     SubGhzProtocolDecoderBase base;
     SubGhzBlockDecoder decoder;
     SubGhzBlockGeneric generic;
@@ -19,15 +18,13 @@ typedef struct SubGhzProtocolDecoderVw
     uint64_t data_2; // Additional 16 bits (type byte + check byte)
 } SubGhzProtocolDecoderVw;
 
-typedef struct SubGhzProtocolEncoderVw
-{
+typedef struct SubGhzProtocolEncoderVw {
     SubGhzProtocolEncoderBase base;
     SubGhzProtocolBlockEncoder encoder;
     SubGhzBlockGeneric generic;
 } SubGhzProtocolEncoderVw;
 
-typedef enum
-{
+typedef enum {
     VwDecoderStepReset = 0,
     VwDecoderStepFoundSync,
     VwDecoderStepFoundStart1,
@@ -67,71 +64,43 @@ const SubGhzProtocol vw_protocol = {
 static bool vw_manchester_advance(
     ManchesterState state,
     ManchesterEvent event,
-    ManchesterState *next_state,
-    bool *data)
-{
-
+    ManchesterState* next_state,
+    bool* data) {
     bool result = false;
     ManchesterState new_state = ManchesterStateMid1;
 
-    if (event == ManchesterEventReset)
-    {
+    if(event == ManchesterEventReset) {
         new_state = ManchesterStateMid1;
-    }
-    else if (state == ManchesterStateMid0 || state == ManchesterStateMid1)
-    {
-        if (event == ManchesterEventShortHigh)
-        {
+    } else if(state == ManchesterStateMid0 || state == ManchesterStateMid1) {
+        if(event == ManchesterEventShortHigh) {
             new_state = ManchesterStateStart1;
-        }
-        else if (event == ManchesterEventShortLow)
-        {
+        } else if(event == ManchesterEventShortLow) {
             new_state = ManchesterStateStart0;
-        }
-        else
-        {
+        } else {
             new_state = ManchesterStateMid1;
         }
-    }
-    else if (state == ManchesterStateStart1)
-    {
-        if (event == ManchesterEventShortLow)
-        {
+    } else if(state == ManchesterStateStart1) {
+        if(event == ManchesterEventShortLow) {
             new_state = ManchesterStateMid1;
             result = true;
-            if (data)
-                *data = true;
-        }
-        else if (event == ManchesterEventLongLow)
-        {
+            if(data) *data = true;
+        } else if(event == ManchesterEventLongLow) {
             new_state = ManchesterStateStart0;
             result = true;
-            if (data)
-                *data = true;
-        }
-        else
-        {
+            if(data) *data = true;
+        } else {
             new_state = ManchesterStateMid1;
         }
-    }
-    else if (state == ManchesterStateStart0)
-    {
-        if (event == ManchesterEventShortHigh)
-        {
+    } else if(state == ManchesterStateStart0) {
+        if(event == ManchesterEventShortHigh) {
             new_state = ManchesterStateMid0;
             result = true;
-            if (data)
-                *data = false;
-        }
-        else if (event == ManchesterEventLongHigh)
-        {
+            if(data) *data = false;
+        } else if(event == ManchesterEventLongHigh) {
             new_state = ManchesterStateStart1;
             result = true;
-            if (data)
-                *data = false;
-        }
-        else
-        {
+            if(data) *data = false;
+        } else {
             new_state = ManchesterStateMid1;
         }
     }
@@ -140,24 +109,18 @@ static bool vw_manchester_advance(
     return result;
 }
 
-static uint8_t vw_get_bit_index(uint8_t bit)
-{
+static uint8_t vw_get_bit_index(uint8_t bit) {
     uint8_t bit_index = 0;
 
-    if (bit < 72 && bit >= 8)
-    {
+    if(bit < 72 && bit >= 8) {
         // use generic.data (bytes 1-8)
         bit_index = bit - 8;
-    }
-    else
-    {
+    } else {
         // use data_2
-        if (bit >= 72)
-        {
+        if(bit >= 72) {
             bit_index = bit - 64; // byte 0 = type
         }
-        if (bit < 8)
-        {
+        if(bit < 8) {
             bit_index = bit; // byte 9 = check digit
         }
         bit_index |= 0x80; // mark for data_2
@@ -166,73 +129,58 @@ static uint8_t vw_get_bit_index(uint8_t bit)
     return bit_index;
 }
 
-static void vw_add_bit(SubGhzProtocolDecoderVw *instance, bool level)
-{
-    if (instance->generic.data_count_bit >= subghz_protocol_vw_const.min_count_bit_for_found)
-    {
+static void vw_add_bit(SubGhzProtocolDecoderVw* instance, bool level) {
+    if(instance->generic.data_count_bit >= subghz_protocol_vw_const.min_count_bit_for_found) {
         return;
     }
 
-    uint8_t bit_index_full = subghz_protocol_vw_const.min_count_bit_for_found - 1 - instance->generic.data_count_bit;
+    uint8_t bit_index_full =
+        subghz_protocol_vw_const.min_count_bit_for_found - 1 - instance->generic.data_count_bit;
     uint8_t bit_index_masked = vw_get_bit_index(bit_index_full);
     uint8_t bit_index = bit_index_masked & 0x7F;
 
-    if (bit_index_masked & 0x80)
-    {
+    if(bit_index_masked & 0x80) {
         // use data_2
-        if (level)
-        {
+        if(level) {
             instance->data_2 |= (1ULL << bit_index);
-        }
-        else
-        {
+        } else {
             instance->data_2 &= ~(1ULL << bit_index);
         }
-    }
-    else
-    {
+    } else {
         // use data
-        if (level)
-        {
+        if(level) {
             instance->generic.data |= (1ULL << bit_index);
-        }
-        else
-        {
+        } else {
             instance->generic.data &= ~(1ULL << bit_index);
         }
     }
 
     instance->generic.data_count_bit++;
 
-    if (instance->generic.data_count_bit >= subghz_protocol_vw_const.min_count_bit_for_found)
-    {
-        if (instance->base.callback)
-        {
+    if(instance->generic.data_count_bit >= subghz_protocol_vw_const.min_count_bit_for_found) {
+        if(instance->base.callback) {
             instance->base.callback(&instance->base, instance->base.context);
         }
     }
 }
 
-void *subghz_protocol_decoder_vw_alloc(SubGhzEnvironment *environment)
-{
+void* subghz_protocol_decoder_vw_alloc(SubGhzEnvironment* environment) {
     UNUSED(environment);
-    SubGhzProtocolDecoderVw *instance = malloc(sizeof(SubGhzProtocolDecoderVw));
+    SubGhzProtocolDecoderVw* instance = malloc(sizeof(SubGhzProtocolDecoderVw));
     instance->base.protocol = &vw_protocol;
     instance->generic.protocol_name = instance->base.protocol->name;
     return instance;
 }
 
-void subghz_protocol_decoder_vw_free(void *context)
-{
+void subghz_protocol_decoder_vw_free(void* context) {
     furi_assert(context);
-    SubGhzProtocolDecoderVw *instance = context;
+    SubGhzProtocolDecoderVw* instance = context;
     free(instance);
 }
 
-void subghz_protocol_decoder_vw_reset(void *context)
-{
+void subghz_protocol_decoder_vw_reset(void* context) {
     furi_assert(context);
-    SubGhzProtocolDecoderVw *instance = context;
+    SubGhzProtocolDecoderVw* instance = context;
     instance->decoder.parser_step = VwDecoderStepReset;
     instance->generic.data_count_bit = 0;
     instance->generic.data = 0;
@@ -240,10 +188,9 @@ void subghz_protocol_decoder_vw_reset(void *context)
     instance->manchester_state = ManchesterStateMid1;
 }
 
-void subghz_protocol_decoder_vw_feed(void *context, bool level, uint32_t duration)
-{
+void subghz_protocol_decoder_vw_feed(void* context, bool level, uint32_t duration) {
     furi_assert(context);
-    SubGhzProtocolDecoderVw *instance = context;
+    SubGhzProtocolDecoderVw* instance = context;
 
     uint32_t te_short = subghz_protocol_vw_const.te_short;
     uint32_t te_long = subghz_protocol_vw_const.te_long;
@@ -253,24 +200,20 @@ void subghz_protocol_decoder_vw_feed(void *context, bool level, uint32_t duratio
 
     ManchesterEvent event = ManchesterEventReset;
 
-    switch (instance->decoder.parser_step)
-    {
+    switch(instance->decoder.parser_step) {
     case VwDecoderStepReset:
-        if (DURATION_DIFF(duration, te_short) < te_delta)
-        {
+        if(DURATION_DIFF(duration, te_short) < te_delta) {
             instance->decoder.parser_step = VwDecoderStepFoundSync;
         }
         break;
 
     case VwDecoderStepFoundSync:
-        if (DURATION_DIFF(duration, te_short) < te_delta)
-        {
+        if(DURATION_DIFF(duration, te_short) < te_delta) {
             // Stay - sync pattern repeats ~43 times
             break;
         }
 
-        if (level && DURATION_DIFF(duration, te_long) < te_delta)
-        {
+        if(level && DURATION_DIFF(duration, te_long) < te_delta) {
             instance->decoder.parser_step = VwDecoderStepFoundStart1;
             break;
         }
@@ -279,8 +222,7 @@ void subghz_protocol_decoder_vw_feed(void *context, bool level, uint32_t duratio
         break;
 
     case VwDecoderStepFoundStart1:
-        if (!level && DURATION_DIFF(duration, te_short) < te_delta)
-        {
+        if(!level && DURATION_DIFF(duration, te_short) < te_delta) {
             instance->decoder.parser_step = VwDecoderStepFoundStart2;
             break;
         }
@@ -289,8 +231,7 @@ void subghz_protocol_decoder_vw_feed(void *context, bool level, uint32_t duratio
         break;
 
     case VwDecoderStepFoundStart2:
-        if (level && DURATION_DIFF(duration, te_med) < te_delta)
-        {
+        if(level && DURATION_DIFF(duration, te_med) < te_delta) {
             instance->decoder.parser_step = VwDecoderStepFoundStart3;
             break;
         }
@@ -299,14 +240,12 @@ void subghz_protocol_decoder_vw_feed(void *context, bool level, uint32_t duratio
         break;
 
     case VwDecoderStepFoundStart3:
-        if (DURATION_DIFF(duration, te_med) < te_delta)
-        {
+        if(DURATION_DIFF(duration, te_med) < te_delta) {
             // Stay - med pattern repeats
             break;
         }
 
-        if (level && DURATION_DIFF(duration, te_short) < te_delta)
-        {
+        if(level && DURATION_DIFF(duration, te_short) < te_delta) {
             // Start data collection
             vw_manchester_advance(
                 instance->manchester_state,
@@ -329,36 +268,27 @@ void subghz_protocol_decoder_vw_feed(void *context, bool level, uint32_t duratio
         break;
 
     case VwDecoderStepFoundData:
-        if (DURATION_DIFF(duration, te_short) < te_delta)
-        {
+        if(DURATION_DIFF(duration, te_short) < te_delta) {
             event = level ? ManchesterEventShortHigh : ManchesterEventShortLow;
         }
 
-        if (DURATION_DIFF(duration, te_long) < te_delta)
-        {
+        if(DURATION_DIFF(duration, te_long) < te_delta) {
             event = level ? ManchesterEventLongHigh : ManchesterEventLongLow;
         }
 
         // Last bit can be arbitrarily long
-        if (instance->generic.data_count_bit == subghz_protocol_vw_const.min_count_bit_for_found - 1 &&
-            !level && duration > te_end)
-        {
+        if(instance->generic.data_count_bit ==
+               subghz_protocol_vw_const.min_count_bit_for_found - 1 &&
+           !level && duration > te_end) {
             event = ManchesterEventShortLow;
         }
 
-        if (event == ManchesterEventReset)
-        {
+        if(event == ManchesterEventReset) {
             subghz_protocol_decoder_vw_reset(instance);
-        }
-        else
-        {
+        } else {
             bool new_level;
-            if (vw_manchester_advance(
-                    instance->manchester_state,
-                    event,
-                    &instance->manchester_state,
-                    &new_level))
-            {
+            if(vw_manchester_advance(
+                   instance->manchester_state, event, &instance->manchester_state, &new_level)) {
                 vw_add_bit(instance, new_level);
             }
         }
@@ -366,28 +296,25 @@ void subghz_protocol_decoder_vw_feed(void *context, bool level, uint32_t duratio
     }
 }
 
-uint8_t subghz_protocol_decoder_vw_get_hash_data(void *context)
-{
+uint8_t subghz_protocol_decoder_vw_get_hash_data(void* context) {
     furi_assert(context);
-    SubGhzProtocolDecoderVw *instance = context;
+    SubGhzProtocolDecoderVw* instance = context;
     return subghz_protocol_blocks_get_hash_data(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 
 SubGhzProtocolStatus subghz_protocol_decoder_vw_serialize(
-    void *context,
-    FlipperFormat *flipper_format,
-    SubGhzRadioPreset *preset)
-{
+    void* context,
+    FlipperFormat* flipper_format,
+    SubGhzRadioPreset* preset) {
     furi_assert(context);
-    SubGhzProtocolDecoderVw *instance = context;
+    SubGhzProtocolDecoderVw* instance = context;
 
     SubGhzProtocolStatus ret = SubGhzProtocolStatusError;
 
     ret = subghz_block_generic_serialize(&instance->generic, flipper_format, preset);
 
-    if (ret == SubGhzProtocolStatusOk)
-    {
+    if(ret == SubGhzProtocolStatusOk) {
         // Add VW-specific data
         uint32_t type = (instance->data_2 >> 8) & 0xFF;
         uint32_t check = instance->data_2 & 0xFF;
@@ -401,18 +328,16 @@ SubGhzProtocolStatus subghz_protocol_decoder_vw_serialize(
     return ret;
 }
 
-SubGhzProtocolStatus subghz_protocol_decoder_vw_deserialize(void *context, FlipperFormat *flipper_format)
-{
+SubGhzProtocolStatus
+    subghz_protocol_decoder_vw_deserialize(void* context, FlipperFormat* flipper_format) {
     furi_assert(context);
-    SubGhzProtocolDecoderVw *instance = context;
+    SubGhzProtocolDecoderVw* instance = context;
     return subghz_block_generic_deserialize_check_count_bit(
         &instance->generic, flipper_format, subghz_protocol_vw_const.min_count_bit_for_found);
 }
 
-static const char *vw_get_button_name(uint8_t btn)
-{
-    switch (btn)
-    {
+static const char* vw_get_button_name(uint8_t btn) {
+    switch(btn) {
     case 0x1:
         return "UNLOCK";
     case 0x2:
@@ -434,10 +359,9 @@ static const char *vw_get_button_name(uint8_t btn)
     }
 }
 
-void subghz_protocol_decoder_vw_get_string(void *context, FuriString *output)
-{
+void subghz_protocol_decoder_vw_get_string(void* context, FuriString* output) {
     furi_assert(context);
-    SubGhzProtocolDecoderVw *instance = context;
+    SubGhzProtocolDecoderVw* instance = context;
 
     uint8_t type = (instance->data_2 >> 8) & 0xFF;
     uint8_t check = instance->data_2 & 0xFF;

@@ -2,6 +2,7 @@
 #include <string.h>
 
 const SubGhzProtocol* protopirate_protocol_registry_items[] = {
+    &subghz_protocol_scher_khan,
     &kia_protocol_v0,
     &kia_protocol_v1,
     &kia_protocol_v2,
@@ -13,6 +14,7 @@ const SubGhzProtocol* protopirate_protocol_registry_items[] = {
     &subaru_protocol,
     &suzuki_protocol,
     &vw_protocol,
+    &subghz_protocol_star_line,
 };
 
 const SubGhzProtocolRegistry protopirate_protocol_registry = {
@@ -110,13 +112,29 @@ static const ProtoPirateProtocolTiming protocol_timings[] = {
         .te_delta = 120,
         .min_count_bit = 80,
     },
+    // Scher-Khan: PWM 750/1100µs
+    {
+        .name = "Scher-Khan",
+        .te_short = 750,
+        .te_long = 1100,
+        .te_delta = 180,
+        .min_count_bit = 35,
+    },
+    // Star Line: PWM 250/500µs
+    {
+        .name = "Star Line",
+        .te_short = 250,
+        .te_long = 500,
+        .te_delta = 120,
+        .min_count_bit = 64,
+    },
 };
 
 static const size_t protocol_timings_count = COUNT_OF(protocol_timings);
 
 const ProtoPirateProtocolTiming* protopirate_get_protocol_timing(const char* protocol_name) {
     if(!protocol_name) return NULL;
-    
+
     for(size_t i = 0; i < protocol_timings_count; i++) {
         // Check for exact match or if the protocol name contains our timing name
         if(strcmp(protocol_name, protocol_timings[i].name) == 0 ||
@@ -124,57 +142,76 @@ const ProtoPirateProtocolTiming* protopirate_get_protocol_timing(const char* pro
             return &protocol_timings[i];
         }
     }
-    
+
     // Try partial matching for version variants
     for(size_t i = 0; i < protocol_timings_count; i++) {
         // Match "Kia" protocols
         if(strstr(protocol_name, "Kia") != NULL || strstr(protocol_name, "KIA") != NULL ||
            strstr(protocol_name, "HYU") != NULL) {
             // Try to match version number
-            if(strstr(protocol_name, "V0") != NULL && strstr(protocol_timings[i].name, "V0") != NULL) {
+            if(strstr(protocol_name, "V0") != NULL &&
+               strstr(protocol_timings[i].name, "V0") != NULL) {
                 return &protocol_timings[i];
             }
-            if(strstr(protocol_name, "V1") != NULL && strstr(protocol_timings[i].name, "V1") != NULL) {
+            if(strstr(protocol_name, "V1") != NULL &&
+               strstr(protocol_timings[i].name, "V1") != NULL) {
                 return &protocol_timings[i];
             }
-            if(strstr(protocol_name, "V2") != NULL && strstr(protocol_timings[i].name, "V2") != NULL) {
+            if(strstr(protocol_name, "V2") != NULL &&
+               strstr(protocol_timings[i].name, "V2") != NULL) {
                 return &protocol_timings[i];
             }
             if((strstr(protocol_name, "V3") != NULL || strstr(protocol_name, "V4") != NULL) &&
                strstr(protocol_timings[i].name, "V3/V4") != NULL) {
                 return &protocol_timings[i];
             }
-            if(strstr(protocol_name, "V5") != NULL && strstr(protocol_timings[i].name, "V5") != NULL) {
+            if(strstr(protocol_name, "V5") != NULL &&
+               strstr(protocol_timings[i].name, "V5") != NULL) {
                 return &protocol_timings[i];
             }
         }
-        
+
         // Match Ford
-        if(strstr(protocol_name, "Ford") != NULL && strstr(protocol_timings[i].name, "Ford") != NULL) {
+        if(strstr(protocol_name, "Ford") != NULL &&
+           strstr(protocol_timings[i].name, "Ford") != NULL) {
             return &protocol_timings[i];
         }
-        
+
         // Match Fiat
-        if(strstr(protocol_name, "Fiat") != NULL && strstr(protocol_timings[i].name, "Fiat") != NULL) {
+        if(strstr(protocol_name, "Fiat") != NULL &&
+           strstr(protocol_timings[i].name, "Fiat") != NULL) {
             return &protocol_timings[i];
         }
-        
+
         // Match Subaru
-        if(strstr(protocol_name, "Subaru") != NULL && strstr(protocol_timings[i].name, "Subaru") != NULL) {
+        if(strstr(protocol_name, "Subaru") != NULL &&
+           strstr(protocol_timings[i].name, "Subaru") != NULL) {
             return &protocol_timings[i];
         }
-        
+
         // Match Suzuki
-        if(strstr(protocol_name, "Suzuki") != NULL && strstr(protocol_timings[i].name, "Suzuki") != NULL) {
+        if(strstr(protocol_name, "Suzuki") != NULL &&
+           strstr(protocol_timings[i].name, "Suzuki") != NULL) {
             return &protocol_timings[i];
         }
-        
+
         // Match VW
         if(strstr(protocol_name, "VW") != NULL && strstr(protocol_timings[i].name, "VW") != NULL) {
             return &protocol_timings[i];
         }
+
+        // Match Scher-Khan
+        if(strstr(protocol_name, "Scher-Khan") != NULL &&
+           strstr(protocol_timings[i].name, "Scher-Khan") != NULL) {
+            return &protocol_timings[i];
+        }
+        // Match Star Line
+        if(strstr(protocol_name, "Star Line") != NULL &&
+           strstr(protocol_timings[i].name, "Star Line") != NULL) {
+            return &protocol_timings[i];
+        }
     }
-    
+
     return NULL;
 }
 
