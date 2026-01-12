@@ -19,7 +19,7 @@ void* subghz_protocol_decoder_vw_alloc(SubGhzEnvironment* environment);
 void subghz_protocol_decoder_vw_free(void* context);
 void subghz_protocol_decoder_vw_reset(void* context);
 void subghz_protocol_decoder_vw_feed(void* context, bool level, uint32_t duration);
-uint32_t subghz_protocol_decoder_vw_get_hash_data(void* context);
+uint8_t subghz_protocol_decoder_vw_get_hash_data(void* context);
 SubGhzProtocolStatus subghz_protocol_decoder_vw_serialize(
     void* context,
     FlipperFormat* flipper_format,

@@ -173,7 +173,7 @@ bool protopirate_scene_about_on_event(void* context, SceneManagerEvent event) {
             }
         }
 
-        view_commit_model(app->view_about, false);
+        view_commit_model(app->view_about, true);
         consumed = true;
     }
 

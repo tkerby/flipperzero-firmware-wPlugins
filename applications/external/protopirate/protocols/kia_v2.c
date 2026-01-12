@@ -40,12 +40,10 @@ const SubGhzProtocolDecoder kia_protocol_v2_decoder = {
     .free = kia_protocol_decoder_v2_free,
     .feed = kia_protocol_decoder_v2_feed,
     .reset = kia_protocol_decoder_v2_reset,
-    .get_hash_data = NULL,
-    .get_hash_data_long = kia_protocol_decoder_v2_get_hash_data,
+    .get_hash_data = kia_protocol_decoder_v2_get_hash_data,
     .serialize = kia_protocol_decoder_v2_serialize,
     .deserialize = kia_protocol_decoder_v2_deserialize,
     .get_string = kia_protocol_decoder_v2_get_string,
-    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder kia_protocol_v2_encoder = {
@@ -142,7 +140,7 @@ void* kia_protocol_encoder_v2_alloc(SubGhzEnvironment* environment) {
     instance->generic.protocol_name = instance->base.protocol->name;
 
     instance->encoder.repeat = 10;
-    instance->encoder.size_upload = 1300;
+    instance->encoder.size_upload = 1200;
     instance->encoder.upload = malloc(instance->encoder.size_upload * sizeof(LevelDuration));
     instance->encoder.is_running = false;
     instance->encoder.front = 0;
@@ -481,26 +479,11 @@ void kia_protocol_decoder_v2_feed(void* context, bool level, uint32_t duration) 
     }
 }
 
-uint32_t kia_protocol_decoder_v2_get_hash_data(void* context) {
+uint8_t kia_protocol_decoder_v2_get_hash_data(void* context) {
     furi_assert(context);
     SubGhzProtocolDecoderKiaV2* instance = context;
-    return subghz_protocol_blocks_get_hash_data_long(
+    return subghz_protocol_blocks_get_hash_data(
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
-}
-
-static const char* kia_v2_get_short_preset_name(const char* preset_name) {
-    if(!strcmp(preset_name, "FuriHalSubGhzPresetOok270Async")) {
-        return "AM270";
-    } else if(!strcmp(preset_name, "FuriHalSubGhzPresetOok650Async")) {
-        return "AM650";
-    } else if(!strcmp(preset_name, "FuriHalSubGhzPreset2FSKDev238Async")) {
-        return "FM238";
-    } else if(!strcmp(preset_name, "FuriHalSubGhzPreset2FSKDev476Async")) {
-        return "FM476";
-    } else if(!strcmp(preset_name, "FuriHalSubGhzPresetCustom")) {
-        return "CUSTOM";
-    }
-    return preset_name;
 }
 
 SubGhzProtocolStatus kia_protocol_decoder_v2_serialize(
@@ -518,7 +501,7 @@ SubGhzProtocolStatus kia_protocol_decoder_v2_serialize(
         }
 
         const char* preset_name = furi_string_get_cstr(preset->name);
-        const char* short_preset = kia_v2_get_short_preset_name(preset_name);
+        const char* short_preset = protopirate_get_short_preset_name(preset_name);
         if(!flipper_format_write_string_cstr(flipper_format, "Preset", short_preset)) {
             break;
         }

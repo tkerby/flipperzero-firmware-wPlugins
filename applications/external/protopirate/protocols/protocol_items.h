@@ -4,6 +4,7 @@
 #include <lib/subghz/types.h>
 
 #include "kia_generic.h"
+#include "scher_khan.h"
 #include "kia_v0.h"
 #include "kia_v1.h"
 #include "kia_v2.h"
@@ -15,6 +16,7 @@
 #include "subaru.h"
 #include "suzuki.h"
 #include "vw.h"
+#include "star_line.h"
 
 extern const SubGhzProtocolRegistry protopirate_protocol_registry;
 

@@ -2,6 +2,7 @@
 
 #include "kia_generic.h"
 #include <lib/toolbox/manchester_decoder.h>
+#include "protocols_common.h"
 
 #define KIA_PROTOCOL_V2_NAME "Kia V2"
 
@@ -16,7 +17,7 @@ void* kia_protocol_decoder_v2_alloc(SubGhzEnvironment* environment);
 void kia_protocol_decoder_v2_free(void* context);
 void kia_protocol_decoder_v2_reset(void* context);
 void kia_protocol_decoder_v2_feed(void* context, bool level, uint32_t duration);
-uint32_t kia_protocol_decoder_v2_get_hash_data(void* context);
+uint8_t kia_protocol_decoder_v2_get_hash_data(void* context);
 SubGhzProtocolStatus kia_protocol_decoder_v2_serialize(
     void* context,
     FlipperFormat* flipper_format,

@@ -44,12 +44,10 @@ const SubGhzProtocolDecoder subghz_protocol_fiat_v0_decoder = {
     .free = subghz_protocol_decoder_fiat_v0_free,
     .feed = subghz_protocol_decoder_fiat_v0_feed,
     .reset = subghz_protocol_decoder_fiat_v0_reset,
-    .get_hash_data = NULL,
-    .get_hash_data_long = subghz_protocol_decoder_fiat_v0_get_hash_data,
+    .get_hash_data = subghz_protocol_decoder_fiat_v0_get_hash_data,
     .serialize = subghz_protocol_decoder_fiat_v0_serialize,
     .deserialize = subghz_protocol_decoder_fiat_v0_deserialize,
     .get_string = subghz_protocol_decoder_fiat_v0_get_string,
-    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder subghz_protocol_fiat_v0_encoder = {
@@ -274,13 +272,13 @@ void subghz_protocol_decoder_fiat_v0_feed(void* context, bool level, uint32_t du
     }
 }
 
-uint32_t subghz_protocol_decoder_fiat_v0_get_hash_data(void* context) {
+uint8_t subghz_protocol_decoder_fiat_v0_get_hash_data(void* context) {
     furi_assert(context);
     SubGhzProtocolDecoderFiatV0* instance = context;
     SubGhzBlockDecoder decoder = {
         .decode_data = instance->generic.data,
         .decode_count_bit = instance->generic.data_count_bit};
-    return subghz_protocol_blocks_get_hash_data_long(&decoder, (decoder.decode_count_bit / 8) + 1);
+    return subghz_protocol_blocks_get_hash_data(&decoder, (decoder.decode_count_bit / 8) + 1);
 }
 
 SubGhzProtocolStatus subghz_protocol_decoder_fiat_v0_serialize(

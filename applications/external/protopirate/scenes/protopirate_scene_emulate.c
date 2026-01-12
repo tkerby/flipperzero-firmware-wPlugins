@@ -576,7 +576,7 @@ bool protopirate_scene_emulate_on_event(void* context, SceneManagerEvent event) 
         }
     } else if(event.type == SceneManagerEventTypeTick) {
         // Update display
-        view_commit_model(app->view_about, false);
+        view_commit_model(app->view_about, true);
 
         if(emulate_context && emulate_context->is_transmitting) {
             if(app->txrx->txrx_state == ProtoPirateTxRxStateTx) {
