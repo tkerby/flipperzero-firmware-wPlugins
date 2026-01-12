@@ -2,8 +2,6 @@
 
 A Flipper Zero application to control CaiXianlin shock collar.
 
-![Screenshot](screenshots/0-home-vibrate.png)
-
 **WARNING:** This application is intended for **educational and research purposes only**.
 
 **NOTE:** I don't endorse use of these devices on any animals. You do you, but I'd never use this device on an animal.
