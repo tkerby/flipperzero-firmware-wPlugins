@@ -6,9 +6,9 @@ A Flipper Zero application that reads values from a Capacitive Moisture Sensor v
 
 ## Screenshots
 
-| Sensor View | Calibration Menu |
-|-------------|------------------|
-| ![Sensor](https://raw.githubusercontent.com/smallwat3r/flipperzero-moisture-sensor/main/screenshots/sensor.png) | ![Calibration](https://raw.githubusercontent.com/smallwat3r/flipperzero-moisture-sensor/main/screenshots/calibration.png) |
+![Sensor View](https://raw.githubusercontent.com/smallwat3r/flipperzero-moisture-sensor/main/screenshots/sensor.png)
+
+![Calibration Menu](https://raw.githubusercontent.com/smallwat3r/flipperzero-moisture-sensor/main/screenshots/calibration.png)
 
 ## Features
 
