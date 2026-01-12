@@ -1,6 +1,6 @@
 #include "moisture_sensor.h"
 
-// Scene handlers are defined in moisture_sensor_scenes.c
+// Scene handlers are defined in scenes/scenes.c
 extern const SceneManagerHandlers moisture_sensor_scene_handlers;
 
 uint8_t calculate_moisture_percent(uint16_t cal_dry, uint16_t cal_wet, uint16_t raw) {
