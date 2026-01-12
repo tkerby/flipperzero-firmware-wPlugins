@@ -2,6 +2,7 @@
 #include <string.h>
 
 const SubGhzProtocol* protopirate_protocol_registry_items[] = {
+    &subghz_protocol_scher_khan,
     &kia_protocol_v0,
     &kia_protocol_v1,
     &kia_protocol_v2,
@@ -13,6 +14,7 @@ const SubGhzProtocol* protopirate_protocol_registry_items[] = {
     &subaru_protocol,
     &suzuki_protocol,
     &vw_protocol,
+    &subghz_protocol_star_line,
 };
 
 const SubGhzProtocolRegistry protopirate_protocol_registry = {
@@ -110,6 +112,22 @@ static const ProtoPirateProtocolTiming protocol_timings[] = {
         .te_delta = 120,
         .min_count_bit = 80,
     },
+    // Scher-Khan: PWM 750/1100µs
+    {
+        .name = "Scher-Khan",
+        .te_short = 750,
+        .te_long = 1100,
+        .te_delta = 180,
+        .min_count_bit = 35,
+    },
+    // Star Line: PWM 250/500µs
+    {
+        .name = "Star Line",
+        .te_short = 250,
+        .te_long = 500,
+        .te_delta = 120,
+        .min_count_bit = 64,
+    },
 };
 
 static const size_t protocol_timings_count = COUNT_OF(protocol_timings);
@@ -179,6 +197,17 @@ const ProtoPirateProtocolTiming* protopirate_get_protocol_timing(const char* pro
 
         // Match VW
         if(strstr(protocol_name, "VW") != NULL && strstr(protocol_timings[i].name, "VW") != NULL) {
+            return &protocol_timings[i];
+        }
+
+        // Match Scher-Khan
+        if(strstr(protocol_name, "Scher-Khan") != NULL &&
+           strstr(protocol_timings[i].name, "Scher-Khan") != NULL) {
+            return &protocol_timings[i];
+        }
+        // Match Star Line
+        if(strstr(protocol_name, "Star Line") != NULL &&
+           strstr(protocol_timings[i].name, "Star Line") != NULL) {
             return &protocol_timings[i];
         }
     }

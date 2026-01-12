@@ -23,6 +23,10 @@
 #include <lib/subghz/devices/devices.h>
 #include <dialogs/dialogs.h>
 
+#define PROTOPIRATE_KEYSTORE_DIR_NAME APP_ASSETS_PATH("encrypted")
+
+//#define ENABLE_EMULATE_FEATURE
+
 typedef struct ProtoPirateApp ProtoPirateApp;
 
 typedef struct {

@@ -2,6 +2,7 @@
 
 #include "kia_generic.h"
 #include <lib/toolbox/manchester_decoder.h>
+#include "protocols_common.h"
 
 #define KIA_PROTOCOL_V2_NAME "Kia V2"
 
