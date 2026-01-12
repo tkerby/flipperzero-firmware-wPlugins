@@ -2,7 +2,8 @@
 
 ## [1.0] - 2026-01-12
 
-### Added
+**Added**
+
 - Real-time moisture percentage display (0-100%)
 - Visual moisture bar indicator
 - Status text (Very Dry, Dry, Moist, Wet, Very Wet)
