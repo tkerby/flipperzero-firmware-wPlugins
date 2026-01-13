@@ -5,8 +5,7 @@
 
 struct Scheduler {
     uint32_t previous_run_time;
-    //uint32_t countdown;
-    uint32_t next_trigger_time; // RTC timestamp, seconds
+    uint32_t countdown;
     uint16_t tx_delay;
     uint8_t interval;
     uint8_t tx_repeats;
@@ -23,8 +22,7 @@ Scheduler* scheduler_alloc() {
     furi_assert(scheduler);
 
     scheduler->previous_run_time = 0;
-    //scheduler->countdown = 0;
-    scheduler->next_trigger_time = 0;
+    scheduler->countdown = 0;
     scheduler->tx_delay = SchedulerTxDelay100;
     scheduler->interval = Interval10Sec;
     scheduler->tx_repeats = 0;
@@ -40,14 +38,16 @@ Scheduler* scheduler_alloc() {
 
 void scheduler_free(Scheduler* scheduler) {
     furi_assert(scheduler);
+    if(scheduler->file_name) {
+        free(scheduler->file_name);
+    }
     free(scheduler);
 }
 
 void scheduler_reset(Scheduler* scheduler) {
     furi_assert(scheduler);
     scheduler->previous_run_time = 0;
-    //scheduler->countdown = 0;
-    scheduler->next_trigger_time = 0;
+    scheduler->countdown = 0;
 }
 
 void scheduler_reset_previous_time(Scheduler* scheduler) {
@@ -57,13 +57,8 @@ void scheduler_reset_previous_time(Scheduler* scheduler) {
 
 void scheduler_set_interval(Scheduler* scheduler, uint8_t interval) {
     furi_assert(scheduler);
-    if(interval >= INTERVAL_COUNT) interval = 0;
-
     scheduler->interval = interval;
-    //scheduler->countdown = interval_second_value[scheduler->interval];
-    scheduler->next_trigger_time =
-        furi_hal_rtc_get_timestamp() + interval_second_value[scheduler->interval];
-    scheduler->previous_run_time = 0;
+    scheduler->countdown = interval_second_value[scheduler->interval];
 }
 
 void scheduler_set_timing_mode(Scheduler* scheduler, bool mode) {
@@ -98,9 +93,34 @@ static const char* extract_filename(const char* filepath) {
 
 void scheduler_set_file(Scheduler* scheduler, const char* file_name, int8_t list_count) {
     furi_assert(scheduler);
-    const char* name = extract_filename(file_name);
-    scheduler->file_name = (char*)name;
-    if(list_count == 0) {
+    furi_assert(file_name);
+
+    //const char* name = extract_filename(file_name);
+    //scheduler->file_name = (char*)name;
+    //if(list_count == 0) {
+    //    scheduler->file_type = SchedulerFileTypeSingle;
+    //    scheduler->list_count = 1;
+    //} else {
+    //    scheduler->file_type = SchedulerFileTypePlaylist;
+    //    scheduler->list_count = list_count;
+    //}
+    const char* base = extract_filename(file_name);
+
+    // Free old name if it exists
+    if(scheduler->file_name) {
+        free(scheduler->file_name);
+        scheduler->file_name = NULL;
+    }
+
+    // Allocate and copy
+    //size_t len = strlen(base) + 1;
+    //scheduler->file_name = malloc(len);
+    //if(scheduler->file_name) {
+    //    memcpy(scheduler->file_name, base, len);
+    //}
+    scheduler->file_name = strdup(base);
+
+    if(list_count <= 0) {
         scheduler->file_type = SchedulerFileTypeSingle;
         scheduler->list_count = 1;
     } else {
@@ -109,87 +129,34 @@ void scheduler_set_file(Scheduler* scheduler, const char* file_name, int8_t list
     }
 }
 
-//bool scheduler_time_to_trigger(Scheduler* scheduler) {
-//    furi_assert(scheduler);
-//    uint32_t current_time = furi_hal_rtc_get_timestamp();
-//    uint32_t interval = interval_second_value[scheduler->interval] - 1; // zero index the interval
-//
-//    if((scheduler->mode != SchedulerTxModeImmediate) && !scheduler->previous_run_time) {
-//        scheduler->previous_run_time = current_time;
-//        scheduler->countdown = interval;
-//        return false; // Don't trigger immediately
-//    }
-//
-//    if(scheduler->countdown == 0) {
-//        scheduler->previous_run_time = current_time;
-//        scheduler->countdown = interval;
-//        return true;
-//    }
-//    scheduler->countdown--;
-//    return false;
-//}
-bool scheduler_time_to_trigger(Scheduler* s) {
-    furi_assert(s);
+bool scheduler_time_to_trigger(Scheduler* scheduler) {
+    furi_assert(scheduler);
+    uint32_t current_time = furi_hal_rtc_get_timestamp();
+    uint32_t interval = interval_second_value[scheduler->interval] - 1; // zero index the interval
 
-    const uint32_t now = furi_hal_rtc_get_timestamp();
+    if((scheduler->mode != SchedulerTxModeImmediate) && !scheduler->previous_run_time) {
+        scheduler->previous_run_time = current_time;
+        scheduler->countdown = interval;
+        return false; // Don't trigger immediately
+    }
 
-    uint8_t idx = s->interval;
-    if(idx >= INTERVAL_COUNT) idx = 0;
-
-    uint32_t interval_s = interval_second_value[idx];
-    if(interval_s == 0) interval_s = 1;
-
-    // Immediate mode: trigger right away (caller likely gates repeated TX)
-    if(s->mode == SchedulerTxModeImmediate) {
+    if(scheduler->countdown == 0) {
+        scheduler->previous_run_time = current_time;
+        scheduler->countdown = interval;
         return true;
     }
-
-    // Initialize next trigger time on first entry
-    if(s->next_trigger_time == 0) {
-        s->next_trigger_time = now + interval_s;
-        return false;
-    }
-
-    // Due?
-    if((int32_t)(now - s->next_trigger_time) >= 0) {
-        // Advance next_trigger_time to the next slot to avoid drift.
-        // If you don't want catch-up, replace with: s->next_trigger_time = now + interval_s;
-        do {
-            s->next_trigger_time += interval_s;
-        } while((int32_t)(now - s->next_trigger_time) >= 0);
-
-        return true;
-    }
-
+    scheduler->countdown--;
     return false;
 }
 
-//void scheduler_get_countdown_fmt(Scheduler* scheduler, char* buffer, uint8_t size) {
-//    furi_assert(scheduler);
-//    snprintf(
-//        buffer,
-//        size,
-//        "%02lu:%02lu:%02lu",
-//        scheduler->countdown / 60 / 60,
-//        scheduler->countdown / 60 % 60,
-//        scheduler->countdown % 60);
-//}
-void scheduler_get_countdown_fmt(Scheduler* s, char* buffer, uint8_t size) {
-    furi_assert(s);
-    furi_assert(buffer);
-    if(size == 0) return;
+void scheduler_get_countdown_fmt(Scheduler* scheduler, char* buffer, uint8_t size) {
+    furi_assert(scheduler);
 
-    uint32_t remaining = 0;
+    uint32_t h = scheduler->countdown / 3600;
+    uint32_t m = (scheduler->countdown / 60) % 60;
+    uint32_t s = scheduler->countdown % 60;
 
-    if(s->mode != SchedulerTxModeImmediate && s->next_trigger_time != 0) {
-        const uint32_t now = furi_hal_rtc_get_timestamp();
-        if((int32_t)(s->next_trigger_time - now) > 0) {
-            remaining = s->next_trigger_time - now;
-        }
-    }
-
-    snprintf(
-        buffer, size, "%02lu:%02lu:%02lu", remaining / 3600, (remaining / 60) % 60, remaining % 60);
+    snprintf(buffer, size, "%02lu:%02lu:%02lu", h, m, s);
 }
 
 uint32_t scheduler_get_previous_time(Scheduler* scheduler) {

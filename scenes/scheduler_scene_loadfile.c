@@ -17,6 +17,8 @@ static int count_playlist_items(Storage* storage, const char* file_path) {
     int count = 0;
 
     if(!flipper_format_file_open_existing(format, file_path)) {
+        flipper_format_free(format);
+        furi_string_free(data);
         return FuriStatusError;
     }
     while(flipper_format_read_string(format, "sub", data)) {
@@ -40,8 +42,12 @@ bool check_file_extension(const char* filename) {
 
 static bool load_protocol_from_file(SchedulerApp* app) {
     furi_assert(app);
-    FuriString* file_path = furi_string_alloc();
     Storage* storage = furi_record_open(RECORD_STORAGE);
+    if(!storage) {
+        dialog_message_show_storage_error(app->dialogs, "Storage unavailable");
+        return false;
+    }
+
     DialogsFileBrowserOptions browser_options;
     dialog_file_browser_set_basic_options(&browser_options, ".sub|.txt", &I_sub1_10px);
     browser_options.base_path = SUBGHZ_APP_FOLDER;
@@ -53,12 +59,21 @@ static bool load_protocol_from_file(SchedulerApp* app) {
 
     const char* filestr = furi_string_get_cstr(app->file_path);
     if(res) {
-        int8_t list_count = count_playlist_items(storage, filestr);
+        int list_count = 0;
+        const char* ext = strrchr(filestr, '.');
+
+        // Only attempt count of TXT playlist files
+        if(ext && strcmp(ext, ".txt") == 0) {
+            list_count = count_playlist_items(storage, filestr);
+            // TODO: if list_count == 0, treat as invalid playlist and throw error.
+        } else {
+            list_count = 0;
+        }
         scheduler_set_file(app->scheduler, filestr, list_count);
     }
 
     furi_record_close(RECORD_STORAGE);
-    furi_string_free(file_path);
+    furi_string_free(app->file_path);
     return res;
 }
 
