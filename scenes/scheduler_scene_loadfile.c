@@ -57,10 +57,10 @@ static bool load_protocol_from_file(SchedulerApp* app) {
     bool res =
         dialog_file_browser_show(app->dialogs, app->file_path, app->file_path, &browser_options);
 
-    const char* filestr = furi_string_get_cstr(app->file_path);
     if(res) {
-        int list_count = 0;
+        const char* filestr = furi_string_get_cstr(app->file_path);
         const char* ext = strrchr(filestr, '.');
+        int list_count = 0;
 
         // Only attempt count of TXT playlist files
         if(ext && strcmp(ext, ".txt") == 0) {
@@ -73,7 +73,6 @@ static bool load_protocol_from_file(SchedulerApp* app) {
     }
 
     furi_record_close(RECORD_STORAGE);
-    furi_string_free(app->file_path);
     return res;
 }
 

@@ -109,6 +109,7 @@ static int32_t scheduler_tx(void* context) {
         furi_string_set_str(tx_run->data, furi_string_get_cstr(app->file_path));
     }
 
+    uint16_t tx_counter = scheduler_get_list_count(app->scheduler);
     tx_run->tx_delay = scheduler_get_tx_delay(app->scheduler);
     do {
         if(!flipper_format_file_open_existing(

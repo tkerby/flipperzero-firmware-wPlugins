@@ -94,16 +94,6 @@ static const char* extract_filename(const char* filepath) {
 void scheduler_set_file(Scheduler* scheduler, const char* file_name, int8_t list_count) {
     furi_assert(scheduler);
     furi_assert(file_name);
-
-    //const char* name = extract_filename(file_name);
-    //scheduler->file_name = (char*)name;
-    //if(list_count == 0) {
-    //    scheduler->file_type = SchedulerFileTypeSingle;
-    //    scheduler->list_count = 1;
-    //} else {
-    //    scheduler->file_type = SchedulerFileTypePlaylist;
-    //    scheduler->list_count = list_count;
-    //}
     const char* base = extract_filename(file_name);
 
     // Free old name if it exists
@@ -112,12 +102,6 @@ void scheduler_set_file(Scheduler* scheduler, const char* file_name, int8_t list
         scheduler->file_name = NULL;
     }
 
-    // Allocate and copy
-    //size_t len = strlen(base) + 1;
-    //scheduler->file_name = malloc(len);
-    //if(scheduler->file_name) {
-    //    memcpy(scheduler->file_name, base, len);
-    //}
     scheduler->file_name = strdup(base);
 
     if(list_count <= 0) {
