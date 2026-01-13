@@ -1,7 +1,7 @@
 sourcecode:
   type: git
   location:
-    origin: 
+    origin:"https://github.com/ku6a-cj/-PIR-HC-SR501-Proximity-alarm-Flipper-zero"
     commit_sha: 
 short_description: "PIR HC-SR501 proximity alarm"
 description: |
@@ -12,4 +12,5 @@ description: |
 changelog: "@changelog.md"
 screenshots:
   - images/1.png
+
   - images/2.png
