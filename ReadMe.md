@@ -3,7 +3,7 @@
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://lh3.googleusercontent.com/d/1iYQlRQXM7nA4IAdcPwvcKRSTCMoi8tug' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0103-2116-0.420.0-2631485.tgz&channel=RM0103-2116-0.420.0-2631485&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0112-2043-0.420.0-a9a0b32.tgz&channel=RM0112-2043-0.420.0-a9a0b32&version=0.420.0&target=f7)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -30,43 +30,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2026-01-12 20:25 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-01-12 20:25 EST`
-- Updated: [CAN Tools v1.1 (By MatthewKuKanich)](https://github.com/MatthewKuKanich/FlipperCANTools)
-- Updated: [LD2410 Human Detector v1.0 (By sistemasorp)](https://github.com/sistemasorp/flipper-ld2410_human_detector) [add distance visualizer (By MatthewKuKanich)](https://github.com/sistemasorp/flipper-ld2410_human_detector/pull/1)
-- Updated: [T-Union Master (China) v0.1 (By SocialSisterYi)](https://github.com/SocialSisterYi/T-Union_Master)
-- Updated: [Wolfenduino v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperWolfenstein)
-- [Updated Ventra.c (ventra_parser.fal) w/ StopID parsing (By FatherDivine)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1159)
-- Updated: [Catacombs Of The Damned v2.2 (By apfxtech)](https://github.com/apfxtech/FlipperCatacombs)
-- Updated: [FlipSocial v2.0.7 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [Sub-GHz Bruteforcer v4.0 (By Ganapati/xMasterX/derskythe)](https://github.com/derskythe/flipperzero-subbrute/tree/master)
-- Updated: [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader)
-- UL: SubGHz: Cardin S449 full support (with Add manually, and all button codes) (use FSK12K modulation to read the remote) (closes issues #735 #908) (By xMasterX and zero-mega (thanks!))
-- UL: SubGHz: Added new modulation FSK with 12KHz deviation (By xMasterX)
-- UL: SubGHz: KingGates Stylo 4k - Add manually and button switch support + refactoring of encoder (By xMasterX)
-- UL: SubGHz: Stilmatic - button 9 support (two buttons hold simulation) (By xMasterX)
-- UL: SubGHz: Counter editor refactoring (By Dmitry422)
-- Added: [Geometry Dash v0.1 (By goosedev72-projects)](https://github.com/goosedev72-projects/flipperzero-geometryflip)
-- Updated: [FZ nRF24 Jammer v1.4 (By W0rthlessS0ul)](https://github.com/W0rthlessS0ul/FZ_nRF24_jammer)
-- Updated: [ESP Flasher v1.8 (By 0xchocolate)](https://github.com/0xchocolate/flipperzero-esp-flasher)
-- Updated: [WiFi (Marauder) v0.7.7 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion) `Req: ESP32` with [ESP32 MARAUDER Firmware](https://github.com/justcallmekoko/ESP32Marauder/releases/latest)
-- [Alutech_at_4n and Nice Flor S protocols acceleration and Debug status for desktop clock (By Dmitry422)](https://github.com/DarkFlippers/unleashed-firmware/pull/942)
-- SubGHz: [Sommer fm2 in Add manually now uses FM12K modulation (Sommer without fm2 tag uses FM476) (try this if regular option doesn't work for you) (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/e97f90529d5735e38971d54b3879fdc515516852)
-- Docs: [Add full list of supported SubGHz protocols and their frequencies/modulations that can be used for reading remotes (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/c6ebfb2c4e9902a31bbfb88f9fcfa4b30d76d487) [Docs Link](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/documentation/SubGHzSupportedSystems.md)
-- SubGHz: Stilmatic - button 9 support (two buttons hold simulation) (mapped on arrow keys) (By xMasterX)
-- SubGHz: [Sommer - last button code 0x6 support (mapped on arrow keys) (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/c5520b7d3325fd8d8b17d66f668a3a321d3a54a4)
-- SubGHz: [Add 390MHz, 430.5MHz to default hopper list (6 elements like in OFW) (works well with Hopper RSSI level set for your enviroment) (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/0e44e56659c3208fc8a2718436b8adb3af710e2e)
-- [Segment clock and HC-SR04 app improvements (By Tyl3rA)](https://github.com/xMasterX/all-the-plugins/pull/201)
-- [Many app updates to add FM12K (By xMasterX)](https://github.com/xMasterX/all-the-plugins/commit/fca96440a66c9fbc9a15cb56f90afe2feb026491#diff-d48125c42269db81f9468bb6aaca2d42030ea5a701d14cf6deb4db378b2ff669)
-- Updated: [Marmalade v0.1.1 (By RocketGod)](https://github.com/RocketGod-git/flipper-zero-rf-jammer) Added FM12K
-- Updated: [TPMS Reader v0.2 (By wosk)](https://github.com/wosk/flipperzero-tpms) [Add Schrader SMD3MA4, Schrader EG53MA4, and Abarth 124 (By mslocrian)](https://github.com/wosk/flipperzero-tpms/pull/26) Added FM12K
-- Updated: [Sub-GHz Remote v1.8 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote) Added FM12K
-- Updated: [FlipBoard Blinky v3.6 (By jamisonderek)](https://github.com/jamisonderek/flipboard) Added FM12K
-- Updated: [FlipBoard Keyboard v3.9 (By jamisonderek)](https://github.com/jamisonderek/flipboard) Added FM12K
-- Updated: [FlipBoard Signal v3.12 (By jamisonderek)](https://github.com/jamisonderek/flipboard) Added FM12K
-- Updated: [FlipBoard Simon v1.10 (By jamisonderek)](https://github.com/jamisonderek/flipboard) Added FM12K
-- Added: [Moisture Sensor v1.0 (By smallwat3r)](https://github.com/smallwat3r/flipperzero-moisture-sensor)
-- Added: [Remote for CaiXianlin v1.0 (By anty-ce)](https://github.com/anty-ce/flipper_zero_caixianlin_remote)
-- Updated: [Sub-GHz Scheduler v2.3 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler) Added FM12K
-- Updated: [ProtoPirate v1.5 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate) [Fix Kia V1 and add Kia V2 encoder (By zero-mega)](https://github.com/RocketGod-git/ProtoPirate/pull/28) Added FM12K [Fix Kia V2 buffer overflow (By grugnoymeme)](https://github.com/RocketGod-git/ProtoPirate/pull/29) [Many Fixes and Improvements (By xMasterX)](https://github.com/RocketGod-git/ProtoPirate/pull/33/files#diff-be6543f708a2d5f409d2128af0e395cf1f7946d8c96f5a1b05b547043bb71829)
 
 <a name="release">
 
@@ -845,4 +808,4 @@ $ ./fbt dolphin_ext
 - Have a new app? Submit GitHub link to me on Discord for a special reward (if I add it to RM Firmware).
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0103-2116-0.420.0-2631485.tgz&channel=RM0103-2116-0.420.0-2631485&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0112-2043-0.420.0-a9a0b32.tgz&channel=RM0112-2043-0.420.0-a9a0b32&version=0.420.0&target=f7)
