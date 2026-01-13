@@ -173,7 +173,7 @@ static bool ventra_search_file(const char* file_path, const char* id_str, char* 
         if(*trimmed == '\0') continue;
 
         // Skip comment lines
-        if(line[0] == '#') continue;
+        if(*trimmed == '#') continue;
 
         char* comma = strchr(line, ',');
         if(!comma) continue;
