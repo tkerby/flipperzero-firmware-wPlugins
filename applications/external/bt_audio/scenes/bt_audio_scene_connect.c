@@ -11,7 +11,7 @@ static bool connect_failure_handled = false;
 
 // Power stabilization delays (milliseconds)
 // Time to wait after enabling OTG for voltage to stabilize
-#define POWER_STABILIZE_MS 100
+#define POWER_STABILIZE_MS  100
 // Time to wait for ESP32 to boot after power was restored
 // ESP32 boot time is typically 1-2 seconds
 #define ESP32_BOOT_DELAY_MS 1500
@@ -34,15 +34,15 @@ static void bt_audio_connect_rx_callback(const char* data, size_t len, void* con
 
     if(strncmp(data, "CONNECTED", 9) == 0) {
         if(app->connect_timer) furi_timer_stop(app->connect_timer);
-        connect_failure_handled = false;  // Reset flag on successful connection
-        
+        connect_failure_handled = false; // Reset flag on successful connection
+
         // Show initializing message while audio pipeline stabilizes
         widget_reset(app->widget);
         widget_add_string_element(
             app->widget, 64, 20, AlignCenter, AlignCenter, FontPrimary, "Connected!");
         widget_add_string_element(
             app->widget, 64, 40, AlignCenter, AlignCenter, FontSecondary, "Initializing audio...");
-        
+
         // Use non-blocking timer to give ESP32 time to stabilize audio pipeline
         // This helps prevent the first audio playback delay issue
         if(!app->init_timer) {
@@ -99,12 +99,12 @@ void bt_audio_scene_connect_on_enter(void* context) {
     // =========================================================================
     if(app->config.enable_5v_gpio) {
         bool power_was_off = !furi_hal_power_is_otg_enabled();
-        
+
         if(power_was_off) {
             FURI_LOG_I(TAG, "5V power was off, attempting to re-enable for connection...");
             furi_hal_power_enable_otg();
             furi_delay_ms(POWER_STABILIZE_MS);
-            
+
             if(!furi_hal_power_is_otg_enabled()) {
                 // 5V power failed to enable - this usually happens when USB-C is connected
                 // In this case, USB-C prevents GPIO 5V output (OTG mode conflict)
@@ -114,17 +114,41 @@ void bt_audio_scene_connect_on_enter(void* context) {
                 widget_add_string_element(
                     app->widget, 64, 8, AlignCenter, AlignCenter, FontPrimary, "5V GPIO Blocked");
                 widget_add_string_element(
-                    app->widget, 64, 22, AlignCenter, AlignCenter, FontSecondary, "USB-C blocks GPIO power");
+                    app->widget,
+                    64,
+                    22,
+                    AlignCenter,
+                    AlignCenter,
+                    FontSecondary,
+                    "USB-C blocks GPIO power");
                 widget_add_string_element(
-                    app->widget, 64, 36, AlignCenter, AlignCenter, FontSecondary, "Unplug USB to use GPIO");
+                    app->widget,
+                    64,
+                    36,
+                    AlignCenter,
+                    AlignCenter,
+                    FontSecondary,
+                    "Unplug USB to use GPIO");
                 widget_add_string_element(
-                    app->widget, 64, 50, AlignCenter, AlignCenter, FontSecondary, "or power ESP32 externally");
+                    app->widget,
+                    64,
+                    50,
+                    AlignCenter,
+                    AlignCenter,
+                    FontSecondary,
+                    "or power ESP32 externally");
                 widget_add_string_element(
-                    app->widget, 64, 62, AlignCenter, AlignCenter, FontSecondary, "Press Back to exit");
+                    app->widget,
+                    64,
+                    62,
+                    AlignCenter,
+                    AlignCenter,
+                    FontSecondary,
+                    "Press Back to exit");
                 view_dispatcher_switch_to_view(app->view_dispatcher, BtAudioViewWidget);
                 return;
             }
-            
+
             FURI_LOG_I(TAG, "5V power restored for connection");
             // Wait for ESP32 to boot after power restore
             furi_delay_ms(ESP32_BOOT_DELAY_MS);
@@ -144,25 +168,24 @@ void bt_audio_scene_connect_on_enter(void* context) {
             strncpy(display_name, comma + 1, sizeof(display_name) - 1);
             display_name[sizeof(display_name) - 1] = '\0';
         } else {
-            strncpy(display_name, app->device_list[app->selected_device], sizeof(display_name) - 1);
+            strncpy(
+                display_name, app->device_list[app->selected_device], sizeof(display_name) - 1);
             display_name[sizeof(display_name) - 1] = '\0';
         }
-        
+
         widget_add_string_element(
-            app->widget,
-            64,
-            28,
-            AlignCenter,
-            AlignCenter,
-            FontSecondary,
-            display_name);
+            app->widget, 64, 28, AlignCenter, AlignCenter, FontSecondary, display_name);
     }
 
     // Show retry attempt if this is a retry
     if(app->connection_retry_count > 0) {
         char retry_text[32];
-        snprintf(retry_text, sizeof(retry_text), "Attempt %d/%d", 
-                 app->connection_retry_count + 1, MAX_CONNECTION_RETRIES + 1);
+        snprintf(
+            retry_text,
+            sizeof(retry_text),
+            "Attempt %d/%d",
+            app->connection_retry_count + 1,
+            MAX_CONNECTION_RETRIES + 1);
         widget_add_string_element(
             app->widget, 64, 40, AlignCenter, AlignCenter, FontSecondary, retry_text);
         widget_add_string_element(
@@ -194,8 +217,12 @@ void bt_audio_scene_connect_on_enter(void* context) {
             char cmd[BT_AUDIO_CMD_BUF_SIZE];
             snprintf(cmd, sizeof(cmd), "CONNECT %s\n", mac);
             bt_audio_uart_tx(app->uart, cmd);
-            FURI_LOG_I(TAG, "Sent connect command: %s (attempt %d/%d)", cmd, 
-                       app->connection_retry_count + 1, MAX_CONNECTION_RETRIES + 1);
+            FURI_LOG_I(
+                TAG,
+                "Sent connect command: %s (attempt %d/%d)",
+                cmd,
+                app->connection_retry_count + 1,
+                MAX_CONNECTION_RETRIES + 1);
         }
     }
 }
@@ -209,7 +236,7 @@ bool bt_audio_scene_connect_on_event(void* context, SceneManagerEvent event) {
             // Audio pipeline is ready after initialization delay
             if(app->init_timer) furi_timer_stop(app->init_timer);
             app->is_connected = true;
-            app->connection_retry_count = 0;  // Reset retry count on successful connection
+            app->connection_retry_count = 0; // Reset retry count on successful connection
 
             // Save the connected MAC address to config and device history
             if(app->selected_device >= 0 && app->selected_device < app->device_count) {
@@ -221,11 +248,11 @@ bool bt_audio_scene_connect_on_event(void* context, SceneManagerEvent event) {
                         char mac[BT_AUDIO_MAC_LEN];
                         strncpy(mac, app->device_list[app->selected_device], mac_len);
                         mac[mac_len] = '\0';
-                        
+
                         // Save to last connected MAC
                         strncpy(app->config.last_connected_mac, mac, BT_AUDIO_MAC_LEN - 1);
                         app->config.last_connected_mac[BT_AUDIO_MAC_LEN - 1] = '\0';
-                        
+
                         // Extract device name (after comma) and add to history
                         const char* device_name = comma + 1;
                         bt_audio_device_history_add(app, mac, device_name);
@@ -236,11 +263,11 @@ bool bt_audio_scene_connect_on_event(void* context, SceneManagerEvent event) {
             // Send saved settings to ESP32 after connection
             // This ensures initial volume and EQ are applied before first playback
             char cmd[64];
-            
+
             // Send initial volume setting
             snprintf(cmd, sizeof(cmd), "SET_INIT_VOL:%d\n", app->config.initial_volume);
             bt_audio_uart_tx(app->uart, cmd);
-            
+
             // Send EQ settings if not flat (0 dB)
             if(app->config.eq_bass != 0) {
                 snprintf(cmd, sizeof(cmd), "EQ_BASS:%d\n", app->config.eq_bass);
@@ -254,14 +281,22 @@ bool bt_audio_scene_connect_on_event(void* context, SceneManagerEvent event) {
                 snprintf(cmd, sizeof(cmd), "EQ_TREBLE:%d\n", app->config.eq_treble);
                 bt_audio_uart_tx(app->uart, cmd);
             }
-            
+
             // Send TX power setting
             const char* power_level;
             switch(app->config.tx_power) {
-                case BtAudioTxPowerLow: power_level = "LOW"; break;
-                case BtAudioTxPowerMedium: power_level = "MEDIUM"; break;
-                case BtAudioTxPowerHigh: power_level = "HIGH"; break;
-                default: power_level = "MAX"; break;
+            case BtAudioTxPowerLow:
+                power_level = "LOW";
+                break;
+            case BtAudioTxPowerMedium:
+                power_level = "MEDIUM";
+                break;
+            case BtAudioTxPowerHigh:
+                power_level = "HIGH";
+                break;
+            default:
+                power_level = "MAX";
+                break;
             }
             snprintf(cmd, sizeof(cmd), "TX_POWER:%s\n", power_level);
             bt_audio_uart_tx(app->uart, cmd);
@@ -275,17 +310,20 @@ bool bt_audio_scene_connect_on_event(void* context, SceneManagerEvent event) {
         } else if(event.event == BtAudioEventConnectTimeout) {
             // Connection timed out - check if we should retry
             app->connection_retry_count++;
-            
+
             if(app->connection_retry_count < MAX_CONNECTION_RETRIES) {
                 // Retry connection
-                FURI_LOG_I(TAG, "Connection timeout, retrying (%d/%d)...", 
-                           app->connection_retry_count + 1, MAX_CONNECTION_RETRIES);
-                
+                FURI_LOG_I(
+                    TAG,
+                    "Connection timeout, retrying (%d/%d)...",
+                    app->connection_retry_count + 1,
+                    MAX_CONNECTION_RETRIES);
+
                 // Send disconnect to clean up ESP32 state
                 connect_failure_handled = true;
                 bt_audio_uart_tx(app->uart, "DISCONNECT\n");
-                furi_delay_ms(500);  // Wait for ESP32 to process
-                
+                furi_delay_ms(500); // Wait for ESP32 to process
+
                 // Re-enter the scene to retry
                 connect_failure_handled = false;
                 scene_manager_previous_scene(app->scene_manager);
@@ -297,16 +335,22 @@ bool bt_audio_scene_connect_on_event(void* context, SceneManagerEvent event) {
                 // from triggering another failure event
                 connect_failure_handled = true;
                 app->is_connected = false;
-                app->connection_retry_count = 0;  // Reset for next attempt
+                app->connection_retry_count = 0; // Reset for next attempt
                 bt_audio_uart_tx(app->uart, "DISCONNECT\n");
-                
+
                 widget_reset(app->widget);
                 widget_add_string_element(
                     app->widget, 64, 8, AlignCenter, AlignCenter, FontPrimary, "Connection");
                 widget_add_string_element(
                     app->widget, 64, 20, AlignCenter, AlignCenter, FontPrimary, "Failed");
                 widget_add_string_element(
-                    app->widget, 64, 36, AlignCenter, AlignCenter, FontSecondary, "Device may need");
+                    app->widget,
+                    64,
+                    36,
+                    AlignCenter,
+                    AlignCenter,
+                    FontSecondary,
+                    "Device may need");
                 widget_add_string_element(
                     app->widget, 64, 48, AlignCenter, AlignCenter, FontSecondary, "pairing mode");
                 widget_add_string_element(
@@ -316,18 +360,21 @@ bool bt_audio_scene_connect_on_event(void* context, SceneManagerEvent event) {
         } else if(event.event == BtAudioEventConnectFailed) {
             // Connection failed - check if we should retry
             app->connection_retry_count++;
-            
+
             if(app->connection_retry_count < MAX_CONNECTION_RETRIES) {
                 // Retry connection
-                FURI_LOG_I(TAG, "Connection failed, retrying (%d/%d)...", 
-                           app->connection_retry_count + 1, MAX_CONNECTION_RETRIES);
-                
+                FURI_LOG_I(
+                    TAG,
+                    "Connection failed, retrying (%d/%d)...",
+                    app->connection_retry_count + 1,
+                    MAX_CONNECTION_RETRIES);
+
                 // Send disconnect to clean up ESP32 state
                 // Note: connect_failure_handled is already set in the RX callback
                 app->is_connected = false;
                 bt_audio_uart_tx(app->uart, "DISCONNECT\n");
-                furi_delay_ms(500);  // Wait for ESP32 to process
-                
+                furi_delay_ms(500); // Wait for ESP32 to process
+
                 // Re-enter the scene to retry
                 connect_failure_handled = false;
                 scene_manager_previous_scene(app->scene_manager);
@@ -338,9 +385,9 @@ bool bt_audio_scene_connect_on_event(void* context, SceneManagerEvent event) {
                 // Note: connect_failure_handled is already set in the RX callback
                 // so subsequent ERROR responses won't trigger this again
                 app->is_connected = false;
-                app->connection_retry_count = 0;  // Reset for next attempt
+                app->connection_retry_count = 0; // Reset for next attempt
                 bt_audio_uart_tx(app->uart, "DISCONNECT\n");
-                
+
                 widget_reset(app->widget);
                 widget_add_string_element(
                     app->widget, 64, 8, AlignCenter, AlignCenter, FontPrimary, "Connection");

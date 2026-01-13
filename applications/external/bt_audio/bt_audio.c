@@ -16,19 +16,21 @@ void bt_audio_config_load(BtAudio* app) {
     // Set defaults
     // Note: Changed default from Flipper SD to ESP32 SD in v2.2 for better performance
     // Users upgrading from v2.1 or earlier may need to adjust this setting
-    app->config.sd_source = BtAudioSdSourceESP32;  // ESP32 SD is default for better performance
-    app->config.tx_power = BtAudioTxPowerMax;       // Max power for best range
-    app->config.enable_5v_gpio = true;              // Auto-enable 5V by default
-    app->config.background_mode = false;            // Background audio off by default
-    app->config.keep_backlight_on = false;          // Backlight timeout by default
-    app->config.shuffle_mode = false;               // Shuffle mode off by default
-    app->config.continuous_play = false;            // Repeat single file by default (OFF = repeat, ON = play next)
-    app->config.initial_volume = BT_AUDIO_DEFAULT_VOLUME;  // ~75% volume by default
-    app->config.eq_bass = 0;                        // EQ flat by default
+    app->config.sd_source = BtAudioSdSourceESP32; // ESP32 SD is default for better performance
+    app->config.tx_power = BtAudioTxPowerMax; // Max power for best range
+    app->config.enable_5v_gpio = true; // Auto-enable 5V by default
+    app->config.background_mode = false; // Background audio off by default
+    app->config.keep_backlight_on = false; // Backlight timeout by default
+    app->config.shuffle_mode = false; // Shuffle mode off by default
+    app->config.continuous_play =
+        false; // Repeat single file by default (OFF = repeat, ON = play next)
+    app->config.initial_volume = BT_AUDIO_DEFAULT_VOLUME; // ~75% volume by default
+    app->config.eq_bass = 0; // EQ flat by default
     app->config.eq_mid = 0;
     app->config.eq_treble = 0;
     app->config.last_connected_mac[0] = '\0';
-    strncpy(app->config.bt_device_name, "FlipperAudio", BT_AUDIO_BT_NAME_LEN - 1);  // Default BT name
+    strncpy(
+        app->config.bt_device_name, "FlipperAudio", BT_AUDIO_BT_NAME_LEN - 1); // Default BT name
     app->config.bt_device_name[BT_AUDIO_BT_NAME_LEN - 1] = '\0';
 
     Storage* storage = furi_record_open(RECORD_STORAGE);
@@ -90,12 +92,10 @@ void bt_audio_config_load(BtAudio* app) {
                         app->config.eq_treble = (int8_t)val;
                     }
                 } else if(strncmp(line, "last_mac=", 9) == 0) {
-                    strncpy(
-                        app->config.last_connected_mac, line + 9, BT_AUDIO_MAC_LEN - 1);
+                    strncpy(app->config.last_connected_mac, line + 9, BT_AUDIO_MAC_LEN - 1);
                     app->config.last_connected_mac[BT_AUDIO_MAC_LEN - 1] = '\0';
                 } else if(strncmp(line, "bt_name=", 8) == 0) {
-                    strncpy(
-                        app->config.bt_device_name, line + 8, BT_AUDIO_BT_NAME_LEN - 1);
+                    strncpy(app->config.bt_device_name, line + 8, BT_AUDIO_BT_NAME_LEN - 1);
                     app->config.bt_device_name[BT_AUDIO_BT_NAME_LEN - 1] = '\0';
                 }
 
@@ -191,7 +191,7 @@ void bt_audio_wifi_config_load(BtAudio* app) {
     File* file = storage_file_alloc(storage);
 
     if(storage_file_open(file, BT_AUDIO_WIFI_CONFIG_FILE, FSAM_READ, FSOM_OPEN_EXISTING)) {
-        char line[512];  // Longer buffer to accommodate URLs
+        char line[512]; // Longer buffer to accommodate URLs
         size_t bytes_read;
         size_t line_pos = 0;
 
@@ -238,10 +238,11 @@ void bt_audio_wifi_config_save(BtAudio* app) {
     File* file = storage_file_alloc(storage);
 
     if(storage_file_open(file, BT_AUDIO_WIFI_CONFIG_FILE, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
-        char buf[512];  // Longer buffer to accommodate URLs
+        char buf[512]; // Longer buffer to accommodate URLs
         int len;
 
-        len = snprintf(buf, sizeof(buf), "wifi_enabled=%d\n", app->wifi_config.wifi_enabled ? 1 : 0);
+        len =
+            snprintf(buf, sizeof(buf), "wifi_enabled=%d\n", app->wifi_config.wifi_enabled ? 1 : 0);
         storage_file_write(file, buf, len);
 
         if(app->wifi_config.ssid[0] != '\0') {
@@ -272,7 +273,7 @@ void bt_audio_wifi_config_save(BtAudio* app) {
 // Favorites load/save functions
 void bt_audio_favorites_load(BtAudio* app) {
     app->favorites_count = 0;
-    
+
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* file = storage_file_alloc(storage);
 
@@ -284,9 +285,10 @@ void bt_audio_favorites_load(BtAudio* app) {
         while((bytes_read = storage_file_read(file, line + line_pos, 1)) > 0) {
             if(line[line_pos] == '\n' || line_pos >= sizeof(line) - 1) {
                 line[line_pos] = '\0';
-                
+
                 // Skip empty lines and comments
-                if(line[0] != '\0' && line[0] != '#' && app->favorites_count < BT_AUDIO_MAX_FAVORITES) {
+                if(line[0] != '\0' && line[0] != '#' &&
+                   app->favorites_count < BT_AUDIO_MAX_FAVORITES) {
                     strncpy(app->favorites[app->favorites_count], line, BT_AUDIO_FILENAME_LEN - 1);
                     app->favorites[app->favorites_count][BT_AUDIO_FILENAME_LEN - 1] = '\0';
                     app->favorites_count++;
@@ -318,7 +320,7 @@ void bt_audio_favorites_save(BtAudio* app) {
         // Write header comment
         const char* header = "# BT Audio Favorites\n# One filename per line\n";
         storage_file_write(file, header, strlen(header));
-        
+
         for(uint8_t i = 0; i < app->favorites_count; i++) {
             storage_file_write(file, app->favorites[i], strlen(app->favorites[i]));
             storage_file_write(file, "\n", 1);
@@ -336,7 +338,7 @@ void bt_audio_favorites_save(BtAudio* app) {
 
 bool bt_audio_is_favorite(BtAudio* app, const char* filename) {
     if(!filename || filename[0] == '\0') return false;
-    
+
     for(uint8_t i = 0; i < app->favorites_count; i++) {
         if(strcmp(app->favorites[i], filename) == 0) {
             return true;
@@ -347,33 +349,33 @@ bool bt_audio_is_favorite(BtAudio* app, const char* filename) {
 
 bool bt_audio_add_favorite(BtAudio* app, const char* filename) {
     if(!filename || filename[0] == '\0') return false;
-    
+
     // Check if already a favorite
     if(bt_audio_is_favorite(app, filename)) {
         return false;
     }
-    
+
     // Check if we have room
     if(app->favorites_count >= BT_AUDIO_MAX_FAVORITES) {
         FURI_LOG_W(TAG, "Favorites list full");
         return false;
     }
-    
+
     // Add to favorites
     strncpy(app->favorites[app->favorites_count], filename, BT_AUDIO_FILENAME_LEN - 1);
     app->favorites[app->favorites_count][BT_AUDIO_FILENAME_LEN - 1] = '\0';
     app->favorites_count++;
-    
+
     // Save immediately
     bt_audio_favorites_save(app);
-    
+
     FURI_LOG_I(TAG, "Added favorite: %s", filename);
     return true;
 }
 
 bool bt_audio_remove_favorite(BtAudio* app, const char* filename) {
     if(!filename || filename[0] == '\0') return false;
-    
+
     // Find the favorite
     for(uint8_t i = 0; i < app->favorites_count; i++) {
         if(strcmp(app->favorites[i], filename) == 0) {
@@ -382,10 +384,10 @@ bool bt_audio_remove_favorite(BtAudio* app, const char* filename) {
                 strncpy(app->favorites[j], app->favorites[j + 1], BT_AUDIO_FILENAME_LEN);
             }
             app->favorites_count--;
-            
+
             // Save immediately
             bt_audio_favorites_save(app);
-            
+
             FURI_LOG_I(TAG, "Removed favorite: %s", filename);
             return true;
         }
@@ -404,30 +406,36 @@ bool bt_audio_toggle_favorite(BtAudio* app, const char* filename) {
 // Device history load/save functions
 void bt_audio_device_history_load(BtAudio* app) {
     app->device_history_count = 0;
-    
+
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* file = storage_file_alloc(storage);
 
     if(storage_file_open(file, BT_AUDIO_DEVICE_HISTORY_FILE, FSAM_READ, FSOM_OPEN_EXISTING)) {
-        char line[BT_AUDIO_DEVICE_NAME_LEN + BT_AUDIO_MAC_LEN + 2];  // MAC,name\n
+        char line[BT_AUDIO_DEVICE_NAME_LEN + BT_AUDIO_MAC_LEN + 2]; // MAC,name\n
         size_t line_pos = 0;
         size_t bytes_read;
 
         while((bytes_read = storage_file_read(file, line + line_pos, 1)) > 0) {
             if(line[line_pos] == '\n' || line_pos >= sizeof(line) - 1) {
                 line[line_pos] = '\0';
-                
+
                 // Skip empty lines and comments
-                if(line[0] != '\0' && line[0] != '#' && app->device_history_count < BT_AUDIO_DEVICE_HISTORY_SIZE) {
+                if(line[0] != '\0' && line[0] != '#' &&
+                   app->device_history_count < BT_AUDIO_DEVICE_HISTORY_SIZE) {
                     // Parse "MAC,Name" format
                     const char* comma = strchr(line, ',');
                     if(comma) {
                         size_t mac_len = comma - line;
                         if(mac_len > 0 && mac_len < BT_AUDIO_MAC_LEN) {
-                            strncpy(app->device_history[app->device_history_count].mac, line, mac_len);
+                            strncpy(
+                                app->device_history[app->device_history_count].mac, line, mac_len);
                             app->device_history[app->device_history_count].mac[mac_len] = '\0';
-                            strncpy(app->device_history[app->device_history_count].name, comma + 1, BT_AUDIO_DEVICE_NAME_LEN - 1);
-                            app->device_history[app->device_history_count].name[BT_AUDIO_DEVICE_NAME_LEN - 1] = '\0';
+                            strncpy(
+                                app->device_history[app->device_history_count].name,
+                                comma + 1,
+                                BT_AUDIO_DEVICE_NAME_LEN - 1);
+                            app->device_history[app->device_history_count]
+                                .name[BT_AUDIO_DEVICE_NAME_LEN - 1] = '\0';
                             app->device_history_count++;
                         }
                     }
@@ -459,11 +467,14 @@ void bt_audio_device_history_save(BtAudio* app) {
         // Write header comment
         const char* header = "# BT Audio Device History\n# Format: MAC,Name\n";
         storage_file_write(file, header, strlen(header));
-        
+
         for(uint8_t i = 0; i < app->device_history_count; i++) {
             char line[BT_AUDIO_DEVICE_NAME_LEN + BT_AUDIO_MAC_LEN + 4];
-            int len = snprintf(line, sizeof(line), "%s,%s\n", 
-                app->device_history[i].mac, 
+            int len = snprintf(
+                line,
+                sizeof(line),
+                "%s,%s\n",
+                app->device_history[i].mac,
                 app->device_history[i].name);
             storage_file_write(file, line, len);
         }
@@ -480,60 +491,63 @@ void bt_audio_device_history_save(BtAudio* app) {
 
 void bt_audio_device_history_add(BtAudio* app, const char* mac, const char* name) {
     if(!mac || mac[0] == '\0') return;
-    
+
     // Check if device already exists in history
     for(uint8_t i = 0; i < app->device_history_count; i++) {
         if(strcmp(app->device_history[i].mac, mac) == 0) {
             // Device already exists - move it to the top (most recent)
             BtAudioDeviceEntry temp;
             memcpy(&temp, &app->device_history[i], sizeof(BtAudioDeviceEntry));
-            
+
             // Update name if provided (might have changed)
             if(name && name[0] != '\0') {
                 strncpy(temp.name, name, BT_AUDIO_DEVICE_NAME_LEN - 1);
                 temp.name[BT_AUDIO_DEVICE_NAME_LEN - 1] = '\0';
             }
-            
+
             // Shift entries down
             for(uint8_t j = i; j > 0; j--) {
-                memcpy(&app->device_history[j], &app->device_history[j - 1], sizeof(BtAudioDeviceEntry));
+                memcpy(
+                    &app->device_history[j],
+                    &app->device_history[j - 1],
+                    sizeof(BtAudioDeviceEntry));
             }
-            
+
             // Put at top
             memcpy(&app->device_history[0], &temp, sizeof(BtAudioDeviceEntry));
-            
+
             bt_audio_device_history_save(app);
             FURI_LOG_I(TAG, "Moved device to top of history: %s", mac);
             return;
         }
     }
-    
+
     // New device - add to top
     // Shift existing entries down (drop oldest if full)
     uint8_t entries_to_shift = app->device_history_count;
     if(entries_to_shift >= BT_AUDIO_DEVICE_HISTORY_SIZE) {
         entries_to_shift = BT_AUDIO_DEVICE_HISTORY_SIZE - 1;
     }
-    
+
     for(int j = entries_to_shift; j > 0; j--) {
         memcpy(&app->device_history[j], &app->device_history[j - 1], sizeof(BtAudioDeviceEntry));
     }
-    
+
     // Add new entry at top
     strncpy(app->device_history[0].mac, mac, BT_AUDIO_MAC_LEN - 1);
     app->device_history[0].mac[BT_AUDIO_MAC_LEN - 1] = '\0';
-    
+
     if(name && name[0] != '\0') {
         strncpy(app->device_history[0].name, name, BT_AUDIO_DEVICE_NAME_LEN - 1);
         app->device_history[0].name[BT_AUDIO_DEVICE_NAME_LEN - 1] = '\0';
     } else {
         strncpy(app->device_history[0].name, "Unknown Device", BT_AUDIO_DEVICE_NAME_LEN - 1);
     }
-    
+
     if(app->device_history_count < BT_AUDIO_DEVICE_HISTORY_SIZE) {
         app->device_history_count++;
     }
-    
+
     bt_audio_device_history_save(app);
     FURI_LOG_I(TAG, "Added device to history: %s (%s)", mac, app->device_history[0].name);
 }
@@ -544,14 +558,14 @@ void bt_audio_device_history_add(BtAudio* app, const char* mac, const char* name
 // ============================================================================
 
 // Base64 encoding lookup table
-static const char base64_chars[] = 
+static const char base64_chars[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 // Chunk size for streaming (512 bytes raw = ~684 bytes base64)
-#define FLIPPER_CHUNK_SIZE 512
+#define FLIPPER_CHUNK_SIZE    512
 // Buffer sizes for base64 encoding and UART command construction
-#define FLIPPER_BASE64_MARGIN 16   // Extra space for base64 padding
-#define FLIPPER_CMD_OVERHEAD 32    // Space for "MP3_CHUNK:" prefix and newline
+#define FLIPPER_BASE64_MARGIN 16 // Extra space for base64 padding
+#define FLIPPER_CMD_OVERHEAD  32 // Space for "MP3_CHUNK:" prefix and newline
 
 /**
  * Encode binary data to base64 for safe UART transmission
@@ -565,40 +579,36 @@ static size_t bt_audio_base64_encode(const uint8_t* data, size_t len, char* outp
     uint8_t char_array_3[3];
     uint8_t char_array_4[4];
     size_t input_pos = 0;
-    
+
     while(len--) {
         char_array_3[i++] = data[input_pos++];
         if(i == 3) {
             char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
-            char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + 
-                             ((char_array_3[1] & 0xf0) >> 4);
-            char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + 
-                             ((char_array_3[2] & 0xc0) >> 6);
+            char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
+            char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
             char_array_4[3] = char_array_3[2] & 0x3f;
-            
+
             for(i = 0; i < 4; i++)
                 output[j++] = base64_chars[char_array_4[i]];
             i = 0;
         }
     }
-    
+
     if(i) {
         for(size_t k = i; k < 3; k++)
             char_array_3[k] = '\0';
-            
+
         char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
-        char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + 
-                         ((char_array_3[1] & 0xf0) >> 4);
-        char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + 
-                         ((char_array_3[2] & 0xc0) >> 6);
-        
+        char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
+        char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
+
         for(size_t k = 0; k < i + 1; k++)
             output[j++] = base64_chars[char_array_4[k]];
-            
+
         while(i++ < 3)
             output[j++] = '=';
     }
-    
+
     output[j] = '\0';
     return j;
 }
@@ -608,67 +618,67 @@ bool bt_audio_stream_flipper_sd_file(BtAudio* app, const char* filepath) {
         FURI_LOG_E(TAG, "Invalid parameters for Flipper SD streaming");
         return false;
     }
-    
+
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* file = storage_file_alloc(storage);
-    
+
     if(!storage_file_open(file, filepath, FSAM_READ, FSOM_OPEN_EXISTING)) {
         FURI_LOG_E(TAG, "Failed to open file for streaming: %s", filepath);
         storage_file_free(file);
         furi_record_close(RECORD_STORAGE);
         return false;
     }
-    
+
     FURI_LOG_I(TAG, "Starting Flipper SD stream: %s", filepath);
-    
+
     // Send initialization command to ESP32
     bt_audio_uart_tx(app->uart, "PLAY_MP3_FLIPPER\n");
-    furi_delay_ms(100);  // Wait for ESP32 to prepare
-    
+    furi_delay_ms(100); // Wait for ESP32 to prepare
+
     // Send filename for display (optional, uses just the base filename)
     const char* basename = strrchr(filepath, '/');
     if(basename) {
-        basename++;  // Skip the '/'
+        basename++; // Skip the '/'
     } else {
         basename = filepath;
     }
-    
+
     char filename_cmd[BT_AUDIO_FILENAME_LEN + 16];
     snprintf(filename_cmd, sizeof(filename_cmd), "FLIPPER_FILE:%s\n", basename);
     bt_audio_uart_tx(app->uart, filename_cmd);
     furi_delay_ms(10);
-    
+
     // Read and send file in chunks
     uint8_t chunk_buffer[FLIPPER_CHUNK_SIZE];
     char encoded_buffer[(FLIPPER_CHUNK_SIZE * 4 / 3) + FLIPPER_BASE64_MARGIN];
     char cmd_buffer[(FLIPPER_CHUNK_SIZE * 4 / 3) + FLIPPER_CMD_OVERHEAD];
-    
+
     size_t total_bytes = 0;
     size_t bytes_read;
-    
+
     while((bytes_read = storage_file_read(file, chunk_buffer, FLIPPER_CHUNK_SIZE)) > 0) {
         // Encode chunk to base64 for safe UART transmission
         size_t encoded_len = bt_audio_base64_encode(chunk_buffer, bytes_read, encoded_buffer);
         UNUSED(encoded_len);
-        
+
         // Build command
         snprintf(cmd_buffer, sizeof(cmd_buffer), "MP3_CHUNK:%s\n", encoded_buffer);
         bt_audio_uart_tx(app->uart, cmd_buffer);
-        
+
         total_bytes += bytes_read;
-        
+
         // Small delay to avoid overwhelming ESP32 UART buffer
         // This is critical for reliable streaming
-        furi_delay_ms(15);  // ~66 chunks/sec, allows for ACK processing
+        furi_delay_ms(15); // ~66 chunks/sec, allows for ACK processing
     }
-    
+
     // Send end marker
     bt_audio_uart_tx(app->uart, "STREAM_END\n");
-    
+
     storage_file_close(file);
     storage_file_free(file);
     furi_record_close(RECORD_STORAGE);
-    
+
     FURI_LOG_I(TAG, "Flipper SD stream complete: %zu bytes sent", total_bytes);
     return true;
 }
@@ -681,7 +691,7 @@ void bt_audio_stop_flipper_stream(BtAudio* app) {
 
 static void draw_qrcode(Canvas* canvas, void* model) {
     QRCodeModel* qr_model = (QRCodeModel*)model;
-    
+
     if(!qr_model->qrcode) return;
 
     int size = qrcodegen_getSize(qr_model->qrcode);
@@ -699,7 +709,7 @@ static void draw_qrcode(Canvas* canvas, void* model) {
             }
         }
     }
-    
+
     canvas_set_font(canvas, FontSecondary);
     canvas_draw_str_aligned(canvas, 64, 60, AlignCenter, AlignBottom, "Scan for setup guide");
 }
@@ -751,11 +761,11 @@ static BtAudio* bt_audio_alloc() {
     // Load config from SD card BEFORE GPIO initialization
     // This ensures enable_5v_gpio setting is available for the GPIO power check below (line ~180)
     bt_audio_config_load(app);
-    bt_audio_wifi_config_load(app);  // Load WiFi configuration
-    
+    bt_audio_wifi_config_load(app); // Load WiFi configuration
+
     // Load favorites list
     bt_audio_favorites_load(app);
-    
+
     // Load device history
     bt_audio_device_history_load(app);
 
@@ -791,7 +801,9 @@ static BtAudio* bt_audio_alloc() {
 
     // View dispatcher
     app->view_dispatcher = view_dispatcher_alloc();
+#if defined(FW_ORIGIN_RM)
     view_dispatcher_enable_queue(app->view_dispatcher);
+#endif
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_custom_event_callback(
         app->view_dispatcher, bt_audio_custom_event_callback);
@@ -869,7 +881,7 @@ static void bt_audio_free(BtAudio* app) {
     // Skip if background mode is keeping audio playing
     if(app->is_connected && !keep_playing) {
         bt_audio_uart_tx(app->uart, "DISCONNECT\n");
-        furi_delay_ms(100);  // Give ESP32 time to process
+        furi_delay_ms(100); // Give ESP32 time to process
     } else if(keep_playing) {
         FURI_LOG_I(TAG, "Background mode: keeping audio playing");
     }

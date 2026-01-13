@@ -13,11 +13,12 @@ static bool bt_audio_is_device_duplicate(BtAudio* app, const char* device_info) 
     // Compare with existing devices
     for(uint8_t i = 0; i < app->device_count; i++) {
         const char* existing_comma = strchr(app->device_list[i], ',');
-        size_t existing_mac_len =
-            existing_comma ? (size_t)(existing_comma - app->device_list[i]) : strlen(app->device_list[i]);
+        size_t existing_mac_len = existing_comma ? (size_t)(existing_comma - app->device_list[i]) :
+                                                   strlen(app->device_list[i]);
 
         // Compare MAC addresses (case-insensitive)
-        if(mac_len == existing_mac_len && strncasecmp(device_info, app->device_list[i], mac_len) == 0) {
+        if(mac_len == existing_mac_len &&
+           strncasecmp(device_info, app->device_list[i], mac_len) == 0) {
             return true; // Duplicate found
         }
     }
@@ -58,7 +59,11 @@ static void bt_audio_uart_rx_callback(const char* data, size_t len, void* contex
                 app->device_count++;
                 size_t name_len =
                     strnlen(app->device_list[app->device_count - 1], BT_AUDIO_DEVICE_NAME_LEN);
-                FURI_LOG_I(TAG, "Device found: %.*s", (int)name_len, app->device_list[app->device_count - 1]);
+                FURI_LOG_I(
+                    TAG,
+                    "Device found: %.*s",
+                    (int)name_len,
+                    app->device_list[app->device_count - 1]);
 
                 // Send event to update the UI with device count
                 view_dispatcher_send_custom_event(app->view_dispatcher, BtAudioEventDeviceFound);
@@ -168,23 +173,65 @@ bool bt_audio_scene_scan_on_event(void* context, SceneManagerEvent event) {
                     widget_add_string_element(
                         app->widget, 64, 20, AlignCenter, AlignCenter, FontPrimary, "Response!");
                     widget_add_string_element(
-                        app->widget, 64, 36, AlignCenter, AlignCenter, FontSecondary, "Check wiring &");
+                        app->widget,
+                        64,
+                        36,
+                        AlignCenter,
+                        AlignCenter,
+                        FontSecondary,
+                        "Check wiring &");
                     widget_add_string_element(
-                        app->widget, 64, 48, AlignCenter, AlignCenter, FontSecondary, "ESP32 power");
+                        app->widget,
+                        64,
+                        48,
+                        AlignCenter,
+                        AlignCenter,
+                        FontSecondary,
+                        "ESP32 power");
                     widget_add_string_element(
-                        app->widget, 64, 60, AlignCenter, AlignCenter, FontSecondary, "Run Diagnostics");
+                        app->widget,
+                        64,
+                        60,
+                        AlignCenter,
+                        AlignCenter,
+                        FontSecondary,
+                        "Run Diagnostics");
                 } else {
                     // Got UART response but no devices found
                     widget_add_string_element(
-                        app->widget, 64, 8, AlignCenter, AlignCenter, FontPrimary, "Scan timed out");
+                        app->widget,
+                        64,
+                        8,
+                        AlignCenter,
+                        AlignCenter,
+                        FontPrimary,
+                        "Scan timed out");
                     widget_add_string_element(
                         app->widget, 64, 20, AlignCenter, AlignCenter, FontPrimary, "No devices");
                     widget_add_string_element(
-                        app->widget, 64, 36, AlignCenter, AlignCenter, FontSecondary, "Troubleshooting:");
+                        app->widget,
+                        64,
+                        36,
+                        AlignCenter,
+                        AlignCenter,
+                        FontSecondary,
+                        "Troubleshooting:");
                     widget_add_string_element(
-                        app->widget, 64, 48, AlignCenter, AlignCenter, FontSecondary, "- Pairing mode?");
+                        app->widget,
+                        64,
+                        48,
+                        AlignCenter,
+                        AlignCenter,
+                        FontSecondary,
+                        "- Pairing mode?");
                     widget_add_string_element(
-                        app->widget, 64, 60, AlignCenter, AlignCenter, FontSecondary, "- Move closer");
+                        app->widget,
+                        64,
+                        60,
+                        AlignCenter,
+                        AlignCenter,
+                        FontSecondary,
+                        "- Move closer");
                 }
             }
             consumed = true;

@@ -19,13 +19,12 @@ static void bt_audio_firmware_check_callback(const char* data, size_t len, void*
     UNUSED(len);
 
     // Check for firmware response - expecting "BT_AUDIO_READY" or similar
-    if(strncmp(data, "BT_AUDIO_READY", 14) == 0 || 
-       strncmp(data, "ESP32", 5) == 0 ||
+    if(strncmp(data, "BT_AUDIO_READY", 14) == 0 || strncmp(data, "ESP32", 5) == 0 ||
        strncmp(data, "READY", 5) == 0) {
         bt_audio_set_firmware_response(app, data);
         app->esp32_present = true;
         app->firmware_check_done = true;
-        
+
         // Send saved BT device name to ESP32 so it can persist it
         // This ensures ESP32's NVS has the latest name from Flipper's config
         // The name will take effect on next ESP32 restart if different
@@ -35,35 +34,32 @@ static void bt_audio_firmware_check_callback(const char* data, size_t len, void*
             bt_audio_uart_tx(app->uart, cmd);
             FURI_LOG_I(TAG, "Sent BT name to ESP32: %s", app->config.bt_device_name);
         }
-        
+
         // Send shuffle mode setting to ESP32
         {
             char cmd[16];
             snprintf(cmd, sizeof(cmd), "SHUFFLE:%s\n", app->config.shuffle_mode ? "ON" : "OFF");
             bt_audio_uart_tx(app->uart, cmd);
-            FURI_LOG_I(TAG, "Sent shuffle mode to ESP32: %s", app->config.shuffle_mode ? "ON" : "OFF");
+            FURI_LOG_I(
+                TAG, "Sent shuffle mode to ESP32: %s", app->config.shuffle_mode ? "ON" : "OFF");
         }
-        
+
         view_dispatcher_send_custom_event(app->view_dispatcher, BtAudioEventFirmwareOK);
     }
     // Handle STATUS response (for background mode re-entry)
     else if(strncmp(data, "STATUS_CONNECTED:YES", 20) == 0) {
         app->is_connected = true;
         FURI_LOG_I(TAG, "Background mode: ESP32 still connected");
-    }
-    else if(strncmp(data, "STATUS_PLAYING:YES", 18) == 0) {
+    } else if(strncmp(data, "STATUS_PLAYING:YES", 18) == 0) {
         app->is_playing = true;
         FURI_LOG_I(TAG, "Background mode: ESP32 still playing");
-    }
-    else if(strncmp(data, "STATUS_PAUSED:YES", 17) == 0) {
+    } else if(strncmp(data, "STATUS_PAUSED:YES", 17) == 0) {
         app->is_paused = true;
         FURI_LOG_I(TAG, "Background mode: ESP32 paused");
-    }
-    else if(strncmp(data, "STATUS_FILE:", 12) == 0) {
+    } else if(strncmp(data, "STATUS_FILE:", 12) == 0) {
         snprintf(app->current_filename, BT_AUDIO_FILENAME_LEN, "%s", data + 12);
         FURI_LOG_I(TAG, "Background mode: Current file: %s", app->current_filename);
-    }
-    else if(strncmp(data, "STATUS_COMPLETE", 15) == 0) {
+    } else if(strncmp(data, "STATUS_COMPLETE", 15) == 0) {
         // STATUS response complete - trigger menu rebuild if audio is playing
         FURI_LOG_I(TAG, "STATUS complete, playing=%d, paused=%d", app->is_playing, app->is_paused);
         view_dispatcher_send_custom_event(app->view_dispatcher, BtAudioEventStatusComplete);
@@ -91,11 +87,11 @@ void bt_audio_scene_start_on_enter(void* context) {
     if(!app->firmware_check_done) {
         // Send version check command
         bt_audio_uart_tx(app->uart, "VERSION\n");
-        
+
         // Wait briefly for response - we'll check esp32_present when user tries to scan
         app->firmware_check_done = true;
     }
-    
+
     // Send STATUS command asynchronously - don't block the UI thread
     // The STATUS response will arrive via UART callback and trigger a menu rebuild
     // if audio is currently playing (see BtAudioEventStatusComplete handler in on_event)
@@ -110,12 +106,22 @@ void bt_audio_scene_start_on_enter(void* context) {
     // Add "Now Playing Menu" item if audio is playing (from background mode)
     if(now_playing_shown) {
         submenu_add_item(
-            submenu, "Now Playing Menu", SubmenuIndexNowPlayingBackground, bt_audio_scene_start_submenu_callback, app);
-        FURI_LOG_I(TAG, "Menu built with Now Playing Menu (is_playing=%d, is_paused=%d)", 
-                   app->is_playing, app->is_paused);
+            submenu,
+            "Now Playing Menu",
+            SubmenuIndexNowPlayingBackground,
+            bt_audio_scene_start_submenu_callback,
+            app);
+        FURI_LOG_I(
+            TAG,
+            "Menu built with Now Playing Menu (is_playing=%d, is_paused=%d)",
+            app->is_playing,
+            app->is_paused);
     } else {
-        FURI_LOG_I(TAG, "Menu built without Now Playing Menu (is_playing=%d, is_paused=%d)", 
-                   app->is_playing, app->is_paused);
+        FURI_LOG_I(
+            TAG,
+            "Menu built without Now Playing Menu (is_playing=%d, is_paused=%d)",
+            app->is_playing,
+            app->is_paused);
     }
 
     submenu_add_item(
@@ -123,11 +129,7 @@ void bt_audio_scene_start_on_enter(void* context) {
     submenu_add_item(
         submenu, "Settings", SubmenuIndexSettings, bt_audio_scene_start_submenu_callback, app);
     submenu_add_item(
-        submenu,
-        "Board version",
-        SubmenuIndexVersion,
-        bt_audio_scene_start_submenu_callback,
-        app);
+        submenu, "Board version", SubmenuIndexVersion, bt_audio_scene_start_submenu_callback, app);
     submenu_add_item(
         submenu,
         "Diagnostics",
@@ -139,7 +141,8 @@ void bt_audio_scene_start_on_enter(void* context) {
 
     // If "Now Playing Menu" is shown, select it; otherwise use saved state
     if(now_playing_shown) {
-        submenu_set_selected_item(submenu, SubmenuIndexNowPlayingBackground);  // Select by index value
+        submenu_set_selected_item(
+            submenu, SubmenuIndexNowPlayingBackground); // Select by index value
     } else {
         submenu_set_selected_item(
             submenu, scene_manager_get_scene_state(app->scene_manager, BtAudioSceneStart));
@@ -158,31 +161,56 @@ bool bt_audio_scene_start_on_event(void* context, SceneManagerEvent event) {
             if(app->is_playing || app->is_paused) {
                 // Rebuild the menu to include "Now Playing Menu"
                 submenu_reset(app->submenu);
-                
+
                 // Add "Now Playing Menu" at the top and select it
                 submenu_add_item(
-                    app->submenu, "Now Playing Menu", SubmenuIndexNowPlayingBackground, bt_audio_scene_start_submenu_callback, app);
-                
+                    app->submenu,
+                    "Now Playing Menu",
+                    SubmenuIndexNowPlayingBackground,
+                    bt_audio_scene_start_submenu_callback,
+                    app);
+
                 submenu_add_item(
-                    app->submenu, "Scan for devices", SubmenuIndexScan, bt_audio_scene_start_submenu_callback, app);
+                    app->submenu,
+                    "Scan for devices",
+                    SubmenuIndexScan,
+                    bt_audio_scene_start_submenu_callback,
+                    app);
                 submenu_add_item(
-                    app->submenu, "Settings", SubmenuIndexSettings, bt_audio_scene_start_submenu_callback, app);
+                    app->submenu,
+                    "Settings",
+                    SubmenuIndexSettings,
+                    bt_audio_scene_start_submenu_callback,
+                    app);
                 submenu_add_item(
-                    app->submenu, "Board version", SubmenuIndexVersion, bt_audio_scene_start_submenu_callback, app);
+                    app->submenu,
+                    "Board version",
+                    SubmenuIndexVersion,
+                    bt_audio_scene_start_submenu_callback,
+                    app);
                 submenu_add_item(
-                    app->submenu, "Diagnostics", SubmenuIndexDiagnostics, bt_audio_scene_start_submenu_callback, app);
+                    app->submenu,
+                    "Diagnostics",
+                    SubmenuIndexDiagnostics,
+                    bt_audio_scene_start_submenu_callback,
+                    app);
                 submenu_add_item(
-                    app->submenu, "About", SubmenuIndexAbout, bt_audio_scene_start_submenu_callback, app);
-                
+                    app->submenu,
+                    "About",
+                    SubmenuIndexAbout,
+                    bt_audio_scene_start_submenu_callback,
+                    app);
+
                 // Select the "Now Playing Menu" item by index value
                 submenu_set_selected_item(app->submenu, SubmenuIndexNowPlayingBackground);
-                
+
                 FURI_LOG_I(TAG, "Menu rebuilt with Now Playing Menu");
             }
             consumed = true;
         } else if(event.event == SubmenuIndexNowPlayingBackground) {
             // "Now Playing Menu" from background mode - go directly to control scene
-            scene_manager_set_scene_state(app->scene_manager, BtAudioSceneStart, SubmenuIndexNowPlayingBackground);
+            scene_manager_set_scene_state(
+                app->scene_manager, BtAudioSceneStart, SubmenuIndexNowPlayingBackground);
             scene_manager_next_scene(app->scene_manager, BtAudioSceneControl);
             consumed = true;
         } else if(event.event == SubmenuIndexScan) {
@@ -203,7 +231,10 @@ bool bt_audio_scene_start_on_event(void* context, SceneManagerEvent event) {
             consumed = true;
         } else if(event.event == SubmenuIndexAbout) {
             // Use state + offset to indicate we're viewing About (not in submenu)
-            scene_manager_set_scene_state(app->scene_manager, BtAudioSceneStart, SubmenuIndexAbout + ABOUT_VIEW_STATE_OFFSET);
+            scene_manager_set_scene_state(
+                app->scene_manager,
+                BtAudioSceneStart,
+                SubmenuIndexAbout + ABOUT_VIEW_STATE_OFFSET);
             furi_string_printf(
                 app->text_box_store,
                 "BT Audio v1.0\n"
@@ -250,7 +281,8 @@ bool bt_audio_scene_start_on_event(void* context, SceneManagerEvent event) {
         uint32_t state = scene_manager_get_scene_state(app->scene_manager, BtAudioSceneStart);
         if(state == SubmenuIndexAbout + ABOUT_VIEW_STATE_OFFSET) {
             // Return to main menu from About screen
-            scene_manager_set_scene_state(app->scene_manager, BtAudioSceneStart, SubmenuIndexAbout);
+            scene_manager_set_scene_state(
+                app->scene_manager, BtAudioSceneStart, SubmenuIndexAbout);
             view_dispatcher_switch_to_view(app->view_dispatcher, BtAudioViewSubmenu);
             consumed = true;
         } else {

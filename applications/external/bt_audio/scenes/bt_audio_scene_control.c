@@ -4,34 +4,34 @@
 
 // Submenu indices for control menu
 typedef enum {
-    SubmenuIndexBrowseMusic,    // Browse and select MP3 files
+    SubmenuIndexBrowseMusic, // Browse and select MP3 files
     SubmenuIndexPlayAudio,
-    SubmenuIndexPlayFavorites,  // Play favorites playlist
-    SubmenuIndexPlayPlaylist,   // Play from playlist1.m3u
-    SubmenuIndexPlayPlaylist2,  // Play from playlist2.m3u
-    SubmenuIndexStreamAudio,    // Stream audio from WiFi (new)
+    SubmenuIndexPlayFavorites, // Play favorites playlist
+    SubmenuIndexPlayPlaylist, // Play from playlist1.m3u
+    SubmenuIndexPlayPlaylist2, // Play from playlist2.m3u
+    SubmenuIndexStreamAudio, // Stream audio from WiFi (new)
     SubmenuIndexPlayTone,
     SubmenuIndexPlayJingle,
     SubmenuIndexPlayBeeps,
     SubmenuIndexStopPlayback,
-    SubmenuIndexReconnect,      // Force reconnection when connection drops
+    SubmenuIndexReconnect, // Force reconnection when connection drops
     SubmenuIndexDisconnect,
-    SubmenuIndexNowPlaying,  // Added at end to avoid breaking existing indices
+    SubmenuIndexNowPlaying, // Added at end to avoid breaking existing indices
 } SubmenuIndex;
 
 // WiFi streaming state - tracks if we're waiting for WiFi connection before starting stream
 static bool wifi_stream_pending = false;
 
 // Double-tap detection timing (ms)
-#define DOUBLE_TAP_TIME_MS 400
+#define DOUBLE_TAP_TIME_MS        400
 // Hold detection timing (ms)
-#define HOLD_TIME_MS 500
+#define HOLD_TIME_MS              500
 // Scroll speed (ms between scroll ticks)
-#define SCROLL_TICK_MS 300
+#define SCROLL_TICK_MS            300
 // Pixels to scroll per tick
-#define SCROLL_PIXELS 6
+#define SCROLL_PIXELS             6
 // Screen width for scrolling calculation
-#define SCREEN_WIDTH 128
+#define SCREEN_WIDTH              128
 // Approximate character width for FontSecondary
 #define FONT_SECONDARY_CHAR_WIDTH 6
 // Timer callback for scroll animation
@@ -56,8 +56,7 @@ static void start_playlist_playback(BtAudio* app) {
 
     // Start scroll timer for filename scrolling
     if(!app->scroll_timer) {
-        app->scroll_timer =
-            furi_timer_alloc(bt_audio_scroll_timer_cb, FuriTimerTypePeriodic, app);
+        app->scroll_timer = furi_timer_alloc(bt_audio_scroll_timer_cb, FuriTimerTypePeriodic, app);
     }
     furi_timer_start(app->scroll_timer, furi_ms_to_ticks(SCROLL_TICK_MS));
 
@@ -138,7 +137,8 @@ static void bt_audio_player_draw_callback(Canvas* canvas, void* model) {
     }
 
     // Draw control hints at bottom
-    canvas_draw_str_aligned(canvas, 64, 50, AlignCenter, AlignCenter, "^v:Vol  <:Rst <<:Prev  >:Next");
+    canvas_draw_str_aligned(
+        canvas, 64, 50, AlignCenter, AlignCenter, "^v:Vol  <:Rst <<:Prev  >:Next");
     canvas_draw_str_aligned(canvas, 64, 60, AlignCenter, AlignCenter, "OK:Pause  Hold OK:Fav");
 }
 
@@ -162,8 +162,10 @@ static bool bt_audio_player_input_callback(InputEvent* event, void* context) {
             app->current_is_favorite = bt_audio_is_favorite(app, app->current_filename);
             // Provide feedback via notification
             notification_message(app->notifications, &sequence_single_vibro);
-            FURI_LOG_I(TAG, "Toggled favorite: %s (now %s)", 
-                app->current_filename, 
+            FURI_LOG_I(
+                TAG,
+                "Toggled favorite: %s (now %s)",
+                app->current_filename,
                 app->current_is_favorite ? "favorited" : "unfavorited");
         }
         consumed = true;
@@ -189,11 +191,12 @@ static bool bt_audio_player_input_callback(InputEvent* event, void* context) {
             // Second tap within DOUBLE_TAP_TIME_MS: go to previous track
             uint32_t current_time = furi_get_tick();
             uint32_t time_since_last = current_time - app->last_left_press;
-            
-            if(app->last_left_press > 0 && time_since_last < furi_ms_to_ticks(DOUBLE_TAP_TIME_MS)) {
+
+            if(app->last_left_press > 0 &&
+               time_since_last < furi_ms_to_ticks(DOUBLE_TAP_TIME_MS)) {
                 // Double-tap detected: go to previous track
                 bt_audio_uart_tx(app->uart, "PREV\n");
-                app->last_left_press = 0;  // Reset to prevent triple-tap
+                app->last_left_press = 0; // Reset to prevent triple-tap
                 FURI_LOG_D(TAG, "Double-tap left: PREV");
             } else {
                 // Single tap: restart current track
@@ -204,7 +207,7 @@ static bool bt_audio_player_input_callback(InputEvent* event, void* context) {
             consumed = true;
         }
     }
-    
+
     // Handle short press OK for pause/resume (only on short press, not after long)
     if(event->key == InputKeyOk && event->type == InputTypeShort) {
         // Short OK: toggle pause/resume
@@ -223,7 +226,7 @@ static bool bt_audio_player_input_callback(InputEvent* event, void* context) {
             if(app->scroll_timer) furi_timer_stop(app->scroll_timer);
             // Don't stop playback, don't clear state - just navigate away
             // The scene manager will handle the navigation
-            consumed = false;  // Let scene manager handle the back navigation
+            consumed = false; // Let scene manager handle the back navigation
         }
     }
 
@@ -254,12 +257,15 @@ static void bt_audio_control_rx_callback(const char* data, size_t len, void* con
         // ESP32 is playing a specific file - update display
         strncpy(app->current_filename, data + 13, BT_AUDIO_FILENAME_LEN - 1);
         app->current_filename[BT_AUDIO_FILENAME_LEN - 1] = '\0';
-        app->scroll_offset = 0;  // Reset scroll position
+        app->scroll_offset = 0; // Reset scroll position
         app->is_playing = true;
         app->is_paused = false;
         // Update favorite status for the new track
         app->current_is_favorite = bt_audio_is_favorite(app, app->current_filename);
-        FURI_LOG_I(TAG, "Playing file: %s (favorite: %s)", app->current_filename, 
+        FURI_LOG_I(
+            TAG,
+            "Playing file: %s (favorite: %s)",
+            app->current_filename,
             app->current_is_favorite ? "yes" : "no");
         view_dispatcher_send_custom_event(app->view_dispatcher, BtAudioEventFileChanged);
     } else if(strncmp(data, "FILE_NOT_FOUND:", 15) == 0) {
@@ -331,9 +337,10 @@ static void bt_audio_control_rx_callback(const char* data, size_t len, void* con
         app->reconnect_in_progress = false;
         FURI_LOG_W(TAG, "Reconnection failed");
         view_dispatcher_send_custom_event(app->view_dispatcher, BtAudioEventReconnectFailed);
-    } else if(strncmp(data, "SD_ERROR", 8) == 0 || strncmp(data, "NO_FILES", 8) == 0 || 
-              strncmp(data, "NO_FAVORITES", 12) == 0 || strncmp(data, "NO_PLAYLIST", 11) == 0 ||
-              strncmp(data, "NO_PLAYLIST2", 12) == 0) {
+    } else if(
+        strncmp(data, "SD_ERROR", 8) == 0 || strncmp(data, "NO_FILES", 8) == 0 ||
+        strncmp(data, "NO_FAVORITES", 12) == 0 || strncmp(data, "NO_PLAYLIST", 11) == 0 ||
+        strncmp(data, "NO_PLAYLIST2", 12) == 0) {
         // SD card or file errors
         FURI_LOG_W(TAG, "ESP32 error: %s", data);
         app->is_playing = false;
@@ -370,10 +377,10 @@ static void bt_audio_control_rx_callback(const char* data, size_t len, void* con
         if(wifi_stream_pending) {
             // WiFi is now connected - send stream URL and start command
             char stream_cmd[BT_AUDIO_STREAM_URL_LEN + 16];
-            snprintf(stream_cmd, sizeof(stream_cmd), "STREAM_URL:%s\n", 
-                app->wifi_config.stream_url);
+            snprintf(
+                stream_cmd, sizeof(stream_cmd), "STREAM_URL:%s\n", app->wifi_config.stream_url);
             bt_audio_uart_tx(app->uart, stream_cmd);
-            
+
             bt_audio_uart_tx(app->uart, "STREAM_START\n");
             wifi_stream_pending = false;
         }
@@ -423,7 +430,11 @@ static void bt_audio_control_rx_callback(const char* data, size_t len, void* con
         app->is_paused = false;
         // Truncate URL for display to fit in filename buffer
         // "Streaming: " is 11 chars, leaving 116 chars for URL (128 - 11 - 1 for null)
-        snprintf(app->current_filename, BT_AUDIO_FILENAME_LEN, "Streaming: %.116s", app->wifi_config.stream_url);
+        snprintf(
+            app->current_filename,
+            BT_AUDIO_FILENAME_LEN,
+            "Streaming: %.116s",
+            app->wifi_config.stream_url);
         view_dispatcher_send_custom_event(app->view_dispatcher, BtAudioEventFileChanged);
     }
 }
@@ -439,7 +450,7 @@ void bt_audio_scene_control_on_enter(void* context) {
 
     // Mark as connected when entering control scene
     app->is_connected = true;
-    
+
     // Note: Don't reset is_playing/is_paused here - preserve state when returning from player view
     if(!app->is_playing && !app->is_paused) {
         app->current_filename[0] = '\0';
@@ -463,9 +474,13 @@ void bt_audio_scene_control_on_enter(void* context) {
 
     // Track whether "Now Playing" is shown at the top
     bool now_playing_shown = (app->is_playing || app->is_paused);
-    
-    FURI_LOG_I(TAG, "Control scene: building menu, now_playing_shown=%d (is_playing=%d, is_paused=%d)", 
-               now_playing_shown, app->is_playing, app->is_paused);
+
+    FURI_LOG_I(
+        TAG,
+        "Control scene: building menu, now_playing_shown=%d (is_playing=%d, is_paused=%d)",
+        now_playing_shown,
+        app->is_playing,
+        app->is_paused);
 
     // Add "Now Playing" item if audio is currently playing
     if(now_playing_shown) {
@@ -477,7 +492,7 @@ void bt_audio_scene_control_on_enter(void* context) {
             app);
         FURI_LOG_I(TAG, "Added 'Now Playing' menu item");
     }
-    
+
     // Add "Browse Music" option to select specific files
     submenu_add_item(
         submenu,
@@ -485,14 +500,14 @@ void bt_audio_scene_control_on_enter(void* context) {
         SubmenuIndexBrowseMusic,
         bt_audio_scene_control_submenu_callback,
         app);
-    
+
     submenu_add_item(
         submenu,
         "Play Music Folder",
         SubmenuIndexPlayAudio,
         bt_audio_scene_control_submenu_callback,
         app);
-    
+
     // Add "Play Playlist 1" option for playlist1.m3u
     submenu_add_item(
         submenu,
@@ -500,7 +515,7 @@ void bt_audio_scene_control_on_enter(void* context) {
         SubmenuIndexPlayPlaylist,
         bt_audio_scene_control_submenu_callback,
         app);
-    
+
     // Add "Play Playlist 2" option for playlist2.m3u
     submenu_add_item(
         submenu,
@@ -508,7 +523,7 @@ void bt_audio_scene_control_on_enter(void* context) {
         SubmenuIndexPlayPlaylist2,
         bt_audio_scene_control_submenu_callback,
         app);
-    
+
     // Add "Play Favorites" if there are favorites
     if(app->favorites_count > 0) {
         char fav_label[32];
@@ -520,7 +535,7 @@ void bt_audio_scene_control_on_enter(void* context) {
             bt_audio_scene_control_submenu_callback,
             app);
     }
-    
+
     // WiFi Streaming DISABLED - ESP32 BT/WiFi coexistence limitation
     // The ESP32 (original) cannot reliably run WiFi and Bluetooth A2DP simultaneously
     // because they share the same 2.4GHz radio. WiFi initialization fails when BT is active.
@@ -528,8 +543,8 @@ void bt_audio_scene_control_on_enter(void* context) {
     // See WIFI_STREAMING_IMPLEMENTATION.md for technical details.
     //
     // Uncomment below to re-enable (experimental, may not work on ESP32):
-    // if(app->wifi_config.wifi_enabled && 
-    //    app->wifi_config.ssid[0] != '\0' && 
+    // if(app->wifi_config.wifi_enabled &&
+    //    app->wifi_config.ssid[0] != '\0' &&
     //    app->wifi_config.stream_url[0] != '\0') {
     //     submenu_add_item(
     //         submenu,
@@ -538,8 +553,8 @@ void bt_audio_scene_control_on_enter(void* context) {
     //         bt_audio_scene_control_submenu_callback,
     //         app);
     // }
-    (void)SubmenuIndexStreamAudio;  // Suppress unused warning
-    
+    (void)SubmenuIndexStreamAudio; // Suppress unused warning
+
     submenu_add_item(
         submenu,
         "Play Test Tone",
@@ -560,11 +575,7 @@ void bt_audio_scene_control_on_enter(void* context) {
         app);
     // Add "Reconnect" option - useful when BT connection drops and auto-reconnect fails
     submenu_add_item(
-        submenu,
-        "Reconnect",
-        SubmenuIndexReconnect,
-        bt_audio_scene_control_submenu_callback,
-        app);
+        submenu, "Reconnect", SubmenuIndexReconnect, bt_audio_scene_control_submenu_callback, app);
     submenu_add_item(
         submenu,
         "Disconnect",
@@ -592,7 +603,7 @@ bool bt_audio_scene_control_on_event(void* context, SceneManagerEvent event) {
             extract_filename(app->current_filename, display_name, sizeof(display_name));
             size_t text_len = strlen(display_name);
             int text_width = text_len * FONT_SECONDARY_CHAR_WIDTH;
-            
+
             if(text_width > SCREEN_WIDTH - 8) {
                 if(!app->scroll_timer) {
                     app->scroll_timer =
@@ -600,7 +611,7 @@ bool bt_audio_scene_control_on_event(void* context, SceneManagerEvent event) {
                 }
                 furi_timer_start(app->scroll_timer, furi_ms_to_ticks(SCROLL_TICK_MS));
             }
-            
+
             view_dispatcher_switch_to_view(app->view_dispatcher, BtAudioViewPlayer);
             consumed = true;
         } else if(event.event == SubmenuIndexBrowseMusic) {
@@ -614,21 +625,22 @@ bool bt_audio_scene_control_on_event(void* context, SceneManagerEvent event) {
                 // Note: This initial implementation plays the first MP3 file found in /ext/music
                 // A file browser for selection may be added in a future update
                 FURI_LOG_I(TAG, "Starting Flipper SD playback mode");
-                
+
                 // Show status message
-                snprintf(app->current_filename, BT_AUDIO_FILENAME_LEN, "Searching for MP3 files...");
-                
+                snprintf(
+                    app->current_filename, BT_AUDIO_FILENAME_LEN, "Searching for MP3 files...");
+
                 // Try to find first MP3 in the music folder on Flipper SD
                 Storage* storage = furi_record_open(RECORD_STORAGE);
                 File* dir = storage_file_alloc(storage);
-                
+
                 bool found_file = false;
                 char first_mp3[128] = {0};
-                
+
                 if(storage_dir_open(dir, "/ext/music")) {
                     FileInfo fileinfo;
                     char name[64];
-                    
+
                     while(storage_dir_read(dir, &fileinfo, name, sizeof(name))) {
                         // Skip directories - only process files
                         if(file_info_is_dir(&fileinfo)) {
@@ -636,9 +648,8 @@ bool bt_audio_scene_control_on_event(void* context, SceneManagerEvent event) {
                         }
                         // Check for MP3 extension (case insensitive)
                         size_t len = strlen(name);
-                        if(len > 4 && 
-                           (strcmp(name + len - 4, ".mp3") == 0 || 
-                            strcmp(name + len - 4, ".MP3") == 0)) {
+                        if(len > 4 && (strcmp(name + len - 4, ".mp3") == 0 ||
+                                       strcmp(name + len - 4, ".MP3") == 0)) {
                             snprintf(first_mp3, sizeof(first_mp3), "/ext/music/%s", name);
                             found_file = true;
                             FURI_LOG_I(TAG, "Found MP3 file: %s", first_mp3);
@@ -647,17 +658,17 @@ bool bt_audio_scene_control_on_event(void* context, SceneManagerEvent event) {
                     }
                     storage_dir_close(dir);
                 }
-                
+
                 storage_file_free(dir);
                 furi_record_close(RECORD_STORAGE);
-                
+
                 if(found_file) {
                     // Start streaming the file
                     app->is_playing = true;
                     app->is_paused = false;
                     app->playing_favorites = false;
                     app->scroll_offset = 0;
-                    
+
                     // Extract filename for display (snprintf ensures null-termination)
                     const char* basename = strrchr(first_mp3, '/');
                     if(basename) {
@@ -665,17 +676,17 @@ bool bt_audio_scene_control_on_event(void* context, SceneManagerEvent event) {
                     } else {
                         snprintf(app->current_filename, BT_AUDIO_FILENAME_LEN, "%s", first_mp3);
                     }
-                    
+
                     // Start scroll timer for filename scrolling
                     if(!app->scroll_timer) {
                         app->scroll_timer =
                             furi_timer_alloc(bt_audio_scroll_timer_cb, FuriTimerTypePeriodic, app);
                     }
                     furi_timer_start(app->scroll_timer, furi_ms_to_ticks(SCROLL_TICK_MS));
-                    
+
                     // Switch to player view first (shows "loading" state)
                     view_dispatcher_switch_to_view(app->view_dispatcher, BtAudioViewPlayer);
-                    
+
                     // Start the streaming - this blocks while streaming
                     // Note: Future improvement should use a background thread
                     if(!bt_audio_stream_flipper_sd_file(app, first_mp3)) {
@@ -690,9 +701,21 @@ bool bt_audio_scene_control_on_event(void* context, SceneManagerEvent event) {
                     widget_add_string_element(
                         app->widget, 64, 20, AlignCenter, AlignCenter, FontPrimary, "No MP3 Files");
                     widget_add_string_element(
-                        app->widget, 64, 36, AlignCenter, AlignCenter, FontSecondary, "Add files to");
+                        app->widget,
+                        64,
+                        36,
+                        AlignCenter,
+                        AlignCenter,
+                        FontSecondary,
+                        "Add files to");
                     widget_add_string_element(
-                        app->widget, 64, 48, AlignCenter, AlignCenter, FontSecondary, "/ext/music/");
+                        app->widget,
+                        64,
+                        48,
+                        AlignCenter,
+                        AlignCenter,
+                        FontSecondary,
+                        "/ext/music/");
                     view_dispatcher_switch_to_view(app->view_dispatcher, BtAudioViewWidget);
                 }
             } else {
@@ -722,13 +745,14 @@ bool bt_audio_scene_control_on_event(void* context, SceneManagerEvent event) {
                 char cmd[64];
                 snprintf(cmd, sizeof(cmd), "PLAY_FAVORITES:%d\n", app->favorites_count);
                 bt_audio_uart_tx(app->uart, cmd);
-                
+
                 // Send each favorite filename with delay proportional to command length
                 // At 115200 baud, ~11.5 bytes/ms, so need to wait for transmission plus processing
                 // Formula: ((cmd_length + 9) / 10) + 15ms base for ESP32 processing
                 for(uint8_t i = 0; i < app->favorites_count; i++) {
                     char fav_cmd[BT_AUDIO_FILENAME_LEN + 8];
-                    int cmd_len = snprintf(fav_cmd, sizeof(fav_cmd), "FAV:%s\n", app->favorites[i]);
+                    int cmd_len =
+                        snprintf(fav_cmd, sizeof(fav_cmd), "FAV:%s\n", app->favorites[i]);
                     bt_audio_uart_tx(app->uart, fav_cmd);
                     // Dynamic delay: transmission time (~cmd_len/10 ms) + processing time (15ms)
                     // Use (cmd_len + 9) / 10 to round up integer division
@@ -740,10 +764,10 @@ bool bt_audio_scene_control_on_event(void* context, SceneManagerEvent event) {
                         furi_delay_ms(30);
                     }
                 }
-                
+
                 // Signal end of favorites list
                 bt_audio_uart_tx(app->uart, "FAV_END\n");
-                
+
                 app->is_playing = true;
                 app->is_paused = false;
                 app->playing_favorites = true;
@@ -764,21 +788,25 @@ bool bt_audio_scene_control_on_event(void* context, SceneManagerEvent event) {
             // Stream audio from WiFi
             // First, stop any existing playback to ensure clean transition
             bt_audio_uart_tx(app->uart, "STOP\n");
-            furi_delay_ms(100);  // Delay to ensure STOP is processed
-            
+            furi_delay_ms(100); // Delay to ensure STOP is processed
+
             // Set pending flag - the RX callback will send STREAM_URL and STREAM_START
             // after WIFI_CONNECTED is received
             wifi_stream_pending = true;
-            
+
             // Connect to WiFi network with credentials from config
             // Buffer size: 13 (WIFI_CONNECT:) + 64 (SSID) + 1 (:) + 64 (password) + 1 (\n) + 1 (\0) = 144
             char wifi_cmd[BT_AUDIO_WIFI_SSID_LEN + BT_AUDIO_WIFI_PASS_LEN + 16];
-            snprintf(wifi_cmd, sizeof(wifi_cmd), "WIFI_CONNECT:%s:%s\n", 
-                app->wifi_config.ssid, app->wifi_config.password);
+            snprintf(
+                wifi_cmd,
+                sizeof(wifi_cmd),
+                "WIFI_CONNECT:%s:%s\n",
+                app->wifi_config.ssid,
+                app->wifi_config.password);
             bt_audio_uart_tx(app->uart, wifi_cmd);
-            
+
             FURI_LOG_I(TAG, "Starting WiFi stream: %s", app->wifi_config.stream_url);
-            
+
             // Mark as playing (pending) and switch to player view
             app->is_playing = true;
             app->is_paused = false;
@@ -867,44 +895,68 @@ bool bt_audio_scene_control_on_event(void* context, SceneManagerEvent event) {
             // 1. First disconnect cleanly
             // 2. Wait for ESP32 to process
             // 3. Then connect using the proper CONNECT <MAC> command
-            
+
             bool power_ok = true;
             bool power_was_off = false;
-            
+
             // Set reconnect_in_progress flag BEFORE any operations that might trigger disconnect
             app->reconnect_in_progress = true;
-            
+
             // First check if 5V power is available (may have been lost if USB-C was removed)
             if(app->config.enable_5v_gpio && !furi_hal_power_is_otg_enabled()) {
                 power_was_off = true;
                 // Try to re-enable 5V power
                 furi_hal_power_enable_otg();
-                furi_delay_ms(100);  // Wait for power to stabilize
+                furi_delay_ms(100); // Wait for power to stabilize
                 if(!furi_hal_power_is_otg_enabled()) {
                     // 5V power failed - usually happens when USB-C is connected
                     // USB-C prevents GPIO 5V output (OTG mode conflict)
-                    app->reconnect_in_progress = false;  // Clear flag on failure
+                    app->reconnect_in_progress = false; // Clear flag on failure
                     widget_reset(app->widget);
                     widget_add_string_element(
-                        app->widget, 64, 8, AlignCenter, AlignCenter, FontPrimary, "5V GPIO Blocked");
+                        app->widget,
+                        64,
+                        8,
+                        AlignCenter,
+                        AlignCenter,
+                        FontPrimary,
+                        "5V GPIO Blocked");
                     widget_add_string_element(
-                        app->widget, 64, 22, AlignCenter, AlignCenter, FontSecondary, "USB-C blocks GPIO power");
+                        app->widget,
+                        64,
+                        22,
+                        AlignCenter,
+                        AlignCenter,
+                        FontSecondary,
+                        "USB-C blocks GPIO power");
                     widget_add_string_element(
-                        app->widget, 64, 36, AlignCenter, AlignCenter, FontSecondary, "Unplug USB to use GPIO");
+                        app->widget,
+                        64,
+                        36,
+                        AlignCenter,
+                        AlignCenter,
+                        FontSecondary,
+                        "Unplug USB to use GPIO");
                     widget_add_string_element(
-                        app->widget, 64, 50, AlignCenter, AlignCenter, FontSecondary, "or power ESP32 externally");
+                        app->widget,
+                        64,
+                        50,
+                        AlignCenter,
+                        AlignCenter,
+                        FontSecondary,
+                        "or power ESP32 externally");
                     view_dispatcher_switch_to_view(app->view_dispatcher, BtAudioViewWidget);
                     power_ok = false;
                 } else {
                     FURI_LOG_I(TAG, "Re-enabled 5V on GPIO for reconnection");
                 }
             }
-            
+
             if(power_ok) {
                 // Check if we have a last connected MAC address
                 if(app->config.last_connected_mac[0] == '\0') {
                     // No last device - show error
-                    app->reconnect_in_progress = false;  // Clear flag on failure
+                    app->reconnect_in_progress = false; // Clear flag on failure
                     widget_reset(app->widget);
                     widget_add_string_element(
                         app->widget, 64, 24, AlignCenter, AlignCenter, FontPrimary, "No Device");
@@ -915,35 +967,36 @@ bool bt_audio_scene_control_on_event(void* context, SceneManagerEvent event) {
                     // If power was off, ESP32 needs time to boot (typically ~1-2 seconds)
                     if(power_was_off) {
                         FURI_LOG_I(TAG, "Waiting for ESP32 to boot after power restore...");
-                        furi_delay_ms(1500);  // Wait for ESP32 to boot
+                        furi_delay_ms(1500); // Wait for ESP32 to boot
                     }
-                    
+
                     // Send disconnect first to clean up any stale connection state
                     // Only send once and wait for it to complete
                     bt_audio_uart_tx(app->uart, "DISCONNECT\n");
-                    furi_delay_ms(500);  // Give ESP32 time to fully process disconnect
-                    
+                    furi_delay_ms(500); // Give ESP32 time to fully process disconnect
+
                     // Clear reconnect flag before going to connect scene
                     app->reconnect_in_progress = false;
-                    
+
                     // Reset connection state
                     app->is_connected = false;
                     app->is_playing = false;
                     app->is_paused = false;
                     if(app->scroll_timer) furi_timer_stop(app->scroll_timer);
-                    
+
                     // Use the same approach as "Last devices" - set up device list and go to connect scene
                     // This is the workflow that works reliably
-                    
+
                     // Find device name in history if available
                     const char* device_name = "Saved Device";
                     for(uint8_t i = 0; i < app->device_history_count; i++) {
-                        if(strcmp(app->device_history[i].mac, app->config.last_connected_mac) == 0) {
+                        if(strcmp(app->device_history[i].mac, app->config.last_connected_mac) ==
+                           0) {
                             device_name = app->device_history[i].name;
                             break;
                         }
                     }
-                    
+
                     // Copy MAC address to device list slot 0 for connection
                     // Format: "MAC,Name" - connect scene will extract MAC
                     snprintf(
@@ -954,14 +1007,14 @@ bool bt_audio_scene_control_on_event(void* context, SceneManagerEvent event) {
                         device_name);
                     app->device_count = 1;
                     app->selected_device = 0;
-                    
+
                     FURI_LOG_I(TAG, "Reconnecting to: %s", app->config.last_connected_mac);
-                    
+
                     // Go to connect scene - same workflow as "Last devices"
                     scene_manager_next_scene(app->scene_manager, BtAudioSceneConnect);
                 }
             }
-            
+
             consumed = true;
         } else if(event.event == SubmenuIndexDisconnect) {
             // Send DISCONNECT command
@@ -970,13 +1023,13 @@ bool bt_audio_scene_control_on_event(void* context, SceneManagerEvent event) {
             app->is_playing = false;
             app->is_paused = false;
             if(app->scroll_timer) furi_timer_stop(app->scroll_timer);
-            
+
             // Restore backlight to auto mode when disconnecting
             if(app->config.keep_backlight_on) {
                 notification_message(app->notifications, &sequence_display_backlight_enforce_auto);
                 FURI_LOG_I(TAG, "Backlight restored to auto (disconnect)");
             }
-            
+
             // Go back to start
             scene_manager_search_and_switch_to_previous_scene(
                 app->scene_manager, BtAudioSceneStart);
@@ -1008,13 +1061,13 @@ bool bt_audio_scene_control_on_event(void* context, SceneManagerEvent event) {
             app->is_paused = false;
             if(app->play_timer) furi_timer_stop(app->play_timer);
             if(app->scroll_timer) furi_timer_stop(app->scroll_timer);
-            
+
             // Restore backlight to auto mode when disconnected
             if(app->config.keep_backlight_on) {
                 notification_message(app->notifications, &sequence_display_backlight_enforce_auto);
                 FURI_LOG_I(TAG, "Backlight restored to auto (disconnected)");
             }
-            
+
             scene_manager_search_and_switch_to_previous_scene(
                 app->scene_manager, BtAudioSceneStart);
             consumed = true;
@@ -1051,7 +1104,7 @@ bool bt_audio_scene_control_on_event(void* context, SceneManagerEvent event) {
             if(text_width > SCREEN_WIDTH - 8) {
                 app->scroll_offset += SCROLL_PIXELS;
                 if(app->scroll_offset > text_width - SCREEN_WIDTH + 32) {
-                    app->scroll_offset = 0;  // Reset to beginning
+                    app->scroll_offset = 0; // Reset to beginning
                 }
             }
             // The view dispatcher will automatically redraw the active view
@@ -1060,13 +1113,13 @@ bool bt_audio_scene_control_on_event(void* context, SceneManagerEvent event) {
             // Reconnection successful - return to control menu
             if(app->connect_timer) furi_timer_stop(app->connect_timer);
             app->is_connected = true;
-            app->reconnect_in_progress = false;  // Clear flag on success
-            
+            app->reconnect_in_progress = false; // Clear flag on success
+
             // Re-enable backlight always on if that setting is enabled
             if(app->config.keep_backlight_on) {
                 notification_message(app->notifications, &sequence_display_backlight_enforce_on);
             }
-            
+
             // Rebuild and show control menu
             submenu_reset(app->submenu);
             bt_audio_scene_control_on_enter(app);
@@ -1076,8 +1129,8 @@ bool bt_audio_scene_control_on_event(void* context, SceneManagerEvent event) {
             // Reconnection failed - show error then return to menu
             if(app->connect_timer) furi_timer_stop(app->connect_timer);
             app->is_connected = false;
-            app->reconnect_in_progress = false;  // Clear flag on failure
-            
+            app->reconnect_in_progress = false; // Clear flag on failure
+
             widget_reset(app->widget);
             widget_add_string_element(
                 app->widget, 64, 12, AlignCenter, AlignCenter, FontPrimary, "Reconnection");
@@ -1093,8 +1146,8 @@ bool bt_audio_scene_control_on_event(void* context, SceneManagerEvent event) {
             // Reconnection timed out
             if(app->connect_timer) furi_timer_stop(app->connect_timer);
             app->is_connected = false;
-            app->reconnect_in_progress = false;  // Clear flag on timeout
-            
+            app->reconnect_in_progress = false; // Clear flag on timeout
+
             widget_reset(app->widget);
             widget_add_string_element(
                 app->widget, 64, 12, AlignCenter, AlignCenter, FontPrimary, "Reconnection");

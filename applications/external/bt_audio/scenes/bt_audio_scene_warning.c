@@ -1,9 +1,7 @@
 #include "../bt_audio.h"
 
-static void bt_audio_scene_warning_widget_callback(
-    GuiButtonType result,
-    InputType type,
-    void* context) {
+static void
+    bt_audio_scene_warning_widget_callback(GuiButtonType result, InputType type, void* context) {
     BtAudio* app = context;
     if(type == InputTypeShort) {
         view_dispatcher_send_custom_event(app->view_dispatcher, result);
@@ -18,7 +16,7 @@ void bt_audio_scene_warning_on_enter(void* context) {
 
     widget_add_string_element(
         widget, 0, 0, AlignLeft, AlignTop, FontPrimary, "ESP32 Not Detected");
-    
+
     widget_add_text_scroll_element(
         widget,
         0,

@@ -19,9 +19,9 @@ static void bt_audio_diag_rx_callback(const char* data, size_t len, void* contex
     // Accumulate diagnostic response in buffer
     size_t current_len = strlen(app->diag_buffer);
     size_t remaining = sizeof(app->diag_buffer) - current_len - 1; // -1 for null terminator
-    if(remaining > 2) {  // Need at least 3 chars: 1 data + newline + null terminator
+    if(remaining > 2) { // Need at least 3 chars: 1 data + newline + null terminator
         // Leave room for newline and null terminator
-        size_t max_copy = remaining - 1;  // -1 for newline
+        size_t max_copy = remaining - 1; // -1 for newline
         size_t copy_len = len < max_copy ? len : max_copy;
         // Copy data using memcpy for efficiency, then manually add newline
         memcpy(app->diag_buffer + current_len, data, copy_len);
@@ -76,9 +76,9 @@ bool bt_audio_scene_diagnostics_on_event(void* context, SceneManagerEvent event)
             if(app->uart_rx_active || strlen(app->diag_buffer) > 0) {
                 // Got response from ESP32
                 // Check real-time 5V GPIO status
-                const char* gpio_status = furi_hal_power_is_otg_enabled() ? 
-                    "5V GPIO: ENABLED" : "5V GPIO: DISABLED";
-                
+                const char* gpio_status = furi_hal_power_is_otg_enabled() ? "5V GPIO: ENABLED" :
+                                                                            "5V GPIO: DISABLED";
+
                 furi_string_printf(
                     app->text_box_store,
                     "ESP32 Communication: OK\n\n"
@@ -94,9 +94,9 @@ bool bt_audio_scene_diagnostics_on_event(void* context, SceneManagerEvent event)
             } else {
                 // No response - UART communication issue
                 // Check real-time 5V GPIO status
-                const char* gpio_status = furi_hal_power_is_otg_enabled() ? 
-                    "5V GPIO: ENABLED" : "5V GPIO: DISABLED";
-                
+                const char* gpio_status = furi_hal_power_is_otg_enabled() ? "5V GPIO: ENABLED" :
+                                                                            "5V GPIO: DISABLED";
+
                 furi_string_printf(
                     app->text_box_store,
                     "ESP32 Communication: FAIL\n\n"
