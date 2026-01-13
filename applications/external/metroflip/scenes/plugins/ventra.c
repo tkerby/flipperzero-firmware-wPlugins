@@ -150,7 +150,8 @@ static bool ventra_read_line(File* file, char* buf, size_t buf_size) {
  *   Bus:   16959,Harlem & Addison
  *   Train: 003B,Jefferson Park
  */
-static bool ventra_search_file(const char* file_path, const char* id_str, char* out_name, size_t out_size) {
+static bool
+    ventra_search_file(const char* file_path, const char* id_str, char* out_name, size_t out_size) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     if(!storage) return false;
 
@@ -208,7 +209,8 @@ static bool ventra_search_file(const char* file_path, const char* id_str, char* 
  *
  * line parameter: 1 = Train (T), 2 = Bus (B)
  */
-static bool ventra_lookup_stop_name_str(const char* id_str, uint8_t line, char* out_name, size_t out_size) {
+static bool
+    ventra_lookup_stop_name_str(const char* id_str, uint8_t line, char* out_name, size_t out_size) {
     // Validation for out_size parameter
     if(out_size == 0) return false;
 
@@ -577,14 +579,15 @@ static void ventra_on_enter(Metroflip* app) {
         FURI_LOG_I(TAG, "Ventra using data from auto-detect scan");
         const MfUltralightData* ultralight_data =
             nfc_device_get_data(app->nfc_device, NfcProtocolMfUltralight);
-        
+
         // Safety check for null data
         if(!ultralight_data) {
             FURI_LOG_E(TAG, "Failed to get ultralight data from nfc_device");
-            view_dispatcher_send_custom_event(app->view_dispatcher, MetroflipCustomEventPollerFail);
+            view_dispatcher_send_custom_event(
+                app->view_dispatcher, MetroflipCustomEventPollerFail);
             return;
         }
-        
+
         FuriString* parsed_data = furi_string_alloc();
         Widget* widget = app->widget;
 
@@ -594,8 +597,7 @@ static void ventra_on_enter(Metroflip* app) {
             FURI_LOG_I(TAG, "Unknown card type");
             furi_string_printf(parsed_data, "\e#Unknown card\n");
         }
-        widget_add_text_scroll_element(
-            widget, 0, 0, 128, 64, furi_string_get_cstr(parsed_data));
+        widget_add_text_scroll_element(widget, 0, 0, 128, 64, furi_string_get_cstr(parsed_data));
         widget_add_button_element(
             widget, GuiButtonTypeLeft, "Exit", metroflip_exit_widget_callback, app);
         widget_add_button_element(

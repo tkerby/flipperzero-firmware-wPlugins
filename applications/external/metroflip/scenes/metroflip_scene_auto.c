@@ -30,9 +30,10 @@ static bool is_ventra_card(const MfUltralightData* data) {
     if(data->pages_read < VENTRA_MIN_PAGES_REQUIRED) return false;
 
     // Ventra detection signature from ventra.c
-    return (data->page[4].data[0] == 0x0A && data->page[4].data[1] == 4 &&
-            data->page[4].data[2] == 0 && data->page[6].data[0] == 0 &&
-            data->page[6].data[1] == 0 && data->page[6].data[2] == 0);
+    return (
+        data->page[4].data[0] == 0x0A && data->page[4].data[1] == 4 &&
+        data->page[4].data[2] == 0 && data->page[6].data[0] == 0 && data->page[6].data[1] == 0 &&
+        data->page[6].data[2] == 0);
 }
 
 // Helper function to determine if MfUltralight card is TRT

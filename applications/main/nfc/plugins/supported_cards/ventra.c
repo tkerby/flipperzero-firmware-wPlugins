@@ -152,7 +152,8 @@ static bool ventra_read_line(File* file, char* buf, size_t buf_size) {
  *   Bus:   16959,Harlem & Addison
  *   Train: 003B,Jefferson Park
  */
-static bool ventra_search_file(const char* file_path, const char* id_str, char* out_name, size_t out_size) {
+static bool
+    ventra_search_file(const char* file_path, const char* id_str, char* out_name, size_t out_size) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     if(!storage) return false;
 
@@ -210,7 +211,8 @@ static bool ventra_search_file(const char* file_path, const char* id_str, char* 
  *
  * line parameter: 1 = Train (T), 2 = Bus (B)
  */
-static bool ventra_lookup_stop_name_str(const char* id_str, uint8_t line, char* out_name, size_t out_size) {
+static bool
+    ventra_lookup_stop_name_str(const char* id_str, uint8_t line, char* out_name, size_t out_size) {
     // Validation for out_size parameter
     if(out_size == 0) return false;
 
