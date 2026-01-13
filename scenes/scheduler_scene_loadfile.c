@@ -42,14 +42,10 @@ bool check_file_extension(const char* filename) {
 
 static bool load_protocol_from_file(SchedulerApp* app) {
     furi_assert(app);
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-    if(!storage) {
-        dialog_message_show_storage_error(app->dialogs, "Storage unavailable");
-        return false;
-    }
 
     DialogsFileBrowserOptions browser_options;
     dialog_file_browser_set_basic_options(&browser_options, ".sub|.txt", &I_sub1_10px);
+    browser_options.skip_assets = true;
     browser_options.base_path = SUBGHZ_APP_FOLDER;
     furi_string_set(app->file_path, SUBGHZ_APP_FOLDER);
 
@@ -58,6 +54,11 @@ static bool load_protocol_from_file(SchedulerApp* app) {
         dialog_file_browser_show(app->dialogs, app->file_path, app->file_path, &browser_options);
 
     if(res) {
+        Storage* storage = furi_record_open(RECORD_STORAGE);
+        if(!storage) {
+            dialog_message_show_storage_error(app->dialogs, "Storage unavailable");
+            return false;
+        }
         const char* filestr = furi_string_get_cstr(app->file_path);
         const char* ext = strrchr(filestr, '.');
         int list_count = 0;
@@ -70,9 +71,9 @@ static bool load_protocol_from_file(SchedulerApp* app) {
             list_count = 0;
         }
         scheduler_set_file(app->scheduler, filestr, list_count);
+        furi_record_close(RECORD_STORAGE);
     }
 
-    furi_record_close(RECORD_STORAGE);
     return res;
 }
 
