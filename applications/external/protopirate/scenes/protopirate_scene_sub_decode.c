@@ -9,8 +9,8 @@
 #define TAG "ProtoPirateSubDecode"
 
 #define SUBGHZ_APP_FOLDER     EXT_PATH("subghz")
-#define SAMPLES_PER_TICK      256
-#define MAX_RAW_SAMPLES       4092
+#define SAMPLES_PER_TICK      128
+#define MAX_RAW_SAMPLES       2048
 #define SUCCESS_DISPLAY_TICKS 18
 #define FAILURE_DISPLAY_TICKS 18
 
