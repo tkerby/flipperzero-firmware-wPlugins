@@ -8,8 +8,7 @@
 #include <notification/notification_messages.h>
 #include <notification/notification.h>
 
-
-#define PIR_PIN &gpio_ext_pc0
+#define PIR_PIN        &gpio_ext_pc0
 #define CHECK_INTERVAL 50
 #define ALARM_DURATION 3000
 #define BLINK_INTERVAL 150
@@ -33,7 +32,7 @@ static void pir_draw_callback(Canvas* const canvas, void* ctx) {
     canvas_set_color(canvas, ColorBlack);
     canvas_set_font(canvas, FontPrimary);
 
-     if(app_state->state == StateIdle) {
+    if(app_state->state == StateIdle) {
         canvas_set_font(canvas, FontPrimary);
         canvas_draw_str(canvas, 2, 18, "PIR HC-SR501");
         canvas_set_font(canvas, FontSecondary);
@@ -87,9 +86,9 @@ int32_t pir_alarm_app(void* p) {
             app_state.state = StateAlarm;
             app_state.alarm_start = furi_get_tick();
 
-            notification_message(notifications, &sequence_double_vibro);         
+            notification_message(notifications, &sequence_double_vibro);
             notification_message(notifications, &sequence_set_only_red_255);
-}
+        }
 
         if(app_state.state == StateAlarm) {
             uint32_t ticks = furi_get_tick();
