@@ -1,8 +1,8 @@
 sourcecode:
   type: git
   location:
-    origin: https://github.com/ku6a-cj/flipper-application-catalog
-short_description: HC-SR501 proximity alarm
+    origin: "https://github.com/ku6a-cj/-PIR-HC-SR501-Proximity-alarm-Flipper-zero"
+short_description: PIR HC-SR501 Alarm
 description: |
   Simple proximity alarm app for Flipper Zero using HC-SR501 PIR sensor.
   Triggers vibration, LED alerts, and screen notifications on motion detection.
@@ -12,3 +12,4 @@ changelog: "@changelog.md"
 screenshots:
   - images/1.png
   - images/2.png
+
