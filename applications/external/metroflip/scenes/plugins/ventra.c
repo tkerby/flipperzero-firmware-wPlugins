@@ -466,7 +466,7 @@ static bool ventra_parse(FuriString* parsed_data, const MfUltralightData* data) 
 
         furi_string_cat_printf(
             parsed_data,
-            "Exp: %04d-%02d-%02d %02d:%02d",
+            "Exp: %04d-%02d-%02d %02d:%02d\n",
             ventra_validity_date.year,
             ventra_validity_date.month,
             ventra_validity_date.day,
