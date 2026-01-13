@@ -209,7 +209,7 @@ bool scheduler_scene_run_on_event(void* context, SceneManagerEvent event) {
     SchedulerApp* app = context;
 
     bool consumed = false;
-    bool update = (!app->is_transmitting | scheduler_get_timing_mode(app->scheduler)) &&
+    bool update = (!app->is_transmitting || scheduler_get_timing_mode(app->scheduler)) &&
                   !(state->tick_counter % 2);
 
     if(event.type == SceneManagerEventTypeTick) {
