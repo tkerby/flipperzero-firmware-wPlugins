@@ -211,7 +211,7 @@ void* kia_protocol_encoder_v3_v4_alloc(SubGhzEnvironment* environment) {
 
     instance->encoder.size_upload = 600;
     instance->encoder.upload = malloc(instance->encoder.size_upload * sizeof(LevelDuration));
-    instance->encoder.repeat = 10;
+    instance->encoder.repeat = 40;
     instance->encoder.front = 0;
     instance->encoder.is_running = false;
 
@@ -361,7 +361,7 @@ static void kia_protocol_encoder_v3_v4_get_upload(SubGhzProtocolEncoderKiaV3V4* 
         }
     }
 
-    instance->encoder.upload[index++] = level_duration_make(false, KIA_V3_V4_INTER_BURST_GAP_US);
+    //instance->encoder.upload[index++] = level_duration_make(false, KIA_V3_V4_INTER_BURST_GAP_US);
 
     instance->encoder.size_upload = index;
     instance->encoder.front = 0;
@@ -381,7 +381,7 @@ SubGhzProtocolStatus
 
     instance->encoder.is_running = false;
     instance->encoder.front = 0;
-    instance->encoder.repeat = 10;
+    //instance->encoder.repeat = 40;
 
     SubGhzProtocolStatus ret = SubGhzProtocolStatusError;
 
@@ -548,8 +548,8 @@ SubGhzProtocolStatus
         flipper_format_rewind(flipper_format);
         if(!flipper_format_read_uint32(
                flipper_format, "Repeat", (uint32_t*)&instance->encoder.repeat, 1)) {
-            instance->encoder.repeat = 10;
-            FURI_LOG_D(TAG, "Repeat not found, using default 10");
+            instance->encoder.repeat = 40;
+            FURI_LOG_D(TAG, "Repeat not found, using default 40");
         }
 
         // Build the upload

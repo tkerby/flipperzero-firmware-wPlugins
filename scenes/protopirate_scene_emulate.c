@@ -363,6 +363,14 @@ void protopirate_scene_emulate_on_enter(void* context) {
         const char* proto_name = furi_string_get_cstr(emulate_context->protocol_name);
         FURI_LOG_I(TAG, "Setting up transmitter for protocol: %s", proto_name);
 
+        if(strcmp(proto_name, "Kia V3") == 0) {
+            proto_name = "Kia V3/V4";
+            FURI_LOG_I(TAG, "Protocol name KiaV3 fixed to Kia V3/V4 for registry");
+        } else if(strcmp(proto_name, "Kia V4") == 0) {
+            proto_name = "Kia V3/V4";
+            FURI_LOG_I(TAG, "Protocol name KiaV4 fixed to Kia V3/V4 for registry");
+        }
+
         // Find the protocol in the registry
         const SubGhzProtocol* protocol = NULL;
         for(size_t i = 0; i < protopirate_protocol_registry.size; i++) {
