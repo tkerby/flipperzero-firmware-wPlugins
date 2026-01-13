@@ -26,10 +26,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0112-2025-0.420.0-b5626ba](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0113-1830-0.420.0-d232582](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2026-01-12 20:25 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-01-12 20:25 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2026-01-13 18:30 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-01-13 18:30 EST`
 - NFC: [ADD: Ventra parsing plugin to Metroflip. Updated: NFC ventra_parser.fal. #1164 (By FatherDivine)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1164)
 - Updated: [Sub-GHz Scheduler v2.3 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
 - Added: [PIR HC-SR501 Alarm v1.0 (By ku6a-cj)](https://github.com/ku6a-cj/-PIR-HC-SR501-Proximity-alarm-Flipper-zero) `Req: PIR HC-SR501`
