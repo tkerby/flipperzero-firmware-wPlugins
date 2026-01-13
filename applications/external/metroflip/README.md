@@ -77,6 +77,7 @@ This is a list of metro cards and transit systems that need support or have part
 | **Metromoney**     | 🇬🇪 Tbilisi, Georgia                          | MIFARE Classic    |
 | **myki**           | 🇦🇺 Melbourne (and surrounds), VIC, Australia | MIFARE DESFire    |
 | **Navigo**         | 🇫🇷 Paris, France                             | Calypso           |
+| **nol**            | 🇦🇪 Dubai, UAE                                | MIFARE DESFire    |
 | **Opal**           | 🇦🇺 Sydney (and surrounds), NSW, Australia    | MIFARE DESFire    |
 | **Opus**           | 🇨🇦 Montreal, QC, Canada                      | Calypso           |
 | **Rav-Kav**        | 🇮🇱 Israel                                    | Calypso           |
@@ -86,7 +87,7 @@ This is a list of metro cards and transit systems that need support or have part
 | **Troika**         | 🇷🇺 Moscow, Russia                            | MIFARE Classic    |
 | **Trt**            | 🇨🇳 Tianjin, China                            | MIFARE Ultralight |
 | **Octopus**        | 🇭🇰 Hong Kong                                 | FeliCa            |
-| **nol**            | 🇦🇪 Dubai, UAE                                | MIFARE DESFire    |
+| **Ventra**         | 🇺🇸 Chicago, IL, USA                          | MIFARE Ultralight |
 
 
 
@@ -112,6 +113,7 @@ This is a list of metro cards and transit systems that need support or have part
 - **TRT Parser:** [@luu176](https://github.com/luu176), [@zinongli](https://github.com/zinongli)
 - **Octopus Parser:** [@zinongli](https://github.com/zinongli)
 - **nol Parser:** [@zinongli](https://github.com/zinongli)
+- **Ventra Parser:** [@hazardousvoltage](https://github.com/hazardousvoltage), [@FatherDivine](https://github.com/FatherDivine)
 
 ---
 
