@@ -62,3 +62,4 @@ For best performance, **do not use USB features** (such as video streaming or de
 To ensure smooth performance:
 - **Disconnect USB** and run the game **standalone** during play.
 - If communication is required, **use BLE (Bluetooth Low Energy)** instead of USB, as it has significantly lower impact on CPU performance.
+[FlipperToolkit](https://github.com/apfxtech/FlipperToolkit.git)
