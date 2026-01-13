@@ -1368,6 +1368,12 @@ static uint8_t subghz_protocol_keeloq_get_btn_code(uint8_t last_btn_code) {
         case 0xF:
             btn = 0x1;
             break;
+        case 0x9:
+            btn = 0x2;
+            break;
+        case 0x6:
+            btn = 0x2;
+            break;
 
         default:
             btn = 0x1;
@@ -1391,6 +1397,12 @@ static uint8_t subghz_protocol_keeloq_get_btn_code(uint8_t last_btn_code) {
             btn = 0x4;
             break;
         case 0xF:
+            btn = 0x4;
+            break;
+        case 0x9:
+            btn = 0x4;
+            break;
+        case 0x6:
             btn = 0x4;
             break;
 
@@ -1418,6 +1430,12 @@ static uint8_t subghz_protocol_keeloq_get_btn_code(uint8_t last_btn_code) {
         case 0xF:
             btn = 0x8;
             break;
+        case 0x9:
+            btn = 0x6;
+            break;
+        case 0x6:
+            btn = 0x9;
+            break;
 
         default:
             btn = 0x8;
@@ -1443,9 +1461,15 @@ static uint8_t subghz_protocol_keeloq_get_btn_code(uint8_t last_btn_code) {
         case 0xF:
             btn = 0x2;
             break;
+        case 0x9:
+            btn = last_btn_code;
+            break;
+        case 0x6:
+            btn = last_btn_code;
+            break;
 
         default:
-            btn = 0x2;
+            btn = last_btn_code;
             break;
         }
     }
