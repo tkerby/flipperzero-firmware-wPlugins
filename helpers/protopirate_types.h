@@ -24,6 +24,7 @@ typedef enum {
     ProtoPirateCustomEventSceneSettingLock,
     // File management
     ProtoPirateCustomEventReceiverInfoSave,
+    ProtoPirateCustomEventReceiverInfoEmulate,
     ProtoPirateCustomEventSavedInfoDelete,
     // Emulator
     ProtoPirateCustomEventSavedInfoEmulate,

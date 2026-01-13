@@ -2,6 +2,8 @@
 #include "../protopirate_app_i.h"
 #include "../helpers/protopirate_storage.h"
 
+#define TAG "ProtoPirateReceiverInfo"
+
 static void protopirate_scene_receiver_info_widget_callback(
     GuiButtonType result,
     InputType type,
@@ -12,6 +14,12 @@ static void protopirate_scene_receiver_info_widget_callback(
             view_dispatcher_send_custom_event(
                 app->view_dispatcher, ProtoPirateCustomEventReceiverInfoSave);
         }
+#ifdef ENABLE_EMULATE_FEATURE
+        else if(result == GuiButtonTypeLeft) {
+            view_dispatcher_send_custom_event(
+                app->view_dispatcher, ProtoPirateCustomEventReceiverInfoEmulate);
+        }
+#endif
     }
 }
 
@@ -52,7 +60,17 @@ void protopirate_scene_receiver_info_on_enter(void* context) {
     widget_add_string_multiline_element(
         app->widget, 0, 11, AlignLeft, AlignTop, FontSecondary, text_str);
 
-    // Add save button
+#ifdef ENABLE_EMULATE_FEATURE
+    // Add emulate button on the left
+    widget_add_button_element(
+        app->widget,
+        GuiButtonTypeLeft,
+        "Emulate",
+        protopirate_scene_receiver_info_widget_callback,
+        app);
+#endif
+
+    // Add save button on the right
     widget_add_button_element(
         app->widget,
         GuiButtonTypeRight,
@@ -88,8 +106,10 @@ bool protopirate_scene_receiver_info_on_event(void* context, SceneManagerEvent e
                        ff, furi_string_get_cstr(protocol), saved_path)) {
                     // Show success notification
                     notification_message(app->notifications, &sequence_success);
+                    FURI_LOG_I(TAG, "Saved to: %s", furi_string_get_cstr(saved_path));
                 } else {
                     notification_message(app->notifications, &sequence_error);
+                    FURI_LOG_E(TAG, "Save failed");
                 }
 
                 furi_string_free(protocol);
@@ -97,6 +117,48 @@ bool protopirate_scene_receiver_info_on_event(void* context, SceneManagerEvent e
             }
             consumed = true;
         }
+#ifdef ENABLE_EMULATE_FEATURE
+        else if(event.event == ProtoPirateCustomEventReceiverInfoEmulate) {
+            // Get the flipper format from history
+            FlipperFormat* ff =
+                protopirate_history_get_raw_data(app->txrx->history, app->txrx->idx_menu_chosen);
+
+            if(ff) {
+                // Extract protocol name
+                FuriString* protocol = furi_string_alloc();
+                flipper_format_rewind(ff);
+                if(!flipper_format_read_string(ff, "Protocol", protocol)) {
+                    furi_string_set_str(protocol, "Unknown");
+                }
+
+                // Save to file first (emulate scene needs a file path)
+                FuriString* saved_path = furi_string_alloc();
+                if(protopirate_storage_save_capture(
+                       ff, furi_string_get_cstr(protocol), saved_path)) {
+                    FURI_LOG_I(TAG, "Saved for emulate: %s", furi_string_get_cstr(saved_path));
+
+                    // Set the file path for emulate scene
+                    if(app->loaded_file_path) {
+                        furi_string_free(app->loaded_file_path);
+                    }
+                    app->loaded_file_path = furi_string_alloc_set(saved_path);
+
+                    // Go to emulate scene
+                    scene_manager_next_scene(app->scene_manager, ProtoPirateSceneEmulate);
+                } else {
+                    notification_message(app->notifications, &sequence_error);
+                    FURI_LOG_E(TAG, "Failed to save for emulate");
+                }
+
+                furi_string_free(protocol);
+                furi_string_free(saved_path);
+            } else {
+                FURI_LOG_E(TAG, "No flipper format data for index %d", app->txrx->idx_menu_chosen);
+                notification_message(app->notifications, &sequence_error);
+            }
+            consumed = true;
+        }
+#endif
     }
 
     return consumed;
