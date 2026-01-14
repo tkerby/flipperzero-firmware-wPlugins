@@ -8,6 +8,7 @@
 #define PROTOPIRATE_APP_FOLDER       EXT_PATH("subghz/protopirate")
 #define PROTOPIRATE_APP_EXTENSION    ".sub"
 #define PROTOPIRATE_APP_FILE_VERSION 1
+#define PROTOPIRATE_TEMP_FILE        EXT_PATH("subghz/protopirate/.temp.sub")
 
 bool protopirate_storage_init(void);
 
@@ -15,6 +16,12 @@ bool protopirate_storage_save_capture(
     FlipperFormat* flipper_format,
     const char* protocol_name,
     FuriString* out_path);
+
+// Save to temp file for emulation (will be deleted on exit)
+bool protopirate_storage_save_temp(FlipperFormat* flipper_format);
+
+// Delete temp file
+void protopirate_storage_delete_temp(void);
 
 bool protopirate_storage_get_next_filename(const char* protocol_name, FuriString* out_filename);
 
