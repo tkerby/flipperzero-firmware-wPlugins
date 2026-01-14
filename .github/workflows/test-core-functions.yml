@@ -8,6 +8,8 @@ jobs:
   test-space-travel-calculator:
     runs-on: ubuntu-latest
     name: Test Space Travel Calculator
+    permissions:
+      contents: read
     
     steps:
       - name: Checkout code
@@ -30,6 +32,8 @@ jobs:
   test-dilate:
     runs-on: ubuntu-latest
     name: Test Dilate Calculator
+    permissions:
+      contents: read
     
     steps:
       - name: Checkout code
