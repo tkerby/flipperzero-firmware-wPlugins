@@ -1,0 +1,52 @@
+name: Test Core Functions
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-space-travel-calculator:
+    runs-on: ubuntu-latest
+    name: Test Space Travel Calculator
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential
+      
+      - name: Build tests
+        run: |
+          cd space-travel-calculator/tests
+          make clean
+          make
+      
+      - name: Run tests
+        run: |
+          cd space-travel-calculator/tests
+          make test
+
+  test-dilate:
+    runs-on: ubuntu-latest
+    name: Test Dilate Calculator
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential
+      
+      - name: Build tests
+        run: |
+          cd dilate/tests
+          make clean
+          make
+      
+      - name: Run tests
+        run: |
+          cd dilate/tests
+          make test
