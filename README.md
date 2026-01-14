@@ -39,11 +39,11 @@ Simple proximity alarm app for Flipper Zero using HC-SR501 PIR sensor. Triggers 
 -- GPIO Pin Definitions
 -- =====================================================
 local PIR_PIN  = gpio.c0     -- Pin 16 / GPIO C0 (PIR Input)
-local LED_PIN  = gpio.gpioa7 -- Pin 2  / GPIO A7 (Onboard/Status LED)
-local VIB_PIN  = gpio.gpiob3 -- Pin 10 / GPIO B3 (Vibration Motor)
+local POWER_SUPPLY  = gpio.gpioa7 -- Pin 1  / GPIO 5V 
+local GND  = gpio.gpiob3 -- Pin 8/18 / GPIO  GND
 
 
-1. Initialize GPIO: PIR_PIN(input), LED_PIN(output), VIB_PIN(output)
+1. Initialize GPIO: PIR_PIN(input), POWER_SUPPLY, GND
 2. Main Loop:
    ├─ Read PIR_PIN state
    ├─ IF HIGH and not in alarm → startAlarm()
@@ -54,3 +54,4 @@ local VIB_PIN  = gpio.gpiob3 -- Pin 10 / GPIO B3 (Vibration Motor)
    │  ├─ Activate vibration pattern
    │  └─ Update screen countdown
    └─ Reset to idle state
+
