@@ -33,7 +33,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - NFC: [ADD: Ventra parsing plugin to Metroflip. Updated: NFC ventra_parser.fal. #1164 (By FatherDivine)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1164)
 - Updated: [Sub-GHz Scheduler v2.3 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
 - Added: [PIR HC-SR501 Alarm v1.0 (By ku6a-cj)](https://github.com/ku6a-cj/-PIR-HC-SR501-Proximity-alarm-Flipper-zero) `Req: PIR HC-SR501`
-- Added: [BT Audio v1.0 (By FatherDivine)](https://github.com/FatherDivine/flipperzero-mayhem/tree/bt_audio/flipper_companion_apps/bt_audio) `Req: ESP32 w BT` & [This FW](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/external/bt_audio/.esp32_firmware)
+- Added: [BT Audio v1.0 (By FatherDivine)](https://github.com/FatherDivine/flipperzero-mayhem/tree/bt_audio/flipper_companion_apps/applications/external/bt_audio) `Req: ESP32 w BT` & [This FW](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/external/bt_audio/.esp32_firmware)
+- Updated: [BT Audio v1.1 (By FatherDivine)](https://github.com/FatherDivine/flipperzero-mayhem/tree/bt_audio/flipper_companion_apps/applications/external/bt_audio) `Req: ESP32 w BT` & [This FW](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/external/bt_audio/.esp32_firmware)
 
 <a name="release">
 
@@ -423,7 +424,7 @@ $ ./fbt dolphin_ext
 - [BMI Air Mouse v1.2 (By ginkage)](https://github.com/ginkage/FlippAirMouse/) `Req: BMI160`
 - [BPM Tapper v1.2 (By panki27)](https://github.com/panki27/bpm-tapper)
 - [Brainfuck v1.3 (By nymda)](https://github.com/nymda/FlipperZeroBrainfuck)
-- [BT Audio v1.0 (By FatherDivine)](https://github.com/FatherDivine/flipperzero-mayhem/tree/bt_audio/flipper_companion_apps/bt_audio) `Req: ESP32 w BT` & [This FW](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/external/bt_audio/.esp32_firmware)
+- [BT Audio v1.1 (By FatherDivine)](https://github.com/FatherDivine/flipperzero-mayhem/tree/bt_audio/flipper_companion_apps/bt_audio) `Req: ESP32 w BT` & [This FW](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/external/bt_audio/.esp32_firmware)
 - [BT Remote for Kodi v1.2 (Remixed By coded-with-claws)](https://github.com/coded-with-claws/flipperzero-tools/tree/main/applications_user/bt_hid_kodi)
 - [BT Trigger v1.3 (By Nem0oo)](https://github.com/Nem0oo/flipper-zero_ios-bluetooth-trigger)
 - [BunnyConnect v1.0 (By C0d3-5t3w)](https://github.com/C0d3-5t3w/flipper-bunnyconnect) `Req: BashBunny`

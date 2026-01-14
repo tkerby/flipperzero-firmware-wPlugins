@@ -27,6 +27,7 @@
  *   PLAY_MP3\n - Play all MP3 files from /music folder (base files first, then subfolders)
  *   PLAY_PLAYLIST\n - Play only files listed in /music/playlist1.m3u
  *   PLAY_PLAYLIST2\n - Play only files listed in /music/playlist2.m3u
+ *   PLAY_M3U:<path>\n - Play a custom M3U playlist file by full path (via file browser)
  *   PAUSE\n - Pause current playback
  *   RESUME\n - Resume paused playback
  *   NEXT\n - Skip to next track
@@ -56,6 +57,9 @@
  *   DISCONNECTED\n - Disconnected from device
  *   SD_ERROR\n - SD card error
  *   NO_FILES\n - No MP3 files found
+ *   PLAYBACK_ERROR:<type>\n - Playback error (e.g., M3U for playlist errors)
+ *   M3U_NOT_FOUND:<path>\n - M3U playlist file not found
+ *   M3U_EMPTY\n - M3U playlist has no valid MP3 files
  *   LIST_FILES_PATH:<path>\n - Current path being listed
  *   FILE:<full_path>|<filename>|<type>\n - File entry (type: f=file, d=directory)
  *   LIST_FILES_COUNT:<dirs>,<files>\n - Count of directories and files
@@ -385,10 +389,15 @@ typedef enum {
     PLAYBACK_MODE_FOLDER,        // Play all files in /music folder
     PLAYBACK_MODE_PLAYLIST1,     // Play from playlist1.m3u
     PLAYBACK_MODE_PLAYLIST2,     // Play from playlist2.m3u
-    PLAYBACK_MODE_FAVORITES      // Play favorites list
+    PLAYBACK_MODE_FAVORITES,     // Play favorites list
+    PLAYBACK_MODE_CUSTOM_M3U     // Play from custom M3U file (via file browser)
 } PlaybackMode;
 
 PlaybackMode current_playback_mode = PLAYBACK_MODE_NONE;  // Current playback mode
+// Path to the custom M3U file currently being played (via file browser).
+// Used to detect when the same M3U is requested again - if same file,
+// playback continues from current position; if different file, starts fresh.
+String custom_m3u_path = "";
 
 // WiFi streaming state
 bool wifi_connected = false;                    // WiFi connection status
@@ -718,14 +727,25 @@ static inline int gap_duration_units(uint32_t ms) {
 }
 
 // Forward declarations
+// Command processing
 void processCommand(String cmd);
+
+// Device management
 void scanDevices();
 void connectToDevice(String mac);
+void disconnectDevice();
+void printDiagnostics();
+void onGapEvent(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t* param);
+void extractNameFromEir(uint8_t* eir, char* name, size_t name_len);
+
+// Playback control
 void playTestTone();
 void playMelody(int melody_id);
 void playMP3FromSD();
 void playFavorites();  // Play favorites playlist
 void playPlaylistOnly();  // Play only from playlist1.m3u
+void playPlaylist2Only();  // Play only from playlist2.m3u
+void playCustomM3U(const String& m3u_path);  // Play custom M3U file from file browser
 void stopPlayback();
 void pausePlayback();
 void resumePlayback();
@@ -734,28 +754,32 @@ void prevTrack();
 void restartTrack();
 void seekForward();
 void seekBackward();
-void disconnectDevice();
-void printDiagnostics();
-void onGapEvent(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t* param);
-void extractNameFromEir(uint8_t* eir, char* name, size_t name_len);
 void activateNavigationProtection();  // Helper to activate navigation command protection
+void executeQueuedNavigation();  // Execute pending navigation after debounce timeout
+
+// Audio data and codec
 int32_t get_audio_data(Frame* frame, int32_t frame_count);
-bool initSDCard();
-bool tryInitSDCard();  // Try to initialize SD (called on demand)
-void scanMP3Files();
-bool scanPlaylistOnly();  // Scan only playlist1.m3u, returns true if found
-bool openNextMP3();
-bool openMP3AtIndex(int index);
-bool openFavoriteAtIndex(int index);  // Open a favorite file with validation
 bool decodeMP3Frame();
 void skipID3Tag();
+
+// SD card and file management
+bool initSDCard();
+bool tryInitSDCard();  // Try to initialize SD (called on demand)
 fs::FS& getSDFS();  // Get the appropriate SD filesystem
 bool fileExists(const String& path);  // Check if file exists on SD
 String findMusicFolder();  // Find the music folder with case-insensitive search
-void executeQueuedNavigation();  // Execute pending navigation after debounce timeout
-bool scanPlaylist2Only();  // Scan only playlist2.m3u, returns true if found
-void playPlaylist2Only();  // Play only from playlist2.m3u
+
+// Playlist and file scanning
+void scanMP3Files();
 void scanMusicFolderOnly();  // Scan directory structure only (no playlist check)
+bool scanPlaylistOnly();  // Scan only playlist1.m3u, returns true if found
+bool scanPlaylist2Only();  // Scan only playlist2.m3u, returns true if found
+bool scanCustomM3U(const String& m3u_path);  // Scan custom M3U file from file browser
+bool openNextMP3();
+bool openMP3AtIndex(int index);
+bool openFavoriteAtIndex(int index);  // Open a favorite file with validation
+
+// WiFi streaming
 void refillStreamBuffer();  // Refill stream buffer from WiFi (called from main loop)
 
 // Active music folder path (determined at runtime)
@@ -2207,6 +2231,17 @@ void processCommand(String cmd) {
             Serial.println("ERROR: Not connected");
         }
     }
+    else if (cmd.startsWith("PLAY_M3U:")) {
+        // Play from a custom M3U file (selected via file browser)
+        // Format: PLAY_M3U:<full_path_to_m3u>
+        if (is_connected) {
+            String m3u_path = cmd.substring(9);
+            m3u_path.trim();
+            playCustomM3U(m3u_path);
+        } else {
+            Serial.println("ERROR: Not connected");
+        }
+    }
     else if (cmd.startsWith("PLAY_FAVORITES:")) {
         // Start receiving favorites list
         // Format: PLAY_FAVORITES:<count>
@@ -2620,17 +2655,17 @@ void processCommand(String cmd) {
         }
         root.close();
         
-        // Second pass: list MP3 files
+        // Second pass: list MP3 and M3U files
         root = fs.open(scan_path);
         if (root && root.isDirectory()) {
             file = root.openNextFile();
             while (file && (file_count + dir_count) < MAX_MP3_FILES) {
                 String filename = file.name();
                 if (!file.isDirectory()) {
-                    // Check for MP3 extension (case insensitive)
+                    // Check for MP3 or M3U extension (case insensitive)
                     String lower_name = filename;
                     lower_name.toLowerCase();
-                    if (lower_name.endsWith(".mp3")) {
+                    if (lower_name.endsWith(".mp3") || lower_name.endsWith(".m3u")) {
                         String full_path = clean_path + "/" + filename;
                         Serial.print("FILE:");
                         Serial.print(full_path);
@@ -4500,6 +4535,193 @@ void playPlaylist2Only() {
     // Start from first file
     if (!openMP3AtIndex(0)) {
         Serial.println("ERROR: Could not open playlist2 file");
+        return;
+    }
+    
+    Serial.println("PLAYING");
+    is_playing = true;
+    is_playing_mp3 = true;
+}
+
+/**
+ * Scan a custom M3U file (any path, selected via file browser)
+ * Returns true if playlist was found and has valid files
+ * @param m3u_path Full path to the M3U file
+ */
+bool scanCustomM3U(const String& m3u_path) {
+    mp3_file_count = 0;
+    
+    if (!sd_initialized) {
+        Serial.println("M3U_ERROR:SD not initialized");
+        return false;
+    }
+    
+    fs::FS& fs = getSDFS();
+    
+    File playlist_file = fs.open(m3u_path);
+    
+    if (!playlist_file || playlist_file.isDirectory()) {
+        Serial.print("M3U_NOT_FOUND:");
+        Serial.println(m3u_path);
+        return false;
+    }
+    
+    // Get the directory containing the M3U file for relative path resolution
+    String m3u_dir = m3u_path;
+    int last_slash = m3u_dir.lastIndexOf('/');
+    if (last_slash > 0) {
+        // M3U is in a subdirectory (e.g., /music/playlist.m3u -> /music)
+        m3u_dir = m3u_dir.substring(0, last_slash);
+    } else if (last_slash == 0) {
+        // M3U is at root (e.g., /playlist.m3u -> /)
+        m3u_dir = "/";
+    } else {
+        // No slash found (shouldn't happen with valid absolute paths)
+        m3u_dir = "";
+    }
+    
+    Serial.print("Parsing M3U: ");
+    Serial.println(m3u_path);
+    
+    while (playlist_file.available() && mp3_file_count < MAX_MP3_FILES) {
+        String line = playlist_file.readStringUntil('\n');
+        line.trim();
+        
+        // Skip empty lines and comments
+        if (line.length() == 0 || line.startsWith("#")) {
+            continue;
+        }
+        
+        // Handle both relative paths and full paths
+        String file_path;
+        if (line.startsWith("/")) {
+            // Absolute path
+            file_path = line;
+        } else if (m3u_dir == "/") {
+            // Relative path from root directory - prepend just /
+            file_path = "/" + line;
+        } else if (m3u_dir.length() > 0) {
+            // Relative path with non-root, non-empty directory - prepend M3U file's directory
+            file_path = m3u_dir + "/" + line;
+        } else {
+            // No directory info (shouldn't happen) - treat as root relative
+            file_path = "/" + line;
+        }
+        
+        // Check if file exists and is MP3
+        String lower_path = file_path;
+        lower_path.toLowerCase();
+        if (lower_path.endsWith(".mp3")) {
+            if (fileExists(file_path)) {
+                // Validate MP3 file before adding to playlist
+                if (isValidMP3File(file_path)) {
+                    mp3_files[mp3_file_count] = file_path;
+                    Serial.print("M3U entry: ");
+                    Serial.println(mp3_files[mp3_file_count]);
+                    mp3_file_count++;
+                } else {
+                    Serial.print("Warning: Invalid MP3 file skipped: ");
+                    Serial.println(file_path);
+                }
+            } else {
+                Serial.print("FILE_NOT_FOUND:");
+                Serial.println(file_path);
+            }
+        }
+    }
+    
+    playlist_file.close();
+    
+    if (mp3_file_count > 0) {
+        Serial.print("Loaded ");
+        Serial.print(mp3_file_count);
+        Serial.print(" files from ");
+        Serial.println(m3u_path);
+        return true;
+    }
+    
+    Serial.print("M3U_EMPTY:");
+    Serial.println(m3u_path);
+    return false;
+}
+
+/**
+ * Play from a custom M3U file (selected via file browser)
+ * @param m3u_path Full path to the M3U file
+ */
+void playCustomM3U(const String& m3u_path) {
+    // Try to initialize SD card if not already done
+    if (!sd_initialized) {
+        Serial.println("SD card not initialized, attempting late initialization...");
+        if (!tryInitSDCard()) {
+            Serial.println("SD_ERROR");
+            return;
+        }
+    }
+    
+    if (!is_connected) {
+        Serial.println("ERROR: Not connected");
+        return;
+    }
+    
+    // Check if we're playing the same M3U file or changing
+    bool same_m3u = (current_playback_mode == PLAYBACK_MODE_CUSTOM_M3U && custom_m3u_path == m3u_path);
+    
+    // Rescan if M3U changed or not playing
+    if (!same_m3u || mp3_file_count == 0 || (!is_playing && !is_paused)) {
+        // Scan the custom M3U file
+        if (!scanCustomM3U(m3u_path)) {
+            // Ensure playback state is cleared so the Flipper doesn't wait indefinitely
+            is_playing = false;
+            is_playing_mp3 = false;
+            playing_favorites = false;
+            single_file_repeat = false;
+            if (mp3_file) {
+                mp3_file.close();
+            }
+            // Send a protocol-friendly error response in addition to any M3U_* messages
+            Serial.println("PLAYBACK_ERROR:M3U");
+            return;
+        }
+        custom_m3u_path = m3u_path;  // Save the path for comparison
+    } else {
+        Serial.print("Using cached M3U: ");
+        Serial.println(m3u_path);
+    }
+    
+    // Set initial volume on first play
+    if (!first_play_volume_set) {
+        a2dp_source.set_volume(initial_volume);
+        Serial.print("INIT_VOLUME_APPLIED:");
+        Serial.println(initial_volume);
+        first_play_volume_set = true;
+        
+        // Activate volume protection to prevent remote device from overriding
+        volume_protection_active = true;
+        volume_protection_start_time = millis();
+    }
+    
+    // Not favorites mode
+    playing_favorites = false;
+    // Disable single file repeat when playing M3U (plays through all files)
+    single_file_repeat = false;
+    
+    // If we're already playing the same M3U, continue current playback
+    bool file_available = mp3_file && mp3_file.available();
+    if (same_m3u && (is_playing || is_paused) && is_playing_mp3 && file_available) {
+        // Same M3U, file is open - continue current playback
+        Serial.println("PLAYING");
+        Serial.print("PLAYING_FILE:");
+        Serial.println(current_playing_file);
+        return;
+    }
+    
+    // Update current mode
+    current_playback_mode = PLAYBACK_MODE_CUSTOM_M3U;
+    
+    // Start from first file
+    if (!openMP3AtIndex(0)) {
+        Serial.println("ERROR: Could not open first file from M3U playlist");
         return;
     }
     

@@ -158,15 +158,32 @@ static bool bt_audio_player_input_callback(InputEvent* event, void* context) {
     if(event->key == InputKeyOk && event->type == InputTypeLong) {
         // Long press OK: toggle favorite for current track
         if(app->current_filename[0] != '\0') {
-            bt_audio_toggle_favorite(app, app->current_filename);
+            bool was_favorite = bt_audio_is_favorite(app, app->current_filename);
+            bool toggle_success = bt_audio_toggle_favorite(app, app->current_filename);
             app->current_is_favorite = bt_audio_is_favorite(app, app->current_filename);
-            // Provide feedback via notification
-            notification_message(app->notifications, &sequence_single_vibro);
-            FURI_LOG_I(
-                TAG,
-                "Toggled favorite: %s (now %s)",
-                app->current_filename,
-                app->current_is_favorite ? "favorited" : "unfavorited");
+
+            // Provide appropriate feedback based on result
+            if(toggle_success) {
+                // Success - single vibration
+                notification_message(app->notifications, &sequence_single_vibro);
+                FURI_LOG_I(
+                    TAG,
+                    "Toggled favorite: %s (now %s)",
+                    app->current_filename,
+                    app->current_is_favorite ? "favorited" : "unfavorited");
+            } else if(!was_favorite && app->favorites_count >= BT_AUDIO_MAX_FAVORITES) {
+                // Failed to add because list is full - use error notification
+                notification_message(app->notifications, &sequence_error);
+                FURI_LOG_W(
+                    TAG,
+                    "Could not add favorite (list full, max %d): %s",
+                    BT_AUDIO_MAX_FAVORITES,
+                    app->current_filename);
+            } else {
+                // Some other failure (shouldn't normally happen) - still provide feedback
+                notification_message(app->notifications, &sequence_single_vibro);
+                FURI_LOG_W(TAG, "Favorite toggle returned false for: %s", app->current_filename);
+            }
         }
         consumed = true;
         return consumed;
@@ -470,6 +487,33 @@ void bt_audio_scene_control_on_enter(void* context) {
     // Apply backlight setting - use enforce functions for persistent effect
     if(app->config.keep_backlight_on) {
         notification_message(app->notifications, &sequence_display_backlight_enforce_on);
+    }
+
+    // Check if we should go directly to player view (e.g., when coming from file browser after selecting a file)
+    // Scene state 1 means "go directly to player view"
+    uint32_t scene_state = scene_manager_get_scene_state(app->scene_manager, BtAudioSceneControl);
+    if(scene_state == 1 && (app->is_playing || app->is_paused)) {
+        // Clear the state so next time we show menu normally
+        scene_manager_set_scene_state(app->scene_manager, BtAudioSceneControl, 0);
+
+        // Start scroll timer for filename scrolling
+        if(!app->scroll_timer) {
+            app->scroll_timer =
+                furi_timer_alloc(bt_audio_scroll_timer_cb, FuriTimerTypePeriodic, app);
+        }
+        furi_timer_start(app->scroll_timer, furi_ms_to_ticks(SCROLL_TICK_MS));
+
+        // Update favorite status for current track
+        app->current_is_favorite = bt_audio_is_favorite(app, app->current_filename);
+
+        FURI_LOG_I(TAG, "Going directly to player view (from file browser)");
+        view_dispatcher_switch_to_view(app->view_dispatcher, BtAudioViewPlayer);
+        return;
+    }
+
+    // Clear scene state if it was set but conditions weren't met
+    if(scene_state == 1) {
+        scene_manager_set_scene_state(app->scene_manager, BtAudioSceneControl, 0);
     }
 
     // Track whether "Now Playing" is shown at the top
