@@ -38,6 +38,94 @@ static char esp32_error_message[64] = "";
 static void scan_directory(BtAudio* app, const char* path);
 static void scan_esp32_directory(BtAudio* app, const char* path);
 static void bt_audio_file_browser_submenu_callback(void* context, uint32_t index);
+static void show_path_too_long_error(BtAudio* app);
+
+/**
+ * Display "Path Too Long" error message to user
+ * Shown when file path exceeds UART command buffer limits
+ */
+static void show_path_too_long_error(BtAudio* app) {
+    widget_reset(app->widget);
+    widget_add_string_element(
+        app->widget, 64, 20, AlignCenter, AlignCenter, FontPrimary, "Path Too Long");
+    widget_add_string_element(
+        app->widget, 64, 36, AlignCenter, AlignCenter, FontSecondary, "Move file closer");
+    widget_add_string_element(
+        app->widget, 64, 48, AlignCenter, AlignCenter, FontSecondary, "to /music root");
+    view_dispatcher_switch_to_view(app->view_dispatcher, BtAudioViewWidget);
+}
+
+/**
+ * Comparison function for full sorting: directories first, then alphabetically
+ * Used when entries may be mixed (e.g., from ESP32 listing)
+ */
+static int file_entry_compare_full(const void* a, const void* b) {
+    const FileBrowserEntry* entry_a = (const FileBrowserEntry*)a;
+    const FileBrowserEntry* entry_b = (const FileBrowserEntry*)b;
+    
+    // Directories come before files
+    if(entry_a->is_directory && !entry_b->is_directory) return -1;
+    if(!entry_a->is_directory && entry_b->is_directory) return 1;
+    
+    // Same type - sort alphabetically (case-insensitive)
+    return strcasecmp(entry_a->name, entry_b->name);
+}
+
+/**
+ * Sort file entries alphabetically
+ * Directories are grouped first, then files, both sorted alphabetically
+ * Uses bubble sort since qsort is not available in Flipper firmware API
+ */
+static void sort_file_entries(void) {
+    if(file_entry_count <= 1) return;
+    
+    // Bubble sort that groups directories first, then sorts each group alphabetically
+    for(uint32_t i = 0; i < file_entry_count - 1; i++) {
+        for(uint32_t j = 0; j < file_entry_count - i - 1; j++) {
+            int cmp = file_entry_compare_full(&file_entries[j], &file_entries[j + 1]);
+            if(cmp > 0) {
+                // Swap entries
+                FileBrowserEntry temp = file_entries[j];
+                file_entries[j] = file_entries[j + 1];
+                file_entries[j + 1] = temp;
+            }
+        }
+    }
+    
+    // Count for logging
+    uint32_t dir_count = 0;
+    for(uint32_t i = 0; i < file_entry_count; i++) {
+        if(file_entries[i].is_directory) {
+            dir_count++;
+        } else {
+            break;  // After sorting, all directories are at the start
+        }
+    }
+    
+    FURI_LOG_I(TAG, "Sorted %lu directories and %lu files", 
+               (unsigned long)dir_count, (unsigned long)(file_entry_count - dir_count));
+}
+
+/**
+ * Check if a filename has a supported audio/playlist extension
+ * Supports: .mp3, .m3u (case-insensitive)
+ */
+static bool is_supported_file(const char* name) {
+    const char* ext = strrchr(name, '.');
+    if(!ext || ext == name) return false;  // No extension or starts with dot
+    
+    return (strcasecmp(ext, ".mp3") == 0 || strcasecmp(ext, ".m3u") == 0);
+}
+
+/**
+ * Check if a filename is an M3U playlist file
+ */
+static bool is_m3u_file(const char* name) {
+    const char* ext = strrchr(name, '.');
+    if(!ext || ext == name) return false;  // No extension or starts with dot
+    
+    return (strcasecmp(ext, ".m3u") == 0);
+}
 
 /**
  * UART callback for file browser scene
@@ -113,7 +201,10 @@ static void bt_audio_file_browser_rx_callback(const char* data, size_t len, void
         app->current_filename[BT_AUDIO_FILENAME_LEN - 1] = '\0';
         app->is_playing = true;
         app->is_paused = false;
-        // Switch to control scene to show player
+        // Set state to indicate we should go directly to player view (not menu)
+        // State value 1 = go directly to player view
+        scene_manager_set_scene_state(app->scene_manager, BtAudioSceneControl, 1);
+        // Switch to control scene (which will detect state and show player view)
         scene_manager_next_scene(app->scene_manager, BtAudioSceneControl);
     } else if(strncmp(data, "PLAYING", 7) == 0) {
         app->is_playing = true;
@@ -153,7 +244,7 @@ static void scan_esp32_directory(BtAudio* app, const char* path) {
 }
 
 /**
- * Scan a directory for MP3 files and subdirectories (Flipper SD only)
+ * Scan a directory for MP3/M3U files and subdirectories (Flipper SD only)
  */
 static void scan_directory(BtAudio* app, const char* path) {
     file_entry_count = 0;
@@ -201,23 +292,19 @@ static void scan_directory(BtAudio* app, const char* path) {
     }
     storage_dir_close(dir);
     
-    // Second pass: MP3 files
+    // Second pass: MP3 and M3U files
     if(storage_dir_open(dir, scan_path)) {
         while(storage_dir_read(dir, &fileinfo, name, sizeof(name)) && file_entry_count < FILE_BROWSER_MAX_FILES) {
             if(!file_info_is_dir(&fileinfo)) {
-                // Check for MP3 extension (case insensitive)
-                size_t len = strlen(name);
-                if(len > 4) {
-                    const char* ext = name + len - 4;
-                    if(strcasecmp(ext, ".mp3") == 0) {
-                        strncpy(file_entries[file_entry_count].name, name, sizeof(file_entries[0].name) - 1);
-                        file_entries[file_entry_count].name[sizeof(file_entries[0].name) - 1] = '\0';
-                        
-                        snprintf(file_entries[file_entry_count].full_path, FILE_BROWSER_MAX_PATH,
-                                 "%s/%s", scan_path, name);
-                        file_entries[file_entry_count].is_directory = false;
-                        file_entry_count++;
-                    }
+                // Check for supported extensions (MP3, M3U - case insensitive)
+                if(is_supported_file(name)) {
+                    strncpy(file_entries[file_entry_count].name, name, sizeof(file_entries[0].name) - 1);
+                    file_entries[file_entry_count].name[sizeof(file_entries[0].name) - 1] = '\0';
+                    
+                    snprintf(file_entries[file_entry_count].full_path, FILE_BROWSER_MAX_PATH,
+                             "%s/%s", scan_path, name);
+                    file_entries[file_entry_count].is_directory = false;
+                    file_entry_count++;
                 }
             }
         }
@@ -226,6 +313,9 @@ static void scan_directory(BtAudio* app, const char* path) {
     
     storage_file_free(dir);
     furi_record_close(RECORD_STORAGE);
+    
+    // Sort entries alphabetically (directories and files sorted separately)
+    sort_file_entries();
     
     FURI_LOG_I(TAG, "Found %lu entries in %s", (unsigned long)file_entry_count, scan_path);
 }
@@ -302,9 +392,9 @@ void bt_audio_scene_file_browser_on_enter(void* context) {
         // No files found - show message
         widget_reset(app->widget);
         widget_add_string_element(
-            app->widget, 64, 16, AlignCenter, AlignCenter, FontPrimary, "No MP3 Files");
+            app->widget, 64, 16, AlignCenter, AlignCenter, FontPrimary, "No Music Files");
         widget_add_string_element(
-            app->widget, 64, 32, AlignCenter, AlignCenter, FontSecondary, "Add files to");
+            app->widget, 64, 32, AlignCenter, AlignCenter, FontSecondary, "Add MP3/M3U to");
         widget_add_string_element(
             app->widget, 64, 44, AlignCenter, AlignCenter, FontSecondary, "/ext/music/");
         view_dispatcher_switch_to_view(app->view_dispatcher, BtAudioViewWidget);
@@ -336,13 +426,15 @@ bool bt_audio_scene_file_browser_on_event(void* context, SceneManagerEvent event
                     // No files found
                     widget_reset(app->widget);
                     widget_add_string_element(
-                        app->widget, 64, 16, AlignCenter, AlignCenter, FontPrimary, "No MP3 Files");
+                        app->widget, 64, 16, AlignCenter, AlignCenter, FontPrimary, "No Music Files");
                     widget_add_string_element(
-                        app->widget, 64, 32, AlignCenter, AlignCenter, FontSecondary, "Add files to ESP32");
+                        app->widget, 64, 32, AlignCenter, AlignCenter, FontSecondary, "Add MP3/M3U to ESP32");
                     widget_add_string_element(
                         app->widget, 64, 44, AlignCenter, AlignCenter, FontSecondary, "/music/ folder");
                     view_dispatcher_switch_to_view(app->view_dispatcher, BtAudioViewWidget);
                 } else {
+                    // Sort entries alphabetically before building menu
+                    sort_file_entries();
                     // Build menu with received files
                     submenu_reset(app->submenu);
                     submenu_set_header(app->submenu, "ESP32 SD Browser");
@@ -429,27 +521,56 @@ bool bt_audio_scene_file_browser_on_event(void* context, SceneManagerEvent event
                 strncpy(app->current_filename, file_entries[index].name, BT_AUDIO_FILENAME_LEN - 1);
                 app->current_filename[BT_AUDIO_FILENAME_LEN - 1] = '\0';
                 app->playing_favorites = false;
+                // Check and update favorite status for the selected file
+                app->current_is_favorite = bt_audio_is_favorite(app, app->current_filename);
                 
                 if(app->config.sd_source == BtAudioSdSourceFlipper) {
-                    // Flipper SD mode - stream the file
-                    app->is_playing = true;
-                    app->is_paused = false;
-                    
-                    if(bt_audio_stream_flipper_sd_file(app, selected_file)) {
-                        // Success - go to control scene
-                        scene_manager_next_scene(app->scene_manager, BtAudioSceneControl);
-                    } else {
-                        // Failed
+                    // Flipper SD mode
+                    // Note: M3U playlists from Flipper SD are not supported (would need to parse locally)
+                    // Only MP3 files can be streamed from Flipper SD
+                    if(is_m3u_file(file_entries[index].name)) {
                         widget_reset(app->widget);
                         widget_add_string_element(
-                            app->widget, 64, 28, AlignCenter, AlignCenter, FontPrimary, "Stream Failed");
+                            app->widget, 64, 20, AlignCenter, AlignCenter, FontPrimary, "M3U Not Supported");
                         widget_add_string_element(
-                            app->widget, 64, 44, AlignCenter, AlignCenter, FontSecondary, "Check connection");
+                            app->widget, 64, 36, AlignCenter, AlignCenter, FontSecondary, "Use ESP32 SD for");
+                        widget_add_string_element(
+                            app->widget, 64, 48, AlignCenter, AlignCenter, FontSecondary, "playlist playback");
                         view_dispatcher_switch_to_view(app->view_dispatcher, BtAudioViewWidget);
+                    } else {
+                        // MP3 file - stream it
+                        app->is_playing = true;
+                        app->is_paused = false;
+                        
+                        if(bt_audio_stream_flipper_sd_file(app, selected_file)) {
+                            // Success - go directly to player view
+                            // Set state to indicate we should go directly to player view (not menu)
+                            scene_manager_set_scene_state(app->scene_manager, BtAudioSceneControl, 1);
+                            scene_manager_next_scene(app->scene_manager, BtAudioSceneControl);
+                        } else {
+                            // Failed
+                            widget_reset(app->widget);
+                            widget_add_string_element(
+                                app->widget, 64, 28, AlignCenter, AlignCenter, FontPrimary, "Stream Failed");
+                            widget_add_string_element(
+                                app->widget, 64, 44, AlignCenter, AlignCenter, FontSecondary, "Check connection");
+                            view_dispatcher_switch_to_view(app->view_dispatcher, BtAudioViewWidget);
+                        }
                     }
                 } else {
-                    // ESP32 SD mode - send PLAY_FILE command with directory context for continuous play
-                    if(app->config.continuous_play) {
+                    // ESP32 SD mode
+                    if(is_m3u_file(file_entries[index].name)) {
+                        // M3U playlist file - send PLAY_M3U command
+                        char cmd[FILE_BROWSER_MAX_PATH + 16];
+                        int cmd_len = snprintf(cmd, sizeof(cmd), "PLAY_M3U:%s\n", selected_file);
+                        if(cmd_len < 0 || cmd_len >= (int)sizeof(cmd)) {
+                            FURI_LOG_W(TAG, "Path too long for M3U command");
+                            show_path_too_long_error(app);
+                        } else {
+                            bt_audio_uart_tx(app->uart, cmd);
+                            FURI_LOG_I(TAG, "Requesting ESP32 to play M3U playlist: %s", selected_file);
+                        }
+                    } else if(app->config.continuous_play) {
                         // Continuous play mode: send directory and file info
                         // Format: PLAY_FILE_DIR:<directory>|<filename>
                         // ESP32 will scan the directory and start playback from the selected file
@@ -457,20 +578,24 @@ bool bt_audio_scene_file_browser_on_event(void* context, SceneManagerEvent event
                         int cmd_len = snprintf(cmd, sizeof(cmd), "PLAY_FILE_DIR:%s|%s\n", 
                                  current_path, file_entries[index].name);
                         if(cmd_len < 0 || cmd_len >= (int)sizeof(cmd)) {
-                            FURI_LOG_W(TAG, "Command may be truncated due to long path");
+                            FURI_LOG_W(TAG, "Path too long for continuous play command");
+                            show_path_too_long_error(app);
+                        } else {
+                            bt_audio_uart_tx(app->uart, cmd);
+                            FURI_LOG_I(TAG, "Requesting ESP32 continuous play from: %s, starting with: %s", 
+                                       current_path, file_entries[index].name);
                         }
-                        bt_audio_uart_tx(app->uart, cmd);
-                        FURI_LOG_I(TAG, "Requesting ESP32 continuous play from: %s, starting with: %s", 
-                                   current_path, file_entries[index].name);
                     } else {
                         // Single file repeat mode: send just the file path
                         char cmd[FILE_BROWSER_MAX_PATH + 16];
                         int cmd_len = snprintf(cmd, sizeof(cmd), "PLAY_FILE:%s\n", selected_file);
                         if(cmd_len < 0 || cmd_len >= (int)sizeof(cmd)) {
-                            FURI_LOG_W(TAG, "Command may be truncated due to long path");
+                            FURI_LOG_W(TAG, "Path too long for play command");
+                            show_path_too_long_error(app);
+                        } else {
+                            bt_audio_uart_tx(app->uart, cmd);
+                            FURI_LOG_I(TAG, "Requesting ESP32 to play (repeat): %s", selected_file);
                         }
-                        bt_audio_uart_tx(app->uart, cmd);
-                        FURI_LOG_I(TAG, "Requesting ESP32 to play (repeat): %s", selected_file);
                     }
                     // The UART callback will handle the PLAYING_FILE response and switch to control scene
                 }

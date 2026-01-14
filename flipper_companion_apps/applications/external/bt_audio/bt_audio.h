@@ -23,7 +23,7 @@
 #define BT_AUDIO_MAC_LEN (18)
 #define BT_AUDIO_CMD_BUF_SIZE (32)
 #define BT_AUDIO_FILENAME_LEN (128)
-#define BT_AUDIO_MAX_FAVORITES (20)  // Maximum number of favorite tracks
+#define BT_AUDIO_MAX_FAVORITES (40)  // Maximum number of favorite tracks
 #define BT_AUDIO_BT_NAME_LEN (32)    // Max Bluetooth device name length
 #define BT_AUDIO_DEVICE_HISTORY_SIZE (10)  // Maximum number of device history entries
 #define BT_AUDIO_WIFI_SSID_LEN (64)    // Max WiFi SSID length
