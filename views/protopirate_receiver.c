@@ -363,17 +363,19 @@ bool protopirate_view_receiver_input(InputEvent* event, void* context) {
             receiver->view,
             ProtoPirateReceiverModel * model,
             {
-                if(event->type == InputTypeShort && event->key == InputKeyBack) {
-                    model->lock_count++;
-                    if(model->lock_count >= UNLOCK_CNT) {
-                        model->lock = ProtoPirateLockOff;
-                        model->lock_count = 0;
-                        if(receiver->callback) {
-                            receiver->callback(
-                                ProtoPirateCustomEventViewReceiverUnlock, receiver->context);
+                if(event->key == InputKeyBack) {
+                    if(event->type == InputTypeShort) {
+                        model->lock_count++;
+                        if(model->lock_count >= UNLOCK_CNT) {
+                            model->lock = ProtoPirateLockOff;
+                            model->lock_count = 0;
+                            if(receiver->callback) {
+                                receiver->callback(
+                                    ProtoPirateCustomEventViewReceiverUnlock, receiver->context);
+                            }
                         }
                     }
-                } else {
+                } else if(event->type == InputTypeShort || event->type == InputTypeLong || event->type == InputTypePress) {
                     model->lock_count = 0;
                 }
             },
