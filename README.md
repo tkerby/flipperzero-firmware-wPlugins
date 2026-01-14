@@ -45,18 +45,34 @@ Each application can be built independently from the Flipper firmware root:
 
 Copy the `.fap` files to your Flipper Zero's SD card under `/apps/Tools/`
 
+## Testing
+
+Both calculators include automated unit tests for their core atomic functions. These tests run in GitHub Actions on every push and pull request, ensuring the physics calculations work correctly without needing a physical Flipper device.
+
+**Test Coverage:**
+- Space Travel Calculator: 14 tests covering orbital mechanics, Hohmann transfers, and transfer calculations
+- Dilate: 15 tests covering Lorentz factor calculations and time dilation formulas
+
+See the `tests/` directory in each app for details.
+
 ## Project Structure
 
 ```
 flipper-space-calculators/
-├── README.md                    # This file
-├── space-travel-calculator/     # Orbital transfer calculator
+├── README.md                           # This file
+├── .github/workflows/                  # GitHub Actions CI
+│   └── test-core-functions.yml        # Automated tests
+├── space-travel-calculator/            # Orbital transfer calculator
 │   ├── README.md
-│   ├── CLAUDE.md               # Development guide
+│   ├── CLAUDE.md                       # Development guide
+│   ├── calculations.h/c                # Core calculation functions
+│   ├── tests/                          # Unit tests
 │   └── [source files]
-└── dilate/                     # Time dilation calculator
+└── dilate/                             # Time dilation calculator
     ├── README.md
-    ├── CLAUDE.md               # Development guide
+    ├── CLAUDE.md                       # Development guide
+    ├── calculations.h/c                # Core calculation functions
+    ├── tests/                          # Unit tests
     └── [source files]
 ```
 
