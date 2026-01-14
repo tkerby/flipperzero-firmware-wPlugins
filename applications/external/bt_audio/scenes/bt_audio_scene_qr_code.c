@@ -1,7 +1,8 @@
 #include "../bt_audio.h"
 #include "../lib/qrcodegen/qrcodegen.h"
 
-#define README_URL "https://github.com/FatherDivine/flipperzero-mayhem/tree/bt_audio/flipper_companion_apps/applications/external/bt_audio"
+#define README_URL \
+    "https://github.com/FatherDivine/flipperzero-mayhem/tree/bt_audio/flipper_companion_apps/applications/external/bt_audio"
 
 // Forward declaration - typedef is in bt_audio.c
 typedef struct {

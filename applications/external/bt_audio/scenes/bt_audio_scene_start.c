@@ -237,7 +237,7 @@ bool bt_audio_scene_start_on_event(void* context, SceneManagerEvent event) {
                 SubmenuIndexAbout + ABOUT_VIEW_STATE_OFFSET);
             furi_string_printf(
                 app->text_box_store,
-                "BT Audio v1.1\n"
+                "BT Audio v%s\n"
                 "Created by Father Divine\n\n"
                 "An ESP32 Bluetooth Audio\n"
                 "Controller over UART\n"
@@ -271,7 +271,8 @@ bool bt_audio_scene_start_on_event(void* context, SceneManagerEvent event) {
                 "STOP - Stop playback\n"
                 "TX_POWER:<LVL> - TX power\n"
                 "VERSION - Check firmware\n"
-                "VOL_UP/VOL_DOWN - Volume\n");
+                "VOL_UP/VOL_DOWN - Volume\n",
+                FAP_VERSION);
             text_box_set_text(app->text_box, furi_string_get_cstr(app->text_box_store));
             view_dispatcher_switch_to_view(app->view_dispatcher, BtAudioViewTextBox);
             consumed = true;

@@ -19,9 +19,9 @@
 #define TAG "BtAudio"
 
 #if __has_include(<cfw/cfw.h>)
-#define BT_AUDIO_UART_CH             (cfw_settings.uart_esp_channel)
+#define BT_AUDIO_UART_CH (cfw_settings.uart_esp_channel)
 #else
-#define BT_AUDIO_UART_CH             (FuriHalSerialIdUsart)
+#define BT_AUDIO_UART_CH (FuriHalSerialIdUsart)
 #endif
 #define BT_AUDIO_BAUDRATE            (115200)
 #define BT_AUDIO_RX_BUF_SIZE         (256)
