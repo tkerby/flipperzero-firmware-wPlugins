@@ -1,15 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <math.h>
 #include "../calculations.h"
 
 #define EPSILON 0.001
-#define TEST_TOLERANCE 0.1
 
 int test_count = 0;
 int test_passed = 0;
 int test_failed = 0;
 
+// Assert helper: compares two doubles with a tolerance
 void assert_double_equals(const char* test_name, double expected, double actual, double tolerance) {
     test_count++;
     double diff = fabs(expected - actual);
@@ -22,6 +23,7 @@ void assert_double_equals(const char* test_name, double expected, double actual,
     }
 }
 
+// Assert helper: compares two boolean values
 void assert_bool_equals(const char* test_name, bool expected, bool actual) {
     test_count++;
     if (expected == actual) {
