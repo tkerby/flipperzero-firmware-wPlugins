@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define PROTOPIRATE_SETTINGS_FILE EXT_PATH("apps_data/protopirate/settings.txt")
-#define PROTOPIRATE_SETTINGS_DIR  EXT_PATH("apps_data/protopirate")
+#define PROTOPIRATE_SETTINGS_FILE APP_DATA_PATH("settings.txt")
+#define PROTOPIRATE_SETTINGS_DIR  APP_DATA_PATH()
 
 typedef struct {
     uint32_t frequency;

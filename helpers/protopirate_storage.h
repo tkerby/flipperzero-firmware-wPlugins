@@ -5,10 +5,10 @@
 #include <storage/storage.h>
 #include <flipper_format/flipper_format.h>
 
-#define PROTOPIRATE_APP_FOLDER       EXT_PATH("subghz/protopirate")
-#define PROTOPIRATE_APP_EXTENSION    ".sub"
+#define PROTOPIRATE_APP_FOLDER       APP_DATA_PATH("saved")
+#define PROTOPIRATE_APP_EXTENSION    ".psf"
 #define PROTOPIRATE_APP_FILE_VERSION 1
-#define PROTOPIRATE_TEMP_FILE        EXT_PATH("subghz/protopirate/.temp.sub")
+#define PROTOPIRATE_TEMP_FILE        APP_DATA_PATH("saved/.temp.psf")
 
 bool protopirate_storage_init(void);
 

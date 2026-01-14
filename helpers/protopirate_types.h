@@ -32,6 +32,7 @@ typedef enum {
     ProtoPirateCustomEventEmulateStop,
     ProtoPirateCustomEventEmulateExit,
     // Sub decode
+    ProtoPirateCustomEventSubDecodeUpdate,
     ProtoPirateCustomEventSubDecodeSave,
 } ProtoPirateCustomEvent;
 
