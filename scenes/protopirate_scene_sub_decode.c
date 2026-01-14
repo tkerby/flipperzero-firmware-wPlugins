@@ -694,7 +694,10 @@ bool protopirate_scene_sub_decode_on_event(void* context, SceneManagerEvent even
                 furi_string_free(protocol);
                 furi_string_free(saved_path);
             } else {
-                FURI_LOG_E(TAG, "No flipper format data available");
+                FURI_LOG_E(
+                    TAG,
+                    "No flipper format data available, item: %d",
+                    ctx->selected_history_index);
                 notification_message(app->notifications, &sequence_error);
             }
             consumed = true;
@@ -754,11 +757,10 @@ bool protopirate_scene_sub_decode_on_event(void* context, SceneManagerEvent even
                     break;
                 }
 
-                if(furi_string_cmp_str(temp_str, "Flipper SubGhz Key File") != 0 &&
-                   furi_string_cmp_str(temp_str, "Flipper SubGhz RAW File") != 0 &&
+                if(furi_string_cmp_str(temp_str, "Flipper SubGhz RAW File") != 0 &&
                    furi_string_cmp_str(temp_str, "Flipper SubGhz") != 0) {
-                    furi_string_set(ctx->result, "Not a SubGhz file");
-                    furi_string_set(ctx->error_info, "Not SubGhz file");
+                    furi_string_set(ctx->result, "Not a RAW SubGhz file");
+                    furi_string_set(ctx->error_info, "Not RAW SubGhz file");
                     break;
                 }
 
