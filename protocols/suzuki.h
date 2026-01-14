@@ -26,3 +26,8 @@ SubGhzProtocolStatus subghz_protocol_decoder_suzuki_serialize(
 SubGhzProtocolStatus
     subghz_protocol_decoder_suzuki_deserialize(void* context, FlipperFormat* flipper_format);
 void subghz_protocol_decoder_suzuki_get_string(void* context, FuriString* output);
+void* subghz_protocol_encoder_suzuki_alloc(SubGhzEnvironment* environment);
+void subghz_protocol_encoder_suzuki_free(void* context);
+SubGhzProtocolStatus subghz_protocol_encoder_suzuki_deserialize(void* context, FlipperFormat* flipper_format);
+void subghz_protocol_encoder_suzuki_stop(void* context);
+LevelDuration subghz_protocol_encoder_suzuki_yield(void* context);
