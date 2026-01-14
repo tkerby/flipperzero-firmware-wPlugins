@@ -21,6 +21,7 @@
 #include <lib/subghz/receiver.h>
 #include <lib/subghz/transmitter.h>
 #include <lib/subghz/devices/devices.h>
+#include <lib/subghz/subghz_file_encoder_worker.h>
 #include <dialogs/dialogs.h>
 
 #define PROTOPIRATE_KEYSTORE_DIR_NAME APP_ASSETS_PATH("encrypted")
@@ -61,6 +62,7 @@ struct ProtoPirateApp {
     FuriString* loaded_file_path;
     bool auto_save;
     ProtoPirateSettings settings;
+    SubGhzFileEncoderWorker* decode_raw_file_worker_encoder;
 };
 
 void protopirate_preset_init(
