@@ -180,6 +180,9 @@ void protopirate_scene_receiver_on_enter(void* context) {
     protopirate_rx(app, frequency);
     FURI_LOG_I(TAG, "RX started, state: %d", app->txrx->txrx_state);
 
+    // Update lock state in view
+    protopirate_view_receiver_set_lock(app->protopirate_receiver, app->lock);
+
     // Switch to receiver view
     view_dispatcher_switch_to_view(app->view_dispatcher, ProtoPirateViewReceiver);
 }
@@ -225,6 +228,8 @@ bool protopirate_scene_receiver_on_event(void* context, SceneManagerEvent event)
             break;
 
         case ProtoPirateCustomEventViewReceiverUnlock:
+            app->lock = ProtoPirateLockOff;
+            protopirate_view_receiver_set_lock(app->protopirate_receiver, app->lock);
             consumed = true;
             break;
         }

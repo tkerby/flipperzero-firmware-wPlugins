@@ -625,6 +625,9 @@ void protopirate_scene_emulate_on_exit(void* context) {
     // Close storage record that was opened in on_enter
     furi_record_close(RECORD_STORAGE);
 
+    // Delete temp file if we were using one
+    protopirate_storage_delete_temp();
+
     notification_message(app->notifications, &sequence_blink_stop);
 
     // Clear view callbacks

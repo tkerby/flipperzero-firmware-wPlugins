@@ -207,8 +207,6 @@ ProtoPirateApp* protopirate_app_alloc() {
         app->txrx->worker, (SubGhzWorkerPairCallback)subghz_receiver_decode);
     subghz_worker_set_context(app->txrx->worker, app->txrx->receiver);
 
-    furi_hal_power_suppress_charge_enter();
-
     scene_manager_next_scene(app->scene_manager, ProtoPirateSceneStart);
 
     return app;
@@ -310,18 +308,21 @@ void protopirate_app_free(ProtoPirateApp* app) {
     // Close records
     furi_record_close(RECORD_GUI);
 
-    furi_hal_power_suppress_charge_exit();
-
     free(app);
 }
 
 int32_t protopirate_app(void* p) {
     UNUSED(p);
+
+    furi_hal_power_suppress_charge_enter();
+
     ProtoPirateApp* protopirate_app = protopirate_app_alloc();
 
     view_dispatcher_run(protopirate_app->view_dispatcher);
 
     protopirate_app_free(protopirate_app);
+
+    furi_hal_power_suppress_charge_exit();
 
     return 0;
 }
