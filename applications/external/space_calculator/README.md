@@ -1,94 +1,80 @@
-# Flipper Space Calculators
+# Space Travel Calculator
 
-A collection of minimalist space and physics calculators for the Flipper Zero. No games, no gimmicks - just the essential calculations for when you need them most.
+A minimalist trajectory calculator for the Flipper Zero. Plan real interplanetary missions with KSP-style visual feedback.
 
-## Applications
+## Overview
 
-### [Space Travel Calculator](./space-travel-calculator/)
-Interplanetary trajectory calculator for planning transfers between planets. Calculates:
-- Hohmann transfer orbits
-- Delta-v requirements
-- Launch windows
-- Phase angles
+Answer the critical mission planning questions:
+- **"When's the next good launch window?"**
+- **"How much fuel (delta-v) will this mission need?"**  
+- **"How long until my crew gets there?"**
+- **"Is this launch date optimal or should I wait?"**
 
-*For when you need to know if that Mars window is actually worth taking.*
+Watch planets move in real-time as you scroll through launch dates. See transfer windows open and close. Make informed mission decisions.
 
-### [Dilate](./dilate/)
-Time dilation calculator with two modes:
-- **Special Relativity**: Time dilation at relativistic velocities
-- **General Relativity**: Time dilation in gravitational fields
+## Features
 
-*Because sometimes you need to know exactly how much younger you'll be.*
+- **Real-time orbital calculations** with KSP-style visual feedback
+- **Extensive destination options**: Mars, Moon, Venus, Mercury, Jupiter, plus major moons (Europa, Titan, Ganymede, etc.)
+- **Dynamic transfer visualization**: Watch planets move as you scroll through launch dates
+- **Mission planning tools**: Delta-v requirements, flight times, launch windows
+- **Visual transfer window identification**: See optimal windows by orbit ellipse shape
 
-## Design Philosophy
+## User Interface
 
-These calculators follow strict minimalist principles:
-- Boot directly to functionality - no splash screens
+### Main View (Orbit Diagram)
+```
+EARTH → MARS
+────────────
+LAUNCH: 147
+FLIGHT: 259d
+BURN: →32°
+[Orbit diagram]
+```
+
+### Data View
+```
+TRANSFER DATA
+─────────────
+ΔV TOTAL: 5.64 km/s
+DEPART: 3.58 km/s
+ARRIVE: 2.06 km/s
+PHASE: 44.3°
+WINDOW: GOOD
+```
+
+### Phase View
+Shows current planetary alignment and days until optimal transfer window.
+
+## Controls
+
+- **UP/DOWN**: Select destination planet
+- **LEFT/RIGHT**: Adjust launch date (day of year)
+- **OK**: Cycle through views (Orbit → Data → Phase)
+- **BACK**: Exit application
+
+## Technical Details
+
+- Assumes circular planetary orbits for simplicity
+- Uses January 1, 2024 as epoch for calculations
+- All calculations in metric units (km/s, days)
 - Response time <50ms for all interactions
-- Numbers only - no unnecessary explanations
-- Default system font - no fancy typography
-- Metric units - this is space
 
 ## Building
 
-Each application can be built independently from the Flipper firmware root:
-
 ```bash
-# Space Travel Calculator
+# From flipper firmware root
 ./fbt fap_space_travel_calculator
-
-# Dilate
-./fbt fap_dilate
 ```
 
 ## Installation
 
-Copy the `.fap` files to your Flipper Zero's SD card under `/apps/Tools/`
+Copy `space_travel_calculator.fap` to your Flipper Zero's SD card under `/apps/Tools/`
 
-## Testing
+## Physics Reference
 
-Both calculators include automated unit tests for their core atomic functions. These tests run in GitHub Actions on every push and pull request, ensuring the physics calculations work correctly without needing a physical Flipper device.
-
-**Test Coverage:**
-- Space Travel Calculator: 14 tests covering orbital mechanics, Hohmann transfers, and transfer calculations
-- Dilate: 15 tests covering Lorentz factor calculations and time dilation formulas
-
-See the `tests/` directory in each app for details.
-
-## Project Structure
-
-```
-flipper-space-calculators/
-├── README.md                           # This file
-├── .github/workflows/                  # GitHub Actions CI
-│   └── test-core-functions.yml        # Automated tests
-├── space-travel-calculator/            # Orbital transfer calculator
-│   ├── README.md
-│   ├── CLAUDE.md                       # Development guide
-│   ├── calculations.h/c                # Core calculation functions
-│   ├── tests/                          # Unit tests
-│   └── [source files]
-└── dilate/                             # Time dilation calculator
-    ├── README.md
-    ├── CLAUDE.md                       # Development guide
-    ├── calculations.h/c                # Core calculation functions
-    ├── tests/                          # Unit tests
-    └── [source files]
-```
-
-## Contributing
-
-These tools are designed to do one thing perfectly. If you're thinking of adding features, ask yourself:
-1. Is it essential to the core calculation?
-2. Does it maintain <50ms response time?
-3. Does it follow the minimalist aesthetic?
-
-If any answer is no, it doesn't belong here.
-
-## License
-
-These calculators are tools, not toys. Use them wisely.
+Uses simplified patched conic approximation for interplanetary transfers. Ideal for quick field calculations when you need to know if that Mars launch window is actually worth taking.
 
 ---
 
-*"The universe is under no obligation to make sense to you. But your calculator is."*
+*"Space is hard. Math shouldn't be."*
