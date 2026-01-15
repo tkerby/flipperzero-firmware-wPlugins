@@ -1,5 +1,4 @@
 #include "suzuki.h"
-#include <toolbox/level_duration.h>
 
 #define TAG "SuzukiProtocol"
 
