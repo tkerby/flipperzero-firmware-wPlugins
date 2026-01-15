@@ -120,7 +120,7 @@ The following manufacturers have KeeLoq support in RM firmware (thanks to Unleas
 - Nice Smilo - `433.92MHz` `AM650` (KeeLoq, 64 bits) (8bit serial part in Hop - simple learning)
 - Normstahl - `433.92MHz` `AM650` (KeeLoq, 64 bits)
 - Novoferm - `433.92MHz` `AM650` (KeeLoq, 64 bits)
-- Sommer `434.42MHz, 868.80MHz` `FSK12K (or FSK476)` (KeeLoq, 64 bits) (normal learning)
+- Sommer `434.42MHz, 868.80MHz` `FSK12K (or FSK476)` (KeeLoq, 64 bits) (normal learning) (TX03-868-4, Pearl, and maybe other models are supported (SOMloq2))
 - Steelmate - `433.92MHz` `AM650` (KeeLoq, 64 bits) (12bit serial part in Hop - normal learning)
 - Stilmatic - `433.92MHz` `AM650` (KeeLoq, 64 bits) (normal learning)
 

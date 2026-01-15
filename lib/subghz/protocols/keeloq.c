@@ -528,6 +528,11 @@ static bool
         klq_last_custom_btn = 0xD;
     }
 
+    uint32_t gap_duration = subghz_protocol_keeloq_const.te_short * 40;
+    if((strcmp(instance->manufacture_name, "Sommer") == 0)) {
+        gap_duration = subghz_protocol_keeloq_const.te_short * 29;
+    }
+
     btn = subghz_protocol_keeloq_get_btn_code(klq_last_custom_btn);
 
     // Generate new key
@@ -582,8 +587,7 @@ static bool
     // send end
     instance->encoder.upload[index++] =
         level_duration_make(true, (uint32_t)subghz_protocol_keeloq_const.te_short);
-    instance->encoder.upload[index++] =
-        level_duration_make(false, (uint32_t)subghz_protocol_keeloq_const.te_short * 40);
+    instance->encoder.upload[index++] = level_duration_make(false, gap_duration);
 
     return true;
 }
