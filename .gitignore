@@ -1,0 +1,22 @@
+# Test artifacts
+*.o
+test_calculations
+calculations.o
+
+# Build artifacts
+dist/
+.vscode/compile_commands.json
+
+# Python virtual environment
+flipper-dev-env/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
