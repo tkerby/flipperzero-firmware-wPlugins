@@ -1,6 +1,5 @@
 #pragma once
 
-#include <furi.h>
 #include <lib/subghz/protocols/base.h>
 #include <lib/subghz/types.h>
 #include <lib/subghz/blocks/const.h>
