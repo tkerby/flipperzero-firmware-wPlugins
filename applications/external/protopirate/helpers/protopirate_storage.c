@@ -30,8 +30,8 @@ static void sanitize_filename(const char* input, char* output, size_t output_siz
     while(input[i] != '\0' && j < output_size - 1) {
         char c = input[i];
         // Replace problematic characters AND spaces with underscore
-        if(c == '/' || c == '\\' || c == ':' || c == '*' || c == '?' || c == '"' ||
-           c == '<' || c == '>' || c == '|' || c == ' ') {
+        if(c == '/' || c == '\\' || c == ':' || c == '*' || c == '?' || c == '"' || c == '<' ||
+           c == '>' || c == '|' || c == ' ') {
             output[j] = '_';
         } else {
             output[j] = c;
@@ -124,8 +124,7 @@ static bool protopirate_storage_write_capture_data(
 
     // Custom preset module
     flipper_format_rewind(flipper_format);
-    if(flipper_format_get_value_count(
-           flipper_format, "Custom_preset_module", &uint32_array_size) &&
+    if(flipper_format_get_value_count(flipper_format, "Custom_preset_module", &uint32_array_size) &&
        uint32_array_size > 0) {
         if(flipper_format_read_string(flipper_format, "Custom_preset_module", string_value))
             flipper_format_write_string(save_file, "Custom_preset_module", string_value);

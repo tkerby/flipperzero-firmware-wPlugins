@@ -375,7 +375,9 @@ bool protopirate_view_receiver_input(InputEvent* event, void* context) {
                             }
                         }
                     }
-                } else if(event->type == InputTypeShort || event->type == InputTypeLong || event->type == InputTypePress) {
+                } else if(
+                    event->type == InputTypeShort || event->type == InputTypeLong ||
+                    event->type == InputTypePress) {
                     model->lock_count = 0;
                 }
             },
