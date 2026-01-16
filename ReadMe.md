@@ -35,8 +35,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [PIR HC-SR501 Alarm v1.0 (By ku6a-cj)](https://github.com/ku6a-cj/-PIR-HC-SR501-Proximity-alarm-Flipper-zero) `Req: PIR HC-SR501`
 - Added: [BT Audio v1.0 (By FatherDivine)](https://github.com/FatherDivine/flipperzero-mayhem/tree/bt_audio/flipper_companion_apps/applications/external/bt_audio) `Req: ESP32 w BT` & [This FW](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/external/bt_audio/.esp32_firmware)
 - Updated: [BT Audio v1.1 (By FatherDivine)](https://github.com/FatherDivine/flipperzero-mayhem/tree/bt_audio/flipper_companion_apps/applications/external/bt_audio) `Req: ESP32 w BT` & [This FW](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/external/bt_audio/.esp32_firmware)
-- Updated: [ProtoPirate v1.5 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - Updated: [Flipper Hero v1.4 (By mentoster)](https://github.com/mentoster/Flipper-hero)
+- Updated: [ProtoPirate v1.5 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
+- Updated: [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader)
 
 <a name="release">
 
