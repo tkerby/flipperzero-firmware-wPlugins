@@ -25,6 +25,7 @@ Decoders:
 
 Encoders:
 
+- Fiat V0
 - Ford V0
 - KIA V0
 - KIA V1
