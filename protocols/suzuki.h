@@ -1,5 +1,6 @@
 #pragma once
 
+#include <furi.h>
 #include <lib/subghz/protocols/base.h>
 #include <lib/subghz/types.h>
 #include <lib/subghz/blocks/const.h>
@@ -13,6 +14,7 @@
 
 extern const SubGhzProtocol suzuki_protocol;
 
+// Decoder functions
 void* subghz_protocol_decoder_suzuki_alloc(SubGhzEnvironment* environment);
 void subghz_protocol_decoder_suzuki_free(void* context);
 void subghz_protocol_decoder_suzuki_reset(void* context);
@@ -25,8 +27,11 @@ SubGhzProtocolStatus subghz_protocol_decoder_suzuki_serialize(
 SubGhzProtocolStatus
     subghz_protocol_decoder_suzuki_deserialize(void* context, FlipperFormat* flipper_format);
 void subghz_protocol_decoder_suzuki_get_string(void* context, FuriString* output);
+
+// Encoder functions
 void* subghz_protocol_encoder_suzuki_alloc(SubGhzEnvironment* environment);
 void subghz_protocol_encoder_suzuki_free(void* context);
-SubGhzProtocolStatus subghz_protocol_encoder_suzuki_deserialize(void* context, FlipperFormat* flipper_format);
+SubGhzProtocolStatus
+    subghz_protocol_encoder_suzuki_deserialize(void* context, FlipperFormat* flipper_format);
 void subghz_protocol_encoder_suzuki_stop(void* context);
 LevelDuration subghz_protocol_encoder_suzuki_yield(void* context);
