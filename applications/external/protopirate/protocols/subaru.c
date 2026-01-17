@@ -9,6 +9,12 @@ static const SubGhzBlockConst subghz_protocol_subaru_const = {
     .min_count_bit_for_found = 64,
 };
 
+#define SUBARU_PREAMBLE_PAIRS  80
+#define SUBARU_GAP_US          2800
+#define SUBARU_SYNC_US         2800
+#define SUBARU_TOTAL_BURSTS    3
+#define SUBARU_INTER_BURST_GAP 25000
+
 typedef struct SubGhzProtocolDecoderSubaru {
     SubGhzProtocolDecoderBase base;
     SubGhzBlockDecoder decoder;
@@ -20,14 +26,19 @@ typedef struct SubGhzProtocolDecoderSubaru {
 
     uint64_t key;
     uint32_t serial;
-    uint8_t button;
-    uint16_t count;
+    uint8_t btn;
+    uint16_t cnt;
 } SubGhzProtocolDecoderSubaru;
 
 typedef struct SubGhzProtocolEncoderSubaru {
     SubGhzProtocolEncoderBase base;
     SubGhzProtocolBlockEncoder encoder;
     SubGhzBlockGeneric generic;
+
+    uint64_t key;
+    uint32_t serial;
+    uint8_t btn;
+    uint16_t cnt;
 } SubGhzProtocolEncoderSubaru;
 
 typedef enum {
@@ -51,22 +62,27 @@ const SubGhzProtocolDecoder subghz_protocol_subaru_decoder = {
 };
 
 const SubGhzProtocolEncoder subghz_protocol_subaru_encoder = {
-    .alloc = NULL,
-    .free = NULL,
-    .deserialize = NULL,
-    .stop = NULL,
-    .yield = NULL,
+    .alloc = subghz_protocol_encoder_subaru_alloc,
+    .free = subghz_protocol_encoder_subaru_free,
+    .deserialize = subghz_protocol_encoder_subaru_deserialize,
+    .stop = subghz_protocol_encoder_subaru_stop,
+    .yield = subghz_protocol_encoder_subaru_yield,
 };
 
 const SubGhzProtocol subaru_protocol = {
     .name = SUBARU_PROTOCOL_NAME,
     .type = SubGhzProtocolTypeDynamic,
-    .flag = SubGhzProtocolFlag_433 | SubGhzProtocolFlag_AM | SubGhzProtocolFlag_Decodable,
+    .flag = SubGhzProtocolFlag_433 | SubGhzProtocolFlag_AM | SubGhzProtocolFlag_Decodable |
+            SubGhzProtocolFlag_Load | SubGhzProtocolFlag_Save | SubGhzProtocolFlag_Send,
     .decoder = &subghz_protocol_subaru_decoder,
     .encoder = &subghz_protocol_subaru_encoder,
 };
 
-static void subaru_decode_count(const uint8_t* KB, uint16_t* count) {
+// ============================================================================
+// DECODER HELPER FUNCTIONS
+// ============================================================================
+
+static void subaru_decode_count(const uint8_t* KB, uint16_t* cnt) {
     uint8_t lo = 0;
     if((KB[4] & 0x40) == 0) lo |= 0x01;
     if((KB[4] & 0x80) == 0) lo |= 0x02;
@@ -110,7 +126,7 @@ static void subaru_decode_count(const uint8_t* KB, uint16_t* count) {
     if((T2 & 0x08) == 0) hi |= 0x20;
     if((T2 & 0x04) == 0) hi |= 0x10;
 
-    *count = ((hi << 8) | lo) & 0xFFFF;
+    *cnt = ((hi << 8) | lo) & 0xFFFF;
 }
 
 static void subaru_add_bit(SubGhzProtocolDecoderSubaru* instance, bool bit) {
@@ -138,11 +154,249 @@ static bool subaru_process_data(SubGhzProtocolDecoderSubaru* instance) {
                     ((uint64_t)b[6] << 8) | ((uint64_t)b[7]);
 
     instance->serial = ((uint32_t)b[1] << 16) | ((uint32_t)b[2] << 8) | b[3];
-    instance->button = b[0] & 0x0F;
-    subaru_decode_count(b, &instance->count);
+    instance->btn = b[0] & 0x0F;
+    subaru_decode_count(b, &instance->cnt);
 
     return true;
 }
+
+// ============================================================================
+// ENCODER IMPLEMENTATION
+// ============================================================================
+
+void* subghz_protocol_encoder_subaru_alloc(SubGhzEnvironment* environment) {
+    UNUSED(environment);
+    SubGhzProtocolEncoderSubaru* instance = malloc(sizeof(SubGhzProtocolEncoderSubaru));
+
+    instance->base.protocol = &subaru_protocol;
+    instance->generic.protocol_name = instance->base.protocol->name;
+
+    instance->encoder.repeat = 10;
+    instance->encoder.size_upload = 1024;
+    instance->encoder.upload = malloc(instance->encoder.size_upload * sizeof(LevelDuration));
+    instance->encoder.is_running = false;
+    instance->encoder.front = 0;
+
+    instance->key = 0;
+    instance->serial = 0;
+    instance->btn = 0;
+    instance->cnt = 0;
+
+    return instance;
+}
+
+void subghz_protocol_encoder_subaru_free(void* context) {
+    furi_assert(context);
+    SubGhzProtocolEncoderSubaru* instance = context;
+    if(instance->encoder.upload) {
+        free(instance->encoder.upload);
+    }
+    free(instance);
+}
+
+static void subghz_protocol_encoder_subaru_get_upload(SubGhzProtocolEncoderSubaru* instance) {
+    furi_assert(instance);
+    size_t index = 0;
+
+    uint32_t te_short = subghz_protocol_subaru_const.te_short;
+    uint32_t te_long = subghz_protocol_subaru_const.te_long;
+
+    FURI_LOG_I(
+        TAG,
+        "Building upload: key=0x%016llX, serial=0x%06lX, btn=0x%X, cnt=0x%04X",
+        instance->key,
+        instance->serial,
+        instance->btn,
+        instance->cnt);
+
+    for(uint8_t burst = 0; burst < SUBARU_TOTAL_BURSTS; burst++) {
+        if(burst > 0) {
+            instance->encoder.upload[index++] = level_duration_make(false, SUBARU_INTER_BURST_GAP);
+        }
+
+        // Preamble: Long HIGH/LOW pairs
+        for(int i = 0; i < SUBARU_PREAMBLE_PAIRS; i++) {
+            instance->encoder.upload[index++] = level_duration_make(true, te_long);
+            instance->encoder.upload[index++] = level_duration_make(false, te_long);
+        }
+
+        // Replace last preamble LOW with gap (to avoid consecutive LOWs combining)
+        instance->encoder.upload[index - 1] = level_duration_make(false, SUBARU_GAP_US);
+
+        // Sync: Long HIGH
+        instance->encoder.upload[index++] = level_duration_make(true, SUBARU_SYNC_US);
+
+        // Sync end: Long LOW
+        instance->encoder.upload[index++] = level_duration_make(false, te_long);
+
+        // Data: 64 bits, PWM encoding
+        // Short HIGH = 1, Long HIGH = 0
+        for(int bit = 63; bit >= 0; bit--) {
+            if((instance->key >> bit) & 1) {
+                // Bit 1: Short HIGH
+                instance->encoder.upload[index++] = level_duration_make(true, te_short);
+            } else {
+                // Bit 0: Long HIGH
+                instance->encoder.upload[index++] = level_duration_make(true, te_long);
+            }
+            // LOW separator
+            instance->encoder.upload[index++] = level_duration_make(false, te_short);
+        }
+
+        // End marker: extended LOW
+        instance->encoder.upload[index++] = level_duration_make(false, te_long * 2);
+    }
+
+    instance->encoder.size_upload = index;
+    instance->encoder.front = 0;
+
+    FURI_LOG_I(TAG, "Upload built: %zu elements", instance->encoder.size_upload);
+}
+
+SubGhzProtocolStatus
+    subghz_protocol_encoder_subaru_deserialize(void* context, FlipperFormat* flipper_format) {
+    furi_assert(context);
+    SubGhzProtocolEncoderSubaru* instance = context;
+    SubGhzProtocolStatus ret = SubGhzProtocolStatusError;
+
+    instance->encoder.is_running = false;
+    instance->encoder.front = 0;
+    instance->encoder.repeat = 10;
+
+    flipper_format_rewind(flipper_format);
+
+    do {
+        FuriString* temp_str = furi_string_alloc();
+        if(!flipper_format_read_string(flipper_format, "Protocol", temp_str)) {
+            FURI_LOG_E(TAG, "Missing Protocol");
+            furi_string_free(temp_str);
+            break;
+        }
+
+        if(!furi_string_equal(temp_str, instance->base.protocol->name)) {
+            FURI_LOG_E(TAG, "Wrong protocol: %s", furi_string_get_cstr(temp_str));
+            furi_string_free(temp_str);
+            break;
+        }
+        furi_string_free(temp_str);
+
+        uint32_t bit_count_temp;
+        if(!flipper_format_read_uint32(flipper_format, "Bit", &bit_count_temp, 1)) {
+            FURI_LOG_E(TAG, "Missing Bit");
+            break;
+        }
+
+        // Try to read raw data first (most accurate)
+        uint32_t raw_high = 0, raw_low = 0;
+        if(flipper_format_read_uint32(flipper_format, "DataHi", &raw_high, 1) &&
+           flipper_format_read_uint32(flipper_format, "DataLo", &raw_low, 1)) {
+            instance->key = ((uint64_t)raw_high << 32) | raw_low;
+            FURI_LOG_I(TAG, "Read raw data: 0x%016llX", instance->key);
+        } else {
+            // Fall back to Key field
+            temp_str = furi_string_alloc();
+            if(!flipper_format_read_string(flipper_format, "Key", temp_str)) {
+                FURI_LOG_E(TAG, "Missing Key");
+                furi_string_free(temp_str);
+                break;
+            }
+
+            const char* key_str = furi_string_get_cstr(temp_str);
+            uint64_t key = 0;
+            size_t str_len = strlen(key_str);
+            size_t hex_pos = 0;
+
+            for(size_t i = 0; i < str_len && hex_pos < 16; i++) {
+                char c = key_str[i];
+                if(c == ' ') continue;
+
+                uint8_t nibble;
+                if(c >= '0' && c <= '9')
+                    nibble = c - '0';
+                else if(c >= 'A' && c <= 'F')
+                    nibble = c - 'A' + 10;
+                else if(c >= 'a' && c <= 'f')
+                    nibble = c - 'a' + 10;
+                else
+                    break;
+
+                key = (key << 4) | nibble;
+                hex_pos++;
+            }
+            furi_string_free(temp_str);
+
+            instance->key = key;
+            FURI_LOG_I(TAG, "Parsed key: 0x%016llX", instance->key);
+        }
+
+        // Read optional fields
+        if(!flipper_format_read_uint32(flipper_format, "Serial", &instance->serial, 1)) {
+            instance->serial = (uint32_t)((instance->key >> 32) & 0xFFFFFF);
+        }
+
+        uint32_t btn_temp = 0;
+        if(flipper_format_read_uint32(flipper_format, "Btn", &btn_temp, 1)) {
+            instance->btn = (uint8_t)btn_temp;
+        } else {
+            instance->btn = (uint8_t)((instance->key >> 56) & 0x0F);
+        }
+
+        uint32_t cnt_temp = 0;
+        if(flipper_format_read_uint32(flipper_format, "Cnt", &cnt_temp, 1)) {
+            instance->cnt = (uint16_t)cnt_temp;
+        } else {
+            instance->cnt = 0;
+        }
+
+        if(!flipper_format_read_uint32(
+               flipper_format, "Repeat", (uint32_t*)&instance->encoder.repeat, 1)) {
+            instance->encoder.repeat = 10;
+        }
+
+        subghz_protocol_encoder_subaru_get_upload(instance);
+        instance->encoder.is_running = true;
+
+        FURI_LOG_I(
+            TAG,
+            "Encoder ready: key=0x%016llX, serial=0x%06lX, btn=0x%X",
+            instance->key,
+            instance->serial,
+            instance->btn);
+
+        ret = SubGhzProtocolStatusOk;
+    } while(false);
+
+    return ret;
+}
+
+void subghz_protocol_encoder_subaru_stop(void* context) {
+    furi_assert(context);
+    SubGhzProtocolEncoderSubaru* instance = context;
+    instance->encoder.is_running = false;
+}
+
+LevelDuration subghz_protocol_encoder_subaru_yield(void* context) {
+    furi_assert(context);
+    SubGhzProtocolEncoderSubaru* instance = context;
+
+    if(!instance->encoder.is_running || instance->encoder.repeat == 0) {
+        instance->encoder.is_running = false;
+        return level_duration_reset();
+    }
+
+    LevelDuration ret = instance->encoder.upload[instance->encoder.front];
+
+    if(++instance->encoder.front == instance->encoder.size_upload) {
+        instance->encoder.repeat--;
+        instance->encoder.front = 0;
+    }
+
+    return ret;
+}
+
+// ============================================================================
+// DECODER IMPLEMENTATION
+// ============================================================================
 
 void* subghz_protocol_decoder_subaru_alloc(SubGhzEnvironment* environment) {
     UNUSED(environment);
@@ -172,10 +426,13 @@ void subghz_protocol_decoder_subaru_feed(void* context, bool level, uint32_t dur
     furi_assert(context);
     SubGhzProtocolDecoderSubaru* instance = context;
 
+    uint32_t te_short = subghz_protocol_subaru_const.te_short;
+    uint32_t te_long = subghz_protocol_subaru_const.te_long;
+    uint32_t te_delta = subghz_protocol_subaru_const.te_delta;
+
     switch(instance->decoder.parser_step) {
     case SubaruDecoderStepReset:
-        if(level && DURATION_DIFF(duration, subghz_protocol_subaru_const.te_long) <
-                        subghz_protocol_subaru_const.te_delta) {
+        if(level && (DURATION_DIFF(duration, te_long) < te_delta)) {
             instance->decoder.parser_step = SubaruDecoderStepCheckPreamble;
             instance->decoder.te_last = duration;
             instance->header_count = 1;
@@ -184,8 +441,7 @@ void subghz_protocol_decoder_subaru_feed(void* context, bool level, uint32_t dur
 
     case SubaruDecoderStepCheckPreamble:
         if(!level) {
-            if(DURATION_DIFF(duration, subghz_protocol_subaru_const.te_long) <
-               subghz_protocol_subaru_const.te_delta) {
+            if(DURATION_DIFF(duration, te_long) < te_delta) {
                 instance->header_count++;
             } else if(duration > 2000 && duration < 3500) {
                 if(instance->header_count > 20) {
@@ -197,8 +453,7 @@ void subghz_protocol_decoder_subaru_feed(void* context, bool level, uint32_t dur
                 instance->decoder.parser_step = SubaruDecoderStepReset;
             }
         } else {
-            if(DURATION_DIFF(duration, subghz_protocol_subaru_const.te_long) <
-               subghz_protocol_subaru_const.te_delta) {
+            if(DURATION_DIFF(duration, te_long) < te_delta) {
                 instance->decoder.te_last = duration;
                 instance->header_count++;
             } else {
@@ -216,8 +471,7 @@ void subghz_protocol_decoder_subaru_feed(void* context, bool level, uint32_t dur
         break;
 
     case SubaruDecoderStepFoundSync:
-        if(!level && DURATION_DIFF(duration, subghz_protocol_subaru_const.te_long) <
-                         subghz_protocol_subaru_const.te_delta) {
+        if(!level && (DURATION_DIFF(duration, te_long) < te_delta)) {
             instance->decoder.parser_step = SubaruDecoderStepSaveDuration;
             instance->bit_count = 0;
             memset(instance->data, 0, sizeof(instance->data));
@@ -228,18 +482,12 @@ void subghz_protocol_decoder_subaru_feed(void* context, bool level, uint32_t dur
 
     case SubaruDecoderStepSaveDuration:
         if(level) {
-            // HIGH pulse duration encodes the bit :
-            // Short HIGH (~800µs) = 1
-            // Long HIGH (~1600µs) = 0
-            if(DURATION_DIFF(duration, subghz_protocol_subaru_const.te_short) <
-               subghz_protocol_subaru_const.te_delta) {
+            if(DURATION_DIFF(duration, te_short) < te_delta) {
                 // Short HIGH = bit 1
                 subaru_add_bit(instance, true);
                 instance->decoder.te_last = duration;
                 instance->decoder.parser_step = SubaruDecoderStepCheckDuration;
-            } else if(
-                DURATION_DIFF(duration, subghz_protocol_subaru_const.te_long) <
-                subghz_protocol_subaru_const.te_delta) {
+            } else if(DURATION_DIFF(duration, te_long) < te_delta) {
                 // Long HIGH = bit 0
                 subaru_add_bit(instance, false);
                 instance->decoder.te_last = duration;
@@ -251,8 +499,8 @@ void subghz_protocol_decoder_subaru_feed(void* context, bool level, uint32_t dur
                         instance->generic.data = instance->key;
                         instance->generic.data_count_bit = 64;
                         instance->generic.serial = instance->serial;
-                        instance->generic.btn = instance->button;
-                        instance->generic.cnt = instance->count;
+                        instance->generic.btn = instance->btn;
+                        instance->generic.cnt = instance->cnt;
 
                         if(instance->base.callback) {
                             instance->base.callback(&instance->base, instance->base.context);
@@ -270,11 +518,8 @@ void subghz_protocol_decoder_subaru_feed(void* context, bool level, uint32_t dur
 
     case SubaruDecoderStepCheckDuration:
         if(!level) {
-            // LOW pulse - just validates timing, doesn't encode bit
-            if(DURATION_DIFF(duration, subghz_protocol_subaru_const.te_short) <
-                   subghz_protocol_subaru_const.te_delta ||
-               DURATION_DIFF(duration, subghz_protocol_subaru_const.te_long) <
-                   subghz_protocol_subaru_const.te_delta) {
+            if((DURATION_DIFF(duration, te_short) < te_delta) ||
+               (DURATION_DIFF(duration, te_long) < te_delta)) {
                 instance->decoder.parser_step = SubaruDecoderStepSaveDuration;
             } else if(duration > 3000) {
                 // Gap - end of packet
@@ -283,8 +528,8 @@ void subghz_protocol_decoder_subaru_feed(void* context, bool level, uint32_t dur
                         instance->generic.data = instance->key;
                         instance->generic.data_count_bit = 64;
                         instance->generic.serial = instance->serial;
-                        instance->generic.btn = instance->button;
-                        instance->generic.cnt = instance->count;
+                        instance->generic.btn = instance->btn;
+                        instance->generic.cnt = instance->cnt;
 
                         if(instance->base.callback) {
                             instance->base.callback(&instance->base, instance->base.context);
@@ -318,24 +563,40 @@ SubGhzProtocolStatus subghz_protocol_decoder_subaru_serialize(
 
     SubGhzProtocolStatus ret = SubGhzProtocolStatusError;
 
-    ret = subghz_block_generic_serialize(&instance->generic, flipper_format, preset);
+    do {
+        if(!flipper_format_write_uint32(flipper_format, "Frequency", &preset->frequency, 1)) break;
+        if(!flipper_format_write_string_cstr(
+               flipper_format, "Preset", furi_string_get_cstr(preset->name)))
+            break;
+        if(!flipper_format_write_string_cstr(
+               flipper_format, "Protocol", instance->generic.protocol_name))
+            break;
 
-    if(ret == SubGhzProtocolStatusOk) {
-        // Subaru specific data - the counter uses special decoding
-        flipper_format_write_uint32(flipper_format, "Serial", &instance->serial, 1);
+        uint32_t bits = 64;
+        if(!flipper_format_write_uint32(flipper_format, "Bit", &bits, 1)) break;
 
-        uint32_t temp = instance->button;
-        flipper_format_write_uint32(flipper_format, "Btn", &temp, 1);
+        char key_str[20];
+        uint32_t key_hi = (uint32_t)(instance->key >> 32);
+        uint32_t key_lo = (uint32_t)(instance->key & 0xFFFFFFFF);
+        snprintf(key_str, sizeof(key_str), "%08lX%08lX", key_hi, key_lo);
+        if(!flipper_format_write_string_cstr(flipper_format, "Key", key_str)) break;
 
-        temp = instance->count;
-        flipper_format_write_uint32(flipper_format, "Cnt", &temp, 1);
+        if(!flipper_format_write_uint32(flipper_format, "Serial", &instance->serial, 1)) break;
+
+        uint32_t temp = instance->btn;
+        if(!flipper_format_write_uint32(flipper_format, "Btn", &temp, 1)) break;
+
+        temp = instance->cnt;
+        if(!flipper_format_write_uint32(flipper_format, "Cnt", &temp, 1)) break;
 
         // Save raw data for exact reproduction
         uint32_t raw_high = (uint32_t)(instance->key >> 32);
         uint32_t raw_low = (uint32_t)(instance->key & 0xFFFFFFFF);
-        flipper_format_write_uint32(flipper_format, "DataHi", &raw_high, 1);
-        flipper_format_write_uint32(flipper_format, "DataLo", &raw_low, 1);
-    }
+        if(!flipper_format_write_uint32(flipper_format, "DataHi", &raw_high, 1)) break;
+        if(!flipper_format_write_uint32(flipper_format, "DataLo", &raw_low, 1)) break;
+
+        ret = SubGhzProtocolStatusOk;
+    } while(false);
 
     return ret;
 }
@@ -365,6 +626,6 @@ void subghz_protocol_decoder_subaru_get_string(void* context, FuriString* output
         key_hi,
         key_lo,
         instance->serial,
-        instance->button,
-        instance->count);
+        instance->btn,
+        instance->cnt);
 }

@@ -32,6 +32,8 @@ Encoders:
 - KIA V2
 - KIA V3 / V4
 - StarLine
+- Subaru
+- Suzuki
 - More Coming Soon
 
 ## **Features**

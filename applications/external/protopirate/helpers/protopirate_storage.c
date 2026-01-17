@@ -11,8 +11,8 @@ typedef struct {
     char name[64];
 } FileEntry;
 
-// Static array to hold file entries (circular buffer)
-static FileEntry g_file_entries[MAX_FILES_TO_DISPLAY];
+// Dynamically allocated array to hold file entries (circular buffer)
+static FileEntry* g_file_entries = NULL;
 static uint32_t g_file_count = 0;
 static bool g_file_list_valid = false;
 
@@ -339,8 +339,19 @@ bool protopirate_storage_save_capture(
 
 // Build file list using circular buffer - keeps only last MAX_FILES_TO_DISPLAY
 static void protopirate_storage_build_file_list(void) {
+    // Allocate buffer if needed
+    if(g_file_entries == NULL) {
+        g_file_entries = malloc(sizeof(FileEntry) * MAX_FILES_TO_DISPLAY);
+        if(g_file_entries == NULL) {
+            FURI_LOG_E(TAG, "Failed to allocate file list buffer");
+            g_file_count = 0;
+            g_file_list_valid = true;
+            return;
+        }
+    }
+
     g_file_count = 0;
-    memset(g_file_entries, 0, sizeof(g_file_entries));
+    memset(g_file_entries, 0, sizeof(FileEntry) * MAX_FILES_TO_DISPLAY);
 
     Storage* storage = furi_record_open(RECORD_STORAGE);
 
@@ -395,13 +406,16 @@ static void protopirate_storage_build_file_list(void) {
     // so that newest files come first
     if(total_found > MAX_FILES_TO_DISPLAY) {
         // write_index points to oldest entry, we need to rotate
-        FileEntry temp[MAX_FILES_TO_DISPLAY];
-        for(uint32_t i = 0; i < MAX_FILES_TO_DISPLAY; i++) {
-            // Read from write_index backwards (newest is at write_index - 1)
-            uint32_t src = (write_index + MAX_FILES_TO_DISPLAY - 1 - i) % MAX_FILES_TO_DISPLAY;
-            temp[i] = g_file_entries[src];
+        FileEntry* temp = malloc(sizeof(FileEntry) * MAX_FILES_TO_DISPLAY);
+        if(temp) {
+            for(uint32_t i = 0; i < MAX_FILES_TO_DISPLAY; i++) {
+                // Read from write_index backwards (newest is at write_index - 1)
+                uint32_t src = (write_index + MAX_FILES_TO_DISPLAY - 1 - i) % MAX_FILES_TO_DISPLAY;
+                temp[i] = g_file_entries[src];
+            }
+            memcpy(g_file_entries, temp, sizeof(FileEntry) * MAX_FILES_TO_DISPLAY);
+            free(temp);
         }
-        memcpy(g_file_entries, temp, sizeof(g_file_entries));
     } else if(g_file_count > 1) {
         // Simple reverse for non-wrapped case
         for(uint32_t i = 0; i < g_file_count / 2; i++) {
@@ -434,7 +448,7 @@ bool protopirate_storage_get_file_by_index(
     FuriString* out_name) {
     if(!g_file_list_valid) protopirate_storage_build_file_list();
 
-    if(index >= g_file_count) return false;
+    if(g_file_entries == NULL || index >= g_file_count) return false;
 
     if(out_path) {
         furi_string_printf(
@@ -500,7 +514,10 @@ bool protopirate_storage_file_exists(const char* file_path) {
 // Free the internal file list cache
 // Call this when exiting the app or when you need to refresh the list
 void protopirate_storage_free_file_list(void) {
+    if(g_file_entries != NULL) {
+        free(g_file_entries);
+        g_file_entries = NULL;
+    }
     g_file_count = 0;
     g_file_list_valid = false;
-    // Static array, no need to free
 }
