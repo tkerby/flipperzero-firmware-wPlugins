@@ -36,8 +36,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [BT Audio v1.0 (By FatherDivine)](https://github.com/FatherDivine/flipperzero-mayhem/tree/bt_audio/flipper_companion_apps/applications/external/bt_audio) `Req: ESP32 w BT` & [This FW](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/external/bt_audio/.esp32_firmware)
 - Updated: [BT Audio v1.1 (By FatherDivine)](https://github.com/FatherDivine/flipperzero-mayhem/tree/bt_audio/flipper_companion_apps/applications/external/bt_audio) `Req: ESP32 w BT` & [This FW](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/external/bt_audio/.esp32_firmware)
 - Updated: [Flipper Hero v1.4 (By mentoster)](https://github.com/mentoster/Flipper-hero)
-- Updated: [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader)
 - Updated: [ProtoPirate v1.5 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
+- Updated: [NFC Seader v4.0 (By bettse)](https://github.com/bettse/seader)
 
 <a name="release">
 
@@ -659,7 +659,7 @@ $ ./fbt dolphin_ext
 - [NFC Maker v2.0 (by WillyJL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/343cb39d08f60b75b537e1a31100707935cf6e9d)
 - [NFC Playlist v3.4 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
 - [NFC Relay v0.2 (By leommxj)](https://github.com/leommxj/nfc_relay)
-- [NFC Seader v3.4 (By bettse)](https://github.com/bettse/seader)
+- [NFC Seader v4.0 (By bettse)](https://github.com/bettse/seader)
 - [NFC Sniffer v0.2 (By kdiller713)](https://github.com/kdiller713/public-FlipperApps/tree/main/nfc_sniffer)
 - [NFC URL v1.0 (By y-dejong)](https://github.com/y-dejong/nfcurl)
 - [Nickname Generator v0.1 (By disaxq)](https://github.com/disaxq/Nickname-Generator)
