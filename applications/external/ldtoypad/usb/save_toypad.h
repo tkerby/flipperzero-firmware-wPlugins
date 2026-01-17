@@ -2,13 +2,21 @@
 
 #include "../ldtoypad.h"
 #include "../views/EmulateToyPad_scene.h"
+#include "../ToyPadEmu.h"
+
+#define FILEPATH_SIZE          128
+#define FILE_NAME_LEN_MAX      256
+#define TOKEN_FILE_EXTENSION   ".toy"
+#define TOKENS_DIR             "tokens"
+#define TOYPADS_DIR            "toypads"
+#define TOYPADS_FILE_EXTENSION ".toypad"
+#define FILE_NAME_FAVORITES    "favs.bin"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define MAX_FAVORITES       100
-#define FILE_NAME_FAVORITES "favs.bin"
+#define MAX_FAVORITES 100
 
 extern int favorite_ids[MAX_FAVORITES];
 extern int num_favorites;

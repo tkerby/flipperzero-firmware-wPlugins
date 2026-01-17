@@ -61,6 +61,8 @@ static FuriHalSubGhzPreset scheduler_get_subghz_preset_name(const char* preset_n
         preset = FuriHalSubGhzPresetOok650Async;
     } else if(!strcmp(preset_name, "FuriHalSubGhzPreset2FSKDev238Async")) {
         preset = FuriHalSubGhzPreset2FSKDev238Async;
+    } else if(!strcmp(preset_name, "FuriHalSubGhzPreset2FSKDev12KAsync")) {
+        preset = FuriHalSubGhzPreset2FSKDev12KAsync;
     } else if(!strcmp(preset_name, "FuriHalSubGhzPreset2FSKDev476Async")) {
         preset = FuriHalSubGhzPreset2FSKDev476Async;
     } else if(!strcmp(preset_name, "FuriHalSubGhzPresetCustom")) {
@@ -88,6 +90,9 @@ static void
         subghz_devices_stop_async_tx(device);
     }
 
+    subghz_devices_idle(device);
+    subghz_transmitter_stop(transmitter);
+    subghz_transmitter_free(transmitter);
     notification_message(app->notifications, &sequence_blink_stop);
 }
 
@@ -109,6 +114,8 @@ static int32_t scheduler_tx(void* context) {
         furi_string_set_str(tx_run->data, furi_string_get_cstr(app->file_path));
     }
 
+    //uint16_t list_count = scheduler_get_list_count(app->scheduler);
+    //uint16_t tx_count = 1;
     tx_run->tx_delay = scheduler_get_tx_delay(app->scheduler);
     do {
         if(!flipper_format_file_open_existing(
@@ -151,10 +158,11 @@ static int32_t scheduler_tx(void* context) {
 
             transmit(app, device, transmitter);
 
-            subghz_transmitter_free(transmitter);
-
+            //if(tx_count < list_count) {
             furi_delay_ms(tx_run->tx_delay);
+            //}
         }
+        //tx_count++;
     } while(tx_run->filetype == SchedulerFileTypePlaylist &&
             flipper_format_read_string(tx_run->fff_head, "sub", tx_run->data));
 

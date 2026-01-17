@@ -146,7 +146,8 @@ ProtoViewApp* protoview_app_alloc() {
     app->text_input = NULL;
     app->show_text_input = false;
     app->alert_dismiss_time = 0;
-    app->current_view = ViewRawPulses;
+    // app->current_view = ViewRawPulses;
+    app->current_view = ViewInfoList;
     app->view_updating_mutex = furi_mutex_alloc(FuriMutexTypeNormal);
     for(int j = 0; j < ViewLast; j++)
         app->current_subview[j] = 0;
@@ -172,7 +173,8 @@ ProtoViewApp* protoview_app_alloc() {
     app->txrx->last_g0_value = false;
 
     app->frequency = subghz_setting_get_default_frequency(app->setting);
-    app->modulation = 0; /* Defaults to ProtoViewModulations[0]. */
+    //app->modulation = 0; /* Defaults to ProtoViewModulations[0]. */
+    app->modulation = 4; /* Default to TPMS 1 (FSK) */
 
     // Init & set radio_device
     subghz_devices_init();

@@ -10,7 +10,7 @@ TODO:
  - [x] Score
  - [x] Pause
  - [x] Start state
- - [ ] Enemy speeding up, adjust starting speed
+ - [x] Enemy speeding up, adjust starting speed
+ - [x] Levels
  - [ ] Enemy shooting
- - [ ] Levels
  - [ ] Sound (?)

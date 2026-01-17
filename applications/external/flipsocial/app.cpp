@@ -471,6 +471,9 @@ void FlipSocialApp::viewPortDraw(Canvas* canvas, void* context) {
 }
 
 void FlipSocialApp::viewPortInput(InputEvent* event, void* context) {
+    if(event->type != InputTypeShort && event->type != InputTypeLong) {
+        return;
+    }
     FlipSocialApp* app = static_cast<FlipSocialApp*>(context);
     furi_check(app);
     auto run = app->run.get();
@@ -490,7 +493,7 @@ int32_t main_flip_social(void* p) {
     app.saveChar("app_version", VERSION);
 
     // check if update is available from lab.flipper.net
-    app.updateApp();
+    // app.updateApp();
 
     // Run the app
     app.runDispatcher();

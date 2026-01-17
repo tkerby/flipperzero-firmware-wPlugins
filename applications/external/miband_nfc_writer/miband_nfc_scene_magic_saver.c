@@ -23,9 +23,9 @@ static bool miband_nfc_save_magic_dump(MiBandNfcApp* app) {
 
     mf_classic_copy(magic_data, app->mf_classic_data);
     size_t total_sectors = mf_classic_get_total_sectors_num(magic_data->type);
-
+    FuriString* progress = furi_string_alloc();
     for(size_t sector_idx = 0; sector_idx < total_sectors; sector_idx++) {
-        FuriString* progress = furi_string_alloc();
+        furi_string_reset(progress);
         furi_string_printf(
             progress, "Converting keys\nSector %zu/%zu\n\n", sector_idx + 1, total_sectors);
 
@@ -41,7 +41,7 @@ static bool miband_nfc_save_magic_dump(MiBandNfcApp* app) {
         furi_string_cat_printf(progress, "]\n%lu%%", percent);
 
         popup_set_text(app->popup, furi_string_get_cstr(progress), 64, 22, AlignCenter, AlignTop);
-        furi_string_free(progress);
+
         furi_delay_ms(20);
 
         uint8_t sector_trailer_block_idx;
@@ -63,6 +63,7 @@ static bool miband_nfc_save_magic_dump(MiBandNfcApp* app) {
         FURI_BIT_SET(magic_data->key_a_mask, sector_idx);
         FURI_BIT_SET(magic_data->key_b_mask, sector_idx);
     }
+    furi_string_free(progress);
 
     popup_set_text(app->popup, "Saving file...", 64, 30, AlignCenter, AlignTop);
     furi_delay_ms(100);

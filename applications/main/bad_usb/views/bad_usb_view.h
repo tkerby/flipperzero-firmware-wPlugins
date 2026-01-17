@@ -25,4 +25,6 @@ void bad_usb_view_set_state(BadUsb* bad_usb, BadUsbState* st);
 
 void bad_usb_view_set_interface(BadUsb* bad_usb, BadUsbHidInterface interface);
 
+void bad_usb_view_set_nfc_status(BadUsb* bad_usb, bool nfc_active);
+
 bool bad_usb_view_is_idle_state(BadUsb* bad_usb);

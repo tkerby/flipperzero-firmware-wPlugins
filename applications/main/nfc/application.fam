@@ -557,6 +557,15 @@ App(
 )
 
 App(
+    appid="hotels_parser",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="hotels_plugin_ep",
+    targets=["f7"],
+    requires=["nfc"],
+    sources=["plugins/supported_cards/hotels.c"],
+)
+
+App(
     appid="banapass_parser",
     apptype=FlipperAppType.PLUGIN,
     entry_point="banapass_plugin_ep",

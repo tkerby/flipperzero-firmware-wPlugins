@@ -1848,8 +1848,6 @@ int32_t anki_remote_app(void* p) {
     return 0;
 }
 
-// No one will read this cuz it's at the bottom and no one will care about my app but
-
 // 67 67 67 67 67 67 67 67 67 67 67 67
 // 67 67 67 67 67 67 67 67 67 67 67 67
 // 67 67 67 67 67 67 67 67 67 67 67 67
@@ -1868,6 +1866,4 @@ int32_t anki_remote_app(void* p) {
 // 67 67 67 67 67 67 67 67 67 67 67 67
 // 67 67 67 67 67 67 67 67 67 67 67 67
 // 67 67 67 67 67 67 67 67 67 67 67 67
-
-// I <3 HANABI HYUGA (from Boruto) best anime waifu
-// Skibidi ohio sigma sigma boy ok I'll stop sry
+// 67 67 67 67 67 67 67 67 67 67 67 67

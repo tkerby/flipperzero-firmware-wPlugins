@@ -1,5 +1,6 @@
 #include "transaction_list.h"
 #include "../view_modules/elements.h"
+#include "t_union_master_icons.h"
 
 struct TransactionListView {
     View* view;
@@ -247,6 +248,8 @@ static void transaction_list_view_draw_cb(Canvas* canvas, void* _model) {
             frame_x + frame_width,
             frame_y + frame_height);
         elements_draw_str_aligned_utf8(canvas, 64, 32, AlignCenter, AlignCenter, "交易记录");
+        canvas_draw_icon(canvas, frame_x + 5, 28, &I_ButtonLeft_4x7);
+        canvas_draw_icon(canvas, frame_x + frame_width - 5 - 4, 28, &I_ButtonRight_4x7);
     }
 
     furi_string_free(temp_str);

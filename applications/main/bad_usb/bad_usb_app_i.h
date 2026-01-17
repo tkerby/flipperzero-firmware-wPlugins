@@ -20,6 +20,11 @@
 #include "views/bad_usb_view.h"
 #include <furi_hal_usb.h>
 
+#include <nfc/nfc.h>
+#include <nfc/nfc_listener.h>
+#include <nfc/protocols/mf_ultralight/mf_ultralight.h>
+#include <bt/bt_service/bt.h>
+
 #define BAD_USB_APP_BASE_FOLDER        EXT_PATH("badusb")
 #define BAD_USB_APP_PATH_LAYOUT_FOLDER BAD_USB_APP_BASE_FOLDER "/assets/layouts"
 #define BAD_USB_APP_SCRIPT_EXTENSION   ".txt"
@@ -50,12 +55,21 @@ struct BadUsbApp {
     BadUsbAppError error;
     FuriString* file_path;
     FuriString* keyboard_layout;
-    BadUsb* bad_usb_view;
-    BadUsbScript* bad_usb_script;
 
     BadUsbHidInterface interface;
     BadUsbHidConfig user_hid_cfg;
     BadUsbHidConfig script_hid_cfg;
+    bool nfc_pairing_enabled; // Toggle for NFC pairing emulation
+
+    BadUsbScript* bad_usb_script;
+    BadUsb* bad_usb_view;
+
+    // NFC Pairing
+    Nfc* nfc;
+    NfcListener* nfc_listener;
+    MfUltralightData* nfc_data;
+
+    Bt* bt;
 };
 
 typedef enum {

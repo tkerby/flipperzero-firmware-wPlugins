@@ -94,7 +94,16 @@ static MiBandNfcApp* miband_nfc_app_alloc() {
     // FIX: Controllo allocazione logger
     app->logger = miband_logger_alloc(app->storage);
     if(!app->logger) {
-        FURI_LOG_W(TAG, "Failed to allocate logger, continuing without logging");
+        FURI_LOG_W(TAG, "Failed to allocate logger, cleaning up partial allocations");
+
+        if(app->temp_text_buffer) furi_string_free(app->temp_text_buffer);
+        if(app->file_path) furi_string_free(app->file_path);
+        if(app->mf_classic_data) mf_classic_free(app->mf_classic_data);
+        if(app->target_data) mf_classic_free(app->target_data);
+        if(app->nfc_device) nfc_device_free(app->nfc_device);
+        if(app->nfc) nfc_free(app->nfc);
+
+        goto error;
     }
 
     if(!miband_settings_load(app)) {
@@ -124,6 +133,12 @@ error:
 
 static void miband_nfc_app_free(MiBandNfcApp* app) {
     furi_assert(app);
+
+    if(app->uid_check_context) {
+        FURI_LOG_W(TAG, "UidCheckContext still allocated at app free, cleaning up");
+        free(app->uid_check_context);
+        app->uid_check_context = NULL;
+    }
 
     if(app->submenu) {
         view_dispatcher_remove_view(app->view_dispatcher, MiBandNfcViewIdMainMenu);

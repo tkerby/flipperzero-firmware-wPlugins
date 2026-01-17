@@ -9,6 +9,6 @@ App(
     fap_category="Sub-GHz",
     fap_author="shalebridge / Patrick Edwards",
     fap_weburl="https://github.com/shalebridge/flipper-subghz-scheduler",
-    fap_version="2.2",
+    fap_version="2.3",
     fap_description="Send a Sub-GHz signal repeatedly at a given interval.",
 )

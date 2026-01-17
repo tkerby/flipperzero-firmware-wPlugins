@@ -13,23 +13,39 @@ struct Scheduler {
     uint8_t list_count;
     char* file_name;
     SchedulerTxMode mode;
-    bool timing_mode;
+    SchedulerTimingMode timing_mode;
     bool radio;
 };
 
 Scheduler* scheduler_alloc() {
-    Scheduler* scheduler = malloc(sizeof(Scheduler));
+    Scheduler* scheduler = calloc(1, sizeof(Scheduler));
+    furi_assert(scheduler);
+
+    scheduler->previous_run_time = 0;
+    scheduler->countdown = 0;
     scheduler->tx_delay = SchedulerTxDelay100;
+    scheduler->interval = Interval10Sec;
     scheduler->tx_repeats = 0;
+    scheduler->file_type = SchedulerFileTypeSingle;
+    scheduler->list_count = 1;
+    scheduler->file_name = NULL;
+    scheduler->mode = SchedulerTxModeNormal;
+    scheduler->timing_mode = SchedulerTimingModeRelative;
+    scheduler->radio = 0; // internal by default
+
     return scheduler;
 }
 
 void scheduler_free(Scheduler* scheduler) {
     furi_assert(scheduler);
+    if(scheduler->file_name) {
+        free(scheduler->file_name);
+    }
     free(scheduler);
 }
 
 void scheduler_reset(Scheduler* scheduler) {
+    furi_assert(scheduler);
     scheduler->previous_run_time = 0;
     scheduler->countdown = 0;
 }
@@ -77,9 +93,18 @@ static const char* extract_filename(const char* filepath) {
 
 void scheduler_set_file(Scheduler* scheduler, const char* file_name, int8_t list_count) {
     furi_assert(scheduler);
-    const char* name = extract_filename(file_name);
-    scheduler->file_name = (char*)name;
-    if(list_count == 0) {
+    furi_assert(file_name);
+    const char* base = extract_filename(file_name);
+
+    // Free old name if it exists
+    if(scheduler->file_name) {
+        free(scheduler->file_name);
+        scheduler->file_name = NULL;
+    }
+
+    scheduler->file_name = strdup(base);
+
+    if(list_count <= 0) {
         scheduler->file_type = SchedulerFileTypeSingle;
         scheduler->list_count = 1;
     } else {
@@ -110,13 +135,12 @@ bool scheduler_time_to_trigger(Scheduler* scheduler) {
 
 void scheduler_get_countdown_fmt(Scheduler* scheduler, char* buffer, uint8_t size) {
     furi_assert(scheduler);
-    snprintf(
-        buffer,
-        size,
-        "%02lu:%02lu:%02lu",
-        scheduler->countdown / 60 / 60,
-        scheduler->countdown / 60 % 60,
-        scheduler->countdown % 60);
+
+    uint32_t h = scheduler->countdown / 3600;
+    uint32_t m = (scheduler->countdown / 60) % 60;
+    uint32_t s = scheduler->countdown % 60;
+
+    snprintf(buffer, size, "%02lu:%02lu:%02lu", h, m, s);
 }
 
 uint32_t scheduler_get_previous_time(Scheduler* scheduler) {

@@ -56,7 +56,7 @@ bool nfc_playlist_confirm_delete_scene_on_event(void* context, SceneManagerEvent
     bool consumed = false;
     if(event.type == SceneManagerEventTypeCustom) {
         switch(event.event) {
-        case GuiButtonTypeRight:
+        case GuiButtonTypeRight: {
             Storage* storage = furi_record_open(RECORD_STORAGE);
             if(storage_simply_remove(
                    storage,
@@ -68,6 +68,7 @@ bool nfc_playlist_confirm_delete_scene_on_event(void* context, SceneManagerEvent
                 nfc_playlist->scene_manager, NfcPlaylistScene_MainMenu);
             consumed = true;
             break;
+        }
         case GuiButtonTypeLeft:
             scene_manager_previous_scene(nfc_playlist->scene_manager);
             consumed = true;

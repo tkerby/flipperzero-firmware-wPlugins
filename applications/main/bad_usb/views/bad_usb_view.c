@@ -21,6 +21,7 @@ typedef struct {
     uint8_t anim_frame;
     BadUsbHidInterface interface;
     Bt* bt;
+    bool nfc_active; // NFC pairing emulation status
 } BadUsbModel;
 
 static void bad_usb_draw_callback(Canvas* canvas, void* _model) {
@@ -38,6 +39,9 @@ static void bad_usb_draw_callback(Canvas* canvas, void* _model) {
     }
     if(model->interface == BadUsbHidInterfaceBle && model->bt->pin_code) {
         furi_string_cat_printf(disp_str, "  PIN: %ld", model->bt->pin_code);
+    } else if(model->interface == BadUsbHidInterfaceBle) {
+        // Show NFC status in BLE mode
+        furi_string_cat_printf(disp_str, "  NFC: %s", model->nfc_active ? "Active" : "Inactive");
     } else {
         uint32_t e = model->state.elapsed;
         furi_string_cat_printf(disp_str, "  %02lu:%02lu.%ld", e / 60 / 1000, e / 1000, e % 1000);
@@ -291,8 +295,27 @@ void bad_usb_view_set_state(BadUsb* bad_usb, BadUsbState* st) {
         true);
 }
 
-void bad_usb_view_set_interface(BadUsb* bad_usb, BadUsbHidInterface interface) {
-    with_view_model(bad_usb->view, BadUsbModel * model, { model->interface = interface; }, true);
+void bad_usb_view_set_interface(BadUsb* instance, BadUsbHidInterface interface) {
+    furi_assert(instance);
+    with_view_model(
+        instance->view,
+        BadUsbModel * model,
+        {
+            model->interface = interface;
+            if(interface == BadUsbHidInterfaceBle) {
+                model->bt = furi_record_open(RECORD_BT);
+            } else {
+                furi_record_close(RECORD_BT);
+                model->bt = NULL;
+            }
+        },
+        true);
+}
+
+void bad_usb_view_set_nfc_status(BadUsb* instance, bool nfc_active) {
+    furi_assert(instance);
+    with_view_model(
+        instance->view, BadUsbModel * model, { model->nfc_active = nfc_active; }, true);
 }
 
 bool bad_usb_view_is_idle_state(BadUsb* bad_usb) {

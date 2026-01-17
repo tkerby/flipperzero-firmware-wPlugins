@@ -10,7 +10,7 @@
 #include <datetime/datetime.h>
 
 #define LOG_PATH        EXT_PATH("apps_data/miband_nfc/logs")
-#define MAX_LOG_ENTRIES 500
+#define MAX_LOG_ENTRIES 50
 #define MAX_LOG_SIZE    50000 // 50KB max per file
 
 typedef enum {
@@ -23,7 +23,7 @@ typedef enum {
 typedef struct {
     DateTime timestamp;
     LogLevel level;
-    char message[128];
+    char message[64];
 } LogEntry;
 
 typedef struct {

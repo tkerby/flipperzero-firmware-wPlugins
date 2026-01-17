@@ -76,12 +76,12 @@ bool miband_nfc_scene_scanner_on_event(void* context, SceneManagerEvent event) {
             break;
 
         case MiBandNfcCustomEventWrongCard:
+            app->is_scan_active = false;
             if(app->scanner) {
                 nfc_scanner_stop(app->scanner);
                 nfc_scanner_free(app->scanner);
                 app->scanner = NULL;
             }
-            app->is_scan_active = false;
 
             popup_reset(app->popup);
             popup_set_header(app->popup, "Wrong Card Type", 64, 4, AlignCenter, AlignTop);
@@ -102,12 +102,13 @@ bool miband_nfc_scene_scanner_on_event(void* context, SceneManagerEvent event) {
             break;
 
         case MiBandNfcCustomEventMfClassicCard:
+            app->is_scan_active = false;
             if(app->scanner) {
                 nfc_scanner_stop(app->scanner);
                 nfc_scanner_free(app->scanner);
                 app->scanner = NULL;
             }
-            app->is_scan_active = false;
+
             scene_manager_next_scene(app->scene_manager, MiBandNfcSceneWriter);
             consumed = true;
             break;

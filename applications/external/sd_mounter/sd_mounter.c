@@ -101,7 +101,10 @@ void do_mass_storage(FuriHalSdInfo card_info) {
         // Update bytes counter
         furi_string_printf(
             message,
-            "Read: %llu kB\nWritten: %llu kB",
+            "Read: %llu kB\n"
+            "Written: %llu kB\n"
+            "\n"
+            "Press Back to eject.",
             ctx.bytes_read / 1024,
             ctx.bytes_written / 1024);
         update_existing_popup(furi_string_get_cstr(message));
@@ -122,6 +125,8 @@ void do_mass_storage(FuriHalSdInfo card_info) {
             furi_thread_flags_wait(FlagEject | FlagBackButtonPressed, FuriFlagNoClear, 50);
         if(flags != FuriFlagErrorTimeout) break;
     }
+
+    update_existing_popup("Ejecting card, please wait...");
 
     // Cleanup
     mass_storage_usb_stop(usb);
@@ -198,15 +203,15 @@ int32_t sd_mounter_app(void* p) {
     */
     FuriHalSdInfo* card_info = NULL;
     FuriString* card_desc = NULL;
-    while(!back_button_was_pressed()) {
-        show("Insert an SD card");
+    while(!back_button_was_pressed(true)) {
+        show("Insert an SD card or\npress Back to exit.");
         // Wait for the card to be inserted or the back button to be pressed
         notify(&led_blink_cyan);
-        while(!furi_hal_sd_is_present() && !back_button_was_pressed())
+        while(!furi_hal_sd_is_present() && !back_button_was_pressed(false))
             furi_thread_yield();
 
         // If the back button was pressed, attempt to quit the app
-        if(back_button_was_pressed()) break;
+        if(back_button_was_pressed(true)) break;
 
         show("Scanning card, please wait...\nDO NOT REMOVE CARD!");
 
@@ -214,7 +219,7 @@ int32_t sd_mounter_app(void* p) {
         card_info = try_get_sd_info();
 
         // Fetching the card info can take a while so check again if the back button was pressed
-        if(back_button_was_pressed()) break;
+        if(back_button_was_pressed(true)) break;
 
         if(card_info == NULL) {
             show("Failed to get card info!\nRemove card and try again.");
@@ -234,9 +239,9 @@ int32_t sd_mounter_app(void* p) {
         do_mass_storage(*card_info);
 
         // Card ejected, wait for it to be removed
-        show("Card ejected.\nPlease remove it.");
+        show("SD Card ejected,\nplease remove it.\nPress Back to exit.");
         notify(&led_blink_yellow_slow);
-        while(furi_hal_sd_is_present())
+        while(furi_hal_sd_is_present() && !back_button_was_pressed(false))
             furi_thread_yield();
     };
 
@@ -247,7 +252,7 @@ int32_t sd_mounter_app(void* p) {
     card_desc = NULL;
     notify(&led_blink_cyan);
     while(1) {
-        show("Please reinsert the Flipper's\noriginal SD card to exit this app.");
+        show("Please reinsert the\nFlipper's original SD\ncard to exit this app.");
         if(furi_hal_sd_is_present()) {
             show("Scanning card, please wait...\nDO NOT REMOVE CARD!");
             card_info = try_get_sd_info();
@@ -260,24 +265,12 @@ int32_t sd_mounter_app(void* p) {
                 if(furi_string_equal(card_desc, original_card_desc)) {
                     notify(&led_green);
                     break;
-                } else {
-                    FuriString* message = furi_string_alloc();
-                    furi_string_printf(
-                        message,
-                        "Expected:\n%s\nGot:\n%s",
-                        furi_string_get_cstr(original_card_desc),
-                        furi_string_get_cstr(card_desc));
-                    show(furi_string_get_cstr(message));
-                    furi_string_free(message);
-                    // show("Failed to scan card. Reinsert\nthe Flipper's original SD card\nto exit this app.");
                 }
-            } else {
-                show(
-                    "Wrong SD card card. Reinsert\nthe Flipper's original SD card\nto exit this app.");
             }
 
             // Otherwise, show a message and wait for the card to be removed
             notify(&led_red);
+            show("Wrong SD card. Reinsert\nthe Flipper's original SD\ncard to exit this app.");
             while(furi_hal_sd_is_present())
                 furi_thread_yield();
             notify(&led_blink_cyan);
@@ -285,7 +278,7 @@ int32_t sd_mounter_app(void* p) {
     }
 
     notify(NULL);
-    show("Flipper card reinserted.\nGoodbye!");
+    show("Flipper card detected.\nGoodbye!");
     furi_delay_ms(500);
 
     cleanup();

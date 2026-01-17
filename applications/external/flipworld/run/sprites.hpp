@@ -4,7 +4,13 @@
 #include "engine/vector.hpp"
 #include "engine/game.hpp"
 
+class FlipWorldRun;
+
 class Sprite : public Entity {
+private:
+    FlipWorldRun* flipWorldRun = nullptr;
+    void syncMultiplayerState(bool hostOnly = true, Entity* other = nullptr);
+
 public:
     Sprite(
         const char* name,
@@ -21,4 +27,7 @@ public:
     void drawUsername(Vector pos, Game* game);
     void render(Draw* canvas, Game* game) override;
     void update(Game* game) override;
+    void setFlipWorldRun(FlipWorldRun* run) {
+        flipWorldRun = run;
+    } // Set the FlipWorldRun instance
 };

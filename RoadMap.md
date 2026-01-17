@@ -85,6 +85,8 @@
 ### OFW TO ADD: [#4292](https://github.com/flipperdevices/flipperzero-firmware/pull/4292)
 ### OFW TO ADD: [#4284](https://github.com/flipperdevices/flipperzero-firmware/pull/4284) [#4305](https://github.com/flipperdevices/flipperzero-firmware/pull/4305)
 ### OFW TO ADD: [#4293](https://github.com/flipperdevices/flipperzero-firmware/pull/4293)
+### OFW TO ADD: [#4311](https://github.com/flipperdevices/flipperzero-firmware/pull/4311)
+### OFW TO ADD: [#4312](https://github.com/flipperdevices/flipperzero-firmware/pull/4312)
 
 ## WISH LIST ITEMS:
 - Battery Type moved to Power Settings

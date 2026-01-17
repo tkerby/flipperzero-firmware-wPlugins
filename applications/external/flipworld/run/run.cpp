@@ -3,19 +3,10 @@
 #include "app.hpp"
 #include "jsmn/jsmn.h"
 
-FlipWorldRun::FlipWorldRun() {
-    // Initialize chunked messages array
-    for(size_t i = 0; i < MAX_CHUNKED_MESSAGES; i++) {
-        chunkedMessages[i].id = 0;
-        chunkedMessages[i].totalChunks = 0;
-        chunkedMessages[i].receivedChunks = 0;
-        chunkedMessages[i].data = nullptr;
-        chunkedMessages[i].dataSize = 0;
-        chunkedMessages[i].dataCapacity = 0;
-        chunkedMessages[i].lastUpdateTime = 0;
-    }
-    chunkedMessageCount = 0;
+// this was hardcoded as 80 before, but FlipperHTTP v2.1 fixed this
+#define MAX_WEBSOCKET_SIZE 256
 
+FlipWorldRun::FlipWorldRun() {
     // Initialize message queue
     for(size_t i = 0; i < MAX_QUEUED_MESSAGES; i++) {
         messageQueue[i].message = nullptr;
@@ -34,14 +25,6 @@ FlipWorldRun::~FlipWorldRun() {
         }
         free(currentIconGroup);
         currentIconGroup = nullptr;
-    }
-
-    // Clean up chunked messages
-    for(size_t i = 0; i < MAX_CHUNKED_MESSAGES; i++) {
-        if(chunkedMessages[i].data) {
-            free(chunkedMessages[i].data);
-            chunkedMessages[i].data = nullptr;
-        }
     }
 
     // Clean up message queue
@@ -115,6 +98,8 @@ bool FlipWorldRun::addRemotePlayer(const char* username) {
         remotePlayer->level = 1.0f;
 
         currentLevel->entity_add(remotePlayer);
+
+        syncMultiplayerLevel(); // Notify others of current level
         return true;
     } else {
         FURI_LOG_E("FlipWorldRun", "Failed to create remote player entity for '%s'", username);
@@ -122,68 +107,6 @@ bool FlipWorldRun::addRemotePlayer(const char* username) {
     }
 
     return false;
-}
-
-void FlipWorldRun::cleanupExpiredChunkedMessages() {
-    uint32_t currentTime = furi_get_tick();
-    const uint32_t CHUNK_TIMEOUT = 3000;
-
-    for(size_t i = 0; i < MAX_CHUNKED_MESSAGES; i++) {
-        if(chunkedMessages[i].data &&
-           (currentTime - chunkedMessages[i].lastUpdateTime) > CHUNK_TIMEOUT) {
-            FURI_LOG_W(
-                "FlipWorldRun",
-                "Cleaning up expired chunked message ID %d (%zu bytes)",
-                chunkedMessages[i].id,
-                chunkedMessages[i].dataCapacity);
-            free(chunkedMessages[i].data);
-            chunkedMessages[i].data = nullptr;
-            chunkedMessages[i].id = 0;
-            chunkedMessages[i].totalChunks = 0;
-            chunkedMessages[i].receivedChunks = 0;
-            chunkedMessages[i].dataSize = 0;
-            chunkedMessages[i].dataCapacity = 0;
-            chunkedMessages[i].lastUpdateTime = 0;
-            if(chunkedMessageCount > 0) {
-                chunkedMessageCount--;
-            }
-        }
-    }
-
-    // Clean up - if we have more than 50% full, clean up the oldest ones
-    if(chunkedMessageCount > MAX_CHUNKED_MESSAGES * 0.5) {
-        FURI_LOG_W(
-            "FlipWorldRun",
-            "Too many concurrent chunked messages (%zu), cleaning oldest",
-            chunkedMessageCount);
-        uint32_t oldestTime = currentTime;
-        size_t oldestIndex = SIZE_MAX;
-
-        for(size_t i = 0; i < MAX_CHUNKED_MESSAGES; i++) {
-            if(chunkedMessages[i].data && chunkedMessages[i].lastUpdateTime < oldestTime) {
-                oldestTime = chunkedMessages[i].lastUpdateTime;
-                oldestIndex = i;
-            }
-        }
-
-        if(oldestIndex != SIZE_MAX) {
-            FURI_LOG_W(
-                "FlipWorldRun",
-                "Force cleaning oldest chunked message ID %d",
-                chunkedMessages[oldestIndex].id);
-            free(chunkedMessages[oldestIndex].data);
-            chunkedMessages[oldestIndex].data = nullptr;
-            chunkedMessages[oldestIndex].id = 0;
-            chunkedMessages[oldestIndex].totalChunks = 0;
-            chunkedMessages[oldestIndex].receivedChunks = 0;
-            chunkedMessages[oldestIndex].dataSize = 0;
-            chunkedMessages[oldestIndex].dataCapacity = 0;
-            chunkedMessages[oldestIndex].lastUpdateTime = 0;
-            if(chunkedMessageCount > 0) {
-                chunkedMessageCount--;
-            }
-        }
-    }
 }
 
 void FlipWorldRun::debounceInput() {
@@ -219,134 +142,6 @@ void FlipWorldRun::endGame() {
 
     isPvEMode = false;
     isLobbyHost = false;
-}
-
-bool FlipWorldRun::entityJsonUpdate(Entity* entity) {
-    FlipWorldApp* app = static_cast<FlipWorldApp*>(appContext);
-    if(!app) {
-        FURI_LOG_E("Game", "entityJsonUpdate: App context is not set");
-        return false;
-    }
-    auto response = app->getLastResponse();
-    if(!response) {
-        FURI_LOG_E("Game", "entityJsonUpdate: Response is null");
-        return false;
-    }
-    if(strlen(response) == 0) {
-        // no need for error log here, just return false
-        return false;
-    }
-
-    // parse the response and set the position
-    /* expected response:
-    {
-        "u": "JBlanked",
-        "xp": 37743,
-        "h": 207,
-        "ehr": 0.7,
-        "eat": 127.5,
-        "d": 2,
-        "s": 1,
-        "sp": {
-            "x": 381.0,
-            "y": 192.0
-        }
-    }
-    */
-
-    char* u = get_json_value("u", response);
-    if(!u) {
-        FURI_LOG_E("Game", "entityJsonUpdate: Failed to get username");
-        return false;
-    }
-
-    // check if the username matches
-    if(strcmp(u, entity->name) != 0) {
-        free(u);
-        return false;
-    }
-
-    free(u); // free username
-
-    // we need the health, elapsed attack timer, direction, xp, and position
-    char* h = get_json_value("h", response);
-    char* eat = get_json_value("eat", response);
-    char* d = get_json_value("d", response);
-    char* xp = get_json_value("xp", response);
-    char* sp = get_json_value("sp", response);
-    char* x = get_json_value("x", sp);
-    char* y = get_json_value("y", sp);
-
-    if(!h || !eat || !d || !sp || !x || !y || !xp) {
-        if(h) free(h);
-        if(eat) free(eat);
-        if(d) free(d);
-        if(sp) free(sp);
-        if(x) free(x);
-        if(y) free(y);
-        if(xp) free(xp);
-        return false;
-    }
-
-    // set enemy info
-    entity->health = (float)atoi(h); // h is an int
-    if(entity->health <= 0) {
-        entity->health = 0;
-        entity->state = ENTITY_DEAD;
-        entity->position_set((Vector){-100, -100});
-        free(h);
-        free(eat);
-        free(d);
-        free(sp);
-        free(x);
-        free(y);
-        free(xp);
-        return true;
-    }
-
-    entity->elapsed_attack_timer = atof_(eat);
-
-    switch(atoi(d)) {
-    case 0:
-        entity->direction = ENTITY_LEFT;
-        break;
-    case 1:
-        entity->direction = ENTITY_RIGHT;
-        break;
-    case 2:
-        entity->direction = ENTITY_UP;
-        break;
-    case 3:
-        entity->direction = ENTITY_DOWN;
-        break;
-    default:
-        entity->direction = ENTITY_RIGHT;
-        break;
-    }
-
-    entity->xp = (atoi)(xp); // xp is an int
-    entity->level = 1;
-    uint32_t xp_required = 100; // Base XP for level 2
-
-    while(entity->level < 100 && entity->xp >= xp_required) // Maximum level supported
-    {
-        entity->level++;
-        xp_required = (uint32_t)(xp_required * 1.5); // 1.5 growth factor per level
-    }
-
-    // set position
-    entity->position_set(Vector(atof_(x), atof_(y)));
-
-    // free the strings
-    free(h);
-    free(eat);
-    free(d);
-    free(sp);
-    free(x);
-    free(y);
-    free(xp);
-
-    return true;
 }
 
 const char* FlipWorldRun::entityToJson(Entity* entity, bool websocketParsing) const {
@@ -570,6 +365,12 @@ const char* FlipWorldRun::entityToJson(Entity* entity, bool websocketParsing) co
             break;
         case ENTITY_MOVING:
             state_str = "\"state\":\"moving\",";
+            break;
+        case ENTITY_MOVING_TO_START:
+            state_str = "\"state\":\"moving_to_start\",";
+            break;
+        case ENTITY_MOVING_TO_END:
+            state_str = "\"state\":\"moving_to_end\",";
             break;
         case ENTITY_ATTACKING:
             state_str = "\"state\":\"attacking\",";
@@ -804,7 +605,7 @@ const char* FlipWorldRun::getLevelJson(LevelIndex index) const {
     }
 }
 
-std::unique_ptr<Level> FlipWorldRun::getLevel(LevelIndex index, Game* game) const {
+std::unique_ptr<Level> FlipWorldRun::getLevel(LevelIndex index, Game* game) {
     std::unique_ptr<Level> level = std::make_unique<Level>(
         getLevelName(index), Vector(768, 384), game ? game : engine->getGame());
     if(!level) {
@@ -812,199 +613,225 @@ std::unique_ptr<Level> FlipWorldRun::getLevel(LevelIndex index, Game* game) cons
         return nullptr;
     }
     switch(index) {
-    case LevelHomeWoods:
-        level->entity_add(std::make_unique<Sprite>(
-                              "Cyclops",
-                              ENTITY_ENEMY,
-                              Vector(350, 210),
-                              Vector(390, 210),
-                              2.0f,
-                              30.0f,
-                              0.4f,
-                              10.0f,
-                              100.0f)
-                              .release());
-        level->entity_add(std::make_unique<Sprite>(
-                              "Ogre",
-                              ENTITY_ENEMY,
-                              Vector(200, 320),
-                              Vector(220, 320),
-                              0.5f,
-                              45.0f,
-                              0.6f,
-                              20.0f,
-                              200.0f)
-                              .release());
-        level->entity_add(std::make_unique<Sprite>(
-                              "Ghost",
-                              ENTITY_ENEMY,
-                              Vector(100, 80),
-                              Vector(180, 85),
-                              2.2f,
-                              55.0f,
-                              0.5f,
-                              30.0f,
-                              300.0f)
-                              .release());
-        level->entity_add(std::make_unique<Sprite>(
-                              "Ogre",
-                              ENTITY_ENEMY,
-                              Vector(400, 50),
-                              Vector(490, 50),
-                              1.7f,
-                              35.0f,
-                              1.0f,
-                              20.0f,
-                              200.0f)
-                              .release());
-        level->entity_add(std::make_unique<Sprite>(
-                              "Funny NPC",
-                              ENTITY_NPC,
-                              Vector(350, 180),
-                              Vector(350, 180),
-                              0.0f,
-                              0.0f,
-                              0.0f,
-                              0.0f,
-                              0.0f)
-                              .release());
+    case LevelHomeWoods: {
+        auto sprite1 = std::make_unique<Sprite>(
+            "Cyclops",
+            ENTITY_ENEMY,
+            Vector(350, 210),
+            Vector(390, 210),
+            2.0f,
+            30.0f,
+            0.4f,
+            10.0f,
+            100.0f);
+        auto sprite2 = std::make_unique<Sprite>(
+            "Ogre",
+            ENTITY_ENEMY,
+            Vector(200, 320),
+            Vector(220, 320),
+            0.5f,
+            45.0f,
+            0.6f,
+            20.0f,
+            200.0f);
+        auto sprite3 = std::make_unique<Sprite>(
+            "Ghost",
+            ENTITY_ENEMY,
+            Vector(100, 80),
+            Vector(180, 85),
+            2.2f,
+            55.0f,
+            0.5f,
+            30.0f,
+            300.0f);
+        auto sprite4 = std::make_unique<Sprite>(
+            "Ogre",
+            ENTITY_ENEMY,
+            Vector(400, 50),
+            Vector(490, 50),
+            1.7f,
+            35.0f,
+            1.0f,
+            20.0f,
+            200.0f);
+        auto sprite5 = std::make_unique<Sprite>(
+            "Funny NPC",
+            ENTITY_NPC,
+            Vector(350, 180),
+            Vector(350, 180),
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f);
+        //
+        sprite1->setFlipWorldRun(this);
+        sprite2->setFlipWorldRun(this);
+        sprite3->setFlipWorldRun(this);
+        sprite4->setFlipWorldRun(this);
+        sprite5->setFlipWorldRun(this);
+        //
+        level->entity_add(sprite1.release());
+        level->entity_add(sprite2.release());
+        level->entity_add(sprite3.release());
+        level->entity_add(sprite4.release());
+        level->entity_add(sprite5.release());
         break;
-    case LevelRockWorld:
-        level->entity_add(std::make_unique<Sprite>(
-                              "Ghost",
-                              ENTITY_ENEMY,
-                              Vector(180, 80),
-                              Vector(160, 80),
-                              1.0f,
-                              32.0f,
-                              0.5f,
-                              10.0f,
-                              100.0f)
-                              .release());
-        level->entity_add(std::make_unique<Sprite>(
-                              "Ogre",
-                              ENTITY_ENEMY,
-                              Vector(220, 140),
-                              Vector(200, 140),
-                              1.5f,
-                              20.0f,
-                              1.0f,
-                              10.0f,
-                              100.0f)
-                              .release());
-        level->entity_add(std::make_unique<Sprite>(
-                              "Cyclops",
-                              ENTITY_ENEMY,
-                              Vector(400, 200),
-                              Vector(450, 200),
-                              2.0f,
-                              15.0f,
-                              1.2f,
-                              20.0f,
-                              200.0f)
-                              .release());
-        level->entity_add(std::make_unique<Sprite>(
-                              "Ogre",
-                              ENTITY_ENEMY,
-                              Vector(600, 150),
-                              Vector(580, 150),
-                              1.8f,
-                              28.0f,
-                              1.0f,
-                              40.0f,
-                              400.0f)
-                              .release());
-        level->entity_add(std::make_unique<Sprite>(
-                              "Ghost",
-                              ENTITY_ENEMY,
-                              Vector(500, 250),
-                              Vector(480, 250),
-                              1.2f,
-                              30.0f,
-                              0.6f,
-                              10.0f,
-                              100.0f)
-                              .release());
+    }
+    case LevelRockWorld: {
+        auto sprite1 = std::make_unique<Sprite>(
+            "Ghost",
+            ENTITY_ENEMY,
+            Vector(180, 80),
+            Vector(160, 80),
+            1.0f,
+            32.0f,
+            0.5f,
+            10.0f,
+            100.0f);
+        auto sprite2 = std::make_unique<Sprite>(
+            "Ogre",
+            ENTITY_ENEMY,
+            Vector(220, 140),
+            Vector(200, 140),
+            1.5f,
+            20.0f,
+            1.0f,
+            10.0f,
+            100.0f);
+        auto sprite3 = std::make_unique<Sprite>(
+            "Cyclops",
+            ENTITY_ENEMY,
+            Vector(400, 200),
+            Vector(450, 200),
+            2.0f,
+            15.0f,
+            1.2f,
+            20.0f,
+            200.0f);
+        auto sprite4 = std::make_unique<Sprite>(
+            "Ogre",
+            ENTITY_ENEMY,
+            Vector(600, 150),
+            Vector(580, 150),
+            1.8f,
+            28.0f,
+            1.0f,
+            40.0f,
+            400.0f);
+        auto sprite5 = std::make_unique<Sprite>(
+            "Ghost",
+            ENTITY_ENEMY,
+            Vector(500, 250),
+            Vector(480, 250),
+            1.2f,
+            30.0f,
+            0.6f,
+            10.0f,
+            100.0f);
+        //
+        sprite1->setFlipWorldRun(this);
+        sprite2->setFlipWorldRun(this);
+        sprite3->setFlipWorldRun(this);
+        sprite4->setFlipWorldRun(this);
+        sprite5->setFlipWorldRun(this);
+        //
+        level->entity_add(sprite1.release());
+        level->entity_add(sprite2.release());
+        level->entity_add(sprite3.release());
+        level->entity_add(sprite4.release());
+        level->entity_add(sprite5.release());
         break;
-    case LevelForestWorld:
-        level->entity_add(std::make_unique<Sprite>(
-                              "Ghost",
-                              ENTITY_ENEMY,
-                              Vector(50, 120),
-                              Vector(100, 120),
-                              1.0f,
-                              30.0f,
-                              0.5f,
-                              10.0f,
-                              100.0f)
-                              .release());
-        level->entity_add(std::make_unique<Sprite>(
-                              "Cyclops",
-                              ENTITY_ENEMY,
-                              Vector(300, 60),
-                              Vector(250, 60),
-                              1.5f,
-                              20.0f,
-                              0.8f,
-                              30.0f,
-                              300.0f)
-                              .release());
-        level->entity_add(std::make_unique<Sprite>(
-                              "Ogre",
-                              ENTITY_ENEMY,
-                              Vector(400, 200),
-                              Vector(450, 200),
-                              1.7f,
-                              15.0f,
-                              1.0f,
-                              10.0f,
-                              100.0f)
-                              .release());
-        level->entity_add(std::make_unique<Sprite>(
-                              "Ghost",
-                              ENTITY_ENEMY,
-                              Vector(700, 150),
-                              Vector(650, 150),
-                              1.2f,
-                              25.0f,
-                              0.6f,
-                              10.0f,
-                              100.0f)
-                              .release());
-        level->entity_add(std::make_unique<Sprite>(
-                              "Cyclops",
-                              ENTITY_ENEMY,
-                              Vector(200, 300),
-                              Vector(250, 300),
-                              2.0f,
-                              18.0f,
-                              0.9f,
-                              20.0f,
-                              200.0f)
-                              .release());
-        level->entity_add(std::make_unique<Sprite>(
-                              "Ogre",
-                              ENTITY_ENEMY,
-                              Vector(300, 300),
-                              Vector(350, 300),
-                              1.5f,
-                              15.0f,
-                              1.2f,
-                              50.0f,
-                              500.0f)
-                              .release());
-        level->entity_add(std::make_unique<Sprite>(
-                              "Ghost",
-                              ENTITY_ENEMY,
-                              Vector(500, 200),
-                              Vector(550, 200),
-                              1.3f,
-                              20.0f,
-                              0.7f,
-                              40.0f,
-                              400.0f)
-                              .release());
+    }
+    case LevelForestWorld: {
+        auto sprite1 = std::make_unique<Sprite>(
+            "Ghost",
+            ENTITY_ENEMY,
+            Vector(50, 120),
+            Vector(100, 120),
+            1.0f,
+            30.0f,
+            0.5f,
+            10.0f,
+            100.0f);
+        auto sprite2 = std::make_unique<Sprite>(
+            "Cyclops",
+            ENTITY_ENEMY,
+            Vector(300, 60),
+            Vector(250, 60),
+            1.5f,
+            20.0f,
+            0.8f,
+            30.0f,
+            300.0f);
+        auto sprite3 = std::make_unique<Sprite>(
+            "Ogre",
+            ENTITY_ENEMY,
+            Vector(400, 200),
+            Vector(450, 200),
+            1.7f,
+            15.0f,
+            1.0f,
+            10.0f,
+            100.0f);
+        auto sprite4 = std::make_unique<Sprite>(
+            "Ghost",
+            ENTITY_ENEMY,
+            Vector(700, 150),
+            Vector(650, 150),
+            1.2f,
+            25.0f,
+            0.6f,
+            10.0f,
+            100.0f);
+        auto sprite5 = std::make_unique<Sprite>(
+            "Cyclops",
+            ENTITY_ENEMY,
+            Vector(200, 300),
+            Vector(250, 300),
+            2.0f,
+            18.0f,
+            0.9f,
+            20.0f,
+            200.0f);
+        auto sprite6 = std::make_unique<Sprite>(
+            "Ogre",
+            ENTITY_ENEMY,
+            Vector(300, 300),
+            Vector(350, 300),
+            1.5f,
+            15.0f,
+            1.2f,
+            50.0f,
+            500.0f);
+        auto sprite7 = std::make_unique<Sprite>(
+            "Ghost",
+            ENTITY_ENEMY,
+            Vector(500, 200),
+            Vector(550, 200),
+            1.3f,
+            20.0f,
+            0.7f,
+            40.0f,
+            400.0f);
+        //
+        sprite1->setFlipWorldRun(this);
+        sprite2->setFlipWorldRun(this);
+        sprite3->setFlipWorldRun(this);
+        sprite4->setFlipWorldRun(this);
+        sprite5->setFlipWorldRun(this);
+        sprite6->setFlipWorldRun(this);
+        sprite7->setFlipWorldRun(this);
+        //
+        level->entity_add(sprite1.release());
+        level->entity_add(sprite2.release());
+        level->entity_add(sprite3.release());
+        level->entity_add(sprite4.release());
+        level->entity_add(sprite5.release());
+        level->entity_add(sprite6.release());
+        level->entity_add(sprite7.release());
         break;
+    }
     default:
         break;
     };
@@ -1027,13 +854,6 @@ const char* FlipWorldRun::getLevelName(LevelIndex index) const {
 size_t FlipWorldRun::getMemoryUsage() const {
     size_t totalMemory = 0;
 
-    // Count chunked message memory
-    for(size_t i = 0; i < MAX_CHUNKED_MESSAGES; i++) {
-        if(chunkedMessages[i].data) {
-            totalMemory += chunkedMessages[i].dataCapacity;
-        }
-    }
-
     // Count queued message memory
     for(size_t i = 0; i < MAX_QUEUED_MESSAGES; i++) {
         if(messageQueue[i].message) {
@@ -1049,335 +869,6 @@ size_t FlipWorldRun::getMemoryUsage() const {
     return totalMemory;
 }
 
-bool FlipWorldRun::handleChunkedMessage(const char* message) {
-    if(!message || strlen(message) == 0) {
-        return false;
-    }
-
-    // Look for "id": pattern
-    const char* idPos = strstr(message, "\"id\":");
-    if(!idPos) {
-        return false; // Not a chunked message
-    }
-
-    // Extract id value (skip "id": and any whitespace)
-    idPos += 5; // skip "id":
-    while(*idPos == ' ' || *idPos == '\t')
-        idPos++; // skip whitespace
-
-    int messageId = 0;
-    if(sscanf(idPos, "%d", &messageId) != 1) {
-        FURI_LOG_E("FlipWorldRun", "Failed to parse id value");
-        return true;
-    }
-
-    // Look for "seq": pattern
-    const char* seqPos = strstr(message, "\"seq\":");
-    if(!seqPos) {
-        FURI_LOG_E("FlipWorldRun", "No seq field found");
-        return true;
-    }
-
-    seqPos += 6; // skip "seq":
-    while(*seqPos == ' ' || *seqPos == '\t')
-        seqPos++; // skip whitespace
-
-    int seqVal = 0;
-    if(sscanf(seqPos, "%d", &seqVal) != 1) {
-        FURI_LOG_E("FlipWorldRun", "Failed to parse seq value");
-        return true;
-    }
-
-    // Look for "total": pattern
-    const char* totalPos = strstr(message, "\"total\":");
-    if(!totalPos) {
-        FURI_LOG_E("FlipWorldRun", "No total field found");
-        return true;
-    }
-
-    totalPos += 8; // skip "total":
-    while(*totalPos == ' ' || *totalPos == '\t')
-        totalPos++; // skip whitespace
-
-    int totalChunks = 0;
-    if(sscanf(totalPos, "%d", &totalChunks) != 1) {
-        FURI_LOG_E("FlipWorldRun", "Failed to parse total value");
-        return true;
-    }
-
-    // Look for "data": pattern and extract the string value
-    const char* dataPos = strstr(message, "\"data\":");
-    if(!dataPos) {
-        FURI_LOG_E("FlipWorldRun", "No data field found");
-        return true;
-    }
-
-    dataPos += 7; // skip "data":
-    while(*dataPos == ' ' || *dataPos == '\t')
-        dataPos++; // skip whitespace
-
-    if(*dataPos != '"') {
-        FURI_LOG_E("FlipWorldRun", "Data field is not a string");
-        return true;
-    }
-
-    dataPos++; // skip opening quote
-
-    // The data field contains unescaped JSON, so we need to find the end carefully
-    // Look for the last quote in the message, which should be the closing quote of the data field
-    const char* messageEnd = message + strlen(message);
-    const char* dataEnd = messageEnd - 1; // start from the end
-
-    // Move backwards to find the last quote, skipping the final }
-    while(dataEnd > dataPos && *dataEnd != '"') {
-        dataEnd--;
-    }
-
-    if(dataEnd <= dataPos || *dataEnd != '"') {
-        FURI_LOG_E("FlipWorldRun", "Could not find end quote for data field");
-        return true;
-    }
-
-    size_t dataLen = dataEnd - dataPos;
-    char* dataStr = (char*)malloc(dataLen + 1);
-    if(!dataStr) {
-        FURI_LOG_E("FlipWorldRun", "Failed to allocate memory for data string");
-        return true;
-    }
-
-    memcpy(dataStr, dataPos, dataLen);
-    dataStr[dataLen] = '\0';
-
-    // if we're already using too much memory, reject new chunked messages
-    size_t currentMemoryUsage = getMemoryUsage();
-    size_t freeHeap = memmgr_get_free_heap();
-    const size_t MEMORY_PRESSURE_THRESHOLD = 12288;
-    const size_t CRITICAL_HEAP_THRESHOLD = 8192;
-
-    if(currentMemoryUsage > MEMORY_PRESSURE_THRESHOLD || freeHeap < CRITICAL_HEAP_THRESHOLD) {
-        FURI_LOG_E(
-            "FlipWorldRun",
-            "Memory pressure (used: %zu bytes, free heap: %zu bytes), rejecting chunked message",
-            currentMemoryUsage,
-            freeHeap);
-        free(dataStr);
-        return true; // Consumed but rejected
-    }
-
-    // Validate chunk parameters
-    const uint16_t MAX_REASONABLE_CHUNKS = 6;
-    const size_t MAX_CHUNK_DATA_SIZE = 50;
-
-    if(totalChunks == 0 || totalChunks > MAX_REASONABLE_CHUNKS) {
-        FURI_LOG_E(
-            "FlipWorldRun",
-            "Invalid totalChunks: %d (max: %d)",
-            totalChunks,
-            MAX_REASONABLE_CHUNKS);
-        free(dataStr);
-        return true;
-    }
-
-    // Clean up expired messages first
-    cleanupExpiredChunkedMessages();
-
-    // Find existing chunked message or create new one
-    ChunkedMessage* chunkedMsg = nullptr;
-    for(size_t i = 0; i < MAX_CHUNKED_MESSAGES; i++) {
-        if(chunkedMessages[i].id == messageId && chunkedMessages[i].data) {
-            chunkedMsg = &chunkedMessages[i];
-            break;
-        }
-    }
-
-    // If not found, create new one
-    if(!chunkedMsg) {
-        // Check total memory usage before creating new chunked message
-        size_t totalMemoryUsed = 0;
-        for(size_t j = 0; j < MAX_CHUNKED_MESSAGES; j++) {
-            if(chunkedMessages[j].data) {
-                totalMemoryUsed += chunkedMessages[j].dataCapacity;
-            }
-        }
-
-        const size_t MAX_TOTAL_CHUNK_MEMORY = 6144;
-        size_t estimatedNewSize = totalChunks * MAX_CHUNK_DATA_SIZE;
-
-        if(totalMemoryUsed + estimatedNewSize > MAX_TOTAL_CHUNK_MEMORY) {
-            FURI_LOG_E(
-                "FlipWorldRun",
-                "Would exceed total chunk memory limit (%zu + %zu > %zu)",
-                totalMemoryUsed,
-                estimatedNewSize,
-                MAX_TOTAL_CHUNK_MEMORY);
-            free(dataStr);
-            return true;
-        }
-
-        for(size_t i = 0; i < MAX_CHUNKED_MESSAGES; i++) {
-            if(!chunkedMessages[i].data) {
-                chunkedMsg = &chunkedMessages[i];
-                chunkedMsg->id = messageId;
-                chunkedMsg->totalChunks = totalChunks;
-                chunkedMsg->receivedChunks = 0;
-                chunkedMsg->dataSize = 0;
-                chunkedMsg->dataCapacity = (totalChunks * MAX_CHUNK_DATA_SIZE < 512) ?
-                                               512 :
-                                               totalChunks * MAX_CHUNK_DATA_SIZE;
-                chunkedMsg->data = (char*)malloc(chunkedMsg->dataCapacity);
-                if(!chunkedMsg->data) {
-                    FURI_LOG_E("FlipWorldRun", "Failed to allocate chunked message buffer");
-                    free(dataStr);
-                    return true;
-                }
-                chunkedMsg->data[0] = '\0';
-                chunkedMessageCount++;
-                break;
-            }
-        }
-    }
-
-    if(!chunkedMsg) {
-        FURI_LOG_E("FlipWorldRun", "No available slots for chunked message");
-        free(dataStr);
-        return true;
-    }
-
-    // Update last update time
-    chunkedMsg->lastUpdateTime = furi_get_tick();
-
-    // Append data to the chunked message
-    if(dataLen > 120) {
-        FURI_LOG_E("FlipWorldRun", "Chunk data too large: %zu bytes (max: 120)", dataLen);
-        free(dataStr);
-        return true;
-    }
-
-    // ensure we have enough heap memory for the operation
-    size_t chunkProcessHeap = memmgr_get_free_heap();
-    if(chunkProcessHeap < 8192) // Need at least 8KB free heap for safe chunk processing
-    {
-        FURI_LOG_E(
-            "FlipWorldRun",
-            "Insufficient heap memory for chunk processing: %zu bytes free",
-            chunkProcessHeap);
-        free(dataStr);
-        return true;
-    }
-
-    // Check if buffer expansion is needed
-    if(chunkedMsg->dataSize + dataLen >= chunkedMsg->dataCapacity) {
-        const size_t MAX_MESSAGE_SIZE = 2048;
-        size_t newCapacity = chunkedMsg->dataCapacity + 512;
-
-        // Cap the maximum size to prevent runaway growth
-        if(newCapacity > MAX_MESSAGE_SIZE) {
-            FURI_LOG_E(
-                "FlipWorldRun", "Message too large, would exceed %zu bytes", MAX_MESSAGE_SIZE);
-            free(dataStr);
-            return true;
-        }
-
-        // Additional safety check before realloc
-        size_t reallocHeap = memmgr_get_free_heap();
-        if(reallocHeap < newCapacity + 4096) // Need buffer capacity + 4KB safety margin
-        {
-            FURI_LOG_E(
-                "FlipWorldRun",
-                "Insufficient heap for buffer expansion: need %zu, have %zu",
-                newCapacity + 4096,
-                reallocHeap);
-            free(dataStr);
-            return true;
-        }
-
-        char* newData = (char*)realloc(chunkedMsg->data, newCapacity);
-        if(!newData) {
-            FURI_LOG_E(
-                "FlipWorldRun",
-                "Failed to expand chunked message buffer to %zu bytes",
-                newCapacity);
-            free(dataStr);
-            return true;
-        }
-        chunkedMsg->data = newData;
-        chunkedMsg->dataCapacity = newCapacity;
-    }
-
-    // Additional bounds checking before memcpy
-    if(chunkedMsg->dataSize + dataLen >= chunkedMsg->dataCapacity) {
-        FURI_LOG_E(
-            "FlipWorldRun",
-            "Buffer overflow prevention: dataSize %zu + dataLen %zu >= capacity %zu",
-            chunkedMsg->dataSize,
-            dataLen,
-            chunkedMsg->dataCapacity);
-        free(dataStr);
-        return true;
-    }
-
-    // Append the chunk data safely
-    memcpy(chunkedMsg->data + chunkedMsg->dataSize, dataStr, dataLen);
-    chunkedMsg->dataSize += dataLen;
-
-    // Ensure we don't write past buffer end
-    if(chunkedMsg->dataSize < chunkedMsg->dataCapacity) {
-        chunkedMsg->data[chunkedMsg->dataSize] = '\0'; // Null terminate
-    } else {
-        FURI_LOG_E(
-            "FlipWorldRun",
-            "Cannot null-terminate: dataSize %zu >= capacity %zu",
-            chunkedMsg->dataSize,
-            chunkedMsg->dataCapacity);
-        free(dataStr);
-        return true;
-    }
-
-    chunkedMsg->receivedChunks++;
-
-    // Free the dataStr since we've copied it to the chunked message buffer
-    free(dataStr);
-
-    // Check if we have all chunks
-    if(chunkedMsg->receivedChunks >= chunkedMsg->totalChunks) {
-        // Validate the complete message before processing
-        if(chunkedMsg->data && chunkedMsg->dataSize > 0) {
-            // Ensure null termination
-            chunkedMsg->data[chunkedMsg->dataSize] = '\0';
-
-            // Basic JSON validation - must start with { and end with }
-            if(chunkedMsg->data[0] == '{' && chunkedMsg->data[chunkedMsg->dataSize - 1] == '}') {
-                // Check memory before processing to prevent crashes
-                size_t freeHeap = memmgr_get_free_heap();
-                if(freeHeap > 8192) // Only process if we have at least 8KB free heap
-                {
-                    processCompleteMultiplayerMessage(chunkedMsg->data);
-                } else {
-                    FURI_LOG_W(
-                        "FlipWorldRun",
-                        "Skipping chunked message processing due to low memory: %zu bytes free",
-                        freeHeap);
-                }
-            }
-        }
-
-        // Clean up this chunked message
-        free(chunkedMsg->data);
-        chunkedMsg->data = nullptr;
-        chunkedMsg->id = 0;
-        chunkedMsg->totalChunks = 0;
-        chunkedMsg->receivedChunks = 0;
-        chunkedMsg->dataSize = 0;
-        chunkedMsg->dataCapacity = 0;
-        chunkedMsg->lastUpdateTime = 0;
-        if(chunkedMessageCount > 0) {
-            chunkedMessageCount--;
-        }
-    }
-
-    return true;
-}
-
 void FlipWorldRun::handleIncomingMultiplayerData(const char* message) {
     // Only handle in PvE mode
     if(!isPvEMode || !message) {
@@ -1390,12 +881,6 @@ void FlipWorldRun::handleIncomingMultiplayerData(const char* message) {
         return;
     }
 
-    // First check if this is a chunked message
-    if(handleChunkedMessage(message)) {
-        return; // Message was handled as a chunk (or completed chunk assembly)
-    }
-
-    // If not a chunk, process as complete message
     processCompleteMultiplayerMessage(message);
 }
 
@@ -1545,28 +1030,28 @@ void FlipWorldRun::processCompleteMultiplayerMessage(const char* message) {
         return;
     }
 
-    // ensure message looks like valid JSON
-    if(!message || strlen(message) < 10 || message[0] != '{' ||
-       message[strlen(message) - 1] != '}') {
-        FURI_LOG_E("FlipWorldRun", "Invalid message format: not proper JSON structure");
-        return;
-    }
+    // // ensure message looks like valid JSON
+    // if (!message || strlen(message) < 10 || message[0] != '{' || message[strlen(message) - 1] != '}')
+    // {
+    //     FURI_LOG_E("FlipWorldRun", "Invalid message format: not proper JSON structure");
+    //     return;
+    // }
 
-    // check for malformed JSON fragments
-    if(strstr(message, "\"seq\"") != NULL && strstr(message, "\"total\"") != NULL &&
-       strstr(message, "\"data\"") != NULL) {
-        FURI_LOG_E(
-            "FlipWorldRun", "Attempted to process chunked message fragment as complete message");
-        return;
-    }
+    // // check for malformed JSON fragments
+    // if (strstr(message, "\"seq\"") != NULL && strstr(message, "\"total\"") != NULL && strstr(message, "\"data\"") != NULL)
+    // {
+    //     FURI_LOG_E("FlipWorldRun", "Attempted to process chunked message fragment as complete message");
+    //     return;
+    // }
 
-    // Reject messages that contain chunked message fragments or malformed data
-    if(strstr(message, "Rend") != NULL || strstr(message, "total\":") != NULL ||
-       strstr(message, "seq\":") != NULL || strstr(message, "},\"") == message ||
-       strncmp(message, "\"", 1) == 0) {
-        FURI_LOG_E("FlipWorldRun", "Rejecting malformed message fragment: %.100s...", message);
-        return;
-    }
+    // // Reject messages that contain chunked message fragments or malformed data
+    // if (strstr(message, "Rend") != NULL || strstr(message, "total\":") != NULL ||
+    //     strstr(message, "seq\":") != NULL || strstr(message, "},\"") == message ||
+    //     strncmp(message, "\"", 1) == 0)
+    // {
+    //     FURI_LOG_E("FlipWorldRun", "Rejecting malformed message fragment: %.100s...", message);
+    //     return;
+    // }
 
     auto currentLevel = engine->getGame()->current_level;
 
@@ -1582,13 +1067,14 @@ void FlipWorldRun::processCompleteMultiplayerMessage(const char* message) {
         return;
     }
 
-    // Additional validation for message type
-    if(strlen(messageType) == 0 || strlen(messageType) > 20 || strstr(messageType, "\"") != NULL ||
-       strstr(messageType, "}") != NULL) {
-        FURI_LOG_E("FlipWorldRun", "Invalid message type: '%s'", messageType);
-        free(messageType);
-        return;
-    }
+    // // Additional validation for message type
+    // if (strlen(messageType) == 0 || strlen(messageType) > 20 ||
+    //     strstr(messageType, "\"") != NULL || strstr(messageType, "}") != NULL)
+    // {
+    //     FURI_LOG_E("FlipWorldRun", "Invalid message type: '%s'", messageType);
+    //     free(messageType);
+    //     return;
+    // }
 
     if(strcmp(messageType, "player") == 0) {
         // Handle player update
@@ -1598,27 +1084,24 @@ void FlipWorldRun::processCompleteMultiplayerMessage(const char* message) {
             char* username = get_json_value("u", playerData);
             if(username) {
                 // Validate username before processing - reject invalid/malformed usernames
-                if(strlen(username) == 0 || strlen(username) > 50 ||
-                   strstr(username, "\"") != NULL || strstr(username, "}") != NULL ||
-                   strstr(username, "{") != NULL || strstr(username, "total") != NULL ||
-                   strstr(username, "data") != NULL || strstr(username, "seq") != NULL ||
-                   strstr(username, "Rend") != NULL || strstr(username, ",") != NULL ||
-                   strstr(username, ":") != NULL || strstr(username, "[") != NULL ||
-                   strstr(username, "]") != NULL || username[0] == ' ' ||
-                   username[strlen(username) - 1] == ' ' || isdigit(username[0]) ||
-                   strlen(username) < 3 || // Require at least 3 characters for valid username
-                   strstr(username, "type") != NULL || strstr(username, "player") != NULL ||
-                   strstr(username, "chunk") != NULL || strstr(username, "id") != NULL) {
-                    FURI_LOG_W(
-                        "FlipWorldRun",
-                        "Rejecting invalid username: '%s' (len: %zu)",
-                        username,
-                        strlen(username));
-                    free(username);
-                    free(playerData);
-                    free(messageType);
-                    return;
-                }
+                // if (strlen(username) == 0 || strlen(username) > 50 ||
+                //     strstr(username, "\"") != NULL || strstr(username, "}") != NULL ||
+                //     strstr(username, "{") != NULL || strstr(username, "total") != NULL ||
+                //     strstr(username, "data") != NULL || strstr(username, "seq") != NULL ||
+                //     strstr(username, "Rend") != NULL || strstr(username, ",") != NULL ||
+                //     strstr(username, ":") != NULL || strstr(username, "[") != NULL ||
+                //     strstr(username, "]") != NULL || username[0] == ' ' ||
+                //     username[strlen(username) - 1] == ' ' || isdigit(username[0]) ||
+                //     strlen(username) < 3 || // Require at least 3 characters for valid username
+                //     strstr(username, "type") != NULL || strstr(username, "player") != NULL ||
+                //     strstr(username, "chunk") != NULL || strstr(username, "id") != NULL)
+                // {
+                //     FURI_LOG_W("FlipWorldRun", "Rejecting invalid username: '%s' (len: %zu)", username, strlen(username));
+                //     free(username);
+                //     free(playerData);
+                //     free(messageType);
+                //     return;
+                // }
 
                 // Don't update self
                 if(strcmp(username, player->name) == 0 && strcmp(username, "Player") != 0) {
@@ -1702,217 +1185,17 @@ void FlipWorldRun::processCompleteMultiplayerMessage(const char* message) {
 }
 
 void FlipWorldRun::processMultiplayerUpdate() {
-    // Always process the websocket message queue first
-    processWebsocketMessageQueue();
-
-    // Only process multiplayer logic in PvE mode
-    if(!isPvEMode) {
-        return;
-    }
-
-    static uint32_t lastCleanupTime = 0;
-    static uint32_t lastMemoryMaintenance = 0;
-    uint32_t currentTime = furi_get_tick();
-
-    // cleanup every 500ms
-    if(currentTime - lastCleanupTime > 500) {
-        cleanupExpiredChunkedMessages();
-        lastCleanupTime = currentTime;
-
-        // Log memory usage periodically for debugging
-        size_t memUsage = getMemoryUsage();
-        size_t availableHeap = memmgr_get_free_heap();
-
-        // detailed memory tracking
-        static uint32_t lastMemoryLog = 0;
-        if(memUsage > 10240 && (currentTime - lastMemoryLog > 2000)) // Log at most every 2 seconds
-        {
-            FURI_LOG_W(
-                "FlipWorldRun",
-                "High memory usage: %zu bytes (chunks: %zu, queue: %zu), free heap: %zu",
-                memUsage,
-                chunkedMessageCount,
-                queueSize,
-                availableHeap);
-            lastMemoryLog = currentTime;
-        }
-
-        // Force garbage collection if available heap is getting dangerously low
-        if(availableHeap < 8192) // If less than 8KB free heap remaining
-        {
-            FURI_LOG_W(
-                "FlipWorldRun",
-                "Critical memory situation: only %zu bytes free heap",
-                availableHeap);
-
-            // Emergency cleanup
-            // Clear ALL chunked messages immediately
-            for(size_t i = 0; i < MAX_CHUNKED_MESSAGES; i++) {
-                if(chunkedMessages[i].data) {
-                    FURI_LOG_W(
-                        "FlipWorldRun",
-                        "Emergency clearing chunked message ID %d (%zu bytes)",
-                        chunkedMessages[i].id,
-                        chunkedMessages[i].dataCapacity);
-                    free(chunkedMessages[i].data);
-                    chunkedMessages[i].data = nullptr;
-                    chunkedMessages[i].id = 0;
-                    chunkedMessages[i].totalChunks = 0;
-                    chunkedMessages[i].receivedChunks = 0;
-                    chunkedMessages[i].dataSize = 0;
-                    chunkedMessages[i].dataCapacity = 0;
-                    chunkedMessages[i].lastUpdateTime = 0;
-                }
-            }
-            chunkedMessageCount = 0;
-
-            // Clear most of the message queue, keep only the most recent 5 messages
-            while(queueSize > 5) {
-                QueuedMessage* oldMsg = &messageQueue[queueHead];
-                if(oldMsg->message) {
-                    free(oldMsg->message);
-                    oldMsg->message = nullptr;
-                    oldMsg->messageLen = 0;
-                }
-                queueHead = (queueHead + 1) % MAX_QUEUED_MESSAGES;
-                queueSize--;
-            }
-
-            FURI_LOG_I(
-                "FlipWorldRun",
-                "Emergency cleanup complete, free heap now: %zu",
-                memmgr_get_free_heap());
-        } else if(memUsage > 12288) // If using more than 12KB, force aggressive cleanup
-        {
-            FURI_LOG_W(
-                "FlipWorldRun", "Emergency memory cleanup triggered at %zu bytes", memUsage);
-
-            // Force cleanup of all but the most recent chunked messages
-            for(size_t i = 0; i < MAX_CHUNKED_MESSAGES; i++) {
-                if(chunkedMessages[i].data && chunkedMessageCount > 2) // Keep only 2 most recent
-                {
-                    // Find oldest message to clean
-                    uint32_t oldestTime = currentTime;
-                    size_t oldestIndex = SIZE_MAX;
-
-                    for(size_t j = 0; j < MAX_CHUNKED_MESSAGES; j++) {
-                        if(chunkedMessages[j].data &&
-                           chunkedMessages[j].lastUpdateTime < oldestTime) {
-                            oldestTime = chunkedMessages[j].lastUpdateTime;
-                            oldestIndex = j;
-                        }
-                    }
-
-                    if(oldestIndex != SIZE_MAX) {
-                        FURI_LOG_W(
-                            "FlipWorldRun",
-                            "Emergency cleanup of chunked message ID %d",
-                            chunkedMessages[oldestIndex].id);
-                        free(chunkedMessages[oldestIndex].data);
-                        chunkedMessages[oldestIndex].data = nullptr;
-                        chunkedMessages[oldestIndex].id = 0;
-                        chunkedMessages[oldestIndex].totalChunks = 0;
-                        chunkedMessages[oldestIndex].receivedChunks = 0;
-                        chunkedMessages[oldestIndex].dataSize = 0;
-                        chunkedMessages[oldestIndex].dataCapacity = 0;
-                        chunkedMessages[oldestIndex].lastUpdateTime = 0;
-                        if(chunkedMessageCount > 0) {
-                            chunkedMessageCount--;
-                        }
-                    }
-                }
-            }
-
-            // trim the queue if it's large
-            while(queueSize > MAX_QUEUED_MESSAGES * 0.7) {
-                QueuedMessage* oldMsg = &messageQueue[queueHead];
-                if(oldMsg->message) {
-                    free(oldMsg->message);
-                    oldMsg->message = nullptr;
-                    oldMsg->messageLen = 0;
-                }
-                queueHead = (queueHead + 1) % MAX_QUEUED_MESSAGES;
-                queueSize--;
-            }
-        }
-    }
-
-    //  periodic memory maintenance every 2 seconds
-    if(currentTime - lastMemoryMaintenance > 2000) {
-        lastMemoryMaintenance = currentTime;
-        size_t freeHeap = memmgr_get_free_heap();
-
-        // If free heap is getting low, clean it up gang
-        if(freeHeap < 15360) {
-            FURI_LOG_W("FlipWorldRun", "Preventive memory cleanup: free heap %zu bytes", freeHeap);
-
-            // Trim queue if it's getting large
-            while(queueSize > MAX_QUEUED_MESSAGES * 0.5) // Keep queue at 50% max
-            {
-                QueuedMessage* oldMsg = &messageQueue[queueHead];
-                if(oldMsg->message) {
-                    free(oldMsg->message);
-                    oldMsg->message = nullptr;
-                    oldMsg->messageLen = 0;
-                }
-                queueHead = (queueHead + 1) % MAX_QUEUED_MESSAGES;
-                queueSize--;
-            }
-
-            // Force cleanup of any chunked messages older than 2 seconds
-            for(size_t i = 0; i < MAX_CHUNKED_MESSAGES; i++) {
-                if(chunkedMessages[i].data &&
-                   (currentTime - chunkedMessages[i].lastUpdateTime) > 2000) {
-                    FURI_LOG_W(
-                        "FlipWorldRun",
-                        "Preventive cleanup of chunked message ID %d",
-                        chunkedMessages[i].id);
-                    free(chunkedMessages[i].data);
-                    chunkedMessages[i].data = nullptr;
-                    chunkedMessages[i].id = 0;
-                    chunkedMessages[i].totalChunks = 0;
-                    chunkedMessages[i].receivedChunks = 0;
-                    chunkedMessages[i].dataSize = 0;
-                    chunkedMessages[i].dataCapacity = 0;
-                    chunkedMessages[i].lastUpdateTime = 0;
-                    if(chunkedMessageCount > 0) {
-                        chunkedMessageCount--;
-                    }
-                }
-            }
-        }
-    }
-
-    // Send our state to other players
-    static uint32_t lastSyncAttempt = 0;
-    size_t currentMemUsage = getMemoryUsage();
-    size_t freeHeap = memmgr_get_free_heap();
-
-    // Adaptive sync frequency based on memory situation
-    uint32_t adaptiveSyncInterval = syncInterval;
-    if(freeHeap < 12288) // If less than 12KB free heap
-    {
-        adaptiveSyncInterval = syncInterval * 4; //  reduce sync frequency
-    } else if(
-        currentMemUsage > 12288 ||
-        queueSize > MAX_QUEUED_MESSAGES * 0.6) // If high memory usage or large queue
-    {
-        adaptiveSyncInterval = syncInterval * 2; // Double the sync interval
-    }
-
-    if(currentTime - lastSyncAttempt >= adaptiveSyncInterval) {
-        syncMultiplayerState();
-        lastSyncAttempt = currentTime;
-    }
-
-    // Check for incoming messages (with reduced frequency under memory pressure)
+    // Check for incoming messages
     FlipWorldApp* app = static_cast<FlipWorldApp*>(appContext);
     if(app) {
+        // Always process the websocket message queue first
+        processWebsocketQueue(app);
+
         const char* incomingMessage = app->getLastResponse();
         if(incomingMessage && strlen(incomingMessage) > 0) {
             // Skip processing if we're under severe memory pressure
             size_t freeHeap = memmgr_get_free_heap();
-            if(freeHeap < 6144) {
+            if(freeHeap < 8192) {
                 FURI_LOG_W(
                     "FlipWorldRun",
                     "Skipping message processing due to low memory: %zu bytes free",
@@ -1921,32 +1204,7 @@ void FlipWorldRun::processMultiplayerUpdate() {
                 return;
             }
 
-            // Only process messages that look like websocket messages (have "type" field or chunk metadata)
-            bool isWebsocketMessage = false;
-
-            //  check for proper JSON structure
-            if(incomingMessage[0] == '{' && incomingMessage[strlen(incomingMessage) - 1] == '}') {
-                // Check for chunked message first (has id, seq, total at top level)
-                if(strstr(incomingMessage, "\"id\"") != NULL &&
-                   strstr(incomingMessage, "\"seq\"") != NULL &&
-                   strstr(incomingMessage, "\"total\"") != NULL) {
-                    isWebsocketMessage = true;
-                }
-                // Check for complete message with top-level "type" field
-                // Look for "type" near the beginning to avoid matching "type" in nested data
-                else if(strstr(incomingMessage, "\"type\"") != NULL) {
-                    // ensure "type" appears early in the message (within first 50 chars)
-                    // to avoid matching "type" that appears in chunked data payload
-                    const char* typePos = strstr(incomingMessage, "\"type\"");
-                    if(typePos && (typePos - incomingMessage) < 50) {
-                        isWebsocketMessage = true;
-                    }
-                }
-            }
-
-            if(isWebsocketMessage) {
-                handleIncomingMultiplayerData(incomingMessage);
-            }
+            handleIncomingMultiplayerData(incomingMessage);
 
             app->clearLastResponse(); // Clear after processing
         }
@@ -1958,31 +1216,10 @@ void FlipWorldRun::processWebsocketQueue(FlipWorldApp* app) {
         return;
     }
 
-    uint32_t currentTime = furi_get_tick();
-
-    // throttling based on memory pressure
-    size_t memUsage = getMemoryUsage();
-    uint32_t throttleDelay = 300; // Base delay of 300ms
-
-    if(memUsage > 12288) // If using more than 12KB
-    {
-        throttleDelay = 500; // Slow down to 500ms when memory pressure detected
-    }
-    if(queueSize > 35) // If queue is very large
-    {
-        throttleDelay = 400; // Moderate slowdown for large queue
-    }
-
-    // Check if enough time has passed since last send
-    if(lastWebsocketSendTime != 0 && (currentTime - lastWebsocketSendTime < throttleDelay)) {
-        return; // Not enough time has passed
-    }
-
     // Send the next message in the queue
     QueuedMessage* msg = &messageQueue[queueHead];
     if(msg->message) {
         app->websocketSend(msg->message);
-        lastWebsocketSendTime = currentTime;
 
         // Clean up and advance queue
         free(msg->message);
@@ -1990,25 +1227,6 @@ void FlipWorldRun::processWebsocketQueue(FlipWorldApp* app) {
         msg->messageLen = 0;
         queueHead = (queueHead + 1) % MAX_QUEUED_MESSAGES;
         queueSize--;
-    }
-}
-
-void FlipWorldRun::processWebsocketMessageQueue() {
-    FlipWorldApp* app = static_cast<FlipWorldApp*>(appContext);
-    if(app) {
-        processWebsocketQueue(app);
-    } else if(queueSize > 0) {
-        // clear everything if app fails (very very unlikely)
-        while(queueSize > 0) {
-            QueuedMessage* msg = &messageQueue[queueHead];
-            if(msg->message) {
-                free(msg->message);
-                msg->message = nullptr;
-                msg->messageLen = 0;
-            }
-            queueHead = (queueHead + 1) % MAX_QUEUED_MESSAGES;
-            queueSize--;
-        }
     }
 }
 
@@ -2049,11 +1267,8 @@ bool FlipWorldRun::queueWebsocketMessage(const char* message) {
     if(queueSize >= MAX_QUEUED_MESSAGES * 0.85) {
         // Drop messages until we're back to 70% to prevent oscillation
         while(queueSize > MAX_QUEUED_MESSAGES * 0.7) {
-            FURI_LOG_W(
-                "FlipWorldRun",
-                "Queue very full (%zu/%zu), dropping oldest message to prevent overflow",
-                queueSize,
-                MAX_QUEUED_MESSAGES);
+            // FURI_LOG_W("FlipWorldRun", "Queue very full (%zu/%zu), dropping oldest message to prevent overflow",
+            //            queueSize, MAX_QUEUED_MESSAGES);
 
             // Drop the oldest message
             QueuedMessage* oldMsg = &messageQueue[queueHead];
@@ -2164,161 +1379,6 @@ bool FlipWorldRun::safeWebsocketSend(FlipWorldApp* app, const char* message) {
 
     // queue it bro
     return queueWebsocketMessage(message);
-}
-
-void FlipWorldRun::sendMessageWithChunking(FlipWorldApp* app, const char* message) {
-    if(!app || !message) {
-        return;
-    }
-
-    // if this doesnt work... we definitely need another approach lol
-    // i think instead we should just fix FlipperHTTP handle large websocket messages
-    // and then we can just send the message as-is without chunking
-    // but we made it this far sooo.. let's use it until then
-
-    const size_t MAX_WEBSOCKET_SIZE = 80;
-    size_t messageLen = strlen(message);
-
-    // If message fits within limit, send as-is with throttling
-    if(messageLen <= MAX_WEBSOCKET_SIZE) {
-        safeWebsocketSend(app, message);
-        return;
-    }
-
-    // Generate unique message ID
-    static uint16_t messageId = 0;
-    messageId++;
-
-    // Calculate metadata overhead dynamically for better accuracy
-    char testHeader[64];
-    int maxHeaderLen = snprintf(
-        testHeader,
-        sizeof(testHeader),
-        "{\"id\":%d,\"seq\":999,\"total\":999,\"data\":\"",
-        messageId);
-    const size_t METADATA_OVERHEAD = maxHeaderLen + 2; // +2 for closing "}
-    const size_t MAX_DATA_SIZE = MAX_WEBSOCKET_SIZE - METADATA_OVERHEAD;
-
-    size_t messagePos = 0;
-
-    // First pass: determine actual chunk boundaries that respect JSON structure
-    struct ChunkBoundary {
-        size_t start;
-        size_t length;
-    };
-    ChunkBoundary boundaries[6];
-    size_t boundaryCount = 0;
-
-    while(messagePos < messageLen && boundaryCount < 6) {
-        size_t chunkStart = messagePos;
-        size_t maxChunkSize =
-            (messageLen - messagePos > MAX_DATA_SIZE) ? MAX_DATA_SIZE : (messageLen - messagePos);
-
-        // Find a good break point that doesn't split JSON tokens
-        size_t actualChunkSize = maxChunkSize;
-
-        // If we're not at the end of the message, try to find a safe break point
-        if(messagePos + maxChunkSize < messageLen) {
-            // Look backwards from the max position to find a safe break point
-            size_t searchPos = messagePos + maxChunkSize;
-            bool foundBreak = false;
-
-            // Search backwards up to 10 characters for a safe break point
-            for(int backtrack = 0; backtrack < 10 && searchPos > messagePos;
-                backtrack++, searchPos--) {
-                char c = message[searchPos];
-                char prevC = (searchPos > 0) ? message[searchPos - 1] : '\0';
-
-                // Good break points: after comma, after colon, after closing brace/bracket
-                if((c == ',' || c == ':' || c == '}' || c == ']') && prevC != '\\') {
-                    actualChunkSize = searchPos - messagePos + 1;
-                    foundBreak = true;
-                    break;
-                }
-                // Also good: before opening quote of a new field
-                else if(c == '"' && prevC == ',' && searchPos + 1 < messageLen) {
-                    actualChunkSize = searchPos - messagePos;
-                    foundBreak = true;
-                    break;
-                }
-            }
-
-            // If we couldn't find a good break point, use the maximum size
-            if(!foundBreak) {
-                actualChunkSize = maxChunkSize;
-            }
-        }
-
-        boundaries[boundaryCount].start = chunkStart;
-        boundaries[boundaryCount].length = actualChunkSize;
-        boundaryCount++;
-
-        messagePos += actualChunkSize;
-    }
-
-    // Second pass: send the chunks (all or nothing approach)
-    // First, check if we have enough queue space for all chunks
-    if(queueSize + boundaryCount > MAX_QUEUED_MESSAGES) {
-        FURI_LOG_E(
-            "FlipWorldRun",
-            "Not enough queue space for %zu chunks (need %zu, have %zu free), skipping entire message",
-            boundaryCount,
-            boundaryCount,
-            MAX_QUEUED_MESSAGES - queueSize);
-        return; // Skip this entire message to avoid partial sends
-    }
-
-    // Check if memory pressure would prevent queueing all chunks
-    size_t currentMemoryUsage = getMemoryUsage();
-    size_t estimatedChunkMemory = boundaryCount * 60;
-    const size_t MAX_TOTAL_MEMORY = 12288;
-
-    if(currentMemoryUsage + estimatedChunkMemory > MAX_TOTAL_MEMORY) {
-        FURI_LOG_E(
-            "FlipWorldRun",
-            "Would exceed memory limit with %zu chunks (%zu + %zu > %zu), skipping message",
-            boundaryCount,
-            currentMemoryUsage,
-            estimatedChunkMemory,
-            MAX_TOTAL_MEMORY);
-        return; // Skip this entire message to avoid partial sends
-    }
-
-    // We have enough space, send all chunks
-    for(size_t i = 0; i < boundaryCount; i++) {
-        size_t chunkStart = boundaries[i].start;
-        size_t chunkLength = boundaries[i].length;
-
-        // Build chunk header with actual total count
-        char chunkHeader[64];
-        int headerLen = snprintf(
-            chunkHeader,
-            sizeof(chunkHeader),
-            "{\"id\":%d,\"seq\":%zu,\"total\":%zu,\"data\":\"",
-            messageId,
-            i + 1,
-            boundaryCount);
-
-        // Build the complete chunk
-        char chunk[MAX_WEBSOCKET_SIZE + 1];
-        strcpy(chunk, chunkHeader);
-        int pos = headerLen;
-
-        // Add the chunk data
-        for(size_t j = 0; j < chunkLength && pos < (int)sizeof(chunk) - 3; j++) {
-            chunk[pos++] = message[chunkStart + j];
-        }
-
-        // Close JSON
-        chunk[pos++] = '"';
-        chunk[pos++] = '}';
-        chunk[pos] = '\0';
-
-        if(!safeWebsocketSend(app, chunk)) {
-            FURI_LOG_E("FlipWorldRun", "Unexpected failure to send/queue chunk %zu", i + 1);
-            // Continue anyway since we pre-checked queue space
-        }
-    }
 }
 
 bool FlipWorldRun::setAppContext(void* context) {
@@ -2493,19 +1553,19 @@ bool FlipWorldRun::startGame() {
 
     // add levels and player to the game
     std::unique_ptr<Level> level1 = getLevel(LevelHomeWoods, game.get());
-    std::unique_ptr<Level> level2 = getLevel(LevelRockWorld, game.get());
-    std::unique_ptr<Level> level3 = getLevel(LevelForestWorld, game.get());
+    // std::unique_ptr<Level> level2 = getLevel(LevelRockWorld, game.get());
+    // std::unique_ptr<Level> level3 = getLevel(LevelForestWorld, game.get());
 
     setIconGroup(LevelHomeWoods); // once we switch levels, we need to set the icon group again
 
     level1->entity_add(player.get());
-    level2->entity_add(player.get());
-    level3->entity_add(player.get());
+    // level2->entity_add(player.get());
+    // level3->entity_add(player.get());
 
     // Add all levels to the game engine
     game->level_add(level1.release());
-    game->level_add(level2.release());
-    game->level_add(level3.release());
+    // game->level_add(level2.release());
+    // game->level_add(level3.release());
 
     // Start with the first level
     game->level_switch(0); // Switch to LevelHomeWoods (index 0)
@@ -2532,9 +1592,9 @@ bool FlipWorldRun::startGame() {
     return true;
 }
 
-void FlipWorldRun::syncMultiplayerState() {
+void FlipWorldRun::syncMultiplayerEntity(Entity* entity) {
     // Only sync in PvE mode
-    if(!isPvEMode) {
+    if(!isPvEMode || !entity) {
         return;
     }
 
@@ -2543,123 +1603,66 @@ void FlipWorldRun::syncMultiplayerState() {
         return;
     }
 
-    // Check if enough time has passed since last sync
-    uint32_t currentTime = furi_get_tick();
-
-    // If queue is getting full, increase sync interval to prevent overflow
-    uint32_t effectiveSyncInterval = syncInterval;
-    if(queueSize > MAX_QUEUED_MESSAGES * 0.7) // If queue is 70% full
-    {
-        effectiveSyncInterval = syncInterval * 2; // Double the interval
-    }
-
-    if(currentTime - lastSyncTime < effectiveSyncInterval) {
+    if(!engine || !engine->getGame() || !engine->getGame()->current_level) {
         return;
     }
-    lastSyncTime = currentTime;
+
+    // Host sends entity state
+    const char* entityJson = entityToJson(entity, true); // websocket format
+    if(entityJson) {
+        // Calculate required buffer size and allocate dynamically
+        size_t entityJsonLen = strlen(entityJson);
+        size_t messageSize = entityJsonLen + 64; // Extra space for wrapper JSON
+        char* message = (char*)malloc(messageSize);
+
+        if(!message) {
+            FURI_LOG_E("FlipWorldRun", "Failed to allocate message buffer");
+            free((void*)entityJson);
+            return;
+        }
+
+        // Create message with type and data
+        if(entity->type == ENTITY_PLAYER) {
+            snprintf(message, messageSize, "{\"type\":\"player\",\"data\":%s}", entityJson);
+        } else if(entity->type == ENTITY_ENEMY) {
+            snprintf(message, messageSize, "{\"type\":\"enemy\",\"data\":%s}", entityJson);
+        } else {
+            free((void*)entityJson); // Free allocated memory
+            free(message);
+            return; // Skip NPCs and other entity types
+        }
+
+        // Send message
+        safeWebsocketSend(app, message);
+
+        free((void*)entityJson); // Free allocated memory after use
+        free(message); // Free message buffer
+    }
+}
+
+void FlipWorldRun::syncMultiplayerLevel() {
+    // Only sync in PvE mode
+    if(!isPvEMode || !isLobbyHost) {
+        return;
+    }
+
+    FlipWorldApp* app = static_cast<FlipWorldApp*>(appContext);
+    if(!app) {
+        return;
+    }
 
     if(!engine || !engine->getGame() || !engine->getGame()->current_level) {
         return;
     }
 
-    auto currentLevel = engine->getGame()->current_level;
-
-    if(isLobbyHost) {
-        // Host sends all entity states (player + enemies)
-        // Limit number of entities per sync if queue is getting full
-        int maxEntitiesToSync = currentLevel->getEntityCount();
-        if(queueSize > MAX_QUEUED_MESSAGES * 0.5) // If queue is 50% full
-        {
-            maxEntitiesToSync = 2; // Only sync 2 entities at a time
-        }
-
-        int entitiesSynced = 0;
-        for(int i = 0; i < currentLevel->getEntityCount() && entitiesSynced < maxEntitiesToSync;
-            i++) {
-            Entity* entity = currentLevel->getEntity(i);
-            if(!entity) continue;
-
-            const char* entityJson = entityToJson(entity, true); // websocket format
-            if(entityJson) {
-                // Calculate required buffer size and allocate dynamically
-                size_t entityJsonLen = strlen(entityJson);
-                size_t messageSize = entityJsonLen + 64; // Extra space for wrapper JSON
-                char* message = (char*)malloc(messageSize);
-
-                if(!message) {
-                    FURI_LOG_E("FlipWorldRun", "Failed to allocate message buffer");
-                    free((void*)entityJson);
-                    continue;
-                }
-
-                // Create message with type and data
-                if(entity->type == ENTITY_PLAYER) {
-                    snprintf(
-                        message, messageSize, "{\"type\":\"player\",\"data\":%s}", entityJson);
-                } else if(entity->type == ENTITY_ENEMY) {
-                    snprintf(message, messageSize, "{\"type\":\"enemy\",\"data\":%s}", entityJson);
-                } else {
-                    free((void*)entityJson); // Free allocated memory
-                    free(message);
-                    continue; // Skip NPCs and other entity types
-                }
-
-                // Send message with chunking support
-                sendMessageWithChunking(app, message);
-                entitiesSynced++;
-
-                free((void*)entityJson); // Free allocated memory after use
-                free(message); // Free message buffer
-            }
-        }
-
-        // Send current level info
-        char levelMessage[128];
-        snprintf(
-            levelMessage,
-            sizeof(levelMessage),
-            "{\"type\":\"level\",\"level_index\":%d}",
-            getCurrentLevelIndex());
-        safeWebsocketSend(app, levelMessage);
-    } else {
-        // Follower sends only their player state
-        if(player) {
-            // Find the player entity in the current level
-            Entity* playerEntity = nullptr;
-            for(int i = 0; i < currentLevel->getEntityCount(); i++) {
-                Entity* entity = currentLevel->getEntity(i);
-                if(entity && entity->type == ENTITY_PLAYER) {
-                    playerEntity = entity;
-                    break;
-                }
-            }
-
-            if(playerEntity) {
-                const char* entityJson = entityToJson(playerEntity, true); // websocket format
-                if(entityJson) {
-                    // Calculate required buffer size and allocate dynamically
-                    size_t entityJsonLen = strlen(entityJson);
-                    size_t messageSize = entityJsonLen + 64; // Extra space for wrapper JSON
-                    char* message = (char*)malloc(messageSize);
-
-                    if(!message) {
-                        FURI_LOG_E("FlipWorldRun", "Failed to allocate message buffer");
-                        free((void*)entityJson);
-                        return;
-                    }
-
-                    snprintf(
-                        message, messageSize, "{\"type\":\"player\",\"data\":%s}", entityJson);
-
-                    // Send message with chunking support
-                    sendMessageWithChunking(app, message);
-
-                    free((void*)entityJson); // Free allocated memory after use
-                    free(message); // Free message buffer
-                }
-            }
-        }
-    }
+    // Host sends current level info
+    char levelMessage[128];
+    snprintf(
+        levelMessage,
+        sizeof(levelMessage),
+        "{\"type\":\"level\",\"level_index\":%d}",
+        getCurrentLevelIndex());
+    safeWebsocketSend(app, levelMessage);
 }
 
 void FlipWorldRun::updateDraw(Canvas* canvas) {

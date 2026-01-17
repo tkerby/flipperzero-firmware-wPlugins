@@ -1,6 +1,7 @@
 #include "travel_list.h"
 #include "../view_modules/elements.h"
 #include "../view_modules/app_elements.h"
+#include "t_union_master_icons.h"
 
 struct TravelListView {
     View* view;
@@ -229,6 +230,7 @@ static void travel_list_view_draw_cb(Canvas* canvas, void* _model) {
             frame_x + frame_width,
             frame_y + frame_height);
         elements_draw_str_aligned_utf8(canvas, 64, 32, AlignCenter, AlignCenter, "行程记录");
+        canvas_draw_icon(canvas, frame_x + frame_width - 5 - 4, 28, &I_ButtonRight_4x7);
     }
 
     furi_string_free(temp_str);

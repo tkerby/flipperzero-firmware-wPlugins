@@ -23,6 +23,7 @@ typedef struct {
 typedef enum {
     MarmaladeModeOok650Async,
     MarmaladeMode2FSKDev238Async,
+    MarmaladeMode2FSKDev12KAsync,
     MarmaladeMode2FSKDev476Async,
     MarmaladeModeMSK99_97KbAsync,
     MarmaladeModeGFSK9_99KbAsync,

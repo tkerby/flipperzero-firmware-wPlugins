@@ -11,13 +11,13 @@ This will detail:
 - How you can set it up
 - The details of it
 - What each command means
-- How to get it on Andriod if you don't have a FZ
+- How to get it on Android if you don't have a FZ
 
 And other information of course!
 
 # Download the app first:
 
-https://github.com/Haw8411/magic-band-plus-lights/releases/download/v1.0.0/magicband_plus_lights.fap
+https://github.com/Haw8411/magic-band-plus-lights/releases/download/v1.0.0/magicband_plus_lights.fap (or on the Flipper App)
 
 # Part 1: What is this app anyway?
 

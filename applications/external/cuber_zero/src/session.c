@@ -7,6 +7,11 @@ typedef struct {
     SESSIONSETTINGS settings;
 } CBZSHEADER, *PCBZSHEADER;
 
+typedef struct {
+    uint8_t scramble[8];
+    uint64_t time;
+} SESSIONENTRY, *PSESSIONENTRY;
+
 uint8_t SessionCreate(const PSESSION session, const char* const path) {
     furi_check(session && path);
 
@@ -38,6 +43,10 @@ uint8_t SessionCreate(const PSESSION session, const char* const path) {
 
 void SessionDelete(const PSESSION session) {
     furi_check(session);
+    storage_common_remove(session->storage, furi_string_get_cstr(session->path));
+    storage_file_close(session->file);
+    storage_file_free(session->file);
+    session->file = 0;
 }
 
 void SessionFree(const PSESSION session) {
@@ -66,7 +75,14 @@ void SessionInitialize(const PSESSION session) {
 }
 
 void SessionLoadSettings(const PSESSION session, const PSESSIONSETTINGS settings) {
-    furi_check(session && settings);
+    furi_check(session);
+
+    if(!session->file) {
+        return;
+    }
+
+    furi_check(settings);
+    storage_file_read(session->file, settings, 1);
 }
 
 void SessionOpen(const PSESSION session) {
@@ -78,7 +94,14 @@ void SessionRename(const PSESSION session) {
 }
 
 void SessionSaveSettings(const PSESSION session, const PSESSIONSETTINGS settings) {
-    furi_check(session && settings);
+    furi_check(session);
+
+    if(!session->file) {
+        return;
+    }
+
+    furi_check(settings);
+    storage_file_write(session->file, settings, sizeof(SESSIONSETTINGS));
 }
 
 /*#include "src/cuberzero.h"

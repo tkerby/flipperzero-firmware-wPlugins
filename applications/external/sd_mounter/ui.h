@@ -15,7 +15,7 @@ void show_error_and_wait(const char* text, const Icon* icon, int icon_width);
 void notify(const NotificationSequence* sequence);
 
 // Helper method to check for the "back button pressed" flag
-bool back_button_was_pressed();
+bool back_button_was_pressed(bool clear);
 
 void ui_init();
 void ui_cleanup();

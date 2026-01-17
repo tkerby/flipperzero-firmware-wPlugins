@@ -8,6 +8,11 @@ class Sprite3D;
 struct Vertex3D;
 struct Triangle3D;
 
+#define ENTITY_LEFT  Vector(-1, 0)
+#define ENTITY_RIGHT Vector(1, 0)
+#define ENTITY_UP    Vector(0, -1)
+#define ENTITY_DOWN  Vector(0, 1)
+
 typedef enum {
     ENTITY_IDLE,
     ENTITY_MOVING,
@@ -119,6 +124,8 @@ public:
         float view_height) const;
     void update3DSpritePosition();
 
+    bool hasChangedPosition() const; // Check if the entity's position has changed
+
 private:
     // Internal 3D sprite management
     void create3DSprite(
@@ -130,7 +137,9 @@ private:
 
     // Helper methods for 3D sprite rendering
     Vector project3DTo2D(
-        const Vertex3D& vertex,
+        float x,
+        float y,
+        float z,
         Vector player_pos,
         Vector player_dir,
         Vector player_plane,

@@ -188,26 +188,22 @@ static bool subghz_protocol_keeloq_gen_data(
 
         if(keeloq_counter_mode == 0) {
             // Check for OFEX (overflow experimental) mode
-            if(furi_hal_subghz_get_rolling_counter_mult() != 0xFFFE) {
-                // If counter is 0xFFFF we will reset it to 0
-                if(instance->generic.cnt < 0xFFFF) {
-                    // Increase counter with value set in global settings (mult)
+            if(furi_hal_subghz_get_rolling_counter_mult() != -0x7FFFFFFF) {
+                // standart counter mode. PULL data from subghz_block_generic_global variables
+                if(!subghz_block_generic_global_counter_override_get(&instance->generic.cnt)) {
+                    // if counter_override_get return FALSE then counter was not changed and we increase counter by standart mult value
                     if((instance->generic.cnt + furi_hal_subghz_get_rolling_counter_mult()) >
                        0xFFFF) {
                         instance->generic.cnt = 0;
                     } else {
                         instance->generic.cnt += furi_hal_subghz_get_rolling_counter_mult();
                     }
-                } else if(
-                    (instance->generic.cnt >= 0xFFFF) &&
-                    (furi_hal_subghz_get_rolling_counter_mult() != 0)) {
-                    instance->generic.cnt = 0;
                 }
             } else {
                 if((instance->generic.cnt + 0x1) > 0xFFFF) {
                     instance->generic.cnt = 0;
                 } else if(instance->generic.cnt >= 0x1 && instance->generic.cnt != 0xFFFE) {
-                    instance->generic.cnt = furi_hal_subghz_get_rolling_counter_mult();
+                    instance->generic.cnt = 0xFFFE;
                 } else {
                     instance->generic.cnt++;
                 }
@@ -310,11 +306,13 @@ static bool subghz_protocol_keeloq_gen_data(
                 (strcmp(instance->manufacture_name, "Rosh") == 0) ||
                 (strcmp(instance->manufacture_name, "Rossi") == 0) ||
                 (strcmp(instance->manufacture_name, "Pecinin") == 0) ||
-                (strcmp(instance->manufacture_name, "Steelmate") == 0)) {
+                (strcmp(instance->manufacture_name, "Steelmate") == 0) ||
+                (strcmp(instance->manufacture_name, "Cardin_S449") == 0)) {
                 // DTM Neo, Came_Space uses 12bit serial -> simple learning
                 // FAAC_RC,XT , Mutanco_Mutancode, Genius_Bravo, GSN 12bit serial -> normal learning
                 // Rosh, Rossi, Pecinin -> 12bit serial - simple learning
                 // Steelmate -> 12bit serial - normal learning
+                // Cardin_S449 -> 12bit serial - normal learning
                 decrypt = btn << 28 | (instance->generic.serial & 0xFFF) << 16 |
                           instance->generic.cnt;
             } else if(
@@ -516,12 +514,18 @@ static bool
         (strcmp(instance->manufacture_name, "Monarch") == 0) ||
         (strcmp(instance->manufacture_name, "NICE_Smilo") == 0)) {
         klq_last_custom_btn = 0xB;
-    } else if((strcmp(instance->manufacture_name, "Novoferm") == 0)) {
+    } else if(
+        (strcmp(instance->manufacture_name, "Novoferm") == 0) ||
+        (strcmp(instance->manufacture_name, "Stilmatic") == 0)) {
         klq_last_custom_btn = 0x9;
-    } else if((strcmp(instance->manufacture_name, "EcoStar") == 0)) {
+    } else if(
+        (strcmp(instance->manufacture_name, "EcoStar") == 0) ||
+        (strcmp(instance->manufacture_name, "Sommer") == 0)) {
         klq_last_custom_btn = 0x6;
     } else if((strcmp(instance->manufacture_name, "AN-Motors") == 0)) {
         klq_last_custom_btn = 0xC;
+    } else if((strcmp(instance->manufacture_name, "Cardin_S449") == 0)) {
+        klq_last_custom_btn = 0xD;
     }
 
     btn = subghz_protocol_keeloq_get_btn_code(klq_last_custom_btn);
@@ -1435,6 +1439,9 @@ void subghz_protocol_decoder_keeloq_get_string(void* context, FuriString* output
     uint32_t code_found_reverse_lo = code_found_reverse & 0x00000000ffffffff;
 
     if(strcmp(instance->manufacture_name, "BFT") == 0) {
+        subghz_block_generic_global.cnt_is_available = true;
+        subghz_block_generic_global.cnt_length_bit = 16;
+        subghz_block_generic_global.current_cnt = instance->generic.cnt;
         furi_string_cat_printf(
             output,
             "%s %dbit\r\n"
@@ -1470,6 +1477,9 @@ void subghz_protocol_decoder_keeloq_get_string(void* context, FuriString* output
             instance->generic.btn,
             instance->manufacture_name);
     } else {
+        subghz_block_generic_global.cnt_is_available = true;
+        subghz_block_generic_global.cnt_length_bit = 16;
+        subghz_block_generic_global.current_cnt = instance->generic.cnt;
         furi_string_cat_printf(
             output,
             "%s %dbit\r\n"

@@ -16,8 +16,10 @@
 
 #define TAG "SubGhzProtocolNiceFlorS"
 
-#define NICE_ONE_COUNT_BIT 72
-#define NICE_ONE_NAME      "Nice One"
+#define NICE_ONE_COUNT_BIT                          72
+#define NICE_ONE_NAME                               "Nice One"
+#define SUBGHZ_NICE_FLOR_S_RAINBOW_TABLE_SIZE_BYTES 32
+#define SUBGHZ_NO_NICE_FLOR_S_RAINBOW_TABLE         0
 
 static const SubGhzBlockConst subghz_protocol_nice_flor_s_const = {
     .te_short = 500,
@@ -158,23 +160,21 @@ static void subghz_protocol_encoder_nice_flor_s_get_upload(
     }
     if(nice_flors_counter_mode == 0) {
         // Check for OFEX (overflow experimental) mode
-        if(furi_hal_subghz_get_rolling_counter_mult() != 0xFFFE) {
-            if(instance->generic.cnt < 0xFFFF) {
+        if(furi_hal_subghz_get_rolling_counter_mult() != -0x7FFFFFFF) {
+            // standart counter mode. PULL data from subghz_block_generic_global variables
+            if(!subghz_block_generic_global_counter_override_get(&instance->generic.cnt)) {
+                // if counter_override_get return FALSE then counter was not changed and we increase counter by standart mult value
                 if((instance->generic.cnt + furi_hal_subghz_get_rolling_counter_mult()) > 0xFFFF) {
                     instance->generic.cnt = 0;
                 } else {
                     instance->generic.cnt += furi_hal_subghz_get_rolling_counter_mult();
                 }
-            } else if(
-                (instance->generic.cnt >= 0xFFFF) &&
-                (furi_hal_subghz_get_rolling_counter_mult() != 0)) {
-                instance->generic.cnt = 0;
             }
         } else {
             if((instance->generic.cnt + 0x1) > 0xFFFF) {
                 instance->generic.cnt = 0;
             } else if(instance->generic.cnt >= 0x1 && instance->generic.cnt != 0xFFFE) {
-                instance->generic.cnt = furi_hal_subghz_get_rolling_counter_mult();
+                instance->generic.cnt = 0xFFFE;
             } else {
                 instance->generic.cnt++;
             }
@@ -420,21 +420,13 @@ static void subghz_protocol_nice_one_get_data(uint8_t* p, uint8_t num_parcel, ui
 }
 
 /** 
- * Read bytes from rainbow table
- * @param file_name Full path to rainbow table the file 
+ * Read bytes from buffer array with rainbow table
+ * @param buffer pointer to decrypted rainbow table 
  * @param address Byte address in file
  * @return data
  */
-static uint8_t
-    subghz_protocol_nice_flor_s_get_byte_in_file(const char* file_name, uint32_t address) {
-    if(!file_name) return 0;
-
-    uint8_t buffer[1] = {0};
-    if(subghz_keystore_raw_get_data(file_name, address, buffer, sizeof(uint8_t))) {
-        return buffer[0];
-    } else {
-        return 0;
-    }
+static uint8_t subghz_protocol_nice_flor_s_get_byte_from_buffer(uint8_t* buffer, uint8_t address) {
+    return buffer[address];
 }
 
 static inline void subghz_protocol_decoder_nice_flor_s_magic_xor(uint8_t* p, uint8_t k) {
@@ -444,16 +436,28 @@ static inline void subghz_protocol_decoder_nice_flor_s_magic_xor(uint8_t* p, uin
 }
 
 uint64_t subghz_protocol_nice_flor_s_encrypt(uint64_t data, const char* file_name) {
+    // load and decrypt rainbow table from file to buffer array in RAM
+    if(!file_name) return SUBGHZ_NO_NICE_FLOR_S_RAINBOW_TABLE;
+
+    uint8_t buffer[SUBGHZ_NICE_FLOR_S_RAINBOW_TABLE_SIZE_BYTES] = {0};
+    uint8_t* buffer_ptr = (uint8_t*)&buffer;
+
+    if(subghz_keystore_raw_get_data(
+           file_name, 0, buffer, SUBGHZ_NICE_FLOR_S_RAINBOW_TABLE_SIZE_BYTES)) {
+    } else {
+        return SUBGHZ_NO_NICE_FLOR_S_RAINBOW_TABLE;
+    }
+
     uint8_t* p = (uint8_t*)&data;
 
     uint8_t k = 0;
     for(uint8_t y = 0; y < 2; y++) {
-        k = subghz_protocol_nice_flor_s_get_byte_in_file(file_name, p[0] & 0x1f);
+        k = subghz_protocol_nice_flor_s_get_byte_from_buffer(buffer_ptr, p[0] & 0x1f);
         subghz_protocol_decoder_nice_flor_s_magic_xor(p, k);
 
         p[5] &= 0x0f;
         p[0] ^= k & 0xe0;
-        k = subghz_protocol_nice_flor_s_get_byte_in_file(file_name, p[0] >> 3) + 0x25;
+        k = subghz_protocol_nice_flor_s_get_byte_from_buffer(buffer_ptr, p[0] >> 3) + 0x25;
         subghz_protocol_decoder_nice_flor_s_magic_xor(p, k);
 
         p[5] &= 0x0f;
@@ -481,6 +485,19 @@ static uint64_t
     subghz_protocol_nice_flor_s_decrypt(SubGhzBlockGeneric* instance, const char* file_name) {
     furi_assert(instance);
     uint64_t data = instance->data;
+
+    // load and decrypt rainbow table from file to buffer array in RAM
+    if(!file_name) return SUBGHZ_NO_NICE_FLOR_S_RAINBOW_TABLE;
+
+    uint8_t buffer[SUBGHZ_NICE_FLOR_S_RAINBOW_TABLE_SIZE_BYTES] = {0};
+    uint8_t* buffer_ptr = (uint8_t*)&buffer;
+
+    if(subghz_keystore_raw_get_data(
+           file_name, 0, buffer, SUBGHZ_NICE_FLOR_S_RAINBOW_TABLE_SIZE_BYTES)) {
+    } else {
+        return SUBGHZ_NO_NICE_FLOR_S_RAINBOW_TABLE;
+    }
+
     uint8_t* p = (uint8_t*)&data;
 
     uint8_t k = 0;
@@ -495,12 +512,12 @@ static uint64_t
     p[1] = k;
 
     for(uint8_t y = 0; y < 2; y++) {
-        k = subghz_protocol_nice_flor_s_get_byte_in_file(file_name, p[0] >> 3) + 0x25;
+        k = subghz_protocol_nice_flor_s_get_byte_from_buffer(buffer_ptr, p[0] >> 3) + 0x25;
         subghz_protocol_decoder_nice_flor_s_magic_xor(p, k);
 
         p[5] &= 0x0f;
         p[0] ^= k & 0x7;
-        k = subghz_protocol_nice_flor_s_get_byte_in_file(file_name, p[0] & 0x1f);
+        k = subghz_protocol_nice_flor_s_get_byte_from_buffer(buffer_ptr, p[0] & 0x1f);
         subghz_protocol_decoder_nice_flor_s_magic_xor(p, k);
 
         p[5] &= 0x0f;
@@ -919,6 +936,11 @@ void subghz_protocol_decoder_nice_flor_s_get_string(void* context, FuriString* o
 
     subghz_protocol_nice_flor_s_remote_controller(
         &instance->generic, instance->nice_flor_s_rainbow_table_file_name);
+
+    // push protocol data to global variable
+    subghz_block_generic_global.cnt_is_available = true;
+    subghz_block_generic_global.cnt_length_bit = 16;
+    subghz_block_generic_global.current_cnt = instance->generic.cnt;
 
     if(instance->generic.data_count_bit == NICE_ONE_COUNT_BIT) {
         furi_string_cat_printf(

@@ -40,6 +40,7 @@ static const FrequencyBand valid_frequency_bands[] = {
 static const char* marmalade_modes[] = {
     "OOK 650kHz",
     "2FSK 2.38kHz",
+    "2FSK 12kHz",
     "2FSK 47.6kHz",
     "MSK 99.97Kb/s",
     "GFSK 9.99Kb/s",
@@ -512,6 +513,9 @@ static void marmalade_switch_mode(MarmaladeApp* app) {
     case MarmaladeMode2FSKDev238Async:
         subghz_devices_load_preset(app->device, FuriHalSubGhzPreset2FSKDev238Async, NULL);
         break;
+    case MarmaladeMode2FSKDev12KAsync:
+        subghz_devices_load_preset(app->device, FuriHalSubGhzPreset2FSKDev12KAsync, NULL);
+        break;
     case MarmaladeMode2FSKDev476Async:
         subghz_devices_load_preset(app->device, FuriHalSubGhzPreset2FSKDev476Async, NULL);
         break;
@@ -584,6 +588,7 @@ static int32_t marmalade_tx_thread(void* context) {
         memset(marmalade_data, 0xFF, sizeof(marmalade_data));
         break;
     case MarmaladeMode2FSKDev238Async:
+    case MarmaladeMode2FSKDev12KAsync:
     case MarmaladeMode2FSKDev476Async:
         for(size_t i = 0; i < sizeof(marmalade_data); i++) {
             marmalade_data[i] = (i % 2 == 0) ? 0xAA : 0x55;

@@ -1,4 +1,5 @@
 #include "../bad_usb_app_i.h"
+#include <bt/bt_service/bt.h>
 
 enum ConfigIndex {
     ConfigIndexKeyboardLayout,
@@ -8,6 +9,7 @@ enum ConfigIndex {
 enum ConfigIndexBle {
     ConfigIndexBlePersistPairing = ConfigIndexConnection + 1,
     ConfigIndexBlePairingMode,
+    ConfigIndexBleNfcPairing,
     ConfigIndexBleSetDeviceName,
     ConfigIndexBleSetMacAddress,
     ConfigIndexBleRandomizeMacAddress,
@@ -63,6 +65,30 @@ void bad_usb_scene_config_ble_pairing_mode_callback(VariableItem* item) {
     variable_item_set_current_value_text(item, ble_pairing_mode_names[index]);
 }
 
+void bad_usb_scene_config_ble_nfc_pairing_callback(VariableItem* item) {
+    BadUsbApp* bad_usb = variable_item_get_context(item);
+    bool value = variable_item_get_current_value_index(item);
+    bad_usb->nfc_pairing_enabled = value;
+    variable_item_set_current_value_text(item, value ? "ON" : "OFF");
+
+    // Update NFC emulation state immediately
+    if(bad_usb->interface == BadUsbHidInterfaceBle) {
+        Bt* bt = furi_record_open(RECORD_BT);
+        BtStatus bt_status = bt_get_status(bt);
+        furi_record_close(RECORD_BT);
+
+        if(bt_status != BtStatusConnected) {
+            if(value) {
+                // Enabled: start NFC pairing
+                bad_usb_nfc_pairing_start(bad_usb);
+            } else {
+                // Disabled: stop NFC pairing
+                bad_usb_nfc_pairing_stop(bad_usb);
+            }
+        }
+    }
+}
+
 void bad_usb_scene_config_select_callback(void* context, uint32_t index) {
     BadUsbApp* bad_usb = context;
 
@@ -103,6 +129,15 @@ static void draw_menu(BadUsbApp* bad_usb) {
             bad_usb);
         variable_item_set_current_value_index(item, ble_hid_cfg->pairing);
         variable_item_set_current_value_text(item, ble_pairing_mode_names[ble_hid_cfg->pairing]);
+
+        item = variable_item_list_add(
+            var_item_list,
+            "NFC Pairing",
+            2,
+            bad_usb_scene_config_ble_nfc_pairing_callback,
+            bad_usb);
+        variable_item_set_current_value_index(item, bad_usb->nfc_pairing_enabled);
+        variable_item_set_current_value_text(item, bad_usb->nfc_pairing_enabled ? "ON" : "OFF");
 
         variable_item_list_add(var_item_list, "Set Device Name", 0, NULL, NULL);
 
@@ -181,6 +216,16 @@ bool bad_usb_scene_config_on_event(void* context, SceneManagerEvent event) {
                     bad_usb->user_hid_cfg.ble.mac,
                     bad_usb->script_hid_cfg.ble.mac,
                     sizeof(bad_usb->user_hid_cfg.ble.mac));
+                // Regenerate NFC tag with new randomized MAC
+                if(bad_usb->interface == BadUsbHidInterfaceBle && bad_usb->nfc_pairing_enabled) {
+                    Bt* bt = furi_record_open(RECORD_BT);
+                    BtStatus bt_status = bt_get_status(bt);
+                    furi_record_close(RECORD_BT);
+                    if(bt_status != BtStatusConnected) {
+                        bad_usb_nfc_pairing_stop(bad_usb);
+                        bad_usb_nfc_pairing_start(bad_usb);
+                    }
+                }
                 scene_manager_next_scene(bad_usb->scene_manager, BadUsbSceneDone);
                 break;
             case ConfigIndexBleRestoreDefaults:
@@ -196,6 +241,16 @@ bool bad_usb_scene_config_on_event(void* context, SceneManagerEvent event) {
                     &bad_usb->user_hid_cfg.ble,
                     &bad_usb->script_hid_cfg.ble,
                     sizeof(bad_usb->user_hid_cfg.ble));
+                // Regenerate NFC tag with default MAC
+                if(bad_usb->interface == BadUsbHidInterfaceBle && bad_usb->nfc_pairing_enabled) {
+                    Bt* bt = furi_record_open(RECORD_BT);
+                    BtStatus bt_status = bt_get_status(bt);
+                    furi_record_close(RECORD_BT);
+                    if(bt_status != BtStatusConnected) {
+                        bad_usb_nfc_pairing_stop(bad_usb);
+                        bad_usb_nfc_pairing_start(bad_usb);
+                    }
+                }
                 scene_manager_next_scene(bad_usb->scene_manager, BadUsbSceneDone);
                 break;
             case ConfigIndexBleRemovePairing:
