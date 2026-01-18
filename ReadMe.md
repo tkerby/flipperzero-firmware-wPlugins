@@ -36,9 +36,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [BT Audio v1.0 (By FatherDivine)](https://github.com/FatherDivine/flipperzero-mayhem/tree/bt_audio/flipper_companion_apps/applications/external/bt_audio) `Req: ESP32 w BT` & [This FW](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/external/bt_audio/.esp32_firmware)
 - Updated: [BT Audio v1.1 (By FatherDivine)](https://github.com/FatherDivine/flipperzero-mayhem/tree/bt_audio/flipper_companion_apps/applications/external/bt_audio) `Req: ESP32 w BT` & [This FW](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/external/bt_audio/.esp32_firmware)
 - Updated: [Flipper Hero v1.4 (By mentoster)](https://github.com/mentoster/Flipper-hero)
-- Updated: [ProtoPirate v1.5 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate) Added Subaru & Suzuki (By RocketGod-Git)
 - Updated: [NFC Seader v4.0 (By bettse)](https://github.com/bettse/seader) (Version Only)
 - Updated: [CO2 Logger v0.4 (By harryob2)](https://github.com/harryob2/co2_logger) `Req: MH-Z19` (Version Only)
+- Updated: [ProtoPirate v1.5 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 
 <a name="release">
 
