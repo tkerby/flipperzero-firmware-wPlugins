@@ -43,6 +43,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [ArduGolf v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperGolf)
 - Sub-GHz: [Removed car protocols from internal compile, now handled by ProtoPirate. Removed: Kia, ScherKahn and StarLine (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/cdd4f4d8430e311c9a745a5b953012cdd00c448b)
 - Sub-GHz: [Added Signal Settings (By Dmitry422 & xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/905b52a53f4b430d8db22594893352a2f72cd078)
+- Updated: [Noptel LRF Sampler v2.4 (By Giraut)](https://github.com/Giraut/flipper_zero_noptel_lrf_sampler)
 
 <a name="release">
 
@@ -670,7 +671,7 @@ $ ./fbt dolphin_ext
 - [NFC URL v1.0 (By y-dejong)](https://github.com/y-dejong/nfcurl)
 - [Nickname Generator v0.1 (By disaxq)](https://github.com/disaxq/Nickname-Generator)
 - [Nightstand Clock v1.2 (By nymda)](https://github.com/nymda/FlipperNightStand)
-- [Noptel LRF Sampler v2.3 (By Giraut)](https://github.com/Giraut/flipper_zero_noptel_lrf_sampler)
+- [Noptel LRF Sampler v2.4 (By Giraut)](https://github.com/Giraut/flipper_zero_noptel_lrf_sampler)
 - [Notes for FZ WIP (By AdrianN001)](https://github.com/AdrianN001/Flipper-Zero-Note-Application)
 - [NRF Sniff v1.1 (By mothball187)](https://github.com/mothball187/flipperzero-nrf24/tree/main/nrfsniff) [Pin Out from nocomp/Frog/UberGuidoZ](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/nrfsniff) `Req: NRF24`
 - [NRF Sniffer for MS Mouse (Remixed By coded-with-claws)](https://github.com/coded-with-claws/flipperzero-tools/tree/main/applications_user/nrfsniff_ms) `Req: NRF24`
