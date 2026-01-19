@@ -17,6 +17,7 @@
 #include "suzuki.h"
 #include "vw.h"
 #include "star_line.h"
+#include "psa.h"
 
 extern const SubGhzProtocolRegistry protopirate_protocol_registry;
 

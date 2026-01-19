@@ -15,6 +15,7 @@ const SubGhzProtocol* protopirate_protocol_registry_items[] = {
     &suzuki_protocol,
     &vw_protocol,
     &subghz_protocol_star_line,
+    &psa_protocol,
 };
 
 const SubGhzProtocolRegistry protopirate_protocol_registry = {
@@ -127,6 +128,14 @@ static const ProtoPirateProtocolTiming protocol_timings[] = {
         .te_long = 500,
         .te_delta = 120,
         .min_count_bit = 64,
+    },
+    // PSA: Manchester 250/500µs (Pattern 1) or 125/250µs (Pattern 2)
+    {
+        .name = "PSA",
+        .te_short = 250,
+        .te_long = 500,
+        .te_delta = 100,
+        .min_count_bit = 128,
     },
 };
 
