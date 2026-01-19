@@ -1,148 +1,124 @@
-# Flipper Zero Apps
+# Big Clock for Flipper Zero
 
-A collection of custom applications for [Flipper Zero](https://flipperzero.one/).
+A full-screen digital bedside/tableside clock for Flipper Zero with adjustable screen brightness.
 
-![Flipper Zero](https://img.shields.io/badge/Flipper%20Zero-FF6600?style=for-the-badge&logo=flipper&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+![Flipper Zero](https://img.shields.io/badge/Flipper%20Zero-FF6600?style=flat&logo=flipper&logoColor=white)
+![Version](https://img.shields.io/badge/version-1.1-blue)
 ![CI](https://github.com/Eris-Margeta/flipper-apps/actions/workflows/ci.yml/badge.svg)
 
-## Apps
+## Use Case
 
-| App | Description | Version | Category |
-|-----|-------------|---------|----------|
-| [Big Clock](apps/big-clock/) | Bedside/tableside clock with adjustable brightness (0-100%) | 1.1 | Tools |
-| [Reality Clock](apps/reality-clock/) | Dimensional stability monitor using multi-band EM ratio analysis | 1.0 | Tools |
+Turn your Flipper Zero into a **bedside or desk clock** with:
+- Large, easy-to-read digits visible from across the room
+- Adjustable brightness from completely off (0%) to your system maximum
+- Perfect for nightstands, desks, or anywhere you need a simple clock
 
-## Quick Start
+## Features
+
+- **Large Display**: Full-screen time display with custom 24x48 pixel digits
+- **Adjustable Brightness**: 11 levels from 0% (off) to 100% in 10% increments
+- **Visual Feedback**: Shows brightness bar and percentage when adjusting
+- **Always On**: Backlight stays on while the app is running (no timeout)
+- **Flicker-Free**: Smooth brightness transitions without screen flashing
+
+## Controls
+
+| Button | Action |
+|--------|--------|
+| UP | Increase brightness (+10%) |
+| DOWN | Decrease brightness (-10%, down to 0% = off) |
+| BACK | Exit application |
+
+## Brightness Control
+
+> **Important Note**: This app controls brightness as a **percentage of your system's maximum backlight setting**.
+>
+> The maximum brightness is determined by:
+> **Settings > LCD and Notifications > LCD Backlight**
+>
+> For example:
+> - If your system backlight is set to 50%, then 100% in this app = 50% actual brightness
+> - If your system backlight is set to 100%, then 100% in this app = full brightness
+>
+> **0% brightness** turns the backlight completely off (screen blank but clock still running).
+
+## Screenshots
+
+```
+    ██  ██████    ██████  ██████
+    ██      ██  ●     ██  ██
+    ██  ██████  ●  █████  ██████
+    ██  ██          ██        ██
+    ██  ██████    █████  ██████
+```
+
+## Building
 
 ### Prerequisites
 
-- [Python](https://python.org/) 3.10+
-- [Poetry](https://python-poetry.org/) (recommended) or pip
-- [Flipper Zero](https://flipperzero.one/) device
+- [ufbt](https://github.com/flipperdevices/flipperzero-ufbt) (micro Flipper Build Tool)
 
-### Development Setup
+### Build Commands
 
 ```bash
-# Clone the repository
-git clone https://github.com/Eris-Margeta/flipper-apps.git
-cd flipper-apps
+# Using Poetry (recommended)
+poetry run ufbt           # Build only
+poetry run ufbt launch    # Build + install + run
 
-# Install dependencies with Poetry
-poetry install
-
-# Navigate to an app and build
-cd apps/big-clock
-poetry run ufbt
-
-# Build and install to connected Flipper Zero
-poetry run ufbt launch
-```
-
-<details>
-<summary>Alternative: Using pip</summary>
-
-```bash
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-
-# Install ufbt
+# Using pip
 pip install ufbt
-
-# Build and run
-cd apps/big-clock
 ufbt launch
 ```
 
-</details>
+### Output
 
-## Building Apps
+The compiled `.fap` file will be in the `dist/` directory.
 
+## Installation
+
+### Via ufbt (recommended)
 ```bash
-cd apps/<app-name>
-poetry run ufbt           # Build only
-poetry run ufbt launch    # Build + install + run on Flipper
+poetry run ufbt launch
 ```
 
-The compiled `.fap` file will be in `dist/`.
+### Manual Installation
+1. Build the app with `ufbt`
+2. Copy `dist/big_clock.fap` to your Flipper Zero's SD card at `/ext/apps/Tools/`
 
-## Creating a New App
+## Technical Details
 
-1. Copy the template:
-   ```bash
-   cp -r apps/_template apps/your-app-name
-   ```
+| Property | Value |
+|----------|-------|
+| Target | Flipper Zero |
+| App Type | External (.fap) |
+| Category | Tools |
+| Stack Size | 2KB |
+| Version | 1.1 |
 
-2. Update files:
-   - `application.fam` - Set unique `appid`, `name`, version
-   - `app.c` - Implement your app
-   - `README.md` - Document your app
-   - `VERSION` - Set version number
+### Implementation Notes
 
-3. Create icon and screenshots
+- Uses direct hardware control via `furi_hal_light_set()` for brightness
+- Brightness levels mapped from 0-100% to hardware values (0-255)
+- Continuously maintains brightness to prevent system timeout
 
-4. Build and test:
-   ```bash
-   cd apps/your-app-name
-   poetry run ufbt launch
-   ```
+## Version History
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+See [changelog.md](changelog.md) for full version history.
 
-## Repository Structure
+Current version: see [VERSION](VERSION)
 
-```
-flipper-apps/
-├── .github/workflows/   # CI configuration
-├── apps/
-│   ├── _template/       # Template for new apps
-│   ├── big-clock/       # Big Clock application
-│   └── reality-clock/   # Reality Dimension Clock (experimental)
-├── docs/
-│   └── PUBLISHING.md    # Catalog publishing guide
-├── CONTRIBUTING.md      # Contribution guidelines
-├── SECURITY.md          # Security policy
-├── LICENSE              # MIT License
-└── README.md            # This file
-```
+## Known Issues
 
-## App Structure
-
-Each app contains:
-
-```
-apps/<app-name>/
-├── application.fam      # App manifest
-├── *.c / *.h            # Source files
-├── README.md            # Documentation
-├── changelog.md         # Version history
-├── VERSION              # Version number
-├── icon.png             # 10x10px 1-bit icon
-└── screenshots/         # qFlipper screenshots
-```
-
-## Publishing to Flipper Catalog
-
-See [docs/PUBLISHING.md](docs/PUBLISHING.md) for instructions on publishing apps to the official Flipper App Catalog.
-
-## Contributing
-
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting a pull request.
-
-## Security
-
-For security concerns, see [SECURITY.md](SECURITY.md).
+- **Brief flicker on button press/release**: When adjusting brightness, a brief flicker may occur at the moment of button press and release. This appears to be a hardware/firmware limitation related to how the Flipper Zero's backlight system handles brightness changes. The brightness change itself works correctly.
 
 ## License
 
-This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
+MIT License - see [LICENSE](../../LICENSE)
 
 ## Author
 
 **Eris Margeta** ([@Eris-Margeta](https://github.com/Eris-Margeta))
 
-## Acknowledgments
+---
 
-- [Flipper Devices](https://github.com/flipperdevices) for the hardware and SDK
-- [Flipper Zero Firmware](https://github.com/flipperdevices/flipperzero-firmware)
+Part of [flipper-apps](https://github.com/Eris-Margeta/flipper-apps) monorepo.

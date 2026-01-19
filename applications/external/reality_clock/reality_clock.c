@@ -27,47 +27,47 @@
  * CONSTANTS
  * ============================================================================ */
 
-#define SCREEN_WIDTH         128
-#define SCREEN_HEIGHT        64
+#define SCREEN_WIDTH  128
+#define SCREEN_HEIGHT 64
 
-#define INPUT_QUEUE_SIZE     8
+#define INPUT_QUEUE_SIZE 8
 
 /** Sample rates */
-#define SAMPLE_INTERVAL_CALIB_MS  200   /**< 5 samples/sec during calibration */
-#define SAMPLE_INTERVAL_NORMAL_MS 1000  /**< 1 sample/sec during normal */
+#define SAMPLE_INTERVAL_CALIB_MS  200 /**< 5 samples/sec during calibration */
+#define SAMPLE_INTERVAL_NORMAL_MS 1000 /**< 1 sample/sec during normal */
 
 /** Rolling buffer size */
-#define BUFFER_SIZE          1000  /**< Rolling buffer for stability */
-#define CALIBRATION_SAMPLES  100   /**< Samples needed before stable (20 sec at 5Hz) */
+#define BUFFER_SIZE         1000 /**< Rolling buffer for stability */
+#define CALIBRATION_SAMPLES 100 /**< Samples needed before stable (20 sec at 5Hz) */
 
 /** Stability thresholds - very generous with averaged readings */
-#define HOME_THRESHOLD       90.0f
-#define STABLE_THRESHOLD     75.0f
-#define UNSTABLE_THRESHOLD   50.0f
+#define HOME_THRESHOLD     90.0f
+#define STABLE_THRESHOLD   75.0f
+#define UNSTABLE_THRESHOLD 50.0f
 
 /** Screen IDs */
-#define SCREEN_HOME          0   /**< Main sci-fi display */
-#define SCREEN_BANDS         1   /**< Band readings */
-#define SCREEN_DETAILS       2   /**< Scrollable details */
-#define SCREEN_INFO          3   /**< QR code / info screen */
-#define SCREEN_MENU          4   /**< Settings menu */
-#define SCREEN_BRIGHTNESS    5   /**< Brightness slider */
-#define SCREEN_COUNT         6
+#define SCREEN_HOME       0 /**< Main sci-fi display */
+#define SCREEN_BANDS      1 /**< Band readings */
+#define SCREEN_DETAILS    2 /**< Scrollable details */
+#define SCREEN_INFO       3 /**< QR code / info screen */
+#define SCREEN_MENU       4 /**< Settings menu */
+#define SCREEN_BRIGHTNESS 5 /**< Brightness slider */
+#define SCREEN_COUNT      6
 
 /** Menu items */
-#define MENU_ITEM_CALIBRATE   0
-#define MENU_ITEM_BRIGHTNESS  1
-#define MENU_ITEM_COUNT       2
+#define MENU_ITEM_CALIBRATE  0
+#define MENU_ITEM_BRIGHTNESS 1
+#define MENU_ITEM_COUNT      2
 
 /** Brightness settings */
-#define BRIGHTNESS_MIN        0
-#define BRIGHTNESS_MAX        100
-#define BRIGHTNESS_STEP       10
+#define BRIGHTNESS_MIN  0
+#define BRIGHTNESS_MAX  100
+#define BRIGHTNESS_STEP 10
 
 /** Details screen */
-#define DETAILS_LINES        12
-#define DETAILS_VISIBLE      5
-#define LINE_HEIGHT          10
+#define DETAILS_LINES   12
+#define DETAILS_VISIBLE 5
+#define LINE_HEIGHT     10
 
 /* ============================================================================
  * TYPES
@@ -94,10 +94,10 @@ typedef struct {
     bool is_calibrated;
 
     uint8_t current_screen;
-    uint8_t previous_screen;  /**< For returning from menu */
+    uint8_t previous_screen; /**< For returning from menu */
     int8_t scroll_offset;
-    uint8_t menu_selection;   /**< Current menu item */
-    uint8_t brightness;       /**< Current brightness 0-100 */
+    uint8_t menu_selection; /**< Current menu item */
+    uint8_t brightness; /**< Current brightness 0-100 */
 
     /** Rolling buffers for each band */
     RollingBuffer lf_buffer;
@@ -114,8 +114,8 @@ typedef struct {
     float hf_raw;
     float uhf_raw;
 
-    float phi_current;       /**< Φ from averaged readings */
-    float phi_baseline;      /**< Baseline Φ (first stable average) */
+    float phi_current; /**< Φ from averaged readings */
+    float phi_baseline; /**< Baseline Φ (first stable average) */
     float match_percent;
 
     DimensionStatus status;
@@ -279,40 +279,40 @@ static void update_readings(RealityClockState* state) {
  * 29x29 QR code - displayed at 2x scale (58x58 pixels on screen)
  */
 
-#define QR_SIZE 29
+#define QR_SIZE          29
 #define QR_BYTES_PER_ROW 4
-#define QR_SCALE 2
+#define QR_SCALE         2
 
 static const uint8_t qr_code_data[] = {
-    0xFE, 0x2A, 0x9B, 0xF8,  /* Row 0 */
-    0x82, 0xA1, 0x6A, 0x08,  /* Row 1 */
-    0xBA, 0x09, 0x02, 0xE8,  /* Row 2 */
-    0xBA, 0xEF, 0xF2, 0xE8,  /* Row 3 */
-    0xBA, 0x40, 0xFA, 0xE8,  /* Row 4 */
-    0x82, 0xDB, 0x82, 0x08,  /* Row 5 */
-    0xFE, 0xAA, 0xAB, 0xF8,  /* Row 6 */
-    0x00, 0x73, 0x10, 0x00,  /* Row 7 */
-    0xFB, 0xD6, 0x0D, 0x50,  /* Row 8 */
-    0x00, 0x2A, 0xFB, 0x88,  /* Row 9 */
-    0x3F, 0xA5, 0x08, 0x80,  /* Row 10 */
-    0xC9, 0x89, 0x88, 0x50,  /* Row 11 */
-    0x36, 0x6C, 0x40, 0x60,  /* Row 12 */
-    0xFD, 0xC4, 0xAF, 0x88,  /* Row 13 */
-    0x57, 0x7B, 0x2C, 0xE0,  /* Row 14 */
-    0x80, 0xF2, 0x9F, 0x90,  /* Row 15 */
-    0x36, 0xF7, 0x55, 0x60,  /* Row 16 */
-    0xE0, 0x68, 0x97, 0xA8,  /* Row 17 */
-    0xBA, 0xC1, 0xEB, 0xA0,  /* Row 18 */
-    0x85, 0xAA, 0xAE, 0x10,  /* Row 19 */
-    0x96, 0x0E, 0x5F, 0xB8,  /* Row 20 */
-    0x00, 0xE2, 0x28, 0xF8,  /* Row 21 */
-    0xFE, 0xD9, 0xDA, 0xE0,  /* Row 22 */
-    0x82, 0x31, 0x18, 0x90,  /* Row 23 */
-    0xBA, 0xFF, 0x4F, 0xA8,  /* Row 24 */
-    0xBA, 0xAA, 0xB8, 0x78,  /* Row 25 */
-    0xBA, 0xA1, 0x1F, 0xF0,  /* Row 26 */
-    0x82, 0xD9, 0x8D, 0x50,  /* Row 27 */
-    0xFE, 0xA7, 0xD3, 0xA0,  /* Row 28 */
+    0xFE, 0x2A, 0x9B, 0xF8, /* Row 0 */
+    0x82, 0xA1, 0x6A, 0x08, /* Row 1 */
+    0xBA, 0x09, 0x02, 0xE8, /* Row 2 */
+    0xBA, 0xEF, 0xF2, 0xE8, /* Row 3 */
+    0xBA, 0x40, 0xFA, 0xE8, /* Row 4 */
+    0x82, 0xDB, 0x82, 0x08, /* Row 5 */
+    0xFE, 0xAA, 0xAB, 0xF8, /* Row 6 */
+    0x00, 0x73, 0x10, 0x00, /* Row 7 */
+    0xFB, 0xD6, 0x0D, 0x50, /* Row 8 */
+    0x00, 0x2A, 0xFB, 0x88, /* Row 9 */
+    0x3F, 0xA5, 0x08, 0x80, /* Row 10 */
+    0xC9, 0x89, 0x88, 0x50, /* Row 11 */
+    0x36, 0x6C, 0x40, 0x60, /* Row 12 */
+    0xFD, 0xC4, 0xAF, 0x88, /* Row 13 */
+    0x57, 0x7B, 0x2C, 0xE0, /* Row 14 */
+    0x80, 0xF2, 0x9F, 0x90, /* Row 15 */
+    0x36, 0xF7, 0x55, 0x60, /* Row 16 */
+    0xE0, 0x68, 0x97, 0xA8, /* Row 17 */
+    0xBA, 0xC1, 0xEB, 0xA0, /* Row 18 */
+    0x85, 0xAA, 0xAE, 0x10, /* Row 19 */
+    0x96, 0x0E, 0x5F, 0xB8, /* Row 20 */
+    0x00, 0xE2, 0x28, 0xF8, /* Row 21 */
+    0xFE, 0xD9, 0xDA, 0xE0, /* Row 22 */
+    0x82, 0x31, 0x18, 0x90, /* Row 23 */
+    0xBA, 0xFF, 0x4F, 0xA8, /* Row 24 */
+    0xBA, 0xAA, 0xB8, 0x78, /* Row 25 */
+    0xBA, 0xA1, 0x1F, 0xF0, /* Row 26 */
+    0x82, 0xD9, 0x8D, 0x50, /* Row 27 */
+    0xFE, 0xA7, 0xD3, 0xA0, /* Row 28 */
 };
 
 /* ============================================================================
@@ -363,7 +363,7 @@ static void draw_scifi_lines(Canvas* canvas, int16_t y) {
 static void draw_large_e137(Canvas* canvas, int16_t center_x, int16_t center_y) {
     /* Draw "E-137" in a large, blocky sci-fi style */
     /* Each character is approximately 12 pixels wide, 16 pixels tall */
-    int16_t x = center_x - 30;  /* Start position */
+    int16_t x = center_x - 30; /* Start position */
     int16_t y = center_y - 8;
 
     /* 'E' */
@@ -439,20 +439,20 @@ static void draw_screen_home(Canvas* canvas, RealityClockState* state) {
     canvas_set_font(canvas, FontSecondary);
     const char* status_text;
     switch(state->status) {
-        case DimStatusHome:
-            status_text = "[ HOME DIMENSION ]";
-            break;
-        case DimStatusStable:
-            status_text = "[ STABLE ]";
-            break;
-        case DimStatusUnstable:
-            status_text = "[ DRIFT DETECTED ]";
-            break;
-        case DimStatusForeign:
-            status_text = "[ FOREIGN DIMENSION ]";
-            break;
-        default:
-            status_text = "[ SCANNING... ]";
+    case DimStatusHome:
+        status_text = "[ HOME DIMENSION ]";
+        break;
+    case DimStatusStable:
+        status_text = "[ STABLE ]";
+        break;
+    case DimStatusUnstable:
+        status_text = "[ DRIFT DETECTED ]";
+        break;
+    case DimStatusForeign:
+        status_text = "[ FOREIGN DIMENSION ]";
+        break;
+    default:
+        status_text = "[ SCANNING... ]";
     }
     canvas_draw_str_aligned(canvas, 64, 56, AlignCenter, AlignCenter, status_text);
 
@@ -468,7 +468,7 @@ static void draw_bar(Canvas* canvas, int16_t x, int16_t y, int16_t w, int16_t h,
         canvas_draw_box(canvas, x, y, fill_w, h);
     }
     for(int16_t i = fill_w; i < w; i += 2) {
-        canvas_draw_dot(canvas, x + i, y + h/2);
+        canvas_draw_dot(canvas, x + i, y + h / 2);
     }
 }
 
@@ -551,7 +551,10 @@ static void draw_screen_details(Canvas* canvas, RealityClockState* state) {
     canvas_draw_str(canvas, 2, 8, "DETAILS");
 
     char scroll_buf[16];
-    snprintf(scroll_buf, sizeof(scroll_buf), "[%d-%d/%d]",
+    snprintf(
+        scroll_buf,
+        sizeof(scroll_buf),
+        "[%d-%d/%d]",
         state->scroll_offset + 1,
         state->scroll_offset + DETAILS_VISIBLE,
         line_count);
@@ -589,10 +592,8 @@ static void draw_screen_info(Canvas* canvas, RealityClockState* state) {
             int bit_idx = 7 - (col % 8);
             if(qr_code_data[byte_idx] & (1 << bit_idx)) {
                 /* Draw 2x2 pixel block for each QR module */
-                canvas_draw_box(canvas,
-                    qr_x + col * QR_SCALE,
-                    qr_y + row * QR_SCALE,
-                    QR_SCALE, QR_SCALE);
+                canvas_draw_box(
+                    canvas, qr_x + col * QR_SCALE, qr_y + row * QR_SCALE, QR_SCALE, QR_SCALE);
             }
         }
     }
@@ -699,32 +700,31 @@ static void brightness_timer_callback(void* ctx) {
     furi_hal_light_set(LightBacklight, hw);
 }
 
-
 static void render_callback(Canvas* canvas, void* ctx) {
     RealityClockState* state = (RealityClockState*)ctx;
     canvas_clear(canvas);
 
     switch(state->current_screen) {
-        case SCREEN_HOME:
-            draw_screen_home(canvas, state);
-            break;
-        case SCREEN_BANDS:
-            draw_screen_bands(canvas, state);
-            break;
-        case SCREEN_DETAILS:
-            draw_screen_details(canvas, state);
-            break;
-        case SCREEN_INFO:
-            draw_screen_info(canvas, state);
-            break;
-        case SCREEN_MENU:
-            draw_screen_menu(canvas, state);
-            break;
-        case SCREEN_BRIGHTNESS:
-            draw_screen_brightness(canvas, state);
-            break;
-        default:
-            draw_screen_home(canvas, state);
+    case SCREEN_HOME:
+        draw_screen_home(canvas, state);
+        break;
+    case SCREEN_BANDS:
+        draw_screen_bands(canvas, state);
+        break;
+    case SCREEN_DETAILS:
+        draw_screen_details(canvas, state);
+        break;
+    case SCREEN_INFO:
+        draw_screen_info(canvas, state);
+        break;
+    case SCREEN_MENU:
+        draw_screen_menu(canvas, state);
+        break;
+    case SCREEN_BRIGHTNESS:
+        draw_screen_brightness(canvas, state);
+        break;
+    default:
+        draw_screen_home(canvas, state);
     }
 }
 
@@ -772,27 +772,27 @@ static void process_input(RealityClockState* state, InputEvent* event) {
     /* Handle brightness screen */
     if(state->current_screen == SCREEN_BRIGHTNESS) {
         switch(event->key) {
-            case InputKeyLeft:
-                if(state->brightness >= BRIGHTNESS_STEP) {
-                    state->brightness -= BRIGHTNESS_STEP;
-                    g_current_brightness = state->brightness;
-                    apply_brightness(state->brightness);
-                }
-                break;
-            case InputKeyRight:
-                if(state->brightness <= BRIGHTNESS_MAX - BRIGHTNESS_STEP) {
-                    state->brightness += BRIGHTNESS_STEP;
-                    g_current_brightness = state->brightness;
-                    apply_brightness(state->brightness);
-                }
-                break;
-            case InputKeyBack:
-            case InputKeyOk:
-                /* Return to menu */
-                state->current_screen = SCREEN_MENU;
-                break;
-            default:
-                break;
+        case InputKeyLeft:
+            if(state->brightness >= BRIGHTNESS_STEP) {
+                state->brightness -= BRIGHTNESS_STEP;
+                g_current_brightness = state->brightness;
+                apply_brightness(state->brightness);
+            }
+            break;
+        case InputKeyRight:
+            if(state->brightness <= BRIGHTNESS_MAX - BRIGHTNESS_STEP) {
+                state->brightness += BRIGHTNESS_STEP;
+                g_current_brightness = state->brightness;
+                apply_brightness(state->brightness);
+            }
+            break;
+        case InputKeyBack:
+        case InputKeyOk:
+            /* Return to menu */
+            state->current_screen = SCREEN_MENU;
+            break;
+        default:
+            break;
         }
         return;
     }
@@ -800,78 +800,78 @@ static void process_input(RealityClockState* state, InputEvent* event) {
     /* Handle menu screen */
     if(state->current_screen == SCREEN_MENU) {
         switch(event->key) {
-            case InputKeyUp:
-                if(state->menu_selection > 0) {
-                    state->menu_selection--;
-                }
-                break;
-            case InputKeyDown:
-                if(state->menu_selection < MENU_ITEM_COUNT - 1) {
-                    state->menu_selection++;
-                }
-                break;
-            case InputKeyOk:
-                if(state->menu_selection == MENU_ITEM_CALIBRATE) {
-                    do_calibrate(state);
-                    state->current_screen = state->previous_screen;
-                } else if(state->menu_selection == MENU_ITEM_BRIGHTNESS) {
-                    state->current_screen = SCREEN_BRIGHTNESS;
-                }
-                break;
-            case InputKeyBack:
+        case InputKeyUp:
+            if(state->menu_selection > 0) {
+                state->menu_selection--;
+            }
+            break;
+        case InputKeyDown:
+            if(state->menu_selection < MENU_ITEM_COUNT - 1) {
+                state->menu_selection++;
+            }
+            break;
+        case InputKeyOk:
+            if(state->menu_selection == MENU_ITEM_CALIBRATE) {
+                do_calibrate(state);
                 state->current_screen = state->previous_screen;
-                break;
-            default:
-                break;
+            } else if(state->menu_selection == MENU_ITEM_BRIGHTNESS) {
+                state->current_screen = SCREEN_BRIGHTNESS;
+            }
+            break;
+        case InputKeyBack:
+            state->current_screen = state->previous_screen;
+            break;
+        default:
+            break;
         }
         return;
     }
 
     /* Handle normal screens (HOME, BANDS, DETAILS, INFO) */
     switch(event->key) {
-        case InputKeyLeft:
-            if(state->current_screen > 0) {
-                state->current_screen--;
-                state->scroll_offset = 0;
+    case InputKeyLeft:
+        if(state->current_screen > 0) {
+            state->current_screen--;
+            state->scroll_offset = 0;
+        }
+        break;
+
+    case InputKeyRight:
+        if(state->current_screen < SCREEN_INFO) {
+            state->current_screen++;
+            state->scroll_offset = 0;
+        }
+        break;
+
+    case InputKeyUp:
+        /* Only scroll on details screen */
+        if(state->current_screen == SCREEN_DETAILS && state->scroll_offset > 0) {
+            state->scroll_offset--;
+        }
+        break;
+
+    case InputKeyDown:
+        /* Only scroll on details screen */
+        if(state->current_screen == SCREEN_DETAILS) {
+            if(state->scroll_offset + DETAILS_VISIBLE < DETAILS_LINES) {
+                state->scroll_offset++;
             }
-            break;
+        }
+        break;
 
-        case InputKeyRight:
-            if(state->current_screen < SCREEN_INFO) {
-                state->current_screen++;
-                state->scroll_offset = 0;
-            }
-            break;
+    case InputKeyOk:
+        /* Open menu */
+        state->previous_screen = state->current_screen;
+        state->current_screen = SCREEN_MENU;
+        state->menu_selection = 0;
+        break;
 
-        case InputKeyUp:
-            /* Only scroll on details screen */
-            if(state->current_screen == SCREEN_DETAILS && state->scroll_offset > 0) {
-                state->scroll_offset--;
-            }
-            break;
+    case InputKeyBack:
+        state->is_running = false;
+        break;
 
-        case InputKeyDown:
-            /* Only scroll on details screen */
-            if(state->current_screen == SCREEN_DETAILS) {
-                if(state->scroll_offset + DETAILS_VISIBLE < DETAILS_LINES) {
-                    state->scroll_offset++;
-                }
-            }
-            break;
-
-        case InputKeyOk:
-            /* Open menu */
-            state->previous_screen = state->current_screen;
-            state->current_screen = SCREEN_MENU;
-            state->menu_selection = 0;
-            break;
-
-        case InputKeyBack:
-            state->is_running = false;
-            break;
-
-        default:
-            break;
+    default:
+        break;
     }
 }
 
@@ -881,12 +881,12 @@ static void process_input(RealityClockState* state, InputEvent* event) {
 
 static RealityClockState* state_alloc(void) {
     RealityClockState* state = malloc(sizeof(RealityClockState));
-    furi_check(state != NULL);  /* Abort if allocation fails */
+    furi_check(state != NULL); /* Abort if allocation fails */
     memset(state, 0, sizeof(RealityClockState));
 
     state->is_running = true;
     state->status = DimStatusCalibrating;
-    state->brightness = 100;  /**< Start at max brightness */
+    state->brightness = 100; /**< Start at max brightness */
 
     buffer_init(&state->lf_buffer);
     buffer_init(&state->hf_buffer);
@@ -923,8 +923,8 @@ int32_t reality_clock_app(void* p) {
 
     /* Create VERY high-frequency brightness timer (5ms = 200Hz)
      * This aggressively overrides system backlight changes */
-    FuriTimer* brightness_timer = furi_timer_alloc(
-        brightness_timer_callback, FuriTimerTypePeriodic, NULL);
+    FuriTimer* brightness_timer =
+        furi_timer_alloc(brightness_timer_callback, FuriTimerTypePeriodic, NULL);
     furi_timer_start(brightness_timer, 5);
 
     InputEvent event;
@@ -935,8 +935,8 @@ int32_t reality_clock_app(void* p) {
         view_port_update(view_port);
 
         /* Dynamic sample rate: faster during calibration */
-        uint32_t interval = state->is_calibrated ?
-            SAMPLE_INTERVAL_NORMAL_MS : SAMPLE_INTERVAL_CALIB_MS;
+        uint32_t interval = state->is_calibrated ? SAMPLE_INTERVAL_NORMAL_MS :
+                                                   SAMPLE_INTERVAL_CALIB_MS;
 
         if(furi_message_queue_get(event_queue, &event, interval) == FuriStatusOk) {
             process_input(state, &event);

@@ -9,19 +9,19 @@ static const SubGhzBlockConst subghz_protocol_psa_const = {
     .min_count_bit_for_found = 128,
 };
 
-#define PSA_TE_SHORT_125 0x7d
-#define PSA_TE_LONG_250 0xfa
-#define PSA_TE_END_1000 1000
-#define PSA_TE_END_500 500
-#define PSA_TOLERANCE_99 99
-#define PSA_TOLERANCE_100 100
-#define PSA_TOLERANCE_49 0x31
-#define PSA_TOLERANCE_50 0x32
+#define PSA_TE_SHORT_125        0x7d
+#define PSA_TE_LONG_250         0xfa
+#define PSA_TE_END_1000         1000
+#define PSA_TE_END_500          500
+#define PSA_TOLERANCE_99        99
+#define PSA_TOLERANCE_100       100
+#define PSA_TOLERANCE_49        0x31
+#define PSA_TOLERANCE_50        0x32
 #define PSA_PATTERN_THRESHOLD_1 0x46
 #define PSA_PATTERN_THRESHOLD_2 0x45
-#define PSA_MAX_BITS 0x79
-#define PSA_KEY1_BITS 0x40
-#define PSA_KEY2_BITS 0x50
+#define PSA_MAX_BITS            0x79
+#define PSA_KEY1_BITS           0x40
+#define PSA_KEY2_BITS           0x50
 
 typedef enum {
     PSADecoderState0 = 0,
@@ -34,25 +34,25 @@ typedef enum {
 struct SubGhzProtocolDecoderPSA {
     SubGhzProtocolDecoderBase base;
     SubGhzBlockDecoder decoder;
-    
+
     uint32_t state;
     uint32_t prev_duration;
-    
+
     uint32_t decode_data_low;
     uint32_t decode_data_high;
     uint8_t decode_count_bit;
-    
+
     uint32_t seed;
     uint32_t key1_low;
     uint32_t key1_high;
     uint16_t validation_field;
     uint32_t key2_low;
     uint32_t key2_high;
-    
+
     uint32_t status_flag;
     uint16_t decrypted;
     uint8_t mode_serialize;
-    
+
     uint16_t pattern_counter;
     ManchesterState manchester_state;
 };
@@ -161,19 +161,19 @@ void subghz_protocol_decoder_psa_reset(void* context) {
 void subghz_protocol_decoder_psa_feed(void* context, bool level, uint32_t duration) {
     furi_assert(context);
     SubGhzProtocolDecoderPSA* instance = context;
-    
+
     uint32_t tolerance;
     uint32_t new_state = instance->state;
     uint32_t prev_dur = instance->prev_duration;
     uint32_t te_short = subghz_protocol_psa_const.te_short;
     uint32_t te_long = subghz_protocol_psa_const.te_long;
-    
+
     switch(instance->state) {
     case PSADecoderState0:
         if(!level) {
             return;
         }
-        
+
         if(duration < te_short) {
             tolerance = te_short - duration;
             if(tolerance > PSA_TOLERANCE_99) {
@@ -196,22 +196,22 @@ void subghz_protocol_decoder_psa_feed(void* context, bool level, uint32_t durati
             }
             new_state = PSADecoderState1;
         }
-        
+
         instance->decode_data_low = 0;
         instance->decode_data_high = 0;
         instance->pattern_counter = 0;
         instance->decode_count_bit = 0;
         instance->mode_serialize = 0;
         instance->prev_duration = duration;
-        manchester_advance(instance->manchester_state, ManchesterEventReset, 
-                         &instance->manchester_state, NULL);
+        manchester_advance(
+            instance->manchester_state, ManchesterEventReset, &instance->manchester_state, NULL);
         break;
-        
+
     case PSADecoderState1:
         if(level) {
             return;
         }
-        
+
         if(duration < te_short) {
             tolerance = te_short - duration;
             if(tolerance < PSA_TOLERANCE_100) {
@@ -244,8 +244,11 @@ void subghz_protocol_decoder_psa_feed(void* context, bool level, uint32_t durati
                         instance->decode_data_low = 0;
                         instance->decode_data_high = 0;
                         instance->decode_count_bit = 0;
-                        manchester_advance(instance->manchester_state, ManchesterEventReset, 
-                                         &instance->manchester_state, NULL);
+                        manchester_advance(
+                            instance->manchester_state,
+                            ManchesterEventReset,
+                            &instance->manchester_state,
+                            NULL);
                         instance->state = new_state;
                     }
                     instance->pattern_counter = 0;
@@ -254,17 +257,17 @@ void subghz_protocol_decoder_psa_feed(void* context, bool level, uint32_t durati
                 }
             }
         }
-        
+
         new_state = PSADecoderState0;
         instance->pattern_counter = 0;
         break;
-        
+
     case PSADecoderState2:
         if(instance->decode_count_bit >= PSA_MAX_BITS) {
             new_state = PSADecoderState0;
             break;
         }
-        
+
         if(level && instance->decode_count_bit == PSA_KEY2_BITS) {
             if(duration >= 800) {
                 uint32_t end_diff;
@@ -279,18 +282,18 @@ void subghz_protocol_decoder_psa_feed(void* context, bool level, uint32_t durati
                     instance->key2_high = instance->decode_data_high;
                     instance->mode_serialize = 1;
                     instance->status_flag = 0x80;
-                    
+
                     bool validation_passed = ((instance->validation_field & 0xf) == 0xa);
                     if(validation_passed) {
                         instance->decrypted = 0x50;
                     } else {
                         instance->decrypted = 0x00;
                     }
-                    
+
                     if(instance->base.callback) {
                         instance->base.callback(&instance->base, instance->base.context);
                     }
-                    
+
                     instance->decode_data_low = 0;
                     instance->decode_data_high = 0;
                     instance->decode_count_bit = 0;
@@ -300,10 +303,10 @@ void subghz_protocol_decoder_psa_feed(void* context, bool level, uint32_t durati
                 }
             }
         }
-        
+
         uint8_t manchester_input = 0;
         bool should_process = false;
-        
+
         if(duration < te_short) {
             tolerance = te_short - duration;
             if(tolerance >= PSA_TOLERANCE_100) {
@@ -319,7 +322,7 @@ void subghz_protocol_decoder_psa_feed(void* context, bool level, uint32_t durati
             } else if(duration < te_long) {
                 uint32_t diff_from_250 = duration - te_short;
                 uint32_t diff_from_500 = te_long - duration;
-                
+
                 if(diff_from_500 < 150 || diff_from_250 > diff_from_500) {
                     if(level == 0) {
                         manchester_input = 6;
@@ -369,19 +372,21 @@ void subghz_protocol_decoder_psa_feed(void* context, bool level, uint32_t durati
                 }
             }
         }
-        
+
         if(should_process && instance->decode_count_bit < PSA_KEY2_BITS) {
             bool decoded_bit = false;
-            
-            if(manchester_advance(instance->manchester_state, 
-                               (ManchesterEvent)manchester_input,
-                               &instance->manchester_state, 
-                               &decoded_bit)) {
+
+            if(manchester_advance(
+                   instance->manchester_state,
+                   (ManchesterEvent)manchester_input,
+                   &instance->manchester_state,
+                   &decoded_bit)) {
                 uint32_t carry = (instance->decode_data_low >> 31) & 1;
-                instance->decode_data_low = (instance->decode_data_low << 1) | (decoded_bit ? 1 : 0);
+                instance->decode_data_low = (instance->decode_data_low << 1) |
+                                            (decoded_bit ? 1 : 0);
                 instance->decode_data_high = (instance->decode_data_high << 1) | carry;
                 instance->decode_count_bit++;
-                
+
                 if(instance->decode_count_bit == PSA_KEY1_BITS) {
                     instance->key1_low = instance->decode_data_low;
                     instance->key1_high = instance->decode_data_high;
@@ -390,11 +395,11 @@ void subghz_protocol_decoder_psa_feed(void* context, bool level, uint32_t durati
                 }
             }
         }
-        
+
         if(!level) {
             return;
         }
-        
+
         if(!should_process) {
             uint32_t end_diff;
             if(duration < PSA_TE_END_1000) {
@@ -406,20 +411,20 @@ void subghz_protocol_decoder_psa_feed(void* context, bool level, uint32_t durati
                 if(instance->decode_count_bit != PSA_KEY2_BITS) {
                     return;
                 }
-                
+
                 instance->validation_field = (uint16_t)(instance->decode_data_low & 0xFFFF);
-                
+
                 if((instance->validation_field & 0xf) == 0xa) {
                     instance->key2_low = instance->decode_data_low;
                     instance->key2_high = instance->decode_data_high;
                     instance->decrypted = 0x50;
                     instance->mode_serialize = 1;
                     instance->status_flag = 0x80;
-                    
+
                     if(instance->base.callback) {
                         instance->base.callback(&instance->base, instance->base.context);
                     }
-                    
+
                     instance->decode_data_low = 0;
                     instance->decode_data_high = 0;
                     instance->decode_count_bit = 0;
@@ -432,12 +437,12 @@ void subghz_protocol_decoder_psa_feed(void* context, bool level, uint32_t durati
             }
         }
         break;
-        
+
     case PSADecoderState3:
         if(level) {
             return;
         }
-        
+
         if(duration < PSA_TE_SHORT_125) {
             tolerance = PSA_TE_SHORT_125 - duration;
             if(tolerance < PSA_TOLERANCE_50) {
@@ -467,8 +472,11 @@ void subghz_protocol_decoder_psa_feed(void* context, bool level, uint32_t durati
                     instance->decode_data_low = 0;
                     instance->decode_data_high = 0;
                     instance->decode_count_bit = 0;
-                    manchester_advance(instance->manchester_state, ManchesterEventReset, 
-                                     &instance->manchester_state, NULL);
+                    manchester_advance(
+                        instance->manchester_state,
+                        ManchesterEventReset,
+                        &instance->manchester_state,
+                        NULL);
                     instance->state = new_state;
                 }
                 instance->pattern_counter = 0;
@@ -476,20 +484,20 @@ void subghz_protocol_decoder_psa_feed(void* context, bool level, uint32_t durati
                 return;
             }
         }
-        
+
         new_state = PSADecoderState0;
         break;
-        
+
     case PSADecoderState4:
         if(instance->decode_count_bit >= PSA_MAX_BITS) {
             new_state = PSADecoderState0;
             break;
         }
-        
+
         if(!level) {
             uint8_t manchester_input;
             bool decoded_bit = false;
-            
+
             if(duration < PSA_TE_SHORT_125) {
                 tolerance = PSA_TE_SHORT_125 - duration;
                 if(tolerance > PSA_TOLERANCE_49) {
@@ -510,16 +518,18 @@ void subghz_protocol_decoder_psa_feed(void* context, bool level, uint32_t durati
                     return;
                 }
             }
-            
-            if(manchester_advance(instance->manchester_state, 
-                                 (ManchesterEvent)manchester_input,
-                                 &instance->manchester_state, 
-                                 &decoded_bit)) {
+
+            if(manchester_advance(
+                   instance->manchester_state,
+                   (ManchesterEvent)manchester_input,
+                   &instance->manchester_state,
+                   &decoded_bit)) {
                 uint32_t carry = (instance->decode_data_low >> 31) & 1;
-                instance->decode_data_low = (instance->decode_data_low << 1) | (decoded_bit ? 1 : 0);
+                instance->decode_data_low = (instance->decode_data_low << 1) |
+                                            (decoded_bit ? 1 : 0);
                 instance->decode_data_high = (instance->decode_data_high << 1) | carry;
                 instance->decode_count_bit++;
-                
+
                 if(instance->decode_count_bit == PSA_KEY1_BITS) {
                     instance->key1_low = instance->decode_data_low;
                     instance->key1_high = instance->decode_data_high;
@@ -538,24 +548,24 @@ void subghz_protocol_decoder_psa_feed(void* context, bool level, uint32_t durati
                 if(instance->decode_count_bit != PSA_KEY2_BITS) {
                     return;
                 }
-                
+
                 instance->validation_field = (uint16_t)(instance->decode_data_low & 0xFFFF);
                 instance->key2_low = instance->decode_data_low;
                 instance->key2_high = instance->decode_data_high;
                 instance->mode_serialize = 2;
                 instance->status_flag = 0x80;
-                
+
                 bool validation_passed = ((instance->validation_field & 0xf) == 0xa);
                 if(validation_passed) {
                     instance->decrypted = 0x50;
                 } else {
                     instance->decrypted = 0x00;
                 }
-                
+
                 if(instance->base.callback) {
                     instance->base.callback(&instance->base, instance->base.context);
                 }
-                
+
                 instance->decode_data_low = 0;
                 instance->decode_data_high = 0;
                 instance->decode_count_bit = 0;
@@ -568,7 +578,7 @@ void subghz_protocol_decoder_psa_feed(void* context, bool level, uint32_t durati
         }
         break;
     }
-    
+
     instance->state = new_state;
     instance->prev_duration = duration;
 }
@@ -577,10 +587,7 @@ uint8_t subghz_protocol_decoder_psa_get_hash_data(void* context) {
     furi_assert(context);
     SubGhzProtocolDecoderPSA* instance = context;
     uint64_t combined_data = ((uint64_t)instance->key1_high << 32) | instance->key1_low;
-    SubGhzBlockDecoder decoder = {
-        .decode_data = combined_data,
-        .decode_count_bit = 64
-    };
+    SubGhzBlockDecoder decoder = {.decode_data = combined_data, .decode_count_bit = 64};
     return subghz_protocol_blocks_get_hash_data(&decoder, 16);
 }
 
@@ -590,57 +597,58 @@ SubGhzProtocolStatus subghz_protocol_decoder_psa_serialize(
     SubGhzRadioPreset* preset) {
     furi_assert(context);
     SubGhzProtocolDecoderPSA* instance = context;
-    
+
     SubGhzProtocolStatus ret = SubGhzProtocolStatusError;
     do {
         if(!flipper_format_write_uint32(flipper_format, "Frequency", &preset->frequency, 1)) break;
-        
+
         if(!flipper_format_write_string_cstr(
                flipper_format, "Preset", furi_string_get_cstr(preset->name)))
             break;
-        
+
         if(!flipper_format_write_string_cstr(
                flipper_format, "Protocol", instance->base.protocol->name))
             break;
-        
+
         uint32_t bits = 128;
         if(!flipper_format_write_uint32(flipper_format, "Bit", &bits, 1)) break;
-        
+
         char key1_str[20];
         uint64_t key1 = ((uint64_t)instance->key1_high << 32) | instance->key1_low;
         snprintf(key1_str, sizeof(key1_str), "%016llX", key1);
         if(!flipper_format_write_string_cstr(flipper_format, "Key", key1_str)) break;
-        
+
         char key2_str[20];
         uint64_t key2 = ((uint64_t)instance->key2_high << 32) | instance->key2_low;
         snprintf(key2_str, sizeof(key2_str), "%016llX", key2);
         if(!flipper_format_write_string_cstr(flipper_format, "Key_2", key2_str)) break;
-        
+
         ret = SubGhzProtocolStatusOk;
     } while(false);
-    
+
     return ret;
 }
 
-SubGhzProtocolStatus subghz_protocol_decoder_psa_deserialize(void* context, FlipperFormat* flipper_format) {
+SubGhzProtocolStatus
+    subghz_protocol_decoder_psa_deserialize(void* context, FlipperFormat* flipper_format) {
     furi_assert(context);
     SubGhzProtocolDecoderPSA* instance = context;
-    
+
     SubGhzProtocolStatus ret = SubGhzProtocolStatusError;
     FuriString* temp_str = furi_string_alloc();
-    
+
     do {
         if(!flipper_format_read_string(flipper_format, "Key", temp_str)) {
             break;
         }
-        
+
         const char* key1_str = furi_string_get_cstr(temp_str);
         uint64_t key1 = 0;
         size_t str_len = strlen(key1_str);
         for(size_t i = 0; i < str_len && i < 16; i++) {
             char c = key1_str[i];
             if(c == ' ') continue;
-            
+
             uint8_t nibble;
             if(c >= '0' && c <= '9') {
                 nibble = c - '0';
@@ -655,18 +663,18 @@ SubGhzProtocolStatus subghz_protocol_decoder_psa_deserialize(void* context, Flip
         }
         instance->key1_low = (uint32_t)(key1 & 0xFFFFFFFF);
         instance->key1_high = (uint32_t)((key1 >> 32) & 0xFFFFFFFF);
-        
+
         if(!flipper_format_read_string(flipper_format, "Key_2", temp_str)) {
             break;
         }
-        
+
         const char* key2_str = furi_string_get_cstr(temp_str);
         uint64_t key2 = 0;
         str_len = strlen(key2_str);
         for(size_t i = 0; i < str_len && i < 16; i++) {
             char c = key2_str[i];
             if(c == ' ') continue;
-            
+
             uint8_t nibble;
             if(c >= '0' && c <= '9') {
                 nibble = c - '0';
@@ -681,12 +689,12 @@ SubGhzProtocolStatus subghz_protocol_decoder_psa_deserialize(void* context, Flip
         }
         instance->key2_low = (uint32_t)(key2 & 0xFFFFFFFF);
         instance->key2_high = (uint32_t)((key2 >> 32) & 0xFFFFFFFF);
-        
+
         instance->status_flag = 0x80;
-        
+
         ret = SubGhzProtocolStatusOk;
     } while(false);
-    
+
     furi_string_free(temp_str);
     return ret;
 }
@@ -694,9 +702,9 @@ SubGhzProtocolStatus subghz_protocol_decoder_psa_deserialize(void* context, Flip
 void subghz_protocol_decoder_psa_get_string(void* context, FuriString* output) {
     furi_assert(context);
     SubGhzProtocolDecoderPSA* instance = context;
-    
+
     uint16_t key2_value = (uint16_t)(instance->key2_low & 0xFFFF);
-    
+
     furi_string_printf(
         output,
         "%s %dbit\r\n"
@@ -708,5 +716,3 @@ void subghz_protocol_decoder_psa_get_string(void* context, FuriString* output) {
         instance->key1_low,
         key2_value);
 }
-
-
