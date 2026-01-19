@@ -170,14 +170,14 @@ bool subghz_protocol_nice_flor_s_create_data(
  * @param preset Modulation, SubGhzRadioPreset
  * @return true On success
  */
-bool subghz_protocol_star_line_create_data(
-    void* context,
-    FlipperFormat* flipper_format,
-    uint32_t serial,
-    uint8_t btn,
-    uint16_t cnt,
-    const char* manufacture_name,
-    SubGhzRadioPreset* preset);
+// bool subghz_protocol_star_line_create_data(
+// void* context,
+// FlipperFormat* flipper_format,
+// uint32_t serial,
+// uint8_t btn,
+// uint16_t cnt,
+// const char* manufacture_name,
+// SubGhzRadioPreset* preset);
 
 /**
  * Key generation from simple data.

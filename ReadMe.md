@@ -41,6 +41,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [ProtoPirate v1.5 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - Updated: [Swimmy Fish v2.0 (By Invizabel)](https://github.com/Invizabel/fish)
 - Added: [ArduGolf v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperGolf)
+- Sub-GHz: [Removed car protocols from internal compile, now handled by ProtoPirate. Removed: Kia, ScherKahn and StarLine (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/)
 
 <a name="release">
 
@@ -244,12 +245,12 @@ $ ./fbt dolphin_ext
 - SubGHz: [Beep on TX for SubGHz & Remote (By LeeroysHub)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/ad0a273a71d7701af30df75c9174f3bdc3fd6e4a)
 - SubGhz: [GPS support (By Sil333033) & SubGHz Repeater (By LeeroysHub) & Optimizations (By WillyJL) & Merge Fixes (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/3e5e1870621b52caad8fd1287e116c542703984a)
 - SubGHz: [keeloq jolly motors add full support with add manually (By pkooiman)](https://github.com/DarkFlippers/unleashed-firmware/commit/dd6e0a9b721c09b82a127aadd0a1accba8b18f7c)
-- SubGHz: [Ignore options - Alarms: Hollarm, GangQi | Cars: Kia, Starline, ScherKhan | Sensors: Magellan, Honeywell Sec, Honeywell WDB (doorbells), Legrand (doorbells), Feron (RGB lights) (By xMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/9effc03c355630b004afc52db976229a024d90d5)
+- SubGHz: [Ignore options - Alarms: Hollarm, GangQi | Sensors: Magellan, Honeywell Sec, Honeywell WDB (doorbells), Legrand (doorbells), Feron (RGB lights) (By xMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/9effc03c355630b004afc52db976229a024d90d5)
 - SubGHz: Moved setting_user file to setting_user.txt! This makes it changable from IOS app. (By RogueMaster)
 - SubGHz: Nicer SubGHz Chat via [CLI Bridge (By ranchordo)](https://github.com/ranchordo/flipperzero-cli-bridge) with "chat" command (Thanks ESurge and qqMajikpp)
 - SubGHz: OFW PR [Decode RAW recordings #1667 (By qistoph)](https://github.com/flipperdevices/flipperzero-firmware/pull/1667)
 - SubGhz: [Protocol integrations (Pocsag) (By htotoo)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/d6a7bb66c370e44775f9cbb8b7b12c00d6bdbdc6)
-- SubGHz: Protocols An-Motors, Keeloq BFT Mitto, Came Atomo, FAAC SLH (Spa), HCS101, Keeloq, Keeloq Common, Nice Flor S, SecPlus v1+v2 and Star Line updates from [Eng1n33r](https://github.com/DarkFlippers/unleashed-firmware) Check out new [instructions](https://github.com/DarkFlippers/unleashed-firmware/blob/dev/documentation/SubGHzRemoteProg.md)
+- SubGHz: Protocols An-Motors, Keeloq BFT Mitto, Came Atomo, FAAC SLH (Spa), HCS101, Keeloq, Keeloq Common, Nice Flor S and SecPlus v1+v2 updates from [Eng1n33r](https://github.com/DarkFlippers/unleashed-firmware) Check out new [instructions](https://github.com/DarkFlippers/unleashed-firmware/blob/dev/documentation/SubGHzRemoteProg.md)
 - SubGHz: [Protocols: Hay21, Hollarm, Marantec24 (static 24 bit) and GangQi (static 34 bit) (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/bc19dbfbda5db4aee1ed39e2ccf29cfa1d8bd508)
 - SubGHz: Protocols Feron (static 32 bit), Keeloq: Dea Mio, Genius Bravo, GSN, HCS101, AN-Motors, JCM Tech, MHouse, Nice Smilo, DTM Neo, FAAC RC,XT, Mutancode, Normstahl, Beninca + Allmatic, Stilmatic, CAME Space, Aprimatic (model TR and similar), Centurion Nova (Many added and updated by the community and xMasterX), IL-100(Smart) (thx Vitaly for RAWs)
 - SubGHz: Protocols Roger (static 28 bit) with add manually support (By xMasterX & mishamyte), V2 Phoenix (Phox) (dynamic 52 bit) (By xMasterX & RocketGod-git) & Marantec (static 49 bit) (add manually support and CRC verify) (By xMasterX & li0ard), Motorline (with add manually support), Rosh, Pecinin, Rossi, Merlin, Steelmate (thanks RocketGod-git), Cardin S449 (thanks zero-mega)
