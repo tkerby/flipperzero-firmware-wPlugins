@@ -42,7 +42,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Swimmy Fish v2.0 (By Invizabel)](https://github.com/Invizabel/fish)
 - Added: [ArduGolf v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperGolf)
 - Sub-GHz: [Removed car protocols from internal compile, now handled by ProtoPirate. Removed: Kia, ScherKahn and StarLine (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/cdd4f4d8430e311c9a745a5b953012cdd00c448b)
-- Sub-GHz: [Added Signal Settings (By Dmitry422 & xMasterX)]
+- Sub-GHz: [Added Signal Settings (By Dmitry422 & xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/905b52a53f4b430d8db22594893352a2f72cd078)
 
 <a name="release">
 
