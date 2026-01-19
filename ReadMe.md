@@ -41,7 +41,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [ProtoPirate v1.5 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - Updated: [Swimmy Fish v2.0 (By Invizabel)](https://github.com/Invizabel/fish)
 - Added: [ArduGolf v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperGolf)
-- Sub-GHz: [Removed car protocols from internal compile, now handled by ProtoPirate. Removed: Kia, ScherKahn and StarLine (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/)
+- Sub-GHz: [Removed car protocols from internal compile, now handled by ProtoPirate. Removed: Kia, ScherKahn and StarLine (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/cdd4f4d8430e311c9a745a5b953012cdd00c448b)
 
 <a name="release">
 
