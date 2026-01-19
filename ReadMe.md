@@ -39,6 +39,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [NFC Seader v4.0 (By bettse)](https://github.com/bettse/seader) (Version Only)
 - Updated: [CO2 Logger v0.4 (By harryob2)](https://github.com/harryob2/co2_logger) `Req: MH-Z19` (Version Only)
 - Updated: [ProtoPirate v1.5 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
+- Updated: [Swimmy Fish v2.0 (By Invizabel)](https://github.com/Invizabel/fish)
 
 <a name="release">
 
