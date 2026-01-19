@@ -9,5 +9,8 @@ We are using [Zeller's congruence algorithm](https://en.wikipedia.org/wiki/Zelle
 - Leap years (including century rules)
 - ISO 8601 week numbering
 
+## References
+* [A Visual Guide to Flipper Zero UI Components](https://brodan.biz/blog/a-visual-guide-to-flipper-zero-gui-components/)
+
 ## Version history
 See [changelog.md](changelog.md)
