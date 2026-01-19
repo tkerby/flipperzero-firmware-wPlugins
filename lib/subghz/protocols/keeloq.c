@@ -626,6 +626,21 @@ SubGhzProtocolStatus
                flipper_format, "Manufacture", instance->manufacture_from_file)) {
             instance->manufacture_name = furi_string_get_cstr(instance->manufacture_from_file);
             instance->keystore->mfname = instance->manufacture_name;
+            // Compatibility fixes for old names in user files
+            if(strcmp(instance->manufacture_name, "Sommer(fsk476)") == 0) {
+                instance->manufacture_name = "Sommer";
+                instance->keystore->mfname = instance->manufacture_name;
+                if(!flipper_format_rewind(flipper_format)) {
+                    FURI_LOG_E(TAG, "Rewind error");
+                    break;
+                }
+                if(!flipper_format_update_string_cstr(
+                       flipper_format, "Manufacture", instance->manufacture_name)) {
+                    FURI_LOG_E(TAG, "DECODER: Unable to fix Sommer manufacture name");
+                    ret = SubGhzProtocolStatusError;
+                    break;
+                }
+            }
         } else {
             FURI_LOG_D(TAG, "ENCODER: Missing Manufacture");
         }
@@ -930,7 +945,7 @@ static uint8_t subghz_protocol_keeloq_check_remote_controller_selector(
                     man =
                         subghz_protocol_keeloq_common_normal_learning(fix, manufacture_code->key);
                     decrypt = subghz_protocol_keeloq_common_decrypt(hop, man);
-                    if(strcmp(furi_string_get_cstr(manufacture_code->name), "Centurion") == 0) {
+                    if((strcmp(furi_string_get_cstr(manufacture_code->name), "Centurion") == 0)) {
                         if(subghz_protocol_keeloq_check_decrypt_centurion(instance, decrypt, btn)) {
                             *manufacture_name = furi_string_get_cstr(manufacture_code->name);
                             keystore->mfname = *manufacture_name;
@@ -1277,6 +1292,21 @@ SubGhzProtocolStatus
                flipper_format, "Manufacture", instance->manufacture_from_file)) {
             instance->manufacture_name = furi_string_get_cstr(instance->manufacture_from_file);
             instance->keystore->mfname = instance->manufacture_name;
+            // Compatibility fixes for old names in user files
+            if(strcmp(instance->manufacture_name, "Sommer(fsk476)") == 0) {
+                instance->manufacture_name = "Sommer";
+                instance->keystore->mfname = instance->manufacture_name;
+                if(!flipper_format_rewind(flipper_format)) {
+                    FURI_LOG_E(TAG, "Rewind error");
+                    break;
+                }
+                if(!flipper_format_update_string_cstr(
+                       flipper_format, "Manufacture", instance->manufacture_name)) {
+                    FURI_LOG_E(TAG, "DECODER: Unable to fix Sommer manufacture name");
+                    res = SubGhzProtocolStatusError;
+                    break;
+                }
+            }
         } else {
             FURI_LOG_D(TAG, "DECODER: Missing Manufacture");
         }
