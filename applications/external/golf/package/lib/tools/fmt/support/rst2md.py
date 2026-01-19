@@ -5,18 +5,18 @@ from docutils import core, nodes, writers
 
 
 def is_github_ref(node):
-    return re.match('https://github.com/.*/(issues|pull)/.*', node['refuri'])
+    return re.match("https://github.com/.*/(issues|pull)/.*", node["refuri"])
 
 
 class Translator(nodes.NodeVisitor):
     def __init__(self, document):
         nodes.NodeVisitor.__init__(self, document)
-        self.output = ''
+        self.output = ""
         self.indent = 0
         self.preserve_newlines = False
 
     def write(self, text):
-        self.output += text.replace('\n', '\n' + ' ' * self.indent)
+        self.output += text.replace("\n", "\n" + " " * self.indent)
 
     def visit_document(self, node):
         pass
@@ -32,7 +32,7 @@ class Translator(nodes.NodeVisitor):
         raise nodes.StopTraversal
 
     def visit_title(self, node):
-        self.version = re.match(r'(\d+\.\d+\.\d+).*', node.children[0]).group(1)
+        self.version = re.match(r"(\d+\.\d+\.\d+).*", node.children[0]).group(1)
         raise nodes.SkipChildren
 
     def depart_title(self, node):
@@ -40,7 +40,7 @@ class Translator(nodes.NodeVisitor):
 
     def visit_Text(self, node):
         if not self.preserve_newlines:
-            node = node.replace('\n', ' ')
+            node = node.replace("\n", " ")
         self.write(node)
 
     def depart_Text(self, node):
@@ -53,12 +53,12 @@ class Translator(nodes.NodeVisitor):
         pass
 
     def visit_list_item(self, node):
-        self.write('* ')
+        self.write("* ")
         self.indent += 2
 
     def depart_list_item(self, node):
         self.indent -= 2
-        self.write('\n\n')
+        self.write("\n\n")
 
     def visit_paragraph(self, node):
         pass
@@ -68,11 +68,11 @@ class Translator(nodes.NodeVisitor):
 
     def visit_reference(self, node):
         if not is_github_ref(node):
-            self.write('[')
+            self.write("[")
 
     def depart_reference(self, node):
         if not is_github_ref(node):
-            self.write('](' + node['refuri'] + ')')
+            self.write("](" + node["refuri"] + ")")
 
     def visit_target(self, node):
         pass
@@ -81,20 +81,20 @@ class Translator(nodes.NodeVisitor):
         pass
 
     def visit_literal(self, node):
-        self.write('`')
+        self.write("`")
 
     def depart_literal(self, node):
-        self.write('`')
+        self.write("`")
 
     def visit_literal_block(self, node):
-        self.write('\n\n```')
-        if 'c++' in node['classes']:
-            self.write('c++')
-        self.write('\n')
+        self.write("\n\n```")
+        if "c++" in node["classes"]:
+            self.write("c++")
+        self.write("\n")
         self.preserve_newlines = True
 
     def depart_literal_block(self, node):
-        self.write('\n```\n')
+        self.write("\n```\n")
         self.preserve_newlines = False
 
     def visit_inline(self, node):
@@ -104,7 +104,7 @@ class Translator(nodes.NodeVisitor):
         pass
 
     def visit_image(self, node):
-        self.write('![](' + node['uri'] + ')')
+        self.write("![](" + node["uri"] + ")")
 
     def depart_image(self, node):
         pass
@@ -113,7 +113,7 @@ class Translator(nodes.NodeVisitor):
 class MDWriter(writers.Writer):
     """GitHub-flavored markdown writer"""
 
-    supported = ('md',)
+    supported = ("md",)
     """Formats this writer supports."""
 
     def translate(self):
