@@ -7,7 +7,7 @@
 #include "about/about.hpp"
 
 #define TAG         "FlipSocial"
-#define VERSION     "2.0.7"
+#define VERSION     "2.0.8"
 #define VERSION_TAG TAG " " VERSION
 #define APP_ID      "flip_social"
 
@@ -89,7 +89,8 @@ public:
     bool saveChar(
         const char* path_name,
         const char* value,
-        const char* appId = APP_ID); // save a string to storage
+        const char* appId = APP_ID,
+        bool overwrite = true); // save a string to storage
     bool setHttpState(HTTPState state = IDLE) noexcept; // set the HTTP state
     bool sendWiFiCredentials(
         const char* ssid,

@@ -332,6 +332,7 @@ bool FlipSocialApp::loadFileChunk(
 
     // Change the current access position in a file.
     if(!storage_file_seek(file, iteration * sizeOfChunk, true)) {
+        storage_file_close(file);
         storage_file_free(file);
         furi_record_close(RECORD_STORAGE);
         FURI_LOG_E(TAG, "Failed to seek file: %s", filePath);
@@ -340,7 +341,9 @@ bool FlipSocialApp::loadFileChunk(
 
     // Check whether the current access position is at the end of the file.
     if(storage_file_eof(file)) {
-        FURI_LOG_E(TAG, "End of file reached: %s", filePath);
+        storage_file_close(file);
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
         return false;
     }
 
@@ -374,7 +377,11 @@ void FlipSocialApp::runDispatcher() {
     view_dispatcher_run(viewDispatcher);
 }
 
-bool FlipSocialApp::saveChar(const char* path_name, const char* value, const char* appId) {
+bool FlipSocialApp::saveChar(
+    const char* path_name,
+    const char* value,
+    const char* appId,
+    bool overwrite) {
     Storage* storage = static_cast<Storage*>(furi_record_open(RECORD_STORAGE));
     File* file = storage_file_alloc(storage);
     char file_path[256];
@@ -384,9 +391,21 @@ bool FlipSocialApp::saveChar(const char* path_name, const char* value, const cha
         STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/%s.txt",
         appId,
         path_name);
-    storage_file_open(file, file_path, FSAM_WRITE, FSOM_CREATE_ALWAYS);
-    size_t data_size = strlen(value) + 1; // Include null terminator
-    storage_file_write(file, value, data_size);
+    if(!storage_file_open(
+           file, file_path, FSAM_WRITE, overwrite ? FSOM_CREATE_ALWAYS : FSOM_OPEN_APPEND)) {
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return false;
+    }
+    size_t append = overwrite ? 1 : 0; // add null terminator if overwriting
+    size_t data_size = strlen(value) + append;
+    if(storage_file_write(file, value, data_size) != data_size) {
+        FURI_LOG_E(TAG, "Failed to write complete data to file: %s", file_path);
+        storage_file_close(file);
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return false;
+    }
     storage_file_close(file);
     storage_file_free(file);
     furi_record_close(RECORD_STORAGE);

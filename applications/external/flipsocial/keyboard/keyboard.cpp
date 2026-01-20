@@ -93,7 +93,7 @@ void Keyboard::draw(Canvas* canvas, const char* title, const char* current_text)
         canvas_set_color(canvas, ColorBlack);
 
         // Calculate position to right-align the suggestion
-        uint16_t suggestion_width = canvas_string_width(canvas, suggestion);
+        uint16_t suggestion_width = canvas_string_width_custom(canvas, suggestion);
         int suggestion_x = display_width - suggestion_width - 2; // 2 pixel padding from right edge
 
         // Draw suggestion on the right side of the text line
@@ -109,7 +109,7 @@ void Keyboard::draw(Canvas* canvas, const char* title, const char* current_text)
         if(cursor_display_pos >= 0 && cursor_display_pos <= max_visible_chars) {
             char text_before_cursor[MAX_TEXT_SIZE];
             snprintf(text_before_cursor, MAX_TEXT_SIZE, "%.*s", cursor_display_pos, display_text);
-            uint16_t text_width = canvas_string_width(canvas, text_before_cursor);
+            uint16_t text_width = canvas_string_width_custom(canvas, text_before_cursor);
             int cursor_x = text_start_x + text_width;
             canvas_draw_box(canvas, cursor_x, 1, 1, 8);
         }
@@ -199,9 +199,11 @@ void Keyboard::draw(Canvas* canvas, const char* title, const char* current_text)
     canvas_draw_str(canvas, 105, func_y, "DONE");
     canvas_set_color(canvas, ColorBlack);
 
-    // Draw title at the bottom
+    // Draw title at the bottom centered
     canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-    canvas_draw_str(canvas, 50, 64, title);
+    uint16_t title_width = canvas_string_width_custom(canvas, title);
+    int title_x = (display_width - title_width) / 2;
+    canvas_draw_str(canvas, title_x, 64, title);
 }
 
 char Keyboard::getCurrentChar(bool long_press) {
@@ -278,25 +280,34 @@ const char* Keyboard::getCurrentWord() {
 }
 
 void Keyboard::updateAutoComplete() {
-    const char* current_word = getCurrentWord();
+    // Only update if text has changed
+    if(strcmp(text_buffer, last_word) != 0) {
+        snprintf(last_word, MAX_TEXT_SIZE, "%s", text_buffer);
 
-    // Extract only the current word
-    char word_buffer[MAX_TEXT_SIZE];
-    size_t word_len = 0;
-    while(current_word[word_len] != '\0' && current_word[word_len] != ' ' &&
-          word_len < MAX_TEXT_SIZE - 1) {
-        word_buffer[word_len] = current_word[word_len];
-        word_len++;
-    }
-    word_buffer[word_len] = '\0';
+        if(strlen(text_buffer) > 0) {
+            // First try to find a phrase match with the entire text
+            if(auto_complete_search(&autoComplete, text_buffer)) {
+                // Found phrase suggestions
+                return;
+            }
 
-    // Only update if the current word has changed
-    if(strcmp(word_buffer, last_word) != 0) {
-        snprintf(last_word, MAX_TEXT_SIZE, "%s", word_buffer);
+            // No phrase match, fall back to searching just the current word
+            const char* current_word = getCurrentWord();
 
-        // Update autocomplete suggestions if word is not empty
-        if(word_len > 0) {
-            auto_complete_search(&autoComplete, word_buffer);
+            // Extract only the current word
+            char word_buffer[MAX_TEXT_SIZE];
+            size_t word_len = 0;
+            while(current_word[word_len] != '\0' && current_word[word_len] != ' ' &&
+                  word_len < MAX_TEXT_SIZE - 1) {
+                word_buffer[word_len] = current_word[word_len];
+                word_len++;
+            }
+            word_buffer[word_len] = '\0';
+
+            // Search with just the current word
+            if(word_len > 0) {
+                auto_complete_search(&autoComplete, word_buffer);
+            }
         }
     }
 }
@@ -377,50 +388,71 @@ bool Keyboard::handleInput(InputEvent* event, char* target_buffer, size_t target
     // Handle text edit mode
     if(text_edit_mode) {
         if(event->type == InputTypeLong && key == InputKeyOk) {
-            // Add the suggested word on long press OK in text edit mode
+            // Add the suggested phrase/word on long press OK in text edit mode
             if(autoComplete.suggestion_count > 0) {
                 const char* suggestion = autoComplete.suggestions[0];
-
-                // Find the start of the current word
-                int word_start = text_cursor - 1;
-                while(word_start >= 0 && target_buffer[word_start] != ' ') {
-                    word_start--;
-                }
-                word_start++;
-
-                // Calculate current word length
-                int current_word_len = text_cursor - word_start;
                 size_t suggestion_len = strlen(suggestion);
                 size_t text_len = getStringLength(target_buffer, target_size);
 
-                // Check if we have enough space
-                if(text_len - current_word_len + suggestion_len < target_size - 1) {
-                    // Shift text after cursor to make room
-                    int shift_amount = suggestion_len - current_word_len;
-                    if(shift_amount > 0) {
-                        // Need to make room
-                        for(int i = text_len; i >= text_cursor; i--) {
-                            target_buffer[i + shift_amount] = target_buffer[i];
-                        }
-                    } else if(shift_amount < 0) {
-                        // Need to close gap
-                        for(size_t i = text_cursor; i <= text_len; i++) {
-                            target_buffer[i + shift_amount] = target_buffer[i];
-                        }
+                // Check if this is a phrase completion (suggestion starts with entire buffer)
+                bool is_phrase_match = (text_len <= suggestion_len);
+                for(size_t i = 0; i < text_len && is_phrase_match; i++) {
+                    if(target_buffer[i] != suggestion[i]) {
+                        is_phrase_match = false;
                     }
-
-                    // Copy suggestion to replace current word
-                    for(size_t i = 0; i < suggestion_len; i++) {
-                        target_buffer[word_start + i] = suggestion[i];
-                    }
-
-                    // Update cursor position
-                    text_cursor = word_start + suggestion_len;
-
-                    // Clear suggestions after inserting
-                    last_word[0] = '\0';
-                    autoComplete.suggestion_count = 0;
                 }
+
+                if(is_phrase_match) {
+                    // Phrase completion: append the remaining part
+                    size_t remaining_len = suggestion_len - text_len;
+                    if(text_len + remaining_len < target_size - 1) {
+                        for(size_t i = 0; i < remaining_len; i++) {
+                            target_buffer[text_len + i] = suggestion[text_len + i];
+                        }
+                        target_buffer[text_len + remaining_len] = '\0';
+                        text_cursor = text_len + remaining_len;
+                    }
+                } else {
+                    // Word completion: replace current word with suggestion
+                    // Find start of current word
+                    int word_start = text_cursor - 1;
+                    while(word_start >= 0 && target_buffer[word_start] != ' ') {
+                        word_start--;
+                    }
+                    word_start++;
+
+                    // Calculate lengths
+                    int current_word_len = text_cursor - word_start;
+                    int shift_amount = suggestion_len - current_word_len;
+
+                    // Check if we have space
+                    if(text_len + shift_amount < target_size - 1) {
+                        // Shift text after current word
+                        if(shift_amount > 0) {
+                            // Need to make room
+                            for(int i = text_len; i >= text_cursor; i--) {
+                                target_buffer[i + shift_amount] = target_buffer[i];
+                            }
+                        } else if(shift_amount < 0) {
+                            // Need to close gap
+                            for(size_t i = text_cursor; i <= text_len; i++) {
+                                target_buffer[i + shift_amount] = target_buffer[i];
+                            }
+                        }
+
+                        // Copy suggestion to replace current word
+                        for(size_t i = 0; i < suggestion_len; i++) {
+                            target_buffer[word_start + i] = suggestion[i];
+                        }
+
+                        // Update cursor position
+                        text_cursor = word_start + suggestion_len;
+                    }
+                }
+
+                // Clear suggestions after inserting
+                last_word[0] = '\0';
+                autoComplete.suggestion_count = 0;
             }
             return false;
         }

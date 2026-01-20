@@ -19,7 +19,6 @@ FlipSocialRun::FlipSocialRun(void* appContext)
     , feedItemIndex(0)
     , feedIteration(1)
     , feedStatus(FeedNotStarted)
-    , inputHeld(false)
     , lastInput(InputKeyMAX)
     , loginStatus(LoginNotStarted)
     , messagesStatus(MessagesNotStarted)
@@ -2026,25 +2025,28 @@ void FlipSocialRun::loadKeyboardSuggestions() {
     if(keyboard) {
         keyboard->addSuggestion("the");
         keyboard->addSuggestion("that");
+        keyboard->addSuggestion("this is ");
         keyboard->addSuggestion("hi");
-        keyboard->addSuggestion("hey");
+        keyboard->addSuggestion("hey whats up");
         keyboard->addSuggestion("help");
         keyboard->addSuggestion("hello");
-        keyboard->addSuggestion("how");
+        keyboard->addSuggestion("how are you");
         keyboard->addSuggestion("hack");
         keyboard->addSuggestion("what");
+        keyboard->addSuggestion("what's up");
         keyboard->addSuggestion("JBlanked");
         keyboard->addSuggestion("flip");
         keyboard->addSuggestion("flipper");
+        keyboard->addSuggestion("flipper zero");
         keyboard->addSuggestion("yooo");
         keyboard->addSuggestion("everyone");
         keyboard->addSuggestion("anyone");
-        keyboard->addSuggestion("good");
+        keyboard->addSuggestion("good night from ");
         keyboard->addSuggestion("great");
         keyboard->addSuggestion("morning");
-        keyboard->addSuggestion("night");
         keyboard->addSuggestion("message");
         keyboard->addSuggestion("awesome");
+        keyboard->addSuggestion("i am from ");
         keyboard->addSuggestion("FlipperHTTP");
     }
 }
@@ -2312,6 +2314,8 @@ void FlipSocialRun::updateInput(InputEvent* event) {
                     app->saveChar("new_feed_post", keyboard->getText());
                     postStatus = PostWaiting;
                     userRequest(RequestTypePost);
+                    keyboard->clearText();
+                    keyboard.reset();
                 }
                 if(lastInput != InputKeyMAX) {
                 }
@@ -2419,6 +2423,8 @@ void FlipSocialRun::updateInput(InputEvent* event) {
                     app->saveChar("message_to_user", keyboard->getText());
                     messagesStatus = MessagesSending;
                     userRequest(RequestTypeMessageSend);
+                    keyboard->clearText();
+                    keyboard.reset();
                 }
                 if(lastInput != InputKeyMAX) {
                 }
@@ -2475,6 +2481,8 @@ void FlipSocialRun::updateInput(InputEvent* event) {
                     exploreStatus = ExploreWaiting;
                     exploreIndex = 0;
                     userRequest(RequestTypeExplore);
+                    keyboard->clearText();
+                    keyboard.reset();
                 }
                 if(lastInput != InputKeyMAX) {
                 }
@@ -2496,6 +2504,8 @@ void FlipSocialRun::updateInput(InputEvent* event) {
                     app->saveChar("message_to_user", keyboard->getText());
                     exploreStatus = ExploreSending;
                     userRequest(RequestTypeMessageSend);
+                    keyboard->clearText();
+                    keyboard.reset();
                 }
                 if(lastInput != InputKeyMAX) {
                 }
@@ -2584,6 +2594,8 @@ void FlipSocialRun::updateInput(InputEvent* event) {
                     app->saveChar("new_comment", keyboard->getText());
                     commentsStatus = CommentsSending;
                     userRequest(RequestTypeCommentPost);
+                    keyboard->clearText();
+                    keyboard.reset();
                 }
                 if(lastInput != InputKeyMAX) {
                 }
