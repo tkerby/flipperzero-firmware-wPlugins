@@ -164,6 +164,11 @@ static bool protopirate_storage_write_capture_data(
     if(flipper_format_read_uint32(flipper_format, "Cnt", &uint32_value, 1))
         flipper_format_write_uint32(save_file, "Cnt", &uint32_value, 1);
 
+    // BS Magic
+    flipper_format_rewind(flipper_format);
+    if(flipper_format_read_uint32(flipper_format, "BSMagic", &uint32_value, 1))
+        flipper_format_write_uint32(save_file, "BSMagic", &uint32_value, 1);
+
     // CRC
     flipper_format_rewind(flipper_format);
     if(flipper_format_read_uint32(flipper_format, "CRC", &uint32_value, 1))

@@ -43,10 +43,10 @@ This software is for experimental purposes only and is not meant for any illegal
 - Sub-GHz: [Removed car protocols from internal compile, now handled by ProtoPirate. Removed: Kia, ScherKahn and StarLine (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/cdd4f4d8430e311c9a745a5b953012cdd00c448b)
 - Sub-GHz: [Added Signal Settings (By Dmitry422 & xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/905b52a53f4b430d8db22594893352a2f72cd078)
 - Updated: [Noptel LRF Sampler v2.4 (By Giraut)](https://github.com/Giraut/flipper_zero_noptel_lrf_sampler)
-- Updated: [ProtoPirate v1.5 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - Added: [Big Clock v1.1 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
 - Added: [Reality Clock v2.1 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
 - Updated: [FlipSocial v2.0.8 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- Updated: [ProtoPirate v1.5 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 
 <a name="release">
 

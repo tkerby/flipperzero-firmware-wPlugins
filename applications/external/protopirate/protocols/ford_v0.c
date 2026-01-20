@@ -51,6 +51,7 @@ typedef struct SubGhzProtocolDecoderFordV0 {
     uint32_t serial;
     uint8_t button;
     uint32_t count;
+    uint8_t bs_magic;
 } SubGhzProtocolDecoderFordV0;
 
 typedef struct SubGhzProtocolEncoderFordV0 {
@@ -64,6 +65,7 @@ typedef struct SubGhzProtocolEncoderFordV0 {
     uint8_t button;
     uint32_t count;
     uint8_t bs;
+    uint8_t bs_magic;
 } SubGhzProtocolEncoderFordV0;
 
 typedef enum {
@@ -84,7 +86,8 @@ static void decode_ford_v0(
     uint16_t key2,
     uint32_t* serial,
     uint8_t* button,
-    uint32_t* count);
+    uint32_t* count,
+    uint8_t* bs_magic);
 static void encode_ford_v0(
     uint8_t header_byte,
     uint32_t serial,
@@ -131,8 +134,14 @@ const SubGhzProtocol ford_protocol_v0 = {
 // BS = (counter_low_byte + 0x6F + (button << 4)) & 0xFF
 // =============================================================================
 
-static uint8_t ford_v0_calculate_bs(uint32_t count, uint8_t button) {
-    return ((count & 0xFF) + 0x6F + (button << 4)) & 0xFF;
+static uint8_t ford_v0_calculate_bs(uint32_t count, uint8_t button, uint8_t bs_magic) {
+    uint16_t result;
+
+    //Do the BS calculation
+    result = ((uint16_t)count & 0xFF) + bs_magic + (button << 4);
+
+    //Return the last byte of result
+    return (uint8_t)(result & 0xFF);
 }
 
 // =============================================================================
@@ -202,7 +211,8 @@ static void decode_ford_v0(
     uint16_t key2,
     uint32_t* serial,
     uint8_t* button,
-    uint32_t* count) {
+    uint32_t* count,
+    uint8_t* bs_magic) {
     uint8_t buf[13] = {0};
 
     for(int i = 0; i < 8; ++i) {
@@ -213,6 +223,7 @@ static void decode_ford_v0(
     buf[9] = (uint8_t)(key2 & 0xFF);
 
     uint8_t tmp = buf[8];
+    uint8_t bs = tmp;
     uint8_t parity = 0;
     uint8_t parity_any = (tmp != 0);
     while(tmp) {
@@ -254,6 +265,9 @@ static void decode_ford_v0(
     *button = (buf[5] >> 4) & 0x0F;
 
     *count = ((buf[5] & 0x0F) << 16) | (buf[6] << 8) | buf[7];
+
+    //Build the BS Magic number for this fob. (Wlll have overflow bug until other pr is acceoted and overflow calc returned)
+    *bs_magic = bs - (*button << 4) - (uint8_t)(*count & 0xFF);
 }
 
 // =============================================================================
@@ -359,6 +373,7 @@ void* subghz_protocol_encoder_ford_v0_alloc(SubGhzEnvironment* environment) {
     instance->button = 0;
     instance->count = 0;
     instance->bs = 0;
+    instance->bs_magic = 0;
 
     FURI_LOG_I(TAG, "Encoder allocated");
     return instance;
@@ -568,14 +583,22 @@ SubGhzProtocolStatus
         instance->generic.cnt = instance->count;
         FURI_LOG_I(TAG, "Counter: 0x%05lX", (unsigned long)instance->count);
 
-        // Calculate BS from counter and button (not from saved file!)
-        instance->bs = ford_v0_calculate_bs(instance->count, instance->button);
+        flipper_format_rewind(flipper_format);
+        uint32_t bs_magic_temp = 0;
+        if(!flipper_format_read_uint32(flipper_format, "BSMagic", &bs_magic_temp, 1))
+            instance->bs_magic = 0x6F; //For Backward compatibility
+        else
+            instance->bs_magic = (uint8_t)bs_magic_temp;
+
+        // Calculate BS from counter and button, as well as the BS Magic Number we pulled on decode.
+        instance->bs = ford_v0_calculate_bs(instance->count, instance->button, instance->bs_magic);
         FURI_LOG_I(
             TAG,
-            "Calculated BS: 0x%02X (from Cnt=0x%05lX, Btn=0x%02X)",
+            "Calculated BS: 0x%02X (from Cnt=0x%05lX, Btn=0x%02X, BSMagic=0x%02X))",
             instance->bs,
             (unsigned long)instance->count,
-            instance->button);
+            instance->button,
+            instance->bs_magic);
 
         encode_ford_v0(
             header_byte,
@@ -678,7 +701,13 @@ static bool ford_v0_process_data(SubGhzProtocolDecoderFordV0* instance) {
         uint16_t key2 = ~key2_raw;
 
         decode_ford_v0(
-            instance->key1, key2, &instance->serial, &instance->button, &instance->count);
+            instance->key1,
+            key2,
+            &instance->serial,
+            &instance->button,
+            &instance->count,
+            &instance->bs_magic);
+
         instance->key2 = key2;
         return true;
     }
@@ -716,6 +745,7 @@ void subghz_protocol_decoder_ford_v0_reset(void* context) {
     instance->serial = 0;
     instance->button = 0;
     instance->count = 0;
+    instance->bs_magic = 0;
 }
 
 void subghz_protocol_decoder_ford_v0_feed(void* context, bool level, uint32_t duration) {
@@ -851,6 +881,9 @@ SubGhzProtocolStatus subghz_protocol_decoder_ford_v0_serialize(
         flipper_format_write_uint32(flipper_format, "Btn", &temp, 1);
 
         flipper_format_write_uint32(flipper_format, "Cnt", &instance->count, 1);
+
+        temp = (uint32_t)instance->bs_magic;
+        flipper_format_write_uint32(flipper_format, "BSMagic", &temp, 1);
     }
 
     return ret;
@@ -885,6 +918,12 @@ SubGhzProtocolStatus
 
         flipper_format_read_uint32(flipper_format, "Cnt", &instance->count, 1);
         instance->generic.cnt = instance->count;
+
+        uint32_t bs_magic_temp = 0;
+        if(flipper_format_read_uint32(flipper_format, "BSMagic", &bs_magic_temp, 1))
+            instance->bs_magic = bs_magic_temp;
+        else
+            instance->bs_magic = 0x6F; //For backward psf file compatibiility.
     }
 
     return ret;
@@ -913,7 +952,8 @@ void subghz_protocol_decoder_ford_v0_get_string(void* context, FuriString* outpu
         "Key1:%08lX%08lX\r\n"
         "Key2:%04X\r\n"
         "Sn:%08lX Btn:%02X:%s\r\n"
-        "Cnt:%05lX BS:%02X CRC:%02X\r\n",
+        "Cnt:%05lX BS:%02X CRC:%02X\r\n"
+        "BSMagic:%02X\r\n",
         instance->generic.protocol_name,
         instance->generic.data_count_bit,
         crc_ok ? "OK" : "BAD",
@@ -925,5 +965,6 @@ void subghz_protocol_decoder_ford_v0_get_string(void* context, FuriString* outpu
         button_name,
         (unsigned long)instance->count,
         (instance->key2 >> 8) & 0xFF,
-        instance->key2 & 0xFF);
+        instance->key2 & 0xFF,
+        instance->bs_magic);
 }
