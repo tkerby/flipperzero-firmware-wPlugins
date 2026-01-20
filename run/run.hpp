@@ -1,7 +1,7 @@
 #pragma once
 #include "easy_flipper/easy_flipper.h"
 #include "loading/loading.hpp"
-#include "run/keyboard.hpp"
+#include "keyboard/keyboard.hpp"
 
 #define MAX_PRE_SAVED_MESSAGES 20 // Maximum number of pre-saved messages
 #define MAX_MESSAGE_LENGTH 100    // Maximum length of a message in the feed
@@ -175,7 +175,6 @@ class FlipSocialRun
     FeedStatus feedStatus;                           // current feed status
     bool feedItemFlipOverride[MAX_FEED_ITEMS];       // local override for flip status to show immediate feedback
     bool feedItemFlipOverrideActive[MAX_FEED_ITEMS]; // track which items have local overrides
-    bool inputHeld;                                  // flag to check if input is held
     InputKey lastInput;                              // last input key pressed
     std::unique_ptr<Keyboard> keyboard;              // keyboard instance for input handling
     std::unique_ptr<Loading> loading;                // loading animation instance

@@ -1,3 +1,9 @@
+## 2.0.8
+- Updated auto-complete functionality to accept and return multi-word suggestions.
+- Moved the keyboard class to its own folder for better organization.
+- Added more suggestions to the auto-complete dictionary.
+- Fixed some minor bugs in file saving/loading.
+
 ## 2.0.7
 - Fixed crashes that occurred in menu navigation when trying to access an item that was out of bounds.
 - Updated the keyboard input: pressing BACK now deletes the current character instead of exiting the keyboard (hold BACK to exit the keyboard).
