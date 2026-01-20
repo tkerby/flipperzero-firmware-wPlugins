@@ -8,6 +8,6 @@ App(
     fap_category="Tools",
     fap_author="Eris-Margeta",
     fap_weburl="https://github.com/Eris-Margeta/flipper-apps",
-    fap_version="1.1",
+    fap_version="1.2",
     fap_description="Bedside clock with adjustable brightness (0-100%). UP/DOWN to adjust.",
 )

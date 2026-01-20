@@ -1,10 +1,17 @@
-# Big Clock for Flipper Zero
+# Big Clock v1.2
 
-A full-screen digital bedside/tableside clock for Flipper Zero with adjustable screen brightness.
+> Full-screen digital bedside/tableside clock with adjustable brightness
 
-![Flipper Zero](https://img.shields.io/badge/Flipper%20Zero-FF6600?style=flat&logo=flipper&logoColor=white)
-![Version](https://img.shields.io/badge/version-1.1-blue)
-![CI](https://github.com/Eris-Margeta/flipper-apps/actions/workflows/ci.yml/badge.svg)
+![Big Clock Screenshot](screenshots/screenshot1.png)
+
+[![Flipper Zero](https://img.shields.io/badge/Flipper%20Zero-FF6600?style=flat&logo=flipper&logoColor=white)](https://flipperzero.one/)
+[![Version](https://img.shields.io/badge/version-1.2-blue)](../../releases)
+[![Release](https://img.shields.io/github/v/release/Eris-Margeta/flipper-apps?filter=big-clock-v*&label=release)](https://github.com/Eris-Margeta/flipper-apps/releases?q=big-clock)
+[![CI](https://github.com/Eris-Margeta/flipper-apps/actions/workflows/ci.yml/badge.svg)](https://github.com/Eris-Margeta/flipper-apps/actions/workflows/ci.yml)
+
+## Download
+
+**[⬇️ Download Latest Release](https://github.com/Eris-Margeta/flipper-apps/releases?q=big-clock)** - Get the `.fap` file and copy to `/ext/apps/Tools/` on your Flipper.
 
 ## Use Case
 
@@ -44,6 +51,9 @@ Turn your Flipper Zero into a **bedside or desk clock** with:
 
 ## Screenshots
 
+![Big Clock Screenshot 2](screenshots/screenshot2.png)
+
+alternate style (thinking about it)
 ```
     ██  ██████    ██████  ██████
     ██      ██  ●     ██  ██
@@ -62,12 +72,12 @@ Turn your Flipper Zero into a **bedside or desk clock** with:
 
 ```bash
 # Using Poetry (recommended)
-poetry run ufbt           # Build only
-poetry run ufbt launch    # Build + install + run
+poetry run python -m ufbt           # Build only
+poetry run python -m ufbt launch    # Build + install + run
 
 # Using pip
 pip install ufbt
-ufbt launch
+python -m ufbt launch
 ```
 
 ### Output
@@ -78,7 +88,7 @@ The compiled `.fap` file will be in the `dist/` directory.
 
 ### Via ufbt (recommended)
 ```bash
-poetry run ufbt launch
+poetry run python -m ufbt launch
 ```
 
 ### Manual Installation
@@ -93,7 +103,7 @@ poetry run ufbt launch
 | App Type | External (.fap) |
 | Category | Tools |
 | Stack Size | 2KB |
-| Version | 1.1 |
+| Version | 1.2 |
 
 ### Implementation Notes
 
@@ -110,6 +120,15 @@ Current version: see [VERSION](VERSION)
 ## Known Issues
 
 - **Brief flicker on button press/release**: When adjusting brightness, a brief flicker may occur at the moment of button press and release. This appears to be a hardware/firmware limitation related to how the Flipper Zero's backlight system handles brightness changes. The brightness change itself works correctly.
+
+## Tested
+
+| Firmware | Version | Status |
+|----------|---------|--------|
+| Official Flipper | 1.43 | ✅ Works |
+| Momentum | mntm-012 | ✅ Works |
+| Unleashed | - | ❓ Not tested |
+| RogueMaster | - | ⛔ Not supported (firmware too unstable) |
 
 ## License
 
