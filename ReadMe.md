@@ -47,6 +47,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Reality Clock v2.1 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
 - Updated: [FlipSocial v2.0.8 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [ProtoPirate v1.5 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
+- Updated: [Reality Clock v3.0 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
 
 <a name="release">
 
@@ -720,7 +721,7 @@ $ ./fbt dolphin_ext
 - [Radio Scanner v0.3 (By RocketGod)](https://github.com/RocketGod-Git/Flipper-Zero-Radio-Scanner)
 - [RC2014 ColecoVision (By ezod)](https://github.com/ezod/flipperzero-rc2014-coleco)
 - [RCWL-516 Motion Sensor (By ahmedafe1)](https://github.com/ahmedafe1/rcwl_0516-Flipperzero)
-- [Reality Clock v2.1 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
+- [Reality Clock v3.0 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
 - [Remote for CaiXianlin v1.0 (By anty-ce)](https://github.com/anty-ce/flipper_zero_caixianlin_remote)[Remote for CaiXianlin v1.0 (By anty-ce)](https://github.com/anty-ce/flipper_zero_caixianlin_remote)
 - [Remote Maker (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/487)
 - [Resistance Calculator v1.4 (By instantiator)](https://github.com/instantiator/flipper-zero-experimental-apps)
