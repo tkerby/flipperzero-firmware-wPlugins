@@ -46,10 +46,6 @@ void subghz_scene_set_counter_on_enter(void* context) {
         byte_ptr = (uint8_t*)&subghz->gen_info->kinggates_stylo_4k.cnt;
         byte_count = sizeof(subghz->gen_info->kinggates_stylo_4k.cnt);
         break;
-    case GenBenincaARC:
-        byte_ptr = (uint8_t*)&subghz->gen_info->beninca_arc.cnt;
-        byte_count = sizeof(subghz->gen_info->beninca_arc.cnt);
-        break;
     case GenNiceFlorS:
         byte_ptr = (uint8_t*)&subghz->gen_info->nice_flor_s.cnt;
         byte_count = sizeof(subghz->gen_info->nice_flor_s.cnt);
@@ -125,9 +121,6 @@ bool subghz_scene_set_counter_on_event(void* context, SceneManagerEvent event) {
                 subghz->gen_info->kinggates_stylo_4k.cnt =
                     __bswap16(subghz->gen_info->kinggates_stylo_4k.cnt);
                 break;
-            case GenBenincaARC:
-                subghz->gen_info->beninca_arc.cnt = __bswap32(subghz->gen_info->beninca_arc.cnt);
-                break;
             case GenNiceFlorS:
                 subghz->gen_info->nice_flor_s.cnt = __bswap16(subghz->gen_info->nice_flor_s.cnt);
                 break;
@@ -194,15 +187,6 @@ bool subghz_scene_set_counter_on_event(void* context, SceneManagerEvent event) {
                     subghz->gen_info->kinggates_stylo_4k.serial,
                     subghz->gen_info->kinggates_stylo_4k.btn,
                     subghz->gen_info->kinggates_stylo_4k.cnt);
-                break;
-            case GenBenincaARC:
-                generated_protocol = subghz_txrx_gen_beninca_arc_protocol(
-                    subghz->txrx,
-                    subghz->gen_info->mod,
-                    subghz->gen_info->freq,
-                    subghz->gen_info->beninca_arc.serial,
-                    subghz->gen_info->beninca_arc.btn,
-                    subghz->gen_info->beninca_arc.cnt);
                 break;
             case GenNiceFlorS:
                 generated_protocol = subghz_txrx_gen_nice_flor_s_protocol(

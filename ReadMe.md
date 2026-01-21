@@ -63,6 +63,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - NFC: [Fix LED not blinking at SLIX unlock (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/7a65388051be7bd78c81e4b36ec2a1d4d0e47ff0)
 - Sub-GHz: [Fixes for changes from UL (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/7ae73aa9f5ef2b9ecc133fd7670806dc538fa4ee)
 - OFW: PR: [Various UI/UX changes #4331 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4331)
+- Revert: Sub-GHz: [Beninca ARC AES128 protocol full support (128bit dynamic) (with Add manually, and 2 button codes) (resolves issue #596) (By xMasterX and zero-mega)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/1e45ea4db5bc4ceba71665206f57113ef867b8de)
 
 <a name="release">
 
