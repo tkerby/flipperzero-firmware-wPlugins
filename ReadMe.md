@@ -76,6 +76,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Karl Eido v0.1 (By fgreil)](https://github.com/fgreil/mitzi-karl-eido)
 - Updated: [ListEM v1.1 (By Clawzman)](https://github.com/Clawzman/Flipper_ListEM)
 - Updated: [Roman Decoder v0.2 (By evillero)](https://github.com/evillero/roman_decoder)
+- UI: [Revert spacing changes 3px back to 4px (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/a1e01bc06d945e3ca045f3f1c526f4613544e2e2)
+- NFC: [Fix LED not blinking at SLIX unlock (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/3f85bea80dad661f8d47f0715c36a11e5004d839)
 
 <a name="release">
 
