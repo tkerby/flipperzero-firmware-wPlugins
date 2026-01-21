@@ -87,6 +87,7 @@
 ### OFW TO ADD: [#4293](https://github.com/flipperdevices/flipperzero-firmware/pull/4293)
 ### OFW TO ADD: [#4311](https://github.com/flipperdevices/flipperzero-firmware/pull/4311)
 ### OFW TO ADD: [#4312](https://github.com/flipperdevices/flipperzero-firmware/pull/4312)
+- Sub-GHz: [Beninca ARC AES128 protocol full support (128bit dynamic) (with Add manually, and 2 button codes) (resolves issue #596) (By xMasterX and zero-mega)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/1e45ea4db5bc4ceba71665206f57113ef867b8de)
 
 ## WISH LIST ITEMS:
 - Battery Type moved to Power Settings

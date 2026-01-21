@@ -53,7 +53,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [CANBUS v1.1.6.2 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
 - [Add ProtoPirate to RM Known Apps (Browser and Favorites Integration) #1166 (By LeeroysHub)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1166)
 - Added: [Flipper Wedge v1.0 (By DangerousThings)](https://github.com/DangerousThings/flipper-wedge)
-- Sub-GHz: [Beninca ARC AES128 protocol full support (128bit dynamic) (with Add manually, and 2 button codes) (resolves issue #596) (By xMasterX and zero-mega)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/1e45ea4db5bc4ceba71665206f57113ef867b8de)
 - Sub-GHz: [Treadmill37 protocol support (37bit static) (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/3abd6a319e7d93e9938942e62933aa5df7c6c402)
 - Sub-GHz: [Fixed button mapping for FAAC RC/XT (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/134f48e8df4de915d6301864a935d34af6d93d7c)
 - Sub-GHz: [Possible Sommer timings fix (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/15d757abe038af45f1b8ef1dd44143b2b4c41cc1)
@@ -63,7 +62,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - NFC: [Fix LED not blinking at SLIX unlock (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/7a65388051be7bd78c81e4b36ec2a1d4d0e47ff0)
 - Sub-GHz: [Fixes for changes from UL (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/7ae73aa9f5ef2b9ecc133fd7670806dc538fa4ee)
 - OFW: PR: [Various UI/UX changes #4331 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4331)
-- Revert: Sub-GHz: [Beninca ARC AES128 protocol full support (128bit dynamic) (with Add manually, and 2 button codes) (resolves issue #596) (By xMasterX and zero-mega)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/1e45ea4db5bc4ceba71665206f57113ef867b8de)
 
 <a name="release">
 
