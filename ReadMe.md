@@ -49,6 +49,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [ProtoPirate v1.5 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - Updated: [Big Clock v1.2 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
 - Updated: [Reality Clock v4.0 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
+- Updated: [CANBUS v1.1.6.1 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats` (Version Only)
 
 <a name="release">
 
@@ -452,7 +453,7 @@ $ ./fbt dolphin_ext
 - [CAN Commander v0.1 (By MatthewKuKanich)](https://github.com/MatthewKuKanich/CAN_Commander/tree/main/FlipperZeroEnvironment/CANCommander_Boilerplate) `Req: CAN Commander Board`
 - [CAN Tools v1.1 (By MatthewKuKanich)](https://github.com/MatthewKuKanich/FlipperCANTools)
 - [CAN Transceiver v0.1 (By Chainmanner)](https://github.com/Chainmanner/Flipper-CAN-Transceiver)
-- [CANBUS v1.1.6 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
+- [CANBUS v1.1.6.1 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
 - [CANBUS ATTACK v1.0 (By jorgepnaranjo25)](https://github.com/jorgepnaranjo25/CAN-Bus-Attack) `Req: CANBUS By ElectronicCats`
 - [Canon Intervalometer v1.0 (By TravisCG)](https://github.com/TravisCG/canonivm)
 - [Caesar Cipher v1.2 (By panki27)](https://github.com/panki27/caesar-cipher)
