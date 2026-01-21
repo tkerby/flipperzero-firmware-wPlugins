@@ -5,108 +5,91 @@
 
 #define BLINK_INTERVAL_MS 1000
 
-Keyboard::Keyboard()
-{
+Keyboard::Keyboard() {
     reset();
     resetText();
     text_edit_mode = false;
     last_word[0] = '\0';
 
-    if (!auto_complete_init(&autoComplete))
-    {
+    if(!auto_complete_init(&autoComplete)) {
         FURI_LOG_E("Keyboard", "Failed to initialize autocomplete");
     }
 }
 
-Keyboard::~Keyboard()
-{
+Keyboard::~Keyboard() {
     auto_complete_free(&autoComplete);
 }
 
-bool Keyboard::addSuggestion(const char *word)
-{
-    if (!auto_complete_add_word(&autoComplete, word))
-    {
+bool Keyboard::addSuggestion(const char* word) {
+    if(!auto_complete_add_word(&autoComplete, word)) {
         FURI_LOG_E("Keyboard", "Failed to add word to autocomplete: %s", word);
         return false;
     }
     return true;
 }
 
-void Keyboard::clampCursorToValidPosition()
-{
-    const char (*keyboard)[11] = getCurrentKeyboard();
+void Keyboard::clampCursorToValidPosition() {
+    const char(*keyboard)[11] = getCurrentKeyboard();
 
-    if (cursor_y < KEYBOARD_ROWS)
-    {
+    if(cursor_y < KEYBOARD_ROWS) {
         // Clamp to valid position in keyboard grid
-        if (cursor_x > KEYBOARD_COLS - 1)
-            cursor_x = KEYBOARD_COLS - 1;
+        if(cursor_x > KEYBOARD_COLS - 1) cursor_x = KEYBOARD_COLS - 1;
 
-        while (cursor_x > 0 && keyboard[cursor_y][cursor_x] == '\0')
-        {
+        while(cursor_x > 0 && keyboard[cursor_y][cursor_x] == '\0') {
             cursor_x--;
         }
     }
 }
 
-void Keyboard::clearText()
-{
+void Keyboard::clearText() {
     text_buffer[0] = '\0';
     text_cursor = 0;
     text_edit_mode = false;
 }
 
-void Keyboard::draw(Canvas *canvas, const char *title)
-{
+void Keyboard::draw(Canvas* canvas, const char* title) {
     draw(canvas, title, text_buffer);
 }
 
-void Keyboard::draw(Canvas *canvas, const char *title, const char *current_text)
-{
+void Keyboard::draw(Canvas* canvas, const char* title, const char* current_text) {
     canvas_clear(canvas);
-    const char (*keyboard)[11] = getCurrentKeyboard();
+    const char(*keyboard)[11] = getCurrentKeyboard();
 
     // Calculate text display parameters
     canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
     size_t text_len = strlen(current_text);
-    const int char_width = 6;                                                // Width of each character in pixels
-    const int display_width = 128;                                           // Screen width in pixels
-    const int max_visible_chars = (display_width - char_width) / char_width; // Reserve space for cursor
+    const int char_width = 6; // Width of each character in pixels
+    const int display_width = 128; // Screen width in pixels
+    const int max_visible_chars =
+        (display_width - char_width) / char_width; // Reserve space for cursor
 
     // Calculate scroll offset to show the end of the text
     int scroll_offset = 0;
-    if (text_len > max_visible_chars)
-    {
+    if(text_len > max_visible_chars) {
         scroll_offset = text_len - max_visible_chars;
     }
 
     // Create a substring to display (scrolled portion)
     char display_text[MAX_TEXT_SIZE];
-    if (scroll_offset > 0)
-    {
+    if(scroll_offset > 0) {
         snprintf(display_text, MAX_TEXT_SIZE, "%s", current_text + scroll_offset);
-    }
-    else
-    {
+    } else {
         snprintf(display_text, MAX_TEXT_SIZE, "%s", current_text);
     }
 
     // Show scroll indicator if text is scrolled (draw first, before text)
     int text_start_x = 0;
-    if (scroll_offset > 0)
-    {
+    if(scroll_offset > 0) {
         canvas_draw_str(canvas, 0, 8, "<"); // Left arrow to indicate scrolled content
-        text_start_x = char_width + 2;      // Offset text to make room for indicator
+        text_start_x = char_width + 2; // Offset text to make room for indicator
     }
 
     // Draw the visible portion of the text
     canvas_draw_str(canvas, text_start_x, 8, display_text);
 
     // Show autocomplete suggestion on the right side
-    if (autoComplete.suggestion_count > 0)
-    {
-        const char *suggestion = autoComplete.suggestions[0];
+    if(autoComplete.suggestion_count > 0) {
+        const char* suggestion = autoComplete.suggestions[0];
         canvas_set_color(canvas, ColorBlack);
 
         // Calculate position to right-align the suggestion
@@ -121,11 +104,9 @@ void Keyboard::draw(Canvas *canvas, const char *title, const char *current_text)
     uint32_t tick = furi_get_tick();
     bool cursor_visible = (tick / BLINK_INTERVAL_MS) % 2 == 0; // Blink every BLINK_INTERVAL_MS
 
-    if (cursor_visible)
-    {
+    if(cursor_visible) {
         int cursor_display_pos = text_cursor - scroll_offset;
-        if (cursor_display_pos >= 0 && cursor_display_pos <= max_visible_chars)
-        {
+        if(cursor_display_pos >= 0 && cursor_display_pos <= max_visible_chars) {
             char text_before_cursor[MAX_TEXT_SIZE];
             snprintf(text_before_cursor, MAX_TEXT_SIZE, "%.*s", cursor_display_pos, display_text);
             uint16_t text_width = canvas_string_width_custom(canvas, text_before_cursor);
@@ -135,20 +116,16 @@ void Keyboard::draw(Canvas *canvas, const char *title, const char *current_text)
     }
 
     // Draw compact 3x10 virtual keyboard
-    for (int row = 0; row < KEYBOARD_ROWS; row++)
-    {
-        for (int col = 0; col < KEYBOARD_COLS; col++)
-        {
+    for(int row = 0; row < KEYBOARD_ROWS; row++) {
+        for(int col = 0; col < KEYBOARD_COLS; col++) {
             char ch = keyboard[row][col];
-            if (ch == '\0')
-                break;
+            if(ch == '\0') break;
 
             int x = 3 + col * 12;
             int y = 22 + row * 10;
 
             // Highlight current cursor position
-            if (row == cursor_y && col == cursor_x)
-            {
+            if(row == cursor_y && col == cursor_x) {
                 canvas_draw_rbox(canvas, x - 1, y - 7, 11, 9, 1);
                 canvas_set_color(canvas, ColorWhite);
             }
@@ -165,8 +142,7 @@ void Keyboard::draw(Canvas *canvas, const char *title, const char *current_text)
 
     // Space bar (wide button)
     bool space_selected = (cursor_y == FUNCTION_ROW && cursor_x == FUNC_KEY_SPACE);
-    if (space_selected)
-    {
+    if(space_selected) {
         canvas_draw_rbox(canvas, 3, func_y - 7, 30, 9, 1);
         canvas_set_color(canvas, ColorWhite);
     }
@@ -175,8 +151,7 @@ void Keyboard::draw(Canvas *canvas, const char *title, const char *current_text)
 
     // Backspace
     bool backspace_selected = (cursor_y == FUNCTION_ROW && cursor_x == FUNC_KEY_BACKSPACE);
-    if (backspace_selected)
-    {
+    if(backspace_selected) {
         canvas_draw_rbox(canvas, 35, func_y - 7, 20, 9, 1);
         canvas_set_color(canvas, ColorWhite);
     }
@@ -185,50 +160,39 @@ void Keyboard::draw(Canvas *canvas, const char *title, const char *current_text)
 
     // Shift/Mode
     bool shift_selected = (cursor_y == FUNCTION_ROW && cursor_x == FUNC_KEY_MODE_SWITCH);
-    if (shift_selected)
-    {
+    if(shift_selected) {
         canvas_draw_rbox(canvas, 57, func_y - 7, 20, 9, 1);
         canvas_set_color(canvas, ColorWhite);
     }
-    if (mode == KEYBOARD_NUMBERS)
-    {
+    if(mode == KEYBOARD_NUMBERS) {
         canvas_draw_str(canvas, 60, func_y, "ABC");
-    }
-    else
-    {
+    } else {
         canvas_draw_str(canvas, 60, func_y, "123");
     }
     canvas_set_color(canvas, ColorBlack);
 
     // Caps Lock (only show in letter modes)
-    if (mode != KEYBOARD_NUMBERS)
-    {
+    if(mode != KEYBOARD_NUMBERS) {
         bool caps_selected = (cursor_y == FUNCTION_ROW && cursor_x == FUNC_KEY_CAPS_LOCK);
-        if (caps_selected)
-        {
+        if(caps_selected) {
             canvas_draw_rbox(canvas, 79, func_y - 7, 20, 9, 1);
             canvas_set_color(canvas, ColorWhite);
             canvas_draw_str(canvas, 82, func_y, "CAPS");
             canvas_set_color(canvas, ColorBlack);
-        }
-        else if (caps_lock)
-        {
+        } else if(caps_lock) {
             // When caps lock is on but not selected, draw with inverted colors
             canvas_draw_rbox(canvas, 79, func_y - 7, 20, 9, 1);
             canvas_set_color(canvas, ColorWhite);
             canvas_draw_str(canvas, 82, func_y, "CAPS");
             canvas_set_color(canvas, ColorBlack);
-        }
-        else
-        {
+        } else {
             canvas_draw_str(canvas, 82, func_y, "CAPS");
         }
     }
 
     // Done/Enter
     bool done_selected = (cursor_y == FUNCTION_ROW && cursor_x == FUNC_KEY_DONE);
-    if (done_selected)
-    {
+    if(done_selected) {
         canvas_draw_rbox(canvas, 101, func_y - 7, 25, 9, 1);
         canvas_set_color(canvas, ColorWhite);
     }
@@ -242,28 +206,23 @@ void Keyboard::draw(Canvas *canvas, const char *title, const char *current_text)
     canvas_draw_str(canvas, title_x, 64, title);
 }
 
-char Keyboard::getCurrentChar(bool long_press)
-{
-    const char (*keyboard)[11] = getCurrentKeyboard();
+char Keyboard::getCurrentChar(bool long_press) {
+    const char(*keyboard)[11] = getCurrentKeyboard();
     char ch = keyboard[cursor_y][cursor_x];
     /* if long press,
       - return uppercase version if in lowercase mode
       - return lowercase version if in uppercase mode
     */
-    if (long_press)
-    {
-        switch (mode)
-        {
+    if(long_press) {
+        switch(mode) {
         case KEYBOARD_NUMBERS:
             // No change in number mode
             return ch;
         case KEYBOARD_LOWERCASE:
-            if (ch >= 'a' && ch <= 'z')
-            {
+            if(ch >= 'a' && ch <= 'z') {
                 return ch - ('a' - 'A');
             }
-            switch (ch)
-            {
+            switch(ch) {
             case '.':
                 return ',';
             case '_':
@@ -277,12 +236,10 @@ char Keyboard::getCurrentChar(bool long_press)
             };
             break;
         case KEYBOARD_UPPERCASE:
-            if (ch >= 'A' && ch <= 'Z')
-            {
+            if(ch >= 'A' && ch <= 'Z') {
                 return ch + ('a' - 'A');
             }
-            switch (ch)
-            {
+            switch(ch) {
             case ',':
                 return '.';
             case '-':
@@ -302,10 +259,8 @@ char Keyboard::getCurrentChar(bool long_press)
     return ch;
 }
 
-const char (*Keyboard::getCurrentKeyboard())[11]
-{
-    switch (mode)
-    {
+const char (*Keyboard::getCurrentKeyboard())[11] {
+    switch(mode) {
     case KEYBOARD_UPPERCASE:
         return keyboard_uppercase;
     case KEYBOARD_NUMBERS:
@@ -315,59 +270,50 @@ const char (*Keyboard::getCurrentKeyboard())[11]
     }
 }
 
-const char *Keyboard::getCurrentWord()
-{
+const char* Keyboard::getCurrentWord() {
     // Find the start of the current word
     int pos = text_cursor - 1;
-    while (pos >= 0 && text_buffer[pos] != ' ')
-    {
+    while(pos >= 0 && text_buffer[pos] != ' ') {
         pos--;
     }
     return &text_buffer[pos + 1];
 }
 
-void Keyboard::updateAutoComplete()
-{
+void Keyboard::updateAutoComplete() {
     // Only update if text has changed
-    if (strcmp(text_buffer, last_word) != 0)
-    {
+    if(strcmp(text_buffer, last_word) != 0) {
         snprintf(last_word, MAX_TEXT_SIZE, "%s", text_buffer);
 
-        if (strlen(text_buffer) > 0)
-        {
+        if(strlen(text_buffer) > 0) {
             // First try to find a phrase match with the entire text
-            if (auto_complete_search(&autoComplete, text_buffer))
-            {
+            if(auto_complete_search(&autoComplete, text_buffer)) {
                 // Found phrase suggestions
                 return;
             }
 
             // No phrase match, fall back to searching just the current word
-            const char *current_word = getCurrentWord();
+            const char* current_word = getCurrentWord();
 
             // Extract only the current word
             char word_buffer[MAX_TEXT_SIZE];
             size_t word_len = 0;
-            while (current_word[word_len] != '\0' && current_word[word_len] != ' ' && word_len < MAX_TEXT_SIZE - 1)
-            {
+            while(current_word[word_len] != '\0' && current_word[word_len] != ' ' &&
+                  word_len < MAX_TEXT_SIZE - 1) {
                 word_buffer[word_len] = current_word[word_len];
                 word_len++;
             }
             word_buffer[word_len] = '\0';
 
             // Search with just the current word
-            if (word_len > 0)
-            {
+            if(word_len > 0) {
                 auto_complete_search(&autoComplete, word_buffer);
             }
         }
     }
 }
 
-const char *Keyboard::getModeName()
-{
-    switch (mode)
-    {
+const char* Keyboard::getModeName() {
+    switch(mode) {
     case KEYBOARD_UPPERCASE:
         return caps_lock ? "CAPS" : "ABC";
     case KEYBOARD_NUMBERS:
@@ -377,30 +323,24 @@ const char *Keyboard::getModeName()
     }
 }
 
-size_t Keyboard::getStringLength(const char *str, size_t max_size)
-{
+size_t Keyboard::getStringLength(const char* str, size_t max_size) {
     size_t len = 0;
-    while (len < max_size - 1 && str[len] != '\0')
-    {
+    while(len < max_size - 1 && str[len] != '\0') {
         len++;
     }
     return len;
 }
 
-const char *Keyboard::getText() const
-{
+const char* Keyboard::getText() const {
     return text_buffer;
 }
 
-size_t Keyboard::getTextLength() const
-{
+size_t Keyboard::getTextLength() const {
     return strlen(text_buffer);
 }
 
-const char *Keyboard::getSuggestion(uint8_t index)
-{
-    if (autoComplete.suggestion_count > 0 && index < autoComplete.suggestion_count)
-    {
+const char* Keyboard::getSuggestion(uint8_t index) {
+    if(autoComplete.suggestion_count > 0 && index < autoComplete.suggestion_count) {
         return autoComplete.suggestions[index];
     }
     return nullptr;
@@ -421,29 +361,23 @@ const char Keyboard::keyboard_numbers[3][11] = {
     {'@', '#', '$', '%', '&', '*', '+', '=', '?', '!', '\0'},
     {'(', ')', '[', ']', '{', '}', '<', '>', '|', '~', '\0'}};
 
-bool Keyboard::handleInput(InputEvent *event)
-{
-    if (event->type != InputTypeShort && event->type != InputTypeLong)
-    {
+bool Keyboard::handleInput(InputEvent* event) {
+    if(event->type != InputTypeShort && event->type != InputTypeLong) {
         return false;
     }
     return handleInput(event, text_buffer, MAX_TEXT_SIZE);
 }
 
-bool Keyboard::handleInput(InputEvent *event, char *target_buffer, size_t target_size)
-{
-    const char (*keyboard)[11] = getCurrentKeyboard();
+bool Keyboard::handleInput(InputEvent* event, char* target_buffer, size_t target_size) {
+    const char(*keyboard)[11] = getCurrentKeyboard();
     const uint8_t key = event->key;
 
-    if (key == InputKeyBack && event->type == InputTypeShort)
-    {
+    if(key == InputKeyBack && event->type == InputTypeShort) {
         // Delete character to the left of cursor
         size_t text_len = getStringLength(target_buffer, target_size);
-        if (text_len > 0 && text_cursor > 0)
-        {
+        if(text_len > 0 && text_cursor > 0) {
             // Shift characters left to remove character before cursor
-            for (size_t i = text_cursor - 1; i < text_len; i++)
-            {
+            for(size_t i = text_cursor - 1; i < text_len; i++) {
                 target_buffer[i] = target_buffer[i + 1];
             }
             text_cursor--;
@@ -452,48 +386,37 @@ bool Keyboard::handleInput(InputEvent *event, char *target_buffer, size_t target
     }
 
     // Handle text edit mode
-    if (text_edit_mode)
-    {
-        if (event->type == InputTypeLong && key == InputKeyOk)
-        {
+    if(text_edit_mode) {
+        if(event->type == InputTypeLong && key == InputKeyOk) {
             // Add the suggested phrase/word on long press OK in text edit mode
-            if (autoComplete.suggestion_count > 0)
-            {
-                const char *suggestion = autoComplete.suggestions[0];
+            if(autoComplete.suggestion_count > 0) {
+                const char* suggestion = autoComplete.suggestions[0];
                 size_t suggestion_len = strlen(suggestion);
                 size_t text_len = getStringLength(target_buffer, target_size);
 
                 // Check if this is a phrase completion (suggestion starts with entire buffer)
                 bool is_phrase_match = (text_len <= suggestion_len);
-                for (size_t i = 0; i < text_len && is_phrase_match; i++)
-                {
-                    if (target_buffer[i] != suggestion[i])
-                    {
+                for(size_t i = 0; i < text_len && is_phrase_match; i++) {
+                    if(target_buffer[i] != suggestion[i]) {
                         is_phrase_match = false;
                     }
                 }
 
-                if (is_phrase_match)
-                {
+                if(is_phrase_match) {
                     // Phrase completion: append the remaining part
                     size_t remaining_len = suggestion_len - text_len;
-                    if (text_len + remaining_len < target_size - 1)
-                    {
-                        for (size_t i = 0; i < remaining_len; i++)
-                        {
+                    if(text_len + remaining_len < target_size - 1) {
+                        for(size_t i = 0; i < remaining_len; i++) {
                             target_buffer[text_len + i] = suggestion[text_len + i];
                         }
                         target_buffer[text_len + remaining_len] = '\0';
                         text_cursor = text_len + remaining_len;
                     }
-                }
-                else
-                {
+                } else {
                     // Word completion: replace current word with suggestion
                     // Find start of current word
                     int word_start = text_cursor - 1;
-                    while (word_start >= 0 && target_buffer[word_start] != ' ')
-                    {
+                    while(word_start >= 0 && target_buffer[word_start] != ' ') {
                         word_start--;
                     }
                     word_start++;
@@ -503,29 +426,22 @@ bool Keyboard::handleInput(InputEvent *event, char *target_buffer, size_t target
                     int shift_amount = suggestion_len - current_word_len;
 
                     // Check if we have space
-                    if (text_len + shift_amount < target_size - 1)
-                    {
+                    if(text_len + shift_amount < target_size - 1) {
                         // Shift text after current word
-                        if (shift_amount > 0)
-                        {
+                        if(shift_amount > 0) {
                             // Need to make room
-                            for (int i = text_len; i >= text_cursor; i--)
-                            {
+                            for(int i = text_len; i >= text_cursor; i--) {
                                 target_buffer[i + shift_amount] = target_buffer[i];
                             }
-                        }
-                        else if (shift_amount < 0)
-                        {
+                        } else if(shift_amount < 0) {
                             // Need to close gap
-                            for (size_t i = text_cursor; i <= text_len; i++)
-                            {
+                            for(size_t i = text_cursor; i <= text_len; i++) {
                                 target_buffer[i + shift_amount] = target_buffer[i];
                             }
                         }
 
                         // Copy suggestion to replace current word
-                        for (size_t i = 0; i < suggestion_len; i++)
-                        {
+                        for(size_t i = 0; i < suggestion_len; i++) {
                             target_buffer[word_start + i] = suggestion[i];
                         }
 
@@ -542,18 +458,15 @@ bool Keyboard::handleInput(InputEvent *event, char *target_buffer, size_t target
         }
         size_t text_len = getStringLength(target_buffer, target_size);
 
-        switch (key)
-        {
+        switch(key) {
         case InputKeyLeft:
-            if (text_cursor > 0)
-            {
+            if(text_cursor > 0) {
                 text_cursor--;
             }
             break;
 
         case InputKeyRight:
-            if (text_cursor < text_len)
-            {
+            if(text_cursor < text_len) {
                 text_cursor++;
             }
             break;
@@ -569,11 +482,9 @@ bool Keyboard::handleInput(InputEvent *event, char *target_buffer, size_t target
 
         case InputKeyOk:
             // Backspace at cursor position
-            if (text_cursor > 0 && text_len > 0)
-            {
+            if(text_cursor > 0 && text_len > 0) {
                 // Shift characters left to remove character before cursor
-                for (size_t i = text_cursor - 1; i < text_len; i++)
-                {
+                for(size_t i = text_cursor - 1; i < text_len; i++) {
                     target_buffer[i] = target_buffer[i + 1];
                 }
                 text_cursor--;
@@ -588,33 +499,22 @@ bool Keyboard::handleInput(InputEvent *event, char *target_buffer, size_t target
     }
 
     // Handle keyboard navigation mode
-    switch (key)
-    {
+    switch(key) {
     case InputKeyLeft:
-        if (cursor_y < KEYBOARD_ROWS)
-        { // Main keyboard area
-            if (cursor_x > 0)
-            {
+        if(cursor_y < KEYBOARD_ROWS) { // Main keyboard area
+            if(cursor_x > 0) {
                 cursor_x--;
-            }
-            else
-            {
+            } else {
                 // Wrap to end of row
                 cursor_x = KEYBOARD_COLS - 1;
-                while (cursor_x > 0 && keyboard[cursor_y][cursor_x] == '\0')
-                {
+                while(cursor_x > 0 && keyboard[cursor_y][cursor_x] == '\0') {
                     cursor_x--;
                 }
             }
-        }
-        else
-        { // Function key row
-            if (cursor_x > 0)
-            {
+        } else { // Function key row
+            if(cursor_x > 0) {
                 cursor_x--;
-            }
-            else
-            {
+            } else {
                 // Wrap to last function key
                 cursor_x = (mode == KEYBOARD_NUMBERS) ? 3 : 4; // No caps in number mode
             }
@@ -622,40 +522,28 @@ bool Keyboard::handleInput(InputEvent *event, char *target_buffer, size_t target
         break;
 
     case InputKeyRight:
-        if (cursor_y < KEYBOARD_ROWS)
-        { // Main keyboard area
-            if (cursor_x < KEYBOARD_COLS - 1 && keyboard[cursor_y][cursor_x + 1] != '\0')
-            {
+        if(cursor_y < KEYBOARD_ROWS) { // Main keyboard area
+            if(cursor_x < KEYBOARD_COLS - 1 && keyboard[cursor_y][cursor_x + 1] != '\0') {
                 cursor_x++;
-            }
-            else
-            {
+            } else {
                 // Wrap to beginning of row
                 cursor_x = 0;
             }
-        }
-        else
-        {                                                          // Function key row
+        } else { // Function key row
             int max_func_key = (mode == KEYBOARD_NUMBERS) ? 3 : 4; // No caps in number mode
-            if (cursor_x < max_func_key)
-            {
+            if(cursor_x < max_func_key) {
                 cursor_x++;
-            }
-            else
-            {
+            } else {
                 cursor_x = 0;
             }
         }
         break;
 
     case InputKeyUp:
-        if (cursor_y > 0)
-        {
+        if(cursor_y > 0) {
             // Map function keys to bottom row keys when moving up
-            if (cursor_y == FUNCTION_ROW)
-            {
-                switch (cursor_x)
-                {
+            if(cursor_y == FUNCTION_ROW) {
+                switch(cursor_x) {
                 case FUNC_KEY_SPACE:
                     cursor_x = 1; // → x (middle of z,x,c)
                     break;
@@ -674,13 +562,10 @@ bool Keyboard::handleInput(InputEvent *event, char *target_buffer, size_t target
                 }
             }
             cursor_y--;
-            if (cursor_y < KEYBOARD_ROWS)
-            { // Moving to main keyboard
+            if(cursor_y < KEYBOARD_ROWS) { // Moving to main keyboard
                 clampCursorToValidPosition();
             }
-        }
-        else
-        {
+        } else {
             // Enter text edit mode when pressing up from top keyboard row
             text_edit_mode = true;
             updateAutoComplete();
@@ -688,62 +573,41 @@ bool Keyboard::handleInput(InputEvent *event, char *target_buffer, size_t target
         break;
 
     case InputKeyDown:
-        if (cursor_y < KEYBOARD_ROWS)
-        {
-            if (cursor_y < KEYBOARD_ROWS - 1)
-            { // Can move down within keyboard
+        if(cursor_y < KEYBOARD_ROWS) {
+            if(cursor_y < KEYBOARD_ROWS - 1) { // Can move down within keyboard
                 cursor_y++;
                 clampCursorToValidPosition();
-            }
-            else
-            { // Move to function keys
+            } else { // Move to function keys
                 cursor_y = FUNCTION_ROW;
                 // Map bottom row keys to corresponding function keys
-                if (cursor_x <= 2)
-                { // z, x, c → SPACE
+                if(cursor_x <= 2) { // z, x, c → SPACE
                     cursor_x = FUNC_KEY_SPACE;
-                }
-                else if (cursor_x == 3)
-                { // v → DEL
+                } else if(cursor_x == 3) { // v → DEL
                     cursor_x = FUNC_KEY_BACKSPACE;
-                }
-                else if (cursor_x <= 5)
-                { // b, n → 123
+                } else if(cursor_x <= 5) { // b, n → 123
                     cursor_x = FUNC_KEY_MODE_SWITCH;
-                }
-                else if (cursor_x <= 7)
-                { // m, . → CAPS
+                } else if(cursor_x <= 7) { // m, . → CAPS
                     cursor_x = FUNC_KEY_CAPS_LOCK;
-                }
-                else
-                { // _, / → DONE
+                } else { // _, / → DONE
                     cursor_x = FUNC_KEY_DONE;
                 }
             }
-        }
-        else
-        {
+        } else {
             // Wrap to top row
             cursor_y = 0;
-            if (cursor_x > KEYBOARD_COLS - 1)
-                cursor_x = KEYBOARD_COLS - 1;
+            if(cursor_x > KEYBOARD_COLS - 1) cursor_x = KEYBOARD_COLS - 1;
         }
         break;
 
     case InputKeyOk:
-        if (cursor_y == FUNCTION_ROW)
-        { // Function key row
-            switch (cursor_x)
-            {
-            case FUNC_KEY_SPACE:
-            {
+        if(cursor_y == FUNCTION_ROW) { // Function key row
+            switch(cursor_x) {
+            case FUNC_KEY_SPACE: {
                 size_t len = getStringLength(target_buffer, target_size);
-                if (len < target_size - 1)
-                {
+                if(len < target_size - 1) {
                     // Insert space at cursor position
                     // Shift characters right
-                    for (size_t i = len; i > text_cursor; i--)
-                    {
+                    for(size_t i = len; i > text_cursor; i--) {
                         target_buffer[i] = target_buffer[i - 1];
                     }
                     target_buffer[text_cursor] = ' ';
@@ -756,17 +620,13 @@ bool Keyboard::handleInput(InputEvent *event, char *target_buffer, size_t target
                 break;
             }
 
-            case FUNC_KEY_BACKSPACE:
-            {
+            case FUNC_KEY_BACKSPACE: {
                 size_t len = getStringLength(target_buffer, target_size);
-                if (len > 0)
-                {
+                if(len > 0) {
                     // Delete at cursor position (before cursor)
-                    if (text_cursor > 0)
-                    {
+                    if(text_cursor > 0) {
                         // Shift characters left
-                        for (size_t i = text_cursor - 1; i < len; i++)
-                        {
+                        for(size_t i = text_cursor - 1; i < len; i++) {
                             target_buffer[i] = target_buffer[i + 1];
                         }
                         text_cursor--;
@@ -778,19 +638,15 @@ bool Keyboard::handleInput(InputEvent *event, char *target_buffer, size_t target
             }
 
             case FUNC_KEY_MODE_SWITCH:
-                if (mode == KEYBOARD_NUMBERS)
-                {
+                if(mode == KEYBOARD_NUMBERS) {
                     mode = caps_lock ? KEYBOARD_UPPERCASE : KEYBOARD_LOWERCASE;
-                }
-                else
-                {
+                } else {
                     mode = KEYBOARD_NUMBERS;
                 }
                 break;
 
             case FUNC_KEY_CAPS_LOCK:
-                if (mode != KEYBOARD_NUMBERS)
-                {
+                if(mode != KEYBOARD_NUMBERS) {
                     caps_lock = !caps_lock;
                     mode = caps_lock ? KEYBOARD_UPPERCASE : KEYBOARD_LOWERCASE;
                 }
@@ -799,20 +655,15 @@ bool Keyboard::handleInput(InputEvent *event, char *target_buffer, size_t target
             case FUNC_KEY_DONE:
                 return true; // Signal that input is complete
             }
-        }
-        else
-        {
+        } else {
             // Main keyboard area
             char ch = getCurrentChar(event->type == InputTypeLong);
-            if (ch != '\0')
-            {
+            if(ch != '\0') {
                 size_t len = getStringLength(target_buffer, target_size);
-                if (len < target_size - 1)
-                {
+                if(len < target_size - 1) {
                     // Insert character at cursor position
                     // Shift characters right
-                    for (size_t i = len; i > text_cursor; i--)
-                    {
+                    for(size_t i = len; i > text_cursor; i--) {
                         target_buffer[i] = target_buffer[i - 1];
                     }
                     target_buffer[text_cursor] = ch;
@@ -823,9 +674,7 @@ bool Keyboard::handleInput(InputEvent *event, char *target_buffer, size_t target
                     updateAutoComplete();
 
                     // Auto-switch to lowercase after typing a letter in caps mode (not caps lock)
-                    if (mode == KEYBOARD_UPPERCASE && !caps_lock &&
-                        ((ch >= 'A' && ch <= 'Z')))
-                    {
+                    if(mode == KEYBOARD_UPPERCASE && !caps_lock && ((ch >= 'A' && ch <= 'Z'))) {
                         mode = KEYBOARD_LOWERCASE;
                     }
                 }
@@ -840,8 +689,7 @@ bool Keyboard::handleInput(InputEvent *event, char *target_buffer, size_t target
     return false; // Input not complete
 }
 
-void Keyboard::reset()
-{
+void Keyboard::reset() {
     cursor_x = 0;
     cursor_y = 0;
     mode = KEYBOARD_LOWERCASE;
@@ -851,22 +699,17 @@ void Keyboard::reset()
     auto_complete_remove_words(&autoComplete);
 }
 
-void Keyboard::resetText()
-{
+void Keyboard::resetText() {
     text_buffer[0] = '\0';
     text_cursor = 0;
     text_edit_mode = false;
 }
 
-void Keyboard::setText(const char *text)
-{
-    if (text != nullptr)
-    {
+void Keyboard::setText(const char* text) {
+    if(text != nullptr) {
         snprintf(text_buffer, MAX_TEXT_SIZE, "%s", text);
         text_cursor = strlen(text_buffer);
-    }
-    else
-    {
+    } else {
         text_buffer[0] = '\0';
         text_cursor = 0;
     }

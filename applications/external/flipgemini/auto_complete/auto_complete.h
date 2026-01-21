@@ -10,33 +10,30 @@
 
 #define MAX_WORD_LENGTH 32
 #define MAX_SUGGESTIONS 10
-#define ALPHABET_SIZE 27 // a-z + space
+#define ALPHABET_SIZE   27 // a-z + space
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-    typedef struct TrieNode
-    {
-        struct TrieNode *children[ALPHABET_SIZE];
-        bool is_end_of_word;
-        char *word; // Store complete word at end nodes
-    } TrieNode;
+typedef struct TrieNode {
+    struct TrieNode* children[ALPHABET_SIZE];
+    bool is_end_of_word;
+    char* word; // Store complete word at end nodes
+} TrieNode;
 
-    typedef struct
-    {
-        TrieNode *root;
-        char **suggestions;
-        uint8_t suggestion_count;
-    } AutoComplete;
+typedef struct {
+    TrieNode* root;
+    char** suggestions;
+    uint8_t suggestion_count;
+} AutoComplete;
 
-    bool auto_complete_add_word(AutoComplete *context, const char *word);
-    void auto_complete_free(AutoComplete *context);
-    bool auto_complete_init(AutoComplete *context);
-    void auto_complete_remove_suggestions(AutoComplete *context);
-    void auto_complete_remove_words(AutoComplete *context);
-    bool auto_complete_search(AutoComplete *context, const char *prefix);
+bool auto_complete_add_word(AutoComplete* context, const char* word);
+void auto_complete_free(AutoComplete* context);
+bool auto_complete_init(AutoComplete* context);
+void auto_complete_remove_suggestions(AutoComplete* context);
+void auto_complete_remove_words(AutoComplete* context);
+bool auto_complete_search(AutoComplete* context, const char* prefix);
 
 #ifdef __cplusplus
 }

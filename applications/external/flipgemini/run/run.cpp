@@ -1,30 +1,35 @@
 #include "run/run.hpp"
 #include "app.hpp"
 
-FlipGeminiRun::FlipGeminiRun(void *appContext) : appContext(appContext), chatIndex(0), chatStatus(ChatViewing),
-                                                 currentCount(0), currentMenuIndex(GeminiRunViewChat), currentView(GeminiRunViewMenu),
-                                                 lastInput(InputKeyMAX), maxChatLines(0), promptStatus(PromptKeyboard), shouldReturnToMenu(false),
-                                                 chatScrollOffset(0), totalChatLines(0), chatLinesCounted(false)
-{
+FlipGeminiRun::FlipGeminiRun(void* appContext)
+    : appContext(appContext)
+    , chatIndex(0)
+    , chatStatus(ChatViewing)
+    , currentCount(0)
+    , currentMenuIndex(GeminiRunViewChat)
+    , currentView(GeminiRunViewMenu)
+    , lastInput(InputKeyMAX)
+    , maxChatLines(0)
+    , promptStatus(PromptKeyboard)
+    , shouldReturnToMenu(false)
+    , chatScrollOffset(0)
+    , totalChatLines(0)
+    , chatLinesCounted(false) {
 }
 
-FlipGeminiRun::~FlipGeminiRun()
-{
+FlipGeminiRun::~FlipGeminiRun() {
     // nothing to do
 }
 
-void FlipGeminiRun::countChatLines()
-{
-    FlipGeminiApp *app = static_cast<FlipGeminiApp *>(appContext);
-    if (!app)
-    {
+void FlipGeminiRun::countChatLines() {
+    FlipGeminiApp* app = static_cast<FlipGeminiApp*>(appContext);
+    if(!app) {
         totalChatLines = 0;
         return;
     }
 
-    char *buffer = (char *)malloc(CHUNK_SIZE);
-    if (!buffer)
-    {
+    char* buffer = (char*)malloc(CHUNK_SIZE);
+    if(!buffer) {
         totalChatLines = 0;
         return;
     }
@@ -33,25 +38,23 @@ void FlipGeminiRun::countChatLines()
     uint8_t iteration = 0;
     size_t currentLineChars = 0;
 
-    while (app->loadFileChunk(STORAGE_EXT_PATH_PREFIX "/apps_data/flip_gemini/data/logs.txt", buffer, CHUNK_SIZE - 1, iteration))
-    {
+    while(app->loadFileChunk(
+        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_gemini/data/logs.txt",
+        buffer,
+        CHUNK_SIZE - 1,
+        iteration)) {
         buffer[CHUNK_SIZE - 1] = '\0';
         size_t len = strlen(buffer);
 
-        for (size_t i = 0; i < len; i++)
-        {
-            if (buffer[i] == '\n')
-            {
+        for(size_t i = 0; i < len; i++) {
+            if(buffer[i] == '\n') {
                 // Newline in file = new display line
                 totalChatLines++;
                 currentLineChars = 0;
-            }
-            else
-            {
+            } else {
                 currentLineChars++;
                 // Word wrap: if we've reached max chars, count as new display line
-                if (currentLineChars >= CHARS_PER_LINE)
-                {
+                if(currentLineChars >= CHARS_PER_LINE) {
                     totalChatLines++;
                     currentLineChars = 0;
                 }
@@ -61,8 +64,7 @@ void FlipGeminiRun::countChatLines()
     }
 
     // Count any remaining partial line
-    if (currentLineChars > 0)
-    {
+    if(currentLineChars > 0) {
         totalChatLines++;
     }
 
@@ -70,64 +72,54 @@ void FlipGeminiRun::countChatLines()
     chatLinesCounted = true;
 }
 
-void FlipGeminiRun::drawChatView(Canvas *canvas)
-{
+void FlipGeminiRun::drawChatView(Canvas* canvas) {
     canvas_clear(canvas);
     canvas_set_font(canvas, FontSecondary);
 
-    if (chatStatus == ChatParseError)
-    {
+    if(chatStatus == ChatParseError) {
         canvas_draw_str(canvas, 0, 10, "Error parsing chat data!");
         canvas_draw_str(canvas, 0, 20, "Please try again later.");
         return;
     }
 
-    FlipGeminiApp *app = static_cast<FlipGeminiApp *>(appContext);
-    if (!app)
-    {
+    FlipGeminiApp* app = static_cast<FlipGeminiApp*>(appContext);
+    if(!app) {
         FURI_LOG_E(TAG, "drawChatView: App context is NULL");
         return;
     }
 
     // Count lines only once when entering the view
-    if (!chatLinesCounted)
-    {
+    if(!chatLinesCounted) {
         countChatLines();
         // Start at the end of the conversation
-        if (totalChatLines > MAX_LINES_PER_SCREEN)
-        {
+        if(totalChatLines > MAX_LINES_PER_SCREEN) {
             chatScrollOffset = totalChatLines - MAX_LINES_PER_SCREEN;
-        }
-        else
-        {
+        } else {
             chatScrollOffset = 0;
         }
     }
 
-    if (totalChatLines == 0)
-    {
+    if(totalChatLines == 0) {
         canvas_draw_str(canvas, 0, 10, "No chat history yet.");
         canvas_draw_str(canvas, 0, 20, "Send a prompt to start!");
         return;
     }
 
     // Ensure scroll offset is valid
-    if (totalChatLines > MAX_LINES_PER_SCREEN && chatScrollOffset > totalChatLines - MAX_LINES_PER_SCREEN)
-    {
+    if(totalChatLines > MAX_LINES_PER_SCREEN &&
+       chatScrollOffset > totalChatLines - MAX_LINES_PER_SCREEN) {
         chatScrollOffset = totalChatLines - MAX_LINES_PER_SCREEN;
     }
 
-    char *buffer = (char *)malloc(CHUNK_SIZE);
-    if (!buffer)
-    {
+    char* buffer = (char*)malloc(CHUNK_SIZE);
+    if(!buffer) {
         canvas_draw_str(canvas, 0, 10, "Memory error!");
         return;
     }
 
     // We'll collect up to 6 display lines
     char displayLines[MAX_LINES_PER_SCREEN][CHARS_PER_LINE + 1];
-    for (int i = 0; i < MAX_LINES_PER_SCREEN; i++)
-    {
+    for(int i = 0; i < MAX_LINES_PER_SCREEN; i++) {
         displayLines[i][0] = '\0';
     }
 
@@ -139,17 +131,20 @@ void FlipGeminiRun::drawChatView(Canvas *canvas)
 
     // Read through file and extract the lines we need
     bool continueReading = true;
-    while (continueReading)
-    {
-        bool chunkLoaded = app->loadFileChunk(STORAGE_EXT_PATH_PREFIX "/apps_data/flip_gemini/data/logs.txt", buffer, CHUNK_SIZE - 1, iteration);
+    while(continueReading) {
+        bool chunkLoaded = app->loadFileChunk(
+            STORAGE_EXT_PATH_PREFIX "/apps_data/flip_gemini/data/logs.txt",
+            buffer,
+            CHUNK_SIZE - 1,
+            iteration);
 
-        if (!chunkLoaded)
-        {
+        if(!chunkLoaded) {
             // End of file - add any remaining content as final line
-            if (currentLineChars > 0 && currentDisplayLine >= chatScrollOffset && displayedLines < MAX_LINES_PER_SCREEN)
-            {
+            if(currentLineChars > 0 && currentDisplayLine >= chatScrollOffset &&
+               displayedLines < MAX_LINES_PER_SCREEN) {
                 currentLineBuffer[currentLineChars] = '\0';
-                snprintf(displayLines[displayedLines], CHARS_PER_LINE + 1, "%s", currentLineBuffer);
+                snprintf(
+                    displayLines[displayedLines], CHARS_PER_LINE + 1, "%s", currentLineBuffer);
                 displayedLines++;
             }
             break;
@@ -158,37 +153,36 @@ void FlipGeminiRun::drawChatView(Canvas *canvas)
         buffer[CHUNK_SIZE - 1] = '\0';
         size_t len = strlen(buffer);
 
-        for (size_t i = 0; i < len && displayedLines < MAX_LINES_PER_SCREEN; i++)
-        {
-            if (buffer[i] == '\n')
-            {
+        for(size_t i = 0; i < len && displayedLines < MAX_LINES_PER_SCREEN; i++) {
+            if(buffer[i] == '\n') {
                 // End of line in file
-                if (currentDisplayLine >= chatScrollOffset && displayedLines < MAX_LINES_PER_SCREEN)
-                {
+                if(currentDisplayLine >= chatScrollOffset &&
+                   displayedLines < MAX_LINES_PER_SCREEN) {
                     currentLineBuffer[currentLineChars] = '\0';
-                    snprintf(displayLines[displayedLines], CHARS_PER_LINE + 1, "%s", currentLineBuffer);
+                    snprintf(
+                        displayLines[displayedLines], CHARS_PER_LINE + 1, "%s", currentLineBuffer);
                     displayedLines++;
                 }
                 currentDisplayLine++;
                 currentLineChars = 0;
                 currentLineBuffer[0] = '\0';
-            }
-            else
-            {
+            } else {
                 // Add character to current line
-                if (currentLineChars < CHARS_PER_LINE)
-                {
+                if(currentLineChars < CHARS_PER_LINE) {
                     currentLineBuffer[currentLineChars] = buffer[i];
                     currentLineChars++;
                 }
 
                 // Check if we need to wrap
-                if (currentLineChars >= CHARS_PER_LINE)
-                {
-                    if (currentDisplayLine >= chatScrollOffset && displayedLines < MAX_LINES_PER_SCREEN)
-                    {
+                if(currentLineChars >= CHARS_PER_LINE) {
+                    if(currentDisplayLine >= chatScrollOffset &&
+                       displayedLines < MAX_LINES_PER_SCREEN) {
                         currentLineBuffer[currentLineChars] = '\0';
-                        snprintf(displayLines[displayedLines], CHARS_PER_LINE + 1, "%s", currentLineBuffer);
+                        snprintf(
+                            displayLines[displayedLines],
+                            CHARS_PER_LINE + 1,
+                            "%s",
+                            currentLineBuffer);
                         displayedLines++;
                     }
                     currentDisplayLine++;
@@ -199,16 +193,14 @@ void FlipGeminiRun::drawChatView(Canvas *canvas)
         }
 
         // Stop if we have all the lines we need
-        if (displayedLines >= MAX_LINES_PER_SCREEN)
-        {
+        if(displayedLines >= MAX_LINES_PER_SCREEN) {
             continueReading = false;
         }
 
         iteration++;
 
         // Safety limit
-        if (iteration > 200)
-        {
+        if(iteration > 200) {
             continueReading = false;
         }
     }
@@ -216,26 +208,27 @@ void FlipGeminiRun::drawChatView(Canvas *canvas)
     free(buffer);
 
     // Display the lines
-    for (uint8_t i = 0; i < displayedLines; i++)
-    {
+    for(uint8_t i = 0; i < displayedLines; i++) {
         uint8_t y = 10 + (i * 10);
         canvas_draw_str(canvas, 0, y, displayLines[i]);
     }
 }
 
-void FlipGeminiRun::drawMainMenuView(Canvas *canvas)
-{
-    const char *menuItems[] = {"View Chat", "Send Prompt"};
+void FlipGeminiRun::drawMainMenuView(Canvas* canvas) {
+    const char* menuItems[] = {"View Chat", "Send Prompt"};
     drawMenu(canvas, (uint8_t)currentMenuIndex, menuItems, 2);
 }
 
-void FlipGeminiRun::drawMenu(Canvas *canvas, uint8_t selectedIndex, const char **menuItems, uint8_t menuCount)
-{
+void FlipGeminiRun::drawMenu(
+    Canvas* canvas,
+    uint8_t selectedIndex,
+    const char** menuItems,
+    uint8_t menuCount) {
     canvas_clear(canvas);
 
     // Draw title
     canvas_set_font_custom(canvas, FONT_SIZE_LARGE);
-    const char *title = "FlipGemini";
+    const char* title = "FlipGemini";
     int title_width = canvas_string_width(canvas, title);
     int title_x = (128 - title_width) / 2;
     canvas_draw_str(canvas, title_x, 12, title);
@@ -244,20 +237,19 @@ void FlipGeminiRun::drawMenu(Canvas *canvas, uint8_t selectedIndex, const char *
     canvas_draw_line(canvas, title_x, 14, title_x + title_width, 14);
 
     // Draw decorative horizontal pattern
-    for (int i = 0; i < 128; i += 4)
-    {
+    for(int i = 0; i < 128; i += 4) {
         canvas_draw_dot(canvas, i, 18);
     }
 
     // Menu items with word wrapping
     canvas_set_font_custom(canvas, FONT_SIZE_MEDIUM);
-    const char *currentItem = menuItems[selectedIndex];
+    const char* currentItem = menuItems[selectedIndex];
 
     const int box_padding = 10;
     const int box_width = 108;
     const int usable_width = box_width - (box_padding * 2); // Text area inside box
-    const int line_height = 8;                              // Typical line height for medium font
-    const int max_lines = 2;                                // Maximum lines to prevent overflow
+    const int line_height = 8; // Typical line height for medium font
+    const int max_lines = 2; // Maximum lines to prevent overflow
 
     int menu_y = 40;
 
@@ -266,22 +258,20 @@ void FlipGeminiRun::drawMenu(Canvas *canvas, uint8_t selectedIndex, const char *
     int line_count = 0;
 
     // word wrap
-    const char *text = currentItem;
+    const char* text = currentItem;
     int text_len = strlen(text);
     int current_pos = 0;
 
-    while (current_pos < text_len && line_count < max_lines)
-    {
+    while(current_pos < text_len && line_count < max_lines) {
         int line_start = current_pos;
         int last_space = -1;
         int current_width = 0;
         int char_pos = 0;
 
         // Find how much text fits on this line
-        while (current_pos < text_len && char_pos < 63) // Leave room for null terminator
+        while(current_pos < text_len && char_pos < 63) // Leave room for null terminator
         {
-            if (text[current_pos] == ' ')
-            {
+            if(text[current_pos] == ' ') {
                 last_space = char_pos;
             }
 
@@ -292,17 +282,13 @@ void FlipGeminiRun::drawMenu(Canvas *canvas, uint8_t selectedIndex, const char *
             lines[line_count][char_pos] = '\0'; // Temporary null terminator
             current_width = canvas_string_width_custom(canvas, lines[line_count]);
 
-            if (current_width > usable_width)
-            {
+            if(current_width > usable_width) {
                 // Text is too wide, need to break
-                if (last_space > 0)
-                {
+                if(last_space > 0) {
                     // Break at last space
                     lines[line_count][last_space] = '\0';
                     current_pos = line_start + last_space + 1; // Skip the space
-                }
-                else
-                {
+                } else {
                     // No space found, break at previous character
                     char_pos--;
                     lines[line_count][char_pos] = '\0';
@@ -315,8 +301,7 @@ void FlipGeminiRun::drawMenu(Canvas *canvas, uint8_t selectedIndex, const char *
         }
 
         // If we reached end of text
-        if (current_pos >= text_len)
-        {
+        if(current_pos >= text_len) {
             lines[line_count][char_pos] = '\0';
         }
 
@@ -324,29 +309,23 @@ void FlipGeminiRun::drawMenu(Canvas *canvas, uint8_t selectedIndex, const char *
     }
 
     // If there's still more text and we're at max lines, add ellipsis
-    if (current_pos < text_len && line_count == max_lines)
-    {
+    if(current_pos < text_len && line_count == max_lines) {
         int last_line = line_count - 1;
         int line_len = strlen(lines[last_line]);
-        if (line_len > 3)
-        {
+        if(line_len > 3) {
             strcpy(&lines[last_line][line_len - 3], "...");
         }
     }
 
     // Calculate box height based on number of lines, but keep minimum height
     int box_height = (line_count * line_height) + 8;
-    if (box_height < 16)
-        box_height = 16;
+    if(box_height < 16) box_height = 16;
 
     // Dynamic box positioning based on content height
     int box_y_offset;
-    if (line_count > 1)
-    {
+    if(line_count > 1) {
         box_y_offset = -22;
-    }
-    else
-    {
+    } else {
         box_y_offset = -12;
     }
 
@@ -355,8 +334,7 @@ void FlipGeminiRun::drawMenu(Canvas *canvas, uint8_t selectedIndex, const char *
     canvas_set_color(canvas, ColorWhite);
 
     // Draw each line of text centered
-    for (int i = 0; i < line_count; i++)
-    {
+    for(int i = 0; i < line_count; i++) {
         int line_width = canvas_string_width_custom(canvas, lines[i]);
         int line_x = (128 - line_width) / 2;
         int text_y_offset = (line_count > 1) ? -18 : -4;
@@ -367,12 +345,10 @@ void FlipGeminiRun::drawMenu(Canvas *canvas, uint8_t selectedIndex, const char *
     canvas_set_color(canvas, ColorBlack);
 
     // Draw navigation arrows
-    if (selectedIndex > 0)
-    {
+    if(selectedIndex > 0) {
         canvas_draw_str(canvas, 2, menu_y + 4, "<");
     }
-    if (selectedIndex < (menuCount - 1))
-    {
+    if(selectedIndex < (menuCount - 1)) {
         canvas_draw_str(canvas, 122, menu_y + 4, ">");
     }
 
@@ -380,25 +356,18 @@ void FlipGeminiRun::drawMenu(Canvas *canvas, uint8_t selectedIndex, const char *
     const int dots_spacing = 6;
     int indicator_y = 52;
 
-    if (menuCount <= MAX_DOTS)
-    {
+    if(menuCount <= MAX_DOTS) {
         // Show all dots if they fit
         int dots_start_x = (128 - (menuCount * dots_spacing)) / 2;
-        for (int i = 0; i < menuCount; i++)
-        {
+        for(int i = 0; i < menuCount; i++) {
             int dot_x = dots_start_x + (i * dots_spacing);
-            if (i == selectedIndex)
-            {
+            if(i == selectedIndex) {
                 canvas_draw_box(canvas, dot_x, indicator_y, 4, 4);
-            }
-            else
-            {
+            } else {
                 canvas_draw_frame(canvas, dot_x, indicator_y, 4, 4);
             }
         }
-    }
-    else
-    {
+    } else {
         // condensed indicator with current position
         canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
         char position_text[16];
@@ -417,67 +386,52 @@ void FlipGeminiRun::drawMenu(Canvas *canvas, uint8_t selectedIndex, const char *
     }
 
     // Draw decorative bottom pattern
-    for (int i = 0; i < 128; i += 4)
-    {
+    for(int i = 0; i < 128; i += 4) {
         canvas_draw_dot(canvas, i, 58);
     }
 
     currentCount = menuCount;
 }
 
-void FlipGeminiRun::drawPromptView(Canvas *canvas)
-{
+void FlipGeminiRun::drawPromptView(Canvas* canvas) {
     canvas_clear(canvas);
     canvas_set_font(canvas, FontPrimary);
     static bool loadingStarted = false;
-    switch (promptStatus)
-    {
+    switch(promptStatus) {
     case PromptWaiting:
-        if (!loadingStarted)
-        {
-            if (!loading)
-            {
+        if(!loadingStarted) {
+            if(!loading) {
                 loading = std::make_unique<Loading>(canvas);
             }
             loadingStarted = true;
-            if (loading)
-            {
+            if(loading) {
                 loading->setText("Sending...");
             }
         }
-        if (!this->httpRequestIsFinished())
-        {
-            if (loading)
-            {
+        if(!this->httpRequestIsFinished()) {
+            if(loading) {
                 loading->animate();
             }
-        }
-        else
-        {
-            if (loading)
-            {
+        } else {
+            if(loading) {
                 loading->stop();
             }
             loadingStarted = false;
-            FlipGeminiApp *app = static_cast<FlipGeminiApp *>(appContext);
+            FlipGeminiApp* app = static_cast<FlipGeminiApp*>(appContext);
             furi_check(app);
-            if (app->getHttpState() == ISSUE)
-            {
+            if(app->getHttpState() == ISSUE) {
                 FURI_LOG_E(TAG, "drawPromptView: HTTP request issue");
                 promptStatus = PromptRequestError;
                 return;
             }
-            char *response = (char *)malloc(MAX_RESPONSE_SIZE);
-            if (!response)
-            {
+            char* response = (char*)malloc(MAX_RESPONSE_SIZE);
+            if(!response) {
                 FURI_LOG_E(TAG, "drawPromptView: Failed to allocate memory for response");
                 promptStatus = PromptParseError;
-                if (response)
-                    free(response);
+                if(response) free(response);
                 return;
             }
-            if (!app->loadChar("prompt", response, MAX_RESPONSE_SIZE))
-            {
+            if(!app->loadChar("prompt", response, MAX_RESPONSE_SIZE)) {
                 FURI_LOG_E(TAG, "drawPromptView: Failed to load prompt response");
                 free(response);
                 promptStatus = PromptParseError;
@@ -486,55 +440,45 @@ void FlipGeminiRun::drawPromptView(Canvas *canvas)
             // parse response and save to SD card/chat log so the ChatView can load it
             // Structure: candidates[0] -> content -> parts[0] -> text
             promptStatus = PromptKeyboard; // reset to keyboard for next time
-            char *candidate = get_json_array_value("candidates", 0, response);
-            if (candidate)
-            {
-                char *content = get_json_value("content", candidate);
-                if (content)
-                {
-                    char *part = get_json_array_value("parts", 0, content);
-                    if (part)
-                    {
-                        char *response_text = get_json_value("text", part);
-                        if (response_text)
-                        {
-
+            char* candidate = get_json_array_value("candidates", 0, response);
+            if(candidate) {
+                char* content = get_json_value("content", candidate);
+                if(content) {
+                    char* part = get_json_array_value("parts", 0, content);
+                    if(part) {
+                        char* response_text = get_json_value("text", part);
+                        if(response_text) {
                             // Log Gemini response to logs.txt
                             size_t responseTextLen = strlen(response_text);
                             size_t geminiLen = strlen("Gemini: \n");
-                            char *logEntry = (char *)malloc(responseTextLen + geminiLen + 1);
-                            if (logEntry)
-                            {
-                                snprintf(logEntry, responseTextLen + geminiLen + 1, "Gemini: %s\n", response_text);
+                            char* logEntry = (char*)malloc(responseTextLen + geminiLen + 1);
+                            if(logEntry) {
+                                snprintf(
+                                    logEntry,
+                                    responseTextLen + geminiLen + 1,
+                                    "Gemini: %s\n",
+                                    response_text);
                                 app->saveChar("logs", logEntry, APP_ID, false);
                                 free(logEntry);
                             }
 
                             free(response_text);
-                        }
-                        else
-                        {
+                        } else {
                             FURI_LOG_E(TAG, "Failed to parse 'text' field");
                             promptStatus = PromptParseError;
                         }
                         free(part);
-                    }
-                    else
-                    {
+                    } else {
                         FURI_LOG_E(TAG, "Failed to parse 'parts' array");
                         promptStatus = PromptParseError;
                     }
                     free(content);
-                }
-                else
-                {
+                } else {
                     FURI_LOG_E(TAG, "Failed to parse 'content' field");
                     promptStatus = PromptParseError;
                 }
                 free(candidate);
-            }
-            else
-            {
+            } else {
                 FURI_LOG_E(TAG, "Failed to parse 'candidates' array");
                 promptStatus = PromptParseError;
             }
@@ -562,13 +506,11 @@ void FlipGeminiRun::drawPromptView(Canvas *canvas)
         canvas_draw_str(canvas, 0, 30, "follows the rules.");
         break;
     case PromptKeyboard:
-        if (!keyboard)
-        {
+        if(!keyboard) {
             keyboard = std::make_unique<Keyboard>();
             this->loadKeyboardSuggestions();
         }
-        if (keyboard)
-        {
+        if(keyboard) {
             keyboard->draw(canvas, "Enter prompt:");
         }
         break;
@@ -578,11 +520,9 @@ void FlipGeminiRun::drawPromptView(Canvas *canvas)
     }
 }
 
-bool FlipGeminiRun::httpRequestIsFinished()
-{
-    FlipGeminiApp *app = static_cast<FlipGeminiApp *>(appContext);
-    if (!app)
-    {
+bool FlipGeminiRun::httpRequestIsFinished() {
+    FlipGeminiApp* app = static_cast<FlipGeminiApp*>(appContext);
+    if(!app) {
         FURI_LOG_E(TAG, "httpRequestIsFinished: App context is NULL");
         return true;
     }
@@ -590,11 +530,9 @@ bool FlipGeminiRun::httpRequestIsFinished()
     return state == IDLE || state == ISSUE || state == INACTIVE;
 }
 
-void FlipGeminiRun::loadKeyboardSuggestions()
-{
+void FlipGeminiRun::loadKeyboardSuggestions() {
     // Standard words for autocomplete
-    if (keyboard)
-    {
+    if(keyboard) {
         keyboard->addSuggestion("flipper zero");
         keyboard->addSuggestion("how");
         keyboard->addSuggestion("how come");
@@ -620,10 +558,8 @@ void FlipGeminiRun::loadKeyboardSuggestions()
     }
 }
 
-void FlipGeminiRun::updateDraw(Canvas *canvas)
-{
-    switch (currentView)
-    {
+void FlipGeminiRun::updateDraw(Canvas* canvas) {
+    switch(currentView) {
     case GeminiRunViewMenu:
         drawMainMenuView(canvas);
         break;
@@ -639,44 +575,33 @@ void FlipGeminiRun::updateDraw(Canvas *canvas)
     }
 }
 
-void FlipGeminiRun::updateInput(InputEvent *event)
-{
+void FlipGeminiRun::updateInput(InputEvent* event) {
     lastInput = event->key;
-    switch (currentView)
-    {
-    case GeminiRunViewMenu:
-    {
-        switch (lastInput)
-        {
+    switch(currentView) {
+    case GeminiRunViewMenu: {
+        switch(lastInput) {
         case InputKeyBack:
             // return to menu
             shouldReturnToMenu = true;
             break;
         case InputKeyDown:
         case InputKeyLeft:
-            if (currentMenuIndex == GeminiRunViewPrompt)
-            {
+            if(currentMenuIndex == GeminiRunViewPrompt) {
                 currentMenuIndex = GeminiRunViewChat;
-            }
-            else if (currentMenuIndex == GeminiRunViewChat)
-            {
+            } else if(currentMenuIndex == GeminiRunViewChat) {
                 currentMenuIndex = GeminiRunViewPrompt;
             }
             break;
         case InputKeyUp:
         case InputKeyRight:
-            if (currentMenuIndex == GeminiRunViewChat)
-            {
+            if(currentMenuIndex == GeminiRunViewChat) {
                 currentMenuIndex = GeminiRunViewPrompt;
-            }
-            else if (currentMenuIndex == GeminiRunViewPrompt)
-            {
+            } else if(currentMenuIndex == GeminiRunViewPrompt) {
                 currentMenuIndex = GeminiRunViewChat;
             }
             break;
         case InputKeyOk:
-            switch (currentMenuIndex)
-            {
+            switch(currentMenuIndex) {
             case GeminiRunViewChat:
                 currentView = GeminiRunViewChat;
                 break;
@@ -692,47 +617,38 @@ void FlipGeminiRun::updateInput(InputEvent *event)
         }
         break;
     }
-    case GeminiRunViewChat:
-    {
-        switch (lastInput)
-        {
+    case GeminiRunViewChat: {
+        switch(lastInput) {
         case InputKeyBack:
             currentView = GeminiRunViewMenu;
             chatIndex = 0;
-            chatScrollOffset = 0;     // Reset scroll on exit
+            chatScrollOffset = 0; // Reset scroll on exit
             chatLinesCounted = false; // Recount on next view
             break;
         case InputKeyUp:
-            if (chatScrollOffset > 0)
-            {
+            if(chatScrollOffset > 0) {
                 chatScrollOffset--;
             }
             break;
         case InputKeyDown:
-            if (totalChatLines > MAX_LINES_PER_SCREEN &&
-                chatScrollOffset < totalChatLines - MAX_LINES_PER_SCREEN)
-            {
+            if(totalChatLines > MAX_LINES_PER_SCREEN &&
+               chatScrollOffset < totalChatLines - MAX_LINES_PER_SCREEN) {
                 chatScrollOffset++;
             }
             break;
         case InputKeyLeft:
             // Page up (scroll up by screen)
-            if (chatScrollOffset >= MAX_LINES_PER_SCREEN)
-            {
+            if(chatScrollOffset >= MAX_LINES_PER_SCREEN) {
                 chatScrollOffset -= MAX_LINES_PER_SCREEN;
-            }
-            else
-            {
+            } else {
                 chatScrollOffset = 0;
             }
             break;
         case InputKeyRight:
             // Page down (scroll down by screen)
-            if (totalChatLines > MAX_LINES_PER_SCREEN)
-            {
+            if(totalChatLines > MAX_LINES_PER_SCREEN) {
                 chatScrollOffset += MAX_LINES_PER_SCREEN;
-                if (chatScrollOffset > totalChatLines - MAX_LINES_PER_SCREEN)
-                {
+                if(chatScrollOffset > totalChatLines - MAX_LINES_PER_SCREEN) {
                     chatScrollOffset = totalChatLines - MAX_LINES_PER_SCREEN;
                 }
             }
@@ -742,19 +658,14 @@ void FlipGeminiRun::updateInput(InputEvent *event)
         };
         break;
     }
-    case GeminiRunViewPrompt:
-    {
-        if (promptStatus == PromptKeyboard)
-        {
-            if (keyboard)
-            {
-                if (keyboard->handleInput(event))
-                {
-                    FlipGeminiApp *app = static_cast<FlipGeminiApp *>(appContext);
+    case GeminiRunViewPrompt: {
+        if(promptStatus == PromptKeyboard) {
+            if(keyboard) {
+                if(keyboard->handleInput(event)) {
+                    FlipGeminiApp* app = static_cast<FlipGeminiApp*>(appContext);
                     app->saveChar("new_prompt", keyboard->getText(), APP_ID, true);
                     promptStatus = PromptWaiting;
-                    if (!sendPrompt(keyboard->getText()))
-                    {
+                    if(!sendPrompt(keyboard->getText())) {
                         promptStatus = PromptRequestError;
                         FURI_LOG_E(TAG, "updateInput: Failed to send prompt");
                     }
@@ -762,24 +673,19 @@ void FlipGeminiRun::updateInput(InputEvent *event)
                     keyboard.reset();
                     return;
                 }
-                if (lastInput != InputKeyMAX)
-                {
+                if(lastInput != InputKeyMAX) {
                 }
             }
-            if (lastInput == InputKeyBack && event->type == InputTypeLong)
-            {
+            if(lastInput == InputKeyBack && event->type == InputTypeLong) {
                 promptStatus = PromptKeyboard;
                 currentView = GeminiRunViewMenu;
 
-                if (keyboard)
-                {
+                if(keyboard) {
                     keyboard->clearText();
                     keyboard.reset();
                 }
             }
-        }
-        else if (lastInput == InputKeyBack)
-        {
+        } else if(lastInput == InputKeyBack) {
             currentView = GeminiRunViewMenu;
         }
         break;
@@ -789,67 +695,64 @@ void FlipGeminiRun::updateInput(InputEvent *event)
     };
 }
 
-bool FlipGeminiRun::sendPrompt(const char *prompt)
-{
-    FlipGeminiApp *app = static_cast<FlipGeminiApp *>(appContext);
+bool FlipGeminiRun::sendPrompt(const char* prompt) {
+    FlipGeminiApp* app = static_cast<FlipGeminiApp*>(appContext);
     furi_check(app);
 
     // Allocate memory for credentials
-    char *apiKey = (char *)malloc(128);
-    if (!apiKey)
-    {
+    char* apiKey = (char*)malloc(128);
+    if(!apiKey) {
         FURI_LOG_E(TAG, "sendPrompt: Failed to allocate memory for API key");
         promptStatus = PromptRequestError;
         return false;
     }
 
     // Load credentials from storage
-    if (!app->loadChar("api_key", apiKey, 128, APP_ID))
-    {
+    if(!app->loadChar("api_key", apiKey, 128, APP_ID)) {
         FURI_LOG_E(TAG, "Failed to load api_key");
         promptStatus = PromptRequestError;
         free(apiKey);
         return false;
     }
 
-    char *url = (char *)malloc(256);
-    char *promptPayload = (char *)malloc(512);
-    if (!url || !promptPayload)
-    {
+    char* url = (char*)malloc(256);
+    char* promptPayload = (char*)malloc(512);
+    if(!url || !promptPayload) {
         FURI_LOG_E(TAG, "sendPrompt: Failed to allocate memory for url or promptPayload");
         promptStatus = PromptRequestError;
         free(apiKey);
-        if (url)
-            free(url);
-        if (promptPayload)
-            free(promptPayload);
+        if(url) free(url);
+        if(promptPayload) free(promptPayload);
         return false;
     }
-    snprintf(url, 256, "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=%s", apiKey);
-    snprintf(promptPayload, 512, "{\"contents\":[{\"parts\":[{\"text\":\"%s\"}]}],\"generationConfig\":{\"stopSequences\":[\"Title\"],\"temperature\":1.0,\"maxOutputTokens\":512,\"thinkingConfig\":{\"thinkingBudget\":0}}}", prompt);
+    snprintf(
+        url,
+        256,
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=%s",
+        apiKey);
+    snprintf(
+        promptPayload,
+        512,
+        "{\"contents\":[{\"parts\":[{\"text\":\"%s\"}]}],\"generationConfig\":{\"stopSequences\":[\"Title\"],\"temperature\":1.0,\"maxOutputTokens\":512,\"thinkingConfig\":{\"thinkingBudget\":0}}}",
+        prompt);
 
-    const bool sent = app->httpRequestAsync("prompt.txt", url, POST, "{\"Content-Type\":\"application/json\"}", promptPayload);
-    if (sent)
-    {
+    const bool sent = app->httpRequestAsync(
+        "prompt.txt", url, POST, "{\"Content-Type\":\"application/json\"}", promptPayload);
+    if(sent) {
         // Log user message to logs.txt
         size_t promptLen = strlen(prompt);
         size_t userLen = strlen("User: \n");
-        char *logEntry = (char *)malloc(promptLen + userLen + 1);
-        if (logEntry)
-        {
+        char* logEntry = (char*)malloc(promptLen + userLen + 1);
+        if(logEntry) {
             snprintf(logEntry, promptLen + userLen + 1, "User: %s\n", prompt);
             app->saveChar("logs", logEntry, APP_ID, false);
             free(logEntry);
             chatLinesCounted = false; // Recount after new message
-        }
-        else
-        {
+        } else {
             FURI_LOG_E(TAG, "sendPrompt: Failed to allocate memory for log entry");
             promptStatus = PromptRequestError;
         }
-    }
-    else
-    {
+    } else {
         FURI_LOG_E(TAG, "sendPrompt: httpRequestAsync failed to send");
         promptStatus = PromptRequestError;
     }

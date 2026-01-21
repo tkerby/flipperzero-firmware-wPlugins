@@ -1,89 +1,69 @@
 #include "auto_complete.h"
 
 // Get index for character (a-z maps to 0-25, space maps to 26)
-static int char_to_index(char c)
-{
+static int char_to_index(char c) {
     c = tolower(c);
-    if (c >= 'a' && c <= 'z')
-    {
+    if(c >= 'a' && c <= 'z') {
         return c - 'a';
     }
-    if (c == ' ')
-    {
+    if(c == ' ') {
         return 26; // Space gets index 26
     }
     return -1; // Invalid character
 }
 
 // Recursively collect all words from node
-static void collect_words(TrieNode *node, AutoComplete *context)
-{
-    if (!node || context->suggestion_count >= MAX_SUGGESTIONS)
-        return;
+static void collect_words(TrieNode* node, AutoComplete* context) {
+    if(!node || context->suggestion_count >= MAX_SUGGESTIONS) return;
 
-    if (node->is_end_of_word && node->word)
-    {
+    if(node->is_end_of_word && node->word) {
         const size_t len = strlen(node->word);
 
         // Reallocate suggestions array to fit one more suggestion
-        char **new_suggestions = (char **)realloc(context->suggestions,
-                                                  (context->suggestion_count + 1) * sizeof(char *));
-        if (!new_suggestions)
-            return;
+        char** new_suggestions =
+            (char**)realloc(context->suggestions, (context->suggestion_count + 1) * sizeof(char*));
+        if(!new_suggestions) return;
 
         context->suggestions = new_suggestions;
-        context->suggestions[context->suggestion_count] = (char *)malloc(len + 1);
-        if (context->suggestions[context->suggestion_count])
-        {
+        context->suggestions[context->suggestion_count] = (char*)malloc(len + 1);
+        if(context->suggestions[context->suggestion_count]) {
             snprintf(context->suggestions[context->suggestion_count], len + 1, "%s", node->word);
             context->suggestion_count++;
         }
-        if (context->suggestion_count >= MAX_SUGGESTIONS)
-            return;
+        if(context->suggestion_count >= MAX_SUGGESTIONS) return;
     }
 
-    for (int i = 0; i < ALPHABET_SIZE; i++)
-    {
-        if (node->children[i])
-        {
+    for(int i = 0; i < ALPHABET_SIZE; i++) {
+        if(node->children[i]) {
             collect_words(node->children[i], context);
-            if (context->suggestion_count >= MAX_SUGGESTIONS)
-                return;
+            if(context->suggestion_count >= MAX_SUGGESTIONS) return;
         }
     }
 }
 
 // Create new trie node
-static TrieNode *create_node(void)
-{
-    TrieNode *node = (TrieNode *)malloc(sizeof(TrieNode));
-    if (!node)
-        return NULL;
+static TrieNode* create_node(void) {
+    TrieNode* node = (TrieNode*)malloc(sizeof(TrieNode));
+    if(!node) return NULL;
 
     node->is_end_of_word = false;
     node->word = NULL;
-    for (int i = 0; i < ALPHABET_SIZE; i++)
-    {
+    for(int i = 0; i < ALPHABET_SIZE; i++) {
         node->children[i] = NULL;
     }
     return node;
 }
 
 // Recursively free trie nodes
-static void free_trie(TrieNode *node)
-{
-    if (node)
-    {
-        for (int i = 0; i < ALPHABET_SIZE; i++)
-        {
-            if (node->children[i])
-            {
+static void free_trie(TrieNode* node) {
+    if(node) {
+        for(int i = 0; i < ALPHABET_SIZE; i++) {
+            if(node->children[i]) {
                 free_trie(node->children[i]);
             }
         }
 
-        if (node->word)
-        {
+        if(node->word) {
             free(node->word);
             node->word = NULL;
         }
@@ -94,27 +74,21 @@ static void free_trie(TrieNode *node)
 }
 
 // Add word to dictionary
-bool auto_complete_add_word(AutoComplete *context, const char *word)
-{
+bool auto_complete_add_word(AutoComplete* context, const char* word) {
     const size_t len = strlen(word);
 
-    if (!context || !word || len == 0 || !context->root)
-    {
+    if(!context || !word || len == 0 || !context->root) {
         return false;
     }
-    TrieNode *current = context->root;
+    TrieNode* current = context->root;
 
-    for (int i = 0; word[i] != '\0'; i++)
-    {
+    for(int i = 0; word[i] != '\0'; i++) {
         int idx = char_to_index(word[i]);
-        if (idx == -1)
-            continue; // Skip invalid chars
+        if(idx == -1) continue; // Skip invalid chars
 
-        if (current->children[idx] == NULL)
-        {
+        if(current->children[idx] == NULL) {
             current->children[idx] = create_node();
-            if (!current->children[idx])
-            {
+            if(!current->children[idx]) {
                 return false;
             }
         }
@@ -124,9 +98,8 @@ bool auto_complete_add_word(AutoComplete *context, const char *word)
     current->is_end_of_word = true;
 
     // Store complete word at end node
-    current->word = (char *)malloc(len + 1);
-    if (current->word)
-    {
+    current->word = (char*)malloc(len + 1);
+    if(current->word) {
         snprintf(current->word, len + 1, "%s", word);
         return true;
     }
@@ -135,20 +108,15 @@ bool auto_complete_add_word(AutoComplete *context, const char *word)
 }
 
 // Free all memory
-void auto_complete_free(AutoComplete *context)
-{
-    if (context && context->root)
-    {
+void auto_complete_free(AutoComplete* context) {
+    if(context && context->root) {
         free_trie(context->root);
         context->root = NULL;
 
         // Free suggestions
-        if (context->suggestions)
-        {
-            for (uint8_t i = 0; i < context->suggestion_count; i++)
-            {
-                if (context->suggestions[i])
-                {
+        if(context->suggestions) {
+            for(uint8_t i = 0; i < context->suggestion_count; i++) {
+                if(context->suggestions[i]) {
                     free(context->suggestions[i]);
                     context->suggestions[i] = NULL;
                 }
@@ -161,10 +129,8 @@ void auto_complete_free(AutoComplete *context)
 }
 
 // Initialize autocomplete context
-bool auto_complete_init(AutoComplete *context)
-{
-    if (!context)
-        return false;
+bool auto_complete_init(AutoComplete* context) {
+    if(!context) return false;
 
     context->root = create_node();
     context->suggestion_count = 0;
@@ -174,14 +140,10 @@ bool auto_complete_init(AutoComplete *context)
 }
 
 // Remove all current suggestions
-void auto_complete_remove_suggestions(AutoComplete *context)
-{
-    if (context)
-    {
-        for (uint8_t i = 0; i < context->suggestion_count; i++)
-        {
-            if (context->suggestions[i])
-            {
+void auto_complete_remove_suggestions(AutoComplete* context) {
+    if(context) {
+        for(uint8_t i = 0; i < context->suggestion_count; i++) {
+            if(context->suggestions[i]) {
                 free(context->suggestions[i]);
                 context->suggestions[i] = NULL;
             }
@@ -193,32 +155,26 @@ void auto_complete_remove_suggestions(AutoComplete *context)
 }
 
 // Remove all words from dictionary
-void auto_complete_remove_words(AutoComplete *context)
-{
-    if (context)
-    {
+void auto_complete_remove_words(AutoComplete* context) {
+    if(context) {
         free_trie(context->root);
         context->root = create_node();
     }
 }
 
 // Search for completions
-bool auto_complete_search(AutoComplete *context, const char *prefix)
-{
-    if (!context || !prefix || !context->root)
-        return false;
+bool auto_complete_search(AutoComplete* context, const char* prefix) {
+    if(!context || !prefix || !context->root) return false;
 
     // Free previous suggestions
     auto_complete_remove_suggestions(context);
 
-    TrieNode *current = context->root;
+    TrieNode* current = context->root;
 
     // Navigate to prefix end
-    for (int i = 0; prefix[i] != '\0'; i++)
-    {
+    for(int i = 0; prefix[i] != '\0'; i++) {
         int idx = char_to_index(prefix[i]);
-        if (idx == -1 || current->children[idx] == NULL)
-        {
+        if(idx == -1 || current->children[idx] == NULL) {
             return false; // Prefix not found
         }
         current = current->children[idx];
