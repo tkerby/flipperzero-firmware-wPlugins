@@ -28,8 +28,8 @@ This software is for experimental purposes only and is not meant for any illegal
 
 ## Latest Updates - [PATREON: Latest Release RM0120-2118-0.420.0-3d317eb](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2026-01-20 21:18 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-01-20 21:18 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2026-01-21 15:45 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-01-21 15:45 EST`
 - NFC: [ADD: Ventra parsing plugin to Metroflip. Updated: NFC ventra_parser.fal. #1164 (By FatherDivine)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1164)
 - Updated: [Sub-GHz Scheduler v2.3 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
 - Added: [PIR HC-SR501 Alarm v1.0 (By ku6a-cj)](https://github.com/ku6a-cj/-PIR-HC-SR501-Proximity-alarm-Flipper-zero) `Req: PIR HC-SR501`
@@ -53,6 +53,14 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [CANBUS v1.1.6.2 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
 - [Add ProtoPirate to RM Known Apps (Browser and Favorites Integration) #1166 (By LeeroysHub)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1166)
 - Added: [Flipper Wedge v1.0 (By DangerousThings)](https://github.com/DangerousThings/flipper-wedge)
+- Sub-GHz: [Beninca ARC AES128 protocol full support (128bit dynamic) (with Add manually, and 2 button codes) (resolves issue #596) (By xMasterX and zero-mega)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/1e45ea4db5bc4ceba71665206f57113ef867b8de)
+- Sub-GHz: [Treadmill37 protocol support (37bit static) (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/3abd6a319e7d93e9938942e62933aa5df7c6c402)
+- Sub-GHz: [Fixed button mapping for FAAC RC/XT (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/134f48e8df4de915d6301864a935d34af6d93d7c)
+- Sub-GHz: [Possible Sommer timings fix (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/15d757abe038af45f1b8ef1dd44143b2b4c41cc1)
+- Sub-GHz: [Replaced Cars ignore option with Revers RB2 protocol ignore option (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/cf1fa8a9a65664910a95252c41af9ec9c6b69efd)
+- Sub-GHz: [Various fixes (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/64e803d856c8bf2a21d8ebc2ded7bc829455661c)
+- Sub-GHz: [Nice Flor S remove extra uint64 variable (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/db2e9f0029117d29035727b40b6f0716490bc179)
+- NFC: [Fix LED not blinking at SLIX unlock (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/7a65388051be7bd78c81e4b36ec2a1d4d0e47ff0)
 
 <a name="release">
 

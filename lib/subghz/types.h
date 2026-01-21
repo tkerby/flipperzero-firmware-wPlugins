@@ -134,10 +134,10 @@ typedef enum {
     SubGhzProtocolFlag_Load = (1 << 8),
     SubGhzProtocolFlag_Send = (1 << 9),
     SubGhzProtocolFlag_BinRAW = (1 << 10),
-    SubGhzProtocolFlag_ReversRB2 = (1 << 11),
 } SubGhzProtocolFlag;
 
 typedef enum {
+    SubGhzProtocolFilter_ReversRB2 = (1 << 0),
     SubGhzProtocolFilter_Alarms = (1 << 1),
     SubGhzProtocolFilter_Sensors = (1 << 2),
     SubGhzProtocolFilter_Princeton = (1 << 3),

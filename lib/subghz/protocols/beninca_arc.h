@@ -77,7 +77,7 @@ void subghz_protocol_decoder_beninca_arc_feed(void* context, bool level, uint32_
  * @param context Pointer to a SubGhzProtocolDecoderBenincaARC instance
  * @return hash Hash sum
  */
-uint8_t subghz_protocol_decoder_beninca_arc_get_hash_data(void* context);
+uint32_t subghz_protocol_decoder_beninca_arc_get_hash_data(void* context);
 
 /**
  * Serialize data SubGhzProtocolDecoderBenincaARC.
