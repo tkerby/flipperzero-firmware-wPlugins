@@ -51,6 +51,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Reality Clock v4.0 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
 - Added: [FlipGemini v1.0 (By jblanked)](https://github.com/jblanked/FlipGemini) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [CANBUS v1.1.6.1 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats` (Version Only)
+- [Add ProtoPirate to RM Known Apps (Browser and Favorites Integration) #1166 (By LeeroysHub)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1166)
 
 <a name="release">
 

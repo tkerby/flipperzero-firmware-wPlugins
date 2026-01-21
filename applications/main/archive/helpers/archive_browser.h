@@ -45,6 +45,7 @@ static const char* known_ext[] = {
     [ArchiveFileTypeSearch] = "*",
     [ArchiveFileTypeUpdateManifest] = ".fuf",
     [ArchiveFileTypeDiskImage] = ".img",
+    [ArchiveFileTypeProtoPirate] = ".psf",
     [ArchiveFileTypeFolder] = "?",
     [ArchiveFileTypeUnknown] = "*",
     [ArchiveFileTypeAppOrJs] = ".fap|.js",
