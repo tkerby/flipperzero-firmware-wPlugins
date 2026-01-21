@@ -28,8 +28,8 @@ This software is for experimental purposes only and is not meant for any illegal
 
 ## Latest Updates - [PATREON: Latest Release RM0120-2118-0.420.0-3d317eb](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2026-01-21 15:45 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-01-21 15:45 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2026-01-21 16:23 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-01-21 16:23 EST`
 - NFC: [ADD: Ventra parsing plugin to Metroflip. Updated: NFC ventra_parser.fal. #1164 (By FatherDivine)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1164)
 - Updated: [Sub-GHz Scheduler v2.3 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
 - Added: [PIR HC-SR501 Alarm v1.0 (By ku6a-cj)](https://github.com/ku6a-cj/-PIR-HC-SR501-Proximity-alarm-Flipper-zero) `Req: PIR HC-SR501`
@@ -61,6 +61,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Sub-GHz: [Various fixes (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/64e803d856c8bf2a21d8ebc2ded7bc829455661c)
 - Sub-GHz: [Nice Flor S remove extra uint64 variable (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/db2e9f0029117d29035727b40b6f0716490bc179)
 - NFC: [Fix LED not blinking at SLIX unlock (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/7a65388051be7bd78c81e4b36ec2a1d4d0e47ff0)
+- Sub-GHz: [Fixes for changes from UL (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/7ae73aa9f5ef2b9ecc133fd7670806dc538fa4ee)
+- OFW: PR: [Various UI/UX changes #4331 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4331)
 
 <a name="release">
 
