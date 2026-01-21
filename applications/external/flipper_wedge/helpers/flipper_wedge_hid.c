@@ -7,11 +7,11 @@
 #define HID_TYPE_DELAY_MS 2
 
 // MAC address XOR to make Flipper appear as different device in HID mode
-#define HID_BT_MAC_XOR 0xF1D0  // "FliD" in hex - unique identifier
+#define HID_BT_MAC_XOR 0xF1D0 // "FliD" in hex - unique identifier
 
 struct FlipperWedgeHid {
     // USB HID
-    FuriHalUsbInterface* usb_mode_prev;  // Save previous USB mode for restoration
+    FuriHalUsbInterface* usb_mode_prev; // Save previous USB mode for restoration
     bool usb_initialized;
 
     // Bluetooth HID
@@ -37,7 +37,8 @@ static void flipper_wedge_hid_bt_status_callback(BtStatus status, void* context)
 
     if(instance->connection_callback) {
         bool usb_connected = flipper_wedge_hid_is_usb_connected(instance);
-        instance->connection_callback(usb_connected, connected, instance->connection_callback_context);
+        instance->connection_callback(
+            usb_connected, connected, instance->connection_callback_context);
     }
 }
 
@@ -93,7 +94,8 @@ void flipper_wedge_hid_init_usb(FlipperWedgeHid* instance) {
     if(instance->connection_callback) {
         bool usb_connected = flipper_wedge_hid_is_usb_connected(instance);
         bool bt_connected = flipper_wedge_hid_is_bt_connected(instance);
-        instance->connection_callback(usb_connected, bt_connected, instance->connection_callback_context);
+        instance->connection_callback(
+            usb_connected, bt_connected, instance->connection_callback_context);
     }
 }
 
@@ -152,7 +154,8 @@ void flipper_wedge_hid_init_ble(FlipperWedgeHid* instance) {
         storage,
         EXT_PATH("apps/NFC/" FLIPPER_WEDGE_BT_KEYS_STORAGE_NAME),
         APP_DATA_PATH(FLIPPER_WEDGE_BT_KEYS_STORAGE_NAME));
-    bt_keys_storage_set_storage_path(instance->bt, APP_DATA_PATH(FLIPPER_WEDGE_BT_KEYS_STORAGE_NAME));
+    bt_keys_storage_set_storage_path(
+        instance->bt, APP_DATA_PATH(FLIPPER_WEDGE_BT_KEYS_STORAGE_NAME));
     furi_record_close(RECORD_STORAGE);
     flipper_wedge_debug_log(TAG, "BT key storage configured");
 
@@ -161,18 +164,19 @@ void flipper_wedge_hid_init_ble(FlipperWedgeHid* instance) {
     // using cached pairing credentials from the default Flipper profile
     flipper_wedge_debug_log(TAG, "Starting BLE HID profile...");
     BleProfileHidParams hid_params = {
-        .device_name_prefix = "HID",  // Must be <8 chars per firmware limitation
-        .mac_xor = HID_BT_MAC_XOR,  // XOR MAC to appear as different device
+        .device_name_prefix = "HID", // Must be <8 chars per firmware limitation
+        .mac_xor = HID_BT_MAC_XOR, // XOR MAC to appear as different device
     };
     instance->ble_hid_profile = bt_profile_start(instance->bt, ble_profile_hid, &hid_params);
-    flipper_wedge_debug_log(TAG, "bt_profile_start returned: %p", (void*)instance->ble_hid_profile);
+    flipper_wedge_debug_log(
+        TAG, "bt_profile_start returned: %p", (void*)instance->ble_hid_profile);
 
     if(!instance->ble_hid_profile) {
         FURI_LOG_E(TAG, "FATAL: bt_profile_start returned NULL!");
         flipper_wedge_debug_log(TAG, "ERROR: bt_profile_start failed!");
         furi_record_close(RECORD_BT);
         instance->bt = NULL;
-        return;  // Fail gracefully instead of crashing
+        return; // Fail gracefully instead of crashing
     }
 
     // Start advertising
@@ -202,7 +206,7 @@ void flipper_wedge_hid_deinit_ble(FlipperWedgeHid* instance) {
 
     bt_set_status_changed_callback(instance->bt, NULL, NULL);
     bt_disconnect(instance->bt);
-    furi_delay_ms(200);  // CRITICAL delay for NVM sync
+    furi_delay_ms(200); // CRITICAL delay for NVM sync
     bt_keys_storage_set_default_path(instance->bt);
 
     FURI_LOG_I(TAG, "Restoring default BT profile");
@@ -251,7 +255,8 @@ bool flipper_wedge_hid_is_bt_connected(FlipperWedgeHid* instance) {
 }
 
 bool flipper_wedge_hid_is_connected(FlipperWedgeHid* instance) {
-    return flipper_wedge_hid_is_usb_connected(instance) || flipper_wedge_hid_is_bt_connected(instance);
+    return flipper_wedge_hid_is_usb_connected(instance) ||
+           flipper_wedge_hid_is_bt_connected(instance);
 }
 
 void flipper_wedge_hid_type_char(FlipperWedgeHid* instance, char c) {
@@ -267,7 +272,8 @@ void flipper_wedge_hid_type_char(FlipperWedgeHid* instance, char c) {
     }
 
     // Send to BT HID if initialized
-    if(instance->bt_initialized && flipper_wedge_hid_is_bt_connected(instance) && instance->ble_hid_profile) {
+    if(instance->bt_initialized && flipper_wedge_hid_is_bt_connected(instance) &&
+       instance->ble_hid_profile) {
         ble_profile_hid_kb_press(instance->ble_hid_profile, keycode);
         ble_profile_hid_kb_release(instance->ble_hid_profile, keycode);
     }
@@ -297,7 +303,8 @@ void flipper_wedge_hid_press_enter(FlipperWedgeHid* instance) {
     }
 
     // Send to BT HID if initialized
-    if(instance->bt_initialized && flipper_wedge_hid_is_bt_connected(instance) && instance->ble_hid_profile) {
+    if(instance->bt_initialized && flipper_wedge_hid_is_bt_connected(instance) &&
+       instance->ble_hid_profile) {
         ble_profile_hid_kb_press(instance->ble_hid_profile, keycode);
         ble_profile_hid_kb_release(instance->ble_hid_profile, keycode);
     }
@@ -312,7 +319,8 @@ void flipper_wedge_hid_release_all(FlipperWedgeHid* instance) {
     }
 
     // Release all keys on BT HID if initialized
-    if(instance->bt_initialized && flipper_wedge_hid_is_bt_connected(instance) && instance->ble_hid_profile) {
+    if(instance->bt_initialized && flipper_wedge_hid_is_bt_connected(instance) &&
+       instance->ble_hid_profile) {
         ble_profile_hid_kb_release_all(instance->ble_hid_profile);
     }
 }

@@ -29,7 +29,9 @@ void flipper_wedge_save_settings(void* context) {
     // Open File, create if not exists
     if(!storage_common_stat(storage, FLIPPER_WEDGE_SETTINGS_SAVE_PATH, NULL) == FSE_OK) {
         FURI_LOG_D(
-            TAG, "Config file %s is not found. Will create new.", FLIPPER_WEDGE_SETTINGS_SAVE_PATH);
+            TAG,
+            "Config file %s is not found. Will create new.",
+            FLIPPER_WEDGE_SETTINGS_SAVE_PATH);
         if(storage_common_stat(storage, CONFIG_FILE_DIRECTORY_PATH, NULL) == FSE_NOT_EXIST) {
             FURI_LOG_D(
                 TAG, "Directory %s doesn't exist. Will create new.", CONFIG_FILE_DIRECTORY_PATH);
@@ -50,17 +52,17 @@ void flipper_wedge_save_settings(void* context) {
     bool save_success = true;
 
     if(!flipper_format_write_header_cstr(
-        fff_file, FLIPPER_WEDGE_SETTINGS_HEADER, FLIPPER_WEDGE_SETTINGS_FILE_VERSION)) {
+           fff_file, FLIPPER_WEDGE_SETTINGS_HEADER, FLIPPER_WEDGE_SETTINGS_FILE_VERSION)) {
         FURI_LOG_E(TAG, "Failed to write header");
         save_success = false;
     }
     if(!flipper_format_write_string_cstr(
-        fff_file, FLIPPER_WEDGE_SETTINGS_KEY_DELIMITER, app->delimiter)) {
+           fff_file, FLIPPER_WEDGE_SETTINGS_KEY_DELIMITER, app->delimiter)) {
         FURI_LOG_E(TAG, "Failed to write delimiter");
         save_success = false;
     }
     if(!flipper_format_write_bool(
-        fff_file, FLIPPER_WEDGE_SETTINGS_KEY_APPEND_ENTER, &app->append_enter, 1)) {
+           fff_file, FLIPPER_WEDGE_SETTINGS_KEY_APPEND_ENTER, &app->append_enter, 1)) {
         FURI_LOG_E(TAG, "Failed to write append_enter");
         save_success = false;
     }
@@ -70,28 +72,33 @@ void flipper_wedge_save_settings(void* context) {
         save_success = false;
     }
     uint32_t mode_startup = app->mode_startup_behavior;
-    if(!flipper_format_write_uint32(fff_file, FLIPPER_WEDGE_SETTINGS_KEY_MODE_STARTUP, &mode_startup, 1)) {
+    if(!flipper_format_write_uint32(
+           fff_file, FLIPPER_WEDGE_SETTINGS_KEY_MODE_STARTUP, &mode_startup, 1)) {
         FURI_LOG_E(TAG, "Failed to write mode_startup");
         save_success = false;
     }
     uint32_t output_mode = app->output_mode;
-    if(!flipper_format_write_uint32(fff_file, FLIPPER_WEDGE_SETTINGS_KEY_OUTPUT_MODE, &output_mode, 1)) {
+    if(!flipper_format_write_uint32(
+           fff_file, FLIPPER_WEDGE_SETTINGS_KEY_OUTPUT_MODE, &output_mode, 1)) {
         FURI_LOG_E(TAG, "Failed to write output_mode");
         save_success = false;
     }
     // Note: USB Debug Mode no longer saved (deprecated in favor of Output selector)
     uint32_t vibration = app->vibration_level;
-    if(!flipper_format_write_uint32(fff_file, FLIPPER_WEDGE_SETTINGS_KEY_VIBRATION, &vibration, 1)) {
+    if(!flipper_format_write_uint32(
+           fff_file, FLIPPER_WEDGE_SETTINGS_KEY_VIBRATION, &vibration, 1)) {
         FURI_LOG_E(TAG, "Failed to write vibration");
         save_success = false;
     }
     uint32_t ndef_max_len = app->ndef_max_len;
     FURI_LOG_I(TAG, "Saving NDEF max len: %lu", ndef_max_len);
-    if(!flipper_format_write_uint32(fff_file, FLIPPER_WEDGE_SETTINGS_KEY_NDEF_MAX_LEN, &ndef_max_len, 1)) {
+    if(!flipper_format_write_uint32(
+           fff_file, FLIPPER_WEDGE_SETTINGS_KEY_NDEF_MAX_LEN, &ndef_max_len, 1)) {
         FURI_LOG_E(TAG, "Failed to write ndef_max_len");
         save_success = false;
     }
-    if(!flipper_format_write_bool(fff_file, FLIPPER_WEDGE_SETTINGS_KEY_LOG_TO_SD, &app->log_to_sd, 1)) {
+    if(!flipper_format_write_bool(
+           fff_file, FLIPPER_WEDGE_SETTINGS_KEY_LOG_TO_SD, &app->log_to_sd, 1)) {
         FURI_LOG_E(TAG, "Failed to write log_to_sd");
         save_success = false;
     }
@@ -140,11 +147,19 @@ void flipper_wedge_read_settings(void* context) {
         return;
     }
 
-    FURI_LOG_I(TAG, "Config file version: %lu (current: %d)", file_version, FLIPPER_WEDGE_SETTINGS_FILE_VERSION);
+    FURI_LOG_I(
+        TAG,
+        "Config file version: %lu (current: %d)",
+        file_version,
+        FLIPPER_WEDGE_SETTINGS_FILE_VERSION);
     furi_string_free(temp_str);
 
     if(file_version < FLIPPER_WEDGE_SETTINGS_FILE_VERSION) {
-        FURI_LOG_W(TAG, "Old config version %lu (expected %d), settings will not be loaded", file_version, FLIPPER_WEDGE_SETTINGS_FILE_VERSION);
+        FURI_LOG_W(
+            TAG,
+            "Old config version %lu (expected %d), settings will not be loaded",
+            file_version,
+            FLIPPER_WEDGE_SETTINGS_FILE_VERSION);
         flipper_wedge_close_config_file(fff_file);
         flipper_wedge_close_storage();
         return;
@@ -152,7 +167,10 @@ void flipper_wedge_read_settings(void* context) {
 
     FuriString* delimiter_str = furi_string_alloc();
     if(flipper_format_read_string(fff_file, FLIPPER_WEDGE_SETTINGS_KEY_DELIMITER, delimiter_str)) {
-        strncpy(app->delimiter, furi_string_get_cstr(delimiter_str), FLIPPER_WEDGE_DELIMITER_MAX_LEN - 1);
+        strncpy(
+            app->delimiter,
+            furi_string_get_cstr(delimiter_str),
+            FLIPPER_WEDGE_DELIMITER_MAX_LEN - 1);
         app->delimiter[FLIPPER_WEDGE_DELIMITER_MAX_LEN - 1] = '\0';
     }
     furi_string_free(delimiter_str);
@@ -160,12 +178,13 @@ void flipper_wedge_read_settings(void* context) {
     flipper_format_read_bool(
         fff_file, FLIPPER_WEDGE_SETTINGS_KEY_APPEND_ENTER, &app->append_enter, 1);
 
-    uint32_t saved_mode = FlipperWedgeModeNfc;  // Default to NFC mode
+    uint32_t saved_mode = FlipperWedgeModeNfc; // Default to NFC mode
     flipper_format_read_uint32(fff_file, FLIPPER_WEDGE_SETTINGS_KEY_MODE, &saved_mode, 1);
 
     // Read mode startup behavior (default to Remember)
     uint32_t mode_startup = FlipperWedgeModeStartupRemember;
-    if(flipper_format_read_uint32(fff_file, FLIPPER_WEDGE_SETTINGS_KEY_MODE_STARTUP, &mode_startup, 1)) {
+    if(flipper_format_read_uint32(
+           fff_file, FLIPPER_WEDGE_SETTINGS_KEY_MODE_STARTUP, &mode_startup, 1)) {
         // Validate mode startup is within valid range
         if(mode_startup < FlipperWedgeModeStartupCount) {
             app->mode_startup_behavior = (FlipperWedgeModeStartup)mode_startup;
@@ -181,32 +200,33 @@ void flipper_wedge_read_settings(void* context) {
     } else {
         // Use default mode based on startup behavior
         switch(app->mode_startup_behavior) {
-            case FlipperWedgeModeStartupDefaultNfc:
-                app->mode = FlipperWedgeModeNfc;
-                break;
-            case FlipperWedgeModeStartupDefaultRfid:
-                app->mode = FlipperWedgeModeRfid;
-                break;
-            case FlipperWedgeModeStartupDefaultNdef:
-                app->mode = FlipperWedgeModeNdef;
-                break;
-            case FlipperWedgeModeStartupDefaultNfcRfid:
-                app->mode = FlipperWedgeModeNfcThenRfid;
-                break;
-            case FlipperWedgeModeStartupDefaultRfidNfc:
-                app->mode = FlipperWedgeModeRfidThenNfc;
-                break;
-            default:
-                app->mode = FlipperWedgeModeNfc;
-                break;
+        case FlipperWedgeModeStartupDefaultNfc:
+            app->mode = FlipperWedgeModeNfc;
+            break;
+        case FlipperWedgeModeStartupDefaultRfid:
+            app->mode = FlipperWedgeModeRfid;
+            break;
+        case FlipperWedgeModeStartupDefaultNdef:
+            app->mode = FlipperWedgeModeNdef;
+            break;
+        case FlipperWedgeModeStartupDefaultNfcRfid:
+            app->mode = FlipperWedgeModeNfcThenRfid;
+            break;
+        case FlipperWedgeModeStartupDefaultRfidNfc:
+            app->mode = FlipperWedgeModeRfidThenNfc;
+            break;
+        default:
+            app->mode = FlipperWedgeModeNfc;
+            break;
         }
     }
 
     // Read output mode setting (default to USB)
     // Note: Old file versions (< 5) are rejected above, so no migration needed
     // Current format: 0 = USB, 1 = BLE
-    uint32_t output_mode = FlipperWedgeOutputUsb;  // Default to USB
-    if(flipper_format_read_uint32(fff_file, FLIPPER_WEDGE_SETTINGS_KEY_OUTPUT_MODE, &output_mode, 1)) {
+    uint32_t output_mode = FlipperWedgeOutputUsb; // Default to USB
+    if(flipper_format_read_uint32(
+           fff_file, FLIPPER_WEDGE_SETTINGS_KEY_OUTPUT_MODE, &output_mode, 1)) {
         // Validate output_mode is within valid range
         if(output_mode < FlipperWedgeOutputCount) {
             app->output_mode = (FlipperWedgeOutput)output_mode;
@@ -231,7 +251,8 @@ void flipper_wedge_read_settings(void* context) {
 
     // Read NDEF max length setting (default to 250 chars for fast typing)
     uint32_t ndef_max_len = FlipperWedgeNdefMaxLen250;
-    if(flipper_format_read_uint32(fff_file, FLIPPER_WEDGE_SETTINGS_KEY_NDEF_MAX_LEN, &ndef_max_len, 1)) {
+    if(flipper_format_read_uint32(
+           fff_file, FLIPPER_WEDGE_SETTINGS_KEY_NDEF_MAX_LEN, &ndef_max_len, 1)) {
         FURI_LOG_I(TAG, "Loaded NDEF max len from file: %lu", ndef_max_len);
         // Validate NDEF max length is within valid range
         // Migrate old "unlimited" value (2) to new max value (2)
@@ -239,7 +260,11 @@ void flipper_wedge_read_settings(void* context) {
             app->ndef_max_len = (FlipperWedgeNdefMaxLen)ndef_max_len;
             FURI_LOG_I(TAG, "Set NDEF max len to: %d", app->ndef_max_len);
         } else {
-            FURI_LOG_E(TAG, "Invalid NDEF max len %lu (max %d), using default", ndef_max_len, FlipperWedgeNdefMaxLenCount);
+            FURI_LOG_E(
+                TAG,
+                "Invalid NDEF max len %lu (max %d), using default",
+                ndef_max_len,
+                FlipperWedgeNdefMaxLenCount);
         }
     } else {
         FURI_LOG_W(TAG, "NDEF max len not found in file, using default 250");

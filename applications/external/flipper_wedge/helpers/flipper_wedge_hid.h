@@ -11,7 +11,8 @@
 
 typedef struct FlipperWedgeHid FlipperWedgeHid;
 
-typedef void (*FlipperWedgeHidConnectionCallback)(bool usb_connected, bool bt_connected, void* context);
+typedef void (
+    *FlipperWedgeHidConnectionCallback)(bool usb_connected, bool bt_connected, void* context);
 
 /** Allocate HID helper
  *

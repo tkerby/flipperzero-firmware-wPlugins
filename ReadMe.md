@@ -50,8 +50,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Big Clock v1.2 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
 - Updated: [Reality Clock v4.0 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
 - Added: [FlipGemini v1.0 (By jblanked)](https://github.com/jblanked/FlipGemini) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [CANBUS v1.1.6.1 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats` (Version Only)
+- Updated: [CANBUS v1.1.6.2 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
 - [Add ProtoPirate to RM Known Apps (Browser and Favorites Integration) #1166 (By LeeroysHub)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1166)
+- Added: [Flipper Wedge v1.0 (By DangerousThings)](https://github.com/DangerousThings/flipper-wedge)
 
 <a name="release">
 
@@ -455,7 +456,7 @@ $ ./fbt dolphin_ext
 - [CAN Commander v0.1 (By MatthewKuKanich)](https://github.com/MatthewKuKanich/CAN_Commander/tree/main/FlipperZeroEnvironment/CANCommander_Boilerplate) `Req: CAN Commander Board`
 - [CAN Tools v1.1 (By MatthewKuKanich)](https://github.com/MatthewKuKanich/FlipperCANTools)
 - [CAN Transceiver v0.1 (By Chainmanner)](https://github.com/Chainmanner/Flipper-CAN-Transceiver)
-- [CANBUS v1.1.6.1 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
+- [CANBUS v1.1.6.2 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
 - [CANBUS ATTACK v1.0 (By jorgepnaranjo25)](https://github.com/jorgepnaranjo25/CAN-Bus-Attack) `Req: CANBUS By ElectronicCats`
 - [Canon Intervalometer v1.0 (By TravisCG)](https://github.com/TravisCG/canonivm)
 - [Caesar Cipher v1.2 (By panki27)](https://github.com/panki27/caesar-cipher)
@@ -544,6 +545,7 @@ $ ./fbt dolphin_ext
 - [Flipper Aid v1.0 (By spaghety)](https://github.com/spaghety/flipper-aid)
 - [Flipper Doctor v0.1 (By julandealb)](https://github.com/julandealb/flipperdoc)
 - [Flipper Tag v1.0 (By thejudge156)](https://github.com/thejudge156/flippertag)
+- [Flipper Wedge v1.0 (By DangerousThings)](https://github.com/DangerousThings/flipper-wedge)
 - [Flipper95 v1.0 (By CookiePLMonster)](https://github.com/CookiePLMonster/flipper-bakery/flipper95)
 - [FlipperZero Clock v1.3 (By mdaskalov)](https://github.com/mdaskalov/flipperzero-clock)
 - [Flippy Temp WIP v0.1 (By n0ciple)](https://github.com/n0ciple/flippy_sensors) `Req: Flippy Sensor Board`

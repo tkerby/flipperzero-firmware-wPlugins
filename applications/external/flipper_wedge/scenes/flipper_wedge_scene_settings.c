@@ -63,11 +63,11 @@ const char* const delimiter_names[] = {
 
 // Delimiter options - actual values
 const char* const delimiter_values[] = {
-    "",    // empty
+    "", // empty
     ":",
     "-",
     "_",
-    " ",   // space
+    " ", // space
     ",",
     ";",
     "|",
@@ -103,7 +103,7 @@ static void flipper_wedge_scene_settings_set_append_enter(VariableItem* item) {
 
     variable_item_set_current_value_text(item, on_off_text[index]);
     app->append_enter = (index == 1);
-    flipper_wedge_save_settings(app);  // Save immediately to persist across app restarts
+    flipper_wedge_save_settings(app); // Save immediately to persist across app restarts
 }
 
 static void flipper_wedge_scene_settings_set_mode_startup(VariableItem* item) {
@@ -112,7 +112,7 @@ static void flipper_wedge_scene_settings_set_mode_startup(VariableItem* item) {
 
     variable_item_set_current_value_text(item, mode_startup_text[index]);
     app->mode_startup_behavior = (FlipperWedgeModeStartup)index;
-    flipper_wedge_save_settings(app);  // Save immediately to persist across app restarts
+    flipper_wedge_save_settings(app); // Save immediately to persist across app restarts
 }
 
 static void flipper_wedge_scene_settings_set_vibration(VariableItem* item) {
@@ -121,7 +121,7 @@ static void flipper_wedge_scene_settings_set_vibration(VariableItem* item) {
 
     variable_item_set_current_value_text(item, vibration_text[index]);
     app->vibration_level = (FlipperWedgeVibration)index;
-    flipper_wedge_save_settings(app);  // Save immediately to persist across app restarts
+    flipper_wedge_save_settings(app); // Save immediately to persist across app restarts
 }
 
 static void flipper_wedge_scene_settings_set_ndef_max_len(VariableItem* item) {
@@ -132,7 +132,7 @@ static void flipper_wedge_scene_settings_set_ndef_max_len(VariableItem* item) {
     variable_item_set_current_value_text(item, ndef_max_len_text[index]);
     app->ndef_max_len = (FlipperWedgeNdefMaxLen)index;
     FURI_LOG_I("Settings", "NDEF callback: new app value=%d, about to save", app->ndef_max_len);
-    flipper_wedge_save_settings(app);  // Save immediately to persist across app restarts
+    flipper_wedge_save_settings(app); // Save immediately to persist across app restarts
 }
 
 static void flipper_wedge_scene_settings_set_log_to_sd(VariableItem* item) {
@@ -143,7 +143,7 @@ static void flipper_wedge_scene_settings_set_log_to_sd(VariableItem* item) {
     variable_item_set_current_value_text(item, on_off_text[index]);
     app->log_to_sd = (index == 1);
     FURI_LOG_I("Settings", "LogToSD callback: new app value=%d, about to save", app->log_to_sd);
-    flipper_wedge_save_settings(app);  // Save immediately to persist across app restarts
+    flipper_wedge_save_settings(app); // Save immediately to persist across app restarts
 }
 
 static void flipper_wedge_scene_settings_set_output(VariableItem* item) {
@@ -155,9 +155,11 @@ static void flipper_wedge_scene_settings_set_output(VariableItem* item) {
 
     // Handle output mode change with DEFERRED switching
     if(new_output_mode != app->output_mode) {
-        FURI_LOG_I("Settings", "Requesting output mode switch: %s -> %s",
-                   app->output_mode == FlipperWedgeOutputUsb ? "USB" : "BLE",
-                   new_output_mode == FlipperWedgeOutputUsb ? "USB" : "BLE");
+        FURI_LOG_I(
+            "Settings",
+            "Requesting output mode switch: %s -> %s",
+            app->output_mode == FlipperWedgeOutputUsb ? "USB" : "BLE",
+            new_output_mode == FlipperWedgeOutputUsb ? "USB" : "BLE");
 
         // Set flag for tick callback to process (worker thread handles HID lifecycle)
         app->output_switch_pending = true;
@@ -190,16 +192,11 @@ void flipper_wedge_scene_settings_on_enter(void* context) {
     if(app->output_mode >= FlipperWedgeOutputCount) {
         FURI_LOG_E("Settings", "Output mode %d out of range, forcing to USB", app->output_mode);
         app->output_mode = FlipperWedgeOutputUsb;
-        flipper_wedge_save_settings(app);  // Save the fix
+        flipper_wedge_save_settings(app); // Save the fix
     }
 
     // Header with branding (non-interactive)
-    item = variable_item_list_add(
-        app->variable_item_list,
-        "dangerousthings.com",
-        0,
-        NULL,
-        app);
+    item = variable_item_list_add(app->variable_item_list, "dangerousthings.com", 0, NULL, app);
 
     // Output mode selector
     item = variable_item_list_add(
@@ -210,8 +207,8 @@ void flipper_wedge_scene_settings_on_enter(void* context) {
         app);
 
     // Use target mode for display if switching is pending (prevents duplicate positions)
-    FlipperWedgeOutput display_mode = app->output_switch_pending ?
-        app->output_switch_target : app->output_mode;
+    FlipperWedgeOutput display_mode = app->output_switch_pending ? app->output_switch_target :
+                                                                   app->output_mode;
 
     variable_item_set_current_value_index(item, display_mode);
     variable_item_set_current_value_text(item, output_text[display_mode]);
@@ -219,8 +216,10 @@ void flipper_wedge_scene_settings_on_enter(void* context) {
     // Pair Bluetooth... action (show in BLE mode or when switching to BLE)
     // Hide immediately when switching from BLE to USB for cleaner UX
     bool currently_ble = (app->output_mode == FlipperWedgeOutputBle);
-    bool switching_to_ble = (app->output_switch_pending && app->output_switch_target == FlipperWedgeOutputBle);
-    bool switching_from_ble = (app->output_switch_pending && app->output_mode == FlipperWedgeOutputBle);
+    bool switching_to_ble =
+        (app->output_switch_pending && app->output_switch_target == FlipperWedgeOutputBle);
+    bool switching_from_ble =
+        (app->output_switch_pending && app->output_mode == FlipperWedgeOutputBle);
 
     // Only show if in BLE mode or switching TO BLE (not FROM BLE)
     if((currently_ble || switching_to_ble) && !switching_from_ble) {
@@ -246,7 +245,7 @@ void flipper_wedge_scene_settings_on_enter(void* context) {
             app->variable_item_list,
             "Pair Bluetooth...",
             1,
-            NULL,  // No change callback
+            NULL, // No change callback
             app);
         variable_item_set_current_value_text(item, bt_status);
     }
@@ -304,19 +303,13 @@ void flipper_wedge_scene_settings_on_enter(void* context) {
 
     // Log to SD toggle
     item = variable_item_list_add(
-        app->variable_item_list,
-        "Log to SD:",
-        2,
-        flipper_wedge_scene_settings_set_log_to_sd,
-        app);
+        app->variable_item_list, "Log to SD:", 2, flipper_wedge_scene_settings_set_log_to_sd, app);
     variable_item_set_current_value_index(item, app->log_to_sd ? 1 : 0);
     variable_item_set_current_value_text(item, on_off_text[app->log_to_sd ? 1 : 0]);
 
     // Set callback for when user clicks on an item
     variable_item_list_set_enter_callback(
-        app->variable_item_list,
-        flipper_wedge_scene_settings_item_callback,
-        app);
+        app->variable_item_list, flipper_wedge_scene_settings_item_callback, app);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipperWedgeViewIdSettings);
 }
@@ -371,7 +364,11 @@ bool flipper_wedge_scene_settings_on_event(void* context, SceneManagerEvent even
             if(app->output_mode != last_output_mode) {
                 needs_rebuild = true;
                 last_output_mode = app->output_mode;
-                FURI_LOG_I("Settings", "Output mode changed: %d -> %d", last_output_mode, app->output_mode);
+                FURI_LOG_I(
+                    "Settings",
+                    "Output mode changed: %d -> %d",
+                    last_output_mode,
+                    app->output_mode);
             }
 
             // Check BT status changes when in BLE mode or switching
