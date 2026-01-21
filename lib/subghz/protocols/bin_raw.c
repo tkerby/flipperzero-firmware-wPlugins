@@ -311,7 +311,7 @@ SubGhzProtocolStatus
             res = SubGhzProtocolStatusErrorParserOthers;
             break;
         }
-        //optional parameter parameter
+        // Optional value
         flipper_format_read_uint32(
             flipper_format, "Repeat", (uint32_t*)&instance->encoder.repeat, 1);
 
@@ -432,7 +432,7 @@ static bool
             } else if(
                 DURATION_DIFF((float)(abs(instance->data_raw[i])), (classes[k].data)) <
                 (classes[k].data / 4)) { //if the test value does not differ by more than 25%
-                classes[k].data += ((float)(abs(instance->data_raw[i])) - classes[k].data) *
+                classes[k].data += ((float)(abs(instance->data_raw[i]))-classes[k].data) *
                                    0.05f; //running average k=0.05
                 classes[k].count++;
                 break;
