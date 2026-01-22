@@ -6,6 +6,9 @@
 // PROTOCOL CONSTANTS
 // =============================================================================
 
+// Uncomment to enable bit-level debug logging (WARNING: 80 log calls per signal)
+// #define FORD_V0_DEBUG_BITS
+
 static const SubGhzBlockConst subghz_protocol_ford_v0_const = {
     .te_short = 250,
     .te_long = 500,
@@ -679,7 +682,9 @@ LevelDuration subghz_protocol_encoder_ford_v0_yield(void* context) {
 // =============================================================================
 
 static void ford_v0_add_bit(SubGhzProtocolDecoderFordV0* instance, bool bit) {
+#ifdef FORD_V0_DEBUG_BITS
     FURI_LOG_D(TAG, "Bit %d: %d", instance->bit_count, bit);
+#endif
 
     uint32_t low = (uint32_t)instance->data_low;
     instance->data_low = (instance->data_low << 1) | (bit ? 1 : 0);
