@@ -8,7 +8,6 @@ App(
     fap_icon="icon.png",
     fap_icon_assets="assets",
     fap_icon_assets_symbol="unitemp",
-    fap_libs=["assets"],
     fap_category="GPIO/Sensors",
     fap_author="quen0n & (fixes by xMasterX)",
     fap_weburl="https://github.com/quen0n/Unitemp-Flipper-Zero-Plugin",
