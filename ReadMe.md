@@ -62,6 +62,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Sub-GHz: [Fixes for changes from UL (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/7ae73aa9f5ef2b9ecc133fd7670806dc538fa4ee)
 - OFW: PR: [Various UI/UX changes #4331 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4331)
 - Updated: [ProtoPirate v1.7 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
+- Updated: [Sub-GHz Scheduler v3.0 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
 
 <a name="release">
 
@@ -781,7 +782,7 @@ $ ./fbt dolphin_ext
 - [Sub-GHz Playlist Creator v0.2 (By coolerUA)](https://github.com/coolerUA/Sub-Ghz-Playlist-Creator)
 - [Sub-GHz Remote v1.8 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote)
 - [Sub-GHz Rolling Flaws v1.5 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials)
-- [Sub-GHz Scheduler v2.3 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
+- [Sub-GHz Scheduler v3.0 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
 - [Sub-Ghz Toolkit 1808 v1.0 (By RocketGod-git)](https://github.com/RocketGod-git/RocketGods-SubGHz-Toolkit)
 - [SWD Probe v1.3 (By g3gg0)](https://github.com/g3gg0/flipper-swd_probe)
 - [T5577 Multiwriter v0.2 (By Leptopt1los)](https://github.com/Leptopt1los/t5577_multiwriter)

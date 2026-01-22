@@ -1,14 +1,40 @@
-#include "scheduler_scene_start.h"
-
-#include <furi_hal_power.h>
-#include <furi_hal_usb.h>
-#include <furi_hal.h>
-#include <dolphin/dolphin.h>
-#include <devices/devices.h>
-
-#include <string.h>
+#include "helpers/scheduler_hms.h"
+#include "helpers/scheduler_settings_io.h"
+#include "scheduler_scene_loadfile.h"
+#include "src/scheduler_app_i.h"
 
 #define TAG "Sub-GHzSchedulerSceneStart"
+
+typedef uint8_t (*SchedulerGetIdxFn)(const Scheduler* scheduler);
+typedef void (*SchedulerSetIdxFn)(Scheduler* scheduler, uint8_t idx);
+
+static uint8_t get_timing_idx(const Scheduler* s) {
+    return scheduler_get_timing_mode((Scheduler*)s);
+}
+static void set_timing_idx(Scheduler* s, uint8_t idx) {
+    scheduler_set_timing_mode(s, idx);
+}
+
+static uint8_t get_tx_count_idx(const Scheduler* s) {
+    return scheduler_get_tx_count((Scheduler*)s);
+}
+static void set_tx_count_idx(Scheduler* s, uint8_t idx) {
+    scheduler_set_tx_count(s, idx);
+}
+
+static uint8_t get_tx_mode_idx(const Scheduler* s) {
+    return (uint8_t)scheduler_get_tx_mode((Scheduler*)s);
+}
+static void set_tx_mode_idx(Scheduler* s, uint8_t idx) {
+    scheduler_set_tx_mode(s, (SchedulerTxMode)idx);
+}
+
+static uint8_t get_radio_idx(const Scheduler* s) {
+    return scheduler_get_radio((Scheduler*)s);
+}
+static void set_radio_idx(Scheduler* s, uint8_t idx) {
+    scheduler_set_radio(s, idx);
+}
 
 static VariableItem* add_scheduler_option_item(
     VariableItemList* list,
@@ -19,19 +45,14 @@ static VariableItem* add_scheduler_option_item(
     SchedulerGetIdxFn get_idx,
     SchedulerSetIdxFn set_idx,
     const char* const* text_table) {
-    furi_assert(list);
     furi_assert(app);
-    furi_assert(label);
-    furi_assert(on_change);
-    furi_assert(get_idx);
-    furi_assert(set_idx);
-    furi_assert(text_table);
-    furi_assert(count > 0);
 
     VariableItem* item = variable_item_list_add(list, label, count, on_change, app);
 
     uint8_t idx = get_idx(app->scheduler);
-    idx = clamp_u8(idx, count);
+    if(idx >= count) {
+        idx = 0;
+    }
 
     variable_item_set_current_value_index(item, idx);
     variable_item_set_current_value_text(item, text_table[idx]);
@@ -45,18 +66,15 @@ static void scheduler_scene_start_var_list_enter_callback(void* context, uint32_
     furi_assert(context);
     SchedulerApp* app = context;
 
-    if(index == SchedulerStartRunEvent) {
+    if(index == 0) {
+        scene_manager_next_scene(app->scene_manager, SchedulerSceneInterval);
+    } else if(index == SchedulerStartRunEvent) {
         view_dispatcher_send_custom_event(app->view_dispatcher, SchedulerStartRunEvent);
     } else if(index == SchedulerStartEventSelectFile) {
         view_dispatcher_send_custom_event(app->view_dispatcher, SchedulerStartEventSelectFile);
+    } else if(index == SchedulerStartEventSaveSchedule) {
+        view_dispatcher_send_custom_event(app->view_dispatcher, SchedulerStartEventSaveSchedule);
     }
-}
-
-static void scheduler_scene_start_set_interval(VariableItem* item) {
-    SchedulerApp* app = variable_item_get_context(item);
-    uint8_t index = variable_item_get_current_value_index(item);
-    variable_item_set_current_value_text(item, interval_text[index]);
-    scheduler_set_interval(app->scheduler, index);
 }
 
 static void scheduler_scene_start_set_timing(VariableItem* item) {
@@ -66,25 +84,31 @@ static void scheduler_scene_start_set_timing(VariableItem* item) {
     scheduler_set_timing_mode(app->scheduler, index);
 }
 
-static void scheduler_scene_start_set_repeats(VariableItem* item) {
+static void scheduler_scene_start_set_tx_count(VariableItem* item) {
     SchedulerApp* app = variable_item_get_context(item);
     uint8_t index = variable_item_get_current_value_index(item);
-    variable_item_set_current_value_text(item, tx_repeats_text[index]);
-    scheduler_set_tx_repeats(app->scheduler, index);
+    variable_item_set_current_value_text(item, tx_count_text[index]);
+    scheduler_set_tx_count(app->scheduler, index);
 }
 
 static void scheduler_scene_start_set_mode(VariableItem* item) {
     SchedulerApp* app = variable_item_get_context(item);
     SchedulerTxMode index = variable_item_get_current_value_index(item);
-    variable_item_set_current_value_text(item, mode_text[index]);
-    scheduler_set_mode(app->scheduler, index);
+    variable_item_set_current_value_text(item, tx_mode_text[index]);
+    scheduler_set_tx_mode(app->scheduler, index);
 }
 
 static void scheduler_scene_start_set_tx_delay(VariableItem* item) {
     SchedulerApp* app = variable_item_get_context(item);
-    uint8_t index = variable_item_get_current_value_index(item);
-    variable_item_set_current_value_text(item, tx_delay_text[index]);
-    scheduler_set_tx_delay(app->scheduler, index);
+    uint8_t idx = variable_item_get_current_value_index(item);
+
+    uint16_t ms = (uint16_t)idx * TX_DELAY_STEP_MS;
+
+    char buf[12];
+    snprintf(buf, sizeof(buf), "%ums", (unsigned)ms);
+    variable_item_set_current_value_text(item, buf);
+
+    scheduler_set_tx_delay_ms(app->scheduler, ms);
 }
 
 static void scheduler_scene_start_set_radio(VariableItem* item) {
@@ -99,20 +123,23 @@ void scheduler_scene_start_on_enter(void* context) {
     VariableItemList* var_item_list = app->var_item_list;
     char buffer[20];
 
-    scheduler_reset(app->scheduler);
+    scheduler_time_reset(app->scheduler);
+    if(app->should_reset) {
+        scheduler_full_reset(app->scheduler);
+        furi_string_reset(app->tx_file_path);
+        app->should_reset = false;
+    }
 
     variable_item_list_set_enter_callback(
         var_item_list, scheduler_scene_start_var_list_enter_callback, app);
 
-    add_scheduler_option_item(
-        var_item_list,
-        app,
-        "Interval:",
-        INTERVAL_COUNT,
-        scheduler_scene_start_set_interval,
-        get_interval_idx,
-        set_interval_idx,
-        interval_text);
+    VariableItem* interval_item = variable_item_list_add(var_item_list, "Interval:", 0, NULL, app);
+    {
+        char hms[12];
+        const uint32_t sec = scheduler_get_interval_seconds(app->scheduler);
+        scheduler_seconds_to_hms_string(sec, hms, sizeof(hms));
+        variable_item_set_current_value_text(interval_item, hms);
+    }
 
     add_scheduler_option_item(
         var_item_list,
@@ -127,32 +154,34 @@ void scheduler_scene_start_on_enter(void* context) {
     add_scheduler_option_item(
         var_item_list,
         app,
-        "Repeats:",
-        REPEATS_COUNT,
-        scheduler_scene_start_set_repeats,
-        get_repeats_idx,
-        set_repeats_idx,
-        tx_repeats_text);
+        "TX Count:",
+        TX_COUNT,
+        scheduler_scene_start_set_tx_count,
+        get_tx_count_idx,
+        set_tx_count_idx,
+        tx_count_text);
 
     add_scheduler_option_item(
         var_item_list,
         app,
-        "Mode:",
+        "TX Mode:",
         SchedulerTxModeSettingsNum,
         scheduler_scene_start_set_mode,
-        get_mode_idx,
-        set_mode_idx,
-        mode_text);
+        get_tx_mode_idx,
+        set_tx_mode_idx,
+        tx_mode_text);
 
-    add_scheduler_option_item(
-        var_item_list,
-        app,
-        "TX Delay:",
-        TX_DELAY_COUNT,
-        scheduler_scene_start_set_tx_delay,
-        get_tx_delay_idx,
-        set_tx_delay_idx,
-        tx_delay_text);
+    VariableItem* txd = variable_item_list_add(
+        var_item_list, "TX Delay:", TX_DELAY_COUNT, scheduler_scene_start_set_tx_delay, app);
+    uint8_t idx = scheduler_get_tx_delay_index(app->scheduler);
+    if(idx >= TX_DELAY_COUNT) {
+        idx = 0;
+    }
+    variable_item_set_current_value_index(txd, idx);
+
+    char buf[12];
+    snprintf(buf, sizeof(buf), "%ums", (unsigned)((uint16_t)idx * TX_DELAY_STEP_MS));
+    variable_item_set_current_value_text(txd, buf);
 
     const uint8_t radio_count = app->ext_radio_present ? RADIO_DEVICE_COUNT : 1;
     add_scheduler_option_item(
@@ -166,21 +195,26 @@ void scheduler_scene_start_on_enter(void* context) {
         radio_device_text);
 
     VariableItem* item = variable_item_list_add(var_item_list, "Select File", 0, NULL, app);
-    if(check_file_extension(furi_string_get_cstr(app->file_path))) {
-        scene_manager_set_scene_state(
-            app->scene_manager, SchedulerSceneStart, SchedulerStartRunEvent);
-        if(scheduler_get_file_type(app->scheduler) == SchedulerFileTypeSingle) {
-            variable_item_set_current_value_text(item, "[Single]");
-        } else if(scheduler_get_file_type(app->scheduler) == SchedulerFileTypePlaylist) {
-            snprintf(
-                buffer,
-                sizeof(buffer),
-                "[Playlist of %d]",
-                scheduler_get_list_count(app->scheduler));
-            variable_item_set_current_value_text(item, buffer);
+    if(!furi_string_empty(app->tx_file_path)) {
+        if(check_file_extension(furi_string_get_cstr(app->tx_file_path))) {
+            scene_manager_set_scene_state(
+                app->scene_manager, SchedulerSceneStart, SchedulerStartRunEvent);
+            if(scheduler_get_file_type(app->scheduler) == SchedulerFileTypeSingle) {
+                variable_item_set_current_value_text(item, "[Single]");
+            } else if(scheduler_get_file_type(app->scheduler) == SchedulerFileTypePlaylist) {
+                snprintf(
+                    buffer,
+                    sizeof(buffer),
+                    "[Playlist of %d]",
+                    scheduler_get_list_count(app->scheduler));
+                variable_item_set_current_value_text(item, buffer);
+            }
         }
+
+        variable_item_list_add(var_item_list, "Save Schedule...", 0, NULL, app);
+
+        variable_item_list_add(var_item_list, "Start", 0, NULL, app);
     }
-    variable_item_list_add(var_item_list, "Start", 0, NULL, app);
 
     variable_item_list_set_selected_item(
         var_item_list, scene_manager_get_scene_state(app->scene_manager, SchedulerSceneStart));
@@ -194,7 +228,7 @@ bool scheduler_scene_start_on_event(void* context, SceneManagerEvent event) {
 
     if(event.type == SceneManagerEventTypeCustom) {
         if(event.event == SchedulerStartRunEvent) {
-            if(!check_file_extension(furi_string_get_cstr(app->file_path))) {
+            if(furi_string_empty(app->tx_file_path)) {
                 dialog_message_show_storage_error(
                     app->dialogs, "Please select\nplaylist (*.txt) or\n *.sub file!");
             } else {
@@ -202,6 +236,8 @@ bool scheduler_scene_start_on_event(void* context, SceneManagerEvent event) {
             }
         } else if(event.event == SchedulerStartEventSelectFile) {
             scene_manager_next_scene(app->scene_manager, SchedulerSceneLoadFile);
+        } else if(event.event == SchedulerStartEventSaveSchedule) {
+            scene_manager_next_scene(app->scene_manager, SchedulerSceneSaveName);
         }
         consumed = true;
     }
