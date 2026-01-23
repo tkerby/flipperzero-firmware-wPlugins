@@ -61,10 +61,10 @@ This software is for experimental purposes only and is not meant for any illegal
 - NFC: [Fix LED not blinking at SLIX unlock (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/7a65388051be7bd78c81e4b36ec2a1d4d0e47ff0)
 - Sub-GHz: [Fixes for changes from UL (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/7ae73aa9f5ef2b9ecc133fd7670806dc538fa4ee)
 - OFW: PR: [Various UI/UX changes #4331 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4331)
-- Updated: [ProtoPirate v1.7 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - Updated: [Sub-GHz Scheduler v3.0 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
 - Updated: [Temp Sensors Reader 1.7 (By quen0n)](https://github.com/quen0n/Unitemp-Flipper-Zero-Plugin) `Req: BMP180/BMP280/BME280/BME680/DHT11/DHT22(AM2302)/AM2301/AM2320/HTU2XD/HTU21x/HDC1080/MAX31725/MAX31855/MAX6675/SCD30`
 - Updated: [Wolfenduino v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperWolfenstein)
+- Updated: [ProtoPirate v1.7 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 
 <a name="release">
 

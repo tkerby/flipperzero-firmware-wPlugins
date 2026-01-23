@@ -252,6 +252,9 @@ bool protopirate_scene_receiver_on_event(void* context, SceneManagerEvent event)
                 FURI_LOG_D(TAG, "RSSI: %.1f dBm (%s)", (double)rssi, is_ext ? "EXT" : "INT");
                 rssi_log_counter = 0;
             }
+
+            //Blink the light like the SubGHZ app.
+            notification_message(app->notifications, &sequence_blink_cyan_10);
         }
 
         consumed = true;
