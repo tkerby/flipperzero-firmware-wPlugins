@@ -9,7 +9,7 @@ App(
     fap_icon="romandec_icon.png",  
     fap_description="An app that converts Roman numerals to decimal values.",
     fap_author="@evillero",
-    fap_version="0.1",
+    fap_version="0.2",
 )
 
 
