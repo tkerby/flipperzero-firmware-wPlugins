@@ -46,8 +46,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Big Clock v1.1 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
 - Added: [Reality Clock v2.1 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
 - Updated: [FlipSocial v2.0.8 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [Big Clock v1.2 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
-- Updated: [Reality Clock v4.0 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
 - Added: [FlipGemini v1.0 (By jblanked)](https://github.com/jblanked/FlipGemini) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [CANBUS v1.1.6.2 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
 - [Add ProtoPirate to RM Known Apps (Browser and Favorites Integration) #1166 (By LeeroysHub)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1166)
@@ -65,6 +63,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Temp Sensors Reader 1.7 (By quen0n)](https://github.com/quen0n/Unitemp-Flipper-Zero-Plugin) `Req: BMP180/BMP280/BME280/BME680/DHT11/DHT22(AM2302)/AM2301/AM2320/HTU2XD/HTU21x/HDC1080/MAX31725/MAX31855/MAX6675/SCD30`
 - Updated: [Wolfenduino v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperWolfenstein)
 - Updated: [ProtoPirate v1.7 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
+- Updated: [Big Clock v1.3 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
+- Updated: [Reality Clock v4.1 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
 
 <a name="release">
 
@@ -448,7 +448,7 @@ $ ./fbt dolphin_ext
 - [BarCode Scanner Emulator (By polarikus)](https://github.com/polarikus/flipper-zero_bc_scanner_emulator) `Uses: COM-port`
 - [Battery Checker v0.2 (By Programistich)](https://github.com/Programistich/battery_checker)
 - [BG Loader (By twisted-pear)](https://github.com/twisted-pear/bgloader)
-- [Big Clock v1.2 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
+- [Big Clock v1.3 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
 - [BlackJack Counter v1.0 (By grugnoymeme)](https://github.com/grugnoymeme/flipperzero-blackjack_counter-fap)
 - [BLE Killer v1.1 (By H4lo)](https://github.com/H4lo/flipper_zero_ble_killer) `Req: ESP32`
 - [BLE Spam v6.6 (By WillyJL & ECTO-1A & Spooks4576 with research from xMasterX; OFW API thanks to noproto)](https://github.com/Next-Flip/Momentum-Apps/tree/dev/ble_spam)
@@ -740,7 +740,7 @@ $ ./fbt dolphin_ext
 - [Radio Scanner v0.3 (By RocketGod)](https://github.com/RocketGod-Git/Flipper-Zero-Radio-Scanner)
 - [RC2014 ColecoVision (By ezod)](https://github.com/ezod/flipperzero-rc2014-coleco)
 - [RCWL-516 Motion Sensor (By ahmedafe1)](https://github.com/ahmedafe1/rcwl_0516-Flipperzero)
-- [Reality Clock v4.0 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
+- [Reality Clock v4.1 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
 - [Remote for CaiXianlin v1.0 (By anty-ce)](https://github.com/anty-ce/flipper_zero_caixianlin_remote)[Remote for CaiXianlin v1.0 (By anty-ce)](https://github.com/anty-ce/flipper_zero_caixianlin_remote)
 - [Remote Maker (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/487)
 - [Resistance Calculator v1.4 (By instantiator)](https://github.com/instantiator/flipper-zero-experimental-apps)
