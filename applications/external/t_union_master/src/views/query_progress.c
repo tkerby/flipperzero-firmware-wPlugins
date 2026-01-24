@@ -45,7 +45,7 @@ static void query_progress_enter_cb(void* ctx) {
 
 static void query_progress_exit_cb(void* ctx) {
     QureyProgressView* instance = ctx;
-    
+
     with_view_model(
         instance->view,
         QureyProgressViewModel * model,

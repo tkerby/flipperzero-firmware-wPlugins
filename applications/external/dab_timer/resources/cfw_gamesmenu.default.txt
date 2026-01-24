@@ -53,6 +53,7 @@ GamesMenuList Version 0
 /ext/apps/Games/guess_the_number.fap
 /ext/apps/Games/hangman.fap
 /ext/apps/Games/hanoi_towers.fap
+/ext/apps/Games/hirn.fap
 /ext/apps/Games/heap_defence.fap
 /ext/apps/Games/hunter_flipper.fap
 /ext/apps/Games/infinite_tic_tac_toe.fap
@@ -81,6 +82,7 @@ GamesMenuList Version 0
 /ext/apps/Games/p1x_your_own_adventure.fap
 /ext/apps/Games/pacman.fap
 /ext/apps/Games/paint.fap
+/ext/apps/Games/panis.fap
 /ext/apps/Games/paper_plane.fap
 /ext/apps/Games/pinball0.fap
 /ext/apps/Games/platformer_game.fap

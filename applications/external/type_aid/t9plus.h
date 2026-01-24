@@ -34,8 +34,7 @@ void t9plus_deinit(void);
 uint8_t t9plus_get_suggestions(
     const char* input,
     char suggestions[T9PLUS_MAX_SUGGESTIONS][T9PLUS_MAX_WORD_LENGTH],
-    uint8_t max_suggestions
-);
+    uint8_t max_suggestions);
 
 /**
  * @brief Check if a character is valid for word prediction
