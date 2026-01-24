@@ -90,6 +90,8 @@ static const Protocol protocols[] = {
 
 #define PROTOCOL_COUNT (sizeof(protocols)/sizeof(Protocol))
 #define MAX_PREFIXES 4
+#define FAST_PROTO_STEP 1
+#define FAST_COUNT_STEP 3000
 
 /* ===================== STATE ===================== */
 
@@ -309,17 +311,22 @@ static void input(InputEvent* e, void* ctx) {
         return;
     }
 
-    if(e->type != InputTypeShort) return;
+    bool fast = (e->type == InputTypeRepeat);
+    if(e->type != InputTypeShort && !fast) return;
 
     if(!s->selecting_prefix) {
-        if(e->key == InputKeyUp)
-            s->proto = (s->proto + 1) % PROTOCOL_COUNT;
-        else if(e->key == InputKeyDown)
-            s->proto = (s->proto == 0) ? PROTOCOL_COUNT - 1 : s->proto - 1;
-        else if(e->key == InputKeyLeft && s->count > 1000)
-            s->count -= 1000;
-        else if(e->key == InputKeyRight)
-            s->count += 1000;
+        if(e->key == InputKeyUp) {
+           s->proto = (s->proto + (fast ? FAST_PROTO_STEP : 1)) % PROTOCOL_COUNT;
+    } else if(e->key == InputKeyDown) {
+        size_t step = fast ? FAST_PROTO_STEP : 1;
+        s->proto = (s->proto + PROTOCOL_COUNT - step) % PROTOCOL_COUNT;
+    }
+        else if(e->key == InputKeyLeft) {
+           uint32_t step = fast ? FAST_COUNT_STEP : 1000;
+           if(s->count > step) s->count -= step;
+      } else if(e->key == InputKeyRight) {
+          s->count += fast ? FAST_COUNT_STEP : 1000;
+    }
         else if(e->key == InputKeyOk) {
             memcpy(s->prefix_snapshot,
                    s->prefix_enabled[s->proto],
@@ -337,10 +344,20 @@ static void input(InputEvent* e, void* ctx) {
         } else if(e->key == InputKeyBack)
             s->run = false;
     } else {
-        if(e->key == InputKeyUp && s->prefix_cursor > 0)
-            s->prefix_cursor--;
-        else if(e->key == InputKeyDown && s->prefix_cursor < p->prefix_count - 1)
-            s->prefix_cursor++;
+        if(e->key == InputKeyUp) {
+            uint8_t step = fast ? 3 : 1;
+            if(s->prefix_cursor >= step)
+               s->prefix_cursor -= step;
+        else
+            s->prefix_cursor = 0;
+    } else if(e->key == InputKeyDown) {
+        uint8_t step = 1;
+        uint8_t max = p->prefix_count - 1;
+        if(s->prefix_cursor + step <= max)
+            s->prefix_cursor += step;
+        else
+            s->prefix_cursor = max;
+    }
         else if(e->key == InputKeyOk)
             s->prefix_enabled[s->proto][s->prefix_cursor] ^= 1;
         else if(e->key == InputKeyBack)
