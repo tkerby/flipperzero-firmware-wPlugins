@@ -3,7 +3,7 @@ App(
     name="Karl Eido",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="karl_main",
-    sources=["karl-eido.c"],
+    sources=["karl_eido.c"],
     stack_size=1 * 1024,
     fap_icon="images/icon_10x10.png",
     fap_icon_assets="images",

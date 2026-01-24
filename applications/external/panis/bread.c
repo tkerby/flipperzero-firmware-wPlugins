@@ -31,7 +31,7 @@
 #define TOTAL_MAP_WIDTH (TILE_WIDTH * NUM_TILES)
 
 // Character dimensions
-#define CHAR_WIDTH  10
+#define CHAR__WIDTH  10
 #define CHAR_HEIGHT 10
 
 // Scrolling thresholds
@@ -286,7 +286,7 @@ static uint8_t get_cell_at(GameState* state, int world_x, int world_y) {
 static bool check_block_collision(GameState* state, int world_x, int y_pos) {
     // Check all four corners of character
     int left = world_x;
-    int right = world_x + CHAR_WIDTH - 1;
+    int right = world_x + CHAR__WIDTH - 1;
     int top = y_pos;
     int bottom = y_pos + CHAR_HEIGHT - 1;
 
@@ -302,7 +302,7 @@ static bool check_block_collision(GameState* state, int world_x, int y_pos) {
 // Collect pills at character position
 static void collect_pills(GameState* state) {
     int left = state->world_x;
-    int right = state->world_x + CHAR_WIDTH - 1;
+    int right = state->world_x + CHAR__WIDTH - 1;
     int top = state->y_pos;
     int bottom = state->y_pos + CHAR_HEIGHT - 1;
 
@@ -339,7 +339,7 @@ static bool check_ground_support(GameState* state, int world_x, int y_pos) {
     // Check one pixel below character's feet
     int feet_y = y_pos + CHAR_HEIGHT;
     int left = world_x;
-    int right = world_x + CHAR_WIDTH - 1;
+    int right = world_x + CHAR__WIDTH - 1;
 
     if(get_cell_at(state, left, feet_y) == CELL_BLOCK) return true;
     if(get_cell_at(state, right, feet_y) == CELL_BLOCK) return true;
@@ -596,7 +596,7 @@ static void update_game(GameState* state, InputKey key) {
         state->facing_right = true;
 
         // Check if we can move right
-        if(state->world_x < TOTAL_MAP_WIDTH - CHAR_WIDTH) {
+        if(state->world_x < TOTAL_MAP_WIDTH - CHAR__WIDTH) {
             // Calculate new position
             new_world_x = state->world_x + MOVEMENT_SPEED;
 
@@ -626,14 +626,14 @@ static void update_game(GameState* state, InputKey key) {
                 new_camera_x = state->camera_x;
 
                 // Clamp to screen edge
-                if(new_screen_x > SCREEN_WIDTH - CHAR_WIDTH) {
-                    new_screen_x = SCREEN_WIDTH - CHAR_WIDTH;
+                if(new_screen_x > SCREEN_WIDTH - CHAR__WIDTH) {
+                    new_screen_x = SCREEN_WIDTH - CHAR__WIDTH;
                 }
             }
 
             // Clamp world position
-            if(new_world_x > TOTAL_MAP_WIDTH - CHAR_WIDTH) {
-                new_world_x = TOTAL_MAP_WIDTH - CHAR_WIDTH;
+            if(new_world_x > TOTAL_MAP_WIDTH - CHAR__WIDTH) {
+                new_world_x = TOTAL_MAP_WIDTH - CHAR__WIDTH;
             }
 
             state->world_x = new_world_x;
@@ -691,7 +691,7 @@ static void update_game(GameState* state, InputKey key) {
 
     // Vibrate if we hit a boundary
     if((old_world_x != state->world_x) &&
-       (state->world_x == 0 || state->world_x == TOTAL_MAP_WIDTH - CHAR_WIDTH)) {
+       (state->world_x == 0 || state->world_x == TOTAL_MAP_WIDTH - CHAR__WIDTH)) {
         trigger_vibration(state);
     }
 }
