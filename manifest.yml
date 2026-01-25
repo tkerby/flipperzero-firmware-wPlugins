@@ -1,8 +1,8 @@
 sourcecode:
   type: git
   location: https://github.com/LN4CY/lasko-2519-timer
-  commit_sha: HEAD # REPLACE THIS WITH YOUR ACTUAL COMMIT SHA
-  subdir: .
+  commit_sha: "92bafa1340b1426da081a4faf33dffd77b502731"
+  subdir: lasko_automator
 
 description: >
   Automates certain Lasko Tower Fans (e.g. model 2519) by cycling the power ON and OFF at configurable intervals.
