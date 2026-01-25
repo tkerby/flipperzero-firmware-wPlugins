@@ -31,7 +31,7 @@
 #define TOTAL_MAP_WIDTH (TILE_WIDTH * NUM_TILES)
 
 // Character dimensions
-#define CHAR__WIDTH  10
+#define CHAR__WIDTH 10
 #define CHAR_HEIGHT 10
 
 // Scrolling thresholds

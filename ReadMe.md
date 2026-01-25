@@ -75,6 +75,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Panis - A Grumpy Bread v0.1 (By fgreil)](https://github.com/fgreil/mitzi-panis)
 - Added: [Karl Eido v0.1 (By fgreil)](https://github.com/fgreil/mitzi-karl-eido)
 - Updated: [ListEM v1.1 (By Clawzman)](https://github.com/Clawzman/Flipper_ListEM)
+- Updated: [Roman Decoder v0.2 (By evillero)](https://github.com/evillero/roman_decoder)
 
 <a name="release">
 
@@ -764,7 +765,7 @@ $ ./fbt dolphin_ext
 - [RFID Fuzzer v1.7 (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/507)
 - [RGB LED (By flyandi)](https://github.com/flyandi/flipper_zero_rgb_led)
 - [R.O.B. Control v1.0.1 (By riney)](https://github.com/riney/flip_rob)
-- [Roman Decoder v0.1 (By evillero)](https://github.com/evillero/roman_decoder)
+- [Roman Decoder v0.2 (By evillero)](https://github.com/evillero/roman_decoder)
 - [ROT13 v0.1 (By nothingbutlucas)](https://codeberg.org/nothingbutlucas/flipperzero_rot13)
 - [Rubiks Cube Timer v0.0.2 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
 - [SAM (By Unknown)][Original?](https://github.com/ctoth/SAM)
