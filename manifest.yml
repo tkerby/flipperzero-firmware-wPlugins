@@ -1,7 +1,7 @@
 sourcecode:
   type: git
   location: https://github.com/LN4CY/lasko-2519-timer
-  commit_sha: "92bafa1340b1426da081a4faf33dffd77b502731"
+  commit_sha: "e6bafda3aeb54635fa4ad8d2509ccfc4b44d2b03"
   subdir: lasko_automator
 
 description: >
