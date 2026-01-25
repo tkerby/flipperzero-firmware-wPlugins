@@ -9,6 +9,7 @@ App(
     order=20,
     fap_category="Infrared",
     fap_author="LN4CY",
+    fap_weburl="https://github.com/LN4CY/lasko-2519-timer",
     fap_version="1.0",
     fap_description="Automates Lasko 2519 fans with a configurable ON/OFF timer cycle.",
 )
