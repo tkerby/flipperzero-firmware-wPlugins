@@ -38,4 +38,4 @@ Install "Lasko 2519 Timer" via the Flipper Mobile App.
 ## Credits
 
 -   **Author**: LN4CY
--   **License**: MIT (or your preferred license)
+-   **License**: MIT
