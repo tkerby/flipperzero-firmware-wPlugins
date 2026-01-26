@@ -22,7 +22,6 @@ void protopirate_scene_saved_on_enter(void* context) {
     FURI_LOG_I(TAG, "Entering saved captures scene");
 
     uint32_t file_count = protopirate_storage_get_file_count();
-    FURI_LOG_I(TAG, "File count: %lu", file_count);
 
     if(file_count == 0) {
         submenu_add_item(
@@ -35,9 +34,11 @@ void protopirate_scene_saved_on_enter(void* context) {
         FuriString* name = furi_string_alloc();
         FuriString* path = furi_string_alloc();
 
-        for(uint32_t i = 0; i < file_count && i < 50; i++) {
+        // Limit to 20 items to prevent lockup
+        uint32_t max_items = (file_count < 20) ? file_count : 20;
+
+        for(uint32_t i = 0; i < max_items; i++) {
             if(protopirate_storage_get_file_by_index(i, path, name)) {
-                FURI_LOG_D(TAG, "Adding menu item: %s", furi_string_get_cstr(name));
                 submenu_add_item(
                     app->submenu,
                     furi_string_get_cstr(name),
@@ -45,6 +46,9 @@ void protopirate_scene_saved_on_enter(void* context) {
                     protopirate_scene_saved_submenu_callback,
                     app);
             }
+            
+            // CRITICAL: Yield to prevent GUI lockup
+            furi_delay_ms(1);
         }
 
         furi_string_free(name);

@@ -61,7 +61,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: PR: [Various UI/UX changes #4331 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4331)
 - Updated: [Temp Sensors Reader 1.7 (By quen0n)](https://github.com/quen0n/Unitemp-Flipper-Zero-Plugin) `Req: BMP180/BMP280/BME280/BME680/DHT11/DHT22(AM2302)/AM2301/AM2320/HTU2XD/HTU21x/HDC1080/MAX31725/MAX31855/MAX6675/SCD30`
 - Updated: [Wolfenduino v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperWolfenstein)
-- Updated: [ProtoPirate v1.7 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - Updated: [Big Clock v1.3 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
 - Updated: [Reality Clock v4.1 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
 - Updated: [T-Union Master (China) v0.1 (By SocialSisterYi)](https://github.com/SocialSisterYi/T-Union_Master)
@@ -78,6 +77,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - UI: [Revert spacing changes 3px back to 4px (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/a1e01bc06d945e3ca045f3f1c526f4613544e2e2)
 - NFC: [Fix LED not blinking at SLIX unlock (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/3f85bea80dad661f8d47f0715c36a11e5004d839)
 - Updated: [Sub-GHz Scheduler v3.0 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
+- Updated: [ProtoPirate v1.7 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 
 <a name="release">
 
