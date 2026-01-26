@@ -79,6 +79,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [ProtoPirate v1.7 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - Updated: [BT Audio v1.2 (By FatherDivine)](https://github.com/FatherDivine/flipperzero-mayhem/tree/bt_audio/flipper_companion_apps/applications/external/bt_audio) `Req: ESP32 w BT` & [This FW](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/external/bt_audio/.esp32_firmware)
 - Updated: [Metroflip v1.1 (By luu176)](https://github.com/luu176/Metroflip)
+- Updated: [WiFi (Marauder) v0.7.7 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion) `Req: ESP32` with [ESP32 MARAUDER Firmware](https://github.com/justcallmekoko/ESP32Marauder/releases/latest)
+- Updated: [ESP32CAM Marauder v0.7.5 (By 0xchocolate & eried)](https://github.com/eried/flipperzero-mayhem) `Req: ESP32-CAM (Mayhem)`
+- ESP Flasher: Bump Marauder v1.9.1 4fb65cd_nightly (By justcallmekoko)
 
 <a name="release">
 

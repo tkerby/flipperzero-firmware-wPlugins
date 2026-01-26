@@ -20,7 +20,7 @@ typedef enum {
 #define SHOW_STOPSCAN_TIP (true)
 #define NO_TIP            (false)
 
-#define MAX_OPTIONS (15)
+#define MAX_OPTIONS (16)
 typedef struct {
     const char* item_string;
     const char* options_menu[MAX_OPTIONS];
@@ -91,19 +91,21 @@ const WifiMarauderItem items[NUM_MENU_ITEMS] = {
       "funny",
       "badmsg",
       "sleep",
+      "sae flood",
       "sour apple",
       "swiftpair spam",
       "samsung spam",
       "google spam",
       "flipper spam",
       "bt spam all"},
-     12,
+     13,
      {"attack -t deauth",
       "attack -t probe",
       "attack -t rickroll",
       "attack -t funny",
       "attack -t badmsg",
       "attack -t sleep",
+      "attack -t sae",
       "blespam -t apple",
       "blespam -t windows",
       "blespam -t samsung",
@@ -182,8 +184,9 @@ const WifiMarauderItem items[NUM_MENU_ITEMS] = {
       "mactrack",
       "packetcount",
       "pineapple",
-      "multissid"},
-     15,
+      "multissid",
+      "sae"},
+     16,
      {"sniffbeacon",
       "sniffdeauth",
       "sniffpmkid",
@@ -198,7 +201,8 @@ const WifiMarauderItem items[NUM_MENU_ITEMS] = {
       "mactrack",
       "packetcount",
       "sniffpinescan",
-      "sniffmultissid"},
+      "sniffmultissid",
+      "sniffsae"},
      NO_ARGS,
      FOCUS_CONSOLE_END,
      SHOW_STOPSCAN_TIP},
