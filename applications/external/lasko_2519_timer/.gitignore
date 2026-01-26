@@ -1,5 +1,0 @@
-.vscode/
-build/
-dist/
-*.pyc
-__pycache__/

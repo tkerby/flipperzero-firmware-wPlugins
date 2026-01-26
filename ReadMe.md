@@ -87,6 +87,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Brainfuck v1.5 (By nymda)](https://github.com/nymda/FlipperZeroBrainfuck)
 - Added: [NFC Login v1.1.1 (By Play2BReal)](https://github.com/Play2BReal/NFC-Login)
 - Added: [ISO15693-3 NFC Writer v1.0 (By ch4istO)](https://github.com/ch4istO/unleashed-firmware/tree/dev/applications_user/iso15693_nfc_writer)
+- Added: [Lasko 2519 Timer v1.0 (By LN4CY)](https://github.com/LN4CY/lasko-2519-timer)
 
 <a name="release">
 
@@ -648,6 +649,7 @@ $ ./fbt dolphin_ext
 - [Lab401/DigiLab v1.1.1 (By lab-401 & tixlegeek)](https://github.com/lab-401/fzDigiLab)
 - [Lab401/Light MESSENGER v1.4.1 (By tixlegeek)](https://github.com/lab-401/fzLightMessenger/tree/main/401lightMessengerApp)
 - [LaserCat v1.1 (By DroWez)](https://github.com/DroWez/LaserCat)
+- [Lasko 2519 Timer v1.0 (By LN4CY)](https://github.com/LN4CY/lasko-2519-timer)
 - [LD2410 Human Detector v1.0 (By sistemasorp)](https://github.com/sistemasorp/flipper-ld2410_human_detector)
 - [LED Blinker v1.0 (By Cupprum)](https://github.com/Cupprum/Blinker)
 - [LED Pulsator (By leedave)](https://github.com/leedave/Leeds-Flipper-Zero-Applications)
