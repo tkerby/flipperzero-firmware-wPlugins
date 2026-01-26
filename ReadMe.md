@@ -89,6 +89,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [ListEM v1.2 (By Clawzman)](https://github.com/Clawzman/Flipper_ListEM)
 - Updated: [Swimmy Fish v2.0 (By Invizabel)](https://github.com/Invizabel/fish)
 - Updated: [Sub-GHz Scheduler v3.0 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
+- Updated: [NFC Comparator v2.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
 
 <a name="release">
 
