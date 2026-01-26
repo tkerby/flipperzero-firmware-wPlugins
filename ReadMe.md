@@ -37,7 +37,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Flipper Hero v1.4 (By mentoster)](https://github.com/mentoster/Flipper-hero)
 - Updated: [NFC Seader v4.0 (By bettse)](https://github.com/bettse/seader) (Version Only)
 - Updated: [CO2 Logger v0.4 (By harryob2)](https://github.com/harryob2/co2_logger) `Req: MH-Z19` (Version Only)
-- Updated: [Swimmy Fish v2.0 (By Invizabel)](https://github.com/Invizabel/fish)
 - Added: [ArduGolf v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperGolf)
 - Sub-GHz: [Removed car protocols from internal compile, now handled by ProtoPirate. Removed: Kia, ScherKahn and StarLine (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/cdd4f4d8430e311c9a745a5b953012cdd00c448b)
 - Sub-GHz: [Added Signal Settings (By Dmitry422 & xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/905b52a53f4b430d8db22594893352a2f72cd078)
@@ -90,6 +89,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Lasko 2519 Timer v1.0 (By LN4CY)](https://github.com/LN4CY/lasko-2519-timer)
 - Added: [C5 Lab v1.0 (By C5Lab / Lab_Team)](https://github.com/C5Lab/projectZero)
 - Updated: [ListEM v1.2 (By Clawzman)](https://github.com/Clawzman/Flipper_ListEM)
+- Updated: [Swimmy Fish v2.0 (By Invizabel)](https://github.com/Invizabel/fish)
 
 <a name="release">
 

@@ -19,10 +19,10 @@ int jellyfish_y = 0;
 bool is_jumping = false;
 bool is_random_kelp = true;
 bool is_random_jellyfish = true;
-int kelp_x_rand = rand() % 2 + 1;
-int kelp_y_rand = rand() % 2 + 1;
-int jellyfish_x_rand = rand() % 2 + 1;
-int jellyfish_y_rand = rand() % 2 + 1;
+int kelp_x_rand;
+int kelp_y_rand;
+int jellyfish_x_rand;
+int jellyfish_y_rand;
 
 // specials
 int max_gravity = 1;
@@ -215,6 +215,11 @@ int main() {
     furi_hal_rtc_get_datetime(&dt);
     unsigned int seed = dt.hour * 3600 + dt.minute * 60 + dt.second;
     srand(seed);
+
+    kelp_x_rand = rand() % 2 + 1;
+    kelp_y_rand = rand() % 2 + 1;
+    jellyfish_x_rand = rand() % 2 + 1;
+    jellyfish_y_rand = rand() % 2 + 1;
 
     FuriMessageQueue* queue = furi_message_queue_alloc(8, sizeof(InputEvent));
     ViewPort* view_port = view_port_alloc();
