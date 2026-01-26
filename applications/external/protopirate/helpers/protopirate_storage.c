@@ -94,7 +94,8 @@ static bool protopirate_storage_write_capture_data(
            uint32_array_size > 0 && uint32_array_size < 1024) {
             uint32_t* uint32_array = malloc(sizeof(uint32_t) * uint32_array_size);
             if(uint32_array) {
-                if(flipper_format_read_uint32(flipper_format, "Key", uint32_array, uint32_array_size))
+                if(flipper_format_read_uint32(
+                       flipper_format, "Key", uint32_array, uint32_array_size))
                     flipper_format_write_uint32(save_file, "Key", uint32_array, uint32_array_size);
                 free(uint32_array);
             }
@@ -121,8 +122,10 @@ static bool protopirate_storage_write_capture_data(
        uint32_array_size > 0 && uint32_array_size < 1024) {
         uint8_t* custom_data = malloc(uint32_array_size);
         if(custom_data) {
-            if(flipper_format_read_hex(flipper_format, "Custom_preset_data", custom_data, uint32_array_size))
-                flipper_format_write_hex(save_file, "Custom_preset_data", custom_data, uint32_array_size);
+            if(flipper_format_read_hex(
+                   flipper_format, "Custom_preset_data", custom_data, uint32_array_size))
+                flipper_format_write_hex(
+                    save_file, "Custom_preset_data", custom_data, uint32_array_size);
             free(custom_data);
         }
     }
@@ -164,8 +167,10 @@ static bool protopirate_storage_write_capture_data(
        uint32_array_size > 0 && uint32_array_size < 4096) {
         uint32_t* uint32_array = malloc(sizeof(uint32_t) * uint32_array_size);
         if(uint32_array) {
-            if(flipper_format_read_uint32(flipper_format, "RAW_Data", uint32_array, uint32_array_size))
-                flipper_format_write_uint32(save_file, "RAW_Data", uint32_array, uint32_array_size);
+            if(flipper_format_read_uint32(
+                   flipper_format, "RAW_Data", uint32_array, uint32_array_size))
+                flipper_format_write_uint32(
+                    save_file, "RAW_Data", uint32_array, uint32_array_size);
             free(uint32_array);
         }
     }
@@ -384,7 +389,7 @@ static void protopirate_storage_build_file_list(void) {
             g_file_entries[i] = g_file_entries[g_file_count - 1 - i];
             g_file_entries[g_file_count - 1 - i] = temp;
         }
-    }    
+    }
 
     storage_dir_close(dir);
     storage_file_free(dir);

@@ -46,7 +46,7 @@ void protopirate_scene_saved_on_enter(void* context) {
                     protopirate_scene_saved_submenu_callback,
                     app);
             }
-            
+
             // CRITICAL: Yield to prevent GUI lockup
             furi_delay_ms(1);
         }
