@@ -74,7 +74,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Roman Decoder v0.2 (By evillero)](https://github.com/evillero/roman_decoder)
 - UI: [Revert spacing changes 3px back to 4px (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/a1e01bc06d945e3ca045f3f1c526f4613544e2e2)
 - NFC: [Fix LED not blinking at SLIX unlock (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/3f85bea80dad661f8d47f0715c36a11e5004d839)
-- Updated: [Sub-GHz Scheduler v3.0 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
 - Updated: [ProtoPirate v1.7 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - Updated: [BT Audio v1.2 (By FatherDivine)](https://github.com/FatherDivine/flipperzero-mayhem/tree/bt_audio/flipper_companion_apps/applications/external/bt_audio) `Req: ESP32 w BT` & [This FW](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/external/bt_audio/.esp32_firmware)
 - Updated: [Metroflip v1.1 (By luu176)](https://github.com/luu176/Metroflip)
@@ -90,6 +89,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [C5 Lab v1.0 (By C5Lab / Lab_Team)](https://github.com/C5Lab/projectZero)
 - Updated: [ListEM v1.2 (By Clawzman)](https://github.com/Clawzman/Flipper_ListEM)
 - Updated: [Swimmy Fish v2.0 (By Invizabel)](https://github.com/Invizabel/fish)
+- Updated: [Sub-GHz Scheduler v3.0 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
 
 <a name="release">
 
