@@ -1,7 +1,9 @@
 #include "../bt_audio.h"
 
-static void
-    bt_audio_scene_warning_widget_callback(GuiButtonType result, InputType type, void* context) {
+static void bt_audio_scene_warning_widget_callback(
+    GuiButtonType result,
+    InputType type,
+    void* context) {
     BtAudio* app = context;
     if(type == InputTypeShort) {
         view_dispatcher_send_custom_event(app->view_dispatcher, result);
@@ -16,7 +18,7 @@ void bt_audio_scene_warning_on_enter(void* context) {
 
     widget_add_string_element(
         widget, 0, 0, AlignLeft, AlignTop, FontPrimary, "ESP32 Not Detected");
-
+    
     widget_add_text_scroll_element(
         widget,
         0,
@@ -27,10 +29,9 @@ void bt_audio_scene_warning_on_enter(void* context) {
         "board with compatible firmware.\n\n"
         "Setup guide:\n"
         "github.com/FatherDivine/\n"
-        "flipperzero-mayhem/tree/\n"
-        "bt_audio/flipper_companion_apps/\n"
-        "applications/external/\n"
-        "bt_audio/README.md\n\n"
+        "flipperzero-firmware-wPlugins\n"
+        "blob/dev/applications/\n"
+        "external/bt_audio/README.md\n\n"
         "Press OK for QR code");
 
     widget_add_button_element(
