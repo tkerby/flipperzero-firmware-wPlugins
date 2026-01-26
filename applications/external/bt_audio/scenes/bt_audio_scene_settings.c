@@ -9,15 +9,15 @@ typedef enum {
     SettingsIndexBackgroundMode,
     SettingsIndexBacklight,
     SettingsIndexShuffleMode,
-    SettingsIndexContinuousPlay,   // Continuous play mode for file browser
+    SettingsIndexContinuousPlay, // Continuous play mode for file browser
     SettingsIndexInitialVolume,
     SettingsIndexEqBass,
     SettingsIndexEqMid,
     SettingsIndexEqTreble,
     SettingsIndexBtDeviceName,
-    SettingsIndexWifiEnabled,      // WiFi enable/disable toggle
-    SettingsIndexWifiSettings,     // WiFi settings submenu
-    SettingsIndexSavedDevices,     // Saved devices list (includes last device as first entry)
+    SettingsIndexWifiEnabled, // WiFi enable/disable toggle
+    SettingsIndexWifiSettings, // WiFi settings submenu
+    SettingsIndexSavedDevices, // Saved devices list (includes last device as first entry)
 } SettingsIndex;
 
 static const char* sd_source_names[] = {
@@ -53,8 +53,8 @@ static const char* shuffle_mode_names[] = {
 };
 
 static const char* continuous_play_names[] = {
-    "Repeat File",   // OFF - repeat the selected file
-    "Play Next",     // ON - play next files in directory
+    "Repeat File", // OFF - repeat the selected file
+    "Play Next", // ON - play next files in directory
 };
 
 static const char* wifi_enabled_names[] = {
@@ -64,18 +64,18 @@ static const char* wifi_enabled_names[] = {
 
 // Volume level names (0-127 in steps of ~12.7, showing %)
 static const char* volume_names[] = {
-    "0%",    // 0
-    "10%",   // 13
-    "20%",   // 25
-    "30%",   // 38
-    "40%",   // 51
-    "50%",   // 64
-    "60%",   // 76
-    "70%",   // 89
-    "75%",   // 96 (default)
-    "80%",   // 102
-    "90%",   // 114
-    "100%",  // 127
+    "0%", // 0
+    "10%", // 13
+    "20%", // 25
+    "30%", // 38
+    "40%", // 51
+    "50%", // 64
+    "60%", // 76
+    "70%", // 89
+    "75%", // 96 (default)
+    "80%", // 102
+    "90%", // 114
+    "100%", // 127
 };
 #define VOLUME_STEP_COUNT 12
 static const uint8_t volume_values[] = {0, 13, 25, 38, 51, 64, 76, 89, 96, 102, 114, 127};
@@ -101,7 +101,7 @@ static const int8_t eq_values[] = {-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10};
 // Users can choose from these names when connecting to speakers/headphones
 // "FlipperAudio" is the default (index 0), followed by rest in alphabetical order
 static const char* bt_device_names[] = {
-    "FlipperAudio",   // Default - kept first
+    "FlipperAudio", // Default - kept first
     "Audio Stream",
     "BT Audio",
     "Flipper Zero",
@@ -160,10 +160,11 @@ static void bt_audio_scene_settings_sd_source_change(VariableItem* item) {
     variable_item_set_current_value_text(item, sd_source_names[index]);
 
     FURI_LOG_I(TAG, "SD source changed to: %s", sd_source_names[index]);
-    
+
     // Warn user if Flipper SD is selected (WIP feature)
     if(index == BtAudioSdSourceFlipper) {
-        FURI_LOG_W(TAG, "Flipper SD mode selected - this feature is WIP and not fully implemented");
+        FURI_LOG_W(
+            TAG, "Flipper SD mode selected - this feature is WIP and not fully implemented");
     }
 }
 
@@ -178,19 +179,19 @@ static void bt_audio_scene_settings_tx_power_change(VariableItem* item) {
     char cmd[32];
     const char* power_level;
     switch(index) {
-        case BtAudioTxPowerLow:
-            power_level = "LOW";
-            break;
-        case BtAudioTxPowerMedium:
-            power_level = "MEDIUM";
-            break;
-        case BtAudioTxPowerHigh:
-            power_level = "HIGH";
-            break;
-        case BtAudioTxPowerMax:
-        default:
-            power_level = "MAX";
-            break;
+    case BtAudioTxPowerLow:
+        power_level = "LOW";
+        break;
+    case BtAudioTxPowerMedium:
+        power_level = "MEDIUM";
+        break;
+    case BtAudioTxPowerHigh:
+        power_level = "HIGH";
+        break;
+    case BtAudioTxPowerMax:
+    default:
+        power_level = "MAX";
+        break;
     }
     snprintf(cmd, sizeof(cmd), "TX_POWER:%s\n", power_level);
     bt_audio_uart_tx(app->uart, cmd);
@@ -228,9 +229,11 @@ static void bt_audio_scene_settings_background_mode_change(VariableItem* item) {
     variable_item_set_current_value_text(item, background_mode_names[index]);
 
     FURI_LOG_I(TAG, "Background mode: %s", background_mode_names[index]);
-    
+
     if(app->config.background_mode) {
-        FURI_LOG_I(TAG, "Background mode enabled - audio will continue when app exits, UART pins stay in use");
+        FURI_LOG_I(
+            TAG,
+            "Background mode enabled - audio will continue when app exits, UART pins stay in use");
     }
 }
 
@@ -277,7 +280,8 @@ static void bt_audio_scene_settings_continuous_play_change(VariableItem* item) {
 
     // Send continuous play mode to ESP32
     char cmd[32];
-    int cmd_len = snprintf(cmd, sizeof(cmd), "CONTINUOUS:%s\n", app->config.continuous_play ? "ON" : "OFF");
+    int cmd_len =
+        snprintf(cmd, sizeof(cmd), "CONTINUOUS:%s\n", app->config.continuous_play ? "ON" : "OFF");
     if(cmd_len >= 0 && cmd_len < (int)sizeof(cmd)) {
         bt_audio_uart_tx(app->uart, cmd);
     }
@@ -372,7 +376,7 @@ static void bt_audio_scene_settings_wifi_enabled_change(VariableItem* item) {
     variable_item_set_current_value_text(item, wifi_enabled_names[index]);
 
     FURI_LOG_I(TAG, "WiFi Streaming: %s", wifi_enabled_names[index]);
-    
+
     // Save WiFi config when changed
     bt_audio_wifi_config_save(app);
 }
@@ -411,54 +415,39 @@ void bt_audio_scene_settings_on_enter(void* context) {
 
     // 5V GPIO Power setting
     item = variable_item_list_add(
-        var_item_list,
-        "5V GPIO Power",
-        2,
-        bt_audio_scene_settings_5v_gpio_change,
-        app);
+        var_item_list, "5V GPIO Power", 2, bt_audio_scene_settings_5v_gpio_change, app);
     variable_item_set_current_value_index(item, app->config.enable_5v_gpio ? 1 : 0);
-    variable_item_set_current_value_text(item, enable_5v_names[app->config.enable_5v_gpio ? 1 : 0]);
+    variable_item_set_current_value_text(
+        item, enable_5v_names[app->config.enable_5v_gpio ? 1 : 0]);
 
     // Background mode setting (WIP)
     item = variable_item_list_add(
-        var_item_list,
-        "Background Audio",
-        2,
-        bt_audio_scene_settings_background_mode_change,
-        app);
+        var_item_list, "Background Audio", 2, bt_audio_scene_settings_background_mode_change, app);
     variable_item_set_current_value_index(item, app->config.background_mode ? 1 : 0);
-    variable_item_set_current_value_text(item, background_mode_names[app->config.background_mode ? 1 : 0]);
+    variable_item_set_current_value_text(
+        item, background_mode_names[app->config.background_mode ? 1 : 0]);
 
     // Backlight setting
     item = variable_item_list_add(
-        var_item_list,
-        "Backlight",
-        2,
-        bt_audio_scene_settings_backlight_change,
-        app);
+        var_item_list, "Backlight", 2, bt_audio_scene_settings_backlight_change, app);
     variable_item_set_current_value_index(item, app->config.keep_backlight_on ? 1 : 0);
-    variable_item_set_current_value_text(item, backlight_names[app->config.keep_backlight_on ? 1 : 0]);
+    variable_item_set_current_value_text(
+        item, backlight_names[app->config.keep_backlight_on ? 1 : 0]);
 
     // Shuffle mode setting
     item = variable_item_list_add(
-        var_item_list,
-        "Shuffle Play",
-        2,
-        bt_audio_scene_settings_shuffle_mode_change,
-        app);
+        var_item_list, "Shuffle Play", 2, bt_audio_scene_settings_shuffle_mode_change, app);
     variable_item_set_current_value_index(item, app->config.shuffle_mode ? 1 : 0);
-    variable_item_set_current_value_text(item, shuffle_mode_names[app->config.shuffle_mode ? 1 : 0]);
+    variable_item_set_current_value_text(
+        item, shuffle_mode_names[app->config.shuffle_mode ? 1 : 0]);
 
     // Continuous play setting (for file browser)
     // OFF = Repeat selected file, ON = Play next files in directory
     item = variable_item_list_add(
-        var_item_list,
-        "Continuous Play",
-        2,
-        bt_audio_scene_settings_continuous_play_change,
-        app);
+        var_item_list, "Continuous Play", 2, bt_audio_scene_settings_continuous_play_change, app);
     variable_item_set_current_value_index(item, app->config.continuous_play ? 1 : 0);
-    variable_item_set_current_value_text(item, continuous_play_names[app->config.continuous_play ? 1 : 0]);
+    variable_item_set_current_value_text(
+        item, continuous_play_names[app->config.continuous_play ? 1 : 0]);
 
     // Initial Volume setting
     item = variable_item_list_add(
@@ -473,33 +462,21 @@ void bt_audio_scene_settings_on_enter(void* context) {
 
     // EQ Bass setting
     item = variable_item_list_add(
-        var_item_list,
-        "EQ Bass",
-        EQ_STEP_COUNT,
-        bt_audio_scene_settings_eq_bass_change,
-        app);
+        var_item_list, "EQ Bass", EQ_STEP_COUNT, bt_audio_scene_settings_eq_bass_change, app);
     uint8_t bass_index = eq_to_index(app->config.eq_bass);
     variable_item_set_current_value_index(item, bass_index);
     variable_item_set_current_value_text(item, eq_names[bass_index]);
 
     // EQ Mid setting
     item = variable_item_list_add(
-        var_item_list,
-        "EQ Mid",
-        EQ_STEP_COUNT,
-        bt_audio_scene_settings_eq_mid_change,
-        app);
+        var_item_list, "EQ Mid", EQ_STEP_COUNT, bt_audio_scene_settings_eq_mid_change, app);
     uint8_t mid_index = eq_to_index(app->config.eq_mid);
     variable_item_set_current_value_index(item, mid_index);
     variable_item_set_current_value_text(item, eq_names[mid_index]);
 
     // EQ Treble setting
     item = variable_item_list_add(
-        var_item_list,
-        "EQ Treble",
-        EQ_STEP_COUNT,
-        bt_audio_scene_settings_eq_treble_change,
-        app);
+        var_item_list, "EQ Treble", EQ_STEP_COUNT, bt_audio_scene_settings_eq_treble_change, app);
     uint8_t treble_index = eq_to_index(app->config.eq_treble);
     variable_item_set_current_value_index(item, treble_index);
     variable_item_set_current_value_text(item, eq_names[treble_index]);
@@ -520,13 +497,10 @@ void bt_audio_scene_settings_on_enter(void* context) {
     // The menu option will not appear even if this is enabled.
     // Keeping the setting for future ESP32-S3 support.
     item = variable_item_list_add(
-        var_item_list,
-        "WiFi (Disabled)",
-        2,
-        bt_audio_scene_settings_wifi_enabled_change,
-        app);
+        var_item_list, "WiFi (Disabled)", 2, bt_audio_scene_settings_wifi_enabled_change, app);
     variable_item_set_current_value_index(item, app->wifi_config.wifi_enabled ? 1 : 0);
-    variable_item_set_current_value_text(item, wifi_enabled_names[app->wifi_config.wifi_enabled ? 1 : 0]);
+    variable_item_set_current_value_text(
+        item, wifi_enabled_names[app->wifi_config.wifi_enabled ? 1 : 0]);
 
     // WiFi Settings - click to configure SSID, password, stream URL
     {
@@ -551,7 +525,8 @@ void bt_audio_scene_settings_on_enter(void* context) {
     // The first device in the list is always the most recently connected (Last Device)
     {
         char saved_label[32];
-        snprintf(saved_label, sizeof(saved_label), "Saved Devices (%d)", app->device_history_count);
+        snprintf(
+            saved_label, sizeof(saved_label), "Saved Devices (%d)", app->device_history_count);
         item = variable_item_list_add(var_item_list, saved_label, 1, NULL, app);
         if(app->device_history_count > 0) {
             // Show first device name as hint (this is the last connected device)
@@ -579,18 +554,26 @@ bool bt_audio_scene_settings_on_event(void* context, SceneManagerEvent event) {
             // TODO: Create proper WiFi settings scene with text input
             FuriString* wifi_info = furi_string_alloc();
             furi_string_printf(wifi_info, "WiFi Configuration\n\n");
-            furi_string_cat_printf(wifi_info, "SSID: %s\n", 
+            furi_string_cat_printf(
+                wifi_info,
+                "SSID: %s\n",
                 app->wifi_config.ssid[0] != '\0' ? app->wifi_config.ssid : "(not set)");
-            furi_string_cat_printf(wifi_info, "Password: %s\n", 
+            furi_string_cat_printf(
+                wifi_info,
+                "Password: %s\n",
                 app->wifi_config.password[0] != '\0' ? "********" : "(not set)");
-            furi_string_cat_printf(wifi_info, "Stream URL: %s\n", 
-                app->wifi_config.stream_url[0] != '\0' ? app->wifi_config.stream_url : "(not set)");
-            furi_string_cat_printf(wifi_info, "\nEdit wifi.config file manually:\n%s\n", BT_AUDIO_WIFI_CONFIG_FILE);
-            
+            furi_string_cat_printf(
+                wifi_info,
+                "Stream URL: %s\n",
+                app->wifi_config.stream_url[0] != '\0' ? app->wifi_config.stream_url :
+                                                         "(not set)");
+            furi_string_cat_printf(
+                wifi_info, "\nEdit wifi.config file manually:\n%s\n", BT_AUDIO_WIFI_CONFIG_FILE);
+
             text_box_set_text(app->text_box, furi_string_get_cstr(wifi_info));
             text_box_set_font(app->text_box, TextBoxFontText);
             view_dispatcher_switch_to_view(app->view_dispatcher, BtAudioViewTextBox);
-            
+
             furi_string_free(wifi_info);
             consumed = true;
         }

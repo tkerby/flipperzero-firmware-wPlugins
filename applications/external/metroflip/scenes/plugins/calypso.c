@@ -534,7 +534,7 @@ static NfcCommand calypso_poller_callback(NfcGenericEvent event, void* context) 
                 card->navigo = NULL;
                 card->opus = NULL;
                 card->ravkav = NULL;
-                
+
                 // Select app ICC
                 error = select_new_app(
                     0x00, 0x02, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);

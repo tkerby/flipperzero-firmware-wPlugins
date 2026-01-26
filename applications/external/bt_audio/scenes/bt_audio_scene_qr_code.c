@@ -14,13 +14,13 @@ void bt_audio_scene_qr_code_on_enter(void* context) {
 
     // Generate QR code
     QRCodeModel* qr_model = view_get_model(app->qr_view);
-    
+
     static const size_t buffer_len = qrcodegen_BUFFER_LEN_MAX;
-    
+
     if(!qr_model->buffer) {
         qr_model->buffer = malloc(buffer_len);
     }
-    
+
     if(!qr_model->qrcode) {
         qr_model->qrcode = malloc(buffer_len);
     }
@@ -37,7 +37,7 @@ void bt_audio_scene_qr_code_on_enter(void* context) {
             qrcodegen_Mask_AUTO,
             true);
     }
-    
+
     view_commit_model(app->qr_view, false);
     view_dispatcher_switch_to_view(app->view_dispatcher, BtAudioViewQRCode);
 }
@@ -50,7 +50,7 @@ bool bt_audio_scene_qr_code_on_event(void* context, SceneManagerEvent event) {
 
 void bt_audio_scene_qr_code_on_exit(void* context) {
     BtAudio* app = context;
-    
+
     // Free QR code data
     QRCodeModel* qr_model = view_get_model(app->qr_view);
     if(qr_model->buffer) {
