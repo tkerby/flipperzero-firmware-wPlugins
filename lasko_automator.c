@@ -49,6 +49,7 @@ typedef struct {
   int32_t duration_on_min;
   int32_t duration_off_min;
   int32_t menu_index; // 0: Start, 1: On, 2: Off, 3: About
+  bool screen_off;
 } AppContext;
 
 // --- IR Logic ---
@@ -160,6 +161,12 @@ static void render_callback(Canvas *canvas, void *ctx_ptr) {
   furi_mutex_acquire(ctx->mutex, FuriWaitForever);
 
   canvas_clear(canvas);
+
+  if (ctx->screen_off) {
+    furi_mutex_release(ctx->mutex);
+    return;
+  }
+
   canvas_set_font(canvas, FontPrimary);
   canvas_draw_str(canvas, 2, 10, "Lasko 2519 Timer");
 
@@ -205,6 +212,7 @@ static void render_callback(Canvas *canvas, void *ctx_ptr) {
     canvas_set_font(canvas, FontSecondary);
     canvas_draw_str(canvas, 10, 40, "Copyright 2026");
     canvas_draw_str(canvas, 10, 52, "Made by LN4CY");
+    canvas_draw_str(canvas, 10, 62, "Back/Left to Exit");
 
   } else {
     uint32_t now = furi_get_tick();
@@ -235,6 +243,8 @@ static void render_callback(Canvas *canvas, void *ctx_ptr) {
     canvas_draw_str(canvas, 10, 50, buffer);
 
     canvas_draw_str(canvas, 40, 62, "Back to Stop");
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str(canvas, 10, 20, "Right: Screen Off");
   }
 
   furi_mutex_release(ctx->mutex);
@@ -252,6 +262,7 @@ int32_t lasko_automator_app(void *p) {
   ctx->duration_on_min = DEFAULT_ON_MIN;
   ctx->duration_off_min = DEFAULT_OFF_MIN;
   ctx->menu_index = 0;
+  ctx->screen_off = false;
 
   ctx->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
   ctx->notification = furi_record_open(RECORD_NOTIFICATION);
@@ -277,14 +288,21 @@ int32_t lasko_automator_app(void *p) {
       furi_mutex_acquire(ctx->mutex, FuriWaitForever);
 
       if (event.type == InputTypeShort || event.type == InputTypeRepeat) {
-        if (event.key == InputKeyBack) {
+        if (event.key == InputKeyBack ||
+            (event.key == InputKeyLeft && ctx->state == StateAbout)) {
           if (ctx->state == StateIdle) {
-            running = false;
+            if (event.key == InputKeyBack)
+              running = false;
           } else if (ctx->state == StateAbout) {
             ctx->state = StateIdle;
           } else {
             // Stop and go back to config
             ctx->state = StateIdle;
+            if (ctx->screen_off) {
+              ctx->screen_off = false;
+              notification_message(ctx->notification,
+                                   &sequence_display_backlight_on);
+            }
           }
         }
 
@@ -313,7 +331,9 @@ int32_t lasko_automator_app(void *p) {
               ctx->duration_off_min++;
           }
 
-          if (event.key == InputKeyOk) {
+          if (event.key == InputKeyOk ||
+              (event.key == InputKeyRight &&
+               (ctx->menu_index == 0 || ctx->menu_index == 3))) {
             if (ctx->menu_index == 0) {
               // Start!
               furi_mutex_release(ctx->mutex);
@@ -327,6 +347,18 @@ int32_t lasko_automator_app(void *p) {
             }
             if (ctx->menu_index == 3) {
               ctx->state = StateAbout;
+            }
+          }
+        } else if (ctx->state == StateRunningOn ||
+                   ctx->state == StateRunningOff) {
+          if (event.key == InputKeyRight) {
+            ctx->screen_off = !ctx->screen_off;
+            if (ctx->screen_off) {
+              notification_message(ctx->notification,
+                                   &sequence_display_backlight_off);
+            } else {
+              notification_message(ctx->notification,
+                                   &sequence_display_backlight_on);
             }
           }
         }
