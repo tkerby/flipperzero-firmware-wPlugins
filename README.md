@@ -77,10 +77,10 @@ Ideal for:
 
 **✔ Configurable via submenu**
 
--> Boundary on/off
--> Bit flip on/off
--> Flip count adjustable
--> Prefix preserve on/off
+| Boundary on/off
+| Bit flip on/off
+| Flip count adjustable
+| Prefix preserve on/off
 
 **This is legitimate fuzzing, not just “random junk”!**
 
