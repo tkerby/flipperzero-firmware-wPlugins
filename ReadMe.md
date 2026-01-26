@@ -26,10 +26,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0124-2146-0.420.0-5c9e5a0](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0126-1534-0.420.0-edd1aa7](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2026-01-24 21:46 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-01-24 21:46 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2026-01-26 15:34 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-01-26 15:34 EST`
 - NFC: [ADD: Ventra parsing plugin to Metroflip. Updated: NFC ventra_parser.fal. #1164 (By FatherDivine)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1164)
 - Updated: [Sub-GHz Scheduler v2.3 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
 - Added: [PIR HC-SR501 Alarm v1.0 (By ku6a-cj)](https://github.com/ku6a-cj/-PIR-HC-SR501-Proximity-alarm-Flipper-zero) `Req: PIR HC-SR501`
@@ -70,7 +70,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Mitzi Type Aid Demo v0.1 (By fgreil)](https://github.com/fgreil/mitzi-tyaid)
 - Added: [Panis - A Grumpy Bread v0.1 (By fgreil)](https://github.com/fgreil/mitzi-panis)
 - Added: [Karl Eido v0.1 (By fgreil)](https://github.com/fgreil/mitzi-karl-eido)
-- Updated: [ListEM v1.1 (By Clawzman)](https://github.com/Clawzman/Flipper_ListEM)
 - Updated: [Roman Decoder v0.2 (By evillero)](https://github.com/evillero/roman_decoder)
 - UI: [Revert spacing changes 3px back to 4px (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/a1e01bc06d945e3ca045f3f1c526f4613544e2e2)
 - NFC: [Fix LED not blinking at SLIX unlock (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/3f85bea80dad661f8d47f0715c36a11e5004d839)
