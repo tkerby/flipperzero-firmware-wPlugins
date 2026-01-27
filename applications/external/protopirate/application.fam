@@ -4,7 +4,7 @@ App(
     apptype=FlipperAppType.EXTERNAL,
     targets=["f7"],
     entry_point="protopirate_app",
-    stack_size=3 * 1024,
+    stack_size=2 * 1024,
     fap_icon="images/protopirate_10px.png",
     fap_icon_assets="images",
     fap_file_assets="keystore",
