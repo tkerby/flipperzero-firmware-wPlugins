@@ -77,7 +77,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Metroflip v1.1 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [WiFi (Marauder) v0.7.7 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion) `Req: ESP32` with [ESP32 MARAUDER Firmware](https://github.com/justcallmekoko/ESP32Marauder/releases/latest)
 - Updated: [ESP32CAM Marauder v0.7.5 (By 0xchocolate & eried)](https://github.com/eried/flipperzero-mayhem) `Req: ESP32-CAM (Mayhem)`
-- ESP Flasher: Bump Marauder v1.9.1 4fb65cd_nightly (By justcallmekoko)
 - Updated: [PicoPass (iClass) v1.19 (By Bettse)](https://gitlab.com/bettse/picopass)
 - Updated: [Seos compatible v1.2 (By bettse)](https://gitlab.com/bettse/flipper_seos)
 - Updated: [Brainfuck v1.5 (By nymda)](https://github.com/nymda/FlipperZeroBrainfuck)
@@ -92,6 +91,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [ProtoPirate v1.8 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - Sub-GHz: [Fix Alutech AT4N false positives & Cleanup of extra local variables (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/185155a8b561f555a982bb0d6772fc39735e7422)
 - Desktop Animations Update to Remove Holiday Animations, Patreon animation sets for Minimal have had these removed as well.
+- [ESP Flasher: Bump Marauder v1.10.0 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.10.0)
 
 <a name="release">
 
