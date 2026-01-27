@@ -30,6 +30,8 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2026-01-27 11:44 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-01-27 11:44 EST`
+- Updated: [NFC Comparator v2.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
+- Updated: [UDECard v1.0.4 (By hahnworks](https://github.com/hahnworks/UDECard) (Version Only)
 
 <a name="release">
 
@@ -783,7 +785,7 @@ $ ./fbt dolphin_ext
 - [u-blox GPS v0.5 (By liamhays)](https://github.com/liamhays/ublox)
 - [UART Echo (By DrZlo13)-OFW](https://github.com/flipperdevices/flipperzero-firmware/pull/831)
 - [UART Terminal v1.5 (By cool4uma)](https://github.com/cool4uma/UART_Terminal)
-- [UDECard v1.0.3 (By hahnworks](https://github.com/hahnworks/UDECard)
+- [UDECard v1.0.4 (By hahnworks](https://github.com/hahnworks/UDECard)
 - [UHF RFID WIP v1.1 (By frux-c)](https://github.com/frux-c/uhf_rfid) `Req: M100 or QM100`
 - [UID Brute Smarter v1.1 (By fbettag)](https://github.com/fbettag/uid_brute_smarter)
 - [uPython v1.7 (By ofabel)](https://github.com/ofabel/mp-flipper)

@@ -1,3 +1,6 @@
+v1.0.4:
+- Don't check the second occurrence(s) of the member type (thanks @Zwiebelmettwurst)
+
 v1.0.3:
 - Improve dictionary handling on standard firmware
 
