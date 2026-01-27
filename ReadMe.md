@@ -90,7 +90,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Sub-GHz Scheduler v3.0 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
 - Updated: [NFC Comparator v2.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
 - Updated: [ProtoPirate v1.8 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
-- Sub-GHz: [Fix Alutech AT4N false positives & Cleanup of extra local variables (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/)
+- Sub-GHz: [Fix Alutech AT4N false positives & Cleanup of extra local variables (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/185155a8b561f555a982bb0d6772fc39735e7422)
+- Desktop Animations Update to Remove Holiday Animations, Patreon animation sets for Minimal have had these removed as well.
 
 <a name="release">
 

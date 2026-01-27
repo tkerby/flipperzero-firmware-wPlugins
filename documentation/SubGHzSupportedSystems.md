@@ -63,8 +63,8 @@ That list is only for default SubGHz app, apps like *Weather Station* have their
 - Legrand `AM650` (18 bits, Static) - Doorbells
 - Somfy Telis `433.92MHz` `AM650` (56 bits, Dynamic)
 - Feron `433.92MHz` `AM650` (32 bits, Static) - RGB LED remotes, other.
-- Honeywell `AM650` (64 bits, Dynamic) - Alarm, Sensor
-- Honeywell WDB `AM650` (48 bits, Dynamic) - Doorbell
+- Honeywell `AM650` (64 bits, Static) - Alarm, Sensor
+- Honeywell WDB `AM650` (48 bits, Static) - Doorbell
 - Magellan `433.92MHz` `AM650` (32 bits, Static) - Sensor, alarm
 - See Weather Station for other weather sensors
 
