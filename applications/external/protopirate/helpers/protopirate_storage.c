@@ -1,18 +1,7 @@
 // helpers/protopirate_storage.c
 #include "protopirate_storage.h"
-#include <toolbox/stream/file_stream.h>
 
-#define TAG                  "ProtoPirateStorage"
-#define MAX_FILES_TO_DISPLAY 30
-
-// Simple file entry
-typedef struct {
-    char name[48];
-} FileEntry;
-
-static FileEntry* g_file_entries = NULL;
-static uint32_t g_file_count = 0;
-static bool g_file_list_valid = false;
+#define TAG "ProtoPirateStorage"
 
 bool protopirate_storage_init(void) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
@@ -159,6 +148,29 @@ static bool protopirate_storage_write_capture_data(
         flipper_format_write_uint32(save_file, "Type", &uint32_value, 1);
 
     flipper_format_rewind(flipper_format);
+    if(flipper_format_read_uint32(flipper_format, "Seed", &uint32_value, 1))
+        flipper_format_write_uint32(save_file, "Seed", &uint32_value, 1);
+
+    flipper_format_rewind(flipper_format);
+    uint8_t val_field[2];
+    if(flipper_format_read_hex(flipper_format, "ValidationField", val_field, 2)) {
+        flipper_format_write_hex(save_file, "ValidationField", val_field, 2);
+    } else {
+        flipper_format_rewind(flipper_format);
+        if(flipper_format_read_uint32(flipper_format, "ValidationField", &uint32_value, 1))
+            flipper_format_write_uint32(save_file, "ValidationField", &uint32_value, 1);
+    }
+
+    flipper_format_rewind(flipper_format);
+    if(flipper_format_read_string(flipper_format, "Key_2", string_value))
+        flipper_format_write_string(save_file, "Key_2", string_value);
+
+    flipper_format_rewind(flipper_format);
+    uint8_t key1_buf[8];
+    if(flipper_format_read_hex(flipper_format, "Key1", key1_buf, 8))
+        flipper_format_write_hex(save_file, "Key1", key1_buf, 8);
+
+    flipper_format_rewind(flipper_format);
     if(flipper_format_read_uint32(flipper_format, "Check", &uint32_value, 1))
         flipper_format_write_uint32(save_file, "Check", &uint32_value, 1);
 
@@ -291,8 +303,6 @@ bool protopirate_storage_save_capture(
 
         if(out_path) furi_string_set(out_path, file_path);
 
-        g_file_list_valid = false;
-
         result = true;
         FURI_LOG_I(TAG, "Saved capture to %s", furi_string_get_cstr(file_path));
 
@@ -304,147 +314,10 @@ bool protopirate_storage_save_capture(
     return result;
 }
 
-// Simple file list builder
-static void protopirate_storage_build_file_list(void) {
-    FURI_LOG_D(TAG, "Building file list...");
-
-    // Free old entries
-    if(g_file_entries != NULL) {
-        free(g_file_entries);
-        g_file_entries = NULL;
-    }
-    g_file_count = 0;
-
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-
-    if(!storage_dir_exists(storage, PROTOPIRATE_APP_FOLDER)) {
-        storage_simply_mkdir(storage, PROTOPIRATE_APP_FOLDER);
-        furi_record_close(RECORD_STORAGE);
-        g_file_list_valid = true;
-        FURI_LOG_D(TAG, "Created app folder, no files yet");
-        return;
-    }
-
-    File* dir = storage_file_alloc(storage);
-    if(!dir) {
-        furi_record_close(RECORD_STORAGE);
-        g_file_list_valid = true;
-        return;
-    }
-
-    // Allocate max entries
-    g_file_entries = malloc(sizeof(FileEntry) * MAX_FILES_TO_DISPLAY);
-    if(!g_file_entries) {
-        storage_file_free(dir);
-        furi_record_close(RECORD_STORAGE);
-        g_file_list_valid = true;
-        FURI_LOG_E(TAG, "Failed to allocate file entries");
-        return;
-    }
-    memset(g_file_entries, 0, sizeof(FileEntry) * MAX_FILES_TO_DISPLAY);
-
-    if(!storage_dir_open(dir, PROTOPIRATE_APP_FOLDER)) {
-        storage_file_free(dir);
-        furi_record_close(RECORD_STORAGE);
-        g_file_list_valid = true;
-        FURI_LOG_E(TAG, "Failed to open directory");
-        return;
-    }
-
-    FileInfo file_info;
-    char name[128];
-    uint32_t count = 0;
-
-    while(storage_dir_read(dir, &file_info, name, sizeof(name)) && count < MAX_FILES_TO_DISPLAY) {
-        // Skip hidden/temp files
-        if(name[0] == '.') continue;
-
-        // Check extension
-        size_t len = strlen(name);
-        if(len < 5) continue;
-        if(strcmp(name + len - 4, ".psf") != 0) continue;
-
-        // Skip directories
-        if(file_info.flags & FSF_DIRECTORY) continue;
-
-        // Store name without extension
-        size_t copy_len = len - 4;
-        if(copy_len >= sizeof(g_file_entries[count].name)) {
-            copy_len = sizeof(g_file_entries[count].name) - 1;
-        }
-        memcpy(g_file_entries[count].name, name, copy_len);
-        g_file_entries[count].name[copy_len] = '\0';
-
-        count++;
-
-        // Yield every 10 files to prevent watchdog
-        if(count % 10 == 0) {
-            furi_delay_ms(1);
-        }
-    }
-
-    if(g_file_count > 1) {
-        for(uint32_t i = 0; i < g_file_count / 2; i++) {
-            FileEntry temp = g_file_entries[i];
-            g_file_entries[i] = g_file_entries[g_file_count - 1 - i];
-            g_file_entries[g_file_count - 1 - i] = temp;
-        }
-    }
-
-    storage_dir_close(dir);
-    storage_file_free(dir);
-    furi_record_close(RECORD_STORAGE);
-
-    g_file_count = count;
-    g_file_list_valid = true;
-
-    FURI_LOG_I(TAG, "Built file list: %lu files", (unsigned long)g_file_count);
-}
-
-uint32_t protopirate_storage_get_file_count(void) {
-    if(!g_file_list_valid) {
-        protopirate_storage_build_file_list();
-    }
-    return g_file_count;
-}
-
-void protopirate_storage_invalidate_cache(void) {
-    g_file_list_valid = false;
-}
-
-bool protopirate_storage_get_file_by_index(
-    uint32_t index,
-    FuriString* out_path,
-    FuriString* out_name) {
-    if(!g_file_list_valid) {
-        protopirate_storage_build_file_list();
-    }
-
-    if(g_file_entries == NULL || index >= g_file_count) {
-        return false;
-    }
-
-    if(out_path) {
-        furi_string_printf(
-            out_path,
-            "%s/%s%s",
-            PROTOPIRATE_APP_FOLDER,
-            g_file_entries[index].name,
-            PROTOPIRATE_APP_EXTENSION);
-    }
-    if(out_name) {
-        furi_string_set_str(out_name, g_file_entries[index].name);
-    }
-
-    return true;
-}
-
 bool protopirate_storage_delete_file(const char* file_path) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     bool result = storage_simply_remove(storage, file_path);
     furi_record_close(RECORD_STORAGE);
-
-    if(result) g_file_list_valid = false;
 
     FURI_LOG_I(TAG, "Delete file %s: %s", file_path, result ? "OK" : "FAILED");
     return result;
@@ -465,7 +338,9 @@ FlipperFormat* protopirate_storage_load_file(const char* file_path) {
 }
 
 void protopirate_storage_close_file(FlipperFormat* flipper_format) {
-    if(flipper_format) flipper_format_free(flipper_format);
+    if(flipper_format) {
+        flipper_format_free(flipper_format);
+    }
     furi_record_close(RECORD_STORAGE);
 }
 
@@ -477,14 +352,4 @@ bool protopirate_storage_file_exists(const char* file_path) {
     furi_record_close(RECORD_STORAGE);
 
     return exists;
-}
-
-void protopirate_storage_free_file_list(void) {
-    if(g_file_entries != NULL) {
-        free(g_file_entries);
-        g_file_entries = NULL;
-    }
-    g_file_count = 0;
-    g_file_list_valid = false;
-    FURI_LOG_D(TAG, "File list freed");
 }
