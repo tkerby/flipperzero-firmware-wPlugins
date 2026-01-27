@@ -3,7 +3,7 @@
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://lh3.googleusercontent.com/d/1iYQlRQXM7nA4IAdcPwvcKRSTCMoi8tug' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0112-2043-0.420.0-a9a0b32.tgz&channel=RM0112-2043-0.420.0-a9a0b32&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0127-1444-0.420.0-cd46514.tgz&channel=RM0127-1444-0.420.0-cd46514&version=0.420.0&target=f7)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -30,68 +30,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2026-01-27 11:44 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-01-27 11:44 EST`
-- NFC: [ADD: Ventra parsing plugin to Metroflip. Updated: NFC ventra_parser.fal. #1164 (By FatherDivine)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1164)
-- Updated: [Sub-GHz Scheduler v2.3 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
-- Added: [PIR HC-SR501 Alarm v1.0 (By ku6a-cj)](https://github.com/ku6a-cj/-PIR-HC-SR501-Proximity-alarm-Flipper-zero) `Req: PIR HC-SR501`
-- Added: [BT Audio v1.0 (By FatherDivine)](https://github.com/FatherDivine/flipperzero-mayhem/tree/bt_audio/flipper_companion_apps/applications/external/bt_audio) `Req: ESP32 w BT` & [This FW](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/external/bt_audio/.esp32_firmware)
-- Updated: [Flipper Hero v1.4 (By mentoster)](https://github.com/mentoster/Flipper-hero)
-- Updated: [NFC Seader v4.0 (By bettse)](https://github.com/bettse/seader) (Version Only)
-- Updated: [CO2 Logger v0.4 (By harryob2)](https://github.com/harryob2/co2_logger) `Req: MH-Z19` (Version Only)
-- Added: [ArduGolf v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperGolf)
-- Sub-GHz: [Removed car protocols from internal compile, now handled by ProtoPirate. Removed: Kia, ScherKahn and StarLine (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/cdd4f4d8430e311c9a745a5b953012cdd00c448b)
-- Sub-GHz: [Added Signal Settings (By Dmitry422 & xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/905b52a53f4b430d8db22594893352a2f72cd078)
-- Updated: [Noptel LRF Sampler v2.4 (By Giraut)](https://github.com/Giraut/flipper_zero_noptel_lrf_sampler)
-- Added: [Big Clock v1.1 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
-- Added: [Reality Clock v2.1 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
-- Updated: [FlipSocial v2.0.8 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Added: [FlipGemini v1.0 (By jblanked)](https://github.com/jblanked/FlipGemini) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [CANBUS v1.1.6.2 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
-- [Add ProtoPirate to RM Known Apps (Browser and Favorites Integration) #1166 (By LeeroysHub)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1166)
-- Added: [Flipper Wedge v1.0 (By DangerousThings)](https://github.com/DangerousThings/flipper-wedge)
-- Sub-GHz: [Treadmill37 protocol support (37bit static) (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/3abd6a319e7d93e9938942e62933aa5df7c6c402)
-- Sub-GHz: [Fixed button mapping for FAAC RC/XT (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/134f48e8df4de915d6301864a935d34af6d93d7c)
-- Sub-GHz: [Possible Sommer timings fix (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/15d757abe038af45f1b8ef1dd44143b2b4c41cc1)
-- Sub-GHz: [Replaced Cars ignore option with Revers RB2 protocol ignore option (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/cf1fa8a9a65664910a95252c41af9ec9c6b69efd)
-- Sub-GHz: [Various fixes (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/64e803d856c8bf2a21d8ebc2ded7bc829455661c)
-- Sub-GHz: [Nice Flor S remove extra uint64 variable (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/db2e9f0029117d29035727b40b6f0716490bc179)
-- NFC: [Fix LED not blinking at SLIX unlock (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/7a65388051be7bd78c81e4b36ec2a1d4d0e47ff0)
-- Sub-GHz: [Fixes for changes from UL (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/7ae73aa9f5ef2b9ecc133fd7670806dc538fa4ee)
-- OFW: PR: [Various UI/UX changes #4331 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4331)
-- Updated: [Temp Sensors Reader 1.7 (By quen0n)](https://github.com/quen0n/Unitemp-Flipper-Zero-Plugin) `Req: BMP180/BMP280/BME280/BME680/DHT11/DHT22(AM2302)/AM2301/AM2320/HTU2XD/HTU21x/HDC1080/MAX31725/MAX31855/MAX6675/SCD30`
-- Updated: [Wolfenduino v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperWolfenstein)
-- Updated: [Big Clock v1.3 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
-- Updated: [Reality Clock v4.1 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
-- Updated: [T-Union Master (China) v0.1 (By SocialSisterYi)](https://github.com/SocialSisterYi/T-Union_Master)
-- Added: [Hirn - Crack Color Codes v0.2 (By fgreil)](https://github.com/fgreil/mitzi-hirn)
-- Added: [USB Midi Capturing v0.1 (By fgreil)](https://github.com/fgreil/mitzi-midi)
-- Added: [Snowflake v0.1 (By fgreil)](https://github.com/fgreil/mitzi-snowflake)
-- Added: [Guido Music Score Reader v0.1 (By fgreil)](https://github.com/fgreil/mitzi-guido)
-- Added: [Image Scroller v0.1 (By fgreil)](https://github.com/fgreil/mitzi-scroller)
-- Added: [Mitzi Type Aid Demo v0.1 (By fgreil)](https://github.com/fgreil/mitzi-tyaid)
-- Added: [Panis - A Grumpy Bread v0.1 (By fgreil)](https://github.com/fgreil/mitzi-panis)
-- Added: [Karl Eido v0.1 (By fgreil)](https://github.com/fgreil/mitzi-karl-eido)
-- Updated: [Roman Decoder v0.2 (By evillero)](https://github.com/evillero/roman_decoder)
-- UI: [Revert spacing changes 3px back to 4px (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/a1e01bc06d945e3ca045f3f1c526f4613544e2e2)
-- NFC: [Fix LED not blinking at SLIX unlock (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/3f85bea80dad661f8d47f0715c36a11e5004d839)
-- Updated: [BT Audio v1.2 (By FatherDivine)](https://github.com/FatherDivine/flipperzero-mayhem/tree/bt_audio/flipper_companion_apps/applications/external/bt_audio) `Req: ESP32 w BT` & [This FW](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/external/bt_audio/.esp32_firmware)
-- Updated: [Metroflip v1.1 (By luu176)](https://github.com/luu176/Metroflip)
-- Updated: [WiFi (Marauder) v0.7.7 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion) `Req: ESP32` with [ESP32 MARAUDER Firmware](https://github.com/justcallmekoko/ESP32Marauder/releases/latest)
-- Updated: [ESP32CAM Marauder v0.7.5 (By 0xchocolate & eried)](https://github.com/eried/flipperzero-mayhem) `Req: ESP32-CAM (Mayhem)`
-- Updated: [PicoPass (iClass) v1.19 (By Bettse)](https://gitlab.com/bettse/picopass)
-- Updated: [Seos compatible v1.2 (By bettse)](https://gitlab.com/bettse/flipper_seos)
-- Updated: [Brainfuck v1.5 (By nymda)](https://github.com/nymda/FlipperZeroBrainfuck)
-- Added: [NFC Login v1.1.1 (By Play2BReal)](https://github.com/Play2BReal/NFC-Login)
-- Added: [ISO15693-3 NFC Writer v1.0 (By ch4istO)](https://github.com/ch4istO/unleashed-firmware/tree/dev/applications_user/iso15693_nfc_writer)
-- Added: [Lasko 2519 Timer v1.0 (By LN4CY)](https://github.com/LN4CY/lasko-2519-timer)
-- Added: [C5 Lab v1.0 (By C5Lab / Lab_Team)](https://github.com/C5Lab/projectZero)
-- Updated: [ListEM v1.2 (By Clawzman)](https://github.com/Clawzman/Flipper_ListEM)
-- Updated: [Swimmy Fish v2.0 (By Invizabel)](https://github.com/Invizabel/fish)
-- Updated: [Sub-GHz Scheduler v3.0 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
-- Updated: [NFC Comparator v2.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
-- Updated: [ProtoPirate v1.8 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
-- Sub-GHz: [Fix Alutech AT4N false positives & Cleanup of extra local variables (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/185155a8b561f555a982bb0d6772fc39735e7422)
-- Desktop Animations Update to Remove Holiday Animations, Patreon animation sets for Minimal have had these removed as well.
-- [ESP Flasher: Bump Marauder v1.10.0 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.10.0)
 
 <a name="release">
 
@@ -889,4 +827,4 @@ $ ./fbt dolphin_ext
 - Have a new app? Submit GitHub link to me on Discord for a special reward (if I add it to RM Firmware).
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0112-2043-0.420.0-a9a0b32.tgz&channel=RM0112-2043-0.420.0-a9a0b32&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0127-1444-0.420.0-cd46514.tgz&channel=RM0127-1444-0.420.0-cd46514&version=0.420.0&target=f7)
