@@ -90,6 +90,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Sub-GHz Scheduler v3.0 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
 - Updated: [NFC Comparator v2.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
 - Updated: [ProtoPirate v1.8 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
+- Sub-GHz: [Fix Alutech AT4N false positives (By xMasterX)]
+- Sub-GHz: [Cleanup of extra local variables (By xMasterX)]
 
 <a name="release">
 
