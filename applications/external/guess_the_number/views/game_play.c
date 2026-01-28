@@ -22,6 +22,8 @@ typedef struct {
     int attempts;
     int best_score;
     bool game_won;
+    int range_min;
+    int range_max;
 } GamePlayModel;
 
 void game_play_set_callback(GamePlay* instance, GamePlayCallback callback, void* context) {
@@ -48,12 +50,14 @@ void game_play_draw(Canvas* canvas, GamePlayModel* model) {
         canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignTop, model->game_message);
     }
 
+    canvas_set_font(canvas, FontSecondary);
     if(model->game_won) {
-        canvas_set_font(canvas, FontSecondary);
         canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignTop, "Press BACK for new game");
     } else {
-        canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignTop, "Range: 0-99");
+        char rangeBuffer[20];
+        snprintf(
+            rangeBuffer, sizeof(rangeBuffer), "Range: %d-%d", model->range_min, model->range_max);
+        canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignTop, rangeBuffer);
     }
 
     canvas_set_font(canvas, FontSecondary);
@@ -76,6 +80,8 @@ static void game_play_model_init(GamePlayModel* const model) {
     model->player_guess = 50;
     model->attempts = 0;
     model->game_won = false;
+    model->range_min = 0;
+    model->range_max = 99;
     strcpy(model->game_message, "Make your first guess!");
     if(model->best_score == 0) {
         model->best_score = game_read_best_score();
@@ -88,18 +94,11 @@ bool game_play_input(InputEvent* event, void* context) {
     GamePlay* instance = context;
 
     if(event->type == InputTypeLong && event->key == InputKeyBack) {
-        with_view_model(
-            instance->view,
-            GamePlayModel * model,
-            {
-                UNUSED(model);
-                game_play_long_bump(instance->context);
-                game_led_set_rgb(instance->context, 255, 0, 0);
-                furi_thread_flags_wait(0, FuriFlagWaitAny, 200);
-                game_led_reset(instance->context);
-                instance->callback(GameCustomEventPlayBack, instance->context);
-            },
-            true);
+        game_play_long_bump(instance->context);
+        game_led_set_rgb(instance->context, 255, 0, 0);
+        furi_thread_flags_wait(0, FuriFlagWaitAny, 200);
+        game_led_reset(instance->context);
+        instance->callback(GameCustomEventPlayBack, instance->context);
         return true;
     }
 
@@ -112,12 +111,12 @@ bool game_play_input(InputEvent* event, void* context) {
                 strcpy(model->game_message, "New game started!");
                 game_play_model_init(model);
                 model->best_score = saved_best_score;
-                game_play_long_bump(instance->context);
-                game_led_set_rgb(instance->context, 0, 0, 255);
-                furi_thread_flags_wait(0, FuriFlagWaitAny, 200);
-                game_led_reset(instance->context);
             },
             true);
+        game_play_long_bump(instance->context);
+        game_led_set_rgb(instance->context, 0, 0, 255);
+        furi_thread_flags_wait(0, FuriFlagWaitAny, 200);
+        game_led_reset(instance->context);
         return true;
     }
 
@@ -128,8 +127,9 @@ bool game_play_input(InputEvent* event, void* context) {
                 instance->view,
                 GamePlayModel * model,
                 {
-                    model->player_guess = model->player_guess < 99 ? model->player_guess + 1 : 0;
+                    model->player_guess = model->player_guess < 99 ? model->player_guess + 1 : 99;
                     game_play_button_press(instance->context);
+                    game_play_input_sound(instance->context);
                 },
                 true);
             break;
@@ -138,8 +138,9 @@ bool game_play_input(InputEvent* event, void* context) {
                 instance->view,
                 GamePlayModel * model,
                 {
-                    model->player_guess = model->player_guess > 0 ? model->player_guess - 1 : 99;
+                    model->player_guess = model->player_guess > 0 ? model->player_guess - 1 : 0;
                     game_play_button_press(instance->context);
+                    game_play_input_sound(instance->context);
                 },
                 true);
             break;
@@ -148,8 +149,9 @@ bool game_play_input(InputEvent* event, void* context) {
                 instance->view,
                 GamePlayModel * model,
                 {
-                    model->player_guess = model->player_guess > 10 ? model->player_guess - 10 : 99;
+                    model->player_guess = model->player_guess >= 10 ? model->player_guess - 10 : 0;
                     game_play_short_bump(instance->context);
+                    game_play_input_sound(instance->context);
                 },
                 true);
             break;
@@ -158,8 +160,10 @@ bool game_play_input(InputEvent* event, void* context) {
                 instance->view,
                 GamePlayModel * model,
                 {
-                    model->player_guess = model->player_guess < 90 ? model->player_guess + 10 : 0;
+                    model->player_guess = model->player_guess <= 89 ? model->player_guess + 10 :
+                                                                      99;
                     game_play_short_bump(instance->context);
+                    game_play_input_sound(instance->context);
                 },
                 true);
             break;
@@ -190,6 +194,13 @@ bool game_play_input(InputEvent* event, void* context) {
                             dolphin_deed(DolphinDeedPluginGameWin);
                         } else {
                             int difference = abs(model->target_number - model->player_guess);
+
+                            // Update dynamic range
+                            if(model->target_number > model->player_guess) {
+                                model->range_min = model->player_guess + 1;
+                            } else {
+                                model->range_max = model->player_guess - 1;
+                            }
 
                             if(difference <= 2) {
                                 strcpy(
@@ -244,7 +255,8 @@ bool game_play_input(InputEvent* event, void* context) {
         case InputKeyLeft:
         case InputKeyRight:
         case InputKeyOk:
-            game_play_input_sound(instance->context);
+            game_stop_all_sound(instance->context);
+            game_led_reset(instance->context);
             break;
         case InputKeyBack:
         case InputKeyMAX:
@@ -290,6 +302,7 @@ GamePlay* game_play_alloc() {
 
 void game_play_free(GamePlay* instance) {
     furi_assert(instance);
+    with_view_model(instance->view, GamePlayModel * model, { UNUSED(model); }, true);
     view_free(instance->view);
     free(instance);
 }
