@@ -6,7 +6,8 @@
 #include <nfc/protocols/st25tb/st25tb.h>
 #include <nfc/protocols/mf_ultralight/mf_ultralight.h>
 #include <nfc/protocols/felica/felica.h>
-#include <nfc/protocols/type_4_tag/type_4_tag.h>
+// #include <nfc/protocols/type_4_tag/type_4_tag.h>
+#include <nfc/protocols/iso15693_3/iso15693_3.h>
 
 #ifdef __cplusplus
 extern "C" {
