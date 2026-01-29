@@ -1,6 +1,6 @@
 /*
     Unitemp - Universal temperature reader
-    Copyright (C) 2022-2023  Victor Nikitchuk (https://github.com/quen0n)
+    Copyright (C) 2022-2026  Victor Nikitchuk (https://github.com/quen0n)
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@
 //Application name
 #define APP_NAME              "Unitemp"
 //Application version
-#define UNITEMP_APP_VER       "1.6"
+#define UNITEMP_APP_VER       FAP_VERSION
 //Plugin file storage path
 #define APP_PATH_FOLDER       "/ext/unitemp"
 //Settings file name
