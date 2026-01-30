@@ -34,6 +34,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Guess The Number v1.3 (By kWAYTV)](https://github.com/kWAYTV/guess-the-number-fz)
 - Updated: [Temp Sensors Reader 1.8 (By quen0n)](https://github.com/quen0n/Unitemp-Flipper-Zero-Plugin) `Req: BMP180/BMP280/BME280/BME680/DHT11/DHT22(AM2302)/AM2301/AM2320/HTU2XD/HTU21x/HDC1080/MAX31725/MAX31855/MAX6675/SCD30` (Version Only)
 - Updated: [NFC Comparator v2.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
+- Updated: [WiFi (Marauder) v0.7.8 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion) `Req: ESP32` with [ESP32 MARAUDER Firmware](https://github.com/justcallmekoko/ESP32Marauder/releases/latest)
 
 <a name="release">
 
@@ -817,7 +818,7 @@ $ ./fbt dolphin_ext
 - [Wendigo Bluetooth Tracker WIP v0.5.1 (By chris-bc)](https://github.com/chris-bc/wendigo) `WIP Req: ESP32`
 - [Wiegand Reader v1.4 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/gpio)
 - [WiFi (Deauther) V2 (By Timmotools)](https://github.com/Timmotools/flipperzero_esp8266_deautherv2) `Req: ESP8266`
-- [WiFi (Marauder) v0.7.7 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion) `Req: ESP32` with [ESP32 MARAUDER Firmware](https://github.com/justcallmekoko/ESP32Marauder/releases/latest)
+- [WiFi (Marauder) v0.7.8 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion) `Req: ESP32` with [ESP32 MARAUDER Firmware](https://github.com/justcallmekoko/ESP32Marauder/releases/latest)
 - [Wifi Mapping (By carvilsi)](https://github.com/carvilsi/flipper0-wifi-map/tree/main) `Req: ESP32`
 - [Wii EC Analyzer v1.1 (By csBlueChip)](https://github.com/csBlueChip/FlipperZero_WiiEC)
 - [Wire Tester v1.1 (By unixispower)](https://gitlab.com/unixispower/flipper-wire-tester)
