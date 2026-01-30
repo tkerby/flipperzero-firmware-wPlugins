@@ -41,3 +41,6 @@
 [submodule "lib/uzlib"]
 	path = lib/uzlib
 	url = https://github.com/pfalcon/uzlib.git
+[submodule "applications/external/protopirate"]
+	path = applications/external/protopirate
+	url = https://github.com/RogueMaster/ProtoPirate
