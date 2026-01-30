@@ -37,6 +37,11 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [WiFi (Marauder) v0.7.8 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion) `Req: ESP32` with [ESP32 MARAUDER Firmware](https://github.com/justcallmekoko/ESP32Marauder/releases/latest)
 - Updated: [ProtoPirate v1.8 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - Sub-GHz: [BFT KeeLoq try decoding with zero seed too (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/523a3723cf9ec475c2904603b422c55802120519)
+- Added: [UL-C Bruteforce v1.0 (By noproto)](https://github.com/zc-public/breakme-resources/tree/main/flipper_apps)
+- Added: [UL-C Bruteforce Optimized v1.0 (By noproto)](https://github.com/zc-public/breakme-resources/tree/main/flipper_apps)
+- Added: [UL-C Relay v1.0 (By noproto)](https://github.com/zc-public/breakme-resources/tree/main/flipper_apps)
+- Added: [ULCFKey v1.0 (By noproto)](https://github.com/zc-public/breakme-resources/tree/main/flipper_apps)
+- Added: [ULCFKey Next v1.0 (By noproto)](https://github.com/zc-public/breakme-resources/tree/main/flipper_apps)
 
 <a name="release">
 
@@ -793,6 +798,11 @@ $ ./fbt dolphin_ext
 - [UDECard v1.0.4 (By hahnworks](https://github.com/hahnworks/UDECard)
 - [UHF RFID WIP v1.1 (By frux-c)](https://github.com/frux-c/uhf_rfid) `Req: M100 or QM100`
 - [UID Brute Smarter v1.1 (By fbettag)](https://github.com/fbettag/uid_brute_smarter)
+- [UL-C Bruteforce v1.0 (By noproto)](https://github.com/zc-public/breakme-resources/tree/main/flipper_apps)
+- [UL-C Bruteforce Optimized v1.0 (By noproto)](https://github.com/zc-public/breakme-resources/tree/main/flipper_apps)
+- [UL-C Relay v1.0 (By noproto)](https://github.com/zc-public/breakme-resources/tree/main/flipper_apps)
+- [ULCFKey v1.0 (By noproto)](https://github.com/zc-public/breakme-resources/tree/main/flipper_apps)
+- [ULCFKey Next v1.0 (By noproto)](https://github.com/zc-public/breakme-resources/tree/main/flipper_apps)
 - [uPython v1.7 (By ofabel)](https://github.com/ofabel/mp-flipper)
 - [USB Consumer Control (By WithSecureLabs)](https://github.com/WithSecureLabs/usb-consumer-control)
 - [USB HID Autofire v0.6 (By pbek)](https://github.com/pbek/usb_hid_autofire)
