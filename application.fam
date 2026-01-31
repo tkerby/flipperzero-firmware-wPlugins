@@ -1,7 +1,7 @@
 
 App(
      # Unique identifier used by the build system (must be unique across firmware).
-    appid="mitzi_mancala",
+    appid="mancala",
 
     # What users will see when browsing apps
     name="Mancala",
