@@ -41,7 +41,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [UL-C Relay v1.0 (By noproto)](https://github.com/zc-public/breakme-resources/tree/main/flipper_apps)
 - Added: [ULCFKey v1.0 (By noproto)](https://github.com/zc-public/breakme-resources/tree/main/flipper_apps)
 - Added: [ULCFKey Next v1.0 (By noproto)](https://github.com/zc-public/breakme-resources/tree/main/flipper_apps)
-- Updated: [ProtoPirate v1.8 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
+- Updated: [ProtoPirate v1.8 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate) [VW Crypro Updates (By zero-mega and slackware)](https://protopirate.net/ProtoPirate/ProtoPirate/commit/b422766a052a2a13c8d2b82967d3d9b541844cba)
 
 <a name="release">
 
