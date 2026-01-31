@@ -1,6 +1,6 @@
 # Sub-GHz Supported Protocols
 
-This file lists all supported Sub-GHz protocols available in RM Firmware (thanks to Unleashed), both tested and untested.
+This file lists all supported Sub-GHz protocols available in Unleashed Firmware, both tested and untested.
 
 That list is only for default SubGHz app, apps like *Weather Station* have their own protocols list
 
@@ -20,6 +20,7 @@ That list is only for default SubGHz app, apps like *Weather Station* have their
 - AN-Motors (Alutech) AT4 `433.92MHz` `AM650` (64 bits, Pseudo-Dynamic, KeeLoq based)
 - Ansonic `433MHz` `FM` (12 bits, Static)
 - BETT `433.92MHz` `AM650` (18 bits, Static)
+- Beninca ARC (TOGO2VA) `433.92MHz` `AM650` (128 bits, Dynamic AES)
 - BFT Mitto `433.92MHz` `AM650` (64 bits, Dynamic, KeeLoq based with Seed)
 - CAME Atomo `433.92MHz, 868MHz` `AM650` (62 bits, Dynamic)
 - CAME TWEE `433.92MHz` `AM650` (54 bits, Static)
@@ -66,12 +67,12 @@ That list is only for default SubGHz app, apps like *Weather Station* have their
 - Honeywell `AM650` (64 bits, Static) - Alarm, Sensor
 - Honeywell WDB `AM650` (48 bits, Static) - Doorbell
 - Magellan `433.92MHz` `AM650` (32 bits, Static) - Sensor, alarm
-- See Weather Station for other weather sensors
+- Jarolift `433.92MHz` `AM650` (72 bits, Dynamic, KeeLoq based) - Automatic roller shutters
 
 ### Alarms
 - Hollarm `433.92MHz` `AM650` (42 bits, Static) - Bike alarms
 - GangQi `433.92MHz` `AM650` (34 bits, Static) - Bike alarms
-- See ProtoPirate for other car alarm systems
+
 
 ### Generic any branded remotes
 - Holtek `AM650` (40 bits, Static)
@@ -86,7 +87,7 @@ That list is only for default SubGHz app, apps like *Weather Station* have their
 ## KeeLoq Rolling Code Supported Manufacturers list
 
 KeeLoq is a rolling code encryption system used by many garage door openers and gate systems. 
-The following manufacturers have KeeLoq support in RM firmware (thanks to Unleashed):
+The following manufacturers have KeeLoq support in Unleashed firmware:
 
 *Default value for encryption type "learning" is `simple` and `10bits` for serial part in Hop*
 
@@ -97,7 +98,7 @@ The following manufacturers have KeeLoq support in RM firmware (thanks to Unleas
 - Aprimatic - `433.92MHz` `AM650` (KeeLoq, 64 bits) (12bit serial number art in Hop + 2bit "parity" in front of it replacing first 2 bits of serial)
 - Beninca - `433.92MHz, 868MHz` `AM650` (KeeLoq, 64 bits) (no serial part in Hop - magic XOR)
 - CAME Space - `433.92MHz` `AM650` (KeeLoq, 64 bits) (12bit serial part in Hop - simple learning)
-- Cardin S449 - `433.92MHz` `FSK12K` (KeeLoq, 64 bits) (12bit (original remotes) or 10bit (chinese remotes) serial part in Hop - normal learning)
+- Cardin S449 - `433.92MHz` `FSK12K` (KeeLoq, 64 bits) (12bit (original remotes) or 10bit (chinese remotes) serial part in Hop - normal learning) (receiver checks for 10bit only (unverified))
 - Centurion - `433.92MHz` `AM650` (KeeLoq, 64 bits) (no serial in Hop, uses fixed value 0x1CE - normal learning)
 - Comunello - `433.92MHz, 868MHz` `AM650` (KeeLoq, 64 bits) (normal learning)
 - DEA Mio - `433.92MHz` `AM650` (KeeLoq, 64 bits) (modified serial in Hop, uses last 3 digits modifying first one (example - 419 -> C19) - simple learning)
@@ -121,9 +122,9 @@ The following manufacturers have KeeLoq support in RM firmware (thanks to Unleas
 - Nice Smilo - `433.92MHz` `AM650` (KeeLoq, 64 bits) (8bit serial part in Hop - simple learning)
 - Normstahl - `433.92MHz` `AM650` (KeeLoq, 64 bits)
 - Novoferm - `433.92MHz` `AM650` (KeeLoq, 64 bits)
-- Sommer `434.42MHz, 868.80MHz` `FSK12K (or FSK476)` (KeeLoq, 64 bits) (normal learning) (TX03-868-4, Pearl, and maybe other models are supported (SOMloq2))
+- Sommer `434.42MHz, 868.80MHz` `FSK12K (or FSK476)` (KeeLoq, 64 bits) (normal learning) (TX03-868-4, Pearl, and maybe other models are supported (SOMloq))
 - Steelmate - `433.92MHz` `AM650` (KeeLoq, 64 bits) (12bit serial part in Hop - normal learning)
-- Stilmatic - `433.92MHz` `AM650` (KeeLoq, 64 bits) (normal learning)
+- Stilmatic (R-Tech) - `433.92MHz` `AM650` (KeeLoq, 64 bits) (12bit serial part in Hop - normal learning) (receiver checks for 10bit only (unverified))
 
 ### Alarms, unknown origin, etc.
 - APS-1100/APS-2550 (KeeLoq, 64 bits)
@@ -166,7 +167,7 @@ The following manufacturers have KeeLoq support in RM firmware (thanks to Unleas
 
 ## Protocol Type Reference
 
-RM firmware supports various protocol types:
+Unleashed firmware supports various protocol types:
 
 - **Static Code**: Fixed transmission codes (e.g., Roger, Princeton, Marantec, Revers RB2)
 - **Rolling Code (Dynamic) (KeeLoq)**: Dynamic codes with rolling counter using KeeLoq encryption (60+ manufacturer systems supported)
