@@ -43,6 +43,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [ULCFKey Next v1.0 (By noproto)](https://github.com/zc-public/breakme-resources/tree/main/flipper_apps)
 - Updated: [ProtoPirate v1.8 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate) [VW Crypro Updates (By zero-mega and slackware)](https://protopirate.net/ProtoPirate/ProtoPirate/commit/b422766a052a2a13c8d2b82967d3d9b541844cba)
 - Added: [Timed Remote v0.1 (By anders-dc)](https://github.com/anders-dc/timed-remote)
+- Updated: [LIDAR Emulator v0.2 (By regaly)](https://github.com/regaly/flipperzero-lidar_emulator) [v0.2 Updates: External GPIO IR device support (By mistrustt)](https://github.com/mistrustt/flipperzero-lidar_emulator)
 
 <a name="release">
 
@@ -611,7 +612,7 @@ $ ./fbt dolphin_ext
 - [LED Pulsator (By leedave)](https://github.com/leedave/Leeds-Flipper-Zero-Applications)
 - [LEGO Dimensions Toy Pad v0.5 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
 - [Letter Beacon v1.0 (By nmrr)](https://github.com/nmrr/flipperzero-rfidbeacon)
-- [LIDAR Emulator v0.1 (By regaly)](https://github.com/regaly/flipperzero-lidar_emulator)
+- [LIDAR Emulator v0.2 (By regaly)](https://github.com/regaly/flipperzero-lidar_emulator)
 - [Lightmeter v1.3 (By oleksiikutuzov)](https://github.com/oleksiikutuzov/flipperzero-lightmeter) `Req: BH1750/MAX44009`
 - [Lightning Distance v0.1 (By HyperMuffin12)](https://github.com/HyperMuffin12/Flipper-Lightning-Distance)
 - [Lishi HU66 v0.2 (By evillero)](https://github.com/evillero/lishi_hu66)

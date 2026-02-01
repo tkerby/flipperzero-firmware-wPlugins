@@ -2,6 +2,7 @@
 
 enum SubmenuIndex {
     SubmenuIndexPredefinedGUNs,
+    SubmenuIndexGpioSettings,
 };
 
 static void lidaremulator_scene_start_submenu_callback(void* context, uint32_t index) {
@@ -27,6 +28,12 @@ void lidaremulator_scene_start_on_enter(void* context) {
         SubmenuIndexPredefinedGUNs,
         lidaremulator_scene_start_submenu_callback,
         lidaremulator);
+    submenu_add_item(
+        submenu,
+        "GPIO Settings",
+        SubmenuIndexGpioSettings,
+        lidaremulator_scene_start_submenu_callback,
+        lidaremulator);
 
     uint32_t submenu_index = scene_manager_get_scene_state(scene_manager, LidarEmulatorSceneStart);
     submenu_set_selected_item(submenu, submenu_index);
@@ -50,6 +57,8 @@ bool lidaremulator_scene_start_on_event(void* context, SceneManagerEvent event) 
         scene_manager_set_scene_state(scene_manager, LidarEmulatorSceneStart, submenu_index);
         if(submenu_index == SubmenuIndexPredefinedGUNs) {
             scene_manager_next_scene(scene_manager, LidarEmulatorScenePredefinedGUNs);
+        } else if(submenu_index == SubmenuIndexGpioSettings) {
+            scene_manager_next_scene(scene_manager, LidarEmulatorSceneGpioSettings);
         }
 
         consumed = true;
