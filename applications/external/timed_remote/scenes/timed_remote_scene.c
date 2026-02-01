@@ -2,7 +2,7 @@
 
 /* Scene handler tables */
 
-void (*const timed_remote_scene_on_enter_handlers[])(void *) = {
+void (*const timed_remote_scene_on_enter_handlers[])(void*) = {
     timed_remote_scene_ir_browse_on_enter,
     timed_remote_scene_ir_select_on_enter,
     timed_remote_scene_timer_config_on_enter,
@@ -10,8 +10,7 @@ void (*const timed_remote_scene_on_enter_handlers[])(void *) = {
     timed_remote_scene_confirm_on_enter,
 };
 
-bool (*const timed_remote_scene_on_event_handlers[])(void *,
-                                                     SceneManagerEvent) = {
+bool (*const timed_remote_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     timed_remote_scene_ir_browse_on_event,
     timed_remote_scene_ir_select_on_event,
     timed_remote_scene_timer_config_on_event,
@@ -19,7 +18,7 @@ bool (*const timed_remote_scene_on_event_handlers[])(void *,
     timed_remote_scene_confirm_on_event,
 };
 
-void (*const timed_remote_scene_on_exit_handlers[])(void *) = {
+void (*const timed_remote_scene_on_exit_handlers[])(void*) = {
     timed_remote_scene_ir_browse_on_exit,
     timed_remote_scene_ir_select_on_exit,
     timed_remote_scene_timer_config_on_exit,

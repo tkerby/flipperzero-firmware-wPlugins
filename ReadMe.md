@@ -42,6 +42,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [ULCFKey v1.0 (By noproto)](https://github.com/zc-public/breakme-resources/tree/main/flipper_apps)
 - Added: [ULCFKey Next v1.0 (By noproto)](https://github.com/zc-public/breakme-resources/tree/main/flipper_apps)
 - Updated: [ProtoPirate v1.8 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate) [VW Crypro Updates (By zero-mega and slackware)](https://protopirate.net/ProtoPirate/ProtoPirate/commit/b422766a052a2a13c8d2b82967d3d9b541844cba)
+- Added: [Timed Remote v0.1 (By anders-dc)](https://github.com/anders-dc/timed-remote)
 
 <a name="release">
 
@@ -784,6 +785,7 @@ $ ./fbt dolphin_ext
 - [The C Prog. Language v0.2 (By armixz)](https://github.com/armixz/Flipper-Zero-The-C-Programming-Language)
 - [Time Dilation Calculator v1.0 (By ejfox)](https://github.com/ejfox/flipper-space-calculators)
 - [Time Tracker v1.0.3 (By MassivDash)](https://github.com/MassivDash/flipper-tracker)
+- [Timed Remote v0.1 (By anders-dc)](https://github.com/anders-dc/timed-remote)
 - [Timer v0.1 (By nagamine-git)](https://github.com/nagamine-git/flipperzero_timer_app)
 - [Tone Generator v1.0 (By GEMISIS)](https://github.com/GEMISIS/tone_gen)
 - [TonUINO Writer v2.0 (By Bastelsaal)](https://github.com/Bastelsaal/tonuino-flipper-zero)

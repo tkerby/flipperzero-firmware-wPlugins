@@ -22,8 +22,7 @@ uint32_t time_helper_hms_to_seconds(uint8_t h, uint8_t m, uint8_t s);
  * @param m Output: minutes (0-59)
  * @param s Output: seconds (0-59)
  */
-void time_helper_seconds_to_hms(uint32_t total_seconds, uint8_t *h, uint8_t *m,
-                                uint8_t *s);
+void time_helper_seconds_to_hms(uint32_t total_seconds, uint8_t* h, uint8_t* m, uint8_t* s);
 
 #ifndef TIMED_REMOTE_TEST_BUILD
 /**
@@ -36,8 +35,7 @@ void time_helper_seconds_to_hms(uint32_t total_seconds, uint8_t *h, uint8_t *m,
  * @param target_s Target second (0-59)
  * @return Seconds until target (today or next day), or 0 if now
  */
-uint32_t time_helper_seconds_until(uint8_t target_h, uint8_t target_m,
-                                   uint8_t target_s);
+uint32_t time_helper_seconds_until(uint8_t target_h, uint8_t target_m, uint8_t target_s);
 
 /**
  * Generate a timestamp-based signal name placeholder.
@@ -46,5 +44,5 @@ uint32_t time_helper_seconds_until(uint8_t target_h, uint8_t target_m,
  * @param buffer Output buffer (must be at least 20 bytes)
  * @param buffer_size Size of buffer
  */
-void time_helper_generate_signal_name(char *buffer, size_t buffer_size);
+void time_helper_generate_signal_name(char* buffer, size_t buffer_size);
 #endif
