@@ -1,6 +1,6 @@
 # Sub-GHz Supported Protocols
 
-This file lists all supported Sub-GHz protocols available in Unleashed Firmware, both tested and untested.
+This file lists all supported Sub-GHz protocols available in RM Firmware (thanks to Unleashed), both tested and untested.
 
 That list is only for default SubGHz app, apps like *Weather Station* have their own protocols list
 
@@ -20,7 +20,7 @@ That list is only for default SubGHz app, apps like *Weather Station* have their
 - AN-Motors (Alutech) AT4 `433.92MHz` `AM650` (64 bits, Pseudo-Dynamic, KeeLoq based)
 - Ansonic `433MHz` `FM` (12 bits, Static)
 - BETT `433.92MHz` `AM650` (18 bits, Static)
-- Beninca ARC (TOGO2VA) `433.92MHz` `AM650` (128 bits, Dynamic AES)
+- Beninca ARC (TOGO2VA) `433.92MHz` `AM650` (128 bits, Dynamic AES) (button code `0` emulates `hidden button` option on the remote)
 - BFT Mitto `433.92MHz` `AM650` (64 bits, Dynamic, KeeLoq based with Seed)
 - CAME Atomo `433.92MHz, 868MHz` `AM650` (62 bits, Dynamic)
 - CAME TWEE `433.92MHz` `AM650` (54 bits, Static)
@@ -46,7 +46,7 @@ That list is only for default SubGHz app, apps like *Weather Station* have their
 - Nice One `433.92MHz` `AM650` (72 bits, Dynamic)
 - Revers RB2 (Реверс РБ-2 (М)) `433.92MHz` `AM650` (64 bits, Static)
 - Roger `433.92MHz` `AM650` (28 bits, Static)
-- V2 Phoenix (Phox) `433.92MHz` `AM650` (52 bits, Dynamic)
+- V2 Phoenix (Phox) `433.92MHz` `AM650` (52 bits, Dynamic) (receivers have option to enable Static mode, making them ignore rolling part of the key)
 - Marantec `433.92MHz, 868MHz` `AM650` (49 bits, Static)
 - Marantec24 `868MHz` `AM650` (24 bits, Static)
 - Somfy Keytis `433.92MHz, 868MHz` `AM650` (80 bits, Dynamic)
@@ -87,7 +87,7 @@ That list is only for default SubGHz app, apps like *Weather Station* have their
 ## KeeLoq Rolling Code Supported Manufacturers list
 
 KeeLoq is a rolling code encryption system used by many garage door openers and gate systems. 
-The following manufacturers have KeeLoq support in Unleashed firmware:
+The following manufacturers have KeeLoq support in RM Firmware (thanks to Unleashed):
 
 *Default value for encryption type "learning" is `simple` and `10bits` for serial part in Hop*
 
@@ -167,7 +167,7 @@ The following manufacturers have KeeLoq support in Unleashed firmware:
 
 ## Protocol Type Reference
 
-Unleashed firmware supports various protocol types:
+RM firmware supports various protocol types:
 
 - **Static Code**: Fixed transmission codes (e.g., Roger, Princeton, Marantec, Revers RB2)
 - **Rolling Code (Dynamic) (KeeLoq)**: Dynamic codes with rolling counter using KeeLoq encryption (60+ manufacturer systems supported)

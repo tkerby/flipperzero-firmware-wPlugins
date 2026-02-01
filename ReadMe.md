@@ -45,6 +45,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [LIDAR Emulator v0.2 (By regaly)](https://github.com/regaly/flipperzero-lidar_emulator) [v0.2 Updates: External GPIO IR device support (By mistrustt)](https://github.com/mistrustt/flipperzero-lidar_emulator)
 - Updated: [ListEM v1.3 (By Clawzman)](https://github.com/Clawzman/Flipper_ListEM)
 - Updated: [NFC Comparator v2.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
+- SubGHz: [V2 Phoenix (Phox) added 2 counter modes support (docs updated) (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/95dd537bf81ee445b1fb71aa60431cb62080333d)
 
 <a name="release">
 
