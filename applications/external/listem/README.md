@@ -13,7 +13,6 @@ Now with **Fuzzing Mode / Bit-Mutation engine!** A real, usable reader testing F
 
 - Reverse sequential UID generation
 - Collision-aware fuzzing for realistic reader behavior testing
-- Per-prefix sequential distribution
 - Improved prefix handling across all modes
 - Improved stability and generation reliability
 
@@ -104,6 +103,7 @@ Ideal for:
 | Bit flip on/off
 | Flip count adjustable
 | Prefix preserve on/off
+| Collision on/off (10) <- adjustable count
 
 **This is legitimate fuzzing, not just “random junk”!**
 

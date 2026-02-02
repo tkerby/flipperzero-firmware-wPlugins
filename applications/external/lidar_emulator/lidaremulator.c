@@ -117,7 +117,7 @@ int lidar_emulator_app(void* p) {
 }
 
 // GPIO Settings helper functions
-#define LIDAREMULATOR_SETTINGS_PATH    INT_PATH(".lidar_emulator.settings")
+#define LIDAREMULATOR_SETTINGS_PATH    APP_ASSETS_PATH(".lidar_emulator.settings")
 #define LIDAREMULATOR_SETTINGS_VERSION (1)
 #define LIDAREMULATOR_SETTINGS_MAGIC   (0xA5)
 
