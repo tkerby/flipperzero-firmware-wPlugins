@@ -120,9 +120,11 @@ bool subghz_protocol_phoenix_v2_create_data(
         local_data_rev, instance->generic.cnt);
 
     instance->generic.data = subghz_protocol_blocks_reverse_key(
-        (uint64_t)(((uint64_t)encrypted_counter << 40) | ((uint64_t)instance->generic.btn << 32) |
-                   (uint64_t)instance->generic.serial),
-        instance->generic.data_count_bit + 4);
+                                 (uint64_t)(((uint64_t)encrypted_counter << 40) |
+                                            ((uint64_t)instance->generic.btn << 32) |
+                                            (uint64_t)instance->generic.serial),
+                                 instance->generic.data_count_bit + 4) &
+                             0xFFFFFFFFFFFFF;
 
     return SubGhzProtocolStatusOk ==
            subghz_block_generic_serialize(&instance->generic, flipper_format, preset);

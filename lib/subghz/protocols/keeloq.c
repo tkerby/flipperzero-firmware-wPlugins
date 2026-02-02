@@ -110,7 +110,7 @@ void* subghz_protocol_encoder_keeloq_alloc(SubGhzEnvironment* environment) {
     instance->keystore = subghz_environment_get_keystore(environment);
 
     instance->encoder.repeat = 100;
-    instance->encoder.size_upload = 256;
+    instance->encoder.size_upload = 1110;
     instance->encoder.upload = malloc(instance->encoder.size_upload * sizeof(LevelDuration));
     instance->encoder.is_running = false;
 
