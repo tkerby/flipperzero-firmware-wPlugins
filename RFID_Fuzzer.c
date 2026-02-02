@@ -41,6 +41,7 @@ typedef enum {
     SeqStart,
     SeqStep,
     SeqCounter,
+    SeqDirection,
 } SeqFocus;
 
 typedef enum {
@@ -48,6 +49,7 @@ typedef enum {
     FuzzBitflip,
     FuzzBits,
     FuzzPreserve,
+    FuzzCollision,
 } FuzzFocus;
 
 typedef struct {
@@ -60,6 +62,7 @@ typedef struct {
 } Protocol;
 
 /* ===================== PREFIX TABLES ===================== */
+
 /* RFID */
 static const uint8_t P_EM4100[]  = {0x00,0x01,0x02,0x03};
 static const uint8_t P_HID[]     = {0xA0,0xB0,0xC0};
@@ -84,7 +87,7 @@ static const uint8_t P_ICLASS[]  = {0xEC};
 /* iButton */
 static const uint8_t P_DALLAS[]  = {0x01,0x02};
 
-/* ===================== PROTOCOL ===================== */
+/* ===================== PROTOCOL LIST ===================== */
 
 static const Protocol protocols[] = {
 /* RFID */
@@ -127,8 +130,7 @@ static const Protocol protocols[] = {
 #define COUNT_STEP 1000
 #define MAX_IDS 300000
 
-
-/* ===================== STATE ===================== */
+/* ===================== APP STATE ===================== */
 
 typedef struct {
     size_t proto;
@@ -146,6 +148,7 @@ typedef struct {
     uint64_t seq_start;
     uint64_t seq_step;
     bool per_prefix;
+    bool seq_reverse;
     SeqFocus seq_focus;
 
     bool fuzz_boundary;
@@ -154,15 +157,19 @@ typedef struct {
     bool fuzz_preserve;
     FuzzFocus fuzz_focus;
 
+    bool collision_enabled;
+    uint8_t collision_rate;
+    uint64_t collision_pool[16];
+    uint8_t collision_pool_size;
+
     bool generating;
     uint8_t progress;
     FuriThread* worker;
-    
-    uint8_t hold_ticks;
 
+    uint8_t hold_ticks;
 } AppState;
 
-/* ===================== PATH ===================== */
+/* ===================== PATH HELPERS ===================== */
 
 static const char* base_path(ProtocolType t) {
     if(t == ProtocolRFID) return "/ext/lfrfid_fuzzer/ListEM";
@@ -177,66 +184,137 @@ static void ensure_dirs(Storage* st, ProtocolType t) {
     storage_common_mkdir(st, base_path(t));
 }
 
+
 /* ===================== GENERATION ===================== */
 
 static int32_t generate_worker(void* ctx) {
     AppState* s = ctx;
     const Protocol* p = &protocols[s->proto];
 
+    /* reset collision pool */
+    s->collision_pool_size = 0;
+
     Storage* st = furi_record_open(RECORD_STORAGE);
     ensure_dirs(st, p->type);
 
+    /* clean protocol name */
     char clean[64];
-    strncpy(clean, p->name, sizeof(clean)-1);
-    for(size_t i=0; clean[i]; i++)
-        if(clean[i]==' ') clean[i]='_';
+    strncpy(clean, p->name, sizeof(clean) - 1);
+    clean[sizeof(clean) - 1] = '\0';
+    for(size_t i = 0; clean[i]; i++)
+        if(clean[i] == ' ') clean[i] = '_';
 
     const char* mode_str =
         (s->mode == GenModeSequential) ? "sequential" :
         (s->mode == GenModeFuzz)       ? "fuzz" :
                                          "random";
+                                         
 
-    char prefix_part[64] = "noprefix";
-    bool has_prefix = false;
 
-    if(p->prefix_count > 0) {
-        prefix_part[0] = '\0';
-        for(uint8_t i=0;i<p->prefix_count;i++) {
-            if(s->prefix_enabled[s->proto][i]) {
-                if(has_prefix) strcat(prefix_part, "-");
-                char tmp[8];
-                snprintf(tmp,sizeof(tmp),"%02X",p->prefixes[i]);
-                strcat(prefix_part,tmp);
-                has_prefix = true;
-            }
+                                         
+
+/* ===================== PREFIX STRING (FILENAME) ===================== */
+
+char prefix_part[64] = "noprefix";
+bool has_prefix = false;
+
+if(p->prefix_count > 0) {
+    prefix_part[0] = '\0';
+
+    for(uint8_t i = 0; i < p->prefix_count; i++) {
+        if(s->prefix_enabled[s->proto][i]) {
+            if(has_prefix) strcat(prefix_part, "-");
+
+            char tmp[8];
+            snprintf(tmp, sizeof(tmp), "%02X", p->prefixes[i]);
+            strcat(prefix_part, tmp);
+
+            has_prefix = true;
         }
-        if(!has_prefix) strcpy(prefix_part,"noprefix");
     }
 
-    char path[192];
-    snprintf(path,sizeof(path),"%s/%s_%s_%s.txt",
-             base_path(p->type), clean, mode_str, prefix_part);
+    if(!has_prefix) {
+        strcpy(prefix_part, "noprefix");
+    }
+}
+
+/* ===================== OUTPUT PATH ===================== */
+
+char path[192];
+snprintf(
+    path,
+    sizeof(path),
+    "%s/%s_%s_%s.txt",
+    base_path(p->type),
+    clean,
+    mode_str,
+    prefix_part
+);
+
 
     File* f = storage_file_alloc(st);
     storage_file_open(f, path, FSAM_WRITE, FSOM_CREATE_ALWAYS);
+    
+    if(!storage_file_is_open(f)) {
+    storage_file_free(f);
+    furi_record_close(RECORD_STORAGE);
+    s->generating = false;
+    return 0;
+}
 
+
+    uint64_t max = p->max ? p->max : ((1ULL << (p->bytes * 8)) - 1);
     uint32_t step = s->count / 100;
     if(step == 0) step = 1;
 
-    uint64_t max = p->max ? p->max : ((1ULL << (p->bytes * 8)) - 1);
-
     for(uint32_t i = 0; i < s->count; i++) {
         uint64_t id = 0;
+        
+uint8_t prefix_index = 0;
 
-        if(s->mode == GenModeSequential) {
-            id = s->seq_start + (uint64_t)i * s->seq_step;
-        } else {
+if(s->per_prefix && p->prefix_count > 0) {
+    uint8_t enabled = 0;
+
+    for(uint8_t j = 0; j < p->prefix_count; j++)
+        if(s->prefix_enabled[s->proto][j])
+            enabled++;
+
+    if(enabled > 0) {
+        uint32_t block = s->count / enabled;
+        if(block == 0) block = 1;
+        prefix_index = (i / block) % enabled;
+    }
+}
+        
+
+        /* ================= BASE GENERATION ================= */
+
+if(s->mode == GenModeSequential) {
+    uint64_t offset = (uint64_t)i * s->seq_step;
+
+    uint64_t start =
+        s->seq_reverse
+            ? (p->max ? p->max : ((1ULL << (p->bytes * 8)) - 1))
+            : s->seq_start;
+
+    if(!s->seq_reverse) {
+        id = start + offset;
+    } else {
+        if(start > offset)
+            id = start - offset;
+        else
+            id = 0;
+    }
+}
+        
+        else {
             uint64_t r = ((uint64_t)rand() << 32) | rand();
             id = r & max;
         }
 
-        if(s->mode == GenModeFuzz) {
+        /* ================= FUZZ MUTATIONS ================= */
 
+        if(s->mode == GenModeFuzz) {
             if(s->fuzz_boundary) {
                 static const uint64_t patterns[] = {
                     0x0ULL,
@@ -255,6 +333,8 @@ static int32_t generate_worker(void* ctx) {
             }
         }
 
+        /* ================= PREFIX APPLY ================= */
+
         if(p->prefix_count > 0) {
             uint8_t usable[MAX_PREFIXES];
             uint8_t n = 0;
@@ -264,7 +344,9 @@ static int32_t generate_worker(void* ctx) {
                     usable[n++] = p->prefixes[j];
 
             if(n > 0) {
-                uint8_t prefix = usable[rand() % n];
+                uint8_t prefix = usable[
+                    s->per_prefix ? (prefix_index % n) : (rand() % n)
+                   ];
                 uint8_t rem = p->bytes - 1;
 
                 if(s->mode != GenModeFuzz || s->fuzz_preserve) {
@@ -273,6 +355,29 @@ static int32_t generate_worker(void* ctx) {
                 }
             }
         }
+
+        /* ================= COLLISION REUSE ================= */
+
+        if(
+            s->mode == GenModeFuzz &&
+            s->collision_enabled &&
+            s->collision_pool_size > 0 &&
+            (i % s->collision_rate == 0)
+        ) {
+            id = s->collision_pool[rand() % s->collision_pool_size];
+        }
+
+        /* ================= STORE COLLISION SAMPLES ================= */
+
+        if(
+            s->mode == GenModeFuzz &&
+            s->collision_enabled &&
+            s->collision_pool_size < 16
+        ) {
+            s->collision_pool[s->collision_pool_size++] = id;
+        }
+
+        /* ================= WRITE OUTPUT ================= */
 
         char line[40];
         snprintf(line, sizeof(line), "%0*llX\n", p->bytes * 2, id);
@@ -287,9 +392,9 @@ static int32_t generate_worker(void* ctx) {
     furi_record_close(RECORD_STORAGE);
 
     s->generating = false;
-    s->worker = NULL;
     return 0;
 }
+
 
 /* ===================== DRAW ===================== */
 
@@ -333,21 +438,33 @@ static void draw(Canvas* c, void* ctx) {
         return;
     }
 
-    if(s->submenu == SubmenuSequential) {
-        char l[32];
-        snprintf(l,sizeof(l),"Start: %llu", s->seq_start);
-        canvas_draw_str(c,2,14,(s->seq_focus==SeqStart)?">":" ");
-        canvas_draw_str(c,10,14,l);
+if(s->submenu == SubmenuSequential) {
+    char l[32];
 
-        snprintf(l,sizeof(l),"Step: %llu", s->seq_step);
-        canvas_draw_str(c,2,26,(s->seq_focus==SeqStep)?">":" ");
-        canvas_draw_str(c,10,26,l);
+    snprintf(l,sizeof(l),"Start: %llu", s->seq_start);
+    canvas_draw_str(c,2,14,(s->seq_focus==SeqStart)?">":" ");
+    canvas_draw_str(c,10,14,l);
 
-        canvas_draw_str(c,2,38,(s->seq_focus==SeqCounter)?">":" ");
-        canvas_draw_str(c,10,38,s->per_prefix?"Per-prefix: ON":"Per-prefix: OFF");
+    snprintf(l,sizeof(l),"Step: %llu", s->seq_step);
+    canvas_draw_str(c,2,26,(s->seq_focus==SeqStep)?">":" ");
+    canvas_draw_str(c,10,26,l);
 
-        return;
-    }
+    canvas_draw_str(c,2,38,(s->seq_focus==SeqCounter)?">":" ");
+    canvas_draw_str(c,10,38,
+        s->per_prefix ? "Per-prefix: ON" : "Per-prefix: OFF"
+    );
+
+    snprintf(
+        l,sizeof(l),
+        "Direction: %s",
+        s->seq_reverse ? "Reverse" : "Forward"
+    );
+    canvas_draw_str(c,2,50,(s->seq_focus==SeqDirection)?">":" ");
+    canvas_draw_str(c,10,50,l);
+
+    return;
+}
+
 
     if(s->submenu == SubmenuFuzz) {
         canvas_draw_str(c,2,14,(s->fuzz_focus==FuzzBoundary)?">":" ");
@@ -363,6 +480,18 @@ static void draw(Canvas* c, void* ctx) {
 
         canvas_draw_str(c,2,50,(s->fuzz_focus==FuzzPreserve)?">":" ");
         canvas_draw_str(c,10,50,s->fuzz_preserve?"Preserve Prefix: ON":"Preserve Prefix: OFF");
+        
+        char cbuf[32];
+        snprintf(
+            cbuf,
+            sizeof(cbuf),
+            "Collision: %s (%u)",
+            s->collision_enabled ? "ON" : "OFF",
+            s->collision_rate
+        );
+
+        canvas_draw_str(c,2,62,(s->fuzz_focus==FuzzCollision)?">":" ");
+        canvas_draw_str(c,10,62,cbuf);
 
         return;
     }
@@ -398,7 +527,6 @@ static void input(InputEvent* e, void* ctx) {
     bool is_repeat = (e->type == InputTypeRepeat);
     if(!is_short && !is_repeat) return;
 
-    /* === acceleration calculation === */
     uint32_t accel = 1;
     if(is_repeat) {
         if(s->hold_ticks < 10) s->hold_ticks++;
@@ -416,41 +544,85 @@ static void input(InputEvent* e, void* ctx) {
         return;
     }
 
-    if(s->submenu == SubmenuSequential) {
-        if(e->key==InputKeyUp&&s->seq_focus>SeqStart) s->seq_focus--;
-        else if(e->key==InputKeyDown&&s->seq_focus<SeqCounter) s->seq_focus++;
-        else if(e->key==InputKeyLeft) {
-            if(s->seq_focus==SeqStart&&s->seq_start>0) s->seq_start--;
-            if(s->seq_focus==SeqStep&&s->seq_step>1) s->seq_step--;
-        }
-        else if(e->key==InputKeyRight) {
-            if(s->seq_focus==SeqStart) s->seq_start++;
-            if(s->seq_focus==SeqStep) s->seq_step++;
-        }
-        else if(e->key==InputKeyOk&&s->seq_focus==SeqCounter) s->per_prefix^=1;
-        else if(e->key==InputKeyBack) {
-            s->submenu=SubmenuNone; 
-            s->focus=FocusMode;
-        }
-        return;
+if(s->submenu == SubmenuSequential) {
+
+    if(e->key==InputKeyUp && s->seq_focus > SeqStart)
+        s->seq_focus--;
+
+    else if(e->key==InputKeyDown && s->seq_focus < SeqDirection)
+        s->seq_focus++;
+
+    else if(e->key==InputKeyLeft) {
+        if(s->seq_focus==SeqStart && s->seq_start>0)
+            s->seq_start--;
+        else if(s->seq_focus==SeqStep && s->seq_step>1)
+            s->seq_step--;
     }
 
-    if(s->submenu == SubmenuFuzz) {
-        if(e->key==InputKeyUp&&s->fuzz_focus>FuzzBoundary) s->fuzz_focus--;
-        else if(e->key==InputKeyDown&&s->fuzz_focus<FuzzPreserve) s->fuzz_focus++;
-        else if(e->key==InputKeyLeft&&s->fuzz_focus==FuzzBits&&s->fuzz_bits>1) s->fuzz_bits--;
-        else if(e->key==InputKeyRight&&s->fuzz_focus==FuzzBits) s->fuzz_bits++;
-        else if(e->key==InputKeyOk) {
-            if(s->fuzz_focus==FuzzBoundary) s->fuzz_boundary^=1;
-            else if(s->fuzz_focus==FuzzBitflip) s->fuzz_bitflip^=1;
-            else if(s->fuzz_focus==FuzzPreserve) s->fuzz_preserve^=1;
-        }
-        else if(e->key==InputKeyBack) {
-            s->submenu=SubmenuNone; 
-            s->focus=FocusMode;
-        }
-        return;
+    else if(e->key==InputKeyRight) {
+        if(s->seq_focus==SeqStart)
+            s->seq_start++;
+        else if(s->seq_focus==SeqStep)
+            s->seq_step++;
     }
+
+    else if(e->key==InputKeyOk) {
+        if(s->seq_focus==SeqCounter)
+            s->per_prefix ^= 1;
+        else if(s->seq_focus==SeqDirection)
+            s->seq_reverse ^= 1;
+    }
+
+    else if(e->key==InputKeyBack) {
+        s->submenu = SubmenuNone;
+        s->focus = FocusMode;
+    }
+
+    return;
+}
+
+
+if(s->submenu == SubmenuFuzz) {
+
+    if(e->key==InputKeyUp && s->fuzz_focus > FuzzBoundary)
+        s->fuzz_focus--;
+
+    else if(e->key==InputKeyDown && s->fuzz_focus < FuzzCollision)
+        s->fuzz_focus++;
+
+    else if(e->key==InputKeyLeft) {
+        if(s->fuzz_focus==FuzzBits && s->fuzz_bits > 1)
+            s->fuzz_bits--;
+        else if(s->fuzz_focus==FuzzCollision && s->collision_rate > 2)
+            s->collision_rate--;
+    }
+
+    else if(e->key==InputKeyRight) {
+        if(s->fuzz_focus==FuzzBits)
+            s->fuzz_bits++;
+        else if(s->fuzz_focus==FuzzCollision && s->collision_rate < 50)
+            s->collision_rate++;
+    }
+
+    else if(e->key==InputKeyOk) {
+        if(s->fuzz_focus==FuzzBoundary)
+            s->fuzz_boundary ^= 1;
+        else if(s->fuzz_focus==FuzzBitflip)
+            s->fuzz_bitflip ^= 1;
+        else if(s->fuzz_focus==FuzzPreserve)
+            s->fuzz_preserve ^= 1;
+        else if(s->fuzz_focus==FuzzCollision)
+            s->collision_enabled ^= 1;
+    }
+
+    else if(e->key==InputKeyBack) {
+        s->submenu = SubmenuNone;
+        s->focus = FocusMode;
+    }
+
+    return;
+}
+
 
     if(e->key==InputKeyUp && s->focus > 0) {
     s->focus--;
@@ -470,7 +642,7 @@ static void input(InputEvent* e, void* ctx) {
         uint32_t dec = COUNT_STEP * effective_accel;
 
         if(s->count <= COUNT_STEP || s->count <= dec) {
-            s->count = MAX_IDS;   // 🔄 wrap to 200000
+            s->count = MAX_IDS;  
         } else {
             s->count -= dec;
         }
@@ -535,10 +707,16 @@ int32_t rfid_fuzzer_app(void* p) {
         .proto=0,.count=30000,.run=true,
         .mode=GenModeSequential,.focus=FocusProtocol,
         .seq_start=0,.seq_step=1,
+        .seq_reverse = false,
         .fuzz_boundary=true,.fuzz_bitflip=true,
         .fuzz_bits=1,.fuzz_preserve=true,
+        .collision_enabled = false,
+        .collision_rate = 10,
+        .collision_pool_size = 0,
         .hold_ticks=0,
     };
+    
+    memset(s.prefix_enabled, 0, sizeof(s.prefix_enabled));
     
     if(s.count > MAX_IDS) s.count = MAX_IDS;
 
@@ -557,4 +735,3 @@ int32_t rfid_fuzzer_app(void* p) {
     furi_record_close(RECORD_GUI);
     return 0;
 }
-

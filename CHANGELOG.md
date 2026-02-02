@@ -1,6 +1,39 @@
 # Changelog
 
 
+## [v1.3] – 01-02-2026
+
+### Added
+- **Reverse sequential generation**
+  - Sequential IDs can now be generated in reverse order
+  - Safe underflow handling to prevent early termination
+
+- **Collision fuzzing**
+  - Optional collision reuse during fuzzing
+  - Configurable collision rate
+  - Collision pool sampling for reader behavior and stress testing
+
+- **Per-prefix sequential distribution**
+  - Sequential generation can optionally distribute IDs evenly across enabled prefixes
+  - Ensures balanced coverage when multiple prefixes are selected
+
+- **Improved fuzzing controls**
+  - Prefix preservation now works correctly with boundary and bit-flip mutations
+
+### Changed
+- Sequential generation logic refactored for correctness and stability
+- Prefix handling unified across Random, Sequential, and Fuzz modes
+- Output generation stabilized across all modes and configurations
+
+### Fixed
+- Fixed prefix overwrite issues during fuzzing
+- Fixed edge cases producing empty or duplicated lists
+- Improved generation stability
+
+
+
+
+
 ## [v1.2] – 26-01-2026
 
 ### Added
