@@ -44,6 +44,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [ProtoPirate v1.8 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate) [VW Crypro Updates (By zero-mega and slackware)](https://protopirate.net/ProtoPirate/ProtoPirate/commit/b422766a052a2a13c8d2b82967d3d9b541844cba)
 - Added: [Timed Remote v0.1 (By anders-dc)](https://github.com/anders-dc/timed-remote)
 - Updated: [LIDAR Emulator v0.2 (By regaly)](https://github.com/regaly/flipperzero-lidar_emulator) [v0.2 Updates: External GPIO IR device support (By mistrustt)](https://github.com/mistrustt/flipperzero-lidar_emulator)
+- Updated: [ListEM v1.3 (By Clawzman)](https://github.com/Clawzman/Flipper_ListEM)
 
 <a name="release">
 
@@ -616,7 +617,7 @@ $ ./fbt dolphin_ext
 - [Lightmeter v1.3 (By oleksiikutuzov)](https://github.com/oleksiikutuzov/flipperzero-lightmeter) `Req: BH1750/MAX44009`
 - [Lightning Distance v0.1 (By HyperMuffin12)](https://github.com/HyperMuffin12/Flipper-Lightning-Distance)
 - [Lishi HU66 v0.2 (By evillero)](https://github.com/evillero/lishi_hu66)
-- [ListEM v1.2 (By Clawzman)](https://github.com/Clawzman/Flipper_ListEM)
+- [ListEM v1.3 (By Clawzman)](https://github.com/Clawzman/Flipper_ListEM)
 - [Logic Analyzer v1.1 (By g3gg0)](https://github.com/g3gg0/flipper-logic_analyzer)
 - [Longwave Clock v0.1 (By m7i-org)](https://github.com/m7i-org/flipper_longwave_clock)
 - [LoRa Relay v1.1.3 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-SX1262-LoRa) `Req: SX1262 By ElectronicCats`

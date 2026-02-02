@@ -6,6 +6,16 @@ I decided to build it as a native Flipper app for **flexibility, portability, an
 ListEM brings advanced list generating features (previously done via my Python scripts) straight onto the Flipper Zero.
 Now with **Fuzzing Mode / Bit-Mutation engine!** A real, usable reader testing FuZZ engine!
 
+---
+
+
+## 🆕 What’s New in v1.3
+
+- Reverse sequential UID generation
+- Collision-aware fuzzing for realistic reader behavior testing
+- Per-prefix sequential distribution
+- Improved prefix handling across all modes
+- Improved stability and generation reliability
 
 ---
 
@@ -51,28 +61,41 @@ Now with **Fuzzing Mode / Bit-Mutation engine!** A real, usable reader testing F
 ### 🎛️ Generating Modes
 
 #### 🎲 Random Mode
-- Fully random ID generation
-- Optional manufacturer prefix injection
-- Ideal for discovery and bruteforce testing
+ - Fully random ID generation
+ - Optional manufacturer prefix injection
+ - Ideal for discovery and bruteforce testing
+
 
 #### 🔢 Sequential Mode
-- Configurable **start value**
-- Configurable **step size**
-- Optional manufacturer prefix injection
-- Useful for ordered UID ranges and predictable badge patterns
+ - Configurable **start value**
+ - Configurable **step size**
+ - Optional manufacturer prefix injection
+  - Useful for ordered UID ranges and predictable badge patterns
+ - Optional **per-prefix independent enumeration**
+ - Optional **reverse enumeration**
+  - Safely counts downward without underflow
+  - Useful for backward UID ranges and legacy systems
+  
+Ideal for:
+ - Ordered UID ranges
+ - Predictable badge numbering schemes
+ - Legacy access systems
+
 
 #### 🧪 Fuzz Mode (Advanced lists for Fuzzing) 🔥
 Designed for **reader fuzzing and robustness testing**
 
 Fuzz Mode can generate:
-- Boundary values (all zeros, all ones, AA / 55 patterns)
-- Bit flip mutations (configurable bit count)
-- Prefix preserving fuzzing (optional)
+ - Boundary values (all zeros, all ones, AA / 55 patterns)
+ - Bit flip mutations (configurable bit count)
+ - Prefix preserving fuzzing (optional)
+ - Collision Fuzzing  (Configurable collision rate)
 
 Ideal for:
-- Parser robustness testing
-- Reader edge case discovery
-- Unexpected behavior detection
+ - Parser robustness testing
+ - Reader edge case discovery
+ - Unexpected behavior detection
+ - Caching and UID de-duplication logic
 
 
 **✔ Configurable via submenu**
@@ -129,6 +152,7 @@ EM4100_fuzz_A0-C0.txt
 This tool is intended for **testing, research, and educational purposes**.
 
 ---
+Developed by **Clawzman**  
 
 ## 🔗 Source
 
