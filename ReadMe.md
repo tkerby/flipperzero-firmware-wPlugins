@@ -33,7 +33,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [UDECard v1.0.4 (By hahnworks](https://github.com/hahnworks/UDECard) (Version Only)
 - Updated: [Guess The Number v1.3 (By kWAYTV)](https://github.com/kWAYTV/guess-the-number-fz)
 - Updated: [Temp Sensors Reader 1.8 (By quen0n)](https://github.com/quen0n/Unitemp-Flipper-Zero-Plugin) `Req: BMP180/BMP280/BME280/BME680/DHT11/DHT22(AM2302)/AM2301/AM2320/HTU2XD/HTU21x/HDC1080/MAX31725/MAX31855/MAX6675/SCD30` (Version Only)
-- Updated: [NFC Comparator v2.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
 - Updated: [WiFi (Marauder) v0.7.8 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion) `Req: ESP32` with [ESP32 MARAUDER Firmware](https://github.com/justcallmekoko/ESP32Marauder/releases/latest)
 - Sub-GHz: [BFT KeeLoq try decoding with zero seed too (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/523a3723cf9ec475c2904603b422c55802120519)
 - Added: [UL-C Bruteforce v1.0 (By noproto)](https://github.com/zc-public/breakme-resources/tree/main/flipper_apps)
@@ -45,6 +44,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Timed Remote v0.1 (By anders-dc)](https://github.com/anders-dc/timed-remote)
 - Updated: [LIDAR Emulator v0.2 (By regaly)](https://github.com/regaly/flipperzero-lidar_emulator) [v0.2 Updates: External GPIO IR device support (By mistrustt)](https://github.com/mistrustt/flipperzero-lidar_emulator)
 - Updated: [ListEM v1.3 (By Clawzman)](https://github.com/Clawzman/Flipper_ListEM)
+- Updated: [NFC Comparator v2.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
 
 <a name="release">
 
