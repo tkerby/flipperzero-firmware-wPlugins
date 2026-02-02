@@ -91,6 +91,10 @@ static void LidarEmulatorApp_free(LidarEmulatorApp* lidaremulator) {
 
 int lidar_emulator_app(void* p) {
     UNUSED(p);
+    // Disable expansion protocol to avoid interference with UART Handle
+    Expansion* expansion = furi_record_open(RECORD_EXPANSION);
+    expansion_disable(expansion);
+    bool otg_was_enabled = furi_hal_power_is_otg_enabled();
 
     LidarEmulatorApp* lidaremulator = LidarEmulatorApp_alloc();
 
@@ -103,6 +107,12 @@ int lidar_emulator_app(void* p) {
 
     LidarEmulatorApp_free(lidaremulator);
 
+    if(furi_hal_power_is_otg_enabled() && !otg_was_enabled) {
+        furi_hal_power_disable_otg();
+    }
+    // Return previous state of expansion
+    expansion_enable(expansion);
+    furi_record_close(RECORD_EXPANSION);
     return 0;
 }
 
@@ -135,11 +145,15 @@ void lidaremulator_set_tx_pin(LidarEmulatorApp* app, FuriHalInfraredTxPin tx_pin
 
 void lidaremulator_enable_otg(LidarEmulatorApp* app, bool enable) {
     furi_check(app);
-
-    Power* power = furi_record_open(RECORD_POWER);
-    power_enable_otg(power, enable);
+    if(enable) {
+        uint8_t attempts = 0;
+        while(!furi_hal_power_is_otg_enabled() && attempts++ < 5) {
+            furi_hal_power_enable_otg();
+            furi_delay_ms(10);
+        }
+        furi_delay_ms(200);
+    }
     app->app_state.is_otg_enabled = enable;
-    furi_record_close(RECORD_POWER);
 }
 
 void lidaremulator_load_settings(LidarEmulatorApp* app) {

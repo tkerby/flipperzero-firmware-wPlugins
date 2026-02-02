@@ -11,6 +11,8 @@
 #include <notification/notification_messages.h>
 #include <infrared/worker/infrared_worker.h>
 #include <power/power_service/power.h>
+#include <expansion/expansion.h>
+#include <furi_hal.h>
 #include <furi_hal_infrared.h>
 
 #include "scenes/lidaremulator_scene.h"
