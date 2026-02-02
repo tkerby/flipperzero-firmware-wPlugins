@@ -103,6 +103,7 @@ Ideal for:
 | Bit flip on/off
 | Flip count adjustable
 | Prefix preserve on/off
+| Collision on/off (10) <- adjustable count
 
 **This is legitimate fuzzing, not just “random junk”!**
 
