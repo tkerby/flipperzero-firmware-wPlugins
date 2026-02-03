@@ -40,12 +40,12 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [UL-C Relay v1.0 (By noproto)](https://github.com/zc-public/breakme-resources/tree/main/flipper_apps)
 - Added: [ULCFKey v1.0 (By noproto)](https://github.com/zc-public/breakme-resources/tree/main/flipper_apps)
 - Added: [ULCFKey Next v1.0 (By noproto)](https://github.com/zc-public/breakme-resources/tree/main/flipper_apps)
-- Updated: [ProtoPirate v1.8 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate) [VW Crypro Updates (By zero-mega and slackware)](https://protopirate.net/ProtoPirate/ProtoPirate/commit/b422766a052a2a13c8d2b82967d3d9b541844cba)
 - Added: [Timed Remote v0.1 (By anders-dc)](https://github.com/anders-dc/timed-remote)
 - Updated: [LIDAR Emulator v0.2 (By regaly)](https://github.com/regaly/flipperzero-lidar_emulator) [v0.2 Updates: External GPIO IR device support (By mistrustt)](https://github.com/mistrustt/flipperzero-lidar_emulator)
 - Updated: [ListEM v1.3 (By Clawzman)](https://github.com/Clawzman/Flipper_ListEM)
 - Updated: [NFC Comparator v2.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
 - SubGHz: [V2 Phoenix (Phox) added 2 counter modes support (docs updated) (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/95dd537bf81ee445b1fb71aa60431cb62080333d)
+- Updated: [ProtoPirate v1.9 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 
 <a name="release">
 
@@ -721,7 +721,7 @@ $ ./fbt dolphin_ext
 - [Postman v0.1 (By MassivDash)](https://github.com/MassivDash/flipper-postman) `Req: ESP32` with [Postman Firmware](https://github.com/MassivDash/flipper-postman-esp32s2)
 - [Programmer Calculator v0.9.2 (By armixz)](https://github.com/armixz/Flipper-Zero-Programmer-Calculator)
 - [Protocol Visualizer v1.3 (By antirez)](https://github.com/antirez/protoview)
-- [ProtoPirate v1.8 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
+- [ProtoPirate v1.9 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - [QR Code v2.1.4 (By bmatcuk)](https://github.com/bmatcuk/flipperzero-qrcode)
 - [QRCode Generator v0.1 (By qw3rtty)](https://github.com/qw3rtty/flipperzero-qrcode-generator)
 - [Quac! v0.9.1 (By rdefeo)](https://github.com/rdefeo/quac)
