@@ -20,6 +20,7 @@ static const ActionMenuItemType ItemToMenuItem[] = {
     [Item_IR] = ActionMenuItemTypeIR,
     [Item_NFC] = ActionMenuItemTypeNFC,
     [Item_iButton] = ActionMenuItemTypeiButton,
+    [Item_Picopass] = ActionMenuItemTypePicopass,
     [Item_Playlist] = ActionMenuItemTypePlaylist,
     [Item_Group] = ActionMenuItemTypeGroup,
     [Item_Settings] = ActionMenuItemTypeSettings,
@@ -116,6 +117,10 @@ bool scene_items_on_event(void* context, SceneManagerEvent event) {
                     item_items_view_free(app->items_view);
                     app->items_view = new_items;
                     scene_manager_next_scene(app->scene_manager, QScene_Items);
+                } else if(item->type == Item_Picopass) {
+                    // Picopass uses a dedicated scene for continuous emulation
+                    FURI_LOG_I(TAG, "Starting picopass emulation: %s", furi_string_get_cstr(item->name));
+                    scene_manager_next_scene(app->scene_manager, QScene_PicopassEmulate);
                 } else {
                     FURI_LOG_I(
                         TAG, "Initiating item action: %s", furi_string_get_cstr(item->name));

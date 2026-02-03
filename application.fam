@@ -5,7 +5,7 @@ App(
     name="Quac!",  # Displayed in menus
     apptype=FlipperAppType.EXTERNAL,
     entry_point="quac_app",
-    stack_size=2 * 1024,
+    stack_size=4 * 1024,  # Increased for picopass emulation
     fap_category="Tools",
     # Optional values
     fap_version="0.9.1",
@@ -14,4 +14,10 @@ App(
     fap_author="Roberto De Feo",
     fap_weburl="https://github.com/rdefeo/quac",
     fap_icon_assets="images",  # Image assets to compile for this application
+    fap_private_libs=[
+        Lib(
+            name="loclass",
+            cflags=["-O3"],
+        ),
+    ],
 )
