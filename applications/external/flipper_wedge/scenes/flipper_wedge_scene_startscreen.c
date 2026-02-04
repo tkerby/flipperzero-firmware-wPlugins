@@ -239,14 +239,16 @@ static void flipper_wedge_scene_startscreen_output_and_reset(FlipperWedge* app) 
                 memcpy(chunk, app->output_buffer + chunk_start, chunk_len);
                 chunk[chunk_len] = '\0';
 
-                flipper_wedge_hid_type_string(flipper_wedge_get_hid(app), chunk);
+                flipper_wedge_hid_type_string(
+                    flipper_wedge_get_hid(app), app->keyboard_layout, chunk);
 
                 // Small delay between chunks (let HID catch up)
                 furi_delay_ms(50);
             }
         } else {
             // Short text, type normally
-            flipper_wedge_hid_type_string(flipper_wedge_get_hid(app), app->output_buffer);
+            flipper_wedge_hid_type_string(
+                flipper_wedge_get_hid(app), app->keyboard_layout, app->output_buffer);
         }
 
         if(app->append_enter) {

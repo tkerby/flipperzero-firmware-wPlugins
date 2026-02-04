@@ -86,7 +86,11 @@ FlipperWedge* flipper_wedge_app_alloc() {
     app->dialogs = furi_record_open(RECORD_DIALOGS);
     app->file_path = furi_string_alloc();
 
+    // Allocate keyboard layout (default to QWERTY)
+    app->keyboard_layout = flipper_wedge_keyboard_layout_alloc();
+
     // Load configs BEFORE initializing HID (so we respect output_mode setting)
+    // This also loads keyboard layout settings
     flipper_wedge_read_settings(app);
 
     // Allocate HID worker (manages HID interface in separate thread)
@@ -242,6 +246,12 @@ void flipper_wedge_app_free(FlipperWedge* app) {
 
     // Free HID worker (stops thread and cleans up HID)
     flipper_wedge_hid_worker_free(app->hid_worker);
+
+    // Free keyboard layout
+    if(app->keyboard_layout) {
+        flipper_wedge_keyboard_layout_free(app->keyboard_layout);
+        app->keyboard_layout = NULL;
+    }
 
     // Scene manager
     scene_manager_free(app->scene_manager);

@@ -9,7 +9,7 @@ App(
     fap_icon_assets="icons",
     fap_category="Tools",
     fap_author="Dangerous Things",
-    fap_version="1.0",
+    fap_version="1.1",
     fap_weburl="https://github.com/DangerousThings/flipper-wedge",
     fap_description="Read RFID/NFC tags and type their UIDs as HID keyboard input via USB or Bluetooth. Supports 5 scan modes and NDEF text records.",
 )

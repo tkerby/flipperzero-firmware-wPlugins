@@ -6,7 +6,7 @@
 #include <flipper_format/flipper_format_i.h>
 #include "../flipper_wedge.h"
 
-#define FLIPPER_WEDGE_SETTINGS_FILE_VERSION     5
+#define FLIPPER_WEDGE_SETTINGS_FILE_VERSION     6
 #define CONFIG_FILE_DIRECTORY_PATH              EXT_PATH("apps_data/hid_device")
 #define FLIPPER_WEDGE_SETTINGS_SAVE_PATH        CONFIG_FILE_DIRECTORY_PATH "/hid_device.conf"
 #define FLIPPER_WEDGE_SETTINGS_SAVE_PATH_TMP    FLIPPER_WEDGE_SETTINGS_SAVE_PATH ".tmp"
@@ -20,6 +20,8 @@
 #define FLIPPER_WEDGE_SETTINGS_KEY_VIBRATION    "Vibration"
 #define FLIPPER_WEDGE_SETTINGS_KEY_NDEF_MAX_LEN "NdefMaxLen"
 #define FLIPPER_WEDGE_SETTINGS_KEY_LOG_TO_SD    "LogToSd"
+#define FLIPPER_WEDGE_SETTINGS_KEY_LAYOUT_TYPE  "LayoutType"
+#define FLIPPER_WEDGE_SETTINGS_KEY_LAYOUT_FILE  "LayoutFile"
 
 void flipper_wedge_save_settings(void* context);
 void flipper_wedge_read_settings(void* context);

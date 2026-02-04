@@ -1,4 +1,5 @@
 #include "flipper_wedge_storage.h"
+#include "flipper_wedge_keyboard_layout.h"
 
 static Storage* flipper_wedge_open_storage() {
     return furi_record_open(RECORD_STORAGE);
@@ -101,6 +102,25 @@ void flipper_wedge_save_settings(void* context) {
            fff_file, FLIPPER_WEDGE_SETTINGS_KEY_LOG_TO_SD, &app->log_to_sd, 1)) {
         FURI_LOG_E(TAG, "Failed to write log_to_sd");
         save_success = false;
+    }
+    // Keyboard layout settings
+    if(app->keyboard_layout) {
+        uint32_t layout_type = app->keyboard_layout->type;
+        if(!flipper_format_write_uint32(
+               fff_file, FLIPPER_WEDGE_SETTINGS_KEY_LAYOUT_TYPE, &layout_type, 1)) {
+            FURI_LOG_E(TAG, "Failed to write layout_type");
+            save_success = false;
+        }
+        // Only save file path for custom layouts
+        if(app->keyboard_layout->type == FlipperWedgeLayoutCustom) {
+            if(!flipper_format_write_string_cstr(
+                   fff_file,
+                   FLIPPER_WEDGE_SETTINGS_KEY_LAYOUT_FILE,
+                   app->keyboard_layout->file_path)) {
+                FURI_LOG_E(TAG, "Failed to write layout_file");
+                save_success = false;
+            }
+        }
     }
 
     if(!flipper_format_rewind(fff_file)) {
@@ -272,6 +292,43 @@ void flipper_wedge_read_settings(void* context) {
 
     // Read log to SD setting (default to OFF for privacy/performance)
     flipper_format_read_bool(fff_file, FLIPPER_WEDGE_SETTINGS_KEY_LOG_TO_SD, &app->log_to_sd, 1);
+
+    // Read keyboard layout settings (default to QWERTY)
+    if(app->keyboard_layout) {
+        uint32_t layout_type = FlipperWedgeLayoutDefault;
+        if(flipper_format_read_uint32(
+               fff_file, FLIPPER_WEDGE_SETTINGS_KEY_LAYOUT_TYPE, &layout_type, 1)) {
+            if(layout_type < FlipperWedgeLayoutCount) {
+                switch(layout_type) {
+                case FlipperWedgeLayoutDefault:
+                    flipper_wedge_keyboard_layout_set_default(app->keyboard_layout);
+                    break;
+                case FlipperWedgeLayoutNumPad:
+                    flipper_wedge_keyboard_layout_set_numpad(app->keyboard_layout);
+                    break;
+                case FlipperWedgeLayoutCustom: {
+                    FuriString* layout_path = furi_string_alloc();
+                    if(flipper_format_read_string(
+                           fff_file, FLIPPER_WEDGE_SETTINGS_KEY_LAYOUT_FILE, layout_path)) {
+                        if(!flipper_wedge_keyboard_layout_load(
+                               app->keyboard_layout, furi_string_get_cstr(layout_path))) {
+                            FURI_LOG_W(TAG, "Failed to load layout file, using default");
+                            flipper_wedge_keyboard_layout_set_default(app->keyboard_layout);
+                        }
+                    } else {
+                        FURI_LOG_W(TAG, "Layout file path not found, using default");
+                        flipper_wedge_keyboard_layout_set_default(app->keyboard_layout);
+                    }
+                    furi_string_free(layout_path);
+                    break;
+                }
+                default:
+                    flipper_wedge_keyboard_layout_set_default(app->keyboard_layout);
+                    break;
+                }
+            }
+        }
+    }
 
     flipper_format_rewind(fff_file);
 

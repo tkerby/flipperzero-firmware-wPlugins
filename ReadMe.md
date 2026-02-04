@@ -49,6 +49,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Swimmy Fish v2.0 (By Invizabel)](https://github.com/Invizabel/fish)
 - Updated: [Key Copier v1.5 (By zinongli)](https://github.com/zinongli/KeyCopier) [Add Schlage Everest 29 Key Profile (By RJohnson2106)](https://github.com/zinongli/KeyCopier/pull/39)
 - Updated: [Quac! v0.9.1 (By rdefeo)](https://github.com/rdefeo/quac) [Support for HID iClass (Picopass files) (By lilgangus)](https://github.com/rdefeo/quac/pull/24)
+- Updated: [Flipper Wedge v1.1 (By DangerousThings)](https://github.com/DangerousThings/flipper-wedge)
 
 <a name="release">
 
@@ -544,7 +545,7 @@ $ ./fbt dolphin_ext
 - [Flipper Aid v1.0 (By spaghety)](https://github.com/spaghety/flipper-aid)
 - [Flipper Doctor v0.1 (By julandealb)](https://github.com/julandealb/flipperdoc)
 - [Flipper Tag v1.0 (By thejudge156)](https://github.com/thejudge156/flippertag)
-- [Flipper Wedge v1.0 (By DangerousThings)](https://github.com/DangerousThings/flipper-wedge)
+- [Flipper Wedge v1.1 (By DangerousThings)](https://github.com/DangerousThings/flipper-wedge)
 - [Flipper95 v1.0 (By CookiePLMonster)](https://github.com/CookiePLMonster/flipper-bakery/flipper95)
 - [FlipperZero Clock v1.3 (By mdaskalov)](https://github.com/mdaskalov/flipperzero-clock)
 - [Flippy Temp WIP v0.1 (By n0ciple)](https://github.com/n0ciple/flippy_sensors) `Req: Flippy Sensor Board`
