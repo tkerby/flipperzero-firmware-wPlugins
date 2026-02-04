@@ -1,6 +1,7 @@
 #include "../flipper_wedge.h"
 #include "../helpers/flipper_wedge_keyboard_layout.h"
 #include <lib/toolbox/value_index.h>
+#include <notification/notification_messages.h>
 
 enum SettingsIndex {
     SettingsIndexHeader,
@@ -196,8 +197,14 @@ static void flipper_wedge_scene_settings_set_keyboard_layout(VariableItem* item)
             const char* path = furi_string_get_cstr(layout_custom_paths[custom_index]);
             if(!flipper_wedge_keyboard_layout_load(app->keyboard_layout, path)) {
                 FURI_LOG_E("Settings", "Failed to load layout: %s", path);
-                // Fall back to default
+                // Notify user of failure with error feedback
+                NotificationApp* notifications = furi_record_open(RECORD_NOTIFICATION);
+                notification_message(notifications, &sequence_error);
+                furi_record_close(RECORD_NOTIFICATION);
+                // Fall back to default and update UI
                 flipper_wedge_keyboard_layout_set_default(app->keyboard_layout);
+                variable_item_set_current_value_index(item, 0);
+                variable_item_set_current_value_text(item, "Default (QWERTY)");
             }
         }
     }

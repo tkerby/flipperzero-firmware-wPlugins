@@ -8,6 +8,11 @@
 #define LAYOUT_FILE_VERSION 1
 
 // NumPad keycodes from hid_usage_keyboard.h
+// NOTE: Digits 0-9 (0x62, 0x59-0x61) are standard HID numpad keycodes.
+// Hex letters A-F (0xBC-0xC1) are NON-STANDARD extended keycodes.
+// Standard USB HID does not define numpad A-F keys, so these may not
+// work on all operating systems or applications. NumPad mode is primarily
+// useful for typing digits 0-9 on systems where the number row layout differs.
 #define HID_KEYPAD_NUMLOCK 0x53
 #define HID_KEYPAD_0       0x62
 #define HID_KEYPAD_1       0x59
@@ -19,12 +24,12 @@
 #define HID_KEYPAD_7       0x5F
 #define HID_KEYPAD_8       0x60
 #define HID_KEYPAD_9       0x61
-#define HID_KEYPAD_A       0xBC
-#define HID_KEYPAD_B       0xBD
-#define HID_KEYPAD_C       0xBE
-#define HID_KEYPAD_D       0xBF
-#define HID_KEYPAD_E       0xC0
-#define HID_KEYPAD_F       0xC1
+#define HID_KEYPAD_A       0xBC  // Non-standard
+#define HID_KEYPAD_B       0xBD  // Non-standard
+#define HID_KEYPAD_C       0xBE  // Non-standard
+#define HID_KEYPAD_D       0xBF  // Non-standard
+#define HID_KEYPAD_E       0xC0  // Non-standard
+#define HID_KEYPAD_F       0xC1  // Non-standard
 
 static const char* layout_type_names[] = {
     [FlipperWedgeLayoutDefault] = "Default (QWERTY)",
@@ -180,8 +185,11 @@ bool flipper_wedge_keyboard_layout_load(FlipperWedgeKeyboardLayout* layout, cons
         // Format: single character key, value is "keycode" or "keycode SHIFT"
         FuriString* value = furi_string_alloc();
 
-        // Try to read mappings for all printable ASCII characters
-        for(char c = 32; c < 127; c++) {
+        // Only lookup characters we actually need for hex UIDs and delimiters
+        // (27 lookups instead of 95 - ~3.5x faster)
+        static const char* chars_to_lookup = "0123456789ABCDEFabcdef-:,.;";
+        for(size_t i = 0; chars_to_lookup[i] != '\0'; i++) {
+            char c = chars_to_lookup[i];
             char key[2] = {c, '\0'};
 
             if(flipper_format_read_string(file, key, value)) {
