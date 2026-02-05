@@ -24,12 +24,12 @@
 #define HID_KEYPAD_7       0x5F
 #define HID_KEYPAD_8       0x60
 #define HID_KEYPAD_9       0x61
-#define HID_KEYPAD_A       0xBC  // Non-standard
-#define HID_KEYPAD_B       0xBD  // Non-standard
-#define HID_KEYPAD_C       0xBE  // Non-standard
-#define HID_KEYPAD_D       0xBF  // Non-standard
-#define HID_KEYPAD_E       0xC0  // Non-standard
-#define HID_KEYPAD_F       0xC1  // Non-standard
+#define HID_KEYPAD_A       0xBC // Non-standard
+#define HID_KEYPAD_B       0xBD // Non-standard
+#define HID_KEYPAD_C       0xBE // Non-standard
+#define HID_KEYPAD_D       0xBF // Non-standard
+#define HID_KEYPAD_E       0xC0 // Non-standard
+#define HID_KEYPAD_F       0xC1 // Non-standard
 
 static const char* layout_type_names[] = {
     [FlipperWedgeLayoutDefault] = "Default (QWERTY)",
