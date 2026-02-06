@@ -48,8 +48,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Key Copier v1.5 (By zinongli)](https://github.com/zinongli/KeyCopier) [Add Schlage Everest 29 Key Profile (By RJohnson2106)](https://github.com/zinongli/KeyCopier/pull/39)
 - Updated: [Quac! v0.9.1 (By rdefeo)](https://github.com/rdefeo/quac) [Support for HID iClass (Picopass files) (By lilgangus)](https://github.com/rdefeo/quac/pull/24)
 - Updated: [Flipper Wedge v1.1 (By DangerousThings)](https://github.com/DangerousThings/flipper-wedge)
-- Updated: [ProtoPirate v1.9.1 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - Updated: [NFC Comparator v2.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
+- Updated: [ProtoPirate v1.9.1 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 
 <a name="release">
 
