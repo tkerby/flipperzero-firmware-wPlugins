@@ -43,13 +43,13 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Timed Remote v0.1 (By anders-dc)](https://github.com/anders-dc/timed-remote)
 - Updated: [LIDAR Emulator v0.2 (By regaly)](https://github.com/regaly/flipperzero-lidar_emulator) [v0.2 Updates: External GPIO IR device support (By mistrustt)](https://github.com/mistrustt/flipperzero-lidar_emulator)
 - Updated: [ListEM v1.3 (By Clawzman)](https://github.com/Clawzman/Flipper_ListEM)
-- Updated: [NFC Comparator v2.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
 - SubGHz: [V2 Phoenix (Phox) added 2 counter modes support (docs updated) (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/95dd537bf81ee445b1fb71aa60431cb62080333d)
 - Updated: [Swimmy Fish v2.0 (By Invizabel)](https://github.com/Invizabel/fish)
 - Updated: [Key Copier v1.5 (By zinongli)](https://github.com/zinongli/KeyCopier) [Add Schlage Everest 29 Key Profile (By RJohnson2106)](https://github.com/zinongli/KeyCopier/pull/39)
 - Updated: [Quac! v0.9.1 (By rdefeo)](https://github.com/rdefeo/quac) [Support for HID iClass (Picopass files) (By lilgangus)](https://github.com/rdefeo/quac/pull/24)
 - Updated: [Flipper Wedge v1.1 (By DangerousThings)](https://github.com/DangerousThings/flipper-wedge)
 - Updated: [ProtoPirate v1.9.1 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
+- Updated: [NFC Comparator v2.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
 
 <a name="release">
 
