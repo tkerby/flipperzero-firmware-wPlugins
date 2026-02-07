@@ -1,125 +1,120 @@
-name: "Build RELEASE for Momentum Firmware (MiBand NFC Writer)"
+name: "Build MiBand NFC Writer - Momentum Release"
 
 on:
   push:
-    branches:
-      - main
-      - master
+    branches: [main, master]
+  workflow_dispatch:
 
 env:
   APP_NAME: "MiBand NFC Writer"
   REPO_URL: "https://github.com/LucaTomei/flipper-miband-nfc-writer"
+  FAP_SOURCE_FILE: "dist/miband_nfc.fap"
   OUTPUT_FILE: "miband_nfc_writer.fap"
 
 jobs:
-  ufbt-build-action:
+  build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - name: Momentum_Release
-            sdk-index-url: https://up.momentum-fw.dev/firmware/directory.json
-            sdk-channel: release
-
-    name: "ufbt: Build for ${{ matrix.name }}"
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
       - name: Build with ufbt
-        id: build-app
         uses: flipperdevices/flipperzero-ufbt-action@v0.1.3
         with:
           app-dir: "."
-          sdk-index-url: ${{ matrix.sdk-index-url }}
-          sdk-channel: ${{ matrix.sdk-channel }}
+          sdk-index-url: "https://up.momentum-fw.dev/firmware/directory.json"
+          sdk-channel: "release"
 
-      - name: Show build output
+      - name: Verify build output
         run: |
-          echo "Artifacts dir: ${{ steps.build-app.outputs.fap-artifacts }}"
-          ls -lah ${{ steps.build-app.outputs.fap-artifacts }}/
+          echo "Checking build directory..."
+          ls -la dist/
+          
+          if [ ! -f "${{ env.FAP_SOURCE_FILE }}" ]; then
+            echo "ERROR: FAP file not found!"
+            echo "Files in dist/:"
+            ls -la dist/
+            exit 1
+          fi
+          
+          echo "FAP file found:"
+          ls -la "${{ env.FAP_SOURCE_FILE }}"
 
-      - name: Copy FAP file
+      - name: Prepare release file
         run: |
-          # Copia il file FAP specifico
-          cp "${{ steps.build-app.outputs.fap-artifacts }}/miband_nfc.fap" "${{ env.OUTPUT_FILE }}"
-          echo "FAP file created: ${{ env.OUTPUT_FILE }}"
+          cp "${{ env.FAP_SOURCE_FILE }}" "${{ env.OUTPUT_FILE }}"
+          echo "Release file created: ${{ env.OUTPUT_FILE }}"
           ls -la "${{ env.OUTPUT_FILE }}"
           
-          # Verifica che il file esista
-          if [ ! -f "${{ env.OUTPUT_FILE }}" ]; then
-            echo "ERROR: FAP file was not created!"
-            exit 1
-          fi
+          # Mostra alcune info sul file
+          echo "File size: $(stat -c%s "${{ env.OUTPUT_FILE }}") bytes"
+          echo "SHA256: $(sha256sum "${{ env.OUTPUT_FILE }}" | cut -d' ' -f1)"
 
-      - name: Cache output file
-        uses: actions/cache@v3
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
         with:
-          path: ${{ env.OUTPUT_FILE }}
-          key: ${{ runner.os }}-${{ env.OUTPUT_FILE }}-${{ github.sha }}
+          name: "miband-nfc-writer"
+          path: "${{ env.OUTPUT_FILE }}"
+          retention-days: 7
 
-  notify-telegram:
-    needs: ufbt-build-action
+  telegram-notify:
+    needs: build
     runs-on: ubuntu-latest
     if: success()
-
+    
     steps:
-      - name: Restore output file from cache
-        uses: actions/cache/restore@v3
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
         with:
-          path: ${{ env.OUTPUT_FILE }}
-          key: ${{ runner.os }}-${{ env.OUTPUT_FILE }}-${{ github.sha }}
-
-      - name: Send file to Telegram
-        env:
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          TELEGRAM_CHAT_ID1: ${{ secrets.TELEGRAM_CHAT_ID1 }}
-          TELEGRAM_CHAT_ID2: ${{ secrets.TELEGRAM_CHAT_ID2 }}
-          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          name: "miband-nfc-writer"
+          
+      - name: Verify downloaded file
         run: |
-          # Verifica che il file esista
           if [ ! -f "${{ env.OUTPUT_FILE }}" ]; then
-            echo "ERROR: FAP file not found!"
+            echo "ERROR: Downloaded FAP file not found!"
             exit 1
           fi
-          
-          # Verifica i secrets
-          if [ -z "$TELEGRAM_TOKEN" ]; then
-            echo "WARNING: TELEGRAM_TOKEN not set. Skipping Telegram notification."
+          echo "File verified:"
+          ls -la "${{ env.OUTPUT_FILE }}"
+
+      - name: Send to Telegram
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          # Verifica che i secrets siano configurati
+          if [ -z "$TELEGRAM_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "WARNING: Telegram secrets not configured. Skipping notification."
             exit 0
           fi
           
-          if [ -z "$TELEGRAM_CHAT_ID1" ]; then
-            echo "WARNING: TELEGRAM_CHAT_ID1 not set. Skipping Telegram notification."
-            exit 0
-          fi
+          # Prepara le info del file
+          FILE_SIZE=$(stat -c%s "${{ env.OUTPUT_FILE }}")
+          FILE_SHA256=$(sha256sum "${{ env.OUTPUT_FILE }}" | cut -d' ' -f1)
+          SHORT_SHA=${GITHUB_SHA:0:8}
           
-          # Prepara il testo del messaggio
-          TEXT_TO_SEND="🧿 New release for <b>${{ env.APP_NAME }}</b>
-          <a href=\"${{ env.REPO_URL }}\">Repo URL</a>
-
-          <b>Commit message:</b>
-          <pre>${COMMIT_MESSAGE}</pre>
-
-          <b>File:</b> ${{ env.OUTPUT_FILE }}
-          <b>Size:</b> $(stat -c%s "${{ env.OUTPUT_FILE }}") bytes"
-
-          send_telegram() {
-            echo "Sending to chat ID: $1"
-            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendDocument" \
-              -F chat_id="$1" \
-              -F parse_mode=HTML \
-              -F caption="$TEXT_TO_SEND" \
-              -F document=@"${{ env.OUTPUT_FILE }}"
-          }
-
-          # Invia al primo chat ID
-          send_telegram "$TELEGRAM_CHAT_ID1"
+          # Crea il messaggio
+          MESSAGE="🚀 *New Build: ${{ env.APP_NAME }}*
           
-          # Invia al secondo chat ID se configurato
-          if [ -n "$TELEGRAM_CHAT_ID2" ] && [ "$TELEGRAM_CHAT_ID2" != "null" ]; then
-            send_telegram "$TELEGRAM_CHAT_ID2"
-          fi
+          📦 *Repository:* [${{ env.APP_NAME }}](${{ env.REPO_URL }})
+          🔧 *Commit:* \`$SHORT_SHA\`
+          💾 *File:* \`${{ env.OUTPUT_FILE }}\`
+          📏 *Size:* $FILE_SIZE bytes
+          🔐 *SHA256:* \`${FILE_SHA256:0:16}...\`
+          📅 *Built:* $(date +'%Y-%m-%d %H:%M:%S UTC')
+
+          ✅ *Build completed successfully!*"
+          
+          # Invia a Telegram
+          echo "Sending to Telegram..."
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" \
+            -F chat_id="$TELEGRAM_CHAT_ID" \
+            -F document=@"${{ env.OUTPUT_FILE }}" \
+            -F caption="$MESSAGE" \
+            -F parse_mode="Markdown" \
+            -F disable_notification="false"
+          
+          echo "Telegram notification sent!"
