@@ -24,7 +24,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Supporters also get SD Card Assets zip file with extra NFC Assets such as Infrared remotes, NFC files, SubGHz files and 86 RM Pro Trained Level 50 Sm@sh Amiib0 (By RogueMaster)](https://www.patreon.com/RogueMaster/membership)
 - We love our features, to keep some, some have been purposefully left out. See list of [OFW TO ADD in ROADMAP](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/RoadMap.md). We are open to PRs, suggestions and advice if you feel you need anything that has been left out. [Contact me on Discord](https://discord.gg/gF2bBUzAFe)
 
-<a name="latest">
+<a name="latest"></a>
 
 ## Latest Updates - [PATREON: Latest Release RM0206-2105-0.420.0-7206394](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
@@ -52,7 +52,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [ESP Flasher: Bump Marauder v1.10.2 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.10.2)
 - Updated: [ProtoPirate v2.0 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 
-<a name="release">
+<a name="release"></a>
 
 ## Install Latest Release
 
@@ -114,7 +114,7 @@ $ ./fbt dolphin_ext
 - [FLIPPER PROJECT WISH LIST](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/RoadMap.md)
 - [SAMPLE EDUCATIONAL PROJECTS 😄](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/RoadMap.md)
 
-<a name="all">
+<a name="all"></a>
 
 ## All Changes and Features
 
