@@ -37,19 +37,26 @@ jobs:
           sdk-index-url: ${{ matrix.sdk-index-url }}
           sdk-channel: ${{ matrix.sdk-channel }}
 
-      - name: Show build output
+      - name: Debug dist folder
         run: |
-          echo "Artifacts dir: ${{ steps.build-app.outputs.fap-artifacts }}"
-          ls -lah ${{ steps.build-app.outputs.fap-artifacts }}
+          echo "== DIST CONTENT =="
+          ls -lah dist || true
 
       - name: Copy FAP file
         run: |
-          find ${{ steps.build-app.outputs.fap-artifacts }} -name "*.fap" -exec cp {} ${{ env.OUTPUT_FILE }} \;
-            - name: Cache output file
-              uses: actions/cache@v3
-              with:
-                path: ${{ env.OUTPUT_FILE }}
-                key: ${{ runner.os }}-${{ env.OUTPUT_FILE }}-${{ github.sha }}
+          if [ ! -f dist/miband_nfc.fap ]; then
+            echo "❌ FAP file not found!"
+            exit 1
+          fi
+
+          cp dist/miband_nfc.fap ${{ env.OUTPUT_FILE }}
+          echo "✅ Copied FAP to ${{ env.OUTPUT_FILE }}"
+
+      - name: Cache output file
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.OUTPUT_FILE }}
+          key: ${{ runner.os }}-${{ env.OUTPUT_FILE }}-${{ github.sha }}
 
   notify-telegram:
     needs: ufbt-build-action
@@ -69,19 +76,26 @@ jobs:
           TELEGRAM_CHAT_ID2: ${{ secrets.TELEGRAM_CHAT_ID2 }}
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
-          TEXT_TO_SEND="🧿 New release for <b>${{ env.APP_NAME }}</b>
-          <a href=\"${{ env.REPO_URL }}\">Repo URL</a>
-          
-          <b>Commit message:</b>
-          <pre>${COMMIT_MESSAGE}</pre>"
+          FILE_SIZE=$(stat -c%s "${{ env.OUTPUT_FILE }}")
+          SHA1=$(sha1sum "${{ env.OUTPUT_FILE }}" | awk '{print $1}')
 
-          send_telegram() {
+          TEXT="🧿 <b>${{ env.APP_NAME }}</b>
+<a href=\"${{ env.REPO_URL }}\">Repo</a>
+
+<b>Commit:</b>
+<pre>${COMMIT_MESSAGE}</pre>
+
+<b>Size:</b> ${FILE_SIZE} bytes
+<b>SHA1:</b>
+<pre>${SHA1}</pre>"
+
+          send() {
             curl -s -X POST https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendDocument \
               -F chat_id=$1 \
               -F parse_mode=HTML \
-              -F caption="$TEXT_TO_SEND" \
+              -F caption="$TEXT" \
               -F document=@${{ env.OUTPUT_FILE }}
           }
 
-          send_telegram ${TELEGRAM_CHAT_ID1}
-          send_telegram ${TELEGRAM_CHAT_ID2}
+          send ${TELEGRAM_CHAT_ID1}
+          send ${TELEGRAM_CHAT_ID2}
