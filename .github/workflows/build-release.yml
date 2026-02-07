@@ -1,0 +1,88 @@
+name: "Build RELEASE for Momentum Firmware (MiBand NFC Writer)"
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+env:
+  APP_NAME: "MiBand NFC Writer"
+  REPO_URL: "https://github.com/LucaTomei/flipper-miband-nfc-writer"
+  OUTPUT_FILE: "miband_nfc_writer.fap"
+
+jobs:
+  ufbt-build-action:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: Momentum_Release
+            sdk-index-url: https://up.momentum-fw.dev/firmware/directory.json
+            sdk-channel: release
+
+    name: "ufbt: Build for ${{ matrix.name }}"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build with ufbt
+        id: build-app
+        uses: flipperdevices/flipperzero-ufbt-action@v0.1.3
+        with:
+          app-dir: "."
+          sdk-index-url: ${{ matrix.sdk-index-url }}
+          sdk-channel: ${{ matrix.sdk-channel }}
+
+      - name: Show build output
+        run: |
+          echo "Artifacts dir: ${{ steps.build-app.outputs.fap-artifacts }}"
+          ls -lah ${{ steps.build-app.outputs.fap-artifacts }}
+
+      - name: Copy FAP file
+        run: |
+          cp ${{ steps.build-app.outputs.fap-artifacts }}/*.fap ${{ env.OUTPUT_FILE }}
+
+      - name: Cache output file
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.OUTPUT_FILE }}
+          key: ${{ runner.os }}-${{ env.OUTPUT_FILE }}-${{ github.sha }}
+
+  notify-telegram:
+    needs: ufbt-build-action
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Restore output file from cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.OUTPUT_FILE }}
+          key: ${{ runner.os }}-${{ env.OUTPUT_FILE }}-${{ github.sha }}
+
+      - name: Send file to Telegram
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID1: ${{ secrets.TELEGRAM_CHAT_ID1 }}
+          TELEGRAM_CHAT_ID2: ${{ secrets.TELEGRAM_CHAT_ID2 }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          TEXT_TO_SEND="🧿 New release for <b>${{ env.APP_NAME }}</b>
+          <a href=\"${{ env.REPO_URL }}\">Repo URL</a>
+          
+          <b>Commit message:</b>
+          <pre>${COMMIT_MESSAGE}</pre>"
+
+          send_telegram() {
+            curl -s -X POST https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendDocument \
+              -F chat_id=$1 \
+              -F parse_mode=HTML \
+              -F caption="$TEXT_TO_SEND" \
+              -F document=@${{ env.OUTPUT_FILE }}
+          }
+
+          send_telegram ${TELEGRAM_CHAT_ID1}
+          send_telegram ${TELEGRAM_CHAT_ID2}
