@@ -1,101 +1,107 @@
-name: "Build RELEASE for Momentum Firmware (MiBand NFC Writer)"
+name: Build MiBand NFC Writer (Momentum Release)
 
 on:
   push:
     branches:
       - main
       - master
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
 
 env:
-  APP_NAME: "MiBand NFC Writer"
-  REPO_URL: "https://github.com/LucaTomei/flipper-miband-nfc-writer"
-  OUTPUT_FILE: "miband_nfc_writer.fap"
+  APP_NAME: MiBand NFC Writer
+  REPO_URL: https://github.com/LucaTomei/flipper-miband-nwc-writer
+  OUTPUT_FILE: miband_nfc_writer.fap
 
 jobs:
-  ufbt-build-action:
+  build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - name: Momentum_Release
-            sdk-index-url: https://up.momentum-fw.dev/firmware/directory.json
-            sdk-channel: release
-
-    name: "ufbt: Build for ${{ matrix.name }}"
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Build with ufbt
-        id: build-app
+      - name: Build with ufbt (Momentum SDK)
         uses: flipperdevices/flipperzero-ufbt-action@v0.1.3
         with:
-          app-dir: "."
-          sdk-index-url: ${{ matrix.sdk-index-url }}
-          sdk-channel: ${{ matrix.sdk-channel }}
+          app-dir: .
+          sdk-index-url: https://up.momentum-fw.dev/firmware/directory.json
+          sdk-channel: release
 
-      - name: Debug dist folder
+      - name: Verify build output
         run: |
-          echo "== DIST CONTENT =="
-          ls -lah dist || true
-
-      - name: Copy FAP file
-        run: |
-          if [ ! -f dist/miband_nfc.fap ]; then
-            echo "❌ FAP file not found!"
+          echo "Build directory contents:"
+          ls -la dist/
+          if [ ! -f "dist/miband_nfc.fap" ]; then
+            echo "ERROR: FAP file not found!"
             exit 1
           fi
 
-          cp dist/miband_nfc.fap ${{ env.OUTPUT_FILE }}
-          echo "✅ Copied FAP to ${{ env.OUTPUT_FILE }}"
+      - name: Copy FAP to output
+        run: |
+          cp dist/miband_nfc.fap $OUTPUT_FILE
+          echo "FAP file created: $OUTPUT_FILE"
+          ls -la $OUTPUT_FILE
 
-      - name: Cache output file
-        uses: actions/cache@v3
+      - name: Upload FAP as artifact
+        uses: actions/upload-artifact@v4
         with:
+          name: miband-nwc-writer-fap
           path: ${{ env.OUTPUT_FILE }}
-          key: ${{ runner.os }}-${{ env.OUTPUT_FILE }}-${{ github.sha }}
 
-  notify-telegram:
-    needs: ufbt-build-action
+  telegram:
+    needs: build
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
 
     steps:
-      - name: Restore output file from cache
-        uses: actions/cache@v3
+      - name: Download FAP artifact
+        uses: actions/download-artifact@v4
         with:
-          path: ${{ env.OUTPUT_FILE }}
-          key: ${{ runner.os }}-${{ env.OUTPUT_FILE }}-${{ github.sha }}
+          name: miband-nwc-writer-fap
 
-      - name: Send file to Telegram
+      - name: Send to Telegram
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID1: ${{ secrets.TELEGRAM_CHAT_ID1 }}
           TELEGRAM_CHAT_ID2: ${{ secrets.TELEGRAM_CHAT_ID2 }}
-          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
-          FILE_SIZE=$(stat -c%s "${{ env.OUTPUT_FILE }}")
-          SHA1=$(sha1sum "${{ env.OUTPUT_FILE }}" | awk '{print $1}')
+          if [ ! -f "$OUTPUT_FILE" ]; then
+            echo "ERROR: FAP file not found!"
+            exit 1
+          fi
 
-          TEXT="🧿 <b>${{ env.APP_NAME }}</b>
-<a href=\"${{ env.REPO_URL }}\">Repo</a>
+          SIZE=$(stat -c%s "$OUTPUT_FILE")
+          SHA=$(sha1sum "$OUTPUT_FILE" | cut -d' ' -f1)
+          SHORT_SHA=${GITHUB_SHA::8}
 
-<b>Commit:</b>
-<pre>${COMMIT_MESSAGE}</pre>
+          TEXT="🚀 *New Build: $APP_NAME*
+          
+📦 Repository: $REPO_URL
+🔧 Commit: \`$SHORT_SHA\`
+💾 Size: $SIZE bytes
+🔐 SHA1: \`$SHA\`
 
-<b>Size:</b> ${FILE_SIZE} bytes
-<b>SHA1:</b>
-<pre>${SHA1}</pre>"
+✅ Build completed successfully!"
 
-          send() {
-            curl -s -X POST https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendDocument \
-              -F chat_id=$1 \
-              -F parse_mode=HTML \
+          send_telegram() {
+            local CHAT_ID="$1"
+            curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" \
+              -F chat_id="$CHAT_ID" \
+              -F document=@"$OUTPUT_FILE" \
               -F caption="$TEXT" \
-              -F document=@${{ env.OUTPUT_FILE }}
+              -F parse_mode="Markdown"
           }
 
-          send ${TELEGRAM_CHAT_ID1}
-          send ${TELEGRAM_CHAT_ID2}
+          if [ -n "$TELEGRAM_CHAT_ID1" ]; then
+            send_telegram "$TELEGRAM_CHAT_ID1"
+          fi
+
+          if [ -n "$TELEGRAM_CHAT_ID2" ]; then
+            send_telegram "$TELEGRAM_CHAT_ID2"
+          fi
