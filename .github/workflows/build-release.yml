@@ -1,23 +1,16 @@
-name: Build MiBand NFC Writer (Momentum Release)
+name: Build MiBand NFC Writer
 
 on:
   push:
-    branches:
-      - main
-      - master
-  pull_request:
-    branches:
-      - main
-      - master
+    branches: [main, master]
   workflow_dispatch:
 
 env:
   APP_NAME: MiBand NFC Writer
-  REPO_URL: https://github.com/LucaTomei/flipper-miband-nwc-writer
   OUTPUT_FILE: miband_nfc_writer.fap
 
 jobs:
-  build:
+  build-and-notify:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,82 +19,37 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Build with ufbt (Momentum SDK)
+      - name: Build with ufbt
         uses: flipperdevices/flipperzero-ufbt-action@v0.1.3
         with:
           app-dir: .
           sdk-index-url: https://up.momentum-fw.dev/firmware/directory.json
           sdk-channel: release
 
-      - name: Verify build output
+      - name: Verify and prepare FAP
         run: |
-          echo "Build directory contents:"
-          ls -la dist/
           if [ ! -f "dist/miband_nfc.fap" ]; then
             echo "ERROR: FAP file not found!"
+            ls -la dist/
             exit 1
           fi
-
-      - name: Copy FAP to output
-        run: |
           cp dist/miband_nfc.fap $OUTPUT_FILE
-          echo "FAP file created: $OUTPUT_FILE"
+          echo "FAP created: $OUTPUT_FILE"
           ls -la $OUTPUT_FILE
-
-      - name: Upload FAP as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: miband-nwc-writer-fap
-          path: ${{ env.OUTPUT_FILE }}
-
-  telegram:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
-
-    steps:
-      - name: Download FAP artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: miband-nwc-writer-fap
 
       - name: Send to Telegram
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          TELEGRAM_CHAT_ID1: ${{ secrets.TELEGRAM_CHAT_ID1 }}
-          TELEGRAM_CHAT_ID2: ${{ secrets.TELEGRAM_CHAT_ID2 }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          if [ ! -f "$OUTPUT_FILE" ]; then
-            echo "ERROR: FAP file not found!"
-            exit 1
-          fi
-
           SIZE=$(stat -c%s "$OUTPUT_FILE")
           SHA=$(sha1sum "$OUTPUT_FILE" | cut -d' ' -f1)
-          SHORT_SHA=${GITHUB_SHA::8}
-
-          TEXT="🚀 *New Build: $APP_NAME*
           
-📦 Repository: $REPO_URL
-🔧 Commit: \`$SHORT_SHA\`
-💾 Size: $SIZE bytes
-🔐 SHA1: \`$SHA\`
-
-✅ Build completed successfully!"
-
-          send_telegram() {
-            local CHAT_ID="$1"
-            curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" \
-              -F chat_id="$CHAT_ID" \
-              -F document=@"$OUTPUT_FILE" \
-              -F caption="$TEXT" \
-              -F parse_mode="Markdown"
-          }
-
-          if [ -n "$TELEGRAM_CHAT_ID1" ]; then
-            send_telegram "$TELEGRAM_CHAT_ID1"
-          fi
-
-          if [ -n "$TELEGRAM_CHAT_ID2" ]; then
-            send_telegram "$TELEGRAM_CHAT_ID2"
-          fi
+          TEXT="New build: $APP_NAME
+          Size: $SIZE bytes
+          SHA1: $SHA"
+          
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" \
+            -F chat_id="$TELEGRAM_CHAT_ID" \
+            -F caption="$TEXT" \
+            -F document=@"$OUTPUT_FILE"
