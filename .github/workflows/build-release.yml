@@ -44,13 +44,12 @@ jobs:
 
       - name: Copy FAP file
         run: |
-          cp ${{ steps.build-app.outputs.fap-artifacts }}/*.fap ${{ env.OUTPUT_FILE }}
-
-      - name: Cache output file
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.OUTPUT_FILE }}
-          key: ${{ runner.os }}-${{ env.OUTPUT_FILE }}-${{ github.sha }}
+          find ${{ steps.build-app.outputs.fap-artifacts }} -name "*.fap" -exec cp {} ${{ env.OUTPUT_FILE }} \;
+            - name: Cache output file
+              uses: actions/cache@v3
+              with:
+                path: ${{ env.OUTPUT_FILE }}
+                key: ${{ runner.os }}-${{ env.OUTPUT_FILE }}-${{ github.sha }}
 
   notify-telegram:
     needs: ufbt-build-action
