@@ -40,13 +40,20 @@ jobs:
       - name: Show build output
         run: |
           echo "Artifacts dir: ${{ steps.build-app.outputs.fap-artifacts }}"
-          ls -lah ${{ steps.build-app.outputs.fap-artifacts }}
+          ls -lah ${{ steps.build-app.outputs.fap-artifacts }}/
 
       - name: Copy FAP file
         run: |
-          cp ${{ steps.build-app.outputs.fap-artifacts }}/*.fap ${{ env.OUTPUT_FILE }}
+          # Copia il file FAP specifico
+          cp "${{ steps.build-app.outputs.fap-artifacts }}/miband_nfc.fap" "${{ env.OUTPUT_FILE }}"
           echo "FAP file created: ${{ env.OUTPUT_FILE }}"
-          ls -la ${{ env.OUTPUT_FILE }}
+          ls -la "${{ env.OUTPUT_FILE }}"
+          
+          # Verifica che il file esista
+          if [ ! -f "${{ env.OUTPUT_FILE }}" ]; then
+            echo "ERROR: FAP file was not created!"
+            exit 1
+          fi
 
       - name: Cache output file
         uses: actions/cache@v3
@@ -57,10 +64,11 @@ jobs:
   notify-telegram:
     needs: ufbt-build-action
     runs-on: ubuntu-latest
+    if: success()
 
     steps:
       - name: Restore output file from cache
-        uses: actions/cache@v3
+        uses: actions/cache/restore@v3
         with:
           path: ${{ env.OUTPUT_FILE }}
           key: ${{ runner.os }}-${{ env.OUTPUT_FILE }}-${{ github.sha }}
@@ -72,19 +80,46 @@ jobs:
           TELEGRAM_CHAT_ID2: ${{ secrets.TELEGRAM_CHAT_ID2 }}
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
+          # Verifica che il file esista
+          if [ ! -f "${{ env.OUTPUT_FILE }}" ]; then
+            echo "ERROR: FAP file not found!"
+            exit 1
+          fi
+          
+          # Verifica i secrets
+          if [ -z "$TELEGRAM_TOKEN" ]; then
+            echo "WARNING: TELEGRAM_TOKEN not set. Skipping Telegram notification."
+            exit 0
+          fi
+          
+          if [ -z "$TELEGRAM_CHAT_ID1" ]; then
+            echo "WARNING: TELEGRAM_CHAT_ID1 not set. Skipping Telegram notification."
+            exit 0
+          fi
+          
+          # Prepara il testo del messaggio
           TEXT_TO_SEND="🧿 New release for <b>${{ env.APP_NAME }}</b>
           <a href=\"${{ env.REPO_URL }}\">Repo URL</a>
-          
+
           <b>Commit message:</b>
-          <pre>${COMMIT_MESSAGE}</pre>"
+          <pre>${COMMIT_MESSAGE}</pre>
+
+          <b>File:</b> ${{ env.OUTPUT_FILE }}
+          <b>Size:</b> $(stat -c%s "${{ env.OUTPUT_FILE }}") bytes"
 
           send_telegram() {
-            curl -s -X POST https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendDocument \
-              -F chat_id=$1 \
+            echo "Sending to chat ID: $1"
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendDocument" \
+              -F chat_id="$1" \
               -F parse_mode=HTML \
               -F caption="$TEXT_TO_SEND" \
-              -F document=@${{ env.OUTPUT_FILE }}
+              -F document=@"${{ env.OUTPUT_FILE }}"
           }
 
-          send_telegram ${TELEGRAM_CHAT_ID1}
-          send_telegram ${TELEGRAM_CHAT_ID2}
+          # Invia al primo chat ID
+          send_telegram "$TELEGRAM_CHAT_ID1"
+          
+          # Invia al secondo chat ID se configurato
+          if [ -n "$TELEGRAM_CHAT_ID2" ] && [ "$TELEGRAM_CHAT_ID2" != "null" ]; then
+            send_telegram "$TELEGRAM_CHAT_ID2"
+          fi
