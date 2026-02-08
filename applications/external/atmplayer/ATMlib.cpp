@@ -159,8 +159,8 @@ static inline uint8_t atm_render_logical_sample_u8() {
     const uint8_t l1 = vol_meter_step(&channel_meters[1], abs_i8_to_u8(c1));
     const uint8_t l2 = vol_meter_step(&channel_meters[2], abs_i8_to_u8(c2));
     const uint8_t l3 = vol_meter_step(&channel_meters[3], abs_i8_to_u8(c3));
-    const uint32_t packed =
-        (uint32_t)l0 | ((uint32_t)l1 << 8) | ((uint32_t)l2 << 16) | ((uint32_t)l3 << 24);
+    const uint32_t packed = (uint32_t)l0 | ((uint32_t)l1 << 8) | ((uint32_t)l2 << 16) |
+                            ((uint32_t)l3 << 24);
     __atomic_store_n(&channel_levels_packed, packed, __ATOMIC_RELAXED);
 
     const uint16_t gain_q8 = __atomic_load_n(&atm_master_gain_q8, __ATOMIC_RELAXED);
@@ -671,7 +671,7 @@ static int32_t atm_thread_fn(void* /*ctx*/) {
             }
 
             if(cmd.type == AtmCmdUnmute) {
-                ChannelActiveMute = (uint8_t)(ChannelActiveMute & (uint8_t)~(1 << cmd.u.ch.ch));
+                ChannelActiveMute = (uint8_t)(ChannelActiveMute & (uint8_t) ~(1 << cmd.u.ch.ch));
                 continue;
             }
 

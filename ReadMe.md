@@ -51,6 +51,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - [ESP Flasher: Bump Marauder v1.10.2 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.10.2)
 - Updated: [ProtoPirate v2.0 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - Updated: [NFC Comparator v2.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
+- Added: [Ardudrivin v1.0.2 (By apfxtech)](https://github.com/apfxtech/FlipperDrivin)
+- Added: [ATM Player v1.0.7 (By apfxtech)](https://github.com/apfxtech/FlipperATM)
 
 <a name="release"></a>
 
@@ -282,6 +284,7 @@ $ ./fbt dolphin_ext
 - [Air Arkanoid  v1.1 (By DrZlo13)](https://github.com/flipperdevices/flipperzero-good-faps/pull/141) `Req: Video Game Module By Flipper Devices`
 - [Air Labyrinth v0.1 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/vgm/apps/air_labyrinth) `Req: Video Game Module By Flipper Devices`
 - [Apple Grabber v0.1 (By d7d8)](https://github.com/d7d8/apple-grabber)
+- [Ardudrivin v1.0.2 (By apfxtech)](https://github.com/apfxtech/FlipperDrivin)
 - [ArduGolf v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperGolf)
 - [Arduventure v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperArduventure)
 - [Arkanoid v1.2 (By gotnull)](https://github.com/gotnull/flipperzero-firmware-wPlugins)
@@ -427,6 +430,7 @@ $ ./fbt dolphin_ext
 - [Anki Remote v1.3 (By Blue5GD)](https://github.com/Blue5GD/Anki-Remote)
 - [ASCII Table v1.0 (By x10102)](https://github.com/x10102/flipper_ascii)
 - [Atari SIO Emulator v0.5 (By cepetr)](https://github.com/cepetr/sio2flip)
+- [ATM Player v1.0.7 (By apfxtech)](https://github.com/apfxtech/FlipperATM)
 - [Atomic Dice Roller v1.1 (By nmrr)](https://github.com/nmrr/flipperzero-atomicdiceroller)
 - [Authenticator/TOTP v5.19.0 (By akopachov)](https://github.com/akopachov/flipper-zero_authenticator)
 - [AVR Flasher v1.5 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2475)

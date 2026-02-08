@@ -43,8 +43,8 @@
 #define ATM_TXT_OP_SET_VIBRATO       "SET_VIBRATO"
 
 #define ATM_SONG_MAX_TEXT_SIZE (32 * 1024)
-#define ATM_VOLUME_UNIT_STEP 0.1f
-#define ATM_VOLUME_UNIT_MAX  8
+#define ATM_VOLUME_UNIT_STEP   0.1f
+#define ATM_VOLUME_UNIT_MAX    8
 
 typedef enum {
     AtmViewBrowser = 0,
@@ -509,8 +509,7 @@ static bool atm_parse_song_text(
         if(!atm_next_token(&tz, token, sizeof(token))) goto out;
     }
 
-    if(!atm_token_equals(token, ATM_TXT_CMD_ENTRY))
-        goto out;
+    if(!atm_token_equals(token, ATM_TXT_CMD_ENTRY)) goto out;
     for(size_t i = 0; i < 4; i++) {
         if(!atm_parse_arg_i32(&tz, &value)) goto out;
         entry[i] = (uint8_t)(value & 0xFF);
@@ -592,7 +591,8 @@ static bool atm_load_song_from_file(
         uint8_t* compiled = NULL;
         size_t compiled_size = 0;
         if(read_total == (size_t)file_size &&
-           atm_parse_song_text(text, &compiled, &compiled_size, out_song_name, out_song_name_size)) {
+           atm_parse_song_text(
+               text, &compiled, &compiled_size, out_song_name, out_song_name_size)) {
             if(app->song_buf) free(app->song_buf);
             app->song_buf = compiled;
             app->song_size = compiled_size;
@@ -609,12 +609,14 @@ static bool atm_load_song_from_file(
 
 static bool atm_play_selected_file(FlipperAtmApp* app) {
     char short_name[48];
-    atm_extract_file_name(furi_string_get_cstr(app->selected_path), short_name, sizeof(short_name));
+    atm_extract_file_name(
+        furi_string_get_cstr(app->selected_path), short_name, sizeof(short_name));
 
     char song_name[48] = {0};
     if(atm_load_song_from_file(
            app, furi_string_get_cstr(app->selected_path), song_name, sizeof(song_name))) {
-        snprintf(app->song_name, sizeof(app->song_name), "%s", song_name[0] ? song_name : short_name);
+        snprintf(
+            app->song_name, sizeof(app->song_name), "%s", song_name[0] ? song_name : short_name);
         atm_reset_ui_level_meters(app);
         ATM.play(app->song_buf);
         app->playing = true;
@@ -767,7 +769,8 @@ static void atm_player_draw_callback(Canvas* canvas, void* model_ptr) {
 
     canvas_draw_frame(canvas, vol_x, vol_y, vol_w, vol_h);
     const uint8_t center_x = (uint8_t)(vol_x + 1 + (vol_inner_w / 2));
-    canvas_draw_line(canvas, center_x, (uint8_t)(vol_y + 1), center_x, (uint8_t)(vol_y + vol_h - 2));
+    canvas_draw_line(
+        canvas, center_x, (uint8_t)(vol_y + 1), center_x, (uint8_t)(vol_y + vol_h - 2));
 
     int8_t vu = model->volume_units;
     if(vu > ATM_VOLUME_UNIT_MAX) vu = ATM_VOLUME_UNIT_MAX;
@@ -775,16 +778,14 @@ static void atm_player_draw_callback(Canvas* canvas, void* model_ptr) {
 
     if(vu >= 0) {
         uint8_t w = (uint8_t)(((uint16_t)vu * (vol_inner_w / 2)) / ATM_VOLUME_UNIT_MAX);
-        if(w) canvas_draw_box(canvas, (uint8_t)(center_x + 1), (uint8_t)(vol_y + 1), w, (uint8_t)(vol_h - 2));
+        if(w)
+            canvas_draw_box(
+                canvas, (uint8_t)(center_x + 1), (uint8_t)(vol_y + 1), w, (uint8_t)(vol_h - 2));
     } else {
         uint8_t w = (uint8_t)(((uint16_t)(-vu) * (vol_inner_w / 2)) / ATM_VOLUME_UNIT_MAX);
         if(w) {
             canvas_draw_box(
-                canvas,
-                (uint8_t)(center_x - w),
-                (uint8_t)(vol_y + 1),
-                w,
-                (uint8_t)(vol_h - 2));
+                canvas, (uint8_t)(center_x - w), (uint8_t)(vol_y + 1), w, (uint8_t)(vol_h - 2));
         }
     }
 
@@ -808,7 +809,13 @@ static void atm_player_draw_callback(Canvas* canvas, void* model_ptr) {
         const uint8_t y = (uint8_t)(meter_top + i * (meter_outer_h + meter_gap));
 
         canvas_draw_frame(canvas, meter_x, y, meter_outer_w, meter_outer_h);
-        if(w) canvas_draw_box(canvas, (uint8_t)(meter_x + meter_frame), (uint8_t)(y + meter_frame), w, meter_inner_h);
+        if(w)
+            canvas_draw_box(
+                canvas,
+                (uint8_t)(meter_x + meter_frame),
+                (uint8_t)(y + meter_frame),
+                w,
+                meter_inner_h);
     }
 }
 
@@ -922,6 +929,7 @@ extern "C" int32_t flipper_atm_app(void* p) {
     app->gui = (Gui*)furi_record_open(RECORD_GUI);
     app->storage = (Storage*)furi_record_open(RECORD_STORAGE);
     app->dispatcher = view_dispatcher_alloc();
+    view_dispatcher_enable_queue(app->dispatcher);
 
     app->selected_path = furi_string_alloc();
     furi_string_set_str(app->selected_path, APP_ASSETS_PATH("title.atm"));
