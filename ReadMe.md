@@ -53,6 +53,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [NFC Comparator v2.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
 - Added: [Ardudrivin v1.0.2 (By apfxtech)](https://github.com/apfxtech/FlipperDrivin)
 - Added: [ATM Player v1.0.7 (By apfxtech)](https://github.com/apfxtech/FlipperATM)
+- Added: [Pause Timer v1.0 (By Matt-London)](https://github.com/Matt-London/pause_timer)
 
 <a name="release"></a>
 
@@ -712,6 +713,7 @@ $ ./fbt dolphin_ext
 - [Password Generator v1.3 (By anakod)](https://github.com/anakod/flipper_passgen)
 - [Password Manager v1.2 (By Rrycbarm)](https://github.com/Rrycbarm/flipperZeroPasswordManager)
 - [Passy v1.4 (By bettse)](https://github.com/bettse/passy)
+- [Pause Timer v1.0 (By Matt-London)](https://github.com/Matt-London/pause_timer)
 - [PC Monitor v1.1.3 (By TheSainEyereg)](https://github.com/TheSainEyereg/flipper-pc-monitor) `Req: [Backend](https://github.com/TheSainEyereg/flipper-pc-monitor-backend)`
 - [PC Monitor USB v1.0 (By DonJulve & TheSainEyereg)](https://github.com/TheSainEyereg/flipper-pc-monitor) `Req: [Backend](https://github.com/DonJulve/Flipper-Zero-PC-Monitor-USB-Backend)`
 - [Pet a Dolphin v1.2 (By ugeneSmile)](https://github.com/EugeneSmile/PetADolphin)
