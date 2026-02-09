@@ -4,7 +4,7 @@ App(
     apptype=FlipperAppType.EXTERNAL,
     entry_point="flipper_atm_app",
     stack_size=6 * 1024,
-    fap_icon_assets="assets",
+    fap_icon_assets="icons",
     fap_file_assets="assets",
     fap_icon="icon.png",
     fap_category="Media",

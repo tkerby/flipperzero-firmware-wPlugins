@@ -54,6 +54,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Ardudrivin v1.0.2 (By apfxtech)](https://github.com/apfxtech/FlipperDrivin)
 - Added: [ATM Player v1.0.7 (By apfxtech)](https://github.com/apfxtech/FlipperATM)
 - Added: [Pause Timer v1.0 (By Matt-London)](https://github.com/Matt-London/pause_timer)
+- Updated: [INA Meter v0.2 (By cepetr)](https://github.com/cepetr/flipper-tina)
+- Updated: [ATM Player v1.0.7 (By apfxtech)](https://github.com/apfxtech/FlipperATM) Compiled Images Location Fix (By xMasterX)
 
 <a name="release"></a>
 
