@@ -6,7 +6,7 @@
 #include "helpers/duck3_hid.h"
 
 #include <gui/gui.h>
-#include <assets_icons.h>
+#include <bad_duck3_icons.h>
 #include <gui/view_dispatcher.h>
 #include <gui/scene_manager.h>
 #include <dialogs/dialogs.h>

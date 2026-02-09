@@ -4,7 +4,7 @@ void bad_duck3_scene_done_on_enter(void* context) {
     BadDuck3App* app = context;
 
     popup_reset(app->popup);
-    popup_set_icon(app->popup, 36, 5, &I_DolphinDone_80x58);
+    popup_set_icon(app->popup, 32, 5, &I_DolphinNice_96x59);
     popup_set_header(app->popup, "Done!", 20, 22, AlignLeft, AlignBottom);
     popup_set_timeout(app->popup, 1500);
     popup_set_context(app->popup, app);

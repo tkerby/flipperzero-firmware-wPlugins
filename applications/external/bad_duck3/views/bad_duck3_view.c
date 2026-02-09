@@ -1,7 +1,7 @@
 #include "bad_duck3_view.h"
 #include <toolbox/path.h>
 #include <gui/elements.h>
-#include <assets_icons.h>
+#include <bad_duck3_icons.h>
 #include <bt/bt_service/bt_i.h>
 
 #define MAX_NAME_LEN 64
