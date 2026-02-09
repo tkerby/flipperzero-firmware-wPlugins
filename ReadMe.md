@@ -56,6 +56,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Pause Timer v1.0 (By Matt-London)](https://github.com/Matt-London/pause_timer)
 - Updated: [INA Meter v0.2 (By cepetr)](https://github.com/cepetr/flipper-tina)
 - Updated: [ATM Player v1.0.7 (By apfxtech)](https://github.com/apfxtech/FlipperATM) Compiled Images Location Fix (By xMasterX)
+- Added: [Prince Of Arabia v1.0.8 (By apfxtech)](https://github.com/apfxtech/FlipperPrinceOfArabia)
 
 <a name="release"></a>
 
@@ -373,6 +374,7 @@ $ ./fbt dolphin_ext
 - [Pinball0 v0.5.2 (By rdefeo)](https://github.com/rdefeo/pinball0)
 - [Pocket Battle+ v2.0 (By HermeticCode)](https://github.com/HermeticCode/showdown-current)
 - [Pong v1.3 (By nmrr)](https://github.com/nmrr/flipperzero-pong)
+- [Prince Of Arabia v1.0.8 (By apfxtech)](https://github.com/apfxtech/FlipperPrinceOfArabia)
 - [Puck Girl v0.3 (By fgreil)](https://github.com/fgreil/mitzi-puck)
 - [Quadrastic v1.0.2 (By ivanbarsukov)](https://github.com/ivanbarsukov/flipperzero-quadrastic)
 - [Questions v1.1 (By nikilark)](https://github.com/nikilark/flipper_questions)

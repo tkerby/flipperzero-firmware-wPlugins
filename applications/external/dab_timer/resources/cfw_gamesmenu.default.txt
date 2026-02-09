@@ -8,6 +8,7 @@ GamesMenuList Version 0
 /ext/apps/GPIO/VGM/air_labyrinth.fap
 /ext/apps/Games/apple_grabber.fap
 /ext/apps/Games/ardugolf.fap
+/ext/apps/Games/arddrivin.fap
 /ext/apps/Games/arduventure.fap
 /ext/apps/Games/arkanoid.fap
 /ext/apps/Games/asteroids.fap
@@ -88,6 +89,7 @@ GamesMenuList Version 0
 /ext/apps/Games/platformer_game.fap
 /ext/apps/Games/pocket_battle.fap
 /ext/apps/Games/pong.fap
+/ext/apps/Games/princeofarabia.fap
 /ext/apps/Games/puck.fap
 /ext/apps/Games/quadrastic.fap
 /ext/apps/Games/questions.fap
