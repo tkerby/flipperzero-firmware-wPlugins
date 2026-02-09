@@ -57,6 +57,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [INA Meter v0.2 (By cepetr)](https://github.com/cepetr/flipper-tina)
 - Updated: [ATM Player v1.0.7 (By apfxtech)](https://github.com/apfxtech/FlipperATM) Compiled Images Location Fix (By xMasterX)
 - Added: [Prince Of Arabia v1.0.8 (By apfxtech)](https://github.com/apfxtech/FlipperPrinceOfArabia)
+- Added: [Bad Duck3 v1.1 (By dutchpatriot)](https://github.com/dutchpatriot/all-the-plugins/tree/833335354aa46fe605b494c1b3bf11afb5b362f9/non_catalog_apps/bad_duck3)
 
 <a name="release"></a>
 
@@ -440,6 +441,7 @@ $ ./fbt dolphin_ext
 - [Authenticator/TOTP v5.19.0 (By akopachov)](https://github.com/akopachov/flipper-zero_authenticator)
 - [AVR Flasher v1.5 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2475)
 - [AZERTY Mouse Jacker v1.2 (By mothball187)](https://github.com/mothball187/flipperzero-nrf24/tree/main/mousejacker) `Req: NRF24` (Uses AZERTY keyboard - Source Unknown)
+- [Bad Duck3 v1.1 (By dutchpatriot)](https://github.com/dutchpatriot/all-the-plugins/tree/833335354aa46fe605b494c1b3bf11afb5b362f9/non_catalog_apps/bad_duck3)
 - [Bad KB (Modified PR#738 from pengu1ndev - Original from WillyJL) #739 (By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/739) (Part of BadUSB)
 - [Barcode App v1.4 (By Kingal1337)](https://github.com/Kingal1337/flipper-barcode-generator)
 - [BarCode Scanner Emulator (By polarikus)](https://github.com/polarikus/flipper-zero_bc_scanner_emulator) `Uses: COM-port`
