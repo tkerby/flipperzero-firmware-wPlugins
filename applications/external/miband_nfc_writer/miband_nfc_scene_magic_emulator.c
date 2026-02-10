@@ -29,35 +29,28 @@ static void emulation_stats_free(EmulationStats* stats) {
         stats->update_timer = NULL;
     }
 
+    // FIX: Always mark inactive and free strings, release mutex before freeing it
     if(stats->mutex) {
         if(furi_mutex_acquire(stats->mutex, 200) == FuriStatusOk) {
             stats->is_active = false;
-
-            if(stats->last_activity) {
-                furi_string_free(stats->last_activity);
-                stats->last_activity = NULL;
-            }
-
-            if(stats->status_message) {
-                furi_string_free(stats->status_message);
-                stats->status_message = NULL;
-            }
+            furi_mutex_release(stats->mutex);
         }
+    }
 
+    // Free strings outside mutex - timer is already stopped so no concurrent access
+    if(stats->last_activity) {
+        furi_string_free(stats->last_activity);
+        stats->last_activity = NULL;
+    }
+
+    if(stats->status_message) {
+        furi_string_free(stats->status_message);
+        stats->status_message = NULL;
+    }
+
+    if(stats->mutex) {
         furi_mutex_free(stats->mutex);
         stats->mutex = NULL;
-    } else {
-        stats->is_active = false;
-
-        if(stats->last_activity) {
-            furi_string_free(stats->last_activity);
-            stats->last_activity = NULL;
-        }
-
-        if(stats->status_message) {
-            furi_string_free(stats->status_message);
-            stats->status_message = NULL;
-        }
     }
 
     free(stats);
@@ -90,40 +83,41 @@ static void emulation_timer_callback(void* context) {
         return;
     }
 
-    bool is_active = stats->is_active;
-    uint32_t auth_attempts = stats->auth_attempts;
-    uint32_t successful_auths = stats->successful_auths;
-    const char* last_activity = furi_string_get_cstr(stats->last_activity);
-    const char* status_message = furi_string_get_cstr(stats->status_message);
-
-    furi_mutex_release(stats->mutex);
-
-    if(!is_active) {
+    if(!stats->is_active) {
+        furi_mutex_release(stats->mutex);
         return;
     }
 
-    FuriString* stats_text = furi_string_alloc();
-    if(!stats_text) return;
+    // FIX: Build the entire display string while holding the mutex to avoid
+    // race condition where string pointers become stale after release.
+    // Use app->temp_text_buffer (persistent) because popup_set_text stores
+    // pointer only - a local FuriString freed after set would be use-after-free.
+    furi_string_printf(app->temp_text_buffer, "UID+0xFF template\n");
+    furi_string_cat_printf(
+        app->temp_text_buffer,
+        "Auth: %lu | OK %lu\n",
+        stats->auth_attempts,
+        stats->successful_auths);
 
-    furi_string_printf(stats_text, "UID+0xFF template\n");
-    furi_string_cat_printf(stats_text, "Auth: %lu | OK %lu\n", auth_attempts, successful_auths);
-
-    if(last_activity) {
-        furi_string_cat_printf(stats_text, "%s\n", last_activity);
+    if(stats->last_activity && furi_string_size(stats->last_activity) > 0) {
+        furi_string_cat_printf(
+            app->temp_text_buffer, "%s\n", furi_string_get_cstr(stats->last_activity));
     }
 
-    if(status_message) {
-        furi_string_cat_printf(stats_text, "%s\n", status_message);
+    if(stats->status_message && furi_string_size(stats->status_message) > 0) {
+        furi_string_cat_printf(
+            app->temp_text_buffer, "%s\n", furi_string_get_cstr(stats->status_message));
     }
 
-    furi_string_cat_str(stats_text, "Back=Stop");
+    furi_string_cat_str(app->temp_text_buffer, "Back=Stop");
+
+    furi_mutex_release(stats->mutex);
 
     popup_reset(app->popup);
     popup_set_header(app->popup, "Magic Template Active", 64, 2, AlignCenter, AlignTop);
-    popup_set_text(app->popup, furi_string_get_cstr(stats_text), 2, 12, AlignLeft, AlignTop);
+    popup_set_text(
+        app->popup, furi_string_get_cstr(app->temp_text_buffer), 2, 12, AlignLeft, AlignTop);
     popup_set_icon(app->popup, 68, 20, &I_NFC_dolphin_emulation_51x64);
-
-    furi_string_free(stats_text);
 }
 
 static EmulationStats* emulation_stats_alloc(MiBandNfcApp* app) {
@@ -339,14 +333,16 @@ void miband_nfc_scene_magic_emulator_on_enter(void* context) {
     }
 
     if(!app->is_valid_nfc_data) {
-        scene_manager_previous_scene(app->scene_manager);
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MiBandNfcSceneMainMenu);
         return;
     }
 
     app->emulation_stats = emulation_stats_alloc(app);
     if(!app->emulation_stats) {
         FURI_LOG_E(TAG, "Failed to allocate emulation stats");
-        scene_manager_previous_scene(app->scene_manager);
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MiBandNfcSceneMainMenu);
         return;
     }
 
@@ -359,7 +355,8 @@ void miband_nfc_scene_magic_emulator_on_enter(void* context) {
         FURI_LOG_E(TAG, "Failed to allocate listener");
         emulation_stats_free((EmulationStats*)app->emulation_stats);
         app->emulation_stats = NULL;
-        scene_manager_previous_scene(app->scene_manager);
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MiBandNfcSceneMainMenu);
         return;
     }
 
@@ -390,14 +387,18 @@ bool miband_nfc_scene_magic_emulator_on_event(void* context, SceneManagerEvent e
 
     if(event.type == SceneManagerEventTypeCustom) {
         switch(event.event) {
-        case MiBandNfcCustomEventCardDetected:
+        case MiBandNfcCustomEventCardDetected: {
             EmulationStats* stats = (EmulationStats*)app->emulation_stats;
-            if(stats) {
-                furi_string_set_str(stats->status_message, "Mi Band actively reading");
+            if(stats && stats->mutex) {
+                if(furi_mutex_acquire(stats->mutex, 100) == FuriStatusOk) {
+                    furi_string_set_str(stats->status_message, "Mi Band actively reading");
+                    furi_mutex_release(stats->mutex);
+                }
                 notification_message(app->notifications, &sequence_single_vibro);
             }
             consumed = true;
             break;
+        }
         default:
             break;
         }
@@ -409,7 +410,8 @@ bool miband_nfc_scene_magic_emulator_on_event(void* context, SceneManagerEvent e
             app->listener = NULL;
         }
 
-        scene_manager_previous_scene(app->scene_manager);
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MiBandNfcSceneMainMenu);
         consumed = true;
     }
 

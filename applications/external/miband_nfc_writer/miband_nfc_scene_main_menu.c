@@ -120,5 +120,6 @@ bool miband_nfc_scene_main_menu_on_event(void* context, SceneManagerEvent event)
 }
 
 void miband_nfc_scene_main_menu_on_exit(void* context) {
-    UNUSED(context);
+    MiBandNfcApp* app = context;
+    submenu_reset(app->submenu);
 }

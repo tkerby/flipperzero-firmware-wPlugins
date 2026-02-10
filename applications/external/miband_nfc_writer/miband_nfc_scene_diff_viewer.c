@@ -104,7 +104,8 @@ void miband_nfc_scene_diff_viewer_on_enter(void* context) {
     dialog_ex_reset(app->dialog_ex);
 
     if(!app->is_valid_nfc_data) {
-        scene_manager_previous_scene(app->scene_manager);
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MiBandNfcSceneMainMenu);
         return;
     }
 
@@ -112,7 +113,8 @@ void miband_nfc_scene_diff_viewer_on_enter(void* context) {
 
     BlockDifference* differences = malloc(sizeof(BlockDifference) * total_blocks);
     if(!differences) {
-        scene_manager_previous_scene(app->scene_manager);
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MiBandNfcSceneMainMenu);
         return;
     }
 
@@ -152,7 +154,8 @@ void miband_nfc_scene_diff_viewer_on_enter(void* context) {
     free(differences);
 
     if(!report) {
-        scene_manager_previous_scene(app->scene_manager);
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MiBandNfcSceneMainMenu);
         return;
     }
 

@@ -538,51 +538,101 @@ static bool miband_write_with_sync_approach(MiBandNfcApp* app) {
 }
 
 /**
- * @brief Scanner callback for card detection
- * 
- * Called when NFC scanner detects a card. Validates that it's a
- * Mifare Classic card before proceeding to write.
- * 
- * @param event NFC scanner event
- * @param context Pointer to MiBandNfcApp instance
+ * @brief NFC scanner callback for card detection
+ *
+ * Called from NFC worker thread when a card is detected.
+ * Sends custom event to main thread if MfClassic card found.
  */
-static void miband_nfc_scene_writer_scan_callback(NfcScannerEvent event, void* context) {
-    furi_assert(context);
+static void writer_scanner_callback(NfcScannerEvent event, void* context) {
     MiBandNfcApp* app = context;
-
     if(event.type == NfcScannerEventTypeDetected) {
-        // Log all detected protocols for debugging
-        FURI_LOG_D(TAG, "Card detected with %zu protocols:", event.data.protocol_num);
-        for(size_t i = 0; i < event.data.protocol_num; i++) {
-            FURI_LOG_D(TAG, "  Protocol %zu: %d", i, event.data.protocols[i]);
-        }
-
-        // Check if Mifare Classic is among detected protocols
-        bool has_mf_classic = false;
         for(size_t i = 0; i < event.data.protocol_num; i++) {
             if(event.data.protocols[i] == NfcProtocolMfClassic) {
-                has_mf_classic = true;
-                FURI_LOG_I(TAG, "MfClassic found at index %zu", i);
-                break;
+                view_dispatcher_send_custom_event(
+                    app->view_dispatcher, MiBandNfcCustomEventCardDetected);
+                return;
             }
-        }
-
-        if(has_mf_classic) {
-            FURI_LOG_I(TAG, "Mi Band valid for write operation");
-            view_dispatcher_send_custom_event(
-                app->view_dispatcher, MiBandNfcCustomEventCardDetected);
-        } else {
-            FURI_LOG_W(TAG, "No MfClassic protocol found");
-            view_dispatcher_send_custom_event(app->view_dispatcher, MiBandNfcCustomEventWrongCard);
         }
     }
 }
 
 /**
+ * @brief Execute write operation and show result
+ *
+ * Called after card is detected via async scanner.
+ * Performs the sync write operation and displays result.
+ */
+static void writer_execute_and_show_result(MiBandNfcApp* app) {
+    if(app->logger) {
+        miband_logger_log(app->logger, LogLevelInfo, "Card detected, starting write");
+    }
+
+    popup_reset(app->popup);
+    popup_set_header(app->popup, "Writing Data", 64, 4, AlignCenter, AlignTop);
+    popup_set_text(app->popup, "Starting write...", 64, 18, AlignCenter, AlignTop);
+    furi_delay_ms(500);
+
+    notification_message(app->notifications, &sequence_blink_stop);
+    notification_message(app->notifications, &sequence_blink_start_magenta);
+
+    FURI_LOG_I(TAG, "Starting write operation");
+    bool write_result = miband_write_with_sync_approach(app);
+
+    popup_reset(app->popup);
+
+    if(write_result) {
+        if(app->logger) {
+            miband_logger_log(
+                app->logger,
+                LogLevelInfo,
+                "Write successful for: %s",
+                furi_string_get_cstr(app->file_path));
+        }
+        notification_message(app->notifications, &sequence_success);
+        popup_set_header(app->popup, "Write Success!", 2, 2, AlignLeft, AlignTop);
+        popup_set_text(app->popup, "Data written\nsuccessfully", 2, 16, AlignLeft, AlignTop);
+        popup_set_icon(app->popup, 68, 6, &I_DolphinSuccess_91x55);
+        furi_delay_ms(2000);
+
+        if(app->verify_after_write) {
+            popup_set_text(app->popup, "Auto-verifying...", 64, 20, AlignCenter, AlignTop);
+            furi_delay_ms(500);
+            scene_manager_next_scene(app->scene_manager, MiBandNfcSceneVerify);
+        } else {
+            scene_manager_search_and_switch_to_another_scene(
+                app->scene_manager, MiBandNfcSceneMainMenu);
+        }
+    } else {
+        if(app->logger) {
+            miband_logger_log(
+                app->logger,
+                LogLevelError,
+                "Write failed for: %s",
+                furi_string_get_cstr(app->file_path));
+        }
+        notification_message(app->notifications, &sequence_error);
+        popup_set_header(app->popup, "Write Failed", 64, 4, AlignCenter, AlignTop);
+        popup_set_text(
+            app->popup,
+            "Could not write\ndata to Mi Band\n\nCheck position",
+            64,
+            20,
+            AlignCenter,
+            AlignTop);
+        FURI_LOG_E(TAG, "Write failed");
+
+        furi_delay_ms(3000);
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MiBandNfcSceneMainMenu);
+    }
+}
+
+/**
  * @brief Scene entry point
- * 
- * Initializes scanner and waits for Mi Band to be placed near Flipper.
- * 
+ *
+ * Sets up UI and starts async NFC scanner for card detection.
+ * Back button works during the card waiting phase.
+ *
  * @param context Pointer to MiBandNfcApp instance
  */
 void miband_nfc_scene_writer_on_enter(void* context) {
@@ -590,7 +640,8 @@ void miband_nfc_scene_writer_on_enter(void* context) {
     MiBandNfcApp* app = context;
 
     if(!app->is_valid_nfc_data) {
-        scene_manager_previous_scene(app->scene_manager);
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MiBandNfcSceneMainMenu);
         return;
     }
     if(app->logger) {
@@ -619,170 +670,72 @@ void miband_nfc_scene_writer_on_enter(void* context) {
     view_dispatcher_switch_to_view(app->view_dispatcher, MiBandNfcViewIdWriter);
     notification_message(app->notifications, &sequence_blink_start_cyan);
 
-    app->poller = NULL;
-    app->scanner = nfc_scanner_alloc(app->nfc);
-    nfc_scanner_start(app->scanner, miband_nfc_scene_writer_scan_callback, app);
-    app->is_scan_active = true;
-
     FURI_LOG_I(TAG, "Waiting for Mi Band to be placed...");
+
+    // Start async NFC scanner - event loop stays free, Back button works
+    app->scanner = nfc_scanner_alloc(app->nfc);
+    nfc_scanner_start(app->scanner, writer_scanner_callback, app);
+    app->is_scan_active = true;
 }
 
 /**
  * @brief Scene event handler
- * 
- * Handles card detection and write completion events.
- * 
+ *
+ * Handles card detection (from async scanner) and Back button.
+ *
  * @param context Pointer to MiBandNfcApp instance
  * @param event Scene manager event
  * @return true if event was consumed, false otherwise
  */
 bool miband_nfc_scene_writer_on_event(void* context, SceneManagerEvent event) {
-    furi_assert(context);
     MiBandNfcApp* app = context;
     bool consumed = false;
 
     if(event.type == SceneManagerEventTypeCustom) {
-        switch(event.event) {
-        case MiBandNfcCustomEventCardDetected:
-            if(app->scanner) {
-                app->is_scan_active = false;
-                nfc_scanner_stop(app->scanner);
-                nfc_scanner_free(app->scanner);
-                app->scanner = NULL;
-            }
-
-            popup_reset(app->popup);
-            popup_set_header(app->popup, "Writing Data", 64, 4, AlignCenter, AlignTop);
-
-            popup_set_text(app->popup, "Starting write...", 64, 18, AlignCenter, AlignTop);
-            furi_delay_ms(500);
-
-            if(app->logger) {
-                miband_logger_log(app->logger, LogLevelInfo, "Card detected, starting write");
-            }
-
-            notification_message(app->notifications, &sequence_blink_stop);
-            notification_message(app->notifications, &sequence_blink_start_magenta);
-
-            FURI_LOG_I(TAG, "Starting write operation");
-            bool write_result = miband_write_with_sync_approach(app);
-
-            popup_reset(app->popup);
-
-            if(write_result) {
-                if(app->logger) {
-                    miband_logger_log(
-                        app->logger,
-                        LogLevelInfo,
-                        "Write successful for: %s",
-                        furi_string_get_cstr(app->file_path));
-                }
-                notification_message(app->notifications, &sequence_success);
-                popup_set_header(app->popup, "Write Success!", 64, 4, AlignCenter, AlignTop);
-                popup_set_text(
-                    app->popup, "Data written\nsuccessfully", 64, 20, AlignCenter, AlignTop);
-                popup_set_icon(app->popup, 32, 24, &I_DolphinSuccess_91x55);
-                furi_delay_ms(2000);
-
-                if(app->verify_after_write) {
-                    popup_set_text(app->popup, "Auto-verifying...", 64, 20, AlignCenter, AlignTop);
-                    furi_delay_ms(500);
-                    scene_manager_next_scene(app->scene_manager, MiBandNfcSceneVerify);
-                } else {
-                    scene_manager_search_and_switch_to_another_scene(
-                        app->scene_manager, MiBandNfcSceneMainMenu);
-                }
-            } else {
-                if(app->logger) {
-                    miband_logger_log(
-                        app->logger,
-                        LogLevelError,
-                        "Write failed for: %s",
-                        furi_string_get_cstr(app->file_path));
-                }
-                notification_message(app->notifications, &sequence_error);
-                popup_set_header(app->popup, "Write Failed", 64, 4, AlignCenter, AlignTop);
-                popup_set_text(
-                    app->popup,
-                    "Could not write\ndata to Mi Band\n\nCheck position",
-                    64,
-                    20,
-                    AlignCenter,
-                    AlignTop);
-                popup_set_icon(app->popup, 40, 28, &I_WarningDolphinFlip_45x42);
-                FURI_LOG_E(TAG, "Write failed");
-            }
-
-            furi_delay_ms(3000);
-            scene_manager_search_and_switch_to_another_scene(
-                app->scene_manager, MiBandNfcSceneMainMenu);
-            consumed = true;
-            break;
-
-        case MiBandNfcCustomEventWrongCard:
-            if(app->logger) {
-                miband_logger_log(app->logger, LogLevelWarning, "Wrong card type detected");
-            }
+        if(event.event == MiBandNfcCustomEventCardDetected && app->is_scan_active) {
+            // Stop async scanner - card found
             if(app->scanner) {
                 nfc_scanner_stop(app->scanner);
                 nfc_scanner_free(app->scanner);
                 app->scanner = NULL;
-                app->is_scan_active = false;
             }
+            app->is_scan_active = false;
 
-            popup_set_header(app->popup, "Wrong Card Type", 64, 4, AlignCenter, AlignTop);
-            popup_set_text(
-                app->popup,
-                "This is not a\nMifare Classic card\n\nTry again",
-                64,
-                20,
-                AlignCenter,
-                AlignTop);
-            popup_set_icon(app->popup, 40, 28, &I_WarningDolphinFlip_45x42);
-            notification_message(app->notifications, &sequence_error);
-
-            furi_delay_ms(2000);
-            scene_manager_search_and_switch_to_another_scene(
-                app->scene_manager, MiBandNfcSceneMainMenu);
+            // Perform sync write operation
+            writer_execute_and_show_result(app);
             consumed = true;
-            break;
-
-        default:
-            break;
         }
     } else if(event.type == SceneManagerEventTypeBack) {
-        scene_manager_search_and_switch_to_another_scene(
-            app->scene_manager, MiBandNfcSceneMainMenu);
+        // User pressed Back - cancel card detection, return to previous scene
+        if(app->scanner) {
+            nfc_scanner_stop(app->scanner);
+            nfc_scanner_free(app->scanner);
+            app->scanner = NULL;
+        }
+        app->is_scan_active = false;
+        scene_manager_previous_scene(app->scene_manager);
         consumed = true;
     }
 
     return consumed;
 }
+
 /**
  * @brief Scene exit handler
- * 
- * Stops scanner if active and cleans up resources.
- * 
+ *
  * @param context Pointer to MiBandNfcApp instance
  */
 void miband_nfc_scene_writer_on_exit(void* context) {
     furi_assert(context);
     MiBandNfcApp* app = context;
 
-    // Aggiungere:
-    if(app->poller) {
-        nfc_poller_stop(app->poller);
-        nfc_poller_free(app->poller);
-        app->poller = NULL;
-    }
-
-    app->is_scan_active = false;
-
+    // Safety: stop scanner if still running
     if(app->scanner) {
         nfc_scanner_stop(app->scanner);
         nfc_scanner_free(app->scanner);
         app->scanner = NULL;
     }
+    app->is_scan_active = false;
 
     notification_message(app->notifications, &sequence_blink_stop);
     popup_reset(app->popup);

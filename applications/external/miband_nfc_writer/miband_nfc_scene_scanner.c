@@ -92,7 +92,6 @@ bool miband_nfc_scene_scanner_on_event(void* context, SceneManagerEvent event) {
                 22,
                 AlignCenter,
                 AlignTop);
-            popup_set_icon(app->popup, 40, 32, &I_WarningDolphinFlip_45x42);
 
             notification_message(app->notifications, &sequence_error);
             furi_delay_ms(2000);
