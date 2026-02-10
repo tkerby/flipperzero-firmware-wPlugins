@@ -61,6 +61,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [ProtoPirate v2.2 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - Updated: [Mi Band NFC Writer v1.0 (By LucaTomei)](https://github.com/LucaTomei/flipper-miband-nfc-writer)
 - Updated: [Minesweeper Redux v1.6 (By squee72564)](https://github.com/squee72564/F0_Minesweeper_Fap)
+- Updated: [Prince Of Arabia v1.0.8 (By apfxtech)](https://github.com/apfxtech/FlipperPrinceOfArabia)
 
 <a name="release"></a>
 
