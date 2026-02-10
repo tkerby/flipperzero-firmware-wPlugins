@@ -381,8 +381,7 @@ static void verify_execute_and_show_result(MiBandNfcApp* app) {
         bool has_card_uid = false;
 
         for(int attempt = 0; attempt < 3; attempt++) {
-            if(iso14443_3a_poller_sync_read(app->nfc, &card_iso_data) ==
-               Iso14443_3aErrorNone) {
+            if(iso14443_3a_poller_sync_read(app->nfc, &card_iso_data) == Iso14443_3aErrorNone) {
                 has_card_uid = true;
                 break;
             }
@@ -504,10 +503,7 @@ static void verify_execute_and_show_result(MiBandNfcApp* app) {
 
         if(i % 16 == 0) {
             furi_string_printf(
-                verify_tracker.current_operation,
-                "Comparing block %zu/%zu",
-                i,
-                total_blocks);
+                verify_tracker.current_operation, "Comparing block %zu/%zu", i, total_blocks);
             update_verify_ui(app, "Comparing Data");
         }
 
@@ -518,10 +514,8 @@ static void verify_execute_and_show_result(MiBandNfcApp* app) {
             FURI_LOG_D(TAG, "Skipping trailer block %zu", i);
             continue;
         } else {
-            if(memcmp(
-                   app->mf_classic_data->block[i].data,
-                   app->target_data->block[i].data,
-                   16) != 0) {
+            if(memcmp(app->mf_classic_data->block[i].data, app->target_data->block[i].data, 16) !=
+               0) {
                 data_match = false;
                 different_blocks++;
                 verify_tracker.blocks_different++;
@@ -548,25 +542,20 @@ static void verify_execute_and_show_result(MiBandNfcApp* app) {
             app->scene_manager, MiBandNfcSceneMainMenu);
 
         if(app->logger) {
-            miband_logger_log(
-                app->logger, LogLevelInfo, "Verify successful: all blocks match");
+            miband_logger_log(app->logger, LogLevelInfo, "Verify successful: all blocks match");
         }
     } else {
         notification_message(app->notifications, &sequence_error);
         if(app->logger) {
             miband_logger_log(
-                app->logger,
-                LogLevelWarning,
-                "Verify failed: %d blocks differ",
-                different_blocks);
+                app->logger, LogLevelWarning, "Verify failed: %d blocks differ", different_blocks);
         }
 
         popup_reset(app->popup);
         text_box_reset(app->text_box_report);
 
         dialog_ex_reset(app->dialog_ex);
-        dialog_ex_set_header(
-            app->dialog_ex, "Differences Found", 64, 0, AlignCenter, AlignTop);
+        dialog_ex_set_header(app->dialog_ex, "Differences Found", 64, 0, AlignCenter, AlignTop);
 
         furi_string_printf(
             app->temp_text_buffer, "%d data blocks\ndiffer from dump", different_blocks);

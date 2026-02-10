@@ -50,10 +50,7 @@ static bool backup_read_all_data(MiBandNfcApp* app) {
 
         if(sector % 2 == 0) {
             furi_string_printf(
-                app->temp_text_buffer,
-                "Reading...\nSector %zu/%zu\n",
-                sector + 1,
-                total_sectors);
+                app->temp_text_buffer, "Reading...\nSector %zu/%zu\n", sector + 1, total_sectors);
 
             uint32_t percent = ((sector + 1) * 100) / total_sectors;
             furi_string_cat_str(app->temp_text_buffer, "[");

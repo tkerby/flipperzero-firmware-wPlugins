@@ -107,10 +107,7 @@ uint32_t progress_tracker_get_eta_seconds(const ProgressTracker* tracker) {
     return eta_ms / 1000; // Convert to seconds
 }
 
-void progress_tracker_update_popup(
-    ProgressTracker* tracker,
-    Popup* popup,
-    const char* header) {
+void progress_tracker_update_popup(ProgressTracker* tracker, Popup* popup, const char* header) {
     if(header) {
         popup_set_header(popup, header, 64, 2, AlignCenter, AlignTop);
     }
@@ -152,5 +149,6 @@ void progress_tracker_update_popup(
         furi_string_cat_printf(tracker->display_buffer, "\n\nETA: %lu seconds", eta);
     }
 
-    popup_set_text(popup, furi_string_get_cstr(tracker->display_buffer), 4, 18, AlignLeft, AlignTop);
+    popup_set_text(
+        popup, furi_string_get_cstr(tracker->display_buffer), 4, 18, AlignLeft, AlignTop);
 }

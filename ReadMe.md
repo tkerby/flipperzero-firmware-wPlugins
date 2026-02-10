@@ -60,6 +60,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [VK Thermo v1.0 (By VivoKey)](https://github.com/VivoKey/vkthermo-flipper)
 - Updated: [ProtoPirate v2.2 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - Updated: [Mi Band NFC Writer v1.0 (By LucaTomei)](https://github.com/LucaTomei/flipper-miband-nfc-writer)
+- Updated: [Minesweeper Redux v1.6 (By squee72564)](https://github.com/squee72564/F0_Minesweeper_Fap)
 
 <a name="release"></a>
 
@@ -358,7 +359,7 @@ $ ./fbt dolphin_ext
 - [Matagotchi v1.1 (By MrModd)](https://github.com/MrModd/Matagotchi)
 - [Mind Probe v0.1 (By Miksang)](https://github.com/Miksang/flipper_guessing_game)
 - [Minesweeper v1.2 (By panki27)](https://github.com/panki27/minesweeper)
-- [Minesweeper Redux v1.5 (By squee72564)](https://github.com/squee72564/F0_Minesweeper_Fap)
+- [Minesweeper Redux v1.6 (By squee72564)](https://github.com/squee72564/F0_Minesweeper_Fap)
 - [Monster Slayer v0.1 (By ratmanZorry)](https://github.com/ratmanZorry/monster_slayer_flipper_zero)
 - [Monty Hall v1.2 (By DevMilanIan)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/203)
 - [Morse Master v1.1 (By w84death)](https://github.com/w84death/morse-master)

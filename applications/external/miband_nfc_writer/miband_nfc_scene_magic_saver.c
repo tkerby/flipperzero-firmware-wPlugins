@@ -45,12 +45,7 @@ static bool miband_nfc_save_magic_dump(MiBandNfcApp* app) {
         furi_string_cat_printf(app->temp_text_buffer, "]\n%lu%%", percent);
 
         popup_set_text(
-            app->popup,
-            furi_string_get_cstr(app->temp_text_buffer),
-            64,
-            22,
-            AlignCenter,
-            AlignTop);
+            app->popup, furi_string_get_cstr(app->temp_text_buffer), 64, 22, AlignCenter, AlignTop);
 
         furi_delay_ms(20);
 
@@ -135,8 +130,7 @@ void miband_nfc_scene_magic_saver_on_enter(void* context) {
         }
         notification_message(app->notifications, &sequence_success);
         popup_set_header(app->popup, "Success!", 2, 2, AlignLeft, AlignTop);
-        popup_set_text(
-            app->popup, "Magic dump\nsaved OK!", 2, 16, AlignLeft, AlignTop);
+        popup_set_text(app->popup, "Magic dump\nsaved OK!", 2, 16, AlignLeft, AlignTop);
         popup_set_icon(app->popup, 68, 6, &I_DolphinSuccess_91x55);
         furi_delay_ms(2000);
     } else {
