@@ -192,8 +192,8 @@ static int32_t uid_check_worker_thread(void* context) {
 
         ctx->files_checked++;
 
-        // Ricicla il FuriString invece di crearne uno nuovo
-        furi_string_set_strn(full_path, furi_string_get_cstr(full_path), base_path_len);
+        // FIX: Use furi_string_left instead of self-referencing furi_string_set_strn
+        furi_string_left(full_path, base_path_len);
         furi_string_cat_str(full_path, "/");
         furi_string_cat_str(full_path, name);
 
@@ -335,7 +335,8 @@ void miband_nfc_scene_uid_check_on_enter(void* context) {
         }
         popup_set_text(app->popup, "Card not found", 64, 22, AlignCenter, AlignTop);
         furi_delay_ms(1500);
-        scene_manager_previous_scene(app->scene_manager);
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MiBandNfcSceneMainMenu);
         return;
     }
 
@@ -362,7 +363,8 @@ void miband_nfc_scene_uid_check_on_enter(void* context) {
         }
         popup_set_text(app->popup, "Memory error", 64, 22, AlignCenter, AlignTop);
         furi_delay_ms(1500);
-        scene_manager_previous_scene(app->scene_manager);
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MiBandNfcSceneMainMenu);
         return;
     }
 
@@ -382,7 +384,8 @@ void miband_nfc_scene_uid_check_on_enter(void* context) {
         app->uid_check_context = NULL; // IMPORTANTE: resetta il puntatore
         popup_set_text(app->popup, "Memory error", 64, 22, AlignCenter, AlignTop);
         furi_delay_ms(1500);
-        scene_manager_previous_scene(app->scene_manager);
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MiBandNfcSceneMainMenu);
         return;
     }
 
@@ -417,7 +420,10 @@ void miband_nfc_scene_uid_check_on_enter(void* context) {
 
         // Forza update se counter cambia O ogni 300ms
         if((uid_ctx->files_checked != last_count) || (now - last_update > 300)) {
-            FuriString* msg = furi_string_alloc_printf(
+            // FIX: Use app->temp_text_buffer - popup_set_text stores pointer, not copy.
+            // Alloc/free per iteration was use-after-free (popup rendered freed memory).
+            furi_string_printf(
+                app->temp_text_buffer,
                 "Scanning...\n\n%lu / %lu files\n%zu matches",
                 uid_ctx->files_checked,
                 uid_ctx->files_total > 0 ? uid_ctx->files_total : uid_ctx->files_checked,
@@ -425,8 +431,13 @@ void miband_nfc_scene_uid_check_on_enter(void* context) {
 
             popup_reset(app->popup);
             popup_set_header(app->popup, "UID Check", 64, 4, AlignCenter, AlignTop);
-            popup_set_text(app->popup, furi_string_get_cstr(msg), 64, 18, AlignCenter, AlignTop);
-            furi_string_free(msg);
+            popup_set_text(
+                app->popup,
+                furi_string_get_cstr(app->temp_text_buffer),
+                64,
+                18,
+                AlignCenter,
+                AlignTop);
 
             last_update = now;
             last_count = uid_ctx->files_checked;
@@ -460,7 +471,8 @@ void miband_nfc_scene_uid_check_on_enter(void* context) {
         app->uid_check_context = NULL; // IMPORTANTE: resetta
         popup_set_text(app->popup, "Error", 64, 22, AlignCenter, AlignTop);
         furi_delay_ms(1500);
-        scene_manager_previous_scene(app->scene_manager);
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MiBandNfcSceneMainMenu);
         return;
     }
 
@@ -496,7 +508,8 @@ bool miband_nfc_scene_uid_check_on_event(void* context, SceneManagerEvent event)
             }
         }
 
-        scene_manager_previous_scene(app->scene_manager);
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MiBandNfcSceneMainMenu);
         return true;
     }
     return false;

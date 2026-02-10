@@ -15,10 +15,12 @@ struct ProgressTracker {
     char operation_name[32];
     uint32_t start_time;
     uint32_t last_update_time;
+    FuriString* display_buffer; // Persistent buffer for popup text
 };
 
 ProgressTracker* progress_tracker_alloc(uint32_t total_items, const char* operation_name) {
     ProgressTracker* tracker = malloc(sizeof(ProgressTracker));
+    if(!tracker) return NULL;
 
     tracker->total_items = total_items;
     tracker->completed_items = 0;
@@ -28,11 +30,20 @@ ProgressTracker* progress_tracker_alloc(uint32_t total_items, const char* operat
     strncpy(tracker->operation_name, operation_name, 31);
     tracker->operation_name[31] = '\0';
 
+    tracker->display_buffer = furi_string_alloc();
+    if(!tracker->display_buffer) {
+        free(tracker);
+        return NULL;
+    }
+
     return tracker;
 }
 
 void progress_tracker_free(ProgressTracker* tracker) {
-    free(tracker);
+    if(tracker) {
+        if(tracker->display_buffer) furi_string_free(tracker->display_buffer);
+        free(tracker);
+    }
 }
 
 void progress_tracker_update(ProgressTracker* tracker, uint32_t completed_items) {
@@ -97,34 +108,49 @@ uint32_t progress_tracker_get_eta_seconds(const ProgressTracker* tracker) {
 }
 
 void progress_tracker_update_popup(
-    const ProgressTracker* tracker,
+    ProgressTracker* tracker,
     Popup* popup,
     const char* header) {
     if(header) {
         popup_set_header(popup, header, 64, 2, AlignCenter, AlignTop);
     }
 
-    FuriString* text = furi_string_alloc();
+    // FIX: Use persistent display_buffer instead of local FuriString.
+    // popup_set_text stores a pointer, NOT a copy - freeing a local
+    // string would leave a dangling pointer in the popup.
+    furi_string_reset(tracker->display_buffer);
 
     // Progress text
-    FuriString* progress_text = progress_tracker_get_text(tracker);
-    furi_string_cat(text, progress_text);
-    furi_string_free(progress_text);
+    uint8_t percentage = progress_tracker_get_percentage(tracker);
+    furi_string_printf(
+        tracker->display_buffer,
+        "%s: %lu/%lu (%u%%)",
+        tracker->operation_name,
+        tracker->completed_items,
+        tracker->total_items,
+        percentage);
 
-    furi_string_cat_str(text, "\n\n");
+    furi_string_cat_str(tracker->display_buffer, "\n\n");
 
-    // Progress bar
-    FuriString* bar = progress_tracker_get_bar(tracker, 20);
-    furi_string_cat(text, bar);
-    furi_string_free(bar);
+    // Progress bar inline
+    uint8_t filled = (percentage * 20) / 100;
+    furi_string_cat_str(tracker->display_buffer, "[");
+    for(uint8_t i = 0; i < 20; i++) {
+        if(i < filled) {
+            furi_string_cat_str(tracker->display_buffer, "=");
+        } else if(i == filled && percentage < 100) {
+            furi_string_cat_str(tracker->display_buffer, ">");
+        } else {
+            furi_string_cat_str(tracker->display_buffer, " ");
+        }
+    }
+    furi_string_cat_str(tracker->display_buffer, "]");
 
     // ETA if available
     uint32_t eta = progress_tracker_get_eta_seconds(tracker);
     if(eta > 0 && tracker->completed_items > 5) {
-        furi_string_cat_printf(text, "\n\nETA: %lu seconds", eta);
+        furi_string_cat_printf(tracker->display_buffer, "\n\nETA: %lu seconds", eta);
     }
 
-    popup_set_text(popup, furi_string_get_cstr(text), 4, 18, AlignLeft, AlignTop);
-
-    furi_string_free(text);
+    popup_set_text(popup, furi_string_get_cstr(tracker->display_buffer), 4, 18, AlignLeft, AlignTop);
 }

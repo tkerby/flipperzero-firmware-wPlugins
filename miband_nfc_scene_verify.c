@@ -17,12 +17,6 @@
 
 #define TAG "MiBandNfc"
 
-enum {
-    MiBandNfcSceneVerifyStateCardSearch,
-    MiBandNfcSceneVerifyStateReading,
-    MiBandNfcSceneVerifyStateComparison,
-};
-
 static void verify_dialog_callback(DialogExResult result, void* context) {
     MiBandNfcApp* app = context;
 
@@ -345,52 +339,269 @@ static bool miband_verify_read_card(MiBandNfcApp* app) {
 }
 
 /**
- * @brief NFC poller callback for initial card detection
- * 
- * Handles card detection events before we start manual reading.
- * 
- * @param event NFC generic event
- * @param context Pointer to MiBandNfcApp instance
- * @return NfcCommand to continue or stop polling
+ * @brief NFC scanner callback for card detection
+ *
+ * Called from NFC worker thread. Sends custom event if MfClassic card found.
  */
-static NfcCommand miband_verify_reader_callback(NfcGenericEvent event, void* context) {
+static void verify_scanner_callback(NfcScannerEvent event, void* context) {
     MiBandNfcApp* app = context;
-    furi_assert(event.protocol == NfcProtocolMfClassic);
+    if(event.type == NfcScannerEventTypeDetected) {
+        for(size_t i = 0; i < event.data.protocol_num; i++) {
+            if(event.data.protocols[i] == NfcProtocolMfClassic) {
+                view_dispatcher_send_custom_event(
+                    app->view_dispatcher, MiBandNfcCustomEventCardDetected);
+                return;
+            }
+        }
+    }
+}
 
-    const MfClassicPollerEvent* mfc_event = event.event_data;
+/**
+ * @brief Execute verify read + compare and show result
+ *
+ * Called after card is detected via async scanner.
+ */
+static void verify_execute_and_show_result(MiBandNfcApp* app) {
+    notification_message(app->notifications, &sequence_success);
+    furi_string_set_str(verify_tracker.current_operation, "Card detected");
+    update_verify_ui(app, "Card Found!");
+    furi_delay_ms(500);
 
-    if(mfc_event->type == MfClassicPollerEventTypeCardDetected) {
-        furi_string_set_str(verify_tracker.current_operation, "Card detected");
-        update_verify_ui(app, "Card Found");
-        view_dispatcher_send_custom_event(app->view_dispatcher, MiBandNfcCustomEventCardDetected);
+    // Read all sectors
+    mf_classic_reset(app->target_data);
+    app->target_data->type = app->mf_classic_data->type;
 
-    } else if(mfc_event->type == MfClassicPollerEventTypeRequestMode) {
-        mfc_event->data->poller_mode.mode = MfClassicPollerModeRead;
-        mf_classic_reset(app->target_data);
-        mfc_event->data->poller_mode.data = app->target_data;
+    bool read_success = miband_verify_read_card(app);
 
-    } else if(
-        mfc_event->type == MfClassicPollerEventTypeSuccess ||
-        mfc_event->type == MfClassicPollerEventTypeFail) {
-        view_dispatcher_send_custom_event(app->view_dispatcher, MiBandNfcCustomEventPollerDone);
-        return NfcCommandStop;
+    if(!read_success) {
+        notification_message(app->notifications, &sequence_error);
+
+        // Read UID for diagnostic
+        Iso14443_3aData card_iso_data = {0};
+        bool has_card_uid = false;
+
+        for(int attempt = 0; attempt < 3; attempt++) {
+            if(iso14443_3a_poller_sync_read(app->nfc, &card_iso_data) ==
+               Iso14443_3aErrorNone) {
+                has_card_uid = true;
+                break;
+            }
+            furi_delay_ms(100);
+        }
+
+        if(app->logger) {
+            if(has_card_uid) {
+                miband_logger_log(
+                    app->logger,
+                    LogLevelError,
+                    "Verify read failed - Card UID: %02X %02X %02X %02X",
+                    card_iso_data.uid[0],
+                    card_iso_data.uid[1],
+                    card_iso_data.uid[2],
+                    card_iso_data.uid[3]);
+            } else {
+                miband_logger_log(
+                    app->logger, LogLevelError, "Verify read failed - No card detected");
+            }
+
+            if(app->mf_classic_data) {
+                uint8_t* file_uid = app->mf_classic_data->block[0].data;
+                miband_logger_log(
+                    app->logger,
+                    LogLevelInfo,
+                    "Expected file UID: %02X %02X %02X %02X",
+                    file_uid[0],
+                    file_uid[1],
+                    file_uid[2],
+                    file_uid[3]);
+            }
+        }
+
+        popup_reset(app->popup);
+        text_box_reset(app->text_box_report);
+        dialog_ex_reset(app->dialog_ex);
+
+        FuriString* error_msg = furi_string_alloc();
+        const char* header_text = "Verify Failed";
+
+        if(has_card_uid) {
+            if(app->mf_classic_data) {
+                uint8_t* file_uid = app->mf_classic_data->block[0].data;
+
+                if(memcmp(card_iso_data.uid, file_uid, 4) != 0) {
+                    header_text = "Wrong Card!";
+                    furi_string_printf(
+                        error_msg,
+                        "Card UID: %02X %02X %02X %02X\n"
+                        "Expected: %02X %02X %02X %02X\n"
+                        "Use 'Quick UID Check' function",
+                        card_iso_data.uid[0],
+                        card_iso_data.uid[1],
+                        card_iso_data.uid[2],
+                        card_iso_data.uid[3],
+                        file_uid[0],
+                        file_uid[1],
+                        file_uid[2],
+                        file_uid[3]);
+                } else {
+                    furi_string_printf(
+                        error_msg,
+                        "Card UID OK:%02X %02X %02X %02X\n"
+                        "Cannot read data\nCheck keys",
+                        card_iso_data.uid[0],
+                        card_iso_data.uid[1],
+                        card_iso_data.uid[2],
+                        card_iso_data.uid[3]);
+                }
+            } else {
+                furi_string_printf(
+                    error_msg,
+                    "Card UID:%02X %02X %02X %02X\n"
+                    "Cannot read data",
+                    card_iso_data.uid[0],
+                    card_iso_data.uid[1],
+                    card_iso_data.uid[2],
+                    card_iso_data.uid[3]);
+            }
+        } else {
+            header_text = "No Card";
+            furi_string_set_str(error_msg, "Place card near\nFlipper Zero");
+        }
+
+        furi_string_set(app->temp_text_buffer, error_msg);
+        furi_string_free(error_msg);
+
+        dialog_ex_set_header(app->dialog_ex, header_text, 64, 4, AlignCenter, AlignTop);
+        dialog_ex_set_text(
+            app->dialog_ex,
+            furi_string_get_cstr(app->temp_text_buffer),
+            64,
+            32,
+            AlignCenter,
+            AlignCenter);
+        dialog_ex_set_left_button_text(app->dialog_ex, "Back");
+        dialog_ex_set_icon(app->dialog_ex, 0, 0, NULL);
+        dialog_ex_set_result_callback(app->dialog_ex, verify_dialog_callback);
+        dialog_ex_set_context(app->dialog_ex, app);
+
+        view_dispatcher_switch_to_view(app->view_dispatcher, MiBandNfcViewIdDialog);
+        notification_message(app->notifications, &sequence_blink_stop);
+        notification_message(app->notifications, &sequence_error);
+        return;
     }
 
-    return NfcCommandContinue;
+    // Compare data
+    furi_string_set_str(verify_tracker.current_operation, "Comparing data");
+    update_verify_ui(app, "Comparing Data");
+    furi_delay_ms(500);
+
+    bool data_match = true;
+    int different_blocks = 0;
+    size_t total_blocks = mf_classic_get_total_block_num(app->mf_classic_data->type);
+
+    for(size_t i = 0; i < total_blocks; i++) {
+        verify_tracker.blocks_compared++;
+
+        if(i % 16 == 0) {
+            furi_string_printf(
+                verify_tracker.current_operation,
+                "Comparing block %zu/%zu",
+                i,
+                total_blocks);
+            update_verify_ui(app, "Comparing Data");
+        }
+
+        if(i == 0) {
+            FURI_LOG_D(TAG, "Skipping Block 0 (UID block)");
+            continue;
+        } else if(mf_classic_is_sector_trailer(i)) {
+            FURI_LOG_D(TAG, "Skipping trailer block %zu", i);
+            continue;
+        } else {
+            if(memcmp(
+                   app->mf_classic_data->block[i].data,
+                   app->target_data->block[i].data,
+                   16) != 0) {
+                data_match = false;
+                different_blocks++;
+                verify_tracker.blocks_different++;
+                FURI_LOG_W(TAG, "Block %zu differs", i);
+            }
+        }
+    }
+
+    notification_message(app->notifications, &sequence_blink_stop);
+
+    if(data_match && different_blocks == 0) {
+        notification_message(app->notifications, &sequence_success);
+
+        text_box_reset(app->text_box_report);
+        dialog_ex_reset(app->dialog_ex);
+
+        popup_reset(app->popup);
+        popup_set_header(app->popup, "Verify OK!", 2, 2, AlignLeft, AlignTop);
+        popup_set_text(app->popup, "All data\nmatches!", 2, 16, AlignLeft, AlignTop);
+        popup_set_icon(app->popup, 68, 6, &I_DolphinSuccess_91x55);
+        view_dispatcher_switch_to_view(app->view_dispatcher, MiBandNfcViewIdScanner);
+        furi_delay_ms(3000);
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MiBandNfcSceneMainMenu);
+
+        if(app->logger) {
+            miband_logger_log(
+                app->logger, LogLevelInfo, "Verify successful: all blocks match");
+        }
+    } else {
+        notification_message(app->notifications, &sequence_error);
+        if(app->logger) {
+            miband_logger_log(
+                app->logger,
+                LogLevelWarning,
+                "Verify failed: %d blocks differ",
+                different_blocks);
+        }
+
+        popup_reset(app->popup);
+        text_box_reset(app->text_box_report);
+
+        dialog_ex_reset(app->dialog_ex);
+        dialog_ex_set_header(
+            app->dialog_ex, "Differences Found", 64, 0, AlignCenter, AlignTop);
+
+        furi_string_printf(
+            app->temp_text_buffer, "%d data blocks\ndiffer from dump", different_blocks);
+        dialog_ex_set_text(
+            app->dialog_ex,
+            furi_string_get_cstr(app->temp_text_buffer),
+            64,
+            28,
+            AlignCenter,
+            AlignCenter);
+
+        dialog_ex_set_left_button_text(app->dialog_ex, "Exit");
+        dialog_ex_set_right_button_text(app->dialog_ex, "Details");
+        dialog_ex_set_icon(app->dialog_ex, 0, 0, NULL);
+        dialog_ex_set_result_callback(app->dialog_ex, verify_dialog_callback);
+        dialog_ex_set_context(app->dialog_ex, app);
+
+        view_dispatcher_switch_to_view(app->view_dispatcher, MiBandNfcViewIdDialog);
+    }
 }
 
 /**
  * @brief Scene entry point
- * 
- * Initializes verification and starts card detection.
- * 
+ *
+ * Sets up UI and starts async NFC scanner for card detection.
+ * Back button works during the card waiting phase.
+ *
  * @param context Pointer to MiBandNfcApp instance
  */
 void miband_nfc_scene_verify_on_enter(void* context) {
     MiBandNfcApp* app = context;
 
     if(!app->is_valid_nfc_data) {
-        scene_manager_previous_scene(app->scene_manager);
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MiBandNfcSceneMainMenu);
         return;
     }
     if(app->logger) {
@@ -401,29 +612,26 @@ void miband_nfc_scene_verify_on_enter(void* context) {
             furi_string_get_cstr(app->file_path));
     }
     verify_tracker_init();
-    scene_manager_set_scene_state(
-        app->scene_manager, MiBandNfcSceneVerify, MiBandNfcSceneVerifyStateCardSearch);
 
     popup_reset(app->popup);
     popup_set_header(app->popup, "Verify Data", 64, 2, AlignCenter, AlignTop);
-    furi_string_set_str(verify_tracker.current_operation, "Place Mi Band near Flipper");
-    update_verify_ui(app, "Verify Data");
+    popup_set_text(
+        app->popup, "Place Mi Band near\nFlipper Zero...", 64, 22, AlignCenter, AlignTop);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, MiBandNfcViewIdScanner);
     notification_message(app->notifications, &sequence_blink_start_cyan);
 
-    mf_classic_reset(app->target_data);
-    app->target_data->type = app->mf_classic_data->type;
-
-    app->poller = nfc_poller_alloc(app->nfc, NfcProtocolMfClassic);
-    nfc_poller_start(app->poller, miband_verify_reader_callback, app);
+    // Start async NFC scanner - event loop stays free, Back button works
+    app->scanner = nfc_scanner_alloc(app->nfc);
+    nfc_scanner_start(app->scanner, verify_scanner_callback, app);
+    app->is_scan_active = true;
 }
 
 /**
  * @brief Scene event handler
- * 
- * Handles card detection and verification completion events.
- * 
+ *
+ * Handles card detection (from async scanner), dialog results, and Back button.
+ *
  * @param context Pointer to MiBandNfcApp instance
  * @param event Scene manager event
  * @return true if event was consumed, false otherwise
@@ -435,272 +643,44 @@ bool miband_nfc_scene_verify_on_event(void* context, SceneManagerEvent event) {
     if(event.type == SceneManagerEventTypeCustom) {
         switch(event.event) {
         case MiBandNfcCustomEventCardDetected:
-            scene_manager_set_scene_state(
-                app->scene_manager, MiBandNfcSceneVerify, MiBandNfcSceneVerifyStateReading);
-            furi_string_set_str(verify_tracker.current_operation, "Card detected");
-            update_verify_ui(app, "Card Detected");
-            consumed = true;
-            break;
-
-        case MiBandNfcCustomEventPollerDone:
-            if(app->poller) {
-                nfc_poller_stop(app->poller);
-                nfc_poller_free(app->poller);
-                app->poller = NULL;
-            }
-
-            scene_manager_set_scene_state(
-                app->scene_manager, MiBandNfcSceneVerify, MiBandNfcSceneVerifyStateComparison);
-
-            bool read_success = miband_verify_read_card(app);
-
-            if(!read_success) {
-                notification_message(app->notifications, &sequence_error);
-
-                // Leggi UID della card fisica
-                Iso14443_3aData card_iso_data = {0};
-                bool has_card_uid = false;
-
-                for(int attempt = 0; attempt < 3; attempt++) {
-                    if(iso14443_3a_poller_sync_read(app->nfc, &card_iso_data) ==
-                       Iso14443_3aErrorNone) {
-                        has_card_uid = true;
-                        break;
-                    }
-                    furi_delay_ms(100);
+            if(app->is_scan_active) {
+                // Stop async scanner - card found
+                if(app->scanner) {
+                    nfc_scanner_stop(app->scanner);
+                    nfc_scanner_free(app->scanner);
+                    app->scanner = NULL;
                 }
+                app->is_scan_active = false;
 
-                // LOG dettagliato
-                if(app->logger) {
-                    if(has_card_uid) {
-                        miband_logger_log(
-                            app->logger,
-                            LogLevelError,
-                            "Verify read failed - Card UID: %02X %02X %02X %02X",
-                            card_iso_data.uid[0],
-                            card_iso_data.uid[1],
-                            card_iso_data.uid[2],
-                            card_iso_data.uid[3]);
-                    } else {
-                        miband_logger_log(
-                            app->logger, LogLevelError, "Verify read failed - No card detected");
-                    }
-
-                    if(app->mf_classic_data) {
-                        uint8_t* file_uid = app->mf_classic_data->block[0].data;
-                        miband_logger_log(
-                            app->logger,
-                            LogLevelInfo,
-                            "Expected file UID: %02X %02X %02X %02X",
-                            file_uid[0],
-                            file_uid[1],
-                            file_uid[2],
-                            file_uid[3]);
-                    }
-                }
-
-                // RESET tutto
-                popup_reset(app->popup);
-                text_box_reset(app->text_box_report);
-                dialog_ex_reset(app->dialog_ex);
-
-                // Prepara messaggio
-                FuriString* error_msg = furi_string_alloc();
-                const char* header_text = "Verify Failed";
-
-                if(has_card_uid) {
-                    if(app->mf_classic_data) {
-                        uint8_t* file_uid = app->mf_classic_data->block[0].data;
-
-                        if(memcmp(card_iso_data.uid, file_uid, 4) != 0) {
-                            // WRONG CARD
-                            header_text = "Wrong Card!";
-                            furi_string_printf(
-                                error_msg,
-                                "Card UID: %02X %02X %02X %02X\n"
-                                "Expected: %02X %02X %02X %02X\n"
-                                "Use 'Quick UID Check' function",
-                                card_iso_data.uid[0],
-                                card_iso_data.uid[1],
-                                card_iso_data.uid[2],
-                                card_iso_data.uid[3],
-                                file_uid[0],
-                                file_uid[1],
-                                file_uid[2],
-                                file_uid[3]);
-
-                        } else {
-                            // UID OK but read failed
-                            furi_string_printf(
-                                error_msg,
-                                "Card UID OK:%02X %02X %02X %02X\n"
-                                "Cannot read data\nCheck keys",
-                                card_iso_data.uid[0],
-                                card_iso_data.uid[1],
-                                card_iso_data.uid[2],
-                                card_iso_data.uid[3]);
-                        }
-                    } else {
-                        furi_string_printf(
-                            error_msg,
-                            "Card UID:%02X %02X %02X %02X\n"
-                            "Cannot read data",
-                            card_iso_data.uid[0],
-                            card_iso_data.uid[1],
-                            card_iso_data.uid[2],
-                            card_iso_data.uid[3]);
-                    }
-                } else {
-                    header_text = "No Card";
-                    furi_string_set_str(error_msg, "Place card near\nFlipper Zero");
-                }
-
-                // USA DIALOG_EX
-                dialog_ex_set_header(app->dialog_ex, header_text, 64, 4, AlignCenter, AlignTop);
-                dialog_ex_set_text(
-                    app->dialog_ex,
-                    furi_string_get_cstr(error_msg),
-                    64,
-                    32,
-                    AlignCenter,
-                    AlignCenter);
-                dialog_ex_set_left_button_text(app->dialog_ex, "Back");
-                dialog_ex_set_icon(app->dialog_ex, 0, 0, NULL);
-                dialog_ex_set_result_callback(app->dialog_ex, verify_dialog_callback);
-                dialog_ex_set_context(app->dialog_ex, app);
-
-                view_dispatcher_switch_to_view(app->view_dispatcher, MiBandNfcViewIdDialog);
-
-                furi_string_free(error_msg);
-                notification_message(app->notifications, &sequence_blink_stop);
-                notification_message(app->notifications, &sequence_error);
+                // Perform sync verify operation
+                verify_execute_and_show_result(app);
                 consumed = true;
-                break;
             }
-            furi_string_set_str(verify_tracker.current_operation, "Comparing data");
-            update_verify_ui(app, "Comparing Data");
-            furi_delay_ms(500);
-
-            bool data_match = true;
-            int different_blocks = 0;
-            size_t total_blocks = mf_classic_get_total_block_num(app->mf_classic_data->type);
-
-            for(size_t i = 0; i < total_blocks; i++) {
-                verify_tracker.blocks_compared++;
-
-                if(i % 16 == 0) {
-                    furi_string_printf(
-                        verify_tracker.current_operation,
-                        "Comparing block %zu/%zu",
-                        i,
-                        total_blocks);
-                    update_verify_ui(app, "Comparing Data");
-                }
-
-                if(i == 0) {
-                    FURI_LOG_D(TAG, "Skipping Block 0 (UID block)");
-                    continue;
-                } else if(mf_classic_is_sector_trailer(i)) {
-                    FURI_LOG_D(TAG, "Skipping trailer block %zu", i);
-                    continue;
-                } else {
-                    if(memcmp(
-                           app->mf_classic_data->block[i].data,
-                           app->target_data->block[i].data,
-                           16) != 0) {
-                        data_match = false;
-                        different_blocks++;
-                        verify_tracker.blocks_different++;
-                        FURI_LOG_W(TAG, "Block %zu differs", i);
-                    }
-                }
-            }
-
-            if(data_match && different_blocks == 0) {
-                // SUCCESS
-                notification_message(app->notifications, &sequence_success);
-
-                // RESET COMPLETO prima di mostrare popup
-                text_box_reset(app->text_box_report);
-                dialog_ex_reset(app->dialog_ex);
-
-                popup_reset(app->popup);
-                popup_set_header(app->popup, "SUCCESS!", 64, 4, AlignCenter, AlignTop);
-                popup_set_text(
-                    app->popup, "All data matches!\n\nPress Back", 64, 20, AlignCenter, AlignTop);
-                popup_set_icon(app->popup, 32, 28, &I_DolphinSuccess_91x55);
-                view_dispatcher_switch_to_view(app->view_dispatcher, MiBandNfcViewIdScanner);
-                furi_delay_ms(3000);
-                scene_manager_search_and_switch_to_another_scene(
-                    app->scene_manager, MiBandNfcSceneMainMenu);
-
-                if(app->logger) {
-                    miband_logger_log(
-                        app->logger, LogLevelInfo, "Verify successful: all blocks match");
-                }
-            } else {
-                // DIFFERENCES FOUND
-                notification_message(app->notifications, &sequence_blink_stop);
-                notification_message(app->notifications, &sequence_error);
-                if(app->logger) {
-                    miband_logger_log(
-                        app->logger,
-                        LogLevelWarning,
-                        "Verify failed: %d blocks differ",
-                        different_blocks);
-                }
-                // RESET TUTTO PRIMA del dialog
-                popup_reset(app->popup);
-                text_box_reset(app->text_box_report);
-
-                dialog_ex_reset(app->dialog_ex);
-                dialog_ex_set_header(
-                    app->dialog_ex, "Differences Found", 64, 0, AlignCenter, AlignTop);
-
-                FuriString* msg =
-                    furi_string_alloc_printf("%d data blocks\ndiffer from dump", different_blocks);
-                dialog_ex_set_text(
-                    app->dialog_ex, furi_string_get_cstr(msg), 64, 28, AlignCenter, AlignCenter);
-                furi_string_free(msg);
-
-                dialog_ex_set_left_button_text(app->dialog_ex, "Exit");
-                dialog_ex_set_right_button_text(app->dialog_ex, "Details");
-                dialog_ex_set_icon(app->dialog_ex, 0, 0, NULL);
-                dialog_ex_set_result_callback(app->dialog_ex, verify_dialog_callback);
-                dialog_ex_set_context(app->dialog_ex, app);
-
-                view_dispatcher_switch_to_view(app->view_dispatcher, MiBandNfcViewIdDialog);
-            }
-
-            consumed = true;
             break;
 
         case MiBandNfcCustomEventVerifyExit:
-            // User sceglie Exit/Back
             scene_manager_search_and_switch_to_another_scene(
                 app->scene_manager, MiBandNfcSceneMainMenu);
             consumed = true;
             break;
 
         case MiBandNfcCustomEventVerifyViewDetails:
-            // User sceglie View Details - vai al diff viewer
             scene_manager_next_scene(app->scene_manager, MiBandNfcSceneDiffViewer);
             consumed = true;
             break;
 
-        case MiBandNfcCustomEventPollerFailed:
-            notification_message(app->notifications, &sequence_error);
-            furi_string_set_str(verify_tracker.error_details, "Card detection failed");
-            update_verify_ui(app, "Detection Failed");
-            furi_delay_ms(2000);
-            scene_manager_search_and_switch_to_another_scene(
-                app->scene_manager, MiBandNfcSceneMainMenu);
-            consumed = true;
+        default:
             break;
         }
     } else if(event.type == SceneManagerEventTypeBack) {
-        scene_manager_search_and_switch_to_another_scene(
-            app->scene_manager, MiBandNfcSceneMainMenu);
+        // User pressed Back - cancel card detection, return to previous scene
+        if(app->scanner) {
+            nfc_scanner_stop(app->scanner);
+            nfc_scanner_free(app->scanner);
+            app->scanner = NULL;
+        }
+        app->is_scan_active = false;
+        scene_manager_previous_scene(app->scene_manager);
         consumed = true;
     }
 
@@ -709,20 +689,22 @@ bool miband_nfc_scene_verify_on_event(void* context, SceneManagerEvent event) {
 
 /**
  * @brief Scene exit handler
- * 
+ *
  * Cleans up resources and stops notifications.
- * 
+ *
  * @param context Pointer to MiBandNfcApp instance
  */
 void miband_nfc_scene_verify_on_exit(void* context) {
     furi_assert(context);
     MiBandNfcApp* app = context;
 
-    if(app->poller) {
-        nfc_poller_stop(app->poller);
-        nfc_poller_free(app->poller);
-        app->poller = NULL;
+    // Safety: stop scanner if still running
+    if(app->scanner) {
+        nfc_scanner_stop(app->scanner);
+        nfc_scanner_free(app->scanner);
+        app->scanner = NULL;
     }
+    app->is_scan_active = false;
 
     if(verify_tracker.current_operation) {
         furi_string_free(verify_tracker.current_operation);

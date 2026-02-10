@@ -7,6 +7,8 @@
 
 #define TAG "MiBandNfc"
 
+static void miband_nfc_app_free(MiBandNfcApp* app);
+
 bool miband_nfc_app_custom_event_callback(void* context, uint32_t event) {
     furi_assert(context);
     MiBandNfcApp* app = context;
@@ -90,19 +92,13 @@ static MiBandNfcApp* miband_nfc_app_alloc() {
     app->last_selected_submenu_index = SubmenuIndexQuickUidCheck;
     app->current_operation = OperationTypeEmulateMagic;
 
-    // FIX: Controllo allocazione logger
     app->logger = miband_logger_alloc(app->storage);
     if(!app->logger) {
-        FURI_LOG_W(TAG, "Failed to allocate logger, cleaning up partial allocations");
-
-        if(app->temp_text_buffer) furi_string_free(app->temp_text_buffer);
-        if(app->file_path) furi_string_free(app->file_path);
-        if(app->mf_classic_data) mf_classic_free(app->mf_classic_data);
-        if(app->target_data) mf_classic_free(app->target_data);
-        if(app->nfc_device) nfc_device_free(app->nfc_device);
-        if(app->nfc) nfc_free(app->nfc);
-
-        goto error;
+        FURI_LOG_W(TAG, "Failed to allocate logger, cleaning up");
+        // FIX: Use miband_nfc_app_free for complete cleanup instead of
+        // partial manual cleanup that missed GUI views (submenu, popup, etc.)
+        miband_nfc_app_free(app);
+        return NULL;
     }
 
     if(!miband_settings_load(app)) {
@@ -113,20 +109,14 @@ static MiBandNfcApp* miband_nfc_app_alloc() {
         FURI_LOG_I(TAG, "Using default settings");
     }
 
-    if(app->logger) {
-        miband_logger_set_enabled(app->logger, app->enable_logging);
-        miband_logger_log(app->logger, LogLevelInfo, "Application started");
-    }
+    miband_logger_set_enabled(app->logger, app->enable_logging);
+    miband_logger_log(app->logger, LogLevelInfo, "Application started");
 
     return app;
 
 error:
-    // FIX: Cleanup parziale in caso di errore
-    if(app->dialogs) furi_record_close(RECORD_DIALOGS);
-    if(app->storage) furi_record_close(RECORD_STORAGE);
-    if(app->notifications) furi_record_close(RECORD_NOTIFICATION);
-    if(app->gui) furi_record_close(RECORD_GUI);
-    free(app);
+    // FIX: Use miband_nfc_app_free for complete cleanup
+    miband_nfc_app_free(app);
     return NULL;
 }
 

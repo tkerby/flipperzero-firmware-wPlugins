@@ -3,7 +3,7 @@ App(
     name="Mi Band NFC",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="miband_nfc_app",
-    stack_size=4 * 1024,  # Aumento stack
+    stack_size=8 * 1024,  # 8KB: necessario per NFC sync ops + file I/O + report generation
     fap_category="NFC",
     fap_description="NFC writer for Mi Band with 0xFF keys",
     fap_author="Luca Tomei",

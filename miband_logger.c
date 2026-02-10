@@ -119,7 +119,8 @@ bool miband_logger_export(MiBandLogger* logger, const char* filename) {
                              "================================\n\n";
         storage_file_write(file, header, strlen(header));
 
-        // Write each entry
+        // FIX: Reuse a single FuriString instead of alloc/free per entry
+        FuriString* line = furi_string_alloc();
         for(size_t i = 0; i < logger->count; i++) {
             LogEntry* entry = &logger->entries[i];
 
@@ -142,7 +143,8 @@ bool miband_logger_export(MiBandLogger* logger, const char* filename) {
                 break;
             }
 
-            FuriString* line = furi_string_alloc_printf(
+            furi_string_printf(
+                line,
                 "%04d-%02d-%02d %02d:%02d:%02d [%s] %s\n",
                 entry->timestamp.year,
                 entry->timestamp.month,
@@ -154,8 +156,8 @@ bool miband_logger_export(MiBandLogger* logger, const char* filename) {
                 entry->message);
 
             storage_file_write(file, furi_string_get_cstr(line), furi_string_size(line));
-            furi_string_free(line);
         }
+        furi_string_free(line);
 
         storage_file_close(file);
         success = true;
