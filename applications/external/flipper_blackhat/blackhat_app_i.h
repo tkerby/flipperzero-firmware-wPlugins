@@ -9,20 +9,21 @@
 #include <gui/modules/text_input.h>
 #include <gui/modules/variable_item_list.h>
 #include <gui/scene_manager.h>
+#include <gui/view.h>
 #include <gui/view_dispatcher.h>
 #include <gui/view_stack.h>
 #include <input/input.h>
 #include <notification/notification.h>
 #include <notification/notification_messages.h>
 #include <stdio.h>
+#include <cfw/cfw.h>
 
 #include "blackhat_app.h"
 #include "blackhat_custom_event.h"
 #include "blackhat_uart.h"
 #include "scenes/blackhat_scene.h"
-#include <cfw/cfw.h>
 
-#define NUM_MENU_ITEMS (19)
+#define NUM_MENU_ITEMS (20)
 
 #define BLACKHAT_TEXT_BOX_STORE_SIZE (4096)
 #define UART_CH                      cfw_settings.uart_esp_channel
@@ -47,6 +48,7 @@
 #define TEST_INET          "bh test_inet"
 #define GET_CMD            "bh get"
 #define REBOOT_CMD         "reboot"
+#define BHTUI_CMD          "TERM=linux bhtui > /dev/tty1 2>&1"
 
 typedef enum {
     NO_ARGS = 0,
@@ -93,6 +95,7 @@ struct BlackhatApp {
     VariableItemList* var_item_list;
     BlackhatUart* uart;
     TextInput* text_input;
+    View* tui_view;
     DialogsApp* dialogs;
 
     int selected_menu_index;
@@ -111,4 +114,5 @@ typedef enum {
     BlackhatAppViewConsoleOutput,
     BlackhatAppViewStartPortal,
     BlackhatAppViewTextInput,
+    BlackhatAppViewTui,
 } BlackhatAppView;
