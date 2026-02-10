@@ -132,6 +132,8 @@ static uint16_t bfs_tile_clear(
     const uint16_t x,
     const uint16_t y);
 
+static void mine_sweeper_game_screen_normalize_board_size(uint8_t* width, uint8_t* height);
+
 static void mine_sweeper_game_screen_set_board_information(
     MineSweeperGameScreen* instance,
     const uint8_t width,
@@ -202,6 +204,8 @@ static void setup_board(MineSweeperGameScreen* instance) {
             board_difficulty = model->board_difficulty;
         },
         false);
+
+    furi_assert(board_tile_count <= MINESWEEPER_BOARD_MAX_TILES);
 
     uint16_t num_mines = board_tile_count * difficulty_multiplier[board_difficulty];
 
@@ -287,7 +291,7 @@ static void setup_board(MineSweeperGameScreen* instance) {
             model->is_restart_triggered = false;
             model->has_lost_game = false;
         },
-        true);
+        false);
 }
 
 /**
@@ -311,6 +315,7 @@ static bool check_board_with_verifier(
     point_set_init(visited);
 
     bool is_solvable = false;
+    bool has_invalid_flag_deduction = false;
 
     // Point_t pos will be used to keep track of the current point
     Point_t pos;
@@ -325,7 +330,7 @@ static bool check_board_with_verifier(
     bfs_tile_clear_verifier(board, board_width, board_height, 0, 0, &deq, &visited);
 
     //While we have valid edges to check and have not solved the board
-    while(!is_solvable && point_deq_size(deq) > 0) {
+    while(!is_solvable && !has_invalid_flag_deduction && point_deq_size(deq) > 0) {
         bool is_stuck =
             true; // This variable will track if any flag was placed for any edge to see if we are stuck
 
@@ -390,7 +395,7 @@ static bool check_board_with_verifier(
 
             } else if(num_surrounding_tiles == tile_num) {
                 // If the number of surrounding tiles is the tile num it is unambiguous so we place a flag on those tiles,
-                // decrement the mine count appropriately and check win condition, and then mark stuck as false
+                // decrement the mine count per newly flagged tile and check win condition.
 
                 for(uint8_t j = 0; j < 8; j++) {
                     const int16_t dx = curr_pos.x + (int16_t)offsets[j][0];
@@ -402,11 +407,20 @@ static bool check_board_with_verifier(
 
                     const uint16_t pos_1d = dx * board_width + dy;
                     if(board[pos_1d].tile_state == MineSweeperGameScreenTileStateUncleared) {
+                        if(board[pos_1d].tile_type != MineSweeperGameScreenTileMine ||
+                           total_mines == 0) {
+                            has_invalid_flag_deduction = true;
+                            break;
+                        }
+
                         board[pos_1d].tile_state = MineSweeperGameScreenTileStateFlagged;
+                        total_mines--;
                     }
                 }
 
-                total_mines -= (num_surrounding_tiles - num_flagged_tiles);
+                if(has_invalid_flag_deduction) {
+                    break;
+                }
 
                 if(total_mines == 0) is_solvable = true;
 
@@ -601,6 +615,38 @@ static uint16_t bfs_tile_clear(
     return ret;
 }
 
+static void mine_sweeper_game_screen_normalize_board_size(uint8_t* width, uint8_t* height) {
+    furi_assert(width);
+    furi_assert(height);
+
+    const uint8_t min_width = MINESWEEPER_SCREEN_TILE_WIDTH;
+    const uint8_t min_height = MINESWEEPER_SCREEN_TILE_HEIGHT;
+    const uint8_t max_width = MINESWEEPER_BOARD_MAX_TILES / min_height;
+    const uint8_t max_height = MINESWEEPER_BOARD_MAX_TILES / min_width;
+
+    if(*width < min_width) {
+        *width = min_width;
+    } else if(*width > max_width) {
+        *width = max_width;
+    }
+
+    if(*height < min_height) {
+        *height = min_height;
+    } else if(*height > max_height) {
+        *height = max_height;
+    }
+
+    while(((uint16_t)(*width) * (uint16_t)(*height)) > MINESWEEPER_BOARD_MAX_TILES) {
+        if(*width >= *height && *width > min_width) {
+            (*width)--;
+        } else if(*height > min_height) {
+            (*height)--;
+        } else {
+            break;
+        }
+    }
+}
+
 static void mine_sweeper_game_screen_set_board_information(
     MineSweeperGameScreen* instance,
     uint8_t width,
@@ -609,19 +655,7 @@ static void mine_sweeper_game_screen_set_board_information(
     bool is_solvable) {
     furi_assert(instance);
 
-    // These are the min/max values that can actually be set
-    if(width > 146) {
-        width = 146;
-    }
-    if(width < 16) {
-        width = 16;
-    }
-    if(height > 64) {
-        height = 64;
-    }
-    if(height < 7) {
-        height = 7;
-    }
+    mine_sweeper_game_screen_normalize_board_size(&width, &height);
     if(difficulty > 2) {
         difficulty = 2;
     }
@@ -635,7 +669,7 @@ static void mine_sweeper_game_screen_set_board_information(
             model->board_difficulty = difficulty;
             model->ensure_solvable_board = is_solvable;
         },
-        true);
+        false);
 }
 
 // THIS FUNCTION CAN TRIGGER THE LOSE CONDITION
@@ -650,11 +684,13 @@ static bool try_clear_surrounding_tiles(MineSweeperGameScreenModel* model) {
 
     MineSweeperTile tile = model->board[curr_pos_1d];
 
-    // Return false if tile is zero tile or not cleared
+    // Chord-clear is valid only on revealed number tiles.
     if(tile.tile_state != MineSweeperGameScreenTileStateCleared ||
-       tile.tile_type == MineSweeperGameScreenTileZero) {
+       !mine_sweeper_tile_type_is_number(tile.tile_type)) {
         return false;
     }
+
+    uint8_t tile_num = (uint8_t)tile.tile_type - (uint8_t)MineSweeperGameScreenTileZero;
 
     uint8_t num_surrounding_flagged = 0;
     bool was_mine_found = false;
@@ -679,7 +715,7 @@ static bool try_clear_surrounding_tiles(MineSweeperGameScreenModel* model) {
     }
 
     // We clear surrounding tile
-    if(num_surrounding_flagged >= tile.tile_type - 1) {
+    if(num_surrounding_flagged == tile_num) {
         if(was_mine_found) is_lose_condition_triggered = true;
 
         for(uint8_t j = 0; j < 8; j++) {
@@ -1332,6 +1368,11 @@ static bool mine_sweeper_game_screen_view_end_input_callback(InputEvent* event, 
 
     MineSweeperGameScreen* instance = context;
     bool consumed = false;
+    bool should_reset = false;
+    uint8_t reset_width = 0;
+    uint8_t reset_height = 0;
+    uint8_t reset_difficulty = 0;
+    bool reset_ensure_solvable = false;
 
     with_view_model(
         instance->view,
@@ -1354,16 +1395,12 @@ static bool mine_sweeper_game_screen_view_end_input_callback(InputEvent* event, 
             } else if(
                 !model->is_holding_down_button && model->is_restart_triggered &&
                 event->key == InputKeyOk) {
-                // After restart flagged is triggered this should also trigger and restart the game
-
-                mine_sweeper_led_reset(instance->context);
-
-                mine_sweeper_game_screen_reset(
-                    instance,
-                    model->board_width,
-                    model->board_height,
-                    model->board_difficulty,
-                    model->ensure_solvable_board);
+                // Trigger reset outside this with_view_model() scope to avoid nested model locking.
+                should_reset = true;
+                reset_width = model->board_width;
+                reset_height = model->board_height;
+                reset_difficulty = model->board_difficulty;
+                reset_ensure_solvable = model->ensure_solvable_board;
 
                 consumed = true;
 
@@ -1373,7 +1410,13 @@ static bool mine_sweeper_game_screen_view_end_input_callback(InputEvent* event, 
                 consumed = handle_player_move(instance, model, event, true);
             }
         },
-        false);
+        true);
+
+    if(should_reset) {
+        mine_sweeper_led_reset(instance->context);
+        mine_sweeper_game_screen_reset(
+            instance, reset_width, reset_height, reset_difficulty, reset_ensure_solvable);
+    }
 
     return consumed;
 }
@@ -1567,6 +1610,7 @@ void mine_sweeper_game_screen_reset(
         setup_board(instance);
 
         uint16_t num_mines = 1;
+        uint16_t board_tile_count = 0;
 
         uint16_t board_width = 16; //default values
         uint16_t board_height = 7; //default values
@@ -1578,12 +1622,13 @@ void mine_sweeper_game_screen_reset(
                 num_mines = model->mines_left;
                 board_width = model->board_width;
                 board_height = model->board_height;
+                board_tile_count = board_width * board_height;
+                furi_assert(board_tile_count <= MINESWEEPER_BOARD_MAX_TILES);
 
                 memset(board_t, 0, memsz);
-                memcpy(
-                    board_t, model->board, sizeof(MineSweeperTile) * (board_width * board_height));
+                memcpy(board_t, model->board, sizeof(MineSweeperTile) * board_tile_count);
             },
-            true);
+            false);
 
         if(ensure_solvable)
             is_valid_board =

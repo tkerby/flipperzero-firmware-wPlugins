@@ -58,10 +58,10 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Flipper Wedge v1.1 (By DangerousThings)](https://github.com/DangerousThings/flipper-wedge)
 - Added: [VK Thermo v1.0 (By VivoKey)](https://github.com/VivoKey/vkthermo-flipper)
 - Updated: [Mi Band NFC Writer v1.0 (By LucaTomei)](https://github.com/LucaTomei/flipper-miband-nfc-writer)
-- Updated: [Minesweeper Redux v1.6 (By squee72564)](https://github.com/squee72564/F0_Minesweeper_Fap)
 - Updated: [Prince Of Arabia v1.0.11 (By apfxtech)](https://github.com/apfxtech/FlipperPrinceOfArabia)
 - Updated: [NFC Comparator v2.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
 - Updated: [ProtoPirate v2.2 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
+- Updated: [Minesweeper Redux v1.6 (By squee72564)](https://github.com/squee72564/F0_Minesweeper_Fap)
 
 <a name="release"></a>
 
