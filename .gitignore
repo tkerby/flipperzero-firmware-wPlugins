@@ -1,8 +1,86 @@
-dist/*
-.vscode
-.clang-format
-.clangd
-.editorconfig
+####################################
+# Build / Output
+####################################
+dist/
+build/
+out/
+bin/
+*.elf
+*.bin
+*.hex
+*.map
+
+####################################
+# Flipper / ufbt
+####################################
+.ufbt/
+.fbt/
+.flipper/
+*.fap
+*.ufbt
+firmware/
+
+####################################
+# Python
+####################################
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
 .env
-.ufbt
+.env.*
+
+####################################
+# IDE / Editor
+####################################
+.vscode/
+.idea/
+*.swp
+*.swo
+*.bak
+
+####################################
+# Tooling / Config locali
+####################################
+.clangd
+.clang-format
+.editorconfig
+compile_commands.json
+
+####################################
+# OS files
+####################################
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+####################################
+# Logs / Temp
+####################################
+*.log
+*.tmp
+*.temp
+
+####################################
+# Git merge / patch / backup
+####################################
 merge*
+*.orig
+*.rej
+*.patch
+*.diff
+
+####################################
+# Archives
+####################################
+*.zip
+*.tar
+*.tar.gz
+*.7z
