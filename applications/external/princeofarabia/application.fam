@@ -16,6 +16,6 @@ App(
     fap_category="Games",
     fap_author="apfxtech",
     fap_weburl="https://github.com/apfxtech/FlipperPrinceOfArabia",
-    fap_version="1.0.8",
+    fap_version="1.0.11",
     fap_description="Escape the dungeons and free the princess!",
 )

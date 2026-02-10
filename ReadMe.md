@@ -48,7 +48,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Key Copier v1.5 (By zinongli)](https://github.com/zinongli/KeyCopier) [Add Schlage Everest 29 Key Profile (By RJohnson2106)](https://github.com/zinongli/KeyCopier/pull/39)
 - Updated: [Quac! v0.9.1 (By rdefeo)](https://github.com/rdefeo/quac) [Support for HID iClass (Picopass files) (By lilgangus)](https://github.com/rdefeo/quac/pull/24)
 - [ESP Flasher: Bump Marauder v1.10.2 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.10.2)
-- Updated: [NFC Comparator v2.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
 - Added: [Ardudrivin v1.0.2 (By apfxtech)](https://github.com/apfxtech/FlipperDrivin)
 - Added: [ATM Player v1.0.7 (By apfxtech)](https://github.com/apfxtech/FlipperATM)
 - Added: [Pause Timer v1.0 (By Matt-London)](https://github.com/Matt-London/pause_timer)
@@ -61,7 +60,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [ProtoPirate v2.2 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - Updated: [Mi Band NFC Writer v1.0 (By LucaTomei)](https://github.com/LucaTomei/flipper-miband-nfc-writer)
 - Updated: [Minesweeper Redux v1.6 (By squee72564)](https://github.com/squee72564/F0_Minesweeper_Fap)
-- Updated: [Prince Of Arabia v1.0.8 (By apfxtech)](https://github.com/apfxtech/FlipperPrinceOfArabia)
+- Updated: [Prince Of Arabia v1.0.11 (By apfxtech)](https://github.com/apfxtech/FlipperPrinceOfArabia)
+- Updated: [NFC Comparator v2.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
 
 <a name="release"></a>
 
@@ -379,7 +379,7 @@ $ ./fbt dolphin_ext
 - [Pinball0 v0.5.2 (By rdefeo)](https://github.com/rdefeo/pinball0)
 - [Pocket Battle+ v2.0 (By HermeticCode)](https://github.com/HermeticCode/showdown-current)
 - [Pong v1.3 (By nmrr)](https://github.com/nmrr/flipperzero-pong)
-- [Prince Of Arabia v1.0.8 (By apfxtech)](https://github.com/apfxtech/FlipperPrinceOfArabia)
+- [Prince Of Arabia v1.0.11 (By apfxtech)](https://github.com/apfxtech/FlipperPrinceOfArabia)
 - [Puck Girl v0.3 (By fgreil)](https://github.com/fgreil/mitzi-puck)
 - [Quadrastic v1.0.2 (By ivanbarsukov)](https://github.com/ivanbarsukov/flipperzero-quadrastic)
 - [Questions v1.1 (By nikilark)](https://github.com/nikilark/flipper_questions)
