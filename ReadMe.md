@@ -64,8 +64,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [ProtoPirate v2.3 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - Updated: [Wolfenduino v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperWolfenstein)
 - Updated: [Mystic Balloon v2.0 (By apfxtech)](https://github.com/apfxtech/FlipperMysticBalloon)
-- Updated: [ATM Player v1.0.8 (By apfxtech)](https://github.com/apfxtech/FlipperATM) Compiled Images Location Fix (By xMasterX)
 - Updated: [USB HID Autofire v0.7 (By pbek)](https://github.com/pbek/usb_hid_autofire)
+- Updated: [ATM Player v1.0.8 (By apfxtech)](https://github.com/apfxtech/FlipperATM) Added Cruel Angels Thesis sample
 
 <a name="release"></a>
 
