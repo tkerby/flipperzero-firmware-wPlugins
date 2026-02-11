@@ -52,7 +52,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [ATM Player v1.0.7 (By apfxtech)](https://github.com/apfxtech/FlipperATM)
 - Added: [Pause Timer v1.0 (By Matt-London)](https://github.com/Matt-London/pause_timer)
 - Updated: [INA Meter v0.2 (By cepetr)](https://github.com/cepetr/flipper-tina)
-- Updated: [ATM Player v1.0.7 (By apfxtech)](https://github.com/apfxtech/FlipperATM) Compiled Images Location Fix (By xMasterX)
 - Added: [Prince Of Arabia v1.0.8 (By apfxtech)](https://github.com/apfxtech/FlipperPrinceOfArabia)
 - Added: [Bad Duck3 v1.1 (By dutchpatriot)](https://github.com/dutchpatriot/all-the-plugins/tree/833335354aa46fe605b494c1b3bf11afb5b362f9/non_catalog_apps/bad_duck3)
 - Updated: [Flipper Wedge v1.1 (By DangerousThings)](https://github.com/DangerousThings/flipper-wedge)
@@ -65,6 +64,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [ProtoPirate v2.3 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
 - Updated: [Wolfenduino v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperWolfenstein)
 - Updated: [Mystic Balloon v2.0 (By apfxtech)](https://github.com/apfxtech/FlipperMysticBalloon)
+- Updated: [ATM Player v1.0.8 (By apfxtech)](https://github.com/apfxtech/FlipperATM) Compiled Images Location Fix (By xMasterX)
 
 <a name="release"></a>
 
@@ -443,7 +443,7 @@ $ ./fbt dolphin_ext
 - [Anki Remote v1.3 (By Blue5GD)](https://github.com/Blue5GD/Anki-Remote)
 - [ASCII Table v1.0 (By x10102)](https://github.com/x10102/flipper_ascii)
 - [Atari SIO Emulator v0.5 (By cepetr)](https://github.com/cepetr/sio2flip)
-- [ATM Player v1.0.7 (By apfxtech)](https://github.com/apfxtech/FlipperATM)
+- [ATM Player v1.0.8 (By apfxtech)](https://github.com/apfxtech/FlipperATM)
 - [Atomic Dice Roller v1.1 (By nmrr)](https://github.com/nmrr/flipperzero-atomicdiceroller)
 - [Authenticator/TOTP v5.19.0 (By akopachov)](https://github.com/akopachov/flipper-zero_authenticator)
 - [AVR Flasher v1.5 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2475)
