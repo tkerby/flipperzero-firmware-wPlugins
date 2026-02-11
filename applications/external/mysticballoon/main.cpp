@@ -104,7 +104,6 @@ static void input_events_callback(const void* value, void* ctx) {
 static void game_setup() {
     arduboy.boot();
     arduboy.audio.begin();
-    arduboy.bootLogoSpritesSelfMasked();
     arduboy.setFrameRate(TARGET_FRAMERATE);
     loadSetEEPROM();
     arduboy.pollButtons();
@@ -114,21 +113,89 @@ static void game_setup() {
 }
 
 static uint8_t exit_hold_frames = 0;
+static bool menu_exit_requires_release = false;
+
+static bool has_visible_enemy_on_screen() {
+    const int16_t view_left = cam.pos.x;
+    const int16_t view_top = cam.pos.y;
+    const int16_t view_right = cam.pos.x + DISPLAY_WIDTH - 1;
+    const int16_t view_bottom = cam.pos.y + DISPLAY_HEIGHT - 1;
+
+    for(uint8_t i = 0; i < MAX_PER_TYPE; ++i) {
+        if(!walkers[i].active || walkers[i].HP <= 0) continue;
+
+        const int16_t enemy_left = walkers[i].pos.x;
+        const int16_t enemy_top = walkers[i].pos.y;
+        const int16_t enemy_right = walkers[i].pos.x + 7;
+        const int16_t enemy_bottom = walkers[i].pos.y + 7;
+
+        const bool intersects =
+            !(enemy_left > view_right || enemy_right < view_left || enemy_top > view_bottom ||
+              enemy_bottom < view_top);
+        if(intersects) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 static void game_loop_tick() {
     arduboy.pollButtons();
     if(!(arduboy.nextFrame())) return;
 
-    if(gameState < 6) {
-        if(arduboy.pressed(A_BUTTON)) {
+    const bool menu_state = (gameState < STATE_GAME_NEXT_LEVEL);
+    const bool in_game_state = !menu_state;
+    const bool a_pressed = arduboy.pressed(A_BUTTON);
+
+    bool can_hold_to_exit = menu_state;
+    bool hold_action_exits_app = menu_state;
+
+    if(gameState == STATE_GAME_PLAYING) {
+        const bool enemy_visible = has_visible_enemy_on_screen();
+        if(kid.isSucking) {
+            can_hold_to_exit = false;
+            hold_action_exits_app = false;
+        } else if(!enemy_visible) {
+            can_hold_to_exit = true;
+            hold_action_exits_app = false;
+        } else {
+            can_hold_to_exit = false;
+            hold_action_exits_app = false;
+        }
+    } else if(in_game_state) {
+        can_hold_to_exit = true;
+        hold_action_exits_app = false;
+    }
+
+    if(menu_state && menu_exit_requires_release) {
+        if(!a_pressed) {
+            menu_exit_requires_release = false;
+        } else {
+            can_hold_to_exit = false;
+            hold_action_exits_app = true;
+        }
+    }
+
+    if(can_hold_to_exit) {
+        if(a_pressed) {
             if(exit_hold_frames < HOLD_TO_EXIT_FRAMES) {
                 exit_hold_frames++;
             } else {
                 EEPROM.commit();
-                if(g_state) g_state->exit_requested = true;
+                if(hold_action_exits_app) {
+                    if(g_state) g_state->exit_requested = true;
+                } else {
+                    gameState = STATE_MENU_MAIN;
+                    menu_exit_requires_release = true;
+                }
+                exit_hold_frames = 0;
             }
         } else {
             exit_hold_frames = 0;
         }
+    } else {
+        exit_hold_frames = 0;
     }
 
     if(gameState < STATE_GAME_NEXT_LEVEL && arduboy.everyXFrames(10)) {

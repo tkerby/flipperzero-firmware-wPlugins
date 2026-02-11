@@ -4,8 +4,34 @@
 #include "../lib/Arduino.h"
 #include "globals.h"
 #include "player.h"
+#include "enemies.h"
 
 #define TIMER_AMOUNT 48
+
+static bool attack_hold_latched = false;
+
+static bool isWalkerVisibleForAttack() {
+    const int16_t view_left = cam.pos.x;
+    const int16_t view_top = cam.pos.y;
+    const int16_t view_right = cam.pos.x + 127;
+    const int16_t view_bottom = cam.pos.y + 63;
+
+    for(byte i = 0; i < MAX_PER_TYPE; ++i) {
+        if(!walkers[i].active || walkers[i].HP <= 0) continue;
+
+        const int16_t enemy_left = walkers[i].pos.x;
+        const int16_t enemy_top = walkers[i].pos.y;
+        const int16_t enemy_right = walkers[i].pos.x + 7;
+        const int16_t enemy_bottom = walkers[i].pos.y + 7;
+
+        const bool intersects =
+            !(enemy_left > view_right || enemy_right < view_left || enemy_top > view_bottom ||
+              enemy_bottom < view_top);
+        if(intersects) return true;
+    }
+
+    return false;
+}
 
 void checkInputs() {
     if(kid.balloons <= 0) return; // Cannot control player if dead
@@ -47,13 +73,15 @@ void checkInputs() {
         }
     }
     kid.isSucking = false;
+    if(!arduboy.pressed(A_BUTTON)) attack_hold_latched = false;
+
     if(arduboy.pressed(A_BUTTON)) {
         if(arduboy.pressed(DOWN_BUTTON))
             gameState = STATE_MENU_INTRO;
-        else //if (!kid.isBalloon)
-        {
+        else if(isWalkerVisibleForAttack() || attack_hold_latched) {
             kid.isBalloon = false;
             kid.isSucking = true;
+            attack_hold_latched = true;
         }
     }
     /*if (arduboy.pressed(A_BUTTON + DOWN_BUTTON))  gameState = STATE_GAME_PAUSE;

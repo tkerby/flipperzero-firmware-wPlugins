@@ -15,6 +15,7 @@
 byte blinkingFrames = 0;
 byte sparkleFrames = 0;
 byte cont = 0;
+byte helpFrames = 0;
 
 extern void drawNumbers(byte numbersX, byte numbersY, byte fontType, byte data);
 
@@ -53,6 +54,7 @@ void stateMenuMain() {
         sound.tone(300, 20);
     }
     if(arduboy.justPressed(A_BUTTON | B_BUTTON)) {
+        if(menuSelection == STATE_MENU_HELP) helpFrames = 0;
         gameState = menuSelection;
         sound.tone(425, 20);
     }
@@ -60,7 +62,15 @@ void stateMenuMain() {
 }
 
 void stateMenuHelp() {
+    if(helpFrames < 50) {
+        sprites.drawSelfMasked(34, 4, T_arg, 0);
+        helpFrames++;
+    } else {
+        sprites.drawSelfMasked(43, 10, badgeMysticBalloon, 0);
+        sprites.drawSelfMasked(40, 38, madeBy, 0);
+    }
     if(arduboy.justPressed(A_BUTTON | B_BUTTON)) {
+        helpFrames = 0;
         gameState = STATE_MENU_MAIN;
         sound.tone(425, 20);
     }

@@ -58,8 +58,8 @@ extern "C" {
 #define ARDUBOY_UNIT_NAME_LEN         6
 #define ARDUBOY_UNIT_NAME_BUFFER_SIZE (ARDUBOY_UNIT_NAME_LEN + 1)
 #define EEPROM_STORAGE_SPACE_START    16
-#define BLACK                         0
-#define WHITE                         1
+#define BLACK                         1
+#define WHITE                         0
 #define INVERT                        2
 #define CLEAR_BUFFER                  true
 
