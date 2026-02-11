@@ -63,6 +63,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Minesweeper Redux v1.6 (By squee72564)](https://github.com/squee72564/F0_Minesweeper_Fap)
 - Updated: [Flipper Blackhat v0.4.1 (By o7-machinehum)](https://github.com/o7-machinehum/flipper-blackhat-app) `Req: Blackhat Board` with [Blackhat OS](https://github.com/o7-machinehum/flipper-blackhat-os)
 - Updated: [ProtoPirate v2.3 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
+- Updated: [Wolfenduino v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperWolfenstein)
 
 <a name="release"></a>
 
