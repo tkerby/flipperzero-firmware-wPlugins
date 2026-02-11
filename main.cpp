@@ -88,6 +88,7 @@ static void framebuffer_commit_callback(
 }
 
 static uint8_t exit_hold_frames = 0;
+static bool exit_hold_cancelled = false;
 extern "C" int32_t arduboy_app(void* p) {
     UNUSED(p);
 
@@ -155,22 +156,31 @@ extern "C" int32_t arduboy_app(void* p) {
                 Platform.update();
                 const uint8_t in = Platform.readInput();
                 const bool inGame = engine.inGame();
-                const bool exitComboMenu = (in & Input_Btn_A);
-                const bool exitComboGame = ((in & Input_Btn_A) && (in & Input_Dpad_Down));
-                const bool exitCombo = inGame ? exitComboGame : exitComboMenu;
-                if(exitCombo) {
-                    if(exit_hold_frames < HOLD_TO_EXIT_FRAMES) exit_hold_frames++;
-                    if(exit_hold_frames >= HOLD_TO_EXIT_FRAMES) {
-                        exit_hold_frames = 0;
+                const bool backHeld = (in & Input_Btn_A);
+                const bool strafeHeld =
+                    inGame && backHeld && ((in & Input_Dpad_Left) || (in & Input_Dpad_Right));
 
-                        if(inGame) {
-                            engine.exitToMenu(); 
-                        } else {
-                            g_state->exit_requested = true; 
+                if(!backHeld) {
+                    exit_hold_frames = 0;
+                    exit_hold_cancelled = false;
+                } else if(strafeHeld) {
+                    // Cancel hold-to-exit once user starts strafing while holding Back.
+                    exit_hold_frames = 0;
+                    exit_hold_cancelled = true;
+                } else {
+                    if(!exit_hold_cancelled) {
+                        if(exit_hold_frames < HOLD_TO_EXIT_FRAMES) exit_hold_frames++;
+                        if(exit_hold_frames >= HOLD_TO_EXIT_FRAMES) {
+                            exit_hold_frames = 0;
+                            if(inGame) {
+                                engine.exitToMenu();
+                                // Require releasing Back before starting a new hold action in menu.
+                                exit_hold_cancelled = true;
+                            } else {
+                                arduboy.exitToBootloader();
+                            }
                         }
                     }
-                } else {
-                    exit_hold_frames = 0;
                 }
 
                 while(tickAccum > frameDuration) {
