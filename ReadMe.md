@@ -65,7 +65,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Mystic Balloon v2.0 (By apfxtech)](https://github.com/apfxtech/FlipperMysticBalloon)
 - Updated: [USB HID Autofire v0.7 (By pbek)](https://github.com/pbek/usb_hid_autofire)
 - Updated: [ATM Player v1.0.8 (By apfxtech)](https://github.com/apfxtech/FlipperATM) Added Cruel Angels Thesis sample
-- Updated: [ProtoPirate v2.3 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
+- Updated: [ProtoPirate v2.3 (By RocketGod-git)](https://protopirate.net/ProtoPirate/ProtoPirate)
 
 <a name="release"></a>
 
@@ -746,7 +746,7 @@ $ ./fbt dolphin_ext
 - [Postman v0.1 (By MassivDash)](https://github.com/MassivDash/flipper-postman) `Req: ESP32` with [Postman Firmware](https://github.com/MassivDash/flipper-postman-esp32s2)
 - [Programmer Calculator v0.9.2 (By armixz)](https://github.com/armixz/Flipper-Zero-Programmer-Calculator)
 - [Protocol Visualizer v1.3 (By antirez)](https://github.com/antirez/protoview)
-- [ProtoPirate v2.3 (By RocketGod-git)](https://github.com/RocketGod-git/ProtoPirate)
+- [ProtoPirate v2.3 (By RocketGod-git)](https://protopirate.net/ProtoPirate/ProtoPirate)
 - [QR Code v2.1.4 (By bmatcuk)](https://github.com/bmatcuk/flipperzero-qrcode)
 - [QRCode Generator v0.1 (By qw3rtty)](https://github.com/qw3rtty/flipperzero-qrcode-generator)
 - [Quac! v0.9.1 (By rdefeo)](https://github.com/rdefeo/quac)
