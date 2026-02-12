@@ -509,7 +509,6 @@ static uint32_t ldtoypad_scene_emulate_navigation_submenu_callback(void* context
     return ViewSubmenu;
 }
 
-
 static bool ldtoypad_scene_emulate_custom_event_callback(uint32_t event, void* context) {
     LDToyPadSceneEmulate* scene = (LDToyPadSceneEmulate*)context;
     switch(event) {
