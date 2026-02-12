@@ -31,6 +31,37 @@ typedef struct {
     StartScreenDrawCallback secondary_draw_callback;
 } StartScreenModel;
 
+static void start_screen_text_element_set_default(TextElement* text) {
+    furi_assert(text);
+    text->x = 0;
+    text->y = 0;
+    text->text = NULL;
+    text->font = FontSecondary;
+    text->horizontal = AlignLeft;
+    text->vertical = AlignBottom;
+}
+
+static void start_screen_icon_animation_cleanup(IconElement* icon) {
+    furi_assert(icon);
+    if(icon->animation != NULL) {
+        icon_animation_stop(icon->animation);
+        icon_animation_free(icon->animation);
+        icon->animation = NULL;
+    }
+}
+
+static void start_screen_model_set_default(StartScreenModel* model) {
+    furi_assert(model);
+    start_screen_text_element_set_default(&model->text1);
+    start_screen_text_element_set_default(&model->text2);
+    start_screen_text_element_set_default(&model->text3);
+
+    model->icon.x = 0;
+    model->icon.y = 0;
+    model->icon.animation = NULL;
+    model->secondary_draw_callback = NULL;
+}
+
 void start_screen_view_enter(void* context) {
     furi_assert(context);
     StartScreen* start_screen = context;
@@ -111,14 +142,14 @@ void start_screen_view_draw_callback(Canvas* canvas, void* _model) {
 }
 
 bool start_screen_view_input_callback(InputEvent* event, void* context) {
+    furi_assert(event);
+    furi_assert(context);
     StartScreen* start_screen = context;
     bool consumed = false;
 
     // If custom input callback is defined pass event to it
     if(start_screen->input_callback != NULL) {
         consumed = start_screen->input_callback(event, start_screen->context);
-    } else {
-        // You can add default functionality here
     }
 
     return consumed;
@@ -129,6 +160,7 @@ StartScreen* start_screen_alloc() {
 
     start_screen->view = view_alloc();
 
+    start_screen->context = NULL;
     start_screen->input_callback = NULL;
 
     view_set_context(start_screen->view, start_screen);
@@ -137,33 +169,7 @@ StartScreen* start_screen_alloc() {
     with_view_model(
         start_screen->view,
         StartScreenModel * model,
-        {
-            model->text1.x = 0;
-            model->text1.y = 0;
-            model->text1.text = NULL;
-            model->text1.font = FontSecondary;
-            model->text1.horizontal = AlignLeft;
-            model->text1.vertical = AlignBottom;
-
-            model->text2.x = 0;
-            model->text2.y = 0;
-            model->text2.text = NULL;
-            model->text2.font = FontSecondary;
-            model->text2.horizontal = AlignLeft;
-            model->text2.vertical = AlignBottom;
-
-            model->text3.x = 0;
-            model->text3.y = 0;
-            model->text3.text = NULL;
-            model->text3.font = FontSecondary;
-            model->text3.horizontal = AlignLeft;
-            model->text3.vertical = AlignBottom;
-
-            model->icon.x = 0;
-            model->icon.y = 0;
-            model->icon.animation = NULL;
-            model->secondary_draw_callback = NULL;
-        },
+        { start_screen_model_set_default(model); },
         true);
 
     view_set_draw_callback(start_screen->view, start_screen_view_draw_callback);
@@ -182,13 +188,11 @@ void start_screen_free(StartScreen* instance) {
     with_view_model(
         instance->view,
         StartScreenModel * model,
-        {
-            if(model->icon.animation != NULL) icon_animation_free(model->icon.animation);
-
-            model->icon.animation = NULL;
-        },
+        { start_screen_icon_animation_cleanup(&model->icon); },
         false);
 
+    instance->context = NULL;
+    instance->input_callback = NULL;
     view_free(instance->view);
     free(instance);
 }
@@ -200,18 +204,12 @@ void start_screen_reset(StartScreen* instance) {
         instance->view,
         StartScreenModel * model,
         {
-            if(model->icon.animation != NULL) {
-                icon_animation_stop(model->icon.animation);
-                icon_animation_free(model->icon.animation);
-                model->icon.animation = NULL;
-            }
-            memset(&model->text1, 0, sizeof(model->text1));
-            memset(&model->text2, 0, sizeof(model->text2));
-            memset(&model->text3, 0, sizeof(model->text3));
-            model->secondary_draw_callback = NULL;
+            start_screen_icon_animation_cleanup(&model->icon);
+            start_screen_model_set_default(model);
         },
         false);
     instance->input_callback = NULL;
+    instance->context = NULL;
 }
 
 View* start_screen_get_view(StartScreen* instance) {
@@ -319,11 +317,7 @@ void start_screen_set_icon_animation(
         instance->view,
         StartScreenModel * model,
         {
-            if(model->icon.animation != NULL) {
-                icon_animation_stop(model->icon.animation);
-                icon_animation_free(model->icon.animation);
-                model->icon.animation = NULL;
-            }
+            start_screen_icon_animation_cleanup(&model->icon);
 
             model->icon.x = x;
             model->icon.y = y;

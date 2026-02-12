@@ -868,7 +868,7 @@ static void
         model->right_boundary = model->curr_pos.y_abs + MINESWEEPER_SCREEN_TILE_WIDTH;
     }
 
-    mine_sweeper_play_happy_bump(instance->context);
+    mine_sweeper_play_haptic_short(instance->context);
 }
 
 static void mine_sweeper_short_ok_effect(void* context) {
@@ -877,7 +877,7 @@ static void mine_sweeper_short_ok_effect(void* context) {
 
     mine_sweeper_led_blink_magenta(instance->context);
     mine_sweeper_play_ok_sound(instance->context);
-    mine_sweeper_play_happy_bump(instance->context);
+    mine_sweeper_play_haptic_short(instance->context);
     mine_sweeper_stop_all_sound(instance->context);
 }
 
@@ -887,7 +887,7 @@ static void mine_sweeper_long_ok_effect(void* context) {
 
     mine_sweeper_led_blink_magenta(instance->context);
     mine_sweeper_play_ok_sound(instance->context);
-    mine_sweeper_play_long_ok_bump(instance->context);
+    mine_sweeper_play_haptic_double_short(instance->context);
     mine_sweeper_stop_all_sound(instance->context);
 }
 
@@ -897,7 +897,7 @@ static void mine_sweeper_flag_effect(void* context) {
 
     mine_sweeper_led_blink_cyan(instance->context);
     mine_sweeper_play_flag_sound(instance->context);
-    mine_sweeper_play_happy_bump(instance->context);
+    mine_sweeper_play_haptic_short(instance->context);
     mine_sweeper_stop_all_sound(instance->context);
 }
 
@@ -905,7 +905,7 @@ static void mine_sweeper_move_effect(void* context) {
     furi_assert(context);
     MineSweeperGameScreen* instance = context;
 
-    mine_sweeper_play_happy_bump(instance->context);
+    mine_sweeper_play_haptic_short(instance->context);
 }
 
 static void mine_sweeper_wrap_effect(void* context) {
@@ -914,7 +914,7 @@ static void mine_sweeper_wrap_effect(void* context) {
 
     mine_sweeper_led_blink_yellow(instance->context);
     mine_sweeper_play_wrap_sound(instance->context);
-    mine_sweeper_play_wrap_bump(instance->context);
+    mine_sweeper_play_haptic_short(instance->context);
     mine_sweeper_stop_all_sound(instance->context);
 }
 
@@ -924,7 +924,7 @@ static void mine_sweeper_oob_effect(void* context) {
 
     mine_sweeper_led_blink_red(instance->context);
     mine_sweeper_play_oob_sound(instance->context);
-    mine_sweeper_play_happy_bump(instance->context);
+    mine_sweeper_play_haptic_short(instance->context);
     mine_sweeper_stop_all_sound(instance->context);
 }
 
@@ -934,7 +934,7 @@ static void mine_sweeper_lose_effect(void* context) {
 
     mine_sweeper_led_set_rgb(instance->context, 255, 0, 000);
     mine_sweeper_play_lose_sound(instance->context);
-    mine_sweeper_play_lose_bump(instance->context);
+    mine_sweeper_play_haptic_lose(instance->context);
     mine_sweeper_stop_all_sound(instance->context);
 }
 
@@ -944,7 +944,7 @@ static void mine_sweeper_win_effect(void* context) {
 
     mine_sweeper_led_set_rgb(instance->context, 0, 0, 255);
     mine_sweeper_play_win_sound(instance->context);
-    mine_sweeper_play_win_bump(instance->context);
+    mine_sweeper_play_haptic_win(instance->context);
     mine_sweeper_stop_all_sound(instance->context);
 }
 
