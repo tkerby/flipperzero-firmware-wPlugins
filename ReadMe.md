@@ -68,6 +68,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [ProtoPirate v2.3 (By RocketGod-git)](https://protopirate.net/ProtoPirate/ProtoPirate)
 - Updated: [LEGO Dimensions Toy Pad v0.5 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
 - Updated: [Sub-GHz Scheduler v3.0 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
+- Updated: [XRemote v1.3 (By kala13x)](https://github.com/kala13x/flipper-xremote)
 
 <a name="release"></a>
 
