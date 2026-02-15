@@ -69,6 +69,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [LEGO Dimensions Toy Pad v0.5 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
 - Updated: [Sub-GHz Scheduler v3.0 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
 - Updated: [XRemote v1.3 (By kala13x)](https://github.com/kala13x/flipper-xremote)
+- Added: [24Cxx Programmer v1.0 (By kamylwnb)](https://github.com/kamylwnb/24cxxprog)
 
 <a name="release"></a>
 
@@ -439,6 +440,7 @@ $ ./fbt dolphin_ext
 
 ## Apps / Plugins
 
+- [24Cxx Programmer v1.0 (By kamylwnb)](https://github.com/kamylwnb/24cxxprog)
 - [Air Level v1.0 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/vgm/air_level) `Req: Video Game Module By Flipper Devices`
 - [Amiibo Toolkit v0.2 (By Firefox2100)](https://github.com/Firefox2100/ami_tool) `Req: key_retail.bin on SD card /nfc/assets`
 - [Amusement IC v0.1 (By object-Object)](https://github.com/object-Object/flip_aic)
