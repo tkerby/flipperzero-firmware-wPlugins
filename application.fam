@@ -11,5 +11,5 @@ App(
     fap_icon_assets="icons",
     fap_description="App for saving obtained vaules from lishi tool.",
     fap_author="@evillero",
-    fap_version="0.2",
+    fap_version="0.3",
 )
