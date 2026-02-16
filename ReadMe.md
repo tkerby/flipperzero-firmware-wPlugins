@@ -73,6 +73,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Lishi HU66 v0.3 (By evillero)](https://github.com/evillero/lishi_hu66)
 - Updated: [Mfkey v4.1 (By noproto)](https://github.com/noproto/FlipperMfkey)
 - Updated: [Weather Station v2.0 (By Skorpionm)-OFW](https://github.com/flipperdevices/flipperzero-good-faps/tree/dev/weather_station)
+- Updated: [FAP Boilerplate v1.3 (By leedave)](https://github.com/leedave/flipper-zero-fap-boilerplate)
 
 <a name="release"></a>
 
