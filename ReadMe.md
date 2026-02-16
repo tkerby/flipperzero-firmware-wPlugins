@@ -74,6 +74,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Mfkey v4.1 (By noproto)](https://github.com/noproto/FlipperMfkey)
 - Updated: [Weather Station v2.0 (By Skorpionm)-OFW](https://github.com/flipperdevices/flipperzero-good-faps/tree/dev/weather_station)
 - Updated: [FAP Boilerplate v1.3 (By leedave)](https://github.com/leedave/flipper-zero-fap-boilerplate)
+- Added: [Race Game v1.0 (By mrc19056)](https://github.com/mrc19056/flipper-race-game)
 
 <a name="release"></a>
 
@@ -396,6 +397,7 @@ $ ./fbt dolphin_ext
 - [Quadrastic v1.0.2 (By ivanbarsukov)](https://github.com/ivanbarsukov/flipperzero-quadrastic)
 - [Questions v1.1 (By nikilark)](https://github.com/nikilark/flipper_questions)
 - [Race v1.2 (By zyuhel)](https://github.com/zyuhel/flipperzero-racegame)
+- [Race Game v1.0 (By mrc19056)](https://github.com/mrc19056/flipper-race-game)
 - [Reaction Test v1.2 (By Milk-Cool)](https://github.com/Milk-Cool/fz-reaction-game)
 - [Reaction Time (By ihatecsv)](https://github.com/ihatecsv/flipper_reaction_time)
 - [Reversi v1.3 (By dimat)](https://github.com/dimat/flipperzero-reversi)

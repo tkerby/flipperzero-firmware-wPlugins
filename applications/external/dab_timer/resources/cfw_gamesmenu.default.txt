@@ -94,6 +94,7 @@ GamesMenuList Version 0
 /ext/apps/Games/quadrastic.fap
 /ext/apps/Games/questions.fap
 /ext/apps/Games/race.fap
+/ext/apps/Games/race_game.fap
 /ext/apps/Games/reaction_time.fap
 /ext/apps/Games/reactiontest.fap
 /ext/apps/Games/reversi.fap
