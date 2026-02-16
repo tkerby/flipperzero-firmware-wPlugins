@@ -65,7 +65,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [USB HID Autofire v0.7.1 (By pbek)](https://github.com/pbek/usb_hid_autofire)
 - Updated: [ATM Player v1.0.8 (By apfxtech)](https://github.com/apfxtech/FlipperATM) Added Cruel Angels Thesis sample
 - Updated: [Minesweeper Redux v1.6 (By squee72564)](https://github.com/squee72564/F0_Minesweeper_Fap)
-- Updated: [ProtoPirate v2.3 (By RocketGod-git)](https://protopirate.net/ProtoPirate/ProtoPirate)
 - Updated: [LEGO Dimensions Toy Pad v0.5 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
 - Updated: [Sub-GHz Scheduler v3.0 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
 - Updated: [XRemote v1.3 (By kala13x)](https://github.com/kala13x/flipper-xremote)
@@ -78,6 +77,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Ardudrivin v1.0.3 (By apfxtech)](https://github.com/apfxtech/FlipperDrivin)
 - Updated: [24Cxx Programmer v1.0 (By kamylwnb)](https://github.com/kamylwnb/24cxxprog)
 - Updated: [Smartra VIN2PIN v2.0 (By evillero)](https://github.com/evillero/smartra_vin2pin)
+- Updated: [ProtoPirate v2.3.1 (By RocketGod-git)](https://protopirate.net/ProtoPirate/ProtoPirate)
 
 <a name="release"></a>
 
@@ -760,7 +760,7 @@ $ ./fbt dolphin_ext
 - [Postman v0.1 (By MassivDash)](https://github.com/MassivDash/flipper-postman) `Req: ESP32` with [Postman Firmware](https://github.com/MassivDash/flipper-postman-esp32s2)
 - [Programmer Calculator v0.9.2 (By armixz)](https://github.com/armixz/Flipper-Zero-Programmer-Calculator)
 - [Protocol Visualizer v1.3 (By antirez)](https://github.com/antirez/protoview)
-- [ProtoPirate v2.3 (By RocketGod-git)](https://protopirate.net/ProtoPirate/ProtoPirate)
+- [ProtoPirate v2.3.1 (By RocketGod-git)](https://protopirate.net/ProtoPirate/ProtoPirate)
 - [QR Code v2.1.4 (By bmatcuk)](https://github.com/bmatcuk/flipperzero-qrcode)
 - [QRCode Generator v0.1 (By qw3rtty)](https://github.com/qw3rtty/flipperzero-qrcode-generator)
 - [Quac! v0.9.1 (By rdefeo)](https://github.com/rdefeo/quac)
