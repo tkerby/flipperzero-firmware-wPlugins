@@ -1122,6 +1122,15 @@ void game_setup() {
     state = (uint8_t)currentState;
 }
 
+bool game_back_hold_action() {
+    if(currentState == EState::Game || currentState == EState::GameOver) {
+        SetState(EState::Title);
+        return false;
+    }
+
+    return true;
+}
+
 void game_loop() {
     loop();
 }

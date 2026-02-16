@@ -9,6 +9,6 @@ App(
     fap_category="Games",
     fap_author="apfxtech",
     fap_weburl="https://github.com/apfxtech/FlipperDrivin",
-    fap_version="1.0.2",
+    fap_version="1.0.3",
     fap_description="Race game ported to Flipper Zero.",
 )
