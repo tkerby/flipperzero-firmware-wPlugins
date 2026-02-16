@@ -76,6 +76,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FAP Boilerplate v1.3 (By leedave)](https://github.com/leedave/flipper-zero-fap-boilerplate)
 - Added: [Race Game v1.0 (By mrc19056)](https://github.com/mrc19056/flipper-race-game)
 - Updated: [Ardudrivin v1.0.3 (By apfxtech)](https://github.com/apfxtech/FlipperDrivin)
+- Updated: [24Cxx Programmer v1.0 (By kamylwnb)](https://github.com/kamylwnb/24cxxprog)
+- Updated: [Smartra VIN2PIN v2.0 (By evillero)](https://github.com/evillero/smartra_vin2pin)
 
 <a name="release"></a>
 
@@ -798,7 +800,7 @@ $ ./fbt dolphin_ext
 - [Sleep Counter v2.0 (By silverwolf2r)](https://github.com/silverwolf2r/flipper-sleep-counter) `Req: RCWL-0516`
 - [SLI Writer v1.4 (By Julienbxl)](https://github.com/Julienbxl/SLI-Writer)
 - [Smack My Dolphin Up! (By siberianbot)](https://github.com/siberianbot/smack-my-dolphin-up)
-- [Smartra VIN2PIN v1.0 (By evillero)](https://github.com/evillero/smartra_vin2pin)
+- [Smartra VIN2PIN v2.0 (By evillero)](https://github.com/evillero/smartra_vin2pin)
 - [Snowflake v0.1 (By fgreil)](https://github.com/fgreil/mitzi-snowflake)
 - [Space PLayground v0.1 (By alanfortlink)](https://github.com/alanfortlink/fzspground)
 - [Space Travel Calculator v1.0 (By ejfox)](https://github.com/ejfox/flipper-space-calculators)
