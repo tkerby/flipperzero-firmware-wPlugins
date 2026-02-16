@@ -51,7 +51,7 @@ typedef struct {
     int about_scroll_offset;
 } Lishi;
 
-// Logo bitmap - 50x50 pixels 
+// Logo lishi bitmap - 50x50 pixels 
 static const uint8_t image_logo_0_bits[] = {
     0x00,0x00,0x00,0x00,0x41,0x00,0x00,0x00,0x00,0x00,0x00,0x8a,0x00,0x00,0x00,0x00,
     0x00,0x80,0x1e,0x01,0x00,0x00,0x00,0x00,0x80,0x3f,0x01,0x00,0x00,0x00,0x00,0xc0,
@@ -102,7 +102,7 @@ static void render_callback(Canvas* canvas, void* ctx) {
 
     if(l->menu_state == MenuMain) {
         canvas_draw_str(canvas, 5, 10, "LISHI Main Menu");
-        const char* options[] = {"Protocols", "Show", "About"};
+        const char* options[] = {"Key Type", "Show", "About"};
         for(int i = 0; i < 3; i++) {
             if(i == l->selected_menu) {
                 canvas_draw_str(canvas, 5, 30 + i * 15, ">");
@@ -211,7 +211,8 @@ static void render_callback(Canvas* canvas, void* ctx) {
                 char truncated[64];
                 strncpy(truncated, car_models, 30);
                 truncated[30] = '\0';
-                strcat(truncated, "...");
+                size_t len = strlen(truncated);
+                snprintf(truncated + len, sizeof(truncated) - len, "...");
                 canvas_draw_str(canvas, 5, 62, truncated);
             }
         } else {
