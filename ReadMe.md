@@ -78,6 +78,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [24Cxx Programmer v1.0 (By kamylwnb)](https://github.com/kamylwnb/24cxxprog)
 - Updated: [Smartra VIN2PIN v2.0 (By evillero)](https://github.com/evillero/smartra_vin2pin)
 - Updated: [ProtoPirate v2.3.1 (By RocketGod-git)](https://protopirate.net/ProtoPirate/ProtoPirate)
+- Updated: [Timed Remote v0.1 (By anders-dc)](https://github.com/anders-dc/timed-remote)
 
 <a name="release"></a>
 
