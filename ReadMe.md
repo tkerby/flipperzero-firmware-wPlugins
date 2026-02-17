@@ -79,6 +79,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Smartra VIN2PIN v2.0 (By evillero)](https://github.com/evillero/smartra_vin2pin)
 - Updated: [ProtoPirate v2.3.1 (By RocketGod-git)](https://protopirate.net/ProtoPirate/ProtoPirate)
 - Updated: [Timed Remote v0.1 (By anders-dc)](https://github.com/anders-dc/timed-remote)
+- Updated: [INA Meter v0.8 (By cepetr)](https://github.com/cepetr/flipper-tina) (Version Only)
 
 <a name="release"></a>
 
@@ -629,7 +630,7 @@ $ ./fbt dolphin_ext
 - [IFTTT Button (By Ferrazzi)](https://github.com/Ferrazzi/FlipperZero_IFTTT_Virtual_Button) `Req: ESP8266 w/ IFTTT FW Flashed`
 - [Image Scroller v0.1 (By fgreil)](https://github.com/fgreil/mitzi-scroller)
 - [Image Viewer v0.1 (By polioan)](https://github.com/polioan/flipper-zero-image-viewer)
-- [INA Meter v0.2 (By cepetr)](https://github.com/cepetr/flipper-tina)
+- [INA Meter v0.8 (By cepetr)](https://github.com/cepetr/flipper-tina)
 - [Intervalometer v1.2 (By theageoflove)](https://github.com/theageoflove/flipperzero-zeitraffer)
 - [IR Blaster v1.1 (By mateusz-szafraniec)](https://github.com/mateusz-szafraniec/flipperzero-IR_Blaster)
 - [IR Decoder v1.0 (By prplecake)](https://github.com/prplecake/f0/tree/master/infrared/apps/ir_decoder)
