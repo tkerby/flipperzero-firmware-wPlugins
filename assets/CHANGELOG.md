@@ -1,3 +1,6 @@
+## 2.0.9
+- Added support for loading a custom dictionary for the keyboard auto-complete functionality (stored in "apps_data/flip_social/dictionary.txt" with each word/phrase separated by a newline).
+
 ## 2.0.8
 - Updated auto-complete functionality to accept and return multi-word suggestions.
 - Moved the keyboard class to its own folder for better organization.
