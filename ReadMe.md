@@ -80,6 +80,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [ProtoPirate v2.3.1 (By RocketGod-git)](https://protopirate.net/ProtoPirate/ProtoPirate)
 - Updated: [Timed Remote v0.1 (By anders-dc)](https://github.com/anders-dc/timed-remote)
 - Updated: [INA Meter v0.8 (By cepetr)](https://github.com/cepetr/flipper-tina) (Version Only)
+- Updated: [Tetris v1.5 (By jeffplang)](https://github.com/jeffplang/flipperzero-firmware/tree/tetris_game/applications/tetris_game) [fix some tetris bugs (By Bricktech2000)](https://github.com/xMasterX/all-the-plugins/pull/210)
 
 <a name="release"></a>
 
