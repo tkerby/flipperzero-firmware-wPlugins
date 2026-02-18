@@ -12,6 +12,7 @@
 #define MAX_MESSAGE_USERS 40      // Maximum number of users to display in the submenu
 #define MAX_MESSAGES 20           // Maximum number of messages between each user
 #define MAX_COMMENTS 20           // Maximum number of comments per feed item
+#define DICTIONARY_PATH STORAGE_EXT_PATH_PREFIX "/apps_data/flip_social/dictionary.txt"
 
 typedef enum
 {

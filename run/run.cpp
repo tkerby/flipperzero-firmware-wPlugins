@@ -2320,6 +2320,11 @@ void FlipSocialRun::loadKeyboardSuggestions()
     // Standard words for autocomplete
     if (keyboard)
     {
+        if (keyboard->addDictionary(DICTIONARY_PATH))
+        {
+            return;
+        }
+
         keyboard->addSuggestion("the");
         keyboard->addSuggestion("that");
         keyboard->addSuggestion("this is ");
