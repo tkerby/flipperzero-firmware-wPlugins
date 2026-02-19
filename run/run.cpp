@@ -3845,23 +3845,28 @@ void FlipSocialRun::userRequest(RequestType requestType)
     case RequestTypeFlipPost:
     {
         char *feedPostPayload = (char *)malloc(256);
-        if (!feedPostPayload)
+        char *authHeader = (char *)malloc(256);
+        if (!feedPostPayload || !authHeader)
         {
-            FURI_LOG_E(TAG, "userRequest: Failed to allocate memory for feedPostPayload");
+            FURI_LOG_E(TAG, "userRequest: Failed to allocate memory for feedPostPayload or authHeader");
             feedStatus = FeedRequestError;
             free(username);
             free(password);
             free(payload);
             if (feedPostPayload)
                 free(feedPostPayload);
+            if (authHeader)
+                free(authHeader);
             return;
         }
+        snprintf(authHeader, 256, "{\"Content-Type\":\"application/json\",\"Username\":\"%s\",\"Password\":\"%s\"}", username, password);
         snprintf(feedPostPayload, 256, "{\"username\":\"%s\",\"post_id\":\"%u\"}", username, feedItemID);
-        if (!app->httpRequestAsync("flip_post.txt", "https://www.jblanked.com/flipper/api/feed/flip/", POST, "{\"Content-Type\":\"application/json\"}", feedPostPayload))
+        if (!app->httpRequestAsync("flip_post.txt", "https://www.jblanked.com/flipper/api/feed/flip/", POST, authHeader, feedPostPayload))
         {
             feedStatus = FeedRequestError;
         }
         free(feedPostPayload);
+        free(authHeader);
         break;
     }
     case RequestTypeCommentFetch:
@@ -3895,21 +3900,28 @@ void FlipSocialRun::userRequest(RequestType requestType)
     case RequestTypeCommentFlip:
     {
         char *commentFlipPayload = (char *)malloc(256);
-        if (!commentFlipPayload)
+        char *authHeader = (char *)malloc(256);
+        if (!commentFlipPayload || !authHeader)
         {
-            FURI_LOG_E(TAG, "userRequest: Failed to allocate memory for commentFlipPayload");
+            FURI_LOG_E(TAG, "userRequest: Failed to allocate memory for commentFlipPayload or authHeader");
             feedStatus = FeedRequestError;
             free(username);
             free(password);
             free(payload);
+            if (commentFlipPayload)
+                free(commentFlipPayload);
+            if (authHeader)
+                free(authHeader);
             return;
         }
         snprintf(commentFlipPayload, 256, "{\"username\":\"%s\",\"post_id\":\"%u\"}", username, commentItemID);
-        if (!app->httpRequestAsync("flip_comment.txt", "https://www.jblanked.com/flipper/api/feed/flip/", POST, "{\"Content-Type\":\"application/json\"}", commentFlipPayload))
+        snprintf(authHeader, 256, "{\"Content-Type\":\"application/json\",\"Username\":\"%s\",\"Password\":\"%s\"}", username, password);
+        if (!app->httpRequestAsync("flip_comment.txt", "https://www.jblanked.com/flipper/api/feed/flip/", POST, authHeader, commentFlipPayload))
         {
             feedStatus = FeedRequestError;
         }
         free(commentFlipPayload);
+        free(authHeader);
         break;
     }
     case RequestTypeMessagesUserList:
