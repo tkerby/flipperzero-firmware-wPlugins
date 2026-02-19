@@ -7,7 +7,7 @@
 #include <ctype.h>
 #include <stdint.h>
 
-#include "auto_complete/config.h"
+#include "auto_complete_config.h"
 
 #define MAX_WORD_LENGTH 32
 #define MAX_SUGGESTIONS 10
