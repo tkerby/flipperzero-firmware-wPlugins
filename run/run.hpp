@@ -27,6 +27,7 @@ typedef enum
     SocialViewUserInfo = 7,     // user info view
     SocialViewMessages = 8,     // messages view
     SocialViewComments = 9,     // comments view
+    SocialViewFriends = 10,     // friends view
 } SocialView;
 
 typedef enum
@@ -82,6 +83,9 @@ typedef enum
     RequestTypeMessageSend = 10,     // Request to send a message to the current user
     RequestTypeExplore = 11,         // Request explore (fetch users to explore)
     RequestTypePost = 12,            // Request post (send a post to the feed)
+    RequestTypeFriendAdd = 13,       // Request add friend (add a user as a friend)
+    RequestTypeFriendRemove = 14,    // Request remove friend (remove a user from friends)
+    RequestTypeFriendFetch = 15,     // Request fetch friends (fetch list of friends)
 } RequestType;
 
 typedef enum
@@ -131,6 +135,8 @@ typedef enum
     ExploreKeyboardUsers = 5,   // Keyboard for explore view (we'll start here)
     ExploreKeyboardMessage = 6, // Keyboard for explore view (sending messages)
     ExploreSending = 7,         // Sending message in explore view
+    ExploreDeciding = 8,        // Deciding what to do after explore (message user or add friend)
+    ExploreAddingFriend = 9,    // Adding clicked on user as a friend in explore view
 } ExploreStatus;
 
 typedef enum
@@ -155,6 +161,17 @@ typedef enum
     CommentsSending = 6,      // Sending comment
 } CommentsStatus;
 
+typedef enum
+{
+    FriendNotStarted = 0,    // Friend status not started (send request to fetch friends list) - start here
+    FriendWaiting = 1,       // Waiting for fetch friends request to finish
+    FriendSuccess = 2,       // Friend list fetched successfully
+    FriendParseError = 3,    // Error parsing friend list
+    FriendRequestError = 4,  // Error in friend request
+    FriendRemove = 5,        // Actively removing a friend (after sending request to remove friend)
+    FriendConfirmRemove = 6, // Asking the user to confirm friend removal
+} FriendStatus;
+
 class FlipSocialApp;
 
 class FlipSocialRun
@@ -176,6 +193,8 @@ class FlipSocialRun
     FeedStatus feedStatus;                           // current feed status
     bool feedItemFlipOverride[MAX_FEED_ITEMS];       // local override for flip status to show immediate feedback
     bool feedItemFlipOverrideActive[MAX_FEED_ITEMS]; // track which items have local overrides
+    uint8_t friendIndex;                             // currently selected friend index
+    FriendStatus friendStatus;                       // current friend status
     InputKey lastInput;                              // last input key pressed
     std::unique_ptr<Keyboard> keyboard;              // keyboard instance for input handling
     std::unique_ptr<Loading> loading;                // loading animation instance
@@ -195,6 +214,7 @@ class FlipSocialRun
     void drawFeedItem(Canvas *canvas, char *username, char *message, char *flipped, char *flips, char *date_created, char *comments, bool isComment = false); // draw a single feed item
     void drawFeedMessage(Canvas *canvas, const char *user_message, int x, int y);                                                                             // draw the feed message with wrapping
     void drawFeedView(Canvas *canvas);                                                                                                                        // draw the feed view
+    void drawFriendsView(Canvas *canvas);                                                                                                                     // draw the friends view
     void drawLoginView(Canvas *canvas);                                                                                                                       // draw the login view
     void drawMainMenuView(Canvas *canvas);                                                                                                                    // draw the main menu view
     void drawMessagesView(Canvas *canvas);                                                                                                                    // draw the messages view
