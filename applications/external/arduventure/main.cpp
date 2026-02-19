@@ -12,8 +12,7 @@
 #define TONES_END    0x8000
 
 // ====== НАСТРОЙКИ ======
-#define TARGET_FRAMERATE         60
-#define GHOST_COMPENSATION_LEVEL 0
+#define TARGET_FRAMERATE 60
 
 #ifndef HOLD_TO_EXIT_FRAMES
 #define HOLD_TO_EXIT_FRAMES 30
@@ -30,13 +29,6 @@
 typedef struct {
     uint8_t screen_buffer[BUFFER_SIZE];
     uint8_t front_buffer[BUFFER_SIZE];
-
-#if(GHOST_COMPENSATION_LEVEL >= 1)
-    uint8_t prev_buffer[BUFFER_SIZE];
-#endif
-#if(GHOST_COMPENSATION_LEVEL >= 2)
-    uint8_t prev2_buffer[BUFFER_SIZE];
-#endif
 
     Gui* gui;
     Canvas* canvas;
@@ -92,10 +84,14 @@ const FunctionPointer mainGameLoop[] = {
 };
 
 static void game_setup() {
-    atm_system_init();
     arduboy.boot();
     arduboy.audio.begin();
-    ATM.play(titleSong);
+    atm_system_init();
+    EEPROM.begin();
+    atm_set_enabled(arduboy.audio.enabled());
+    if(arduboy.audio.enabled()) {
+        ATM.play(titleSong);
+    }
     arduboy.setFrameRate(60); // set the frame rate of the game at 60 fps
 }
 
@@ -145,29 +141,6 @@ static void framebuffer_commit_callback(
     furi_mutex_release(state->fb_mutex);
 }
 
-static void apply_ghost_compensation(FlipperState* state) {
-#if(GHOST_COMPENSATION_LEVEL == 0)
-    memcpy(state->front_buffer, state->screen_buffer, BUFFER_SIZE);
-
-#elif(GHOST_COMPENSATION_LEVEL == 1)
-    // front = current OR prev  (объект держится 2 кадра по сути: текущий + предыдущий)
-    for(size_t i = 0; i < BUFFER_SIZE; i++) {
-        state->front_buffer[i] = (uint8_t)(state->screen_buffer[i] | state->prev_buffer[i]);
-    }
-    // сдвигаем историю
-    memcpy(state->prev_buffer, state->screen_buffer, BUFFER_SIZE);
-
-#elif(GHOST_COMPENSATION_LEVEL >= 2)
-    // front = current OR prev OR prev2 (ещё сильнее удержание)
-    for(size_t i = 0; i < BUFFER_SIZE; i++) {
-        state->front_buffer[i] =
-            (uint8_t)(state->screen_buffer[i] | state->prev_buffer[i] | state->prev2_buffer[i]);
-    }
-    memcpy(state->prev2_buffer, state->prev_buffer, BUFFER_SIZE);
-    memcpy(state->prev_buffer, state->screen_buffer, BUFFER_SIZE);
-#endif
-}
-
 static void timer_callback(void* ctx) {
     FlipperState* state = (FlipperState*)ctx;
     if(!state) return;
@@ -184,9 +157,9 @@ static void timer_callback(void* ctx) {
 
     state->invert_frame = false;
 
-    // Критично: защита fb + применение компенсации
+    // Критично: защита fb + копирование
     furi_mutex_acquire(state->fb_mutex, FuriWaitForever);
-    apply_ghost_compensation(state);
+    memcpy(state->front_buffer, state->screen_buffer, BUFFER_SIZE);
     furi_mutex_release(state->fb_mutex);
 
     if(g_state->canvas) canvas_commit(g_state->canvas);
@@ -220,13 +193,6 @@ extern "C" int32_t arduboy_app(void* p) {
     memset(g_state->screen_buffer, 0x00, BUFFER_SIZE);
     memset(g_state->front_buffer, 0x00, BUFFER_SIZE);
 
-#if(GHOST_COMPENSATION_LEVEL >= 1)
-    memset(g_state->prev_buffer, 0x00, BUFFER_SIZE);
-#endif
-#if(GHOST_COMPENSATION_LEVEL >= 2)
-    memset(g_state->prev2_buffer, 0x00, BUFFER_SIZE);
-#endif
-
     arduboy.begin(
         g_state->screen_buffer,
         &g_state->input_state,
@@ -247,7 +213,7 @@ extern "C" int32_t arduboy_app(void* p) {
     game_setup();
 
     furi_mutex_acquire(g_state->fb_mutex, FuriWaitForever);
-    apply_ghost_compensation(g_state);
+    memcpy(g_state->front_buffer, g_state->screen_buffer, BUFFER_SIZE);
     furi_mutex_release(g_state->fb_mutex);
 
     if(g_state->canvas) canvas_commit(g_state->canvas);
@@ -265,6 +231,7 @@ extern "C" int32_t arduboy_app(void* p) {
         furi_delay_ms(50);
     }
 
+    EEPROM.commit();
     atm_system_deinit();
     arduboy_tone_sound_system_deinit();
 

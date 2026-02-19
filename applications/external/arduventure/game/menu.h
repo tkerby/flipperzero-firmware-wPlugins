@@ -64,8 +64,11 @@ void stateMenuMain() {
 
 void stateMenuContinue() {
     loadGame();
-    gameState = STATE_GAME_PLAYING;
     ATM.stop();
+    // Force region music to start immediately after loading.
+    songPlaying = 0;
+    changeSong(player.currentRegion);
+    gameState = STATE_GAME_PLAYING;
 }
 
 void stateMenuNew() {
@@ -75,10 +78,16 @@ void stateMenuNew() {
 }
 
 void toggleSound() {
-    if(!arduboy.audio.enabled())
+    if(!arduboy.audio.enabled()) {
         arduboy.audio.on();
-    else
+        atm_set_enabled(1);
+        // Restart title music immediately when sound is enabled.
+        ATM.play(titleSong);
+    } else {
+        ATM.stop();
+        atm_set_enabled(0);
         arduboy.audio.off();
+    }
     arduboy.audio.saveOnOff();
     cursorY = STATE_MENU_CONTINUE + firstGame;
 }

@@ -81,6 +81,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Timed Remote v0.1 (By anders-dc)](https://github.com/anders-dc/timed-remote)
 - Updated: [INA Meter v0.8 (By cepetr)](https://github.com/cepetr/flipper-tina) (Version Only)
 - Updated: [Tetris v1.5 (By jeffplang)](https://github.com/jeffplang/flipperzero-firmware/tree/tetris_game/applications/tetris_game) [fix some tetris bugs (By Bricktech2000)](https://github.com/xMasterX/all-the-plugins/pull/210)
+- Updated: [Arduventure v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperArduventure)
 
 <a name="release"></a>
 

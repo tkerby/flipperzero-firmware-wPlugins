@@ -3,6 +3,7 @@ App(
     name="Arduventure",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="arduboy_app",
+    sources=["main.cpp", "lib/ATMlib.cpp"],
     stack_size=8 * 1024,
     fap_icon="arduventure.png",
     fap_icon_assets="assets",
