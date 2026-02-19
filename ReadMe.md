@@ -83,6 +83,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Tetris v1.5 (By jeffplang)](https://github.com/jeffplang/flipperzero-firmware/tree/tetris_game/applications/tetris_game) [fix some tetris bugs (By Bricktech2000)](https://github.com/xMasterX/all-the-plugins/pull/210)
 - Updated: [Arduventure v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperArduventure)
 - Updated: [FlipSocial v2.0.9 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- Updated: [FZ nRF24 Jammer v1.4 (By W0rthlessS0ul)](https://github.com/W0rthlessS0ul/FZ_nRF24_jammer)
 
 <a name="release"></a>
 
