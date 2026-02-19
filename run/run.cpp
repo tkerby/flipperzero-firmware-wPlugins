@@ -583,11 +583,25 @@ void FlipSocialRun::drawExploreView(Canvas *canvas)
 void FlipSocialRun::drawFeedItem(Canvas *canvas, char *username, char *message, char *flipped, char *flips, char *date_created, char *comments, bool isComment)
 {
     bool isFlipped = strcmp(flipped, "true") == 0;
+    bool isAdmin = strcmp(username, "JBlanked") == 0;
     auto flipCount = atoi(flips);
     // auto commentCount = atoi(comments);
     canvas_clear(canvas);
     canvas_set_font_custom(canvas, FONT_SIZE_LARGE);
-    canvas_draw_str(canvas, 0, 7, username);
+
+    if (isAdmin)
+    {
+        // Filled black badge with white username text
+        int user_width = canvas_string_width(canvas, username);
+        canvas_draw_rbox(canvas, 0, 0, user_width + 4, 10, 2);
+        canvas_set_color(canvas, ColorWhite);
+        canvas_draw_str(canvas, 1, 8, username);
+        canvas_set_color(canvas, ColorBlack);
+    }
+    else
+    {
+        canvas_draw_str(canvas, 0, 7, username);
+    }
 
     if (!isComment)
     {
