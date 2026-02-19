@@ -10,7 +10,8 @@ FlipSocialRun::FlipSocialRun(void *appContext) : appContext(appContext), comment
                                                  friendIndex(0), friendStatus(FriendNotStarted), lastInput(InputKeyMAX),
                                                  loginStatus(LoginNotStarted), messagesStatus(MessagesNotStarted), messageUsersStatus(MessageUsersNotStarted), messageUserIndex(0),
                                                  postStatus(PostChoose), registrationStatus(RegistrationNotStarted),
-                                                 shouldReturnToMenu(false), userInfoStatus(UserInfoNotStarted)
+                                                 shouldReturnToMenu(false), userInfoStatus(UserInfoNotStarted),
+                                                 bioEditStatus(BioEditKeyboard)
 {
     char *loginStatusStr = (char *)malloc(64);
     if (loginStatusStr)
@@ -2199,6 +2200,83 @@ void FlipSocialRun::drawWrappedBio(Canvas *canvas, const char *text, uint8_t x, 
     }
 }
 
+void FlipSocialRun::drawBioEditView(Canvas *canvas)
+{
+    canvas_clear(canvas);
+    canvas_set_font(canvas, FontPrimary);
+    static bool loadingStarted = false;
+    switch (bioEditStatus)
+    {
+    case BioEditKeyboard:
+        if (!keyboard)
+        {
+            keyboard = std::make_unique<Keyboard>();
+            this->loadKeyboardSuggestions();
+        }
+        if (keyboard)
+        {
+            keyboard->draw(canvas, "Edit Bio:");
+        }
+        break;
+    case BioEditWaiting:
+        if (!loadingStarted)
+        {
+            if (!loading)
+            {
+                loading = std::make_unique<Loading>(canvas);
+            }
+            loadingStarted = true;
+            if (loading)
+            {
+                loading->setText("Updating bio...");
+            }
+        }
+        if (!this->httpRequestIsFinished())
+        {
+            if (loading)
+            {
+                loading->animate();
+            }
+        }
+        else
+        {
+            if (loading)
+            {
+                loading->stop();
+            }
+            loadingStarted = false;
+            FlipSocialApp *app = static_cast<FlipSocialApp *>(appContext);
+            if (!app || app->getHttpState() == ISSUE)
+            {
+                bioEditStatus = BioEditRequestError;
+                return;
+            }
+            char response[64];
+            if (app->loadChar("update_bio", response, sizeof(response)) && strstr(response, "[SUCCESS]") != NULL)
+            {
+                bioEditStatus = BioEditSuccess;
+            }
+            else
+            {
+                bioEditStatus = BioEditRequestError;
+            }
+        }
+        break;
+    case BioEditSuccess:
+        canvas_draw_str(canvas, 0, 10, "Bio updated!");
+        canvas_draw_str(canvas, 0, 20, "Press OK to view profile.");
+        break;
+    case BioEditRequestError:
+        canvas_draw_str(canvas, 0, 10, "Failed to update bio!");
+        canvas_draw_str(canvas, 0, 20, "Check your network and");
+        canvas_draw_str(canvas, 0, 30, "try again later.");
+        break;
+    default:
+        canvas_draw_str(canvas, 0, 10, "Updating bio...");
+        break;
+    }
+}
+
 void FlipSocialRun::drawRegistrationView(Canvas *canvas)
 {
     canvas_clear(canvas);
@@ -2720,6 +2798,9 @@ void FlipSocialRun::updateDraw(Canvas *canvas)
         break;
     case SocialViewFriends:
         drawFriendsView(canvas);
+        break;
+    case SocialViewBioEdit:
+        drawBioEditView(canvas);
         break;
     default:
         canvas_draw_str(canvas, 0, 10, "View not implemented yet.");
@@ -3376,10 +3457,96 @@ void FlipSocialRun::updateInput(InputEvent *event)
                 friendStatus = FriendNotStarted;
                 friendIndex = 0;
             }
+            else if (currentProfileElement == ProfileElementBio)
+            {
+                // Start editing bio
+                if (keyboard)
+                {
+                    keyboard->clearText();
+                    keyboard.reset();
+                }
+                keyboard = std::make_unique<Keyboard>();
+                this->loadKeyboardSuggestions();
+                if (keyboard)
+                {
+                    FlipSocialApp *app = static_cast<FlipSocialApp *>(appContext);
+                    char userInfo[256] = {0};
+                    bool didPreload = false;
+                    if (app && app->loadChar("user_info", userInfo, sizeof(userInfo), APP_ID))
+                    {
+                        char *bio = get_json_value("bio", userInfo);
+                        if (bio)
+                        {
+                            keyboard->setText(bio);
+                            free(bio);
+                            didPreload = true;
+                        }
+                    }
+                    if (!didPreload)
+                    {
+                        keyboard->setText("");
+                    }
+                    bioEditStatus = BioEditKeyboard;
+                    currentView = SocialViewBioEdit;
+                }
+            }
             break;
         default:
             break;
         };
+        break;
+    }
+    case SocialViewBioEdit:
+    {
+        if (bioEditStatus == BioEditKeyboard)
+        {
+            if (keyboard)
+            {
+                if (keyboard->handleInput(event))
+                {
+                    FlipSocialApp *app = static_cast<FlipSocialApp *>(appContext);
+                    app->saveChar("new_bio", keyboard->getText());
+                    bioEditStatus = BioEditWaiting;
+                    userRequest(RequestTypeBioUpdate);
+                    keyboard->clearText();
+                    keyboard.reset();
+                }
+            }
+            if (lastInput == InputKeyBack && event->type == InputTypeLong)
+            {
+                currentView = SocialViewProfile;
+                if (keyboard)
+                {
+                    keyboard->clearText();
+                    keyboard.reset();
+                }
+            }
+        }
+        else
+        {
+            switch (lastInput)
+            {
+            case InputKeyBack:
+                currentView = SocialViewProfile;
+                bioEditStatus = BioEditKeyboard;
+                break;
+            case InputKeyOk:
+                if (bioEditStatus == BioEditSuccess)
+                {
+                    // Reload user info so the profile shows the updated bio
+                    userInfoStatus = UserInfoWaiting;
+                    userRequest(RequestTypeUserInfo);
+                    currentView = SocialViewUserInfo;
+                }
+                else if (bioEditStatus == BioEditRequestError)
+                {
+                    bioEditStatus = BioEditKeyboard;
+                }
+                break;
+            default:
+                break;
+            };
+        }
         break;
     }
     case SocialViewComments:
@@ -4143,6 +4310,53 @@ void FlipSocialRun::userRequest(RequestType requestType)
         }
         free(url);
         free(authHeader);
+        break;
+    }
+    case RequestTypeBioUpdate:
+    {
+        char *url = (char *)malloc(128);
+        char *authHeader = (char *)malloc(256);
+        char *bio = (char *)malloc(128);
+        char *payload = (char *)malloc(256);
+        if (!url || !authHeader || !bio || !payload)
+        {
+            FURI_LOG_E(TAG, "userRequest: Failed to allocate memory for url, authHeader, bio or payload");
+            bioEditStatus = BioEditRequestError;
+            free(username);
+            free(password);
+            if (url)
+                free(url);
+            if (authHeader)
+                free(authHeader);
+            if (bio)
+                free(bio);
+            if (payload)
+                free(payload);
+            return;
+        }
+        if (!app->loadChar("new_bio", bio, 128) || strlen(bio) == 0 || strlen(bio) > MAX_BIO_LENGTH)
+        {
+            FURI_LOG_E(TAG, "Failed to load new bio");
+            bioEditStatus = BioEditRequestError;
+            free(username);
+            free(password);
+            free(url);
+            free(authHeader);
+            free(bio);
+            free(payload);
+            return;
+        }
+        snprintf(authHeader, 256, "{\"Content-Type\":\"application/json\",\"Username\":\"%s\",\"Password\":\"%s\"}", username, password);
+        snprintf(url, 128, "https://www.jblanked.com/flipper/api/user/change-bio/");
+        snprintf(payload, 256, "{\"username\":\"%s\",\"bio\":\"%s\"}", username, bio);
+        if (!app->httpRequestAsync("update_bio.txt", url, POST, authHeader, payload))
+        {
+            bioEditStatus = BioEditRequestError;
+        }
+        free(url);
+        free(authHeader);
+        free(bio);
+        free(payload);
         break;
     }
     default:

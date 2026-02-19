@@ -4,6 +4,7 @@
 #include "keyboard/keyboard.hpp"
 
 #define MAX_PRE_SAVED_MESSAGES 20 // Maximum number of pre-saved messages
+#define MAX_BIO_LENGTH 100        // Maximum length of a user bio
 #define MAX_MESSAGE_LENGTH 100    // Maximum length of a message in the feed
 #define MAX_EXPLORE_USERS 50      // Maximum number of users to explore
 #define MAX_USER_LENGTH 32        // Maximum length of a username
@@ -28,6 +29,7 @@ typedef enum
     SocialViewMessages = 8,     // messages view
     SocialViewComments = 9,     // comments view
     SocialViewFriends = 10,     // friends view
+    SocialViewBioEdit = 11,     // bio edit view
 } SocialView;
 
 typedef enum
@@ -86,6 +88,7 @@ typedef enum
     RequestTypeFriendAdd = 13,       // Request add friend (add a user as a friend)
     RequestTypeFriendRemove = 14,    // Request remove friend (remove a user from friends)
     RequestTypeFriendFetch = 15,     // Request fetch friends (fetch list of friends)
+    RequestTypeBioUpdate = 16,       // Request bio update (update the user's bio)
 } RequestType;
 
 typedef enum
@@ -163,6 +166,14 @@ typedef enum
 
 typedef enum
 {
+    BioEditKeyboard = 0,     // Keyboard open for bio editing
+    BioEditWaiting = 1,      // Waiting for bio update response
+    BioEditSuccess = 2,      // Bio updated successfully
+    BioEditRequestError = 3, // Error in bio update request
+} BioEditStatus;
+
+typedef enum
+{
     FriendNotStarted = 0,    // Friend status not started (send request to fetch friends list) - start here
     FriendWaiting = 1,       // Waiting for fetch friends request to finish
     FriendSuccess = 2,       // Friend list fetched successfully
@@ -208,6 +219,7 @@ class FlipSocialRun
     RegistrationStatus registrationStatus;           // current registration status
     bool shouldReturnToMenu;                         // Flag to signal return to menu
     UserInfoStatus userInfoStatus;                   // current user info status
+    BioEditStatus bioEditStatus;                     // current bio edit status
     //
     void drawCommentsView(Canvas *canvas);                                                                                                                    // draw the comments view
     void drawExploreView(Canvas *canvas);                                                                                                                     // draw the explore view
@@ -223,6 +235,7 @@ class FlipSocialRun
     void drawProfileView(Canvas *canvas);                                                                                                                     // draw the profile view
     void drawRegistrationView(Canvas *canvas);                                                                                                                // draw the registration view
     void drawUserInfoView(Canvas *canvas);                                                                                                                    // draw the user info view
+    void drawBioEditView(Canvas *canvas);                                                                                                                     // draw the bio edit view
     void drawWrappedBio(Canvas *canvas, const char *text, uint8_t x, uint8_t y);                                                                              // draw wrapped text on the canvas
     bool getMessageUser(char *buffer, size_t buffer_size);                                                                                                    // get the message user at the specified messageUserIndex
     bool getSelectedPost(char *buffer, size_t buffer_size);                                                                                                   // get the selected post at the specified postIndex
