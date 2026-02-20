@@ -3,6 +3,7 @@
 #include <string.h>
 #include <furi.h>
 #include <furi_hal.h>
+#include <furi_hal_resources.h>
 #include <stm32wbxx_ll_tim.h>
 #include <stm32wbxx_ll_dma.h>
 
@@ -90,23 +91,28 @@ static inline uint16_t read_u16_le(const uint8_t** pp) {
 }
 
 static constexpr uint32_t ATM_PWM_ARR = 255;
-static constexpr uint32_t ATM_PWM_PSC = 3;
+static constexpr uint32_t ATM_PWM_PSC = 7;
 static constexpr uint32_t ATM_LOGICAL_HZ = 31250;
 
 static inline uint32_t tick_div_from_rate(uint8_t tr) {
     if(tr < 1) tr = 1;
-    return (uint32_t)(ATM_LOGICAL_HZ / (uint32_t)tr);
+    uint32_t div = ATM_LOGICAL_HZ / (uint32_t)tr;
+    if(div < 1) div = 1;
+    return div;
 }
 
 static constexpr size_t ATM_LOGICAL_SAMPLES_PER_HALF = 128;
-static constexpr size_t ATM_DMA_SAMPLES_PER_HALF = ATM_LOGICAL_SAMPLES_PER_HALF * 2;
+static constexpr size_t ATM_DMA_SAMPLES_PER_HALF = ATM_LOGICAL_SAMPLES_PER_HALF;
 static constexpr size_t ATM_DMA_TOTAL = ATM_DMA_SAMPLES_PER_HALF * 2;
 
 static uint32_t dma_buf[ATM_DMA_TOTAL];
 
 static bool atm_running = false;
 static bool atm_paused = false;
-static float atm_master_volume = 1.0f;
+
+static constexpr float ATM_MASTER_GAIN_MAX = 1.7f;
+static constexpr uint16_t ATM_MASTER_GAIN_DEFAULT_Q8 = (uint16_t)(1.8f * 256.0f + 0.5f);
+static uint16_t atm_master_gain_q8 = ATM_MASTER_GAIN_DEFAULT_Q8;
 
 static uint32_t atm_tick_div = 0;
 static uint32_t atm_tick_acc = 0;
@@ -124,17 +130,18 @@ static inline uint8_t atm_render_logical_sample_u8() {
     if(phase2 < 0) phase2 = (int8_t)(~phase2);
     phase2 = (int8_t)(phase2 << 1);
     phase2 = (int8_t)(phase2 - 128);
-    int8_t vol = (int8_t)((((int16_t)phase2 * (int8_t)osc[2].vol) << 1) >> 8);
+    int8_t c2 = (int8_t)((((int16_t)phase2 * (int8_t)osc[2].vol) << 1) >> 8);
+    int16_t mix = c2;
 
     osc[0].phase = (uint16_t)(osc[0].phase + osc[0].freq);
-    int8_t vol0 = (int8_t)osc[0].vol;
-    if(osc[0].phase >= 0xC000) vol0 = (int8_t)(-vol0);
-    vol = (int8_t)(vol + vol0);
+    int8_t c0 = (int8_t)osc[0].vol;
+    if(osc[0].phase >= 0xC000) c0 = (int8_t)(-c0);
+    mix += c0;
 
     osc[1].phase = (uint16_t)(osc[1].phase + osc[1].freq);
-    int8_t vol1 = (int8_t)osc[1].vol;
-    if(osc[1].phase & 0x8000) vol1 = (int8_t)(-vol1);
-    vol = (int8_t)(vol + vol1);
+    int8_t c1 = (int8_t)osc[1].vol;
+    if(osc[1].phase & 0x8000) c1 = (int8_t)(-c1);
+    mix += c1;
 
     uint16_t freq = osc[3].freq;
     freq <<= 1;
@@ -142,15 +149,15 @@ static inline uint8_t atm_render_logical_sample_u8() {
     if(freq & 0x4000) freq ^= 1;
     osc[3].freq = freq;
 
-    int8_t vol3 = (int8_t)osc[3].vol;
-    if(freq & 0x8000) vol3 = (int8_t)(-vol3);
-    vol = (int8_t)(vol + vol3);
+    int8_t c3 = (int8_t)osc[3].vol;
+    if(freq & 0x8000) c3 = (int8_t)(-c3);
+    mix += c3;
 
-    int16_t out = (int16_t)vol + (int16_t)pcm;
-
-    float centered = (float)(out - 128);
-    centered *= atm_master_volume;
-    int16_t outv = (int16_t)(128.0f + centered);
+    const uint16_t gain_q8 = __atomic_load_n(&atm_master_gain_q8, __ATOMIC_RELAXED);
+    int32_t centered = ((int32_t)mix * (int32_t)gain_q8) >> 9;
+    if(centered > 127) centered = 127;
+    if(centered < -127) centered = -127;
+    int16_t outv = (int16_t)(128 + centered);
     if(outv < 0) outv = 0;
     if(outv > 255) outv = 255;
 
@@ -170,13 +177,16 @@ static inline void atm_fill_half(size_t half_index) {
         uint8_t s = (!en || atm_paused) ? 128 : atm_render_logical_sample_u8();
         uint32_t duty = (uint32_t)s;
         if(duty > ATM_PWM_ARR) duty = ATM_PWM_ARR;
-        dst[i * 2 + 0] = duty;
-        dst[i * 2 + 1] = duty;
+        dst[i] = duty;
     }
 }
 
 static void tim16_dma_start() {
     furi_check(furi_hal_speaker_is_mine());
+    furi_hal_gpio_init_ex(
+        &gpio_speaker, GpioModeAltFunctionPushPull, GpioPullNo, GpioSpeedVeryHigh, GpioAltFn14TIM16);
+
+    atm_tick_div = tick_div_from_rate(tickRate);
 
     for(size_t i = 0; i < ATM_DMA_TOTAL; i++)
         dma_buf[i] = 128;
@@ -189,6 +199,7 @@ static void tim16_dma_start() {
 
     LL_TIM_DisableAllOutputs(TIM16);
     LL_TIM_DisableCounter(TIM16);
+    LL_TIM_SetCounter(TIM16, 0);
 
     LL_TIM_SetPrescaler(TIM16, ATM_PWM_PSC);
     LL_TIM_SetAutoReload(TIM16, ATM_PWM_ARR);
@@ -649,9 +660,10 @@ static int32_t atm_thread_fn(void* /*ctx*/) {
 
             if(cmd.type == AtmCmdSetVolume) {
                 float v = cmd.u.vol.v;
-                if(v < 0) v = 0;
-                if(v > 1) v = 1;
-                atm_master_volume = v;
+                if(v < 0.0f) v = 0.0f;
+                if(v > ATM_MASTER_GAIN_MAX) v = ATM_MASTER_GAIN_MAX;
+                __atomic_store_n(
+                    &atm_master_gain_q8, (uint16_t)(v * 256.0f + 0.5f), __ATOMIC_RELAXED);
                 continue;
             }
 
