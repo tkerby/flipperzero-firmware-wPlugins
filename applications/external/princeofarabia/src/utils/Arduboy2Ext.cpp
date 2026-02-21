@@ -26,8 +26,14 @@ uint8_t Arduboy2Ext::getSampledButtons() const {
 }
 
 uint8_t Arduboy2Ext::justPressedButtons() const {
-    const uint8_t current = getSampledButtons();
-    return (uint8_t)(~previous_buttons & current);
+    uint8_t out = 0;
+    if(justPressed(UP_BUTTON)) out |= UP_BUTTON;
+    if(justPressed(DOWN_BUTTON)) out |= DOWN_BUTTON;
+    if(justPressed(LEFT_BUTTON)) out |= LEFT_BUTTON;
+    if(justPressed(RIGHT_BUTTON)) out |= RIGHT_BUTTON;
+    if(justPressed(A_BUTTON)) out |= A_BUTTON;
+    if(justPressed(B_BUTTON)) out |= B_BUTTON;
+    return out;
 }
 
 uint8_t Arduboy2Ext::pressedButtons() const {

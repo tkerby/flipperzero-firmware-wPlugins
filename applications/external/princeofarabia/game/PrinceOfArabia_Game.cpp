@@ -1136,25 +1136,21 @@ void game() {
 
 #ifndef ALT_B_BUTTON
 #ifndef SAVE_MEMORY_ENEMY
-        if((pressed & B_BUTTON) && prince.isEmpty() &&
+        if((justPressed & B_BUTTON) && prince.isEmpty() &&
            (!sameLevelAsPrince || enemy.getHealth() == 0 || prince.getHealth() == 0)) {
 #else
-        if((pressed & B_BUTTON) && prince.isEmpty() &&
+        if((justPressed & B_BUTTON) && prince.isEmpty() &&
            (!sameLevelAsPrince || prince.getHealth() == 0)) {
 #endif
-
-            if(bCounter > 4) {
+            if(!menuBRequiresRelease) {
                 gamePlay.gameState = GameState::Menu;
                 menu.direction = Direction::Left;
                 menu.cursor = static_cast<uint8_t>(MenuOption::Resume);
-                bCounter = 0;
-
-            } else {
-                bCounter++;
+                menuBRequiresRelease = true;
             }
 
-        } else {
-            bCounter = 0;
+        } else if(arduboy.justReleased(B_BUTTON)) {
+            menuBRequiresRelease = false;
         }
 
 #endif
@@ -1172,7 +1168,11 @@ void game() {
         }
     }
 
-        if(justPressed & (A_BUTTON | B_BUTTON)) {
+        if(menuBRequiresRelease && arduboy.justReleased(B_BUTTON)) {
+            menuBRequiresRelease = false;
+        }
+
+        if((justPressed & A_BUTTON) || ((justPressed & B_BUTTON) && !menuBRequiresRelease)) {
             switch(static_cast<MenuOption>(menu.cursor)) {
             case MenuOption::Resume:
                 menu.direction = Direction::Right;
@@ -1197,7 +1197,6 @@ void game() {
 
                     // Resume play from loaded world state.
                     gamePlay.gameState = GameState::Game;
-                    bCounter = 0;
                 }
 
                 menu.direction = Direction::Right;
@@ -1238,6 +1237,10 @@ void game() {
 
             default:
                 break;
+            }
+
+            if(justPressed & B_BUTTON) {
+                menuBRequiresRelease = true;
             }
 
             justPressed = 0;
