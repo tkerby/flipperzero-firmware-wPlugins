@@ -84,6 +84,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [ProtoPirate v2.3.1 (By RocketGod-git)](https://protopirate.net/ProtoPirate/ProtoPirate)
 - Updated: [Arduventure v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperArduventure)
 - Updated: [Prince Of Arabia v1.0.11 (By apfxtech)](https://github.com/apfxtech/FlipperPrinceOfArabia)
+- Updated: [Catacombs Of The Damned v2.2 (By apfxtech)](https://github.com/apfxtech/FlipperCatacombs)
 
 <a name="release"></a>
 
