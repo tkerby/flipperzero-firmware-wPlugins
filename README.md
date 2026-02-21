@@ -155,7 +155,10 @@ Preset file keys (presets.fff):
 ## Build
 This is a Flipper Zero external app (has `application.fam`). Two common workflows:
 
-- `ufbt` (recommended for external apps): install `ufbt`, then run `ufbt` in this app folder.
+- `ufbt` (recommended for external apps):
+	- `ufbt build`
+	- `ufbt launch`
+	- Note: do not pass `.fap` path to `ufbt launch` (e.g. `ufbt launch fmradio_controller_pt2257.fap`), because that form is not valid in this setup.
 - `fbt`: clone the Flipper firmware repo, copy/link this app into `applications_user/`, then run `./fbt fap_fmradio_controller_pt2257`.
 
 Exact commands vary depending on your firmware/tooling version.

@@ -52,13 +52,11 @@ def main() -> int:
         rf'\g<1>{full_version}',
     )
 
-    # About text shown inside the app: "FM Radio. (vX)"
-    # This must be updated, otherwise CI would ship a .fap with a stale About version.
-    # Keep the leading 'v' in the UI string.
+    # UI/About version macro in radio.c.
     replace_or_die(
         radio_c,
-        r'(FM Radio\.?\s*\(v)([^)]+)(\))',
-        rf"\g<1>{full_version}\g<3>",
+        r'^(\s*#define\s+FMRADIO_UI_VERSION\s+")([^"]+)(")\s*$',
+        rf'\g<1>{full_version}\g<3>',
     )
 
     return 0

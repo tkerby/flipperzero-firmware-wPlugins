@@ -39,25 +39,30 @@
 // #define BACKLIGHT_ALWAYS_ON
 
 #define TAG "FMRadio"
+#define FMRADIO_UI_VERSION "0.9+pt2257.dev"
 
 // Volume config options (used by Config menu)
 static const uint8_t volume_values[] = {0, 1};
 static const char* volume_names[] = {"Un-Muted", "Muted"};
-static bool current_volume = false;  // PT2257 mute state
+static bool current_volume = false;  // PT2257 mute flag
 
 // PT2257 attenuation in dB: 0..79 (0 => max volume, 79 => min volume)
 static uint8_t pt2257_atten_db = 20;
 static bool pt2257_ready_cached = false;
 
-static uint8_t fmradio_get_effective_atten_db(void) {
-    // If muted, force maximum attenuation to minimize hiss/clicks even if PT2257 mute is imperfect.
-    return (current_volume != 0) ? 79 : pt2257_atten_db;
-}
+static void fmradio_state_lock(void);
+static void fmradio_state_unlock(void);
 
 static void fmradio_apply_pt2257_state(void) {
-    if(!pt2257_ready_cached) return;
-    pt2257_set_attenuation_db(fmradio_get_effective_atten_db());
-    pt2257_mute(current_volume != 0);
+    fmradio_state_lock();
+    bool local_ready = pt2257_ready_cached;
+    bool local_muted = current_volume;
+    uint8_t local_atten_db = pt2257_atten_db;
+    fmradio_state_unlock();
+
+    if(!local_ready) return;
+    pt2257_set_attenuation_db(local_muted ? 79 : local_atten_db);
+    pt2257_mute(local_muted);
 }
 
 #define SETTINGS_DIR EXT_PATH("apps_data/fmradio_controller_pt2257")
@@ -94,6 +99,9 @@ static uint32_t scan_start_freq_10khz = 7600U;
 static uint32_t scan_last_freq_10khz = 0;
 static uint32_t scan_last_step_tick = 0;
 static uint32_t scan_start_tick = 0;
+static uint8_t scan_read_fail_count = 0;
+
+static FuriMutex* state_mutex = NULL;
 
 // Built-in frequency list for Config menu quick-jump
 static const float frequency_values[] = {
@@ -108,6 +116,18 @@ static uint32_t clamp_u32(uint32_t value, uint32_t min, uint32_t max) {
     if(value < min) return min;
     if(value > max) return max;
     return value;
+}
+
+static void fmradio_state_lock(void) {
+    if(state_mutex) {
+        (void)furi_mutex_acquire(state_mutex, FuriWaitForever);
+    }
+}
+
+static void fmradio_state_unlock(void) {
+    if(state_mutex) {
+        (void)furi_mutex_release(state_mutex);
+    }
 }
 
 static uint32_t fmradio_get_current_freq_10khz(void) {
@@ -240,6 +260,7 @@ static bool fmradio_presets_find_min(uint8_t* min_index) {
 
 static void fmradio_scan_finish_and_tune_first(void) {
     scan_active = false;
+    scan_read_fail_count = 0;
     fmradio_presets_save();
 
     if(preset_count > 0) {
@@ -283,6 +304,7 @@ static void fmradio_scan_start(bool direction_up) {
     scan_last_freq_10khz = scan_start_freq_10khz;
     scan_last_step_tick = 0;
     scan_start_tick = furi_get_tick();
+    scan_read_fail_count = 0;
 
     // Fresh scan: clear and rebuild presets
     fmradio_presets_reset();
@@ -672,6 +694,7 @@ bool fmradio_controller_view_input_callback(InputEvent* event, void* context) {
     if(event->type == InputTypeLong && event->key == InputKeyLeft) {
         // Triple-seek gesture clears presets
         uint32_t now = furi_get_tick();
+        fmradio_state_lock();
         if((now - seek_press_tick) > furi_ms_to_ticks(2500)) {
             seek_press_count = 0;
         }
@@ -681,8 +704,10 @@ bool fmradio_controller_view_input_callback(InputEvent* event, void* context) {
             fmradio_presets_reset();
             scan_active = false;
             seek_press_count = 0;
+            fmradio_state_unlock();
             return true;
         }
+        fmradio_state_unlock();
 
         fmradio_scan_start(false);
         fmradio_settings_mark_dirty();
@@ -690,6 +715,7 @@ bool fmradio_controller_view_input_callback(InputEvent* event, void* context) {
     } else if(event->type == InputTypeLong && event->key == InputKeyRight) {
         // Triple-seek gesture clears presets
         uint32_t now = furi_get_tick();
+        fmradio_state_lock();
         if((now - seek_press_tick) > furi_ms_to_ticks(2500)) {
             seek_press_count = 0;
         }
@@ -699,8 +725,10 @@ bool fmradio_controller_view_input_callback(InputEvent* event, void* context) {
             fmradio_presets_reset();
             scan_active = false;
             seek_press_count = 0;
+            fmradio_state_unlock();
             return true;
         }
+        fmradio_state_unlock();
 
         fmradio_scan_start(true);
         fmradio_settings_mark_dirty();
@@ -729,16 +757,21 @@ bool fmradio_controller_view_input_callback(InputEvent* event, void* context) {
         fmradio_feedback_success();
         return true;
     } else if (event->type == InputTypeShort && event->key == InputKeyOk) {
+        fmradio_state_lock();
         current_volume = !current_volume;
+        fmradio_state_unlock();
         fmradio_apply_pt2257_state();
         fmradio_settings_mark_dirty();
         return true;  // Event was handled
     } else if (event->type == InputTypeShort && event->key == InputKeyUp) {
+        fmradio_state_lock();
         if(preset_count > 0) {
             preset_index = (preset_index + 1) % preset_count;
             tea5767_SetFreqMHz(((float)preset_freq_10khz[preset_index]) / 100.0f);
             fmradio_presets_mark_dirty();
+            fmradio_state_unlock();
         } else {
+            fmradio_state_unlock();
             // Increment the current frequency index and loop back if at the end
             current_frequency_index = (current_frequency_index + 1) %
                                       (sizeof(frequency_values) / sizeof(frequency_values[0]));
@@ -748,6 +781,7 @@ bool fmradio_controller_view_input_callback(InputEvent* event, void* context) {
         fmradio_settings_mark_dirty();
         return true;  // Event was handled
     } else if (event->type == InputTypeShort && event->key == InputKeyDown) {
+        fmradio_state_lock();
         if(preset_count > 0) {
             if(preset_index == 0) {
                 preset_index = preset_count - 1;
@@ -756,7 +790,9 @@ bool fmradio_controller_view_input_callback(InputEvent* event, void* context) {
             }
             tea5767_SetFreqMHz(((float)preset_freq_10khz[preset_index]) / 100.0f);
             fmradio_presets_mark_dirty();
+            fmradio_state_unlock();
         } else {
+            fmradio_state_unlock();
             // Decrement the current frequency index and loop back if at the beginning
             if (current_frequency_index == 0) {
                 current_frequency_index = (sizeof(frequency_values) / sizeof(frequency_values[0])) - 1;
@@ -771,19 +807,27 @@ bool fmradio_controller_view_input_callback(InputEvent* event, void* context) {
     } else if ((event->type == InputTypeLong || event->type == InputTypeRepeat) &&
               event->key == InputKeyUp) {
         // Volume up => reduce attenuation
+        fmradio_state_lock();
         if (pt2257_atten_db > 0) {
             pt2257_atten_db--;
+            fmradio_state_unlock();
             fmradio_apply_pt2257_state();
             fmradio_settings_mark_dirty();
+        } else {
+            fmradio_state_unlock();
         }
         return true;
     } else if ((event->type == InputTypeLong || event->type == InputTypeRepeat) &&
               event->key == InputKeyDown) {
         // Volume down => increase attenuation
+        fmradio_state_lock();
         if (pt2257_atten_db < 79) {
             pt2257_atten_db++;
+            fmradio_state_unlock();
             fmradio_apply_pt2257_state();
             fmradio_settings_mark_dirty();
+        } else {
+            fmradio_state_unlock();
         }
         return true;
     }
@@ -794,6 +838,10 @@ bool fmradio_controller_view_input_callback(InputEvent* event, void* context) {
 // Callback for handling frequency changes
 void fmradio_controller_frequency_change(VariableItem* item) {
     uint8_t index = variable_item_get_current_value_index(item);
+    if(index >= COUNT_OF(frequency_values)) {
+        index = 0;
+        variable_item_set_current_value_index(item, index);
+    }
 
     // Apply immediately
     if(index < COUNT_OF(frequency_values)) {
@@ -810,6 +858,10 @@ void fmradio_controller_frequency_change(VariableItem* item) {
 // Callback for handling volume changes
 void fmradio_controller_volume_change(VariableItem* item) {
     uint8_t index = variable_item_get_current_value_index(item);
+    if(index >= COUNT_OF(volume_values)) {
+        index = 0;
+        variable_item_set_current_value_index(item, index);
+    }
     variable_item_set_current_value_text(item, volume_names[index]);  // Display the selected volume as text
 
     // Apply immediately (this Config "Volume" is just PT2257 mute/unmute)
@@ -844,12 +896,43 @@ static void fmradio_tick_callback(void* context) {
     static uint32_t last_pt2257_check = 0;
     if((now - last_pt2257_check) > furi_ms_to_ticks(500)) {
         bool ready = pt2257_is_device_ready();
-        if(ready && !pt2257_ready_cached) {
-            pt2257_ready_cached = true;
+        fmradio_state_lock();
+        bool was_ready = pt2257_ready_cached;
+        pt2257_ready_cached = ready;
+        fmradio_state_unlock();
+
+        if(ready && !was_ready) {
             fmradio_apply_pt2257_state();
         }
-        pt2257_ready_cached = ready;
         last_pt2257_check = now;
+    }
+
+    // Scan processing is event/state logic, keep it off draw callback.
+    fmradio_state_lock();
+    bool local_scan_active = scan_active;
+    uint32_t local_scan_start_tick = scan_start_tick;
+    fmradio_state_unlock();
+
+    if(local_scan_active) {
+        uint8_t tea_buffer[5];
+        struct RADIO_INFO info;
+        if(tea5767_get_radio_info(tea_buffer, &info)) {
+            fmradio_state_lock();
+            scan_read_fail_count = 0;
+            fmradio_state_unlock();
+            fmradio_scan_process(tea_buffer, &info);
+        } else {
+            fmradio_state_lock();
+            if(scan_read_fail_count < 255) scan_read_fail_count++;
+            bool should_abort =
+                (scan_read_fail_count >= 8) ||
+                ((furi_get_tick() - local_scan_start_tick) > furi_ms_to_ticks(35000));
+            if(should_abort) {
+                scan_active = false;
+                scan_read_fail_count = 0;
+            }
+            fmradio_state_unlock();
+        }
     }
 
     // Debounced settings save (every ~2 s when dirty)
@@ -897,28 +980,32 @@ void fmradio_controller_view_draw_callback(Canvas* canvas, void* model) {
     elements_button_top_left(canvas, " Pre");
     elements_button_top_right(canvas, "Pre ");
 
-    if(pt2257_ready_cached) {
+    fmradio_state_lock();
+    bool local_pt2257_ready = pt2257_ready_cached;
+    uint8_t local_pt2257_atten = pt2257_atten_db;
+    bool local_muted = current_volume;
+    fmradio_state_unlock();
+
+    if(local_pt2257_ready) {
         snprintf(
             pt2257_display,
             sizeof(pt2257_display),
             "PT2257: OK  Vol: -%udB",
-            (unsigned)pt2257_atten_db);
+            (unsigned)local_pt2257_atten);
     } else {
         snprintf(pt2257_display, sizeof(pt2257_display), "PT2257: ERROR");
     }
     canvas_draw_str(canvas, 10, 51, pt2257_display);
     
     
-    if (tea5767_get_radio_info(buffer, &info)) { 
-        // If scanning, keep collecting presets until scan completes
-        fmradio_scan_process(buffer, &info);
+    if (tea5767_get_radio_info(buffer, &info)) {
         snprintf(frequency_display, sizeof(frequency_display), "Frequency: %.1f MHz", (double)info.frequency);
         canvas_draw_str(canvas, 10, 21, frequency_display);
 
         snprintf(signal_display, sizeof(signal_display), "RSSI: %d (%s)", info.signalLevel, info.signalQuality);
         canvas_draw_str(canvas, 10, 41, signal_display); 
 
-        if(current_volume != 0) {
+        if(local_muted) {
             snprintf(audio_display, sizeof(audio_display), "Audio: MUTE");
         } else {
             snprintf(audio_display, sizeof(audio_display), "Audio: %s", info.stereo ? "Stereo" : "Mono");
@@ -937,16 +1024,25 @@ void fmradio_controller_view_draw_callback(Canvas* canvas, void* model) {
 // Allocate memory for the application
 FMRadio* fmradio_controller_alloc() {
     FMRadio* app = (FMRadio*)malloc(sizeof(FMRadio));
+    if(!app) return NULL;
+    memset(app, 0, sizeof(FMRadio));
 
+    bool gui_opened = false;
     Gui* gui = furi_record_open(RECORD_GUI);
+    if(!gui) goto fail;
+    gui_opened = true;
+
+    state_mutex = furi_mutex_alloc(FuriMutexTypeNormal);
+    if(!state_mutex) goto fail;
 
     // Initialize the view dispatcher
     app->view_dispatcher = view_dispatcher_alloc();
-    
+    if(!app->view_dispatcher) goto fail;
     view_dispatcher_attach_to_gui(app->view_dispatcher, gui, ViewDispatcherTypeFullscreen);
 
     // Initialize the submenu
     app->submenu = submenu_alloc();
+    if(!app->submenu) goto fail;
     submenu_add_item(app->submenu,"Listen Now",FMRadioSubmenuIndexListen,fmradio_controller_submenu_callback,app);
     submenu_add_item(app->submenu, "Config", FMRadioSubmenuIndexConfigure, fmradio_controller_submenu_callback, app);
     submenu_add_item(app->submenu, "About", FMRadioSubmenuIndexAbout, fmradio_controller_submenu_callback, app);
@@ -956,6 +1052,7 @@ FMRadio* fmradio_controller_alloc() {
 
     // Initialize the variable item list for configuration
     app->variable_item_list_config = variable_item_list_alloc();
+    if(!app->variable_item_list_config) goto fail;
     variable_item_list_reset(app->variable_item_list_config);
 
     // Add TEA5767 SNC toggle
@@ -965,6 +1062,7 @@ FMRadio* fmradio_controller_alloc() {
         2,
         fmradio_controller_snc_change,
         app);
+    if(!app->item_snc) goto fail;
     variable_item_set_current_value_index(app->item_snc, tea_snc_enabled ? 1 : 0);
     variable_item_set_current_value_text(app->item_snc, tea_snc_enabled ? "On" : "Off");
 
@@ -975,6 +1073,7 @@ FMRadio* fmradio_controller_alloc() {
         2,
         fmradio_controller_deemph_change,
         app);
+    if(!app->item_deemph) goto fail;
     variable_item_set_current_value_index(app->item_deemph, tea_deemph_75us ? 1 : 0);
     variable_item_set_current_value_text(app->item_deemph, tea_deemph_75us ? "75us" : "50us");
 
@@ -985,6 +1084,7 @@ FMRadio* fmradio_controller_alloc() {
         2,
         fmradio_controller_softmute_change,
         app);
+    if(!app->item_softmute) goto fail;
     variable_item_set_current_value_index(app->item_softmute, tea_softmute_enabled ? 1 : 0);
     variable_item_set_current_value_text(app->item_softmute, tea_softmute_enabled ? "On" : "Off");
 
@@ -995,6 +1095,7 @@ FMRadio* fmradio_controller_alloc() {
         2,
         fmradio_controller_highcut_change,
         app);
+    if(!app->item_highcut) goto fail;
     variable_item_set_current_value_index(app->item_highcut, tea_highcut_enabled ? 1 : 0);
     variable_item_set_current_value_text(app->item_highcut, tea_highcut_enabled ? "On" : "Off");
 
@@ -1005,6 +1106,7 @@ FMRadio* fmradio_controller_alloc() {
         2,
         fmradio_controller_mono_change,
         app);
+    if(!app->item_mono) goto fail;
     variable_item_set_current_value_index(app->item_mono, tea_force_mono_enabled ? 1 : 0);
     variable_item_set_current_value_text(app->item_mono, tea_force_mono_enabled ? "On" : "Off");
 
@@ -1015,16 +1117,19 @@ FMRadio* fmradio_controller_alloc() {
         2,
         fmradio_controller_backlight_change,
         app);
+    if(!app->item_backlight) goto fail;
     variable_item_set_current_value_index(app->item_backlight, backlight_keep_on ? 1 : 0);
     variable_item_set_current_value_text(app->item_backlight, backlight_keep_on ? "On" : "Off");
 
     // Add frequency configuration
     app->item_freq = variable_item_list_add(app->variable_item_list_config,"Freq (MHz)", COUNT_OF(frequency_values),fmradio_controller_frequency_change,app); 
+    if(!app->item_freq) goto fail;
     uint32_t frequency_index = 0;
     variable_item_set_current_value_index(app->item_freq, frequency_index);
 
     // Add volume configuration
     app->item_volume = variable_item_list_add(app->variable_item_list_config,"Volume", COUNT_OF(volume_values),fmradio_controller_volume_change,app);
+    if(!app->item_volume) goto fail;
     uint8_t volume_index = 0;
     variable_item_set_current_value_index(app->item_volume, volume_index);
     view_set_previous_callback(variable_item_list_get_view(app->variable_item_list_config),fmradio_controller_navigation_submenu_callback);
@@ -1032,6 +1137,7 @@ FMRadio* fmradio_controller_alloc() {
 
     // Initialize the Listen view
     app->listen_view = view_alloc();
+    if(!app->listen_view) goto fail;
     view_set_draw_callback(app->listen_view, fmradio_controller_view_draw_callback);
     view_set_input_callback(app->listen_view, fmradio_controller_view_input_callback);
     view_set_previous_callback(app->listen_view, fmradio_controller_navigation_submenu_callback);
@@ -1041,8 +1147,9 @@ FMRadio* fmradio_controller_alloc() {
 
     // Initialize the widget for displaying information about the app
     app->widget_about = widget_alloc();
+    if(!app->widget_about) goto fail;
     widget_add_text_scroll_element(app->widget_about,0,0,128,64,
-        "FM Radio. (v0.9+pt2257.1)\n---\n Created By Coolshrimp\n Fork/extended by pchmielewski1\n\n"
+        "FM Radio. (v" FMRADIO_UI_VERSION ")\n---\n Created By Coolshrimp\n Fork/extended by pchmielewski1\n\n"
         "Left/Right (short) = Tune -/+ 0.1MHz\n"
         "Left/Right (hold) = Scan band (build presets)\n"
         "OK (short) = Mute (PT2257)\n"
@@ -1057,6 +1164,7 @@ FMRadio* fmradio_controller_alloc() {
     view_dispatcher_add_view(app->view_dispatcher, FMRadioViewAbout, widget_get_view(app->widget_about));
 
     app->notifications = furi_record_open(RECORD_NOTIFICATION);
+    if(!app->notifications) goto fail;
 
     // Load persisted state (if present)
     fmradio_presets_load();
@@ -1111,6 +1219,7 @@ FMRadio* fmradio_controller_alloc() {
 
     // Start periodic background tick (I2C hot-plug, debounced saves)
     app->tick_timer = furi_timer_alloc(fmradio_tick_callback, FuriTimerTypePeriodic, app);
+    if(!app->tick_timer) goto fail;
     furi_timer_start(app->tick_timer, furi_ms_to_ticks(250));
 
 #ifdef BACKLIGHT_ALWAYS_ON
@@ -1118,28 +1227,105 @@ FMRadio* fmradio_controller_alloc() {
 #endif
 
     return app;
+
+fail:
+    if(app) {
+        if(app->tick_timer) {
+            furi_timer_stop(app->tick_timer);
+            furi_timer_free(app->tick_timer);
+            app->tick_timer = NULL;
+        }
+        if(app->notifications) {
+            notification_message(app->notifications, &sequence_display_backlight_enforce_auto);
+            furi_record_close(RECORD_NOTIFICATION);
+            app->notifications = NULL;
+        }
+        if(app->widget_about) {
+            if(app->view_dispatcher) view_dispatcher_remove_view(app->view_dispatcher, FMRadioViewAbout);
+            widget_free(app->widget_about);
+            app->widget_about = NULL;
+        }
+        if(app->listen_view) {
+            if(app->view_dispatcher) view_dispatcher_remove_view(app->view_dispatcher, FMRadioViewListen);
+            view_free(app->listen_view);
+            app->listen_view = NULL;
+        }
+        if(app->variable_item_list_config) {
+            if(app->view_dispatcher) view_dispatcher_remove_view(app->view_dispatcher, FMRadioViewConfigure);
+            variable_item_list_free(app->variable_item_list_config);
+            app->variable_item_list_config = NULL;
+        }
+        if(app->submenu) {
+            if(app->view_dispatcher) view_dispatcher_remove_view(app->view_dispatcher, FMRadioViewSubmenu);
+            submenu_free(app->submenu);
+            app->submenu = NULL;
+        }
+        if(app->view_dispatcher) {
+            view_dispatcher_free(app->view_dispatcher);
+            app->view_dispatcher = NULL;
+        }
+    }
+
+    if(state_mutex) {
+        furi_mutex_free(state_mutex);
+        state_mutex = NULL;
+    }
+
+    if(gui_opened) {
+        furi_record_close(RECORD_GUI);
+    }
+    free(app);
+    return NULL;
 }
 
 // Free memory used by the application
 void fmradio_controller_free(FMRadio* app) {
+    if(!app) return;
+
     // Stop background tick timer
-    furi_timer_stop(app->tick_timer);
-    furi_timer_free(app->tick_timer);
+    if(app->tick_timer) {
+        furi_timer_stop(app->tick_timer);
+        furi_timer_free(app->tick_timer);
+        app->tick_timer = NULL;
+    }
 
     // Always restore auto backlight on exit
-    notification_message(app->notifications, &sequence_display_backlight_enforce_auto);
-    furi_record_close(RECORD_NOTIFICATION);
+    if(app->notifications) {
+        notification_message(app->notifications, &sequence_display_backlight_enforce_auto);
+        furi_record_close(RECORD_NOTIFICATION);
+        app->notifications = NULL;
+    }
 
-    view_dispatcher_remove_view(app->view_dispatcher, FMRadioViewAbout);
-    widget_free(app->widget_about);
-    view_dispatcher_remove_view(app->view_dispatcher, FMRadioViewListen);
-    view_free(app->listen_view);
-    view_dispatcher_remove_view(app->view_dispatcher, FMRadioViewConfigure);
-    variable_item_list_free(app->variable_item_list_config);
-    view_dispatcher_remove_view(app->view_dispatcher, FMRadioViewSubmenu);
-    submenu_free(app->submenu);
-    view_dispatcher_free(app->view_dispatcher);
+    if(app->widget_about) {
+        if(app->view_dispatcher) view_dispatcher_remove_view(app->view_dispatcher, FMRadioViewAbout);
+        widget_free(app->widget_about);
+        app->widget_about = NULL;
+    }
+    if(app->listen_view) {
+        if(app->view_dispatcher) view_dispatcher_remove_view(app->view_dispatcher, FMRadioViewListen);
+        view_free(app->listen_view);
+        app->listen_view = NULL;
+    }
+    if(app->variable_item_list_config) {
+        if(app->view_dispatcher) view_dispatcher_remove_view(app->view_dispatcher, FMRadioViewConfigure);
+        variable_item_list_free(app->variable_item_list_config);
+        app->variable_item_list_config = NULL;
+    }
+    if(app->submenu) {
+        if(app->view_dispatcher) view_dispatcher_remove_view(app->view_dispatcher, FMRadioViewSubmenu);
+        submenu_free(app->submenu);
+        app->submenu = NULL;
+    }
+    if(app->view_dispatcher) {
+        view_dispatcher_free(app->view_dispatcher);
+        app->view_dispatcher = NULL;
+    }
     furi_record_close(RECORD_GUI);
+
+    if(state_mutex) {
+        furi_mutex_free(state_mutex);
+        state_mutex = NULL;
+    }
 
     free(app);
 }
@@ -1149,6 +1335,10 @@ int32_t fmradio_controller_app(void* p) {
     UNUSED(p);
 
     FMRadio* app = fmradio_controller_alloc();
+    if(!app) {
+        FURI_LOG_E(TAG, "App allocation failed");
+        return -1;
+    }
     view_dispatcher_run(app->view_dispatcher);
 
     fmradio_controller_free(app);
