@@ -2,7 +2,7 @@
 
 #include "lib/Arduino.h"
 #include "lib/ArduboyTones.h"
-#include "EEPROM.h"
+#include "lib/ArduboyAudio.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
@@ -59,7 +59,6 @@ using uint24_t = uint32_t;
 #define ARDUBOY_LIB_VER               60000
 #define ARDUBOY_UNIT_NAME_LEN         6
 #define ARDUBOY_UNIT_NAME_BUFFER_SIZE (ARDUBOY_UNIT_NAME_LEN + 1)
-#define EEPROM_STORAGE_SPACE_START    16
 #define BLACK                         1
 #define WHITE                         0
 #define INVERT                        2
@@ -122,8 +121,7 @@ public:
         volatile uint8_t* input_state,
         volatile uint8_t* input_press_latch,
         FuriMutex* game_mutex,
-        volatile bool* exit_requested)
-    {
+        volatile bool* exit_requested) {
         sBuffer = screen_buffer;
         input_state_ = input_state;
         input_press_latch_ = input_press_latch;
@@ -248,9 +246,10 @@ public:
 
         if(input_ctx_.runtime) {
             in = __atomic_load_n((uint8_t*)&input_ctx_.runtime->held, __ATOMIC_RELAXED);
-            press = __atomic_exchange_n((uint8_t*)&input_ctx_.runtime->press_latch, 0, __ATOMIC_RELAXED);
-            release =
-                __atomic_exchange_n((uint8_t*)&input_ctx_.runtime->release_latch, 0, __ATOMIC_RELAXED);
+            press = __atomic_exchange_n(
+                (uint8_t*)&input_ctx_.runtime->press_latch, 0, __ATOMIC_RELAXED);
+            release = __atomic_exchange_n(
+                (uint8_t*)&input_ctx_.runtime->release_latch, 0, __ATOMIC_RELAXED);
         } else if(input_state_) {
             in = __atomic_load_n((uint8_t*)input_state_, __ATOMIC_RELAXED);
         }
@@ -266,7 +265,8 @@ public:
         press_edges_ = 0;
         release_edges_ = 0;
         if(input_ctx_.runtime) {
-            (void)__atomic_store_n((uint8_t*)&input_ctx_.runtime->press_latch, 0, __ATOMIC_RELAXED);
+            (void)__atomic_store_n(
+                (uint8_t*)&input_ctx_.runtime->press_latch, 0, __ATOMIC_RELAXED);
             (void)__atomic_store_n(
                 (uint8_t*)&input_ctx_.runtime->release_latch, 0, __ATOMIC_RELAXED);
         }
@@ -275,7 +275,8 @@ public:
     void resetInputState() {
         if(input_ctx_.runtime) {
             (void)__atomic_store_n((uint8_t*)&input_ctx_.runtime->held, 0, __ATOMIC_RELAXED);
-            (void)__atomic_store_n((uint8_t*)&input_ctx_.runtime->press_latch, 0, __ATOMIC_RELAXED);
+            (void)__atomic_store_n(
+                (uint8_t*)&input_ctx_.runtime->press_latch, 0, __ATOMIC_RELAXED);
             (void)__atomic_store_n(
                 (uint8_t*)&input_ctx_.runtime->release_latch, 0, __ATOMIC_RELAXED);
         }
@@ -469,30 +470,7 @@ public:
         return frame_count_;
     }
 
-
-  static constexpr uint16_t eepromSysFlags = 1;
-    // Audio mute control. 0 = audio off, non-zero = audio on
-  static constexpr uint16_t eepromAudioOnOff = 2;
-    // -- Addresses 3-7 are currently reserved for future use --
-    // A uint16_t binary unit ID
-  static constexpr uint16_t eepromUnitID = 8; // A uint16_t binary unit ID
-    // An up to 6 character unit name
-    // The name cannot contain 0x00, 0xFF, 0x0A, 0x0D
-    // Lengths less than 6 are padded with 0x00
-  static constexpr uint16_t eepromUnitName = 10;
-    // -- User EEPROM space starts at address 16 --
-
-  // --- Map of the bits in the eepromSysFlags byte --
-    // Display the unit name on the logo screen
-  static constexpr uint8_t sysFlagUnameBit = 0;
-  static constexpr uint8_t sysFlagUnameMask = _BV(sysFlagUnameBit);
-    // Show the logo sequence during boot up
-  static constexpr uint8_t sysFlagShowLogoBit = 1;
-  static constexpr uint8_t sysFlagShowLogoMask = _BV(sysFlagShowLogoBit);
-    // Flash the RGB led during the boot logo
-  static constexpr uint8_t sysFlagShowLogoLEDsBit = 2;
-  static constexpr uint8_t sysFlagShowLogoLEDsMask = _BV(sysFlagShowLogoLEDsBit);
-uint8_t* sBuffer = nullptr;
+    uint8_t* sBuffer = nullptr;
 
 private:
     static uint8_t FlipperInputMaskFromKey_(InputKey key) {

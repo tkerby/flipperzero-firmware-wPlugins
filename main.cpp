@@ -35,7 +35,6 @@ volatile uint8_t g_arduboy_volume_mode = VOLUME_IN_TONE;
 void splashScreen_Init();
 void splashScreen();
 void title_Init();
-void saveSoundState();
 void title();
 void setSound(SoundIndex index);
 void isEnemyVisible(
@@ -242,8 +241,6 @@ extern "C" int32_t arduboy_app(void* p) {
         &g_state->exit_requested);
     Sprites::setArduboy(&arduboy);
 
-    EEPROM.begin(APP_DATA_PATH("eeprom.bin"));
-
     g_state->gui = (Gui*)furi_record_open(RECORD_GUI);
     if(g_state->gui) {
         gui_add_framebuffer_callback(g_state->gui, framebuffer_commit_callback, g_state);
@@ -321,7 +318,6 @@ extern "C" int32_t arduboy_app(void* p) {
     }
 
     arduboy.audio.saveOnOff();
-    EEPROM.commit();
     FX::commit();
     FX::end();
     arduboy_tone_sound_system_deinit();
