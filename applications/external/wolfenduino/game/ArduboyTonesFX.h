@@ -5,6 +5,7 @@
 #include <stdbool.h>
 
 #include "lib/Arduino.h"
+#include "lib/ArduboyAudio.h"
 #include "lib/ArduboyTones.h"
 #include "lib/ArduboyFX.h"
 
