@@ -26,9 +26,9 @@ volatile uint8_t g_arduboy_volume_mode = VOLUME_IN_TONE;
 volatile bool g_arduboy_force_high = false;
 volatile bool g_arduboy_force_norm = false;
 
-#define DISPLAY_WIDTH  128
-#define DISPLAY_HEIGHT 64
-#define BUFFER_SIZE    (DISPLAY_WIDTH * DISPLAY_HEIGHT / 8)
+#define DISPLAY_WIDTH       128
+#define DISPLAY_HEIGHT      64
+#define BUFFER_SIZE         (DISPLAY_WIDTH * DISPLAY_HEIGHT / 8)
 #define HOLD_TO_EXIT_FRAMES 15
 
 typedef struct {
