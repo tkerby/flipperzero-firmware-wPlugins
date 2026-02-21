@@ -35,6 +35,7 @@ uint8_t Arduboy2Ext::pressedButtons() const {
 }
 
 void Arduboy2Ext::clearButtonState() {
+    Arduboy2Base::clearButtonState();
     sampled_frame = UINT32_MAX;
     previous_buttons = 0;
     current_buttons = 0;

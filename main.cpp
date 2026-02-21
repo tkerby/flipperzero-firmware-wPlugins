@@ -111,11 +111,20 @@ typedef struct {
     volatile uint8_t input_press_latch;
     volatile bool exit_requested;
     volatile bool back_long_requested;
+    volatile bool back_long_suppressed;
+    volatile uint32_t input_cb_inflight;
     GameState last_game_state;
     bool backlight_forced;
 } FlipperState;
 
 static FlipperState* g_state = NULL;
+
+static void wait_input_callbacks_idle(FlipperState* state) {
+    if(!state) return;
+    while(__atomic_load_n((uint32_t*)&state->input_cb_inflight, __ATOMIC_ACQUIRE) != 0) {
+        furi_delay_ms(1);
+    }
+}
 
 static bool can_exit_from_current_state() {
     switch(gamePlay.gameState) {
@@ -153,43 +162,29 @@ static void input_events_callback(const void* value, void* ctx) {
     FlipperState* state = (FlipperState*)ctx;
     if(!state) return;
 
-    uint8_t bit = 0;
-    switch(event->key) {
-    case InputKeyUp:
-        bit = INPUT_UP;
-        break;
-    case InputKeyDown:
-        bit = INPUT_DOWN;
-        break;
-    case InputKeyLeft:
-        bit = INPUT_LEFT;
-        break;
-    case InputKeyRight:
-        bit = INPUT_RIGHT;
-        break;
-    case InputKeyOk:
-        bit = INPUT_A;
-        break;
-    case InputKeyBack:
-        bit = INPUT_B;
-        break;
-    default:
-        return;
+    (void)__atomic_fetch_add((uint32_t*)&state->input_cb_inflight, 1, __ATOMIC_RELAXED);
+
+    if(event->key == InputKeyBack) {
+        if(state->back_long_suppressed) {
+            if(event->type == InputTypeRelease) {
+                state->back_long_suppressed = false;
+            }
+            arduboy.clearInputMask(INPUT_B);
+            goto exit_callback;
+        }
+
+        if(event->type == InputTypeLong && can_exit_from_current_state()) {
+            state->back_long_requested = true;
+            state->back_long_suppressed = true;
+            arduboy.clearInputMask(INPUT_B);
+            goto exit_callback;
+        }
     }
 
-    if(event->type == InputTypePress || event->type == InputTypeRepeat) {
-        (void)__atomic_fetch_or((uint8_t*)&state->input_state, bit, __ATOMIC_RELAXED);
-        (void)__atomic_fetch_or((uint8_t*)&state->input_press_latch, bit, __ATOMIC_RELAXED);
-    } else if(event->type == InputTypeRelease) {
-        (void)__atomic_fetch_and((uint8_t*)&state->input_state, (uint8_t)~bit, __ATOMIC_RELAXED);
-        if(event->key == InputKeyBack) {
-            state->back_long_requested = false;
-        }
-    } else if(event->type == InputTypeLong && event->key == InputKeyBack) {
-        if(can_exit_from_current_state()) {
-            state->back_long_requested = true;
-        }
-    }
+    Arduboy2Base::FlipperInputCallback(event, arduboy.inputContext());
+
+exit_callback:
+    (void)__atomic_fetch_sub((uint32_t*)&state->input_cb_inflight, 1, __ATOMIC_RELAXED);
 }
 
 static void framebuffer_commit_callback(
@@ -229,6 +224,8 @@ extern "C" int32_t arduboy_app(void* p) {
 
     g_state->exit_requested = false;
     g_state->back_long_requested = false;
+    g_state->back_long_suppressed = false;
+    g_state->input_cb_inflight = 0;
     g_state->last_game_state = gamePlay.gameState;
     g_state->notifications = NULL;
     g_state->backlight_forced = false;
@@ -269,16 +266,17 @@ extern "C" int32_t arduboy_app(void* p) {
         if(g_state->back_long_requested) {
             g_state->back_long_requested = false;
             if(can_exit_from_current_state()) g_state->exit_requested = true;
+            arduboy.resetInputState();
+            g_state->back_long_suppressed = false;
         }
         const uint32_t frame_after = arduboy.frameCount();
         if(frame_after != frame_before) {
             const GameState now_state = gamePlay.gameState;
             if(now_state != g_state->last_game_state) {
                 g_state->last_game_state = now_state;
-                g_state->input_state = 0;
-                g_state->input_press_latch = 0;
+                arduboy.resetInputState();
                 g_state->back_long_requested = false;
-                arduboy.clearButtonState();
+                g_state->back_long_suppressed = false;
             }
             if(furi_mutex_acquire(g_state->fb_mutex, FuriWaitForever) == FuriStatusOk) {
                 memcpy(g_state->front_buffer, g_state->screen_buffer, FB_SIZE);
@@ -298,16 +296,17 @@ extern "C" int32_t arduboy_app(void* p) {
             if(g_state->back_long_requested) {
                 g_state->back_long_requested = false;
                 if(can_exit_from_current_state()) g_state->exit_requested = true;
+                arduboy.resetInputState();
+                g_state->back_long_suppressed = false;
             }
             const uint32_t frame_after = arduboy.frameCount();
             if(frame_after != frame_before) {
                 const GameState now_state = gamePlay.gameState;
                 if(now_state != g_state->last_game_state) {
                     g_state->last_game_state = now_state;
-                    g_state->input_state = 0;
-                    g_state->input_press_latch = 0;
+                    arduboy.resetInputState();
                     g_state->back_long_requested = false;
-                    arduboy.clearButtonState();
+                    g_state->back_long_suppressed = false;
                 }
                 if(furi_mutex_acquire(g_state->fb_mutex, 0) == FuriStatusOk) {
                     memcpy(g_state->front_buffer, g_state->screen_buffer, FB_SIZE);
@@ -339,6 +338,8 @@ extern "C" int32_t arduboy_app(void* p) {
         furi_pubsub_unsubscribe(g_state->input_events, g_state->input_sub);
         g_state->input_sub = NULL;
     }
+
+    wait_input_callbacks_idle(g_state);
 
     if(g_state->input_events) {
         furi_record_close(RECORD_INPUT_EVENTS);
