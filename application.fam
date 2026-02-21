@@ -9,6 +9,6 @@ App(
     fap_icon_assets="images",
     fap_author="coolshrimp",
     fap_weburl="https://coolshrimp/flipperzero-firmware-wPlugins/",
-    fap_version="0.9+pt2257.1",
+    fap_version="0.9",
     fap_description="FM Radio App",
 )
