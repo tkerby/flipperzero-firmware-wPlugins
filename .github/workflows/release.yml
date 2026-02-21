@@ -44,21 +44,31 @@ jobs:
         run: ufbt build
 
       - name: Collect artifacts
+        shell: bash
         run: |
+          set -euxo pipefail
           mkdir -p dist
 
           # ufbt typically puts the built fap under ~/.ufbt/build/
-          FAP_PATH="$(find "$HOME/.ufbt/build" -maxdepth 1 -name '*.fap' | head -n 1)"
+          echo "Listing $HOME/.ufbt/build (if exists):"
+          ls -la "$HOME/.ufbt/build" || true
+
+          FAP_PATH="$(find "$HOME/.ufbt/build" -type f -name '*.fap' -print -quit 2>/dev/null || true)"
           if [ -z "$FAP_PATH" ]; then
-            echo "Could not find .fap under $HOME/.ufbt/build; searching workspace..." >&2
-            FAP_PATH="$(find . -name '*.fap' | head -n 1)"
+            echo "No .fap under $HOME/.ufbt/build; searching under $HOME/.ufbt" >&2
+            FAP_PATH="$(find "$HOME/.ufbt" -type f -name '*.fap' -print -quit 2>/dev/null || true)"
           fi
           if [ -z "$FAP_PATH" ]; then
-            echo "No .fap produced" >&2
-            exit 1
+            echo "No .fap under $HOME/.ufbt; searching workspace" >&2
+            FAP_PATH="$(find "$GITHUB_WORKSPACE" -type f -name '*.fap' -print -quit 2>/dev/null || true)"
           fi
 
-          cp "$FAP_PATH" dist/
+          if [ -z "$FAP_PATH" ]; then
+            echo "No .fap produced (searched ~/.ufbt and workspace)" >&2
+            exit 2
+          fi
+
+          cp "$FAP_PATH" "dist/$(basename "$FAP_PATH")"
           (cd dist && sha256sum *.fap > SHA256SUMS.txt)
 
       - name: Upload build artifact
