@@ -2,6 +2,7 @@
 
 #include "Arduino.h"
 #include "ArduboyTones.h"
+#include "ArduboyAudio.h"
 #include "EEPROM.h"
 #include <stdint.h>
 #include <stddef.h>

@@ -2,10 +2,10 @@
 
 #if !SAVE_TO_FLASH_CHIP
 
-static constexpr uint16_t EEPROM_START_ADDRESS = 700;
-
-#if defined(ARDUINO)
 #include "lib/EEPROM.h"
+
+static constexpr uint16_t EEPROM_START_ADDRESS = 0;
+
 static inline uint8_t eeprom_read(int addr) {
     return EEPROM.read((int)(uintptr_t)addr);
 }
@@ -14,49 +14,42 @@ static inline void eeprom_update(int addr, uint8_t value) {
     EEPROM.update((int)(uintptr_t)addr, value);
 }
 #else
-static array<uint8_t, 1024> eeprom_data;
-static uint8_t eeprom_read(uint16_t i) { return eeprom_data[i]; }
-static void eeprom_update(uint16_t i, uint8_t d) { eeprom_data[i] = d; }
-#endif
-#else
 
-#if !defined(ARDUINO)
 #if GEN_FXSAVE
 static uint8_t FX_SAVE[4096 * 2];
-#endif
 #endif
 
 static void fx_read_save_bytes(uint24_t addr, uint8_t* p, size_t n)
 {
-#ifdef ARDUINO
+#if GEN_FXSAVE
+    memcpy(p, &FX_SAVE[addr], n);
+#else
     FX::readSaveBytes(addr, p, n);
     FX::waitWhileBusy();
-#else
-    memcpy(p, &FX_SAVE[addr], n);
 #endif
 }
 
 static void fx_erase_save_block(uint16_t page)
 {
-#ifdef ARDUINO
-    FX::eraseSaveBlock(page);
-    FX::waitWhileBusy();
-#else
+#if GEN_FXSAVE
     myassert((page & 0xf) == 0);
     myassert(page * 256 + 4096 <= sizeof(FX_SAVE));
     memset(&FX_SAVE[page * 256], 0xff, 4096);
+#else
+    FX::eraseSaveBlock(page);
+    FX::waitWhileBusy();
 #endif
 }
 
 static void fx_write_save_page(uint16_t page, uint8_t* p)
 {
-#ifdef ARDUINO
-    FX::writeSavePage(page, p);
-    FX::waitWhileBusy();
-#else
+#if GEN_FXSAVE
     myassert(page * 256 + 256 <= sizeof(FX_SAVE));
     for(int i = 0; i < 256; ++i)
         FX_SAVE[page * 256 + i] &= p[i];
+#else
+    FX::writeSavePage(page, p);
+    FX::waitWhileBusy();
 #endif
 }
 
@@ -172,5 +165,6 @@ void save()
 #else
     for(uint8_t i = 0; i < sizeof(course_save_data); ++i)
          eeprom_update(EEPROM_START_ADDRESS + i, ((uint8_t*)&savedata)[i]);
+    (void)EEPROM.commit();
 #endif
 }
