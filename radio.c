@@ -1,5 +1,3 @@
-
-
 /**
  *
  * @author Coolshrimp - CoolshrimpModz.com
@@ -42,15 +40,10 @@
 
 #define TAG "FMRadio"
 
-// Define volume options and names
-uint8_t volume_values[] = {0, 1};
-char* volume_names[] = {"Un-Muted", "Muted"};
-bool current_volume = 0;  // Muted or not
-char* current_vol = "Un-Muted";  // Legacy label (kept for compatibility with existing code)
-int* signal_strength;
-int loopcount = 0;
-
-uint8_t tea5767_registers[5];
+// Volume config options (used by Config menu)
+static const uint8_t volume_values[] = {0, 1};
+static const char* volume_names[] = {"Un-Muted", "Muted"};
+static bool current_volume = false;  // PT2257 mute state
 
 // PT2257 attenuation in dB: 0..79 (0 => max volume, 79 => min volume)
 static uint8_t pt2257_atten_db = 20;
@@ -102,14 +95,14 @@ static uint32_t scan_last_freq_10khz = 0;
 static uint32_t scan_last_step_tick = 0;
 static uint32_t scan_start_tick = 0;
 
-// Define values for frequency selection
-float frequency_values[] = {
+// Built-in frequency list for Config menu quick-jump
+static const float frequency_values[] = {
     88.1, 88.9, 89.1, 90.3, 91.5, 91.7, 92.0, 92.5, 94.1, 95.9, 96.3, 96.9,
     97.3, 98.1, 98.7, 99.1, 99.9, 100.7, 101.3, 103.9, 104.5, 105.1, 105.5, 106.5,
     107.1, 102.7, 105.3
 };
 
-uint32_t current_frequency_index = 0;  // Default to the first frequency
+static uint32_t current_frequency_index = 0;  // Default to the first frequency
 
 static uint32_t clamp_u32(uint32_t value, uint32_t min, uint32_t max) {
     if(value < min) return min;
@@ -422,8 +415,7 @@ static void fmradio_settings_load(void) {
 
         bool muted = false;
         if(flipper_format_read_bool(ff, "PtMuted", &muted, 1)) {
-            current_volume = muted ? 1 : 0;
-            current_vol = muted ? "Muted" : "Un-Muted";
+            current_volume = muted;
         }
 
     } while(false);
@@ -559,15 +551,11 @@ static void fmradio_controller_backlight_change(VariableItem* item) {
 }
 
 //lib can only do bottom left/right
-void elements_button_top_left(Canvas* canvas, const char* str) {
+static void elements_button_top_left(Canvas* canvas, const char* str) {
     const uint8_t button_height = 12;
     const uint8_t vertical_offset = 3;
     const uint8_t horizontal_offset = 3;
-
-    // You may need to declare or pass 'button_width' here.
-    const uint8_t string_width = canvas_string_width(canvas, str);    
-
-    // 'button_width' should be declared or passed here.
+    const uint8_t string_width = canvas_string_width(canvas, str);
     const uint8_t button_width = string_width + horizontal_offset * 2 + 3;
 
     const uint8_t x = 0;
@@ -584,14 +572,11 @@ void elements_button_top_left(Canvas* canvas, const char* str) {
     canvas_invert_color(canvas);
 }
 
-void elements_button_top_right(Canvas* canvas, const char* str) {
+static void elements_button_top_right(Canvas* canvas, const char* str) {
     const uint8_t button_height = 12;
     const uint8_t vertical_offset = 3;
     const uint8_t horizontal_offset = 3;
-    // You may need to declare or pass 'button_width' here.
     const uint8_t string_width = canvas_string_width(canvas, str);
-
-    // 'button_width' should be declared or passed here.
     const uint8_t button_width = string_width + horizontal_offset * 2 + 3;
 
     const uint8_t x = canvas_width(canvas);
@@ -610,14 +595,14 @@ void elements_button_top_right(Canvas* canvas, const char* str) {
 // Enumerations for submenu and view indices
 typedef enum {
     FMRadioSubmenuIndexConfigure,
-    FMRadioSubmenuIndexFlipTheWorld,
+    FMRadioSubmenuIndexListen,
     FMRadioSubmenuIndexAbout,
 } FMRadioSubmenuIndex;
 
 typedef enum {
     FMRadioViewSubmenu,
     FMRadioViewConfigure,
-    FMRadioViewFlipTheWorld,
+    FMRadioViewListen,
     FMRadioViewAbout,
 } FMRadioView;
 
@@ -635,14 +620,14 @@ typedef struct {
     VariableItem* item_highcut;
     VariableItem* item_mono;
     VariableItem* item_backlight;
-    View* view_flip_the_world;
+    View* listen_view;
     Widget* widget_about;
+    FuriTimer* tick_timer;
 } FMRadio;
 
-// Define a model struct for your application
+// Model struct for the Listen view (state lives in globals; kept for view_commit_model redraws)
 typedef struct {
-    uint32_t frequency_index;
-    uint8_t volume_index;
+    uint8_t _dummy; // Flipper view system requires a non-zero model
 } MyModel;
 
 // Callback for navigation events
@@ -671,8 +656,8 @@ void fmradio_controller_submenu_callback(void* context, uint32_t index) {
     case FMRadioSubmenuIndexConfigure:
         view_dispatcher_switch_to_view(app->view_dispatcher, FMRadioViewConfigure);
         break;
-    case FMRadioSubmenuIndexFlipTheWorld:
-        view_dispatcher_switch_to_view(app->view_dispatcher, FMRadioViewFlipTheWorld);
+    case FMRadioSubmenuIndexListen:
+        view_dispatcher_switch_to_view(app->view_dispatcher, FMRadioViewListen);
         break;
     case FMRadioSubmenuIndexAbout:
         view_dispatcher_switch_to_view(app->view_dispatcher, FMRadioViewAbout);
@@ -743,14 +728,8 @@ bool fmradio_controller_view_input_callback(InputEvent* event, void* context) {
         fmradio_presets_save();
         fmradio_feedback_success();
         return true;
-    } else if (event->type == InputTypeShort && event->key == InputKeyOk) {       
-        if (current_volume == 0) {
-            current_volume = 1;
-            current_vol = "Muted";
-        } else {
-            current_volume = 0;
-            current_vol = "Un-Muted";
-        }
+    } else if (event->type == InputTypeShort && event->key == InputKeyOk) {
+        current_volume = !current_volume;
         fmradio_apply_pt2257_state();
         fmradio_settings_mark_dirty();
         return true;  // Event was handled
@@ -814,10 +793,7 @@ bool fmradio_controller_view_input_callback(InputEvent* event, void* context) {
 
 // Callback for handling frequency changes
 void fmradio_controller_frequency_change(VariableItem* item) {
-    FMRadio* app = variable_item_get_context(item);
     uint8_t index = variable_item_get_current_value_index(item);
-    MyModel* model = view_get_model(app->view_flip_the_world);
-    model->frequency_index = index;
 
     // Apply immediately
     if(index < COUNT_OF(frequency_values)) {
@@ -833,16 +809,12 @@ void fmradio_controller_frequency_change(VariableItem* item) {
 
 // Callback for handling volume changes
 void fmradio_controller_volume_change(VariableItem* item) {
-    FMRadio* app = variable_item_get_context(item);
     uint8_t index = variable_item_get_current_value_index(item);
     variable_item_set_current_value_text(item, volume_names[index]);  // Display the selected volume as text
-    MyModel* model = view_get_model(app->view_flip_the_world);
-    model->volume_index = index;
 
     // Apply immediately (this Config "Volume" is just PT2257 mute/unmute)
     if(index < COUNT_OF(volume_values)) {
         current_volume = (volume_values[index] != 0);
-        current_vol = current_volume ? "Muted" : "Un-Muted";
         fmradio_apply_pt2257_state();
         fmradio_settings_mark_dirty();
     }
@@ -862,6 +834,44 @@ static uint32_t fmradio_find_nearest_freq_index(float mhz) {
     return best;
 }
 
+// Periodic background tick: I2C hot-plug check, debounced saves.
+// Runs every 250 ms via FuriTimer, independent of which view is active.
+static void fmradio_tick_callback(void* context) {
+    FMRadio* app = (FMRadio*)context;
+    uint32_t now = furi_get_tick();
+
+    // PT2257 hot-plug (every ~500 ms)
+    static uint32_t last_pt2257_check = 0;
+    if((now - last_pt2257_check) > furi_ms_to_ticks(500)) {
+        bool ready = pt2257_is_device_ready();
+        if(ready && !pt2257_ready_cached) {
+            pt2257_ready_cached = true;
+            fmradio_apply_pt2257_state();
+        }
+        pt2257_ready_cached = ready;
+        last_pt2257_check = now;
+    }
+
+    // Debounced settings save (every ~2 s when dirty)
+    static uint32_t last_settings_save = 0;
+    if(settings_dirty && ((now - last_settings_save) > furi_ms_to_ticks(2000))) {
+        fmradio_settings_save();
+        last_settings_save = now;
+    }
+
+    // Debounced presets save (every ~2 s when dirty)
+    static uint32_t last_presets_save = 0;
+    if(presets_dirty && ((now - last_presets_save) > furi_ms_to_ticks(2000))) {
+        fmradio_presets_save();
+        last_presets_save = now;
+    }
+
+    // Trigger a redraw so the Listen view picks up fresh data
+    if(app->listen_view) {
+        view_commit_model(app->listen_view, false);
+    }
+}
+
 // Callback for drawing the view
 
 void fmradio_controller_view_draw_callback(Canvas* canvas, void* model) {
@@ -875,34 +885,6 @@ void fmradio_controller_view_draw_callback(Canvas* canvas, void* model) {
     // tea5767_get_radio_info() populates the info
     struct RADIO_INFO info;
     uint8_t buffer[5];
-
-    // PT2257 hot-plug: if it wasn't present at startup, apply the default/current state
-    // as soon as it appears on the I2C bus.
-    static uint32_t last_pt2257_check_tick = 0;
-    static uint32_t last_settings_save_tick = 0;
-    static uint32_t last_presets_save_tick = 0;
-    uint32_t now_tick = furi_get_tick();
-    if((now_tick - last_pt2257_check_tick) > furi_ms_to_ticks(500)) {
-        bool ready = pt2257_is_device_ready();
-        if(ready && !pt2257_ready_cached) {
-            pt2257_ready_cached = true;
-            fmradio_apply_pt2257_state();
-        }
-        pt2257_ready_cached = ready;
-        last_pt2257_check_tick = now_tick;
-    }
-
-    // Debounced settings save (avoid excessive writes while holding buttons)
-    if(settings_dirty && ((now_tick - last_settings_save_tick) > furi_ms_to_ticks(2000))) {
-        fmradio_settings_save();
-        last_settings_save_tick = now_tick;
-    }
-
-    // Debounced presets save
-    if(presets_dirty && ((now_tick - last_presets_save_tick) > furi_ms_to_ticks(2000))) {
-        fmradio_presets_save();
-        last_presets_save_tick = now_tick;
-    }
 
     // Draw strings on the canvas
     canvas_draw_str(canvas, 45, 10, "FM Radio");    
@@ -933,7 +915,7 @@ void fmradio_controller_view_draw_callback(Canvas* canvas, void* model) {
         snprintf(frequency_display, sizeof(frequency_display), "Frequency: %.1f MHz", (double)info.frequency);
         canvas_draw_str(canvas, 10, 21, frequency_display);
 
-        snprintf(signal_display, sizeof(signal_display), "RSSI: %d (%s) %d", info.signalLevel, info.signalQuality, loopcount);
+        snprintf(signal_display, sizeof(signal_display), "RSSI: %d (%s)", info.signalLevel, info.signalQuality);
         canvas_draw_str(canvas, 10, 41, signal_display); 
 
         if(current_volume != 0) {
@@ -946,7 +928,7 @@ void fmradio_controller_view_draw_callback(Canvas* canvas, void* model) {
         snprintf(frequency_display, sizeof(frequency_display), "TEA5767 Not Detected");
         canvas_draw_str(canvas, 10, 21, frequency_display); 
 
-        snprintf(signal_display, sizeof(signal_display), "Pin 15 = SDA | Pin 16 = SLC");
+        snprintf(signal_display, sizeof(signal_display), "Pin 15 = SDA | Pin 16 = SCL");
         canvas_draw_str(canvas, 10, 41, signal_display); 
     }   
 
@@ -965,7 +947,7 @@ FMRadio* fmradio_controller_alloc() {
 
     // Initialize the submenu
     app->submenu = submenu_alloc();
-    submenu_add_item(app->submenu,"Listen Now",FMRadioSubmenuIndexFlipTheWorld,fmradio_controller_submenu_callback,app);
+    submenu_add_item(app->submenu,"Listen Now",FMRadioSubmenuIndexListen,fmradio_controller_submenu_callback,app);
     submenu_add_item(app->submenu, "Config", FMRadioSubmenuIndexConfigure, fmradio_controller_submenu_callback, app);
     submenu_add_item(app->submenu, "About", FMRadioSubmenuIndexAbout, fmradio_controller_submenu_callback, app);
     view_set_previous_callback(submenu_get_view(app->submenu), fmradio_controller_navigation_exit_callback);
@@ -1048,17 +1030,14 @@ FMRadio* fmradio_controller_alloc() {
     view_set_previous_callback(variable_item_list_get_view(app->variable_item_list_config),fmradio_controller_navigation_submenu_callback);
     view_dispatcher_add_view(app->view_dispatcher,FMRadioViewConfigure,variable_item_list_get_view(app->variable_item_list_config));
 
-    // Initialize the view for flipping the world
-    app->view_flip_the_world = view_alloc();
-    view_set_draw_callback(app->view_flip_the_world, fmradio_controller_view_draw_callback);
-    view_set_input_callback(app->view_flip_the_world, fmradio_controller_view_input_callback);
-    view_set_previous_callback(app->view_flip_the_world, fmradio_controller_navigation_submenu_callback);
-    view_allocate_model(app->view_flip_the_world, ViewModelTypeLockFree, sizeof(MyModel));
-    MyModel* model = view_get_model(app->view_flip_the_world);
-    model->frequency_index = frequency_index;
-    model->volume_index = volume_index;
+    // Initialize the Listen view
+    app->listen_view = view_alloc();
+    view_set_draw_callback(app->listen_view, fmradio_controller_view_draw_callback);
+    view_set_input_callback(app->listen_view, fmradio_controller_view_input_callback);
+    view_set_previous_callback(app->listen_view, fmradio_controller_navigation_submenu_callback);
+    view_allocate_model(app->listen_view, ViewModelTypeLockFree, sizeof(MyModel));
 
-    view_dispatcher_add_view(app->view_dispatcher, FMRadioViewFlipTheWorld, app->view_flip_the_world);
+    view_dispatcher_add_view(app->view_dispatcher, FMRadioViewListen, app->listen_view);
 
     // Initialize the widget for displaying information about the app
     app->widget_about = widget_alloc();
@@ -1130,6 +1109,10 @@ FMRadio* fmradio_controller_alloc() {
     pt2257_ready_cached = pt2257_is_device_ready();
     fmradio_apply_pt2257_state();
 
+    // Start periodic background tick (I2C hot-plug, debounced saves)
+    app->tick_timer = furi_timer_alloc(fmradio_tick_callback, FuriTimerTypePeriodic, app);
+    furi_timer_start(app->tick_timer, furi_ms_to_ticks(250));
+
 #ifdef BACKLIGHT_ALWAYS_ON
     notification_message(app->notifications, &sequence_display_backlight_enforce_on);
 #endif
@@ -1139,14 +1122,18 @@ FMRadio* fmradio_controller_alloc() {
 
 // Free memory used by the application
 void fmradio_controller_free(FMRadio* app) {
+    // Stop background tick timer
+    furi_timer_stop(app->tick_timer);
+    furi_timer_free(app->tick_timer);
+
     // Always restore auto backlight on exit
     notification_message(app->notifications, &sequence_display_backlight_enforce_auto);
     furi_record_close(RECORD_NOTIFICATION);
 
     view_dispatcher_remove_view(app->view_dispatcher, FMRadioViewAbout);
     widget_free(app->widget_about);
-    view_dispatcher_remove_view(app->view_dispatcher, FMRadioViewFlipTheWorld);
-    view_free(app->view_flip_the_world);
+    view_dispatcher_remove_view(app->view_dispatcher, FMRadioViewListen);
+    view_free(app->listen_view);
     view_dispatcher_remove_view(app->view_dispatcher, FMRadioViewConfigure);
     variable_item_list_free(app->variable_item_list_config);
     view_dispatcher_remove_view(app->view_dispatcher, FMRadioViewSubmenu);

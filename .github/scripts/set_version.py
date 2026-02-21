@@ -52,17 +52,14 @@ def main() -> int:
         rf'\g<1>{full_version}',
     )
 
-    # About text: "FM Radio. (vX)"
+    # About text shown inside the app: "FM Radio. (vX)"
+    # This must be updated, otherwise CI would ship a .fap with a stale About version.
     # Keep the leading 'v' in the UI string.
-    text = radio_c.read_text(encoding="utf-8")
-    new_text, n = re.subn(
-        r'(FM Radio\. \(v)([^)]+)(\))',
+    replace_or_die(
+        radio_c,
+        r'(FM Radio\.?\s*\(v)([^)]+)(\))',
         rf"\g<1>{full_version}\g<3>",
-        text,
-        count=1,
     )
-    if n > 0:
-        radio_c.write_text(new_text, encoding="utf-8")
 
     return 0
 

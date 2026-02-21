@@ -25,12 +25,6 @@ static bool tea5767_hcc_enabled = false;
 static bool tea5767_force_mono_enabled = false;
 static uint8_t tea5767_last_write_regs[5];
 static bool tea5767_last_write_valid = false;
-// Define a structure to store station information
-
-struct StationInfo {
-    float frequency; // Frequency in MHz
-    int signalLevel; // Signal level
-};
 
 // Helper function to acquire I2C
 static bool acquire_i2c() {
@@ -62,14 +56,14 @@ bool tea5767_read_registers(uint8_t* buffer) {
 
 bool tea5767_write_registers(uint8_t* buffer) {
     bool result = false;
-    if (buffer == NULL) return false;  // Added NULL check
-        furi_hal_i2c_acquire(&furi_hal_i2c_handle_external);
-        result = furi_hal_i2c_tx(&furi_hal_i2c_handle_external, TEA5767_ADR, buffer, 5, TIMEOUT_MS);
-        if(result) {
-            memcpy(tea5767_last_write_regs, buffer, 5);
-            tea5767_last_write_valid = true;
-        }
-        furi_hal_i2c_release(&furi_hal_i2c_handle_external);
+    if(buffer == NULL) return false;
+    furi_hal_i2c_acquire(&furi_hal_i2c_handle_external);
+    result = furi_hal_i2c_tx(&furi_hal_i2c_handle_external, TEA5767_ADR, buffer, 5, TIMEOUT_MS);
+    if(result) {
+        memcpy(tea5767_last_write_regs, buffer, 5);
+        tea5767_last_write_valid = true;
+    }
+    furi_hal_i2c_release(&furi_hal_i2c_handle_external);
     return result;
 }
 
@@ -214,32 +208,6 @@ bool tea5767_set_force_mono(bool enabled) {
     return tea5767_write_registers(buffer);
 }
 
-bool tea5767_set_mute(uint8_t* buffer, bool mute) {
-    bool result = false;
-
-    if(mute) {
-        buffer[REG_1] |= REG_1_MUTE;
-    } else {
-        buffer[REG_1] &= ~REG_1_MUTE;
-    }
-
-    result = tea5767_write_registers(buffer);
-    return result;
-}
-
-bool tea5767_set_stereo(uint8_t* buffer, bool stereo) {
-    bool result = false;
-
-    if(stereo) {
-        buffer[REG_3] &= ~REG_3_MS;
-    } else {
-        buffer[REG_3] |= REG_3_MS;
-    }
-
-    result = tea5767_write_registers(buffer);
-    return result;
-}
-
 bool tea5767_seek(uint8_t* buffer, bool seek_up) {
     bool result = false;
     if (buffer == NULL) {return false;} 
@@ -249,7 +217,7 @@ bool tea5767_seek(uint8_t* buffer, bool seek_up) {
     } else {
         buffer[REG_3] &= ~REG_3_SUD;  // Set Search Down (SUD) bit 
     }
-    buffer[REG_3] |= (REG_3_SSL | 0x60); // Set the Search Stop Level (SSL) to high for better tuning accuracy,  set bit 7 for RSSI 7
+    buffer[REG_3] |= REG_3_SSL; // Set Search Stop Level to high for better tuning accuracy
     if(tea5767_force_mono_enabled) {
         buffer[REG_3] |= REG_3_MS;
     } else {
@@ -345,74 +313,11 @@ bool tea5767_get_radio_info(uint8_t* buffer, struct RADIO_INFO* info) {
     return result;
 }
 
-void tea5767_seekUp() {    
-    //Get CUrrent Station
-    double fm_frequency = tea5767_GetFreq();
-    int targetFrequencyKHz = fm_frequency * 100;
-        
-    uint8_t buffer[5];
-    if(tea5767_init(buffer)) { 
-        tea5767_set_frequency(buffer, targetFrequencyKHz);
-        // Start seeking upwards
-        tea5767_seek(buffer, true);
-    }
-}
-
-void tea5767_seekDown() {
-        //Get CUrrent Station
-    double fm_frequency = tea5767_GetFreq();
-    int targetFrequencyKHz = fm_frequency * 100;     
-    
-    uint8_t buffer[5];
-    if(tea5767_init(buffer)) {   
-        tea5767_set_frequency(buffer, targetFrequencyKHz);
-        // Start seeking upwards
-        tea5767_seek(buffer, false);
-    }
-}
-
 void tea5767_seekFrom10kHz(uint32_t freq_10khz, bool seek_up) {
     uint8_t buffer[5];
     if(tea5767_init(buffer)) {
         tea5767_set_frequency(buffer, (int)freq_10khz);
         tea5767_seek(buffer, seek_up);
-    }
-}
-
-void tea5767_ToggleMute() {
-    uint8_t buffer[5];
-    if(tea5767_read_registers(buffer)) {
-        if((buffer[REG_1] & REG_1_MUTE) == 0) {
-            tea5767_set_mute(buffer, true);
-        } else {
-            tea5767_set_mute(buffer, false);
-        }
-    }
-}
-
-void tea5767_MuteOn() {
-    uint8_t buffer[5];
-    if(tea5767_read_registers(buffer)) {  // Read the current state into the buffer
-        tea5767_set_mute(buffer, true);  // Set the mute bit
-    }
-}
-
-void tea5767_MuteOff() {
-    uint16_t frequency;
-    float value;  // Changed to a float variable, not a pointer
-    uint8_t buffer[5];
-    if (tea5767_read_registers(buffer)) {  // Read the current state into the buffer
-        tea5767_set_mute(buffer, false);  // Clear the mute bit
-        frequency = ((buffer[0] & REG_1_PLL) << 8) | buffer[1];
-        value = (float)(frequency * QUARTZ / 4 - FILTER) / 10000;  // Explicitly cast to float
-        tea5767_SetFreqMHz(value/ 100.0);  // Pass the float value, not the pointer
-    }
-}
-
-void tea5767_SetFreqKHz(int freq_khz) { 
-    uint8_t buffer[5];
-    if (tea5767_init(buffer)) {
-        tea5767_set_frequency(buffer, freq_khz);
     }
 }
 

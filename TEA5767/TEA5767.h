@@ -60,14 +60,6 @@
 #define REG_5_PLLREF 0x80  // PLL Ref: 1 to enable the 6.5 MHz reference frequency for the PLL, 0 to disable
 #define REG_5_DTC 0x40  // De-emphasis Time Constant: 1 for 75 µs, 0 for 50 µs
 
-// ----- local variables
-/// Band datatype.
-/// The BANDs TEA5767 can tune to.
-typedef enum {
-    RADIO_BAND_FM = 0x01,       ///< FM band 87.5 - 108 MHz (USA, Europe) selected.
-    RADIO_BAND_FM_JAPAN = 0x02  ///< FM band 76 - 90 MHz (Japan) selected.
-} RADIO_BAND;
-
 
 /// A structure that contains information about the radio features from the chip.
 struct RADIO_INFO {
@@ -84,8 +76,6 @@ bool tea5767_is_device_ready();
 bool tea5767_read_registers(uint8_t* buffer);
 bool tea5767_write_registers(uint8_t* buffer);
 bool tea5767_init(uint8_t* buffer);
-bool tea5767_set_mute(uint8_t* buffer, bool mute);
-bool tea5767_set_stereo(uint8_t* buffer, bool stereo);
 bool tea5767_seek(uint8_t* buffer, bool seek_up);
 bool tea5767_get_frequency(uint8_t* buffer, int* value);
 bool tea5767_set_frequency(uint8_t* buffer, int value);
@@ -113,13 +103,7 @@ bool tea5767_set_force_mono(bool enabled);
 
 // New high-level function prototypes
 void tea5767_sleep(uint8_t* buffer);
-void tea5767_seekUp();
-void tea5767_seekDown();
 void tea5767_seekFrom10kHz(uint32_t freq_10khz, bool seek_up);
-void tea5767_ToggleMute();
-void tea5767_MuteOn();
-void tea5767_MuteOff();
-void tea5767_SetFreqKHz(int freq_khz);
 void tea5767_SetFreqMHz(float freq_mhz);
 float tea5767_GetFreq();
 

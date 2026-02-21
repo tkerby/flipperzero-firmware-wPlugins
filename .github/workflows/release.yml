@@ -40,6 +40,17 @@ jobs:
       - name: Apply version to sources (CI only)
         run: python .github/scripts/set_version.py "${{ steps.ver.outputs.version }}"
 
+      - name: Show applied version (debug)
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "application.fam version:"
+          grep -n 'fap_version' application.fam || true
+          echo "radio.c header version:"
+          grep -n '@version' radio.c || true
+          echo "radio.c About string:"
+          grep -n 'FM Radio\. (v' radio.c || true
+
       - name: Build
         run: |
           ufbt update
