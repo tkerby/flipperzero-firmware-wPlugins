@@ -1,5 +1,5 @@
-# flipperzero-radio
-Application for flipperzero device to control radio boards.
+# flipperzero-radio-and-volume-control
+Flipper Zero external app to control TEA5767 FM radio boards and PT2257 I2C volume.
 
 ## Provenance / Licensing
 
