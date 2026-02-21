@@ -19,8 +19,7 @@ static inline void eeprom_update(int addr, uint8_t value) {
 static uint8_t FX_SAVE[4096 * 2];
 #endif
 
-static void fx_read_save_bytes(uint24_t addr, uint8_t* p, size_t n)
-{
+static void fx_read_save_bytes(uint24_t addr, uint8_t* p, size_t n) {
 #if GEN_FXSAVE
     memcpy(p, &FX_SAVE[addr], n);
 #else
@@ -29,8 +28,7 @@ static void fx_read_save_bytes(uint24_t addr, uint8_t* p, size_t n)
 #endif
 }
 
-static void fx_erase_save_block(uint16_t page)
-{
+static void fx_erase_save_block(uint16_t page) {
 #if GEN_FXSAVE
     myassert((page & 0xf) == 0);
     myassert(page * 256 + 4096 <= sizeof(FX_SAVE));
@@ -41,8 +39,7 @@ static void fx_erase_save_block(uint16_t page)
 #endif
 }
 
-static void fx_write_save_page(uint16_t page, uint8_t* p)
-{
+static void fx_write_save_page(uint16_t page, uint8_t* p) {
 #if GEN_FXSAVE
     myassert(page * 256 + 256 <= sizeof(FX_SAVE));
     for(int i = 0; i < 256; ++i)
@@ -55,30 +52,21 @@ static void fx_write_save_page(uint16_t page, uint8_t* p)
 
 #endif
 
-uint16_t checksum()
-{
+uint16_t checksum() {
     // CRC16
     uint8_t x;
     uint16_t crc = 0xffff;
-    for(uint16_t i = 0; i < sizeof(course_save_data) - 2; ++i)
-    {
+    for(uint16_t i = 0; i < sizeof(course_save_data) - 2; ++i) {
         x = (crc >> 8) ^ ((uint8_t*)&savedata)[i];
         x ^= x >> 4;
-        crc = (crc << 8) ^
-            (uint16_t(x) << 12) ^
-            (uint16_t(x) << 5) ^
-            (uint16_t(x) << 0);
+        crc = (crc << 8) ^ (uint16_t(x) << 12) ^ (uint16_t(x) << 5) ^ (uint16_t(x) << 0);
     }
     return crc;
 }
 
-static char const SAVE_IDENT[8] PROGMEM =
-{
-    'A', 'R', 'D', 'U', 'G', 'O', 'L', 'F'
-};
+static char const SAVE_IDENT[8] PROGMEM = {'A', 'R', 'D', 'U', 'G', 'O', 'L', 'F'};
 
-void load()
-{
+void load() {
 #if SAVE_TO_FLASH_CHIP
     fx_read_save_bytes(fx_course * 64, (uint8_t*)&savedata, 64);
 #else
@@ -89,13 +77,10 @@ void load()
     bool clear = false;
 
     for(uint8_t i = 0; i < 8; ++i)
-        if(savedata.ident[i] != (char)pgm_read_byte(&SAVE_IDENT[i]))
-            clear = true;
-    if(savedata.checksum != checksum())
-        clear = true;
+        if(savedata.ident[i] != (char)pgm_read_byte(&SAVE_IDENT[i])) clear = true;
+    if(savedata.checksum != checksum()) clear = true;
 
-    if(clear)
-    {
+    if(clear) {
         // clear everything except identifier and checksum
         memset((uint8_t*)&savedata + 8, 0xff, sizeof(course_save_data) - 8 - 2);
         // don't overwrite identifier when saving to flash chip: it serves
@@ -111,12 +96,10 @@ void load()
     }
 }
 
-void save()
-{
+void save() {
     // refuse to save without valid identifier
     for(uint8_t i = 0; i < 8; ++i)
-        if(savedata.ident[i] != (char)pgm_read_byte(&SAVE_IDENT[i]))
-            return;
+        if(savedata.ident[i] != (char)pgm_read_byte(&SAVE_IDENT[i])) return;
 
 #if SAVE_TO_FLASH_CHIP
 
@@ -134,16 +117,14 @@ void save()
     fx_erase_save_block(0);
 
     // 2. copy from second block to first block (modify relevant page)
-    for(uint8_t p = 0; p < 16; ++p)
-    {
+    for(uint8_t p = 0; p < 16; ++p) {
         uint8_t* pd = (uint8_t*)&fs[0];
 
         // read page from second block
         fx_read_save_bytes(uint16_t(p) * 256 + 4096, pd, 256);
 
         // overwrite page data if necessary
-        if(p == page)
-            memcpy(&pd[index], &savedata, 64);
+        if(p == page) memcpy(&pd[index], &savedata, 64);
 
         // write page to first block
         fx_write_save_page(p, pd);
@@ -153,8 +134,7 @@ void save()
     fx_erase_save_block(16);
 
     // 4. copy from first block to second block
-    for(uint8_t p = 0; p < 16; ++p)
-    {
+    for(uint8_t p = 0; p < 16; ++p) {
         uint8_t* pd = (uint8_t*)&fs[0];
 
         // read page from first block and write to second block
@@ -164,7 +144,7 @@ void save()
 
 #else
     for(uint8_t i = 0; i < sizeof(course_save_data); ++i)
-         eeprom_update(EEPROM_START_ADDRESS + i, ((uint8_t*)&savedata)[i]);
+        eeprom_update(EEPROM_START_ADDRESS + i, ((uint8_t*)&savedata)[i]);
     (void)EEPROM.commit();
 #endif
 }
