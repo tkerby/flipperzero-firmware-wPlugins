@@ -1,4 +1,4 @@
-# flipperzero-radio-and-volume-control
+# flipperzero-radio-with-volume-control
 Flipper Zero external app to control TEA5767 FM radio boards and PT2257 I2C volume.
 
 ## Provenance / Licensing
@@ -159,6 +159,19 @@ This is a Flipper Zero external app (has `application.fam`). Two common workflow
 - `fbt`: clone the Flipper firmware repo, copy/link this app into `applications_user/`, then run `./fbt fap_fmradio_controller_pt2257`.
 
 Exact commands vary depending on your firmware/tooling version.
+
+## Automated releases (GitHub Actions)
+This repo includes a GitHub Actions workflow that builds a ready-to-download `.fap` on every push to `main` and publishes it as a GitHub Release.
+
+- Workflow: `.github/workflows/release.yml`
+- Versioning scheme (auto-incrementing): `0.9+pt2257.<GITHUB_RUN_NUMBER>`
+	- Example: `0.9+pt2257.123`
+	- The release tag is `v0.9-pt2257.<GITHUB_RUN_NUMBER>` (tags avoid `+` for compatibility).
+
+Install from Release:
+- Download the `.fap` from the latest GitHub Release.
+- Copy it to your Flipper SD card: `/ext/apps/GPIO/`
+- Run it from `Applications -> GPIO`.
 
 
 ## References

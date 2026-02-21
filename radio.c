@@ -5,11 +5,12 @@
  * @author Coolshrimp - CoolshrimpModz.com
  *
  * @brief FM Radio using the TEA5767 FM radio chip.
- * @version 0.8
+ * @version 0.9+pt2257.1
  * @date 2023-09-29
  * 
  * @copyright GPLv3
  */
+
 
 #include <furi.h>
 #include <furi_hal.h>
