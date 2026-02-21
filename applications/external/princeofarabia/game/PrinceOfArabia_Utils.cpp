@@ -555,15 +555,7 @@ void saveCookie(bool enableLEDs) {
     }
 #endif
 
-#ifdef SAVE_TO_FX
-
     FX::saveGameState(cookie);
-
-#else
-
-    EEPROM_Utils::saveCookie(cookie);
-
-#endif
 
 #ifdef USE_LED
     if(enableLEDs) {

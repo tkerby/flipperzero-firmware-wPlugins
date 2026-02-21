@@ -221,8 +221,8 @@ extern "C" int32_t arduboy_app(void* p) {
     g_state->canvas = gui_direct_draw_acquire(g_state->gui);
 
     g_state->input_events = (FuriPubSub*)furi_record_open(RECORD_INPUT_EVENTS);
-    g_state->input_sub = furi_pubsub_subscribe(
-        g_state->input_events, input_events_callback, g_state);
+    g_state->input_sub =
+        furi_pubsub_subscribe(g_state->input_events, input_events_callback, g_state);
 
     // Setup game and do one initial draw
     furi_mutex_acquire(g_state->game_mutex, FuriWaitForever);

@@ -8,7 +8,6 @@
 #include "src/utils/FadeEffects.h"
 #include "src/entities/Entities.h"
 #include "src/fonts/Font3x5.h"
-#include "src/utils/EEPROM_Utils.h"
 
 #ifdef SAVE_MEMORY_USB
 ARDUBOY_NO_USB
@@ -72,17 +71,8 @@ void setup() {
 
     arduboy.setFrameRate(Constants::FrameRate);
 
-#ifdef SAVE_TO_FX
-
     FX::begin(FX_DATA_PAGE, FX_SAVE_PAGE);
     const bool hasSave = FX::loadGameState((uint8_t*)&cookie, sizeof(cookie));
-
-#else
-
-    FX::begin(FX_DATA_PAGE);
-    EEPROM_Utils::loadCookie(cookie);
-
-#endif
 
     prince.setStack(&princeStack);
 
@@ -90,11 +80,9 @@ void setup() {
     enemy.setStack(&enemyStack);
 #endif
 
-#ifdef SAVE_TO_FX
     if(hasSave) {
         restoreRuntimeAfterLoad();
     }
-#endif
 
 #ifdef SAVE_MEMORY_OTHER
     gamePlay.gameState = GameState::Game_Init;

@@ -57,7 +57,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Flipper Wedge v1.1 (By DangerousThings)](https://github.com/DangerousThings/flipper-wedge)
 - Added: [VK Thermo v1.0 (By VivoKey)](https://github.com/VivoKey/vkthermo-flipper)
 - Updated: [Mi Band NFC Writer v1.0 (By LucaTomei)](https://github.com/LucaTomei/flipper-miband-nfc-writer)
-- Updated: [Prince Of Arabia v1.0.11 (By apfxtech)](https://github.com/apfxtech/FlipperPrinceOfArabia)
 - Updated: [NFC Comparator v2.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
 - Updated: [Flipper Blackhat v0.4.1 (By o7-machinehum)](https://github.com/o7-machinehum/flipper-blackhat-app) `Req: Blackhat Board` with [Blackhat OS](https://github.com/o7-machinehum/flipper-blackhat-os)
 - Updated: [Wolfenduino v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperWolfenstein)
@@ -84,6 +83,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FZ nRF24 Jammer v1.4 (By W0rthlessS0ul)](https://github.com/W0rthlessS0ul/FZ_nRF24_jammer)
 - Updated: [ProtoPirate v2.3.1 (By RocketGod-git)](https://protopirate.net/ProtoPirate/ProtoPirate)
 - Updated: [Arduventure v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperArduventure)
+- Updated: [Prince Of Arabia v1.0.11 (By apfxtech)](https://github.com/apfxtech/FlipperPrinceOfArabia)
 
 <a name="release"></a>
 

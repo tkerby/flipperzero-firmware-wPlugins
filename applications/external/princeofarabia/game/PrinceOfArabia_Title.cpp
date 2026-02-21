@@ -28,13 +28,6 @@ void title_Init() {
     titleScreenVars.reset(frameIndex);
 }
 
-void saveSoundState() {
-    eeprom_update_byte(
-        (uint8_t*)2,
-        arduboy.audio
-            .enabled()); // arduboy2base::eepromAudioOnOff is protected so we just use 2 here :P
-}
-
 // ----------------------------------------------------------------------------
 //  Handle state updates ..
 //
@@ -86,15 +79,7 @@ void title() {
             if(titleScreenVars.counter == 96) {
                 cookie.pop = !cookie.pop;
 
-#ifdef SAVE_TO_FX
-
                 FX::saveGameState((uint8_t*)&cookie, sizeof(cookie));
-
-#else
-
-                EEPROM_Utils::saveCookie(cookie);
-
-#endif
             }
 
             pressed = 0;
@@ -119,7 +104,6 @@ void title() {
 
         if(justPressed & B_BUTTON) {
             arduboy.audio.toggle();
-            saveSoundState();
         }
     }
 
@@ -159,16 +143,8 @@ void title() {
 
             case TitleScreenOptions::Resume:
 
-#ifdef SAVE_TO_FX
-
                 if(!FX::loadGameState(cookie)) break;
                 restoreRuntimeAfterLoad();
-
-#else
-
-                EEPROM_Utils::loadCookie(cookie);
-
-#endif
 
                 gamePlay.gameState = GameState::Game;
                 fadeEffect.reset();

@@ -1192,8 +1192,6 @@ void game() {
 
             case MenuOption::Load:
 
-#ifdef SAVE_TO_FX
-
                 if(FX::loadGameState(cookie)) {
                     restoreRuntimeAfterLoad();
 
@@ -1201,12 +1199,6 @@ void game() {
                     gamePlay.gameState = GameState::Game;
                     bCounter = 0;
                 }
-
-#else
-
-                EEPROM_Utils::loadCookie(cookie);
-
-#endif
 
                 menu.direction = Direction::Right;
                 break;
@@ -1223,14 +1215,12 @@ void game() {
             case MenuOption::Sound_On:
 
                 arduboy.audio.on();
-                saveSoundState();
                 menu.direction = Direction::Right;
                 break;
 
             case MenuOption::Sound_Off:
 
                 arduboy.audio.off();
-                saveSoundState();
                 menu.direction = Direction::Right;
                 break;
 
