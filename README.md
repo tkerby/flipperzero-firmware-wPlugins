@@ -1,6 +1,11 @@
 # flipperzero-radio-with-volume-control
 Flipper Zero external app to control TEA5767 FM radio boards and PT2257 I2C volume.
 
+## Hardware / Schematics
+
+- Schematic (SVG): [schematics/svg/schematic_radio_tea5767_pt2257_2026-02-22.svg](schematics/svg/schematic_radio_tea5767_pt2257_2026-02-22.svg)
+- PCB files: planned to be added in the future (work in progress).
+
 ## Provenance / Licensing
 
 - **Upstream origin**: https://github.com/victormico/flipperzero-radio
