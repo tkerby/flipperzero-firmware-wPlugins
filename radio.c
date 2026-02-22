@@ -46,12 +46,41 @@ static const uint8_t volume_values[] = {0, 1};
 static const char* volume_names[] = {"Un-Muted", "Muted"};
 static bool current_volume = false;  // PT2257 mute flag
 
+// PT2257/PT2259 I2C address selection.
+// NOTE: This app uses an 8-bit I2C address byte (already left-shifted like TEA5767_ADR).
+// Common values:
+// - PT2257: 0x88
+// - PT2259: 0x44
+// 0 means "Auto" (try known address bytes).
+static const uint8_t pt_i2c_addr8_values[] = {0x00, 0x88, 0x44};
+static const char* pt_i2c_addr8_names[] = {"Auto", "0x88", "0x44"};
+static uint8_t pt2257_i2c_addr8 = 0x00;
+
 // PT2257 attenuation in dB: 0..79 (0 => max volume, 79 => min volume)
 static uint8_t pt2257_atten_db = 20;
 static bool pt2257_ready_cached = false;
 
 static void fmradio_state_lock(void);
 static void fmradio_state_unlock(void);
+
+static bool fmradio_pt2257_autodetect_addr8(void) {
+    // Try known address bytes and keep the first that ACKs.
+    for(size_t i = 0; i < COUNT_OF(pt_i2c_addr8_values); i++) {
+        uint8_t addr8 = pt_i2c_addr8_values[i];
+        if(addr8 == 0x00) continue;
+        pt2257_set_i2c_addr(addr8);
+        if(pt2257_is_device_ready()) return true;
+    }
+    return false;
+}
+
+static void fmradio_pt2257_apply_addr8(void) {
+    if(pt2257_i2c_addr8 != 0x00) {
+        pt2257_set_i2c_addr(pt2257_i2c_addr8);
+    } else {
+        (void)fmradio_pt2257_autodetect_addr8();
+    }
+}
 
 static void fmradio_apply_pt2257_state(void) {
     fmradio_state_lock();
@@ -440,6 +469,13 @@ static void fmradio_settings_load(void) {
             current_volume = muted;
         }
 
+        uint32_t addr8 = 0;
+        if(flipper_format_read_uint32(ff, "PtI2cAddr8", &addr8, 1)) {
+            if((addr8 == 0U) || (addr8 == 0x88U) || (addr8 == 0x44U)) {
+                pt2257_i2c_addr8 = (uint8_t)addr8;
+            }
+        }
+
     } while(false);
 
     flipper_format_file_close(ff);
@@ -484,6 +520,9 @@ static void fmradio_settings_save(void) {
 
         bool muted = (current_volume != 0);
         if(!flipper_format_write_bool(ff, "PtMuted", &muted, 1)) break;
+
+        uint32_t addr8 = pt2257_i2c_addr8;
+        if(!flipper_format_write_uint32(ff, "PtI2cAddr8", &addr8, 1)) break;
 
         ok = true;
     } while(false);
@@ -636,6 +675,7 @@ typedef struct {
     VariableItemList* variable_item_list_config;
     VariableItem* item_freq;
     VariableItem* item_volume;
+    VariableItem* item_pt_i2c_addr;
     VariableItem* item_snc;
     VariableItem* item_deemph;
     VariableItem* item_softmute;
@@ -872,6 +912,22 @@ void fmradio_controller_volume_change(VariableItem* item) {
     }
 }
 
+void fmradio_controller_pt_i2c_addr_change(VariableItem* item) {
+    uint8_t index = variable_item_get_current_value_index(item);
+    if(index >= COUNT_OF(pt_i2c_addr8_values)) {
+        index = 0;
+        variable_item_set_current_value_index(item, index);
+    }
+
+    pt2257_i2c_addr8 = pt_i2c_addr8_values[index];
+    variable_item_set_current_value_text(item, pt_i2c_addr8_names[index]);
+
+    fmradio_pt2257_apply_addr8();
+    pt2257_ready_cached = pt2257_is_device_ready();
+    fmradio_apply_pt2257_state();
+    fmradio_settings_mark_dirty();
+}
+
 static uint32_t fmradio_find_nearest_freq_index(float mhz) {
     if(COUNT_OF(frequency_values) == 0) return 0;
     uint32_t best = 0;
@@ -896,6 +952,10 @@ static void fmradio_tick_callback(void* context) {
     static uint32_t last_pt2257_check = 0;
     if((now - last_pt2257_check) > furi_ms_to_ticks(500)) {
         bool ready = pt2257_is_device_ready();
+        if(!ready && (pt2257_i2c_addr8 == 0x00)) {
+            fmradio_pt2257_apply_addr8();
+            ready = pt2257_is_device_ready();
+        }
         fmradio_state_lock();
         bool was_ready = pt2257_ready_cached;
         pt2257_ready_cached = ready;
@@ -1132,6 +1192,25 @@ FMRadio* fmradio_controller_alloc() {
     if(!app->item_volume) goto fail;
     uint8_t volume_index = 0;
     variable_item_set_current_value_index(app->item_volume, volume_index);
+
+    // PT2257/PT2259 I2C address byte selection
+    app->item_pt_i2c_addr = variable_item_list_add(
+        app->variable_item_list_config,
+        "PT Addr",
+        COUNT_OF(pt_i2c_addr8_values),
+        fmradio_controller_pt_i2c_addr_change,
+        app);
+    if(!app->item_pt_i2c_addr) goto fail;
+    uint8_t addr_index = 0;
+    for(uint8_t i = 0; i < COUNT_OF(pt_i2c_addr8_values); i++) {
+        if(pt_i2c_addr8_values[i] == pt2257_i2c_addr8) {
+            addr_index = i;
+            break;
+        }
+    }
+    variable_item_set_current_value_index(app->item_pt_i2c_addr, addr_index);
+    variable_item_set_current_value_text(app->item_pt_i2c_addr, pt_i2c_addr8_names[addr_index]);
+
     view_set_previous_callback(variable_item_list_get_view(app->variable_item_list_config),fmradio_controller_navigation_submenu_callback);
     view_dispatcher_add_view(app->view_dispatcher,FMRadioViewConfigure,variable_item_list_get_view(app->variable_item_list_config));
 
@@ -1212,8 +1291,23 @@ FMRadio* fmradio_controller_alloc() {
         variable_item_set_current_value_index(app->item_backlight, backlight_keep_on ? 1 : 0);
         variable_item_set_current_value_text(app->item_backlight, backlight_keep_on ? "On" : "Off");
     }
+    if(app->item_pt_i2c_addr) {
+        uint8_t addr_index = 0;
+        for(uint8_t i = 0; i < COUNT_OF(pt_i2c_addr8_values); i++) {
+            if(pt_i2c_addr8_values[i] == pt2257_i2c_addr8) {
+                addr_index = i;
+                break;
+            }
+        }
+        variable_item_set_current_value_index(app->item_pt_i2c_addr, addr_index);
+        variable_item_set_current_value_text(app->item_pt_i2c_addr, pt_i2c_addr8_names[addr_index]);
+    }
 
     // Ensure PT2257 comes up in a known state
+    // PT2257 datasheets typically recommend waiting ~200ms after power-on before I2C.
+    // This is harmless for PT2259 and improves robustness across different modules.
+    furi_delay_ms(200);
+    fmradio_pt2257_apply_addr8();
     pt2257_ready_cached = pt2257_is_device_ready();
     fmradio_apply_pt2257_state();
 

@@ -23,6 +23,18 @@ code for that version (tag/commit) and keep attribution.
 * PT2257 (I2C electronic volume controller)
 * PAM8403 (external audio amplifier)
 
+### PT2257 vs PT2259 (I²C address)
+Some schematics/modules reference **PT2259**, while this repo uses a **PT2257** driver. The key practical difference is the I²C address.
+
+- This app/driver uses an **8-bit I²C address byte** convention (already left-shifted, like the TEA5767 examples).
+	- PT2257 typical address byte: `0x88`
+	- PT2259 typical address byte: `0x44`
+- If you are used to **7-bit addresses**, those would be:
+	- PT2257: `0x44`
+	- PT2259: `0x22`
+
+You can switch this in the app: `Menu -> Config -> PT Addr` (Auto / 0x88 / 0x44). The choice is saved in `settings.fff`.
+
 ### PAM8403 note
 TEA5767 line-out is not meant to drive a speaker directly. A small stereo amp module like PAM8403 is a common choice.
 Some PAM8403 boards have a fixed gain/volume and accept L/R line input.

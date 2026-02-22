@@ -5,9 +5,11 @@
 
 #define TIMEOUT_MS 100
 
-// NOTE: This is an 8-bit I2C address (already left-shifted, like TEA5767_ADR).
-// The Arduino reference library uses 0x88 as the chip address byte.
-#define PT2257_ADDR 0x88
+// NOTE: This driver uses an 8-bit I2C address byte (already left-shifted, like TEA5767_ADR).
+// The Arduino reference library uses 0x88 as the PT2257 chip address byte.
+#ifndef PT2257_I2C_ADDR_DEFAULT
+#define PT2257_I2C_ADDR_DEFAULT 0x88
+#endif
 
 // Instruction base codes (from victornpb/evc_pt2257)
 #define PT2257_EVC_OFF 0xFF
@@ -23,9 +25,19 @@
 
 #define PT2257_EVC_MUTE 0b01111000
 
+static uint8_t pt2257_i2c_addr = PT2257_I2C_ADDR_DEFAULT;
+
+void pt2257_set_i2c_addr(uint8_t addr) {
+    pt2257_i2c_addr = addr;
+}
+
+uint8_t pt2257_get_i2c_addr(void) {
+    return pt2257_i2c_addr;
+}
+
 static bool pt2257_acquire_i2c(void) {
     furi_hal_i2c_acquire(&furi_hal_i2c_handle_external);
-    return furi_hal_i2c_is_device_ready(&furi_hal_i2c_handle_external, PT2257_ADDR, 5);
+    return furi_hal_i2c_is_device_ready(&furi_hal_i2c_handle_external, pt2257_i2c_addr, 5);
 }
 
 static void pt2257_release_i2c(void) {
@@ -47,7 +59,7 @@ static bool pt2257_write_bytes(const uint8_t* data, size_t len) {
 
     bool ok = pt2257_acquire_i2c();
     if(ok) {
-        ok = furi_hal_i2c_tx(&furi_hal_i2c_handle_external, PT2257_ADDR, data, len, TIMEOUT_MS);
+        ok = furi_hal_i2c_tx(&furi_hal_i2c_handle_external, pt2257_i2c_addr, data, len, TIMEOUT_MS);
     }
     pt2257_release_i2c();
     return ok;
