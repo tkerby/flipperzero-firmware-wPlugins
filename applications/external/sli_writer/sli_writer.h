@@ -14,7 +14,6 @@
 #include <furi_hal_nfc.h>
 
 #include <nfc/nfc.h>
-#include <nfc/nfc_device.h> // Pour nfc_detect
 #include <nfc/protocols/iso15693_3/iso15693_3.h>
 #include <nfc/protocols/iso15693_3/iso15693_3_poller.h>
 
@@ -23,9 +22,9 @@
 #include <gui/modules/submenu.h>
 #include <gui/modules/dialog_ex.h>
 #include <gui/modules/loading.h>
-#include <gui/scene_manager.h>
+#include <gui/scene_manager.h> /* <-- correct path for scene manager */
 
-#include <dialogs/dialogs.h>
+#include <dialogs/dialogs.h> /* <-- generic dialogs (no file_browser header) */
 #include <storage/storage.h>
 
 #include <toolbox/bit_buffer.h>
@@ -41,7 +40,8 @@
 #define SLI_MAGIC_BLOCK_SIZE      4
 #define SLI_MAGIC_MAX_BLOCKS      64
 
-/* Some “magic” cards accept FINALIZE without payload */
+/*  Some “magic” cards accept FINALIZE without payload.
+ *  Default ON to preserve legacy behavior; can be toggled in the .c. */
 #define SLI_FINALIZE_WITH_PAYLOAD 1
 
 /* ============================================================================
@@ -65,7 +65,8 @@ typedef enum {
 
 typedef enum {
     SliWriterSubmenuIndexWrite = 0, /* "Write NFC File" */
-    SliWriterSubmenuIndexTestMagic, /* "Read ISO15693 UID" */
+    SliWriterSubmenuIndexTestMagic, /* "Test Magic INIT" */
+    SliWriterSubmenuIndexTestLL, /* "Test LL (Inventory)" */
     SliWriterSubmenuIndexAbout, /* "About" */
 } SliWriterSubmenuIndex;
 
@@ -73,7 +74,6 @@ typedef enum {
     SliWriterCustomEventWriteSuccess = 100,
     SliWriterCustomEventWriteError,
     SliWriterCustomEventParseError,
-    SliWriterCustomEventPollerReady = 0xA100, // Valeur directe, pas de #define
 } SliWriterCustomEvent;
 
 /* ============================================================================
@@ -85,7 +85,9 @@ typedef struct {
      * ISO15693 frames carry UID LSB->MSB. We keep that exact order here
      * to avoid accidental mirroring when building RF payloads. */
     uint8_t uid[8];
+
     uint8_t password_privacy[4];
+
     uint8_t data[SLI_MAGIC_MAX_BLOCKS * SLI_MAGIC_BLOCK_SIZE];
     uint8_t block_count;
     uint8_t block_size;
@@ -103,25 +105,29 @@ typedef struct {
     Submenu* submenu;
     DialogEx* dialog_ex;
     Loading* loading;
+
     /* FS & dialogs */
     Storage* storage;
     DialogsApp* dialogs;
+
     /* Strings */
     FuriString* file_path;
     FuriString* error_message;
+
     /* Worker */
     FuriThread* worker_thread;
+    bool worker_started; // <-- AJOUTER CETTE LIGNE
+
     /* NFC (high-level) */
     Nfc* nfc;
+    bool nfc_started;
     NfcPoller* poller;
+
     /* State */
     bool test_mode;
     bool have_uid;
     uint8_t detected_uid[8];
-    bool running;
-    bool poller_ready;
-    bool field_present;
-    bool fatal_error;
+
     /* Data to write */
     SliWriterNfcData nfc_data;
 } SliWriterApp;
@@ -136,6 +142,8 @@ void sli_writer_app_free(SliWriterApp* app);
 
 /* File parsing + actions (implemented in .c) */
 bool sli_writer_parse_nfc_file(SliWriterApp* app, const char* file_path);
+bool slix_writer_perform_write(SliWriterApp* app);
+bool slix_writer_perform_test(SliWriterApp* app);
 
 /* Worker */
 int32_t slix_writer_work_thread(void* context);
