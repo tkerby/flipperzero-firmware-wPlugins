@@ -10,11 +10,8 @@
 
 class EEPROMClass {
 public:
-    // GAME_ID marker (1 byte) + Player payload (56 bytes).
     static constexpr int kSize = 57;
-    // Absolute path buffer size (compile-time fixed).
     static constexpr size_t kPathSize = 128;
-    static constexpr int kLegacyStart = 16;
 
     EEPROMClass()
         : loaded_(false)
@@ -157,17 +154,6 @@ private:
             const size_t rd = storage_file_read(file, mem_, kSize);
             if(rd < (size_t)kSize) {
                 need_rewrite = true;
-            }
-
-            // Migrate legacy layout (EEPROM_START = 16) into new compact layout.
-            if(mem_[0] == 0 && file_size >= (uint64_t)(kLegacyStart + kSize)) {
-                uint8_t legacy[kSize];
-                (void)storage_file_seek(file, kLegacyStart, true);
-                const size_t legacy_rd = storage_file_read(file, legacy, kSize);
-                if(legacy_rd == (size_t)kSize && legacy[0] != 0) {
-                    memcpy(mem_, legacy, kSize);
-                    need_rewrite = true;
-                }
             }
 
             if(file_size != (uint64_t)kSize) {
