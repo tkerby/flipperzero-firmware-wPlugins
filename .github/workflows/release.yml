@@ -100,7 +100,9 @@ jobs:
             Automated build from commit: ${{ github.sha }}
             App version: ${{ steps.ver.outputs.version }}
 
-            Install: copy the `.fap` to `/ext/apps/GPIO/` on your Flipper, then run it.
+            Install:
+            - Linux/macOS (project sources): `ufbt update && ufbt build && ufbt launch`
+            - Windows (qFlipper + release artifact): copy `.fap` to `/ext/apps/GPIO/` and run from Applications -> GPIO
           files: |
             dist/*.fap
             dist/SHA256SUMS.txt

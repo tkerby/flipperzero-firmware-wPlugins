@@ -6,6 +6,22 @@ Flipper Zero external app to control TEA5767 FM radio boards and PT2257 I2C volu
 - Schematic (SVG): [schematics/svg/schematic_radio_tea5767_pt2257_2026-02-22.svg](schematics/svg/schematic_radio_tea5767_pt2257_2026-02-22.svg)
 - PCB files: planned to be added in the future (work in progress).
 
+## Screenshots
+
+Main radio view:
+
+![Main radio view](images/Screenshot-20260223-115745.png)
+
+Menu view:
+
+![Menu view](images/Screenshot-20260223-115810.png)
+
+Config details:
+
+![Config details 1](images/Screenshot-20260223-115842.png)
+![Config details 2](images/Screenshot-20260223-115942.png)
+![Config details 3](images/Screenshot-20260223-115959.png)
+
 ## Provenance / Licensing
 
 - **Upstream origin**: https://github.com/victormico/flipperzero-radio
@@ -53,8 +69,10 @@ Volume / noise tweak used on one popular PAM8403 board:
 ## PIN
  - 3V3 (3V3, pin 9)  = VCC
  - GND (GND, pin 18) = GND
- - SCL (C0, pin 16)  = SCL
- - SDA (C1, pin 15)  = SDA
+ - SCL (C0, pin 16)  = SCL TEA+PT
+ - SDA (C1, pin 15)  = SDA TEA+PT
+ - 5V (5V, pin 1)    = PAM8403 VCC
+ - GND (GND, pin 8)  = PAM8403 GND only
 
 ## Controls
 - Left/Right (short): tune -/+ 0.1 MHz (76.0–108.0)
@@ -188,8 +206,16 @@ This repo includes a GitHub Actions workflow that builds a ready-to-download `.f
 
 Install from Release:
 - Download the `.fap` from the latest GitHub Release.
-- Copy it to your Flipper SD card: `/ext/apps/GPIO/`
-- Run it from `Applications -> GPIO`.
+
+Linux/macOS (developer workflow with `ufbt`):
+- From project directory: `ufbt update && ufbt build && ufbt launch`
+- This builds, installs, and launches the app over USB.
+
+Windows (qFlipper):
+- Download the `.fap` from the latest GitHub Release.
+- Open `qFlipper` and connect your Flipper Zero.
+- Copy the `.fap` to: `/ext/apps/GPIO/`
+- Run it on Flipper from `Applications -> GPIO`.
 
 
 ## References

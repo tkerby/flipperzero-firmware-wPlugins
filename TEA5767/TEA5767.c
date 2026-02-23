@@ -276,11 +276,12 @@ bool tea5767_get_radio_info(uint8_t* buffer, struct RADIO_INFO* info) {
     // Error handling: Check if buffer and info are not NULL
     if (buffer && info && tea5767_read_registers(buffer)) {
         
-        // REG_3_MS: 1 forces MONO, 0 = stereo
-        if (buffer[REG_3] & REG_3_MS) {
+        // If mono is forced by configuration, report mono explicitly.
+        // TEA5767 readback layout/status bits are not always reliable for reflecting this in real time.
+        if(tea5767_force_mono_enabled) {
             info->stereo = false;
         } else {
-            info->stereo = true;
+            info->stereo = (buffer[REG_3] & REG_3_MS) ? false : true;
         }
 
         info->signalLevel = buffer[REG_4] >> 4;
