@@ -40,6 +40,9 @@
 #define REG_3 0x02  // Register 3 address
 #define REG_3_SUD 0x80  // Search Up/Down: 1 to search up, 0 to search down
 #define REG_3_SSL 0x60  // Search Stop Level: Sets the level at which the search stops (2 bits)
+#define REG_3_SSL_LOW 0x20
+#define REG_3_SSL_MEDIUM 0x40
+#define REG_3_SSL_HIGH 0x60
 #define REG_3_HLSI 0x10  // High/Low Side Injection: 1 for high side LO injection, 0 for low side LO injection
 #define REG_3_MS 0x08  // Mono to Stereo: 1 to force mono, 0 for stereo
 #define REG_3_MR 0x04  // Mute Right: 1 to mute the right audio channel and force mono, 0 to unmute

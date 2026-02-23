@@ -217,7 +217,9 @@ bool tea5767_seek(uint8_t* buffer, bool seek_up) {
     } else {
         buffer[REG_3] &= ~REG_3_SUD;  // Set Search Down (SUD) bit 
     }
-    buffer[REG_3] |= REG_3_SSL; // Set Search Stop Level to high for better tuning accuracy
+    // Use low search stop level to catch weaker stations.
+    buffer[REG_3] &= (uint8_t)~REG_3_SSL;
+    buffer[REG_3] |= REG_3_SSL_LOW;
     if(tea5767_force_mono_enabled) {
         buffer[REG_3] |= REG_3_MS;
     } else {

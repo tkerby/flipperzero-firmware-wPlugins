@@ -58,8 +58,7 @@ Volume / noise tweak used on one popular PAM8403 board:
 
 ## Controls
 - Left/Right (short): tune -/+ 0.1 MHz (76.0–108.0)
-- Left/Right (hold): scan band -/+ (TEA5767) and build presets
-- Left/Right (hold) x3 quickly (within ~2.5s): clear presets
+- Left/Right (hold): single-step seek to next/prev station (from current, +/-0.1 MHz offset)
 - OK (short): toggle mute (PT2257)
 - OK (hold): save current frequency to preset (no duplicates, overwrites current slot if full)
 - Up/Down (short): preset next/prev (uses scanned list when available; otherwise cycles the built-in list)
@@ -82,10 +81,9 @@ Open with: `Menu -> Config`
 ## Presets (persistent)
 This version maintains a dynamic preset list saved on the SD card.
 
-- Scan (hold Left/Right) walks the band and adds found stations to the preset list.
+- Hold Left/Right performs one seek step only (next/prev station) and does not modify presets.
 - Up/Down (short) navigates the preset list when it exists.
 - OK (hold) saves the current tuned frequency into presets.
-- Scan x3 quickly (3x hold Left/Right within ~2.5s) clears the preset file.
 
 Files:
 - Settings: `/ext/apps_data/fmradio_controller_pt2257/settings.fff`
@@ -96,7 +94,7 @@ Files:
 - PT2257 hot-plug handling (applies attenuation/mute when PT appears on the bus)
 - Correct mono/stereo reporting for TEA5767 (REG_3_MS semantics)
 - Manual tuning on short Left/Right in 0.1 MHz steps
-- Long Left/Right starts full-band scan to build presets
+- Long Left/Right: single-step seek next/prev station
 - Band: 76.0–108.0 MHz
 - GUI updates: simplified Audio line (MUTE or Stereo/Mono) and PT2257 status (OK/ERROR)
 

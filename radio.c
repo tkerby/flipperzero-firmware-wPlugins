@@ -82,6 +82,19 @@ static void fmradio_pt2257_apply_addr8(void) {
     }
 }
 
+static const char* fmradio_pt_name_from_addr8(uint8_t addr8) {
+    if(addr8 == 0x88) return "PT2257";
+    if(addr8 == 0x44) return "PT2259";
+    return "PT";
+}
+
+static const char* fmradio_pt_active_name(void) {
+    // Manual selection: use configured address directly.
+    // Auto mode: use currently active driver address (set by autodetection).
+    uint8_t effective_addr8 = (pt2257_i2c_addr8 != 0x00) ? pt2257_i2c_addr8 : pt2257_get_i2c_addr();
+    return fmradio_pt_name_from_addr8(effective_addr8);
+}
+
 static void fmradio_apply_pt2257_state(void) {
     fmradio_state_lock();
     bool local_ready = pt2257_ready_cached;
@@ -119,16 +132,7 @@ static uint8_t preset_count = 0;
 static uint8_t preset_index = 0;
 static bool presets_dirty = false;
 
-static uint8_t seek_press_count = 0;
-static uint32_t seek_press_tick = 0;
-
-static bool scan_active = false;
-static bool scan_direction_up = true;
-static uint32_t scan_start_freq_10khz = 7600U;
-static uint32_t scan_last_freq_10khz = 0;
-static uint32_t scan_last_step_tick = 0;
-static uint32_t scan_start_tick = 0;
-static uint8_t scan_read_fail_count = 0;
+static uint32_t seek_last_step_tick = 0;
 
 static FuriMutex* state_mutex = NULL;
 
@@ -140,6 +144,12 @@ static const float frequency_values[] = {
 };
 
 static uint32_t current_frequency_index = 0;  // Default to the first frequency
+
+// SEEK pacing / settling for TEA5767
+#define SEEK_MIN_INTERVAL_MS 2500
+#define SEEK_SETTLE_DELAY_MS 250
+#define SEEK_READY_TIMEOUT_MS 1800
+#define SEEK_READY_POLL_MS 50
 
 static uint32_t clamp_u32(uint32_t value, uint32_t min, uint32_t max) {
     if(value < min) return min;
@@ -191,16 +201,6 @@ static bool fmradio_preset_find(uint32_t freq_10khz, uint8_t* found_index) {
         }
     }
     return false;
-}
-
-static void fmradio_presets_reset(void) {
-    preset_count = 0;
-    preset_index = 0;
-    presets_dirty = false;
-
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-    storage_simply_remove(storage, PRESETS_FILE);
-    furi_record_close(RECORD_STORAGE);
 }
 
 static void fmradio_presets_load(void) {
@@ -273,38 +273,6 @@ static void fmradio_feedback_success(void) {
     furi_record_close(RECORD_NOTIFICATION);
 }
 
-static bool fmradio_presets_find_min(uint8_t* min_index) {
-    if(preset_count == 0) return false;
-    uint32_t min_freq = preset_freq_10khz[0];
-    uint8_t min_i = 0;
-    for(uint8_t i = 1; i < preset_count; i++) {
-        if(preset_freq_10khz[i] < min_freq) {
-            min_freq = preset_freq_10khz[i];
-            min_i = i;
-        }
-    }
-    if(min_index) *min_index = min_i;
-    return true;
-}
-
-static void fmradio_scan_finish_and_tune_first(void) {
-    scan_active = false;
-    scan_read_fail_count = 0;
-    fmradio_presets_save();
-
-    if(preset_count > 0) {
-        // Jump to the lowest frequency found
-        uint8_t min_i = 0;
-        if(fmradio_presets_find_min(&min_i)) {
-            preset_index = min_i;
-        } else {
-            preset_index = 0;
-        }
-        tea5767_SetFreqMHz(((float)preset_freq_10khz[preset_index]) / 100.0f);
-        fmradio_settings_mark_dirty();
-    }
-}
-
 static void fmradio_presets_add_or_select(uint32_t freq_10khz) {
     freq_10khz = clamp_u32(freq_10khz, 7600U, 10800U);
 
@@ -326,84 +294,37 @@ static void fmradio_presets_add_or_select(uint32_t freq_10khz) {
     fmradio_presets_mark_dirty();
 }
 
-static void fmradio_scan_start(bool direction_up) {
-    scan_active = true;
-    scan_direction_up = direction_up;
-    scan_start_freq_10khz = direction_up ? 7600U : 10800U;
-    scan_last_freq_10khz = scan_start_freq_10khz;
-    scan_last_step_tick = 0;
-    scan_start_tick = furi_get_tick();
-    scan_read_fail_count = 0;
-
-    // Fresh scan: clear and rebuild presets
-    fmradio_presets_reset();
-
-    // Kick first seek from an explicit start frequency
-    tea5767_seekFrom10kHz(scan_start_freq_10khz, direction_up);
-    fmradio_settings_mark_dirty();
-    scan_last_step_tick = furi_get_tick();
-}
-
-static void fmradio_scan_process(uint8_t* tea_buffer, const struct RADIO_INFO* info) {
-    if(!scan_active) return;
-    if(!tea_buffer || !info) return;
-
-    // Safety timeout
-    if((furi_get_tick() - scan_start_tick) > furi_ms_to_ticks(30000)) {
-        fmradio_scan_finish_and_tune_first();
+static void fmradio_seek_step(bool direction_up) {
+    // SEEK-only behavior (scan logic disabled by request).
+    // Debounce repeated long-hold events so seek does not run too fast.
+    uint32_t now = furi_get_tick();
+    if((now - seek_last_step_tick) < furi_ms_to_ticks(SEEK_MIN_INTERVAL_MS)) {
         return;
     }
 
-    // Ready flag in read byte0 bit7
-    bool ready = (tea_buffer[0] & 0x80) != 0;
-    if(!ready) return;
+    uint32_t cur = fmradio_get_current_freq_10khz();
+    uint32_t next = direction_up ? clamp_u32(cur + 10U, 7600U, 10800U) :
+                                   ((cur > 7610U) ? (cur - 10U) : 7600U);
 
-    uint32_t freq_10khz = (uint32_t)(info->frequency * 100.0f);
-    freq_10khz = clamp_u32(freq_10khz, 7600U, 10800U);
+    tea5767_seekFrom10kHz(next, direction_up);
+    seek_last_step_tick = now;
 
-    // Add to presets only if signal is not too weak (avoid adding pure noise hits)
-    if(info->signalLevel >= 4) {
-        fmradio_presets_add_or_select(freq_10khz);
-        fmradio_presets_mark_dirty();
+    // Let PLL/status settle, then poll READY (byte0 bit7) briefly.
+    // This improves reliability on some TEA5767 modules.
+    furi_delay_ms(SEEK_SETTLE_DELAY_MS);
+    uint8_t tea_buffer[5];
+    uint32_t wait_start = furi_get_tick();
+    while((furi_get_tick() - wait_start) < furi_ms_to_ticks(SEEK_READY_TIMEOUT_MS)) {
+        if(tea5767_read_registers(tea_buffer)) {
+            bool ready = (tea_buffer[0] & 0x80) != 0;
+            if(ready) {
+                break;
+            }
+        }
+        furi_delay_ms(SEEK_READY_POLL_MS);
     }
 
-    // Termination: detect wrap-around
-    if(scan_direction_up) {
-        if(freq_10khz < scan_last_freq_10khz && preset_count > 0) {
-            fmradio_scan_finish_and_tune_first();
-            return;
-        }
-        scan_last_freq_10khz = freq_10khz;
-        if(freq_10khz >= 10800U) {
-            fmradio_scan_finish_and_tune_first();
-            return;
-        }
-    } else {
-        if(freq_10khz > scan_last_freq_10khz && preset_count > 0) {
-            fmradio_scan_finish_and_tune_first();
-            return;
-        }
-        scan_last_freq_10khz = freq_10khz;
-        if(freq_10khz <= 7600U) {
-            fmradio_scan_finish_and_tune_first();
-            return;
-        }
-    }
-
-    // Issue next seek step (throttle a bit)
-    uint32_t now = furi_get_tick();
-    if((now - scan_last_step_tick) > furi_ms_to_ticks(250)) {
-        // Start next seek slightly past current station to avoid re-finding it
-        uint32_t next_start = freq_10khz;
-        if(scan_direction_up) {
-            next_start = clamp_u32(freq_10khz + 10U, 7600U, 10800U);
-        } else {
-            next_start = (freq_10khz > 7610U) ? (freq_10khz - 10U) : 7600U;
-        }
-
-        tea5767_seekFrom10kHz(next_start, scan_direction_up);
-        scan_last_step_tick = now;
-    }
+    fmradio_settings_mark_dirty();
 }
 
 static void fmradio_settings_load(void) {
@@ -732,46 +653,10 @@ void fmradio_controller_submenu_callback(void* context, uint32_t index) {
 bool fmradio_controller_view_input_callback(InputEvent* event, void* context) {
     UNUSED(context);
     if(event->type == InputTypeLong && event->key == InputKeyLeft) {
-        // Triple-seek gesture clears presets
-        uint32_t now = furi_get_tick();
-        fmradio_state_lock();
-        if((now - seek_press_tick) > furi_ms_to_ticks(2500)) {
-            seek_press_count = 0;
-        }
-        seek_press_tick = now;
-        seek_press_count++;
-        if(seek_press_count >= 3) {
-            fmradio_presets_reset();
-            scan_active = false;
-            seek_press_count = 0;
-            fmradio_state_unlock();
-            return true;
-        }
-        fmradio_state_unlock();
-
-        fmradio_scan_start(false);
-        fmradio_settings_mark_dirty();
+        fmradio_seek_step(false);
         return true;
     } else if(event->type == InputTypeLong && event->key == InputKeyRight) {
-        // Triple-seek gesture clears presets
-        uint32_t now = furi_get_tick();
-        fmradio_state_lock();
-        if((now - seek_press_tick) > furi_ms_to_ticks(2500)) {
-            seek_press_count = 0;
-        }
-        seek_press_tick = now;
-        seek_press_count++;
-        if(seek_press_count >= 3) {
-            fmradio_presets_reset();
-            scan_active = false;
-            seek_press_count = 0;
-            fmradio_state_unlock();
-            return true;
-        }
-        fmradio_state_unlock();
-
-        fmradio_scan_start(true);
-        fmradio_settings_mark_dirty();
+        fmradio_seek_step(true);
         return true;
     } else if(event->type == InputTypeShort && event->key == InputKeyLeft) {
         float freq = tea5767_GetFreq();
@@ -967,34 +852,6 @@ static void fmradio_tick_callback(void* context) {
         last_pt2257_check = now;
     }
 
-    // Scan processing is event/state logic, keep it off draw callback.
-    fmradio_state_lock();
-    bool local_scan_active = scan_active;
-    uint32_t local_scan_start_tick = scan_start_tick;
-    fmradio_state_unlock();
-
-    if(local_scan_active) {
-        uint8_t tea_buffer[5];
-        struct RADIO_INFO info;
-        if(tea5767_get_radio_info(tea_buffer, &info)) {
-            fmradio_state_lock();
-            scan_read_fail_count = 0;
-            fmradio_state_unlock();
-            fmradio_scan_process(tea_buffer, &info);
-        } else {
-            fmradio_state_lock();
-            if(scan_read_fail_count < 255) scan_read_fail_count++;
-            bool should_abort =
-                (scan_read_fail_count >= 8) ||
-                ((furi_get_tick() - local_scan_start_tick) > furi_ms_to_ticks(35000));
-            if(should_abort) {
-                scan_active = false;
-                scan_read_fail_count = 0;
-            }
-            fmradio_state_unlock();
-        }
-    }
-
     // Debounced settings save (every ~2 s when dirty)
     static uint32_t last_settings_save = 0;
     if(settings_dirty && ((now - last_settings_save) > furi_ms_to_ticks(2000))) {
@@ -1046,14 +903,17 @@ void fmradio_controller_view_draw_callback(Canvas* canvas, void* model) {
     bool local_muted = current_volume;
     fmradio_state_unlock();
 
+    const char* pt_name = fmradio_pt_active_name();
+
     if(local_pt2257_ready) {
         snprintf(
             pt2257_display,
             sizeof(pt2257_display),
-            "PT2257: OK  Vol: -%udB",
+            "%s: OK  Vol: -%udB",
+            pt_name,
             (unsigned)local_pt2257_atten);
     } else {
-        snprintf(pt2257_display, sizeof(pt2257_display), "PT2257: ERROR");
+        snprintf(pt2257_display, sizeof(pt2257_display), "PT: ERROR");
     }
     canvas_draw_str(canvas, 10, 51, pt2257_display);
     
@@ -1230,12 +1090,11 @@ FMRadio* fmradio_controller_alloc() {
     widget_add_text_scroll_element(app->widget_about,0,0,128,64,
         "FM Radio. (v" FMRADIO_UI_VERSION ")\n---\n Created By Coolshrimp\n Fork/extended by pchmielewski1\n\n"
         "Left/Right (short) = Tune -/+ 0.1MHz\n"
-        "Left/Right (hold) = Scan band (build presets)\n"
+        "Left/Right (hold) = Seek next/prev\n"
         "OK (short) = Mute (PT2257)\n"
         "OK (hold) = Save to preset\n"
         "Up/Down (short) = Preset next/prev\n"
         "Up/Down (hold) = Volume (PT2257)\n\n"
-        "Seek x3 quickly = Clear presets\n"
         "Band: 76.0-108.0MHz\n\n"
         "Config: SNC / De-emph / SoftMute / HighCut / Mono\n"
         "Try toggling while listening for feedback");
