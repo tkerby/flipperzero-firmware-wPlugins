@@ -1,0 +1,15 @@
+App(
+    appid="animation_switcher",
+    name="Animation Switcher",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="fas_app_entry",
+    requires=["gui", "storage"],
+    stack_size=4 * 1024,
+    fap_category="Tools",
+    fap_icon_assets="icons",
+    fap_icon="icons/fas.png",
+    fap_author="@lsalik2",
+    fap_weburl="https://github.com/lsalik2/FlipperAnimationSwitcher",
+    fap_version="1.0",
+    fap_description="Change your background animations on the fly!",
+)
