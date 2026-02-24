@@ -8,23 +8,23 @@
 #include <stdio.h>
 
 /* ── Layout constants ─────────────────────────────────────────────────── */
-#define VISIBLE_ROWS   4
-#define ROW_HEIGHT    14
-#define LIST_Y_START   2
-#define CHECKBOX_W    10
-#define CHECKBOX_H    10
+#define VISIBLE_ROWS 4
+#define ROW_HEIGHT   14
+#define LIST_Y_START 2
+#define CHECKBOX_W   10
+#define CHECKBOX_H   10
 
 /* ── Model (stored inside the View) ──────────────────────────────────── */
 typedef struct {
     char labels[FAS_LIST_MAX_ITEMS][FAS_LIST_LABEL_LEN];
     bool has_checkbox[FAS_LIST_MAX_ITEMS];
     bool checked[FAS_LIST_MAX_ITEMS];
-    int  count;
-    int  cursor;
-    int  scroll;  /* index of the topmost visible item */
+    int count;
+    int cursor;
+    int scroll; /* index of the topmost visible item */
 
     FasListCallback callback;
-    void*           callback_ctx;
+    void* callback_ctx;
 } FasListViewModel;
 
 struct FasListView {
@@ -41,9 +41,9 @@ static void fas_list_draw(Canvas* canvas, void* model_ptr) {
         int idx = m->scroll + row;
         if(idx >= m->count) break;
 
-        int y_top  = LIST_Y_START + row * ROW_HEIGHT;
+        int y_top = LIST_Y_START + row * ROW_HEIGHT;
         int y_text = y_top + ROW_HEIGHT - 3; /* baseline for FontSecondary */
-        bool sel   = (idx == m->cursor);
+        bool sel = (idx == m->cursor);
 
         if(sel) {
             canvas_set_color(canvas, ColorBlack);
@@ -63,8 +63,10 @@ static void fas_list_draw(Canvas* canvas, void* model_ptr) {
             canvas_draw_rframe(canvas, x, cb_y, CHECKBOX_W, CHECKBOX_H, 1);
             if(m->checked[idx]) {
                 /* Draw a small X inside */
-                canvas_draw_line(canvas, x + 2, cb_y + 2, x + CHECKBOX_W - 3, cb_y + CHECKBOX_H - 3);
-                canvas_draw_line(canvas, x + CHECKBOX_W - 3, cb_y + 2, x + 2, cb_y + CHECKBOX_H - 3);
+                canvas_draw_line(
+                    canvas, x + 2, cb_y + 2, x + CHECKBOX_W - 3, cb_y + CHECKBOX_H - 3);
+                canvas_draw_line(
+                    canvas, x + CHECKBOX_W - 3, cb_y + 2, x + 2, cb_y + CHECKBOX_H - 3);
             }
             if(sel) canvas_set_color(canvas, ColorWhite);
             x += CHECKBOX_W + 3;
@@ -91,7 +93,7 @@ static void fas_list_draw(Canvas* canvas, void* model_ptr) {
 /* ── Input ────────────────────────────────────────────────────────────── */
 static bool fas_list_input(InputEvent* event, void* context) {
     FasListView* lv = context;
-    bool consumed   = false;
+    bool consumed = false;
 
     /* ── Navigation (short + repeat for smooth scrolling) ─────────────── */
     if((event->type == InputTypeShort || event->type == InputTypeRepeat)) {
@@ -125,16 +127,16 @@ static bool fas_list_input(InputEvent* event, void* context) {
 
     /* ── OK short: toggle checkbox, fire callback ─────────────────────── */
     if(event->type == InputTypeShort && event->key == InputKeyOk) {
-        int             cursor = 0;
-        FasListCallback cb     = NULL;
-        void*           cb_ctx = NULL;
+        int cursor = 0;
+        FasListCallback cb = NULL;
+        void* cb_ctx = NULL;
 
         with_view_model(
             lv->view,
             FasListViewModel * m,
             {
                 cursor = m->cursor;
-                cb     = m->callback;
+                cb = m->callback;
                 cb_ctx = m->callback_ctx;
                 if(m->count > 0 && m->has_checkbox[m->cursor]) {
                     m->checked[m->cursor] = !m->checked[m->cursor];
@@ -148,16 +150,16 @@ static bool fas_list_input(InputEvent* event, void* context) {
 
     /* ── OK long: fire callback (no checkbox toggle) ──────────────────── */
     if(event->type == InputTypeLong && event->key == InputKeyOk) {
-        int             cursor = 0;
-        FasListCallback cb     = NULL;
-        void*           cb_ctx = NULL;
+        int cursor = 0;
+        FasListCallback cb = NULL;
+        void* cb_ctx = NULL;
 
         with_view_model(
             lv->view,
             FasListViewModel * m,
             {
                 cursor = m->cursor;
-                cb     = m->callback;
+                cb = m->callback;
                 cb_ctx = m->callback_ctx;
             },
             false);
@@ -168,16 +170,16 @@ static bool fas_list_input(InputEvent* event, void* context) {
 
     /* ── Right arrow: "Done / Proceed" ───────────────────────────────── */
     if(event->type == InputTypeShort && event->key == InputKeyRight) {
-        int             cursor = 0;
-        FasListCallback cb     = NULL;
-        void*           cb_ctx = NULL;
+        int cursor = 0;
+        FasListCallback cb = NULL;
+        void* cb_ctx = NULL;
 
         with_view_model(
             lv->view,
             FasListViewModel * m,
             {
                 cursor = m->cursor;
-                cb     = m->callback;
+                cb = m->callback;
                 cb_ctx = m->callback_ctx;
             },
             false);
@@ -193,7 +195,7 @@ static bool fas_list_input(InputEvent* event, void* context) {
 
 FasListView* fas_list_view_alloc(void) {
     FasListView* lv = malloc(sizeof(FasListView));
-    lv->view        = view_alloc();
+    lv->view = view_alloc();
     view_allocate_model(lv->view, ViewModelTypeLocking, sizeof(FasListViewModel));
     view_set_draw_callback(lv->view, fas_list_draw);
     view_set_input_callback(lv->view, fas_list_input);
@@ -219,7 +221,7 @@ void fas_list_view_set_callback(FasListView* lv, FasListCallback cb, void* ctx) 
         lv->view,
         FasListViewModel * m,
         {
-            m->callback     = cb;
+            m->callback = cb;
             m->callback_ctx = ctx;
         },
         false);
@@ -230,7 +232,7 @@ void fas_list_view_reset(FasListView* lv) {
         lv->view,
         FasListViewModel * m,
         {
-            m->count  = 0;
+            m->count = 0;
             m->cursor = 0;
             m->scroll = 0;
         },
@@ -246,8 +248,8 @@ void fas_list_view_add_item(FasListView* lv, const char* label, bool has_checkbo
                 int i = m->count;
                 strncpy(m->labels[i], label, FAS_LIST_LABEL_LEN - 1);
                 m->labels[i][FAS_LIST_LABEL_LEN - 1] = '\0';
-                m->has_checkbox[i]                    = has_checkbox;
-                m->checked[i]                         = checked;
+                m->has_checkbox[i] = has_checkbox;
+                m->checked[i] = checked;
                 m->count++;
             }
         },
@@ -269,7 +271,9 @@ bool fas_list_view_get_checked(FasListView* lv, int index) {
     with_view_model(
         lv->view,
         FasListViewModel * m,
-        { if(index >= 0 && index < m->count) result = m->checked[index]; },
+        {
+            if(index >= 0 && index < m->count) result = m->checked[index];
+        },
         false);
     return result;
 }
@@ -289,8 +293,7 @@ void fas_list_view_set_cursor(FasListView* lv, int index) {
                 m->cursor = index;
                 /* Adjust scroll so cursor is visible */
                 if(m->cursor < m->scroll) m->scroll = m->cursor;
-                if(m->cursor >= m->scroll + VISIBLE_ROWS)
-                    m->scroll = m->cursor - VISIBLE_ROWS + 1;
+                if(m->cursor >= m->scroll + VISIBLE_ROWS) m->scroll = m->cursor - VISIBLE_ROWS + 1;
             }
         },
         true);

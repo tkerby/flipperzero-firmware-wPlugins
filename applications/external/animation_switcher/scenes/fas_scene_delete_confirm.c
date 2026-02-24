@@ -14,16 +14,18 @@ void fas_scene_delete_confirm_on_enter(void* context) {
     FasApp* app = context;
 
     dialog_ex_reset(app->dialog_ex);
-    dialog_ex_set_header(
-        app->dialog_ex, "Delete Playlist?", 64, 10, AlignCenter, AlignCenter);
+    dialog_ex_set_header(app->dialog_ex, "Delete Playlist?", 64, 10, AlignCenter, AlignCenter);
 
     /* Show the playlist name as the body text */
     dialog_ex_set_text(
         app->dialog_ex,
         app->playlists[app->current_playlist_index].name,
-        64, 32, AlignCenter, AlignCenter);
+        64,
+        32,
+        AlignCenter,
+        AlignCenter);
 
-    dialog_ex_set_left_button_text(app->dialog_ex,  "No");
+    dialog_ex_set_left_button_text(app->dialog_ex, "No");
     dialog_ex_set_right_button_text(app->dialog_ex, "Yes");
     dialog_ex_set_context(app->dialog_ex, app);
     dialog_ex_set_result_callback(app->dialog_ex, fas_delete_confirm_cb);
@@ -32,8 +34,8 @@ void fas_scene_delete_confirm_on_enter(void* context) {
 }
 
 bool fas_scene_delete_confirm_on_event(void* context, SceneManagerEvent event) {
-    FasApp* app      = context;
-    bool    consumed = false;
+    FasApp* app = context;
+    bool consumed = false;
 
     if(event.type == SceneManagerEventTypeCustom) {
         switch(event.event) {

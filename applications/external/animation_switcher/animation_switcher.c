@@ -28,7 +28,7 @@ static FasApp* fas_app_alloc(void) {
     memset(app, 0, sizeof(FasApp));
 
     /* Open system records */
-    app->gui     = furi_record_open(RECORD_GUI);
+    app->gui = furi_record_open(RECORD_GUI);
     app->storage = furi_record_open(RECORD_STORAGE);
 
     /* Scene manager */
@@ -36,6 +36,7 @@ static FasApp* fas_app_alloc(void) {
 
     /* View dispatcher */
     app->view_dispatcher = view_dispatcher_alloc();
+    view_dispatcher_enable_queue(app->view_dispatcher);
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_custom_event_callback(app->view_dispatcher, fas_custom_event_cb);
     view_dispatcher_set_navigation_event_callback(app->view_dispatcher, fas_navigation_event_cb);
@@ -43,8 +44,7 @@ static FasApp* fas_app_alloc(void) {
     /* ── Allocate views ────────────────────────────────────────────── */
 
     app->menu = menu_alloc();
-    view_dispatcher_add_view(
-        app->view_dispatcher, FasViewMenu, menu_get_view(app->menu));
+    view_dispatcher_add_view(app->view_dispatcher, FasViewMenu, menu_get_view(app->menu));
 
     app->list_view = fas_list_view_alloc();
     view_dispatcher_add_view(
@@ -52,24 +52,21 @@ static FasApp* fas_app_alloc(void) {
 
     app->var_list = variable_item_list_alloc();
     view_dispatcher_add_view(
-        app->view_dispatcher, FasViewVarList,
-        variable_item_list_get_view(app->var_list));
+        app->view_dispatcher, FasViewVarList, variable_item_list_get_view(app->var_list));
 
     app->text_input = text_input_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher, FasViewTextInput, text_input_get_view(app->text_input));
 
     app->widget = widget_alloc();
-    view_dispatcher_add_view(
-        app->view_dispatcher, FasViewWidget, widget_get_view(app->widget));
+    view_dispatcher_add_view(app->view_dispatcher, FasViewWidget, widget_get_view(app->widget));
 
     app->dialog_ex = dialog_ex_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher, FasViewDialogEx, dialog_ex_get_view(app->dialog_ex));
 
     /* Attach to GUI as fullscreen app */
-    view_dispatcher_attach_to_gui(
-        app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
+    view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
 
     return app;
 }
@@ -130,21 +127,21 @@ bool fas_load_animations(FasApp* app) {
     }
 
     FileInfo fi;
-    char     name[FAS_ANIM_NAME_LEN];
+    char name[FAS_ANIM_NAME_LEN];
 
     while(storage_dir_read(dir, &fi, name, sizeof(name)) &&
-        app->animation_count < FAS_MAX_ANIMATIONS) {
+          app->animation_count < FAS_MAX_ANIMATIONS) {
         /* Only include subdirectories (not manifest.txt or other files) */
         if(fi.flags & FSF_DIRECTORY) {
             AnimEntry* e = &app->animations[app->animation_count];
             strncpy(e->name, name, FAS_ANIM_NAME_LEN - 1);
             e->name[FAS_ANIM_NAME_LEN - 1] = '\0';
-            e->selected      = false;
-            e->min_butthurt  = FAS_DEFAULT_MIN_BUTTHURT;
-            e->max_butthurt  = FAS_DEFAULT_MAX_BUTTHURT;
-            e->min_level     = FAS_DEFAULT_MIN_LEVEL;
-            e->max_level     = FAS_DEFAULT_MAX_LEVEL;
-            e->weight        = FAS_DEFAULT_WEIGHT;
+            e->selected = false;
+            e->min_butthurt = FAS_DEFAULT_MIN_BUTTHURT;
+            e->max_butthurt = FAS_DEFAULT_MAX_BUTTHURT;
+            e->min_level = FAS_DEFAULT_MIN_LEVEL;
+            e->max_level = FAS_DEFAULT_MAX_LEVEL;
+            e->weight = FAS_DEFAULT_WEIGHT;
             app->animation_count++;
         }
     }
@@ -177,13 +174,13 @@ bool fas_load_playlists(FasApp* app) {
     char name[FAS_PLAYLIST_NAME_LEN + 4];
 
     while(storage_dir_read(dir, &fi, name, sizeof(name)) &&
-        app->playlist_count < FAS_MAX_PLAYLISTS) {
+          app->playlist_count < FAS_MAX_PLAYLISTS) {
         if(fi.flags & FSF_DIRECTORY) continue;
 
         int len = (int)strlen(name);
         if(len > 4 && strcmp(name + len - 4, ".txt") == 0) {
             PlaylistEntry* e = &app->playlists[app->playlist_count];
-            int  bare_len    = len - 4;
+            int bare_len = len - 4;
             if(bare_len >= FAS_PLAYLIST_NAME_LEN) bare_len = FAS_PLAYLIST_NAME_LEN - 1;
             memcpy(e->name, name, bare_len);
             e->name[bare_len] = '\0';
@@ -218,8 +215,9 @@ bool fas_save_playlist(FasApp* app, const char* name) {
     for(int i = 0; i < app->animation_count; i++) {
         if(!app->animations[i].selected) continue;
         char buf[256];
-        int  len = snprintf(
-            buf, sizeof(buf),
+        int len = snprintf(
+            buf,
+            sizeof(buf),
             "\nName: %s\n"
             "Min butthurt: %d\n"
             "Max butthurt: %d\n"
@@ -246,8 +244,7 @@ bool fas_save_playlist(FasApp* app, const char* name) {
 bool fas_delete_playlist(FasApp* app, int index) {
     if(index < 0 || index >= app->playlist_count) return false;
     char path[FAS_PATH_LEN];
-    snprintf(path, sizeof(path), "%s/%s.txt",
-            FAS_PLAYLISTS_PATH, app->playlists[index].name);
+    snprintf(path, sizeof(path), "%s/%s.txt", FAS_PLAYLISTS_PATH, app->playlists[index].name);
     return storage_simply_remove(app->storage, path);
 }
 
@@ -259,8 +256,7 @@ bool fas_apply_playlist(FasApp* app, int index) {
     if(index < 0 || index >= app->playlist_count) return false;
 
     char src[FAS_PATH_LEN];
-    snprintf(src, sizeof(src), "%s/%s.txt",
-            FAS_PLAYLISTS_PATH, app->playlists[index].name);
+    snprintf(src, sizeof(src), "%s/%s.txt", FAS_PLAYLISTS_PATH, app->playlists[index].name);
 
     /* storage_common_copy will not overwrite an existing destination file,
      * so we must remove the current manifest first.  We ignore the return

@@ -37,8 +37,8 @@ void fas_scene_delete_playlist_on_enter(void* context) {
 }
 
 bool fas_scene_delete_playlist_on_event(void* context, SceneManagerEvent event) {
-    FasApp* app      = context;
-    bool    consumed = false;
+    FasApp* app = context;
+    bool consumed = false;
 
     if(event.type == SceneManagerEventTypeCustom) {
         switch(event.event) {

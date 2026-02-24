@@ -17,16 +17,19 @@ static void fas_main_menu_cb(void* context, uint32_t index) {
 void fas_scene_main_menu_on_enter(void* context) {
     FasApp* app = context;
     menu_reset(app->menu);
-    menu_add_item(app->menu, "Create Playlist", &I_create, FasMainIdxCreate, fas_main_menu_cb, app);
-    menu_add_item(app->menu, "Choose Playlist", &I_choose, FasMainIdxChoose, fas_main_menu_cb, app);
-    menu_add_item(app->menu, "Delete Playlist", &I_delete, FasMainIdxDelete, fas_main_menu_cb, app);
-    menu_add_item(app->menu, "About / Help",    &I_about,  FasMainIdxAbout,  fas_main_menu_cb, app);
+    menu_add_item(
+        app->menu, "Create Playlist", &I_create, FasMainIdxCreate, fas_main_menu_cb, app);
+    menu_add_item(
+        app->menu, "Choose Playlist", &I_choose, FasMainIdxChoose, fas_main_menu_cb, app);
+    menu_add_item(
+        app->menu, "Delete Playlist", &I_delete, FasMainIdxDelete, fas_main_menu_cb, app);
+    menu_add_item(app->menu, "About / Help", &I_about, FasMainIdxAbout, fas_main_menu_cb, app);
     view_dispatcher_switch_to_view(app->view_dispatcher, FasViewMenu);
 }
 
 bool fas_scene_main_menu_on_event(void* context, SceneManagerEvent event) {
-    FasApp* app      = context;
-    bool    consumed = false;
+    FasApp* app = context;
+    bool consumed = false;
 
     if(event.type == SceneManagerEventTypeCustom) {
         switch(event.event) {

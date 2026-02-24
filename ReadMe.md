@@ -89,6 +89,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [SLI Writer v1.4 (By Julienbxl)](https://github.com/Julienbxl/SLI-Writer)
 - Updated: [NFC Comparator v2.4 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
 - Updated: [Arduventure v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperArduventure)
+- Added: [Animation Switcher v1.0 (By lsalik2)](https://github.com/lsalik2/FlipperAnimationSwitcher)
 
 <a name="release"></a>
 
@@ -467,6 +468,7 @@ $ ./fbt dolphin_ext
 - [Analog Clock v1.2 (By scrolltex)](https://github.com/scrolltex/flipper_analog_clock)
 - [Analog Output v0.1 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/gpio/dac)
 - [Anki Remote v1.3 (By Blue5GD)](https://github.com/Blue5GD/Anki-Remote)
+- [Animation Switcher v1.0 (By lsalik2)](https://github.com/lsalik2/FlipperAnimationSwitcher)
 - [ASCII Table v1.0 (By x10102)](https://github.com/x10102/flipper_ascii)
 - [Atari SIO Emulator v0.5 (By cepetr)](https://github.com/cepetr/sio2flip)
 - [ATM Player v1.0.8 (By apfxtech)](https://github.com/apfxtech/FlipperATM)

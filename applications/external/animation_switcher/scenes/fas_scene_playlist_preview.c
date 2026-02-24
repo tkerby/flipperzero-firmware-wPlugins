@@ -4,9 +4,12 @@
 /* ── Read the playlist .txt and build a display string ─────────────────── */
 static void build_preview_text(FasApp* app, char* out, int out_size) {
     char path[FAS_PATH_LEN];
-    snprintf(path, sizeof(path), "%s/%s.txt",
-             FAS_PLAYLISTS_PATH,
-             app->playlists[app->current_playlist_index].name);
+    snprintf(
+        path,
+        sizeof(path),
+        "%s/%s.txt",
+        FAS_PLAYLISTS_PATH,
+        app->playlists[app->current_playlist_index].name);
 
     File* f = storage_file_alloc(app->storage);
     if(!storage_file_open(f, path, FSAM_READ, FSOM_OPEN_EXISTING)) {
@@ -15,9 +18,9 @@ static void build_preview_text(FasApp* app, char* out, int out_size) {
         return;
     }
 
-    int  pos = 0;
+    int pos = 0;
     char line[128];
-    int  lp  = 0;
+    int lp = 0;
     char c;
 
     while(storage_file_read(f, &c, 1) == 1 && pos < out_size - 40) {
@@ -53,10 +56,9 @@ void fas_scene_playlist_preview_on_enter(void* context) {
 
     /* Title */
     char title[FAS_PLAYLIST_NAME_LEN + 16];
-    snprintf(title, sizeof(title), "Playlist: %s",
-             app->playlists[app->current_playlist_index].name);
-    widget_add_string_element(
-        app->widget, 64, 2, AlignCenter, AlignTop, FontPrimary, title);
+    snprintf(
+        title, sizeof(title), "Playlist: %s", app->playlists[app->current_playlist_index].name);
+    widget_add_string_element(app->widget, 64, 2, AlignCenter, AlignTop, FontPrimary, title);
 
     /* Animation list as scrollable text */
     static char preview_buf[512];

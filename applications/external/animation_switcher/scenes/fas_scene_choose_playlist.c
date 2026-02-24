@@ -37,12 +37,11 @@ void fas_scene_choose_playlist_on_enter(void* context) {
 }
 
 bool fas_scene_choose_playlist_on_event(void* context, SceneManagerEvent event) {
-    FasApp* app      = context;
-    bool    consumed = false;
+    FasApp* app = context;
+    bool consumed = false;
 
     if(event.type == SceneManagerEventTypeCustom) {
         switch(event.event) {
-
         case FasEvtChooseSelect:
             if(app->playlist_count > 0) {
                 fas_apply_playlist(app, app->current_playlist_index);

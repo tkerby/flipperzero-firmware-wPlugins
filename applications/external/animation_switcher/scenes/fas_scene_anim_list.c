@@ -14,10 +14,9 @@ static void fas_anim_list_cb(void* context, int index, FasListEvent event) {
 
     case FasListEvtOkLong:
         /* Open per-animation settings.  Set flag so on_enter preserves state. */
-        app->current_anim_index         = index;
-        app->returning_from_settings    = true;
-        view_dispatcher_send_custom_event(
-            app->view_dispatcher, FasEvtAnimListOpenSettings);
+        app->current_anim_index = index;
+        app->returning_from_settings = true;
+        view_dispatcher_send_custom_event(app->view_dispatcher, FasEvtAnimListOpenSettings);
         break;
 
     case FasListEvtRight:
@@ -61,12 +60,11 @@ void fas_scene_anim_list_on_enter(void* context) {
 }
 
 bool fas_scene_anim_list_on_event(void* context, SceneManagerEvent event) {
-    FasApp* app      = context;
-    bool    consumed = false;
+    FasApp* app = context;
+    bool consumed = false;
 
     if(event.type == SceneManagerEventTypeCustom) {
         switch(event.event) {
-
         case FasEvtAnimListOpenSettings:
             scene_manager_next_scene(app->scene_manager, FasSceneAnimSettings);
             consumed = true;
@@ -76,7 +74,10 @@ bool fas_scene_anim_list_on_event(void* context, SceneManagerEvent event) {
             /* Only proceed if at least one animation is selected */
             bool any = false;
             for(int i = 0; i < app->animation_count; i++) {
-                if(app->animations[i].selected) { any = true; break; }
+                if(app->animations[i].selected) {
+                    any = true;
+                    break;
+                }
             }
             if(any) {
                 scene_manager_next_scene(app->scene_manager, FasScenePlaylistName);
