@@ -1,11 +1,11 @@
-#include "nfc_playlist_worker.h"
+#include "nfc_playlist_worker_i.h"
 
 /**
  * Implements delay between NFC card emulations
  * @param worker Pointer to the NfcPlaylistWorker instance
  * @param playlist_position Current position in the playlist (0-based index)
  */
-static void nfc_playlist_worker_delay(NfcPlaylistWorker* worker, int playlist_position) {
+static inline void nfc_playlist_worker_delay(NfcPlaylistWorker* worker, int playlist_position) {
    if(!worker->settings->time_controls) {
       return;
    }
@@ -28,7 +28,7 @@ static void nfc_playlist_worker_delay(NfcPlaylistWorker* worker, int playlist_po
  * @param worker Pointer to the NfcPlaylistWorker instance
  * @param state The state to set during countdown (e.g., Emulating, Error states)
  */
-static void
+static inline void
    nfc_playlist_worker_countdown(NfcPlaylistWorker* worker, NfcPlaylistWorkerState state) {
    worker->state = state;
    worker->ms_counter = (options_emulate_timeout[worker->settings->emulate_timeout] * 1000);
@@ -41,11 +41,6 @@ static void
    worker->ms_counter = 0;
 }
 
-/**
- * Main worker thread task that processes the NFC playlist
- * @param context Pointer to NfcPlaylistWorker instance (cast from void*)
- * @return int32_t Always returns 0 (success)
- */
 static int32_t nfc_playlist_worker_task(void* context) {
    NfcPlaylistWorker* worker = context;
    furi_assert(worker);
@@ -173,11 +168,6 @@ static int32_t nfc_playlist_worker_task(void* context) {
    return 0;
 }
 
-/**
- * Allocates and initializes a new NFC playlist worker
- * @param settings Pointer to worker settings (timeout, delay, loop, etc.)
- * @return NfcPlaylistWorker* Pointer to newly allocated worker instance
- */
 NfcPlaylistWorker* nfc_playlist_worker_alloc(NfcPlaylistWorkerSettings* settings) {
    NfcPlaylistWorker* worker = malloc(sizeof(NfcPlaylistWorker));
    furi_assert(worker);
@@ -197,10 +187,6 @@ NfcPlaylistWorker* nfc_playlist_worker_alloc(NfcPlaylistWorkerSettings* settings
    return worker;
 }
 
-/**
- * Frees all resources associated with the NFC playlist worker
- * @param worker Pointer to NfcPlaylistWorker instance to free
- */
 void nfc_playlist_worker_free(NfcPlaylistWorker* worker) {
    furi_assert(worker);
 
@@ -218,30 +204,18 @@ void nfc_playlist_worker_free(NfcPlaylistWorker* worker) {
    free(worker);
 }
 
-/**
- * Starts the NFC playlist worker thread
- * @param worker Pointer to NfcPlaylistWorker instance to start
- */
 void nfc_playlist_worker_start(NfcPlaylistWorker* worker) {
    furi_assert(worker);
    furi_thread_start(worker->thread);
    worker->state = NfcPlaylistWorkerState_Emulating;
 }
 
-/**
- * Stops the NFC playlist worker and waits for thread completion
- * @param worker Pointer to NfcPlaylistWorker instance to stop
- */
 void nfc_playlist_worker_stop(NfcPlaylistWorker* worker) {
    furi_assert(worker);
    worker->state = NfcPlaylistWorkerState_Stopped;
    furi_thread_join(worker->thread);
 }
 
-/**
- * Skips to the next NFC card in the playlist
- * @param worker Pointer to NfcPlaylistWorker instance to skip
- */
 void nfc_playlist_worker_skip(NfcPlaylistWorker* worker) {
    furi_assert(worker);
    if(worker->state != NfcPlaylistWorkerState_Stopped ||
@@ -250,10 +224,6 @@ void nfc_playlist_worker_skip(NfcPlaylistWorker* worker) {
    }
 }
 
-/**
- * Rewinds the NFC playlist worker to the previous NFC card
- * @param worker Pointer to NfcPlaylistWorker instance to rewind
- */
 void nfc_playlist_worker_rewind(NfcPlaylistWorker* worker) {
    furi_assert(worker);
    if(worker->state != NfcPlaylistWorkerState_Stopped ||

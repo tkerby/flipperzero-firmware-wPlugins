@@ -1,14 +1,15 @@
 #pragma once
-#include <notification/notification_messages.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+typedef struct NotificationApp NotificationApp;
+
 /** LED states for NFC Playlist operations */
 typedef enum {
    NfcPlaylistLedState_Emulating, /**< Operation in progress */
-   NfcPlaylistLedState_Delaying,  /**< Delaying between operations */
+   NfcPlaylistLedState_Delaying, /**< Delaying between operations */
    NfcPlaylistLedState_Error /**< Operation encountered an error */
 } NfcPlaylistLedState;
 
