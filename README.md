@@ -1,10 +1,33 @@
+<p align="center">
+	<img src="images/logo.png" alt="Project logo" width="220"/>
+</p>
+
 # flipperzero-radio-with-volume-control
 Flipper Zero external app to control TEA5767 FM radio boards and PT2257 I2C volume.
 
 ## Hardware / Schematics
 
-- Schematic (SVG): [schematics/svg/schematic_radio_tea5767_pt2257_2026-02-22.svg](schematics/svg/schematic_radio_tea5767_pt2257_2026-02-22.svg)
+- Schematic (SVG, 2026-02-25): [schematics/svg/schematic_radio_tea5767_pt2257_2026-02-25.svg](schematics/svg/schematic_radio_tea5767_pt2257_2026-02-25.svg)
+- PCB Gerbers (ZIP): [schematics/zip/gerber_radio_tea5767_pt2257_2026-02-25.zip](schematics/zip/gerber_radio_tea5767_pt2257_2026-02-25.zip)
+- PCB project/export (ZIP): [schematics/zip/pcb_radio_tea5767_pt2257_2026-02-25.zip](schematics/zip/pcb_radio_tea5767_pt2257_2026-02-25.zip)
 - PCB files: planned to be added in the future (work in progress).
+
+## PCB (current revision)
+
+Front (top):
+
+![PCB front](images/pcb/pcb_front_2026-02-25.jpeg)
+
+Back (bottom):
+
+![PCB back](images/pcb/pcb_back_2026-02-25.jpeg)
+
+Status note:
+
+- I ordered a test batch of 15 pcs.
+- The PCB is not yet 100% validated.
+- Hardware tests in ~14–18 days will confirm whether this revision is fully correct.
+- I will post an update after testing.
 
 ## Screenshots
 
