@@ -1,5 +1,5 @@
 // sli_writer.c
-// Writes Magic ISO15693 SLI cards from a Flipper .nfc file.
+// Writes Magic ISO15693 SLIX cards from a Flipper .nfc file.
 //
 // Flow:
 //   1) Parse .nfc file (UID + block count/size + data)
@@ -9,7 +9,7 @@
 //   5) Write UID last (non-addressed vendor cmd 0x40/0x41, like Proxmark hf 15 csetuid --v2)
 //
 // Based on the official iso15693_nfc_writer worker pattern (callback-driven, no custom thread).
-// Card doc: https://nl.aliexpress.com/item/1005006949791537.html? (Gen2 UID-changeable ISO15693 SLI)
+// Card doc: https://www.aliexpress.com/item/... (Gen2 UID-changeable ISO15693 SLIX)
 
 #include "sli_writer.h"
 #include <stdlib.h>
@@ -56,7 +56,7 @@
 
 /* FWT for iso15693_3_poller_send_frame(): value is in carrier cycles (fc).
  * 300000 fc / 13.56 MHz ≈ 22ms — enough for any ISO15693 card response. */
-#define ISO15693_FWT_FC           300000
+#define ISO15693_FWT_FC           500000  /* ~37ms — generous for slow magic cards */
 
 /* ============================================================================
  *  Notification sequences (LED feedback)
@@ -232,7 +232,7 @@ static bool magic_write_uid(Iso15693_3Poller* iso, const uint8_t uid_new[8]) {
  * ========================================================================== */
 
 /* Write all blocks using non-addressed Write Single Block (like Proxmark hf 15 wrbl).
- * Block size is clamped to 4 bytes (hardware maximum for SLI cards).
+ * Block size is clamped to 4 bytes (hardware maximum for SLIX cards).
  * Each block is retried up to 3 times on failure. */
 static bool write_blocks(
     Iso15693_3Poller* iso,
@@ -241,7 +241,7 @@ static bool write_blocks(
     uint8_t block_size) {
 
     if(block_size == 0) block_size = 4;
-    if(block_size > 4)  block_size = 4;  /* SLI hardware: 4 bytes/block max */
+    if(block_size > 4)  block_size = 4;  /* SLIX hardware: 4 bytes/block max */
 
     size_t blocks = (block_count > SLI_MAGIC_MAX_BLOCKS) ?
                      SLI_MAGIC_MAX_BLOCKS : block_count;
@@ -258,9 +258,9 @@ static bool write_blocks(
         if(block_size < 4) memset(&wframe[3 + block_size], 0x00, 4 - block_size);
 
         bool wrote = false;
-        for(int attempt = 0; attempt < 3 && !wrote; attempt++) {
+        for(int attempt = 0; attempt < 5 && !wrote; attempt++) {
             wrote = iso_send_raw(iso, wframe, sizeof(wframe), ISO15693_FWT_FC);
-            if(!wrote) furi_delay_ms(10);
+            if(!wrote) furi_delay_ms(20);
         }
 
         if(!wrote) {
@@ -268,7 +268,7 @@ static bool write_blocks(
             return false;
         }
 
-        furi_delay_ms(12); /* inter-block delay for card NVM write cycle */
+        furi_delay_ms(20); /* inter-block delay for card NVM write cycle */
     }
 
     return true;
@@ -279,7 +279,7 @@ static bool write_blocks(
  * ========================================================================== */
 
 /* Parse a Flipper .nfc file and fill app->nfc_data.
- * Supports SLI / ISO15693-3 format. Uses strtol for robust hex parsing.
+ * Supports SLIX / ISO15693-3 format. Uses strtol for robust hex parsing.
  *
  * Expected fields:
  *   UID: <8 hex bytes space-separated>
@@ -500,7 +500,7 @@ bool sli_writer_scene_start_on_event(void* context, SceneManagerEvent event) {
             dialog_ex_reset(app->dialog_ex);
             dialog_ex_set_header(app->dialog_ex, "SLI Writer", 64, 0, AlignCenter, AlignTop);
             dialog_ex_set_text(app->dialog_ex,
-                "Write Magic ISO15693\nSLI cards from .nfc\n credit Jubx",
+                "Write Magic ISO15693\nSLI/SLI-S/SLI-L cards\nSLIX support coming soon",
                 64, 32, AlignCenter, AlignCenter);
             dialog_ex_set_left_button_text(app->dialog_ex, "Back");
             view_dispatcher_switch_to_view(app->view_dispatcher, SliWriterViewDialogEx);
