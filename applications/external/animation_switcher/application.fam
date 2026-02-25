@@ -6,7 +6,7 @@ App(
     stack_size=4 * 1024,
     fap_icon_assets="icons",
     fap_icon="icons/fas.png",
-    fap_category="Tools",
+    fap_category="Settings",
     fap_author="lsalik2",
     fap_weburl="https://github.com/lsalik2/FlipperAnimationSwitcher",
     fap_version="1.0",
