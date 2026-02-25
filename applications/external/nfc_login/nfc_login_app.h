@@ -27,40 +27,72 @@
 #include <string.h>
 #include <stdlib.h>
 
+// Centralized BLE HID API availability check
+#undef HAS_BLE_HID_API
+#ifdef __has_include
+#if __has_include(<extra_profiles/hid_profile.h>) && __has_include(<bt/bt_service/bt.h>)
+#define HAS_BLE_HID_API 1
+#else
+#define HAS_BLE_HID_API 0
+#endif
+#else
+#define HAS_BLE_HID_API 0
+#endif
+
+#if !defined(HAS_MOMENTUM_SUPPORT)
+#ifdef __has_include
+#if __has_include(<momentum/momentum.h>) || __has_include(<firmware/momentum.h>)
+#define HAS_MOMENTUM_SUPPORT
+#elif defined(FIRMWARE_MOMENTUM) || defined(MOMENTUM_FIRMWARE) || defined(__MOMENTUM__) || \
+    defined(MOMENTUM) || defined(HAS_MOMENTUM) || defined(MOMENTUM_FW)
+#define HAS_MOMENTUM_SUPPORT
+#endif
+#elif defined(FIRMWARE_MOMENTUM) || defined(MOMENTUM_FIRMWARE) || defined(__MOMENTUM__) || \
+    defined(MOMENTUM) || defined(HAS_MOMENTUM) || defined(MOMENTUM_FW)
+#define HAS_MOMENTUM_SUPPORT
+#endif
+#endif
+
 #define MAX_PASSCODE_SEQUENCE_LEN 64
 
-#define TAG                         "nfc_login"
-#define APP_DATA_DIR                "/ext/apps_data/nfc_login"
-#define NFC_CARDS_FILE_ENC          APP_DATA_DIR "/cards.enc"
-#define NFC_SETTINGS_FILE           APP_DATA_DIR "/settings.txt"
-#define BADUSB_LAYOUTS_DIR          "/ext/badusb/assets/layouts"
-#define MAX_CARDS                   50
-#define MAX_UID_LEN                 10
-#define MAX_PASSWORD_LEN            64
-#define MAX_LAYOUT_PATH             256
-#define SETTINGS_MENU_ITEMS         7
-#define SETTINGS_VISIBLE_ITEMS      3
-#define SETTINGS_HELP_Y_POS         54
-#define CREDITS_PAGES               2
-#define MAX_LAYOUTS                 30
-#define CARD_LIST_VISIBLE_ITEMS     4
-#define KEY_MOD_LEFT_SHIFT          0x02
-#define NFC_COOLDOWN_DELAY_MS       50
-#define NFC_ENROLL_SCAN_DELAY_MS    150
-#define NFC_SCAN_DELAY_MS           500
-#define KEY_PRESS_DELAY_MS          10
-#define KEY_RELEASE_DELAY_MS        10
-#define ENTER_PRESS_DELAY_MS        50
-#define ENTER_RELEASE_DELAY_MS      50
-#define HID_SETTLE_DELAY_MS         100
-#define HID_INIT_DELAY_MS           25
-#define CRYPTO_SETTLE_DELAY_MS      150
-#define STORAGE_READ_DELAY_MS       100
-#define HID_POST_CONNECT_DELAY_MS   1000
-#define HID_POST_TYPE_DELAY_MS      1000
-#define ERROR_NOTIFICATION_DELAY_MS 300
-#define HID_CONNECT_TIMEOUT_MS      5000
-#define HID_CONNECT_RETRY_MS        100
+#define TAG                           "nfc_login"
+#define APP_DATA_DIR                  "/ext/apps_data/nfc_login"
+#define NFC_CARDS_FILE_ENC            APP_DATA_DIR "/cards.enc"
+#define NFC_SETTINGS_FILE             APP_DATA_DIR "/settings.txt"
+#define BADUSB_LAYOUTS_DIR            "/ext/badusb/assets/layouts"
+#define MAX_CARDS                     50
+#define MAX_UID_LEN                   10
+#define MAX_PASSWORD_LEN              64
+#define MAX_LAYOUT_PATH               256
+#define SETTINGS_MENU_ITEMS           7
+#define SETTINGS_VISIBLE_ITEMS        3
+#define SETTINGS_HELP_Y_POS           54
+#define CREDITS_PAGES                 2
+#define MAX_LAYOUTS                   30
+#define CARD_LIST_VISIBLE_ITEMS       4
+#define KEY_MOD_LEFT_SHIFT            0x02
+#define NFC_COOLDOWN_DELAY_MS         50
+#define NFC_ENROLL_SCAN_DELAY_MS      150
+#define NFC_SCAN_DELAY_MS             500
+#define KEY_PRESS_DELAY_MS            10
+#define KEY_RELEASE_DELAY_MS          10
+#define ENTER_PRESS_DELAY_MS          50
+#define ENTER_RELEASE_DELAY_MS        50
+#define HID_SETTLE_DELAY_MS           100
+#define HID_INIT_DELAY_MS             25
+#define CRYPTO_SETTLE_DELAY_MS        150
+#define BLE_DISCONNECT_DELAY_MS       300
+#define BLE_ADVERTISE_DELAY_MS        150
+#define BLE_DEINIT_DELAY_MS           200
+#define BLE_CONNECTION_RETRY_DELAY_MS 100
+#define PASSCODE_DELAY_MS             50
+#define SCENE_DELAY_MS                100
+#define STORAGE_READ_DELAY_MS         100
+#define HID_POST_CONNECT_DELAY_MS     1000
+#define HID_POST_TYPE_DELAY_MS        1000
+#define ERROR_NOTIFICATION_DELAY_MS   300
+#define HID_CONNECT_TIMEOUT_MS        5000
+#define HID_CONNECT_RETRY_MS          100
 
 typedef enum {
     EnrollmentStateNone,

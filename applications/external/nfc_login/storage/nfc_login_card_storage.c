@@ -50,7 +50,12 @@ static bool parse_card_line(const char* line, NfcCard* card) {
     }
 
     if(part == 2) {
-        size_t part_len = strlen(&line_copy[part_start]);
+        size_t part_len = 0;
+        size_t i = part_start;
+        while(line_copy[i] != '\0' && line_copy[i] != '\n' && line_copy[i] != '\r') {
+            part_len++;
+            i++;
+        }
         while(part_len > 0 && (line_copy[part_start + part_len - 1] == '\r' ||
                                line_copy[part_start + part_len - 1] == '\n')) {
             part_len--;
@@ -192,6 +197,8 @@ bool app_save_cards(App* app) {
 
     app_ensure_data_dir(storage);
 
+    static uint8_t default_header[PASSCODE_HEADER_SIZE] = {0, 0, 0};
+
     uint8_t* passcode_header = NULL;
     size_t passcode_header_len = 0;
 
@@ -216,9 +223,7 @@ bool app_save_cards(App* app) {
                     } else {
                         passcode_header = malloc(PASSCODE_HEADER_SIZE);
                         if(passcode_header) {
-                            passcode_header[0] = 0;
-                            passcode_header[1] = 0;
-                            passcode_header[2] = 0; // flags byte
+                            memcpy(passcode_header, default_header, PASSCODE_HEADER_SIZE);
                             passcode_header_len = PASSCODE_HEADER_SIZE;
                         }
                     }
@@ -228,9 +233,7 @@ bool app_save_cards(App* app) {
         } else {
             passcode_header = malloc(PASSCODE_HEADER_SIZE);
             if(passcode_header) {
-                passcode_header[0] = 0;
-                passcode_header[1] = 0;
-                passcode_header[2] = 0; // flags byte
+                memcpy(passcode_header, default_header, PASSCODE_HEADER_SIZE);
                 passcode_header_len = PASSCODE_HEADER_SIZE;
             }
         }
@@ -238,9 +241,7 @@ bool app_save_cards(App* app) {
     } else {
         passcode_header = malloc(PASSCODE_HEADER_SIZE);
         if(passcode_header) {
-            passcode_header[0] = 0;
-            passcode_header[1] = 0;
-            passcode_header[2] = 0; // flags byte
+            memcpy(passcode_header, default_header, PASSCODE_HEADER_SIZE);
             passcode_header_len = PASSCODE_HEADER_SIZE;
         }
     }
@@ -364,8 +365,7 @@ void app_load_cards(App* app) {
             return;
         }
 
-        storage_file_close(file);
-        storage_file_open(file, NFC_CARDS_FILE_ENC, FSAM_READ, FSOM_OPEN_EXISTING);
+        storage_file_seek(file, 0, true);
         size_t total_read = storage_file_read(file, file_data, file_size);
 
         if(total_read != file_size) {
