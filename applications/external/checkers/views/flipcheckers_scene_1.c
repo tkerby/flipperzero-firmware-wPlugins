@@ -379,7 +379,6 @@ void flipcheckers_scene_1_draw(Canvas* canvas, FlipCheckersScene1Model* model) {
     canvas_clear(canvas);
     canvas_set_color(canvas, ColorBlack);
 
-
     // Frame
     canvas_draw_frame(canvas, 0, 0, 66, 64);
 
@@ -412,13 +411,19 @@ void flipcheckers_scene_1_draw(Canvas* canvas, FlipCheckersScene1Model* model) {
         bool black_human = (model->paramPlayerB == 0);
 
         if(model->game.state == SCL_GAME_STATE_WHITE_WIN) {
-            if(white_human && !black_human) banner_text = "You Win!";
-            else if(!white_human && black_human) banner_text = "You Lose!";
-            else banner_text = "White Wins!";
+            if(white_human && !black_human)
+                banner_text = "You Win!";
+            else if(!white_human && black_human)
+                banner_text = "You Lose!";
+            else
+                banner_text = "White Wins!";
         } else if(model->game.state == SCL_GAME_STATE_BLACK_WIN) {
-            if(black_human && !white_human) banner_text = "You Win!";
-            else if(!black_human && white_human) banner_text = "You Lose!";
-            else banner_text = "Black Wins!";
+            if(black_human && !white_human)
+                banner_text = "You Win!";
+            else if(!black_human && white_human)
+                banner_text = "You Lose!";
+            else
+                banner_text = "Black Wins!";
         } else {
             banner_text = "Draw!";
         }
@@ -662,8 +667,9 @@ bool flipcheckers_scene_1_input(InputEvent* event, void* context) {
                         flipcheckers_play_long_bump(app);
                         flipcheckers_play_game_end_sound(
                             app, model->game.state, model->paramPlayerW, model->paramPlayerB);
-                    } else if(turn_res == FlipCheckersStatusMovePlayer ||
-                              turn_res == FlipCheckersStatusMoveAI) {
+                    } else if(
+                        turn_res == FlipCheckersStatusMovePlayer ||
+                        turn_res == FlipCheckersStatusMoveAI) {
                         flipcheckers_play_move_beep(app);
                     }
                     flipcheckers_saveState(app, model);
@@ -714,7 +720,8 @@ void flipcheckers_scene_1_exit(void* context) {
     furi_assert(context);
     FlipCheckersScene1* instance = (FlipCheckersScene1*)context;
 
-    with_view_model(instance->view, FlipCheckersScene1Model * model, { model->paramExit = 0; }, true);
+    with_view_model(
+        instance->view, FlipCheckersScene1Model * model, { model->paramExit = 0; }, true);
 }
 
 void flipcheckers_scene_1_enter(void* context) {

@@ -28,7 +28,7 @@ void flipcheckers_startscreen_set_callback(
 static void draw_piece_filled(Canvas* canvas, int cx, int cy, int r) {
     for(int dy = -r; dy <= r; dy++) {
         for(int dx = -r; dx <= r; dx++) {
-            if(dx*dx + dy*dy <= r*r) {
+            if(dx * dx + dy * dy <= r * r) {
                 canvas_draw_dot(canvas, cx + dx, cy + dy);
             }
         }
@@ -39,8 +39,8 @@ static void draw_piece_filled(Canvas* canvas, int cx, int cy, int r) {
 static void draw_piece_hollow(Canvas* canvas, int cx, int cy, int r) {
     for(int dy = -r; dy <= r; dy++) {
         for(int dx = -r; dx <= r; dx++) {
-            int d2 = dx*dx + dy*dy;
-            if(d2 <= r*r && d2 >= (r-1)*(r-1)) {
+            int d2 = dx * dx + dy * dy;
+            if(d2 <= r * r && d2 >= (r - 1) * (r - 1)) {
                 canvas_draw_dot(canvas, cx + dx, cy + dy);
             }
         }
@@ -142,7 +142,8 @@ void flipcheckers_startscreen_enter(void* context) {
 FlipCheckersStartscreen* flipcheckers_startscreen_alloc() {
     FlipCheckersStartscreen* instance = malloc(sizeof(FlipCheckersStartscreen));
     instance->view = view_alloc();
-    view_allocate_model(instance->view, ViewModelTypeLocking, sizeof(FlipCheckersStartscreenModel));
+    view_allocate_model(
+        instance->view, ViewModelTypeLocking, sizeof(FlipCheckersStartscreenModel));
     view_set_context(instance->view, instance);
     view_set_draw_callback(instance->view, (ViewDrawCallback)flipcheckers_startscreen_draw);
     view_set_input_callback(instance->view, flipcheckers_startscreen_input);
@@ -158,7 +159,8 @@ FlipCheckersStartscreen* flipcheckers_startscreen_alloc() {
 
 void flipcheckers_startscreen_free(FlipCheckersStartscreen* instance) {
     furi_assert(instance);
-    with_view_model(instance->view, FlipCheckersStartscreenModel * model, { UNUSED(model); }, true);
+    with_view_model(
+        instance->view, FlipCheckersStartscreenModel * model, { UNUSED(model); }, true);
     view_free(instance->view);
     free(instance);
 }

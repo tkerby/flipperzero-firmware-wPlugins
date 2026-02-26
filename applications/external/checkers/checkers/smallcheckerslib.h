@@ -32,31 +32,32 @@
 #endif
 
 // ---- constants ----
-#define SCL_BOARD_SQUARES         64
-#define SCL_BOARD_PICTURE_WIDTH   64
-#define SCL_FEN_MAX_LENGTH        96
-#define SCL_VALUE_PAWN            100
+#define SCL_BOARD_SQUARES       64
+#define SCL_BOARD_PICTURE_WIDTH 64
+#define SCL_FEN_MAX_LENGTH      96
+#define SCL_VALUE_PAWN          100
 
 // Unused byte indices – kept so the model struct compiles
 #define SCL_BOARD_ENPASSANT_CASTLE_BYTE 64
 #define SCL_BOARD_MOVE_COUNT_BYTE       65
 #define SCL_BOARD_PLY_BYTE              66
-#define SCL_BOARD_MULTIJUMP_BYTE        67  // 255 = no multi-jump in progress, else = square of jumping piece
-#define SCL_BOARD_STATE_SIZE            72
+#define SCL_BOARD_MULTIJUMP_BYTE \
+    67 // 255 = no multi-jump in progress, else = square of jumping piece
+#define SCL_BOARD_STATE_SIZE 72
 
 // Game states
-#define SCL_GAME_STATE_PLAYING        0
-#define SCL_GAME_STATE_WHITE_WIN      1
-#define SCL_GAME_STATE_BLACK_WIN      2
-#define SCL_GAME_STATE_DRAW_STALEMATE 3
+#define SCL_GAME_STATE_PLAYING         0
+#define SCL_GAME_STATE_WHITE_WIN       1
+#define SCL_GAME_STATE_BLACK_WIN       2
+#define SCL_GAME_STATE_DRAW_STALEMATE  3
 #define SCL_GAME_STATE_DRAW_REPETITION 4
-#define SCL_GAME_STATE_DRAW_DEAD      5
-#define SCL_GAME_STATE_DRAW           6
-#define SCL_GAME_STATE_DRAW_50        7
+#define SCL_GAME_STATE_DRAW_DEAD       5
+#define SCL_GAME_STATE_DRAW            6
+#define SCL_GAME_STATE_DRAW_50         7
 
 // Phase (unused but referenced in comments)
-#define SCL_PHASE_OPENING  0
-#define SCL_PHASE_ENDGAME  2
+#define SCL_PHASE_OPENING 0
+#define SCL_PHASE_ENDGAME 2
 
 // ---- types ----
 typedef uint8_t SCL_Board[SCL_BOARD_STATE_SIZE];
@@ -85,7 +86,8 @@ typedef uint8_t (*SCL_RandomFunction)(void);
 
 // ---- SquareSet helpers ----
 static inline void SCL_squareSetClear(SCL_SquareSet s) {
-    for(int i = 0; i < 8; i++) s[i] = 0;
+    for(int i = 0; i < 8; i++)
+        s[i] = 0;
 }
 
 static inline void SCL_squareSetAdd(SCL_SquareSet s, uint8_t sq) {
@@ -97,14 +99,13 @@ static inline uint8_t SCL_squareSetContains(const SCL_SquareSet s, uint8_t sq) {
     return (s[sq / 8] >> (sq % 8)) & 1;
 }
 
-#define SCL_SQUARE_SET_EMPTY {0,0,0,0,0,0,0,0}
+#define SCL_SQUARE_SET_EMPTY {0, 0, 0, 0, 0, 0, 0, 0}
 
-#define SCL_SQUARE_SET_ITERATE_BEGIN(set) \
+#define SCL_SQUARE_SET_ITERATE_BEGIN(set)                                    \
     for(uint8_t iteratedSquare = 0; iteratedSquare < 64; iteratedSquare++) { \
         if(SCL_squareSetContains(set, iteratedSquare)) {
-
 #define SCL_SQUARE_SET_ITERATE_END \
-        } \
+    }                              \
     }
 
 // ---- piece helpers ----
@@ -144,7 +145,7 @@ static inline void SCL_setMustJump(uint8_t val) {
     SCL_mustJump = val;
 }
 // In standard checkers only dark squares are used.
-// Square numbering: sq = row*8 + col. Dark square when (row+col) is odd... 
+// Square numbering: sq = row*8 + col. Dark square when (row+col) is odd...
 // Actually we treat ALL squares as valid board positions for the cursor,
 // but only place pieces on dark squares (row+col odd).
 static inline uint8_t SCL_isDarkSquare(uint8_t sq) {
@@ -158,16 +159,12 @@ static inline uint8_t SCL_isDarkSquare(uint8_t sq) {
 // Dark squares used: (row+col) % 2 == 1
 // PLY_BYTE at index 66 = position [2] of the 8 extra bytes
 // Set PLY_BYTE=1 means white's turn first
-#define SCL_BOARD_START_STATE_INIT \
-    {'.','P','.','P','.','P','.','P', \
-     'P','.','P','.','P','.','P','.', \
-     '.','P','.','P','.','P','.','P', \
-     '.','.','.','.','.','.','.','.', \
-     '.','.','.','.','.','.','.','.', \
-     'p','.','p','.','p','.','p','.', \
-     '.','p','.','p','.','p','.','p', \
-     'p','.','p','.','p','.','p','.', \
-     0,0,1,255,0,0,0,0}  /* extra bytes 64-71; [2]=PLY_BYTE=1(white starts), [3]=MULTIJUMP=none */
+#define SCL_BOARD_START_STATE_INIT                                                             \
+    {'.', 'P', '.', 'P', '.', 'P', '.', 'P', 'P', '.', 'P', '.', 'P', '.', 'P', '.', '.', 'P', \
+     '.', 'P', '.', 'P', '.', 'P', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', \
+     '.', '.', '.', '.', 'p', '.', 'p', '.', 'p', '.', 'p', '.', '.', 'p', '.', 'p', '.', 'p', \
+     '.', 'p', 'p', '.', 'p', '.', 'p', '.', 'p', '.', 0,   0,   1,   255, 0,   0,   0,   0}   \
+    /* extra bytes 64-71; [2]=PLY_BYTE=1(white starts), [3]=MULTIJUMP=none */
 
 static const SCL_Board SCL_BOARD_START_STATE_VAL = SCL_BOARD_START_STATE_INIT;
 
@@ -208,14 +205,15 @@ static uint8_t _scl_canCaptureFrom(const SCL_Board board, uint8_t sq) {
             dr = white ? 1 : -1;
             dc = (d == 0) ? 1 : -1;
         } else {
-            int8_t dirs[4][2] = {{1,1},{1,-1},{-1,1},{-1,-1}};
-            dr = dirs[d][0]; dc = dirs[d][1];
+            int8_t dirs[4][2] = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
+            dr = dirs[d][0];
+            dc = dirs[d][1];
         }
         int8_t mr = (int8_t)row + dr, mc = (int8_t)col + dc;
-        int8_t lr = mr + dr,          lc = mc + dc;
+        int8_t lr = mr + dr, lc = mc + dc;
         if(mr < 0 || mr > 7 || mc < 0 || mc > 7) continue;
         if(lr < 0 || lr > 7 || lc < 0 || lc > 7) continue;
-        uint8_t mid  = (uint8_t)mr * 8 + (uint8_t)mc;
+        uint8_t mid = (uint8_t)mr * 8 + (uint8_t)mc;
         uint8_t land = (uint8_t)lr * 8 + (uint8_t)lc;
         char midP = board[mid];
         if(midP == '.') continue;
@@ -240,7 +238,7 @@ static uint8_t _scl_genMoves(const SCL_Board board, SCL_Move* moves) {
         if((uint8_t)SCL_pieceIsWhite(p) != white) continue;
         uint8_t isKing = (p == 'K' || p == 'k');
         uint8_t row = sq / 8, col = sq % 8;
-        int8_t dirs[4][2] = {{1,1},{1,-1},{-1,1},{-1,-1}};
+        int8_t dirs[4][2] = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
         int8_t maxDirs = isKing ? 4 : 2;
         for(int8_t d = 0; d < maxDirs; d++) {
             int8_t dr, dc;
@@ -287,8 +285,9 @@ static uint8_t _scl_genMoves(const SCL_Board board, SCL_Move* moves) {
                 dr = white ? 1 : -1;
                 dc = (d == 0) ? 1 : -1;
             } else {
-                int8_t dirs[4][2] = {{1,1},{1,-1},{-1,1},{-1,-1}};
-                dr = dirs[d][0]; dc = dirs[d][1];
+                int8_t dirs[4][2] = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
+                dr = dirs[d][0];
+                dc = dirs[d][1];
             }
             int8_t nr = (int8_t)row + dr;
             int8_t nc = (int8_t)col + dc;
@@ -332,17 +331,23 @@ static inline void _scl_applyMove(SCL_Board board, uint8_t from, uint8_t to) {
     board[to] = p;
     board[from] = '.';
     int8_t fr = from / 8, fc = from % 8;
-    int8_t tr = to / 8,   tc = to % 8;
-    int8_t dr = tr - fr,  dc = tc - fc;
+    int8_t tr = to / 8, tc = to % 8;
+    int8_t dr = tr - fr, dc = tc - fc;
     if(dr == 2 || dr == -2) {
         // Capture: remove the jumped piece
-        uint8_t mid = (uint8_t)((fr + dr/2) * 8 + (fc + dc/2));
+        uint8_t mid = (uint8_t)((fr + dr / 2) * 8 + (fc + dc / 2));
         board[mid] = '.';
         // Promotion (reaching the back rank ends the jump chain per standard rules)
         uint8_t toRow = to / 8;
         uint8_t promoted = 0;
-        if(p == 'P' && toRow == 7) { board[to] = 'K'; promoted = 1; }
-        if(p == 'p' && toRow == 0) { board[to] = 'k'; promoted = 1; }
+        if(p == 'P' && toRow == 7) {
+            board[to] = 'K';
+            promoted = 1;
+        }
+        if(p == 'p' && toRow == 0) {
+            board[to] = 'k';
+            promoted = 1;
+        }
         // Continue multi-jump if more captures exist and piece wasn't just promoted
         if(!promoted && _scl_canCaptureFrom(board, to)) {
             board[SCL_BOARD_MULTIJUMP_BYTE] = to; // stay on same player's turn
@@ -364,10 +369,14 @@ static inline int16_t SCL_boardEvaluateStatic(const SCL_Board board) {
     int16_t val = 0;
     for(uint8_t i = 0; i < 64; i++) {
         char p = board[i];
-        if(p == 'P') val += SCL_VALUE_PAWN;
-        else if(p == 'K') val += SCL_VALUE_PAWN * 3;
-        else if(p == 'p') val -= SCL_VALUE_PAWN;
-        else if(p == 'k') val -= SCL_VALUE_PAWN * 3;
+        if(p == 'P')
+            val += SCL_VALUE_PAWN;
+        else if(p == 'K')
+            val += SCL_VALUE_PAWN * 3;
+        else if(p == 'p')
+            val -= SCL_VALUE_PAWN;
+        else if(p == 'k')
+            val -= SCL_VALUE_PAWN * 3;
     }
     return val;
 }
@@ -384,8 +393,10 @@ static inline uint8_t _scl_checkState(const SCL_Board board) {
     uint8_t whitePieces = 0, blackPieces = 0;
     for(uint8_t i = 0; i < 64; i++) {
         char p = board[i];
-        if(p == 'P' || p == 'K') whitePieces++;
-        else if(p == 'p' || p == 'k') blackPieces++;
+        if(p == 'P' || p == 'K')
+            whitePieces++;
+        else if(p == 'p' || p == 'k')
+            blackPieces++;
     }
     if(whitePieces == 0) return SCL_GAME_STATE_BLACK_WIN;
     if(blackPieces == 0) return SCL_GAME_STATE_WHITE_WIN;
@@ -420,11 +431,14 @@ static inline void SCL_gameUndoMove(SCL_Game* game) {
 }
 
 static inline void SCL_gameGetRepetiotionMove(SCL_Game* game, uint8_t* s0, uint8_t* s1) {
-    (void)game; *s0 = 255; *s1 = 255;
+    (void)game;
+    *s0 = 255;
+    *s1 = 255;
 }
 
 // ---- AI ----
-static int16_t _scl_minimax(SCL_Board board, uint8_t depth, int16_t alpha, int16_t beta, uint8_t maxing) {
+static int16_t
+    _scl_minimax(SCL_Board board, uint8_t depth, int16_t alpha, int16_t beta, uint8_t maxing) {
     if(depth == 0) return SCL_boardEvaluateStatic(board);
     uint8_t state = _scl_checkState(board);
     if(state == SCL_GAME_STATE_WHITE_WIN) return 30000;
@@ -475,12 +489,20 @@ static inline int16_t SCL_getAIMove(
     uint8_t* s0,
     uint8_t* s1,
     char* prom) {
-    (void)extraDepth; (void)endgameDepth; (void)evalFn;
-    (void)rs0; (void)rs1; (void)prom;
+    (void)extraDepth;
+    (void)endgameDepth;
+    (void)evalFn;
+    (void)rs0;
+    (void)rs1;
+    (void)prom;
 
     SCL_Move moves[SCL_MAX_MOVES];
     uint8_t n = _scl_genMoves(board, moves);
-    if(n == 0) { *s0 = 255; *s1 = 255; return 0; }
+    if(n == 0) {
+        *s0 = 255;
+        *s1 = 255;
+        return 0;
+    }
 
     uint8_t white = SCL_boardWhitesTurn(board);
     int16_t bestVal = white ? -30000 : 30000;
@@ -516,13 +538,10 @@ static inline char* SCL_squareToString(uint8_t square, char* string) {
     return string;
 }
 
-static inline void SCL_moveToString(
-    const SCL_Board board,
-    uint8_t from,
-    uint8_t to,
-    char promote,
-    char* string) {
-    (void)board; (void)promote;
+static inline void
+    SCL_moveToString(const SCL_Board board, uint8_t from, uint8_t to, char promote, char* string) {
+    (void)board;
+    (void)promote;
     SCL_squareToString(from, string);
     SCL_squareToString(to, string + 2);
     string[4] = 0;
@@ -545,21 +564,19 @@ static inline void SCL_boardFromFEN(SCL_Board board, const char* fen) {
         if(fen[i] == 0) break;
         board[i] = fen[i];
     }
-    if(fen[64] == 'b') board[SCL_BOARD_PLY_BYTE] = 0; // black = 0 (black goes first would be 0... or 1)
+    if(fen[64] == 'b')
+        board[SCL_BOARD_PLY_BYTE] = 0; // black = 0 (black goes first would be 0... or 1)
     // We treat white=1, black=0 in PLY_BYTE. Default is white starts.
 }
 
-static inline void SCL_recordGetMove(
-    SCL_Record record,
-    uint16_t ply,
-    uint8_t* s0,
-    uint8_t* s1,
-    char* p) {
+static inline void
+    SCL_recordGetMove(SCL_Record record, uint16_t ply, uint8_t* s0, uint8_t* s1, char* p) {
     if(ply < record[0].len) {
         *s0 = record[0].from[ply];
         *s1 = record[0].to[ply];
     } else {
-        *s0 = 0; *s1 = 0;
+        *s0 = 0;
+        *s1 = 0;
     }
     if(p) *p = 0;
 }
@@ -570,21 +587,27 @@ static inline void SCL_recordFromPGN(SCL_Record record, const char* pgn) {
 }
 
 static inline void SCL_recordApply(SCL_Record record, SCL_Board board, uint16_t step) {
-    (void)record; (void)board; (void)step;
+    (void)record;
+    (void)board;
+    (void)step;
 }
 
 static inline void SCL_printPGN(SCL_Record r, void* putCharFunc, SCL_Board initialState) {
-    (void)r; (void)putCharFunc; (void)initialState;
+    (void)r;
+    (void)putCharFunc;
+    (void)initialState;
 }
 
 static inline uint32_t SCL_boardHash32(const SCL_Board board) {
     uint32_t h = 0;
-    for(uint8_t i = 0; i < 64; i++) h = h * 31 + (uint8_t)board[i];
+    for(uint8_t i = 0; i < 64; i++)
+        h = h * 31 + (uint8_t)board[i];
     return h;
 }
 
 static inline uint8_t SCL_boardCheck(const SCL_Board board, uint8_t white) {
-    (void)board; (void)white;
+    (void)board;
+    (void)white;
     return 0; // no "check" in checkers
 }
 
@@ -606,9 +629,9 @@ static inline uint8_t SCL_boardEstimatePhase(const SCL_Board board) {
 // Simple 6-row sprites for each piece type (6 bits wide, centered in 8-bit byte)
 // Pieces are 6x6 pixels, centered in the 8x8 square (1 pixel padding each side)
 // Man (circle), King (circle with crown notches)
-static const uint8_t _scl_spriteMan[6]   = {0x3C, 0x7E, 0x7E, 0x7E, 0x7E, 0x3C};
-static const uint8_t _scl_spriteManB[6]  = {0x3C, 0x42, 0x42, 0x42, 0x42, 0x3C};
-static const uint8_t _scl_spriteKing[6]  = {0x7E, 0x5A, 0x7E, 0x7E, 0x5A, 0x7E};
+static const uint8_t _scl_spriteMan[6] = {0x3C, 0x7E, 0x7E, 0x7E, 0x7E, 0x3C};
+static const uint8_t _scl_spriteManB[6] = {0x3C, 0x42, 0x42, 0x42, 0x42, 0x3C};
+static const uint8_t _scl_spriteKing[6] = {0x7E, 0x5A, 0x7E, 0x7E, 0x5A, 0x7E};
 static const uint8_t _scl_spriteKingB[6] = {0x7E, 0x5A, 0x42, 0x42, 0x5A, 0x7E};
 
 static inline void SCL_drawBoard(
@@ -617,7 +640,6 @@ static inline void SCL_drawBoard(
     uint8_t selectedSquare,
     SCL_SquareSet highlightSquares,
     uint8_t blackDown) {
-
     uint16_t n = 0;
     for(uint8_t screenRow = 0; screenRow < 8; screenRow++) {
         for(uint8_t pixelRow = 0; pixelRow < 8; pixelRow++) {
@@ -644,19 +666,25 @@ static inline void SCL_drawBoard(
                     if(pixelRow == 0 || pixelRow == 7) {
                         byte = 0x00; // 1-pixel vertical padding for 6x6 piece
                     } else if(isKingPiece) {
-                        byte = isWhite ? _scl_spriteKingB[pixelRow - 1] : _scl_spriteKing[pixelRow - 1];
+                        byte = isWhite ? _scl_spriteKingB[pixelRow - 1] :
+                                         _scl_spriteKing[pixelRow - 1];
                     } else {
-                        byte = isWhite ? _scl_spriteManB[pixelRow - 1] : _scl_spriteMan[pixelRow - 1];
+                        byte = isWhite ? _scl_spriteManB[pixelRow - 1] :
+                                         _scl_spriteMan[pixelRow - 1];
                     }
                 }
 
                 if(isHighlighted && isDark) {
-                    if(pixelRow == 0 || pixelRow == 7) byte |= 0xFF;
-                    else byte |= 0x81;
+                    if(pixelRow == 0 || pixelRow == 7)
+                        byte |= 0xFF;
+                    else
+                        byte |= 0x81;
                 }
                 if(isSelected) {
-                    if(pixelRow <= 1 || pixelRow >= 6) byte = 0xFF;
-                    else byte |= 0xC3;
+                    if(pixelRow <= 1 || pixelRow >= 6)
+                        byte = 0xFF;
+                    else
+                        byte |= 0xC3;
                 }
 
                 // Output 8 pixels

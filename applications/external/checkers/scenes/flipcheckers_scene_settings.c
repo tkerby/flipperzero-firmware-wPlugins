@@ -22,11 +22,11 @@ void flipcheckers_save_settings(FlipCheckers* app) {
 void flipcheckers_load_settings(FlipCheckers* app) {
     char s[16] = {0};
     if(flipcheckers_load_file(s, FlipCheckersFileOther, FLIPCHECKERS_SETTINGS_FILE_NAME)) {
-        if(s[0] >= '0' && s[0] <= '1') app->haptic     = s[0] - '0';
+        if(s[0] >= '0' && s[0] <= '1') app->haptic = s[0] - '0';
         if(s[2] >= '0' && s[2] <= '3') app->white_mode = s[2] - '0';
         if(s[4] >= '0' && s[4] <= '3') app->black_mode = s[4] - '0';
-        if(s[6] >= '0' && s[6] <= '1') app->must_jump  = s[6] - '0';
-        if(s[8] >= '0' && s[8] <= '1') app->sound      = s[8] - '0';
+        if(s[6] >= '0' && s[6] <= '1') app->must_jump = s[6] - '0';
+        if(s[8] >= '0' && s[8] <= '1') app->sound = s[8] - '0';
     }
 }
 

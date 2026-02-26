@@ -1,20 +1,20 @@
 #include "../flipcheckers.h"
 
-#define ABOUT_TEXT                                    \
+#define ABOUT_TEXT                                   \
     "\e#Flip Checkers\e# " FLIPCHECKERS_VERSION "\n" \
-    "\n"                                              \
-    "Classic checkers game for\n"                     \
-    "Flipper Zero.\n"                                 \
-    "\n"                                              \
-    "Features:\n"                                     \
-    "- Multi-jump captures\n"                         \
-    "- CPU opponents (levels 1-3)\n"                  \
-    "- Mandatory jump rule\n"                         \
-    "- Save & resume games\n"                         \
-    "\n"                                              \
-    "Controls:\n"                                     \
-    "- D-pad: move cursor\n"                          \
-    "- OK: select / confirm\n"                        \
+    "\n"                                             \
+    "Classic checkers game for\n"                    \
+    "Flipper Zero.\n"                                \
+    "\n"                                             \
+    "Features:\n"                                    \
+    "- Multi-jump captures\n"                        \
+    "- CPU opponents (levels 1-3)\n"                 \
+    "- Mandatory jump rule\n"                        \
+    "- Save & resume games\n"                        \
+    "\n"                                             \
+    "Controls:\n"                                    \
+    "- D-pad: move cursor\n"                         \
+    "- OK: select / confirm\n"                       \
     "- Back: cancel / menu"
 
 void flipcheckers_scene_about_on_enter(void* context) {

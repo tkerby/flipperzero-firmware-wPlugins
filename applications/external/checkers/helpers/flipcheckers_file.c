@@ -8,12 +8,16 @@
 #define FLIPCHECKERS_BOARD_FILE_NAME            "board_fen.txt"
 #define FLIPCHECKERS_BOARD_FILE_NAME_BAK        "board_fen.bak"
 #define FLIPCHECKERS_BOARD_PATH                 FLIPCHECKERS_APP_BASE_FOLDER_PATH(FLIPCHECKERS_BOARD_FILE_NAME)
-#define FLIPCHECKERS_BOARD_PATH_BAK             FLIPCHECKERS_APP_BASE_FOLDER_PATH(FLIPCHECKERS_BOARD_FILE_NAME_BAK)
+#define FLIPCHECKERS_BOARD_PATH_BAK \
+    FLIPCHECKERS_APP_BASE_FOLDER_PATH(FLIPCHECKERS_BOARD_FILE_NAME_BAK)
 
 #define FILE_MAX_PATH_LEN 48
 #define FILE_MAX_CHARS    94
 
-bool flipcheckers_has_file(const FlipCheckersFile file_type, const char* file_name, const bool remove) {
+bool flipcheckers_has_file(
+    const FlipCheckersFile file_type,
+    const char* file_name,
+    const bool remove) {
     bool ret = false;
     const char* path;
     char path_buf[FILE_MAX_PATH_LEN] = {0};
@@ -37,7 +41,10 @@ bool flipcheckers_has_file(const FlipCheckersFile file_type, const char* file_na
     return ret;
 }
 
-bool flipcheckers_load_file(char* contents, const FlipCheckersFile file_type, const char* file_name) {
+bool flipcheckers_load_file(
+    char* contents,
+    const FlipCheckersFile file_type,
+    const char* file_name) {
     bool ret = false;
     const char* path;
     char path_buf[FILE_MAX_PATH_LEN] = {0};

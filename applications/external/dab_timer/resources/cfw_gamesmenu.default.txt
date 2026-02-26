@@ -20,6 +20,7 @@ GamesMenuList Version 0
 /ext/apps/Games/bzzbzz.fap
 /ext/apps/Games/catacombs.fap
 /ext/apps/Games/cells_sim_app.fap
+/ext/apps/Games/checkers.fap
 /ext/apps/Games/chess.fap
 /ext/apps/Games/chess_clock.fap
 /ext/apps/Games/citybloxx.fap

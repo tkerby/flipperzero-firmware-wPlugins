@@ -69,14 +69,13 @@ void flipcheckers_play_game_end_sound(
     uint8_t black_mode) {
     bool white_human = (white_mode == FlipCheckersPlayerHuman);
     bool black_human = (black_mode == FlipCheckersPlayerHuman);
-    bool one_human   = (white_human != black_human);
+    bool one_human = (white_human != black_human);
     if(!one_human) return;
 
     if((game_state == SCL_GAME_STATE_WHITE_WIN && white_human) ||
        (game_state == SCL_GAME_STATE_BLACK_WIN && black_human)) {
         flipcheckers_play_win_sound(context);
-    } else if(game_state == SCL_GAME_STATE_WHITE_WIN ||
-              game_state == SCL_GAME_STATE_BLACK_WIN) {
+    } else if(game_state == SCL_GAME_STATE_WHITE_WIN || game_state == SCL_GAME_STATE_BLACK_WIN) {
         flipcheckers_play_lose_sound(context);
     }
 }

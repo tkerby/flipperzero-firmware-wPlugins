@@ -58,7 +58,7 @@ typedef enum {
 
 typedef enum {
     FlipCheckersMustJumpOff = 0,
-    FlipCheckersMustJumpOn  = 1,
+    FlipCheckersMustJumpOn = 1,
 } FlipCheckersMustJump;
 
 typedef enum {

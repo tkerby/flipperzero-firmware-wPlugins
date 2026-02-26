@@ -40,7 +40,11 @@ void flipcheckers_scene_menu_on_enter(void* context) {
     //     app);
 
     submenu_add_item(
-        app->submenu, "Settings", SubmenuIndexSettings, flipcheckers_scene_menu_submenu_callback, app);
+        app->submenu,
+        "Settings",
+        SubmenuIndexSettings,
+        flipcheckers_scene_menu_submenu_callback,
+        app);
 
     submenu_add_item(
         app->submenu, "About", SubmenuIndexAbout, flipcheckers_scene_menu_submenu_callback, app);

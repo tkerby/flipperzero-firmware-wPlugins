@@ -93,6 +93,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Theme Manager v1.1 (By Hoasker)](https://github.com/Hoasker/flipper-theme-manager)
 - Updated: [NFC Login v1.1.2 (By Play2BReal)](https://github.com/Play2BReal/NFC-Login)
 - Updated: [SLI Writer v1.4 (By Julienbxl)](https://github.com/Julienbxl/SLI-Writer)
+- Added: [Checkers v1.0 (By H4W9)](https://github.com/H4W9/FlipCheckers)
 
 <a name="release"></a>
 
@@ -338,6 +339,7 @@ $ ./fbt dolphin_ext
 - [CarJacker v1.0 (By RocketGod-git)](https://github.com/RocketGod-git/Flipper-Zero-CarJacker)
 - [Catacombs Of The Damned v2.2 (By apfxtech)](https://github.com/apfxtech/FlipperCatacombs)
 - [Cells Lab v0.1 (By PilotOfAsuka)](https://github.com/PilotOfAsuka/Cells-lab-on-Flipper-Zero)
+- [Checkers v1.0 (By H4W9)](https://github.com/H4W9/FlipCheckers)
 - [Chess v1.12 (By xtruan)](https://github.com/xtruan/flipper-chess)
 - [Chess Clock (By ihatecsv)](https://github.com/ihatecsv/flipper_chess_clock)
 - [Cigarette v0.1.2 (By fuckmaz)](https://github.com/fuckmaz/flipper-cigarette)

@@ -13,7 +13,8 @@ void flipcheckers_scene_scene_1_on_enter(void* context) {
     furi_assert(context);
     FlipCheckers* app = context;
 
-    flipcheckers_scene_1_set_callback(app->flipcheckers_scene_1, flipcheckers_scene_1_callback, app);
+    flipcheckers_scene_1_set_callback(
+        app->flipcheckers_scene_1, flipcheckers_scene_1_callback, app);
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipCheckersViewIdScene1);
 }
 
