@@ -36,7 +36,8 @@ static const char *weather_code_to_str(const char *code)
 
 static const char *degrees_to_compass(const char *degrees)
 {
-    float deg = strtod(degrees);
+    char* endptr;
+    float deg = strtod(degrees, &endptr);
     if (deg < 22.5f || deg >= 337.5f) return "N";
     if (deg < 67.5f)  return "NE";
     if (deg < 112.5f) return "E";
