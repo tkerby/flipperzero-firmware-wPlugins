@@ -95,6 +95,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [SLI Writer v1.4 (By Julienbxl)](https://github.com/Julienbxl/SLI-Writer)
 - Added: [Checkers v1.0 (By H4W9)](https://github.com/H4W9/FlipCheckers)
 - Added: [BLE Clicker v1.0 (By random1st)](https://github.com/random1st/flipper-ble-clicker)
+- Added: [FM Radio w Vol v0.9 (By coolshrimp & pchmielewski1)](https://github.com/pchmielewski1/tea5767-pt2257-fm-radio-with-volume-control) `Req: TEA5767+PT2257`
 
 <a name="release"></a>
 
@@ -605,7 +606,8 @@ $ ./fbt dolphin_ext
 - [Flippy Temp WIP v0.1 (By n0ciple)](https://github.com/n0ciple/flippy_sensors) `Req: Flippy Sensor Board`
 - [FlipTDI v1.1 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-good-faps/pull/234)
 - [Flizzer Tracker v0.9 (By LTVA1)](https://github.com/LTVA1/flizzer_tracker)
-- [FM Radio v1.1.1 (By coolshrimp)](https://github.com/coolshrimp/flipperzero-firmware-wPlugins/tree/420/applications/external/fm_radio)
+- [FM Radio v1.1.1 (By coolshrimp)](https://github.com/coolshrimp/flipperzero-firmware-wPlugins/tree/420/applications/external/fm_radio) `Req: TEA5767`
+- [FM Radio w Vol v0.9 (By coolshrimp & pchmielewski1)](https://github.com/pchmielewski1/tea5767-pt2257-fm-radio-with-volume-control) `Req: TEA5767+PT2257`
 - [FM Transmitter KT0803 v1.0 (By goosedev72-projects)](https://github.com/goosedev72-projects/flipperzero-kt0803-transmitter) `Req: KT0803`
 - [FMF2USBMIDI v0.1 (By crackerjacques)](https://github.com/crackerjacques/Flipper_Zero_FMF2USBMIDI)
 - [Ford Radio Codes v0.1 (By DavidB445)](https://github.com/DavidB445/fz_fordradiocodes)

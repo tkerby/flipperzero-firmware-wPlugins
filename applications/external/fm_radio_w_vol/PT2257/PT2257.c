@@ -59,7 +59,8 @@ static bool pt2257_write_bytes(const uint8_t* data, size_t len) {
 
     bool ok = pt2257_acquire_i2c();
     if(ok) {
-        ok = furi_hal_i2c_tx(&furi_hal_i2c_handle_external, pt2257_i2c_addr, data, len, TIMEOUT_MS);
+        ok =
+            furi_hal_i2c_tx(&furi_hal_i2c_handle_external, pt2257_i2c_addr, data, len, TIMEOUT_MS);
     }
     pt2257_release_i2c();
     return ok;
