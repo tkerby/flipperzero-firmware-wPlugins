@@ -94,6 +94,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [NFC Login v1.1.2 (By Play2BReal)](https://github.com/Play2BReal/NFC-Login)
 - Updated: [SLI Writer v1.4 (By Julienbxl)](https://github.com/Julienbxl/SLI-Writer)
 - Added: [Checkers v1.0 (By H4W9)](https://github.com/H4W9/FlipCheckers)
+- Added: [BLE Clicker v1.0 (By random1st)](https://github.com/random1st/flipper-ble-clicker)
 
 <a name="release"></a>
 
@@ -489,6 +490,7 @@ $ ./fbt dolphin_ext
 - [BG Loader (By twisted-pear)](https://github.com/twisted-pear/bgloader)
 - [Big Clock v1.3 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
 - [BlackJack Counter v1.0 (By grugnoymeme)](https://github.com/grugnoymeme/flipperzero-blackjack_counter-fap)
+- [BLE Clicker v1.0 (By random1st)](https://github.com/random1st/flipper-ble-clicker)
 - [BLE Killer v1.1 (By H4lo)](https://github.com/H4lo/flipper_zero_ble_killer) `Req: ESP32`
 - [BLE Spam v6.6 (By WillyJL & ECTO-1A & Spooks4576 with research from xMasterX; OFW API thanks to noproto)](https://github.com/Next-Flip/Momentum-Apps/tree/dev/ble_spam)
 - [Bluetooth/USB Remote v1.8 (By Cutch)-OFW](https://github.com/flipperdevices/flipperzero-firmware/pull/1330)
