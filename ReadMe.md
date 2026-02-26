@@ -96,6 +96,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Checkers v1.0 (By H4W9)](https://github.com/H4W9/FlipCheckers)
 - Added: [BLE Clicker v1.0 (By random1st)](https://github.com/random1st/flipper-ble-clicker)
 - Added: [FM Radio w Vol v0.9 (By coolshrimp & pchmielewski1)](https://github.com/pchmielewski1/tea5767-pt2257-fm-radio-with-volume-control) `Req: TEA5767+PT2257`
+- Added: [IR Signal Generator v1.0 (By temboohms68)](https://github.com/temboohms68/Flipper-Zero-IR-Signal-Generator)
 
 <a name="release"></a>
 
@@ -657,6 +658,7 @@ $ ./fbt dolphin_ext
 - [IR Intervalometer v2.2 (By Nitepone)](https://github.com/Nitepone/flipper-intervalometer)
 - [IR Remote v1.1 (By Hong5489)](https://github.com/Hong5489/ir_remote)
 - [IR Scope v1.3 (By kallanreed)](https://github.com/kallanreed/unleashed-firmware/tree/dev/applications/external/ir_scope)
+- [IR Signal Generator v1.0 (By temboohms68)](https://github.com/temboohms68/Flipper-Zero-IR-Signal-Generator)
 - [IR Transfer WIP v0.1 (By WBP20)](https://github.com/WBP20/ir_transfer)
 - [IR Xbox Controller v1.5 (By gebeto)](https://github.com/gebeto/flipper-xbox-controller)
 - [ISO15693-3 NFC Writer v1.0 (By ch4istO)](https://github.com/ch4istO/unleashed-firmware/tree/dev/applications_user/iso15693_nfc_writer)
