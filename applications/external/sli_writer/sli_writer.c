@@ -46,13 +46,10 @@
 #define GEN2_CFG_B2           0x8B
 #define GEN2_CFG_B3           0x00
 
-/* Layout codes — pattern is simply (block_count - 1):
+/* Layout codes (kept for reference, not currently used in write flow):
  *   0x07 =  8 blocks, 0x0F = 16 blocks, 0x1F = 32 blocks, 0x3F = 64 blocks
- * Confirmed by Proxmark: hf 15 raw -acrk -d 02e00947 <code> 038b00 */
-#define GEN2_LAYOUT_8_BLK  0x07
-#define GEN2_LAYOUT_16_BLK 0x0F
-#define GEN2_LAYOUT_32_BLK 0x1F
-#define GEN2_LAYOUT_64_BLK 0x3F
+ * Usage: hf 15 raw -acrk -d 02e00947 <code> 038b00
+ * WARNING: do NOT send to SLIX-L cards — it will brick them. */
 
 /* FWT for iso15693_3_poller_send_frame(): value is in carrier cycles (fc).
  * 300000 fc / 13.56 MHz ≈ 22ms — enough for any ISO15693 card response. */
@@ -135,12 +132,19 @@ static bool
         iso15693_3_poller_send_frame(iso, tx, rx, fwt_fc ? fwt_fc : ISO15693_FWT_FC);
     bool ok = (err == Iso15693_3ErrorNone) && iso_reply_ok(rx);
 
-    if(!ok)
-        FURI_LOG_W(
-            TAG,
-            "iso_send_raw: err=%d rxbytes=%u",
-            (int)err,
-            (unsigned)bit_buffer_get_size_bytes(rx));
+    if(!ok) {
+        size_t rxsz = bit_buffer_get_size_bytes(rx);
+        if(rxsz >= 2)
+            FURI_LOG_W(
+                TAG,
+                "iso_send_raw: err=%d rxbytes=%u resp=[%02X %02X]",
+                (int)err,
+                (unsigned)rxsz,
+                bit_buffer_get_byte(rx, 0),
+                bit_buffer_get_byte(rx, 1));
+        else
+            FURI_LOG_W(TAG, "iso_send_raw: err=%d rxbytes=%u", (int)err, (unsigned)rxsz);
+    }
     bit_buffer_free(tx);
     bit_buffer_free(rx);
     return ok;
@@ -149,40 +153,6 @@ static bool
 /* ============================================================================
  *  Gen2 magic: set block count layout
  * ========================================================================== */
-
-/* Returns the layout code matching the block count from the .nfc file.
- * Pattern: layout_code = block_count - 1 (e.g. 8-1=0x07, 16-1=0x0F, ...) */
-static uint8_t layout_code_for(uint8_t block_count) {
-    if(block_count <= 8) return GEN2_LAYOUT_8_BLK;
-    if(block_count <= 16) return GEN2_LAYOUT_16_BLK;
-    if(block_count <= 32) return GEN2_LAYOUT_32_BLK;
-    return GEN2_LAYOUT_64_BLK;
-}
-
-/* Send the Gen2 vendor command to configure the number of exposed blocks.
- * Non-fatal: some readers don't care about this value, so we continue on failure. */
-static bool magic_set_layout(Iso15693_3Poller* iso, uint8_t layout_code) {
-    uint8_t frame[8] = {
-        GEN2_CFG_FLAGS,
-        GEN2_CFG_CMD,
-        GEN2_CFG_OP_WRITE,
-        GEN2_CFG_REG_BLOCKCFG,
-        layout_code,
-        GEN2_CFG_B1,
-        GEN2_CFG_B2,
-        GEN2_CFG_B3,
-    };
-
-    FURI_LOG_I(TAG, "Gen2 layout: 0x%02X (%u blocks)", layout_code, (layout_code + 1));
-
-    for(int i = 0; i < 2; i++) {
-        if(iso_send_raw(iso, frame, sizeof(frame), ISO15693_FWT_FC)) return true;
-        furi_delay_ms(10);
-    }
-
-    FURI_LOG_W(TAG, "Gen2 layout cfg failed (continuing anyway)");
-    return false;
-}
 
 /* ============================================================================
  *  Gen2 magic: write UID
@@ -241,9 +211,10 @@ static bool magic_write_uid(Iso15693_3Poller* iso, const uint8_t uid_new[8]) {
  *  Write data blocks
  * ========================================================================== */
 
-/* Write all blocks using non-addressed Write Single Block (like Proxmark hf 15 wrbl).
+/* Write all blocks using non-addressed Write Single Block (flags=0x02).
+ * Compatible with Gen2 SLI/SLIX magic cards.
  * Block size is clamped to 4 bytes (hardware maximum for SLIX cards).
- * Each block is retried up to 3 times on failure. */
+ * Each block is retried up to 5 times on failure. */
 static bool write_blocks(
     Iso15693_3Poller* iso,
     const uint8_t* data,
@@ -257,7 +228,7 @@ static bool write_blocks(
     FURI_LOG_I(TAG, "Writing %u blocks x %u bytes", (unsigned)blocks, (unsigned)block_size);
 
     for(size_t b = 0; b < blocks; b++) {
-        /* Frame: flags(0x02) | cmd(0x21) | block_num | 4 data bytes */
+        /* Non-addressed frame: flags(0x02) | cmd(0x21) | block_num | 4 data bytes */
         uint8_t wframe[7];
         wframe[0] = 0x02;
         wframe[1] = ISO15693_CMD_WRITE_BLOCK;
@@ -370,14 +341,11 @@ bool sli_writer_parse_nfc_file(SliWriterApp* app, const char* path) {
  * ========================================================================== */
 
 static bool do_write_operations(SliWriterApp* app, Iso15693_3Poller* iso) {
-    /* Step 1: Configure Gen2 block count layout to match the .nfc file.
-     * This is non-fatal — many readers only check the first N blocks anyway. */
-    magic_set_layout(iso, layout_code_for(app->nfc_data.block_count));
-    furi_delay_ms(50); /* let card settle after layout change */
-
-    /* Step 2: Write data blocks FIRST using the card's current (original) UID.
-     * Per vendor doc: "data blocks must be written before changing the uid.
-     * After changing the uid, the original uid is required for future modifications." */
+    /* Step 1: Write data blocks FIRST using the card current (original) UID.
+     * Note: layout command 0x47 is intentionally NOT sent here — it is not needed
+     * for most readers, and would destroy SLIX-L magic cards.
+     * Vendor doc: blocks must be written before changing the uid.
+     * After UID change, original uid is required for future modifications. */
     FURI_LOG_I(TAG, "Step 1: write %u data blocks", app->nfc_data.block_count);
     if(!write_blocks(
            iso, app->nfc_data.data, app->nfc_data.block_count, app->nfc_data.block_size)) {
@@ -514,7 +482,6 @@ bool sli_writer_scene_start_on_event(void* context, SceneManagerEvent event) {
     SliWriterApp* app = context;
     if(event.type == SceneManagerEventTypeCustom) {
         if(event.event == SliWriterSubmenuIndexWrite) {
-            app->test_mode = false;
             scene_manager_next_scene(app->scene_manager, SliWriterSceneFileSelect);
             return true;
         } else if(event.event == SliWriterSubmenuIndexAbout) {
