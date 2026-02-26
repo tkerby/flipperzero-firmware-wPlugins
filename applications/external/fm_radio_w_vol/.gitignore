@@ -1,0 +1,33 @@
+# Python / local env
+.venv/
+__pycache__/
+*.pyc
+
+# Editor/OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Build artifacts (Flipper / scons / toolchains)
+*.o
+*.a
+*.so
+*.elf
+*.map
+*.d
+*.su
+
+# Packaged binaries
+*.fap
+*.fap.debug
+
+# Generic build directories
+build/
+dist/
+out/
+
+# Local git backups
+.git_backup_*/
