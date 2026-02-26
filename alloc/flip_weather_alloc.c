@@ -74,8 +74,11 @@ FlipWeatherApp *flip_weather_app_alloc()
     }
     app->variable_item_ssid = variable_item_list_add(app->variable_item_list, "SSID", 0, NULL, NULL);
     app->variable_item_password = variable_item_list_add(app->variable_item_list, "Password", 0, NULL, NULL);
+    app->variable_item_temperature_unit = variable_item_list_add(app->variable_item_list, "Temperature", 2, temperature_unit_change, app);
     variable_item_set_current_value_text(app->variable_item_ssid, "");
     variable_item_set_current_value_text(app->variable_item_password, "");
+    variable_item_set_current_value_index(app->variable_item_temperature_unit, 0);
+    variable_item_set_current_value_text(app->variable_item_temperature_unit, "Celsius");
 
     // Submenu
     if (!easy_flipper_set_submenu(&app->submenu, FlipWeatherViewSubmenu, "FlipWeather v1.2", callback_exit_app, &app->view_dispatcher))
@@ -88,7 +91,7 @@ FlipWeatherApp *flip_weather_app_alloc()
     submenu_add_item(app->submenu, "Settings", FlipWeatherSubmenuIndexSettings, callback_submenu_choices, app);
 
     // load settings
-    if (load_settings(app->uart_text_input_buffer_ssid, app->uart_text_input_buffer_size_ssid, app->uart_text_input_buffer_password, app->uart_text_input_buffer_size_password))
+    if (load_settings(app->uart_text_input_buffer_ssid, app->uart_text_input_buffer_size_ssid, app->uart_text_input_buffer_password, app->uart_text_input_buffer_size_password, &use_fahrenheit))
     {
         // Update variable items
         if (app->variable_item_ssid)
@@ -105,6 +108,13 @@ FlipWeatherApp *flip_weather_app_alloc()
         {
             strncpy(app->uart_text_input_temp_buffer_password, app->uart_text_input_buffer_password, app->uart_text_input_buffer_size_password - 1);
             app->uart_text_input_temp_buffer_password[app->uart_text_input_buffer_size_password - 1] = '\0';
+        }
+
+        // Apply loaded temperature unit
+        if (app->variable_item_temperature_unit)
+        {
+            variable_item_set_current_value_index(app->variable_item_temperature_unit, use_fahrenheit ? 1 : 0);
+            variable_item_set_current_value_text(app->variable_item_temperature_unit, use_fahrenheit ? "Fahrenheit" : "Celsius");
         }
     }
 
