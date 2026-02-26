@@ -86,13 +86,13 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [ArduGolf v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperGolf)
 - Updated: [Mystic Balloon v2.0 (By apfxtech)](https://github.com/apfxtech/FlipperMysticBalloon)
 - Updated: [Wolfenduino v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperWolfenstein)
-- Updated: [SLI Writer v1.4 (By Julienbxl)](https://github.com/Julienbxl/SLI-Writer)
 - Updated: [NFC Comparator v2.4 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
 - Updated: [Arduventure v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperArduventure)
 - Added: [Animation Switcher v1.0 (By lsalik2)](https://github.com/lsalik2/FlipperAnimationSwitcher)
 - Updated: [NFC Playlist v3.5 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
 - Added: [Theme Manager v1.1 (By Hoasker)](https://github.com/Hoasker/flipper-theme-manager)
 - Updated: [NFC Login v1.1.2 (By Play2BReal)](https://github.com/Play2BReal/NFC-Login)
+- Updated: [SLI Writer v1.4 (By Julienbxl)](https://github.com/Julienbxl/SLI-Writer)
 
 <a name="release"></a>
 
