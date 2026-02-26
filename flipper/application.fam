@@ -9,6 +9,6 @@ App(
     fap_description="USB HID Macro Pad with configurable pages",
     fap_author="FlipDeck",
     fap_version="3.0",
-    fap_weburl="https://github.com/flipdeck/flipdeck",
+    fap_weburl="https://github.com/ismail-oe/flipdeck",
     requires=["gui", "storage", "notification"],
 )
