@@ -3,7 +3,7 @@
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://lh3.googleusercontent.com/d/1iYQlRQXM7nA4IAdcPwvcKRSTCMoi8tug' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0127-1444-0.420.0-cd46514.tgz&channel=RM0127-1444-0.420.0-cd46514&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0226-1517-0.420.0-847b104.tgz&channel=RM0226-1517-0.420.0-847b104&version=0.420.0&target=f7)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -30,79 +30,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2026-02-26 15:00 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-02-26 15:00 EST`
-- Updated: [UDECard v1.0.4 (By hahnworks](https://github.com/hahnworks/UDECard) (Version Only)
-- Updated: [Guess The Number v1.3 (By kWAYTV)](https://github.com/kWAYTV/guess-the-number-fz)
-- Updated: [Temp Sensors Reader 1.8 (By quen0n)](https://github.com/quen0n/Unitemp-Flipper-Zero-Plugin) `Req: BMP180/BMP280/BME280/BME680/DHT11/DHT22(AM2302)/AM2301/AM2320/HTU2XD/HTU21x/HDC1080/MAX31725/MAX31855/MAX6675/SCD30` (Version Only)
-- Updated: [WiFi (Marauder) v0.7.8 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion) `Req: ESP32` with [ESP32 MARAUDER Firmware](https://github.com/justcallmekoko/ESP32Marauder/releases/latest)
-- Sub-GHz: [BFT KeeLoq try decoding with zero seed too (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/523a3723cf9ec475c2904603b422c55802120519)
-- Added: [UL-C Bruteforce v1.0 (By noproto)](https://github.com/zc-public/breakme-resources/tree/main/flipper_apps)
-- Added: [UL-C Bruteforce Optimized v1.0 (By noproto)](https://github.com/zc-public/breakme-resources/tree/main/flipper_apps)
-- Added: [UL-C Relay v1.0 (By noproto)](https://github.com/zc-public/breakme-resources/tree/main/flipper_apps)
-- Added: [ULCFKey v1.0 (By noproto)](https://github.com/zc-public/breakme-resources/tree/main/flipper_apps)
-- Added: [ULCFKey Next v1.0 (By noproto)](https://github.com/zc-public/breakme-resources/tree/main/flipper_apps)
-- Added: [Timed Remote v0.1 (By anders-dc)](https://github.com/anders-dc/timed-remote)
-- Updated: [LIDAR Emulator v0.2 (By regaly)](https://github.com/regaly/flipperzero-lidar_emulator) [v0.2 Updates: External GPIO IR device support (By mistrustt)](https://github.com/mistrustt/flipperzero-lidar_emulator)
-- Updated: [ListEM v1.3 (By Clawzman)](https://github.com/Clawzman/Flipper_ListEM)
-- SubGHz: [V2 Phoenix (Phox) added 2 counter modes support (docs updated) (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/95dd537bf81ee445b1fb71aa60431cb62080333d)
-- Updated: [Swimmy Fish v2.0 (By Invizabel)](https://github.com/Invizabel/fish)
-- Updated: [Key Copier v1.5 (By zinongli)](https://github.com/zinongli/KeyCopier) [Add Schlage Everest 29 Key Profile (By RJohnson2106)](https://github.com/zinongli/KeyCopier/pull/39)
-- Updated: [Quac! v0.9.1 (By rdefeo)](https://github.com/rdefeo/quac) [Support for HID iClass (Picopass files) (By lilgangus)](https://github.com/rdefeo/quac/pull/24)
-- [ESP Flasher: Bump Marauder v1.10.2 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.10.2)
-- Added: [Ardudrivin v1.0.2 (By apfxtech)](https://github.com/apfxtech/FlipperDrivin)
-- Added: [ATM Player v1.0.7 (By apfxtech)](https://github.com/apfxtech/FlipperATM)
-- Added: [Pause Timer v1.0 (By Matt-London)](https://github.com/Matt-London/pause_timer)
-- Updated: [INA Meter v0.2 (By cepetr)](https://github.com/cepetr/flipper-tina)
-- Added: [Prince Of Arabia v1.0.8 (By apfxtech)](https://github.com/apfxtech/FlipperPrinceOfArabia)
-- Added: [Bad Duck3 v1.1 (By dutchpatriot)](https://github.com/dutchpatriot/all-the-plugins/tree/833335354aa46fe605b494c1b3bf11afb5b362f9/non_catalog_apps/bad_duck3)
-- Updated: [Flipper Wedge v1.1 (By DangerousThings)](https://github.com/DangerousThings/flipper-wedge)
-- Added: [VK Thermo v1.0 (By VivoKey)](https://github.com/VivoKey/vkthermo-flipper)
-- Updated: [Mi Band NFC Writer v1.0 (By LucaTomei)](https://github.com/LucaTomei/flipper-miband-nfc-writer)
-- Updated: [NFC Comparator v2.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
-- Updated: [Flipper Blackhat v0.4.1 (By o7-machinehum)](https://github.com/o7-machinehum/flipper-blackhat-app) `Req: Blackhat Board` with [Blackhat OS](https://github.com/o7-machinehum/flipper-blackhat-os)
-- Updated: [Mystic Balloon v2.0 (By apfxtech)](https://github.com/apfxtech/FlipperMysticBalloon)
-- Updated: [USB HID Autofire v0.7.1 (By pbek)](https://github.com/pbek/usb_hid_autofire)
-- Updated: [ATM Player v1.0.8 (By apfxtech)](https://github.com/apfxtech/FlipperATM) Added Cruel Angels Thesis sample
-- Updated: [Minesweeper Redux v1.6 (By squee72564)](https://github.com/squee72564/F0_Minesweeper_Fap)
-- Updated: [LEGO Dimensions Toy Pad v0.5 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
-- Updated: [Sub-GHz Scheduler v3.0 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
-- Updated: [XRemote v1.3 (By kala13x)](https://github.com/kala13x/flipper-xremote)
-- Added: [24Cxx Programmer v1.0 (By kamylwnb)](https://github.com/kamylwnb/24cxxprog)
-- Updated: [Lishi HU66 v0.3 (By evillero)](https://github.com/evillero/lishi_hu66)
-- Updated: [Mfkey v4.1 (By noproto)](https://github.com/noproto/FlipperMfkey)
-- Updated: [Weather Station v2.0 (By Skorpionm)-OFW](https://github.com/flipperdevices/flipperzero-good-faps/tree/dev/weather_station)
-- Updated: [FAP Boilerplate v1.3 (By leedave)](https://github.com/leedave/flipper-zero-fap-boilerplate)
-- Added: [Race Game v1.0 (By mrc19056)](https://github.com/mrc19056/flipper-race-game)
-- Updated: [24Cxx Programmer v1.0 (By kamylwnb)](https://github.com/kamylwnb/24cxxprog)
-- Updated: [Smartra VIN2PIN v2.0 (By evillero)](https://github.com/evillero/smartra_vin2pin)
-- Updated: [Timed Remote v0.1 (By anders-dc)](https://github.com/anders-dc/timed-remote)
-- Updated: [INA Meter v0.8 (By cepetr)](https://github.com/cepetr/flipper-tina) (Version Only)
-- Updated: [Tetris v1.5 (By jeffplang)](https://github.com/jeffplang/flipperzero-firmware/tree/tetris_game/applications/tetris_game) [fix some tetris bugs (By Bricktech2000)](https://github.com/xMasterX/all-the-plugins/pull/210)
-- Updated: [FlipSocial v2.0.9 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [FZ nRF24 Jammer v1.4 (By W0rthlessS0ul)](https://github.com/W0rthlessS0ul/FZ_nRF24_jammer)
-- Updated: [ProtoPirate v2.3.1 (By RocketGod-git)](https://protopirate.net/ProtoPirate/ProtoPirate)
-- Updated: [Prince Of Arabia v1.0.11 (By apfxtech)](https://github.com/apfxtech/FlipperPrinceOfArabia)
-- Updated: [Catacombs Of The Damned v2.2 (By apfxtech)](https://github.com/apfxtech/FlipperCatacombs)
-- Updated: [Ardudrivin v1.0.3 (By apfxtech)](https://github.com/apfxtech/FlipperDrivin)
-- Updated: [ArduGolf v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperGolf)
-- Updated: [Mystic Balloon v2.0 (By apfxtech)](https://github.com/apfxtech/FlipperMysticBalloon)
-- Updated: [Wolfenduino v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperWolfenstein)
-- Updated: [NFC Comparator v2.4 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
-- Updated: [Arduventure v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperArduventure)
-- Added: [Animation Switcher v1.0 (By lsalik2)](https://github.com/lsalik2/FlipperAnimationSwitcher)
-- Updated: [NFC Playlist v3.5 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
-- Added: [Theme Manager v1.1 (By Hoasker)](https://github.com/Hoasker/flipper-theme-manager)
-- Updated: [NFC Login v1.1.2 (By Play2BReal)](https://github.com/Play2BReal/NFC-Login)
-- Added: [Checkers v1.0 (By H4W9)](https://github.com/H4W9/FlipCheckers)
-- Added: [BLE Clicker v1.0 (By random1st)](https://github.com/random1st/flipper-ble-clicker)
-- Added: [FM Radio w Vol v0.9 (By coolshrimp & pchmielewski1)](https://github.com/pchmielewski1/tea5767-pt2257-fm-radio-with-volume-control) `Req: TEA5767+PT2257`
-- Added: [IR Signal Generator v1.0 (By temboohms68)](https://github.com/temboohms68/Flipper-Zero-IR-Signal-Generator)
-- Added: [BadUSB Pro v1.0 (By barkandbite)](https://github.com/barkandbite/flipper_suite)
-- Added: [CCID Emulator v1.0 (By barkandbite)](https://github.com/barkandbite/flipper_suite)
-- Added: [HID Exfil v1.0 (By barkandbite)](https://github.com/barkandbite/flipper_suite)
-- Added: [NFC Fuzzer v1.0 (By barkandbite)](https://github.com/barkandbite/flipper_suite)
-- Added: [SPI Flash Dump v1.0 (By barkandbite)](https://github.com/barkandbite/flipper_suite)
-- Added: [SubGHz Spectrum v1.0 (By barkandbite)](https://github.com/barkandbite/flipper_suite)
-- Updated: [SLI Writer v1.4 (By Julienbxl)](https://github.com/Julienbxl/SLI-Writer)
 
 <a name="release"></a>
 
@@ -926,4 +853,4 @@ $ ./fbt dolphin_ext
 - Have a new app? Submit GitHub link to me on Discord for a special reward (if I add it to RM Firmware).
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0127-1444-0.420.0-cd46514.tgz&channel=RM0127-1444-0.420.0-cd46514&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0226-1517-0.420.0-847b104.tgz&channel=RM0226-1517-0.420.0-847b104&version=0.420.0&target=f7)
