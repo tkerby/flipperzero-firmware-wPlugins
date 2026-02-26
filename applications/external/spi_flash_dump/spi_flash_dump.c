@@ -723,6 +723,7 @@ static SpiFlashDumpApp* spi_flash_dump_app_alloc(void) {
 
     /* ViewDispatcher */
     app->view_dispatcher = view_dispatcher_alloc();
+    view_dispatcher_enable_queue(app->view_dispatcher);
     /* view_dispatcher queue enabled by default in SDK 1.4+ */
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_navigation_event_callback(app->view_dispatcher, app_navigation_cb);

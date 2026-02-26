@@ -485,6 +485,7 @@ static CcidEmulatorApp* ccid_emulator_app_alloc(void) {
     /* GUI */
     app->gui = furi_record_open(RECORD_GUI);
     app->view_dispatcher = view_dispatcher_alloc();
+    view_dispatcher_enable_queue(app->view_dispatcher);
     /* view_dispatcher_enable_queue is deprecated in SDK 1.4+ — no longer needed */
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_custom_event_callback(app->view_dispatcher, custom_event_handler);
