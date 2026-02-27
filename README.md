@@ -77,6 +77,7 @@ Concept: Jordan Mechner.
 Development: @filmote, @MrBlinky (/Mr.Blinky), @ace-dent (/acedent)  
 Graphics: /clintonium-119, @vampirics  
 Music: @ajsaucier (/raspberrybrain)  
+FZ port: @apfxtech
 
 ## Contributors and authors
 <a href="https://github.com/apfxtech/FlipperPrinceOfArabia/graphs/contributors">
