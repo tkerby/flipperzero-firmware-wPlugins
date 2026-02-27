@@ -77,6 +77,13 @@ Concept: Jordan Mechner.
 Development: @filmote, @MrBlinky (/Mr.Blinky), @ace-dent (/acedent)  
 Graphics: /clintonium-119, @vampirics  
 Music: @ajsaucier (/raspberrybrain)  
+FZ port: @apfxtech
+
+## Contributors and authors
+<a href="https://github.com/apfxtech/FlipperPrinceOfArabia/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=apfxtech/FlipperPrinceOfArabia" />
+  <img src="https://contrib.rocks/image?repo=Press-Play-On-Tape/PrinceOfArabia" />
+</a>
 
 # Original
 **Press-Play-On-Tape** [Prince of Arabia](https://github.com/Press-Play-On-Tape/PrinceOfArabia.git)
