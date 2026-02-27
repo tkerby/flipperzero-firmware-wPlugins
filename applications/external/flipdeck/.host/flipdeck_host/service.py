@@ -144,7 +144,9 @@ def service_status():
             print("  Service: not installed")
             print(f"  Install: flipdeck install")
             return
-        r = subprocess.run(["launchctl", "list", SERVICE_NAME], capture_output=True, text=True)
+        r = subprocess.run(
+            ["launchctl", "list", SERVICE_NAME], capture_output=True, text=True
+        )
         if r.returncode == 0:
             # Parse PID from output
             lines = r.stdout.strip().split("\n")
@@ -183,7 +185,8 @@ def service_status():
     elif sys.platform == "linux":
         r = subprocess.run(
             ["systemctl", "--user", "is-active", "flipdeck"],
-            capture_output=True, text=True
+            capture_output=True,
+            text=True,
         )
         active = r.stdout.strip() == "active"
         if active:
@@ -211,7 +214,9 @@ def start_service():
         print("  \u2713 Service started")
         print("  Web UI: http://localhost:7433")
     elif sys.platform == "linux":
-        subprocess.run(["systemctl", "--user", "start", "flipdeck"], capture_output=True)
+        subprocess.run(
+            ["systemctl", "--user", "start", "flipdeck"], capture_output=True
+        )
         print("  \u2713 Service started")
         print("  Web UI: http://localhost:7433")
 
@@ -229,7 +234,9 @@ def uninstall_service():
         print("  (Logs in ~/Library/Logs/FlipDeck/ were kept)")
     elif sys.platform == "linux":
         subprocess.run(["systemctl", "--user", "stop", "flipdeck"], capture_output=True)
-        subprocess.run(["systemctl", "--user", "disable", "flipdeck"], capture_output=True)
+        subprocess.run(
+            ["systemctl", "--user", "disable", "flipdeck"], capture_output=True
+        )
         unit = os.path.expanduser("~/.config/systemd/user/flipdeck.service")
         if os.path.exists(unit):
             os.remove(unit)
@@ -252,7 +259,9 @@ def show_logs():
             print("  No logs yet. Is the service running?")
             print(f"  Expected: {log}")
     elif sys.platform == "linux":
-        subprocess.run(["journalctl", "--user", "-u", "flipdeck", "-n", "50", "--no-pager"])
+        subprocess.run(
+            ["journalctl", "--user", "-u", "flipdeck", "-n", "50", "--no-pager"]
+        )
     else:
         print("  [!] Logs not available on this platform")
 
@@ -261,6 +270,7 @@ def _find_binary():
     """Find the flipdeck binary path."""
     # Check if installed as a pip package
     import shutil
+
     path = shutil.which("flipdeck")
     if path:
         return path

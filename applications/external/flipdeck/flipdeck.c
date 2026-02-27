@@ -23,113 +23,114 @@
 
 /* ── Limits ───────────────────────────────────────────── */
 
-#define TAG               "FlipDeck"
-#define MAX_PAGES         8
-#define BTNS_PER_PAGE     6
-#define GRID_COLS         3
-#define GRID_ROWS         2
-#define MAX_LABEL         10
-#define MAX_SYMBOL        4
-#define MAX_PAGE_NAME     14
-#define MAX_ACTION_NAME   8
-#define CONFIG_PATH       APP_DATA_PATH("config.txt")
-#define EXIT_HOLD_MS      600
+#define TAG             "FlipDeck"
+#define MAX_PAGES       8
+#define BTNS_PER_PAGE   6
+#define GRID_COLS       3
+#define GRID_ROWS       2
+#define MAX_LABEL       10
+#define MAX_SYMBOL      4
+#define MAX_PAGE_NAME   14
+#define MAX_ACTION_NAME 8
+#define CONFIG_PATH     APP_DATA_PATH("config.txt")
+#define EXIT_HOLD_MS    600
 
 /* ── Layout (128×64 OLED, full-screen, no footer) ───── */
 
-#define HDR_H             11
-#define GRID_Y            (HDR_H + 1)
-#define GRID_H            (64 - HDR_H - 1)
-#define CELL_W            (128 / GRID_COLS)
-#define CELL_H            (GRID_H / GRID_ROWS)
+#define HDR_H  11
+#define GRID_Y (HDR_H + 1)
+#define GRID_H (64 - HDR_H - 1)
+#define CELL_W (128 / GRID_COLS)
+#define CELL_H (GRID_H / GRID_ROWS)
 
 /* ── HID codes ────────────────────────────────────────── */
 
 /* Consumer (media) keys */
-#define C_PLAY   0x00CD
-#define C_NEXT   0x00B5
-#define C_PREV   0x00B6
-#define C_VOLUP  0x00E9
-#define C_VOLDN  0x00EA
-#define C_MUTE   0x00E2
-#define C_BRTUP  0x006F
-#define C_BRTDN  0x0070
+#define C_PLAY  0x00CD
+#define C_NEXT  0x00B5
+#define C_PREV  0x00B6
+#define C_VOLUP 0x00E9
+#define C_VOLDN 0x00EA
+#define C_MUTE  0x00E2
+#define C_BRTUP 0x006F
+#define C_BRTDN 0x0070
 
 /* Keyboard F-keys */
-#define K_F13    0x68
-#define K_F14    0x69
-#define K_F15    0x6A
-#define K_F16    0x6B
-#define K_F17    0x6C
-#define K_F18    0x6D
-#define K_F19    0x6E
-#define K_F20    0x6F
-#define K_F21    0x70
-#define K_F22    0x71
-#define K_F23    0x72
-#define K_F24    0x73
+#define K_F13 0x68
+#define K_F14 0x69
+#define K_F15 0x6A
+#define K_F16 0x6B
+#define K_F17 0x6C
+#define K_F18 0x6D
+#define K_F19 0x6E
+#define K_F20 0x6F
+#define K_F21 0x70
+#define K_F22 0x71
+#define K_F23 0x72
+#define K_F24 0x73
 
 /* ── Types ────────────────────────────────────────────── */
 
-typedef enum { ActConsumer, ActKeyboard } ActType;
+typedef enum {
+    ActConsumer,
+    ActKeyboard
+} ActType;
 
 typedef struct {
-    char     label[MAX_LABEL];
-    char     symbol[MAX_SYMBOL];
-    ActType  type;
+    char label[MAX_LABEL];
+    char symbol[MAX_SYMBOL];
+    ActType type;
     uint16_t code;
 } BtnDef;
 
 typedef struct {
-    char   name[MAX_PAGE_NAME];
+    char name[MAX_PAGE_NAME];
     BtnDef btns[BTNS_PER_PAGE];
     uint8_t count; /* how many buttons on this page (1-6) */
 } Page;
 
 typedef struct {
-    Page    pages[MAX_PAGES];
+    Page pages[MAX_PAGES];
     uint8_t page_count;
     uint8_t cur_page;
-    uint8_t cur_btn;       /* 0..5 within page */
-    bool    running;
-    bool    hid_ok;
-    bool    flash;
+    uint8_t cur_btn; /* 0..5 within page */
+    bool running;
+    bool hid_ok;
+    bool flash;
     uint32_t flash_end;
 } App;
 
 /* ── Haptic ───────────────────────────────────────────── */
 
 static const NotificationSequence seq_press = {
-    &message_vibro_on, &message_delay_25, &message_vibro_off,
-    &message_green_255, &message_delay_100, &message_green_0,
+    &message_vibro_on,
+    &message_delay_25,
+    &message_vibro_off,
+    &message_green_255,
+    &message_delay_100,
+    &message_green_0,
     NULL,
 };
 
 /* ── Action registry ──────────────────────────────────── */
 
-typedef struct { const char* name; ActType type; uint16_t code; } ActEntry;
+typedef struct {
+    const char* name;
+    ActType type;
+    uint16_t code;
+} ActEntry;
 
 static const ActEntry act_table[] = {
-    {"PLAY",   ActConsumer, C_PLAY},
-    {"NEXT",   ActConsumer, C_NEXT},
-    {"PREV",   ActConsumer, C_PREV},
-    {"VOLUP",  ActConsumer, C_VOLUP},
-    {"VOLDN",  ActConsumer, C_VOLDN},
-    {"MUTE",   ActConsumer, C_MUTE},
-    {"BRTUP",  ActConsumer, C_BRTUP},
-    {"BRTDN",  ActConsumer, C_BRTDN},
-    {"F13",    ActKeyboard, K_F13},
-    {"F14",    ActKeyboard, K_F14},
-    {"F15",    ActKeyboard, K_F15},
-    {"F16",    ActKeyboard, K_F16},
-    {"F17",    ActKeyboard, K_F17},
-    {"F18",    ActKeyboard, K_F18},
-    {"F19",    ActKeyboard, K_F19},
-    {"F20",    ActKeyboard, K_F20},
-    {"F21",    ActKeyboard, K_F21},
-    {"F22",    ActKeyboard, K_F22},
-    {"F23",    ActKeyboard, K_F23},
-    {"F24",    ActKeyboard, K_F24},
+    {"PLAY", ActConsumer, C_PLAY},   {"NEXT", ActConsumer, C_NEXT},
+    {"PREV", ActConsumer, C_PREV},   {"VOLUP", ActConsumer, C_VOLUP},
+    {"VOLDN", ActConsumer, C_VOLDN}, {"MUTE", ActConsumer, C_MUTE},
+    {"BRTUP", ActConsumer, C_BRTUP}, {"BRTDN", ActConsumer, C_BRTDN},
+    {"F13", ActKeyboard, K_F13},     {"F14", ActKeyboard, K_F14},
+    {"F15", ActKeyboard, K_F15},     {"F16", ActKeyboard, K_F16},
+    {"F17", ActKeyboard, K_F17},     {"F18", ActKeyboard, K_F18},
+    {"F19", ActKeyboard, K_F19},     {"F20", ActKeyboard, K_F20},
+    {"F21", ActKeyboard, K_F21},     {"F22", ActKeyboard, K_F22},
+    {"F23", ActKeyboard, K_F23},     {"F24", ActKeyboard, K_F24},
 };
 #define ACT_COUNT (sizeof(act_table) / sizeof(act_table[0]))
 
@@ -167,13 +168,18 @@ static void default_config(App* app) {
     Page* p0 = &app->pages[0];
     strncpy(p0->name, "Media", MAX_PAGE_NAME - 1);
     p0->count = 6;
-    const struct { const char* l; const char* s; ActType t; uint16_t c; } d0[] = {
-        {"Play",  ">",  ActConsumer, C_PLAY},
-        {"Next",  ">>", ActConsumer, C_NEXT},
-        {"Prev",  "<<", ActConsumer, C_PREV},
-        {"Vol+",  "+",  ActConsumer, C_VOLUP},
-        {"Vol-",  "-",  ActConsumer, C_VOLDN},
-        {"Mute",  "X",  ActConsumer, C_MUTE},
+    const struct {
+        const char* l;
+        const char* s;
+        ActType t;
+        uint16_t c;
+    } d0[] = {
+        {"Play", ">", ActConsumer, C_PLAY},
+        {"Next", ">>", ActConsumer, C_NEXT},
+        {"Prev", "<<", ActConsumer, C_PREV},
+        {"Vol+", "+", ActConsumer, C_VOLUP},
+        {"Vol-", "-", ActConsumer, C_VOLDN},
+        {"Mute", "X", ActConsumer, C_MUTE},
     };
     for(int i = 0; i < 6; i++) {
         strncpy(p0->btns[i].label, d0[i].l, MAX_LABEL - 1);
@@ -213,7 +219,8 @@ static bool parse_btn_line(const char* line, BtnDef* btn) {
     memcpy(aname, line, a_len);
     aname[a_len] = '\0';
 
-    ActType t; uint16_t c;
+    ActType t;
+    uint16_t c;
     if(!find_action(aname, &t, &c)) return false;
 
     const char* p2 = strchr(p1 + 1, ':');
@@ -301,7 +308,8 @@ static void load_config(App* app) {
         default_config(app);
     } else {
         int total = 0;
-        for(uint8_t i = 0; i < app->page_count; i++) total += app->pages[i].count;
+        for(uint8_t i = 0; i < app->page_count; i++)
+            total += app->pages[i].count;
         FURI_LOG_I(TAG, "Loaded %d pages, %d buttons", app->page_count, total);
     }
 
@@ -398,14 +406,12 @@ static void draw_cb(Canvas* c, void* ctx) {
         /* Symbol */
         canvas_set_font(c, FontPrimary);
         canvas_draw_str_aligned(
-            c, x + CELL_W / 2, y + CELL_H / 2 - 3,
-            AlignCenter, AlignCenter, pg->btns[i].symbol);
+            c, x + CELL_W / 2, y + CELL_H / 2 - 3, AlignCenter, AlignCenter, pg->btns[i].symbol);
 
         /* Label */
         canvas_set_font(c, FontSecondary);
         canvas_draw_str_aligned(
-            c, x + CELL_W / 2, y + CELL_H - 2,
-            AlignCenter, AlignBottom, pg->btns[i].label);
+            c, x + CELL_W / 2, y + CELL_H - 2, AlignCenter, AlignBottom, pg->btns[i].label);
 
         canvas_set_color(c, ColorBlack);
     }

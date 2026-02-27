@@ -62,6 +62,7 @@ def _listener_evdev(executor, stop_event):
     print(f"  Monitoring {len(keyboards)} keyboard device(s)")
 
     import select
+
     while not stop_event.is_set():
         r, _, _ = select.select(keyboards, [], [], 0.5)
         for dev in r:
@@ -84,6 +85,7 @@ def create_listener(executor, stop_event):
 
 
 # ── Daemon ────────────────────────────────────────────────
+
 
 def run_daemon(actions_file, plugins_dir=None, web_port=None):
     """Run the FlipDeck daemon (key listener + optional web server)."""
@@ -112,6 +114,7 @@ def run_daemon(actions_file, plugins_dir=None, web_port=None):
     web_thread = None
     if web_port:
         from .web import run_web_thread
+
         web_thread = run_web_thread(
             executor=executor,
             actions_file=actions_file,

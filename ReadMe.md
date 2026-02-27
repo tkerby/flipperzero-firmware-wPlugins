@@ -31,6 +31,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2026-02-26 15:00 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-02-26 15:00 EST`
 - Updated: [FlipWeather v1.3 (By jblanked)](https://github.com/jblanked/FlipWeather) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- Added: [FlipDeck v3.0 (By ismail-oe)](https://github.com/ismail-oe/flipdeck)
 
 <a name="release"></a>
 
@@ -514,6 +515,7 @@ $ ./fbt dolphin_ext
 - [Fire String v1.3 (By RyanAboueljoud)](https://github.com/RyanAboueljoud/Fire-String)
 - [Flame RNG v0.3 (By OrionW06)](https://github.com/OrionW06/Flame-RNG)
 - [Flashlight v1.2 (By xMasterX)](https://github.com/xMasterX/flipper-flashlight)
+- [FlipDeck v3.0 (By ismail-oe)](https://github.com/ismail-oe/flipdeck)
 - [FlipDownloader v1.3.5 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - [FlipGemini v1.0 (By jblanked)](https://github.com/jblanked/FlipGemini) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - [FlipLibrary v1.4 (By jblanked)](https://github.com/jblanked/FlipLibrary) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)

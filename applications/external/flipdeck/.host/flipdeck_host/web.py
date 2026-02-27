@@ -79,19 +79,23 @@ def create_app(executor, actions_file, plugins_dir=None):
     @app.route("/api/flipper/status", methods=["GET"])
     def flipper_status():
         port = find_flipper_port()
-        return jsonify({
-            "connected": port is not None,
-            "port": port,
-        })
+        return jsonify(
+            {
+                "connected": port is not None,
+                "port": port,
+            }
+        )
 
     @app.route("/api/flipper/config", methods=["GET"])
     def get_flipper_config():
         """Read current Flipper config from actions file to generate config.txt."""
         executor.reload()
-        return jsonify({
-            "actions": executor.get_all(),
-            "types": list(executor.handlers.keys()),
-        })
+        return jsonify(
+            {
+                "actions": executor.get_all(),
+                "types": list(executor.handlers.keys()),
+            }
+        )
 
     @app.route("/api/flipper/upload", methods=["POST"])
     def upload_to_flipper():
@@ -126,12 +130,15 @@ def run_web(actions_file, plugins_dir=None, port=7433):
     app.run(host="127.0.0.1", port=port, debug=False)
 
 
-def run_web_thread(executor, actions_file, plugins_dir=None, port=7433, stop_event=None):
+def run_web_thread(
+    executor, actions_file, plugins_dir=None, port=7433, stop_event=None
+):
     """Run the web UI in a background thread."""
     app = create_app(executor, actions_file, plugins_dir)
 
     def _run():
         from werkzeug.serving import make_server
+
         srv = make_server("127.0.0.1", port, app)
         srv.timeout = 1
         while not (stop_event and stop_event.is_set()):

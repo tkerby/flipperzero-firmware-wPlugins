@@ -9,6 +9,7 @@ import yaml
 
 # ── Built-in action handlers ──────────────────────────────
 
+
 def act_shell(cfg):
     """Run a shell command."""
     cmd = cfg.get("command", "")
@@ -17,8 +18,11 @@ def act_shell(cfg):
         r = subprocess.run(cmd, shell=True, capture_output=True, timeout=30)
         return r.returncode == 0
     else:
-        subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.Popen(
+            cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
         return True
+
 
 def act_python(cfg):
     """Run a Python script."""
@@ -27,11 +31,13 @@ def act_python(cfg):
     subprocess.Popen([sys.executable, script] + args)
     return True
 
+
 def act_bash(cfg):
     """Run a bash/sh script."""
     script = cfg.get("script", "")
     subprocess.Popen(["bash", script])
     return True
+
 
 def act_keypress(cfg):
     """Simulate a key combination."""
@@ -41,31 +47,43 @@ def act_keypress(cfg):
     else:
         return _keypress_linux(keys)
 
+
 def _keypress_macos(keys):
     parts = [k.strip().lower() for k in keys.split("+")]
     mod_map = {
-        "cmd": "command down", "command": "command down",
-        "shift": "shift down", "alt": "option down",
-        "option": "option down", "ctrl": "control down",
-        "control": "control down", "fn": "fn down",
+        "cmd": "command down",
+        "command": "command down",
+        "shift": "shift down",
+        "alt": "option down",
+        "option": "option down",
+        "ctrl": "control down",
+        "control": "control down",
+        "fn": "fn down",
     }
     mods = [mod_map[p] for p in parts[:-1] if p in mod_map]
     key = parts[-1] if parts else ""
     if mods:
-        script = f'tell app "System Events" to keystroke "{key}" using {{{", ".join(mods)}}}'
+        script = (
+            f'tell app "System Events" to keystroke "{key}" using {{{", ".join(mods)}}}'
+        )
     else:
         script = f'tell app "System Events" to keystroke "{key}"'
     subprocess.run(["osascript", "-e", script], timeout=5, capture_output=True)
     return True
 
+
 def _keypress_linux(keys):
     try:
-        subprocess.run(["xdotool", "key", keys.replace("+", "plus").replace("cmd", "super")],
-                       timeout=5, capture_output=True)
+        subprocess.run(
+            ["xdotool", "key", keys.replace("+", "plus").replace("cmd", "super")],
+            timeout=5,
+            capture_output=True,
+        )
         return True
     except FileNotFoundError:
         print("  [!] xdotool not installed (sudo apt install xdotool)")
         return False
+
 
 def act_open(cfg):
     """Open a file, folder, URL, or application."""
@@ -81,6 +99,7 @@ def act_open(cfg):
         subprocess.Popen(["xdg-open", target])
     return True
 
+
 def act_paste(cfg):
     """Type/paste a string via HID-like simulation."""
     text = cfg.get("text", "")
@@ -88,18 +107,29 @@ def act_paste(cfg):
         # Use pbcopy + cmd+v approach
         proc = subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE)
         proc.communicate(text.encode())
-        subprocess.run(["osascript", "-e",
-            'tell app "System Events" to keystroke "v" using command down'],
-            timeout=5, capture_output=True)
+        subprocess.run(
+            [
+                "osascript",
+                "-e",
+                'tell app "System Events" to keystroke "v" using command down',
+            ],
+            timeout=5,
+            capture_output=True,
+        )
     else:
-        subprocess.run(["xdotool", "type", "--clearmodifiers", text],
-                       timeout=10, capture_output=True)
+        subprocess.run(
+            ["xdotool", "type", "--clearmodifiers", text],
+            timeout=10,
+            capture_output=True,
+        )
     return True
+
 
 def act_http(cfg):
     """Make an HTTP request (curl-like)."""
     import urllib.request
     import urllib.error
+
     url = cfg.get("url", "")
     method = cfg.get("method", "GET").upper()
     headers = cfg.get("headers", {})
@@ -115,6 +145,7 @@ def act_http(cfg):
         print(f"  [!] HTTP error: {e}")
         return False
 
+
 def act_osascript(cfg):
     """Run an AppleScript (macOS only)."""
     if sys.platform != "darwin":
@@ -124,6 +155,7 @@ def act_osascript(cfg):
     subprocess.run(["osascript", "-e", script], timeout=10, capture_output=True)
     return True
 
+
 def act_shortcut(cfg):
     """Run a macOS Shortcuts.app shortcut."""
     if sys.platform != "darwin":
@@ -132,6 +164,7 @@ def act_shortcut(cfg):
     name = cfg.get("name", "")
     subprocess.run(["shortcuts", "run", name], timeout=30, capture_output=True)
     return True
+
 
 # ── Handler registry ──────────────────────────────────────
 
@@ -148,6 +181,7 @@ BUILTIN_HANDLERS = {
 }
 
 # ── Plugin loading ────────────────────────────────────────
+
 
 def load_plugins(plugins_dir):
     """Load custom action plugins from a directory.
@@ -176,7 +210,9 @@ def load_plugins(plugins_dir):
 
     return handlers
 
+
 # ── Action executor ───────────────────────────────────────
+
 
 class ActionExecutor:
     def __init__(self, actions_file, plugins_dir=None):
@@ -242,7 +278,10 @@ class ActionExecutor:
 
     def _save(self):
         with open(self._actions_file, "w") as f:
-            yaml.dump({"actions": self.actions}, f, default_flow_style=False, sort_keys=False)
+            yaml.dump(
+                {"actions": self.actions}, f, default_flow_style=False, sort_keys=False
+            )
+
 
 # ── Defaults ──────────────────────────────────────────────
 
@@ -291,9 +330,11 @@ DEFAULT_ACTIONS = {
     }
 }
 
+
 def write_default_actions(path):
     with open(path, "w") as f:
         yaml.dump(DEFAULT_ACTIONS, f, default_flow_style=False, sort_keys=False)
+
 
 def list_all_actions(actions_file, plugins_dir):
     """Print all configured actions."""
@@ -301,7 +342,9 @@ def list_all_actions(actions_file, plugins_dir):
     print(f"\nConfigured actions ({actions_file}):\n")
     for key, act in executor.get_all().items():
         status = "\u2705" if act.get("enabled", True) else "\u274c"
-        print(f"  {status} {key.upper():>4}  {act.get('name', '?'):20}  [{act.get('type', '?')}]")
+        print(
+            f"  {status} {key.upper():>4}  {act.get('name', '?'):20}  [{act.get('type', '?')}]"
+        )
 
     print(f"\nAvailable action types:")
     for t in sorted(executor.handlers.keys()):

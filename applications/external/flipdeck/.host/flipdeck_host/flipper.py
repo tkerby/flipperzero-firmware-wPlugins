@@ -35,6 +35,7 @@ def is_flipper_connected():
 def _open_serial(port, baud=230400, timeout=2):
     """Open serial connection to Flipper CLI."""
     import serial
+
     return serial.Serial(port, baud, timeout=timeout)
 
 
@@ -104,7 +105,9 @@ def upload_config_data(config_text, port):
                 if line:
                     # Escape special chars
                     safe = line.replace('"', '\\"')
-                    _send_cli(ser, f'storage write {CONFIG_REMOTE_PATH} "{safe}"', wait=0.1)
+                    _send_cli(
+                        ser, f'storage write {CONFIG_REMOTE_PATH} "{safe}"', wait=0.1
+                    )
 
     finally:
         ser.close()
@@ -118,6 +121,7 @@ def read_flipper_config(port=None):
         return None
 
     import serial
+
     ser = _open_serial(port)
     try:
         response = _send_cli(ser, f"storage read {CONFIG_REMOTE_PATH}", wait=0.5)
