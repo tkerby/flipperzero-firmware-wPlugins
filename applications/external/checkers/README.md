@@ -4,15 +4,15 @@ A classic checkers (draughts) game for the Flipper Zero.
 
 ---
 
-<img width=19% height=19% alt="Start Screen" src="https://github.com/user-attachments/assets/61485599-64ce-48a7-9fc4-47b5fedb46a0" />
+<img width=19% height=19% alt="Start Screen" src="https://github.com/user-attachments/assets/b6603c74-04f2-43d3-af68-fc07f19037e5" />
 
 <img width=19% height=19% alt="Main Menu" src="https://github.com/user-attachments/assets/d3da7fa1-caa2-41d9-a7cd-0796dd6046f1" />
 
-<img width=19% height=19% alt="Checkers2" src="https://github.com/user-attachments/assets/18f0b972-bd33-4703-8f24-000adab406b2" />
+<img width=19% height=19% alt="Checkers2" src="https://github.com/user-attachments/assets/fc797edb-7907-42e4-894f-b8e872e6ff3e" />
 
-<img width=19% height=19% alt="Settings" src="https://github.com/user-attachments/assets/c6d984d0-3178-46db-8ab7-dc785e515159" />
+<img width=19% height=19% alt="Settings" src="https://github.com/user-attachments/assets/1b540777-192d-4674-b8c3-b635d576b534" />
 
-<img width=19% height=19% alt="About" src="https://github.com/user-attachments/assets/b01d409c-c970-4554-b0fa-fefccbe4971b" />
+<img width=19% height=19% alt="CheckersWIN" src="https://github.com/user-attachments/assets/0f3cddf3-b425-41ec-86e4-a5676a324e60" />
 
 
 ---
@@ -31,7 +31,7 @@ This was inspired and based off of [Flipper Chess](https://github.com/xtruan/fli
 - Pieces promote to kings on reaching the back rank
 - Mandatory jump rule (configurable in Settings)
 - Save and resume games between sessions
-- Haptic/vibration feedback
+- Haptic/vibration and sound feedback
 
 ## Controls
 
@@ -49,4 +49,5 @@ This was inspired and based off of [Flipper Chess](https://github.com/xtruan/fli
 | Black | Set black player to Human or CPU (levels 1–3) |
 | Must Jump | Enforce mandatory capture rule (ON by default) |
 | Vibro/Haptic | Enable or disable vibration feedback |
+| Sound | Enable or disable sound feedback (OFF by default)|
 
