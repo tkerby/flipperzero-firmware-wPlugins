@@ -19,29 +19,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          path: app
-          fetch-depth: 0
-
-      - uses: actions/checkout@v4
-        with:
           repository: flipperdevices/flipperzero-firmware
           ref: dev
           path: firmware
+          submodules: recursive
+
+      - uses: actions/checkout@v4
+        with:
+          path: firmware/applications_user/app
+          fetch-depth: 0
           submodules: recursive
 
       - id: manifest
         shell: bash
         run: |
           set -euo pipefail
-          APP_DIR_NAME="${GITHUB_REPOSITORY##*/}"
-          DEST_DIR="firmware/applications_user/${APP_DIR_NAME}"
+          MANIFEST_PATH="firmware/applications_user/app/application.fam"
 
-          mkdir -p "$DEST_DIR"
-          rsync -a --delete --exclude '.git' app/ "$DEST_DIR/"
+          if [ ! -f "$MANIFEST_PATH" ]; then
+            echo "application.fam not found in firmware/applications_user/app/" >&2
+            exit 1
+          fi
 
-          mapfile -t APP_IDS < <(sed -n 's/^[[:space:]]*appid="\([^"]\+\)".*/\1/p' app/application.fam)
+          mapfile -t APP_IDS < <(sed -n 's/^[[:space:]]*appid="\([^"]\+\)".*/\1/p' "$MANIFEST_PATH")
           if [ "${#APP_IDS[@]}" -eq 0 ]; then
-            echo "No appid entries found in application.fam" >&2
+            echo "No appid entries found in $MANIFEST_PATH" >&2
             exit 1
           fi
 
@@ -51,7 +53,6 @@ jobs:
           done
 
           {
-            printf 'app_dir_name=%s\n' "$APP_DIR_NAME"
             printf 'build_targets=%s\n' "${BUILD_TARGETS[*]}"
             echo 'app_ids<<EOF'
             printf '%s\n' "${APP_IDS[@]}"
