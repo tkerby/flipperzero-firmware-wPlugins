@@ -1,0 +1,14 @@
+App(
+    appid="bthome",
+    name="BTHome",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="bthome_app",
+    stack_size=2 * 1024,
+    fap_category="Bluetooth",
+    fap_version="0.1",
+    fap_icon="bthome.png",
+    fap_description="BTHome implementation for the Flipper Zero",
+    fap_author="Alessandro Ghedini",
+    fap_weburl="https://github.com/ghedo/flipper-bthome",
+    fap_icon_assets="assets",
+)

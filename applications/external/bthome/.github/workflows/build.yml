@@ -1,0 +1,39 @@
+name: "Build for multiple SDK sources"
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  schedule:
+    # do a build every day
+    - cron: "1 1 * * *"
+
+jobs:
+  ufbt-build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app-dir:
+          - bthome
+        sdk-channel:
+          - dev
+          - release
+
+    name: 'Build ${{ matrix.app-dir }} for ${{ matrix.sdk-channel }}'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build with ufbt
+        uses: flipperdevices/flipperzero-ufbt-action@v0.1
+        id: build-app
+        with:
+          app-dir: ${{ matrix.app-dir }}
+          sdk-channel: ${{ matrix.sdk-channel }}
+
+      - name: Upload app artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.app-dir }}-${{ steps.build-app.outputs.suffix }}
+          path: ${{ steps.build-app.outputs.fap-artifacts }}
