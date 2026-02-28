@@ -4,7 +4,7 @@ App(
     apptype=FlipperAppType.EXTERNAL,
     entry_point="arduboy_app",
     requires=["gui"],
-    cdefines=["ARDULIB_USE_ATM"],
+    cdefines=["ARDULIB_USE_ATM"], # you can add experemental flag ARDULIB_USE_VIEW_PORT for local build
     sources=["main.cpp", "lib/scr/*.cpp", "game/*.cpp"],
     stack_size=8 * 1024,
     fap_category="Games",

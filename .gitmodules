@@ -1,3 +1,4 @@
 [submodule "lib"]
 	path = lib
-	url = https://github.com/apfxtech/ArduboyLIB.git
+	url = https://github.com/apfxtech/arduboylib.git
+	branch = main
