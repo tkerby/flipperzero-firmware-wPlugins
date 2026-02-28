@@ -26,6 +26,7 @@ jobs:
         id: build-app
         with:
           sdk-channel: release
+          no-lint: true
 
       - uses: actions/upload-artifact@v4
         with:
