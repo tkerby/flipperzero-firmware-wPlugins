@@ -3,6 +3,7 @@ I made a simple Flipper app to write magic ISO15693 changeable UID with .nfc fil
 To use with latest Unleashed firmware  
 
 Exact card used is : aliexpress.com/item/1005006949791537.html?
+One user reporter the round ones aren't working, so stick with the rectangulars !
   
 I tried to vibecode the app 6 months ago but I was stuck, somehow it ended in Roguemaster firmawre but I don't know if it was corrected ... ?   
 
