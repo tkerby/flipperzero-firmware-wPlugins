@@ -4,6 +4,7 @@
 #include <furi.h>
 #include <furi_hal.h>
 
+#include "include/ArduboyAudioState.h"
 #include "ArduboyTonesPitches.h"
 
 using uint24_t = uint32_t;
@@ -40,23 +41,11 @@ using uint24_t = uint32_t;
 #define pgm_read_word(addr) (*((const uint16_t*)(addr)))
 #endif
 
-typedef struct {
-    const uint16_t* pattern;
-} ArduboyToneSoundRequest;
-
-extern FuriMessageQueue* g_arduboy_sound_queue;
-extern FuriThread* g_arduboy_sound_thread;
-extern volatile bool g_arduboy_sound_thread_running;
-extern volatile bool g_arduboy_audio_enabled;
-extern volatile bool g_arduboy_tones_playing;
-extern volatile uint8_t g_arduboy_volume_mode;
-extern volatile bool g_arduboy_force_high;
-extern volatile bool g_arduboy_force_norm;
-
 static constexpr float kArduboyToneSoundVolumeNormal = 1.0f;
 static constexpr float kArduboyToneSoundVolumeHigh = 1.0f;
 static constexpr uint32_t kArduboyToneToneTickHz = ARDUBOY_TONES_TICK_HZ;
 
+#ifdef ARDULIB_USE_TONES
 static inline uint32_t ardulib_tone_ticks_to_ms(uint16_t ticks) {
     return (uint32_t)((ticks * 1000u + (kArduboyToneToneTickHz / 2)) / kArduboyToneToneTickHz);
 }
@@ -77,14 +66,13 @@ static inline uint16_t ardulib_tone_strip_volume(uint16_t freq_word) {
 }
 
 void ardulib_tone_init();
+void ardulib_tone_stop();
 void ardulib_tone_deinit();
 
-class ArduboyAudio;
 class ArduboyTones {
 public:
     explicit ArduboyTones(bool /*enabled*/) {}
     ArduboyTones() {}
-    void attachAudio(ArduboyAudio* /*audio*/) {}
     void begin();
     static void volumeMode(uint8_t mode);
     static bool playing();
@@ -115,3 +103,27 @@ private:
     uint16_t inline_patterns3_[8][7];
     uint8_t inline_idx3_ = 0;
 };
+#else
+class ArduboyTones {
+public:
+    explicit ArduboyTones(bool /*enabled*/) {}
+    ArduboyTones() {}
+    void begin() {}
+    static void volumeMode(uint8_t /*mode*/) {}
+    static bool playing() { return false; }
+    void tones(const uint16_t* /*pattern*/) {}
+    void tonesInRAM(uint16_t* /*pattern*/) {}
+    void noTone() {}
+    void tone(uint16_t /*frequency*/, uint16_t /*duration_ms*/) {}
+    void tone(uint16_t /*freq*/, uint16_t /*dur_ms*/, uint16_t /*freq2*/, uint16_t /*dur2_ms*/) {
+    }
+    void tone(
+        uint16_t /*f1*/,
+        uint16_t /*d1_ms*/,
+        uint16_t /*f2*/,
+        uint16_t /*d2_ms*/,
+        uint16_t /*f3*/,
+        uint16_t /*d3_ms*/) {}
+    static void nextTone() {}
+};
+#endif

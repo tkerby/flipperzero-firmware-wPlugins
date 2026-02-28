@@ -1,27 +1,22 @@
 #include "../Arduboy2.h"
 #include "../runtime.h"
 
-Arduboy2Base* arduboy_ptr = nullptr;
-Sprites* sprites_ptr = nullptr;
+// Глобальный объект arduboy - единственный экземпляр для всех игр
+Arduboy2Base arduboy;
+Sprites sprites;
 
-static Sprites ardulib_default_sprites;
+// ============================================================================
+// BeepPin1 - legacy compatibility (пустые заглушки)
+// ============================================================================
 
-Sprites* ardulib_default_sprites_get(void) {
-    return &ardulib_default_sprites;
-}
+void BeepPin1::begin() {}
+void BeepPin1::timer() {}
+uint16_t BeepPin1::freq(uint16_t f) const { return f; }
+void BeepPin1::tone(uint16_t, uint16_t) {}
 
-void BeepPin1::begin() {
-}
-
-void BeepPin1::timer() {
-}
-
-uint16_t BeepPin1::freq(uint16_t f) const {
-    return f;
-}
-
-void BeepPin1::tone(uint16_t, uint16_t) {
-}
+// ============================================================================
+// Sprites - API совместимости с оригинальным Arduboy2
+// ============================================================================
 
 Arduboy2Base* Sprites::ab_ = nullptr;
 
@@ -50,16 +45,8 @@ void Sprites::drawPlusMask(int16_t x, int16_t y, const uint8_t* plusmask, uint8_
 }
 
 // ============================================================================
-// Arduboy2Base Method Implementations
+// Arduboy2Base - начало
 // ============================================================================
-
-Arduboy2Base::InputContext* Arduboy2Base::inputContext() {
-    return &input_ctx_;
-}
-
-void Arduboy2Base::clearInputMask(uint8_t input_mask) {
-    FlipperInputClearMask(input_mask, &input_ctx_);
-}
 
 void Arduboy2Base::begin(
     uint8_t* screen_buffer,
@@ -67,28 +54,21 @@ void Arduboy2Base::begin(
     volatile uint8_t* input_press_latch,
     FuriMutex* game_mutex,
     volatile bool* exit_requested) {
+    // Прямая инициализация без InputContext/InputRuntime мостов
     sBuffer = screen_buffer;
     input_state_ = input_state;
     input_press_latch_ = input_press_latch;
-    input_ctx_.input_state = input_state_;
-    input_ctx_.runtime = &input_runtime_;
     game_mutex_ = game_mutex;
     exit_requested_ = exit_requested;
     external_timing_ = false;
     frame_count_ = 0;
     last_frame_ms_ = 0;
     resetInputState();
+    audio.begin();
 }
 
 void Arduboy2Base::begin() {
-}
-
-void Arduboy2Base::begin(
-    uint8_t* screen_buffer,
-    volatile uint8_t* input_state,
-    FuriMutex* game_mutex,
-    volatile bool* exit_requested) {
-    begin(screen_buffer, input_state, nullptr, game_mutex, exit_requested);
+    // Пустая версия для совместимости
 }
 
 void Arduboy2Base::exitToBootloader() {
@@ -109,58 +89,43 @@ bool Arduboy2Base::collide(Rect rect1, Rect rect2) {
 }
 
 void Arduboy2Base::FlipperInputCallback(const InputEvent* event, void* ctx_ptr) {
+    // Прямой доступ к arduboy.input_state_ и arduboy.input_press_latch_
+    // без InputContext/InputRuntime мостов
     if(!event || !ctx_ptr) return;
-    InputContext* ctx = (InputContext*)ctx_ptr;
-    volatile uint8_t* st = ctx->input_state;
-    InputRuntime* arduboy_ptr = ctx->runtime;
-    if(!st && !arduboy_ptr) return;
+    Arduboy2Base* arduboy_ptr = (Arduboy2Base*)ctx_ptr;
 
     const uint8_t bit = FlipperInputMaskFromKey_(event->key);
     if(!bit) return;
 
     if(event->type == InputTypePress) {
-        if(arduboy_ptr) {
-            (void)__atomic_fetch_or((uint8_t*)&arduboy_ptr->held, bit, __ATOMIC_RELAXED);
-            (void)__atomic_fetch_or((uint8_t*)&arduboy_ptr->press_latch, bit, __ATOMIC_RELAXED);
+        if(arduboy_ptr->input_press_latch_) {
+            (void)__atomic_fetch_or((uint8_t*)arduboy_ptr->input_press_latch_, bit, __ATOMIC_RELAXED);
         }
-        if(st) {
-            (void)__atomic_fetch_or((uint8_t*)st, bit, __ATOMIC_RELAXED);
+        if(arduboy_ptr->input_state_) {
+            (void)__atomic_fetch_or((uint8_t*)arduboy_ptr->input_state_, bit, __ATOMIC_RELAXED);
         }
     } else if(event->type == InputTypeRepeat) {
         // Repeat keeps the held state alive, but must not retrigger justPressed edges.
-        if(arduboy_ptr) {
-            (void)__atomic_fetch_or((uint8_t*)&arduboy_ptr->held, bit, __ATOMIC_RELAXED);
-        }
-        if(st) {
-            (void)__atomic_fetch_or((uint8_t*)st, bit, __ATOMIC_RELAXED);
+        if(arduboy_ptr->input_state_) {
+            (void)__atomic_fetch_or((uint8_t*)arduboy_ptr->input_state_, bit, __ATOMIC_RELAXED);
         }
     } else if(event->type == InputTypeRelease) {
-        if(arduboy_ptr) {
-            (void)__atomic_fetch_and((uint8_t*)&arduboy_ptr->held, (uint8_t)~bit, __ATOMIC_RELAXED);
-            (void)__atomic_fetch_or((uint8_t*)&arduboy_ptr->release_latch, bit, __ATOMIC_RELAXED);
-        }
-        if(st) {
-            (void)__atomic_fetch_and((uint8_t*)st, (uint8_t)~bit, __ATOMIC_RELAXED);
+        if(arduboy_ptr->input_state_) {
+            (void)__atomic_fetch_and((uint8_t*)arduboy_ptr->input_state_, (uint8_t)~bit, __ATOMIC_RELAXED);
         }
     }
 }
 
 void Arduboy2Base::FlipperInputClearMask(uint8_t input_mask, void* ctx_ptr) {
+    // Прямой доступ без InputContext
     if(!input_mask || !ctx_ptr) return;
-    InputContext* ctx = (InputContext*)ctx_ptr;
+    Arduboy2Base* arduboy_ptr = (Arduboy2Base*)ctx_ptr;
 
-    if(ctx->runtime) {
-        (void)__atomic_fetch_and(
-            (uint8_t*)&ctx->runtime->held, (uint8_t)~input_mask, __ATOMIC_RELAXED);
-        (void)__atomic_fetch_and(
-            (uint8_t*)&ctx->runtime->press_latch, (uint8_t)~input_mask, __ATOMIC_RELAXED);
-        (void)__atomic_fetch_and(
-            (uint8_t*)&ctx->runtime->release_latch, (uint8_t)~input_mask, __ATOMIC_RELAXED);
+    if(arduboy_ptr->input_press_latch_) {
+        (void)__atomic_fetch_and((uint8_t*)arduboy_ptr->input_press_latch_, (uint8_t)~input_mask, __ATOMIC_RELAXED);
     }
-
-    if(ctx->input_state) {
-        (void)__atomic_fetch_and(
-            (uint8_t*)ctx->input_state, (uint8_t)~input_mask, __ATOMIC_RELAXED);
+    if(arduboy_ptr->input_state_) {
+        (void)__atomic_fetch_and((uint8_t*)arduboy_ptr->input_state_, (uint8_t)~input_mask, __ATOMIC_RELAXED);
     }
 }
 
@@ -195,19 +160,20 @@ bool Arduboy2Base::everyXFrames(uint8_t n) const {
 }
 
 void Arduboy2Base::pollButtons() {
+    // Прямое чтение из input_state_ и input_press_latch_ без InputContext
     prev_buttons_ = cur_buttons_;
     uint8_t in = 0;
     uint8_t press = 0;
     uint8_t release = 0;
 
-    if(input_ctx_.runtime) {
-        in = __atomic_load_n((uint8_t*)&input_ctx_.runtime->held, __ATOMIC_RELAXED);
-        press = __atomic_exchange_n(
-            (uint8_t*)&input_ctx_.runtime->press_latch, 0, __ATOMIC_RELAXED);
-        release = __atomic_exchange_n(
-            (uint8_t*)&input_ctx_.runtime->release_latch, 0, __ATOMIC_RELAXED);
-    } else if(input_state_) {
+    // input_state_ хранит текущее состояние кнопок
+    // input_press_latch_ хранит нажатия с последнего сброса (edge detection)
+    if(input_state_) {
         in = __atomic_load_n((uint8_t*)input_state_, __ATOMIC_RELAXED);
+    }
+    if(input_press_latch_) {
+        // Сбрасываем latch после чтения для edge detection
+        press = __atomic_exchange_n((uint8_t*)input_press_latch_, 0, __ATOMIC_RELAXED);
     }
 
     cur_buttons_ = mapInputToArduboyMask_(in);
@@ -220,22 +186,10 @@ void Arduboy2Base::clearButtonState() {
     cur_buttons_ = 0;
     press_edges_ = 0;
     release_edges_ = 0;
-    if(input_ctx_.runtime) {
-        (void)__atomic_store_n(
-            (uint8_t*)&input_ctx_.runtime->press_latch, 0, __ATOMIC_RELAXED);
-        (void)__atomic_store_n(
-            (uint8_t*)&input_ctx_.runtime->release_latch, 0, __ATOMIC_RELAXED);
-    }
 }
 
 void Arduboy2Base::resetInputState() {
-    if(input_ctx_.runtime) {
-        (void)__atomic_store_n((uint8_t*)&input_ctx_.runtime->held, 0, __ATOMIC_RELAXED);
-        (void)__atomic_store_n(
-            (uint8_t*)&input_ctx_.runtime->press_latch, 0, __ATOMIC_RELAXED);
-        (void)__atomic_store_n(
-            (uint8_t*)&input_ctx_.runtime->release_latch, 0, __ATOMIC_RELAXED);
-    }
+    // Прямой сброс без InputContext
     if(input_state_) {
         (void)__atomic_store_n((uint8_t*)input_state_, 0, __ATOMIC_RELAXED);
     }
@@ -277,20 +231,17 @@ void Arduboy2Base::fillScreen(uint8_t color) {
 }
 
 void Arduboy2Base::display() {
+    rt_display(false);
 }
 
 void Arduboy2Base::display(bool clear) {
-    if(clear) pending_clear_after_present_ = true;
-}
-
-void Arduboy2Base::applyDeferredDisplayOps() {
-    if(pending_clear_after_present_) {
-        clear();
-        pending_clear_after_present_ = false;
-    }
+    rt_display(clear);
 }
 
 void Arduboy2Base::invert(bool invert) {
+    // Прямой вызов функции из runtime.cpp для инверсии экрана
+    // Объявление здесь для устранения зависимости от runtime.h
+    extern void arduboy_screen_invert(bool);
     arduboy_screen_invert(invert);
 }
 

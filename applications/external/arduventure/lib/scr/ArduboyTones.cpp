@@ -1,5 +1,6 @@
 #include "../ArduboyTones.h"
 
+#ifdef ARDULIB_USE_TONES
 static int32_t ardulib_tone_sound_thread_fn(void* /*ctx*/) {
     ArduboyToneSoundRequest req;
     const uint16_t* current_pattern = NULL;
@@ -130,19 +131,48 @@ static int32_t ardulib_tone_sound_thread_fn(void* /*ctx*/) {
 
 void ardulib_tone_init() {
     if(g_arduboy_sound_queue || g_arduboy_sound_thread) return;
-    g_arduboy_sound_queue = furi_message_queue_alloc(4, sizeof(ArduboyToneSoundRequest));
-    g_arduboy_sound_thread = furi_thread_alloc();
-    furi_thread_set_name(g_arduboy_sound_thread, "ArduboySound");
-    furi_thread_set_stack_size(g_arduboy_sound_thread, 1024);
-    furi_thread_set_priority(g_arduboy_sound_thread, FuriThreadPriorityNormal);
-    furi_thread_set_callback(g_arduboy_sound_thread, ardulib_tone_sound_thread_fn);
+    FuriMessageQueue* queue = furi_message_queue_alloc(4, sizeof(ArduboyToneSoundRequest));
+    if(!queue) return;
+
+    FuriThread* thread = furi_thread_alloc();
+    if(!thread) {
+        furi_message_queue_free(queue);
+        return;
+    }
+
+    g_arduboy_sound_queue = queue;
+    g_arduboy_sound_thread = thread;
+    furi_thread_set_name(thread, "ArduboySound");
+    furi_thread_set_stack_size(thread, 1024);
+    furi_thread_set_priority(thread, FuriThreadPriorityNormal);
+    furi_thread_set_callback(thread, ardulib_tone_sound_thread_fn);
     g_arduboy_sound_thread_running = true;
-    furi_thread_start(g_arduboy_sound_thread);
+    furi_thread_start(thread);
+}
+
+void ardulib_tone_stop() {
+    if(!g_arduboy_sound_queue) {
+        g_arduboy_tones_playing = false;
+        return;
+    }
+
+    ArduboyToneSoundRequest req = {.pattern = NULL};
+    if(furi_message_queue_put(g_arduboy_sound_queue, &req, 0) != FuriStatusOk) {
+        ArduboyToneSoundRequest dummy;
+        (void)furi_message_queue_get(g_arduboy_sound_queue, &dummy, 0);
+        (void)furi_message_queue_put(g_arduboy_sound_queue, &req, 0);
+    }
+    g_arduboy_tones_playing = false;
 }
 
 void ardulib_tone_deinit() {
-    if(!g_arduboy_sound_thread) return;
+    if(!g_arduboy_sound_thread) {
+        ardulib_tone_stop();
+        return;
+    }
+
     g_arduboy_sound_thread_running = false;
+    ardulib_tone_stop();
     furi_thread_join(g_arduboy_sound_thread);
     furi_thread_free(g_arduboy_sound_thread);
     g_arduboy_sound_thread = NULL;
@@ -154,8 +184,9 @@ void ardulib_tone_deinit() {
 }
 
 void ArduboyTones::begin() {
-    g_arduboy_audio_enabled = true;
-    ardulib_tone_init();
+    if(g_arduboy_audio_enabled) {
+        ardulib_tone_init();
+    }
 }
 
 void ArduboyTones::volumeMode(uint8_t mode) {
@@ -175,6 +206,9 @@ bool ArduboyTones::playing() {
 void ArduboyTones::tones(const uint16_t* pattern) {
     if(!g_arduboy_audio_enabled) return;
     if(!pattern) return;
+    if(!g_arduboy_sound_queue) {
+        ardulib_tone_init();
+    }
     if(!g_arduboy_sound_queue) return;
 
     ArduboyToneSoundRequest req = {.pattern = pattern};
@@ -191,13 +225,7 @@ void ArduboyTones::tonesInRAM(uint16_t* pattern) {
 }
 
 void ArduboyTones::noTone() {
-    if(!g_arduboy_sound_queue) {
-        g_arduboy_tones_playing = false;
-        return;
-    }
-    ArduboyToneSoundRequest req = {.pattern = NULL};
-    (void)furi_message_queue_put(g_arduboy_sound_queue, &req, 0);
-    g_arduboy_tones_playing = false;
+    ardulib_tone_stop();
 }
 
 void ArduboyTones::tone(uint16_t frequency, uint16_t duration_ms) {
@@ -260,3 +288,4 @@ void ArduboyTones::tone(uint16_t f1, uint16_t d1_ms, uint16_t f2, uint16_t d2_ms
 
     tones(inline_patterns3_[i]);
 }
+#endif

@@ -44,10 +44,6 @@ extern osc_t osc[4];
 
 void ATM_playroutine(void);
 
-void ardulib_atm_system_init(void);
-void ardulib_atm_system_deinit(void);
-void ardulib_atm_set_enabled(uint8_t en);
-
 class ATMsynth {
 public:
     ATMsynth() {}

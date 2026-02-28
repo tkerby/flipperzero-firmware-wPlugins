@@ -33,6 +33,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipWeather v1.3 (By jblanked)](https://github.com/jblanked/FlipWeather) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Added: [FlipDeck v3.0 (By ismail-oe)](https://github.com/ismail-oe/flipdeck)
 - Updated: [FlipLibrary v1.5 (By jblanked)](https://github.com/jblanked/FlipLibrary) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- Updated: [Arduventure v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperArduventure)
 
 <a name="release"></a>
 

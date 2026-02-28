@@ -41,6 +41,15 @@ without engine hook functions.
 #define ARDULIB_USE_ATM
 ```
 
+### `ARDULIB_USE_TONES`
+
+Enable `ArduboyTones` playback support. Without this flag the `ArduboyTones` API stays available as
+an empty compatibility stub and does not start the tone worker.
+
+```cpp
+#define ARDULIB_USE_TONES
+```
+
 ### `ARDULIB_SWAP_AB`
 
 Swap A and B button flags. When defined, `A_BUTTON` becomes `0x20` and `B_BUTTON` becomes `0x10`.

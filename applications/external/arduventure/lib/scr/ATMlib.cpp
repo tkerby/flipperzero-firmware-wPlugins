@@ -1,4 +1,6 @@
+#ifdef ARDULIB_USE_ATM
 #include "../ATMlib.h"
+#include "../include/ArduboyAudioState.h"
 
 #include <string.h>
 #include <furi.h>
@@ -122,7 +124,7 @@ static FuriThread* ardulib_atm_thread = NULL;
 static FuriMessageQueue* ardulib_atm_cmd_q = NULL;
 static void dma_isr(void* ctx);
 
-static uint8_t ardulib_atm_audio_enabled = 1;
+static uint8_t ardulib_atm_audio_enabled = 0;
 
 static inline uint8_t ardulib_atm_render_logical_sample_u8() {
     osc[2].phase = (uint16_t)(osc[2].phase + osc[2].freq);
@@ -736,9 +738,17 @@ ATMsynth ATM;
 
 void ATMsynth::systemInit() {
     if(ardulib_atm_cmd_q) return;
+    __atomic_store_n(&ardulib_atm_audio_enabled, g_arduboy_audio_enabled ? 1 : 0, __ATOMIC_RELAXED);
     ardulib_atm_cmd_q = furi_message_queue_alloc(8, sizeof(AtmCmd));
+    if(!ardulib_atm_cmd_q) return;
 
     ardulib_atm_thread = furi_thread_alloc();
+    if(!ardulib_atm_thread) {
+        furi_message_queue_free(ardulib_atm_cmd_q);
+        ardulib_atm_cmd_q = NULL;
+        return;
+    }
+
     furi_thread_set_name(ardulib_atm_thread, "ATMlib");
     furi_thread_set_stack_size(ardulib_atm_thread, 2048);
     furi_thread_set_priority(ardulib_atm_thread, FuriThreadPriorityHigh);
@@ -747,15 +757,16 @@ void ATMsynth::systemInit() {
 }
 
 void ATMsynth::systemDeinit() {
+    if(!ardulib_atm_cmd_q || !ardulib_atm_thread) {
+        ardulib_atm_running = false;
+        ardulib_atm_paused = false;
+        __atomic_store_n(&ardulib_atm_tick_pending, 0, __ATOMIC_RELAXED);
+        return;
+    }
+
     AtmCmd c{};
     c.type = AtmCmdQuit;
     furi_message_queue_put(ardulib_atm_cmd_q, &c, FuriWaitForever);
-    tim16_dma_stop();
-
-    if(furi_hal_speaker_is_mine()) {
-        furi_hal_speaker_release();
-    }
-
     __atomic_store_n(&ardulib_atm_tick_pending, 0, __ATOMIC_RELAXED);
     furi_thread_join(ardulib_atm_thread);
     furi_thread_free(ardulib_atm_thread);
@@ -800,13 +811,4 @@ void ATMsynth::unMuteChannel(uint8_t ch) {
 void ATMsynth::setEnabled(bool en) {
     __atomic_store_n(&ardulib_atm_audio_enabled, en ? 1 : 0, __ATOMIC_RELAXED);
 }
-
-void ardulib_atm_system_init(void) {
-    ATMsynth::systemInit();
-}
-void ardulib_atm_system_deinit(void) {
-    ATMsynth::systemDeinit();
-}
-void ardulib_atm_set_enabled(uint8_t en) {
-    ATMsynth::setEnabled(en != 0);
-}
+#endif
