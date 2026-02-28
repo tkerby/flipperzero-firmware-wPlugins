@@ -35,6 +35,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipLibrary v1.5 (By jblanked)](https://github.com/jblanked/FlipLibrary) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [Arduventure v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperArduventure)
 - Added: [BTHome v0.1 (By ghedo)](https://github.com/ghedo/flipper-bthome)
+- [ESP Flasher: Bump Marauder v1.11.0 Beta 2/27 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/nightly_cb1e490)
 
 <a name="release"></a>
 
