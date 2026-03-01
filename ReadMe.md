@@ -33,9 +33,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipWeather v1.3 (By jblanked)](https://github.com/jblanked/FlipWeather) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Added: [FlipDeck v3.0 (By ismail-oe)](https://github.com/ismail-oe/flipdeck)
 - Updated: [FlipLibrary v1.5 (By jblanked)](https://github.com/jblanked/FlipLibrary) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [Arduventure v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperArduventure)
 - Added: [BTHome v0.1 (By ghedo)](https://github.com/ghedo/flipper-bthome)
 - [ESP Flasher: Bump Marauder v1.11.0 Beta 2/27 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/nightly_cb1e490)
+- Updated: [Arduventure v2.0 (By apfxtech)](https://github.com/apfxtech/FlipperArduventure)
 
 <a name="release"></a>
 
@@ -269,7 +269,7 @@ $ ./fbt dolphin_ext
 - [Apple Grabber v0.1 (By d7d8)](https://github.com/d7d8/apple-grabber)
 - [Ardudrivin v1.0.3 (By apfxtech)](https://github.com/apfxtech/FlipperDrivin)
 - [ArduGolf v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperGolf)
-- [Arduventure v1.0 (By apfxtech)](https://github.com/apfxtech/FlipperArduventure)
+- [Arduventure v2.0 (By apfxtech)](https://github.com/apfxtech/FlipperArduventure)
 - [Arkanoid v1.2 (By gotnull)](https://github.com/gotnull/flipperzero-firmware-wPlugins)
 - [Asteroids v1.2 (By antirez)](https://github.com/antirez/flipper-asteroids)
 - [Banana v0.4 (By DrEverr)](https://github.com/DrEverr/FlipperApps)
