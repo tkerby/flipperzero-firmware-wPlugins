@@ -5,8 +5,6 @@ Escape the dungeons and free the princess!
 
 ![s1](package/distributable/Level1RunThroughX2.gif)
 
----
-
 ## Controls
 
 <kbd>🅐</kbd>
