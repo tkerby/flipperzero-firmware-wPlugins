@@ -53,5 +53,9 @@ Graphics: /clintonium-119, @vampirics
 Music: @ajsaucier (/raspberrybrain)  
 Flipper port: @apfxtech
 
+## Licensing
+This project uses mixed licensing and distribution terms.
+Read the root [LICENSE](LICENSE) in full before using.
+
 # Original
 **Press-Play-On-Tape** [Prince of Arabia](https://github.com/Press-Play-On-Tape/PrinceOfArabia.git)
