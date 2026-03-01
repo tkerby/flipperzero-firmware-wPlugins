@@ -155,10 +155,12 @@ bool start_screen_view_input_callback(InputEvent* event, void* context) {
     return consumed;
 }
 
-StartScreen* start_screen_alloc() {
+StartScreen* start_screen_alloc(void) {
     StartScreen* start_screen = (StartScreen*)malloc(sizeof(StartScreen));
+    if(start_screen == NULL) return NULL;
 
     start_screen->view = view_alloc();
+    if(start_screen->view == NULL) return NULL;
 
     start_screen->context = NULL;
     start_screen->input_callback = NULL;
@@ -193,8 +195,9 @@ void start_screen_free(StartScreen* instance) {
 
     instance->context = NULL;
     instance->input_callback = NULL;
-    view_free(instance->view);
-    free(instance);
+
+    if(instance->view) view_free(instance->view);
+    if(instance) free(instance);
 }
 
 void start_screen_reset(StartScreen* instance) {
