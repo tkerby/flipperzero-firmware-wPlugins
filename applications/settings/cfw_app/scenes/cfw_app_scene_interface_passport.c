@@ -179,7 +179,7 @@ static void cfw_app_scene_interface_passport_background_changed(VariableItem* it
     uint8_t index = variable_item_get_current_value_index(item);
 
     variable_item_set_current_value_text(item, background_text[index]);
-    app->passport.background = index;
+    app->passport.background = background_value[index];
 }
 
 static void cfw_app_scene_interface_passport_image_changed(VariableItem* item) {
