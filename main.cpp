@@ -78,6 +78,63 @@ void renderTorches(uint8_t x1, uint8_t x2, uint8_t y);
 #include "game/PrinceOfArabia_Title.cpp"
 #include "game/PrinceOfArabia_Utils.cpp"
 
+namespace {
+
+constexpr uint32_t ExitHoldMs = 500;
+
+bool canExitFromCurrentState(GameState gameState) {
+    switch(gameState) {
+    case GameState::SplashScreen_Init:
+    case GameState::SplashScreen:
+    case GameState::Title_Init:
+    case GameState::Title:
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+bool handleExitRequest() {
+    static bool exitButtonHeld = false;
+    static uint32_t exitPressStartedAt = 0;
+    static GameState lastGameState = GameState::SplashScreen_Init;
+
+    const GameState gameState = gamePlay.gameState;
+
+    if(gameState != lastGameState) {
+        lastGameState = gameState;
+        exitButtonHeld = false;
+        exitPressStartedAt = 0;
+    }
+
+    if(!canExitFromCurrentState(gameState) || !arduboy.pressed(B_BUTTON)) {
+        exitButtonHeld = false;
+        exitPressStartedAt = 0;
+        return false;
+    }
+
+    const uint32_t now = millis();
+
+    if(!exitButtonHeld) {
+        exitButtonHeld = true;
+        exitPressStartedAt = now;
+        return false;
+    }
+
+    if((uint32_t)(now - exitPressStartedAt) < ExitHoldMs) {
+        return false;
+    }
+
+    exitButtonHeld = false;
+    exitPressStartedAt = 0;
+    arduboy.exitToBootloader();
+
+    return true;
+}
+
+} // namespace
+
 void setup() {
     arduboy.setFrameRate(Constants::FrameRate);
 
@@ -109,6 +166,7 @@ void loop() {
     if(!arduboy.nextFrame()) return;
     arduboy.pollButtons();
     bindRuntimeStacks();
+    if(handleExitRequest()) return;
 
 #ifndef SAVE_MEMORY_SOUND
     sound.fillBufferFromFX();
