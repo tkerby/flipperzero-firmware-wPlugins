@@ -32,7 +32,7 @@ class FadeEffects {
 
         }
 
-        void draw(Arduboy2Ext & arduboy) const {
+        void draw(Arduboy2Base & arduboy) const {
 
         #ifdef ARDUINO_ARCH_AVR
 

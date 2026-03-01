@@ -2,36 +2,45 @@
 
 #include <furi.h>
 #include <furi_hal.h>
+#include "include/ArduboyAudioState.h"
+#ifdef ARDULIB_USE_TONES
 #include "ArduboyTones.h"
+#endif
+#ifdef ARDULIB_USE_ATM
+#include "ATMlib.h"
+#endif
 
 class ArduboyAudio {
 public:
     void begin() {
-        const bool system_enabled = systemAudioEnabled();
-
-        if(system_enabled) {
-            on();
-        } else {
+        if(furi_hal_rtc_is_flag_set(FuriHalRtcFlagStealthMode)) {
             off();
+        } else {
+            on();
         }
     }
 
     void on() {
-        bool was_enabled = g_arduboy_audio_enabled;
         g_arduboy_audio_enabled = true;
-        if(!was_enabled) {
-            arduboy_tone_sound_system_init();
-        }
+#ifdef ARDULIB_USE_TONES
+        ardulib_tone_init();
+#endif
+#ifdef ARDULIB_USE_ATM
+        ATMsynth::systemInit();
+        ATMsynth::setEnabled(true);
+#endif
     }
 
     void off() {
-        bool was_enabled = g_arduboy_audio_enabled;
         g_arduboy_audio_enabled = false;
-        if(was_enabled) {
-            ArduboyToneSoundRequest req = {.pattern = NULL};
-            if(g_arduboy_sound_queue) (void)furi_message_queue_put(g_arduboy_sound_queue, &req, 0);
-            arduboy_tone_sound_system_deinit();
-        }
+#ifdef ARDULIB_USE_TONES
+        ardulib_tone_stop();
+        ardulib_tone_deinit();
+#endif
+#ifdef ARDULIB_USE_ATM
+        ATMsynth::setEnabled(false);
+        ATMsynth::systemDeinit();
+#endif
     }
 
     static bool enabled() {
@@ -39,20 +48,13 @@ public:
     }
 
     void toggle() {
-        if(enabled()) {
+        if(g_arduboy_audio_enabled) {
             off();
         } else {
             on();
         }
     }
 
-    bool systemAudioEnabled() const {
-        // Keep compatibility with public SDK headers used by ufbt/CI:
-        // notification settings internals are not part of public API.
-        return !furi_hal_rtc_is_flag_set(FuriHalRtcFlagStealthMode);
-    }
-
     void saveOnOff() {
-        // Audio state is driven by current OS/session settings.
     }
 };

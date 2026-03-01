@@ -1,3 +1,4 @@
+#ifdef ARDULIB_USE_FX
 #include "lib/ArduboyFX.h"
 #include "src/utils/Arduboy2Ext.h"
 
@@ -976,3 +977,5 @@ void FX::enableOLED() {
 
 void FX::disableOLED() {
 }
+
+#endif // ARDULIB_USE_FX
