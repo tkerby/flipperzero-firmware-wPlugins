@@ -15,3 +15,9 @@ Escape the treacherous dungeons, battle fierce enemies, and rescue the imprisone
 Face off against palace guards, undead skeletons, and mysterious shadowy figures that lurk in the forbidden corridors.
 
 Can you master all 13 levels and free the princess?
+
+Concept   Jordan Mechner
+Code      @filmote @Mr.Blinky @acedent
+Graphics  @clintonium-119 @vampirics
+Music     @raspberrybrain
+Ported.   @apfxtech
