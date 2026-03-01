@@ -41,6 +41,7 @@ typedef struct {
     volatile bool input_cb_enabled;
     volatile uint32_t input_cb_inflight;
     volatile bool screen_inverted;
+    volatile bool pending_clear;
 } ArduboyRuntimeState;
 
 ArduboyRuntimeState rt_state;
@@ -156,24 +157,31 @@ void rt_framebuffer_commit_callback(
             data[i] = (uint8_t)(src[i] ^ 0xFF);
         }
     }
+
+    // Clear screen buffer after commit if needed (for non-view_port mode with clear)
+    if(state->pending_clear) {
+        memset(state->screen_buffer, 0x00, RuntimeBufferSize);
+        state->pending_clear = false;
+    }
 }
 
 void rt_display(bool clear) {
     if(!rt_state_initialized) return;
     ArduboyRuntimeState* state = &rt_state;
+
+    // Set pending clear flag - actual clearing will happen in the display callback
+    // after the buffer is sent to the display
+    if(clear) {
+        state->pending_clear = true;
+    }
+
 #ifdef ARDULIB_USE_VIEW_PORT
     if(state->view_port) {
         view_port_update(state->view_port);
     }
-    if(clear) {
-        arduboy.clear();
-    }
 #else
     if(state->canvas) {
         canvas_commit(state->canvas);
-    }
-    if(clear) {
-        arduboy.clear();
     }
 #endif
 }
@@ -205,6 +213,12 @@ void rt_view_port_draw_callback(Canvas* canvas, void* context) {
             data[i] = (uint8_t)(src[i] ^ 0xFF);
         }
     }
+
+    // Clear screen buffer after commit if needed (for view_port mode with clear)
+    if(state->pending_clear) {
+        memset(state->screen_buffer, 0x00, RuntimeBufferSize);
+        state->pending_clear = false;
+    }
 }
 #endif
 
@@ -220,6 +234,7 @@ extern "C" int32_t arduboy_app(void* p) {
     state->input_cb_enabled = true;
     state->input_cb_inflight = 0;
     state->screen_inverted = false;
+    state->pending_clear = false;
 
     if(!state->game_mutex) {
         if(state->game_mutex) furi_mutex_free(state->game_mutex);

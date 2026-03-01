@@ -173,7 +173,6 @@ void loop() {
 #endif
 
     switch(gamePlay.gameState) {
-
 #ifndef SAVE_MEMORY_PPOT
     case GameState::SplashScreen_Init:
 
