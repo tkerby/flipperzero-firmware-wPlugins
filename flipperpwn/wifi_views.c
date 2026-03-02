@@ -169,9 +169,10 @@ static void fpwn_wifi_scan_draw(Canvas* canvas, void* model_ptr) {
             fpwn_draw_lock(canvas, 13, ry);
         }
 
-        /* SSID — truncated to fit, starting x=20 */
-        char ssid_buf[17]; /* 16 visible chars + NUL */
-        snprintf(ssid_buf, sizeof(ssid_buf), "%s", m->aps[idx].ssid);
+        /* SSID — truncated to 16 visible chars, starting x=20 */
+        char ssid_buf[17];
+        strncpy(ssid_buf, m->aps[idx].ssid, sizeof(ssid_buf) - 1);
+        ssid_buf[sizeof(ssid_buf) - 1] = '\0';
         canvas_draw_str(canvas, 20, ry + 7, ssid_buf);
 
         /* Channel + RSSI right-aligned — "ch6 -72" */
