@@ -109,6 +109,7 @@ void boilerplate_app_free(Boilerplate* app) {
     view_dispatcher_remove_view(app->view_dispatcher, BoilerplateViewIdScene3);
     view_dispatcher_remove_view(app->view_dispatcher, BoilerplateViewIdSettings);
     view_dispatcher_remove_view(app->view_dispatcher, BoilerplateViewIdStartscreen);
+    button_menu_free(app->button_menu);
     submenu_free(app->submenu);
     variable_item_list_free(app->variable_item_list);
     boilerplate_scene_1_free(app->boilerplate_scene_1);

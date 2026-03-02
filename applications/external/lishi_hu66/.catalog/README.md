@@ -2,11 +2,12 @@
 An app for saving values obtained from the **Lishi tool**, which is used for lock decoding. This app allows users to input, view, and store values from the decoding process for easy reference and organization.
 
 ## How It Works
-The Lishi tool is used to decode locks by identifying specific pin. This app provides a simple interface for storing these values in eight different columns, allowing the user to manually input the decoding values.
+The Lishi tool is used to decode locks by identifying specific pin depth. This app provides a simple interface for storing these values, allowing the user to manually input the decoding values.
 
 ## Features
-- Key Types: The app supports various types of LISHI keys, including HU66, HU92, HU83, K5, TOY48, and FO38.
+- Key Types: The app supports various types of LISHI keys.
 - Input values directly from the Lishi tool into the app.
+- Vehicle Information: Each protocol shows compatible car model
 - Save values for future reference.
 - Simple navigation between menu.
 - Auto-save functionality to preserve data upon exit.
@@ -18,6 +19,7 @@ The Lishi tool is used to decode locks by identifying specific pin. This app pro
 - **Back**: Exit the app, saving the values automatically.
 
 ## Version history
+- 0.3 - Added vehicle information, redesigned About section, more types of lishi keys
 - 0.2 - Changed Name, Added Menu, Added different types of lishi keys
 - 0.1 - Initial release 
 

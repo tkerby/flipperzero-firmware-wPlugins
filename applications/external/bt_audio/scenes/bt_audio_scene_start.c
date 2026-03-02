@@ -238,7 +238,7 @@ bool bt_audio_scene_start_on_event(void* context, SceneManagerEvent event) {
             furi_string_printf(
                 app->text_box_store,
                 "BT Audio v%s\n"
-                "Created by Father Divine\n\n"
+                "Created by FatherDivine\n\n"
                 "An ESP32 Bluetooth Audio\n"
                 "Controller over UART\n"
                 "(and other methods WIP)\n\n"

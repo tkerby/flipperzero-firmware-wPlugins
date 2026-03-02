@@ -23,24 +23,29 @@ static bool miband_nfc_save_magic_dump(MiBandNfcApp* app) {
 
     mf_classic_copy(magic_data, app->mf_classic_data);
     size_t total_sectors = mf_classic_get_total_sectors_num(magic_data->type);
-    FuriString* progress = furi_string_alloc();
+    // FIX: Use app->temp_text_buffer instead of local FuriString.
+    // popup_set_text stores pointer only - local string buffer could be
+    // invalidated between renders.
     for(size_t sector_idx = 0; sector_idx < total_sectors; sector_idx++) {
-        furi_string_reset(progress);
         furi_string_printf(
-            progress, "Converting keys\nSector %zu/%zu\n\n", sector_idx + 1, total_sectors);
+            app->temp_text_buffer,
+            "Converting keys\nSector %zu/%zu\n\n",
+            sector_idx + 1,
+            total_sectors);
 
         uint32_t percent = ((sector_idx + 1) * 100) / total_sectors;
-        furi_string_cat_str(progress, "[");
+        furi_string_cat_str(app->temp_text_buffer, "[");
         for(uint8_t i = 0; i < 20; i++) {
             if(i < (percent / 5)) {
-                furi_string_cat_str(progress, "=");
+                furi_string_cat_str(app->temp_text_buffer, "=");
             } else {
-                furi_string_cat_str(progress, " ");
+                furi_string_cat_str(app->temp_text_buffer, " ");
             }
         }
-        furi_string_cat_printf(progress, "]\n%lu%%", percent);
+        furi_string_cat_printf(app->temp_text_buffer, "]\n%lu%%", percent);
 
-        popup_set_text(app->popup, furi_string_get_cstr(progress), 64, 22, AlignCenter, AlignTop);
+        popup_set_text(
+            app->popup, furi_string_get_cstr(app->temp_text_buffer), 64, 22, AlignCenter, AlignTop);
 
         furi_delay_ms(20);
 
@@ -63,7 +68,6 @@ static bool miband_nfc_save_magic_dump(MiBandNfcApp* app) {
         FURI_BIT_SET(magic_data->key_a_mask, sector_idx);
         FURI_BIT_SET(magic_data->key_b_mask, sector_idx);
     }
-    furi_string_free(progress);
 
     popup_set_text(app->popup, "Saving file...", 64, 30, AlignCenter, AlignTop);
     furi_delay_ms(100);
@@ -98,7 +102,8 @@ void miband_nfc_scene_magic_saver_on_enter(void* context) {
     MiBandNfcApp* app = context;
 
     if(!app->is_valid_nfc_data) {
-        scene_manager_previous_scene(app->scene_manager);
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MiBandNfcSceneMainMenu);
         return;
     }
     if(app->logger) {
@@ -124,10 +129,9 @@ void miband_nfc_scene_magic_saver_on_enter(void* context) {
             miband_logger_log(app->logger, LogLevelInfo, "Magic dump saved with _magic suffix");
         }
         notification_message(app->notifications, &sequence_success);
-        popup_set_header(app->popup, "Success!", 64, 4, AlignCenter, AlignTop);
-        popup_set_text(
-            app->popup, "Magic dump saved\nwith _magic suffix", 64, 22, AlignCenter, AlignTop);
-        popup_set_icon(app->popup, 32, 28, &I_DolphinSuccess_91x55);
+        popup_set_header(app->popup, "Success!", 2, 2, AlignLeft, AlignTop);
+        popup_set_text(app->popup, "Magic dump\nsaved OK!", 2, 16, AlignLeft, AlignTop);
+        popup_set_icon(app->popup, 68, 6, &I_DolphinSuccess_91x55);
         furi_delay_ms(2000);
     } else {
         if(app->logger) {
@@ -136,7 +140,6 @@ void miband_nfc_scene_magic_saver_on_enter(void* context) {
         notification_message(app->notifications, &sequence_error);
         popup_set_header(app->popup, "Failed", 64, 4, AlignCenter, AlignTop);
         popup_set_text(app->popup, "Could not save file", 64, 22, AlignCenter, AlignTop);
-        popup_set_icon(app->popup, 40, 28, &I_WarningDolphinFlip_45x42);
         furi_delay_ms(2000);
     }
 

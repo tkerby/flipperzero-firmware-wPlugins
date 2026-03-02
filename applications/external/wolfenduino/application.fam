@@ -5,6 +5,7 @@ App(
     entry_point="arduboy_app",
     stack_size=8 * 1024,
     fap_icon="Wolfenduino.png",
+    fap_file_assets="assets",
     fap_category="Games",
     fap_author="apfxtech",
     fap_weburl="https://github.com/apfxtech/FlipperWolfenstein",

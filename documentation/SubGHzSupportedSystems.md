@@ -20,6 +20,7 @@ That list is only for default SubGHz app, apps like *Weather Station* have their
 - AN-Motors (Alutech) AT4 `433.92MHz` `AM650` (64 bits, Pseudo-Dynamic, KeeLoq based)
 - Ansonic `433MHz` `FM` (12 bits, Static)
 - BETT `433.92MHz` `AM650` (18 bits, Static)
+- Beninca ARC (TOGO2VA) `433.92MHz` `AM650` (128 bits, Dynamic AES) (button code `0` emulates `hidden button` option on the remote)
 - BFT Mitto `433.92MHz` `AM650` (64 bits, Dynamic, KeeLoq based with Seed)
 - CAME Atomo `433.92MHz, 868MHz` `AM650` (62 bits, Dynamic)
 - CAME TWEE `433.92MHz` `AM650` (54 bits, Static)
@@ -45,7 +46,7 @@ That list is only for default SubGHz app, apps like *Weather Station* have their
 - Nice One `433.92MHz` `AM650` (72 bits, Dynamic)
 - Revers RB2 (Реверс РБ-2 (М)) `433.92MHz` `AM650` (64 bits, Static)
 - Roger `433.92MHz` `AM650` (28 bits, Static)
-- V2 Phoenix (Phox) `433.92MHz` `AM650` (52 bits, Dynamic)
+- V2 Phoenix (Phox) `433.92MHz` `AM650` (52 bits, Dynamic) (receivers have option to enable Static mode, making them ignore rolling part of the key)
 - Marantec `433.92MHz, 868MHz` `AM650` (49 bits, Static)
 - Marantec24 `868MHz` `AM650` (24 bits, Static)
 - Somfy Keytis `433.92MHz, 868MHz` `AM650` (80 bits, Dynamic)
@@ -63,15 +64,13 @@ That list is only for default SubGHz app, apps like *Weather Station* have their
 - Legrand `AM650` (18 bits, Static) - Doorbells
 - Somfy Telis `433.92MHz` `AM650` (56 bits, Dynamic)
 - Feron `433.92MHz` `AM650` (32 bits, Static) - RGB LED remotes, other.
-- Honeywell `AM650` (64 bits, Dynamic) - Alarm, Sensor
-- Honeywell WDB `AM650` (48 bits, Dynamic) - Doorbell
+- Honeywell `AM650` (64 bits, Static) - Alarm, Sensor
+- Honeywell WDB `AM650` (48 bits, Static) - Doorbell
 - Magellan `433.92MHz` `AM650` (32 bits, Static) - Sensor, alarm
+- Jarolift `433.92MHz` `AM650` (72 bits, Dynamic, KeeLoq based) - Automatic roller shutters
 
 ### Alarms
 - Hollarm `433.92MHz` `AM650` (42 bits, Static) - Bike alarms
-- Scher Khan `433.92MHz` `AM650` (35-82 bits, Dynamic) - Russian external car alarm system (Decode and display only), 200x year
-- Kia `433/434MHz` `FSK476` (61 bits, Dynamic) - Car alarm system (Decode and display only)
-- Star Line `433.92MHz` `AM650` (KeeLoq based, 64 bits) - Russian external car alarm system, 200x year
 - GangQi `433.92MHz` `AM650` (34 bits, Static) - Bike alarms
 
 
@@ -81,13 +80,14 @@ That list is only for default SubGHz app, apps like *Weather Station* have their
 - Princeton (PT2262, PT****) `315MHz, 433.92MHz, Any other frequency` `AM650` (24 bits, Static)
 - SMC5326 `315MHz, 433.92MHz, Any other frequency` `AM650` (25 bits, Static)
 - Hay21 `433.92MHz` `AM650` (21 bits, Dynamic)
+- Treadmill37 (QH-433) `433.92MHz` `AM650` (37 bits, Static)
 
 ---
 
 ## KeeLoq Rolling Code Supported Manufacturers list
 
 KeeLoq is a rolling code encryption system used by many garage door openers and gate systems. 
-The following manufacturers have KeeLoq support in RM firmware (thanks to Unleashed):
+The following manufacturers have KeeLoq support in RM Firmware (thanks to Unleashed):
 
 *Default value for encryption type "learning" is `simple` and `10bits` for serial part in Hop*
 
@@ -98,7 +98,7 @@ The following manufacturers have KeeLoq support in RM firmware (thanks to Unleas
 - Aprimatic - `433.92MHz` `AM650` (KeeLoq, 64 bits) (12bit serial number art in Hop + 2bit "parity" in front of it replacing first 2 bits of serial)
 - Beninca - `433.92MHz, 868MHz` `AM650` (KeeLoq, 64 bits) (no serial part in Hop - magic XOR)
 - CAME Space - `433.92MHz` `AM650` (KeeLoq, 64 bits) (12bit serial part in Hop - simple learning)
-- Cardin S449 - `433.92MHz` `FSK12K` (KeeLoq, 64 bits) (12bit (original remotes) or 10bit (chinese remotes) serial part in Hop - normal learning)
+- Cardin S449 - `433.92MHz` `FSK12K` (KeeLoq, 64 bits) (12bit (original remotes) or 10bit (chinese remotes) serial part in Hop - normal learning) (receiver checks for 10bit only (unverified))
 - Centurion - `433.92MHz` `AM650` (KeeLoq, 64 bits) (no serial in Hop, uses fixed value 0x1CE - normal learning)
 - Comunello - `433.92MHz, 868MHz` `AM650` (KeeLoq, 64 bits) (normal learning)
 - DEA Mio - `433.92MHz` `AM650` (KeeLoq, 64 bits) (modified serial in Hop, uses last 3 digits modifying first one (example - 419 -> C19) - simple learning)
@@ -122,9 +122,9 @@ The following manufacturers have KeeLoq support in RM firmware (thanks to Unleas
 - Nice Smilo - `433.92MHz` `AM650` (KeeLoq, 64 bits) (8bit serial part in Hop - simple learning)
 - Normstahl - `433.92MHz` `AM650` (KeeLoq, 64 bits)
 - Novoferm - `433.92MHz` `AM650` (KeeLoq, 64 bits)
-- Sommer `434.42MHz, 868.80MHz` `FSK12K (or FSK476)` (KeeLoq, 64 bits) (normal learning)
+- Sommer `434.42MHz, 868.80MHz` `FSK12K (or FSK476)` (KeeLoq, 64 bits) (normal learning) (TX03-868-4, Pearl, and maybe other models are supported (SOMloq))
 - Steelmate - `433.92MHz` `AM650` (KeeLoq, 64 bits) (12bit serial part in Hop - normal learning)
-- Stilmatic - `433.92MHz` `AM650` (KeeLoq, 64 bits) (normal learning)
+- Stilmatic (R-Tech) - `433.92MHz` `AM650` (KeeLoq, 64 bits) (12bit serial part in Hop - normal learning) (receiver checks for 10bit only (unverified))
 
 ### Alarms, unknown origin, etc.
 - APS-1100/APS-2550 (KeeLoq, 64 bits)

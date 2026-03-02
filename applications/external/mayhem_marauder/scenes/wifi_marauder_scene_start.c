@@ -20,7 +20,7 @@ typedef enum {
 #define SHOW_STOPSCAN_TIP (true)
 #define NO_TIP            (false)
 
-#define MAX_OPTIONS (13)
+#define MAX_OPTIONS (16)
 typedef struct {
     const char* item_string;
     const char* options_menu[MAX_OPTIONS];
@@ -77,18 +77,20 @@ const WifiMarauderItem items[NUM_MENU_ITEMS] = {
       "rickroll",
       "badmsg",
       "sleep",
+      "sae flood",
       "sour apple",
       "swiftpair spam",
       "samsung spam",
       "google spam",
       "flipper spam",
       "bt spam all"},
-     11,
+     13,
      {"attack -t deauth",
       "attack -t probe",
       "attack -t rickroll",
       "attack -t badmsg",
       "attack -t sleep",
+      "attack -t sae",
       "blespam -t apple",
       "blespam -t windows",
       "blespam -t samsung",
@@ -100,9 +102,9 @@ const WifiMarauderItem items[NUM_MENU_ITEMS] = {
      SHOW_STOPSCAN_TIP},
     {"Spoof Airtag", {""}, 1, {"spoofat -t"}, INPUT_ARGS, FOCUS_CONSOLE_END, NO_TIP},
     {"Wardrive",
-     {"ap", "station", "bt", "bt cont"},
+     {"ap", "station", "flock", "bt"},
      4,
-     {"wardrive", "wardrive -s", "btwardrive", "btwardrive -c"},
+     {"wardrive", "wardrive -s", "wardrive -f", "btwardrive"},
      NO_ARGS,
      FOCUS_CONSOLE_END,
      SHOW_STOPSCAN_TIP},
@@ -156,10 +158,13 @@ const WifiMarauderItem items[NUM_MENU_ITEMS] = {
       "skim",
       "airtag",
       "flipper",
+      "flock",
+      "mactrack",
       "packetcount",
       "pineapple",
-      "multissid"},
-     13,
+      "multissid",
+      "sae"},
+     16,
      {"sniffbeacon",
       "sniffdeauth",
       "sniffpmkid",
@@ -172,7 +177,8 @@ const WifiMarauderItem items[NUM_MENU_ITEMS] = {
       "sniffbt -t flipper",
       "packetcount",
       "sniffpinescan",
-      "sniffmultissid"},
+      "sniffmultissid",
+      "sniffsae"},
      NO_ARGS,
      FOCUS_CONSOLE_END,
      SHOW_STOPSCAN_TIP},

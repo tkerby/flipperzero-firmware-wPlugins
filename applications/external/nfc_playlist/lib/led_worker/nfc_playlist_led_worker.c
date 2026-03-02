@@ -1,4 +1,4 @@
-#include "nfc_playlist_led_worker.h"
+#include "nfc_playlist_led_worker_i.h"
 
 void nfc_playlist_led_worker_start(NotificationApp* notification_app, NfcPlaylistLedState state) {
    switch(state) {

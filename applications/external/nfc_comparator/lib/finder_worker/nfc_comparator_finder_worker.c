@@ -1,4 +1,4 @@
-#include "nfc_comparator_finder_worker.h"
+#include "nfc_comparator_finder_worker_i.h"
 
 static void nfc_comparator_finder_worker_scanner_callback(NfcScannerEvent event, void* context) {
    furi_assert(context);
@@ -53,7 +53,7 @@ static int32_t nfc_comparator_finder_worker_task(void* context) {
       }
       case NfcComparatorFinderWorkerState_Finding: {
          nfc_comparator_finder_worker_compare_cards(
-            worker->compare_checks, worker->scanned_nfc_card, false, worker->settings, NULL);
+            worker->compare_checks, worker->scanned_nfc_card, worker->settings, NULL);
          worker->state = NfcComparatorFinderWorkerState_Stopped;
          break;
       }
@@ -81,7 +81,7 @@ NfcComparatorFinderWorker* nfc_comparator_finder_worker_alloc(
    worker->thread = furi_thread_alloc();
    furi_thread_set_name(worker->thread, "NfcComparatorFinderWorker");
    furi_thread_set_context(worker->thread, worker);
-   furi_thread_set_stack_size(worker->thread, 1024);
+   furi_thread_set_stack_size(worker->thread, 4096);
    furi_thread_set_callback(worker->thread, nfc_comparator_finder_worker_task);
 
    if(!worker->thread) {
@@ -142,12 +142,12 @@ NfcComparatorFinderWorkerState*
 void nfc_comparator_finder_worker_compare_cards(
    NfcComparatorCompareChecks* compare_checks,
    NfcDevice* nfc_card_1,
-   bool check_data,
    NfcComparatorFinderWorkerSettings* settings,
    FuriString* nfc_card_path) {
    furi_assert(nfc_card_1);
    DirWalk* dir_walk = dir_walk_alloc(furi_record_open(RECORD_STORAGE));
    NfcDevice* nfc_card_2 = nfc_device_alloc();
+   NfcComparatorCompareChecks* tmp_compare_checks = nfc_comparator_compare_checks_alloc();
 
    if(dir_walk_open(dir_walk, "/ext/nfc")) {
       FuriString* ext = furi_string_alloc();
@@ -155,25 +155,45 @@ void nfc_comparator_finder_worker_compare_cards(
       dir_walk_set_recursive(dir_walk, settings->recursive);
 
       while(dir_walk_read(dir_walk, compare_checks->nfc_card_path, NULL) == DirWalkOK) {
-         if(nfc_card_path != NULL) {
-            if(furi_string_cmpi(compare_checks->nfc_card_path, nfc_card_path) == 0) {
-               continue;
-            }
+         if(nfc_card_path && furi_string_cmpi(compare_checks->nfc_card_path, nfc_card_path) == 0) {
+            NfcCompareChecksType type = compare_checks->compare_type;
+            nfc_comparator_compare_checks_reset(compare_checks);
+            compare_checks->compare_type = type;
+            continue;
          }
 
          path_extract_ext_str(compare_checks->nfc_card_path, ext);
 
          if(furi_string_cmpi_str(ext, ".nfc") == 0) {
             if(nfc_device_load(nfc_card_2, furi_string_get_cstr(compare_checks->nfc_card_path))) {
-               nfc_comparator_compare_checks_compare_cards(
-                  compare_checks, nfc_card_1, nfc_card_2, check_data);
+               nfc_comparator_compare_checks_compare_cards(compare_checks, nfc_card_1, nfc_card_2);
 
-               if(compare_checks->uid && compare_checks->uid_length && compare_checks->protocol) {
-                  break;
+               if(compare_checks->results.uid && compare_checks->results.uid_length &&
+                  compare_checks->results.protocol) {
+                  if(compare_checks->diff.count == 0) {
+                     break;
+                  } else if(
+                     furi_string_empty(tmp_compare_checks->nfc_card_path) ||
+                     (tmp_compare_checks->diff.count > compare_checks->diff.count)) {
+                     nfc_comparator_compare_checks_copy(tmp_compare_checks, compare_checks);
+                  }
+               } else {
+                  NfcCompareChecksType type = compare_checks->compare_type;
+                  nfc_comparator_compare_checks_reset(compare_checks);
+                  compare_checks->compare_type = type;
                }
             }
          }
       }
+
+      if(!furi_string_empty(tmp_compare_checks->nfc_card_path) &&
+         (furi_string_empty(compare_checks->nfc_card_path) ||
+          tmp_compare_checks->diff.count < compare_checks->diff.count)) {
+         nfc_comparator_compare_checks_copy(compare_checks, tmp_compare_checks);
+      }
+
+      nfc_comparator_compare_checks_free(tmp_compare_checks);
+
       dir_walk_close(dir_walk);
       furi_string_free(ext);
       dir_walk_free(dir_walk);

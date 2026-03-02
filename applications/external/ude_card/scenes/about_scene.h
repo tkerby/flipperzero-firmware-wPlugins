@@ -2,7 +2,7 @@
 This file is part of UDECard App.
 A Flipper Zero application to analyse student ID cards from the University of Duisburg-Essen (Intercard)
 
-Copyright (C) 2025 Alexander Hahn
+Copyright (C) 2025-2026 Alexander Hahn
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,12 +23,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <gui/scene_manager.h>
 
-#define VERSION FAP_VERSION
+#define VERSION "v" FAP_VERSION
 #define ABOUT_TEXT                                                          \
-    "UDECard Parser v" VERSION "\n"                                         \
+    "UDECard Parser " VERSION "\n"                                          \
     "by Alexander Hahn\n(github.com/hahnworks)\n\n"                         \
                                                                             \
-    "Copyright (C) 2025\n"                                                  \
+    "Copyright (C) 2025-2026\n"                                             \
     "Alexander Hahn\n\n"                                                    \
     "This program is free software: you can redistribute it and/or modify " \
     "it under the terms of the GNU General Public License as published by " \

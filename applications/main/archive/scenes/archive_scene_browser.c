@@ -45,6 +45,8 @@ const char* archive_get_flipper_app_name(ArchiveFileTypeEnum file_type) {
         return "UpdaterApp";
     case ArchiveFileTypeDiskImage:
         return EXT_PATH("apps/USB/mass_storage.fap");
+    case ArchiveFileTypeProtoPirate:
+        return EXT_PATH("apps/Sub-GHz/proto_pirate.fap");
     case ArchiveFileTypeJS:
         return EXT_PATH("apps/Main/js_app.fap");
     default:

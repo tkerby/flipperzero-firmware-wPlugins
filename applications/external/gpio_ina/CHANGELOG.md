@@ -1,3 +1,9 @@
+v0.8
+- Fixed application freezing when the sensor is not connected
+
+v0.7
+- Added new averaging settings allowing faster sampling
+
 v0.6:
 - Fixed deadlock when closing datalog file
 
@@ -13,12 +19,10 @@ v0.3:
 - Fixed recording being disabled when LED blinking was off
 - Disabled led blinking during battery charging
 
-v0.2.1:
-- Added current/voltage recording to the CSV file
-
 v0.2:
 - Fixed menu item linking to wiring screen
 - Moved ledBlinking from Sensor to App section in configuration file
+- Added current/voltage recording to the CSV file
 
 v0.1:
 - Initial release

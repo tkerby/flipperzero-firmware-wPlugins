@@ -14,17 +14,18 @@
 #include "../lib/Arduboy2.h"
 #include "../lib/Arduboy2.h"
 #include "../lib/ArduboyTones.h"
+#include "save_layout.h"
 #include "vec2.h"
 #include "bitmaps.h"
 
 // EEPROM - change this address offset from the arduboy starting address if desired
-#define OFFSET_MYBL_START (EEPROM_STORAGE_SPACE_START + 51)
-#define OFFSET_LEVEL      (OFFSET_MYBL_START + sizeof(byte))
-#define OFFSET_COINS      (OFFSET_LEVEL + sizeof(byte))
-#define OFFSET_COINSHS    (OFFSET_COINS + sizeof(byte))
-#define OFFSET_SCORE      (OFFSET_COINSHS + sizeof(byte))
-#define OFFSET_HSCORE     (OFFSET_SCORE + sizeof(unsigned long))
-#define OFFSET_MYBL_END   (OFFSET_HSCORE + sizeof(unsigned long))
+#define OFFSET_MYBL_START MyblSave::kStart
+#define OFFSET_LEVEL      MyblSave::kLevel
+#define OFFSET_COINS      MyblSave::kCoins
+#define OFFSET_COINSHS    MyblSave::kCoinsHs
+#define OFFSET_SCORE      MyblSave::kScore
+#define OFFSET_HSCORE     MyblSave::kHScore
+#define OFFSET_MYBL_END   MyblSave::kEnd
 
 //define menu states (on main menu)
 #define STATE_MENU_INTRO   0

@@ -42,28 +42,33 @@ static bool backup_read_all_data(MiBandNfcApp* app) {
 
     popup_set_text(app->popup, "Reading Mi Band...\n\nSector 0/16", 64, 22, AlignCenter, AlignTop);
 
-    FuriString* progress = furi_string_alloc();
+    // FIX: Use app->temp_text_buffer instead of local FuriString.
+    // popup_set_text stores pointer only - local string freed = use-after-free.
     for(size_t sector = 0; sector < total_sectors; sector++) {
         uint8_t first_block = mf_classic_get_first_block_num_of_sector(sector);
         uint8_t blocks_in_sector = mf_classic_get_blocks_num_in_sector(sector);
 
         if(sector % 2 == 0) {
-            furi_string_reset(progress);
             furi_string_printf(
-                progress, "Reading...\nSector %zu/%zu\n", sector + 1, total_sectors);
+                app->temp_text_buffer, "Reading...\nSector %zu/%zu\n", sector + 1, total_sectors);
 
             uint32_t percent = ((sector + 1) * 100) / total_sectors;
-            furi_string_cat_str(progress, "[");
+            furi_string_cat_str(app->temp_text_buffer, "[");
             for(uint8_t i = 0; i < 20; i++) {
                 if(i < (percent / 5))
-                    furi_string_cat_str(progress, "=");
+                    furi_string_cat_str(app->temp_text_buffer, "=");
                 else
-                    furi_string_cat_str(progress, " ");
+                    furi_string_cat_str(app->temp_text_buffer, " ");
             }
-            furi_string_cat_printf(progress, "]\n%lu%%", percent);
+            furi_string_cat_printf(app->temp_text_buffer, "]\n%lu%%", percent);
 
             popup_set_text(
-                app->popup, furi_string_get_cstr(progress), 64, 18, AlignCenter, AlignTop);
+                app->popup,
+                furi_string_get_cstr(app->temp_text_buffer),
+                64,
+                18,
+                AlignCenter,
+                AlignTop);
         }
 
         furi_delay_ms(50);
@@ -126,62 +131,38 @@ static bool backup_read_all_data(MiBandNfcApp* app) {
 
         if(!sector_read) {
             FURI_LOG_W(TAG, "Failed to read sector %zu for backup", sector);
-            furi_string_free(progress);
             return false;
         }
 
         furi_delay_ms(50);
     }
-    furi_string_free(progress);
     return true;
 }
 
 /**
- * @brief Scene entry point - performs backup operation
- * 
- * @param context Pointer to MiBandNfcApp instance
+ * @brief NFC scanner callback for card detection
+ *
+ * Called from NFC worker thread. Sends custom event if MfClassic card found.
  */
-void miband_nfc_scene_backup_on_enter(void* context) {
-    furi_assert(context);
+static void backup_scanner_callback(NfcScannerEvent event, void* context) {
     MiBandNfcApp* app = context;
-    if(app->logger) {
-        miband_logger_log(app->logger, LogLevelInfo, "Backup operation started");
-    }
-    popup_reset(app->popup);
-    popup_set_header(app->popup, "Creating Backup", 64, 4, AlignCenter, AlignTop);
-    popup_set_text(
-        app->popup, "Place Mi Band near\nFlipper Zero...", 64, 22, AlignCenter, AlignTop);
-
-    view_dispatcher_switch_to_view(app->view_dispatcher, MiBandNfcViewIdScanner);
-    notification_message(app->notifications, &sequence_blink_start_cyan);
-
-    if(!ensure_backup_directory(app->storage)) {
-        if(app->logger) {
-            miband_logger_log(app->logger, LogLevelError, "Cannot create backup directory");
+    if(event.type == NfcScannerEventTypeDetected) {
+        for(size_t i = 0; i < event.data.protocol_num; i++) {
+            if(event.data.protocols[i] == NfcProtocolMfClassic) {
+                view_dispatcher_send_custom_event(
+                    app->view_dispatcher, MiBandNfcCustomEventCardDetected);
+                return;
+            }
         }
-        notification_message(app->notifications, &sequence_error);
-        popup_set_header(app->popup, "Backup Failed", 64, 4, AlignCenter, AlignTop);
-        popup_set_text(app->popup, "Cannot create\nbackup folder", 64, 22, AlignCenter, AlignTop);
-        furi_delay_ms(2000);
-        scene_manager_previous_scene(app->scene_manager);
-        return;
     }
+}
 
-    mf_classic_reset(app->target_data);
-    app->target_data->type = app->mf_classic_data->type;
-
-    popup_set_text(app->popup, "Detecting card...", 64, 30, AlignCenter, AlignTop);
-
-    MfClassicType detected_type;
-    if(mf_classic_poller_sync_detect_type(app->nfc, &detected_type) != MfClassicErrorNone) {
-        notification_message(app->notifications, &sequence_error);
-        popup_set_header(app->popup, "Card Not Found", 64, 4, AlignCenter, AlignTop);
-        popup_set_text(app->popup, "Place card near\nFlipper Zero", 64, 22, AlignCenter, AlignTop);
-        furi_delay_ms(2000);
-        scene_manager_previous_scene(app->scene_manager);
-        return;
-    }
-
+/**
+ * @brief Execute backup read + save and proceed to writer
+ *
+ * Called after card is detected via async scanner.
+ */
+static void backup_execute_and_show_result(MiBandNfcApp* app) {
     if(!backup_read_all_data(app)) {
         if(app->logger) {
             miband_logger_log(app->logger, LogLevelError, "Backup: cannot read all sectors");
@@ -190,7 +171,8 @@ void miband_nfc_scene_backup_on_enter(void* context) {
         popup_set_header(app->popup, "Read Failed", 64, 4, AlignCenter, AlignTop);
         popup_set_text(app->popup, "Cannot read\nall sectors", 64, 22, AlignCenter, AlignTop);
         furi_delay_ms(2000);
-        scene_manager_previous_scene(app->scene_manager);
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MiBandNfcSceneMainMenu);
         return;
     }
 
@@ -221,10 +203,11 @@ void miband_nfc_scene_backup_on_enter(void* context) {
                 app->logger, LogLevelInfo, "Backup saved: %s", furi_string_get_cstr(backup_path));
         }
         notification_message(app->notifications, &sequence_success);
-        popup_set_header(app->popup, "Backup Created!", 64, 4, AlignCenter, AlignTop);
+        popup_set_header(app->popup, "Backup Created!", 2, 2, AlignLeft, AlignTop);
 
-        FuriString* msg = furi_string_alloc_printf(
-            "Saved to:\nbackups/backup_%04d%02d%02d\n_%02d%02d%02d.nfc",
+        furi_string_printf(
+            app->temp_text_buffer,
+            "Saved:\n%04d/%02d/%02d\n%02d:%02d:%02d",
             datetime.year,
             datetime.month,
             datetime.day,
@@ -232,10 +215,9 @@ void miband_nfc_scene_backup_on_enter(void* context) {
             datetime.minute,
             datetime.second);
 
-        popup_set_text(app->popup, furi_string_get_cstr(msg), 4, 18, AlignLeft, AlignTop);
-        popup_set_icon(app->popup, 90, 20, &I_DolphinSuccess_91x55);
-
-        furi_string_free(msg);
+        popup_set_text(
+            app->popup, furi_string_get_cstr(app->temp_text_buffer), 2, 16, AlignLeft, AlignTop);
+        popup_set_icon(app->popup, 68, 6, &I_DolphinSuccess_91x55);
         FURI_LOG_I(TAG, "Backup saved: %s", furi_string_get_cstr(backup_path));
     } else {
         if(app->logger) {
@@ -244,7 +226,6 @@ void miband_nfc_scene_backup_on_enter(void* context) {
         notification_message(app->notifications, &sequence_error);
         popup_set_header(app->popup, "Save Failed", 64, 4, AlignCenter, AlignTop);
         popup_set_text(app->popup, "Cannot save\nbackup file", 64, 22, AlignCenter, AlignTop);
-        popup_set_icon(app->popup, 40, 28, &I_WarningDolphinFlip_45x42);
         FURI_LOG_E(TAG, "Failed to save backup");
     }
 
@@ -255,12 +236,85 @@ void miband_nfc_scene_backup_on_enter(void* context) {
 }
 
 /**
+ * @brief Scene entry point
+ *
+ * Sets up UI and starts async NFC scanner for card detection.
+ * Back button works during the card waiting phase.
+ *
+ * @param context Pointer to MiBandNfcApp instance
+ */
+void miband_nfc_scene_backup_on_enter(void* context) {
+    furi_assert(context);
+    MiBandNfcApp* app = context;
+    if(app->logger) {
+        miband_logger_log(app->logger, LogLevelInfo, "Backup operation started");
+    }
+    popup_reset(app->popup);
+    popup_set_header(app->popup, "Creating Backup", 64, 4, AlignCenter, AlignTop);
+    popup_set_text(
+        app->popup, "Place Mi Band near\nFlipper Zero...", 64, 22, AlignCenter, AlignTop);
+
+    view_dispatcher_switch_to_view(app->view_dispatcher, MiBandNfcViewIdScanner);
+    notification_message(app->notifications, &sequence_blink_start_cyan);
+
+    if(!ensure_backup_directory(app->storage)) {
+        if(app->logger) {
+            miband_logger_log(app->logger, LogLevelError, "Cannot create backup directory");
+        }
+        notification_message(app->notifications, &sequence_error);
+        popup_set_header(app->popup, "Backup Failed", 64, 4, AlignCenter, AlignTop);
+        popup_set_text(app->popup, "Cannot create\nbackup folder", 64, 22, AlignCenter, AlignTop);
+        furi_delay_ms(2000);
+        scene_manager_search_and_switch_to_another_scene(
+            app->scene_manager, MiBandNfcSceneMainMenu);
+        return;
+    }
+
+    mf_classic_reset(app->target_data);
+    app->target_data->type = app->mf_classic_data->type;
+
+    // Start async NFC scanner - event loop stays free, Back button works
+    app->scanner = nfc_scanner_alloc(app->nfc);
+    nfc_scanner_start(app->scanner, backup_scanner_callback, app);
+    app->is_scan_active = true;
+}
+
+/**
  * @brief Scene event handler
+ *
+ * Handles card detection (from async scanner) and Back button.
  */
 bool miband_nfc_scene_backup_on_event(void* context, SceneManagerEvent event) {
-    UNUSED(context);
-    UNUSED(event);
-    return false;
+    MiBandNfcApp* app = context;
+    bool consumed = false;
+
+    if(event.type == SceneManagerEventTypeCustom) {
+        if(event.event == MiBandNfcCustomEventCardDetected && app->is_scan_active) {
+            // Stop async scanner - card found
+            if(app->scanner) {
+                nfc_scanner_stop(app->scanner);
+                nfc_scanner_free(app->scanner);
+                app->scanner = NULL;
+            }
+            app->is_scan_active = false;
+
+            // Perform sync backup operation
+            backup_execute_and_show_result(app);
+            consumed = true;
+        }
+    } else if(event.type == SceneManagerEventTypeBack) {
+        // User pressed Back - cancel card detection, return to previous scene
+        if(app->scanner) {
+            nfc_scanner_stop(app->scanner);
+            nfc_scanner_free(app->scanner);
+            app->scanner = NULL;
+        }
+        app->is_scan_active = false;
+        scene_manager_previous_scene(app->scene_manager);
+        consumed = true;
+    }
+
+    return consumed;
 }
 
 /**
@@ -268,6 +322,15 @@ bool miband_nfc_scene_backup_on_event(void* context, SceneManagerEvent event) {
  */
 void miband_nfc_scene_backup_on_exit(void* context) {
     MiBandNfcApp* app = context;
+
+    // Safety: stop scanner if still running
+    if(app->scanner) {
+        nfc_scanner_stop(app->scanner);
+        nfc_scanner_free(app->scanner);
+        app->scanner = NULL;
+    }
+    app->is_scan_active = false;
+
     notification_message(app->notifications, &sequence_blink_stop);
     popup_reset(app->popup);
 }

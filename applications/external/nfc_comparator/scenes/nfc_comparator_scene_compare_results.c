@@ -1,5 +1,6 @@
-
 #include "../nfc_comparator.h"
+
+static volatile bool reset_exit = true;
 
 static void
     nfc_comparator_compare_results_callback(GuiButtonType result, InputType type, void* context) {
@@ -18,31 +19,38 @@ void nfc_comparator_compare_results_scene_on_enter(void* context) {
     furi_assert(context);
     NfcComparator* nfc_comparator = context;
 
-    nfc_comparator_led_worker_start(
-        nfc_comparator->notification_app, NfcComparatorLedState_Complete);
-
     FuriString* temp_str = furi_string_alloc();
 
-    switch(nfc_comparator->workers.compare_checks->type) {
-    case NfcCompareChecksType_Physical:
+    switch(nfc_comparator->workers.compare_checks->compare_type) {
+    case NfcCompareChecksType_Shallow:
         furi_string_printf(
             temp_str,
             "\e#UID:\e# %s\n\e#UID length:\e# %s\n\e#Protocol:\e# %s",
-            match_str(nfc_comparator->workers.compare_checks->uid),
-            match_str(nfc_comparator->workers.compare_checks->uid_length),
-            match_str(nfc_comparator->workers.compare_checks->protocol));
+            match_str(nfc_comparator->workers.compare_checks->results.uid),
+            match_str(nfc_comparator->workers.compare_checks->results.uid_length),
+            match_str(nfc_comparator->workers.compare_checks->results.protocol));
         break;
-    case NfcCompareChecksType_Digital:
+    case NfcCompareChecksType_Deep:
         furi_string_printf(
             temp_str,
             "\e#UID:\e# %s\n\e#UID length:\e# %s\n\e#Protocol:\e# %s\n\e#NFC Data:\e# %s",
-            match_str(nfc_comparator->workers.compare_checks->uid),
-            match_str(nfc_comparator->workers.compare_checks->uid_length),
-            match_str(nfc_comparator->workers.compare_checks->protocol),
-            match_str(nfc_comparator->workers.compare_checks->nfc_data));
+            match_str(nfc_comparator->workers.compare_checks->results.uid),
+            match_str(nfc_comparator->workers.compare_checks->results.uid_length),
+            match_str(nfc_comparator->workers.compare_checks->results.protocol),
+            match_str(nfc_comparator->workers.compare_checks->results.nfc_data));
+
+        if(!nfc_comparator->workers.compare_checks->results.nfc_data &&
+           nfc_comparator->workers.compare_checks->diff.count > 0) {
+            widget_add_button_element(
+                nfc_comparator->views.widget,
+                GuiButtonTypeCenter,
+                "More",
+                nfc_comparator_compare_results_callback,
+                nfc_comparator);
+        }
         break;
     default:
-        furi_string_printf(temp_str, "Unknown comparison type.");
+        furi_string_set(temp_str, "Unknown comparison type.");
         break;
     }
 
@@ -83,12 +91,17 @@ bool nfc_comparator_compare_results_scene_on_event(void* context, SceneManagerEv
             scene_manager_previous_scene(nfc_comparator->scene_manager);
             consumed = true;
             break;
+        case GuiButtonTypeCenter:
+            reset_exit = false;
+            scene_manager_next_scene(
+                nfc_comparator->scene_manager, NfcComparatorScene_DataBreakdown);
+            consumed = true;
+            break;
         case GuiButtonTypeRight:
             scene_manager_search_and_switch_to_previous_scene(
                 nfc_comparator->scene_manager, NfcComparatorScene_CompareMenu);
             consumed = true;
             break;
-
         default:
             break;
         }
@@ -104,6 +117,7 @@ void nfc_comparator_compare_results_scene_on_exit(void* context) {
     furi_assert(context);
     NfcComparator* nfc_comparator = context;
     widget_reset(nfc_comparator->views.widget);
-    nfc_comparator_led_worker_stop(nfc_comparator->notification_app);
-    nfc_comparator_compare_checks_reset(nfc_comparator->workers.compare_checks);
+    if(reset_exit) {
+        nfc_comparator_compare_checks_reset(nfc_comparator->workers.compare_checks);
+    }
 }

@@ -9,6 +9,7 @@ typedef enum {
     QScene_ActionCreateGroup,
     QScene_ActionIRList,
     QScene_About,
+    QScene_PicopassEmulate,
     QScene_count
 } appScenes;
 

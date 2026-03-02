@@ -2,7 +2,7 @@
 This file is part of UDECard App.
 A Flipper Zero application to analyse student ID cards from the University of Duisburg-Essen (Intercard)
 
-Copyright (C) 2025 Alexander Hahn
+Copyright (C) 2025-2026 Alexander Hahn
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

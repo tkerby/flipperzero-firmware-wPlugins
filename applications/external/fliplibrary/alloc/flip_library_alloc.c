@@ -65,7 +65,7 @@ FlipLibraryApp* flip_library_app_alloc() {
     if(!easy_flipper_set_widget(
            &app->widget_about,
            FlipLibraryViewAbout,
-           "FlipLibrary v1.4\n-----\nUtilize WiFi to retrieve data\nfrom 20 different APIs.\n-----\nCreated by JBlanked and\nDerek Jamison.\n-----\nwww.github.com/jblanked/\nFlipLibrary\n-----\nPress BACK to return.",
+           "FlipLibrary v1.5\n-----\nUtilize WiFi to retrieve data\nfrom 20 different APIs.\n-----\nCreated by JBlanked and\nDerek Jamison.\n-----\nwww.github.com/jblanked/\nFlipLibrary\n-----\nPress BACK to return.",
            callback_to_submenu,
            &app->view_dispatcher)) {
         return NULL;
@@ -132,14 +132,18 @@ FlipLibraryApp* flip_library_app_alloc() {
         variable_item_list_add(app->variable_item_list_wifi, "SSID", 0, NULL, NULL);
     app->variable_item_password =
         variable_item_list_add(app->variable_item_list_wifi, "Password", 0, NULL, NULL);
+    app->variable_item_temperature_unit = variable_item_list_add(
+        app->variable_item_list_wifi, "Weather Unit", 2, temperature_unit_change, app);
     variable_item_set_current_value_text(app->variable_item_ssid, "");
     variable_item_set_current_value_text(app->variable_item_password, "");
+    variable_item_set_current_value_index(app->variable_item_temperature_unit, 0);
+    variable_item_set_current_value_text(app->variable_item_temperature_unit, "Celsius");
 
     // Submenu
     if(!easy_flipper_set_submenu(
            &app->submenu_main,
            FlipLibraryViewSubmenuMain,
-           "FlipLibrary v1.4",
+           "FlipLibrary v1.5",
            callback_exit_app,
            &app->view_dispatcher)) {
         return NULL;
@@ -178,7 +182,11 @@ FlipLibraryApp* flip_library_app_alloc() {
     submenu_add_item(
         app->submenu_main, "About", FlipLibrarySubmenuIndexAbout, callback_submenu_choices, app);
     submenu_add_item(
-        app->submenu_main, "WiFi", FlipLibrarySubmenuIndexSettings, callback_submenu_choices, app);
+        app->submenu_main,
+        "Settings",
+        FlipLibrarySubmenuIndexSettings,
+        callback_submenu_choices,
+        app);
     submenu_add_item(
         app->submenu_library,
         "Wikipedia",
@@ -321,7 +329,8 @@ FlipLibraryApp* flip_library_app_alloc() {
            app->uart_text_input_buffer_ssid,
            app->uart_text_input_buffer_size_ssid,
            app->uart_text_input_buffer_password,
-           app->uart_text_input_buffer_size_password)) {
+           app->uart_text_input_buffer_size_password,
+           &use_fahrenheit)) {
         // Update variable items
         if(app->variable_item_ssid) {
             variable_item_set_current_value_text(
@@ -345,6 +354,13 @@ FlipLibraryApp* flip_library_app_alloc() {
                 app->uart_text_input_buffer_size_password - 1);
             app->uart_text_input_temp_buffer_password[app->uart_text_input_buffer_size_password - 1] =
                 '\0';
+        }
+        // Apply loaded temperature unit
+        if(app->variable_item_temperature_unit) {
+            variable_item_set_current_value_index(
+                app->variable_item_temperature_unit, use_fahrenheit ? 1 : 0);
+            variable_item_set_current_value_text(
+                app->variable_item_temperature_unit, use_fahrenheit ? "Fahrenheit" : "Celsius");
         }
     }
 

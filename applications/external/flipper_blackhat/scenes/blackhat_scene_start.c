@@ -4,6 +4,7 @@ BlackhatItem items[] = {
     {"Shell", {""}, 1, NULL, SHELL_CMD, false},
     {"Scan for Scripts", {""}, 1, NULL, SCAN_CMD, false},
     {"Run Script", {""}, 1, NULL, CHG_RUN_CMD_SCREEN, false},
+    {"BHtui (Screen Only)", {""}, 1, NULL, BHTUI_CMD, false},
     {"Connect WiFi", {"wlan0", "wlan1", "wlan2", "stop"}, 4, NULL, WIFI_CON_CMD, FOCUS_CONSOLE_END},
     {"Set inet SSID", {""}, 1, NULL, SET_INET_SSID_CMD, true},
     {"Set inet Password", {""}, 1, NULL, SET_INET_PWD_CMD, true},
@@ -42,7 +43,11 @@ static void blackhat_scene_start_var_list_enter_callback(void* context, uint32_t
 
     app->selected_option_item_text = item->selected_option;
 
-    scene_manager_next_scene(app->scene_manager, BlackhatAppViewConsoleOutput);
+    if(!strcmp(item->actual_command, BHTUI_CMD)) {
+        scene_manager_next_scene(app->scene_manager, BlackhatSceneTui);
+    } else {
+        scene_manager_next_scene(app->scene_manager, BlackhatAppViewConsoleOutput);
+    }
 }
 
 static void blackhat_scene_start_var_list_change_callback(VariableItem* item) {

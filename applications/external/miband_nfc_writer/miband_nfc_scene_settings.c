@@ -98,6 +98,14 @@ void settings_submenu_callback(void* context, uint32_t index) {
     view_dispatcher_send_custom_event(app->view_dispatcher, index);
 }
 
+// FIX: Static buffers for submenu labels - submenu stores pointers, NOT copies.
+// Allocating FuriStrings and freeing them after submenu_add_item caused use-after-free.
+static char settings_label_backup[32];
+static char settings_label_verify[32];
+static char settings_label_progress[32];
+static char settings_label_logging[32];
+static char settings_label_export[32];
+
 void miband_nfc_scene_settings_on_enter(void* context) {
     furi_assert(context);
     MiBandNfcApp* app = context;
@@ -106,59 +114,70 @@ void miband_nfc_scene_settings_on_enter(void* context) {
     submenu_set_header(app->submenu, "Settings");
 
     // Auto Backup toggle
-    FuriString* backup_text =
-        furi_string_alloc_printf("Auto Backup: %s", app->auto_backup_enabled ? "ON" : "OFF");
+    snprintf(
+        settings_label_backup,
+        sizeof(settings_label_backup),
+        "Auto Backup: %s",
+        app->auto_backup_enabled ? "ON" : "OFF");
     submenu_add_item(
         app->submenu,
-        furi_string_get_cstr(backup_text),
+        settings_label_backup,
         SettingsIndexAutoBackup,
         settings_submenu_callback,
         app);
-    furi_string_free(backup_text);
 
     // Verify after write toggle
-    FuriString* verify_text =
-        furi_string_alloc_printf("Verify After Write: %s", app->verify_after_write ? "ON" : "OFF");
+    snprintf(
+        settings_label_verify,
+        sizeof(settings_label_verify),
+        "Verify After Write: %s",
+        app->verify_after_write ? "ON" : "OFF");
     submenu_add_item(
         app->submenu,
-        furi_string_get_cstr(verify_text),
+        settings_label_verify,
         SettingsIndexVerifyAfterWrite,
         settings_submenu_callback,
         app);
-    furi_string_free(verify_text);
 
     // Show detailed progress toggle
-    FuriString* progress_text = furi_string_alloc_printf(
-        "Detailed Progress: %s", app->show_detailed_progress ? "ON" : "OFF");
+    snprintf(
+        settings_label_progress,
+        sizeof(settings_label_progress),
+        "Detailed Progress: %s",
+        app->show_detailed_progress ? "ON" : "OFF");
     submenu_add_item(
         app->submenu,
-        furi_string_get_cstr(progress_text),
+        settings_label_progress,
         SettingsIndexShowProgress,
         settings_submenu_callback,
         app);
-    furi_string_free(progress_text);
 
     // Enable logging toggle
-    FuriString* logging_text =
-        furi_string_alloc_printf("Enable Logging: %s", app->enable_logging ? "ON" : "OFF");
+    snprintf(
+        settings_label_logging,
+        sizeof(settings_label_logging),
+        "Enable Logging: %s",
+        app->enable_logging ? "ON" : "OFF");
     submenu_add_item(
         app->submenu,
-        furi_string_get_cstr(logging_text),
+        settings_label_logging,
         SettingsIndexEnableLogging,
         settings_submenu_callback,
         app);
-    furi_string_free(logging_text);
 
     // Export logs
     size_t log_count = miband_logger_get_count(app->logger);
-    FuriString* export_text = furi_string_alloc_printf("Export Logs (%zu entries)", log_count);
+    snprintf(
+        settings_label_export,
+        sizeof(settings_label_export),
+        "Export Logs (%zu entries)",
+        log_count);
     submenu_add_item(
         app->submenu,
-        furi_string_get_cstr(export_text),
+        settings_label_export,
         SettingsIndexExportLogs,
         settings_submenu_callback,
         app);
-    furi_string_free(export_text);
 
     // Clear logs
     submenu_add_item(
@@ -249,6 +268,8 @@ bool miband_nfc_scene_settings_on_event(void* context, SceneManagerEvent event) 
                 dt.second);
 
             bool success = miband_logger_export(app->logger, furi_string_get_cstr(filename));
+            furi_string_free(filename);
+
             if(app->logger) {
                 miband_logger_log(app->logger, LogLevelInfo, "Log export requested");
             }
@@ -267,7 +288,6 @@ bool miband_nfc_scene_settings_on_event(void* context, SceneManagerEvent event) 
 
             miband_nfc_scene_settings_on_exit(app);
             miband_nfc_scene_settings_on_enter(app);
-            furi_string_free(filename);
             consumed = true;
             break;
         }

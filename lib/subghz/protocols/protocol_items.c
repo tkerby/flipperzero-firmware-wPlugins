@@ -3,7 +3,6 @@
 const SubGhzProtocol* const subghz_protocol_registry_items[] = {
     &subghz_protocol_gate_tx,
     &subghz_protocol_keeloq,
-    &subghz_protocol_star_line,
     &subghz_protocol_nice_flo,
     &subghz_protocol_came,
     &subghz_protocol_faac_slh,
@@ -12,12 +11,10 @@ const SubGhzProtocol* const subghz_protocol_registry_items[] = {
     &subghz_protocol_came_atomo,
     &subghz_protocol_nero_sketch,
     &subghz_protocol_ido,
-    &subghz_protocol_kia,
     &subghz_protocol_hormann,
     &subghz_protocol_nero_radio,
     &subghz_protocol_somfy_telis,
     &subghz_protocol_somfy_keytis,
-    &subghz_protocol_scher_khan,
     &subghz_protocol_princeton,
     &subghz_protocol_raw,
     &subghz_protocol_linear,
@@ -57,6 +54,7 @@ const SubGhzProtocol* const subghz_protocol_registry_items[] = {
     &subghz_protocol_feron,
     &subghz_protocol_roger,
     &subghz_protocol_elplast,
+    &subghz_protocol_treadmill37,
 };
 
 const SubGhzProtocolRegistry subghz_protocol_registry = {

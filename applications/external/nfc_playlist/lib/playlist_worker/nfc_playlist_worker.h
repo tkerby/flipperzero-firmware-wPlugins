@@ -1,18 +1,18 @@
 #pragma once
-#include <furi.h>
-#include <furi_hal.h>
 
-#include <nfc/nfc.h>
-#include <nfc/nfc_device.h>
-#include <nfc/nfc_listener.h>
-
-#include <toolbox/path.h>
-#include <toolbox/stream/file_stream.h>
-#include <toolbox/stream/stream.h>
+#include <nfc/protocols/nfc_protocol.h>
+#include <stdbool.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef struct FuriThread FuriThread;
+typedef struct FuriString FuriString;
+typedef struct NfcListener NfcListener;
+typedef struct NfcDevice NfcDevice;
+typedef struct Nfc Nfc;
 
 static const int options_emulate_timeout[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
 static const int default_emulate_timeout = 4;
@@ -61,11 +61,41 @@ typedef struct {
    int ms_counter;
 } NfcPlaylistWorker;
 
+/**
+ * Allocates and initializes a new NFC playlist worker
+ * @param settings Pointer to worker settings (timeout, delay, loop, etc.)
+ * @return NfcPlaylistWorker* Pointer to newly allocated worker instance
+ */
 NfcPlaylistWorker* nfc_playlist_worker_alloc(NfcPlaylistWorkerSettings* settings);
+
+/**
+ * Frees all resources associated with the NFC playlist worker
+ * @param worker Pointer to NfcPlaylistWorker instance to free
+ */
 void nfc_playlist_worker_free(NfcPlaylistWorker* worker);
+
+/**
+ * Stops the NFC playlist worker and waits for thread completion
+ * @param worker Pointer to NfcPlaylistWorker instance to stop
+ */
 void nfc_playlist_worker_stop(NfcPlaylistWorker* worker);
+
+/**
+ * Starts the NFC playlist worker thread
+ * @param worker Pointer to NfcPlaylistWorker instance to start
+ */
 void nfc_playlist_worker_start(NfcPlaylistWorker* worker);
+
+/**
+ * Skips to the next NFC card in the playlist
+ * @param worker Pointer to NfcPlaylistWorker instance to skip
+ */
 void nfc_playlist_worker_skip(NfcPlaylistWorker* worker);
+
+/**
+ * Rewinds the NFC playlist worker to the previous NFC card
+ * @param worker Pointer to NfcPlaylistWorker instance to rewind
+ */
 void nfc_playlist_worker_rewind(NfcPlaylistWorker* worker);
 
 #ifdef __cplusplus

@@ -7,6 +7,8 @@ GamesMenuList Version 0
 /ext/apps/GPIO/VGM/air_arkanoid.fap
 /ext/apps/GPIO/VGM/air_labyrinth.fap
 /ext/apps/Games/apple_grabber.fap
+/ext/apps/Games/ardugolf.fap
+/ext/apps/Games/arddrivin.fap
 /ext/apps/Games/arduventure.fap
 /ext/apps/Games/arkanoid.fap
 /ext/apps/Games/asteroids.fap
@@ -18,6 +20,7 @@ GamesMenuList Version 0
 /ext/apps/Games/bzzbzz.fap
 /ext/apps/Games/catacombs.fap
 /ext/apps/Games/cells_sim_app.fap
+/ext/apps/Games/checkers.fap
 /ext/apps/Games/chess.fap
 /ext/apps/Games/chess_clock.fap
 /ext/apps/Games/citybloxx.fap
@@ -52,6 +55,7 @@ GamesMenuList Version 0
 /ext/apps/Games/guess_the_number.fap
 /ext/apps/Games/hangman.fap
 /ext/apps/Games/hanoi_towers.fap
+/ext/apps/Games/hirn.fap
 /ext/apps/Games/heap_defence.fap
 /ext/apps/Games/hunter_flipper.fap
 /ext/apps/Games/infinite_tic_tac_toe.fap
@@ -80,15 +84,18 @@ GamesMenuList Version 0
 /ext/apps/Games/p1x_your_own_adventure.fap
 /ext/apps/Games/pacman.fap
 /ext/apps/Games/paint.fap
+/ext/apps/Games/panis.fap
 /ext/apps/Games/paper_plane.fap
 /ext/apps/Games/pinball0.fap
 /ext/apps/Games/platformer_game.fap
 /ext/apps/Games/pocket_battle.fap
 /ext/apps/Games/pong.fap
+/ext/apps/Games/princeofarabia.fap
 /ext/apps/Games/puck.fap
 /ext/apps/Games/quadrastic.fap
 /ext/apps/Games/questions.fap
 /ext/apps/Games/race.fap
+/ext/apps/Games/race_game.fap
 /ext/apps/Games/reaction_time.fap
 /ext/apps/Games/reactiontest.fap
 /ext/apps/Games/reversi.fap

@@ -94,7 +94,4 @@ uint32_t progress_tracker_get_eta_seconds(const ProgressTracker* tracker);
  * @param popup Popup view to update
  * @param header Optional header text (NULL to keep current)
  */
-void progress_tracker_update_popup(
-    const ProgressTracker* tracker,
-    Popup* popup,
-    const char* header);
+void progress_tracker_update_popup(ProgressTracker* tracker, Popup* popup, const char* header);
