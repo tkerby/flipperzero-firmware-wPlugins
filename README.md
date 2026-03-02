@@ -1,6 +1,6 @@
 # Flipper Suite
 
-A collection of 6 external applications (FAPs) for the [Flipper Zero](https://flipperzero.one/) multi-tool. Each app targets a different hardware interface on the Flipper Zero, covering USB HID, NFC, GPIO, and Sub-GHz radio.
+A collection of 7 external applications (FAPs) for the [Flipper Zero](https://flipperzero.one/) multi-tool. Each app targets a different hardware interface on the Flipper Zero, covering USB HID, NFC, GPIO, and Sub-GHz radio.
 
 ## Applications
 
@@ -55,6 +55,18 @@ Read SPI NOR flash chips via the Flipper's GPIO header.
 | VCC       | 3V3         |
 | GND       | GND         |
 
+### FlipperPwn (USB)
+Modular pentest payload framework with OS detection, inspired by Metasploit.
+
+- **Module Categories**: Recon, Credentials, Exploit, and Post-Exploit modules loaded from `.fpwn` files on the SD card
+- **OS Detection**: Automatic host OS fingerprinting via USB HID LED heuristics (NumLock/ScrollLock probes distinguish Windows, macOS, and Linux)
+- **Cross-Platform Payloads**: Each `.fpwn` module can contain platform-specific payload sections (`PLATFORM WIN`, `PLATFORM MAC`, `PLATFORM LINUX`) with DuckyScript-like syntax
+- **Template Substitution**: Configurable options via `OPTION` declarations with `{{OPTION_NAME}}` placeholders substituted at runtime
+- **18 Built-in Modules**: System info recon, WiFi/network enumeration, AV detection, credential harvesting (WiFi, browser, SSH, environment variables), reverse shells (TCP/DNS), download-and-execute, UAC bypass (fodhelper), MSFvenom stager, persistence (scheduled tasks, startup folder), Defender disablement, and user creation
+- **Live Execution View**: Real-time progress display with line count and abort support (press Back to abort)
+
+**Module files**: Copy `flipperpwn_modules/` contents to `/ext/flipperpwn/modules/` on the SD card.
+
 ### SubGHz Spectrum (Sub-GHz)
 Real-time Sub-GHz spectrum analyzer.
 
@@ -93,7 +105,7 @@ git clone https://github.com/barkandbite/flipper_suite.git
 cd flipper_suite
 
 # Build each app individually
-for app in badusb_pro ccid_emulator hid_exfil nfc_fuzzer spi_flash_dump subghz_spectrum; do
+for app in badusb_pro ccid_emulator flipperpwn hid_exfil nfc_fuzzer spi_flash_dump subghz_spectrum; do
     cd "$app"
     ufbt
     cd ..
@@ -116,7 +128,7 @@ Or manually copy the `.fap` files:
 
 1. Build the app with `ufbt` (inside the app directory)
 2. Copy `dist/<app_name>.fap` to your Flipper's SD card under `/ext/apps/<category>/`
-   - BadUSB Pro, CCID Emulator, HID Exfil: `/ext/apps/USB/`
+   - BadUSB Pro, CCID Emulator, FlipperPwn, HID Exfil: `/ext/apps/USB/`
    - NFC Fuzzer: `/ext/apps/NFC/`
    - SPI Flash Dump: `/ext/apps/GPIO/`
    - SubGHz Spectrum: `/ext/apps/Sub-GHz/`
@@ -127,6 +139,7 @@ Copy the included sample files to your Flipper's SD card:
 
 - `badusb_pro_sample_scripts/*.ds` &rarr; `/ext/badusb_pro/` on SD card
 - `ccid_emulator_sample_cards/*.ccid` &rarr; `/ext/apps_data/ccid_emulator/cards/` on SD card
+- `flipperpwn_modules/**/*.fpwn` &rarr; `/ext/flipperpwn/modules/` on SD card (preserve subdirectory structure)
 
 ## FAQ
 
@@ -151,6 +164,12 @@ A: Dumps are saved to `/ext/apps_data/spi_flash_dump/` on the SD card, named by 
 **Q: Can I add my own CCID card profiles?**
 A: Yes. Create a `.ccid` file following the format in the sample cards and place it in `/ext/apps_data/ccid_emulator/cards/` on your SD card. The format uses `[Card]` headers with `AID`, `RULE`, and `DEFAULT_RESPONSE` directives.
 
+**Q: How do I add custom FlipperPwn modules?**
+A: Create a `.fpwn` text file with `NAME`, `DESCRIPTION`, `CATEGORY`, and `PLATFORMS` headers, then add `OPTION` declarations and `PLATFORM WIN`/`PLATFORM MAC`/`PLATFORM LINUX` sections with DuckyScript-like commands. Place the file in `/ext/flipperpwn/modules/` on the SD card. See the included modules in `flipperpwn_modules/` for examples.
+
+**Q: Does FlipperPwn require admin/root on the target?**
+A: Most modules operate at user privilege level. Modules like UAC bypass use techniques (e.g., fodhelper.exe) that escalate without a UAC prompt on default Windows settings. Modules that require elevated access are noted in their descriptions.
+
 **Q: What SPI flash chips are supported?**
 A: The app includes a database of 32 common SPI NOR flash chips and will auto-detect via JEDEC ID. If your chip isn't recognized, the app will display the raw JEDEC ID so you can verify compatibility manually.
 
@@ -160,12 +179,14 @@ A: The app includes a database of 32 common SPI NOR flash chips and will auto-de
 flipper_suite/
 ├── badusb_pro/                  # BadUSB Pro application
 ├── ccid_emulator/               # CCID Emulator application
+├── flipperpwn/                  # FlipperPwn pentest framework
 ├── hid_exfil/                   # HID Exfil application
 ├── nfc_fuzzer/                  # NFC Fuzzer application
 ├── spi_flash_dump/              # SPI Flash Dump application
 ├── subghz_spectrum/             # SubGHz Spectrum application
 ├── badusb_pro_sample_scripts/   # Sample DuckyScript files
 ├── ccid_emulator_sample_cards/  # Sample CCID card profiles
+├── flipperpwn_modules/          # FlipperPwn payload modules (.fpwn)
 └── README.md
 ```
 

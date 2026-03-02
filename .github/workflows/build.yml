@@ -55,3 +55,9 @@ jobs:
           sdk-channel: ${{ matrix.sdk-channel }}
           app-dir: subghz_spectrum
           skip-setup: true
+      - name: Build flipperpwn
+        uses: flipperdevices/flipperzero-ufbt-action@v0.1
+        with:
+          sdk-channel: ${{ matrix.sdk-channel }}
+          app-dir: flipperpwn
+          skip-setup: true
