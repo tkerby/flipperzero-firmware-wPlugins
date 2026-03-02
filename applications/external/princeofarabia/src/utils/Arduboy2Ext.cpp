@@ -78,7 +78,7 @@ bool Arduboy2Ext::isFrameCount(uint8_t mod, uint8_t val) const {
     return (getFrameCount() % mod) == val;
 }
 
-uint16_t rnd = 0xACE1;
+static uint16_t rnd = 0xACE1;
 
 uint8_t Arduboy2Ext::randomLFSR(uint8_t min, uint8_t max) {
     if(max <= min) return min;

@@ -1,2 +1,2 @@
 #pragma once
-#include "lib/Arduboy2.h"
+#include "Arduboy2.h"

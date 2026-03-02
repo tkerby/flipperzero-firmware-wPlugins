@@ -282,10 +282,10 @@ public:
     }
 
 #ifdef SAVE_MEMORY_SOUND
-    LevelUpdate update(Arduboy2Ext& arduboy, Prince& prince, GamePlay& gamePlay){
+    LevelUpdate update(Arduboy2Base& arduboy, Prince& prince, GamePlay& gamePlay){
 #else
     LevelUpdate
-        update(Arduboy2Ext& arduboy, Prince& prince, GamePlay& gamePlay, ArduboyTonesFX& sound) {
+        update(Arduboy2Base& arduboy, Prince& prince, GamePlay& gamePlay, ArduboyTonesFX& sound) {
 #endif
 
         LevelUpdate levelUpdate = LevelUpdate::NoAction;

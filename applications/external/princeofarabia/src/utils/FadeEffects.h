@@ -27,7 +27,7 @@ public:
         }
     }
 
-    void draw(Arduboy2Ext& arduboy) const {
+    void draw(Arduboy2Base& arduboy) const {
 #ifdef ARDUINO_ARCH_AVR
 
         uint8_t* buffer = arduboy.sBuffer;

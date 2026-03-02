@@ -1,11 +1,12 @@
-#include <furi.h>
-#include <gui/gui.h>
-#include <input/input.h>
-#include <notification/notification_messages.h>
+#ifndef ARDULIB_USE_FX
+#define ARDULIB_USE_FX
+#endif
 
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
+#ifndef ARDULIB_USE_TONES
+#define ARDULIB_USE_TONES
+#endif
+
+#include "lib/runtime.h"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -18,19 +19,6 @@
 #include "src/ArduboyTonesFX.h"
 #include "src/entities/Entities.h"
 #include "src/utils/Enums.h"
-
-#define DISPLAY_WIDTH  128
-#define DISPLAY_HEIGHT 64
-#define FB_SIZE        (DISPLAY_WIDTH * DISPLAY_HEIGHT / 8)
-
-FuriMessageQueue* g_arduboy_sound_queue = NULL;
-FuriThread* g_arduboy_sound_thread = NULL;
-volatile bool g_arduboy_sound_thread_running = false;
-volatile bool g_arduboy_audio_enabled = false;
-volatile bool g_arduboy_tones_playing = false;
-volatile bool g_arduboy_force_high = false;
-volatile bool g_arduboy_force_norm = false;
-volatile uint8_t g_arduboy_volume_mode = VOLUME_IN_TONE;
 
 void splashScreen_Init();
 void splashScreen();
@@ -83,9 +71,6 @@ void renderNumber_Small(uint8_t x, uint8_t y, uint8_t number);
 void renderNumber_Upright(uint8_t x, uint8_t y, uint8_t number);
 void renderTorches(uint8_t x1, uint8_t x2, uint8_t y);
 
-void setup();
-void loop();
-
 #include "game/PrinceOfArabia.cpp"
 #include "game/PrinceOfArabia_Game.cpp"
 #include "game/PrinceOfArabia_Render.cpp"
@@ -93,276 +78,209 @@ void loop();
 #include "game/PrinceOfArabia_Title.cpp"
 #include "game/PrinceOfArabia_Utils.cpp"
 
-typedef struct {
-    uint8_t screen_buffer[FB_SIZE];
-    uint8_t front_buffer[FB_SIZE];
+namespace {
 
-    Gui* gui;
-    Canvas* canvas;
-    FuriMutex* fb_mutex;
-    FuriMutex* game_mutex;
+constexpr uint32_t ExitHoldMs = 500;
 
-    FuriPubSub* input_events;
-    FuriPubSubSubscription* input_sub;
-    NotificationApp* notifications;
-
-    volatile uint8_t input_state;
-    volatile uint8_t input_press_latch;
-    volatile bool exit_requested;
-    volatile bool back_long_requested;
-    volatile bool back_long_suppressed;
-    volatile uint32_t input_cb_inflight;
-    GameState last_game_state;
-    bool backlight_forced;
-} FlipperState;
-
-static FlipperState* g_state = NULL;
-
-static void wait_input_callbacks_idle(FlipperState* state) {
-    if(!state) return;
-    while(__atomic_load_n((uint32_t*)&state->input_cb_inflight, __ATOMIC_ACQUIRE) != 0) {
-        furi_delay_ms(1);
-    }
-}
-
-static bool can_exit_from_current_state() {
-    switch(gamePlay.gameState) {
+bool canExitFromCurrentState(GameState gameState) {
+    switch(gameState) {
     case GameState::SplashScreen_Init:
     case GameState::SplashScreen:
     case GameState::Title_Init:
     case GameState::Title:
         return true;
+
     default:
         return false;
     }
 }
 
-static bool should_hold_backlight(GameState state) {
-    return (state != GameState::SplashScreen_Init) && (state != GameState::SplashScreen);
+bool handleExitRequest() {
+    static bool exitButtonHeld = false;
+    static uint32_t exitPressStartedAt = 0;
+    static GameState lastGameState = GameState::SplashScreen_Init;
+
+    const GameState gameState = gamePlay.gameState;
+
+    if(gameState != lastGameState) {
+        lastGameState = gameState;
+        exitButtonHeld = false;
+        exitPressStartedAt = 0;
+    }
+
+    if(!canExitFromCurrentState(gameState) || !arduboy.pressed(B_BUTTON)) {
+        exitButtonHeld = false;
+        exitPressStartedAt = 0;
+        return false;
+    }
+
+    const uint32_t now = millis();
+
+    if(!exitButtonHeld) {
+        exitButtonHeld = true;
+        exitPressStartedAt = now;
+        return false;
+    }
+
+    if((uint32_t)(now - exitPressStartedAt) < ExitHoldMs) {
+        return false;
+    }
+
+    exitButtonHeld = false;
+    exitPressStartedAt = 0;
+    arduboy.exitToBootloader();
+
+    return true;
 }
 
-static void update_display_policy(FlipperState* state) {
-    if(!state || !state->notifications) return;
+} // namespace
 
-    const bool hold = should_hold_backlight(gamePlay.gameState);
-    if(hold && !state->backlight_forced) {
-        notification_message(state->notifications, &sequence_display_backlight_enforce_on);
-        state->backlight_forced = true;
-    } else if(!hold && state->backlight_forced) {
-        notification_message(state->notifications, &sequence_display_backlight_enforce_auto);
-        state->backlight_forced = false;
+void setup() {
+    arduboy.setFrameRate(Constants::FrameRate);
+
+    FX::begin(FX_DATA_PAGE, FX_SAVE_PAGE);
+    const bool hasSave = FX::loadGameState((uint8_t*)&cookie, sizeof(cookie));
+
+    prince.setStack(&princeStack);
+
+#ifndef SAVE_MEMORY_ENEMY
+    enemy.setStack(&enemyStack);
+#endif
+
+    if(hasSave) {
+        restoreRuntimeAfterLoad();
     }
+
+#ifdef SAVE_MEMORY_OTHER
+    gamePlay.gameState = GameState::Game_Init;
+#else
+#ifdef SAVE_MEMORY_PPOT
+    gamePlay.gameState = GameState::Title_Init;
+#else
+    gamePlay.gameState = GameState::SplashScreen_Init;
+#endif
+#endif
 }
 
-static void input_events_callback(const void* value, void* ctx) {
-    if(!value || !ctx) return;
+void loop() {
+    if(!arduboy.nextFrame()) return;
+    arduboy.pollButtons();
+    bindRuntimeStacks();
+    if(handleExitRequest()) return;
 
-    const InputEvent* event = (const InputEvent*)value;
-    FlipperState* state = (FlipperState*)ctx;
-    if(!state) return;
+#ifndef SAVE_MEMORY_SOUND
+    sound.fillBufferFromFX();
+#endif
 
-    (void)__atomic_fetch_add((uint32_t*)&state->input_cb_inflight, 1, __ATOMIC_RELAXED);
+    switch(gamePlay.gameState) {
+#ifndef SAVE_MEMORY_PPOT
+    case GameState::SplashScreen_Init:
 
-    if(event->key == InputKeyBack) {
-        if(state->back_long_suppressed) {
-            if(event->type == InputTypeRelease) {
-                state->back_long_suppressed = false;
-            }
-            arduboy.clearInputMask(INPUT_B);
-            goto exit_callback;
+        splashScreen_Init();
+        titleScreenVars.counter = 0;
+        [[fallthrough]];
+
+    case GameState::SplashScreen:
+
+        splashScreen();
+        break;
+#endif
+
+#ifndef SAVE_MEMORY_OTHER
+    case GameState::Title_Init:
+
+#ifndef SAVE_MEMORY_SOUND
+        setSound(SoundIndex::Theme);
+#endif
+
+#ifndef SAVE_MEMORY_OTHER
+        fadeEffect.complete();
+#endif
+
+        gamePlay.gameState = GameState::Title;
+
+        title_Init();
+        [[fallthrough]];
+
+    case GameState::Title:
+
+        title();
+        break;
+
+#endif
+
+    case GameState::Game_Init:
+
+#ifndef SAVE_MEMORY_SOUND
+        sound.noTone();
+#endif
+
+        game_Init();
+        [[fallthrough]];
+
+    case GameState::Game_StartLevel:
+        game_StartLevel();
+        game();
+        break;
+
+    case GameState::Game:
+#ifndef SAVE_MEMORY_OTHER
+    case GameState::Menu:
+#endif
+
+        game();
+        break;
+
+    default:
+        break;
+    }
+
+    {
+        bool invert = false;
+
+        switch(prince.getStance()) {
+        case Stance::Pickup_Sword_3:
+        case Stance::Pickup_Sword_5:
+        case Stance::Drink_Tonic_Small_12:
+        case Stance::Drink_Tonic_Small_14:
+        case Stance::Drink_Tonic_Large_12:
+        case Stance::Drink_Tonic_Large_14:
+        case Stance::Drink_Tonic_Poison_12:
+        case Stance::Drink_Tonic_Poison_14:
+        case Stance::Drink_Tonic_Float_12:
+        case Stance::Drink_Tonic_Float_14:
+            invert = true;
+            break;
+
+        default:
+            break;
         }
 
-        if(event->type == InputTypeLong && can_exit_from_current_state()) {
-            state->back_long_requested = true;
-            state->back_long_suppressed = true;
-            arduboy.clearInputMask(INPUT_B);
-            goto exit_callback;
+        Flash& flash = level.getFlash();
+
+#ifndef SAVE_MEMORY_ENEMY
+        if(flash.frame == 1 && flash.type == FlashType::MirrorLevel12) {
+            enemy.setStatus(Status::Dormant);
         }
-    }
+#endif
 
-    Arduboy2Base::FlipperInputCallback(event, arduboy.inputContext());
-
-exit_callback:
-    (void)__atomic_fetch_sub((uint32_t*)&state->input_cb_inflight, 1, __ATOMIC_RELAXED);
-}
-
-static void framebuffer_commit_callback(
-    uint8_t* data,
-    size_t size,
-    CanvasOrientation orientation,
-    void* context) {
-    UNUSED(orientation);
-
-    FlipperState* state = (FlipperState*)context;
-    if(!state || !data || size < FB_SIZE) return;
-
-    if(furi_mutex_acquire(state->fb_mutex, 0) != FuriStatusOk) return;
-    const uint8_t* src = state->front_buffer;
-    for(size_t i = 0; i < FB_SIZE; i++) {
-        data[i] = (uint8_t)(src[i] ^ 0xFF);
-    }
-    furi_mutex_release(state->fb_mutex);
-}
-
-extern "C" int32_t arduboy_app(void* p) {
-    UNUSED(p);
-
-    g_state = (FlipperState*)malloc(sizeof(FlipperState));
-    if(!g_state) return -1;
-    memset(g_state, 0, sizeof(FlipperState));
-
-    g_state->game_mutex = furi_mutex_alloc(FuriMutexTypeNormal);
-    g_state->fb_mutex = furi_mutex_alloc(FuriMutexTypeNormal);
-    if(!g_state->game_mutex || !g_state->fb_mutex) {
-        if(g_state->game_mutex) furi_mutex_free(g_state->game_mutex);
-        if(g_state->fb_mutex) furi_mutex_free(g_state->fb_mutex);
-        free(g_state);
-        g_state = NULL;
-        return -1;
-    }
-
-    g_state->exit_requested = false;
-    g_state->back_long_requested = false;
-    g_state->back_long_suppressed = false;
-    g_state->input_cb_inflight = 0;
-    g_state->last_game_state = gamePlay.gameState;
-    g_state->notifications = NULL;
-    g_state->backlight_forced = false;
-    g_state->input_state = 0;
-    g_state->input_press_latch = 0;
-    memset(g_state->screen_buffer, 0x00, FB_SIZE);
-    memset(g_state->front_buffer, 0x00, FB_SIZE);
-
-    arduboy.begin(
-        g_state->screen_buffer,
-        &g_state->input_state,
-        &g_state->input_press_latch,
-        g_state->game_mutex,
-        &g_state->exit_requested);
-    Sprites::setArduboy(&arduboy);
-
-    g_state->gui = (Gui*)furi_record_open(RECORD_GUI);
-    if(g_state->gui) {
-        gui_add_framebuffer_callback(g_state->gui, framebuffer_commit_callback, g_state);
-        g_state->canvas = gui_direct_draw_acquire(g_state->gui);
-    }
-
-    g_state->notifications = (NotificationApp*)furi_record_open(RECORD_NOTIFICATION);
-
-    g_state->input_events = (FuriPubSub*)furi_record_open(RECORD_INPUT_EVENTS);
-    if(g_state->input_events) {
-        g_state->input_sub =
-            furi_pubsub_subscribe(g_state->input_events, input_events_callback, g_state);
-    }
-
-    if(furi_mutex_acquire(g_state->game_mutex, FuriWaitForever) == FuriStatusOk) {
-        const uint32_t frame_before = arduboy.frameCount();
-        setup();
-        loop();
-        update_display_policy(g_state);
-        if(g_state->back_long_requested) {
-            g_state->back_long_requested = false;
-            if(can_exit_from_current_state()) g_state->exit_requested = true;
-            arduboy.resetInputState();
-            g_state->back_long_suppressed = false;
+        if((flash.frame == 2 || flash.frame == 4) &&
+           (flash.type == FlashType::SwordFight || flash.type == FlashType::MirrorLevel12)) {
+            invert = true;
         }
-        const uint32_t frame_after = arduboy.frameCount();
-        if(frame_after != frame_before) {
-            const GameState now_state = gamePlay.gameState;
-            if(now_state != g_state->last_game_state) {
-                g_state->last_game_state = now_state;
-                arduboy.resetInputState();
-                g_state->back_long_requested = false;
-                g_state->back_long_suppressed = false;
-            }
-            if(furi_mutex_acquire(g_state->fb_mutex, FuriWaitForever) == FuriStatusOk) {
-                memcpy(g_state->front_buffer, g_state->screen_buffer, FB_SIZE);
-                furi_mutex_release(g_state->fb_mutex);
-            }
-            arduboy.applyDeferredDisplayOps();
-        }
-        furi_mutex_release(g_state->game_mutex);
-    }
-    if(g_state->canvas) canvas_commit(g_state->canvas);
 
-    while(!g_state->exit_requested) {
-        if(furi_mutex_acquire(g_state->game_mutex, 0) == FuriStatusOk) {
-            const uint32_t frame_before = arduboy.frameCount();
-            loop();
-            update_display_policy(g_state);
-            if(g_state->back_long_requested) {
-                g_state->back_long_requested = false;
-                if(can_exit_from_current_state()) g_state->exit_requested = true;
-                arduboy.resetInputState();
-                g_state->back_long_suppressed = false;
-            }
-            const uint32_t frame_after = arduboy.frameCount();
-            if(frame_after != frame_before) {
-                const GameState now_state = gamePlay.gameState;
-                if(now_state != g_state->last_game_state) {
-                    g_state->last_game_state = now_state;
-                    arduboy.resetInputState();
-                    g_state->back_long_requested = false;
-                    g_state->back_long_suppressed = false;
-                }
-                if(furi_mutex_acquire(g_state->fb_mutex, 0) == FuriStatusOk) {
-                    memcpy(g_state->front_buffer, g_state->screen_buffer, FB_SIZE);
-                    furi_mutex_release(g_state->fb_mutex);
-                }
-                arduboy.applyDeferredDisplayOps();
-            }
-            furi_mutex_release(g_state->game_mutex);
-        }
-        if(g_state->canvas) canvas_commit(g_state->canvas);
-        furi_delay_ms(1);
+        FX::enableOLED();
+        arduboy.invert(invert);
     }
 
-    arduboy.audio.saveOnOff();
-    FX::commit();
-    FX::end();
-    arduboy_tone_sound_system_deinit();
-    if(g_state->notifications) {
-        if(g_state->backlight_forced) {
-            notification_message(g_state->notifications, &sequence_display_backlight_enforce_auto);
-            g_state->backlight_forced = false;
-        }
-        furi_record_close(RECORD_NOTIFICATION);
-        g_state->notifications = NULL;
+#ifndef SAVE_MEMORY_OTHER
+    if(!fadeEffect.isComplete()) {
+        fadeEffect.draw(arduboy);
+        fadeEffect.update();
     }
+#endif
 
-    if(g_state->input_sub) {
-        furi_pubsub_unsubscribe(g_state->input_events, g_state->input_sub);
-        g_state->input_sub = NULL;
-    }
-
-    wait_input_callbacks_idle(g_state);
-
-    if(g_state->input_events) {
-        furi_record_close(RECORD_INPUT_EVENTS);
-        g_state->input_events = NULL;
-    }
-
-    if(g_state->gui) {
-        gui_direct_draw_release(g_state->gui);
-        gui_remove_framebuffer_callback(g_state->gui, framebuffer_commit_callback, g_state);
-        furi_record_close(RECORD_GUI);
-        g_state->gui = NULL;
-        g_state->canvas = NULL;
-    }
-
-    if(g_state->game_mutex) {
-        furi_mutex_free(g_state->game_mutex);
-        g_state->game_mutex = NULL;
-    }
-    if(g_state->fb_mutex) {
-        furi_mutex_free(g_state->fb_mutex);
-        g_state->fb_mutex = NULL;
-    }
-
-    free(g_state);
-    g_state = NULL;
-
-    return 0;
+    FX::display(CLEAR_BUFFER);
 }
 
 #pragma GCC diagnostic pop

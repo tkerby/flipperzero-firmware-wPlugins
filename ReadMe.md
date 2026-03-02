@@ -37,6 +37,11 @@ This software is for experimental purposes only and is not meant for any illegal
 - [ESP Flasher: Bump Marauder v1.11.0 Beta 2/27 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/nightly_cb1e490)
 - Updated: [Arduventure v2.0 (By apfxtech)](https://github.com/apfxtech/FlipperArduventure)
 - Updated: [Minesweeper Redux v1.7 (By squee72564)](https://github.com/squee72564/F0_Minesweeper_Fap)
+- Updated: [CCID Emulator v1.0 (By barkandbite)](https://github.com/barkandbite/flipper_suite)
+- Updated: [HID Exfil v1.0 (By barkandbite)](https://github.com/barkandbite/flipper_suite)
+- Updated: [NFC Fuzzer v1.0 (By barkandbite)](https://github.com/barkandbite/flipper_suite)
+- Updated: [SubGHz Spectrum v1.0 (By barkandbite)](https://github.com/barkandbite/flipper_suite)
+- Updated: [Prince Of Arabia v1.0.12 (By apfxtech)](https://github.com/apfxtech/FlipperPrinceOfArabia)
 
 <a name="release"></a>
 
@@ -355,7 +360,7 @@ $ ./fbt dolphin_ext
 - [Pinball0 v0.5.2 (By rdefeo)](https://github.com/rdefeo/pinball0)
 - [Pocket Battle+ v2.0 (By HermeticCode)](https://github.com/HermeticCode/showdown-current)
 - [Pong v1.3 (By nmrr)](https://github.com/nmrr/flipperzero-pong)
-- [Prince Of Arabia v1.0.11 (By apfxtech)](https://github.com/apfxtech/FlipperPrinceOfArabia)
+- [Prince Of Arabia v1.0.12 (By apfxtech)](https://github.com/apfxtech/FlipperPrinceOfArabia)
 - [Puck Girl v0.3 (By fgreil)](https://github.com/fgreil/mitzi-puck)
 - [Quadrastic v1.0.2 (By ivanbarsukov)](https://github.com/ivanbarsukov/flipperzero-quadrastic)
 - [Questions v1.1 (By nikilark)](https://github.com/nikilark/flipper_questions)
