@@ -55,14 +55,21 @@ Read SPI NOR flash chips via the Flipper's GPIO header.
 | VCC       | 3V3         |
 | GND       | GND         |
 
-### FlipperPwn (USB)
-Modular pentest payload framework with OS detection, inspired by Metasploit.
+### FlipperPwn (USB + GPIO)
+Modular pentest payload framework with OS detection, inspired by Metasploit. Supports USB HID keystroke injection and WiFi Dev Board (ESP32 Marauder) via GPIO UART.
 
 - **Module Categories**: Recon, Credentials, Exploit, and Post-Exploit modules loaded from `.fpwn` files on the SD card
 - **OS Detection**: Automatic host OS fingerprinting via USB HID LED heuristics (NumLock/ScrollLock probes distinguish Windows, macOS, and Linux)
 - **Cross-Platform Payloads**: Each `.fpwn` module can contain platform-specific payload sections (`PLATFORM WIN`, `PLATFORM MAC`, `PLATFORM LINUX`) with DuckyScript-like syntax
 - **Template Substitution**: Configurable options via `OPTION` declarations with `{{OPTION_NAME}}` placeholders substituted at runtime
-- **18 Built-in Modules**: System info recon, WiFi/network enumeration, AV detection, credential harvesting (WiFi, browser, SSH, environment variables), reverse shells (TCP/DNS), download-and-execute, UAC bypass (fodhelper), MSFvenom stager, persistence (scheduled tasks, startup folder), Defender disablement, and user creation
+- **WiFi Dev Board Integration**: Connect an ESP32 WiFi Dev Board (running Marauder firmware) to the Flipper's GPIO header for wireless capabilities:
+  - WiFi AP scanning with RSSI, channel, and encryption display
+  - Network joining (WPA/WPA2/Open)
+  - ICMP ping sweep for host discovery
+  - Port scanning with service identification
+  - Deauth attacks and PMKID sniffing
+  - Mixed HID+WiFi payloads via `WIFI_SCAN`, `WIFI_JOIN`, `PING_SCAN`, `PORT_SCAN`, `WIFI_RESULT` module commands
+- **21 Built-in Modules**: System info recon, WiFi/network enumeration, AV detection, credential harvesting (WiFi, browser, SSH, environment variables), reverse shells (TCP/DNS), download-and-execute, UAC bypass (fodhelper), MSFvenom stager, persistence (scheduled tasks, startup folder), Defender disablement, user creation, WiFi scan report, evil twin, and port scan report
 - **Live Execution View**: Real-time progress display with line count and abort support (press Back to abort)
 
 **Module files**: Copy `flipperpwn_modules/` contents to `/ext/flipperpwn/modules/` on the SD card.
@@ -128,7 +135,8 @@ Or manually copy the `.fap` files:
 
 1. Build the app with `ufbt` (inside the app directory)
 2. Copy `dist/<app_name>.fap` to your Flipper's SD card under `/ext/apps/<category>/`
-   - BadUSB Pro, CCID Emulator, FlipperPwn, HID Exfil: `/ext/apps/USB/`
+   - BadUSB Pro, CCID Emulator, HID Exfil: `/ext/apps/USB/`
+   - FlipperPwn: `/ext/apps/Tools/`
    - NFC Fuzzer: `/ext/apps/NFC/`
    - SPI Flash Dump: `/ext/apps/GPIO/`
    - SubGHz Spectrum: `/ext/apps/Sub-GHz/`

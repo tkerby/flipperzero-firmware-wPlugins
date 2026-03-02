@@ -19,6 +19,8 @@
  */
 
 #include "flipperpwn.h"
+#include "wifi_uart.h"
+#include "marauder.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -405,8 +407,9 @@ static void
 
 /**
  * Execute a single substituted DuckyScript-like command line.
+ * `app` is required for WiFi commands; all non-WiFi commands ignore it.
  */
-static void fpwn_exec_command(const char* line) {
+static void fpwn_exec_command(const char* line, FPwnApp* app) {
     /* Skip empty lines and comments */
     if(line[0] == '\0' || line[0] == '#') return;
 
@@ -567,6 +570,173 @@ static void fpwn_exec_command(const char* line) {
     if(fkey) {
         furi_hal_hid_kb_press(fkey);
         furi_hal_hid_kb_release(fkey);
+        return;
+    }
+
+    /* ---- WiFi commands (require ESP32 Dev Board) ---- */
+
+    /* WIFI_SCAN — trigger AP scan and wait for results */
+    if(strcmp(line, "WIFI_SCAN") == 0) {
+        if(!app->marauder || !app->wifi_uart || !fpwn_wifi_uart_is_connected(app->wifi_uart)) {
+            FURI_LOG_W(TAG, "WIFI_SCAN: ESP32 not connected, skipping");
+            return;
+        }
+        fpwn_marauder_scan_ap(app->marauder);
+        /* Wait up to 10 seconds for scan results */
+        for(int i = 0; i < 100; i++) {
+            furi_delay_ms(100);
+            if(fpwn_marauder_get_state(app->marauder) == FPwnMarauderStateIdle) break;
+        }
+        fpwn_marauder_stop_scan(app->marauder);
+        return;
+    }
+
+    /* WIFI_JOIN <SSID> <PASSWORD> */
+    if(strncmp(line, "WIFI_JOIN ", 10) == 0) {
+        if(!app->marauder || !app->wifi_uart || !fpwn_wifi_uart_is_connected(app->wifi_uart)) {
+            FURI_LOG_W(TAG, "WIFI_JOIN: ESP32 not connected, skipping");
+            return;
+        }
+        const char* args = line + 10;
+        /* Parse SSID (first token) and password (remainder after first space) */
+        const char* space = strchr(args, ' ');
+        char ssid[33];
+        char password[64];
+        if(space) {
+            size_t ssid_len = (size_t)(space - args);
+            if(ssid_len > 32) ssid_len = 32;
+            memcpy(ssid, args, ssid_len);
+            ssid[ssid_len] = '\0';
+            strncpy(password, space + 1, sizeof(password) - 1);
+            password[sizeof(password) - 1] = '\0';
+        } else {
+            strncpy(ssid, args, sizeof(ssid) - 1);
+            ssid[sizeof(ssid) - 1] = '\0';
+            password[0] = '\0';
+        }
+        /* Find matching AP index in scan results; default to 0 if not found */
+        uint32_t ap_count = 0;
+        FPwnWifiAP* aps = fpwn_marauder_get_aps(app->marauder, &ap_count);
+        uint8_t ap_idx = 0;
+        for(uint32_t i = 0; i < ap_count; i++) {
+            if(strcmp(aps[i].ssid, ssid) == 0) {
+                ap_idx = (uint8_t)i;
+                break;
+            }
+        }
+        fpwn_marauder_join(app->marauder, ap_idx, password);
+        furi_delay_ms(3000); /* Wait for association */
+        return;
+    }
+
+    /* WIFI_DEAUTH */
+    if(strcmp(line, "WIFI_DEAUTH") == 0) {
+        if(!app->marauder || !app->wifi_uart || !fpwn_wifi_uart_is_connected(app->wifi_uart)) {
+            FURI_LOG_W(TAG, "WIFI_DEAUTH: ESP32 not connected, skipping");
+            return;
+        }
+        fpwn_marauder_deauth(app->marauder);
+        return;
+    }
+
+    /* PING_SCAN */
+    if(strcmp(line, "PING_SCAN") == 0) {
+        if(!app->marauder || !app->wifi_uart || !fpwn_wifi_uart_is_connected(app->wifi_uart)) {
+            FURI_LOG_W(TAG, "PING_SCAN: ESP32 not connected, skipping");
+            return;
+        }
+        fpwn_marauder_ping_scan(app->marauder);
+        /* Wait up to 30 seconds for ping scan */
+        for(int i = 0; i < 300; i++) {
+            furi_delay_ms(100);
+            if(fpwn_marauder_get_state(app->marauder) == FPwnMarauderStateIdle) break;
+        }
+        return;
+    }
+
+    /* PORT_SCAN <TARGET_IP> */
+    if(strncmp(line, "PORT_SCAN ", 10) == 0) {
+        if(!app->marauder || !app->wifi_uart || !fpwn_wifi_uart_is_connected(app->wifi_uart)) {
+            FURI_LOG_W(TAG, "PORT_SCAN: ESP32 not connected, skipping");
+            return;
+        }
+        const char* target = line + 10;
+        /* Find host index by IP; default to 0 if not found */
+        uint32_t host_count = 0;
+        FPwnNetHost* hosts = fpwn_marauder_get_hosts(app->marauder, &host_count);
+        uint8_t host_idx = 0;
+        for(uint32_t i = 0; i < host_count; i++) {
+            if(strcmp(hosts[i].ip, target) == 0) {
+                host_idx = (uint8_t)i;
+                break;
+            }
+        }
+        fpwn_marauder_port_scan(app->marauder, host_idx, false);
+        /* Wait up to 60 seconds */
+        for(int i = 0; i < 600; i++) {
+            furi_delay_ms(100);
+            if(fpwn_marauder_get_state(app->marauder) == FPwnMarauderStateIdle) break;
+        }
+        return;
+    }
+
+    /* WIFI_RESULT — type accumulated WiFi scan results as keystrokes */
+    if(strcmp(line, "WIFI_RESULT") == 0) {
+        if(!app->marauder) {
+            FURI_LOG_W(TAG, "WIFI_RESULT: no marauder, skipping");
+            return;
+        }
+        /* Type AP results */
+        uint32_t ap_count = 0;
+        FPwnWifiAP* aps = fpwn_marauder_get_aps(app->marauder, &ap_count);
+        for(uint32_t i = 0; i < ap_count; i++) {
+            char buf[128];
+            snprintf(
+                buf,
+                sizeof(buf),
+                "%s  %s  %ddBm  CH%u",
+                aps[i].ssid,
+                aps[i].bssid,
+                (int)aps[i].rssi,
+                (unsigned)aps[i].channel);
+            fpwn_type_string(buf);
+            furi_hal_hid_kb_press(HID_KEYBOARD_RETURN);
+            furi_hal_hid_kb_release(HID_KEYBOARD_RETURN);
+            furi_delay_ms(5);
+        }
+        /* Type host results */
+        uint32_t host_count = 0;
+        FPwnNetHost* hosts = fpwn_marauder_get_hosts(app->marauder, &host_count);
+        for(uint32_t i = 0; i < host_count; i++) {
+            if(!hosts[i].alive) continue;
+            char buf[32];
+            snprintf(buf, sizeof(buf), "%s alive", hosts[i].ip);
+            fpwn_type_string(buf);
+            furi_hal_hid_kb_press(HID_KEYBOARD_RETURN);
+            furi_hal_hid_kb_release(HID_KEYBOARD_RETURN);
+            furi_delay_ms(5);
+        }
+        /* Type port results */
+        uint32_t port_count = 0;
+        FPwnPortResult* ports = fpwn_marauder_get_ports(app->marauder, &port_count);
+        for(uint32_t i = 0; i < port_count; i++) {
+            if(!ports[i].open) continue;
+            char buf[48];
+            snprintf(
+                buf, sizeof(buf), "%u/tcp open %s", (unsigned)ports[i].port, ports[i].service);
+            fpwn_type_string(buf);
+            furi_hal_hid_kb_press(HID_KEYBOARD_RETURN);
+            furi_hal_hid_kb_release(HID_KEYBOARD_RETURN);
+            furi_delay_ms(5);
+        }
+        return;
+    }
+
+    /* WIFI_WAIT <ms> — sleep for a fixed duration during WiFi operations */
+    if(strncmp(line, "WIFI_WAIT ", 10) == 0) {
+        uint32_t ms = (uint32_t)atoi(line + 10);
+        if(ms > 60000) ms = 60000; /* cap at 60 s to prevent runaway delays */
+        furi_delay_ms(ms);
         return;
     }
 
@@ -879,7 +1049,7 @@ int32_t fpwn_payload_execute_thread(void* ctx) {
 
         /* Substitute template variables then execute */
         fpwn_substitute(trimmed, substituted, sizeof(substituted), module);
-        fpwn_exec_command(substituted);
+        fpwn_exec_command(substituted, app);
 
         lines_done++;
 

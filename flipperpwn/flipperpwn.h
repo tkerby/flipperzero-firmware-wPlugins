@@ -7,10 +7,14 @@
 #include <gui/view_dispatcher.h>
 #include <gui/modules/submenu.h>
 #include <gui/modules/variable_item_list.h>
+#include <gui/modules/text_input.h>
+#include <gui/modules/text_box.h>
 #include <gui/modules/widget.h>
 #include <gui/view.h>
 #include <storage/storage.h>
 #include <notification/notification_messages.h>
+#include "wifi_uart.h"
+#include "marauder.h"
 
 /* =========================================================================
  * Constants
@@ -37,7 +41,14 @@ typedef enum {
     FPwnViewModuleList,
     FPwnViewModuleInfo,
     FPwnViewOptions,
+    FPwnViewOptionEdit,
     FPwnViewExecute,
+    FPwnViewWifiMenu,
+    FPwnViewWifiScan,
+    FPwnViewWifiPassword,
+    FPwnViewPingScan,
+    FPwnViewPortScan,
+    FPwnViewWifiStatus,
 } FPwnView;
 
 typedef enum {
@@ -105,6 +116,9 @@ typedef struct {
     Submenu* module_list;
     Widget* module_info;
     VariableItemList* options_list;
+    TextInput* option_edit_input;
+    char option_edit_buf[FPWN_OPT_VALUE_LEN];
+    uint8_t editing_option_index;
     View* execute_view;
 
     /* Services */
@@ -125,6 +139,20 @@ typedef struct {
     FuriThread* exec_thread;
     bool abort_requested;
     FuriMutex* mutex;
+
+    /* WiFi Dev Board */
+    FPwnWifiUart* wifi_uart;
+    FPwnMarauder* marauder;
+    Submenu* wifi_menu;
+    View* wifi_scan_view;
+    TextInput* wifi_text_input;
+    char wifi_text_buf[128];
+    TextBox* wifi_status;
+    FuriString* wifi_status_text;
+    View* ping_scan_view;
+    View* port_scan_view;
+    uint8_t wifi_selected_ap;
+    uint8_t wifi_selected_host;
 } FPwnApp;
 
 /* =========================================================================
@@ -162,6 +190,23 @@ const char* fpwn_os_name(FPwnOS os);
 /* Resolve the effective OS: manual_os wins over detected_os.
  * Used by payload_engine.c to select the correct payload section. */
 FPwnOS fpwn_effective_os(const FPwnApp* app);
+
+/* Set the active view for navigation tracking.
+ * Used by wifi_views.c to update g_current_view before switching views. */
+void fpwn_set_current_view(FPwnView view);
+
+/* =========================================================================
+ * WiFi views (wifi_views.c)
+ * ========================================================================= */
+
+/* Allocate and register all WiFi-related views with the view dispatcher. */
+void fpwn_wifi_views_alloc(FPwnApp* app);
+
+/* Remove WiFi views and free all WiFi resources. */
+void fpwn_wifi_views_free(FPwnApp* app);
+
+/* Populate the WiFi submenu items. */
+void fpwn_wifi_menu_setup(FPwnApp* app);
 
 /* =========================================================================
  * Entry point

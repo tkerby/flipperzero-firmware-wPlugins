@@ -6,8 +6,9 @@
  *   FPwnViewMainMenu     Submenu           — root menu
  *   FPwnViewCategoryMenu Submenu           — payload category picker
  *   FPwnViewModuleList   Submenu           — filtered module list
- *   FPwnViewModuleInfo   Widget            — module detail + Run/Back buttons
- *   FPwnViewOptions      VariableItemList  — (v1 stub, reserved)
+ *   FPwnViewModuleInfo   Widget            — module detail + Run/Options/Back buttons
+ *   FPwnViewOptions      VariableItemList  — per-module option list
+ *   FPwnViewOptionEdit   TextInput         — inline value editor for a single option
  *   FPwnViewExecute      View              — live execution status
  *
  * Navigation is tracked via a file-static g_current_view so the navigation
@@ -29,9 +30,13 @@ typedef enum {
     FPwnCustomEventExecDone = 1, /* execution thread signalled completion       */
 } FPwnCustomEvent;
 
-/* File-static view-stack tracker.
- * Avoids adding a field to the header-frozen FPwnApp. Reset at app start. */
-static FPwnView g_current_view = FPwnViewMainMenu;
+/* View-stack tracker shared with wifi_views.c via fpwn_set_current_view().
+ * Reset to the main menu at each app start. */
+FPwnView g_current_view = FPwnViewMainMenu;
+
+void fpwn_set_current_view(FPwnView view) {
+    g_current_view = view;
+}
 
 /* --------------------------------------------------------------------------
  * Forward declarations
@@ -49,6 +54,10 @@ static bool fpwn_execute_input_callback(InputEvent* event, void* ctx);
 static void fpwn_rebuild_main_menu(FPwnApp* app);
 static void fpwn_populate_module_list(FPwnApp* app);
 static void fpwn_populate_module_info(FPwnApp* app);
+static void fpwn_widget_options_callback(GuiButtonType btn, InputType type, void* ctx);
+static void fpwn_options_enter_callback(void* ctx, uint32_t index);
+static void fpwn_option_edit_done_callback(void* ctx);
+static void fpwn_populate_options_list(FPwnApp* app);
 
 /* --------------------------------------------------------------------------
  * Helpers
@@ -161,6 +170,11 @@ static bool fpwn_navigation_callback(void* ctx) {
         view_dispatcher_switch_to_view(app->view_dispatcher, FPwnViewModuleList);
         return true;
 
+    case FPwnViewOptionEdit:
+        g_current_view = FPwnViewOptions;
+        view_dispatcher_switch_to_view(app->view_dispatcher, FPwnViewOptions);
+        return true;
+
     case FPwnViewOptions:
         g_current_view = FPwnViewModuleInfo;
         view_dispatcher_switch_to_view(app->view_dispatcher, FPwnViewModuleInfo);
@@ -174,6 +188,44 @@ static bool fpwn_navigation_callback(void* ctx) {
     case FPwnViewCategoryMenu:
         g_current_view = FPwnViewMainMenu;
         view_dispatcher_switch_to_view(app->view_dispatcher, FPwnViewMainMenu);
+        return true;
+
+    case FPwnViewWifiMenu:
+        g_current_view = FPwnViewMainMenu;
+        view_dispatcher_switch_to_view(app->view_dispatcher, FPwnViewMainMenu);
+        return true;
+
+    case FPwnViewWifiScan:
+        /* Stop any active scan before leaving */
+        if(fpwn_marauder_get_state(app->marauder) == FPwnMarauderStateScanning) {
+            fpwn_marauder_stop_scan(app->marauder);
+        }
+        g_current_view = FPwnViewWifiMenu;
+        view_dispatcher_switch_to_view(app->view_dispatcher, FPwnViewWifiMenu);
+        return true;
+
+    case FPwnViewWifiPassword:
+        g_current_view = FPwnViewWifiScan;
+        view_dispatcher_switch_to_view(app->view_dispatcher, FPwnViewWifiScan);
+        return true;
+
+    case FPwnViewPingScan:
+        g_current_view = FPwnViewWifiMenu;
+        view_dispatcher_switch_to_view(app->view_dispatcher, FPwnViewWifiMenu);
+        return true;
+
+    case FPwnViewPortScan:
+        g_current_view = FPwnViewPingScan;
+        view_dispatcher_switch_to_view(app->view_dispatcher, FPwnViewPingScan);
+        return true;
+
+    case FPwnViewWifiStatus:
+        /* Stop any active operation when dismissing the status log */
+        if(fpwn_marauder_get_state(app->marauder) != FPwnMarauderStateIdle) {
+            fpwn_marauder_stop(app->marauder);
+        }
+        g_current_view = FPwnViewWifiMenu;
+        view_dispatcher_switch_to_view(app->view_dispatcher, FPwnViewWifiMenu);
         return true;
 
     case FPwnViewMainMenu:
@@ -256,6 +308,7 @@ typedef enum {
     FPwnMainMenuBrowse = 0,
     FPwnMainMenuDetectOS = 1,
     FPwnMainMenuSetOS = 2,
+    FPwnMainMenuWifi = 3,
 } FPwnMainMenuItem;
 
 static void fpwn_rebuild_main_menu(FPwnApp* app) {
@@ -271,6 +324,12 @@ static void fpwn_rebuild_main_menu(FPwnApp* app) {
         FPwnMainMenuSetOS,
         fpwn_main_menu_callback,
         app);
+
+    /* Show connection state in the label so the user knows if ESP32 is present */
+    const char* wifi_label = (app->wifi_uart && fpwn_wifi_uart_is_connected(app->wifi_uart)) ?
+                                 "WiFi Tools" :
+                                 "WiFi Tools (No ESP32)";
+    submenu_add_item(app->main_menu, wifi_label, FPwnMainMenuWifi, fpwn_main_menu_callback, app);
 }
 
 static void fpwn_main_menu_callback(void* ctx, uint32_t index) {
@@ -308,6 +367,12 @@ static void fpwn_main_menu_callback(void* ctx, uint32_t index) {
         }
         /* Rebuild so the item label reflects the new selection. */
         fpwn_rebuild_main_menu(app);
+        break;
+
+    case FPwnMainMenuWifi:
+        fpwn_wifi_menu_setup(app);
+        g_current_view = FPwnViewWifiMenu;
+        view_dispatcher_switch_to_view(app->view_dispatcher, FPwnViewWifiMenu);
         break;
     }
 }
@@ -450,6 +515,10 @@ static void fpwn_populate_module_info(FPwnApp* app) {
     /* Buttons */
     widget_add_button_element(
         app->module_info, GuiButtonTypeLeft, "Back", fpwn_widget_back_callback, app);
+    if(mod->option_count > 0) {
+        widget_add_button_element(
+            app->module_info, GuiButtonTypeCenter, "Options", fpwn_widget_options_callback, app);
+    }
     widget_add_button_element(
         app->module_info, GuiButtonTypeRight, "Run", fpwn_widget_run_callback, app);
 }
@@ -468,6 +537,89 @@ static void fpwn_widget_back_callback(GuiButtonType btn, InputType type, void* c
     FPwnApp* app = (FPwnApp*)ctx;
     g_current_view = FPwnViewModuleList;
     view_dispatcher_switch_to_view(app->view_dispatcher, FPwnViewModuleList);
+}
+
+static void fpwn_widget_options_callback(GuiButtonType btn, InputType type, void* ctx) {
+    UNUSED(btn);
+    if(type != InputTypeShort) return;
+    FPwnApp* app = (FPwnApp*)ctx;
+    fpwn_populate_options_list(app);
+    g_current_view = FPwnViewOptions;
+    view_dispatcher_switch_to_view(app->view_dispatcher, FPwnViewOptions);
+}
+
+/* --------------------------------------------------------------------------
+ * Options list
+ * -------------------------------------------------------------------------- */
+static void fpwn_populate_options_list(FPwnApp* app) {
+    variable_item_list_reset(app->options_list);
+
+    if(app->selected_module_index < 0 ||
+       (uint32_t)app->selected_module_index >= app->module_count) {
+        return;
+    }
+
+    FPwnModule* mod = &app->modules[app->selected_module_index];
+
+    for(uint8_t i = 0; i < mod->option_count; i++) {
+        VariableItem* item = variable_item_list_add(
+            app->options_list,
+            mod->options[i].name,
+            0, /* no cycling values */
+            NULL,
+            app);
+        variable_item_set_current_value_text(item, mod->options[i].value);
+    }
+
+    variable_item_list_set_enter_callback(app->options_list, fpwn_options_enter_callback, app);
+}
+
+static void fpwn_options_enter_callback(void* ctx, uint32_t index) {
+    FPwnApp* app = (FPwnApp*)ctx;
+
+    if(app->selected_module_index < 0) return;
+    FPwnModule* mod = &app->modules[app->selected_module_index];
+    if(index >= mod->option_count) return;
+
+    app->editing_option_index = (uint8_t)index;
+
+    /* Copy current value into edit buffer */
+    strncpy(app->option_edit_buf, mod->options[index].value, FPWN_OPT_VALUE_LEN - 1);
+    app->option_edit_buf[FPWN_OPT_VALUE_LEN - 1] = '\0';
+
+    text_input_reset(app->option_edit_input);
+    text_input_set_header_text(app->option_edit_input, mod->options[index].name);
+    text_input_set_result_callback(
+        app->option_edit_input,
+        fpwn_option_edit_done_callback,
+        app,
+        app->option_edit_buf,
+        FPWN_OPT_VALUE_LEN,
+        false);
+
+    g_current_view = FPwnViewOptionEdit;
+    view_dispatcher_switch_to_view(app->view_dispatcher, FPwnViewOptionEdit);
+}
+
+static void fpwn_option_edit_done_callback(void* ctx) {
+    FPwnApp* app = (FPwnApp*)ctx;
+
+    if(app->selected_module_index < 0) return;
+    FPwnModule* mod = &app->modules[app->selected_module_index];
+
+    if(app->editing_option_index < mod->option_count) {
+        strncpy(
+            mod->options[app->editing_option_index].value,
+            app->option_edit_buf,
+            FPWN_OPT_VALUE_LEN - 1);
+        mod->options[app->editing_option_index].value[FPWN_OPT_VALUE_LEN - 1] = '\0';
+    }
+
+    /* Refresh the options list to show the new value */
+    fpwn_populate_options_list(app);
+
+    g_current_view = FPwnViewOptions;
+    view_dispatcher_switch_to_view(app->view_dispatcher, FPwnViewOptions);
 }
 
 /* --------------------------------------------------------------------------
@@ -499,7 +651,6 @@ static FPwnApp* flipperpwn_app_alloc(void) {
 
     /* ---- View dispatcher ---- */
     app->view_dispatcher = view_dispatcher_alloc();
-    view_dispatcher_enable_queue(app->view_dispatcher);
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_navigation_event_callback(app->view_dispatcher, fpwn_navigation_callback);
     view_dispatcher_set_custom_event_callback(app->view_dispatcher, fpwn_custom_event_callback);
@@ -527,10 +678,15 @@ static FPwnApp* flipperpwn_app_alloc(void) {
     view_dispatcher_add_view(
         app->view_dispatcher, FPwnViewModuleInfo, widget_get_view(app->module_info));
 
-    /* ---- Options list (v1 stub) ---- */
+    /* ---- Options list ---- */
     app->options_list = variable_item_list_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher, FPwnViewOptions, variable_item_list_get_view(app->options_list));
+
+    /* ---- Option edit text input ---- */
+    app->option_edit_input = text_input_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher, FPwnViewOptionEdit, text_input_get_view(app->option_edit_input));
 
     /* ---- Execute view ---- */
     app->execute_view = view_alloc();
@@ -541,6 +697,13 @@ static FPwnApp* flipperpwn_app_alloc(void) {
     with_view_model(
         app->execute_view, FPwnExecModel * m, { memset(m, 0, sizeof(FPwnExecModel)); }, false);
     view_dispatcher_add_view(app->view_dispatcher, FPwnViewExecute, app->execute_view);
+
+    /* ---- WiFi Dev Board views ---- */
+    fpwn_wifi_views_alloc(app);
+
+    /* Rebuild main menu now that wifi_uart is initialised so the label
+     * accurately reflects whether an ESP32 is present. */
+    fpwn_rebuild_main_menu(app);
 
     return app;
 }
@@ -561,6 +724,9 @@ static void flipperpwn_app_free(FPwnApp* app) {
         app->exec_thread = NULL;
     }
 
+    /* Remove WiFi views first (they hold UART + marauder resources). */
+    fpwn_wifi_views_free(app);
+
     /* Remove views from dispatcher before freeing underlying objects.
      * Order does not matter for correctness, but mirror alloc order. */
     view_dispatcher_remove_view(app->view_dispatcher, FPwnViewMainMenu);
@@ -568,6 +734,7 @@ static void flipperpwn_app_free(FPwnApp* app) {
     view_dispatcher_remove_view(app->view_dispatcher, FPwnViewModuleList);
     view_dispatcher_remove_view(app->view_dispatcher, FPwnViewModuleInfo);
     view_dispatcher_remove_view(app->view_dispatcher, FPwnViewOptions);
+    view_dispatcher_remove_view(app->view_dispatcher, FPwnViewOptionEdit);
     view_dispatcher_remove_view(app->view_dispatcher, FPwnViewExecute);
 
     view_dispatcher_free(app->view_dispatcher);
@@ -577,6 +744,7 @@ static void flipperpwn_app_free(FPwnApp* app) {
     submenu_free(app->module_list);
     widget_free(app->module_info);
     variable_item_list_free(app->options_list);
+    text_input_free(app->option_edit_input);
     view_free(app->execute_view);
 
     furi_mutex_free(app->mutex);
