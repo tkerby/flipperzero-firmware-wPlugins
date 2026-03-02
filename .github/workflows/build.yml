@@ -1,16 +1,9 @@
-name: "FAP: Build for multiple SDK sources"
-# This will build your app for dev and release channels on GitHub. 
-# It will also build your app every day to make sure it's up to date with the latest SDK changes.
-# See https://github.com/marketplace/actions/build-flipper-application-package-fap for more information
+name: "FAP: Build all apps"
 
 on:
   push:
-    ## put your main branch name under "branches"
-    #branches: 
-    #  - master 
   pull_request:
-  schedule: 
-    # do a build every day
+  schedule:
     - cron: "1 1 * * *"
 
 jobs:
@@ -23,19 +16,42 @@ jobs:
             sdk-channel: dev
           - name: release channel
             sdk-channel: release
-          # You can add unofficial channels here. See ufbt action docs for more info.
     name: 'ufbt: Build for ${{ matrix.name }}'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Build with ufbt
+      - name: Build badusb_pro
         uses: flipperdevices/flipperzero-ufbt-action@v0.1
-        id: build-app
         with:
           sdk-channel: ${{ matrix.sdk-channel }}
-      - name: Upload app artifacts
-        uses: actions/upload-artifact@v4
+          app-dir: badusb_pro
+      - name: Build ccid_emulator
+        uses: flipperdevices/flipperzero-ufbt-action@v0.1
         with:
-          # See ufbt action docs for other output variables
-          name: ${{ github.event.repository.name }}-${{ steps.build-app.outputs.suffix }}
-          path: ${{ steps.build-app.outputs.fap-artifacts }}
+          sdk-channel: ${{ matrix.sdk-channel }}
+          app-dir: ccid_emulator
+          skip-setup: true
+      - name: Build hid_exfil
+        uses: flipperdevices/flipperzero-ufbt-action@v0.1
+        with:
+          sdk-channel: ${{ matrix.sdk-channel }}
+          app-dir: hid_exfil
+          skip-setup: true
+      - name: Build nfc_fuzzer
+        uses: flipperdevices/flipperzero-ufbt-action@v0.1
+        with:
+          sdk-channel: ${{ matrix.sdk-channel }}
+          app-dir: nfc_fuzzer
+          skip-setup: true
+      - name: Build spi_flash_dump
+        uses: flipperdevices/flipperzero-ufbt-action@v0.1
+        with:
+          sdk-channel: ${{ matrix.sdk-channel }}
+          app-dir: spi_flash_dump
+          skip-setup: true
+      - name: Build subghz_spectrum
+        uses: flipperdevices/flipperzero-ufbt-action@v0.1
+        with:
+          sdk-channel: ${{ matrix.sdk-channel }}
+          app-dir: subghz_spectrum
+          skip-setup: true
