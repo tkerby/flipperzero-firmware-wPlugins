@@ -4,11 +4,20 @@ App(
     apptype=FlipperAppType.EXTERNAL,
     targets=["f7"],
     entry_point="seader_app",
-    stack_size=5 * 1024,
+    stack_size=3 * 1024,
+    cdefines=[
+        "APP_SEADER",
+        "ASN_DISABLE_PER_SUPPORT",
+        "ASN_DISABLE_OER_SUPPORT",
+        "ASN_DISABLE_XER_SUPPORT",
+        "ASN_DISABLE_RANDOM_FILL",
+    ],
     sources=[
         "*.c",
         "aeabi_uldivmod.sx",
-        "!plugin/*.c",
+        "!hf_interface_fal/*.c",
+        "!runtime_policy.c",
+        "!wiegand_interface_fal/*.c",
     ],
     fap_icon="icons/logo.png",
     fap_category="NFC",
@@ -25,8 +34,11 @@ App(
             cflags=[
                 "-Wno-error",
                 "-DASN_EMIT_DEBUG=0",
+                "-DASN_DISABLE_PER_SUPPORT",
+                "-DASN_DISABLE_OER_SUPPORT",
+                "-DASN_DISABLE_XER_SUPPORT",
+                "-DASN_DISABLE_RANDOM_FILL",
                 "-Os",
-                "-DASN_DISABLE_PER_SUPPORT=1",
             ],
         ),
         Lib(
@@ -39,7 +51,7 @@ App(
     fap_author="bettse",
     # fap_weburl="https://seader.ericbetts.dev",
     fap_weburl="https://github.com/bettse/seader/",
-    fap_version="4.0",
+    fap_version="4.1",
     fap_description="Interface with a SAM from the Flipper Zero over UART",
 )
 
@@ -48,6 +60,15 @@ App(
     apptype=FlipperAppType.PLUGIN,
     entry_point="plugin_wiegand_ep",
     requires=["seader"],
-    sources=["plugin/wiegand.c"],
+    sources=["wiegand_interface_fal/wiegand.c"],
+    fal_embedded=True,
+)
+
+App(
+    appid="seader_plugin_hf",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="plugin_hf_ep",
+    requires=["seader"],
+    sources=["hf_interface_fal/hf.c"],
     fal_embedded=True,
 )

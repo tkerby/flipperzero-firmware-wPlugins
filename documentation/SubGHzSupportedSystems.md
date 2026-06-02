@@ -2,6 +2,10 @@
 
 This file lists all supported Sub-GHz protocols available in RM Firmware (thanks to Unleashed), both tested and untested.
 
+Many protocols support, and this documentation page, comes from [Unleashed Firmware](https://github.com/DarkFlippers/unleashed-firmware).
+Currently Momentum has the same Sub-GHz protocol list as Unleashed, and most Sub-GHz innovation is driven by the Unleashed team.
+Go show them some love and maybe donate to them too!
+
 That list is only for default SubGHz app, apps like *Weather Station* have their own protocols list
 
 
@@ -20,11 +24,13 @@ That list is only for default SubGHz app, apps like *Weather Station* have their
 - AN-Motors (Alutech) AT4 `433.92MHz` `AM650` (64 bits, Pseudo-Dynamic, KeeLoq based)
 - Ansonic `433MHz` `FM` (12 bits, Static)
 - BETT `433.92MHz` `AM650` (18 bits, Static)
-- Beninca ARC (TOGO2VA) `433.92MHz` `AM650` (128 bits, Dynamic AES) (button code `0` emulates `hidden button` option on the remote)
-- BFT Mitto `433.92MHz` `AM650` (64 bits, Dynamic, KeeLoq based with Seed)
-- CAME Atomo `433.92MHz, 868MHz` `AM650` (62 bits, Dynamic)
-- CAME TWEE `433.92MHz` `AM650` (54 bits, Static)
+- Beninca ARC (TOGO2VA) `433.92MHz` `AM650` (128 bits, Dynamic AES128) (button code `0` emulates `hidden button` option on the remote)
+- BFT Mitto `433.92MHz` `AM650` (64 bits, Dynamic, KeeLoq based with Seed taken from serial)
+- Erreka - `433.92MHz` `AM650` (KeeLoq, 64 bits) (8bit serial part in Hop - secure learning with Seed)
+- CAME Atomo `433.92MHz, 868MHz` `AM650` (62 bits, Dynamic) (TOPD4REN, TOP44RBN, TOP42R, TOP44R)
+- CAME TWEE `433.92MHz` `AM650` (54 bits, Pseudo-Dynamic) (+ TOP44FGN) (aka New Fixed Code)
 - CAME `433.92MHz, 868MHz` `AM650` (12, 24 bits, Static)
+- Ditec GOL4 `433.92MHz` `AM650` (54 bits, Dynamic) (should be compatible with BIXLG4, BIXLS2, BIXLP2) - (right arrow emulates button `0` (hidden button))
 - Prastel `433.92MHz, 868MHz` `AM650` (25, 42 bits, Static)
 - Airforce `433.92MHz, 868MHz` `AM650` (18 bits, Static)
 - Chamberlain Code `AM650` (10 bits, Static)
@@ -32,14 +38,15 @@ That list is only for default SubGHz app, apps like *Weather Station* have their
 - Dickert MAHS `AM650` (36 bits, Static)
 - Doitrand `AM650` (37 bits, Dynamic)
 - Elplast/P-11B/3BK/E.C.A `433MHz` `AM650` (18 bits, Static)
-- FAAC SLH `433.92MHz, 868MHz` `AM650` (64 bits, Dynamic)
+- FAAC SLH `433.92MHz, 868.35MHz` `AM650` (64 bits, Dynamic) (+ Genius KILO TX2/4 JLC, other Genius models)
 - Gate TX `433.92MHz` `AM650` (64 bits, Static)
 - Hormann `868MHz` `AM650` (44 bits, Static)
 - HCS101 `AM650` (64 bits, Simple Dynamic, KeeLoq-like)
-- IDO `433MHz` `AM650` (48 bits, Dynamic)
+- iDO `433MHz` `AM650` (48 bits, Dynamic) (Decode only)
 - KingGates Stylo 4k `433.92MHz` `AM650` (89 bits, Dynamic, KeeLoq based)
 - Mastercode `AM650` (36 bits, Static)
 - Megacode `AM650` (24 bits, Static)
+- Nord ICE `433.92MHz` `AM650` (33 bits, Static)
 - Nero Sketch `AM650` (40 bits, Static)
 - Nice Flo `433.92MHz` `AM650` (12, 24 bits, Static)
 - Nice FloR-S `433.92MHz` `AM650` (52 bits, Dynamic)
@@ -49,13 +56,14 @@ That list is only for default SubGHz app, apps like *Weather Station* have their
 - V2 Phoenix (Phox) `433.92MHz` `AM650` (52 bits, Dynamic) (receivers have option to enable Static mode, making them ignore rolling part of the key)
 - Marantec `433.92MHz, 868MHz` `AM650` (49 bits, Static)
 - Marantec24 `868MHz` `AM650` (24 bits, Static)
-- Somfy Keytis `433.92MHz, 868MHz` `AM650` (80 bits, Dynamic)
+- Somfy Keytis `433.42MHz, 868MHz` `AM650` (80 bits, Dynamic) (KeyGo 4 RTS 4 / Keytis NS 2RTS)
 - ZKTeco `430.5MHz` `AM650` (24 bits, Static - Princeton based) - (Button codes (already mapped to arrow keys): `0x30 (UP)`, `0x03 (STOP)`, `0x0C (DOWN)`) 
 - Linear `300MHz` `AM650` (10 bits, Static)
 - Linear Delta3 `AM650` (8 bits, Static)
 - Nero Radio `434.42MHz` `AM650` (56 bits, Static mode only, Dynamic is unsupported)
 - Security+1.0 `315MHz, 433.92MHz, 390MHz` `AM650` (42 bits, Dynamic)
 - Security+2.0 `310MHz, 390MHz, 868MHz` `AM650` (62 bits, Dynamic)
+- Allstar Firefly 318ALD31K `318MHz` `AM650` (18 bits, Static)
 
 ### Sensors & Smart home
 - Intertechno V3 `AM650` (32 bits, Static) - Lights, sockets, other.
@@ -81,6 +89,7 @@ That list is only for default SubGHz app, apps like *Weather Station* have their
 - SMC5326 `315MHz, 433.92MHz, Any other frequency` `AM650` (25 bits, Static)
 - Hay21 `433.92MHz` `AM650` (21 bits, Dynamic)
 - Treadmill37 (QH-433) `433.92MHz` `AM650` (37 bits, Static)
+- KeyFinder `433.92MHz` `AM650` (24 bits, Static)
 
 ---
 
@@ -104,9 +113,9 @@ The following manufacturers have KeeLoq support in RM Firmware (thanks to Unleas
 - DEA Mio - `433.92MHz` `AM650` (KeeLoq, 64 bits) (modified serial in Hop, uses last 3 digits modifying first one (example - 419 -> C19) - simple learning)
 - DoorHan - 315MHz, `433.92MHz` `AM650` (KeeLoq, 64 bits)
 - DTM Neo - `433.92MHz` `AM650` (KeeLoq, 64 bits) (12bit serial part in Hop - simple learning)
-- Elmes Poland - `433.92MHz` `AM650` (KeeLoq, 64 bits) (normal learning)
+- Elmes Poland - `303, 433.92MHz` `AM650` (KeeLoq, 64 bits) (normal learning)
 - FAAC RC,XT - `433.92MHz, 868MHz` `AM650` (KeeLoq, 64 bits) (12bit serial part in Hop - normal learning)
-- Genius Bravo - `433.92MHz` `AM650` (KeeLoq, 64 bits) (12bit serial part in Hop - normal learning)
+- Genius Bravo - `433.92MHz` `AM650` (KeeLoq, 64 bits) (12bit serial part in Hop - normal learning) (Genius ECHO, Genius Bravo (Button code 0xB for prog. mode))
 - Gibidi - `433.92MHz` `AM650` (KeeLoq, 64 bits)
 - GSN - `433.92MHz` `AM650` (KeeLoq, 64 bits) (12bit serial part in Hop - normal learning)
 - Hormann EcoStar - `433.92MHz` `AM650` (KeeLoq, 64 bits) (normal learning)
@@ -117,7 +126,7 @@ The following manufacturers have KeeLoq support in RM Firmware (thanks to Unleas
 - KEY (KeeLoq, 64 bits)
 - Monarch - `433.92MHz` `AM650` (KeeLoq, 64 bits) (no serial in Hop, uses fixed value 0x100 - normal learning)
 - Motorline - `433.92MHz` `AM650` (KeeLoq, 64 bits) (normal learning)
-- Mutanco/Mutancode (KeeLoq, 64 bits) (12bit serial part in Hop - normal learning)
+- Clemsa Mutancode (KeeLoq, 64 bits) (12bit serial part in Hop - normal learning)
 - Mhouse - `433.92MHz` `AM650` (KeeLoq, 64 bits) (8bit serial part in Hop - simple learning)
 - Nice Smilo - `433.92MHz` `AM650` (KeeLoq, 64 bits) (8bit serial part in Hop - simple learning)
 - Normstahl - `433.92MHz` `AM650` (KeeLoq, 64 bits)
@@ -125,6 +134,46 @@ The following manufacturers have KeeLoq support in RM Firmware (thanks to Unleas
 - Sommer `434.42MHz, 868.80MHz` `FSK12K (or FSK476)` (KeeLoq, 64 bits) (normal learning) (TX03-868-4, Pearl, and maybe other models are supported (SOMloq))
 - Steelmate - `433.92MHz` `AM650` (KeeLoq, 64 bits) (12bit serial part in Hop - normal learning)
 - Stilmatic (R-Tech) - `433.92MHz` `AM650` (KeeLoq, 64 bits) (12bit serial part in Hop - normal learning) (receiver checks for 10bit only (unverified))
+- Pujol - `433.92MHz` `AM650` (KeeLoq, 64 bits) (8bit serial part in Hop - special learning) (Pujol Vario 4, other models)
+- Pujol Vario - `433.92MHz` `AM650` (KeeLoq, 64 bits) (8bit serial part in Hop - simple learning) (older models)
+- Wisniowski (KeeLoq, 64 bits) (12bit serial part in Hop - normal learning)
+- Doormatic (KeeLoq, 64 bits) (normal learning)
+- Elvox (KeeLoq, 64 bits) (normal learning)
+- ET Blue (KeeLoq, 64 bits) (10bit serial part in Hop - normal learning)
+- ET Blue Mix (KeeLoq, 64 bits) (10bit serial part in Hop - normal learning)
+- ATA PTX4 (KeeLoq, 64 bits) (12bit serial part in Hop - normal learning)
+- Verex (KeeLoq, 64 bits) (normal learning)
+- Mc Garcia (KeeLoq, 64 bits) (10bit serial part in Hop - simple learning)
+- Fadini (KeeLoq, 64 bits) (12bit serial part in Hop - simple learning)
+- Seav (KeeLoq, 64 bits) (12bit serial part in Hop - normal learning)
+- AERF Otros (KeeLoq, 64 bits) (10bit serial part in Hop - special learning)
+- AERF Collbaix (KeeLoq, 64 bits) (10bit serial part in Hop - special learning)
+- AERF Hy dom (KeeLoq, 64 bits) (10bit serial part in Hop - special learning)
+- AERF Medva (KeeLoq, 64 bits) (10bit serial part in Hop - special learning)
+- AERF VDS (KeeLoq, 64 bits) (10bit serial part in Hop - special learning)
+- AERF Temp (KeeLoq, 64 bits) (10bit serial part in Hop - special learning)
+- AERF Sabutom (KeeLoq, 64 bits) (10bit serial part in Hop - special learning)
+- AERF Motorgate (KeeLoq, 64 bits) (10bit serial part in Hop - special learning)
+- JCM1G EMFA (KeeLoq, 64 bits) (8bit serial part in Hop - simple learning)
+- JCM1G DMIL (KeeLoq, 64 bits) (8bit serial part in Hop - simple learning)
+- JCM1G Antonio Meca (KeeLoq, 64 bits) (8bit serial part in Hop - simple learning)
+- JCM1G Hy dom (KeeLoq, 64 bits) (8bit serial part in Hop - simple learning)
+- JCM1G Baleato (KeeLoq, 64 bits) (8bit serial part in Hop - simple learning)
+- JCM1G Cas (KeeLoq, 64 bits) (8bit serial part in Hop - simple learning)
+- JCM1G Cubells (KeeLoq, 64 bits) (8bit serial part in Hop - simple learning)
+- JCM1G Cyacsa (KeeLoq, 64 bits) (8bit serial part in Hop - simple learning)
+- JCM1G Forsa (KeeLoq, 64 bits) (8bit serial part in Hop - simple learning)
+- JCM1G Gandara (KeeLoq, 64 bits) (8bit serial part in Hop - simple learning)
+- JCM1G Pujol (KeeLoq, 64 bits) (8bit serial part in Hop - simple learning)
+- JCM1G Gibidi (KeeLoq, 64 bits) (8bit serial part in Hop - simple learning)
+- JCM1G Gibidi2 (KeeLoq, 64 bits) (8bit serial part in Hop - simple learning)
+- JCM1G Hybrid (KeeLoq, 64 bits) (8bit serial part in Hop - simple learning)
+- JCM1G Tech (KeeLoq, 64 bits) (8bit serial part in Hop - simple learning)
+- JCM1G Norton (KeeLoq, 64 bits) (8bit serial part in Hop - simple learning)
+- JCM1G Nueva Castilla (KeeLoq, 64 bits) (8bit serial part in Hop - simple learning)
+- JCM1G Puertas Lorenzo (KeeLoq, 64 bits) (8bit serial part in Hop - simple learning)
+- JCM1G Serviparking (KeeLoq, 64 bits) (8bit serial part in Hop - simple learning)
+- JCM1G Zibor (KeeLoq, 64 bits) (8bit serial part in Hop - simple learning)
 
 ### Alarms, unknown origin, etc.
 - APS-1100/APS-2550 (KeeLoq, 64 bits)
@@ -160,6 +209,11 @@ The following manufacturers have KeeLoq support in RM Firmware (thanks to Unleas
 - Tomahawk TZ-9030 (KeeLoq, 64 bits)
 - Tomahawk Z,X 3-5 (KeeLoq, 64 bits)
 - ZX-730-750-1055 (KeeLoq, 64 bits)
+- Zero Simple (KeeLoq, 64 bits)
+- Zero Normal (KeeLoq, 64 bits)
+- FFFF Simple (KeeLoq, 64 bits)
+- FFFF Normal (KeeLoq, 64 bits)
+- Miserere (KeeLoq, 64 bits) (normal learning)
 
 *Note: Most KeeLoq manufacturers operate in the 433 MHz and 868 MHz frequency bands with AM650 modulation. Some operate at other frequencies or modulations. Not all KeeLoq systems are supported for full decoding or emulation.*
 

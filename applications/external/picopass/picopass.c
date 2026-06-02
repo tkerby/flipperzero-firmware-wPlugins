@@ -24,8 +24,8 @@ Picopass* picopass_alloc() {
     Picopass* picopass = malloc(sizeof(Picopass));
 
     picopass->view_dispatcher = view_dispatcher_alloc();
-    picopass->scene_manager = scene_manager_alloc(&picopass_scene_handlers, picopass);
     view_dispatcher_enable_queue(picopass->view_dispatcher);
+    picopass->scene_manager = scene_manager_alloc(&picopass_scene_handlers, picopass);
     view_dispatcher_set_event_callback_context(picopass->view_dispatcher, picopass);
     view_dispatcher_set_custom_event_callback(
         picopass->view_dispatcher, picopass_custom_event_callback);
@@ -97,24 +97,6 @@ Picopass* picopass_alloc() {
     view_dispatcher_add_view(
         picopass->view_dispatcher, PicopassViewLoclass, loclass_get_view(picopass->loclass));
 
-    picopass->plugin_wiegand_manager =
-        plugin_manager_alloc(PLUGIN_APP_ID, PLUGIN_API_VERSION, firmware_api_interface);
-    picopass->plugin_wiegand = NULL;
-    if(plugin_manager_load_single(
-           picopass->plugin_wiegand_manager,
-           APP_ASSETS_PATH("plugins/picopass_plugin_wiegand.fal")) != PluginManagerErrorNone) {
-        FURI_LOG_E(TAG, "Failed to load Wiegand plugin");
-    } else if(plugin_manager_get_count(picopass->plugin_wiegand_manager)) {
-        picopass->plugin_wiegand =
-            (PluginWiegand*)plugin_manager_get_ep(picopass->plugin_wiegand_manager, 0);
-        if(strcmp(picopass->plugin_wiegand->name, "Plugin Wiegand") != 0) {
-            FURI_LOG_E(TAG, "Tried to load invalid Wiegand plugin");
-            picopass->plugin_wiegand = NULL;
-        } else {
-            FURI_LOG_I(TAG, "Loaded Wiegand plugin");
-        }
-    }
-
     picopass->nr_mac_type = ManualNRMAC;
 
     return picopass;
@@ -177,8 +159,6 @@ void picopass_free(Picopass* picopass) {
     // Notifications
     furi_record_close(RECORD_NOTIFICATION);
     picopass->notifications = NULL;
-
-    plugin_manager_free(picopass->plugin_wiegand_manager);
 
     free(picopass);
 }
@@ -255,20 +235,13 @@ bool picopass_is_memset(const uint8_t* data, const uint8_t pattern, size_t size)
     return result;
 }
 
-int32_t picopass_app(const char* p) {
+int32_t picopass_app(void* p) {
+    UNUSED(p);
     picopass_migrate_from_old_folder();
 
     Picopass* picopass = picopass_alloc();
 
-    PicopassScene start_scene = PicopassSceneStart;
-    if(p) {
-        furi_string_set(picopass->dev->load_path, p);
-        if(picopass_device_load(picopass->dev, picopass->dev->load_path)) {
-            start_scene = PicopassSceneSavedMenu;
-        }
-    }
-
-    scene_manager_next_scene(picopass->scene_manager, start_scene);
+    scene_manager_next_scene(picopass->scene_manager, PicopassSceneStart);
 
     view_dispatcher_run(picopass->view_dispatcher);
 

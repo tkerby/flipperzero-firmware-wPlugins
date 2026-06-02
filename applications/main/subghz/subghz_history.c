@@ -199,7 +199,7 @@ bool subghz_history_get_text_space_left(
     furi_assert(instance);
     if(!ignore_full) {
         if(memmgr_get_free_heap() < SUBGHZ_HISTORY_FREE_HEAP) {
-            if(output != NULL) furi_string_printf(output, "  RAM almost FULL");
+            if(output != NULL) furi_string_printf(output, "    Memory is FULL");
             return true;
         }
         if(instance->last_index_write == SUBGHZ_HISTORY_MAX) {
@@ -307,13 +307,6 @@ bool subghz_history_add_to_history(
         }
         if(!strcmp(furi_string_get_cstr(instance->tmp_string), "KeeLoq")) {
             furi_string_set(instance->tmp_string, "KL ");
-            if(!flipper_format_read_string(item->flipper_string, "Manufacture", text)) {
-                FURI_LOG_E(TAG, "Missing Protocol");
-                break;
-            }
-            furi_string_cat(instance->tmp_string, text);
-        } else if(!strcmp(furi_string_get_cstr(instance->tmp_string), "Star Line")) {
-            furi_string_set(instance->tmp_string, "SL ");
             if(!flipper_format_read_string(item->flipper_string, "Manufacture", text)) {
                 FURI_LOG_E(TAG, "Missing Protocol");
                 break;

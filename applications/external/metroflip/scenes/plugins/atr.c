@@ -61,6 +61,10 @@ static bool atr_on_event(Metroflip* app, SceneManagerEvent event) {
             notification_message(notification, &sequence_reset_vibro);
             const Iso14443_4aData* data =
                 nfc_device_get_data(app->nfc_device, NfcProtocolIso14443_4a);
+            // Clear stale historical bytes from previous scans
+            memset(app->hist_bytes, 0, sizeof(app->hist_bytes));
+            app->hist_bytes_count = 0;
+
             uint32_t hist_bytes_count;
             const uint8_t* hist_bytes = iso14443_4a_get_historical_bytes(data, &hist_bytes_count);
             FURI_LOG_I(TAG, "Historical bytes count: %ld", hist_bytes_count);
@@ -69,7 +73,8 @@ static bool atr_on_event(Metroflip* app, SceneManagerEvent event) {
                     app->hist_bytes, hist_bytes, MIN(hist_bytes_count, sizeof(app->hist_bytes)));
                 app->hist_bytes_count = MIN(hist_bytes_count, sizeof(app->hist_bytes));
             }
-            scene_manager_next_scene(app->scene_manager, MetroflipSceneParse);
+            view_dispatcher_send_custom_event(
+                app->view_dispatcher, MetroflipCustomEventAtrComplete);
             consumed = true;
         } else if(event.event == MetroflipPollerEventTypeCardDetect) {
             Popup* popup = app->popup;
@@ -103,6 +108,7 @@ static void atr_on_exit(Metroflip* app) {
     if(app->poller && !app->data_loaded) {
         nfc_poller_stop(app->poller);
         nfc_poller_free(app->poller);
+        app->poller = NULL;
     }
 }
 

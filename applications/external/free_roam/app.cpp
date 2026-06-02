@@ -47,6 +47,10 @@ void FreeRoamApp::viewPortDraw(Canvas* canvas, void* context) {
     }
 }
 void FreeRoamApp::viewPortInput(InputEvent* event, void* context) {
+    if(event->type != InputTypeShort && event->type != InputTypeLong &&
+       event->type != InputTypeRepeat) {
+        return;
+    }
     FreeRoamApp* app = static_cast<FreeRoamApp*>(context);
     furi_check(app);
     auto game = app->game.get();
@@ -77,6 +81,9 @@ void FreeRoamApp::timerCallback(void* context) {
                 view_port_free(app->viewPort);
                 app->viewPort = nullptr;
             }
+
+            view_dispatcher_switch_to_view(app->viewDispatcher, FreeRoamViewSubmenu);
+            app->game.reset();
         }
     }
 }
@@ -107,7 +114,7 @@ void FreeRoamApp::callbackSubmenuChoices(uint32_t index) {
         }
 
         game = std::make_unique<FreeRoamGame>();
-        if(!game->init(&viewDispatcher, this)) {
+        if(!game->init(this)) {
             FURI_LOG_E(TAG, "Failed to initialize game");
             game.reset();
             return;
@@ -309,6 +316,45 @@ bool FreeRoamApp::setHttpState(HTTPState state) noexcept {
         return true;
     }
     return false;
+}
+
+bool FreeRoamApp::websocketStart(const char* url, uint16_t port) {
+    if(!flipperHttp) {
+        FURI_LOG_E(TAG, "FlipperHTTP is not initialized");
+        return false;
+    }
+    if(!url || strlen(url) == 0) {
+        FURI_LOG_E(TAG, "WebSocket URL is NULL or empty");
+        return false;
+    }
+    return flipper_http_websocket_start(
+        flipperHttp, url, port, "{\"Content-Type\":\"application/json\"}");
+}
+
+bool FreeRoamApp::websocketStop() {
+    if(!flipperHttp) {
+        FURI_LOG_E(TAG, "FreeRoamApp::websocketStop: FlipperHTTP is NULL");
+        return false;
+    }
+    return flipper_http_websocket_stop(flipperHttp);
+}
+
+bool FreeRoamApp::websocketSend(const char* message) {
+    if(!flipperHttp || !message) {
+        FURI_LOG_E(TAG, "FreeRoamApp::websocketSend: invalid arguments");
+        return false;
+    }
+    return flipper_http_send_data(flipperHttp, message);
+}
+
+void FreeRoamApp::clearLastResponse() {
+    if(flipperHttp) {
+        flipperHttp->last_response[0] = '\0';
+    }
+}
+
+const char* FreeRoamApp::getLastResponse() const noexcept {
+    return flipperHttp ? flipperHttp->last_response : nullptr;
 }
 
 FreeRoamApp::FreeRoamApp() {

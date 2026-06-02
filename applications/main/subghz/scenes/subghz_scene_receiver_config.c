@@ -409,9 +409,9 @@ static inline bool subghz_scene_receiver_config_ignore_filter_get_index(
     return READ_BIT(filter, flag) > 0;
 }
 
-static void subghz_scene_receiver_config_set_reversrb2(VariableItem* item) {
-    subghz_scene_receiver_config_set_ignore_filter(item, SubGhzProtocolFilter_ReversRB2);
-}
+// static void subghz_scene_receiver_config_set_cars(VariableItem* item) {
+// subghz_scene_receiver_config_set_ignore_filter(item, SubGhzProtocolFilter_Cars);
+// }
 
 static void subghz_scene_receiver_config_set_alarms(VariableItem* item) {
     subghz_scene_receiver_config_set_ignore_filter(item, SubGhzProtocolFilter_Alarms);
@@ -427,6 +427,10 @@ static void subghz_scene_receiver_config_set_princeton(VariableItem* item) {
 
 static void subghz_scene_receiver_config_set_niceflors(VariableItem* item) {
     subghz_scene_receiver_config_set_ignore_filter(item, SubGhzProtocolFilter_NiceFlorS);
+}
+
+static void subghz_scene_receiver_config_set_reversrb2(VariableItem* item) {
+    subghz_scene_receiver_config_set_ignore_filter(item, SubGhzProtocolFilter_ReversRB2);
 }
 
 static void subghz_scene_receiver_config_var_list_enter_callback(void* context, uint32_t index) {

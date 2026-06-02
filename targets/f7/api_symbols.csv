@@ -1,5 +1,5 @@
 entry,status,name,type,params
-Version,+,87.1,,
+Version,+,87.8,,
 Header,+,applications/drivers/subghz/cc1101_ext/cc1101_ext_interconnect.h,,
 Header,+,applications/main/archive/helpers/archive_helpers_ext.h,,
 Header,+,applications/main/subghz/subghz_fap.h,,
@@ -22,6 +22,7 @@ Header,+,applications/services/gui/icon_i.h,,
 Header,+,applications/services/gui/modules/button_menu.h,,
 Header,+,applications/services/gui/modules/button_panel.h,,
 Header,+,applications/services/gui/modules/byte_input.h,,
+Header,+,applications/services/gui/modules/date_time_input.h,,
 Header,+,applications/services/gui/modules/dialog_ex.h,,
 Header,+,applications/services/gui/modules/empty_screen.h,,
 Header,+,applications/services/gui/modules/file_browser.h,,
@@ -118,14 +119,6 @@ Header,+,lib/mbedtls/include/mbedtls/md.h,,
 Header,+,lib/mbedtls/include/mbedtls/md5.h,,
 Header,+,lib/mbedtls/include/mbedtls/sha1.h,,
 Header,+,lib/mbedtls/include/mbedtls/sha256.h,,
-Header,+,lib/mjs/mjs_array_buf_public.h,,
-Header,+,lib/mjs/mjs_array_public.h,,
-Header,+,lib/mjs/mjs_core_public.h,,
-Header,+,lib/mjs/mjs_exec_public.h,,
-Header,+,lib/mjs/mjs_object_public.h,,
-Header,+,lib/mjs/mjs_primitive_public.h,,
-Header,+,lib/mjs/mjs_string_public.h,,
-Header,+,lib/mjs/mjs_util_public.h,,
 Header,+,lib/mlib/m-algo.h,,
 Header,+,lib/mlib/m-array.h,,
 Header,+,lib/mlib/m-bptree.h,,
@@ -141,6 +134,7 @@ Header,+,lib/nanopb/pb.h,,
 Header,+,lib/nanopb/pb_decode.h,,
 Header,+,lib/nanopb/pb_encode.h,,
 Header,+,lib/nfc/helpers/crypto1.h,,
+Header,+,lib/nfc/helpers/felica_crc.h,,
 Header,+,lib/nfc/helpers/iso13239_crc.h,,
 Header,+,lib/nfc/helpers/iso14443_crc.h,,
 Header,+,lib/nfc/helpers/nfc_data_generator.h,,
@@ -183,12 +177,17 @@ Header,+,lib/nfc/protocols/mf_ultralight/mf_ultralight.h,,
 Header,+,lib/nfc/protocols/mf_ultralight/mf_ultralight_listener.h,,
 Header,+,lib/nfc/protocols/mf_ultralight/mf_ultralight_poller.h,,
 Header,+,lib/nfc/protocols/mf_ultralight/mf_ultralight_poller_sync.h,,
+Header,+,lib/nfc/protocols/ntag4xx/ntag4xx.h,,
+Header,+,lib/nfc/protocols/ntag4xx/ntag4xx_poller.h,,
 Header,+,lib/nfc/protocols/slix/slix.h,,
 Header,+,lib/nfc/protocols/slix/slix_listener.h,,
 Header,+,lib/nfc/protocols/slix/slix_poller.h,,
 Header,+,lib/nfc/protocols/st25tb/st25tb.h,,
 Header,+,lib/nfc/protocols/st25tb/st25tb_poller.h,,
 Header,+,lib/nfc/protocols/st25tb/st25tb_poller_sync.h,,
+Header,+,lib/nfc/protocols/type_4_tag/type_4_tag.h,,
+Header,+,lib/nfc/protocols/type_4_tag/type_4_tag_listener.h,,
+Header,+,lib/nfc/protocols/type_4_tag/type_4_tag_poller.h,,
 Header,+,lib/one_wire/maxim_crc.h,,
 Header,+,lib/one_wire/one_wire_host.h,,
 Header,+,lib/one_wire/one_wire_slave.h,,
@@ -236,7 +235,6 @@ Header,+,lib/subghz/protocols/raw.h,,
 Header,+,lib/subghz/receiver.h,,
 Header,+,lib/subghz/registry.h,,
 Header,+,lib/subghz/subghz_file_encoder_worker.h,,
-Header,+,lib/subghz/subghz_keystore.h,,
 Header,+,lib/subghz/subghz_protocol_registry.h,,
 Header,+,lib/subghz/subghz_setting.h,,
 Header,+,lib/subghz/subghz_tx_rx_worker.h,,
@@ -862,6 +860,8 @@ Function,+,canvas_draw_str_aligned,void,"Canvas*, int32_t, int32_t, Align, Align
 Function,+,canvas_draw_triangle,void,"Canvas*, int32_t, int32_t, size_t, size_t, CanvasDirection"
 Function,+,canvas_draw_xbm,void,"Canvas*, int32_t, int32_t, size_t, size_t, const uint8_t*"
 Function,+,canvas_draw_xbm_ex,void,"Canvas*, int32_t, int32_t, size_t, size_t, IconRotation, const uint8_t*"
+Function,+,canvas_get_buffer,uint8_t*,Canvas*
+Function,+,canvas_get_buffer_size,size_t,const Canvas*
 Function,+,canvas_get_font_params,const CanvasFontParameters*,"const Canvas*, Font"
 Function,+,canvas_glyph_width,size_t,"Canvas*, uint16_t"
 Function,+,canvas_height,size_t,const Canvas*
@@ -935,6 +935,11 @@ Function,+,crypto1_reset,void,Crypto1*
 Function,+,crypto1_word,uint32_t,"Crypto1*, uint32_t, int"
 Function,-,ctermid,char*,char*
 Function,-,cuserid,char*,char*
+Function,+,date_time_input_alloc,DateTimeInput*,
+Function,+,date_time_input_free,void,DateTimeInput*
+Function,+,date_time_input_get_view,View*,DateTimeInput*
+Function,+,date_time_input_set_editable_fields,void,"DateTimeInput*, _Bool, _Bool, _Bool, _Bool, _Bool, _Bool"
+Function,+,date_time_input_set_result_callback,void,"DateTimeInput*, DateTimeChangedCallback, DateTimeDoneCallback, void*, DateTime*"
 Function,+,datetime_datetime_to_timestamp,uint32_t,DateTime*
 Function,+,datetime_get_days_per_month,uint8_t,"_Bool, uint8_t"
 Function,+,datetime_get_days_per_year,uint16_t,uint16_t
@@ -1110,6 +1115,9 @@ Function,+,felica_calculate_mac_write,void,"mbedtls_des3_context*, const uint8_t
 Function,+,felica_calculate_session_key,void,"mbedtls_des3_context*, const uint8_t*, const uint8_t*, uint8_t*"
 Function,+,felica_check_mac,_Bool,"mbedtls_des3_context*, const uint8_t*, const uint8_t*, const uint8_t*, const uint8_t, uint8_t*"
 Function,+,felica_copy,void,"FelicaData*, const FelicaData*"
+Function,+,felica_crc_append,void,BitBuffer*
+Function,+,felica_crc_check,_Bool,const BitBuffer*
+Function,+,felica_crc_trim,void,BitBuffer*
 Function,+,felica_free,void,FelicaData*
 Function,+,felica_get_base_data,FelicaData*,const FelicaData*
 Function,+,felica_get_device_name,const char*,"const FelicaData*, NfcDeviceNameType"
@@ -1126,7 +1134,7 @@ Function,+,felica_save,_Bool,"const FelicaData*, FlipperFormat*"
 Function,+,felica_service_get_attribute_string,void,"const FelicaService*, FuriString*"
 Function,+,felica_set_uid,_Bool,"FelicaData*, const uint8_t*, size_t"
 Function,+,felica_verify,_Bool,"FelicaData*, const FuriString*"
-Function,+,felica_write_directory_tree,void,"const FelicaData*, FuriString*"
+Function,+,felica_write_directory_tree,void,"const FelicaSystem*, FuriString*"
 Function,-,feof,int,FILE*
 Function,-,feof_unlocked,int,FILE*
 Function,-,ferror,int,FILE*
@@ -1407,6 +1415,8 @@ Function,+,furi_hal_cortex_instructions_per_microsecond,uint32_t,
 Function,+,furi_hal_cortex_timer_get,FuriHalCortexTimer,uint32_t
 Function,+,furi_hal_cortex_timer_is_expired,_Bool,FuriHalCortexTimer
 Function,+,furi_hal_cortex_timer_wait,void,FuriHalCortexTimer
+Function,+,furi_hal_crypto_aes128_ecb_decrypt,_Bool,"const uint8_t*, const uint8_t*, uint8_t*"
+Function,+,furi_hal_crypto_aes128_ecb_encrypt,_Bool,"const uint8_t*, const uint8_t*, uint8_t*"
 Function,+,furi_hal_crypto_ctr,_Bool,"const uint8_t*, const uint8_t*, const uint8_t*, uint8_t*, size_t"
 Function,+,furi_hal_crypto_decrypt,_Bool,"const uint8_t*, uint8_t*, size_t"
 Function,+,furi_hal_crypto_enclave_ensure_key,_Bool,uint8_t
@@ -1788,7 +1798,7 @@ Function,+,furi_hal_usb_is_locked,_Bool,
 Function,+,furi_hal_usb_lock,void,
 Function,+,furi_hal_usb_reinit,void,
 Function,+,furi_hal_usb_set_config,_Bool,"FuriHalUsbInterface*, void*"
-Function,-,furi_hal_usb_set_state_callback,void,"FuriHalUsbStateCallback, void*"
+Function,+,furi_hal_usb_set_state_callback,void,"FuriHalUsbStateCallback, void*"
 Function,+,furi_hal_usb_unlock,void,
 Function,+,furi_hal_version_do_i_belong_here,_Bool,
 Function,+,furi_hal_version_get_ble_local_device_name_ptr,const char*,
@@ -2278,11 +2288,14 @@ Function,+,iso15693_3_is_equal,_Bool,"const Iso15693_3Data*, const Iso15693_3Dat
 Function,+,iso15693_3_load,_Bool,"Iso15693_3Data*, FlipperFormat*, uint32_t"
 Function,+,iso15693_3_poller_activate,Iso15693_3Error,"Iso15693_3Poller*, Iso15693_3Data*"
 Function,+,iso15693_3_poller_get_blocks_security,Iso15693_3Error,"Iso15693_3Poller*, uint8_t*, uint16_t"
+Function,+,iso15693_3_poller_get_data,const Iso15693_3Data*,Iso15693_3Poller*
 Function,+,iso15693_3_poller_get_system_info,Iso15693_3Error,"Iso15693_3Poller*, Iso15693_3SystemInfo*"
 Function,+,iso15693_3_poller_inventory,Iso15693_3Error,"Iso15693_3Poller*, uint8_t*"
 Function,+,iso15693_3_poller_read_block,Iso15693_3Error,"Iso15693_3Poller*, uint8_t*, uint8_t, uint8_t"
 Function,+,iso15693_3_poller_read_blocks,Iso15693_3Error,"Iso15693_3Poller*, uint8_t*, uint16_t, uint8_t"
 Function,+,iso15693_3_poller_send_frame,Iso15693_3Error,"Iso15693_3Poller*, const BitBuffer*, BitBuffer*, uint32_t"
+Function,+,iso15693_3_poller_write_block,Iso15693_3Error,"Iso15693_3Poller*, const uint8_t*, uint8_t, uint8_t"
+Function,+,iso15693_3_poller_write_blocks,Iso15693_3Error,"Iso15693_3Poller*, const uint8_t*, uint16_t, uint8_t"
 Function,+,iso15693_3_reset,void,Iso15693_3Data*
 Function,+,iso15693_3_save,_Bool,"const Iso15693_3Data*, FlipperFormat*"
 Function,+,iso15693_3_set_uid,_Bool,"Iso15693_3Data*, const uint8_t*, size_t"
@@ -2710,6 +2723,8 @@ Function,+,mf_desfire_get_file_settings,const MfDesfireFileSettings*,"const MfDe
 Function,+,mf_desfire_get_uid,const uint8_t*,"const MfDesfireData*, size_t*"
 Function,+,mf_desfire_is_equal,_Bool,"const MfDesfireData*, const MfDesfireData*"
 Function,+,mf_desfire_load,_Bool,"MfDesfireData*, FlipperFormat*, uint32_t"
+Function,+,mf_desfire_poller_create_application,MfDesfireError,"MfDesfirePoller*, const MfDesfireApplicationId*, const MfDesfireKeySettings*, uint16_t, const uint8_t*, uint8_t"
+Function,+,mf_desfire_poller_create_file,MfDesfireError,"MfDesfirePoller*, MfDesfireFileId, const MfDesfireFileSettings*, uint16_t"
 Function,+,mf_desfire_poller_read_application,MfDesfireError,"MfDesfirePoller*, MfDesfireApplication*"
 Function,+,mf_desfire_poller_read_application_ids,MfDesfireError,"MfDesfirePoller*, SimpleArray*"
 Function,+,mf_desfire_poller_read_applications,MfDesfireError,"MfDesfirePoller*, const SimpleArray*, SimpleArray*"
@@ -2726,9 +2741,10 @@ Function,+,mf_desfire_poller_read_key_version,MfDesfireError,"MfDesfirePoller*, 
 Function,+,mf_desfire_poller_read_key_versions,MfDesfireError,"MfDesfirePoller*, SimpleArray*, uint32_t"
 Function,+,mf_desfire_poller_read_version,MfDesfireError,"MfDesfirePoller*, MfDesfireVersion*"
 Function,+,mf_desfire_poller_select_application,MfDesfireError,"MfDesfirePoller*, const MfDesfireApplicationId*"
+Function,+,mf_desfire_poller_send_chunks,MfDesfireError,"MfDesfirePoller*, const BitBuffer*, BitBuffer*"
+Function,+,mf_desfire_poller_set_command_mode,void,"MfDesfirePoller*, NxpNativeCommandMode"
 Function,+,mf_desfire_reset,void,MfDesfireData*
 Function,+,mf_desfire_save,_Bool,"const MfDesfireData*, FlipperFormat*"
-Function,+,mf_desfire_send_chunks,MfDesfireError,"MfDesfirePoller*, const BitBuffer*, BitBuffer*"
 Function,+,mf_desfire_set_uid,_Bool,"MfDesfireData*, const uint8_t*, size_t"
 Function,+,mf_desfire_verify,_Bool,"MfDesfireData*, const FuriString*"
 Function,+,mf_plus_alloc,MfPlusData*,
@@ -2790,88 +2806,6 @@ Function,+,mf_ultralight_save,_Bool,"const MfUltralightData*, FlipperFormat*"
 Function,+,mf_ultralight_set_uid,_Bool,"MfUltralightData*, const uint8_t*, size_t"
 Function,+,mf_ultralight_support_feature,_Bool,"const uint32_t, const uint32_t"
 Function,+,mf_ultralight_verify,_Bool,"MfUltralightData*, const FuriString*"
-Function,+,mjs_apply,mjs_err_t,"mjs*, mjs_val_t*, mjs_val_t, mjs_val_t, int, mjs_val_t*"
-Function,+,mjs_arg,mjs_val_t,"mjs*, int"
-Function,+,mjs_array_buf_get_ptr,char*,"mjs*, mjs_val_t, size_t*"
-Function,+,mjs_array_del,void,"mjs*, mjs_val_t, unsigned long"
-Function,+,mjs_array_get,mjs_val_t,"mjs*, mjs_val_t, unsigned long"
-Function,+,mjs_array_length,unsigned long,"mjs*, mjs_val_t"
-Function,+,mjs_array_push,mjs_err_t,"mjs*, mjs_val_t, mjs_val_t"
-Function,+,mjs_array_set,mjs_err_t,"mjs*, mjs_val_t, unsigned long, mjs_val_t"
-Function,+,mjs_call,mjs_err_t,"mjs*, mjs_val_t*, mjs_val_t, mjs_val_t, int, ..."
-Function,+,mjs_create,mjs*,void*
-Function,+,mjs_dataview_get_buf,mjs_val_t,"mjs*, mjs_val_t"
-Function,+,mjs_del,int,"mjs*, mjs_val_t, const char*, size_t"
-Function,+,mjs_destroy,void,mjs*
-Function,+,mjs_disasm_all,void,"mjs*, MjsPrintCallback, void*"
-Function,+,mjs_disown,int,"mjs*, mjs_val_t*"
-Function,-,mjs_dump,void,"mjs*, int, MjsPrintCallback, void*"
-Function,+,mjs_exec,mjs_err_t,"mjs*, const char*, mjs_val_t*"
-Function,+,mjs_exec_file,mjs_err_t,"mjs*, const char*, mjs_val_t*"
-Function,+,mjs_exit,void,mjs*
-Function,+,mjs_ffi_resolve,void*,"mjs*, const char*"
-Function,-,mjs_fprintf,void,"mjs_val_t, mjs*, FILE*"
-Function,+,mjs_get,mjs_val_t,"mjs*, mjs_val_t, const char*, size_t"
-Function,-,mjs_get_bcode_filename_by_offset,const char*,"mjs*, int"
-Function,+,mjs_get_bool,int,"mjs*, mjs_val_t"
-Function,+,mjs_get_context,void*,mjs*
-Function,+,mjs_get_cstring,const char*,"mjs*, mjs_val_t*"
-Function,+,mjs_get_double,double,"mjs*, mjs_val_t"
-Function,+,mjs_get_global,mjs_val_t,mjs*
-Function,+,mjs_get_int,int,"mjs*, mjs_val_t"
-Function,+,mjs_get_int32,int32_t,"mjs*, mjs_val_t"
-Function,+,mjs_get_lineno_by_offset,int,"mjs*, int"
-Function,+,mjs_get_offset_by_call_frame_num,int,"mjs*, int"
-Function,+,mjs_get_ptr,void*,"mjs*, mjs_val_t"
-Function,+,mjs_get_stack_trace,const char*,mjs*
-Function,+,mjs_get_string,const char*,"mjs*, mjs_val_t*, size_t*"
-Function,+,mjs_get_this,mjs_val_t,mjs*
-Function,+,mjs_get_v,mjs_val_t,"mjs*, mjs_val_t, mjs_val_t"
-Function,+,mjs_get_v_proto,mjs_val_t,"mjs*, mjs_val_t, mjs_val_t"
-Function,+,mjs_is_array,int,mjs_val_t
-Function,+,mjs_is_array_buf,int,mjs_val_t
-Function,+,mjs_is_boolean,int,mjs_val_t
-Function,+,mjs_is_data_view,int,mjs_val_t
-Function,+,mjs_is_foreign,int,mjs_val_t
-Function,+,mjs_is_function,int,mjs_val_t
-Function,+,mjs_is_null,int,mjs_val_t
-Function,+,mjs_is_number,int,mjs_val_t
-Function,+,mjs_is_object,int,mjs_val_t
-Function,+,mjs_is_object_based,int,mjs_val_t
-Function,+,mjs_is_string,int,mjs_val_t
-Function,+,mjs_is_truthy,int,"mjs*, mjs_val_t"
-Function,+,mjs_is_typed_array,int,mjs_val_t
-Function,+,mjs_is_undefined,int,mjs_val_t
-Function,+,mjs_mk_array,mjs_val_t,mjs*
-Function,+,mjs_mk_array_buf,mjs_val_t,"mjs*, char*, size_t"
-Function,+,mjs_mk_boolean,mjs_val_t,"mjs*, int"
-Function,+,mjs_mk_foreign,mjs_val_t,"mjs*, void*"
-Function,+,mjs_mk_foreign_func,mjs_val_t,"mjs*, mjs_func_ptr_t"
-Function,+,mjs_mk_function,mjs_val_t,"mjs*, size_t"
-Function,+,mjs_mk_null,mjs_val_t,
-Function,+,mjs_mk_number,mjs_val_t,"mjs*, double"
-Function,+,mjs_mk_object,mjs_val_t,mjs*
-Function,+,mjs_mk_string,mjs_val_t,"mjs*, const char*, size_t, int"
-Function,+,mjs_mk_undefined,mjs_val_t,
-Function,+,mjs_nargs,int,mjs*
-Function,+,mjs_next,mjs_val_t,"mjs*, mjs_val_t, mjs_val_t*"
-Function,+,mjs_own,void,"mjs*, mjs_val_t*"
-Function,+,mjs_prepend_errorf,mjs_err_t,"mjs*, mjs_err_t, const char*, ..."
-Function,-,mjs_print_error,void,"mjs*, FILE*, const char*, int"
-Function,+,mjs_return,void,"mjs*, mjs_val_t"
-Function,+,mjs_set,mjs_err_t,"mjs*, mjs_val_t, const char*, size_t, mjs_val_t"
-Function,+,mjs_set_errorf,mjs_err_t,"mjs*, mjs_err_t, const char*, ..."
-Function,+,mjs_set_exec_flags_poller,void,"mjs*, mjs_flags_poller_t"
-Function,+,mjs_set_ffi_resolver,void,"mjs*, mjs_ffi_resolver_t*, void*"
-Function,-,mjs_set_generate_jsc,void,"mjs*, int"
-Function,+,mjs_set_v,mjs_err_t,"mjs*, mjs_val_t, mjs_val_t, mjs_val_t"
-Function,+,mjs_sprintf,void,"mjs_val_t, mjs*, char*, size_t"
-Function,+,mjs_strcmp,int,"mjs*, mjs_val_t*, const char*, size_t"
-Function,+,mjs_strerror,const char*,"mjs*, mjs_err"
-Function,+,mjs_struct_to_obj,mjs_val_t,"mjs*, const void*, const mjs_c_struct_member*"
-Function,+,mjs_to_boolean_v,mjs_val_t,"mjs*, mjs_val_t"
-Function,+,mjs_to_string,mjs_err_t,"mjs*, mjs_val_t*, char**, size_t*, int*"
-Function,+,mjs_typeof,const char*,mjs_val_t
 Function,-,mkdtemp,char*,char*
 Function,-,mkostemp,int,"char*, int"
 Function,-,mkostemps,int,"char*, int, int"
@@ -2983,6 +2917,19 @@ Function,+,notification_message,void,"NotificationApp*, const NotificationSequen
 Function,+,notification_message_block,void,"NotificationApp*, const NotificationSequence*"
 Function,+,notification_message_save_settings,void,NotificationApp*
 Function,-,nrand48,long,unsigned short[3]
+Function,+,ntag4xx_alloc,Ntag4xxData*,
+Function,+,ntag4xx_copy,void,"Ntag4xxData*, const Ntag4xxData*"
+Function,+,ntag4xx_free,void,Ntag4xxData*
+Function,+,ntag4xx_get_base_data,Iso14443_4aData*,const Ntag4xxData*
+Function,+,ntag4xx_get_device_name,const char*,"const Ntag4xxData*, NfcDeviceNameType"
+Function,+,ntag4xx_get_type_from_version,Ntag4xxType,const Ntag4xxVersion*
+Function,+,ntag4xx_get_uid,const uint8_t*,"const Ntag4xxData*, size_t*"
+Function,+,ntag4xx_is_equal,_Bool,"const Ntag4xxData*, const Ntag4xxData*"
+Function,+,ntag4xx_load,_Bool,"Ntag4xxData*, FlipperFormat*, uint32_t"
+Function,+,ntag4xx_reset,void,Ntag4xxData*
+Function,+,ntag4xx_save,_Bool,"const Ntag4xxData*, FlipperFormat*"
+Function,+,ntag4xx_set_uid,_Bool,"Ntag4xxData*, const uint8_t*, size_t"
+Function,+,ntag4xx_verify,_Bool,"Ntag4xxData*, const FuriString*"
 Function,+,number_input_alloc,NumberInput*,
 Function,+,number_input_free,void,NumberInput*
 Function,+,number_input_get_view,View*,NumberInput*
@@ -3288,6 +3235,8 @@ Function,+,slix_poller_get_random_number,SlixError,"SlixPoller*, SlixRandomNumbe
 Function,+,slix_poller_read_signature,SlixError,"SlixPoller*, SlixSignature*"
 Function,+,slix_poller_send_frame,SlixError,"SlixPoller*, const BitBuffer*, BitBuffer*, uint32_t"
 Function,+,slix_poller_set_password,SlixError,"SlixPoller*, SlixPasswordType, SlixPassword, SlixRandomNumber"
+Function,+,slix_poller_write_block,SlixError,"SlixPoller*, const uint8_t*, uint8_t, uint8_t"
+Function,+,slix_poller_write_blocks,SlixError,"SlixPoller*, const uint8_t*, uint16_t, uint8_t"
 Function,+,slix_reset,void,SlixData*
 Function,+,slix_save,_Bool,"const SlixData*, FlipperFormat*"
 Function,+,slix_set_uid,_Bool,"SlixData*, const uint8_t*, size_t"
@@ -3477,7 +3426,7 @@ Function,-,strncat,char*,"char*, const char*, size_t"
 Function,+,strncmp,int,"const char*, const char*, size_t"
 Function,+,strncpy,char*,"char*, const char*, size_t"
 Function,-,strndup,char*,"const char*, size_t"
-Function,+,strnlen,size_t,"const char*, size_t"
+Function,-,strnlen,size_t,"const char*, size_t"
 Function,-,strnstr,char*,"const char*, const char*, size_t"
 Function,-,strpbrk,char*,"const char*, const char*"
 Function,+,strrchr,char*,"const char*, int"
@@ -3509,6 +3458,8 @@ Function,+,subghz_app,int32_t,char*
 Function,+,subghz_block_generic_deserialize,SubGhzProtocolStatus,"SubGhzBlockGeneric*, FlipperFormat*"
 Function,+,subghz_block_generic_deserialize_check_count_bit,SubGhzProtocolStatus,"SubGhzBlockGeneric*, FlipperFormat*, uint16_t"
 Function,+,subghz_block_generic_get_preset_name,void,"const char*, FuriString*"
+Function,+,subghz_block_generic_global_button_override_get,_Bool,uint8_t*
+Function,+,subghz_block_generic_global_button_override_set,void,uint8_t
 Function,+,subghz_block_generic_global_counter_override_get,_Bool,uint32_t*
 Function,+,subghz_block_generic_global_counter_override_set,void,uint32_t
 Function,+,subghz_block_generic_global_reset,void,void*
@@ -3581,6 +3532,7 @@ Function,+,subghz_keystore_raw_get_data,_Bool,"const char*, size_t, uint8_t*, si
 Function,+,subghz_keystore_reset_kl,void,SubGhzKeystore*
 Function,+,subghz_keystore_save,_Bool,"SubGhzKeystore*, const char*, uint8_t*"
 Function,+,subghz_protocol_alutech_at_4n_create_data,_Bool,"void*, FlipperFormat*, uint32_t, uint8_t, uint16_t, SubGhzRadioPreset*"
+Function,+,subghz_protocol_beninca_arc_create_data,_Bool,"void*, FlipperFormat*, uint32_t, uint8_t, uint32_t, SubGhzRadioPreset*"
 Function,+,subghz_protocol_blocks_add_bit,void,"SubGhzBlockDecoder*, uint8_t"
 Function,+,subghz_protocol_blocks_add_bytes,uint8_t,"const uint8_t[], size_t"
 Function,+,subghz_protocol_blocks_add_to_128_bit,void,"SubGhzBlockDecoder*, uint8_t, uint64_t*"
@@ -3617,15 +3569,18 @@ Function,+,subghz_protocol_decoder_raw_feed,void,"void*, _Bool, uint32_t"
 Function,+,subghz_protocol_decoder_raw_free,void,void*
 Function,+,subghz_protocol_decoder_raw_get_string,void,"void*, FuriString*"
 Function,+,subghz_protocol_decoder_raw_reset,void,void*
+Function,+,subghz_protocol_ditec_gol4_create_data,_Bool,"void*, FlipperFormat*, uint32_t, uint8_t, uint16_t, SubGhzRadioPreset*"
 Function,+,subghz_protocol_encoder_raw_alloc,void*,SubGhzEnvironment*
 Function,+,subghz_protocol_encoder_raw_deserialize,SubGhzProtocolStatus,"void*, FlipperFormat*"
 Function,+,subghz_protocol_encoder_raw_free,void,void*
 Function,+,subghz_protocol_encoder_raw_stop,void,void*
 Function,+,subghz_protocol_encoder_raw_yield,LevelDuration,void*
 Function,+,subghz_protocol_faac_slh_create_data,_Bool,"void*, FlipperFormat*, uint32_t, uint8_t, uint32_t, uint32_t, const char*, SubGhzRadioPreset*"
-Function,+,subghz_protocol_keeloq_bft_create_data,_Bool,"void*, FlipperFormat*, uint32_t, uint8_t, uint16_t, uint32_t, const char*, SubGhzRadioPreset*"
+Function,+,subghz_protocol_jarolift_create_data,_Bool,"void*, FlipperFormat*, uint32_t, uint8_t, uint16_t, SubGhzRadioPreset*"
 Function,+,subghz_protocol_keeloq_create_data,_Bool,"void*, FlipperFormat*, uint32_t, uint8_t, uint16_t, const char*, SubGhzRadioPreset*"
+Function,+,subghz_protocol_keeloq_seed_create_data,_Bool,"void*, FlipperFormat*, uint32_t, uint8_t, uint16_t, uint32_t, const char*, SubGhzRadioPreset*"
 Function,+,subghz_protocol_kinggates_stylo_4k_create_data,_Bool,"void*, FlipperFormat*, uint32_t, uint8_t, uint16_t, SubGhzRadioPreset*"
+Function,+,subghz_protocol_marantec_crc8,uint8_t,"uint8_t*, size_t"
 Function,+,subghz_protocol_nice_flor_s_create_data,_Bool,"void*, FlipperFormat*, uint32_t, uint8_t, uint16_t, SubGhzRadioPreset*, _Bool"
 Function,+,subghz_protocol_phoenix_v2_create_data,_Bool,"void*, FlipperFormat*, uint32_t, uint16_t, SubGhzRadioPreset*"
 Function,+,subghz_protocol_raw_file_encoder_worker_set_callback_end,void,"SubGhzProtocolEncoderRAW*, SubGhzProtocolEncoderRAWCallbackEnd, void*"
@@ -3694,6 +3649,7 @@ Function,+,subghz_worker_set_pair_callback,void,"SubGhzWorker*, SubGhzWorkerPair
 Function,+,subghz_worker_start,void,SubGhzWorker*
 Function,+,subghz_worker_stop,void,SubGhzWorker*
 Function,+,submenu_add_item,void,"Submenu*, const char*, uint32_t, SubmenuItemCallback, void*"
+Function,+,submenu_add_item_ex,void,"Submenu*, const char*, uint32_t, SubmenuItemCallbackEx, void*"
 Function,+,submenu_add_lockable_item,void,"Submenu*, const char*, uint32_t, SubmenuItemCallback, void*, _Bool, const char*"
 Function,+,submenu_alloc,Submenu*,
 Function,+,submenu_change_item_label,void,"Submenu*, uint32_t, const char*"
@@ -3768,6 +3724,18 @@ Function,-,toupper_l,int,"int, locale_t"
 Function,-,trunc,double,double
 Function,-,truncf,float,float
 Function,-,truncl,long double,long double
+Function,+,type_4_tag_alloc,Type4TagData*,
+Function,+,type_4_tag_copy,void,"Type4TagData*, const Type4TagData*"
+Function,+,type_4_tag_free,void,Type4TagData*
+Function,+,type_4_tag_get_base_data,Iso14443_4aData*,const Type4TagData*
+Function,+,type_4_tag_get_device_name,const char*,"const Type4TagData*, NfcDeviceNameType"
+Function,+,type_4_tag_get_uid,const uint8_t*,"const Type4TagData*, size_t*"
+Function,+,type_4_tag_is_equal,_Bool,"const Type4TagData*, const Type4TagData*"
+Function,+,type_4_tag_load,_Bool,"Type4TagData*, FlipperFormat*, uint32_t"
+Function,+,type_4_tag_reset,void,Type4TagData*
+Function,+,type_4_tag_save,_Bool,"const Type4TagData*, FlipperFormat*"
+Function,+,type_4_tag_set_uid,_Bool,"Type4TagData*, const uint8_t*, size_t"
+Function,+,type_4_tag_verify,_Bool,"Type4TagData*, const FuriString*"
 Function,+,uint8_to_hex_chars,void,"const uint8_t*, uint8_t*, int"
 Function,-,ungetc,int,"int, FILE*"
 Function,-,unsetenv,int,const char*
@@ -3953,7 +3921,7 @@ Variable,+,_impure_ptr,_reent*,
 Variable,-,_sys_errlist,const char*[],
 Variable,-,_sys_nerr,int,
 Variable,-,ble_profile_hid,const FuriHalBleProfileTemplate*,
-Variable,-,ble_profile_serial,const FuriHalBleProfileTemplate*,
+Variable,+,ble_profile_serial,const FuriHalBleProfileTemplate*,
 Variable,+,cfw_settings,CfwSettings,
 Variable,+,cli_vcp,CliSession,
 Variable,+,firmware_api_interface,const ElfApiInterface*,
@@ -4179,7 +4147,9 @@ Variable,-,nfc_device_mf_classic,const NfcDeviceBase,
 Variable,-,nfc_device_mf_desfire,const NfcDeviceBase,
 Variable,-,nfc_device_mf_plus,const NfcDeviceBase,
 Variable,-,nfc_device_mf_ultralight,const NfcDeviceBase,
+Variable,-,nfc_device_ntag4xx,const NfcDeviceBase,
 Variable,-,nfc_device_st25tb,const NfcDeviceBase,
+Variable,-,nfc_device_type_4_tag,const NfcDeviceBase,
 Variable,+,sequence_audiovisual_alert,const NotificationSequence,
 Variable,+,sequence_blink_blue_10,const NotificationSequence,
 Variable,+,sequence_blink_blue_100,const NotificationSequence,

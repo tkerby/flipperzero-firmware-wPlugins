@@ -202,6 +202,7 @@ CcidCard* ccid_card_load(Storage* storage, const char* path) {
     furi_assert(path);
 
     CcidCard* card = malloc(sizeof(CcidCard));
+    furi_assert(card);
     memset(card, 0, sizeof(CcidCard));
 
     /* Set built-in default response: 6A 82 (file/application not found) */
@@ -221,7 +222,7 @@ CcidCard* ccid_card_load(Storage* storage, const char* path) {
     Section section = SectionNone;
 
     while(stream_read_line(stream, line_buf)) {
-        char line[1024];
+        char line[256];
         size_t line_len = furi_string_size(line_buf);
         if(line_len >= sizeof(line)) line_len = sizeof(line) - 1;
         memcpy(line, furi_string_get_cstr(line_buf), line_len);
@@ -348,10 +349,12 @@ static const char piv_card_content[] =
     "atr = 3B 7F 96 00 00 80 31 80 65 B0 85 03 00 EF 12 00 F6 82 90 00\n"
     "\n"
     "[rules]\n"
-    "# SELECT PIV applet AID\n"
-    "A0 00 00 03 08 00 00 10 00 01 00 = 61 11 4F 06 00 00 10 00 01 00 79 07 4F 05 A0 00 00 03 08 90 00\n"
-    "# GET DATA - Card Holder Unique Identifier\n"
-    "CB 3F FF 05 5C 03 5F C1 02 00 = 53 10 30 19 D4 E7 39 DA 73 9C ED 39 CE 73 9D 83 68 58 90 00\n"
+    "# SELECT PIV applet AID (CLA=00 INS=A4 P1=04 P2=00 Lc=0B)\n"
+    "00 A4 04 00 0B A0 00 00 03 08 00 00 10 00 01 00 = 61 11 4F 06 00 00 10 00 01 00 79 07 4F 05 A0 00 00 03 08 90 00\n"
+    "# GET DATA - Card Holder Unique Identifier (CLA=00 INS=CB P1=3F P2=FF)\n"
+    "00 CB 3F FF 05 5C 03 5F C1 02 = 53 10 30 19 D4 E7 39 DA 73 9C ED 39 CE 73 9D 83 68 58 90 00\n"
+    "# GET RESPONSE (wildcard Le)\n"
+    "00 C0 00 00 ?? = 90 00\n"
     "\n"
     "[default]\n"
     "response = 6A 82\n";

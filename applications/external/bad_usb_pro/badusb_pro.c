@@ -66,7 +66,7 @@ static void app_alloc(BadUsbProApp* app) {
     memset(app, 0, sizeof(*app));
     app->speed_setting = SpeedNormal;
     app->injection_mode = InjectionModeUSB;
-    app->settings_default_delay = 0;
+    app->settings_default_delay = 100; /* 100 ms between commands — sane default */
     app->usb_restored = false;
 
     script_engine_init(&app->engine);
@@ -121,8 +121,8 @@ static void app_alloc(BadUsbProApp* app) {
     /* Default delay item */
     VariableItem* delay_item =
         variable_item_list_add(app->settings, "Default Delay", 6, settings_delay_change_cb, app);
-    variable_item_set_current_value_index(delay_item, 0);
-    variable_item_set_current_value_text(delay_item, "0ms");
+    variable_item_set_current_value_index(delay_item, 2); /* 100ms default */
+    variable_item_set_current_value_text(delay_item, "100ms");
 }
 
 static void app_free(BadUsbProApp* app) {
@@ -239,7 +239,7 @@ static void file_browser_cb(void* ctx, uint32_t index) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
 
     FileInfo finfo;
-    if(storage_common_stat(storage, app->script_path, &finfo)) {
+    if(storage_common_stat(storage, app->script_path, &finfo) == FSE_OK) {
         app->script_size = (uint32_t)finfo.size;
     } else {
         app->script_size = 0;
@@ -264,6 +264,8 @@ static void file_browser_cb(void* ctx, uint32_t index) {
         app->script_line_count);
     widget_add_text_scroll_element(app->script_info, 0, 0, 128, 64, info_buf);
 
+    widget_add_button_element(
+        app->script_info, GuiButtonTypeCenter, "OK", script_info_run_cb, app);
     widget_add_button_element(
         app->script_info, GuiButtonTypeRight, "Run", script_info_run_cb, app);
 
@@ -341,6 +343,7 @@ static void start_script_execution(BadUsbProApp* app) {
     /* Apply settings */
     script_engine_set_speed(&app->engine, speed_values[app->speed_setting]);
     app->engine.default_delay = app->settings_default_delay;
+    app->engine.default_string_delay = 10; /* 10 ms between characters — prevents drops */
 
     /* Set UI update callback */
     script_engine_set_callback(&app->engine, engine_status_cb, app);
@@ -358,6 +361,7 @@ static void start_script_execution(BadUsbProApp* app) {
             m->led_scroll = 0;
             m->state = ScriptStateLoaded;
             m->error_msg[0] = '\0';
+            m->detected_os[0] = '\0';
         },
         true);
 
@@ -369,11 +373,20 @@ static void start_script_execution(BadUsbProApp* app) {
          * Fall back to USB mode and notify the user. */
         app->injection_mode = InjectionModeUSB;
     }
+    furi_hal_usb_unlock(); /* ensure USB is not locked by a previous mode */
     furi_hal_usb_set_config(&usb_hid, NULL);
-    furi_delay_ms(500); /* give host time to enumerate the new USB device */
+    /* Wait up to 5 s for the host to enumerate, then add 1.5 s grace period
+     * per the official BadUSB implementation to let the HID driver settle. */
+    {
+        uint32_t t = furi_get_tick();
+        while(!furi_hal_hid_is_connected() && (furi_get_tick() - t) < furi_ms_to_ticks(5000)) {
+            furi_delay_ms(50);
+        }
+        if(furi_hal_hid_is_connected()) furi_delay_ms(1500);
+    }
 
     /* Start worker thread */
-    app->worker_thread = furi_thread_alloc_ex("BadUSBWorker", 2048, worker_thread_cb, app);
+    app->worker_thread = furi_thread_alloc_ex("BadUSBWorker", 4096, worker_thread_cb, app);
     app->worker_running = true;
     furi_thread_start(app->worker_thread);
 
@@ -386,7 +399,8 @@ static void start_script_execution(BadUsbProApp* app) {
 
 static void script_info_run_cb(GuiButtonType type, InputType input_type, void* ctx) {
     BadUsbProApp* app = ctx;
-    if(type == GuiButtonTypeRight && input_type == InputTypeShort) {
+    if((type == GuiButtonTypeRight || type == GuiButtonTypeCenter) &&
+       input_type == InputTypeShort) {
         start_script_execution(app);
     }
 }
@@ -464,6 +478,13 @@ static void engine_status_cb(void* ctx) {
             m->led_num = (e->led_state & (1 << 0)) ? 1 : 0;
             m->led_caps = (e->led_state & (1 << 1)) ? 1 : 0;
             m->led_scroll = (e->led_state & (1 << 2)) ? 1 : 0;
+
+            /* Capture OS detection result if available */
+            const char* os_val = script_engine_get_var(e, "OS");
+            if(os_val && os_val[0]) {
+                strncpy(m->detected_os, os_val, sizeof(m->detected_os) - 1);
+                m->detected_os[sizeof(m->detected_os) - 1] = '\0';
+            }
 
             if(e->state == ScriptStateError) {
                 strncpy(m->error_msg, e->error_msg, sizeof(m->error_msg) - 1);
@@ -543,18 +564,24 @@ static void execution_draw_cb(Canvas* canvas, void* model) {
         canvas_draw_box(canvas, bar_x + 1, bar_y + 1, fill, bar_h - 2);
     }
 
-    /* Current command */
-    canvas_draw_str(canvas, 2, 38, m->current_cmd);
+    /* Current command — on Done, show OS detection result if available */
+    if(m->state == ScriptStateDone && m->detected_os[0]) {
+        char os_line[32];
+        snprintf(os_line, sizeof(os_line), "Detected OS: %s", m->detected_os);
+        canvas_draw_str(canvas, 2, 38, os_line);
+    } else {
+        canvas_draw_str(canvas, 2, 38, m->current_cmd);
+    }
 
-    /* LED state indicators */
-    char led_line[48];
+    /* LED state indicators — use plain ASCII so every font renders them */
+    char led_line[32];
     snprintf(
         led_line,
         sizeof(led_line),
-        "[N:%s] [C:%s] [S:%s]",
-        m->led_num ? "\x04" : "\x05", /* filled / empty circle approximation */
-        m->led_caps ? "\x04" : "\x05",
-        m->led_scroll ? "\x04" : "\x05");
+        "Num:%c Caps:%c Scrl:%c",
+        m->led_num ? '*' : '-',
+        m->led_caps ? '*' : '-',
+        m->led_scroll ? '*' : '-');
     canvas_draw_str(canvas, 2, 48, led_line);
 
     /* Error message */
@@ -565,11 +592,11 @@ static void execution_draw_cb(Canvas* canvas, void* model) {
 
     /* Controls hint */
     if(m->state == ScriptStateRunning) {
-        canvas_draw_str_aligned(canvas, 64, 62, AlignCenter, AlignBottom, "OK:Pause  <:Abort");
+        canvas_draw_str_aligned(canvas, 64, 63, AlignCenter, AlignBottom, "OK:Pause  Left:Abort");
     } else if(m->state == ScriptStatePaused) {
-        canvas_draw_str_aligned(canvas, 64, 62, AlignCenter, AlignBottom, "OK:Resume <:Abort");
+        canvas_draw_str_aligned(canvas, 64, 63, AlignCenter, AlignBottom, "OK:Resume Left:Abort");
     } else if(m->state == ScriptStateDone || m->state == ScriptStateError) {
-        canvas_draw_str_aligned(canvas, 64, 62, AlignCenter, AlignBottom, "<:Back");
+        canvas_draw_str_aligned(canvas, 64, 63, AlignCenter, AlignBottom, "Left arrow = Back");
     }
 }
 

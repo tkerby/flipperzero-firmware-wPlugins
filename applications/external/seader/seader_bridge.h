@@ -9,8 +9,14 @@
 #include <furi.h>
 #include <furi_hal.h>
 
+#include "t_1_logic.h"
+
 // https://ww1.microchip.com/downloads/en/DeviceDoc/00001561C.pdf
-#define SEADER_UART_RX_BUF_SIZE (261)
+#define SEADER_UART_RX_BUF_SIZE (272)
+#define SEADER_CCID_SLOT_COUNT  (2U)
+
+typedef struct BitBuffer BitBuffer;
+typedef struct SeaderWorker SeaderWorker;
 
 typedef struct {
     uint8_t uart_ch;
@@ -20,10 +26,21 @@ typedef struct {
 } SeaderUartConfig;
 
 typedef struct {
-    uint32_t rx_cnt;
-    uint32_t tx_cnt;
     uint8_t protocol;
 } SeaderUartState;
+
+typedef struct {
+    bool powered;
+    /* CCID sequence counter for this slot. */
+    uint8_t sequence;
+} SeaderCcidSlotState;
+
+typedef struct {
+    bool has_sam;
+    uint8_t sam_slot;
+    uint8_t retries;
+    SeaderCcidSlotState slots[SEADER_CCID_SLOT_COUNT];
+} SeaderCcidState;
 
 struct SeaderUartBridge {
     SeaderUartConfig cfg;
@@ -39,13 +56,13 @@ struct SeaderUartBridge {
 
     SeaderUartState st;
 
-    uint8_t rx_buf[SEADER_UART_RX_BUF_SIZE];
     uint8_t tx_buf[SEADER_UART_RX_BUF_SIZE];
     size_t tx_len;
 
     // T=0 or T=1
     uint8_t T;
-    uint8_t IFSC;
+    SeaderCcidState ccid;
+    SeaderT1State t1;
 };
 
 typedef struct SeaderUartBridge SeaderUartBridge;
