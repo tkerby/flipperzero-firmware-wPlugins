@@ -80,7 +80,7 @@ static bool wmbus_record_formatter_format_label_buf(
         label = "Delta temp";
         break;
     case WmBusApplicationQuantityHeatCostAllocation:
-        label = "HeatCA";
+        label = "HCA";
         break;
     case WmBusApplicationQuantityDate:
         label = "Date";

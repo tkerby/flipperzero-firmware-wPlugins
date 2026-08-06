@@ -319,7 +319,7 @@ static bool wmbus_selftest_check_dif_vif_decode_basic(char* detail, size_t detai
     return true;
 }
 
-static bool wmbus_selftest_check_dif_vif_qcaloric_records(char* detail, size_t detail_len) {
+static bool wmbus_selftest_check_dif_vif_hca_records(char* detail, size_t detail_len) {
     static const uint8_t payload[] = {
         0x0BU, 0x6EU, 0x19U, 0x03U, 0x00U,
         0x4BU, 0x6EU, 0x06U, 0x12U, 0x00U,
@@ -370,7 +370,7 @@ static bool wmbus_selftest_check_dif_vif_qcaloric_records(char* detail, size_t d
                  records[6].value_datetime.minute == 13U &&
                  furi_string_equal_str(
                      fields,
-                     "HeatCA[*]=319;HeatCA[S1]=1206;Date[S1]=2025-12-31;HeatCA[S17]=319;"
+                     "HCA[*]=319;HCA[S1]=1206;Date[S1]=2025-12-31;HCA[S17]=319;"
                      "Date[S17]=2026-07-31;Date[err *]=-;DateTime[*]=2026-08-05 23:13");
     if(!valid) {
         wmbus_selftest_set_detail(
@@ -693,7 +693,7 @@ static const WmBusSelftestCheck wmbus_selftest_checks_tooling[] = {
     {"check_short_tpl_security_modes", wmbus_selftest_check_short_tpl_security_modes},
     {"check_ell_security_modes", wmbus_selftest_check_ell_security_modes},
     {"check_dif_vif_decode_basic", wmbus_selftest_check_dif_vif_decode_basic},
-    {"check_dif_vif_qcaloric_records", wmbus_selftest_check_dif_vif_qcaloric_records},
+    {"check_dif_vif_hca_records", wmbus_selftest_check_dif_vif_hca_records},
     {"check_dif_vif_extension_limits", wmbus_selftest_check_dif_vif_extension_limits},
     {"check_dif_vif_decode_12_digit_bcd", wmbus_selftest_check_dif_vif_decode_12_digit_bcd},
     {"check_dif_vif_decode_reject_malformed",
