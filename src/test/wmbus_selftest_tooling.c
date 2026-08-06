@@ -275,12 +275,12 @@ static bool wmbus_selftest_check_dif_vif_decode_basic(char* detail, size_t detai
 
     if(count != 10U || records[0].quantity != WmBusApplicationQuantityVolume ||
        records[0].value_type != WmBusApplicationValueUnsigned ||
-       records[0].value_unsigned != 123456U || !strstr(fields_text, "Volume[*]=123.456 m3") ||
+       records[0].value_unsigned != 123456U || !strstr(fields_text, "Volume=123.456 m3") ||
        records[1].quantity != WmBusApplicationQuantityEnergy ||
        records[1].value_type != WmBusApplicationValueUnsigned ||
-       records[1].value_unsigned != 123456U || !strstr(fields_text, "Energy[*]=123456 Wh") ||
+       records[1].value_unsigned != 123456U || !strstr(fields_text, "Energy=123456 Wh") ||
        records[2].storage_no != 2U || records[3].quantity != WmBusApplicationQuantityVolumeFlow ||
-       !strstr(fields_text, "Flow[*]=12.345678 m3/h") ||
+       !strstr(fields_text, "Flow=12.345678 m3/h") ||
        records[4].quantity != WmBusApplicationQuantityFlowTemperature ||
        records[4].value_type != WmBusApplicationValueUnsigned ||
        records[4].value_unsigned != 215U || records[4].scale10 != -1 ||
@@ -294,16 +294,16 @@ static bool wmbus_selftest_check_dif_vif_decode_basic(char* detail, size_t detai
        records[7].value_type != WmBusApplicationValueDateTime ||
        records[7].value_datetime.year != 2025U || records[7].value_datetime.month != 3U ||
        records[7].value_datetime.day != 12U || records[7].value_datetime.has_time ||
-       !strstr(fields_text, "Date[*]=2025-03-12") ||
+       !strstr(fields_text, "Date=2025-03-12") ||
        records[8].quantity != WmBusApplicationQuantityDateTime ||
        records[8].value_type != WmBusApplicationValueDateTime ||
        records[8].value_datetime.year != 2025U || records[8].value_datetime.month != 3U ||
        records[8].value_datetime.day != 12U || !records[8].value_datetime.has_time ||
        records[8].value_datetime.hour != 16U || records[8].value_datetime.minute != 37U ||
-       !strstr(fields_text, "DateTime[*]=2025-03-12 16:37") ||
+       !strstr(fields_text, "DateTime=2025-03-12 16:37") ||
        records[9].quantity != WmBusApplicationQuantityStatus ||
        records[9].value_type != WmBusApplicationValueRaw ||
-       !strstr(fields_text, "Status[*]=3412")) {
+       !strstr(fields_text, "Status=3412")) {
         wmbus_selftest_set_detail(
             detail, detail_len, "count=%u fields=%s", (unsigned int)count, fields_text);
         furi_string_free(fields);
@@ -363,15 +363,15 @@ static bool wmbus_selftest_check_dif_vif_hca_records(char* detail, size_t detail
                  records[5].measurement_type == WmBusApplicationMeasurementTypeAtError &&
                  records[5].value_type == WmBusApplicationValueUnavailable &&
                  wmbus_record_formatter_format_field(&records[5], unavailable) &&
-                 furi_string_equal_str(unavailable, "Date=-") &&
+                 furi_string_equal_str(unavailable, "Date[err]=-") &&
                  records[6].quantity == WmBusApplicationQuantityDateTime &&
                  records[6].value_datetime.year == 2026U && records[6].value_datetime.month == 8U &&
                  records[6].value_datetime.day == 5U && records[6].value_datetime.hour == 23U &&
                  records[6].value_datetime.minute == 13U &&
                  furi_string_equal_str(
                      fields,
-                     "HCA[*]=319;HCA[S1]=1206;Date[S1]=2025-12-31;HCA[S17]=319;"
-                     "Date[S17]=2026-07-31;Date[err *]=-;DateTime[*]=2026-08-05 23:13");
+                     "HCA=319;Date[err]=-;DateTime=2026-08-05 23:13;HCA[S1]=1206;"
+                     "Date[S1]=2025-12-31;HCA[S17]=319;Date[S17]=2026-07-31");
     if(!valid) {
         wmbus_selftest_set_detail(
             detail,
@@ -578,13 +578,26 @@ static bool wmbus_selftest_check_format_fields_text_uses_context(
     }
     record->data_len = 2U;
 
+    if(!wmbus_application_record_append(&application, &record)) {
+        wmbus_selftest_set_detail(detail, detail_len, "append maximum context failed");
+        furi_string_free(fields);
+        return false;
+    }
+    record->quantity = WmBusApplicationQuantityEnergy;
+    record->measurement_type = WmBusApplicationMeasurementTypeMaximum;
+    record->storage_no = 2U;
+    record->tariff = 3U;
+    record->subunit = 4U;
+    record->data_len = 1U;
+    wmbus_application_record_set_unsigned(record, 12U);
+
     wmbus_record_formatter_format_joined(
         application.records, application.record_count, ';', fields);
 
     if(strcmp(
            furi_string_get_cstr(fields),
-           "Volume[*]=0.150 m3;Volume[S1]=93958776065412.89160 m3;Energy[*]=0.02 Wh;"
-           "Energy[* T1]=468274118951 Wh;Status[*]=9201") != 0) {
+           "Volume=0.150 m3;Energy=0.02 Wh;Energy[T1]=468274118951 Wh;Status=9201;"
+           "Volume[S1]=93958776065412.89160 m3;Energy[S2 T3 U4 max]=12 Wh") != 0) {
         wmbus_selftest_set_detail(detail, detail_len, "fields=%s", furi_string_get_cstr(fields));
         furi_string_free(fields);
         return false;
@@ -629,9 +642,9 @@ static bool wmbus_selftest_check_packet_detail_retains_volume(char* detail, size
     const char* detail_text = furi_string_get_cstr(text);
     if(strncmp(
            detail_text,
-           "Radio mode: C, Link format: A\nRSSI: -72 dBm\n",
-           sizeof("Radio mode: C, Link format: A\nRSSI: -72 dBm\n") - 1U) != 0 ||
-       !strstr(detail_text, "\nVolume[*]=0.150 m3")) {
+           "Radio mode: C, format: A\nRSSI: -72 dBm\n",
+           sizeof("Radio mode: C, format: A\nRSSI: -72 dBm\n") - 1U) != 0 ||
+       !strstr(detail_text, "\nVolume=0.150 m3")) {
         wmbus_selftest_set_detail(detail, detail_len, "detail=%s", detail_text);
         furi_string_free(text);
         return false;

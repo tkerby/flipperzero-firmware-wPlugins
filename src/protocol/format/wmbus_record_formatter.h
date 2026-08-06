@@ -14,14 +14,16 @@ bool wmbus_record_formatter_format_value_text(
     size_t out_size);
 
 /**
- * Format one application record as `label=value`.
+ * Format one application record as `label[S# T# U# type]=value`.
+ * Default instantaneous/current context is omitted.
  * Resets `out`. Empty output is valid when either side is not printable.
  * The caller owns `out`.
  */
 bool wmbus_record_formatter_format_field(const WmBusApplicationRecord* record, FuriString* out);
 
 /**
- * Format multiple application records separated by `delimiter`.
+ * Format multiple application records separated by `delimiter`, grouped by
+ * ascending storage number while retaining wire order within each group.
  * Resets `out`. Empty output is valid when no record produces text.
  * The caller owns `out`.
  */
