@@ -6,6 +6,9 @@
 
 #include "../../core/wmbus_types.h"
 
+/** CC1101 RX FIFO capacity; RXBYTES may additionally report one guard byte. */
+#define WMBUS_FIFO_READ_MAX 64U
+
 typedef struct {
     /* Decoded Link Layer wire frame starting at its L-field for every mode. */
     uint8_t data[WMBUS_PHY_FRAME_MAX_BYTES];

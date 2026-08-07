@@ -339,7 +339,7 @@ static bool wmbus_selftest_check_packet_process_t_ignores_invalid_tail(
     uint8_t capture[WMBUS_SELFTEST_BUF_MAX] = {0};
     WmBusPacketRecord record = {0};
 
-    if(!wmbus_frame_build_format_a(
+    if(!wmbus_selftest_frame_build_format_a(
            wmbus_apator_b, WMBUS_APATOR_B_LEN, frame, sizeof(frame), &frame_len)) {
         wmbus_selftest_set_detail(detail, detail_len, "build format-A failed");
         return false;
@@ -409,7 +409,7 @@ static bool
     size_t raw_bit_len = 0;
     uint8_t capture[WMBUS_SELFTEST_BUF_MAX] = {0};
 
-    if(!wmbus_frame_build_format_a(
+    if(!wmbus_selftest_frame_build_format_a(
            wmbus_apator_b, WMBUS_APATOR_B_LEN, frame, sizeof(frame), &frame_len)) {
         wmbus_selftest_set_detail(detail, detail_len, "build format-A failed");
         return false;
@@ -485,7 +485,7 @@ static bool wmbus_selftest_check_real_c_capture_24008355(
         return false;
     }
 
-    if(record.quality != WmBusPacketQualityParsed || record.packet_len != 79U ||
+    if(record.quality != WmBusPacketQualityParsed || record.normalized_len != 79U ||
        strcmp(record.identity.manufacturer, "MAD") != 0 ||
        strcmp(record.identity.meter_id, "24008355") != 0 || record.dll.ci_field != 0x7AU ||
        record.tpl.acc != expected_access || record.application.parser_id != WmBusParserIdDifVif ||
@@ -496,7 +496,7 @@ static bool wmbus_selftest_check_real_c_capture_24008355(
             detail_len,
             "q=%u len=%u mfg=%s id=%s ci=%02X acc=%02X parser=%u total=%lu",
             (unsigned int)record.quality,
-            (unsigned int)record.packet_len,
+            (unsigned int)record.normalized_len,
             record.identity.manufacturer,
             record.identity.meter_id,
             record.dll.ci_field,
@@ -593,14 +593,14 @@ static bool wmbus_selftest_check_packet_process_c_bad_header_keeps_wire_diagnost
         return false;
     }
 
-    if(record.quality != WmBusPacketQualityAnyCapture || record.packet_len != 0U ||
+    if(record.quality != WmBusPacketQualityAnyCapture || record.normalized_len != 0U ||
        record.wire_len != sizeof(raw) || memcmp(record.wire_bytes, raw, sizeof(raw)) != 0) {
         wmbus_selftest_set_detail(
             detail,
             detail_len,
-            "unexpected quality=%u packet_len=%u",
+            "unexpected quality=%u normalized_len=%u",
             (unsigned int)record.quality,
-            (unsigned int)record.packet_len);
+            (unsigned int)record.normalized_len);
         return false;
     }
 
@@ -615,7 +615,7 @@ static bool
     uint8_t normalized[WMBUS_SELFTEST_BUF_MAX] = {0};
     WmBusFrameNormalizeResult result = {0};
 
-    if(!wmbus_frame_build_format_a(
+    if(!wmbus_selftest_frame_build_format_a(
            wmbus_apator_a, WMBUS_APATOR_A_LEN, frame, sizeof(frame), &frame_len)) {
         wmbus_selftest_set_detail(detail, detail_len, "build format-A failed");
         return false;
@@ -650,7 +650,7 @@ static bool wmbus_selftest_check_frame_normalize_c_mode_format_a_wire_frame(
     uint8_t normalized[WMBUS_SELFTEST_BUF_MAX] = {0};
     WmBusFrameNormalizeResult result = {0};
 
-    if(!wmbus_frame_build_format_a(
+    if(!wmbus_selftest_frame_build_format_a(
            wmbus_apator_b, WMBUS_APATOR_B_LEN, frame, sizeof(frame), &frame_len)) {
         wmbus_selftest_set_detail(detail, detail_len, "build format-A failed");
         return false;
@@ -684,7 +684,7 @@ static bool
     uint8_t normalized[WMBUS_SELFTEST_BUF_MAX] = {0};
     WmBusFrameNormalizeResult result = {0};
 
-    if(!wmbus_frame_build_format_b(
+    if(!wmbus_selftest_frame_build_format_b(
            wmbus_apator_c, WMBUS_APATOR_C_LEN, frame, sizeof(frame), &frame_len)) {
         wmbus_selftest_set_detail(detail, detail_len, "build format-B failed");
         return false;
@@ -720,7 +720,7 @@ static bool wmbus_selftest_check_packet_process_c_crc_bad_keeps_complete_header(
     const size_t tail_len = 5U;
     WmBusPacketRecord record = {0};
 
-    if(!wmbus_frame_build_format_b(
+    if(!wmbus_selftest_frame_build_format_b(
            wmbus_apator_c, WMBUS_APATOR_C_LEN, frame, sizeof(frame), &frame_len)) {
         wmbus_selftest_set_detail(detail, detail_len, "build format-B failed");
         return false;
@@ -737,8 +737,8 @@ static bool wmbus_selftest_check_packet_process_c_crc_bad_keeps_complete_header(
         return false;
     }
 
-    WmBusFrameMeasureResult measure = {0};
-    if(!wmbus_frame_measure(WmBusFrameFormatB, frame, frame_len, &measure) || !measure.complete ||
+    WmBusSelftestFrameMeasureResult measure = {0};
+    if(!wmbus_selftest_frame_measure(WmBusFrameFormatB, frame, frame_len, &measure) || !measure.complete ||
        measure.format != WmBusFrameFormatB || measure.frame_len != frame_len ||
        measure.normalized_len != WMBUS_APATOR_C_LEN) {
         wmbus_selftest_set_detail(
@@ -788,16 +788,15 @@ static bool wmbus_selftest_check_packet_process_c_crc_bad_keeps_complete_header(
     }
 
     if(record.quality != WmBusPacketQualityFrameComplete ||
-       record.packet_len != sizeof(expected) ||
-       memcmp(record.packet_bytes, expected, sizeof(expected)) != 0 ||
+       record.normalized_len != sizeof(expected) ||
        record.wire_len != frame_len || memcmp(record.wire_bytes, frame, frame_len) != 0 ||
        record.application.parser_id != WmBusParserIdShortTpl) {
         wmbus_selftest_set_detail(
             detail,
             detail_len,
-            "unexpected quality=%u packet_len=%u parser=%u",
+            "unexpected quality=%u normalized_len=%u parser=%u",
             (unsigned int)record.quality,
-            (unsigned int)record.packet_len,
+            (unsigned int)record.normalized_len,
             (unsigned int)record.application.parser_id);
         return false;
     }
@@ -815,7 +814,7 @@ static bool wmbus_selftest_check_c_format_a_is_authoritative(char* detail, size_
     WmBusFrameNormalizeResult normalize = {0};
     WmBusPacketRecord record = {0};
 
-    if(!wmbus_frame_build_format_a(
+    if(!wmbus_selftest_frame_build_format_a(
            wmbus_apator_b, WMBUS_APATOR_B_LEN, frame, sizeof(frame), &frame_len)) {
         wmbus_selftest_set_detail(detail, detail_len, "build format-A failed");
         return false;
@@ -851,8 +850,7 @@ static bool wmbus_selftest_check_c_format_a_is_authoritative(char* detail, size_
     }
 
     if(record.quality != WmBusPacketQualityFrameComplete || record.format != WmBusFrameFormatA ||
-       record.packet_len != sizeof(expected) ||
-       memcmp(record.packet_bytes, expected, sizeof(expected)) != 0 ||
+       record.normalized_len != sizeof(expected) ||
        record.wire_len != frame_len || memcmp(record.wire_bytes, frame, frame_len) != 0 ||
        record.dll.ci_field != expected[10]) {
         wmbus_selftest_set_detail(
@@ -861,7 +859,7 @@ static bool wmbus_selftest_check_c_format_a_is_authoritative(char* detail, size_
             "format-A lost quality=%u wire=%u stored=%u ci=%02X",
             (unsigned int)record.quality,
             (unsigned int)frame_len,
-            (unsigned int)record.packet_len,
+            (unsigned int)record.normalized_len,
             record.dll.ci_field);
         return false;
     }
@@ -871,7 +869,7 @@ static bool wmbus_selftest_check_c_format_a_is_authoritative(char* detail, size_
         detail_len,
         "format=A wire=%u normalized=%u crc_bad",
         (unsigned int)frame_len,
-        (unsigned int)record.packet_len);
+        (unsigned int)record.normalized_len);
     return true;
 }
 
@@ -884,21 +882,24 @@ static bool wmbus_selftest_check_fifo_safe_read_sizes(char* detail, size_t detai
         WmBusRxModeC, WmBusCaptureLengthKnown, 3U, 93U, 64U);
     const size_t prefetch_full = wmbus_fifo_safe_read_size(
         WmBusRxModeC, WmBusCaptureLengthKnown, 3U, 93U, 65U);
+    const size_t exact_65 = wmbus_fifo_safe_read_size(
+        WmBusRxModeC, WmBusCaptureLengthKnown, 28U, 93U, 65U);
     const size_t retain = wmbus_fifo_safe_read_size(
         WmBusRxModeC, WmBusCaptureLengthKnown, 66U, 93U, 26U);
     const size_t final = wmbus_fifo_safe_read_size(
         WmBusRxModeC, WmBusCaptureLengthKnown, 66U, 93U, 27U);
 
     if(t_first != 1U || c_first != 2U || stream != 63U || prefetch_full != 64U ||
-       retain != 25U || final != 27U) {
+       exact_65 != 64U || retain != 25U || final != 27U) {
         wmbus_selftest_set_detail(
             detail,
             detail_len,
-            "unexpected reads T=%u C=%u stream=%u prefetch=%u retain=%u final=%u",
+            "unexpected reads T=%u C=%u stream=%u prefetch=%u exact65=%u retain=%u final=%u",
             (unsigned int)t_first,
             (unsigned int)c_first,
             (unsigned int)stream,
             (unsigned int)prefetch_full,
+            (unsigned int)exact_65,
             (unsigned int)retain,
             (unsigned int)final);
         return false;

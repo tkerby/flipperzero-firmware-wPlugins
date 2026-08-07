@@ -71,7 +71,7 @@ static void
         record->rssi,
         wmbus_packet_quality_str(record->quality),
         wmbus_parser_id_name(record->application.parser_id),
-        (unsigned int)record->packet_len);
+        (unsigned int)record->wire_len);
 }
 
 void wmbus_packet_format_detail_text(const WmBusPacketRecord* record, FuriString* out) {

@@ -171,8 +171,8 @@ static void wmbus_parser_apator162_store_status_record(
     }
 
     app_record->quantity = WmBusApplicationQuantityStatus;
-    app_record->data_len = (uint8_t)((status_len > UINT8_MAX) ? UINT8_MAX : status_len);
-    if(!wmbus_application_record_set_raw_bytes(app_record, status, app_record->data_len)) {
+    const uint8_t data_len = (uint8_t)((status_len > UINT8_MAX) ? UINT8_MAX : status_len);
+    if(!wmbus_application_record_set_raw_bytes(app_record, status, data_len)) {
         app_record->value_type = WmBusApplicationValueRaw;
     }
 }
@@ -280,7 +280,7 @@ static bool wmbus_parser_apator162_scan_stream(
  */
 bool wmbus_parser_apator162_probe(const WmBusParserPacketView* packet) {
     if(!packet || !packet->dll || !packet->tpl || !packet->identity || !packet->payload ||
-       !packet->payload->has_application_payload || packet->payload->application_len == 0U) {
+       !packet->payload->application_bytes || packet->payload->application_len == 0U) {
         return false;
     }
     if(packet->tpl->header_type != WmBusTplHeaderShort || packet->dll->ci_field != 0x7AU) {

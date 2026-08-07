@@ -57,6 +57,13 @@ typedef struct {
     char id[WMBUS_ID_STR_LEN];
 } WmBusSelftestResult;
 
+typedef struct {
+    bool complete;
+    WmBusFrameFormat format;
+    size_t frame_len;
+    size_t normalized_len;
+} WmBusSelftestFrameMeasureResult;
+
 typedef bool (*WmBusSelftestCheckFn)(char* detail, size_t detail_len);
 
 typedef struct {
@@ -100,6 +107,23 @@ bool wmbus_selftest_hex_to_format_b_frame(
     uint8_t* out,
     size_t out_max,
     size_t* out_len);
+bool wmbus_selftest_frame_build_format_a(
+    const uint8_t* normalized,
+    size_t normalized_len,
+    uint8_t* out,
+    size_t out_max,
+    size_t* out_len);
+bool wmbus_selftest_frame_build_format_b(
+    const uint8_t* normalized,
+    size_t normalized_len,
+    uint8_t* out,
+    size_t out_max,
+    size_t* out_len);
+bool wmbus_selftest_frame_measure(
+    WmBusFrameFormat format,
+    const uint8_t* frame,
+    size_t frame_len,
+    WmBusSelftestFrameMeasureResult* out);
 uint32_t wmbus_selftest_fnv1a32(const uint8_t* data, size_t len);
 bool wmbus_selftest_write_report_line(File* file, const char* format, ...);
 bool wmbus_selftest_find_total_volume(const WmBusPacketRecord* record, uint32_t* total_m3_x1000);

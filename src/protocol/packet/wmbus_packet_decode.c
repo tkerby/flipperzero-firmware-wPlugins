@@ -247,18 +247,19 @@ bool wmbus_packet_decode_phy_frame(
            &normalized_result)) {
         out->frame = frame_buf;
         out->frame_len = normalized_result.normalized_len;
+        out->wire_frame_len = normalized_result.computed_len;
         wmbus_packet_upgrade_quality_from_normalize(&out->quality, &normalized_result);
     }
 
     return true;
 }
 
-void wmbus_packet_store_frame(WmBusPacketRecord* record, const uint8_t* frame, size_t frame_len) {
+void wmbus_packet_set_frame_metadata(
+    WmBusPacketRecord* record,
+    const uint8_t* frame,
+    size_t frame_len) {
     if(!record || !frame || frame_len == 0U) return;
 
-    record->packet_len = (uint16_t)((frame_len > sizeof(record->packet_bytes)) ?
-                                        sizeof(record->packet_bytes) :
-                                        frame_len);
-    memcpy(record->packet_bytes, frame, record->packet_len);
+    record->normalized_len = (uint16_t)(frame_len > UINT16_MAX ? UINT16_MAX : frame_len);
     wmbus_packet_extract_dll_tpl_info(frame, frame_len, record);
 }

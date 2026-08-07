@@ -10,8 +10,7 @@
 #define TAG "WmBusDecoder"
 
 #define WMBUS_FREQ_HZ                      868950000UL
-#define WMBUS_FIFO_CHUNK                   64U
-#define WMBUS_RXBYTES_MAX                  (WMBUS_FIFO_CHUNK + 1U)
+#define WMBUS_RXBYTES_MAX                  (WMBUS_FIFO_READ_MAX + 1U)
 #define WMBUS_STATUS_STABLE_READ_MAX       8U
 #define WMBUS_RSSI_UPDATE_HZ               5U
 #define WMBUS_LED_PULSE_MS                 40U
@@ -352,7 +351,7 @@ static bool wmbus_radio_marcstate_is_rx(uint8_t raw_state) {
 }
 
 static bool wmbus_radio_read_fifo_exact(uint8_t* data, uint8_t size) {
-    if(!data || size == 0U || size > WMBUS_FIFO_CHUNK) return false;
+    if(!data || size == 0U || size > WMBUS_FIFO_READ_MAX) return false;
 
     uint8_t addr = CC1101_FIFO | CC1101_READ | CC1101_BURST;
     furi_hal_spi_acquire(&furi_hal_spi_bus_handle_subghz);
@@ -369,7 +368,7 @@ static bool wmbus_capture_read_fifo(
     size_t read_size,
     bool* had_data,
     uint32_t* last_activity_tick) {
-    uint8_t temp[WMBUS_FIFO_CHUNK];
+    uint8_t temp[WMBUS_FIFO_READ_MAX];
     if(!raw || !raw_len || !had_data || !last_activity_tick || *raw_len > raw_max ||
        read_size == 0U || read_size > sizeof(temp) || read_size > raw_max - *raw_len) {
         return false;

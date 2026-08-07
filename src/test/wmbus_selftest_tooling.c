@@ -62,7 +62,7 @@ static bool wmbus_selftest_check_supported_l_field_range(char* detail, size_t de
            &invalid_fifo_len,
            &invalid_fifo_format) != WmBusCaptureLengthInvalid ||
        max_t_raw_len > WMBUS_PHY_FRAME_MAX_BYTES ||
-       !wmbus_frame_build_format_b(
+       !wmbus_selftest_frame_build_format_b(
            format_b_normalized,
            format_b_normalized_len,
            format_b_wire,
@@ -239,19 +239,18 @@ static bool wmbus_selftest_check_ci72_protected_payload(char* detail, size_t det
        strcmp(record.identity.manufacturer, "ZRI") != 0 ||
        strcmp(record.identity.meter_id, "70831902") != 0 ||
        record.identity.version != 0x00U || record.identity.dev_type != 0x07U ||
-       record.payload.has_application_payload || record.application.record_count != 0U ||
+       record.application.record_count != 0U ||
        record.application.parser_id != WmBusParserIdLongTpl) {
         wmbus_selftest_set_detail(
             detail,
             detail_len,
-            "q=%u ci=%02X tpl=%u cfg=%04X sec=%02X id=%s payload=%s parser=%u",
+            "q=%u ci=%02X tpl=%u cfg=%04X sec=%02X id=%s parser=%u",
             (unsigned int)record.quality,
             record.dll.ci_field,
             (unsigned int)record.tpl.header_type,
             record.tpl.cfg,
             record.tpl.security_mode,
             record.identity.meter_id,
-            record.payload.has_application_payload ? "OPEN" : "CLOSED",
             (unsigned int)record.application.parser_id);
         return false;
     }
@@ -294,7 +293,7 @@ static bool wmbus_selftest_check_ci72_mode5_decrypt(char* detail, size_t detail_
 
         normalized[21] = (uint8_t)((normalized[21] & 0x0FU) | (encrypted_blocks[i] << 4U));
         memcpy(&normalized[23], encrypted, sizeof(encrypted));
-        if(!wmbus_frame_build_format_a(
+        if(!wmbus_selftest_frame_build_format_a(
                normalized, normalize.normalized_len, frame, sizeof(frame), &frame_len) ||
            !wmbus_selftest_process_phy_frame_record(
                WmBusRxModeC, WmBusFrameFormatA, frame, frame_len, &key_store, &record)) {
@@ -307,20 +306,14 @@ static bool wmbus_selftest_check_ci72_mode5_decrypt(char* detail, size_t detail_
         }
 
         if(record.tpl.header_type != WmBusTplHeaderLong || !record.tpl.decrypted ||
-           record.tpl.key_index != 0U || !record.payload.has_application_payload ||
-           record.payload.application_len != sizeof(encrypted) ||
-           record.payload.application_bytes[0] != 0x2FU ||
-           record.payload.application_bytes[1] != 0x2FU) {
+           record.tpl.key_index != 0U) {
             wmbus_selftest_set_detail(
                 detail,
                 detail_len,
-                "CI72 N=%u type=%u dec=%s len=%u first=%02X%02X",
+                "CI72 N=%u type=%u dec=%s",
                 (unsigned int)encrypted_blocks[i],
                 (unsigned int)record.tpl.header_type,
-                record.tpl.decrypted ? "YES" : "NO",
-                (unsigned int)record.payload.application_len,
-                record.payload.application_bytes[0],
-                record.payload.application_bytes[1]);
+                record.tpl.decrypted ? "YES" : "NO");
             return false;
         }
     }
@@ -364,7 +357,7 @@ static bool wmbus_selftest_check_ell_chained_tpl_headers(char* detail, size_t de
 
     for(size_t i = 0U; i < COUNT_OF(cases); i++) {
         WmBusPacketRecord record = {0};
-        if(!wmbus_frame_build_format_a(
+        if(!wmbus_selftest_frame_build_format_a(
                cases[i].normalized,
                cases[i].normalized_len,
                frame,
@@ -379,9 +372,6 @@ static bool wmbus_selftest_check_ell_chained_tpl_headers(char* detail, size_t de
         if(!record.ell.has_ell || !record.ell.has_session || record.ell.header_len != 19U ||
            record.tpl.header_type != cases[i].header_type ||
            record.tpl.header_len != cases[i].header_len || record.tpl.acc != cases[i].tpl_acc ||
-           !record.payload.has_application_payload || record.payload.application_len != 2U ||
-           record.payload.application_bytes[0] != 0x2FU ||
-           record.payload.application_bytes[1] != 0x2FU ||
            strcmp(record.identity.manufacturer, "ZRI") != 0 ||
            strcmp(record.identity.meter_id, cases[i].meter_id) != 0 ||
            record.identity.dev_type != cases[i].dev_type) {
@@ -478,7 +468,7 @@ static bool wmbus_selftest_check_long_tpl_ci_headers(char* detail, size_t detail
         WmBusPacketRecord record = {0};
         normalized[10] = long_cis[i];
 
-        if(!wmbus_frame_build_format_a(
+        if(!wmbus_selftest_frame_build_format_a(
                normalized, sizeof(normalized), frame, sizeof(frame), &frame_len) ||
            !wmbus_selftest_process_phy_frame_record(
                WmBusRxModeC, WmBusFrameFormatA, frame, frame_len, NULL, &record)) {
@@ -488,20 +478,16 @@ static bool wmbus_selftest_check_long_tpl_ci_headers(char* detail, size_t detail
         }
         if(record.tpl.header_type != WmBusTplHeaderLong || record.tpl.header_len != 23U ||
            record.tpl.cfg != 0x0500U || record.tpl.decrypted ||
-           !record.payload.has_application_payload || record.payload.application_len != 2U ||
-           record.payload.application_bytes[0] != 0x2FU ||
-           record.payload.application_bytes[1] != 0x2FU ||
            strcmp(record.identity.manufacturer, "ZRI") != 0 ||
            strcmp(record.identity.meter_id, "70831902") != 0) {
             wmbus_selftest_set_detail(
                 detail,
                 detail_len,
-                "CI=%02X type=%u cfg=%04X dec=%u len=%u id=%s",
+                "CI=%02X type=%u cfg=%04X dec=%u id=%s",
                 long_cis[i],
                 (unsigned int)record.tpl.header_type,
                 record.tpl.cfg,
                 record.tpl.decrypted ? 1U : 0U,
-                (unsigned int)record.payload.application_len,
                 record.identity.meter_id);
             return false;
         }
@@ -671,7 +657,7 @@ static bool wmbus_selftest_check_dif_vif_signed_integer_widths(char* detail, siz
     return true;
 }
 
-static bool wmbus_selftest_check_dif_vif_lvar_text_only(char* detail, size_t detail_len) {
+static bool wmbus_selftest_check_dif_vif_lvar_classes(char* detail, size_t detail_len) {
     static const uint8_t text_payload[] = {
         0x0DU,
         0x13U,
@@ -695,21 +681,86 @@ static bool wmbus_selftest_check_dif_vif_lvar_text_only(char* detail, size_t det
         return false;
     }
 
-    for(uint16_t lvar = 0xC0U; lvar <= 0xFFU; lvar++) {
-        uint8_t unsupported_payload[19] = {0x0DU, 0x13U, (uint8_t)lvar};
+    static const uint8_t numeric_payload[] = {
+        0x0DU, 0x13U, 0xC2U, 0x34U, 0x12U,
+        0x0DU, 0x13U, 0xD2U, 0x34U, 0x12U,
+        0x0DU, 0x13U, 0xE3U, 0xFEU, 0xFFU, 0xFFU,
+        0x0DU, 0x13U, 0xF4U, 0x00U, 0x00U, 0x80U, 0x3FU,
+    };
+    WmBusApplicationRecord numeric_records[4] = {0};
+    if(!wmbus_packet_decode_application_records(
+           numeric_payload,
+           sizeof(numeric_payload),
+           numeric_records,
+           COUNT_OF(numeric_records),
+           &count) ||
+       count != COUNT_OF(numeric_records) || numeric_records[0].value != 1234 ||
+       numeric_records[1].value != -1234 || numeric_records[2].value != -2 ||
+       numeric_records[3].data_len != 4U ||
+       numeric_records[3].value_type != WmBusApplicationValueRaw) {
+        wmbus_selftest_set_detail(detail, detail_len, "numeric LVAR decode failed count=%u", count);
+        return false;
+    }
+
+    for(uint16_t lvar = 0xFBU; lvar <= 0xFFU; lvar++) {
+        uint8_t reserved_payload[19] = {0x0DU, 0x13U, (uint8_t)lvar};
         if(wmbus_packet_decode_application_records(
-               unsupported_payload,
-               sizeof(unsupported_payload),
+               reserved_payload,
+               sizeof(reserved_payload),
                records,
                COUNT_OF(records),
                &count)) {
             wmbus_selftest_set_detail(
-                detail, detail_len, "non-text LVAR=%02X accepted", (unsigned int)lvar);
+                detail, detail_len, "reserved LVAR=%02X accepted", (unsigned int)lvar);
             return false;
         }
     }
 
-    wmbus_selftest_set_detail(detail, detail_len, "text LVAR accepted; C0-FF rejected");
+    wmbus_selftest_set_detail(detail, detail_len, "LVAR text/BCD/binary/float framed");
+    return true;
+}
+
+static bool wmbus_selftest_check_dif_vif_extensions(char* detail, size_t detail_len) {
+    static const uint8_t payload[] = {
+        0x04U, 0x93U, 0x00U, 0x01U, 0x00U, 0x00U, 0x00U,
+        0x01U, 0xFDU, 0x97U, 0x00U, 0xA5U,
+    };
+    WmBusApplicationRecord records[2] = {0};
+    uint8_t count = 0U;
+
+    if(!wmbus_packet_decode_application_records(
+           payload, sizeof(payload), records, COUNT_OF(records), &count) ||
+       count != 2U || records[0].quantity != WmBusApplicationQuantityVolume ||
+       records[0].scale10 != -3 || records[0].value != 1 ||
+       records[1].quantity != WmBusApplicationQuantityStatus || records[1].data_len != 1U ||
+       records[1].value_type != WmBusApplicationValueRaw || records[1].raw_bytes[0] != 0xA5U) {
+        wmbus_selftest_set_detail(detail, detail_len, "VIF extension decode failed count=%u", count);
+        return false;
+    }
+
+    wmbus_selftest_set_detail(detail, detail_len, "primary VIF and chained VIFE masked");
+    return true;
+}
+
+static bool wmbus_selftest_check_dif_vif_plain_text_units(char* detail, size_t detail_len) {
+    static const uint8_t payload[] = {
+        0x01U, 0x7CU, 0x02U, 'm', '3', 0x2AU,
+        0x01U, 0xFCU, 0x01U, 'x', 0x00U, 0x2BU,
+        0x01U, 0x13U, 0x2CU,
+    };
+    WmBusApplicationRecord records[3] = {0};
+    uint8_t count = 0U;
+
+    if(!wmbus_packet_decode_application_records(
+           payload, sizeof(payload), records, COUNT_OF(records), &count) ||
+       count != 3U || records[0].value != 42 || records[1].value != 43 ||
+       records[2].quantity != WmBusApplicationQuantityVolume || records[2].value != 44) {
+        wmbus_selftest_set_detail(
+            detail, detail_len, "plain-text VIF framing failed count=%u", count);
+        return false;
+    }
+
+    wmbus_selftest_set_detail(detail, detail_len, "VIF=7C/FC unit strings consumed");
     return true;
 }
 
@@ -999,7 +1050,11 @@ static bool wmbus_selftest_check_format_fields_text_uses_context(char* detail, s
         furi_string_free(fields);
         return false;
     }
-    record->data_len = 2U;
+    if(record->data_len != 2U) {
+        wmbus_selftest_set_detail(detail, detail_len, "raw setter lost data_len");
+        furi_string_free(fields);
+        return false;
+    }
 
     if(!wmbus_application_record_append(&application, &record)) {
         wmbus_selftest_set_detail(detail, detail_len, "append maximum context failed");
@@ -1136,7 +1191,9 @@ static const WmBusSelftestCheck wmbus_selftest_checks_tooling[] = {
     {"check_ell_security_modes", wmbus_selftest_check_ell_security_modes},
     {"check_dif_vif_decode_basic", wmbus_selftest_check_dif_vif_decode_basic},
     {"check_dif_vif_signed_integer_widths", wmbus_selftest_check_dif_vif_signed_integer_widths},
-    {"check_dif_vif_lvar_text_only", wmbus_selftest_check_dif_vif_lvar_text_only},
+    {"check_dif_vif_lvar_classes", wmbus_selftest_check_dif_vif_lvar_classes},
+    {"check_dif_vif_extensions", wmbus_selftest_check_dif_vif_extensions},
+    {"check_dif_vif_plain_text_units", wmbus_selftest_check_dif_vif_plain_text_units},
     {"check_dif_vif_hca_records", wmbus_selftest_check_dif_vif_hca_records},
     {"check_dif_vif_extension_limits", wmbus_selftest_check_dif_vif_extension_limits},
     {"check_dif_vif_decode_12_digit_bcd", wmbus_selftest_check_dif_vif_decode_12_digit_bcd},

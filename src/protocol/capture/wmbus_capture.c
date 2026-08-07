@@ -92,7 +92,9 @@ size_t wmbus_fifo_safe_read_size(
 
         /* The complete software-delimited frame is now in FIFO. It is safe to
          * consume its final byte without retaining the CC1101 guard byte. */
-        if(available_fifo_len >= remaining) return remaining;
+        if(available_fifo_len >= remaining) {
+            return remaining < WMBUS_FIFO_READ_MAX ? remaining : WMBUS_FIFO_READ_MAX;
+        }
     } else {
         const size_t header_len = mode == WmBusRxModeC ? 3U : 2U;
         if((mode != WmBusRxModeC && mode != WmBusRxModeT) || captured_len >= header_len) {

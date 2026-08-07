@@ -21,8 +21,8 @@ The mode-specific radio and capture contract is documented in
 1. radio RX captures raw telegram data in `T` or `C` mode
 2. capture code reconstructs a candidate WM-Bus frame for the selected mode
 3. packet processing validates plausibility, length, and CRC
-4. packet metadata, identity fields, and payload slices are stored in `WmBusPacketRecord`
-5. optional decrypt attempts run before application parsing when the packet indicates supported security
+4. packet metadata, identity fields, and the authoritative wire bytes are stored in `WmBusPacketRecord`
+5. normalized and optionally decrypted payload views remain transient during application parsing
 6. registered parsers inspect the packet and populate application-level fields
 7. the result is routed to live view, history storage, and optional CSV logging
 8. history and CSV retention apply optional RSSI and packet-quality gates
@@ -136,7 +136,7 @@ storage read /ext/apps_data/wmbus_decoder/selftest.txt
 Expected result ends with:
 
 ```text
-selftests done total=55 passed=55 failed=0
+selftests done total=<N> passed=<N> failed=0
 ```
 
 ## Credits

@@ -42,7 +42,9 @@ bool wmbus_application_record_set_raw_bytes(
     uint8_t data_len) {
     if(!record || !data || data_len == 0U || data_len > 8U) return false;
 
+    record->data_len = data_len;
     record->value_type = WmBusApplicationValueRaw;
+    memset(record->raw_bytes, 0, sizeof(record->raw_bytes));
     memcpy(record->raw_bytes, data, data_len);
     return true;
 }

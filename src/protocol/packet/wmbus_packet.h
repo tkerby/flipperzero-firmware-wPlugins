@@ -18,15 +18,14 @@ typedef struct {
     WmBusRxMode mode;
     WmBusFrameFormat format;
     uint16_t wire_len;
-    uint16_t packet_len; /**< Stored byte count of `packet_bytes`, not the same as `dll.l_field`. */
+    /** Normalized frame length after removing link-layer CRC bytes. */
+    uint16_t normalized_len;
     int rssi;
     uint32_t rx_tick;
-    uint8_t wire_bytes[256];
-    uint8_t packet_bytes[256];
+    uint8_t wire_bytes[WMBUS_PHY_FRAME_MAX_BYTES];
     WmBusPacketDllData dll;
     WmBusPacketEllData ell;
     WmBusPacketTplData tpl;
-    WmBusPacketPayloadData payload;
     WmBusPacketIdentityData identity;
     WmBusPacketApplicationData application;
 } WmBusPacketRecord;

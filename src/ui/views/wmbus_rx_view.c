@@ -28,9 +28,9 @@ typedef struct {
     bool rssi_gate_ok;
     int8_t rssi;
     uint32_t rx_tick;
-    uint16_t packet_len;
-    uint8_t packet_preview_len;
-    uint8_t packet_preview[WMBUS_RX_DEBUG_PACKET_MAX];
+    uint16_t wire_len;
+    uint8_t wire_preview_len;
+    uint8_t wire_preview[WMBUS_RX_DEBUG_PACKET_MAX];
     WmBusPacketDllData dll;
     WmBusPacketIdentityData identity;
     WmBusPacketEllData ell;
@@ -270,12 +270,12 @@ static void wmbus_rx_draw(Canvas* canvas, void* model) {
         wmbus_rx_draw_nav_footer(canvas);
     } else if(m->debug_mode) {
         char hex[WMBUS_PACKET_VALUE_MAX];
-        size_t preview_len = entry->packet_preview_len;
+        size_t preview_len = entry->wire_preview_len;
         if(preview_len > 8U) preview_len = 8U;
-        wmbus_hex_encode(entry->packet_preview, preview_len, hex, sizeof(hex));
+        wmbus_hex_encode(entry->wire_preview, preview_len, hex, sizeof(hex));
         wmbus_rx_format_quality_flags(entry, line, sizeof(line));
         canvas_draw_str(canvas, 0, 48, line);
-        snprintf(line, sizeof(line), "Hex:%s%s", hex, (entry->packet_len > 8U) ? "..." : "");
+        snprintf(line, sizeof(line), "Hex:%s%s", hex, (entry->wire_len > 8U) ? "..." : "");
         canvas_draw_str(canvas, 0, 58, line);
     } else if(!wmbus_packet_quality_meets(entry->quality, WmBusPacketQualityFrameComplete)) {
         canvas_draw_str(canvas, 0, 48, "Waiting for complete frame...");
@@ -480,11 +480,11 @@ static void wmbus_rx_history_fill_entry(
     entry->rssi_gate_ok = rssi_gate_ok;
     entry->rssi = (int8_t)record->rssi;
     entry->rx_tick = record->rx_tick;
-    entry->packet_len = record->packet_len;
-    entry->packet_preview_len = (uint8_t)((record->packet_len > WMBUS_RX_DEBUG_PACKET_MAX) ?
-                                              WMBUS_RX_DEBUG_PACKET_MAX :
-                                              record->packet_len);
-    memcpy(entry->packet_preview, record->packet_bytes, entry->packet_preview_len);
+    entry->wire_len = record->wire_len;
+    entry->wire_preview_len = (uint8_t)((record->wire_len > WMBUS_RX_DEBUG_PACKET_MAX) ?
+                                            WMBUS_RX_DEBUG_PACKET_MAX :
+                                            record->wire_len);
+    memcpy(entry->wire_preview, record->wire_bytes, entry->wire_preview_len);
     entry->dll = record->dll;
     entry->identity = record->identity;
     entry->ell = record->ell;
@@ -504,7 +504,7 @@ static void
     record->format = entry->format;
     record->rssi = entry->rssi;
     record->rx_tick = entry->rx_tick;
-    record->packet_len = entry->packet_len;
+    record->wire_len = entry->wire_len;
     record->dll = entry->dll;
     record->identity = entry->identity;
     record->ell = entry->ell;

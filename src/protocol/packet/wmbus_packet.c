@@ -66,7 +66,9 @@ bool wmbus_packet_process_phy_frame(
     record->rx_tick = furi_get_tick();
     memcpy(record->wire_bytes, phy_frame->data, record->wire_len);
 
-    uint8_t normalized[256] = {0};
+    uint8_t normalized[WMBUS_PHY_FRAME_MAX_BYTES] = {0};
+    uint8_t decrypt_workspace[WMBUS_PHY_FRAME_MAX_BYTES] = {0};
+    WmBusPacketPayloadView payload = {0};
     WmBusPacketDecodeState decode = {0};
     if(!wmbus_packet_decode_phy_frame(phy_frame, normalized, sizeof(normalized), &decode)) {
         return false;
@@ -80,14 +82,23 @@ bool wmbus_packet_process_phy_frame(
     bool crc_ok = wmbus_packet_quality_meets(decode.quality, WmBusPacketQualityCrcOk);
 
     if(has_complete_frame) {
-        wmbus_packet_store_frame(record, decode.frame, decode.frame_len);
+        if(decode.wire_frame_len > 0U && decode.wire_frame_len < record->wire_len) {
+            record->wire_len = (uint16_t)decode.wire_frame_len;
+        }
+        wmbus_packet_set_frame_metadata(record, decode.frame, decode.frame_len);
     }
 
     if(has_complete_frame && crc_ok) {
         bool payload_ready = wmbus_packet_resolve_application_payload(
-            decode.frame, decode.frame_len, record, key_store);
+            decode.frame,
+            decode.frame_len,
+            record,
+            key_store,
+            decrypt_workspace,
+            sizeof(decrypt_workspace),
+            &payload);
         if(payload_ready) {
-            bool parser_succeeded = wmbus_packet_parse_application(record);
+            bool parser_succeeded = wmbus_packet_parse_application(record, &payload);
             if(parser_succeeded) {
                 record->quality = WmBusPacketQualityParsed;
             }

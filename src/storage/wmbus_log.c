@@ -94,8 +94,6 @@ bool wmbus_log_append(Storage* storage, WmBusCsvLogging logging, const WmBusPack
             record->application.records, record->application.record_count, ';', fields);
         if(record->wire_len > 0U) {
             wmbus_hex_encode(record->wire_bytes, record->wire_len, hex, sizeof(hex));
-        } else if(record->packet_len > 0U) {
-            wmbus_hex_encode(record->packet_bytes, record->packet_len, hex, sizeof(hex));
         }
         wmbus_application_format_total_volume_m3(
             &record->application, total_m3, sizeof(total_m3), false);

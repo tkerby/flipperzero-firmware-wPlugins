@@ -61,9 +61,12 @@ typedef struct {
     WmBusApplicationMeasurementType measurement_type;
     WmBusApplicationQuantity quantity;
     int8_t scale10;
-    int64_t value;
-    uint8_t raw_bytes[8];
-    WmBusApplicationDateTime value_datetime;
+    /* The value type selects exactly one representation. */
+    union {
+        int64_t value;
+        uint8_t raw_bytes[8];
+        WmBusApplicationDateTime value_datetime;
+    };
 } WmBusApplicationRecord;
 
 typedef struct {

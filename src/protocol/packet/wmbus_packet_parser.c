@@ -4,21 +4,23 @@
 
 #include "../parser/wmbus_device_parser.h"
 
-bool wmbus_packet_parse_application(WmBusPacketRecord* record) {
-    if(!record) {
+bool wmbus_packet_parse_application(
+    WmBusPacketRecord* record,
+    const WmBusPacketPayloadView* payload) {
+    if(!record || !payload) {
         return false;
     }
 
     memset(&record->application, 0, sizeof(record->application));
     if(!wmbus_packet_quality_meets(record->quality, WmBusPacketQualityFrameComplete) ||
-       !record->payload.has_application_payload || record->payload.application_len == 0U) {
+       !payload->application_bytes || payload->application_len == 0U) {
         return false;
     }
 
     WmBusParserPacketView packet = {
         .dll = &record->dll,
         .tpl = &record->tpl,
-        .payload = &record->payload,
+        .payload = payload,
         .identity = &record->identity,
     };
 

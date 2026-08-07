@@ -64,7 +64,7 @@ static bool wmbus_selftest_check_parser_apator162_public_vectors(char* detail, s
             wmbus_selftest_set_detail(detail, detail_len, "vector %s is not plaintext TPL", vector->id);
             return false;
         }
-        if(!wmbus_frame_build_format_b(
+        if(!wmbus_selftest_frame_build_format_b(
                normalized, normalized_len, frame, sizeof(frame), &frame_len)) {
             wmbus_selftest_set_detail(
                 detail, detail_len, "vector %s format-B build failed", vector->id);
@@ -156,7 +156,7 @@ static bool wmbus_selftest_check_parser_apator162_old_style_ci_b6_rejected(
         wmbus_selftest_set_detail(detail, detail_len, "expected CI=B6");
         return false;
     }
-    if(!wmbus_frame_build_format_b(normalized, normalized_len, frame, sizeof(frame), &frame_len)) {
+    if(!wmbus_selftest_frame_build_format_b(normalized, normalized_len, frame, sizeof(frame), &frame_len)) {
         wmbus_selftest_set_detail(detail, detail_len, "format-B build failed");
         return false;
     }
@@ -284,17 +284,15 @@ static bool wmbus_selftest_check_packet_process_mode5_no_key_does_not_decrypt(
     }
 
     if(record.application.parser_id != WmBusParserIdShortTpl || record.tpl.decrypted ||
-       record.tpl.key_index != 0U || record.application.record_count != 0U ||
-       record.payload.has_application_payload) {
+       record.tpl.key_index != 0U || record.application.record_count != 0U) {
         wmbus_selftest_set_detail(
             detail,
             detail_len,
-            "unexpected parser=%s dec=%s idx=%u records=%u payload=%s",
+            "unexpected parser=%s dec=%s idx=%u records=%u",
             wmbus_selftest_parser_name(&record),
             record.tpl.decrypted ? "YES" : "NO",
             (unsigned int)record.tpl.key_index,
-            (unsigned int)record.application.record_count,
-            record.payload.has_application_payload ? "YES" : "NO");
+            (unsigned int)record.application.record_count);
         return false;
     }
 
@@ -516,18 +514,16 @@ static bool wmbus_selftest_check_packet_process_mode5_wrong_key_does_not_decrypt
         }
 
         if(record.application.parser_id != WmBusParserIdShortTpl || record.tpl.decrypted ||
-           record.tpl.key_index != 0U || record.application.record_count != 0U ||
-           record.payload.has_application_payload) {
+           record.tpl.key_index != 0U || record.application.record_count != 0U) {
             wmbus_selftest_set_detail(
                 detail,
                 detail_len,
-                "vector %s parser=%s dec=%s idx=%u records=%u payload=%s",
+                "vector %s parser=%s dec=%s idx=%u records=%u",
                 vectors[i].id,
                 wmbus_selftest_parser_name(&record),
                 record.tpl.decrypted ? "YES" : "NO",
                 (unsigned int)record.tpl.key_index,
-                (unsigned int)record.application.record_count,
-                record.payload.has_application_payload ? "YES" : "NO");
+                (unsigned int)record.application.record_count);
             return false;
         }
     }
@@ -589,7 +585,7 @@ static bool
         return false;
     }
 
-    if(!wmbus_frame_build_format_b(
+    if(!wmbus_selftest_frame_build_format_b(
            normalized, sizeof(normalized), frame, sizeof(frame), &frame_len)) {
         wmbus_selftest_set_detail(detail, detail_len, "format-B build failed");
         return false;
@@ -633,7 +629,7 @@ static bool
         return false;
     }
 
-    if(!wmbus_frame_build_format_b(
+    if(!wmbus_selftest_frame_build_format_b(
            normalized, sizeof(normalized), frame, sizeof(frame), &frame_len)) {
         wmbus_selftest_set_detail(detail, detail_len, "format-B build failed");
         return false;
@@ -676,7 +672,7 @@ static bool wmbus_selftest_check_parser_apator162_invalid_payload_not_claimed(
         return false;
     }
 
-    if(!wmbus_frame_build_format_b(
+    if(!wmbus_selftest_frame_build_format_b(
            normalized, sizeof(normalized), frame, sizeof(frame), &frame_len)) {
         wmbus_selftest_set_detail(detail, detail_len, "format-B build failed");
         return false;
@@ -711,7 +707,7 @@ static bool wmbus_selftest_check_packet_sections_clear_payload(char* detail, siz
 
     memcpy(normalized, wmbus_apator_b, sizeof(normalized));
     if(!wmbus_selftest_prepare_plaintext_short_tpl(normalized, sizeof(normalized)) ||
-       !wmbus_frame_build_format_b(
+       !wmbus_selftest_frame_build_format_b(
            normalized, sizeof(normalized), frame, sizeof(frame), &frame_len)) {
         wmbus_selftest_set_detail(detail, detail_len, "format-B build failed");
         return false;
@@ -721,27 +717,24 @@ static bool wmbus_selftest_check_packet_sections_clear_payload(char* detail, siz
         wmbus_selftest_set_detail(detail, detail_len, "packet process failed");
         return false;
     }
-    if(record.payload.packet_len == 0U ||
-       (uint32_t)record.payload.packet_offset + (uint32_t)record.payload.packet_len >
-           record.packet_len ||
-       record.packet_bytes[record.payload.packet_offset] != 0x2FU ||
-       record.packet_bytes[record.payload.packet_offset + 1U] != 0x2FU) {
+    if(record.quality != WmBusPacketQualityParsed ||
+       record.application.parser_id != WmBusParserIdApator162 ||
+       record.application.record_count == 0U) {
         wmbus_selftest_set_detail(
             detail,
             detail_len,
-            "clear payload slice invalid raw=%u off=%u pkt=%u",
-            (unsigned int)record.payload.packet_len,
-            (unsigned int)record.payload.packet_offset,
-            (unsigned int)record.packet_len);
+            "clear transient parse failed q=%u parser=%u records=%u",
+            (unsigned int)record.quality,
+            (unsigned int)record.application.parser_id,
+            (unsigned int)record.application.record_count);
         return false;
     }
 
     wmbus_selftest_set_detail(
         detail,
         detail_len,
-        "clear_payload raw=%u off=%u",
-        (unsigned int)record.payload.packet_len,
-        (unsigned int)record.payload.packet_offset);
+        "clear transient payload parsed records=%u",
+        (unsigned int)record.application.record_count);
     return true;
 }
 
@@ -769,28 +762,23 @@ static bool
         wmbus_selftest_set_detail(detail, detail_len, "packet process failed");
         return false;
     }
-    if(!record.tpl.decrypted || record.tpl.key_index != 0U || record.payload.packet_len == 0U ||
-       (uint32_t)record.payload.packet_offset + (uint32_t)record.payload.packet_len >
-           record.packet_len ||
-       (record.packet_len >= record.payload.packet_offset + 2U &&
-        record.packet_bytes[record.payload.packet_offset] == 0x2FU &&
-        record.packet_bytes[record.payload.packet_offset + 1U] == 0x2FU)) {
+    if(!record.tpl.decrypted || record.tpl.key_index != 0U ||
+       record.quality != WmBusPacketQualityParsed ||
+       record.application.parser_id != WmBusParserIdApator162) {
         wmbus_selftest_set_detail(
             detail,
             detail_len,
-            "encrypted payload slice invalid dec=%s raw=%u off=%u",
+            "encrypted transient parse failed dec=%s q=%u parser=%u",
             record.tpl.decrypted ? "YES" : "NO",
-            (unsigned int)record.payload.packet_len,
-            (unsigned int)record.payload.packet_offset);
+            (unsigned int)record.quality,
+            (unsigned int)record.application.parser_id);
         return false;
     }
 
     wmbus_selftest_set_detail(
         detail,
         detail_len,
-        "encrypted raw=%u off=%u dec=YES",
-        (unsigned int)record.payload.packet_len,
-        (unsigned int)record.payload.packet_offset);
+        "encrypted transient payload parsed dec=YES");
     return true;
 }
 
@@ -826,7 +814,7 @@ static bool
         return false;
     }
 
-    wmbus_selftest_set_detail(detail, detail_len, "unsupported decrypt keeps packet slice only");
+    wmbus_selftest_set_detail(detail, detail_len, "unsupported decrypt exposes no records");
     return true;
 }
 

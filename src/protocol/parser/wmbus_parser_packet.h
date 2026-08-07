@@ -5,6 +5,6 @@
 typedef struct {
     const WmBusPacketDllData* dll;
     const WmBusPacketTplData* tpl;
-    const WmBusPacketPayloadData* payload;
+    const WmBusPacketPayloadView* payload;
     const WmBusPacketIdentityData* identity;
 } WmBusParserPacketView;

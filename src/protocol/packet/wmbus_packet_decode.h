@@ -5,6 +5,7 @@
 typedef struct {
     const uint8_t* frame;
     size_t frame_len;
+    size_t wire_frame_len;
     WmBusPacketQuality quality;
 } WmBusPacketDecodeState;
 
@@ -14,4 +15,7 @@ bool wmbus_packet_decode_phy_frame(
     size_t frame_buf_max,
     WmBusPacketDecodeState* out);
 
-void wmbus_packet_store_frame(WmBusPacketRecord* record, const uint8_t* frame, size_t frame_len);
+void wmbus_packet_set_frame_metadata(
+    WmBusPacketRecord* record,
+    const uint8_t* frame,
+    size_t frame_len);

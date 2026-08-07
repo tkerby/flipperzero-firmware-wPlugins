@@ -7,6 +7,7 @@
 typedef enum {
     WmBusDifDataEncodingInteger = 0,
     WmBusDifDataEncodingBcd,
+    WmBusDifDataEncodingNegativeBcd,
     WmBusDifDataEncodingFloat,
     WmBusDifDataEncodingVariableText,
 } WmBusDifDataEncoding;
@@ -138,10 +139,31 @@ static int wmbus_packet_data_len_from_dif(uint8_t dif, WmBusDifDataEncoding* dat
     }
 }
 
-static bool wmbus_packet_decode_text_lvar(uint8_t lvar, uint8_t* data_len) {
-    /* Numeric, BCD, binary, and floating-point LVAR classes start at 0xC0. */
-    if(!data_len || lvar > 0xBFU) return false;
-    *data_len = lvar;
+static bool wmbus_packet_decode_lvar(
+    uint8_t lvar,
+    uint8_t* data_len,
+    WmBusDifDataEncoding* data_encoding) {
+    if(!data_len || !data_encoding) return false;
+
+    if(lvar <= 0xBFU) {
+        *data_len = lvar;
+        *data_encoding = WmBusDifDataEncodingVariableText;
+    } else if(lvar <= 0xCFU) {
+        *data_len = lvar - 0xC0U;
+        *data_encoding = WmBusDifDataEncodingBcd;
+    } else if(lvar <= 0xDFU) {
+        *data_len = lvar - 0xD0U;
+        *data_encoding = WmBusDifDataEncodingNegativeBcd;
+    } else if(lvar <= 0xEFU) {
+        *data_len = lvar - 0xE0U;
+        *data_encoding = WmBusDifDataEncodingInteger;
+    } else if(lvar <= 0xFAU) {
+        *data_len = lvar - 0xF0U;
+        *data_encoding = WmBusDifDataEncodingFloat;
+    } else {
+        return false;
+    }
+
     return true;
 }
 
@@ -167,34 +189,37 @@ static void
     record->quantity = WmBusApplicationQuantityUnknown;
     record->scale10 = 0;
 
-    if((record->vif & 0xF8U) == 0x10U) {
+    const uint8_t vif = record->vif & 0x7FU;
+    const uint8_t first_vife_code = first_vife & 0x7FU;
+
+    if((vif & 0x78U) == 0x10U) {
         record->quantity = WmBusApplicationQuantityVolume;
-        record->scale10 = (int8_t)(record->vif & 0x07U) - 6;
-    } else if((record->vif & 0xF8U) == 0x00U) {
+        record->scale10 = (int8_t)(vif & 0x07U) - 6;
+    } else if((vif & 0x78U) == 0x00U) {
         record->quantity = WmBusApplicationQuantityEnergy;
-        record->scale10 = (int8_t)(record->vif & 0x07U) - 3;
-    } else if((record->vif & 0xF8U) == 0x28U) {
+        record->scale10 = (int8_t)(vif & 0x07U) - 3;
+    } else if((vif & 0x78U) == 0x28U) {
         record->quantity = WmBusApplicationQuantityPower;
-        record->scale10 = (int8_t)(record->vif & 0x07U) - 3;
-    } else if((record->vif & 0xF8U) == 0x38U) {
+        record->scale10 = (int8_t)(vif & 0x07U) - 3;
+    } else if((vif & 0x78U) == 0x38U) {
         record->quantity = WmBusApplicationQuantityVolumeFlow;
-        record->scale10 = (int8_t)(record->vif & 0x07U) - 6;
-    } else if((record->vif & 0xFCU) == 0x58U) {
+        record->scale10 = (int8_t)(vif & 0x07U) - 6;
+    } else if((vif & 0x7CU) == 0x58U) {
         record->quantity = WmBusApplicationQuantityFlowTemperature;
-        record->scale10 = (int8_t)(record->vif & 0x03U) - 3;
-    } else if((record->vif & 0xFCU) == 0x5CU) {
+        record->scale10 = (int8_t)(vif & 0x03U) - 3;
+    } else if((vif & 0x7CU) == 0x5CU) {
         record->quantity = WmBusApplicationQuantityReturnTemperature;
-        record->scale10 = (int8_t)(record->vif & 0x03U) - 3;
-    } else if((record->vif & 0xFCU) == 0x60U) {
+        record->scale10 = (int8_t)(vif & 0x03U) - 3;
+    } else if((vif & 0x7CU) == 0x60U) {
         record->quantity = WmBusApplicationQuantityTemperatureDifference;
-        record->scale10 = (int8_t)(record->vif & 0x03U) - 3;
-    } else if(record->vif == 0x6EU) {
+        record->scale10 = (int8_t)(vif & 0x03U) - 3;
+    } else if(vif == 0x6EU) {
         record->quantity = WmBusApplicationQuantityHeatCostAllocation;
-    } else if(record->vif == 0x6CU) {
+    } else if(vif == 0x6CU) {
         record->quantity = WmBusApplicationQuantityDate;
-    } else if(record->vif == 0x6DU) {
+    } else if(vif == 0x6DU) {
         record->quantity = WmBusApplicationQuantityDateTime;
-    } else if(record->vif == 0xFDU && has_first_vife && first_vife == 0x17U) {
+    } else if(vif == 0x7DU && has_first_vife && first_vife_code == 0x17U) {
         record->quantity = WmBusApplicationQuantityStatus;
     }
 }
@@ -208,8 +233,6 @@ static void wmbus_packet_decode_record_value(
 
     record->value_type = WmBusApplicationValueNone;
     record->value = 0;
-    memset(record->raw_bytes, 0, sizeof(record->raw_bytes));
-    memset(&record->value_datetime, 0, sizeof(record->value_datetime));
 
     if(data_len == 0U) {
         return;
@@ -243,10 +266,14 @@ static void wmbus_packet_decode_record_value(
         return;
     }
 
-    if(data_encoding == WmBusDifDataEncodingBcd) {
+    if(data_encoding == WmBusDifDataEncodingBcd ||
+       data_encoding == WmBusDifDataEncodingNegativeBcd) {
         uint64_t bcd_value = 0U;
         if(wmbus_packet_decode_bcd(data, data_len, &bcd_value) && bcd_value <= INT64_MAX) {
-            wmbus_application_record_set_value(record, (int64_t)bcd_value);
+            int64_t value = (int64_t)bcd_value;
+            wmbus_application_record_set_value(
+                record,
+                data_encoding == WmBusDifDataEncodingNegativeBcd ? -value : value);
         } else if(!wmbus_application_record_set_raw_bytes(record, data, data_len)) {
             record->value_type = WmBusApplicationValueRaw;
         }
@@ -313,6 +340,14 @@ bool wmbus_packet_decode_application_records(
         if(pos >= payload_len) return false;
         record->vif = payload[pos++];
 
+        const uint8_t vif_code = record->vif & 0x7FU;
+        if(vif_code == 0x7CU) {
+            if(pos >= payload_len) return false;
+            const uint8_t unit_len = payload[pos++];
+            if((size_t)unit_len > payload_len - pos) return false;
+            pos += unit_len;
+        }
+
         uint8_t first_vife = 0U;
         bool has_first_vife = false;
         uint8_t vife_count = 0U;
@@ -331,12 +366,13 @@ bool wmbus_packet_decode_application_records(
         int data_len = wmbus_packet_data_len_from_dif(record->dif, &data_encoding);
         if(data_len == -1) return false;
         if(data_len == -2) {
-            uint8_t text_len = 0U;
-            if(pos >= payload_len || !wmbus_packet_decode_text_lvar(payload[pos], &text_len)) {
+            uint8_t variable_len = 0U;
+            if(pos >= payload_len ||
+               !wmbus_packet_decode_lvar(payload[pos], &variable_len, &data_encoding)) {
                 return false;
             }
             pos++;
-            data_len = text_len;
+            data_len = variable_len;
         }
         if(data_len < 0 || (size_t)data_len > (payload_len - pos)) return false;
         record->data_len = (uint8_t)data_len;
@@ -367,7 +403,7 @@ static uint8_t wmbus_packet_count_meaningful_records(
 }
 
 bool wmbus_parser_dif_vif_probe(const WmBusParserPacketView* packet) {
-    return packet && packet->payload && packet->payload->has_application_payload &&
+    return packet && packet->payload && packet->payload->application_bytes &&
            packet->payload->application_len > 0U;
 }
 

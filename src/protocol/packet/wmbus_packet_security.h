@@ -6,4 +6,7 @@ bool wmbus_packet_resolve_application_payload(
     const uint8_t* frame,
     size_t frame_len,
     WmBusPacketRecord* record,
-    const WmBusCryptoKeyStore* key_store);
+    const WmBusCryptoKeyStore* key_store,
+    uint8_t* decrypt_workspace,
+    size_t decrypt_workspace_size,
+    WmBusPacketPayloadView* out_payload);

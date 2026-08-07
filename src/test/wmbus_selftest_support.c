@@ -266,6 +266,140 @@ bool wmbus_selftest_hex_to_bytes(const char* hex, uint8_t* out, size_t out_max, 
     return true;
 }
 
+static uint16_t wmbus_selftest_crc16_en13757(const uint8_t* data, size_t len) {
+    uint16_t crc = 0x0000U;
+    for(size_t i = 0; i < len; i++) {
+        crc ^= (uint16_t)data[i] << 8U;
+        for(uint8_t bit = 0; bit < 8U; bit++) {
+            crc = (crc & 0x8000U) ? (uint16_t)((crc << 1U) ^ 0x3D65U) :
+                                     (uint16_t)(crc << 1U);
+        }
+    }
+    return (uint16_t)~crc;
+}
+
+bool wmbus_selftest_frame_build_format_a(
+    const uint8_t* normalized,
+    size_t normalized_len,
+    uint8_t* out,
+    size_t out_max,
+    size_t* out_len) {
+    if(!normalized || !out || !out_len || normalized_len < 11U ||
+       !wmbus_frame_l_field_valid(normalized[0])) {
+        return false;
+    }
+
+    const size_t expected_normalized_len = (size_t)normalized[0] + 1U;
+    if(normalized_len < expected_normalized_len ||
+       out_max < wmbus_frame_len_format_a(normalized[0])) {
+        return false;
+    }
+
+    size_t read = 10U;
+    size_t write = 10U;
+    memcpy(out, normalized, 10U);
+
+    uint16_t crc = wmbus_selftest_crc16_en13757(normalized, 10U);
+    out[write++] = (uint8_t)(crc >> 8U);
+    out[write++] = (uint8_t)crc;
+
+    while(read < expected_normalized_len) {
+        size_t block_len = expected_normalized_len - read;
+        if(block_len > 16U) block_len = 16U;
+
+        memcpy(&out[write], &normalized[read], block_len);
+        write += block_len;
+        crc = wmbus_selftest_crc16_en13757(&normalized[read], block_len);
+        out[write++] = (uint8_t)(crc >> 8U);
+        out[write++] = (uint8_t)crc;
+        read += block_len;
+    }
+
+    *out_len = write;
+    return true;
+}
+
+bool wmbus_selftest_frame_build_format_b(
+    const uint8_t* normalized,
+    size_t normalized_len,
+    uint8_t* out,
+    size_t out_max,
+    size_t* out_len) {
+    if(!normalized || !out || !out_len || normalized_len < 11U ||
+       !wmbus_frame_l_field_valid(normalized[0]) ||
+       normalized_len != (size_t)normalized[0] + 1U) {
+        return false;
+    }
+
+    if(normalized_len <= 126U) {
+        const uint8_t wire_l_field = (uint8_t)(normalized[0] + 2U);
+        if(!wmbus_frame_l_field_valid_for_format(wire_l_field, WmBusFrameFormatB) ||
+           normalized_len + 2U > out_max) {
+            return false;
+        }
+
+        memcpy(out, normalized, normalized_len);
+        out[0] = wire_l_field;
+        const uint16_t crc = wmbus_selftest_crc16_en13757(out, normalized_len);
+        out[normalized_len] = (uint8_t)(crc >> 8U);
+        out[normalized_len + 1U] = (uint8_t)crc;
+        *out_len = normalized_len + 2U;
+        return true;
+    }
+
+    if(normalized[0] > WMBUS_FRAME_L_FIELD_MAX - 4U || normalized_len + 4U > out_max) {
+        return false;
+    }
+
+    const uint8_t wire_l_field = (uint8_t)(normalized[0] + 4U);
+    if(!wmbus_frame_l_field_valid_for_format(wire_l_field, WmBusFrameFormatB)) {
+        return false;
+    }
+
+    memcpy(out, normalized, 126U);
+    out[0] = wire_l_field;
+    uint16_t crc = wmbus_selftest_crc16_en13757(out, 126U);
+    out[126] = (uint8_t)(crc >> 8U);
+    out[127] = (uint8_t)crc;
+
+    const size_t second_block_len = normalized_len - 126U;
+    memcpy(&out[128], &normalized[126], second_block_len);
+    crc = wmbus_selftest_crc16_en13757(&out[128], second_block_len);
+    out[128U + second_block_len] = (uint8_t)(crc >> 8U);
+    out[129U + second_block_len] = (uint8_t)crc;
+    *out_len = normalized_len + 4U;
+    return true;
+}
+
+bool wmbus_selftest_frame_measure(
+    WmBusFrameFormat format,
+    const uint8_t* frame,
+    size_t frame_len,
+    WmBusSelftestFrameMeasureResult* out) {
+    if(!frame || !out || frame_len == 0U) return false;
+    memset(out, 0, sizeof(*out));
+
+    const uint8_t l_field = frame[0];
+    if(!wmbus_frame_l_field_valid_for_format(l_field, format)) return false;
+
+    const size_t expected_len = wmbus_frame_expected_len(l_field, format);
+    if(expected_len == 0U || frame_len < expected_len) return false;
+
+    size_t normalized_len = 0U;
+    if(format == WmBusFrameFormatA) {
+        normalized_len = (size_t)l_field + 1U;
+    } else if(format == WmBusFrameFormatB) {
+        normalized_len = expected_len - (expected_len <= 128U ? 2U : 4U);
+    }
+    if(normalized_len == 0U || normalized_len > WMBUS_SELFTEST_BUF_MAX) return false;
+
+    out->complete = true;
+    out->format = format;
+    out->frame_len = expected_len;
+    out->normalized_len = normalized_len;
+    return true;
+}
+
 bool wmbus_selftest_hex_to_format_b_frame(
     const char* hex,
     uint8_t* out,
@@ -279,7 +413,8 @@ bool wmbus_selftest_hex_to_format_b_frame(
         return false;
     }
 
-    return wmbus_frame_build_format_b(normalized, normalized_len, out, out_max, out_len);
+    return wmbus_selftest_frame_build_format_b(
+        normalized, normalized_len, out, out_max, out_len);
 }
 
 uint32_t wmbus_selftest_fnv1a32(const uint8_t* data, size_t len) {
@@ -370,7 +505,7 @@ bool wmbus_selftest_prepare_frame(
         return true;
     }
 
-    if(!wmbus_frame_build_format_a(
+    if(!wmbus_selftest_frame_build_format_a(
            wmbus_selftest_scratch.seed,
            test_case->vector->len,
            wmbus_selftest_scratch.frame,
@@ -433,15 +568,15 @@ void wmbus_selftest_result_from_record(
     result->length_ok =
         wmbus_packet_quality_meets(record->quality, WmBusPacketQualityFrameComplete);
     result->crc_ok = wmbus_packet_quality_meets(record->quality, WmBusPacketQualityCrcOk);
-    if(record->packet_len > 0U) {
-        result->l_field = record->packet_bytes[0];
+    if(record->normalized_len > 0U) {
+        result->l_field = record->wire_bytes[0];
         result->has_l_field = true;
-        result->computed_len = record->packet_len;
+        result->computed_len = record->normalized_len;
         result->has_computed_len = true;
     }
 
-    if(record->packet_len >= 8U) {
-        wmbus_selftest_set_identity(record->packet_bytes, record->packet_len, result);
+    if(record->wire_len >= 8U) {
+        wmbus_selftest_set_identity(record->wire_bytes, record->wire_len, result);
     }
 }
 
