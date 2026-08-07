@@ -408,7 +408,6 @@ bool wmbus_frame_normalize(
 
     size_t expected_len = wmbus_frame_expected_len(l_field, format);
     if(expected_len == 0U || frame_len < expected_len) return false;
-    if(!wmbus_frame_crc_check(format, frame, expected_len)) return false;
 
     size_t trimmed_len = 0;
     if(!wmbus_frame_trim_crc(
@@ -418,7 +417,7 @@ bool wmbus_frame_normalize(
 
     out->length_ok = true;
     out->crc_known = true;
-    out->crc_ok = true;
+    out->crc_ok = wmbus_frame_crc_check(format, frame, expected_len);
     out->format = format;
     out->computed_len = expected_len;
     out->normalized_len = trimmed_len;

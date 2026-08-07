@@ -219,12 +219,12 @@ void wmbus_selftest_describe_first_record(
     snprintf(
         out,
         out_size,
-        "records=%u q=%u vt=%u scale=%d value=%llu storage=%llu data_len=%u",
+        "records=%u q=%u vt=%u scale=%d value=%lld storage=%llu data_len=%u",
         (unsigned int)packet->application.record_count,
         (unsigned int)rec->quantity,
         (unsigned int)rec->value_type,
         (int)rec->scale10,
-        (unsigned long long)rec->value_unsigned,
+        (long long)rec->value,
         (unsigned long long)rec->storage_no,
         (unsigned int)rec->data_len);
 }

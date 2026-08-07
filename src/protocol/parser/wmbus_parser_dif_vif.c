@@ -4,15 +4,35 @@
 
 #include <string.h>
 
-static bool
-    wmbus_packet_decode_unsigned_le(const uint8_t* data, uint8_t data_len, uint64_t* value) {
+typedef enum {
+    WmBusDifDataEncodingInteger = 0,
+    WmBusDifDataEncodingBcd,
+    WmBusDifDataEncodingFloat,
+    WmBusDifDataEncodingVariableText,
+} WmBusDifDataEncoding;
+
+static bool wmbus_packet_decode_signed_le(const uint8_t* data, uint8_t data_len, int64_t* value) {
     if(!data || !value || data_len == 0U || data_len > 8U) return false;
 
-    uint64_t result = 0U;
+    uint64_t raw = 0U;
     for(uint8_t i = 0; i < data_len; i++) {
-        result |= ((uint64_t)data[i]) << (8U * i);
+        raw |= ((uint64_t)data[i]) << (8U * i);
     }
-    *value = result;
+
+    const uint8_t sign_shift = (uint8_t)(data_len * 8U - 1U);
+    const uint64_t sign_bit = UINT64_C(1) << sign_shift;
+    if((raw & sign_bit) == 0U) {
+        *value = (int64_t)raw;
+        return true;
+    }
+
+    const uint64_t mask = data_len == 8U ? UINT64_MAX : ((sign_bit << 1U) - 1U);
+    const uint64_t magnitude = ((~raw) & mask) + 1U;
+    if(magnitude == (UINT64_C(1) << 63U)) {
+        *value = INT64_MIN;
+    } else {
+        *value = -(int64_t)magnitude;
+    }
     return true;
 }
 
@@ -73,9 +93,9 @@ static bool wmbus_packet_decode_datetime4(const uint8_t* data, WmBusApplicationD
     return true;
 }
 
-static int wmbus_packet_data_len_from_dif(uint8_t dif, bool* is_bcd, bool* is_variable_text) {
-    if(is_bcd) *is_bcd = false;
-    if(is_variable_text) *is_variable_text = false;
+static int wmbus_packet_data_len_from_dif(uint8_t dif, WmBusDifDataEncoding* data_encoding) {
+    if(!data_encoding) return -1;
+    *data_encoding = WmBusDifDataEncodingInteger;
 
     switch(dif & 0x0FU) {
     case 0x00:
@@ -89,32 +109,40 @@ static int wmbus_packet_data_len_from_dif(uint8_t dif, bool* is_bcd, bool* is_va
     case 0x04:
         return 4;
     case 0x05:
+        *data_encoding = WmBusDifDataEncodingFloat;
         return 4;
     case 0x06:
         return 6;
     case 0x07:
         return 8;
     case 0x09:
-        if(is_bcd) *is_bcd = true;
+        *data_encoding = WmBusDifDataEncodingBcd;
         return 1;
     case 0x0A:
-        if(is_bcd) *is_bcd = true;
+        *data_encoding = WmBusDifDataEncodingBcd;
         return 2;
     case 0x0B:
-        if(is_bcd) *is_bcd = true;
+        *data_encoding = WmBusDifDataEncodingBcd;
         return 3;
     case 0x0C:
-        if(is_bcd) *is_bcd = true;
+        *data_encoding = WmBusDifDataEncodingBcd;
         return 4;
     case 0x0D:
-        if(is_variable_text) *is_variable_text = true;
+        *data_encoding = WmBusDifDataEncodingVariableText;
         return -2;
     case 0x0E:
-        if(is_bcd) *is_bcd = true;
+        *data_encoding = WmBusDifDataEncodingBcd;
         return 6;
     default:
         return -1;
     }
+}
+
+static bool wmbus_packet_decode_text_lvar(uint8_t lvar, uint8_t* data_len) {
+    /* Numeric, BCD, binary, and floating-point LVAR classes start at 0xC0. */
+    if(!data_len || lvar > 0xBFU) return false;
+    *data_len = lvar;
+    return true;
 }
 
 static WmBusApplicationMeasurementType wmbus_packet_measurement_type_from_dif(uint8_t dif) {
@@ -175,12 +203,12 @@ static void wmbus_packet_decode_record_value(
     WmBusApplicationRecord* record,
     const uint8_t* data,
     uint8_t data_len,
-    bool is_bcd,
-    bool is_variable_text) {
+    WmBusDifDataEncoding data_encoding) {
     if(!record) return;
 
     record->value_type = WmBusApplicationValueNone;
-    record->value_unsigned = 0U;
+    record->value = 0;
+    memset(record->raw_bytes, 0, sizeof(record->raw_bytes));
     memset(&record->value_datetime, 0, sizeof(record->value_datetime));
 
     if(data_len == 0U) {
@@ -204,31 +232,38 @@ static void wmbus_packet_decode_record_value(
     }
 
     if(record->quantity == WmBusApplicationQuantityStatus) {
-        if(!wmbus_application_record_set_raw_hex_le(record, data, data_len)) {
+        if(!wmbus_application_record_set_raw_bytes(record, data, data_len)) {
             record->value_type = WmBusApplicationValueRaw;
         }
         return;
     }
 
-    if(is_variable_text) {
+    if(data_encoding == WmBusDifDataEncodingVariableText) {
         record->value_type = WmBusApplicationValueRaw;
         return;
     }
 
-    bool decoded = false;
-    uint64_t value = 0U;
-    if(is_bcd) {
-        decoded = wmbus_packet_decode_bcd(data, data_len, &value);
-    } else if((data_len <= 8U) && ((record->dif & 0x0FU) != 0x05U)) {
-        decoded = wmbus_packet_decode_unsigned_le(data, data_len, &value);
-    }
-
-    if(!decoded) {
-        record->value_type = WmBusApplicationValueRaw;
+    if(data_encoding == WmBusDifDataEncodingBcd) {
+        uint64_t bcd_value = 0U;
+        if(wmbus_packet_decode_bcd(data, data_len, &bcd_value) && bcd_value <= INT64_MAX) {
+            wmbus_application_record_set_value(record, (int64_t)bcd_value);
+        } else if(!wmbus_application_record_set_raw_bytes(record, data, data_len)) {
+            record->value_type = WmBusApplicationValueRaw;
+        }
         return;
     }
 
-    wmbus_application_record_set_unsigned(record, value);
+    if(data_encoding == WmBusDifDataEncodingInteger) {
+        int64_t value = 0;
+        if(wmbus_packet_decode_signed_le(data, data_len, &value)) {
+            wmbus_application_record_set_value(record, value);
+            return;
+        }
+    }
+
+    if(!wmbus_application_record_set_raw_bytes(record, data, data_len)) {
+        record->value_type = WmBusApplicationValueRaw;
+    }
 }
 
 bool wmbus_packet_decode_application_records(
@@ -292,20 +327,22 @@ bool wmbus_packet_decode_application_records(
             if((vife & 0x80U) == 0U) break;
         }
 
-        bool is_bcd = false;
-        bool is_variable_text = false;
-        int data_len = wmbus_packet_data_len_from_dif(record->dif, &is_bcd, &is_variable_text);
+        WmBusDifDataEncoding data_encoding = WmBusDifDataEncodingInteger;
+        int data_len = wmbus_packet_data_len_from_dif(record->dif, &data_encoding);
         if(data_len == -1) return false;
         if(data_len == -2) {
-            if(pos >= payload_len) return false;
-            data_len = payload[pos++];
+            uint8_t text_len = 0U;
+            if(pos >= payload_len || !wmbus_packet_decode_text_lvar(payload[pos], &text_len)) {
+                return false;
+            }
+            pos++;
+            data_len = text_len;
         }
-        if((size_t)data_len > (payload_len - pos)) return false;
+        if(data_len < 0 || (size_t)data_len > (payload_len - pos)) return false;
         record->data_len = (uint8_t)data_len;
 
         wmbus_packet_map_vif(record, first_vife, has_first_vife);
-        wmbus_packet_decode_record_value(
-            record, &payload[pos], record->data_len, is_bcd, is_variable_text);
+        wmbus_packet_decode_record_value(record, &payload[pos], record->data_len, data_encoding);
         pos += record->data_len;
         count++;
     }

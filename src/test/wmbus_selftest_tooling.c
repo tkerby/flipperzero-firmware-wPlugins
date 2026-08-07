@@ -578,23 +578,22 @@ static bool wmbus_selftest_check_dif_vif_decode_basic(char* detail, size_t detai
     const char* fields_text = furi_string_get_cstr(fields);
 
     if(count != 10U || records[0].quantity != WmBusApplicationQuantityVolume ||
-       records[0].value_type != WmBusApplicationValueUnsigned ||
-       records[0].value_unsigned != 123456U || !strstr(fields_text, "Volume=123.456 m3") ||
+       records[0].value_type != WmBusApplicationValueScalar || records[0].value != 123456 ||
+       !strstr(fields_text, "Volume=123.456 m3") ||
        records[1].quantity != WmBusApplicationQuantityEnergy ||
-       records[1].value_type != WmBusApplicationValueUnsigned ||
-       records[1].value_unsigned != 123456U || !strstr(fields_text, "Energy=123456 Wh") ||
-       records[2].storage_no != 2U || records[3].quantity != WmBusApplicationQuantityVolumeFlow ||
+       records[1].value_type != WmBusApplicationValueScalar || records[1].value != 123456 ||
+       !strstr(fields_text, "Energy=123456 Wh") || records[2].storage_no != 2U ||
+       records[3].quantity != WmBusApplicationQuantityVolumeFlow ||
        !strstr(fields_text, "Flow=12.345678 m3/h") ||
        records[4].quantity != WmBusApplicationQuantityFlowTemperature ||
-       records[4].value_type != WmBusApplicationValueUnsigned ||
-       records[4].value_unsigned != 215U || records[4].scale10 != -1 ||
+       records[4].value_type != WmBusApplicationValueScalar || records[4].value != 215 ||
+       records[4].scale10 != -1 ||
        records[5].quantity != WmBusApplicationQuantityReturnTemperature ||
-       records[5].value_type != WmBusApplicationValueUnsigned ||
-       records[5].value_unsigned != 160U || records[5].scale10 != -1 ||
+       records[5].value_type != WmBusApplicationValueScalar || records[5].value != 160 ||
+       records[5].scale10 != -1 ||
        records[6].quantity != WmBusApplicationQuantityTemperatureDifference ||
-       records[6].value_type != WmBusApplicationValueUnsigned ||
-       records[6].value_unsigned != 55U || records[6].scale10 != -1 ||
-       records[7].quantity != WmBusApplicationQuantityDate ||
+       records[6].value_type != WmBusApplicationValueScalar || records[6].value != 55 ||
+       records[6].scale10 != -1 || records[7].quantity != WmBusApplicationQuantityDate ||
        records[7].value_type != WmBusApplicationValueDateTime ||
        records[7].value_datetime.year != 2025U || records[7].value_datetime.month != 3U ||
        records[7].value_datetime.day != 12U || records[7].value_datetime.has_time ||
@@ -622,6 +621,98 @@ static bool wmbus_selftest_check_dif_vif_decode_basic(char* detail, size_t detai
     return true;
 }
 
+static bool wmbus_selftest_check_dif_vif_signed_integer_widths(char* detail, size_t detail_len) {
+    static const uint8_t payload[] = {
+        0x01U, 0x5BU, 0x80U, 0x02U, 0x5BU, 0x00U, 0x80U, 0x03U, 0x5BU, 0x00U, 0x00U, 0x80U,
+        0x04U, 0x5BU, 0x00U, 0x00U, 0x00U, 0x80U, 0x06U, 0x5BU, 0x00U, 0x00U, 0x00U, 0x00U,
+        0x00U, 0x80U, 0x07U, 0x5BU, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x80U,
+    };
+    static const uint8_t widths[] = {1U, 2U, 3U, 4U, 6U, 8U};
+    static const int64_t expected[] = {
+        -INT64_C(128),
+        -INT64_C(32768),
+        -INT64_C(8388608),
+        -INT64_C(2147483648),
+        -INT64_C(140737488355328),
+        INT64_MIN,
+    };
+    WmBusApplicationRecord records[COUNT_OF(widths)] = {0};
+    uint8_t count = 0U;
+
+    if(!wmbus_packet_decode_application_records(
+           payload, sizeof(payload), records, COUNT_OF(records), &count) ||
+       count != COUNT_OF(records)) {
+        wmbus_selftest_set_detail(detail, detail_len, "decode failed count=%u", count);
+        return false;
+    }
+
+    for(uint8_t i = 0U; i < count; i++) {
+        char value_text[32] = {0};
+        char expected_text[32] = {0};
+        snprintf(expected_text, sizeof(expected_text), "%lld C", (long long)expected[i]);
+        if(records[i].data_len != widths[i] ||
+           records[i].value_type != WmBusApplicationValueScalar ||
+           records[i].value != expected[i] ||
+           !wmbus_record_formatter_format_value_text(&records[i], value_text, sizeof(value_text)) ||
+           strcmp(value_text, expected_text) != 0) {
+            wmbus_selftest_set_detail(
+                detail,
+                detail_len,
+                "width=%u type=%u value=%lld text=%s",
+                widths[i],
+                (unsigned int)records[i].value_type,
+                (long long)records[i].value,
+                value_text);
+            return false;
+        }
+    }
+
+    wmbus_selftest_set_detail(detail, detail_len, "signed widths=1,2,3,4,6,8");
+    return true;
+}
+
+static bool wmbus_selftest_check_dif_vif_lvar_text_only(char* detail, size_t detail_len) {
+    static const uint8_t text_payload[] = {
+        0x0DU,
+        0x13U,
+        0x03U,
+        'a',
+        'b',
+        'c',
+        0x01U,
+        0x13U,
+        0x01U,
+    };
+    WmBusApplicationRecord records[2] = {0};
+    uint8_t count = 0U;
+
+    if(!wmbus_packet_decode_application_records(
+           text_payload, sizeof(text_payload), records, COUNT_OF(records), &count) ||
+       count != 2U || records[0].data_len != 3U ||
+       records[0].value_type != WmBusApplicationValueRaw ||
+       records[1].value_type != WmBusApplicationValueScalar || records[1].value != 1) {
+        wmbus_selftest_set_detail(detail, detail_len, "text LVAR decode failed count=%u", count);
+        return false;
+    }
+
+    for(uint16_t lvar = 0xC0U; lvar <= 0xFFU; lvar++) {
+        uint8_t unsupported_payload[19] = {0x0DU, 0x13U, (uint8_t)lvar};
+        if(wmbus_packet_decode_application_records(
+               unsupported_payload,
+               sizeof(unsupported_payload),
+               records,
+               COUNT_OF(records),
+               &count)) {
+            wmbus_selftest_set_detail(
+                detail, detail_len, "non-text LVAR=%02X accepted", (unsigned int)lvar);
+            return false;
+        }
+    }
+
+    wmbus_selftest_set_detail(detail, detail_len, "text LVAR accepted; C0-FF rejected");
+    return true;
+}
+
 static bool wmbus_selftest_check_dif_vif_hca_records(char* detail, size_t detail_len) {
     static const uint8_t payload[] = {
         0x0BU, 0x6EU, 0x19U, 0x03U, 0x00U, 0x4BU, 0x6EU, 0x06U, 0x12U, 0x00U, 0x42U, 0x6CU,
@@ -646,14 +737,14 @@ static bool wmbus_selftest_check_dif_vif_hca_records(char* detail, size_t detail
     }
     bool valid = decoded && count == 7U &&
                  records[0].quantity == WmBusApplicationQuantityHeatCostAllocation &&
-                 records[0].value_unsigned == 319U &&
+                 records[0].value == 319 &&
                  records[1].quantity == WmBusApplicationQuantityHeatCostAllocation &&
-                 records[1].storage_no == 1U && records[1].value_unsigned == 1206U &&
+                 records[1].storage_no == 1U && records[1].value == 1206 &&
                  records[2].quantity == WmBusApplicationQuantityDate &&
                  records[2].storage_no == 1U && records[2].value_datetime.year == 2025U &&
                  records[2].value_datetime.month == 12U && records[2].value_datetime.day == 31U &&
                  records[3].quantity == WmBusApplicationQuantityHeatCostAllocation &&
-                 records[3].storage_no == 17U && records[3].value_unsigned == 319U &&
+                 records[3].storage_no == 17U && records[3].value == 319 &&
                  records[4].quantity == WmBusApplicationQuantityDate &&
                  records[4].storage_no == 17U && records[4].value_datetime.year == 2026U &&
                  records[4].value_datetime.month == 7U && records[4].value_datetime.day == 31U &&
@@ -675,9 +766,9 @@ static bool wmbus_selftest_check_dif_vif_hca_records(char* detail, size_t detail
         wmbus_selftest_set_detail(
             detail,
             detail_len,
-            "count=%u hca=%llu error_type=%u error=%s",
+            "count=%u hca=%lld error_type=%u error=%s",
             (unsigned int)count,
-            (unsigned long long)records[0].value_unsigned,
+            (long long)records[0].value,
             (unsigned int)records[5].value_type,
             furi_string_get_cstr(unavailable));
         furi_string_free(unavailable);
@@ -747,7 +838,7 @@ static bool wmbus_selftest_check_dif_vif_extension_limits(char* detail, size_t d
            max_dife_payload, sizeof(max_dife_payload), records, COUNT_OF(records), &count) ||
        count != 1U || records[0].storage_no != UINT64_C(0x1FFFFFFFFFE) ||
        records[0].tariff != UINT32_C(0xFFFFF) || records[0].subunit != UINT16_C(0x3FF) ||
-       records[0].quantity != WmBusApplicationQuantityVolume || records[0].value_unsigned != 1U) {
+       records[0].quantity != WmBusApplicationQuantityVolume || records[0].value != 1) {
         wmbus_selftest_set_detail(
             detail,
             detail_len,
@@ -823,15 +914,15 @@ static bool wmbus_selftest_check_dif_vif_decode_12_digit_bcd(char* detail, size_
        count != 2U || records[0].dif != 0x0EU || records[0].data_len != 6U ||
        records[0].value_type != WmBusApplicationValueRaw ||
        records[1].quantity != WmBusApplicationQuantityVolume ||
-       records[1].value_type != WmBusApplicationValueUnsigned ||
-       records[1].value_unsigned != 29008U || records[1].scale10 != -3) {
+       records[1].value_type != WmBusApplicationValueScalar || records[1].value != 29008 ||
+       records[1].scale10 != -3) {
         wmbus_selftest_set_detail(
             detail,
             detail_len,
-            "decode/count mismatch count=%u first_type=%u total=%llu",
+            "decode/count mismatch count=%u first_type=%u total=%lld",
             (unsigned int)count,
             (unsigned int)records[0].value_type,
-            (unsigned long long)records[1].value_unsigned);
+            (long long)records[1].value);
         return false;
     }
 
@@ -859,7 +950,7 @@ static bool wmbus_selftest_check_format_fields_text_uses_context(char* detail, s
     record->measurement_type = WmBusApplicationMeasurementTypeInstantaneous;
     record->scale10 = -3;
     record->data_len = 4U;
-    wmbus_application_record_set_unsigned(record, 150U);
+    wmbus_application_record_set_value(record, 150);
 
     if(!wmbus_application_record_append(&application, &record)) {
         wmbus_selftest_set_detail(detail, detail_len, "append volume history failed");
@@ -871,7 +962,7 @@ static bool wmbus_selftest_check_format_fields_text_uses_context(char* detail, s
     record->storage_no = 1U;
     record->scale10 = -5;
     record->data_len = 6U;
-    wmbus_application_record_set_unsigned(record, 9395877606541289160ULL);
+    wmbus_application_record_set_value(record, INT64_C(139587760654128));
 
     if(!wmbus_application_record_append(&application, &record)) {
         wmbus_selftest_set_detail(detail, detail_len, "append energy primary failed");
@@ -882,7 +973,7 @@ static bool wmbus_selftest_check_format_fields_text_uses_context(char* detail, s
     record->measurement_type = WmBusApplicationMeasurementTypeInstantaneous;
     record->scale10 = -2;
     record->data_len = 2U;
-    wmbus_application_record_set_unsigned(record, 2U);
+    wmbus_application_record_set_value(record, 2);
 
     if(!wmbus_application_record_append(&application, &record)) {
         wmbus_selftest_set_detail(detail, detail_len, "append energy tariff failed");
@@ -894,7 +985,7 @@ static bool wmbus_selftest_check_format_fields_text_uses_context(char* detail, s
     record->tariff = 1U;
     record->scale10 = 0;
     record->data_len = 6U;
-    wmbus_application_record_set_unsigned(record, 468274118951ULL);
+    wmbus_application_record_set_value(record, INT64_C(468274118951));
 
     if(!wmbus_application_record_append(&application, &record)) {
         wmbus_selftest_set_detail(detail, detail_len, "append status failed");
@@ -903,7 +994,7 @@ static bool wmbus_selftest_check_format_fields_text_uses_context(char* detail, s
     }
     record->quantity = WmBusApplicationQuantityStatus;
     record->measurement_type = WmBusApplicationMeasurementTypeInstantaneous;
-    if(!wmbus_application_record_set_raw_hex_le(record, (const uint8_t[]){0x92, 0x01}, 2U)) {
+    if(!wmbus_application_record_set_raw_bytes(record, (const uint8_t[]){0x92, 0x01}, 2U)) {
         wmbus_selftest_set_detail(detail, detail_len, "status raw encode failed");
         furi_string_free(fields);
         return false;
@@ -921,7 +1012,7 @@ static bool wmbus_selftest_check_format_fields_text_uses_context(char* detail, s
     record->tariff = 3U;
     record->subunit = 4U;
     record->data_len = 1U;
-    wmbus_application_record_set_unsigned(record, 12U);
+    wmbus_application_record_set_value(record, 12);
 
     wmbus_record_formatter_format_joined(
         application.records, application.record_count, ';', fields);
@@ -929,7 +1020,7 @@ static bool wmbus_selftest_check_format_fields_text_uses_context(char* detail, s
     if(strcmp(
            furi_string_get_cstr(fields),
            "Volume=0.150 m3;Energy=0.02 Wh;Energy[T1]=468274118951 Wh;Status=9201;"
-           "Volume[S1]=93958776065412.89160 m3;Energy[S2 T3 U4 max]=12 Wh") != 0) {
+           "Volume[S1]=1395877606.54128 m3;Energy[S2 T3 U4 max]=12 Wh") != 0) {
         wmbus_selftest_set_detail(detail, detail_len, "fields=%s", furi_string_get_cstr(fields));
         furi_string_free(fields);
         return false;
@@ -963,7 +1054,7 @@ static bool wmbus_selftest_check_packet_detail_retains_volume(char* detail, size
     record->measurement_type = WmBusApplicationMeasurementTypeInstantaneous;
     record->scale10 = -3;
     record->data_len = 4U;
-    wmbus_application_record_set_unsigned(record, 150U);
+    wmbus_application_record_set_value(record, 150);
 
     FuriString* text = furi_string_alloc();
     if(!text) {
@@ -1044,6 +1135,8 @@ static const WmBusSelftestCheck wmbus_selftest_checks_tooling[] = {
     {"check_long_tpl_ci_headers", wmbus_selftest_check_long_tpl_ci_headers},
     {"check_ell_security_modes", wmbus_selftest_check_ell_security_modes},
     {"check_dif_vif_decode_basic", wmbus_selftest_check_dif_vif_decode_basic},
+    {"check_dif_vif_signed_integer_widths", wmbus_selftest_check_dif_vif_signed_integer_widths},
+    {"check_dif_vif_lvar_text_only", wmbus_selftest_check_dif_vif_lvar_text_only},
     {"check_dif_vif_hca_records", wmbus_selftest_check_dif_vif_hca_records},
     {"check_dif_vif_extension_limits", wmbus_selftest_check_dif_vif_extension_limits},
     {"check_dif_vif_decode_12_digit_bcd", wmbus_selftest_check_dif_vif_decode_12_digit_bcd},

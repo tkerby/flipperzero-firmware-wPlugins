@@ -157,7 +157,7 @@ static void wmbus_parser_apator162_store_total_record(
     app_record->quantity = WmBusApplicationQuantityVolume;
     app_record->scale10 = -3;
     app_record->data_len = 4U;
-    wmbus_application_record_set_unsigned(app_record, total_m3_x1000);
+    wmbus_application_record_set_value(app_record, (int64_t)total_m3_x1000);
 }
 
 static void wmbus_parser_apator162_store_status_record(
@@ -172,7 +172,7 @@ static void wmbus_parser_apator162_store_status_record(
 
     app_record->quantity = WmBusApplicationQuantityStatus;
     app_record->data_len = (uint8_t)((status_len > UINT8_MAX) ? UINT8_MAX : status_len);
-    if(!wmbus_application_record_set_raw_hex_le(app_record, status, app_record->data_len)) {
+    if(!wmbus_application_record_set_raw_bytes(app_record, status, app_record->data_len)) {
         app_record->value_type = WmBusApplicationValueRaw;
     }
 }

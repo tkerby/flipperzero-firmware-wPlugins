@@ -593,8 +593,8 @@ static bool wmbus_selftest_check_packet_process_c_bad_header_keeps_wire_diagnost
         return false;
     }
 
-    if(record.quality != WmBusPacketQualityAnyCapture || record.packet_len != sizeof(raw) ||
-       memcmp(record.packet_bytes, raw, sizeof(raw)) != 0) {
+    if(record.quality != WmBusPacketQualityAnyCapture || record.packet_len != 0U ||
+       record.wire_len != sizeof(raw) || memcmp(record.wire_bytes, raw, sizeof(raw)) != 0) {
         wmbus_selftest_set_detail(
             detail,
             detail_len,
@@ -753,17 +753,23 @@ static bool wmbus_selftest_check_packet_process_c_crc_bad_keeps_complete_header(
     }
 
     uint8_t normalized[WMBUS_SELFTEST_BUF_MAX] = {0};
+    uint8_t expected[WMBUS_APATOR_C_LEN] = {0};
     WmBusFrameNormalizeResult normalize = {0};
-    if(wmbus_frame_normalize(
+    memcpy(expected, wmbus_apator_c, sizeof(expected));
+    expected[5] ^= 0x01U;
+    if(!wmbus_frame_normalize(
            WmBusFrameFormatB, frame, frame_len, normalized, sizeof(normalized), &normalize) ||
-       normalize.length_ok || normalize.crc_known || normalize.crc_ok) {
+       !normalize.length_ok || !normalize.crc_known || normalize.crc_ok ||
+       normalize.normalized_len != sizeof(expected) ||
+       memcmp(normalized, expected, sizeof(expected)) != 0) {
         wmbus_selftest_set_detail(
             detail,
             detail_len,
-            "unexpected normalize len_ok=%u crc_known=%u crc_ok=%u",
+            "unexpected normalize len_ok=%u crc_known=%u crc_ok=%u len=%u",
             normalize.length_ok ? 1U : 0U,
             normalize.crc_known ? 1U : 0U,
-            normalize.crc_ok ? 1U : 0U);
+            normalize.crc_ok ? 1U : 0U,
+            (unsigned int)normalize.normalized_len);
         return false;
     }
 
@@ -781,8 +787,10 @@ static bool wmbus_selftest_check_packet_process_c_crc_bad_keeps_complete_header(
         return false;
     }
 
-    if(record.quality != WmBusPacketQualityFrameComplete || record.packet_len != frame_len ||
-       memcmp(record.packet_bytes, frame, frame_len) != 0 ||
+    if(record.quality != WmBusPacketQualityFrameComplete ||
+       record.packet_len != sizeof(expected) ||
+       memcmp(record.packet_bytes, expected, sizeof(expected)) != 0 ||
+       record.wire_len != frame_len || memcmp(record.wire_bytes, frame, frame_len) != 0 ||
        record.application.parser_id != WmBusParserIdShortTpl) {
         wmbus_selftest_set_detail(
             detail,
@@ -801,7 +809,10 @@ static bool wmbus_selftest_check_packet_process_c_crc_bad_keeps_complete_header(
 
 static bool wmbus_selftest_check_c_format_a_is_authoritative(char* detail, size_t detail_len) {
     uint8_t frame[WMBUS_SELFTEST_BUF_MAX] = {0};
+    uint8_t normalized[WMBUS_SELFTEST_BUF_MAX] = {0};
+    uint8_t expected[WMBUS_APATOR_B_LEN] = {0};
     size_t frame_len = 0U;
+    WmBusFrameNormalizeResult normalize = {0};
     WmBusPacketRecord record = {0};
 
     if(!wmbus_frame_build_format_a(
@@ -810,6 +821,23 @@ static bool wmbus_selftest_check_c_format_a_is_authoritative(char* detail, size_
         return false;
     }
     frame[5] ^= 0x01U;
+    memcpy(expected, wmbus_apator_b, sizeof(expected));
+    expected[5] ^= 0x01U;
+
+    if(!wmbus_frame_normalize(
+           WmBusFrameFormatA, frame, frame_len, normalized, sizeof(normalized), &normalize) ||
+       !normalize.length_ok || !normalize.crc_known || normalize.crc_ok ||
+       normalize.normalized_len != sizeof(expected) ||
+       memcmp(normalized, expected, sizeof(expected)) != 0) {
+        wmbus_selftest_set_detail(
+            detail,
+            detail_len,
+            "format-A normalize failed len_ok=%u crc_ok=%u len=%u",
+            normalize.length_ok ? 1U : 0U,
+            normalize.crc_ok ? 1U : 0U,
+            (unsigned int)normalize.normalized_len);
+        return false;
+    }
 
     if(!wmbus_selftest_process_phy_frame_record(
            WmBusRxModeC,
@@ -822,22 +850,28 @@ static bool wmbus_selftest_check_c_format_a_is_authoritative(char* detail, size_
         return false;
     }
 
-    if(record.quality != WmBusPacketQualityFrameComplete ||
-       record.format != WmBusFrameFormatA || record.packet_len != frame_len ||
-       record.packet_len == wmbus_frame_len_format_b(frame[0])) {
+    if(record.quality != WmBusPacketQualityFrameComplete || record.format != WmBusFrameFormatA ||
+       record.packet_len != sizeof(expected) ||
+       memcmp(record.packet_bytes, expected, sizeof(expected)) != 0 ||
+       record.wire_len != frame_len || memcmp(record.wire_bytes, frame, frame_len) != 0 ||
+       record.dll.ci_field != expected[10]) {
         wmbus_selftest_set_detail(
             detail,
             detail_len,
-            "format-A lost quality=%u wire=%u stored=%u format-B=%u",
+            "format-A lost quality=%u wire=%u stored=%u ci=%02X",
             (unsigned int)record.quality,
             (unsigned int)frame_len,
             (unsigned int)record.packet_len,
-            (unsigned int)wmbus_frame_len_format_b(frame[0]));
+            record.dll.ci_field);
         return false;
     }
 
     wmbus_selftest_set_detail(
-        detail, detail_len, "format=A authoritative wire_len=%u", (unsigned int)frame_len);
+        detail,
+        detail_len,
+        "format=A wire=%u normalized=%u crc_bad",
+        (unsigned int)frame_len,
+        (unsigned int)record.packet_len);
     return true;
 }
 

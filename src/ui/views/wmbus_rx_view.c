@@ -159,7 +159,7 @@ static void
             record_index++) {
             const WmBusApplicationRecord* record = &entry->application.records[record_index];
             if(record->quantity != preferred_quantities[quantity_index] || record->storage_no != 0U ||
-               record->value_type != WmBusApplicationValueUnsigned) {
+               record->value_type != WmBusApplicationValueScalar) {
                 continue;
             }
 

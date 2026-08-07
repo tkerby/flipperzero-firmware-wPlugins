@@ -81,11 +81,6 @@ bool wmbus_packet_process_phy_frame(
 
     if(has_complete_frame) {
         wmbus_packet_store_frame(record, decode.frame, decode.frame_len);
-    } else {
-        record->packet_len = (uint16_t)((phy_frame->len > sizeof(record->packet_bytes)) ?
-                                            sizeof(record->packet_bytes) :
-                                            phy_frame->len);
-        memcpy(record->packet_bytes, phy_frame->data, record->packet_len);
     }
 
     if(has_complete_frame && crc_ok) {

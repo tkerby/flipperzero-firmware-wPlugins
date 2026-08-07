@@ -12,7 +12,7 @@
 
 typedef enum {
     WmBusApplicationValueNone = 0,
-    WmBusApplicationValueUnsigned,
+    WmBusApplicationValueScalar,
     WmBusApplicationValueDateTime,
     WmBusApplicationValueUnavailable,
     WmBusApplicationValueRaw,
@@ -61,7 +61,8 @@ typedef struct {
     WmBusApplicationMeasurementType measurement_type;
     WmBusApplicationQuantity quantity;
     int8_t scale10;
-    uint64_t value_unsigned;
+    int64_t value;
+    uint8_t raw_bytes[8];
     WmBusApplicationDateTime value_datetime;
 } WmBusApplicationRecord;
 

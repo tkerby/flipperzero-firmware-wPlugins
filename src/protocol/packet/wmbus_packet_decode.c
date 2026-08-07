@@ -217,36 +217,6 @@ static void wmbus_packet_upgrade_quality_from_normalize(
     }
 }
 
-static void wmbus_packet_upgrade_quality_from_measure(
-    WmBusPacketQuality* quality,
-    const WmBusFrameMeasureResult* measure) {
-    if(!quality || !measure) return;
-    if(measure->complete) {
-        wmbus_packet_upgrade_quality(quality, WmBusPacketQualityFrameComplete);
-    }
-}
-
-static bool wmbus_packet_decode_copy_frame(
-    const uint8_t* frame,
-    size_t frame_len,
-    uint8_t* frame_buf,
-    size_t frame_buf_max,
-    const uint8_t** out_frame,
-    size_t* out_frame_len) {
-    if(!frame || frame_len == 0U || !frame_buf || frame_buf_max == 0U || !out_frame ||
-       !out_frame_len) {
-        return false;
-    }
-
-    size_t copy_len = frame_len > frame_buf_max ? frame_buf_max : frame_len;
-    if(frame != frame_buf) {
-        memcpy(frame_buf, frame, copy_len);
-    }
-    *out_frame = frame_buf;
-    *out_frame_len = copy_len;
-    return true;
-}
-
 bool wmbus_packet_decode_phy_frame(
     const WmBusPhyFrame* phy_frame,
     uint8_t* frame_buf,
@@ -263,40 +233,23 @@ bool wmbus_packet_decode_phy_frame(
     }
 
     memset(out, 0, sizeof(*out));
-    const uint8_t* frame = NULL;
-    size_t frame_len = 0U;
+    if(!wmbus_decode_is_plausible_frame(phy_frame->data, phy_frame->len)) return true;
 
-    if(wmbus_decode_is_plausible_frame(phy_frame->data, phy_frame->len)) {
-        frame = phy_frame->data;
-        frame_len = phy_frame->len;
-        wmbus_packet_upgrade_quality(&out->quality, WmBusPacketQualityHeaderOk);
+    wmbus_packet_upgrade_quality(&out->quality, WmBusPacketQualityHeaderOk);
+
+    WmBusFrameNormalizeResult normalized_result = {0};
+    if(wmbus_frame_normalize(
+           phy_frame->format,
+           phy_frame->data,
+           phy_frame->len,
+           frame_buf,
+           frame_buf_max,
+           &normalized_result)) {
+        out->frame = frame_buf;
+        out->frame_len = normalized_result.normalized_len;
+        wmbus_packet_upgrade_quality_from_normalize(&out->quality, &normalized_result);
     }
 
-    if(frame) {
-        WmBusFrameMeasureResult measure = {0};
-        if(wmbus_frame_measure(phy_frame->format, frame, frame_len, &measure)) {
-            wmbus_packet_upgrade_quality_from_measure(&out->quality, &measure);
-        }
-
-        WmBusFrameNormalizeResult normalized_result = {0};
-        if(wmbus_frame_normalize(
-               phy_frame->format,
-               frame,
-               frame_len,
-               frame_buf,
-               frame_buf_max,
-               &normalized_result)) {
-            frame = frame_buf;
-            frame_len = normalized_result.normalized_len;
-            wmbus_packet_upgrade_quality_from_normalize(&out->quality, &normalized_result);
-        } else if(measure.complete && measure.frame_len <= frame_buf_max) {
-            wmbus_packet_decode_copy_frame(
-                frame, measure.frame_len, frame_buf, frame_buf_max, &frame, &frame_len);
-        }
-    }
-
-    out->frame = frame;
-    out->frame_len = frame_len;
     return true;
 }
 

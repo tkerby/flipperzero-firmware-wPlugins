@@ -110,9 +110,8 @@ static bool wmbus_record_formatter_format_value_buf(
     if(!record) return false;
 
     switch(record->value_type) {
-    case WmBusApplicationValueUnsigned: {
-        wmbus_application_format_scaled_unsigned(
-            record->value_unsigned, record->scale10, out, out_size);
+    case WmBusApplicationValueScalar: {
+        wmbus_application_format_scaled_value(record->value, record->scale10, out, out_size);
         const char* unit = wmbus_record_formatter_unit(record);
         if(unit && out[0] != '\0') {
             size_t len = strlen(out);
@@ -145,8 +144,10 @@ static bool wmbus_record_formatter_format_value_buf(
         snprintf(out, out_size, "-");
         return true;
     case WmBusApplicationValueRaw:
-        if(record->quantity == WmBusApplicationQuantityStatus) {
-            return wmbus_hex_encode_le(record->value_unsigned, record->data_len, out, out_size);
+        if(record->quantity == WmBusApplicationQuantityStatus && record->data_len > 0U &&
+           record->data_len <= sizeof(record->raw_bytes)) {
+            wmbus_hex_encode(record->raw_bytes, record->data_len, out, out_size);
+            return out[0] != '\0';
         }
         return false;
     case WmBusApplicationValueNone:

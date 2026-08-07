@@ -30,25 +30,20 @@ bool wmbus_application_record_append(
     return true;
 }
 
-void wmbus_application_record_set_unsigned(WmBusApplicationRecord* record, uint64_t value) {
+void wmbus_application_record_set_value(WmBusApplicationRecord* record, int64_t value) {
     if(!record) return;
-    record->value_type = WmBusApplicationValueUnsigned;
-    record->value_unsigned = value;
+    record->value_type = WmBusApplicationValueScalar;
+    record->value = value;
 }
 
-bool wmbus_application_record_set_raw_hex_le(
+bool wmbus_application_record_set_raw_bytes(
     WmBusApplicationRecord* record,
     const uint8_t* data,
     uint8_t data_len) {
     if(!record || !data || data_len == 0U || data_len > 8U) return false;
 
-    uint64_t value = 0U;
-    for(uint8_t i = 0; i < data_len; i++) {
-        value |= ((uint64_t)data[i]) << (8U * i);
-    }
-
     record->value_type = WmBusApplicationValueRaw;
-    record->value_unsigned = value;
+    memcpy(record->raw_bytes, data, data_len);
     return true;
 }
 
@@ -65,25 +60,26 @@ bool wmbus_application_find_total_volume(
     for(uint8_t i = 0; i < record_count; i++) {
         const WmBusApplicationRecord* record = &records[i];
         if(record->storage_no != 0U || record->quantity != WmBusApplicationQuantityVolume ||
-           record->value_type != WmBusApplicationValueUnsigned) {
+           record->value_type != WmBusApplicationValueScalar || record->value < 0) {
             continue;
         }
 
+        uint64_t value = (uint64_t)record->value;
+
         if(record->scale10 >= -3) {
-            uint64_t scaled = record->value_unsigned;
-            scaled *= wmbus_application_pow10_u64((uint8_t)(record->scale10 + 3));
-            if(scaled > UINT32_MAX) continue;
-            *total_m3_x1000 = (uint32_t)scaled;
+            uint64_t multiplier = wmbus_application_pow10_u64((uint8_t)(record->scale10 + 3));
+            if(multiplier > UINT32_MAX || value > (UINT32_MAX / multiplier)) continue;
+            *total_m3_x1000 = (uint32_t)(value * multiplier);
             return true;
         }
 
         uint8_t divisor_power = (uint8_t)(-3 - record->scale10);
         uint64_t divisor = wmbus_application_pow10_u64(divisor_power);
-        if((record->value_unsigned % divisor) != 0U) {
+        if((value % divisor) != 0U) {
             continue;
         }
 
-        uint64_t scaled = record->value_unsigned / divisor;
+        uint64_t scaled = value / divisor;
         if(scaled > UINT32_MAX) continue;
         *total_m3_x1000 = (uint32_t)scaled;
         return true;
@@ -118,28 +114,43 @@ bool wmbus_application_format_total_volume_m3(
     return true;
 }
 
-void wmbus_application_format_scaled_unsigned(
-    uint64_t value,
+static uint64_t wmbus_application_value_magnitude(int64_t value) {
+    if(value >= 0) return (uint64_t)value;
+    return (uint64_t)(-(value + 1)) + 1U;
+}
+
+void wmbus_application_format_scaled_value(
+    int64_t value,
     int8_t scale10,
     char* out,
     size_t out_size) {
     if(!out || out_size == 0U) return;
     out[0] = '\0';
 
+    uint64_t magnitude = wmbus_application_value_magnitude(value);
+    const char* sign = value < 0 ? "-" : "";
+
     if(scale10 >= 0) {
-        uint64_t scaled = value * wmbus_application_pow10_u64((uint8_t)scale10);
-        snprintf(out, out_size, "%llu", (unsigned long long)scaled);
+        int len = snprintf(out, out_size, "%s%llu", sign, (unsigned long long)magnitude);
+        if(len < 0 || (size_t)len >= out_size) return;
+
+        size_t write = (size_t)len;
+        for(int8_t i = 0; i < scale10 && write + 1U < out_size; i++) {
+            out[write++] = '0';
+        }
+        out[write] = '\0';
         return;
     }
 
     uint8_t decimals = (uint8_t)(-scale10);
     uint64_t div = wmbus_application_pow10_u64(decimals);
-    uint64_t whole = value / div;
-    uint64_t frac = value % div;
+    uint64_t whole = magnitude / div;
+    uint64_t frac = magnitude % div;
     snprintf(
         out,
         out_size,
-        "%llu.%0*llu",
+        "%s%llu.%0*llu",
+        sign,
         (unsigned long long)whole,
         (int)decimals,
         (unsigned long long)frac);
