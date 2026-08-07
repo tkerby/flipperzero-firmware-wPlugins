@@ -51,7 +51,7 @@ static void
         wmbus_packet_summary_frame_type(record->format),
         record->rssi,
         record->identity.manufacturer,
-        record->dll.dev_type,
+        record->identity.dev_type,
         record->dll.ci_field,
         record->identity.meter_id,
         wmbus_packet_quality_str(record->quality),

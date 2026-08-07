@@ -34,8 +34,10 @@ void wmbus_packet_finalize_parser(WmBusPacketRecord* record) {
 
         if(!frame_complete) {
             record->application.parser_id = WmBusParserIdRaw;
-        } else if(record->tpl.has_short_tpl) {
+        } else if(record->tpl.header_type == WmBusTplHeaderShort) {
             record->application.parser_id = WmBusParserIdShortTpl;
+        } else if(record->tpl.header_type == WmBusTplHeaderLong) {
+            record->application.parser_id = WmBusParserIdLongTpl;
         } else if(record->ell.has_ell) {
             record->application.parser_id = WmBusParserIdEll;
         } else {

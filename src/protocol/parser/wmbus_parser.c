@@ -29,6 +29,11 @@ static const WmBusParserInfo wmbus_builtin_parsers[] = {
         .name = "Short TPL",
         .validates_decrypt = false,
     },
+    {
+        .parser_id = WmBusParserIdLongTpl,
+        .name = "Long TPL",
+        .validates_decrypt = false,
+    },
 };
 
 static const WmBusParserInfo* wmbus_parser_get_info(WmBusParserId parser_id) {
@@ -75,20 +80,19 @@ bool wmbus_parser_ell_security_likely_encrypted(uint32_t sn) {
     return wmbus_parser_ell_security_mode(sn) == 0x01U;
 }
 
-uint8_t wmbus_parser_short_tpl_security_mode(uint16_t cfg) {
+uint8_t wmbus_parser_tpl_security_mode(uint16_t cfg) {
     return (uint8_t)((cfg >> 8) & 0x1FU);
 }
 
-bool wmbus_parser_short_tpl_security_likely_encrypted(uint16_t cfg) {
-    // OMS short-TPL security modes that imply encrypted content.
-    switch(wmbus_parser_short_tpl_security_mode(cfg)) {
-    case 0x05:
-    case 0x07:
-    case 0x08:
-    case 0x09:
-    case 0x0A:
-        return true;
-    default:
+bool wmbus_parser_tpl_has_encrypted_payload(uint16_t cfg) {
+    uint8_t security_mode = wmbus_parser_tpl_security_mode(cfg);
+    if(security_mode == 0U) {
         return false;
     }
+    if(security_mode == 0x05U && ((cfg >> 4) & 0x0FU) == 0U) {
+        return false;
+    }
+
+    /* Unsupported security modes stay closed. */
+    return true;
 }

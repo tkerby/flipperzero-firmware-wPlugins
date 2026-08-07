@@ -6,8 +6,10 @@
 #include "../../core/wmbus_types.h"
 
 WmBusMode5DecryptInfo wmbus_crypto_mode5_decrypt(
-    const uint8_t* frame,
-    size_t frame_len,
+    const uint8_t* encrypted_payload,
+    size_t payload_len,
+    const uint8_t iv_address[8],
+    uint8_t access_number,
     uint16_t cfg,
     const uint8_t key[16],
-    uint8_t* out_frame);
+    uint8_t* out_payload);

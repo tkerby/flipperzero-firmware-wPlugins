@@ -289,7 +289,7 @@ static void wmbus_rx_draw(Canvas* canvas, void* model) {
             sizeof(line),
             "MFC:%s DT:%02X",
             entry->identity.manufacturer,
-            entry->dll.dev_type);
+            entry->identity.dev_type);
         canvas_draw_str(canvas, 0, 48, line);
         snprintf(right, sizeof(right), "ID:%s", entry->identity.meter_id);
         canvas_draw_str_aligned(canvas, canvas_width(canvas), 48, AlignRight, AlignBottom, right);

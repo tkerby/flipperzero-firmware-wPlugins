@@ -31,9 +31,17 @@ typedef struct {
     uint8_t key_index;
 } WmBusPacketEllData;
 
+typedef enum {
+    WmBusTplHeaderNone = 0,
+    WmBusTplHeaderShort,
+    WmBusTplHeaderLong,
+} WmBusTplHeaderType;
+
 typedef struct {
-    bool has_short_tpl;
+    WmBusTplHeaderType header_type;
     uint8_t header_len;
+    /* Address material in the Mode 5 IV order: M-field, ID, version, type. */
+    uint8_t iv_address[8];
     uint8_t acc;
     uint8_t tpl_status;
     uint16_t cfg;
@@ -54,4 +62,6 @@ typedef struct {
     char manufacturer[WMBUS_MFG_STR_LEN];
     char meter_id[WMBUS_ID_STR_LEN];
     bool meter_id_is_bcd;
+    uint8_t version;
+    uint8_t dev_type;
 } WmBusPacketIdentityData;

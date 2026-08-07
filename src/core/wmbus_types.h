@@ -29,8 +29,7 @@ typedef enum {
 typedef enum {
     WmBusDecryptResultOk = 0,
     WmBusDecryptResultInvalidArgs,
-    WmBusDecryptResultFrameTooShort,
-    WmBusDecryptResultEncryptedPayloadTooShort,
+    WmBusDecryptResultInvalidEncryptedLength,
 } WmBusDecryptResult;
 
 typedef struct {

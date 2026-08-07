@@ -9,6 +9,18 @@ static const char* wmbus_selftest_parser_name(const WmBusPacketRecord* record) {
     return record ? wmbus_parser_id_name(record->application.parser_id) : "Unknown";
 }
 
+/* The public Apator examples below contain already-decrypted payloads. */
+static bool wmbus_selftest_prepare_plaintext_short_tpl(uint8_t* normalized, size_t normalized_len) {
+    if(!normalized || normalized_len < 17U || normalized[10] != 0x7AU ||
+       normalized[15] != 0x2FU || normalized[16] != 0x2FU) {
+        return false;
+    }
+
+    normalized[13] = 0U;
+    normalized[14] = 0U;
+    return true;
+}
+
 static bool wmbus_selftest_check_parser_apator162_public_vectors(char* detail, size_t detail_len) {
     for(size_t i = 0; i < WMBUS_SELFTEST_APATOR_PUBLIC_VECTOR_COUNT; i++) {
         const WmBusSelftestApatorPublicVector* vector = &wmbus_selftest_apator_public_vectors[i];
@@ -46,6 +58,10 @@ static bool wmbus_selftest_check_parser_apator162_public_vectors(char* detail, s
            !wmbus_decode_is_plausible_frame(normalized, normalized_len)) {
             wmbus_selftest_set_detail(
                 detail, detail_len, "vector %s plausibility failed", vector->id);
+            return false;
+        }
+        if(!wmbus_selftest_prepare_plaintext_short_tpl(normalized, normalized_len)) {
+            wmbus_selftest_set_detail(detail, detail_len, "vector %s is not plaintext TPL", vector->id);
             return false;
         }
         if(!wmbus_frame_build_format_b(
@@ -96,8 +112,8 @@ static bool wmbus_selftest_check_parser_apator162_public_vectors(char* detail, s
                 (unsigned long)total_m3_x1000,
                 (unsigned long)vector->total_m3_x1000,
                 record.identity.meter_id,
-                (record.tpl.has_short_tpl &&
-                 wmbus_parser_short_tpl_security_likely_encrypted(record.tpl.cfg)) ?
+                (record.tpl.header_type != WmBusTplHeaderNone &&
+                 wmbus_parser_tpl_has_encrypted_payload(record.tpl.cfg)) ?
                     "YES" :
                     "NO",
                 record.tpl.decrypted ? "YES" : "NO",
@@ -196,7 +212,7 @@ static bool wmbus_selftest_check_parser_apator162_mode5_configured_zero_key_vect
             return false;
         }
         cfg = (uint16_t)frame[13] | ((uint16_t)frame[14] << 8);
-        if(!wmbus_parser_short_tpl_security_likely_encrypted(cfg) ||
+        if(!wmbus_parser_tpl_has_encrypted_payload(cfg) ||
            (frame[15] == 0x2FU && frame[16] == 0x2FU)) {
             wmbus_selftest_set_detail(
                 detail, detail_len, "vector %s unexpected cipher state", vectors[i].id);
@@ -568,6 +584,10 @@ static bool
 
     memcpy(normalized, wmbus_apator_b, sizeof(normalized));
     normalized[28] = 0xFFU;
+    if(!wmbus_selftest_prepare_plaintext_short_tpl(normalized, sizeof(normalized))) {
+        wmbus_selftest_set_detail(detail, detail_len, "plaintext fixture setup failed");
+        return false;
+    }
 
     if(!wmbus_frame_build_format_b(
            normalized, sizeof(normalized), frame, sizeof(frame), &frame_len)) {
@@ -608,6 +628,10 @@ static bool
     normalized[30] = 0x56U;
     normalized[31] = 0x34U;
     normalized[32] = 0x12U;
+    if(!wmbus_selftest_prepare_plaintext_short_tpl(normalized, sizeof(normalized))) {
+        wmbus_selftest_set_detail(detail, detail_len, "plaintext fixture setup failed");
+        return false;
+    }
 
     if(!wmbus_frame_build_format_b(
            normalized, sizeof(normalized), frame, sizeof(frame), &frame_len)) {
@@ -647,6 +671,10 @@ static bool wmbus_selftest_check_parser_apator162_invalid_payload_not_claimed(
 
     memcpy(normalized, wmbus_apator_b, sizeof(normalized));
     normalized[25] = 0xFEU;
+    if(!wmbus_selftest_prepare_plaintext_short_tpl(normalized, sizeof(normalized))) {
+        wmbus_selftest_set_detail(detail, detail_len, "plaintext fixture setup failed");
+        return false;
+    }
 
     if(!wmbus_frame_build_format_b(
            normalized, sizeof(normalized), frame, sizeof(frame), &frame_len)) {
@@ -676,12 +704,15 @@ static bool wmbus_selftest_check_parser_apator162_invalid_payload_not_claimed(
 }
 
 static bool wmbus_selftest_check_packet_sections_clear_payload(char* detail, size_t detail_len) {
+    uint8_t normalized[WMBUS_APATOR_B_LEN] = {0};
     uint8_t frame[WMBUS_SELFTEST_BUF_MAX] = {0};
     size_t frame_len = 0;
     WmBusPacketRecord record = {0};
 
-    if(!wmbus_frame_build_format_b(
-           wmbus_apator_b, WMBUS_APATOR_B_LEN, frame, sizeof(frame), &frame_len)) {
+    memcpy(normalized, wmbus_apator_b, sizeof(normalized));
+    if(!wmbus_selftest_prepare_plaintext_short_tpl(normalized, sizeof(normalized)) ||
+       !wmbus_frame_build_format_b(
+           normalized, sizeof(normalized), frame, sizeof(frame), &frame_len)) {
         wmbus_selftest_set_detail(detail, detail_len, "format-B build failed");
         return false;
     }

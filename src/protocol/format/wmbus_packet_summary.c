@@ -55,31 +55,34 @@ void wmbus_packet_summary_format_crypto_tag(
     if(!out || out_size == 0U) return;
     out[0] = '\0';
 
-    if(ell && ell->has_ell && ell->has_session) {
+    if(ell && ell->has_ell && ell->has_session && ell->security_mode != 0U) {
         if(ell->decrypted) {
             snprintf(out, out_size, "EDEC#%u", (unsigned int)ell->key_index);
         } else if(wmbus_parser_ell_security_likely_encrypted(ell->sn)) {
             snprintf(out, out_size, "EENC");
-        } else if(ell->security_mode == 0x00U) {
-            snprintf(out, out_size, "ECLR");
         } else {
             snprintf(out, out_size, "ES:%02X", ell->security_mode);
         }
         return;
     }
 
-    if(!tpl || !tpl->has_short_tpl) return;
+    if(tpl && tpl->header_type != WmBusTplHeaderNone) {
+        if(tpl->decrypted) {
+            snprintf(out, out_size, "DEC#%u", (unsigned int)tpl->key_index);
+        } else if(wmbus_parser_tpl_has_encrypted_payload(tpl->cfg)) {
+            snprintf(out, out_size, "ENC");
+        } else if(tpl->security_mode == 0x00U) {
+            snprintf(out, out_size, "CLR");
+        } else if(tpl->security_mode == 0x01U) {
+            snprintf(out, out_size, "MFG");
+        } else {
+            snprintf(out, out_size, "S:%02X", tpl->security_mode);
+        }
+        return;
+    }
 
-    if(tpl->decrypted) {
-        snprintf(out, out_size, "DEC#%u", (unsigned int)tpl->key_index);
-    } else if(wmbus_parser_short_tpl_security_likely_encrypted(tpl->cfg)) {
-        snprintf(out, out_size, "ENC");
-    } else if(tpl->security_mode == 0x00U) {
-        snprintf(out, out_size, "CLR");
-    } else if(tpl->security_mode == 0x01U) {
-        snprintf(out, out_size, "MFG");
-    } else {
-        snprintf(out, out_size, "S:%02X", tpl->security_mode);
+    if(ell && ell->has_ell && ell->has_session) {
+        snprintf(out, out_size, "ECLR");
     }
 }
 
@@ -91,12 +94,7 @@ void wmbus_packet_summary_format_security_text(
     if(!out || out_size == 0U) return;
     out[0] = '\0';
 
-    if(ell && ell->has_ell) {
-        if(!ell->has_session) {
-            snprintf(out, out_size, "ELL");
-            return;
-        }
-
+    if(ell && ell->has_ell && ell->has_session && ell->security_mode != 0U) {
         char mode[20] = {0};
         wmbus_packet_summary_format_security_mode(ell->security_mode, true, mode, sizeof(mode));
 
@@ -111,24 +109,30 @@ void wmbus_packet_summary_format_security_text(
         return;
     }
 
-    if(!tpl || !tpl->has_short_tpl) return;
+    if(tpl && tpl->header_type != WmBusTplHeaderNone) {
+        char mode[20] = {0};
+        wmbus_packet_summary_format_security_mode(tpl->security_mode, false, mode, sizeof(mode));
 
-    char mode[20] = {0};
-    wmbus_packet_summary_format_security_mode(tpl->security_mode, false, mode, sizeof(mode));
-
-    if(tpl->decrypted) {
-        snprintf(out, out_size, "%s, decrypted key #%u", mode, (unsigned int)tpl->key_index);
-    } else if(wmbus_parser_short_tpl_security_likely_encrypted(tpl->cfg)) {
-        snprintf(out, out_size, "%s, encrypted", mode);
-    } else {
-        snprintf(out, out_size, "%s", mode);
+        if(tpl->decrypted) {
+            snprintf(out, out_size, "%s, decrypted key #%u", mode, (unsigned int)tpl->key_index);
+        } else if(wmbus_parser_tpl_has_encrypted_payload(tpl->cfg)) {
+            snprintf(out, out_size, "%s, encrypted", mode);
+        } else {
+            snprintf(out, out_size, "%s", mode);
+        }
+    } else if(ell && ell->has_ell) {
+        if(!ell->has_session) {
+            snprintf(out, out_size, "ELL");
+        } else {
+            snprintf(out, out_size, "ELL Clear");
+        }
     }
 }
 
 uint8_t wmbus_packet_summary_security_mode(
     const WmBusPacketEllData* ell,
     const WmBusPacketTplData* tpl) {
-    if(ell && ell->has_ell && ell->has_session) {
+    if(ell && ell->has_ell && ell->has_session && ell->security_mode != 0U) {
         return ell->security_mode;
     }
     return tpl ? tpl->security_mode : 0U;
@@ -136,7 +140,7 @@ uint8_t wmbus_packet_summary_security_mode(
 
 uint8_t
     wmbus_packet_summary_key_index(const WmBusPacketEllData* ell, const WmBusPacketTplData* tpl) {
-    if(ell && ell->has_ell && ell->has_session) {
+    if(ell && ell->has_ell && ell->has_session && ell->security_mode != 0U) {
         return ell->key_index;
     }
     return tpl ? tpl->key_index : 0U;

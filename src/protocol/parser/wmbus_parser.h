@@ -20,5 +20,5 @@ bool wmbus_parser_ell_has_session_fields(uint8_t ci);
 uint8_t wmbus_parser_ell_security_mode(uint32_t sn);
 bool wmbus_parser_ell_security_likely_encrypted(uint32_t sn);
 
-uint8_t wmbus_parser_short_tpl_security_mode(uint16_t cfg);
-bool wmbus_parser_short_tpl_security_likely_encrypted(uint16_t cfg);
+uint8_t wmbus_parser_tpl_security_mode(uint16_t cfg);
+bool wmbus_parser_tpl_has_encrypted_payload(uint16_t cfg);
