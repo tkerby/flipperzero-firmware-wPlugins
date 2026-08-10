@@ -17,6 +17,7 @@
 #include <gui/view_dispatcher.h>
 #include <gui/modules/variable_item_list.h>
 #include <gui/modules/widget.h>
+#include <notification/notification.h>
 #include <storage/storage.h>
 
 typedef enum {
@@ -45,6 +46,7 @@ typedef struct WmBusApp WmBusApp;
 struct WmBusApp {
     Gui* gui;
     Storage* storage;
+    NotificationApp* notification;
     ViewDispatcher* view_dispatcher;
     SceneManager* scene_manager;
     VariableItemList* config_list;

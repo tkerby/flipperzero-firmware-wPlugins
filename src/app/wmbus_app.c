@@ -141,6 +141,7 @@ static WmBusApp* wmbus_app_alloc(void) {
     wmbus_app_log_step("open records");
     app->gui = furi_record_open(RECORD_GUI);
     app->storage = furi_record_open(RECORD_STORAGE);
+    app->notification = furi_record_open(RECORD_NOTIFICATION);
 
     wmbus_app_log_step("load settings");
     wmbus_settings_reset(&app->settings);
@@ -191,7 +192,7 @@ static WmBusApp* wmbus_app_alloc(void) {
         return NULL;
     }
     wmbus_csv_sink_init(&app->csv_sink, app->storage);
-    wmbus_history_sink_init(&app->history_sink, app->rx_view);
+    wmbus_history_sink_init(&app->history_sink, app->rx_view, app->notification);
     if(!wmbus_capture_processor_add_sink(app->capture_processor, &app->csv_sink.sink) ||
        !wmbus_capture_processor_add_sink(app->capture_processor, &app->history_sink.sink) ||
        !wmbus_capture_processor_start(app->capture_processor)) {
@@ -251,6 +252,7 @@ static void wmbus_app_free(WmBusApp* app) {
     if(app->view_dispatcher) view_dispatcher_free(app->view_dispatcher);
     if(app->scene_manager) scene_manager_free(app->scene_manager);
 
+    furi_record_close(RECORD_NOTIFICATION);
     furi_record_close(RECORD_STORAGE);
     furi_record_close(RECORD_GUI);
     free(app);
