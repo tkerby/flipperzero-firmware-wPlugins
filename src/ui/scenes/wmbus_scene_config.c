@@ -27,39 +27,29 @@ static const char* const wmbus_toggle_text[] = {
     "On",
 };
 
-static const int32_t wmbus_min_rssi_values[] = {
-    0,
-    -100,
-    -95,
-    -90,
-    -85,
-    -80,
-    -75,
-    -70,
-    -65,
-    -60,
-    -55,
-    -50,
-};
+typedef struct {
+    int32_t value;
+    const char* text;
+} WmBusRssiOption;
 
-static const char* const wmbus_min_rssi_text[] = {
-    "Off",
-    "-100 dBm",
-    "-95 dBm",
-    "-90 dBm",
-    "-85 dBm",
-    "-80 dBm",
-    "-75 dBm",
-    "-70 dBm",
-    "-65 dBm",
-    "-60 dBm",
-    "-55 dBm",
-    "-50 dBm",
+static const WmBusRssiOption wmbus_min_rssi_options[] = {
+    {.value = 0, .text = "Off"},
+    {.value = -100, .text = "-100 dBm"},
+    {.value = -95, .text = "-95 dBm"},
+    {.value = -90, .text = "-90 dBm"},
+    {.value = -85, .text = "-85 dBm"},
+    {.value = -80, .text = "-80 dBm"},
+    {.value = -75, .text = "-75 dBm"},
+    {.value = -70, .text = "-70 dBm"},
+    {.value = -65, .text = "-65 dBm"},
+    {.value = -60, .text = "-60 dBm"},
+    {.value = -55, .text = "-55 dBm"},
+    {.value = -50, .text = "-50 dBm"},
 };
 
 static uint8_t wmbus_min_rssi_index(int32_t min_rssi_dbm) {
-    for(uint8_t i = 0; i < COUNT_OF(wmbus_min_rssi_values); i++) {
-        if(wmbus_min_rssi_values[i] == min_rssi_dbm) return i;
+    for(uint8_t i = 0; i < COUNT_OF(wmbus_min_rssi_options); i++) {
+        if(wmbus_min_rssi_options[i].value == min_rssi_dbm) return i;
     }
     return 0U;
 }
@@ -118,11 +108,11 @@ static void wmbus_scene_config_csv_quality_changed(VariableItem* item) {
 static void wmbus_scene_config_min_rssi_changed(VariableItem* item) {
     WmBusApp* app = variable_item_get_context(item);
     uint8_t index = variable_item_get_current_value_index(item);
-    if(index >= COUNT_OF(wmbus_min_rssi_values)) {
+    if(index >= COUNT_OF(wmbus_min_rssi_options)) {
         index = 0U;
     }
-    variable_item_set_current_value_text(item, wmbus_min_rssi_text[index]);
-    app->settings.min_rssi_dbm = wmbus_min_rssi_values[index];
+    variable_item_set_current_value_text(item, wmbus_min_rssi_options[index].text);
+    app->settings.min_rssi_dbm = wmbus_min_rssi_options[index].value;
     wmbus_app_apply_runtime_config(app, true);
 }
 
@@ -171,12 +161,12 @@ static void wmbus_scene_config_add_min_rssi_item(WmBusApp* app) {
     VariableItem* item = variable_item_list_add(
         app->config_list,
         "RSSI gate >=",
-        COUNT_OF(wmbus_min_rssi_values),
+        COUNT_OF(wmbus_min_rssi_options),
         wmbus_scene_config_min_rssi_changed,
         app);
     uint8_t index = wmbus_min_rssi_index(app->settings.min_rssi_dbm);
     variable_item_set_current_value_index(item, index);
-    variable_item_set_current_value_text(item, wmbus_min_rssi_text[index]);
+    variable_item_set_current_value_text(item, wmbus_min_rssi_options[index].text);
 }
 
 static void wmbus_scene_config_add_debug_overlay_item(WmBusApp* app) {

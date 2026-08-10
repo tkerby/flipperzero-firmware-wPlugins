@@ -9,26 +9,39 @@
 
 #define WMBUS_RECORD_FORMATTER_LABEL_MAX 96U
 
-static const char* wmbus_record_formatter_unit(const WmBusApplicationRecord* record) {
-    if(!record) return NULL;
+typedef struct {
+    const char* label;
+    const char* unit;
+} WmBusRecordPresentation;
 
-    switch(record->quantity) {
-    case WmBusApplicationQuantityVolume:
-        return "m3";
-    case WmBusApplicationQuantityEnergy:
-        return "Wh";
-    case WmBusApplicationQuantityPower:
-        return "W";
-    case WmBusApplicationQuantityVolumeFlow:
-        return "m3/h";
-    case WmBusApplicationQuantityFlowTemperature:
-    case WmBusApplicationQuantityReturnTemperature:
-        return "C";
-    case WmBusApplicationQuantityTemperatureDifference:
-        return "K";
-    default:
-        return NULL;
+static const WmBusRecordPresentation wmbus_record_presentations[] = {
+    [WmBusApplicationQuantityUnknown] = {.label = "Data"},
+    [WmBusApplicationQuantityVolume] = {.label = "Volume", .unit = "m3"},
+    [WmBusApplicationQuantityEnergy] = {.label = "Energy", .unit = "Wh"},
+    [WmBusApplicationQuantityPower] = {.label = "Power", .unit = "W"},
+    [WmBusApplicationQuantityVolumeFlow] = {.label = "Flow", .unit = "m3/h"},
+    [WmBusApplicationQuantityFlowTemperature] = {.label = "Flow temp", .unit = "C"},
+    [WmBusApplicationQuantityReturnTemperature] = {.label = "Return temp", .unit = "C"},
+    [WmBusApplicationQuantityTemperatureDifference] = {.label = "Delta temp", .unit = "K"},
+    [WmBusApplicationQuantityHeatCostAllocation] = {.label = "HCA"},
+    [WmBusApplicationQuantityDate] = {.label = "Date"},
+    [WmBusApplicationQuantityDateTime] = {.label = "DateTime"},
+    [WmBusApplicationQuantityVersion] = {.label = "Version"},
+    [WmBusApplicationQuantityStatus] = {.label = "Status"},
+};
+
+static const WmBusRecordPresentation*
+    wmbus_record_formatter_presentation(const WmBusApplicationRecord* record) {
+    if(!record || (size_t)record->quantity >= COUNT_OF(wmbus_record_presentations)) {
+        return &wmbus_record_presentations[WmBusApplicationQuantityUnknown];
     }
+    const WmBusRecordPresentation* presentation = &wmbus_record_presentations[record->quantity];
+    return presentation->label ? presentation :
+                                 &wmbus_record_presentations[WmBusApplicationQuantityUnknown];
+}
+
+static const char* wmbus_record_formatter_unit(const WmBusApplicationRecord* record) {
+    return wmbus_record_formatter_presentation(record)->unit;
 }
 
 static const char*
@@ -57,50 +70,7 @@ static bool wmbus_record_formatter_format_label_buf(
     out[0] = '\0';
     if(!record) return false;
 
-    const char* label = "Data";
-    switch(record->quantity) {
-    case WmBusApplicationQuantityVolume:
-        label = "Volume";
-        break;
-    case WmBusApplicationQuantityEnergy:
-        label = "Energy";
-        break;
-    case WmBusApplicationQuantityPower:
-        label = "Power";
-        break;
-    case WmBusApplicationQuantityVolumeFlow:
-        label = "Flow";
-        break;
-    case WmBusApplicationQuantityFlowTemperature:
-        label = "Flow temp";
-        break;
-    case WmBusApplicationQuantityReturnTemperature:
-        label = "Return temp";
-        break;
-    case WmBusApplicationQuantityTemperatureDifference:
-        label = "Delta temp";
-        break;
-    case WmBusApplicationQuantityHeatCostAllocation:
-        label = "HCA";
-        break;
-    case WmBusApplicationQuantityDate:
-        label = "Date";
-        break;
-    case WmBusApplicationQuantityDateTime:
-        label = "DateTime";
-        break;
-    case WmBusApplicationQuantityVersion:
-        label = "Version";
-        break;
-    case WmBusApplicationQuantityStatus:
-        label = "Status";
-        break;
-    case WmBusApplicationQuantityUnknown:
-    default:
-        break;
-    }
-
-    snprintf(out, out_size, "%s", label);
+    snprintf(out, out_size, "%s", wmbus_record_formatter_presentation(record)->label);
     return true;
 }
 

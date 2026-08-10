@@ -150,9 +150,21 @@ static WmBusApp* wmbus_app_alloc(void) {
 
     wmbus_app_log_step("alloc core");
     app->view_dispatcher = view_dispatcher_alloc();
+    if(!app->view_dispatcher) {
+        wmbus_app_free(app);
+        return NULL;
+    }
     app->scene_manager = scene_manager_alloc(&wmbus_scene_handlers, app);
+    if(!app->scene_manager) {
+        wmbus_app_free(app);
+        return NULL;
+    }
     wmbus_app_log_step("alloc rx view");
     app->rx_view = wmbus_rx_view_alloc();
+    if(!app->rx_view) {
+        wmbus_app_free(app);
+        return NULL;
+    }
 
     wmbus_rx_view_set_dispatcher(app->rx_view, app->view_dispatcher);
     wmbus_rx_view_apply_settings(app->rx_view, &app->settings);
@@ -202,36 +214,42 @@ static WmBusApp* wmbus_app_alloc(void) {
     return app;
 }
 
+static void wmbus_app_remove_view(WmBusApp* app, WmBusAppView view_id) {
+    if(app && app->view_dispatcher) {
+        view_dispatcher_remove_view(app->view_dispatcher, view_id);
+    }
+}
+
+static void wmbus_app_remove_widget(WmBusApp* app, WmBusAppView view_id, Widget** widget) {
+    if(!app || !widget || !*widget) return;
+    wmbus_app_remove_view(app, view_id);
+    widget_free(*widget);
+    *widget = NULL;
+}
+
 static void wmbus_app_free(WmBusApp* app) {
     if(!app) return;
 
     wmbus_radio_rx_service_free(app->rx_service);
     wmbus_capture_processor_free(app->capture_processor);
 
-    if(app->exit_confirm_widget) {
-        view_dispatcher_remove_view(app->view_dispatcher, WmBusAppViewExitConfirm);
-        widget_free(app->exit_confirm_widget);
-    }
-    if(app->about_widget) {
-        view_dispatcher_remove_view(app->view_dispatcher, WmBusAppViewAbout);
-        widget_free(app->about_widget);
-    }
-    if(app->detail_widget) {
-        view_dispatcher_remove_view(app->view_dispatcher, WmBusAppViewPacketDetail);
-        widget_free(app->detail_widget);
-    }
+    wmbus_app_remove_widget(app, WmBusAppViewExitConfirm, &app->exit_confirm_widget);
+    wmbus_app_remove_widget(app, WmBusAppViewAbout, &app->about_widget);
+    wmbus_app_remove_widget(app, WmBusAppViewPacketDetail, &app->detail_widget);
     if(app->config_list) {
-        view_dispatcher_remove_view(app->view_dispatcher, WmBusAppViewConfig);
+        wmbus_app_remove_view(app, WmBusAppViewConfig);
         variable_item_list_free(app->config_list);
     }
     if(app->key_input) {
-        view_dispatcher_remove_view(app->view_dispatcher, WmBusAppViewKeyInput);
+        wmbus_app_remove_view(app, WmBusAppViewKeyInput);
         byte_input_free(app->key_input);
     }
-    view_dispatcher_remove_view(app->view_dispatcher, WmBusAppViewRx);
-    wmbus_rx_view_free(app->rx_view);
-    view_dispatcher_free(app->view_dispatcher);
-    scene_manager_free(app->scene_manager);
+    if(app->rx_view) {
+        wmbus_app_remove_view(app, WmBusAppViewRx);
+        wmbus_rx_view_free(app->rx_view);
+    }
+    if(app->view_dispatcher) view_dispatcher_free(app->view_dispatcher);
+    if(app->scene_manager) scene_manager_free(app->scene_manager);
 
     furi_record_close(RECORD_STORAGE);
     furi_record_close(RECORD_GUI);

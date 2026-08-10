@@ -393,7 +393,14 @@ static bool wmbus_rx_input(InputEvent* event, void* context) {
 
 WmBusRxView* wmbus_rx_view_alloc(void) {
     WmBusRxView* rx_view = malloc(sizeof(WmBusRxView));
+    if(!rx_view) return NULL;
+    *rx_view = (WmBusRxView){0};
+
     rx_view->view = view_alloc();
+    if(!rx_view->view) {
+        free(rx_view);
+        return NULL;
+    }
     view_allocate_model(rx_view->view, ViewModelTypeLocking, sizeof(WmBusRxViewModel));
 
     with_view_model(
