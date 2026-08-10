@@ -8,6 +8,16 @@ void wmbus_scene_rx_on_enter(void* context) {
 bool wmbus_scene_rx_on_event(void* context, SceneManagerEvent event) {
     WmBusApp* app = context;
 
+    if(event.type == SceneManagerEventTypeBack) {
+        if(wmbus_rx_view_has_in_memory_packets(app->rx_view) &&
+           wmbus_app_ensure_exit_confirm_view(app)) {
+            scene_manager_next_scene(app->scene_manager, WmBusSceneExitConfirm);
+        } else {
+            view_dispatcher_stop(app->view_dispatcher);
+        }
+        return true;
+    }
+
     if(event.type != SceneManagerEventTypeCustom) {
         return false;
     }

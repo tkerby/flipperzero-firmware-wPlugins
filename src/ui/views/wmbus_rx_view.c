@@ -595,6 +595,18 @@ bool wmbus_rx_view_has_selected_packet(WmBusRxView* rx_view) {
     return has_packet;
 }
 
+bool wmbus_rx_view_has_in_memory_packets(WmBusRxView* rx_view) {
+    if(!rx_view) return false;
+
+    bool has_packets = false;
+    with_view_model(
+        rx_view->view,
+        WmBusRxViewModel * model,
+        { has_packets = model->has_latest || model->hist_count > 0U; },
+        false);
+    return has_packets;
+}
+
 bool wmbus_rx_view_build_selected_detail_text(WmBusRxView* rx_view, FuriString* out) {
     if(!rx_view || !out) return false;
     furi_string_reset(out);

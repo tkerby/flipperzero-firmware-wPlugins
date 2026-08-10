@@ -131,6 +131,21 @@ bool wmbus_app_ensure_about_view(WmBusApp* app) {
     return true;
 }
 
+bool wmbus_app_ensure_exit_confirm_view(WmBusApp* app) {
+    if(!app) return false;
+    if(app->exit_confirm_widget) return true;
+
+    wmbus_app_log_step("alloc exit confirm view");
+    app->exit_confirm_widget = widget_alloc();
+    if(!app->exit_confirm_widget) return false;
+
+    view_dispatcher_add_view(
+        app->view_dispatcher,
+        WmBusAppViewExitConfirm,
+        widget_get_view(app->exit_confirm_widget));
+    return true;
+}
+
 static WmBusApp* wmbus_app_alloc(void) {
     WmBusApp* app = malloc(sizeof(WmBusApp));
     if(!app) return NULL;
@@ -206,6 +221,10 @@ static void wmbus_app_free(WmBusApp* app) {
     wmbus_radio_rx_service_free(app->rx_service);
     wmbus_capture_processor_free(app->capture_processor);
 
+    if(app->exit_confirm_widget) {
+        view_dispatcher_remove_view(app->view_dispatcher, WmBusAppViewExitConfirm);
+        widget_free(app->exit_confirm_widget);
+    }
     if(app->about_widget) {
         view_dispatcher_remove_view(app->view_dispatcher, WmBusAppViewAbout);
         widget_free(app->about_widget);

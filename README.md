@@ -65,7 +65,7 @@ Parser inputs come through `WmBusParserPacketView`, which exposes DLL, TPL, payl
 - `Left`: open config
 - `Right`: open packet detail for the selected history entry
 - `Long Down`: open application records for the selected history entry
-- `Back`: exit
+- `Back`: exit immediately when no packet is in memory; otherwise confirm before discarding packets
 
 ## Configuration
 

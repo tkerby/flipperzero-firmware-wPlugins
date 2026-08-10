@@ -25,6 +25,7 @@ typedef enum {
     WmBusAppViewKeyInput,
     WmBusAppViewPacketDetail,
     WmBusAppViewAbout,
+    WmBusAppViewExitConfirm,
 } WmBusAppView;
 
 typedef enum {
@@ -35,6 +36,8 @@ typedef enum {
     WmBusCustomEventConfigOpenKeyInput = 100,
     WmBusCustomEventConfigKeyInputDone,
     WmBusCustomEventConfigOpenAbout,
+    WmBusCustomEventExit,
+    WmBusCustomEventStay,
 } WmBusCustomEvent;
 
 typedef struct WmBusApp WmBusApp;
@@ -48,6 +51,7 @@ struct WmBusApp {
     ByteInput* key_input;
     Widget* detail_widget;
     Widget* about_widget;
+    Widget* exit_confirm_widget;
     bool detail_application_only;
     WmBusRxView* rx_view;
 
@@ -67,3 +71,4 @@ bool wmbus_app_ensure_config_view(WmBusApp* app);
 bool wmbus_app_ensure_key_input_view(WmBusApp* app);
 bool wmbus_app_ensure_detail_view(WmBusApp* app);
 bool wmbus_app_ensure_about_view(WmBusApp* app);
+bool wmbus_app_ensure_exit_confirm_view(WmBusApp* app);
