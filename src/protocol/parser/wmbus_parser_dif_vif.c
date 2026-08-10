@@ -219,6 +219,8 @@ static void
         record->quantity = WmBusApplicationQuantityDate;
     } else if(vif == 0x6DU) {
         record->quantity = WmBusApplicationQuantityDateTime;
+    } else if(vif == 0x7DU && has_first_vife && first_vife_code == 0x0CU) {
+        record->quantity = WmBusApplicationQuantityVersion;
     } else if(vif == 0x7DU && has_first_vife && first_vife_code == 0x17U) {
         record->quantity = WmBusApplicationQuantityStatus;
     }
@@ -254,7 +256,8 @@ static void wmbus_packet_decode_record_value(
         return;
     }
 
-    if(record->quantity == WmBusApplicationQuantityStatus) {
+    if(record->quantity == WmBusApplicationQuantityVersion ||
+       record->quantity == WmBusApplicationQuantityStatus) {
         if(!wmbus_application_record_set_raw_bytes(record, data, data_len)) {
             record->value_type = WmBusApplicationValueRaw;
         }

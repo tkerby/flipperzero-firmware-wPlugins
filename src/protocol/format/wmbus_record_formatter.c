@@ -89,6 +89,9 @@ static bool wmbus_record_formatter_format_label_buf(
     case WmBusApplicationQuantityDateTime:
         label = "DateTime";
         break;
+    case WmBusApplicationQuantityVersion:
+        label = "Version";
+        break;
     case WmBusApplicationQuantityStatus:
         label = "Status";
         break;
@@ -144,8 +147,9 @@ static bool wmbus_record_formatter_format_value_buf(
         snprintf(out, out_size, "-");
         return true;
     case WmBusApplicationValueRaw:
-        if(record->quantity == WmBusApplicationQuantityStatus && record->data_len > 0U &&
-           record->data_len <= sizeof(record->raw_bytes)) {
+        if((record->quantity == WmBusApplicationQuantityVersion ||
+            record->quantity == WmBusApplicationQuantityStatus) &&
+           record->data_len > 0U && record->data_len <= sizeof(record->raw_bytes)) {
             wmbus_hex_encode(record->raw_bytes, record->data_len, out, out_size);
             return out[0] != '\0';
         }

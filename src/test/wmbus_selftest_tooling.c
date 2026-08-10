@@ -767,6 +767,49 @@ static bool wmbus_selftest_check_dif_vif_extensions(char* detail, size_t detail_
     return true;
 }
 
+static bool wmbus_selftest_check_dif_vif_qcaloric_version(char* detail, size_t detail_len) {
+    /* Application payload from QDS 27200022, version 35, device type 08. */
+    static const uint8_t payload[] = {
+        0x04U, 0xEDU, 0x39U, 0x20U, 0x08U, 0xB4U, 0x21U,
+        0x01U, 0xFDU, 0x0CU, 0x10U,
+        0x04U, 0x6DU, 0x00U, 0x16U, 0x4AU, 0x38U,
+        0x02U, 0xFDU, 0x3CU, 0xC2U, 0x01U,
+    };
+    WmBusApplicationRecord records[WMBUS_PACKET_RECORD_MAX] = {0};
+    uint8_t count = 0U;
+    FuriString* fields = furi_string_alloc();
+    if(!fields) {
+        wmbus_selftest_set_detail(detail, detail_len, "alloc failed");
+        return false;
+    }
+
+    bool decoded = wmbus_packet_decode_application_records(
+        payload, sizeof(payload), records, COUNT_OF(records), &count);
+    bool formatted = decoded && wmbus_record_formatter_format_joined(records, count, ';', fields);
+    const char* fields_text = furi_string_get_cstr(fields);
+    bool valid = formatted && count == 4U &&
+                 records[1].quantity == WmBusApplicationQuantityVersion &&
+                 records[1].value_type == WmBusApplicationValueRaw &&
+                 records[1].data_len == 1U && records[1].raw_bytes[0] == 0x10U &&
+                 strstr(fields_text, "Version=10") != NULL &&
+                 strstr(fields_text, "DateTime=2026-08-10 22:00") != NULL;
+    if(!valid) {
+        wmbus_selftest_set_detail(
+            detail,
+            detail_len,
+            "decoded=%u count=%u fields=%s",
+            decoded ? 1U : 0U,
+            (unsigned int)count,
+            fields_text);
+        furi_string_free(fields);
+        return false;
+    }
+
+    furi_string_free(fields);
+    wmbus_selftest_set_detail(detail, detail_len, "QDS FD0C Version=10");
+    return true;
+}
+
 static bool wmbus_selftest_check_dif_vif_plain_text_units(char* detail, size_t detail_len) {
     static const uint8_t payload[] = {
         0x01U, 0x7CU, 0x02U, 'm', '3', 0x2AU,
@@ -1220,6 +1263,7 @@ static const WmBusSelftestCheck wmbus_selftest_checks_tooling[] = {
     {"check_dif_vif_signed_integer_widths", wmbus_selftest_check_dif_vif_signed_integer_widths},
     {"check_dif_vif_lvar_classes", wmbus_selftest_check_dif_vif_lvar_classes},
     {"check_dif_vif_extensions", wmbus_selftest_check_dif_vif_extensions},
+    {"check_dif_vif_qcaloric_version", wmbus_selftest_check_dif_vif_qcaloric_version},
     {"check_dif_vif_plain_text_units", wmbus_selftest_check_dif_vif_plain_text_units},
     {"check_dif_vif_hca_records", wmbus_selftest_check_dif_vif_hca_records},
     {"check_dif_vif_extension_limits", wmbus_selftest_check_dif_vif_extension_limits},

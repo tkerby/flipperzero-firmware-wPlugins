@@ -38,6 +38,7 @@ typedef enum {
     WmBusApplicationQuantityHeatCostAllocation,
     WmBusApplicationQuantityDate,
     WmBusApplicationQuantityDateTime,
+    WmBusApplicationQuantityVersion,
     WmBusApplicationQuantityStatus,
 } WmBusApplicationQuantity;
 

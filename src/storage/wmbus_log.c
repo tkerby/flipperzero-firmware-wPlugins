@@ -15,8 +15,8 @@
 
 static const char* wmbus_log_header(WmBusCsvLogging logging) {
     return (logging == WmBusCsvLoggingFull) ?
-               "tick,mode,frame_type,rssi,quality,mfg,id,version,device_type,ci,parser,security_mode,key_index,total_m3,fields,hex\n" :
-               "tick,mode,frame_type,rssi,quality,mfg,id,version,device_type,ci,parser,total_m3\n";
+               "tick,mode,frame_type,rssi,quality,mfg,id,version,device_type,ci,parser,security_mode,key_index,main_field,fields,hex\n" :
+               "tick,mode,frame_type,rssi,quality,mfg,id,version,device_type,ci,parser,main_field\n";
 }
 
 static void wmbus_log_format_path(WmBusCsvLogging logging, char* path, size_t path_size) {
