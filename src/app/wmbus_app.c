@@ -118,6 +118,19 @@ bool wmbus_app_ensure_detail_view(WmBusApp* app) {
     return true;
 }
 
+bool wmbus_app_ensure_about_view(WmBusApp* app) {
+    if(!app) return false;
+    if(app->about_widget) return true;
+
+    wmbus_app_log_step("alloc about view");
+    app->about_widget = widget_alloc();
+    if(!app->about_widget) return false;
+
+    view_dispatcher_add_view(
+        app->view_dispatcher, WmBusAppViewAbout, widget_get_view(app->about_widget));
+    return true;
+}
+
 static WmBusApp* wmbus_app_alloc(void) {
     WmBusApp* app = malloc(sizeof(WmBusApp));
     if(!app) return NULL;
@@ -193,6 +206,10 @@ static void wmbus_app_free(WmBusApp* app) {
     wmbus_radio_rx_service_free(app->rx_service);
     wmbus_capture_processor_free(app->capture_processor);
 
+    if(app->about_widget) {
+        view_dispatcher_remove_view(app->view_dispatcher, WmBusAppViewAbout);
+        widget_free(app->about_widget);
+    }
     if(app->detail_widget) {
         view_dispatcher_remove_view(app->view_dispatcher, WmBusAppViewPacketDetail);
         widget_free(app->detail_widget);

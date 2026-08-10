@@ -77,6 +77,7 @@ Available settings:
 - CSV quality threshold: `CSV gate >=`
 - RSSI gate: `Off` or a negative dBm threshold
 - keyring status and key entry
+- About screen with author, repository, and build commit information
 
 Files used by the app:
 

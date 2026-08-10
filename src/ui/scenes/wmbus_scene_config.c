@@ -8,6 +8,7 @@ enum WmBusConfigItem {
     WmBusConfigItemMinRssi,
     WmBusConfigItemDebugOverlay,
     WmBusConfigItemKeyring,
+    WmBusConfigItemAbout,
 };
 
 static const char* const wmbus_mode_text[] = {
@@ -69,6 +70,9 @@ static void wmbus_scene_config_enter_callback(void* context, uint32_t index) {
     if(index == WmBusConfigItemKeyring) {
         view_dispatcher_send_custom_event(
             app->view_dispatcher, WmBusCustomEventConfigOpenKeyInput);
+    } else if(index == WmBusConfigItemAbout) {
+        view_dispatcher_send_custom_event(
+            app->view_dispatcher, WmBusCustomEventConfigOpenAbout);
     }
 }
 
@@ -193,6 +197,10 @@ static void wmbus_scene_config_add_keyring_item(WmBusApp* app) {
     variable_item_set_current_value_text(item, app->keyring.status);
 }
 
+static void wmbus_scene_config_add_about_item(WmBusApp* app) {
+    variable_item_list_add(app->config_list, "About", 1U, NULL, app);
+}
+
 void wmbus_scene_config_on_enter(void* context) {
     WmBusApp* app = context;
     if(!wmbus_app_ensure_config_view(app)) {
@@ -213,6 +221,7 @@ void wmbus_scene_config_on_enter(void* context) {
     wmbus_scene_config_add_min_rssi_item(app);
     wmbus_scene_config_add_debug_overlay_item(app);
     wmbus_scene_config_add_keyring_item(app);
+    wmbus_scene_config_add_about_item(app);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, WmBusAppViewConfig);
 }
@@ -227,6 +236,9 @@ bool wmbus_scene_config_on_event(void* context, SceneManagerEvent event) {
     switch(event.event) {
     case WmBusCustomEventConfigOpenKeyInput:
         scene_manager_next_scene(app->scene_manager, WmBusSceneKeyAdd);
+        return true;
+    case WmBusCustomEventConfigOpenAbout:
+        scene_manager_next_scene(app->scene_manager, WmBusSceneAbout);
         return true;
     default:
         return false;

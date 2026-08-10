@@ -1,6 +1,17 @@
 import os
+import subprocess
 
 selftests_enabled = os.getenv("WMBUS_SELFTESTS") == "1"
+
+try:
+    git_commit = subprocess.check_output(
+        ["git", "rev-parse", "--short=8", "HEAD"],
+        cwd=os.path.dirname(app_manifest_path),
+        stderr=subprocess.DEVNULL,
+        text=True,
+    ).strip()
+except (OSError, subprocess.SubprocessError):
+    git_commit = "unknown"
 
 App(
     appid="wmbus_decoder",
@@ -8,7 +19,10 @@ App(
     apptype=FlipperAppType.EXTERNAL,
     entry_point="wmbus_decoder_app",
     stack_size=8 * 1024,
-    cdefines=[("WMBUS_SELFTESTS", "1" if selftests_enabled else "0")],
+    cdefines=[
+        ("WMBUS_SELFTESTS", "1" if selftests_enabled else "0"),
+        ("WMBUS_GIT_COMMIT", f'\\"{git_commit}\\"'),
+    ],
     sources=["*.c"] if selftests_enabled else ["*.c", "!test"],
     requires=["gui"],
     fap_libs=["mbedtls"],
