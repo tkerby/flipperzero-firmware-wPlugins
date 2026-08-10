@@ -10,22 +10,10 @@
 static void wmbus_packet_formatter_format_application_detail(
     const WmBusPacketRecord* record,
     FuriString* out) {
-    FuriString* fields = furi_string_alloc();
-
-    if(!fields) {
+    if(!wmbus_record_formatter_format_joined(
+           record->application.records, record->application.record_count, '\n', out)) {
         furi_string_set(out, "-");
-        return;
     }
-
-    wmbus_record_formatter_format_joined(
-        record->application.records, record->application.record_count, '\n', fields);
-    if(furi_string_empty(fields)) {
-        furi_string_set(out, "-");
-    } else {
-        furi_string_set(out, furi_string_get_cstr(fields));
-    }
-
-    furi_string_free(fields);
 }
 
 static void

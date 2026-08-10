@@ -1,6 +1,5 @@
 #include "wmbus_keyring.h"
 
-#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -19,24 +18,6 @@ static void wmbus_keyring_set_status(WmBusKeyring* keyring, const char* format, 
     va_start(args, format);
     vsnprintf(keyring->status, sizeof(keyring->status), format, args);
     va_end(args);
-}
-
-static void wmbus_keyring_trim(char* str) {
-    if(!str) return;
-
-    size_t len = strlen(str);
-    while(len > 0U && isspace((unsigned char)str[len - 1U])) {
-        str[--len] = '\0';
-    }
-
-    size_t start = 0;
-    while(str[start] != '\0' && isspace((unsigned char)str[start])) {
-        start++;
-    }
-
-    if(start > 0U) {
-        memmove(str, &str[start], strlen(&str[start]) + 1U);
-    }
 }
 
 static bool wmbus_keyring_parse_hex_key(const char* text, uint8_t out[WMBUS_KEY_BYTES]) {
@@ -96,11 +77,10 @@ bool wmbus_keyring_load(Storage* storage, WmBusKeyring* keyring) {
     loaded.file_present = true;
 
     while(stream_read_line(stream, line)) {
-        char buffer[128];
-        snprintf(buffer, sizeof(buffer), "%s", furi_string_get_cstr(line));
-        wmbus_keyring_trim(buffer);
+        furi_string_trim(line);
+        const char* text = furi_string_get_cstr(line);
 
-        if((buffer[0] == '\0') || (buffer[0] == '#')) {
+        if((text[0] == '\0') || (text[0] == '#')) {
             continue;
         }
 
@@ -111,7 +91,7 @@ bool wmbus_keyring_load(Storage* storage, WmBusKeyring* keyring) {
         }
 
         if(!wmbus_keyring_parse_hex_key(
-               buffer, loaded.key_store.keys[loaded.key_store.count])) {
+               text, loaded.key_store.keys[loaded.key_store.count])) {
             ok = false;
             wmbus_keyring_set_status(&loaded, "bad key");
             break;

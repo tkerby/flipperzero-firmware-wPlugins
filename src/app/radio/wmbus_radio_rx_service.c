@@ -182,10 +182,6 @@ static char wmbus_radio_mode_char(WmBusRxMode mode) {
     return mode == WmBusRxModeC ? 'C' : 'T';
 }
 
-static void wmbus_radio_apply_mode(WmBusRxMode mode) {
-    wmbus_radio_reload_rx_preset(mode);
-}
-
 static uint8_t wmbus_radio_read_status_locked(uint8_t reg) {
     uint8_t cmd[2] = {reg | CC1101_READ | CC1101_BURST, 0U};
     furi_hal_spi_bus_trx(
@@ -386,7 +382,7 @@ static int32_t wmbus_radio_rx_service_thread(void* context) {
     furi_hal_power_suppress_charge_enter();
 
     WmBusRxMode mode = service->mode;
-    wmbus_radio_apply_mode(mode);
+    wmbus_radio_reload_rx_preset(mode);
 
     WmBusFifoCaptureState capture = {0};
     wmbus_fifo_capture_state_reset(&capture);
@@ -413,7 +409,7 @@ static int32_t wmbus_radio_rx_service_thread(void* context) {
             if(event.cmd == WmBusControlCmdApplyMode) {
                 if(mode != event.mode) {
                     mode = event.mode;
-                    wmbus_radio_apply_mode(mode);
+                    wmbus_radio_reload_rx_preset(mode);
                     wmbus_fifo_capture_state_reset(&capture);
                 }
             }

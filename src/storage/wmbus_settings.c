@@ -18,12 +18,14 @@ static int32_t wmbus_settings_normalize_min_rssi(int32_t min_rssi_dbm) {
 void wmbus_settings_reset(WmBusSettings* settings) {
     if(!settings) return;
 
-    settings->mode = WmBusRxModeT;
-    settings->csv_logging = WmBusCsvLoggingBasic;
-    settings->min_rssi_dbm = 0;
-    settings->memory_quality = WmBusPacketQualityAnyCapture;
-    settings->csv_quality = WmBusPacketQualityCrcOk;
-    settings->debug_overlay = false;
+    *settings = (WmBusSettings){
+        .mode = WmBusRxModeT,
+        .csv_logging = WmBusCsvLoggingBasic,
+        .min_rssi_dbm = 0,
+        .memory_quality = WmBusPacketQualityAnyCapture,
+        .csv_quality = WmBusPacketQualityCrcOk,
+        .debug_overlay = false,
+    };
 }
 
 bool wmbus_settings_load(Storage* storage, WmBusSettings* settings) {

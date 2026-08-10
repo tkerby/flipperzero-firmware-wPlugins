@@ -513,6 +513,25 @@ static void
     record->application = entry->application;
 }
 
+static bool
+    wmbus_rx_view_get_selected_record(WmBusRxView* rx_view, WmBusPacketRecord* out_record) {
+    if(!rx_view || !out_record) return false;
+
+    bool found = false;
+    with_view_model(
+        rx_view->view,
+        WmBusRxViewModel * model,
+        {
+            const WmBusRxHistoryEntry* entry = wmbus_rx_display_entry_get(model);
+            if(entry) {
+                wmbus_rx_history_entry_to_record(entry, out_record);
+                found = true;
+            }
+        },
+        false);
+    return found;
+}
+
 void wmbus_rx_view_push_packet(
     WmBusRxView* rx_view,
     const WmBusPacketRecord* record,
@@ -580,40 +599,20 @@ bool wmbus_rx_view_build_selected_detail_text(WmBusRxView* rx_view, FuriString* 
     if(!rx_view || !out) return false;
     furi_string_reset(out);
 
-    bool found = false;
-    with_view_model(
-        rx_view->view,
-        WmBusRxViewModel * model,
-        {
-            const WmBusRxHistoryEntry* entry = wmbus_rx_display_entry_get(model);
-            if(entry) {
-                WmBusPacketRecord record = {0};
-                wmbus_rx_history_entry_to_record(entry, &record);
-                wmbus_packet_format_detail_text(&record, out);
-                found = true;
-            }
-        },
-        false);
-    return found;
+    WmBusPacketRecord record = {0};
+    if(!wmbus_rx_view_get_selected_record(rx_view, &record)) return false;
+
+    wmbus_packet_format_detail_text(&record, out);
+    return true;
 }
 
 bool wmbus_rx_view_build_selected_application_text(WmBusRxView* rx_view, FuriString* out) {
     if(!rx_view || !out) return false;
     furi_string_reset(out);
 
-    bool found = false;
-    with_view_model(
-        rx_view->view,
-        WmBusRxViewModel * model,
-        {
-            const WmBusRxHistoryEntry* entry = wmbus_rx_display_entry_get(model);
-            if(entry) {
-                WmBusPacketRecord record = {0};
-                wmbus_rx_history_entry_to_record(entry, &record);
-                wmbus_packet_format_application_text(&record, out);
-                found = true;
-            }
-        },
-        false);
-    return found;
+    WmBusPacketRecord record = {0};
+    if(!wmbus_rx_view_get_selected_record(rx_view, &record)) return false;
+
+    wmbus_packet_format_application_text(&record, out);
+    return true;
 }
