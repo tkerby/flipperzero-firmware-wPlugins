@@ -221,8 +221,8 @@ static bool wmbus_record_formatter_format_context_label_buf(
     }
 
     if(measurement_type) {
-        len = snprintf(
-            &out[write], out_size - write, "%s%s", need_sep ? " " : "", measurement_type);
+        len =
+            snprintf(&out[write], out_size - write, "%s%s", need_sep ? " " : "", measurement_type);
         if(len < 0 || (size_t)len >= (out_size - write)) return false;
         write += (size_t)len;
     }

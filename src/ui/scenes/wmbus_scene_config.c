@@ -71,8 +71,7 @@ static void wmbus_scene_config_enter_callback(void* context, uint32_t index) {
         view_dispatcher_send_custom_event(
             app->view_dispatcher, WmBusCustomEventConfigOpenKeyInput);
     } else if(index == WmBusConfigItemAbout) {
-        view_dispatcher_send_custom_event(
-            app->view_dispatcher, WmBusCustomEventConfigOpenAbout);
+        view_dispatcher_send_custom_event(app->view_dispatcher, WmBusCustomEventConfigOpenAbout);
     }
 }
 

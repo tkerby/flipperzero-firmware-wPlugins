@@ -29,9 +29,8 @@ static const char* wmbus_packet_log_id(const WmBusPacketRecord* record) {
     return record->identity.meter_id[0] ? record->identity.meter_id : "--------";
 }
 
-static void wmbus_packet_log_decrypt_failure_reason(
-    const WmBusPacketRecord* record,
-    const char* reason) {
+static void
+    wmbus_packet_log_decrypt_failure_reason(const WmBusPacketRecord* record, const char* reason) {
     if(!record || !reason || reason[0] == '\0') return;
 
     FURI_LOG_D(
@@ -138,8 +137,7 @@ bool wmbus_packet_resolve_application_payload(
 
     if(record->tpl.header_type == WmBusTplHeaderNone ||
        !wmbus_parser_tpl_has_encrypted_payload(record->tpl.cfg)) {
-        if(record->tpl.security_mode == 0x05U &&
-           (((record->tpl.cfg >> 4) & 0x0FU) == 0U) &&
+        if(record->tpl.security_mode == 0x05U && (((record->tpl.cfg >> 4) & 0x0FU) == 0U) &&
            (frame_len < (size_t)record->tpl.header_len + 2U ||
             frame[record->tpl.header_len] != 0x2FU ||
             frame[record->tpl.header_len + 1U] != 0x2FU)) {

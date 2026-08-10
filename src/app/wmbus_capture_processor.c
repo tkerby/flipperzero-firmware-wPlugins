@@ -8,9 +8,9 @@
 
 #define TAG "WmBusDecoder"
 
-#define WMBUS_CAPTURE_PROCESSOR_MAX_SINKS 4U
+#define WMBUS_CAPTURE_PROCESSOR_MAX_SINKS   4U
 #define WMBUS_CAPTURE_PROCESSOR_QUEUE_DEPTH 6U
-#define WMBUS_CAPTURE_PROCESSOR_STACK_SIZE 12288U
+#define WMBUS_CAPTURE_PROCESSOR_STACK_SIZE  12288U
 
 typedef enum {
     WmBusProcessorEventFrame = 0,
@@ -49,8 +49,7 @@ static void wmbus_capture_processor_process_frame(
     }
 
     for(size_t i = 0; i < processor->sink_count; i++) {
-        processor->sinks[i]->consume(
-            processor->sinks[i]->context, &processor->settings, &record);
+        processor->sinks[i]->consume(processor->sinks[i]->context, &processor->settings, &record);
     }
 }
 
@@ -84,8 +83,8 @@ WmBusCaptureProcessor* wmbus_capture_processor_alloc(
     memset(processor, 0, sizeof(*processor));
     processor->settings = *settings;
     processor->key_store = *key_store;
-    processor->queue = furi_message_queue_alloc(
-        WMBUS_CAPTURE_PROCESSOR_QUEUE_DEPTH, sizeof(WmBusProcessorEvent));
+    processor->queue =
+        furi_message_queue_alloc(WMBUS_CAPTURE_PROCESSOR_QUEUE_DEPTH, sizeof(WmBusProcessorEvent));
     if(!processor->queue) {
         free(processor);
         return NULL;

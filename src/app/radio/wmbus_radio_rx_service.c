@@ -9,21 +9,21 @@
 
 #define TAG "WmBusDecoder"
 
-#define WMBUS_FREQ_HZ                      868950000UL
-#define WMBUS_RXBYTES_MAX                  (WMBUS_FIFO_READ_MAX + 1U)
-#define WMBUS_STATUS_STABLE_READ_MAX       8U
-#define WMBUS_RSSI_UPDATE_HZ               5U
-#define WMBUS_LED_PULSE_MS                 40U
-#define WMBUS_T_GAP_TIMEOUT_MS             5U
-#define WMBUS_C_READ_TIMEOUT_MS            25U
-#define WMBUS_CC1101_PKTCTRL0_INFINITE_LEN 0x02U
-#define WMBUS_CC1101_MDMCFG2_T_MODE        0x05U
+#define WMBUS_FREQ_HZ                        868950000UL
+#define WMBUS_RXBYTES_MAX                    (WMBUS_FIFO_READ_MAX + 1U)
+#define WMBUS_STATUS_STABLE_READ_MAX         8U
+#define WMBUS_RSSI_UPDATE_HZ                 5U
+#define WMBUS_LED_PULSE_MS                   40U
+#define WMBUS_T_GAP_TIMEOUT_MS               5U
+#define WMBUS_C_READ_TIMEOUT_MS              25U
+#define WMBUS_CC1101_PKTCTRL0_INFINITE_LEN   0x02U
+#define WMBUS_CC1101_MDMCFG2_T_MODE          0x05U
 #define WMBUS_CC1101_MDMCFG2_2FSK_SYNC_16_CS 0x06U
-#define WMBUS_CC1101_PKTSTATUS_SFD          0x08U
-#define WMBUS_CC1101_MARCSTATE_MASK         0x1FU
-#define WMBUS_CC1101_MARCSTATE_RX           0x0DU
-#define WMBUS_CC1101_MARCSTATE_RX_END       0x0EU
-#define WMBUS_CC1101_MARCSTATE_RX_RST       0x0FU
+#define WMBUS_CC1101_PKTSTATUS_SFD           0x08U
+#define WMBUS_CC1101_MARCSTATE_MASK          0x1FU
+#define WMBUS_CC1101_MARCSTATE_RX            0x0DU
+#define WMBUS_CC1101_MARCSTATE_RX_END        0x0EU
+#define WMBUS_CC1101_MARCSTATE_RX_RST        0x0FU
 
 typedef enum {
     WmBusControlCmdStop = 0,
@@ -169,8 +169,7 @@ static void wmbus_radio_recover_rx(void) {
 static void wmbus_radio_reload_rx_preset(WmBusRxMode mode) {
     wmbus_radio_preset_set(
         CC1101_MDMCFG2,
-        mode == WmBusRxModeC ? WMBUS_CC1101_MDMCFG2_2FSK_SYNC_16_CS :
-                               WMBUS_CC1101_MDMCFG2_T_MODE);
+        mode == WmBusRxModeC ? WMBUS_CC1101_MDMCFG2_2FSK_SYNC_16_CS : WMBUS_CC1101_MDMCFG2_T_MODE);
     furi_hal_subghz_reset();
     furi_hal_subghz_load_custom_preset(wmbus_cc1101_mode_preset_regs);
     furi_hal_subghz_set_frequency_and_path(WMBUS_FREQ_HZ);
@@ -184,8 +183,7 @@ static char wmbus_radio_mode_char(WmBusRxMode mode) {
 
 static uint8_t wmbus_radio_read_status_locked(uint8_t reg) {
     uint8_t cmd[2] = {reg | CC1101_READ | CC1101_BURST, 0U};
-    furi_hal_spi_bus_trx(
-        &furi_hal_spi_bus_handle_subghz, cmd, cmd, sizeof(cmd), CC1101_TIMEOUT);
+    furi_hal_spi_bus_trx(&furi_hal_spi_bus_handle_subghz, cmd, cmd, sizeof(cmd), CC1101_TIMEOUT);
     return cmd[1];
 }
 
@@ -282,8 +280,8 @@ static bool wmbus_capture_step(
     WmBusFrameFormat format = WmBusFrameFormatUnknown;
 
     while(true) {
-        WmBusCaptureLengthStatus length_status = wmbus_fifo_frame_length(
-            mode, state->raw, state->raw_len, &expected_fifo_len, &format);
+        WmBusCaptureLengthStatus length_status =
+            wmbus_fifo_frame_length(mode, state->raw, state->raw_len, &expected_fifo_len, &format);
         if(length_status == WmBusCaptureLengthInvalid) {
             invalid = true;
             break;
@@ -470,9 +468,8 @@ static int32_t wmbus_radio_rx_service_thread(void* context) {
                     "%c RX health: RSSI=%d MARC=%02X PKT=%02X RXB=%u%s capture=%u",
                     wmbus_radio_mode_char(mode),
                     live_rssi,
-                    (unsigned int)(marcstate_valid ?
-                                       (marcstate & WMBUS_CC1101_MARCSTATE_MASK) :
-                                       0xFFU),
+                    (unsigned int)(marcstate_valid ? (marcstate & WMBUS_CC1101_MARCSTATE_MASK) :
+                                                     0xFFU),
                     (unsigned int)(pktstatus_valid ? pktstatus : 0xFFU),
                     (unsigned int)(rxbytes_valid ? rxbytes : 0xFFU),
                     overflow ? "!" : "",
@@ -493,9 +490,8 @@ static int32_t wmbus_radio_rx_service_thread(void* context) {
     return 0;
 }
 
-WmBusRadioRxService* wmbus_radio_rx_service_alloc(
-    const WmBusRadioRxCallbacks* callbacks,
-    WmBusRxMode mode) {
+WmBusRadioRxService*
+    wmbus_radio_rx_service_alloc(const WmBusRadioRxCallbacks* callbacks, WmBusRxMode mode) {
     if(!callbacks || (mode != WmBusRxModeT && mode != WmBusRxModeC)) {
         return NULL;
     }
@@ -549,8 +545,7 @@ void wmbus_radio_rx_service_free(WmBusRadioRxService* service) {
 }
 
 bool wmbus_radio_rx_service_apply_mode(WmBusRadioRxService* service, WmBusRxMode mode) {
-    if(!service || !service->control_queue ||
-       (mode != WmBusRxModeT && mode != WmBusRxModeC)) {
+    if(!service || !service->control_queue || (mode != WmBusRxModeT && mode != WmBusRxModeC)) {
         return false;
     }
 

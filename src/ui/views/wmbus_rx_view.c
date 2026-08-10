@@ -159,8 +159,8 @@ static void
         for(uint8_t record_index = 0U; record_index < entry->application.record_count;
             record_index++) {
             const WmBusApplicationRecord* record = &entry->application.records[record_index];
-            if(record->quantity != preferred_quantities[quantity_index] || record->storage_no != 0U ||
-               record->value_type != WmBusApplicationValueScalar) {
+            if(record->quantity != preferred_quantities[quantity_index] ||
+               record->storage_no != 0U || record->value_type != WmBusApplicationValueScalar) {
                 continue;
             }
 
@@ -199,7 +199,8 @@ static void wmbus_rx_draw_nav_footer(Canvas* canvas) {
     if(canvas_string_width(canvas, left) + canvas_string_width(canvas, center) +
            canvas_string_width(canvas, right) + 12U <=
        canvas_width(canvas)) {
-        canvas_draw_str_aligned(canvas, canvas_width(canvas) / 2U, y, AlignCenter, AlignBottom, center);
+        canvas_draw_str_aligned(
+            canvas, canvas_width(canvas) / 2U, y, AlignCenter, AlignBottom, center);
     }
     canvas_draw_str_aligned(canvas, canvas_width(canvas), y, AlignRight, AlignBottom, right);
 }

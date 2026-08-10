@@ -5,7 +5,7 @@
 
 #include "../parser/wmbus_parser_id.h"
 
-#define WMBUS_PACKET_RECORD_MAX 12U
+#define WMBUS_PACKET_RECORD_MAX    12U
 /* EN 13757-3 permits at most ten DIFE and ten VIFE bytes per record. */
 #define WMBUS_APPLICATION_DIFE_MAX 10U
 #define WMBUS_APPLICATION_VIFE_MAX 10U

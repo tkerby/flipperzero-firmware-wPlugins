@@ -3,20 +3,23 @@
 #include <mbedtls/aes.h>
 #include <string.h>
 
-#define WMBUS_AES_BLOCK_LEN   16U
+#define WMBUS_AES_BLOCK_LEN 16U
 
-static bool wmbus_crypto_mode5_payload_has_check_bytes(const uint8_t* payload, size_t payload_len) {
+static bool
+    wmbus_crypto_mode5_payload_has_check_bytes(const uint8_t* payload, size_t payload_len) {
     return payload_len >= 2U && payload[0] == 0x2F && payload[1] == 0x2F;
 }
 
 static void wmbus_crypto_mode5_build_iv(
-    const uint8_t iv_address[8], uint8_t access_number, uint8_t iv[WMBUS_AES_BLOCK_LEN]) {
+    const uint8_t iv_address[8],
+    uint8_t access_number,
+    uint8_t iv[WMBUS_AES_BLOCK_LEN]) {
     memcpy(iv, iv_address, 8U);
     memset(&iv[8], access_number, 8U);
 }
 
-static bool wmbus_crypto_mode5_encrypted_length(
-    size_t payload_len, uint16_t cfg, size_t* encrypted_len) {
+static bool
+    wmbus_crypto_mode5_encrypted_length(size_t payload_len, uint16_t cfg, size_t* encrypted_len) {
     if(!encrypted_len) {
         return false;
     }
@@ -61,7 +64,8 @@ WmBusMode5DecryptInfo wmbus_crypto_mode5_decrypt(
     memcpy(out_payload, encrypted_payload, payload_len);
     if(encrypted_len == 0U) {
         info.result = WmBusDecryptResultOk;
-        info.has_check_bytes = wmbus_crypto_mode5_payload_has_check_bytes(out_payload, payload_len);
+        info.has_check_bytes =
+            wmbus_crypto_mode5_payload_has_check_bytes(out_payload, payload_len);
         return info;
     }
 
@@ -73,12 +77,7 @@ WmBusMode5DecryptInfo wmbus_crypto_mode5_decrypt(
     int result = mbedtls_aes_setkey_dec(&aes, key, WMBUS_AES_BLOCK_LEN * 8U);
     if(result == 0) {
         result = mbedtls_aes_crypt_cbc(
-            &aes,
-            MBEDTLS_AES_DECRYPT,
-            encrypted_len,
-            iv,
-            encrypted_payload,
-            out_payload);
+            &aes, MBEDTLS_AES_DECRYPT, encrypted_len, iv, encrypted_payload, out_payload);
     }
     mbedtls_aes_free(&aes);
     if(result != 0) {

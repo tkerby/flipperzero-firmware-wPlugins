@@ -237,9 +237,8 @@ static bool wmbus_selftest_check_ci72_protected_payload(char* detail, size_t det
        record.tpl.security_mode != 0x05U ||
        !wmbus_parser_tpl_has_encrypted_payload(record.tpl.cfg) ||
        strcmp(record.identity.manufacturer, "ZRI") != 0 ||
-       strcmp(record.identity.meter_id, "70831902") != 0 ||
-       record.identity.version != 0x00U || record.identity.dev_type != 0x07U ||
-       record.application.record_count != 0U ||
+       strcmp(record.identity.meter_id, "70831902") != 0 || record.identity.version != 0x00U ||
+       record.identity.dev_type != 0x07U || record.application.record_count != 0U ||
        record.application.parser_id != WmBusParserIdLongTpl) {
         wmbus_selftest_set_detail(
             detail,
@@ -324,20 +323,17 @@ static bool wmbus_selftest_check_ci72_mode5_decrypt(char* detail, size_t detail_
 
 static bool wmbus_selftest_check_ell_chained_tpl_headers(char* detail, size_t detail_len) {
     static const uint8_t no_tpl_header[] = {
-        20U, 0x44U, 0x49U, 0x6AU, 0x74U, 0x52U, 0x15U, 0x50U, 0x0AU,
-        0x37U, 0x8DU, 0x00U, 0x23U, 0x67U, 0x45U, 0x23U, 0x01U, 0x00U,
-        0x00U, 0x78U, 0x2FU,
+        20U,   0x44U, 0x49U, 0x6AU, 0x74U, 0x52U, 0x15U, 0x50U, 0x0AU, 0x37U, 0x8DU,
+        0x00U, 0x23U, 0x67U, 0x45U, 0x23U, 0x01U, 0x00U, 0x00U, 0x78U, 0x2FU,
     };
     static const uint8_t short_tpl[] = {
-        25U, 0x44U, 0x49U, 0x6AU, 0x74U, 0x52U, 0x15U, 0x50U, 0x0AU,
-        0x37U, 0x8DU, 0x00U, 0x23U, 0x67U, 0x45U, 0x23U, 0x01U, 0x00U,
-        0x00U, 0x7AU, 0x24U, 0x00U, 0x00U, 0x00U, 0x2FU, 0x2FU,
+        25U,   0x44U, 0x49U, 0x6AU, 0x74U, 0x52U, 0x15U, 0x50U, 0x0AU, 0x37U, 0x8DU, 0x00U, 0x23U,
+        0x67U, 0x45U, 0x23U, 0x01U, 0x00U, 0x00U, 0x7AU, 0x24U, 0x00U, 0x00U, 0x00U, 0x2FU, 0x2FU,
     };
     static const uint8_t long_tpl[] = {
-        33U, 0x44U, 0x49U, 0x6AU, 0x74U, 0x52U, 0x15U, 0x50U, 0x0AU,
-        0x37U, 0x8DU, 0x00U, 0x23U, 0x67U, 0x45U, 0x23U, 0x01U, 0x00U,
-        0x00U, 0x72U, 0x02U, 0x19U, 0x83U, 0x70U, 0x49U, 0x6AU, 0x00U,
-        0x07U, 0x24U, 0x00U, 0x00U, 0x05U, 0x2FU, 0x2FU,
+        33U,   0x44U, 0x49U, 0x6AU, 0x74U, 0x52U, 0x15U, 0x50U, 0x0AU, 0x37U, 0x8DU, 0x00U,
+        0x23U, 0x67U, 0x45U, 0x23U, 0x01U, 0x00U, 0x00U, 0x72U, 0x02U, 0x19U, 0x83U, 0x70U,
+        0x49U, 0x6AU, 0x00U, 0x07U, 0x24U, 0x00U, 0x00U, 0x05U, 0x2FU, 0x2FU,
     };
     const struct {
         const uint8_t* normalized;
@@ -357,22 +353,8 @@ static bool wmbus_selftest_check_ell_chained_tpl_headers(char* detail, size_t de
          0x00U,
          "50155274",
          0x37U},
-        {short_tpl,
-         sizeof(short_tpl),
-         WmBusTplHeaderShort,
-         0x7AU,
-         24U,
-         0x24U,
-         "50155274",
-         0x37U},
-        {long_tpl,
-         sizeof(long_tpl),
-         WmBusTplHeaderLong,
-         0x72U,
-         32U,
-         0x24U,
-         "70831902",
-         0x07U},
+        {short_tpl, sizeof(short_tpl), WmBusTplHeaderShort, 0x7AU, 24U, 0x24U, "50155274", 0x37U},
+        {long_tpl, sizeof(long_tpl), WmBusTplHeaderLong, 0x72U, 32U, 0x24U, "70831902", 0x07U},
     };
     uint8_t frame[WMBUS_SELFTEST_BUF_MAX] = {0};
     size_t frame_len = 0U;
@@ -380,14 +362,11 @@ static bool wmbus_selftest_check_ell_chained_tpl_headers(char* detail, size_t de
     for(size_t i = 0U; i < COUNT_OF(cases); i++) {
         WmBusPacketRecord record = {0};
         if(!wmbus_selftest_frame_build_format_a(
-               cases[i].normalized,
-               cases[i].normalized_len,
-               frame,
-               sizeof(frame),
-               &frame_len) ||
+               cases[i].normalized, cases[i].normalized_len, frame, sizeof(frame), &frame_len) ||
            !wmbus_selftest_process_phy_frame_record(
                WmBusRxModeC, WmBusFrameFormatA, frame, frame_len, NULL, &record)) {
-            wmbus_selftest_set_detail(detail, detail_len, "case=%u process failed", (unsigned int)i);
+            wmbus_selftest_set_detail(
+                detail, detail_len, "case=%u process failed", (unsigned int)i);
             return false;
         }
 
@@ -420,8 +399,7 @@ static bool wmbus_selftest_check_ell_chained_tpl_headers(char* detail, size_t de
     return true;
 }
 
-static bool wmbus_selftest_check_clear_ell_uses_tpl_security(
-    char* detail, size_t detail_len) {
+static bool wmbus_selftest_check_clear_ell_uses_tpl_security(char* detail, size_t detail_len) {
     WmBusPacketEllData ell = {
         .has_ell = true,
         .has_session = true,
@@ -439,8 +417,7 @@ static bool wmbus_selftest_check_clear_ell_uses_tpl_security(
 
     wmbus_packet_summary_format_crypto_tag(&ell, &tpl, crypto, sizeof(crypto));
     wmbus_packet_summary_format_security_text(&ell, &tpl, security, sizeof(security));
-    if(strcmp(crypto, "DEC#2") != 0 ||
-       strcmp(security, "AES-CBC IV, decrypted key #2") != 0 ||
+    if(strcmp(crypto, "DEC#2") != 0 || strcmp(security, "AES-CBC IV, decrypted key #2") != 0 ||
        wmbus_packet_summary_security_mode(&ell, &tpl) != 0x05U ||
        wmbus_packet_summary_key_index(&ell, &tpl) != 2U) {
         wmbus_selftest_set_detail(
@@ -458,8 +435,7 @@ static bool wmbus_selftest_check_clear_ell_uses_tpl_security(
     ell.sn = UINT32_C(0x20000000);
     ell.key_index = 1U;
     wmbus_packet_summary_format_crypto_tag(&ell, &tpl, crypto, sizeof(crypto));
-    if(strcmp(crypto, "EENC") != 0 ||
-       wmbus_packet_summary_security_mode(&ell, &tpl) != 0x01U ||
+    if(strcmp(crypto, "EENC") != 0 || wmbus_packet_summary_security_mode(&ell, &tpl) != 0x01U ||
        wmbus_packet_summary_key_index(&ell, &tpl) != 1U) {
         wmbus_selftest_set_detail(
             detail,
@@ -477,14 +453,12 @@ static bool wmbus_selftest_check_clear_ell_uses_tpl_security(
 
 static bool wmbus_selftest_check_long_tpl_ci_headers(char* detail, size_t detail_len) {
     static const uint8_t long_cis[] = {
-        0x53U, 0x55U, 0x5BU, 0x5FU, 0x60U, 0x64U, 0x68U, 0x6CU,
-        0x6DU, 0x6FU, 0x72U, 0x75U, 0x7CU, 0x7EU, 0x80U, 0x82U,
-        0x87U, 0x8BU, 0x9FU, 0xC0U, 0xC2U, 0xC3U, 0xC5U,
+        0x53U, 0x55U, 0x5BU, 0x5FU, 0x60U, 0x64U, 0x68U, 0x6CU, 0x6DU, 0x6FU, 0x72U, 0x75U,
+        0x7CU, 0x7EU, 0x80U, 0x82U, 0x87U, 0x8BU, 0x9FU, 0xC0U, 0xC2U, 0xC3U, 0xC5U,
     };
     uint8_t normalized[] = {
-        24U, 0x44U, 0x49U, 0x6AU, 0x74U, 0x52U, 0x15U, 0x50U, 0x0AU,
-        0x37U, 0U,    0x02U, 0x19U, 0x83U, 0x70U, 0x49U, 0x6AU, 0x00U,
-        0x07U, 0x23U, 0x00U, 0x00U, 0x05U, 0x2FU, 0x2FU,
+        24U,   0x44U, 0x49U, 0x6AU, 0x74U, 0x52U, 0x15U, 0x50U, 0x0AU, 0x37U, 0U,    0x02U, 0x19U,
+        0x83U, 0x70U, 0x49U, 0x6AU, 0x00U, 0x07U, 0x23U, 0x00U, 0x00U, 0x05U, 0x2FU, 0x2FU,
     };
     uint8_t frame[WMBUS_SELFTEST_BUF_MAX] = {0};
     size_t frame_len = 0U;
@@ -707,10 +681,8 @@ static bool wmbus_selftest_check_dif_vif_lvar_classes(char* detail, size_t detai
     }
 
     static const uint8_t numeric_payload[] = {
-        0x0DU, 0x13U, 0xC2U, 0x34U, 0x12U,
-        0x0DU, 0x13U, 0xD2U, 0x34U, 0x12U,
-        0x0DU, 0x13U, 0xE3U, 0xFEU, 0xFFU, 0xFFU,
-        0x0DU, 0x13U, 0xF4U, 0x00U, 0x00U, 0x80U, 0x3FU,
+        0x0DU, 0x13U, 0xC2U, 0x34U, 0x12U, 0x0DU, 0x13U, 0xD2U, 0x34U, 0x12U, 0x0DU, 0x13U,
+        0xE3U, 0xFEU, 0xFFU, 0xFFU, 0x0DU, 0x13U, 0xF4U, 0x00U, 0x00U, 0x80U, 0x3FU,
     };
     WmBusApplicationRecord numeric_records[4] = {0};
     if(!wmbus_packet_decode_application_records(
@@ -723,18 +695,15 @@ static bool wmbus_selftest_check_dif_vif_lvar_classes(char* detail, size_t detai
        numeric_records[1].value != -1234 || numeric_records[2].value != -2 ||
        numeric_records[3].data_len != 4U ||
        numeric_records[3].value_type != WmBusApplicationValueRaw) {
-        wmbus_selftest_set_detail(detail, detail_len, "numeric LVAR decode failed count=%u", count);
+        wmbus_selftest_set_detail(
+            detail, detail_len, "numeric LVAR decode failed count=%u", count);
         return false;
     }
 
     for(uint16_t lvar = 0xFBU; lvar <= 0xFFU; lvar++) {
         uint8_t reserved_payload[19] = {0x0DU, 0x13U, (uint8_t)lvar};
         if(wmbus_packet_decode_application_records(
-               reserved_payload,
-               sizeof(reserved_payload),
-               records,
-               COUNT_OF(records),
-               &count)) {
+               reserved_payload, sizeof(reserved_payload), records, COUNT_OF(records), &count)) {
             wmbus_selftest_set_detail(
                 detail, detail_len, "reserved LVAR=%02X accepted", (unsigned int)lvar);
             return false;
@@ -747,8 +716,18 @@ static bool wmbus_selftest_check_dif_vif_lvar_classes(char* detail, size_t detai
 
 static bool wmbus_selftest_check_dif_vif_extensions(char* detail, size_t detail_len) {
     static const uint8_t payload[] = {
-        0x04U, 0x93U, 0x00U, 0x01U, 0x00U, 0x00U, 0x00U,
-        0x01U, 0xFDU, 0x97U, 0x00U, 0xA5U,
+        0x04U,
+        0x93U,
+        0x00U,
+        0x01U,
+        0x00U,
+        0x00U,
+        0x00U,
+        0x01U,
+        0xFDU,
+        0x97U,
+        0x00U,
+        0xA5U,
     };
     WmBusApplicationRecord records[2] = {0};
     uint8_t count = 0U;
@@ -759,7 +738,8 @@ static bool wmbus_selftest_check_dif_vif_extensions(char* detail, size_t detail_
        records[0].scale10 != -3 || records[0].value != 1 ||
        records[1].quantity != WmBusApplicationQuantityStatus || records[1].data_len != 1U ||
        records[1].value_type != WmBusApplicationValueRaw || records[1].raw_bytes[0] != 0xA5U) {
-        wmbus_selftest_set_detail(detail, detail_len, "VIF extension decode failed count=%u", count);
+        wmbus_selftest_set_detail(
+            detail, detail_len, "VIF extension decode failed count=%u", count);
         return false;
     }
 
@@ -770,10 +750,8 @@ static bool wmbus_selftest_check_dif_vif_extensions(char* detail, size_t detail_
 static bool wmbus_selftest_check_dif_vif_qcaloric_version(char* detail, size_t detail_len) {
     /* Application payload from QDS 27200022, version 35, device type 08. */
     static const uint8_t payload[] = {
-        0x04U, 0xEDU, 0x39U, 0x20U, 0x08U, 0xB4U, 0x21U,
-        0x01U, 0xFDU, 0x0CU, 0x10U,
-        0x04U, 0x6DU, 0x00U, 0x16U, 0x4AU, 0x38U,
-        0x02U, 0xFDU, 0x3CU, 0xC2U, 0x01U,
+        0x04U, 0xEDU, 0x39U, 0x20U, 0x08U, 0xB4U, 0x21U, 0x01U, 0xFDU, 0x0CU, 0x10U,
+        0x04U, 0x6DU, 0x00U, 0x16U, 0x4AU, 0x38U, 0x02U, 0xFDU, 0x3CU, 0xC2U, 0x01U,
     };
     WmBusApplicationRecord records[WMBUS_PACKET_RECORD_MAX] = {0};
     uint8_t count = 0U;
@@ -789,9 +767,8 @@ static bool wmbus_selftest_check_dif_vif_qcaloric_version(char* detail, size_t d
     const char* fields_text = furi_string_get_cstr(fields);
     bool valid = formatted && count == 4U &&
                  records[1].quantity == WmBusApplicationQuantityVersion &&
-                 records[1].value_type == WmBusApplicationValueRaw &&
-                 records[1].data_len == 1U && records[1].raw_bytes[0] == 0x10U &&
-                 strstr(fields_text, "Version=10") != NULL &&
+                 records[1].value_type == WmBusApplicationValueRaw && records[1].data_len == 1U &&
+                 records[1].raw_bytes[0] == 0x10U && strstr(fields_text, "Version=10") != NULL &&
                  strstr(fields_text, "DateTime=2026-08-10 22:00") != NULL;
     if(!valid) {
         wmbus_selftest_set_detail(
@@ -812,9 +789,21 @@ static bool wmbus_selftest_check_dif_vif_qcaloric_version(char* detail, size_t d
 
 static bool wmbus_selftest_check_dif_vif_plain_text_units(char* detail, size_t detail_len) {
     static const uint8_t payload[] = {
-        0x01U, 0x7CU, 0x02U, 'm', '3', 0x2AU,
-        0x01U, 0xFCU, 0x01U, 'x', 0x00U, 0x2BU,
-        0x01U, 0x13U, 0x2CU,
+        0x01U,
+        0x7CU,
+        0x02U,
+        'm',
+        '3',
+        0x2AU,
+        0x01U,
+        0xFCU,
+        0x01U,
+        'x',
+        0x00U,
+        0x2BU,
+        0x01U,
+        0x13U,
+        0x2CU,
     };
     WmBusApplicationRecord records[3] = {0};
     uint8_t count = 0U;
@@ -1192,8 +1181,7 @@ static bool wmbus_selftest_check_packet_detail_retains_volume(char* detail, size
            detail_text,
            "Radio mode: C, format: A\nRSSI: -72 dBm\n",
            sizeof("Radio mode: C, format: A\nRSSI: -72 dBm\n") - 1U) != 0 ||
-       !strstr(detail_text, "\nCI field: 7A\n") ||
-       !strstr(detail_text, "\nVolume=0.150 m3")) {
+       !strstr(detail_text, "\nCI field: 7A\n") || !strstr(detail_text, "\nVolume=0.150 m3")) {
         wmbus_selftest_set_detail(detail, detail_len, "detail=%s", detail_text);
         furi_string_free(text);
         return false;

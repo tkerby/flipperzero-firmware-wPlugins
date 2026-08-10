@@ -12,9 +12,7 @@ static void wmbus_app_log_step(const char* step) {
     }
 }
 
-static void wmbus_app_handle_frame(
-    void* context,
-    const WmBusPhyFrame* phy_frame) {
+static void wmbus_app_handle_frame(void* context, const WmBusPhyFrame* phy_frame) {
     WmBusApp* app = context;
     if(!app || !app->capture_processor) {
         return;
@@ -59,14 +57,11 @@ bool wmbus_app_apply_runtime_config(WmBusApp* app, bool persist) {
 
     wmbus_rx_view_apply_settings(app->rx_view, &app->settings);
     bool saved = !persist || wmbus_settings_save(app->storage, &app->settings);
-    bool processor_applied =
-        !app->capture_processor || wmbus_capture_processor_apply_config(
-                                       app->capture_processor,
-                                       &app->settings,
-                                       &app->keyring.key_store);
-    bool radio_applied =
-        !app->rx_service ||
-        wmbus_radio_rx_service_apply_mode(app->rx_service, app->settings.mode);
+    bool processor_applied = !app->capture_processor ||
+                             wmbus_capture_processor_apply_config(
+                                 app->capture_processor, &app->settings, &app->keyring.key_store);
+    bool radio_applied = !app->rx_service ||
+                         wmbus_radio_rx_service_apply_mode(app->rx_service, app->settings.mode);
     return saved && processor_applied && radio_applied;
 }
 
@@ -140,9 +135,7 @@ bool wmbus_app_ensure_exit_confirm_view(WmBusApp* app) {
     if(!app->exit_confirm_widget) return false;
 
     view_dispatcher_add_view(
-        app->view_dispatcher,
-        WmBusAppViewExitConfirm,
-        widget_get_view(app->exit_confirm_widget));
+        app->view_dispatcher, WmBusAppViewExitConfirm, widget_get_view(app->exit_confirm_widget));
     return true;
 }
 

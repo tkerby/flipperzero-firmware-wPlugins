@@ -5,10 +5,10 @@
 
 #include <string.h>
 
-#define WMBUS_C_SYNC_REMAINDER_0        0x54U
+#define WMBUS_C_SYNC_REMAINDER_0         0x54U
 #define WMBUS_C_FRAME_A_SYNC_REMAINDER_1 0xCDU
 #define WMBUS_C_FRAME_B_SYNC_REMAINDER_1 0x3DU
-#define WMBUS_C_SYNC_REMAINDER_LEN 2U
+#define WMBUS_C_SYNC_REMAINDER_LEN       2U
 
 void wmbus_fifo_capture_state_reset(WmBusFifoCaptureState* state) {
     if(!state) return;
@@ -37,9 +37,8 @@ WmBusCaptureLengthStatus wmbus_fifo_frame_length(
 
     if(mode == WmBusRxModeC) {
         if(fifo_len < WMBUS_C_SYNC_REMAINDER_LEN) return WmBusCaptureLengthNeedMore;
-        if(fifo[0] != WMBUS_C_SYNC_REMAINDER_0 ||
-           (fifo[1] != WMBUS_C_FRAME_A_SYNC_REMAINDER_1 &&
-            fifo[1] != WMBUS_C_FRAME_B_SYNC_REMAINDER_1)) {
+        if(fifo[0] != WMBUS_C_SYNC_REMAINDER_0 || (fifo[1] != WMBUS_C_FRAME_A_SYNC_REMAINDER_1 &&
+                                                   fifo[1] != WMBUS_C_FRAME_B_SYNC_REMAINDER_1)) {
             return WmBusCaptureLengthInvalid;
         }
         if(fifo_len < WMBUS_C_SYNC_REMAINDER_LEN + 1U) return WmBusCaptureLengthNeedMore;
@@ -50,8 +49,7 @@ WmBusCaptureLengthStatus wmbus_fifo_frame_length(
         if(!wmbus_frame_l_field_valid_for_format(l_field, format)) {
             return WmBusCaptureLengthInvalid;
         }
-        expected_fifo_len = WMBUS_C_SYNC_REMAINDER_LEN +
-                            wmbus_frame_expected_len(l_field, format);
+        expected_fifo_len = WMBUS_C_SYNC_REMAINDER_LEN + wmbus_frame_expected_len(l_field, format);
     } else {
         if(mode != WmBusRxModeT) return WmBusCaptureLengthInvalid;
         if(fifo_len < 2U) return WmBusCaptureLengthNeedMore;
@@ -140,11 +138,7 @@ bool wmbus_phy_frame_from_fifo(
         const size_t wire_len = wmbus_frame_expected_len(l_field, WmBusFrameFormatA);
         size_t decoded_len = 0U;
         if(!wmbus_decode_3of6(
-               fifo,
-               wire_len * 12U,
-               frame->data,
-               sizeof(frame->data),
-               &decoded_len) ||
+               fifo, wire_len * 12U, frame->data, sizeof(frame->data), &decoded_len) ||
            decoded_len != wire_len) {
             return false;
         }

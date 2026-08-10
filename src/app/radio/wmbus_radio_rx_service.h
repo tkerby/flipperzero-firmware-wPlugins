@@ -11,9 +11,8 @@ typedef struct {
     void (*set_live_rssi)(void* context, int rssi);
 } WmBusRadioRxCallbacks;
 
-WmBusRadioRxService* wmbus_radio_rx_service_alloc(
-    const WmBusRadioRxCallbacks* callbacks,
-    WmBusRxMode mode);
+WmBusRadioRxService*
+    wmbus_radio_rx_service_alloc(const WmBusRadioRxCallbacks* callbacks, WmBusRxMode mode);
 
 void wmbus_radio_rx_service_free(WmBusRadioRxService* service);
 

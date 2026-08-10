@@ -6,9 +6,7 @@
 #include "../frame/wmbus_frame.h"
 #include "../parser/wmbus_parser.h"
 
-static void wmbus_packet_populate_identity(
-    WmBusPacketRecord* record,
-    const uint8_t address[8]) {
+static void wmbus_packet_populate_identity(WmBusPacketRecord* record, const uint8_t address[8]) {
     if(!record || !address) return;
 
     uint16_t m_field = (uint16_t)address[0] | ((uint16_t)address[1] << 8U);
@@ -102,8 +100,7 @@ static void wmbus_packet_extract_tpl_info(
         record->tpl.iv_address[7] = frame[ci_pos + 8U];
         record->tpl.acc = frame[ci_pos + 9U];
         record->tpl.tpl_status = frame[ci_pos + 10U];
-        record->tpl.cfg =
-            (uint16_t)frame[ci_pos + 11U] | ((uint16_t)frame[ci_pos + 12U] << 8U);
+        record->tpl.cfg = (uint16_t)frame[ci_pos + 11U] | ((uint16_t)frame[ci_pos + 12U] << 8U);
         record->tpl.security_mode = wmbus_parser_tpl_security_mode(record->tpl.cfg);
         wmbus_packet_populate_identity(record, record->tpl.iv_address);
     }
@@ -207,7 +204,7 @@ bool wmbus_packet_decode_phy_frame(
         out->frame_len = normalized_result.normalized_len;
         out->wire_frame_len = normalized_result.computed_len;
         out->quality = normalized_result.crc_ok ? WmBusPacketQualityCrcOk :
-                                                 WmBusPacketQualityFrameComplete;
+                                                  WmBusPacketQualityFrameComplete;
     }
 
     return true;

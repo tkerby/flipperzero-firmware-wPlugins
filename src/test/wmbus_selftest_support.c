@@ -271,8 +271,7 @@ static uint16_t wmbus_selftest_crc16_en13757(const uint8_t* data, size_t len) {
     for(size_t i = 0; i < len; i++) {
         crc ^= (uint16_t)data[i] << 8U;
         for(uint8_t bit = 0; bit < 8U; bit++) {
-            crc = (crc & 0x8000U) ? (uint16_t)((crc << 1U) ^ 0x3D65U) :
-                                     (uint16_t)(crc << 1U);
+            crc = (crc & 0x8000U) ? (uint16_t)((crc << 1U) ^ 0x3D65U) : (uint16_t)(crc << 1U);
         }
     }
     return (uint16_t)~crc;
@@ -326,8 +325,7 @@ bool wmbus_selftest_frame_build_format_b(
     size_t out_max,
     size_t* out_len) {
     if(!normalized || !out || !out_len || normalized_len < 11U ||
-       !wmbus_frame_l_field_valid(normalized[0]) ||
-       normalized_len != (size_t)normalized[0] + 1U) {
+       !wmbus_frame_l_field_valid(normalized[0]) || normalized_len != (size_t)normalized[0] + 1U) {
         return false;
     }
 
@@ -413,8 +411,7 @@ bool wmbus_selftest_hex_to_format_b_frame(
         return false;
     }
 
-    return wmbus_selftest_frame_build_format_b(
-        normalized, normalized_len, out, out_max, out_len);
+    return wmbus_selftest_frame_build_format_b(normalized, normalized_len, out, out_max, out_len);
 }
 
 uint32_t wmbus_selftest_fnv1a32(const uint8_t* data, size_t len) {
@@ -614,8 +611,7 @@ bool wmbus_selftest_run_phy_frame(
     WmBusPacketRecord record = {0};
 
     if(!data || !result) return false;
-    if(!wmbus_selftest_process_phy_frame_record(
-           mode, format, data, data_len, key_store, &record)) {
+    if(!wmbus_selftest_process_phy_frame_record(mode, format, data, data_len, key_store, &record)) {
         wmbus_selftest_result_reset(result);
         return false;
     }

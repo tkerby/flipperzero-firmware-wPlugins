@@ -81,8 +81,7 @@ bool wmbus_keyring_load(Storage* storage, WmBusKeyring* keyring) {
             break;
         }
 
-        if(!wmbus_keyring_parse_hex_key(
-               text, loaded.key_store.keys[loaded.key_store.count])) {
+        if(!wmbus_keyring_parse_hex_key(text, loaded.key_store.keys[loaded.key_store.count])) {
             ok = false;
             wmbus_keyring_set_status(&loaded, "bad key");
             break;
@@ -93,8 +92,7 @@ bool wmbus_keyring_load(Storage* storage, WmBusKeyring* keyring) {
 
     if(ok) {
         loaded.loaded = true;
-        wmbus_keyring_set_status(
-            &loaded, "%u keys", (unsigned int)loaded.key_store.count);
+        wmbus_keyring_set_status(&loaded, "%u keys", (unsigned int)loaded.key_store.count);
     } else {
         loaded.loaded = false;
         loaded.key_store.count = 0;

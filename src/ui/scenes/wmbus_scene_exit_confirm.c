@@ -1,9 +1,7 @@
 #include "../../app/wmbus_app_i.h"
 
-static void wmbus_scene_exit_confirm_callback(
-    GuiButtonType result,
-    InputType type,
-    void* context) {
+static void
+    wmbus_scene_exit_confirm_callback(GuiButtonType result, InputType type, void* context) {
     WmBusApp* app = context;
 
     if(type != InputTypeShort) return;

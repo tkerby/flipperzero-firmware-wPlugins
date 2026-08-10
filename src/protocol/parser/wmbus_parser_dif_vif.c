@@ -139,10 +139,8 @@ static int wmbus_packet_data_len_from_dif(uint8_t dif, WmBusDifDataEncoding* dat
     }
 }
 
-static bool wmbus_packet_decode_lvar(
-    uint8_t lvar,
-    uint8_t* data_len,
-    WmBusDifDataEncoding* data_encoding) {
+static bool
+    wmbus_packet_decode_lvar(uint8_t lvar, uint8_t* data_len, WmBusDifDataEncoding* data_encoding) {
     if(!data_len || !data_encoding) return false;
 
     if(lvar <= 0xBFU) {
@@ -275,8 +273,7 @@ static void wmbus_packet_decode_record_value(
         if(wmbus_packet_decode_bcd(data, data_len, &bcd_value) && bcd_value <= INT64_MAX) {
             int64_t value = (int64_t)bcd_value;
             wmbus_application_record_set_value(
-                record,
-                data_encoding == WmBusDifDataEncodingNegativeBcd ? -value : value);
+                record, data_encoding == WmBusDifDataEncodingNegativeBcd ? -value : value);
         } else if(!wmbus_application_record_set_raw_bytes(record, data, data_len)) {
             record->value_type = WmBusApplicationValueRaw;
         }

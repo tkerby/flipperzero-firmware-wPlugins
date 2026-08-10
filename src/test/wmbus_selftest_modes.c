@@ -180,12 +180,7 @@ static bool
     }
 
     if(!wmbus_selftest_generate_t_3of6_raw(
-           frame,
-           frame_len,
-           raw,
-           sizeof(raw),
-           &raw_len,
-           &raw_bit_len)) {
+           frame, frame_len, raw, sizeof(raw), &raw_len, &raw_bit_len)) {
         wmbus_selftest_result_reset(result);
         return false;
     }
@@ -198,12 +193,7 @@ static bool
         return !test_case->vector->expect_plausible && !test_case->vector->expect_crc_ok;
     }
     if(!wmbus_selftest_run_phy_frame(
-           phy_frame.mode,
-           phy_frame.format,
-           phy_frame.data,
-           phy_frame.len,
-           NULL,
-           result)) {
+           phy_frame.mode, phy_frame.format, phy_frame.data, phy_frame.len, NULL, result)) {
         return false;
     }
 
@@ -363,8 +353,7 @@ static bool wmbus_selftest_check_packet_process_t_ignores_invalid_tail(
     memset(&capture[raw_len], 0x00, tail_len);
 
     WmBusPhyFrame phy_frame = {0};
-    if(!wmbus_phy_frame_from_fifo(
-           WmBusRxModeT, capture, raw_len + tail_len, -60, &phy_frame) ||
+    if(!wmbus_phy_frame_from_fifo(WmBusRxModeT, capture, raw_len + tail_len, -60, &phy_frame) ||
        !wmbus_packet_process_phy_frame(&phy_frame, NULL, &record)) {
         wmbus_selftest_set_detail(detail, detail_len, "PHY conversion/process failed");
         return false;
@@ -464,7 +453,8 @@ static bool wmbus_selftest_check_real_c_capture_24008355(
 
     if(!wmbus_selftest_hex_to_bytes(capture_hex, capture, sizeof(capture), &capture_len) ||
        capture_len != sizeof(capture)) {
-        wmbus_selftest_set_detail(detail, detail_len, "real capture decode failed len=%u", (unsigned int)capture_len);
+        wmbus_selftest_set_detail(
+            detail, detail_len, "real capture decode failed len=%u", (unsigned int)capture_len);
         return false;
     }
     if(!wmbus_phy_frame_from_fifo(WmBusRxModeC, capture, capture_len, -60, &frame)) {
@@ -488,8 +478,8 @@ static bool wmbus_selftest_check_real_c_capture_24008355(
     if(record.quality != WmBusPacketQualityParsed || record.normalized_len != 79U ||
        strcmp(record.identity.manufacturer, "MAD") != 0 ||
        strcmp(record.identity.meter_id, "24008355") != 0 || record.dll.ci_field != 0x7AU ||
-       record.tpl.ci_field != 0x7AU ||
-       record.tpl.acc != expected_access || record.application.parser_id != WmBusParserIdDifVif ||
+       record.tpl.ci_field != 0x7AU || record.tpl.acc != expected_access ||
+       record.application.parser_id != WmBusParserIdDifVif ||
        !wmbus_selftest_find_total_volume(&record, &total_m3_x1000) ||
        total_m3_x1000 != expected_total_m3_x1000) {
         wmbus_selftest_set_detail(
@@ -516,31 +506,20 @@ static bool wmbus_selftest_check_real_c_capture_24008355(
     return true;
 }
 
-static bool wmbus_selftest_check_real_c_capture_24008355_access_47(
-    char* detail,
-    size_t detail_len) {
+static bool
+    wmbus_selftest_check_real_c_capture_24008355_access_47(char* detail, size_t detail_len) {
     return wmbus_selftest_check_real_c_capture_24008355(
-        wmbus_selftest_c_real_meter_capture_24008355_access_47,
-        0x47U,
-        29008U,
-        detail,
-        detail_len);
+        wmbus_selftest_c_real_meter_capture_24008355_access_47, 0x47U, 29008U, detail, detail_len);
 }
 
-static bool wmbus_selftest_check_real_c_capture_24008355_access_48(
-    char* detail,
-    size_t detail_len) {
+static bool
+    wmbus_selftest_check_real_c_capture_24008355_access_48(char* detail, size_t detail_len) {
     return wmbus_selftest_check_real_c_capture_24008355(
-        wmbus_selftest_c_real_meter_capture_24008355_access_48,
-        0x48U,
-        29009U,
-        detail,
-        detail_len);
+        wmbus_selftest_c_real_meter_capture_24008355_access_48, 0x48U, 29009U, detail, detail_len);
 }
 
-static bool wmbus_selftest_check_c_capture_validates_sync_remainder(
-    char* detail,
-    size_t detail_len) {
+static bool
+    wmbus_selftest_check_c_capture_validates_sync_remainder(char* detail, size_t detail_len) {
     const uint8_t frame_a_fifo[] = {0x54U, 0xCDU, 0x4EU, 0x44U};
     const uint8_t frame_b_fifo[] = {0x54U, 0x3DU, 0x4EU, 0x44U};
     const uint8_t invalid_fifo[] = {0x54U, 0x00U, 0x4EU, 0x44U};
@@ -548,31 +527,22 @@ static bool wmbus_selftest_check_c_capture_validates_sync_remainder(
     WmBusFrameFormat format = WmBusFrameFormatUnknown;
 
     if(wmbus_fifo_frame_length(
-           WmBusRxModeC,
-           frame_a_fifo,
-           sizeof(frame_a_fifo),
-           &expected_fifo_len,
-           &format) != WmBusCaptureLengthKnown ||
+           WmBusRxModeC, frame_a_fifo, sizeof(frame_a_fifo), &expected_fifo_len, &format) !=
+           WmBusCaptureLengthKnown ||
        expected_fifo_len != 93U || format != WmBusFrameFormatA) {
         wmbus_selftest_set_detail(detail, detail_len, "Frame-A 54CD remainder rejected");
         return false;
     }
     if(wmbus_fifo_frame_length(
-           WmBusRxModeC,
-           frame_b_fifo,
-           sizeof(frame_b_fifo),
-           &expected_fifo_len,
-           &format) != WmBusCaptureLengthKnown ||
+           WmBusRxModeC, frame_b_fifo, sizeof(frame_b_fifo), &expected_fifo_len, &format) !=
+           WmBusCaptureLengthKnown ||
        expected_fifo_len != 81U || format != WmBusFrameFormatB) {
         wmbus_selftest_set_detail(detail, detail_len, "Frame-B 543D remainder rejected");
         return false;
     }
     if(wmbus_fifo_frame_length(
-           WmBusRxModeC,
-           invalid_fifo,
-           sizeof(invalid_fifo),
-           &expected_fifo_len,
-           &format) != WmBusCaptureLengthInvalid) {
+           WmBusRxModeC, invalid_fifo, sizeof(invalid_fifo), &expected_fifo_len, &format) !=
+       WmBusCaptureLengthInvalid) {
         wmbus_selftest_set_detail(detail, detail_len, "invalid 5400 remainder accepted");
         return false;
     }
@@ -730,9 +700,9 @@ static bool wmbus_selftest_check_packet_process_c_crc_bad_keeps_complete_header(
     }
 
     WmBusSelftestFrameMeasureResult measure = {0};
-    if(!wmbus_selftest_frame_measure(WmBusFrameFormatB, frame, frame_len, &measure) || !measure.complete ||
-       measure.format != WmBusFrameFormatB || measure.frame_len != frame_len ||
-       measure.normalized_len != WMBUS_APATOR_C_LEN) {
+    if(!wmbus_selftest_frame_measure(WmBusFrameFormatB, frame, frame_len, &measure) ||
+       !measure.complete || measure.format != WmBusFrameFormatB ||
+       measure.frame_len != frame_len || measure.normalized_len != WMBUS_APATOR_C_LEN) {
         wmbus_selftest_set_detail(
             detail,
             detail_len,
@@ -766,19 +736,14 @@ static bool wmbus_selftest_check_packet_process_c_crc_bad_keeps_complete_header(
     memset(&capture[frame_len], 0xA5, tail_len);
 
     if(!wmbus_selftest_process_phy_frame_record(
-           WmBusRxModeC,
-           WmBusFrameFormatB,
-           capture,
-           frame_len + tail_len,
-           NULL,
-           &record)) {
+           WmBusRxModeC, WmBusFrameFormatB, capture, frame_len + tail_len, NULL, &record)) {
         wmbus_selftest_set_detail(detail, detail_len, "process failed");
         return false;
     }
 
     if(record.quality != WmBusPacketQualityFrameComplete ||
-       record.normalized_len != sizeof(expected) ||
-       record.wire_len != frame_len || memcmp(record.wire_bytes, frame, frame_len) != 0 ||
+       record.normalized_len != sizeof(expected) || record.wire_len != frame_len ||
+       memcmp(record.wire_bytes, frame, frame_len) != 0 ||
        record.application.parser_id != WmBusParserIdShortTpl) {
         wmbus_selftest_set_detail(
             detail,
@@ -826,20 +791,15 @@ static bool wmbus_selftest_check_c_format_a_is_authoritative(char* detail, size_
     }
 
     if(!wmbus_selftest_process_phy_frame_record(
-           WmBusRxModeC,
-           WmBusFrameFormatA,
-           frame,
-           frame_len,
-           NULL,
-           &record)) {
+           WmBusRxModeC, WmBusFrameFormatA, frame, frame_len, NULL, &record)) {
         wmbus_selftest_set_detail(detail, detail_len, "process failed");
         return false;
     }
 
     if(record.quality != WmBusPacketQualityFrameComplete || record.format != WmBusFrameFormatA ||
-       record.normalized_len != sizeof(expected) ||
-       record.wire_len != frame_len || memcmp(record.wire_bytes, frame, frame_len) != 0 ||
-       record.dll.ci_field != expected[10] || record.tpl.ci_field != expected[10]) {
+       record.normalized_len != sizeof(expected) || record.wire_len != frame_len ||
+       memcmp(record.wire_bytes, frame, frame_len) != 0 || record.dll.ci_field != expected[10] ||
+       record.tpl.ci_field != expected[10]) {
         wmbus_selftest_set_detail(
             detail,
             detail_len,
@@ -861,20 +821,20 @@ static bool wmbus_selftest_check_c_format_a_is_authoritative(char* detail, size_
 }
 
 static bool wmbus_selftest_check_fifo_safe_read_sizes(char* detail, size_t detail_len) {
-    const size_t t_first = wmbus_fifo_safe_read_size(
-        WmBusRxModeT, WmBusCaptureLengthNeedMore, 0U, 0U, 2U);
-    const size_t c_first = wmbus_fifo_safe_read_size(
-        WmBusRxModeC, WmBusCaptureLengthNeedMore, 0U, 0U, 3U);
-    const size_t stream = wmbus_fifo_safe_read_size(
-        WmBusRxModeC, WmBusCaptureLengthKnown, 3U, 93U, 64U);
-    const size_t prefetch_full = wmbus_fifo_safe_read_size(
-        WmBusRxModeC, WmBusCaptureLengthKnown, 3U, 93U, 65U);
-    const size_t exact_65 = wmbus_fifo_safe_read_size(
-        WmBusRxModeC, WmBusCaptureLengthKnown, 28U, 93U, 65U);
-    const size_t retain = wmbus_fifo_safe_read_size(
-        WmBusRxModeC, WmBusCaptureLengthKnown, 66U, 93U, 26U);
-    const size_t final = wmbus_fifo_safe_read_size(
-        WmBusRxModeC, WmBusCaptureLengthKnown, 66U, 93U, 27U);
+    const size_t t_first =
+        wmbus_fifo_safe_read_size(WmBusRxModeT, WmBusCaptureLengthNeedMore, 0U, 0U, 2U);
+    const size_t c_first =
+        wmbus_fifo_safe_read_size(WmBusRxModeC, WmBusCaptureLengthNeedMore, 0U, 0U, 3U);
+    const size_t stream =
+        wmbus_fifo_safe_read_size(WmBusRxModeC, WmBusCaptureLengthKnown, 3U, 93U, 64U);
+    const size_t prefetch_full =
+        wmbus_fifo_safe_read_size(WmBusRxModeC, WmBusCaptureLengthKnown, 3U, 93U, 65U);
+    const size_t exact_65 =
+        wmbus_fifo_safe_read_size(WmBusRxModeC, WmBusCaptureLengthKnown, 28U, 93U, 65U);
+    const size_t retain =
+        wmbus_fifo_safe_read_size(WmBusRxModeC, WmBusCaptureLengthKnown, 66U, 93U, 26U);
+    const size_t final =
+        wmbus_fifo_safe_read_size(WmBusRxModeC, WmBusCaptureLengthKnown, 66U, 93U, 27U);
 
     if(t_first != 1U || c_first != 2U || stream != 63U || prefetch_full != 64U ||
        exact_65 != 64U || retain != 25U || final != 27U) {
@@ -888,7 +848,7 @@ static bool wmbus_selftest_check_fifo_safe_read_sizes(char* detail, size_t detai
             (unsigned int)prefetch_full,
             (unsigned int)exact_65,
             (unsigned int)retain,
-            (unsigned int)final);
+            (unsigned int) final);
         return false;
     }
 

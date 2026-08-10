@@ -100,16 +100,15 @@ bool wmbus_packet_process_phy_frame(
         wmbus_packet_set_frame_metadata(record, decode.frame, decode.frame_len);
     }
 
-    if(has_complete_frame &&
-       wmbus_packet_quality_meets(decode.quality, WmBusPacketQualityCrcOk) &&
+    if(has_complete_frame && wmbus_packet_quality_meets(decode.quality, WmBusPacketQualityCrcOk) &&
        wmbus_packet_resolve_application_payload(
-            decode.frame,
-            decode.frame_len,
-            record,
-            key_store,
-            decrypt_workspace,
-            sizeof(decrypt_workspace),
-            &payload) &&
+           decode.frame,
+           decode.frame_len,
+           record,
+           key_store,
+           decrypt_workspace,
+           sizeof(decrypt_workspace),
+           &payload) &&
        wmbus_packet_parse_application(record, &payload)) {
         record->quality = WmBusPacketQualityParsed;
     }

@@ -10,9 +10,10 @@ static const char* wmbus_selftest_parser_name(const WmBusPacketRecord* record) {
 }
 
 /* The public Apator examples below contain already-decrypted payloads. */
-static bool wmbus_selftest_prepare_plaintext_short_tpl(uint8_t* normalized, size_t normalized_len) {
-    if(!normalized || normalized_len < 17U || normalized[10] != 0x7AU ||
-       normalized[15] != 0x2FU || normalized[16] != 0x2FU) {
+static bool
+    wmbus_selftest_prepare_plaintext_short_tpl(uint8_t* normalized, size_t normalized_len) {
+    if(!normalized || normalized_len < 17U || normalized[10] != 0x7AU || normalized[15] != 0x2FU ||
+       normalized[16] != 0x2FU) {
         return false;
     }
 
@@ -61,7 +62,8 @@ static bool wmbus_selftest_check_parser_apator162_public_vectors(char* detail, s
             return false;
         }
         if(!wmbus_selftest_prepare_plaintext_short_tpl(normalized, normalized_len)) {
-            wmbus_selftest_set_detail(detail, detail_len, "vector %s is not plaintext TPL", vector->id);
+            wmbus_selftest_set_detail(
+                detail, detail_len, "vector %s is not plaintext TPL", vector->id);
             return false;
         }
         if(!wmbus_selftest_frame_build_format_b(
@@ -155,7 +157,8 @@ static bool wmbus_selftest_check_parser_apator162_old_style_ci_b6_rejected(
         wmbus_selftest_set_detail(detail, detail_len, "expected CI=B6");
         return false;
     }
-    if(!wmbus_selftest_frame_build_format_b(normalized, normalized_len, frame, sizeof(frame), &frame_len)) {
+    if(!wmbus_selftest_frame_build_format_b(
+           normalized, normalized_len, frame, sizeof(frame), &frame_len)) {
         wmbus_selftest_set_detail(detail, detail_len, "format-B build failed");
         return false;
     }
@@ -218,12 +221,7 @@ static bool wmbus_selftest_check_parser_apator162_mode5_configured_zero_key_vect
             return false;
         }
         if(!wmbus_selftest_process_phy_frame_record(
-               WmBusRxModeC,
-               WmBusFrameFormatB,
-               frame,
-               frame_len,
-               &key_store,
-               &record)) {
+               WmBusRxModeC, WmBusFrameFormatB, frame, frame_len, &key_store, &record)) {
             wmbus_selftest_set_detail(
                 detail, detail_len, "vector %s packet process failed", vectors[i].id);
             return false;
@@ -272,12 +270,7 @@ static bool wmbus_selftest_check_packet_process_mode5_no_key_does_not_decrypt(
         return false;
     }
     if(!wmbus_selftest_process_phy_frame_record(
-           WmBusRxModeC,
-           WmBusFrameFormatB,
-           frame,
-           frame_len,
-           &key_store,
-           &record)) {
+           WmBusRxModeC, WmBusFrameFormatB, frame, frame_len, &key_store, &record)) {
         wmbus_selftest_set_detail(detail, detail_len, "packet process failed");
         return false;
     }
@@ -318,12 +311,7 @@ static bool wmbus_selftest_check_packet_process_mode5_multiple_keys_uses_matchin
         return false;
     }
     if(!wmbus_selftest_process_phy_frame_record(
-           WmBusRxModeC,
-           WmBusFrameFormatB,
-           frame,
-           frame_len,
-           &key_store,
-           &record)) {
+           WmBusRxModeC, WmBusFrameFormatB, frame, frame_len, &key_store, &record)) {
         wmbus_selftest_set_detail(detail, detail_len, "packet process failed");
         return false;
     }
@@ -374,12 +362,7 @@ static bool wmbus_selftest_check_packet_process_mode5_wrong_key_does_not_decrypt
             return false;
         }
         if(!wmbus_selftest_process_phy_frame_record(
-               WmBusRxModeC,
-               WmBusFrameFormatB,
-               frame,
-               frame_len,
-               &key_store,
-               &record)) {
+               WmBusRxModeC, WmBusFrameFormatB, frame, frame_len, &key_store, &record)) {
             wmbus_selftest_set_detail(
                 detail, detail_len, "vector %s packet process failed", vectors[i].id);
             return false;
@@ -625,12 +608,7 @@ static bool
         return false;
     }
     if(!wmbus_selftest_process_phy_frame_record(
-           WmBusRxModeC,
-           WmBusFrameFormatB,
-           frame,
-           frame_len,
-           &key_store,
-           &record)) {
+           WmBusRxModeC, WmBusFrameFormatB, frame, frame_len, &key_store, &record)) {
         wmbus_selftest_set_detail(detail, detail_len, "packet process failed");
         return false;
     }
@@ -647,10 +625,7 @@ static bool
         return false;
     }
 
-    wmbus_selftest_set_detail(
-        detail,
-        detail_len,
-        "encrypted transient payload parsed dec=YES");
+    wmbus_selftest_set_detail(detail, detail_len, "encrypted transient payload parsed dec=YES");
     return true;
 }
 

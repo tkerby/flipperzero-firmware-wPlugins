@@ -18,7 +18,7 @@
 /* Format B counts its CRC bytes in L. A one-CRC frame is at most 128
  * bytes including L; the optional second block therefore starts at 131
  * bytes. L=128 and L=129 do not encode a valid Frame-B layout. */
-#define WMBUS_FRAME_B_L_FIELD_MIN          12U
+#define WMBUS_FRAME_B_L_FIELD_MIN            12U
 #define WMBUS_FRAME_B_SINGLE_CRC_L_FIELD_MAX 127U
 #define WMBUS_FRAME_B_DOUBLE_CRC_L_FIELD_MIN 130U
 
