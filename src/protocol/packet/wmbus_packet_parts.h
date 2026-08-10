@@ -18,7 +18,6 @@ typedef struct {
 typedef struct {
     bool has_ell;
     uint8_t header_len;
-    uint8_t ci_field;
     uint8_t cc;
     uint8_t acc;
     bool has_session;
@@ -36,6 +35,8 @@ typedef enum {
 } WmBusTplHeaderType;
 
 typedef struct {
+    /** Effective CI after an optional ELL header. */
+    uint8_t ci_field;
     WmBusTplHeaderType header_type;
     uint8_t header_len;
     /* Address material in the Mode 5 IV order: M-field, ID, version, type. */

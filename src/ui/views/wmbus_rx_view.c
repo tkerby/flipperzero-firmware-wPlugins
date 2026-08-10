@@ -9,6 +9,7 @@
 #include <furi.h>
 #include <gui/canvas.h>
 #include <input/input.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -245,7 +246,7 @@ static void wmbus_rx_draw(Canvas* canvas, void* model) {
     snprintf(
         line,
         sizeof(line),
-        "RX:%lu OK:%lu DEC:%lu",
+        "RX:%" PRIu32 " OK:%" PRIu32 " DEC:%" PRIu32,
         m->packets_rx,
         m->packets_crc_ok,
         m->packets_decoded);

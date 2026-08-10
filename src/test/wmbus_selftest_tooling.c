@@ -323,6 +323,11 @@ static bool wmbus_selftest_check_ci72_mode5_decrypt(char* detail, size_t detail_
 }
 
 static bool wmbus_selftest_check_ell_chained_tpl_headers(char* detail, size_t detail_len) {
+    static const uint8_t no_tpl_header[] = {
+        20U, 0x44U, 0x49U, 0x6AU, 0x74U, 0x52U, 0x15U, 0x50U, 0x0AU,
+        0x37U, 0x8DU, 0x00U, 0x23U, 0x67U, 0x45U, 0x23U, 0x01U, 0x00U,
+        0x00U, 0x78U, 0x2FU,
+    };
     static const uint8_t short_tpl[] = {
         25U, 0x44U, 0x49U, 0x6AU, 0x74U, 0x52U, 0x15U, 0x50U, 0x0AU,
         0x37U, 0x8DU, 0x00U, 0x23U, 0x67U, 0x45U, 0x23U, 0x01U, 0x00U,
@@ -338,19 +343,36 @@ static bool wmbus_selftest_check_ell_chained_tpl_headers(char* detail, size_t de
         const uint8_t* normalized;
         size_t normalized_len;
         WmBusTplHeaderType header_type;
+        uint8_t tpl_ci;
         uint8_t header_len;
         uint8_t tpl_acc;
         const char* meter_id;
         uint8_t dev_type;
     } cases[] = {
+        {no_tpl_header,
+         sizeof(no_tpl_header),
+         WmBusTplHeaderNone,
+         0x78U,
+         20U,
+         0x00U,
+         "50155274",
+         0x37U},
         {short_tpl,
          sizeof(short_tpl),
          WmBusTplHeaderShort,
+         0x7AU,
          24U,
          0x24U,
          "50155274",
          0x37U},
-        {long_tpl, sizeof(long_tpl), WmBusTplHeaderLong, 32U, 0x24U, "70831902", 0x07U},
+        {long_tpl,
+         sizeof(long_tpl),
+         WmBusTplHeaderLong,
+         0x72U,
+         32U,
+         0x24U,
+         "70831902",
+         0x07U},
     };
     uint8_t frame[WMBUS_SELFTEST_BUF_MAX] = {0};
     size_t frame_len = 0U;
@@ -370,6 +392,7 @@ static bool wmbus_selftest_check_ell_chained_tpl_headers(char* detail, size_t de
         }
 
         if(!record.ell.has_ell || !record.ell.has_session || record.ell.header_len != 19U ||
+           record.dll.ci_field != 0x8DU || record.tpl.ci_field != cases[i].tpl_ci ||
            record.tpl.header_type != cases[i].header_type ||
            record.tpl.header_len != cases[i].header_len || record.tpl.acc != cases[i].tpl_acc ||
            strcmp(record.identity.manufacturer, "ZRI") != 0 ||
@@ -378,10 +401,12 @@ static bool wmbus_selftest_check_ell_chained_tpl_headers(char* detail, size_t de
             wmbus_selftest_set_detail(
                 detail,
                 detail_len,
-                "case=%u ell=%u/%u tpl=%u/%u acc=%02X id=%s type=%02X",
+                "case=%u ell=%u/%u ci=%02X/%02X tpl=%u/%u acc=%02X id=%s type=%02X",
                 (unsigned int)i,
                 record.ell.has_ell ? 1U : 0U,
                 record.ell.header_len,
+                record.dll.ci_field,
+                record.tpl.ci_field,
                 (unsigned int)record.tpl.header_type,
                 record.tpl.header_len,
                 record.tpl.acc,
@@ -391,7 +416,7 @@ static bool wmbus_selftest_check_ell_chained_tpl_headers(char* detail, size_t de
         }
     }
 
-    wmbus_selftest_set_detail(detail, detail_len, "ELL clear chain short+long TPL decoded");
+    wmbus_selftest_set_detail(detail, detail_len, "ELL effective CI and TPL headers decoded");
     return true;
 }
 
@@ -1095,6 +1120,7 @@ static bool wmbus_selftest_check_packet_detail_retains_volume(char* detail, size
         .dll.dev_type = 0x07,
         .identity.dev_type = 0x07,
         .dll.ci_field = 0x7A,
+        .tpl.ci_field = 0x7A,
         .application.parser_id = WmBusParserIdDifVif,
     };
     snprintf(packet.identity.manufacturer, sizeof(packet.identity.manufacturer), "TST");
@@ -1123,6 +1149,7 @@ static bool wmbus_selftest_check_packet_detail_retains_volume(char* detail, size
            detail_text,
            "Radio mode: C, format: A\nRSSI: -72 dBm\n",
            sizeof("Radio mode: C, format: A\nRSSI: -72 dBm\n") - 1U) != 0 ||
+       !strstr(detail_text, "\nCI field: 7A\n") ||
        !strstr(detail_text, "\nVolume=0.150 m3")) {
         wmbus_selftest_set_detail(detail, detail_len, "detail=%s", detail_text);
         furi_string_free(text);

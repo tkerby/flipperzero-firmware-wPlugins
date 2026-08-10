@@ -52,7 +52,7 @@ static void
         record->rssi,
         record->identity.manufacturer,
         record->identity.dev_type,
-        record->dll.ci_field,
+        record->tpl.ci_field,
         record->identity.meter_id,
         wmbus_packet_quality_str(record->quality),
         wmbus_parser_id_name(record->application.parser_id),

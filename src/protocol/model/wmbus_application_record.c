@@ -12,11 +12,6 @@ static uint64_t wmbus_application_pow10_u64(uint8_t power) {
     return result;
 }
 
-void wmbus_application_record_reset(WmBusApplicationRecord* record) {
-    if(!record) return;
-    memset(record, 0, sizeof(*record));
-}
-
 bool wmbus_application_record_append(
     WmBusPacketApplicationData* application,
     WmBusApplicationRecord** out_record) {
@@ -25,7 +20,7 @@ bool wmbus_application_record_append(
     }
 
     WmBusApplicationRecord* record = &application->records[application->record_count++];
-    wmbus_application_record_reset(record);
+    *record = (WmBusApplicationRecord){0};
     *out_record = record;
     return true;
 }
@@ -47,10 +42,6 @@ bool wmbus_application_record_set_raw_bytes(
     memset(record->raw_bytes, 0, sizeof(record->raw_bytes));
     memcpy(record->raw_bytes, data, data_len);
     return true;
-}
-
-bool wmbus_application_record_is_meaningful(const WmBusApplicationRecord* record) {
-    return record && record->quantity != WmBusApplicationQuantityUnknown;
 }
 
 bool wmbus_application_find_total_volume(

@@ -79,8 +79,6 @@ bool wmbus_packet_process_phy_frame(
     bool has_complete_frame =
         wmbus_packet_quality_meets(decode.quality, WmBusPacketQualityFrameComplete) &&
         decode.frame && decode.frame_len > 0U;
-    bool crc_ok = wmbus_packet_quality_meets(decode.quality, WmBusPacketQualityCrcOk);
-
     if(has_complete_frame) {
         if(decode.wire_frame_len > 0U && decode.wire_frame_len < record->wire_len) {
             record->wire_len = (uint16_t)decode.wire_frame_len;
@@ -88,21 +86,18 @@ bool wmbus_packet_process_phy_frame(
         wmbus_packet_set_frame_metadata(record, decode.frame, decode.frame_len);
     }
 
-    if(has_complete_frame && crc_ok) {
-        bool payload_ready = wmbus_packet_resolve_application_payload(
+    if(has_complete_frame &&
+       wmbus_packet_quality_meets(decode.quality, WmBusPacketQualityCrcOk) &&
+       wmbus_packet_resolve_application_payload(
             decode.frame,
             decode.frame_len,
             record,
             key_store,
             decrypt_workspace,
             sizeof(decrypt_workspace),
-            &payload);
-        if(payload_ready) {
-            bool parser_succeeded = wmbus_packet_parse_application(record, &payload);
-            if(parser_succeeded) {
-                record->quality = WmBusPacketQualityParsed;
-            }
-        }
+            &payload) &&
+       wmbus_packet_parse_application(record, &payload)) {
+        record->quality = WmBusPacketQualityParsed;
     }
 
     wmbus_packet_finalize_parser(record);

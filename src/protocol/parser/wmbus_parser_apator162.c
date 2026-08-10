@@ -283,7 +283,7 @@ bool wmbus_parser_apator162_probe(const WmBusParserPacketView* packet) {
        !packet->payload->application_bytes || packet->payload->application_len == 0U) {
         return false;
     }
-    if(packet->tpl->header_type != WmBusTplHeaderShort || packet->dll->ci_field != 0x7AU) {
+    if(packet->tpl->header_type != WmBusTplHeaderShort || packet->tpl->ci_field != 0x7AU) {
         return false;
     }
     if(packet->dll->version != 0x05U ||

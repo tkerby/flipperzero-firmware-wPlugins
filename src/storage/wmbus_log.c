@@ -108,7 +108,7 @@ bool wmbus_log_append(Storage* storage, WmBusCsvLogging logging, const WmBusPack
         const char* id = has_frame ? record->identity.meter_id : "";
         uint8_t version = has_frame ? record->identity.version : 0U;
         uint8_t dev_type = has_frame ? record->identity.dev_type : 0U;
-        uint8_t ci = has_frame ? record->dll.ci_field : 0U;
+        uint8_t ci = has_frame ? record->tpl.ci_field : 0U;
         const char* parser = wmbus_parser_id_name(record->application.parser_id);
 
         if(logging == WmBusCsvLoggingFull) {

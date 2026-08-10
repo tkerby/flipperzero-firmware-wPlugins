@@ -6,7 +6,6 @@
 
 #include "wmbus_application_types.h"
 
-void wmbus_application_record_reset(WmBusApplicationRecord* record);
 bool wmbus_application_record_append(
     WmBusPacketApplicationData* application,
     WmBusApplicationRecord** out_record);
@@ -16,7 +15,6 @@ bool wmbus_application_record_set_raw_bytes(
     const uint8_t* data,
     uint8_t data_len);
 
-bool wmbus_application_record_is_meaningful(const WmBusApplicationRecord* record);
 bool wmbus_application_find_total_volume(
     const WmBusApplicationRecord* records,
     uint8_t record_count,

@@ -36,51 +36,19 @@ static void wmbus_packet_log_decrypt_failure_reason(
         TAG,
         "decrypt failed id=%s ci=%02X cfg=%04X reason=%s",
         wmbus_packet_log_id(record),
-        record->dll.ci_field,
+        record->tpl.ci_field,
         record->tpl.cfg,
         reason);
 }
 
-static void wmbus_packet_log_decrypt_failure(
-    const WmBusPacketRecord* record,
-    WmBusDecryptResult result) {
-    if(!record || result == WmBusDecryptResultOk) return;
-
-    wmbus_packet_log_decrypt_failure_reason(record, wmbus_packet_decrypt_result_str(result));
-}
-
-static void wmbus_packet_reset_application_payload(WmBusPacketPayloadView* payload) {
+static void wmbus_packet_set_application_payload(
+    WmBusPacketPayloadView* payload,
+    const uint8_t* bytes,
+    size_t bytes_len) {
     if(!payload) return;
 
-    payload->application_len = 0U;
-    payload->application_bytes = NULL;
-}
-
-static void wmbus_packet_set_application_payload_view(
-    WmBusPacketPayloadView* payload,
-    const uint8_t* frame,
-    size_t frame_len,
-    size_t offset) {
-    if(!payload || !frame) return;
-
-    if(frame_len <= offset) {
-        wmbus_packet_reset_application_payload(payload);
-        return;
-    }
-
-    size_t payload_len = frame_len - offset;
-    if(payload_len > UINT16_MAX) payload_len = UINT16_MAX;
-
-    payload->application_len = (uint16_t)payload_len;
-    payload->application_bytes = &frame[offset];
-}
-
-static void wmbus_packet_set_application_bytes_view(
-    WmBusPacketPayloadView* payload, const uint8_t* bytes, size_t bytes_len) {
-    if(!payload || !bytes || bytes_len == 0U) {
-        wmbus_packet_reset_application_payload(payload);
-        return;
-    }
+    *payload = (WmBusPacketPayloadView){0};
+    if(!bytes || bytes_len == 0U) return;
 
     if(bytes_len > UINT16_MAX) bytes_len = UINT16_MAX;
     payload->application_len = (uint16_t)bytes_len;
@@ -114,7 +82,8 @@ static bool wmbus_packet_try_key(
         key,
         decrypt_workspace);
     if(decrypt.result != WmBusDecryptResultOk) {
-        wmbus_packet_log_decrypt_failure(record, decrypt.result);
+        wmbus_packet_log_decrypt_failure_reason(
+            record, wmbus_packet_decrypt_result_str(decrypt.result));
         return false;
     }
 
@@ -126,8 +95,7 @@ static bool wmbus_packet_try_key(
     };
 
     WmBusPacketPayloadView candidate_payload = {0};
-    wmbus_packet_set_application_bytes_view(
-        &candidate_payload, decrypt_workspace, payload_len);
+    wmbus_packet_set_application_payload(&candidate_payload, decrypt_workspace, payload_len);
     parser_packet.payload = &candidate_payload;
 
     if(decrypt.has_check_bytes || wmbus_device_parser_validate_decrypt(&parser_packet, NULL)) {
@@ -154,7 +122,7 @@ bool wmbus_packet_resolve_application_payload(
     record->tpl.decrypted = false;
     record->tpl.key_index = 0U;
 
-    wmbus_packet_reset_application_payload(out_payload);
+    wmbus_packet_set_application_payload(out_payload, NULL, 0U);
 
     if(record->ell.has_session && record->ell.security_mode != 0U) {
         FURI_LOG_D(
@@ -176,8 +144,11 @@ bool wmbus_packet_resolve_application_payload(
             wmbus_packet_log_decrypt_failure_reason(record, "missing Mode5 2F2F check bytes");
             return false;
         }
-        wmbus_packet_set_application_payload_view(
-            out_payload, frame, frame_len, record->tpl.header_len);
+        size_t payload_offset = record->tpl.header_len;
+        if(frame_len > payload_offset) {
+            wmbus_packet_set_application_payload(
+                out_payload, &frame[payload_offset], frame_len - payload_offset);
+        }
         return true;
     }
 
@@ -186,7 +157,7 @@ bool wmbus_packet_resolve_application_payload(
             TAG,
             "unsupported TPL protection id=%s ci=%02X cfg=%04X mode=%02X",
             wmbus_packet_log_id(record),
-            record->dll.ci_field,
+            record->tpl.ci_field,
             record->tpl.cfg,
             record->tpl.security_mode);
         return false;

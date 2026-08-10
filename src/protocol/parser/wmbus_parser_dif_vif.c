@@ -318,7 +318,7 @@ bool wmbus_packet_decode_application_records(
         if(count >= out_max) break;
 
         WmBusApplicationRecord* record = &out[count];
-        wmbus_application_record_reset(record);
+        *record = (WmBusApplicationRecord){0};
 
         record->dif = payload[pos++];
         record->measurement_type = wmbus_packet_measurement_type_from_dif(record->dif);
@@ -387,21 +387,6 @@ bool wmbus_packet_decode_application_records(
     return true;
 }
 
-static uint8_t wmbus_packet_count_meaningful_records(
-    const WmBusApplicationRecord* records,
-    uint8_t record_count) {
-    if(!records) return 0U;
-    uint8_t count = 0U;
-    for(uint8_t i = 0; i < record_count; i++) {
-        const WmBusApplicationRecord* app_record = &records[i];
-        if(wmbus_application_record_is_meaningful(app_record)) {
-            count++;
-        }
-    }
-
-    return count;
-}
-
 bool wmbus_parser_dif_vif_probe(const WmBusParserPacketView* packet) {
     return packet && packet->payload && packet->payload->application_bytes &&
            packet->payload->application_len > 0U;
@@ -427,5 +412,10 @@ bool wmbus_parser_dif_vif_parse(
     }
 
     out_application->record_count = record_count;
-    return wmbus_packet_count_meaningful_records(out_application->records, record_count) > 0U;
+    for(uint8_t i = 0U; i < record_count; i++) {
+        if(out_application->records[i].quantity != WmBusApplicationQuantityUnknown) {
+            return true;
+        }
+    }
+    return false;
 }

@@ -488,6 +488,7 @@ static bool wmbus_selftest_check_real_c_capture_24008355(
     if(record.quality != WmBusPacketQualityParsed || record.normalized_len != 79U ||
        strcmp(record.identity.manufacturer, "MAD") != 0 ||
        strcmp(record.identity.meter_id, "24008355") != 0 || record.dll.ci_field != 0x7AU ||
+       record.tpl.ci_field != 0x7AU ||
        record.tpl.acc != expected_access || record.application.parser_id != WmBusParserIdDifVif ||
        !wmbus_selftest_find_total_volume(&record, &total_m3_x1000) ||
        total_m3_x1000 != expected_total_m3_x1000) {
@@ -852,7 +853,7 @@ static bool wmbus_selftest_check_c_format_a_is_authoritative(char* detail, size_
     if(record.quality != WmBusPacketQualityFrameComplete || record.format != WmBusFrameFormatA ||
        record.normalized_len != sizeof(expected) ||
        record.wire_len != frame_len || memcmp(record.wire_bytes, frame, frame_len) != 0 ||
-       record.dll.ci_field != expected[10]) {
+       record.dll.ci_field != expected[10] || record.tpl.ci_field != expected[10]) {
         wmbus_selftest_set_detail(
             detail,
             detail_len,
