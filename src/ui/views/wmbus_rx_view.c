@@ -4,7 +4,6 @@
 #include "../../protocol/format/wmbus_hex_utils.h"
 #include "../../protocol/format/wmbus_packet_summary.h"
 #include "../../protocol/format/wmbus_record_formatter.h"
-#include "../../protocol/model/wmbus_application_record.h"
 
 #include <furi.h>
 #include <gui/canvas.h>
@@ -221,10 +220,10 @@ static void wmbus_rx_draw(Canvas* canvas, void* model) {
         if(entry) {
             snprintf(header, sizeof(header), "H:%u/%u", display_cursor + 1U, m->hist_count);
         } else {
-            snprintf(header, sizeof(header), "H:-/0");
+            snprintf(header, sizeof(header), "Empty");
         }
     } else {
-        snprintf(header, sizeof(header), "Latest");
+        snprintf(header, sizeof(header), "Live");
     }
 
     wmbus_rx_format_age(entry, age, sizeof(age));
@@ -324,68 +323,55 @@ static void wmbus_rx_draw(Canvas* canvas, void* model) {
     }
 }
 
+static void wmbus_rx_navigate_history(WmBusRxViewModel* model, InputKey key) {
+    if(key == InputKeyOk) {
+        model->freeze_display = !model->freeze_display;
+        if(!model->freeze_display) model->hist_cursor = 0U;
+    } else if(
+        key == InputKeyUp && model->freeze_display &&
+        model->hist_cursor + 1U < model->hist_count) {
+        model->hist_cursor++;
+    } else if(key == InputKeyDown && model->freeze_display && model->hist_cursor > 0U) {
+        model->hist_cursor--;
+    }
+}
+
 static bool wmbus_rx_input(InputEvent* event, void* context) {
     if(!event || !context) return false;
     WmBusRxViewContext* ctx = context;
 
-    if(event->type == InputTypeShort && event->key == InputKeyUp && ctx->view) {
-        with_view_model(
-            ctx->view,
-            WmBusRxViewModel * model,
-            {
-                if(model->freeze_display && model->hist_cursor + 1U < model->hist_count) {
-                    model->hist_cursor++;
-                }
-            },
-            true);
-        return true;
+    if(event->type == InputTypeShort) {
+        switch(event->key) {
+        case InputKeyUp:
+        case InputKeyDown:
+        case InputKeyOk:
+            if(!ctx->view) return false;
+            with_view_model(
+                ctx->view,
+                WmBusRxViewModel * model,
+                { wmbus_rx_navigate_history(model, event->key); },
+                true);
+            return true;
+        case InputKeyLeft:
+            return wmbus_rx_send_event(ctx, WmBusRxViewEventOpenConfig);
+        case InputKeyRight:
+            return wmbus_rx_send_event(ctx, WmBusRxViewEventOpenDetails);
+        default:
+            return false;
+        }
     }
 
-    if(event->type == InputTypeShort && event->key == InputKeyDown && ctx->view) {
-        with_view_model(
-            ctx->view,
-            WmBusRxViewModel * model,
-            {
-                if(model->freeze_display && model->hist_cursor > 0U) {
-                    model->hist_cursor--;
-                }
-            },
-            true);
-        return true;
-    }
-
-    if(event->type == InputTypeShort && event->key == InputKeyOk && ctx->view) {
-        with_view_model(
-            ctx->view,
-            WmBusRxViewModel * model,
-            {
-                model->freeze_display = !model->freeze_display;
-                if(!model->freeze_display) {
-                    model->hist_cursor = 0U;
-                }
-            },
-            true);
-        return true;
-    }
-
-    if(event->type == InputTypeShort && event->key == InputKeyLeft) {
-        return wmbus_rx_send_event(ctx, WmBusRxViewEventOpenConfig);
-    }
-
-    if(event->type == InputTypeShort && event->key == InputKeyRight) {
-        return wmbus_rx_send_event(ctx, WmBusRxViewEventOpenDetails);
-    }
-
-    if(event->type == InputTypeLong && event->key == InputKeyOk) {
-        return wmbus_rx_send_event(ctx, WmBusRxViewEventOpenConfig);
-    }
-
-    if(event->type == InputTypeLong && event->key == InputKeyUp) {
-        return wmbus_rx_send_event(ctx, WmBusRxViewEventToggleDebug);
-    }
-
-    if(event->type == InputTypeLong && event->key == InputKeyDown) {
-        return wmbus_rx_send_event(ctx, WmBusRxViewEventOpenApplicationRecords);
+    if(event->type == InputTypeLong) {
+        switch(event->key) {
+        case InputKeyOk:
+            return wmbus_rx_send_event(ctx, WmBusRxViewEventOpenConfig);
+        case InputKeyUp:
+            return wmbus_rx_send_event(ctx, WmBusRxViewEventToggleDebug);
+        case InputKeyDown:
+            return wmbus_rx_send_event(ctx, WmBusRxViewEventOpenApplicationRecords);
+        default:
+            return false;
+        }
     }
 
     return false;
@@ -598,7 +584,7 @@ bool wmbus_rx_view_has_selected_packet(WmBusRxView* rx_view) {
     with_view_model(
         rx_view->view,
         WmBusRxViewModel * model,
-        { has_packet = wmbus_rx_display_entry_get(model); },
+        { has_packet = wmbus_rx_display_entry_get(model) != NULL; },
         false);
     return has_packet;
 }

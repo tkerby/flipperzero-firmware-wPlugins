@@ -60,7 +60,7 @@ Parser inputs come through `WmBusParserPacketView`, which exposes DLL, TPL, payl
 
 ## Runtime Controls
 
-- `OK`: switch between `Latest` and `History`
+- `OK`: switch between `Live` and `History`
 - `Up` / `Down`: browse saved packets in `History`
 - `Left`: open config
 - `Right`: open packet detail for the selected history entry
