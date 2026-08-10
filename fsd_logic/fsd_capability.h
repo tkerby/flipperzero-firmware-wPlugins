@@ -58,6 +58,12 @@ typedef struct {
     bool body_door;    // 0x102 VCLEFT_doorStatus   — mirror state/tilt read-back
     bool body_window;  // 0x119 VCSEC_windowRequests — windows
     bool body_lights;  // 0x3E9 DAS_bodyControls    — lights/hazards/turn/wipers
+
+    // Right scroll wheel. 0x3C2 is Vehicle CAN ONLY — the gateway does not forward
+    // it onto Bus 6, so a Bus-6-only tap never sees it. Its presence is the single
+    // most reliable "this tap is direct Vehicle CAN" marker, and it is required for
+    // scroll-emulated speed-profile control (swcRightScrollTicks, mux=1).
+    bool scroll;       // 0x3C2 VCLEFT_switchStatus
 } FSDCapSeen;
 
 typedef struct {
@@ -66,6 +72,7 @@ typedef struct {
     FSDCapVerdict fsd_activation;  // a frame here to modify
     FSDCapVerdict soft_engage;     // 0x129; MISSING => degrades to AP-First-only
     FSDCapVerdict body_control;    // Vehicle/body-bus reachable (#128); RX presence only
+    FSDCapVerdict scroll_profile;  // 0x3C2 present -> scroll-emulated speed profile possible
 
     // Derived predicates (exposed for the UI / one-line verdicts).
     bool has_epas;
@@ -77,6 +84,7 @@ typedef struct {
     bool body_door;     // 0x102 seen (mirror state read-back reachable)
     bool body_window;   // 0x119 seen (window writes reachable)
     bool body_lights;   // 0x3E9 seen (lights/hazards/turn/wiper writes reachable)
+    bool has_scroll;    // 0x3C2 seen -> direct Vehicle CAN tap (not gateway-forwarded Bus 6)
 
     FSDCapBusHint bus_hint;
     bool          hw_unconfirmed;  // hw_version was Unknown -> inferred below
@@ -96,8 +104,8 @@ typedef struct {
  */
 static inline FSDCapReport fsd_capability_eval(FSDCapSeen seen, TeslaHWVersion hw) {
     FSDCapReport r = {
-        CAP_MISSING, CAP_MISSING, CAP_MISSING, CAP_MISSING, CAP_MISSING,
-        false, false, false, false, false, false, false, false, false,
+        CAP_MISSING, CAP_MISSING, CAP_MISSING, CAP_MISSING, CAP_MISSING, CAP_MISSING,
+        false, false, false, false, false, false, false, false, false, false,
         CAP_HINT_NONE, false, hw,
     };
 
@@ -123,6 +131,7 @@ static inline FSDCapReport fsd_capability_eval(FSDCapSeen seen, TeslaHWVersion h
     r.body_window = seen.body_window;
     r.body_lights = seen.body_lights;
     r.has_body    = seen.body_ui || seen.body_door || seen.body_window || seen.body_lights;
+    r.has_scroll  = seen.scroll;
 
     // Nag killer: needs both the 0x370 echo source AND DAS state to gate on.
     if (r.has_epas && r.has_das)       r.nag_killer = CAP_OK;
@@ -133,6 +142,13 @@ static inline FSDCapReport fsd_capability_eval(FSDCapSeen seen, TeslaHWVersion h
     r.fsd_activation = r.has_ap_ctrl ? CAP_OK : CAP_MISSING;
     r.soft_engage    = r.has_steer   ? CAP_OK : CAP_MISSING;  // else AP-First-only
     r.body_control   = r.has_body    ? CAP_OK : CAP_MISSING;  // else needs X179 A-pillar tap
+
+    // Scroll-emulated speed profile: needs 0x3C2, which only exists on a direct
+    // Vehicle CAN tap. If other body frames are present but 0x3C2 is not, this is
+    // a gateway-forwarded (Bus 6) tap -> a second, direct Vehicle CAN tap is needed.
+    if (r.has_scroll)     r.scroll_profile = CAP_OK;
+    else if (r.has_body)  r.scroll_profile = CAP_DUAL_CAN;
+    else                  r.scroll_profile = CAP_MISSING;
 
     // Best-guess bus family (hint only).
     if (r.has_epas && r.has_das)        r.bus_hint = CAP_HINT_PARTY;

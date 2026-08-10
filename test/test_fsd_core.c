@@ -1146,6 +1146,34 @@ static void test_capability(void) {
     CHECK(r.hw_effective == TeslaHW_Legacy, "0x3EE present -> inferred Legacy");
     CHECK(r.has_das, "inferred Legacy: 0x399 is DAS state");
 
+    // ── scroll wheel (0x3C2) — direct Vehicle CAN marker ──
+    // 0x3C2 is NOT gateway-forwarded onto Bus 6, so its presence is the single
+    // most reliable "this tap is direct Vehicle CAN" signal, and it is required
+    // for scroll-emulated speed-profile control.
+    FSDCapSeen vehicle_direct = {0};
+    vehicle_direct.scroll = true; vehicle_direct.body_ui = true;
+    r = fsd_capability_eval(vehicle_direct, TeslaHW_HW3);
+    CHECK(r.has_scroll, "0x3C2 seen -> direct Vehicle CAN tap");
+    CHECK(r.scroll_profile == CAP_OK, "0x3C2 present: scroll profile OK (%d)",
+          r.scroll_profile);
+
+    // Bus 6 (gateway-forwarded): body frames arrive but 0x3C2 never does.
+    // A second, direct Vehicle CAN tap is required -> dual-CAN.
+    FSDCapSeen bus6 = {0};
+    bus6.epas = true; bus6.das_hw3 = true; bus6.ap_control = true;
+    bus6.body_ui = true; bus6.body_window = true;  // forwarded body frames
+    r = fsd_capability_eval(bus6, TeslaHW_HW3);
+    CHECK(!r.has_scroll, "Bus 6: 0x3C2 not forwarded");
+    CHECK(r.scroll_profile == CAP_DUAL_CAN,
+          "body frames but no 0x3C2: scroll profile needs dual-CAN (%d)",
+          r.scroll_profile);
+    CHECK(r.nag_killer == CAP_OK, "Bus 6 still fine for nag killer");
+
+    // Neither scroll nor any body frame -> not reachable at all from this tap.
+    r = fsd_capability_eval(hw3_das, TeslaHW_HW3);
+    CHECK(r.scroll_profile == CAP_MISSING,
+          "no body/scroll frames: scroll profile missing (%d)", r.scroll_profile);
+
     // ── bus hint: steering, no 0x370 -> Chassis/Vehicle-like ──
     FSDCapSeen chassis = {0};
     chassis.steer = true;
