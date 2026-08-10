@@ -29,10 +29,22 @@ typedef struct {
 } WmBusPacketEllData;
 
 typedef enum {
+    WmBusEllSecurityModeClear = 0x00,
+    WmBusEllSecurityModeAesCtr = 0x01,
+} WmBusEllSecurityMode;
+
+typedef enum {
     WmBusTplHeaderNone = 0,
     WmBusTplHeaderShort,
     WmBusTplHeaderLong,
 } WmBusTplHeaderType;
+
+typedef enum {
+    WmBusTplSecurityModeClear = 0x00,
+    WmBusTplSecurityModeManufacturer = 0x01,
+    WmBusTplSecurityModeAesCbcIv = 0x05,
+    WmBusTplSecurityModeAesCtrCmac = 0x08,
+} WmBusTplSecurityMode;
 
 typedef struct {
     /** Effective CI after an optional ELL header. */

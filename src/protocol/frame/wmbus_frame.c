@@ -55,6 +55,27 @@ static uint16_t wmbus_crc16_en13757(const uint8_t* data, size_t len) {
     return (uint16_t)(~crc);
 }
 
+typedef struct {
+    size_t first_crc_pos;
+    size_t second_crc_pos;
+} WmBusFrameBLayout;
+
+static bool
+    wmbus_frame_b_layout(const uint8_t* data, size_t available_len, WmBusFrameBLayout* layout) {
+    if(!data || !layout || !wmbus_frame_l_field_valid_for_format(data[0], WmBusFrameFormatB)) {
+        return false;
+    }
+
+    const size_t frame_len = wmbus_frame_expected_len(data[0], WmBusFrameFormatB);
+    if(frame_len == 0U || available_len < frame_len) return false;
+
+    *layout = (WmBusFrameBLayout){
+        .first_crc_pos = frame_len <= 128U ? frame_len - 2U : 126U,
+        .second_crc_pos = frame_len <= 128U ? 0U : frame_len - 2U,
+    };
+    return true;
+}
+
 static bool wmbus_frame_crc_check_a(const uint8_t* data, size_t len) {
     if(len < 12) return false;
 
@@ -83,32 +104,18 @@ static bool wmbus_frame_crc_check_a(const uint8_t* data, size_t len) {
 }
 
 static bool wmbus_frame_crc_check_b(const uint8_t* data, size_t len) {
-    if(!data || !wmbus_frame_l_field_valid_for_format(data[0], WmBusFrameFormatB)) {
-        return false;
-    }
+    WmBusFrameBLayout layout = {0};
+    if(!wmbus_frame_b_layout(data, len, &layout)) return false;
 
-    const size_t expected_len = wmbus_frame_expected_len(data[0], WmBusFrameFormatB);
-    if(expected_len == 0U || len < expected_len) return false;
-    len = expected_len;
-
-    size_t crc1_pos = 0;
-    size_t crc2_pos = 0;
-    if(len <= 128) {
-        crc1_pos = len - 2;
-    } else {
-        crc1_pos = 126;
-        crc2_pos = len - 2;
-    }
-
-    uint16_t calc = wmbus_crc16_en13757(data, crc1_pos);
-    uint16_t check = ((uint16_t)data[crc1_pos] << 8) | data[crc1_pos + 1];
+    uint16_t calc = wmbus_crc16_en13757(data, layout.first_crc_pos);
+    uint16_t check = ((uint16_t)data[layout.first_crc_pos] << 8) | data[layout.first_crc_pos + 1U];
     if(calc != check) return false;
 
-    if(crc2_pos > 0) {
-        size_t from2 = crc1_pos + 2;
-        size_t len2 = crc2_pos - from2;
+    if(layout.second_crc_pos > 0U) {
+        size_t from2 = layout.first_crc_pos + 2U;
+        size_t len2 = layout.second_crc_pos - from2;
         calc = wmbus_crc16_en13757(&data[from2], len2);
-        check = ((uint16_t)data[crc2_pos] << 8) | data[crc2_pos + 1];
+        check = ((uint16_t)data[layout.second_crc_pos] << 8) | data[layout.second_crc_pos + 1U];
         if(calc != check) return false;
     }
 
@@ -195,32 +202,18 @@ static bool wmbus_frame_trim_crc_b(
     uint8_t* out,
     size_t out_max,
     size_t* out_len) {
-    if(!data || !out || !out_len ||
-       !wmbus_frame_l_field_valid_for_format(data[0], WmBusFrameFormatB)) {
-        return false;
-    }
-
-    const size_t expected_len = wmbus_frame_expected_len(data[0], WmBusFrameFormatB);
-    if(expected_len == 0U || len < expected_len) return false;
-    len = expected_len;
-
-    size_t crc1_pos = 0;
-    size_t crc2_pos = 0;
-    if(len <= 128) {
-        crc1_pos = len - 2;
-    } else {
-        crc1_pos = 126;
-        crc2_pos = len - 2;
-    }
+    if(!out || !out_len) return false;
+    WmBusFrameBLayout layout = {0};
+    if(!wmbus_frame_b_layout(data, len, &layout)) return false;
 
     size_t write = 0;
-    if(crc1_pos > out_max) return false;
-    memcpy(out, data, crc1_pos);
-    write = crc1_pos;
+    if(layout.first_crc_pos > out_max) return false;
+    memcpy(out, data, layout.first_crc_pos);
+    write = layout.first_crc_pos;
 
-    if(crc2_pos > 0) {
-        size_t from2 = crc1_pos + 2;
-        size_t len2 = crc2_pos - from2;
+    if(layout.second_crc_pos > 0U) {
+        size_t from2 = layout.first_crc_pos + 2U;
+        size_t len2 = layout.second_crc_pos - from2;
         if(write + len2 > out_max) return false;
         memcpy(&out[write], &data[from2], len2);
         write += len2;

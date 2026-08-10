@@ -5,6 +5,8 @@
 #include "../protocol/format/wmbus_record_formatter.h"
 #include "../protocol/format/wmbus_packet_summary.h"
 #include "../protocol/model/wmbus_application_record.h"
+#include "../protocol/packet/wmbus_packet_decode.h"
+#include "../protocol/packet/wmbus_packet_security.h"
 #include "../protocol/parser/wmbus_parser.h"
 #include "../protocol/parser/wmbus_parser_apator162.h"
 #include "../protocol/parser/wmbus_parser_dif_vif.h"
@@ -177,10 +179,10 @@ static bool wmbus_selftest_check_apator162_register_sizes(char* detail, size_t d
 }
 
 static bool wmbus_selftest_check_tpl_security_modes(char* detail, size_t detail_len) {
-    uint8_t clear_mode = wmbus_parser_tpl_security_mode(0x0000U);
-    uint8_t aes_cbc_iv_mode = wmbus_parser_tpl_security_mode(0x8560U);
-    uint8_t mfct_mode = wmbus_parser_tpl_security_mode(0x0100U);
-    uint8_t aes_ctr_cmac_mode = wmbus_parser_tpl_security_mode(0x0800U);
+    uint8_t clear_mode = wmbus_packet_tpl_security_mode(0x0000U);
+    uint8_t aes_cbc_iv_mode = wmbus_packet_tpl_security_mode(0x8560U);
+    uint8_t mfct_mode = wmbus_packet_tpl_security_mode(0x0100U);
+    uint8_t aes_ctr_cmac_mode = wmbus_packet_tpl_security_mode(0x0800U);
 
     if(clear_mode != 0U || aes_cbc_iv_mode != 5U || mfct_mode != 1U || aes_ctr_cmac_mode != 8U) {
         wmbus_selftest_set_detail(
@@ -194,11 +196,11 @@ static bool wmbus_selftest_check_tpl_security_modes(char* detail, size_t detail_
         return false;
     }
 
-    if(wmbus_parser_tpl_has_encrypted_payload(0x0000U) ||
-       wmbus_parser_tpl_has_encrypted_payload(0x0500U) ||
-       !wmbus_parser_tpl_has_encrypted_payload(0x8560U) ||
-       !wmbus_parser_tpl_has_encrypted_payload(0x0100U) ||
-       !wmbus_parser_tpl_has_encrypted_payload(0x0800U)) {
+    if(wmbus_packet_tpl_payload_is_protected(0x0000U) ||
+       wmbus_packet_tpl_payload_is_protected(0x0500U) ||
+       !wmbus_packet_tpl_payload_is_protected(0x8560U) ||
+       !wmbus_packet_tpl_payload_is_protected(0x0100U) ||
+       !wmbus_packet_tpl_payload_is_protected(0x0800U)) {
         wmbus_selftest_set_detail(detail, detail_len, "encrypted-payload policy mismatch");
         return false;
     }
@@ -235,7 +237,7 @@ static bool wmbus_selftest_check_ci72_protected_payload(char* detail, size_t det
        record.tpl.header_type != WmBusTplHeaderLong || record.tpl.header_len != 23U ||
        record.tpl.acc != 0x23U || record.tpl.tpl_status != 0x00U || record.tpl.cfg != 0x0550U ||
        record.tpl.security_mode != 0x05U ||
-       !wmbus_parser_tpl_has_encrypted_payload(record.tpl.cfg) ||
+       !wmbus_packet_tpl_payload_is_protected(record.tpl.cfg) ||
        strcmp(record.identity.manufacturer, "ZRI") != 0 ||
        strcmp(record.identity.meter_id, "70831902") != 0 || record.identity.version != 0x00U ||
        record.identity.dev_type != 0x07U || record.application.record_count != 0U ||
@@ -504,36 +506,34 @@ static bool wmbus_selftest_check_ell_security_modes(char* detail, size_t detail_
     uint32_t clear_sn = 0x01234567UL;
     uint32_t aes_ctr_sn = 0x21234567UL;
 
-    if(!wmbus_parser_ci_has_ell(0x8DU) || !wmbus_parser_ci_has_ell(0x8EU) ||
-       !wmbus_parser_ci_has_ell(0x8FU) || wmbus_parser_ci_has_ell(0x7AU)) {
+    if(!wmbus_packet_ci_has_ell(0x8DU) || !wmbus_packet_ci_has_ell(0x8EU) ||
+       !wmbus_packet_ci_has_ell(0x8FU) || wmbus_packet_ci_has_ell(0x7AU)) {
         wmbus_selftest_set_detail(detail, detail_len, "ci detection mismatch");
         return false;
     }
 
-    if(!wmbus_parser_ell_has_session_fields(0x8DU) || wmbus_parser_ell_has_session_fields(0x8EU) ||
-       !wmbus_parser_ell_has_session_fields(0x8FU)) {
+    if(!wmbus_packet_ell_has_session_fields(0x8DU) || wmbus_packet_ell_has_session_fields(0x8EU) ||
+       !wmbus_packet_ell_has_session_fields(0x8FU)) {
         wmbus_selftest_set_detail(detail, detail_len, "session-field detection mismatch");
         return false;
     }
 
-    if(wmbus_parser_ell_security_mode(clear_sn) != 0U ||
-       wmbus_parser_ell_security_mode(aes_ctr_sn) != 1U ||
-       wmbus_parser_ell_security_likely_encrypted(clear_sn) ||
-       !wmbus_parser_ell_security_likely_encrypted(aes_ctr_sn)) {
+    const uint8_t clear_mode = wmbus_packet_ell_security_mode(clear_sn);
+    const uint8_t aes_ctr_mode = wmbus_packet_ell_security_mode(aes_ctr_sn);
+    if(clear_mode != WmBusEllSecurityModeClear || aes_ctr_mode != WmBusEllSecurityModeAesCtr ||
+       wmbus_packet_ell_payload_is_encrypted(clear_mode) ||
+       !wmbus_packet_ell_payload_is_encrypted(aes_ctr_mode)) {
         wmbus_selftest_set_detail(
             detail,
             detail_len,
             "security heuristic mismatch clear=%u aes=%u",
-            (unsigned int)wmbus_parser_ell_security_mode(clear_sn),
-            (unsigned int)wmbus_parser_ell_security_mode(aes_ctr_sn));
+            (unsigned int)clear_mode,
+            (unsigned int)aes_ctr_mode);
         return false;
     }
 
     wmbus_selftest_set_detail(
-        detail,
-        detail_len,
-        "8D/8F session AES-CTR mode=%u",
-        (unsigned int)wmbus_parser_ell_security_mode(aes_ctr_sn));
+        detail, detail_len, "8D/8F session AES-CTR mode=%u", (unsigned int)aes_ctr_mode);
     return true;
 }
 

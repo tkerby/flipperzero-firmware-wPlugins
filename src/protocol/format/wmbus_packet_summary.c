@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-#include "../parser/wmbus_parser.h"
+#include "../packet/wmbus_packet_security.h"
 
 const char* wmbus_packet_summary_frame_type(WmBusFrameFormat format) {
     switch(format) {
@@ -18,15 +18,26 @@ const char* wmbus_packet_summary_frame_type(WmBusFrameFormat format) {
 
 static const char*
     wmbus_packet_summary_security_mode_name(uint8_t security_mode, bool ell_security) {
+    if(ell_security) {
+        switch(security_mode) {
+        case WmBusEllSecurityModeClear:
+            return "Clear";
+        case WmBusEllSecurityModeAesCtr:
+            return "AES-CTR";
+        default:
+            return NULL;
+        }
+    }
+
     switch(security_mode) {
-    case 0x00:
+    case WmBusTplSecurityModeClear:
         return "Clear";
-    case 0x01:
-        return ell_security ? "AES-CTR" : "Manufacturer";
-    case 0x05:
-        return ell_security ? NULL : "AES-CBC IV";
-    case 0x08:
-        return ell_security ? NULL : "AES-CTR CMAC";
+    case WmBusTplSecurityModeManufacturer:
+        return "Manufacturer";
+    case WmBusTplSecurityModeAesCbcIv:
+        return "AES-CBC IV";
+    case WmBusTplSecurityModeAesCtrCmac:
+        return "AES-CTR CMAC";
     default:
         return NULL;
     }
@@ -58,7 +69,7 @@ void wmbus_packet_summary_format_crypto_tag(
     if(ell && ell->has_ell && ell->has_session && ell->security_mode != 0U) {
         if(ell->decrypted) {
             snprintf(out, out_size, "EDEC#%u", (unsigned int)ell->key_index);
-        } else if(wmbus_parser_ell_security_likely_encrypted(ell->sn)) {
+        } else if(wmbus_packet_ell_payload_is_encrypted(ell->security_mode)) {
             snprintf(out, out_size, "EENC");
         } else {
             snprintf(out, out_size, "ES:%02X", ell->security_mode);
@@ -69,11 +80,11 @@ void wmbus_packet_summary_format_crypto_tag(
     if(tpl && tpl->header_type != WmBusTplHeaderNone) {
         if(tpl->decrypted) {
             snprintf(out, out_size, "DEC#%u", (unsigned int)tpl->key_index);
-        } else if(wmbus_parser_tpl_has_encrypted_payload(tpl->cfg)) {
+        } else if(wmbus_packet_tpl_payload_is_protected(tpl->cfg)) {
             snprintf(out, out_size, "ENC");
-        } else if(tpl->security_mode == 0x00U) {
+        } else if(tpl->security_mode == WmBusTplSecurityModeClear) {
             snprintf(out, out_size, "CLR");
-        } else if(tpl->security_mode == 0x01U) {
+        } else if(tpl->security_mode == WmBusTplSecurityModeManufacturer) {
             snprintf(out, out_size, "MFG");
         } else {
             snprintf(out, out_size, "S:%02X", tpl->security_mode);
@@ -101,7 +112,7 @@ void wmbus_packet_summary_format_security_text(
         if(ell->decrypted) {
             snprintf(
                 out, out_size, "ELL %s, decrypted key #%u", mode, (unsigned int)ell->key_index);
-        } else if(wmbus_parser_ell_security_likely_encrypted(ell->sn)) {
+        } else if(wmbus_packet_ell_payload_is_encrypted(ell->security_mode)) {
             snprintf(out, out_size, "ELL %s, encrypted", mode);
         } else {
             snprintf(out, out_size, "ELL %s", mode);
@@ -115,7 +126,7 @@ void wmbus_packet_summary_format_security_text(
 
         if(tpl->decrypted) {
             snprintf(out, out_size, "%s, decrypted key #%u", mode, (unsigned int)tpl->key_index);
-        } else if(wmbus_parser_tpl_has_encrypted_payload(tpl->cfg)) {
+        } else if(wmbus_packet_tpl_payload_is_protected(tpl->cfg)) {
             snprintf(out, out_size, "%s, encrypted", mode);
         } else {
             snprintf(out, out_size, "%s", mode);

@@ -1,6 +1,7 @@
 #include "wmbus_selftest_i.h"
 
 #include "../protocol/decode/wmbus_decode.h"
+#include "../protocol/packet/wmbus_packet_security.h"
 #include "../protocol/parser/wmbus_parser.h"
 
 #include <string.h>
@@ -114,7 +115,7 @@ static bool wmbus_selftest_check_parser_apator162_public_vectors(char* detail, s
                 (unsigned long)vector->total_m3_x1000,
                 record.identity.meter_id,
                 (record.tpl.header_type != WmBusTplHeaderNone &&
-                 wmbus_parser_tpl_has_encrypted_payload(record.tpl.cfg)) ?
+                 wmbus_packet_tpl_payload_is_protected(record.tpl.cfg)) ?
                     "YES" :
                     "NO",
                 record.tpl.decrypted ? "YES" : "NO",
@@ -214,7 +215,7 @@ static bool wmbus_selftest_check_parser_apator162_mode5_configured_zero_key_vect
             return false;
         }
         cfg = (uint16_t)frame[13] | ((uint16_t)frame[14] << 8);
-        if(!wmbus_parser_tpl_has_encrypted_payload(cfg) ||
+        if(!wmbus_packet_tpl_payload_is_protected(cfg) ||
            (frame[15] == 0x2FU && frame[16] == 0x2FU)) {
             wmbus_selftest_set_detail(
                 detail, detail_len, "vector %s unexpected cipher state", vectors[i].id);

@@ -100,43 +100,37 @@ bool wmbus_app_ensure_key_input_view(WmBusApp* app) {
     return true;
 }
 
+static bool wmbus_app_ensure_widget(
+    WmBusApp* app,
+    WmBusAppView view_id,
+    Widget** widget,
+    const char* log_step) {
+    if(!app || !widget) return false;
+    if(*widget) return true;
+
+    wmbus_app_log_step(log_step);
+    *widget = widget_alloc();
+    if(!*widget) return false;
+
+    view_dispatcher_add_view(app->view_dispatcher, view_id, widget_get_view(*widget));
+    return true;
+}
+
 bool wmbus_app_ensure_detail_view(WmBusApp* app) {
     if(!app) return false;
-    if(app->detail_widget) return true;
-
-    wmbus_app_log_step("alloc detail view");
-    app->detail_widget = widget_alloc();
-    if(!app->detail_widget) return false;
-
-    view_dispatcher_add_view(
-        app->view_dispatcher, WmBusAppViewPacketDetail, widget_get_view(app->detail_widget));
-    return true;
+    return wmbus_app_ensure_widget(
+        app, WmBusAppViewPacketDetail, &app->detail_widget, "alloc detail view");
 }
 
 bool wmbus_app_ensure_about_view(WmBusApp* app) {
     if(!app) return false;
-    if(app->about_widget) return true;
-
-    wmbus_app_log_step("alloc about view");
-    app->about_widget = widget_alloc();
-    if(!app->about_widget) return false;
-
-    view_dispatcher_add_view(
-        app->view_dispatcher, WmBusAppViewAbout, widget_get_view(app->about_widget));
-    return true;
+    return wmbus_app_ensure_widget(app, WmBusAppViewAbout, &app->about_widget, "alloc about view");
 }
 
 bool wmbus_app_ensure_exit_confirm_view(WmBusApp* app) {
     if(!app) return false;
-    if(app->exit_confirm_widget) return true;
-
-    wmbus_app_log_step("alloc exit confirm view");
-    app->exit_confirm_widget = widget_alloc();
-    if(!app->exit_confirm_widget) return false;
-
-    view_dispatcher_add_view(
-        app->view_dispatcher, WmBusAppViewExitConfirm, widget_get_view(app->exit_confirm_widget));
-    return true;
+    return wmbus_app_ensure_widget(
+        app, WmBusAppViewExitConfirm, &app->exit_confirm_widget, "alloc exit confirm view");
 }
 
 static WmBusApp* wmbus_app_alloc(void) {

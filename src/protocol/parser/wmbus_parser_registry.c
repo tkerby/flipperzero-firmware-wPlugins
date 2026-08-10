@@ -37,9 +37,10 @@ static bool wmbus_parser_registry_try(
         if(validate_decrypt_only && !parser->validates_decrypt) continue;
         if(!parser->probe(packet)) continue;
 
-        WmBusPacketApplicationData application = {.parser_id = parser->parser_id};
+        WmBusPacketApplicationData application = {0};
         if(!parser->parse(packet, &application)) continue;
 
+        application.parser_id = parser->parser_id;
         if(out_application) *out_application = application;
         return true;
     }

@@ -2,8 +2,6 @@
 
 #include "../model/wmbus_application_record.h"
 
-#include <string.h>
-
 typedef enum {
     WmBusDifDataEncodingInteger = 0,
     WmBusDifDataEncodingBcd,
@@ -192,25 +190,25 @@ static void
 
     if((vif & 0x78U) == 0x10U) {
         record->quantity = WmBusApplicationQuantityVolume;
-        record->scale10 = (int8_t)(vif & 0x07U) - 6;
+        record->scale10 = (int8_t)((int)(vif & 0x07U) - 6);
     } else if((vif & 0x78U) == 0x00U) {
         record->quantity = WmBusApplicationQuantityEnergy;
-        record->scale10 = (int8_t)(vif & 0x07U) - 3;
+        record->scale10 = (int8_t)((int)(vif & 0x07U) - 3);
     } else if((vif & 0x78U) == 0x28U) {
         record->quantity = WmBusApplicationQuantityPower;
-        record->scale10 = (int8_t)(vif & 0x07U) - 3;
+        record->scale10 = (int8_t)((int)(vif & 0x07U) - 3);
     } else if((vif & 0x78U) == 0x38U) {
         record->quantity = WmBusApplicationQuantityVolumeFlow;
-        record->scale10 = (int8_t)(vif & 0x07U) - 6;
+        record->scale10 = (int8_t)((int)(vif & 0x07U) - 6);
     } else if((vif & 0x7CU) == 0x58U) {
         record->quantity = WmBusApplicationQuantityFlowTemperature;
-        record->scale10 = (int8_t)(vif & 0x03U) - 3;
+        record->scale10 = (int8_t)((int)(vif & 0x03U) - 3);
     } else if((vif & 0x7CU) == 0x5CU) {
         record->quantity = WmBusApplicationQuantityReturnTemperature;
-        record->scale10 = (int8_t)(vif & 0x03U) - 3;
+        record->scale10 = (int8_t)((int)(vif & 0x03U) - 3);
     } else if((vif & 0x7CU) == 0x60U) {
         record->quantity = WmBusApplicationQuantityTemperatureDifference;
-        record->scale10 = (int8_t)(vif & 0x03U) - 3;
+        record->scale10 = (int8_t)((int)(vif & 0x03U) - 3);
     } else if(vif == 0x6EU) {
         record->quantity = WmBusApplicationQuantityHeatCostAllocation;
     } else if(vif == 0x6CU) {
@@ -399,8 +397,6 @@ bool wmbus_parser_dif_vif_parse(
         return false;
     }
 
-    memset(out_application, 0, sizeof(*out_application));
-    out_application->parser_id = WmBusParserIdDifVif;
     uint8_t record_count = 0U;
     if(!wmbus_packet_decode_application_records(
            packet->payload->application_bytes,

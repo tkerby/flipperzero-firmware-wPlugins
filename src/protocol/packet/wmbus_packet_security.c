@@ -4,10 +4,34 @@
 
 #include "../crypto/wmbus_crypto_mode5.h"
 #include "../frame/wmbus_frame.h"
-#include "../parser/wmbus_parser.h"
 #include "../parser/wmbus_parser_registry.h"
 
 #define TAG "WmBusDecoder"
+
+uint8_t wmbus_packet_ell_security_mode(uint32_t sn) {
+    return (uint8_t)((sn >> 29) & 0x07U);
+}
+
+bool wmbus_packet_ell_payload_is_encrypted(uint8_t security_mode) {
+    return security_mode == WmBusEllSecurityModeAesCtr;
+}
+
+uint8_t wmbus_packet_tpl_security_mode(uint16_t cfg) {
+    return (uint8_t)((cfg >> 8) & 0x1FU);
+}
+
+bool wmbus_packet_tpl_payload_is_protected(uint16_t cfg) {
+    const uint8_t security_mode = wmbus_packet_tpl_security_mode(cfg);
+    if(security_mode == WmBusTplSecurityModeClear) return false;
+
+    /* Mode 5 with zero encrypted blocks carries a clear application payload. */
+    if(security_mode == WmBusTplSecurityModeAesCbcIv && ((cfg >> 4) & 0x0FU) == 0U) {
+        return false;
+    }
+
+    /* Unknown and unsupported protection modes remain closed. */
+    return true;
+}
 
 static const char* wmbus_packet_decrypt_result_str(WmBusDecryptResult result) {
     switch(result) {
@@ -136,8 +160,9 @@ bool wmbus_packet_resolve_application_payload(
     }
 
     if(record->tpl.header_type == WmBusTplHeaderNone ||
-       !wmbus_parser_tpl_has_encrypted_payload(record->tpl.cfg)) {
-        if(record->tpl.security_mode == 0x05U && (((record->tpl.cfg >> 4) & 0x0FU) == 0U) &&
+       !wmbus_packet_tpl_payload_is_protected(record->tpl.cfg)) {
+        if(record->tpl.security_mode == WmBusTplSecurityModeAesCbcIv &&
+           (((record->tpl.cfg >> 4) & 0x0FU) == 0U) &&
            (frame_len < (size_t)record->tpl.header_len + 2U ||
             frame[record->tpl.header_len] != 0x2FU ||
             frame[record->tpl.header_len + 1U] != 0x2FU)) {
@@ -152,7 +177,7 @@ bool wmbus_packet_resolve_application_payload(
         return true;
     }
 
-    if(record->tpl.security_mode != 0x05U) {
+    if(record->tpl.security_mode != WmBusTplSecurityModeAesCbcIv) {
         FURI_LOG_D(
             TAG,
             "unsupported TPL protection id=%s ci=%02X cfg=%04X mode=%02X",

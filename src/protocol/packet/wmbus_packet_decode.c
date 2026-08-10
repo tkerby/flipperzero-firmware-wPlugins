@@ -4,7 +4,23 @@
 
 #include "../decode/wmbus_decode.h"
 #include "../frame/wmbus_frame.h"
-#include "../parser/wmbus_parser.h"
+#include "wmbus_packet_security.h"
+
+bool wmbus_packet_ci_has_ell(uint8_t ci) {
+    switch(ci) {
+    case 0x8C:
+    case 0x8D:
+    case 0x8E:
+    case 0x8F:
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool wmbus_packet_ell_has_session_fields(uint8_t ci) {
+    return ci == 0x8DU || ci == 0x8FU;
+}
 
 static void wmbus_packet_populate_identity(WmBusPacketRecord* record, const uint8_t address[8]) {
     if(!record || !address) return;
@@ -90,7 +106,7 @@ static void wmbus_packet_extract_tpl_info(
         record->tpl.acc = frame[ci_pos + 1U];
         record->tpl.tpl_status = frame[ci_pos + 2U];
         record->tpl.cfg = (uint16_t)frame[ci_pos + 3U] | ((uint16_t)frame[ci_pos + 4U] << 8U);
-        record->tpl.security_mode = wmbus_parser_tpl_security_mode(record->tpl.cfg);
+        record->tpl.security_mode = wmbus_packet_tpl_security_mode(record->tpl.cfg);
     } else if(header_type == WmBusTplHeaderLong && frame_len >= ci_pos + 13U) {
         record->tpl.header_type = WmBusTplHeaderLong;
         record->tpl.header_len = (uint8_t)(ci_pos + 13U);
@@ -101,7 +117,7 @@ static void wmbus_packet_extract_tpl_info(
         record->tpl.acc = frame[ci_pos + 9U];
         record->tpl.tpl_status = frame[ci_pos + 10U];
         record->tpl.cfg = (uint16_t)frame[ci_pos + 11U] | ((uint16_t)frame[ci_pos + 12U] << 8U);
-        record->tpl.security_mode = wmbus_parser_tpl_security_mode(record->tpl.cfg);
+        record->tpl.security_mode = wmbus_packet_tpl_security_mode(record->tpl.cfg);
         wmbus_packet_populate_identity(record, record->tpl.iv_address);
     }
 }
@@ -124,7 +140,7 @@ static void wmbus_packet_extract_dll_tpl_info(
     record->tpl.security_mode = 0U;
     record->ell.header_len = 11U;
 
-    if(frame_len >= 13U && wmbus_parser_ci_has_ell(frame[10])) {
+    if(frame_len >= 13U && wmbus_packet_ci_has_ell(frame[10])) {
         size_t pos = 11U;
         WmBusPacketEllData ell = {
             .has_ell = true,
@@ -141,14 +157,14 @@ static void wmbus_packet_extract_dll_tpl_info(
             pos += 8U;
         }
 
-        if(wmbus_parser_ell_has_session_fields(ell_ci)) {
+        if(wmbus_packet_ell_has_session_fields(ell_ci)) {
             if(frame_len < pos + 6U) {
                 return;
             }
             ell.has_session = true;
             ell.sn = (uint32_t)frame[pos] | ((uint32_t)frame[pos + 1U] << 8U) |
                      ((uint32_t)frame[pos + 2U] << 16U) | ((uint32_t)frame[pos + 3U] << 24U);
-            ell.security_mode = wmbus_parser_ell_security_mode(ell.sn);
+            ell.security_mode = wmbus_packet_ell_security_mode(ell.sn);
             pos += 4U;
             ell.payload_crc = (uint16_t)frame[pos] | ((uint16_t)frame[pos + 1U] << 8U);
             pos += 2U;

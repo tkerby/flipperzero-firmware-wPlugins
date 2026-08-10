@@ -307,8 +307,6 @@ bool wmbus_parser_apator162_parse(
         return false;
     }
 
-    memset(out_application, 0, sizeof(*out_application));
-    out_application->parser_id = WmBusParserIdApator162;
     WmBusApator162Layout layout = {0};
     if(!wmbus_parser_apator162_locate_layout(
            packet->payload->application_bytes, packet->payload->application_len, &layout)) {

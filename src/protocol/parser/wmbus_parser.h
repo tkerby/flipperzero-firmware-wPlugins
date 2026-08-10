@@ -1,18 +1,5 @@
 #pragma once
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-
-#include "../../core/wmbus_types.h"
 #include "wmbus_parser_id.h"
 
 const char* wmbus_parser_id_name(WmBusParserId parser_id);
-
-bool wmbus_parser_ci_has_ell(uint8_t ci);
-bool wmbus_parser_ell_has_session_fields(uint8_t ci);
-uint8_t wmbus_parser_ell_security_mode(uint32_t sn);
-bool wmbus_parser_ell_security_likely_encrypted(uint32_t sn);
-
-uint8_t wmbus_parser_tpl_security_mode(uint16_t cfg);
-bool wmbus_parser_tpl_has_encrypted_payload(uint16_t cfg);

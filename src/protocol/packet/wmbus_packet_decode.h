@@ -9,6 +9,9 @@ typedef struct {
     WmBusPacketQuality quality;
 } WmBusPacketDecodeState;
 
+bool wmbus_packet_ci_has_ell(uint8_t ci);
+bool wmbus_packet_ell_has_session_fields(uint8_t ci);
+
 bool wmbus_packet_decode_phy_frame(
     const WmBusPhyFrame* phy_frame,
     uint8_t* frame_buf,
