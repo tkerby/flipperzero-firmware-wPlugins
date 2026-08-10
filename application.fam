@@ -1,11 +1,16 @@
+import os
+
+selftests_enabled = os.getenv("WMBUS_SELFTESTS") == "1"
+
 App(
     appid="wmbus_decoder",
     name="WM-Bus Decoder",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="wmbus_decoder_app",
     stack_size=8 * 1024,
-    cdefines=[("WMBUS_SELFTESTS", "1")],
-    sources=["*.c"],
+    cdefines=[("WMBUS_SELFTESTS", "1" if selftests_enabled else "0")],
+    sources=["*.c"] if selftests_enabled else ["*.c", "!test"],
     requires=["gui"],
+    fap_libs=["mbedtls"],
     fap_category="Sub-GHz",
 )

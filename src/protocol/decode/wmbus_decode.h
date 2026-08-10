@@ -11,5 +11,4 @@ bool wmbus_decode_3of6(
     size_t out_max,
     size_t* out_len);
 
-bool wmbus_decode_c_field_valid(uint8_t c_field);
 bool wmbus_decode_is_plausible_frame(const uint8_t* data, size_t len);

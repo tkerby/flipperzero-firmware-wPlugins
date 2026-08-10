@@ -2,7 +2,7 @@
 
 #include <string.h>
 
-#include "../parser/wmbus_device_parser.h"
+#include "../parser/wmbus_parser_registry.h"
 
 bool wmbus_packet_parse_application(
     WmBusPacketRecord* record,
@@ -24,7 +24,7 @@ bool wmbus_packet_parse_application(
         .identity = &record->identity,
     };
 
-    return wmbus_device_parser_apply(&packet, &record->application);
+    return wmbus_parser_registry_parse(&packet, &record->application);
 }
 
 void wmbus_packet_finalize_parser(WmBusPacketRecord* record) {

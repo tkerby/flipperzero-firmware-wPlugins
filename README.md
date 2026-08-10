@@ -11,7 +11,7 @@
 - optional AES key loading from `keys.txt`
 - generic DIF/VIF parsing for standard application records
 - targeted device parsing for supported telegram families
-- startup selftest report written to `/ext/apps_data/wmbus_decoder/selftest.txt`
+- opt-in test builds write a startup selftest report to `/ext/apps_data/wmbus_decoder/selftest.txt`
 
 ### Packet flow
 
@@ -52,10 +52,10 @@ Minimum steps:
 
 1. add a new parser ID in `wmbus_parser_id.h`
 2. add a parser implementation with `probe(const WmBusParserPacketView*)` and `parse(const WmBusParserPacketView*, WmBusPacketApplicationData*)`
-3. include the new parser in `wmbus_device_parser.c`
-4. register it in `wmbus_device_parsers[]` with `parser_id`, display `name`, and the correct `validates_decrypt` flag
+3. add its display name to the indexed table in `wmbus_parser.c`
+4. include and register it in `wmbus_parser_registry.c` with `parser_id` and the correct `validates_decrypt` flag
 5. place it before any broader parser it should override
-6. add or update selftests in `applications_user/wmbus_decoder/test/`
+6. add or update selftests in `src/test/`
 
 Parser inputs come through `WmBusParserPacketView`, which exposes DLL, TPL, payload, and identity data from the shared packet pipeline. New parser tests should exercise the full packet path through `wmbus_packet_process_phy_frame(...)` rather than calling parser internals directly.
 
@@ -104,6 +104,13 @@ Format:
 - only keys explicitly listed in this file are tested; no keys are derived or brute-forced
 - up to 16 keys are tried in file order, stopping at the first standards-valid result
 
+## Protocol Sources
+
+- EN 13757-3 and EN 13757-4 are normative for supported WM-Bus frame, transport, and security behavior.
+- OMS documents are used only for extensions they define.
+- The [TI CC1101 errata](https://www.ti.com/lit/er/swrz020e/swrz020e.pdf) is authoritative for RX FIFO handling.
+- Proprietary Apator behavior is maintained from tested packet fixtures.
+
 ## Build
 
 From this app directory:
@@ -118,7 +125,13 @@ Output:
 
 ## Tests
 
-The app runs its selftests at startup and writes the report to:
+Normal builds exclude the on-device test suite. Build, deploy, and run the test variant with:
+
+```bash
+WMBUS_SELFTESTS=1 ufbt launch
+```
+
+The test build writes its startup report to:
 
 `/ext/apps_data/wmbus_decoder/selftest.txt`
 
@@ -138,6 +151,12 @@ Expected result ends with:
 
 ```text
 selftests done total=<N> passed=<N> failed=0
+```
+
+Rebuild production mode after testing so `dist/wmbus_decoder.fap` does not contain selftests:
+
+```bash
+ufbt
 ```
 
 ## Credits

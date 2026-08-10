@@ -17,8 +17,7 @@
 #define WMBUS_T_GAP_TIMEOUT_MS             5U
 #define WMBUS_C_READ_TIMEOUT_MS            25U
 #define WMBUS_CC1101_PKTCTRL0_INFINITE_LEN 0x02U
-#define WMBUS_CC1101_PKTCTRL0_T_MODE       WMBUS_CC1101_PKTCTRL0_INFINITE_LEN
-#define WMBUS_CC1101_PKTCTRL0_C_MODE       WMBUS_CC1101_PKTCTRL0_INFINITE_LEN
+#define WMBUS_CC1101_MDMCFG2_T_MODE        0x05U
 #define WMBUS_CC1101_MDMCFG2_2FSK_SYNC_16_CS 0x06U
 #define WMBUS_CC1101_PKTSTATUS_SFD          0x08U
 #define WMBUS_CC1101_MARCSTATE_MASK         0x1FU
@@ -36,10 +35,6 @@ typedef struct {
     WmBusRxMode mode;
 } WmBusControlEvent;
 
-typedef struct {
-    const uint8_t* regs;
-} WmBusCc1101Profile;
-
 struct WmBusRadioRxService {
     WmBusRadioRxCallbacks callbacks;
     FuriThread* thread;
@@ -47,7 +42,7 @@ struct WmBusRadioRxService {
     WmBusRxMode mode;
 };
 
-static const uint8_t wmbus_cc1101_t_mode_preset_regs[] = {
+static uint8_t wmbus_cc1101_mode_preset_regs[] = {
     // IOCFG2 is register 0x00 and cannot appear in this table because the
     // Flipper preset loader uses 0x00 as the end-of-table sentinel.
     CC1101_IOCFG1,
@@ -65,7 +60,7 @@ static const uint8_t wmbus_cc1101_t_mode_preset_regs[] = {
     CC1101_PKTCTRL1,
     0x00,
     CC1101_PKTCTRL0,
-    WMBUS_CC1101_PKTCTRL0_T_MODE,
+    WMBUS_CC1101_PKTCTRL0_INFINITE_LEN,
     CC1101_ADDR,
     0x00,
     CC1101_CHANNR,
@@ -85,7 +80,7 @@ static const uint8_t wmbus_cc1101_t_mode_preset_regs[] = {
     CC1101_MDMCFG3,
     0x04,
     CC1101_MDMCFG2,
-    0x05,
+    WMBUS_CC1101_MDMCFG2_T_MODE,
     CC1101_MDMCFG1,
     0x22,
     CC1101_MDMCFG0,
@@ -154,123 +149,15 @@ static const uint8_t wmbus_cc1101_t_mode_preset_regs[] = {
     0x00,
 };
 
-static const uint8_t wmbus_cc1101_c_mode_preset_regs[] = {
-    // Match the common first 16 bits of the C-mode sync (54 3D) exactly. The
-    // capture layer validates the Frame-A (54 CD) or Frame-B (54 3D) remainder.
-    CC1101_IOCFG1,
-    0x2E,
-    CC1101_IOCFG0,
-    0x00,
-    CC1101_FIFOTHR,
-    0x07,
-    CC1101_SYNC1,
-    0x54,
-    CC1101_SYNC0,
-    0x3D,
-    CC1101_PKTLEN,
-    0xFF,
-    CC1101_PKTCTRL1,
-    0x00,
-    CC1101_PKTCTRL0,
-    WMBUS_CC1101_PKTCTRL0_C_MODE,
-    CC1101_ADDR,
-    0x00,
-    CC1101_CHANNR,
-    0x00,
-    CC1101_FSCTRL1,
-    0x08,
-    CC1101_FSCTRL0,
-    0x00,
-    CC1101_FREQ2,
-    0x21,
-    CC1101_FREQ1,
-    0x65,
-    CC1101_FREQ0,
-    0x6A,
-    CC1101_MDMCFG4,
-    0x5C,
-    CC1101_MDMCFG3,
-    0x04,
-    CC1101_MDMCFG2,
-    WMBUS_CC1101_MDMCFG2_2FSK_SYNC_16_CS,
-    CC1101_MDMCFG1,
-    0x22,
-    CC1101_MDMCFG0,
-    0xF8,
-    CC1101_DEVIATN,
-    0x44,
-    CC1101_MCSM2,
-    0x07,
-    CC1101_MCSM1,
-    0x00,
-    CC1101_MCSM0,
-    0x18,
-    CC1101_FOCCFG,
-    0x2E,
-    CC1101_BSCFG,
-    0xBF,
-    CC1101_AGCCTRL2,
-    0x43,
-    CC1101_AGCCTRL1,
-    0x09,
-    CC1101_AGCCTRL0,
-    0xB5,
-    CC1101_WOREVT1,
-    0x87,
-    CC1101_WOREVT0,
-    0x6B,
-    CC1101_WORCTRL,
-    0xFB,
-    CC1101_FREND1,
-    0xB6,
-    CC1101_FREND0,
-    0x10,
-    CC1101_FSCAL3,
-    0xEA,
-    CC1101_FSCAL2,
-    0x2A,
-    CC1101_FSCAL1,
-    0x00,
-    CC1101_FSCAL0,
-    0x1F,
-    CC1101_RCCTRL1,
-    0x41,
-    CC1101_RCCTRL0,
-    0x00,
-    CC1101_FSTEST,
-    0x59,
-    CC1101_PTEST,
-    0x7F,
-    CC1101_AGCTEST,
-    0x3F,
-    CC1101_TEST2,
-    0x81,
-    CC1101_TEST1,
-    0x35,
-    CC1101_TEST0,
-    0x09,
-    0U,
-    0U,
-    0xC0,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-};
+static void wmbus_radio_preset_set(uint8_t reg, uint8_t value) {
+    for(size_t index = 0U; wmbus_cc1101_mode_preset_regs[index] != 0U; index += 2U) {
+        if(wmbus_cc1101_mode_preset_regs[index] == reg) {
+            wmbus_cc1101_mode_preset_regs[index + 1U] = value;
+            return;
+        }
+    }
 
-static const WmBusCc1101Profile wmbus_cc1101_t_mode_profile = {
-    .regs = wmbus_cc1101_t_mode_preset_regs,
-};
-
-static const WmBusCc1101Profile wmbus_cc1101_c_mode_profile = {
-    .regs = wmbus_cc1101_c_mode_preset_regs,
-};
-
-static const WmBusCc1101Profile* wmbus_radio_profile(WmBusRxMode mode) {
-    return mode == WmBusRxModeC ? &wmbus_cc1101_c_mode_profile : &wmbus_cc1101_t_mode_profile;
+    furi_crash("WM-Bus preset register missing");
 }
 
 static void wmbus_radio_recover_rx(void) {
@@ -279,9 +166,13 @@ static void wmbus_radio_recover_rx(void) {
     furi_hal_subghz_rx();
 }
 
-static void wmbus_radio_reload_rx_preset(const WmBusCc1101Profile* profile) {
+static void wmbus_radio_reload_rx_preset(WmBusRxMode mode) {
+    wmbus_radio_preset_set(
+        CC1101_MDMCFG2,
+        mode == WmBusRxModeC ? WMBUS_CC1101_MDMCFG2_2FSK_SYNC_16_CS :
+                               WMBUS_CC1101_MDMCFG2_T_MODE);
     furi_hal_subghz_reset();
-    furi_hal_subghz_load_custom_preset(profile->regs);
+    furi_hal_subghz_load_custom_preset(wmbus_cc1101_mode_preset_regs);
     furi_hal_subghz_set_frequency_and_path(WMBUS_FREQ_HZ);
     furi_hal_subghz_flush_rx();
     furi_hal_subghz_rx();
@@ -292,7 +183,7 @@ static char wmbus_radio_mode_char(WmBusRxMode mode) {
 }
 
 static void wmbus_radio_apply_mode(WmBusRxMode mode) {
-    wmbus_radio_reload_rx_preset(wmbus_radio_profile(mode));
+    wmbus_radio_reload_rx_preset(mode);
 }
 
 static uint8_t wmbus_radio_read_status_locked(uint8_t reg) {

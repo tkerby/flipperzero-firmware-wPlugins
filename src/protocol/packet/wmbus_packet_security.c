@@ -4,8 +4,8 @@
 
 #include "../crypto/wmbus_crypto_mode5.h"
 #include "../frame/wmbus_frame.h"
-#include "../parser/wmbus_device_parser.h"
 #include "../parser/wmbus_parser.h"
+#include "../parser/wmbus_parser_registry.h"
 
 #define TAG "WmBusDecoder"
 
@@ -17,6 +17,8 @@ static const char* wmbus_packet_decrypt_result_str(WmBusDecryptResult result) {
         return "invalid args";
     case WmBusDecryptResultInvalidEncryptedLength:
         return "invalid encrypted length";
+    case WmBusDecryptResultCryptoError:
+        return "crypto error";
     default:
         return "unknown";
     }
@@ -98,7 +100,7 @@ static bool wmbus_packet_try_key(
     wmbus_packet_set_application_payload(&candidate_payload, decrypt_workspace, payload_len);
     parser_packet.payload = &candidate_payload;
 
-    if(decrypt.has_check_bytes || wmbus_device_parser_validate_decrypt(&parser_packet, NULL)) {
+    if(decrypt.has_check_bytes || wmbus_parser_registry_validate_decrypt(&parser_packet)) {
         *out_payload = candidate_payload;
         return true;
     }

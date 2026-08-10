@@ -39,13 +39,6 @@ static void wmbus_keyring_trim(char* str) {
     }
 }
 
-static void wmbus_keyring_uppercase(char* str) {
-    if(!str) return;
-    for(size_t i = 0; str[i] != '\0'; i++) {
-        str[i] = (char)toupper((unsigned char)str[i]);
-    }
-}
-
 static bool wmbus_keyring_parse_hex_key(const char* text, uint8_t out[WMBUS_KEY_BYTES]) {
     if(!text || !out) return false;
     if(strlen(text) != (WMBUS_KEY_BYTES * 2U)) return false;
@@ -106,7 +99,6 @@ bool wmbus_keyring_load(Storage* storage, WmBusKeyring* keyring) {
         char buffer[128];
         snprintf(buffer, sizeof(buffer), "%s", furi_string_get_cstr(line));
         wmbus_keyring_trim(buffer);
-        wmbus_keyring_uppercase(buffer);
 
         if((buffer[0] == '\0') || (buffer[0] == '#')) {
             continue;
@@ -115,12 +107,6 @@ bool wmbus_keyring_load(Storage* storage, WmBusKeyring* keyring) {
         if(loaded.key_store.count >= WMBUS_CRYPTO_KEY_STORE_MAX) {
             ok = false;
             wmbus_keyring_set_status(&loaded, "too many keys");
-            break;
-        }
-
-        if(strchr(buffer, ',')) {
-            ok = false;
-            wmbus_keyring_set_status(&loaded, "bad key");
             break;
         }
 

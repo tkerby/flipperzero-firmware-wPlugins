@@ -1,6 +1,9 @@
 #include "wmbus_app.h"
 #include "../core/wmbus_config.h"
+
+#if WMBUS_SELFTESTS
 #include "../test/wmbus_selftest.h"
+#endif
 
 #include <furi.h>
 

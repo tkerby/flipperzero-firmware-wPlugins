@@ -32,7 +32,6 @@ typedef struct {
 } WmBusFrameNormalizeResult;
 
 void wmbus_frame_decode_mfg(uint16_t man, char out[WMBUS_MFG_STR_LEN]);
-bool wmbus_frame_format_id_bcd(const uint8_t id[4], char out[WMBUS_ID_STR_LEN]);
 void wmbus_frame_format_id(const uint8_t id[4], char out[WMBUS_ID_STR_LEN], bool* is_bcd);
 
 bool wmbus_frame_l_field_valid(uint8_t l_field);

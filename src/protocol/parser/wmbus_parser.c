@@ -1,59 +1,25 @@
 #include "wmbus_parser.h"
-#include "wmbus_device_parser.h"
 
 #include "../../core/wmbus_types.h"
 
-static const WmBusParserInfo wmbus_builtin_parsers[] = {
-    {
-        .parser_id = WmBusParserIdUnknown,
-        .name = "Unknown",
-        .validates_decrypt = false,
-    },
-    {
-        .parser_id = WmBusParserIdRaw,
-        .name = "Raw",
-        .validates_decrypt = false,
-    },
-    {
-        .parser_id = WmBusParserIdHeader,
-        .name = "Header",
-        .validates_decrypt = false,
-    },
-    {
-        .parser_id = WmBusParserIdEll,
-        .name = "ELL",
-        .validates_decrypt = false,
-    },
-    {
-        .parser_id = WmBusParserIdShortTpl,
-        .name = "Short TPL",
-        .validates_decrypt = false,
-    },
-    {
-        .parser_id = WmBusParserIdLongTpl,
-        .name = "Long TPL",
-        .validates_decrypt = false,
-    },
+static const char* const wmbus_parser_names[] = {
+    [WmBusParserIdUnknown] = "Unknown",
+    [WmBusParserIdRaw] = "Raw",
+    [WmBusParserIdHeader] = "Header",
+    [WmBusParserIdEll] = "ELL",
+    [WmBusParserIdShortTpl] = "Short TPL",
+    [WmBusParserIdLongTpl] = "Long TPL",
+    [WmBusParserIdDifVif] = "DifVif",
+    [WmBusParserIdApator162] = "Apator162",
 };
 
-static const WmBusParserInfo* wmbus_parser_get_info(WmBusParserId parser_id) {
-    const WmBusDeviceParser* device_parser = wmbus_device_parser_get(parser_id);
-    if(device_parser) {
-        return &device_parser->info;
-    }
-
-    for(size_t i = 0; i < (sizeof(wmbus_builtin_parsers) / sizeof(wmbus_builtin_parsers[0]));
-        i++) {
-        if(wmbus_builtin_parsers[i].parser_id == parser_id) {
-            return &wmbus_builtin_parsers[i];
-        }
-    }
-
-    return &wmbus_builtin_parsers[0];
-}
-
 const char* wmbus_parser_id_name(WmBusParserId parser_id) {
-    return wmbus_parser_get_info(parser_id)->name;
+    size_t index = (size_t)parser_id;
+    if(index >= sizeof(wmbus_parser_names) / sizeof(wmbus_parser_names[0]) ||
+       !wmbus_parser_names[index]) {
+        return wmbus_parser_names[WmBusParserIdUnknown];
+    }
+    return wmbus_parser_names[index];
 }
 
 bool wmbus_parser_ci_has_ell(uint8_t ci) {

@@ -94,7 +94,7 @@ static bool wmbus_decode_mfg_valid(uint16_t man) {
     return (a >= 1U && a <= 26U) && (b >= 1U && b <= 26U) && (c >= 1U && c <= 26U);
 }
 
-bool wmbus_decode_c_field_valid(uint8_t c_field) {
+static bool wmbus_decode_c_field_valid(uint8_t c_field) {
     if((c_field & 0x40U) == 0U) return false;
 
     switch(c_field & 0x0FU) {

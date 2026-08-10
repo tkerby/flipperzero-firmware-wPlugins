@@ -15,7 +15,7 @@ void wmbus_frame_decode_mfg(uint16_t man, char out[WMBUS_MFG_STR_LEN]) {
     }
 }
 
-bool wmbus_frame_format_id_bcd(const uint8_t id[4], char out[WMBUS_ID_STR_LEN]) {
+static bool wmbus_frame_format_id_bcd(const uint8_t id[4], char out[WMBUS_ID_STR_LEN]) {
     size_t pos = 0;
     for(int i = 3; i >= 0; i--) {
         uint8_t byte = id[i];
