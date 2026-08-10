@@ -27,4 +27,5 @@ App(
     requires=["gui"],
     fap_libs=["mbedtls"],
     fap_category="Sub-GHz",
+    fap_icon="wmbus_decoder.png",
 )
