@@ -43,27 +43,18 @@ static void wmbus_keyring_format_hex_key(
     out[WMBUS_KEY_BYTES * 2U + 1U] = '\0';
 }
 
-void wmbus_keyring_init(WmBusKeyring* keyring) {
-    if(!keyring) return;
-
-    memset(keyring, 0, sizeof(*keyring));
-    snprintf(keyring->path, sizeof(keyring->path), "%s", WMBUS_KEYRING_PATH);
-    wmbus_keyring_set_status(keyring, "missing");
-}
-
 bool wmbus_keyring_load(Storage* storage, WmBusKeyring* keyring) {
     if(!storage || !keyring) return false;
 
-    WmBusKeyring loaded;
-    wmbus_keyring_init(&loaded);
-    snprintf(loaded.path, sizeof(loaded.path), "%s", keyring->path);
+    WmBusKeyring loaded = {0};
+    wmbus_keyring_set_status(&loaded, "missing");
     wmbus_storage_ensure_app_folder(storage);
 
     Stream* stream = file_stream_alloc(storage);
     FuriString* line = furi_string_alloc();
     bool ok = true;
 
-    if(!file_stream_open(stream, loaded.path, FSAM_READ, FSOM_OPEN_EXISTING)) {
+    if(!file_stream_open(stream, WMBUS_KEYRING_PATH, FSAM_READ, FSOM_OPEN_EXISTING)) {
         loaded.file_present = false;
         loaded.loaded = false;
         wmbus_keyring_set_status(&loaded, "missing");
@@ -143,7 +134,7 @@ bool wmbus_keyring_append(
     File* file = storage_file_alloc(storage);
     bool written = false;
 
-    if(storage_file_open(file, keyring->path, FSAM_WRITE, FSOM_OPEN_APPEND)) {
+    if(storage_file_open(file, WMBUS_KEYRING_PATH, FSAM_WRITE, FSOM_OPEN_APPEND)) {
         size_t line_len = strlen(line);
         written = storage_file_write(file, line, line_len) == line_len;
         if(written) {

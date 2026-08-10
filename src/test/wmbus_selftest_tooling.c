@@ -827,7 +827,7 @@ static bool wmbus_selftest_check_dif_vif_hca_records(char* detail, size_t detail
                  records[5].quantity == WmBusApplicationQuantityDate &&
                  records[5].measurement_type == WmBusApplicationMeasurementTypeAtError &&
                  records[5].value_type == WmBusApplicationValueUnavailable &&
-                 wmbus_record_formatter_format_field(&records[5], unavailable) &&
+                 wmbus_record_formatter_format_joined(&records[5], 1U, ';', unavailable) &&
                  furi_string_equal_str(unavailable, "Date[err]=-") &&
                  records[6].quantity == WmBusApplicationQuantityDateTime &&
                  records[6].value_datetime.year == 2026U &&

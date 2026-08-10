@@ -131,7 +131,6 @@ static WmBusApp* wmbus_app_alloc(void) {
     wmbus_settings_reset(&app->settings);
     wmbus_settings_load(app->storage, &app->settings);
     wmbus_app_log_step("load keyring");
-    wmbus_keyring_init(&app->keyring);
     wmbus_keyring_load(app->storage, &app->keyring);
 
     wmbus_app_log_step("alloc core");

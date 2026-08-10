@@ -255,20 +255,6 @@ bool wmbus_record_formatter_format_value_text(
     return wmbus_record_formatter_format_value_buf(record, out, out_size);
 }
 
-bool wmbus_record_formatter_format_field(const WmBusApplicationRecord* record, FuriString* out) {
-    char field[WMBUS_PACKET_DETAIL_MAX] = {0};
-    if(!out) return false;
-
-    furi_string_reset(out);
-    if(!wmbus_record_formatter_format_field_buf(record, true, field, sizeof(field)) ||
-       field[0] == '\0') {
-        return false;
-    }
-
-    furi_string_set(out, field);
-    return true;
-}
-
 bool wmbus_record_formatter_format_joined(
     const WmBusApplicationRecord* records,
     uint8_t record_count,

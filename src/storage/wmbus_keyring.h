@@ -11,14 +11,12 @@
 #define WMBUS_KEY_BYTES WMBUS_CRYPTO_KEY_BYTES
 
 typedef struct {
-    char path[64];
     bool file_present;
     bool loaded;
     char status[24];
     WmBusCryptoKeyStore key_store;
 } WmBusKeyring;
 
-void wmbus_keyring_init(WmBusKeyring* keyring);
 bool wmbus_keyring_load(Storage* storage, WmBusKeyring* keyring);
 bool wmbus_keyring_append(
     Storage* storage,
