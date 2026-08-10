@@ -38,16 +38,7 @@ void wmbus_frame_format_id(const uint8_t id[4], char out[WMBUS_ID_STR_LEN], bool
 bool wmbus_frame_l_field_valid(uint8_t l_field);
 bool wmbus_frame_l_field_valid_for_format(uint8_t l_field, WmBusFrameFormat format);
 size_t wmbus_frame_len_format_a(uint8_t l_field);
-size_t wmbus_frame_len_format_b(uint8_t l_field);
 size_t wmbus_frame_expected_len(uint8_t l_field, WmBusFrameFormat format);
-
-bool wmbus_frame_trim_crc(
-    WmBusFrameFormat format,
-    const uint8_t* data,
-    size_t len,
-    uint8_t* out,
-    size_t out_max,
-    size_t* out_len);
 
 bool wmbus_frame_crc_check(WmBusFrameFormat format, const uint8_t* data, size_t len);
 

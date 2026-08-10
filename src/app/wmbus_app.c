@@ -12,32 +12,15 @@ static void wmbus_app_log_step(const char* step) {
     }
 }
 
-static void wmbus_app_copy_key_store(const WmBusApp* app, WmBusCryptoKeyStore* out_key_store) {
-    if(!out_key_store) {
-        return;
-    }
-
-    memset(out_key_store, 0, sizeof(*out_key_store));
-    if(!app || !app->keyring_mutex) {
-        return;
-    }
-
-    furi_check(furi_mutex_acquire(app->keyring_mutex, FuriWaitForever) == FuriStatusOk);
-    wmbus_keyring_copy_key_store(&app->keyring, out_key_store);
-    furi_check(furi_mutex_release(app->keyring_mutex) == FuriStatusOk);
-}
-
 static void wmbus_app_handle_frame(
     void* context,
-    const WmBusSettings* settings,
-    const WmBusCryptoKeyStore* key_store,
     const WmBusPhyFrame* phy_frame) {
     WmBusApp* app = context;
     if(!app || !app->capture_processor) {
         return;
     }
 
-    wmbus_capture_processor_submit_frame(app->capture_processor, settings, key_store, phy_frame);
+    wmbus_capture_processor_submit_frame(app->capture_processor, phy_frame);
 }
 
 static void wmbus_app_set_freq_valid(void* context, bool freq_valid) {
@@ -74,24 +57,22 @@ static bool wmbus_app_back_event_callback(void* context) {
 bool wmbus_app_apply_runtime_config(WmBusApp* app, bool persist) {
     if(!app) return false;
 
-    WmBusCryptoKeyStore key_store = {0};
-    wmbus_app_copy_key_store(app, &key_store);
-
     wmbus_rx_view_apply_settings(app->rx_view, &app->settings);
-    if(persist) {
-        wmbus_settings_save(app->storage, &app->settings);
-    }
-
-    return app->rx_service ?
-               wmbus_radio_rx_service_apply_config(app->rx_service, &app->settings, &key_store) :
-               true;
+    bool saved = !persist || wmbus_settings_save(app->storage, &app->settings);
+    bool processor_applied =
+        !app->capture_processor || wmbus_capture_processor_apply_config(
+                                       app->capture_processor,
+                                       &app->settings,
+                                       &app->keyring.key_store);
+    bool radio_applied =
+        !app->rx_service ||
+        wmbus_radio_rx_service_apply_mode(app->rx_service, app->settings.mode);
+    return saved && processor_applied && radio_applied;
 }
 
 bool wmbus_app_add_key(WmBusApp* app, const uint8_t key[WMBUS_KEY_BYTES]) {
     if(!app || !key) return false;
-    furi_check(furi_mutex_acquire(app->keyring_mutex, FuriWaitForever) == FuriStatusOk);
     bool added = wmbus_keyring_append(app->storage, &app->keyring, key);
-    furi_check(furi_mutex_release(app->keyring_mutex) == FuriStatusOk);
     if(added) {
         wmbus_app_apply_runtime_config(app, false);
     }
@@ -154,7 +135,6 @@ static WmBusApp* wmbus_app_alloc(void) {
     wmbus_keyring_load(app->storage, &app->keyring);
 
     wmbus_app_log_step("alloc core");
-    app->keyring_mutex = furi_mutex_alloc(FuriMutexTypeNormal);
     app->view_dispatcher = view_dispatcher_alloc();
     app->scene_manager = scene_manager_alloc(&wmbus_scene_handlers, app);
     wmbus_app_log_step("alloc rx view");
@@ -178,7 +158,8 @@ static WmBusApp* wmbus_app_alloc(void) {
     wmbus_app_log_step("enter rx scene");
     scene_manager_next_scene(app->scene_manager, WmBusSceneRx);
     wmbus_app_log_step("alloc capture processor");
-    app->capture_processor = wmbus_capture_processor_alloc();
+    app->capture_processor =
+        wmbus_capture_processor_alloc(&app->settings, &app->keyring.key_store);
     if(!app->capture_processor) {
         wmbus_app_free(app);
         return NULL;
@@ -192,15 +173,13 @@ static WmBusApp* wmbus_app_alloc(void) {
         return NULL;
     }
     wmbus_app_log_step("start rx service");
-    WmBusCryptoKeyStore key_store = {0};
-    wmbus_app_copy_key_store(app, &key_store);
     WmBusRadioRxCallbacks rx_callbacks = {
         .context = app,
         .handle_frame = wmbus_app_handle_frame,
         .set_freq_valid = wmbus_app_set_freq_valid,
         .set_live_rssi = wmbus_app_set_live_rssi,
     };
-    app->rx_service = wmbus_radio_rx_service_alloc(&rx_callbacks, &app->settings, &key_store);
+    app->rx_service = wmbus_radio_rx_service_alloc(&rx_callbacks, app->settings.mode);
     if(!app->rx_service) {
         wmbus_app_free(app);
         return NULL;
@@ -232,7 +211,6 @@ static void wmbus_app_free(WmBusApp* app) {
     view_dispatcher_free(app->view_dispatcher);
     scene_manager_free(app->scene_manager);
 
-    furi_mutex_free(app->keyring_mutex);
     furi_record_close(RECORD_STORAGE);
     furi_record_close(RECORD_GUI);
     free(app);

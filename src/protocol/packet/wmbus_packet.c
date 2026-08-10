@@ -7,38 +7,20 @@
 #include "wmbus_packet_parser.h"
 #include "wmbus_packet_security.h"
 
+static const char* const wmbus_packet_quality_text[WmBusPacketQualityCount][2] = {
+    [WmBusPacketQualityAnyCapture] = {"Received", "RX"},
+    [WmBusPacketQualityHeaderOk] = {"Header OK", "HDR OK"},
+    [WmBusPacketQualityFrameComplete] = {"Frame complete", "LEN OK"},
+    [WmBusPacketQualityCrcOk] = {"CRC OK", "CRC OK"},
+    [WmBusPacketQualityParsed] = {"Decoded", "DECODED"},
+};
+
 const char* wmbus_packet_quality_str(WmBusPacketQuality quality) {
-    switch(wmbus_packet_quality_clamp(quality)) {
-    case WmBusPacketQualityAnyCapture:
-        return "Received";
-    case WmBusPacketQualityHeaderOk:
-        return "Header OK";
-    case WmBusPacketQualityFrameComplete:
-        return "Frame complete";
-    case WmBusPacketQualityCrcOk:
-        return "CRC OK";
-    case WmBusPacketQualityParsed:
-        return "Decoded";
-    default:
-        return "--";
-    }
+    return wmbus_packet_quality_text[wmbus_packet_quality_clamp(quality)][0];
 }
 
 const char* wmbus_packet_quality_short_str(WmBusPacketQuality quality) {
-    switch(wmbus_packet_quality_clamp(quality)) {
-    case WmBusPacketQualityAnyCapture:
-        return "RX";
-    case WmBusPacketQualityHeaderOk:
-        return "HDR OK";
-    case WmBusPacketQualityFrameComplete:
-        return "LEN OK";
-    case WmBusPacketQualityCrcOk:
-        return "CRC OK";
-    case WmBusPacketQualityParsed:
-        return "DECODED";
-    default:
-        return "--";
-    }
+    return wmbus_packet_quality_text[wmbus_packet_quality_clamp(quality)][1];
 }
 
 bool wmbus_packet_record_passes_policy(

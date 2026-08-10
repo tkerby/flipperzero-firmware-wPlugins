@@ -28,13 +28,12 @@
 
 typedef enum {
     WmBusControlCmdStop = 0,
-    WmBusControlCmdApplyConfig,
+    WmBusControlCmdApplyMode,
 } WmBusControlCmd;
 
 typedef struct {
     WmBusControlCmd cmd;
-    WmBusSettings settings;
-    WmBusCryptoKeyStore key_store;
+    WmBusRxMode mode;
 } WmBusControlEvent;
 
 typedef struct {
@@ -45,8 +44,7 @@ struct WmBusRadioRxService {
     WmBusRadioRxCallbacks callbacks;
     FuriThread* thread;
     FuriMessageQueue* control_queue;
-    WmBusSettings settings;
-    WmBusCryptoKeyStore key_store;
+    WmBusRxMode mode;
 };
 
 static const uint8_t wmbus_cc1101_t_mode_preset_regs[] = {
@@ -496,15 +494,11 @@ static int32_t wmbus_radio_rx_service_thread(void* context) {
 
     furi_hal_power_suppress_charge_enter();
 
-    WmBusSettings runtime_settings = service->settings;
-    WmBusCryptoKeyStore runtime_key_store = service->key_store;
-    WmBusRxMode mode = runtime_settings.mode;
+    WmBusRxMode mode = service->mode;
     wmbus_radio_apply_mode(mode);
 
-    WmBusFifoCaptureState capture_t = {0};
-    WmBusFifoCaptureState capture_c = {0};
-    wmbus_fifo_capture_state_reset(&capture_t);
-    wmbus_fifo_capture_state_reset(&capture_c);
+    WmBusFifoCaptureState capture = {0};
+    wmbus_fifo_capture_state_reset(&capture);
 
     uint32_t t_gap_ticks = wmbus_ticks_from_ms(WMBUS_T_GAP_TIMEOUT_MS);
     uint32_t c_gap_ticks = wmbus_ticks_from_ms(WMBUS_C_READ_TIMEOUT_MS);
@@ -525,15 +519,11 @@ static int32_t wmbus_radio_rx_service_thread(void* context) {
                 break;
             }
 
-            if(event.cmd == WmBusControlCmdApplyConfig) {
-                bool mode_changed = (runtime_settings.mode != event.settings.mode);
-                runtime_settings = event.settings;
-                runtime_key_store = event.key_store;
-                if(mode_changed) {
-                    mode = runtime_settings.mode;
+            if(event.cmd == WmBusControlCmdApplyMode) {
+                if(mode != event.mode) {
+                    mode = event.mode;
                     wmbus_radio_apply_mode(mode);
-                    wmbus_fifo_capture_state_reset(&capture_t);
-                    wmbus_fifo_capture_state_reset(&capture_c);
+                    wmbus_fifo_capture_state_reset(&capture);
                 }
             }
         }
@@ -542,10 +532,8 @@ static int32_t wmbus_radio_rx_service_thread(void* context) {
 
         bool had_data = false;
         WmBusPhyFrame frame = {0};
-        bool frame_ready =
-            (mode == WmBusRxModeT) ?
-                wmbus_capture_step(&capture_t, &frame, &had_data, t_gap_ticks, WmBusRxModeT) :
-                wmbus_capture_step(&capture_c, &frame, &had_data, c_gap_ticks, WmBusRxModeC);
+        uint32_t gap_ticks = mode == WmBusRxModeT ? t_gap_ticks : c_gap_ticks;
+        bool frame_ready = wmbus_capture_step(&capture, &frame, &had_data, gap_ticks, mode);
 
         if(frame_ready) {
             uint32_t pulse_now = furi_get_tick();
@@ -553,8 +541,7 @@ static int32_t wmbus_radio_rx_service_thread(void* context) {
             led_pulse_on = true;
             led_pulse_off_tick = pulse_now + led_pulse_ticks;
             if(service->callbacks.handle_frame) {
-                service->callbacks.handle_frame(
-                    service->callbacks.context, &runtime_settings, &runtime_key_store, &frame);
+                service->callbacks.handle_frame(service->callbacks.context, &frame);
             }
         }
 
@@ -575,10 +562,8 @@ static int32_t wmbus_radio_rx_service_thread(void* context) {
                     "%c RX watchdog recovery: MARCSTATE=%02X capture=%u",
                     wmbus_radio_mode_char(mode),
                     (unsigned int)(marcstate & WMBUS_CC1101_MARCSTATE_MASK),
-                    (unsigned int)(mode == WmBusRxModeT ? capture_t.raw_len :
-                                                              capture_c.raw_len));
-                wmbus_fifo_capture_state_reset(
-                    mode == WmBusRxModeT ? &capture_t : &capture_c);
+                    (unsigned int)capture.raw_len);
+                wmbus_fifo_capture_state_reset(&capture);
                 wmbus_radio_recover_rx();
             }
 
@@ -604,8 +589,7 @@ static int32_t wmbus_radio_rx_service_thread(void* context) {
                     (unsigned int)(pktstatus_valid ? pktstatus : 0xFFU),
                     (unsigned int)(rxbytes_valid ? rxbytes : 0xFFU),
                     overflow ? "!" : "",
-                    (unsigned int)(mode == WmBusRxModeT ? capture_t.raw_len :
-                                                              capture_c.raw_len));
+                    (unsigned int)capture.raw_len);
                 rssi_log_divider = 0U;
             }
             last_rssi_tick = now_tick;
@@ -624,9 +608,8 @@ static int32_t wmbus_radio_rx_service_thread(void* context) {
 
 WmBusRadioRxService* wmbus_radio_rx_service_alloc(
     const WmBusRadioRxCallbacks* callbacks,
-    const WmBusSettings* settings,
-    const WmBusCryptoKeyStore* key_store) {
-    if(!callbacks || !settings || !key_store) {
+    WmBusRxMode mode) {
+    if(!callbacks || (mode != WmBusRxModeT && mode != WmBusRxModeC)) {
         return NULL;
     }
 
@@ -637,8 +620,7 @@ WmBusRadioRxService* wmbus_radio_rx_service_alloc(
 
     *service = (WmBusRadioRxService){
         .callbacks = *callbacks,
-        .settings = *settings,
-        .key_store = *key_store,
+        .mode = mode,
     };
 
     service->control_queue = furi_message_queue_alloc(4U, sizeof(WmBusControlEvent));
@@ -679,18 +661,15 @@ void wmbus_radio_rx_service_free(WmBusRadioRxService* service) {
     free(service);
 }
 
-bool wmbus_radio_rx_service_apply_config(
-    WmBusRadioRxService* service,
-    const WmBusSettings* settings,
-    const WmBusCryptoKeyStore* key_store) {
-    if(!service || !settings || !key_store || !service->control_queue) {
+bool wmbus_radio_rx_service_apply_mode(WmBusRadioRxService* service, WmBusRxMode mode) {
+    if(!service || !service->control_queue ||
+       (mode != WmBusRxModeT && mode != WmBusRxModeC)) {
         return false;
     }
 
     WmBusControlEvent event = {
-        .cmd = WmBusControlCmdApplyConfig,
-        .settings = *settings,
-        .key_store = *key_store,
+        .cmd = WmBusControlCmdApplyMode,
+        .mode = mode,
     };
     return furi_message_queue_put(service->control_queue, &event, FuriWaitForever) == FuriStatusOk;
 }

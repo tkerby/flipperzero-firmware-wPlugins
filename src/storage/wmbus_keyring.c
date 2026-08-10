@@ -77,22 +77,6 @@ void wmbus_keyring_init(WmBusKeyring* keyring) {
     wmbus_keyring_set_status(keyring, "missing");
 }
 
-void wmbus_keyring_copy_key_store(const WmBusKeyring* keyring, WmBusCryptoKeyStore* out_key_store) {
-    if(!out_key_store) {
-        return;
-    }
-
-    memset(out_key_store, 0, sizeof(*out_key_store));
-    if(!keyring) {
-        return;
-    }
-
-    out_key_store->count = keyring->count;
-    for(uint8_t i = 0; i < keyring->count; i++) {
-        memcpy(out_key_store->keys[i], keyring->keys[i], WMBUS_KEY_BYTES);
-    }
-}
-
 bool wmbus_keyring_load(Storage* storage, WmBusKeyring* keyring) {
     if(!storage || !keyring) return false;
 
@@ -128,7 +112,7 @@ bool wmbus_keyring_load(Storage* storage, WmBusKeyring* keyring) {
             continue;
         }
 
-        if(loaded.count >= WMBUS_KEYRING_MAX_KEYS) {
+        if(loaded.key_store.count >= WMBUS_CRYPTO_KEY_STORE_MAX) {
             ok = false;
             wmbus_keyring_set_status(&loaded, "too many keys");
             break;
@@ -140,21 +124,23 @@ bool wmbus_keyring_load(Storage* storage, WmBusKeyring* keyring) {
             break;
         }
 
-        if(!wmbus_keyring_parse_hex_key(buffer, loaded.keys[loaded.count])) {
+        if(!wmbus_keyring_parse_hex_key(
+               buffer, loaded.key_store.keys[loaded.key_store.count])) {
             ok = false;
             wmbus_keyring_set_status(&loaded, "bad key");
             break;
         }
 
-        loaded.count++;
+        loaded.key_store.count++;
     }
 
     if(ok) {
         loaded.loaded = true;
-        wmbus_keyring_set_status(&loaded, "%u keys", (unsigned int)loaded.count);
+        wmbus_keyring_set_status(
+            &loaded, "%u keys", (unsigned int)loaded.key_store.count);
     } else {
         loaded.loaded = false;
-        loaded.count = 0;
+        loaded.key_store.count = 0;
     }
 
     *keyring = loaded;
@@ -175,7 +161,7 @@ bool wmbus_keyring_append(
         return false;
     }
 
-    if(keyring->count >= WMBUS_KEYRING_MAX_KEYS) {
+    if(keyring->key_store.count >= WMBUS_CRYPTO_KEY_STORE_MAX) {
         wmbus_keyring_set_status(keyring, "too many keys");
         return false;
     }

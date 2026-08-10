@@ -62,9 +62,12 @@ The upper bound is shared by both modes: a Format-A frame at `L=149` occupies
 
 ## Processing boundary
 
-The radio thread ends at a completed `WmBusPhyFrame`. It submits the frame to a
-bounded processing queue and immediately resumes FIFO service. Link-layer
-processing, decryption, UI history, CSV formatting and SD-card synchronization
-run on a lower-priority processing worker; storage latency therefore cannot
-block RX FIFO draining. A full queue drops the new frame explicitly and reports
-the cumulative drop count rather than blocking the high-priority radio thread.
+The radio thread owns only radio mode and capture state. It ends at a completed
+`WmBusPhyFrame`, submits that frame to a bounded processing queue, and immediately
+resumes FIFO service. Settings, configured keys, link-layer processing,
+decryption, UI history, CSV formatting and SD-card synchronization belong to the
+lower-priority processing worker. Configuration changes use the same queue, so a
+frame is always processed with one coherent settings/key snapshot. Storage
+latency therefore cannot block RX FIFO draining. A full queue drops the new frame
+explicitly and reports the cumulative drop count rather than blocking the
+high-priority radio thread.

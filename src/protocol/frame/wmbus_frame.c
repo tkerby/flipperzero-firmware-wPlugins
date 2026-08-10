@@ -143,17 +143,13 @@ size_t wmbus_frame_len_format_a(uint8_t l_field) {
     return len;
 }
 
-size_t wmbus_frame_len_format_b(uint8_t l_field) {
-    return 1U + (size_t)l_field;
-}
-
 size_t wmbus_frame_expected_len(uint8_t l_field, WmBusFrameFormat format) {
     if(!wmbus_frame_l_field_valid_for_format(l_field, format)) return 0U;
 
     if(format == WmBusFrameFormatA) {
         return wmbus_frame_len_format_a(l_field);
     } else if(format == WmBusFrameFormatB) {
-        return wmbus_frame_len_format_b(l_field);
+        return 1U + (size_t)l_field;
     }
     return 0U;
 }
@@ -236,7 +232,7 @@ static bool wmbus_frame_trim_crc_b(
     return true;
 }
 
-bool wmbus_frame_trim_crc(
+static bool wmbus_frame_trim_crc(
     WmBusFrameFormat format,
     const uint8_t* data,
     size_t len,

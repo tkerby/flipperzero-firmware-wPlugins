@@ -52,7 +52,6 @@ struct WmBusApp {
     WmBusHistorySink history_sink;
     WmBusCaptureProcessor* capture_processor;
     WmBusRadioRxService* rx_service;
-    FuriMutex* keyring_mutex;
 
     WmBusSettings settings;
     WmBusKeyring keyring;

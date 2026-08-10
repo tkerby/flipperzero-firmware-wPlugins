@@ -101,7 +101,8 @@ Format:
 
 - one AES-128 key per line as 32 hex characters
 - lines starting with `#` are ignored
-- keys are tried in file order
+- only keys explicitly listed in this file are tested; no keys are derived or brute-forced
+- up to 16 keys are tried in file order, stopping at the first standards-valid result
 
 ## Build
 
