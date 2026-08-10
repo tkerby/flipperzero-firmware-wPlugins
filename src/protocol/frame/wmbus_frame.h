@@ -23,12 +23,9 @@
 #define WMBUS_FRAME_B_DOUBLE_CRC_L_FIELD_MIN 130U
 
 typedef struct {
-    bool length_ok;
-    bool crc_known;
     bool crc_ok;
     size_t computed_len;
     size_t normalized_len;
-    WmBusFrameFormat format;
 } WmBusFrameNormalizeResult;
 
 void wmbus_frame_decode_mfg(uint16_t man, char out[WMBUS_MFG_STR_LEN]);

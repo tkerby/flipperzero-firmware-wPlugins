@@ -4,8 +4,8 @@
 #include <string.h>
 
 #include "wmbus_packet_decode.h"
-#include "wmbus_packet_parser.h"
 #include "wmbus_packet_security.h"
+#include "../parser/wmbus_parser_registry.h"
 
 static const char* const wmbus_packet_quality_text[WmBusPacketQualityCount][2] = {
     [WmBusPacketQualityAnyCapture] = {"Received", "RX"},
@@ -30,6 +30,38 @@ bool wmbus_packet_record_passes_policy(
     if(!record) return false;
     if(min_rssi_dbm < 0 && record->rssi < min_rssi_dbm) return false;
     return wmbus_packet_quality_meets(record->quality, min_quality);
+}
+
+static bool wmbus_packet_parse_application(
+    WmBusPacketRecord* record,
+    const WmBusPacketPayloadView* payload) {
+    if(!record || !payload || !payload->application_bytes || payload->application_len == 0U) {
+        return false;
+    }
+
+    WmBusParserPacketView packet = {
+        .dll = &record->dll,
+        .tpl = &record->tpl,
+        .payload = payload,
+        .identity = &record->identity,
+    };
+    return wmbus_parser_registry_parse(&packet, &record->application);
+}
+
+static void wmbus_packet_set_fallback_parser(WmBusPacketRecord* record) {
+    if(record->application.parser_id != WmBusParserIdUnknown) return;
+
+    if(!wmbus_packet_quality_meets(record->quality, WmBusPacketQualityFrameComplete)) {
+        record->application.parser_id = WmBusParserIdRaw;
+    } else if(record->tpl.header_type == WmBusTplHeaderShort) {
+        record->application.parser_id = WmBusParserIdShortTpl;
+    } else if(record->tpl.header_type == WmBusTplHeaderLong) {
+        record->application.parser_id = WmBusParserIdLongTpl;
+    } else if(record->ell.has_ell) {
+        record->application.parser_id = WmBusParserIdEll;
+    } else {
+        record->application.parser_id = WmBusParserIdHeader;
+    }
 }
 
 bool wmbus_packet_process_phy_frame(
@@ -82,6 +114,6 @@ bool wmbus_packet_process_phy_frame(
         record->quality = WmBusPacketQualityParsed;
     }
 
-    wmbus_packet_finalize_parser(record);
+    wmbus_packet_set_fallback_parser(record);
     return true;
 }

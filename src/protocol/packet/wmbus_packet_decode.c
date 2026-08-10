@@ -175,26 +175,6 @@ static void wmbus_packet_extract_dll_tpl_info(
     wmbus_packet_extract_tpl_info(frame, frame_len, tpl_ci_pos, record);
 }
 
-static void
-    wmbus_packet_upgrade_quality(WmBusPacketQuality* quality, WmBusPacketQuality candidate) {
-    if(!quality) return;
-    if(wmbus_packet_quality_meets(candidate, *quality)) {
-        *quality = candidate;
-    }
-}
-
-static void wmbus_packet_upgrade_quality_from_normalize(
-    WmBusPacketQuality* quality,
-    const WmBusFrameNormalizeResult* normalize) {
-    if(!quality || !normalize) return;
-    if(normalize->length_ok) {
-        wmbus_packet_upgrade_quality(quality, WmBusPacketQualityFrameComplete);
-    }
-    if(normalize->crc_known && normalize->crc_ok) {
-        wmbus_packet_upgrade_quality(quality, WmBusPacketQualityCrcOk);
-    }
-}
-
 bool wmbus_packet_decode_phy_frame(
     const WmBusPhyFrame* phy_frame,
     uint8_t* frame_buf,
@@ -213,7 +193,7 @@ bool wmbus_packet_decode_phy_frame(
     memset(out, 0, sizeof(*out));
     if(!wmbus_decode_is_plausible_frame(phy_frame->data, phy_frame->len)) return true;
 
-    wmbus_packet_upgrade_quality(&out->quality, WmBusPacketQualityHeaderOk);
+    out->quality = WmBusPacketQualityHeaderOk;
 
     WmBusFrameNormalizeResult normalized_result = {0};
     if(wmbus_frame_normalize(
@@ -226,7 +206,8 @@ bool wmbus_packet_decode_phy_frame(
         out->frame = frame_buf;
         out->frame_len = normalized_result.normalized_len;
         out->wire_frame_len = normalized_result.computed_len;
-        wmbus_packet_upgrade_quality_from_normalize(&out->quality, &normalized_result);
+        out->quality = normalized_result.crc_ok ? WmBusPacketQualityCrcOk :
+                                                 WmBusPacketQualityFrameComplete;
     }
 
     return true;

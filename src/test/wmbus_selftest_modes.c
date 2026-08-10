@@ -626,15 +626,12 @@ static bool
         wmbus_selftest_set_detail(detail, detail_len, "normalize format-A failed");
         return false;
     }
-    if(!result.length_ok || !result.crc_known || !result.crc_ok ||
-       result.format != WmBusFrameFormatA || result.normalized_len != WMBUS_APATOR_A_LEN ||
+    if(!result.crc_ok || result.normalized_len != WMBUS_APATOR_A_LEN ||
        memcmp(wmbus_apator_a, normalized, WMBUS_APATOR_A_LEN) != 0) {
         wmbus_selftest_set_detail(
             detail,
             detail_len,
-            "unexpected format=%u len_ok=%u crc_ok=%u normalized_len=%u",
-            (unsigned int)result.format,
-            result.length_ok ? 1U : 0U,
+            "unexpected crc_ok=%u normalized_len=%u",
             result.crc_ok ? 1U : 0U,
             (unsigned int)result.normalized_len);
         return false;
@@ -661,15 +658,12 @@ static bool wmbus_selftest_check_frame_normalize_c_mode_format_a_wire_frame(
         wmbus_selftest_set_detail(detail, detail_len, "normalize format-A failed");
         return false;
     }
-    if(!result.length_ok || !result.crc_known || !result.crc_ok ||
-       result.format != WmBusFrameFormatA || result.normalized_len != WMBUS_APATOR_B_LEN ||
+    if(!result.crc_ok || result.normalized_len != WMBUS_APATOR_B_LEN ||
        memcmp(wmbus_apator_b, normalized, WMBUS_APATOR_B_LEN) != 0) {
         wmbus_selftest_set_detail(
             detail,
             detail_len,
-            "unexpected format=%u len_ok=%u crc_ok=%u normalized_len=%u",
-            (unsigned int)result.format,
-            result.length_ok ? 1U : 0U,
+            "unexpected crc_ok=%u normalized_len=%u",
             result.crc_ok ? 1U : 0U,
             (unsigned int)result.normalized_len);
         return false;
@@ -695,15 +689,12 @@ static bool
         wmbus_selftest_set_detail(detail, detail_len, "normalize format-B failed");
         return false;
     }
-    if(!result.length_ok || !result.crc_known || !result.crc_ok ||
-       result.format != WmBusFrameFormatB || result.normalized_len != WMBUS_APATOR_C_LEN ||
+    if(!result.crc_ok || result.normalized_len != WMBUS_APATOR_C_LEN ||
        memcmp(wmbus_apator_c, normalized, WMBUS_APATOR_C_LEN) != 0) {
         wmbus_selftest_set_detail(
             detail,
             detail_len,
-            "unexpected format=%u len_ok=%u crc_ok=%u normalized_len=%u",
-            (unsigned int)result.format,
-            result.length_ok ? 1U : 0U,
+            "unexpected crc_ok=%u normalized_len=%u",
             result.crc_ok ? 1U : 0U,
             (unsigned int)result.normalized_len);
         return false;
@@ -760,15 +751,12 @@ static bool wmbus_selftest_check_packet_process_c_crc_bad_keeps_complete_header(
     expected[5] ^= 0x01U;
     if(!wmbus_frame_normalize(
            WmBusFrameFormatB, frame, frame_len, normalized, sizeof(normalized), &normalize) ||
-       !normalize.length_ok || !normalize.crc_known || normalize.crc_ok ||
-       normalize.normalized_len != sizeof(expected) ||
+       normalize.crc_ok || normalize.normalized_len != sizeof(expected) ||
        memcmp(normalized, expected, sizeof(expected)) != 0) {
         wmbus_selftest_set_detail(
             detail,
             detail_len,
-            "unexpected normalize len_ok=%u crc_known=%u crc_ok=%u len=%u",
-            normalize.length_ok ? 1U : 0U,
-            normalize.crc_known ? 1U : 0U,
+            "unexpected normalize crc_ok=%u len=%u",
             normalize.crc_ok ? 1U : 0U,
             (unsigned int)normalize.normalized_len);
         return false;
@@ -826,14 +814,12 @@ static bool wmbus_selftest_check_c_format_a_is_authoritative(char* detail, size_
 
     if(!wmbus_frame_normalize(
            WmBusFrameFormatA, frame, frame_len, normalized, sizeof(normalized), &normalize) ||
-       !normalize.length_ok || !normalize.crc_known || normalize.crc_ok ||
-       normalize.normalized_len != sizeof(expected) ||
+       normalize.crc_ok || normalize.normalized_len != sizeof(expected) ||
        memcmp(normalized, expected, sizeof(expected)) != 0) {
         wmbus_selftest_set_detail(
             detail,
             detail_len,
-            "format-A normalize failed len_ok=%u crc_ok=%u len=%u",
-            normalize.length_ok ? 1U : 0U,
+            "format-A normalize failed crc_ok=%u len=%u",
             normalize.crc_ok ? 1U : 0U,
             (unsigned int)normalize.normalized_len);
         return false;

@@ -279,10 +279,7 @@ bool wmbus_frame_normalize(
         return false;
     }
 
-    out->length_ok = true;
-    out->crc_known = true;
     out->crc_ok = wmbus_frame_crc_check(format, frame, expected_len);
-    out->format = format;
     out->computed_len = expected_len;
     out->normalized_len = trimmed_len;
     return true;

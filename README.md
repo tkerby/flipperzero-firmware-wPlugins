@@ -29,8 +29,7 @@ The mode-specific radio and capture contract is documented in
 
 ## Current Limitations
 
-- `C` mode Frame A processing is validated against real FIFO captures; the C radio profile and
-  Frame B handling still need live on-air validation
+- `T` and `C` mode Frame A processing is validated against real rx captures; the C radio profile with frame B handling still need live on-air validation
 - the app is receive-only; it does not transmit or pair
 - device-specific parsing is limited; unsupported telegrams fall back to generic decode or remain undecoded
 - decryption support is limited to what the shared packet path and registered parsers can validate
