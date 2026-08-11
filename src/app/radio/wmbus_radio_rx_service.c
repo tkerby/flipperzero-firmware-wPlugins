@@ -14,6 +14,7 @@
 #define WMBUS_STATUS_STABLE_READ_MAX         8U
 #define WMBUS_RSSI_UPDATE_HZ                 5U
 #define WMBUS_LED_PULSE_MS                   40U
+#define WMBUS_RADIO_RX_STACK_SIZE            (4U * 1024U)
 #define WMBUS_T_GAP_TIMEOUT_MS               5U
 #define WMBUS_C_READ_TIMEOUT_MS              25U
 #define WMBUS_CC1101_PKTCTRL0_INFINITE_LEN   0x02U
@@ -512,8 +513,8 @@ WmBusRadioRxService*
         return NULL;
     }
 
-    service->thread =
-        furi_thread_alloc_ex("WmBusRx", 12288U, wmbus_radio_rx_service_thread, service);
+    service->thread = furi_thread_alloc_ex(
+        "WmBusRx", WMBUS_RADIO_RX_STACK_SIZE, wmbus_radio_rx_service_thread, service);
     if(!service->thread) {
         furi_message_queue_free(service->control_queue);
         free(service);

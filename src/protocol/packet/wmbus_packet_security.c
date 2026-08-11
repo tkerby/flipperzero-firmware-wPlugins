@@ -3,8 +3,6 @@
 #include <furi.h>
 
 #include "../crypto/wmbus_crypto_mode5.h"
-#include "../frame/wmbus_frame.h"
-#include "../parser/wmbus_parser_registry.h"
 
 #define TAG "WmBusDecoder"
 
@@ -98,7 +96,7 @@ static bool wmbus_packet_try_key(
     }
     size_t payload_len = frame_len - payload_offset;
     if(payload_len > decrypt_workspace_size) return false;
-    WmBusMode5DecryptInfo decrypt = wmbus_crypto_mode5_decrypt(
+    WmBusDecryptResult decrypt_result = wmbus_crypto_mode5_decrypt(
         &frame[payload_offset],
         payload_len,
         record->tpl.iv_address,
@@ -106,30 +104,22 @@ static bool wmbus_packet_try_key(
         record->tpl.cfg,
         key,
         decrypt_workspace);
-    if(decrypt.result != WmBusDecryptResultOk) {
+    if(decrypt_result != WmBusDecryptResultOk) {
         wmbus_packet_log_decrypt_failure_reason(
-            record, wmbus_packet_decrypt_result_str(decrypt.result));
+            record, wmbus_packet_decrypt_result_str(decrypt_result));
         return false;
     }
 
-    WmBusParserPacketView parser_packet = {
-        .dll = &record->dll,
-        .tpl = &record->tpl,
-        .payload = NULL,
-        .identity = &record->identity,
-    };
-
-    WmBusPacketPayloadView candidate_payload = {0};
-    wmbus_packet_set_application_payload(&candidate_payload, decrypt_workspace, payload_len);
-    parser_packet.payload = &candidate_payload;
-
-    if(decrypt.has_check_bytes || wmbus_parser_registry_validate_decrypt(&parser_packet)) {
-        *out_payload = candidate_payload;
-        return true;
+    /* EN 13757-7 / OMS Mode 5 requires these decryption-verification bytes
+     * immediately after the Configuration Field. Parser plausibility is not
+     * a substitute: accepting it would turn device syntax into a key oracle. */
+    if(payload_len < 2U || decrypt_workspace[0] != 0x2FU || decrypt_workspace[1] != 0x2FU) {
+        wmbus_packet_log_decrypt_failure_reason(record, "missing Mode 5 2F2F check bytes");
+        return false;
     }
 
-    wmbus_packet_log_decrypt_failure_reason(record, "missing 2F2F check bytes");
-    return false;
+    wmbus_packet_set_application_payload(out_payload, decrypt_workspace, payload_len);
+    return true;
 }
 
 bool wmbus_packet_resolve_application_payload(
@@ -188,7 +178,7 @@ bool wmbus_packet_resolve_application_payload(
         return false;
     }
 
-    for(uint8_t i = 0; key_store && i < key_store->count; i++) {
+    for(uint8_t i = 0; key_store && i < key_store->count && i < WMBUS_CRYPTO_KEY_STORE_MAX; i++) {
         const uint8_t* key = wmbus_crypto_key_store_get(key_store, i);
         if(!key) {
             continue;

@@ -41,7 +41,7 @@ Currently registered application parsers:
 - `Apator162`: targeted device parser for supported Apator short-TPL telegrams
 - `DifVif`: generic parser for standard DIF/VIF application records
 
-Parser registration is order-dependent. The first parser whose `probe()` and `parse()` both succeed wins, so device-specific parsers must stay ahead of generic fallbacks such as `DifVif`.
+Parser registration is order-dependent. The first parser whose `parse()` succeeds wins, so device-specific parsers must stay ahead of generic fallbacks such as `DifVif`.
 
 ## Adding A Parser
 
@@ -50,9 +50,9 @@ New parsers live under `applications_user/wmbus_decoder/protocol/parser/`.
 Minimum steps:
 
 1. add a new parser ID in `wmbus_parser_id.h`
-2. add a parser implementation with `probe(const WmBusParserPacketView*)` and `parse(const WmBusParserPacketView*, WmBusPacketApplicationData*)`
+2. add a fail-closed `parse(const WmBusParserPacketView*, WmBusPacketApplicationData*)` implementation
 3. add its display name to the indexed table in `wmbus_parser.c`
-4. include and register it in `wmbus_parser_registry.c` with `parser_id` and the correct `validates_decrypt` flag
+4. include and register it in `wmbus_parser_registry.c` with its `parser_id`
 5. place it before any broader parser it should override
 6. add or update selftests in `src/test/`
 
@@ -102,7 +102,7 @@ Format:
 - one AES-128 key per line as 32 hex characters
 - lines starting with `#` are ignored
 - only keys explicitly listed in this file are tested; no keys are derived or brute-forced
-- up to 16 keys are tried in file order, stopping at the first standards-valid result
+- up to 16 keys are tried in file order, stopping at the first result with the Mode 5 `2F 2F` decryption-verification field required by EN 13757-7/OMS
 
 ## Protocol Sources
 

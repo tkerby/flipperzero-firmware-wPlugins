@@ -5,11 +5,6 @@
 
 #define WMBUS_AES_BLOCK_LEN 16U
 
-static bool
-    wmbus_crypto_mode5_payload_has_check_bytes(const uint8_t* payload, size_t payload_len) {
-    return payload_len >= 2U && payload[0] == 0x2F && payload[1] == 0x2F;
-}
-
 static void wmbus_crypto_mode5_build_iv(
     const uint8_t iv_address[8],
     uint8_t access_number,
@@ -41,7 +36,7 @@ static bool
     return *encrypted_len <= payload_len;
 }
 
-WmBusMode5DecryptInfo wmbus_crypto_mode5_decrypt(
+WmBusDecryptResult wmbus_crypto_mode5_decrypt(
     const uint8_t* encrypted_payload,
     size_t payload_len,
     const uint8_t iv_address[8],
@@ -49,24 +44,16 @@ WmBusMode5DecryptInfo wmbus_crypto_mode5_decrypt(
     uint16_t cfg,
     const uint8_t key[WMBUS_AES_BLOCK_LEN],
     uint8_t* out_payload) {
-    WmBusMode5DecryptInfo info = {
-        .result = WmBusDecryptResultInvalidArgs,
-        .has_check_bytes = false,
-    };
-
     if(!encrypted_payload || !iv_address || !key || !out_payload) {
-        return info;
+        return WmBusDecryptResultInvalidArgs;
     }
     size_t encrypted_len = 0U;
     if(!wmbus_crypto_mode5_encrypted_length(payload_len, cfg, &encrypted_len)) {
-        return (WmBusMode5DecryptInfo){.result = WmBusDecryptResultInvalidEncryptedLength};
+        return WmBusDecryptResultInvalidEncryptedLength;
     }
     memcpy(out_payload, encrypted_payload, payload_len);
     if(encrypted_len == 0U) {
-        info.result = WmBusDecryptResultOk;
-        info.has_check_bytes =
-            wmbus_crypto_mode5_payload_has_check_bytes(out_payload, payload_len);
-        return info;
+        return WmBusDecryptResultOk;
     }
 
     uint8_t iv[WMBUS_AES_BLOCK_LEN] = {0};
@@ -81,10 +68,8 @@ WmBusMode5DecryptInfo wmbus_crypto_mode5_decrypt(
     }
     mbedtls_aes_free(&aes);
     if(result != 0) {
-        return (WmBusMode5DecryptInfo){.result = WmBusDecryptResultCryptoError};
+        return WmBusDecryptResultCryptoError;
     }
 
-    info.result = WmBusDecryptResultOk;
-    info.has_check_bytes = wmbus_crypto_mode5_payload_has_check_bytes(out_payload, payload_len);
-    return info;
+    return WmBusDecryptResultOk;
 }

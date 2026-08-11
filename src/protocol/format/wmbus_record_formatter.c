@@ -241,42 +241,14 @@ bool wmbus_record_formatter_format_joined(
     if(!records || record_count == 0U) return false;
 
     bool wrote_any = false;
-    bool have_previous_storage = false;
-    uint64_t previous_storage = 0U;
-
-    /* Group equivalent storage numbers and retain their wire order.  This
-     * improves scanability without guessing relationships between records. */
-    while(true) {
-        bool found_storage = false;
-        uint64_t next_storage = 0U;
-        for(uint8_t i = 0; i < record_count; i++) {
-            uint64_t storage_no = records[i].storage_no;
-            if((have_previous_storage && storage_no <= previous_storage) ||
-               (found_storage && storage_no >= next_storage)) {
-                continue;
-            }
-            next_storage = storage_no;
-            found_storage = true;
+    for(uint8_t i = 0; i < record_count; i++) {
+        char field[WMBUS_RECORD_FORMATTER_FIELD_MAX] = {0};
+        if(!wmbus_record_formatter_format_field_buf(&records[i], true, field, sizeof(field))) {
+            continue;
         }
-        if(!found_storage) break;
-
-        for(uint8_t i = 0; i < record_count; i++) {
-            const WmBusApplicationRecord* record = &records[i];
-            char field[WMBUS_RECORD_FORMATTER_FIELD_MAX] = {0};
-            if(record->storage_no != next_storage ||
-               !wmbus_record_formatter_format_field_buf(record, true, field, sizeof(field))) {
-                continue;
-            }
-
-            if(wrote_any) {
-                furi_string_push_back(out, delimiter);
-            }
-            furi_string_cat_str(out, field);
-            wrote_any = true;
-        }
-
-        previous_storage = next_storage;
-        have_previous_storage = true;
+        if(wrote_any) furi_string_push_back(out, delimiter);
+        furi_string_cat_str(out, field);
+        wrote_any = true;
     }
 
     return wrote_any;

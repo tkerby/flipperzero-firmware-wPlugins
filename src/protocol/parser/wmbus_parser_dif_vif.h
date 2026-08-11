@@ -7,7 +7,6 @@
 #include "../model/wmbus_application_types.h"
 #include "wmbus_parser_packet.h"
 
-bool wmbus_parser_dif_vif_probe(const WmBusParserPacketView* packet);
 bool wmbus_parser_dif_vif_parse(
     const WmBusParserPacketView* packet,
     WmBusPacketApplicationData* out_application);

@@ -8,4 +8,3 @@
 bool wmbus_parser_registry_parse(
     const WmBusParserPacketView* packet,
     WmBusPacketApplicationData* out_application);
-bool wmbus_parser_registry_validate_decrypt(const WmBusParserPacketView* packet);

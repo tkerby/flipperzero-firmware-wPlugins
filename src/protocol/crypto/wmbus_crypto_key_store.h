@@ -1,7 +1,6 @@
 #pragma once
 
 #include <stddef.h>
-#include <stdbool.h>
 #include <stdint.h>
 
 #define WMBUS_CRYPTO_KEY_BYTES     16U
@@ -14,7 +13,7 @@ typedef struct {
 
 static inline const uint8_t*
     wmbus_crypto_key_store_get(const WmBusCryptoKeyStore* key_store, uint8_t index) {
-    if(!key_store || index >= key_store->count) {
+    if(!key_store || index >= key_store->count || index >= WMBUS_CRYPTO_KEY_STORE_MAX) {
         return NULL;
     }
 

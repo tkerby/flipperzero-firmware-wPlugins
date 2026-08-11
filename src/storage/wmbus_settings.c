@@ -7,12 +7,11 @@
 
 static int32_t wmbus_settings_normalize_min_rssi(int32_t min_rssi_dbm) {
     if(min_rssi_dbm >= 0) return 0;
+    if(min_rssi_dbm <= -100) return -100;
+    if(min_rssi_dbm >= -50) return -50;
 
     int32_t magnitude = -min_rssi_dbm;
-    int32_t rounded = -(((magnitude + 2) / 5) * 5);
-    if(rounded < -100) return -100;
-    if(rounded > -50) return -50;
-    return rounded;
+    return -(((magnitude + 2) / 5) * 5);
 }
 
 void wmbus_settings_reset(WmBusSettings* settings) {

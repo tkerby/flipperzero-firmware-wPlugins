@@ -57,6 +57,7 @@ bool wmbus_decode_3of6(
     size_t out_max,
     size_t* out_len) {
     if(!raw || !out || !out_len) return false;
+    *out_len = 0U;
     if(raw_bit_len == 0U) return false;
 
     size_t bit_pos = 0U;
@@ -77,7 +78,7 @@ bool wmbus_decode_3of6(
             high_nibble = nibble;
             have_high = true;
         } else {
-            if(out_idx >= out_max) break;
+            if(out_idx >= out_max) return false;
             out[out_idx++] = (high_nibble << 4) | nibble;
             have_high = false;
         }

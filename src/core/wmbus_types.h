@@ -33,11 +33,6 @@ typedef enum {
     WmBusDecryptResultCryptoError,
 } WmBusDecryptResult;
 
-typedef struct {
-    WmBusDecryptResult result;
-    bool has_check_bytes;
-} WmBusMode5DecryptInfo;
-
 typedef enum {
     WmBusCsvLoggingNone = 0,
     WmBusCsvLoggingBasic,

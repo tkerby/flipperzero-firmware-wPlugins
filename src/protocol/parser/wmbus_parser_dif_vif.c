@@ -385,15 +385,11 @@ bool wmbus_packet_decode_application_records(
     return true;
 }
 
-bool wmbus_parser_dif_vif_probe(const WmBusParserPacketView* packet) {
-    return packet && packet->payload && packet->payload->application_bytes &&
-           packet->payload->application_len > 0U;
-}
-
 bool wmbus_parser_dif_vif_parse(
     const WmBusParserPacketView* packet,
     WmBusPacketApplicationData* out_application) {
-    if(!wmbus_parser_dif_vif_probe(packet) || !out_application) {
+    if(!packet || !packet->payload || !packet->payload->application_bytes ||
+       packet->payload->application_len == 0U || !out_application) {
         return false;
     }
 
