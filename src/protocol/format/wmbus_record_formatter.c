@@ -7,7 +7,9 @@
 #include "../model/wmbus_application_record.h"
 #include "../packet/wmbus_packet.h"
 
-#define WMBUS_RECORD_FORMATTER_LABEL_MAX 96U
+#define WMBUS_RECORD_FORMATTER_LABEL_MAX 64U
+#define WMBUS_RECORD_FORMATTER_FIELD_MAX \
+    (WMBUS_RECORD_FORMATTER_LABEL_MAX + WMBUS_PACKET_VALUE_MAX + 2U)
 
 typedef struct {
     const char* label;
@@ -260,7 +262,7 @@ bool wmbus_record_formatter_format_joined(
 
         for(uint8_t i = 0; i < record_count; i++) {
             const WmBusApplicationRecord* record = &records[i];
-            char field[WMBUS_PACKET_DETAIL_MAX] = {0};
+            char field[WMBUS_RECORD_FORMATTER_FIELD_MAX] = {0};
             if(record->storage_no != next_storage ||
                !wmbus_record_formatter_format_field_buf(record, true, field, sizeof(field))) {
                 continue;

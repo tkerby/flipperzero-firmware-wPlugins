@@ -286,8 +286,8 @@ bool wmbus_parser_apator162_probe(const WmBusParserPacketView* packet) {
     if(packet->tpl->header_type != WmBusTplHeaderShort || packet->tpl->ci_field != 0x7AU) {
         return false;
     }
-    if(packet->dll->version != 0x05U ||
-       (packet->dll->dev_type != 0x06U && packet->dll->dev_type != 0x07U)) {
+    if(packet->identity->version != 0x05U ||
+       (packet->identity->dev_type != 0x06U && packet->identity->dev_type != 0x07U)) {
         return false;
     }
     if(strcmp(packet->identity->manufacturer, "APA") != 0 &&

@@ -31,7 +31,6 @@ typedef struct {
     uint16_t wire_len;
     uint8_t wire_preview_len;
     uint8_t wire_preview[WMBUS_RX_DEBUG_PACKET_MAX];
-    WmBusPacketDllData dll;
     WmBusPacketIdentityData identity;
     WmBusPacketEllData ell;
     WmBusPacketTplData tpl;
@@ -480,7 +479,6 @@ static void wmbus_rx_history_fill_entry(
                                             WMBUS_RX_DEBUG_PACKET_MAX :
                                             record->wire_len);
     memcpy(entry->wire_preview, record->wire_bytes, entry->wire_preview_len);
-    entry->dll = record->dll;
     entry->identity = record->identity;
     entry->ell = record->ell;
     entry->tpl = record->tpl;
@@ -500,7 +498,6 @@ static void
     record->rssi = entry->rssi;
     record->rx_tick = entry->rx_tick;
     record->wire_len = entry->wire_len;
-    record->dll = entry->dll;
     record->identity = entry->identity;
     record->ell = entry->ell;
     record->tpl = entry->tpl;

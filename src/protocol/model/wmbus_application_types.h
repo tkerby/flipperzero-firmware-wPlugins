@@ -52,22 +52,22 @@ typedef struct {
 } WmBusApplicationDateTime;
 
 typedef struct {
-    uint8_t dif;
-    uint8_t vif;
-    uint64_t storage_no;
-    uint32_t tariff;
-    uint16_t subunit;
-    uint8_t data_len;
-    WmBusApplicationValueType value_type;
-    WmBusApplicationMeasurementType measurement_type;
-    WmBusApplicationQuantity quantity;
-    int8_t scale10;
-    /* The value type selects exactly one representation. */
+    /* The value type selects one representation; widest members come first to avoid padding. */
     union {
         int64_t value;
         uint8_t raw_bytes[8];
         WmBusApplicationDateTime value_datetime;
     };
+    uint64_t storage_no;
+    uint32_t tariff;
+    WmBusApplicationValueType value_type;
+    WmBusApplicationMeasurementType measurement_type;
+    WmBusApplicationQuantity quantity;
+    uint16_t subunit;
+    uint8_t dif;
+    uint8_t vif;
+    uint8_t data_len;
+    int8_t scale10;
 } WmBusApplicationRecord;
 
 typedef struct {

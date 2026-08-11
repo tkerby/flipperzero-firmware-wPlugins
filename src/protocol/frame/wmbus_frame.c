@@ -29,13 +29,9 @@ static bool wmbus_frame_format_id_bcd(const uint8_t id[4], char out[WMBUS_ID_STR
     return true;
 }
 
-void wmbus_frame_format_id(const uint8_t id[4], char out[WMBUS_ID_STR_LEN], bool* is_bcd) {
-    bool bcd = wmbus_frame_format_id_bcd(id, out);
-    if(!bcd) {
+void wmbus_frame_format_id(const uint8_t id[4], char out[WMBUS_ID_STR_LEN]) {
+    if(!wmbus_frame_format_id_bcd(id, out)) {
         snprintf(out, WMBUS_ID_STR_LEN, "%02X%02X%02X%02X", id[3], id[2], id[1], id[0]);
-    }
-    if(is_bcd) {
-        *is_bcd = bcd;
     }
 }
 

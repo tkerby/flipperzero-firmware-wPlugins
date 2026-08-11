@@ -235,8 +235,7 @@ static bool wmbus_selftest_check_ci72_protected_payload(char* detail, size_t det
 
     if(record.quality != WmBusPacketQualityCrcOk || record.dll.ci_field != 0x72U ||
        record.tpl.header_type != WmBusTplHeaderLong || record.tpl.header_len != 23U ||
-       record.tpl.acc != 0x23U || record.tpl.tpl_status != 0x00U || record.tpl.cfg != 0x0550U ||
-       record.tpl.security_mode != 0x05U ||
+       record.tpl.acc != 0x23U || record.tpl.cfg != 0x0550U || record.tpl.security_mode != 0x05U ||
        !wmbus_packet_tpl_payload_is_protected(record.tpl.cfg) ||
        strcmp(record.identity.manufacturer, "ZRI") != 0 ||
        strcmp(record.identity.meter_id, "70831902") != 0 || record.identity.version != 0x00U ||
@@ -434,11 +433,9 @@ static bool wmbus_selftest_check_clear_ell_uses_tpl_security(char* detail, size_
     }
 
     ell.security_mode = 0x01U;
-    ell.sn = UINT32_C(0x20000000);
-    ell.key_index = 1U;
     wmbus_packet_summary_format_crypto_tag(&ell, &tpl, crypto, sizeof(crypto));
     if(strcmp(crypto, "EENC") != 0 || wmbus_packet_summary_security_mode(&ell, &tpl) != 0x01U ||
-       wmbus_packet_summary_key_index(&ell, &tpl) != 1U) {
+       wmbus_packet_summary_key_index(&ell, &tpl) != 0U) {
         wmbus_selftest_set_detail(
             detail,
             detail_len,
@@ -1149,7 +1146,6 @@ static bool wmbus_selftest_check_packet_detail_retains_volume(char* detail, size
         .mode = WmBusRxModeC,
         .format = WmBusFrameFormatA,
         .rssi = -72,
-        .dll.dev_type = 0x07,
         .identity.dev_type = 0x07,
         .dll.ci_field = 0x7A,
         .tpl.ci_field = 0x7A,

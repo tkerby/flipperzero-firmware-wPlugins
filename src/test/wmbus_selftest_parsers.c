@@ -85,7 +85,7 @@ static bool wmbus_selftest_check_parser_apator162_public_vectors(char* detail, s
                 detail, detail_len, "vector %s roundtrip failed", vector->id);
             return false;
         }
-        wmbus_frame_format_id(&roundtrip[4], id, NULL);
+        wmbus_frame_format_id(&roundtrip[4], id);
         if(strncmp(vector->id, id, WMBUS_ID_STR_LEN) != 0) {
             wmbus_selftest_set_detail(
                 detail, detail_len, "vector expected id=%s got=%s", vector->id, id);

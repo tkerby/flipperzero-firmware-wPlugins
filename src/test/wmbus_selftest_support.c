@@ -452,7 +452,7 @@ static void wmbus_selftest_set_identity(
 
     uint16_t man = (uint16_t)frame[2] | ((uint16_t)frame[3] << 8);
     wmbus_frame_decode_mfg(man, result->manufacturer);
-    wmbus_frame_format_id(&frame[4], result->id, NULL);
+    wmbus_frame_format_id(&frame[4], result->id);
     result->has_identity = true;
 }
 

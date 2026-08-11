@@ -4,7 +4,6 @@
 
 #include "wmbus_packet_summary.h"
 #include "wmbus_record_formatter.h"
-#include "../model/wmbus_application_record.h"
 #include "../parser/wmbus_parser.h"
 
 static void wmbus_packet_formatter_format_application_detail(

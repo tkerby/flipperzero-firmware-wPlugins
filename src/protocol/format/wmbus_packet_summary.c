@@ -67,9 +67,7 @@ void wmbus_packet_summary_format_crypto_tag(
     out[0] = '\0';
 
     if(ell && ell->has_ell && ell->has_session && ell->security_mode != 0U) {
-        if(ell->decrypted) {
-            snprintf(out, out_size, "EDEC#%u", (unsigned int)ell->key_index);
-        } else if(wmbus_packet_ell_payload_is_encrypted(ell->security_mode)) {
+        if(wmbus_packet_ell_payload_is_encrypted(ell->security_mode)) {
             snprintf(out, out_size, "EENC");
         } else {
             snprintf(out, out_size, "ES:%02X", ell->security_mode);
@@ -109,10 +107,7 @@ void wmbus_packet_summary_format_security_text(
         char mode[20] = {0};
         wmbus_packet_summary_format_security_mode(ell->security_mode, true, mode, sizeof(mode));
 
-        if(ell->decrypted) {
-            snprintf(
-                out, out_size, "ELL %s, decrypted key #%u", mode, (unsigned int)ell->key_index);
-        } else if(wmbus_packet_ell_payload_is_encrypted(ell->security_mode)) {
+        if(wmbus_packet_ell_payload_is_encrypted(ell->security_mode)) {
             snprintf(out, out_size, "ELL %s, encrypted", mode);
         } else {
             snprintf(out, out_size, "ELL %s", mode);
@@ -152,7 +147,7 @@ uint8_t wmbus_packet_summary_security_mode(
 uint8_t
     wmbus_packet_summary_key_index(const WmBusPacketEllData* ell, const WmBusPacketTplData* tpl) {
     if(ell && ell->has_ell && ell->has_session && ell->security_mode != 0U) {
-        return ell->key_index;
+        return 0U;
     }
     return tpl ? tpl->key_index : 0U;
 }
