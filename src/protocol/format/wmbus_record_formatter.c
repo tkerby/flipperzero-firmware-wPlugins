@@ -94,7 +94,18 @@ static bool wmbus_record_formatter_format_value_buf(
         return true;
     }
     case WmBusApplicationValueDateTime:
-        if(record->value_datetime.has_time) {
+        if(record->value_datetime.precision == WmBusApplicationDateTimePrecisionSecond) {
+            snprintf(
+                out,
+                out_size,
+                "%04u-%02u-%02u %02u:%02u:%02u",
+                (unsigned int)record->value_datetime.year,
+                (unsigned int)record->value_datetime.month,
+                (unsigned int)record->value_datetime.day,
+                (unsigned int)record->value_datetime.hour,
+                (unsigned int)record->value_datetime.minute,
+                (unsigned int)record->value_datetime.second);
+        } else if(record->value_datetime.precision == WmBusApplicationDateTimePrecisionMinute) {
             snprintf(
                 out,
                 out_size,

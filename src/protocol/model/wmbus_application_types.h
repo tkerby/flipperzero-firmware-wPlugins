@@ -52,13 +52,22 @@ typedef enum {
     WmBusApplicationQuantityStatus,
 } WmBusApplicationQuantity;
 
+typedef uint8_t WmBusApplicationDateTimePrecision;
+
+enum {
+    WmBusApplicationDateTimePrecisionDate = 0,
+    WmBusApplicationDateTimePrecisionMinute,
+    WmBusApplicationDateTimePrecisionSecond,
+};
+
 typedef struct {
     uint16_t year;
     uint8_t month;
     uint8_t day;
     uint8_t hour;
     uint8_t minute;
-    bool has_time;
+    uint8_t second;
+    WmBusApplicationDateTimePrecision precision;
 } WmBusApplicationDateTime;
 
 typedef struct {

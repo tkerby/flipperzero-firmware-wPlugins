@@ -579,12 +579,14 @@ static bool wmbus_selftest_check_dif_vif_decode_basic(char* detail, size_t detai
        records[6].scale10 != -1 || records[7].quantity != WmBusApplicationQuantityDate ||
        records[7].value_type != WmBusApplicationValueDateTime ||
        records[7].value_datetime.year != 2025U || records[7].value_datetime.month != 3U ||
-       records[7].value_datetime.day != 12U || records[7].value_datetime.has_time ||
+       records[7].value_datetime.day != 12U ||
+       records[7].value_datetime.precision != WmBusApplicationDateTimePrecisionDate ||
        !strstr(fields_text, "Date=2025-03-12") ||
        records[8].quantity != WmBusApplicationQuantityDateTime ||
        records[8].value_type != WmBusApplicationValueDateTime ||
        records[8].value_datetime.year != 2025U || records[8].value_datetime.month != 3U ||
-       records[8].value_datetime.day != 12U || !records[8].value_datetime.has_time ||
+       records[8].value_datetime.day != 12U ||
+       records[8].value_datetime.precision != WmBusApplicationDateTimePrecisionMinute ||
        records[8].value_datetime.hour != 16U || records[8].value_datetime.minute != 37U ||
        !strstr(fields_text, "DateTime=2025-03-12 16:37") ||
        records[9].quantity != WmBusApplicationQuantityStatus ||
@@ -601,6 +603,87 @@ static bool wmbus_selftest_check_dif_vif_decode_basic(char* detail, size_t detai
         detail_len,
         "records=%u common_types=volume,energy,flow,temp,date,status",
         (unsigned int)count);
+    return true;
+}
+
+static bool wmbus_selftest_check_dif_vif_datetime_type_i(char* detail, size_t detail_len) {
+    static const uint8_t payload[] = {0x06U, 0x6DU, 0x28U, 0x1BU, 0x47U, 0x4BU, 0x38U, 0x00U};
+    WmBusApplicationRecord records[1] = {0};
+    uint8_t count = 0U;
+    FuriString* fields = furi_string_alloc();
+    if(!fields) {
+        wmbus_selftest_set_detail(detail, detail_len, "alloc failed");
+        return false;
+    }
+
+    bool decoded = wmbus_packet_decode_application_records(
+        payload, sizeof(payload), records, COUNT_OF(records), &count);
+    bool formatted = decoded && wmbus_record_formatter_format_joined(records, count, ';', fields);
+    const WmBusApplicationDateTime* date_time = &records[0].value_datetime;
+    bool valid = formatted && count == 1U &&
+                 records[0].quantity == WmBusApplicationQuantityDateTime &&
+                 records[0].value_type == WmBusApplicationValueDateTime &&
+                 date_time->precision == WmBusApplicationDateTimePrecisionSecond &&
+                 date_time->year == 2026U && date_time->month == 8U && date_time->day == 11U &&
+                 date_time->hour == 7U && date_time->minute == 27U && date_time->second == 40U &&
+                 furi_string_equal_str(fields, "DateTime=2026-08-11 07:27:40");
+    if(!valid) {
+        wmbus_selftest_set_detail(
+            detail,
+            detail_len,
+            "decoded=%u count=%u value_type=%u fields=%s",
+            decoded ? 1U : 0U,
+            (unsigned int)count,
+            (unsigned int)records[0].value_type,
+            furi_string_get_cstr(fields));
+        furi_string_free(fields);
+        return false;
+    }
+
+    furi_string_free(fields);
+    wmbus_selftest_set_detail(detail, detail_len, "Type I=2026-08-11 07:27:40");
+    return true;
+}
+
+static bool wmbus_selftest_check_dif_vif_datetime_type_i_invalid(
+    char* detail,
+    size_t detail_len) {
+    static const struct {
+        const char* name;
+        uint8_t payload[8];
+        size_t payload_len;
+    } cases[] = {
+        {"invalid flag", {0x06U, 0x6DU, 0x28U, 0x9BU, 0x47U, 0x4BU, 0x38U, 0x00U}, 8U},
+        {"second", {0x06U, 0x6DU, 0x3CU, 0x1BU, 0x47U, 0x4BU, 0x38U, 0x00U}, 8U},
+        {"minute", {0x06U, 0x6DU, 0x28U, 0x3CU, 0x47U, 0x4BU, 0x38U, 0x00U}, 8U},
+        {"hour", {0x06U, 0x6DU, 0x28U, 0x1BU, 0x58U, 0x4BU, 0x38U, 0x00U}, 8U},
+        {"day", {0x06U, 0x6DU, 0x28U, 0x1BU, 0x47U, 0x40U, 0x38U, 0x00U}, 8U},
+        {"month", {0x06U, 0x6DU, 0x28U, 0x1BU, 0x47U, 0x4BU, 0x30U, 0x00U}, 8U},
+        {"reserved year", {0x06U, 0x6DU, 0x28U, 0x1BU, 0x47U, 0x8BU, 0xC8U, 0x00U}, 8U},
+        {"unspecified year", {0x06U, 0x6DU, 0x28U, 0x1BU, 0x47U, 0xEBU, 0xF8U, 0x00U}, 8U},
+        {"unsupported length", {0x03U, 0x6DU, 0x28U, 0x1BU, 0x47U}, 5U},
+    };
+
+    for(size_t i = 0; i < COUNT_OF(cases); i++) {
+        WmBusApplicationRecord record = {0};
+        uint8_t count = 0U;
+        if(!wmbus_packet_decode_application_records(
+               cases[i].payload, cases[i].payload_len, &record, 1U, &count) ||
+           count != 1U || record.quantity != WmBusApplicationQuantityDateTime ||
+           record.value_type != WmBusApplicationValueUnavailable) {
+            wmbus_selftest_set_detail(
+                detail,
+                detail_len,
+                "%s accepted count=%u type=%u",
+                cases[i].name,
+                (unsigned int)count,
+                (unsigned int)record.value_type);
+            return false;
+        }
+    }
+
+    wmbus_selftest_set_detail(
+        detail, detail_len, "Type I invalid/reserved cases=%u", (unsigned int)COUNT_OF(cases));
     return true;
 }
 
@@ -1246,6 +1329,9 @@ static const WmBusSelftestCheck wmbus_selftest_checks_tooling[] = {
     {"check_long_tpl_ci_headers", wmbus_selftest_check_long_tpl_ci_headers},
     {"check_ell_security_modes", wmbus_selftest_check_ell_security_modes},
     {"check_dif_vif_decode_basic", wmbus_selftest_check_dif_vif_decode_basic},
+    {"check_dif_vif_datetime_type_i", wmbus_selftest_check_dif_vif_datetime_type_i},
+    {"check_dif_vif_datetime_type_i_invalid",
+     wmbus_selftest_check_dif_vif_datetime_type_i_invalid},
     {"check_dif_vif_signed_integer_widths", wmbus_selftest_check_dif_vif_signed_integer_widths},
     {"check_dif_vif_lvar_classes", wmbus_selftest_check_dif_vif_lvar_classes},
     {"check_dif_vif_extensions", wmbus_selftest_check_dif_vif_extensions},

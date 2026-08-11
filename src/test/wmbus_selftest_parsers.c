@@ -1,6 +1,7 @@
 #include "wmbus_selftest_i.h"
 
 #include "../protocol/decode/wmbus_decode.h"
+#include "../protocol/format/wmbus_record_formatter.h"
 #include "../protocol/packet/wmbus_packet_security.h"
 #include "../protocol/parser/wmbus_parser.h"
 
@@ -8,6 +9,63 @@
 
 static const char* wmbus_selftest_parser_name(const WmBusPacketRecord* record) {
     return record ? wmbus_parser_id_name(record->application.parser_id) : "Unknown";
+}
+
+static bool wmbus_selftest_check_parser_itw_type_i_datetime(char* detail, size_t detail_len) {
+    static const char* frame_hex =
+        "2E449726120200520D087A8A0000A00B6E000000066D281B474B38004B6E010000426C3F3C067F2C"
+        "007529070C92A3";
+    static const char* expected_fields =
+        "HCA=0;DateTime=2026-08-11 07:27:40;Data=13224899837996;"
+        "HCA[S1]=1;Date[S1]=2025-12-31";
+    uint8_t frame[WMBUS_SELFTEST_BUF_MAX] = {0};
+    size_t frame_len = 0U;
+    WmBusPacketRecord record = {0};
+    FuriString* fields = furi_string_alloc();
+    if(!fields) {
+        wmbus_selftest_set_detail(detail, detail_len, "alloc failed");
+        return false;
+    }
+
+    bool built = wmbus_selftest_hex_to_bytes(frame_hex, frame, sizeof(frame), &frame_len) &&
+                 frame_len == 47U;
+    bool processed = built && wmbus_selftest_process_phy_frame_record(
+                                  WmBusRxModeC,
+                                  WmBusFrameFormatB,
+                                  frame,
+                                  frame_len,
+                                  NULL,
+                                  &record);
+    bool formatted = processed && wmbus_record_formatter_format_joined(
+                                      record.application.records,
+                                      record.application.record_count,
+                                      ';',
+                                      fields);
+    bool valid = formatted && record.quality == WmBusPacketQualityParsed &&
+                 record.normalized_len == 45U &&
+                 strcmp(record.identity.manufacturer, "ITW") == 0 &&
+                 strcmp(record.identity.meter_id, "52000212") == 0 &&
+                 record.application.parser_id == WmBusParserIdDifVif &&
+                 record.application.record_count == 5U &&
+                 furi_string_equal_str(fields, expected_fields);
+    if(!valid) {
+        wmbus_selftest_set_detail(
+            detail,
+            detail_len,
+            "built=%u processed=%u quality=%u parser=%s records=%u fields=%s",
+            built ? 1U : 0U,
+            processed ? 1U : 0U,
+            (unsigned int)record.quality,
+            wmbus_selftest_parser_name(&record),
+            (unsigned int)record.application.record_count,
+            furi_string_get_cstr(fields));
+        furi_string_free(fields);
+        return false;
+    }
+
+    furi_string_free(fields);
+    wmbus_selftest_set_detail(detail, detail_len, "ITW/52000212 Type I decoded with seconds");
+    return true;
 }
 
 /* The public Apator examples below contain already-decrypted payloads. */
@@ -667,6 +725,7 @@ static bool
 }
 
 static const WmBusSelftestCheck wmbus_selftest_checks_parsers[] = {
+    {"check_parser_itw_type_i_datetime", wmbus_selftest_check_parser_itw_type_i_datetime},
     {"check_parser_apator162_public_vectors",
      wmbus_selftest_check_parser_apator162_public_vectors},
     {"check_parser_apator162_old_style_ci_b6_rejected",

@@ -66,7 +66,8 @@ static bool wmbus_packet_decode_date2(const uint8_t* data, WmBusApplicationDateT
     out->day = day;
     out->hour = 0U;
     out->minute = 0U;
-    out->has_time = false;
+    out->second = 0U;
+    out->precision = WmBusApplicationDateTimePrecisionDate;
     return true;
 }
 
@@ -88,7 +89,34 @@ static bool wmbus_packet_decode_datetime4(const uint8_t* data, WmBusApplicationD
     out->day = day;
     out->hour = hour;
     out->minute = minute;
-    out->has_time = true;
+    out->second = 0U;
+    out->precision = WmBusApplicationDateTimePrecisionMinute;
+    return true;
+}
+
+static bool wmbus_packet_decode_datetime6(const uint8_t* data, WmBusApplicationDateTime* out) {
+    if(!data || !out) return false;
+
+    uint8_t second = data[0] & 0x3FU;
+    uint8_t minute = data[1] & 0x3FU;
+    uint8_t hour = data[2] & 0x1FU;
+    uint8_t day = data[3] & 0x1FU;
+    uint8_t month = data[4] & 0x0FU;
+    uint8_t year = (uint8_t)(((data[3] >> 5) & 0x07U) | ((data[4] >> 1) & 0x78U));
+    bool time_invalid = (data[1] & 0x80U) != 0U;
+
+    if(time_invalid || second > 59U || minute > 59U || hour > 23U || day == 0U || day > 31U ||
+       month == 0U || month > 12U || year > 99U) {
+        return false;
+    }
+
+    out->year = (uint16_t)year + 2000U;
+    out->month = month;
+    out->day = day;
+    out->hour = hour;
+    out->minute = minute;
+    out->second = second;
+    out->precision = WmBusApplicationDateTimePrecisionSecond;
     return true;
 }
 
@@ -244,7 +272,8 @@ static void wmbus_packet_decode_record_value(
         }
         return;
     } else if(record->quantity == WmBusApplicationQuantityDateTime) {
-        if(data_len == 4U && wmbus_packet_decode_datetime4(data, &record->value_datetime)) {
+        if((data_len == 4U && wmbus_packet_decode_datetime4(data, &record->value_datetime)) ||
+           (data_len == 6U && wmbus_packet_decode_datetime6(data, &record->value_datetime))) {
             record->value_type = WmBusApplicationValueDateTime;
         } else {
             record->value_type = WmBusApplicationValueUnavailable;
