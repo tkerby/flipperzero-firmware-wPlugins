@@ -5,11 +5,10 @@
 
 #include "wmbus_hex_utils.h"
 #include "../model/wmbus_application_record.h"
-#include "../packet/wmbus_packet.h"
 
 #define WMBUS_RECORD_FORMATTER_LABEL_MAX 64U
 #define WMBUS_RECORD_FORMATTER_FIELD_MAX \
-    (WMBUS_RECORD_FORMATTER_LABEL_MAX + WMBUS_PACKET_VALUE_MAX + 2U)
+    (WMBUS_RECORD_FORMATTER_LABEL_MAX + WMBUS_RECORD_VALUE_TEXT_MAX + 2U)
 
 typedef struct {
     const char* label;
@@ -209,7 +208,7 @@ static bool wmbus_record_formatter_format_field_buf(
     char* out,
     size_t out_size) {
     char label[WMBUS_RECORD_FORMATTER_LABEL_MAX] = {0};
-    char value[WMBUS_PACKET_VALUE_MAX] = {0};
+    char value[WMBUS_RECORD_VALUE_TEXT_MAX] = {0};
     bool have_label =
         include_context ?
             wmbus_record_formatter_format_context_label_buf(record, label, sizeof(label)) :
@@ -241,14 +240,40 @@ bool wmbus_record_formatter_format_joined(
     if(!records || record_count == 0U) return false;
 
     bool wrote_any = false;
-    for(uint8_t i = 0; i < record_count; i++) {
-        char field[WMBUS_RECORD_FORMATTER_FIELD_MAX] = {0};
-        if(!wmbus_record_formatter_format_field_buf(&records[i], true, field, sizeof(field))) {
-            continue;
+    uint64_t storage_no = 0U;
+    bool have_storage = false;
+
+    for(uint8_t i = 0U; i < record_count; i++) {
+        if(!have_storage || records[i].storage_no < storage_no) {
+            storage_no = records[i].storage_no;
+            have_storage = true;
         }
-        if(wrote_any) furi_string_push_back(out, delimiter);
-        furi_string_cat_str(out, field);
-        wrote_any = true;
+    }
+
+    while(have_storage) {
+        for(uint8_t i = 0U; i < record_count; i++) {
+            if(records[i].storage_no != storage_no) continue;
+
+            char field[WMBUS_RECORD_FORMATTER_FIELD_MAX] = {0};
+            if(!wmbus_record_formatter_format_field_buf(&records[i], true, field, sizeof(field))) {
+                continue;
+            }
+            if(wrote_any) furi_string_push_back(out, delimiter);
+            furi_string_cat_str(out, field);
+            wrote_any = true;
+        }
+
+        bool have_next = false;
+        uint64_t next_storage = 0U;
+        for(uint8_t i = 0U; i < record_count; i++) {
+            if(records[i].storage_no > storage_no &&
+               (!have_next || records[i].storage_no < next_storage)) {
+                next_storage = records[i].storage_no;
+                have_next = true;
+            }
+        }
+        storage_no = next_storage;
+        have_storage = have_next;
     }
 
     return wrote_any;

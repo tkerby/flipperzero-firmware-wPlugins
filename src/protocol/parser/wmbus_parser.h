@@ -1,5 +1,5 @@
 #pragma once
 
-#include "wmbus_parser_id.h"
+#include "../model/wmbus_application_types.h"
 
 const char* wmbus_parser_id_name(WmBusParserId parser_id);

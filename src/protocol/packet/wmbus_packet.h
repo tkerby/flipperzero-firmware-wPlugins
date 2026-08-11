@@ -10,8 +10,6 @@
 #include "../../core/wmbus_types.h"
 #include "wmbus_packet_parts.h"
 
-#define WMBUS_PACKET_VALUE_MAX 32U
-
 typedef struct {
     WmBusPacketQuality quality;
     WmBusRxMode mode;

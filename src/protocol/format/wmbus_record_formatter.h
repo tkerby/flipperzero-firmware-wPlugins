@@ -4,6 +4,8 @@
 
 #include "../model/wmbus_application_types.h"
 
+#define WMBUS_RECORD_VALUE_TEXT_MAX 32U
+
 /**
  * Format one application record value without allocating.
  * Returns false when the value has no printable representation.

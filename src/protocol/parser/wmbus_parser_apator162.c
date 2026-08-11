@@ -8,19 +8,19 @@
 #define WMBUS_APATOR162_META_LEN   8U
 #define WMBUS_APATOR162_STATUS_LEN 7U
 
-typedef struct {
-    size_t fields_pos;
-    size_t status_pos;
-    size_t status_len;
-    bool has_status;
-} WmBusApator162Layout;
-
 /**
  * Returns the payload size for a single Apator register body.
  *
  * The size excludes the register byte itself. Unknown register codes return -1.
  */
 int wmbus_parser_apator162_register_size(uint8_t reg) {
+    if(reg >= 0x71U && reg <= 0x7BU) {
+        return 1 + 4 * (reg - 0x6FU);
+    }
+    if(reg >= 0xB6U && reg <= 0xC7U) {
+        return 3;
+    }
+
     switch(reg) {
     case 0x00:
         return 4;
@@ -41,28 +41,6 @@ int wmbus_parser_apator162_register_size(uint8_t reg) {
         return 2;
     case 0x44:
         return 3;
-    case 0x71:
-        return 1 + 2 * 4;
-    case 0x72:
-        return 1 + 3 * 4;
-    case 0x73:
-        return 1 + 4 * 4;
-    case 0x74:
-        return 1 + 5 * 4;
-    case 0x75:
-        return 1 + 6 * 4;
-    case 0x76:
-        return 1 + 7 * 4;
-    case 0x77:
-        return 1 + 8 * 4;
-    case 0x78:
-        return 1 + 9 * 4;
-    case 0x79:
-        return 1 + 10 * 4;
-    case 0x7A:
-        return 1 + 11 * 4;
-    case 0x7B:
-        return 1 + 12 * 4;
     case 0x80:
     case 0x81:
     case 0x82:
@@ -115,24 +93,6 @@ int wmbus_parser_apator162_register_size(uint8_t reg) {
         return 2;
     case 0xB5:
         return 16;
-    case 0xB6:
-    case 0xB7:
-    case 0xB8:
-    case 0xB9:
-    case 0xBA:
-    case 0xBB:
-    case 0xBC:
-    case 0xBD:
-    case 0xBE:
-    case 0xBF:
-    case 0xC0:
-    case 0xC1:
-    case 0xC2:
-    case 0xC3:
-    case 0xC4:
-    case 0xC5:
-    case 0xC6:
-    case 0xC7:
     case 0xD0:
     case 0xD3:
         return 3;
@@ -185,11 +145,11 @@ static void wmbus_parser_apator162_store_status_record(
  * The vendored `wmbusmeters` XMQ grammar models Apator 162 payloads as:
  * `2F* <1-byte proprietary marker> <7-byte status block> <register stream> FF*`
  */
-static bool wmbus_parser_apator162_locate_layout(
+static bool wmbus_parser_apator162_locate_fields(
     const uint8_t* payload,
     size_t payload_len,
-    WmBusApator162Layout* layout) {
-    if(!payload || !layout || payload_len == 0U) {
+    size_t* fields_pos) {
+    if(!payload || !fields_pos || payload_len == 0U) {
         return false;
     }
 
@@ -202,41 +162,37 @@ static bool wmbus_parser_apator162_locate_layout(
         return false;
     }
 
-    memset(layout, 0, sizeof(*layout));
     if((payload_len - pos) < WMBUS_APATOR162_META_LEN) {
         return false;
     }
 
-    layout->fields_pos = pos + WMBUS_APATOR162_META_LEN;
-    layout->status_pos = pos + 1U;
-    layout->status_len = WMBUS_APATOR162_STATUS_LEN;
-    layout->has_status = true;
-
-    if(layout->fields_pos >= payload_len) {
+    const size_t first_register_pos = pos + WMBUS_APATOR162_META_LEN;
+    if(first_register_pos >= payload_len) {
         return false;
     }
-    if(payload[layout->fields_pos] != 0xFFU &&
-       wmbus_parser_apator162_register_size(payload[layout->fields_pos]) < 0) {
+    if(payload[first_register_pos] != 0xFFU &&
+       wmbus_parser_apator162_register_size(payload[first_register_pos]) < 0) {
         return false;
     }
 
+    *fields_pos = first_register_pos;
     return true;
 }
 
 static bool wmbus_parser_apator162_scan_stream(
     const uint8_t* payload,
     size_t payload_len,
-    const WmBusApator162Layout* layout,
+    size_t fields_pos,
     uint32_t* total_m3_x1000,
     bool* found_total) {
-    if(!payload || !layout || layout->fields_pos >= payload_len) {
+    if(!payload || fields_pos >= payload_len) {
         return false;
     }
 
     bool saw_register = false;
     bool have_total = false;
     uint32_t parsed_total = 0U;
-    size_t pos = layout->fields_pos;
+    size_t pos = fields_pos;
 
     while(pos < payload_len) {
         uint8_t reg = payload[pos++];
@@ -307,9 +263,9 @@ bool wmbus_parser_apator162_parse(
         return false;
     }
 
-    WmBusApator162Layout layout = {0};
-    if(!wmbus_parser_apator162_locate_layout(
-           packet->payload->application_bytes, packet->payload->application_len, &layout)) {
+    size_t fields_pos = 0U;
+    if(!wmbus_parser_apator162_locate_fields(
+           packet->payload->application_bytes, packet->payload->application_len, &fields_pos)) {
         return false;
     }
 
@@ -318,19 +274,18 @@ bool wmbus_parser_apator162_parse(
     if(!wmbus_parser_apator162_scan_stream(
            packet->payload->application_bytes,
            packet->payload->application_len,
-           &layout,
+           fields_pos,
            &total_m3_x1000,
            &found_total) ||
        !found_total) {
         return false;
     }
 
-    if(layout.has_status) {
-        wmbus_parser_apator162_store_status_record(
-            out_application,
-            &packet->payload->application_bytes[layout.status_pos],
-            layout.status_len);
-    }
+    const size_t status_pos = fields_pos - WMBUS_APATOR162_STATUS_LEN;
+    wmbus_parser_apator162_store_status_record(
+        out_application,
+        &packet->payload->application_bytes[status_pos],
+        WMBUS_APATOR162_STATUS_LEN);
     wmbus_parser_apator162_store_total_record(out_application, total_m3_x1000);
 
     return true;

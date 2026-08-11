@@ -162,24 +162,20 @@ static bool wmbus_selftest_check_parser_plausibility(char* detail, size_t detail
 }
 
 static bool wmbus_selftest_check_apator162_register_sizes(char* detail, size_t detail_len) {
-    int size_10 = wmbus_parser_apator162_register_size(0x10);
-    int size_a1 = wmbus_parser_apator162_register_size(0xA1);
-    int size_b2 = wmbus_parser_apator162_register_size(0xB2);
-    int size_fe = wmbus_parser_apator162_register_size(0xFE);
-
-    if(size_10 != 4 || size_a1 != 4 || size_b2 != 16 || size_fe != -1) {
-        wmbus_selftest_set_detail(
-            detail,
-            detail_len,
-            "sizes 10=%d A1=%d B2=%d FE=%d",
-            size_10,
-            size_a1,
-            size_b2,
-            size_fe);
+    if(wmbus_parser_apator162_register_size(0x10U) != 4 ||
+       wmbus_parser_apator162_register_size(0x71U) != 9 ||
+       wmbus_parser_apator162_register_size(0x7BU) != 49 ||
+       wmbus_parser_apator162_register_size(0xA1U) != 4 ||
+       wmbus_parser_apator162_register_size(0xB2U) != 16 ||
+       wmbus_parser_apator162_register_size(0xB6U) != 3 ||
+       wmbus_parser_apator162_register_size(0xC7U) != 3 ||
+       wmbus_parser_apator162_register_size(0xC8U) != -1 ||
+       wmbus_parser_apator162_register_size(0xFEU) != -1) {
+        wmbus_selftest_set_detail(detail, detail_len, "register size table mismatch");
         return false;
     }
 
-    wmbus_selftest_set_detail(detail, detail_len, "10=4 A1=4 B2=16 FE=-1");
+    wmbus_selftest_set_detail(detail, detail_len, "fixed and ranged register sizes valid");
     return true;
 }
 
@@ -870,8 +866,9 @@ static bool wmbus_selftest_check_dif_vif_hca_records(char* detail, size_t detail
                  records[6].value_datetime.minute == 13U &&
                  furi_string_equal_str(
                      fields,
-                     "HCA=319;HCA[S1]=1206;Date[S1]=2025-12-31;HCA[S17]=319;"
-                     "Date[S17]=2026-07-31;Date[err]=-;DateTime=2026-08-05 23:13");
+                     "HCA=319;Date[err]=-;DateTime=2026-08-05 23:13;"
+                     "HCA[S1]=1206;Date[S1]=2025-12-31;"
+                     "HCA[S17]=319;Date[S17]=2026-07-31");
     if(!valid) {
         wmbus_selftest_set_detail(
             detail,

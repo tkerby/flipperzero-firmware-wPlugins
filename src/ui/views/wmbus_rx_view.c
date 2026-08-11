@@ -187,9 +187,9 @@ static void
         entry->rssi_gate_ok ? "RSSI" : "rssi");
 }
 
-static void wmbus_rx_draw_nav_footer(Canvas* canvas) {
+static void wmbus_rx_draw_nav_footer(Canvas* canvas, bool history_mode) {
     const char* left = "< Config";
-    const char* center = "OK History";
+    const char* center = history_mode ? "OK Live" : "OK History";
     const char* right = "Detail >";
     const uint8_t y = 58U;
 
@@ -238,7 +238,7 @@ static void wmbus_rx_draw(Canvas* canvas, void* model) {
     if(!m->freq_valid) {
         canvas_draw_str(canvas, 0, 22, "Freq not allowed");
         canvas_draw_str(canvas, 0, 32, "Check region");
-        wmbus_rx_draw_nav_footer(canvas);
+        wmbus_rx_draw_nav_footer(canvas, m->freeze_display);
         return;
     }
 
@@ -267,9 +267,9 @@ static void wmbus_rx_draw(Canvas* canvas, void* model) {
 
     if(!entry) {
         canvas_draw_str(canvas, 0, 48, "Waiting for RX...");
-        wmbus_rx_draw_nav_footer(canvas);
+        wmbus_rx_draw_nav_footer(canvas, m->freeze_display);
     } else if(m->debug_mode) {
-        char hex[WMBUS_PACKET_VALUE_MAX];
+        char hex[WMBUS_RECORD_VALUE_TEXT_MAX];
         size_t preview_len = entry->wire_preview_len;
         if(preview_len > 8U) preview_len = 8U;
         wmbus_hex_encode(entry->wire_preview, preview_len, hex, sizeof(hex));
@@ -279,7 +279,7 @@ static void wmbus_rx_draw(Canvas* canvas, void* model) {
         canvas_draw_str(canvas, 0, 58, line);
     } else if(!wmbus_packet_quality_meets(entry->quality, WmBusPacketQualityFrameComplete)) {
         canvas_draw_str(canvas, 0, 48, "Waiting for complete frame...");
-        wmbus_rx_draw_nav_footer(canvas);
+        wmbus_rx_draw_nav_footer(canvas, m->freeze_display);
     } else {
         char right[20];
         char footer_left[24];
@@ -361,15 +361,10 @@ static bool wmbus_rx_input(InputEvent* event, void* context) {
     }
 
     if(event->type == InputTypeLong) {
-        switch(event->key) {
-        case InputKeyOk:
-            return wmbus_rx_send_event(ctx, WmBusRxViewEventOpenConfig);
-        case InputKeyUp:
+        if(event->key == InputKeyUp) {
             return wmbus_rx_send_event(ctx, WmBusRxViewEventToggleDebug);
-        case InputKeyDown:
+        } else if(event->key == InputKeyDown) {
             return wmbus_rx_send_event(ctx, WmBusRxViewEventOpenApplicationRecords);
-        default:
-            return false;
         }
     }
 

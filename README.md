@@ -49,7 +49,7 @@ New parsers live under `applications_user/wmbus_decoder/protocol/parser/`.
 
 Minimum steps:
 
-1. add a new parser ID in `wmbus_parser_id.h`
+1. add a new parser ID in `wmbus_application_types.h`
 2. add a fail-closed `parse(const WmBusParserPacketView*, WmBusPacketApplicationData*)` implementation
 3. add its display name to the indexed table in `wmbus_parser.c`
 4. include and register it in `wmbus_parser_registry.c` with its `parser_id`
@@ -64,6 +64,7 @@ Parser inputs come through `WmBusParserPacketView`, which exposes DLL, TPL, payl
 - `Up` / `Down`: browse saved packets in `History`
 - `Left`: open config
 - `Right`: open packet detail for the selected history entry
+- `Long Up`: toggle the debug overlay
 - `Long Down`: open application records for the selected history entry
 - `Back`: exit immediately when no packet is in memory; otherwise confirm before discarding packets
 
