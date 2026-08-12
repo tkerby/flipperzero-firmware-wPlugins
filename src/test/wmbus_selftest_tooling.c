@@ -645,9 +645,7 @@ static bool wmbus_selftest_check_dif_vif_datetime_type_i(char* detail, size_t de
     return true;
 }
 
-static bool wmbus_selftest_check_dif_vif_datetime_type_i_invalid(
-    char* detail,
-    size_t detail_len) {
+static bool wmbus_selftest_check_dif_vif_datetime_type_i_invalid(char* detail, size_t detail_len) {
     static const struct {
         const char* name;
         uint8_t payload[8];
@@ -762,8 +760,9 @@ static bool wmbus_selftest_check_dif_vif_lvar_classes(char* detail, size_t detai
     }
 
     static const uint8_t numeric_payload[] = {
-        0x0DU, 0x13U, 0xC2U, 0x34U, 0x12U, 0x0DU, 0x13U, 0xD2U, 0x34U, 0x12U, 0x0DU, 0x13U,
-        0xE3U, 0xFEU, 0xFFU, 0xFFU, 0x0DU, 0x13U, 0xF4U, 0x00U, 0x00U, 0x80U, 0x3FU,
+        0x0DU, 0x13U, 0xC2U, 0x34U, 0x12U, 0x0DU, 0x13U, 0xD2U, 0x34U, 0x12U,
+        0x0DU, 0x13U, 0xE3U, 0xFEU, 0xFFU, 0xFFU, 0x0DU, 0x13U, 0xC9U, 0x99U,
+        0x99U, 0x99U, 0x99U, 0x99U, 0x99U, 0x99U, 0x99U, 0x99U,
     };
     WmBusApplicationRecord numeric_records[4] = {0};
     if(!wmbus_packet_decode_application_records(
@@ -774,15 +773,30 @@ static bool wmbus_selftest_check_dif_vif_lvar_classes(char* detail, size_t detai
            &count) ||
        count != COUNT_OF(numeric_records) || numeric_records[0].value != 1234 ||
        numeric_records[1].value != -1234 || numeric_records[2].value != -2 ||
-       numeric_records[3].data_len != 4U ||
-       numeric_records[3].value_type != WmBusApplicationValueRaw) {
+       numeric_records[3].value != INT64_C(999999999999999999)) {
         wmbus_selftest_set_detail(
             detail, detail_len, "numeric LVAR decode failed count=%u", count);
         return false;
     }
 
-    for(uint16_t lvar = 0xFBU; lvar <= 0xFFU; lvar++) {
-        uint8_t reserved_payload[19] = {0x0DU, 0x13U, (uint8_t)lvar};
+    static const uint8_t large_binary_payload[] = {
+        0x0DU, 0x13U, 0xF0U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,
+        0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x01U, 0x13U, 0x2AU,
+    };
+    if(!wmbus_packet_decode_application_records(
+           large_binary_payload, sizeof(large_binary_payload), records, COUNT_OF(records), &count) ||
+       count != 2U || records[0].data_len != 16U ||
+       records[0].value_type != WmBusApplicationValueRaw || records[1].value != 42) {
+        wmbus_selftest_set_detail(detail, detail_len, "large LVAR framing failed count=%u", count);
+        return false;
+    }
+
+    for(uint16_t lvar = 0xCAU; lvar <= 0xFFU; lvar++) {
+        if((lvar >= 0xD0U && lvar <= 0xD9U) || (lvar >= 0xE0U && lvar <= 0xEFU) ||
+           (lvar >= 0xF0U && lvar <= 0xF6U)) {
+            continue;
+        }
+        uint8_t reserved_payload[3] = {0x0DU, 0x13U, (uint8_t)lvar};
         if(wmbus_packet_decode_application_records(
                reserved_payload, sizeof(reserved_payload), records, COUNT_OF(records), &count)) {
             wmbus_selftest_set_detail(
@@ -791,7 +805,7 @@ static bool wmbus_selftest_check_dif_vif_lvar_classes(char* detail, size_t detai
         }
     }
 
-    wmbus_selftest_set_detail(detail, detail_len, "LVAR text/BCD/binary/float framed");
+    wmbus_selftest_set_detail(detail, detail_len, "LVAR text/BCD/binary framed to 64 bytes");
     return true;
 }
 
@@ -809,22 +823,29 @@ static bool wmbus_selftest_check_dif_vif_extensions(char* detail, size_t detail_
         0x97U,
         0x00U,
         0xA5U,
+        0x02U,
+        0xFDU,
+        0x46U,
+        0xD0U,
+        0x0AU,
     };
-    WmBusApplicationRecord records[2] = {0};
+    WmBusApplicationRecord records[3] = {0};
     uint8_t count = 0U;
 
     if(!wmbus_packet_decode_application_records(
            payload, sizeof(payload), records, COUNT_OF(records), &count) ||
-       count != 2U || records[0].quantity != WmBusApplicationQuantityVolume ||
+       count != 3U || records[0].quantity != WmBusApplicationQuantityVolume ||
        records[0].scale10 != -3 || records[0].value != 1 ||
        records[1].quantity != WmBusApplicationQuantityStatus || records[1].data_len != 1U ||
-       records[1].value_type != WmBusApplicationValueRaw || records[1].raw_bytes[0] != 0xA5U) {
+       records[1].value_type != WmBusApplicationValueRaw || records[1].raw_bytes[0] != 0xA5U ||
+       records[2].quantity != WmBusApplicationQuantityVoltage || records[2].scale10 != -3 ||
+       records[2].value != 2768) {
         wmbus_selftest_set_detail(
             detail, detail_len, "VIF extension decode failed count=%u", count);
         return false;
     }
 
-    wmbus_selftest_set_detail(detail, detail_len, "primary VIF and chained VIFE masked");
+    wmbus_selftest_set_detail(detail, detail_len, "primary, chained, and FD46 voltage VIFs");
     return true;
 }
 

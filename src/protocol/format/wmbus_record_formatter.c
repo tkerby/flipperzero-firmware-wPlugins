@@ -29,6 +29,7 @@ static const WmBusRecordPresentation wmbus_record_presentations[] = {
     [WmBusApplicationQuantityDateTime] = {.label = "DateTime"},
     [WmBusApplicationQuantityVersion] = {.label = "Version"},
     [WmBusApplicationQuantityStatus] = {.label = "Status"},
+    [WmBusApplicationQuantityVoltage] = {.label = "Voltage", .unit = "V"},
 };
 
 static const WmBusRecordPresentation*

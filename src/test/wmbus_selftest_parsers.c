@@ -15,9 +15,8 @@ static bool wmbus_selftest_check_parser_itw_type_i_datetime(char* detail, size_t
     static const char* frame_hex =
         "2E449726120200520D087A8A0000A00B6E000000066D281B474B38004B6E010000426C3F3C067F2C"
         "007529070C92A3";
-    static const char* expected_fields =
-        "HCA=0;DateTime=2026-08-11 07:27:40;Data=13224899837996;"
-        "HCA[S1]=1;Date[S1]=2025-12-31";
+    static const char* expected_fields = "HCA=0;DateTime=2026-08-11 07:27:40;Data=13224899837996;"
+                                         "HCA[S1]=1;Date[S1]=2025-12-31";
     uint8_t frame[WMBUS_SELFTEST_BUF_MAX] = {0};
     size_t frame_len = 0U;
     WmBusPacketRecord record = {0};
@@ -29,25 +28,18 @@ static bool wmbus_selftest_check_parser_itw_type_i_datetime(char* detail, size_t
 
     bool built = wmbus_selftest_hex_to_bytes(frame_hex, frame, sizeof(frame), &frame_len) &&
                  frame_len == 47U;
-    bool processed = built && wmbus_selftest_process_phy_frame_record(
-                                  WmBusRxModeC,
-                                  WmBusFrameFormatB,
-                                  frame,
-                                  frame_len,
-                                  NULL,
-                                  &record);
-    bool formatted = processed && wmbus_record_formatter_format_joined(
-                                      record.application.records,
-                                      record.application.record_count,
-                                      ';',
-                                      fields);
-    bool valid = formatted && record.quality == WmBusPacketQualityParsed &&
-                 record.normalized_len == 45U &&
-                 strcmp(record.identity.manufacturer, "ITW") == 0 &&
-                 strcmp(record.identity.meter_id, "52000212") == 0 &&
-                 record.application.parser_id == WmBusParserIdDifVif &&
-                 record.application.record_count == 5U &&
-                 furi_string_equal_str(fields, expected_fields);
+    bool processed = built &&
+                     wmbus_selftest_process_phy_frame_record(
+                         WmBusRxModeC, WmBusFrameFormatB, frame, frame_len, NULL, &record);
+    bool formatted = processed &&
+                     wmbus_record_formatter_format_joined(
+                         record.application.records, record.application.record_count, ';', fields);
+    bool valid =
+        formatted && record.quality == WmBusPacketQualityParsed && record.normalized_len == 45U &&
+        strcmp(record.identity.manufacturer, "ITW") == 0 &&
+        strcmp(record.identity.meter_id, "52000212") == 0 &&
+        record.application.parser_id == WmBusParserIdDifVif &&
+        record.application.record_count == 5U && furi_string_equal_str(fields, expected_fields);
     if(!valid) {
         wmbus_selftest_set_detail(
             detail,

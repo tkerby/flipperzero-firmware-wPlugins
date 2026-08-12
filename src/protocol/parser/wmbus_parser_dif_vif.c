@@ -247,6 +247,10 @@ static void
         record->quantity = WmBusApplicationQuantityVersion;
     } else if(vif == 0x7DU && has_first_vife && first_vife_code == 0x17U) {
         record->quantity = WmBusApplicationQuantityStatus;
+    } else if(vif == 0x7DU && has_first_vife && (first_vife_code & 0x70U) == 0x40U) {
+        /* EN 13757-3 secondary VIF: E100 nnnn = 10^(nnnn - 9) V. */
+        record->quantity = WmBusApplicationQuantityVoltage;
+        record->scale10 = (int8_t)((int)(first_vife_code & 0x0FU) - 9);
     }
 }
 

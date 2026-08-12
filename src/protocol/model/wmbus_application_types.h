@@ -50,6 +50,7 @@ typedef enum {
     WmBusApplicationQuantityDateTime,
     WmBusApplicationQuantityVersion,
     WmBusApplicationQuantityStatus,
+    WmBusApplicationQuantityVoltage,
 } WmBusApplicationQuantity;
 
 typedef uint8_t WmBusApplicationDateTimePrecision;
