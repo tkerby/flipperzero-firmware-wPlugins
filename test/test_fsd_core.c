@@ -26,6 +26,7 @@
 #include "fsd_checksum.h"
 #include "fsd_events.h"
 #include "fsd_handler.h"
+#include "fsd_power.h"
 #include "fsd_profile.h"
 #include "fsd_profile_db.h"
 #include "fsd_tpms.h"
@@ -3147,6 +3148,100 @@ static void test_blackbox_filter(void) {
     CHECK(!fsd_blackbox_should_record(0x7FF),              "0x7FF dropped");
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Power / reset log
+//
+// The question this answers is whether the rear tap's 12V is switched or
+// always-on, and it exists because a multimeter cannot answer it comfortably:
+// reaching the connector means opening a door, and opening a door wakes the
+// car. It also separates three causes a voltage reading collapses into one --
+// the supply going away, the supply sagging, and us crashing.
+// ─────────────────────────────────────────────────────────────────────────────
+static void test_power_verdict(void) {
+    printf("\n-- power: switched or always-on --\n");
+
+    FsdPwrRecord slept = {true, 2400000u, 1200000u};  // up 40 min, quiet 20 min
+    FsdPwrRecord awake = {true, 2400000u, 0u};        // up 40 min, bus never quiet
+
+    // The whole point: quiet bus, then the supply died.
+    CHECK(fsd_pwr_verdict(FSD_PWR_RESET_POWERON, &slept) == FSD_PWR_SWITCHED,
+          "quiet then power-cycled -> switched");
+
+    // 🔴 The trap. "Came back from a power cut" looks like switched, but if the
+    // bus never went quiet the car never slept -- sentry left on, a scheduled
+    // charge, someone opening the app. Reporting SWITCHED here would be a
+    // confident answer to a question that was never asked.
+    CHECK(fsd_pwr_verdict(FSD_PWR_RESET_POWERON, &awake) == FSD_PWR_NO_SLEEP,
+          "power cut but the bus never went quiet -> inconclusive");
+
+    // A sagging supply is a wiring verdict, not a switching one. Thin tap wire,
+    // a cold crimp, or an e-fuse near its limit all land here, and all of them
+    // want a different response than "the car switched us off".
+    CHECK(fsd_pwr_verdict(FSD_PWR_RESET_BROWNOUT, &slept) == FSD_PWR_BROWNOUT,
+          "brownout is reported as brownout, not as switched");
+
+    // We fell over. The supply is not implicated and must not be blamed.
+    CHECK(fsd_pwr_verdict(FSD_PWR_RESET_SOFTWARE, &slept) == FSD_PWR_CRASH,
+          "software reset says nothing about the supply");
+    CHECK(fsd_pwr_verdict(FSD_PWR_RESET_EXTERNAL, &slept) == FSD_PWR_CRASH,
+          "reset pin says nothing about the supply");
+
+    // Nothing recorded yet -- first boot, or NVS cleared.
+    FsdPwrRecord none = {false, 0u, 0u};
+    CHECK(fsd_pwr_verdict(FSD_PWR_RESET_POWERON, &none) == FSD_PWR_UNKNOWN,
+          "no record -> unknown");
+    CHECK(fsd_pwr_verdict(FSD_PWR_RESET_POWERON, NULL) == FSD_PWR_UNKNOWN,
+          "NULL record -> unknown");
+    CHECK(fsd_pwr_verdict(FSD_PWR_RESET_UNKNOWN, &slept) == FSD_PWR_UNKNOWN,
+          "unknown reset reason -> unknown");
+
+    // ALWAYS_ON can never come from the boot path: a module that kept its power
+    // never rebooted to report anything. It has to come from the live path.
+    CHECK(fsd_pwr_live_verdict(FSD_PWR_ALWAYS_ON_MS) == FSD_PWR_ALWAYS_ON,
+          "still alive long after the bus went quiet -> always-on");
+    CHECK(fsd_pwr_live_verdict(FSD_PWR_ALWAYS_ON_MS - 1u) == FSD_PWR_UNKNOWN,
+          "not quiet long enough yet -> no claim");
+    CHECK(fsd_pwr_live_verdict(0) == FSD_PWR_UNKNOWN, "bus busy -> no claim");
+
+    // Every value has to be printable, or the serial line reports a number.
+    for (int r = 0; r <= FSD_PWR_RESET_EXTERNAL; r++)
+        CHECK(fsd_pwr_reset_str((FsdPwrReset)r)[0] != '\0', "reset %d has a name", r);
+    for (int v = 0; v <= FSD_PWR_CRASH; v++)
+        CHECK(fsd_pwr_verdict_str((FsdPwrVerdict)v)[0] != '\0', "verdict %d has a name", v);
+}
+
+static void test_power_quiet_ms(void) {
+    // Never received anything: we have not seen the bus go quiet, we have seen
+    // nothing at all. Returning a huge quiet time here would make a module that
+    // was never wired to the car look like a car that fell asleep.
+    CHECK(fsd_pwr_quiet_ms(60000u, 0u, false) == 0u, "no frame ever -> not quiet");
+
+    // Traffic within the threshold is not quiet.
+    CHECK(fsd_pwr_quiet_ms(10000u, 9999u, true) == 0u, "recent frame -> not quiet");
+    CHECK(fsd_pwr_quiet_ms(10000u + FSD_PWR_QUIET_MS - 1u, 10000u, true) == 0u,
+          "just under the threshold -> not quiet");
+
+    // Past the threshold the answer is the full gap, not the excess. The
+    // operator reads "quiet for N minutes", which is the gap.
+    uint32_t gap = FSD_PWR_QUIET_MS + 5000u;
+    CHECK(fsd_pwr_quiet_ms(10000u + gap, 10000u, true) == gap,
+          "quiet returns the whole gap, got %u", fsd_pwr_quiet_ms(10000u + gap, 10000u, true));
+
+    // The ms clock wraps after ~49 days. Unsigned subtraction handles it; a
+    // signed comparison would report a wildly quiet bus for a moment and the
+    // module would announce that the car had slept when it had not.
+    //
+    // 0xFFFFFF00 -> 50 is a gap of 306 ms across the wrap, which is short.
+    CHECK(fsd_pwr_quiet_ms(50u, 0xFFFFFF00u, true) == 0u,
+          "a short gap across the wrap is not quiet, got %u",
+          fsd_pwr_quiet_ms(50u, 0xFFFFFF00u, true));
+
+    // ... and a long one across the wrap is reported as the whole gap.
+    CHECK(fsd_pwr_quiet_ms(20000u, 0xFFFFFF00u, true) == 20256u,
+          "long gap across the wrap, got %u",
+          fsd_pwr_quiet_ms(20000u, 0xFFFFFF00u, true));
+}
+
 int main(void) {
     printf("test_fsd_core: Tesla FSD protocol core host tests\n");
     test_set_bit();
@@ -3205,6 +3300,9 @@ int main(void) {
     test_profile();
     test_state_init();
     test_blackbox_filter();
+
+    test_power_verdict();
+    test_power_quiet_ms();
 
     printf("\n%d passed, %d failed\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;
