@@ -1,0 +1,39 @@
+name: Build & Release FAP
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g. 0.8.0)'
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ufbt
+        run: pip install ufbt
+
+      - name: Build FAP
+        run: ufbt
+
+      - name: Bundle release
+        run: |
+          mkdir -p release
+          cp dist/keylogger.fap release/
+          cp -r apps_data/keylogger/payloads release/
+          cd release && zip -r ../keylogger-v${{ github.event.inputs.version }}.zip .
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.event.inputs.version }}
+          name: v${{ github.event.inputs.version }}
+          files: |
+            keylogger-v${{ github.event.inputs.version }}.zip
+            dist/keylogger.fap
+          generate_release_notes: true

