@@ -30,16 +30,7 @@ Deploy to a connected Flipper:
 ufbt launch
 ```
 
-Upload payload files to the Flipper's SD card:
-
-```bash
-.\upload_all_payloads.bat
-```
-
-Edit `upload_all_payloads.bat` line 5 to match your UFBT path:
-```batch
-set UFBT_PATH=C:\Users\YOUR_USERNAME\.ufbt\current\scripts\storage.py
-```
+Upload payload files to the Flipper's SD card
 
 ## Directory Structure
 
@@ -48,10 +39,8 @@ set UFBT_PATH=C:\Users\YOUR_USERNAME\.ufbt\current\scripts\storage.py
 ├── payloads/
 │   ├── deploy_keylogger.txt          # Standard deploy
 │   ├── deploy_keylogger_cmd.txt      # CMD-launched deploy (if direct PS is blocked)
-│   ├── deploy_keylogger_tester.txt   # Deploy with visible debug output
 │   ├── retrieve_keylog.txt           # Standard retrieve
-│   ├── retrieve_keylog_cmd.txt       # CMD-launched retrieve
-│   └── retrieve_keylog_tester.txt    # Retrieve with visible debug output
+│   └── retrieve_keylog_cmd.txt       # CMD-launched retrieve  
 └── keylogs/                          # Retrieved keylog files appear here
 ```
 
@@ -96,10 +85,8 @@ set UFBT_PATH=C:\Users\YOUR_USERNAME\.ufbt\current\scripts\storage.py
 |---------|-------------|
 | `deploy_keylogger.txt` | Standard deploy — opens PowerShell directly via Win+R |
 | `deploy_keylogger_cmd.txt` | Target blocks direct PowerShell launch — goes through `cmd /k` first |
-| `deploy_keylogger_tester.txt` | Debugging — same as standard but with `Write-Host` output at each step, window stays open |
 | `retrieve_keylog.txt` | Standard retrieve |
 | `retrieve_keylog_cmd.txt` | CMD-launched retrieve |
-| `retrieve_keylog_tester.txt` | Debugging — visible output, window stays open |
 
 ## How the Keylogger Works
 
