@@ -179,4 +179,11 @@ void wmbus_selftest_report_case_result(
 
 const WmBusSelftestCheck* wmbus_selftest_tooling_checks(size_t* count);
 const WmBusSelftestCheck* wmbus_selftest_mode_checks(size_t* count);
-const WmBusSelftestCheck* wmbus_selftest_parser_checks(size_t* count);
+const WmBusSelftestCheck* wmbus_selftest_parser_qwaterv2_checks(size_t* count);
+const WmBusSelftestCheck* wmbus_selftest_parser_apator162_checks(size_t* count);
+const WmBusSelftestCheck* wmbus_selftest_parser_dif_vif_checks(size_t* count);
+const WmBusSelftestCheck* wmbus_selftest_packet_checks(size_t* count);
+
+const char* wmbus_selftest_parser_name(const WmBusPacketRecord* record);
+/* Public Apator fixtures can contain plaintext with an encrypted TPL configuration. */
+bool wmbus_selftest_prepare_plaintext_short_tpl(uint8_t* normalized, size_t normalized_len);

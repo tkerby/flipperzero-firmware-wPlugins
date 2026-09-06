@@ -63,7 +63,16 @@ static void
     checks = wmbus_selftest_mode_checks(&count);
     wmbus_selftest_run_checks(summary, log_results, report, checks, count);
 
-    checks = wmbus_selftest_parser_checks(&count);
+    checks = wmbus_selftest_parser_qwaterv2_checks(&count);
+    wmbus_selftest_run_checks(summary, log_results, report, checks, count);
+
+    checks = wmbus_selftest_parser_apator162_checks(&count);
+    wmbus_selftest_run_checks(summary, log_results, report, checks, count);
+
+    checks = wmbus_selftest_parser_dif_vif_checks(&count);
+    wmbus_selftest_run_checks(summary, log_results, report, checks, count);
+
+    checks = wmbus_selftest_packet_checks(&count);
     wmbus_selftest_run_checks(summary, log_results, report, checks, count);
 }
 

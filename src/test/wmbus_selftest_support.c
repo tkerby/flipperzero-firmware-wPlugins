@@ -1,6 +1,7 @@
 #include "wmbus_selftest_i.h"
 
-#include "../protocol/format/wmbus_record_formatter.h"
+#include "../protocol/parser/wmbus_parser.h"
+
 #include "../protocol/model/wmbus_application_record.h"
 
 #include <stdarg.h>
@@ -636,4 +637,19 @@ const char* wmbus_selftest_format_computed_len(const WmBusSelftestResult* result
         snprintf(out, 16, "%u", (unsigned int)result->computed_len);
     }
     return out;
+}
+
+const char* wmbus_selftest_parser_name(const WmBusPacketRecord* record) {
+    return record ? wmbus_parser_id_name(record->application.parser_id) : "Unknown";
+}
+
+bool wmbus_selftest_prepare_plaintext_short_tpl(uint8_t* normalized, size_t normalized_len) {
+    if(!normalized || normalized_len < 17U || normalized[10] != 0x7AU || normalized[15] != 0x2FU ||
+       normalized[16] != 0x2FU) {
+        return false;
+    }
+
+    normalized[13] = 0U;
+    normalized[14] = 0U;
+    return true;
 }

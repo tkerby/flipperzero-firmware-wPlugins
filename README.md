@@ -127,6 +127,12 @@ Output:
 
 ## Tests
 
+Parser selftests live in separate `src/test/wmbus_selftest_parser_<parser>.c` files
+for `qwaterv2`, `apator162`, and `dif_vif`. Each file exposes its own check list,
+registered in `wmbus_selftest_runner.c`. Shared packet/security integration checks
+live in `wmbus_selftest_packet.c`; reusable fixtures and helpers stay in
+`wmbus_selftest_support.c`.
+
 Normal builds exclude the on-device test suite. Build, deploy, and run the test variant with:
 
 ```bash
