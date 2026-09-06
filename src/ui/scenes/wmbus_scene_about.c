@@ -6,13 +6,13 @@
 
 void wmbus_scene_about_on_enter(void* context) {
     WmBusApp* app = context;
-    if(!app || !wmbus_app_ensure_about_view(app)) {
+    if(!app || !wmbus_app_ensure_widget(app)) {
         return;
     }
 
-    widget_reset(app->about_widget);
+    widget_reset(app->widget);
     widget_add_text_box_element(
-        app->about_widget,
+        app->widget,
         4U,
         2U,
         120U,
@@ -24,7 +24,7 @@ void wmbus_scene_about_on_enter(void* context) {
         "Author: Martin Mares\n"
         "https://github.com/maresmar/wmbus-decoder\n",
         false);
-    view_dispatcher_switch_to_view(app->view_dispatcher, WmBusAppViewAbout);
+    view_dispatcher_switch_to_view(app->view_dispatcher, WmBusAppViewWidget);
 }
 
 bool wmbus_scene_about_on_event(void* context, SceneManagerEvent event) {
@@ -35,6 +35,6 @@ bool wmbus_scene_about_on_event(void* context, SceneManagerEvent event) {
 
 void wmbus_scene_about_on_exit(void* context) {
     WmBusApp* app = context;
-    if(!app->about_widget) return;
-    widget_reset(app->about_widget);
+    if(!app->widget) return;
+    widget_reset(app->widget);
 }

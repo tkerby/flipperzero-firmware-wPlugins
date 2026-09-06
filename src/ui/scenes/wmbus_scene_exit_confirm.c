@@ -15,11 +15,11 @@ static void
 
 void wmbus_scene_exit_confirm_on_enter(void* context) {
     WmBusApp* app = context;
-    if(!app || !wmbus_app_ensure_exit_confirm_view(app)) return;
+    if(!app || !wmbus_app_ensure_widget(app)) return;
 
-    widget_reset(app->exit_confirm_widget);
+    widget_reset(app->widget);
     widget_add_text_box_element(
-        app->exit_confirm_widget,
+        app->widget,
         0U,
         0U,
         128U,
@@ -29,19 +29,11 @@ void wmbus_scene_exit_confirm_on_enter(void* context) {
         "\e#Exit WM-Bus Decoder?\e#\nPackets in memory\nwill be lost",
         false);
     widget_add_button_element(
-        app->exit_confirm_widget,
-        GuiButtonTypeLeft,
-        "Exit",
-        wmbus_scene_exit_confirm_callback,
-        app);
+        app->widget, GuiButtonTypeLeft, "Exit", wmbus_scene_exit_confirm_callback, app);
     widget_add_button_element(
-        app->exit_confirm_widget,
-        GuiButtonTypeRight,
-        "Stay",
-        wmbus_scene_exit_confirm_callback,
-        app);
+        app->widget, GuiButtonTypeRight, "Stay", wmbus_scene_exit_confirm_callback, app);
 
-    view_dispatcher_switch_to_view(app->view_dispatcher, WmBusAppViewExitConfirm);
+    view_dispatcher_switch_to_view(app->view_dispatcher, WmBusAppViewWidget);
 }
 
 bool wmbus_scene_exit_confirm_on_event(void* context, SceneManagerEvent event) {
@@ -63,6 +55,6 @@ bool wmbus_scene_exit_confirm_on_event(void* context, SceneManagerEvent event) {
 
 void wmbus_scene_exit_confirm_on_exit(void* context) {
     WmBusApp* app = context;
-    if(!app->exit_confirm_widget) return;
-    widget_reset(app->exit_confirm_widget);
+    if(!app->widget) return;
+    widget_reset(app->widget);
 }

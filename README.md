@@ -46,7 +46,7 @@ Parser registration is order-dependent. The first parser whose `parse()` succeed
 
 ## Adding A Parser
 
-New parsers live under `applications_user/wmbus_decoder/protocol/parser/`.
+New parsers live under `src/protocol/parser/`.
 
 Minimum steps:
 
@@ -64,9 +64,9 @@ Parser inputs come through `WmBusParserPacketView`, which exposes DLL, TPL, payl
 - `OK`: switch between `Live` and `History`
 - `Up` / `Down`: browse saved packets in `History`
 - `Left`: open config
-- `Right`: open packet detail for the selected history entry
+- `Right`: open packet detail for the displayed packet
 - `Long Up`: toggle the debug overlay
-- `Long Down`: open application records for the selected history entry
+- `Long Down`: open application records for the displayed packet
 - `Back`: exit immediately when no packet is in memory; otherwise confirm before discarding packets
 
 ## Configuration
@@ -109,9 +109,15 @@ Format:
 ## Protocol Sources
 
 - EN 13757-3 and EN 13757-4 are normative for supported WM-Bus frame, transport, and security behavior.
+- EN 13757-7 defines transport-layer security; Mode 5 follows its address/access-number IV and decryption-verification field.
 - OMS documents are used only for extensions they define.
 - The [TI CC1101 errata](https://www.ti.com/lit/er/swrz020e/swrz020e.pdf) is authoritative for RX FIFO handling.
 - Proprietary Apator behavior is maintained from tested packet fixtures.
+
+Application decoding accepts the supported variable-data CI values `72`, `7A`,
+and `78`. Unsupported VIF modifiers and record errors remain uninterpreted.
+Other services retain frame metadata without speculative application
+parsing. QWater WDS extraction follows DIF/VIF record boundaries.
 
 ## Build
 

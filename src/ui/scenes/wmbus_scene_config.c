@@ -125,69 +125,16 @@ static void wmbus_scene_config_debug_overlay_changed(VariableItem* item) {
     wmbus_app_apply_runtime_config(app, true);
 }
 
-static void wmbus_scene_config_add_mode_item(WmBusApp* app) {
-    VariableItem* item = variable_item_list_add(
-        app->config_list, "Mode", COUNT_OF(wmbus_mode_text), wmbus_scene_config_mode_changed, app);
-    uint8_t index = (app->settings.mode == WmBusRxModeC) ? 1U : 0U;
-    variable_item_set_current_value_index(item, index);
-    variable_item_set_current_value_text(item, wmbus_mode_text[index]);
-}
-
-static void wmbus_scene_config_add_csv_logging_item(WmBusApp* app) {
-    VariableItem* item = variable_item_list_add(
-        app->config_list,
-        "CSV logging",
-        WmBusCsvLoggingCount,
-        wmbus_scene_config_csv_logging_changed,
-        app);
-    variable_item_set_current_value_index(item, app->settings.csv_logging);
-    variable_item_set_current_value_text(item, wmbus_csv_logging_text[app->settings.csv_logging]);
-}
-
-static void wmbus_scene_config_add_quality_item(
+static void wmbus_scene_config_add_item(
     WmBusApp* app,
     const char* label,
-    WmBusPacketQuality current,
+    uint8_t count,
+    uint8_t index,
+    const char* text,
     VariableItemChangeCallback callback) {
-    VariableItem* item =
-        variable_item_list_add(app->config_list, label, WmBusPacketQualityCount, callback, app);
-    uint8_t index = (uint8_t)wmbus_packet_quality_clamp(current);
+    VariableItem* item = variable_item_list_add(app->config_list, label, count, callback, app);
     variable_item_set_current_value_index(item, index);
-    variable_item_set_current_value_text(
-        item, wmbus_packet_quality_short_str((WmBusPacketQuality)index));
-}
-
-static void wmbus_scene_config_add_min_rssi_item(WmBusApp* app) {
-    VariableItem* item = variable_item_list_add(
-        app->config_list,
-        "RSSI gate >=",
-        COUNT_OF(wmbus_min_rssi_options),
-        wmbus_scene_config_min_rssi_changed,
-        app);
-    uint8_t index = wmbus_min_rssi_index(app->settings.min_rssi_dbm);
-    variable_item_set_current_value_index(item, index);
-    variable_item_set_current_value_text(item, wmbus_min_rssi_options[index].text);
-}
-
-static void wmbus_scene_config_add_debug_overlay_item(WmBusApp* app) {
-    VariableItem* item = variable_item_list_add(
-        app->config_list,
-        "Debug overlay",
-        COUNT_OF(wmbus_toggle_text),
-        wmbus_scene_config_debug_overlay_changed,
-        app);
-    uint8_t index = app->settings.debug_overlay ? 1U : 0U;
-    variable_item_set_current_value_index(item, index);
-    variable_item_set_current_value_text(item, wmbus_toggle_text[index]);
-}
-
-static void wmbus_scene_config_add_keyring_item(WmBusApp* app) {
-    VariableItem* item = variable_item_list_add(app->config_list, "Keyring", 1U, NULL, app);
-    variable_item_set_current_value_text(item, app->keyring.status);
-}
-
-static void wmbus_scene_config_add_about_item(WmBusApp* app) {
-    variable_item_list_add(app->config_list, "About", 1U, NULL, app);
+    variable_item_set_current_value_text(item, text);
 }
 
 void wmbus_scene_config_on_enter(void* context) {
@@ -198,20 +145,54 @@ void wmbus_scene_config_on_enter(void* context) {
 
     variable_item_list_set_enter_callback(
         app->config_list, wmbus_scene_config_enter_callback, app);
-    wmbus_scene_config_add_mode_item(app);
-    wmbus_scene_config_add_csv_logging_item(app);
-    wmbus_scene_config_add_quality_item(
+    wmbus_scene_config_add_item(
+        app,
+        "Mode",
+        COUNT_OF(wmbus_mode_text),
+        app->settings.mode,
+        wmbus_mode_text[app->settings.mode],
+        wmbus_scene_config_mode_changed);
+    wmbus_scene_config_add_item(
+        app,
+        "CSV logging",
+        WmBusCsvLoggingCount,
+        app->settings.csv_logging,
+        wmbus_csv_logging_text[app->settings.csv_logging],
+        wmbus_scene_config_csv_logging_changed);
+    wmbus_scene_config_add_item(
         app,
         "MEM gate >=",
+        WmBusPacketQualityCount,
         app->settings.memory_quality,
+        wmbus_packet_quality_short_str(app->settings.memory_quality),
         wmbus_scene_config_memory_quality_changed);
-    wmbus_scene_config_add_quality_item(
-        app, "CSV gate >=", app->settings.csv_quality, wmbus_scene_config_csv_quality_changed);
-    wmbus_scene_config_add_min_rssi_item(app);
-    wmbus_scene_config_add_debug_overlay_item(app);
-    wmbus_scene_config_add_keyring_item(app);
-    wmbus_scene_config_add_about_item(app);
+    wmbus_scene_config_add_item(
+        app,
+        "CSV gate >=",
+        WmBusPacketQualityCount,
+        app->settings.csv_quality,
+        wmbus_packet_quality_short_str(app->settings.csv_quality),
+        wmbus_scene_config_csv_quality_changed);
+    uint8_t rssi_index = wmbus_min_rssi_index(app->settings.min_rssi_dbm);
+    wmbus_scene_config_add_item(
+        app,
+        "RSSI gate >=",
+        COUNT_OF(wmbus_min_rssi_options),
+        rssi_index,
+        wmbus_min_rssi_options[rssi_index].text,
+        wmbus_scene_config_min_rssi_changed);
+    wmbus_scene_config_add_item(
+        app,
+        "Debug overlay",
+        COUNT_OF(wmbus_toggle_text),
+        app->settings.debug_overlay,
+        wmbus_toggle_text[app->settings.debug_overlay],
+        wmbus_scene_config_debug_overlay_changed);
+    wmbus_scene_config_add_item(app, "Keyring", 1U, 0U, app->keyring.status, NULL);
+    wmbus_scene_config_add_item(app, "About", 1U, 0U, "", NULL);
 
+    variable_item_list_set_selected_item(
+        app->config_list, scene_manager_get_scene_state(app->scene_manager, WmBusSceneConfig));
     view_dispatcher_switch_to_view(app->view_dispatcher, WmBusAppViewConfig);
 }
 
@@ -237,6 +218,9 @@ bool wmbus_scene_config_on_event(void* context, SceneManagerEvent event) {
 void wmbus_scene_config_on_exit(void* context) {
     WmBusApp* app = context;
     if(!app->config_list) return;
-    variable_item_list_set_selected_item(app->config_list, 0U);
+    scene_manager_set_scene_state(
+        app->scene_manager,
+        WmBusSceneConfig,
+        variable_item_list_get_selected_item_index(app->config_list));
     variable_item_list_reset(app->config_list);
 }

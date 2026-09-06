@@ -32,8 +32,11 @@ bool wmbus_scene_key_add_on_event(void* context, SceneManagerEvent event) {
 
     if(event.type == SceneManagerEventTypeCustom &&
        event.event == WmBusCustomEventConfigKeyInputDone) {
-        wmbus_app_add_key(app, app->key_input_bytes);
-        scene_manager_previous_scene(app->scene_manager);
+        if(wmbus_app_add_key(app, app->key_input_bytes)) {
+            scene_manager_previous_scene(app->scene_manager);
+        } else {
+            byte_input_set_header_text(app->key_input, app->keyring.status);
+        }
         return true;
     }
 

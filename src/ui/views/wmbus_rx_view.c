@@ -17,11 +17,6 @@
 #define WMBUS_RX_DEBUG_PACKET_MAX 16U
 
 typedef struct {
-    ViewDispatcher* view_dispatcher;
-    View* view;
-} WmBusRxViewContext;
-
-typedef struct {
     WmBusPacketQuality quality;
     WmBusRxMode mode;
     WmBusFrameFormat format;
@@ -62,10 +57,10 @@ typedef struct {
 
 struct WmBusRxView {
     View* view;
-    WmBusRxViewContext context;
+    ViewDispatcher* view_dispatcher;
 };
 
-static bool wmbus_rx_send_event(WmBusRxViewContext* context, WmBusRxViewEvent event) {
+static bool wmbus_rx_send_event(WmBusRxView* context, WmBusRxViewEvent event) {
     if(!context || !context->view_dispatcher) {
         return false;
     }
@@ -337,7 +332,7 @@ static void wmbus_rx_navigate_history(WmBusRxViewModel* model, InputKey key) {
 
 static bool wmbus_rx_input(InputEvent* event, void* context) {
     if(!event || !context) return false;
-    WmBusRxViewContext* ctx = context;
+    WmBusRxView* ctx = context;
 
     if(event->type == InputTypeShort) {
         switch(event->key) {
@@ -393,8 +388,7 @@ WmBusRxView* wmbus_rx_view_alloc(void) {
         },
         false);
 
-    view_set_context(rx_view->view, &rx_view->context);
-    rx_view->context.view = rx_view->view;
+    view_set_context(rx_view->view, rx_view);
     view_set_draw_callback(rx_view->view, wmbus_rx_draw);
     view_set_input_callback(rx_view->view, wmbus_rx_input);
     return rx_view;
@@ -412,7 +406,7 @@ View* wmbus_rx_view_get_view(WmBusRxView* rx_view) {
 
 void wmbus_rx_view_set_dispatcher(WmBusRxView* rx_view, ViewDispatcher* view_dispatcher) {
     if(!rx_view) return;
-    rx_view->context.view_dispatcher = view_dispatcher;
+    rx_view->view_dispatcher = view_dispatcher;
 }
 
 void wmbus_rx_view_apply_settings(WmBusRxView* rx_view, const WmBusSettings* settings) {
@@ -529,7 +523,6 @@ void wmbus_rx_view_push_packet(
         rx_view->view,
         WmBusRxViewModel * model,
         {
-            model->rssi = record->rssi;
             wmbus_rx_history_fill_entry(&model->latest, record, rssi_gate_ok);
             model->has_latest = true;
 
@@ -555,7 +548,7 @@ void wmbus_rx_view_push_packet(
                 }
 
                 WmBusRxHistoryEntry* entry = &model->hist[model->hist_head];
-                wmbus_rx_history_fill_entry(entry, record, rssi_gate_ok);
+                *entry = model->latest;
 
                 if(model->freeze_display) {
                     if(model->hist_count > 0U && model->hist_cursor + 1U < model->hist_count) {
@@ -593,24 +586,18 @@ bool wmbus_rx_view_has_in_memory_packets(WmBusRxView* rx_view) {
     return has_packets;
 }
 
-bool wmbus_rx_view_build_selected_detail_text(WmBusRxView* rx_view, FuriString* out) {
+bool wmbus_rx_view_build_selected_text(
+    WmBusRxView* rx_view,
+    FuriString* out,
+    bool application_only) {
     if(!rx_view || !out) return false;
     furi_string_reset(out);
-
-    WmBusPacketRecord record = {0};
+    WmBusPacketRecord record;
     if(!wmbus_rx_view_get_selected_record(rx_view, &record)) return false;
-
-    wmbus_packet_format_detail_text(&record, out);
-    return true;
-}
-
-bool wmbus_rx_view_build_selected_application_text(WmBusRxView* rx_view, FuriString* out) {
-    if(!rx_view || !out) return false;
-    furi_string_reset(out);
-
-    WmBusPacketRecord record = {0};
-    if(!wmbus_rx_view_get_selected_record(rx_view, &record)) return false;
-
-    wmbus_packet_format_application_text(&record, out);
+    if(application_only) {
+        wmbus_packet_format_application_text(&record, out);
+    } else {
+        wmbus_packet_format_detail_text(&record, out);
+    }
     return true;
 }
