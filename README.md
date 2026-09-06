@@ -38,6 +38,7 @@ The mode-specific radio and capture contract is documented in
 
 Currently registered application parsers:
 
+- `QWaterV2`: targeted parser for Qundis QWater v2 WalkByDataSet telegrams
 - `Apator162`: targeted device parser for supported Apator short-TPL telegrams
 - `DifVif`: generic parser for standard DIF/VIF application records
 

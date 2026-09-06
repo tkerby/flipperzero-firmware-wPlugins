@@ -11,6 +11,7 @@ static const char* const wmbus_parser_names[] = {
     [WmBusParserIdLongTpl] = "Long TPL",
     [WmBusParserIdDifVif] = "DifVif",
     [WmBusParserIdApator162] = "Apator162",
+    [WmBusParserIdQWaterV2] = "QWaterV2",
 };
 
 const char* wmbus_parser_id_name(WmBusParserId parser_id) {

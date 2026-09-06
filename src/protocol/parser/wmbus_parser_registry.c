@@ -2,6 +2,7 @@
 
 #include "wmbus_parser_apator162.h"
 #include "wmbus_parser_dif_vif.h"
+#include "wmbus_parser_qwaterv2.h"
 
 typedef struct {
     WmBusParserId parser_id;
@@ -10,6 +11,10 @@ typedef struct {
 
 /* First success wins, so specialized parsers must precede generic fallbacks. */
 static const WmBusRegisteredParser wmbus_parsers[] = {
+    {
+        .parser_id = WmBusParserIdQWaterV2,
+        .parse = wmbus_parser_qwaterv2_parse,
+    },
     {
         .parser_id = WmBusParserIdApator162,
         .parse = wmbus_parser_apator162_parse,

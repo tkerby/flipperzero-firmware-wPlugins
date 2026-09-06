@@ -18,6 +18,7 @@ typedef enum {
     WmBusParserIdLongTpl,
     WmBusParserIdDifVif,
     WmBusParserIdApator162,
+    WmBusParserIdQWaterV2,
 } WmBusParserId;
 
 typedef enum {
