@@ -2,6 +2,23 @@
 
 `wmbus_decoder` is a receive-only Flipper Zero Sub-GHz app for Wireless M-Bus at `868.95 MHz`.
 
+## Getting Started
+
+The app uses Flipper Zero's built-in Sub-GHz radio; no external radio module is
+required. Use official Release or Release Candidate firmware and a microSD card
+for settings, optional keys, and CSV logs.
+
+1. Build with `ufbt` and copy `dist/wmbus_decoder.fap` to `/ext/apps/Sub-GHz/`
+   using qFlipper, or install and launch with `ufbt launch` over USB.
+2. Open **Apps > Sub-GHz > WM-Bus Decoder** on your Flipper.
+3. Start with **T** mode near a compatible meter. Telegrams appear in **Live**;
+   press **OK** to browse **History**.
+4. Press **Left** to change receive mode, filtering, or CSV logging. Encrypted
+   telegrams require a supported security mode and a key you supply.
+
+Reception depends on range and the meter's transmission schedule. Not every
+meter broadcasts continuously or uses a supported format.
+
 ## Supported Features
 
 - WM-Bus receive pipeline with `T` and experimental `C` mode capture paths
@@ -176,3 +193,15 @@ ufbt
 ## Credits
 
 - Inspired by [wmbusmeters](https://wmbusmeters.org/)
+
+## License and Contact
+
+Licensed under the [GNU General Public License v3.0](LICENSE).
+Maintained by [Martin Mares](https://github.com/maresmar).
+Report problems through [GitHub issues](https://github.com/maresmar/wmbus-decoder/issues).
+
+## Catalog Submission
+
+See the [catalog submission guide](docs/catalog-submission.md) for screenshot
+requirements, release validation, and preparing the catalog pull request.
+Release notes are in [changelog.md](changelog.md).

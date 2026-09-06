@@ -20,7 +20,7 @@ void wmbus_scene_about_on_enter(void* context) {
         AlignLeft,
         AlignTop,
         "\e#WM-Bus Decoder\e#\n"
-        "Version: 1.0 (" WMBUS_GIT_COMMIT ")\n"
+        "Version: 1.0.0 (" WMBUS_GIT_COMMIT ")\n"
         "Author: Martin Mares\n"
         "https://github.com/maresmar/wmbus-decoder\n",
         false);
