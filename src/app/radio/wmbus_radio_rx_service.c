@@ -252,14 +252,12 @@ static bool wmbus_capture_read_fifo(
     size_t read_size,
     bool* had_data,
     uint32_t* last_activity_tick) {
-    uint8_t temp[WMBUS_FIFO_READ_MAX];
     if(!raw || !raw_len || !had_data || !last_activity_tick || *raw_len > raw_max ||
-       read_size == 0U || read_size > sizeof(temp) || read_size > raw_max - *raw_len) {
+       read_size == 0U || read_size > WMBUS_FIFO_READ_MAX || read_size > raw_max - *raw_len) {
         return false;
     }
-    if(!wmbus_radio_read_fifo_exact(temp, (uint8_t)read_size)) return false;
+    if(!wmbus_radio_read_fifo_exact(&raw[*raw_len], (uint8_t)read_size)) return false;
 
-    memcpy(&raw[*raw_len], temp, read_size);
     *raw_len += read_size;
 
     *had_data = true;

@@ -22,25 +22,50 @@ int wmbus_parser_apator162_register_size(uint8_t reg) {
     }
 
     switch(reg) {
-    case 0x00:
-        return 4;
-    case 0x01:
-        return 3;
-    case 0xA1:
-    case 0x10:
-        return 4;
+    case 0xA2:
+    case 0xA5:
+    case 0xA9:
+    case 0xAF:
+        return 1;
     case 0x11:
-        return 2;
-    case 0x40:
-        return 6;
     case 0x41:
-        return 2;
-    case 0x42:
-        return 4;
     case 0x43:
+    case 0xA7:
+    case 0xA8:
+    case 0xAA:
+    case 0xAB:
+    case 0xAC:
+    case 0xAD:
+    case 0xB4:
         return 2;
+    case 0x01:
     case 0x44:
+    case 0xA6:
+    case 0xD0:
+    case 0xD3:
         return 3;
+    case 0x00:
+    case 0x10:
+    case 0x42:
+    case 0xA0:
+    case 0xA1:
+    case 0xA4:
+    case 0xF0:
+        return 4;
+    case 0xB0:
+        return 5;
+    case 0x40:
+    case 0x8B:
+    case 0x8C:
+        return 6;
+    case 0x8E:
+    case 0xA3:
+        return 7;
+    case 0xB1:
+    case 0xB3:
+        return 8;
+    case 0x8A:
+        return 9;
     case 0x80:
     case 0x81:
     case 0x82:
@@ -53,51 +78,9 @@ int wmbus_parser_apator162_register_size(uint8_t reg) {
     case 0x88:
     case 0x8F:
         return 11;
-    case 0x8A:
-        return 9;
-    case 0x8B:
-    case 0x8C:
-        return 6;
-    case 0x8E:
-        return 7;
-    case 0xA0:
-        return 4;
-    case 0xA2:
-        return 1;
-    case 0xA3:
-        return 7;
-    case 0xA4:
-        return 4;
-    case 0xA5:
-    case 0xA9:
-    case 0xAF:
-        return 1;
-    case 0xA6:
-        return 3;
-    case 0xA7:
-    case 0xA8:
-    case 0xAA:
-    case 0xAB:
-    case 0xAC:
-    case 0xAD:
-        return 2;
-    case 0xB0:
-        return 5;
-    case 0xB1:
-        return 8;
     case 0xB2:
-        return 16;
-    case 0xB3:
-        return 8;
-    case 0xB4:
-        return 2;
     case 0xB5:
         return 16;
-    case 0xD0:
-    case 0xD3:
-        return 3;
-    case 0xF0:
-        return 4;
     default:
         return -1;
     }
@@ -142,7 +125,7 @@ static void wmbus_parser_apator162_store_status_record(
  *
  * Leading 0x2F filler bytes are skipped.
  *
- * The vendored `wmbusmeters` XMQ grammar models Apator 162 payloads as:
+ * The upstream `wmbusmeters` XMQ grammar models Apator 162 payloads as:
  * `2F* <1-byte proprietary marker> <7-byte status block> <register stream> FF*`
  */
 static bool wmbus_parser_apator162_locate_fields(
@@ -170,10 +153,6 @@ static bool wmbus_parser_apator162_locate_fields(
     if(first_register_pos >= payload_len) {
         return false;
     }
-    if(payload[first_register_pos] != 0xFFU &&
-       wmbus_parser_apator162_register_size(payload[first_register_pos]) < 0) {
-        return false;
-    }
 
     *fields_pos = first_register_pos;
     return true;
@@ -183,15 +162,12 @@ static bool wmbus_parser_apator162_scan_stream(
     const uint8_t* payload,
     size_t payload_len,
     size_t fields_pos,
-    uint32_t* total_m3_x1000,
-    bool* found_total) {
+    uint32_t* total_m3_x1000) {
     if(!payload || fields_pos >= payload_len) {
         return false;
     }
 
-    bool saw_register = false;
     bool have_total = false;
-    uint32_t parsed_total = 0U;
     size_t pos = fields_pos;
 
     while(pos < payload_len) {
@@ -205,27 +181,15 @@ static bool wmbus_parser_apator162_scan_stream(
             return false;
         }
 
-        saw_register = true;
         if(!have_total && reg_size >= 4 && (reg == 0x10U || reg == 0xA1U)) {
-            parsed_total = wmbus_parser_apator162_read_u32_le(&payload[pos]);
+            *total_m3_x1000 = wmbus_parser_apator162_read_u32_le(&payload[pos]);
             have_total = true;
         }
 
         pos += (size_t)reg_size;
     }
 
-    if(!saw_register) {
-        return false;
-    }
-
-    if(found_total) {
-        *found_total = have_total;
-    }
-    if(total_m3_x1000 && have_total) {
-        *total_m3_x1000 = parsed_total;
-    }
-
-    return true;
+    return have_total;
 }
 
 /**
@@ -270,14 +234,11 @@ bool wmbus_parser_apator162_parse(
     }
 
     uint32_t total_m3_x1000 = 0U;
-    bool found_total = false;
     if(!wmbus_parser_apator162_scan_stream(
            packet->payload->application_bytes,
            packet->payload->application_len,
            fields_pos,
-           &total_m3_x1000,
-           &found_total) ||
-       !found_total) {
+           &total_m3_x1000)) {
         return false;
     }
 

@@ -53,7 +53,8 @@ bool wmbus_application_find_total_volume(
     for(uint8_t i = 0; i < record_count; i++) {
         const WmBusApplicationRecord* record = &records[i];
         if(record->storage_no != 0U || record->quantity != WmBusApplicationQuantityVolume ||
-           record->value_type != WmBusApplicationValueScalar || record->value < 0) {
+           record->value_type != WmBusApplicationValueScalar || record->value < 0 ||
+           record->scale10 < -22 || record->scale10 > 6) {
             continue;
         }
 
@@ -122,6 +123,12 @@ void wmbus_application_format_scaled_value(
 
     uint64_t magnitude = wmbus_application_value_magnitude(value);
     const char* sign = value < 0 ? "-" : "";
+
+    /* Outside the fixed-point range use an exact exponent representation. */
+    if(scale10 < -19 || scale10 > 19) {
+        snprintf(out, out_size, "%llde%d", (long long)value, (int)scale10);
+        return;
+    }
 
     if(scale10 >= 0) {
         int len = snprintf(out, out_size, "%s%llu", sign, (unsigned long long)magnitude);

@@ -6,10 +6,6 @@
 #include "wmbus_hex_utils.h"
 #include "../model/wmbus_application_record.h"
 
-#define WMBUS_RECORD_FORMATTER_LABEL_MAX 64U
-#define WMBUS_RECORD_FORMATTER_FIELD_MAX \
-    (WMBUS_RECORD_FORMATTER_LABEL_MAX + WMBUS_RECORD_VALUE_TEXT_MAX + 2U)
-
 typedef struct {
     const char* label;
     const char* unit;
@@ -42,10 +38,6 @@ static const WmBusRecordPresentation*
                                  &wmbus_record_presentations[WmBusApplicationQuantityUnknown];
 }
 
-static const char* wmbus_record_formatter_unit(const WmBusApplicationRecord* record) {
-    return wmbus_record_formatter_presentation(record)->unit;
-}
-
 static const char*
     wmbus_record_formatter_measurement_type_short(const WmBusApplicationRecord* record) {
     if(!record) return NULL;
@@ -64,19 +56,7 @@ static const char*
     }
 }
 
-static bool wmbus_record_formatter_format_label_buf(
-    const WmBusApplicationRecord* record,
-    char* out,
-    size_t out_size) {
-    if(!out || out_size == 0U) return false;
-    out[0] = '\0';
-    if(!record) return false;
-
-    snprintf(out, out_size, "%s", wmbus_record_formatter_presentation(record)->label);
-    return true;
-}
-
-static bool wmbus_record_formatter_format_value_buf(
+bool wmbus_record_formatter_format_value_text(
     const WmBusApplicationRecord* record,
     char* out,
     size_t out_size) {
@@ -87,7 +67,7 @@ static bool wmbus_record_formatter_format_value_buf(
     switch(record->value_type) {
     case WmBusApplicationValueScalar: {
         wmbus_application_format_scaled_value(record->value, record->scale10, out, out_size);
-        const char* unit = wmbus_record_formatter_unit(record);
+        const char* unit = wmbus_record_formatter_presentation(record)->unit;
         if(unit && out[0] != '\0') {
             size_t len = strlen(out);
             snprintf(&out[len], out_size - len, " %s", unit);
@@ -143,103 +123,20 @@ static bool wmbus_record_formatter_format_value_buf(
     }
 }
 
-static bool wmbus_record_formatter_format_context_label_buf(
-    const WmBusApplicationRecord* record,
-    char* out,
-    size_t out_size) {
-    if(!wmbus_record_formatter_format_label_buf(record, out, out_size)) {
-        return false;
-    }
+static void
+    wmbus_record_formatter_append_label(const WmBusApplicationRecord* record, FuriString* out) {
+    furi_string_cat_str(out, wmbus_record_formatter_presentation(record)->label);
+    const char* measurement = wmbus_record_formatter_measurement_type_short(record);
+    if(!record->storage_no && !record->tariff && !record->subunit && !measurement) return;
 
-    if(!record || out[0] == '\0') return false;
-
-    const char* measurement_type = wmbus_record_formatter_measurement_type_short(record);
-    bool include_storage = record->storage_no != 0U;
-    bool include_tariff = record->tariff != 0U;
-    bool include_subunit = record->subunit != 0U;
-    if(!measurement_type && !include_storage && !include_tariff && !include_subunit) {
-        return true;
-    }
-
-    size_t write = strlen(out);
-    int len = snprintf(&out[write], out_size - write, "[");
-    if(len < 0 || (size_t)len >= (out_size - write)) return false;
-    write += (size_t)len;
-
-    bool need_sep = false;
-    if(include_storage) {
-        len = snprintf(
-            &out[write],
-            out_size - write,
-            "%sS%llu",
-            need_sep ? " " : "",
-            (unsigned long long)record->storage_no);
-        if(len < 0 || (size_t)len >= (out_size - write)) return false;
-        write += (size_t)len;
-        need_sep = true;
-    }
-
-    if(include_tariff) {
-        len = snprintf(
-            &out[write],
-            out_size - write,
-            "%sT%lu",
-            need_sep ? " " : "",
-            (unsigned long)record->tariff);
-        if(len < 0 || (size_t)len >= (out_size - write)) return false;
-        write += (size_t)len;
-        need_sep = true;
-    }
-
-    if(include_subunit) {
-        len = snprintf(
-            &out[write],
-            out_size - write,
-            "%sU%u",
-            need_sep ? " " : "",
-            (unsigned int)record->subunit);
-        if(len < 0 || (size_t)len >= (out_size - write)) return false;
-        write += (size_t)len;
-        need_sep = true;
-    }
-
-    if(measurement_type) {
-        len =
-            snprintf(&out[write], out_size - write, "%s%s", need_sep ? " " : "", measurement_type);
-        if(len < 0 || (size_t)len >= (out_size - write)) return false;
-        write += (size_t)len;
-    }
-
-    len = snprintf(&out[write], out_size - write, "]");
-    return len >= 0 && (size_t)len < (out_size - write);
-}
-
-static bool wmbus_record_formatter_format_field_buf(
-    const WmBusApplicationRecord* record,
-    bool include_context,
-    char* out,
-    size_t out_size) {
-    char label[WMBUS_RECORD_FORMATTER_LABEL_MAX] = {0};
-    char value[WMBUS_RECORD_VALUE_TEXT_MAX] = {0};
-    bool have_label =
-        include_context ?
-            wmbus_record_formatter_format_context_label_buf(record, label, sizeof(label)) :
-            wmbus_record_formatter_format_label_buf(record, label, sizeof(label));
-    bool have_value = wmbus_record_formatter_format_value_buf(record, value, sizeof(value));
-    if(!have_label || !have_value || label[0] == '\0' || value[0] == '\0') {
-        if(out && out_size > 0U) out[0] = '\0';
-        return false;
-    }
-
-    snprintf(out, out_size, "%s=%s", label, value);
-    return true;
-}
-
-bool wmbus_record_formatter_format_value_text(
-    const WmBusApplicationRecord* record,
-    char* out,
-    size_t out_size) {
-    return wmbus_record_formatter_format_value_buf(record, out, out_size);
+    furi_string_push_back(out, '[');
+    if(record->storage_no)
+        furi_string_cat_printf(out, "S%llu ", (unsigned long long)record->storage_no);
+    if(record->tariff) furi_string_cat_printf(out, "T%lu ", (unsigned long)record->tariff);
+    if(record->subunit) furi_string_cat_printf(out, "U%u ", (unsigned int)record->subunit);
+    if(measurement) furi_string_cat_printf(out, "%s ", measurement);
+    furi_string_left(out, furi_string_size(out) - 1U);
+    furi_string_push_back(out, ']');
 }
 
 bool wmbus_record_formatter_format_joined(
@@ -266,12 +163,13 @@ bool wmbus_record_formatter_format_joined(
         for(uint8_t i = 0U; i < record_count; i++) {
             if(records[i].storage_no != storage_no) continue;
 
-            char field[WMBUS_RECORD_FORMATTER_FIELD_MAX] = {0};
-            if(!wmbus_record_formatter_format_field_buf(&records[i], true, field, sizeof(field))) {
+            char value[WMBUS_RECORD_VALUE_TEXT_MAX];
+            if(!wmbus_record_formatter_format_value_text(&records[i], value, sizeof(value))) {
                 continue;
             }
             if(wrote_any) furi_string_push_back(out, delimiter);
-            furi_string_cat_str(out, field);
+            wmbus_record_formatter_append_label(&records[i], out);
+            furi_string_cat_printf(out, "=%s", value);
             wrote_any = true;
         }
 

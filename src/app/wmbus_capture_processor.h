@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sink/wmbus_packet_sink.h"
+#include "../protocol/packet/wmbus_packet.h"
 
 #include "../protocol/capture/wmbus_capture.h"
 #include "../protocol/crypto/wmbus_crypto_key_store.h"
@@ -8,14 +8,17 @@
 
 typedef struct WmBusCaptureProcessor WmBusCaptureProcessor;
 
+typedef void (*WmBusPacketCallback)(
+    void* context,
+    const WmBusSettings* settings,
+    const WmBusPacketRecord* record);
+
 WmBusCaptureProcessor* wmbus_capture_processor_alloc(
     const WmBusSettings* settings,
-    const WmBusCryptoKeyStore* key_store);
+    const WmBusCryptoKeyStore* key_store,
+    WmBusPacketCallback callback,
+    void* context);
 void wmbus_capture_processor_free(WmBusCaptureProcessor* processor);
-bool wmbus_capture_processor_add_sink(
-    WmBusCaptureProcessor* processor,
-    const WmBusPacketSink* sink);
-bool wmbus_capture_processor_start(WmBusCaptureProcessor* processor);
 bool wmbus_capture_processor_apply_config(
     WmBusCaptureProcessor* processor,
     const WmBusSettings* settings,

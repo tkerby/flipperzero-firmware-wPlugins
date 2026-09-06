@@ -8,7 +8,6 @@
 
 #define TAG "WmBusDecoder"
 
-#define WMBUS_CAPTURE_PROCESSOR_MAX_SINKS   4U
 #define WMBUS_CAPTURE_PROCESSOR_QUEUE_DEPTH 6U
 #define WMBUS_CAPTURE_PROCESSOR_STACK_SIZE  (6U * 1024U)
 
@@ -30,11 +29,10 @@ typedef struct {
 } WmBusProcessorEvent;
 
 struct WmBusCaptureProcessor {
-    const WmBusPacketSink* sinks[WMBUS_CAPTURE_PROCESSOR_MAX_SINKS];
-    size_t sink_count;
+    WmBusPacketCallback callback;
+    void* context;
     FuriMessageQueue* queue;
     FuriThread* thread;
-    bool started;
     uint32_t dropped_frames;
     WmBusSettings settings;
     WmBusCryptoKeyStore key_store;
@@ -48,9 +46,7 @@ static void wmbus_capture_processor_process_frame(
         return;
     }
 
-    for(size_t i = 0; i < processor->sink_count; i++) {
-        processor->sinks[i]->consume(processor->sinks[i]->context, &processor->settings, &record);
-    }
+    processor->callback(processor->context, &processor->settings, &record);
 }
 
 static int32_t wmbus_capture_processor_thread(void* context) {
@@ -72,8 +68,10 @@ static int32_t wmbus_capture_processor_thread(void* context) {
 
 WmBusCaptureProcessor* wmbus_capture_processor_alloc(
     const WmBusSettings* settings,
-    const WmBusCryptoKeyStore* key_store) {
-    if(!settings || !key_store) return NULL;
+    const WmBusCryptoKeyStore* key_store,
+    WmBusPacketCallback callback,
+    void* context) {
+    if(!settings || !key_store || !callback) return NULL;
 
     WmBusCaptureProcessor* processor = malloc(sizeof(*processor));
     if(!processor) {
@@ -81,6 +79,8 @@ WmBusCaptureProcessor* wmbus_capture_processor_alloc(
     }
 
     memset(processor, 0, sizeof(*processor));
+    processor->callback = callback;
+    processor->context = context;
     processor->settings = *settings;
     processor->key_store = *key_store;
     processor->queue =
@@ -101,46 +101,25 @@ WmBusCaptureProcessor* wmbus_capture_processor_alloc(
         return NULL;
     }
     furi_thread_set_priority(processor->thread, FuriThreadPriorityLow);
+    furi_thread_start(processor->thread);
     return processor;
 }
 
 void wmbus_capture_processor_free(WmBusCaptureProcessor* processor) {
     if(!processor) return;
 
-    if(processor->started) {
-        WmBusProcessorEvent event = {.type = WmBusProcessorEventStop};
-        furi_message_queue_put(processor->queue, &event, FuriWaitForever);
-        furi_thread_join(processor->thread);
-    }
+    WmBusProcessorEvent event = {.type = WmBusProcessorEventStop};
+    furi_message_queue_put(processor->queue, &event, FuriWaitForever);
+    furi_thread_join(processor->thread);
     furi_thread_free(processor->thread);
     furi_message_queue_free(processor->queue);
     free(processor);
 }
 
-bool wmbus_capture_processor_add_sink(
-    WmBusCaptureProcessor* processor,
-    const WmBusPacketSink* sink) {
-    if(!processor || processor->started || !sink || !sink->consume ||
-       processor->sink_count >= WMBUS_CAPTURE_PROCESSOR_MAX_SINKS) {
-        return false;
-    }
-
-    processor->sinks[processor->sink_count++] = sink;
-    return true;
-}
-
-bool wmbus_capture_processor_start(WmBusCaptureProcessor* processor) {
-    if(!processor || processor->started || processor->sink_count == 0U) return false;
-
-    processor->started = true;
-    furi_thread_start(processor->thread);
-    return true;
-}
-
 bool wmbus_capture_processor_submit_frame(
     WmBusCaptureProcessor* processor,
     const WmBusPhyFrame* phy_frame) {
-    if(!processor || !processor->started || !phy_frame) {
+    if(!processor || !phy_frame) {
         return false;
     }
 
@@ -169,7 +148,7 @@ bool wmbus_capture_processor_apply_config(
     WmBusCaptureProcessor* processor,
     const WmBusSettings* settings,
     const WmBusCryptoKeyStore* key_store) {
-    if(!processor || !processor->started || !settings || !key_store) return false;
+    if(!processor || !settings || !key_store) return false;
 
     WmBusProcessorEvent event = {
         .type = WmBusProcessorEventApplyConfig,

@@ -11,7 +11,6 @@
 #include <furi_hal.h>
 #include <stdarg.h>
 #include <stdio.h>
-#define WMBUS_LOG_LINE_MAX 1024U
 
 static const char* wmbus_log_header(WmBusCsvLogging logging) {
     return (logging == WmBusCsvLoggingFull) ?
@@ -45,20 +44,15 @@ static void wmbus_log_format_path(WmBusCsvLogging logging, char* path, size_t pa
 static bool wmbus_log_write_line(File* file, const char* format, ...) {
     if(!file || !format) return false;
 
-    char line[WMBUS_LOG_LINE_MAX];
+    FuriString* line = furi_string_alloc();
     va_list args;
     va_start(args, format);
-    int len = vsnprintf(line, sizeof(line), format, args);
+    furi_string_vprintf(line, format, args);
     va_end(args);
-
-    if(len < 0) return false;
-
-    size_t to_write = (size_t)len;
-    if(to_write >= sizeof(line)) {
-        to_write = sizeof(line) - 1U;
-    }
-
-    return storage_file_write(file, line, to_write) == to_write;
+    size_t len = furi_string_size(line);
+    bool written = storage_file_write(file, furi_string_get_cstr(line), len) == len;
+    furi_string_free(line);
+    return written;
 }
 
 bool wmbus_log_append(Storage* storage, WmBusCsvLogging logging, const WmBusPacketRecord* record) {
@@ -84,17 +78,7 @@ bool wmbus_log_append(Storage* storage, WmBusCsvLogging logging, const WmBusPack
             }
         }
 
-        char hex[513] = {0};
         char total_m3[24] = {0};
-        FuriString* fields = furi_string_alloc();
-        if(!fields) {
-            break;
-        }
-        wmbus_record_formatter_format_joined(
-            record->application.records, record->application.record_count, ';', fields);
-        if(record->wire_len > 0U) {
-            wmbus_hex_encode(record->wire_bytes, record->wire_len, hex, sizeof(hex));
-        }
         wmbus_application_format_total_volume_m3(
             &record->application, total_m3, sizeof(total_m3), false);
 
@@ -112,6 +96,11 @@ bool wmbus_log_append(Storage* storage, WmBusCsvLogging logging, const WmBusPack
         const char* parser = wmbus_parser_id_name(record->application.parser_id);
 
         if(logging == WmBusCsvLoggingFull) {
+            char hex[WMBUS_PHY_FRAME_MAX_BYTES * 2U + 1U];
+            FuriString* fields = furi_string_alloc();
+            wmbus_record_formatter_format_joined(
+                record->application.records, record->application.record_count, ';', fields);
+            wmbus_hex_encode(record->wire_bytes, record->wire_len, hex, sizeof(hex));
             written = wmbus_log_write_line(
                 file,
                 "%lu,%c,%s,%d,%s,%s,%s,%02X,%02X,%02X,%s,%02X,%u,%s,%s,%s\n",
@@ -131,6 +120,7 @@ bool wmbus_log_append(Storage* storage, WmBusCsvLogging logging, const WmBusPack
                 total_m3,
                 furi_string_get_cstr(fields),
                 hex);
+            furi_string_free(fields);
         } else {
             written = wmbus_log_write_line(
                 file,
@@ -149,9 +139,7 @@ bool wmbus_log_append(Storage* storage, WmBusCsvLogging logging, const WmBusPack
                 total_m3);
         }
 
-        furi_string_free(fields);
-
-        storage_file_sync(file);
+        written = storage_file_sync(file) && written;
     } while(false);
 
     if(storage_file_is_open(file)) {

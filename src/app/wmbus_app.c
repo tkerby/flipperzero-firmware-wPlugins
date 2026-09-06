@@ -2,13 +2,34 @@
 
 #include <furi.h>
 #include <string.h>
+#include <notification/notification_messages.h>
+#include "../storage/wmbus_log.h"
 
 #define TAG "WmBusDecoder"
 static void wmbus_app_free(WmBusApp* app);
 
-static void wmbus_app_log_step(const char* step) {
-    if(step) {
-        FURI_LOG_D(TAG, "app init: %s", step);
+static const NotificationSequence wmbus_packet_stored_sequence = {
+    &message_note_c7,
+    &message_delay_50,
+    &message_sound_off,
+    NULL,
+};
+
+/* Runs on the processing worker; storage must never delay radio FIFO service. */
+static void wmbus_app_handle_packet(
+    void* context,
+    const WmBusSettings* settings,
+    const WmBusPacketRecord* record) {
+    WmBusApp* app = context;
+    bool store = wmbus_packet_record_passes_policy(
+        record, settings->memory_quality, settings->min_rssi_dbm);
+    bool rssi_ok = settings->min_rssi_dbm >= 0 || record->rssi >= settings->min_rssi_dbm;
+    wmbus_rx_view_push_packet(app->rx_view, record, rssi_ok, store);
+    if(store) notification_message(app->notification, &wmbus_packet_stored_sequence);
+    if(settings->csv_logging != WmBusCsvLoggingNone &&
+       wmbus_packet_record_passes_policy(record, settings->csv_quality, settings->min_rssi_dbm) &&
+       !wmbus_log_append(app->storage, settings->csv_logging, record)) {
+        FURI_LOG_W(TAG, "CSV write failed");
     }
 }
 
@@ -78,7 +99,6 @@ bool wmbus_app_ensure_config_view(WmBusApp* app) {
     if(!app) return false;
     if(app->config_list) return true;
 
-    wmbus_app_log_step("alloc config view");
     app->config_list = variable_item_list_alloc();
     if(!app->config_list) return false;
 
@@ -91,7 +111,6 @@ bool wmbus_app_ensure_key_input_view(WmBusApp* app) {
     if(!app) return false;
     if(app->key_input) return true;
 
-    wmbus_app_log_step("alloc key input view");
     app->key_input = byte_input_alloc();
     if(!app->key_input) return false;
 
@@ -100,37 +119,13 @@ bool wmbus_app_ensure_key_input_view(WmBusApp* app) {
     return true;
 }
 
-static bool wmbus_app_ensure_widget(
-    WmBusApp* app,
-    WmBusAppView view_id,
-    Widget** widget,
-    const char* log_step) {
-    if(!app || !widget) return false;
-    if(*widget) return true;
-
-    wmbus_app_log_step(log_step);
-    *widget = widget_alloc();
-    if(!*widget) return false;
-
-    view_dispatcher_add_view(app->view_dispatcher, view_id, widget_get_view(*widget));
+bool wmbus_app_ensure_widget(WmBusApp* app) {
+    if(app->widget) return true;
+    app->widget = widget_alloc();
+    if(!app->widget) return false;
+    view_dispatcher_add_view(
+        app->view_dispatcher, WmBusAppViewWidget, widget_get_view(app->widget));
     return true;
-}
-
-bool wmbus_app_ensure_detail_view(WmBusApp* app) {
-    if(!app) return false;
-    return wmbus_app_ensure_widget(
-        app, WmBusAppViewPacketDetail, &app->detail_widget, "alloc detail view");
-}
-
-bool wmbus_app_ensure_about_view(WmBusApp* app) {
-    if(!app) return false;
-    return wmbus_app_ensure_widget(app, WmBusAppViewAbout, &app->about_widget, "alloc about view");
-}
-
-bool wmbus_app_ensure_exit_confirm_view(WmBusApp* app) {
-    if(!app) return false;
-    return wmbus_app_ensure_widget(
-        app, WmBusAppViewExitConfirm, &app->exit_confirm_widget, "alloc exit confirm view");
 }
 
 static WmBusApp* wmbus_app_alloc(void) {
@@ -138,18 +133,13 @@ static WmBusApp* wmbus_app_alloc(void) {
     if(!app) return NULL;
     memset(app, 0, sizeof(*app));
 
-    wmbus_app_log_step("open records");
     app->gui = furi_record_open(RECORD_GUI);
     app->storage = furi_record_open(RECORD_STORAGE);
     app->notification = furi_record_open(RECORD_NOTIFICATION);
 
-    wmbus_app_log_step("load settings");
-    wmbus_settings_reset(&app->settings);
     wmbus_settings_load(app->storage, &app->settings);
-    wmbus_app_log_step("load keyring");
     wmbus_keyring_load(app->storage, &app->keyring);
 
-    wmbus_app_log_step("alloc core");
     app->view_dispatcher = view_dispatcher_alloc();
     if(!app->view_dispatcher) {
         wmbus_app_free(app);
@@ -160,7 +150,6 @@ static WmBusApp* wmbus_app_alloc(void) {
         wmbus_app_free(app);
         return NULL;
     }
-    wmbus_app_log_step("alloc rx view");
     app->rx_view = wmbus_rx_view_alloc();
     if(!app->rx_view) {
         wmbus_app_free(app);
@@ -176,30 +165,17 @@ static WmBusApp* wmbus_app_alloc(void) {
     view_dispatcher_set_navigation_event_callback(
         app->view_dispatcher, wmbus_app_back_event_callback);
 
-    wmbus_app_log_step("add rx view");
     view_dispatcher_add_view(
         app->view_dispatcher, WmBusAppViewRx, wmbus_rx_view_get_view(app->rx_view));
 
-    wmbus_app_log_step("attach gui");
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
-    wmbus_app_log_step("enter rx scene");
     scene_manager_next_scene(app->scene_manager, WmBusSceneRx);
-    wmbus_app_log_step("alloc capture processor");
-    app->capture_processor =
-        wmbus_capture_processor_alloc(&app->settings, &app->keyring.key_store);
+    app->capture_processor = wmbus_capture_processor_alloc(
+        &app->settings, &app->keyring.key_store, wmbus_app_handle_packet, app);
     if(!app->capture_processor) {
         wmbus_app_free(app);
         return NULL;
     }
-    wmbus_csv_sink_init(&app->csv_sink, app->storage);
-    wmbus_history_sink_init(&app->history_sink, app->rx_view, app->notification);
-    if(!wmbus_capture_processor_add_sink(app->capture_processor, &app->csv_sink.sink) ||
-       !wmbus_capture_processor_add_sink(app->capture_processor, &app->history_sink.sink) ||
-       !wmbus_capture_processor_start(app->capture_processor)) {
-        wmbus_app_free(app);
-        return NULL;
-    }
-    wmbus_app_log_step("start rx service");
     WmBusRadioRxCallbacks rx_callbacks = {
         .context = app,
         .handle_frame = wmbus_app_handle_frame,
@@ -211,7 +187,6 @@ static WmBusApp* wmbus_app_alloc(void) {
         wmbus_app_free(app);
         return NULL;
     }
-    wmbus_app_log_step("init done");
     return app;
 }
 
@@ -221,22 +196,16 @@ static void wmbus_app_remove_view(WmBusApp* app, WmBusAppView view_id) {
     }
 }
 
-static void wmbus_app_remove_widget(WmBusApp* app, WmBusAppView view_id, Widget** widget) {
-    if(!app || !widget || !*widget) return;
-    wmbus_app_remove_view(app, view_id);
-    widget_free(*widget);
-    *widget = NULL;
-}
-
 static void wmbus_app_free(WmBusApp* app) {
     if(!app) return;
 
     wmbus_radio_rx_service_free(app->rx_service);
     wmbus_capture_processor_free(app->capture_processor);
 
-    wmbus_app_remove_widget(app, WmBusAppViewExitConfirm, &app->exit_confirm_widget);
-    wmbus_app_remove_widget(app, WmBusAppViewAbout, &app->about_widget);
-    wmbus_app_remove_widget(app, WmBusAppViewPacketDetail, &app->detail_widget);
+    if(app->widget) {
+        wmbus_app_remove_view(app, WmBusAppViewWidget);
+        widget_free(app->widget);
+    }
     if(app->config_list) {
         wmbus_app_remove_view(app, WmBusAppViewConfig);
         variable_item_list_free(app->config_list);

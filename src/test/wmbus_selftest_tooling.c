@@ -707,7 +707,27 @@ static bool wmbus_selftest_check_packet_quality_policy(char* detail, size_t deta
     return true;
 }
 
+static bool check_scaled_value_extremes(char* detail, size_t detail_len) {
+    char text[40];
+    wmbus_application_format_scaled_value(INT64_MIN, 0, text, sizeof(text));
+    if(strcmp(text, "-9223372036854775808") != 0) return false;
+    wmbus_application_format_scaled_value(1, INT8_MIN, text, sizeof(text));
+    if(strcmp(text, "1e-128") != 0) return false;
+    WmBusApplicationRecord record = {
+        .quantity = WmBusApplicationQuantityVolume,
+        .value_type = WmBusApplicationValueScalar,
+        .value = 1,
+        .scale10 = INT8_MIN,
+    };
+    uint32_t volume;
+    if(wmbus_application_find_total_volume(&record, 1U, &volume)) return false;
+    wmbus_selftest_set_detail(
+        detail, detail_len, "Extreme scales avoid overflowing powers of ten");
+    return true;
+}
+
 static const WmBusSelftestCheck wmbus_selftest_checks_tooling[] = {
+    {"check_scaled_value_extremes", check_scaled_value_extremes},
     {"check_3of6_valid_single_byte", wmbus_selftest_check_3of6_valid_single_byte},
     {"check_supported_l_field_range", wmbus_selftest_check_supported_l_field_range},
     {"check_3of6_reject_dangling_nibble", wmbus_selftest_check_3of6_reject_dangling_nibble},

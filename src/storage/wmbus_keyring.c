@@ -9,7 +9,7 @@
 
 #include "../protocol/format/wmbus_hex_utils.h"
 
-#define WMBUS_KEYRING_LINE_MAX (WMBUS_KEY_BYTES * 2U + 2U)
+#define WMBUS_KEYRING_LINE_MAX (WMBUS_KEY_BYTES * 2U + 3U)
 
 static void wmbus_keyring_set_status(WmBusKeyring* keyring, const char* format, ...) {
     if(!keyring || !format) return;
@@ -38,9 +38,11 @@ static void wmbus_keyring_format_hex_key(
     char out[WMBUS_KEYRING_LINE_MAX]) {
     if(!key || !out) return;
 
-    wmbus_hex_encode(key, WMBUS_KEY_BYTES, out, WMBUS_KEYRING_LINE_MAX - 1U);
-    out[WMBUS_KEY_BYTES * 2U] = '\n';
-    out[WMBUS_KEY_BYTES * 2U + 1U] = '\0';
+    /* Separate an existing final line even when it has no newline. */
+    out[0] = '\n';
+    wmbus_hex_encode(key, WMBUS_KEY_BYTES, &out[1], WMBUS_KEYRING_LINE_MAX - 1U);
+    out[WMBUS_KEY_BYTES * 2U + 1U] = '\n';
+    out[WMBUS_KEY_BYTES * 2U + 2U] = '\0';
 }
 
 bool wmbus_keyring_load(Storage* storage, WmBusKeyring* keyring) {
@@ -116,6 +118,9 @@ bool wmbus_keyring_append(
         return false;
     }
 
+    for(uint8_t i = 0U; i < keyring->key_store.count; i++) {
+        if(memcmp(keyring->key_store.keys[i], key, WMBUS_KEY_BYTES) == 0) return true;
+    }
     if(keyring->key_store.count >= WMBUS_CRYPTO_KEY_STORE_MAX) {
         wmbus_keyring_set_status(keyring, "too many keys");
         return false;
@@ -136,7 +141,7 @@ bool wmbus_keyring_append(
         size_t line_len = strlen(line);
         written = storage_file_write(file, line, line_len) == line_len;
         if(written) {
-            storage_file_sync(file);
+            written = storage_file_sync(file);
         }
     }
 

@@ -1,4 +1,5 @@
 #include "wmbus_parser_dif_vif.h"
+#include "../decode/wmbus_value.h"
 
 #include "../model/wmbus_application_record.h"
 
@@ -35,58 +36,14 @@ static bool wmbus_packet_decode_signed_le(const uint8_t* data, uint8_t data_len,
     return true;
 }
 
-static bool wmbus_packet_decode_bcd(const uint8_t* data, uint8_t data_len, uint64_t* value) {
-    if(!data || !value || data_len == 0U || data_len > 8U) return false;
-
-    uint64_t result = 0U;
-    uint64_t factor = 1U;
-    for(uint8_t i = 0; i < data_len; i++) {
-        uint8_t lo = data[i] & 0x0FU;
-        uint8_t hi = (data[i] >> 4) & 0x0FU;
-        if(lo > 9U || hi > 9U) return false;
-        result += (uint64_t)lo * factor;
-        factor *= 10U;
-        result += (uint64_t)hi * factor;
-        factor *= 10U;
-    }
-    *value = result;
-    return true;
-}
-
-static bool wmbus_packet_decode_date2(const uint8_t* data, WmBusApplicationDateTime* out) {
-    if(!data || !out) return false;
-
-    uint8_t day = data[0] & 0x1FU;
-    uint8_t month = data[1] & 0x0FU;
-    uint16_t year = (uint16_t)(((data[0] >> 5) & 0x07U) | ((data[1] >> 1) & 0x78U)) + 2000U;
-    if(day == 0U || day > 31U || month == 0U || month > 12U) return false;
-
-    out->year = year;
-    out->month = month;
-    out->day = day;
-    out->hour = 0U;
-    out->minute = 0U;
-    out->second = 0U;
-    out->precision = WmBusApplicationDateTimePrecisionDate;
-    return true;
-}
-
 static bool wmbus_packet_decode_datetime4(const uint8_t* data, WmBusApplicationDateTime* out) {
     if(!data || !out) return false;
 
     uint8_t minute = data[0] & 0x3FU;
     uint8_t hour = data[1] & 0x1FU;
-    uint8_t day = data[2] & 0x1FU;
-    uint8_t month = data[3] & 0x0FU;
-    uint16_t year = (uint16_t)(((data[2] >> 5) & 0x07U) | ((data[3] >> 1) & 0x78U)) + 2000U;
-
-    if(minute > 59U || hour > 23U || day == 0U || day > 31U || month == 0U || month > 12U) {
+    if((data[0] & 0x80U) != 0U || minute > 59U || hour > 23U || !wmbus_decode_date(&data[2], out))
         return false;
-    }
 
-    out->year = year;
-    out->month = month;
-    out->day = day;
     out->hour = hour;
     out->minute = minute;
     out->second = 0U;
@@ -121,48 +78,13 @@ static bool wmbus_packet_decode_datetime6(const uint8_t* data, WmBusApplicationD
 }
 
 static int wmbus_packet_data_len_from_dif(uint8_t dif, WmBusDifDataEncoding* data_encoding) {
-    if(!data_encoding) return -1;
-    *data_encoding = WmBusDifDataEncodingInteger;
-
-    switch(dif & 0x0FU) {
-    case 0x00:
-        return 0;
-    case 0x01:
-        return 1;
-    case 0x02:
-        return 2;
-    case 0x03:
-        return 3;
-    case 0x04:
-        return 4;
-    case 0x05:
-        *data_encoding = WmBusDifDataEncodingFloat;
-        return 4;
-    case 0x06:
-        return 6;
-    case 0x07:
-        return 8;
-    case 0x09:
-        *data_encoding = WmBusDifDataEncodingBcd;
-        return 1;
-    case 0x0A:
-        *data_encoding = WmBusDifDataEncodingBcd;
-        return 2;
-    case 0x0B:
-        *data_encoding = WmBusDifDataEncodingBcd;
-        return 3;
-    case 0x0C:
-        *data_encoding = WmBusDifDataEncodingBcd;
-        return 4;
-    case 0x0D:
-        *data_encoding = WmBusDifDataEncodingVariableText;
-        return -2;
-    case 0x0E:
-        *data_encoding = WmBusDifDataEncodingBcd;
-        return 6;
-    default:
-        return -1;
-    }
+    /* EN 13757-3 DIF data field: -1 unsupported, -2 followed by LVAR. */
+    static const int8_t lengths[16] = {0, 1, 2, 3, 4, 4, 6, 8, -1, 1, 2, 3, 4, -2, 6, -1};
+    uint8_t code = dif & 0x0FU;
+    *data_encoding = code == 0x05U                  ? WmBusDifDataEncodingFloat :
+                     code >= 0x09U && code != 0x0DU ? WmBusDifDataEncodingBcd :
+                                                      WmBusDifDataEncodingInteger;
+    return lengths[code];
 }
 
 static bool
@@ -172,18 +94,19 @@ static bool
     if(lvar <= 0xBFU) {
         *data_len = lvar;
         *data_encoding = WmBusDifDataEncodingVariableText;
-    } else if(lvar <= 0xCFU) {
+    } else if(lvar >= 0xC0U && lvar <= 0xC9U) {
         *data_len = lvar - 0xC0U;
         *data_encoding = WmBusDifDataEncodingBcd;
-    } else if(lvar <= 0xDFU) {
+    } else if(lvar >= 0xD0U && lvar <= 0xD9U) {
         *data_len = lvar - 0xD0U;
         *data_encoding = WmBusDifDataEncodingNegativeBcd;
-    } else if(lvar <= 0xEFU) {
+    } else if(lvar >= 0xE0U && lvar <= 0xEFU) {
         *data_len = lvar - 0xE0U;
         *data_encoding = WmBusDifDataEncodingInteger;
-    } else if(lvar <= 0xFAU) {
-        *data_len = lvar - 0xF0U;
-        *data_encoding = WmBusDifDataEncodingFloat;
+    } else if(lvar >= 0xF0U && lvar <= 0xF6U) {
+        /* EN 13757-3:2018 Table 5: extended binary lengths. */
+        *data_len = lvar <= 0xF4U ? 4U * (lvar - 0xECU) : 16U * (lvar - 0xF2U);
+        *data_encoding = WmBusDifDataEncodingInteger;
     } else {
         return false;
     }
@@ -269,7 +192,7 @@ static void wmbus_packet_decode_record_value(
     }
 
     if(record->quantity == WmBusApplicationQuantityDate) {
-        if(data_len == 2U && wmbus_packet_decode_date2(data, &record->value_datetime)) {
+        if(data_len == 2U && wmbus_decode_date(data, &record->value_datetime)) {
             record->value_type = WmBusApplicationValueDateTime;
         } else {
             record->value_type = WmBusApplicationValueUnavailable;
@@ -301,7 +224,7 @@ static void wmbus_packet_decode_record_value(
     if(data_encoding == WmBusDifDataEncodingBcd ||
        data_encoding == WmBusDifDataEncodingNegativeBcd) {
         uint64_t bcd_value = 0U;
-        if(wmbus_packet_decode_bcd(data, data_len, &bcd_value) && bcd_value <= INT64_MAX) {
+        if(wmbus_decode_bcd(data, data_len, &bcd_value) && bcd_value <= INT64_MAX) {
             int64_t value = (int64_t)bcd_value;
             wmbus_application_record_set_value(
                 record, data_encoding == WmBusDifDataEncodingNegativeBcd ? -value : value);
@@ -324,6 +247,100 @@ static void wmbus_packet_decode_record_value(
     }
 }
 
+WmBusDataRecordStatus wmbus_dif_vif_next_record(
+    const uint8_t* payload,
+    size_t payload_len,
+    size_t* offset,
+    WmBusDataRecord* out) {
+    if(!offset || !out || (!payload && payload_len) || *offset > payload_len) {
+        return WmBusDataRecordInvalid;
+    }
+    size_t pos = *offset;
+    while(pos < payload_len && payload[pos] == 0x2FU)
+        pos++;
+    if(pos == payload_len || payload[pos] == 0x0FU || payload[pos] == 0x1FU) {
+        *offset = payload_len;
+        return WmBusDataRecordEnd;
+    }
+    *out = (WmBusDataRecord){0};
+    WmBusApplicationRecord* record = &out->record;
+    record->dif = payload[pos++];
+    record->measurement_type = wmbus_packet_measurement_type_from_dif(record->dif);
+
+    uint64_t storage_no = (uint64_t)((record->dif >> 6) & 0x01U);
+    uint8_t dife_index = 0U;
+
+    while((record->dif & 0x80U) != 0U) {
+        if(pos >= payload_len || dife_index >= WMBUS_APPLICATION_DIFE_MAX)
+            return WmBusDataRecordInvalid;
+        uint8_t dife = payload[pos++];
+        storage_no |= (uint64_t)(dife & 0x0FU) << (1U + (4U * dife_index));
+        record->tariff |= (uint32_t)((dife >> 4) & 0x03U) << (2U * dife_index);
+        record->subunit |= (uint16_t)((dife >> 6) & 0x01U) << dife_index;
+        dife_index++;
+        if((dife & 0x80U) == 0U) break;
+    }
+    record->storage_no = storage_no;
+
+    if(pos >= payload_len) return WmBusDataRecordInvalid;
+    record->vif = payload[pos++];
+
+    const uint8_t vif_code = record->vif & 0x7FU;
+    if(vif_code == 0x7CU) {
+        if(pos >= payload_len) return WmBusDataRecordInvalid;
+        const uint8_t unit_len = payload[pos++];
+        if((size_t)unit_len > payload_len - pos) return WmBusDataRecordInvalid;
+        pos += unit_len;
+    }
+
+    uint8_t first_vife = 0U;
+    uint8_t vife_count = 0U;
+    bool unsupported_modifier = false;
+    while((record->vif & 0x80U) != 0U) {
+        if(pos >= payload_len || vife_count >= WMBUS_APPLICATION_VIFE_MAX)
+            return WmBusDataRecordInvalid;
+        uint8_t vife = payload[pos++];
+        if(vife_count == 0U) {
+            first_vife = vife;
+        }
+        /* The first FD/FB extension selects a unit table. Other VIFEs
+         * modify the unit or report errors; only "no error" is supported. */
+        bool table_selector = vife_count == 0U && (vif_code == 0x7DU || vif_code == 0x7BU);
+        if(!table_selector && (vife & 0x7FU) != 0U) unsupported_modifier = true;
+        vife_count++;
+        if((vife & 0x80U) == 0U) break;
+    }
+
+    WmBusDifDataEncoding data_encoding = WmBusDifDataEncodingInteger;
+    int data_len = wmbus_packet_data_len_from_dif(record->dif, &data_encoding);
+    if(data_len == -1) return WmBusDataRecordInvalid;
+    if(data_len == -2) {
+        uint8_t variable_len = 0U;
+        if(pos >= payload_len ||
+           !wmbus_packet_decode_lvar(payload[pos], &variable_len, &data_encoding)) {
+            return WmBusDataRecordInvalid;
+        }
+        pos++;
+        data_len = variable_len;
+    }
+    if(data_len < 0 || (size_t)data_len > (payload_len - pos)) return WmBusDataRecordInvalid;
+    record->data_len = (uint8_t)data_len;
+
+    out->first_vife = first_vife;
+    out->vife_count = vife_count;
+    out->data = &payload[pos];
+    if(unsupported_modifier) {
+        record->value_type = WmBusApplicationValueRaw;
+        wmbus_application_record_set_raw_bytes(record, out->data, record->data_len);
+    } else {
+        wmbus_packet_map_vif(record, first_vife, vife_count != 0U);
+        wmbus_packet_decode_record_value(record, out->data, record->data_len, data_encoding);
+    }
+    pos += record->data_len;
+    *offset = pos;
+    return WmBusDataRecordOk;
+}
+
 bool wmbus_packet_decode_application_records(
     const uint8_t* payload,
     size_t payload_len,
@@ -331,89 +348,16 @@ bool wmbus_packet_decode_application_records(
     uint8_t out_max,
     uint8_t* out_count) {
     if(out_count) *out_count = 0U;
-    if((payload_len > 0U) && (!payload || !out)) return false;
-    if(!payload && payload_len == 0U) return true;
-
+    if(payload_len && (!payload || !out)) return false;
     size_t pos = 0U;
     uint8_t count = 0U;
-
-    while(pos < payload_len) {
-        while(pos < payload_len && payload[pos] == 0x2FU) {
-            pos++;
-        }
-        if(pos >= payload_len) break;
-        if(payload[pos] == 0x0FU || payload[pos] == 0x1FU) {
-            break;
-        }
-
-        if(count >= out_max) break;
-
-        WmBusApplicationRecord* record = &out[count];
-        *record = (WmBusApplicationRecord){0};
-
-        record->dif = payload[pos++];
-        record->measurement_type = wmbus_packet_measurement_type_from_dif(record->dif);
-
-        uint64_t storage_no = (uint64_t)((record->dif >> 6) & 0x01U);
-        uint8_t dife_index = 0U;
-
-        while((record->dif & 0x80U) != 0U) {
-            if(pos >= payload_len || dife_index >= WMBUS_APPLICATION_DIFE_MAX) return false;
-            uint8_t dife = payload[pos++];
-            storage_no |= (uint64_t)(dife & 0x0FU) << (1U + (4U * dife_index));
-            record->tariff |= (uint32_t)((dife >> 4) & 0x03U) << (2U * dife_index);
-            record->subunit |= (uint16_t)((dife >> 6) & 0x01U) << dife_index;
-            dife_index++;
-            if((dife & 0x80U) == 0U) break;
-        }
-        record->storage_no = storage_no;
-
-        if(pos >= payload_len) return false;
-        record->vif = payload[pos++];
-
-        const uint8_t vif_code = record->vif & 0x7FU;
-        if(vif_code == 0x7CU) {
-            if(pos >= payload_len) return false;
-            const uint8_t unit_len = payload[pos++];
-            if((size_t)unit_len > payload_len - pos) return false;
-            pos += unit_len;
-        }
-
-        uint8_t first_vife = 0U;
-        bool has_first_vife = false;
-        uint8_t vife_count = 0U;
-        while((record->vif & 0x80U) != 0U) {
-            if(pos >= payload_len || vife_count >= WMBUS_APPLICATION_VIFE_MAX) return false;
-            uint8_t vife = payload[pos++];
-            if(!has_first_vife) {
-                first_vife = vife;
-                has_first_vife = true;
-            }
-            vife_count++;
-            if((vife & 0x80U) == 0U) break;
-        }
-
-        WmBusDifDataEncoding data_encoding = WmBusDifDataEncodingInteger;
-        int data_len = wmbus_packet_data_len_from_dif(record->dif, &data_encoding);
-        if(data_len == -1) return false;
-        if(data_len == -2) {
-            uint8_t variable_len = 0U;
-            if(pos >= payload_len ||
-               !wmbus_packet_decode_lvar(payload[pos], &variable_len, &data_encoding)) {
-                return false;
-            }
-            pos++;
-            data_len = variable_len;
-        }
-        if(data_len < 0 || (size_t)data_len > (payload_len - pos)) return false;
-        record->data_len = (uint8_t)data_len;
-
-        wmbus_packet_map_vif(record, first_vife, has_first_vife);
-        wmbus_packet_decode_record_value(record, &payload[pos], record->data_len, data_encoding);
-        pos += record->data_len;
-        count++;
+    WmBusDataRecord data;
+    WmBusDataRecordStatus status;
+    while((status = wmbus_dif_vif_next_record(payload, payload_len, &pos, &data)) ==
+          WmBusDataRecordOk) {
+        if(count < out_max) out[count++] = data.record;
     }
-
+    if(status == WmBusDataRecordInvalid) return false;
     if(out_count) *out_count = count;
     return true;
 }
@@ -426,18 +370,16 @@ bool wmbus_parser_dif_vif_parse(
         return false;
     }
 
-    uint8_t record_count = 0U;
     if(!wmbus_packet_decode_application_records(
            packet->payload->application_bytes,
            packet->payload->application_len,
            out_application->records,
            WMBUS_PACKET_RECORD_MAX,
-           &record_count)) {
+           &out_application->record_count)) {
         return false;
     }
 
-    out_application->record_count = record_count;
-    for(uint8_t i = 0U; i < record_count; i++) {
+    for(uint8_t i = 0U; i < out_application->record_count; i++) {
         if(out_application->records[i].quantity != WmBusApplicationQuantityUnknown) {
             return true;
         }

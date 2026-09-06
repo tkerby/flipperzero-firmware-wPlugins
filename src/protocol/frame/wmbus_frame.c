@@ -15,24 +15,8 @@ void wmbus_frame_decode_mfg(uint16_t man, char out[WMBUS_MFG_STR_LEN]) {
     }
 }
 
-static bool wmbus_frame_format_id_bcd(const uint8_t id[4], char out[WMBUS_ID_STR_LEN]) {
-    size_t pos = 0;
-    for(int i = 3; i >= 0; i--) {
-        uint8_t byte = id[i];
-        uint8_t hi = (byte >> 4) & 0x0F;
-        uint8_t lo = byte & 0x0F;
-        if(hi > 9 || lo > 9) return false;
-        out[pos++] = (char)('0' + hi);
-        out[pos++] = (char)('0' + lo);
-    }
-    out[pos] = '\0';
-    return true;
-}
-
 void wmbus_frame_format_id(const uint8_t id[4], char out[WMBUS_ID_STR_LEN]) {
-    if(!wmbus_frame_format_id_bcd(id, out)) {
-        snprintf(out, WMBUS_ID_STR_LEN, "%02X%02X%02X%02X", id[3], id[2], id[1], id[0]);
-    }
+    snprintf(out, WMBUS_ID_STR_LEN, "%02X%02X%02X%02X", id[3], id[2], id[1], id[0]);
 }
 
 static uint16_t wmbus_crc16_en13757(const uint8_t* data, size_t len) {

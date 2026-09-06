@@ -1,62 +1,21 @@
 #include "wmbus_parser_qwaterv2.h"
+#include "wmbus_parser_dif_vif.h"
+#include "../decode/wmbus_value.h"
 
 #include "../model/wmbus_application_record.h"
 
-#define WMBUS_QWATERV2_MFG_QDS                  0x4493U
-#define WMBUS_QWATERV2_WALKBY_DATA_LEN          53U
-#define WMBUS_QWATERV2_TOTAL_OFFSET              12U
-#define WMBUS_QWATERV2_TARGET_YEAR_DATE_OFFSET   16U
-#define WMBUS_QWATERV2_TARGET_YEAR_OFFSET        18U
-#define WMBUS_QWATERV2_TARGET_DATE_OFFSET        22U
-#define WMBUS_QWATERV2_TARGET_OFFSET             24U
-
-static bool wmbus_parser_qwaterv2_decode_bcd4(const uint8_t* data, uint32_t* value) {
-    if(!data || !value) return false;
-
-    uint32_t result = 0U;
-    uint32_t factor = 1U;
-    for(uint8_t i = 0U; i < 4U; i++) {
-        const uint8_t lo = data[i] & 0x0FU;
-        const uint8_t hi = (data[i] >> 4U) & 0x0FU;
-        if(lo > 9U || hi > 9U) return false;
-        result += (uint32_t)lo * factor;
-        factor *= 10U;
-        result += (uint32_t)hi * factor;
-        factor *= 10U;
-    }
-
-    *value = result;
-    return true;
-}
-
-static bool wmbus_parser_qwaterv2_decode_date(
-    const uint8_t* data,
-    WmBusApplicationDateTime* date,
-    bool* unavailable) {
-    if(!data || !date || !unavailable) return false;
-
-    *unavailable = data[0] == 0xFFU && data[1] == 0xFFU;
-    if(*unavailable) return true;
-
-    const uint8_t day = data[0] & 0x1FU;
-    const uint8_t month = data[1] & 0x0FU;
-    const uint16_t year =
-        (uint16_t)(((data[0] >> 5U) & 0x07U) | ((data[1] >> 1U) & 0x78U)) + 2000U;
-    if(day == 0U || day > 31U || month == 0U || month > 12U) return false;
-
-    *date = (WmBusApplicationDateTime){
-        .year = year,
-        .month = month,
-        .day = day,
-        .precision = WmBusApplicationDateTimePrecisionDate,
-    };
-    return true;
-}
+#define WMBUS_QWATERV2_MFG_QDS                 0x4493U
+#define WMBUS_QWATERV2_WALKBY_DATA_LEN         53U
+#define WMBUS_QWATERV2_TOTAL_OFFSET            12U
+#define WMBUS_QWATERV2_TARGET_YEAR_DATE_OFFSET 16U
+#define WMBUS_QWATERV2_TARGET_YEAR_OFFSET      18U
+#define WMBUS_QWATERV2_TARGET_DATE_OFFSET      22U
+#define WMBUS_QWATERV2_TARGET_OFFSET           24U
 
 static bool wmbus_parser_qwaterv2_store_volume(
     WmBusPacketApplicationData* application,
     uint64_t storage_no,
-    uint32_t volume_l) {
+    uint64_t volume_l) {
     WmBusApplicationRecord* record = NULL;
     if(!wmbus_application_record_append(application, &record)) return false;
 
@@ -104,30 +63,25 @@ static bool wmbus_parser_qwaterv2_probe(const WmBusParserPacketView* packet) {
            packet->identity->dev_type == 0x37U && packet->tpl->ci_field == 0x78U;
 }
 
-static const uint8_t* wmbus_parser_qwaterv2_find_walkby_data(
-    const uint8_t* payload,
-    size_t payload_len) {
-    static const uint8_t record_header[] = {0x0DU, 0xFFU, 0x5FU, 0x35U};
-    if(!payload || payload_len < sizeof(record_header) + WMBUS_QWATERV2_WALKBY_DATA_LEN) {
-        return NULL;
-    }
-
-    for(size_t pos = 0U;
-        pos + sizeof(record_header) + WMBUS_QWATERV2_WALKBY_DATA_LEN <= payload_len;
-        pos++) {
-        if(payload[pos] != record_header[0] || payload[pos + 1U] != record_header[1] ||
-           payload[pos + 2U] != record_header[2] || payload[pos + 3U] != record_header[3]) {
+static const uint8_t*
+    wmbus_parser_qwaterv2_find_walkby_data(const uint8_t* payload, size_t payload_len) {
+    size_t pos = 0U;
+    const uint8_t* walkby = NULL;
+    WmBusDataRecord data;
+    WmBusDataRecordStatus status;
+    while((status = wmbus_dif_vif_next_record(payload, payload_len, &pos, &data)) ==
+          WmBusDataRecordOk) {
+        if(data.record.dif != 0x0DU || data.record.vif != 0xFFU || data.vife_count != 1U ||
+           data.first_vife != 0x5FU || data.record.data_len != WMBUS_QWATERV2_WALKBY_DATA_LEN)
             continue;
+        const uint8_t* bytes = data.data;
+        if(walkby || bytes[0] != 0x00U || bytes[1] != 0x82U || bytes[3] != 0x00U ||
+           bytes[4] != 0x00U || bytes[7] != 0x07U || bytes[8] != 0xC1U || bytes[9] != 0x13U) {
+            return NULL;
         }
-
-        const uint8_t* data = &payload[pos + sizeof(record_header)];
-        if(data[0] == 0x00U && data[1] == 0x82U && data[3] == 0x00U && data[4] == 0x00U &&
-           data[7] == 0x07U && data[8] == 0xC1U && data[9] == 0x13U) {
-            return data;
-        }
+        walkby = bytes;
     }
-
-    return NULL;
+    return status == WmBusDataRecordEnd ? walkby : NULL;
 }
 
 bool wmbus_parser_qwaterv2_parse(
@@ -139,25 +93,20 @@ bool wmbus_parser_qwaterv2_parse(
         packet->payload->application_bytes, packet->payload->application_len);
     if(!data) return false;
 
-    uint32_t total_l = 0U;
-    uint32_t target_year_l = 0U;
-    uint32_t target_l = 0U;
+    uint64_t total_l = 0U;
+    uint64_t target_year_l = 0U;
+    uint64_t target_l = 0U;
     WmBusApplicationDateTime target_year_date = {0};
     WmBusApplicationDateTime target_date = {0};
-    bool target_year_date_unavailable = false;
-    bool target_date_unavailable = false;
-    if(!wmbus_parser_qwaterv2_decode_bcd4(&data[WMBUS_QWATERV2_TOTAL_OFFSET], &total_l) ||
-       !wmbus_parser_qwaterv2_decode_date(
-           &data[WMBUS_QWATERV2_TARGET_YEAR_DATE_OFFSET],
-           &target_year_date,
-           &target_year_date_unavailable) ||
-       !wmbus_parser_qwaterv2_decode_bcd4(
-           &data[WMBUS_QWATERV2_TARGET_YEAR_OFFSET], &target_year_l) ||
-       !wmbus_parser_qwaterv2_decode_date(
-           &data[WMBUS_QWATERV2_TARGET_DATE_OFFSET],
-           &target_date,
-           &target_date_unavailable) ||
-       !wmbus_parser_qwaterv2_decode_bcd4(&data[WMBUS_QWATERV2_TARGET_OFFSET], &target_l)) {
+    bool target_year_date_unavailable = data[16] == 0xFFU && data[17] == 0xFFU;
+    bool target_date_unavailable = data[22] == 0xFFU && data[23] == 0xFFU;
+    if(!wmbus_decode_bcd(&data[WMBUS_QWATERV2_TOTAL_OFFSET], 4U, &total_l) ||
+       !wmbus_decode_bcd(&data[WMBUS_QWATERV2_TARGET_YEAR_OFFSET], 4U, &target_year_l) ||
+       !wmbus_decode_bcd(&data[WMBUS_QWATERV2_TARGET_OFFSET], 4U, &target_l) ||
+       (!target_year_date_unavailable &&
+        !wmbus_decode_date(&data[WMBUS_QWATERV2_TARGET_YEAR_DATE_OFFSET], &target_year_date)) ||
+       (!target_date_unavailable &&
+        !wmbus_decode_date(&data[WMBUS_QWATERV2_TARGET_DATE_OFFSET], &target_date))) {
         return false;
     }
 

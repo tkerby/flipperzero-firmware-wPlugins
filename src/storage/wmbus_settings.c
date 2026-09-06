@@ -53,7 +53,7 @@ bool wmbus_settings_load(Storage* storage, WmBusSettings* settings) {
 
             if(mode > WmBusRxModeC) break;
             if(csv_logging >= WmBusCsvLoggingCount) break;
-            if(version < WMBUS_SETTINGS_VERSION) break;
+            if(version != WMBUS_SETTINGS_VERSION) break;
 
             if(!flipper_format_read_int32(fff, "min_rssi_dbm", &min_rssi_dbm, 1)) break;
             if(!flipper_format_read_uint32(fff, "memory_quality", &memory_quality, 1)) break;

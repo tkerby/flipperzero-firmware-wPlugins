@@ -95,7 +95,7 @@ static void wmbus_packet_extract_tpl_info(
     }
 
     record->tpl.ci_field = frame[ci_pos];
-    record->tpl.header_len = (uint8_t)(ci_pos + 1U);
+    record->tpl.header_len = 0U;
 
     WmBusTplHeaderType header_type = wmbus_packet_ci_tpl_header_type(record->tpl.ci_field);
     if(header_type == WmBusTplHeaderShort && frame_len >= ci_pos + 5U) {
@@ -116,6 +116,8 @@ static void wmbus_packet_extract_tpl_info(
         record->tpl.cfg = (uint16_t)frame[ci_pos + 11U] | ((uint16_t)frame[ci_pos + 12U] << 8U);
         record->tpl.security_mode = wmbus_packet_tpl_security_mode(record->tpl.cfg);
         wmbus_packet_populate_identity(record, record->tpl.iv_address);
+    } else if(header_type == WmBusTplHeaderNone) {
+        record->tpl.header_len = (uint8_t)(ci_pos + 1U);
     }
 }
 
@@ -128,11 +130,13 @@ static void wmbus_packet_extract_dll_tpl_info(
     record->dll.m_field = (uint16_t)frame[2] | ((uint16_t)frame[3] << 8);
     record->dll.ci_field = frame[10];
     wmbus_packet_populate_identity(record, &frame[2]);
-    record->tpl.header_len = 11U;
+    record->tpl.header_len = 0U;
     record->tpl.security_mode = 0U;
     record->ell.header_len = 11U;
 
-    if(frame_len >= 13U && wmbus_packet_ci_has_ell(frame[10])) {
+    if(wmbus_packet_ci_has_ell(frame[10])) {
+        record->ell.has_ell = true;
+        if(frame_len < 13U) return;
         size_t pos = 11U;
         WmBusPacketEllData ell = {
             .has_ell = true,
@@ -184,7 +188,8 @@ bool wmbus_packet_decode_phy_frame(
     uint8_t* frame_buf,
     size_t frame_buf_max,
     WmBusPacketDecodeState* out) {
-    if(!phy_frame || !frame_buf || frame_buf_max == 0U || !out) {
+    if(!phy_frame || phy_frame->len > sizeof(phy_frame->data) || !frame_buf ||
+       frame_buf_max == 0U || !out) {
         return false;
     }
     if((phy_frame->mode == WmBusRxModeT && phy_frame->format != WmBusFrameFormatA) ||

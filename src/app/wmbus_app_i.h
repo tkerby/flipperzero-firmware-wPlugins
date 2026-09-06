@@ -2,8 +2,6 @@
 
 #include "wmbus_app.h"
 #include "wmbus_capture_processor.h"
-#include "sink/wmbus_csv_sink.h"
-#include "sink/wmbus_history_sink.h"
 #include "radio/wmbus_radio_rx_service.h"
 
 #include "../storage/wmbus_keyring.h"
@@ -24,9 +22,7 @@ typedef enum {
     WmBusAppViewRx = 0,
     WmBusAppViewConfig,
     WmBusAppViewKeyInput,
-    WmBusAppViewPacketDetail,
-    WmBusAppViewAbout,
-    WmBusAppViewExitConfirm,
+    WmBusAppViewWidget,
 } WmBusAppView;
 
 typedef enum {
@@ -51,14 +47,10 @@ struct WmBusApp {
     SceneManager* scene_manager;
     VariableItemList* config_list;
     ByteInput* key_input;
-    Widget* detail_widget;
-    Widget* about_widget;
-    Widget* exit_confirm_widget;
+    Widget* widget;
     bool detail_application_only;
     WmBusRxView* rx_view;
 
-    WmBusCsvSink csv_sink;
-    WmBusHistorySink history_sink;
     WmBusCaptureProcessor* capture_processor;
     WmBusRadioRxService* rx_service;
 
@@ -71,6 +63,4 @@ bool wmbus_app_apply_runtime_config(WmBusApp* app, bool persist);
 bool wmbus_app_add_key(WmBusApp* app, const uint8_t key[WMBUS_KEY_BYTES]);
 bool wmbus_app_ensure_config_view(WmBusApp* app);
 bool wmbus_app_ensure_key_input_view(WmBusApp* app);
-bool wmbus_app_ensure_detail_view(WmBusApp* app);
-bool wmbus_app_ensure_about_view(WmBusApp* app);
-bool wmbus_app_ensure_exit_confirm_view(WmBusApp* app);
+bool wmbus_app_ensure_widget(WmBusApp* app);

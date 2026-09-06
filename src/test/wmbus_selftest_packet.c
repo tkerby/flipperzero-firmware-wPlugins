@@ -1,6 +1,5 @@
 #include "wmbus_selftest_i.h"
 
-
 #include <string.h>
 
 static bool wmbus_selftest_check_packet_process_mode5_no_key_does_not_decrypt(
@@ -249,7 +248,83 @@ static bool
     return true;
 }
 
+static bool check_packet_application_ci_scope(char* detail, size_t detail_len) {
+    const uint8_t cis[] = {0x78, 0x79, 0x7B, 0x90, 0xA0, 0x7D, 0x7F, 0x72, 0x7A};
+    for(size_t i = 0; i < COUNT_OF(cis); i++) {
+        uint8_t normalized[32] = {0, 0x44, 0x93, 0x44, 1, 2, 3, 4, 1, 7};
+        normalized[10] = cis[i];
+        size_t pos = cis[i] == 0x72                                       ? 23U :
+                     (cis[i] == 0x7A || cis[i] == 0x7D || cis[i] == 0x7F) ? 15U :
+                                                                            11U;
+        normalized[pos++] = 0x01;
+        normalized[pos++] = 0x13;
+        normalized[pos++] = 42;
+        normalized[0] = pos - 1U;
+        uint8_t frame[WMBUS_SELFTEST_BUF_MAX];
+        size_t len = 0;
+        WmBusPacketRecord packet;
+        bool expected = cis[i] == 0x72 || cis[i] == 0x7A || cis[i] == 0x78;
+        if(!wmbus_selftest_frame_build_format_a(normalized, pos, frame, sizeof(frame), &len) ||
+           !wmbus_selftest_process_phy_frame_record(
+               WmBusRxModeC, WmBusFrameFormatA, frame, len, NULL, &packet) ||
+           (packet.quality == WmBusPacketQualityParsed) != expected) {
+            wmbus_selftest_set_detail(
+                detail, detail_len, "CI=%02X expected parsed=%u", cis[i], expected);
+            return false;
+        }
+    }
+    wmbus_selftest_set_detail(detail, detail_len, "Only CI72/7A/78 variable data is parsed");
+    return true;
+}
+
+static bool check_packet_truncated_headers(char* detail, size_t detail_len) {
+    const struct {
+        uint8_t ci;
+        size_t len;
+    } headers[] = {
+        {0x72, 13},
+        {0x7A, 5},
+        {0x8C, 3},
+        {0x8D, 9},
+        {0x8E, 11},
+        {0x8F, 17},
+    };
+    for(size_t i = 0; i < COUNT_OF(headers); i++) {
+        for(size_t size = 1; size < headers[i].len; size++) {
+            uint8_t normalized[32] = {0, 0x44, 0x93, 0x44, 1, 2, 3, 4, 1, 7};
+            normalized[10] = headers[i].ci;
+            normalized[11] = 0x01;
+            normalized[12] = 0x13;
+            normalized[13] = 42;
+            size_t normalized_len = 10U + size;
+            normalized[0] = normalized_len - 1U;
+            uint8_t frame[WMBUS_SELFTEST_BUF_MAX];
+            size_t len = 0;
+            WmBusPacketRecord packet;
+            if(!wmbus_selftest_frame_build_format_a(
+                   normalized, normalized_len, frame, sizeof(frame), &len) ||
+               !wmbus_selftest_process_phy_frame_record(
+                   WmBusRxModeC, WmBusFrameFormatA, frame, len, NULL, &packet) ||
+               packet.quality != WmBusPacketQualityCrcOk || packet.application.record_count ||
+               packet.tpl.decrypted) {
+                wmbus_selftest_set_detail(
+                    detail, detail_len, "CI=%02X truncated=%u", headers[i].ci, (unsigned)size);
+                return false;
+            }
+        }
+    }
+    WmBusPhyFrame oversized = {
+        .mode = WmBusRxModeC, .format = WmBusFrameFormatA, .len = WMBUS_PHY_FRAME_MAX_BYTES + 1U};
+    WmBusPacketRecord packet;
+    if(wmbus_packet_process_phy_frame(&oversized, NULL, &packet)) return false;
+    wmbus_selftest_set_detail(detail, detail_len, "Truncated TPL/ELL and oversized PHY rejected");
+    return true;
+}
+
 static const WmBusSelftestCheck wmbus_selftest_checks_packet[] = {
+    {"check_packet_application_ci_scope", check_packet_application_ci_scope},
+    {"check_packet_truncated_headers", check_packet_truncated_headers},
+
     {"check_packet_process_mode5_no_key_does_not_decrypt",
      wmbus_selftest_check_packet_process_mode5_no_key_does_not_decrypt},
     {"check_packet_process_mode5_multiple_keys_uses_matching_slot",

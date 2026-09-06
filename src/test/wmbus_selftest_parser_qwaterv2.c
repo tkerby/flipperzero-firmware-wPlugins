@@ -9,9 +9,8 @@ static bool wmbus_selftest_check_parser_qwaterv2_walkby(char* detail, size_t det
         "5a449344965643353337637e78077996564335934433070dff5f3500301c82020000100007c1"
         "13ffff003900003feefb3c003900005f370039000000000000004c1e00000000000000000000"
         "000000000000ffff0000002f046d25114b380cfd109000819abc2414f0";
-    static const char* expected_fields =
-        "Volume=3.900 m3;Volume[S1]=3.900 m3;Date[S1]=2025-12-31;"
-        "Volume[S17]=3.900 m3;Date[S17]=2026-07-31";
+    static const char* expected_fields = "Volume=3.900 m3;Volume[S1]=3.900 m3;Date[S1]=2025-12-31;"
+                                         "Volume[S17]=3.900 m3;Date[S17]=2026-07-31";
     uint8_t frame[WMBUS_SELFTEST_BUF_MAX] = {0};
     size_t frame_len = 0U;
     WmBusPacketRecord packet = {0};
@@ -21,26 +20,17 @@ static bool wmbus_selftest_check_parser_qwaterv2_walkby(char* detail, size_t det
         return false;
     }
 
-    const bool built = wmbus_selftest_hex_to_bytes(
-        frame_hex, frame, sizeof(frame), &frame_len);
+    const bool built = wmbus_selftest_hex_to_bytes(frame_hex, frame, sizeof(frame), &frame_len);
     const bool processed = built && frame_len == 105U &&
                            wmbus_selftest_process_phy_frame_record(
-                               WmBusRxModeC,
-                               WmBusFrameFormatA,
-                               frame,
-                               frame_len,
-                               NULL,
-                               &packet);
-    const bool formatted = processed &&
-                           wmbus_record_formatter_format_joined(
-                               packet.application.records,
-                               packet.application.record_count,
-                               ';',
-                               fields);
+                               WmBusRxModeC, WmBusFrameFormatA, frame, frame_len, NULL, &packet);
+    const bool formatted =
+        processed && wmbus_record_formatter_format_joined(
+                         packet.application.records, packet.application.record_count, ';', fields);
     const WmBusApplicationRecord* records = packet.application.records;
     const bool valid =
-        formatted && packet.quality == WmBusPacketQualityParsed &&
-        packet.normalized_len == 91U && packet.application.parser_id == WmBusParserIdQWaterV2 &&
+        formatted && packet.quality == WmBusPacketQualityParsed && packet.normalized_len == 91U &&
+        packet.application.parser_id == WmBusParserIdQWaterV2 &&
         packet.application.record_count == 5U &&
         strcmp(packet.identity.manufacturer, "QDS") == 0 &&
         strcmp(packet.identity.meter_id, "35435696") == 0 &&
@@ -89,15 +79,9 @@ static bool wmbus_selftest_check_parser_qwaterv2_scope(char* detail, size_t deta
         uint8_t frame[WMBUS_SELFTEST_BUF_MAX] = {0};
         size_t frame_len = 0U;
         WmBusPacketRecord packet = {0};
-        if(!wmbus_selftest_hex_to_bytes(
-               frames[i], frame, sizeof(frame), &frame_len) ||
+        if(!wmbus_selftest_hex_to_bytes(frames[i], frame, sizeof(frame), &frame_len) ||
            !wmbus_selftest_process_phy_frame_record(
-               WmBusRxModeC,
-               WmBusFrameFormatA,
-               frame,
-               frame_len,
-               NULL,
-               &packet) ||
+               WmBusRxModeC, WmBusFrameFormatA, frame, frame_len, NULL, &packet) ||
            packet.application.parser_id != WmBusParserIdDifVif) {
             wmbus_selftest_set_detail(
                 detail,
@@ -128,8 +112,9 @@ static bool wmbus_selftest_check_parser_qwaterv2_scope(char* detail, size_t deta
                     (unsigned long)total_m3_x1000);
                 return false;
             }
-        } else if(packet.tpl.ci_field != 0x78U || packet.identity.version != 0x35U ||
-                  packet.identity.dev_type != 0x08U) {
+        } else if(
+            packet.tpl.ci_field != 0x78U || packet.identity.version != 0x35U ||
+            packet.identity.dev_type != 0x08U) {
             wmbus_selftest_set_detail(
                 detail,
                 detail_len,
@@ -145,7 +130,50 @@ static bool wmbus_selftest_check_parser_qwaterv2_scope(char* detail, size_t deta
     return true;
 }
 
+static bool check_qwater_record_boundaries(char* detail, size_t detail_len) {
+    /* A valid WDS record, then the same signature hidden inside another record. */
+    uint8_t wds[57] = {0x0D, 0xFF, 0x5F, 0x35, 0x00, 0x82};
+    wds[11] = 0x07;
+    wds[12] = 0xC1;
+    wds[13] = 0x13;
+    wds[20] = wds[21] = wds[26] = wds[27] = 0xFF;
+    for(unsigned variant = 0; variant < 5; variant++) {
+        uint8_t normalized[100] = {0, 0x44, 0x93, 0x44, 1, 2, 3, 4, 0x33, 0x37, 0x78};
+        size_t pos = 11;
+        if(variant == 1) { // filler is valid at record boundaries
+            normalized[pos++] = 0x2F;
+        } else if(variant == 2) { // signature inside a variable text value
+            normalized[pos++] = 0x0D;
+            normalized[pos++] = 0x7C;
+            normalized[pos++] = 0;
+            normalized[pos++] = sizeof(wds);
+        } else if(variant == 3) { // invalid prefix, never resynchronize
+            normalized[pos++] = 0x08;
+        }
+        memcpy(&normalized[pos], wds, sizeof(wds));
+        pos += sizeof(wds);
+        if(variant == 4) normalized[pos++] = 0x04; // malformed trailing record
+        normalized[0] = pos - 1U;
+        uint8_t frame[WMBUS_SELFTEST_BUF_MAX];
+        size_t len = 0;
+        WmBusPacketRecord packet;
+        bool expected = variant < 2;
+        if(!wmbus_selftest_frame_build_format_a(normalized, pos, frame, sizeof(frame), &len) ||
+           !wmbus_selftest_process_phy_frame_record(
+               WmBusRxModeC, WmBusFrameFormatA, frame, len, NULL, &packet) ||
+           (packet.application.parser_id == WmBusParserIdQWaterV2) != expected) {
+            wmbus_selftest_set_detail(
+                detail, detail_len, "variant=%u expected QWater=%u", variant, expected);
+            return false;
+        }
+    }
+    wmbus_selftest_set_detail(detail, detail_len, "WDS accepted only on valid record boundaries");
+    return true;
+}
+
 static const WmBusSelftestCheck wmbus_selftest_checks_parser_qwaterv2[] = {
+    {"check_qwater_record_boundaries", check_qwater_record_boundaries},
+
     {"check_parser_qwaterv2_walkby", wmbus_selftest_check_parser_qwaterv2_walkby},
     {"check_parser_qwaterv2_scope", wmbus_selftest_check_parser_qwaterv2_scope},
 };

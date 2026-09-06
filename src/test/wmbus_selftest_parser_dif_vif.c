@@ -661,7 +661,64 @@ static bool wmbus_selftest_check_dif_vif_decode_12_digit_bcd(char* detail, size_
     return true;
 }
 
+static bool check_dif_vif_validates_unstored_tail(char* detail, size_t detail_len) {
+    uint8_t payload[WMBUS_PACKET_RECORD_MAX * 3U + 1U];
+    for(size_t i = 0; i < WMBUS_PACKET_RECORD_MAX; i++) {
+        payload[i * 3U] = 0x01;
+        payload[i * 3U + 1U] = 0x13;
+        payload[i * 3U + 2U] = i;
+    }
+    payload[sizeof(payload) - 1U] = 0x04;
+    WmBusApplicationRecord records[WMBUS_PACKET_RECORD_MAX];
+    uint8_t count;
+    if(wmbus_packet_decode_application_records(
+           payload, sizeof(payload), records, COUNT_OF(records), &count) ||
+       count != 0U)
+        return false;
+    static const uint8_t invalid_time[] = {0x04, 0x6D, 0x80, 0x12, 0x21, 0x31};
+    if(!wmbus_packet_decode_application_records(
+           invalid_time, sizeof(invalid_time), records, COUNT_OF(records), &count) ||
+       count != 1U || records[0].value_type != WmBusApplicationValueUnavailable)
+        return false;
+    wmbus_selftest_set_detail(
+        detail, detail_len, "Malformed tail and invalid Type F time rejected");
+    return true;
+}
+
+static bool check_dif_vif_unsupported_modifiers(char* detail, size_t detail_len) {
+    /* Unit modifiers and record errors must not become ordinary readings.
+     * A later supported record must still decode at its declared boundary. */
+    static const uint8_t normalized[] = {
+        0x1B, 0x44, 0x93, 0x44, 0x78, 0x56, 0x34, 0x12, 0x01, 0x07, 0x78, 0x01, 0x93, 0x3B,
+        0x01, 0x01, 0x93, 0x15, 0x02, 0x02, 0xFD, 0xC6, 0x3B, 0xD0, 0x0A, 0x01, 0x13, 0x2A,
+    };
+    uint8_t frame[WMBUS_SELFTEST_BUF_MAX];
+    size_t frame_len;
+    WmBusPacketRecord packet;
+    if(!wmbus_selftest_frame_build_format_a(
+           normalized, sizeof(normalized), frame, sizeof(frame), &frame_len) ||
+       !wmbus_selftest_process_phy_frame_record(
+           WmBusRxModeC, WmBusFrameFormatA, frame, frame_len, NULL, &packet) ||
+       packet.quality != WmBusPacketQualityParsed || packet.application.record_count != 4U)
+        return false;
+    for(size_t i = 0; i < 3U; i++) {
+        if(packet.application.records[i].quantity != WmBusApplicationQuantityUnknown ||
+           packet.application.records[i].value_type != WmBusApplicationValueRaw)
+            return false;
+    }
+    const WmBusApplicationRecord* volume = &packet.application.records[3];
+    if(volume->quantity != WmBusApplicationQuantityVolume || volume->value != 42 ||
+       volume->scale10 != -3)
+        return false;
+    wmbus_selftest_set_detail(
+        detail, detail_len, "Unsupported VIFEs retained raw; following volume decoded");
+    return true;
+}
+
 static const WmBusSelftestCheck wmbus_selftest_checks_parser_dif_vif[] = {
+    {"check_dif_vif_unsupported_modifiers", check_dif_vif_unsupported_modifiers},
+    {"check_dif_vif_validates_unstored_tail", check_dif_vif_validates_unstored_tail},
+
     {"check_parser_itw_type_i_datetime", wmbus_selftest_check_parser_itw_type_i_datetime},
     {"check_dif_vif_decode_basic", wmbus_selftest_check_dif_vif_decode_basic},
     {"check_dif_vif_datetime_type_i", wmbus_selftest_check_dif_vif_datetime_type_i},

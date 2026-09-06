@@ -64,64 +64,6 @@ static void
         reason);
 }
 
-static void wmbus_packet_set_application_payload(
-    WmBusPacketPayloadView* payload,
-    const uint8_t* bytes,
-    size_t bytes_len) {
-    if(!payload) return;
-
-    *payload = (WmBusPacketPayloadView){0};
-    if(!bytes || bytes_len == 0U) return;
-
-    if(bytes_len > UINT16_MAX) bytes_len = UINT16_MAX;
-    payload->application_len = (uint16_t)bytes_len;
-    payload->application_bytes = bytes;
-}
-
-static bool wmbus_packet_try_key(
-    const uint8_t* frame,
-    size_t frame_len,
-    const uint8_t key[WMBUS_CRYPTO_KEY_BYTES],
-    WmBusPacketRecord* record,
-    WmBusPacketPayloadView* out_payload,
-    uint8_t* decrypt_workspace,
-    size_t decrypt_workspace_size) {
-    if(!frame || !key || !record || !out_payload || !decrypt_workspace) {
-        return false;
-    }
-
-    size_t payload_offset = record->tpl.header_len;
-    if(frame_len <= payload_offset) {
-        return false;
-    }
-    size_t payload_len = frame_len - payload_offset;
-    if(payload_len > decrypt_workspace_size) return false;
-    WmBusDecryptResult decrypt_result = wmbus_crypto_mode5_decrypt(
-        &frame[payload_offset],
-        payload_len,
-        record->tpl.iv_address,
-        record->tpl.acc,
-        record->tpl.cfg,
-        key,
-        decrypt_workspace);
-    if(decrypt_result != WmBusDecryptResultOk) {
-        wmbus_packet_log_decrypt_failure_reason(
-            record, wmbus_packet_decrypt_result_str(decrypt_result));
-        return false;
-    }
-
-    /* EN 13757-7 / OMS Mode 5 requires these decryption-verification bytes
-     * immediately after the Configuration Field. Parser plausibility is not
-     * a substitute: accepting it would turn device syntax into a key oracle. */
-    if(payload_len < 2U || decrypt_workspace[0] != 0x2FU || decrypt_workspace[1] != 0x2FU) {
-        wmbus_packet_log_decrypt_failure_reason(record, "missing Mode 5 2F2F check bytes");
-        return false;
-    }
-
-    wmbus_packet_set_application_payload(out_payload, decrypt_workspace, payload_len);
-    return true;
-}
-
 bool wmbus_packet_resolve_application_payload(
     const uint8_t* frame,
     size_t frame_len,
@@ -137,7 +79,17 @@ bool wmbus_packet_resolve_application_payload(
     record->tpl.decrypted = false;
     record->tpl.key_index = 0U;
 
-    wmbus_packet_set_application_payload(out_payload, NULL, 0U);
+    *out_payload = (WmBusPacketPayloadView){0};
+
+    /* Only these CI values declare the supported variable-data application.
+     * Other services (compact data, DLMS, SML, AFL, etc.) must not be guessed. */
+    if(record->tpl.header_len == 0U || record->tpl.header_len >= frame_len ||
+       (record->tpl.ci_field != 0x72U && record->tpl.ci_field != 0x7AU &&
+        record->tpl.ci_field != 0x78U)) {
+        return false;
+    }
+    const uint8_t* bytes = &frame[record->tpl.header_len];
+    const size_t payload_len = frame_len - record->tpl.header_len;
 
     if(record->ell.has_session && record->ell.security_mode != 0U) {
         FURI_LOG_D(
@@ -159,11 +111,7 @@ bool wmbus_packet_resolve_application_payload(
             wmbus_packet_log_decrypt_failure_reason(record, "missing Mode5 2F2F check bytes");
             return false;
         }
-        size_t payload_offset = record->tpl.header_len;
-        if(frame_len > payload_offset) {
-            wmbus_packet_set_application_payload(
-                out_payload, &frame[payload_offset], frame_len - payload_offset);
-        }
+        *out_payload = (WmBusPacketPayloadView){payload_len, bytes};
         return true;
     }
 
@@ -178,25 +126,28 @@ bool wmbus_packet_resolve_application_payload(
         return false;
     }
 
+    if(payload_len > decrypt_workspace_size) return false;
     for(uint8_t i = 0; key_store && i < key_store->count && i < WMBUS_CRYPTO_KEY_STORE_MAX; i++) {
-        const uint8_t* key = wmbus_crypto_key_store_get(key_store, i);
-        if(!key) {
-            continue;
+        WmBusDecryptResult result = wmbus_crypto_mode5_decrypt(
+            bytes,
+            payload_len,
+            record->tpl.iv_address,
+            record->tpl.acc,
+            record->tpl.cfg,
+            key_store->keys[i],
+            decrypt_workspace);
+        if(result != WmBusDecryptResultOk) {
+            wmbus_packet_log_decrypt_failure_reason(
+                record, wmbus_packet_decrypt_result_str(result));
+            return false;
         }
-
-        if(wmbus_packet_try_key(
-               frame,
-               frame_len,
-               key,
-               record,
-               out_payload,
-               decrypt_workspace,
-               decrypt_workspace_size)) {
+        /* EN 13757-7 / OMS Mode 5 verification, never parser plausibility. */
+        if(payload_len >= 2U && decrypt_workspace[0] == 0x2FU && decrypt_workspace[1] == 0x2FU) {
+            *out_payload = (WmBusPacketPayloadView){payload_len, decrypt_workspace};
             record->tpl.decrypted = true;
             record->tpl.key_index = i;
             return true;
         }
     }
-
     return false;
 }
