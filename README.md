@@ -1,6 +1,13 @@
 # WM-Bus Decoder
 
-`wmbus_decoder` is a receive-only Flipper Zero Sub-GHz app for Wireless M-Bus at `868.95 MHz`.
+WM-Bus Decoder is a receive-only Flipper Zero app for Wireless M-Bus meter
+telegrams at **868.95 MHz**. It receives packets in **T** or **C**
+mode, validates their frames, and decodes supported meter readings. You can
+inspect packets live, browse recent history, and optionally save CSV logs.
+
+This README covers [getting started](#getting-started), the
+[architecture](#architecture), [controls and configuration](#runtime-controls),
+and [building and testing](#build).
 
 ## Getting Started
 
@@ -19,62 +26,136 @@ for settings, optional keys, and CSV logs.
 Reception depends on range and the meter's transmission schedule. Not every
 meter broadcasts continuously or uses a supported format.
 
-## Supported Features
+## Architecture
 
-- WM-Bus receive pipeline with `T` and experimental `C` mode capture paths
-- packet validation with plausibility, length, and CRC checks
-- packet history on device with quality-based retention threshold and optional RSSI gate
-- optional dated CSV logging with quality-based CSV threshold
-- optional AES key loading from `keys.txt`
-- generic DIF/VIF parsing for standard application records
-- targeted device parsing for supported telegram families
-- opt-in test builds write a startup selftest report to `/ext/apps_data/wmbus_decoder/selftest.txt`
+The app separates radio reception from packet processing. The radio thread
+drains the CC1101 receive FIFO and reconstructs frames. A separate processing
+worker validates each frame, resolves its application payload, runs the parsers,
+and sends the result to the UI and storage.
 
-### Packet flow
+```mermaid
+flowchart TD
+    Radio["CC1101 radio: T or C mode"] --> Capture["Capture: framing and exact length"]
+    Capture --> Queue["WmBusPhyFrame queue"]
+    Queue --> Validate["Packet processing: plausibility, length, CRC"]
+    Validate --> Record["WmBusPacketRecord: wire bytes, quality, metadata"]
+    Record --> Eligible{"CRC valid and payload supported?"}
+    Eligible -->|Yes| Parse["Transient payload: decrypt if needed, then parse"]
+    Parse --> Result["Packet record with available application fields"]
+    Eligible -->|No| Result
+    Result --> Live["Live view and counters"]
+    Result --> MemoryGate["RSSI + memory quality gate"]
+    MemoryGate --> History["In-memory history"]
+    Result --> CsvGate["Logging enabled + RSSI + CSV quality gate"]
+    CsvGate --> CSV["CSV on microSD"]
+```
 
-The mode-specific radio and capture contract is documented in
-[Receive Pipeline](docs/receive-pipeline.md).
+### From radio bytes to a packet
 
-1. radio RX captures raw telegram data in `T` or `C` mode
-2. capture code reconstructs a candidate WM-Bus frame for the selected mode
-3. packet processing validates plausibility, length, and CRC
-4. packet metadata, identity fields, and the authoritative wire bytes are stored in `WmBusPacketRecord`
-5. normalized and optionally decrypted payload views remain transient during application parsing
-6. registered parsers inspect the packet and populate application-level fields
-7. the result is routed to live view, history storage, and optional CSV logging
-8. history and CSV retention apply optional RSSI and packet-quality gates
+1. **Capture establishes the frame boundary.** In T mode, capture decodes
+   3-of-6 symbols into a Frame A telegram. In C mode, it validates and removes
+   the remaining sync bytes, then produces Frame A or B. Both paths check the
+   expected length and produce a `WmBusPhyFrame` starting at the link-layer
+   L-field. Invalid framing and incomplete captures are discarded here.
+2. **The radio hands off the frame.** A bounded queue lets the radio resume
+   reception while the worker processes the packet. If the queue fills, the new
+   frame is dropped and the drop count is reported. Settings and key updates
+   use the same queue, giving each frame a coherent processing configuration.
+3. **Packet processing assigns a quality level.** Plausibility, length, and CRC
+   checks determine how much of the frame can be trusted. Complete frames yield
+   identity and protocol metadata. A failed CRC prevents application parsing,
+   but the packet can still reach the live view and qualify for retention.
+4. **Supported payloads are parsed.** For CRC-valid frames, the worker uses
+   the normalized frame with link-layer CRC bytes removed. It resolves the
+   application payload and decrypts supported Mode 5 payloads when a configured
+   key succeeds. Registered parsers then try to extract application fields.
+   Unsupported payloads or unsuccessful decryption retain the frame metadata.
+5. **The app routes the result.** Every processed record updates live state and
+   counters. History and CSV each apply their retention policy before saving.
+
+See [Receive Pipeline](docs/receive-pipeline.md) for the radio presets, FIFO
+handling, mode-specific framing, and supported length range.
+
+### Data ownership
+
+`WmBusPacketRecord` is the shared result passed from processing to the app. It
+contains reception metadata, quality, identity, protocol headers, application
+fields, and the authoritative **link-layer wire bytes**. These bytes include
+link-layer CRCs and retain any encrypted payload; they exclude radio sync and
+T-mode 3-of-6 coding.
+
+Normalization happens during frame validation. The normalized frame and any
+decrypted payload live in temporary worker buffers. Parsers access the resolved
+application payload and packet metadata through `WmBusParserPacketView`. The
+extracted fields and decryption status are added to the record; the temporary
+payload buffers are not retained.
+
+History keeps compact entries with a wire-byte preview. **Full CSV** writes the
+complete wire bytes as hex alongside metadata and decoded fields; **Basic CSV**
+writes a smaller summary.
+
+### Quality and retention
+
+Quality progresses through **Received → Header OK → Frame complete → CRC OK →
+Decoded**. A packet reaches **Decoded** only when an application parser succeeds.
+
+The `MEM gate >=` and `CSV gate >=` settings select independent minimum quality
+levels. Both use the same optional RSSI threshold. These gates control saving;
+packets below either threshold still update live state and counters. History is
+held in memory, while CSV logs persist on the microSD card.
+
+### Source map
+
+| Location | Responsibility |
+| --- | --- |
+| [`src/app/`](src/app/) | App lifecycle, processing queue, and routing results to UI and storage |
+| [`src/app/radio/`](src/app/radio/) | CC1101 configuration, FIFO service, and RX recovery |
+| [`src/protocol/capture/`](src/protocol/capture/) | Mode-specific FIFO framing and `WmBusPhyFrame` construction |
+| [`src/protocol/frame/`](src/protocol/frame/) and [`decode/`](src/protocol/decode/) | Frame lengths, CRC handling, normalization, and decoding helpers |
+| [`src/protocol/packet/`](src/protocol/packet/) and [`crypto/`](src/protocol/crypto/) | Packet quality, metadata, payload resolution, and Mode 5 decryption |
+| [`src/protocol/parser/`](src/protocol/parser/) and [`model/`](src/protocol/model/) | Parser registry, device parsers, and application records |
+| [`src/protocol/format/`](src/protocol/format/) | Packet and application-field presentation |
+| [`src/ui/`](src/ui/) | Scenes, live display, compact history, and packet details |
+| [`src/storage/`](src/storage/) | Settings, keys, and CSV files |
+| [`src/test/`](src/test/) | Opt-in on-device selftests |
 
 ## Current Limitations
 
-- `T` and `C` mode Frame A processing is validated against real rx captures; the C radio profile with frame B handling still need live on-air validation
-- the app is receive-only; it does not transmit or pair
-- device-specific parsing is limited; unsupported telegrams fall back to generic decode or remain undecoded
-- decryption support is limited to what the shared packet path and registered parsers can validate
+- T- and C-mode Frame A processing is validated against real RX captures.
+  C-mode Frame B reception still needs live on-air validation.
+- The app receives only; it does not transmit or pair with meters.
+- Device-specific parsing covers selected telegram families. Other telegrams
+  use generic DIF/VIF parsing where supported, or remain undecoded.
+- Decryption supports TPL Mode 5 (AES-128-CBC). Unsupported protection modes
+  retain frame metadata without application parsing.
 
 ## Parsers
 
-Currently registered application parsers:
+Parsers run in the following order. The first successful parser supplies the
+application fields, so device-specific parsers precede the generic fallback.
 
-- `QWaterV2`: targeted parser for Qundis QWater v2 WalkByDataSet telegrams
-- `Apator162`: targeted device parser for supported Apator short-TPL telegrams
-- `DifVif`: generic parser for standard DIF/VIF application records
+| Parser | Handles |
+| --- | --- |
+| `QWaterV2` | Qundis QWater v2 WalkByDataSet telegrams |
+| `Apator162` | Supported Apator short-TPL telegrams |
+| `DifVif` | Standard DIF/VIF application records |
 
-Parser registration is order-dependent. The first parser whose `parse()` succeeds wins, so device-specific parsers must stay ahead of generic fallbacks such as `DifVif`.
-
-## Adding A Parser
+### Adding a parser
 
 New parsers live under `src/protocol/parser/`.
 
-Minimum steps:
+1. Add a parser ID in `src/protocol/model/wmbus_application_types.h`.
+2. Implement `parse(const WmBusParserPacketView*, WmBusPacketApplicationData*)`.
+   Return `false` when the packet does not match or cannot be safely interpreted.
+3. Add its display name to the indexed table in `wmbus_parser.c`.
+4. Include and register it in `wmbus_parser_registry.c` with its `parser_id`,
+   before any broader parser it should override.
+5. Add or update selftests in `src/test/`.
 
-1. add a new parser ID in `wmbus_application_types.h`
-2. add a fail-closed `parse(const WmBusParserPacketView*, WmBusPacketApplicationData*)` implementation
-3. add its display name to the indexed table in `wmbus_parser.c`
-4. include and register it in `wmbus_parser_registry.c` with its `parser_id`
-5. place it before any broader parser it should override
-6. add or update selftests in `src/test/`
-
-Parser inputs come through `WmBusParserPacketView`, which exposes DLL, TPL, payload, and identity data from the shared packet pipeline. New parser tests should exercise the full packet path through `wmbus_packet_process_phy_frame(...)` rather than calling parser internals directly.
+`WmBusParserPacketView` exposes data-link (DLL), transport (TPL), payload, and
+identity data from the shared packet pipeline. New parser tests should exercise
+the full path through `wmbus_packet_process_phy_frame(...)` so they also cover
+framing, security checks, and parser selection.
 
 ## Runtime Controls
 

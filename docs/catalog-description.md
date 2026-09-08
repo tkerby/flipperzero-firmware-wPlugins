@@ -5,7 +5,7 @@ Zero's built-in Sub-GHz radio. No external radio module is required.
 
 ## Features
 
-- T mode reception and experimental C mode reception.
+- T and C mode reception.
 - Frame length and CRC validation, live display, and packet history.
 - Packet details and decoded application records.
 - Targeted parsing for supported Qundis QWater v2 and Apator telegrams, plus
@@ -45,4 +45,3 @@ live on-air validation.
 See the [project README](https://github.com/maresmar/wmbus-decoder#readme) for
 detailed usage and development instructions. Report issues on
 [GitHub](https://github.com/maresmar/wmbus-decoder/issues).
-
