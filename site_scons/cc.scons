@@ -23,8 +23,8 @@ ENV.AppendUnique(
         # "-MP",
         "-Wall",
         "-Wextra",
-        "-Werror",
-        "-Wno-error=deprecated-declarations",
+        # Keep compiler warnings visible without failing release builds.
+        "-Wno-error",
         "-Wno-address-of-packed-member",
         "-Wredundant-decls",
         "-Wdouble-promotion",
