@@ -1,4 +1,4 @@
-## 1.0
+v1.0:
 
 - First release.
 - 835 things, 192 questions, streamed from a 96 KB table on the SD card.
