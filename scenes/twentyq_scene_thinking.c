@@ -75,8 +75,9 @@ static int32_t twentyq_worker_thread(void* context) {
     }
 
     app->turn_ms = furi_get_tick() - start;
-    /* SPEC 11.3: turn time, worker stack watermark, heap headroom */
-    FURI_LOG_I(
+    /* SPEC 11.3: turn time, worker stack watermark, heap headroom.
+     * Debug level: see it with `log debug` in the CLI. */
+    FURI_LOG_D(
         TAG,
         "job %d took %lums, stack free %lu, heap free %u",
         (int)app->job,

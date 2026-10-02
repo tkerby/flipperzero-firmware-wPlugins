@@ -143,7 +143,7 @@ prior and the remaining answers. Snapshotting would cost 3.3 KB per level of und
   - Turn time 180–331 ms (spec budget: 400 ms).
   - Worker thread used at most ~1.1 KB of stack, so it now gets 2 KB (~950 bytes spare;
     spec floor: 256). Stack overflow is undetected on this platform — re-measure after
-    any engine change. The worker logs `stack free` and `heap free` after every turn.
+    any engine change. The worker logs `stack free` and `heap free` after every turn (`log debug`).
   - Heap: 124 KB free with the app closed, 102 KB at the start screen, 86 KB mid-game,
     so the app costs ~38 KB while playing against the spec's ~40 KB budget. Scaling up
     entities will need memory work.
