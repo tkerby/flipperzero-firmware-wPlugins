@@ -17,7 +17,8 @@ icon: twentyq.png
 screenshots:
   # 512x256 or 1024x512 PNGs taken with qFlipper, unmodified.
   - screenshots/question.png
-  - screenshots/guess.png
+  - screenshots/category.png
+  - screenshots/menu.png
 
 description: "@README.md"
 changelog: "@./docs/changelog.md"
