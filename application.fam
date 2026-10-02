@@ -17,7 +17,7 @@ App(
     fap_icon_assets="images",
     fap_file_assets="files",
     fap_description="Think of anything. Your Flipper guesses it in 20 questions. Fully offline.",
-    fap_author="20q contributors",
-    fap_weburl="https://github.com/example/flipper-20q",
+    fap_author="Cheesedog223",
+    fap_weburl="https://github.com/Cheesedog223/20Q_Flipper0",
     fap_version=(1, 0),
 )

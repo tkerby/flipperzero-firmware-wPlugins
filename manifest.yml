@@ -4,7 +4,7 @@
 sourcecode:
   type: git
   location:
-    origin: https://github.com/example/flipper-20q.git
+    origin: https://github.com/Cheesedog223/20Q_Flipper0.git
     commit_sha: FILL_ME_IN
     subdir: .
 
