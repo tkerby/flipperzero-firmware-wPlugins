@@ -6,7 +6,8 @@
 #define TQ_IO_CHUNK 512
 
 static uint32_t tq_rd_u32(const uint8_t* p) {
-    return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24);
+    return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) |
+           ((uint32_t)p[3] << 24);
 }
 
 static uint16_t tq_rd_u16(const uint8_t* p) {
@@ -25,9 +26,22 @@ static float tq_rd_f32(const uint8_t* p) {
 /* Nibble-wise CRC-32 (IEEE). 16-entry table -- 64 bytes of .rodata instead of
  * 1 KB, and no transcendentals. ~2x slower than a byte table, irrelevant here. */
 static const uint32_t tq_crc_tab[16] = {
-    0x00000000, 0x1DB71064, 0x3B6E20C8, 0x26D930AC, 0x76DC4190, 0x6B6B51F4,
-    0x4DB26158, 0x5005713C, 0xEDB88320, 0xF00F9344, 0xD6D6A3E8, 0xCB61B38C,
-    0x9B64C2B0, 0x86D3D2D4, 0xA00AE278, 0xBDBDF21C,
+    0x00000000,
+    0x1DB71064,
+    0x3B6E20C8,
+    0x26D930AC,
+    0x76DC4190,
+    0x6B6B51F4,
+    0x4DB26158,
+    0x5005713C,
+    0xEDB88320,
+    0xF00F9344,
+    0xD6D6A3E8,
+    0xCB61B38C,
+    0x9B64C2B0,
+    0x86D3D2D4,
+    0xA00AE278,
+    0xBDBDF21C,
 };
 
 static uint32_t tq_crc32_update(uint32_t crc, const uint8_t* data, size_t len) {
@@ -91,13 +105,15 @@ static uint16_t* tq_load_u16_block(const Tq_Dataset* ds, uint32_t off, uint32_t 
             free(out);
             return NULL;
         }
-        for(uint32_t k = 0; k < want; k++) out[done + k] = tq_rd_u16(chunk + k * 2);
+        for(uint32_t k = 0; k < want; k++)
+            out[done + k] = tq_rd_u16(chunk + k * 2);
         done += want;
     }
     return out;
 }
 
-static uint8_t* tq_load_u8_block(const Tq_Dataset* ds, uint32_t off, uint32_t count, uint8_t fill) {
+static uint8_t*
+    tq_load_u8_block(const Tq_Dataset* ds, uint32_t off, uint32_t count, uint8_t fill) {
     uint8_t* out = malloc(count);
     if(off == 0) {
         memset(out, fill, count);
@@ -130,7 +146,8 @@ Tq_Error tq_dataset_open(Tq_Dataset* ds, Tq_Reader reader, bool verify_crc) {
     ds->prior_off = tq_rd_u32(h + 0x24);
     ds->category_off = tq_rd_u32(h + 0x28);
     ds->qrank_off = tq_rd_u32(h + 0x2C);
-    for(int i = 0; i < TQ_LUT_SIZE; i++) ds->lut[i] = tq_rd_f32(h + 0x30 + i * 4);
+    for(int i = 0; i < TQ_LUT_SIZE; i++)
+        ds->lut[i] = tq_rd_f32(h + 0x30 + i * 4);
     ds->crc32 = tq_rd_u32(h + 0x70);
     ds->build_epoch = tq_rd_u32(h + 0x74);
     memcpy(ds->dataset_id, h + 0x78, 32);
@@ -160,19 +177,24 @@ Tq_Error tq_dataset_open(Tq_Dataset* ds, Tq_Reader reader, bool verify_crc) {
         if(!ds->qrank) return TqErrIo;
         for(uint32_t k = 0; k < q; k++) {
             if(ds->qrank[k] >= q) { /* corrupt ranking: fall back to identity */
-                for(uint32_t m = 0; m < q; m++) ds->qrank[m] = (uint16_t)m;
+                for(uint32_t m = 0; m < q; m++)
+                    ds->qrank[m] = (uint16_t)m;
                 break;
             }
         }
     } else {
         ds->qrank = malloc(sizeof(uint16_t) * q);
-        for(uint32_t k = 0; k < q; k++) ds->qrank[k] = (uint16_t)k;
+        for(uint32_t k = 0; k < q; k++)
+            ds->qrank[k] = (uint16_t)k;
     }
     ds->qrank_pos = malloc(sizeof(uint16_t) * q);
-    for(uint32_t k = 0; k < q; k++) ds->qrank_pos[k] = (uint16_t)k; /* safe default */
-    for(uint32_t k = 0; k < q; k++) ds->qrank_pos[ds->qrank[k]] = (uint16_t)k;
+    for(uint32_t k = 0; k < q; k++)
+        ds->qrank_pos[k] = (uint16_t)k; /* safe default */
+    for(uint32_t k = 0; k < q; k++)
+        ds->qrank_pos[ds->qrank[k]] = (uint16_t)k;
 
-    ds->family = tq_load_u8_block(ds, (ds->flags & TQ_FLAG_HAS_FAMILIES) ? ds->family_off : 0, q, 0);
+    ds->family =
+        tq_load_u8_block(ds, (ds->flags & TQ_FLAG_HAS_FAMILIES) ? ds->family_off : 0, q, 0);
     if(!ds->family) {
         tq_dataset_close(ds);
         return TqErrIo;
@@ -292,7 +314,8 @@ bool tq_dataset_find_entity(const Tq_Dataset* ds, const char* name, uint32_t* ou
 bool tq_dataset_read_priors(const Tq_Dataset* ds, float* out) {
     uint32_t n = ds->entity_count;
     if(!(ds->flags & TQ_FLAG_HAS_PRIORS) || ds->prior_off == 0) {
-        for(uint32_t i = 0; i < n; i++) out[i] = 1.0f;
+        for(uint32_t i = 0; i < n; i++)
+            out[i] = 1.0f;
         return true;
     }
     uint8_t chunk[TQ_IO_CHUNK];

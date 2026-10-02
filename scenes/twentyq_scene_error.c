@@ -11,7 +11,11 @@ void twentyq_scene_error_on_enter(void* context) {
 
     popup_reset(popup);
     popup_set_header(
-        popup, app->message_header[0] ? app->message_header : "Sorry", 64, 10, AlignCenter,
+        popup,
+        app->message_header[0] ? app->message_header : "Sorry",
+        64,
+        10,
+        AlignCenter,
         AlignCenter);
     popup_set_text(popup, app->message, 64, 34, AlignCenter, AlignCenter);
     popup_set_callback(popup, twentyq_scene_error_callback);
@@ -27,7 +31,8 @@ bool twentyq_scene_error_on_event(void* context, SceneManagerEvent event) {
     if(event.type == SceneManagerEventTypeBack || event.type == SceneManagerEventTypeCustom) {
         if(app->dataset_ready) {
             /* recoverable: back to the menu */
-            scene_manager_search_and_switch_to_another_scene(app->scene_manager, TwentyQSceneStart);
+            scene_manager_search_and_switch_to_another_scene(
+                app->scene_manager, TwentyQSceneStart);
         } else {
             /* nothing to play with: leave cleanly */
             view_dispatcher_stop(app->view_dispatcher);

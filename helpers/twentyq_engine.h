@@ -15,8 +15,8 @@
 extern "C" {
 #endif
 
-#define TQ_MAX_QUESTIONS_PER_GAME 40
-#define TQ_MAX_GUESSES 3
+#define TQ_MAX_QUESTIONS_PER_GAME    40
+#define TQ_MAX_GUESSES               3
 #define TQ_EXTRA_QUESTIONS_PER_GUESS 5
 /* Tuned with tools/eval.py against the shipped dataset: 80 candidates beat 40
  * by ~5 points of win rate at N=835 (33 KB of SD reads per turn, still well

@@ -13,13 +13,14 @@ void twentyq_scene_stats_on_enter(void* context) {
     widget_add_string_element(widget, 64, 24, AlignCenter, AlignCenter, FontSecondary, line);
 
     snprintf(
-        line, sizeof(line), "Win rate %u%%",
-        s->games ? (unsigned)(100u * s->wins / s->games) : 0u);
+        line, sizeof(line), "Win rate %u%%", s->games ? (unsigned)(100u * s->wins / s->games) : 0u);
     widget_add_string_element(widget, 64, 34, AlignCenter, AlignCenter, FontSecondary, line);
 
     if(s->win_games) {
         snprintf(
-            line, sizeof(line), "Average %lu questions",
+            line,
+            sizeof(line),
+            "Average %lu questions",
             (unsigned long)(s->questions_to_win / s->win_games));
     } else {
         snprintf(line, sizeof(line), "No wins yet");

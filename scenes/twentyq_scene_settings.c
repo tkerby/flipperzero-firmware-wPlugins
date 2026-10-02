@@ -72,11 +72,13 @@ void twentyq_scene_settings_on_enter(void* context) {
     }
 
     VariableItem* item;
-    item = variable_item_list_add(list, "Questions", COUNT_OF(kQuestionLimits), twentyq_settings_questions_changed, app);
+    item = variable_item_list_add(
+        list, "Questions", COUNT_OF(kQuestionLimits), twentyq_settings_questions_changed, app);
     variable_item_set_current_value_index(item, limit_index);
     variable_item_set_current_value_text(item, kQuestionLabels[limit_index]);
 
-    item = variable_item_list_add(list, "Category hint", 2, twentyq_settings_category_changed, app);
+    item =
+        variable_item_list_add(list, "Category hint", 2, twentyq_settings_category_changed, app);
     variable_item_set_current_value_index(item, app->settings.ask_category ? 1 : 0);
     variable_item_set_current_value_text(item, kAskSkip[app->settings.ask_category ? 1 : 0]);
 
@@ -90,7 +92,8 @@ void twentyq_scene_settings_on_enter(void* context) {
 
     item = variable_item_list_add(list, "Start on", 2, twentyq_settings_default_changed, app);
     variable_item_set_current_value_index(item, app->settings.default_answer_yes ? 1 : 0);
-    variable_item_set_current_value_text(item, kDefaultAnswer[app->settings.default_answer_yes ? 1 : 0]);
+    variable_item_set_current_value_text(
+        item, kDefaultAnswer[app->settings.default_answer_yes ? 1 : 0]);
 
     variable_item_list_add(list, "Reset learned words", 0, NULL, app);
     variable_item_list_add(list, "Reset stats", 0, NULL, app);

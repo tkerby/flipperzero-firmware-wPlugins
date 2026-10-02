@@ -37,12 +37,7 @@ void twentyq_scene_learn_name_on_enter(void* context) {
     text_input_reset(text_input);
     text_input_set_header_text(text_input, "What was it?");
     text_input_set_result_callback(
-        text_input,
-        twentyq_scene_learn_name_callback,
-        app,
-        app->learn_name,
-        TQ_MAX_NAME + 1,
-        true);
+        text_input, twentyq_scene_learn_name_callback, app, app->learn_name, TQ_MAX_NAME + 1, true);
     text_input_set_validator(text_input, twentyq_learn_name_validator, app);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, TwentyQViewTextInput);

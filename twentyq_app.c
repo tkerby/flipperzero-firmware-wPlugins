@@ -47,24 +47,36 @@ static TwentyQApp* twentyq_app_alloc(void) {
     app->scene_manager = scene_manager_alloc(&twentyq_scene_handlers, app);
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_custom_event_callback(app->view_dispatcher, twentyq_custom_event_callback);
-    view_dispatcher_set_navigation_event_callback(app->view_dispatcher, twentyq_back_event_callback);
+    view_dispatcher_set_navigation_event_callback(
+        app->view_dispatcher, twentyq_back_event_callback);
 
     app->submenu = submenu_alloc();
-    view_dispatcher_add_view(app->view_dispatcher, TwentyQViewSubmenu, submenu_get_view(app->submenu));
+    view_dispatcher_add_view(
+        app->view_dispatcher, TwentyQViewSubmenu, submenu_get_view(app->submenu));
     app->dialog = dialog_ex_alloc();
-    view_dispatcher_add_view(app->view_dispatcher, TwentyQViewDialog, dialog_ex_get_view(app->dialog));
+    view_dispatcher_add_view(
+        app->view_dispatcher, TwentyQViewDialog, dialog_ex_get_view(app->dialog));
     app->popup = popup_alloc();
     view_dispatcher_add_view(app->view_dispatcher, TwentyQViewPopup, popup_get_view(app->popup));
     app->text_input = text_input_alloc();
-    view_dispatcher_add_view(app->view_dispatcher, TwentyQViewTextInput, text_input_get_view(app->text_input));
+    view_dispatcher_add_view(
+        app->view_dispatcher, TwentyQViewTextInput, text_input_get_view(app->text_input));
     app->var_item_list = variable_item_list_alloc();
-    view_dispatcher_add_view(app->view_dispatcher, TwentyQViewVarItemList, variable_item_list_get_view(app->var_item_list));
+    view_dispatcher_add_view(
+        app->view_dispatcher,
+        TwentyQViewVarItemList,
+        variable_item_list_get_view(app->var_item_list));
     app->widget = widget_alloc();
-    view_dispatcher_add_view(app->view_dispatcher, TwentyQViewWidget, widget_get_view(app->widget));
+    view_dispatcher_add_view(
+        app->view_dispatcher, TwentyQViewWidget, widget_get_view(app->widget));
     app->loading = loading_alloc();
-    view_dispatcher_add_view(app->view_dispatcher, TwentyQViewLoading, loading_get_view(app->loading));
+    view_dispatcher_add_view(
+        app->view_dispatcher, TwentyQViewLoading, loading_get_view(app->loading));
     app->question_view = twentyq_question_view_alloc();
-    view_dispatcher_add_view(app->view_dispatcher, TwentyQViewQuestion, twentyq_question_view_get_view(app->question_view));
+    view_dispatcher_add_view(
+        app->view_dispatcher,
+        TwentyQViewQuestion,
+        twentyq_question_view_get_view(app->question_view));
 
     twentyq_settings_load(app->storage, &app->settings);
     twentyq_stats_load(app->storage, &app->stats);
@@ -129,8 +141,8 @@ int32_t twentyq_app(void* p) {
         scene_manager_next_scene(app->scene_manager, TwentyQSceneStart);
     } else {
         /* Data file missing or corrupt: say so plainly and exit (SPEC 9). */
-        const char* detail = (err == TqErrIo) ? "Data file missing.\nReinstall the app."
-                                              : "Data file unusable.";
+        const char* detail = (err == TqErrIo) ? "Data file missing.\nReinstall the app." :
+                                                "Data file unusable.";
         snprintf(app->message, sizeof(app->message), "%s\n(%s)", detail, tq_error_str(err));
         strcpy(app->message_header, "Sorry");
         scene_manager_next_scene(app->scene_manager, TwentyQSceneError);

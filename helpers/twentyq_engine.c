@@ -5,7 +5,7 @@
 
 #define TQ_LEARNED_PRIOR 0.5f
 #define TQ_CATEGORY_MISS 0.05f /* soft, never a hard filter (SPEC 6.2) */
-#define TQ_TINY 1e-6f
+#define TQ_TINY          1e-6f
 
 const char* tq_answer_label(Tq_Answer a) {
     switch(a) {
@@ -109,7 +109,8 @@ static bool tq_engine_load_prior(Tq_Engine* eng, uint8_t category_hint) {
         eng->io_error = true;
         return false;
     }
-    for(uint32_t i = n; i < eng->n_total; i++) eng->belief[i] = TQ_LEARNED_PRIOR;
+    for(uint32_t i = n; i < eng->n_total; i++)
+        eng->belief[i] = TQ_LEARNED_PRIOR;
 
     if(category_hint < TQ_CATEGORY_COUNT) {
         for(uint32_t i = 0; i < eng->n_total; i++) {
@@ -122,13 +123,16 @@ static bool tq_engine_load_prior(Tq_Engine* eng, uint8_t category_hint) {
     }
 
     float sum = 0.0f;
-    for(uint32_t i = 0; i < eng->n_total; i++) sum += eng->belief[i];
+    for(uint32_t i = 0; i < eng->n_total; i++)
+        sum += eng->belief[i];
     if(sum <= 0.0f) {
-        for(uint32_t i = 0; i < eng->n_total; i++) eng->belief[i] = 1.0f / (float)eng->n_total;
+        for(uint32_t i = 0; i < eng->n_total; i++)
+            eng->belief[i] = 1.0f / (float)eng->n_total;
         return true;
     }
     float inv = 1.0f / sum;
-    for(uint32_t i = 0; i < eng->n_total; i++) eng->belief[i] *= inv;
+    for(uint32_t i = 0; i < eng->n_total; i++)
+        eng->belief[i] *= inv;
     return true;
 }
 
@@ -206,7 +210,8 @@ static bool tq_apply(Tq_Engine* eng, uint16_t qid, Tq_Answer answer) {
     }
     if(sum > 0.0f) {
         float inv = 1.0f / sum;
-        for(uint32_t i = 0; i < eng->n_total; i++) eng->belief[i] *= inv;
+        for(uint32_t i = 0; i < eng->n_total; i++)
+            eng->belief[i] *= inv;
     }
     tq_mark_asked(eng, qid);
     return true;
@@ -397,12 +402,15 @@ void tq_engine_reject(Tq_Engine* eng, uint32_t entity_index) {
     if(eng->rejected_count < TQ_MAX_GUESSES) eng->rejected[eng->rejected_count++] = entity_index;
     eng->belief[entity_index] = 0.0f;
     float sum = 0.0f;
-    for(uint32_t i = 0; i < eng->n_total; i++) sum += eng->belief[i];
+    for(uint32_t i = 0; i < eng->n_total; i++)
+        sum += eng->belief[i];
     if(sum > 0.0f) {
         float inv = 1.0f / sum;
-        for(uint32_t i = 0; i < eng->n_total; i++) eng->belief[i] *= inv;
+        for(uint32_t i = 0; i < eng->n_total; i++)
+            eng->belief[i] *= inv;
     } else {
-        for(uint32_t i = 0; i < eng->n_total; i++) eng->belief[i] = 1.0f / (float)eng->n_total;
+        for(uint32_t i = 0; i < eng->n_total; i++)
+            eng->belief[i] = 1.0f / (float)eng->n_total;
     }
 }
 

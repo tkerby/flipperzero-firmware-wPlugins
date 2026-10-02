@@ -31,7 +31,8 @@ static void twentyq_decide_next(TwentyQApp* app) {
         app->outcome = TwentyQOutcomeOutOfIdeas;
         return;
     }
-    if(!tq_dataset_question_text(&app->dataset, qid, app->question_text, sizeof(app->question_text))) {
+    if(!tq_dataset_question_text(
+           &app->dataset, qid, app->question_text, sizeof(app->question_text))) {
         app->outcome = TwentyQOutcomeError;
         return;
     }
@@ -126,7 +127,8 @@ bool twentyq_scene_thinking_on_event(void* context, SceneManagerEvent event) {
     default:
         twentyq_show_error(
             app,
-            app->engine->io_error ? "SD card unreadable.\nGame stopped." : "Something went wrong.");
+            app->engine->io_error ? "SD card unreadable.\nGame stopped." :
+                                    "Something went wrong.");
         return true;
     }
 }

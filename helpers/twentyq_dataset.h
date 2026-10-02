@@ -15,21 +15,21 @@
 extern "C" {
 #endif
 
-#define TQ_MAGIC 0x51303246UL /* "F20Q" little-endian */
+#define TQ_MAGIC          0x51303246UL /* "F20Q" little-endian */
 #define TQ_FORMAT_VERSION 1
-#define TQ_HEADER_SIZE 0xC0
-#define TQ_LUT_SIZE 16
+#define TQ_HEADER_SIZE    0xC0
+#define TQ_LUT_SIZE       16
 
 /* Guard rails, SPEC 5.6. */
-#define TQ_MAX_ENTITIES 16384
+#define TQ_MAX_ENTITIES  16384
 #define TQ_MAX_QUESTIONS 1024
 
-#define TQ_FLAG_HAS_PRIORS (1u << 0)
+#define TQ_FLAG_HAS_PRIORS     (1u << 0)
 #define TQ_FLAG_HAS_CATEGORIES (1u << 1)
-#define TQ_FLAG_HAS_FAMILIES (1u << 2)
+#define TQ_FLAG_HAS_FAMILIES   (1u << 2)
 
-#define TQ_MAX_NAME 22
-#define TQ_MAX_QTEXT 72
+#define TQ_MAX_NAME       22
+#define TQ_MAX_QTEXT      72
 #define TQ_CATEGORY_COUNT 4
 
 typedef enum {
@@ -73,10 +73,10 @@ typedef struct {
     float lut[TQ_LUT_SIZE];
 
     /* Small hot tables cached in RAM: 2 * Q + Q bytes, <= 3 KB at Q=1024. */
-    uint16_t* qrank;     /* question ids, best first */
+    uint16_t* qrank; /* question ids, best first */
     uint16_t* qrank_pos; /* inverse of qrank: rank of question j */
-    uint8_t* family;     /* family id per question, 0 if absent */
-    uint8_t* category;   /* category id per entity, N bytes, 3 if absent */
+    uint8_t* family; /* family id per question, 0 if absent */
+    uint8_t* category; /* category id per entity, N bytes, 3 if absent */
 } Tq_Dataset;
 
 /**

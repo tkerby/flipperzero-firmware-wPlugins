@@ -70,7 +70,9 @@ static bool twentyq_question_view_input(InputEvent* event, void* context) {
             with_view_model(
                 view->view,
                 TwentyQQuestionModel * model,
-                { if(model->selected > 0) model->selected--; },
+                {
+                    if(model->selected > 0) model->selected--;
+                },
                 true);
             consumed = true;
             break;
@@ -78,7 +80,9 @@ static bool twentyq_question_view_input(InputEvent* event, void* context) {
             with_view_model(
                 view->view,
                 TwentyQQuestionModel * model,
-                { if(model->selected + 1 < TQ_ANSWER_SLOTS) model->selected++; },
+                {
+                    if(model->selected + 1 < TQ_ANSWER_SLOTS) model->selected++;
+                },
                 true);
             consumed = true;
             break;
@@ -93,10 +97,7 @@ static bool twentyq_question_view_input(InputEvent* event, void* context) {
         case InputKeyOk: {
             uint8_t selected = 0;
             with_view_model(
-                view->view,
-                TwentyQQuestionModel * model,
-                { selected = model->selected; },
-                false);
+                view->view, TwentyQQuestionModel * model, { selected = model->selected; }, false);
             if(view->on_answer) view->on_answer((Tq_Answer)selected, view->context);
             consumed = true;
             break;

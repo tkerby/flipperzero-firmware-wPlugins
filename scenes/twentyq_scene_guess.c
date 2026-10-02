@@ -28,7 +28,10 @@ void twentyq_scene_guess_on_enter(void* context) {
     dialog_ex_set_header(
         dialog,
         app->guess_number == 0 ? "I'm thinking of..." : "Then maybe...",
-        64, 8, AlignCenter, AlignCenter);
+        64,
+        8,
+        AlignCenter,
+        AlignCenter);
     dialog_ex_set_text(dialog, shout, 64, 30, AlignCenter, AlignCenter);
     dialog_ex_set_left_button_text(dialog, "No");
     dialog_ex_set_right_button_text(dialog, "Yes!");

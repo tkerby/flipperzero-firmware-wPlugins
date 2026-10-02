@@ -9,7 +9,8 @@ static void twentyq_scene_result_callback(GuiButtonType type, InputType input, v
     TwentyQApp* app = context;
     if(input != InputTypeShort) return;
     view_dispatcher_send_custom_event(
-        app->view_dispatcher, (type == GuiButtonTypeRight) ? ResultEventTeach : ResultEventContinue);
+        app->view_dispatcher,
+        (type == GuiButtonTypeRight) ? ResultEventTeach : ResultEventContinue);
 }
 
 static void twentyq_record_result(TwentyQApp* app) {
@@ -37,28 +38,40 @@ void twentyq_scene_result_on_enter(void* context) {
 
     char line[64];
     if(app->game_won) {
-        widget_add_string_element(widget, 64, 12, AlignCenter, AlignCenter, FontPrimary, "I got it!");
+        widget_add_string_element(
+            widget, 64, 12, AlignCenter, AlignCenter, FontPrimary, "I got it!");
         snprintf(
-            line, sizeof(line), "%u question%s%s", app->engine->asked_count,
+            line,
+            sizeof(line),
+            "%u question%s%s",
+            app->engine->asked_count,
             app->engine->asked_count == 1 ? "" : "s",
             app->guess_number ? ", 2nd guess" : "");
         widget_add_string_element(widget, 64, 28, AlignCenter, AlignCenter, FontSecondary, line);
         if(app->stats.games) {
             snprintf(
-                line, sizeof(line), "Win rate %u%% over %u games",
-                (unsigned)(100u * app->stats.wins / app->stats.games), app->stats.games);
-            widget_add_string_element(widget, 64, 40, AlignCenter, AlignCenter, FontSecondary, line);
+                line,
+                sizeof(line),
+                "Win rate %u%% over %u games",
+                (unsigned)(100u * app->stats.wins / app->stats.games),
+                app->stats.games);
+            widget_add_string_element(
+                widget, 64, 40, AlignCenter, AlignCenter, FontSecondary, line);
         }
-        widget_add_button_element(widget, GuiButtonTypeLeft, "Menu", twentyq_scene_result_callback, app);
+        widget_add_button_element(
+            widget, GuiButtonTypeLeft, "Menu", twentyq_scene_result_callback, app);
         twentyq_notify(app, &sequence_success);
     } else {
-        widget_add_string_element(widget, 64, 12, AlignCenter, AlignCenter, FontPrimary, "You win!");
+        widget_add_string_element(
+            widget, 64, 12, AlignCenter, AlignCenter, FontPrimary, "You win!");
         widget_add_string_element(
             widget, 64, 28, AlignCenter, AlignCenter, FontSecondary, "I could not guess it.");
         widget_add_string_element(
             widget, 64, 40, AlignCenter, AlignCenter, FontSecondary, "Teach me what it was?");
-        widget_add_button_element(widget, GuiButtonTypeLeft, "Menu", twentyq_scene_result_callback, app);
-        widget_add_button_element(widget, GuiButtonTypeRight, "Teach", twentyq_scene_result_callback, app);
+        widget_add_button_element(
+            widget, GuiButtonTypeLeft, "Menu", twentyq_scene_result_callback, app);
+        widget_add_button_element(
+            widget, GuiButtonTypeRight, "Teach", twentyq_scene_result_callback, app);
         twentyq_notify(app, &sequence_error);
     }
 

@@ -33,10 +33,10 @@ typedef enum {
 } TwentyQView;
 
 typedef enum {
-    TwentyQEventAnswer,      /* the player chose an answer */
-    TwentyQEventUndo,        /* short Back on the question screen */
-    TwentyQEventQuit,        /* long Back */
-    TwentyQEventWorkerDone,  /* the engine finished a turn */
+    TwentyQEventAnswer, /* the player chose an answer */
+    TwentyQEventUndo, /* short Back on the question screen */
+    TwentyQEventQuit, /* long Back */
+    TwentyQEventWorkerDone, /* the engine finished a turn */
 } TwentyQCustomEvent;
 
 /** What the worker thread should do next. */

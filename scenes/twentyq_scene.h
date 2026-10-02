@@ -11,8 +11,8 @@ typedef enum {
 
 extern const SceneManagerHandlers twentyq_scene_handlers;
 
-#define ADD_SCENE(prefix, name, id)                    \
-    void prefix##_scene_##name##_on_enter(void*);      \
+#define ADD_SCENE(prefix, name, id)                                  \
+    void prefix##_scene_##name##_on_enter(void*);                    \
     bool prefix##_scene_##name##_on_event(void*, SceneManagerEvent); \
     void prefix##_scene_##name##_on_exit(void*);
 #include "twentyq_scene_config.h"

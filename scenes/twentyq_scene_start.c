@@ -19,7 +19,8 @@ void twentyq_scene_start_on_enter(void* context) {
     submenu_reset(submenu);
     submenu_set_header(submenu, "20 Questions");
     submenu_add_item(submenu, "Play", SubmenuIndexPlay, twentyq_scene_start_callback, app);
-    submenu_add_item(submenu, "How it works", SubmenuIndexHowItWorks, twentyq_scene_start_callback, app);
+    submenu_add_item(
+        submenu, "How it works", SubmenuIndexHowItWorks, twentyq_scene_start_callback, app);
     submenu_add_item(submenu, "Stats", SubmenuIndexStats, twentyq_scene_start_callback, app);
     submenu_add_item(submenu, "Settings", SubmenuIndexSettings, twentyq_scene_start_callback, app);
     submenu_set_selected_item(

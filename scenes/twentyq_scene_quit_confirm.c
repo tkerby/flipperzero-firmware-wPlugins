@@ -11,7 +11,8 @@ void twentyq_scene_quit_confirm_on_enter(void* context) {
 
     dialog_ex_reset(dialog);
     dialog_ex_set_header(dialog, "Give up?", 64, 10, AlignCenter, AlignCenter);
-    dialog_ex_set_text(dialog, "This game will not\nbe counted.", 64, 30, AlignCenter, AlignCenter);
+    dialog_ex_set_text(
+        dialog, "This game will not\nbe counted.", 64, 30, AlignCenter, AlignCenter);
     dialog_ex_set_left_button_text(dialog, "Keep going");
     dialog_ex_set_right_button_text(dialog, "Quit");
     dialog_ex_set_result_callback(dialog, twentyq_scene_quit_confirm_callback);

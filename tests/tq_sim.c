@@ -46,13 +46,20 @@ int main(int argc, char** argv) {
     const char* only_entity = NULL; /* --entity dog: print one full transcript */
 
     for(int i = 2; i < argc; i++) {
-        if(!strcmp(argv[i], "--games") && i + 1 < argc) games = atoi(argv[++i]);
-        else if(!strcmp(argv[i], "--limit") && i + 1 < argc) limit = atoi(argv[++i]);
-        else if(!strcmp(argv[i], "--noise") && i + 1 < argc) noise = (float)atof(argv[++i]);
-        else if(!strcmp(argv[i], "--seed") && i + 1 < argc) rng_state = (uint32_t)atoi(argv[++i]);
-        else if(!strcmp(argv[i], "--uniform")) by_prior = false;
-        else if(!strcmp(argv[i], "--verbose")) verbose = true;
-        else if(!strcmp(argv[i], "--entity") && i + 1 < argc) only_entity = argv[++i];
+        if(!strcmp(argv[i], "--games") && i + 1 < argc)
+            games = atoi(argv[++i]);
+        else if(!strcmp(argv[i], "--limit") && i + 1 < argc)
+            limit = atoi(argv[++i]);
+        else if(!strcmp(argv[i], "--noise") && i + 1 < argc)
+            noise = (float)atof(argv[++i]);
+        else if(!strcmp(argv[i], "--seed") && i + 1 < argc)
+            rng_state = (uint32_t)atoi(argv[++i]);
+        else if(!strcmp(argv[i], "--uniform"))
+            by_prior = false;
+        else if(!strcmp(argv[i], "--verbose"))
+            verbose = true;
+        else if(!strcmp(argv[i], "--entity") && i + 1 < argc)
+            only_entity = argv[++i];
     }
 
     Tq_Reader reader;
@@ -71,7 +78,8 @@ int main(int argc, char** argv) {
     float* prior = malloc(sizeof(float) * n);
     tq_dataset_read_priors(&ds, prior);
     float prior_total = 0.0f;
-    for(uint32_t i = 0; i < n; i++) prior_total += prior[i];
+    for(uint32_t i = 0; i < n; i++)
+        prior_total += prior[i];
 
     uint8_t* col = malloc(ds.stride);
     Tq_Engine* eng = tq_engine_alloc(&ds, NULL);
@@ -121,8 +129,11 @@ int main(int argc, char** argv) {
                 if(only_entity) {
                     char gn[TQ_MAX_NAME + 1];
                     tq_dataset_entity_name(&ds, top[0].index, gn, sizeof(gn));
-                    printf("  -> guess %u: %s (belief %.2f)\n", guesses + 1u, gn,
-                           (double)top[0].belief);
+                    printf(
+                        "  -> guess %u: %s (belief %.2f)\n",
+                        guesses + 1u,
+                        gn,
+                        (double)top[0].belief);
                 }
                 if(top[0].index == target) {
                     won = true;
@@ -153,13 +164,17 @@ int main(int argc, char** argv) {
         if(verbose) {
             char nm[32];
             tq_dataset_entity_name(&ds, target, nm, sizeof(nm));
-            printf("  %-22s %s in %u questions\n", nm, won ? "WON " : "lost",
-                   eng->asked_count);
+            printf("  %-22s %s in %u questions\n", nm, won ? "WON " : "lost", eng->asked_count);
         }
     }
 
-    printf("games %d  limit %d  noise %.2f  eps %.3f  candidates %d\n", games, limit,
-           (double)noise, (double)TQ_EPS, TQ_CANDIDATES);
+    printf(
+        "games %d  limit %d  noise %.2f  eps %.3f  candidates %d\n",
+        games,
+        limit,
+        (double)noise,
+        (double)TQ_EPS,
+        TQ_CANDIDATES);
     printf("  win rate        %.1f%%\n", 100.0 * wins / games);
     printf("  first-guess     %.1f%%\n", 100.0 * first_guess_wins / games);
     printf("  top-3 accuracy  %.1f%%\n", 100.0 * top3 / games);
@@ -168,12 +183,18 @@ int main(int argc, char** argv) {
         printf("  mean Qs to win  %.1f\n", (double)first_win_questions / first_guess_wins);
         printf("  best game       %d\n", best_game);
     }
-    printf("JSON {\"win_rate\": %.4f, \"first_guess\": %.4f, \"top3\": %.4f, "
-           "\"mean_questions\": %.2f, \"eps\": %.3f, \"candidates\": %d, \"limit\": %d, "
-           "\"noise\": %.2f}\n",
-           (double)wins / games, (double)first_guess_wins / games, (double)top3 / games,
-           (double)total_questions / games, (double)TQ_EPS, TQ_CANDIDATES, limit,
-           (double)noise);
+    printf(
+        "JSON {\"win_rate\": %.4f, \"first_guess\": %.4f, \"top3\": %.4f, "
+        "\"mean_questions\": %.2f, \"eps\": %.3f, \"candidates\": %d, \"limit\": %d, "
+        "\"noise\": %.2f}\n",
+        (double)wins / games,
+        (double)first_guess_wins / games,
+        (double)top3 / games,
+        (double)total_questions / games,
+        (double)TQ_EPS,
+        TQ_CANDIDATES,
+        limit,
+        (double)noise);
 
     tq_engine_free(eng);
     free(col);

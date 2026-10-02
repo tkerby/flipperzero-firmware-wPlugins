@@ -11,10 +11,10 @@
 #include "twentyq_engine.h"
 #include "twentyq_learned.h"
 
-#define TWENTYQ_SETTINGS_MAGIC 0x51533032UL /* "20SQ" */
-#define TWENTYQ_STATS_MAGIC 0x54533032UL /* "20ST" */
+#define TWENTYQ_SETTINGS_MAGIC   0x51533032UL /* "20SQ" */
+#define TWENTYQ_STATS_MAGIC      0x54533032UL /* "20ST" */
 #define TWENTYQ_SETTINGS_VERSION 1
-#define TWENTYQ_STATS_VERSION 1
+#define TWENTYQ_STATS_VERSION    1
 
 typedef struct {
     Storage* storage;

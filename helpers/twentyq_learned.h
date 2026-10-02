@@ -16,8 +16,8 @@
 extern "C" {
 #endif
 
-#define TQ_LEARN_MAGIC 0x4C303246UL /* "F20L" */
-#define TQ_LEARN_VERSION 1
+#define TQ_LEARN_MAGIC       0x4C303246UL /* "F20L" */
+#define TQ_LEARN_VERSION     1
 #define TQ_LEARN_MAX_RECORDS 128
 #define TQ_LEARN_MAX_ANSWERS 30
 

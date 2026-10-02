@@ -12,7 +12,8 @@ void twentyq_scene_learn_category_on_enter(void* context) {
     submenu_reset(submenu);
     submenu_set_header(submenu, "What kind of thing?");
     for(uint8_t c = 0; c < TQ_CATEGORY_COUNT; c++) {
-        submenu_add_item(submenu, tq_category_label(c), c, twentyq_scene_learn_category_callback, app);
+        submenu_add_item(
+            submenu, tq_category_label(c), c, twentyq_scene_learn_category_callback, app);
     }
     submenu_set_selected_item(submenu, app->learn_category);
 

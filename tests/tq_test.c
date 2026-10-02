@@ -11,32 +11,46 @@
 static int failures = 0;
 static int checks = 0;
 
-#define CHECK(cond, ...)                                    \
-    do {                                                    \
-        checks++;                                           \
-        if(!(cond)) {                                       \
-            failures++;                                     \
-            printf("  FAIL %s:%d  ", __FILE__, __LINE__);   \
-            printf(__VA_ARGS__);                            \
-            printf("\n");                                   \
-        }                                                   \
+#define CHECK(cond, ...)                                  \
+    do {                                                  \
+        checks++;                                         \
+        if(!(cond)) {                                     \
+            failures++;                                   \
+            printf("  FAIL %s:%d  ", __FILE__, __LINE__); \
+            printf(__VA_ARGS__);                          \
+            printf("\n");                                 \
+        }                                                 \
     } while(0)
 
-#define CHECK_NEAR(a, b, tol, ...)                                        \
-    do {                                                                  \
-        checks++;                                                         \
-        float _a = (a), _b = (b);                                         \
-        if(fabsf(_a - _b) > (tol)) {                                      \
-            failures++;                                                   \
-            printf("  FAIL %s:%d  %f != %f  ", __FILE__, __LINE__,        \
-                   (double)_a, (double)_b);                               \
-            printf(__VA_ARGS__);                                          \
-            printf("\n");                                                 \
-        }                                                                 \
+#define CHECK_NEAR(a, b, tol, ...)                                                          \
+    do {                                                                                    \
+        checks++;                                                                           \
+        float _a = (a), _b = (b);                                                           \
+        if(fabsf(_a - _b) > (tol)) {                                                        \
+            failures++;                                                                     \
+            printf("  FAIL %s:%d  %f != %f  ", __FILE__, __LINE__, (double)_a, (double)_b); \
+            printf(__VA_ARGS__);                                                            \
+            printf("\n");                                                                   \
+        }                                                                                   \
     } while(0)
 
-static const float LUT[16] = {0.02f, 0.05f, 0.10f, 0.17f, 0.25f, 0.33f, 0.42f, 0.48f,
-                              0.52f, 0.58f, 0.67f, 0.75f, 0.83f, 0.90f, 0.95f, 0.98f};
+static const float LUT[16] = {
+    0.02f,
+    0.05f,
+    0.10f,
+    0.17f,
+    0.25f,
+    0.33f,
+    0.42f,
+    0.48f,
+    0.52f,
+    0.58f,
+    0.67f,
+    0.75f,
+    0.83f,
+    0.90f,
+    0.95f,
+    0.98f};
 
 /* The fixture's generating rule, mirrored from tools/pack.py:synthetic(). */
 static float truth(uint32_t i, uint32_t j) {
@@ -52,7 +66,8 @@ static void test_header(Tq_Dataset* ds) {
     CHECK(ds->flags & TQ_FLAG_HAS_PRIORS, "priors flag");
     CHECK(ds->flags & TQ_FLAG_HAS_CATEGORIES, "categories flag");
     CHECK(ds->flags & TQ_FLAG_HAS_FAMILIES, "families flag");
-    for(int i = 0; i < 16; i++) CHECK_NEAR(ds->lut[i], LUT[i], 1e-6f, "lut[%d]", i);
+    for(int i = 0; i < 16; i++)
+        CHECK_NEAR(ds->lut[i], LUT[i], 1e-6f, "lut[%d]", i);
     /* qrank was written as [3,1,5,0,4,2] */
     CHECK(ds->qrank[0] == 3 && ds->qrank[5] == 2, "qrank");
     CHECK(ds->qrank_pos[3] == 0 && ds->qrank_pos[2] == 5, "qrank_pos inverse");
@@ -127,12 +142,14 @@ static void test_belief_update(Tq_Dataset* ds) {
         expect[i] = snapshot[i] * (TQ_EPS + (1.0f - 2.0f * TQ_EPS) * (1.0f - p));
         sum += expect[i];
     }
-    for(uint32_t i = 0; i < 8; i++) CHECK_NEAR(eng->belief[i], expect[i] / sum, 1e-5f, "no %u", i);
+    for(uint32_t i = 0; i < 8; i++)
+        CHECK_NEAR(eng->belief[i], expect[i] / sum, 1e-5f, "no %u", i);
 
     /* "Don't know" must not move the belief at all (SPEC 3.3) */
     memcpy(snapshot, eng->belief, sizeof(snapshot));
     CHECK(tq_engine_answer(eng, 1, TqAnswerUnknown), "answer unknown");
-    for(uint32_t i = 0; i < 8; i++) CHECK_NEAR(eng->belief[i], snapshot[i], 1e-7f, "dk %u", i);
+    for(uint32_t i = 0; i < 8; i++)
+        CHECK_NEAR(eng->belief[i], snapshot[i], 1e-7f, "dk %u", i);
     CHECK(tq_engine_is_asked(eng, 1), "unknown still marks asked");
 
     tq_engine_free(eng);
@@ -145,7 +162,7 @@ static void test_normalisation_stability(Tq_Dataset* ds) {
     /* Deliberately hammer the same two columns with the worst-case answer. */
     for(int turn = 0; turn < 30; turn++) {
         uint16_t qid = (uint16_t)(turn % 6);
-        eng->asked[qid >> 3] &= (uint8_t)~(1u << (qid & 7u)); /* allow re-asking */
+        eng->asked[qid >> 3] &= (uint8_t) ~(1u << (qid & 7u)); /* allow re-asking */
         eng->asked_count = 0;
         tq_engine_answer(eng, qid, (turn & 1) ? TqAnswerNo : TqAnswerYes);
         float sum = 0.0f;
@@ -186,8 +203,12 @@ static void test_gini_against_reference(Tq_Dataset* ds) {
         if(j == picked) chosen_score = purity;
     }
     CHECK(picked != 0, "never re-asks question 0");
-    CHECK(chosen_score >= best * 0.98f, "picked %u scores %f vs best %f", picked,
-          (double)chosen_score, (double)best);
+    CHECK(
+        chosen_score >= best * 0.98f,
+        "picked %u scores %f vs best %f",
+        picked,
+        (double)chosen_score,
+        (double)best);
     tq_engine_free(eng);
 }
 
@@ -205,7 +226,8 @@ static void test_undo_is_replay(Tq_Dataset* ds) {
     CHECK(tq_engine_undo(eng), "undo");
     CHECK(eng->asked_count == 2, "back to two");
     CHECK(!tq_engine_is_asked(eng, 2), "undone question is askable again");
-    for(uint32_t i = 0; i < 8; i++) CHECK_NEAR(eng->belief[i], snapshot[i], 1e-6f, "undo %u", i);
+    for(uint32_t i = 0; i < 8; i++)
+        CHECK_NEAR(eng->belief[i], snapshot[i], 1e-6f, "undo %u", i);
     CHECK(tq_engine_undo(eng) && tq_engine_undo(eng), "undo to empty");
     CHECK(!tq_engine_undo(eng), "undo past the start refused");
     tq_engine_free(eng);
@@ -215,7 +237,8 @@ static void test_category_hint(Tq_Dataset* ds) {
     printf("category hint is soft, never a hard filter\n");
     Tq_Engine* eng = tq_engine_alloc(ds, NULL);
     tq_engine_reset(eng, 0); /* animal: entities 0, 3, 4 */
-    for(uint32_t i = 0; i < 8; i++) CHECK(eng->belief[i] > 0.0f, "entity %u survives hint", i);
+    for(uint32_t i = 0; i < 8; i++)
+        CHECK(eng->belief[i] > 0.0f, "entity %u survives hint", i);
     float animal = eng->belief[0] + eng->belief[3] + eng->belief[4];
     CHECK(animal > 0.5f, "hinted category dominates (%f)", (double)animal);
     tq_engine_free(eng);
@@ -239,14 +262,17 @@ static void test_guessing(Tq_Dataset* ds) {
     tq_engine_top(eng, top, 3);
     CHECK(top[0].index != first, "rejected entity is not offered again");
     float sum = 0.0f;
-    for(uint32_t i = 0; i < 8; i++) sum += eng->belief[i];
+    for(uint32_t i = 0; i < 8; i++)
+        sum += eng->belief[i];
     CHECK_NEAR(sum, 1.0f, 1e-5f, "renormalised after rejection");
 
     /* Drive one entity to near-certainty and confirm the trigger fires. */
     tq_engine_reset(eng, TQ_NO_CATEGORY);
-    for(uint32_t i = 0; i < 8; i++) eng->belief[i] = (i == 5) ? 0.97f : 0.03f / 7.0f;
+    for(uint32_t i = 0; i < 8; i++)
+        eng->belief[i] = (i == 5) ? 0.97f : 0.03f / 7.0f;
     CHECK(tq_engine_should_guess(eng), "confident -> guess");
-    for(uint32_t i = 0; i < 8; i++) eng->belief[i] = 0.125f;
+    for(uint32_t i = 0; i < 8; i++)
+        eng->belief[i] = 0.125f;
     CHECK(!tq_engine_should_guess(eng), "flat belief -> keep asking");
     eng->asked_count = 20;
     CHECK(tq_engine_should_guess(eng), "out of questions -> guess anyway");
@@ -264,8 +290,10 @@ static void test_learned_overlay(Tq_Dataset* ds) {
     CHECK(ln.records[0]->qid[0] == 0 && ln.records[0]->qid[2] == 4, "answers sorted");
 
     float p = -1.0f;
-    CHECK(tq_learned_pyes(&ln, 0, 4, ds->lut, &p) && fabsf(p - 0.98f) < 1e-6f, "lookup p=%f",
-          (double)p);
+    CHECK(
+        tq_learned_pyes(&ln, 0, 4, ds->lut, &p) && fabsf(p - 0.98f) < 1e-6f,
+        "lookup p=%f",
+        (double)p);
     CHECK(!tq_learned_pyes(&ln, 0, 5, ds->lut, &p), "unanswered question reports absent");
 
     size_t len = 0;
@@ -294,9 +322,11 @@ static void test_learned_overlay(Tq_Dataset* ds) {
     CHECK(tq_engine_entity_category(eng, 8) == 0, "category");
     /* q4 -> p=0.98 for narwhal, so a "yes" must raise its share of the mass */
     float sum = 0.0f;
-    for(uint32_t i = 0; i < 9; i++) sum += eng->belief[i];
+    for(uint32_t i = 0; i < 9; i++)
+        sum += eng->belief[i];
     CHECK_NEAR(sum, 1.0f, 1e-5f, "still normalised with overlay");
-    CHECK(eng->belief[8] > 1.0f / 9.0f, "learned entity gained belief (%f)", (double)eng->belief[8]);
+    CHECK(
+        eng->belief[8] > 1.0f / 9.0f, "learned entity gained belief (%f)", (double)eng->belief[8]);
     uint16_t qsel;
     CHECK(tq_engine_select_question(eng, &qsel), "selection works with overlay");
     tq_engine_free(eng);

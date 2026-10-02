@@ -4,11 +4,11 @@
 
 #define TAG "TwentyQStorage"
 
-#define DATASET_PATH APP_ASSETS_PATH("20q.dat")
-#define LEARNED_PATH APP_DATA_PATH("learned.dat")
+#define DATASET_PATH       APP_ASSETS_PATH("20q.dat")
+#define LEARNED_PATH       APP_DATA_PATH("learned.dat")
 #define LEARNED_STALE_PATH APP_DATA_PATH("learned.dat.stale")
-#define SETTINGS_PATH APP_DATA_PATH("settings.bin")
-#define STATS_PATH APP_DATA_PATH("stats.bin")
+#define SETTINGS_PATH      APP_DATA_PATH("settings.bin")
+#define STATS_PATH         APP_DATA_PATH("stats.bin")
 
 #define LEARNED_MAX_BYTES (TQ_LEARN_MAX_RECORDS * 128u)
 
@@ -105,8 +105,8 @@ void twentyq_settings_save(Storage* storage, const TwentyQSettings* settings) {
 }
 
 void twentyq_stats_load(Storage* storage, TwentyQStats* out) {
-    if(!read_record(storage, STATS_PATH, out, sizeof(*out)) ||
-       out->magic != TWENTYQ_STATS_MAGIC || out->version != TWENTYQ_STATS_VERSION) {
+    if(!read_record(storage, STATS_PATH, out, sizeof(*out)) || out->magic != TWENTYQ_STATS_MAGIC ||
+       out->version != TWENTYQ_STATS_VERSION) {
         memset(out, 0, sizeof(*out));
         out->magic = TWENTYQ_STATS_MAGIC;
         out->version = TWENTYQ_STATS_VERSION;
