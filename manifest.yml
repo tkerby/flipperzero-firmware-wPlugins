@@ -20,5 +20,5 @@ screenshots:
   - screenshots/category.png
   - screenshots/menu.png
 
-description: "@README.md"
+description: "@./docs/catalog.md"
 changelog: "@./docs/changelog.md"
