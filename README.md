@@ -148,8 +148,8 @@ prior and the remaining answers. Snapshotting would cost 3.3 KB per level of und
     so the app costs ~38 KB while playing against the spec's ~40 KB budget. Scaling up
     entities will need memory work.
   - Pulling the SD card mid-game shows the error screen, no crash.
-  - Main `stack_size` is still 4 KB (2.8 KB never touched at the start screen); measure it
-    across a full game, including the learn flow, before trimming.
+  - Main thread used at most ~1.3 KB across a full lost game including the learn flow, so
+    `stack_size` is now 2 KB (~750 bytes spare). Check it with `top` (`Stack Min`).
 - Turn cost is 80 columns x 418 bytes = 33 KB of sequential SD reads plus ~400k flops.
   All of it runs on a worker thread behind the loading spinner, so the UI never blocks.
 - Learned words are capped at 128 records and are dropped (renamed to `learned.dat.stale`)
