@@ -1,0 +1,226 @@
+# THE QUESTION BANK (SPEC 4.2). Hand-authored, 192 entries.
+#
+#   text : <= 60 chars, 7-bit ASCII, unambiguous for someone holding the answer
+#   def  : fallback P(yes) per category [animal, vegetable, mineral, other]
+#   y/n/l/u : tag rules, evaluated in the order y > n > l > u, first match wins
+#             y = yes (0.95)   l = likely (0.78)   u = unlikely (0.15)   n = no (0.03)
+#
+# Tags come from ontology.yaml and are checked at build time.
+
+questions:
+
+# ---- taxonomy (14) -------------------------------------------------------
+- {id: 0,  text: "Is it alive?", family: taxonomy, def: [0.92, 0.35, 0.02, 0.10], y: [alive], n: [manmade, food, dead, concept, place]}
+- {id: 1,  text: "Is it an animal?", family: taxonomy, def: [0.95, 0.02, 0.01, 0.05], y: [animal], n: [plant, manmade, place, concept, plant_food]}
+- {id: 2,  text: "Is it a plant, or does it come from one?", family: taxonomy, def: [0.02, 0.85, 0.05, 0.05], y: [plant, plant_food], l: [wooden, paper_made], n: [animal, metal, plastic, stone_made]}
+- {id: 3,  text: "Was it made by people?", family: taxonomy, def: [0.02, 0.20, 0.95, 0.30], y: [manmade], n: [alive, natural, body_part]}
+- {id: 4,  text: "Is it a mammal?", family: taxonomy, def: [0.45, 0.01, 0.01, 0.02], y: [mammal], n: [bird, fish, insect, arachnid, reptile, amphibian, mollusc, crustacean, manmade, plant, plant_food]}
+- {id: 5,  text: "Is it a bird?", family: taxonomy, def: [0.15, 0.01, 0.01, 0.02], y: [bird], n: [mammal, fish, insect, arachnid, reptile, manmade, plant, plant_food]}
+- {id: 6,  text: "Is it an insect or a spider?", family: taxonomy, def: [0.12, 0.01, 0.01, 0.02], y: [insect, arachnid], n: [mammal, bird, fish, reptile, manmade, plant, plant_food]}
+- {id: 7,  text: "Is it a fish?", family: taxonomy, def: [0.10, 0.01, 0.01, 0.02], y: [fish], n: [mammal, bird, insect, arachnid, reptile, manmade, plant, plant_food]}
+- {id: 8,  text: "Is it a reptile or an amphibian?", family: taxonomy, def: [0.08, 0.01, 0.01, 0.02], y: [reptile, amphibian], n: [mammal, bird, fish, insect, manmade, plant, plant_food]}
+- {id: 9,  text: "Is it a vehicle?", family: taxonomy, def: [0.01, 0.01, 0.15, 0.03], y: [vehicle], n: [alive, food, furniture, clothing]}
+- {id: 10, text: "Is it a tool or a piece of equipment?", family: taxonomy, def: [0.01, 0.02, 0.25, 0.05], y: [tool, equipment], n: [alive, food, vehicle, building]}
+- {id: 11, text: "Is it a building or a place?", family: taxonomy, def: [0.01, 0.01, 0.06, 0.45], y: [place, building], n: [handheld, animal, food, worn]}
+- {id: 12, text: "Is it a machine?", family: taxonomy, def: [0.01, 0.01, 0.30, 0.05], y: [machine], n: [alive, food, natural, furniture, clothing]}
+- {id: 13, text: "Is it a person or a kind of job?", family: taxonomy, def: [0.02, 0.01, 0.01, 0.10], y: [person], n: [animal, plant, manmade, food, place]}
+
+# ---- animal traits (26) --------------------------------------------------
+- {id: 14, text: "Does it have fur or hair?", family: animal, def: [0.35, 0.02, 0.02, 0.05], y: [has_fur], l: [mammal], n: [bird, fish, insect, reptile, manmade, plant, plant_food]}
+- {id: 15, text: "Does it have feathers?", family: animal, def: [0.15, 0.01, 0.01, 0.02], y: [has_feathers], n: [mammal, fish, insect, reptile, manmade, plant, plant_food]}
+- {id: 16, text: "Does it have scales?", family: animal, def: [0.12, 0.01, 0.01, 0.02], y: [has_scales], n: [mammal, bird, insect, manmade, plant, plant_food]}
+- {id: 17, text: "Can it fly?", family: animal, def: [0.20, 0.01, 0.05, 0.05], y: [flies], l: [sky], n: [flightless, fish, plant, heavy, furniture, building]}
+- {id: 18, text: "Does it live in water?", family: animal, def: [0.20, 0.02, 0.02, 0.10], y: [aquatic], l: [amphibian], n: [land_animal, manmade, plant_food]}
+- {id: 19, text: "Does it lay eggs?", family: animal, def: [0.35, 0.01, 0.01, 0.02], y: [lays_eggs], n: [mammal, manmade, plant, plant_food]}
+- {id: 20, text: "Is it a common pet?", family: animal, def: [0.20, 0.01, 0.01, 0.02], y: [pet], n: [wild, manmade, plant, plant_food, place]}
+- {id: 21, text: "Does it have four legs?", family: animal, def: [0.35, 0.01, 0.05, 0.03], y: [four_legs], n: [two_legs, no_legs, six_legs, eight_legs, plant, food]}
+- {id: 22, text: "Does it have more than four legs?", family: animal, def: [0.10, 0.01, 0.01, 0.02], y: [six_legs, eight_legs, many_legs], n: [four_legs, two_legs, no_legs, manmade, plant]}
+- {id: 23, text: "Does it have a tail?", family: animal, def: [0.45, 0.01, 0.02, 0.03], y: [has_tail], l: [mammal, reptile, fish, bird], n: [insect, manmade, plant, plant_food, person]}
+- {id: 24, text: "Does it have horns or antlers?", family: animal, def: [0.10, 0.01, 0.01, 0.02], y: [has_horns], n: [bird, fish, insect, manmade, plant, plant_food]}
+- {id: 25, text: "Does it eat other animals?", family: animal, def: [0.30, 0.01, 0.01, 0.02], y: [predator, carnivore], l: [omnivore], n: [herbivore, plant, manmade, plant_food]}
+- {id: 26, text: "Is it a farm animal?", family: animal, def: [0.12, 0.01, 0.01, 0.02], y: [farm_animal], n: [wild, manmade, plant, plant_food]}
+- {id: 27, text: "Does it live in the ocean?", family: animal, def: [0.15, 0.01, 0.01, 0.05], y: [marine], n: [land_animal, freshwater, home, plant_food]}
+- {id: 28, text: "Does it live in a hot country?", family: animal, def: [0.30, 0.10, 0.02, 0.10], y: [jungle, savanna, africa, desert_animal], n: [arctic, cold_place]}
+- {id: 29, text: "Does it live somewhere cold?", family: animal, def: [0.12, 0.02, 0.02, 0.05], y: [arctic, cold_place], n: [jungle, savanna, desert_animal, africa]}
+- {id: 30, text: "Is it a wild animal?", family: animal, def: [0.55, 0.01, 0.01, 0.02], y: [wild], n: [pet, farm_animal, manmade, plant, plant_food]}
+- {id: 31, text: "Can it swim?", family: animal, def: [0.35, 0.01, 0.02, 0.05], y: [swims, aquatic], l: [amphibian, floats], n: [insect, manmade, plant, plant_food]}
+- {id: 32, text: "Does it have a beak?", family: animal, def: [0.15, 0.01, 0.01, 0.02], y: [has_beak], n: [mammal, fish, insect, manmade, plant, plant_food]}
+- {id: 33, text: "Does it have wings?", family: animal, def: [0.25, 0.01, 0.03, 0.03], y: [has_wings], n: [fish, reptile, plant, plant_food, furniture, food]}
+- {id: 34, text: "Does it have sharp teeth or claws?", family: animal, def: [0.30, 0.01, 0.02, 0.02], y: [claws, sharp_teeth], l: [predator], n: [herbivore, plant, plant_food, food]}
+- {id: 35, text: "Does it live underground?", family: animal, def: [0.10, 0.10, 0.02, 0.05], y: [underground, burrows], n: [bird, marine, sky, home]}
+- {id: 36, text: "Is it active mainly at night?", family: animal, def: [0.20, 0.01, 0.02, 0.05], y: [nocturnal], n: [plant, plant_food, farm_animal]}
+- {id: 37, text: "Does it have a shell?", family: animal, def: [0.10, 0.02, 0.01, 0.02], y: [has_shell], n: [mammal, bird, fish, plant, manmade]}
+- {id: 38, text: "Is it a rodent?", family: animal, def: [0.08, 0.01, 0.01, 0.01], y: [rodent], n: [bird, fish, insect, reptile, manmade, plant, plant_food]}
+- {id: 39, text: "Would you see one at a zoo?", family: animal, def: [0.35, 0.02, 0.01, 0.05], y: [zoo], l: [wild, big_animal], n: [pet, manmade, plant_food, home]}
+
+# ---- size and shape (18) -------------------------------------------------
+- {id: 40, text: "Is it bigger than a car?", family: size, def: [0.10, 0.10, 0.12, 0.35], y: [huge], l: [big_animal, building, place], n: [small, handheld, tiny, medium_size]}
+- {id: 41, text: "Is it bigger than a person?", family: size, def: [0.15, 0.15, 0.20, 0.40], y: [huge, big], n: [small, handheld, tiny]}
+- {id: 42, text: "Can you hold it in one hand?", family: size, def: [0.25, 0.55, 0.45, 0.10], y: [handheld, tiny], n: [big, huge, building, vehicle, furniture, place]}
+- {id: 43, text: "Is it smaller than your hand?", family: size, def: [0.20, 0.40, 0.30, 0.08], y: [tiny], l: [handheld], n: [big, huge, medium_size, building, vehicle]}
+- {id: 44, text: "Could you fit it in a pocket?", family: size, def: [0.10, 0.30, 0.30, 0.05], y: [tiny], l: [handheld], n: [big, huge, medium_size, furniture, vehicle, building]}
+- {id: 45, text: "Is it heavy?", family: size, def: [0.15, 0.05, 0.30, 0.25], y: [heavy], l: [huge, big, metal, stone_made], n: [light_weight, tiny, paper_made]}
+- {id: 46, text: "Is it round?", family: size, def: [0.05, 0.40, 0.15, 0.10], y: [round], n: [flat, long_thin, building]}
+- {id: 47, text: "Is it flat?", family: size, def: [0.02, 0.05, 0.20, 0.10], y: [flat], n: [round, big_animal, animal, huge]}
+- {id: 48, text: "Is it long and thin?", family: size, def: [0.05, 0.10, 0.20, 0.05], y: [long_thin], n: [round, flat, building, huge]}
+- {id: 49, text: "Is it about the size of a shoebox?", family: size, def: [0.10, 0.20, 0.25, 0.05], y: [medium_size], n: [tiny, huge, big, building, vehicle]}
+- {id: 50, text: "Would it fit through a doorway?", family: size, def: [0.75, 0.90, 0.70, 0.30], y: [handheld, small, tiny, medium_size], n: [huge, building, vehicle, place]}
+- {id: 51, text: "Is it taller than it is wide?", family: size, def: [0.30, 0.35, 0.35, 0.30], y: [long_thin], u: [flat, round]}
+- {id: 52, text: "Does it come in more than one piece?", family: size, def: [0.02, 0.10, 0.30, 0.10], y: [comes_in_pair], l: [machine, has_moving_parts], n: [alive, plant_food, stone_made]}
+- {id: 53, text: "Does it usually come in a pair?", family: size, def: [0.02, 0.05, 0.10, 0.05], y: [comes_in_pair], n: [alive, vehicle, building, furniture, food]}
+- {id: 54, text: "Is it light enough to lift with one finger?", family: size, def: [0.05, 0.25, 0.20, 0.05], y: [tiny], l: [paper_made, light_weight], n: [heavy, big, huge, vehicle, furniture]}
+- {id: 55, text: "Is it hollow inside?", family: size, def: [0.02, 0.10, 0.25, 0.05], y: [hollow, container], l: [building], n: [alive, stone_made, metal, plant_food]}
+- {id: 56, text: "Does it have a handle?", family: size, def: [0.01, 0.02, 0.30, 0.03], y: [has_handle], l: [tool, utensil, container], n: [alive, plant_food, building, clothing]}
+- {id: 57, text: "Is it soft to touch?", family: size, def: [0.35, 0.30, 0.10, 0.10], y: [soft, fabric], l: [has_fur], n: [hard, metal, stone_made, glass_made]}
+
+# ---- material (14) -------------------------------------------------------
+- {id: 58, text: "Is it made of metal?", family: material, def: [0.01, 0.01, 0.35, 0.05], y: [metal], n: [alive, plant_food, fabric, wooden, paper_made, food]}
+- {id: 59, text: "Is it made of wood?", family: material, def: [0.01, 0.10, 0.15, 0.05], y: [wooden], n: [alive, metal, plastic, glass_made, food]}
+- {id: 60, text: "Is it made of plastic?", family: material, def: [0.01, 0.01, 0.25, 0.03], y: [plastic], n: [alive, natural, food, metal, wooden]}
+- {id: 61, text: "Is it made of glass?", family: material, def: [0.01, 0.01, 0.08, 0.02], y: [glass_made], n: [alive, food, fabric, wooden, metal]}
+- {id: 62, text: "Is it made of fabric or cloth?", family: material, def: [0.01, 0.01, 0.12, 0.03], y: [fabric], n: [alive, food, metal, glass_made, stone_made]}
+- {id: 63, text: "Is it made of paper or card?", family: material, def: [0.01, 0.01, 0.08, 0.02], y: [paper_made], n: [alive, food, metal, glass_made, fabric]}
+- {id: 64, text: "Is it made of stone, brick or concrete?", family: material, def: [0.01, 0.01, 0.10, 0.20], y: [stone_made], n: [alive, food, fabric, paper_made, plastic]}
+- {id: 65, text: "Is it hard rather than soft?", family: material, def: [0.20, 0.25, 0.75, 0.40], y: [hard, metal, stone_made, glass_made], n: [soft, fabric, liquid]}
+- {id: 66, text: "Would it break if you dropped it?", family: material, def: [0.05, 0.15, 0.25, 0.10], y: [breakable, glass_made, ceramic, fragile], n: [metal, rubber, fabric, alive, huge]}
+- {id: 67, text: "Can you see through it?", family: material, def: [0.02, 0.02, 0.10, 0.10], y: [transparent, glass_made], n: [alive, metal, wooden, stone_made, fabric]}
+- {id: 68, text: "Is it a liquid?", family: material, def: [0.01, 0.15, 0.03, 0.10], y: [liquid, drink], n: [alive, hard, solid, metal, wooden]}
+- {id: 69, text: "Is it made of leather or rubber?", family: material, def: [0.01, 0.01, 0.10, 0.02], y: [leather, rubber], n: [alive, food, metal, glass_made, paper_made]}
+- {id: 70, text: "Is it made of more than one material?", family: material, def: [0.05, 0.05, 0.45, 0.15], y: [machine, vehicle, electronic], l: [appliance, building], n: [alive, plant_food, stone_made, liquid]}
+- {id: 71, text: "Does it come from an animal?", family: material, def: [0.10, 0.15, 0.05, 0.05], y: [from_animal, leather, dairy, meat], n: [plant, plant_food, metal, plastic, glass_made]}
+
+# ---- colour (10) ---------------------------------------------------------
+- {id: 72, text: "Is it usually green?", family: colour, def: [0.08, 0.30, 0.05, 0.10], y: [green], n: [red, blue, black, white, yellow, brown]}
+- {id: 73, text: "Is it usually red?", family: colour, def: [0.05, 0.15, 0.08, 0.05], y: [red], n: [green, blue, black, white, brown, yellow]}
+- {id: 74, text: "Is it usually brown?", family: colour, def: [0.25, 0.20, 0.10, 0.05], y: [brown, wooden], n: [green, blue, red, white, black]}
+- {id: 75, text: "Is it usually black or grey?", family: colour, def: [0.15, 0.05, 0.30, 0.10], y: [black, grey, silver_col], n: [green, red, yellow, pink, white]}
+- {id: 76, text: "Is it usually white?", family: colour, def: [0.10, 0.10, 0.12, 0.10], y: [white], n: [black, green, red, blue, brown]}
+- {id: 77, text: "Is it usually yellow or orange?", family: colour, def: [0.05, 0.20, 0.05, 0.05], y: [yellow, orange_col, gold_col], n: [black, green, blue, white, brown]}
+- {id: 78, text: "Is it usually blue?", family: colour, def: [0.03, 0.03, 0.08, 0.15], y: [blue], n: [green, red, brown, black, yellow]}
+- {id: 79, text: "Is it brightly coloured?", family: colour, def: [0.15, 0.35, 0.15, 0.15], y: [colourful, red, yellow, orange_col, pink, purple], n: [grey, black, brown, stone_made]}
+- {id: 80, text: "Is it shiny?", family: colour, def: [0.05, 0.10, 0.30, 0.10], y: [shiny_thing, metal, glass_made, jewellery, silver_col, gold_col], n: [fabric, paper_made, has_fur, stone_made, wooden]}
+- {id: 81, text: "Is it more than one colour?", family: colour, def: [0.30, 0.25, 0.30, 0.25], y: [colourful], l: [machine, vehicle, toy], n: [stone_made, metal, liquid]}
+
+# ---- location (20) -------------------------------------------------------
+- {id: 82, text: "Would you find it in a house?", family: location, def: [0.15, 0.55, 0.55, 0.10], y: [home, furniture, appliance, kitchen, bathroom, bedroom], n: [wild, building, vehicle, place, huge]}
+- {id: 83, text: "Would you find it in a kitchen?", family: location, def: [0.02, 0.60, 0.25, 0.02], y: [kitchen, utensil, crockery, cooking], l: [food, drink], n: [wild, outdoors, vehicle, clothing, building]}
+- {id: 84, text: "Would you find it in a bathroom?", family: location, def: [0.02, 0.05, 0.15, 0.02], y: [bathroom], n: [kitchen, outdoors, wild, vehicle, food]}
+- {id: 85, text: "Would you find it in a bedroom?", family: location, def: [0.02, 0.02, 0.20, 0.02], y: [bedroom], n: [kitchen, outdoors, wild, vehicle, food]}
+- {id: 86, text: "Would you find it in an office or a school?", family: location, def: [0.02, 0.05, 0.25, 0.05], y: [office, school, stationery, writing], n: [wild, kitchen, food, vehicle, bathroom]}
+- {id: 87, text: "Is it usually found outdoors?", family: location, def: [0.60, 0.35, 0.20, 0.70], y: [outdoors, wild, garden, forest, building, place], n: [home, indoors, furniture, appliance, kitchen]}
+- {id: 88, text: "Would you find it in a garden or a park?", family: location, def: [0.25, 0.45, 0.10, 0.25], y: [garden, playground, plant, tree, flower], n: [indoors, marine, kitchen, vehicle]}
+- {id: 89, text: "Would you find it in a garage or a shed?", family: location, def: [0.02, 0.02, 0.25, 0.03], y: [garage, workshop, tool], n: [kitchen, bathroom, bedroom, alive, food]}
+- {id: 90, text: "Would you find it in a shop?", family: location, def: [0.05, 0.70, 0.70, 0.10], y: [shop], l: [manmade, food, clothing], n: [wild, building, place, huge]}
+- {id: 91, text: "Would you find it on a farm?", family: location, def: [0.20, 0.35, 0.10, 0.10], y: [farm, farm_animal], n: [marine, city, indoors, jungle]}
+- {id: 92, text: "Would you find it in a forest or the woods?", family: location, def: [0.30, 0.35, 0.02, 0.15], y: [forest, tree], n: [marine, city, indoors, manmade, desert_animal]}
+- {id: 93, text: "Would you find it in a city?", family: location, def: [0.15, 0.20, 0.45, 0.45], y: [city, building, road], n: [wild, jungle, marine, farm, forest]}
+- {id: 94, text: "Would you find it near water?", family: location, def: [0.25, 0.10, 0.10, 0.30], y: [aquatic, marine, water_place, beach, floats], n: [desert_animal, indoors, sky]}
+- {id: 95, text: "Would you find it in the sky?", family: location, def: [0.15, 0.02, 0.05, 0.15], y: [sky, flies, air_transport], n: [aquatic, underground, indoors, furniture]}
+- {id: 96, text: "Would you find it on a road?", family: location, def: [0.02, 0.02, 0.15, 0.15], y: [road, road_vehicle], n: [indoors, marine, sky, wild, food]}
+- {id: 97, text: "Would you find it in a hospital?", family: location, def: [0.01, 0.02, 0.08, 0.05], y: [hospital, medical_thing], n: [wild, kitchen, garden, vehicle, food]}
+- {id: 98, text: "Would you find it at the seaside?", family: location, def: [0.15, 0.05, 0.08, 0.20], y: [beach, marine], n: [jungle, city, indoors, underground]}
+- {id: 99, text: "Would you find it in a museum?", family: location, def: [0.05, 0.02, 0.10, 0.10], y: [museum, old_fashioned, extinct, rare], n: [common, food, pet, modern]}
+- {id: 100, text: "Do most homes have one?", family: location, def: [0.08, 0.40, 0.35, 0.05], y: [home, appliance, furniture, kitchen], l: [common], n: [rare, expensive, wild, building, place, huge]}
+- {id: 101, text: "Would you find it in a restaurant?", family: location, def: [0.02, 0.55, 0.20, 0.05], y: [restaurant, food, drink, crockery], n: [wild, garage, bathroom, vehicle, building]}
+
+# ---- function and use (26) -----------------------------------------------
+- {id: 102, text: "Do you use it for cooking?", family: function, def: [0.01, 0.05, 0.15, 0.02], y: [cooking, utensil], n: [alive, worn, vehicle, toy, building]}
+- {id: 103, text: "Do you wear it?", family: function, def: [0.01, 0.01, 0.20, 0.02], y: [worn, clothing, jewellery], n: [alive, food, vehicle, furniture, building]}
+- {id: 104, text: "Do you use it for cleaning?", family: function, def: [0.01, 0.02, 0.10, 0.02], y: [cleaning, cleaning_thing], n: [alive, food, vehicle, toy, jewellery]}
+- {id: 105, text: "Do you use it to write or draw?", family: function, def: [0.01, 0.01, 0.10, 0.02], y: [writing, art, stationery], n: [alive, food, vehicle, clothing, furniture]}
+- {id: 106, text: "Do you use it to cut things?", family: function, def: [0.01, 0.01, 0.10, 0.02], y: [cutting], l: [sharp], n: [alive, food, soft, clothing, furniture]}
+- {id: 107, text: "Do you use it to travel?", family: function, def: [0.03, 0.01, 0.15, 0.05], y: [transport, vehicle], n: [alive, food, furniture, kitchen, toy]}
+- {id: 108, text: "Is it used to carry or store things?", family: function, def: [0.01, 0.02, 0.25, 0.05], y: [container, storage], n: [alive, food, vehicle, clothing, liquid]}
+- {id: 109, text: "Is it used for playing or having fun?", family: function, def: [0.05, 0.02, 0.20, 0.10], y: [toy, play, game_thing, sport, sports_equipment], n: [tool, medical_thing, cleaning_thing, food, building]}
+- {id: 110, text: "Is it used to make music?", family: function, def: [0.01, 0.01, 0.10, 0.02], y: [instrument, music], n: [alive, food, vehicle, clothing, furniture]}
+- {id: 111, text: "Do you sit or lie on it?", family: function, def: [0.02, 0.01, 0.12, 0.02], y: [seating, bedroom], n: [alive, food, handheld, tiny, clothing]}
+- {id: 112, text: "Does it need electricity or a battery?", family: function, def: [0.01, 0.01, 0.35, 0.05], y: [electric, battery_powered, appliance, electronic], n: [alive, natural, food, fabric, wooden, plant_food]}
+- {id: 113, text: "Does it have a screen?", family: function, def: [0.01, 0.01, 0.12, 0.02], y: [has_screen], n: [alive, natural, food, clothing, furniture, plant_food]}
+- {id: 114, text: "Does it have buttons or switches?", family: function, def: [0.01, 0.01, 0.30, 0.03], y: [has_buttons], l: [electronic, appliance, machine], n: [alive, natural, food, plant_food, stone_made]}
+- {id: 115, text: "Does it have wheels?", family: function, def: [0.01, 0.01, 0.15, 0.03], y: [has_wheels, road_vehicle], n: [alive, food, clothing, building, plant_food]}
+- {id: 116, text: "Does it have an engine or a motor?", family: function, def: [0.01, 0.01, 0.15, 0.03], y: [has_engine], l: [machine, vehicle], n: [alive, food, clothing, furniture, plant_food]}
+- {id: 117, text: "Is it used for work rather than fun?", family: function, def: [0.05, 0.05, 0.45, 0.20], y: [tool, equipment, workplace, office, medical_thing], n: [toy, play, sport, game_thing, pet]}
+- {id: 118, text: "Does it give light?", family: function, def: [0.01, 0.01, 0.10, 0.15], y: [lighting, burns], n: [alive, food, clothing, furniture, plant_food]}
+- {id: 119, text: "Is it used to talk to people far away?", family: function, def: [0.01, 0.01, 0.08, 0.03], y: [communication], n: [alive, food, clothing, furniture, plant_food]}
+- {id: 120, text: "Do you use it every day?", family: function, def: [0.05, 0.35, 0.30, 0.10], y: [common, home, bathroom, kitchen], n: [rare, expensive, wild, museum, building]}
+- {id: 121, text: "Does it open and close?", family: function, def: [0.02, 0.05, 0.30, 0.05], y: [opens, container], l: [building, machine], n: [alive, stone_made, plant_food, liquid]}
+- {id: 122, text: "Is it used in sport or exercise?", family: function, def: [0.02, 0.01, 0.12, 0.05], y: [sport, sports_equipment], n: [alive, food, furniture, kitchen, medical_thing]}
+- {id: 123, text: "Is it used for measuring?", family: function, def: [0.01, 0.01, 0.08, 0.02], y: [measuring], n: [alive, food, clothing, furniture, toy]}
+- {id: 124, text: "Is it used in building or repairing things?", family: function, def: [0.01, 0.01, 0.15, 0.03], y: [building_thing, tool, workshop], n: [alive, food, clothing, toy, jewellery]}
+- {id: 125, text: "Is it used by doctors or in medicine?", family: function, def: [0.01, 0.01, 0.06, 0.03], y: [medical_thing, hospital], n: [toy, food, vehicle, wild, clothing]}
+- {id: 126, text: "Is it mainly for children?", family: function, def: [0.02, 0.05, 0.15, 0.05], y: [toy, child_thing, playground], n: [adult_thing, tool, medical_thing, vehicle, alcoholic]}
+- {id: 127, text: "Is it something you would give as a gift?", family: function, def: [0.05, 0.15, 0.30, 0.15], y: [toy, jewellery, holiday_thing, valuable], n: [wild, building, place, cleaning_thing, dangerous]}
+
+# ---- food (14) -----------------------------------------------------------
+- {id: 128, text: "Can you eat it?", family: food, def: [0.10, 0.85, 0.02, 0.05], y: [food], l: [edible_raw], n: [manmade, alive, place, building, vehicle]}
+- {id: 129, text: "Is it a fruit?", family: food, def: [0.01, 0.30, 0.01, 0.02], y: [fruit, berry], n: [vegetable_food, meat, dairy, manmade, animal]}
+- {id: 130, text: "Is it a vegetable?", family: food, def: [0.01, 0.25, 0.01, 0.02], y: [vegetable_food], n: [fruit, meat, dairy, dessert, manmade, animal]}
+- {id: 131, text: "Is it sweet?", family: food, def: [0.01, 0.35, 0.02, 0.03], y: [sweet, dessert, fruit], n: [savoury, sour, spicy, salty, manmade, animal]}
+- {id: 132, text: "Do you drink it?", family: food, def: [0.01, 0.15, 0.02, 0.03], y: [drink, liquid], n: [solid, animal, manmade, vegetable_food, fruit]}
+- {id: 133, text: "Is it usually cooked before eating?", family: food, def: [0.02, 0.30, 0.01, 0.02], y: [cooked_food, meat], n: [edible_raw, fruit, drink, manmade, animal]}
+- {id: 134, text: "Is it meat, fish or dairy?", family: food, def: [0.05, 0.20, 0.02, 0.03], y: [meat, dairy, seafood], n: [plant_food, fruit, vegetable_food, manmade]}
+- {id: 135, text: "Is it a dessert or a sweet treat?", family: food, def: [0.01, 0.20, 0.01, 0.02], y: [dessert, junk_food], n: [vegetable_food, meat, drink, savoury, manmade]}
+- {id: 136, text: "Is it eaten at breakfast?", family: food, def: [0.01, 0.20, 0.01, 0.02], y: [breakfast], l: [hot_drink], n: [alcoholic, meat, manmade, animal]}
+- {id: 137, text: "Does it grow on a tree or a bush?", family: food, def: [0.02, 0.30, 0.01, 0.02], y: [grows_on_tree, fruit, berry, nut, tree], n: [vegetable_food, meat, dairy, manmade, animal]}
+- {id: 138, text: "Does it grow underground?", family: food, def: [0.02, 0.12, 0.01, 0.02], y: [underground], l: [vegetable_food], n: [fruit, tree, meat, manmade, animal]}
+- {id: 139, text: "Is it spicy, sour or salty?", family: food, def: [0.01, 0.15, 0.01, 0.02], y: [spicy, sour, salty], n: [sweet, dessert, drink, manmade, animal]}
+- {id: 140, text: "Is it considered healthy?", family: food, def: [0.05, 0.55, 0.05, 0.10], y: [healthy, vegetable_food, fruit], n: [junk_food, alcoholic, dessert, dangerous]}
+- {id: 141, text: "Would you find it in a fridge?", family: food, def: [0.01, 0.45, 0.03, 0.02], y: [dairy, meat, drink, seafood], l: [vegetable_food, fruit], n: [manmade, alive, grain, nut]}
+
+# ---- sensory (12) --------------------------------------------------------
+- {id: 142, text: "Does it make a sound by itself?", family: sensory, def: [0.55, 0.02, 0.15, 0.15], y: [makes_sound, noisy, instrument], l: [animal, machine, has_engine], n: [quiet, plant, plant_food, furniture, stone_made]}
+- {id: 143, text: "Is it noisy?", family: sensory, def: [0.25, 0.01, 0.15, 0.10], y: [noisy, loud, has_engine], n: [quiet, plant, plant_food, jewellery, fabric]}
+- {id: 144, text: "Does it have a strong smell?", family: sensory, def: [0.20, 0.35, 0.05, 0.10], y: [smells, flower], l: [food, cooked_food], n: [metal, glass_made, stone_made, electronic]}
+- {id: 145, text: "Is it warm or hot to touch?", family: sensory, def: [0.30, 0.05, 0.05, 0.15], y: [hot_thing, burns, warm_thing], l: [warm_blooded, has_fur], n: [cold_thing, stone_made, metal, glass_made]}
+- {id: 146, text: "Is it cold to touch?", family: sensory, def: [0.05, 0.15, 0.15, 0.10], y: [cold_thing, arctic], l: [metal, stone_made], n: [hot_thing, has_fur, fabric, burns]}
+- {id: 147, text: "Is it wet or slimy?", family: sensory, def: [0.10, 0.15, 0.03, 0.10], y: [wet, liquid, water], n: [dry_thing, paper_made, fabric, electronic, hard]}
+- {id: 148, text: "Is it sharp or pointed?", family: sensory, def: [0.05, 0.05, 0.20, 0.05], y: [sharp, pointed, cutting], n: [soft, round, fabric, liquid, food]}
+- {id: 149, text: "Is it rough to touch?", family: sensory, def: [0.10, 0.15, 0.15, 0.20], y: [rough_thing, stone_made, wooden], n: [soft, glass_made, metal, liquid, fabric]}
+- {id: 150, text: "Would it float on water?", family: sensory, def: [0.15, 0.25, 0.15, 0.10], y: [floats, water_transport, wooden], n: [metal, stone_made, heavy, huge]}
+- {id: 151, text: "Is it something you can taste?", family: sensory, def: [0.08, 0.85, 0.02, 0.05], y: [food, drink], n: [manmade, alive, building, vehicle, place]}
+- {id: 152, text: "Does it feel smooth?", family: sensory, def: [0.15, 0.35, 0.40, 0.15], y: [glass_made, metal, plastic, ceramic], n: [has_fur, fabric, stone_made, rough_thing]}
+- {id: 153, text: "Is it scary to some people?", family: sensory, def: [0.30, 0.02, 0.08, 0.15], y: [scary, dangerous, venomous, weapon], n: [pet, toy, child_thing, food, furniture]}
+
+# ---- movement (12) -------------------------------------------------------
+- {id: 154, text: "Does it move on its own?", family: motion, def: [0.90, 0.02, 0.10, 0.15], y: [moves_itself, animal, alive], l: [machine, vehicle], n: [furniture, plant_food, building, stone_made, plant]}
+- {id: 155, text: "Does it have moving parts?", family: motion, def: [0.60, 0.02, 0.35, 0.10], y: [has_moving_parts, machine, opens], n: [stone_made, plant_food, jewellery, paper_made]}
+- {id: 156, text: "Can it carry a person?", family: motion, def: [0.10, 0.01, 0.20, 0.10], y: [vehicle, transport, seating], n: [handheld, tiny, small, food, jewellery]}
+- {id: 157, text: "Does it go faster than a person can run?", family: motion, def: [0.20, 0.01, 0.15, 0.10], y: [fast_thing, vehicle, has_engine], l: [flies], n: [slow_thing, furniture, plant, plant_food, building, tiny]}
+- {id: 158, text: "Do you push, pull or carry it?", family: motion, def: [0.05, 0.30, 0.45, 0.05], y: [handheld, tool, container], n: [alive, building, place, huge, vehicle]}
+- {id: 159, text: "Does it stay in one place?", family: motion, def: [0.05, 0.55, 0.55, 0.75], y: [building, place, furniture, plant, tree], n: [animal, vehicle, moves_itself, handheld]}
+- {id: 160, text: "Can it climb or jump?", family: motion, def: [0.45, 0.01, 0.02, 0.05], y: [climbs_trees, primate, rodent], l: [four_legs, insect], n: [fish, plant, manmade, plant_food, no_legs]}
+- {id: 161, text: "Does it spin or turn?", family: motion, def: [0.02, 0.02, 0.25, 0.05], y: [spins, has_wheels], n: [alive, plant_food, furniture, building, clothing]}
+- {id: 162, text: "Can it be folded or bent?", family: motion, def: [0.02, 0.05, 0.20, 0.05], y: [fabric, paper_made, clothing], n: [glass_made, stone_made, metal, alive, ceramic]}
+- {id: 163, text: "Does it grow or change over time?", family: motion, def: [0.90, 0.55, 0.02, 0.15], y: [alive, plant, animal], l: [plant_food], n: [manmade, stone_made, metal, building]}
+- {id: 164, text: "Does it need to be plugged in or charged?", family: motion, def: [0.01, 0.01, 0.25, 0.03], y: [electric, battery_powered], n: [alive, natural, food, fabric, wooden]}
+- {id: 165, text: "Would it fit in a car boot?", family: motion, def: [0.35, 0.75, 0.55, 0.10], y: [handheld, small, tiny, medium_size], n: [huge, building, vehicle, place, big_animal]}
+
+# ---- social and cultural (12) --------------------------------------------
+- {id: 166, text: "Would a small child recognise it?", family: social, def: [0.60, 0.65, 0.55, 0.35], y: [kid_knows, child_thing, toy, common, pet, farm_animal], n: [rare, adult_thing, workplace, medical_thing]}
+- {id: 167, text: "Is it expensive?", family: social, def: [0.10, 0.02, 0.25, 0.20], y: [expensive, valuable, jewellery, vehicle], n: [cheap, common, food, plant, stationery]}
+- {id: 168, text: "Is it something you see every day?", family: social, def: [0.20, 0.45, 0.40, 0.25], y: [common, home, road, city], n: [rare, extinct, museum, jungle, marine]}
+- {id: 169, text: "Is it rare or unusual?", family: social, def: [0.20, 0.05, 0.08, 0.15], y: [rare, extinct, museum], n: [common, home, pet, food, road]}
+- {id: 170, text: "Is it linked to a holiday or celebration?", family: social, def: [0.05, 0.10, 0.10, 0.15], y: [holiday_thing, seasonal], n: [tool, wild, medical_thing, workplace, vehicle]}
+- {id: 171, text: "Is it old-fashioned?", family: social, def: [0.05, 0.05, 0.15, 0.15], y: [old_fashioned, museum], n: [modern, digital, electronic, common]}
+- {id: 172, text: "Was it invented in the last hundred years?", family: social, def: [0.02, 0.05, 0.35, 0.10], y: [modern, digital, electronic], n: [alive, natural, old_fashioned, plant_food, stone_made]}
+- {id: 173, text: "Is it famous or well known by name?", family: social, def: [0.10, 0.05, 0.10, 0.35], y: [famous], n: [common, tool, food, rare]}
+- {id: 174, text: "Do people keep it or collect it?", family: social, def: [0.15, 0.02, 0.20, 0.10], y: [pet, valuable, jewellery, toy], n: [cleaning_thing, food, wild, building, place]}
+- {id: 175, text: "Is it mostly used by adults?", family: social, def: [0.05, 0.15, 0.35, 0.20], y: [adult_thing, tool, vehicle, alcoholic, workplace], n: [toy, child_thing, playground, pet]}
+- {id: 176, text: "Do people take photos of it?", family: social, def: [0.30, 0.10, 0.10, 0.45], y: [famous, place, building, zoo], n: [cleaning_thing, tool, stationery, common]}
+- {id: 177, text: "Could you buy one for under ten pounds?", family: social, def: [0.10, 0.75, 0.35, 0.05], y: [cheap, stationery, food, snack], n: [expensive, valuable, vehicle, building, appliance]}
+
+# ---- misc and tiebreakers (14) -------------------------------------------
+- {id: 178, text: "Is it dangerous?", family: misc, def: [0.20, 0.02, 0.10, 0.15], y: [dangerous, venomous, weapon, sharp], n: [pet, toy, child_thing, food, furniture]}
+- {id: 179, text: "Is it found in most countries?", family: misc, def: [0.35, 0.55, 0.55, 0.30], y: [common, home], n: [rare, extinct, jungle, arctic, famous]}
+- {id: 180, text: "Does it have a screen or a display?", family: misc, def: [0.01, 0.01, 0.12, 0.02], y: [has_screen], n: [alive, natural, food, clothing, plant_food]}
+- {id: 181, text: "Is it usually kept in a cupboard or drawer?", family: misc, def: [0.01, 0.25, 0.30, 0.02], y: [utensil, crockery, stationery, cleaning_thing], n: [alive, big, huge, vehicle, building]}
+- {id: 182, text: "Does it come in different sizes you can buy?", family: misc, def: [0.05, 0.30, 0.45, 0.10], y: [clothing, footwear, container], l: [manmade], n: [alive, wild, building, place]}
+- {id: 183, text: "Is it made of one single piece?", family: misc, def: [0.05, 0.55, 0.25, 0.15], y: [stone_made, plant_food], n: [machine, vehicle, electronic, comes_in_pair, appliance]}
+- {id: 184, text: "Can light shine through it?", family: misc, def: [0.04, 0.10, 0.15, 0.10], y: [transparent, glass_made], l: [paper_made, fabric], n: [metal, stone_made, wooden, has_fur, huge, building, vehicle]}
+- {id: 185, text: "Does it need water to survive or work?", family: misc, def: [0.90, 0.60, 0.05, 0.15], y: [alive, plant, animal], n: [manmade, electronic, stone_made, metal, food]}
+- {id: 186, text: "Is it a part of something bigger?", family: misc, def: [0.05, 0.15, 0.15, 0.15], y: [body_part], n: [vehicle, building, animal, appliance, furniture]}
+- {id: 187, text: "Do people give it a name of its own?", family: misc, def: [0.45, 0.02, 0.08, 0.25], y: [pet, famous, place], n: [tool, food, stationery, cleaning_thing, common]}
+- {id: 188, text: "Would you take it on holiday with you?", family: misc, def: [0.05, 0.10, 0.30, 0.05], y: [clothing, footwear, container, has_screen], n: [alive, wild, furniture, building, appliance]}
+- {id: 189, text: "Is it heavier than a bag of shopping?", family: misc, def: [0.25, 0.05, 0.30, 0.35], y: [heavy, huge, vehicle, building, big_animal], n: [tiny, handheld, light_weight, paper_made]}
+- {id: 190, text: "Can it hurt you if you are careless?", family: misc, def: [0.25, 0.05, 0.25, 0.15], y: [dangerous, sharp, hot_thing, weapon, venomous], n: [toy, fabric, plant_food, paper_made, child_thing]}
+- {id: 191, text: "Would you be surprised to see one indoors?", family: misc, def: [0.55, 0.15, 0.10, 0.55], y: [wild, huge, building, place, vehicle], n: [home, furniture, appliance, kitchen, indoors]}
