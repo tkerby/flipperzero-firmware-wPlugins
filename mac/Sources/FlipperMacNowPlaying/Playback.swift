@@ -24,15 +24,15 @@ struct Playback: Equatable {
 
     static func fromNowPlaying(_ data: Data) -> Playback? {
         guard let raw = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let title = raw["kMRMediaRemoteNowPlayingInfoTitle"] as? String, !title.isEmpty else { return nil }
-        return Playback(source: sourceName(raw["kMRMediaRemoteNowPlayingInfoClientBundleIdentifier"] as? String),
+              let title = raw["title"] as? String, !title.isEmpty else { return nil }
+        return Playback(source: sourceName(raw["bundleIdentifier"] as? String),
                         title: title,
-                        artist: raw["kMRMediaRemoteNowPlayingInfoArtist"] as? String ?? "",
-                        album: raw["kMRMediaRemoteNowPlayingInfoAlbum"] as? String ?? "",
-                        playing: (raw["kMRMediaRemoteNowPlayingInfoPlaybackRate"] as? Double ?? 0) > 0,
-                        position: raw["kMRMediaRemoteNowPlayingInfoElapsedTime"] as? Double,
-                        duration: raw["kMRMediaRemoteNowPlayingInfoDuration"] as? Double,
-                        artwork: (raw["kMRMediaRemoteNowPlayingInfoArtworkData"] as? String).flatMap { Data(base64Encoded: $0) })
+                        artist: raw["artist"] as? String ?? "",
+                        album: raw["album"] as? String ?? "",
+                        playing: (raw["playbackRate"] as? Double ?? 0) > 0,
+                        position: raw["elapsedTimeNow"] as? Double,
+                        duration: raw["duration"] as? Double,
+                        artwork: (raw["artworkData"] as? String).flatMap { Data(base64Encoded: $0) })
     }
 }
 
@@ -121,10 +121,11 @@ final class PlaybackStore {
 }
 
 enum Runner {
-    static func command(_ arguments: [String]) -> Data? {
+    static func command(_ executable: String, _ arguments: [String], environment: [String: String]? = nil) -> Data? {
         let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/opt/homebrew/bin/nowplaying-cli")
+        task.executableURL = URL(fileURLWithPath: executable)
         task.arguments = arguments
+        if let environment { task.environment = ProcessInfo.processInfo.environment.merging(environment) { _, new in new } }
         let output = Pipe(); task.standardOutput = output
         task.standardError = Pipe()
         do { try task.run(); let data = output.fileHandleForReading.readDataToEndOfFile(); task.waitUntilExit(); return task.terminationStatus == 0 ? data : nil }
@@ -132,7 +133,13 @@ enum Runner {
     }
     static func desktopSnapshot(_ callback: @escaping (Playback?) -> Void) {
         DispatchQueue.global(qos: .utility).async {
-            let bytes = command(["get-raw"])
+            // nowplaying-cli get-raw drops the MediaRemote timestamp. Its helper
+            // calculates elapsedTimeNow from the timestamp and playback rate.
+            let bytes = command("/usr/bin/perl", [
+                "/opt/homebrew/share/nowplaying-cli/scripts/mediaremote-mini.pl",
+                "/opt/homebrew/lib/nowplaying-cli/MediaRemoteMini.dylib",
+                "adapter_get_env"
+            ], environment: ["MEDIAREMOTEADAPTER_OPTION_now": "1"])
             let state = bytes.flatMap(Playback.fromNowPlaying)
             DispatchQueue.main.async { callback(state) }
         }
@@ -140,7 +147,7 @@ enum Runner {
     static func desktopCommand(_ action: UInt8) {
         DispatchQueue.global(qos: .userInitiated).async {
             let names: [UInt8: String] = [1: "togglePlayPause", 2: "previous", 3: "next"]
-            if let name = names[action] { _ = command([name]) }
+            if let name = names[action] { _ = command("/opt/homebrew/bin/nowplaying-cli", [name]) }
         }
     }
 }
