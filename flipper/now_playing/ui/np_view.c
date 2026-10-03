@@ -1,5 +1,4 @@
 #include "np_view.h"
-#include <stdio.h>
 #include <string.h>
 extern const uint8_t np_cyrillic_font[];
 static void row(Canvas *c, const char *text, int x, int right,
@@ -33,11 +32,8 @@ void np_view_draw(Canvas *c, const NpModel *m, uint32_t now, const char *status,
   }
   const char *title = *m->title ? m->title : "Unknown track";
   const char *artist = *m->artist ? m->artist : "Unknown artist";
-  char context[245];
-  snprintf(context, sizeof(context), "%s%s%s", *m->app ? m->app : "Mac",
-           *m->album ? " / " : "", m->album);
   (void)held; /* Physical key mappings are unchanged; no control legend. */
-  const char *texts[3] = {title, artist, context};
+  const char *texts[3] = {title, artist, m->album};
   const int baselines[3] = {10, 25, 40};
   const int tops[3] = {0, 14, 29};
   const int bottoms[3] = {12, 27, 43};
