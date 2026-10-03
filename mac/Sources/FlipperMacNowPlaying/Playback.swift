@@ -110,7 +110,7 @@ final class PlaybackStore {
         FNP.put16(item?.playing == true ? 1000 : 0, &body)
         FNP.put64(item == nil ? 0 : position, &body)
         FNP.put64(item == nil ? 0 : (validDuration ?? 0), &body)
-        FNP.put16(item == nil ? 0 : 7, &body)
+        FNP.put16(item == nil ? 0 : (SystemVolume.isAvailable ? 31 : 7), &body)
         body.append(0); body.append(0)
         if snapshot {
             for field in fields { FNP.put16(UInt16(field.0.count), &body) }
@@ -144,10 +144,15 @@ enum Runner {
             DispatchQueue.main.async { callback(state) }
         }
     }
-    static func desktopCommand(_ action: UInt8) {
-        DispatchQueue.global(qos: .userInitiated).async {
-            let names: [UInt8: String] = [1: "togglePlayPause", 2: "previous", 3: "next"]
-            if let name = names[action] { _ = command("/opt/homebrew/bin/nowplaying-cli", [name]) }
+    static func desktopCommand(_ action: UInt8) -> Bool {
+        if action == 4 || action == 5 {
+            return SystemVolume.change(by: action == 4 ? 0.05 : -0.05)
         }
+        let names: [UInt8: String] = [1: "togglePlayPause", 2: "previous", 3: "next"]
+        guard let name = names[action] else { return false }
+        DispatchQueue.global(qos: .userInitiated).async {
+            _ = command("/opt/homebrew/bin/nowplaying-cli", [name])
+        }
+        return true
     }
 }

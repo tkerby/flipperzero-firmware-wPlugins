@@ -174,11 +174,8 @@ final class BluetoothLink: NSObject, CBCentralManagerDelegate, CBPeripheralDeleg
         if !ready { status = 7 }
         else if store.current == nil { status = 1 }
         else if target != store.epoch { status = 2 }
-        else if !(1...3).contains(action) { status = 3 }
-        else {
-            status = 0
-            Runner.desktopCommand(action)
-        }
+        else if !(1...5).contains(action) { status = 3 }
+        else { status = Runner.desktopCommand(action) ? 0 : 3 }
         var response = Data(); FNP.put32(frame.id, &response)
         response.append(status); response.append(0); FNP.put16(0, &response); FNP.put32(store.current == nil ? 0 : store.epoch, &response)
         commandResults[frame.id] = (frame.payload, response)
