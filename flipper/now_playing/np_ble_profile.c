@@ -1,6 +1,5 @@
 #include "np_ble_profile.h"
-#include <app_common.h>
-#include <ble/ble.h>
+#include <ble/core/ble_std.h>
 #include <furi_ble/event_dispatcher.h>
 #include <furi_ble/gatt.h>
 #include <furi_hal.h>
@@ -37,40 +36,71 @@ static bool value(const void *ctx, const uint8_t **data, uint16_t *length) {
   *length = v ? v->length : 0;
   return false;
 }
+
+/* The public FAP SDK omits ST's private BLE event packet declarations and
+ * vendor event-code header. These are the event codes from the STM32WB BLE
+ * protocol; parse the documented byte layout directly to avoid private ABI
+ * dependencies and unaligned packed-structure reads. */
+enum {
+  NpAciGattAttributeModified = 0x0C01,
+  NpAciGattServerConfirmation = 0x0C17,
+};
+
+static uint16_t read_le16(const uint8_t *bytes) {
+  return (uint16_t)bytes[0] | ((uint16_t)bytes[1] << 8);
+}
+
 static BleEventAckStatus event_inner(void *raw, void *ctx) {
   NpProfile *p = ctx;
   NpBleEvents *e = p->events;
-  hci_event_pckt *h = (hci_event_pckt *)((hci_uart_pckt *)raw)->data;
-  if (h->evt == HCI_DISCONNECTION_COMPLETE_EVT_CODE) {
+  const uint8_t *packet = raw;
+  if (!packet)
+    return BleEventNotAck;
+
+  /* hci_uart_pckt: type, followed by hci_event_pckt: event, length, data. */
+  const uint8_t *hci = packet + 1;
+  uint8_t event_code = hci[0];
+  uint8_t event_length = hci[1];
+  const uint8_t *event_data = hci + 2;
+  if (event_code == HCI_DISCONNECTION_COMPLETE_EVT_CODE) {
     atomic_store(&e->disconnected, true);
     atomic_store(&e->subscribed, false);
     return BleEventNotAck;
   }
-  if (h->evt != HCI_VENDOR_SPECIFIC_DEBUG_EVT_CODE || atomic_load(&e->stopping))
+  if (event_code != HCI_VENDOR_SPECIFIC_DEBUG_EVT_CODE ||
+      atomic_load(&e->stopping) || event_length < 2)
     return BleEventNotAck;
-  evt_blecore_aci *v = (evt_blecore_aci *)h->data;
-  if (v->ecode == ACI_GATT_SERVER_CONFIRMATION_VSEVT_CODE) {
+  uint16_t vendor_event_code = read_le16(event_data);
+  if (vendor_event_code == NpAciGattServerConfirmation) {
     atomic_store(&e->confirmed, true);
     return BleEventAckFlowEnable;
   }
-  if (v->ecode != ACI_GATT_ATTRIBUTE_MODIFIED_VSEVT_CODE)
+  if (vendor_event_code != NpAciGattAttributeModified || event_length < 10)
     return BleEventNotAck;
-  aci_gatt_attribute_modified_event_rp0 *a =
-      (aci_gatt_attribute_modified_event_rp0 *)v->data;
-  if (a->Attr_Handle == p->tx.handle + 2) {
-    bool enabled = a->Attr_Data_Length == 2 && a->Attr_Data[0] == 2 &&
-                   a->Attr_Data[1] == 0;
+
+  /* ACI event code (2), then connection, attribute, offset and value length
+   * (four little-endian uint16 fields), followed by the value bytes. */
+  const uint8_t *attribute = event_data + 2;
+  uint16_t attribute_handle = read_le16(attribute + 2);
+  uint16_t attribute_length = read_le16(attribute + 6);
+  const uint8_t *attribute_data = attribute + 8;
+  if (attribute_length > event_length - 10)
+    return BleEventNotAck;
+
+  if (attribute_handle == p->tx.handle + 2) {
+    bool enabled = attribute_length == 2 && attribute_data[0] == 2 &&
+                   attribute_data[1] == 0;
     atomic_store(&e->subscribed, enabled);
     return BleEventAckFlowEnable;
   }
-  if (a->Attr_Handle != p->rx.handle + 1)
+  if (attribute_handle != p->rx.handle + 1)
     return BleEventNotAck;
-  if (a->Attr_Data_Length > 128 || !atomic_load(&e->subscribed)) {
+  if (attribute_length > 128 || !atomic_load(&e->subscribed)) {
     atomic_store(&e->overflow, true);
     return BleEventAckFlowEnable;
   }
-  NpRx r = {.length = a->Attr_Data_Length};
-  memcpy(r.bytes, a->Attr_Data, r.length);
+  NpRx r = {.length = attribute_length};
+  memcpy(r.bytes, attribute_data, r.length);
   if (furi_message_queue_put(e->rx, &r, 0) != FuriStatusOk)
     atomic_store(&e->overflow, true);
   return BleEventAckFlowEnable;
