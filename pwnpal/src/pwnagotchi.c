@@ -148,7 +148,7 @@ void pwnagotchi_draw_channel(Pwnagotchi* pwn, Canvas* canvas) {
 }
 
 void pwnagotchi_draw_aps(Pwnagotchi* pwn, Canvas* canvas) {
-    pwnagotchi_draw_str("AP ", pwn->apStat, PWNAGOTCHI_APS_I, PWNAGOTCHI_APS_J, canvas);
+    pwnagotchi_draw_str("APS ", pwn->apStat, PWNAGOTCHI_APS_I, PWNAGOTCHI_APS_J, canvas);
 }
 
 void pwnagotchi_draw_uptime(Pwnagotchi* pwn, Canvas* canvas) {

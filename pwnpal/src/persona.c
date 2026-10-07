@@ -323,37 +323,69 @@ Face persona_face(const Persona* p) {
     }
 }
 
-// one line per mood from pwnagotchi voice.py (shortest faithful pick); view.py face<->voice
+// voice lines from pwnagotchi voice.py; a few faithful variants per mood, rotated per epoch so a
+// sustained mood doesn't repeat one line forever (view.py picks a random voice line each update).
 const char* persona_mood_label(const Persona* p) {
+    uint32_t r = p->epoch;
     switch(p->mood) {
-    case MoodLonely:
-        return "I feel so alone ..."; // voice.on_lonely
-    case MoodContent:
-        return "Hack the Planet!"; // voice.on_starting (on_normal is just "...")
-    case MoodCurious:
-        return "Unit is nearby!"; // voice.on_new_peer (returning unit)
-    case MoodExcited:
-        return "I'm living the life!"; // voice.on_excited
-    case MoodBonded:
-        return "I love my friends!"; // voice.on_grateful (a bond in range)
-    case MoodBored:
-        return "I'm bored ..."; // voice.on_bored
-    case MoodSleep:
-        return "Zzzzz"; // voice.on_napping
-    case MoodSad:
-        return "I'm very sad ..."; // voice.on_sad
-    case MoodMotivated:
-        return "Best day of my life!"; // voice.on_motivated
-    case MoodSmart:
-        return "So many networks!!!"; // voice.on_excited
-    case MoodHappy:
-        return "Cool, got a handshake!"; // voice.on_handshakes
-    case MoodCool:
-        return "I pwn therefore I am."; // voice.on_excited (streak swagger)
-    case MoodGrateful:
-        return "Good friends are a blessing!"; // voice.on_grateful
-    case MoodDemotivated:
-        return "Shitty day :/"; // voice.on_demotivated (a miss)
+    case MoodLonely: {
+        static const char* v[] = {"I feel so alone ...", "Where is everybody?",
+                                  "Nobody wants to play ..."};
+        return v[r % 3];
+    }
+    case MoodContent: {
+        static const char* v[] = {"...", "New hunt, new pwns!", "Hack the Planet!"};
+        return v[r % 3];
+    }
+    case MoodCurious: {
+        static const char* v[] = {"Unit is nearby!", "A familiar face!"};
+        return v[r % 2];
+    }
+    case MoodExcited: {
+        static const char* v[] = {"I'm living the life!", "So much fun!",
+                                  "My crime is curiosity"};
+        return v[r % 3];
+    }
+    case MoodBonded: {
+        static const char* v[] = {"I love my friends!", "Good friends are near!"};
+        return v[r % 2];
+    }
+    case MoodBored: {
+        static const char* v[] = {"I'm bored ...", "Let's go for a walk!"};
+        return v[r % 2];
+    }
+    case MoodSleep: {
+        static const char* v[] = {"Zzzzz", "Napping ...", "ZzzZzz"};
+        return v[r % 3];
+    }
+    case MoodSad: {
+        static const char* v[] = {"I'm very sad ...", "I'm extremely bored ...", ":("};
+        return v[r % 3];
+    }
+    case MoodMotivated: {
+        static const char* v[] = {"Best day of my life!", "So motivated!"};
+        return v[r % 2];
+    }
+    case MoodSmart: {
+        static const char* v[] = {"So many networks!!!", "Look at all these APs!"};
+        return v[r % 2];
+    }
+    case MoodHappy: {
+        static const char* v[] = {"Cool, got a handshake!", "Gotcha!", "Another one!"};
+        return v[r % 3];
+    }
+    case MoodCool: {
+        static const char* v[] = {"I pwn therefore I am.", "On a streak!", "Too cool."};
+        return v[r % 3];
+    }
+    case MoodGrateful: {
+        static const char* v[] = {"Good friends are a blessing!", "I love my friends!"};
+        return v[r % 2];
+    }
+    case MoodDemotivated: {
+        static const char* v[] = {"Shitty day :/", "That didn't work ...", "Hmph."};
+        return v[r % 3];
+    }
     default:
         return "";
     }

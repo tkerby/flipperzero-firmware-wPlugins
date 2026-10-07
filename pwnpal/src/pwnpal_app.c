@@ -1683,7 +1683,21 @@ static void pwnpal_populate(PwnpalModel* model) {
     Pwnagotchi* pwn = model->pwn;
 
     furi_string_set(pwn->hostname, p->s.name);
-    pwn->face = (enum PwnagotchiFace)persona_face(p);
+    // base face from mood; the advertised -f face uses persona_face(p) directly, so this idle
+    // animation is local-draw only and never churns the broadcast persona.
+    Face base_face = persona_face(p);
+    pwn->face = (enum PwnagotchiFace)base_face;
+    // give the face life: while awake/scanning, glance right then left as it hops channels; while
+    // napping, breathe Sleep<->Sleep2. driven by the 1Hz home tick.
+    if(base_face == FaceAwake) {
+        uint32_t m = model->tick_secs % 8; // ~8s loop: forward, a glance right, a glance left
+        if(m == 3)
+            pwn->face = (enum PwnagotchiFace)FaceLookR;
+        else if(m == 6)
+            pwn->face = (enum PwnagotchiFace)FaceLookL;
+    } else if(base_face == FaceSleep && (model->tick_secs & 1)) {
+        pwn->face = (enum PwnagotchiFace)FaceSleep2;
+    }
     // exit prompt: angry face while asking, happy for a beat if you stay. deadline compare works at tick 0
     bool staying = model->tick_secs < model->stayed_until;
     if(model->confirm_exit)
@@ -2610,10 +2624,10 @@ static void pwnpal_draw_stats(Canvas* canvas, const PwnpalModel* model) {
         if(ap_crackable(&model->aps[i])) nc++;
     }
     snprintf(
-        l, sizeof(l), "pwnd %lu (%lu)   aps %u", (unsigned long)p->pwnd_run,
-        (unsigned long)p->s.pwnd_tot, aps_seen_session(model));
+        l, sizeof(l), "pwnd %lu (%lu)  seen %lu", (unsigned long)p->pwnd_run,
+        (unsigned long)p->s.pwnd_tot, (unsigned long)p->aps_session);
     canvas_draw_str(canvas, 2, 31, l);
-    snprintf(l, sizeof(l), "sats %d   cap %s", model->gps_sats, capture_name(model->capture_mode));
+    snprintf(l, sizeof(l), "sats %d   mode %s", model->gps_sats, capture_name(model->capture_mode));
     canvas_draw_str(canvas, 2, 41, l);
     // coords get the whole row (no prefix/comma) so a full lat+lon fits at this font
     if(model->gps_seen) {
@@ -2720,7 +2734,7 @@ static void pwnpal_draw_home_stats(Canvas* canvas, const PwnpalModel* model) {
         for(uint16_t i = 0; i < model->ap_count; i++)
             if(model->aps[i].has_essid && (model->aps[i].pmkid || model->aps[i].handshake)) crack++;
         // pwnd omitted here: the persistent bottom bar already shows it on every home page
-        HS_ROW("aps %u", aps_seen_session(model));
+        HS_ROW("seen %lu", (unsigned long)p->aps_session);
         HS_ROW("crack %u", (unsigned)crack);
         HS_ROW("epoch %lu", (unsigned long)p->epoch);
         break;
@@ -2734,7 +2748,7 @@ static void pwnpal_draw_home_stats(Canvas* canvas, const PwnpalModel* model) {
             if(model->aps[i].pmkid) np++;
             if(model->aps[i].handshake) nh++;
         }
-        HS_ROW("caps P%u/H%u", (unsigned)np, (unsigned)nh);
+        HS_ROW("pwnd P%u/H%u", (unsigned)np, (unsigned)nh);
         HS_ROW("near %d", near);
         break;
     }
