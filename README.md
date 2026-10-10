@@ -4,9 +4,9 @@ Real input replaces the first version's built-in meal picker. The supplied deskt
 
 ## Release status
 
-The app display name is **BusterMan Decoder**. A renamed binary built with uFBT against official release SDK 1.4.3 is available at [builds/BusterMan.fap](builds/BusterMan.fap). Build validation passed for target f7, API 87.1. Physical-device testing of this new binary is still pending; the previously supplied binary is preserved separately in the owner's private backups.
+The app display name is **BusterMan Decoder**. A renamed binary built with uFBT against official release SDK 1.4.3 is available at [builds/BusterMan.fap](builds/BusterMan.fap). Build validation passed for target f7, API 87.1. The owner reports the renamed build works on their Flipper; the previously supplied binary is preserved separately in the owner's private backups.
 
-Official Flipper Apps Catalog submission remains pending icon, catalog metadata, and device acceptance. Original qFlipper captures are in screenshots/; they show the prior build's splash and decoder modes.
+Catalog icon and metadata are prepared; submission is pending creation of the catalog fork and pull request. Original qFlipper captures are in screenshots/; they show the prior build's splash and decoder modes.
 
 The internal appid, save directory, entry point, and USB commands retain their legacy names for compatibility with existing progress and CyberKing.
 

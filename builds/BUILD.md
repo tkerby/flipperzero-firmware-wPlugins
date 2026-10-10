@@ -1,14 +1,8 @@
 # Build record — 2026-10-10
 
-Source commit: 86432309b98aace3ea1d3e2a3fc1cdfbdf2db63f
-Display name: BusterMan Decoder
-Tool: uFBT 0.2.6
-SDK: official release 1.4.3
-Target: f7 (7)
-API: 87.1
-Output size: 21788 bytes
-SHA256: 2cac01dba524f7f4f8bf711eb57cc35e4c98529aeb9db9b1ce59b39f542988c6
+BusterMan Decoder 1.0, Mr-Nobody88. uFBT 0.2.6, official release SDK 1.4.3, target f7, API 87.1. Compilation, linking and APPCHK passed with the 10x10 monochrome icon adapted from the embedded loading-screen artwork. No C/header logic changed.
 
-Compilation, linking and APPCHK passed. Binary metadata contains BusterMan Decoder and no MegaMan Decoder display name. Original app logic, save paths and USB commands were preserved. Host decoder, sync and bridge checks passed; LeakSanitizer was disabled because the execution environment does not support its process inspection. AddressSanitizer and UndefinedBehaviorSanitizer remained enabled for the decoder checks.
+SHA256: 107e4cbfcb7f39dd5160ee321d925d03bb8508936f90dcade9df4d3f40ed653b
+Size: 21784 bytes.
 
-No physical device or USB integration test was performed on this rebuilt binary here. Install and test before catalog submission. Internal appid remains megaman, so the build tool emits megaman.fap; the published copy is named BusterMan.fap.
+The owner reports the preceding renamed binary works on their physical Flipper. This metadata/icon rebuild has not separately been run on hardware here. Existing host decoder/sync/bridge tests passed for the unchanged logic. Catalog bundle validation is recorded separately. Internal appid/save paths/USB identifiers remain megaman for compatibility.
