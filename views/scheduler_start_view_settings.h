@@ -80,6 +80,9 @@ static const char* const start_line_text[START_LINE_COUNT] = {"Line 1", "Nearest
 #define SECONDS_PER_DAY      86400UL
 #define DEFAULT_LINE_SECONDS (12UL * 60 * 60)
 
+// Only blink the idle LED when the next send is this close
+#define IDLE_BLINK_WINDOW_S 60
+
 #define TX_DELAY_STEP_MS 50
 #define TX_DELAY_MAX_MS  1000
 #define TX_DELAY_COUNT   ((TX_DELAY_MAX_MS / TX_DELAY_STEP_MS) + 1)

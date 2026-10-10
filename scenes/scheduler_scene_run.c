@@ -50,7 +50,10 @@ bool scheduler_scene_run_on_event(void* context, SceneManagerEvent event) {
     if(!busy && scheduler_time_to_trigger(app->scheduler)) {
         const int16_t line = scheduler_fire(app->scheduler);
         scheduler_start_tx(app, line);
-    } else if(!busy && !(tick_counter % 2)) {
+    } else if(
+        !busy && !(tick_counter % 2) && scheduler_is_armed(app->scheduler) &&
+        scheduler_get_countdown_seconds(app->scheduler) <= IDLE_BLINK_WINDOW_S) {
+        // Keep quiet during long waits, only blink in the last minute before a send
         notification_message(app->notifications, &sequence_blink_red_10);
     }
 

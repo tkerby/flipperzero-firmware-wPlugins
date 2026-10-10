@@ -117,6 +117,7 @@ Notes:
 * To send the same signal more than once a day, list its `*.sub` file more than once in the playlist. Every entry is a separate line with its own wait or time.
 * Times use the Flipper clock, so make sure date and time are set correctly.
 * Playlists can have up to 127 lines.
+* The red LED only blinks during the last minute before a send, so long waits stay dark.
 * The app has to stay open on the run screen. Charging is only blocked while transmitting, so the Flipper can stay on USB power for long schedules.
 
 

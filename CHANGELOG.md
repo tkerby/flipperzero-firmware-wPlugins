@@ -6,6 +6,7 @@
 - One-Shot with the Time schedule also sends following lines that share the same time.
 - Time editor: Up/Down change the selected block right away and Left/Right switch blocks, no OK needed first. OK saves and closes, Back closes without saving.
 - Schedule files are now version 3 (line times in seconds). Version 1 and 2 files still load.
+- Red idle LED only blinks during the last minute before a send, instead of every second while waiting.
 ## Bug-fix
 - Playlist lines with the same time now fire one after the other, instead of the second one waiting a day.
 - Line times that pass during a long transmission fire right after it, instead of the next day.
