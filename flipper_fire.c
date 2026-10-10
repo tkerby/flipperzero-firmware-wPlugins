@@ -4,10 +4,10 @@
 #include <input/input.h>
 #include <stdlib.h>
 
-#define FIRE_WIDTH 128
-#define FIRE_HEIGHT 64
+#define FIRE_WIDTH         128
+#define FIRE_HEIGHT        64
 #define FIRE_MAX_INTENSITY 36
-#define FRAME_MS 33
+#define FRAME_MS           33
 
 static const uint8_t bayer4[4][4] = {
     {0, 8, 2, 10},
@@ -23,7 +23,8 @@ typedef struct {
 
 static void fire_set_source(FireState* state, uint8_t intensity) {
     uint8_t* row = &state->pixels[(FIRE_HEIGHT - 1) * FIRE_WIDTH];
-    for(int x = 0; x < FIRE_WIDTH; x++) row[x] = intensity;
+    for(int x = 0; x < FIRE_WIDTH; x++)
+        row[x] = intensity;
 }
 
 static void fire_decrease_source(FireState* state) {
@@ -67,7 +68,8 @@ static void fire_propagate(FireState* state) {
 static void fire_sound_tick(FireState* state) {
     const uint8_t* row = &state->pixels[(FIRE_HEIGHT - 1) * FIRE_WIDTH];
     int sum = 0;
-    for(int x = 0; x < FIRE_WIDTH; x++) sum += row[x];
+    for(int x = 0; x < FIRE_WIDTH; x++)
+        sum += row[x];
     int avg = sum / FIRE_WIDTH;
 
     // Random short pops whose density and loudness follow the source intensity

@@ -1,3 +1,4 @@
 *.fap
 dist
 .vscode
+.clang-format
