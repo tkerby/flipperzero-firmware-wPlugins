@@ -1,3 +1,12 @@
+# v3.2 (unreleased)
+
+## New Features
+- Time schedule now uses HH:MM:SS instead of HH:MM.
+- Schedule files are now version 3 (line times in seconds). Version 1 and 2 files still load.
+## Bug-fix
+- Playlist lines with the same time now fire one after the other, instead of the second one waiting a day.
+- Line times that pass during a long transmission fire right after it, instead of the next day.
+
 # v3.1 (unreleased)
 
 ## New Features

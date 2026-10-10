@@ -2,6 +2,8 @@
 
 A Flipper Zero app to send SubGHz signals at a given interval. Individual `*.sub` or playlist `*.txt` files can be used for transmission, and schedule settings can be saved in a `*.sch` file.
 
+Playlists can also be stepped through one line at a time, with a separate wait or a time of day (HH:MM:SS) per line. See [Playlist Scheduling](#playlist-scheduling).
+
 
 <table style="border:0px">
   <tr style="border:0px">
@@ -18,6 +20,7 @@ A Flipper Zero app to send SubGHz signals at a given interval. Individual `*.sub
        <li>Relative: Interval is length of time from `END` of one transmission to `START` of next.</li>
        <li>Precise: Interval is length of time from `START` of one transmission to `START` of next.</li>
      </ul>
+     Not used with the <code>Time</code> schedule.
     </td>
     <td style="border:0px" width="20%"><img src="./screenshots/v3/timing.png" width="100%"></td>
   </tr>
@@ -35,7 +38,7 @@ A Flipper Zero app to send SubGHz signals at a given interval. Individual `*.sub
   <ul>
   <li>Normal: Transmit after intervals.</li>
   <li>Immediate: Counts start as interval.</li>
-  <li>One-Shot: Wait interval and transmits once.</li>
+  <li>One-Shot: Wait interval and transmits once. With a stepped playlist, sends one line (plus any following lines with a zero wait).</li>
   </ul>
   </td>
   <td style="border:0px" width="20%"><img src="./screenshots/v3/txmode.png" width="100%"></td>
@@ -72,12 +75,43 @@ A Flipper Zero app to send SubGHz signals at a given interval. Individual `*.sub
       <li>TX Count</li>
       <li>Radio</li>
       <li>Selected File</li>
-      <li>TX Interval Countdown</li>
+      <li>TX Interval Countdown (<code>Sending</code> while transmitting)</li>
+      <li>Next playlist line, when stepping</li>
     </ul>
   </td>
    <td style="border:0px" width="20%"><img src="./screenshots/v3/rundisplay.png" width="100%"></td>
   </tr>
 </table>
+
+## Playlist Scheduling
+
+When a playlist (`*.txt`) is selected, extra options appear in the schedule menu.
+
+**Step**
+* `All`: every trigger sends the whole playlist (default, same as before).
+* `One`: every trigger sends the next line of the playlist. After the last line it starts over at line 1.
+
+**Schedule** (only with Step `One`)
+* `Uniform`: one interval for every line, set with `Interval`.
+* `Per Line`: every line has its own wait before it is sent. A wait of `00:00:00` sends the line right after the previous one, so lines can be grouped.
+* `Time`: every line is sent at a time of day (`HH:MM:SS`), in playlist order, repeating daily. Lines with the same time are sent one after the other.
+
+Set the wait or time of each line under `Edit Lines...`. These settings are stored in the `*.sch` file; the playlist itself is not changed and still works with the stock `SubGHz Playlist` app.
+
+Example: a playlist with 4 lines and Schedule `Time`:
+
+| Line | Time | Sent |
+|---|---|---|
+| 1 | 17:30:00 | 17:30:00 |
+| 2 | 18:00:00 | 18:00:00 |
+| 3 | 18:00:00 | right after line 2 |
+| 4 | 23:00:00 | 23:00:00, then line 1 again the next day at 17:30:00 |
+
+Notes:
+* To send the same signal more than once a day, list its `*.sub` file more than once in the playlist. Every entry is a separate line with its own wait or time.
+* Times use the Flipper clock, so make sure date and time are set correctly.
+* Playlists can have up to 127 lines.
+* The app has to stay open on the run screen. Charging is only blocked while transmitting, so the Flipper can stay on USB power for long schedules.
 
 
 ## Requirements
@@ -87,7 +121,7 @@ This app is tested against the current `dev` and `release` branches of the [OFW]
 * Current OFW Version: 1.4.3
 <br>[![Compatibility status:](https://github.com/shalebridge/flipper-subghz-scheduler/actions/workflows/build.yml/badge.svg)](https://github.com/shalebridge/flipper-subghz-scheduler/actions/workflows/build.yml)
 
-It has also been tested against [Momentum 009](https://github.com/Next-Flip/Momentum-Firmware/releases/tag/mntm-009).
+It has also been tested against [Momentum 009](https://github.com/Next-Flip/Momentum-Firmware/releases/tag/mntm-009). Playlist scheduling (v3.1) was tested on Momentum (API 87.1).
 
 > [!NOTE]
 > Currently not supported on Xtreme, as development of that firmware was officially [discontinued on Nov 18, 2024](https://github.com/Flipper-XFW/Xtreme-Firmware/commit/54619d013a120897eeade491decf4d1e95217c06). Since then, breaking changes were made to the Furi API. For those who still use Xtreme I am working on a separate port.
@@ -110,11 +144,11 @@ Build outputs are found in the `dist` directory for each application.
 
 # To-Do
 - [ ] Enable running in the background.
-- [ ] `TESTING IN PROGRESS` Enable interval delays for playlists. For example, turning on a light (playlist index 1), then 4 hours later turning it off (playlist index 2), and run that at another arbitrary interval. This can include custom playlist keys or custom app files.
-- [ ] `TESTING IN PROGRESS` Separate into multiple modes:  
+- [x] Enable interval delays for playlists. For example, turning on a light (playlist index 1), then 4 hours later turning it off (playlist index 2). See Step `One` with Schedule `Per Line`.
+- [ ] Separate into multiple modes:  
   - `Periodic`: Current functionality.
-  - `Alarm`: To set specific time for transmission.
+  - [x] `Alarm`: To set specific time for transmission. See Schedule `Time`.
   - `Custom`: Periodic with custom breaks and tx count between transmissions.
 - [ ] More visual feedback of current transmission (like `SubGHz Playlist`).
-- [ ] Enable quitting from transmission. Currently, if back is pressed during playlist transmission, transmission will complete before exiting to main menu.
+- [x] Enable quitting from transmission. Back on the run screen stops a transmission in progress.
 - [ ] Options to select notifications on transmit (vibro, backlight, etc).

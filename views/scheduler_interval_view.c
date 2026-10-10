@@ -14,7 +14,7 @@ typedef struct {
     SchedulerHMS time;
     uint8_t col;
     bool editing;
-    bool time_of_day; // HH:MM clock time instead of an H:M:S interval
+    bool time_of_day; // clock time, hours wrap at 24
     bool allow_zero;
     char title[24];
 } IntervalModel;
@@ -72,25 +72,6 @@ static void interval_view_draw(Canvas* canvas, void* context) {
     canvas_draw_str_aligned(
         canvas, GUI_DISPLAY_WIDTH / 2, 4, AlignCenter, AlignTop, model->title);
 
-    if(model->time_of_day) {
-        // Hours
-        snprintf(buffer, sizeof(buffer), "%02u", model->time.h);
-        draw_block(canvas, 32, 19, 28, 24, FontBigNumbers, get_state(model, 0), buffer);
-
-        // Hour/Minute colon
-        canvas_draw_box(canvas, 63, 34, 2, 2);
-        canvas_draw_box(canvas, 63, 28, 2, 2);
-
-        // Minutes
-        snprintf(buffer, sizeof(buffer), "%02u", model->time.m);
-        draw_block(canvas, 68, 19, 28, 24, FontBigNumbers, get_state(model, 1), buffer);
-
-        canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str_aligned(
-            canvas, 64, 58, AlignCenter, AlignCenter, model->editing ? "Editing" : "");
-        return;
-    }
-
     // Hours
     snprintf(buffer, sizeof(buffer), "%02u", model->time.h);
     draw_block(canvas, 14, 19, 28, 24, FontBigNumbers, get_state(model, 0), buffer);
@@ -136,7 +117,7 @@ static bool interval_view_input(InputEvent* event, void* context) {
                     }
                     consumed = true;
                 } else if(key == InputKeyRight) {
-                    if(model->col < (model->time_of_day ? 1 : 2)) {
+                    if(model->col < 2) {
                         model->col++;
                     }
                     consumed = true;

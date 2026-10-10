@@ -3,7 +3,7 @@
 #include <storage/storage.h>
 
 #define SCHEDULER_APP_SETTINGS_FILE_TYPE    "SubGHz Scheduler Settings file"
-#define SCHEDULER_APP_SETTINGS_FILE_VERSION 2
+#define SCHEDULER_APP_SETTINGS_FILE_VERSION 3
 #define SCHEDULER_SETTINGS_FILE_EXTENSION   ".sch"
 
 #define SCHEDULER_APP_FILE_TYPE    "SubGHz Scheduler Custom file"

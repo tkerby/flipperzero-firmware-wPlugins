@@ -215,16 +215,10 @@ void scheduler_run_view_update(
         scheduler_seconds_to_hms_string(
             scheduler_get_line_interval(scheduler, line), interval, sizeof(interval));
         break;
-    case SchedulerScheduleTimeOfDay: {
-        const uint32_t minutes = scheduler_get_line_time(scheduler, line);
-        snprintf(
-            interval,
-            sizeof(interval),
-            "@ %02u:%02u",
-            (unsigned)((minutes / 60) % 24),
-            (unsigned)(minutes % 60));
+    case SchedulerScheduleTimeOfDay:
+        scheduler_seconds_to_hms_string(
+            scheduler_get_line_time(scheduler, line), interval, sizeof(interval));
         break;
-    }
     case SchedulerScheduleUniform:
     default:
         scheduler_seconds_to_hms_string(

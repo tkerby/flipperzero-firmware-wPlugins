@@ -67,8 +67,8 @@ static const char* const schedule_type_text[SCHEDULE_TYPE_COUNT] = {"Uniform", "
 // Playlist line count is stored as int8_t
 #define SCHEDULER_MAX_LINES 127
 
-#define MINUTES_PER_DAY      (24 * 60)
-#define DEFAULT_LINE_MINUTES (12 * 60)
+#define SECONDS_PER_DAY      86400UL
+#define DEFAULT_LINE_SECONDS (12UL * 60 * 60)
 
 #define TX_DELAY_STEP_MS 50
 #define TX_DELAY_MAX_MS  1000

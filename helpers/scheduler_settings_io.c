@@ -57,8 +57,12 @@ static void scheduler_settings_write_lines(FlipperFormat* ff, Scheduler* schedul
 }
 
 // stored_count: line count the schedule was saved with, the playlist may have changed since
-static void
-    scheduler_settings_read_lines(FlipperFormat* ff, Scheduler* scheduler, uint32_t stored_count) {
+// version: file version, line times are minutes before version 3 and seconds since
+static void scheduler_settings_read_lines(
+    FlipperFormat* ff,
+    Scheduler* scheduler,
+    uint32_t stored_count,
+    uint32_t version) {
     if(stored_count == 0 || stored_count > SCHEDULER_MAX_LINES) {
         return;
     }
@@ -76,7 +80,7 @@ static void
 
     if(flipper_format_read_uint32(ff, KEY_LINE_TIMES, values, stored_count)) {
         for(uint8_t i = 0; i < count; ++i) {
-            scheduler_set_line_time(scheduler, i, values[i]);
+            scheduler_set_line_time(scheduler, i, version < 3 ? values[i] * 60 : values[i]);
         }
     } else {
         FURI_LOG_W(TAG, "Missing/invalid %s", KEY_LINE_TIMES);
@@ -286,7 +290,7 @@ bool scheduler_settings_load_from_path(SchedulerApp* app, const char* full_path)
                 if(flipper_format_read_uint32(ff, KEY_SCHEDULE_KIND, &v, 1)) {
                     scheduler_set_schedule_type(app->scheduler, (SchedulerScheduleType)v);
                 }
-                scheduler_settings_read_lines(ff, app->scheduler, list_count);
+                scheduler_settings_read_lines(ff, app->scheduler, list_count, ver);
             }
         }
         // TODO: Error here too

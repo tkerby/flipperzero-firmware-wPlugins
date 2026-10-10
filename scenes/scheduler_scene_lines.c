@@ -38,13 +38,9 @@ void scheduler_scene_lines_on_enter(void* context) {
         }
 
         if(time_of_day) {
-            const uint32_t minutes = scheduler_get_line_time(app->scheduler, i);
-            snprintf(
-                value,
-                sizeof(value),
-                "@%02u:%02u",
-                (unsigned)((minutes / 60) % 24),
-                (unsigned)(minutes % 60));
+            value[0] = '@';
+            scheduler_seconds_to_hms_string(
+                scheduler_get_line_time(app->scheduler, i), value + 1, sizeof(value) - 1);
         } else {
             scheduler_seconds_to_hms_string(
                 scheduler_get_line_interval(app->scheduler, i), value, sizeof(value));

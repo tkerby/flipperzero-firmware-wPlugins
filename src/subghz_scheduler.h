@@ -63,5 +63,6 @@ SchedulerScheduleType scheduler_get_effective_schedule(Scheduler* scheduler);
 void scheduler_set_line_interval(Scheduler* scheduler, uint8_t line, uint32_t seconds);
 uint32_t scheduler_get_line_interval(Scheduler* scheduler, uint8_t line);
 
-void scheduler_set_line_time(Scheduler* scheduler, uint8_t line, uint32_t minutes);
+// Time of day in seconds since midnight
+void scheduler_set_line_time(Scheduler* scheduler, uint8_t line, uint32_t seconds);
 uint32_t scheduler_get_line_time(Scheduler* scheduler, uint8_t line);

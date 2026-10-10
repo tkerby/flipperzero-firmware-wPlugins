@@ -3,8 +3,6 @@
 
 #define TAG "SubGHzScheduler"
 
-#define SECONDS_PER_DAY 86400UL
-
 struct Scheduler {
     uint32_t next_fire_time;
     bool armed;
@@ -28,13 +26,13 @@ struct Scheduler {
     bool radio;
 
     uint32_t line_interval[SCHEDULER_MAX_LINES];
-    uint32_t line_time[SCHEDULER_MAX_LINES]; // minutes since midnight
+    uint32_t line_time[SCHEDULER_MAX_LINES]; // seconds since midnight
 };
 
 static void scheduler_reset_lines(Scheduler* scheduler) {
     for(uint8_t i = 0; i < SCHEDULER_MAX_LINES; ++i) {
         scheduler->line_interval[i] = scheduler->interval_seconds;
-        scheduler->line_time[i] = DEFAULT_LINE_MINUTES;
+        scheduler->line_time[i] = DEFAULT_LINE_SECONDS;
     }
 }
 
@@ -92,8 +90,10 @@ SchedulerScheduleType scheduler_get_effective_schedule(Scheduler* scheduler) {
     return scheduler_is_stepping(scheduler) ? scheduler->schedule_type : SchedulerScheduleUniform;
 }
 
-// Next fire time for the current line, counted from base
-static uint32_t scheduler_next_fire_from(Scheduler* scheduler, uint32_t base) {
+// Next fire time for the current line, counted from base.
+// allow_equal: a time of day equal to base fires at base instead of the next day, so lines
+// sharing a time fire back to back.
+static uint32_t scheduler_next_fire_from(Scheduler* scheduler, uint32_t base, bool allow_equal) {
     const uint8_t line = scheduler->current_line;
 
     switch(scheduler_get_effective_schedule(scheduler)) {
@@ -101,8 +101,8 @@ static uint32_t scheduler_next_fire_from(Scheduler* scheduler, uint32_t base) {
         return base + scheduler->line_interval[line];
     case SchedulerScheduleTimeOfDay: {
         // RTC holds local time, so the timestamp modulo a day is the time of day
-        uint32_t fire = base - (base % SECONDS_PER_DAY) + scheduler->line_time[line] * 60;
-        if(fire <= base) {
+        uint32_t fire = base - (base % SECONDS_PER_DAY) + scheduler->line_time[line];
+        if(fire < base || (fire == base && !allow_equal)) {
             fire += SECONDS_PER_DAY;
         }
         return fire;
@@ -121,7 +121,7 @@ void scheduler_start(Scheduler* scheduler) {
     if(scheduler->tx_mode == SchedulerTxModeImmediate) {
         scheduler->next_fire_time = now;
     } else {
-        scheduler->next_fire_time = scheduler_next_fire_from(scheduler, now);
+        scheduler->next_fire_time = scheduler_next_fire_from(scheduler, now, false);
     }
     scheduler->armed = true;
 }
@@ -142,13 +142,18 @@ int16_t scheduler_fire(Scheduler* scheduler) {
     }
 
     if(scheduler_get_effective_schedule(scheduler) == SchedulerScheduleTimeOfDay) {
-        scheduler->next_fire_time = scheduler_next_fire_from(scheduler, now);
+        // Count from the scheduled time, so a line with the same time fires right after this
+        // one, and times that passed during a long transmission are not pushed a day.
+        // Wrapping back to the first line starts a new day, never fire it again right away.
+        const bool same_cycle = scheduler->current_line != 0;
+        scheduler->next_fire_time =
+            scheduler_next_fire_from(scheduler, scheduler->next_fire_time, same_cycle);
         scheduler->armed = true;
     } else if(scheduler->timing_mode == SchedulerTimingModePrecise) {
         // Count from the scheduled time to avoid drift, unless we fell behind
-        uint32_t next = scheduler_next_fire_from(scheduler, scheduler->next_fire_time);
+        uint32_t next = scheduler_next_fire_from(scheduler, scheduler->next_fire_time, false);
         if(next < now) {
-            next = scheduler_next_fire_from(scheduler, now);
+            next = scheduler_next_fire_from(scheduler, now, false);
         }
         scheduler->next_fire_time = next;
         scheduler->armed = true;
@@ -164,7 +169,7 @@ void scheduler_tx_done(Scheduler* scheduler) {
     furi_assert(scheduler);
     if(!scheduler->armed) {
         scheduler->next_fire_time =
-            scheduler_next_fire_from(scheduler, furi_hal_rtc_get_timestamp());
+            scheduler_next_fire_from(scheduler, furi_hal_rtc_get_timestamp(), false);
         scheduler->armed = true;
     }
 }
@@ -238,10 +243,10 @@ void scheduler_set_line_interval(Scheduler* scheduler, uint8_t line, uint32_t se
     }
 }
 
-void scheduler_set_line_time(Scheduler* scheduler, uint8_t line, uint32_t minutes) {
+void scheduler_set_line_time(Scheduler* scheduler, uint8_t line, uint32_t seconds) {
     furi_assert(scheduler);
     if(line < SCHEDULER_MAX_LINES) {
-        scheduler->line_time[line] = minutes % MINUTES_PER_DAY;
+        scheduler->line_time[line] = seconds % SECONDS_PER_DAY;
     }
 }
 

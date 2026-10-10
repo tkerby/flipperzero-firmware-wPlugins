@@ -13,7 +13,7 @@ void scheduler_scene_interval_on_enter(void* context) {
         snprintf(title, sizeof(title), "Line %d Time", line + 1);
         scheduler_interval_view_configure(app->interval_view, title, true, false);
         scheduler_interval_view_set_seconds(
-            app->interval_view, scheduler_get_line_time(app->scheduler, line) * 60);
+            app->interval_view, scheduler_get_line_time(app->scheduler, line));
     } else {
         // Zero wait chains a line to the one before it
         snprintf(title, sizeof(title), "Line %d Wait", line + 1);
@@ -39,7 +39,7 @@ void scheduler_scene_interval_on_exit(void* context) {
     if(line < 0) {
         scheduler_set_interval_seconds(app->scheduler, sec);
     } else if(scheduler_get_schedule_type(app->scheduler) == SchedulerScheduleTimeOfDay) {
-        scheduler_set_line_time(app->scheduler, line, sec / 60);
+        scheduler_set_line_time(app->scheduler, line, sec);
     } else {
         scheduler_set_line_interval(app->scheduler, line, sec);
     }
