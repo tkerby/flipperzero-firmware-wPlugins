@@ -6,9 +6,9 @@ Smart Home lets you control Home Assistant devices from your Flipper Zero using 
 
 - Direct Home Assistant REST API control
 - Persistent devices and settings
-- Home Assistant `switch.*` support
-- Home Assistant `climate.*` support
-- Home Assistant `light.*` support
+- Home Assistant switch.* support
+- Home Assistant climate.* support
+- Home Assistant light.* support
 - Switch On, Off, and Toggle actions
 - Light Status, On, Off, Toggle, brightness, RGB color, and effect controls
 - Thermostat status and temperature controls
@@ -29,17 +29,17 @@ Home Assistant is required. No companion PC relay is required.
 
 ## Home Assistant Switches
 
-Add a switch using its `switch.*` entity ID, for example:
+Add a switch using its switch.* entity ID, for example:
 
-- `switch.smart_plug`
+- switch.smart_plug
 
 Supported actions include On, Off, Toggle, Rename, and Delete.
 
 ## Home Assistant Lights
 
-Add a light using its `light.*` entity ID, for example:
+Add a light using its light.* entity ID, for example:
 
-- `light.monitor_backlight`
+- light.monitor_backlight
 
 Supported actions include Status, On, Off, Toggle, brightness presets, a Solid RGB color submenu, Rename, and Delete.
 
@@ -47,9 +47,9 @@ The Effects submenu includes the WLED effect set used by current WLED integratio
 
 ## Home Assistant Climate / Thermostat
 
-Add a thermostat using its `climate.*` entity ID, for example:
+Add a thermostat using its climate.* entity ID, for example:
 
-- `climate.living_room`
+- climate.living_room
 
 Supported actions include Status, temperature adjustment, direct target temperature, HVAC modes, fan modes, Rename, and Delete.
 
