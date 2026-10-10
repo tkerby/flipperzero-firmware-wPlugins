@@ -1,3 +1,24 @@
+# v3.1 (unreleased)
+
+## New Features
+- Playlist 'Step' setting: send the whole playlist per trigger (`All`) or one line per trigger (`One`), wrapping around.
+- 'Schedule' setting when stepping one line at a time:
+  - `Uniform` -- one interval for every line.
+  - `Per Line` -- each line has its own wait before it is sent. A wait of 00:00:00 chains a line to the one before it.
+  - `Time` -- each line is sent at a time of day (HH:MM), in playlist order, repeating daily.
+- 'Edit Lines...' menu to set the wait or time for each playlist line.
+- One-Shot with a stepped playlist sends a single line (plus any chained zero-wait lines).
+- Run view shows the next line and its wait or time, and 'Sending' while transmitting.
+- Schedule files are now version 2 and store step mode, schedule type and per-line settings. Version 1 files still load.
+## Bug-fix
+- Scheduling uses the RTC instead of counting GUI ticks, so long intervals no longer drift.
+- Back on the run screen aborts a transmission in progress instead of waiting for the playlist to finish.
+- TX thread is no longer freed from its own state callback, and scenes are only switched from the GUI thread.
+- Charging is only suppressed while transmitting, not for the whole time the schedule runs.
+- Radio is put back to sleep when a file fails to load.
+- Empty playlists and playlists over 127 lines are rejected when selected.
+- Cancelling file selection keeps the previously selected file.
+
 # v3.0 (2026-02-12)
 
 ## New Features

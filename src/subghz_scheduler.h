@@ -12,9 +12,15 @@ void scheduler_free(Scheduler* scheduler);
 
 void scheduler_full_reset(Scheduler* scheduler);
 void scheduler_time_reset(Scheduler* scheduler);
-void scheduler_reset_previous_time(Scheduler* scheduler);
 
+// Run control. Timing is based on the RTC, the GUI tick only polls.
+void scheduler_start(Scheduler* scheduler);
 bool scheduler_time_to_trigger(Scheduler* scheduler);
+int16_t scheduler_fire(Scheduler* scheduler);
+void scheduler_tx_done(Scheduler* scheduler);
+bool scheduler_one_shot_done(Scheduler* scheduler);
+bool scheduler_is_armed(Scheduler* scheduler);
+uint8_t scheduler_get_current_line(Scheduler* scheduler);
 
 void scheduler_set_interval_seconds(Scheduler* scheduler, uint32_t interval_seconds);
 uint32_t scheduler_get_interval_seconds(Scheduler* scheduler);
@@ -43,4 +49,19 @@ const char* scheduler_get_file_name(Scheduler* scheduler);
 uint8_t scheduler_get_list_count(Scheduler* scheduler);
 FileTxType scheduler_get_file_type(Scheduler* scheduler);
 
-uint32_t scheduler_get_previous_time(Scheduler* scheduler);
+void scheduler_set_step_mode(Scheduler* scheduler, SchedulerStepMode step_mode);
+SchedulerStepMode scheduler_get_step_mode(Scheduler* scheduler);
+
+void scheduler_set_schedule_type(Scheduler* scheduler, SchedulerScheduleType schedule_type);
+SchedulerScheduleType scheduler_get_schedule_type(Scheduler* scheduler);
+
+// True when a playlist is sent one line per trigger
+bool scheduler_is_stepping(Scheduler* scheduler);
+// Schedule type in effect: anything other than Uniform requires stepping
+SchedulerScheduleType scheduler_get_effective_schedule(Scheduler* scheduler);
+
+void scheduler_set_line_interval(Scheduler* scheduler, uint8_t line, uint32_t seconds);
+uint32_t scheduler_get_line_interval(Scheduler* scheduler, uint8_t line);
+
+void scheduler_set_line_time(Scheduler* scheduler, uint8_t line, uint32_t minutes);
+uint32_t scheduler_get_line_time(Scheduler* scheduler, uint8_t line);

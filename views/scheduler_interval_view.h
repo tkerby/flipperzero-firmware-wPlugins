@@ -15,3 +15,10 @@ void scheduler_interval_view_set_seconds(SchedulerIntervalView* v, uint32_t sec)
 uint32_t scheduler_interval_view_get_seconds(SchedulerIntervalView* v);
 
 void scheduler_interval_view_set_app(SchedulerIntervalView* v, SchedulerApp* app);
+
+// time_of_day: edit HH:MM (seconds = minutes * 60), allow_zero: accept 00:00:00 intervals
+void scheduler_interval_view_configure(
+    SchedulerIntervalView* v,
+    const char* title,
+    bool time_of_day,
+    bool allow_zero);

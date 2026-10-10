@@ -137,6 +137,8 @@ SchedulerApp* scheduler_app_alloc(void) {
     }
 
     app->should_reset = true;
+    app->tx_line = -1;
+    app->edit_line = -1;
 
     scene_manager_next_scene(app->scene_manager, SchedulerSceneMenu);
 

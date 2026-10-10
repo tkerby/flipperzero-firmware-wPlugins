@@ -14,6 +14,9 @@ typedef struct {
     SchedulerHMS time;
     uint8_t col;
     bool editing;
+    bool time_of_day; // HH:MM clock time instead of an H:M:S interval
+    bool allow_zero;
+    char title[24];
 } IntervalModel;
 
 struct SchedulerIntervalView {
@@ -67,7 +70,26 @@ static void interval_view_draw(Canvas* canvas, void* context) {
 
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str_aligned(
-        canvas, GUI_DISPLAY_WIDTH / 2, 4, AlignCenter, AlignTop, "Set Interval");
+        canvas, GUI_DISPLAY_WIDTH / 2, 4, AlignCenter, AlignTop, model->title);
+
+    if(model->time_of_day) {
+        // Hours
+        snprintf(buffer, sizeof(buffer), "%02u", model->time.h);
+        draw_block(canvas, 32, 19, 28, 24, FontBigNumbers, get_state(model, 0), buffer);
+
+        // Hour/Minute colon
+        canvas_draw_box(canvas, 63, 34, 2, 2);
+        canvas_draw_box(canvas, 63, 28, 2, 2);
+
+        // Minutes
+        snprintf(buffer, sizeof(buffer), "%02u", model->time.m);
+        draw_block(canvas, 68, 19, 28, 24, FontBigNumbers, get_state(model, 1), buffer);
+
+        canvas_set_font(canvas, FontSecondary);
+        canvas_draw_str_aligned(
+            canvas, 64, 58, AlignCenter, AlignCenter, model->editing ? "Editing" : "");
+        return;
+    }
 
     // Hours
     snprintf(buffer, sizeof(buffer), "%02u", model->time.h);
@@ -114,14 +136,14 @@ static bool interval_view_input(InputEvent* event, void* context) {
                     }
                     consumed = true;
                 } else if(key == InputKeyRight) {
-                    if(model->col < 2) {
+                    if(model->col < (model->time_of_day ? 1 : 2)) {
                         model->col++;
                     }
                     consumed = true;
                 } else if(key == InputKeyOk) {
                     model->editing = !model->editing;
-                    // Don't allow 00:00:00, clamp to 00:00:01
-                    if(!model->editing) {
+                    // Don't allow 00:00:00 for intervals unless zero is allowed, clamp to 00:00:01
+                    if(!model->editing && !model->allow_zero && !model->time_of_day) {
                         if(scheduler_hms_to_seconds(&model->time) == 0) {
                             model->time.s = 1;
                         }
@@ -134,9 +156,10 @@ static bool interval_view_input(InputEvent* event, void* context) {
                     const bool up = (key == InputKeyUp);
 
                     if(model->col == 0) {
+                        const uint8_t hours = model->time_of_day ? 24 : 100;
                         model->time.h =
-                            up ? (uint8_t)((model->time.h + 1) % 100) :
-                                 (model->time.h == 0 ? 99 : (uint8_t)(model->time.h - 1));
+                            up ? (uint8_t)((model->time.h + 1) % hours) :
+                                 (model->time.h == 0 ? hours - 1 : (uint8_t)(model->time.h - 1));
                     } else if(model->col == 1) {
                         model->time.m =
                             up ? (uint8_t)((model->time.m + 1) % 60) :
@@ -195,6 +218,9 @@ SchedulerIntervalView* scheduler_interval_view_alloc() {
             m->time.h = 0;
             m->time.m = 0;
             m->time.s = 1;
+            m->time_of_day = false;
+            m->allow_zero = false;
+            snprintf(m->title, sizeof(m->title), "Set Interval");
             m->col = 0;
             m->editing = false;
         },
@@ -217,4 +243,22 @@ void scheduler_interval_view_free(SchedulerIntervalView* interval_view) {
 void scheduler_interval_view_set_app(SchedulerIntervalView* view, SchedulerApp* app) {
     furi_assert(view);
     view->app = app;
+}
+
+void scheduler_interval_view_configure(
+    SchedulerIntervalView* v,
+    const char* title,
+    bool time_of_day,
+    bool allow_zero) {
+    furi_assert(v);
+
+    with_view_model(
+        v->view,
+        IntervalModel * m,
+        {
+            snprintf(m->title, sizeof(m->title), "%s", title);
+            m->time_of_day = time_of_day;
+            m->allow_zero = allow_zero;
+        },
+        true);
 }
