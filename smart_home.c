@@ -415,6 +415,21 @@ static const size_t smart_home_light_effect_count =
     sizeof(smart_home_light_effects[0]);
 
 
+static void smart_home_open_status_view(
+    SmartHomeApp* app,
+    const char* title,
+    const char* line1,
+    const char* line2,
+    const char* line3);
+
+static bool smart_home_start_ha_light_worker(
+    SmartHomeApp* app,
+    uint32_t action,
+    const char* url,
+    const char* payload,
+    const char* title,
+    bool is_get);
+
 /* ---------- FlipperHTTP ---------- */
 
 static bool smart_home_wait_for_board(FlipperHTTP* fhttp) {
@@ -1954,7 +1969,6 @@ static void smart_home_set_temperature_entered(void* context) {
             app,
             "Invalid Temperature",
             "Enter 50 to 90 F");
-
         return;
     }
 
@@ -1966,8 +1980,18 @@ static void smart_home_set_temperature_entered(void* context) {
         return;
     }
 
+    if(app->ha_worker_running) {
+        smart_home_open_status_view(
+            app,
+            "Home Assistant",
+            "Request already running",
+            "",
+            "");
+        return;
+    }
+
     char url[URL_SIZE];
-    char payload[96];
+    char payload[160];
 
     snprintf(
         url,
@@ -1982,62 +2006,22 @@ static void smart_home_set_temperature_entered(void* context) {
         device->remote_id,
         (double)temperature);
 
-    dialog_ex_set_header(
-        app->dialog,
-        device->name,
-        64,
-        12,
-        AlignCenter,
-        AlignCenter);
+    if(!smart_home_start_ha_light_worker(
+           app,
+           DeviceActionThermostatSetTemperature,
+           url,
+           payload,
+           device->name,
+           false)) {
 
-    dialog_ex_set_text(
-        app->dialog,
-        "Setting temperature...",
-        64,
-        34,
-        AlignCenter,
-        AlignCenter);
-
-    dialog_ex_set_center_button_text(
-        app->dialog,
-        NULL);
-
-    view_dispatcher_switch_to_view(
-        app->view_dispatcher,
-        SmartHomeViewResult);
-
-    bool success =
-        smart_home_send_ha_post(
+        smart_home_open_status_view(
             app,
-            url,
-            payload);
-
-    if(!success) {
-        smart_home_show_result(
-            app,
-            "HTTP Error",
-            app->fhttp->last_response &&
-                    strlen(app->fhttp->last_response) ?
-                app->fhttp->last_response :
-                "No response");
-
-        return;
+            "Home Assistant",
+            "Could not start request",
+            "",
+            "");
     }
-
-    char message[48];
-
-    snprintf(
-        message,
-        sizeof(message),
-        "Set to %.1f F",
-        (double)temperature);
-
-    smart_home_show_result(
-        app,
-        device->name,
-        message);
 }
-
 
 static void smart_home_begin_set_temperature(
     SmartHomeApp* app) {
@@ -2362,74 +2346,9 @@ static void smart_home_open_settings(SmartHomeApp* app) {
 
 #define ADD_DEVICE_INDEX 1000
 
-static bool smart_home_ha_set_temperature(
-    SmartHomeApp* app,
-    const SmartHomeDevice* device,
-    float temperature) {
 
-    char url[URL_SIZE];
-    char payload[160];
 
-    snprintf(
-        url,
-        sizeof(url),
-        "%s/api/services/climate/set_temperature",
-        app->ha_url);
 
-    snprintf(
-        payload,
-        sizeof(payload),
-        "{\"entity_id\":\"%s\",\"temperature\":%.1f}",
-        device->remote_id,
-        (double)temperature);
-
-    return smart_home_send_ha_post(
-        app,
-        url,
-        payload);
-}
-
-static bool smart_home_ha_adjust_temperature(
-    SmartHomeApp* app,
-    const SmartHomeDevice* device,
-    float delta) {
-
-    char url[URL_SIZE];
-
-    snprintf(
-        url,
-        sizeof(url),
-        "%s/api/states/%s",
-        app->ha_url,
-        device->remote_id);
-
-    if(!smart_home_send_ha(app, url) ||
-       !app->fhttp->last_response) {
-        return false;
-    }
-
-    char target[24];
-
-    if(!smart_home_extract_json_scalar(
-           app->fhttp->last_response,
-           "temperature",
-           target,
-           sizeof(target))) {
-        return false;
-    }
-
-    char* end = NULL;
-    float current = strtof(target, &end);
-
-    if(end == target || *end != '\0') {
-        return false;
-    }
-
-    return smart_home_ha_set_temperature(
-        app,
-        device,
-        current + delta);
-}
 
 static void smart_home_status_draw_callback(
     Canvas* canvas,
@@ -2602,7 +2521,64 @@ static int32_t smart_home_ha_light_worker(void* context) {
         return -1;
     }
 
-    if(app->ha_worker_is_get) {
+    if(app->ha_worker_action == DeviceActionThermostatTempUp ||
+       app->ha_worker_action == DeviceActionThermostatTempDown) {
+
+        app->ha_worker_success =
+            smart_home_send_ha(
+                app,
+                app->ha_worker_url);
+
+        if(app->ha_worker_success &&
+           app->fhttp->last_response) {
+
+            char target[24];
+
+            if(smart_home_extract_json_scalar(
+                   app->fhttp->last_response,
+                   "temperature",
+                   target,
+                   sizeof(target))) {
+
+                char* end = NULL;
+                float current = strtof(target, &end);
+
+                if(end != target && *end == '\0') {
+                    float delta =
+                        app->ha_worker_action ==
+                                DeviceActionThermostatTempUp ?
+                            1.0f :
+                            -1.0f;
+
+                    char url[URL_SIZE];
+                    char payload[160];
+
+                    snprintf(
+                        url,
+                        sizeof(url),
+                        "%s/api/services/climate/set_temperature",
+                        app->ha_url);
+
+                    snprintf(
+                        payload,
+                        sizeof(payload),
+                        "{\"entity_id\":\"%.63s\",\"temperature\":%.1f}",
+                        app->ha_worker_payload,
+                        (double)(current + delta));
+
+                    app->ha_worker_success =
+                        smart_home_send_ha_post(
+                            app,
+                            url,
+                            payload);
+                } else {
+                    app->ha_worker_success = false;
+                }
+            } else {
+                app->ha_worker_success = false;
+            }
+        }
+    } else if(app->ha_worker_is_get) {
         app->ha_worker_status_state[0] = '\0';
 
         if(app->ha_worker_action == DeviceActionLightStatus) {
@@ -2800,6 +2776,87 @@ static bool smart_home_custom_event_callback(
         return true;
     }
 
+    if(app->ha_worker_action == DeviceActionThermostatStatus) {
+        char current[16] = "?";
+        char target[16] = "?";
+        char state[20] = "?";
+        char fan[20] = "?";
+        char humidity[16] = "?";
+
+        const char* response =
+            app->fhttp->last_response;
+
+        if(response) {
+            smart_home_extract_json_scalar(
+                response,
+                "current_temperature",
+                current,
+                sizeof(current));
+
+            smart_home_extract_json_scalar(
+                response,
+                "temperature",
+                target,
+                sizeof(target));
+
+            if(!smart_home_extract_ha_root_state(
+                   response,
+                   state,
+                   sizeof(state))) {
+                smart_home_extract_json_scalar(
+                    response,
+                    "state",
+                    state,
+                    sizeof(state));
+            }
+
+            smart_home_extract_json_scalar(
+                response,
+                "fan_mode",
+                fan,
+                sizeof(fan));
+
+            smart_home_extract_json_scalar(
+                response,
+                "current_humidity",
+                humidity,
+                sizeof(humidity));
+        }
+
+        char line1[48];
+        char line2[48];
+        char line3[48];
+
+        snprintf(
+            line1,
+            sizeof(line1),
+            "Now %sF  Set %sF",
+            current,
+            target);
+
+        snprintf(
+            line2,
+            sizeof(line2),
+            "%s / Fan %s",
+            state,
+            fan);
+
+        snprintf(
+            line3,
+            sizeof(line3),
+            "Humidity %s%%",
+            humidity);
+
+        smart_home_open_status_view(
+            app,
+            app->ha_worker_title,
+            line1,
+            line2,
+            line3);
+
+        return true;
+    }
+
     if(app->ha_worker_action == DeviceActionLightStatus) {
         char state[16] = "?";
         char brightness[16] = "?";
@@ -2928,6 +2985,33 @@ static bool smart_home_custom_event_callback(
     const char* message = "Command sent";
 
     switch(app->ha_worker_action) {
+    case DeviceActionThermostatTempUp:
+        message = "Temperature +1";
+        break;
+    case DeviceActionThermostatTempDown:
+        message = "Temperature -1";
+        break;
+    case DeviceActionThermostatSetTemperature:
+        message = "Temperature set";
+        break;
+    case DeviceActionThermostatCool:
+        message = "Mode: Cool";
+        break;
+    case DeviceActionThermostatHeat:
+        message = "Mode: Heat";
+        break;
+    case DeviceActionThermostatAuto:
+        message = "Mode: Auto";
+        break;
+    case DeviceActionThermostatOff:
+        message = "HVAC Off";
+        break;
+    case DeviceActionThermostatFanAuto:
+        message = "Fan: Auto";
+        break;
+    case DeviceActionThermostatFanOn:
+        message = "Fan: On";
+        break;
     case DeviceActionOn:
         message = "Turned ON";
         break;
@@ -3231,9 +3315,11 @@ static void smart_home_device_action_callback(
 
     char url[URL_SIZE];
     char payload[160];
-    bool success = false;
-
     if(device->type == DeviceTypeHomeAssistantSwitch) {
+        if(app->ha_worker_running) {
+            return;
+        }
+
         const char* service = NULL;
 
         switch(index) {
@@ -3263,27 +3349,22 @@ static void smart_home_device_action_callback(
             "{\"entity_id\":\"%s\"}",
             device->remote_id);
 
-        success = smart_home_send_ha_post(
-            app,
-            url,
-            payload);
+        if(!smart_home_start_ha_light_worker(
+               app,
+               index,
+               url,
+               payload,
+               device->name,
+               false)) {
 
-        if(!success) {
-            smart_home_show_result(
+            smart_home_open_status_view(
                 app,
                 "Home Assistant",
-                "Switch request failed");
-            return;
+                "Could not start request",
+                "",
+                "");
         }
 
-        smart_home_show_result(
-            app,
-            device->name,
-            index == DeviceActionOn ?
-                "Turned ON" :
-                index == DeviceActionOff ?
-                    "Turned OFF" :
-                    "Toggled");
         return;
     }
 
@@ -3423,6 +3504,10 @@ static void smart_home_device_action_callback(
         return;
     }
 
+    if(app->ha_worker_running) {
+        return;
+    }
+
     if(index == DeviceActionThermostatStatus) {
         snprintf(
             url,
@@ -3431,208 +3516,131 @@ static void smart_home_device_action_callback(
             app->ha_url,
             device->remote_id);
 
-        success = smart_home_send_ha(
-            app,
-            url);
+        if(!smart_home_start_ha_light_worker(
+               app,
+               index,
+               url,
+               NULL,
+               device->name,
+               true)) {
 
-    } else if(index == DeviceActionThermostatTempUp) {
-        success =
-            smart_home_ha_adjust_temperature(
+            smart_home_open_status_view(
                 app,
-                device,
-                1.0f);
-
-    } else if(index == DeviceActionThermostatTempDown) {
-        success =
-            smart_home_ha_adjust_temperature(
-                app,
-                device,
-                -1.0f);
-
-    } else {
-        const char* service = NULL;
-        const char* field = NULL;
-        const char* value = NULL;
-
-        switch(index) {
-        case DeviceActionThermostatCool:
-            service = "set_hvac_mode";
-            field = "hvac_mode";
-            value = "cool";
-            break;
-
-        case DeviceActionThermostatHeat:
-            service = "set_hvac_mode";
-            field = "hvac_mode";
-            value = "heat";
-            break;
-
-        case DeviceActionThermostatAuto:
-            service = "set_hvac_mode";
-            field = "hvac_mode";
-            value = "heat_cool";
-            break;
-
-        case DeviceActionThermostatOff:
-            service = "set_hvac_mode";
-            field = "hvac_mode";
-            value = "off";
-            break;
-
-        case DeviceActionThermostatFanAuto:
-            service = "set_fan_mode";
-            field = "fan_mode";
-            value = "auto";
-            break;
-
-        case DeviceActionThermostatFanOn:
-            service = "set_fan_mode";
-            field = "fan_mode";
-            value = "on";
-            break;
-
-        default:
-            return;
+                "Home Assistant",
+                "Could not start request",
+                "",
+                "");
         }
+
+        return;
+    }
+
+    if(index == DeviceActionThermostatTempUp ||
+       index == DeviceActionThermostatTempDown) {
 
         snprintf(
             url,
             sizeof(url),
-            "%s/api/services/climate/%s",
+            "%s/api/states/%s",
             app->ha_url,
-            service);
+            device->remote_id);
 
-        snprintf(
-            payload,
-            sizeof(payload),
-            "{\"entity_id\":\"%s\",\"%s\":\"%s\"}",
-            device->remote_id,
-            field,
-            value);
+        if(!smart_home_start_ha_light_worker(
+               app,
+               index,
+               url,
+               device->remote_id,
+               device->name,
+               true)) {
 
-        success = smart_home_send_ha_post(
-            app,
-            url,
-            payload);
-    }
-
-    if(!success) {
-        FURI_LOG_E(
-            TAG,
-            "Home Assistant request failed");
-
-        smart_home_show_result(
-            app,
-            "Home Assistant",
-            "Request failed");
-        return;
-    }
-
-    if(index == DeviceActionThermostatStatus) {
-        char current[16] = "?";
-        char target[16] = "?";
-        char state[20] = "?";
-        char fan[20] = "?";
-        char humidity[16] = "?";
-
-        const char* response =
-            app->fhttp->last_response;
-
-        if(response) {
-            smart_home_extract_json_scalar(
-                response,
-                "current_temperature",
-                current,
-                sizeof(current));
-
-            smart_home_extract_json_scalar(
-                response,
-                "temperature",
-                target,
-                sizeof(target));
-
-            smart_home_extract_json_scalar(
-                response,
-                "state",
-                state,
-                sizeof(state));
-
-            smart_home_extract_json_scalar(
-                response,
-                "fan_mode",
-                fan,
-                sizeof(fan));
-
-            smart_home_extract_json_scalar(
-                response,
-                "current_humidity",
-                humidity,
-                sizeof(humidity));
+            smart_home_open_status_view(
+                app,
+                "Home Assistant",
+                "Could not start request",
+                "",
+                "");
         }
 
-        char message[128];
-
-        snprintf(
-            message,
-            sizeof(message),
-            "Now %sF  Set %sF\n%s / Fan %s\nHumidity %s%%",
-            current,
-            target,
-            state,
-            fan,
-            humidity);
-
-        smart_home_show_result(
-            app,
-            device->name,
-            message);
-
         return;
     }
 
-    const char* message = "Command sent";
+    const char* service = NULL;
+    const char* field = NULL;
+    const char* value = NULL;
 
     switch(index) {
-    case DeviceActionThermostatTempUp:
-        message = "Temperature +1";
-        break;
-
-    case DeviceActionThermostatTempDown:
-        message = "Temperature -1";
-        break;
-
     case DeviceActionThermostatCool:
-        message = "Mode: Cool";
+        service = "set_hvac_mode";
+        field = "hvac_mode";
+        value = "cool";
         break;
 
     case DeviceActionThermostatHeat:
-        message = "Mode: Heat";
+        service = "set_hvac_mode";
+        field = "hvac_mode";
+        value = "heat";
         break;
 
     case DeviceActionThermostatAuto:
-        message = "Mode: Auto";
+        service = "set_hvac_mode";
+        field = "hvac_mode";
+        value = "heat_cool";
         break;
 
     case DeviceActionThermostatOff:
-        message = "HVAC Off";
+        service = "set_hvac_mode";
+        field = "hvac_mode";
+        value = "off";
         break;
 
     case DeviceActionThermostatFanAuto:
-        message = "Fan: Auto";
+        service = "set_fan_mode";
+        field = "fan_mode";
+        value = "auto";
         break;
 
     case DeviceActionThermostatFanOn:
-        message = "Fan: On";
+        service = "set_fan_mode";
+        field = "fan_mode";
+        value = "on";
         break;
 
     default:
-        break;
+        return;
     }
 
-    smart_home_show_result(
-        app,
-        device->name,
-        message);
+    snprintf(
+        url,
+        sizeof(url),
+        "%s/api/services/climate/%s",
+        app->ha_url,
+        service);
+
+    snprintf(
+        payload,
+        sizeof(payload),
+        "{\"entity_id\":\"%s\",\"%s\":\"%s\"}",
+        device->remote_id,
+        field,
+        value);
+
+    if(!smart_home_start_ha_light_worker(
+           app,
+           index,
+           url,
+           payload,
+           device->name,
+           false)) {
+
+        smart_home_open_status_view(
+            app,
+            "Home Assistant",
+            "Could not start request",
+            "",
+            "");
+    }
+
+    return;
 }
 
 
