@@ -1,4 +1,5 @@
 #include <furi.h>
+#include <furi_hal.h>
 #include <gui/gui.h>
 #include <input/input.h>
 #include <stdlib.h>
@@ -63,6 +64,22 @@ static void fire_propagate(FireState* state) {
     }
 }
 
+static void fire_sound_tick(FireState* state) {
+    const uint8_t* row = &state->pixels[(FIRE_HEIGHT - 1) * FIRE_WIDTH];
+    int sum = 0;
+    for(int x = 0; x < FIRE_WIDTH; x++) sum += row[x];
+    int avg = sum / FIRE_WIDTH;
+
+    // Random short pops whose density and loudness follow the source intensity
+    if(avg > 0 && rand() % (FIRE_MAX_INTENSITY * 3) < avg) {
+        float freq = 80 + rand() % 1500;
+        float volume = 0.1f + 0.6f * avg / FIRE_MAX_INTENSITY;
+        furi_hal_speaker_start(freq, volume);
+    } else {
+        furi_hal_speaker_stop();
+    }
+}
+
 static void draw_callback(Canvas* canvas, void* ctx) {
     FireState* state = ctx;
     canvas_clear(canvas);
@@ -101,6 +118,7 @@ int32_t flipper_fire_app(void* p) {
     gui_add_view_port(gui, view_port, GuiLayerFullscreen);
 
     bool running = true;
+    bool sound_on = false;
     while(running) {
         InputEvent event;
         if(furi_message_queue_get(queue, &event, FRAME_MS) == FuriStatusOk) {
@@ -119,6 +137,16 @@ int32_t flipper_fire_app(void* p) {
                 case InputKeyUp:
                     fire_set_source(&state, FIRE_MAX_INTENSITY);
                     break;
+                case InputKeyOk:
+                    if(event.type != InputTypePress) break;
+                    if(sound_on) {
+                        furi_hal_speaker_stop();
+                        furi_hal_speaker_release();
+                        sound_on = false;
+                    } else {
+                        sound_on = furi_hal_speaker_acquire(30);
+                    }
+                    break;
                 case InputKeyBack:
                     running = false;
                     break;
@@ -132,8 +160,14 @@ int32_t flipper_fire_app(void* p) {
 
         furi_mutex_acquire(state.mutex, FuriWaitForever);
         fire_propagate(&state);
+        if(sound_on) fire_sound_tick(&state);
         furi_mutex_release(state.mutex);
         view_port_update(view_port);
+    }
+
+    if(sound_on) {
+        furi_hal_speaker_stop();
+        furi_hal_speaker_release();
     }
 
     gui_remove_view_port(gui, view_port);
