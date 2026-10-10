@@ -1,0 +1,11 @@
+App(
+    appid="flipper_fire",
+    name="FlipperFire",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="flipper_fire_app",
+    stack_size=2 * 1024,
+    fap_category="Media",
+    fap_description="Doom Fire for the Flipper Zero",
+    fap_author="Jan Kammerath",
+    fap_version="1.0",
+)
