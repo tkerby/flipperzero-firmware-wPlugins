@@ -9,7 +9,9 @@ Playlists can also be stepped through one line at a time, with a separate wait o
   <tr style="border:0px">
     <td style="border:0px" width="25%" align="left">
     Schedule intervals in H:M:S format <br>
-    from 00:00:01 to 99:59:59.
+    from 00:00:01 to 99:59:59.<br><br>
+    Left/Right select hours, minutes or seconds, Up/Down change the value.
+    OK saves, Back cancels.
     </td>
     <td style="border:0px" width="20%"><img src="./screenshots/v3/intervals.png" width="100%"></td>
   </tr>
@@ -100,7 +102,7 @@ When a playlist (`*.txt`) is selected, extra options appear in the schedule menu
 * `Line 1`: start with line 1 and wait for its time, even if that is tomorrow (default).
 * `Nearest`: start with the line whose time comes up first, then continue in playlist order. Started at 19:00 in the example below, line 4 is sent at 23:00 and line 1 the next day at 17:30:00.
 
-Set the wait or time of each line under `Edit Lines...`. These settings are stored in the `*.sch` file; the playlist itself is not changed and still works with the stock `SubGHz Playlist` app.
+Set the wait or time of each line under `Edit Lines...`. The same time editor is used: Left/Right select a block, Up/Down change it, OK saves and Back cancels. These settings are stored in the `*.sch` file; the playlist itself is not changed and still works with the stock `SubGHz Playlist` app.
 
 Example: a playlist with 4 lines and Schedule `Time`:
 

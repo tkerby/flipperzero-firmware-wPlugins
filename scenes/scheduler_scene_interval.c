@@ -2,6 +2,8 @@
 
 void scheduler_scene_interval_on_enter(void* context) {
     SchedulerApp* app = context;
+    // Scene state 1 = save on exit (OK), 0 = discard (Back)
+    scene_manager_set_scene_state(app->scene_manager, SchedulerSceneInterval, 0);
     const int16_t line = app->edit_line;
     char title[24];
 
@@ -26,13 +28,22 @@ void scheduler_scene_interval_on_enter(void* context) {
 }
 
 bool scheduler_scene_interval_on_event(void* context, SceneManagerEvent event) {
-    UNUSED(context);
-    UNUSED(event);
+    SchedulerApp* app = context;
+
+    // OK saves and closes, Back closes without saving
+    if(event.type == SceneManagerEventTypeCustom && event.event == SchedulerEventIntervalDone) {
+        scene_manager_set_scene_state(app->scene_manager, SchedulerSceneInterval, 1);
+        scene_manager_previous_scene(app->scene_manager);
+        return true;
+    }
     return false;
 }
 
 void scheduler_scene_interval_on_exit(void* context) {
     SchedulerApp* app = context;
+    if(!scene_manager_get_scene_state(app->scene_manager, SchedulerSceneInterval)) {
+        return;
+    }
     const int16_t line = app->edit_line;
 
     uint32_t sec = scheduler_interval_view_get_seconds(app->interval_view);
