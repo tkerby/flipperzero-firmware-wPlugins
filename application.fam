@@ -9,6 +9,5 @@ App(
     fap_description="Doom fire effect simulator for Flipper Zero",
     fap_author="Jan Kammerath",
     fap_version="1.0",
-    fap_icon="icon.png",
     fap_weburl="https://github.com/jankammerath/FlipperFire",
 )
