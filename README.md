@@ -4,7 +4,9 @@ Real input replaces the first version's built-in meal picker. The supplied deskt
 
 ## Release status
 
-Source is published for a free, open-source release. The display name in application.fam is now BusterMan Decoder; no renamed binary has been built in this publication step. The existing binary still has its legacy display name. Official Flipper Apps Catalog submission is pending official-firmware compatibility checks, icon, screenshots, and catalog metadata.
+The app display name is **BusterMan Decoder**. A renamed binary built with uFBT against official release SDK 1.4.3 is available at [builds/BusterMan.fap](builds/BusterMan.fap). Build validation passed for target f7, API 87.1. Physical-device testing of this new binary is still pending; the previously supplied binary is preserved separately in the owner's private backups.
+
+Official Flipper Apps Catalog submission remains pending icon, catalog metadata, and device acceptance. Original qFlipper captures are in screenshots/; they show the prior build's splash and decoder modes.
 
 The internal appid, save directory, entry point, and USB commands retain their legacy names for compatibility with existing progress and CyberKing.
 
@@ -12,7 +14,7 @@ The internal appid, save directory, entry point, and USB commands retain their l
 
 ## Install
 
-Close the old app. Using qFlipper, replace its file at `/ext/apps/Tools/BusterMan.fap` with the new compiled file. Open Apps > Tools > BusterMan Decoder. Built with the Momentum mntm-012 SDK, target f7, API 87.1. Firmware with an incompatible app API needs a rebuild.
+Close the old app. Using qFlipper, replace its file at `/ext/apps/Tools/BusterMan.fap` with the new compiled file. Open Apps > Tools > BusterMan Decoder. The published renamed binary is built with the official 1.4.3 SDK, target f7, API 87.1. Firmware with an incompatible app API needs a rebuild.
 
 ## Controls
 
