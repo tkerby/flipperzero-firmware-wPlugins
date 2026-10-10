@@ -1088,14 +1088,39 @@ bool flipper_http_send_data(FlipperHTTP *fhttp, const char *data)
                                      (strstr(send_buffer, "[WIFI/CONNECT]") == NULL)))
     {
         FURI_LOG_E("FlipperHTTP", "Cannot send data while INACTIVE.");
-        fhttp->last_response = "Cannot send data while INACTIVE.";
+
+        /*
+         * last_response is heap-owned memory allocated in
+         * flipper_http_alloc(). Never replace that pointer with a string
+         * literal: later code clears last_response[0] and flipper_http_free()
+         * frees the pointer. Replacing it with read-only static storage can
+         * therefore cause an invalid write/free and reboot the Flipper.
+         */
+        if(fhttp->last_response) {
+            strlcpy(
+                fhttp->last_response,
+                "Cannot send data while INACTIVE.",
+                RX_BUF_SIZE);
+        }
+
         return false;
     }
 
     fhttp->state = SENDING;
     furi_hal_serial_tx(fhttp->serial_handle, (const uint8_t *)send_buffer, send_length);
 
-    FURI_LOG_I("FlipperHTTP", "Sent data over UART: %s", send_buffer);
+    /*
+     * Do not log authenticated request headers or credential-bearing
+     * Wi-Fi commands. The UART payload may contain bearer tokens or
+     * passwords that must never be exposed through debug logs.
+     */
+    if(strstr(send_buffer, "Authorization") != NULL ||
+       strstr(send_buffer, "\"password\"") != NULL) {
+        FURI_LOG_I("FlipperHTTP", "Sent credential-bearing request over UART (redacted).");
+    } else {
+        FURI_LOG_I("FlipperHTTP", "Sent data over UART: %s", send_buffer);
+    }
+
     fhttp->state = IDLE;
     return true;
 }

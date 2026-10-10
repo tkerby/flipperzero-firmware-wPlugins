@@ -1,84 +1,135 @@
 # Smart Home for Flipper Zero
 
-Smart Home is a Flipper Zero application for controlling supported smart home devices through a Wi-Fi Developer Board and an authenticated companion relay server.
+Smart Home is a Flipper Zero application for controlling smart home devices through Home Assistant using a Wi-Fi Developer Board compatible with FlipperHTTP.
 
 ## Features
 
-- Add smart home devices from the Flipper Zero
-- Store devices persistently on the SD card
+- Direct Home Assistant REST API control
+- Persistent device and settings storage on the Flipper SD card
+- Home Assistant `switch.*` entities with On, Off, and Toggle
+- Home Assistant `climate.*` entities with status, temperature, HVAC mode, and fan controls
+- Home Assistant `light.*` entities with Status, On, Off, Toggle, brightness presets, RGB colors, and effects
 - Rename and remove saved devices
-- Persistent relay URL and API token configuration
-- Stable remote device IDs
-- Editable IPv4 device entry for supported LAN devices
-- Shelly smart device support
-- Home Assistant climate/thermostat support
-- Generic Home Assistant climate.* entities
-- Thermostat status, temperature, HVAC mode, and fan controls
+- Custom on-device Home Assistant URL keyboard with URL punctuation
+- Editable Home Assistant long-lived access token
+- Optional SD-card Home Assistant configuration import
 
 ## Requirements
 
 - Flipper Zero
 - Wi-Fi Developer Board compatible with FlipperHTTP
 - FlipperHTTP firmware/library
-- A reachable Smart Home relay server
-- Supported smart home devices accessible by the relay
-- Home Assistant only if using Home Assistant thermostat support
+- A reachable Home Assistant server
+- A Home Assistant long-lived access token
 
-The companion relay is required. It handles authenticated communication between the Flipper application and supported smart home services/devices.
+Home Assistant is required. Smart Home communicates with Home Assistant directly; no companion PC relay is required.
 
 ## First-Time Setup
 
-1. Install smart_home.fap on the Flipper Zero.
+1. Install `smart_home.fap` on the Flipper Zero.
 2. Connect the Wi-Fi Developer Board.
 3. Open **Smart Home**.
 4. Open **Settings**.
-5. Configure the Relay URL and API Token.
-6. Return to the main menu.
-7. Select **+ Add Device**.
-8. Choose the desired device type.
+5. Configure **Home Assistant URL**.
+6. Configure **Edit HA Token**, or import the settings from the SD card.
+7. Return to the main menu.
+8. Select **+ Add Device**.
+9. Choose the desired Home Assistant device type.
 
-### Adding a Shelly device
+A new URL entry starts with:
 
-1. Choose **Shelly**.
-2. Enter a device name.
-3. Enter the Shelly device's IPv4 address.
-4. The relay discovers the device and stores its stable Shelly device ID.
+    https://
 
-The IPv4 editor starts at 192.168.7.0 for convenience. Every octet is editable.
+Enter the normal Home Assistant base URL, for example:
 
-### Adding a Home Assistant thermostat
+    https://ha.example.com
 
-1. Choose **Home Assistant Thermostat**.
-2. Enter a device name.
-3. Enter the Home Assistant climate entity ID.
+or a local address such as:
 
-Examples:
+    http://192.168.1.50:8123
 
-    climate.living_room
-    climate.bedroom
-    climate.downstairs
+Use a trusted HTTPS certificate for HTTPS connections.
 
-The public application does not contain a hard-coded thermostat entity. Each user supplies their own Home Assistant climate.* entity when adding the device.
+## SD-Card Configuration Import
 
-## Current Device Support
+For long tokens, it can be easier to prepare a small configuration file on a computer and copy it to the Flipper SD card.
 
-### Shelly
+Create:
 
-The relay discovers the Shelly device at the supplied IPv4 address and returns its stable Shelly device ID.
+    /ext/apps_data/smart_home/ha_config.txt
 
-Supported actions include:
+with:
 
-- On
-- Off
+    ha_url=https://ha.example.com
+    ha_token=PASTE_YOUR_HOME_ASSISTANT_LONG_LIVED_ACCESS_TOKEN_HERE
+
+Then select:
+
+    Settings -> Import HA Config
+
+The import is explicit; the application does not automatically re-import the file on every launch.
+
+Treat the Flipper SD card as sensitive because Home Assistant credentials are stored locally.
+
+## Adding a Home Assistant Switch
+
+1. Select **+ Add Device**.
+2. Choose **Home Assistant Switch**.
+3. Enter a local display name.
+4. Enter the Home Assistant `switch.*` entity ID.
+
+Example:
+
+    switch.smart_plug
+
+Supported actions:
+
+- Turn ON
+- Turn OFF
 - Toggle
 - Rename
 - Delete
 
-### Home Assistant Climate / Thermostat
+## Adding a Home Assistant Light
 
-Home Assistant thermostats are addressed through generic climate.* entity IDs.
+1. Select **+ Add Device**.
+2. Choose **Home Assistant Light**.
+3. Enter a local display name.
+4. Enter the Home Assistant `light.*` entity ID.
 
-Supported actions include:
+Example:
+
+    light.monitor_backlight
+
+Supported actions:
+
+- Status
+- Turn ON
+- Turn OFF
+- Toggle
+- Brightness 25%
+- Brightness 50%
+- Brightness 75%
+- Brightness 100%
+- **Solid** submenu with RGB color presets
+- **Effects** submenu
+
+The Status screen shows the entity state, brightness, and active effect when Home Assistant provides them.
+
+The Effects menu includes the WLED effect set used by current WLED integrations. A selected effect only works when the target Home Assistant light entity supports that effect. RGB colors likewise require an RGB-capable light.
+
+## Adding a Home Assistant Thermostat
+
+1. Select **+ Add Device**.
+2. Choose **Home Assistant Thermostat**.
+3. Enter a local display name.
+4. Enter the Home Assistant `climate.*` entity ID.
+
+Example:
+
+    climate.living_room
+
+Supported actions:
 
 - Status
 - Temperature +1
@@ -93,28 +144,7 @@ Supported actions include:
 - Rename
 - Delete
 
-Available HVAC and fan modes ultimately depend on the capabilities exposed by the selected Home Assistant climate entity.
-
-## Companion Relay
-
-The companion relay is available at:
-
-https://github.com/biotechnicallc/SmartHome-Relay
-
-The application communicates with the companion Smart Home relay over HTTP using bearer-token authentication.
-
-The relay provides:
-
-- Shelly registration and stable device IDs
-- RFC1918-only Shelly registration targets
-- Home Assistant API integration
-- Generic climate.* thermostat endpoints
-- Optional Home Assistant support
-- Separate relay and Home Assistant credentials
-
-Do not expose the relay directly to the public Internet. Use it on a trusted LAN, VPN, or equivalent private network.
-
-Keep relay credentials and runtime state private.
+Available HVAC and fan modes depend on the selected Home Assistant entity.
 
 ## Configuration Storage
 
@@ -124,10 +154,11 @@ Smart Home stores application data under:
 
 Current files include:
 
-- devices.txt
-- settings.txt
+- `devices.txt`
+- `settings.txt`
+- optional `ha_config.txt`
 
-The relay API token is stored locally in settings.txt. Treat the Flipper Zero SD card as sensitive if the configured relay token grants remote-control access.
+`settings.txt` contains the configured Home Assistant URL and token. Backups of the app-data folder therefore contain credentials and should be protected accordingly.
 
 ## Building
 
@@ -156,11 +187,11 @@ To install and launch directly on a connected Flipper Zero:
 
 This project includes the MIT-licensed FlipperHTTP library by JBlanked.
 
-See THIRD_PARTY_NOTICES.md for attribution and upstream project information.
+See `THIRD_PARTY_NOTICES.md` for attribution and upstream project information.
 
 ## Version
 
-Current release: 1.1
+Current release: 2.0
 
 ## Author
 

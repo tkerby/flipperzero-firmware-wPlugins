@@ -1,31 +1,30 @@
 # Changelog
 
+## 2.0
+
+Home Assistant is now the required smart-home backend.
+
+- Replaced the legacy companion-relay/Shelly architecture with direct Home Assistant REST API communication through FlipperHTTP
+- Added generic Home Assistant `switch.*` support
+- Retained and moved `climate.*` thermostat control to the direct Home Assistant path
+- Added Home Assistant `light.*` support with Status, On, Off, Toggle, and brightness presets
+- Added an RGB Solid submenu with expanded color presets
+- Added a full WLED Effects submenu; effect availability ultimately depends on the selected light entity
+- Added non-blocking Home Assistant light requests so network waits do not run on the GUI thread
+- Added a dedicated light Status view showing state, brightness, and effect
+- Fixed large Home Assistant light-state responses that span multiple FlipperHTTP UART chunks
+- Added a custom Home Assistant URL keyboard
+- Added editable Home Assistant long-lived access-token configuration
+- Added optional SD-card Home Assistant configuration import
+- Added safer missing-configuration and result-dialog navigation
+- Simplified device storage to Home Assistant entities only
+- Redacted authenticated request headers from FlipperHTTP logs
+- Fixed FlipperHTTP `last_response` ownership when the Wi-Fi board is inactive
+
 ## 1.1
 
-Added Home Assistant climate/thermostat support.
-
-- Added generic Home Assistant climate.* entity support
-- Added Home Assistant Thermostat device type
-- Added thermostat status display
-- Added temperature increase and decrease controls
-- Added direct Set Temperature control
-- Added Cool, Heat, Auto/Heat-Cool, and Off controls
-- Added Fan Auto and Fan On controls
-- Added climate entity entry when creating a thermostat
-- Removed installation-specific thermostat identifiers
-- Improved protection for credentials and runtime files
-- Retained existing Shelly support and stable device IDs
+- Added Home Assistant climate/thermostat support
 
 ## 1.0
 
-Initial public release.
-
-- Added Shelly smart device support
-- Added device registration using stable remote IDs
-- Added On, Off, and Toggle controls
-- Added persistent device storage
-- Added device rename and removal
-- Added configurable relay URL and API token
-- Added persistent settings storage
-- Added editable IPv4 device entry
-- Added first-run configuration checks
+- Initial public release

@@ -1,63 +1,60 @@
 # Smart Home
 
-Smart Home lets you control supported smart home devices from your Flipper Zero using a Wi-Fi Developer Board and an authenticated companion relay server.
+Smart Home lets you control Home Assistant devices from your Flipper Zero using a Wi-Fi Developer Board compatible with FlipperHTTP.
 
 ## Features
 
-- Add and save supported smart home devices
-- Rename and remove saved devices
-- Configure a remote relay URL and API token
-- Store stable remote device IDs
-- Persistent device and settings storage
-- Editable IPv4 address entry
-- Shelly smart device support
-- Home Assistant climate/thermostat support
-- Generic Home Assistant climate.* entity support
+- Direct Home Assistant REST API control
+- Persistent devices and settings
+- Home Assistant `switch.*` support
+- Home Assistant `climate.*` support
+- Home Assistant `light.*` support
+- Switch On, Off, and Toggle actions
+- Light Status, On, Off, Toggle, brightness, RGB color, and effect controls
 - Thermostat status and temperature controls
-- HVAC mode controls
-- Fan mode controls
+- HVAC and fan mode controls
+- Custom Home Assistant URL entry
+- Editable Home Assistant token
+- Optional SD-card configuration import
+- Rename and remove saved devices
 
-## Shelly Support
+## Requirements
 
-Shelly devices can be added by IPv4 address.
+- Flipper Zero
+- Compatible FlipperHTTP Wi-Fi Developer Board
+- Reachable Home Assistant server
+- Home Assistant long-lived access token
 
-The relay discovers the device and stores its stable Shelly device ID.
+Home Assistant is required. No companion PC relay is required.
 
-Supported actions include:
+## Home Assistant Switches
 
-- On
-- Off
-- Toggle
+Add a switch using its `switch.*` entity ID, for example:
 
-## Home Assistant Thermostat Support
+- `switch.smart_plug`
 
-Home Assistant thermostats can be added using their climate.* entity ID.
+Supported actions include On, Off, Toggle, Rename, and Delete.
 
-Examples:
+## Home Assistant Lights
 
-- climate.living_room
-- climate.bedroom
-- climate.downstairs
+Add a light using its `light.*` entity ID, for example:
 
-Supported thermostat actions include:
+- `light.monitor_backlight`
 
-- Status
-- Temperature +1
-- Temperature -1
-- Set Temperature
-- Cool
-- Heat
-- Auto / Heat-Cool
-- Off
-- Fan Auto
-- Fan On
+Supported actions include Status, On, Off, Toggle, brightness presets, a Solid RGB color submenu, Rename, and Delete.
 
-Available HVAC and fan modes depend on the capabilities of the selected Home Assistant climate entity.
+The Effects submenu includes the WLED effect set used by current WLED integrations. Effects and RGB colors depend on capabilities exposed by the selected Home Assistant light entity.
 
-A compatible FlipperHTTP Wi-Fi Developer Board and reachable Smart Home relay server are required.
+## Home Assistant Climate / Thermostat
 
-Companion relay:
+Add a thermostat using its `climate.*` entity ID, for example:
 
-https://github.com/biotechnicallc/SmartHome-Relay
+- `climate.living_room`
 
-Home Assistant is only required when using Home Assistant thermostat support.
+Supported actions include Status, temperature adjustment, direct target temperature, HVAC modes, fan modes, Rename, and Delete.
+
+Available actions ultimately depend on the capabilities exposed by the selected Home Assistant entity.
+
+## Credentials
+
+The Home Assistant URL and long-lived token are stored in the Smart Home app-data folder on the Flipper SD card. Treat that storage and any backups as sensitive.
