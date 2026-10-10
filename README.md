@@ -1,12 +1,16 @@
 # BusterMan Decoder
 
+## Authorship and AI assistance
+
+Mr-Nobody88 created the original code and logic behind BusterMan, including its dcoder foundation, and directs the project. AI assisted with adapting and extending that code into the native Flipper application and preparing documentation and the catalog submission. The project’s artwork was primarily AI-generated, and its website was developed with AI assistance.
+
 Real input replaces the first version's built-in meal picker. The supplied desktop Python files remain untouched. Native C ports provide the baseline Hex -> Base64 -> Brainfuck chain, explicit decoder modes, and ROT13. Device limits and conservative Brainfuck auto detection are deliberate departures from the unlimited desktop baseline.
 
 ## Release status
 
 The app display name is **BusterMan Decoder**. A renamed binary built with uFBT against official release SDK 1.4.3 is available at [builds/BusterMan.fap](builds/BusterMan.fap). Build validation passed for target f7, API 87.1. The owner reports the renamed build works on their Flipper; the previously supplied binary is preserved separately in the owner's private backups.
 
-Catalog icon and metadata are prepared; submission is pending creation of the catalog fork and pull request. Original qFlipper captures are in screenshots/; they show the prior build's splash and decoder modes.
+The catalog submission is open as [PR #1300](https://github.com/flipperdevices/flipper-application-catalog/pull/1300). Original qFlipper captures are in screenshots/; they document the catalog-pinned build and are not validation of later artwork changes.
 
 The internal appid, save directory, entry point, and USB commands retain their legacy names for compatibility with existing progress and CyberKing.
 
