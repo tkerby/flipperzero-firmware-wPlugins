@@ -4,9 +4,7 @@ The classic PSX Doom fire effect running on the Flipper Zero, with optional crac
 
 The fire is simulated at the full 128x64 screen resolution with 37 intensity levels, which are mapped onto the monochrome display using ordered dithering.
 
-| ![Screenshot 1](screenshots/screenshot1.png) | ![Screenshot 2](screenshots/screenshot2.png) |
-|---|---|
-| ![Screenshot 3](screenshots/screenshot3.png) | ![Screenshot 4](screenshots/screenshot4.png) |
+![FlipperFire](screenshots/flipperfire.gif)
 
 ## Controls
 

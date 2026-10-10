@@ -7,6 +7,7 @@ short_description: Doom fire effect with crackling sound
 description: "@README.md"
 changelog: "@./docs/changelog.md"
 screenshots:
+  - screenshots/flipperfire.gif
   - screenshots/screenshot1.png
   - screenshots/screenshot2.png
   - screenshots/screenshot3.png
