@@ -53,6 +53,13 @@ static void set_schedule_type_idx(Scheduler* s, uint8_t idx) {
     scheduler_set_schedule_type(s, (SchedulerScheduleType)idx);
 }
 
+static uint8_t get_start_line_idx(const Scheduler* s) {
+    return (uint8_t)scheduler_get_start_line((Scheduler*)s);
+}
+static void set_start_line_idx(Scheduler* s, uint8_t idx) {
+    scheduler_set_start_line(s, (SchedulerStartLine)idx);
+}
+
 typedef uint8_t (*SchedulerGetIdxFn)(const Scheduler* scheduler);
 typedef void (*SchedulerSetIdxFn)(Scheduler* scheduler, uint8_t idx);
 
@@ -160,6 +167,13 @@ static void scheduler_start_set_radio(VariableItem* item) {
     uint8_t index = variable_item_get_current_value_index(item);
     variable_item_set_current_value_text(item, radio_device_text[index]);
     scheduler_set_radio(app->scheduler, index);
+}
+
+static void scheduler_start_set_start_line(VariableItem* item) {
+    SchedulerApp* app = variable_item_get_context(item);
+    uint8_t index = variable_item_get_current_value_index(item);
+    variable_item_set_current_value_text(item, start_line_text[index]);
+    scheduler_set_start_line(app->scheduler, index);
 }
 
 // Step mode and schedule type change which items are shown, so rebuild the list
@@ -296,6 +310,18 @@ void scheduler_start_view_rebuild(SchedulerApp* app) {
                 get_schedule_type_idx,
                 set_schedule_type_idx,
                 schedule_type_text);
+
+            if(schedule == SchedulerScheduleTimeOfDay) {
+                add_scheduler_option_item(
+                    app,
+                    MenuIndexStartLine,
+                    "Start:",
+                    START_LINE_COUNT,
+                    scheduler_start_set_start_line,
+                    get_start_line_idx,
+                    set_start_line_idx,
+                    start_line_text);
+            }
 
             if(schedule != SchedulerScheduleUniform) {
                 add_start_item(app, MenuIndexEditLines, "Edit Lines...", 0, NULL);

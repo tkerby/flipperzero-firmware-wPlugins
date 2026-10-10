@@ -24,6 +24,7 @@
 #define KEY_SCHEDULE_KIND "ScheduleType"
 #define KEY_LINE_WAITS    "LineIntervals"
 #define KEY_LINE_TIMES    "LineTimes"
+#define KEY_START_LINE    "StartLine"
 
 typedef struct {
     uint32_t interval_seconds;
@@ -157,6 +158,10 @@ bool scheduler_settings_save_to_path(SchedulerApp* app, const char* full_path) {
 
         scheduler_settings_write_lines(ff, app->scheduler);
 
+        // Optional, kept last so files saved without it still load
+        v = scheduler_get_start_line(app->scheduler);
+        flipper_format_write_uint32(ff, KEY_START_LINE, &v, 1);
+
         ok = true;
     } while(false);
 
@@ -282,6 +287,7 @@ bool scheduler_settings_load_from_path(SchedulerApp* app, const char* full_path)
 
             scheduler_set_step_mode(app->scheduler, SchedulerStepModeAll);
             scheduler_set_schedule_type(app->scheduler, SchedulerScheduleUniform);
+            scheduler_set_start_line(app->scheduler, SchedulerStartLineFirst);
             if(ver >= 2) {
                 uint32_t v = 0;
                 if(flipper_format_read_uint32(ff, KEY_STEP_MODE, &v, 1)) {
@@ -291,6 +297,9 @@ bool scheduler_settings_load_from_path(SchedulerApp* app, const char* full_path)
                     scheduler_set_schedule_type(app->scheduler, (SchedulerScheduleType)v);
                 }
                 scheduler_settings_read_lines(ff, app->scheduler, list_count, ver);
+                if(flipper_format_read_uint32(ff, KEY_START_LINE, &v, 1)) {
+                    scheduler_set_start_line(app->scheduler, (SchedulerStartLine)v);
+                }
             }
         }
         // TODO: Error here too

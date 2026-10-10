@@ -96,6 +96,10 @@ When a playlist (`*.txt`) is selected, extra options appear in the schedule menu
 * `Per Line`: every line has its own wait before it is sent. A wait of `00:00:00` sends the line right after the previous one, so lines can be grouped.
 * `Time`: every line is sent at a time of day (`HH:MM:SS`), in playlist order, repeating daily. Lines with the same time are sent one after the other.
 
+**Start** (only with Schedule `Time`)
+* `Line 1`: start with line 1 and wait for its time, even if that is tomorrow (default).
+* `Nearest`: start with the line whose time comes up first, then continue in playlist order. Started at 19:00 in the example below, line 4 is sent at 23:00 and line 1 the next day at 17:30:00.
+
 Set the wait or time of each line under `Edit Lines...`. These settings are stored in the `*.sch` file; the playlist itself is not changed and still works with the stock `SubGHz Playlist` app.
 
 Example: a playlist with 4 lines and Schedule `Time`:

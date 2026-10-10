@@ -55,6 +55,9 @@ SchedulerStepMode scheduler_get_step_mode(Scheduler* scheduler);
 void scheduler_set_schedule_type(Scheduler* scheduler, SchedulerScheduleType schedule_type);
 SchedulerScheduleType scheduler_get_schedule_type(Scheduler* scheduler);
 
+void scheduler_set_start_line(Scheduler* scheduler, SchedulerStartLine start_line);
+SchedulerStartLine scheduler_get_start_line(Scheduler* scheduler);
+
 // True when a playlist is sent one line per trigger
 bool scheduler_is_stepping(Scheduler* scheduler);
 // Schedule type in effect: anything other than Uniform requires stepping

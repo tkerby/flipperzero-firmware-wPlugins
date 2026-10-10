@@ -12,6 +12,7 @@ struct Scheduler {
     SchedulerTimingMode timing_mode;
     SchedulerStepMode step_mode;
     SchedulerScheduleType schedule_type;
+    SchedulerStartLine start_line;
 
     char* file_name;
 
@@ -75,6 +76,7 @@ void scheduler_full_reset(Scheduler* scheduler) {
     scheduler->timing_mode = SchedulerTimingModeRelative;
     scheduler->step_mode = SchedulerStepModeAll;
     scheduler->schedule_type = SchedulerScheduleUniform;
+    scheduler->start_line = SchedulerStartLineFirst;
     scheduler->radio = 0; // internal by default
     scheduler_reset_lines(scheduler);
 }
@@ -90,6 +92,20 @@ SchedulerScheduleType scheduler_get_effective_schedule(Scheduler* scheduler) {
     return scheduler_is_stepping(scheduler) ? scheduler->schedule_type : SchedulerScheduleUniform;
 }
 
+// Next time line fires at its time of day, counted from base
+static uint32_t scheduler_time_of_day_fire(
+    Scheduler* scheduler,
+    uint8_t line,
+    uint32_t base,
+    bool allow_equal) {
+    // RTC holds local time, so the timestamp modulo a day is the time of day
+    uint32_t fire = base - (base % SECONDS_PER_DAY) + scheduler->line_time[line];
+    if(fire < base || (fire == base && !allow_equal)) {
+        fire += SECONDS_PER_DAY;
+    }
+    return fire;
+}
+
 // Next fire time for the current line, counted from base.
 // allow_equal: a time of day equal to base fires at base instead of the next day, so lines
 // sharing a time fire back to back.
@@ -99,18 +115,27 @@ static uint32_t scheduler_next_fire_from(Scheduler* scheduler, uint32_t base, bo
     switch(scheduler_get_effective_schedule(scheduler)) {
     case SchedulerSchedulePerLine:
         return base + scheduler->line_interval[line];
-    case SchedulerScheduleTimeOfDay: {
-        // RTC holds local time, so the timestamp modulo a day is the time of day
-        uint32_t fire = base - (base % SECONDS_PER_DAY) + scheduler->line_time[line];
-        if(fire < base || (fire == base && !allow_equal)) {
-            fire += SECONDS_PER_DAY;
-        }
-        return fire;
-    }
+    case SchedulerScheduleTimeOfDay:
+        return scheduler_time_of_day_fire(scheduler, line, base, allow_equal);
     case SchedulerScheduleUniform:
     default:
         return base + scheduler->interval_seconds;
     }
+}
+
+// Line whose time of day comes up first after now, the lowest line wins a tie
+static uint8_t scheduler_nearest_line(Scheduler* scheduler, uint32_t now) {
+    uint8_t nearest = 0;
+    uint32_t nearest_fire = UINT32_MAX;
+
+    for(uint8_t i = 0; i < scheduler->list_count; ++i) {
+        const uint32_t fire = scheduler_time_of_day_fire(scheduler, i, now, false);
+        if(fire < nearest_fire) {
+            nearest = i;
+            nearest_fire = fire;
+        }
+    }
+    return nearest;
 }
 
 void scheduler_start(Scheduler* scheduler) {
@@ -118,6 +143,10 @@ void scheduler_start(Scheduler* scheduler) {
     const uint32_t now = furi_hal_rtc_get_timestamp();
 
     scheduler->current_line = 0;
+    if(scheduler_get_effective_schedule(scheduler) == SchedulerScheduleTimeOfDay &&
+       scheduler->start_line == SchedulerStartLineNearest) {
+        scheduler->current_line = scheduler_nearest_line(scheduler, now);
+    }
     if(scheduler->tx_mode == SchedulerTxModeImmediate) {
         scheduler->next_fire_time = now;
     } else {
@@ -179,6 +208,12 @@ bool scheduler_one_shot_done(Scheduler* scheduler) {
     // Lines with a zero wait are chained to the line before them
     if(scheduler_get_effective_schedule(scheduler) == SchedulerSchedulePerLine &&
        scheduler->current_line != 0 && scheduler->line_interval[scheduler->current_line] == 0) {
+        return false;
+    }
+    // Same for lines sharing the time of the line before them
+    const uint8_t line = scheduler->current_line;
+    if(scheduler_get_effective_schedule(scheduler) == SchedulerScheduleTimeOfDay && line != 0 &&
+       scheduler->line_time[line] == scheduler->line_time[line - 1]) {
         return false;
     }
     return true;
@@ -360,4 +395,15 @@ uint32_t scheduler_get_line_interval(Scheduler* scheduler, uint8_t line) {
 uint32_t scheduler_get_line_time(Scheduler* scheduler, uint8_t line) {
     furi_assert(scheduler);
     return (line < SCHEDULER_MAX_LINES) ? scheduler->line_time[line] : 0;
+}
+
+void scheduler_set_start_line(Scheduler* scheduler, SchedulerStartLine start_line) {
+    furi_assert(scheduler);
+    scheduler->start_line = (start_line < SchedulerStartLineNum) ? start_line :
+                                                                  SchedulerStartLineFirst;
+}
+
+SchedulerStartLine scheduler_get_start_line(Scheduler* scheduler) {
+    furi_assert(scheduler);
+    return scheduler->start_line;
 }

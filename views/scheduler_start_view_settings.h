@@ -10,6 +10,7 @@ typedef enum MenuIndices {
     MenuIndexSelectFile,
     MenuIndexStepMode,
     MenuIndexScheduleType,
+    MenuIndexStartLine,
     MenuIndexEditLines,
     MenuIndexSaveSchedule,
     MenuIndexStartSchedule,
@@ -63,6 +64,15 @@ typedef enum SchedulerScheduleType {
 } SchedulerScheduleType;
 #define SCHEDULE_TYPE_COUNT SchedulerScheduleNum
 static const char* const schedule_type_text[SCHEDULE_TYPE_COUNT] = {"Uniform", "Per Line", "Time"};
+
+// First line of a Time schedule: always line 1, or the line whose time comes up first
+typedef enum SchedulerStartLine {
+    SchedulerStartLineFirst,
+    SchedulerStartLineNearest,
+    SchedulerStartLineNum
+} SchedulerStartLine;
+#define START_LINE_COUNT SchedulerStartLineNum
+static const char* const start_line_text[START_LINE_COUNT] = {"Line 1", "Nearest"};
 
 // Playlist line count is stored as int8_t
 #define SCHEDULER_MAX_LINES 127
