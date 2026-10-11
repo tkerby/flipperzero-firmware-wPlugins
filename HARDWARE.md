@@ -89,6 +89,29 @@ same ESP32/MCP2515 setups described below.
 These cars also have an **X930m** connector near the A-pillar.
 Pinout not yet confirmed — if you test it, please report in an issue.
 
+### X120 — 2020 Model 3 at the Autopilot ECU
+
+Some early builds route Party CAN cleanest at the **X120** connector on
+the Autopilot ECU, rather than X052. Confirmed by @mxkr303 (issue #191)
+on a 2020 Model 3 Standard Range Plus built in Fremont (SOP4): X120 is a
+**blue** connector in the passenger footwell behind the glove box,
+plugged into the Autopilot ECU.
+
+| X120 Pin | Wire | Signal |
+|----------|------|--------|
+| **5** | 0.13 mm² blue | **Party CAN High** |
+| **6** | 0.13 mm² white | **Party CAN Low** |
+| **9** | 2 mm² red | **12V +** |
+| **18** | 2 mm² black | **12V −** |
+
+Same 4-wire pattern (CAN + power); works with any of the ESP32/MCP2515
+setups below. Note the nag killer only reports green once the car is in
+a drive gear — that's when the EPAS starts nagging and there's a torque
+echo to answer, so a "red" nag killer status while parked is expected.
+Reported working on 2026.36 (Germany), with a rare system error that
+drops Autopilot; if you see it, a single-ID `0x370` capture while it
+happens would help pin down the cause.
+
 ### X179 — behind the rear center console (2021+ Model 3/Y)
 
 Tesla's own service/diagnostic connector. Requires removing a trim
