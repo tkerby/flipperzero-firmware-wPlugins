@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stddef.h> // offsetof (v2->v3 persona migration)
 #include <furi_hal_random.h>
 #include <furi_hal_version.h>
 #include <storage/storage.h>
@@ -95,15 +96,23 @@ Persona* persona_alloc(void) {
 
     if(storage_file_open(file, PERSONA_PATH, FSAM_READ, FSOM_OPEN_EXISTING)) {
         PersonaSaved saved;
-        memset(&saved, 0, sizeof(saved)); // so a shorter v2 blob leaves the new tallies at 0
+        memset(&saved, 0, sizeof(saved)); // so fields beyond a shorter v2 blob stay zero
         uint16_t read = storage_file_read(file, &saved, sizeof(saved));
-        // accept a full v3 blob, or migrate a v2 one (12 bytes shorter: v3 appended 3 u32 tallies)
-        bool ok_v3 = (read == sizeof(saved) && saved.version == PERSONA_SAVE_VERSION);
-        bool ok_v2 = (read == sizeof(saved) - 3 * sizeof(uint32_t) && saved.version == 2);
-        if((ok_v3 || ok_v2) && saved.magic == PERSONA_SAVE_MAGIC) {
+        // accept v3, or migrate v2. don't rely on the exact size delta (struct padding makes it 8,
+        // not 12): require all v2 fields present, then zero the v3 tallies (their bytes in a v2 blob
+        // are padding/garbage) and restamp the version.
+        bool ok = (saved.magic == PERSONA_SAVE_MAGIC) &&
+                  (saved.version == PERSONA_SAVE_VERSION || saved.version == 2) &&
+                  (read >= offsetof(PersonaSaved, crack_tot));
+        if(ok) {
+            if(saved.version != PERSONA_SAVE_VERSION) {
+                saved.crack_tot = 0;
+                saved.pmkid_tot = 0;
+                saved.hs_tot = 0;
+                saved.version = PERSONA_SAVE_VERSION;
+            }
             memset(p, 0, sizeof(Persona));
             p->s = saved;
-            p->s.version = PERSONA_SAVE_VERSION; // persist as v3 on next save
             // guard corrupt name/identity from a truncated write
             p->s.name[PERSONA_NAME_MAX - 1] = '\0';
             p->s.identity[PERSONA_ID_HEX_LEN] = '\0';
