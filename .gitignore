@@ -1,0 +1,12 @@
+# Local Python environment and caches
+.venv/
+__pycache__/
+*.pyc
+
+# Build output (rebuild with ufbt)
+flipper_app/dist/
+dist/
+build/
+
+# Editor files with local paths
+.vscode/

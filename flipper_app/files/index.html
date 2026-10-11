@@ -1,0 +1,2697 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gitphin</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2010%2010%22%20shape-rendering=%22crispEdges%22%3E%3Ctitle%3EGitphin%3C/title%3E%3Cpath%20fill=%22%23111%22%20d=%22M4%200h1v1h-1zM5%201h2v1h-2zM3%202h6v1h-6zM2%203h8v1h-8zM1%204h3v1h-3zM0%205h1v1h-1zM2%205h1v1h-1zM2%207h6v1h-6zM1%208h1v1h-1zM8%208h1v1h-1zM0%209h1v1h-1zM9%209h1v1h-1z%22/%3E%3C/svg%3E">
+<style>
+/* Gitphin design system: pixel look, Flipper orange + near-black. Spacing scale 4/8/12/16/24/32. */
+:root{
+--s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:24px;--s6:32px;
+--fs:14px;--fs-s:12px;--mono:13px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+--bg:#ff8200;--chrome:#14110d;--chrome2:#2a2218;--on-chrome:#ff8200;--on-chrome2:#ffd9a8;
+--card:#fff4e0;--card2:#f5e3c2;--fg:#14110d;--muted:#6a5841;--line:#d6c29c;--bd:#14110d;--shadow:#14110d;
+--accent:#b85700;--orange:#ff8200;--p-bg:#14110d;--p-fg:#ff8200;
+--ok:#1f7a3d;--warn:#a85d00;--bad:#c0261c;--merged:#6b3fb5;
+--code:#fffaf0;--add:#d6efd6;--del:#f7d6d0;--hunk:#efdfbd;--focus:#14110d;--side-w:232px}
+:root[data-theme=dark]{
+--bg:#0c0a07;--chrome:#000;--chrome2:#1f1710;--on-chrome:#ff8200;--on-chrome2:#ffc780;
+--card:#16120d;--card2:#211a12;--fg:#ffe9c7;--muted:#ad956f;--line:#3b2b15;--bd:#ff8200;--shadow:#5c2f00;
+--accent:#ff8200;--p-bg:#ff8200;--p-fg:#0c0a07;
+--ok:#4cc27b;--warn:#ffb340;--bad:#ff6a5c;--merged:#b394f5;
+--code:#100d09;--add:#10301a;--del:#3a1713;--hunk:#2a1f0f;--focus:#ff8200}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+--bg:#0c0a07;--chrome:#000;--chrome2:#1f1710;--on-chrome:#ff8200;--on-chrome2:#ffc780;
+--card:#16120d;--card2:#211a12;--fg:#ffe9c7;--muted:#ad956f;--line:#3b2b15;--bd:#ff8200;--shadow:#5c2f00;
+--accent:#ff8200;--p-bg:#ff8200;--p-fg:#0c0a07;
+--ok:#4cc27b;--warn:#ffb340;--bad:#ff6a5c;--merged:#b394f5;
+--code:#100d09;--add:#10301a;--del:#3a1713;--hunk:#2a1f0f;--focus:#ff8200}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden}
+body{background:var(--bg);color:var(--fg);font:var(--fs)/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.top :focus-visible,.side :focus-visible{outline-color:var(--orange)}
+a{color:inherit}
+.vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.pxt{display:inline-flex;align-items:center;vertical-align:middle;line-height:0}
+.pxt svg{fill:currentColor;shape-rendering:crispEdges;display:block}
+.ic{width:12px;height:12px;fill:currentColor;shape-rendering:crispEdges;flex:none;vertical-align:-2px}
+.ic.l{width:24px;height:24px}
+.ic.xl{width:32px;height:32px}
+/* ---- shell ---- */
+#app{display:grid;grid-template-rows:48px 1fr;grid-template-columns:var(--side-w) 1fr;height:100vh;height:100dvh}
+.top{grid-column:1/-1;display:flex;align-items:center;gap:var(--s3);padding:0 var(--s3);background:var(--chrome);color:var(--on-chrome2);border-bottom:2px solid var(--on-chrome);min-width:0}
+.brand{display:flex;align-items:center;gap:var(--s2);text-decoration:none;color:var(--on-chrome);flex:none}
+.brand .logo{width:34px;height:25px;fill:currentColor;shape-rendering:crispEdges}
+.dev{color:var(--on-chrome2);font-size:var(--fs-s);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px}
+.crumb{display:flex;align-items:center;gap:var(--s1);min-width:0;flex:1;overflow:hidden;white-space:nowrap}
+.crumb a,.crumb span{color:var(--on-chrome2);text-decoration:none;overflow:hidden;text-overflow:ellipsis}
+.crumb a:hover{color:var(--on-chrome)}
+.crumb b{color:var(--on-chrome);font-weight:600}
+.gsearch{display:flex;align-items:center;gap:var(--s2);height:32px;padding:0 var(--s2);border:2px solid var(--on-chrome);background:var(--chrome);flex:0 1 260px;min-width:0;color:var(--on-chrome)}
+.gsearch input[type=search]{flex:1;min-width:0;min-height:0;border:0;background:none;color:var(--on-chrome2);font:inherit;outline:0;padding:0}
+.gsearch input[type=search]::placeholder{color:#a58a63}
+.gsearch kbd{font:11px ui-monospace,monospace;border:1px solid var(--on-chrome);padding:0 4px;color:var(--on-chrome)}
+.gsearch:focus-within{background:var(--chrome2)}
+.ib{width:32px;height:32px;min-height:0;padding:0;border:2px solid var(--on-chrome);background:var(--chrome);color:var(--on-chrome);box-shadow:none;display:inline-flex;align-items:center;justify-content:center;flex:none;cursor:pointer}
+.ib:hover{background:var(--on-chrome);color:var(--chrome)}
+.ib:active{transform:translate(1px,1px)}
+#menubtn{display:none}
+.side{background:var(--chrome);color:var(--on-chrome2);overflow:auto;padding:var(--s3) 0;border-right:2px solid var(--on-chrome);min-height:0}
+.side .grp{padding:var(--s2) var(--s3) var(--s1);color:var(--on-chrome);opacity:.85}
+.side a.si{display:flex;align-items:center;gap:var(--s2);height:36px;padding:0 var(--s3);color:var(--on-chrome2);text-decoration:none;border-left:4px solid transparent;white-space:nowrap}
+.side a.si:hover{background:var(--chrome2);color:var(--on-chrome)}
+.side a.si.on{background:var(--on-chrome);color:var(--chrome);border-left-color:var(--on-chrome2)}
+.side a.si .n{margin-left:auto;font-size:11px;font-family:ui-monospace,monospace;border:1px solid currentColor;padding:0 4px}
+.side a.si .lb{overflow:hidden;text-overflow:ellipsis}
+.side .sub{padding-left:var(--s3)}
+.side .rname{padding:0 var(--s3) var(--s2);color:var(--on-chrome);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.main{padding:var(--s4) var(--s5);min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.scrim{display:none}
+.panel{display:none;min-height:0}
+.panel.active{display:flex;flex-direction:column;flex:1;overflow:auto}
+.pt{margin:0 0 var(--s3);color:var(--chrome);display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap}
+:root[data-theme=dark] .pt{color:var(--on-chrome)}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .pt{color:var(--on-chrome)}}
+@media (max-width:1024px){
+:root{--side-w:56px}
+.side a.si .lb,.side a.si .n,.side .grp,.side .rname{display:none}
+.side a.si{justify-content:center;padding:0;border-left-width:0}
+.dev{display:none}
+}
+@media (max-width:720px){
+#app{grid-template-columns:1fr}
+#menubtn{display:inline-flex}
+.side{position:fixed;top:48px;bottom:0;left:0;width:260px;z-index:50;transform:translateX(-100%);transition:transform .15s steps(4)}
+.side a.si .lb,.side .grp,.side .rname{display:block}
+.side a.si .n{display:inline}
+.side a.si{justify-content:flex-start;padding:0 var(--s3);border-left-width:4px}
+body.nav-open .side{transform:none}
+body.nav-open .scrim{display:block;position:fixed;inset:48px 0 0 0;background:rgba(0,0,0,.55);z-index:40}
+.main{padding:var(--s2)}
+.crumb{display:none}
+.gsearch{flex:1}
+.gsearch kbd{display:none}
+}
+/* ---- progress bar, toasts ---- */
+#prog{position:fixed;top:0;left:0;right:0;height:4px;z-index:200;pointer-events:none;opacity:0;transition:opacity 0s .2s;background:repeating-linear-gradient(90deg,var(--orange) 0 12px,transparent 12px 20px);background-size:20px 4px;animation:pg .5s steps(5) infinite}
+#prog.on{opacity:1}
+@keyframes pg{to{background-position:20px 0}}
+#toasts{position:fixed;right:var(--s4);bottom:var(--s4);display:flex;flex-direction:column;gap:var(--s2);z-index:150;max-width:min(420px,calc(100vw - 32px))}
+.toast{display:flex;gap:var(--s2);align-items:flex-start;background:var(--card);color:var(--fg);border:2px solid var(--bd);box-shadow:4px 4px 0 var(--shadow);padding:var(--s2) var(--s3);overflow-wrap:anywhere}
+.toast.err{border-color:var(--bad)}.toast.err .ic{color:var(--bad)}
+.toast.ok .ic{color:var(--ok)}
+.toast .ic{margin-top:3px}
+/* ---- controls ---- */
+button,label.btn{font:inherit;display:inline-flex;align-items:center;justify-content:center;gap:var(--s2);min-height:32px;padding:0 var(--s3);border:2px solid var(--bd);background:var(--card);color:var(--fg);border-radius:0;box-shadow:2px 2px 0 var(--shadow);cursor:pointer;white-space:nowrap}
+button:hover,label.btn:hover{background:var(--card2)}
+button:active,label.btn:active{transform:translate(2px,2px);box-shadow:none}
+button.primary{background:var(--p-bg);color:var(--p-fg)}
+button.primary:hover{background:var(--p-bg);filter:brightness(1.2)}
+button.danger{color:var(--bad);border-color:var(--bad);box-shadow:2px 2px 0 var(--bad)}
+button.ghost{border-color:transparent;background:none;box-shadow:none}
+button.ghost:hover{border-color:var(--bd);background:var(--card2)}
+button.sm,td.act button{min-height:24px;padding:0 var(--s2);border-width:2px}
+button:disabled{color:var(--muted);border-color:var(--line);background:repeating-linear-gradient(45deg,var(--card2) 0 2px,var(--card) 2px 4px);box-shadow:none;cursor:not-allowed;transform:none}
+button.busy{position:relative;cursor:progress}
+button.busy::before{content:"";width:10px;height:10px;border:2px solid currentColor;border-right-color:transparent;animation:spin .6s steps(8) infinite}
+input[type=text],input[type=search],select,textarea{font:inherit;border:2px solid var(--bd);background:var(--code);color:var(--fg);border-radius:0;padding:var(--s1) var(--s2);min-height:32px;min-width:0;max-width:100%}
+input[type=text]:focus,select:focus,textarea:focus{outline:2px solid var(--focus);outline-offset:1px}
+input[type=file]{display:none}
+textarea{resize:vertical;min-height:80px}
+input[type=checkbox],input[type=radio]{accent-color:var(--p-bg);width:16px;height:16px}
+.bar{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center;margin-bottom:var(--s3)}
+.seg{display:inline-flex}.seg button{box-shadow:none;margin-left:-2px}.seg button:first-child{margin:0}
+.seg button.active{background:var(--p-bg);color:var(--p-fg)}
+.tools{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center;margin-bottom:var(--s3)}
+.tools .crumbs{flex:1 1 200px}
+.crumbs{flex:1;min-width:0;overflow-wrap:anywhere}
+.crumbs a{color:var(--fg);text-decoration:none;font-weight:600}
+.crumbs a:hover,a.lnk:hover,.name a:hover{color:var(--accent);text-decoration:underline}
+a.lnk,.name a{color:var(--fg);text-decoration:none;overflow-wrap:anywhere}
+.muted{color:var(--muted)}.small{font-size:var(--fs-s)}
+.k{color:var(--muted);font-size:var(--fs-s);text-transform:uppercase;letter-spacing:.04em}
+.v{font-size:18px;font-weight:600;margin-top:2px;word-break:break-word}
+.note{color:var(--muted);font-size:var(--fs-s);margin-top:var(--s3)}
+.status{color:var(--muted);min-height:1.4em;margin-top:var(--s3)}.status.err{color:var(--bad)}
+.pill{font-size:var(--fs-s);color:var(--muted)}
+.badge,.state,.st{display:inline-flex;align-items:center;font-size:11px;font-weight:700;padding:1px 6px;border:2px solid var(--accent);color:var(--accent);margin-left:var(--s2);white-space:nowrap;line-height:1.2}
+.state{color:#fff;margin-left:0}
+.state.open{background:var(--ok);border-color:var(--ok)}.state.closed{background:var(--muted);border-color:var(--muted)}.state.merged{background:var(--merged);border-color:var(--merged)}
+.st{margin:0;color:#fff;font-family:ui-monospace,monospace}
+.st.A{background:var(--ok);border-color:var(--ok)}.st.D{background:var(--bad);border-color:var(--bad)}.st.M,.st.T{background:var(--merged);border-color:var(--merged)}
+.chip{display:inline-block;font-size:12px;padding:0 6px;margin-right:4px;border:2px solid var(--bd);white-space:nowrap}
+.swatch{display:inline-block;width:14px;height:14px;vertical-align:-2px;border:2px solid var(--bd)}
+/* ---- cards, tables, lists ---- */
+.card{background:var(--card);border:2px solid var(--bd);box-shadow:4px 4px 0 var(--shadow);padding:var(--s3) var(--s4);min-width:0}
+.card>h2:first-child,.card>.tools:first-child h2{font-size:var(--fs)}
+.card>h2:first-child{margin:calc(-1*var(--s3)) calc(-1*var(--s4)) var(--s3);padding:var(--s2) var(--s4);background:var(--chrome);color:var(--on-chrome)}
+h2{font-size:var(--fs);margin:0 0 var(--s3)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--s3);margin-bottom:var(--s4)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:var(--s4)}
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:var(--s3)}
+@media (max-width:720px){.cols,.cols2{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse}
+td,th{padding:var(--s2) var(--s1);border-top:1px solid var(--line);text-align:left}
+tr:first-child td{border-top:0}
+td.size{color:var(--muted);text-align:right;white-space:nowrap;width:90px}
+td.act{text-align:right;white-space:nowrap;width:1%}
+td.num{color:var(--muted);white-space:nowrap;text-align:right;width:1%}
+td.sha code,.sha{font:var(--mono);color:var(--muted)}
+.cell-desc{color:var(--muted);font-size:var(--fs-s);overflow-wrap:anywhere}
+.rows{display:flex;flex-direction:column}
+.row{display:flex;justify-content:space-between;gap:var(--s3);padding:var(--s2) 0;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}.row .k{align-self:center}.row .val{text-align:right;overflow-wrap:anywhere;font-weight:600}
+.secret{display:flex;align-items:center;gap:var(--s2);justify-content:flex-end}
+.item{padding:var(--s2) 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.item .t{font-weight:600;overflow-wrap:anywhere}
+.item .m{color:var(--muted);font-size:var(--fs-s);margin-top:2px;overflow-wrap:anywhere}
+code,pre.snip{font:var(--mono)}
+.clone code,pre.snip{background:var(--code);border:2px solid var(--bd);padding:2px var(--s2);overflow-wrap:anywhere}
+pre.snip{margin:var(--s2) 0 0;padding:var(--s2) var(--s3);white-space:pre-wrap}
+.empty{display:flex;flex-direction:column;align-items:center;gap:var(--s3);padding:var(--s6) var(--s4);color:var(--muted);text-align:center;background:repeating-conic-gradient(var(--card2) 0 25%,transparent 0 50%) 0 0/8px 8px}
+.empty .ic{width:48px;height:48px;color:var(--fg)}
+.empty p{margin:0;max-width:44ch}
+.sk{height:14px;margin:var(--s2) 0;background:var(--card2) repeating-conic-gradient(var(--line) 0 25%,transparent 0 50%) 0 0/4px 4px;animation:skx .8s steps(4) infinite}
+@keyframes skx{to{background-position:4px 0}}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid var(--muted);border-right-color:transparent;animation:spin .8s steps(8) infinite;vertical-align:-2px;margin-right:var(--s2)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.progress{margin-top:var(--s3)}
+.progress .track{height:12px;background:var(--code);border:2px solid var(--bd)}
+.progress .fill{height:100%;width:0;background:repeating-linear-gradient(90deg,var(--orange) 0 6px,transparent 6px 8px)}
+.progress .txt{margin-top:var(--s1);font-size:var(--fs-s);color:var(--muted)}
+.banner{border:2px solid var(--accent);padding:var(--s2) var(--s3);margin-bottom:var(--s3);background:var(--card);font-size:var(--fs-s)}
+/* ---- repo view ---- */
+.repos-grid{display:flex;flex-direction:column}
+.rrow{display:flex;align-items:center;gap:var(--s3);padding:var(--s3) 0;border-top:1px solid var(--line)}
+.rrow:first-child{border-top:0}
+.rrow .main-c{flex:1;min-width:0}
+.rrow .rn{font-weight:700;font-size:15px;text-decoration:none;color:var(--fg)}
+.rrow .rn:hover{color:var(--accent);text-decoration:underline}
+.rrow .meta{display:flex;gap:var(--s3);align-items:center;color:var(--muted);font-size:var(--fs-s);white-space:nowrap}
+.rrow .acts{display:flex;gap:var(--s1)}
+@media (max-width:720px){.rrow{flex-wrap:wrap}.rrow .meta{order:3;flex-basis:100%}}
+#repo-view{display:none;flex-direction:column;flex:1;min-height:0}
+#repo-view:not([hidden]){display:flex}
+.repo-head{flex:none;margin-bottom:var(--s3)}
+.repo-head .rh{display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap}
+.repo-head h2{margin:0;font-size:20px;overflow-wrap:anywhere;flex:1;min-width:0;background:none;color:inherit}
+.repo-desc{color:var(--muted);overflow-wrap:anywhere}
+.clone{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2);padding:var(--s1) 0}
+.clone .k{width:110px;flex:none}.clone code{flex:1;min-width:180px}
+#rv-body{flex:1;min-height:0;overflow:auto;display:block}
+#rv-body.fill{overflow:hidden;display:flex;flex-direction:column}
+.split{display:grid;grid-template-columns:minmax(220px,300px) 1fr;gap:var(--s3);flex:1;min-height:0}
+.split.h{height:72vh;flex:none}
+.pane{display:flex;flex-direction:column;min-height:0;min-width:0;background:var(--card);border:2px solid var(--bd);box-shadow:4px 4px 0 var(--shadow)}
+.pane>.ph{flex:none;display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;padding:var(--s2) var(--s3);background:var(--chrome);color:var(--on-chrome);min-height:40px;z-index:2}
+.pane>.ph a{color:var(--on-chrome2);text-decoration:none}
+.pane>.ph a:hover{color:var(--on-chrome);text-decoration:underline}
+.pane>.ph select{min-height:28px;background:var(--chrome);color:var(--on-chrome2);border-color:var(--on-chrome)}
+.pane>.ph .sp{flex:1}
+.pane>.ph button{border-color:var(--on-chrome);background:var(--chrome);color:var(--on-chrome);box-shadow:none;min-height:28px}
+.pane>.ph button:hover{background:var(--on-chrome);color:var(--chrome)}
+.pane>.pb{flex:1;min-height:0;overflow:auto}
+.pane>.pb.nos{overflow:hidden;display:flex;flex-direction:column}
+.pane>.pb.pad{padding:var(--s3) var(--s4)}
+@media (max-width:820px){.split{grid-template-columns:1fr;grid-template-rows:minmax(120px,34%) 1fr}.split.h{height:auto}.split.h .pane{max-height:60vh}}
+.tr{display:flex;align-items:center;gap:var(--s2);height:28px;padding:0 var(--s2) 0 calc(var(--s2) + var(--d,0)*16px);cursor:pointer;white-space:nowrap;text-decoration:none;color:var(--fg)}
+.tr:hover{background:var(--card2)}
+.tr.on{background:var(--p-bg);color:var(--p-fg)}
+.tr .nm{overflow:hidden;text-overflow:ellipsis}
+.tr .ic.c{width:12px}
+.codebox{display:grid;grid-template-columns:auto 1fr;overflow:auto;flex:1;min-height:0;position:relative;font:var(--mono);line-height:20px;background:var(--code)}
+.codebox pre{margin:0;padding:6px 8px;line-height:20px}
+.codebox .gut{color:var(--muted);text-align:right;user-select:none;border-right:2px solid var(--line);background:var(--card2);position:sticky;left:0}
+.codebox .txt{white-space:pre;min-width:0}
+.codebox .hl{position:absolute;left:0;width:100%;height:20px;background:rgba(255,130,0,.28);pointer-events:none}
+.diff{width:100%;border-collapse:collapse;font:12.5px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace}
+.diff td{border:0;padding:0 var(--s2);vertical-align:top}
+.diff td.ln{color:var(--muted);text-align:right;user-select:none;width:1%;white-space:nowrap}
+.diff td.tx{white-space:pre-wrap;overflow-wrap:anywhere}
+.diff tr.add{background:var(--add)}.diff tr.del{background:var(--del)}.diff tr.hunk{background:var(--hunk);color:var(--muted)}
+.dwrap{overflow-x:auto}
+.fhead{display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap;padding:var(--s2) var(--s3);background:var(--card2);border-bottom:2px solid var(--bd);position:sticky;top:0;z-index:1}
+.fhead .p{flex:1;min-width:0;overflow-wrap:anywhere;font-weight:600}
+.fsec{border-bottom:2px solid var(--bd)}
+.fl .tr{height:auto;min-height:30px;padding-top:2px;padding-bottom:2px;white-space:normal}
+.fl .tr .fp{min-width:0;overflow-wrap:anywhere}
+.fl .tr .fp small{color:var(--muted)}
+.fl .tr.on small{color:inherit;opacity:.8}
+.kv{display:flex;flex-wrap:wrap;gap:var(--s2) var(--s4);margin:var(--s2) 0}
+.title-row{display:flex;gap:var(--s3);align-items:baseline;flex-wrap:wrap}
+.title-row h2{margin:0;font-size:20px;overflow-wrap:anywhere;background:none;color:inherit;padding:0}
+.shachip{display:inline-flex;align-items:center;gap:var(--s1);font:var(--mono)}
+.newref{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center;margin-bottom:var(--s3)}
+.newref input[type=text]{flex:1;min-width:140px}
+form.inl{display:flex;gap:var(--s2);margin:var(--s2) 0 0}form.inl input{flex:1;min-width:0}
+/* ---- markdown ---- */
+.md{overflow-wrap:anywhere}
+.md h1,.md h2,.md h3,.md h4{margin:var(--s4) 0 var(--s2);line-height:1.25;background:none;color:inherit;padding:0}
+.md h1{font-size:22px}.md h2{font-size:18px}.md h3{font-size:16px}.md h4,.md h5,.md h6{font-size:14px}
+.md p{margin:var(--s2) 0}.md ul,.md ol{margin:var(--s2) 0;padding-left:var(--s5)}
+.md code{font:var(--mono);background:var(--code);border:1px solid var(--line);padding:0 4px}
+.md pre{background:var(--code);border:2px solid var(--bd);padding:var(--s2) var(--s3);overflow:auto;margin:var(--s2) 0}
+.md pre code{border:0;padding:0;background:none}
+.md blockquote{margin:var(--s2) 0;padding:0 var(--s3);border-left:4px solid var(--bd);color:var(--muted)}
+.md a{color:var(--accent)}.md a.missing{color:var(--bad)}
+.md table{width:auto;margin:var(--s2) 0}.md th,.md td{border:1px solid var(--line);padding:var(--s1) var(--s2)}
+.md hr{border:0;border-top:2px solid var(--bd)}
+.cmt{margin-top:var(--s3)}
+.cmt .h{display:flex;gap:var(--s2);align-items:baseline;flex-wrap:wrap;color:var(--muted);font-size:var(--fs-s);margin-bottom:var(--s2)}
+.cmt .h b{color:var(--fg)}.cmt .h .sp{flex:1}
+.cbox textarea{width:100%;min-height:100px}
+.wiki{display:grid;grid-template-columns:220px 1fr;gap:var(--s3);align-items:start}
+@media (max-width:720px){.wiki{grid-template-columns:1fr}}
+mark{background:rgba(255,130,0,.4);color:inherit}
+.hit{display:flex;gap:var(--s3);padding:2px 0;font:var(--mono)}
+.hit a{flex:none;min-width:44px;text-align:right;color:var(--muted);text-decoration:none}
+.hit span{white-space:pre-wrap;overflow-wrap:anywhere}
+/* ---- dialogs ---- */
+dialog.dlg{background:var(--card);color:var(--fg);border:2px solid var(--bd);box-shadow:6px 6px 0 var(--shadow);padding:var(--s4);width:min(560px,calc(100vw - 32px))}
+dialog.dlg::backdrop{background:rgba(0,0,0,.6)}
+dialog.dlg h2{background:none;color:inherit;margin:0 0 var(--s2)}
+dialog.dlg label{display:block;margin-top:var(--s3)}
+dialog.dlg label span{display:block;color:var(--muted);font-size:var(--fs-s);text-transform:uppercase;letter-spacing:.04em;margin-bottom:var(--s1)}
+dialog.dlg input[type=text],dialog.dlg textarea,dialog.dlg select{width:100%}
+dialog.dlg textarea{min-height:140px;font:var(--mono)}
+dialog.dlg label.chk{display:flex;align-items:center;gap:var(--s2);margin-top:var(--s2)}
+dialog.dlg label.chk span{display:inline}
+dialog.dlg .msg{margin:var(--s2) 0 0;overflow-wrap:anywhere}
+dialog.dlg .hint{color:var(--muted);font-size:var(--fs-s);margin-top:var(--s1);overflow-wrap:anywhere}
+dialog.dlg .btns{display:flex;justify-content:flex-end;gap:var(--s2);margin-top:var(--s4)}
+/* ---- status dot ---- */
+.hs{display:inline-flex;align-items:center;gap:var(--s2);font-size:var(--fs-s);color:var(--on-chrome2);white-space:nowrap;flex:none}
+.hs i{display:inline-block;width:12px;height:12px;box-sizing:border-box;background:var(--muted)}
+.hs.idle i{background:#4cc27b;animation:hspulse 2s steps(2) infinite}
+.hs.work i,.hs.slow i{background:transparent;border:3px solid #4cc27b;border-right-color:transparent;animation:spin .8s steps(8) infinite}
+.hs.slow i{border-color:#ffb340;border-right-color:transparent}
+.hs.slow{color:#ffb340}
+.hs.stuck i,.hs.dead i{background:#ff6a5c}
+.hs.stuck,.hs.dead{color:#ff6a5c}
+@keyframes hspulse{0%{opacity:1}50%{opacity:.35}}
+@media (max-width:720px){.hs .pxt,.hs #hubtxt{display:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.hs.work i{background:#4cc27b}.hs.slow i{background:#ffb340}#prog.on{background:var(--orange)}}
+.fsec .note{padding:6px 12px;margin:0}
+@media (max-width:720px){.pane>.ph .crumbs{flex:1 1 100%}}
+nav.subtabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}nav.subtabs button.active{background:var(--p-bg);color:var(--p-fg)}
+.pad{padding:8px 12px}</style>
+</head>
+<body>
+<svg id="sprite" width="0" height="0" style="position:absolute" aria-hidden="true"></svg>
+<div id="prog"></div>
+<div id="app">
+<header class="top">
+  <button class="ib" id="menubtn" aria-label="Menu"><svg class="ic l"><use href="#i-menu"/></svg></button>
+  <a class="brand" href="#repos" aria-label="Gitphin"><svg class="logo" viewBox="0 0 34 25" aria-hidden="true"><use href="#i-logo"/></svg><b>Gitphin</b></a>
+  <span class="dev" id="dev"></span>
+  <nav class="crumb" id="crumb" aria-label="Breadcrumb"></nav>
+  <form class="gsearch" id="gform" role="search"><svg class="ic"><use href="#i-search"/></svg><input id="gq" type="search" placeholder="Search" aria-label="Search code or repositories" autocomplete="off"><kbd>/</kbd></form>
+  <span class="hs unknown" id="hubstat" role="status" aria-live="off"><i></i><span id="hubtxt"></span></span>
+  <button class="ib" id="themebtn" aria-label="Toggle light and dark theme"><svg class="ic l"><use href="#i-moon"/></svg></button>
+</header>
+<aside class="side" id="side" aria-label="Navigation"></aside>
+<div class="scrim" id="scrim"></div>
+<main class="main" id="main">
+  <div class="panel active" id="panel-files">
+    <h1 class="pt">Files</h1>
+    <div class="grid" id="info"></div>
+    <section class="card">
+      <h2>Files on the Flipper</h2>
+      <div class="bar">
+        <div class="crumbs" id="crumbs"></div>
+        <button id="mkdir"><svg class="ic"><use href="#i-plus"/></svg>New folder</button>
+        <label class="btn"><svg class="ic"><use href="#i-upload"/></svg>Upload<input type="file" id="upload" multiple></label>
+        <button id="refresh"><svg class="ic"><use href="#i-refresh"/></svg>Refresh</button>
+      </div>
+      <table><tbody id="list"></tbody></table>
+      <div class="status" id="status"></div>
+      <div class="progress" id="progress" style="display:none">
+        <div class="track"><div class="fill" id="progress-fill"></div></div>
+        <div class="txt" id="progress-text"></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="panel" id="panel-collector">
+    <h1 class="pt">Collector</h1>
+    <div class="bar">
+      <div class="crumbs muted">Information collected from this PC by the bridge.</div>
+      <button id="collect-refresh"><svg class="ic"><use href="#i-refresh"/></svg>Refresh</button>
+    </div>
+    <div class="cols">
+      <section class="card">
+        <h2>This PC</h2>
+        <div class="rows" id="pc-rows"></div>
+        <div class="note" id="pc-note"></div>
+      </section>
+      <section class="card">
+        <h2>Connected Wi-Fi</h2>
+        <div class="rows" id="wifi-rows"></div>
+        <div class="note" id="wifi-note"></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-repos">
+    <div id="repos-list-view">
+      <h1 class="pt">Repositories</h1>
+      <div class="bar">
+        <div class="crumbs muted">Git repositories stored on the Flipper SD card. Git hosting in your pocket.</div>
+        <button id="repo-new" class="primary"><svg class="ic"><use href="#i-plus"/></svg>New repo</button>
+        <button id="repos-refresh"><svg class="ic"><use href="#i-refresh"/></svg>Refresh</button>
+      </div>
+      <section class="card"><div id="repos-list" class="repos-grid"></div></section>
+    </div>
+
+    <div id="repo-view" hidden>
+      <section class="card repo-head" id="rv-head">
+        <div class="rh">
+          <svg class="ic l"><use href="#i-repo"/></svg>
+          <h2 id="rv-name"></h2>
+          <button class="sm" id="rv-clone-btn" aria-expanded="false"><svg class="ic"><use href="#i-link"/></svg>Clone</button>
+          <button class="ghost sm" id="rv-refresh" aria-label="Reload this repository"><svg class="ic"><use href="#i-refresh"/></svg></button>
+        </div>
+        <div class="repo-desc" id="rv-desc"></div>
+        <div class="note" id="rv-meta" style="margin-top:4px"></div>
+        <div id="rv-clonebox" hidden style="margin-top:12px;border-top:1px solid var(--line);padding-top:8px">
+          <div id="rv-clone"></div>
+          <div class="note">The http:// URL works with plain git (clone, fetch, push), no helper needed. The flipper:// URL uses the optional git-remote-flipper helper, which pushes big changes faster.</div>
+        </div>
+      </section>
+      <section class="card" id="rv-empty" hidden style="margin-bottom:12px">
+        <h2>Push an existing repository</h2>
+        <div class="note" style="margin-top:0">This repository has no branches yet. Run this in your local repository:</div>
+        <pre class="snip" id="rv-snippet"></pre>
+        <div class="bar" style="margin:8px 0 0"><button id="rv-snippet-copy"><svg class="ic"><use href="#i-copy"/></svg>Copy</button></div>
+      </section>
+      <div id="rv-body"></div>
+    </div>
+  </div>
+</main>
+</div>
+<div id="toasts" aria-live="polite"></div>
+<script>
+const $ = id => document.getElementById(id);
+let cwd = "/ext";
+const inflight = new Map();
+let inflightId = 0, hubStat = null, hubPolling = false;
+const _fetch = window.fetch.bind(window);
+const reqQueue = []; let reqRunning = false;
+function exclusive(fn){ return new Promise((res, rej) => { reqQueue.push({fn, res, rej}); pumpQueue(); setProg(); }); }
+function pumpQueue(){
+if(reqRunning || !reqQueue.length) return;
+reqRunning = true;
+const j = reqQueue.shift(), id = ++inflightId; inflight.set(id, performance.now());
+setTimeout(renderHubStat, 2100);
+let done = false;
+const release = () => { if(done) return; done = true; inflight.delete(id); reqRunning = false; renderHubStat(); pumpQueue(); setProg(); };
+let p; try{ p = Promise.resolve(j.fn(release)); }catch(e){ release(); j.rej(e); return; }
+p.then(j.res, e => { release(); j.rej(e); });
+}
+const HEX40 = /^[0-9a-f]{40}$/;
+const memCache = new Map(); let memBytes = 0;
+const MEM_CAP = 4 * 1024 * 1024, SS_MAX = 64 * 1024;
+function cacheKey(url, o){
+if(o && o.method && o.method !== "GET") return null;
+let u; try{ u = new URL(url, location.origin); }catch(_){ return null; }
+const m = /^\/api\/git\/(blob|commit|diff|tree|log|compare)$/.exec(u.pathname); if(!m) return null;
+const g = k => u.searchParams.get(k), x = v => v && HEX40.test(v);
+const ok = m[1] === "blob" ? (x(g("sha")) || (x(g("ref")) && g("path") != null))
+: m[1] === "commit" ? x(g("sha"))
+: m[1] === "diff" ? (x(g("sha")) || (x(g("base")) && x(g("head"))))
+: m[1] === "compare" ? (x(g("base")) && x(g("head")))
+: x(g("ref"));
+return ok && !g("dl") ? u.pathname + u.search : null;
+}
+function cacheGet(key){
+let e = memCache.get(key);
+if(e){ memCache.delete(key); memCache.set(key, e); return e; }   // refresh LRU order
+try{
+const t = sessionStorage.getItem("hubc:" + key);
+if(t){ const j = JSON.parse(t); const bin = atob(j.b), u = new Uint8Array(bin.length); for(let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+e = {status: j.s, ct: j.c, sha: j.h, buf: u.buffer}; memPut(key, e, true); return e; }
+}catch(_){}
+return null;
+}
+function memPut(key, e, skipSession){
+const size = e.buf.byteLength;
+if(size > MEM_CAP / 2) return;
+if(memCache.has(key)) memBytes -= memCache.get(key).buf.byteLength;
+memCache.set(key, e); memBytes += size;
+while(memBytes > MEM_CAP){ const k = memCache.keys().next().value; memBytes -= memCache.get(k).buf.byteLength; memCache.delete(k); }
+if(!skipSession && size < SS_MAX){
+try{ const u = new Uint8Array(e.buf); let bin = ""; for(let i = 0; i < u.length; i++) bin += String.fromCharCode(u[i]);
+sessionStorage.setItem("hubc:" + key, JSON.stringify({s: e.status, c: e.ct, h: e.sha, b: btoa(bin)})); }catch(_){}
+}
+}
+function cachedResponse(e){
+const h = {}; if(e.ct) h["Content-Type"] = e.ct; if(e.sha) h["X-Git-Sha"] = e.sha;
+return new Response(e.status === 204 ? null : e.buf.slice(0), {status: e.status, headers: h});
+}
+window.fetch = (u, o) => {
+const url = String((u && u.url) || u);
+if(url.indexOf("/pc/hub") === 0) return _fetch(u, o);
+const key = cacheKey(url, o);
+const hit = key && cacheGet(key);
+if(hit){ netStats.hits++; return Promise.resolve(cachedResponse(hit)); }
+netStats.net++;
+return exclusive(release => _fetch(u, o).then(r => {
+try{
+r.clone().arrayBuffer().then(buf => {
+if(key && (r.status === 200 || r.status === 413)) memPut(key, {status: r.status, ct: r.headers.get("Content-Type"), sha: r.headers.get("X-Git-Sha"), buf});
+}).catch(() => {}).then(release);
+}catch(_){ release(); }
+return r;
+}));
+};
+const netStats = {net: 0, hits: 0};
+function renderHubStat(){
+const box = document.getElementById("hubstat"); if(!box) return;
+const now = performance.now();
+let age = 0; inflight.forEach(t => { age = Math.max(age, (now - t) / 1000); });
+let cls = "unknown", txt = "", title = "Flipper status unknown";
+const h = hubStat;
+if(h && h.error === "net"){ cls = "stuck"; txt = "not answering"; title = "The bridge does not answer"; }
+else if(h && h.connected === false){ cls = "dead"; txt = "not answering"; title = "App not running / reconnecting"; }
+else if(h && h.connected){
+let busy = h.busy_s == null ? null : Number(h.busy_s);
+if(age > 2) busy = Math.max(busy == null ? 0 : busy, age);
+if(busy == null || busy <= 0){ cls = "idle"; txt = "idle"; title = "Flipper idle"; }
+else if(busy < 10){ cls = "work"; txt = "working…"; title = "Flipper is working"; }
+else if(busy < 60){ cls = "slow"; txt = "working " + Math.floor(busy) + " s"; title = "Flipper is busy for " + Math.floor(busy) + " s"; }
+else{ cls = "stuck"; txt = "not answering"; title = "No answer for " + Math.floor(busy) + " s. The app may be stuck."; }
+}else if(age > 2){ cls = "work"; txt = "working…"; title = "A request is taking long"; }
+if(box.className !== "hs " + cls) box.className = "hs " + cls;
+document.getElementById("hubtxt").textContent = txt;
+box.title = title;
+}
+async function pollHub(){
+if(document.visibilityState !== "visible" || hubPolling) return;
+hubPolling = true;
+try{
+const ac = new AbortController(), t = setTimeout(() => ac.abort(), 4000);
+const r = await _fetch("/pc/hub", {signal: ac.signal, cache: "no-store"}); clearTimeout(t);
+hubStat = r.ok ? await r.json() : null;   // no /pc/hub route (older bridge): stay neutral
+}catch(_){ hubStat = {error: "net"}; }
+hubPolling = false; renderHubStat();
+}
+setInterval(pollHub, 2000);
+document.addEventListener("visibilitychange", () => { if(document.visibilityState === "visible") pollHub(); });
+pollHub(); renderHubStat();
+const PXFONT = "0000000044444040aaa00000avaavaa04fke5u40pq248bj0cik8lid044800000248884208422248004lel4000044v44000000cc80000v00000000cc011248gg0ehjlphe04c4444e0eh1248v0eh161he026aiv220vgu11he068guhhe0v1248880ehhehhe0ehhf12c000cc0cc000cc0cc8248g842000v0v00084212480eh124040ehnlngf0ehhvhhh0uhhuhhu0ehggghe0sihhhis0vgguggv0vgguggg0ehgnhhf0hhhvhhh0e44444e072222ic0hikokih0ggggggv0hrllhhh0hpljhhh0ehhhhhe0uhhuggg0ehhhlid0uhhukih0fgge11u0v4444440hhhhhhe0hhhhha40hhhllrh0hha4ahh0hha44440v1248gv0e88888e0gg842110e22222e04ah000000000000v8400000000e1fhf0gguhhhu000ehghe011fhhhf000ehvge0698s888000fhhf1egguhhhh040c444e0206222icggikoki0c44444e000qllll000uhhhh000ehhhe000uhhugg00fhhf1100noggg000fge1u008u8896000hhhjd000hhha4000hhlla000ha4ah000hhhf1e00v248v0688g886044444444c22122c000dm0000";
+const PXICONS = {"repo":"12:7fe4025fa4025fa4024027fe4025fa7fe","branch":"12:70050370320027c2c1701500700","tag":"12:0000007f84045825824047f8","commit":"12:0000000000f0108f0ff0f1080f0","file":"12:7f041841441e4024024024024027fe","folder":"12:78044047f4014014014014017ff","folder-open":"12:78047f4015554aa5554aa7ff","code":"12:000000118214422841442284188","issue-open":"12:1f82044028618f18f18614022041f8","issue-closed":"12:1f820440680da199318e14822041f8","pull-request":"12:e00a04e0a404404404404404e0ea0ae0e","merge":"12:e00a00e8044043c41441c400e00a00e00","release":"12:0007fe4624624627fe4024024027fe","book":"12:7fc4045f44045f44044047fc3fe","search":"12:3c04208108108108104203d001800c006","gear":"12:0f06f67fe3fc79e79e3fc7fe6f60f0","plus":"12:0000600600600607f87f8060060060060","pencil":"12:006009012024048090120240680780","trash":"12:0f07fe4022aa2aa2aa2aa2aa2021fc","upload":"12:0600f01f82d40600600604047fc","download":"12:0600600604642f41f80f00607fc","copy":"12:3f82087f85085085085f84087f8","check":"12:00000000200680cc186303601c0080","x":"12:00060630c1980f00600f019830c606","refresh":"12:1f020840440e4044004042081f0","chevron-right":"12:000000100080040020040080100","chevron-down":"12:0000000004042081100a0040","menu":"12:0007fe0000007fe0000007fe","sun":"12:0604622641f85fa5fa1f8264462060","moon":"12:1f03c07807807807803c21fe0fc","lock":"12:1f02082087fc4044444444047fc","link":"12:0000003de4215fd4213de","clock":"12:1f820444244247a4022041f8","user":"12:0f01081081080f00003fc4024027fe","home":"12:0600901082044027fe4f24924927fe","alert":"12:0600900901681682642044624027fe","info":"12:1f82044624024624624622041f8","dots":"12:000000000666666","filter":"12:7fe2041080900900f0"};
+const GP_LOGO = "M13 0h2v1h-2zM14 1h3v1h-3zM14 2h5v1h-5zM15 3h6v1h-6zM15 4h9v1h-9zM12 5h14v1h-14zM11 6h16v1h-16zM10 7h15v1h-15zM26 7h2v1h-2zM8 8h23v1h-23zM7 9h25v1h-25zM6 10h21v1h-21zM6 11h18v1h-18zM1 12h2v1h-2zM5 12h6v1h-6zM2 13h7v1h-7zM3 14h4v1h-4zM3 15h3v1h-3zM3 16h2v1h-2zM3 17h1v1h-1zM16 17h3v1h-3zM9 18h8v1h-8zM18 18h7v1h-7zM8 19h1v1h-1zM16 19h3v1h-3zM25 19h1v1h-1zM7 20h1v1h-1zM26 20h1v1h-1zM6 21h1v1h-1zM27 21h1v1h-1zM3 22h3v1h-3zM28 22h3v1h-3zM0 23h4v1h-4zM5 23h24v1h-24zM30 23h4v1h-4zM3 24h3v1h-3zM28 24h3v1h-3z";
+const NS = "http://www.w3.org/2000/svg";
+const pxCache = new Map();
+function pxPath(t){
+let c = pxCache.get(t); if(c) return c;
+let x = 0, d = "";
+for(const ch of t){
+if(ch === " "){ x += 3; continue; }
+let code = ch.charCodeAt(0) - 32; if(code < 0 || code > 94) code = 31;
+const rows = []; for(let i = 0; i < 8; i++) rows.push(parseInt(PXFONT[code * 8 + i], 32));
+let lo = 5, hi = -1;
+for(const r of rows) for(let b = 0; b < 5; b++) if(r >> (4 - b) & 1){ lo = Math.min(lo, b); hi = Math.max(hi, b); }
+if(hi < 0){ x += 3; continue; }
+rows.forEach((r, y) => {
+let b = lo;
+while(b <= hi){
+if(r >> (4 - b) & 1){ let e = b; while(e < hi && (r >> (3 - e) & 1)) e++; const n = e - b + 1; d += "M" + (x + b - lo) + " " + y + "h" + n + "v1h-" + n + "z"; b = e + 1; }
+else b++;
+}
+});
+x += hi - lo + 2;
+}
+c = {d, w: Math.max(1, x - 1)}; pxCache.set(t, c); return c;
+}
+function pxSvg(t, s){
+const {d, w} = pxPath(t), svg = document.createElementNS(NS, "svg"), p = document.createElementNS(NS, "path");
+svg.setAttribute("viewBox", "0 0 " + w + " 8"); svg.setAttribute("width", w * s); svg.setAttribute("height", 8 * s); svg.setAttribute("aria-hidden", "true");
+p.setAttribute("d", d); svg.append(p); return svg;
+}
+(function buildSprite(){
+let h = '<symbol id="i-logo" viewBox="0 0 34 25"><path d="' + GP_LOGO + '"/></symbol>';
+for(const k in PXICONS){
+const [ws, hex] = PXICONS[k].split(":"), w = +ws, n = (w + 3) >> 2, rows = hex.length / n;
+let d = "";
+for(let y = 0; y < rows; y++){
+const v = parseInt(hex.substr(y * n, n), 16); let x = 0;
+while(x < w){
+if(v >> (n * 4 - 1 - x) & 1){ let e = x; while(e + 1 < w && (v >> (n * 4 - 2 - e) & 1)) e++; d += "M" + x + " " + y + "h" + (e - x + 1) + "v1h-" + (e - x + 1) + "z"; x = e + 1; }
+else x++;
+}
+}
+h += '<symbol id="i-' + k + '" viewBox="0 0 ' + w + " " + rows + '"><path d="' + d + '"/></symbol>';
+}
+document.getElementById("sprite").innerHTML = h;
+})();
+function ic(name, cls){ const s = document.createElementNS(NS, "svg"), u = document.createElementNS(NS, "use"); s.setAttribute("class", "ic" + (cls ? " " + cls : "")); u.setAttribute("href", "#i-" + name); s.append(u); return s; }
+const PXSEL = [
+["button.sm,td.act button,.pane>.ph button", 1],
+["h1.pt,.brand b", 3],
+[".badge,.state,.st,.k,#hubtxt,.side .grp,.px1", 1],
+["button:not(.ib):not(.nopx),label.btn,.card>h2:first-child,.tools>h2,dialog.dlg h2,.side .lb.px,.px2", 2]
+];
+const PXQ = PXSEL.map(a => a[0]).join(",");
+function pxScale(e){ for(const [q, s] of PXSEL) if(e.matches(q)) return s; return 2; }
+function pixelize(e){
+if(!e.matches || !e.matches(PXQ)) return;
+const s = pxScale(e);
+for(const n of [...e.childNodes]){
+if(n.nodeType !== 3) continue;
+const raw = n.nodeValue.trim(); if(!raw) continue;
+const t = raw.replace(/…/g, "...").replace(/·/g, "-").replace(/\s+/g, " ");
+if(!/^[\x20-\x7e]{1,60}$/.test(t)) continue;
+const w = document.createElement("span"), v = document.createElement("span");
+w.className = "pxt"; w.append(pxSvg(t, s)); v.className = "vh"; v.textContent = raw;
+n.replaceWith(w, v);
+}
+}
+new MutationObserver(ms => {
+for(const m of ms) for(const n of m.addedNodes){
+if(n.nodeType === 1){ pixelize(n); if(n.querySelectorAll) n.querySelectorAll(PXQ).forEach(pixelize); }
+else if(n.nodeType === 3 && n.parentNode && n.parentNode.nodeType === 1) pixelize(n.parentNode);
+}
+}).observe(document.body, {childList: true, subtree: true});
+document.querySelectorAll(PXQ).forEach(pixelize);
+function toast(msg, kind){
+const t = el("div", {class: "toast " + (kind || ""), role: "status"}, ic(kind === "err" ? "alert" : kind === "ok" ? "check" : "info", "l"), el("div", {}, msg));
+t.onclick = () => t.remove(); $("toasts").append(t);
+while($("toasts").children.length > 4) $("toasts").firstChild.remove();
+setTimeout(() => t.remove(), kind === "err" ? 9000 : 4500);
+}
+function setProg(){ $("prog").classList.toggle("on", reqRunning || reqQueue.length > 0); }
+function curTheme(){ return document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"); }
+function applyTheme(t, save){
+document.documentElement.dataset.theme = t;
+if(save) try{ localStorage.setItem("gp.theme", t); }catch(_){}
+const b = $("themebtn"); b.innerHTML = ""; b.append(ic(t === "dark" ? "sun" : "moon", "l"));
+}
+(function initTheme(){
+let t = new URLSearchParams(location.search).get("theme");
+if(t !== "dark" && t !== "light"){ try{ t = localStorage.getItem("gp.theme"); }catch(_){ t = null; } }
+applyTheme(t === "dark" || t === "light" ? t : curTheme(), false);
+$("themebtn").onclick = () => applyTheme(curTheme() === "dark" ? "light" : "dark", true);
+})();
+const shell = {tab: "files", repos: [], repo: null, key: "code", counts: {}};
+const SECS = [["code", "code", "Code"], ["commit", "commits", "Commits"], ["branch", "branches", "Branches"], ["tag", "tags", "Tags"],
+["issue-open", "issues", "Issues"], ["pull-request", "pulls", "Pull requests"], ["release", "releases", "Releases"], ["book", "wiki", "Wiki"], ["gear", "settings", "Settings"]];
+function sideLink(href, icon, label, on, px, n){
+const a = el("a", {class: "si" + (on ? " on" : ""), href, title: label}, ic(icon, "l"), el("span", {class: "lb" + (px ? " px" : "")}, label));
+if(n) a.append(el("span", {class: "n"}, String(n)));
+return a;
+}
+function renderSide(){
+const side = $("side"); if(!side) return;
+side.innerHTML = "";
+side.append(el("div", {class: "grp"}, "Device"), sideLink("#files", "folder", "Files", shell.tab === "files", true), sideLink("#collector", "info", "Collector", shell.tab === "collector", true));
+side.append(el("div", {class: "grp"}, "Repositories"), sideLink("#repos", "repo", "All repositories", shell.tab === "repos" && !shell.repo, true));
+shell.repos.forEach(n => side.append(sideLink("#repos/" + encodeURIComponent(n), "book", n, shell.repo === n && false)));
+if(shell.tab === "repos" && shell.repo){
+side.append(el("div", {class: "grp"}, "This repository"));
+for(const [icon, key, label] of SECS){
+const href = "#repos/" + encodeURIComponent(shell.repo) + (key === "code" ? "" : "/" + key);
+side.append(sideLink(href, icon, label, shell.key === key, true, shell.counts[key]));
+}
+}
+renderCrumb();
+}
+function renderCrumb(){
+const c = $("crumb"); if(!c) return; c.innerHTML = "";
+const sep = () => ic("chevron-right");
+if(shell.tab !== "repos"){ c.append(el("b", {}, shell.tab === "files" ? "Files" : "Collector")); return; }
+c.append(el("a", {href: "#repos"}, "Repositories"));
+if(shell.repo){
+const lab = (SECS.find(s => s[1] === shell.key) || [0, 0, ""])[2];
+c.append(sep(), el("a", {href: "#repos/" + encodeURIComponent(shell.repo)}, shell.repo));
+if(lab) c.append(sep(), el("b", {}, lab));
+}
+}
+$("menubtn").onclick = () => document.body.classList.toggle("nav-open");
+$("scrim").onclick = () => document.body.classList.remove("nav-open");
+$("side").addEventListener("click", e => { if(e.target.closest("a")) document.body.classList.remove("nav-open"); });
+let repoFilter = "";
+$("gform").onsubmit = e => {
+e.preventDefault(); const q = $("gq").value.trim();
+if(shell.repo && R && R.name === shell.repo){ if(q) go2(hs("search", lastRef || defBranch()) + "?q=" + encodeURIComponent(q)); }
+else{ repoFilter = q; go2("#repos"); if(location.hash === "#repos") route(); }
+};
+document.addEventListener("keydown", e => {
+if(e.key === "/" && !e.ctrlKey && !e.metaKey && !/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || "")){ e.preventDefault(); $("gq").focus(); }
+else if(e.key === "Escape"){ document.body.classList.remove("nav-open"); if(document.activeElement === $("gq")) $("gq").blur(); }
+});
+function fmtSize(n){
+if(n < 1024) return n + " B";
+const u = ["KiB","MiB","GiB"]; let i = -1;
+do { n /= 1024; i++; } while(n >= 1024 && i < u.length - 1);
+return n.toFixed(n < 10 ? 1 : 0) + " " + u[i];
+}
+function fmtUptime(s){
+const d = Math.floor(s/86400), h = Math.floor(s%86400/3600), m = Math.floor(s%3600/60);
+return (d ? d + "d " : "") + h + "h " + m + "m";
+}
+function status(msg, err){ const s = $("status"); s.textContent = msg || ""; s.className = "status" + (err ? " err" : ""); }
+function q(path){ return "path=" + encodeURIComponent(path); }
+function join(dir, name){ return dir.replace(/\/$/, "") + "/" + name; }
+async function api(method, url, body){
+const r = await fetch(url, {method, body});
+const j = await r.json().catch(() => ({ok:false, error:"bad answer (" + r.status + ")"}));
+if(!r.ok || j.ok === false) throw new Error(j.error || r.statusText);
+return j;
+}
+async function loadInfo(){
+try{
+const i = await (await fetch("/api/info")).json();
+$("dev").textContent = i.name;
+const cards = [
+["Device", i.name],
+["Firmware", i.firmware],
+["Battery", i.battery + "%" + (i.charging ? " ⚡" : "")],
+["SD free", i.sd_ok ? fmtSize(i.sd_free_kib*1024) + " / " + fmtSize(i.sd_total_kib*1024) : "no card"],
+["Free RAM", fmtSize(i.heap_free)],
+["Uptime", fmtUptime(i.uptime_s)],
+];
+$("info").innerHTML = "";
+for(const [k, v] of cards){
+const c = document.createElement("div"); c.className = "card";
+c.innerHTML = '<div class="k"></div><div class="v"></div>';
+c.children[0].textContent = k; c.children[1].textContent = v;
+$("info").appendChild(c);
+}
+}catch(e){ status("Info: " + e.message, true); }
+}
+function renderCrumbs(){
+const c = $("crumbs"); c.innerHTML = "";
+const parts = cwd.split("/").filter(Boolean);
+parts.forEach((p, idx) => {
+const a = document.createElement("a"); a.href = "#"; a.textContent = p;
+const target = "/" + parts.slice(0, idx + 1).join("/");
+a.onclick = e => { e.preventDefault(); go(target); };
+c.append("/", a);
+});
+}
+async function go(path){
+cwd = path; renderCrumbs(); status("Loading…");
+try{
+const j = await api("GET", "/api/list?" + q(path));
+const rows = j.entries
+.filter(f => !f.name.endsWith(".part"))  // hide uploads in progress
+.sort((a, b) => (b.dir - a.dir) || a.name.localeCompare(b.name));
+const tb = $("list"); tb.innerHTML = "";
+if(path.split("/").filter(Boolean).length > 1){
+const tr = tb.insertRow(); const td = tr.insertCell(); td.className = "name"; td.colSpan = 3;
+const a = document.createElement("a"); a.href = "#"; a.textContent = "↑ ..";
+a.onclick = e => { e.preventDefault(); go(path.replace(/\/[^/]+$/, "")); };
+td.appendChild(a);
+}
+for(const f of rows){
+const full = join(path, f.name);
+const tr = tb.insertRow();
+const name = tr.insertCell(); name.className = "name";
+const a = document.createElement("a");
+a.textContent = (f.dir ? "📁 " : "📄 ") + f.name;
+if(f.dir){ a.href = "#"; a.onclick = e => { e.preventDefault(); go(full); }; }
+else { a.href = "/api/file?" + q(full); a.target = "_blank"; }
+name.appendChild(a);
+const size = tr.insertCell(); size.className = "size"; size.textContent = f.dir ? "" : fmtSize(f.size);
+const act = tr.insertCell(); act.className = "act";
+if(!f.dir){
+const dl = document.createElement("button"); dl.textContent = "Download";
+dl.onclick = () => { location.href = "/api/file?dl=1&" + q(full); };
+act.appendChild(dl); act.append(" ");
+}
+const del = document.createElement("button"); del.textContent = "Delete";
+del.onclick = async () => {
+const cf = await confirmDialog("Delete file", "Delete " + full + " from the Flipper?", "Delete", {danger: true});
+if(!cf.ok) return;
+try{ await api("POST", "/api/delete?" + q(full)); go(cwd); }
+catch(e){ status("Delete: " + e.message, true); }
+};
+act.appendChild(del);
+}
+status(rows.length ? rows.length + " items" : "Empty folder");
+}catch(e){ status("List: " + e.message, true); }
+}
+$("refresh").onclick = () => { loadInfo(); go(cwd); };
+$("mkdir").onclick = async () => {
+const name = prompt("Folder name");
+if(!name) return;
+try{ await api("POST", "/api/mkdir?" + q(join(cwd, name))); go(cwd); }
+catch(e){ status("New folder: " + e.message, true); }
+};
+function putFile(url, file, onProgress){
+return exclusive(release => {
+const pr = new Promise((resolve, reject) => {
+const xhr = new XMLHttpRequest();
+xhr.open("PUT", url);
+xhr.upload.onprogress = e => { if(e.lengthComputable) onProgress(e.loaded, e.total); };
+xhr.onload = () => {
+let j = {}; try{ j = JSON.parse(xhr.responseText); }catch(_){}
+if(xhr.status >= 200 && xhr.status < 300 && j.ok !== false) resolve(j);
+else reject(new Error((j && j.error) || ("HTTP " + xhr.status)));
+};
+xhr.onerror = () => reject(new Error("network error"));
+xhr.send(file);
+});
+pr.then(release, release);
+return pr;
+});
+}
+$("upload").onchange = async e => {
+const files = [...e.target.files];
+e.target.value = "";
+if(!files.length) return;
+const prog = $("progress"), fill = $("progress-fill"), txt = $("progress-text");
+prog.style.display = "block"; fill.style.width = "0";
+status("");
+let done = 0;
+for(const f of files){
+done++;
+const start = performance.now();
+try{
+await putFile("/api/file?" + q(join(cwd, f.name)), f, (loaded, total) => {
+const pct = total ? Math.round(loaded / total * 100) : 0;
+fill.style.width = pct + "%";
+const secs = (performance.now() - start) / 1000;
+const speed = secs > 0.2 ? fmtSize(loaded / secs) + "/s" : "…";
+txt.textContent = `(${done}/${files.length}) ${f.name} · ${pct}% · ${speed}`;
+});
+}catch(err){
+prog.style.display = "none";
+status("Upload " + f.name + ": " + err.message, true);
+go(cwd);
+return;
+}
+}
+fill.style.width = "100%";
+txt.textContent = files.length > 1 ? files.length + " files uploaded" : "Uploaded";
+setTimeout(() => { prog.style.display = "none"; }, 1500);
+go(cwd);
+};
+let collectorLoaded = false;
+function showTab(name){
+document.querySelectorAll(".panel").forEach(p => p.classList.toggle("active", p.id === "panel-" + name));
+shell.tab = name; if(name !== "repos") shell.repo = null; renderSide();
+if(name === "collector" && !collectorLoaded){ collectorLoaded = true; loadCollector(); }
+}
+function row(k, v){
+const d = document.createElement("div"); d.className = "row";
+const kd = document.createElement("div"); kd.className = "k"; kd.textContent = k;
+const vd = document.createElement("div"); vd.className = "val"; vd.textContent = v;
+d.append(kd, vd); return d;
+}
+function fmtUp(s){
+if(s == null) return "—";
+const d = Math.floor(s/86400), h = Math.floor(s%86400/3600), m = Math.floor(s%3600/60);
+return (d ? d + "d " : "") + h + "h " + m + "m";
+}
+async function loadPC(){
+const box = $("pc-rows"); box.innerHTML = ""; $("pc-note").textContent = "";
+try{
+const p = await (await fetch("/pc/info")).json();
+box.append(
+row("Hostname", p.hostname || "—"),
+row("OS", p.os || "—"),
+row("Kernel", (p.kernel || "") + (p.arch ? " · " + p.arch : "")),
+row("CPU cores", p.cpu_count ?? "—"),
+row("Memory", p.mem_total ? fmtSize(p.mem_available) + " free / " + fmtSize(p.mem_total) : "—"),
+row("Uptime", fmtUp(p.uptime_s)),
+row("User", p.user || "—"),
+);
+(p.ips || []).forEach(a => box.append(row("IP (" + a.iface + ")", a.cidr)));
+(p.connections || []).forEach(c => box.append(row("Network", c.name + " (" + c.type.replace("802-11-wireless","wifi").replace("802-3-ethernet","ethernet") + ")")));
+}catch(e){ $("pc-note").textContent = "Could not read PC info: " + e.message; }
+}
+function secretRow(label, value){
+const d = document.createElement("div"); d.className = "row";
+const kd = document.createElement("div"); kd.className = "k"; kd.textContent = label;
+const wrap = document.createElement("div"); wrap.className = "secret";
+const code = document.createElement("code"); code.textContent = "••••••••";
+let shown = false;
+const toggle = document.createElement("button"); toggle.textContent = "Show";
+toggle.onclick = () => { shown = !shown; code.textContent = shown ? value : "••••••••"; toggle.textContent = shown ? "Hide" : "Show"; };
+const copy = document.createElement("button"); copy.textContent = "Copy";
+copy.onclick = async () => { try{ await navigator.clipboard.writeText(value); copy.textContent = "Copied"; setTimeout(() => copy.textContent = "Copy", 1200); }catch(e){} };
+wrap.append(code, toggle, copy);
+d.append(kd, wrap); return d;
+}
+async function loadWifi(){
+const box = $("wifi-rows"); box.innerHTML = ""; $("wifi-note").textContent = "";
+try{
+const w = await (await fetch("/pc/wifi")).json();
+if(!w.connected){ box.append(row("Status", "Not connected")); $("wifi-note").textContent = w.note || ""; return; }
+box.append(row("Network name", w.ssid || "—"));
+if(w.signal != null) box.append(row("Signal", w.signal + "%"));
+if(w.rate) box.append(row("Rate", w.rate));
+if(w.password){
+box.append(secretRow("Password", w.password));
+}else{
+box.append(row("Password", "needs root"));
+}
+if(w.note) $("wifi-note").textContent = w.note;
+}catch(e){ $("wifi-note").textContent = "Could not read Wi-Fi: " + e.message; }
+}
+function loadCollector(){ loadPC(); loadWifi(); }
+$("collect-refresh").onclick = loadCollector;
+const ZERO = "0".repeat(40);
+const TABS = ["files", "collector", "repos"];
+const SUBS = ["code", "commits", "branches", "tags", "issues", "pulls", "releases", "wiki", "settings"];
+let R = null;       // loaded repo: {name, meta, refs, head}
+let curSub = "code";
+function el(tag, attrs, ...kids){
+const e = document.createElement(tag);
+for(const k in (attrs || {})){
+if(k === "class") e.className = attrs[k];
+else if(k.startsWith("on")) e[k] = attrs[k];
+else e.setAttribute(k, attrs[k]);
+}
+e.append(...kids.filter(x => x != null && x !== false));
+return e;
+}
+function rstatus(msg, err){ if(!msg || /(\u2026|\.\.\.)$/.test(msg)) return; toast(msg, err ? "err" : "ok"); }
+function validRepoName(n){ return /^[A-Za-z0-9._-]{1,64}$/.test(n) && n[0] !== "." && !/\.git$/.test(n); }
+function validRefName(n){
+if(!n || /\.\.|\/\/|@\{/.test(n) || /[\s\x00-\x1f\x7f~^:?*\[\\]/.test(n)) return false;
+if(/[\/.]$/.test(n) || n[0] === "/") return false;
+return n.split("/").every(c => c && c[0] !== "." && !/\.lock$/.test(c));
+}
+function enc(o){ return Object.keys(o).map(k => k + "=" + encodeURIComponent(o[k])).join("&"); }
+function gapi(method, route, params){ return api(method, "/api/git/" + route + (params ? "?" + enc(params) : "")); }
+function short(ref){ return ref.replace(/^refs\/(heads|tags)\//, ""); }
+async function copyText(text, btn){
+let ok = false;
+try{ await navigator.clipboard.writeText(text); ok = true; }
+catch(_){
+const t = el("textarea", {}); t.value = text; document.body.appendChild(t); t.select();
+try{ ok = document.execCommand("copy"); }catch(__){}
+t.remove();
+}
+const old = btn.textContent; btn.textContent = ok ? "Copied" : "Copy failed";
+setTimeout(() => btn.textContent = old, 1200);
+}
+function go2(hash){ if(location.hash === hash) route(); else location.hash = hash; }
+function formDialog(title, fields, submitText, onSubmit, opts){
+opts = opts || {};
+const d = el("dialog", {class: "dlg"});
+const form = el("form", {method: "dialog"});
+const get = {};
+form.append(el("h2", {}, title));
+if(opts.message) form.append(el("div", {class: "msg"}, opts.message));
+let first = null;
+for(const f of fields){
+const type = f.type || "text";
+let node, ctl;
+if(type === "textarea"){ ctl = el("textarea", {spellcheck: "false"}); ctl.value = f.value || ""; get[f.key] = () => ctl.value.trim(); }
+else if(type === "select"){
+ctl = el("select", {}); (f.options || []).forEach(o => { const op = el("option", {value: o.value}, o.label); ctl.append(op); });
+if(f.value != null) ctl.value = f.value; get[f.key] = () => ctl.value;
+}else if(type === "checks"){
+ctl = el("div", {}); const boxes = [];
+(f.options || []).forEach(o => { const c = el("input", {type: "checkbox"}); c.checked = (f.value || []).includes(o.value); boxes.push([c, o.value]);
+ctl.append(el("label", {class: "chk"}, c, o.label)); });
+if(!(f.options || []).length) ctl.append(el("div", {class: "hint"}, "Nothing to choose from yet."));
+get[f.key] = () => boxes.filter(b => b[0].checked).map(b => b[1]);
+}else if(type === "check"){
+const c = el("input", {type: "checkbox"}); c.checked = !!f.value; get[f.key] = () => c.checked;
+form.append(el("label", {class: "chk"}, c, f.text)); continue;
+}else{
+ctl = el("input", {type: "text", autocomplete: "off", spellcheck: "false"}); ctl.value = f.value || ""; get[f.key] = () => ctl.value.trim();
+}
+if(!first && type !== "checks") first = ctl;
+form.append(el("label", {}, el("span", {}, f.label), ctl));
+if(f.hint) form.append(el("div", {class: "hint"}, f.hint));
+f._ctl = ctl;
+}
+const err = el("div", {class: "status err"});
+const ok = el("button", {type: "submit", class: opts.danger ? "danger" : "primary"}, submitText);
+const cancel = el("button", {type: "button", onclick: () => d.close()}, "Cancel");
+form.append(err, el("div", {class: "btns"}, cancel, ok));
+const lastCtl = fields.length ? fields[fields.length - 1]._ctl : null;
+if(opts.confirm){
+ok.disabled = true;
+lastCtl.oninput = e => { ok.disabled = e.target.value !== opts.confirm; };
+}
+form.onsubmit = async e => {
+e.preventDefault(); err.textContent = ""; ok.disabled = true;
+const vals = {}; for(const k in get) vals[k] = get[k]();
+try{ await onSubmit(vals); d.close(); }
+catch(x){ err.textContent = x.message; ok.disabled = !!opts.confirm && lastCtl.value !== opts.confirm; }
+};
+d.onclose = () => { d.remove(); if(opts.onClose) opts.onClose(); };
+d.append(form); document.body.appendChild(d); d.showModal();
+(first || ok).focus();
+}
+function confirmDialog(title, msg, okText, opts){
+opts = opts || {};
+return new Promise(res => {
+let done = false;
+formDialog(title, opts.check ? [{key: "c", type: "check", text: opts.check, value: false}] : [], okText,
+async v => { done = true; res({ok: true, checked: !!v.c}); },
+{danger: opts.danger, message: msg, onClose: () => { if(!done) res({ok: false, checked: false}); }});
+});
+}
+function newRepoDialog(){
+formDialog("New repo", [
+{key: "name", label: "Name", hint: "Letters, digits, . _ -  (max 64). Must not start with . or end with .git"},
+{key: "description", label: "Description"},
+{key: "branch", label: "Default branch", value: "main"},
+], "Create repo", async v => {
+if(!validRepoName(v.name)) throw new Error("Invalid repo name");
+if(v.branch && !validRefName(v.branch)) throw new Error("Invalid branch name");
+const p = {name: v.name, branch: v.branch || "main"};
+if(v.description) p.description = v.description;
+await gapi("POST", "create", p);
+go2("#repos/" + encodeURIComponent(v.name));
+});
+}
+function renameDialog(name){
+formDialog("Rename " + name, [{key: "to", label: "New name", value: name}], "Rename", async v => {
+if(!validRepoName(v.to)) throw new Error("Invalid repo name");
+if(v.to === name) throw new Error("Same name");
+await gapi("POST", "rename", {name, to: v.to});
+if(R && R.name === name) R = null;
+go2("#repos/" + (inRepoView() ? encodeURIComponent(v.to) : ""));
+});
+}
+function describeDialog(name, text){
+formDialog("Description of " + name, [{key: "text", label: "Description", value: text || ""}], "Save", async v => {
+await gapi("POST", "describe", {name, text: v.text});
+if(inRepoView()) await reloadRepo(); else loadRepoList();
+});
+}
+function deleteDialog(name){
+formDialog("Delete " + name, [{key: "typed", label: "Type the repo name to confirm", hint: "This removes the repo and all its data from the Flipper. It cannot be undone."}],
+"Delete this repo", async () => {
+await gapi("POST", "delete", {name});
+R = null; go2("#repos");
+}, {danger: true, confirm: name});
+}
+function inRepoView(){ return !$("repo-view").hidden; }
+const FEATURES = {mergeCommit: true};  // POST /api/git/merge (tree merge on the Flipper)
+let mergeConflict = null, lastRef = null, routeQuery = new URLSearchParams();
+function refSha(ref){   // branch/tag name -> tip sha (from the loaded refs), so answers can be cached
+if(HEX40.test(ref)) return ref;
+const h = R.refs.find(r => r.name === "refs/heads/" + ref); if(h) return h.sha;
+const t = R.refs.find(r => r.name === "refs/tags/" + ref); return t ? (t.peeled || t.sha) : ref;
+}
+function isBranchRef(ref){ return branches().some(b => short(b.name) === ref); }
+let navTok = 0;           // bumps on every navigation; async views stop when it changes
+let flash = null;         // message to show after the next route()
+function setFlash(msg, err){ flash = {msg, err: !!err}; }
+function esc(s){ return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
+function relTime(ms){
+if(!isFinite(ms)) return "";
+let s = Math.round((Date.now() - ms) / 1000);
+if(s < 45) return s < -45 ? "in the future" : "just now";
+const u = [["minute", 60], ["hour", 3600], ["day", 86400], ["month", 2592000], ["year", 31536000]];
+let best = ["minute", 60];
+for(const x of u) if(s >= x[1]) best = x;
+const n = Math.floor(s / best[1]);
+return n + " " + best[0] + (n === 1 ? "" : "s") + " ago";
+}
+function timeEl(ms){ const t = el("span", {title: new Date(ms).toLocaleString()}, relTime(ms)); return t; }
+function getAuthor(){ try{ return localStorage.getItem("hub.author") || "me"; }catch(_){ return "me"; } }
+function getEmail(){ try{ return localStorage.getItem("hub.email") || "hub@flipper.local"; }catch(_){ return "hub@flipper.local"; } }
+function setEmail(v){ try{ localStorage.setItem("hub.email", v); }catch(_){} }
+function setAuthor(v){ try{ localStorage.setItem("hub.author", v); }catch(_){} }
+function hs(...segs){ return "#repos/" + encodeURIComponent(R.name) + segs.map(x => "/" + encodeURIComponent(x)).join(""); }
+function pathSegs(path){ return path ? path.split("/") : []; }
+function treeHash(ref, path){ return hs("tree", ref, ...pathSegs(path)); }
+function blobHash(ref, path){ return hs("blob", ref, ...pathSegs(path)); }
+function commitHash(sha){ return hs("commit", sha); }
+function link(href, text, cls){ return el("a", {href, class: cls || "lnk"}, text); }
+function note(text, cls){ return el("div", {class: "note " + (cls || "")}, text); }
+function errBox(msg){ return el("div", {class: "status err"}, msg); }
+function card(...kids){ return el("section", {class: "card", style: "margin-bottom:12px"}, ...kids); }
+function branches(){ return R.refs.filter(r => r.name.startsWith("refs/heads/")); }
+function tags(){ return R.refs.filter(r => r.name.startsWith("refs/tags/")); }
+function defBranch(){ return R.head.replace(/^refs\/heads\//, ""); }
+function textColor(hex){ const n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255; return (r * 299 + g * 587 + b * 114) / 1000 > 150 ? "#1d1d1b" : "#ffffff"; }
+function chip(name){
+const l = (R.hub.meta.labels || []).find(x => x.name === name);
+const c = l && /^#[0-9a-fA-F]{6}$/.test(l.color) ? l.color : null;
+const e = el("span", {class: "chip"}, name);
+if(c){ e.style.background = c; e.style.color = textColor(c); } else { e.style.borderColor = "var(--line)"; e.style.color = "var(--muted)"; }
+return e;
+}
+function stateBadge(st){ return el("span", {class: "state " + st}, st[0].toUpperCase() + st.slice(1)); }
+function commitTime(c){ return (c.committer && c.committer.time ? c.committer.time : c.author.time) * 1000; }
+async function openRepo(name, rest){
+const tok = ++navTok;
+$("repos-list-view").hidden = true; $("repo-view").hidden = false;
+if(!R || R.name !== name){
+$("rv-body").innerHTML = "";
+if(!(await reloadRepo(name, true)) || tok !== navTok) return;
+}
+else{
+if(Date.now() - (R.refsAt || 0) > 30000){ try{ await reloadRefs(); }catch(_){} if(tok !== navTok) return; }
+if(Date.now() - (R.metaAt || 0) > 30000){ await refreshMeta(); if(tok !== navTok) return; }
+}
+renderRepo(rest, tok);
+}
+async function reloadRepo(name, quiet){
+name = name || (R && R.name);
+rstatus("Loading…");
+try{
+const l = await gapi("GET", "repos");
+const meta = l.repos.find(x => x.name === name);
+if(!meta) throw new Error("repo not found");
+const r = await gapi("GET", "refs", {name});
+R = {name, meta, refs: r.refs || [], head: r.head || ("refs/heads/" + meta.head), hub: {meta: null, index: null}};
+R.hub.meta = defMeta(); R.metaAt = Date.now(); R.refsAt = Date.now();
+rstatus("");
+try{ await loadIndex(true); }catch(_){ R.hub.index = {items: []}; }
+if(!quiet) route();
+return true;
+}catch(e){
+R = null; $("repo-view").hidden = true; $("repos-list-view").hidden = false;
+loadRepoList().then(() => rstatus(name + ": " + e.message, true));
+return false;
+}
+}
+async function reloadRefs(){
+const r = await gapi("GET", "refs", {name: R.name});
+R.refs = r.refs || []; R.head = r.head || R.head; R.refsAt = Date.now();
+}
+function cloneRow(label, url){
+const code = el("code", {}, url);
+const b = el("button", {}, "Copy"); b.onclick = () => copyText(url, b);
+return el("div", {class: "clone"}, el("div", {class: "k"}, label), code, b);
+}
+function viewKey(v){
+return {tree: "code", blob: "code", code: "code", edit: "code", new: "code", upload: "code", delete: "code", search: "code", commit: "commits", labels: "issues"}[v] || v;
+}
+function openCount(kind){ return R.hub.index.items.filter(x => x.kind === kind && x.state === "open").length; }
+let curKey = "code";
+function renderHeadMeta(){
+if(!R || $("repo-view").hidden) return;
+const meta = $("rv-meta"); const st = R.hub.storageVal;
+meta.textContent = "Default branch: " + defBranch() + " · " + R.meta.packs + (R.meta.packs === 1 ? " pack" : " packs") +
+(st ? " · " + st.loose + " loose" + (st.loose > 0 ? " (updating in the background)" : "") : "") + " · Posting as ";
+meta.append(el("b", {}, getAuthor()), " ", el("a", {href: "#", class: "lnk", onclick: e => { e.preventDefault(); authorDialog(); }}, "change"));
+}
+function renderSubtabs(){
+if(!R || $("repo-view").hidden) return;
+shell.repo = R.name; shell.key = curKey;
+shell.counts = {branches: branches().length, tags: tags().length, issues: openCount("issue"), pulls: openCount("pull")};
+renderSide();
+}
+async function refreshMeta(){
+const name = R && R.name;
+try{
+const l = await gapi("GET", "repos"); const m = l.repos.find(x => x.name === name);
+if(R && R.name === name && m){ R.meta = m; R.metaAt = Date.now(); renderHeadMeta(); }
+}catch(_){}
+}
+function renderRepo(rest, tok){
+const n = R.name;
+$("rv-name").textContent = n;
+$("rv-desc").textContent = R.meta.description || "No description";
+renderHeadMeta();
+const cl = $("rv-clone"); cl.innerHTML = "";
+cl.append(cloneRow("Flipper", "flipper://" + n),
+cloneRow("HTTP (plain git)", location.origin + "/git/" + n + ".git"));
+$("rv-empty").hidden = R.refs.length !== 0;
+$("rv-snippet").textContent = "git remote add flipper flipper://" + n + "\ngit push -u flipper " + defBranch();
+const view = (rest && rest[0]) || "code"; curKey = viewKey(view);
+renderSubtabs();
+const body = $("rv-body"); body.innerHTML = ""; body.className = ""; body.scrollTop = 0;
+if(flash){ rstatus(flash.msg, flash.err); flash = null; }
+const fail = e => { if(tok === navTok) body.append(errBox(e.message)); };
+try{
+let p;
+switch(view){
+case "branches": body.append(refSection(true)); break;
+case "tags": body.append(refSection(false)); break;
+case "commits": p = viewCommits(body, rest[1], tok); break;
+case "commit": p = viewCommit(body, rest[1], tok); break;
+case "blob": p = viewCode(body, "blob", rest[1], rest.slice(2).join("/"), tok); break;
+case "issues": case "pulls": case "labels": p = viewHub(body, view, rest.slice(1), tok); break;
+case "edit": case "new": case "upload": case "delete": p = viewEdit(body, view, rest[1], rest.slice(2).join("/"), tok); break;
+case "search": p = viewSearch(body, rest[1] || defBranch(), routeQuery.get("q") || "", tok); break;
+case "releases": p = viewReleases(body, rest.slice(1), tok); break;
+case "wiki": p = viewWiki(body, rest.slice(1), tok); break;
+case "settings": p = viewSettings(body, tok); break;
+default: p = viewCode(body, "tree", view === "tree" ? rest[1] : null, view === "tree" ? rest.slice(2).join("/") : "", tok);
+}
+if(p) p.catch(fail);
+}catch(e){ fail(e); }
+}
+function authorDialog(){
+formDialog("Your name", [{key: "a", label: "Author name for issues, comments, pull requests and commits", value: getAuthor()},
+{key: "e", label: "Email for commits", value: getEmail(), hint: "Both are stored only in this browser."}], "Save", async v => {
+if(!v.a) throw new Error("Enter a name");
+if(!/^[^\s@<>]+@[^\s@<>]+$/.test(v.e)) throw new Error("Enter an email like me@example.com");
+setAuthor(v.a); setEmail(v.e); route();
+});
+}
+async function refAction(fn){
+let msg = "", isErr = false;
+try{ await fn(); }
+catch(e){
+isErr = true;
+msg = /ref changed/i.test(e.message) ? "The ref changed on the Flipper while you worked (409 ref changed). The list was reloaded. Please try again." : e.message;
+}
+try{ await reloadRefs(); }catch(e){ msg = "Reload: " + e.message; isErr = true; }
+setFlash(msg, isErr); route();
+}
+function refSection(isBranch){
+const list = isBranch ? branches() : tags();
+const kind = isBranch ? "branch" : "tag";
+const c = card(el("h2", {}, isBranch ? "Branches" : "Tags"));
+const def = defBranch();
+const name = el("input", {type: "text", placeholder: "New " + kind + " name", autocomplete: "off", spellcheck: "false"});
+const sel = el("select", {});
+const srcB = branches(), srcT = isBranch ? tags() : [];
+const og = (label, arr) => { if(arr.length){ const g = el("optgroup", {label}); arr.forEach(r => { const o = el("option", {value: r.peeled || r.sha}, short(r.name)); if(isBranch === (label === "Branches") && short(r.name) === def) o.selected = true; g.append(o); }); sel.append(g); } };
+og("Branches", srcB); og("Tags", srcT);
+const create = el("button", {class: "primary"}, "Create " + kind);
+create.disabled = !sel.options.length;
+create.onclick = () => {
+const nm = name.value.trim();
+if(!validRefName(nm)){ rstatus("Invalid " + kind + " name", true); return; }
+if(list.some(r => short(r.name) === nm)){ rstatus("A " + kind + " named " + nm + " already exists", true); return; }
+refAction(() => gapi("POST", "ref", {name: R.name, ref: (isBranch ? "refs/heads/" : "refs/tags/") + nm, old: ZERO, new: sel.value}));
+};
+name.onkeydown = e => { if(e.key === "Enter") create.onclick(); };
+c.append(el("div", {class: "newref"}, name, el("span", {class: "pill"}, "from"), sel, create));
+if(!sel.options.length) c.append(note("Nothing to create from yet. Push a branch first."));
+const tb = el("tbody", {});
+list.forEach(r => {
+const nm = short(r.name);
+const tr = el("tr", {});
+const c1 = el("td", {class: "name"}, link(treeHash(nm, ""), nm));
+if(isBranch && nm === def) c1.append(el("span", {class: "badge"}, "default"));
+const cs = r.peeled || r.sha;   // annotated tags: show the commit the tag points at
+const c2 = el("td", {class: "sha"}, el("code", {}, link(commitHash(cs), cs.slice(0, 7))));
+if(r.peeled) c2.append(el("div", {class: "muted", style: "font-size:11px"}, "tag object " + r.sha.slice(0, 7)));
+const act = el("td", {class: "act"});
+if(isBranch && nm !== def)
+act.append(el("button", {onclick: () => refAction(() => gapi("POST", "head", {name: R.name, branch: nm}))}, "Set default"), " ");
+if(!(isBranch && nm === def))
+act.append(el("button", {class: "danger", onclick: async () => {
+const c = await confirmDialog("Delete " + kind, "Delete the " + kind + " " + nm + "?", "Delete", {danger: true});
+if(!c.ok) return;
+refAction(() => gapi("POST", "ref", {name: R.name, ref: r.name, old: r.sha, new: ZERO}));
+}}, "Delete"));
+tr.append(c1, c2, act); tb.append(tr);
+});
+c.append(el("table", {}, tb));
+if(!list.length) c.append(note("No " + kind + "s yet."));
+return c;
+}
+function refSelect(cur, onPick){
+const sel = el("select", {class: "refsel", title: "Branch or tag"});
+const add = (label, arr) => { if(arr.length){ const g = el("optgroup", {label}); arr.forEach(r => g.append(el("option", {value: short(r.name)}, short(r.name)))); sel.append(g); } };
+add("Branches", branches()); add("Tags", tags());
+if(![...sel.options].some(o => o.value === cur)) sel.insertBefore(el("option", {value: cur}, cur.slice(0, 10)), sel.firstChild);
+sel.value = cur;
+sel.onchange = () => onPick(sel.value);
+return sel;
+}
+function emptyRepoNote(body){ body.append(card(note("This repository has no commits yet. Push a branch, or add the first file here:", ""), el("div", {class: "bar", style: "margin:8px 0 0"}, el("button", {onclick: () => go2(hs("new", defBranch()))}, "New file"), el("button", {onclick: () => go2(hs("upload", defBranch()))}, "Upload file")))); }
+const blobCache = new Map();
+async function fetchBlob(sha, maxView){
+if(!sha || /^0+$/.test(sha)) return {text: "", size: 0};
+const key = R.name + "/" + sha;
+if(blobCache.has(key)) return blobCache.get(key);
+const r = await fetch("/api/git/blob?" + enc({name: R.name, sha}));
+let out;
+if(r.status === 413) out = {tooLarge: true};
+else if(!r.ok){ const j = await r.json().catch(() => ({})); throw new Error(j.error || ("HTTP " + r.status)); }
+else out = decodeBlob(await r.arrayBuffer());
+if(blobCache.size > 40) blobCache.delete(blobCache.keys().next().value);
+blobCache.set(key, out);
+return out;
+}
+const MAX_VIEW = 512 * 1024;
+function decodeBlob(ab){
+const u = new Uint8Array(ab), size = u.length;
+if(size > MAX_VIEW) return {tooLarge: true, size};
+const head = u.subarray(0, 8000);
+for(let i = 0; i < head.length; i++) if(head[i] === 0) return {binary: true, size};
+return {text: new TextDecoder("utf-8").decode(u), size};
+}
+function personLine(p){ return p.name + (p.time ? " · " : ""); }
+async function viewCommits(body, ref, tok){
+if(!R.refs.length){ emptyRepoNote(body); return; }
+ref = ref || defBranch();
+const c = card();
+c.append(el("div", {class: "tools"}, refSelect(ref, v => go2(hs("commits", v))), el("div", {class: "crumbs muted"}, "First-parent history")));
+const list = el("div", {}), more = el("button", {}, "Older"), status2 = el("div", {});
+c.append(list, el("div", {class: "bar", style: "margin:10px 0 0"}, more), status2); body.append(c);
+let skip = 0;
+const N = 30;
+async function load(){
+more.disabled = true; status2.textContent = "";
+try{
+const j = await gapi("GET", "log", {name: R.name, ref: refSha(ref), skip, n: N});
+if(tok !== navTok) return;
+for(const cm of j.commits){
+const subj = (cm.message || "").split("\n")[0] || "(no message)";
+list.append(el("div", {class: "item"},
+el("div", {class: "t"}, link(commitHash(cm.sha), subj)),
+el("div", {class: "m"}, cm.author.name + " committed ", timeEl(commitTime(cm)), " · ", el("code", {}, cm.sha.slice(0, 7)))));
+}
+skip = j.next_skip != null ? j.next_skip : skip + j.commits.length;   // the device may return fewer than n
+more.hidden = !j.more;
+if(!skip) list.append(note("No commits."));
+}catch(e){ status2.className = "status err"; status2.textContent = e.message; }
+more.disabled = false;
+}
+more.onclick = load;
+await load();
+}
+function myersOps(a, b){
+const N = a.length, M = b.length;
+if(!N) return b.map(t => [2, t]);
+if(!M) return a.map(t => [1, t]);
+const LIM = Math.min(N + M, 2000), off = LIM + 1;
+let v = new Int32Array(2 * LIM + 3);
+const trace = [];
+let found = -1;
+for(let d = 0; d <= LIM && found < 0; d++){
+trace.push(v.slice(off - d - 1, off + d + 2));
+for(let k = -d; k <= d; k += 2){
+let x = (k === -d || (k !== d && v[off + k - 1] < v[off + k + 1])) ? v[off + k + 1] : v[off + k - 1] + 1;
+let y = x - k;
+while(x < N && y < M && a[x] === b[y]){ x++; y++; }
+v[off + k] = x;
+if(x >= N && y >= M){ found = d; break; }
+}
+}
+if(found < 0) return a.map(t => [1, t]).concat(b.map(t => [2, t]));
+const out = [];
+let x = N, y = M;
+for(let d = found; d > 0; d--){
+const vv = trace[d], k = x - y, g = i => vv[i + d + 1];
+const pk = (k === -d || (k !== d && g(k - 1) < g(k + 1))) ? k + 1 : k - 1;
+const px = g(pk), py = px - pk;
+while(x > px && y > py){ x--; y--; out.push([0, a[x]]); }
+if(x === px) { y--; out.push([2, b[y]]); } else { x--; out.push([1, a[x]]); }
+}
+while(x > 0 && y > 0){ x--; y--; out.push([0, a[x]]); }
+return out.reverse();
+}
+function splitLines(t){ if(!t) return []; const l = t.split("\n"); if(l[l.length - 1] === "") l.pop(); return l; }
+function lineDiff(oldText, newText){
+const a = splitLines(oldText), b = splitLines(newText);
+let p = 0; while(p < a.length && p < b.length && a[p] === b[p]) p++;
+let s = 0; while(s < a.length - p && s < b.length - p && a[a.length - 1 - s] === b[b.length - 1 - s]) s++;
+const mid = myersOps(a.slice(p, a.length - s), b.slice(p, b.length - s));
+const ops = [];
+for(let i = 0; i < p; i++) ops.push([0, a[i]]);
+for(const o of mid) ops.push(o);
+for(let i = a.length - s; i < a.length; i++) ops.push([0, a[i]]);
+return ops;
+}
+function unifiedHunks(ops, ctx){
+ctx = ctx == null ? 3 : ctx;
+let ao = 1, bo = 1, added = 0, removed = 0;
+const rows = [], ob = [], nb = [];
+for(const o of ops){
+ob.push(ao - 1); nb.push(bo - 1);
+rows.push([o[0], o[0] === 2 ? 0 : ao, o[0] === 1 ? 0 : bo, o[1]]);
+if(o[0] !== 2) ao++; if(o[0] !== 1) bo++;
+if(o[0] === 1) removed++; if(o[0] === 2) added++;
+}
+const ch = []; rows.forEach((r, i) => { if(r[0]) ch.push(i); });
+const hunks = [];
+let gi = 0;
+while(gi < ch.length){
+const first = ch[gi]; let last = first; gi++;
+while(gi < ch.length && ch[gi] - last - 1 <= 2 * ctx){ last = ch[gi]; gi++; }
+const start = Math.max(0, first - ctx), end = Math.min(rows.length, last + ctx + 1);
+const h = rows.slice(start, end);
+const ol = h.filter(r => r[0] !== 2).length, nl = h.filter(r => r[0] !== 1).length;
+hunks.push({os: ol ? ob[start] + 1 : ob[start], ol, ns: nl ? nb[start] + 1 : nb[start], nl, rows: h});
+}
+return {hunks, added, removed};
+}
+function renderHunks(hk){
+const tb = el("tbody", {});
+const frag = document.createDocumentFragment();
+for(const h of hk.hunks){
+tb.append(el("tr", {class: "hunk"}, el("td", {colspan: "4"}, "@@ -" + h.os + "," + h.ol + " +" + h.ns + "," + h.nl + " @@")));
+for(const r of h.rows){
+tb.append(el("tr", {class: r[0] === 1 ? "del" : r[0] === 2 ? "add" : ""},
+el("td", {class: "ln"}, r[1] || ""), el("td", {class: "ln"}, r[2] || ""),
+el("td", {class: "ln"}, r[0] === 1 ? "-" : r[0] === 2 ? "+" : " "), el("td", {class: "tx"}, r[3])));
+}
+}
+return el("div", {class: "dwrap"}, el("table", {class: "diff"}, tb));
+}
+async function fileDiff(area, f, tok){
+const oldB = f.status === "A" ? {text: ""} : await fetchBlob(f.old_sha);
+if(tok !== navTok) return;
+const newB = f.status === "D" ? {text: ""} : await fetchBlob(f.new_sha);
+if(tok !== navTok) return;
+area.innerHTML = "";
+if(oldB.tooLarge || newB.tooLarge){ area.append(note("File changed (too large to diff here).")); return; }
+if(oldB.binary || newB.binary){ area.append(note("File changed (binary).")); return; }
+if(f.status === "T" || (f.old_mode && f.new_mode && f.old_mode !== f.new_mode && oldB.text === newB.text)){
+area.append(note("Mode changed " + (f.old_mode || "") + " → " + (f.new_mode || "") + (oldB.text === newB.text ? "" : ", content changed") + "."));
+if(oldB.text === newB.text) return;
+}
+const hk = unifiedHunks(lineDiff(oldB.text, newB.text), 3);
+if(!hk.hunks.length){ area.append(note("No line changes.")); return; }
+const info = note("+" + hk.added + " −" + hk.removed, "");
+area.append(info);
+const changed = hk.added + hk.removed;
+if(changed > 500){
+const btn = el("button", {}, "Large diff (" + changed + " changed lines) - show");
+btn.onclick = () => { btn.remove(); area.append(renderHunks(hk)); };
+area.append(btn);
+}else area.append(renderHunks(hk));
+}
+function mdEmph(t){
+return t.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>").replace(/__([^_\n]+)__/g, "<strong>$1</strong>")
+.replace(/(^|[^*\w])\*([^*\n]+)\*(?!\*)/g, "$1<em>$2</em>").replace(/(^|[^_\w])_([^_\n]+)_(?![_\w])/g, "$1<em>$2</em>")
+.replace(/~~([^~\n]+)~~/g, "<del>$1</del>");
+}
+function mdHref(u, ctx){
+if(/^(https?:\/\/|mailto:)/i.test(u)) return {href: u, ext: true};
+if(u[0] === "#") return {href: u, ext: false};
+if(/^[a-z][a-z0-9+.-]*:/i.test(u) || u.slice(0, 2) === "//") return null;
+if(!ctx || !ctx.ref) return null;
+const parts = (u[0] === "/" ? u.slice(1) : (ctx.dir ? ctx.dir + "/" + u : u)).split("#")[0].split("?")[0].split("/");
+const out = [];
+for(const p of parts){ if(p === "..") out.pop(); else if(p && p !== ".") out.push(p); }
+if(!out.length) return null;
+let dec; try{ dec = out.map(x => decodeURIComponent(x.replace(/&amp;/g, "&"))); }catch(_){ return null; }
+return {href: esc(blobHash(ctx.ref, dec.join("/"))), ext: false};
+}
+function mdInline(src, ctx){
+const tok = [];
+const keep = h => "\0" + (tok.push(h) - 1) + "\0";
+let s = src.replace(/\0/g, "");
+s = s.replace(/`([^`\n]+)`/g, (m, c) => keep("<code>" + esc(c) + "</code>"));
+s = esc(s);
+if(ctx && ctx.wiki) s = s.replace(/\[\[([A-Za-z0-9 ._-]+)(?:\|([^\]\n]+))?\]\]/g, (m, pg, t) => {
+const nm = wikiName(pg), miss = !wikiHas(nm);
+return keep('<a href="' + esc(hs("wiki", nm, ...(miss ? ["edit"] : []))) + '"' + (miss ? ' class="missing" title="Page does not exist yet. Click to create it."' : "") + ">" + (t || esc(pg)) + (miss ? " ✎" : "") + "</a>");
+});
+s = s.replace(/\[([^\]\n]+)\]\(([^)\s]+)\)/g, (m, t, u) => {
+const h = mdHref(u, ctx);
+if(!h) return t;
+return keep('<a href="' + h.href + '"' + (h.ext ? ' target="_blank" rel="noopener noreferrer"' : "") + ">" + mdEmph(t) + "</a>");
+});
+s = mdEmph(s);
+return s.replace(/\0(\d+)\0/g, (m, i) => tok[+i]);
+}
+function mdBlocks(src, ctx){
+const L = src.replace(/\r\n?/g, "\n").split("\n");
+const out = []; let i = 0, para = [];
+const flush = () => { if(para.length){ out.push("<p>" + mdInline(para.join("\n"), ctx) + "</p>"); para = []; } };
+const isTableSep = l => /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/.test(l || "") && (l || "").includes("-");
+const cells = l => l.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map(x => x.trim());
+while(i < L.length){
+const line = L[i];
+let m;
+if((m = /^\s*(```|~~~)/.exec(line))){
+flush(); const fence = m[1]; const code = []; i++;
+while(i < L.length && !L[i].trim().startsWith(fence)){ code.push(L[i]); i++; }
+i++; out.push('<pre><code>' + esc(code.join("\n")) + "</code></pre>"); continue;
+}
+if(!line.trim()){ flush(); i++; continue; }
+if((m = /^(#{1,6})\s+(.*?)\s*#*\s*$/.exec(line))){ flush(); out.push("<h" + m[1].length + ">" + mdInline(m[2], ctx) + "</h" + m[1].length + ">"); i++; continue; }
+if(/^\s*([-*_])(\s*\1){2,}\s*$/.test(line)){ flush(); out.push("<hr>"); i++; continue; }
+if(/^\s*>/.test(line)){
+flush(); const q = [];
+while(i < L.length && /^\s*>/.test(L[i])){ q.push(L[i].replace(/^\s*> ?/, "")); i++; }
+out.push("<blockquote>" + mdBlocks(q.join("\n"), ctx) + "</blockquote>"); continue;
+}
+if(line.includes("|") && isTableSep(L[i + 1]) ){
+flush(); const head = cells(line); i += 2; const rows = [];
+while(i < L.length && L[i].includes("|") && L[i].trim()){ rows.push(cells(L[i])); i++; }
+out.push("<table><thead><tr>" + head.map(c => "<th>" + mdInline(c, ctx) + "</th>").join("") + "</tr></thead><tbody>" +
+rows.map(r => "<tr>" + head.map((_, k) => "<td>" + mdInline(r[k] || "", ctx) + "</td>").join("") + "</tr>").join("") + "</tbody></table>");
+continue;
+}
+if(/^(\s*)([-*+]|\d+[.)])\s+/.test(line)){
+flush(); const items = [];
+while(i < L.length){
+const mm = /^(\s*)([-*+]|\d+[.)])\s+(.*)$/.exec(L[i]);
+if(mm){ items.push({indent: mm[1].replace(/\t/g, "    ").length, ordered: /\d/.test(mm[2]), text: mm[3]}); i++; }
+else if(L[i].trim() && /^\s+/.test(L[i]) && items.length){ items[items.length - 1].text += "\n" + L[i].trim(); i++; }
+else break;
+}
+let html = "", stack = [];
+for(const it of items){
+while(stack.length && it.indent < stack[stack.length - 1].indent) html += "</li></" + stack.pop().tag + ">";
+const top = stack[stack.length - 1];
+if(!top || it.indent > top.indent){ const tag = it.ordered ? "ol" : "ul"; html += "<" + tag + ">"; stack.push({indent: it.indent, tag}); }
+else html += "</li>";
+html += "<li>" + mdInline(it.text, ctx);
+}
+while(stack.length) html += "</li></" + stack.pop().tag + ">";
+out.push(html); continue;
+}
+para.push(line); i++;
+}
+flush();
+return out.join("\n");
+}
+function mdNode(src, ctx){ const d = el("div", {class: "md"}); d.innerHTML = mdBlocks(String(src), ctx); return d; }
+function defMeta(){ return {next: 1, labels: [], milestones: []}; }
+function normMeta(m){ m = m || {}; m.next = m.next || 1; m.labels = m.labels || []; m.milestones = m.milestones || []; return m; }
+function docUrl(key){ return "/api/git/doc?" + enc({name: R.name, key}); }
+async function docGet(key){
+const r = await fetch(docUrl(key));
+if(r.status === 404) return null;
+if(!r.ok){ const j = await r.json().catch(() => ({})); throw new Error(j.error || ("HTTP " + r.status)); }
+return {text: await r.text(), etag: r.headers.get("ETag")};
+}
+async function docPut(key, text, etag){
+const r = await fetch(docUrl(key), {method: "PUT", headers: etag ? {"If-Match": etag} : {"If-None-Match": "*"}, body: text});
+const j = await r.json().catch(() => ({}));
+if(r.status === 412){ const e = new Error("changed"); e.conflict = true; throw e; }
+if(!r.ok || j.ok === false) throw new Error(j.error || ("HTTP " + r.status));
+return j.etag;
+}
+async function updateJson(key, dflt, mutate){
+for(let i = 0; i < 8; i++){
+const d = await docGet(key);
+let cur;
+if(d){ try{ cur = JSON.parse(d.text); }catch(_){ throw new Error(key + " is not valid JSON"); } }
+else cur = dflt();
+const next = mutate(cur) || cur;
+try{ const etag = await docPut(key, JSON.stringify(next), d && d.etag); return {value: next, etag}; }
+catch(e){ if(!e.conflict) throw e; }
+}
+throw new Error("Could not save " + key + ": too many edit conflicts. Try again.");
+}
+async function loadIndex(force){
+if(!force && R.hub.index && Date.now() - (R.hub.indexAt || 0) < 30000) return R.hub.index;
+const d = await docGet("issues/index.json");
+let idx = {items: []};
+if(d){ try{ idx = JSON.parse(d.text); }catch(_){} }
+idx.items = idx.items || [];
+R.hub.index = idx; R.hub.indexAt = Date.now(); renderSubtabs();
+return idx;
+}
+async function loadMeta(force){
+if(!force && R.hub.metaLoaded && Date.now() - (R.hub.metaAt2 || 0) < 30000) return R.hub.meta;
+const d = await docGet("meta.json");
+let m = null; if(d){ try{ m = JSON.parse(d.text); }catch(_){} }
+R.hub.meta = normMeta(m); R.hub.metaLoaded = true; R.hub.metaAt2 = Date.now();
+return R.hub.meta;
+}
+function updateMeta(fn){
+return updateJson("meta.json", defMeta, m => { normMeta(m); return fn(m); }).then(r => { R.hub.meta = normMeta(r.value); R.hub.metaLoaded = true; R.hub.metaAt2 = Date.now(); return r.value; });
+}
+function summary(it){ return {n: it.n, kind: it.kind, title: it.title, state: it.state, labels: it.labels || [], milestone: it.milestone == null ? null : it.milestone, updated: it.updated, comments: (it.comments || []).length}; }
+async function upsertIndex(it){
+const r = await updateJson("issues/index.json", () => ({items: []}), idx => {
+idx.items = idx.items || [];
+const s = summary(it), k = idx.items.findIndex(x => x.n === it.n);
+if(k < 0) idx.items.push(s); else idx.items[k] = s;
+return idx;
+});
+R.hub.index = r.value; R.hub.indexAt = Date.now(); renderSubtabs();
+}
+async function rebuildIndex(){
+const l = await gapi("GET", "docs", {name: R.name, prefix: "issues"});
+const keys = (l.keys || []).map(k => k.key).filter(k => /(^|\/)\d+\.json$/.test(k));
+const items = [];
+for(const k of keys){
+const d = await docGet(k.startsWith("issues/") ? k : "issues/" + k.split("/").pop());
+if(!d) continue;
+try{ items.push(summary(JSON.parse(d.text))); }catch(_){}
+}
+items.sort((a, b) => a.n - b.n);
+await updateJson("issues/index.json", () => ({items: []}), idx => { idx.items = items; return idx; });
+await loadIndex(true);
+}
+async function createItem(kind, title, body, labels, milestone, pull){
+const now = new Date().toISOString();
+let n = 0;
+await updateMeta(m => { n = m.next; m.next = n + 1; });   // number allocated by CAS on meta.json
+const it = {n, kind, title, body, state: "open", labels, milestone, author: getAuthor(), created: now, updated: now, comments: [], pull: pull || null};
+await docPut("issues/" + n + ".json", JSON.stringify(it), null);
+await upsertIndex(it);
+return it;
+}
+async function mutateItem(n, fn){
+const r = await updateJson("issues/" + n + ".json", () => { throw new Error("#" + n + " not found"); }, it => { fn(it); it.comments = it.comments || []; it.updated = new Date().toISOString(); return it; });
+await upsertIndex(r.value);
+return r.value;
+}
+function milestoneTitle(id){ const m = (R.hub.meta.milestones || []).find(x => x.id === id); return m ? m.title : null; }
+const F = {issue: {state: "open", label: ""}, pull: {state: "open", label: ""}};
+function viewHub(body, view, rest, tok){
+if(view === "labels") return viewLabels(body, tok);
+const kind = view === "pulls" ? "pull" : "issue";
+if(!rest.length) return viewList(body, kind, tok);
+if(rest[0] === "new") return kind === "issue" ? viewNewIssue(body, tok) : viewNewPull(body, rest[1], rest[2], tok);
+const n = parseInt(rest[0], 10);
+if(!(n > 0)) return Promise.reject(new Error("Bad number"));
+return kind === "issue" ? viewIssue(body, n, tok) : viewPull(body, n, rest[1] || "conv", tok);
+}
+async function viewList(body, kind, tok){
+const isPull = kind === "pull";
+await loadIndex(); const meta = await loadMeta();
+if(tok !== navTok) return;
+const f = F[kind];
+const c = card();
+const head = el("div", {class: "tools"});
+const seg = el("div", {class: "seg"});
+const labelSel = el("select", {title: "Filter by label"}, el("option", {value: ""}, "All labels"));
+(meta.labels || []).forEach(l => labelSel.append(el("option", {value: l.name}, l.name)));
+labelSel.value = f.label;
+const nw = el("button", {class: "primary", onclick: () => go2(hs(isPull ? "pulls" : "issues", "new"))}, isPull ? "New pull request" : "New issue");
+const lab = el("button", {onclick: () => go2(hs("labels"))}, "Labels & milestones");
+const list = el("div", {});
+const draw = () => {
+const items = R.hub.index.items.filter(x => x.kind === kind);
+const isOpen = x => x.state === "open";
+const nOpen = items.filter(isOpen).length, nClosed = items.length - nOpen;
+seg.innerHTML = "";
+const b1 = el("button", {class: f.state === "open" ? "active" : "", onclick: () => { f.state = "open"; draw(); }}, "Open (" + nOpen + ")");
+const b2 = el("button", {class: f.state === "closed" ? "active" : "", onclick: () => { f.state = "closed"; draw(); }}, "Closed (" + nClosed + ")");
+seg.append(b1, b2);
+list.innerHTML = "";
+const shown = items.filter(x => (f.state === "open") === isOpen(x) && (!f.label || (x.labels || []).includes(f.label)))
+.sort((a, b) => b.n - a.n);
+for(const x of shown){
+const t = el("div", {class: "t"}, link(hs(isPull ? "pulls" : "issues", x.n), x.title), " ");
+(x.labels || []).forEach(l => t.append(chip(l)));
+const m = el("div", {class: "m"}, "#" + x.n + " ");
+if(isPull) m.append(stateBadge(x.state), " ");
+m.append("updated ", timeEl(Date.parse(x.updated)));
+if(x.comments) m.append(" · " + x.comments + (x.comments === 1 ? " comment" : " comments"));
+const ms = x.milestone != null ? milestoneTitle(x.milestone) : null;
+if(ms) m.append(" · 🏁 " + ms);
+list.append(el("div", {class: "item"}, t, m));
+}
+if(!shown.length) list.append(note(items.length ? "Nothing matches this filter." : "No " + (isPull ? "pull requests" : "issues") + " yet."));
+};
+labelSel.onchange = () => { f.label = labelSel.value; draw(); };
+head.append(seg, labelSel, el("span", {style: "flex:1"}), lab, nw);
+const foot = el("div", {class: "note"}, "The list reads issues/index.json. ",
+el("a", {href: "#", class: "lnk", onclick: async e => { e.preventDefault(); try{ await rebuildIndex(); draw(); rstatus("Index rebuilt."); }catch(x){ rstatus("Rebuild: " + x.message, true); } }}, "Rebuild the index"),
+" if it ever looks wrong.");
+c.append(head, list, foot); body.append(c);
+draw();
+}
+function labelPickerField(cur){
+return {key: "labels", label: "Labels", type: "checks", value: cur || [], options: (R.hub.meta.labels || []).map(l => ({value: l.name, label: l.name}))};
+}
+function milestoneField(cur){
+return {key: "milestone", label: "Milestone", type: "select", value: cur == null ? "" : String(cur),
+options: [{value: "", label: "No milestone"}].concat((R.hub.meta.milestones || []).filter(m => m.state !== "closed" || m.id === cur).map(m => ({value: String(m.id), label: m.title})))};
+}
+function msVal(v){ return v === "" ? null : parseInt(v, 10); }
+async function viewNewIssue(body, tok){
+await loadMeta(); if(tok !== navTok) return;
+const title = el("input", {type: "text", placeholder: "Title", autocomplete: "off", style: "width:100%"});
+const txt = el("textarea", {placeholder: "Describe the issue (Markdown)", style: "width:100%;min-height:160px"});
+const labs = labelPickerField([]), ms = milestoneField(null);
+const chk = el("div", {class: "kv"});
+const boxes = (R.hub.meta.labels || []).map(l => { const cb = el("input", {type: "checkbox"}); chk.append(el("label", {}, cb, " ", chip(l.name))); return [cb, l.name]; });
+const msSel = el("select", {}); ms.options.forEach(o => msSel.append(el("option", {value: o.value}, o.label)));
+const st = el("div", {});
+const go = el("button", {class: "primary"}, "Create issue");
+go.onclick = async () => {
+if(!title.value.trim()){ st.className = "status err"; st.textContent = "Enter a title."; return; }
+go.disabled = true; st.className = "status"; st.textContent = "Saving…";
+try{
+const it = await createItem("issue", title.value.trim(), txt.value, boxes.filter(b => b[0].checked).map(b => b[1]), msVal(msSel.value), null);
+setFlash("Created #" + it.n); go2(hs("issues", it.n));
+}catch(e){ st.className = "status err"; st.textContent = e.message; go.disabled = false; }
+};
+const c = card(el("h2", {}, "New issue"), title, el("div", {style: "height:8px"}), txt,
+el("div", {class: "kv"}, el("span", {class: "muted"}, "Labels")), chk, el("div", {class: "kv"}, el("span", {class: "muted"}, "Milestone"), msSel),
+el("div", {class: "bar", style: "margin-top:10px"}, go, el("button", {onclick: () => go2(hs("issues"))}, "Cancel")), st);
+body.append(c); title.focus();
+}
+function conversation(it, ctxRef, redraw, extraButtons, beforeCompose){
+const wrap = el("div", {});
+const mk = (author, when, edited, text, onEdit) => {
+const h = el("div", {class: "h"}, el("b", {}, author), " commented ", timeEl(Date.parse(when)));
+if(edited) h.append(el("span", {}, "· edited"));
+h.append(el("span", {class: "sp"}));
+if(onEdit) h.append(el("button", {onclick: onEdit, style: "padding:1px 8px;font-size:12px"}, "Edit"));
+return el("section", {class: "card cmt"}, h, text.trim() ? mdNode(text, {ref: ctxRef}) : el("div", {class: "muted"}, "No description provided."));
+};
+wrap.append(mk(it.author, it.created, false, it.body || "", () => editDialog(it, redraw)));
+(it.comments || []).forEach(cm => wrap.append(mk(cm.author, cm.created, cm.edited, cm.body, () => {
+formDialog("Edit comment", [{key: "b", label: "Comment", type: "textarea", value: cm.body}], "Save", async v => {
+if(!v.b) throw new Error("A comment cannot be empty");
+const r = await mutateItem(it.n, x => { const c2 = x.comments.find(k => k.id === cm.id); if(!c2) throw new Error("comment not found"); c2.body = v.b; c2.edited = new Date().toISOString(); });
+redraw(r);
+});
+})));
+const ta = el("textarea", {placeholder: "Leave a comment (Markdown)", style: "width:100%"});
+const st = el("div", {});
+const add = el("button", {class: "primary"}, "Comment");
+const post = async after => {
+const text = ta.value.trim();
+if(!text && !after){ st.className = "status err"; st.textContent = "Write a comment first."; return; }
+add.disabled = true; st.className = "status"; st.textContent = "Saving…";
+try{
+const r = await (after ? after(text) : mutateItem(it.n, x => { addComment(x, text); }));
+redraw(r);
+}catch(e){ st.className = "status err"; st.textContent = e.message; add.disabled = false; }
+};
+add.onclick = () => post(null);
+const bar = el("div", {class: "bar", style: "margin:8px 0 0"}, add);
+(extraButtons || []).forEach(b => { b.onclick = () => post(b.run); bar.append(b); });
+if(beforeCompose) wrap.append(beforeCompose);
+wrap.append(el("section", {class: "card cmt cbox"}, ta, bar, st));
+return wrap;
+}
+function addComment(x, text){
+if(!text) return;
+const id = Math.max(0, ...x.comments.map(c => c.id || 0)) + 1;
+x.comments.push({id, author: getAuthor(), body: text, created: new Date().toISOString(), edited: null});
+}
+function editDialog(it, redraw){
+formDialog("Edit #" + it.n, [{key: "t", label: "Title", value: it.title}, {key: "b", label: "Description", type: "textarea", value: it.body}], "Save", async v => {
+if(!v.t) throw new Error("Enter a title");
+redraw(await mutateItem(it.n, x => { x.title = v.t; x.body = v.b; }));
+});
+}
+function metaRows(it, redraw){
+const row = el("div", {class: "kv small"});
+const lab = el("span", {}, el("span", {class: "muted"}, "Labels "));
+if(!(it.labels || []).length) lab.append(el("span", {class: "muted"}, "none "));
+(it.labels || []).forEach(l => lab.append(chip(l)));
+lab.append(el("a", {href: "#", class: "lnk", onclick: e => { e.preventDefault();
+formDialog("Labels of #" + it.n, [labelPickerField(it.labels)], "Save", async v => { redraw(await mutateItem(it.n, x => { x.labels = v.labels; })); }); }}, "edit"));
+const ms = el("span", {}, el("span", {class: "muted"}, "Milestone "), it.milestone != null ? (milestoneTitle(it.milestone) || "#" + it.milestone) : el("span", {class: "muted"}, "none"), " ",
+el("a", {href: "#", class: "lnk", onclick: e => { e.preventDefault();
+formDialog("Milestone of #" + it.n, [milestoneField(it.milestone)], "Save", async v => { redraw(await mutateItem(it.n, x => { x.milestone = msVal(v.milestone); })); }); }}, "edit"));
+row.append(lab, ms);
+return row;
+}
+async function viewIssue(body, n, tok){
+const d = await docGet("issues/" + n + ".json"); await loadMeta();
+if(tok !== navTok) return;
+if(!d){ body.append(card(note("Issue #" + n + " does not exist."))); return; }
+let it; try{ it = JSON.parse(d.text); }catch(_){ body.append(errBox("issues/" + n + ".json is not valid JSON")); return; }
+if(it.kind === "pull"){ go2(hs("pulls", n)); return; }
+const host = el("div", {}); body.append(host);
+const draw = cur => {
+if(tok !== navTok) return;
+it = cur || it; host.innerHTML = "";
+const closed = it.state !== "open";
+const head = card(
+el("div", {class: "title-row"}, el("h2", {}, it.title), el("span", {class: "muted"}, "#" + it.n), stateBadge(it.state)),
+el("div", {class: "note", style: "margin-top:4px"}, it.author + " opened this ", timeEl(Date.parse(it.created))),
+metaRows(it, draw),
+el("div", {class: "bar", style: "margin:8px 0 0"},
+el("button", {onclick: () => editDialog(it, draw)}, "Edit"),
+el("button", {onclick: () => go2(hs("issues"))}, "Back to issues")));
+const toggle = el("button", {class: closed ? "" : "danger"}, closed ? "Reopen" : "Close issue");
+toggle.run = async text => mutateItem(it.n, x => { addComment(x, text); x.state = closed ? "open" : "closed"; });
+host.append(head, conversation(it, defBranch(), draw, [toggle]));
+};
+draw(it);
+}
+async function viewLabels(body, tok){
+await loadMeta(); if(tok !== navTok) return;
+const host = el("div", {}); body.append(host);
+const draw = () => {
+if(tok !== navTok) return;
+const m = R.hub.meta; host.innerHTML = "";
+const lc = card(el("div", {class: "tools"}, el("h2", {style: "margin:0;flex:1"}, "Labels"),
+el("button", {class: "primary", onclick: () => labelDialog(null)}, "New label"), el("button", {onclick: () => go2(hs("issues"))}, "Back to issues")));
+m.labels.forEach(l => lc.append(el("div", {class: "item bar", style: "margin-bottom:0"}, chip(l.name), el("span", {class: "muted small", style: "flex:1"}, l.color),
+el("button", {onclick: () => labelDialog(l)}, "Edit"),
+el("button", {class: "danger", onclick: async () => { const c = await confirmDialog("Delete label", "Delete the label " + l.name + "? Issues keep the name but it loses its colour.", "Delete", {danger: true}); if(c.ok) save(x => { x.labels = x.labels.filter(k => k.name !== l.name); }); }}, "Delete"))));
+if(!m.labels.length) lc.append(note("No labels yet."));
+const mc = card(el("div", {class: "tools"}, el("h2", {style: "margin:0;flex:1"}, "Milestones"), el("button", {class: "primary", onclick: () => milestoneDialog(null)}, "New milestone")));
+m.milestones.forEach(x => {
+const cnt = R.hub.index.items.filter(i => i.milestone === x.id);
+mc.append(el("div", {class: "item bar", style: "margin-bottom:0"},
+el("span", {style: "flex:1;min-width:0;overflow-wrap:anywhere"}, el("b", {}, x.title), el("span", {class: "muted small"}, (x.due ? " · due " + x.due : "") + " · " + cnt.filter(i => i.state === "open").length + " open, " + cnt.filter(i => i.state !== "open").length + " closed")),
+stateBadge(x.state === "closed" ? "closed" : "open"),
+el("button", {onclick: () => milestoneDialog(x)}, "Edit"),
+el("button", {onclick: () => save(k => { const t = k.milestones.find(y => y.id === x.id); if(t) t.state = t.state === "closed" ? "open" : "closed"; })}, x.state === "closed" ? "Reopen" : "Close"),
+el("button", {class: "danger", onclick: async () => { const c = await confirmDialog("Delete milestone", "Delete the milestone " + x.title + "?", "Delete", {danger: true}); if(c.ok) save(k => { k.milestones = k.milestones.filter(y => y.id !== x.id); }); }}, "Delete")));
+});
+if(!m.milestones.length) mc.append(note("No milestones yet."));
+host.append(lc, mc);
+};
+const save = async fn => { try{ await updateMeta(fn); }catch(e){ rstatus(e.message, true); return; } rstatus(""); draw(); };
+const labelDialog = old => formDialog(old ? "Edit label" : "New label", [
+{key: "name", label: "Name", value: old ? old.name : ""}, {key: "color", label: "Colour (#rrggbb)", value: old ? old.color : "#ff8200"}], "Save", async v => {
+if(!v.name || /[\n,]/.test(v.name)) throw new Error("Enter a name without commas");
+if(!/^#[0-9a-fA-F]{6}$/.test(v.color)) throw new Error("Colour must look like #ff8200");
+await updateMeta(m => {
+const dup = m.labels.find(l => l.name === v.name && (!old || l.name !== old.name));
+if(dup) throw new Error("A label named " + v.name + " exists");
+if(old){ const t = m.labels.find(l => l.name === old.name); if(t){ t.name = v.name; t.color = v.color; } else m.labels.push({name: v.name, color: v.color}); }
+else m.labels.push({name: v.name, color: v.color});
+});
+if(old && old.name !== v.name) setFlash("Renamed the label. Existing issues keep the old name.");
+draw();
+});
+const milestoneDialog = old => formDialog(old ? "Edit milestone" : "New milestone", [
+{key: "title", label: "Title", value: old ? old.title : ""}, {key: "due", label: "Due date (YYYY-MM-DD, optional)", value: old ? old.due || "" : ""}], "Save", async v => {
+if(!v.title) throw new Error("Enter a title");
+if(v.due && !/^\d{4}-\d{2}-\d{2}$/.test(v.due)) throw new Error("Due date must look like 2026-12-31");
+await updateMeta(m => {
+if(old){ const t = m.milestones.find(y => y.id === old.id); if(t){ t.title = v.title; t.due = v.due || null; } }
+else m.milestones.push({id: Math.max(0, ...m.milestones.map(y => y.id)) + 1, title: v.title, due: v.due || null, state: "open"});
+});
+draw();
+});
+draw();
+}
+async function viewNewPull(body, base0, head0, tok){
+const bl = branches();
+if(bl.length < 2){ body.append(card(note("A pull request needs at least two branches. Create a branch first."))); return; }
+await loadMeta(); if(tok !== navTok) return;
+const names = bl.map(b => short(b.name));
+const base = base0 && names.includes(base0) ? base0 : defBranch();
+const head = head0 && names.includes(head0) ? head0 : (names.find(n => n !== base) || base);
+const mk = v => { const s = el("select", {}); names.forEach(n => s.append(el("option", {value: n}, n))); s.value = v; return s; };
+const bSel = mk(base), hSel = mk(head);
+const title = el("input", {type: "text", placeholder: "Title", autocomplete: "off", style: "width:100%"});
+const txt = el("textarea", {placeholder: "Describe the change (Markdown)", style: "width:100%;min-height:120px"});
+const prev = el("div", {});
+const st = el("div", {});
+const go = el("button", {class: "primary"}, "Create pull request"); go.disabled = true;
+let cmp = null, titleTouched = false, pv = 0;
+title.oninput = () => { titleTouched = true; };
+async function preview(){
+const tk = ++pv;
+prev.innerHTML = ""; go.disabled = true; cmp = null; st.textContent = "";
+if(bSel.value === hSel.value){ prev.append(note("Pick two different branches.")); return; }
+prev.append(el("div", {class: "note"}, el("span", {class: "spin"}), "Comparing on the Flipper, this can take a minute…"));
+const live = () => tk === pv && tok === navTok;
+try{
+const c = await gapi("GET", "compare", {name: R.name, base: refSha(bSel.value), head: refSha(hSel.value)});   // one request at a time
+if(!live()) return;
+cmp = c; prev.innerHTML = "";
+prev.append(note(c.ahead_count + (c.ahead_count === 1 ? " commit" : " commits") + " ahead, " + c.behind_count + " behind" + (c.capped ? " (counts are lower bounds)" : "") + ". " +
+(c.ff ? "Can be merged by fast-forward." : "Cannot be fast-forwarded."), ""));
+(c.ahead || []).forEach(cm => prev.append(el("div", {class: "item"}, el("div", {class: "t"}, link(commitHash(cm.sha), (cm.message || "").split("\n")[0] || "(no message)")),
+el("div", {class: "m"}, cm.author.name + " · ", timeEl(commitTime(cm)), " · ", el("code", {}, cm.sha.slice(0, 7))))));
+if(!titleTouched && c.ahead && c.ahead.length){ title.value = c.ahead.length === 1 ? (c.ahead[0].message || "").split("\n")[0] : hSel.value; }
+go.disabled = c.ahead_count === 0;
+if(c.ahead_count === 0){ prev.append(note("Nothing to merge: " + hSel.value + " has no commits that " + bSel.value + " lacks.")); return; }
+const fl = el("div", {});
+const fb = el("button", {style: "margin-top:8px"}, "List changed files");
+fb.onclick = async () => {
+fb.disabled = true; fb.textContent = "Listing…";
+try{
+const d = await gapi("GET", "diff", {name: R.name, base: refSha(bSel.value), head: refSha(hSel.value)});
+if(!live()) return;
+fl.innerHTML = "";
+const files = d.files || [];
+fl.append(el("div", {class: "note"}, files.length + (files.length === 1 ? " file" : " files") + " differ" + (d.truncated ? " (truncated)" : "") + ":"));
+files.forEach(f => fl.append(el("div", {class: "fhead"}, el("span", {class: "st " + f.status}, f.status), el("span", {class: "p"}, f.path))));
+}catch(e){ fb.disabled = false; fb.textContent = "List changed files"; fl.append(errBox(e.message)); }
+};
+fl.append(fb); prev.append(fl);
+}catch(e){ if(live()) prev.append(errBox(e.message)); }
+}
+bSel.onchange = hSel.onchange = preview;
+go.onclick = async () => {
+if(!title.value.trim()){ st.className = "status err"; st.textContent = "Enter a title."; return; }
+go.disabled = true; st.className = "status"; st.textContent = "Saving…";
+try{
+const it = await createItem("pull", title.value.trim(), txt.value, [], null, {base: bSel.value, head: hSel.value, merged_sha: null, merged_at: null});
+setFlash("Created pull request #" + it.n); go2(hs("pulls", it.n));
+}catch(e){ st.className = "status err"; st.textContent = e.message; go.disabled = false; }
+};
+body.append(card(el("h2", {}, "New pull request"),
+el("div", {class: "tools"}, el("span", {class: "muted"}, "merge"), hSel, el("span", {class: "muted"}, "into"), bSel),
+prev, el("div", {style: "height:10px"}), title, el("div", {style: "height:8px"}), txt,
+el("div", {class: "bar", style: "margin-top:10px"}, go, el("button", {onclick: () => go2(hs("pulls"))}, "Cancel")), st));
+preview();
+}
+async function viewPull(body, n, tab, tok){
+const d = await docGet("issues/" + n + ".json"); await loadMeta();
+if(tok !== navTok) return;
+if(!d){ body.append(card(note("Pull request #" + n + " does not exist."))); return; }
+let it; try{ it = JSON.parse(d.text); }catch(_){ body.append(errBox("issues/" + n + ".json is not valid JSON")); return; }
+if(it.kind !== "pull"){ go2(hs("issues", n)); return; }
+const host = el("div", {}); body.append(host);
+const state = {pending: false, cmp: null, err: null, promise: null};
+if(it.state === "open" && tab !== "files"){
+state.pending = true;
+state.promise = gapi("GET", "compare", {name: R.name, base: refSha(it.pull.base), head: refSha(it.pull.head)})
+.then(c => { state.cmp = c; }).catch(e => { state.err = e.message; }).then(() => { state.pending = false; });
+}
+const draw = cur => {
+if(tok !== navTok) return;
+it = cur || it; host.innerHTML = "";
+const p = it.pull, closed = it.state === "closed", merged = it.state === "merged";
+const head = card(
+el("div", {class: "title-row"}, el("h2", {}, it.title), el("span", {class: "muted"}, "#" + it.n), stateBadge(it.state)),
+el("div", {class: "note", style: "margin-top:4px"}, it.author + " wants to merge ", el("code", {}, p.head), " into ", el("code", {}, p.base), " · opened ", timeEl(Date.parse(it.created)),
+merged && p.merged_at ? [" · merged ", timeEl(Date.parse(p.merged_at))] : ""),
+metaRows(it, draw),
+el("div", {class: "bar", style: "margin:8px 0 0"}, el("button", {onclick: () => editDialog(it, draw)}, "Edit"), el("button", {onclick: () => go2(hs("pulls"))}, "Back to pull requests")));
+const nav = el("nav", {class: "subtabs", style: "margin:12px 0"});
+[["conv", "Conversation"], ["commits", "Commits"], ["files", "Files changed"]].forEach(([k, t]) => {
+nav.append(el("button", {class: k === tab ? "active" : "", onclick: () => go2(hs("pulls", it.n, ...(k === "conv" ? [] : [k])))}, t));
+});
+host.append(head, nav);
+const sub = el("div", {}); host.append(sub);
+if(tab === "commits") prCommits(sub, it, state, tok);
+else if(tab === "files") prFiles(sub, it, tok);
+else prConversation(sub, it, state, draw, tok);
+};
+draw(it);
+}
+async function prCommits(sub, it, state, tok){
+const p = it.pull;
+try{
+if(state.pending){
+const w = el("div", {class: "note"}, el("span", {class: "spin"}), "Comparing on the Flipper, this can take a minute…"); sub.append(w);
+await state.promise; w.remove();
+}
+if(tok !== navTok) return;
+let c = state.cmp;
+if(!c){
+if(it.state === "open") throw new Error(state.err || "compare failed");
+const base = p.base_sha || p.base, head = p.head_sha || p.merged_sha || p.head;
+c = await gapi("GET", "compare", {name: R.name, base, head});
+}
+if(tok !== navTok) return;
+const k = card(el("h2", {}, c.ahead_count + (c.ahead_count === 1 ? " commit" : " commits") + (c.capped ? " (at least)" : "")));
+(c.ahead || []).forEach(cm => k.append(el("div", {class: "item"}, el("div", {class: "t"}, link(commitHash(cm.sha), (cm.message || "").split("\n")[0] || "(no message)")),
+el("div", {class: "m"}, cm.author.name + " · ", timeEl(commitTime(cm)), " · ", el("code", {}, cm.sha.slice(0, 7))))));
+if(c.ahead_count > (c.ahead || []).length) k.append(note("Showing the newest " + c.ahead.length + "."));
+sub.append(k);
+}catch(e){ sub.append(errBox(e.message)); }
+}
+async function prFiles(sub, it, tok){
+const p = it.pull;
+const params = it.state === "merged" && p.base_sha ? {base: p.base_sha, head: p.head_sha || p.merged_sha} : {base: p.base, head: p.head};
+if(params.base && !HEX40.test(params.base)) params.base = refSha(params.base);
+if(params.head && !HEX40.test(params.head)) params.head = refSha(params.head);
+try{ await diffSection(sub, params, tok, true); }catch(e){ sub.append(errBox(e.message)); }
+}
+function prConversation(sub, it, state, draw, tok){
+const p = it.pull, merged = it.state === "merged", closed = it.state === "closed";
+const mergeBox = card(); mergeBox.style.marginTop = "12px";
+const fill = () => {
+mergeBox.innerHTML = "";
+const cmp = state.cmp, cmpErr = state.err;
+if(merged){
+mergeBox.append(el("div", {class: "title-row"}, stateBadge("merged"), el("span", {}, "This pull request was merged" + (p.merged_sha ? " as " : "."), p.merged_sha ? el("code", {}, p.merged_sha.slice(0, 7)) : "")));
+}else if(closed){
+mergeBox.append(note("This pull request is closed.", ""));
+}else if(state.pending){
+mergeBox.append(el("div", {class: "note", style: "margin:0"}, el("span", {class: "spin"}), "Comparing on the Flipper, this can take a minute…"));
+}else if(cmpErr){
+mergeBox.append(errBox("Could not compare the branches: " + cmpErr), note("A branch may have been deleted. You can close this pull request."));
+}else if(cmp){
+if(cmp.ahead_count === 0) mergeBox.append(note("Nothing to merge: " + p.base + " already contains " + p.head + ".", ""));
+else if(cmp.ff){
+mergeBox.append(el("div", {}, el("b", {}, "Ready to merge. "), el("span", {class: "muted"}, p.base + " can be fast-forwarded to " + p.head + " (" + cmp.ahead_count + (cmp.ahead_count === 1 ? " commit" : " commits") + ").")),
+el("div", {class: "bar", style: "margin:8px 0 0"}, el("button", {class: "primary", onclick: () => doMerge(it, cmp)}, "Merge (fast-forward)")));
+}else{
+mergeBox.append(el("div", {}, el("b", {}, "This branch cannot be fast-forwarded. "), el("span", {class: "muted"}, p.base + " has " + cmp.behind_count + " commit" + (cmp.behind_count === 1 ? "" : "s") + " that " + p.head + " lacks.")));
+if(FEATURES.mergeCommit) mergeBox.append(el("div", {class: "bar", style: "margin:8px 0 0"}, el("button", {class: "primary", onclick: () => doMergeCommit(it, cmp)}, "Create merge commit")));
+if(mergeConflict && mergeConflict.n === it.n)
+mergeBox.append(errBox("The merge has conflicts in " + mergeConflict.paths.length + (mergeConflict.paths.length === 1 ? " path" : " paths") + ":"), el("pre", {class: "snip"}, mergeConflict.paths.join("\n")));
+mergeBox.append(note("Merge locally and push:", ""),
+el("pre", {class: "snip"}, "git fetch flipper\ngit checkout " + p.base + "\ngit merge flipper/" + p.head + "\ngit push flipper " + p.base));
+}
+}
+};
+fill();
+if(state.pending) state.promise.then(() => { if(tok === navTok) fill(); });
+sub.append(conversation(it, p.head, draw, stateButtons(it, draw), mergeBox));
+}
+function stateButtons(it, draw){
+if(it.state === "merged") return [];
+const closed = it.state === "closed";
+const b = el("button", {class: closed ? "" : "danger"}, closed ? "Reopen" : "Close pull request");
+b.run = async text => { const r = await mutateItem(it.n, x => { addComment(x, text); if(x.state !== "merged") x.state = closed ? "open" : "closed"; }); return r; };
+return [b];
+}
+async function doMerge(it, cmp){
+const p = it.pull;
+const delOk = p.head !== defBranch();
+const c = await confirmDialog("Merge pull request #" + it.n, "Fast-forward " + p.base + " to " + p.head + " (" + cmp.head.slice(0, 7) + ").", "Merge", delOk ? {check: "Delete branch " + p.head + " after merging"} : {});
+if(!c.ok) return;
+let msg = "Merged #" + it.n + ".", err = false;
+try{
+await gapi("POST", "ref", {name: R.name, ref: "refs/heads/" + p.base, old: cmp.base, new: cmp.head});
+}catch(e){
+err = true; msg = /ref changed/i.test(e.message) ? "The branch " + p.base + " changed while you worked (409 ref changed). Nothing was merged. Check again." : "Merge failed: " + e.message;
+try{ await reloadRefs(); }catch(_){}
+setFlash(msg, true); route(); return;
+}
+try{
+await mutateItem(it.n, x => { x.state = "merged"; x.pull.merged_sha = cmp.head; x.pull.merged_at = new Date().toISOString(); x.pull.base_sha = cmp.base; x.pull.head_sha = cmp.head; });
+}catch(e){ msg = "The branch was updated, but marking the pull request as merged failed: " + e.message; err = true; }
+if(c.checked && delOk){
+try{ await gapi("POST", "ref", {name: R.name, ref: "refs/heads/" + p.head, old: cmp.head, new: ZERO}); msg += " Deleted branch " + p.head + "."; }
+catch(e){ msg += " Could not delete " + p.head + ": " + e.message; err = true; }
+}
+try{ await reloadRefs(); }catch(_){}
+setFlash(msg, err); route();
+}
+async function doMergeCommit(it, cmp){
+const p = it.pull;
+const c = await confirmDialog("Create merge commit", "Merge " + p.head + " into " + p.base + " with a merge commit.", "Merge", {});
+if(!c.ok) return;
+let msg, err = false;
+try{
+const r = await fetch("/api/git/merge?" + enc({name: R.name, base: p.base, head: p.head, message: "Merge pull request #" + it.n + " from " + p.head, author: getAuthor(), email: getEmail()}), {method: "POST"});
+const j = await r.json().catch(() => ({}));
+if(r.status === 409 && j.error === "conflict"){
+mergeConflict = {n: it.n, paths: j.paths || []}; err = true;
+msg = "The merge has conflicts. Nothing was changed. Merge locally instead.";
+}else if(!r.ok || j.ok === false) throw new Error(j.error || ("HTTP " + r.status));
+else{
+mergeConflict = null;
+await mutateItem(it.n, x => { x.state = "merged"; x.pull.merged_sha = j.commit; x.pull.merged_at = new Date().toISOString(); x.pull.base_sha = cmp.base; x.pull.head_sha = cmp.head; });
+msg = "Merged #" + it.n + " with merge commit " + j.commit.slice(0, 7) + ".";
+}
+}catch(e){ err = true; msg = "Merge failed: " + e.message; }
+try{ await reloadRefs(); }catch(_){}
+setFlash(msg, err); route();
+}
+function repoDir(){ return "/ext/git/" + R.name + ".git"; }
+function storageInfo(force){   // GET /api/git/storage: {packs, pack_kib, loose}. Slow on the device, so it is only cached for 15 s.
+if(force || !R.hub.storage || Date.now() - R.hub.storageAt > 15000){
+R.hub.storageAt = Date.now();
+R.hub.storage = gapi("GET", "storage", {name: R.name}).then(st => { R.hub.storageVal = st; renderHeadMeta(); return st; })
+.catch(e => { R.hub.storage = null; throw e; });
+}
+return R.hub.storage;
+}
+function looseBanner(body, tok){   // no request of its own: uses the storage numbers Settings read earlier
+const st = R.hub.storageVal;
+if(tok !== navTok || !st || !(st.loose >= 100)) return;
+body.prepend(el("div", {class: "banner"}, "This repo has " + st.loose + " loose objects. Clones of loose repos are slow. ",
+link(hs("settings"), "Pack them in Settings", "lnk"), " or run ", el("code", {}, "git flipper gc " + R.name), " on the PC."));
+}
+async function commitFile(branch, tip, path, message, action, body, newBranch){
+const p = {name: R.name, branch, old: tip, path, message, author: getAuthor(), email: getEmail(), action};
+if(newBranch) p.new_branch = newBranch;
+const r = await fetch("/api/git/commit-file?" + enc(p), {method: "POST", body: action === "delete" ? undefined : body});
+const j = await r.json().catch(() => ({}));
+if(r.status === 409){ const e = new Error(j.error || "branch moved"); e.moved = true; throw e; }
+if(!r.ok || j.ok === false) throw new Error(j.error || ("HTTP " + r.status));
+return j.commit;
+}
+function validFilePath(p){
+if(!p) return "Enter a file path";
+const segs = p.split("/");
+if(segs.some(x => !x || x === "." || x === ".." || x === ".git" || /[\x00-\x1f\x7f\\]/.test(x))) return "Invalid path";
+return "";
+}
+const MAX_EDIT = 65536;
+async function viewEdit(body, mode, branch, path, tok){
+const emptyRepo = !R.refs.length && (mode === "new" || mode === "upload");
+if(!branch || (!isBranchRef(branch) && !emptyRepo)){ body.append(card(note("Editing needs a branch. Open a branch in the Code view first."))); return; }
+lastRef = branch;
+await reloadRefs(); if(tok !== navTok) return;
+const br = R.refs.find(r => r.name === "refs/heads/" + branch);
+if(!br && R.refs.length){ body.append(card(note("Branch " + branch + " no longer exists."))); return; }
+let tip = br ? br.sha : ZERO;   // ZERO = first commit on an empty repo
+const back = mode === "edit" || mode === "delete" ? blobHash(branch, path) : treeHash(branch, path);
+const titles = {edit: "Edit ", new: "New file in ", upload: "Upload file to ", delete: "Delete "};
+const c = card(el("h2", {}, titles[mode] + (path || R.name) + " on " + branch));
+body.append(c);
+let ta = null, pathIn = null, fileIn = null, defMsg = "", getBody = async () => undefined, getPath = () => path;
+if(mode === "edit"){
+const r = await fetch("/api/git/blob?" + enc({name: R.name, ref: refSha(branch), path}));
+if(tok !== navTok) return;
+if(!r.ok){ c.append(errBox(r.status === 413 ? "This file is too large to edit here." : "Could not load the file (HTTP " + r.status + ")")); return; }
+const ab = await r.arrayBuffer(), u = new Uint8Array(ab);
+if(u.length > MAX_EDIT){ c.append(note("This file is " + fmtSize(u.length) + ". The page edits files up to 64 KiB.")); return; }
+if(u.subarray(0, 8000).includes(0)){ c.append(note("Binary files cannot be edited here. Upload a new version instead.")); return; }
+ta = el("textarea", {spellcheck: "false", style: "width:100%;min-height:340px;font:13px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace"});
+ta.value = new TextDecoder().decode(u);
+c.append(ta); defMsg = "Update " + path; getBody = async () => ta.value;
+}else if(mode === "new"){
+pathIn = el("input", {type: "text", style: "width:100%", placeholder: "folder/new-file.txt (folders are created)", autocomplete: "off", spellcheck: "false"});
+pathIn.value = path ? path + "/" : "";
+ta = el("textarea", {spellcheck: "false", placeholder: "File content", style: "width:100%;min-height:260px;margin-top:8px;font:13px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace"});
+c.append(pathIn, ta); defMsg = "Create new file"; getPath = () => pathIn.value.trim().replace(/^\/+/, ""); getBody = async () => ta.value;
+}else if(mode === "upload"){
+fileIn = el("input", {type: "file"}); fileIn.style.display = "block";
+pathIn = el("input", {type: "text", style: "width:100%;margin-top:8px", placeholder: "Name in the repo", autocomplete: "off"});
+fileIn.onchange = () => { const f = fileIn.files[0]; if(f) pathIn.value = (path ? path + "/" : "") + f.name; };
+c.append(note("Pick a file (up to 64 KiB).", ""), fileIn, pathIn); defMsg = "Add file"; getPath = () => pathIn.value.trim().replace(/^\/+/, "");
+getBody = async () => { const f = fileIn.files[0]; if(!f) throw new Error("Pick a file first"); if(f.size > MAX_EDIT) throw new Error("The file is " + fmtSize(f.size) + ". The limit is 64 KiB."); return await f.arrayBuffer(); };
+}else{
+c.append(note("This removes " + path + " from the branch " + branch + ". The history keeps the old version.", ""));
+defMsg = "Delete " + path;
+}
+const msg = el("input", {type: "text", style: "width:100%", placeholder: defMsg, autocomplete: "off"});
+const rDirect = el("input", {type: "radio", name: "cm", checked: "checked"}), rNew = el("input", {type: "radio", name: "cm"});
+const nbIn = el("input", {type: "text", placeholder: "new-branch-name", autocomplete: "off", spellcheck: "false", style: "flex:1;min-width:140px"});
+const st = el("div", {class: "status"});
+const commit = el("button", {class: "primary"}, mode === "delete" ? "Delete file" : "Commit changes");
+nbIn.oninput = () => { rNew.checked = true; };
+const suggest = () => { if(!nbIn.value) nbIn.placeholder = "patch-" + Math.random().toString(36).slice(2, 6); };
+suggest();
+const box = el("div", {style: "margin-top:12px;border-top:1px solid var(--line);padding-top:10px"},
+el("div", {class: "k"}, "Commit message"), msg,
+el("label", {class: "chk", style: "display:flex;gap:8px;align-items:center;margin-top:8px"}, rDirect, "Commit directly to ", el("b", {}, branch)),
+el("label", {class: "chk", style: "display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap"}, rNew, "Create a new branch for this commit and start a pull request", nbIn),
+el("div", {class: "note"}, "Committing as " + getAuthor() + " <" + getEmail() + ">."),
+el("div", {class: "bar", style: "margin:8px 0 0"}, commit, link(back, "Cancel", ""), st));
+c.append(box);
+commit.onclick = async () => {
+st.className = "status"; st.textContent = "";
+const fp = getPath();
+const bad = mode === "edit" || mode === "delete" ? "" : validFilePath(fp);
+if(bad){ st.className = "status err"; st.textContent = bad; return; }
+let nb = "";
+if(rNew.checked){
+nb = nbIn.value.trim() || nbIn.placeholder;
+if(!validRefName(nb) || branches().some(b => short(b.name) === nb)){ st.className = "status err"; st.textContent = "Pick a valid branch name that does not exist yet."; return; }
+}
+let data;
+try{
+data = await getBody();
+if(typeof data === "string" && new Blob([data]).size > MAX_EDIT) throw new Error("The content is over 64 KiB.");
+}catch(e){ st.className = "status err"; st.textContent = e.message; return; }
+commit.disabled = true; st.textContent = "Committing…";
+try{
+const sha = await commitFile(branch, tip, fp, msg.value.trim() || (mode === "new" || mode === "upload" ? defMsg + " " + fp : defMsg), mode === "delete" ? "delete" : "put", data, nb);
+try{ await reloadRefs(); }catch(_){}
+if(nb){ setFlash("Committed " + sha.slice(0, 7) + " to the new branch " + nb + "."); go2(hs("pulls", "new", branch, nb)); }
+else{
+setFlash("Committed " + sha.slice(0, 7) + " to " + branch + ".");
+go2(mode === "delete" ? treeHash(branch, fp.split("/").slice(0, -1).join("/")) : blobHash(branch, fp));
+}
+}catch(e){
+commit.disabled = false; st.className = "status err";
+if(e.moved){
+st.textContent = "The branch moved while you were editing (409). Your text is kept. ";
+st.append(el("button", {onclick: async () => {
+try{ await reloadRefs(); const b2 = R.refs.find(r => r.name === "refs/heads/" + branch); tip = b2 ? b2.sha : ZERO;
+st.className = "status"; st.textContent = "Reloaded the branch tip (" + tip.slice(0, 7) + "). Check that nobody changed this file, then commit again."; }
+catch(x){ st.textContent = "Reload failed: " + x.message; }
+}}, "Reload branch tip"));
+}else st.textContent = e.message;
+}
+};
+}
+function markText(text, qs){
+const f = document.createDocumentFragment(), lo = text.toLowerCase(), ql = qs.toLowerCase();
+let i = 0;
+while(ql){
+const k = lo.indexOf(ql, i);
+if(k < 0) break;
+f.append(text.slice(i, k), el("mark", {}, text.slice(k, k + ql.length))); i = k + ql.length;
+}
+f.append(text.slice(i)); return f;
+}
+async function viewSearch(body, ref, qs, tok){
+lastRef = ref; $("rv-q").value = qs;
+const c = card(el("div", {class: "tools"}, el("h2", {style: "margin:0;flex:1"}, "Search results"),
+refSelect(ref, v => go2(hs("search", v) + "?q=" + encodeURIComponent(qs)))));
+body.append(c);
+if(!qs){ c.append(note("Type something in the search box above.")); return; }
+if(new Blob([qs]).size > 100){ c.append(errBox("The search text is limited to 100 bytes.")); return; }
+const st = el("div", {class: "note"}, el("span", {class: "spin"}), "Searching for “" + qs + "” in " + ref + ". This can take several seconds on the Flipper…");
+c.append(st);
+const j = await gapi("GET", "search", {name: R.name, ref, q: qs, max: 100});
+if(tok !== navTok) return;
+st.innerHTML = "";
+const hits = j.hits || [];
+st.append((hits.length ? hits.length + (hits.length === 1 ? " hit" : " hits") : "No hits") + " for “" + qs + "”" +
+(j.scanned != null ? " · scanned " + j.scanned + " files" : "") + (j.truncated ? " · more hits exist, narrow your search" : "") + (j.timed_out ? " · the time budget ran out, so not every file was scanned" : "") + " · files over 64 KiB are not scanned");
+const groups = new Map();
+hits.forEach(h => { if(!groups.has(h.path)) groups.set(h.path, []); groups.get(h.path).push(h); });
+for(const [path, hs2] of groups){
+const g = el("div", {class: "item"}, el("div", {class: "t"}, link(blobHash(ref, path), path)));
+hs2.forEach(h => {
+if(!h.line) { g.append(el("div", {class: "m"}, "file name matches")); return; }
+const t = el("span", {}); t.append(markText(String(h.text || "").slice(0, 300), qs));
+g.append(el("div", {class: "hit"}, el("a", {href: blobHash(ref, path) + "?L=" + h.line}, String(h.line)), t));
+});
+c.append(g);
+}
+}
+function relSummary(r){ return {id: r.id, tag: r.tag, title: r.title, draft: !!r.draft, prerelease: !!r.prerelease, created: r.created}; }
+async function loadRelIndex(force){
+if(!force && R.hub.rel) return R.hub.rel;
+const d = await docGet("releases/index.json");
+let idx = {next: 1, items: []};
+if(d){ try{ idx = JSON.parse(d.text); }catch(_){} }
+idx.items = idx.items || []; idx.next = idx.next || 1;
+R.hub.rel = idx; return idx;
+}
+async function upsertRel(r){
+const u = await updateJson("releases/index.json", () => ({next: 1, items: []}), idx => {
+idx.items = idx.items || []; const s = relSummary(r), k = idx.items.findIndex(x => x.id === r.id);
+if(k < 0) idx.items.push(s); else idx.items[k] = s;
+idx.next = Math.max(idx.next || 1, r.id + 1);
+});
+R.hub.rel = u.value;
+}
+function assetPath(id, name){ return repoDir() + "/hub/releases/" + id + "/" + name; }
+function cleanAsset(n){ return String(n).replace(/[^A-Za-z0-9._-]+/g, "-").replace(/^\.+/, "") || "file"; }
+function relBadges(r){
+const s = el("span", {});
+if(r.draft) s.append(el("span", {class: "badge"}, "Draft"));
+if(r.prerelease) s.append(el("span", {class: "badge"}, "Pre-release"));
+return s;
+}
+async function docDelete(key, etag){
+const r = await fetch("/api/git/doc-delete?" + enc({name: R.name, key}), {method: "POST", headers: {"If-Match": etag}});
+const j = await r.json().catch(() => ({}));
+if(r.status === 412){ const e = new Error("changed"); e.conflict = true; throw e; }
+if(!r.ok || j.ok === false) throw new Error(j.error || ("HTTP " + r.status));
+}
+function viewReleases(body, rest, tok){
+if(!rest.length) return viewRelList(body, tok);
+if(rest[0] === "new") return viewRelForm(body, 0, tok);
+const id = parseInt(rest[0], 10);
+if(!(id > 0)) return Promise.reject(new Error("Bad release number"));
+return rest[1] === "edit" ? viewRelForm(body, id, tok) : viewRelease(body, id, tok);
+}
+async function viewRelList(body, tok){
+const idx = await loadRelIndex(true); if(tok !== navTok) return;
+const c = card(el("div", {class: "tools"}, el("h2", {style: "margin:0;flex:1"}, "Releases"), el("button", {class: "primary", onclick: () => go2(hs("releases", "new"))}, "New release")));
+idx.items.slice().sort((a, b) => b.id - a.id).forEach(r => {
+c.append(el("div", {class: "item"},
+el("div", {class: "t"}, link(hs("releases", r.id), r.title || r.tag), relBadges(r)),
+el("div", {class: "m"}, el("code", {}, r.tag), " · ", timeEl(Date.parse(r.created)))));
+});
+if(!idx.items.length) c.append(note("No releases yet."));
+body.append(c);
+}
+async function viewRelease(body, id, tok){
+const d = await docGet("releases/" + id + ".json"); if(tok !== navTok) return;
+if(!d){ body.append(card(note("Release " + id + " does not exist."))); return; }
+let r; try{ r = JSON.parse(d.text); }catch(_){ body.append(errBox("releases/" + id + ".json is not valid JSON")); return; }
+const c = card(el("div", {class: "title-row"}, el("h2", {}, r.title || r.tag), relBadges(r)),
+el("div", {class: "note", style: "margin-top:4px"}, "Tag ", link(treeHash(r.tag, ""), r.tag), " · ", timeEl(Date.parse(r.created))),
+el("div", {class: "bar", style: "margin:8px 0"}, el("button", {onclick: () => go2(hs("releases", id, "edit"))}, "Edit"),
+el("button", {class: "danger", onclick: () => deleteRelease(r)}, "Delete"), el("button", {onclick: () => go2(hs("releases"))}, "All releases")));
+if(r.body) c.append(mdNode(r.body, {ref: r.tag}));
+const a = el("div", {style: "margin-top:12px"}, el("h2", {}, "Assets"));
+(r.assets || []).forEach(x => a.append(el("div", {class: "item"}, el("a", {class: "lnk", href: "/api/file?dl=1&" + q(assetPath(r.id, x.name))}, "📦 " + x.name), el("span", {class: "muted small"}, " · " + fmtSize(x.size)))));
+if(!(r.assets || []).length) a.append(note("No assets."));
+c.append(a); body.append(c);
+}
+async function deleteRelease(r){
+const c = await confirmDialog("Delete release", "Delete the release " + (r.title || r.tag) + " and its " + (r.assets || []).length + " asset file(s)? The tag stays.", "Delete", {danger: true});
+if(!c.ok) return;
+try{
+for(const x of (r.assets || [])) await api("POST", "/api/delete?" + q(assetPath(r.id, x.name))).catch(() => {});
+await api("POST", "/api/delete?" + q(repoDir() + "/hub/releases/" + r.id)).catch(() => {});
+for(let i = 0; i < 5; i++){
+const d = await docGet("releases/" + r.id + ".json"); if(!d) break;
+try{ await docDelete("releases/" + r.id + ".json", d.etag); break; }catch(e){ if(!e.conflict) throw e; }
+}
+const u = await updateJson("releases/index.json", () => ({next: 1, items: []}), idx => { idx.items = (idx.items || []).filter(x => x.id !== r.id); });
+R.hub.rel = u.value; setFlash("Deleted the release."); go2(hs("releases"));
+}catch(e){ rstatus("Delete: " + e.message, true); }
+}
+async function viewRelForm(body, id, tok){
+let rel = {id: 0, tag: "", title: "", body: "", draft: false, prerelease: false, assets: []};
+if(id){
+const d = await docGet("releases/" + id + ".json"); if(tok !== navTok) return;
+if(!d){ body.append(card(note("Release " + id + " does not exist."))); return; }
+try{ rel = JSON.parse(d.text); }catch(_){ body.append(errBox("releases/" + id + ".json is not valid JSON")); return; }
+}
+const tg = tags(), bl = branches();
+const tagSel = el("select", {});
+tg.forEach(t => tagSel.append(el("option", {value: short(t.name)}, short(t.name))));
+if(rel.tag && !tg.some(t => short(t.name) === rel.tag)) tagSel.append(el("option", {value: rel.tag}, rel.tag + " (missing)"));
+if(!id) tagSel.append(el("option", {value: "\u0000new"}, "➕ Create a new tag…"));
+if(rel.tag) tagSel.value = rel.tag;
+const newTag = el("input", {type: "text", placeholder: "new tag name, e.g. v1.0", autocomplete: "off", spellcheck: "false"});
+const fromSel = el("select", {}); bl.forEach(b => fromSel.append(el("option", {value: b.sha}, short(b.name))));
+const dBr = bl.find(b => short(b.name) === defBranch()); if(dBr) fromSel.value = dBr.sha;
+const newRow = el("div", {class: "newref"}, newTag, el("span", {class: "pill"}, "from"), fromSel);
+const sync = () => { newRow.hidden = tagSel.value !== "\u0000new"; };
+tagSel.onchange = sync; if(!tg.length && !id) tagSel.value = "\u0000new"; sync();
+const title = el("input", {type: "text", style: "width:100%", placeholder: "Release title", autocomplete: "off"}); title.value = rel.title;
+const notes = el("textarea", {placeholder: "Release notes (Markdown)", style: "width:100%;min-height:160px"}); notes.value = rel.body;
+const dr = el("input", {type: "checkbox"}), pre = el("input", {type: "checkbox"}); dr.checked = !!rel.draft; pre.checked = !!rel.prerelease;
+const keep = (rel.assets || []).map(a => ({a, remove: false}));
+const picked = [];
+const assetBox = el("div", {});
+const drawAssets = () => {
+assetBox.innerHTML = "";
+keep.forEach(k => { const cb = el("input", {type: "checkbox"}); cb.checked = k.remove; cb.onchange = () => { k.remove = cb.checked; };
+assetBox.append(el("div", {class: "item"}, "📦 " + k.a.name + " · " + fmtSize(k.a.size) + " ", el("label", {class: "muted small"}, cb, " remove"))); });
+picked.forEach((f, i) => assetBox.append(el("div", {class: "item"}, "➕ " + cleanAsset(f.name) + " · " + fmtSize(f.size) + " ", el("button", {onclick: () => { picked.splice(i, 1); drawAssets(); }, style: "padding:1px 8px;font-size:12px"}, "Remove"))));
+if(!keep.length && !picked.length) assetBox.append(note("No assets. Optional files to attach."));
+};
+const fileIn = el("input", {type: "file"}); fileIn.multiple = true;
+fileIn.onchange = () => { picked.push(...fileIn.files); fileIn.value = ""; drawAssets(); };
+drawAssets();
+const prog = el("div", {class: "progress", style: "display:none"}, el("div", {class: "track"}, el("div", {class: "fill"})), el("div", {class: "txt"}));
+const st = el("div", {class: "status"});
+const save = el("button", {class: "primary"}, id ? "Save release" : "Publish release");
+const fail = m => { st.className = "status err"; st.textContent = m; save.disabled = false; prog.style.display = "none"; };
+save.onclick = async () => {
+st.className = "status"; st.textContent = "";
+let tag = tagSel.value, mkTag = false;
+if(tag === "\u0000new"){
+tag = newTag.value.trim(); mkTag = true;
+if(!validRefName(tag)) return fail("Enter a valid tag name.");
+if(tg.some(t => short(t.name) === tag)) return fail("That tag already exists. Pick it from the list.");
+if(!fromSel.value) return fail("There is no branch to tag.");
+}
+if(!tag) return fail("Pick or create a tag.");
+const names = new Set(keep.filter(k => !k.remove).map(k => k.a.name));
+for(const f of picked){ if(names.has(cleanAsset(f.name))) return fail("Two assets are named " + cleanAsset(f.name) + "."); names.add(cleanAsset(f.name)); }
+save.disabled = true; st.textContent = "Saving…";
+try{
+if(mkTag) await gapi("POST", "ref", {name: R.name, ref: "refs/tags/" + tag, old: ZERO, new: fromSel.value});
+const fields = r => { r.tag = tag; r.title = title.value.trim() || tag; r.body = notes.value; r.draft = dr.checked; r.prerelease = pre.checked; };
+let rid = id;
+if(!id){
+const idx = await loadRelIndex(true);
+const r0 = {id: 0, tag: "", title: "", body: "", draft: false, prerelease: false, created: new Date().toISOString(), assets: []}; fields(r0);
+let cand = Math.max(idx.next || 1, ...idx.items.map(x => x.id + 1)), ok = false;
+for(let i = 0; i < 12 && !ok; i++, cand++){ r0.id = cand; try{ await docPut("releases/" + cand + ".json", JSON.stringify(r0), null); rid = cand; ok = true; }catch(e){ if(!e.conflict) throw e; } }
+if(!ok) throw new Error("Could not allocate a release number. Try again.");
+await upsertRel(r0);
+}
+const gone = keep.filter(k => k.remove).map(k => k.a.name);
+for(const n of gone) await api("POST", "/api/delete?" + q(assetPath(rid, n)));
+const added = [];
+if(picked.length){
+await api("POST", "/api/mkdir?" + q(repoDir() + "/hub/releases/" + rid)).catch(() => {});
+prog.style.display = "block"; const fill = prog.querySelector(".fill"), txt = prog.querySelector(".txt"); fill.style.width = "0";
+let done = 0;
+for(const f of picked){
+done++; const nm = cleanAsset(f.name), t0 = performance.now();
+await putFile("/api/file?" + q(assetPath(rid, nm)), f, (l, t) => {
+const pct = t ? Math.round(l / t * 100) : 0; fill.style.width = pct + "%";
+const secs = (performance.now() - t0) / 1000;
+txt.textContent = "(" + done + "/" + picked.length + ") " + nm + " · " + pct + "% · " + (secs > 0.2 ? fmtSize(l / secs) + "/s" : "…");
+});
+added.push({name: nm, size: f.size});
+}
+}
+const u = await updateJson("releases/" + rid + ".json", () => { throw new Error("release vanished"); }, r => {
+fields(r); r.assets = (r.assets || []).filter(a => !gone.includes(a.name) && !added.some(x => x.name === a.name)).concat(added);
+});
+await upsertRel(u.value);
+setFlash(id ? "Release saved." : "Release published."); go2(hs("releases", rid));
+}catch(e){ fail(/ref changed|exists/i.test(e.message) ? "Could not create the tag: " + e.message : e.message); }
+};
+body.append(card(el("h2", {}, id ? "Edit release" : "New release"),
+el("div", {class: "k"}, "Tag"), el("div", {class: "tools"}, tagSel), newRow,
+el("div", {class: "k"}, "Title"), title, el("div", {style: "height:8px"}), el("div", {class: "k"}, "Notes"), notes,
+el("div", {class: "kv"}, el("label", {}, dr, " Draft"), el("label", {}, pre, " Pre-release")),
+el("div", {class: "k"}, "Assets"), assetBox, el("label", {class: "btn", style: "display:inline-block;margin-top:8px"}, "Add files", fileIn), prog,
+el("div", {class: "bar", style: "margin-top:12px"}, save, el("button", {onclick: () => go2(id ? hs("releases", id) : hs("releases"))}, "Cancel")), st));
+}
+function wikiName(s){ return String(s).trim().replace(/\s+/g, "-").replace(/[^A-Za-z0-9._-]/g, "").replace(/^\.+/, "").slice(0, 80); }
+function wikiHas(nm){ return !!(R && R.hub.wiki && R.hub.wiki.pages.some(p => p.name === nm)); }
+async function loadWikiIndex(){
+const d = await docGet("wiki/index.json");
+let idx = {pages: []}; if(d){ try{ idx = JSON.parse(d.text); }catch(_){} }
+idx.pages = idx.pages || []; R.hub.wiki = idx; return idx;
+}
+async function viewWiki(body, rest, tok){
+const idx = await loadWikiIndex(); if(tok !== navTok) return;
+const name = rest[0] ? wikiName(rest[0]) : "Home", editing = rest[1] === "edit";
+const side = card(el("div", {class: "tools"}, el("h2", {style: "margin:0;flex:1"}, "Pages"),
+el("button", {onclick: () => formDialog("New wiki page", [{key: "n", label: "Page name", hint: "Letters, digits, . _ -  (spaces become -)"}], "Create", async v => {
+const nm = wikiName(v.n); if(!nm) throw new Error("Enter a page name"); go2(hs("wiki", nm, "edit")); })}, "New")));
+const pages = idx.pages.slice().sort((a, b) => (b.name === "Home") - (a.name === "Home") || a.name.localeCompare(b.name));
+if(!wikiHas("Home")) side.append(el("div", {class: "item"}, link(hs("wiki", "Home"), "Home ✎")));
+pages.forEach(p => side.append(el("div", {class: "item"}, p.name === name ? el("b", {}, p.name.replace(/-/g, " ")) : link(hs("wiki", p.name), p.name.replace(/-/g, " ")))));
+const main = el("div", {});
+body.append(el("div", {class: "wiki"}, side, main));
+const key = "wiki/" + name + ".md";
+const d = await docGet(key); if(tok !== navTok) return;
+if(editing){
+const ta = el("textarea", {style: "width:100%;min-height:320px", spellcheck: "false"}); ta.value = d ? d.text : "";
+let etag = d ? d.etag : null;
+const st = el("div", {class: "status"});
+const save = el("button", {class: "primary"}, "Save page");
+const doSave = async () => {
+save.disabled = true; st.className = "status"; st.textContent = "Saving…";
+try{
+if(new Blob([ta.value]).size > 60000) throw new Error("The page is over 60 KB.");
+await docPut(key, ta.value, etag);
+await updateJson("wiki/index.json", () => ({pages: []}), ix => { ix.pages = ix.pages || []; const e = {name, updated: new Date().toISOString()}; const k = ix.pages.findIndex(x => x.name === name); if(k < 0) ix.pages.push(e); else ix.pages[k] = e; });
+setFlash("Saved " + name + "."); go2(hs("wiki", name));
+}catch(e){
+save.disabled = false; st.className = "status err";
+if(e.conflict){
+st.textContent = "Someone saved this page meanwhile. ";
+st.append(el("button", {onclick: async () => { const f = await docGet(key); etag = f ? f.etag : null; doSave(); }}, "Overwrite with my text"));
+}else st.textContent = e.message;
+}
+};
+save.onclick = doSave;
+main.append(card(el("h2", {}, (d ? "Edit " : "New page ") + name.replace(/-/g, " ")), ta, note("Link other pages with [[Page Name]]. Markdown is supported."),
+el("div", {class: "bar", style: "margin:8px 0 0"}, save, el("button", {onclick: () => go2(hs("wiki", name))}, "Cancel"), st)));
+return;
+}
+if(!d){
+main.append(card(el("h2", {}, name.replace(/-/g, " ")), note("This page does not exist yet."), el("div", {class: "bar", style: "margin:8px 0 0"}, el("button", {class: "primary", onclick: () => go2(hs("wiki", name, "edit"))}, "Create it"))));
+return;
+}
+const c = card(el("div", {class: "tools"}, el("h2", {style: "margin:0;flex:1"}, name.replace(/-/g, " ")),
+el("button", {onclick: () => go2(hs("wiki", name, "edit"))}, "Edit"),
+el("button", {class: "danger", onclick: async () => {
+const cf = await confirmDialog("Delete page", "Delete the wiki page " + name + "?", "Delete", {danger: true}); if(!cf.ok) return;
+try{
+const f = await docGet(key); if(f) await docDelete(key, f.etag);
+await updateJson("wiki/index.json", () => ({pages: []}), ix => { ix.pages = (ix.pages || []).filter(x => x.name !== name); });
+setFlash("Deleted " + name + "."); go2(hs("wiki"));
+}catch(e){ rstatus("Delete: " + e.message, true); }
+}}, "Delete")), mdNode(d.text, {ref: defBranch(), wiki: true}));
+main.append(c);
+}
+async function viewSettings(body, tok){
+const desc = el("input", {type: "text", style: "flex:1;min-width:160px", autocomplete: "off"}); desc.value = R.meta.description || "";
+const dsave = el("button", {class: "primary", onclick: async () => { try{ await gapi("POST", "describe", {name: R.name, text: desc.value.trim()}); setFlash("Description saved."); await reloadRepo(); }catch(e){ rstatus(e.message, true); } }}, "Save");
+const bsel = el("select", {}); branches().forEach(b => bsel.append(el("option", {value: short(b.name)}, short(b.name)))); bsel.value = defBranch();
+const bsave = el("button", {class: "primary", onclick: () => refAction(() => gapi("POST", "head", {name: R.name, branch: bsel.value}))}, "Save");
+const gen = card(el("h2", {}, "Repository"),
+el("div", {class: "k"}, "Description"), el("div", {class: "newref"}, desc, dsave),
+el("div", {class: "k"}, "Default branch"), el("div", {class: "newref"}, bsel, bsave),
+el("div", {class: "bar", style: "margin:4px 0 0"}, el("button", {onclick: () => renameDialog(R.name)}, "Rename repository")));
+const line = el("div", {class: "note"}, el("span", {class: "spin"}), "Reading storage info (takes a few seconds)…"), pline = el("div", {class: "note"});
+const packBtn = el("button", {class: "primary"}, "Pack loose objects"), cntBtn = el("button", {}, "Refresh");
+const show = async force => {
+line.innerHTML = ""; line.className = "note"; line.append(el("span", {class: "spin"}), "Reading storage info (takes a few seconds)…");
+try{
+const st = await storageInfo(force); if(tok !== navTok) return;
+line.textContent = "Packs: " + st.packs + (st.pack_kib != null ? " (" + fmtSize(st.pack_kib * 1024) + ")" : "") + " · loose objects: " + st.loose +
+(st.loose > 0 ? ". Updating in the background" + (st.loose >= 100 ? ", or pack them now." : ".") : ".");
+}catch(e){ line.className = "note status err"; line.textContent = "Storage info: " + e.message; }
+};
+cntBtn.onclick = () => show(true);
+show(true); refreshMeta();
+packBtn.onclick = async () => {
+packBtn.disabled = true; cntBtn.disabled = true;
+let total = 0, merged = 0, idle = 0;
+try{
+for(let i = 0; i < 1000; i++){
+pline.textContent = "Packing… " + total + " objects packed, " + merged + " packs merged. One step can take up to a minute.";
+const j = await gapi("POST", "pack", {name: R.name});
+total += j.packed || 0; merged += j.merged || 0;
+if(!j.more) break;
+idle = (j.packed > 0 || j.merged > 0) ? 0 : idle + 1;
+if(idle >= 5) throw new Error("the Flipper made no progress");
+if(tok !== navTok) return;
+}
+R.hub.storage = null;
+setFlash("Packed " + total + " loose objects, merged " + merged + " packs."); await reloadRepo();
+}catch(e){
+pline.className = "note status err"; pline.textContent = "Pack failed after " + total + " objects: " + e.message;
+packBtn.disabled = false; cntBtn.disabled = false;
+}
+};
+const sto = card(el("h2", {}, "Storage"), line,
+el("div", {class: "bar", style: "margin:6px 0"}, packBtn, cntBtn), pline,
+el("div", {class: "note"}, "Clones of repos with many loose objects are slow. You can also pack them on the PC with ", el("code", {}, "git flipper gc " + R.name), "."));
+const dz = card(el("h2", {}, "Danger zone"), note("Deleting removes the repository, its issues, releases and wiki from the Flipper.", ""),
+el("div", {class: "bar", style: "margin:8px 0 0"}, el("button", {class: "danger", onclick: () => deleteDialog(R.name)}, "Delete this repository")));
+body.append(gen, sto, dz);
+}
+let codeUI = null;
+function prefixes(path){ const out = [""]; const segs = pathSegs(path); segs.forEach((_, i) => out.push(segs.slice(0, i + 1).join("/"))); return out; }
+function dirOf(p){ return p.split("/").slice(0, -1).join("/"); }
+function skel(n, w){ const d = el("div", {class: "pad"}); for(let i = 0; i < n; i++) d.append(el("div", {class: "sk", style: "width:" + (w || (60 + (i * 37) % 40)) + "%"})); return d; }
+function emptyState(icon, text, ...actions){
+return el("div", {class: "empty"}, ic(icon), el("p", {}, text), actions.length ? el("div", {class: "bar", style: "margin:0;justify-content:center"}, ...actions) : null);
+}
+function copyBtn(text, label){
+const b = el("button", {class: "ghost sm", "aria-label": label || "Copy"}, ic("copy"));
+b.onclick = async () => { try{ await navigator.clipboard.writeText(text); }catch(_){ const t = el("textarea"); t.value = text; document.body.append(t); t.select(); try{ document.execCommand("copy"); }catch(__){} t.remove(); } toast("Copied " + (text.length > 40 ? "to the clipboard" : text), "ok"); };
+return b;
+}
+function shaChip(sha){ return el("span", {class: "shachip"}, el("code", {}, sha.slice(0, 7)), copyBtn(sha, "Copy full SHA")); }
+function buildCodeUI(ref, sha){
+const ui = {name: R.name, ref, sha, dirs: new Map(), open: new Set([""]), cur: {mode: "tree", path: ""}, seq: 0};
+ui.treeBody = el("div", {class: "pb"});
+ui.viewBody = el("div", {class: "pb"});
+ui.rh = el("div", {class: "ph"});
+const lh = el("div", {class: "ph"}, ic("folder-open"), el("span", {class: "px2"}, "Files"), el("span", {class: "sp"}),
+refSelect(ref, v => go2(treeHash(v, ui.cur.mode === "tree" ? ui.cur.path : dirOf(ui.cur.path)))));
+ui.root = el("div", {class: "split"}, el("section", {class: "pane"}, lh, ui.treeBody), el("section", {class: "pane"}, ui.rh, ui.viewBody));
+ui.loadDir = async path => {
+const have = ui.dirs.get(path); if(have && have.entries) return have;
+try{
+const j = await gapi("GET", "tree", {name: R.name, ref: sha, path});
+const entries = j.entries.slice().sort((a, b) => ((b.type === "tree") - (a.type === "tree")) || a.name.localeCompare(b.name));
+const d = {entries}; ui.dirs.set(path, d); return d;
+}catch(e){ const d = {entries: null, err: e.message}; ui.dirs.set(path, d); return d; }
+};
+ui.renderTree = () => {
+const tb = ui.treeBody; tb.innerHTML = "";
+const add = (path, depth) => {
+const d = ui.dirs.get(path);
+if(!d){ tb.append(skel(depth ? 2 : 6, 70)); return; }
+if(d.err){ tb.append(el("div", {class: "pad status err", style: "padding:8px"}, d.err)); return; }
+const lim = d.limit || 150;
+d.entries.slice(0, lim).forEach(e => {
+const full = path ? path + "/" + e.name : e.name, isDir = e.type === "tree", on = ui.open.has(full);
+const row = el("a", {class: "tr" + (ui.cur.path === full ? " on" : ""), style: "--d:" + depth, title: e.name});
+if(isDir){
+const chev = ic(on ? "chevron-down" : "chevron-right", "c"); chev.addEventListener("click", ev => { ev.preventDefault(); ev.stopPropagation(); ui.toggle(full); });
+row.href = treeHash(ref, full); row.append(chev, ic(on ? "folder-open" : "folder"));
+row.onclick = ev => { ev.preventDefault(); ui.open.add(full); go2(treeHash(ref, full)); };
+}else if(e.type === "blob"){ row.href = blobHash(ref, full); row.append(el("span", {style: "width:12px"}), ic("file")); }
+else row.append(el("span", {style: "width:12px"}), ic(e.type === "commit" ? "repo" : "link"));
+row.append(el("span", {class: "nm"}, e.name));
+tb.append(row);
+if(isDir && on) add(full, depth + 1);
+});
+if(d.entries.length > lim) tb.append(el("a", {class: "tr", style: "--d:" + depth, href: "#", onclick: ev => { ev.preventDefault(); d.limit = lim + 150; ui.renderTree(); }}, el("span", {class: "muted"}, "Show " + Math.min(150, d.entries.length - lim) + " more of " + (d.entries.length - lim) + "...")));
+};
+add("", 0);
+};
+ui.toggle = async full => {
+if(ui.open.has(full)){ ui.open.delete(full); ui.renderTree(); return; }
+ui.open.add(full); ui.renderTree(); await ui.loadDir(full); ui.renderTree();
+};
+return ui;
+}
+async function viewCode(body, mode, ref, path, tok){
+if(!R.refs.length){ emptyRepoNote(body); return; }
+ref = ref || defBranch(); lastRef = ref;
+body.className = "fill";
+const sha = refSha(ref);
+if(!(codeUI && codeUI.name === R.name && codeUI.ref === ref && codeUI.sha === sha)) codeUI = buildCodeUI(ref, sha);
+const ui = codeUI; body.append(ui.root);
+looseBanner(body, tok);
+const seq = ++ui.seq, live = () => seq === ui.seq && tok === navTok;
+ui.cur = {mode, path};
+ui.renderTree();
+for(const p of prefixes(mode === "tree" ? path : dirOf(path))){
+if(p) ui.open.add(p);
+await ui.loadDir(p); if(!live()) return;
+ui.renderTree();
+}
+renderCodeRight(ui, live);
+}
+function pathCrumbs(ref, path, lastIsFile){
+const c = el("div", {class: "crumbs", style: "flex:1;color:var(--on-chrome2)"}, link(treeHash(ref, ""), R.name, ""));
+const segs = pathSegs(path);
+segs.forEach((sg, i) => {
+c.append(" / ");
+if(i === segs.length - 1 && lastIsFile) c.append(el("b", {style: "color:var(--on-chrome)"}, sg));
+else c.append(link(treeHash(ref, segs.slice(0, i + 1).join("/")), sg, ""));
+});
+return c;
+}
+async function renderCodeRight(ui, live){
+const {mode, path} = ui.cur, ref = ui.ref, isBr = isBranchRef(ref);
+ui.rh.innerHTML = ""; ui.viewBody.innerHTML = ""; ui.viewBody.className = "pb";
+ui.rh.append(pathCrumbs(ref, path, mode === "blob"));
+if(mode === "tree"){
+if(isBr){
+const nf = el("button", {class: "sm"}, ic("plus"), "New file"); nf.onclick = () => go2(hs("new", ref, ...pathSegs(path)));
+const up = el("button", {class: "sm"}, ic("upload"), "Upload"); up.onclick = () => go2(hs("upload", ref, ...pathSegs(path)));
+ui.rh.append(nf, up);
+}
+const d = ui.dirs.get(path);
+if(!d || d.err){ ui.viewBody.append(el("div", {class: "pad"}, errBox(d ? d.err : "Could not read this folder"))); return; }
+const tb = el("tbody", {});
+if(path) tb.append(el("tr", {}, el("td", {class: "name", colspan: "2", style: "padding-left:12px"}, link(treeHash(ref, dirOf(path)), ".. (up)", ""))));
+d.entries.slice(0, 300).forEach(e => {
+const full = path ? path + "/" + e.name : e.name;
+const icn = ic(e.type === "tree" ? "folder" : e.type === "blob" ? "file" : e.type === "commit" ? "repo" : "link");
+const nm = e.type === "tree" ? link(treeHash(ref, full), e.name) : e.type === "blob" ? link(blobHash(ref, full), e.name) : el("span", {class: "muted"}, e.name);
+tb.append(el("tr", {}, el("td", {class: "name", style: "padding-left:12px;width:99%"}, el("span", {style: "display:inline-flex;gap:8px;align-items:center"}, icn, nm)), el("td", {class: "size small"}, e.type === "link" ? "link" : e.type === "commit" ? "submodule" : "")));
+});
+ui.viewBody.append(el("table", {}, tb));
+if(d.entries.length > 300) ui.viewBody.append(el("div", {class: "note", style: "padding:0 12px 12px"}, "Showing the first 300 of " + d.entries.length + " entries."));
+if(!d.entries.length) ui.viewBody.append(emptyState("folder-open", "This folder is empty."));
+const rd = d.entries.filter(e => e.type === "blob" && /^readme(\.(md|markdown|txt|rst))?$/i.test(e.name))
+.sort((a, b) => (/\.m/i.test(b.name) - /\.m/i.test(a.name)) || a.name.localeCompare(b.name))[0];
+if(rd){
+const box = el("div", {class: "pad", style: "padding:12px 16px;border-top:2px solid var(--bd)"}, el("div", {class: "k", style: "margin-bottom:8px"}, rd.name), skel(3));
+ui.viewBody.append(box);
+try{
+const b = await fetchBlob(rd.sha); if(!live()) return;
+box.lastChild.remove();
+if(b.tooLarge) box.append(note("README is too large to show here."));
+else if(b.binary) box.append(note("README is not text."));
+else if(/\.(md|markdown)$/i.test(rd.name)) box.append(mdNode(b.text, {ref, dir: path}));
+else box.append(el("pre", {class: "snip", style: "white-space:pre-wrap"}, b.text));
+}catch(e){ box.lastChild.remove(); box.append(errBox("README: " + e.message)); }
+}
+return;
+}
+const rawUrl = "/api/git/blob?" + enc({name: R.name, ref, path}), dlUrl = rawUrl + "&dl=1";
+const mk = (icon, label, fn) => { const b = el("button", {class: "sm"}, ic(icon), label); b.onclick = fn; return b; };
+ui.rh.append(mk("code", "Raw", () => window.open(rawUrl, "_blank", "noopener")), mk("download", "Download", () => { location.href = dlUrl; }));
+if(isBr){ ui.rh.append(mk("pencil", "Edit", () => go2(hs("edit", ref, ...pathSegs(path)))), mk("trash", "Delete", () => go2(hs("delete", ref, ...pathSegs(path))))); }
+ui.viewBody.className = "pb nos"; ui.viewBody.append(skel(8, 80));
+const r = await fetch("/api/git/blob?" + enc({name: R.name, ref: ui.sha, path}));
+if(!live()) return;
+const vb = ui.viewBody; vb.innerHTML = "";
+if(r.status === 413){ vb.className = "pb"; vb.append(emptyState("file", "This file is too large to show here. Use Raw or Download.")); return; }
+if(!r.ok){ vb.className = "pb"; const j = await r.json().catch(() => ({})); vb.append(el("div", {class: "pad"}, errBox(j.error || ("HTTP " + r.status)))); return; }
+const ab = await r.arrayBuffer(); if(!live()) return;
+const b = decodeBlob(ab);
+if(b.binary){ vb.className = "pb"; vb.append(emptyState("file", "Binary file (" + fmtSize(b.size) + "). Use Download.")); return; }
+if(b.tooLarge){ vb.className = "pb"; vb.append(emptyState("file", "This file is " + fmtSize(b.size) + ", too large to show here. Use Raw or Download.")); return; }
+const lines = b.text.split("\n"); if(lines.length > 1 && lines[lines.length - 1] === "") lines.pop();
+if(!b.size){ vb.className = "pb"; vb.append(emptyState("file", "This file is empty.")); return; }
+const info = el("div", {class: "small muted", style: "padding:6px 12px;border-bottom:2px solid var(--line);display:flex;gap:12px;align-items:center;flex:none"}, el("span", {}, lines.length + " lines"), el("span", {}, fmtSize(b.size)), el("span", {style: "flex:1"}), copyBtn(path, "Copy path"));
+const src = el("div", {class: "codebox"}, el("pre", {class: "gut"}, lines.map((_, i) => i + 1).join("\n")), el("pre", {class: "txt"}, lines.join("\n")));
+vb.append(info);
+if(/\.(md|markdown)$/i.test(path)){
+const rendered = el("div", {class: "pb pad", style: "padding:12px 16px"}, mdNode(b.text, {ref, dir: dirOf(path)}));
+src.hidden = true;
+const bR = el("button", {class: "sm active"}, "Preview"), bS = el("button", {class: "sm"}, "Source");
+bR.onclick = () => { rendered.hidden = false; src.hidden = true; bR.classList.add("active"); bS.classList.remove("active"); };
+bS.onclick = () => { rendered.hidden = true; src.hidden = false; bS.classList.add("active"); bR.classList.remove("active"); };
+info.insertBefore(el("div", {class: "seg"}, bR, bS), info.children[0]);
+vb.append(rendered, src);
+if(parseInt(routeQuery.get("L"), 10) > 0) bS.onclick();
+}else vb.append(src);
+const L = parseInt(routeQuery.get("L"), 10);
+if(L > 0 && L <= lines.length && !src.hidden){
+src.append(el("div", {class: "hl", style: "top:" + (6 + (L - 1) * 20) + "px"}));
+src.scrollTop = Math.max(0, 6 + (L - 1) * 20 - 100);
+}
+}
+async function viewCommit(body, sha, tok){
+body.className = "fill";
+const hold = el("div", {class: "card", style: "margin-bottom:12px;flex:none"}, skel(3, 50)); body.append(hold);
+const j = await gapi("GET", "commit", {name: R.name, sha});
+if(tok !== navTok) return;
+const cm = (j.commit && typeof j.commit === "object") ? j.commit : j;
+const lines = (cm.message || "").replace(/\n+$/, "").split("\n");
+const c = el("section", {class: "card", style: "margin-bottom:12px;flex:none;max-height:40%;overflow:auto"},
+el("div", {class: "title-row"}, ic("commit", "l"), el("h2", {}, lines[0] || "(no message)")),
+lines.length > 1 ? el("pre", {class: "snip", style: "white-space:pre-wrap;max-height:120px;overflow:auto"}, lines.slice(1).join("\n").replace(/^\n+/, "")) : null,
+el("div", {class: "kv small"},
+el("span", {class: "shachip"}, ic("commit"), el("code", {}, cm.sha), copyBtn(cm.sha, "Copy full SHA")),
+el("span", {}, ic("user"), " ", cm.author.name, " ", el("span", {class: "muted"}, "committed ", timeEl((cm.committer && cm.committer.time ? cm.committer.time : cm.author.time) * 1000))),
+cm.committer && (cm.committer.name !== cm.author.name) ? el("span", {class: "muted"}, "committer " + cm.committer.name) : null,
+el("span", {}, el("span", {class: "muted"}, cm.parents.length === 1 ? "parent " : "parents "), ...(cm.parents.length ? cm.parents.flatMap((p, i) => [i ? ", " : "", link(commitHash(p), p.slice(0, 7))]) : ["none (root)"])),
+link(treeHash(cm.sha, ""), "Browse files")));
+hold.replaceWith(c);
+await diffSection(body, {sha: cm.sha}, tok);
+}
+async function diffSection(body, params, tok, fixed){
+const split = el("div", {class: "split" + (fixed ? " h" : "")});
+const lb = el("div", {class: "pb fl"}, skel(6, 80)), rb = el("div", {class: "pb"});
+const lh = el("div", {class: "ph"}, ic("file"), el("span", {class: "px2"}, "Changed files"));
+const rh = el("div", {class: "ph"}, ic("code"), el("span", {class: "px2"}, "Changes"), el("span", {class: "sp"}));
+split.append(el("section", {class: "pane"}, lh, lb), el("section", {class: "pane"}, rh, rb));
+body.append(split);
+const j = await gapi("GET", "diff", Object.assign({name: R.name}, params));
+if(tok !== navTok) return;
+lb.innerHTML = "";
+const files = j.files || [];
+const add = files.filter(f => f.status === "A").length, del = files.filter(f => f.status === "D").length;
+lh.append(el("span", {class: "sp"}), el("span", {class: "small"}, files.length + (j.truncated ? "+" : "") + " | +" + add + " -" + del));
+if(!files.length){ rb.append(emptyState("check", "No file changes in this commit.")); return; }
+const loaders = [], secs = [];
+let shown = 0;
+const moreL = el("a", {class: "tr", href: "#"}, el("span", {class: "muted"}, ""));
+const addFile = (f, idx) => {
+const area = el("div", {}); let state = "idle";
+const btn = el("button", {class: "sm"}, "Show diff");
+const head = el("div", {class: "fhead"}, el("span", {class: "st " + f.status}, f.status), el("span", {class: "p"}, f.path), btn);
+const sec = el("div", {class: "fsec"}, head, area); secs[idx] = sec; rb.insertBefore(sec, rb.querySelector("#dhint"));
+const open = async () => {
+if(state === "open"){ area.hidden = true; state = "closed"; btn.textContent = "Show diff"; return; }
+if(state === "closed"){ area.hidden = false; state = "open"; btn.textContent = "Hide diff"; return; }
+if(state === "loading") return;
+state = "loading"; btn.disabled = true; area.innerHTML = ""; area.append(el("div", {class: "note", style: "padding:0 12px 8px"}, el("span", {class: "spin"}), "Loading diff..."));
+try{ await fileDiff(area, f, tok); }catch(e){ area.innerHTML = ""; area.append(errBox(e.message)); }
+state = "open"; btn.disabled = false; btn.textContent = "Hide diff";
+};
+btn.onclick = open; loaders[idx] = () => state === "idle" ? open() : null;
+const name = f.path.split("/").pop(), dir = dirOf(f.path);
+const row = el("a", {class: "tr", href: "#", title: f.path}, el("span", {class: "st " + f.status}, f.status), el("span", {class: "fp"}, name, dir ? el("small", {}, " " + dir) : null));
+row.onclick = ev => { ev.preventDefault(); lb.querySelectorAll(".tr.on").forEach(x => x.classList.remove("on")); row.classList.add("on"); sec.scrollIntoView({block: "start"}); open(); };
+lb.insertBefore(row, moreL.parentNode ? moreL : null);
+};
+rb.append(el("div", {class: "note", style: "padding:8px 12px", id: "dhint"}, "Pick a file on the left, or use Show all diffs."));
+const PAGE = 100;
+const renderMore = () => {
+const end = Math.min(files.length, shown + PAGE);
+for(; shown < end; shown++) addFile(files[shown], shown);
+moreL.remove();
+if(shown < files.length){
+moreL.firstChild.textContent = "Show " + Math.min(PAGE, files.length - shown) + " more of " + (files.length - shown) + "...";
+lb.append(moreL);
+}
+};
+moreL.onclick = ev => { ev.preventDefault(); renderMore(); };
+renderMore();
+if(files.length > 1){
+const all = el("button", {class: "sm"}, "Show all diffs");
+all.onclick = async () => { all.disabled = true; for(let i = 0; i < loaders.length; i++){ if(tok !== navTok) return; if(loaders[i]) await loaders[i](); } all.remove(); };
+rh.append(all);
+}
+}
+async function loadRepoList(){
+const box = $("repos-list"); box.innerHTML = ""; box.append(skel(4, 80));
+try{
+const j = await gapi("GET", "repos");
+shell.repos = j.repos.map(r => r.name); renderSide();
+const f = repoFilter.toLowerCase();
+const list = j.repos.filter(r => !f || r.name.toLowerCase().includes(f) || (r.description || "").toLowerCase().includes(f));
+box.innerHTML = "";
+if(!list.length){
+box.append(f ? emptyState("search", "No repository matches “" + repoFilter + "”.", el("button", {onclick: () => { repoFilter = ""; $("gq").value = ""; loadRepoList(); }}, "Clear search"))
+: emptyState("repo", "No repositories yet. Git hosting in your pocket: create one, or push to flipper://<name>.", el("button", {class: "primary", onclick: newRepoDialog}, ic("plus"), "New repo")));
+return;
+}
+for(const r of list){
+const acts = el("div", {class: "acts"},
+el("button", {class: "ghost sm", "aria-label": "Rename " + r.name, title: "Rename", onclick: () => renameDialog(r.name)}, ic("pencil")),
+el("button", {class: "ghost sm", "aria-label": "Edit description of " + r.name, title: "Edit description", onclick: () => describeDialog(r.name, r.description)}, ic("book")),
+el("button", {class: "ghost sm danger", "aria-label": "Delete " + r.name, title: "Delete", onclick: () => deleteDialog(r.name)}, ic("trash")));
+box.append(el("div", {class: "rrow"}, ic("repo", "l"),
+el("div", {class: "main-c"}, el("a", {class: "rn", href: "#repos/" + encodeURIComponent(r.name)}, r.name), r.description ? el("div", {class: "cell-desc"}, r.description) : null),
+el("div", {class: "meta"}, el("span", {style: "display:inline-flex;gap:4px;align-items:center"}, ic("branch"), r.head || "-"), el("span", {}, r.packs + (r.packs === 1 ? " pack" : " packs"))),
+acts));
+}
+}catch(e){ box.innerHTML = ""; box.append(emptyState("alert", "Could not read the repository list: " + e.message, el("button", {onclick: loadRepoList}, "Try again"))); }
+}
+function route(){
+let parts;
+const raw = location.hash.replace(/^#/, ""), qi = raw.indexOf("?");
+routeQuery = new URLSearchParams(qi < 0 ? "" : raw.slice(qi + 1));
+try{ parts = (qi < 0 ? raw : raw.slice(0, qi)).split("/").map(decodeURIComponent); }catch(_){ parts = []; }
+const tab = TABS.includes(parts[0]) ? parts[0] : "files";
+showTab(tab);
+if(tab !== "repos") return;
+if(parts[1]) openRepo(parts[1], parts.slice(2));
+else { ++navTok; R = null; shell.repo = null; renderSide(); $("repo-view").hidden = true; $("repos-list-view").hidden = false; loadRepoList(); }
+}
+window.addEventListener("hashchange", route);
+$("repo-new").onclick = newRepoDialog;
+$("repos-refresh").onclick = loadRepoList;
+$("rv-refresh").onclick = () => reloadRepo();
+$("rv-clone-btn").onclick = () => { const b = $("rv-clonebox"); b.hidden = !b.hidden; $("rv-clone-btn").setAttribute("aria-expanded", String(!b.hidden)); };
+$("rv-snippet-copy").onclick = e => copyText($("rv-snippet").textContent, e.target);
+loadInfo(); go(cwd); route();</script>
+</body>
+</html>

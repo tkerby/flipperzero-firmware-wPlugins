@@ -1,0 +1,5 @@
+# Flipper Zero serial ports (CLI and Flipper Hub channel).
+# uaccess: the user of the active desktop session gets read/write access at once,
+# with no group membership and no new login. The uucp group keeps access for
+# other cases (SSH, no desktop session).
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="5740", ATTRS{manufacturer}=="Flipper Devices Inc.", GROUP="uucp", MODE="0660", TAG+="uaccess"
