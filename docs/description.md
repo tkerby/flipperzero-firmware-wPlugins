@@ -23,7 +23,7 @@ In settings, Up and Down pick a line, Left and Right change it, Back returns.
 
 ## The desktop helper
 
-A small Python script, `helper/jiggler_helper.py` in the repository. Once a second it tells the Flipper how long the computer has been idle and whether the screen is locked, and shows the Flipper's status on one line. It needs the `hidapi` package and works on macOS, Windows and Linux with X11. It talks to the Flipper over a separate USB HID interface, so it needs no special permissions.
+A small Python script, helper/jiggler_helper.py in the repository. Once a second it tells the Flipper how long the computer has been idle and whether the screen is locked, and shows the Flipper's status on one line. It needs the hidapi package and works on macOS, Windows and Linux with X11. It talks to the Flipper over a separate USB HID interface, so it needs no special permissions.
 
 ## Notes
 
