@@ -53,10 +53,14 @@ def fs_path(path):
     return os.path.join(ROOT, *[p for p in parts[2:] if p])
 
 
+# The repo folder on the device, /ext/apps_data/gitphin/git, below ROOT.
+GIT_ROOT = ("apps_data", "gitphin", "git")
+
+
 def repo_dir(name):
     if not valid_name(name or ""):
         raise Fail(400, "bad repo name")
-    return os.path.join(ROOT, "git", name + ".git")
+    return os.path.join(ROOT, *GIT_ROOT, name + ".git")
 
 
 def existing_repo(name):
@@ -125,7 +129,7 @@ def count_packs(d):
 
 def g_repos(q, body):
     repos = []
-    gd = os.path.join(ROOT, "git")
+    gd = os.path.join(ROOT, *GIT_ROOT)
     for fn in sorted(os.listdir(gd)) if os.path.isdir(gd) else []:
         d = os.path.join(gd, fn)
         if fn.endswith(".git") and os.path.isdir(d):
@@ -301,7 +305,7 @@ class Handler(BaseHTTPRequestHandler):
         m = re.match(r"^/git/([^/]+)\.git/(.+)$", path)
         if not m or any(p in ("", "..") for p in m.group(2).split("/")) or not valid_name(m.group(1)):
             raise Fail(404, "not found")
-        full = os.path.join(ROOT, "git", m.group(1) + ".git", *m.group(2).split("/"))
+        full = os.path.join(ROOT, *GIT_ROOT, m.group(1) + ".git", *m.group(2).split("/"))
         if not os.path.isfile(full):
             raise Fail(404, "not found")
         with open(full, "rb") as f:

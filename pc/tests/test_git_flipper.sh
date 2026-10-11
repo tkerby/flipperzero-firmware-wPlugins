@@ -10,7 +10,7 @@ BASE=/tmp/claude-1000
 mkdir -p "$BASE"
 W="$(mktemp -d "$BASE/flipper-git-test.XXXXXX")"
 SRV="$W/ext"            # the mock's "SD card"
-REPO="$SRV/git"
+REPO="$SRV/apps_data/gitphin/git"
 MOCK_PID=""
 
 export PATH="$PC:$PATH"
