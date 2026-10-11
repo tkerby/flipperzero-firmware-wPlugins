@@ -712,7 +712,11 @@ static void git_route_describe(GitCtx* g) {
     for(char* c = g->text; *c; c++) {
         if(*c == '\r' || *c == '\n') *c = ' ';
     }
-    strcat(g->text, "\n");
+    /* strcat is not in the release firmware's API; also keeps room for the newline */
+    size_t tl = strlen(g->text);
+    if(tl > sizeof(g->text) - 2) tl = sizeof(g->text) - 2;
+    g->text[tl] = '\n';
+    g->text[tl + 1] = '\0';
     snprintf(g->path, sizeof(g->path), "%s/description", g->base);
     if(git_write(g, g->path, g->text, strlen(g->text))) {
         hub_send_ok(g->r);

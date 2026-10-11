@@ -50,6 +50,7 @@ jobs:
   host-tests:
     name: Host tests (app code on the PC against git, ASan)
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - name: Dependencies

@@ -193,8 +193,9 @@ HubGitWriter*
     for(int i = 0; i < 8; i++) num[i] = "0123456789abcdef"[(c >> (28 - 4 * i)) & 15];
     num[8] = '\0';
     memcpy(w->tmp, w->repo, rl);
-    strcpy(w->tmp + rl, "/objects/tmp_obj_");
-    strcat(w->tmp, num);
+    static const char tmp_prefix[] = "/objects/tmp_obj_";
+    memcpy(w->tmp + rl, tmp_prefix, sizeof(tmp_prefix) - 1);
+    memcpy(w->tmp + rl + sizeof(tmp_prefix) - 1, num, sizeof(num));
 
     w->file = io->open(io->ctx, w->tmp);
     if(!w->file) {
@@ -282,9 +283,8 @@ static void object_path(const char* repo, const char* hex, char* out) {
     size_t rl = strlen(repo);
     while(rl > 1 && repo[rl - 1] == '/') rl--;
     memcpy(out, repo, rl);
-    out[rl] = '\0';
-    strcat(out, "/objects/");
-    size_t dl = strlen(out);
+    memcpy(out + rl, "/objects/", 9);
+    size_t dl = rl + 9;
     out[dl] = hex[0];
     out[dl + 1] = hex[1];
     out[dl + 2] = '/';
