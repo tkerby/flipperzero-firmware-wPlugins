@@ -14,7 +14,7 @@ REPO="$SRV/git"
 MOCK_PID=""
 
 export PATH="$PC:$PATH"
-export FLIPPER_HUB_URL="http://127.0.0.1:$PORT"
+export GITPHIN_URL="http://127.0.0.1:$PORT"
 export W REPO
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null GIT_TERMINAL_PROMPT=0
 export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@example.com GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@example.com
@@ -43,7 +43,7 @@ commit() { echo "$2" >>"$1/f.txt"; git -C "$1" add f.txt; git -C "$1" commit -q 
 
 python3 "$HERE/mock_hub.py" "$SRV" --port $PORT 2>"$W/mock.log" &
 MOCK_PID=$!
-for _ in $(seq 50); do curl -s "$FLIPPER_HUB_URL/api/git/repos" >/dev/null && break; sleep 0.1; done
+for _ in $(seq 50); do curl -s "$GITPHIN_URL/api/git/repos" >/dev/null && break; sleep 0.1; done
 mkdir -p "$SRV"/{git,ext}
 
 # ---- push to create
@@ -59,7 +59,7 @@ check "created: info/refs lists main" grep -q 'refs/heads/main$' "$REPO/demo.git
 # ---- clones
 check "clone flipper://" git clone -q flipper://demo "$W/b"
 check "clone flipper:// content" same "$(cat "$W/b/f.txt")" "$(cat "$W/a/f.txt")"
-check "clone dumb http" git clone -q "$FLIPPER_HUB_URL/git/demo.git" "$W/c"
+check "clone dumb http" git clone -q "$GITPHIN_URL/git/demo.git" "$W/c"
 check "clone dumb http content" same "$(git -C "$W/c" rev-parse HEAD)" "$(git -C "$W/a" rev-parse HEAD)"
 check "ls-remote shows HEAD" git ls-remote flipper://demo HEAD
 
@@ -94,7 +94,7 @@ check "force over unknown commit" git -C "$W/a" push -q --force origin main
 # stale info: the ref moves between list and push
 S1="$(git -C "$W/a" rev-parse main)"
 P="$( { printf 'list for-push\n'; sleep 0.7
-        curl -s -X POST "$FLIPPER_HUB_URL/api/git/ref?name=demo&ref=refs/heads/main&old=$S1&new=$(git -C "$W/a" rev-parse main~1)" >/dev/null
+        curl -s -X POST "$GITPHIN_URL/api/git/ref?name=demo&ref=refs/heads/main&old=$S1&new=$(git -C "$W/a" rev-parse main~1)" >/dev/null
         commit "$W/a" five
         printf 'push refs/heads/main:refs/heads/main\n\n'; } | (cd "$W/a" && git-remote-flipper origin flipper://demo 2>/dev/null))"
 check "stale info on CAS conflict" grep -q '^error refs/heads/main \(stale info\|non-fast-forward\)' <<<"$P"
@@ -150,7 +150,7 @@ check "cli describe: file" grep -qx 'new text here' "$REPO/tmp1.git/description"
 check "cli list shows description" bash -c "git flipper list | grep -q 'tmp1 .*trunk.*new text here'"
 check "cli rename" git flipper rename tmp1 tmp2
 check "cli rename: moved" test -d "$REPO/tmp2.git" -a ! -d "$REPO/tmp1.git"
-check "cli url" bash -c "[[ \"\$(git flipper url tmp2)\" == \$'flipper://tmp2\n$FLIPPER_HUB_URL/git/tmp2.git' ]]"
+check "cli url" bash -c "[[ \"\$(git flipper url tmp2)\" == \$'flipper://tmp2\n$GITPHIN_URL/git/tmp2.git' ]]"
 refuse "cli delete needs --yes" git flipper delete tmp2
 check "cli delete" git flipper delete tmp2 --yes
 check "cli delete: gone" test ! -d "$REPO/tmp2.git"
@@ -165,7 +165,7 @@ check "after gc: objects/info/packs has one entry" test "$(grep -c '^P ' "$REPO/
 check "after gc: refs intact" same "$(remote_ref demo refs/heads/main)" "$(git -C "$W/a" rev-parse main)"
 check "after gc: fsck of the server repo" git --git-dir="$REPO/demo.git" fsck --strict
 check "after gc: clone flipper://" git clone -q flipper://demo "$W/e"
-check "after gc: clone dumb http" git clone -q "$FLIPPER_HUB_URL/git/demo.git" "$W/f"
+check "after gc: clone dumb http" git clone -q "$GITPHIN_URL/git/demo.git" "$W/f"
 check "after gc: clone content" same "$(git -C "$W/e" rev-parse origin/main)" "$(git -C "$W/a" rev-parse main)"
 check "gc again is stable" git flipper gc demo
 check "gc again: one pack" test "$(npacks demo)" = 1

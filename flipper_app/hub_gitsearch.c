@@ -24,18 +24,18 @@ typedef struct {
     char path[HUB_GS_PATH_MAX + 1];
     bool stop;
     /* current blob */
-    uint8_t* head;      /* first HUB_GS_BINARY_PROBE bytes, until probed */
+    uint8_t* head; /* first HUB_GS_BINARY_PROBE bytes, until probed */
     size_t head_n;
-    bool probed;        /* head checked, the scan runs */
+    bool probed; /* head checked, the scan runs */
     bool binary;
     uint32_t line_no;
-    size_t kmp;         /* matcher state in this line */
-    bool matched;       /* this line matched */
+    size_t kmp; /* matcher state in this line */
+    bool matched; /* this line matched */
     char text[HUB_GS_TEXT_MAX + 1];
     size_t text_n;
     bool cut;
-    bool pending;       /* bytes of an unfinished line exist */
-    size_t seen;        /* bytes passed to the sink */
+    bool pending; /* bytes of an unfinished line exist */
+    size_t seen; /* bytes passed to the sink */
     uint32_t chunks;
     /* working copies, not on the 4 KB stack */
     SFrame fr_;
@@ -48,11 +48,13 @@ static uint8_t lc(uint8_t c) {
 
 static void kmp_build(SCtx* c, const char* q) {
     c->qn = strlen(q);
-    for(size_t i = 0; i < c->qn; i++) c->q[i] = lc((uint8_t)q[i]);
+    for(size_t i = 0; i < c->qn; i++)
+        c->q[i] = lc((uint8_t)q[i]);
     size_t k = 0;
     c->fail[0] = 0;
     for(size_t i = 1; i < c->qn; i++) {
-        while(k > 0 && c->q[i] != c->q[k]) k = c->fail[k - 1];
+        while(k > 0 && c->q[i] != c->q[k])
+            k = c->fail[k - 1];
         if(c->q[i] == c->q[k]) k++;
         c->fail[i] = (uint8_t)k;
     }
@@ -61,7 +63,8 @@ static void kmp_build(SCtx* c, const char* q) {
 /* One matcher step. *found is set when the whole query matched. */
 static size_t kmp_step(SCtx* c, size_t state, uint8_t ch, bool* found) {
     ch = lc(ch);
-    while(state > 0 && (state == c->qn || ch != c->q[state])) state = c->fail[state - 1];
+    while(state > 0 && (state == c->qn || ch != c->q[state]))
+        state = c->fail[state - 1];
     if(ch == c->q[state]) state++;
     if(state == c->qn) *found = true;
     return state;
@@ -70,7 +73,8 @@ static size_t kmp_step(SCtx* c, size_t state, uint8_t ch, bool* found) {
 static bool name_matches(SCtx* c, const char* path, size_t n) {
     size_t st = 0;
     bool found = false;
-    for(size_t i = 0; i < n && !found; i++) st = kmp_step(c, st, (uint8_t)path[i], &found);
+    for(size_t i = 0; i < n && !found; i++)
+        st = kmp_step(c, st, (uint8_t)path[i], &found);
     return found;
 }
 

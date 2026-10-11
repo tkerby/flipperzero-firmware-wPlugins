@@ -175,7 +175,7 @@ def _read_psk(conn_name):
 
     # 2. Narrow sudo helper installed by root. It must be a root-owned path, so a
     #    NOPASSWD sudoers rule for it cannot be abused by editing the script.
-    helper = "/usr/local/sbin/flipper-hub-wifi-psk"
+    helper = "/usr/local/sbin/gitphin-wifi-psk"
     if os.path.exists(helper) and shutil.which("sudo"):
         out = _run(["sudo", "-n", helper, conn_name])
         psk = out.strip()

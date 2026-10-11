@@ -54,12 +54,13 @@ static const uint16_t lbase[29] = {3,  4,  5,  6,  7,  8,  9,  10, 11,  13,  15,
                                    31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258};
 static const uint8_t lext[29] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2,
                                  2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0};
-static const uint16_t dbase[30] = {1,   2,   3,   4,   5,   7,    9,    13,   17,   25,
-                                   33,  49,  65,  97,  129, 193,  257,  385,  513,  769,
+static const uint16_t dbase[30] = {1,    2,    3,    4,    5,    7,    9,    13,    17,    25,
+                                   33,   49,   65,   97,   129,  193,  257,  385,   513,   769,
                                    1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577};
 static const uint8_t dext[30] = {0, 0, 0, 0, 1, 1, 2, 2,  3,  3,  4,  4,  5,  5,  6,
                                  6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13};
-static const uint8_t clorder[19] = {16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15};
+static const uint8_t clorder[19] =
+    {16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15};
 
 /* ---------- input ---------- */
 
@@ -150,14 +151,16 @@ static bool huff_build(Huff* h, const uint8_t* lens, int n) {
 
     memset(h->count, 0, sizeof(h->count));
     memset(h->fast, 0, sizeof(h->fast));
-    for(int i = 0; i < n; i++) h->count[lens[i]]++;
+    for(int i = 0; i < n; i++)
+        h->count[lens[i]]++;
     for(int len = 1; len <= MAX_BITS; len++) {
         left <<= 1;
         left -= h->count[len];
         if(left < 0) return false; /* over-subscribed */
     }
     offs[1] = 0;
-    for(int len = 1; len < MAX_BITS; len++) offs[len + 1] = offs[len] + h->count[len];
+    for(int len = 1; len < MAX_BITS; len++)
+        offs[len + 1] = offs[len] + h->count[len];
     for(int i = 0; i < n; i++) {
         if(lens[i]) h->symbol[offs[lens[i]]++] = (uint16_t)i;
     }
@@ -264,7 +267,8 @@ static void do_codes(Inf* s) {
                 s->err = HUB_INF_ERR_DATA;
                 return;
             }
-            if(dist > s->wsize) { /* beyond the ring: the output file has it (read in 512 byte blocks) */
+            if(dist >
+               s->wsize) { /* beyond the ring: the output file has it (read in 512 byte blocks) */
                 while(len) {
                     uint64_t from = s->base + s->pos - dist;
                     if(from >= s->base) { /* still in the ring */
@@ -273,7 +277,8 @@ static void do_codes(Inf* s) {
                         continue;
                     }
                     if(!(s->fc_len && from >= s->fc_pos && from < s->fc_pos + s->fc_len)) {
-                        size_t k = s->base - from < sizeof(s->fc) ? (size_t)(s->base - from) : sizeof(s->fc);
+                        size_t k = s->base - from < sizeof(s->fc) ? (size_t)(s->base - from) :
+                                                                    sizeof(s->fc);
                         if(!s->far(s->fctx, from, s->fc, k)) {
                             s->err = HUB_INF_ERR_DATA;
                             return;
@@ -290,8 +295,7 @@ static void do_codes(Inf* s) {
                 }
                 continue;
             }
-            size_t src = s->stream ? ((s->pos + s->wsize - dist) & (s->wsize - 1)) :
-                                     s->pos - dist;
+            size_t src = s->stream ? ((s->pos + s->wsize - dist) & (s->wsize - 1)) : s->pos - dist;
             while(len--) {
                 uint8_t b = s->win[src];
                 if(!put(s, b)) return;
@@ -304,12 +308,17 @@ static void do_codes(Inf* s) {
 
 static void do_fixed(Inf* s) {
     int i = 0;
-    for(; i < 144; i++) s->lens[i] = 8;
-    for(; i < 256; i++) s->lens[i] = 9;
-    for(; i < 280; i++) s->lens[i] = 7;
-    for(; i < 288; i++) s->lens[i] = 8;
+    for(; i < 144; i++)
+        s->lens[i] = 8;
+    for(; i < 256; i++)
+        s->lens[i] = 9;
+    for(; i < 280; i++)
+        s->lens[i] = 7;
+    for(; i < 288; i++)
+        s->lens[i] = 8;
     huff_build(&s->lit, s->lens, 288);
-    for(i = 0; i < 30; i++) s->lens[i] = 5;
+    for(i = 0; i < 30; i++)
+        s->lens[i] = 5;
     huff_build(&s->dist, s->lens, 30);
     do_codes(s);
 }
@@ -324,7 +333,8 @@ static void do_dynamic(Inf* s) {
         return;
     }
     memset(s->lens, 0, 19);
-    for(int i = 0; i < ncode; i++) s->lens[clorder[i]] = (uint8_t)bits(s, 3);
+    for(int i = 0; i < ncode; i++)
+        s->lens[clorder[i]] = (uint8_t)bits(s, 3);
     if(s->err) return;
     /* the dist table holds the code length code for now */
     if(!huff_build(&s->dist, s->lens, 19)) {
@@ -361,7 +371,8 @@ static void do_dynamic(Inf* s) {
                 s->err = HUB_INF_ERR_DATA;
                 return;
             }
-            while(rep--) L[idx++] = val;
+            while(rep--)
+                L[idx++] = val;
         }
     }
     if(L[256] == 0) {

@@ -8,9 +8,9 @@
 #include <stdio.h>
 #include "hub_mem.h"
 
-#define DOC_ROOT      "/ext/git"
-#define DOC_NAME_MAX  64
-#define DOC_LIST_MAX  1000
+#define DOC_ROOT     "/ext/git"
+#define DOC_NAME_MAX 64
+#define DOC_LIST_MAX 1000
 
 typedef struct {
     HubReq* r;
@@ -208,8 +208,7 @@ static void doc_put(DocCtx* d) {
     storage_file_free(f);
     if(!ok || r->body_read != r->content_length) {
         storage_common_remove(r->storage, d->tmp);
-        hub_send_error(
-            r, ok ? 400 : 500, ok ? "upload was cut off" : "write failed");
+        hub_send_error(r, ok ? 400 : 500, ok ? "upload was cut off" : "write failed");
         return;
     }
     /* rename does not overwrite */
@@ -255,7 +254,8 @@ static void doc_delete(DocCtx* d) {
 static void doc_list_add(DocItem* items, size_t* count, char* key, uint32_t size) {
     size_t n = *count;
     size_t pos = 0;
-    while(pos < n && strcmp(items[pos].key, key) < 0) pos++;
+    while(pos < n && strcmp(items[pos].key, key) < 0)
+        pos++;
     memmove(&items[pos + 1], &items[pos], (n - pos) * sizeof(DocItem));
     items[pos].key = key;
     items[pos].size = size;

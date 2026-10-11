@@ -94,7 +94,7 @@ extern HubProgress hub_prog;
 size_t hub_body_read(HubReq* r, uint8_t* buf, size_t len);
 
 bool hub_send_head(HubReq* r, int code, const char* ctype, size_t len, const char* extra);
-#define HUB_CHUNKED    ((size_t)-1) /* len for hub_send_head: Transfer-Encoding: chunked */
+#define HUB_CHUNKED    ((size_t) - 1) /* len for hub_send_head: Transfer-Encoding: chunked */
 #define HUB_CHUNK_SIZE 512
 /* Chunked writer: pieces go out in chunks of at most 512 bytes. The caller keeps
  * the struct (about 540 bytes) on the heap or in its own state. */

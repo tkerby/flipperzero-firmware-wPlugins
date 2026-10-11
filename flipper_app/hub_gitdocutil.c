@@ -47,9 +47,22 @@ bool hub_gitdoc_prefix_ok(const char* prefix) {
 
 uint32_t hub_crc32(uint32_t crc, const void* data, size_t len) {
     static const uint32_t tab[16] = {
-        0x00000000, 0x1db71064, 0x3b6e20c8, 0x26d930ac, 0x76dc4190, 0x6b6b51f4,
-        0x4db26158, 0x5005713c, 0xedb88320, 0xf00f9344, 0xd6d6a3e8, 0xcb61b38c,
-        0x9b64c2b0, 0x86d3d2d4, 0xa00ae278, 0xbdbdf21c};
+        0x00000000,
+        0x1db71064,
+        0x3b6e20c8,
+        0x26d930ac,
+        0x76dc4190,
+        0x6b6b51f4,
+        0x4db26158,
+        0x5005713c,
+        0xedb88320,
+        0xf00f9344,
+        0xd6d6a3e8,
+        0xcb61b38c,
+        0x9b64c2b0,
+        0x86d3d2d4,
+        0xa00ae278,
+        0xbdbdf21c};
     const uint8_t* p = data;
     crc = ~crc;
     for(size_t i = 0; i < len; i++) {
@@ -63,13 +76,15 @@ uint32_t hub_crc32(uint32_t crc, const void* data, size_t len) {
 void hub_gitdoc_etag(uint32_t crc, char out[11]) {
     static const char hex[] = "0123456789abcdef";
     out[0] = '"';
-    for(int i = 0; i < 8; i++) out[1 + i] = hex[(crc >> (28 - 4 * i)) & 15];
+    for(int i = 0; i < 8; i++)
+        out[1 + i] = hex[(crc >> (28 - 4 * i)) & 15];
     out[9] = '"';
     out[10] = '\0';
 }
 
 static const char* skip_ws(const char* s) {
-    while(*s == ' ' || *s == '\t') s++;
+    while(*s == ' ' || *s == '\t')
+        s++;
     return s;
 }
 
@@ -88,7 +103,8 @@ static bool list_has(const char* v, uint32_t crc) {
         bool weak = (v[0] == 'W' || v[0] == 'w') && v[1] == '/';
         if(weak) v += 2;
         const char* t = v;
-        while(*v && *v != ',' && *v != ' ' && *v != '\t') v++;
+        while(*v && *v != ',' && *v != ' ' && *v != '\t')
+            v++;
         size_t n = (size_t)(v - t);
         if(!weak) {
             /* "xxxxxxxx" (quoted) or xxxxxxxx (lenient) */
@@ -158,7 +174,8 @@ void hub_gitdoc_scan_head(
         }
         const char* line = head + pos;
         size_t n = 0;
-        while(pos + n < len && line[n]) n++;
+        while(pos + n < len && line[n])
+            n++;
         const char* v;
         if((v = hub_gitdoc_hdr(line, "if-match"))) {
             *if_match = v;

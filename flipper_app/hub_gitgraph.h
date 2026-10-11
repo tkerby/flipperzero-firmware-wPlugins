@@ -18,11 +18,15 @@
 #define HUB_GB_CAP 200 /* new records per slice */
 
 typedef struct {
-    unsigned added;  /* records written in this call */
-    bool more;       /* pending commits remain: call again */
-    bool stopped;    /* the slice ended on the stop callback */
+    unsigned added; /* records written in this call */
+    bool more; /* pending commits remain: call again */
+    bool stopped; /* the slice ended on the stop callback */
 } HubGitGraphResult;
 
 /* Returns 0 or a HUB_GIT_ERR_* code (records collected before an error are kept). */
 int hub_git_graph_update(
-    void* io, const char* repo_dir, HubGitPackStop stop, void* ctx, HubGitGraphResult* res);
+    void* io,
+    const char* repo_dir,
+    HubGitPackStop stop,
+    void* ctx,
+    HubGitGraphResult* res);

@@ -1,4 +1,4 @@
-# Flipper Zero serial ports (CLI and Flipper Hub channel).
+# Flipper Zero serial ports (CLI and Gitphin channel).
 # uaccess: the user of the active desktop session gets read/write access at once,
 # with no group membership and no new login. The uucp group keeps access for
 # other cases (SSH, no desktop session).

@@ -28,7 +28,7 @@
 #define HUB_GIT_CACHE_MAX (8 * 1024 * 1024) /* hub/cache folder cap */
 #endif
 #define HUB_GIT_MAX_DEPTH   64 /* delta chain */
-#define HUB_GIT_MAX_PARENTS 4  /* parents kept by the commit parser */
+#define HUB_GIT_MAX_PARENTS 4 /* parents kept by the commit parser */
 #define HUB_GIT_PATH_MAX    200 /* repo path */
 #define HUB_GIT_REF_MAX     200
 
@@ -41,8 +41,10 @@
 #define HUB_GIT_ERR_IO       (-5)
 #define HUB_GIT_ERR_BADARG   (-6)
 #define HUB_GIT_ERR_WRITE    (-7) /* the stream sink returned false */
-#define HUB_GIT_ERR_TOOMANY  (-8) /* more packs than the reader keeps and the object was not in the first ones: consolidate (hub_git_pack_merge) */
-#define HUB_GIT_ERR_FAR     (-9) /* internal: the stream needs a far window (not returned by the public calls) */
+#define HUB_GIT_ERR_TOOMANY \
+    (-8) /* more packs than the reader keeps and the object was not in the first ones: consolidate (hub_git_pack_merge) */
+#define HUB_GIT_ERR_FAR \
+    (-9) /* internal: the stream needs a far window (not returned by the public calls) */
 
 /* object types (same numbers as in the pack format) */
 #define HUB_OBJ_COMMIT 1
@@ -171,7 +173,8 @@ const char* hub_tree_mode_type(uint32_t mode);
  * to the NUL, 20-byte id), so there is no size limit. name is 0-terminated and
  * valid during the callback only. Return false from cb to stop (result WRITE).
  * Needs about 300 bytes for the parser, plus the tree or the inflate window. */
-typedef bool (*HubTreeCb)(void* ctx, uint32_t mode, const char* name, size_t name_len, const HubOid* oid);
+typedef bool (
+    *HubTreeCb)(void* ctx, uint32_t mode, const char* name, size_t name_len, const HubOid* oid);
 int hub_git_tree_walk(HubGit* g, const HubOid* tree, HubTreeCb cb, void* ctx);
 
 /* Find a path ("a/b/c.txt", "" = root) below a tree. Reads one tree at a time.
@@ -188,15 +191,15 @@ int hub_git_tree_find(HubGit* g, const HubOid* tree, const char* path, HubOid* o
  * Record: id[20], time u32, parent1[20], parent2[20] (zeros if none),
  * flags u32: bit 0 = more than 2 parents, bits 8..15 = parent count (max 255).
  * A missing or damaged file is ignored: everything works, only slower. */
-#define HUB_GRAPH_REC     68
-#define HUB_GRAPH_HDR     16
-#define HUB_GRAPH_RECS    (HUB_GRAPH_HDR + 1024) /* offset of the first record */
+#define HUB_GRAPH_REC  68
+#define HUB_GRAPH_HDR  16
+#define HUB_GRAPH_RECS (HUB_GRAPH_HDR + 1024) /* offset of the first record */
 
 typedef struct {
     HubOid parent[HUB_GIT_MAX_PARENTS];
     unsigned nparents; /* real count (parent[] holds the first HUB_GIT_MAX_PARENTS) */
-    uint32_t time;     /* committer time */
-    bool cached;       /* the id is in the graph */
+    uint32_t time; /* committer time */
+    bool cached; /* the id is in the graph */
 } HubCommitMeta;
 
 /* Parents and committer time of a commit. From the graph when it is there,

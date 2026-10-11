@@ -13,12 +13,12 @@ struct HubGitWriter {
     void* file;
     HubSha1 sha;
     uint32_t adler_a, adler_b;
-    uint64_t total;   /* header + content bytes the deflate stream carries */
-    uint64_t fed;     /* of those, taken so far */
+    uint64_t total; /* header + content bytes the deflate stream carries */
+    uint64_t fed; /* of those, taken so far */
     uint32_t block_left;
-    size_t size;      /* content size given at begin */
+    size_t size; /* content size given at begin */
     bool failed;
-    uint16_t on;      /* bytes in obuf */
+    uint16_t on; /* bytes in obuf */
     uint8_t obuf[OBUF_SIZE];
     char repo[HUB_GW_REPO_MAX + 1];
     char tmp[HUB_GW_REPO_MAX + 40];
@@ -54,7 +54,8 @@ static size_t make_header(int type, size_t size, char* out /* >= 32 */) {
         dig[d++] = (char)('0' + (int)(v % 10));
         v /= 10;
     } while(v);
-    while(d) out[n++] = dig[--d];
+    while(d)
+        out[n++] = dig[--d];
     out[n++] = '\0';
     return n;
 }
@@ -186,15 +187,18 @@ HubGitWriter*
     w->io = io;
     w->size = size;
     memcpy(w->repo, repo_dir, rl + 1);
-    while(rl > 1 && w->repo[rl - 1] == '/') w->repo[--rl] = '\0';
+    while(rl > 1 && w->repo[rl - 1] == '/')
+        w->repo[--rl] = '\0';
 
     uint32_t c = ++tmp_counter;
     char num[9];
-    for(int i = 0; i < 8; i++) num[i] = "0123456789abcdef"[(c >> (28 - 4 * i)) & 15];
+    for(int i = 0; i < 8; i++)
+        num[i] = "0123456789abcdef"[(c >> (28 - 4 * i)) & 15];
     num[8] = '\0';
     memcpy(w->tmp, w->repo, rl);
-    strcpy(w->tmp + rl, "/objects/tmp_obj_");
-    strcat(w->tmp, num);
+    static const char tmp_prefix[] = "/objects/tmp_obj_";
+    memcpy(w->tmp + rl, tmp_prefix, sizeof(tmp_prefix) - 1);
+    memcpy(w->tmp + rl + sizeof(tmp_prefix) - 1, num, sizeof(num));
 
     w->file = io->open(io->ctx, w->tmp);
     if(!w->file) {
@@ -205,7 +209,8 @@ HubGitWriter*
     w->adler_a = 1;
     w->adler_b = 0;
     w->total = (uint64_t)hn + size;
-    static const uint8_t zhdr[2] = {0x08, 0x1d}; /* deflate, CINFO 0 (stored blocks need no window), no preset dict */
+    static const uint8_t zhdr[2] = {
+        0x08, 0x1d}; /* deflate, CINFO 0 (stored blocks need no window), no preset dict */
     out_put(w, zhdr, 2);
     feed(w, (const uint8_t*)hdr, hn);
     return w;
@@ -280,11 +285,11 @@ int hub_gitwrite_end(HubGitWriter* w, uint8_t id[20], bool* existed) {
 /* Object path of an id: "<repo>/objects/xx/<38>" into out (>= repo + 52). */
 static void object_path(const char* repo, const char* hex, char* out) {
     size_t rl = strlen(repo);
-    while(rl > 1 && repo[rl - 1] == '/') rl--;
+    while(rl > 1 && repo[rl - 1] == '/')
+        rl--;
     memcpy(out, repo, rl);
-    out[rl] = '\0';
-    strcat(out, "/objects/");
-    size_t dl = strlen(out);
+    memcpy(out + rl, "/objects/", 9);
+    size_t dl = rl + 9;
     out[dl] = hex[0];
     out[dl + 1] = hex[1];
     out[dl + 2] = '/';
@@ -355,7 +360,12 @@ static bool ent_is_tree(const HubGitTreeEnt* e) {
 
 /* git's base_name_compare: a tree name counts as if it ended with "/" */
 int hub_gitwrite_ent_cmp(
-    const char* an, size_t al, bool a_tree, const char* bn, size_t bl, bool b_tree) {
+    const char* an,
+    size_t al,
+    bool a_tree,
+    const char* bn,
+    size_t bl,
+    bool b_tree) {
     size_t m = al < bl ? al : bl;
     int c = memcmp(an, bn, m);
     if(c != 0) return c < 0 ? -1 : 1;
@@ -385,7 +395,8 @@ static void sift_down(HubGitTreeEnt* a, size_t root, size_t end) {
 
 static void tree_sort(HubGitTreeEnt* a, size_t n) {
     if(n < 2) return;
-    for(size_t i = n / 2; i-- > 0;) sift_down(a, i, n);
+    for(size_t i = n / 2; i-- > 0;)
+        sift_down(a, i, n);
     for(size_t end = n - 1; end > 0; end--) {
         HubGitTreeEnt t = a[0];
         a[0] = a[end];
@@ -412,12 +423,17 @@ static size_t put_mode(uint8_t* out, uint32_t mode) {
         mode >>= 3;
     } while(mode);
     size_t n = 0;
-    while(d) out[n++] = (uint8_t)tmp[--d];
+    while(d)
+        out[n++] = (uint8_t)tmp[--d];
     return n;
 }
 
 size_t hub_gitwrite_ent_put(
-    uint8_t* out, uint32_t mode, const char* name, size_t nlen, const uint8_t id[20]) {
+    uint8_t* out,
+    uint32_t mode,
+    const char* name,
+    size_t nlen,
+    const uint8_t id[20]) {
     size_t pos = put_mode(out, mode);
     out[pos++] = ' ';
     memcpy(out + pos, name, nlen);
@@ -471,9 +487,11 @@ static size_t clean_copy(char* out, const char* s) {
         if(*s == '<' || *s == '>' || *s == '\n' || *s == '\r') continue;
         out[n++] = *s;
     }
-    while(n > 0 && (out[n - 1] == ' ' || out[n - 1] == '\t')) n--;
+    while(n > 0 && (out[n - 1] == ' ' || out[n - 1] == '\t'))
+        n--;
     size_t skip = 0;
-    while(skip < n && (out[skip] == ' ' || out[skip] == '\t')) skip++;
+    while(skip < n && (out[skip] == ' ' || out[skip] == '\t'))
+        skip++;
     if(skip) memmove(out, out + skip, n - skip);
     return n - skip;
 }
@@ -495,7 +513,8 @@ static size_t put_u64(char* out, uint64_t v) {
         v /= 10;
     } while(v);
     size_t n = 0;
-    while(d) out[n++] = tmp[--d];
+    while(d)
+        out[n++] = tmp[--d];
     return n;
 }
 
@@ -541,9 +560,9 @@ char* hub_gitwrite_commit_build(
     if(!tree || (nparents && !parents) || !ident_ok(author) || !ident_ok(committer)) return NULL;
     if(!message) message = "";
     size_t ml = strlen(message);
-    size_t cap = 5 + 41 + nparents * (7 + 41) + 2 * (16 + 40 + 5 + 2) +
-                 strlen(author->name) + strlen(author->email) + strlen(committer->name) +
-                 strlen(committer->email) + 4 + ml + 2;
+    size_t cap = 5 + 41 + nparents * (7 + 41) + 2 * (16 + 40 + 5 + 2) + strlen(author->name) +
+                 strlen(author->email) + strlen(committer->name) + strlen(committer->email) + 4 +
+                 ml + 2;
     char* buf = malloc(cap);
     if(!buf) return NULL;
     char hex[41];

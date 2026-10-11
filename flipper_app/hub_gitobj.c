@@ -8,13 +8,13 @@
 #include <string.h>
 #include "hub_mem.h"
 
-#define MAX_PACKS   64
-#define IDX_HDR     8
-#define IDX_FANOUT  1024
-#define IDX_TABLE   (IDX_HDR + IDX_FANOUT)
-#define HEAD_PEEK   32 /* bytes of a loose object to inflate for its header */
-#define PEEL_MAX    8
-#define SYMREF_MAX  6
+#define MAX_PACKS  64
+#define IDX_HDR    8
+#define IDX_FANOUT 1024
+#define IDX_TABLE  (IDX_HDR + IDX_FANOUT)
+#define HEAD_PEEK  32 /* bytes of a loose object to inflate for its header */
+#define PEEL_MAX   8
+#define SYMREF_MAX 6
 
 typedef struct {
     char name[46]; /* "pack-" + 40 hex */
@@ -37,7 +37,7 @@ struct HubGit {
     int pack_i;
 
     HubGitFile* gf; /* graph.bin */
-    uint8_t* fan;   /* its fanout table (1 KB), NULL if there was no memory */
+    uint8_t* fan; /* its fanout table (1 KB), NULL if there was no memory */
     uint32_t gcount;
     uint8_t gstate; /* 0 not tried, 1 open, 2 none */
     bool stale, quiet;
@@ -153,7 +153,8 @@ HubGit* hub_git_open(void* io, const char* repo_dir) {
     g->cache_max = HUB_GIT_CACHE_MAX;
     g->pack_i = -1;
     memcpy(g->base, repo_dir, len);
-    while(len > 1 && g->base[len - 1] == '/') g->base[--len] = '\0';
+    while(len > 1 && g->base[len - 1] == '/')
+        g->base[--len] = '\0';
 
     snprintf(g->path, sizeof(g->path), "%s/objects", g->base);
     HubGitDir* d = hub_gitio_dir_open(io, g->path);
@@ -486,7 +487,8 @@ static int loose_head(
         return inf_err(r);
     }
     size_t i = 0;
-    while(i < got && h[i] != ' ') i++;
+    while(i < got && h[i] != ' ')
+        i++;
     int t = i < got ? type_from_name((const char*)h, i) : 0;
     if(!t) goto bad;
     i++;
@@ -548,12 +550,7 @@ static int plain_info(HubGit* g, Loc loc, uint8_t* type, size_t* size) {
     return HUB_GIT_OK;
 }
 
-static int plain_read(
-    HubGit* g,
-    Loc loc,
-    uint8_t* type,
-    uint8_t** data,
-    size_t* size) {
+static int plain_read(HubGit* g, Loc loc, uint8_t* type, uint8_t** data, size_t* size) {
     HubGitFile* f;
     size_t hl = 0, sz = 0, got = 0, in_off = 0;
     uint8_t t = 0;
@@ -807,9 +804,11 @@ static bool far_read(void* c, uint64_t pos, uint8_t* b, size_t n) {
     hub_far_reads++;
     hub_far_bytes += n;
 #endif
-    for(; n && pos < s->hl; n--) *b++ = (uint8_t)s->hdr[pos++];
+    for(; n && pos < s->hl; n--)
+        *b++ = (uint8_t)s->hdr[pos++];
     if(!n) return true;
-    if(!obj_beat() || !hub_gitio_seek(s->f, pos - s->hl) || hub_gitio_read(s->f, b, n) != n) return false;
+    if(!obj_beat() || !hub_gitio_seek(s->f, pos - s->hl) || hub_gitio_read(s->f, b, n) != n)
+        return false;
     return hub_gitio_seek(s->f, s->w); /* back to the write position */
 }
 
@@ -838,7 +837,8 @@ static int plain_stream(
             fs->hl = hl;
             snprintf(fs->hdr, sizeof(fs->hdr), "%s %u", tn[*type], (unsigned)*size);
         }
-        r = inf_err(hub_inflate_stream(rd_file, f, skip_write, &sc, 0, &out, NULL, fs ? far_read : NULL, fs));
+        r = inf_err(hub_inflate_stream(
+            rd_file, f, skip_write, &sc, 0, &out, NULL, fs ? far_read : NULL, fs));
         hub_gitio_close(f);
         if(r == HUB_GIT_OK && (out != hl + *size || sc.total != *size)) r = HUB_GIT_ERR_CORRUPT;
         return r;
@@ -850,17 +850,24 @@ static int plain_stream(
     *type = h.type;
     *size = h.size;
     if(!hub_gitio_seek(g->pack_f, h.data_off)) return HUB_GIT_ERR_IO;
-    r = inf_err(hub_inflate_stream(rd_file, g->pack_f, sink, ctx, 0, &out, NULL, fs ? far_read : NULL, fs));
+    r = inf_err(hub_inflate_stream(
+        rd_file, g->pack_f, sink, ctx, 0, &out, NULL, fs ? far_read : NULL, fs));
     if(r == HUB_GIT_OK && out != h.size) r = HUB_GIT_ERR_CORRUPT;
     return r;
 }
 
-#define SPILL_BUF 1024
+#define SPILL_BUF  1024
 #define SPILL_PATH (HUB_GIT_PATH_MAX + 56)
 
 /* States of the delta instruction parser (it sees the inflated bytes in
  * arbitrary chunks). */
-enum { DS_SRC, DS_DST, DS_CMD, DS_ARGS, DS_INS };
+enum {
+    DS_SRC,
+    DS_DST,
+    DS_CMD,
+    DS_ARGS,
+    DS_INS
+};
 
 typedef struct {
     HubGit* g;
@@ -911,7 +918,8 @@ static bool ds_copy(DeltaSpill* d) {
 
 /* Skip the argument bits that are not set; run the copy when all are read. */
 static bool ds_args_step(DeltaSpill* d) {
-    while(d->bit < 7 && !(d->cmd & (1u << d->bit))) d->bit++;
+    while(d->bit < 7 && !(d->cmd & (1u << d->bit)))
+        d->bit++;
     if(d->bit == 7) {
         d->st = DS_CMD;
         return ds_copy(d);
@@ -1015,7 +1023,8 @@ static void clean_tmp(HubGit* g) {
 }
 
 /* Send a file of known size to the sink. */
-static int file_stream(HubGit* g, const char* path, size_t size, uint8_t* cb, HubGitSink sink, void* ctx) {
+static int
+    file_stream(HubGit* g, const char* path, size_t size, uint8_t* cb, HubGitSink sink, void* ctx) {
     HubGitFile* f = hub_gitio_open(g->io, path);
     if(!f) return HUB_GIT_ERR_NOTFOUND;
     int r = HUB_GIT_OK;
@@ -1064,7 +1073,13 @@ static void cache_trim(HubGit* g, Spill* s, const char* keep) {
 
 /* A delta that declares a big window: inflate it to a temp file (with the far
  * window), then run the delta parser over the file. */
-static int delta_via_file(HubGit* g, Spill* s, HubGitFile* pf, const ChainEnt* ce, DeltaSpill* d, size_t* olen) {
+static int delta_via_file(
+    HubGit* g,
+    Spill* s,
+    HubGitFile* pf,
+    const ChainEnt* ce,
+    DeltaSpill* d,
+    size_t* olen) {
     snprintf(s->vpath, sizeof s->vpath, "%s/hub/tmp/w2", g->base);
     HubGitFile* f = hub_gitio_create(g->io, s->vpath);
     if(!f || !hub_gitio_seek(pf, ce->data_off)) {
@@ -1076,7 +1091,8 @@ static int delta_via_file(HubGit* g, Spill* s, HubGitFile* pf, const ChainEnt* c
     hub_gitio_close(f);
     if(r == HUB_GIT_ERR_WRITE) r = HUB_GIT_ERR_IO;
     if(r == HUB_GIT_OK && *olen != ce->dsize) r = HUB_GIT_ERR_CORRUPT;
-    uint8_t* cb = r == HUB_GIT_OK ? malloc(SPILL_BUF) : NULL; /* not s->cb: the parser copies with it */
+    uint8_t* cb = r == HUB_GIT_OK ? malloc(SPILL_BUF) :
+                                    NULL; /* not s->cb: the parser copies with it */
     if(r == HUB_GIT_OK) {
         r = cb ? file_stream(g, s->vpath, *olen, cb, ds_sink, d) : HUB_GIT_ERR_NOMEM;
         if(r == HUB_GIT_ERR_WRITE) r = HUB_GIT_ERR_CORRUPT;
@@ -1150,8 +1166,7 @@ static int spill_stream(
             r = inf_err(hub_inflate_stream(rd_file, pf, ds_sink, &d, 0, &olen, NULL, NULL, NULL));
             if(r == HUB_GIT_ERR_FAR) r = delta_via_file(g, s, pf, ce, &d, &olen);
             if(r == HUB_GIT_ERR_WRITE && d.err) r = d.err;
-            if(r == HUB_GIT_OK &&
-               (olen != ce->dsize || d.st != DS_CMD || d.out != d.dst_size))
+            if(r == HUB_GIT_OK && (olen != ce->dsize || d.st != DS_CMD || d.out != d.dst_size))
                 r = HUB_GIT_ERR_CORRUPT;
         }
         if(d.src) hub_gitio_close(d.src);
@@ -1197,7 +1212,14 @@ static void spill_dirs(HubGit* g, Spill* s) {
 /* A non-delta object for a sink. When its stream declares a window bigger than
  * the ring (git's own objects: 32 KB), it is inflated into hub/cache/<sha> first
  * (with the far window) and that file is sent. */
-static int plain_cached(HubGit* g, const HubOid* oid, Loc loc, HubGitSink sink, void* ctx, uint8_t* type, size_t* size) {
+static int plain_cached(
+    HubGit* g,
+    const HubOid* oid,
+    Loc loc,
+    HubGitSink sink,
+    void* ctx,
+    uint8_t* type,
+    size_t* size) {
     int r = plain_stream(g, loc, sink, ctx, type, size, NULL);
     if(r != HUB_GIT_ERR_FAR) return r;
     Spill* s = malloc(sizeof(Spill));
@@ -1322,8 +1344,8 @@ static int packed_ref(HubGit* g, const char* name, HubOid* oid) {
                 continue;
             }
             g->line[ll] = '\0';
-            if(!skip && ll >= 42 && g->line[0] != '#' && g->line[0] != '^' &&
-               g->line[40] == ' ' && ll - 41 == nlen && memcmp(g->line + 41, name, nlen) == 0) {
+            if(!skip && ll >= 42 && g->line[0] != '#' && g->line[0] != '^' && g->line[40] == ' ' &&
+               ll - 41 == nlen && memcmp(g->line + 41, name, nlen) == 0) {
                 g->line[40] = '\0';
                 found = hub_oid_from_hex(g->line, oid);
                 if(!found) {
@@ -1455,19 +1477,24 @@ static bool parse_ident(const char* s, size_t len, HubGitIdent* id) {
     const char* gt = memchr(lt, '>', (size_t)(end - lt));
     id->name = s;
     id->name_len = (size_t)(lt - s);
-    while(id->name_len > 0 && id->name[id->name_len - 1] == ' ') id->name_len--;
+    while(id->name_len > 0 && id->name[id->name_len - 1] == ' ')
+        id->name_len--;
     id->email = lt + 1;
     id->email_len = gt ? (size_t)(gt - lt - 1) : (size_t)(end - lt - 1);
     strcpy(id->tz, "+0000");
     if(!gt) return true;
     const char* p = gt + 1;
-    while(p < end && *p == ' ') p++;
+    while(p < end && *p == ' ')
+        p++;
     int64_t t = 0;
-    while(p < end && *p >= '0' && *p <= '9') t = t * 10 + (*p++ - '0');
+    while(p < end && *p >= '0' && *p <= '9')
+        t = t * 10 + (*p++ - '0');
     id->time = t;
-    while(p < end && *p == ' ') p++;
+    while(p < end && *p == ' ')
+        p++;
     size_t k = 0;
-    while(p < end && k < sizeof(id->tz) - 1 && *p != ' ') id->tz[k++] = *p++;
+    while(p < end && k < sizeof(id->tz) - 1 && *p != ' ')
+        id->tz[k++] = *p++;
     if(k) id->tz[k] = '\0';
     return true;
 }
@@ -1476,7 +1503,8 @@ static bool parse_ident(const char* s, size_t len, HubGitIdent* id) {
  * Returns the message start. */
 typedef void (*HdrCb)(void* ctx, const char* k, size_t kl, const char* v, size_t vl);
 
-static const char* parse_headers(const uint8_t* data, size_t len, HdrCb cb, void* ctx, const char** msg_end) {
+static const char*
+    parse_headers(const uint8_t* data, size_t len, HdrCb cb, void* ctx, const char** msg_end) {
     const char* p = (const char*)data;
     const char* end = p + len;
     while(p < end) {
@@ -1488,8 +1516,7 @@ static const char* parse_headers(const uint8_t* data, size_t len, HdrCb cb, void
         }
         if(*p != ' ') {
             const char* sp = memchr(p, ' ', (size_t)(le - p));
-            if(sp)
-                cb(ctx, p, (size_t)(sp - p), sp + 1, (size_t)(le - sp - 1));
+            if(sp) cb(ctx, p, (size_t)(sp - p), sp + 1, (size_t)(le - sp - 1));
         }
         p = nl ? nl + 1 : end;
     }
@@ -1591,7 +1618,8 @@ int hub_tree_next(HubTreeIter* it, HubTreeEntry* e) {
     if(q == p || q >= it->end) return HUB_GIT_ERR_CORRUPT;
     q++;
     const uint8_t* name = q;
-    while(q < it->end && *q != '\0') q++;
+    while(q < it->end && *q != '\0')
+        q++;
     if(q >= it->end || q == name || (size_t)(it->end - q) < 21) return HUB_GIT_ERR_CORRUPT;
     e->mode = mode;
     e->name = (const char*)name;
@@ -1614,20 +1642,17 @@ const char* hub_tree_mode_type(uint32_t mode) {
     }
 }
 
-int hub_git_tree_find(
-    HubGit* g,
-    const HubOid* tree,
-    const char* path,
-    HubOid* oid,
-    uint32_t* mode) {
+int hub_git_tree_find(HubGit* g, const HubOid* tree, const char* path, HubOid* oid, uint32_t* mode) {
     HubOid cur = *tree;
     uint32_t cur_mode = 0040000;
     const char* p = path;
     for(;;) {
-        while(*p == '/') p++;
+        while(*p == '/')
+            p++;
         if(*p == '\0') break;
         const char* e = p;
-        while(*e && *e != '/') e++;
+        while(*e && *e != '/')
+            e++;
         size_t cl = (size_t)(e - p);
         if((cl == 1 && p[0] == '.') || (cl == 2 && p[0] == '.' && p[1] == '.'))
             return HUB_GIT_ERR_BADARG;
@@ -1725,7 +1750,11 @@ static int graph_find(HubGit* g, const HubOid* oid, uint8_t* rec) {
             lo = mid + 1;
         }
     }
-    if(hi == lo || !read_at(g->gf, HUB_GRAPH_RECS + (uint64_t)HUB_GRAPH_REC * lo, b, (size_t)HUB_GRAPH_REC * (hi - lo)))
+    if(hi == lo || !read_at(
+                       g->gf,
+                       HUB_GRAPH_RECS + (uint64_t)HUB_GRAPH_REC * lo,
+                       b,
+                       (size_t)HUB_GRAPH_REC * (hi - lo)))
         return 0;
     for(uint32_t k = 0; k < hi - lo; k++) {
         if(memcmp(oid->b, b + HUB_GRAPH_REC * k, 20) == 0) {
@@ -1868,8 +1897,10 @@ int hub_git_tree_walk(HubGit* g, const HubOid* tree, HubTreeCb cb, void* ctx) {
         if(r == HUB_GIT_OK && type != HUB_OBJ_TREE) r = HUB_GIT_ERR_BADARG;
     }
     if(r == HUB_GIT_OK) {
-        if(w->stopped) r = HUB_GIT_ERR_WRITE;
-        else if(w->bad || w->st != 0) r = HUB_GIT_ERR_CORRUPT;
+        if(w->stopped)
+            r = HUB_GIT_ERR_WRITE;
+        else if(w->bad || w->st != 0)
+            r = HUB_GIT_ERR_CORRUPT;
     }
     free(w);
     return r;

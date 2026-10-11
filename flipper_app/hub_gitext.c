@@ -14,21 +14,22 @@
 #include <stdio.h>
 #include "hub_mem.h"
 
-#define EXT_ROOT        "/ext/git"
-#define EXT_MAX_OBJ     (16 * 1024)
-#define EXT_DIFF_OBJ    (12 * 1024)
-#define EXT_CF_OBJ      (12 * 1024)  /* commit-file: 2-3 trees at once */  /* diff holds two trees at once */
-#define EXT_DEADLINE_MS 60000  /* RAM limit for one object */
-#define EXT_MERGE_OBJ   (8 * 1024)   /* merge holds 3 trees + output at once */
+#define EXT_ROOT     "/ext/git"
+#define EXT_MAX_OBJ  (16 * 1024)
+#define EXT_DIFF_OBJ (12 * 1024)
+#define EXT_CF_OBJ \
+    (12 * 1024) /* commit-file: 2-3 trees at once */ /* diff holds two trees at once */
+#define EXT_DEADLINE_MS 60000 /* RAM limit for one object */
+#define EXT_MERGE_OBJ   (8 * 1024) /* merge holds 3 trees + output at once */
 #define EXT_COMPARE_CAP 500
 #define EXT_BODY_MAX    (64 * 1024)
 #define EXT_MSG_MAX     1000
 #define EXT_SEARCH_MAX  200
 #define EXT_SEARCH_MS   20000
-#define EXT_SEARCH_BLOB (64 * 1024)  /* bigger files are not searched */
-#define EXT_JSON_CAP    (24 * 1024)  /* stop adding items above this many JSON bytes */
+#define EXT_SEARCH_BLOB (64 * 1024) /* bigger files are not searched */
+#define EXT_JSON_CAP    (24 * 1024) /* stop adding items above this many JSON bytes */
 #define EXT_LOG_MSG     1024
-#define EXT_LOG_OBJ     (8 * 1024)  /* commit objects the log reads */
+#define EXT_LOG_OBJ     (8 * 1024) /* commit objects the log reads */
 #define EXT_LOG_MAX     50
 #define EXT_COMMIT_MSG  (16 * 1024)
 #define EXT_ZERO        "0000000000000000000000000000000000000000"
@@ -232,7 +233,8 @@ static __attribute__((unused)) bool ext_ref_write(Ext* e, const char* ref, const
 }
 
 /* Compare-and-swap of a ref: expected is a 40 hex sha or ZERO (must not exist). */
-static __attribute__((unused)) bool ext_ref_cas(Ext* e, const char* ref, const char* expected, const char* value) {
+static __attribute__((unused)) bool
+    ext_ref_cas(Ext* e, const char* ref, const char* expected, const char* value) {
     HubOid cur;
     char hex[41];
     int rc = ext_ref_value(e, ref, &cur);
@@ -267,11 +269,17 @@ static void ext_chunk_ident(HubChunk* c, FuriString* t, const HubGitIdent* id) {
 
 /* One commit as JSON "C", written straight to the chunks (t is a small scratch string). */
 static void ext_chunk_commit(
-    HubChunk* c, FuriString* t, const HubOid* oid, const HubGitCommit* cm, size_t msg_cap, bool open_brace) {
+    HubChunk* c,
+    FuriString* t,
+    const HubOid* oid,
+    const HubGitCommit* cm,
+    size_t msg_cap,
+    bool open_brace) {
     char hex[41], hex2[41];
     hub_oid_to_hex(oid, hex);
     hub_oid_to_hex(&cm->tree, hex2);
-    furi_string_printf(t, "%s\"sha\":\"%s\",\"tree\":\"%s\",\"parents\":[", open_brace ? "{" : "", hex, hex2);
+    furi_string_printf(
+        t, "%s\"sha\":\"%s\",\"tree\":\"%s\",\"parents\":[", open_brace ? "{" : "", hex, hex2);
     unsigned np = cm->nparents < HUB_GIT_MAX_PARENTS ? cm->nparents : HUB_GIT_MAX_PARENTS;
     for(unsigned i = 0; i < np; i++) {
         hub_oid_to_hex(&cm->parent[i], hex);
@@ -285,7 +293,8 @@ static void ext_chunk_commit(
     size_t n = cm->msg_len;
     if(n > msg_cap) {
         n = msg_cap;
-        while(n > 0 && ((unsigned char)cm->msg[n] & 0xC0) == 0x80) n--; /* not inside a character */
+        while(n > 0 && ((unsigned char)cm->msg[n] & 0xC0) == 0x80)
+            n--; /* not inside a character */
     }
     hub_chunk_lit(c, ",\"message\":");
     hub_chunk_json(c, cm->msg ? cm->msg : "", cm->msg ? n : 0);
@@ -298,8 +307,10 @@ static int ext_read_commit(Ext* e, const HubOid* oid, uint8_t** data, HubGitComm
     size_t size;
     int rc = hub_git_read(e->g, oid, &type, data, &size);
     if(rc != HUB_GIT_OK) return rc;
-    if(type != HUB_OBJ_COMMIT) rc = HUB_GIT_ERR_BADARG;
-    else rc = hub_git_parse_commit(*data, size, c);
+    if(type != HUB_OBJ_COMMIT)
+        rc = HUB_GIT_ERR_BADARG;
+    else
+        rc = hub_git_parse_commit(*data, size, c);
     if(rc != HUB_GIT_OK) {
         hub_git_free(*data);
         *data = NULL;
@@ -422,7 +433,9 @@ static void route_diff(Ext* e) {
         int rc = ext_first_parent(e, &head, &base, &has_base);
         if(rc != HUB_GIT_OK) return ext_err(e, rc);
     } else {
-        if(!ext_need(e, "base", e->p1, sizeof(e->p1)) || !ext_need(e, "head", e->p2, sizeof(e->p2))) return;
+        if(!ext_need(e, "base", e->p1, sizeof(e->p1)) ||
+           !ext_need(e, "head", e->p2, sizeof(e->p2)))
+            return;
         if(!ext_resolve(e, e->p1, &base) || !ext_resolve(e, e->p2, &head)) return;
     }
     int rc = hub_git_tree_of(e->g, &head, &tb);
@@ -440,9 +453,11 @@ static void route_diff(Ext* e) {
 /* ---------- compare ---------- */
 
 static void route_compare(Ext* e) {
-    if(!ext_open(e, EXT_MAX_OBJ, 30 * 1024)) return; /* host peak 23.2 KB (cap 500 arrays, Ext) +25 % */
+    if(!ext_open(e, EXT_MAX_OBJ, 30 * 1024))
+        return; /* host peak 23.2 KB (cap 500 arrays, Ext) +25 % */
     HubOid base, head;
-    if(!ext_need(e, "base", e->p1, sizeof(e->p1)) || !ext_need(e, "head", e->p2, sizeof(e->p2))) return;
+    if(!ext_need(e, "base", e->p1, sizeof(e->p1)) || !ext_need(e, "head", e->p2, sizeof(e->p2)))
+        return;
     if(!ext_resolve(e, e->p1, &base) || !ext_resolve(e, e->p2, &head)) return;
     HubGitCompare* c = calloc(1, sizeof(HubGitCompare));
     if(!c) return hub_send_error(e->r, 503, "low memory, try again");
@@ -456,7 +471,9 @@ static void route_compare(Ext* e) {
     HubChunk* ck = malloc(sizeof(HubChunk));
     HubGitCommit* cm = malloc(sizeof(HubGitCommit));
     FuriString* s = furi_string_alloc_set("{\"ok\":true,\"base\":");
-    if(!ck || !cm || !hub_chunk_begin(ck, e->r, "application/json", hub_cache_hdr(ext_both_ids(e) ? e->p1 : ""))) {
+    if(!ck || !cm ||
+       !hub_chunk_begin(
+           ck, e->r, "application/json", hub_cache_hdr(ext_both_ids(e) ? e->p1 : ""))) {
         if(!ck || !cm) hub_send_error(e->r, 503, "low memory, try again");
         furi_string_free(s);
         free(cm);
@@ -554,7 +571,11 @@ static void route_search(Ext* e) {
     int rc = hub_git_tree_of(e->g, &commit, &tree);
     if(rc != HUB_GIT_OK) return ext_err(e, rc);
 
-    SearchOut o = {.ck = malloc(sizeof(HubChunk)), .s = furi_string_alloc(), .start = furi_get_tick(), .first = true};
+    SearchOut o = {
+        .ck = malloc(sizeof(HubChunk)),
+        .s = furi_string_alloc(),
+        .start = furi_get_tick(),
+        .first = true};
     HubGitSearch* s = calloc(1, sizeof(HubGitSearch));
     if(!s || !o.ck || !hub_chunk_begin(o.ck, e->r, "application/json", NULL)) {
         if(!s || !o.ck) hub_send_error(e->r, 503, "low memory, try again");
@@ -645,7 +666,8 @@ static void route_commit_file(Ext* e) {
     if(q < 0) return;
     if(q == 0 || e->action[0] == '\0') strcpy(e->action, "put");
     bool del = strcmp(e->action, "delete") == 0;
-    if(!del && strcmp(e->action, "put") != 0) return hub_send_error(r, 400, "action must be put or delete");
+    if(!del && strcmp(e->action, "put") != 0)
+        return hub_send_error(r, 400, "action must be put or delete");
     q = ext_q(e, "new_branch", e->nbranch, sizeof(e->nbranch));
     if(q < 0) return;
     bool create = q == 1 && e->nbranch[0];
@@ -694,7 +716,17 @@ static void route_commit_file(Ext* e) {
     HubGwIdent who = {e->author, e->email, (int64_t)furi_hal_rtc_get_timestamp(), "+0000"};
     HubOid commit;
     rc = hub_git_commit_file(
-        e->g, &io, e->base, root ? NULL : &tip, e->p3, del ? NULL : body, blen, e->msg, &who, &commit, NULL);
+        e->g,
+        &io,
+        e->base,
+        root ? NULL : &tip,
+        e->p3,
+        del ? NULL : body,
+        blen,
+        e->msg,
+        &who,
+        &commit,
+        NULL);
     free(body);
     if(rc != HUB_GIT_OK) return ext_err(e, rc);
 
@@ -723,7 +755,8 @@ static bool merge_path(void* ctx, const char* path) {
 static void route_merge(Ext* e) {
     HubReq* r = e->r;
     if(!ext_open(e, EXT_MAX_OBJ, 35 * 1024)) return;
-    if(!ext_need(e, "base", e->p1, sizeof(e->p1)) || !ext_need(e, "head", e->p2, sizeof(e->p2))) return;
+    if(!ext_need(e, "base", e->p1, sizeof(e->p1)) || !ext_need(e, "head", e->p2, sizeof(e->p2)))
+        return;
     char* ref = e->ref;
     if(strncmp(e->p1, "refs/heads/", 11) == 0) {
         snprintf(ref, sizeof(e->ref), "%s", e->p1);
@@ -768,11 +801,24 @@ static void route_merge(Ext* e) {
         unsigned nconf = 0;
         hub_git_set_limit(e->g, EXT_MERGE_OBJ);
         rc = hub_git_merge_commits(
-            e->g, &io, e->base, &base, &head, has_mb ? &mb : NULL, e->msg, &who, &result, NULL, merge_path, paths, &nconf);
+            e->g,
+            &io,
+            e->base,
+            &base,
+            &head,
+            has_mb ? &mb : NULL,
+            e->msg,
+            &who,
+            &result,
+            NULL,
+            merge_path,
+            paths,
+            &nconf);
         hub_git_set_limit(e->g, EXT_MAX_OBJ);
         if(rc == HUB_GC_ERR_MERGE) {
             furi_string_cat_str(paths, "]");
-            FuriString* s = furi_string_alloc_set("{\"ok\":false,\"error\":\"conflict\",\"paths\":");
+            FuriString* s =
+                furi_string_alloc_set("{\"ok\":false,\"error\":\"conflict\",\"paths\":");
             furi_string_cat(s, paths);
             furi_string_push_back(s, '}');
             hub_send_json(r, 409, s);
@@ -798,7 +844,8 @@ static void route_merge(Ext* e) {
 
 #ifdef HUB_EXT_QUERY
 static void route_log(Ext* e) {
-    if(!ext_open(e, EXT_LOG_OBJ, 20 * 1024)) return; /* streamed: 8 KB object + 4.5 KB inflate + chunk + scratch */
+    if(!ext_open(e, EXT_LOG_OBJ, 20 * 1024))
+        return; /* streamed: 8 KB object + 4.5 KB inflate + chunk + scratch */
     HubReq* r = e->r;
     HubOid oid;
     int rc;
@@ -872,7 +919,8 @@ out:
 }
 
 static void route_commit(Ext* e) {
-    if(!ext_open(e, 16 * 1024, 28 * 1024)) return; /* 16 KB object + 4.5 KB inflate + chunk + scratch */
+    if(!ext_open(e, 16 * 1024, 28 * 1024))
+        return; /* 16 KB object + 4.5 KB inflate + chunk + scratch */
     HubOid oid;
     int rc;
     if(!ext_ref_param(e, "sha", "ref", &oid)) return;

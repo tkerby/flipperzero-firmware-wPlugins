@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mock Flipper Hub server for the git helper tests (follows docs/git-design.md).
+"""Mock Gitphin server for the git helper tests (follows docs/git-design.md).
 
 Usage: python3 pc/tests/mock_hub.py ROOT [--host 127.0.0.1] [--port 8099] [--verbose]
 

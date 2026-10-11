@@ -33,15 +33,17 @@
 #define HUB_INF_ERR_NOMEM (-4)
 #define HUB_INF_ERR_WRITE (-5) /* the write callback failed */
 #define HUB_INF_ERR_ADLER (-6) /* checksum mismatch (only with HUB_INF_ADLER) */
-#define HUB_INF_ERR_FAR   (-7) /* the stream declares a window bigger than the ring and no far callback was given (nothing was written) */
+#define HUB_INF_ERR_FAR \
+    (-7) /* the stream declares a window bigger than the ring and no far callback was given (nothing was written) */
 
 /* flags */
-#define HUB_INF_RAW     1 /* raw deflate: no zlib header and no trailer */
-#define HUB_INF_ADLER   2 /* check the Adler-32 trailer */
-#define HUB_INF_PARTIAL 4 /* buf mode: stop with success when the buffer is full.
+#define HUB_INF_RAW   1 /* raw deflate: no zlib header and no trailer */
+#define HUB_INF_ADLER 2 /* check the Adler-32 trailer */
+#define HUB_INF_PARTIAL \
+    4 /* buf mode: stop with success when the buffer is full.
                            * *in_used is not valid then. Used to read a header. */
 
-#define HUB_INF_RING    8192
+#define HUB_INF_RING 8192
 
 /* Read up to max bytes. Return the number of bytes, 0 at the end or on error. */
 typedef size_t (*HubInfRead)(void* ctx, uint8_t* buf, size_t max);

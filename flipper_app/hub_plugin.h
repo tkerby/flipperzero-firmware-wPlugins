@@ -18,7 +18,7 @@ typedef enum {
     HUB_PL_COUNT
 } HubPluginId;
 
-#define HUB_PLUGIN_APPID "flipper_hub_plugin"
+#define HUB_PLUGIN_APPID "gitphin_plugin"
 #define HUB_PLUGIN_API   1
 
 /* What a plugin offers (entry_point of its descriptor). */
@@ -33,11 +33,11 @@ typedef struct {
     __typeof__(hub_git_graph_update)* graph_update;
 } HubPluginPack;
 
-#define HUB_PLUGIN_ENTRY(epname, ops)                                      \
-    static const FlipperAppPluginDescriptor epname##_desc = {              \
+#define HUB_PLUGIN_ENTRY(epname, ops)                                                       \
+    static const FlipperAppPluginDescriptor epname##_desc = {                               \
         .appid = HUB_PLUGIN_APPID, .ep_api_version = HUB_PLUGIN_API, .entry_point = (ops)}; \
-    const FlipperAppPluginDescriptor* epname(void) {                       \
-        return &epname##_desc;                                             \
+    const FlipperAppPluginDescriptor* epname(void) {                                        \
+        return &epname##_desc;                                                              \
     }
 
 /* A WebDAV lock is a key hash and four random words (the token is rebuilt from

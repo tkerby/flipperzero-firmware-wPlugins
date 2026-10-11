@@ -22,11 +22,11 @@
 #define HUB_GW_TAG    4
 
 /* results (0 = ok) */
-#define HUB_GW_OK          0
-#define HUB_GW_ERR_IO      (-1)
-#define HUB_GW_ERR_NOMEM   (-2)
-#define HUB_GW_ERR_BADARG  (-3)
-#define HUB_GW_ERR_SIZE    (-4) /* streamed byte count differs from the size given */
+#define HUB_GW_OK         0
+#define HUB_GW_ERR_IO     (-1)
+#define HUB_GW_ERR_NOMEM  (-2)
+#define HUB_GW_ERR_BADARG (-3)
+#define HUB_GW_ERR_SIZE   (-4) /* streamed byte count differs from the size given */
 
 #define HUB_GW_REPO_MAX 190 /* longest repo path */
 
@@ -85,7 +85,7 @@ bool hub_gitwrite_unhex(const char* hex, uint8_t id[20]);
 
 typedef struct {
     const char* name; /* one path segment: no "/", not empty, not ".", ".." or ".git" */
-    uint32_t mode;    /* HUB_GW_MODE_* */
+    uint32_t mode; /* HUB_GW_MODE_* */
     uint8_t id[20];
 } HubGitTreeEnt;
 
@@ -100,18 +100,27 @@ uint8_t* hub_gitwrite_tree_build(HubGitTreeEnt* ents, size_t n, size_t* len);
 /* git's tree order for two entry names (a tree counts as if its name ended
  * with "/"): < 0, 0 or > 0. Names are given with their length. */
 int hub_gitwrite_ent_cmp(
-    const char* an, size_t al, bool a_tree, const char* bn, size_t bl, bool b_tree);
+    const char* an,
+    size_t al,
+    bool a_tree,
+    const char* bn,
+    size_t bl,
+    bool b_tree);
 /* Append one raw tree entry "<octal mode> <name>\0<20 bytes>" at out.
  * Returns the bytes written (at most 8 + nlen + 21). */
 size_t hub_gitwrite_ent_put(
-    uint8_t* out, uint32_t mode, const char* name, size_t nlen, const uint8_t id[20]);
+    uint8_t* out,
+    uint32_t mode,
+    const char* name,
+    size_t nlen,
+    const uint8_t id[20]);
 
 /* ---------- commit ---------- */
 
 typedef struct {
     const char* name;
     const char* email;
-    int64_t time;   /* Unix seconds, not negative */
+    int64_t time; /* Unix seconds, not negative */
     const char* tz; /* "+0000" style; NULL means "+0000" */
 } HubGwIdent;
 

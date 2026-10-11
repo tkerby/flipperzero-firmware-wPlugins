@@ -9,7 +9,7 @@
 typedef struct {
     uint32_t h[5];
     uint64_t len; /* bytes hashed */
-    uint32_t n;   /* bytes in buf */
+    uint32_t n; /* bytes in buf */
     uint8_t buf[64];
 } HubSha1;
 

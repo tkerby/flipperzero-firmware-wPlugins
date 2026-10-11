@@ -14,41 +14,41 @@
 
 #include "hub_gitobj.h"
 
-#define HUB_GS_QUERY_MAX 100
-#define HUB_GS_TEXT_MAX  200
+#define HUB_GS_QUERY_MAX    100
+#define HUB_GS_TEXT_MAX     200
 #define HUB_GS_BINARY_PROBE 8000
-#define HUB_GS_MAX_DEPTH 40
-#define HUB_GS_PATH_MAX  300
+#define HUB_GS_MAX_DEPTH    40
+#define HUB_GS_PATH_MAX     300
 
 typedef struct {
     const char* path; /* valid during the callback only */
-    uint32_t line;    /* 1-based; 0 = the file name matched */
+    uint32_t line; /* 1-based; 0 = the file name matched */
     const char* text; /* the line without "\n" (cut to HUB_GS_TEXT_MAX), "" for a name hit */
     size_t text_len;
-    bool cut;         /* the line was longer than text_len */
+    bool cut; /* the line was longer than text_len */
 } HubGitHit;
 
 typedef bool (*HubGitHitCb)(void* ctx, const HubGitHit* hit); /* false = stop */
-typedef bool (*HubGitStopCb)(void* ctx);                      /* true = stop (time budget) */
+typedef bool (*HubGitStopCb)(void* ctx); /* true = stop (time budget) */
 
 typedef struct {
     /* in */
-    const char* query;     /* 1..HUB_GS_QUERY_MAX bytes */
-    size_t max_hits;       /* 0 = no limit */
-    size_t max_blob;       /* blobs bigger than this are not scanned (0 = no limit) */
-    bool no_names;         /* set to turn name matching off */
-    bool no_content;       /* set to turn content matching off */
+    const char* query; /* 1..HUB_GS_QUERY_MAX bytes */
+    size_t max_hits; /* 0 = no limit */
+    size_t max_blob; /* blobs bigger than this are not scanned (0 = no limit) */
+    bool no_names; /* set to turn name matching off */
+    bool no_content; /* set to turn content matching off */
     HubGitHitCb on_hit;
     void* hit_ctx;
     HubGitStopCb should_stop; /* may be NULL; asked before each blob and each chunk */
     void* stop_ctx;
     /* out */
     size_t hits;
-    uint32_t scanned;      /* blobs whose content was read */
-    uint32_t skipped;      /* regular files not scanned (too big) */
-    uint32_t binary;       /* blobs found to be binary */
-    bool truncated;        /* stopped early: max_hits, budget or the callback */
-    bool timed_out;        /* should_stop said so */
+    uint32_t scanned; /* blobs whose content was read */
+    uint32_t skipped; /* regular files not scanned (too big) */
+    uint32_t binary; /* blobs found to be binary */
+    bool truncated; /* stopped early: max_hits, budget or the callback */
+    bool timed_out; /* should_stop said so */
 } HubGitSearch;
 
 /* Search below a tree. Returns 0 or a HUB_GIT_ERR_* code. A stop (max_hits,

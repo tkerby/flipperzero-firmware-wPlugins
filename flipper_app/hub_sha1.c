@@ -90,7 +90,8 @@ void hub_sha1_final(HubSha1* s, uint8_t out[20]) {
         s->n = 0;
     }
     memset(s->buf + s->n, 0, 56 - s->n);
-    for(int i = 0; i < 8; i++) s->buf[56 + i] = (uint8_t)(bits >> (56 - 8 * i));
+    for(int i = 0; i < 8; i++)
+        s->buf[56 + i] = (uint8_t)(bits >> (56 - 8 * i));
     sha1_block(s->h, s->buf);
     for(int i = 0; i < 5; i++) {
         out[4 * i] = (uint8_t)(s->h[i] >> 24);

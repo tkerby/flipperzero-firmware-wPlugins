@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Flipper Hub Git: remote helper (git-remote-flipper) and CLI (git flipper).
+"""Gitphin: Git remote helper (git-remote-flipper) and CLI (git flipper).
 
 Usage: git remote add origin flipper://<name>     then git push / fetch / clone as usual
        git flipper list
@@ -9,7 +9,7 @@ Usage: git remote add origin flipper://<name>     then git push / fetch / clone 
        git flipper describe <name> <text>
        git flipper url <name>
        git flipper gc <name>
-Env:   FLIPPER_HUB_URL  server base URL (default http://127.0.0.1:8080)
+Env:   GITPHIN_URL      server base URL (default http://127.0.0.1:8080; FLIPPER_HUB_URL also works)
 
 One script, two names (install.sh makes the links). The name it runs under
 picks the mode: git-remote-flipper speaks the remote helper protocol on
@@ -82,7 +82,7 @@ class Hub:
     """Plain HTTP client for the Flipper server (or the mock)."""
 
     def __init__(self, base=None):
-        base = base or os.environ.get("FLIPPER_HUB_URL") or DEFAULT_URL
+        base = base or os.environ.get("GITPHIN_URL") or os.environ.get("FLIPPER_HUB_URL") or DEFAULT_URL
         parts = urlsplit(base if "//" in base else "http://" + base)
         self.host = parts.hostname or "127.0.0.1"
         self.port = parts.port or 80

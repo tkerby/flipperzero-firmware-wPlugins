@@ -8,10 +8,10 @@
 #include <string.h>
 #include "hub_mem.h"
 
-#define GB_TODO   128 /* ids waiting (pending + ref tips) */
-#define GB_DEPTH  8   /* folder depth below refs/ */
-#define GB_PATH   (HUB_GIT_PATH_MAX + HUB_GIT_REF_MAX + 16)
-#define GB_CHUNK  16  /* old records per read while merging */
+#define GB_TODO  128 /* ids waiting (pending + ref tips) */
+#define GB_DEPTH 8 /* folder depth below refs/ */
+#define GB_PATH  (HUB_GIT_PATH_MAX + HUB_GIT_REF_MAX + 16)
+#define GB_CHUNK 16 /* old records per read while merging */
 
 typedef struct {
     HubGit* g;
@@ -81,7 +81,8 @@ static void todo_more_parents(GB* c, const HubOid* id) {
     const char* end = p + size;
     unsigned seen = 0;
     char hex[41];
-    while(p < end && *p != '\n') p++; /* the tree line */
+    while(p < end && *p != '\n')
+        p++; /* the tree line */
     while(end - p > 48 && memcmp(p + 1, "parent ", 7) == 0) {
         p++;
         if(++seen > HUB_GIT_MAX_PARENTS) {
@@ -158,7 +159,8 @@ static void tips_packed(GB* c) {
     while((n = hub_gitio_read(f, b, sizeof b)) > 0) {
         for(size_t i = 0; i < n; i++) {
             if(b[i] == '\n') {
-                if(!skip && ll >= 41 && line[0] != '#' && line[0] != '^' && line[40] == ' ') tip_add(c, line);
+                if(!skip && ll >= 41 && line[0] != '#' && line[0] != '^' && line[40] == ' ')
+                    tip_add(c, line);
                 ll = 0;
                 skip = false;
             } else if(ll < sizeof line) {
@@ -228,13 +230,15 @@ static int graph_write(GB* c) {
             if(of) hub_gitio_close(of);
             return HUB_GIT_ERR_IO;
         }
-        for(unsigned i = 0; i < 256; i++) fan[i] = rd32(fb + 4 * i);
+        for(unsigned i = 0; i < 256; i++)
+            fan[i] = rd32(fb + 4 * i);
     }
     /* new cumulative fanout */
     {
         unsigned k = 0;
         for(unsigned b = 0; b < 256; b++) {
-            while(k < c->nnews && c->news[k][0] <= b) k++;
+            while(k < c->nnews && c->news[k][0] <= b)
+                k++;
             fan[b] += k;
         }
     }
@@ -255,7 +259,8 @@ static int graph_write(GB* c) {
     ok = hub_gitio_write(nf, h, sizeof h) == sizeof h;
     uint8_t fb[4 * 32];
     for(unsigned b = 0; b < 256 && ok; b += 32) {
-        for(unsigned j = 0; j < 32; j++) wr32(fb + 4 * j, fan[b + j]);
+        for(unsigned j = 0; j < 32; j++)
+            wr32(fb + 4 * j, fan[b + j]);
         ok = hub_gitio_write(nf, fb, sizeof fb) == sizeof fb;
     }
     /* merge the old records (in chunks) with the sorted new ones */
@@ -266,7 +271,8 @@ static int graph_write(GB* c) {
         if(oi < oc) {
             if(buf_at == in_buf) {
                 uint32_t k = oc - oi < GB_CHUNK ? oc - oi : GB_CHUNK;
-                if(hub_gitio_read(of, c->buf, (size_t)k * HUB_GRAPH_REC) != (size_t)k * HUB_GRAPH_REC) {
+                if(hub_gitio_read(of, c->buf, (size_t)k * HUB_GRAPH_REC) !=
+                   (size_t)k * HUB_GRAPH_REC) {
                     ok = false;
                     break;
                 }
@@ -287,7 +293,8 @@ static int graph_write(GB* c) {
         }
         ok = hub_gitio_write(nf, take, HUB_GRAPH_REC) == HUB_GRAPH_REC;
     }
-    for(unsigned i = 0; i < c->ntodo && ok; i++) ok = hub_gitio_write(nf, c->todo[i].b, 20) == 20;
+    for(unsigned i = 0; i < c->ntodo && ok; i++)
+        ok = hub_gitio_write(nf, c->todo[i].b, 20) == 20;
     hub_gitio_close(nf);
     if(of) hub_gitio_close(of);
     if(ok) {
@@ -301,7 +308,11 @@ static int graph_write(GB* c) {
 /* ---------- the slice ---------- */
 
 int hub_git_graph_update(
-    void* io, const char* repo, HubGitPackStop stop, void* ctx, HubGitGraphResult* res) {
+    void* io,
+    const char* repo,
+    HubGitPackStop stop,
+    void* ctx,
+    HubGitGraphResult* res) {
     memset(res, 0, sizeof *res);
     if(strlen(repo) > HUB_GIT_PATH_MAX - 40) return HUB_GIT_ERR_BADARG;
     GB* c = calloc(1, sizeof(GB));
@@ -333,7 +344,8 @@ int hub_git_graph_update(
         news_find(c, id.b, &found);
         if(found) continue;
         int r = hub_git_commit_meta(c->g, &id, m);
-        if(r == HUB_GIT_ERR_CORRUPT || r == HUB_GIT_ERR_NOTFOUND || r == HUB_GIT_ERR_TOOLARGE) continue;
+        if(r == HUB_GIT_ERR_CORRUPT || r == HUB_GIT_ERR_NOTFOUND || r == HUB_GIT_ERR_TOOLARGE)
+            continue;
         if(r != HUB_GIT_OK) {
             rc = r;
             break;
@@ -348,7 +360,8 @@ int hub_git_graph_update(
         wr32(rec + 20, m->time);
         if(np > 0) memcpy(rec + 24, m->parent[0].b, 20);
         if(np > 1) memcpy(rec + 44, m->parent[1].b, 20);
-        wr32(rec + 64, (m->nparents > 2 ? 1u : 0u) | (m->nparents > 255 ? 255u : m->nparents) << 8);
+        wr32(
+            rec + 64, (m->nparents > 2 ? 1u : 0u) | (m->nparents > 255 ? 255u : m->nparents) << 8);
         c->nnews++;
         for(unsigned j = 0; j < np; j++) {
             news_find(c, m->parent[j].b, &found);

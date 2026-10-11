@@ -9,18 +9,18 @@
  * The PC git does all the object work; here we only store files.
  * One user: locks are bookkeeping only (not enforced), kept in RAM, they expire. */
 
-#define DAV_NAME_MAX   64
-#define DAV_REST_MAX   150
-#define DAV_PATH_MAX   320
-#define DAV_LOCK_SECS  600
-#define DAV_FLUSH_AT   1024
+#define DAV_NAME_MAX  64
+#define DAV_REST_MAX  150
+#define DAV_PATH_MAX  320
+#define DAV_LOCK_SECS 600
+#define DAV_FLUSH_AT  1024
 
 typedef struct {
     char name[DAV_NAME_MAX + 1];
     char rest[DAV_REST_MAX + 1]; /* no leading or trailing "/", may be empty */
-    bool trailing;               /* the URL ended with "/" */
+    bool trailing; /* the URL ended with "/" */
     char base[DAV_NAME_MAX + 24];
-    char path[DAV_PATH_MAX];  /* file system path of rest */
+    char path[DAV_PATH_MAX]; /* file system path of rest */
     char path2[DAV_PATH_MAX + 8]; /* MOVE target, or scratch */
 } Dav;
 
@@ -45,15 +45,18 @@ static uint32_t dav_now(void) {
 
 static uint32_t dav_name_hash(const char* name) {
     uint32_t h = 2166136261u;
-    for(const char* p = name; *p; p++) h = (h ^ (uint8_t)*p) * 16777619u;
+    for(const char* p = name; *p; p++)
+        h = (h ^ (uint8_t)*p) * 16777619u;
     return h;
 }
 
 static uint32_t dav_hash(const char* name, const char* rest) {
     uint32_t h = 2166136261u;
-    for(const char* p = name; *p; p++) h = (h ^ (uint8_t)*p) * 16777619u;
+    for(const char* p = name; *p; p++)
+        h = (h ^ (uint8_t)*p) * 16777619u;
     h = (h ^ '/') * 16777619u;
-    for(const char* p = rest; *p; p++) h = (h ^ (uint8_t)*p) * 16777619u;
+    for(const char* p = rest; *p; p++)
+        h = (h ^ (uint8_t)*p) * 16777619u;
     return h;
 }
 
@@ -99,7 +102,8 @@ static bool dav_in(const Dav* d, const char* dir) {
 /* ---------- small helpers ---------- */
 
 /* Answer with no body (or a short one). */
-static void dav_reply(HubReq* r, int code, const char* ctype, const char* body, const char* extra) {
+static void
+    dav_reply(HubReq* r, int code, const char* ctype, const char* body, const char* extra) {
     size_t len = body ? strlen(body) : 0;
     if(hub_send_head(r, code, ctype ? ctype : "text/plain", len, extra) && len) {
         hub_conn_write(r->t, body, len);
@@ -209,7 +213,9 @@ static void dav_entry(
     furi_string_cat_str(s, "</D:href><D:propstat><D:prop><D:resourcetype>");
     if(is_dir) furi_string_cat_str(s, "<D:collection/>");
     furi_string_cat_str(s, "</D:resourcetype>");
-    if(!is_dir) furi_string_cat_printf(s, "<D:getcontentlength>%lu</D:getcontentlength>", (unsigned long)size);
+    if(!is_dir)
+        furi_string_cat_printf(
+            s, "<D:getcontentlength>%lu</D:getcontentlength>", (unsigned long)size);
     if(full) {
         furi_string_cat_str(
             s,
@@ -217,11 +223,13 @@ static void dav_entry(
             "<D:locktype><D:write/></D:locktype></D:lockentry></D:supportedlock>"
             "<D:lockdiscovery/>");
     }
-    furi_string_cat_str(s, "</D:prop><D:status>HTTP/1.1 200 OK</D:status></D:propstat></D:response>\n");
+    furi_string_cat_str(
+        s, "</D:prop><D:status>HTTP/1.1 200 OK</D:status></D:propstat></D:response>\n");
     sink_end_chunk(k, s);
 }
 
-static void dav_propfind_body(HubReq* r, const Dav* d, bool is_dir, uint64_t size, bool depth1, Sink* k) {
+static void
+    dav_propfind_body(HubReq* r, const Dav* d, bool is_dir, uint64_t size, bool depth1, Sink* k) {
     FuriString* s = furi_string_alloc_set("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                           "<D:multistatus xmlns:D=\"DAV:\">\n");
     sink_end_chunk(k, s);
@@ -377,7 +385,8 @@ static void dav_put(HubReq* r, Dav* d) {
     const char* tmp = replace ? d->path2 : d->path;
     if(!write_ok || r->body_read != r->content_length) {
         storage_common_remove(r->storage, tmp);
-        dav_reply(r, write_ok ? 400 : 500, NULL, write_ok ? "upload was cut off" : "write failed", NULL);
+        dav_reply(
+            r, write_ok ? 400 : 500, NULL, write_ok ? "upload was cut off" : "write failed", NULL);
         return;
     }
     if(replace) {
@@ -491,7 +500,8 @@ static void dav_move(HubReq* r, Dav* d) {
 static DavLock* dav_lock_find(uint32_t key) {
     uint32_t now = dav_now();
     for(size_t i = 0; i < DAV_LOCKS; i++) {
-        if(dav_locks[i].used && (int32_t)(dav_locks[i].expires - now) <= 0) dav_locks[i].used = false;
+        if(dav_locks[i].used && (int32_t)(dav_locks[i].expires - now) <= 0)
+            dav_locks[i].used = false;
         if(dav_locks[i].used && dav_locks[i].key == key) return &dav_locks[i];
     }
     return NULL;
@@ -513,7 +523,8 @@ static void dav_lock(HubReq* r, Dav* d) {
             }
             if(!l) l = &dav_locks[0]; /* table full: reuse a slot */
         }
-        for(size_t i = 0; i < 4; i++) l->tok[i] = furi_hal_random_get();
+        for(size_t i = 0; i < 4; i++)
+            l->tok[i] = furi_hal_random_get();
         l->key = key;
         l->repo = dav_name_hash(d->name);
         l->used = true;
@@ -532,7 +543,8 @@ static void dav_lock(HubReq* r, Dav* d) {
         "</D:activelock></D:lockdiscovery></D:prop>\n",
         DAV_LOCK_SECS,
         token);
-    dav_reply(r, 200, "text/xml; charset=utf-8", furi_string_get_cstr(body), furi_string_get_cstr(extra));
+    dav_reply(
+        r, 200, "text/xml; charset=utf-8", furi_string_get_cstr(body), furi_string_get_cstr(extra));
     furi_string_free(body);
     furi_string_free(extra);
 }
@@ -553,9 +565,9 @@ static void dav_unlock(HubReq* r, Dav* d) {
 
 bool hub_dav_route(HubReq* r) {
     const char* m = r->method;
-    bool known = !strcmp(m, "OPTIONS") || !strcmp(m, "HEAD") || !strcmp(m, "PROPFIND") || !strcmp(m, "MKCOL") ||
-                 !strcmp(m, "PUT") || !strcmp(m, "MOVE") || !strcmp(m, "DELETE") ||
-                 !strcmp(m, "LOCK") || !strcmp(m, "UNLOCK");
+    bool known = !strcmp(m, "OPTIONS") || !strcmp(m, "HEAD") || !strcmp(m, "PROPFIND") ||
+                 !strcmp(m, "MKCOL") || !strcmp(m, "PUT") || !strcmp(m, "MOVE") ||
+                 !strcmp(m, "DELETE") || !strcmp(m, "LOCK") || !strcmp(m, "UNLOCK");
     if(!known) return false;
 
     Dav* d = malloc(sizeof(Dav));

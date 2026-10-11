@@ -5,9 +5,9 @@
 #
 # Install it to a root-owned path and allow exactly that path, so the rule
 # cannot be abused by editing the script:
-#   sudo install -m 755 -o root -g root wifi_psk.sh /usr/local/sbin/flipper-hub-wifi-psk
-#   echo '<user> ALL=(root) NOPASSWD: /usr/local/sbin/flipper-hub-wifi-psk' \
-#     | sudo tee /etc/sudoers.d/flipper-hub-wifi && sudo chmod 440 /etc/sudoers.d/flipper-hub-wifi
+#   sudo install -m 755 -o root -g root wifi_psk.sh /usr/local/sbin/gitphin-wifi-psk
+#   echo '<user> ALL=(root) NOPASSWD: /usr/local/sbin/gitphin-wifi-psk' \
+#     | sudo tee /etc/sudoers.d/gitphin-wifi && sudo chmod 440 /etc/sudoers.d/gitphin-wifi
 set -euo pipefail
 
 conn="${1:-}"

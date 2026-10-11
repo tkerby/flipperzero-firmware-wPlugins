@@ -1002,6 +1002,13 @@ static void test_refs(HubGit* g) {
             rest += 1;
         }
         sscanf(rest, "%15s %127[^\n]", ty, tagger);
+        /* %(*objectname) peels one level only in older git (2.43); a tag of a tag must
+         * resolve to the final object, so ask rev-parse for the full peel. */
+        if(!strcmp(ty, "tag")) {
+            char* full = git_out("rev-parse '%s^{}'", name);
+            snprintf(peeled, sizeof peeled, "%.40s", full);
+            free(full);
+        }
         HubOid o;
         int e = hub_git_ref_read(g, name, &o);
         char hex[41];

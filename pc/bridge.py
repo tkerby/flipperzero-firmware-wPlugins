@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Flipper Hub bridge: http://localhost:8080 <-> HTTP server on the Flipper.
+"""Gitphin bridge: http://localhost:8080 <-> HTTP server on the Flipper.
 
 Usage: .venv/bin/python -I pc/bridge.py [--port 8080] [--open-browser]
 
-The HTTP server runs on the Flipper (Apps > Tools > Flipper Hub). This bridge:
+The HTTP server runs on the Flipper (Apps > Tools > Gitphin). This bridge:
   1. starts the Flipper app through the CLI port when the Flipper is plugged in,
   2. carries each TCP connection as frames over the app's USB serial channel,
   3. answers the PC-side /pc/* routes itself (Collector tab), using collector.py.
@@ -31,7 +31,7 @@ import collector  # noqa: E402
 
 CLI_GLOB = "/dev/serial/by-id/usb-Flipper_Devices_Inc.*-if00"
 HUB_GLOB = "/dev/serial/by-id/usb-Flipper_Devices_Inc.*-if02"
-APP_PATH = "/ext/apps/Tools/flipper_hub.fap"
+APP_PATH = "/ext/apps/Tools/gitphin.fap"
 
 UNPLUG_GRACE_S = 5.0  # USB re-enumerates when the app starts or stops
 STUCK_S = 180.0  # app port present but no PONG for this long: recover
@@ -45,7 +45,7 @@ MAX_PAYLOAD = 1024
 
 
 def log(msg):
-    print(f"[flipper-hub] {msg}", file=sys.stderr, flush=True)
+    print(f"[gitphin] {msg}", file=sys.stderr, flush=True)
 
 
 def frame(ftype, payload=b""):
@@ -335,7 +335,7 @@ def recover(cli_path):
 
 def notify(url, open_browser):
     if shutil.which("notify-send"):
-        subprocess.Popen(["notify-send", "-a", "Flipper Hub", "Flipper Hub", f"Open {url}"])
+        subprocess.Popen(["notify-send", "-a", "Gitphin", "Gitphin", f"Open {url}"])
     if open_browser and shutil.which("xdg-open"):
         subprocess.Popen(["xdg-open", url])
 
@@ -393,7 +393,7 @@ def main():
                 next_try = now + 3.0
         except (serial.SerialException, OSError) as e:
             if getattr(e, "errno", None) == 13:
-                PROBLEM = "no permission for the serial port: install systemd/70-flipper-hub.rules (see README)"
+                PROBLEM = "no permission for the serial port: install systemd/70-gitphin.rules (see README)"
                 log(PROBLEM)
                 next_try = now + 5.0
             else:
