@@ -7,7 +7,7 @@
 #include <toolbox/version.h>
 #include "hub_mem.h"
 
-#define HUB_INDEX_PATH   EXT_PATH("apps_assets/flipper_hub/index.html")
+#define HUB_INDEX_PATH   EXT_PATH("apps_assets/gitphin/index.html")
 
 /* ---------- small helpers ---------- */
 
@@ -569,9 +569,9 @@ static void hub_route_index(HubReq* r) {
         return;
     }
     static const char page[] =
-        "<!doctype html><meta charset=utf-8><title>Flipper Hub</title>"
-        "<h1>Flipper Hub</h1><p>The server runs, but the web page is missing. "
-        "Install the app again with <code>ufbt launch</code> to copy it to the SD card.</p>"
+        "<!doctype html><meta charset=utf-8><title>Gitphin</title>"
+        "<h1>Gitphin</h1><p>The server runs, but the web page is missing. "
+        "Install <code>gitphin.fap</code> again: the app unpacks the page to the SD card on start.</p>"
         "<p>The API works: <a href=/api/info>/api/info</a></p>";
     hub_send_body(r, 200, "text/html; charset=utf-8", page, sizeof(page) - 1);
 }

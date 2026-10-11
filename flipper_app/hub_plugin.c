@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include "hub_mem.h"
 
-#define PL_DIR     "/ext/apps_data/flipper_hub/plugins/"
+#define PL_DIR     "/ext/apps_assets/gitphin/plugins/"
 #define PL_IDLE_MS 5000
 
 /* mem: size of the loaded plugin (text + data + bss + loader work), bytes.
@@ -140,7 +140,7 @@ const void* hub_plugin_use(HubPluginId id, HubReq* r) {
             return pl_ops;
         }
         hub_plugin_unload();
-        FURI_LOG_E("FlipperHub", "cannot load %s", path);
+        FURI_LOG_E("Gitphin", "cannot load %s", path);
         if(r) hub_send_error(r, 500, "plugin missing or does not fit, install the app again");
         return NULL;
     }

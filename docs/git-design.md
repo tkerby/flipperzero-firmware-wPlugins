@@ -1,4 +1,4 @@
-# Flipper Hub Git – design (phases 1 and 2)
+# Gitphin – design (phases 1 and 2)
 
 Goal: Gitea-like repository hosting on the Flipper. The Flipper stores bare
 repositories on the SD card and serves them; all Git logic that needs real
@@ -59,7 +59,8 @@ Generated files:
 ## Phase 1 – PC helper
 
 `pc/git-remote-flipper` (Python 3 stdlib only). Remote URL: `flipper://<name>`.
-Server base URL from env `FLIPPER_HUB_URL` (default `http://127.0.0.1:8080`).
+Server base URL from env `GITPHIN_URL` (default `http://127.0.0.1:8080`; the old
+`FLIPPER_HUB_URL` also works).
 `git flipper ...` is the same script installed as `git-flipper`.
 
 Remote helper protocol (see `man gitremote-helpers`), capabilities
@@ -356,16 +357,18 @@ the 8 KB reserve. Object-size-dependent routes keep room for a 16 KB object.
 
 ### Plugins
 
-The core (`flipper_hub.fap`, about 43 KB of code) holds the HTTP server, the
+The core (`gitphin.fap`, about 43 KB of code) holds the HTTP server, the
 transport, the object reader, the repo/ref routes and the browse routes. The
-rest is loaded on demand from `/ext/apps_data/flipper_hub/plugins/*.fal`, one
+rest is loaded on demand from `/ext/apps_assets/gitphin/plugins/*.fal`, one
 at a time (`hub_plugin.c`): `hub_pl_dav` (WebDAV push), `hub_pl_pack` (pack,
 merge), `hub_pl_write` (commit-file, merge), `hub_pl_query` (diff, compare,
 search), `hub_pl_doc` (documents). A plugin stays loaded until another is
 needed or 5 s pass without use. The load is guarded: the largest free block
 must hold the plugin and its job plus the reserve, else 503. WebDAV locks live
 in the core so they survive an unload. The core API for plugins is the list in
-`hub_api_table.inc`.
+`hub_api_table.inc`. The plugins are embedded in the `.fap` (`fal_embedded` in
+`application.fam`); the firmware unpacks them with the web page when the app
+starts, so the one `.fap` file is the whole app (as the Apps Catalog needs).
 
 ### Storage
 
@@ -379,7 +382,7 @@ in the core so they survive an unload. The core API for plugins is the list in
 ### Deploying and recovery (lessons from two freezes, 2026-10-11)
 
 - **One app launcher at a time.** Stop the bridge (`systemctl --user stop
-  flipper-hub.path flipper-hub.service`) before `ufbt launch`, start it again
+  gitphin.path gitphin.service`) before `ufbt launch`, start it again
   after. The bridge's auto-start and `ufbt launch` racing each other froze the
   loader.
 - **Never `loader close` (or Back) an app whose worker may be busy.** The app

@@ -1,18 +1,23 @@
 App(
-    appid="flipper_hub",
+    appid="gitphin",
     name="Gitphin",
     apptype=FlipperAppType.EXTERNAL,
-    entry_point="flipper_hub_app",
+    entry_point="gitphin_app",
     stack_size=2 * 1024,
     fap_category="Tools",
-    fap_version="0.1",
+    fap_version="1.0",
     fap_icon="gitphin_10.png",
-    fap_description="Gitphin: Git hosting in your pocket, reachable from the PC over USB",
+    fap_description="Git hosting in your pocket: a Git server and web UI for your repos, used from the PC over USB",
+    fap_author="Adhamura",
+    fap_weburl="https://github.com/Adhamura/Gitphin",
     fap_file_assets="files",
+    targets=["f7"],
     # The resident core. Everything else is a plugin (.fal) that the core loads
-    # on demand, one at a time (hub_plugin.c).
+    # on demand, one at a time (hub_plugin.c). The plugins are embedded in the
+    # .fap (fal_embedded) and unpacked to apps_assets/gitphin/plugins/ on start,
+    # so the single .fap is the whole app.
     sources=[
-        "flipper_hub.c",
+        "gitphin.c",
         "hub_http.c",
         "hub_chunk.c",
         "hub_transport.c",
@@ -30,7 +35,8 @@ App(
     appid="hub_pl_dav",
     apptype=FlipperAppType.PLUGIN,
     entry_point="hub_pl_dav_ep",
-    requires=["flipper_hub"],
+    requires=["gitphin"],
+    fal_embedded=True,
     sources=["hub_dav.c"],
 )
 
@@ -38,7 +44,8 @@ App(
     appid="hub_pl_pack",
     apptype=FlipperAppType.PLUGIN,
     entry_point="hub_pl_pack_ep",
-    requires=["flipper_hub"],
+    requires=["gitphin"],
+    fal_embedded=True,
     sources=["hub_plugin_pack.c", "hub_gitpack.c", "hub_gitgraph.c", "hub_deflate.c", "hub_sha1.c", "hub_gitdocutil.c"],
 )
 
@@ -46,7 +53,8 @@ App(
     appid="hub_pl_write",
     apptype=FlipperAppType.PLUGIN,
     entry_point="hub_pl_write_ep",
-    requires=["flipper_hub"],
+    requires=["gitphin"],
+    fal_embedded=True,
     cdefines=["HUB_EXT_WRITE"],
     sources=[
         "hub_gitext.c",
@@ -62,7 +70,8 @@ App(
     appid="hub_pl_query",
     apptype=FlipperAppType.PLUGIN,
     entry_point="hub_pl_query_ep",
-    requires=["flipper_hub"],
+    requires=["gitphin"],
+    fal_embedded=True,
     cdefines=["HUB_EXT_QUERY"],
     sources=["hub_gitext.c", "hub_gitdiff.c", "hub_gitsearch.c"],
 )
@@ -71,6 +80,7 @@ App(
     appid="hub_pl_doc",
     apptype=FlipperAppType.PLUGIN,
     entry_point="hub_pl_doc_ep",
-    requires=["flipper_hub"],
+    requires=["gitphin"],
+    fal_embedded=True,
     sources=["hub_gitdoc.c", "hub_gitdocutil.c"],
 )

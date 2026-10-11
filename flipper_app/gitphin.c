@@ -20,7 +20,7 @@ typedef struct {
     uint32_t last_beat;
     uint32_t frames; /* redraw counter */
     uint8_t spin;
-} FlipperHub;
+} GitphinApp;
 
 /* 8-dot spinner around (cx, cy): bright head, two trail dots. */
 static void hub_draw_spinner(Canvas* canvas, int cx, int cy, uint8_t pos) {
@@ -33,7 +33,7 @@ static void hub_draw_spinner(Canvas* canvas, int cx, int cy, uint8_t pos) {
 
 /* The worker owns the transport: CDC callbacks wake the thread that made it. */
 static int32_t hub_worker(void* ctx) {
-    FlipperHub* hub = ctx;
+    GitphinApp* hub = ctx;
     Storage* storage = furi_record_open(RECORD_STORAGE);
     HubTransport* t = hub_transport_alloc();
     hub->usb_ready = true;
@@ -102,7 +102,7 @@ static void hub_bar(Canvas* c, int y, int h, uint32_t done, uint32_t total, uint
  *   transfer: bar y27..34, thin bar y37..39, "N obj, X KB" + rate 48, route 58
  */
 static void hub_draw(Canvas* canvas, void* ctx) {
-    FlipperHub* hub = ctx;
+    GitphinApp* hub = ctx;
 
     uint32_t requests;
     char last[sizeof(hub->stats.last)];
@@ -126,7 +126,7 @@ static void hub_draw(Canvas* canvas, void* ctx) {
     } /* no new beat: the spinner stays where it is */
     hub->frames++;
     static bool stuck_logged;
-    if(stuck && !stuck_logged) FURI_LOG_E("FlipperHub", "worker stuck: no heartbeat for %lu s", (unsigned long)(age / 1000));
+    if(stuck && !stuck_logged) FURI_LOG_E("Gitphin", "worker stuck: no heartbeat for %lu s", (unsigned long)(age / 1000));
     stuck_logged = stuck;
 
     /* progress snapshot (the worker writes it without a lock) */
@@ -227,12 +227,12 @@ static bool hub_signal(uint32_t signal, void* arg, void* ctx) {
     return true;
 }
 
-int32_t flipper_hub_app(void* p) {
+int32_t gitphin_app(void* p) {
     UNUSED(p);
 
-    FlipperHub* hub = malloc(sizeof(FlipperHub));
+    GitphinApp* hub = malloc(sizeof(GitphinApp));
     if(!hub) return 0; /* not enough memory to start */
-    memset(hub, 0, sizeof(FlipperHub));
+    memset(hub, 0, sizeof(GitphinApp));
     hub->stats.lock = furi_mutex_alloc(FuriMutexTypeNormal);
     hub->running = true;
 
@@ -244,7 +244,7 @@ int32_t flipper_hub_app(void* p) {
     gui_add_view_port(gui, view_port, GuiLayerFullscreen);
     furi_thread_set_signal_callback(furi_thread_get_current(), hub_signal, queue);
 
-    FuriThread* worker = furi_thread_alloc_ex("FlipperHubWorker", 4 * 1024, hub_worker, hub);
+    FuriThread* worker = furi_thread_alloc_ex("GitphinWorker", 4 * 1024, hub_worker, hub);
     furi_thread_start(worker);
 
     InputEvent event;

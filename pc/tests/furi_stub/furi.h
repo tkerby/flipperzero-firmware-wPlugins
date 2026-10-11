@@ -1,5 +1,5 @@
 #pragma once
-/* Host stand-in for the parts of furi.h that the Flipper Hub route code uses (pc/tests/route_test). */
+/* Host stand-in for the parts of furi.h that the Gitphin route code uses (pc/tests/route_test). */
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>

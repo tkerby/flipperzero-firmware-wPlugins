@@ -1,0 +1,32 @@
+name: Bug report
+description: Something does not work with Gitphin
+labels: [bug]
+body:
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: "Gitphin version, Flipper firmware (Settings › About, or `info device` → firmware.version / firmware.api), git version"
+      placeholder: "Gitphin 1.0, official firmware 1.x.y (API xx.y), git 2.x"
+    validations: {required: true}
+  - type: input
+    id: pc
+    attributes: {label: PC, placeholder: "Arch Linux, KDE Plasma 6, Python 3.13"}
+    validations: {required: true}
+  - type: textarea
+    id: what
+    attributes: {label: What happened, and what did you expect?, description: "The git command or the page you used, and the answer you got."}
+    validations: {required: true}
+  - type: textarea
+    id: logs
+    attributes:
+      label: Bridge log
+      description: "`journalctl --user -u gitphin.service -b --no-pager | tail -50`"
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: qFlipper and Flipper Lab were closed (they hold the USB port)
+        - label: The Flipper screen did not show STUCK (if it did, say so above)

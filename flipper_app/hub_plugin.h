@@ -18,7 +18,7 @@ typedef enum {
     HUB_PL_COUNT
 } HubPluginId;
 
-#define HUB_PLUGIN_APPID "flipper_hub_plugin"
+#define HUB_PLUGIN_APPID "gitphin_plugin"
 #define HUB_PLUGIN_API   1
 
 /* What a plugin offers (entry_point of its descriptor). */

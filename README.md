@@ -1,39 +1,170 @@
+<div align="center">
+
+<img src="docs/gitphin_logo_orange.svg" width="120" alt="Gitphin logo">
+
 # Gitphin
 
-**Git hosting in your pocket.** Gitphin runs **on the Flipper Zero**: it keeps
-Git repositories on the SD card, serves them to plain `git`, and has a
-Gitea-like web page (code, commits, diffs, branches, tags, issues, pull
-requests, releases, wiki, search). Plug the Flipper in by USB, open
-<http://localhost:8080>, and use git. Nothing else to install on the PC.
+### Git hosting in your pocket — a Git server with a web UI that runs on the Flipper Zero.
 
+Gitphin keeps your Git repositories on the Flipper's SD card and serves them to plain `git`
+over USB. Plug the Flipper in, `git push`, and browse code, commits, diffs, branches, tags,
+issues, pull requests, releases and a wiki at <http://localhost:8080> — no server, no cloud,
+no account.
+
+[![CI](https://github.com/Adhamura/Gitphin/actions/workflows/ci.yml/badge.svg)](https://github.com/Adhamura/Gitphin/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/Adhamura/Gitphin?include_prereleases&sort=semver)](https://github.com/Adhamura/Gitphin/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Device](https://img.shields.io/badge/device-Flipper%20Zero-ff8200)
+![Firmware](https://img.shields.io/badge/firmware-official%20release%20%7C%20dev-informational)
+![PC](https://img.shields.io/badge/PC%20bridge-Linux-informational)
+
+[**Download**](https://github.com/Adhamura/Gitphin/releases/latest) ·
+[Screenshots](#screenshots) · [Why Gitphin](#why-gitphin) · [Install](#install) · [FAQ](#faq)
+
+<img src="docs/screenshots/code.png" width="820" alt="Gitphin web UI: a repository on the Flipper Zero">
+
+</div>
+
+> [!NOTE]
+> **Not affiliated with Flipper Devices.** Gitphin is an independent open-source project.
+> Flipper Zero is a trademark of Flipper Devices Inc. and is used only to name the hardware
+> Gitphin runs on. Git is a trademark of the Software Freedom Conservancy.
+
+## Why Gitphin
+
+Your code usually lives on a laptop and on a server somewhere. Gitphin adds a third place you
+always carry: the Flipper Zero. It is a real Git remote with a Gitea-like web UI, running on
+the device itself, reached from the PC over the USB cable.
+
+- **🐬 A Git server on the Flipper.** The app speaks Git's HTTP protocol itself: `git clone`,
+  `pull` and `push` work with the `git` you already have. No helper, plugin or special remote
+  is needed.
+- **🌐 A full web UI.** Code browser with Markdown READMEs, commit history, diffs, compare,
+  branches, tags, search, file edits and uploads, **issues**, **pull requests** with merge,
+  **releases** and a **wiki** — rendered in your browser, served by the Flipper.
+- **🔌 Offline and private.** Nothing leaves the cable: the PC bridge listens on `127.0.0.1`
+  only. No account, no cloud, no telemetry.
+- **🗂️ Your repos stay normal Git.** Each repo is an ordinary bare repository on the SD card
+  (`/ext/git/<name>.git`). Copy it to any PC and use it there; issues and wiki live next to it
+  as plain JSON and Markdown.
+- **🛡️ Built for 256 KB of RAM.** A 47 KB core plus five plugins loaded on demand, a guarded
+  allocator that answers "low memory, try again" instead of crashing, streamed answers,
+  temp-file + rename for every write, and a bridge that reboots a stuck Flipper. A power loss
+  never corrupts a repo.
+- **🧹 Housekeeping while idle.** When the Flipper is idle, Gitphin packs loose objects, merges
+  small packs and builds a commit graph, in short slices, so clones and history stay fast.
+- **🪶 Small and open.** Plain C on the Flipper (no external libraries, its own inflate,
+  deflate and SHA-1), standard-library Python on the PC, MIT licensed.
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/repos.png" alt="Repositories"><br><b>Repositories</b> — every repo on the SD card, create, rename, describe, delete</td>
+    <td width="50%"><img src="docs/screenshots/commits.png" alt="Commits"><br><b>Commits</b> — history per branch, authors, short SHAs</td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/diff.png" alt="Commit diff"><br><b>Diffs</b> — changed files and line diffs, computed on the Flipper</td>
+    <td><img src="docs/screenshots/pull-request.png" alt="Pull request"><br><b>Pull requests</b> — conversation, commits, files changed, merge on the device</td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/issues.png" alt="Issues"><br><b>Issues</b> — labels, milestones, comments, open / closed</td>
+    <td><img src="docs/screenshots/code-dark.png" alt="Dark theme"><br><b>Dark theme</b> — follows the system, or switch it in the header</td>
+  </tr>
+</table>
+
+<sub>Screenshots show made-up demo repositories, rendered by the app's real route code on the PC
+with <code>tools/screenshots/capture.sh</code>.</sub>
+
+## How it compares
+
+We know of no other Git server that runs on the Flipper Zero itself. These are the usual ways to
+keep a portable or private Git remote:
+
+| | **Gitphin** | Bare repo on a USB stick | Flipper *Mass Storage* app + bare repo | Gitea / Forgejo on a Raspberry Pi | GitHub / GitLab |
+|---|:--|:--|:--|:--|:--|
+| Lives on a device you already carry | ✅ | ➖ extra stick | ✅ | ❌ | — |
+| Works offline, nothing on the network | ✅ | ✅ | ✅ | ➖ LAN | ❌ |
+| Plain `git clone` / `pull` / `push` | ✅ HTTP | ✅ file path | ✅ file path (slow) | ✅ | ✅ |
+| Web UI: code, commits, diffs | ✅ | ❌ | ❌ | ✅ | ✅ |
+| Issues, pull requests, releases, wiki | ✅ | ❌ | ❌ | ✅ | ✅ |
+| Repos are normal bare repos you can copy | ✅ | ✅ | ✅ | ➖ on the server disk | ❌ export |
+| Safe when unplugged during a write | ✅ temp + rename | ➖ file system | ➖ disk image | ✅ | ✅ |
+| No setup on the network, no account | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Users, permissions, SSH, CI, webhooks | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Big repos (hundreds of MB) | ❌ a few MB | ✅ | ➖ | ✅ | ✅ |
+
+<sub>✅ yes · ➖ partial, or depends on setup · ❌ no. Based on each tool's public documentation;
+corrections are welcome in an issue. Gitea, Forgejo and the cloud services are far bigger
+products — Gitphin is for people who want their own Git remote, with a real UI, in their
+pocket.</sub>
+
+## Requirements
+
+- **Flipper Zero** with a microSD card, on **official firmware**. Release downloads are built
+  for the current official **release** and **dev** firmware; the app must match the firmware's
+  API version (see [FAQ](#faq) for custom firmware).
+- **Linux PC** for the bridge: Python 3, `git`, and a systemd user session for the automatic
+  start (the bridge also runs by hand). macOS and Windows: not supported yet.
+- `git` and a browser on the PC.
+
+## Install
+
+Two parts: the **app** on the Flipper and the small **bridge** on the PC.
+
+### 1. The Flipper app
+
+Download **`gitphin.fap`** from [**Releases**](https://github.com/Adhamura/Gitphin/releases/latest)
+and copy it to the SD card as **`/ext/apps/Tools/gitphin.fap`** with
+[qFlipper](https://flipperzero.one/update) or the [Flipper Lab](https://lab.flipper.net) file
+manager. The web page and the plugins are inside the `.fap`; the Flipper unpacks them on the
+first start. On dev firmware use the file from `gitphin-<version>-dev-firmware.zip`.
+
+### 2. The PC bridge
+
+Download `gitphin-<version>-pc.tar.gz` from the same release (or clone this repository), then:
+
+```bash
+tar xzf gitphin-*-pc.tar.gz && cd gitphin-*-pc
+./install.sh            # Python venv + systemd user units, no sudo
+./install.sh --remove   # undo
 ```
-git / browser ──TCP──> pc/bridge.py ──USB serial, channel 2──> Gitphin app (HTTP + Git server)
-localhost:8080         (copies bytes only)                      core + plugins, repos on SD
+
+The bridge needs read/write access to the Flipper's serial port. Install the udev rule once
+(`install.sh` prints the command). It gives the desktop user access at once, with no group
+change and no new login:
+
+```bash
+sudo install -m 644 systemd/70-gitphin.rules /etc/udev/rules.d/70-gitphin.rules
+sudo udevadm control --reload && sudo udevadm trigger --subsystem-match=tty
 ```
 
-- `flipper_app/` – the Flipper app (Apps > Tools > Gitphin; internal id `flipper_hub`).
-  - Resident core: `hub_http.c` (HTTP, web page, file API), `hub_transport.c`
-    (USB framing), `hub_git.c` / `hub_gitview.c` (repos, refs, browse),
-    `hub_gitobj.c` + `hub_inflate.c` (Git object reader), `hub_mem.c` (guarded
-    allocator), `flipper_hub.c` (screen).
-  - Plugins (`.fal`, loaded on demand, one at a time): `dav` (WebDAV for
-    `git push`), `pack` (idle packing, pack merging, commit graph), `write`
-    (web commits, merge), `query` (diff, compare, search, log, commit), `doc`
-    (issues, pull requests, releases, wiki).
-  - `files/index.html` – the web page (served gzipped when
-    `files/index.html.gz` exists; rebuild it with `pc/tools/build_page.sh`).
-- `pc/bridge.py` – starts the app when the Flipper is plugged in, maps each TCP
-  connection on `127.0.0.1:8080` onto the USB channel, and reboots a Flipper
-  whose app has not answered for 3 minutes. No HTTP logic.
-- `pc/git-remote-flipper` – optional helper for `flipper://<repo>` remotes
-  (faster pack pushes, `git flipper gc`). Nothing depends on it.
-- `systemd/` – user units: the `.path` unit starts the bridge when a Flipper CLI
-  port appears; the bridge exits when the Flipper is unplugged.
-- `docs/git-design.md` – the full design: routes, formats, resource limits.
+Membership in the `uucp` group also works, after a new login. Check downloads with
+`sha256sum -c SHA256SUMS --ignore-missing`.
 
-## Use git with the Flipper
+### From source
 
-Plug the Flipper in. The bridge starts Gitphin by itself. Then:
+```bash
+pip install ufbt && ufbt update           # SDK for your firmware (ufbt update --channel=dev for dev)
+pc/tools/build_page.sh                    # gzip the web page
+systemctl --user stop gitphin.path gitphin.service   # one program may start the app at a time
+cd flipper_app && ufbt launch; cd ..
+systemctl --user start gitphin.path gitphin.service
+```
+
+`ufbt launch` reports a "device disconnected" error after the upload. That is expected: the app
+switches USB to two ports, so the port drops for a moment.
+
+**Releases are automatic.** Bump `fap_version` in `flipper_app/application.fam`, add a
+`## <version>` section to `CHANGELOG.md` and a `v<version>:` entry to
+`flipper_app/docs/changelog.md`, and merge to `main`: GitHub Actions builds the app for the
+release and dev firmware, packs the PC bridge and publishes the release `v<version>` with the
+changelog section as notes.
+
+## Using Gitphin
+
+Plug the Flipper in. The bridge starts Gitphin by itself and shows a notification with the
+link (`--open-browser` in the service opens it). Then:
 
 ```bash
 # put an existing repo on the Flipper (the repo is created on the first push)
@@ -46,219 +177,193 @@ git pull
 git push
 ```
 
-Open <http://localhost:8080> for the web page. Repos live on the SD card in
-`/ext/git/<name>.git` (normal bare repositories).
+Open <http://localhost:8080> for the web UI. Repos live on the SD card in `/ext/git/<name>.git`.
+
+**Optional, faster pushes:** `install.sh` also installs `git-remote-flipper`, a helper for
+`flipper://<repo>` remotes. It sends one pack instead of many single objects (much faster for
+big pushes) and adds `git flipper list | create | delete | rename | describe | url | gc`.
+Nothing depends on it.
+
+```bash
+git remote add flipper flipper://myproject
+git push flipper main
+```
+
+**The Flipper screen** shows the state (Waiting for PC, Ready, Busy, Packing, STUCK), and during
+transfers a progress bar, object count, KB and speed.
 
 ## How it works
 
-**Path of a request.** Git or the browser talks HTTP to `127.0.0.1:8080`. The
-PC bridge (`pc/bridge.py`) copies the bytes, unchanged, into frames on the
-Flipper's second USB serial channel. The Gitphin app on the Flipper parses the
-HTTP request, does the Git work and answers. One request runs at a time; the
-bridge queues the rest.
+```mermaid
+flowchart LR
+    git["git / browser"] -->|"HTTP<br/>127.0.0.1:8080"| bridge
+    subgraph pc ["PC (Linux)"]
+        bridge["pc/bridge.py<br/>copies bytes only"]
+    end
+    subgraph flipper ["Flipper Zero"]
+        core["Gitphin core<br/>HTTP + Git server"]
+        plugins["plugins on demand:<br/>WebDAV push · pack · write · query · docs"]
+        sd[("SD card<br/>/ext/git/*.git")]
+        core <--> plugins
+        core <--> sd
+    end
+    bridge <-->|"USB serial, channel 2<br/>framed"| core
+```
+
+| Part | Runs on | Does |
+|---|---|---|
+| Gitphin app (`flipper_app/`) | Flipper Zero | HTTP server, Git dumb-HTTP + WebDAV, object reader, diff, merge, search, docs, web page |
+| Bridge (`pc/bridge.py`) | PC, systemd user unit | starts the app on plug-in, maps TCP `127.0.0.1:8080` onto USB, reboots a stuck Flipper |
+| `git-remote-flipper` (`pc/`) | PC, optional | `flipper://` remotes, pack pushes, `git flipper` CLI |
+
+<details>
+<summary>Protocol, storage, memory and self-protection</summary>
+
+**Path of a request.** Git or the browser talks HTTP to `127.0.0.1:8080`. The bridge copies the
+bytes, unchanged, into frames on the Flipper's second USB serial channel. The Gitphin app parses
+the HTTP request, does the Git work and answers. One request runs at a time; the bridge queues
+the rest.
 
 **Plain git, no helper.**
-- *Clone, fetch, pull* use git's "dumb HTTP" protocol: git downloads
-  `info/refs`, `objects/info/packs`, pack files and loose objects as plain
-  files.
-- *Push* uses git's built-in WebDAV fallback (`git http-push`): git uploads
-  each object as a file (PUT + MOVE), then updates the branch under a lock.
-  The first push to an unknown name creates the repo.
-- The PC's git does all heavy Git work (packing, deltas, hashing). The Flipper
-  stores and serves files and reads objects for the web page.
+- *Clone, fetch, pull* use git's "dumb HTTP" protocol: git downloads `info/refs`,
+  `objects/info/packs`, pack files and loose objects as plain files.
+- *Push* uses git's built-in WebDAV fallback (`git http-push`): git uploads each object as a
+  file (PUT + MOVE), then updates the branch under a lock. The first push to an unknown name
+  creates the repo.
+- The PC's git does the heavy Git work (packing, deltas, hashing). The Flipper stores and serves
+  files and reads objects for the web page.
 
-**Repository storage.** Each repo is a normal bare repository at
-`/ext/git/<name>.git` on the SD card. You can copy it to a PC and use it
-there. Extra Gitphin data lives in `<repo>.git/hub/`: issues, pull requests,
-wiki and releases (JSON/Markdown documents with ETag conflict checks), the
-commit graph (`graph.bin`) and caches. Git ignores this folder.
+**Repository storage.** Each repo is a normal bare repository at `/ext/git/<name>.git`. Extra
+Gitphin data lives in `<repo>.git/hub/`: issues, pull requests, wiki and releases (JSON /
+Markdown documents with ETag conflict checks), the commit graph (`graph.bin`) and caches. Git
+ignores this folder.
 
-**Background work (when the Flipper is idle for 10 s).**
-- Loose objects from pushes are packed into one pack file, so clones need few
-  requests.
-- Small packs are merged (from 4 small packs upward), so lookups stay fast.
-- A commit graph (`hub/graph.bin`, about 70 bytes per commit) is built, so
-  compare, merge and log do not need to unpack every commit.
-- Each step runs in slices of about 3 s and keeps its progress.
+**Background work (when the Flipper is idle for 10 s).** Loose objects from pushes are packed
+into one pack; small packs are merged; a commit graph (about 70 bytes per commit) is built so
+compare, merge and log do not unpack every commit. Each step runs in slices of about 3 s and
+keeps its progress.
 
-**Memory design.** Apps from the SD card run from RAM, so code competes with
-work memory (about 187 KB heap in total).
-- A small resident core (~47 KB code) plus five plugins (4–15 KB each) that
-  are loaded only while they are needed, one at a time.
-- Every allocation goes through a guarded allocator: it refuses a request that
-  does not fit the largest free block plus an 8 KB reserve, and the route
-  answers `503 low memory, try again` instead. (The firmware halts the device
-  when a normal malloc fails.)
-- Answers are streamed in 512-byte pieces (chunked JSON), the zlib window is at
-  most 8 KB in RAM (older bytes are read back from the SD card), and big
-  delta objects are rebuilt through temp files on the SD card and cached.
+**Memory design.** Apps from the SD card run from RAM, so code competes with work memory (about
+187 KB heap in total).
+- A small resident core (~47 KB code) plus five plugins (4–15 KB each), loaded only while they
+  are needed, one at a time. The plugins ship inside the `.fap` and are unpacked to
+  `/ext/apps_assets/gitphin/plugins/`.
+- Every allocation goes through a guarded allocator: it refuses a request that does not fit the
+  largest free block plus an 8 KB reserve, and the route answers `503 low memory, try again`.
+  (The firmware halts the device when a normal malloc fails.)
+- Answers are streamed in 512-byte pieces, the zlib window is at most 8 KB in RAM (older bytes
+  are read back from the SD card), and big delta objects are rebuilt through temp files.
 - Free heap with Gitphin running: about 80–85 KB.
 
 **Self-protection.**
-- Every route checks free memory first and has a deadline (60 s for merge,
-  compare and diff; 20 s for search).
-- The screen spinner moves only while the worker is alive; "STUCK" appears
-  when it is not.
-- If the app stops answering for 3 minutes, the bridge reboots the Flipper.
-  All writes use a temp file + rename, so a reboot does not corrupt repos.
+- Every route checks free memory first and has a deadline (60 s for merge, compare and diff;
+  20 s for search).
+- The screen spinner moves only while the worker is alive; "STUCK" appears when it is not.
+- If the app stops answering for 3 minutes, the bridge reboots the Flipper. All writes use a temp
+  file + rename, so a reboot does not corrupt repos.
 
-**Screen.** Header with the Gitphin logo; state (Waiting for PC, Ready, Busy,
-Packing, STUCK); during transfers a progress bar, object/file count, KB and
-speed; "Done: …" for 2 s afterwards.
+**Web page.** Served gzipped (~47 KB) from the SD card; all rendering, diffs and Markdown run in
+the browser. The page sends one request at a time and caches everything addressed by a commit /
+object SHA, so the Flipper is asked as little as possible.
 
-**Web page.** Served gzipped (~47 KB) from the SD card; all rendering, diffs
-and Markdown run in the browser. The page sends one request at a time and
-caches everything addressed by a commit/object SHA, so the Flipper is asked as
-little as possible.
+**Frame format (bridge ↔ Flipper).** `0xA5 | type | len_lo | len_hi | payload` with types OPEN
+0x01, DATA 0x02, CLOSE 0x03, PING 0x10, PONG 0x11; payload up to 1024 bytes. The bridge sends
+OPEN, the whole request as DATA, then reads DATA until CLOSE.
+
+The full design — routes, formats, resource limits — is in [docs/git-design.md](docs/git-design.md);
+the file API and the Collector routes are in [docs/api.md](docs/api.md).
+</details>
 
 ## Limitations
 
-- **Local only.** The bridge listens on `127.0.0.1`; other machines cannot
-  reach it. There are no users, logins or permissions.
-- **Speed.** Plain `git push` costs about 0.3 s per object (SD-card writes);
-  a first push of a big repo takes minutes. Downloads run at about 330 KB/s,
-  uploads at about 120 KB/s. The optional `flipper://` helper pushes one pack
-  instead and is much faster for big pushes.
-- **Repo size.** Comfortable up to a few MB and a few thousand commits. Larger
-  repos work but get slow (compare/merge history walks are capped at 500
-  commits; files over 64 KB are skipped by search).
-- **Push progress.** Git never tells the server how many objects a push will
-  send, so the screen shows the % of the current file and a running count,
-  not a total %. Clones of packed repos show the total %.
-- **Merge on the device** is a tree merge only: it works when the two branches
-  changed different files. Changes to the same file are a conflict; merge
-  those on the PC and push.
-- **Web edits** are limited to files up to 64 KB; issues/wiki documents up to
-  64 KB each.
+- **Local only.** The bridge listens on `127.0.0.1`; other machines cannot reach it. There are no
+  users, logins or permissions.
+- **Speed.** Downloads run at about 330 KB/s, uploads at about 120 KB/s. Plain `git push` costs
+  about 0.3 s per object (SD-card writes), so a first push of a big repo takes minutes; the
+  optional `flipper://` helper pushes one pack instead and is much faster.
+- **Repo size.** Comfortable up to a few MB and a few thousand commits. Larger repos work but get
+  slow (compare / merge history walks are capped at 500 commits; files over 64 KB are skipped by
+  search).
+- **Merge on the device** is a tree merge: it works when the two branches changed different
+  files. Changes to the same file are a conflict; merge those on the PC and push.
+- **Web edits** are limited to files up to 64 KB; issues / wiki documents up to 64 KB each.
 - **No hooks, CI, webhooks, SSH, LFS, blame or activity graphs.**
-- **One person at a time.** Two simultaneous pushes to the same branch are
-  protected by compare-and-swap on the ref, but the WebDAV locks are simple.
-- **Objects that did not compress well with the Flipper's small-window
-  compressor stay loose**; they are read with the SD-backed window and are
-  slower to clone.
-- **Linux PC only** for the bridge (systemd, udev); the Flipper side is
-  independent.
+- **One person at a time.** Two simultaneous pushes to the same branch are protected by
+  compare-and-swap on the ref, but the WebDAV locks are simple.
+- **Push progress.** Git never tells the server how many objects a push will send, so the screen
+  shows the current file and a running count, not a total %. Clones of packed repos show the
+  total %.
+- **Linux PC only** for the bridge (systemd, udev); the Flipper side is independent.
 
-## What to keep in mind
+## Tips
 
-- **Turn the SD desktop animations off** (they take about 49 KB of RAM):
-  rename `/ext/dolphin/manifest.txt` to `manifest.txt.off` with the Flipper CLI
-  or qFlipper. With them on, heavy routes answer "low memory" more often.
-- **Do not keep qFlipper or the web lab connected** while you use Gitphin:
-  they hold the USB port and use RAM.
-- **Never close a busy Gitphin with Back or `loader close`**: the loader can
-  freeze. Reboot instead (Left + Back for 5 s). Data stays safe.
-- **After a firmware update**, rebuild the app with the matching SDK
-  (`ufbt update`, check `info device` → `firmware.api`), or it will not start.
-- **Deploy with the bridge stopped** (see Install) so only one program starts
-  the app; after editing `files/index.html`, run `pc/tools/build_page.sh`, or
-  the Flipper serves the old gzipped page.
-- **Back up your repos.** They are normal bare repos: `git clone --mirror`
-  them to the PC now and then, or copy `/ext/git/` from the SD card.
-- **Give big pushes time.** Leave the Flipper connected and idle afterwards
-  so it can pack and build the commit graph; the first compare/merge on a new
-  history is slower until then.
-- **If something hangs**: the bridge log tells what happened
-  (`journalctl --user -u flipper-hub.service -f`), and the bridge reboots the
-  Flipper itself after 3 minutes.
-- **Code size is at its limit.** New features should go into a plugin, not
-  the core, and must follow the "Resource limits" rules in
-  `docs/git-design.md`.
+- **Turn the SD desktop animations off** (they take about 49 KB of RAM): rename
+  `/ext/dolphin/manifest.txt` to `manifest.txt.off`. With them on, heavy pages answer
+  "low memory" more often.
+- **Close qFlipper and Flipper Lab** while you use Gitphin: they hold the USB port and use RAM.
+- **Never close a busy Gitphin with Back or `loader close`**: the loader can freeze. Reboot instead
+  (Left + Back for 5 s). Data stays safe.
+- **After a firmware update**, install the matching `gitphin.fap` (or rebuild with `ufbt update`),
+  or the app will not start.
+- **Back up your repos.** They are normal bare repos: `git clone --mirror` them to the PC now and
+  then, or copy `/ext/git/` from the SD card.
+- **Give big pushes time.** Leave the Flipper connected and idle afterwards so it can pack and
+  build the commit graph.
+- **If something hangs:** `journalctl --user -u gitphin.service -f` shows what happened, and the
+  bridge reboots the Flipper itself after 3 minutes.
 
-## Install
+## FAQ
 
-```bash
-./install.sh            # venv + systemd user units, no sudo
-./install.sh --remove   # undo
-```
+**Do I need anything on the PC besides git?** The bridge: one Python script and `pyserial`
+(`install.sh` sets it up). It only copies bytes between `127.0.0.1:8080` and the USB port; all
+Git and HTTP logic runs on the Flipper.
 
-The bridge needs read/write access to the Flipper serial port. Install the udev
-rule once (`install.sh` prints the command). It gives the desktop user access at
-once, with no group change and no new login:
+**Is my code safe if I pull the cable mid-push?** Yes. Every write goes to a temp file and is
+renamed into place, refs are updated with compare-and-swap, and an interrupted push leaves the old
+branch tip in place. Repos are plain bare repositories that `git fsck` can check on any PC.
 
-```bash
-sudo install -m 644 systemd/70-flipper-hub.rules /etc/udev/rules.d/70-flipper-hub.rules
-sudo udevadm control --reload && sudo udevadm trigger --subsystem-match=tty
-```
+**Does it work on custom firmware (Momentum, Unleashed, RogueMaster)?** Not tested. Apps must be
+built for the firmware's API version: build from source with that firmware's SDK
+(`ufbt update --index-url=…` or `--url=…`), then `ufbt launch`. Reports are welcome.
 
-Membership in the `uucp` group also works, but only after the systemd user
-manager restarts (full logout or reboot).
+**Does it work on macOS or Windows?** The Flipper app does; the bridge is Linux-only for now
+(serial device names, systemd, udev). A port is on the [roadmap](#roadmap).
 
-Build and install the Flipper app (needs uFBT with the SDK that matches the firmware):
+**Can several people use it?** Over USB, one PC at a time. There are no accounts; issues and
+comments carry a name you set once in the browser.
 
-Deploy (one program may start the app at a time, so stop the bridge first):
+**Why HTTP and not SSH?** HTTP needs no keys and works with plain `git`; the Flipper has no
+network stack of its own, and the USB bridge keeps everything on `127.0.0.1`.
 
-```bash
-pc/tools/build_page.sh
-systemctl --user stop flipper-hub.path flipper-hub.service
-cd flipper_app && ufbt launch; cd ..
-systemctl --user start flipper-hub.path flipper-hub.service
-```
+**What is the Collector tab?** An optional extra: the bridge (not the Flipper) answers
+`/pc/info` with facts about the PC (hostname, OS, CPU, memory, uptime, addresses) and `/pc/wifi`
+with the connected Wi-Fi's name. Showing the saved Wi-Fi password is **off** unless you install
+a narrow root helper yourself; see [docs/api.md](docs/api.md).
 
-`ufbt launch` reports a "device disconnected" error after the upload. That is
-expected: the app switches USB to two ports, so the port drops for a moment.
-Never close a busy app with `loader close` or Back: the loader can freeze. To
-stop a stuck Flipper, reboot it (Left + Back for 5 s).
+**How do I report a bug?** [Open an issue](https://github.com/Adhamura/Gitphin/issues/new/choose)
+with your firmware version, the Gitphin version and the bridge log
+(`journalctl --user -u gitphin.service -b`). Security problems: see [SECURITY.md](SECURITY.md).
 
-## Collector tab
+## Roadmap
 
-A second header tab, **Collector**, shows data about the PC, not the Flipper.
-The bridge answers these routes itself (it does not forward them to the Flipper):
+- **1.0** — ✅ Git server and web UI on the Flipper: clone / pull / push, code, commits, diffs,
+  compare, branches, tags, search, web edits, issues, pull requests with tree merge, releases,
+  wiki; idle packing and commit graph; Linux bridge; single-file `.fap` with embedded plugins.
+- **Next** — listing in the Flipper Apps Catalog.
+- **Ideas, not scheduled** — macOS and Windows bridge; blame; a Wi-Fi Dev Board transport
+  (no PC bridge).
 
-| Method | Path | Returns |
-|---|---|---|
-| GET | `/pc/info` | hostname, OS, kernel, CPU, memory, uptime, IPs, active connections |
-| GET | `/pc/wifi` | SSID, signal, and the saved password of the connected Wi-Fi |
+Ideas and features you miss: [open an issue](https://github.com/Adhamura/Gitphin/issues/new/choose).
 
-Left column: this PC. Right column: the connected Wi-Fi (name + password).
-The password is hidden behind a **Show** button and never written to the log.
-Linux / NetworkManager only for now.
+## Contributing
 
-### Wi-Fi password
+Bug reports with your firmware version and bridge log help most. For code: the host tests in
+`pc/tests/` run the real app code on the PC against `git` (`pc/tests/run_*.sh`, gcc + zlib +
+ASan); CI runs them and builds the app with uFBT for the release and dev firmware. New features
+belong in a plugin, not the core (code size is at its limit), and must follow the "Resource
+limits" rules in [docs/git-design.md](docs/git-design.md). `tools/screenshots/capture.sh` makes
+the README screenshots without a Flipper.
 
-The saved password needs root to read. By default `/pc/wifi` returns the SSID
-with `password: null` and a note. To show it, install the narrow sudo helper
-(root-owned path, so the rule cannot be abused):
+## License
 
-```bash
-cd ~/Desktop/Flipper/flipper_hub
-sudo install -m 755 -o root -g root pc/wifi_psk.sh /usr/local/sbin/flipper-hub-wifi-psk
-echo "$USER ALL=(root) NOPASSWD: /usr/local/sbin/flipper-hub-wifi-psk" | sudo tee /etc/sudoers.d/flipper-hub-wifi
-sudo chmod 440 /etc/sudoers.d/flipper-hub-wifi
-systemctl --user restart flipper-hub.service
-```
-
-This lets the bridge run exactly one command as root: read one connection's PSK.
-To undo: `sudo rm /usr/local/sbin/flipper-hub-wifi-psk /etc/sudoers.d/flipper-hub-wifi`.
-
-## API
-
-The Git routes (`/git/...`, `/api/git/...`) are listed in `docs/git-design.md`.
-The basic file API:
-
-| Method | Path | Notes |
-|---|---|---|
-| GET | `/` | the web page |
-| GET | `/api/info` | name, firmware, battery, SD space, free RAM, uptime |
-| GET | `/api/list?path=/ext/...` | folder listing |
-| GET | `/api/file?path=...[&dl=1]` | read a file (`dl=1` = download) |
-| PUT | `/api/file?path=...` | write a file (request body = content) |
-| POST | `/api/mkdir?path=...` | make a folder |
-| POST | `/api/delete?path=...` | delete a file or an empty folder |
-
-Paths must be inside `/ext` (SD card) or `/int`. The bridge listens on
-`127.0.0.1` only, so other machines cannot reach it.
-
-Speed (measured): about 330 KB/s download, 120 KB/s upload.
-
-## Logs
-
-```bash
-journalctl --user -u flipper-hub.service -f
-```
-
-## Frame format (bridge <-> Flipper)
-
-`0xA5 | type | len_lo | len_hi | payload` with types OPEN 0x01, DATA 0x02,
-CLOSE 0x03, PING 0x10, PONG 0x11; payload up to 1024 bytes. The bridge sends
-OPEN, the whole request as DATA, then reads DATA until CLOSE.
+MIT. See [LICENSE](LICENSE).
