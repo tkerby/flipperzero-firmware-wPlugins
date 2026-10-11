@@ -1,3 +1,9 @@
+## 2.16-beta.38 — captive portal, Chinese dashboard, 2020 M3 wiring
+
+- **ESP32: captive portal on the SoftAP (#219).** iOS, macOS, Android and Windows probe for internet when they join a Wi-Fi network; on the ESP32's own AP they find none and silently drop the link after a few seconds, so the dashboard was hard to reach. A DNS catch-all now resolves every hostname to the AP, and the OS captive-detection URLs (`/generate_204`, `/hotspot-detect.html`, `/ncsi.txt`, …) are redirected to the dashboard, so the page pops up and the connection stays up. SoftAP only — a no-op when the device is joined to your real network (STA). Redirect only, no CAN or TX changes. Thanks @nobless for the report and references. (PR #220)
+- **ESP32 dashboard: Simplified + Traditional Chinese (#205).** A runtime translation layer with an en → 简体 → 繁體 toggle that also picks the language from the browser locale, zh-Hant in Taiwan wording. The English page is unchanged and nothing is sent to the car. Thanks @i520e3e4. (PR #205)
+- **Docs: 2020 Model 3 (SOP4) wiring at the Autopilot ECU (#191).** HARDWARE.md documents the X120 connector — Party CAN on pins 5/6, 12V on 9/18 — for early Fremont Model 3 builds that route Party CAN cleanest there rather than at X052. Thanks @mxkr303.
+
 ## 2.16-beta.37 — read-only performance panel
 
 - **ESP32: a read-only Performance card on the dashboard.** Acceleration timers (0-50, 0-60 mph, 0-100 km/h) and a braking 100-0 with a per-session best, estimated longitudinal G from dv/dt of speed (labelled "est.", no IMU), wheel slip % from 0x175, and battery pack temp banding + power kW from the BMS frames. It transmits nothing — every value is derived from frames already received, with no new TX path. Hidden by default. The timers and est. G work on any tap carrying 0x257; wheel slip needs Party CAN (0x175) and temp/power need a Vehicle-CAN BMS tap. (PR #216)
