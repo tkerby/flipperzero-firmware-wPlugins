@@ -17,6 +17,7 @@
 #include "profile_match.h"
 #include "prefs.h"
 #include "ota_verify.h"
+#include "captive_portal.h"
 #include <WebServer.h>
 #include <WebSocketsServer.h>
 #include <WiFi.h>
@@ -2820,7 +2821,11 @@ void web_dashboard_init(FSDState *state,
     g_http.on("/blackbox/get",  HTTP_GET, handle_blackbox_get);
     g_http.on("/restart",    HTTP_GET,  handle_restart);
     g_http.on("/update",     HTTP_POST, handle_ota_done, handle_ota_upload);
+    // Captive portal: OS probe routes + catch-all onNotFound (SoftAP only).
+    // Registered last so the explicit routes above take precedence.
+    captive_portal_register_routes(g_http);
     g_http.begin();
+    captive_portal_begin();
     http_can_stream_init();
 
     g_ws.begin();
@@ -2832,6 +2837,7 @@ void web_dashboard_init(FSDState *state,
 void web_dashboard_update() {
     if (g_state == nullptr) return;   // init was never called (WiFi failed)
 
+    captive_portal_process();
     g_http.handleClient();
     g_ws.loop();
     http_can_stream_update();
