@@ -24,7 +24,7 @@ typedef struct {
     DFrame* st;
     size_t cap, sp;
     char path[HUB_GD_PATH_MAX + 1];
-    DFrame fr_;      /* working copies live here, not on the 4 KB stack */
+    DFrame fr_; /* working copies live here, not on the 4 KB stack */
     HubTreeCur ca_, cb_;
 } DCtx;
 
@@ -58,11 +58,7 @@ static bool push(DCtx* d, const HubOid* a, const HubOid* b, size_t prefix) {
 }
 
 /* Report one file. Returns false when the walk must stop. */
-static bool emit(
-    DCtx* d,
-    size_t plen,
-    const HubTreeEntry* ea,
-    const HubTreeEntry* eb) {
+static bool emit(DCtx* d, size_t plen, const HubTreeEntry* ea, const HubTreeEntry* eb) {
     if(d->count >= d->max) {
         d->trunc = true;
         d->stop = true;
@@ -188,10 +184,10 @@ int hub_git_diff_trees(
 /* ========== compare ========== */
 
 enum {
-    F_BASE = 1,    /* ancestor of base (or base) */
-    F_HEAD = 2,    /* ancestor of head (or head) */
-    F_EXP_A = 4,   /* parents read in the base walk */
-    F_EXP_B = 8,   /* parents read in the head walk */
+    F_BASE = 1, /* ancestor of base (or base) */
+    F_HEAD = 2, /* ancestor of head (or head) */
+    F_EXP_A = 4, /* parents read in the base walk */
+    F_EXP_B = 8, /* parents read in the head walk */
     F_NOTBEST = 16 /* ancestor of a common commit: not a best common ancestor */
 };
 
@@ -271,7 +267,8 @@ static int walk_octopus(Set* s, const HubOid* id, uint8_t flag, bool common) {
     if(rc != HUB_GIT_OK) return rc;
     const uint8_t* p = data;
     const uint8_t* end = data + size;
-    while(p < end && *p != '\n') p++; /* skip the tree line */
+    while(p < end && *p != '\n')
+        p++; /* skip the tree line */
     while(p < end) {
         p++;
         if(end - p < 48 || memcmp(p, "parent ", 7) != 0) break;
@@ -300,7 +297,8 @@ static int set_walk(Set* s, const HubOid* start, uint8_t flag, uint8_t expbit) {
     set_mark(s, start->b, flag);
     for(;;) {
         size_t i = 0;
-        while(i < s->n && !((s->fl[i] & flag) && !(s->fl[i] & expbit))) i++;
+        while(i < s->n && !((s->fl[i] & flag) && !(s->fl[i] & expbit)))
+            i++;
         if(i == s->n) return HUB_GIT_OK;
         HubOid id;
         memcpy(id.b, s->ids[i], 20);
@@ -318,7 +316,8 @@ static int set_walk(Set* s, const HubOid* start, uint8_t flag, uint8_t expbit) {
             if(rc != HUB_GIT_OK) return rc;
             continue;
         }
-        for(unsigned j = 0; j < m->nparents; j++) mark_parent(s, m->parent[j].b, flag, common);
+        for(unsigned j = 0; j < m->nparents; j++)
+            mark_parent(s, m->parent[j].b, flag, common);
     }
 }
 
@@ -369,8 +368,10 @@ int hub_git_compare(HubGit* g, const HubOid* base, const HubOid* head, HubGitCom
                     pos--;
                 }
                 if(pos < HUB_GD_AHEAD_MAX) {
-                    unsigned last = out->n_ahead < HUB_GD_AHEAD_MAX ? out->n_ahead : HUB_GD_AHEAD_MAX - 1;
-                    for(unsigned m = last; m > pos; m--) out->ahead[m] = out->ahead[m - 1];
+                    unsigned last = out->n_ahead < HUB_GD_AHEAD_MAX ? out->n_ahead :
+                                                                      HUB_GD_AHEAD_MAX - 1;
+                    for(unsigned m = last; m > pos; m--)
+                        out->ahead[m] = out->ahead[m - 1];
                     memcpy(out->ahead[pos].b, s.ids[i], 20);
                     if(out->n_ahead < HUB_GD_AHEAD_MAX) out->n_ahead++;
                 }

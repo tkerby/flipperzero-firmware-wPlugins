@@ -10,13 +10,13 @@
 
 #include "hub_gitobj.h"
 
-#define HUB_GD_MAX_FILES  300
-#define HUB_GD_MAX_DEPTH  40
-#define HUB_GD_PATH_MAX   300
+#define HUB_GD_MAX_FILES 300
+#define HUB_GD_MAX_DEPTH 40
+#define HUB_GD_PATH_MAX  300
 
 typedef struct {
     const char* path; /* valid during the callback only */
-    char status;      /* 'A', 'D', 'M' or 'T' */
+    char status; /* 'A', 'D', 'M' or 'T' */
     HubOid old_oid, new_oid; /* all zero when absent */
     uint32_t old_mode, new_mode; /* 0 when absent */
 } HubGitDiffFile;
@@ -46,14 +46,14 @@ int hub_git_diff_trees(
 #define HUB_GD_COMPARE_CAP 2000
 
 typedef struct {
-    size_t cap;            /* in: ids kept in RAM (0 = HUB_GD_COMPARE_CAP) */
+    size_t cap; /* in: ids kept in RAM (0 = HUB_GD_COMPARE_CAP) */
     bool has_merge_base;
     HubOid merge_base;
-    bool ff;               /* base is an ancestor of head */
-    bool capped;           /* the cap was reached: counts are lower bounds */
-    uint32_t ahead_count;  /* commits in base..head */
+    bool ff; /* base is an ancestor of head */
+    bool capped; /* the cap was reached: counts are lower bounds */
+    uint32_t ahead_count; /* commits in base..head */
     uint32_t behind_count; /* commits in head..base */
-    unsigned n_ahead;      /* entries in ahead[] */
+    unsigned n_ahead; /* entries in ahead[] */
     HubOid ahead[HUB_GD_AHEAD_MAX]; /* newest first (committer time) */
 } HubGitCompare;
 

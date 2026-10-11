@@ -36,7 +36,8 @@ DavLock hub_dav_locks[DAV_LOCKS];
 /* Is a WebDAV lock held on this repo (a push is going on)? */
 bool hub_dav_repo_locked(const char* name) {
     uint32_t repo = 2166136261u;
-    for(const char* p = name; *p; p++) repo = (repo ^ (uint8_t)*p) * 16777619u;
+    for(const char* p = name; *p; p++)
+        repo = (repo ^ (uint8_t)*p) * 16777619u;
     uint32_t now = furi_get_tick() / furi_kernel_get_tick_frequency();
     for(size_t i = 0; i < DAV_LOCKS; i++) {
         if(hub_dav_locks[i].used && hub_dav_locks[i].repo == repo &&
@@ -48,7 +49,12 @@ bool hub_dav_repo_locked(const char* name) {
 
 /* Same as in hub_gitwrite.c (that file lives in a plugin, the query plugin needs this). */
 int hub_gitwrite_ent_cmp(
-    const char* an, size_t al, bool a_tree, const char* bn, size_t bl, bool b_tree) {
+    const char* an,
+    size_t al,
+    bool a_tree,
+    const char* bn,
+    size_t bl,
+    bool b_tree) {
     size_t m = al < bl ? al : bl;
     int c = memcmp(an, bn, m);
     if(c != 0) return c < 0 ? -1 : 1;
@@ -65,7 +71,8 @@ typedef struct {
     const void* addr;
 } ApiEntry;
 
-#define API(x) {#x, (const void*)&(x)}
+#define API(x) \
+    { #x, (const void*)&(x) }
 
 static const ApiEntry hub_api_table[] = {
 #include "hub_api_table.inc"
@@ -129,7 +136,8 @@ const void* hub_plugin_use(HubPluginId id, HubReq* r) {
         pl_res = composite_api_resolver_alloc();
         composite_api_resolver_add(pl_res, firmware_api_interface);
         composite_api_resolver_add(pl_res, &hub_api_iface);
-        pl_pm = plugin_manager_alloc(HUB_PLUGIN_APPID, HUB_PLUGIN_API, composite_api_resolver_get(pl_res));
+        pl_pm = plugin_manager_alloc(
+            HUB_PLUGIN_APPID, HUB_PLUGIN_API, composite_api_resolver_get(pl_res));
         char path[80];
         snprintf(path, sizeof(path), PL_DIR "%s", pl_info[id].file);
         if(plugin_manager_load_single(pl_pm, path) == PluginManagerErrorNone &&
@@ -188,7 +196,11 @@ int hub_git_pack_loose(
 }
 
 int hub_git_pack_stats(
-    void* io, const char* repo_dir, uint32_t small_limit, unsigned* total, unsigned* nsmall) {
+    void* io,
+    const char* repo_dir,
+    uint32_t small_limit,
+    unsigned* total,
+    unsigned* nsmall) {
     const HubPluginPack* p = hub_plugin_use(HUB_PL_PACK, NULL);
     if(!p) return HUB_GIT_ERR_NOMEM;
     return p->pack_stats(io, repo_dir, small_limit, total, nsmall);
@@ -211,7 +223,11 @@ int hub_git_pack_merge(
 }
 
 int hub_git_graph_update(
-    void* io, const char* repo_dir, HubGitPackStop stop, void* ctx, HubGitGraphResult* res) {
+    void* io,
+    const char* repo_dir,
+    HubGitPackStop stop,
+    void* ctx,
+    HubGitGraphResult* res) {
     const HubPluginPack* p = hub_plugin_use(HUB_PL_PACK, NULL);
     if(!p) return HUB_GIT_ERR_NOMEM;
     int rc = p->graph_update(io, repo_dir, stop, ctx, res);

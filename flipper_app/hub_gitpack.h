@@ -40,17 +40,17 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define HUB_GITPACK_MAX_OBJS 512  /* hard cap per call */
+#define HUB_GITPACK_MAX_OBJS 512 /* hard cap per call */
 #define HUB_GITPACK_STOPPED  (-100) /* not returned any more; kept for old code */
 
 typedef struct {
     uint16_t dir; /* next objects/xx folder (0..256); zero it to start a job */
-    void* job;    /* the open tmp pack between slices (malloc'd by the packer, free() it to drop) */
+    void* job; /* the open tmp pack between slices (malloc'd by the packer, free() it to drop) */
 } HubGitPackCursor;
 
 typedef struct {
-    unsigned packed;    /* objects written to the new pack */
-    bool more;          /* there may be more loose objects: call again */
+    unsigned packed; /* objects written to the new pack */
+    bool more; /* there may be more loose objects: call again */
     unsigned remaining; /* loose objects seen in this call and not packed (a lower bound) */
     uint32_t pack_bytes;
     bool stopped;
@@ -69,7 +69,8 @@ int hub_git_pack_loose(
     void* io,
     const char* repo_dir,
     unsigned max_objects,
-    size_t ram_limit, /* objects up to this size are compressed, bigger ones stored; 0 = HUB_GIT_MAX_OBJ */
+    size_t
+        ram_limit, /* objects up to this size are compressed, bigger ones stored; 0 = HUB_GIT_MAX_OBJ */
     HubGitPackCursor* cursor, /* may be NULL */
     HubGitPackProgress progress,
     HubGitPackStop stop,
@@ -114,27 +115,32 @@ typedef struct {
     uint8_t phase; /* 0 = start (zero the struct), 1 = copying, 2 = build idx */
     uint8_t nsrc;
     uint8_t cur_src;
-    uint32_t cur_off;  /* bytes of the current source entry area copied */
-    uint32_t total;    /* bytes in tmp_merge_p so far */
-    uint32_t count;    /* objects in the new pack */
+    uint32_t cur_off; /* bytes of the current source entry area copied */
+    uint32_t total; /* bytes in tmp_merge_p so far */
+    uint32_t count; /* objects in the new pack */
     HubSha1 sha;
     char names[HUB_MERGE_MAX_SRC][46]; /* "pack-<40 hex>" */
-    uint32_t dest[HUB_MERGE_MAX_SRC];  /* offset in the new pack of the source's byte 12 */
-    uint32_t elen[HUB_MERGE_MAX_SRC];  /* entry bytes of the source: size - 32 */
+    uint32_t dest[HUB_MERGE_MAX_SRC]; /* offset in the new pack of the source's byte 12 */
+    uint32_t elen[HUB_MERGE_MAX_SRC]; /* entry bytes of the source: size - 32 */
 } HubGitMergeCursor;
 
 typedef struct {
     unsigned merged_packs; /* source packs merged and deleted (set in the last call) */
     unsigned objects;
-    bool more;     /* call again with the same cursor */
-    bool stopped;  /* this slice ended on the stop callback */
+    bool more; /* call again with the same cursor */
+    bool stopped; /* this slice ended on the stop callback */
     uint32_t pack_bytes;
     char name[46]; /* "pack-<40 hex>" of the result, set in the last call */
 } HubGitMergeResult;
 
 /* Count the packs of a repo: total, and those with a .pack smaller than
  * small_limit (0 = 1 MB). */
-int hub_git_pack_stats(void* io, const char* repo_dir, uint32_t small_limit, unsigned* total, unsigned* nsmall);
+int hub_git_pack_stats(
+    void* io,
+    const char* repo_dir,
+    uint32_t small_limit,
+    unsigned* total,
+    unsigned* nsmall);
 
 /* small_limit: sources must have a .pack smaller than this (0 = 1 MB).
  * max_srcs: up to this many of the smallest (0 or > 16 = 16). With fewer than

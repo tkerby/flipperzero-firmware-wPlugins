@@ -11,9 +11,9 @@
 typedef struct {
     uint8_t* buf; /* NULL for the empty tree */
     size_t len;
-    size_t pos;  /* start of the head entry */
+    size_t pos; /* start of the head entry */
     size_t next; /* start of the entry after the head */
-    bool valid;  /* head entry parsed */
+    bool valid; /* head entry parsed */
     HubTreeEntry e;
 } HubTreeCur;
 

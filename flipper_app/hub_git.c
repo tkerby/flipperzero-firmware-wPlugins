@@ -11,16 +11,17 @@
  * dumb HTTP protocol. The PC side does all the real git work (see
  * docs/git-design.md). Here we only store files and keep refs consistent. */
 
-#define GIT_ROOT       "/ext/git"
-#define GIT_NAME_MAX   64
-#define GIT_REF_MAX    180
-#define GIT_PATH_MAX   320
-#define GIT_TEXT_MAX   200
-#define GIT_REFS_MAX   256
-#define GIT_REPOS_MAX  128
-#define GIT_FILE_MAX   (64 * 1024)
-#define GIT_ZERO       "0000000000000000000000000000000000000000"
-#define GIT_SKELETON_CONFIG "[core]\n\trepositoryformatversion = 0\n\tfilemode = false\n\tbare = true\n"
+#define GIT_ROOT      "/ext/git"
+#define GIT_NAME_MAX  64
+#define GIT_REF_MAX   180
+#define GIT_PATH_MAX  320
+#define GIT_TEXT_MAX  200
+#define GIT_REFS_MAX  256
+#define GIT_REPOS_MAX 128
+#define GIT_FILE_MAX  (64 * 1024)
+#define GIT_ZERO      "0000000000000000000000000000000000000000"
+#define GIT_SKELETON_CONFIG \
+    "[core]\n\trepositoryformatversion = 0\n\tfilemode = false\n\tbare = true\n"
 
 typedef struct {
     HubReq* r;
@@ -218,7 +219,8 @@ static int git_packs(GitCtx* g, FuriString* list) {
         char name[128];
         while(storage_dir_read(dir, &info, name, sizeof(name))) {
             size_t len = strlen(name);
-            if(file_info_is_dir(&info) || len < 6 || strcmp(name + len - 5, ".pack") != 0) continue;
+            if(file_info_is_dir(&info) || len < 6 || strcmp(name + len - 5, ".pack") != 0)
+                continue;
             count++;
             if(list) furi_string_cat_printf(list, "P %s\n", name);
         }
@@ -231,7 +233,8 @@ static int git_packs(GitCtx* g, FuriString* list) {
 /* ---------- refs ---------- */
 
 static void git_refs_free(GitRefs* l) {
-    for(size_t i = 0; i < l->n; i++) free(l->v[i].name);
+    for(size_t i = 0; i < l->n; i++)
+        free(l->v[i].name);
     free(l->v);
 }
 
@@ -370,7 +373,8 @@ static bool git_refs_load(GitCtx* g, GitRefs* l) {
                     char saved = nm[len - 41];
                     nm[len - 41] = '\0'; /* the string is ours to cut */
                     if(git_sha_ok(sha) &&
-                       (strncmp(nm, "refs/heads/", 11) == 0 || strncmp(nm, "refs/tags/", 10) == 0) &&
+                       (strncmp(nm, "refs/heads/", 11) == 0 ||
+                        strncmp(nm, "refs/tags/", 10) == 0) &&
                        !git_refs_find(l, nm)) {
                         ok = git_refs_add(l, nm, len - 41, sha);
                     }
@@ -401,7 +405,8 @@ static bool git_write_info_refs(GitCtx* g) {
     git_refs_free(&l);
 
     snprintf(g->path, sizeof(g->path), "%s/info/refs", g->base);
-    bool ok = git_mkdirs(g, g->path) && git_write(g, g->path, furi_string_get_cstr(s), furi_string_size(s));
+    bool ok = git_mkdirs(g, g->path) &&
+              git_write(g, g->path, furi_string_get_cstr(s), furi_string_size(s));
     furi_string_free(s);
     return ok;
 }
@@ -413,7 +418,8 @@ static bool git_write_info_packs(GitCtx* g) {
     furi_string_push_back(s, '\n');
 
     snprintf(g->path, sizeof(g->path), "%s/objects/info/packs", g->base);
-    bool ok = git_mkdirs(g, g->path) && git_write(g, g->path, furi_string_get_cstr(s), furi_string_size(s));
+    bool ok = git_mkdirs(g, g->path) &&
+              git_write(g, g->path, furi_string_get_cstr(s), furi_string_size(s));
     furi_string_free(s);
     return ok;
 }
@@ -457,7 +463,8 @@ static bool git_packed_drop(GitCtx* g, const char* ref) {
         }
         skip_peeled = drop && p[0] != '^';
         if(!drop) {
-            for(size_t i = 0; i < len; i++) furi_string_push_back(out, p[i]);
+            for(size_t i = 0; i < len; i++)
+                furi_string_push_back(out, p[i]);
             furi_string_push_back(out, '\n');
         }
         p += len + (e ? 1 : 0);
@@ -516,8 +523,8 @@ static void git_route_file(HubReq* r, GitCtx* g) {
 
     git_set_base(g, g->name);
     /* push to create: the receive-pack discovery of a missing repo makes it */
-    if(strcmp(rest, "info/refs") == 0 && r->query && strstr(r->query, "service=git-receive-pack") &&
-       !git_is_dir(g, g->base)) {
+    if(strcmp(rest, "info/refs") == 0 && r->query &&
+       strstr(r->query, "service=git-receive-pack") && !git_is_dir(g, g->base)) {
         storage_simply_mkdir(r->storage, GIT_ROOT);
         strcpy(g->ref, "refs/heads/main");
         strcpy(g->text, "Unnamed repository");
@@ -556,7 +563,8 @@ static void git_route_repos(GitCtx* g) {
         char name[128];
         while(count < GIT_REPOS_MAX && storage_dir_read(dir, &info, name, sizeof(name))) {
             size_t len = strlen(name);
-            if(!file_info_is_dir(&info) || len < 5 || strcmp(name + len - 4, ".git") != 0) continue;
+            if(!file_info_is_dir(&info) || len < 5 || strcmp(name + len - 4, ".git") != 0)
+                continue;
             name[len - 4] = '\0';
             if(!git_name_ok(name)) continue;
             strcpy(names + count * (GIT_NAME_MAX + 1), name);
@@ -615,7 +623,14 @@ static void git_route_repos(GitCtx* g) {
  * (description) are set. Removes the half made repo on failure. */
 static bool git_create(GitCtx* g) {
     static const char* const dirs[] = {
-        "", "/refs", "/refs/heads", "/refs/tags", "/objects", "/objects/pack", "/objects/info", "/info"};
+        "",
+        "/refs",
+        "/refs/heads",
+        "/refs/tags",
+        "/objects",
+        "/objects/pack",
+        "/objects/info",
+        "/info"};
     bool ok = storage_simply_mkdir(g->r->storage, GIT_ROOT);
     for(size_t i = 0; ok && i < COUNT_OF(dirs); i++) {
         snprintf(g->path, sizeof(g->path), "%s%s", g->base, dirs[i]);
@@ -764,7 +779,8 @@ static void git_route_refs(GitCtx* g) {
         HubOid oid;
         uint8_t type;
         size_t size;
-        if(og && strncmp(l.v[i].name, "refs/tags/", 10) == 0 && hub_oid_from_hex(l.v[i].sha, &oid) &&
+        if(og && strncmp(l.v[i].name, "refs/tags/", 10) == 0 &&
+           hub_oid_from_hex(l.v[i].sha, &oid) &&
            hub_git_info(og, &oid, &type, &size) == HUB_GIT_OK && type == HUB_OBJ_TAG &&
            hub_git_peel(og, &oid) == HUB_GIT_OK) {
             char hex[41];
@@ -874,17 +890,17 @@ static void git_route_server_info(GitCtx* g) {
 
 /* ---------- packing loose objects ---------- */
 
-#define PACK_BATCH     128
-#define PACK_RAM       (16 * 1024)
-#define PACK_MARKS     16
-#define PACK_QUIET_MS  30000 /* no auto-pack this long after a write to the repo */
+#define PACK_BATCH    128
+#define PACK_RAM      (16 * 1024)
+#define PACK_MARKS    16
+#define PACK_QUIET_MS 30000 /* no auto-pack this long after a write to the repo */
 
 typedef struct {
     char name[GIT_NAME_MAX + 1];
     uint32_t last_write; /* tick */
     HubGitPackCursor cursor; /* where the last idle slice stopped */
     HubGitMergeCursor* merge; /* allocated only while a pack merge job runs */
-    bool graph;  /* the commit graph may be out of date */
+    bool graph; /* the commit graph may be out of date */
     bool rescan; /* loose objects came in while a pack was open: scan again when it is finished */
 } PackMark;
 
@@ -991,7 +1007,8 @@ void hub_git_mark_all(Storage* storage) {
         char name[128];
         while(storage_dir_read(dir, &info, name, sizeof(name))) {
             size_t len = strlen(name);
-            if(!file_info_is_dir(&info) || len < 5 || strcmp(name + len - 4, ".git") != 0) continue;
+            if(!file_info_is_dir(&info) || len < 5 || strcmp(name + len - 4, ".git") != 0)
+                continue;
             name[len - 4] = '\0';
             if(git_name_ok(name)) hub_git_mark_loose(name);
         }
@@ -1000,7 +1017,8 @@ void hub_git_mark_all(Storage* storage) {
     storage_file_free(dir);
     /* the start is not a write: the packer may begin as soon as it is idle */
     if(pack_marks) {
-        for(size_t i = 0; i < PACK_MARKS; i++) pack_marks[i].last_write = 0;
+        for(size_t i = 0; i < PACK_MARKS; i++)
+            pack_marks[i].last_write = 0;
     }
 }
 
@@ -1026,7 +1044,7 @@ static void pack_regen_packs(HubReq* r, const char* name) {
 #define PACK_API_MS   25000
 
 typedef struct {
-    uint32_t budget;   /* ms of object writing, counted from the first object */
+    uint32_t budget; /* ms of object writing, counted from the first object */
     uint32_t deadline; /* tick */
     uint32_t first; /* tick of the first stop callback */
 } PackClock;
@@ -1054,11 +1072,13 @@ static bool pack_slice(
     PackClock k = {.budget = budget};
     memset(res, 0, sizeof(*res));
     uint16_t dir_before = cursor ? cursor->dir : 0;
-    int rc = hub_git_pack_loose(r->storage, dir, PACK_BATCH, PACK_RAM, cursor, NULL, pack_stop, &k, res);
+    int rc = hub_git_pack_loose(
+        r->storage, dir, PACK_BATCH, PACK_RAM, cursor, NULL, pack_stop, &k, res);
     if(rc == HUB_GIT_ERR_NOMEM) *nomem = true;
     if(res->finished) pack_regen_packs(r, name);
     /* a slice that only scanned folders is progress too, if the cursor moved */
-    bool progress = res->packed > 0 || res->finished || res->stopped || (cursor && (cursor->dir != dir_before || cursor->job));
+    bool progress = res->packed > 0 || res->finished || res->stopped ||
+                    (cursor && (cursor->dir != dir_before || cursor->job));
     return rc == 0 && res->more && progress;
 }
 
@@ -1237,7 +1257,8 @@ static void clean_dir(Storage* storage, const char* path) {
         while(storage_dir_read(dir, &info, name, sizeof(name))) {
             size_t len = strlen(name);
             if(file_info_is_dir(&info)) continue;
-            if((len > 5 && strcmp(name + len - 5, ".part") == 0) || strncmp(name, "tmp_pack_", 9) == 0) {
+            if((len > 5 && strcmp(name + len - 5, ".part") == 0) ||
+               strncmp(name, "tmp_pack_", 9) == 0) {
                 furi_string_cat_printf(names, "%s\n", name);
             }
         }
@@ -1351,11 +1372,12 @@ bool hub_git_route(HubReq* r) {
             git_route_pack(g);
         } else if(post && strcmp(name, "server-info") == 0) {
             git_route_server_info(g);
-        } else if(strcmp(name, "repos") == 0 || strcmp(name, "refs") == 0 || strcmp(name, "create") == 0 ||
-                  strcmp(name, "delete") == 0 || strcmp(name, "rename") == 0 ||
-                  strcmp(name, "describe") == 0 || strcmp(name, "ref") == 0 ||
-                  strcmp(name, "head") == 0 || strcmp(name, "server-info") == 0 ||
-                  strcmp(name, "pack") == 0) {
+        } else if(
+            strcmp(name, "repos") == 0 || strcmp(name, "refs") == 0 ||
+            strcmp(name, "create") == 0 || strcmp(name, "delete") == 0 ||
+            strcmp(name, "rename") == 0 || strcmp(name, "describe") == 0 ||
+            strcmp(name, "ref") == 0 || strcmp(name, "head") == 0 ||
+            strcmp(name, "server-info") == 0 || strcmp(name, "pack") == 0) {
             hub_send_error(r, 405, "method not allowed");
         } else {
             hub_send_error(r, 404, "not found");
@@ -1380,7 +1402,6 @@ void hub_git_mark_dirty(HubReq* r, const char* name) {
     }
     snprintf(git_dirty, sizeof(git_dirty), "%s", name);
 }
-
 
 bool hub_git_name_ok(const char* name) {
     return git_name_ok(name);

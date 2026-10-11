@@ -26,7 +26,7 @@ typedef struct {
     uint8_t type;
     size_t size;
     HubDeflate* df; /* compressor of a big object */
-    PackOut so;     /* scratch file of a big object (tmp_pack_o) */
+    PackOut so; /* scratch file of a big object (tmp_pack_o) */
     uint64_t limit; /* the scratch file may not grow past this: the object is left loose */
     bool nomem, over;
     char pa[PATHLEN], pb[PATHLEN], pc[PATHLEN];
@@ -37,7 +37,7 @@ typedef struct {
  * until the pack is finished, so dropping this (a restart) loses only time:
  * the next slice deletes the tmp_pack_* files and starts again. */
 #define JOB_MAX 384 /* finish the pack when it holds this many objects */
-#define TAB_REC 28  /* tmp_pack_t record: id[20], offset u32, crc u32 */
+#define TAB_REC 28 /* tmp_pack_t record: id[20], offset u32, crc u32 */
 typedef struct {
     uint8_t phase; /* 1 append, 2 hash, 3 index, 4 delete loose */
     bool patched;
@@ -109,8 +109,10 @@ static void list_folders(
         }
         hub_gitio_dir_close(s);
         if(over) {
-            if(base == 0) *big = true;
-            else n = base;
+            if(base == 0)
+                *big = true;
+            else
+                n = base;
             break; /* stay on this folder */
         }
     }
@@ -118,7 +120,8 @@ static void list_folders(
     *next = d;
 }
 
-__attribute__((noinline)) static void clean_stale(void* io, const char* repo, char* path, char* full) {
+__attribute__((noinline)) static void
+    clean_stale(void* io, const char* repo, char* path, char* full) {
     char name[64];
     snprintf(path, PATHLEN, "%s/objects/pack", repo);
     for(int round = 0; round < 8; round++) {
@@ -233,7 +236,8 @@ static int pack_big(void* io, const char* repo, HubGit* g, Run* r, const HubOid*
     r->so.f = hub_gitio_create(io, r->pc);
     if(!r->so.f) return HUB_GIT_ERR_IO;
     int e = hub_git_stream(g, oid, big_sink, r, &r->type, &r->size);
-    if(e == HUB_GIT_ERR_WRITE) e = r->over ? PACK_SKIP : (r->nomem ? HUB_GIT_ERR_NOMEM : HUB_GIT_ERR_IO);
+    if(e == HUB_GIT_ERR_WRITE)
+        e = r->over ? PACK_SKIP : (r->nomem ? HUB_GIT_ERR_NOMEM : HUB_GIT_ERR_IO);
     if(!e && !(r->df && hub_deflate_finish(r->df))) e = r->over ? PACK_SKIP : HUB_GIT_ERR_IO;
     if(r->df) {
         hub_deflate_free(r->df);
@@ -247,7 +251,8 @@ static int pack_big(void* io, const char* repo, HubGit* g, Run* r, const HubOid*
         if(!f || !put_entry_header(r)) e = HUB_GIT_ERR_IO;
         for(uint32_t left = r->so.total; !e && left;) {
             uint32_t k = left < sizeof r->buf ? left : (uint32_t)sizeof r->buf;
-            if(hub_gitio_read(f, r->buf, k) != k || !pack_out(&r->po, r->buf, k)) e = HUB_GIT_ERR_IO;
+            if(hub_gitio_read(f, r->buf, k) != k || !pack_out(&r->po, r->buf, k))
+                e = HUB_GIT_ERR_IO;
             left -= k;
         }
         if(f) hub_gitio_close(f);
@@ -279,9 +284,11 @@ static void sift(const uint8_t* ids, uint16_t* o, unsigned start, unsigned end) 
 }
 
 static void sort_order(const uint8_t* ids, uint16_t* o, unsigned n) {
-    for(unsigned i = 0; i < n; i++) o[i] = (uint16_t)i;
+    for(unsigned i = 0; i < n; i++)
+        o[i] = (uint16_t)i;
     if(n < 2) return;
-    for(unsigned s = n / 2; s > 0; s--) sift(ids, o, s - 1, n);
+    for(unsigned s = n / 2; s > 0; s--)
+        sift(ids, o, s - 1, n);
     for(unsigned e = n - 1; e > 0; e--) {
         uint16_t t = o[0];
         o[0] = o[e];
@@ -349,12 +356,16 @@ static int write_idx(
     idx_put(o, magic, 8);
     unsigned k = 0;
     for(unsigned b = 0; b < 256; b++) {
-        while(k < n && ids[20 * (size_t)order[k]] <= b) k++;
+        while(k < n && ids[20 * (size_t)order[k]] <= b)
+            k++;
         idx_be32(o, k);
     }
-    for(unsigned i = 0; i < n; i++) idx_put(o, ids + 20 * (size_t)order[i], 20);
-    for(unsigned i = 0; i < n; i++) idx_be32(o, crcs[order[i]]);
-    for(unsigned i = 0; i < n; i++) idx_be32(o, offs[order[i]]);
+    for(unsigned i = 0; i < n; i++)
+        idx_put(o, ids + 20 * (size_t)order[i], 20);
+    for(unsigned i = 0; i < n; i++)
+        idx_be32(o, crcs[order[i]]);
+    for(unsigned i = 0; i < n; i++)
+        idx_be32(o, offs[order[i]]);
     idx_put(o, pack_sha, 20);
     idx_flush(o);
     uint8_t sum[20];
@@ -470,7 +481,8 @@ static int job_append(
         pack_out(&run->po, hdr, 12);
     } else {
         run->po.f = hub_gitio_open_rw(io, run->pa);
-        if(!run->po.f || hub_gitio_size(run->po.f) != job->total || !hub_gitio_seek(run->po.f, job->total)) {
+        if(!run->po.f || hub_gitio_size(run->po.f) != job->total ||
+           !hub_gitio_seek(run->po.f, job->total)) {
             r = HUB_GIT_ERR_IO; /* the temp file changed: start over */
             cur->job = job; /* dropped below with the files */
             goto out;
@@ -481,7 +493,8 @@ static int job_append(
     unsigned done = 0, kept = 0;
     while(done < n && !run->po.err) {
         unsigned end = done;
-        while(end < n && ids[20 * (size_t)end] == ids[20 * (size_t)done]) end++;
+        while(end < n && ids[20 * (size_t)end] == ids[20 * (size_t)done])
+            end++;
         if(stop && stop(ctx)) {
             res->stopped = true;
             break;
@@ -514,12 +527,14 @@ static int job_append(
     }
     hub_gitio_close(run->po.f);
     run->po.f = NULL;
-    uint16_t newdir = done == n ? (uint16_t)(big && kept == 0 ? next + 1 : next) : (uint16_t)ids[20 * (size_t)done];
+    uint16_t newdir = done == n ? (uint16_t)(big && kept == 0 ? next + 1 : next) :
+                                  (uint16_t)ids[20 * (size_t)done];
     if(kept > 0) {
         /* the table of this slice goes to the end of tmp_pack_t */
         tmp_path(run, repo, run->pb, "tmp_pack_t");
         HubGitFile* t = hub_gitio_open_rw(io, run->pb);
-        if(!t || hub_gitio_size(t) != (uint64_t)job->count * TAB_REC || !hub_gitio_seek(t, (uint64_t)job->count * TAB_REC)) {
+        if(!t || hub_gitio_size(t) != (uint64_t)job->count * TAB_REC ||
+           !hub_gitio_seek(t, (uint64_t)job->count * TAB_REC)) {
             if(t) hub_gitio_close(t);
             r = HUB_GIT_ERR_IO;
             goto out;
@@ -545,7 +560,8 @@ static int job_append(
     cur->dir = newdir;
     res->remaining = n - done;
     res->more = done < n || next < 256 || big;
-    *finish = job->count > 0 && done == n && (next >= 256 || big || oneshot || job->count >= JOB_MAX);
+    *finish = job->count > 0 && done == n &&
+              (next >= 256 || big || oneshot || job->count >= JOB_MAX);
     if(*finish) job->phase = 2;
 out:
     if(r) {
@@ -563,7 +579,14 @@ out:
 
 /* ---- finish: hash, index, rename, delete the loose files; every step resumes ---- */
 
-static int job_hash(void* io, const char* repo, Run* run, PackJob* job, HubGitPackStop stop, void* ctx, bool* stopped) {
+static int job_hash(
+    void* io,
+    const char* repo,
+    Run* run,
+    PackJob* job,
+    HubGitPackStop stop,
+    void* ctx,
+    bool* stopped) {
     tmp_path(run, repo, run->pa, "tmp_pack_p");
     HubGitFile* f = hub_gitio_open_rw(io, run->pa);
     if(!f || hub_gitio_size(f) != job->total) {
@@ -660,7 +683,14 @@ static int job_index(void* io, const char* repo, Run* run, PackJob* job, HubGitP
 }
 
 /* Both files are in place: delete the loose objects of the pack. Done is true at the end. */
-static void job_delete(void* io, const char* repo, Run* run, PackJob* job, HubGitPackStop stop, void* ctx, bool* done) {
+static void job_delete(
+    void* io,
+    const char* repo,
+    Run* run,
+    PackJob* job,
+    HubGitPackStop stop,
+    void* ctx,
+    bool* done) {
     tmp_path(run, repo, run->pb, "tmp_pack_t");
     HubGitFile* t = hub_gitio_open(io, run->pb);
     if(!t) {
@@ -674,7 +704,8 @@ static void job_delete(void* io, const char* repo, Run* run, PackJob* job, HubGi
         }
         unsigned k = job->count - job->dpos;
         if(k > 8) k = 8;
-        if(!hub_gitio_seek(t, (uint64_t)job->dpos * TAB_REC) || hub_gitio_read(t, run->buf, k * TAB_REC) != k * TAB_REC) {
+        if(!hub_gitio_seek(t, (uint64_t)job->dpos * TAB_REC) ||
+           hub_gitio_read(t, run->buf, k * TAB_REC) != k * TAB_REC) {
             job->dpos = job->count;
             break;
         }
@@ -728,7 +759,8 @@ int hub_git_pack_loose(
         finish = true; /* a finish that was interrupted */
         res->more = true;
     } else {
-        r = job_append(io, repo, run, cur, max_objects, ram_limit, progress, stop, ctx, res, oneshot, &finish);
+        r = job_append(
+            io, repo, run, cur, max_objects, ram_limit, progress, stop, ctx, res, oneshot, &finish);
         job = cur->job;
     }
     while(r == HUB_GIT_OK && finish && job) {
@@ -773,11 +805,11 @@ int hub_git_pack_loose(
 
 /* ======================= merging small packs ======================= */
 
-#define M_IDS 8  /* ids cached per source */
-#define M_VALS 16 /* u32 values cached per source */
-#define M_PATH (HUB_GIT_PATH_MAX + 80)
+#define M_IDS           8 /* ids cached per source */
+#define M_VALS          16 /* u32 values cached per source */
+#define M_PATH          (HUB_GIT_PATH_MAX + 80)
 #define M_SMALL_DEFAULT (1024u * 1024u)
-#define IDX_TABLE_OFF 1032u /* 8 header + 1024 fanout */
+#define IDX_TABLE_OFF   1032u /* 8 header + 1024 fanout */
 
 typedef struct {
     HubGitFile* f;
@@ -887,7 +919,12 @@ static int mg_next(Merge* m, uint8_t id[20], unsigned* src, uint32_t* ix) {
 
 /* ---------- stats ---------- */
 
-int hub_git_pack_stats(void* io, const char* repo, uint32_t small_limit, unsigned* total, unsigned* nsmall) {
+int hub_git_pack_stats(
+    void* io,
+    const char* repo,
+    uint32_t small_limit,
+    unsigned* total,
+    unsigned* nsmall) {
     if(!small_limit) small_limit = M_SMALL_DEFAULT;
     *total = *nsmall = 0;
     char* path = malloc(M_PATH);
@@ -901,7 +938,8 @@ int hub_git_pack_stats(void* io, const char* repo, uint32_t small_limit, unsigne
     uint64_t sz;
     while(hub_gitio_dir_read_ex(d, name, sizeof name, &isdir, &sz)) {
         size_t n = strlen(name);
-        if(isdir || n != 50 || strncmp(name, "pack-", 5) != 0 || strcmp(name + 45, ".pack") != 0) continue;
+        if(isdir || n != 50 || strncmp(name, "pack-", 5) != 0 || strcmp(name + 45, ".pack") != 0)
+            continue;
         (*total)++;
         if(sz < small_limit) (*nsmall)++;
     }
@@ -927,7 +965,13 @@ static void rm_tmp_merge(void* io, MCtx* c, const char* repo) {
 }
 
 /* Pick the sources (smallest first), check them, drop duplicate sharers. */
-static int merge_select(void* io, const char* repo, MCtx* c, HubGitMergeCursor* cur, uint32_t small_limit, unsigned max_srcs) {
+static int merge_select(
+    void* io,
+    const char* repo,
+    MCtx* c,
+    HubGitMergeCursor* cur,
+    uint32_t small_limit,
+    unsigned max_srcs) {
     char names[HUB_MERGE_MAX_SRC][46];
     uint32_t sizes[HUB_MERGE_MAX_SRC];
     unsigned k = 0;
@@ -939,11 +983,13 @@ static int merge_select(void* io, const char* repo, MCtx* c, HubGitMergeCursor* 
     uint64_t sz;
     while(hub_gitio_dir_read_ex(d, name, sizeof name, &isdir, &sz)) {
         size_t n = strlen(name);
-        if(isdir || n != 50 || strncmp(name, "pack-", 5) != 0 || strcmp(name + 45, ".pack") != 0) continue;
+        if(isdir || n != 50 || strncmp(name, "pack-", 5) != 0 || strcmp(name + 45, ".pack") != 0)
+            continue;
         if(sz >= small_limit || sz < 32) continue;
         /* insert into the sorted list of the smallest max_srcs */
         unsigned pos = k;
-        while(pos > 0 && sizes[pos - 1] > sz) pos--;
+        while(pos > 0 && sizes[pos - 1] > sz)
+            pos--;
         if(pos >= max_srcs) continue;
         if(k < max_srcs) k++;
         for(unsigned j = k - 1; j > pos; j--) {
@@ -1032,7 +1078,11 @@ static int merge_select(void* io, const char* repo, MCtx* c, HubGitMergeCursor* 
 }
 
 static int merge_build_idx(
-    void* io, const char* repo, MCtx* c, HubGitMergeCursor* cur, const uint8_t pack_sha[20]) {
+    void* io,
+    const char* repo,
+    MCtx* c,
+    HubGitMergeCursor* cur,
+    const uint8_t pack_sha[20]) {
     IdxOut* o = malloc(sizeof(IdxOut));
     if(!o) return HUB_GIT_ERR_NOMEM;
     m_paths(c, repo, TMP_I, c->p1);
@@ -1060,7 +1110,8 @@ static int merge_build_idx(
     if(r) goto out;
     unsigned b = 0;
     while((got = mg_next(m, id, &src, &ix)) > 0) {
-        for(; b < id[0]; b++) idx_be32(o, total);
+        for(; b < id[0]; b++)
+            idx_be32(o, total);
         total++;
     }
     mg_close(m);
@@ -1068,7 +1119,8 @@ static int merge_build_idx(
         r = HUB_GIT_ERR_IO;
         goto out;
     }
-    for(; b < 256; b++) idx_be32(o, total);
+    for(; b < 256; b++)
+        idx_be32(o, total);
     if(total != cur->count) {
         r = HUB_GIT_ERR_CORRUPT;
         goto out;
@@ -1077,7 +1129,8 @@ static int merge_build_idx(
     /* pass 1: ids */
     r = mg_open(c, io, repo, cur->names, cur->nsrc);
     if(r) goto out;
-    while((got = mg_next(m, id, &src, &ix)) > 0) idx_put(o, id, 20);
+    while((got = mg_next(m, id, &src, &ix)) > 0)
+        idx_put(o, id, 20);
     mg_close(m);
     if(got < 0) {
         r = HUB_GIT_ERR_IO;
@@ -1174,7 +1227,19 @@ int hub_git_pack_merge(
             goto fail;
         }
         uint32_t n = cur->count;
-        uint8_t hdr[12] = {'P', 'A', 'C', 'K', 0, 0, 0, 2, (uint8_t)(n >> 24), (uint8_t)(n >> 16), (uint8_t)(n >> 8), (uint8_t)n};
+        uint8_t hdr[12] = {
+            'P',
+            'A',
+            'C',
+            'K',
+            0,
+            0,
+            0,
+            2,
+            (uint8_t)(n >> 24),
+            (uint8_t)(n >> 16),
+            (uint8_t)(n >> 8),
+            (uint8_t)n};
         if(hub_gitio_write(f, hdr, 12) != 12) {
             r = HUB_GIT_ERR_IO;
             goto fail;
@@ -1209,8 +1274,8 @@ int hub_git_pack_merge(
                 }
                 uint32_t k = cur->elen[i] - cur->cur_off;
                 if(k > sizeof c->buf) k = sizeof c->buf;
-                if(!hub_gitio_seek(sf, 12ull + cur->cur_off) || hub_gitio_read(sf, c->buf, k) != k ||
-                   hub_gitio_write(f, c->buf, k) != k) {
+                if(!hub_gitio_seek(sf, 12ull + cur->cur_off) ||
+                   hub_gitio_read(sf, c->buf, k) != k || hub_gitio_write(f, c->buf, k) != k) {
                     r = HUB_GIT_ERR_IO;
                     goto fail;
                 }

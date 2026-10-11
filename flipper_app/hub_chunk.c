@@ -57,7 +57,8 @@ void hub_json_bytes(FuriString* s, const char* v, size_t n) {
                 furi_string_cat_str(s, "\\ufffd");
                 i++;
             } else {
-                for(size_t k = 0; k < l; k++) furi_string_push_back(s, v[i + k]);
+                for(size_t k = 0; k < l; k++)
+                    furi_string_push_back(s, v[i + k]);
                 i += l;
             }
         }
@@ -162,4 +163,3 @@ bool hub_chunk_end(HubChunk* c, bool good) {
     }
     return c->ok;
 }
-

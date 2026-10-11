@@ -126,7 +126,8 @@ static void hub_draw(Canvas* canvas, void* ctx) {
     } /* no new beat: the spinner stays where it is */
     hub->frames++;
     static bool stuck_logged;
-    if(stuck && !stuck_logged) FURI_LOG_E("Gitphin", "worker stuck: no heartbeat for %lu s", (unsigned long)(age / 1000));
+    if(stuck && !stuck_logged)
+        FURI_LOG_E("Gitphin", "worker stuck: no heartbeat for %lu s", (unsigned long)(age / 1000));
     stuck_logged = stuck;
 
     /* progress snapshot (the worker writes it without a lock) */
@@ -150,18 +151,28 @@ static void hub_draw(Canvas* canvas, void* ctx) {
 
     /* state */
     const char* st;
-    if(!hub->usb_ready) st = "Starting USB";
-    else if(stuck) st = "STUCK";
-    else if(show) st = live ? (kind == HUB_PG_PUSH ? "Pushing" : (kind == HUB_PG_PULL ? "Pulling" : "Transfer")) : "Done";
-    else if(act == HUB_ACT_PACK) st = "Packing";
-    else if(act == HUB_ACT_REQUEST) st = "Busy";
-    else st = requests ? "Ready" : "Waiting for PC";
+    if(!hub->usb_ready)
+        st = "Starting USB";
+    else if(stuck)
+        st = "STUCK";
+    else if(show)
+        st = live ? (kind == HUB_PG_PUSH ? "Pushing" :
+                                           (kind == HUB_PG_PULL ? "Pulling" : "Transfer")) :
+                    "Done";
+    else if(act == HUB_ACT_PACK)
+        st = "Packing";
+    else if(act == HUB_ACT_REQUEST)
+        st = "Busy";
+    else
+        st = requests ? "Ready" : "Waiting for PC";
     if(stuck) {
         canvas_draw_box(canvas, 30, 14, 68, 12); /* inverted */
         canvas_set_color(canvas, ColorWhite);
     }
-    if(show) canvas_draw_str(canvas, 4, 23, st);
-    else hub_ctr(canvas, 23, st);
+    if(show)
+        canvas_draw_str(canvas, 4, 23, st);
+    else
+        hub_ctr(canvas, 23, st);
     canvas_set_color(canvas, ColorBlack);
 
     canvas_set_font(canvas, FontSecondary);
@@ -183,11 +194,23 @@ static void hub_draw(Canvas* canvas, void* ctx) {
         if(whole && live && total > 8192) hub_bar(canvas, 37, 3, done, total, now);
         const char* pre = live ? "" : "Done: ";
         if(big && live) {
-            snprintf(line, sizeof(line), "%lu of %lu KB", (unsigned long)(done >> 10), (unsigned long)(total >> 10));
+            snprintf(
+                line,
+                sizeof(line),
+                "%lu of %lu KB",
+                (unsigned long)(done >> 10),
+                (unsigned long)(total >> 10));
         } else if(big) {
             snprintf(line, sizeof(line), "Done: %lu KB", (unsigned long)kb);
         } else {
-            snprintf(line, sizeof(line), "%s%lu %s, %lu KB", pre, (unsigned long)objs, kind == HUB_PG_PUSH ? "obj" : "files", (unsigned long)kb);
+            snprintf(
+                line,
+                sizeof(line),
+                "%s%lu %s, %lu KB",
+                pre,
+                (unsigned long)objs,
+                kind == HUB_PG_PUSH ? "obj" : "files",
+                (unsigned long)kb);
         }
         uint32_t ms = (live ? now : plast) - pstart;
         if(live && ms >= 1000 && !big) {

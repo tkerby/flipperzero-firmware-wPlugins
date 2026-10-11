@@ -7,7 +7,7 @@
 #include <toolbox/version.h>
 #include "hub_mem.h"
 
-#define HUB_INDEX_PATH   EXT_PATH("apps_assets/gitphin/index.html")
+#define HUB_INDEX_PATH EXT_PATH("apps_assets/gitphin/index.html")
 
 /* ---------- small helpers ---------- */
 
@@ -21,7 +21,8 @@ static bool hub_ieq_prefix(const char* s, const char* prefix) {
 }
 
 static const char* hub_hdr_value(const char* v) {
-    while(*v == ' ' || *v == '\t') v++;
+    while(*v == ' ' || *v == '\t')
+        v++;
     return v;
 }
 
@@ -79,7 +80,8 @@ void hub_beat(void) {
     hub_beat_tick = now;
     HubReq* r = hub_cur_req;
     /* PING frames can be read only when the request body is all in */
-    if(r && now - hub_last_service >= 500 && r->body_read >= r->content_length && r->pre_len == 0) {
+    if(r && now - hub_last_service >= 500 && r->body_read >= r->content_length &&
+       r->pre_len == 0) {
         hub_last_service = now;
         hub_transport_service(r->t);
     }
@@ -108,7 +110,8 @@ bool hub_beat_hook(void) {
 
 bool hub_sd_free_ok(Storage* storage, uint64_t incoming) {
     uint64_t total = 0, free_bytes = 0;
-    if(storage_common_fs_info(storage, STORAGE_EXT_PATH_PREFIX, &total, &free_bytes) != FSE_OK) return false;
+    if(storage_common_fs_info(storage, STORAGE_EXT_PATH_PREFIX, &total, &free_bytes) != FSE_OK)
+        return false;
     return free_bytes > incoming && free_bytes - incoming >= 16ULL * 1024 * 1024;
 }
 
@@ -120,7 +123,8 @@ bool hub_sd_ok(HubReq* r, uint64_t incoming) {
 
 /* Enough free memory (total and biggest block) for a route? Else answer 503. */
 bool hub_heap_ok(HubReq* r, size_t need) {
-    if(memmgr_get_free_heap() >= need + HUB_HEAP_RESERVE && memmgr_heap_get_max_free_block() >= need / 4 * 3) {
+    if(memmgr_get_free_heap() >= need + HUB_HEAP_RESERVE &&
+       memmgr_heap_get_max_free_block() >= need / 4 * 3) {
         return true;
     }
     hub_send_error(r, 503, "low memory, try again");
@@ -221,7 +225,8 @@ static void prog_begin(HubReq* r) {
     if(strncmp(r->path, "/git/", 5) == 0) {
         uint8_t kind = strcmp(r->method, "GET") ? HUB_PG_PUSH : HUB_PG_PULL;
         uint32_t repo = 0;
-        for(const char* c = r->path + 5; *c && *c != '/'; c++) repo = repo * 31 + (uint8_t)*c;
+        for(const char* c = r->path + 5; *c && *c != '/'; c++)
+            repo = repo * 31 + (uint8_t)*c;
         if(kind != p->kind || repo != p->repo || now - p->last >= 3000) {
             p->objects = p->bytes = 0;
             p->start = now;
@@ -368,7 +373,8 @@ static bool hub_get_path(HubReq* r, char* out) {
 
 static void hub_route_info(HubReq* r) {
     uint64_t total = 0, free_bytes = 0;
-    bool sd_ok = storage_common_fs_info(r->storage, STORAGE_EXT_PATH_PREFIX, &total, &free_bytes) == FSE_OK;
+    bool sd_ok =
+        storage_common_fs_info(r->storage, STORAGE_EXT_PATH_PREFIX, &total, &free_bytes) == FSE_OK;
     const Version* ver = furi_hal_version_get_firmware_version();
     const char* name = furi_hal_version_get_name_ptr();
 

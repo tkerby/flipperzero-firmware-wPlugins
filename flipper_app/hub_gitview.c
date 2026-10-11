@@ -7,7 +7,7 @@
  * The object reading is in hub_gitobj.c; here is only HTTP and JSON.
  * Objects held in RAM are limited to VIEW_MAX_OBJ; blobs are streamed. */
 
-#define VIEW_MAX_OBJ    (16 * 1024)
+#define VIEW_MAX_OBJ (16 * 1024)
 
 typedef struct {
     HubReq* r;
@@ -116,7 +116,12 @@ static bool tree_cb(void* ctx, uint32_t mode, const char* name, size_t nl, const
     hub_chunk_lit(o->ck, "{\"name\":");
     o->first = false;
     hub_chunk_json(o->ck, name, nl);
-    furi_string_printf(o->t, ",\"type\":\"%s\",\"mode\":\"%06lo\",\"sha\":\"%s\"}", type, (unsigned long)mode, hex);
+    furi_string_printf(
+        o->t,
+        ",\"type\":\"%s\",\"mode\":\"%06lo\",\"sha\":\"%s\"}",
+        type,
+        (unsigned long)mode,
+        hex);
     hub_chunk_fs(o->ck, o->t);
     hub_beat();
     return o->ck->ok;
@@ -132,7 +137,8 @@ static void view_tree(View* v) {
     if(rc == HUB_GIT_OK) rc = hub_git_tree_of(v->g, &commit, &tree);
     if(!hub_query_get(r->query, "path", v->path, sizeof(v->path))) v->path[0] = '\0';
     size_t pl = strlen(v->path);
-    while(pl > 0 && v->path[pl - 1] == '/') v->path[--pl] = '\0';
+    while(pl > 0 && v->path[pl - 1] == '/')
+        v->path[--pl] = '\0';
     if(rc == HUB_GIT_OK) rc = hub_git_tree_find(v->g, &tree, v->path, &oid, &mode);
     if(rc != HUB_GIT_OK) return view_err(v, rc);
     if(hub_tree_mode_type(mode)[0] != 't') {
@@ -180,11 +186,11 @@ static void view_tree(View* v) {
 static const char* blob_mime(const char* path) {
     const char* dot = strrchr(path, '.');
     if(!dot) return "application/octet-stream";
-    static const char* const text[] = {".txt", ".md",  ".c",    ".h",   ".cpp", ".hpp", ".py",
-                                       ".js",  ".json", ".css", ".html", ".htm", ".xml", ".yml",
-                                       ".yaml", ".toml", ".sh", ".rs",  ".go",  ".java", ".csv",
-                                       ".ini", ".cfg", ".log",  ".sub", ".ir",  ".nfc", ".rfid",
-                                       ".fam", ".ts",  ".lua",  ".rb",  ".php", ".sql"};
+    static const char* const text[] = {".txt",  ".md",   ".c",   ".h",    ".cpp", ".hpp",  ".py",
+                                       ".js",   ".json", ".css", ".html", ".htm", ".xml",  ".yml",
+                                       ".yaml", ".toml", ".sh",  ".rs",   ".go",  ".java", ".csv",
+                                       ".ini",  ".cfg",  ".log", ".sub",  ".ir",  ".nfc",  ".rfid",
+                                       ".fam",  ".ts",   ".lua", ".rb",   ".php", ".sql"};
     for(size_t i = 0; i < COUNT_OF(text); i++) {
         if(strcasecmp(dot, text[i]) == 0) return "text/plain; charset=utf-8";
     }
@@ -227,7 +233,8 @@ static void view_blob(View* v) {
     char sha[48];
     const char* ckey = sha; /* what addresses the answer: a full id never changes */
 
-    if(hub_query_get(r->query, "sha", sha, sizeof(sha)) && !hub_query_get(r->query, "path", v->path, sizeof(v->path))) {
+    if(hub_query_get(r->query, "sha", sha, sizeof(sha)) &&
+       !hub_query_get(r->query, "path", v->path, sizeof(v->path))) {
         if(!hub_oid_from_hex(sha, &oid)) {
             hub_send_error(r, 400, "bad sha");
             return;
@@ -258,7 +265,9 @@ static void view_blob(View* v) {
     char hex[41];
     hub_oid_to_hex(&oid, hex);
     FuriString* extra = furi_string_alloc_printf(
-        "X-Git-Sha: %s\r\nX-Content-Type-Options: nosniff\r\nContent-Security-Policy: sandbox\r\n%s", hex, hub_cache_hdr(ckey));
+        "X-Git-Sha: %s\r\nX-Content-Type-Options: nosniff\r\nContent-Security-Policy: sandbox\r\n%s",
+        hex,
+        hub_cache_hdr(ckey));
     char dl[4] = {0};
     if(hub_query_get(r->query, "dl", dl, sizeof(dl)) && dl[0] == '1') {
         const char* base = strrchr(name_for_mime, '/');
@@ -310,11 +319,14 @@ bool hub_gitview_route(HubReq* r) {
         need = 28 * 1024; /* est.: 16 KB object + 4.5 KB inflate + 6 KB list/out */
     } else if(strcmp(route, "blob") == 0) {
         fn = view_blob;
-        need = 24 * 1024; /* host peak 16.6 KB (8 KB ring window, cache file for far matches) +25 % +firmware objects */
+        need =
+            24 *
+            1024; /* host peak 16.6 KB (8 KB ring window, cache file for far matches) +25 % +firmware objects */
     } else {
         return false;
     }
-    if(memmgr_get_free_heap() < need + HUB_HEAP_RESERVE) hub_plugin_unload(); /* give the plugin's memory back */
+    if(memmgr_get_free_heap() < need + HUB_HEAP_RESERVE)
+        hub_plugin_unload(); /* give the plugin's memory back */
     View* v = malloc(sizeof(View));
     if(!v) {
         hub_send_error(r, 503, "low memory, try again");

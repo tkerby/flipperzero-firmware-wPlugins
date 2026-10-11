@@ -129,8 +129,8 @@ static bool hub_rx_header(HubTransport* t, uint8_t* type, uint16_t* len, uint32_
     if(!hub_rx_byte(t, &hi, HUB_HEADER_TIMEOUT_MS)) return false;
     *len = lo | (hi << 8);
 
-    bool known = *type == HUB_FRAME_OPEN || *type == HUB_FRAME_DATA ||
-                 *type == HUB_FRAME_CLOSE || *type == HUB_FRAME_PING;
+    bool known = *type == HUB_FRAME_OPEN || *type == HUB_FRAME_DATA || *type == HUB_FRAME_CLOSE ||
+                 *type == HUB_FRAME_PING;
     return known && *len <= HUB_FRAME_MAX_PAYLOAD;
 }
 

@@ -223,7 +223,15 @@ __attribute__((noinline)) static int commit_file_run(
         uint8_t* buf;
         size_t blen;
         rc = splice(
-            g, c->lvl[k].exists ? &c->lvl[k].oid : NULL, name, nl, op_put, mode, &child, &buf, &blen);
+            g,
+            c->lvl[k].exists ? &c->lvl[k].oid : NULL,
+            name,
+            nl,
+            op_put,
+            mode,
+            &child,
+            &buf,
+            &blen);
         if(rc != HUB_GIT_OK) return rc;
         if(k > 0 && blen == 0) {
             free(buf);
@@ -276,7 +284,8 @@ int hub_git_commit_file(
     if(!split_path(c, path)) {
         rc = HUB_GC_ERR_BADPATH;
     } else {
-        rc = commit_file_run(c, g, io, repo_dir, tip, content, len, message, who, out_commit, out_tree);
+        rc = commit_file_run(
+            c, g, io, repo_dir, tip, content, len, message, who, out_commit, out_tree);
     }
     free(c);
     return rc;
@@ -392,9 +401,9 @@ static int same(const HubTreeCur* c[3], const bool pr[3], int a, int b) {
     return c[a]->e.mode == c[b]->e.mode && memcmp(c[a]->e.oid, c[b]->e.oid, 20) == 0;
 }
 
-#define fr   (m->fr_)
-#define cur  (m->cur_)
-#define sub  (m->sub_)
+#define fr  (m->fr_)
+#define cur (m->cur_)
+#define sub (m->sub_)
 
 int hub_git_tree_merge(
     HubGit* g,
@@ -432,7 +441,8 @@ int hub_git_tree_merge(
             if(rc != HUB_GIT_OK) break;
         }
         if(rc != HUB_GIT_OK) {
-            for(int i = 0; i < opened; i++) cur_close(&cur[i]);
+            for(int i = 0; i < opened; i++)
+                cur_close(&cur[i]);
             break;
         }
         size_t plen = fr.prefix;
@@ -446,7 +456,8 @@ int hub_git_tree_merge(
             }
             bool pr[3];
             const HubTreeCur* cp[3] = {&cur[0], &cur[1], &cur[2]};
-            for(int i = 0; i < 3; i++) pr[i] = cur[i].valid && cur_cmp(&cur[i], &cur[mi]) == 0;
+            for(int i = 0; i < 3; i++)
+                pr[i] = cur[i].valid && cur_cmp(&cur[i], &cur[mi]) == 0;
             const char* name = cur[mi].e.name;
             size_t nl = cur[mi].e.name_len;
             if(plen + nl + 1 > HUB_GC_PATH_MAX) {
@@ -482,10 +493,18 @@ int hub_git_tree_merge(
             if(take == -1) {
                 conflict(m, plen, name, nl);
             } else if(te) {
-                rc = out_add(&fr, te->mode, name, nl, te->oid, limit, cur[1].len > cur[2].len ? cur[1].len : cur[2].len);
+                rc = out_add(
+                    &fr,
+                    te->mode,
+                    name,
+                    nl,
+                    te->oid,
+                    limit,
+                    cur[1].len > cur[2].len ? cur[1].len : cur[2].len);
                 if(rc != HUB_GIT_OK) {
                     m->st[fi] = fr;
-                    for(int i = 0; i < 3; i++) cur_close(&cur[i]);
+                    for(int i = 0; i < 3; i++)
+                        cur_close(&cur[i]);
                     goto done;
                 }
             }
@@ -493,17 +512,20 @@ int hub_git_tree_merge(
                 if(pr[i]) cur_advance(&cur[i]);
             }
             if(take == 4) {
-                for(int i = 0; i < 3; i++) fr.p[i] = cur[i].pos;
+                for(int i = 0; i < 3; i++)
+                    fr.p[i] = cur[i].pos;
                 m->st[fi] = fr; /* output so far and resume offsets */
                 rc = mpush(m, subp, plen + nl + 1);
                 if(rc != HUB_GIT_OK) {
-                    for(int i = 0; i < 3; i++) cur_close(&cur[i]);
+                    for(int i = 0; i < 3; i++)
+                        cur_close(&cur[i]);
                     goto done;
                 }
                 pushed = true;
             }
         }
-        for(int i = 0; i < 3; i++) cur_close(&cur[i]);
+        for(int i = 0; i < 3; i++)
+            cur_close(&cur[i]);
         if(rc != HUB_GIT_OK) {
             m->st[fi] = fr;
             break;
@@ -548,7 +570,8 @@ done:
             rc = HUB_GIT_ERR_CORRUPT;
         }
     }
-    for(size_t i = 0; i < m->sp; i++) free(m->st[i].out);
+    for(size_t i = 0; i < m->sp; i++)
+        free(m->st[i].out);
     free(m->st);
     free(m);
     return rc;
@@ -577,14 +600,16 @@ int hub_git_merge_commits(
     if(rc == HUB_GIT_OK) rc = hub_git_tree_of(g, theirs_tip, &tt);
     if(rc == HUB_GIT_OK && merge_base) rc = hub_git_tree_of(g, merge_base, &bt);
     if(rc != HUB_GIT_OK) return rc;
-    rc = hub_git_tree_merge(g, io, repo_dir, merge_base ? &bt : NULL, &ot, &tt, &merged, cb, ctx, nconf);
+    rc = hub_git_tree_merge(
+        g, io, repo_dir, merge_base ? &bt : NULL, &ot, &tt, &merged, cb, ctx, nconf);
     if(rc != HUB_GIT_OK) return rc;
     if(out_tree) *out_tree = merged;
     uint8_t parents[2][20];
     memcpy(parents[0], ours_tip->b, 20);
     memcpy(parents[1], theirs_tip->b, 20);
     size_t clen;
-    char* cbuf = hub_gitwrite_commit_build(merged.b, (const uint8_t(*)[20])parents, 2, who, who, message, &clen);
+    char* cbuf = hub_gitwrite_commit_build(
+        merged.b, (const uint8_t(*)[20])parents, 2, who, who, message, &clen);
     if(!cbuf) return HUB_GIT_ERR_NOMEM;
     HubOid cid;
     rc = map_wr(hub_gitwrite_object(io, repo_dir, HUB_GW_COMMIT, cbuf, clen, cid.b, NULL));

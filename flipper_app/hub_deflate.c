@@ -18,7 +18,7 @@ struct HubDeflate {
     void* ctx;
     bool err;
     uint32_t adler_a, adler_b;
-    uint32_t pos;  /* bytes taken in so far */
+    uint32_t pos; /* bytes taken in so far */
     uint16_t fill; /* bytes of the current block */
 
     uint32_t bitbuf; /* main bit writer */
@@ -36,8 +36,8 @@ static const uint16_t lbase[29] = {3,  4,  5,  6,  7,  8,  9,  10, 11,  13,  15,
                                    31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258};
 static const uint8_t lext[29] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2,
                                  2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0};
-static const uint16_t dbase[30] = {1,   2,   3,   4,   5,   7,    9,    13,   17,   25,
-                                   33,  49,  65,  97,  129, 193,  257,  385,  513,  769,
+static const uint16_t dbase[30] = {1,    2,    3,    4,    5,    7,    9,    13,    17,    25,
+                                   33,   49,   65,   97,   129,  193,  257,  385,   513,   769,
                                    1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577};
 static const uint8_t dext[30] = {0, 0, 0, 0, 1, 1, 2, 2,  3,  3,  4,  4,  5,  5,  6,
                                  6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13};
@@ -94,7 +94,8 @@ static void tb_put(TB* t, uint32_t v, int n) {
 /* Huffman codes go MSB first */
 static void tb_code(TB* t, uint32_t code, int len) {
     uint32_t r = 0;
-    for(int i = 0; i < len; i++) r |= ((code >> i) & 1u) << (len - 1 - i);
+    for(int i = 0; i < len; i++)
+        r |= ((code >> i) & 1u) << (len - 1 - i);
     tb_put(t, r, len);
 }
 
@@ -111,11 +112,13 @@ static void tb_lit(TB* t, unsigned sym) { /* literal or length symbol 0..285 */
 
 static void tb_match(TB* t, unsigned len, unsigned dist) {
     unsigned li = 28;
-    while(lbase[li] > len) li--;
+    while(lbase[li] > len)
+        li--;
     tb_lit(t, 257 + li);
     tb_put(t, len - lbase[li], lext[li]);
     unsigned di = 29;
-    while(dbase[di] > dist) di--;
+    while(dbase[di] > dist)
+        di--;
     tb_code(t, di, 5);
     tb_put(t, dist - dbase[di], dext[di]);
 }
@@ -158,7 +161,8 @@ static void do_block(HubDeflate* d, bool final) {
                 if(dist == 0 || dist > p - lowest || dist <= lastd) break;
                 lastd = dist;
                 unsigned l = 0;
-                while(l < maxlen && d->ring[(p - dist + l) & (WSIZE - 1)] == data[i + l]) l++;
+                while(l < maxlen && d->ring[(p - dist + l) & (WSIZE - 1)] == data[i + l])
+                    l++;
                 if(l > best) {
                     best = l;
                     bestd = dist;
@@ -188,10 +192,12 @@ static void do_block(HubDeflate* d, bool final) {
         align(d);
         put_bits(d, fill, 16);
         put_bits(d, ~fill & 0xffff, 16);
-        for(unsigned k = 0; k < fill; k++) ob_byte(d, data[k]);
+        for(unsigned k = 0; k < fill; k++)
+            ob_byte(d, data[k]);
     } else {
         unsigned full = t.nbits >> 3;
-        for(unsigned k = 0; k < full; k++) put_bits(d, d->tb[k], 8);
+        for(unsigned k = 0; k < full; k++)
+            put_bits(d, d->tb[k], 8);
         if(t.nbits & 7) put_bits(d, d->tb[full] & ((1u << (t.nbits & 7)) - 1), (int)(t.nbits & 7));
     }
 }
