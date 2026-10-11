@@ -414,8 +414,11 @@ def main():
       }
     }
 '''
+    # Insert BEFORE the `if (!wifi_scan_obj.scanning())` guard so the handler is always processed,
+    # even while a scan is running -- otherwise re-advertises (live persona/-ch/-target updates) are
+    # dropped once WIFI_SCAN_PWNPAL starts, and only the launch command ever configures the ESP.
     t, d2 = insert_before(
-        t, "    else if (cmd_args.get(0) == SNIFF_PWN_CMD) {",
+        t, "  if (!wifi_scan_obj.scanning()) {",
         handler, tag="cmd_args.get(0) == PWNPAL_CMD")
     _write(p, t); steps += d1 + d2
 

@@ -57,6 +57,19 @@ static inline bool pwnpal_assoc_pmkid(const uint8_t* f, int len, uint8_t pmkid[1
             off += 2 + 4 * pc;
             if(off + 2 > l) return false;
             int ac = r[off] | (r[off + 1] << 8); // AKM suite count
+            // Only a PSK-family AKM yields a hashcat-crackable PMKID (-m 22000). SAE/OWE/802.1X
+            // PMKIDs are what hcx flags "KDV:0, not supported" -- don't harvest/count those.
+            bool psk = false;
+            for(int a = 0; a < ac; a++) {
+                int so = off + 2 + 4 * a;
+                if(so + 4 > l) break;
+                if(r[so] == 0x00 && r[so + 1] == 0x0f && r[so + 2] == 0xac &&
+                   (r[so + 3] == 2 || r[so + 3] == 4 || r[so + 3] == 6)) { // PSK, FT-PSK, PSK-SHA256
+                    psk = true;
+                    break;
+                }
+            }
+            if(!psk) return false; // non-PSK (SAE/OWE/enterprise) PMKID -> uncrackable, skip
             off += 2 + 4 * ac;
             if(off + 2 > l) return false;
             off += 2; // RSN capabilities
