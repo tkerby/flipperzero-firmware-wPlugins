@@ -58,7 +58,7 @@ typedef struct {
 
 typedef struct HubGit HubGit;
 
-/* Open the bare repo at repo_dir (for example "/ext/git/x.git"). io is the
+/* Open the bare repo at repo_dir (for example HUB_GIT_ROOT "/x.git"). io is the
  * platform handle for hub_gitio (Storage* on the Flipper, NULL on the host).
  * NULL when it is not a repo, the path is too long, or memory is short. */
 HubGit* hub_git_open(void* io, const char* repo_dir);

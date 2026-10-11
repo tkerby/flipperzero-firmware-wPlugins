@@ -20,6 +20,7 @@ bool storage_dir_read(File* f, FileInfo* info, char* name, uint16_t cap);
 bool storage_dir_close(File* f);
 FS_Error storage_common_stat(Storage* s, const char* path, FileInfo* info);
 FS_Error storage_common_remove(Storage* s, const char* path);
+bool storage_dir_exists(Storage* s, const char* path);
 FS_Error storage_common_rename(Storage* s, const char* a, const char* b);
 bool storage_simply_mkdir(Storage* s, const char* path);
 bool storage_simply_remove_recursive(Storage* s, const char* path);

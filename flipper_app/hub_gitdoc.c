@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include "hub_mem.h"
 
-#define DOC_ROOT     "/ext/git"
+#define DOC_ROOT     HUB_GIT_ROOT
 #define DOC_NAME_MAX 64
 #define DOC_LIST_MAX 1000
 
@@ -16,7 +16,7 @@ typedef struct {
     HubReq* r;
     char name[DOC_NAME_MAX + 16];
     char key[HUB_GITDOC_KEY_MAX + 40];
-    char base[DOC_NAME_MAX + 32]; /* /ext/git/<name>.git */
+    char base[DOC_NAME_MAX + 48]; /* DOC_ROOT/<name>.git */
     char path[320];
     char tmp[330];
     const char* if_match;
@@ -369,7 +369,7 @@ bool hub_gitdoc_route(HubReq* r) {
     }
     memset(d, 0, sizeof(DocCtx));
     d->r = r;
-    storage_simply_mkdir(r->storage, DOC_ROOT);
+    hub_git_mkroot(r->storage);
     fn(d);
     free(d);
     return true;

@@ -1,7 +1,7 @@
 #pragma once
 
 /* Git document store: GET/PUT /api/git/doc, POST /api/git/doc-delete,
- * GET /api/git/docs. Files live in /ext/git/<name>.git/hub/<key>.
+ * GET /api/git/docs. Files live in HUB_GIT_ROOT/<name>.git/hub/<key>.
  * See docs/git-design.md, "Document store". */
 
 #include "hub_req.h"

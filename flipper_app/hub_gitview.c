@@ -13,7 +13,7 @@ typedef struct {
     HubReq* r;
     HubGit* g;
     char name[80];
-    char base[96];
+    char base[112];
     char val[210];
     char path[170];
 } View;
@@ -61,7 +61,7 @@ static bool view_open(View* v, size_t need) {
         hub_send_error(v->r, 400, "bad repo name");
         return false;
     }
-    snprintf(v->base, sizeof(v->base), "/ext/git/%s.git", v->name);
+    snprintf(v->base, sizeof(v->base), HUB_GIT_ROOT "/%s.git", v->name);
     v->g = hub_git_open(v->r->storage, v->base);
     if(!v->g) {
         hub_send_error(v->r, 404, "repository not found");

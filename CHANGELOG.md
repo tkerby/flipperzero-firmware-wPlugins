@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1
+
+- **Repos move to the app's own data folder**, `/ext/apps_data/gitphin/git/<name>.git`, as the
+  Flipper Apps Catalog asks. On the first start, Gitphin moves an existing `/ext/git` folder there
+  by itself (only when the new folder does not exist yet). The Git URLs do not change.
+- **The web file manager works on the SD card only** (`/ext`). The internal flash (`/int`) is no
+  longer reachable.
+- Author and contact in the app description.
+
 ## 1.0
 
 The first public release.

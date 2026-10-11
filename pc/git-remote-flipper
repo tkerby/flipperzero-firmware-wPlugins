@@ -73,7 +73,7 @@ def valid_ref(ref):
 
 
 def repo_path(name, rest=""):
-    return f"/ext/git/{name}.git" + (f"/{rest}" if rest else "")
+    return f"/ext/apps_data/gitphin/git/{name}.git" + (f"/{rest}" if rest else "")
 
 
 # ---------------------------------------------------------------- http

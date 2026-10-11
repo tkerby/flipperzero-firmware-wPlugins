@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include "hub_mem.h"
 
-#define EXT_ROOT     "/ext/git"
+#define EXT_ROOT     HUB_GIT_ROOT
 #define EXT_MAX_OBJ  (16 * 1024)
 #define EXT_DIFF_OBJ (12 * 1024)
 #define EXT_CF_OBJ \
@@ -39,7 +39,7 @@ typedef struct {
     HubReq* r;
     HubGit* g;
     char name[80];
-    char base[96]; /* /ext/git/<name>.git */
+    char base[112]; /* EXT_ROOT/<name>.git */
     char p1[210];
     char p2[210];
     char p3[210];
@@ -956,7 +956,7 @@ static void route_storage(Ext* e) {
         hub_send_error(r, 400, "bad repo name");
         return;
     }
-    snprintf(dir, sizeof(dir), "/ext/git/%s.git/objects", name);
+    snprintf(dir, sizeof(dir), EXT_ROOT "/%s.git/objects", name);
     FileInfo fi;
     if(storage_common_stat(r->storage, dir, &fi) != FSE_OK) {
         hub_send_error(r, 404, "repository not found");

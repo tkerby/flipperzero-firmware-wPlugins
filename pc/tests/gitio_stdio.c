@@ -27,11 +27,16 @@ static bool fault(void) {
 /* Counters for the tests: file opens and read calls (the proxy for device time). */
 unsigned long gitio_nopen, gitio_nread;
 
-/* Route tests: HUB_ROOT maps "/ext/..." to a scratch folder (identity when unset). */
+/* Route tests: HUB_ROOT maps "/ext/..." to a scratch folder (identity when unset), and
+ * the repo folder HUB_GIT_ROOT to <root>/git. */
 const char* host_map(const char* p, char* buf, size_t n) {
+    static const char git_root[] = "/ext/apps_data/gitphin/git";
     const char* root = getenv("HUB_ROOT");
     if(!root || strncmp(p, "/ext/", 5) != 0) return p;
-    snprintf(buf, n, "%s%s", root, p + 4);
+    if(strncmp(p, git_root, sizeof(git_root) - 1) == 0)
+        snprintf(buf, n, "%s/git%s", root, p + sizeof(git_root) - 1);
+    else
+        snprintf(buf, n, "%s%s", root, p + 4);
     return buf;
 }
 

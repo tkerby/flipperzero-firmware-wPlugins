@@ -1,7 +1,7 @@
 /* Host driver for the route code: route_test <root> <METHOD> <path> <query>
  * Runs one request through hub_git_route / hub_gitview_route / hub_gitext_route (query build) with
  * the host stand-ins of furi_stub.c and writes the raw HTTP answer to stdout. HUB_ROOT is <root>
- * ("/ext/git/x.git" is <root>/git/x.git). */
+ * ("/ext/apps_data/gitphin/git/x.git" is <root>/git/x.git). */
 #include "../../flipper_app/hub_req.h"
 #include "../../flipper_app/hub_git.h"
 #include "../../flipper_app/hub_gitext.h"

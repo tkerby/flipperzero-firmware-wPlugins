@@ -11,7 +11,7 @@
  * dumb HTTP protocol. The PC side does all the real git work (see
  * docs/git-design.md). Here we only store files and keep refs consistent. */
 
-#define GIT_ROOT      "/ext/git"
+#define GIT_ROOT      HUB_GIT_ROOT
 #define GIT_NAME_MAX  64
 #define GIT_REF_MAX   180
 #define GIT_PATH_MAX  320
@@ -31,7 +31,7 @@ typedef struct {
     char osha[48];
     char nsha[48];
     char text[GIT_TEXT_MAX + 56];
-    char base[GIT_NAME_MAX + 32]; /* /ext/git/<name>.git */
+    char base[GIT_NAME_MAX + 48]; /* GIT_ROOT/<name>.git */
     char path[GIT_PATH_MAX];
     char tmp[GIT_PATH_MAX + 8];
 } GitCtx;
@@ -525,7 +525,7 @@ static void git_route_file(HubReq* r, GitCtx* g) {
     /* push to create: the receive-pack discovery of a missing repo makes it */
     if(strcmp(rest, "info/refs") == 0 && r->query &&
        strstr(r->query, "service=git-receive-pack") && !git_is_dir(g, g->base)) {
-        storage_simply_mkdir(r->storage, GIT_ROOT);
+        hub_git_mkroot(r->storage);
         strcpy(g->ref, "refs/heads/main");
         strcpy(g->text, "Unnamed repository");
         if(!git_create(g)) {
@@ -631,7 +631,7 @@ static bool git_create(GitCtx* g) {
         "/objects/pack",
         "/objects/info",
         "/info"};
-    bool ok = storage_simply_mkdir(g->r->storage, GIT_ROOT);
+    bool ok = hub_git_mkroot(g->r->storage);
     for(size_t i = 0; ok && i < COUNT_OF(dirs); i++) {
         snprintf(g->path, sizeof(g->path), "%s%s", g->base, dirs[i]);
         ok = storage_simply_mkdir(g->r->storage, g->path);
@@ -949,7 +949,7 @@ void hub_git_mark_loose(const char* name) {
     }
 }
 
-/* name of "/ext/git/<name>.git" */
+/* name of GIT_ROOT "/<name>.git" */
 void hub_git_mark_base(const char* base) {
     size_t root = sizeof(GIT_ROOT);
     size_t len = strlen(base);
@@ -1067,7 +1067,7 @@ static bool pack_slice(
     uint32_t budget,
     HubGitPackResult* res,
     bool* nomem) {
-    char dir[GIT_NAME_MAX + 24];
+    char dir[GIT_NAME_MAX + 40];
     snprintf(dir, sizeof(dir), GIT_ROOT "/%s.git", name);
     PackClock k = {.budget = budget};
     memset(res, 0, sizeof(*res));
@@ -1088,7 +1088,7 @@ static bool graph_slice(HubReq* r, const char* name, PackMark* m, bool* blocked)
         *blocked = true;
         return false;
     }
-    char dir[GIT_NAME_MAX + 24];
+    char dir[GIT_NAME_MAX + 40];
     snprintf(dir, sizeof(dir), GIT_ROOT "/%s.git", name);
     PackClock k = {.budget = PACK_SLICE_MS};
     HubGitGraphResult gr;
@@ -1115,7 +1115,7 @@ static bool work_slice(
     unsigned* packed,
     unsigned* merged,
     bool* blocked) {
-    char dir[GIT_NAME_MAX + 24];
+    char dir[GIT_NAME_MAX + 40];
     snprintf(dir, sizeof(dir), GIT_ROOT "/%s.git", name);
     unsigned total = 0, nsmall = 0;
     hub_git_pack_stats(r->storage, dir, 0, &total, &nsmall);
@@ -1351,7 +1351,7 @@ bool hub_git_route(HubReq* r) {
         git_route_file(r, g);
     } else {
         const char* name = r->path + 9;
-        storage_simply_mkdir(r->storage, GIT_ROOT);
+        hub_git_mkroot(r->storage);
         if(strcmp(name, "repos") == 0 && get) {
             git_route_repos(g);
         } else if(strcmp(name, "refs") == 0 && get) {
@@ -1448,4 +1448,14 @@ void hub_git_flush(Storage* storage) {
     r->storage = storage;
     hub_git_flush_r(r);
     free(r);
+}
+
+/* Gitphin 1.0 kept the repos in /ext/git. Move that folder into the app's data folder
+ * once, at start, while the new folder does not exist yet. */
+void hub_git_migrate(Storage* storage) {
+    if(storage_dir_exists(storage, GIT_ROOT) || !storage_dir_exists(storage, EXT_PATH("git")))
+        return;
+    storage_simply_mkdir(storage, EXT_PATH("apps_data"));
+    storage_simply_mkdir(storage, EXT_PATH("apps_data/gitphin"));
+    storage_common_rename(storage, EXT_PATH("git"), GIT_ROOT);
 }

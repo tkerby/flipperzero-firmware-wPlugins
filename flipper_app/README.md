@@ -7,7 +7,7 @@
 - A real Git remote: **git clone**, **git pull** and **git push** work with the git you already have
 - A web UI in your browser at http://localhost:8080: code, commits, diffs, branches, tags and search
 - **Issues, pull requests, releases and a wiki** for every repository
-- Normal bare repositories in /ext/git on the SD card: copy them to any PC
+- Normal bare repositories in /ext/apps_data/gitphin/git on the SD card: copy them to any PC
 - Offline and private: no server, no cloud, no account
 
 ## What you need
@@ -27,5 +27,13 @@
 - Close qFlipper and Flipper Lab while you use Gitphin: they hold the USB port
 - Turn the SD desktop animations off for more free memory
 - Do not exit Gitphin while it is busy: reboot the Flipper instead (Left + Back), your repos stay safe
+
+## Author
+
+Kazuki Kimura (@Adhamura)
+
+- GitHub: https://github.com/Adhamura
+- Email: kazuki.kimura.jp@gmail.com
+- Bugs and ideas: https://github.com/Adhamura/Gitphin/issues
 
 Not affiliated with Flipper Devices. Open source, MIT license: https://github.com/Adhamura/Gitphin

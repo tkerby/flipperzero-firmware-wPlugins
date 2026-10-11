@@ -1976,7 +1976,7 @@ msg = "Merged #" + it.n + " with merge commit " + j.commit.slice(0, 7) + ".";
 try{ await reloadRefs(); }catch(_){}
 setFlash(msg, err); route();
 }
-function repoDir(){ return "/ext/git/" + R.name + ".git"; }
+function repoDir(){ return "/ext/apps_data/gitphin/git/" + R.name + ".git"; }
 function storageInfo(force){   // GET /api/git/storage: {packs, pack_kib, loose}. Slow on the device, so it is only cached for 15 s.
 if(force || !R.hub.storage || Date.now() - R.hub.storageAt > 15000){
 R.hub.storageAt = Date.now();

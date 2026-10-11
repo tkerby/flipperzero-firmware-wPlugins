@@ -11,7 +11,7 @@ report, without details).
   `127.0.0.1` on your PC — every local user and program — can read and change the repos and the
   files on the Flipper's SD card. Use Gitphin on a PC you trust.
 - **The Flipper app** answers only on its USB serial channel. It reads and writes only below
-  `/ext` and `/int`; Git and document paths are checked against `..`, empty segments and
+  `/ext` (the SD card), never the internal flash; Git and document paths are checked against `..`, empty segments and
   leading dots.
 - **The bridge runs as your user**, never as root. The udev rule gives the desktop user access to
   the Flipper's serial ports only.

@@ -7,7 +7,7 @@ compute (building packs, merges) runs in the PC-side `git` through a helper.
 Rules that do not change:
 - All HTTP logic lives in the Flipper app. `pc/bridge.py` stays a byte copier.
 - The PC helper is a *client* (like the browser), not a server.
-- Repos live at `/ext/git/<name>.git` (normal bare layout). Packs only; the
+- Repos live at `/ext/apps_data/gitphin/git/<name>.git` (normal bare layout). Packs only; the
   helper never writes loose objects.
 
 ## Names
@@ -27,7 +27,7 @@ shape. Parameters are query parameters (percent-encoded).
 
 | Method | Path | Behaviour |
 |---|---|---|
-| GET | `/git/<name>.git/<rest>` | Raw file from `/ext/git/<name>.git/<rest>` for the git dumb HTTP protocol. Ignore the query string (`?service=...`). Reject `..` and empty segments. 404 when missing. `text/plain` for `info/refs`, `HEAD`, `objects/info/packs`; `application/octet-stream` otherwise. |
+| GET | `/git/<name>.git/<rest>` | Raw file from `/ext/apps_data/gitphin/git/<name>.git/<rest>` for the git dumb HTTP protocol. Ignore the query string (`?service=...`). Reject `..` and empty segments. 404 when missing. `text/plain` for `info/refs`, `HEAD`, `objects/info/packs`; `application/octet-stream` otherwise. |
 | GET | `/api/git/repos` | `{"ok":true,"repos":[{"name":"x","description":"...","head":"main","packs":2}]}` sorted by name. `head` = branch from `HEAD` (without `refs/heads/`). |
 | POST | `/api/git/create?name=&branch=main&description=` | Make the bare skeleton (below). 409 if it exists. `branch` and `description` optional. |
 | POST | `/api/git/delete?name=` | Remove the repo folder recursively. |

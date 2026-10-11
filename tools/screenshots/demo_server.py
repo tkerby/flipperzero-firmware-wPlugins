@@ -5,7 +5,7 @@ Usage: demo_server.py <route_test binary> <root> [port]
 
 Git routes (/api/git/..., /git/...) run through the real route code of the app
 (pc/tests/route_test: hub_git.c, hub_gitview.c, hub_gitext.c on the host), one
-process per request, with <root>/git/<name>.git as /ext/git/<name>.git.
+process per request, with <root>/git/<name>.git as /ext/apps_data/gitphin/git/<name>.git.
 Issues, pull requests, releases and wiki (/api/git/doc, /docs) are read from
 <root>/git/<name>.git/hub/<key>, as the doc plugin does. /api/info and /pc/hub
 answer fixed demo values. Read-only: writes answer 403.

@@ -67,6 +67,12 @@ FS_Error storage_common_stat(Storage* s, const char* path, FileInfo* info) {
     info->flags = S_ISDIR(st.st_mode) ? 1 : 0;
     return FSE_OK;
 }
+bool storage_dir_exists(Storage* s, const char* path) {
+    (void)s;
+    char mb[1024];
+    struct stat st;
+    return stat(host_map(path, mb, sizeof mb), &st) == 0 && S_ISDIR(st.st_mode);
+}
 FS_Error storage_common_remove(Storage* s, const char* path) {
     (void)s;
     char mb[1024];

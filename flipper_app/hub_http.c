@@ -61,10 +61,9 @@ bool hub_query_get(const char* query, const char* key, char* out, size_t out_siz
     return false;
 }
 
-/* Only the SD card and internal storage, and no way out of them. */
+/* Only the SD card (not the internal flash), and no way out of it. */
 bool hub_path_ok(const char* path) {
-    bool root_ok = (strncmp(path, "/ext", 4) == 0 && (path[4] == '\0' || path[4] == '/')) ||
-                   (strncmp(path, "/int", 4) == 0 && (path[4] == '\0' || path[4] == '/'));
+    bool root_ok = strncmp(path, "/ext", 4) == 0 && (path[4] == '\0' || path[4] == '/');
     return root_ok && strstr(path, "/..") == NULL;
 }
 
@@ -202,8 +201,8 @@ static uint32_t prog_pack_bytes(HubReq* r) {
     const char* name = r->path + 5;
     const char* end = strchr(name, '/');
     if(!end || end - name > 80) return 0;
-    char path[112];
-    snprintf(path, sizeof(path), "/ext/git/%.*s/objects/pack", (int)(end - name), name);
+    char path[128];
+    snprintf(path, sizeof(path), HUB_GIT_ROOT "/%.*s/objects/pack", (int)(end - name), name);
     File* dir = storage_file_alloc(r->storage);
     uint32_t sum = 0;
     if(storage_dir_open(dir, path)) {
@@ -363,7 +362,7 @@ static bool hub_get_path(HubReq* r, char* out) {
         return false;
     }
     if(!hub_path_ok(out)) {
-        hub_send_error(r, 400, "path must be inside /ext or /int");
+        hub_send_error(r, 400, "path must be inside /ext");
         return false;
     }
     return true;

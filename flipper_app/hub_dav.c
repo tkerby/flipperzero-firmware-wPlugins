@@ -19,7 +19,7 @@ typedef struct {
     char name[DAV_NAME_MAX + 1];
     char rest[DAV_REST_MAX + 1]; /* no leading or trailing "/", may be empty */
     bool trailing; /* the URL ended with "/" */
-    char base[DAV_NAME_MAX + 24];
+    char base[DAV_NAME_MAX + 40];
     char path[DAV_PATH_MAX]; /* file system path of rest */
     char path2[DAV_PATH_MAX + 8]; /* MOVE target, or scratch */
 } Dav;
@@ -86,7 +86,7 @@ static bool dav_parse(const char* url, Dav* d) {
             return false;
         s += n + (s[n] == '/' ? 1 : 0);
     }
-    snprintf(d->base, sizeof(d->base), "/ext/git/%s.git", d->name);
+    snprintf(d->base, sizeof(d->base), HUB_GIT_ROOT "/%s.git", d->name);
     if(len) {
         snprintf(d->path, sizeof(d->path), "%s/%s", d->base, d->rest);
     } else {

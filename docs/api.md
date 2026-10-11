@@ -46,4 +46,4 @@ The page's **Files** tab uses the app's basic file API.
 | POST | `/api/mkdir?path=...` | make a folder |
 | POST | `/api/delete?path=...` | delete a file or an empty folder |
 
-Paths must be inside `/ext` (SD card) or `/int`.
+Paths must be inside `/ext` (SD card).

@@ -45,7 +45,7 @@ the device itself, reached from the PC over the USB cable.
 - **🔌 Offline and private.** Nothing leaves the cable: the PC bridge listens on `127.0.0.1`
   only. No account, no cloud, no telemetry.
 - **🗂️ Your repos stay normal Git.** Each repo is an ordinary bare repository on the SD card
-  (`/ext/git/<name>.git`). Copy it to any PC and use it there; issues and wiki live next to it
+  (`/ext/apps_data/gitphin/git/<name>.git`). Copy it to any PC and use it there; issues and wiki live next to it
   as plain JSON and Markdown.
 - **🛡️ Built for 256 KB of RAM.** A 47 KB core plus five plugins loaded on demand, a guarded
   allocator that answers "low memory, try again" instead of crashing, streamed answers,
@@ -177,7 +177,7 @@ git pull
 git push
 ```
 
-Open <http://localhost:8080> for the web UI. Repos live on the SD card in `/ext/git/<name>.git`.
+Open <http://localhost:8080> for the web UI. Repos live on the SD card in `/ext/apps_data/gitphin/git/<name>.git`.
 
 **Optional, faster pushes:** `install.sh` also installs `git-remote-flipper`, a helper for
 `flipper://<repo>` remotes. It sends one pack instead of many single objects (much faster for
@@ -203,7 +203,7 @@ flowchart LR
     subgraph flipper ["Flipper Zero"]
         core["Gitphin core<br/>HTTP + Git server"]
         plugins["plugins on demand:<br/>WebDAV push · pack · write · query · docs"]
-        sd[("SD card<br/>/ext/git/*.git")]
+        sd[("SD card<br/>/ext/apps_data/gitphin/git/*.git")]
         core <--> plugins
         core <--> sd
     end
@@ -233,7 +233,7 @@ the rest.
 - The PC's git does the heavy Git work (packing, deltas, hashing). The Flipper stores and serves
   files and reads objects for the web page.
 
-**Repository storage.** Each repo is a normal bare repository at `/ext/git/<name>.git`. Extra
+**Repository storage.** Each repo is a normal bare repository at `/ext/apps_data/gitphin/git/<name>.git`. Extra
 Gitphin data lives in `<repo>.git/hub/`: issues, pull requests, wiki and releases (JSON /
 Markdown documents with ETag conflict checks), the commit graph (`graph.bin`) and caches. Git
 ignores this folder.
@@ -306,7 +306,7 @@ the file API and the Collector routes are in [docs/api.md](docs/api.md).
 - **After a firmware update**, install the matching `gitphin.fap` (or rebuild with `ufbt update`),
   or the app will not start.
 - **Back up your repos.** They are normal bare repos: `git clone --mirror` them to the PC now and
-  then, or copy `/ext/git/` from the SD card.
+  then, or copy `/ext/apps_data/gitphin/git/` from the SD card.
 - **Give big pushes time.** Leave the Flipper connected and idle afterwards so it can pack and
   build the commit graph.
 - **If something hangs:** `journalctl --user -u gitphin.service -f` shows what happened, and the

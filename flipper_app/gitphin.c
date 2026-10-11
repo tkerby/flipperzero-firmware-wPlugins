@@ -39,6 +39,7 @@ static int32_t hub_worker(void* ctx) {
     hub->usb_ready = true;
     hub_beat();
     hub_gitobj_beat = hub_beat_hook; /* the object reader keeps the heartbeat alive */
+    hub_git_migrate(storage);
     hub_git_cleanup_temp(storage); /* leftovers of an interrupted write */
     hub_git_mark_all(storage);
     uint32_t last_conn = furi_get_tick();
