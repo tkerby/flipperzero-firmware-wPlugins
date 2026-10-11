@@ -38,9 +38,8 @@ jobs:
         with:
           name: gitphin-${{ matrix.sdk }}-${{ steps.build.outputs.suffix }}
           path: flipper_app/dist/*.fap
-      - name: Lint (clang-format, as the Apps Catalog checks; report only)
+      - name: Lint (clang-format, as the Apps Catalog checks; fix with ufbt format)
         if: matrix.sdk == 'release'
-        continue-on-error: true
         uses: flipperdevices/flipperzero-ufbt-action@v0.1
         with:
           app-dir: flipper_app

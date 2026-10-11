@@ -71,8 +71,9 @@ typedef struct {
     const void* addr;
 } ApiEntry;
 
-#define API(x) \
-    { #x, (const void*)&(x) }
+// clang-format off
+#define API(x) {#x, (const void*)&(x)}
+// clang-format on
 
 static const ApiEntry hub_api_table[] = {
 #include "hub_api_table.inc"

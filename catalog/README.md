@@ -42,8 +42,8 @@ repository; Flipper's servers build the `.fap` from source.
   section, with the link to this repository.
 - The bridge's optional Collector tab (PC facts, opt-in Wi-Fi password helper) runs on the PC
   only; the Flipper app does not contain it. Mention it if the reviewers ask.
-- The catalog lints sources with `ufbt lint` (clang-format). Check it with
-  `cd flipper_app && ufbt lint` and fix with `ufbt format` before the pull request.
+- The catalog lints sources with `ufbt lint` (clang-format). CI runs the same lint on every
+  push; fix a failure with `cd flipper_app && ufbt format`.
 
 ## Updating
 
