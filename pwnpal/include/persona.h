@@ -31,7 +31,7 @@ typedef enum {
 // persisted-to-SD portion; fixed layout, bump PERSONA_SAVE_VERSION on change. loader
 // rejects any blob whose size/version differs, so an old file is cleanly discarded
 #define PERSONA_SAVE_MAGIC 0x50574E46u // "PWNF"
-#define PERSONA_SAVE_VERSION 2
+#define PERSONA_SAVE_VERSION 3
 
 typedef struct {
     uint32_t magic;
@@ -46,6 +46,10 @@ typedef struct {
     uint32_t pwnd_tot; // REAL handshakes/PMKID captured, lifetime (advertised as -pt)
     uint32_t aps_tot; // access points seen, lifetime
     uint32_t epochs_tot; // lifetime epoch count (feeds the level curve)
+    // --- v3 additions: recycle-proof capture tallies (table evicts, these don't) ---
+    uint32_t crack_tot; // strictly-crackable APs, lifetime (survives AP-table recycling)
+    uint32_t pmkid_tot; // captures via PMKID, lifetime
+    uint32_t hs_tot; // captures via 4-way handshake, lifetime
 } PersonaSaved;
 
 typedef struct {

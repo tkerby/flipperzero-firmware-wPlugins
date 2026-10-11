@@ -138,6 +138,7 @@ class Pwnpal {
     // Channel hopping
     int      _pinned_channel;  // -1 => hop
     uint8_t  _hop_idx;
+    uint32_t _cmd_count = 0;   // DEBUG: total pwnpal commands parsed (ncmd= on ADV line)
 
     // Prebuilt frame
     uint8_t  _frame[300];

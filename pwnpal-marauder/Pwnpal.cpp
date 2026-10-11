@@ -474,6 +474,7 @@ void Pwnpal::deauthChannelPass(uint8_t channel) {
 
 bool Pwnpal::configureFromArgs(LinkedList<String>* args) {
     // args->get(0) == "pwnpal"; scan for flags.
+    _cmd_count++;                        // DEBUG: count every parsed command (ncmd= on ADV)
     int prev_pinned = _pinned_channel;   // detect an actual channel-tune change below
     bool prev_deauth = _deauth_policy;   // ...and an actual capture-policy change
     bool prev_assoc = _assoc_policy;
@@ -713,10 +714,12 @@ void Pwnpal::broadcast() {
     }
 
     // single write so it can't interleave with the rx callback's prints.
-    char line[96];
-    int n = snprintf(line, sizeof(line), "PWNPAL_ADV name=%s ch=%u sent=%u ver=%d fw=%s\n",
+    char line[128];
+    int n = snprintf(line, sizeof(line),
+                     "PWNPAL_ADV name=%s ch=%u sent=%u ver=%d fw=%s pin=%d tgt=%d ncmd=%lu\n",
                      _name, (unsigned)_cur_channel, (unsigned)_sent, PWNPAL_PROTO,
-                     PWNPAL_FW_COMMIT);
+                     PWNPAL_FW_COMMIT, _pinned_channel, _target_set ? 1 : 0,
+                     (unsigned long)_cmd_count);
     if (n < 0) return;
     if (n >= (int)sizeof(line)) n = sizeof(line) - 1;
     Serial.write((const uint8_t*)line, n);

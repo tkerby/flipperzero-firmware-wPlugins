@@ -699,6 +699,25 @@ static void pwnpal_handle_adv_line(PwnpalApp* app, const char* line) {
                                  strcmp(fw, PWNPAL_EXPECTED_FW_COMMIT) != 0;
         },
         true);
+    // Diagnostic: ONLY when running the instrumented fw (ADV carries ncmd=), log one tick-stamped
+    // snapshot per minute. Stock firmware writes nothing here, so normal runs have no debug SD load
+    // (the per-advert flood could stall the loop over a multi-day trip).
+    if(strstr(line, "ncmd=")) {
+        static uint32_t last_rxdbg = 0;
+        uint32_t t = 0;
+        with_view_model(app->view, PwnpalModel * model, { t = model->tick_secs; }, false);
+        if(last_rxdbg == 0 || t - last_rxdbg >= 60) {
+            last_rxdbg = t;
+            File* df = storage_file_alloc(app->storage);
+            if(storage_file_open(df, "/ext/apps_data/pwnpal/rxdbg.txt", FSAM_WRITE, FSOM_OPEN_APPEND)) {
+                char dl[160];
+                int dn = snprintf(dl, sizeof(dl), "t=%lu %s\n", (unsigned long)t, line);
+                if(dn > 0) storage_file_write(df, dl, (size_t)dn);
+            }
+            storage_file_close(df);
+            storage_file_free(df);
+        }
+    }
 }
 
 static int hexval(char c) {
@@ -1083,6 +1102,9 @@ static void pwnpal_handle_pwnd_line(PwnpalApp* app, const char* line) {
             // count a capture once per AP: skip 15s re-emits and already-captured APs
             if(!had_capture && pwnd_seen_insert(model, key)) {
                 persona_note_pwnd(model->persona);
+                // recycle-proof per-type tally (deduped once per AP, same gate as pwnd_tot)
+                if(strcmp(type, "pmkid") == 0) model->persona->s.pmkid_tot++;
+                else model->persona->s.hs_tot++;
                 strncpy(model->last_pwnd_ssid, label, sizeof(model->last_pwnd_ssid) - 1);
                 model->last_pwnd_ssid[sizeof(model->last_pwnd_ssid) - 1] = '\0';
                 // Provenance split: did our attack earn it, or did we sniff it passively?
@@ -1371,6 +1393,15 @@ static void pwnpal_handle_ap_line(PwnpalApp* app, const char* line) {
 // true later as more frames land). One scratch table; only the serial-worker thread calls this.
 #define FLIPPER_HS_SLOTS 64
 #define HS_CRACK_WIN_MS 2000
+// flag an AP crackable and bump the recycle-proof lifetime tally once, on the false->true edge
+// (the AP table evicts records; crack_tot persists so Stats never under-reports after a long run)
+static void mark_crackable(PwnpalModel* model, int ai) {
+    if(ai >= 0 && !model->aps[ai].crackable) {
+        model->aps[ai].crackable = true;
+        model->persona->s.crack_tot++;
+    }
+}
+
 static void pwnpal_note_crackable(PwnpalApp* app, const char* key, const uint8_t* frame, size_t flen) {
     int eo = pwnpal_eapol_locate(frame, (int)flen);
     if(eo < 0) {
@@ -1382,7 +1413,7 @@ static void pwnpal_note_crackable(PwnpalApp* app, const char* key, const uint8_t
                 PwnpalModel * model,
                 {
                     int ai = ap_find(model, key);
-                    if(ai >= 0) model->aps[ai].crackable = true;
+                    mark_crackable(model, ai);
                 },
                 false);
         }
@@ -1407,7 +1438,7 @@ static void pwnpal_note_crackable(PwnpalApp* app, const char* key, const uint8_t
                 PwnpalHsVerdict v = pwnpal_hs_note(
                     hs_tab, FLIPPER_HS_SLOTS, (uint8_t)ai, client, msg, pmkid, k.kdv, k.replay, now,
                     HS_CRACK_WIN_MS);
-                if(v.strict) model->aps[ai].crackable = true;
+                if(v.strict) mark_crackable(model, ai);
             }
         },
         false); // no forced redraw; the browser refreshes on its own and crackable rarely flips
@@ -1620,6 +1651,14 @@ static void pwnpal_handle_gps_line(PwnpalApp* app, const char* line) {
         false);
     // em is the concrete effective mode (Auto resolves to wardrive/siege; manual can be roam)
     const char* mode = em == CaptureRoam ? "roam" : em == CaptureSiege ? "siege" : "wardrive";
+
+    // Throttle this TTFF/acquisition debug probe: write only on a fix-state change or every 30s,
+    // not every ~2Hz poll (that was ~2 rows/s -> 100k+ rows/day of SD churn that can stall the loop).
+    static int gps_last_fix = -1;
+    static uint32_t gps_last_log = 0;
+    if(gps_last_log != 0 && (fix != 0) == (gps_last_fix == 1) && up - gps_last_log < 30) return;
+    gps_last_fix = (fix != 0) ? 1 : 0;
+    gps_last_log = up;
 
     storage_common_mkdir(app->storage, "/ext/apps_data/pwnpal");
     File* f = storage_file_alloc(app->storage);
@@ -2123,16 +2162,6 @@ static void list_rebuild_order(PwnpalModel* m) {
     if(m->list_idx >= m->list_top + APLIST_ROWS) m->list_top = m->list_idx - APLIST_ROWS + 1;
 }
 
-// distinct APs actually heard this session (ap_seen_tick != 0). counts persisted APs re-heard
-// this run, unlike aps_session which only fires on first-ever discovery -> stays >0 while the
-// list has live items.
-static uint16_t aps_seen_session(const PwnpalModel* m) {
-    uint16_t n = 0;
-    for(uint16_t i = 0; i < m->ap_count; i++)
-        if(m->ap_seen_tick[i]) n++;
-    return n;
-}
-
 // True if this friend's RSSI is fresh enough to show a live meter (heard within the TTL).
 static bool friend_signal_recent(const PwnpalModel* m, uint16_t i) {
     return m->friend_seen_tick[i] != 0 &&
@@ -2192,7 +2221,7 @@ static void pwnpal_draw_menu(Canvas* canvas, const PwnpalModel* model) {
         case MenuAllAps:
             label = "Recent APs";
             // APs heard this session (includes persisted APs re-heard, so it tracks the live list)
-            snprintf(value, sizeof(value), "%u", aps_seen_session(model));
+            snprintf(value, sizeof(value), "%lu", (unsigned long)model->persona->aps_session);
             break;
         case MenuWhitelist: label = "Ignore"; snprintf(value, sizeof(value), "%u", wl); break;
         case MenuFriends:
@@ -2326,7 +2355,7 @@ static void pwnpal_draw_aplist(Canvas* canvas, const PwnpalModel* model) {
     else if(model->list_filter == FilterWhitelist)
         snprintf(hint, sizeof(hint), "%u", n);
     else
-        snprintf(hint, sizeof(hint), "%u", aps_seen_session(model));
+        snprintf(hint, sizeof(hint), "%lu", (unsigned long)model->persona->aps_session);
     draw_titlebar(canvas, title, hint);
     canvas_set_font(canvas, FontSecondary);
     if(n == 0) {
@@ -2617,12 +2646,7 @@ static void pwnpal_draw_stats(Canvas* canvas, const PwnpalModel* model) {
         l, sizeof(l), "epoch %lu   up %02lu:%02lu:%02lu", (unsigned long)p->epoch,
         (unsigned long)(up / 3600), (unsigned long)((up % 3600) / 60), (unsigned long)(up % 60));
     canvas_draw_str(canvas, 2, 21, l);
-    uint16_t np = 0, nh = 0, nc = 0; // captures: pmkid / handshake (loose) / crackable (strict)
-    for(uint16_t i = 0; i < model->ap_count; i++) {
-        if(model->aps[i].pmkid) np++;
-        if(model->aps[i].handshake) nh++;
-        if(ap_crackable(&model->aps[i])) nc++;
-    }
+    // capture tallies come from the persisted persona stats (recycle-proof), not the AP table
     snprintf(
         l, sizeof(l), "pwnd %lu (%lu)  seen %lu", (unsigned long)p->pwnd_run,
         (unsigned long)p->s.pwnd_tot, (unsigned long)p->aps_session);
@@ -2638,7 +2662,8 @@ static void pwnpal_draw_stats(Canvas* canvas, const PwnpalModel* model) {
     }
     // captures: crackable (strict ✓) leads so it never clips; then loose P=pmkid/H=handshake, tx.
     snprintf(
-        l, sizeof(l), "crack %u  P%u/H%u  tx %lu", (unsigned)nc, (unsigned)np, (unsigned)nh,
+        l, sizeof(l), "crack %lu  P%lu/H%lu  tx %lu", (unsigned long)p->s.crack_tot,
+        (unsigned long)p->s.pmkid_tot, (unsigned long)p->s.hs_tot,
         (unsigned long)model->adv_sent_count);
     canvas_draw_str(canvas, 2, 61, l);
 }
@@ -2730,12 +2755,9 @@ static void pwnpal_draw_home_stats(Canvas* canvas, const PwnpalModel* model) {
     } while(0)
     switch(model->stat_page) {
     case StatPageCounts: {
-        uint16_t crack = 0;
-        for(uint16_t i = 0; i < model->ap_count; i++)
-            if(model->aps[i].has_essid && (model->aps[i].pmkid || model->aps[i].handshake)) crack++;
         // pwnd omitted here: the persistent bottom bar already shows it on every home page
         HS_ROW("seen %lu", (unsigned long)p->aps_session);
-        HS_ROW("crack %u", (unsigned)crack);
+        HS_ROW("crack %lu", (unsigned long)p->s.crack_tot);
         HS_ROW("epoch %lu", (unsigned long)p->epoch);
         break;
     }
@@ -2743,12 +2765,7 @@ static void pwnpal_draw_home_stats(Canvas* canvas, const PwnpalModel* model) {
         int near = 0;
         for(int i = 0; i < MAX_PEERS; i++)
             if(model->peers.items[i].used) near++;
-        uint16_t np = 0, nh = 0; // captures split by type (pmkid / handshake)
-        for(uint16_t i = 0; i < model->ap_count; i++) {
-            if(model->aps[i].pmkid) np++;
-            if(model->aps[i].handshake) nh++;
-        }
-        HS_ROW("pwnd P%u/H%u", (unsigned)np, (unsigned)nh);
+        HS_ROW("pwnd P%lu/H%lu", (unsigned long)p->s.pmkid_tot, (unsigned long)p->s.hs_tot);
         HS_ROW("near %d", near);
         break;
     }
@@ -3669,7 +3686,7 @@ static int32_t pwnpal_verify_thread(void* ctx) {
                     app->view, PwnpalModel * model,
                     {
                         int ai = ap_find(model, key);
-                        if(ai >= 0) model->aps[ai].crackable = true;
+                        mark_crackable(model, ai);
                     },
                     false);
             }

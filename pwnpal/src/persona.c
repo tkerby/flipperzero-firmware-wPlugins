@@ -95,11 +95,15 @@ Persona* persona_alloc(void) {
 
     if(storage_file_open(file, PERSONA_PATH, FSAM_READ, FSOM_OPEN_EXISTING)) {
         PersonaSaved saved;
+        memset(&saved, 0, sizeof(saved)); // so a shorter v2 blob leaves the new tallies at 0
         uint16_t read = storage_file_read(file, &saved, sizeof(saved));
-        if(read == sizeof(saved) && saved.magic == PERSONA_SAVE_MAGIC &&
-           saved.version == PERSONA_SAVE_VERSION) {
+        // accept a full v3 blob, or migrate a v2 one (12 bytes shorter: v3 appended 3 u32 tallies)
+        bool ok_v3 = (read == sizeof(saved) && saved.version == PERSONA_SAVE_VERSION);
+        bool ok_v2 = (read == sizeof(saved) - 3 * sizeof(uint32_t) && saved.version == 2);
+        if((ok_v3 || ok_v2) && saved.magic == PERSONA_SAVE_MAGIC) {
             memset(p, 0, sizeof(Persona));
             p->s = saved;
+            p->s.version = PERSONA_SAVE_VERSION; // persist as v3 on next save
             // guard corrupt name/identity from a truncated write
             p->s.name[PERSONA_NAME_MAX - 1] = '\0';
             p->s.identity[PERSONA_ID_HEX_LEN] = '\0';
