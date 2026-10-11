@@ -694,9 +694,10 @@ static void pwnpal_handle_adv_line(PwnpalApp* app, const char* line) {
             model->fw_commit[sizeof(model->fw_commit) - 1] = '\0';
             // board reports a build that isn't the one this app ships with -> recommend a reflash.
             // both hashes must be real (a "nogit" tarball build on either side can't be compared).
-            model->fw_outdated = fw[0] != '\0' && strcmp(fw, "nogit") != 0 &&
-                                 strcmp(PWNPAL_EXPECTED_FW_COMMIT, "nogit") != 0 &&
-                                 strcmp(fw, PWNPAL_EXPECTED_FW_COMMIT) != 0;
+            // Nag only when the board's serial PROTOCOL is older than this app needs. A commit-hash
+            // difference alone means compatible firmware (e.g. a rebuild), so it must NOT nag --
+            // the exact hash still shows on the About screen for reference.
+            model->fw_outdated = model->fw_proto > 0 && model->fw_proto < PWNPAL_FW_PROTO;
         },
         true);
     // Diagnostic: ONLY when running the instrumented fw (ADV carries ncmd=), log one tick-stamped
