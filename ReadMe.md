@@ -211,6 +211,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [UHF Expansion v1.6 (By mtoolstec)](https://github.com/mtoolstec/fz-uhf-expansion)
 - Updated: [FlipBIP Crypto Wallet v2.0 (By xtruan)](https://github.com/xtruan/FlipBIP)
 - Updated: [Pod v1.0 (By thecoolguy2001)](https://github.com/thecoolguy2001/flipper-pod)
+- Updated: [Internet Bridge v0.5 (By mete888)](https://github.com/mete888/flipper_usb_to_wifi)
 
 <a name="release"></a>
 
@@ -788,6 +789,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [INA Meter v0.8 (By cepetr)](https://github.com/cepetr/flipper-tina)
 - [InfraFi v1.2 (By amd989)](https://github.com/amd989/InfraFi)
 - [Infrared Playback v0.2 (By kdiller713)](https://github.com/kdiller713/public-FlipperApps)
+- [Internet Bridge v0.5 (By mete888)](https://github.com/mete888/flipper_usb_to_wifi)
 - [Internet Time Screen v0.2 (By sureserverman)](https://github.com/sureserverman/internet-time-screen)
 - [Intervalometer v1.2 (By theageoflove)](https://github.com/theageoflove/flipperzero-zeitraffer)
 - [IR Blaster v1.1 (By mateusz-szafraniec)](https://github.com/mateusz-szafraniec/flipperzero-IR_Blaster)
@@ -1103,7 +1105,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - [uPython v1.8 (By ofabel)](https://github.com/ofabel/mp-flipper)
 - [USB Consumer Control (By WithSecureLabs)](https://github.com/WithSecureLabs/usb-consumer-control)
 - [USB HID Autofire v1.1 (By pbek)](https://github.com/pbek/usb_hid_autofire)
-- [USB Internet Bridge v0.4 (By mete888)](https://github.com/mete888/flipper_usb_to_wifi)
 - [USB Mass Storage v1.5 (By nminaylov)](https://github.com/flipperdevices/flipperzero-good-faps/tree/nm/usb_mass_storage_app/mass_storage)
 - [USB Midi Capturing v0.1 (By fgreil)](https://github.com/fgreil/mitzi-midi)
 - [USB Midi v1.0 (By DrZlo13 & kribesk)](https://github.com/kribesk/flipper-zero-usb-midi) [Instructions by ESurge](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/applications/plugins/usb_midi/ReadMe.md)
