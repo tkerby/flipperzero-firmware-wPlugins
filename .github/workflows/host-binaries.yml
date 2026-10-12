@@ -47,12 +47,20 @@ jobs:
         env:
           QT_QPA_PLATFORM: offscreen
       - if: runner.os == 'Windows'
-        run: pyinstaller --onefile --collect-all bleak --collect-all keyring --icon host/assets/fib-bridge.ico --name fib-bridge-${{ matrix.asset }} host/fib_bridge_entry.py
+        run: pyinstaller --onefile --exclude-module readline --collect-all bleak --collect-all keyring --icon host/assets/fib-bridge.ico --name fib-bridge-${{ matrix.asset }} host/fib_bridge_entry.py
       - if: runner.os == 'Linux'
         run: |
-          pyinstaller --onefile --collect-all bleak --collect-all keyring --name fib-bridge-${{ matrix.asset }} host/fib_bridge_entry.py
+          pyinstaller --onefile --exclude-module readline --collect-all bleak --collect-all keyring --name fib-bridge-${{ matrix.asset }} host/fib_bridge_entry.py
       - name: Build compact desktop GUI and package notices
-        run: python scripts/package_desktop_host.py --platform ${{ matrix.asset }}
+        run: python -m scripts.package_desktop_host --platform ${{ matrix.asset }}
+      - name: Run the packaged terminal executable
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = Windows ]; then
+            ./dist/fib-bridge-${{ matrix.asset }}.exe --version
+          else
+            ./dist/fib-bridge-${{ matrix.asset }} --version
+          fi
       - name: Capture actual target-platform widgets (labelled preview)
         run: python -m scripts.capture_desktop_ui
         env:
@@ -64,4 +72,5 @@ jobs:
             dist/fib-bridge-${{ matrix.asset }}.exe
             dist/host-desktop/*.tar.gz
             dist/host-desktop/*.zip
+            .build-tests/third-party-sources/*
             screenshots/desktop/*.png

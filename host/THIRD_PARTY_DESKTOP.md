@@ -22,8 +22,11 @@ notices, and build instructions when redistributing. Do not prohibit debugging
 for modifications of LGPL components. The build emits a dependency/version
 inventory and copies license files present in installed dependency distributions.
 
-Before public binary publication, review the licenses/notices of the actual
-bundled Qt build and provide the corresponding source/required offers under the
-chosen terms. The workflow and a local UI preview alone are not a distribution
-compliance certification. This change does not publish binaries or alter the
-project's license.
+Release packages include `SOURCES.md`, exact versions/source directions in
+`native-sources.json`, copied upstream license/attribution files, and Linux system
+package copyright files. Corresponding Qt/PySide source archives are attached
+next to the release binaries. The unused Python readline module is excluded.
+Shared GUI libraries remain replaceable; rebuilding/relinking and debugging
+modified LGPL components are not prohibited. The project's own license remains
+MIT. Automated notice collection is not a legal certification, and CI is not a
+physical-device/platform test.

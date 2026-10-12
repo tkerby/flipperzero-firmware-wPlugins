@@ -14,6 +14,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+if __package__:
+    from .desktop_release_notices import collect_release_notices, is_notice
+else:
+    from desktop_release_notices import collect_release_notices, is_notice
+
 
 def copy_notices(target):
     licenses = target / "licenses"
@@ -24,7 +29,7 @@ def copy_notices(target):
         inventory.append({"name": name, "version": distribution.version,
                           "license": distribution.metadata.get("License-Expression") or distribution.metadata.get("License", "See upstream")})
         for entry in distribution.files or ():
-            if not any(word in entry.name.lower() for word in ("license", "copying", "notice")):
+            if not is_notice(entry):
                 continue
             source = Path(distribution.locate_file(entry))
             if source.is_file() and source.suffix.lower() not in {".py", ".pyc", ".so", ".dll", ".pyd"}:
@@ -32,6 +37,7 @@ def copy_notices(target):
                 destination.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(source, destination)
     (target / "dependency-versions.json").write_text(json.dumps(sorted(inventory, key=lambda item: item["name"].lower()), indent=2) + "\n", encoding="utf-8")
+    collect_release_notices(target)
 
 
 def main():
@@ -45,6 +51,7 @@ def main():
     output = root / "dist" / "host-desktop"
     output.mkdir(parents=True, exist_ok=True)
     build = [sys.executable, "-m", "PyInstaller", "--noconfirm", "--onedir", "--windowed",
+             "--exclude-module", "readline",
              "--collect-all", "bleak", "--collect-all", "keyring", "--collect-data", "host",
              "--name", "fib-bridge-desktop", "--distpath", str(output),
              "--workpath", str(root / ".build-tests" / "desktop-package"),
@@ -56,6 +63,7 @@ def main():
         shutil.copy2(source, bundle / source.name)
     copy_notices(bundle)
     if expected == "Windows":
+        shutil.copy2(root / "dist/fib-bridge-windows-x86_64.exe", bundle / "fib-bridge-cli.exe")
         archive = shutil.make_archive(str(output / "fib-bridge-desktop-windows-x86_64"), "zip", output, bundle.name)
     else:
         package = output / "fib-bridge-linux-x86_64-package"
