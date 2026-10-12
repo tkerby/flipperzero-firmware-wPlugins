@@ -282,57 +282,57 @@ typedef struct {
 char credentials[1000];
 char message[128];
 char ev_last[96]; // 5Ghost: latest captured credential, handed worker -> main thread
-#define GHOST_EVT_EV_CRED \
-    0x204u // EV: a credential was captured; defer SD write + GUI to main thread
-#define GHOST_EVT_LOAD_PORTAL \
-    0x205u // task10: open the SD file browser from the dispatcher loop, not the input callback
-#define GHOST_EVT_SPLASH_TICK \
-    0x206u // startup splash timer tick: drive the progress bar / HELLO probe
-#define GHOST_EVT_CONFIG_AP_REBUILD \
-    0x20Au // rebuild Create AP after a dynamic item callback has returned
-#define GHOST_EVT_CONFIG_ATTACK_REBUILD \
-    0x20Bu // rebuild attack config after a dynamic item callback has returned
-#define GHOST_EVT_CONFIG_AP_START \
-    0x20Cu // send AP commands after the VariableItemList input callback has returned
-#define GHOST_EVT_GATT_PROBE                                                   \
-    0x20Du // 5Ghost ②: BLE detail card OK -> gattProbeScene (input callback \
-        // only posts the event; the scene's on_event does the next_scene)
-#define GHOST_EVT_BLE_RAW                                                       \
-    0x20Eu // 5Ghost ③: BLE detail card Right -> bleRawScene (posted from the \
-        // input callback; the scene's on_event does the next_scene)
-#define GHOST_EVT_BADBLE_LOAD_FILE \
-    0x20Fu // 5Ghost ⑧b: open the SD .txt browser from the dispatcher loop, not the input callback
-#define GHOST_EVT_BADBLE_LOAD_PRESET \
-    0x210u // 5Ghost ⑧b: upload the selected built-in preset (paced UART)
-#define GHOST_EVT_BADBLE_START  0x211u // 5Ghost ⑧b: send BADBLE after the input callback returns
-#define GHOST_EVT_BADBLE_UPDATE 0x212u // 5Ghost ⑧b: a BADBLE:START/INJECT/heartbeat line arrived
-#define GHOST_EVT_BADBLE_DONE   0x213u // 5Ghost ⑧b: BADBLE:OK — injection window finished
-#define GHOST_EVT_BADBLE_STOP \
-    0x214u // 5Ghost ⑧b: run scene OK pressed while running -> send STOP (abort the fw inject window)
-#define GHOST_EVT_MULTI_DEAUTH_START                                                                \
-    0x215u // 5Ghost MULTI-AP C2: scan-list Left-long -> send the paced STOP/DEAUTHADD×N/DEAUTHRUN \
+#define GHOST_EVT_EV_CRED               0x204u
+    // EV: a credential was captured; defer SD write + GUI to main thread
+#define GHOST_EVT_LOAD_PORTAL           0x205u
+    // task10: open the SD file browser from the dispatcher loop, not the input callback
+#define GHOST_EVT_SPLASH_TICK           0x206u
+    // startup splash timer tick: drive the progress bar / HELLO probe
+#define GHOST_EVT_CONFIG_AP_REBUILD     0x20Au
+    // rebuild Create AP after a dynamic item callback has returned
+#define GHOST_EVT_CONFIG_ATTACK_REBUILD 0x20Bu
+    // rebuild attack config after a dynamic item callback has returned
+#define GHOST_EVT_CONFIG_AP_START       0x20Cu
+    // send AP commands after the VariableItemList input callback has returned
+#define GHOST_EVT_GATT_PROBE            0x20Du
+    // 5Ghost ②: BLE detail card OK -> gattProbeScene (input callback \
+ // only posts the event; the scene's on_event does the next_scene)
+#define GHOST_EVT_BLE_RAW               0x20Eu
+    // 5Ghost ③: BLE detail card Right -> bleRawScene (posted from the \
+ // input callback; the scene's on_event does the next_scene)
+#define GHOST_EVT_BADBLE_LOAD_FILE      0x20Fu
+    // 5Ghost ⑧b: open the SD .txt browser from the dispatcher loop, not the input callback
+#define GHOST_EVT_BADBLE_LOAD_PRESET    0x210u
+    // 5Ghost ⑧b: upload the selected built-in preset (paced UART)
+#define GHOST_EVT_BADBLE_START          0x211u // 5Ghost ⑧b: send BADBLE after the input callback returns
+#define GHOST_EVT_BADBLE_UPDATE         0x212u // 5Ghost ⑧b: a BADBLE:START/INJECT/heartbeat line arrived
+#define GHOST_EVT_BADBLE_DONE           0x213u // 5Ghost ⑧b: BADBLE:OK — injection window finished
+#define GHOST_EVT_BADBLE_STOP           0x214u
+    // 5Ghost ⑧b: run scene OK pressed while running -> send STOP (abort the fw inject window)
+#define GHOST_EVT_MULTI_DEAUTH_START    0x215u
+    // 5Ghost MULTI-AP C2: scan-list Left-long -> send the paced STOP/DEAUTHADD×N/DEAUTHRUN \
         // sequence from the dispatcher loop, not the ViewPort input callback (ViewPort lock)
-#define GHOST_EVT_AUDIT_TICK \
-    0x216u // P1 A2: 500ms wait tick for LISTAP/STASCAN/CAPTURE dwell (no dispatcher-blocking while)
-#define GHOST_EVT_BLEADV_SAVE 0x217u // issue #7: raw view OK -> append this advert to SD
-#define GHOST_EVT_BLEADV_OPEN 0x218u // issue #7: raw view Left -> saved-advert library
-#define GHOST_EVT_BLEADV_HEX  0x219u // issue #7: custom-hex text input committed
-#define GHOST_EVT_BLEADV_DONE 0x21Au // issue #7: BLEADVTX:OK
-#define GHOST_EVT_BLEADV_FAIL 0x21Bu // issue #7: firmware replied ERR:UNKNOWN to BLEADV
-#define GHOST_EVT_BLEADV_DEL  0x21Cu // issue #7: confirm-delete OK -> rewrite bleadv.txt
-#define GHOST_EVT_SSID_TICK \
-    0x21Du // scan-list / AP-detail SSID marquee. Timer callback only posts this.
-#define GHOST_SSID_TICK_MS     100 // UI cadence, not a radio timing. Tune on device.
-#define GHOST_SSID_SCROLL_STEP 2
-#define GHOST_SSID_SCROLL_GAP  16 // px held at the end of a long name before wrap
-#define AUDIT_TICK_MS          500
-#define AUDIT_LISTAP_TICKS     50
-#define AUDIT_STASCAN_TICKS    24
-#define AUDIT_CAPTURE_TICKS    30 // 15s dwell then CAPSTOP; firmware has no host timeout
-#define AUDIT_WAIT_NONE        0
-#define AUDIT_WAIT_LISTAP      1
-#define AUDIT_WAIT_STASCAN     2
-#define AUDIT_WAIT_CAPTURE     3
+#define GHOST_EVT_AUDIT_TICK            0x216u
+    // P1 A2: 500ms wait tick for LISTAP/STASCAN/CAPTURE dwell (no dispatcher-blocking while)
+#define GHOST_EVT_BLEADV_SAVE           0x217u // issue #7: raw view OK -> append this advert to SD
+#define GHOST_EVT_BLEADV_OPEN           0x218u // issue #7: raw view Left -> saved-advert library
+#define GHOST_EVT_BLEADV_HEX            0x219u // issue #7: custom-hex text input committed
+#define GHOST_EVT_BLEADV_DONE           0x21Au // issue #7: BLEADVTX:OK
+#define GHOST_EVT_BLEADV_FAIL           0x21Bu // issue #7: firmware replied ERR:UNKNOWN to BLEADV
+#define GHOST_EVT_BLEADV_DEL            0x21Cu // issue #7: confirm-delete OK -> rewrite bleadv.txt
+#define GHOST_EVT_SSID_TICK             0x21Du
+    // scan-list / AP-detail SSID marquee. Timer callback only posts this.
+#define GHOST_SSID_TICK_MS              100 // UI cadence, not a radio timing. Tune on device.
+#define GHOST_SSID_SCROLL_STEP          2
+#define GHOST_SSID_SCROLL_GAP           16 // px held at the end of a long name before wrap
+#define AUDIT_TICK_MS                   500
+#define AUDIT_LISTAP_TICKS              50
+#define AUDIT_STASCAN_TICKS             24
+#define AUDIT_CAPTURE_TICKS             30 // 15s dwell then CAPSTOP; firmware has no host timeout
+#define AUDIT_WAIT_NONE                 0
+#define AUDIT_WAIT_LISTAP               1
+#define AUDIT_WAIT_STASCAN              2
+#define AUDIT_WAIT_CAPTURE              3
 
 // 5Ghost firmware handshake status (L1 text handshake)
 typedef enum {
