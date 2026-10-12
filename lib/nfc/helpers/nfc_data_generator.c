@@ -2,6 +2,7 @@
 
 #include <furi/furi.h>
 #include <furi_hal_random.h>
+#include <nfc/protocols/felica/felica.h>
 #include <nfc/protocols/iso14443_3a/iso14443_3a.h>
 #include <nfc/protocols/mf_classic/mf_classic.h>
 #include <nfc/protocols/mf_ultralight/mf_ultralight.h>
@@ -497,6 +498,47 @@ static void nfc_generate_mf_classic_4k_7b_uid(NfcDevice* nfc_device) {
     nfc_generate_mf_classic(nfc_device, 7, MfClassicType4k);
 }
 
+// Factory-register defaults for a blank (post-0th issuance) FeliCa Lite-S.
+// See flipperdevices/flipperzero-firmware PR #4371 (dogtopus).
+static const uint8_t pmm_felica_lite_s[] = {0x00, 0xF1, 0x00, 0x00, 0x00, 0x01, 0x43, 0x00};
+static const uint8_t default_mc_felica_lite_s[] =
+    {0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static const uint8_t default_wcnt_felica_lite_s[] = {0x00, 0xFE, 0xFF};
+
+static void nfc_generate_felica_lite_s(NfcDevice* nfc_device) {
+    FelicaData* data = felica_alloc();
+    felica_reset(data);
+    data->workflow_type = FelicaLite;
+
+    // Sony FeliCa Lite-S manufacturer code, followed by six random bytes.
+    // Note the wire order: 0x2E01 is stored as 01 2E in IDm.
+    uint8_t idm[FELICA_IDM_SIZE] = {0x01, 0x2E};
+    furi_hal_random_fill_buf(&idm[2], FELICA_IDM_SIZE - 2);
+    memcpy(data->idm.data, idm, sizeof(idm));
+    memcpy(data->pmm.data, pmm_felica_lite_s, sizeof(pmm_felica_lite_s));
+
+    // Follow the upstream blank-template convention: 26 of 28 blocks readable.
+    data->blocks_total = FELICA_BLOCKS_TOTAL_COUNT;
+    data->blocks_read = 26;
+
+    FelicaFileSystem* fs = &data->data.fs;
+    memset(fs->reg.data, 0xFF, sizeof(fs->reg.data));
+    memcpy(fs->id.data, idm, sizeof(idm));
+    memcpy(fs->d_id.data, idm, sizeof(idm));
+    memcpy(&fs->d_id.data[FELICA_IDM_SIZE], pmm_felica_lite_s, sizeof(pmm_felica_lite_s));
+    fs->sys_c.data[0] = 0x88;
+    fs->sys_c.data[1] = 0xB4;
+    memcpy(fs->mc.data, default_mc_felica_lite_s, sizeof(default_mc_felica_lite_s));
+    memcpy(fs->wcnt.data, default_wcnt_felica_lite_s, sizeof(default_wcnt_felica_lite_s));
+
+    // Reading MAC_A without authentication returns status 01B2.
+    fs->mac_a.SF1 = 0x01;
+    fs->mac_a.SF2 = 0xB2;
+
+    nfc_device_set_data(nfc_device, NfcProtocolFelica, data);
+    felica_free(data);
+}
+
 // MIFARE Plus ATS historical bytes per product. Only the type/size nibbles are load-bearing for
 // detection (see mf_plus_type_from_ats): S/X mask their size with 2F 2F and differ by the caps
 // byte's SVC bit; SE reveals 21 30. The trailing CRC16 floats between configs -- the SE value is a
@@ -851,6 +893,11 @@ static const NfcDataGenerator nfc_data_generator[NfcDataGeneratorTypeNum] = {
             .handler = nfc_generate_mf_classic_4k_7b_uid,
         },
 
+    [NfcDataGeneratorTypeFelicaLiteS] =
+        {
+            .name = "FeliCa Lite-S",
+            .handler = nfc_generate_felica_lite_s,
+        },
     [NfcDataGeneratorTypeTexkomTk13] =
         {
             .name = "Texkom TK13",

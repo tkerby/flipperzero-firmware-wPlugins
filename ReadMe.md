@@ -212,6 +212,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipBIP Crypto Wallet v2.0 (By xtruan)](https://github.com/xtruan/FlipBIP)
 - Updated: [Pod v1.0 (By thecoolguy2001)](https://github.com/thecoolguy2001/flipper-pod)
 - Updated: [Internet Bridge v0.5 (By mete888)](https://github.com/mete888/flipper_usb_to_wifi)
+- Updated: NFC: [FeliCa: Add card generator for FeliCa Lite-S #4371 (By dogtopus)](https://github.com/flipperdevices/flipperzero-firmware/pull/4371)
 
 <a name="release"></a>
 
