@@ -1,22 +1,16 @@
 """Optional actual-widget tests. Offscreen, no device/network/keyring access."""
-
 from __future__ import annotations
 import os
 import unittest
-
+from unittest.mock import patch
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 try:
     from PySide6.QtWidgets import QApplication, QPushButton
     from host.fibp_host.desktop_gui import BridgeWindow, ConsentDialog, apply_style
-
     QT_AVAILABLE = True
 except ImportError:
     QT_AVAILABLE = False
-from host.fibp_host.desktop_backend import (
-    ConnectionSnapshot,
-    DesktopController,
-    PromptBroker,
-)
+from host.fibp_host.desktop_backend import ConnectionSnapshot, DesktopController, PromptBroker
 from host.fibp_host.session import PermissionDecision
 
 
@@ -34,9 +28,7 @@ class DesktopWidgetTests(unittest.TestCase):
         self.addCleanup(self.window.timer.stop)
 
     def test_tabs_are_presentation_only_and_independent(self):
-        usb = ConnectionSnapshot(
-            "usb", True, True, "Mico", "Device", "Internet access ready", True
-        )
+        usb = ConnectionSnapshot("usb", True, True, "Mico", "Device", "Internet access ready", True)
         self.controller.snapshots["usb"] = usb
         self.window.select("bluetooth")
         self.assertEqual(self.controller.snapshot("usb"), usb)
@@ -56,11 +48,7 @@ class DesktopWidgetTests(unittest.TestCase):
     def test_code_requires_six_ascii_digits(self):
         item = PromptBroker().request("test", "bluetooth", "code", "Mico")
         dialog = ConsentDialog(item, self.window)
-        pair = next(
-            button
-            for button in dialog.findChildren(QPushButton)
-            if button.text() == "Pair"
-        )
+        pair = next(button for button in dialog.findChildren(QPushButton) if button.text() == "Pair")
         self.assertFalse(pair.isEnabled())
         dialog.code.setText("12345")
         self.assertFalse(pair.isEnabled())
@@ -77,15 +65,16 @@ class DesktopWidgetTests(unittest.TestCase):
     def test_empty_pairings_has_no_ghost_rows(self):
         self.controller.records = (("a" * 64, "Mico"),)
         self.window.pairings.refresh()
-        self.assertEqual(
-            len(self.window.pairings.area.widget().findChildren(QPushButton)), 1
-        )
+        self.assertEqual(len(self.window.pairings.area.widget().findChildren(QPushButton)), 1)
         self.controller.records = ()
         self.window.pairings.refresh()
-        self.assertEqual(
-            len(self.window.pairings.area.widget().findChildren(QPushButton)), 0
-        )
+        self.assertEqual(len(self.window.pairings.area.widget().findChildren(QPushButton)), 0)
+
+    def test_native_smoke_never_enables_devices_or_creates_permission_directory(self):
+        from host.fibp_host.desktop_gui import main
+        with patch("host.fibp_host.desktop_gui.default_permission_path", side_effect=AssertionError("must not create grants")), \
+             patch.object(DesktopController, "set_enabled", side_effect=AssertionError("must not start devices")):
+            self.assertEqual(main(["--smoke-test"]), 0)
 
 
-if __name__ == "__main__":
-    unittest.main()
+if __name__ == "__main__": unittest.main()

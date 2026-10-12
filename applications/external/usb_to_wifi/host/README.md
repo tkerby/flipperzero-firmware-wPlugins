@@ -37,7 +37,8 @@ Do not run the CLI/native Mac helper against the same device concurrently.
 Real-widget previews are in [screenshots/desktop](../screenshots/desktop).
 They are rendered on the development Mac with labelled fixture data, **not**
 evidence of Windows/Linux hardware validation. The target-platform CI captures
-the same widgets but has not been dispatched for this working-tree change.
+the same widgets on Windows/Linux and builds native packages. These checks do
+not certify physical USB/Bluetooth devices or OS credential stores.
 
 Use the v0.5.0 host with the v0.5.0 FAP for Latest Earthquakes, Currency Converter
 and English Dictionary. These endpoint responses are converted into bounded
@@ -146,9 +147,9 @@ helper does not advertise USB PCM and the FAP asks to update the helper. The
 decoded stream is mono s16le at 14,493 Hz, with a ten-second host reservoir.
 
 POST stays USB-only. Physical Windows/Linux Bluetooth and
-installer/binary validation still need those platforms: local tests use fake
-GATT/keyring peers. The CI workflow installs the BLE extra and collects Bleak
-and keyring into each platform's binary; it has not been run/published here.
+device validation still needs those platforms: local tests use fake GATT/keyring
+peers. Native Windows/Linux CI runs tests, builds the packages and runs the
+packaged CLI. Real Bluetooth adapters/keyrings still require operator testing.
 
 Dependencies use [Bleak's documented native pairing/GATT APIs](https://bleak.readthedocs.io/en/latest/api/client.html)
 and [keyring's OS credential backends](https://github.com/jaraco/keyring).
@@ -167,9 +168,13 @@ while retaining the original hostname for SNI and certificate validation.
 
 The `host-binaries.yml` workflow builds the CLI plus a **onedir** Qt GUI on each
 target OS. Keep the GUI's shared libraries and notices next to its executable;
-do not copy only the executable. Existing release candidates are on the
+do not copy only the executable. Downloads are on the
 [GitHub Releases](https://github.com/mete888/flipper_internet_bridge/releases) page.
-This working-tree GUI change has not been published there.
+The Windows ZIP contains the GUI plus `fib-bridge-cli.exe`. The Linux tarball
+contains the GUI, CLI, user-local installer and uninstaller. Python, Xcode and
+FFmpeg are not required to run the prebuilt helpers. Keep `licenses/`,
+`SOURCES.md` and the library files together; corresponding Qt/PySide source
+archives are available next to the binaries for users who want to modify them.
 
 Windows PowerShell:
 
@@ -177,7 +182,7 @@ Windows PowerShell:
 # Extract the GUI ZIP, then:
 .\fib-bridge-desktop\fib-bridge-desktop.exe
 # Optional terminal host:
-.\fib-bridge-windows-x86_64.exe
+.\fib-bridge-desktop\fib-bridge-cli.exe
 ```
 
 Linux:
@@ -201,15 +206,16 @@ GUI dependencies installed:
 ```sh
 python -m pip install ".[desktop]" pyinstaller
 # Linux: build the CLI first, then the GUI/package.
-pyinstaller --onefile --collect-all bleak --collect-all keyring --name fib-bridge-linux-x86_64 host/fib_bridge_entry.py
-python scripts/package_desktop_host.py --platform linux-x86_64
+pyinstaller --onefile --exclude-module readline --collect-all bleak --collect-all keyring --name fib-bridge-linux-x86_64 host/fib_bridge_entry.py
+python -m scripts.package_desktop_host --platform linux-x86_64
 ```
 
 Windows PowerShell:
 
 ```powershell
 python -m pip install ".[desktop]" pyinstaller
-python scripts/package_desktop_host.py --platform windows-x86_64
+pyinstaller --onefile --exclude-module readline --collect-all bleak --collect-all keyring --icon host/assets/fib-bridge.ico --name fib-bridge-windows-x86_64 host/fib_bridge_entry.py
+python -m scripts.package_desktop_host --platform windows-x86_64
 ```
 
 Packages are generated in `dist/host-desktop/`. Packaging is not cross-compilation.
@@ -219,6 +225,6 @@ access needs the normal user-group permissions. No privileged helper is used.
 The binaries are currently unsigned. Windows SmartScreen or Linux desktop
 policy may therefore ask for confirmation. Backend, real Qt widget and POSIX
 virtual-serial tests run locally on macOS. The CI matrix is configured to run on
-Windows/Linux, but these new native packages and physical Bluetooth/USB behavior
-on those platforms have not yet been validated. Review dependency distribution
-obligations before public binary publication.
+Windows/Linux and verifies native test/build/CLI results. Physical Bluetooth/USB
+behavior, keyrings and installed-user environments still need device testing.
+See `SOURCES.md`, `native-sources.json` and the included dependency notices.
