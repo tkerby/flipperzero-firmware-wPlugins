@@ -213,6 +213,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Pod v1.0 (By thecoolguy2001)](https://github.com/thecoolguy2001/flipper-pod)
 - Updated: [Internet Bridge v0.5 (By mete888)](https://github.com/mete888/flipper_usb_to_wifi)
 - Updated: NFC: [FeliCa: Add card generator for FeliCa Lite-S #4371 (By dogtopus)](https://github.com/flipperdevices/flipperzero-firmware/pull/4371)
+- Updated: [5Ghost Wifi Lab v2.7.8 (By pingequalab)](https://github.com/pingequalab/5ghost-wifi-lab) `Req: BW15`
 
 <a name="release"></a>
 
@@ -515,7 +516,7 @@ This software is for experimental purposes only and is not meant for any illegal
 ## Apps / Plugins
 
 - [24Cxx Programmer v2.1 (By kamylwnb)](https://github.com/kamylwnb/24cxxprog)
-- [5Ghost Wifi Lab v2.7.6 (By pingequalab)](https://github.com/pingequalab/5ghost-wifi-lab) `Req: BW15`
+- [5Ghost Wifi Lab v2.7.8 (By pingequalab)](https://github.com/pingequalab/5ghost-wifi-lab) `Req: BW15`
 - [AC Detector v1.0 (By xMasterX)](https://github.com/xMasterX/all-the-plugins/tree/213baa6e872d1db597a25d2c16e81406e9634440/non_catalog_apps/ac_detector)
 - [AC Fujitsu General Remote v1.0 (By j-stud-res)](https://github.com/j-stud-res/flipper-ac-fujitsu-general-remote)
 - [Access Audit v1.13 (By matthewkayne)](https://github.com/matthewkayne/flipper-access-audit)
