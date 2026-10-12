@@ -213,6 +213,7 @@ void Pwnpal::reset() {
     _sent = 0;
     _last_active_ms = 0;
     _last_sweep_ms = 0;
+    _next_sweep_ms = 0;
     _last_gps_ms = 0;
     _saver = 0;
     _saver_idle = false;
@@ -608,6 +609,19 @@ void Pwnpal::rebuild() {
     _frame_len = 38 + jlen;
 }
 
+// cheap self-contained xorshift PRNG for advert-sweep jitter. deliberately no esp_random /
+// IDF header dependency (the feberis base is cloned fresh at overlay time, IDF version
+// unknown). returns a symmetric jitter around base [0.75*base .. 1.25*base] so the AVERAGE
+// cadence is unchanged (no extra off-channel time) but the per-channel absolute timing
+// stops phase-locking with a hopping pwngrid receiver.
+static uint32_t sweep_jitter(uint32_t base_ms, uint32_t seed) {
+    static uint32_t s = 0;
+    if (s == 0) s = seed | 1u;  // lazy seed once; never zero (xorshift fixed point)
+    s ^= s << 13; s ^= s >> 17; s ^= s << 5;
+    uint32_t span = base_ms / 2 + 1;       // +/- quarter of base
+    return base_ms - base_ms / 4 + (s % span);
+}
+
 void Pwnpal::broadcast() {
     if (!_ready) return;
 
@@ -692,8 +706,13 @@ void Pwnpal::broadcast() {
     uint32_t sweep_ms = _saver ? ADVERTISE_SWEEP_SAVER_MS : ADVERTISE_SWEEP_MS;
     // when pinned to a target, DON'T spray beacons across all channels -- that hop is the only
     // thing that would leave the target channel. stay put; social reach yields to the focused hunt.
-    if (_pinned_channel <= 0 && now - _last_sweep_ms >= sweep_ms) {
+    // jitter the gap (not the average): a fixed 1500ms period visits each channel at a constant
+    // absolute offset, which can phase-lock against a hopping pwngrid receiver and hide our sparse
+    // sprinkle from a friend for a long stretch until a restart resets the phase (observed: a peer
+    // drops us within ~an hour, re-sees instantly on restart). wobbling the gap breaks the lock.
+    if (_pinned_channel <= 0 && now - _last_sweep_ms >= _next_sweep_ms) {
         _last_sweep_ms = now;
+        _next_sweep_ms = sweep_jitter(sweep_ms, now + _sent);
         for (uint8_t h = 0; h < NUM_HOP_CHANNELS; h++) {
             esp_wifi_set_channel(HOP_CHANNELS[h], WIFI_SECOND_CHAN_NONE);
             delay(1);

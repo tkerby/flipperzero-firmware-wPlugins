@@ -157,6 +157,7 @@ class Pwnpal {
     uint8_t  _cur_channel;     // channel we're parked on right now
     uint32_t _last_hop_ms;     // recon-sweep hop cadence timer
     uint32_t _last_sweep_ms;   // all-channel advertise-sweep cadence timer
+    uint32_t _next_sweep_ms;   // jittered gap until the next sweep (anti phase-lock)
     uint32_t _last_gps_ms;     // PWNPAL_GPS status-line cadence timer
     uint8_t  _saver;           // battery-saver level (0/1/2), from -saver
     bool     _saver_idle;      // deep saver: radio currently dozed off
