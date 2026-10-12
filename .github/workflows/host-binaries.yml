@@ -35,7 +35,12 @@ jobs:
       # instead of shadowing an installed wheel with an extension-free source tree.
       - run: python -m pip install -e ".[desktop]" pyinstaller
       - if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libegl1 libopengl0 libxkbcommon0
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libopengl0 libxkbcommon0 libxkbcommon-x11-0 \
+            libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
+            libxcb-render-util0 libxcb-shape0 libxcb-util1 libxcb-xinerama0 \
+            libxcb-xkb1 libxcb-xinput0 xvfb xauth
       - name: Verify radio decoder is present in release binaries
         run: python -c "from host.fibp_host.radio_pcm import AVAILABLE; assert AVAILABLE"
       - if: runner.os != 'Windows'
@@ -60,6 +65,14 @@ jobs:
             ./dist/fib-bridge-${{ matrix.asset }}.exe --version
           else
             ./dist/fib-bridge-${{ matrix.asset }} --version
+          fi
+      - name: Open the actual packaged GUI without devices or credentials
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = Windows ]; then
+            QT_QPA_PLATFORM=offscreen ./dist/host-desktop/fib-bridge-desktop/fib-bridge-desktop.exe --smoke-test
+          else
+            xvfb-run -a env QT_QPA_PLATFORM=xcb ./dist/host-desktop/fib-bridge-desktop/fib-bridge-desktop --smoke-test
           fi
       - name: Capture actual target-platform widgets (labelled preview)
         run: python -m scripts.capture_desktop_ui

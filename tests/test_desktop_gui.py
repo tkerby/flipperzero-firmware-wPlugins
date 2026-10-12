@@ -2,6 +2,7 @@
 from __future__ import annotations
 import os
 import unittest
+from unittest.mock import patch
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 try:
     from PySide6.QtWidgets import QApplication, QPushButton
@@ -68,6 +69,12 @@ class DesktopWidgetTests(unittest.TestCase):
         self.controller.records = ()
         self.window.pairings.refresh()
         self.assertEqual(len(self.window.pairings.area.widget().findChildren(QPushButton)), 0)
+
+    def test_native_smoke_never_enables_devices_or_creates_permission_directory(self):
+        from host.fibp_host.desktop_gui import main
+        with patch("host.fibp_host.desktop_gui.default_permission_path", side_effect=AssertionError("must not create grants")), \
+             patch.object(DesktopController, "set_enabled", side_effect=AssertionError("must not start devices")):
+            self.assertEqual(main(["--smoke-test"]), 0)
 
 
 if __name__ == "__main__": unittest.main()

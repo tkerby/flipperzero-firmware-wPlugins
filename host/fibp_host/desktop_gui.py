@@ -416,10 +416,23 @@ class BridgeWindow(QWidget):
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Flipper Internet Bridge desktop helper")
     parser.add_argument("--dark", action="store_true", help="use the dark compact panel")
+    parser.add_argument("--smoke-test", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
     app = QApplication.instance() or QApplication(sys.argv[:1])
     app.setApplicationName("Flipper Internet Bridge")
     app.setWindowIcon(app_icon())
+    if args.smoke_test:
+        # Native-package QA only: no locks, device workers, keyring or grants.
+        apply_style(app, args.dark)
+        controller = DesktopController(port_provider=lambda: [])
+        window = BridgeWindow(controller, preview=True, tray=False)
+        window.show()
+        QTimer.singleShot(300, app.quit)
+        try:
+            return app.exec()
+        finally:
+            window.timer.stop()
+            controller.close()
     root = default_permission_path().parent
     root.mkdir(parents=True, exist_ok=True)
     lock = QLockFile(str(root / "desktop.lock"))

@@ -101,7 +101,8 @@ def _linux_notices(target: Path) -> list[dict]:
             raise ValueError("Unused GPL readline must not be bundled")
         if name.startswith(("libssl", "libcrypto")):
             # setup-python may ship a different OpenSSL build than Ubuntu's dpkg.
-            strings = subprocess.check_output(["strings", str(library)], text=True)
+            version_library = internal / "libcrypto.so.3" if name.startswith("libssl") else library
+            strings = subprocess.check_output(["strings", str(version_library)], text=True)
             match = re.search(r"OpenSSL (\d+\.\d+\.\d+[a-z]?)", strings)
             if match is None:
                 raise ValueError("Cannot identify bundled OpenSSL version: " + name)
