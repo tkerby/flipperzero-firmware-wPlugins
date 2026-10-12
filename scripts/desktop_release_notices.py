@@ -93,6 +93,8 @@ def _linux_notices(target: Path) -> list[dict]:
         shutil.copytree(common, target / "licenses/system/common-licenses", dirs_exist_ok=True)
     for library in sorted(internal.glob("*.so*")):
         name = library.name
+        if not name.startswith("lib"):
+            continue  # Python extension wheel notices were copied by copy_notices.
         if name.startswith(("libQt6", "libpyside", "libshiboken", "libpython")):
             continue  # Exact Qt/PySide and CPython sources are recorded separately.
         if name.startswith("libreadline"):
