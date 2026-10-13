@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, "claude/**"]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # weekly: catch firmware SDK changes that break the build
+    - cron: "17 4 * * 1"
+
+jobs:
+  app:
+    name: "App (uFBT, ${{ matrix.sdk }} firmware)"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        sdk: [release, dev]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Web page and its gzip match
+        run: cmp <(gzip -dc flipper_app/files/index.html.gz) flipper_app/files/index.html || { echo "::error::Run pc/tools/build_page.sh and commit flipper_app/files/index.html.gz"; exit 1; }
+      - name: Build with uFBT
+        uses: flipperdevices/flipperzero-ufbt-action@v0.1
+        id: build
+        with:
+          app-dir: flipper_app
+          sdk-channel: ${{ matrix.sdk }}
+      - name: The .fap carries the plugins and the page
+        run: |
+          fap=$(find flipper_app/dist -name gitphin.fap | head -1)
+          ls -l "$fap"
+          for f in hub_pl_dav.fal hub_pl_pack.fal hub_pl_write.fal hub_pl_query.fal hub_pl_doc.fal index.html.gz; do
+              grep -q "$f" "$fap" || { echo "::error::$f is not embedded in gitphin.fap"; exit 1; }
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gitphin-${{ matrix.sdk }}-${{ steps.build.outputs.suffix }}
+          path: flipper_app/dist/*.fap
+      - name: Lint (clang-format, as the Apps Catalog checks; fix with ufbt format)
+        if: matrix.sdk == 'release'
+        uses: flipperdevices/flipperzero-ufbt-action@v0.1
+        with:
+          app-dir: flipper_app
+          skip-setup: true
+          task: lint
+
+  host-tests:
+    name: Host tests (app code on the PC against git, ASan)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencies
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq zlib1g-dev
+      - name: Logic (diff, compare, commit, merge)
+        run: pc/tests/run_logic_test.sh
+      - name: Routes (HTTP answers of every browse route)
+        run: pc/tests/run_route_test.sh
+      - name: Search
+        run: pc/tests/run_search_test.sh
+      - name: Commit graph
+        run: pc/tests/run_graph_test.sh
+      - name: Web writes
+        run: pc/tests/run_write_test.sh
+      - name: Packing
+        run: pc/tests/run_gitpack_test.sh
+      - name: Object reader
+        run: pc/tests/run_gitobj_test.sh
+      - name: git helper against the mock server
+        run: pc/tests/test_git_flipper.sh
+
+  pc:
+    name: PC bridge and scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python compiles
+        run: python3 -m py_compile pc/bridge.py pc/collector.py pc/git-remote-flipper tools/screenshots/demo_server.py
+      - name: Shell syntax
+        run: for f in install.sh pc/*.sh pc/tools/*.sh pc/tests/*.sh tools/screenshots/*.sh; do bash -n "$f"; done
+      - name: Version and changelogs agree
+        run: |
+          v=$(sed -n 's/^ *fap_version="\([0-9.]*\)".*/\1/p' flipper_app/application.fam)
+          grep -q "^## $v\$" CHANGELOG.md || { echo "::error::CHANGELOG.md has no '## $v' section"; exit 1; }
+          grep -q "^v$v:\$" flipper_app/docs/changelog.md || { echo "::error::flipper_app/docs/changelog.md has no 'v$v:' entry"; exit 1; }
+          echo "version $v"

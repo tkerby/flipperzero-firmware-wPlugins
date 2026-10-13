@@ -1,0 +1,11 @@
+name: Feature request
+description: A Git or Gitea feature you miss, or an idea
+labels: [enhancement]
+body:
+  - type: textarea
+    id: what
+    attributes: {label: What would you like Gitphin to do?, description: "If Gitea, GitHub or plain git has it, say where."}
+    validations: {required: true}
+  - type: textarea
+    id: why
+    attributes: {label: Why does it matter for you?}
