@@ -85,6 +85,11 @@ jobs:
       - name: Build ${{ matrix.env }}
         working-directory: esp32
         run: pio run -e ${{ matrix.env }}
+      # Loop-task call chains vs. the loop task's stack size, from the .su
+      # files the build just wrote. Fails before anything is staged or uploaded.
+      - name: Check loop-task stack budget
+        working-directory: esp32
+        run: python3 ci_check_stack.py ".pio/build/${{ matrix.env }}"
       - name: Stage firmware
         working-directory: esp32
         run: |
