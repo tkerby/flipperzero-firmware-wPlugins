@@ -15,10 +15,14 @@ Keys
 
 Keep the app open while you read. While it runs, the Flipper's own Bluetooth (for the phone app) is off.
 
-Build and install
------------------
+Install
+-------
 
-Install [ufbt](https://github.com/flipperdevices/flipperzero-ufbt) (`pipx install ufbt`), connect the Flipper over USB and run `ufbt launch` in this folder. The app is then in Apps › Bluetooth. ufbt builds against the latest official firmware release by default; the app was tested on 1.4.3.
+Download `kindle_click.fap` from [Releases](https://github.com/zuyan9/Flipper-Zero-Kindle-Click/releases) and copy it to `apps/Bluetooth` on the Flipper's SD card, with qFlipper or the Flipper mobile app. The release is built for official firmware 1.4.3.
+
+To build it yourself, install [ufbt](https://github.com/flipperdevices/flipperzero-ufbt) (`pipx install ufbt`), connect the Flipper over USB and run `ufbt launch` in this folder. ufbt builds against the latest official firmware release by default.
+
+The app is then in Apps › Bluetooth.
 
 Pairing
 -------

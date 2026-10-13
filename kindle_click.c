@@ -20,8 +20,6 @@
 
 #include "kc_profile.h"
 
-#define TAG "KindleClick"
-
 #define KEYS_PATH   APP_DATA_PATH(".bt_kindle.keys")
 #define PAIRED_PATH APP_DATA_PATH("paired")
 
@@ -59,18 +57,17 @@ typedef enum {
 } KeyId;
 
 typedef struct {
-    const char* name;
     bool consumer; // false = keyboard page
     uint16_t usage;
 } KeyDef;
 
 // Linux hid-input maps these to the evdev codes in input_manager's table.
 static const KeyDef KEYS[KeyCount] = {
-    {"page forward (KEY_PAGEDOWN)", false, 0x4E},
-    {"page backward (KEY_PAGEUP)", false, 0x4B},
-    {"brightness up (KEY_BRIGHTNESSUP)", true, 0x006F},
-    {"brightness down (KEY_BRIGHTNESSDOWN)", true, 0x0070},
-    {"sleep (KEY_POWER)", true, 0x0030},
+    {false, 0x4E}, // page forward (KEY_PAGEDOWN)
+    {false, 0x4B}, // page backward (KEY_PAGEUP)
+    {true, 0x006F}, // brightness up (KEY_BRIGHTNESSUP)
+    {true, 0x0070}, // brightness down (KEY_BRIGHTNESSDOWN)
+    {true, 0x0030}, // sleep (KEY_POWER)
 };
 
 typedef enum {
@@ -108,7 +105,6 @@ typedef struct {
     uint32_t generation; // last connection seen
     bool connected;
     bool ready; // latched per connection
-    uint32_t ready_at;
 
     bool down[KeyCount]; // key state the Kindle should see
     uint32_t down_at[KeyCount];
@@ -140,22 +136,7 @@ static bool link_ready(KindleClick* app) {
     uint32_t last = !c ? d : !d ? c : (int32_t)(c - d) > 0 ? c : d;
     // Signed: a stamp from the BLE thread can be ahead of now.
     bool quiet = last && !link->fast_interval && (int32_t)(now - last) >= READY_QUIET_MS;
-    if(quiet || now - link->secured_at >= READY_FALLBACK_MS) {
-        app->ready = true;
-        app->ready_at = now;
-        uint32_t t0 = link->connected_at;
-        FURI_LOG_I(
-            TAG,
-            "[link] +%lu ms ready for keys (%s): encrypted +%lu, link change %c%lu, %u CCCD writes, last %c%lu",
-            now - t0,
-            quiet ? "host settled" : "fallback",
-            link->secured_at - t0,
-            d ? '+' : '-',
-            d ? d - t0 : 0,
-            link->cccd_writes,
-            c ? '+' : '-',
-            c ? c - t0 : 0);
-    }
+    if(quiet || now - link->secured_at >= READY_FALLBACK_MS) app->ready = true;
     return app->ready;
 }
 
@@ -194,9 +175,6 @@ static void key_down(KindleClick* app, KeyId k) {
             app->pending = k;
             app->pending_at = furi_get_tick();
             notification_message(app->notifications, &sequence_blink_blue_10);
-            FURI_LOG_I(TAG, "[key] %s queued until the Kindle is ready", KEYS[k].name);
-        } else {
-            FURI_LOG_I(TAG, "[key] %s ignored: not connected", KEYS[k].name);
         }
         return;
     }
@@ -210,7 +188,6 @@ static void key_down(KindleClick* app, KeyId k) {
     app->dirty = true;
     flush_reports(app);
     notification_message(app->notifications, &sequence_blink_green_10);
-    FURI_LOG_I(TAG, "[key] %s down", KEYS[k].name);
 }
 
 static void key_up(KindleClick* app, KeyId k) {
@@ -224,7 +201,6 @@ static void service_releases(KindleClick* app) {
             app->down[k] = false;
             app->release_wanted[k] = false;
             app->dirty = true;
-            FURI_LOG_I(TAG, "[key] %s up", KEYS[k].name);
         }
     }
     flush_reports(app);
@@ -252,11 +228,7 @@ static void release_all(KindleClick* app) {
 static void service_pending(KindleClick* app) {
     if(app->pending == KeyNone) return;
     if(furi_get_tick() - app->pending_at > PENDING_TTL_MS) {
-        FURI_LOG_I(
-            TAG,
-            "[key] dropped queued %s (the Kindle didn't reconnect: asleep?)",
-            KEYS[app->pending].name);
-        app->pending = KeyNone;
+        app->pending = KeyNone; // the Kindle didn't come back: asleep?
         return;
     }
     if(link_ready(app)) {
@@ -271,20 +243,15 @@ static void service_sleep_hold(KindleClick* app) {
     if(furi_get_tick() - app->ok_down_at < SLEEP_HOLD_MS) return;
     app->ok_fired = true;
     // Never queued: it could put the Kindle to sleep right after it wakes.
-    if(!link_ready(app)) {
-        FURI_LOG_I(TAG, "[key] sleep ignored: not connected");
-        return;
-    }
-    tap(app, KeySleep);
+    if(link_ready(app)) tap(app, KeySleep);
 }
 
 // ---- Battery ----------------------------------------------------------------
-static void notify_battery(KindleClick* app, const char* why) {
+static void notify_battery(KindleClick* app) {
     if(!kc_profile_set_battery(app->profile, app->battery)) return;
     app->battery_sent = true;
     app->battery_sent_cccd = app->link->cccd_at;
     app->battery_sent_at = furi_get_tick();
-    FURI_LOG_I(TAG, "[bat] %u%% notified (%s)", app->battery, why);
 }
 
 static void service_battery(KindleClick* app) {
@@ -294,19 +261,14 @@ static void service_battery(KindleClick* app) {
         uint8_t pct = furi_hal_power_get_pct();
         bool changed = pct != app->battery;
         app->battery = pct;
-        if(changed && link_ready(app)) notify_battery(app, "changed");
+        if(changed && link_ready(app)) notify_battery(app);
     }
     if(!link_ready(app)) return;
-    // Notify after its CCCD writes settle.
+    // On connecting, once its CCCD writes settle, and now and then.
     uint32_t c = app->link->cccd_at;
-    const char* why = NULL;
-    if(!app->battery_sent)
-        why = "connected";
-    else if(c != app->battery_sent_cccd && (int32_t)(now - c) >= 1000)
-        why = "subscribed";
-    else if(now - app->battery_sent_at >= BATTERY_RENOTIFY_MS)
-        why = "periodic";
-    if(why) notify_battery(app, why);
+    if(!app->battery_sent || (c != app->battery_sent_cccd && (int32_t)(now - c) >= 1000) ||
+       now - app->battery_sent_at >= BATTERY_RENOTIFY_MS)
+        notify_battery(app);
 }
 
 // ---- Link and advertising ---------------------------------------------------
@@ -345,12 +307,10 @@ static void service_link(KindleClick* app) {
         furi_hal_bt_stop_advertising();
         furi_hal_bt_start_advertising();
         app->adv_since = now;
-        FURI_LOG_D(TAG, "[ble] advertising restarted");
     }
 }
 
 static void forget_kindle(KindleClick* app) {
-    FURI_LOG_I(TAG, "[ble] forgetting the Kindle (also Forget the remote on the Kindle)");
     app->pending = KeyNone;
     release_all(app);
     furi_delay_ms(100); // let the key-up notification go out
@@ -472,7 +432,7 @@ static void tick(void* context) {
     service_releases(app);
     service_sleep_hold(app);
     service_battery(app);
-    link_ready(app); // logs the moment it becomes ready
+    link_ready(app); // latches readiness for the status line
     update_view(app);
 }
 
@@ -538,10 +498,6 @@ int32_t kindle_click_app(void* p) {
     kc_profile_set_battery(app->profile, app->battery);
     furi_hal_bt_start_advertising();
     app->adv_since = furi_get_tick();
-    FURI_LOG_I(
-        TAG,
-        "Kindle Click " KC_VERSION " started (%s)",
-        app->paired ? "waiting for the Kindle" : "pairing mode");
 
     view_dispatcher_switch_to_view(app->view_dispatcher, KcViewRemote);
     view_dispatcher_run(app->view_dispatcher);

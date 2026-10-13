@@ -11,8 +11,6 @@
 #include <furi_ble/gatt.h>
 #include <ble/core/ble_defs.h>
 
-#define TAG "KindleClick"
-
 #define UUID_HID              0x1812
 #define UUID_BATTERY          0x180F
 #define UUID_DEVICE_INFO      0x180A
@@ -33,7 +31,6 @@
 #define LE_CONNECTION_COMPLETE          0x01
 #define LE_CONNECTION_UPDATE_COMPLETE   0x03
 #define LE_ENHANCED_CONNECTION_COMPLETE 0x0A
-#define ACI_GAP_PAIRING_COMPLETE        0x0401
 #define ACI_GATT_ATTRIBUTE_MODIFIED     0x0C01
 
 // One 10-byte input report (ID 1): the boot-keyboard layout, then one consumer
@@ -192,7 +189,6 @@ static BleEventAckStatus kc_event(void* event, void* context) {
     const uint8_t* evt = (const uint8_t*)event + 1;
     const uint8_t* p = evt + 2;
     uint32_t now = furi_get_tick();
-    uint32_t t = now - link->connected_at;
 
     switch(evt[0]) {
     case HCI_EVT_LE_META:
@@ -200,20 +196,12 @@ static BleEventAckStatus kc_event(void* event, void* context) {
            p[1] == 0) {
             const uint8_t* params = p + (p[0] == LE_CONNECTION_COMPLETE ? 12 : 24);
             profile->conn_handle = le16(p + 2);
-            link->connected_at = now;
             link->secured = false;
             link->cccd_at = 0;
-            link->cccd_writes = 0;
             link->link_change_at = 0;
             link->fast_interval = le16(params) == 6;
             link->generation++;
             link->connected = true;
-            FURI_LOG_I(
-                TAG,
-                "[ble] connected: interval %u, latency %u, timeout %u0 ms",
-                le16(params),
-                le16(params + 2),
-                le16(params + 4));
         } else if(p[0] == LE_CONNECTION_UPDATE_COMPLETE && p[1] == 0) {
             uint16_t interval = le16(p + 4);
             uint16_t latency = le16(p + 6);
@@ -223,62 +211,32 @@ static BleEventAckStatus kc_event(void* event, void* context) {
             if((link->fast_interval && !fast) || (interval == 16 && latency == 0))
                 link->link_change_at = now | 1;
             link->fast_interval = fast;
-            FURI_LOG_I(
-                TAG,
-                "[link] +%lu ms: interval %u, latency %u, timeout %u0 ms",
-                t,
-                interval,
-                latency,
-                le16(p + 8));
         }
         break;
     case HCI_EVT_ENCRYPTION_CHANGE:
         if(p[0] == 0 && p[3]) {
             link->secured_at = now;
             link->secured = true;
-            FURI_LOG_I(TAG, "[ble] +%lu ms: link encrypted", t);
-        } else {
-            FURI_LOG_I(TAG, "[ble] +%lu ms: encryption change, status 0x%02X", t, p[0]);
         }
         break;
     case HCI_EVT_DISCONNECTION_COMPLETE:
         if(p[0] == 0 && le16(p + 1) == profile->conn_handle) {
             link->connected = false;
             link->secured = false;
-            FURI_LOG_I(TAG, "[ble] disconnected (reason 0x%02X)", p[3]);
         }
         break;
-    case HCI_EVT_VENDOR: {
-        const uint8_t* d = p + 2;
+    case HCI_EVT_VENDOR:
+        // A notification-enabling CCCD write. A characteristic's CCCD follows
+        // its value: declaration handle + 2.
         if(le16(p) == ACI_GATT_ATTRIBUTE_MODIFIED) {
-            // A characteristic's CCCD follows its value: declaration handle + 2.
+            const uint8_t* d = p + 2;
             uint16_t attr = le16(d + 2);
-            bool report = attr == profile->chars[KcCharReport].handle + 2;
-            bool battery = attr == profile->chars[KcCharBattery].handle + 2;
-            if((report || battery) && le16(d + 6) >= 1) {
-                bool on = d[8] & 0x01;
-                if(on) {
-                    link->cccd_at = now | 1;
-                    link->cccd_writes++;
-                }
-                FURI_LOG_I(
-                    TAG,
-                    "[link] +%lu ms: %s notifications %s",
-                    t,
-                    report ? "report" : "battery",
-                    on ? "on" : "off");
-            }
-        } else if(le16(p) == ACI_GAP_PAIRING_COMPLETE) {
-            FURI_LOG_I(
-                TAG,
-                "[ble] +%lu ms: pairing %s (status 0x%02X, reason 0x%02X)",
-                t,
-                d[2] ? "FAILED" : "complete",
-                d[2],
-                d[3]);
+            if((attr == profile->chars[KcCharReport].handle + 2 ||
+                attr == profile->chars[KcCharBattery].handle + 2) &&
+               le16(d + 6) >= 1 && (d[8] & 0x01))
+                link->cccd_at = now | 1;
         }
         break;
-    }
     default:
         break;
     }

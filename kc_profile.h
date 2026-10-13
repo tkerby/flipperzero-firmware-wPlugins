@@ -10,10 +10,8 @@ typedef struct {
     volatile bool connected;
     volatile bool secured; // encrypted, so the Kindle holds our bond
     volatile uint32_t generation; // counts connections
-    volatile uint32_t connected_at;
     volatile uint32_t secured_at;
     volatile uint32_t cccd_at; // last notification-enabling CCCD write (report, battery)
-    volatile uint8_t cccd_writes;
     volatile uint32_t link_change_at; // last link change: left 7.5 ms, or 20 ms with no latency
     volatile bool fast_interval; // 7.5 ms: the Kindle is discovering GATT
 } KcLink;
