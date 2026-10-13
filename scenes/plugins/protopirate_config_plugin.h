@@ -1,6 +1,7 @@
 #pragma once
 //#include "../../protopirate_app_i.h"
 #include "helpers/protopirate_models.h"
+#include "helpers/protopirate_settings.h"
 
 #include "helpers/variable_item_list.h"
 
@@ -35,4 +36,8 @@ typedef struct ProtoPirateConfigPlugin {
 #endif
     void (*on_enter)(void* app, bool show_lock_keyboard);
     void (*set_host_api)(const ProtoPirateSharedPluginHostApi* host_api);
+    void (*protopirate_settings_load)(ProtoPirateSettings* settings);
+    void (*protopirate_settings_save)(ProtoPirateSettings* settings);
+    void (*protopirate_settings_set_defaults)(ProtoPirateSettings* settings);
+
 } ProtoPirateConfigPlugin;

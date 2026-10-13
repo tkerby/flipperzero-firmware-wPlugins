@@ -536,6 +536,9 @@ static const ProtoPirateConfigPlugin protopirate_config_plugin = {
     .car_model_get_by_index = car_model_get_by_index,
     .car_model_get_count = car_model_get_count,
 #endif
+    .protopirate_settings_load = protopirate_settings_load,
+    .protopirate_settings_save = protopirate_settings_save,
+    .protopirate_settings_set_defaults = protopirate_settings_set_defaults,
     .on_enter = plugin_on_enter,
     .set_host_api = config_plugin_set_host_api,
 };
