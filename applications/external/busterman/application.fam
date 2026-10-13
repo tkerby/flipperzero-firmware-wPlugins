@@ -1,0 +1,12 @@
+App(
+    appid="megaman",
+    name="BusterMan Decoder",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="megaman_app",
+    stack_size=4096,
+    sources=["megaman.c", "decoder.c", "bridge.c"],
+    fap_category="Tools",
+    fap_version=(1, 0),
+    fap_author="Mr-Nobody88",
+    fap_icon="icon.png",
+)
