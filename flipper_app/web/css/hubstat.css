@@ -1,0 +1,12 @@
+/* ---- status dot ---- */
+.hs{display:inline-flex;align-items:center;gap:var(--s2);font-size:var(--fs-s);color:var(--on-chrome2);white-space:nowrap;flex:none}
+.hs i{display:inline-block;width:12px;height:12px;box-sizing:border-box;background:var(--muted)}
+.hs.idle i{background:#4cc27b;animation:hspulse 2s steps(2) infinite}
+.hs.work i,.hs.slow i{background:transparent;border:3px solid #4cc27b;border-right-color:transparent;animation:spin .8s steps(8) infinite}
+.hs.slow i{border-color:#ffb340;border-right-color:transparent}
+.hs.slow{color:#ffb340}
+.hs.stuck i,.hs.dead i{background:#ff6a5c}
+.hs.stuck,.hs.dead{color:#ff6a5c}
+@keyframes hspulse{0%{opacity:1}50%{opacity:.35}}
+@media (max-width:720px){.hs .pxt,.hs #hubtxt{display:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.hs.work i{background:#4cc27b}.hs.slow i{background:#ffb340}#prog.on{background:var(--orange)}}

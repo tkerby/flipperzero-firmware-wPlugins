@@ -1,3 +1,6 @@
+v1.2:
+Syntax highlighting in the code view, repo avatars, Download ZIP of any branch or tag, protected system folders in the file manager. The PC bridge adds backup on plug-in, push to both remotes and webhooks. Source files reorganised by area; the app code is unchanged.
+
 v1.1:
 Repos move to the app's own folder /ext/apps_data/gitphin/git (repos in /ext/git move there by themselves on the first start). The web file manager is limited to the SD card. Author contact in the description.
 

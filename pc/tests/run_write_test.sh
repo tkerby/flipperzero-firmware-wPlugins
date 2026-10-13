@@ -15,12 +15,12 @@ export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null
 
 CF="-g -O1 -Wall -Wextra -fsanitize=address,undefined -fno-sanitize-recover=undefined"
 cd "$W"
-gcc $CF -c "$APP/hub_sha1.c" -o sha1.o
-gcc $CF -c "$APP/hub_gitwrite.c" -o gitwrite.o
+gcc $CF -c "$APP/src/util/hub_sha1.c" -o sha1.o
+gcc $CF -c "$APP/src/write/hub_gitwrite.c" -o gitwrite.o
 gcc $CF -c "$HERE/gitwrite_stdio.c" -o stdio.o
 gcc $CF -c "$HERE/gitwrite_test.c" -o test.o
 gcc $CF sha1.o gitwrite.o stdio.o test.o -o gw
-gcc $CF "$APP/hub_gitdocutil.c" "$HERE/gitdoc_test.c" -o gd
+gcc $CF "$APP/src/doc/hub_gitdocutil.c" "$HERE/gitdoc_test.c" -o gd
 
 fail=0
 bad() { echo "FAIL: $*"; fail=1; }

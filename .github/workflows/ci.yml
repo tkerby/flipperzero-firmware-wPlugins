@@ -20,13 +20,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Web page and its gzip match
-        run: cmp <(gzip -dc flipper_app/files/index.html.gz) flipper_app/files/index.html || { echo "::error::Run pc/tools/build_page.sh and commit flipper_app/files/index.html.gz"; exit 1; }
+        run: |
+          cmp <(gzip -dc flipper_app/files/index.html.gz) flipper_app/files/index.html || { echo "::error::Run pc/tools/build_page.sh and commit flipper_app/files/index.html.gz"; exit 1; }
+          out=$(mktemp -d)
+          sh pc/tools/build_page.sh "$out"
+          cmp "$out/index.html" flipper_app/files/index.html || { echo "::error::flipper_app/files/index.html is not built from flipper_app/web. Run pc/tools/build_page.sh and commit"; exit 1; }
+          cmp <(gzip -dc "$out/index.html.gz") <(gzip -dc flipper_app/files/index.html.gz) || { echo "::error::flipper_app/files/index.html.gz is out of date. Run pc/tools/build_page.sh and commit"; exit 1; }
       - name: Build with uFBT
         uses: flipperdevices/flipperzero-ufbt-action@v0.1
         id: build
         with:
           app-dir: flipper_app
           sdk-channel: ${{ matrix.sdk }}
+      - name: Every core function a plugin imports is in the API table
+        run: |
+          command -v arm-none-eabi-nm >/dev/null || ls ~/.ufbt/toolchain/*/bin/arm-none-eabi-nm >/dev/null 2>&1 || { sudo apt-get update -qq && sudo apt-get install -y -qq binutils-arm-none-eabi; }
+          pc/tools/check_plugin_api.sh
       - name: The .fap carries the plugins and the page
         run: |
           fap=$(find flipper_app/dist -name gitphin.fap | head -1)
@@ -77,9 +86,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Python compiles
-        run: python3 -m py_compile pc/bridge.py pc/collector.py pc/git-remote-flipper tools/screenshots/demo_server.py
+        run: python3 -m py_compile pc/bridge.py pc/gitphin_bridge/*.py pc/gitphin_git/*.py pc/git-remote-flipper pc/tests/mock_hub.py pc/tests/webhook_sink.py pc/tests/zip_compare.py pc/tests/logic_check.py pc/tests/logic/*.py tools/screenshots/demo_server.py
       - name: Shell syntax
         run: for f in install.sh pc/*.sh pc/tools/*.sh pc/tests/*.sh tools/screenshots/*.sh; do bash -n "$f"; done
+      - name: PC bridge (ZIP, webhooks, backup, push to both) against the mock
+        run: pc/tests/test_bridge.sh
+      - name: Web page (bundle, JS, highlighter, browser check)
+        run: CHROMIUM=$(command -v google-chrome || command -v chromium) pc/tests/test_page.sh
+      - name: No source file over 500 lines
+        run: |
+          big=$(find flipper_app/src flipper_app/web pc tools -type f \( -name '*.c' -o -name '*.h' -o -name '*.py' -o -name '*.js' -o -name '*.cjs' -o -name '*.css' -o -name '*.sh' \) -exec wc -l {} + | awk '$2 != "total" && $1 > 500')
+          [ -z "$big" ] || { echo "::error::files over 500 lines:"; echo "$big"; exit 1; }
       - name: Version and changelogs agree
         run: |
           v=$(sed -n 's/^ *fap_version="\([0-9.]*\)".*/\1/p' flipper_app/application.fam)

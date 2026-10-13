@@ -3,3 +3,5 @@
 pc/git-remote-flipper text eol=lf
 *.png binary
 *.gz binary
+*.gif binary
+*.mp4 binary

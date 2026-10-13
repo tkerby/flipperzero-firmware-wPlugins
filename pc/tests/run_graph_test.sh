@@ -12,19 +12,19 @@ export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null
 [[ -n "${KEEP:-}" ]] || trap 'rm -rf "$W"' EXIT
 CF="-g -O1 -Wall -Wextra -fsanitize=address,undefined -fno-sanitize-recover=undefined"
 cd "$W/lt"
-for f in hub_inflate hub_gitobj hub_gitdiff hub_gitcommit hub_gitwrite hub_sha1; do
-    gcc $CF -DHUB_TEST_COUNTERS -include "$HERE/malloc_wrap.h" -c "$APP/$f.c" -o "$f.o"
+for f in util/hub_inflate obj/hub_gitobj write/hub_gitdiff write/hub_gitcommit write/hub_gitwrite util/hub_sha1; do
+    gcc $CF -DHUB_TEST_COUNTERS -include "$HERE/malloc_wrap.h" -c "$APP/src/$f.c" -o "${f##*/}.o"
 done
 gcc $CF -c "$HERE/gitio_stdio.c" -o gitio.o
 gcc $CF -c "$HERE/gitwrite_stdio.c" -o wio.o
 gcc $CF -c "$HERE/logic_test.c" -o test.o
 gcc $CF *.o -lz -o logic_test
 cd "$W/gp"
-for f in hub_deflate hub_gitpack hub_gitgraph hub_gitobj hub_inflate; do
-    gcc $CF -include "$HERE/malloc_wrap.h" -c "$APP/$f.c" -o $f.o
+for f in pack/hub_deflate pack/hub_gitpack pack/hub_gitgraph obj/hub_gitobj util/hub_inflate; do
+    gcc $CF -include "$HERE/malloc_wrap.h" -c "$APP/src/$f.c" -o "${f##*/}.o"
 done
-gcc $CF -c "$APP/hub_sha1.c" -o sha1.o
-gcc $CF -c "$APP/hub_gitdocutil.c" -o docutil.o
+gcc $CF -c "$APP/src/util/hub_sha1.c" -o sha1.o
+gcc $CF -c "$APP/src/doc/hub_gitdocutil.c" -o docutil.o
 gcc $CF -c "$HERE/gitio_stdio.c" -o gitio.o
 gcc $CF -c "$HERE/gitpack_tool.c" -o tool.o
 gcc $CF *.o -o gitpack_tool

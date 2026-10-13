@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.2
+
+- **Syntax highlighting** in the code view for C, Java/Kotlin, JS/TS, JSON, Python, shell, Go,
+  Rust, HTML/XML, CSS, Markdown, YAML/TOML/INI, Makefile and diffs. No libraries, light and dark
+  colors with readable contrast.
+- **Repo avatars.** Upload a picture for a repo on its page ("Avatar"); it shows in the repo list
+  and the header. The browser shrinks it to 128 px first. Stored in the repo folder
+  (`hub/avatar.png`), so it moves and goes away with the repo.
+- **Download ZIP** of any branch, tag or commit from the repo page (`/pc/zip`, made by the PC
+  bridge from the Flipper's data, like `git archive`).
+- **System folders are protected** in the Files tab: the repos folder and the app's own folders
+  cannot be deleted by mistake.
+- **PC bridge extras** (answers to "isn't it a single point of failure?"):
+  - **Backup on plug-in:** every repo is mirrored to `~/GitphinBackup/` when the Flipper connects
+    (`git flipper backup now|status|on|off|dir`).
+  - **Push to both:** `git flipper mirror-add` adds the Flipper as a second push URL, so one
+    `git push` updates GitHub and the Flipper.
+  - **Webhooks:** a JSON `POST` after each push or repo change, signed with HMAC-SHA256 when a
+    secret is set (`git flipper webhook add|list|remove|secret|test`).
+- **Code layout:** every source file is now under 500 lines and grouped by area
+  (`flipper_app/src/`, `flipper_app/web/`, `pc/gitphin_bridge/`, `pc/gitphin_git/`). The built
+  app is byte for byte the same code as 1.1.
+- FAQ in the README: what Gitphin is for, and why it is not a single point of failure.
+- README: a short demo video and GIF (`tools/promo/make_promo.sh`), and a link to
+  [Gitphin Droid](https://github.com/Adhamura/gitphinDroid), the same server and web UI on Android.
+
 ## 1.1
 
 - **Repos move to the app's own data folder**, `/ext/apps_data/gitphin/git/<name>.git`, as the

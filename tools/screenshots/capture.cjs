@@ -10,6 +10,7 @@ const exe = process.env.CHROMIUM ||
 const shots = [
     ["repos", "#repos"],
     ["code", "#repos/weather-station"],
+    ["highlight", "#repos/weather-station/blob/main/src/bme280.c"],
     ["commits", "#repos/weather-station/commits"],
     ["diff", "#repos/weather-station/commit/HEAD", "Show diff"],
     ["pull-request", "#repos/weather-station/pulls/3"],
@@ -24,7 +25,7 @@ const shots = [
         await page.goto(base + "/");
         await page.evaluate(() => localStorage.setItem("hub.author", "Mika Tanaka"));
         for (const [name, hash, click] of shots) {
-            if (scheme === "dark" && name !== "code") continue;
+            if (scheme === "dark" && name !== "code" && name !== "highlight") continue;
             await page.goto(base + "/" + hash);
             await page.waitForLoadState("networkidle");
             await page.waitForTimeout(800);

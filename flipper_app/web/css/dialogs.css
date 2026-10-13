@@ -1,0 +1,13 @@
+/* ---- dialogs ---- */
+dialog.dlg{background:var(--card);color:var(--fg);border:2px solid var(--bd);box-shadow:6px 6px 0 var(--shadow);padding:var(--s4);width:min(560px,calc(100vw - 32px))}
+dialog.dlg::backdrop{background:rgba(0,0,0,.6)}
+dialog.dlg h2{background:none;color:inherit;margin:0 0 var(--s2)}
+dialog.dlg label{display:block;margin-top:var(--s3)}
+dialog.dlg label span{display:block;color:var(--muted);font-size:var(--fs-s);text-transform:uppercase;letter-spacing:.04em;margin-bottom:var(--s1)}
+dialog.dlg input[type=text],dialog.dlg textarea,dialog.dlg select{width:100%}
+dialog.dlg textarea{min-height:140px;font:var(--mono)}
+dialog.dlg label.chk{display:flex;align-items:center;gap:var(--s2);margin-top:var(--s2)}
+dialog.dlg label.chk span{display:inline}
+dialog.dlg .msg{margin:var(--s2) 0 0;overflow-wrap:anywhere}
+dialog.dlg .hint{color:var(--muted);font-size:var(--fs-s);margin-top:var(--s1);overflow-wrap:anywhere}
+dialog.dlg .btns{display:flex;justify-content:flex-end;gap:var(--s2);margin-top:var(--s4)}
