@@ -12,6 +12,13 @@
 // secs between persona saves to SD
 #define PWNPAL_SAVE_SECS 30
 
+// the ESP32 wifi TX silently stalls after tens of minutes (esp_wifi_80211_tx keeps returning OK
+// but nothing radiates -- beacons AND attacks go dark while the firmware's counters keep ticking;
+// only a full wifi re-init revives it). periodically force the board to stop+restart its scan
+// (exactly what a manual app restart does) to pre-empt the stall. well under the observed
+// ~30-45min death, and it also keeps captures alive (same dead radio kills those too).
+#define PWNPAL_REINIT_SECS 600
+
 // ESP32-absence: board sends PWNPAL_ADV ~2x/sec; silence for LINK_TIMEOUT after
 // LINK_GRACE (covers boot + StartScan) warns the user
 // the ESP goes quiet for several seconds while attackChannel() hammers a dense channel

@@ -31,9 +31,11 @@ typedef enum {
     WorkerEventStop = (1 << 0),
     WorkerEventRx = (1 << 1),
     WorkerEventResend = (1 << 2), // send_advertise off the worker's 2K stack
+    WorkerEventReinit = (1 << 3), // stopscan+re-advertise: force a full ESP wifi re-init
 } WorkerEventFlags;
 
-#define WORKER_EVENTS_MASK (WorkerEventStop | WorkerEventRx | WorkerEventResend)
+#define WORKER_EVENTS_MASK \
+    (WorkerEventStop | WorkerEventRx | WorkerEventResend | WorkerEventReinit)
 
 // per-session pwnd dedup cap: a re-emitted PWND (every 15s) can't inflate counts
 #define PWND_SEEN_MAX 64
@@ -212,6 +214,7 @@ typedef struct {
     uint32_t tick_secs;
     bool advertising;
     uint32_t last_adv_sent;
+    uint32_t last_reinit_secs; // tick of the last forced ESP wifi re-init (anti TX-stall)
     uint32_t adv_sent_count; // last "sent=" from the ESP32
     uint8_t adv_channel; // last channel it reported broadcasting on
     Pwnagotchi* pwn; // flipagotchi renderer state, repopulated each draw
@@ -503,6 +506,16 @@ static void pwnpal_send_advertise(PwnpalApp* app) {
 static void pwnpal_send_stop(PwnpalApp* app) {
     const char* cmd = "stopscan\n";
     furi_hal_serial_tx(app->serial_handle, (const uint8_t*)cmd, strlen(cmd));
+}
+
+// Force a full ESP32 wifi re-init: stopscan (exit WIFI_SCAN_PWNPAL) then re-advertise
+// (which StartScan()s and re-inits the radio). Mirrors a manual app restart; clears a
+// silently-stalled TX radio that esp_wifi_80211_tx() won't report as failed. Runs on the
+// worker thread (send_advertise needs more stack than the timer has).
+static void pwnpal_send_reinit(PwnpalApp* app) {
+    pwnpal_send_stop(app);
+    furi_delay_ms(400); // let the ESP process stopscan before the StartScan re-advertise
+    pwnpal_send_advertise(app);
 }
 
 // ---------------------------------------------------------------------------
@@ -3078,6 +3091,7 @@ static bool pwnpal_input_callback(InputEvent* event, void* ctx) {
                         toggled_adv = true;
                         if(now_adv) {
                             model->advertising_since = model->tick_secs;
+                            model->last_reinit_secs = model->tick_secs; // fresh re-init clock
                             model->last_rx_secs = model->tick_secs;
                             app->last_rx_tick = furi_get_tick(); // reset liveness on resume
                         } else {
@@ -3719,6 +3733,7 @@ static int32_t pwnpal_verify_thread(void* ctx) {
 static void pwnpal_timer_callback(void* ctx) {
     PwnpalApp* app = ctx;
     bool resend = false;
+    bool reinit = false;
     bool save = false;
     // link-watchdog debug: capture the context of any link_down flip (see LINKDBG_PATH)
     bool link_dbg = false, d_down = false, d_pwr = false, d_chg = false;
@@ -3838,6 +3853,14 @@ static void pwnpal_timer_callback(void* ctx) {
                    (model->tick_secs - model->last_adv_sent >= PWNPAL_ADV_RESEND_SECS)) {
                     resend = true;
                 }
+                // periodic full wifi re-init: the ESP TX silently stalls after tens of minutes;
+                // stop+restart the scan before it does. supersedes a plain resend this tick.
+                if(model->advertising &&
+                   (model->tick_secs - model->last_reinit_secs >= PWNPAL_REINIT_SECS)) {
+                    reinit = true;
+                    model->last_reinit_secs = model->tick_secs;
+                    model->advertising_since = model->tick_secs; // re-arm link grace over the gap
+                }
                 if(model->tick_secs % PWNPAL_SAVE_SECS == 0) {
                     save = true;
                 }
@@ -3867,8 +3890,14 @@ static void pwnpal_timer_callback(void* ctx) {
         storage_file_free(f);
     }
 
-    // send_advertise needs ~760B of buffers, too much for the 1KB timer stack; kick the 2KB worker
-    if(resend) furi_thread_flags_set(furi_thread_get_id(app->worker_thread), WorkerEventResend);
+    // send_advertise needs ~760B of buffers, too much for the 1KB timer stack; kick the 2KB worker.
+    // a re-init already re-advertises, so it supersedes a plain resend this tick.
+    if(reinit) {
+        app->last_rx_tick = furi_get_tick(); // the re-init gap isn't a dead board
+        furi_thread_flags_set(furi_thread_get_id(app->worker_thread), WorkerEventReinit);
+    } else if(resend) {
+        furi_thread_flags_set(furi_thread_get_id(app->worker_thread), WorkerEventResend);
+    }
     if(save) {
         // a save racing a note_peer update at worst records a slightly stale count (harmless)
         with_view_model(
@@ -3910,6 +3939,8 @@ static int32_t pwnpal_worker(void* context) {
             furi_thread_flags_wait(WORKER_EVENTS_MASK, FuriFlagWaitAny, FuriWaitForever);
         furi_check((events & FuriFlagError) == 0);
         if(events & WorkerEventStop) break;
+
+        if(events & WorkerEventReinit) pwnpal_send_reinit(app);
 
         if(events & WorkerEventResend) pwnpal_send_advertise(app);
 
@@ -4060,6 +4091,7 @@ static PwnpalApp* pwnpal_app_alloc(void) {
             home_load(app->storage, model); // may restore quiet + home_set
             model->last_rx_secs = 0;
             model->advertising_since = 0; // advertising starts now (tick 0) -> grace runs
+            model->last_reinit_secs = 0; // first forced wifi re-init at PWNPAL_REINIT_SECS
             model->link_down = false;
             pwnpal_qr_encode(model); // one-time; the draw callback only reads it
         },
