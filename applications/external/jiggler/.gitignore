@@ -1,0 +1,4 @@
+dist/
+.vscode/
+.clang-format
+__pycache__/
