@@ -23,7 +23,9 @@ def _git_describe(project_dir):
     try:
         out = subprocess.check_output(
             ["git", "-C", project_dir, "describe", "--tags", "--always", "--dirty"],
-            stderr=subprocess.DEVNULL, timeout=10)
+            stderr=subprocess.DEVNULL,
+            timeout=10,
+        )
     except (OSError, subprocess.SubprocessError):
         return ""
     desc = out.decode("utf-8", "replace").strip()
@@ -56,7 +58,8 @@ def _define_version(env, node):
     return env.Object(
         node,
         CPPDEFINES=list(env["CPPDEFINES"])
-        + [("FW_VERSION", env.StringifyMacro(FW_VERSION))])
+        + [("FW_VERSION", env.StringifyMacro(FW_VERSION))],
+    )
 
 
 env.AddBuildMiddleware(_define_version)
