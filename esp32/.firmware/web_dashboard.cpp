@@ -825,7 +825,7 @@ R"rawliteral(
   <div class="card-head"><div class="icon ic-d">D</div><h2>Device</h2></div>
   <div class="row">
     <span class="lbl">Firmware</span>
-    <span id="fwBuild" style="font-size:.8em;color:var(--text2)">--</span>
+    <span id="fwBuild" style="font-size:.8em;color:var(--text2)">)rawliteral" FW_VERSION " &middot; " __DATE__ " " __TIME__ R"rawliteral(</span>
   </div>
   <div class="row">
     <span class="lbl">Uptime</span>
@@ -845,14 +845,7 @@ R"rawliteral(
   </div>
 </details>
 
-<div class="foot">Tesla FSD ESP32 &middot;
-)rawliteral"
-#if defined(BOARD_TTGO_DISPLAY)
-R"rawliteral( TTGO T-Display + MCP2515)rawliteral"
-#else
-R"rawliteral( M5Stack ATOM Lite + ATOMIC CAN Base)rawliteral"
-#endif
-R"rawliteral(</div>
+<div class="foot">Tesla FSD ESP32 &middot; )rawliteral" BOARD_NAME " &middot; " FW_VERSION R"rawliteral(</div>
 <div class="foot">Free &amp; open source &middot; <a href="https://fsd.fkey.id/" target="_blank" rel="noopener">support the research</a></div>
 </div><!-- /wrap -->
 
@@ -1251,7 +1244,7 @@ function upd(d){
   renderPerf(d);
 
   // Device
-  if(document.getElementById('fwBuild')) document.getElementById('fwBuild').textContent=d.fw_build;
+  if(document.getElementById('fwBuild') && d.fw_build) document.getElementById('fwBuild').textContent=(d.fw_version?d.fw_version+' \u00b7 ':'')+d.fw_build;
   if(document.getElementById('uptime')) document.getElementById('uptime').textContent=fmt(d.uptime_s||0);
   if(document.getElementById('wifiCl')) document.getElementById('wifiCl').textContent=d.wifi_clients||0;
   var partEl=document.getElementById('otaPartInfo');
@@ -1869,6 +1862,8 @@ static String build_json() {
     j += "\"bms\":";           j += bms;                               j += ',';
     j += "\"perf\":";          j += perf;                              j += ',';
     j += "\"uptime_s\":";      j += uptime_s;                          j += ',';
+    j += "\"fw_version\":\""   FW_VERSION "\",";
+    j += "\"board\":\""        BOARD_NAME "\",";
     j += "\"fw_build\":\"";    j += __DATE__;  j += ' '; j += __TIME__; j += "\",";
     j += "\"can_dump\":";      j += can_dump_active()                 ? "true" : "false"; j += ',';
     // blackbox/capability/profile moved OFF the hot WS state push (#124): they

@@ -319,6 +319,8 @@ pio device monitor -b 115200
 ============================
  Tesla Mod — ESP32
 ============================
+[FSD] Version: v2.16-beta.38
+[FSD] Board: M5Stack ATOM Lite + ATOMIC CAN Base
 [FSD] Build: Apr  8 2026 18:59:17
 [CAN] Driver: ESP32 TWAI (M5Stack ATOM Lite + ATOMIC CAN Base)
 [CAN] 500 kbps — Listen-Only
@@ -475,6 +477,7 @@ esp32/
 │   └── config.h            — CAN IDs and pin definitions
 ├── platformio.ini          — Build configs (one env per board, see Alternative Hardware)
 ├── build_firmware.sh       — Local build + packaging helper
+├── gen_version.py          — Pre-build step that sets FW_VERSION (release tag / `git describe`; override with the FW_VERSION env var)
 ├── merge_firmware.py       — Post-build step that writes firmware-merged.bin for the web flasher
 └── README.md
 ```
