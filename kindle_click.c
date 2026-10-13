@@ -353,13 +353,14 @@ static void remote_draw(Canvas* canvas, void* model_ptr) {
     canvas_clear(canvas);
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str(canvas, 0, 10, "Kindle Click");
+    // FontSecondary takes 7 rows above the baseline and 2 below it.
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str_aligned(canvas, 128, 10, AlignRight, AlignBottom, battery);
-    canvas_draw_str(canvas, 0, 23, STATUS[model->status][0]);
-    canvas_draw_str(canvas, 0, 33, model->queued ? "Page turn queued" : STATUS[model->status][1]);
-    canvas_draw_str(canvas, 0, 46, "Right / Left: page");
-    canvas_draw_str(canvas, 0, 55, "Up / Down: light");
-    canvas_draw_str(canvas, 0, 64, "Hold OK: Kindle sleeps");
+    canvas_draw_str_aligned(canvas, 127, 10, AlignRight, AlignBottom, battery);
+    canvas_draw_str(canvas, 0, 21, STATUS[model->status][0]);
+    canvas_draw_str(canvas, 0, 31, model->queued ? "Page turn queued" : STATUS[model->status][1]);
+    canvas_draw_str(canvas, 0, 41, "Right / Left: page");
+    canvas_draw_str(canvas, 0, 51, "Up / Down: light");
+    canvas_draw_str(canvas, 0, 61, "Hold OK: Kindle sleeps");
 }
 
 static bool remote_input(InputEvent* event, void* context) {
