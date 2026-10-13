@@ -1871,11 +1871,47 @@ static bool uhf_lock_selected_bank(UhfApp* app, bool lock) {
     uhf_set_status(
         app, "%s %s...", lock ? "Locking" : "Unlocking", uhf_current_tag_bank_name(app->tag_bank));
     if(!uhf_wait_tag_reply(app, UHF_CMD_LOCK_TAG, payload, sizeof(payload), 3000U)) {
-        uhf_notify_write_result(app, false);
+        /* Recover the reader if a Lock/Unlock command times out. */
+        uhf_hardware_reset_reader(app);
+
+        if(app->rx_stream) {
+            (void)furi_stream_buffer_reset(app->rx_stream);
+        }
+
+        app->frame_buffer_len = 0U;
+        app->tag_reply_ready = false;
+        app->tag_reply_len = 0U;
+        app->tag_reply_cmd = 0U;
+        app->tag_reply_checksum_ok = false;
+
+        /* The hardware reset clears the reader's EPC filter state. */
+        app->epc_filter_active = false;
+        uhf_clear_version(app);
+
+        const bool recovered = uhf_try_reader_handshake(app, 1U);
+
+        uhf_set_status(
+            app, "%s timeout; reset %s",
+            lock ? "Lock" : "Unlock",
+            recovered ? "OK" : "FAILED");
+
+        snprintf(
+            app->write_popup_text, sizeof(app->write_popup_text),
+            "%s timeout; reset %s",
+            lock ? "Lock" : "Unlock",
+            recovered ? "OK" : "FAIL");
+        app->write_popup_tick = furi_get_tick();
+        app->write_popup_active = true;
+        uhf_notify_result_sound(app, false);
+        if(app->view_port) view_port_update(app->view_port);
+
         return false;
     }
     const uint8_t status = uhf_tag_reply_status(app);
     const bool ok = status == 0x10U;
+
+    uhf_clear_selected_epc_filter(app);
+
     uhf_set_status(
         app, ok ? "%s complete" : "%s: %s", lock ? "Lock" : "Unlock", uhf_tag_error_text(status));
     uhf_notify_write_result(app, ok);
@@ -5275,7 +5311,9 @@ static bool uhf_handle_saved_tags(UhfApp* app, const InputEvent* input) {
 
 static void uhf_read_memory_page(UhfApp* app) {
     const uint8_t bank = app->memory_selected;
-    uint8_t words = bank == 0U ? 4U : (bank == 1U ? (uint8_t)(strlen(app->access_epc) / 4U + 2U) : 16U);
+    uint8_t words = bank == 0U ? 4U :
+        (bank == 1U ? (uint8_t)(strlen(app->access_epc) / 4U + 2U) :
+         (bank == 2U ? 6U : 16U));
     app->memory_valid = false;
     app->memory_end = false;
     app->memory_hex[0] = '\0';
@@ -5284,12 +5322,26 @@ static void uhf_read_memory_page(UhfApp* app) {
     app->tag_bank = bank == 0U ? UhfTagBankReserved :
                     bank == 1U ? UhfTagBankEpc : bank == 2U ? UhfTagBankTid : UhfTagBankUser;
     app->page = UhfPageTagActions;
+    /* Clear the reader's EPC filter before an Inventory TID read. */
+    if(bank == 2U) {
+        const uint8_t clear_mode = 0x01U;
+
+        if(!uhf_wait_tag_reply(
+               app, UHF_CMD_SET_EPC_MATCH, &clear_mode, 1U, 600U) ||
+           app->tag_reply_len != 1U ||
+           app->tag_reply[0] != 0x10U) {
+            uhf_set_status(app, "EPC filter reset failed");
+            return;
+        }
+
+        app->epc_filter_active = false;
+    }
     /* Unknown banks are read in bounded windows. Only overrun permits a smaller
        retry; password, transport and unsupported-bank failures stop immediately. */
     do {
         app->memory_valid = uhf_read_selected_bank_words(
             app, bank, app->memory_address, words, app->memory_hex,
-            sizeof(app->memory_hex), uhf_memory_banks[bank], true);
+            sizeof(app->memory_hex), uhf_memory_banks[bank], bank != 2U);
         if(app->memory_valid || bank < 2U || words == 1U ||
            app->tag_reply_len != 1U || app->tag_reply[0] != 0x23U) break;
         words--;
@@ -5408,7 +5460,8 @@ static void uhf_edit_memory_window(UhfApp* app) {
 }
 
 static bool uhf_handle_inventory_actions(UhfApp* app, const InputEvent* input) {
-    if(!app->inventory_actions_active) return false;
+    if(!app->inventory_actions_active && app->page != UhfPageConfirm &&
+       app->page != UhfPageActionResult) return false;
     const bool short_press = input->type == InputTypeShort;
     if(app->page == UhfPageTagActions && app->memory_readonly) {
         if(input->key == InputKeyBack) {
