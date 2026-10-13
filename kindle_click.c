@@ -87,6 +87,7 @@ typedef struct {
     KcStatus status;
     bool queued;
     uint8_t battery;
+    uint8_t held; // keys held on the Flipper, as 1 << KeyId
 } KcModel;
 
 typedef struct {
@@ -115,6 +116,7 @@ typedef struct {
     uint32_t pending_at;
     uint32_t ok_down_at; // OK held: the Kindle sleeps after SLEEP_HOLD_MS
     bool ok_fired;
+    uint8_t held; // keys held on the Flipper, as 1 << KeyId
 
     uint8_t battery;
     uint32_t battery_read_at;
@@ -219,6 +221,7 @@ static void release_all(KindleClick* app) {
         app->release_wanted[k] = false;
     }
     app->ok_down_at = 0;
+    app->held = 0;
     if(any) {
         app->dirty = true;
         flush_reports(app);
@@ -331,36 +334,88 @@ static void update_view(KindleClick* app) {
                                          KcStatusPairing,
         .queued = app->pending != KeyNone,
         .battery = app->battery,
+        .held = app->held,
     };
     if(now.status == app->shown.status && now.queued == app->shown.queued &&
-       now.battery == app->shown.battery)
+       now.battery == app->shown.battery && now.held == app->shown.held)
         return;
     app->shown = now;
     with_view_model(app->remote, KcModel * model, { *model = now; }, true);
 }
 
+// Glyphs: one byte per row, leftmost pixel in the lowest bit.
+static const uint8_t GLYPH_LEFT[] = {0x08, 0x0C, 0x0E, 0x0F, 0x0E, 0x0C, 0x08}; // 4x7
+static const uint8_t GLYPH_RIGHT[] = {0x01, 0x03, 0x07, 0x0F, 0x07, 0x03, 0x01}; // 4x7
+static const uint8_t GLYPH_UP[] = {0x08, 0x1C, 0x3E, 0x7F}; // 7x4
+static const uint8_t GLYPH_DOWN[] = {0x7F, 0x3E, 0x1C, 0x08}; // 7x4
+static const uint8_t GLYPH_BLUETOOTH[] =
+    {0x04, 0x0C, 0x15, 0x0E, 0x04, 0x0E, 0x15, 0x0C, 0x04}; // 5x9
+
+// A key in the legend: a 9x9 cell, filled while the key is held. No glyph: OK.
+static void draw_key(Canvas* canvas, int x, int y, const uint8_t* glyph, int w, int h, bool held) {
+    if(held) {
+        canvas_draw_rbox(canvas, x, y, 9, 9, 1);
+        canvas_set_color(canvas, ColorWhite);
+    }
+    if(glyph)
+        canvas_draw_xbm(canvas, x + (9 - w) / 2, y + (9 - h) / 2, w, h, glyph);
+    else
+        canvas_draw_disc(canvas, x + 4, y + 4, 2);
+    canvas_set_color(canvas, ColorBlack);
+}
+
 static void remote_draw(Canvas* canvas, void* model_ptr) {
     KcModel* model = model_ptr;
-    static const char* const STATUS[][2] = {
-        [KcStatusPairing] = {"Pair it in the Kindle's", "Bluetooth devices"},
-        [KcStatusWaiting] = {"Waiting for the Kindle", ""},
-        [KcStatusConnecting] = {"Connecting...", ""},
-        [KcStatusReady] = {"Connected", ""},
+    static const char* const STATUS[] = {
+        [KcStatusPairing] = "Not paired yet",
+        [KcStatusWaiting] = "Waiting for Kindle",
+        [KcStatusConnecting] = "Connecting...",
+        [KcStatusReady] = "Connected",
     };
-    char battery[8];
-    snprintf(battery, sizeof(battery), "%u%%", model->battery);
-
     canvas_clear(canvas);
+
+    // Header: the name; Bluetooth, solid while linked; the battery and its level.
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str(canvas, 0, 10, "Kindle Click");
-    // FontSecondary takes 7 rows above the baseline and 2 below it.
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str_aligned(canvas, 127, 10, AlignRight, AlignBottom, battery);
-    canvas_draw_str(canvas, 0, 21, STATUS[model->status][0]);
-    canvas_draw_str(canvas, 0, 31, model->queued ? "Page turn queued" : STATUS[model->status][1]);
-    canvas_draw_str(canvas, 0, 41, "Right / Left: page");
-    canvas_draw_str(canvas, 0, 51, "Up / Down: light");
-    canvas_draw_str(canvas, 0, 61, "Hold OK: Kindle sleeps");
+    char pct[8];
+    snprintf(pct, sizeof(pct), "%u%%", model->battery);
+    int x = 127 - canvas_string_width(canvas, pct);
+    canvas_draw_str(canvas, x, 10, pct);
+    x -= 18;
+    canvas_draw_frame(canvas, x, 2, 14, 8);
+    canvas_draw_box(canvas, x + 14, 4, 2, 4);
+    canvas_draw_box(canvas, x + 2, 4, (model->battery * 10 + 50) / 100, 4);
+    x -= 12;
+    bool linked = model->status >= KcStatusConnecting;
+    if(linked)
+        canvas_draw_rbox(canvas, x, 0, 9, 11, 2);
+    else
+        canvas_draw_rframe(canvas, x, 0, 9, 11, 2);
+    canvas_set_color(canvas, linked ? ColorWhite : ColorBlack);
+    canvas_draw_xbm(canvas, x + 2, 1, 5, 9, GLYPH_BLUETOOTH);
+    canvas_set_color(canvas, ColorBlack);
+    canvas_draw_line(canvas, 0, 12, 127, 12);
+
+    // Both fonts take 7-8 rows above the baseline and 2 below it.
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str(canvas, 0, 25, STATUS[model->status]);
+    canvas_set_font(canvas, FontSecondary);
+    if(model->status == KcStatusPairing) {
+        canvas_draw_str(canvas, 0, 37, "On the Kindle: Bluetooth");
+        canvas_draw_str(canvas, 0, 48, "devices > Kindle Click,");
+        canvas_draw_str(canvas, 0, 59, "confirm the code on both");
+        return;
+    }
+    if(model->queued) canvas_draw_str(canvas, 0, 36, "Page turn queued");
+    draw_key(canvas, 0, 43, GLYPH_LEFT, 4, 7, model->held & (1 << KeyPrev));
+    draw_key(canvas, 10, 43, GLYPH_RIGHT, 4, 7, model->held & (1 << KeyNext));
+    canvas_draw_str(canvas, 22, 51, "page");
+    draw_key(canvas, 66, 43, GLYPH_UP, 7, 4, model->held & (1 << KeyBriUp));
+    draw_key(canvas, 76, 43, GLYPH_DOWN, 7, 4, model->held & (1 << KeyBriDown));
+    canvas_draw_str(canvas, 88, 51, "light");
+    draw_key(canvas, 0, 54, NULL, 0, 0, model->held & (1 << KeySleep));
+    canvas_draw_str(canvas, 12, 62, "hold: Kindle sleeps");
 }
 
 static bool remote_input(InputEvent* event, void* context) {
@@ -380,20 +435,27 @@ static bool remote_input(InputEvent* event, void* context) {
         key = KeyBriDown;
         break;
     case InputKeyOk:
-        if(event->type == InputTypePress) {
-            app->ok_down_at = furi_get_tick() | 1;
-            app->ok_fired = false;
-        } else if(event->type == InputTypeRelease) {
-            app->ok_down_at = 0;
-        }
-        return true;
+        key = KeySleep; // after SLEEP_HOLD_MS
+        break;
     default:
         return false; // Back: to the menu
     }
-    if(event->type == InputTypePress)
-        key_down(app, key);
-    else if(event->type == InputTypeRelease)
-        key_up(app, key);
+    if(event->type == InputTypePress) {
+        app->held |= 1 << key;
+        if(key == KeySleep) {
+            app->ok_down_at = furi_get_tick() | 1;
+            app->ok_fired = false;
+        } else {
+            key_down(app, key);
+        }
+    } else if(event->type == InputTypeRelease) {
+        app->held &= ~(1 << key);
+        if(key == KeySleep)
+            app->ok_down_at = 0;
+        else
+            key_up(app, key);
+    }
+    update_view(app);
     return true;
 }
 

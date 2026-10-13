@@ -1,3 +1,7 @@
+## v0.3
+
+- A new screen: Bluetooth and battery status in a header, and a key legend that lights up the key you press.
+
 ## v0.2
 
 - The bottom line of the screen is no longer cut off.
