@@ -232,7 +232,18 @@ EU Model Y (pre-Juniper, post-April-2024 production) running 2026.14.3
 | 15 | +12V (unchanged) |
 | 26 | GND (unchanged) |
 
-This is a **single empirical data point** and may not generalise to
+A second car points the same way for 18/19: @nobless's Fremont-built
+Model Y AWD (2024-07) has Vehicle CAN there too. A Listen-Only capture
+from that pair carries `0x334`, `0x293`, `0x3C2`, the BMS frames,
+`0x25D` and `0x7FF`, and no `0x370`, `0x257`, `0x118` or `0x398`
+(issue [#211](https://github.com/hypery11/flipper-tesla-fsd/issues/211)).
+The other pairs on that car were not probed. On a tap like this the
+features that need Party CAN have nothing to work with (nag killer, HW
+detection from `0x398`), and Acceleration Mode sees the car's `0x334`
+but cannot latch a new map, because its standstill check reads `0x257`
+or `0x118`.
+
+The DoIP rows above are a **single empirical data point** and may not generalise to
 every post-April-2024 build. @TianzeWang notes (issue [#52](https://github.com/hypery11/flipper-tesla-fsd/issues/52))
 that Tesla's [Model Y Electrical Reference](https://service.tesla.com/docs/ModelY/ElectricalReference/)
 distinguishes between **Berlin Juniper (SOP8)** and **Shanghai Juniper
