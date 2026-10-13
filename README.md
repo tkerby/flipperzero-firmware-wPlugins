@@ -30,6 +30,11 @@ no account.
 > Flipper Zero is a trademark of Flipper Devices Inc. and is used only to name the hardware
 > Gitphin runs on. Git is a trademark of the Software Freedom Conservancy.
 
+> [!TIP]
+> **No Flipper? Gitphin also runs on Android.** [Gitphin Droid](https://github.com/Adhamura/gitphinDroid)
+> is the same Git server and web UI as an app on your phone, reached over USB, USB tethering or
+> Wi-Fi.
+
 ## Why Gitphin
 
 Your code usually lives on a laptop and on a server somewhere. Gitphin adds a third place you
@@ -56,6 +61,12 @@ the device itself, reached from the PC over the USB cable.
   small packs and builds a commit graph, in short slices, so clones and history stay fast.
 - **🪶 Small and open.** Plain C on the Flipper (no external libraries, its own inflate,
   deflate and SHA-1), standard-library Python on the PC, MIT licensed.
+
+## See it work
+
+<p align="center"><img src="docs/promo/gitphin.gif" width="720" alt="git push to the Flipper, then browsing the repo at localhost:8080"><br>
+<sub>A real plain-git push (the output of the same Gitphin core on a PC), the Flipper's screen
+(captures from the device) and the web UI. Full video: <a href="docs/promo/gitphin.mp4">gitphin.mp4</a> (44 s).</sub></p>
 
 ## Screenshots
 
@@ -417,6 +428,11 @@ with your firmware version, the Gitphin version and the bridge log
 - **1.0** — ✅ Git server and web UI on the Flipper: clone / pull / push, code, commits, diffs,
   compare, branches, tags, search, web edits, issues, pull requests with tree merge, releases,
   wiki; idle packing and commit graph; Linux bridge; single-file `.fap` with embedded plugins.
+- **1.1** — ✅ repos in the app's own data folder (`/ext/apps_data/gitphin/git`), file manager on the
+  SD card only.
+- **1.2** — ✅ syntax highlighting, repo avatars, Download ZIP, protected system folders; bridge
+  backup on plug-in, push to GitHub and the Flipper at once, webhooks. Also on Android as
+  [Gitphin Droid](https://github.com/Adhamura/gitphinDroid).
 - **Next** — listing in the Flipper Apps Catalog.
 - **Ideas, not scheduled** — macOS and Windows bridge; blame; a Wi-Fi Dev Board transport
   (no PC bridge).
@@ -430,7 +446,7 @@ Bug reports with your firmware version and bridge log help most. For code: the h
 ASan); CI runs them and builds the app with uFBT for the release and dev firmware. New features
 belong in a plugin, not the core (code size is at its limit), and must follow the "Resource
 limits" rules in [docs/git-design.md](docs/git-design.md). `tools/screenshots/capture.sh` makes
-the README screenshots without a Flipper.
+the README screenshots without a Flipper. `tools/promo/make_promo.sh` then makes the video and the GIF in `docs/promo/` (needs ffmpeg).
 
 ## License
 

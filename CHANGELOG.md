@@ -23,6 +23,8 @@
   (`flipper_app/src/`, `flipper_app/web/`, `pc/gitphin_bridge/`, `pc/gitphin_git/`). The built
   app is byte for byte the same code as 1.1.
 - FAQ in the README: what Gitphin is for, and why it is not a single point of failure.
+- README: a short demo video and GIF (`tools/promo/make_promo.sh`), and a link to
+  [Gitphin Droid](https://github.com/Adhamura/gitphinDroid), the same server and web UI on Android.
 
 ## 1.1
 
