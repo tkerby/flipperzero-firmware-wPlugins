@@ -224,6 +224,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [20Q Flipper v1.0 (By Cheesedog223)](https://github.com/Cheesedog223/20Q_Flipper0)
 - Added: [RFIDMaker v0.9 (By KindaCharming / jeremydbean)](https://github.com/jeremydbean/FlipperRFIDMaker)
 - Updated: [Tesla Mod v2.16b40 (By hypery11)](https://github.com/hypery11/flipper-tesla-fsd)
+- OFW: NFC: [Fix FeliCa command handling #4465 (By kormax)](https://github.com/flipperdevices/flipperzero-firmware/pull/4465)
 
 <a name="release"></a>
 
