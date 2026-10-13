@@ -2568,6 +2568,7 @@ static void ws_event(uint8_t num, WStype_t type,
 
 // ── HTTP handlers ─────────────────────────────────────────────────────────────
 static void handle_root() {
+    captive_portal_note_dashboard(g_http);   // portal "login" for Apple's probe (SoftAP only)
     g_http.setContentLength(sizeof(WEB_HTML) - 1);
     g_http.send(200, "text/html", "");
 
