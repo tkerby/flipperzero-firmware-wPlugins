@@ -1602,6 +1602,8 @@ void setup() {
     Serial.println("\n============================");
     Serial.println(" Tesla Mod — ESP32          ");
     Serial.println("============================");
+    Serial.printf("[FSD] Version: %s\n", FW_VERSION);
+    Serial.printf("[FSD] Board: %s\n", BOARD_NAME);
     Serial.printf("[FSD] Build: %s %s\n", __DATE__, __TIME__);
 
     {
@@ -1618,7 +1620,7 @@ void setup() {
   #elif defined(BOARD_LILYGO)
     Serial.println("[CAN] Driver: ESP32 TWAI (LilyGO T-CAN485)");
   #else
-    Serial.println("[CAN] Driver: ESP32 TWAI (M5Stack ATOM Lite + ATOMIC CAN Base)");
+    Serial.println("[CAN] Driver: ESP32 TWAI (" BOARD_NAME ")");
   #endif
 #elif defined(CAN_DRIVER_MCP2515)
     Serial.println("[CAN] Driver: MCP2515 via SPI");
