@@ -69,6 +69,7 @@ else
     if [[ -x "$W/b/route_test" ]]; then
         export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null
         check "demo repos" bash "$TOP/tools/screenshots/make_demo.sh" "$W/root"
+        rm -f "$W"/root/git/*.git/hub/avatar.png   # the avatar checks start with no repo picture
         mkdir -p "$W/sd/apps_data/gitphin" "$W/sd/apps_assets/gitphin" "$W/sd/music"
         ln -s "$W/root/git" "$W/sd/apps_data/gitphin/git"
         : >"$W/sd/apps_assets/gitphin/index.html.gz"; : >"$W/requests.log"
