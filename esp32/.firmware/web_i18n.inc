@@ -239,7 +239,8 @@ var TABLES = {
  "Password must be empty or 8+ chars": "密码须为空或 8 位以上",
  "SSID required": "需要填写 SSID",
  "OTA writes to the next app partition when available. The new image is kept only after 15 s of runtime; a crash or power cut before that restores the previous firmware. Keep USB reflashing available as a recovery path.": "OTA 会在可用时写入下一个 app 分区；新固件需连续运行 15 秒后才会被保留，在此之前崩溃或断电会回滚到上一版固件。请保留 USB 线刷作为恢复手段。",
- "WiFi Clients": "WiFi 客户端"
+ "WiFi Clients": "WiFi 客户端",
+ "Memory": "内存"
 },
 "zh-Hant": {
  "Connection lost — retrying…": "連線已中斷 — 正在重試…",
@@ -470,7 +471,8 @@ var TABLES = {
  "Password must be empty or 8+ chars": "密碼須為空或 8 位以上",
  "SSID required": "需要填寫 SSID",
  "OTA writes to the next app partition when available. The new image is kept only after 15 s of runtime; a crash or power cut before that restores the previous firmware. Keep USB reflashing available as a recovery path.": "OTA 會在可用時寫入下一個 app 分割區；新韌體需連續執行 15 秒後才會被保留，在此之前當機或斷電會還原到上一版韌體。請保留 USB 線刷作為還原手段。",
- "WiFi Clients": "WiFi 客戶端"
+ "WiFi Clients": "WiFi 客戶端",
+ "Memory": "記憶體"
 }
 };
 

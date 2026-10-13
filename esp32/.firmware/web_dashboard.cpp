@@ -858,6 +858,10 @@ R"rawliteral(
     <span id="wifiCl">--</span>
   </div>
   <div class="row">
+    <span class="lbl">Memory</span>
+    <span id="memInfo" style="font-size:.78em;color:var(--text2)">--</span>
+  </div>
+  <div class="row">
     <span class="lbl">OTA Partition</span>
     <span id="otaPartInfo" style="font-size:.78em;color:var(--text2)">--</span>
   </div>
@@ -1347,6 +1351,13 @@ function updDevice(d){
   if(document.getElementById('fwBuild') && d.fw_build) document.getElementById('fwBuild').textContent=(d.fw_version?d.fw_version+' \u00b7 ':'')+d.fw_build;
   if(document.getElementById('uptime')) document.getElementById('uptime').textContent=fmt(d.uptime_s||0);
   if(document.getElementById('wifiCl')) document.getElementById('wifiCl').textContent=d.wifi_clients||0;
+  // Lowest free loop-task stack since boot + heap now / lowest. Red under 1 KB of stack.
+  var me=document.getElementById('memInfo');
+  if(me && d.stack_free!==undefined){
+    var kb=function(b){return ((b||0)/1024).toFixed(1)+' KB';};
+    me.textContent='stack '+kb(d.stack_free)+' \u00b7 heap '+kb(d.heap_free)+' (min '+kb(d.heap_min)+')';
+    me.style.color=d.stack_free<1024?'var(--red)':'var(--text2)';
+  }
   var partEl=document.getElementById('otaPartInfo');
   if(partEl && d.ota_partition){
     var p=d.ota_partition;
@@ -2030,6 +2041,10 @@ static String build_json() {
     j += "\"bms\":";           j += bms;                               j += ',';
     j += "\"perf\":";          j += perf;                              j += ',';
     j += "\"uptime_s\":";      j += uptime_s;                          j += ',';
+    // Loop-task stack low-water mark (this runs on it) and heap, for field reports.
+    j += "\"stack_free\":";    j += (uint32_t)uxTaskGetStackHighWaterMark(nullptr); j += ',';
+    j += "\"heap_free\":";     j += (uint32_t)ESP.getFreeHeap();       j += ',';
+    j += "\"heap_min\":";      j += (uint32_t)ESP.getMinFreeHeap();    j += ',';
     j += "\"fw_version\":\""   FW_VERSION "\",";
     j += "\"board\":\""        BOARD_NAME "\",";
     j += "\"fw_build\":\"";    j += __DATE__;  j += ' '; j += __TIME__; j += "\",";
