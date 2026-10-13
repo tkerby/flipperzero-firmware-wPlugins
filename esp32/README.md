@@ -304,6 +304,8 @@ cd flipper-tesla-fsd/esp32
 pio run -e m5stack-atom
 ```
 
+CI runs `ci_check_stack.py` after each build: it adds up the stack frames along the deepest loop-task call chains (dashboard connect and command, `/api/status`, `/api/cmd`, a CAN frame) and fails the build when one passes 93% of the loop task's stack (`SET_LOOP_TASK_STACK_SIZE` in `main.cpp`). Run it yourself after a build with `python3 ci_check_stack.py .pio/build/m5stack-atom`. New fields in `FSDState` and new locals in `loop()`, `process_frame()`, `build_json()` or `web_command()` are what move the numbers.
+
 ### Flash
 ```bash
 pio run -e m5stack-atom -t upload
@@ -479,6 +481,7 @@ esp32/
 ├── build_firmware.sh       — Local build + packaging helper
 ├── gen_version.py          — Pre-build step that sets FW_VERSION (release tag / `git describe`; override with the FW_VERSION env var)
 ├── merge_firmware.py       — Post-build step that writes firmware-merged.bin for the web flasher
+├── ci_check_stack.py       — CI check of the loop task's deepest call chains against its stack size
 └── README.md
 ```
 
