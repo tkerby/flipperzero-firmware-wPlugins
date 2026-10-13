@@ -295,11 +295,11 @@ char ev_last[96]; // 5Ghost: latest captured credential, handed worker -> main t
 #define GHOST_EVT_CONFIG_AP_START       0x20Cu
     // send AP commands after the VariableItemList input callback has returned
 #define GHOST_EVT_GATT_PROBE            0x20Du
-    // 5Ghost ②: BLE detail card OK -> gattProbeScene (input callback \
- // only posts the event; the scene's on_event does the next_scene)
+    // 5Ghost ②: BLE detail card OK -> gattProbeScene (input callback
+    // only posts the event; the scene's on_event does the next_scene)
 #define GHOST_EVT_BLE_RAW               0x20Eu
-    // 5Ghost ③: BLE detail card Right -> bleRawScene (posted from the \
- // input callback; the scene's on_event does the next_scene)
+    // 5Ghost ③: BLE detail card Right -> bleRawScene (posted from the
+    // input callback; the scene's on_event does the next_scene)
 #define GHOST_EVT_BADBLE_LOAD_FILE      0x20Fu
     // 5Ghost ⑧b: open the SD .txt browser from the dispatcher loop, not the input callback
 #define GHOST_EVT_BADBLE_LOAD_PRESET    0x210u
@@ -310,8 +310,8 @@ char ev_last[96]; // 5Ghost: latest captured credential, handed worker -> main t
 #define GHOST_EVT_BADBLE_STOP           0x214u
     // 5Ghost ⑧b: run scene OK pressed while running -> send STOP (abort the fw inject window)
 #define GHOST_EVT_MULTI_DEAUTH_START    0x215u
-    // 5Ghost MULTI-AP C2: scan-list Left-long -> send the paced STOP/DEAUTHADD×N/DEAUTHRUN \
-        // sequence from the dispatcher loop, not the ViewPort input callback (ViewPort lock)
+    // 5Ghost MULTI-AP C2: scan-list Left-long -> send the paced STOP/DEAUTHADD×N/DEAUTHRUN
+    // sequence from the dispatcher loop, not the ViewPort input callback (ViewPort lock)
 #define GHOST_EVT_AUDIT_TICK            0x216u
     // P1 A2: 500ms wait tick for LISTAP/STASCAN/CAPTURE dwell (no dispatcher-blocking while)
 #define GHOST_EVT_BLEADV_SAVE           0x217u // issue #7: raw view OK -> append this advert to SD

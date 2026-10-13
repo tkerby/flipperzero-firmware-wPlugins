@@ -24,8 +24,12 @@ GLYPH = [
 
 
 def chunk(tag, data):
-    return (struct.pack(">I", len(data)) + tag + data
-            + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF))
+    return (
+        struct.pack(">I", len(data))
+        + tag
+        + data
+        + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+    )
 
 
 def main(out):
@@ -34,10 +38,12 @@ def main(out):
         raw.append(0)  # filter: none
         for c in row:
             raw += b"\x00\x00\x00\xff" if c == "#" else b"\x00\x00\x00\x00"
-    png = (b"\x89PNG\r\n\x1a\n"
-           + chunk(b"IHDR", struct.pack(">IIBBBBB", 10, 10, 8, 6, 0, 0, 0))
-           + chunk(b"IDAT", zlib.compress(bytes(raw), 9))
-           + chunk(b"IEND", b""))
+    png = (
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", struct.pack(">IIBBBBB", 10, 10, 8, 6, 0, 0, 0))
+        + chunk(b"IDAT", zlib.compress(bytes(raw), 9))
+        + chunk(b"IEND", b"")
+    )
     Path(out).write_bytes(png)
     print(f"wrote {out} ({len(png)} bytes)")
 

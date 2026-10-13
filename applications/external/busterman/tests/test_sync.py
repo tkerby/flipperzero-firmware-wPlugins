@@ -1,10 +1,16 @@
 """Exercise the actual C sync callback with host storage/pipe stubs."""
+
 from pathlib import Path
 import subprocess
 import tempfile
-source=(Path(__file__).resolve().parents[1]/'megaman.c').read_text()
-callback=source[source.index('static void sync_command('):source.index('static void format_output(')]
-header=r'''
+
+source = (Path(__file__).resolve().parents[1] / "megaman.c").read_text()
+callback = source[
+    source.index("static void sync_command(") : source.index(
+        "static void format_output("
+    )
+]
+header = r"""
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -26,8 +32,8 @@ static void furi_mutex_release(void* lock) {(void)lock;}
 static size_t pipe_spaces_available(PipeSide* p) {(void)p;return 128;}
 static void pipe_send(PipeSide* p,const void* data,size_t len) {memcpy(p->response,data,len);p->response[len]=0;}
 static bool save_progress(App* a) {(void)a;saves++;return storage_works;}
-'''
-tests=r'''
+"""
+tests = r"""
 int main(void) {
  App app={0};app.progress.total_xp=12;app.save_ok=true;
  PipeSide pipe={0};FuriString args={"25"};
@@ -49,9 +55,12 @@ int main(void) {
  puts("Actual C sync callback checks passed.");
  return 0;
 }
-'''
+"""
 with tempfile.TemporaryDirectory() as directory:
-    path=Path(directory)/'sync.c';path.write_text(header+callback+tests)
-    binary=Path(directory)/'sync'
-    subprocess.run(['cc','-Wall','-Wextra','-Werror',str(path),'-o',str(binary)],check=True)
-    subprocess.run([str(binary)],check=True)
+    path = Path(directory) / "sync.c"
+    path.write_text(header + callback + tests)
+    binary = Path(directory) / "sync"
+    subprocess.run(
+        ["cc", "-Wall", "-Wextra", "-Werror", str(path), "-o", str(binary)], check=True
+    )
+    subprocess.run([str(binary)], check=True)

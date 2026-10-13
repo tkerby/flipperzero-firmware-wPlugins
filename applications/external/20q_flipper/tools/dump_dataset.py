@@ -13,14 +13,28 @@ import sys
 def load(path):
     d = open(path, "rb").read()
     assert d[:4] == b"F20Q", "bad magic"
-    (ver, flags, n, q, matrix_off, ent_index_off, ent_text_off, qst_index_off,
-     qst_text_off, prior_off, cat_off, qrank_off) = struct.unpack_from("<HHIIIIIIIIII", d, 4)
+    (
+        ver,
+        flags,
+        n,
+        q,
+        matrix_off,
+        ent_index_off,
+        ent_text_off,
+        qst_index_off,
+        qst_text_off,
+        prior_off,
+        cat_off,
+        qrank_off,
+    ) = struct.unpack_from("<HHIIIIIIIIII", d, 4)
     lut = struct.unpack_from("<16f", d, 0x30)
     fam_off = struct.unpack_from("<I", d, 0x98)[0]
 
     def texts(index_off, text_off, count):
         idx = struct.unpack_from(f"<{count + 1}I", d, index_off)
-        return [d[text_off + idx[i]:text_off + idx[i + 1]].decode() for i in range(count)]
+        return [
+            d[text_off + idx[i] : text_off + idx[i + 1]].decode() for i in range(count)
+        ]
 
     names = texts(ent_index_off, ent_text_off, n)
     questions = texts(qst_index_off, qst_text_off, q)
@@ -31,10 +45,21 @@ def load(path):
         return lut[(b >> 4) if (i & 1) else (b & 0x0F)]
 
     qrank = struct.unpack_from(f"<{q}H", d, qrank_off)
-    cats = d[cat_off:cat_off + n]
-    fams = d[fam_off:fam_off + q]
-    return dict(n=n, q=q, names=names, questions=questions, cell=cell, lut=lut,
-                qrank=qrank, cats=cats, fams=fams, flags=flags, version=ver)
+    cats = d[cat_off : cat_off + n]
+    fams = d[fam_off : fam_off + q]
+    return dict(
+        n=n,
+        q=q,
+        names=names,
+        questions=questions,
+        cell=cell,
+        lut=lut,
+        qrank=qrank,
+        cats=cats,
+        fams=fams,
+        flags=flags,
+        version=ver,
+    )
 
 
 def main():

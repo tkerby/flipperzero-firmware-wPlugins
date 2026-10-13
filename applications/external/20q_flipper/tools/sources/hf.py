@@ -23,9 +23,19 @@ def rows(dataset, config="default", split="train", limit=100000, sleep=0.05):
         if cache_file.exists():
             payload = json.loads(cache_file.read_text())
         else:
-            url = API + "?" + urllib.parse.urlencode(
-                {"dataset": dataset, "config": config, "split": split,
-                 "offset": offset, "length": PAGE})
+            url = (
+                API
+                + "?"
+                + urllib.parse.urlencode(
+                    {
+                        "dataset": dataset,
+                        "config": config,
+                        "split": split,
+                        "offset": offset,
+                        "length": PAGE,
+                    }
+                )
+            )
             with urllib.request.urlopen(url, timeout=60) as resp:
                 payload = json.loads(resp.read().decode())
             cache_file.write_text(json.dumps(payload))

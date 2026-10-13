@@ -2,8 +2,8 @@
 #include "card_formats.h"
 #include <string.h>
 
-#define FC8 {"Facility code", 0, 255, 0}
-#define CN16 {"Card number", 0, 65535, 1}
+#define FC8                        {"Facility code", 0, 255, 0}
+#define CN16                       {"Card number", 0, 65535, 1}
 #define FIELD(label, max, initial) {label, 0, max, initial}
 const CardFormat card_formats[] = {
     {"HID H10301 (26-bit)",
@@ -68,7 +68,9 @@ const CardFormat card_formats[] = {
      CardGallagher,
      8,
      4,
-     {FIELD("Facility code", 65535, 0), FIELD("Card number", 16777215, 1), FIELD("Region", 15, 0),
+     {FIELD("Facility code", 65535, 0),
+      FIELD("Card number", 16777215, 1),
+      FIELD("Region", 15, 0),
       FIELD("Issue level", 15, 0)}},
     {"Keri",
      "Keri",
@@ -140,7 +142,7 @@ const CardFormat card_formats[] = {
 };
 const size_t card_format_count = sizeof(card_formats) / sizeof(card_formats[0]);
 
-static uint64_t get(const uint8_t *data, unsigned start, unsigned width) {
+static uint64_t get(const uint8_t* data, unsigned start, unsigned width) {
     uint64_t value = 0;
     for(unsigned i = 0; i < width; ++i) {
         unsigned pos = start + i;
@@ -149,25 +151,21 @@ static uint64_t get(const uint8_t *data, unsigned start, unsigned width) {
     return value;
 }
 
-bool card_parse_decimal(const char *text, uint64_t min, uint64_t max, uint64_t *value) {
-    if(!text || !*text || min > max)
-        return false;
+bool card_parse_decimal(const char* text, uint64_t min, uint64_t max, uint64_t* value) {
+    if(!text || !*text || min > max) return false;
     uint64_t n = 0;
     for(; *text; ++text) {
-        if(*text < '0' || *text > '9')
-            return false;
+        if(*text < '0' || *text > '9') return false;
         unsigned digit = (unsigned)(*text - '0');
-        if(digit > max || n > (max - digit) / 10)
-            return false;
+        if(digit > max || n > (max - digit) / 10) return false;
         n = n * 10 + digit;
     }
-    if(n < min)
-        return false;
+    if(n < min) return false;
     *value = n;
     return true;
 }
 
-static void put(uint8_t *data, unsigned start, unsigned width, uint64_t value) {
+static void put(uint8_t* data, unsigned start, unsigned width, uint64_t value) {
     for(unsigned i = 0; i < width; ++i) {
         unsigned pos = start + i;
         uint8_t mask = 1U << (7 - pos % 8);
@@ -197,10 +195,13 @@ static uint64_t wiegand26(uint64_t fc, uint64_t cn) {
     uint64_t value = (fc << 16) | cn;
     return ((uint64_t)parity(value >> 12) << 25) | (value << 1) | (parity(value & 4095) ^ 1);
 }
-size_t card_proxmark_raw(const CardFormat *f, const uint8_t *d, size_t size, uint8_t *raw,
-                         size_t capacity) {
-    if(!f || !d || !raw || size != f->size)
-        return 0;
+size_t card_proxmark_raw(
+    const CardFormat* f,
+    const uint8_t* d,
+    size_t size,
+    uint8_t* raw,
+    size_t capacity) {
+    if(!f || !d || !raw || size != f->size) return 0;
     size_t length;
     switch(f->encoding) {
     case CardHid26:
@@ -217,8 +218,7 @@ size_t card_proxmark_raw(const CardFormat *f, const uint8_t *d, size_t size, uin
     default:
         return 0;
     }
-    if(capacity < length)
-        return 0;
+    if(capacity < length) return 0;
     memset(raw, 0, length);
     switch(f->encoding) {
     case CardHid26:
@@ -267,12 +267,10 @@ static uint8_t paradox_crc(uint64_t fc, uint64_t cn) {
     return reverse(crc) ^ 6;
 }
 
-bool card_encode(const CardFormat *f, const uint64_t *v, uint8_t *d, size_t size) {
-    if(!f || !v || !d || size != f->size)
-        return false;
+bool card_encode(const CardFormat* f, const uint64_t* v, uint8_t* d, size_t size) {
+    if(!f || !v || !d || size != f->size) return false;
     for(size_t i = 0; i < f->count; ++i)
-        if(v[i] < f->fields[i].min || v[i] > f->fields[i].max)
-            return false;
+        if(v[i] < f->fields[i].min || v[i] > f->fields[i].max) return false;
     memset(d, 0, size);
     switch(f->encoding) {
     case CardHid26:
@@ -346,10 +344,8 @@ bool card_encode(const CardFormat *f, const uint64_t *v, uint8_t *d, size_t size
                               -1, -1, 2,  -1, -1, -1, 3,  -1, 4,  -1, -1, -1, -1, -1, 1,  -1};
         uint32_t id = 0x80000000;
         for(unsigned i = 0; i < 32; ++i) {
-            if(cn_map[i] >= 0)
-                id |= ((v[1] >> cn_map[i]) & 1) << i;
-            if(fc_map[i] >= 0)
-                id |= ((v[0] >> fc_map[i]) & 1) << i;
+            if(cn_map[i] >= 0) id |= ((v[1] >> cn_map[i]) & 1) << i;
+            if(fc_map[i] >= 0) id |= ((v[0] >> fc_map[i]) & 1) << i;
         }
         put(d, 0, 32, id);
         break;
@@ -386,11 +382,10 @@ bool card_encode(const CardFormat *f, const uint64_t *v, uint8_t *d, size_t size
     return true;
 }
 
-bool card_decode(const CardFormat *f, const uint8_t *d, size_t size, uint64_t *values) {
+bool card_decode(const CardFormat* f, const uint8_t* d, size_t size, uint64_t* values) {
     uint8_t canonical[12];
     uint64_t v[CARD_MAX_FIELDS] = {0};
-    if(!f || !d || !values || size != f->size || size > sizeof(canonical))
-        return false;
+    if(!f || !d || !values || size != f->size || size > sizeof(canonical)) return false;
     switch(f->encoding) {
     case CardHid26:
         v[0] = get(d, 0, 8);
@@ -407,14 +402,12 @@ bool card_decode(const CardFormat *f, const uint8_t *d, size_t size, uint64_t *v
         v[2] = get(d, 8, 8);
         break;
     case CardAwid:
-        if(d[0] != 26)
-            return false;
+        if(d[0] != 26) return false;
         v[0] = get(d, 9, 8);
         v[1] = get(d, 17, 16);
         break;
     case CardPyramid:
-        if(d[0] != 26)
-            return false;
+        if(d[0] != 26) return false;
         v[0] = get(d, 8, 8);
         v[1] = get(d, 16, 16);
         break;
@@ -466,11 +459,9 @@ bool card_decode(const CardFormat *f, const uint8_t *d, size_t size, uint64_t *v
         for(unsigned i = 0; i < 9; ++i) {
             uint8_t b = (get(d, 6 + i * 10, 4) << 4) | get(d, 11 + i * 10, 4);
             plain[i] = reverse(b);
-            if(i)
-                plain[i] ^= plain[0];
+            if(i) plain[i] ^= plain[0];
         }
-        if(get(plain, 8, 6) != 26)
-            return false;
+        if(get(plain, 8, 6) != 26) return false;
         v[0] = get(plain, 33, 8);
         v[1] = get(plain, 41, 16);
         v[2] = get(plain, 16, 16);
@@ -485,8 +476,7 @@ bool card_decode(const CardFormat *f, const uint8_t *d, size_t size, uint64_t *v
     }
     // An unknown layout, check bit, or extra payload stays in the raw editor.
     // Never discard information merely to make a file fit a decimal preset.
-    if(!card_encode(f, v, canonical, size) || memcmp(canonical, d, size) != 0)
-        return false;
+    if(!card_encode(f, v, canonical, size) || memcmp(canonical, d, size) != 0) return false;
     memcpy(values, v, f->count * sizeof(*v));
     return true;
 }

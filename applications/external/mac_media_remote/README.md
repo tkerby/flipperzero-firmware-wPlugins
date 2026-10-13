@@ -1,52 +1,24 @@
-# Mac Media Remote
+# Now Playing for Mac
 
-Показывает на Flipper Zero текущий медиапоток macOS по Bluetooth Low Energy: трек, исполнитель, альбом, прогресс и доступную обложку в контрастном постерном стиле. Работает с приложением или вкладкой браузера, если она публикует данные в системный Now Playing. Аудио остаётся на Mac. USB нужен только для установки приложения на Flipper.
+Show the current macOS media session on Flipper Zero over Bluetooth LE: title, artist, album, progress, and available cover art. Use Flipper buttons to pause or resume, change tracks, and adjust Mac system volume.
 
-## Требования
+## Requirements
 
-- Flipper Zero с официальной прошивкой 1.4.3 (API 87.1), включённым Bluetooth и картой microSD.
-- Mac с Bluetooth и Swift toolchain.
-- `nowplaying-cli`: `brew install nowplaying-cli`.
+- A Mac with Bluetooth running the [Mac Media Remote companion](https://github.com/Vchekryzhov/mac-media-remote). The Flipper Apps Catalog installs only the Flipper app.
+- [nowplaying-cli](https://github.com/kirtan-shah/nowplaying-cli) installed on the Mac. The companion uses it to read the system Now Playing session.
+- An app or browser tab that publishes playback information to macOS Now Playing.
 
-## Установка
+## Setup
 
-```sh
-sh scripts/build-flipper.sh # SDK прошивки 1.4.3 по умолчанию
-sh scripts/build-mac.sh
-```
+1. Install and launch Now Playing from the Bluetooth category on Flipper Zero.
+2. Follow the [Mac setup instructions](https://github.com/Vchekryzhov/mac-media-remote#установка) to build and start the companion.
+3. Enable Bluetooth and confirm pairing when prompted. USB is only needed for setup or recovery.
 
-Скрипт Flipper скачивает официальный SDK и кладёт FAP в `dist/`. Установите FAP через qFlipper по USB в `/ext/apps/Bluetooth/now_playing.fap`, затем откройте **Apps → Bluetooth → Now Playing**. Для разработки `./fbt launch APPSRC=now_playing` в каталоге SDK загружает и запускает FAP без обновления прошивки.
+## Controls
 
-В терминале Mac запустите:
+- OK: play or pause.
+- Left and right: previous or next track.
+- Up and down: Mac system volume, when the selected audio output supports software volume control.
+- Hold Back: exit the app.
 
-```sh
-sh scripts/run-mac.sh
-```
-
-При первом запуске разрешите Bluetooth и подтвердите сопряжение на устройствах. После установки FAP кабель можно отключить. Выход с экрана Flipper: удерживать Back.
-
-Если на Flipper остаётся `Waiting for Mac`, проверьте запрос с кодом сопряжения на его экране и подтвердите его кнопкой OK. После подтверждения компаньон должен подключиться автоматически.
-
-## Управление
-
-- OK: пауза/воспроизведение активного системного медиаплеера.
-- Влево/вправо: предыдущий/следующий трек.
-- Вверх/вниз: системная громкость Mac на 5%; удержание повторяет команду. Работает, когда выбранное аудиоустройство поддерживает программную регулировку.
-
-Если приложение или браузер не публикует состояние в macOS Now Playing, его трек не будет виден. Позиция трека зависит от метки времени, которую источник передаёт в системный медиапоток. При потере Bluetooth соединение восстанавливается автоматически; старые данные на Flipper помечаются как `Reconnecting`.
-
-## Экраны
-
-Реальные кадры с подключённого Flipper; музыкальные экраны сняты во время воспроизведения Яндекс Музыки:
-
-| Ожидание Mac | Воспроизведение | Другой альбом |
-| --- | --- | --- |
-| ![Ожидание Mac](flipper/now_playing/screenshots/00-waiting-for-mac.png) | ![Трек Яндекс Музыки](flipper/now_playing/screenshots/01-playing-yandex.png) | ![Другой альбом](flipper/now_playing/screenshots/02-playing-yandex.png) |
-
-| Следующий трек | Пауза | Переподключение |
-| --- | --- | --- |
-| ![Следующий трек](flipper/now_playing/screenshots/03-next-track-yandex.png) | ![Пауза](flipper/now_playing/screenshots/04-paused-yandex.png) | ![Переподключение](flipper/now_playing/screenshots/05-reconnecting.png) |
-
-## Исходный код
-
-Протокол описан в `protocol/constants.json`. Код Flipper адаптирован из `villenull/flipper-now-playing`; см. `THIRD_PARTY_NOTICES.md` и `LICENSE`.
+Cover art is optional. Playback information and controls require the Mac companion to be running.

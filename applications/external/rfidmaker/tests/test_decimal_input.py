@@ -3,6 +3,7 @@
 Usage: python tests/test_decimal_input.py COMPILER SDK_HEADERS
 Requires unicorn and pyelftools. Canvas/view services are mocked.
 """
+
 import io
 import json
 import os
@@ -17,7 +18,7 @@ from unicorn.arm_const import UC_ARM_REG_R0, UC_ARM_REG_R1, UC_ARM_REG_SP, UC_AR
 from test_formats import STUB
 
 ROOT = Path(__file__).resolve().parents[1]
-HARNESS = r'''
+HARNESS = r"""
 #include "decimal_input.c"
 #include <stdarg.h>
 static DecimalModel model;
@@ -80,41 +81,88 @@ unsigned run_edit(void) {
     decimal_event(&repeat,&widget); if(calls!=2) return 4;
     return 0;
 }
-'''
+"""
+
 
 def main():
     compiler, sdk = map(lambda p: Path(p).resolve(), sys.argv[1:3])
-    os.environ['PATH'] = str(compiler.parent) + os.pathsep + os.environ['PATH']
-    includes = [a.replace('SDK_ROOT_DIR',str(sdk)) for a in json.loads((sdk/'sdk.opts').read_text())['cc_args'].split() if a.startswith('-I')]
-    with tempfile.TemporaryDirectory(prefix='rfid-keypad-') as folder:
+    os.environ["PATH"] = str(compiler.parent) + os.pathsep + os.environ["PATH"]
+    includes = [
+        a.replace("SDK_ROOT_DIR", str(sdk))
+        for a in json.loads((sdk / "sdk.opts").read_text())["cc_args"].split()
+        if a.startswith("-I")
+    ]
+    with tempfile.TemporaryDirectory(prefix="rfid-keypad-") as folder:
         folder = Path(folder)
-        (folder/'harness.c').write_text(HARNESS + '\n' + STUB)
-        path = folder/'test.elf'
-        subprocess.run([str(compiler), '-std=c11','-mcpu=cortex-m4','-mthumb','-mfloat-abi=soft','-O1',
-                        '-ffunction-sections','-fdata-sections','-fno-builtin','-nostdlib',
-                        '-DSTM32WB','-DSTM32WB55xx','-DFURI_NDEBUG','-DNDEBUG',
-                        '-I'+str(ROOT),*includes,str(folder/'harness.c'),str(ROOT/'card_formats.c'),
-                        '-Wl,-Ttext=0x10000','-Wl,-e,run_entry','-Wl,--gc-sections',
-                        '-Wl,--undefined=run_edit','-Wl,--undefined=info',
-                        '-Wl,--unresolved-symbols=ignore-all','-o',str(path),'-lgcc'],check=True)
+        (folder / "harness.c").write_text(HARNESS + "\n" + STUB)
+        path = folder / "test.elf"
+        subprocess.run(
+            [
+                str(compiler),
+                "-std=c11",
+                "-mcpu=cortex-m4",
+                "-mthumb",
+                "-mfloat-abi=soft",
+                "-O1",
+                "-ffunction-sections",
+                "-fdata-sections",
+                "-fno-builtin",
+                "-nostdlib",
+                "-DSTM32WB",
+                "-DSTM32WB55xx",
+                "-DFURI_NDEBUG",
+                "-DNDEBUG",
+                "-I" + str(ROOT),
+                *includes,
+                str(folder / "harness.c"),
+                str(ROOT / "card_formats.c"),
+                "-Wl,-Ttext=0x10000",
+                "-Wl,-e,run_entry",
+                "-Wl,--gc-sections",
+                "-Wl,--undefined=run_edit",
+                "-Wl,--undefined=info",
+                "-Wl,--unresolved-symbols=ignore-all",
+                "-o",
+                str(path),
+                "-lgcc",
+            ],
+            check=True,
+        )
         elf = ELFFile(io.BytesIO(path.read_bytes()))
-        symbols = {s.name:s['st_value'] for s in elf.get_section_by_name('.symtab').iter_symbols()}
-        emu = Uc(UC_ARCH_ARM,UC_MODE_THUMB)
-        emu.mem_map(0x10000,0x200000); emu.mem_map(0x400000,0x1000)
+        symbols = {
+            s.name: s["st_value"]
+            for s in elf.get_section_by_name(".symtab").iter_symbols()
+        }
+        emu = Uc(UC_ARCH_ARM, UC_MODE_THUMB)
+        emu.mem_map(0x10000, 0x200000)
+        emu.mem_map(0x400000, 0x1000)
         for segment in elf.iter_segments():
-            if segment['p_type']=='PT_LOAD': emu.mem_write(segment['p_vaddr'],segment.data())
-        def call(name,a=0,b=0):
-            emu.reg_write(UC_ARM_REG_SP,0x200000); emu.reg_write(UC_ARM_REG_LR,0x400001)
-            emu.reg_write(UC_ARM_REG_R0,a); emu.reg_write(UC_ARM_REG_R1,b)
-            emu.emu_start(symbols[name]|1,0x400000,count=1000000)
-            return emu.reg_read(UC_ARM_REG_R0)
-        count=0
-        for fmt in range(18):
-            fields=call('info',fmt)>>8
-            for field in range(fields):
-                assert call('run_entry',fmt,field)==0, (fmt,field,'numeric event regression')
-                count+=1
-        assert call('run_edit')==0, 'replacement/deletion/minimum/repeat behavior'
-        print(f'PASS: {count} numeric fields across 18 presets: full maxima, blank starts, replace imported values, zero, overflow, deletion, minimum prefixes, Back and repeated OK.')
+            if segment["p_type"] == "PT_LOAD":
+                emu.mem_write(segment["p_vaddr"], segment.data())
 
-if __name__=='__main__': main()
+        def call(name, a=0, b=0):
+            emu.reg_write(UC_ARM_REG_SP, 0x200000)
+            emu.reg_write(UC_ARM_REG_LR, 0x400001)
+            emu.reg_write(UC_ARM_REG_R0, a)
+            emu.reg_write(UC_ARM_REG_R1, b)
+            emu.emu_start(symbols[name] | 1, 0x400000, count=1000000)
+            return emu.reg_read(UC_ARM_REG_R0)
+
+        count = 0
+        for fmt in range(18):
+            fields = call("info", fmt) >> 8
+            for field in range(fields):
+                assert call("run_entry", fmt, field) == 0, (
+                    fmt,
+                    field,
+                    "numeric event regression",
+                )
+                count += 1
+        assert call("run_edit") == 0, "replacement/deletion/minimum/repeat behavior"
+        print(
+            f"PASS: {count} numeric fields across 18 presets: full maxima, blank starts, replace imported values, zero, overflow, deletion, minimum prefixes, Back and repeated OK."
+        )
+
+
+if __name__ == "__main__":
+    main()

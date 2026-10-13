@@ -25,7 +25,15 @@ def load(name_to_index, mapping, questions, limit=200000):
         negative = int(row.get("is_negative") or 0)
 
         if score < MIN_SCORE or typicality < MIN_TYPICALITY:
-            m.drop("quasimodo", "below threshold", subject, predicate, obj, score, typicality)
+            m.drop(
+                "quasimodo",
+                "below threshold",
+                subject,
+                predicate,
+                obj,
+                score,
+                typicality,
+            )
             continue
         if subject not in name_to_index:
             m.drop("quasimodo", "subject not in vocabulary", subject, predicate, obj)
@@ -38,7 +46,11 @@ def load(name_to_index, mapping, questions, limit=200000):
             m.drop("quasimodo", "predicate not mapped", subject, predicate, obj)
             continue
         q, polarity, p_override = hit
-        p_hat = p_override if p_override is not None else (score if not negative else 1.0 - score)
+        p_hat = (
+            p_override
+            if p_override is not None
+            else (score if not negative else 1.0 - score)
+        )
         if polarity == 0:
             p_hat = 1.0 - p_hat
         out.append((name_to_index[subject], q, p_hat))

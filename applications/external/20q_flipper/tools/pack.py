@@ -25,8 +25,18 @@ FLAG_HAS_CATEGORIES = 1 << 1
 FLAG_HAS_FAMILIES = 1 << 2
 
 FAMILIES = (
-    "taxonomy", "animal", "size", "material", "colour", "location",
-    "function", "food", "sensory", "motion", "social", "misc",
+    "taxonomy",
+    "animal",
+    "size",
+    "material",
+    "colour",
+    "location",
+    "function",
+    "food",
+    "sensory",
+    "motion",
+    "social",
+    "misc",
 )
 
 MAX_ENTITY_NAME = 22
@@ -35,8 +45,22 @@ MAX_QUESTION_TEXT = 72
 # Section 4.6. Non-linear, denser near the ends. Indices 7/8 straddle 0.5,
 # so "no information" quantises to the middle of the table.
 PYES_LUT = [
-    0.02, 0.05, 0.10, 0.17, 0.25, 0.33, 0.42, 0.48,
-    0.52, 0.58, 0.67, 0.75, 0.83, 0.90, 0.95, 0.98,
+    0.02,
+    0.05,
+    0.10,
+    0.17,
+    0.25,
+    0.33,
+    0.42,
+    0.48,
+    0.52,
+    0.58,
+    0.67,
+    0.75,
+    0.83,
+    0.90,
+    0.95,
+    0.98,
 ]
 
 CATEGORIES = ("animal", "vegetable", "mineral", "other")
@@ -167,19 +191,24 @@ def write_dataset(
             nib = quantise(p)
             off = base + (i >> 1)
             if i & 1:
-                matrix[off] = (matrix[off] & 0x0F) | (nib << 4)   # odd -> high
+                matrix[off] = (matrix[off] & 0x0F) | (nib << 4)  # odd -> high
             else:
-                matrix[off] = (matrix[off] & 0xF0) | nib          # even -> low
+                matrix[off] = (matrix[off] & 0xF0) | nib  # even -> low
 
     # Lay the blocks out after the header; any order is legal, offsets rule.
     blocks = []
     cursor = HEADER_SIZE
     offsets = {}
     for key, blk in (
-        ("ent_index", ent_index), ("ent_text", ent_text),
-        ("qst_index", qst_index), ("qst_text", qst_text),
-        ("prior", prior_blk), ("category", cat_blk),
-        ("qrank", qrank_blk), ("family", family_blk), ("matrix", bytes(matrix)),
+        ("ent_index", ent_index),
+        ("ent_text", ent_text),
+        ("qst_index", qst_index),
+        ("qst_text", qst_text),
+        ("prior", prior_blk),
+        ("category", cat_blk),
+        ("qrank", qrank_blk),
+        ("family", family_blk),
+        ("matrix", bytes(matrix)),
     ):
         pad = (-cursor) % 4
         if pad:
@@ -195,25 +224,38 @@ def write_dataset(
     did = _check_ascii(dataset_id, 32, "dataset_id")
     header = bytearray(HEADER_SIZE)
     struct.pack_into(
-        "<4sHHIIIIIIIIII", header, 0,
-        MAGIC, FORMAT_VERSION,
+        "<4sHHIIIIIIIIII",
+        header,
+        0,
+        MAGIC,
+        FORMAT_VERSION,
         FLAG_HAS_PRIORS | FLAG_HAS_CATEGORIES | FLAG_HAS_FAMILIES,
-        n, q,
-        offsets["matrix"], offsets["ent_index"], offsets["ent_text"],
-        offsets["qst_index"], offsets["qst_text"],
-        offsets["prior"], offsets["category"], offsets["qrank"],
+        n,
+        q,
+        offsets["matrix"],
+        offsets["ent_index"],
+        offsets["ent_text"],
+        offsets["qst_index"],
+        offsets["qst_text"],
+        offsets["prior"],
+        offsets["category"],
+        offsets["qrank"],
     )
     struct.pack_into("<16f", header, 0x30, *PYES_LUT)
     struct.pack_into("<II", header, 0x70, crc, build_epoch)
-    header[0x78:0x78 + len(did)] = did
+    header[0x78 : 0x78 + len(did)] = did
     struct.pack_into("<I", header, 0x98, offsets["family"])
 
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(bytes(header) + body)
     return {
-        "path": str(path), "entities": n, "questions": q,
-        "bytes": HEADER_SIZE + len(body), "matrix_bytes": stride * q, "crc32": crc,
+        "path": str(path),
+        "entities": n,
+        "questions": q,
+        "bytes": HEADER_SIZE + len(body),
+        "matrix_bytes": stride * q,
+        "crc32": crc,
     }
 
 
@@ -230,7 +272,10 @@ def synthetic():
 
 if __name__ == "__main__":
     import sys
+
     out = sys.argv[1] if len(sys.argv) > 1 else "tests/golden_8x6.dat"
     e, q, m = synthetic()
-    info = write_dataset(out, e, q, m, dataset_id="golden-8x6", qrank=[3, 1, 5, 0, 4, 2])
+    info = write_dataset(
+        out, e, q, m, dataset_id="golden-8x6", qrank=[3, 1, 5, 0, 4, 2]
+    )
     print(info)

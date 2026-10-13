@@ -1,9 +1,15 @@
 """Run the actual firmware callbacks with bounded storage/pipe stubs."""
+
 from pathlib import Path
 import subprocess
 import tempfile
-source=(Path(__file__).resolve().parents[1]/'bridge.c').read_text().replace('#include "bridge.h"','')
-header=r'''
+
+source = (
+    (Path(__file__).resolve().parents[1] / "bridge.c")
+    .read_text()
+    .replace('#include "bridge.h"', "")
+)
+header = r"""
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -44,8 +50,8 @@ static uint64_t storage_file_size(File* file) {(void)file;return sizeof(capture)
 static bool storage_file_seek(File* file,uint32_t offset,bool start) {(void)start;file->offset=offset;return offset<=sizeof(capture);}
 static size_t storage_file_read(File* file,void* data,size_t n) {assert(file->offset+n<=sizeof(capture));memcpy(data,capture+file->offset,n);file->offset+=n;return n;}
 static void storage_file_close(File* file) {(void)file;}
-'''
-tests=r'''
+"""
+tests = r"""
 int main(void) {
  MegaBridge bridge={0};PipeSide pipe={.available=192};FuriString args={"1 0"};
  for(unsigned i=0;i<sizeof(capture);i++)capture[i]=(unsigned char)i;
@@ -63,9 +69,22 @@ int main(void) {
  pipe.available=0;pipe.response[0]=0;pipe.response[0]=0;args.text="10 0";mega_files_command(&pipe,&args,&bridge);assert(!pipe.response[0]);
  puts("Actual firmware listing, read, CRC, path, offset, full-pipe and job-status checks passed.");
 }
-'''
+"""
 with tempfile.TemporaryDirectory() as temp:
-    path=Path(temp)/'test.c';path.write_text(header+source+tests)
-    binary=Path(temp)/'test'
-    subprocess.run(['cc','-Wall','-Wextra','-Werror','-Wno-misleading-indentation',str(path),'-o',str(binary)],check=True)
-    subprocess.run([str(binary)],check=True)
+    path = Path(temp) / "test.c"
+    path.write_text(header + source + tests)
+    binary = Path(temp) / "test"
+    subprocess.run(
+        [
+            "cc",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-Wno-misleading-indentation",
+            str(path),
+            "-o",
+            str(binary),
+        ],
+        check=True,
+    )
+    subprocess.run([str(binary)], check=True)

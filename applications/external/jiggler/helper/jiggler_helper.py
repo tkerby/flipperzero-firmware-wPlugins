@@ -31,7 +31,13 @@ FLAG_HAS_IDLE = 1 << 0
 FLAG_HAS_LOCK = 1 << 1
 FLAG_LOCKED = 1 << 2
 
-STATES = {0: "stopped", 1: "jiggling", 2: "paused, you're busy", 3: "paused, PC locked", 4: "finished"}
+STATES = {
+    0: "stopped",
+    1: "jiggling",
+    2: "paused, you're busy",
+    3: "paused, PC locked",
+    4: "finished",
+}
 
 # ---------------------------------------------------------------- idle time per platform
 
@@ -39,13 +45,21 @@ STATES = {0: "stopped", 1: "jiggling", 2: "paused, you're busy", 3: "paused, PC 
 def _mac_source():
     import ctypes
 
-    cg = ctypes.cdll.LoadLibrary("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics")
-    cf = ctypes.cdll.LoadLibrary("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation")
+    cg = ctypes.cdll.LoadLibrary(
+        "/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics"
+    )
+    cf = ctypes.cdll.LoadLibrary(
+        "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation"
+    )
     cg.CGEventSourceSecondsSinceLastEventType.restype = ctypes.c_double
     cg.CGEventSourceSecondsSinceLastEventType.argtypes = [ctypes.c_int, ctypes.c_uint32]
     cg.CGSessionCopyCurrentDictionary.restype = ctypes.c_void_p
     cf.CFStringCreateWithCString.restype = ctypes.c_void_p
-    cf.CFStringCreateWithCString.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_uint32]
+    cf.CFStringCreateWithCString.argtypes = [
+        ctypes.c_void_p,
+        ctypes.c_char_p,
+        ctypes.c_uint32,
+    ]
     cf.CFDictionaryGetValue.restype = ctypes.c_void_p
     cf.CFDictionaryGetValue.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
     cf.CFBooleanGetValue.restype = ctypes.c_bool
@@ -125,7 +139,11 @@ def _linux_source():
     xlib.XDefaultRootWindow.restype = ctypes.c_ulong
     xlib.XDefaultRootWindow.argtypes = [ctypes.c_void_p]
     xss.XScreenSaverAllocInfo.restype = ctypes.POINTER(XScreenSaverInfo)
-    xss.XScreenSaverQueryInfo.argtypes = [ctypes.c_void_p, ctypes.c_ulong, ctypes.POINTER(XScreenSaverInfo)]
+    xss.XScreenSaverQueryInfo.argtypes = [
+        ctypes.c_void_p,
+        ctypes.c_ulong,
+        ctypes.POINTER(XScreenSaverInfo),
+    ]
     dpy = xlib.XOpenDisplay(None)
     if not dpy:
         return None, None
@@ -148,6 +166,7 @@ def activity_source():
 
 
 # ---------------------------------------------------------------- the Flipper
+
 
 class ActivityTracker:
     """Tracks when the person last gave input, discounting the Flipper's own moves.
@@ -172,7 +191,10 @@ class ActivityTracker:
             return
         if self.effective_last_input is None:
             self.effective_last_input = last_input
-        if self.ignored_input is not None and abs(last_input - self.ignored_input) < 0.05:
+        if (
+            self.ignored_input is not None
+            and abs(last_input - self.ignored_input) < 0.05
+        ):
             if reply is not None:
                 self.last_moves = reply["moves"]
             return
@@ -183,7 +205,11 @@ class ActivityTracker:
                 move_time = None
                 if reply["since_ms"] != 0xFFFF:
                     move_time = now - reply["since_ms"] / 1000.0
-                flipper_did_it = moved and move_time is not None and abs(last_input - move_time) < 1.5
+                flipper_did_it = (
+                    moved
+                    and move_time is not None
+                    and abs(last_input - move_time) < 1.5
+                )
                 if flipper_did_it:
                     self.ignored_input = last_input
                 else:
@@ -192,13 +218,15 @@ class ActivityTracker:
             self.effective_last_input = last_input
 
 
-
-
 def find_flipper(verbose=False):
     """Open the Jiggler's vendor collection. Returns an open hid.device or None."""
     found = hid.enumerate()
     preferred = [d for d in found if d.get("usage_page") == VENDOR_PAGE]
-    others = [d for d in found if d.get("product_string") == PRODUCT_NAME and d not in preferred]
+    others = [
+        d
+        for d in found
+        if d.get("product_string") == PRODUCT_NAME and d not in preferred
+    ]
     for info in preferred + others:
         try:
             dev = hid.device()
@@ -221,7 +249,9 @@ def find_flipper(verbose=False):
 
 
 def send(dev, flags, idle_seconds):
-    payload = struct.pack("<BBBHBBB", MAGIC, VERSION, flags, min(int(idle_seconds), 0xFFFF), 0, 0, 0)
+    payload = struct.pack(
+        "<BBBHBBB", MAGIC, VERSION, flags, min(int(idle_seconds), 0xFFFF), 0, 0, 0
+    )
     dev.write(bytes([0]) + payload)  # leading 0: the channel has no report id
 
 
@@ -242,14 +272,23 @@ def fmt(seconds):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--interval", type=float, default=1.0, help="seconds between updates (default 1)")
-    ap.add_argument("--once", action="store_true", help="send one update, print the reply and exit")
+    ap.add_argument(
+        "--interval",
+        type=float,
+        default=1.0,
+        help="seconds between updates (default 1)",
+    )
+    ap.add_argument(
+        "--once", action="store_true", help="send one update, print the reply and exit"
+    )
     ap.add_argument("--verbose", action="store_true")
     args = ap.parse_args()
 
     idle_fn, locked_fn = activity_source()
     if idle_fn is None:
-        print("Warning: cannot read idle time on this system; the Flipper will not pause for you.")
+        print(
+            "Warning: cannot read idle time on this system; the Flipper will not pause for you."
+        )
 
     dev = None
     tracker = ActivityTracker()
@@ -259,7 +298,11 @@ def main():
             if dev is None:
                 if args.once:
                     sys.exit("No Flipper running the Jiggler app was found.")
-                print("\rLooking for the Jiggler app on a Flipper...      ", end="", flush=True)
+                print(
+                    "\rLooking for the Jiggler app on a Flipper...      ",
+                    end="",
+                    flush=True,
+                )
                 time.sleep(2)
                 continue
             print("\rConnected to the Flipper.                          ")

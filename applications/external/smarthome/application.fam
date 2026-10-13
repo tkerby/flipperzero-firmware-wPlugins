@@ -4,9 +4,10 @@ App(
     apptype=FlipperAppType.EXTERNAL,
     entry_point="smart_home_app",
     stack_size=4 * 1024,
-    fap_category="GPIO",
     fap_icon="smart_home_10px.png",
-    fap_description="Control Home Assistant devices through a Wi-Fi Developer Board",
+    fap_category="GPIO/ESP32",
     fap_author="Vincenzo",
+    fap_weburl="https://github.com/biotechnicallc/SmartHome",
     fap_version="2.0",
+    fap_description="Control Home Assistant devices through a Wi-Fi Developer Board",
 )

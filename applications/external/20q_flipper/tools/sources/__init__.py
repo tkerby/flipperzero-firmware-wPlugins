@@ -34,8 +34,10 @@ class Matcher:
     """Turns a normalised 'predicate object' phrase into question hits."""
 
     def __init__(self, mapping):
-        self.rules = [(re.compile(r["re"]), r["q"], r.get("polarity", 1), r.get("p"))
-                      for r in mapping["rules"]]
+        self.rules = [
+            (re.compile(r["re"]), r["q"], r.get("polarity", 1), r.get("p"))
+            for r in mapping["rules"]
+        ]
         self.blocked = _blocklist()
         self.drops = []
 
@@ -65,11 +67,14 @@ class Matcher:
 def load(name, name_to_index, mapping, questions):
     if name == "mcrae":
         from . import mcrae
+
         return mcrae.load(name_to_index, mapping, questions)
     if name == "quasimodo":
         from . import quasimodo
+
         return quasimodo.load(name_to_index, mapping, questions)
     if name == "conceptnet":
         from . import conceptnet
+
         return conceptnet.load(name_to_index, mapping, questions)
     raise SystemExit(f"unknown source {name}")

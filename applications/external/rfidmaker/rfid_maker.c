@@ -18,7 +18,13 @@
 #include <storage/storage.h>
 #include <string.h>
 
-enum { ViewMenu, ViewInput, ViewText, ViewBytes, ViewNumber };
+enum {
+    ViewMenu,
+    ViewInput,
+    ViewText,
+    ViewBytes,
+    ViewNumber
+};
 enum {
     EventInput = 1000,
     EventBytes,
@@ -46,26 +52,26 @@ typedef enum {
     PageAbout
 } Page;
 typedef struct {
-    Gui *gui;
-    Storage *storage;
-    DialogsApp *dialogs;
-    NotificationApp *notifications;
-    ViewDispatcher *dispatcher;
-    Submenu *menu;
-    TextInput *input;
-    TextBox *text;
-    ByteInput *bytes;
-    DecimalInput *number;
-    ProtocolDict *dict;
-    LFRFIDWorker *worker;
-    FuriString *display;
-    FuriString *source_path;
-    FuriString *browse_path;
-    const CardFormat *format;
+    Gui* gui;
+    Storage* storage;
+    DialogsApp* dialogs;
+    NotificationApp* notifications;
+    ViewDispatcher* dispatcher;
+    Submenu* menu;
+    TextInput* input;
+    TextBox* text;
+    ByteInput* bytes;
+    DecimalInput* number;
+    ProtocolDict* dict;
+    LFRFIDWorker* worker;
+    FuriString* display;
+    FuriString* source_path;
+    FuriString* browse_path;
+    const CardFormat* format;
     ProtocolId protocol;
     uint64_t values[CARD_MAX_FIELDS];
     bool field_entered[CARD_MAX_FIELDS];
-    uint8_t *data;
+    uint8_t* data;
     size_t size;
     size_t capacity;
     size_t field;
@@ -80,25 +86,37 @@ typedef struct {
 // Own all three notification LED channels while emulating, so an underlying
 // charging/status green does not mask the pulse. Release them when finished.
 static const NotificationSequence rfid_led_on = {
-    &message_blink_stop, &message_red_255,      &message_green_0,
-    &message_blue_255,   &message_do_not_reset, NULL,
+    &message_blink_stop,
+    &message_red_255,
+    &message_green_0,
+    &message_blue_255,
+    &message_do_not_reset,
+    NULL,
 };
 static const NotificationSequence rfid_led_off = {
-    &message_red_0, &message_green_0, &message_blue_0, &message_do_not_reset, NULL,
+    &message_red_0,
+    &message_green_0,
+    &message_blue_0,
+    &message_do_not_reset,
+    NULL,
 };
 static const NotificationSequence rfid_led_release = {
-    &message_blink_stop, &message_red_0, &message_green_0, &message_blue_0, NULL,
+    &message_blink_stop,
+    &message_red_0,
+    &message_green_0,
+    &message_blue_0,
+    NULL,
 };
 
-static void show_types(Maker *app);
-static void show_form(Maker *app);
-static void show_raw_types(Maker *app);
+static void show_types(Maker* app);
+static void show_form(Maker* app);
+static void show_raw_types(Maker* app);
 
-static void open_card(Maker *app) {
+static void open_card(Maker* app) {
     DialogsFileBrowserOptions options;
     dialog_file_browser_set_basic_options(&options, ".rfid", NULL);
     options.base_path = STORAGE_EXT_PATH_PREFIX;
-    FuriString *selected = furi_string_alloc();
+    FuriString* selected = furi_string_alloc();
     bool chosen = dialog_file_browser_show(app->dialogs, selected, app->browse_path, &options);
     if(!chosen) {
         furi_string_free(selected);
@@ -108,10 +126,11 @@ static void open_card(Maker *app) {
     furi_string_set(app->browse_path, selected);
     ProtocolId protocol = lfrfid_dict_file_load(app->dict, furi_string_get_cstr(selected));
     if(protocol == PROTOCOL_NO) {
-        furi_string_printf(app->display,
-                           "Cannot open RFID file\n\n%s\n\nFile may be damaged or its type "
-                           "unsupported by this SDK.\nBack: type menu",
-                           furi_string_get_cstr(selected));
+        furi_string_printf(
+            app->display,
+            "Cannot open RFID file\n\n%s\n\nFile may be damaged or its type "
+            "unsupported by this SDK.\nBack: type menu",
+            furi_string_get_cstr(selected));
         furi_string_free(selected);
         // Show a load error without entering a form for an invalid protocol.
         app->page = PageLoadError;
@@ -126,7 +145,7 @@ static void open_card(Maker *app) {
     furi_string_set(app->source_path, selected);
     furi_string_free(selected);
     app->format = NULL;
-    const char *name = protocol_dict_get_name(app->dict, protocol);
+    const char* name = protocol_dict_get_name(app->dict, protocol);
     for(size_t i = 0; i < card_format_count; ++i) {
         if(strcmp(card_formats[i].protocol, name) == 0 &&
            card_decode(&card_formats[i], app->data, app->size, app->values)) {
@@ -150,7 +169,7 @@ static void open_card(Maker *app) {
     }
 }
 
-static void stop_emulating(Maker *app) {
+static void stop_emulating(Maker* app) {
     if(app->emulating) {
         app->emulating = false;
         app->blink_on = false;
@@ -161,47 +180,52 @@ static void stop_emulating(Maker *app) {
         lfrfid_worker_stop_thread(app->worker);
     }
 }
-static void show_text(Maker *app, Page page) {
+static void show_text(Maker* app, Page page) {
     app->page = page;
     text_box_reset(app->text);
     text_box_set_font(app->text, TextBoxFontText);
     text_box_set_text(app->text, furi_string_get_cstr(app->display));
     view_dispatcher_switch_to_view(app->dispatcher, ViewText);
 }
-static bool prepare(Maker *app) {
+static bool prepare(Maker* app) {
     if(app->format) {
         for(size_t i = 0; i < app->format->count; ++i) {
             if(!app->field_entered[i]) {
-                furi_string_printf(app->display, "Enter %s first.\n\nBack: return to fields",
-                                   app->format->fields[i].label);
+                furi_string_printf(
+                    app->display,
+                    "Enter %s first.\n\nBack: return to fields",
+                    app->format->fields[i].label);
                 show_text(app, PageStatus);
                 return false;
             }
         }
     }
     if(app->format && !card_encode(app->format, app->values, app->data, app->size)) {
-        furi_string_set(app->display, "Cannot encode this format.\nValues or SDK layout mismatch.");
+        furi_string_set(
+            app->display, "Cannot encode this format.\nValues or SDK layout mismatch.");
         show_text(app, PageStatus);
         return false;
     }
     protocol_dict_set_data(app->dict, app->protocol, app->data, app->size);
     return true;
 }
-static void preview(Maker *app) {
-    if(!prepare(app))
-        return;
-    furi_string_printf(app->display, "%s\n\nHEX (.rfid Data):\n",
-                       protocol_dict_get_name(app->dict, app->protocol));
+static void preview(Maker* app) {
+    if(!prepare(app)) return;
+    furi_string_printf(
+        app->display,
+        "%s\n\nHEX (.rfid Data):\n",
+        protocol_dict_get_name(app->dict, app->protocol));
     for(size_t i = 0; i < app->size; ++i) {
-        furi_string_cat_printf(app->display, "%02X%s", app->data[i],
-                               ((i + 1) % 8 == 0) ? "\n" : " ");
+        furi_string_cat_printf(
+            app->display, "%02X%s", app->data[i], ((i + 1) % 8 == 0) ? "\n" : " ");
     }
     uint8_t raw[12];
     size_t raw_size = card_proxmark_raw(app->format, app->data, app->size, raw, sizeof(raw));
     if(raw_size) {
-        furi_string_cat(app->display, app->format->encoding == CardEm
-                                          ? "\n\nProxmark ID (EM410x):\n"
-                                          : "\n\nProxmark raw HEX:\n");
+        furi_string_cat(
+            app->display,
+            app->format->encoding == CardEm ? "\n\nProxmark ID (EM410x):\n" :
+                                              "\n\nProxmark raw HEX:\n");
         for(size_t i = 0; i < raw_size; ++i)
             furi_string_cat_printf(app->display, "%02X", raw[i]);
         if(app->format->encoding == CardHid26) {
@@ -220,9 +244,9 @@ static void preview(Maker *app) {
     }
     furi_string_cat(app->display, "\n\nFirmware interpretation:\n");
     if(!furi_string_empty(app->source_path))
-        furi_string_cat_printf(app->display, "Source: %s\n\n",
-                               furi_string_get_cstr(app->source_path));
-    FuriString *details = furi_string_alloc();
+        furi_string_cat_printf(
+            app->display, "Source: %s\n\n", furi_string_get_cstr(app->source_path));
+    FuriString* details = furi_string_alloc();
     protocol_dict_render_data(app->dict, details, app->protocol);
     furi_string_cat(app->display, details);
     furi_string_free(details);
@@ -235,34 +259,34 @@ static void preview(Maker *app) {
     furi_string_cat(app->display, "\n\nBack: return to fields");
     show_text(app, PageHex);
 }
-static void input_done(void *context) {
-    Maker *app = context;
+static void input_done(void* context) {
+    Maker* app = context;
     view_dispatcher_send_custom_event(app->dispatcher, EventInput);
 }
-static void bytes_done(void *context) {
-    Maker *app = context;
+static void bytes_done(void* context) {
+    Maker* app = context;
     view_dispatcher_send_custom_event(app->dispatcher, EventBytes);
 }
-static void number_done(void *context, uint64_t value) {
-    Maker *app = context;
+static void number_done(void* context, uint64_t value) {
+    Maker* app = context;
     app->values[app->field] = value;
     app->field_entered[app->field] = true;
     view_dispatcher_send_custom_event(app->dispatcher, EventNumber);
 }
-static bool input_validator(const char *text, FuriString *error, void *context) {
-    Maker *app = context;
+static bool input_validator(const char* text, FuriString* error, void* context) {
+    Maker* app = context;
     if(!*text) {
         furi_string_set(error, "Enter a file name");
         return false;
     }
-    for(const char *p = text; *p; ++p) {
+    for(const char* p = text; *p; ++p) {
         if(!((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z') || (*p >= '0' && *p <= '9') ||
              *p == '_' || *p == '-')) {
             furi_string_set(error, "Use letters, numbers,\nunderscore or hyphen");
             return false;
         }
     }
-    FuriString *path = furi_string_alloc_printf(STORAGE_EXT_PATH_PREFIX "/lfrfid/%s.rfid", text);
+    FuriString* path = furi_string_alloc_printf(STORAGE_EXT_PATH_PREFIX "/lfrfid/%s.rfid", text);
     bool exists = storage_common_stat(app->storage, furi_string_get_cstr(path), NULL) == FSE_OK;
     furi_string_free(path);
     if(exists) {
@@ -271,41 +295,45 @@ static bool input_validator(const char *text, FuriString *error, void *context) 
     }
     return true;
 }
-static void edit_field(Maker *app, size_t field) {
+static void edit_field(Maker* app, size_t field) {
     app->field = field;
     app->page = PageField;
     snprintf(app->header, sizeof(app->header), "%s (decimal)", app->format->fields[field].label);
-    const CardField *limits = &app->format->fields[field];
-    decimal_input_configure(app->number, app->header, app->values[field], limits->min, limits->max,
-                            !app->field_entered[field], number_done, app);
+    const CardField* limits = &app->format->fields[field];
+    decimal_input_configure(
+        app->number,
+        app->header,
+        app->values[field],
+        limits->min,
+        limits->max,
+        !app->field_entered[field],
+        number_done,
+        app);
     view_dispatcher_switch_to_view(app->dispatcher, ViewNumber);
 }
-static void edit_bytes(Maker *app) {
+static void edit_bytes(Maker* app) {
     app->page = PageBytes;
     byte_input_set_header_text(app->bytes, "Protocol data (HEX)");
     byte_input_set_result_callback(app->bytes, bytes_done, NULL, app, app->data, app->size);
     view_dispatcher_switch_to_view(app->dispatcher, ViewBytes);
 }
-static void begin_save(Maker *app) {
-    if(!prepare(app))
-        return;
+static void begin_save(Maker* app) {
+    if(!prepare(app)) return;
     app->page = PageName;
     snprintf(app->buffer, sizeof(app->buffer), "card");
     if(!furi_string_empty(app->source_path)) {
-        const char *path = furi_string_get_cstr(app->source_path);
-        const char *base = strrchr(path, '/');
+        const char* path = furi_string_get_cstr(app->source_path);
+        const char* base = strrchr(path, '/');
         base = base ? base + 1 : path;
         size_t length = strlen(base);
-        if(length >= 5)
-            length -= 5; // Native browser filters the .rfid extension.
-        if(length > 27)
-            length = 27;
+        if(length >= 5) length -= 5; // Native browser filters the .rfid extension.
+        if(length > 27) length = 27;
         for(size_t i = 0; i < length; ++i) {
             char c = base[i];
             app->buffer[i] = ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-                              (c >= '0' && c <= '9') || c == '_' || c == '-')
-                                 ? c
-                                 : '_';
+                              (c >= '0' && c <= '9') || c == '_' || c == '-') ?
+                                 c :
+                                 '_';
         }
         snprintf(app->buffer + length, sizeof(app->buffer) - length, "_copy");
     }
@@ -315,8 +343,8 @@ static void begin_save(Maker *app) {
     text_input_set_validator(app->input, input_validator, app);
     view_dispatcher_switch_to_view(app->dispatcher, ViewInput);
 }
-static void save_card(Maker *app) {
-    FuriString *error = furi_string_alloc();
+static void save_card(Maker* app) {
+    FuriString* error = furi_string_alloc();
     if(!input_validator(app->buffer, error, app)) {
         furi_string_set(app->display, error);
         furi_string_free(error);
@@ -324,21 +352,21 @@ static void save_card(Maker *app) {
         return;
     }
     furi_string_free(error);
-    FuriString *path =
+    FuriString* path =
         furi_string_alloc_printf(STORAGE_EXT_PATH_PREFIX "/lfrfid/%s.rfid", app->buffer);
     FS_Error mkdir_result = storage_common_mkdir(app->storage, STORAGE_EXT_PATH_PREFIX "/lfrfid");
     bool saved = (mkdir_result == FSE_OK || mkdir_result == FSE_EXIST) &&
                  lfrfid_dict_file_save(app->dict, app->protocol, furi_string_get_cstr(path));
-    furi_string_printf(app->display,
-                       saved
-                           ? "Saved\n\n%s\n\nOpen from the RFID app.\nBack: return to fields"
-                           : "Save failed\n\nCheck SD card and free space.\nBack: return to fields",
-                       furi_string_get_cstr(path));
+    furi_string_printf(
+        app->display,
+        saved ? "Saved\n\n%s\n\nOpen from the RFID app.\nBack: return to fields" :
+                "Save failed\n\nCheck SD card and free space.\nBack: return to fields",
+        furi_string_get_cstr(path));
     furi_string_free(path);
     show_text(app, PageStatus);
 }
-static void menu_callback(void *context, uint32_t index) {
-    Maker *app = context;
+static void menu_callback(void* context, uint32_t index) {
+    Maker* app = context;
     if(app->page == PageTypes) {
         if(index == ActionOpen) {
             // Open dialogs after the input callback has returned. VIEW_NONE would
@@ -347,10 +375,11 @@ static void menu_callback(void *context, uint32_t index) {
             return;
         }
         if(index == ActionAbout) {
-            furi_string_set(app->display,
-                            "RFID Maker v0.9\n\nCreated by: KindaCharming\n\n"
-                            "Create and edit 125 kHz RFID files using decimal values.\n\n"
-                            "GPL-3.0-or-later\n\nBack: type menu");
+            furi_string_set(
+                app->display,
+                "RFID Maker v0.9\n\nCreated by: KindaCharming\n\n"
+                "Create and edit 125 kHz RFID files using decimal values.\n\n"
+                "GPL-3.0-or-later\n\nBack: type menu");
             show_text(app, PageAbout);
             return;
         }
@@ -366,8 +395,7 @@ static void menu_callback(void *context, uint32_t index) {
             app->values[i] = app->format->fields[i].initial;
             bool card_field = strncmp(app->format->fields[i].label, "Card ", 5) == 0;
             app->field_entered[i] = !card_field;
-            if(card_field)
-                app->values[i] = 0;
+            if(card_field) app->values[i] = 0;
         }
         show_form(app);
     } else if(app->page == PageRawTypes) {
@@ -393,13 +421,15 @@ static void menu_callback(void *context, uint32_t index) {
             app->blink_on = true;
             app->blink_ticks = 0;
             notification_message_block(app->notifications, &rfid_led_on);
-            furi_string_printf(app->display, "Emulating (v0.9)\n\n%s\n\nBack: stop emulation",
-                               protocol_dict_get_name(app->dict, app->protocol));
+            furi_string_printf(
+                app->display,
+                "Emulating (v0.9)\n\n%s\n\nBack: stop emulation",
+                protocol_dict_get_name(app->dict, app->protocol));
             show_text(app, PageEmulate);
         }
     }
 }
-static void show_types(Maker *app) {
+static void show_types(Maker* app) {
     app->page = PageTypes;
     submenu_reset(app->menu);
     submenu_set_header(app->menu, "RFID Maker v0.9");
@@ -413,7 +443,7 @@ static void show_types(Maker *app) {
     submenu_add_item(app->menu, "About", ActionAbout, menu_callback, app);
     view_dispatcher_switch_to_view(app->dispatcher, ViewMenu);
 }
-static void show_raw_types(Maker *app) {
+static void show_raw_types(Maker* app) {
     app->page = PageRawTypes;
     submenu_reset(app->menu);
     submenu_set_header(app->menu, "Advanced - raw protocol");
@@ -421,17 +451,18 @@ static void show_raw_types(Maker *app) {
         submenu_add_item(app->menu, protocol_dict_get_name(app->dict, i), i, menu_callback, app);
     view_dispatcher_switch_to_view(app->dispatcher, ViewMenu);
 }
-static void show_form(Maker *app) {
+static void show_form(Maker* app) {
     app->page = PageForm;
     submenu_reset(app->menu);
-    submenu_set_header(app->menu, app->format ? app->format->label
-                                              : protocol_dict_get_name(app->dict, app->protocol));
+    submenu_set_header(
+        app->menu,
+        app->format ? app->format->label : protocol_dict_get_name(app->dict, app->protocol));
     if(app->format) {
         for(size_t i = 0; i < app->format->count; ++i) {
             char label[64];
             if(app->field_entered[i])
-                snprintf(label, sizeof(label), "%s: %llu", app->format->fields[i].label,
-                         app->values[i]);
+                snprintf(
+                    label, sizeof(label), "%s: %llu", app->format->fields[i].label, app->values[i]);
             else
                 snprintf(label, sizeof(label), "%s: <enter>", app->format->fields[i].label);
             submenu_add_item(app->menu, label, i, menu_callback, app);
@@ -439,14 +470,17 @@ static void show_form(Maker *app) {
     } else
         submenu_add_item(app->menu, "Edit HEX data", ActionEditRaw, menu_callback, app);
     submenu_add_item(app->menu, "Show HEX / details", ActionPreview, menu_callback, app);
-    submenu_add_item(app->menu,
-                     furi_string_empty(app->source_path) ? "Save .rfid" : "Save as .rfid",
-                     ActionSave, menu_callback, app);
+    submenu_add_item(
+        app->menu,
+        furi_string_empty(app->source_path) ? "Save .rfid" : "Save as .rfid",
+        ActionSave,
+        menu_callback,
+        app);
     submenu_add_item(app->menu, "Emulate", ActionEmulate, menu_callback, app);
     view_dispatcher_switch_to_view(app->dispatcher, ViewMenu);
 }
-static bool back_callback(void *context) {
-    Maker *app = context;
+static bool back_callback(void* context) {
+    Maker* app = context;
     stop_emulating(app);
     switch(app->page) {
     case PageTypes:
@@ -469,15 +503,14 @@ static bool back_callback(void *context) {
     }
     return true;
 }
-static bool custom_callback(void *context, uint32_t event) {
-    Maker *app = context;
+static bool custom_callback(void* context, uint32_t event) {
+    Maker* app = context;
     if(event == EventOpen) {
         open_card(app);
         return true;
     }
     if(event == EventInput) {
-        if(app->page == PageName)
-            save_card(app);
+        if(app->page == PageName) save_card(app);
         return true;
     }
     if(event == EventBytes || event == EventNumber) {
@@ -486,10 +519,9 @@ static bool custom_callback(void *context, uint32_t event) {
     }
     return false;
 }
-static void tick_callback(void *context) {
-    Maker *app = context;
-    if(!app->emulating)
-        return;
+static void tick_callback(void* context) {
+    Maker* app = context;
+    if(!app->emulating) return;
     // Match the standard emulation pulse: 10 ms on in a 100 ms period.
     ++app->blink_ticks;
     if(app->blink_ticks == 1) {
@@ -501,9 +533,9 @@ static void tick_callback(void *context) {
         notification_message(app->notifications, &rfid_led_on);
     }
 }
-int32_t rfid_maker_app(void *p) {
+int32_t rfid_maker_app(void* p) {
     UNUSED(p);
-    Maker *app = malloc(sizeof(Maker));
+    Maker* app = malloc(sizeof(Maker));
     memset(app, 0, sizeof(Maker));
     app->gui = furi_record_open(RECORD_GUI);
     app->storage = furi_record_open(RECORD_STORAGE);

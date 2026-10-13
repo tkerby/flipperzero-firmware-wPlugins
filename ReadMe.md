@@ -215,6 +215,15 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [5Ghost Wifi Lab v2.7.8 (By pingequalab)](https://github.com/pingequalab/5ghost-wifi-lab) `Req: BW15`
 - Updated: [Tesla Mod v2.16b38 (By hypery11)](https://github.com/hypery11/flipper-tesla-fsd)
 - Updated: [BarCode Scanner Emulator v0.5 (By polarikus)](https://github.com/polarikus/flipper-zero_bc_scanner_emulator) `Uses: COM-port`
+- Added: [FlipperFire v1.0 (By jankammerath)](https://github.com/jankammerath/FlipperFire)
+- Added: [Now Playing v1.2 (By Vchekryzhov)](https://github.com/Vchekryzhov/mac-media-remote) `Req: Mac`
+- Added: [Jiggler v0.1 (By rseufert)](https://github.com/rseufert/jiggler)
+- Added: [Gitphin v1.1 (By Adhamura)](https://github.com/Adhamura/gitphin)
+- Added: [SmartHome v2.0 (By biotechnicallc)](https://github.com/biotechnicallc/SmartHome) `Req: ESP32`
+- Added: [RF Survey v1.0 (By tbelbek)](https://github.com/tbelbek/flipper-rf-survey)
+- Added: [BusterMan v1.0 (By Mr-Nobody88)](https://github.com/Mr-Nobody88/BusterMan) `Req: ESP32`
+- Added: [20Q Flipper v1.0 (By Cheesedog223)](https://github.com/Cheesedog223/20Q_Flipper0)
+- Added: [RFIDMaker v0.9 (By KindaCharming / jeremydbean)](https://github.com/jeremydbean/FlipperRFIDMaker)
 
 <a name="release"></a>
 
@@ -324,6 +333,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [1D Pacman v0.1 (By easiwork)](https://github.com/easiwork/1dpacman)
 - [2048 v1.1 (By OlegSchwann)](https://github.com/OlegSchwann/flipperzero-firmware/tree/hackaton/game_2048/applications/game-2048)
 - [2048 v1.6 (By eugene-kirzhanov)](https://github.com/eugene-kirzhanov/flipper-zero-2048-game) (Titled 2048 (Improved))
+- [20Q Flipper v1.0 (By Cheesedog223)](https://github.com/Cheesedog223/20Q_Flipper0)
 - [4 In A Row v1.4 (By leo-need-more-coffee)](https://github.com/leo-need-more-coffee/flipperzero-4inrow)
 - [99 Bottles (By bolknote)](https://github.com/bolknote/99-Flipper)
 - [Air Arkanoid  v1.1 (By DrZlo13)](https://github.com/flipperdevices/flipperzero-good-faps/pull/141) `Req: Video Game Module By Flipper Devices`
@@ -576,6 +586,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [BT Trigger v1.5 (By Nem0oo)](https://github.com/Nem0oo/flipper-zero_ios-bluetooth-trigger)
 - [BTHome v0.1 (By ghedo)](https://github.com/ghedo/flipper-bthome)
 - [BunnyConnect v1.0 (By C0d3-5t3w)](https://github.com/C0d3-5t3w/flipper-bunnyconnect) `Req: BashBunny`
+- [BusterMan v1.0 (By Mr-Nobody88)](https://github.com/Mr-Nobody88/BusterMan) `Req: ESP32`
 - [C5 Lab v0.41 (By C5Lab / Lab Team)](https://github.com/C5Lab/projectZero)
 - [Caesar Cipher v1.3 (By panki27)](https://github.com/panki27/caesar-cipher)
 - [Calculator v1.4 (By n-o-T-I-n-s-a-n-e)](https://github.com/n-o-T-I-n-s-a-n-e)
@@ -710,6 +721,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Flipper Tag v1.0 (By thejudge156)](https://github.com/thejudge156/flippertag)
 - [Flipper Wedge v1.1 (By DangerousThings)](https://github.com/DangerousThings/flipper-wedge)
 - [Flipper95 v1.1 (By CookiePLMonster)](https://github.com/CookiePLMonster/flipper-bakery)
+- [FlipperFire v1.0 (By jankammerath)](https://github.com/jankammerath/FlipperFire)
 - [FlipperPwn v1.7 (By barkandbite)](https://github.com/barkandbite/flipper_suite)
 - [FlipperTrack v1.0 (By pinkpwningclub)](https://github.com/pinkpwningclub/flipperTrack)
 - [FlipperZero Clock v1.3 (By mdaskalov)](https://github.com/mdaskalov/flipperzero-clock)
@@ -745,6 +757,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Ghost ESP v1.8.2 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
 - [GhostBook v0.6 (By digitard)](https://github.com/digitard/ghostbook)
 - [GhostTag v2.0 (By at0m-b0mb)](https://github.com/at0m-b0mb/GhostTag-FlipperZero) `Req: ESP32`
+- [Gitphin v1.1 (By Adhamura)](https://github.com/Adhamura/gitphin)
 - [GlitchTrigger v1.3 (By at0m-b0mb)](https://github.com/at0m-b0mb/GlitchTrigger-FlipperZero)
 - [GnomishTool v1.0 (By Andreeved88)](https://github.com/Andreeved88/GnomishTool)
 - [Goodweather AC v1.0 (By xMasterX)](https://github.com/xMasterX/all-the-plugins/tree/213baa6e872d1db597a25d2c16e81406e9634440/non_catalog_apps/goodweather_ac_remote)
@@ -808,6 +821,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [ISO15693-3 NFC Writer v1.0 (By ch4istO)](https://github.com/ch4istO/unleashed-firmware/tree/dev/applications_user/iso15693_nfc_writer)
 - [J305 Geiger Counter v1.5 (By nmrr)](https://github.com/nmrr/flipperzero-geigercounter)
 - [JAYX PC Monitor v0.4 (By contactjayclatty)](https://github.com/contactjayclatty/JAYX)
+- [Jiggler v0.1 (By rseufert)](https://github.com/rseufert/jiggler)
 - [Joycon v1.0 (By ccyyturralde)](https://github.com/ccyyturralde/Flipper-Zero-Joycon)
 - [K2 RFID v1.0 (By mitchsurp)](https://github.com/mitchsurp/K2-RFID-Flipper)
 - [Karl Eido v0.1 (By fgreil)](https://github.com/fgreil/mitzi-karl-eido)
@@ -932,6 +946,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Nightstand Clock v1.3 (By nymda)](https://github.com/nymda/FlipperNightStand)
 - [Noptel LRF Sampler v2.4 (By Giraut)](https://github.com/Giraut/flipper_zero_noptel_lrf_sampler)
 - [Notes for FZ WIP (By AdrianN001)](https://github.com/AdrianN001/Flipper-Zero-Note-Application)
+- [Now Playing v1.2 (By Vchekryzhov)](https://github.com/Vchekryzhov/mac-media-remote) `Req: Mac`
 - [NRF Sniff v1.2 (By mothball187)](https://github.com/mothball187/flipperzero-nrf24/tree/main/nrfsniff) [Pin Out from nocomp/Frog/UberGuidoZ](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/nrfsniff) `Req: NRF24`
 - [NRF Sniffer for MS Mouse (Remixed By coded-with-claws)](https://github.com/coded-with-claws/flipperzero-tools/tree/main/applications_user/nrfsniff_ms) `Req: NRF24`
 - [NRF24 Batch v2.0 (By vad7)](https://github.com/vad7/nRF24-Batch)
@@ -996,8 +1011,10 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Remote Maker (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/487)
 - [Resistance Calculator v1.4 (By instantiator)](https://github.com/instantiator/flipper-zero-experimental-apps)
 - [Restaurant Pager Trigger v1.7 (By leedave)](https://github.com/leedave/flipper-zero-meal-pager)
+- [RF Survey v1.0 (By tbelbek)](https://github.com/tbelbek/flipper-rf-survey)
 - [RFID Fuzzer v1.8 (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/507)
 - [RFID Metal Detector v1.0 (By hnsvrdmn)](https://github.com/hnsvrdmn/flipper-rfid-metal-detector)
+- [RFIDMaker v0.9 (By KindaCharming / jeremydbean)](https://github.com/jeremydbean/FlipperRFIDMaker)
 - [RGB LED (By flyandi)](https://github.com/flyandi/flipper_zero_rgb_led)
 - [Rogue AP Detector v1.0 (By barkandbite)](https://github.com/barkandbite/flipper_suite) `Req: ESP32`
 - [RollCall v1.1 (By at0m-b0mb)](https://github.com/at0m-b0mb/RollCall-FlipperZero)
@@ -1030,6 +1047,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [SKIDcity v1.2 (By H4W9)](https://github.com/H4W9/SKIDcity_App)
 - [Sleep Counter v2.0 (By silverwolf2r)](https://github.com/silverwolf2r/flipper-sleep-counter) `Req: RCWL-0516`
 - [SLI Writer v1.4 (By Julienbxl)](https://github.com/Julienbxl/SLI-Writer)
+- [SmartHome v2.0 (By biotechnicallc)](https://github.com/biotechnicallc/SmartHome) `Req: ESP32`
 - [Smartra VIN2PIN v2.0 (By evillero)](https://github.com/evillero/smartra_vin2pin)
 - [Smoke Free v0.1 (By kamylwnb)](https://github.com/kamylwnb/smoke_free)
 - [Snowflake v0.1 (By fgreil)](https://github.com/fgreil/mitzi-snowflake)

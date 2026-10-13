@@ -1,0 +1,13 @@
+App(
+    appid="now_playing",
+    name="Now Playing",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="now_playing_app",
+    stack_size=4 * 1024,
+    fap_icon="assets/app.png",
+    fap_category="Bluetooth",
+    fap_author="Now Playing contributors",
+    fap_weburl="https://github.com/Vchekryzhov/mac-media-remote",
+    fap_version=(1, 2),
+    fap_description="Mac Now Playing display and BLE remote",
+)

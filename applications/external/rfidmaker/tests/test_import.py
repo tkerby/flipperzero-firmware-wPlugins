@@ -4,6 +4,7 @@ Usage: python tests/test_import.py COMPILER SDK_HEADERS [PRIVATE_SAMPLE.rfid]
 The optional file is read locally and is never copied into the repository.
 Requires unicorn and pyelftools. Hardware/browser interactions are mocked.
 """
+
 import io
 import json
 import os
@@ -18,7 +19,7 @@ from unicorn.arm_const import UC_ARM_REG_R0, UC_ARM_REG_SP, UC_ARM_REG_LR
 from test_formats import STUB, reference
 
 ROOT = Path(__file__).resolve().parents[1]
-HARNESS = r'''
+HARNESS = r"""
 #include "rfid_maker.c"
 struct FuriString { char text[512]; };
 static struct FuriString strings[8];
@@ -209,61 +210,119 @@ unsigned test_fields(void) {
     }
     return 0;
 }
-'''
+"""
+
 
 def main():
     compiler = Path(sys.argv[1]).resolve()
     sdk = Path(sys.argv[2]).resolve()
-    os.environ['PATH']=str(compiler.parent)+os.pathsep+os.environ['PATH']
-    includes = [arg.replace('SDK_ROOT_DIR',str(sdk)) for arg in json.loads((sdk/'sdk.opts').read_text())['cc_args'].split() if arg.startswith('-I')]
-    data = reference(6,[5,1234,0,0,0])
-    expected=(5,1234)
-    if len(sys.argv)>3:
-        sample=Path(sys.argv[3])
-        original=sample.read_bytes()
-        fields=dict(line.split(':',1) for line in original.decode('utf-8-sig').splitlines() if ':' in line)
-        assert fields['Filetype'].strip()=='Flipper RFID key' and fields['Version'].strip()=='1'
-        assert fields['Key type'].strip()=='AWID', 'This regression fixture expects AWID'
-        data=bytes.fromhex(fields['Data'])
-        assert len(data)==9
-        bits=''.join(f'{b:08b}' for b in data)
-        expected=(int(bits[9:17],2),int(bits[17:33],2))
-    with tempfile.TemporaryDirectory(prefix='rfid-import-') as folder:
-        folder=Path(folder)
-        (folder/'harness.c').write_text(HARNESS+'\n'+STUB)
-        elf_path=folder/'test.elf'
-        subprocess.run([str(compiler),'-std=c11','-mcpu=cortex-m4','-mthumb','-mfloat-abi=soft','-O1',
-                        '-ffunction-sections','-fdata-sections','-fno-builtin','-nostdlib',
-                        '-DSTM32WB','-DSTM32WB55xx','-DFURI_NDEBUG','-DNDEBUG',
-                        '-I'+str(ROOT),*includes,str(folder/'harness.c'),str(ROOT/'card_formats.c'),
-                        '-Wl,-Ttext=0x10000','-Wl,-e,test_open','-Wl,--gc-sections','-Wl,--undefined=test_emulation','-Wl,--undefined=test_fields',
-                        '-Wl,--unresolved-symbols=ignore-all','-o',str(elf_path),'-lgcc'],check=True)
-        elf=ELFFile(io.BytesIO(elf_path.read_bytes()))
-        symbols={s.name:s['st_value'] for s in elf.get_section_by_name('.symtab').iter_symbols()}
-        emu=Uc(UC_ARCH_ARM,UC_MODE_THUMB)
-        emu.mem_map(0x10000,0x200000); emu.mem_map(0x400000,0x1000)
+    os.environ["PATH"] = str(compiler.parent) + os.pathsep + os.environ["PATH"]
+    includes = [
+        arg.replace("SDK_ROOT_DIR", str(sdk))
+        for arg in json.loads((sdk / "sdk.opts").read_text())["cc_args"].split()
+        if arg.startswith("-I")
+    ]
+    data = reference(6, [5, 1234, 0, 0, 0])
+    expected = (5, 1234)
+    if len(sys.argv) > 3:
+        sample = Path(sys.argv[3])
+        original = sample.read_bytes()
+        fields = dict(
+            line.split(":", 1)
+            for line in original.decode("utf-8-sig").splitlines()
+            if ":" in line
+        )
+        assert (
+            fields["Filetype"].strip() == "Flipper RFID key"
+            and fields["Version"].strip() == "1"
+        )
+        assert (
+            fields["Key type"].strip() == "AWID"
+        ), "This regression fixture expects AWID"
+        data = bytes.fromhex(fields["Data"])
+        assert len(data) == 9
+        bits = "".join(f"{b:08b}" for b in data)
+        expected = (int(bits[9:17], 2), int(bits[17:33], 2))
+    with tempfile.TemporaryDirectory(prefix="rfid-import-") as folder:
+        folder = Path(folder)
+        (folder / "harness.c").write_text(HARNESS + "\n" + STUB)
+        elf_path = folder / "test.elf"
+        subprocess.run(
+            [
+                str(compiler),
+                "-std=c11",
+                "-mcpu=cortex-m4",
+                "-mthumb",
+                "-mfloat-abi=soft",
+                "-O1",
+                "-ffunction-sections",
+                "-fdata-sections",
+                "-fno-builtin",
+                "-nostdlib",
+                "-DSTM32WB",
+                "-DSTM32WB55xx",
+                "-DFURI_NDEBUG",
+                "-DNDEBUG",
+                "-I" + str(ROOT),
+                *includes,
+                str(folder / "harness.c"),
+                str(ROOT / "card_formats.c"),
+                "-Wl,-Ttext=0x10000",
+                "-Wl,-e,test_open",
+                "-Wl,--gc-sections",
+                "-Wl,--undefined=test_emulation",
+                "-Wl,--undefined=test_fields",
+                "-Wl,--unresolved-symbols=ignore-all",
+                "-o",
+                str(elf_path),
+                "-lgcc",
+            ],
+            check=True,
+        )
+        elf = ELFFile(io.BytesIO(elf_path.read_bytes()))
+        symbols = {
+            s.name: s["st_value"]
+            for s in elf.get_section_by_name(".symtab").iter_symbols()
+        }
+        emu = Uc(UC_ARCH_ARM, UC_MODE_THUMB)
+        emu.mem_map(0x10000, 0x200000)
+        emu.mem_map(0x400000, 0x1000)
         for segment in elf.iter_segments():
-            if segment['p_type']=='PT_LOAD': emu.mem_write(segment['p_vaddr'],segment.data())
-        emu.mem_write(symbols['fixture'],data)
+            if segment["p_type"] == "PT_LOAD":
+                emu.mem_write(segment["p_vaddr"], segment.data())
+        emu.mem_write(symbols["fixture"], data)
         for mode in range(4):
-            emu.reg_write(UC_ARM_REG_SP,0x200000); emu.reg_write(UC_ARM_REG_LR,0x400001)
-            emu.reg_write(UC_ARM_REG_R0,mode)
-            emu.emu_start(symbols['test_open']|1,0x400000,count=1000000)
-            s=struct.unpack('<10I',emu.mem_read(symbols['state'],40))
-            assert s[:4]==(1,1,0,1), ('event loop/browser callback',mode,s)
-            if mode==0:
-                assert s[4:]==(1,6,*expected,1,1), ('AWID form',s)
-            elif mode in (1,2):
-                assert s[4]==0 and s[8]==0, ('cancel/error recovery',s)
+            emu.reg_write(UC_ARM_REG_SP, 0x200000)
+            emu.reg_write(UC_ARM_REG_LR, 0x400001)
+            emu.reg_write(UC_ARM_REG_R0, mode)
+            emu.emu_start(symbols["test_open"] | 1, 0x400000, count=1000000)
+            s = struct.unpack("<10I", emu.mem_read(symbols["state"], 40))
+            assert s[:4] == (1, 1, 0, 1), ("event loop/browser callback", mode, s)
+            if mode == 0:
+                assert s[4:] == (1, 6, *expected, 1, 1), ("AWID form", s)
+            elif mode in (1, 2):
+                assert s[4] == 0 and s[8] == 0, ("cancel/error recovery", s)
             else:
-                assert s[4]==5 and s[5]==999 and s[8]==1, ('unknown format raw fallback',s)
-        emu.reg_write(UC_ARM_REG_SP,0x200000); emu.reg_write(UC_ARM_REG_LR,0x400001)
-        emu.emu_start(symbols['test_emulation']|1,0x400000,count=1000000)
-        assert emu.reg_read(UC_ARM_REG_R0)==1, 'emulation LED/worker lifecycle failed'
-        emu.reg_write(UC_ARM_REG_SP,0x200000); emu.reg_write(UC_ARM_REG_LR,0x400001)
-        emu.emu_start(symbols['test_fields']|1,0x400000,count=1000000)
-        assert emu.reg_read(UC_ARM_REG_R0)==0, 'blank/reopen/cancel/required numeric-field lifecycle failed'
-        if len(sys.argv)>3: assert sample.read_bytes()==original
-        print('PASS: actual ARM import/emulation controllers and all 18 preset field lifecycles: blank new card, cancel, required value, full-range commit/reopen; valid AWID, cancel/error/raw fallback; dispatcher stays running; 10 ms on / 100 ms LED ticks override USB green; Back restores charging green; worker lifecycle.')
+                assert s[4] == 5 and s[5] == 999 and s[8] == 1, (
+                    "unknown format raw fallback",
+                    s,
+                )
+        emu.reg_write(UC_ARM_REG_SP, 0x200000)
+        emu.reg_write(UC_ARM_REG_LR, 0x400001)
+        emu.emu_start(symbols["test_emulation"] | 1, 0x400000, count=1000000)
+        assert emu.reg_read(UC_ARM_REG_R0) == 1, "emulation LED/worker lifecycle failed"
+        emu.reg_write(UC_ARM_REG_SP, 0x200000)
+        emu.reg_write(UC_ARM_REG_LR, 0x400001)
+        emu.emu_start(symbols["test_fields"] | 1, 0x400000, count=1000000)
+        assert (
+            emu.reg_read(UC_ARM_REG_R0) == 0
+        ), "blank/reopen/cancel/required numeric-field lifecycle failed"
+        if len(sys.argv) > 3:
+            assert sample.read_bytes() == original
+        print(
+            "PASS: actual ARM import/emulation controllers and all 18 preset field lifecycles: blank new card, cancel, required value, full-range commit/reopen; valid AWID, cancel/error/raw fallback; dispatcher stays running; 10 ms on / 100 ms LED ticks override USB green; Back restores charging green; worker lifecycle."
+        )
 
-if __name__=='__main__': main()
+
+if __name__ == "__main__":
+    main()

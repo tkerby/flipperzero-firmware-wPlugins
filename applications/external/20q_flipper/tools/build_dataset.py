@@ -146,9 +146,13 @@ def main():
     ap.add_argument("--hf-conceptnet", action="store_true")
     ap.add_argument("--hf-quasimodo", action="store_true")
     ap.add_argument("--report", default=str(REPO / "build" / "build_report.json"))
-    ap.add_argument("--epoch", type=int, default=None,
-                    help="build timestamp; defaults to SOURCE_DATE_EPOCH or now. "
-                         "Pin it for byte-reproducible builds.")
+    ap.add_argument(
+        "--epoch",
+        type=int,
+        default=None,
+        help="build timestamp; defaults to SOURCE_DATE_EPOCH or now. "
+        "Pin it for byte-reproducible builds.",
+    )
     args = ap.parse_args()
 
     onto = load_yaml("ontology.yaml")["tags"]
@@ -208,9 +212,7 @@ def main():
     priors = [float(e.get("p", 50)) for e in entities]
     qrank = rank_questions(matrix, priors, n)
 
-    packed = [
-        Entity(e["n"], e["c"], float(e.get("p", 50)), e["t"]) for e in entities
-    ]
+    packed = [Entity(e["n"], e["c"], float(e.get("p", 50)), e["t"]) for e in entities]
     packed_q = [
         Question(x["text"], x["family"], dict(zip(CATEGORIES, x["def"])))
         for x in questions
@@ -237,7 +239,9 @@ def main():
         f"  prior-only={stats['prior_only']} ({100.0 * covered / cells:.1f}% covered)"
     )
     print(f"  sources: {', '.join(used_sources) if used_sources else 'ontology only'}")
-    print(f"  wrote {info['path']}  {info['bytes'] / 1024.0:.1f} KB  crc {info['crc32']:#010x}")
+    print(
+        f"  wrote {info['path']}  {info['bytes'] / 1024.0:.1f} KB  crc {info['crc32']:#010x}"
+    )
     print(f"  best opening questions: {[questions[j]['text'] for j in qrank[:3]]}")
 
     Path(args.report).parent.mkdir(parents=True, exist_ok=True)
