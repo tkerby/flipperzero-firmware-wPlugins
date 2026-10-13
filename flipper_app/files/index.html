@@ -298,7 +298,22 @@ dialog.dlg .btns{display:flex;justify-content:flex-end;gap:var(--s2);margin-top:
 .fsec .note{padding:6px 12px;margin:0}
 @media (max-width:720px){.pane>.ph .crumbs{flex:1 1 100%}}
 nav.subtabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}nav.subtabs button.active{background:var(--p-bg);color:var(--p-fg)}
-.pad{padding:8px 12px}</style>
+.pad{padding:8px 12px}
+/* ---- syntax highlighting (code view) ---- */
+:root{--hl-c:#6a5841;--hl-s:#1f6b36;--hl-n:#0b6384;--hl-k:#a63f00;--hl-t:#6b3fb5;--hl-p:#7a4a1c;--hl-h:#a63f00;--hl-l:#0b5cad;--hl-a:#1f7a3d;--hl-d:#b3201a;--hl-m:#6a5841}
+:root[data-theme=dark]{--hl-c:#a08b69;--hl-s:#7fd89a;--hl-n:#6fd0e8;--hl-k:#ff9a2e;--hl-t:#c3a6ff;--hl-p:#d9b98a;--hl-h:#ffc780;--hl-l:#7cc0ff;--hl-a:#4cc27b;--hl-d:#ff7a6d;--hl-m:#ffd9a8}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--hl-c:#a08b69;--hl-s:#7fd89a;--hl-n:#6fd0e8;--hl-k:#ff9a2e;--hl-t:#c3a6ff;--hl-p:#d9b98a;--hl-h:#ffc780;--hl-l:#7cc0ff;--hl-a:#4cc27b;--hl-d:#ff7a6d;--hl-m:#ffd9a8}}
+.hl-c{color:var(--hl-c);font-style:italic}.hl-s{color:var(--hl-s)}.hl-n{color:var(--hl-n)}
+.hl-k{color:var(--hl-k);font-weight:bold}.hl-t{color:var(--hl-t)}.hl-p{color:var(--hl-p)}
+.hl-h{color:var(--hl-h);font-weight:bold}.hl-l{color:var(--hl-l);text-decoration:underline}
+.hl-a{color:var(--hl-a)}.hl-d{color:var(--hl-d)}.hl-m{color:var(--hl-m);font-weight:bold}
+/* ---- repo pictures ---- */
+.av{display:inline-flex;flex:none;align-items:center;justify-content:center}
+.av img{display:block;object-fit:cover;border:2px solid var(--bd);background:var(--card2);image-rendering:pixelated}
+.av.s32 img{width:32px;height:32px}.av.s48 img{width:48px;height:48px}
+.av-prev{display:flex;gap:var(--s3);align-items:center;margin:var(--s3) 0 0}
+.av-prev .av img{width:64px;height:64px}
+.sys{color:var(--muted);font-size:var(--fs-s)}</style>
 </head>
 <body>
 <svg id="sprite" width="0" height="0" style="position:absolute" aria-hidden="true"></svg>
@@ -370,9 +385,11 @@ nav.subtabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}nav.subtabs button
     <div id="repo-view" hidden>
       <section class="card repo-head" id="rv-head">
         <div class="rh">
-          <svg class="ic l"><use href="#i-repo"/></svg>
+          <span class="av" id="rv-avatar"><svg class="ic l"><use href="#i-repo"/></svg></span>
           <h2 id="rv-name"></h2>
           <button class="sm" id="rv-clone-btn" aria-expanded="false"><svg class="ic"><use href="#i-link"/></svg>Clone</button>
+          <button class="sm" id="rv-zip" hidden aria-label="Download the current branch or tag as a ZIP file"><svg class="ic"><use href="#i-download"/></svg>Download ZIP</button>
+          <button class="sm" id="rv-avatar-btn" aria-label="Change the picture of this repository"><svg class="ic"><use href="#i-user"/></svg>Avatar</button>
           <button class="ghost sm" id="rv-refresh" aria-label="Reload this repository"><svg class="ic"><use href="#i-refresh"/></svg></button>
         </div>
         <div class="repo-desc" id="rv-desc"></div>
@@ -644,6 +661,35 @@ document.addEventListener("keydown", e => {
 if(e.key === "/" && !e.ctrlKey && !e.metaKey && !/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || "")){ e.preventDefault(); $("gq").focus(); }
 else if(e.key === "Escape"){ document.body.classList.remove("nav-open"); if(document.activeElement === $("gq")) $("gq").blur(); }
 });
+/* Files tab: system folders cannot be deleted (Gitphin and the Flipper need them).
+ * The GF block holds pure functions; pc/tests/test_page.sh runs them in node. */
+const GF_MSG = "Needed by Gitphin";
+/*GF-BEGIN*/
+// Gitphin folders: the app writes the page and plugins on start; repos live in git/.
+const GF_APP = {"/ext/apps_data/gitphin": 1, "/ext/apps_data/gitphin/git": 1, "/ext/apps_assets/gitphin": 1};
+// Parents of those folders (other apps use them too): never delete them either.
+const GF_SYS = {"/ext": 1, "/ext/apps_data": 1, "/ext/apps_assets": 1};
+function gfNorm(p){
+const out = [];
+for(const s of String(p || "").split("/")){
+if(!s || s === ".") continue;
+if(s === "..") out.pop(); else out.push(s);
+}
+return "/" + out.join("/");
+}
+function gfApp(p){ return GF_APP[gfNorm(p)] === 1; }
+function gfLocked(p){ const n = gfNorm(p); return GF_APP[n] === 1 || GF_SYS[n] === 1; }
+// path= of a /api/delete request URL, or null
+function gfDeletePath(url){
+const m = /^\/api\/delete\?(.*)$/.exec(String(url || ""));
+if(!m) return null;
+for(const part of m[1].split("&")){
+if(part.indexOf("path=") !== 0) continue;
+try{ return decodeURIComponent(part.slice(5).replace(/\+/g, " ")); }catch(_){ return part.slice(5); }
+}
+return null;
+}
+/*GF-END*/
 function fmtSize(n){
 if(n < 1024) return n + " B";
 const u = ["KiB","MiB","GiB"]; let i = -1;
@@ -658,6 +704,8 @@ function status(msg, err){ const s = $("status"); s.textContent = msg || ""; s.c
 function q(path){ return "path=" + encodeURIComponent(path); }
 function join(dir, name){ return dir.replace(/\/$/, "") + "/" + name; }
 async function api(method, url, body){
+const dp = gfDeletePath(url);   // last guard: no call may delete a system folder
+if(dp !== null && gfLocked(dp)){ toast(GF_MSG, "err"); throw new Error(GF_MSG); }
 const r = await fetch(url, {method, body});
 const j = await r.json().catch(() => ({ok:false, error:"bad answer (" + r.status + ")"}));
 if(!r.ok || j.ok === false) throw new Error(j.error || r.statusText);
@@ -723,6 +771,11 @@ if(!f.dir){
 const dl = document.createElement("button"); dl.textContent = "Download";
 dl.onclick = () => { location.href = "/api/file?dl=1&" + q(full); };
 act.appendChild(dl); act.append(" ");
+}
+if(gfLocked(full)){
+const lk = document.createElement("span"); lk.className = "sys"; lk.textContent = GF_MSG;   // no Delete button
+if(!gfApp(full)) lk.textContent = "System folder";
+act.appendChild(lk); continue;
 }
 const del = document.createElement("button"); del.textContent = "Delete";
 del.onclick = async () => {
@@ -1118,6 +1171,8 @@ cloneRow("HTTP (plain git)", location.origin + "/git/" + n + ".git"));
 $("rv-empty").hidden = R.refs.length !== 0;
 $("rv-snippet").textContent = "git remote add flipper flipper://" + n + "\ngit push -u flipper " + defBranch();
 const view = (rest && rest[0]) || "code"; curKey = viewKey(view);
+const av = $("rv-avatar"); avShow(av, avCache.get(n) || ""); if(!avCache.has(n)) avFill(av, n);
+const zr = zipRef(view, rest || []); $("rv-zip").hidden = !zr; $("rv-zip").onclick = () => zipDownload(n, zr);
 renderSubtabs();
 const body = $("rv-body"); body.innerHTML = ""; body.className = ""; body.scrollTop = 0;
 if(flash){ rstatus(flash.msg, flash.err); flash = null; }
@@ -2415,6 +2470,356 @@ const dz = card(el("h2", {}, "Danger zone"), note("Deleting removes the reposito
 el("div", {class: "bar", style: "margin:8px 0 0"}, el("button", {class: "danger", onclick: () => deleteDialog(R.name)}, "Delete this repository")));
 body.append(gen, sto, dz);
 }
+/* Syntax highlighter 1/3 (same as gitphinDroid): language table and file name detection. No library.
+ * The blocks between HL-BEGIN and HL-END are pure functions; pc/tests/test_page.sh runs them in node. */
+const HLX = {};
+(function () {
+  "use strict";
+  /*HL-BEGIN*/
+  function S(w) { var o = {}, a = w.split(" "); for (var i = 0; i < a.length; i++) if (a[i]) o[a[i]] = 1; return o; }
+  var CKW = "if else for while do switch case default break continue return goto sizeof typedef struct union enum static extern const volatile inline register auto restrict namespace class public private protected virtual override final template typename using new delete this try catch throw operator friend explicit constexpr noexcept nullptr true false NULL define include ifdef ifndef endif elif undef pragma error";
+  var CTY = "void int char short long float double signed unsigned bool size_t ssize_t uint8_t uint16_t uint32_t uint64_t int8_t int16_t int32_t int64_t uintptr_t intptr_t ptrdiff_t FILE string vector map set wchar_t";
+  var JVKW = "abstract assert break case catch class const continue default do else enum extends final finally for goto if implements import instanceof interface native new package private protected public return static strictfp super switch synchronized this throw throws transient try volatile while true false null var val fun when object is in as override open data sealed lateinit companion init typealias suspend inline internal operator";
+  var JVTY = "boolean byte char double float int long short void String Object Integer Long Boolean List Map Set Int Unit Any Nothing Array Double Float Byte Short Char";
+  var JSKW = "async await break case catch class const continue debugger default delete do else export extends finally for from function if import in instanceof let new of return static super switch this throw try typeof var void while with yield true false null undefined interface type enum implements namespace declare readonly abstract as is keyof private protected public";
+  var JSTY = "Array Object String Number Boolean Map Set Promise Symbol Date RegExp Error JSON Math console window document string number boolean any unknown never void";
+  var PYKW = "and as assert async await break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield match case True False None self";
+  var PYTY = "int str float bool list dict set tuple bytes object type print len range open super Exception ValueError";
+  var SHKW = "if then else elif fi for while until do done case esac in function select time return exit break continue local export readonly declare unset shift set source alias echo cd test true false";
+  var SHTY = "ls cat grep sed awk git make cp mv rm mkdir curl wget chmod chown tar find xargs sudo printf read eval exec trap";
+  var GOKW = "break case chan const continue default defer else fallthrough for func go goto if import interface map package range return select struct switch type var true false nil iota";
+  var GOTY = "int int8 int16 int32 int64 uint uint8 uint16 uint32 uint64 uintptr float32 float64 complex64 complex128 string bool byte rune error any make new len cap append copy delete panic recover print println";
+  var RSKW = "as async await break const continue crate dyn else enum extern false fn for if impl in let loop match mod move mut pub ref return self Self static struct super trait true type unsafe use where while macro_rules";
+  var RSTY = "i8 i16 i32 i64 i128 isize u8 u16 u32 u64 u128 usize f32 f64 bool char str String Vec Option Result Box Some None Ok Err";
+  var MKKW = "ifeq ifneq ifdef ifndef else endif include sinclude -include define endef export unexport override vpath";
+
+  var DQ = ['"'], DQS = ['"', "'"];
+  var LANGS = {
+    c: { lc: ["//"], bc: ["/*", "*/"], q: DQ, chr: 1, kw: S(CKW), ty: S(CTY), pre: 1 },
+    java: { lc: ["//"], bc: ["/*", "*/"], q: DQ, ml: ['"""'], chr: 1, kw: S(JVKW), ty: S(JVTY), cap: 1 },
+    js: { lc: ["//"], bc: ["/*", "*/"], q: DQS, ml: ["`"], kw: S(JSKW), ty: S(JSTY), cap: 1 },
+    json: { q: DQ, kw: S("true false null"), keys: 1 },
+    py: { lc: ["#"], q: DQS, ml: ['"""', "'''"], kw: S(PYKW), ty: S(PYTY), cap: 1 },
+    sh: { lc: ["#"], q: DQS, kw: S(SHKW), ty: S(SHTY), extra: "shvar" },
+    go: { lc: ["//"], bc: ["/*", "*/"], q: DQ, ml: ["`"], chr: 1, kw: S(GOKW), ty: S(GOTY), cap: 1 },
+    rust: { lc: ["//"], bc: ["/*", "*/"], q: DQ, chr: 1, kw: S(RSKW), ty: S(RSTY), cap: 1 },
+    css: { bc: ["/*", "*/"], lc: ["//"], q: DQS, extra: "css", kw: S("important none auto inherit initial block flex grid inline absolute relative fixed solid dashed transparent") },
+    yaml: { lc: ["#"], q: DQS, kw: S("true false null yes no on off True False"), keys: 1, extra: "yaml" },
+    toml: { lc: ["#"], q: DQS, ml: ['"""', "'''"], kw: S("true false"), extra: "ini" },
+    ini: { lc: ["#", ";"], q: DQS, kw: S("true false yes no on off"), extra: "ini" },
+    make: { lc: ["#"], q: DQS, kw: S(MKKW), extra: "make" },
+    html: { special: "html" },
+    md: { special: "md" },
+    diff: { special: "diff" }
+  };
+
+  var EXT = {
+    c: "c", h: "c", cc: "c", cpp: "c", cxx: "c", hpp: "c", hh: "c", hxx: "c", ino: "c", m: "c",
+    java: "java", kt: "java", kts: "java", scala: "java", cs: "java", dart: "java", swift: "java",
+    js: "js", mjs: "js", cjs: "js", jsx: "js", ts: "js", tsx: "js",
+    json: "json", jsonc: "json", json5: "json", webmanifest: "json",
+    py: "py", pyw: "py", pyi: "py",
+    sh: "sh", bash: "sh", zsh: "sh", ksh: "sh", fish: "sh", bats: "sh",
+    go: "go", rs: "rust",
+    html: "html", htm: "html", xhtml: "html", xml: "html", svg: "html", xsl: "html", xsd: "html", plist: "html", vue: "html",
+    css: "css", scss: "css", less: "css",
+    md: "md", markdown: "md",
+    yml: "yaml", yaml: "yaml", toml: "toml",
+    ini: "ini", cfg: "ini", conf: "ini", properties: "ini", gitconfig: "ini", editorconfig: "ini", desktop: "ini",
+    mk: "make", mak: "make",
+    diff: "diff", patch: "diff"
+  };
+  var NAMES = { makefile: "make", gnumakefile: "make", dockerfile: "sh", ".bashrc": "sh", ".profile": "sh", ".zshrc": "sh",
+    ".gitconfig": "ini", ".gitignore": "", ".editorconfig": "ini" };
+
+  /* language id from the path (and the first line for a shebang); "" when unknown */
+  function hlDetect(path, first) {
+    var base = String(path || "").split("/").pop().toLowerCase();
+    if (Object.prototype.hasOwnProperty.call(NAMES, base) && NAMES[base]) return NAMES[base];
+    var dot = base.lastIndexOf(".");
+    if (dot >= 0) {
+      var e = base.slice(dot + 1);
+      if (Object.prototype.hasOwnProperty.call(EXT, e)) return EXT[e];
+    }
+    var m = /^#!\s*(\S+)(?:\s+(\S+))?/.exec(first || "");
+    if (m) {
+      var cmd = (m[1].split("/").pop() === "env" ? m[2] || "" : m[1].split("/").pop());
+      if (/^(ba|z|da|k|a)?sh$/.test(cmd)) return "sh";
+      if (/^python[\d.]*$/.test(cmd)) return "py";
+      if (/^(node|deno|bun)$/.test(cmd)) return "js";
+    }
+    return "";
+  }
+  HLX.langs = LANGS;
+  HLX.detect = hlDetect;
+  /*HL-END*/
+})();
+/* Syntax highlighter 2/3: the tokenizer (pure functions, no DOM).
+ * Output is HTML with <span class="hl-X"> tokens; all text is escaped, so code can never inject markup. */
+(function () {
+  "use strict";
+  /*HL-BEGIN*/
+  var LANGS = HLX.langs;
+  var MAX_LINE = 2000;
+  var NUM = /0[xX][0-9a-fA-F_]+[uUlL]*|0[bB][01_]+|(?:\d[\d_]*\.?[\d_]*|\.\d[\d_]*)(?:[eE][+-]?\d+)?[uUlLfFdD]?/y;
+  var IDENT = /[A-Za-z_$][\w$]*/y;
+  var PUNCT = /[{}()\[\];,.<>+\-*\/%=!&|^~?:@]+/y;
+  var CHR = /'(?:\\(?:x[0-9a-fA-F]+|u[0-9a-fA-F]+|[0-7]{1,3}|.)|[^'\\])'/y;
+
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  function sp(cls, t) { return t === "" ? "" : '<span class="hl-' + cls + '">' + esc(t) + "</span>"; }
+  function at(re, line, i) { re.lastIndex = i; return re.exec(line); }
+  function scanStr(line, from, delim) {
+    for (var k = from; k < line.length; k++) {
+      if (line.charAt(k) === "\\" && delim !== "`") { k++; continue; }
+      if (line.substr(k, delim.length) === delim) return k + delim.length;
+    }
+    return -1;
+  }
+
+  /* per-language extras: return [length, class] for a token starting at i, or null */
+  var VARSH = /\$(?:\{[^}]*\}|[A-Za-z_]\w*|[@#?$!*0-9-])/y;
+  var MKVAR2 = /\$\([^)]*\)|\$\{[^}]*\}|\$[@<^?*%+]/y;
+  var CSSAT = /@[\w-]+/y, CSSHEX = /#[0-9a-fA-F]+\b/y, CSSNUM = /-?(?:\d+\.?\d*|\.\d+)(?:%|[a-zA-Z]+)?/y;
+  var CSSSEL = /[.#][A-Za-z_-][\w-]*/y, CSSPROP = /-{0,2}[a-zA-Z_][\w-]*(?=\s*:(?!:))/y;
+  var YKEY = /(?:"[^"]*"|'[^']*'|[^\s:#'"\[\]{},&*!|>-][^:#]*?)(?=\s*:(?:\s|$))/y;
+  var INISEC = /\[\[?[^\]]*\]\]?/y, INIKEY = /[\w.\-"\/@ ]+?(?=\s*[=:])/y;
+  var MKASSIGN = /[A-Za-z_][\w.]*(?=\s*[:+?]?=)/y, MKTARGET = /[^\s:=#][^:=#]*?(?=\s*:(?!=))/y;
+  var EXTRA = {
+    shvar: function (line, i) {
+      if (line.charAt(i) !== "$") return null;
+      var m = at(VARSH, line, i); return m ? [m[0].length, "t"] : null;
+    },
+    css: function (line, i, x) {
+      var c = line.charAt(i), m, prev = i ? line.charAt(i - 1) : " ";
+      if (c === "@") { m = at(CSSAT, line, i); if (m) return [m[0].length, "k"]; }
+      if (c === "#") {
+        m = at(CSSHEX, line, i);
+        if (m && /^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(m[0])) return [m[0].length, "n"];
+      }
+      if ((c === "." || c === "#") && !/[\w-]/.test(prev)) { m = at(CSSSEL, line, i); if (m) return [m[0].length, "t"]; }
+      if (/[0-9.\-]/.test(c) && !/[\w-]/.test(prev)) { m = at(CSSNUM, line, i); if (m) return [m[0].length, "n"]; }
+      if (/[a-zA-Z_-]/.test(c) && !/[\w-]/.test(prev) && (x.lead > 0 || line.substr(i).search(/^[\w-]+:\s/) === 0)) {
+        m = at(CSSPROP, line, i); if (m) return [m[0].length, "t"];
+      }
+      return null;
+    },
+    yaml: function (line, i, x) {
+      var c = line.charAt(i), m;
+      if (i === x.lead) {
+        if (c === "-" && /\s/.test(line.charAt(i + 1) || " ")) {
+          var w = /^-\s*/.exec(line.slice(i))[0].length; x.lead = i + w; return [1, "p"];
+        }
+        m = at(YKEY, line, i); if (m) return [m[0].length, "t"];
+      }
+      if ((c === "&" || c === "*") && (i === 0 || /\s/.test(line.charAt(i - 1)))) {
+        m = /^[&*][\w-]+/.exec(line.slice(i)); if (m) return [m[0].length, "n"];
+      }
+      return null;
+    },
+    ini: function (line, i, x) {
+      if (i !== x.lead) return null;
+      var m = at(INISEC, line, i); if (m && line.charAt(i) === "[") return [m[0].length, "k"];
+      m = at(INIKEY, line, i); if (m) return [m[0].length, "t"];
+      return null;
+    },
+    make: function (line, i, x) {
+      var c = line.charAt(i), m;
+      if (c === "$") { m = at(MKVAR2, line, i); if (m) return [m[0].length, "t"]; }
+      if (i === 0 && x.lead === 0) {
+        m = at(MKASSIGN, line, i); if (m) return [m[0].length, "t"];
+        m = at(MKTARGET, line, i); if (m) return [m[0].length, "t"];
+      }
+      return null;
+    }
+  };
+
+  /* one line of a generic language; st.m is the carried state (null, "bc" or the open string delimiter) */
+  function genLine(cfg, line, st) {
+    var out = "", buf = "", i = 0, n = line.length, m, j, k;
+    var x = { lead: /^\s*/.exec(line)[0].length };
+    function put(cls, t) { if (buf) { out += esc(buf); buf = ""; } out += sp(cls, t); }
+    if (st.m === "bc") {
+      j = line.indexOf(cfg.bc[1]);
+      if (j < 0) return sp("c", line);
+      i = j + cfg.bc[1].length; put("c", line.slice(0, i)); st.m = null;
+    } else if (st.m) {
+      j = scanStr(line, 0, st.m);
+      if (j < 0) return sp("s", line);
+      put("s", line.slice(0, j)); i = j; st.m = null;
+    }
+    outer:
+    while (i < n) {
+      var c = line.charAt(i);
+      if (cfg.extra) {
+        var r = EXTRA[cfg.extra](line, i, x);
+        if (r) { put(r[1], line.substr(i, r[0])); i += r[0]; continue; }
+      }
+      if (cfg.lc) {
+        for (k = 0; k < cfg.lc.length; k++) {
+          var lc = cfg.lc[k];
+          if (line.substr(i, lc.length) === lc && (lc.length > 1 || lc === "//" || i === 0 || /\s/.test(line.charAt(i - 1)))) {
+            put("c", line.slice(i)); i = n; break outer;
+          }
+        }
+      }
+      if (cfg.pre && c === "#" && i === x.lead) {
+        m = /^#\s*\w+/.exec(line.slice(i));
+        if (m) {
+          put("k", m[0]); i += m[0].length;
+          var inc = /^(\s*)(<[^>]*>)/.exec(line.slice(i));
+          if (inc && /include|import/.test(m[0])) { buf += inc[1]; put("s", inc[2]); i += inc[0].length; }
+          continue;
+        }
+      }
+      if (cfg.bc && line.substr(i, cfg.bc[0].length) === cfg.bc[0]) {
+        j = line.indexOf(cfg.bc[1], i + cfg.bc[0].length);
+        if (j < 0) { put("c", line.slice(i)); st.m = "bc"; i = n; break; }
+        j += cfg.bc[1].length; put("c", line.slice(i, j)); i = j; continue;
+      }
+      if (cfg.ml) {
+        for (k = 0; k < cfg.ml.length; k++) {
+          var d = cfg.ml[k];
+          if (line.substr(i, d.length) === d) {
+            j = scanStr(line, i + d.length, d);
+            if (j < 0) { put("s", line.slice(i)); st.m = d; i = n; break outer; }
+            put("s", line.slice(i, j)); i = j; continue outer;
+          }
+        }
+      }
+      if (cfg.q && cfg.q.indexOf(c) >= 0) {
+        j = scanStr(line, i + 1, c); if (j < 0) j = n;
+        var key = cfg.keys && /^\s*:/.test(line.slice(j));
+        put(key ? "t" : "s", line.slice(i, j)); i = j; continue;
+      }
+      if (cfg.chr && c === "'") {
+        m = at(CHR, line, i);
+        if (m) { put("s", m[0]); i += m[0].length; continue; }
+      }
+      if ((c >= "0" && c <= "9") || (c === "." && /\d/.test(line.charAt(i + 1))))  {
+        if (i === 0 || !/[\w$]/.test(line.charAt(i - 1))) {
+          m = at(NUM, line, i);
+          if (m && m[0]) { put("n", m[0]); i += m[0].length; continue; }
+        }
+      }
+      if (/[A-Za-z_$]/.test(c)) {
+        m = at(IDENT, line, i);
+        var w = m[0], cls = null;
+        if (cfg.kw && cfg.kw[w] === 1) cls = "k";
+        else if (cfg.ty && cfg.ty[w] === 1) cls = "t";
+        else if (cfg.cap && w.length > 1 && c >= "A" && c <= "Z") cls = "t";
+        if (cls) put(cls, w); else buf += w;
+        i += w.length; continue;
+      }
+      m = at(PUNCT, line, i);
+      if (m) { put("p", m[0]); i += m[0].length; continue; }
+      buf += c; i++;
+    }
+    if (buf) out += esc(buf);
+    return out;
+  }
+
+  function diffLine(line) {
+    if (!line) return "";
+    if (/^(\+\+\+|---) /.test(line) || /^(diff |index |new file|deleted file|similarity|rename )/.test(line)) return sp("m", line);
+    var c = line.charAt(0);
+    if (c === "+") return sp("a", line);
+    if (c === "-") return sp("d", line);
+    if (line.slice(0, 2) === "@@") return sp("h", line);
+    return esc(line);
+  }
+
+  var MDINL = /`[^`]+`|\[[^\]]*\]\([^)\s]*(?:\s+"[^"]*")?\)|<https?:\/\/[^>\s]+>|^\s*(?:[-*+]|\d+[.)])(?=\s)|\*\*[^*]+\*\*/g;
+  function mdLine(line, st) {
+    if (/^\s*(```|~~~)/.test(line)) { st.f = !st.f; return sp("s", line); }
+    if (st.f) return sp("s", line);
+    if (/^#{1,6}\s/.test(line)) return sp("h", line);
+    if (/^\s*>/.test(line)) return sp("c", line);
+    if (/^\s*([-*_])\s*(\1\s*){2,}$/.test(line)) return sp("p", line);
+    var out = "", last = 0, m;
+    MDINL.lastIndex = 0;
+    while ((m = MDINL.exec(line))) {
+      out += esc(line.slice(last, m.index));
+      var t = m[0], c = t.charAt(0);
+      if (c === "`") out += sp("s", t);
+      else if (c === "[") {
+        var b = t.indexOf("](");
+        out += sp("p", "[") + sp("l", t.slice(1, b)) + sp("p", "](") + sp("c", t.slice(b + 2, -1)) + sp("p", ")");
+      } else if (c === "<") out += sp("l", t);
+      else if (c === "*" && t.charAt(1) === "*") out += sp("k", t);
+      else out += sp("p", t);
+      last = m.index + t.length;
+      if (!t.length) MDINL.lastIndex++;
+    }
+    return out + esc(line.slice(last));
+  }
+
+  var HTAG = /<[\/!?]?[A-Za-z][\w:.\-]*/y, HATTR = /[^\s=>\/"']+/y;
+  function htmlLine(line, st) {
+    var out = "", i = 0, n = line.length, m, j;
+    while (i < n) {
+      if (st.m === "c") {
+        j = line.indexOf("-->", i);
+        if (j < 0) return out + sp("c", line.slice(i));
+        out += sp("c", line.slice(i, j + 3)); i = j + 3; st.m = null; continue;
+      }
+      var c = line.charAt(i);
+      if (st.m === "t") {
+        if (c === ">" || (c === "/" && line.charAt(i + 1) === ">") || (c === "?" && line.charAt(i + 1) === ">")) {
+          var len = c === ">" ? 1 : 2; out += sp("p", line.substr(i, len)); i += len; st.m = null;
+        } else if (c === '"' || c === "'") {
+          j = line.indexOf(c, i + 1); j = j < 0 ? n : j + 1; out += sp("s", line.slice(i, j)); i = j;
+        } else if (c === "=") { out += sp("p", c); i++; }
+        else if (/\s/.test(c)) { out += esc(c); i++; }
+        else { m = at(HATTR, line, i); if (m) { out += sp("t", m[0]); i += m[0].length; } else { out += esc(c); i++; } }
+        continue;
+      }
+      if (line.substr(i, 4) === "<!--") { st.m = "c"; continue_c(); continue; }
+      if (c === "<") {
+        m = at(HTAG, line, i);
+        if (m) {
+          var pre = /^<[\/!?]?/.exec(m[0])[0];
+          out += sp("p", pre) + sp("k", m[0].slice(pre.length)); i += m[0].length; st.m = "t"; continue;
+        }
+      }
+      j = line.indexOf("<", i + 1); if (j < 0) j = n;
+      out += esc(line.slice(i, j)); i = j;
+    }
+    return out;
+    function continue_c() { out += sp("c", "<!--"); i += 4; }
+  }
+
+  /* highlight an array of lines; returns an array of HTML strings (same length) */
+  function hlLines(lang, lines) {
+    var cfg = LANGS[lang], res = [], st = {}, i, line;
+    for (i = 0; i < lines.length; i++) {
+      line = lines[i];
+      if (!cfg || line.length > MAX_LINE) { res.push(esc(line)); continue; }
+      if (cfg.special === "diff") res.push(diffLine(line));
+      else if (cfg.special === "md") res.push(mdLine(line, st));
+      else if (cfg.special === "html") res.push(htmlLine(line, st));
+      else res.push(genLine(cfg, line, st));
+    }
+    return res;
+  }
+  HLX.lines = hlLines;
+  HLX.esc = esc;
+  /*HL-END*/
+})();
+/* Syntax highlighter 3/3: the code view hook. Colors are in css/highlight.css. */
+const HL_MAX_BYTES = 200 * 1024;   // bigger files stay plain
+// Fills the <pre class="txt"> of the code view with colored spans. The text never changes.
+function hlApply(pre, path, text, lines){
+try{
+if(text.length > HL_MAX_BYTES) return;
+const lang = HLX.detect(path, lines[0]);
+if(!lang) return;
+pre.innerHTML = HLX.lines(lang, lines).join("\n");
+if(pre.textContent !== text) pre.textContent = text;   // safety net
+}catch(_){ pre.textContent = text; }
+}
 let codeUI = null;
 function prefixes(path){ const out = [""]; const segs = pathSegs(path); segs.forEach((_, i) => out.push(segs.slice(0, i + 1).join("/"))); return out; }
 function dirOf(p){ return p.split("/").slice(0, -1).join("/"); }
@@ -2558,7 +2963,8 @@ if(b.tooLarge){ vb.className = "pb"; vb.append(emptyState("file", "This file is 
 const lines = b.text.split("\n"); if(lines.length > 1 && lines[lines.length - 1] === "") lines.pop();
 if(!b.size){ vb.className = "pb"; vb.append(emptyState("file", "This file is empty.")); return; }
 const info = el("div", {class: "small muted", style: "padding:6px 12px;border-bottom:2px solid var(--line);display:flex;gap:12px;align-items:center;flex:none"}, el("span", {}, lines.length + " lines"), el("span", {}, fmtSize(b.size)), el("span", {style: "flex:1"}), copyBtn(path, "Copy path"));
-const src = el("div", {class: "codebox"}, el("pre", {class: "gut"}, lines.map((_, i) => i + 1).join("\n")), el("pre", {class: "txt"}, lines.join("\n")));
+const txt = el("pre", {class: "txt"}, lines.join("\n")); hlApply(txt, path, lines.join("\n"), lines);
+const src = el("div", {class: "codebox"}, el("pre", {class: "gut"}, lines.map((_, i) => i + 1).join("\n")), txt);
 vb.append(info);
 if(/\.(md|markdown)$/i.test(path)){
 const rendered = el("div", {class: "pb pad", style: "padding:12px 16px"}, mdNode(b.text, {ref, dir: dirOf(path)}));
@@ -2650,6 +3056,142 @@ all.onclick = async () => { all.disabled = true; for(let i = 0; i < loaders.leng
 rh.append(all);
 }
 }
+/* Repo pictures. No firmware route: the picture is an ordinary file on the SD card,
+ * /ext/apps_data/gitphin/git/<name>.git/hub/avatar.png, moved with the file API
+ * (PUT /api/file, GET /api/file, POST /api/mkdir, POST /api/delete).
+ * The browser shrinks it to at most 128x128 and under 16 KB before the upload. */
+const AV_MAX_PX = 128, AV_MAX_BYTES = 16 * 1024, AV_IN_MAX = 20 * 1024 * 1024;
+const avCache = new Map();   // repo name -> object URL of its picture, or "" when it has none
+const avPending = new Map(); // repo name -> promise of a running read
+let avChain = Promise.resolve();
+function avDir(name){ return "/ext/apps_data/gitphin/git/" + name + ".git/hub"; }
+function avPath(name){ return avDir(name) + "/avatar.png"; }
+// the picture of a repo as an object URL, or "" (cached; the request is queued by the page fetch)
+function avRead(name){
+if(avCache.has(name)) return Promise.resolve(avCache.get(name));
+if(avPending.has(name)) return avPending.get(name);
+const p = (async () => {
+let url = "";
+try{
+const r = await fetch("/api/file?" + q(avPath(name)));
+if(r.ok){ const b = await r.blob(); if(b.size && b.size <= 4 * AV_MAX_BYTES) url = URL.createObjectURL(new Blob([b], {type: "image/png"})); }
+}catch(_){}
+avCache.set(name, url); avPending.delete(name);
+return url;
+})();
+avPending.set(name, p);
+return p;
+}
+// show the picture in box (a span.av with the generic repo icon), or the icon when there is none
+function avShow(box, url){
+const old = box.querySelector("img"); if(old) old.remove();
+const svg = box.querySelector("svg");
+if(url){ box.append(el("img", {src: url, alt: ""})); svg.style.display = "none"; }
+else svg.style.display = "";
+}
+const avIdle = () => new Promise(res => { const t = () => (reqRunning || reqQueue.length) ? setTimeout(t, 250) : res(); t(); });
+// fill box with the picture of name; the reads go one by one and wait until the page has no other request
+function avFill(box, name){
+if(avCache.has(name)){ avShow(box, avCache.get(name)); return; }
+avChain = avChain.then(async () => {
+if(!box.isConnected) return;
+await avIdle();
+if(box.isConnected) avShow(box, await avRead(name));
+}).catch(() => {});
+}
+// repo icon for the list (size 32) or the header (size 48)
+function avBox(name, size){
+const box = el("span", {class: "av s" + size}, ic("repo", "l"));
+avFill(box, name);
+return box;
+}
+// the browser picture -> PNG, at most 128x128 and 16 KB; smaller sizes are tried when it is too big
+function avShrink(file){
+return new Promise((resolve, reject) => {
+if(file.size > AV_IN_MAX) return reject(new Error("The picture is too big (max 20 MB)."));
+const url = URL.createObjectURL(file), im = new Image();
+im.onerror = () => { URL.revokeObjectURL(url); reject(new Error("The browser cannot read this picture.")); };
+im.onload = async () => {
+URL.revokeObjectURL(url);
+const w = im.naturalWidth, h = im.naturalHeight;
+if(!w || !h) return reject(new Error("The browser cannot read this picture."));
+for(const max of [AV_MAX_PX, 96, 64, 48, 32]){
+const k = Math.min(1, max / Math.max(w, h)), c = document.createElement("canvas");
+c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k));
+c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+const b = await new Promise(r => c.toBlob(r, "image/png"));
+if(b && b.size <= AV_MAX_BYTES) return resolve(b);
+}
+reject(new Error("The picture is too detailed for 16 KB. Use a simpler one."));
+};
+im.src = url;
+});
+}
+function avSet(name, url){
+const old = avCache.get(name); if(old) URL.revokeObjectURL(old);
+avCache.set(name, url);
+if(R && R.name === name) avShow($("rv-avatar"), url);
+}
+async function avUpload(name, file){
+const png = await avShrink(file);
+try{ await api("POST", "/api/mkdir?" + q(avDir(name))); }catch(_){}   // hub/ may not exist yet
+await putFile("/api/file?" + q(avPath(name)), png, () => {});
+avSet(name, URL.createObjectURL(png));
+}
+async function avRemove(name){
+await api("POST", "/api/delete?" + q(avPath(name)));
+avSet(name, "");
+}
+function avDialog(name){
+const d = el("dialog", {class: "dlg"});
+const prev = el("span", {class: "av"}, ic("repo", "l"));
+const msg = el("div", {class: "hint"}, "A picture for this repository. It is shrunk to 128 px and 16 KB in the browser.");
+const file = el("input", {type: "file", accept: "image/png,image/jpeg,image/gif,image/webp", hidden: true});
+const up = el("button", {type: "button", class: "primary"}, ic("upload"), "Upload picture");
+const rm = el("button", {type: "button", class: "danger"}, ic("trash"), "Remove");
+const close = el("button", {type: "button"}, "Close");
+const err = e => toast(e.message, "err");
+const sync = () => { const u = avCache.get(name) || ""; avShow(prev, u); rm.hidden = !u; };
+up.onclick = () => file.click();
+file.onchange = async () => {
+const f = file.files[0]; file.value = ""; if(!f) return;
+up.disabled = true;
+try{ await avUpload(name, f); toast("Picture saved", "ok"); sync(); }catch(e){ err(e); }
+up.disabled = false;
+};
+rm.onclick = async () => {
+const cf = await confirmDialog("Remove picture", "Remove the picture of " + name + "?", "Remove", {danger: true});
+if(!cf.ok) return;
+try{ await avRemove(name); toast("Picture removed", "ok"); sync(); }catch(e){ err(e); }
+};
+close.onclick = () => d.close();
+d.append(el("h2", {}, "Avatar"), el("div", {class: "av-prev"}, prev, msg), file,
+el("div", {class: "btns"}, rm, close, up));
+d.onclose = () => d.remove();
+document.body.appendChild(d); d.showModal();
+rm.hidden = true;
+avRead(name).then(sync);
+}
+/* "Download ZIP" on the repo page: the PC bridge streams a .zip of the ref (GET /pc/zip?name=&ref=). */
+const ZIP_REF_VIEWS = ["tree", "blob", "commits", "search", "edit", "new", "upload", "delete"];
+// the ref of the open view (branch or tag name), else the default branch; null for an empty repo
+function zipRef(view, rest){
+if(!R.refs.length) return null;
+return (ZIP_REF_VIEWS.includes(view) && rest[1]) || defBranch();
+}
+function zipUrl(name, ref){ return "/pc/zip?" + enc({name, ref}); }
+async function zipDownload(name, ref){
+const b = $("rv-zip"); b.disabled = true;
+try{
+const r = await fetch(zipUrl(name, ref));
+if(!r.ok){ const j = await r.json().catch(() => ({})); throw new Error(j.error || ("HTTP " + r.status)); }
+const blob = await r.blob();
+const a = el("a", {href: URL.createObjectURL(blob), download: name + "-" + ref.replace(/[^A-Za-z0-9._-]+/g, "-") + ".zip"});
+document.body.append(a); a.click(); a.remove();
+setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+}catch(e){ toast("ZIP: " + e.message, "err"); }
+b.disabled = false;
+}
 async function loadRepoList(){
 const box = $("repos-list"); box.innerHTML = ""; box.append(skel(4, 80));
 try{
@@ -2668,7 +3210,7 @@ const acts = el("div", {class: "acts"},
 el("button", {class: "ghost sm", "aria-label": "Rename " + r.name, title: "Rename", onclick: () => renameDialog(r.name)}, ic("pencil")),
 el("button", {class: "ghost sm", "aria-label": "Edit description of " + r.name, title: "Edit description", onclick: () => describeDialog(r.name, r.description)}, ic("book")),
 el("button", {class: "ghost sm danger", "aria-label": "Delete " + r.name, title: "Delete", onclick: () => deleteDialog(r.name)}, ic("trash")));
-box.append(el("div", {class: "rrow"}, ic("repo", "l"),
+box.append(el("div", {class: "rrow"}, avBox(r.name, 32),
 el("div", {class: "main-c"}, el("a", {class: "rn", href: "#repos/" + encodeURIComponent(r.name)}, r.name), r.description ? el("div", {class: "cell-desc"}, r.description) : null),
 el("div", {class: "meta"}, el("span", {style: "display:inline-flex;gap:4px;align-items:center"}, ic("branch"), r.head || "-"), el("span", {}, r.packs + (r.packs === 1 ? " pack" : " packs"))),
 acts));
@@ -2690,6 +3232,7 @@ window.addEventListener("hashchange", route);
 $("repo-new").onclick = newRepoDialog;
 $("repos-refresh").onclick = loadRepoList;
 $("rv-refresh").onclick = () => reloadRepo();
+$("rv-avatar-btn").onclick = () => avDialog(R.name);
 $("rv-clone-btn").onclick = () => { const b = $("rv-clonebox"); b.hidden = !b.hidden; $("rv-clone-btn").setAttribute("aria-expanded", String(!b.hidden)); };
 $("rv-snippet-copy").onclick = e => copyText($("rv-snippet").textContent, e.target);
 loadInfo(); go(cwd); route();</script>

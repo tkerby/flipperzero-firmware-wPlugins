@@ -14,10 +14,10 @@ W="$(mktemp -d)"; trap 'kill $(jobs -p) 2>/dev/null; rm -rf "$W"' EXIT
 # the route code on the host, as in pc/tests/run_route_test.sh (no sanitizers)
 mkdir -p "$W/b"; cd "$W/b"
 CF="-O1 -I$T/furi_stub -Wno-unused-parameter -include $T/malloc_wrap.h"
-for f in hub_chunk hub_gitview hub_git hub_gitobj hub_inflate hub_gitdiff hub_gitsearch; do
-    gcc $CF -c "$APP/$f.c" -o "$f.o"
+for f in http/hub_chunk git/hub_gitview git/hub_git obj/hub_gitobj util/hub_inflate write/hub_gitdiff ext/hub_gitsearch; do
+    gcc $CF -c "$APP/src/$f.c" -o "${f##*/}.o"
 done
-gcc $CF -DHUB_EXT_QUERY -c "$APP/hub_gitext.c" -o hub_gitext.o
+gcc $CF -DHUB_EXT_QUERY -c "$APP/src/ext/hub_gitext.c" -o hub_gitext.o
 gcc -O1 -I"$T/furi_stub" -c "$T/gitio_stdio.c" -o gitio.o
 gcc $CF -c "$T/furi_stub.c" -o furi_stub.o
 gcc $CF -c "$T/route_test.c" -o route_test.o

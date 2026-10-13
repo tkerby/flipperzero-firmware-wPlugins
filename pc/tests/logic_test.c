@@ -7,8 +7,8 @@
  *   logic_test cfile <repo> <tip|-> <path> del - <msgfile>
  *   logic_test merge <repo> <ours> <theirs> <base|-> <msgfile>
  */
-#include "../../flipper_app/hub_gitdiff.h"
-#include "../../flipper_app/hub_gitcommit.h"
+#include "../../flipper_app/src/write/hub_gitdiff.h"
+#include "../../flipper_app/src/write/hub_gitcommit.h"
 
 #include <stdio.h>
 #include <stdlib.h>

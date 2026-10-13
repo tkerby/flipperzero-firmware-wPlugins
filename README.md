@@ -41,7 +41,8 @@ the device itself, reached from the PC over the USB cable.
   is needed.
 - **🌐 A full web UI.** Code browser with Markdown READMEs, commit history, diffs, compare,
   branches, tags, search, file edits and uploads, **issues**, **pull requests** with merge,
-  **releases** and a **wiki** — rendered in your browser, served by the Flipper.
+  **releases** and a **wiki** — rendered in your browser, served by the Flipper. Syntax
+  highlighting, repo avatars and **Download ZIP** of any branch or tag.
 - **🔌 Offline and private.** Nothing leaves the cable: the PC bridge listens on `127.0.0.1`
   only. No account, no cloud, no telemetry.
 - **🗂️ Your repos stay normal Git.** Each repo is an ordinary bare repository on the SD card
@@ -60,7 +61,7 @@ the device itself, reached from the PC over the USB cable.
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/repos.png" alt="Repositories"><br><b>Repositories</b> — every repo on the SD card, create, rename, describe, delete</td>
+    <td width="50%"><img src="docs/screenshots/repos.png" alt="Repositories"><br><b>Repositories</b> — every repo on the SD card with its avatar; create, rename, describe, delete</td>
     <td width="50%"><img src="docs/screenshots/commits.png" alt="Commits"><br><b>Commits</b> — history per branch, authors, short SHAs</td>
   </tr>
   <tr>
@@ -70,6 +71,10 @@ the device itself, reached from the PC over the USB cable.
   <tr>
     <td><img src="docs/screenshots/issues.png" alt="Issues"><br><b>Issues</b> — labels, milestones, comments, open / closed</td>
     <td><img src="docs/screenshots/code-dark.png" alt="Dark theme"><br><b>Dark theme</b> — follows the system, or switch it in the header</td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/highlight.png" alt="Syntax highlighting"><br><b>Syntax highlighting</b> — C, Python, JS, Go, Rust, shell, Markdown and more, no libraries; Download ZIP and Avatar in the header</td>
+    <td><img src="docs/screenshots/highlight-dark.png" alt="Syntax highlighting, dark"><br><b>Highlighting, dark theme</b> — colors tuned for both themes</td>
   </tr>
 </table>
 
@@ -189,6 +194,55 @@ git remote add flipper flipper://myproject
 git push flipper main
 ```
 
+### Extras on the PC
+
+The bridge and `git flipper` add a few things that the Flipper alone cannot do. All settings are
+in `~/.config/gitphin/` (mode 0600); the running bridge reads them again at each use.
+
+**Push to both.** `git flipper mirror-add [remote]` adds the Flipper as a second push URL of a
+remote (default `origin`; use `--name <repo>` if the Flipper repo is not named like the folder).
+After that, one `git push` updates GitHub and the Flipper together. Fetching still uses the
+original URL. The original push URL stays first. The repo is created on the Flipper if it is
+missing. `git flipper mirror-remove [remote]` undoes it.
+
+```bash
+git flipper mirror-add            # in your project: origin now pushes to GitHub and the Flipper
+git push                          # updates both
+```
+
+**Backup on plug-in.** Every time the Flipper connects, the bridge copies all repos to
+`~/GitphinBackup/<name>.git` (`git clone --mirror` the first time, `git remote update --prune`
+after that) and shows one notification, for example "Backup: 5 repos up to date". It starts a
+repo only when no request is running, runs git at low priority and pauses between repos.
+Repos you delete on the Flipper stay in the backup.
+
+```bash
+git flipper backup               # status: last run and result per repo
+git flipper backup now           # run it now
+git flipper backup off|on        # switch the automatic run
+git flipper backup dir ~/Backups/flipper
+```
+
+**Webhooks.** After a push, a web edit, a merge or a repo change, the bridge posts JSON to your
+URLs (same events as Gitphin Droid): `push` (refs before/after and the head commit),
+`repo_created`, `repo_deleted`. It waits until a repo has been quiet for 2 s, sends from a
+background thread (the page never waits), and tries again after 2, 8 and 30 s on errors. Headers:
+`X-Gitphin-Event`, `X-Gitphin-Delivery`, and `X-Gitphin-Signature-256: sha256=<hmac>` when you
+set a secret (same scheme as GitHub). `GET /pc/webhooks` lists the URLs and the last delivery.
+
+```bash
+git flipper webhook add https://example.com/hook
+git flipper webhook secret mysecret
+git flipper webhook test          # sends a ping to every URL
+git flipper webhook list | remove <url>
+```
+
+**ZIP download.** `http://127.0.0.1:8080/pc/zip?name=<repo>&ref=<branch|tag|sha>[&path=sub/dir]`
+downloads the files of a ref as `<repo>-<ref>.zip`, like `git archive` (top folder
+`<repo>-<ref>/`, executable bit and symlinks kept). The bridge builds the zip and reads the
+Flipper one file at a time, so the page keeps working while it runs, only slower. A big repo
+takes a while: every file is one request over USB.
+
 **The Flipper screen** shows the state (Waiting for PC, Ready, Busy, Packing, STUCK), and during
 transfers a progress bar, object count, KB and speed.
 
@@ -213,8 +267,8 @@ flowchart LR
 | Part | Runs on | Does |
 |---|---|---|
 | Gitphin app (`flipper_app/`) | Flipper Zero | HTTP server, Git dumb-HTTP + WebDAV, object reader, diff, merge, search, docs, web page |
-| Bridge (`pc/bridge.py`) | PC, systemd user unit | starts the app on plug-in, maps TCP `127.0.0.1:8080` onto USB, reboots a stuck Flipper |
-| `git-remote-flipper` (`pc/`) | PC, optional | `flipper://` remotes, pack pushes, `git flipper` CLI |
+| Bridge (`pc/bridge.py`, code in `pc/gitphin_bridge/`) | PC, systemd user unit | starts the app on plug-in, maps TCP `127.0.0.1:8080` onto USB, reboots a stuck Flipper, ZIP download, webhooks, backup on plug-in |
+| `git-remote-flipper` (`pc/`, code in `pc/gitphin_git/`) | PC, optional | `flipper://` remotes, pack pushes, `git flipper` CLI (also webhook, backup, mirror-add) |
 
 <details>
 <summary>Protocol, storage, memory and self-protection</summary>
@@ -305,8 +359,9 @@ the file API and the Collector routes are in [docs/api.md](docs/api.md).
   (Left + Back for 5 s). Data stays safe.
 - **After a firmware update**, install the matching `gitphin.fap` (or rebuild with `ufbt update`),
   or the app will not start.
-- **Back up your repos.** They are normal bare repos: `git clone --mirror` them to the PC now and
-  then, or copy `/ext/apps_data/gitphin/git/` from the SD card.
+- **Back up your repos.** The bridge mirrors them to `~/GitphinBackup` on every plug-in (see
+  [Extras on the PC](#extras-on-the-pc)). They are also normal bare repos: you can copy
+  `/ext/apps_data/gitphin/git/` from the SD card.
 - **Give big pushes time.** Leave the Flipper connected and idle afterwards so it can pack and
   build the commit graph.
 - **If something hangs:** `journalctl --user -u gitphin.service -f` shows what happened, and the
@@ -314,9 +369,22 @@ the file API and the Collector routes are in [docs/api.md](docs/api.md).
 
 ## FAQ
 
-**Do I need anything on the PC besides git?** The bridge: one Python script and `pyserial`
-(`install.sh` sets it up). It only copies bytes between `127.0.0.1:8080` and the USB port; all
-Git and HTTP logic runs on the Flipper.
+**What is it for?** Gitphin is an extra Git remote that you carry in your pocket, with a web UI
+(code, commits, diffs, issues, pull requests, wiki) and no network, account or server to run.
+Use it as a private remote for projects you do not want on a cloud service, as a second copy of
+your work next to GitHub, as a way to move code between PCs without a network, or just because it
+is fun to push to a Flipper.
+
+**Is it a single point of failure?** No, if you use it as intended: it is an *extra* remote, not
+the only copy. Every `git clone` is a full copy of the history. The bridge also mirrors all repos
+to `~/GitphinBackup` each time you plug the Flipper in, and `git flipper mirror-add` makes one
+`git push` update GitHub (or any other remote) and the Flipper together. SD cards can fail or get
+lost like any storage, so keep at least one other copy of work you care about.
+
+**Do I need anything on the PC besides git?** The bridge: a small Python program
+(`pc/bridge.py`) and `pyserial` (`install.sh` sets it up). It copies bytes between
+`127.0.0.1:8080` and the USB port; all Git and HTTP logic runs on the Flipper. The
+[extras](#extras-on-the-pc) (ZIP, webhooks, backup) run in the bridge.
 
 **Is my code safe if I pull the cable mid-push?** Yes. Every write goes to a temp file and is
 renamed into place, refs are updated with compare-and-swap, and an interrupted push leaves the old

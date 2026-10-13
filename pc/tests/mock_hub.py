@@ -3,8 +3,9 @@
 
 Usage: python3 pc/tests/mock_hub.py ROOT [--host 127.0.0.1] [--port 8099] [--verbose]
 
-ROOT is served as /ext. Implements GET /git/..., /api/git/*, and the existing
-PUT /api/file, GET /api/list, POST /api/delete.
+ROOT is served as /ext. Implements GET /git/..., /api/git/* (including tree, blob and
+commit, which use the git of this machine), and the existing PUT /api/file, GET /api/list,
+POST /api/delete.
 """
 
 import argparse
@@ -13,6 +14,7 @@ import mimetypes
 import os
 import re
 import shutil
+import subprocess
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, unquote, urlsplit
@@ -217,7 +219,114 @@ def g_server_info(q, body):
     return {}
 
 
+# ---- browse routes (hub_gitview.c / hub_gitext.c): tree, blob, commit. They use the
+# git of the test machine on the repo folder; the answers follow docs/git-design.md.
+
+def git_run(d, *args):
+    p = subprocess.run(["git", "--git-dir", d, *args], capture_output=True)
+    return p.returncode, p.stdout
+
+
+def resolve_commit(d, ref):
+    """Ref resolution of the Flipper: 40-hex as is, else HEAD, refs/..., heads/<x>, tags/<x>;
+    annotated tags are peeled. Returns the commit sha or raises Fail(404)."""
+    if SHA_RE.match(ref):
+        cands = [ref]
+    elif ref == "HEAD":
+        cands = ["HEAD"]
+    else:
+        cands = [ref, "refs/heads/" + ref, "refs/tags/" + ref] if ref.startswith("refs/") else \
+                ["refs/heads/" + ref, "refs/tags/" + ref]
+    for c in cands:
+        rc, out = git_run(d, "rev-parse", "--verify", "-q", c + "^{commit}")
+        if rc == 0 and SHA_RE.match(out.decode().strip()):
+            return out.decode().strip()
+    raise Fail(404, "ref not found")
+
+
+def clean_path(p):
+    parts = [x for x in p.split("/") if x]
+    if ".." in parts or "." in parts:
+        raise Fail(400, "bad path")
+    return "/".join(parts)
+
+
+def g_tree(q, body):
+    d = existing_repo(q.get("name"))
+    commit = resolve_commit(d, q.get("ref") or q.get("sha") or "HEAD")
+    path = clean_path(q.get("path", ""))
+    spec = commit + ":" + path
+    rc, kind = git_run(d, "cat-file", "-t", spec)
+    if rc != 0:
+        raise Fail(404, "not found")
+    if kind.strip() != b"tree":
+        raise Fail(400, "not a folder")
+    rc, out = git_run(d, "ls-tree", "-z", spec)
+    entries = []
+    for rec in out.split(b"\0"):
+        if not rec:
+            continue
+        meta, _, name = rec.partition(b"\t")
+        mode, otype, sha = meta.decode().split()
+        t = "link" if mode == "120000" else {"tree": "tree", "commit": "commit"}.get(otype, "blob")
+        entries.append({"name": name.decode("utf-8", "surrogateescape"), "type": t, "mode": mode, "sha": sha})
+    entries.sort(key=lambda e: (e["type"] != "tree", e["name"]))
+    return {"commit": commit, "path": path, "entries": entries}
+
+
+def g_blob(q, body):
+    d = existing_repo(q.get("name"))
+    if q.get("sha") and not q.get("path"):
+        if not SHA_RE.match(q["sha"]):
+            raise Fail(400, "bad sha")
+        spec = q["sha"]
+    else:
+        path = clean_path(q.get("path", ""))
+        if not path:
+            raise Fail(400, "missing path or sha")
+        spec = resolve_commit(d, q.get("ref") or "HEAD") + ":" + path
+    rc, kind = git_run(d, "cat-file", "-t", spec)
+    if rc != 0:
+        raise Fail(404, "not found")
+    if kind.strip() == b"tree":
+        raise Fail(400, "path is a folder")
+    if kind.strip() == b"commit":
+        raise Fail(400, "path is a submodule")
+    rc, sha = git_run(d, "rev-parse", spec)
+    rc, data = git_run(d, "cat-file", "blob", spec)
+    return RawBody(data, {"X-Git-Sha": sha.decode().strip()})
+
+
+def parse_person(line):
+    m = re.match(r"^(.*) <(.*)> (\d+) ([+-]\d{4})$", line)
+    return {"name": m.group(1), "email": m.group(2), "time": int(m.group(3)), "tz": m.group(4)}
+
+
+def g_commit(q, body):
+    d = existing_repo(q.get("name"))
+    sha = resolve_commit(d, q.get("sha") or q.get("ref") or "HEAD")
+    rc, raw = git_run(d, "cat-file", "commit", sha)
+    head, _, msg = raw.decode("utf-8", "replace").partition("\n\n")
+    out = {"sha": sha, "tree": "", "parents": []}
+    for line in head.split("\n"):
+        key, _, val = line.partition(" ")
+        if key == "tree":
+            out["tree"] = val
+        elif key == "parent":
+            out["parents"].append(val)
+        elif key in ("author", "committer"):
+            out[key] = parse_person(val)
+    out["message"] = msg
+    return out
+
+
+class RawBody:
+    def __init__(self, data, headers):
+        self.data, self.headers = data, headers
+
+
 GIT_ROUTES = {
+    ("GET", "tree"): g_tree, ("GET", "blob"): g_blob, ("GET", "commit"): g_commit,
     ("GET", "repos"): g_repos, ("POST", "create"): g_create, ("POST", "delete"): g_delete,
     ("POST", "rename"): g_rename, ("POST", "describe"): g_describe, ("GET", "refs"): g_refs,
     ("POST", "ref"): g_ref, ("POST", "head"): g_head, ("POST", "server-info"): g_server_info,
@@ -268,9 +377,11 @@ class Handler(BaseHTTPRequestHandler):
         if VERBOSE:
             print("[mock-hub]", fmt % args, file=sys.stderr)
 
-    def send(self, status, data, ctype):
+    def send(self, status, data, ctype, headers=None):
         self.send_response(status)
         self.send_header("Content-Type", ctype)
+        for k, v in (headers or {}).items():
+            self.send_header(k, v)
         self.send_header("Content-Length", str(len(data)))
         self.end_headers()
         self.wfile.write(data)
@@ -295,7 +406,10 @@ class Handler(BaseHTTPRequestHandler):
                            ("POST", "/api/delete"): f_delete}.get((method, path))
             if handler is None:
                 raise Fail(404, "no such route")
-            self.json(200, {"ok": True, **handler(q, body)})
+            got = handler(q, body)
+            if isinstance(got, RawBody):
+                return self.send(200, got.data, "application/octet-stream", got.headers)
+            self.json(200, {"ok": True, **got})
         except Fail as e:
             self.json(e.status, {"ok": False, "error": e.msg})
         except Exception as e:  # keep the mock alive, show the bug

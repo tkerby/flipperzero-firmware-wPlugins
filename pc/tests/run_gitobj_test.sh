@@ -14,8 +14,8 @@ export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null
 CF="-g -O1 -Wall -Wextra -fsanitize=address,undefined -fno-sanitize-recover=undefined"
 cd "$W"
 # library code gets the malloc wrapper, harness and I/O layer do not
-gcc $CF -include "$HERE/malloc_wrap.h" -c "$APP/hub_inflate.c" -o inflate.o
-gcc $CF -include "$HERE/malloc_wrap.h" -c "$APP/hub_gitobj.c" -o gitobj.o
+gcc $CF -include "$HERE/malloc_wrap.h" -c "$APP/src/util/hub_inflate.c" -o inflate.o
+gcc $CF -include "$HERE/malloc_wrap.h" -c "$APP/src/obj/hub_gitobj.c" -o gitobj.o
 gcc $CF -c "$HERE/gitio_stdio.c" -o gitio.o
 gcc $CF -c "$HERE/gitobj_test.c" -o test.o
 gcc $CF inflate.o gitobj.o gitio.o test.o -lz -o gitobj_test

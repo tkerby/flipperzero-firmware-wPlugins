@@ -16,8 +16,8 @@ export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null
 CF="-g -O1 -Wall -Wextra -fsanitize=address,undefined -fno-sanitize-recover=undefined"
 cd "$W"
 # library code gets the malloc wrapper (heap peaks); the harness and I/O layers do not
-for f in hub_inflate hub_gitobj hub_gitdiff hub_gitcommit hub_gitwrite hub_sha1; do
-    gcc $CF -DHUB_TEST_COUNTERS -include "$HERE/malloc_wrap.h" -c "$APP/$f.c" -o "$f.o"
+for f in util/hub_inflate obj/hub_gitobj write/hub_gitdiff write/hub_gitcommit write/hub_gitwrite util/hub_sha1; do
+    gcc $CF -DHUB_TEST_COUNTERS -include "$HERE/malloc_wrap.h" -c "$APP/src/$f.c" -o "${f##*/}.o"
 done
 gcc $CF -c "$HERE/gitio_stdio.c" -o gitio.o
 gcc $CF -c "$HERE/gitwrite_stdio.c" -o wio.o

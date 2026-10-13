@@ -15,6 +15,22 @@ answers these routes itself (it does not forward them to the Flipper):
 Left column: this PC. Right column: the connected Wi-Fi. Linux / NetworkManager only for now.
 Like everything the bridge serves, these routes are reachable only from `127.0.0.1`.
 
+## Other bridge routes
+
+The bridge also answers these itself:
+
+| Method | Path | Returns |
+|---|---|---|
+| GET | `/pc/hub` | link state for the page's status dot: `connected`, `busy_s`, `stuck_after_s` |
+| GET | `/pc/zip?name=<repo>&ref=<branch, tag or sha>[&path=<folder>]` | a `.zip` of that tree, like `git archive` (top folder `<repo>-<ref>/`); 404 JSON for a bad repo, ref or path |
+| GET | `/pc/backup` | backup on plug-in: enabled, folder, last run, result per repo |
+| POST | `/pc/backup/now` | starts a backup run now: `{"ok":true,"started":true}` (`false` when one runs already) |
+| GET | `/pc/webhooks` | the configured webhook URLs and whether a secret is set (never the secret) |
+
+Webhook events are `POST`ed as JSON (`push`, `repo_created`, `repo_deleted`) with the headers
+`X-Gitphin-Event`, `X-Gitphin-Delivery` and, with a secret, `X-Gitphin-Signature-256:
+sha256=<HMAC-SHA256 of the body>`. See the README ("Extras on the PC") for the commands.
+
 ### Wi-Fi password (opt-in)
 
 Reading a saved Wi-Fi password needs root, so by default `/pc/wifi` returns the SSID with

@@ -2,6 +2,7 @@
 """Host checks of the commit graph, the one-pack packer and the read counts.
 Usage: graph_check.py <logic_test> <gitpack_tool> <repos dir> <work dir>"""
 import os, re, shutil, struct, subprocess, sys
+import glob
 
 LT, GP, REPOS, WORK = sys.argv[1:5]
 ENV = dict(os.environ, GIT_CONFIG_GLOBAL="/dev/null", GIT_CONFIG_SYSTEM="/dev/null",
@@ -360,8 +361,9 @@ def main():
     print("  delta chain (200 KB x 25 versions, SD path): far reads total", nfar)
     # the packer re-encodes a big loose object with the small window only when that costs at most 1.25x the
     # loose file; otherwise the object stays loose (and is read with the far window)
-    src_text = b"".join(open(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "flipper_app", f), "rb").read()
-                        for f in sorted(os.listdir(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "flipper_app"))) if f.endswith((".c", ".h")))[:600000]
+    src_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "flipper_app", "src")
+    src_text = b"".join(open(os.path.join(src_dir, f), "rb").read()
+                         for f in sorted(glob.glob("**/*.[ch]", root_dir=src_dir, recursive=True)))[:600000]
     r = subprocess.run(["git", "--git-dir", bg, "hash-object", "-w", "--stdin"], input=src_text, capture_output=True, check=True, env=ENV)
     ids["source"] = (r.stdout.decode().strip(), src_text)
     for name, (oid, data) in ids.items():

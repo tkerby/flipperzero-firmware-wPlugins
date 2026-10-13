@@ -2,6 +2,7 @@
 """Checks the answers of the real route code (route_test) against git, on all test repos.
 Usage: route_check.py <route_test> <repos dir> <root dir>"""
 import json, os, re, shutil, subprocess, sys, urllib.parse
+import glob
 
 RT, REPOS, ROOT = sys.argv[1:4]
 ENV = dict(os.environ, GIT_CONFIG_GLOBAL="/dev/null", GIT_CONFIG_SYSTEM="/dev/null")
@@ -203,8 +204,9 @@ def main():
     import random
     rnd = random.Random(9)
     pool = [("line %05d " % i + "".join(rnd.choice("abcdefghijklmnop qrstuvwxyz") for _ in range(90)) + "\n").encode() for i in range(1500)]
-    src = b"".join(open(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "flipper_app", f), "rb").read()
-                   for f in sorted(os.listdir(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "flipper_app"))) if f.endswith((".c", ".h")))[:400000]
+    src_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "flipper_app", "src")
+    src = b"".join(open(os.path.join(src_dir, f), "rb").read()
+                    for f in sorted(glob.glob("**/*.[ch]", root_dir=src_dir, recursive=True)))[:400000]
     blobs = {"text": b"".join(rnd.choice(pool) for _ in range(10000))[:1 << 20], "source": src,
              "binary": bytes(rnd.randrange(256) for _ in range(300000))}
     bb = os.path.join(ROOT, "git", "bigblobs.git")

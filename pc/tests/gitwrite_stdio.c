@@ -1,5 +1,5 @@
 /* Host side of HubGitWriteIo (stdio / POSIX). */
-#include "../../flipper_app/hub_gitwrite.h"
+#include "../../flipper_app/src/write/hub_gitwrite.h"
 
 #include <stdio.h>
 #include <string.h>

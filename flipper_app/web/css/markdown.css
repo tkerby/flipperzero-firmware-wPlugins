@@ -1,0 +1,12 @@
+/* ---- markdown ---- */
+.md{overflow-wrap:anywhere}
+.md h1,.md h2,.md h3,.md h4{margin:var(--s4) 0 var(--s2);line-height:1.25;background:none;color:inherit;padding:0}
+.md h1{font-size:22px}.md h2{font-size:18px}.md h3{font-size:16px}.md h4,.md h5,.md h6{font-size:14px}
+.md p{margin:var(--s2) 0}.md ul,.md ol{margin:var(--s2) 0;padding-left:var(--s5)}
+.md code{font:var(--mono);background:var(--code);border:1px solid var(--line);padding:0 4px}
+.md pre{background:var(--code);border:2px solid var(--bd);padding:var(--s2) var(--s3);overflow:auto;margin:var(--s2) 0}
+.md pre code{border:0;padding:0;background:none}
+.md blockquote{margin:var(--s2) 0;padding:0 var(--s3);border-left:4px solid var(--bd);color:var(--muted)}
+.md a{color:var(--accent)}.md a.missing{color:var(--bad)}
+.md table{width:auto;margin:var(--s2) 0}.md th,.md td{border:1px solid var(--line);padding:var(--s1) var(--s2)}
+.md hr{border:0;border-top:2px solid var(--bd)}

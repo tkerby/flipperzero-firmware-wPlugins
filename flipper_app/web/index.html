@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gitphin</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2010%2010%22%20shape-rendering=%22crispEdges%22%3E%3Ctitle%3EGitphin%3C/title%3E%3Cpath%20fill=%22%23111%22%20d=%22M4%200h1v1h-1zM5%201h2v1h-2zM3%202h6v1h-6zM2%203h8v1h-8zM1%204h3v1h-3zM0%205h1v1h-1zM2%205h1v1h-1zM2%207h6v1h-6zM1%208h1v1h-1zM8%208h1v1h-1zM0%209h1v1h-1zM9%209h1v1h-1z%22/%3E%3C/svg%3E">
+<style>
+@@CSS@@</style>
+</head>
+<body>
+<svg id="sprite" width="0" height="0" style="position:absolute" aria-hidden="true"></svg>
+<div id="prog"></div>
+<div id="app">
+<header class="top">
+  <button class="ib" id="menubtn" aria-label="Menu"><svg class="ic l"><use href="#i-menu"/></svg></button>
+  <a class="brand" href="#repos" aria-label="Gitphin"><svg class="logo" viewBox="0 0 34 25" aria-hidden="true"><use href="#i-logo"/></svg><b>Gitphin</b></a>
+  <span class="dev" id="dev"></span>
+  <nav class="crumb" id="crumb" aria-label="Breadcrumb"></nav>
+  <form class="gsearch" id="gform" role="search"><svg class="ic"><use href="#i-search"/></svg><input id="gq" type="search" placeholder="Search" aria-label="Search code or repositories" autocomplete="off"><kbd>/</kbd></form>
+  <span class="hs unknown" id="hubstat" role="status" aria-live="off"><i></i><span id="hubtxt"></span></span>
+  <button class="ib" id="themebtn" aria-label="Toggle light and dark theme"><svg class="ic l"><use href="#i-moon"/></svg></button>
+</header>
+<aside class="side" id="side" aria-label="Navigation"></aside>
+<div class="scrim" id="scrim"></div>
+<main class="main" id="main">
+  <div class="panel active" id="panel-files">
+    <h1 class="pt">Files</h1>
+    <div class="grid" id="info"></div>
+    <section class="card">
+      <h2>Files on the Flipper</h2>
+      <div class="bar">
+        <div class="crumbs" id="crumbs"></div>
+        <button id="mkdir"><svg class="ic"><use href="#i-plus"/></svg>New folder</button>
+        <label class="btn"><svg class="ic"><use href="#i-upload"/></svg>Upload<input type="file" id="upload" multiple></label>
+        <button id="refresh"><svg class="ic"><use href="#i-refresh"/></svg>Refresh</button>
+      </div>
+      <table><tbody id="list"></tbody></table>
+      <div class="status" id="status"></div>
+      <div class="progress" id="progress" style="display:none">
+        <div class="track"><div class="fill" id="progress-fill"></div></div>
+        <div class="txt" id="progress-text"></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="panel" id="panel-collector">
+    <h1 class="pt">Collector</h1>
+    <div class="bar">
+      <div class="crumbs muted">Information collected from this PC by the bridge.</div>
+      <button id="collect-refresh"><svg class="ic"><use href="#i-refresh"/></svg>Refresh</button>
+    </div>
+    <div class="cols">
+      <section class="card">
+        <h2>This PC</h2>
+        <div class="rows" id="pc-rows"></div>
+        <div class="note" id="pc-note"></div>
+      </section>
+      <section class="card">
+        <h2>Connected Wi-Fi</h2>
+        <div class="rows" id="wifi-rows"></div>
+        <div class="note" id="wifi-note"></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-repos">
+    <div id="repos-list-view">
+      <h1 class="pt">Repositories</h1>
+      <div class="bar">
+        <div class="crumbs muted">Git repositories stored on the Flipper SD card. Git hosting in your pocket.</div>
+        <button id="repo-new" class="primary"><svg class="ic"><use href="#i-plus"/></svg>New repo</button>
+        <button id="repos-refresh"><svg class="ic"><use href="#i-refresh"/></svg>Refresh</button>
+      </div>
+      <section class="card"><div id="repos-list" class="repos-grid"></div></section>
+    </div>
+
+    <div id="repo-view" hidden>
+      <section class="card repo-head" id="rv-head">
+        <div class="rh">
+          <span class="av" id="rv-avatar"><svg class="ic l"><use href="#i-repo"/></svg></span>
+          <h2 id="rv-name"></h2>
+          <button class="sm" id="rv-clone-btn" aria-expanded="false"><svg class="ic"><use href="#i-link"/></svg>Clone</button>
+          <button class="sm" id="rv-zip" hidden aria-label="Download the current branch or tag as a ZIP file"><svg class="ic"><use href="#i-download"/></svg>Download ZIP</button>
+          <button class="sm" id="rv-avatar-btn" aria-label="Change the picture of this repository"><svg class="ic"><use href="#i-user"/></svg>Avatar</button>
+          <button class="ghost sm" id="rv-refresh" aria-label="Reload this repository"><svg class="ic"><use href="#i-refresh"/></svg></button>
+        </div>
+        <div class="repo-desc" id="rv-desc"></div>
+        <div class="note" id="rv-meta" style="margin-top:4px"></div>
+        <div id="rv-clonebox" hidden style="margin-top:12px;border-top:1px solid var(--line);padding-top:8px">
+          <div id="rv-clone"></div>
+          <div class="note">The http:// URL works with plain git (clone, fetch, push), no helper needed. The flipper:// URL uses the optional git-remote-flipper helper, which pushes big changes faster.</div>
+        </div>
+      </section>
+      <section class="card" id="rv-empty" hidden style="margin-bottom:12px">
+        <h2>Push an existing repository</h2>
+        <div class="note" style="margin-top:0">This repository has no branches yet. Run this in your local repository:</div>
+        <pre class="snip" id="rv-snippet"></pre>
+        <div class="bar" style="margin:8px 0 0"><button id="rv-snippet-copy"><svg class="ic"><use href="#i-copy"/></svg>Copy</button></div>
+      </section>
+      <div id="rv-body"></div>
+    </div>
+  </div>
+</main>
+</div>
+<div id="toasts" aria-live="polite"></div>
+<script>
+@@JS@@</script>
+</body>
+</html>

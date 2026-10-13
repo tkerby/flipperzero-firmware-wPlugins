@@ -1,0 +1,21 @@
+/* Gitphin design system: pixel look, Flipper orange + near-black. Spacing scale 4/8/12/16/24/32. */
+:root{
+--s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:24px;--s6:32px;
+--fs:14px;--fs-s:12px;--mono:13px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+--bg:#ff8200;--chrome:#14110d;--chrome2:#2a2218;--on-chrome:#ff8200;--on-chrome2:#ffd9a8;
+--card:#fff4e0;--card2:#f5e3c2;--fg:#14110d;--muted:#6a5841;--line:#d6c29c;--bd:#14110d;--shadow:#14110d;
+--accent:#b85700;--orange:#ff8200;--p-bg:#14110d;--p-fg:#ff8200;
+--ok:#1f7a3d;--warn:#a85d00;--bad:#c0261c;--merged:#6b3fb5;
+--code:#fffaf0;--add:#d6efd6;--del:#f7d6d0;--hunk:#efdfbd;--focus:#14110d;--side-w:232px}
+:root[data-theme=dark]{
+--bg:#0c0a07;--chrome:#000;--chrome2:#1f1710;--on-chrome:#ff8200;--on-chrome2:#ffc780;
+--card:#16120d;--card2:#211a12;--fg:#ffe9c7;--muted:#ad956f;--line:#3b2b15;--bd:#ff8200;--shadow:#5c2f00;
+--accent:#ff8200;--p-bg:#ff8200;--p-fg:#0c0a07;
+--ok:#4cc27b;--warn:#ffb340;--bad:#ff6a5c;--merged:#b394f5;
+--code:#100d09;--add:#10301a;--del:#3a1713;--hunk:#2a1f0f;--focus:#ff8200}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+--bg:#0c0a07;--chrome:#000;--chrome2:#1f1710;--on-chrome:#ff8200;--on-chrome2:#ffc780;
+--card:#16120d;--card2:#211a12;--fg:#ffe9c7;--muted:#ad956f;--line:#3b2b15;--bd:#ff8200;--shadow:#5c2f00;
+--accent:#ff8200;--p-bg:#ff8200;--p-fg:#0c0a07;
+--ok:#4cc27b;--warn:#ffb340;--bad:#ff6a5c;--merged:#b394f5;
+--code:#100d09;--add:#10301a;--del:#3a1713;--hunk:#2a1f0f;--focus:#ff8200}}

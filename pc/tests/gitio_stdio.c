@@ -1,7 +1,7 @@
 /* Host implementation of flipper_app/hub_gitio.h (stdio + dirent). */
 #define _FILE_OFFSET_BITS 64
 #define _DEFAULT_SOURCE
-#include "../../flipper_app/hub_gitio.h"
+#include "../../flipper_app/src/obj/hub_gitio.h"
 
 #include <dirent.h>
 #include <stdio.h>
