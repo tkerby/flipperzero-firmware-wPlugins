@@ -26,9 +26,14 @@ Behavior:
  - First visit: browser language decides (zh-Hant/TW/HK/MO -> Traditional,
    other zh-* -> Simplified, else English). detectLang() below.
  - Toggle cycles en -> zh-Hans -> zh-Hant -> en, persisted in localStorage
-   ("teslaFsdLang"); document.documentElement.lang is set accordingly.
+   ("teslaFsdLang"); document.documentElement.lang is set accordingly. Where
+   storage is refused (captive-portal sheets) the choice rides in the URL
+   fragment (#lang=...) instead, so it still survives the reload.
  - en -> zh-* translates live; any other switch reloads the page.
- - WebSocket-driven dynamic content is translated via MutationObserver.
+ - Live status updates and the page's own dialogs / toasts (uiAlert, uiConfirm,
+   uiToast) are ordinary DOM text, translated via MutationObserver. Messages
+   with a dynamic part (file name, size) rely on the prefix / suffix match in
+   zhText(): put the variable text after a key, or between two keys.
  - Upstream strings missing from the tables simply stay English (graceful).
 
 To update translations, edit the T table below and re-run:
@@ -50,6 +55,9 @@ T = [
     ('Connection lost — retrying…',
      '连接已断开 — 正在重试…',
      '連線已中斷 — 正在重試…'),
+    ('Command failed — the device did not accept it. Check the connection and try again.',
+     '命令未生效 — 设备没有接受该命令。请检查连接后重试。',
+     '指令未生效 — 裝置沒有接受這個指令。請檢查連線後再試一次。'),
     ('⚠️ 2026.14.x firmware enforcement active.',
      '⚠️ 2026.14.x 固件限制已生效。',
      '⚠️ 2026.14.x 韌體限制已生效。'),
@@ -158,6 +166,9 @@ T = [
     ('SAVE & RESTART WIFI',
      '保存并重启 WiFi',
      '儲存並重啟 WiFi'),
+    ('WiFi settings will be updated and the device will restart.',
+     'WiFi 设置将被更新，设备将重启。',
+     '將更新 WiFi 設定，裝置會重新啟動。'),
     ('RESTART DEVICE',
      '重启设备',
      '重啟裝置'),
@@ -170,6 +181,9 @@ T = [
     ('Cancel',
      '取消',
      '取消'),
+    ('OK',
+     '确定',
+     '確定'),
     ('Dismiss',
      '忽略',
      '忽略'),
@@ -191,6 +205,22 @@ T = [
     ('Error: Please select a .bin firmware file',
      '错误：请选择 .bin 固件文件',
      '錯誤：請選擇 .bin 韌體檔案'),
+    ('Error: Firmware file too large (max 16MB)',
+     '错误：固件文件过大（最大 16MB）',
+     '錯誤：韌體檔案過大（上限 16MB）'),
+    # Prefix keys: the dialog appends " (<size> KB)." / " <file> (<size> KB)?".
+    ('Warning: This file is very small',
+     '警告：此文件非常小',
+     '警告：這個檔案非常小'),
+    ('Are you sure it is a valid ESP32 firmware?',
+     '确定这是有效的 ESP32 固件吗？',
+     '確定這是有效的 ESP32 韌體嗎？'),
+    ('Flash firmware:',
+     '刷入固件',
+     '燒錄韌體'),
+    ('Device will reboot after update.',
+     '更新后设备将重启。',
+     '更新後裝置會重新啟動。'),
     ('STREAM LOG AND SAVE',
      '开始串流并保存',
      '開始串流並儲存'),
@@ -200,6 +230,9 @@ T = [
     ('FORMAT SD CARD',
      '格式化 SD 卡',
      '格式化 SD 卡'),
+    ('Format SD card? All data will be lost.',
+     '确定格式化 SD 卡吗？所有数据都将丢失。',
+     '確定要格式化 SD 卡嗎？所有資料都會遺失。'),
     ('DELETE ALL EVENTS',
      '删除全部事件',
      '刪除全部事件'),
@@ -820,27 +853,22 @@ function walk(root){
 
 function currentIsZh(){ return lang !== "en"; }
 
-// Translate native dialogs (alert/confirm) issued by the page's own script.
-(function(){
-  if(window.__i18nAlertWrapped) return;
-  window.__i18nAlertWrapped = true;
-  var _alert = window.alert ? window.alert.bind(window) : null;
-  var _confirm = window.confirm ? window.confirm.bind(window) : null;
-  if(_alert) window.alert = function(msg){ _alert(currentIsZh() ? (zhText(msg) || msg) : msg); };
-  if(_confirm) window.confirm = function(msg){ return _confirm(currentIsZh() ? (zhText(msg) || msg) : msg); };
-})();
-
 function applyLang(){
   if(!currentIsZh() || !document.documentElement) return;
   walk(document.documentElement);
 }
 
-try{
-  var saved = window.localStorage.getItem(LS_KEY);
-  if(saved === "zh") saved = "zh-Hans";  // migrate the old two-way value
-  if(saved === "en" || saved === "zh-Hans" || saved === "zh-Hant"){ setLang(saved); }
-  else { setLang(detectLang(navigator.language || navigator.userLanguage)); }
-}catch(e){ setLang("en"); }
+// Saved choice: localStorage, else the URL fragment the toggle leaves behind
+// when storage is refused (captive-portal sheets), else the browser language.
+var saved = null;
+try{ saved = window.localStorage.getItem(LS_KEY); }catch(e){}
+if(saved === "zh") saved = "zh-Hans";  // migrate the old two-way value
+if(LANGS.indexOf(saved) < 0){
+  var hm = /(?:^|[#&])lang=([A-Za-z-]+)/.exec(window.location.hash || "");
+  saved = hm ? hm[1] : null;
+}
+if(LANGS.indexOf(saved) >= 0){ setLang(saved); }
+else { setLang(detectLang(navigator.language || navigator.userLanguage)); }
 
 var btn = document.createElement("button");
 btn.id = "langToggle";
@@ -855,7 +883,9 @@ btn.onclick = function(){
   var from = lang;
   var i = LANGS.indexOf(lang);
   setLang(LANGS[(i + 1) % LANGS.length]);
-  try{ window.localStorage.setItem(LS_KEY, lang); }catch(e){}
+  var stored = false;
+  try{ window.localStorage.setItem(LS_KEY, lang); stored = (window.localStorage.getItem(LS_KEY) === lang); }catch(e){}
+  if(!stored){ try{ window.location.hash = "lang=" + lang; }catch(e){} }
   paintBtn();
   if(from === "en" && currentIsZh()){ applyLang(); }
   else { window.location.reload(); }
@@ -874,7 +904,8 @@ if(document.readyState === "loading"){
   mount();
 }
 
-// Translate WebSocket-driven live updates as they land in the DOM.
+// Translate live updates, and the page's own dialogs / toasts, as they land
+// in the DOM.
 if("MutationObserver" in window){
   var mo = new MutationObserver(function(muts){
     var i, j, m, added, nd;

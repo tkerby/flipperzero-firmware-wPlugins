@@ -50,7 +50,7 @@ Most CAN protocol handling from hypery11's Flipper Zero implementation (`fsd_han
 - **Tesla dark theme UI** — mobile-first responsive design (optimized for phone in portrait)
   - Dark background (#0a0a1a) with accent gradients, inspired by Tesla's in-car UI
   - All HTML/CSS/JS embedded in firmware (no external CDN dependencies)
-- **Real-time WebSocket push** — 1 Hz state updates via WebSocket on port 81
+- **Real-time WebSocket push** — 1 Hz state updates via WebSocket on port 81; where the WebSocket never delivers (the iOS / macOS captive-portal sheet) the page polls `GET /api/status` and sends commands with `POST /api/cmd` instead
 - **FSD Status Panel** — FSD active/waiting, Listen-Only/Active mode, HW version, NAG Killer state, HW3 speed read-out (car → sent profile and FSD offset, follow distance)
 - **Battery SOC Ring** — animated circular progress bar with color coding (green >60%, yellow >30%, red ≤30%)
 - **BMS Live Data UI hooks** — fields exist in UI/API; Model 3/Y frames only (wrong on S/X), not yet confirmed on the ESP32
@@ -86,9 +86,9 @@ Most CAN protocol handling from hypery11's Flipper Zero implementation (`fsd_han
   - Hardware override selector (Auto-detect / Force HW4 / Force HW3 / Force Legacy)
 - **OTA Warning Banner** — pulsing red alert when vehicle OTA update is detected (same banner style for the in-car Autopark TX pause)
 - **CAN Errors** — combined controller error count with an RX missed / bus / TX fail split (mostly RX-queue drops on a busy bus, not failed sends)
-- **Connection Status** — green/red dot indicator with auto-reconnect on WebSocket disconnect
-- **Device Info** — firmware build date, uptime counter, WiFi client count
-- **REST API** — `GET /api/status` returns full JSON state
+- **Connection Status** — green/red dot indicator with auto-reconnect on WebSocket disconnect; stays green while HTTP polling is working
+- **Device Info** — release version and build date, uptime counter, WiFi client count; the footer names the board the image was built for
+- **REST API** — `GET /api/status` returns full JSON state; `POST /api/cmd` takes the same `{"cmd":…,"value":…}` JSON as a WebSocket message (`Content-Type: application/json` required)
 - **TTGO T-Display dashboard** — optional on-board ST7789 status display for the `ttgo-tdisplay` build
 - **Web firmware update** — the OTA Firmware Update card takes the app-only `tesla-fsd-<env>.bin` from a release (user `admin`, password = the WiFi AP password). The new image is confirmed after 15 s of runtime; a crash, watchdog reset, brownout or power cut before that boots the previous firmware, so just run the update again.
 
