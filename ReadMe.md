@@ -225,6 +225,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [RFIDMaker v0.9 (By KindaCharming / jeremydbean)](https://github.com/jeremydbean/FlipperRFIDMaker)
 - Updated: [Tesla Mod v2.16b40 (By hypery11)](https://github.com/hypery11/flipper-tesla-fsd)
 - OFW: NFC: [Fix FeliCa command handling #4465 (By kormax)](https://github.com/flipperdevices/flipperzero-firmware/pull/4465)
+- Added: [Kindle Click v0.3 (By zuyan9)](https://github.com/zuyan9/Flipper-Zero-Kindle-Click)
 
 <a name="release"></a>
 
@@ -829,6 +830,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Kelon AC v1.0 (By xMasterX)](https://github.com/xMasterX/all-the-plugins/tree/213baa6e872d1db597a25d2c16e81406e9634440/non_catalog_apps/kelon_ac_remote)
 - [Kelvinator AC v1.0 (By xMasterX)](https://github.com/xMasterX/all-the-plugins/tree/213baa6e872d1db597a25d2c16e81406e9634440/non_catalog_apps/kelvinator_ac_remote)
 - [Key Copier v1.5 (By zinongli)](https://github.com/zinongli/KeyCopier)
+- [Kindle Click v0.3 (By zuyan9)](https://github.com/zuyan9/Flipper-Zero-Kindle-Click)
 - [KneeFlip Rehab v0.1 (By daryalok)](https://github.com/daryalok/KneeFlip-Rehab)
 - [KyberWrite v0.1 (By spandox2)](https://github.com/spandox2/KyberWrite)
 - [Lab401/DigiLab v1.1.1 (By lab-401 & tixlegeek)](https://github.com/lab-401/fzDigiLab)

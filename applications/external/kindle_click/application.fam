@@ -4,10 +4,10 @@ App(
     apptype=FlipperAppType.EXTERNAL,
     entry_point="kindle_click_app",
     stack_size=3 * 1024,
-    fap_category="Bluetooth",
-    fap_version="0.3",
     fap_icon="kindle_click_10px.png",
-    fap_description="Turn Kindle pages: the Flipper acts as a Kindle Click remote",
+    fap_category="Bluetooth",
     fap_author="zuyan9",
     fap_weburl="https://github.com/zuyan9/Flipper-Zero-Kindle-Click",
+    fap_version="0.3",
+    fap_description="Turn Kindle pages: the Flipper acts as a Kindle Click remote",
 )
