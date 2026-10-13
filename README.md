@@ -12,14 +12,14 @@ The application broadcasts unencrypted BLE advertisements from the Flipper Zero.
 
 Supported beacon types:
 
-- **BTHome V2 Flipper**
-- **BTHome V1 Flipper**
-- **iBeacon Flipper**
-- **Eddystone TLM Flipper**
-- **ATC1441 Flipper**
-- **MiBeacon Flipper**
+- **BTHome V2**
+- **BTHome V1**
+- **iBeacon**
+- **Eddystone TLM**
+- **ATC1441**
+- **MiBeacon**
 
-The device advertises with the local name `Flipper` where the selected advertising format has enough space for it.
+The device advertises with the local name Flipper` where the selected advertising format has enough space for it.
 
 ## Why it is useful
 
@@ -58,7 +58,7 @@ The simulated humidity changes slightly between advertising updates, which makes
 
 ### BTHome V2
 
-Broadcasts an unencrypted BTHome V2 advertisement using service UUID `0xFCD2`.
+Broadcasts an unencrypted BTHome V2 advertisement using service UUID 0xFCD2.
 
 Included data:
 
@@ -72,7 +72,7 @@ This is the recommended format for testing [BTHome Logger](https://github.com/st
 
 ### BTHome V1
 
-Broadcasts an unencrypted BTHome V1 advertisement using service UUID `0x181C`.
+Broadcasts an unencrypted BTHome V1 advertisement using service UUID 0x181C.
 
 It contains the same telemetry fields as BTHome V2 and is useful for testing older BTHome receivers and custom parsers.
 
@@ -80,16 +80,14 @@ It contains the same telemetry fields as BTHome V2 and is useful for testing old
 
 Broadcasts an Apple iBeacon advertisement with:
 
-- Proximity UUID: `e2c56db5-dffb-48d2-b060-d0f5a71096e6`
-- Major: `1`
-- Minor: `1`
-- Measured RSSI at 1 m: `-59 dBm`
-
-The iBeacon format has a fixed structure and occupies nearly the entire 31-byte BLE advertising payload limit. Therefore, it does not include the `Flipper` local name.
+- Proximity UUID: e2c56db5-dffb-48d2-b060-d0f5a71096e6
+- Major: 1
+- Minor: 1
+- Measured RSSI at 1 m: -59 dBm
 
 ### Eddystone TLM
 
-Broadcasts an Eddystone Telemetry frame using the Eddystone service UUID `0xFEAA`.
+Broadcasts an Eddystone Telemetry frame using the Eddystone service UUID 0xFEAA.
 
 Included data:
 
@@ -126,28 +124,7 @@ The product ID is intended to be replaced with the ID of a real Xiaomi device wh
 
 ## User interface
 
-The main screen shows the selected beacon type, live telemetry, and the advertising status.
-
-```text
-        BLE Beacon
- < Type: BTHome V2 Flipper >
-  V:4100mV 98% T:27C
- Unencrypted BLE beacon
-
-[Info]    (Start)    [Help]
-```
-
-When the beacon is active, an `ADV` indicator and a blinking Bluetooth symbol appear at the top of the screen.
-
-```text
- >- ADV
-        BLE Beacon
- < Type: BTHome V2 Flipper >
-  V:4100mV 98% T:27C
- Unencrypted BLE beacon
-
-[Info]     (Stop)     [Help]
-```
+The main screen shows the selected beacon type, live telemetry, and the advertising status. When the beacon is active, an `ADV` indicator and a blinking Bluetooth symbol appear at the top of the screen.
 
 ## Controls
 
@@ -162,7 +139,7 @@ When the beacon is active, an `ADV` indicator and a blinking Bluetooth symbol ap
 | OK | Start or stop the beacon; opens Info or Help if selected |
 | Back | Open the exit confirmation screen |
 
-The beacon is not started automatically. Press `OK` to begin advertising.
+The beacon is not started automatically. Press OK to begin advertising.
 
 ## Info screen
 
@@ -175,42 +152,17 @@ It includes:
 - List of real Flipper telemetry values
 - BLE local name
 
-Use `Up` and `Down` to scroll through the text. Press `OK` or `Back` to return to the main screen.
+Use Up and Down to scroll through the text. Press OK or Back to return to the main screen.
 
 ## Help screen
 
 The Help screen contains a short reference for all controls.
 
-Use `Up` and `Down` to scroll through the text. Press `OK` or `Back` to return to the main screen.
+Use Up and Down to scroll through the text. Press OK or Back to return to the main screen.
 
 ## Exit screen
 
-Pressing `Back` on the main screen opens an exit confirmation dialog:
-
-```text
-          Exit?
-
- [ No ]           [ Yes ]
-```
-
-- `Left` selects **No**
-- `Right` selects **Yes**
-- `OK` confirms the selection
-
-If you select **Yes**, the app shows a short exit splash screen:
-
-```text
-┌──────────────────────────────┐
-│                              │
-│         BLE Beacon           │
-│       Simulator v1.0         │
-│                              │
-│   LAB-66 (C) Siarhei Besarab │
-│                              │
-└──────────────────────────────┘
-```
-
-After the splash screen, the application stops BLE advertising, releases all resources, and exits cleanly.
+Pressing Back on the main screen opens an exit confirmation dialog. If you select **Yes**, the app shows a short exit splash screen. After the splash screen, the application stops BLE advertising, releases all resources, and exits cleanly.
 
 ## Technical details
 
@@ -222,37 +174,6 @@ After the splash screen, the application stops BLE advertising, releases all res
 - All supported advertisements are unencrypted.
 - The BLE advertising payload is limited to 31 bytes, which determines which fields and local names fit into each beacon format.
 
-BTHome is an open standard for broadcasting sensor data over Bluetooth LE. BTHome v2 uses service UUID `0xFCD2`, while BTHome v1 uses `0x181C`. [157][156]
-
-## Building
-
-Build the application with [uFBT](https://github.com/flipperdevices/flipperzero-ufbt):
-
-```bash
-ufbt
-```
-
-Install and launch it on a connected Flipper Zero:
-
-```bash
-ufbt launch
-```
-
-For a clean rebuild:
-
-```bash
-ufbt clean
-ufbt
-```
-
-## Installation
-
-1. Build the application or download a release `.fap` file.
-2. Copy it to the `apps/Bluetooth` folder on the Flipper Zero SD card.
-3. Open the Flipper Zero menu and launch **BLE Beacon**.
-4. Select the desired beacon type.
-5. Press `OK` to start advertising.
-
 ## Related project
 
 - [BTHome Logger for Android](https://github.com/steanlab/BTHome-Logger) — an Android application for receiving and decoding unencrypted BTHome v1 and v2 advertisements.
@@ -262,6 +183,20 @@ ufbt
 **Siarhei Besarab (steanlab)**  
 LAB-66
 
-## License
+## Contacts
 
-Add your chosen open-source license here, for example MIT or GPL-3.0.
+* **LAB-66:** [t.me/lab66](https://t.me/lab66)
+* **LinkedIn:** [@steanlab](https://www.linkedin.com/in/steanlab)
+* **Mastodon:** [@lab66](https://mastodon.social/@lab66)
+
+## Support Development
+
+If this database tool is useful for your academic, educational, laboratory, or hardware projects, you can support its development:
+
+* [PayPal](https://paypal.me/steanlab)
+* [Revolut](https://revolut.me/steanlab)
+* [GitHub Sponsors](https://github.com/sponsors/steanlab)
+* [Donorbox](https://donorbox.org/donations-for-lab-66)
+* Crypto Bitcoin (BTC): bc1qe5dmykh247nnycz8tjlfp3te67kftsmc8uxz5k, Ethereum (ETH): 0x3Aa313FA17444db70536A0ec5493F3aaA49C9CBf, Z-CASH (ZEC): t1LrYwjGn84gG4fWRs3ajaHZdaK2VWi5gFk
+
+*Thank you for supporting independent science and open-source tools.*
