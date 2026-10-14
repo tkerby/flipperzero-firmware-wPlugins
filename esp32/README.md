@@ -229,6 +229,8 @@ LILYGO's physical connector names are easy to confuse with this project's `can0`
 
 Pins shown are for one harness (`1933903-XX`). Confirm yours on **Service Mode → CAN Port** before wiring.
 
+The dashboard's **Tap Check** card adds a **Bus hint** per bus from `0x3C2`: seen there, the pair is likely Vehicle CAN; body frames without it point to the subset the gateway forwards. `0x3C2` showing only on Vehicle CAN is what contributors report and what the public DBCs say, not something confirmed on every car, so treat it as a hint and let the CAN Port page decide.
+
 > [!IMPORTANT]
 > The official LILYGO T-2CAN V1.0 labels physical `CANA` as MCP2515/SPI and physical `CANB` as native TWAI.
 
