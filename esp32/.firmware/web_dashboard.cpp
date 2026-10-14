@@ -1208,11 +1208,12 @@ function capSync(d){
     h+=capRow('Soft Engage','soft_engage',b.soft_engage);
     h+=capRow('Body/comfort bus','body_control',b.body_control);
     if(b.body_control===0){
-      var seen=[];
-      if(b.body_ui)seen.push('mirror/lock/horn');
-      if(b.body_window)seen.push('windows');
-      if(b.body_lights)seen.push('lights/turn');
-      if(b.body_door)seen.push('mirror read-back');
+      // Which frames were seen comes per bus under "ids" (capability_status_json()).
+      var ids=b.ids||{},seen=[];
+      if(ids.body_ui)seen.push('mirror/lock/horn');
+      if(ids.body_window)seen.push('windows');
+      if(ids.body_lights)seen.push('lights/turn');
+      if(ids.body_door)seen.push('mirror read-back');
       if(seen.length)h+='<div style="font-size:.7em;color:var(--text3);padding-top:3px">Reachable frames: '+seen.join(', ')+' (presence only — not proof injection actuates them).</div>';
     }
     if(typeof b.vehicle_hint==='number')h+=capHintRow('Bus hint',b.vehicle_hint);
