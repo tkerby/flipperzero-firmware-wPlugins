@@ -1280,10 +1280,12 @@ static void test_cp_type_rewrite(void) {
     CHECK(fsd_handle_cp_type_rewrite(&s, &f), "US unplugged -> rewritten");
     CHECK(f.data[0] == 0x37 && memcmp(f.data + 1, k_25d_us_unplugged + 1, 7) == 0,
           "only CP_type changed: byte0=0x%02X", f.data[0]);
-    CHECK(fsd_cp_type_value(f.data[0]) == FSD_CP_TYPE_IEC_CCS && s.cp_type_tx_count == 1,
-          "copy is IEC_CCS, tx counted (%u)", s.cp_type_tx_count);
+    // The copy is counted by the caller once the CAN driver has taken it, so a
+    // send refused by a full TX queue never shows as sent.
+    CHECK(fsd_cp_type_value(f.data[0]) == FSD_CP_TYPE_IEC_CCS && s.cp_type_tx_count == 0,
+          "copy is IEC_CCS, not counted before the send (%u)", s.cp_type_tx_count);
     CanFrame f2 = cp_frame(k_25d_us_unplugged2, 8);
-    CHECK(fsd_handle_cp_type_rewrite(&s, &f2) && f2.data[0] == 0x37 && s.cp_type_tx_count == 2,
+    CHECK(fsd_handle_cp_type_rewrite(&s, &f2) && f2.data[0] == 0x37 && s.cp_type_tx_count == 0,
           "second US frame rewritten (tx=%u)", s.cp_type_tx_count);
 
     // Already IEC_CCS -> never echoed (no self-trigger loop).

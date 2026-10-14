@@ -1288,6 +1288,5 @@ bool fsd_handle_cp_type_rewrite(FSDState *state, CanFrame *frame) {
     if (state->cp_plug_state != FSD_CP_PLUG_UNPLUGGED) return false;
 
     frame->data[0] = fsd_cp_type_make_iec_ccs(frame->data[0]);
-    state->cp_type_tx_count++;
     return true;
 }

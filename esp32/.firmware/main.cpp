@@ -1424,7 +1424,13 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
         bool modified = fsd_handle_cp_type_rewrite(&g_state, &f);
         bool cp_tx = fsd_can_transmit(&g_state);
         state_exit();
-        if (modified && cp_tx) send_on_bus(bus, f);
+        // Counted only once the copy is out: a send refused by a full TX queue
+        // is not one the dashboard should report.
+        if (modified && cp_tx && send_on_bus(bus, f)) {
+            state_enter();
+            g_state.cp_type_tx_count++;
+            state_exit();
+        }
         return;
     }
 
