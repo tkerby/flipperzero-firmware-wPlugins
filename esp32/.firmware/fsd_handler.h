@@ -234,10 +234,12 @@ bool fsd_build_gear_lever_frame(CanFrame *frame, uint8_t gear_pos, uint8_t count
 
 /** Charge-port type (0x25D CP_status, Vehicle CAN, #228). Read-only decode runs
  *  in every mode: an 8-byte frame updates cp_type / cp_plug_state / cp_status_seen
- *  so the dashboard shows what the car reports. When cp_type_eu_rewrite is on and
+ *  and stamps cp_status_ms with now_ms, so the dashboard shows what the car
+ *  reports and when it stopped reporting it. When cp_type_eu_rewrite is on and
  *  TX is allowed, a US-type frame (CP_type 0) that is unplugged is rewritten to
  *  IEC_CCS in place and the function returns true so the caller re-sends it on
- *  the bus it arrived on. Returns false (no rewrite) for a short/6-byte 0x25D, a
+ *  the bus it arrived on; the caller counts it in cp_type_tx_count once the send
+ *  has gone out. Returns false (no rewrite) for a short/6-byte 0x25D, a
  *  frame already EU or any non-US type, or any plug state other than unplugged
  *  (fail closed). Source: fsd_logic/fsd_cp_status.h. */
-bool fsd_handle_cp_type_rewrite(FSDState *state, CanFrame *frame);
+bool fsd_handle_cp_type_rewrite(FSDState *state, CanFrame *frame, uint32_t now_ms);

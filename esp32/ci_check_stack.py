@@ -200,6 +200,11 @@ _CHAINS = [
     ("HTTP command",
      ["loop", "web_dashboard_update", "handle_cmd", "web_command", "prefs_save"],
      ["WebServer", "NVS write"]),
+    # The Origin check ahead of POST /api/cmd and /sdformat, which logs and
+    # answers a refusal; handle_cmd() has the larger frame.
+    ("HTTP POST origin",
+     ["loop", "web_dashboard_update", "handle_cmd", "post_from_dashboard"],
+     ["WebServer", "HTTP reply"]),
     ("black-box list",
      ["loop", "web_dashboard_update", "handle_blackbox_list", "blackbox_list_json"],
      ["WebServer", "black-box storage"], "black box on disk"),
@@ -212,22 +217,33 @@ _CHAINS = [
     ("black-box auth",
      ["loop", "web_dashboard_update", "handle_blackbox_get", "download_auth_ok"],
      ["WebServer", "HTTP reply"]),
+    # The Host check ahead of /api/status, /api/aux and both /blackbox
+    # handlers, which answers a refusal; /blackbox/get has the largest frame.
+    ("HTTP Host check",
+     ["loop", "web_dashboard_update", "handle_blackbox_get", "host_ours"],
+     ["WebServer", "HTTP reply"]),
     ("OTA upload",
      ["loop", "web_dashboard_update", "handle_ota_upload"],
      ["WebServer upload", "OTA flash"]),
-    # The deepest of the require_admin_auth() routes (/auth, /restart, /update).
+    # The deepest of the require_admin_auth() routes (/auth, /restart,
+    # /sdformat, /update).
     ("OTA upload auth",
      ["loop", "web_dashboard_update", "handle_ota_upload", "require_admin_auth"],
      ["WebServer upload", "HTTP reply"]),
     ("CAN stream accept",
      ["loop", "web_dashboard_update", "http_can_stream_update", "accept_client"],
      ["TCP socket"]),
-    # rm_recursive() recurses once per directory level. Counted three deep, the
-    # layout can_dump.cpp writes (/dumps/<n>/<file>); each further level of a
-    # tree someone else put on the card adds 144 bytes.
+    # Whose request it is, from the device's names (own_names(): IP text).
+    ("CAN stream access",
+     ["loop", "web_dashboard_update", "http_can_stream_update", "accept_client",
+      "web_dashboard_stream_access"],
+     ["Serial printf"]),
+    # rm_recursive() recurses once per path level, at most RM_MAX_DEPTH (8)
+    # deep in can_dump.cpp; the layout it writes is three (/dumps/<n>/<file>),
+    # the rest is room for a tree someone else put on the card.
     ("SD format",
-     ["loop", "web_dashboard_update", "handle_sdformat", "sd_format_card",
-      "rm_recursive", "rm_recursive", "rm_recursive"],
+     ["loop", "web_dashboard_update", "handle_sdformat", "sd_format_card"]
+     + ["rm_recursive"] * 8,
      ["WebServer", "SD card"], "SD card"),
     ("CAN frame",
      ["loop", "drain_can_bus_index", "process_frame", "prefs_save"],
@@ -310,6 +326,16 @@ def loop_stack_size(main_cpp):
         sizes.append(size)
     # More than one (an #if per board): hold every env to the smallest.
     return min(sizes) if sizes else _DEFAULT_STACK
+
+
+def rm_max_depth(src_dir):
+    """RM_MAX_DEPTH from can_dump.cpp, or None when the file has none."""
+    try:
+        with open(os.path.join(src_dir, "can_dump.cpp"), encoding="utf-8", errors="replace") as f:
+            m = re.search(r"^#define\s+RM_MAX_DEPTH\s+(\d+)[uU]?\b", f.read(), re.M)
+    except OSError:
+        return None
+    return int(m.group(1)) if m else None
 
 
 def _bare_name(signature):
@@ -404,6 +430,13 @@ def check(build_dir, src_dir, allow_missing):
 
     errors = []
     notes = []
+    # The SD format chain counts one rm_recursive() frame per level it may go.
+    depth = rm_max_depth(src_dir)
+    counted = max(chain[1].count("rm_recursive") for chain in _CHAINS)
+    if depth is not None and depth != counted:
+        errors.append("RM_MAX_DEPTH is %d in can_dump.cpp but the SD format chain "
+                      "counts %d rm_recursive() frames: update _CHAINS in %s"
+                      % (depth, counted, os.path.basename(__file__)))
     markers = {m for found in _FEATURES.values() for m in found}
     gone = sorted(markers - _defined_in_sources(src_dir, markers))
     if gone:

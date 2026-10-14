@@ -245,6 +245,33 @@ static void test_value_types() {
     CHECK(parse("{\"cmd\":\"x\",\"value\":5}", &cmd) && !cmd.string(s, sizeof(s)), "number is no string");
 }
 
+// Percentages and timeouts: limited on the int, before the caller narrows it
+// to uint8_t / uint32_t. 300 used to become 44 and -1 a 49-day sleep timeout.
+static void test_capped_integers() {
+    WebCmd cmd;
+    struct { const char *v; int min, cap; bool ok; int n; } c[] = {
+        {"0", 0, 100, true, 0}, {"55", 0, 100, true, 55}, {"100", 0, 100, true, 100},
+        {"101", 0, 100, true, 100}, {"300", 0, 100, true, 100}, {"256", 0, 100, true, 100},
+        {"2147483647", 0, 100, true, 100},
+        {"-1", 0, 100, false, 0}, {"-256", 0, 100, false, 0}, {"-2147483648", 0, 100, false, 0},
+        {"3600", 0, 3600, true, 3600}, {"7200", 0, 3600, true, 3600}, {"-5", 0, 3600, false, 0},
+        {"10000", 10000, INT32_MAX, true, 10000}, {"9999", 10000, INT32_MAX, false, 0},
+        {"-1", 10000, INT32_MAX, false, 0}, {"2147483647", 10000, INT32_MAX, true, 2147483647},
+        {"\"50\"", 0, 100, false, 0}, {"50.5", 0, 100, false, 0}, {"null", 0, 100, false, 0},
+    };
+    for (auto &t : c) {
+        std::string m = std::string("{\"cmd\":\"disp_br\",\"value\":") + t.v + "}";
+        CHECK(parse(m, &cmd), "parses: %s", m.c_str());
+        int n = 12345;
+        bool ok = cmd.integer_capped(&n, t.min, t.cap);
+        CHECK(ok == t.ok && (!ok || n == t.n), "%s in [%d, cap %d]: ok=%d n=%d", t.v, t.min, t.cap, ok, n);
+        CHECK(cmd.bad_value == !t.ok, "%s: bad_value=%d", t.v, cmd.bad_value);
+        if (ok) CHECK((uint8_t)n == n || t.cap > 255, "%s narrows to uint8_t unchanged", t.v);
+    }
+    CHECK(parse("{\"cmd\":\"disp_br\"}", &cmd) && !cmd.integer_capped(nullptr, 0, 100) && cmd.bad_value,
+          "absent value refused");
+}
+
 static bool str(const char *quoted, std::string *out, size_t cap = 80) {
     char buf[128];
     size_t len = 0;
@@ -356,12 +383,19 @@ static void test_wifi_quotes_and_backslashes() {
     CHECK(strcmp(cfg.sta_ssid, "Home \"5G\"") == 0, "sta_ssid decoded: %s", cfg.sta_ssid);
     CHECK(strcmp(cfg.sta_pass, "\\\\back\\slash\"quote\"") == 0, "sta_pass decoded: %s", cfg.sta_pass);
 
-    // 64 quote characters: 128 bytes of JSON, 64 once decoded.
+    // 64 quote characters: 128 bytes of JSON, 64 once decoded. They fit the
+    // buffer (a network password with no network is not checked further), but
+    // 64 characters that are not hex are no password (web_wifi_pass_ok()).
     std::string q64;
     for (int i = 0; i < 64; i++) q64 += "\\\"";
-    CHECK(wifi(wifi_value("\"a\"", "\"" + q64 + "\""), &cfg) == nullptr && strlen(cfg.pass) == 64,
-          "64 escaped quotes fit");
-    CHECK(wifi(wifi_value("\"a\"", "\"" + q64 + "\\\"\""), &cfg) != nullptr, "65 do not");
+    CHECK(wifi(wifi_value("\"a\"", "\"\"", "\"\"", "\"" + q64 + "\""), &cfg) == nullptr &&
+          strlen(cfg.sta_pass) == 64, "64 escaped quotes fit");
+    CHECK(wifi(wifi_value("\"a\"", "\"\"", "\"\"", "\"" + q64 + "\\\"\""), &cfg) != nullptr, "65 do not");
+    bad = wifi(wifi_value("\"a\"", "\"" + q64 + "\""), &cfg);
+    CHECK(bad && strcmp(bad, "pass") == 0, "64 quotes are no AP password: %s", bad ? bad : "null");
+    std::string q63 = q64.substr(2);
+    CHECK(wifi(wifi_value("\"a\"", "\"" + q63 + "\""), &cfg) == nullptr && strlen(cfg.pass) == 63,
+          "63 escaped quotes are");
 
     CHECK(wifi(wifi_value("\"\\u00e9t\\u00e9\"", "\"\\u5bc6\\u78bc\\u5bc6\\u78bc\\u5bc6\\u78bc\""), &cfg) == nullptr &&
           strcmp(cfg.ssid, "\xC3\xA9t\xC3\xA9") == 0 && strlen(cfg.pass) == 18, "escaped non-ASCII");
@@ -369,12 +403,32 @@ static void test_wifi_quotes_and_backslashes() {
 
 static void test_wifi_lengths() {
     WebWifiCfg cfg;
-    std::string s32(32, 's'), s33(33, 's'), p7(7, 'p'), p8(8, 'p'), p64(64, 'p'), p65(65, 'p');
+    std::string s32(32, 's'), s33(33, 's'), p7(7, 'p'), p8(8, 'p'), p63(63, 'p'), p64(64, 'p'),
+        p65(65, 'p');
+    std::string hex64 = "0123456789abcdefABCDEF0123456789abcdef0123456789ABCDEF0123456789";
     auto q = [](const std::string &s) { return "\"" + s + "\""; };
 
     CHECK(wifi(wifi_value(q(s32), q(p8)), &cfg) == nullptr, "32-byte SSID, 8-byte password");
-    CHECK(wifi(wifi_value(q("x"), q(p64)), &cfg) == nullptr, "64-byte password");
-    const char *bad = wifi(wifi_value(q(s33), q(p8)), &cfg);
+    CHECK(wifi(wifi_value(q("x"), q(p63)), &cfg) == nullptr, "63-byte password");
+    // 64 characters are the key in hex: the SoftAP does not start on any other.
+    CHECK(hex64.size() == 64, "hex64 is 64 long");
+    CHECK(wifi(wifi_value(q("x"), q(hex64)), &cfg) == nullptr && strcmp(cfg.pass, hex64.c_str()) == 0,
+          "64 hex digits");
+    const char *bad = wifi(wifi_value(q("x"), q(p64)), &cfg);
+    CHECK(bad && strcmp(bad, "pass") == 0, "64 characters, not hex: %s", bad ? bad : "null");
+    std::string hex63g = hex64.substr(0, 63) + "g";
+    bad = wifi(wifi_value(q("x"), q(hex63g)), &cfg);
+    CHECK(bad && strcmp(bad, "pass") == 0, "63 hex digits and a g: %s", bad ? bad : "null");
+    bad = wifi(wifi_value(q("x"), q(p8), q("Home"), q(p64)), &cfg);
+    CHECK(bad && strcmp(bad, "sta_pass") == 0, "64-character network password, not hex: %s",
+          bad ? bad : "null");
+    CHECK(wifi(wifi_value(q("x"), q(p8), q("Home"), q(hex64)), &cfg) == nullptr,
+          "64 hex digits for the network");
+    CHECK(wifi(wifi_value(q("x"), q(p8), q(""), q(p64)), &cfg) == nullptr,
+          "anything with no network (the page does not check it then)");
+    CHECK(web_wifi_pass_ok("", 0) && web_wifi_pass_ok("12345678", 8) && !web_wifi_pass_ok("1234567", 7),
+          "empty, 8, 7");
+    bad = wifi(wifi_value(q(s33), q(p8)), &cfg);
     CHECK(bad && strcmp(bad, "ssid") == 0, "33-byte SSID: %s", bad ? bad : "null");
     bad = wifi(wifi_value(q(""), q(p8)), &cfg);
     CHECK(bad && strcmp(bad, "ssid") == 0, "empty SSID: %s", bad ? bad : "null");
@@ -487,6 +541,7 @@ int main() {
     test_layout_variations();
     test_malformed_messages();
     test_value_types();
+    test_capped_integers();
     test_string_decoding();
     test_get();
     test_wifi_page_message();

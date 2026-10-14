@@ -9,7 +9,10 @@
  *
  * Serves a single plain HTTP stream on port 82 at /stream. The dashboard reads
  * this stream with fetch(), stores the bytes in the browser, and saves them as
- * a candump-compatible text file when the user stops collection.
+ * a candump-compatible text file when the user stops collection. Only the
+ * dashboard's own page gets the CORS grant that read needs; other web pages,
+ * and requests under a name that is not the device's, are refused
+ * (web_stream_access() in web_origin.h).
  */
 
 /** Allocate the frame ring. Call early in setup(), before WiFi starts, so the

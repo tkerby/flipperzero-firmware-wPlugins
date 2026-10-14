@@ -342,6 +342,7 @@ typedef struct FSDState {
     bool cp_status_seen;         // an 8-byte 0x25D has been decoded (false => tap carries no CP_status)
     uint8_t cp_type;             // CP_type the car reports: 0 US_TESLA 1 EURO_IEC 2 GB 3 IEC_CCS
     uint8_t cp_plug_state;       // FsdCpPlugState from the last 0x25D (plug guard read-out)
+    uint32_t cp_status_ms;       // when the last 8-byte 0x25D arrived (stale read-out)
     // EU CP Type rewrite: when on, re-send each received US-type 0x25D with
     // CP_type=IEC_CCS on the bus it arrived on, so EU Superchargers show in nav.
     // Opt-in, default OFF. Plug guard (no rewrite while a cable is present /

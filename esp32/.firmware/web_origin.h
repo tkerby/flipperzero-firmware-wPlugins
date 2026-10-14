@@ -19,6 +19,10 @@
  * under any other name is always in that position; the dashboard sends such a
  * page load to its own address instead (handle_root()).
  *
+ * The CAN stream on :82 is read by the dashboard page across ports, which a
+ * browser allows only when the reply grants the page's origin: it grants our
+ * own page and nothing else (web_stream_access()).
+ *
  * Plain C++ over const char* so it is unit tested on the host
  * (test/test_web_origin.cpp); web_dashboard.cpp feeds it the request headers
  * and the device's current names.
@@ -63,10 +67,12 @@ inline bool web_origin_have(const char *name) {
     return name && *name && strcmp(name, "0.0.0.0") != 0;
 }
 
-// [host, host + n) is one of our names, with no port or :80, the only port
-// the page is served on.
-inline bool web_origin_host_ours(const char *host, size_t n, const WebOwnNames &own) {
-    if (n >= 3 && memcmp(host + n - 3, ":80", 3) == 0) n -= 3;
+// [host, host + n) is one of our names, with no port or `port`: :80, the port
+// the page is served on, unless the request went to another of our servers.
+inline bool web_origin_host_ours(const char *host, size_t n, const WebOwnNames &own,
+                                 const char *port = ":80") {
+    size_t pl = strlen(port);
+    if (n >= pl && memcmp(host + n - pl, port, pl) == 0) n -= pl;
     if (n == 0) return false;
     if (web_origin_have(own.ap_ip) && web_origin_same(host, n, own.ap_ip)) return true;
     if (web_origin_have(own.sta_ip) && web_origin_same(host, n, own.sta_ip)) return true;
@@ -93,12 +99,14 @@ inline bool web_origin_trim(const char *v, const char **p, size_t *n) {
     return len > 0;
 }
 
-// Host header: one of our names, or no Host at all (HTTP/1.0).
-inline bool web_host_header_ours(const char *host, const WebOwnNames &own) {
+// Host header: one of our names, or no Host at all (HTTP/1.0). `port` as in
+// web_origin_host_ours().
+inline bool web_host_header_ours(const char *host, const WebOwnNames &own,
+                                 const char *port = ":80") {
     const char *p;
     size_t n;
     if (!web_origin_trim(host, &p, &n)) return true;
-    return web_origin_host_ours(p, n, own);
+    return web_origin_host_ours(p, n, own, port);
 }
 
 // Origin header: http:// and one of our names. Not "null", not https (the
@@ -120,20 +128,37 @@ inline bool web_ws_origin_ok(const char *origin, const WebOwnNames &own) {
     return !web_origin_trim(origin, &p, &n) || web_origin_ours(origin, own);
 }
 
-// POST /api/cmd. Browsers send Origin on every POST, so as on the WebSocket
-// no Origin is a client that is not a page. "null" is a browser hiding the
-// page's origin (a no-referrer policy, a sandboxed frame): taken only when
-// Host is one of our names, which a rebound name is not; from another site
-// such a request cannot get past the CORS preflight that the JSON
-// Content-Type forces. Any other Origin has to be our own page.
-inline bool web_post_origin_ok(const char *origin, const char *host, const WebOwnNames &own) {
-    const char *p, *h;
-    size_t n, hn;
-    if (!web_origin_trim(origin, &p, &n)) return true;
-    if (n == 4 && memcmp(p, "null", 4) == 0) {
-        return web_origin_trim(host, &h, &hn) && web_origin_host_ours(h, hn, own);
-    }
-    return web_origin_ours(origin, own);
+// POST /api/cmd and /sdformat, the same rule as the WebSocket. Browsers send
+// Origin on every POST, so no Origin is a client that is not a page; any
+// Origin has to be our own page. That refuses "null", which the dashboard
+// page never sends but sandboxed frames, data: URLs and file:// pages do,
+// with whatever Host they aim at: the CORS preflight that /api/cmd's JSON
+// Content-Type forces would be all that stood between them and a command.
+inline bool web_post_origin_ok(const char *origin, const WebOwnNames &own) {
+    return web_ws_origin_ok(origin, own);
+}
+
+// The CAN stream on :82 (http_can_stream.cpp). The dashboard's own page reads
+// it from :80, so it gets the stream with a CORS grant for its Origin. Any
+// other page is refused outright: without a grant it could not read the
+// stream, but taking it would still end a capture in progress and replace its
+// filters. No Origin is a client that is not a page (curl, a capture script)
+// and is served without a grant. Host has to be ours in every case: a page on
+// a rebound name reads the stream as its own origin, and sends no Origin at
+// all on that GET.
+enum WebStreamAccess {
+    WEB_STREAM_REFUSE,
+    WEB_STREAM_SERVE,         // no Origin: not a browser page
+    WEB_STREAM_SERVE_GRANT,   // the dashboard page: echo its Origin
+};
+
+inline WebStreamAccess web_stream_access(const char *origin, const char *host,
+                                         const WebOwnNames &own) {
+    const char *p;
+    size_t n;
+    if (!web_host_header_ours(host, own, ":82")) return WEB_STREAM_REFUSE;
+    if (!web_origin_trim(origin, &p, &n)) return WEB_STREAM_SERVE;
+    return web_origin_ours(origin, own) ? WEB_STREAM_SERVE_GRANT : WEB_STREAM_REFUSE;
 }
 
 #endif // WEB_ORIGIN_H

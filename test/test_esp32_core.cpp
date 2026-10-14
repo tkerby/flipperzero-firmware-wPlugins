@@ -19,6 +19,7 @@
 #include "fsd_checksum.h" // tesla_additive_checksum (0x334 / 0x118 vectors)
 #include "fsd_cp_status.h" // 0x25D CP_status decode + plug guard + rewrite predicate (#228)
 #include "blackbox_flush.h" // black-box ring push, window search, save slices
+#include "blackbox_name.h"  // black-box event names and their order across reboots
 #include "gear_tx_route.h" // Continuous AP 0x229 press bus choice
 
 static int g_pass = 0;
@@ -1242,7 +1243,7 @@ static void test_cp_type_decode(void) {
     // Decode is read-only and runs even in Listen-Only, toggle off.
     FSDState s; cp_set(&s, false); s.op_mode = OpMode_ListenOnly;
     CanFrame f = cp_frame(k_25d_us_unplugged, 8);
-    CHECK(!fsd_handle_cp_type_rewrite(&s, &f), "decode-only: no rewrite, toggle off");
+    CHECK(!fsd_handle_cp_type_rewrite(&s, &f, 1000u), "decode-only: no rewrite, toggle off");
     CHECK(s.cp_status_seen && s.cp_type == FSD_CP_TYPE_US_TESLA &&
           s.cp_plug_state == FSD_CP_PLUG_UNPLUGGED,
           "idle US decoded: seen=%d type=%u plug=%u", s.cp_status_seen, s.cp_type, s.cp_plug_state);
@@ -1251,7 +1252,7 @@ static void test_cp_type_decode(void) {
     // The 6-byte Party-CAN 0x25D is not CP_status: decodes to nothing.
     FSDState s6; cp_set(&s6, true);
     CanFrame f6 = cp_frame(k_25d_us_unplugged, 6);
-    CHECK(!fsd_handle_cp_type_rewrite(&s6, &f6) && !s6.cp_status_seen, "6-byte 0x25D ignored");
+    CHECK(!fsd_handle_cp_type_rewrite(&s6, &f6, 1000u) && !s6.cp_status_seen, "6-byte 0x25D ignored");
 
     // Plug-state table straight from the shared decoder.
     uint8_t d[8]; memcpy(d, k_25d_us_unplugged, 8);
@@ -1273,24 +1274,57 @@ static void test_cp_type_decode(void) {
     CHECK(fsd_cp_plug_state(d) == FSD_CP_PLUG_UNKNOWN, "cable state SNA -> unknown (fail closed)");
 }
 
+static void test_cp_type_stale(void) {
+    // Each 8-byte CP_status stamps when it arrived; the read-out goes stale
+    // FSD_CP_STATUS_STALE_MS after the last one, never before the first.
+    FSDState s; cp_set(&s, false);
+    CHECK(!fsd_cp_status_stale(s.cp_status_seen, s.cp_status_ms, 100000u), "never seen -> not stale");
+    CanFrame f = cp_frame(k_25d_us_unplugged, 8);
+    fsd_handle_cp_type_rewrite(&s, &f, 5000u);
+    CHECK(s.cp_status_ms == 5000u, "arrival stamped (%u)", s.cp_status_ms);
+    CHECK(!fsd_cp_status_stale(s.cp_status_seen, s.cp_status_ms, 5000u + FSD_CP_STATUS_STALE_MS),
+          "fresh up to the limit");
+    CHECK(fsd_cp_status_stale(s.cp_status_seen, s.cp_status_ms, 5001u + FSD_CP_STATUS_STALE_MS),
+          "stale past it");
+    f = cp_frame(k_25d_us_unplugged2, 8);
+    fsd_handle_cp_type_rewrite(&s, &f, 9000u);
+    CHECK(!fsd_cp_status_stale(s.cp_status_seen, s.cp_status_ms, 9100u), "a new frame makes it fresh again");
+
+    // A 6-byte 0x25D (Party CAN DAS_road) is not CP_status and keeps nothing alive.
+    CanFrame f6 = cp_frame(k_25d_us_unplugged, 6);
+    fsd_handle_cp_type_rewrite(&s, &f6, 20000u);
+    CHECK(s.cp_status_ms == 9000u && fsd_cp_status_stale(s.cp_status_seen, s.cp_status_ms, 20000u),
+          "6-byte 0x25D does not refresh the stamp (%u)", s.cp_status_ms);
+
+    // millis() wraps after ~49 days.
+    FSDState w; cp_set(&w, false);
+    f = cp_frame(k_25d_us_unplugged, 8);
+    fsd_handle_cp_type_rewrite(&w, &f, 0xFFFFFF00u);
+    CHECK(!fsd_cp_status_stale(w.cp_status_seen, w.cp_status_ms, 0x00000100u), "fresh across the wrap");
+    CHECK(fsd_cp_status_stale(w.cp_status_seen, w.cp_status_ms, 0x00000100u + FSD_CP_STATUS_STALE_MS),
+          "stale across the wrap");
+}
+
 static void test_cp_type_rewrite(void) {
     // US + unplugged + Active + toggle on -> one bit-preserving IEC_CCS copy.
     FSDState s; cp_set(&s, true);
     CanFrame f = cp_frame(k_25d_us_unplugged, 8);
-    CHECK(fsd_handle_cp_type_rewrite(&s, &f), "US unplugged -> rewritten");
+    CHECK(fsd_handle_cp_type_rewrite(&s, &f, 1000u), "US unplugged -> rewritten");
     CHECK(f.data[0] == 0x37 && memcmp(f.data + 1, k_25d_us_unplugged + 1, 7) == 0,
           "only CP_type changed: byte0=0x%02X", f.data[0]);
-    CHECK(fsd_cp_type_value(f.data[0]) == FSD_CP_TYPE_IEC_CCS && s.cp_type_tx_count == 1,
-          "copy is IEC_CCS, tx counted (%u)", s.cp_type_tx_count);
+    // The copy is counted by the caller once the CAN driver has taken it, so a
+    // send refused by a full TX queue never shows as sent.
+    CHECK(fsd_cp_type_value(f.data[0]) == FSD_CP_TYPE_IEC_CCS && s.cp_type_tx_count == 0,
+          "copy is IEC_CCS, not counted before the send (%u)", s.cp_type_tx_count);
     CanFrame f2 = cp_frame(k_25d_us_unplugged2, 8);
-    CHECK(fsd_handle_cp_type_rewrite(&s, &f2) && f2.data[0] == 0x37 && s.cp_type_tx_count == 2,
+    CHECK(fsd_handle_cp_type_rewrite(&s, &f2, 1000u) && f2.data[0] == 0x37 && s.cp_type_tx_count == 0,
           "second US frame rewritten (tx=%u)", s.cp_type_tx_count);
 
     // Already IEC_CCS -> never echoed (no self-trigger loop).
     FSDState s3; cp_set(&s3, true);
     uint8_t ccs[8]; memcpy(ccs, k_25d_us_unplugged, 8); ccs[0] = fsd_cp_type_make_iec_ccs(ccs[0]);
     CanFrame f3 = cp_frame(ccs, 8);
-    CHECK(!fsd_handle_cp_type_rewrite(&s3, &f3) && s3.cp_type == FSD_CP_TYPE_IEC_CCS,
+    CHECK(!fsd_handle_cp_type_rewrite(&s3, &f3, 1000u) && s3.cp_type == FSD_CP_TYPE_IEC_CCS,
           "already IEC_CCS -> not rewritten");
 
     // CP_type 1 (EURO_IEC) and 2 (GB): not US, left alone.
@@ -1299,7 +1333,7 @@ static void test_cp_type_rewrite(void) {
         uint8_t d[8]; memcpy(d, k_25d_us_unplugged, 8);
         d[0] = (uint8_t)((d[0] & 0xFCu) | t);
         CanFrame ft = cp_frame(d, 8);
-        CHECK(!fsd_handle_cp_type_rewrite(&st, &ft) && ft.data[0] == d[0],
+        CHECK(!fsd_handle_cp_type_rewrite(&st, &ft, 1000u) && ft.data[0] == d[0],
               "CP_type %u -> untouched", t);
     }
 
@@ -1307,7 +1341,7 @@ static void test_cp_type_rewrite(void) {
     FSDState sp; cp_set(&sp, true);
     uint8_t plugged[8]; memcpy(plugged, k_25d_us_unplugged, 8); plugged[0] |= 0x08u;
     CanFrame fp = cp_frame(plugged, 8);
-    CHECK(!fsd_handle_cp_type_rewrite(&sp, &fp) && memcmp(fp.data, plugged, 8) == 0,
+    CHECK(!fsd_handle_cp_type_rewrite(&sp, &fp, 1000u) && memcmp(fp.data, plugged, 8) == 0,
           "cable present -> held (plug guard)");
     CHECK(sp.cp_status_seen && sp.cp_plug_state == FSD_CP_PLUG_PLUGGED && sp.cp_type_tx_count == 0,
           "plug guard: decoded but no copy");
@@ -1316,32 +1350,32 @@ static void test_cp_type_rewrite(void) {
     FSDState su; cp_set(&su, true);
     uint8_t sna[8]; memcpy(sna, k_25d_us_unplugged, 8); sna[1] = (uint8_t)(sna[1] & ~0xC0u);
     CanFrame fu = cp_frame(sna, 8);
-    CHECK(!fsd_handle_cp_type_rewrite(&su, &fu) && su.cp_plug_state == FSD_CP_PLUG_UNKNOWN,
+    CHECK(!fsd_handle_cp_type_rewrite(&su, &fu, 1000u) && su.cp_plug_state == FSD_CP_PLUG_UNKNOWN,
           "plug state unknown -> held (fail closed)");
 
     // Wrong DLC -> no rewrite, no decode.
     FSDState sd; cp_set(&sd, true);
     CanFrame fd = cp_frame(k_25d_us_unplugged, 7);
-    CHECK(!fsd_handle_cp_type_rewrite(&sd, &fd) && !sd.cp_status_seen, "dlc7 -> untouched");
+    CHECK(!fsd_handle_cp_type_rewrite(&sd, &fd, 1000u) && !sd.cp_status_seen, "dlc7 -> untouched");
 
     // Transmit gate closed: decode still runs, no copy.
     FSDState sg; cp_set(&sg, true); sg.op_mode = OpMode_ListenOnly;
     CanFrame fg = cp_frame(k_25d_us_unplugged, 8);
-    CHECK(!fsd_handle_cp_type_rewrite(&sg, &fg) && sg.cp_status_seen && sg.cp_type_tx_count == 0,
+    CHECK(!fsd_handle_cp_type_rewrite(&sg, &fg, 1000u) && sg.cp_status_seen && sg.cp_type_tx_count == 0,
           "Listen-Only -> decoded, no copy");
     sg.op_mode = OpMode_Active; sg.tesla_ota_in_progress = true;
     fg = cp_frame(k_25d_us_unplugged, 8);
-    CHECK(!fsd_handle_cp_type_rewrite(&sg, &fg), "OTA in progress -> no copy");
+    CHECK(!fsd_handle_cp_type_rewrite(&sg, &fg, 1000u), "OTA in progress -> no copy");
     sg.tesla_ota_in_progress = false; sg.autopark_tx_block = true;
     fg = cp_frame(k_25d_us_unplugged, 8);
-    CHECK(!fsd_handle_cp_type_rewrite(&sg, &fg), "Autopark pause -> no copy");
+    CHECK(!fsd_handle_cp_type_rewrite(&sg, &fg, 1000u), "Autopark pause -> no copy");
 
     // The rewrite depends only on frame bytes + state, never on a bus id, so it
     // behaves the same whichever bus delivers 0x25D (main.cpp re-sends on the
     // arrival bus). Same frame, two independent states -> identical result.
     FSDState ba, bb; cp_set(&ba, true); cp_set(&bb, true);
     CanFrame fa = cp_frame(k_25d_us_unplugged, 8), fb = cp_frame(k_25d_us_unplugged, 8);
-    CHECK(fsd_handle_cp_type_rewrite(&ba, &fa) == fsd_handle_cp_type_rewrite(&bb, &fb) &&
+    CHECK(fsd_handle_cp_type_rewrite(&ba, &fa, 1000u) == fsd_handle_cp_type_rewrite(&bb, &fb, 1000u) &&
           memcmp(fa.data, fb.data, 8) == 0, "rewrite is bus-agnostic (pure in the frame)");
 }
 
@@ -1498,6 +1532,62 @@ static void test_gear_tx_route(void) {
     CHECK(gear_tx_bus_index(two, 2, 1, 2591u, AGE) == -1, "everything stale: no press");
 }
 
+// ── Black-box event names ────────────────────────────────────────────────────
+// The name that retention drops first among `names`, as bb_drop_oldest() picks it.
+static const char* bb_oldest(const char* const* names, int n) {
+    const char* pick = nullptr;
+    uint64_t oldest = UINT64_MAX;
+    for (int i = 0; i < n; i++) {
+        uint64_t o = bb_event_order(names[i]);
+        if (o < oldest) { oldest = o; pick = names[i]; }
+    }
+    return pick;
+}
+
+static void test_blackbox_names(void) {
+    char nm[40];
+    bb_event_name(nm, sizeof(nm), 7u, "abort");
+    CHECK(strcmp(nm, "ev000007_abort") == 0, "name: %s", nm);
+    CHECK(bb_event_seq(nm) == 7u, "number read back (%u)", bb_event_seq(nm));
+    bb_event_name(nm, sizeof(nm), 1234567u, "busoff");
+    CHECK(strcmp(nm, "ev1234567_busoff") == 0 && bb_event_seq(nm) == 1234567u,
+          "past six digits: %s", nm);
+    bb_event_name(nm, sizeof(nm), 0xFFFFFFFFu, "manual");
+    CHECK(bb_event_seq(nm) == 0xFFFFFFFFu && strlen(nm) < 40, "largest number fits: %s", nm);
+
+    // Names without a number: the old evt_<millis>_ form and anything else.
+    CHECK(bb_event_seq("evt_123456_abort") == 0, "old name has no number");
+    CHECK(bb_event_seq("ev_12_abort") == 0 && bb_event_seq("ev12") == 0 &&
+          bb_event_seq("ev12x_abort") == 0 && bb_event_seq("ev99999999999_abort") == 0 &&
+          bb_event_seq("notes") == 0 && bb_event_seq("") == 0 && bb_event_seq(nullptr) == 0,
+          "malformed names have no number");
+
+    // Old names come before every numbered one, by <millis> among themselves.
+    CHECK(bb_event_order("evt_4000000000_abort") < bb_event_order("ev000001_abort"),
+          "a long-uptime old name is still older than event 1");
+    CHECK(bb_event_order("evt_100_abort") < bb_event_order("evt_200_abort"), "old names by millis");
+    CHECK(bb_event_order("ev000009_abort") < bb_event_order("ev000010_manual"), "numbers in order");
+    CHECK(bb_event_order("notes") == 0, "a stray file sorts first");
+
+    // The reported bug: five saved from a long session (evt_<big millis>), the
+    // device reboots, and an event early in the new uptime came out smallest
+    // and was deleted right after it was written. Numbered, it is the newest.
+    const char* disk[] = {"evt_3600000_abort", "evt_3700000_abort", "evt_3800000_busoff",
+                          "evt_3900000_abort", "evt_4000000_manual", "ev000001_abort"};
+    CHECK(strcmp(bb_oldest(disk, 6), "evt_3600000_abort") == 0,
+          "retention drops the oldest old name, not the new event (%s)", bb_oldest(disk, 6));
+    const char* later[] = {"ev000002_abort", "ev000006_abort", "ev000003_busoff",
+                           "ev000005_abort", "ev000004_manual", "ev000007_manual"};
+    CHECK(strcmp(bb_oldest(later, 6), "ev000002_abort") == 0, "then the lowest number (%s)",
+          bb_oldest(later, 6));
+
+    // Numbering carries on from the highest on disk, however the files are listed.
+    uint32_t last = 0;
+    for (const char* n : later) if (bb_event_seq(n) > last) last = bb_event_seq(n);
+    bb_event_name(nm, sizeof(nm), last + 1u, "abort");
+    CHECK(strcmp(nm, "ev000008_abort") == 0, "next after a reboot: %s", nm);
+}
+
 int main() {
     printf("test_esp32_core: ESP32 firmware handler host tests\n");
     test_gear_tx_route();
@@ -1531,11 +1621,13 @@ int main() {
     test_di_speed();
     test_cp_type_decode();
     test_cp_type_rewrite();
+    test_cp_type_stale();
     test_state_init();
     test_can_frame_filter();
     test_blackbox_window();
     test_blackbox_ring_push();
     test_blackbox_save_slices();
+    test_blackbox_names();
 
     printf("\n%d passed, %d failed\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;

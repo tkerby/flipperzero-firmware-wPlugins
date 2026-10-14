@@ -24,6 +24,7 @@
 #include "captive_portal.h"
 #include "web_cmd.h"
 #include "web_origin.h"
+#include "../../fsd_logic/fsd_cp_status.h"  // CP_status stale read-out (#228)
 #include <WebServer.h>
 #include <WebSocketsServer.h>
 #include <WiFi.h>
@@ -419,7 +420,7 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
   </div>
   <div class="row">
     <span class="lbl">Charge Port<span class="hint">0x25D CP_status &mdash; Vehicle CAN only</span></span>
-    <span id="cpType" style="font-size:.8em;color:var(--text2)">--</span>
+    <span style="font-size:.8em;color:var(--text2)"><span id="cpStale" style="display:none;color:var(--yellow);margin-right:6px">Stale</span><span id="cpType">--</span></span>
   </div>
 </div>
 
@@ -880,7 +881,7 @@ R"rawliteral(
     <span class="lbl">Dump Status</span>
     <span class="pill off" id="dumpSt"><span class="pd"></span>Idle</span>
   </div>
-  <button id="btnFmt" class="btn-main btn-stop" onclick="sdFormat()" style="margin-top:8px">FORMAT SD CARD</button>
+  <button id="btnFmt" class="btn-main btn-stop" onclick="sdFormat(this)" style="margin-top:8px">FORMAT SD CARD</button>
   <div id="fmtOut" style="font-size:.75em;color:var(--text2);margin-top:8px;display:none"></div>
 </div>
 
@@ -1133,7 +1134,8 @@ function bbRefreshList(){
   fetch('/blackbox/list').then(function(r){return r.json()}).then(function(a){
     var el=document.getElementById('bbList');if(!el)return;
     if(!a||!a.length){el.innerHTML='<div style="font-size:.78em;color:var(--text3);padding:6px 0">No events recorded yet.</div>';return;}
-    a.sort(function(x,y){return (y.name||'').localeCompare(x.name||'')});
+    // Newest first: by event number (0 for names from before it existed).
+    a.sort(function(x,y){return ((y.seq||0)-(x.seq||0))||(y.name||'').localeCompare(x.name||'')});
     var h='';
     a.forEach(function(ev){
       var s=ev.summary||{},nm=encodeURIComponent(ev.name);
@@ -1207,11 +1209,12 @@ function capSync(d){
     h+=capRow('Soft Engage','soft_engage',b.soft_engage);
     h+=capRow('Body/comfort bus','body_control',b.body_control);
     if(b.body_control===0){
-      var seen=[];
-      if(b.body_ui)seen.push('mirror/lock/horn');
-      if(b.body_window)seen.push('windows');
-      if(b.body_lights)seen.push('lights/turn');
-      if(b.body_door)seen.push('mirror read-back');
+      // Which frames were seen comes per bus under "ids" (capability_status_json()).
+      var ids=b.ids||{},seen=[];
+      if(ids.body_ui)seen.push('mirror/lock/horn');
+      if(ids.body_window)seen.push('windows');
+      if(ids.body_lights)seen.push('lights/turn');
+      if(ids.body_door)seen.push('mirror read-back');
       if(seen.length)h+='<div style="font-size:.7em;color:var(--text3);padding-top:3px">Reachable frames: '+seen.join(', ')+' (presence only — not proof injection actuates them).</div>';
     }
     if(typeof b.vehicle_hint==='number')h+=capHintRow('Bus hint',b.vehicle_hint);
@@ -1265,9 +1268,12 @@ function updStatus(d){
 
   pill('nagSt', d.nag_killer, d.nag_killer?'ON':'OFF');
   pill('canVeh', d.can_vehicle_detected, d.can_vehicle_detected?'Detected':'No CAN Traffic');
-  // Charge-port type read-out (0x25D, #228): the car's own type, -- until seen.
+  // Charge-port type read-out (0x25D, #228): the car's own type, -- until seen,
+  // marked stale once CP_status has stopped arriving.
   var cpEl=document.getElementById('cpType');
   if(cpEl) cpEl.textContent=(d.cp_type===undefined||d.cp_type<0)?'--':(CPT[d.cp_type]||('type '+d.cp_type));
+  var cpSx=document.getElementById('cpStale');
+  if(cpSx) cpSx.style.display=(d.cp_stale&&d.cp_type>=0)?'inline':'none';
   pill('bmsSt', d.bms && d.bms.seen, (d.bms && d.bms.seen)?'Live':'Waiting Frames');
   var bF=document.getElementById('bmsFrames');
   if(bF) bF.textContent='HV:'+(d.bms_hv_seen||0)+' SOC:'+(d.bms_soc_seen||0)+' TH:'+(d.bms_thermal_seen||0);
@@ -1350,7 +1356,8 @@ function updControls(d){
   var cpSt=document.getElementById('cpTypeSt');
   if(cpSt){
     var ct;
-    if(d.cp_type===undefined||d.cp_type<0) ct='no 0x25D on this tap (Vehicle CAN only)';
+    if(d.cp_type===undefined||d.cp_type<0) ct='no CP_status on this tap (the 8-byte 0x25D, Vehicle CAN only)';
+    else if(d.cp_stale) ct='Stale: no CP_status from the car for '+(d.cp_age_s||0)+' s';
     else{
       ct='Car '+(CPT[d.cp_type]||('type '+d.cp_type));
       if(d.cp_type_eu_rewrite){
@@ -1371,9 +1378,9 @@ function updControls(d){
   if(document.getElementById('swTrkCO')) document.getElementById('swTrkCO').checked=d.track_cmp_overclock;
   if(document.getElementById('swDisp')) document.getElementById('swDisp').checked=!!d.display_enabled;
   if(focusId()!=='dispBr' && document.getElementById('dispBr'))
-    document.getElementById('dispBr').value=d.display_brightness||50;
+    document.getElementById('dispBr').value=d.display_brightness!==undefined?d.display_brightness:50;
   if(focusId()!=='dispTo' && document.getElementById('dispTo'))
-    document.getElementById('dispTo').value=d.display_timeout_s||60;
+    document.getElementById('dispTo').value=d.display_timeout_s!==undefined?d.display_timeout_s:60;
   if(document.getElementById('swDump')) document.getElementById('swDump').checked=!!d.can_dump;
 
   if(focusId()!=='numSleep' && document.getElementById('numSleep'))
@@ -1615,17 +1622,25 @@ function authFailed(el){
   uiAlert('Authentication failed',function(){if(el)el.focus();});
 }
 
-function sdFormat(){
-  uiConfirm('Format SD card? All data will be lost.',sdFormatRun);
+// The device asks for the admin password before it wipes the card.
+function sdFormat(el){
+  requireAuth(function(){uiConfirm('Format SD card? All data will be lost.',sdFormatRun);},el);
 }
 function sdFormatRun(){
   var btn=document.getElementById('btnFmt');
   var out=document.getElementById('fmtOut');
   btn.disabled=true;btn.textContent='FORMATTING\u2026';
-  fetch('/sdformat').then(function(r){return r.json();}).then(function(d){
+  fetch('/sdformat',{method:'POST',headers:{Authorization:authHeader}}).then(function(r){
+    if(r.status===401){authHeader='';requireAuth(sdFormatRun,btn);return null;}
+    return r.json();
+  }).then(function(d){
+    if(!d)return;
+    if(d.err==='origin'&&d.url){location.replace(d.url);return;}
     out.style.display='block';
-    out.style.color=d.ok?'var(--accent)':'var(--red)';
-    out.textContent=d.msg+(d.ok?' \u2014 '+d.free_mb+' MB free':'');
+    var part=d.ok&&d.left>0;   // folders nested too deep, or deletes the card refused
+    out.style.color=part?'var(--yellow)':d.ok?'var(--accent)':'var(--red)';
+    out.textContent=(part?'Some files or folders could not be deleted (nested too deep, or refused by the card)':d.msg)
+      +(d.ok?' \u2014 '+d.free_mb+' MB free':'');
   }).catch(function(){
     out.style.display='block';out.style.color='var(--red)';out.textContent='Request failed';
   }).then(function(){
@@ -1642,6 +1657,9 @@ function saveWifi(b){
   if(s.length<1){uiAlert('SSID required');return;}
   if(p!=='***' && p.length>0 && p.length<8){uiAlert('Password must be empty or 8+ chars');return;}
   if(sp!=='***' && ss.length>0 && sp.length>0 && sp.length<8){uiAlert('Network password must be empty or 8+ chars');return;}
+  // 64 characters are the key itself, in hex (web_wifi_pass_ok() in web_cmd.h).
+  if(p!=='***' && p.length===64 && !WIFI_HEX64.test(p)){uiAlert(WIFI_ERR.pass);return;}
+  if(sp!=='***' && ss.length>0 && sp.length===64 && !WIFI_HEX64.test(sp)){uiAlert(WIFI_ERR.sta_pass);return;}
   if(hn && !/^[A-Za-z0-9]([A-Za-z0-9-]{0,29}[A-Za-z0-9])?$/.test(hn)){uiAlert(WIFI_ERR.host);return;}
   uiConfirm('WiFi settings will be updated and the device will restart.',function(){
     var t=b?b.textContent:'';
@@ -1684,11 +1702,12 @@ function cmd(c,v,fail){
   });
 }
 var WIFI_BYTES='\nCharacters outside plain ASCII take 2 to 4 bytes each; control characters are not accepted.';
+var WIFI_HEX64=/^[0-9A-Fa-f]{64}$/;
 var WIFI_ERR={
   ssid:'SSID must be 1 to 32 bytes.'+WIFI_BYTES,
-  pass:'Password must be empty or 8 to 64 bytes.'+WIFI_BYTES,
+  pass:'Password must be empty, 8 to 63 bytes, or exactly 64 hex digits (0-9, a-f), which are the key itself.'+WIFI_BYTES,
   sta_ssid:'Network name must be at most 32 bytes.'+WIFI_BYTES,
-  sta_pass:'Network password must be empty or 8 to 64 bytes.'+WIFI_BYTES,
+  sta_pass:'Network password must be empty, 8 to 63 bytes, or exactly 64 hex digits (0-9, a-f), which are the key itself.'+WIFI_BYTES,
   host:'Hostname must be 1 to 31 letters, digits or hyphens, and cannot start or end with a hyphen.'};
 // A command that did not take, refused by the device (d.err) or never
 // delivered: say so and undo what the page did for it.
@@ -2174,8 +2193,15 @@ static String build_json() {
     j += "\"accel_bad\":";      j += state.accel_bad_frames;              j += ',';
     // Charge-port type (0x25D, #228): what the car reports (-1 = no 0x25D on
     // this tap yet), the plug-guard read-out, the opt-in rewrite + copies sent.
+    // cp_stale: no CP_status for a few seconds, cp_type / cp_plug are its last.
     j += "\"cp_type\":";        j += state.cp_status_seen ? (int)state.cp_type : -1; j += ',';
     j += "\"cp_plug\":";        j += (int)state.cp_plug_state;            j += ',';
+    {
+        uint32_t now_ms = millis();
+        j += "\"cp_stale\":";   j += fsd_cp_status_stale(state.cp_status_seen, state.cp_status_ms, now_ms)
+                                     ? "true" : "false"; j += ',';
+        j += "\"cp_age_s\":";   j += state.cp_status_seen ? (now_ms - state.cp_status_ms) / 1000u : 0u; j += ',';
+    }
     j += "\"cp_type_eu_rewrite\":"; j += state.cp_type_eu_rewrite        ? "true" : "false"; j += ',';
     j += "\"cp_type_tx\":";     j += state.cp_type_tx_count;              j += ',';
     j += "\"tx_allowed\":";     j += fsd_can_transmit(&state)            ? "true" : "false"; j += ',';
@@ -2545,9 +2571,8 @@ static WebCmdResult web_command(WebCmd &cmd, const uint8_t *payload, size_t leng
         }
     } else if (cmd.is("disp_br")) {
         int n;
-        if (cmd.integer(&n)) {
+        if (cmd.integer_capped(&n, 0, 100)) {
             uint8_t val = (uint8_t)n;
-            if (val > 100) val = 100;
             FSDState saved;
             state_enter();
             g_state->display_brightness = val;
@@ -2557,8 +2582,10 @@ static WebCmdResult web_command(WebCmd &cmd, const uint8_t *payload, size_t leng
             prefs_save(&saved);
         }
     } else if (cmd.is("disp_to")) {
+        // 0 = never off; capped where the page's field stops, well short of
+        // the seconds * 1000 overflow in the timeout check.
         int n;
-        if (cmd.integer(&n)) {
+        if (cmd.integer_capped(&n, 0, 3600)) {
             uint32_t val = (uint32_t)n;
             FSDState saved;
             state_enter();
@@ -2757,9 +2784,8 @@ static WebCmdResult web_command(WebCmd &cmd, const uint8_t *payload, size_t leng
         }
     } else if (cmd.is("track_rotation_pct")) {
         int n;
-        if (cmd.integer(&n)) {
+        if (cmd.integer_capped(&n, 0, 100)) {
             uint8_t val = (uint8_t)n;
-            if (val > 100) val = 100;
             FSDState saved;
             state_enter();
             g_state->track_rotation_pct = val;
@@ -2770,9 +2796,8 @@ static WebCmdResult web_command(WebCmd &cmd, const uint8_t *payload, size_t leng
         }
     } else if (cmd.is("track_stability_pct")) {
         int n;
-        if (cmd.integer(&n)) {
+        if (cmd.integer_capped(&n, 0, 100)) {
             uint8_t val = (uint8_t)n;
-            if (val > 100) val = 100;
             FSDState saved;
             state_enter();
             g_state->track_stability_pct = val;
@@ -2812,19 +2837,15 @@ static WebCmdResult web_command(WebCmd &cmd, const uint8_t *payload, size_t leng
         }
     } else if (cmd.is("sleep")) {
         int n;
-        if (cmd.integer(&n)) {
+        if (cmd.integer_capped(&n, 10000, INT32_MAX)) {   // minimum 10 s
             uint32_t val = (uint32_t)n;
-            if (val >= 10000) { // minimum 10s
-                FSDState saved;
-                state_enter();
-                g_state->sleep_idle_ms = val;
-                saved = *g_state;
-                state_exit();
-                Serial.printf("[Web] Sleep timeout: %u ms\n", val);
-                prefs_save(&saved);
-            } else {
-                cmd.bad_value = true;
-            }
+            FSDState saved;
+            state_enter();
+            g_state->sleep_idle_ms = val;
+            saved = *g_state;
+            state_exit();
+            Serial.printf("[Web] Sleep timeout: %u ms\n", val);
+            prefs_save(&saved);
         }
     } else if (cmd.is("wifi_cfg")) {
         // All or nothing: one field that does not validate rejects the whole
@@ -2911,6 +2932,27 @@ static String home_url() {
     return String("http://") + g_http.client().localIP().toString() + "/";
 }
 
+WebStreamAccess web_dashboard_stream_access(const char *origin, const char *host) {
+    if (g_state == nullptr) return WEB_STREAM_REFUSE;
+    OwnNamesText t;
+    return web_stream_access(origin, host, own_names(t));
+}
+
+// GETs that hand out state (status, aux, black-box captures) answer only
+// under our own names: a page on a rebound name is same-origin with them and
+// could read them. The page itself is sent to our address under any other
+// name (handle_root()), so the dashboard never gets this 403; like the one
+// from /api/cmd it names the address to use.
+static bool host_ours(const char *what) {
+    String host = g_http.hostHeader();
+    OwnNamesText t;
+    if (web_host_header_ours(host.c_str(), own_names(t))) return true;
+    Serial.printf("[Web] %s refused: Host %.64s\n", what, host.c_str());
+    g_http.send(403, "application/json",
+                String("{\"ok\":false,\"err\":\"host\",\"url\":\"") + home_url() + "\"}");
+    return false;
+}
+
 // WebSocket handshake, once for each request header the library does not
 // handle itself: a browser page that is not the dashboard is refused (the
 // library answers 400 and the page falls back to HTTP polling).
@@ -2988,30 +3030,36 @@ static void handle_root() {
 
 static void handle_status() {
     if (g_state == nullptr) { g_http.send(503, "application/json", "{}"); return; }
+    if (!host_ours("status")) return;
     g_http.sendHeader("Cache-Control", "no-store");
     g_http.send(200, "application/json", build_json());
+}
+
+// A POST that changes something has to come from the dashboard's own page, as
+// on the WebSocket (web_origin.h); that also stops a rebound name, where the
+// request is not cross-site at all. Otherwise this sends a 403 that names the
+// address to load the dashboard from, and returns false.
+static bool post_from_dashboard(const char *what) {
+    String origin = g_http.header("Origin");
+    String host = g_http.hostHeader();
+    OwnNamesText t;
+    if (web_post_origin_ok(origin.c_str(), own_names(t))) return true;
+    Serial.printf("[Web] %s refused: Origin %.64s Host %.64s\n", what, origin.c_str(), host.c_str());
+    g_http.send(403, "application/json",
+                String("{\"ok\":false,\"err\":\"origin\",\"url\":\"") + home_url() + "\"}");
+    return false;
 }
 
 // Commands over HTTP, for clients without a working WebSocket. The body is the
 // same JSON text a WS frame carries and goes through the same dispatcher.
 // Content-Type must be application/json: a cross-site form or no-cors fetch
 // cannot send that without a CORS preflight, which this server never grants.
-// The Origin has to be the dashboard's own page, as on the WebSocket
-// (web_origin.h); that also stops a rebound name, where the request is not
-// cross-site at all. A 403 names the address to load the dashboard from.
+// The Origin has to be the dashboard's own page (post_from_dashboard()).
 // Otherwise the reply is {"ok":true}, or a 400 with the reason the command
 // was refused.
 static void handle_cmd() {
     if (g_state == nullptr) { g_http.send(503, "application/json", "{}"); return; }
-    String origin = g_http.header("Origin");
-    String host = g_http.hostHeader();
-    OwnNamesText t;
-    if (!web_post_origin_ok(origin.c_str(), host.c_str(), own_names(t))) {
-        Serial.printf("[Web] command refused: Origin %.64s Host %.64s\n", origin.c_str(), host.c_str());
-        g_http.send(403, "application/json",
-                    String("{\"ok\":false,\"err\":\"origin\",\"url\":\"") + home_url() + "\"}");
-        return;
-    }
+    if (!post_from_dashboard("command")) return;
     String ctype = g_http.header("Content-Type");
     ctype.toLowerCase();
     if (!ctype.startsWith("application/json")) {
@@ -3040,6 +3088,7 @@ static void handle_cmd() {
 // on a slow timer so these heavy blocks stay off the hot WS state push (#124).
 static void handle_aux() {
     if (g_state == nullptr) { g_http.send(503, "application/json", "{}"); return; }
+    if (!host_ours("aux")) return;
     g_http.sendHeader("Cache-Control", "no-store");
     g_http.send(200, "application/json", build_aux_json());
 }
@@ -3049,19 +3098,26 @@ static void handle_auth() {
     g_http.send(200, "text/plain", "OK");
 }
 
+// Wipes the card, so it takes what the other destructive routes take: a POST
+// from the dashboard's own page (a GET could be set off by an <img> on any
+// page) and the admin password.
 static void handle_sdformat() {
+    if (!post_from_dashboard("SD format")) return;
+    if (!require_admin_auth()) return;
     String result = sd_format_card();
     g_http.send(200, "application/json", result);
 }
 
 // ── Black-box (#124) ──────────────────────────────────────────────────────────
 static void handle_blackbox_list() {
+    if (!host_ours("black-box list")) return;
     if (!download_auth_ok()) return;
     g_http.sendHeader("Cache-Control", "no-store");
     g_http.send(200, "application/json", blackbox_list_json());
 }
 
 static void handle_blackbox_get() {
+    if (!host_ours("black-box download")) return;
     if (!download_auth_ok()) return;
     String name = g_http.arg("name");
     bool json = (g_http.arg("type") == "json");
@@ -3257,7 +3313,7 @@ void web_dashboard_init(FSDState *state,
     g_http.on("/api/cmd",    HTTP_POST, handle_cmd);
     g_http.on("/api/aux",    HTTP_GET,  handle_aux);
     g_http.on("/auth",       HTTP_GET,  handle_auth);
-    g_http.on("/sdformat",   HTTP_GET,  handle_sdformat);
+    g_http.on("/sdformat",   HTTP_POST, handle_sdformat);
     g_http.on("/blackbox/list", HTTP_GET, handle_blackbox_list);
     g_http.on("/blackbox/get",  HTTP_GET, handle_blackbox_get);
     g_http.on("/restart",    HTTP_GET,  handle_restart);
@@ -3268,8 +3324,8 @@ void web_dashboard_init(FSDState *state,
     // WebServer keeps only the request headers named here (plus Authorization),
     // and collectHeaders() replaces the list instead of adding to it. This is
     // the last call before begin(), so it names every header a handler reads:
-    // Content-Type and Origin for /api/cmd, User-Agent for the captive
-    // portal's probes.
+    // Content-Type and Origin for /api/cmd, Origin for /sdformat, User-Agent
+    // for the captive portal's probes.
     const char *collect[] = { "Content-Type", "Origin", "User-Agent" };
     g_http.collectHeaders(collect, sizeof(collect) / sizeof(collect[0]));
     g_http.begin();

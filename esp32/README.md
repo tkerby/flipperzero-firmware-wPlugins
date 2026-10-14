@@ -137,7 +137,7 @@ Auto-detect picks the source. If it's wrong, pin the car with the Hardware selec
 | **Telemetry Off** | `0x3F8` / `0x3FD` mux1 | Experimental; clears reachable telemetry-enable flags |
 | **Track Mode** | `0x313` | Experimental adjustable Track Mode (rotation / stability / cooling) |
 | **Acceleration Mode** | `0x334` | Experimental pedal-map override (`UI_pedalMap` byte0 bits 5-6), off by default. Rewrites the car's own frame (counter kept, checksum recomputed) and only switches at standstill (fresh `0x257` ≤ 1 km/h, or `0x118` gear P); Off or a touchscreen change while driving returns to pass-through at once. Needs a Vehicle or Chassis CAN tap. Idea from [ColinM-sys/tesla-can-boost](https://github.com/ColinM-sys/tesla-can-boost) ([#211](https://github.com/hypery11/flipper-tesla-fsd/issues/211)) |
-| **EU Charge-Port Type** | `0x25D` | Read-only `CP_type` read-out is always on, in every mode. Opt-in rewrite (off by default) re-sends `CP_status` with `CP_type` = IEC CCS (byte0 bits 0-1, no counter/checksum) on the bus it arrived on, so EU Superchargers appear in nav. Only a standard 8-byte US-type frame is copied — never an already-EU or non-US frame — and a per-frame plug guard holds the rewrite while a cable is present or charging (and when the plug state is unknown). Needs a Vehicle CAN tap; a Party-CAN tap has no `0x25D`. Idea + on-car validation: @Tesla234987234sdf ([#228](https://github.com/hypery11/flipper-tesla-fsd/discussions/228)) |
+| **EU Charge-Port Type** | `0x25D` | Read-only `CP_type` read-out is always on, in every mode. Opt-in rewrite (off by default) re-sends `CP_status` with `CP_type` = IEC CCS (byte0 bits 0-1, no counter/checksum) on the bus it arrived on, so EU Superchargers appear in nav. Only a standard 8-byte US-type frame is copied — never an already-EU or non-US frame — and a per-frame plug guard holds the rewrite while a cable is present or charging (and when the plug state is unknown). Needs a Vehicle CAN tap: Party CAN carries a `0x25D` too, but that is the 6-byte `DAS_road` frame, not `CP_status`, and is left alone. Idea + on-car validation: @Tesla234987234sdf ([#228](https://github.com/hypery11/flipper-tesla-fsd/discussions/228)) |
 | **HW Override** | — | Manual Auto-detect / Force HW4 / Force HW3 / Force Legacy selector |
 | **Battery Precondition** | `0x082` | Preheat trigger, re-sent every 500 ms while the dashboard **Precondition** switch is on (off by default) |
 | **TLSSC Restore** | `0x331` | Recovers stop sign / traffic light control on VIN-banned cars |
@@ -407,7 +407,7 @@ Type these into the serial monitor:
 3. Monitor and control everything from the web UI
 4. Tap **STREAM LOG AND SAVE** to collect a CAN log on the phone; tap **STOP COLLECTING**, then **SAVE LOG FILE** to save it as a candump `.dump` file
 5. REST API available at `http://192.168.4.1/api/status`
-6. Raw CAN stream endpoint: `http://192.168.4.1:82/stream`
+6. Raw CAN stream endpoint: `http://192.168.4.1:82/stream`. Address it by the device's IP or hostname; in a browser, only the dashboard's own page can read it
 
 ### Capture fidelity — the two drop metrics
 
