@@ -357,14 +357,30 @@ static constexpr size_t WEB_WIFI_PASS_MIN = 8;
 static constexpr size_t WEB_WIFI_PASS_MAX = 64;
 // The status JSON shows a stored password as this; sent back it means "keep".
 static constexpr char WEB_WIFI_PASS_KEEP[] = "***";
+// Station hostname. A DNS label may be 63 long, but the Arduino core keeps the
+// name in a 32-byte buffer and would cut anything longer than 31 short.
+static constexpr size_t WEB_HOSTNAME_MAX = 31;
+
+// One DNS label: 1-31 letters, digits and hyphens, no hyphen at either end.
+inline bool web_hostname_valid(const char *s) {
+    size_t n = s ? strlen(s) : 0;
+    if (n == 0 || n > WEB_HOSTNAME_MAX || s[0] == '-' || s[n - 1] == '-') return false;
+    for (size_t i = 0; i < n; i++) {
+        char c = s[i];
+        bool ok = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-';
+        if (!ok) return false;
+    }
+    return true;
+}
 
 struct WebWifiCfg {
-    bool has_ssid, has_pass, has_hidden, has_sta_ssid, has_sta_pass;
+    bool has_ssid, has_pass, has_hidden, has_sta_ssid, has_sta_pass, has_host;
     bool hidden;
     char ssid[WEB_WIFI_SSID_MAX + 1];
     char pass[WEB_WIFI_PASS_MAX + 1];
     char sta_ssid[WEB_WIFI_SSID_MAX + 1];
     char sta_pass[WEB_WIFI_PASS_MAX + 1];
+    char host[WEB_HOSTNAME_MAX + 1];   // empty = back to the default
 };
 
 // Reads the settings out of a wifi_cfg value. Every member is optional: one
@@ -380,6 +396,7 @@ struct WebWifiCfg {
 //   sta_ssid  0-32 bytes, empty = no network
 //   sta_pass  empty or 8-64 bytes; any length up to 64 while sta_ssid is
 //             sent empty (the page does not check it then)
+//   host      empty (the default) or a hostname, see web_hostname_valid()
 //
 // Lengths are bytes after decoding, and nothing is cut to fit. Text may not
 // hold control characters: they would end up raw in the status JSON.
@@ -423,6 +440,10 @@ inline const char *web_wifi_parse(WebJson value, WebWifiCfg *cfg) {
     cfg->has_sta_pass = got > 0 && strcmp(cfg->sta_pass, WEB_WIFI_PASS_KEEP) != 0;
     bool no_network = cfg->has_sta_ssid && cfg->sta_ssid[0] == '\0';
     if (cfg->has_sta_pass && short_pass(len) && !no_network) return "sta_pass";
+
+    got = text("host", cfg->host, sizeof(cfg->host), &len);
+    if (got < 0 || (got > 0 && len > 0 && !web_hostname_valid(cfg->host))) return "host";
+    cfg->has_host = got > 0;
 
     return nullptr;
 }

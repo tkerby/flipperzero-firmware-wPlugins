@@ -842,6 +842,10 @@ R"rawliteral(
     <span class="lbl">Network Password</span>
     <input type="password" id="wifiStaPass" maxlength="64" style="width:140px;background:var(--card2);border:1px solid var(--border);color:var(--text);padding:4px;border-radius:4px;text-align:right">
   </div>
+  <div class="row">
+    <span class="lbl">Hostname<br><small style="color:var(--muted)">name shown on your router</small></span>
+    <input type="text" id="wifiHost" maxlength="31" placeholder="tesla-fsd" autocomplete="off" autocapitalize="off" spellcheck="false" style="width:140px;background:var(--card2);border:1px solid var(--border);color:var(--text);padding:4px;border-radius:4px;text-align:right">
+  </div>
   <button class="btn-main btn-stop" onclick="saveWifi(this)" style="margin-top:12px">SAVE & RESTART WIFI</button>
 </div>
 
@@ -993,6 +997,7 @@ function initWifi(d){
   document.getElementById('swWifiHid').checked=!!d.wifi_hidden;
   document.getElementById('wifiStaSsid').value=d.wifi_sta_ssid||'';
   document.getElementById('wifiStaPass').value=d.wifi_sta_pass||'';
+  document.getElementById('wifiHost').value=d.wifi_hostname||'';
 }
 
 function fmt(s){
@@ -1621,13 +1626,15 @@ function saveWifi(b){
   var h=document.getElementById('swWifiHid').checked;
   var ss=document.getElementById('wifiStaSsid').value;
   var sp=document.getElementById('wifiStaPass').value;
+  var hn=document.getElementById('wifiHost').value.trim();
   if(s.length<1){uiAlert('SSID required');return;}
   if(p!=='***' && p.length>0 && p.length<8){uiAlert('Password must be empty or 8+ chars');return;}
   if(sp!=='***' && ss.length>0 && sp.length>0 && sp.length<8){uiAlert('Network password must be empty or 8+ chars');return;}
+  if(hn && !/^[A-Za-z0-9]([A-Za-z0-9-]{0,29}[A-Za-z0-9])?$/.test(hn)){uiAlert(WIFI_ERR.host);return;}
   uiConfirm('WiFi settings will be updated and the device will restart.',function(){
     var t=b?b.textContent:'';
     if(b){b.disabled=true;b.textContent='SAVING...';}
-    cmd('wifi_cfg',{ssid:s,pass:p,hidden:h,sta_ssid:ss,sta_pass:sp},function(){
+    cmd('wifi_cfg',{ssid:s,pass:p,hidden:h,sta_ssid:ss,sta_pass:sp,host:hn},function(){
       if(b){b.disabled=false;b.textContent=t;}
     });
   });
@@ -1669,7 +1676,8 @@ var WIFI_ERR={
   ssid:'SSID must be 1 to 32 bytes.'+WIFI_BYTES,
   pass:'Password must be empty or 8 to 64 bytes.'+WIFI_BYTES,
   sta_ssid:'Network name must be at most 32 bytes.'+WIFI_BYTES,
-  sta_pass:'Network password must be empty or 8 to 64 bytes.'+WIFI_BYTES};
+  sta_pass:'Network password must be empty or 8 to 64 bytes.'+WIFI_BYTES,
+  host:'Hostname must be 1 to 31 letters, digits or hyphens, and cannot start or end with a hyphen.'};
 // A command that did not take, refused by the device (d.err) or never
 // delivered: say so and undo what the page did for it.
 function cmdRefused(d){
@@ -2234,6 +2242,7 @@ static String build_json() {
     j += "\"wifi_hidden\":";  j += state.wifi_hidden                  ? "true" : "false"; j += ',';
     j += "\"wifi_sta_ssid\":\""; j += json_escape(state.wifi_sta_ssid); j += "\",";
     j += "\"wifi_sta_pass\":\""; j += state.wifi_sta_pass[0] ? "***" : ""; j += "\",";
+    j += "\"wifi_hostname\":\""; j += json_escape(state.wifi_hostname); j += "\",";
     j += "\"wifi_clients\":";  j += (int)WiFi.softAPgetStationNum();   j += ',';
     j += "\"http_can_stream\":{";
     j += "\"active\":";       j += http_can_stream_active()           ? "true" : "false"; j += ',';
@@ -2819,10 +2828,12 @@ static WebCmdResult web_command(WebCmd &cmd, const uint8_t *payload, size_t leng
         if (cfg.has_hidden)   g_state->wifi_hidden = cfg.hidden;
         if (cfg.has_sta_ssid) strlcpy(g_state->wifi_sta_ssid, cfg.sta_ssid, sizeof(g_state->wifi_sta_ssid));
         if (cfg.has_sta_pass) strlcpy(g_state->wifi_sta_pass, cfg.sta_pass, sizeof(g_state->wifi_sta_pass));
+        if (cfg.has_host)     strlcpy(g_state->wifi_hostname, cfg.host[0] ? cfg.host : WIFI_HOSTNAME_DEFAULT,
+                                      sizeof(g_state->wifi_hostname));
         saved = *g_state;
         state_exit();
-        Serial.printf("[Web] WiFi config: AP=\"%s\" STA=\"%s\" PASS=*** HIDDEN=%d\n",
-            saved.wifi_ssid, saved.wifi_sta_ssid, saved.wifi_hidden);
+        Serial.printf("[Web] WiFi config: AP=\"%s\" STA=\"%s\" PASS=*** HIDDEN=%d HOST=%s\n",
+            saved.wifi_ssid, saved.wifi_sta_ssid, saved.wifi_hidden, saved.wifi_hostname);
         prefs_save(&saved);
         return WEB_CMD_RESTART;
     } else {

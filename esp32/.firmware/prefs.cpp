@@ -60,6 +60,7 @@ void prefs_load(FSDState *state) {
     state->wifi_hidden = g_prefs.getBool("wsh", false);
     if (g_prefs.isKey("stas")) g_prefs.getString("stas").toCharArray(state->wifi_sta_ssid, sizeof(state->wifi_sta_ssid));
     if (g_prefs.isKey("stap")) g_prefs.getString("stap").toCharArray(state->wifi_sta_pass, sizeof(state->wifi_sta_pass));
+    if (g_prefs.isKey("host")) g_prefs.getString("host").toCharArray(state->wifi_hostname, sizeof(state->wifi_hostname));
 
     state->op_mode = (OpMode)g_prefs.getUChar("mode", (uint8_t)OpMode_ListenOnly);
     // Manual HW selection (#110); TeslaHW_Unknown = auto-detect.
@@ -145,6 +146,7 @@ void prefs_save(const FSDState *state) {
     g_prefs.putBool("wsh",    state->wifi_hidden);
     g_prefs.putString("stas", state->wifi_sta_ssid);
     g_prefs.putString("stap", state->wifi_sta_pass);
+    g_prefs.putString("host", state->wifi_hostname);
 
     g_prefs.putUChar("mode",  (uint8_t)state->op_mode);
     g_prefs.putUChar("hwov",  (uint8_t)state->hw_override);   // manual HW selection (#110)

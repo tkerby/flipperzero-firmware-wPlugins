@@ -456,7 +456,7 @@ state after synchronization and whenever it changes during the capture.
 - **Frame checks** — frames with DLC > 8 are dropped in the driver; extended and remote frames go into captures but never reach a parser or handler; `send()` refuses anything that isn't an 11-bit id with at most 8 bytes; every handler checks the data length before parsing
 - **Unplug = reset** — remove the device and restart the car to clear any modified state
 - **Web OTA rollback** — a web-flashed image is confirmed only after 15 s of runtime; a crash or power cut before that boots the previous firmware
-- **WiFi** — runs its own access point by default. If you set a network under Connect to WiFi, it joins that network and falls back to its own AP when it can't connect. The firmware makes no internet connections
+- **WiFi** — runs its own access point by default. If you set a network under Connect to WiFi, it joins that network and falls back to its own AP when it can't connect. On that network it goes by the Hostname set on the same card (default `tesla-fsd`), the name your router lists it under; there is no mDNS. The firmware makes no internet connections
 
 ---
 

@@ -436,6 +436,41 @@ static void test_wifi_bad_fields() {
     }
 }
 
+static void test_hostname() {
+    std::string h31(31, 'h'), h32(32, 'h');
+    const char *good[] = {"tesla-fsd", "Tesla-FSD", "a", "Z", "7", "car2", "my-car-2", "a--b", "123",
+                          h31.c_str()};
+    for (const char *h : good) CHECK(web_hostname_valid(h), "valid hostname refused: %s", h);
+    const char *bad[] = {"", "-car", "car-", "-", "my_car", "my.car", "my car", " car", "car\n",
+                         "caf\xC3\xA9", "tesla-fsd.local", h32.c_str()};
+    for (const char *h : bad) CHECK(!web_hostname_valid(h), "invalid hostname accepted: %s", h);
+    CHECK(!web_hostname_valid(nullptr), "null hostname");
+
+    WebWifiCfg cfg;
+    CHECK(wifi("{\"ssid\":\"a\"}", &cfg) == nullptr && !cfg.has_host, "no host member: unchanged");
+    CHECK(wifi("{\"host\":\"\"}", &cfg) == nullptr && cfg.has_host && cfg.host[0] == '\0',
+          "empty host: back to the default");
+    CHECK(wifi("{\"host\":\"Tesla-FSD\"}", &cfg) == nullptr && strcmp(cfg.host, "Tesla-FSD") == 0,
+          "case is kept");
+    CHECK(wifi("{\"host\":\"" + h31 + "\"}", &cfg) == nullptr && strlen(cfg.host) == 31, "31 characters");
+    struct { std::string value; } refused[] = {
+        {"{\"host\":\"" + h32 + "\"}"}, {"{\"host\":\"my_car\"}"}, {"{\"host\":\"car.lan\"}"},
+        {"{\"host\":\"-car\"}"}, {"{\"host\":5}"}, {"{\"host\":null}"}, {"{\"host\":\"car\\n\"}"},
+        {"{\"host\":\"\\u00e9\"}"},
+    };
+    for (auto &c : refused) {
+        const char *bad_field = wifi(c.value, &cfg);
+        CHECK(bad_field && strcmp(bad_field, "host") == 0, "%s: got %s", c.value.c_str(),
+              bad_field ? bad_field : "null");
+    }
+    // The whole page message, hostname included.
+    CHECK(wifi("{\"ssid\":\"Tesla-FSD\",\"pass\":\"***\",\"hidden\":false,\"sta_ssid\":\"Home\","
+               "\"sta_pass\":\"***\",\"host\":\"garage-car\"}", &cfg) == nullptr &&
+          cfg.has_host && strcmp(cfg.host, "garage-car") == 0, "page message with host");
+    const char *bad_field = wifi("{\"ssid\":\"Tesla-FSD\",\"pass\":\"***\",\"host\":\"bad name\"}", &cfg);
+    CHECK(bad_field && strcmp(bad_field, "host") == 0, "a bad host rejects the whole message");
+}
+
 static void test_reasons() {
     CHECK(web_cmd_error(WEB_CMD_OK) == nullptr, "ok");
     CHECK(web_cmd_error(WEB_CMD_RESTART) == nullptr, "restart");
@@ -458,6 +493,7 @@ int main() {
     test_wifi_quotes_and_backslashes();
     test_wifi_lengths();
     test_wifi_bad_fields();
+    test_hostname();
     test_reasons();
 
     printf("\n%d passed, %d failed\n", g_pass, g_fail);

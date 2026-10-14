@@ -187,6 +187,8 @@ var TABLES = {
  "The device starts its own access point by default. Optionally set a network below; when a network name is set, the device tries to connect to it on boot and starts its own access point if it cannot connect.": "设备默认会启动自带热点。也可在下方设置网络；设置网络名称后，设备启动时会优先连接该网络，失败则回退到自带热点。",
  "Network Name": "网络名称",
  "Network Password": "网络密码",
+ "Hostname": "主机名",
+ "name shown on your router": "路由器上显示的名称",
  "Password": "密码",
  "Access Point": "接入点",
  "Enter the admin username and the WiFi AP password.": "请输入管理员用户名和 WiFi 热点密码。",
@@ -261,6 +263,7 @@ var TABLES = {
  "Network name must be at most 32 bytes.": "网络名称最多 32 字节。",
  "Network password must be empty or 8 to 64 bytes.": "网络密码须为空或 8 到 64 字节。",
  "Characters outside plain ASCII take 2 to 4 bytes each; control characters are not accepted.": "非 ASCII 字符（如中文）每个占 2 到 4 字节；不接受控制字符。",
+ "Hostname must be 1 to 31 letters, digits or hyphens, and cannot start or end with a hyphen.": "主机名须为 1 到 31 个字母、数字或连字符，且不能以连字符开头或结尾。",
  "OTA writes to the next app partition when available. The new image is kept only after 15 s of runtime; a crash or power cut before that restores the previous firmware. Keep USB reflashing available as a recovery path.": "OTA 会在可用时写入下一个 app 分区；新固件需连续运行 15 秒后才会被保留，在此之前崩溃或断电会回滚到上一版固件。请保留 USB 线刷作为恢复手段。",
  "WiFi Clients": "WiFi 客户端",
  "Memory": "内存"
@@ -442,6 +445,8 @@ var TABLES = {
  "The device starts its own access point by default. Optionally set a network below; when a network name is set, the device tries to connect to it on boot and starts its own access point if it cannot connect.": "裝置預設會啟動自帶熱點。也可在下方設定網路；設定網路名稱後，裝置啟動時會優先連接該網路，失敗則退回自帶熱點。",
  "Network Name": "網路名稱",
  "Network Password": "網路密碼",
+ "Hostname": "主機名稱",
+ "name shown on your router": "路由器上顯示的名稱",
  "Password": "密碼",
  "Access Point": "存取點",
  "Enter the admin username and the WiFi AP password.": "請輸入管理員使用者名稱和 WiFi 熱點密碼。",
@@ -516,6 +521,7 @@ var TABLES = {
  "Network name must be at most 32 bytes.": "網路名稱最多 32 位元組。",
  "Network password must be empty or 8 to 64 bytes.": "網路密碼須為空或 8 到 64 位元組。",
  "Characters outside plain ASCII take 2 to 4 bytes each; control characters are not accepted.": "非 ASCII 字元（如中文）每個佔 2 到 4 位元組；不接受控制字元。",
+ "Hostname must be 1 to 31 letters, digits or hyphens, and cannot start or end with a hyphen.": "主機名稱須為 1 到 31 個字母、數字或連字號，且不能以連字號開頭或結尾。",
  "OTA writes to the next app partition when available. The new image is kept only after 15 s of runtime; a crash or power cut before that restores the previous firmware. Keep USB reflashing available as a recovery path.": "OTA 會在可用時寫入下一個 app 分割區；新韌體需連續執行 15 秒後才會被保留，在此之前當機或斷電會還原到上一版韌體。請保留 USB 線刷作為還原手段。",
  "WiFi Clients": "WiFi 客戶端",
  "Memory": "記憶體"
