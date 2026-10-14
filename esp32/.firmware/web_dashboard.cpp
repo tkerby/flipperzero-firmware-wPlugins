@@ -23,6 +23,7 @@
 #include "ota_verify.h"
 #include "captive_portal.h"
 #include "web_cmd.h"
+#include "web_origin.h"
 #include <WebServer.h>
 #include <WebSocketsServer.h>
 #include <WiFi.h>
@@ -1682,6 +1683,9 @@ var WIFI_ERR={
 // delivered: say so and undo what the page did for it.
 function cmdRefused(d){
   busy=0;
+  // Loaded under a name the device does not take commands from (renamed
+  // since): reload from the address it gives.
+  if(d.err==='origin'&&d.url){location.replace(d.url);return;}
   var fail=cmdFail[d.cmd];
   if(d.cmd==='wifi_cfg'&&d.err){
     var why=WIFI_ERR[d.field];
@@ -2865,6 +2869,48 @@ static void restart_for_wifi() {
     ESP.restart();
 }
 
+// ── Whose commands are taken (web_origin.h) ──────────────────────────────────
+// Text form of the names in WebOwnNames, filled in by own_names().
+struct OwnNamesText {
+    char ap[16];
+    char sta[16];
+    char host[sizeof(FSDState::wifi_hostname)];
+};
+
+// The addresses and hostname the device has right now.
+static WebOwnNames own_names(OwnNamesText &t) {
+    auto text = [](IPAddress ip, char *out) {
+        snprintf(out, 16, "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
+    };
+    t.ap[0] = t.sta[0] = '\0';
+    wifi_mode_t mode = WiFi.getMode();
+    if (mode == WIFI_MODE_AP || mode == WIFI_MODE_APSTA) text(WiFi.softAPIP(), t.ap);
+    if ((mode == WIFI_MODE_STA || mode == WIFI_MODE_APSTA) && WiFi.status() == WL_CONNECTED) {
+        text(WiFi.localIP(), t.sta);
+    }
+    state_enter();
+    memcpy(t.host, g_state->wifi_hostname, sizeof(t.host));
+    state_exit();
+    t.host[sizeof(t.host) - 1] = '\0';
+    return WebOwnNames{t.ap, t.sta, t.host};
+}
+
+// The dashboard at the address this client reached us on.
+static String home_url() {
+    return String("http://") + g_http.client().localIP().toString() + "/";
+}
+
+// WebSocket handshake, once for each request header the library does not
+// handle itself: a browser page that is not the dashboard is refused (the
+// library answers 400 and the page falls back to HTTP polling).
+static bool ws_header_ok(String name, String value) {
+    if (!name.equalsIgnoreCase("Origin")) return true;
+    OwnNamesText t;
+    if (web_ws_origin_ok(value.c_str(), own_names(t))) return true;
+    Serial.printf("[WS] connection refused: Origin %.64s\n", value.c_str());
+    return false;
+}
+
 // ── WebSocket event handler ───────────────────────────────────────────────────
 static void ws_event(uint8_t num, WStype_t type,
                      uint8_t *payload, size_t length)
@@ -2896,6 +2942,15 @@ static void ws_event(uint8_t num, WStype_t type,
 
 // ── HTTP handlers ─────────────────────────────────────────────────────────────
 static void handle_root() {
+    // The page is served under our own names only: its origin is what the
+    // WebSocket and /api/cmd check, and on the SoftAP every name resolves
+    // here (captive portal). Under any other name it is sent to our address.
+    OwnNamesText t;
+    if (!web_host_header_ours(g_http.hostHeader().c_str(), own_names(t))) {
+        g_http.sendHeader("Location", home_url(), true);
+        g_http.send(302, "text/plain", "");
+        return;
+    }
     captive_portal_note_dashboard(g_http);   // portal "login" for Apple's probe (SoftAP only)
     g_http.setContentLength(sizeof(WEB_HTML) - 1);
     g_http.send(200, "text/html", "");
@@ -2930,9 +2985,22 @@ static void handle_status() {
 // same JSON text a WS frame carries and goes through the same dispatcher.
 // Content-Type must be application/json: a cross-site form or no-cors fetch
 // cannot send that without a CORS preflight, which this server never grants.
-// The reply is {"ok":true}, or a 400 with the reason the command was refused.
+// The Origin has to be the dashboard's own page, as on the WebSocket
+// (web_origin.h); that also stops a rebound name, where the request is not
+// cross-site at all. A 403 names the address to load the dashboard from.
+// Otherwise the reply is {"ok":true}, or a 400 with the reason the command
+// was refused.
 static void handle_cmd() {
     if (g_state == nullptr) { g_http.send(503, "application/json", "{}"); return; }
+    String origin = g_http.header("Origin");
+    String host = g_http.hostHeader();
+    OwnNamesText t;
+    if (!web_post_origin_ok(origin.c_str(), host.c_str(), own_names(t))) {
+        Serial.printf("[Web] command refused: Origin %.64s Host %.64s\n", origin.c_str(), host.c_str());
+        g_http.send(403, "application/json",
+                    String("{\"ok\":false,\"err\":\"origin\",\"url\":\"") + home_url() + "\"}");
+        return;
+    }
     String ctype = g_http.header("Content-Type");
     ctype.toLowerCase();
     if (!ctype.startsWith("application/json")) {
@@ -3189,8 +3257,9 @@ void web_dashboard_init(FSDState *state,
     // WebServer keeps only the request headers named here (plus Authorization),
     // and collectHeaders() replaces the list instead of adding to it. This is
     // the last call before begin(), so it names every header a handler reads:
-    // Content-Type for /api/cmd, User-Agent for the captive portal's probes.
-    const char *collect[] = { "Content-Type", "User-Agent" };
+    // Content-Type and Origin for /api/cmd, User-Agent for the captive
+    // portal's probes.
+    const char *collect[] = { "Content-Type", "Origin", "User-Agent" };
     g_http.collectHeaders(collect, sizeof(collect) / sizeof(collect[0]));
     g_http.begin();
     captive_portal_begin();
@@ -3198,6 +3267,7 @@ void web_dashboard_init(FSDState *state,
 
     g_ws.begin();
     g_ws.onEvent(ws_event);
+    g_ws.onValidateHttpHeader(ws_header_ok, nullptr, 0);
 
     Serial.println("[Web] HTTP :80  WS :81 — ready");
 }

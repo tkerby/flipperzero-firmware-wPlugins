@@ -80,6 +80,11 @@ _ALLOWANCES = {
     # std::function call 48 + 32 + handleWebsocketPayloadCb 48 +
     # messageReceived 32 + runCbEvent 48 + invoker 32.
     "WebSockets message": 1216,
+    # WebSocketsServer::loop 32 + WebSocketsServerCore::loop 32 +
+    # handleClientData 64 + handleHeader 128 + execHttpHeaderValidation 80 +
+    # the std::function invoker 80 (it takes two Strings by value), from the
+    # library's .su files.
+    "WebSockets handshake": 416,
     # WebServer::handleClient 80 + _handleRequest 112 +
     # FunctionRequestHandler::handle 64 + std::function call 32 + 32, from the
     # framework library's .su files.
@@ -171,6 +176,10 @@ _CHAINS = [
     ("dashboard connect",
      ["loop", "web_dashboard_update", "ws_event", "build_json"],
      ["WebSockets connect", "printf %f"]),
+    # The Origin check on each handshake header, which logs a refusal.
+    ("dashboard handshake",
+     ["loop", "web_dashboard_update", "ws_header_ok"],
+     ["WebSockets handshake", "Serial printf"]),
     ("dashboard command",
      ["loop", "web_dashboard_update", "ws_event", "web_command", "prefs_save"],
      ["WebSockets message", "NVS write"]),

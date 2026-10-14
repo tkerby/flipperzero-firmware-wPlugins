@@ -4,6 +4,7 @@
 # test_captive_probe covers esp32/.firmware/captive_probe.h (captive-portal logic).
 # test_can_mcp2518fd covers esp32/.firmware/can_mcp2518fd.h (T-2CAN FD driver logic).
 # test_web_cmd covers esp32/.firmware/web_cmd.h (dashboard command parser).
+# test_web_origin covers esp32/.firmware/web_origin.h (whose commands are taken).
 #
 #   make -C test check
 
@@ -36,15 +37,19 @@ test_can_mcp2518fd: test_can_mcp2518fd.cpp $(ESP32)/can_mcp2518fd.h $(ESP32)/can
 test_web_cmd: test_web_cmd.cpp $(ESP32)/web_cmd.h
 	$(CXX) $(CXXFLAGS) -I$(ESP32) test_web_cmd.cpp -o $@
 
-check: test_fsd_core test_esp32_core test_can_capture_filter test_captive_probe test_can_mcp2518fd test_web_cmd
+test_web_origin: test_web_origin.cpp $(ESP32)/web_origin.h
+	$(CXX) $(CXXFLAGS) -I$(ESP32) test_web_origin.cpp -o $@
+
+check: test_fsd_core test_esp32_core test_can_capture_filter test_captive_probe test_can_mcp2518fd test_web_cmd test_web_origin
 	./test_fsd_core
 	./test_esp32_core
 	./test_can_capture_filter
 	./test_captive_probe
 	./test_can_mcp2518fd
 	./test_web_cmd
+	./test_web_origin
 
 clean:
-	rm -rf test_fsd_core test_fsd_core.dSYM test_esp32_core test_esp32_core.dSYM test_can_capture_filter test_can_capture_filter.dSYM test_captive_probe test_captive_probe.dSYM test_can_mcp2518fd test_can_mcp2518fd.dSYM test_web_cmd test_web_cmd.dSYM
+	rm -rf test_fsd_core test_fsd_core.dSYM test_esp32_core test_esp32_core.dSYM test_can_capture_filter test_can_capture_filter.dSYM test_captive_probe test_captive_probe.dSYM test_can_mcp2518fd test_can_mcp2518fd.dSYM test_web_cmd test_web_cmd.dSYM test_web_origin test_web_origin.dSYM
 
 .PHONY: check clean
