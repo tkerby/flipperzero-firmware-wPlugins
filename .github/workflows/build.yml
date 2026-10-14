@@ -66,6 +66,7 @@ jobs:
           - esp32-mcp2515
           - esp32-lilygo
           - lilygo-t2can
+          - lilygo-t2can-fd
           - ttgo-tdisplay
           - waveshare-s3-can
     steps:
