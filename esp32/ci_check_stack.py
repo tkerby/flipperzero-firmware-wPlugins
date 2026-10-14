@@ -160,7 +160,7 @@ _ALLOWANCES = {
 # its chains off.
 _FEATURES = {
     # blackbox.cpp with the LittleFS or SD backend; the RAM backend has none.
-    "black box on disk": ("disk_emit", "backend_stream_body", "bb_scan_count"),
+    "black box on disk": ("bb_drop_oldest", "backend_stream_body", "bb_scan_count"),
     # can_dump.cpp under BOARD_LILYGO: CAN dump, syslog and format on SD.
     "SD card": ("rm_recursive", "open_new_file", "syslog_open"),
     # main.cpp under BOARD_LILYGO.
@@ -239,8 +239,10 @@ _CHAINS = [
     ("black-box flush",
      ["loop", "blackbox_tick", "do_flush"],
      ["Serial printf"]),
+    # On disk do_flush() saves a step per call; the deepest step drops an old
+    # event to make room.
     ("black-box flush, disk",
-     ["loop", "blackbox_tick", "do_flush", "bb_scan_count"],
+     ["loop", "blackbox_tick", "do_flush", "bb_drop_oldest"],
      ["black-box storage"], "black box on disk"),
     ("bus-off",
      ["loop", "blackbox_busoff", "blackbox_arm"],
@@ -260,7 +262,7 @@ _CHAINS = [
      ["setup"],
      ["Wi-Fi start"]),
     ("boot, disk",
-     ["setup", "blackbox_init", "bb_scan_count"],
+     ["setup", "blackbox_init", "bb_drop_orphans"],
      ["black-box storage"], "black box on disk"),
 ]
 

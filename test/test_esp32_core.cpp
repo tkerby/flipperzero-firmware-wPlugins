@@ -18,6 +18,7 @@
 #include "fsd_can_ops.h"  // tesla_can_rx_accept / tesla_can_tx_valid (driver RX/TX filter)
 #include "fsd_checksum.h" // tesla_additive_checksum (0x334 / 0x118 vectors)
 #include "fsd_cp_status.h" // 0x25D CP_status decode + plug guard + rewrite predicate (#228)
+#include "blackbox_flush.h" // black-box ring push, window search, save slices
 
 static int g_pass = 0;
 static int g_fail = 0;
@@ -1343,6 +1344,125 @@ static void test_cp_type_rewrite(void) {
           memcmp(fa.data, fb.data, 8) == 0, "rewrite is bus-agnostic (pure in the frame)");
 }
 
+// ── Black-box save in slices ─────────────────────────────────────────────────
+// The window the save used to find with a linear scan of the whole ring.
+static BBWindow bb_window_linear(const uint32_t* ts, uint32_t n, uint32_t lo, uint32_t hi) {
+    BBWindow w = {0, 0};
+    bool started = false;
+    for (uint32_t k = 0; k < n; k++) {
+        if (ts[k] < lo) continue;
+        if (ts[k] > hi) break;
+        if (!started) { w.first = k; started = true; }
+        w.count++;
+    }
+    return w;
+}
+
+static void test_blackbox_window(void) {
+    uint32_t ts[64];
+    uint32_t seed = 0x1234567u;
+    int bad = 0;
+    for (int trial = 0; trial < 3000; trial++) {
+        uint32_t n = xorshift32(&seed) % 64u;
+        uint32_t t = 1000u + xorshift32(&seed) % 50u;
+        for (uint32_t k = 0; k < n; k++) {
+            ts[k] = t;
+            t += xorshift32(&seed) % 4u == 0 ? 0u : xorshift32(&seed) % 30u;  // with repeats
+        }
+        uint32_t lo = 990u + xorshift32(&seed) % (t - 990u + 20u);
+        uint32_t hi = lo + xorshift32(&seed) % 400u;
+        BBWindow got = bb_find_window(n, lo, hi, [&](uint32_t k) { return ts[k]; });
+        BBWindow want = bb_window_linear(ts, n, lo, hi);
+        if (got.count != want.count || (want.count && got.first != want.first)) bad++;
+    }
+    CHECK(bad == 0, "binary-search window matches the linear scan (%d mismatches)", bad);
+
+    uint32_t two[3] = {100u, 200u, 200u};
+    auto at = [&](uint32_t k) { return two[k]; };
+    BBWindow w = bb_find_window(0, 0u, 1000u, at);
+    CHECK(w.count == 0, "empty ring: empty window");
+    w = bb_find_window(3, 300u, 400u, at);
+    CHECK(w.count == 0 && w.first == 3, "everything before the window");
+    w = bb_find_window(3, 0u, 50u, at);
+    CHECK(w.count == 0 && w.first == 0, "everything after the window");
+    w = bb_find_window(3, 200u, 200u, at);
+    CHECK(w.first == 1 && w.count == 2, "lo == hi on a repeated timestamp: both frames");
+    w = bb_find_window(3, 100u, 199u, at);
+    CHECK(w.first == 0 && w.count == 1, "hi just before a frame excludes it");
+}
+
+static void test_blackbox_ring_push(void) {
+    // Without a save, a full ring evicts its oldest frame.
+    const uint32_t cap = 8u;
+    uint32_t vals[cap] = {};
+    uint32_t head = 0, tail = 0, slot = 0;
+    bool pushed = true;
+    for (uint32_t v = 0; v < 20u; v++) {
+        pushed &= bb_ring_push(cap, head, tail, cap, &slot);
+        vals[slot] = v;
+    }
+    CHECK(pushed, "without a save every push lands");
+    CHECK(bb_ring_count(cap, head, tail) == cap - 1u, "full ring holds cap - 1 frames");
+    bool order = true;
+    for (uint32_t k = 0; k < cap - 1u; k++) order &= vals[(tail + k) % cap] == 13u + k;
+    CHECK(order, "the newest seven frames, oldest first");
+}
+
+static void test_blackbox_save_slices(void) {
+    // A full ring of frames 0..14; the event window is 3..11. The save writes
+    // four frames a pass while eight new frames arrive between passes, more
+    // than the save frees, so the ring fills up to the frames still to write.
+    const uint32_t cap = 16u;
+    uint32_t vals[cap] = {};
+    uint32_t head = 0, tail = 0, slot = 0;
+    for (uint32_t v = 0; v < 15u; v++) {
+        bb_ring_push(cap, head, tail, cap, &slot);
+        vals[slot] = v;
+    }
+    uint32_t t0 = tail;
+    BBWindow w = bb_find_window(bb_ring_count(cap, head, tail), 3u, 11u,
+                                [&](uint32_t k) { return vals[(t0 + k) % cap]; });
+    CHECK(w.first == 3u && w.count == 9u, "window 3..11 (first %u, count %u)",
+          (unsigned)w.first, (unsigned)w.count);
+    uint32_t next = (tail + w.first) % cap, left = w.count;
+    uint32_t written[16], nw = 0, passes = 0, dropped = 0, v = 100u;
+    while (left) {
+        for (uint32_t n = bb_slice(left, 4u); n > 0; n--) {
+            written[nw++] = vals[next];
+            next = bb_ring_next(cap, next);
+            left--;
+        }
+        passes++;
+        for (int i = 0; i < 8; i++, v++) {
+            if (bb_ring_push(cap, head, tail, left ? next : cap, &slot)) vals[slot] = v;
+            else dropped++;
+        }
+    }
+    bool intact = nw == 9u;
+    for (uint32_t k = 0; intact && k < nw; k++) intact = written[k] == 3u + k;
+    CHECK(intact, "every window frame written once, in order, none overwritten");
+    CHECK(passes == 3u, "9 frames at 4 a pass: 3 passes (%u)", (unsigned)passes);
+    CHECK(dropped > 0u, "new frames dropped while the ring was full up to the save (%u)",
+          (unsigned)dropped);
+    CHECK(bb_ring_count(cap, head, tail) == cap - 1u, "ring still full after the save");
+    CHECK(bb_ring_push(cap, head, tail, cap, &slot), "after the save the oldest frame goes again");
+
+    // Slices add up to the window, never more than the per-pass cap.
+    bool ok = true;
+    for (uint32_t count = 0; count < 100u; count++) {
+        for (uint32_t per = 1; per < 40u; per++) {
+            uint32_t left2 = count, sum = 0, n2 = 0;
+            while (left2) {
+                uint32_t s2 = bb_slice(left2, per);
+                ok &= s2 >= 1u && s2 <= per;
+                sum += s2; left2 -= s2; n2++;
+            }
+            ok &= sum == count && n2 == (count + per - 1u) / per;
+        }
+    }
+    CHECK(ok, "slices cover the window in ceil(count / per_pass) passes");
+}
+
 int main() {
     printf("test_esp32_core: ESP32 firmware handler host tests\n");
     test_perf_accel_timer();
@@ -1377,6 +1497,9 @@ int main() {
     test_cp_type_rewrite();
     test_state_init();
     test_can_frame_filter();
+    test_blackbox_window();
+    test_blackbox_ring_push();
+    test_blackbox_save_slices();
 
     printf("\n%d passed, %d failed\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;

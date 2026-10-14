@@ -85,7 +85,8 @@ void blackbox_arm(BBTrigger trig, const FSDState* snap, uint32_t now_ms);
 void blackbox_busoff(uint32_t now_ms);
 void blackbox_mark(uint32_t now_ms);
 
-// Post-roll countdown + flush. Call once per loop().
+// Post-roll countdown, then the save. On disk that is a step per call, so a
+// big event never holds up the loop. Call once per loop().
 void blackbox_tick(uint32_t now_ms);
 
 // Enable/disable + persist; off stops recording and clears any armed capture.
