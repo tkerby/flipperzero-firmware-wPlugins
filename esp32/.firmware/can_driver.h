@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stddef.h>
 #include <stdint.h>
 #include "fsd_handler.h"  // for CanFrame
 
@@ -62,6 +63,13 @@ public:
     /** Cumulative frames that failed to transmit. TWAI: .tx_failed_count;
      *  MCP2515: sendMessage() failures. Drivers without the metric return 0. */
     virtual uint32_t txFailedCount() { return 0; }
+
+    /** Mode, controller state and error counters in the driver's own terms,
+     *  for the serial `canstat` command. TWAI and MCP2515 count different
+     *  things, so errorCount() alone reads the same on both while meaning
+     *  different things; this spells out what each one has. Reads registers
+     *  (over SPI on the MCP2515): not for the receive path. */
+    virtual void describeState(char *out, size_t n) { if (n) out[0] = '\0'; }
 
     /** Switch between listen-only and normal TX mode at runtime.
      *  Implementations must reinitialise the hardware as needed. */

@@ -359,6 +359,15 @@ pio device monitor -b 115200
 [Web] HTTP :80  WS :81 — ready
 ```
 
+### Serial Commands
+
+Type these into the serial monitor:
+
+| Command | Prints |
+|---|---|
+| `ip` | WiFi status and dashboard URLs |
+| `canstat` | One line per CAN bus: RX/TX counts, rejected frames, hardware filter, then the controller's own state. TWAI: mode, controller state, TEC/REC, `rx_missed` (driver queue full), `rx_overrun` (controller FIFO full), `bus_err`, `tx_fail`, frames still waiting to be sent. MCP2515: mode, the EFLG error flags, TEC/REC and failed sends; the chip keeps no count of lost frames, so an overflow only shows as a flag. MCP2518FD (T-2CAN FD): mode, TEC/REC, bus-off / error-passive, RX FIFO overflow events, bus errors, failed sends and the measured crystal |
+
 ---
 
 ## Usage

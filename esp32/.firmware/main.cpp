@@ -124,6 +124,29 @@ static bool serial_cmd_equals(const char *cmd, const char *expected) {
     return *cmd == '\0' && *expected == '\0';
 }
 
+// Serial `canstat`: one line per bus. The combined error count is left out on
+// purpose: on TWAI it is mostly RX-queue drops, on the MCP2515 only failed
+// sends, so the same number would mean two different things side by side.
+// Each driver states its own counters instead.
+static void print_can_stats() {
+    for (uint8_t i = 0; i < CAN_ACTIVE_BUS_COUNT; i++) {
+        const char *name = can_bus_name(bus_id_from_index(i));
+        if (!g_can[i]) {
+            Serial.printf("[CAN] %s: no driver\n", name);
+            continue;
+        }
+        char state[192];
+        g_can[i]->describeState(state, sizeof(state));
+        Serial.printf("[CAN] %s %s RX=%lu TX=%lu rejected=%lu filter=%s | %s\n",
+                      name, g_can_ok[i] ? "up" : "down",
+                      (unsigned long)g_can[i]->rxCount(),
+                      (unsigned long)g_can[i]->txCount(),
+                      (unsigned long)g_can[i]->rxRejectedCount(),
+                      g_can_ok[i] ? g_can[i]->acceptanceFilterMode() : "down",
+                      state);
+    }
+}
+
 static NOINLINE void serial_command_tick() {
     static char buf[24];
     static uint8_t len = 0;
@@ -137,10 +160,12 @@ static NOINLINE void serial_command_tick() {
 
             if (serial_cmd_equals(buf, "ip") || serial_cmd_equals(buf, "wifi")) {
                 wifi_print_status();
+            } else if (serial_cmd_equals(buf, "canstat")) {
+                print_can_stats();
             } else if (serial_cmd_equals(buf, "help") || serial_cmd_equals(buf, "?")) {
-                Serial.println("[SER] Commands: ip");
+                Serial.println("[SER] Commands: ip | canstat (per-bus CAN counters and state)");
             } else {
-                Serial.println("[SER] Unknown command. Type: ip");
+                Serial.println("[SER] Unknown command. Type: ip, canstat");
             }
             continue;
         }
@@ -353,18 +378,6 @@ static GearSequenceSendResult arm_gear_ap_double_press_sequence(uint32_t now, ui
     g_gear_sequence_next_ms = now;
     return gear_sequence_tick(now, "CONT-AP");
 }
-
-#if defined(CAN_DRIVER_T2CAN_DUAL)
-static void debug_log_bus_stats() {
-    Serial.printf("[CAN] RX can0=%lu can1=%lu TX can0=%lu can1=%lu Err can0=%lu can1=%lu\n",
-                  (unsigned long)(g_can[0] ? g_can[0]->rxCount() : 0),
-                  (unsigned long)(g_can[1] ? g_can[1]->rxCount() : 0),
-                  (unsigned long)(g_can[0] ? g_can[0]->txCount() : 0),
-                  (unsigned long)(g_can[1] ? g_can[1]->txCount() : 0),
-                  (unsigned long)(g_can[0] ? g_can[0]->errorCount() : 0),
-                  (unsigned long)(g_can[1] ? g_can[1]->errorCount() : 0));
-}
-#endif
 
 static const char *hw_to_str(TeslaHWVersion hw) {
     switch (hw) {
