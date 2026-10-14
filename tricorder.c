@@ -57,8 +57,10 @@
 #define PIN_FULL_MV 2500
 
 #define BOOT_TICKS     30
+#define FLASH_TICKS    4 // frames the panel inverts on a new contact
+#define REPORT_TICKS   50 // frames the sweep report card stays up
 #define SETTINGS_PATH  APP_DATA_PATH("settings.bin")
-#define SETTINGS_MAGIC 0x31435254 // "TRC1"
+#define SETTINGS_MAGIC 0x32435254 // "TRC2"
 
 typedef enum {
     ModeRf,
@@ -146,8 +148,9 @@ typedef enum {
     MenuIrSend,
     MenuIrSave,
     MenuSound,
+    MenuLed,
 } MenuItem;
-#define MENU_MAX 3
+#define MENU_MAX 4
 
 typedef struct {
     uint16_t freq; // 0 = rest
@@ -158,6 +161,23 @@ static const Chirp chirp_open[] = {{1568, 1}, {2093, 1}, {2637, 1}, {3136, 2}, {
 static const Chirp chirp_mode[] = {{2093, 1}, {2794, 1}, {0, 0}};
 static const Chirp chirp_contact[] = {{2637, 1}, {3520, 1}, {2637, 1}, {3520, 1}, {0, 0}};
 static const Chirp chirp_lock[] = {{1760, 1}, {2349, 1}, {3136, 1}, {0, 0}};
+static const Chirp chirp_done[] = {{2093, 1}, {2637, 1}, {3136, 1}, {0, 1}, {3136, 3}, {0, 0}};
+static const Chirp chirp_clear[] = {{1047, 2}, {0, 1}, {784, 3}, {0, 0}};
+
+// Each sensor has a colour for the LED
+typedef struct {
+    uint8_t r, g, b;
+} Rgb;
+static const Rgb mode_colors[ModeCount] = {
+    {0, 255, 0}, // RF green
+    {0, 0, 255}, // IR blue
+    {0, 255, 255}, // EMF cyan
+    {255, 0, 255}, // TAG magenta
+    {255, 160, 0}, // KEY amber
+    {255, 255, 255}, // PIN white
+    {255, 0, 0}, // PWR red
+    {255, 255, 255}, // ALL white
+};
 
 typedef struct {
     uint32_t magic;
@@ -169,6 +189,7 @@ typedef struct {
     uint8_t ir_zoom;
     uint8_t pin;
     uint8_t key_kind;
+    uint8_t led;
 } Settings;
 
 typedef struct {
@@ -291,6 +312,13 @@ typedef struct {
     bool menu_open;
     uint8_t menu_sel;
 
+    // Looks
+    bool led; // breathing LED while scanning
+    uint8_t flash; // panel inverts for a few frames on a new contact
+    uint8_t sw_report; // frames left on the sweep report card
+    uint8_t sw_contacts;
+    uint8_t led_level; // last brightness sent, so quiet frames send nothing
+
     // Sound
     bool sound;
     bool speaker_held;
@@ -367,6 +395,29 @@ static void sound_chirp(App* app, const Chirp* chirp) {
     app->chirp_left = 0;
 }
 
+// One Geiger-counter click: a few milliseconds of tone
+static void sound_click(App* app) {
+    if(!app->sound || furi_hal_rtc_is_flag_set(FuriHalRtcFlagStealthMode)) return;
+    if(!app->speaker_held) {
+        if(!furi_hal_speaker_acquire(10)) return;
+        app->speaker_held = true;
+    }
+    furi_hal_speaker_start(3600.0f, 0.4f);
+    furi_delay_ms(2);
+    furi_hal_speaker_stop();
+    app->tone_on = false;
+}
+
+// A contact worth announcing: flash the panel, chirp, buzz, blink the LED
+static void contact_announce(App* app, const NotificationSequence* blink) {
+    app->flash = FLASH_TICKS;
+    sound_chirp(app, chirp_contact);
+    notification_message(app->notifications, &sequence_single_vibro);
+    notification_message(app->notifications, blink);
+}
+
+static int rf_level(int dbm);
+
 // Called once per loop pass: plays the queued chirp, else warbles on a contact
 static void sound_update(App* app) {
     if(app->chirp) {
@@ -386,13 +437,40 @@ static void sound_update(App* app) {
         if(--app->chirp_left == 0) app->chirp++;
         return;
     }
-    if(app->contact) {
+    if(app->mode == ModeRf && app->track) {
+        // Geiger clicks: the stronger the signal, the faster the crackle
+        sound_quiet(app);
+        int lvl = rf_level(app->track_rssi);
+        uint32_t chance = 2 + (uint32_t)lvl * lvl * 98 / (GH * GH);
+        if(furi_hal_random_get() % 100 < chance) sound_click(app);
+    } else if(app->contact) {
         float freq = 900.0f + app->contact * 45.0f;
         if(app->frame & 1) freq *= 1.26f;
         sound_tone(app, freq);
     } else {
         sound_quiet(app);
     }
+}
+
+// Breathing LED in the sensor's colour, dim, two seconds per breath
+static void led_update(App* app) {
+    uint8_t level = 0;
+    if(app->led && !app->boot) {
+        // ten steps up and ten down, a step every four frames
+        uint32_t t = app->frame / 4 % 20;
+        level = (t < 10 ? t : 20 - t) * 6; // 0..60
+    }
+    if(level == app->led_level) return;
+    app->led_level = level;
+    const Rgb* c = &mode_colors[app->mode];
+    NotificationMessage red = {
+        .type = NotificationMessageTypeLedRed, .data.led.value = c->r * level / 255};
+    NotificationMessage green = {
+        .type = NotificationMessageTypeLedGreen, .data.led.value = c->g * level / 255};
+    NotificationMessage blue = {
+        .type = NotificationMessageTypeLedBlue, .data.led.value = c->b * level / 255};
+    const NotificationMessage* seq[] = {&red, &green, &blue, &message_do_not_reset, NULL};
+    notification_message(app->notifications, (const NotificationSequence*)&seq);
 }
 
 // ---------------------------------------------------------------- Sub-GHz
@@ -524,7 +602,11 @@ static void rf_step_scan(App* app) {
             app->fall[0][i] = rf_fall_level(app->rssi[i]);
         }
         app->max_i = best;
+        bool had = app->contact != 0;
         app->contact = app->rssi[best] > RF_CONTACT ? MAX(rf_level(app->rssi[best]), 1) : 0;
+        if(app->contact && !had && app->mode == ModeRf) {
+            contact_announce(app, &sequence_blink_green_10);
+        }
     }
     furi_mutex_release(app->mutex);
 }
@@ -557,10 +639,7 @@ static void rf_step_track(App* app) {
     app->rf_ident_new = false;
     furi_mutex_release(app->mutex);
 
-    if(ident) {
-        sound_chirp(app, chirp_contact);
-        notification_message(app->notifications, &sequence_blink_green_10);
-    }
+    if(ident) contact_announce(app, &sequence_blink_green_10);
 }
 
 static void rf_enter_track(App* app) {
@@ -674,8 +753,12 @@ static void ir_step(App* app) {
     furi_mutex_release(app->mutex);
 
     if(fresh) {
-        sound_chirp(app, decoded ? chirp_contact : chirp_mode);
-        notification_message(app->notifications, &sequence_blink_blue_10);
+        if(decoded) {
+            contact_announce(app, &sequence_blink_blue_10);
+        } else {
+            sound_chirp(app, chirp_mode);
+            notification_message(app->notifications, &sequence_blink_blue_10);
+        }
     }
 }
 
@@ -842,7 +925,7 @@ static void emf_step(App* app) {
     app->contact = nfc ? 30 : lf ? 14 : 0;
     furi_mutex_release(app->mutex);
 
-    if((nfc || lf) && !was) notification_message(app->notifications, &sequence_blink_cyan_10);
+    if((nfc || lf) && !was) contact_announce(app, &sequence_blink_cyan_10);
 }
 
 // ---------------------------------------------------------------- NFC tags
@@ -960,11 +1043,7 @@ static void tag_step(App* app) {
         app->tag_event = false;
         if(fresh) app->tag_uid_len = 0;
         furi_mutex_release(app->mutex);
-        if(fresh) {
-            sound_chirp(app, chirp_contact);
-            notification_message(app->notifications, &sequence_single_vibro);
-            notification_message(app->notifications, &sequence_blink_green_10);
-        }
+        if(fresh) contact_announce(app, &sequence_blink_magenta_10);
         // the UID lives in the base protocol underneath whatever was detected
         NfcProtocol base = app->tag_protocols[0];
         for(NfcProtocol parent = nfc_protocol_get_parent(base); parent != NfcProtocolInvalid;
@@ -1093,9 +1172,7 @@ static void key_step(App* app) {
 
     app->key_reading = false;
     app->key_restart_at = now + 1500;
-    sound_chirp(app, chirp_contact);
-    notification_message(app->notifications, &sequence_single_vibro);
-    notification_message(app->notifications, &sequence_blink_green_10);
+    contact_announce(app, &sequence_blink_yellow_10);
 }
 
 // ---------------------------------------------------------------- GPIO probe
@@ -1194,6 +1271,7 @@ static void sweep_phase_begin(App* app) {
         break;
     }
     app->sw_active = true;
+    sound_chirp(app, chirp_mode);
 }
 
 static void sweep_phase_end(App* app) {
@@ -1224,12 +1302,22 @@ static void sweep_report(App* app, bool hit, const char* text) {
     strlcpy(app->sw_text[app->sw_phase], text, LINE_LEN);
     app->sw_hit[app->sw_phase] = hit;
     furi_mutex_release(app->mutex);
-    if(fresh) sound_chirp(app, chirp_contact);
+    if(fresh) contact_announce(app, &sequence_blink_white_100);
 
     sweep_phase_end(app);
     app->sw_phase = (app->sw_phase + 1) % SweepCount;
-    if(app->sw_phase == SweepRf) app->sw_pass++;
-    sweep_phase_begin(app);
+    if(app->sw_phase == SweepRf) {
+        // a full pass is done: show the report card before going round again
+        app->sw_pass++;
+        app->sw_contacts = 0;
+        for(size_t i = 0; i < SweepCount; i++)
+            if(app->sw_hit[i]) app->sw_contacts++;
+        app->sw_report = REPORT_TICKS;
+        sound_chirp(app, app->sw_contacts ? chirp_done : chirp_clear);
+        notification_message(app->notifications, &sequence_double_vibro);
+    } else {
+        sweep_phase_begin(app);
+    }
 }
 
 static void sweep_start(App* app) {
@@ -1245,11 +1333,40 @@ static void sweep_start(App* app) {
 
 static void sweep_stop(App* app) {
     sweep_phase_end(app);
+    app->sw_report = 0;
     app->band = app->sw_saved_band;
+}
+
+// Loop passes each phase takes, for the progress bar
+static const uint16_t sweep_weights[SweepCount] = {27, 30, 12, 30};
+
+// Where a phase starts on the progress bar, 0..GW
+static int sweep_phase_start(size_t phase) {
+    uint16_t total = 0, before = 0;
+    for(size_t i = 0; i < SweepCount; i++) {
+        total += sweep_weights[i];
+        if(i < phase) before += sweep_weights[i];
+    }
+    return before * GW / total;
+}
+
+// How far through a pass the sweep is, 0..GW
+static int sweep_progress(const App* app) {
+    if(app->sw_report) return GW;
+    uint16_t total = 0;
+    for(size_t i = 0; i < SweepCount; i++)
+        total += sweep_weights[i];
+    int done = sweep_phase_start(app->sw_phase) +
+               MIN(app->sw_ticks, sweep_weights[app->sw_phase]) * GW / total;
+    return MIN(done, GW);
 }
 
 static void sweep_step(App* app) {
     char text[LINE_LEN];
+    if(app->sw_report) {
+        if(--app->sw_report == 0) sweep_phase_begin(app);
+        return;
+    }
     app->sw_ticks++;
     switch(app->sw_phase) {
     case SweepRf:
@@ -1425,7 +1542,8 @@ static void mode_step(App* app) {
 // The Sub-GHz sweep paces itself; every other sensor ticks at 20 Hz
 static bool mode_self_paced(App* app) {
     if(app->boot) return false;
-    return app->mode == ModeRf || (app->mode == ModeAll && app->sw_phase == SweepRf);
+    return app->mode == ModeRf ||
+           (app->mode == ModeAll && app->sw_phase == SweepRf && !app->sw_report);
 }
 
 static void mode_switch(App* app, int dir) {
@@ -1449,6 +1567,7 @@ static size_t menu_items(App* app, MenuItem* items) {
         items[n++] = MenuIrSave;
     }
     items[n++] = MenuSound;
+    items[n++] = MenuLed;
     return n;
 }
 
@@ -1468,6 +1587,9 @@ static void menu_label(App* app, MenuItem item, char* buf, size_t size) {
         break;
     case MenuSound:
         snprintf(buf, size, "Sound: %s", app->sound ? "On" : "Off");
+        break;
+    case MenuLed:
+        snprintf(buf, size, "LED: %s", app->led ? "On" : "Off");
         break;
     }
 }
@@ -1497,6 +1619,9 @@ static bool menu_select(App* app, MenuItem item) {
             sound_release(app);
         }
         return false;
+    case MenuLed:
+        app->led = !app->led;
+        return false;
     }
     return true;
 }
@@ -1522,18 +1647,22 @@ static void draw_frame(Canvas* canvas, App* app, const char* title, const char* 
         }
     }
 
-    canvas_draw_str(canvas, GX, 8, title);
+    // header: a filled bar with the title cut out of it, rounded at the far end
+    canvas_draw_rbox(canvas, GX - 2, 0, GW + 4, 10, 3);
+    canvas_draw_box(canvas, GX - 2, 0, 4, 10);
+    canvas_set_color(canvas, ColorWhite);
+    canvas_draw_str(canvas, GX + 1, 8, title);
     // three little blocks that chase while the sensor is live
     for(int i = 0; i < 3; i++) {
-        int x = 119 + i * 3;
+        int x = 118 + i * 3;
         if((int)(app->frame / 2 % 3) == i) {
             canvas_draw_box(canvas, x, 2, 2, 6);
         } else {
             canvas_draw_box(canvas, x, 6, 2, 2);
         }
     }
-    canvas_draw_str_aligned(canvas, 116, 8, AlignRight, AlignBottom, status);
-    canvas_draw_box(canvas, GX, 10, GW, 2);
+    canvas_draw_str_aligned(canvas, 115, 8, AlignRight, AlignBottom, status);
+    canvas_set_color(canvas, ColorBlack);
 }
 
 static void draw_footer(Canvas* canvas, App* app, const char* text) {
@@ -1867,8 +1996,17 @@ static void draw_all(Canvas* canvas, App* app) {
     char status[16];
     snprintf(status, sizeof(status), "#%u", app->sw_pass);
     draw_frame(canvas, app, "FULL SWEEP", status);
+    // progress through the pass, with a notch at each phase boundary
+    canvas_draw_frame(canvas, GX, GY, GW, 4);
+    canvas_draw_box(canvas, GX, GY, sweep_progress(app), 4);
+    canvas_set_color(canvas, ColorXOR);
+    for(size_t i = 1; i < SweepCount; i++) {
+        int x = GX + sweep_phase_start(i);
+        canvas_draw_box(canvas, x, GY + 1, 1, 2);
+    }
+    canvas_set_color(canvas, ColorBlack);
     for(int i = 0; i < SweepCount; i++) {
-        int y = GY + 9 + i * 10;
+        int y = GY + 12 + i * 9;
         if(i == (int)app->sw_phase) {
             // the sensor being read right now blinks an arrow
             if(app->frame / 3 % 2) canvas_draw_str(canvas, GX, y, ">");
@@ -1891,6 +2029,26 @@ static void draw_all(Canvas* canvas, App* app) {
     default:
         snprintf(foot, sizeof(foot), "POLLING FOR TAGS");
         break;
+    }
+    if(app->sw_report) {
+        snprintf(
+            foot,
+            sizeof(foot),
+            app->sw_contacts == 1 ? "%u CONTACT FOUND" : "%u CONTACTS FOUND",
+            app->sw_contacts);
+        if(!app->sw_contacts) snprintf(foot, sizeof(foot), "AREA CLEAR");
+        // report card over the list for the first part of the pause
+        if(app->sw_report > REPORT_TICKS / 2) {
+            canvas_set_color(canvas, ColorWhite);
+            canvas_draw_box(canvas, GX, GY + 10, GW, 30);
+            canvas_set_color(canvas, ColorBlack);
+            canvas_draw_rframe(canvas, GX, GY + 10, GW, 30, 3);
+            canvas_set_font(canvas, FontPrimary);
+            canvas_draw_str_aligned(
+                canvas, GX + GW / 2, GY + 23, AlignCenter, AlignBottom, "SWEEP COMPLETE");
+            canvas_set_font(canvas, FontSecondary);
+            canvas_draw_str_aligned(canvas, GX + GW / 2, GY + 35, AlignCenter, AlignBottom, foot);
+        }
     }
     draw_footer(canvas, app, foot);
 }
@@ -1930,6 +2088,20 @@ static void draw_boot(Canvas* canvas, App* app) {
     if(side_h > 6) canvas_draw_rbox(canvas, 0, 0, 14, side_h, 3);
     if(p > 4) canvas_draw_box(canvas, 0, 4, 14, 6);
 
+    if(p > 8) {
+        // stardate: the year and the day of the year, as any cadet would log it
+        DateTime dt;
+        furi_hal_rtc_get_datetime(&dt);
+        static const uint16_t before[12] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
+        int day = before[(dt.month - 1) % 12] + dt.day;
+        if(dt.month > 2 && dt.year % 4 == 0) day++;
+        char sd[24];
+        snprintf(sd, sizeof(sd), "STARDATE %u.%03d", dt.year, day);
+        canvas_set_font(canvas, FontSecondary);
+        canvas_set_color(canvas, ColorWhite);
+        canvas_draw_str(canvas, 20, 8, sd);
+        canvas_set_color(canvas, ColorBlack);
+    }
     canvas_set_font(canvas, FontPrimary);
     if(p > 6) {
         static const char name[] = "TRICORDER";
@@ -1987,6 +2159,15 @@ static void draw_callback(Canvas* canvas, void* context) {
         break;
     default:
         break;
+    }
+    if(app->flash) {
+        // a new contact: the panel inverts and announces itself
+        canvas_set_color(canvas, ColorXOR);
+        canvas_draw_box(canvas, GX, GY, GW, GH + 2);
+        canvas_set_color(canvas, ColorBlack);
+        canvas_set_font(canvas, FontPrimary);
+        draw_label(canvas, GX + GW / 2 - 24, GY + GH / 2 + 4, "CONTACT");
+        canvas_set_font(canvas, FontSecondary);
     }
     if(app->menu_open) draw_menu(canvas, app);
     furi_mutex_release(app->mutex);
@@ -2161,6 +2342,7 @@ static void settings_load(App* app) {
         app->ir_zoom = s.ir_zoom < IR_ZOOM_COUNT ? s.ir_zoom : 2;
         app->pin = s.pin < PIN_COUNT ? s.pin : 0;
         app->key_kind = s.key_kind < KeyKindCount ? s.key_kind : KeyRfid;
+        app->led = s.led != 0;
     }
     storage_file_close(file);
     storage_file_free(file);
@@ -2178,6 +2360,7 @@ static void settings_save(App* app) {
         .ir_zoom = app->ir_zoom,
         .pin = app->pin,
         .key_kind = app->key_kind,
+        .led = app->led,
     };
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* file = storage_file_alloc(storage);
@@ -2199,6 +2382,7 @@ int32_t tricorder_app(void* p) {
     app->queue = furi_message_queue_alloc(8, sizeof(InputEvent));
     app->running = true;
     app->sound = true;
+    app->led = true;
     app->band = 1;
     app->ir_zoom = 2;
     settings_load(app);
@@ -2232,12 +2416,15 @@ int32_t tricorder_app(void* p) {
         }
         app->frame++;
         if(app->toast) app->toast--;
+        if(app->flash) app->flash--;
         sound_update(app);
+        led_update(app);
         view_port_update(app->view_port);
     }
 
     if(!app->boot) mode_stop(app);
     sound_release(app);
+    notification_message(app->notifications, &sequence_reset_rgb);
     settings_save(app);
     notification_message(app->notifications, &sequence_display_backlight_enforce_auto);
     furi_record_close(RECORD_NOTIFICATION);
