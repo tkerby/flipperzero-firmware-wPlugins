@@ -319,6 +319,17 @@ struct WebCmd {
     bool integer(int *out)             { return check(web_json_int(value, out)); }
     bool string(char *out, size_t cap) { return check(web_json_str(value, out, cap)); }
 
+    // An integer of at least `min`, taken as `cap` above that: a percentage, a
+    // timeout. Below `min` it is refused like a value of the wrong type. Done
+    // on the int, so the caller can narrow the result without it wrapping.
+    bool integer_capped(int *out, int min, int cap) {
+        int n;
+        if (!integer(&n)) return false;
+        if (n < min) return check(false);
+        *out = n > cap ? cap : n;
+        return true;
+    }
+
     bool check(bool ok) {
         if (!ok) bad_value = true;
         return ok;

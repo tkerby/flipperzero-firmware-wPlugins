@@ -1378,9 +1378,9 @@ function updControls(d){
   if(document.getElementById('swTrkCO')) document.getElementById('swTrkCO').checked=d.track_cmp_overclock;
   if(document.getElementById('swDisp')) document.getElementById('swDisp').checked=!!d.display_enabled;
   if(focusId()!=='dispBr' && document.getElementById('dispBr'))
-    document.getElementById('dispBr').value=d.display_brightness||50;
+    document.getElementById('dispBr').value=d.display_brightness!==undefined?d.display_brightness:50;
   if(focusId()!=='dispTo' && document.getElementById('dispTo'))
-    document.getElementById('dispTo').value=d.display_timeout_s||60;
+    document.getElementById('dispTo').value=d.display_timeout_s!==undefined?d.display_timeout_s:60;
   if(document.getElementById('swDump')) document.getElementById('swDump').checked=!!d.can_dump;
 
   if(focusId()!=='numSleep' && document.getElementById('numSleep'))
@@ -2565,9 +2565,8 @@ static WebCmdResult web_command(WebCmd &cmd, const uint8_t *payload, size_t leng
         }
     } else if (cmd.is("disp_br")) {
         int n;
-        if (cmd.integer(&n)) {
+        if (cmd.integer_capped(&n, 0, 100)) {
             uint8_t val = (uint8_t)n;
-            if (val > 100) val = 100;
             FSDState saved;
             state_enter();
             g_state->display_brightness = val;
@@ -2577,8 +2576,10 @@ static WebCmdResult web_command(WebCmd &cmd, const uint8_t *payload, size_t leng
             prefs_save(&saved);
         }
     } else if (cmd.is("disp_to")) {
+        // 0 = never off; capped where the page's field stops, well short of
+        // the seconds * 1000 overflow in the timeout check.
         int n;
-        if (cmd.integer(&n)) {
+        if (cmd.integer_capped(&n, 0, 3600)) {
             uint32_t val = (uint32_t)n;
             FSDState saved;
             state_enter();
@@ -2777,9 +2778,8 @@ static WebCmdResult web_command(WebCmd &cmd, const uint8_t *payload, size_t leng
         }
     } else if (cmd.is("track_rotation_pct")) {
         int n;
-        if (cmd.integer(&n)) {
+        if (cmd.integer_capped(&n, 0, 100)) {
             uint8_t val = (uint8_t)n;
-            if (val > 100) val = 100;
             FSDState saved;
             state_enter();
             g_state->track_rotation_pct = val;
@@ -2790,9 +2790,8 @@ static WebCmdResult web_command(WebCmd &cmd, const uint8_t *payload, size_t leng
         }
     } else if (cmd.is("track_stability_pct")) {
         int n;
-        if (cmd.integer(&n)) {
+        if (cmd.integer_capped(&n, 0, 100)) {
             uint8_t val = (uint8_t)n;
-            if (val > 100) val = 100;
             FSDState saved;
             state_enter();
             g_state->track_stability_pct = val;
@@ -2832,19 +2831,15 @@ static WebCmdResult web_command(WebCmd &cmd, const uint8_t *payload, size_t leng
         }
     } else if (cmd.is("sleep")) {
         int n;
-        if (cmd.integer(&n)) {
+        if (cmd.integer_capped(&n, 10000, INT32_MAX)) {   // minimum 10 s
             uint32_t val = (uint32_t)n;
-            if (val >= 10000) { // minimum 10s
-                FSDState saved;
-                state_enter();
-                g_state->sleep_idle_ms = val;
-                saved = *g_state;
-                state_exit();
-                Serial.printf("[Web] Sleep timeout: %u ms\n", val);
-                prefs_save(&saved);
-            } else {
-                cmd.bad_value = true;
-            }
+            FSDState saved;
+            state_enter();
+            g_state->sleep_idle_ms = val;
+            saved = *g_state;
+            state_exit();
+            Serial.printf("[Web] Sleep timeout: %u ms\n", val);
+            prefs_save(&saved);
         }
     } else if (cmd.is("wifi_cfg")) {
         // All or nothing: one field that does not validate rejects the whole

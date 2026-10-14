@@ -245,6 +245,33 @@ static void test_value_types() {
     CHECK(parse("{\"cmd\":\"x\",\"value\":5}", &cmd) && !cmd.string(s, sizeof(s)), "number is no string");
 }
 
+// Percentages and timeouts: limited on the int, before the caller narrows it
+// to uint8_t / uint32_t. 300 used to become 44 and -1 a 49-day sleep timeout.
+static void test_capped_integers() {
+    WebCmd cmd;
+    struct { const char *v; int min, cap; bool ok; int n; } c[] = {
+        {"0", 0, 100, true, 0}, {"55", 0, 100, true, 55}, {"100", 0, 100, true, 100},
+        {"101", 0, 100, true, 100}, {"300", 0, 100, true, 100}, {"256", 0, 100, true, 100},
+        {"2147483647", 0, 100, true, 100},
+        {"-1", 0, 100, false, 0}, {"-256", 0, 100, false, 0}, {"-2147483648", 0, 100, false, 0},
+        {"3600", 0, 3600, true, 3600}, {"7200", 0, 3600, true, 3600}, {"-5", 0, 3600, false, 0},
+        {"10000", 10000, INT32_MAX, true, 10000}, {"9999", 10000, INT32_MAX, false, 0},
+        {"-1", 10000, INT32_MAX, false, 0}, {"2147483647", 10000, INT32_MAX, true, 2147483647},
+        {"\"50\"", 0, 100, false, 0}, {"50.5", 0, 100, false, 0}, {"null", 0, 100, false, 0},
+    };
+    for (auto &t : c) {
+        std::string m = std::string("{\"cmd\":\"disp_br\",\"value\":") + t.v + "}";
+        CHECK(parse(m, &cmd), "parses: %s", m.c_str());
+        int n = 12345;
+        bool ok = cmd.integer_capped(&n, t.min, t.cap);
+        CHECK(ok == t.ok && (!ok || n == t.n), "%s in [%d, cap %d]: ok=%d n=%d", t.v, t.min, t.cap, ok, n);
+        CHECK(cmd.bad_value == !t.ok, "%s: bad_value=%d", t.v, cmd.bad_value);
+        if (ok) CHECK((uint8_t)n == n || t.cap > 255, "%s narrows to uint8_t unchanged", t.v);
+    }
+    CHECK(parse("{\"cmd\":\"disp_br\"}", &cmd) && !cmd.integer_capped(nullptr, 0, 100) && cmd.bad_value,
+          "absent value refused");
+}
+
 static bool str(const char *quoted, std::string *out, size_t cap = 80) {
     char buf[128];
     size_t len = 0;
@@ -487,6 +514,7 @@ int main() {
     test_layout_variations();
     test_malformed_messages();
     test_value_types();
+    test_capped_integers();
     test_string_decoding();
     test_get();
     test_wifi_page_message();
