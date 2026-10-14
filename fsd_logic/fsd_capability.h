@@ -41,6 +41,16 @@ typedef enum {
     CAP_HINT_CHASSIS,   // steering present, no 0x370 -> looks Chassis/Vehicle-like
 } FSDCapBusHint;
 
+// Second bus hint, from 0x3C2 VCLEFT_switchStatus (just as unauthoritative).
+// 0x3C2 is reported on the Vehicle CAN pair and not on the gateway-forwarded
+// subset. That matches the public DBCs but has not been confirmed here, so it
+// only ever reads as a hint.
+typedef enum {
+    CAP_VEH_HINT_NONE = 0,   // no 0x3C2 and no body frame: nothing to go on
+    CAP_VEH_HINT_DIRECT,     // 0x3C2 seen -> looks like the Vehicle CAN pair
+    CAP_VEH_HINT_FORWARDED,  // body frames but no 0x3C2 -> looks like a forwarded subset
+} FSDCapVehicleHint;
+
 // The set of capability-relevant ids seen on one tap during the listen window.
 // Names match the config.h CAN_ID_* roles, not bus names.
 typedef struct {
@@ -59,11 +69,8 @@ typedef struct {
     bool body_window;  // 0x119 VCSEC_windowRequests — windows
     bool body_lights;  // 0x3E9 DAS_bodyControls    — lights/hazards/turn/wipers
 
-    // Right scroll wheel. 0x3C2 is Vehicle CAN ONLY — the gateway does not forward
-    // it onto Bus 6, so a Bus-6-only tap never sees it. Its presence is the single
-    // most reliable "this tap is direct Vehicle CAN" marker, and it is required for
-    // scroll-emulated speed-profile control (swcRightScrollTicks, mux=1).
-    bool scroll;       // 0x3C2 VCLEFT_switchStatus
+    // Steering-wheel switches. Only read for vehicle_hint, never actuated here.
+    bool vcleft_switch;  // 0x3C2 VCLEFT_switchStatus
 } FSDCapSeen;
 
 typedef struct {
@@ -72,7 +79,6 @@ typedef struct {
     FSDCapVerdict fsd_activation;  // a frame here to modify
     FSDCapVerdict soft_engage;     // 0x129; MISSING => degrades to AP-First-only
     FSDCapVerdict body_control;    // Vehicle/body-bus reachable (#128); RX presence only
-    FSDCapVerdict scroll_profile;  // 0x3C2 present -> scroll-emulated speed profile possible
 
     // Derived predicates (exposed for the UI / one-line verdicts).
     bool has_epas;
@@ -84,9 +90,10 @@ typedef struct {
     bool body_door;     // 0x102 seen (mirror state read-back reachable)
     bool body_window;   // 0x119 seen (window writes reachable)
     bool body_lights;   // 0x3E9 seen (lights/hazards/turn/wiper writes reachable)
-    bool has_scroll;    // 0x3C2 seen -> direct Vehicle CAN tap (not gateway-forwarded Bus 6)
+    bool has_vcleft_switch;  // 0x3C2 seen
 
     FSDCapBusHint bus_hint;
+    FSDCapVehicleHint vehicle_hint;  // from 0x3C2, hint only
     bool          hw_unconfirmed;  // hw_version was Unknown -> inferred below
     TeslaHWVersion hw_effective;   // HW used for the 0x399 interpretation
 } FSDCapReport;
@@ -104,9 +111,9 @@ typedef struct {
  */
 static inline FSDCapReport fsd_capability_eval(FSDCapSeen seen, TeslaHWVersion hw) {
     FSDCapReport r = {
-        CAP_MISSING, CAP_MISSING, CAP_MISSING, CAP_MISSING, CAP_MISSING, CAP_MISSING,
+        CAP_MISSING, CAP_MISSING, CAP_MISSING, CAP_MISSING, CAP_MISSING,
         false, false, false, false, false, false, false, false, false, false,
-        CAP_HINT_NONE, false, hw,
+        CAP_HINT_NONE, CAP_VEH_HINT_NONE, false, hw,
     };
 
     // Resolve HW for the 0x399 interpretation.
@@ -131,7 +138,7 @@ static inline FSDCapReport fsd_capability_eval(FSDCapSeen seen, TeslaHWVersion h
     r.body_window = seen.body_window;
     r.body_lights = seen.body_lights;
     r.has_body    = seen.body_ui || seen.body_door || seen.body_window || seen.body_lights;
-    r.has_scroll  = seen.scroll;
+    r.has_vcleft_switch = seen.vcleft_switch;
 
     // Nag killer: needs both the 0x370 echo source AND DAS state to gate on.
     if (r.has_epas && r.has_das)       r.nag_killer = CAP_OK;
@@ -143,17 +150,16 @@ static inline FSDCapReport fsd_capability_eval(FSDCapSeen seen, TeslaHWVersion h
     r.soft_engage    = r.has_steer   ? CAP_OK : CAP_MISSING;  // else AP-First-only
     r.body_control   = r.has_body    ? CAP_OK : CAP_MISSING;  // else needs X179 A-pillar tap
 
-    // Scroll-emulated speed profile: needs 0x3C2, which only exists on a direct
-    // Vehicle CAN tap. If other body frames are present but 0x3C2 is not, this is
-    // a gateway-forwarded (Bus 6) tap -> a second, direct Vehicle CAN tap is needed.
-    if (r.has_scroll)     r.scroll_profile = CAP_OK;
-    else if (r.has_body)  r.scroll_profile = CAP_DUAL_CAN;
-    else                  r.scroll_profile = CAP_MISSING;
-
     // Best-guess bus family (hint only).
     if (r.has_epas && r.has_das)        r.bus_hint = CAP_HINT_PARTY;
     else if (r.has_steer && !r.has_epas) r.bus_hint = CAP_HINT_CHASSIS;
     else                                 r.bus_hint = CAP_HINT_NONE;
+
+    // Vehicle CAN hint (hint only): body frames that arrive without 0x3C2 look
+    // like the subset the gateway forwards rather than the Vehicle CAN pair.
+    if (r.has_vcleft_switch) r.vehicle_hint = CAP_VEH_HINT_DIRECT;
+    else if (r.has_body)     r.vehicle_hint = CAP_VEH_HINT_FORWARDED;
+    else                     r.vehicle_hint = CAP_VEH_HINT_NONE;
 
     return r;
 }
