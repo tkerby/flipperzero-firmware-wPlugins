@@ -306,7 +306,7 @@ cd flipper-tesla-fsd/esp32
 pio run -e m5stack-atom
 ```
 
-CI runs `ci_check_stack.py` after each build: it adds up the stack frames along the deepest loop-task call chains (dashboard connect and command, `/api/status`, `/api/cmd`, a CAN frame) and fails the build when one passes 93% of the loop task's stack (`SET_LOOP_TASK_STACK_SIZE` in `main.cpp`). Run it yourself after a build with `python3 ci_check_stack.py .pio/build/m5stack-atom`. New fields in `FSDState` and new locals in `loop()`, `process_frame()`, `build_json()` or `web_command()` are what move the numbers.
+CI runs `ci_check_stack.py` after each build. It adds up the stack frames along the deepest loop-task call chains (the dashboard WebSocket; the HTTP routes for status, commands, the black-box list and download, the OTA upload and its login; the CAN stream; a CAN frame; the black-box flush; the button; `setup()`), plus measured allowances for the library code below them, and fails the build when one passes 93% of the loop task's stack (`SET_LOOP_TASK_STACK_SIZE` in `main.cpp`). Chains for code that only some boards build (the black box on LittleFS or SD, the LilyGO SD card and deep sleep) are checked on the builds that compile it. The build also fails when a function with a frame of 512 bytes or more is on none of the chains: add the call chain it runs on to `_CHAINS` in the script, shrink the frame, or list it in `_KNOWN_SAFE` with the reason it is safe. Run it yourself after a build with `python3 ci_check_stack.py .pio/build/m5stack-atom`. New fields in `FSDState` (each copy of it is a 792-byte local) and new locals in `loop()`, `process_frame()`, `build_json()` or `web_command()` are what move the numbers.
 
 ### Flash
 ```bash
