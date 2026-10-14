@@ -881,7 +881,7 @@ R"rawliteral(
     <span class="lbl">Dump Status</span>
     <span class="pill off" id="dumpSt"><span class="pd"></span>Idle</span>
   </div>
-  <button id="btnFmt" class="btn-main btn-stop" onclick="sdFormat()" style="margin-top:8px">FORMAT SD CARD</button>
+  <button id="btnFmt" class="btn-main btn-stop" onclick="sdFormat(this)" style="margin-top:8px">FORMAT SD CARD</button>
   <div id="fmtOut" style="font-size:.75em;color:var(--text2);margin-top:8px;display:none"></div>
 </div>
 
@@ -1622,14 +1622,20 @@ function authFailed(el){
   uiAlert('Authentication failed',function(){if(el)el.focus();});
 }
 
-function sdFormat(){
-  uiConfirm('Format SD card? All data will be lost.',sdFormatRun);
+// The device asks for the admin password before it wipes the card.
+function sdFormat(el){
+  requireAuth(function(){uiConfirm('Format SD card? All data will be lost.',sdFormatRun);},el);
 }
 function sdFormatRun(){
   var btn=document.getElementById('btnFmt');
   var out=document.getElementById('fmtOut');
   btn.disabled=true;btn.textContent='FORMATTING\u2026';
-  fetch('/sdformat').then(function(r){return r.json();}).then(function(d){
+  fetch('/sdformat',{method:'POST',headers:{Authorization:authHeader}}).then(function(r){
+    if(r.status===401){authHeader='';requireAuth(sdFormatRun,btn);return null;}
+    return r.json();
+  }).then(function(d){
+    if(!d)return;
+    if(d.err==='origin'&&d.url){location.replace(d.url);return;}
     out.style.display='block';
     out.style.color=d.ok?'var(--accent)':'var(--red)';
     out.textContent=d.msg+(d.ok?' \u2014 '+d.free_mb+' MB free':'');
@@ -3006,26 +3012,31 @@ static void handle_status() {
     g_http.send(200, "application/json", build_json());
 }
 
+// A POST that changes something has to come from the dashboard's own page, as
+// on the WebSocket (web_origin.h); that also stops a rebound name, where the
+// request is not cross-site at all. Otherwise this sends a 403 that names the
+// address to load the dashboard from, and returns false.
+static bool post_from_dashboard(const char *what) {
+    String origin = g_http.header("Origin");
+    String host = g_http.hostHeader();
+    OwnNamesText t;
+    if (web_post_origin_ok(origin.c_str(), host.c_str(), own_names(t))) return true;
+    Serial.printf("[Web] %s refused: Origin %.64s Host %.64s\n", what, origin.c_str(), host.c_str());
+    g_http.send(403, "application/json",
+                String("{\"ok\":false,\"err\":\"origin\",\"url\":\"") + home_url() + "\"}");
+    return false;
+}
+
 // Commands over HTTP, for clients without a working WebSocket. The body is the
 // same JSON text a WS frame carries and goes through the same dispatcher.
 // Content-Type must be application/json: a cross-site form or no-cors fetch
 // cannot send that without a CORS preflight, which this server never grants.
-// The Origin has to be the dashboard's own page, as on the WebSocket
-// (web_origin.h); that also stops a rebound name, where the request is not
-// cross-site at all. A 403 names the address to load the dashboard from.
+// The Origin has to be the dashboard's own page (post_from_dashboard()).
 // Otherwise the reply is {"ok":true}, or a 400 with the reason the command
 // was refused.
 static void handle_cmd() {
     if (g_state == nullptr) { g_http.send(503, "application/json", "{}"); return; }
-    String origin = g_http.header("Origin");
-    String host = g_http.hostHeader();
-    OwnNamesText t;
-    if (!web_post_origin_ok(origin.c_str(), host.c_str(), own_names(t))) {
-        Serial.printf("[Web] command refused: Origin %.64s Host %.64s\n", origin.c_str(), host.c_str());
-        g_http.send(403, "application/json",
-                    String("{\"ok\":false,\"err\":\"origin\",\"url\":\"") + home_url() + "\"}");
-        return;
-    }
+    if (!post_from_dashboard("command")) return;
     String ctype = g_http.header("Content-Type");
     ctype.toLowerCase();
     if (!ctype.startsWith("application/json")) {
@@ -3063,7 +3074,12 @@ static void handle_auth() {
     g_http.send(200, "text/plain", "OK");
 }
 
+// Wipes the card, so it takes what the other destructive routes take: a POST
+// from the dashboard's own page (a GET could be set off by an <img> on any
+// page) and the admin password.
 static void handle_sdformat() {
+    if (!post_from_dashboard("SD format")) return;
+    if (!require_admin_auth()) return;
     String result = sd_format_card();
     g_http.send(200, "application/json", result);
 }
@@ -3271,7 +3287,7 @@ void web_dashboard_init(FSDState *state,
     g_http.on("/api/cmd",    HTTP_POST, handle_cmd);
     g_http.on("/api/aux",    HTTP_GET,  handle_aux);
     g_http.on("/auth",       HTTP_GET,  handle_auth);
-    g_http.on("/sdformat",   HTTP_GET,  handle_sdformat);
+    g_http.on("/sdformat",   HTTP_POST, handle_sdformat);
     g_http.on("/blackbox/list", HTTP_GET, handle_blackbox_list);
     g_http.on("/blackbox/get",  HTTP_GET, handle_blackbox_get);
     g_http.on("/restart",    HTTP_GET,  handle_restart);
@@ -3282,8 +3298,8 @@ void web_dashboard_init(FSDState *state,
     // WebServer keeps only the request headers named here (plus Authorization),
     // and collectHeaders() replaces the list instead of adding to it. This is
     // the last call before begin(), so it names every header a handler reads:
-    // Content-Type and Origin for /api/cmd, User-Agent for the captive
-    // portal's probes.
+    // Content-Type and Origin for /api/cmd, Origin for /sdformat, User-Agent
+    // for the captive portal's probes.
     const char *collect[] = { "Content-Type", "Origin", "User-Agent" };
     g_http.collectHeaders(collect, sizeof(collect) / sizeof(collect[0]));
     g_http.begin();

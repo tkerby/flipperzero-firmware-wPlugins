@@ -200,6 +200,11 @@ _CHAINS = [
     ("HTTP command",
      ["loop", "web_dashboard_update", "handle_cmd", "web_command", "prefs_save"],
      ["WebServer", "NVS write"]),
+    # The Origin check ahead of POST /api/cmd and /sdformat, which logs and
+    # answers a refusal; handle_cmd() has the larger frame.
+    ("HTTP POST origin",
+     ["loop", "web_dashboard_update", "handle_cmd", "post_from_dashboard"],
+     ["WebServer", "HTTP reply"]),
     ("black-box list",
      ["loop", "web_dashboard_update", "handle_blackbox_list", "blackbox_list_json"],
      ["WebServer", "black-box storage"], "black box on disk"),
@@ -215,7 +220,8 @@ _CHAINS = [
     ("OTA upload",
      ["loop", "web_dashboard_update", "handle_ota_upload"],
      ["WebServer upload", "OTA flash"]),
-    # The deepest of the require_admin_auth() routes (/auth, /restart, /update).
+    # The deepest of the require_admin_auth() routes (/auth, /restart,
+    # /sdformat, /update).
     ("OTA upload auth",
      ["loop", "web_dashboard_update", "handle_ota_upload", "require_admin_auth"],
      ["WebServer upload", "HTTP reply"]),
