@@ -1722,6 +1722,7 @@ void setup() {
 
     led_set(LED_BLUE);
 
+    http_can_stream_reserve();  // the one big block, before WiFi fragments the heap
     can_dump_init();
     blackbox_init(&g_state, &g_state_mux);  // ring + storage (after SD is mounted)
     capability_init(&g_state, &g_state_mux);  // tap capability checker (#125)

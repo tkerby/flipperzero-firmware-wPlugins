@@ -16,9 +16,9 @@ Tagged and released. The whole PR set landed:
 - **PR #97** — Flipper HW3 `0x399` DAS_status parser fix (mirror of ESP32 #92)
 - ESP32 side (vrs11): HW3 `0x399` DAS_status fix + `can_signals.h` refactor (#92), HTTP CAN log stream on port 82 (#94), Ignore OTA toggle (#93)
 
-## v2.16 — shipped (beta line, currently beta.32)
+## v2.16 — shipped (stable 2.16.0)
 
-The v2.16 beta line shipped and is on **beta.32**. What started as the
+The v2.16 line ran through forty betas and was released as **2.16.0**. What started as the
 baseline-capture tooling grew into the Field-Readiness initiative (#127)
 and a long run of on-car 14.x nag / steer-jerk fixes. Highlights across the
 line (see `changelog.md` for the full per-beta history):
@@ -32,8 +32,9 @@ line (see `changelog.md` for the full per-beta history):
 - **EU / AP feature toggles (beta.25, all opt-in, default OFF)** — Summon EU Unlock (`0x3FD` mux1, clears bit19 + sets bit47, closing the HW3 gap; #111/#139, PR #144); Continue on Green (`0x3FD` mux0 bit39; PR #145); Right-Hand Drive override (`0x3F8` bit41; #66, PR #146); Telemetry Off (experimental — clears reachable telemetry-enable flags, not a ban guarantee; PR #147); AP branch/tier selector (`UI_apmv3Branch`, experimental, non-persistent; PR #148). ESP32 dashboard only; Telemetry Off is also in Flipper Settings.
 - **Adjustable Track Mode (beta.26, PR #150)** — `0x313 UI_trackModeSettings`: Track Mode ON + Handling Balance (byte1) + Stability Assist (byte2) + post-drive cooling (byte3), additive checksum recomputed and counter preserved. Opt-in, default OFF, works on non-Performance trims. ESP32 dashboard only. (See Tier 2 / Tier 3 below.)
 - **Field fixes (beta.27–32)** — capture fidelity + Flipper Signal Map presets (beta.27); one shared OTA check that only trusts a stable raw 2 (`fsd_logic/fsd_ota.h`), HW4 AP state from `0x39B` byte0 and the in-car Autopark TX pause (beta.28, narrowed so it no longer fires in city traffic in beta.30, #176); browser flasher served from GitHub Pages + LilyGO deep-sleep bus release (beta.29); HW4 `0x3FD` mux2 speed profile back on bits 60-62 (#59), ESP32 DLC>8 drop and web-OTA rollback (beta.31); ESP32 Precondition toggle (beta.32, #192).
+- **Late line (beta.33–40)** — Flipper / ESP32 Summon-bit parity and motion-based Summon safety (beta.33/34); HW3 keeps the car's own FSD speed offset (beta.35, #209); opt-in Acceleration Mode and T-2CAN multi-ID capture filters (beta.36); read-only performance panel (beta.37); captive portal and Chinese dashboard (beta.38); captive-sheet dashboard fixes, real board name and version (beta.39); the loop-task stack fix for the dashboard reboot loop, plus a CI check on it (beta.40).
 
-### Now / next (post beta.32)
+### Now / next
 
 Genuinely-open, contributions welcome:
 

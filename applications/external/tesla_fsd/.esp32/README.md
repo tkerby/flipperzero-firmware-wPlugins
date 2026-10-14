@@ -291,7 +291,7 @@ Bus speed: **500 kbps**
 
 ## Build & Flash
 
-No toolchain? Flash a prebuilt image from the [Web Flasher](https://hypery11.github.io/flipper-tesla-fsd/install/) (Chrome / Edge / Opera on a desktop).
+No toolchain? Flash a prebuilt image from the [Web Flasher](https://hypery11.github.io/flipper-tesla-fsd/install/) (Chrome / Edge / Opera on a desktop). It installs the newest stable release. When a newer test build is out, the page offers it as an opt-in link, and `…/install/#beta` selects it directly.
 
 ### Prerequisites
 - [PlatformIO](https://platformio.org/) (CLI or VSCode extension)
@@ -303,6 +303,8 @@ git clone https://github.com/hypery11/flipper-tesla-fsd.git
 cd flipper-tesla-fsd/esp32
 pio run -e m5stack-atom
 ```
+
+CI runs `ci_check_stack.py` after each build: it adds up the stack frames along the deepest loop-task call chains (dashboard connect and command, `/api/status`, `/api/cmd`, a CAN frame) and fails the build when one passes 93% of the loop task's stack (`SET_LOOP_TASK_STACK_SIZE` in `main.cpp`). Run it yourself after a build with `python3 ci_check_stack.py .pio/build/m5stack-atom`. New fields in `FSDState` and new locals in `loop()`, `process_frame()`, `build_json()` or `web_command()` are what move the numbers.
 
 ### Flash
 ```bash
@@ -479,6 +481,7 @@ esp32/
 ├── build_firmware.sh       — Local build + packaging helper
 ├── gen_version.py          — Pre-build step that sets FW_VERSION (release tag / `git describe`; override with the FW_VERSION env var)
 ├── merge_firmware.py       — Post-build step that writes firmware-merged.bin for the web flasher
+├── ci_check_stack.py       — CI check of the loop task's deepest call chains against its stack size
 └── README.md
 ```
 
