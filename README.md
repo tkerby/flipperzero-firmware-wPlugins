@@ -11,7 +11,9 @@ Keys
 | Left | page back |
 | Up / Down | light up / down (repeats while held) |
 | OK, held 1 s | sleep |
-| Back | menu (Remote, Forget Kindle); Back again exits |
+| Back | menu (Remote, Buttons, Forget Kindle); Back again exits |
+
+Buttons in the menu lets you assign any of the keys (including a short press of OK) to page forward, page back, light up, light down, sleep, or off.
 
 Keep the app open while you read. While it runs, the Flipper's own Bluetooth (for the phone app) is off.
 

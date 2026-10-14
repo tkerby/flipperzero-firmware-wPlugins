@@ -5,7 +5,7 @@ App(
     entry_point="kindle_click_app",
     stack_size=3 * 1024,
     fap_category="Bluetooth",
-    fap_version="0.3",
+    fap_version="0.4",
     fap_icon="kindle_click_10px.png",
     fap_description="Turn Kindle pages: the Flipper acts as a Kindle Click remote",
     fap_author="zuyan9",

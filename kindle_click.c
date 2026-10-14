@@ -5,7 +5,7 @@
 //   Right / Left   page forward / back
 //   Up / Down      light up / down (held: repeats)
 //   OK held 1 s    the Kindle sleeps
-//   Back           menu (Remote, Forget Kindle); Back again exits
+//   Back           menu (Remote, Buttons, Forget Kindle); Back again exits
 
 #include <furi.h>
 #include <furi_hal.h>
@@ -13,6 +13,7 @@
 #include <gui/view.h>
 #include <gui/view_dispatcher.h>
 #include <gui/modules/submenu.h>
+#include <gui/modules/variable_item_list.h>
 #include <gui/modules/dialog_ex.h>
 #include <notification/notification_messages.h>
 #include <bt/bt_service/bt.h>
@@ -20,8 +21,9 @@
 
 #include "kc_profile.h"
 
-#define KEYS_PATH   APP_DATA_PATH(".bt_kindle.keys")
-#define PAIRED_PATH APP_DATA_PATH("paired")
+#define KEYS_PATH    APP_DATA_PATH(".bt_kindle.keys")
+#define PAIRED_PATH  APP_DATA_PATH("paired")
+#define BUTTONS_PATH APP_DATA_PATH("buttons")
 
 // The Kindle drops a press that comes within 50 ms of the previous press of
 // the same key; releases are never filtered. This only keeps press and
@@ -53,8 +55,20 @@ typedef enum {
     KeyBriDown,
     KeySleep,
     KeyCount,
-    KeyNone = 0xFF,
+    KeyNone = KeyCount,
+    KeyActionCount,
 } KeyId;
+
+typedef enum {
+    BtnRight,
+    BtnLeft,
+    BtnUp,
+    BtnDown,
+    BtnOk,
+    BtnOkHold,
+    BtnCount,
+    BtnNone = 0xFF,
+} BtnId;
 
 typedef struct {
     bool consumer; // false = keyboard page
@@ -70,9 +84,37 @@ static const KeyDef KEYS[KeyCount] = {
     {true, 0x0030}, // sleep (KEY_POWER)
 };
 
+static const uint8_t DEFAULT_MAP[BtnCount] = {
+    [BtnRight] = KeyNext,
+    [BtnLeft] = KeyPrev,
+    [BtnUp] = KeyBriUp,
+    [BtnDown] = KeyBriDown,
+    [BtnOk] = KeyNone,
+    [BtnOkHold] = KeySleep,
+};
+
+static const char* const BTN_LABELS[BtnCount] = {
+    [BtnRight] = "Right",
+    [BtnLeft] = "Left",
+    [BtnUp] = "Up",
+    [BtnDown] = "Down",
+    [BtnOk] = "OK",
+    [BtnOkHold] = "OK hold",
+};
+
+static const char* const KEY_NAMES[KeyActionCount] = {
+    [KeyNext] = "Next",
+    [KeyPrev] = "Back",
+    [KeyBriUp] = "Light+",
+    [KeyBriDown] = "Light-",
+    [KeySleep] = "Sleep",
+    [KeyNone] = "Off",
+};
+
 typedef enum {
     KcViewRemote,
     KcViewMenu,
+    KcViewButtons,
     KcViewForget,
 } KcViewId;
 
@@ -87,7 +129,9 @@ typedef struct {
     KcStatus status;
     bool queued;
     uint8_t battery;
-    uint8_t held; // keys held on the Flipper, as 1 << KeyId
+    uint8_t held; // buttons held on the Flipper, as 1 << BtnId
+    uint8_t ok_r; // center circle fill radius (0..10) while holding OK
+    uint8_t map[BtnCount];
 } KcModel;
 
 typedef struct {
@@ -95,6 +139,8 @@ typedef struct {
     ViewDispatcher* view_dispatcher;
     View* remote;
     Submenu* menu;
+    VariableItemList* buttons;
+    VariableItem* btn_items[BtnCount];
     DialogEx* forget;
     NotificationApp* notifications;
     Storage* storage;
@@ -107,6 +153,7 @@ typedef struct {
     bool connected;
     bool ready; // latched per connection
 
+    uint8_t map[BtnCount];
     bool down[KeyCount]; // key state the Kindle should see
     uint32_t down_at[KeyCount];
     bool release_wanted[KeyCount];
@@ -114,9 +161,9 @@ typedef struct {
 
     KeyId pending; // page turn queued until the Kindle is ready
     uint32_t pending_at;
-    uint32_t ok_down_at; // OK held: the Kindle sleeps after SLEEP_HOLD_MS
+    uint32_t ok_down_at; // OK held: fires BtnOkHold after SLEEP_HOLD_MS
     bool ok_fired;
-    uint8_t held; // keys held on the Flipper, as 1 << KeyId
+    uint8_t held; // buttons held on the Flipper, as 1 << BtnId
 
     uint8_t battery;
     uint32_t battery_read_at;
@@ -245,8 +292,91 @@ static void service_sleep_hold(KindleClick* app) {
     if(!app->ok_down_at || app->ok_fired) return;
     if(furi_get_tick() - app->ok_down_at < SLEEP_HOLD_MS) return;
     app->ok_fired = true;
-    // Never queued: it could put the Kindle to sleep right after it wakes.
-    if(link_ready(app)) tap(app, KeySleep);
+    app->held = (app->held & ~(1 << BtnOk)) | (1 << BtnOkHold);
+    KeyId k = app->map[BtnOkHold];
+    if(k == KeySleep) {
+        // Never queued: it could put the Kindle to sleep right after it wakes.
+        if(link_ready(app)) tap(app, KeySleep);
+    } else if(k == KeyBriUp || k == KeyBriDown) {
+        key_down(app, k);
+    } else if(k < KeyCount) {
+        tap(app, k);
+    }
+}
+
+static void btn_down(KindleClick* app, BtnId btn) {
+    KeyId k = app->map[btn];
+    if(k == KeySleep) {
+        if(link_ready(app)) tap(app, KeySleep);
+    } else if(k < KeyCount) {
+        key_down(app, k);
+    }
+}
+
+static void btn_up(KindleClick* app, BtnId btn) {
+    KeyId k = app->map[btn];
+    if(k >= KeySleep) return;
+    for(int b = 0; b < BtnCount; b++) {
+        if((app->held & (1 << b)) && app->map[b] == k) return;
+    }
+    key_up(app, k);
+}
+
+// ---- Buttons config ---------------------------------------------------------
+static void load_buttons(KindleClick* app) {
+    memcpy(app->map, DEFAULT_MAP, sizeof(app->map));
+    File* file = storage_file_alloc(app->storage);
+    if(storage_file_open(file, BUTTONS_PATH, FSAM_READ, FSOM_OPEN_EXISTING)) {
+        uint8_t buf[BtnCount];
+        if(storage_file_read(file, buf, sizeof(buf)) == sizeof(buf)) {
+            bool ok = true;
+            for(int b = 0; b < BtnCount; b++) {
+                if(buf[b] >= KeyActionCount) ok = false;
+            }
+            if(ok) memcpy(app->map, buf, sizeof(app->map));
+        }
+    }
+    storage_file_free(file);
+}
+
+static void save_buttons(KindleClick* app) {
+    File* file = storage_file_alloc(app->storage);
+    if(storage_file_open(file, BUTTONS_PATH, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+        storage_file_write(file, app->map, sizeof(app->map));
+    }
+    storage_file_free(file);
+}
+
+static void sync_button_items(KindleClick* app) {
+    for(int b = 0; b < BtnCount; b++) {
+        uint8_t k = app->map[b];
+        variable_item_set_current_value_index(app->btn_items[b], k);
+        variable_item_set_current_value_text(app->btn_items[b], KEY_NAMES[k]);
+    }
+}
+
+static void button_change_callback(VariableItem* item) {
+    KindleClick* app = variable_item_get_context(item);
+    for(int b = 0; b < BtnCount; b++) {
+        if(app->btn_items[b] == item) {
+            uint8_t k = variable_item_get_current_value_index(item);
+            app->map[b] = k;
+            variable_item_set_current_value_text(item, KEY_NAMES[k]);
+            save_buttons(app);
+            return;
+        }
+    }
+}
+
+static void buttons_enter_callback(void* context, uint32_t index) {
+    KindleClick* app = context;
+    if(index < BtnCount) {
+        app->map[index] = (app->map[index] + 1) % KeyActionCount;
+    } else {
+        memcpy(app->map, DEFAULT_MAP, sizeof(app->map));
+    }
+    sync_button_items(app);
+    save_buttons(app);
 }
 
 // ---- Battery ----------------------------------------------------------------
@@ -327,6 +457,17 @@ static void forget_kindle(KindleClick* app) {
 
 // ---- Views ------------------------------------------------------------------
 static void update_view(KindleClick* app) {
+    uint8_t ok_r = 0;
+    if(app->ok_down_at) {
+        if(app->ok_fired) {
+            ok_r = 10;
+        } else {
+            uint32_t dt = furi_get_tick() - app->ok_down_at;
+            ok_r = dt >= SLEEP_HOLD_MS ? 10 : (1 + (dt * 9) / SLEEP_HOLD_MS);
+        }
+    } else if(app->held & (1 << BtnOk)) {
+        ok_r = 10;
+    }
     KcModel now = {
         .status = app->ready           ? KcStatusReady :
                   app->link->connected ? KcStatusConnecting :
@@ -335,125 +476,255 @@ static void update_view(KindleClick* app) {
         .queued = app->pending != KeyNone,
         .battery = app->battery,
         .held = app->held,
+        .ok_r = ok_r,
     };
+    memcpy(now.map, app->map, sizeof(now.map));
     if(now.status == app->shown.status && now.queued == app->shown.queued &&
-       now.battery == app->shown.battery && now.held == app->shown.held)
+       now.battery == app->shown.battery && now.held == app->shown.held &&
+       now.ok_r == app->shown.ok_r && memcmp(now.map, app->shown.map, sizeof(now.map)) == 0)
         return;
     app->shown = now;
     with_view_model(app->remote, KcModel * model, { *model = now; }, true);
 }
 
 // Glyphs: one byte per row, leftmost pixel in the lowest bit.
-static const uint8_t GLYPH_LEFT[] = {0x08, 0x0C, 0x0E, 0x0F, 0x0E, 0x0C, 0x08}; // 4x7
-static const uint8_t GLYPH_RIGHT[] = {0x01, 0x03, 0x07, 0x0F, 0x07, 0x03, 0x01}; // 4x7
-static const uint8_t GLYPH_UP[] = {0x08, 0x1C, 0x3E, 0x7F}; // 7x4
-static const uint8_t GLYPH_DOWN[] = {0x7F, 0x3E, 0x1C, 0x08}; // 7x4
 static const uint8_t GLYPH_BLUETOOTH[] =
     {0x04, 0x0C, 0x15, 0x0E, 0x04, 0x0E, 0x15, 0x0C, 0x04}; // 5x9
+static const uint8_t DIGITS_3X5[10][5] = {
+    {0x7, 0x5, 0x5, 0x5, 0x7}, // 0
+    {0x2, 0x6, 0x2, 0x2, 0x7}, // 1
+    {0x7, 0x1, 0x7, 0x4, 0x7}, // 2
+    {0x7, 0x1, 0x7, 0x1, 0x7}, // 3
+    {0x5, 0x5, 0x7, 0x1, 0x1}, // 4
+    {0x7, 0x4, 0x7, 0x1, 0x7}, // 5
+    {0x7, 0x4, 0x7, 0x5, 0x7}, // 6
+    {0x7, 0x1, 0x1, 0x1, 0x1}, // 7
+    {0x7, 0x5, 0x7, 0x5, 0x7}, // 8
+    {0x7, 0x5, 0x7, 0x1, 0x7}, // 9
+};
 
-// A key in the legend: a 9x9 cell, filled while the key is held. No glyph: OK.
-static void draw_key(Canvas* canvas, int x, int y, const uint8_t* glyph, int w, int h, bool held) {
-    if(held) {
-        canvas_draw_rbox(canvas, x, y, 9, 9, 1);
-        canvas_set_color(canvas, ColorWhite);
+static void draw_digit_3x5(Canvas* canvas, int x, int y, uint8_t d, Color col) {
+    canvas_set_color(canvas, col);
+    for(int ry = 0; ry < 5; ry++) {
+        uint8_t row = DIGITS_3X5[d][ry];
+        for(int rx = 0; rx < 3; rx++) {
+            if(row & (1 << (2 - rx))) canvas_draw_dot(canvas, x + rx, y + ry);
+        }
     }
-    if(glyph)
-        canvas_draw_xbm(canvas, x + (9 - w) / 2, y + (9 - h) / 2, w, h, glyph);
-    else
-        canvas_draw_disc(canvas, x + 4, y + 4, 2);
+}
+
+static void draw_battery(Canvas* canvas, int x, int y, uint8_t pct) {
+    if(pct > 100) pct = 100;
+    canvas_set_color(canvas, ColorBlack);
+    canvas_draw_rframe(canvas, x, y, 20, 11, 2);
+    canvas_draw_box(canvas, x + 20, y + 3, 2, 5);
+
+    int fill = (pct * 16 + 50) / 100;
+    if(pct >= 10 && pct < 100) {
+        if(fill > 3 && fill < 7)
+            fill = 3;
+        else if(fill >= 7 && fill <= 10)
+            fill = 8;
+        else if(fill > 10 && fill < 13)
+            fill = 13;
+    } else if(pct < 10) {
+        if(fill > 5 && fill < 10) fill = 5;
+    }
+    if(fill > 0) canvas_draw_box(canvas, x + 2, y + 2, fill, 7);
+
+    int ty = y + 3;
+    if(pct == 100) {
+        canvas_set_color(canvas, ColorWhite);
+        canvas_draw_dot(canvas, x + 6, ty);
+        canvas_draw_dot(canvas, x + 5, ty + 1);
+        for(int ry = 1; ry < 5; ry++) canvas_draw_dot(canvas, x + 6, ty + ry);
+        draw_digit_3x5(canvas, x + 8, ty, 0, ColorWhite);
+        draw_digit_3x5(canvas, x + 12, ty, 0, ColorWhite);
+    } else if(pct >= 10) {
+        draw_digit_3x5(canvas, x + 6, ty, pct / 10, fill >= 8 ? ColorWhite : ColorBlack);
+        draw_digit_3x5(canvas, x + 11, ty, pct % 10, fill >= 13 ? ColorWhite : ColorBlack);
+    } else {
+        draw_digit_3x5(canvas, x + 8, ty, pct, fill >= 10 ? ColorWhite : ColorBlack);
+    }
+    canvas_set_color(canvas, ColorBlack);
+}
+static const uint8_t ACT_NEXT[] =
+    {0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x1F, 0x0F, 0x07, 0x03, 0x01}; // 6x11
+static const uint8_t ACT_PREV[] =
+    {0x20, 0x30, 0x38, 0x3C, 0x3E, 0x3F, 0x3E, 0x3C, 0x38, 0x30, 0x20}; // 6x11
+static const uint8_t ACT_BRI_UP[] = {
+    0x40, 0x00, 0x42, 0x08, 0x04, 0x04, 0xE0, 0x00, 0x10, 0x01, 0x08, 0x02, 0x0B,
+    0x1A, 0x08, 0x02, 0x10, 0x01, 0xE0, 0x00, 0x04, 0x04, 0x42, 0x08, 0x40, 0x00,
+}; // 13x13 (bright sun, 7x7 core, 2px rays)
+static const uint8_t ACT_BRI_DOWN[] = {
+    0x10, 0x00, 0x82, 0x00, 0x38, 0x00, 0x44, 0x00, 0x45,
+    0x01, 0x44, 0x00, 0x38, 0x00, 0x82, 0x00, 0x10, 0x00,
+}; // 9x9 (dim sun, 5x5 core, 1px dot rays)
+static const uint8_t ACT_SLEEP[] = {
+    0x78, 0x00, 0x46, 0x00, 0x22, 0x00, 0x91, 0x00, 0x51,
+    0x01, 0x91, 0x00, 0x22, 0x00, 0x46, 0x00, 0x78, 0x00,
+}; // 9x9 (moon + star)
+
+static void draw_sector_action(Canvas* canvas, int cx, int cy, KeyId k, uint8_t fill_r) {
+    static const struct {
+        const uint8_t* glyph;
+        uint8_t w, h;
+    } ACT_GLYPH[KeyCount] = {
+        [KeyNext] = {ACT_NEXT, 6, 11},
+        [KeyPrev] = {ACT_PREV, 6, 11},
+        [KeyBriUp] = {ACT_BRI_UP, 13, 13},
+        [KeyBriDown] = {ACT_BRI_DOWN, 9, 9},
+        [KeySleep] = {ACT_SLEEP, 9, 9},
+    };
+    if(fill_r > 0) {
+        canvas_draw_disc(canvas, cx, cy, fill_r);
+    }
+    if(k < KeyCount) {
+        int w = ACT_GLYPH[k].w, h = ACT_GLYPH[k].h;
+        int x0 = cx - w / 2 + (k == KeyNext ? 1 : 0);
+        int y0 = cy - h / 2;
+        int stride = (w + 7) / 8;
+        int r_in = (int)fill_r - 1;
+        for(int ry = 0; ry < h; ry++) {
+            for(int rx = 0; rx < w; rx++) {
+                if(ACT_GLYPH[k].glyph[ry * stride + (rx / 8)] & (1 << (rx % 8))) {
+                    int dx = (x0 + rx) - cx, dy = (y0 + ry) - cy;
+                    canvas_set_color(
+                        canvas,
+                        (r_in >= 0 && dx * dx + dy * dy <= r_in * r_in) ? ColorWhite : ColorBlack);
+                    canvas_draw_dot(canvas, x0 + rx, y0 + ry);
+                }
+            }
+        }
+    }
     canvas_set_color(canvas, ColorBlack);
 }
 
 static void remote_draw(Canvas* canvas, void* model_ptr) {
     KcModel* model = model_ptr;
-    static const char* const STATUS[] = {
-        [KcStatusPairing] = "Not paired yet",
-        [KcStatusWaiting] = "Waiting for Kindle",
-        [KcStatusConnecting] = "Connecting...",
-        [KcStatusReady] = "Connected",
+    static const char* const HOLD_TEXT[KeyCount] = {
+        [KeyNext] = "hold: next",
+        [KeyPrev] = "hold: back",
+        [KeyBriUp] = "hold: light+",
+        [KeyBriDown] = "hold: light-",
+        [KeySleep] = "hold: sleep",
     };
     canvas_clear(canvas);
 
-    // Header: the name; Bluetooth, solid while linked; the battery and its level.
+    // Left column: Title, BT + Battery, Status, and OK hold legend (1 px margin at x=0, y=0, y=63).
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str(canvas, 0, 10, "Kindle Click");
-    canvas_set_font(canvas, FontSecondary);
-    char pct[8];
-    snprintf(pct, sizeof(pct), "%u%%", model->battery);
-    int x = 127 - canvas_string_width(canvas, pct);
-    canvas_draw_str(canvas, x, 10, pct);
-    x -= 18;
-    canvas_draw_frame(canvas, x, 2, 14, 8);
-    canvas_draw_box(canvas, x + 14, 4, 2, 4);
-    canvas_draw_box(canvas, x + 2, 4, (model->battery * 10 + 50) / 100, 4);
-    x -= 12;
+    canvas_draw_str(canvas, 1, 9, "Kindle Click");
+
     bool linked = model->status >= KcStatusConnecting;
     if(linked)
-        canvas_draw_rbox(canvas, x, 0, 9, 11, 2);
+        canvas_draw_rbox(canvas, 1, 13, 9, 11, 2);
     else
-        canvas_draw_rframe(canvas, x, 0, 9, 11, 2);
+        canvas_draw_rframe(canvas, 1, 13, 9, 11, 2);
     canvas_set_color(canvas, linked ? ColorWhite : ColorBlack);
-    canvas_draw_xbm(canvas, x + 2, 1, 5, 9, GLYPH_BLUETOOTH);
+    canvas_draw_xbm(canvas, 3, 14, 5, 9, GLYPH_BLUETOOTH);
     canvas_set_color(canvas, ColorBlack);
-    canvas_draw_line(canvas, 0, 12, 127, 12);
 
-    // Both fonts take 7-8 rows above the baseline and 2 below it.
+    draw_battery(canvas, 12, 13, model->battery);
+
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str(canvas, 0, 25, STATUS[model->status]);
-    canvas_set_font(canvas, FontSecondary);
-    if(model->status == KcStatusPairing) {
-        canvas_draw_str(canvas, 0, 37, "On the Kindle: Bluetooth");
-        canvas_draw_str(canvas, 0, 48, "devices > Kindle Click,");
-        canvas_draw_str(canvas, 0, 59, "confirm the code on both");
-        return;
+    if(model->status == KcStatusReady) {
+        canvas_draw_str(canvas, 1, 38, "Connected");
+    } else if(model->status == KcStatusConnecting) {
+        canvas_draw_str(canvas, 1, 38, "Connecting");
+    } else if(model->status == KcStatusWaiting) {
+        canvas_draw_str(canvas, 1, 36, "Waiting");
+        canvas_set_font(canvas, FontSecondary);
+        if(!model->queued) {
+            canvas_draw_str(canvas, 2, 46, "for Kindle");
+            canvas_draw_dot(canvas, 1, 42);
+            canvas_draw_dot(canvas, 4, 39);
+        }
+    } else {
+        canvas_draw_str(canvas, 1, 36, "Not paired");
+        canvas_set_font(canvas, FontSecondary);
+        canvas_draw_str(canvas, 1, 46, "Pair on Kindle");
     }
-    if(model->queued) canvas_draw_str(canvas, 0, 36, "Page turn queued");
-    draw_key(canvas, 0, 43, GLYPH_LEFT, 4, 7, model->held & (1 << KeyPrev));
-    draw_key(canvas, 10, 43, GLYPH_RIGHT, 4, 7, model->held & (1 << KeyNext));
-    canvas_draw_str(canvas, 22, 51, "page");
-    draw_key(canvas, 66, 43, GLYPH_UP, 7, 4, model->held & (1 << KeyBriUp));
-    draw_key(canvas, 76, 43, GLYPH_DOWN, 7, 4, model->held & (1 << KeyBriDown));
-    canvas_draw_str(canvas, 88, 51, "light");
-    draw_key(canvas, 0, 54, NULL, 0, 0, model->held & (1 << KeySleep));
-    canvas_draw_str(canvas, 12, 62, "hold: Kindle sleeps");
+    canvas_set_font(canvas, FontSecondary);
+    if(model->queued) canvas_draw_str(canvas, 1, 47, "Turn queued");
+
+    KeyId hold_k = model->map[BtnOkHold];
+    if(hold_k < KeyCount) {
+        canvas_draw_disc(canvas, 5, 57, 2);
+        canvas_draw_str(canvas, 12, 61, HOLD_TEXT[hold_k]);
+    }
+
+    // Right side: 61x61 D-pad wheel centered at (96, 31), R_outer=30, R_inner=10.
+    const int cx = 96, cy = 31;
+    canvas_draw_circle(canvas, cx, cy, 30);
+    canvas_draw_circle(canvas, cx, cy, 10);
+    canvas_draw_line(canvas, cx - 10, cy - 10, cx - 9, cy - 9);
+    canvas_draw_line(canvas, cx + 9, cy - 9, cx + 10, cy - 10);
+    canvas_draw_line(canvas, cx - 10, cy + 10, cx - 9, cy + 9);
+    canvas_draw_line(canvas, cx + 9, cy + 9, cx + 10, cy + 10);
+    canvas_draw_line(canvas, cx - 19, cy - 19, cx - 18, cy - 18);
+    canvas_draw_line(canvas, cx + 18, cy - 18, cx + 19, cy - 19);
+    canvas_draw_line(canvas, cx - 19, cy + 19, cx - 18, cy + 18);
+    canvas_draw_line(canvas, cx + 18, cy + 18, cx + 19, cy + 19);
+
+    draw_sector_action(canvas, cx, cy - 20, model->map[BtnUp], (model->held & (1 << BtnUp)) ? 8 : 0);
+    draw_sector_action(
+        canvas, cx, cy + 20, model->map[BtnDown], (model->held & (1 << BtnDown)) ? 8 : 0);
+    draw_sector_action(
+        canvas, cx - 20, cy, model->map[BtnLeft], (model->held & (1 << BtnLeft)) ? 8 : 0);
+    draw_sector_action(
+        canvas, cx + 20, cy, model->map[BtnRight], (model->held & (1 << BtnRight)) ? 8 : 0);
+
+    KeyId ok_k = (model->held & (1 << BtnOkHold))  ? model->map[BtnOkHold] :
+                 (model->map[BtnOk] < KeyCount)    ? model->map[BtnOk] :
+                                                     model->map[BtnOkHold];
+    draw_sector_action(canvas, cx, cy, ok_k, model->ok_r);
 }
 
 static bool remote_input(InputEvent* event, void* context) {
     KindleClick* app = context;
-    KeyId key;
+    BtnId btn;
     switch(event->key) {
     case InputKeyRight:
-        key = KeyNext;
+        btn = BtnRight;
         break;
     case InputKeyLeft:
-        key = KeyPrev;
+        btn = BtnLeft;
         break;
     case InputKeyUp:
-        key = KeyBriUp;
+        btn = BtnUp;
         break;
     case InputKeyDown:
-        key = KeyBriDown;
+        btn = BtnDown;
         break;
     case InputKeyOk:
-        key = KeySleep; // after SLEEP_HOLD_MS
+        btn = BtnOk;
         break;
     default:
         return false; // Back: to the menu
     }
     if(event->type == InputTypePress) {
-        app->held |= 1 << key;
-        if(key == KeySleep) {
+        if(btn == BtnOk && app->map[BtnOkHold] != KeyNone) {
+            app->held |= 1 << BtnOk;
             app->ok_down_at = furi_get_tick() | 1;
             app->ok_fired = false;
         } else {
-            key_down(app, key);
+            app->held |= 1 << btn;
+            btn_down(app, btn);
         }
     } else if(event->type == InputTypeRelease) {
-        app->held &= ~(1 << key);
-        if(key == KeySleep)
+        if(btn == BtnOk && app->map[BtnOkHold] != KeyNone) {
+            app->held &= ~((1 << BtnOk) | (1 << BtnOkHold));
             app->ok_down_at = 0;
-        else
-            key_up(app, key);
+            if(!app->ok_fired) {
+                btn_down(app, BtnOk);
+                btn_up(app, BtnOk);
+            } else {
+                btn_up(app, BtnOkHold);
+            }
+        } else {
+            app->held &= ~(1 << btn);
+            btn_up(app, btn);
+        }
     }
     update_view(app);
     return true;
@@ -512,6 +783,7 @@ int32_t kindle_click_app(void* p) {
     app->storage = furi_record_open(RECORD_STORAGE);
     app->bt = furi_record_open(RECORD_BT);
     app->paired = storage_file_exists(app->storage, PAIRED_PATH);
+    load_buttons(app);
 
     app->view_dispatcher = view_dispatcher_alloc();
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
@@ -530,9 +802,22 @@ int32_t kindle_click_app(void* p) {
     app->menu = submenu_alloc();
     submenu_set_header(app->menu, "Kindle Click");
     submenu_add_item(app->menu, "Remote", KcViewRemote, menu_callback, app);
+    submenu_add_item(app->menu, "Buttons", KcViewButtons, menu_callback, app);
     submenu_add_item(app->menu, "Forget Kindle", KcViewForget, menu_callback, app);
     view_set_previous_callback(submenu_get_view(app->menu), to_exit);
     view_dispatcher_add_view(app->view_dispatcher, KcViewMenu, submenu_get_view(app->menu));
+
+    app->buttons = variable_item_list_alloc();
+    for(int b = 0; b < BtnCount; b++) {
+        app->btn_items[b] = variable_item_list_add(
+            app->buttons, BTN_LABELS[b], KeyActionCount, button_change_callback, app);
+    }
+    variable_item_list_add(app->buttons, "Reset defaults", 1, NULL, app);
+    variable_item_list_set_enter_callback(app->buttons, buttons_enter_callback, app);
+    sync_button_items(app);
+    view_set_previous_callback(variable_item_list_get_view(app->buttons), to_menu);
+    view_dispatcher_add_view(
+        app->view_dispatcher, KcViewButtons, variable_item_list_get_view(app->buttons));
 
     app->forget = dialog_ex_alloc();
     dialog_ex_set_header(app->forget, "Forget the Kindle?", 64, 2, AlignCenter, AlignTop);
@@ -574,9 +859,11 @@ int32_t kindle_click_app(void* p) {
 
     view_dispatcher_remove_view(app->view_dispatcher, KcViewRemote);
     view_dispatcher_remove_view(app->view_dispatcher, KcViewMenu);
+    view_dispatcher_remove_view(app->view_dispatcher, KcViewButtons);
     view_dispatcher_remove_view(app->view_dispatcher, KcViewForget);
     view_free(app->remote);
     submenu_free(app->menu);
+    variable_item_list_free(app->buttons);
     dialog_ex_free(app->forget);
     view_dispatcher_free(app->view_dispatcher);
 

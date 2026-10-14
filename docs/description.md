@@ -5,7 +5,9 @@ Turns the Flipper into a remote that a Kindle accepts as a Kindle Click: page fo
 - Right / Left: page forward / back
 - Up / Down: light up / down (repeats while held)
 - OK, held 1 s: the Kindle sleeps
-- Back: menu (Remote, Forget Kindle); Back again exits
+- Back: menu (Remote, Buttons, Forget Kindle); Back again exits
+
+Buttons in the menu lets you assign any key (including a short press of OK) to page forward, page back, light up, light down, sleep, or off.
 
 Keep the app open while you read. While it runs, the Flipper's own Bluetooth (for the phone app) is off.
 

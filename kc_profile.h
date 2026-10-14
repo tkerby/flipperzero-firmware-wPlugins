@@ -2,7 +2,7 @@
 
 #include <furi_ble/profile_interface.h>
 
-#define KC_VERSION "0.3"
+#define KC_VERSION "0.4"
 
 // The link as the profile sees it. Written in the BLE event thread; the app
 // reads it.
