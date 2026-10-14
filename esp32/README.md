@@ -409,6 +409,30 @@ Type these into the serial monitor:
 5. REST API available at `http://192.168.4.1/api/status`
 6. Raw CAN stream endpoint: `http://192.168.4.1:82/stream`. Address it by the device's IP or hostname; in a browser, only the dashboard's own page can read it
 
+### Why did the board restart? (reset reason)
+
+The boot banner and the dashboard's **Device › Power** row report why the board last came up: power-on, brownout (the supply sagged — thin tap wire, a cold crimp, an e-fuse near its limit), panic or watchdog (a crash — not the supply's fault), a plain software restart, or a deep-sleep wake. Beside it, the restarts since power-on: a crash, watchdog, brownout or software restart adds one, a power-on starts again from 0, and a deep-sleep wake does not count (the LilyGO T-CAN485 boots on every CAN wake). `GET /api/status` carries the same as `reset_reason` (0 unknown, 1 power-on, 2 brownout, 3 panic, 4 watchdog, 5 software, 6 deep-sleep wake, 7 external) and `restart_count`, so a tester can paste it.
+
+### 12 V feed test — is the tap switched or always-on?
+
+The rear tap carries CAN, ground and 12 V. Whether that 12 V is **switched** (dies when the car sleeps) or **always-on** (powers the module overnight and wakes it whenever the car wakes) decides the final install. A multimeter can't answer it well — reaching the connector means opening a door, which wakes the car — but the board can, by watching whether it outlives the bus going quiet. The verdict shows in **Device › Power** and in `GET /api/status` as `power_verdict` (0 not-known-yet, 1 inconclusive/car-never-slept, 2 switched, 3 always-on, 4 brownout, 5 crash, 6 inconclusive/USB).
+
+To run it:
+
+1. Flash and wire the module to the tap as usual, then **leave it powered from the car only**.
+2. **Unplug USB** and walk away — see the caveat below.
+3. Park the car and let it sleep. A Tesla takes roughly 15–30 min to sleep after the last door/app/sentry activity; the bus goes quiet first, the 12 V (if switched) drops some minutes later.
+4. Come back later, reconnect to the **Tesla-FSD** Wi-Fi, open the dashboard, and read **Device › Power**:
+   - **Switched (dies with the car)** — the board lost power after the bus went quiet. The feed is switched.
+   - **Always-on (outlives the car)** — the board was still running (or, on the LilyGO T-CAN485, had kept its state across a deep sleep) long after the bus went quiet. The feed is always-on; the module will draw current and wake with the car.
+   - **Inconclusive (car never slept)** — the bus never went quiet during the session (sentry left on, a scheduled charge, someone opened the app). The test says nothing; try again when the car can actually sleep.
+   - **Not known yet** — no quiet period has been seen yet this session. Give it longer.
+   - **Brownout / Crash** — the board reset for a reason unrelated to the car switching it off; the reset-reason line explains which.
+
+The evidence is written to flash (NVS) so it survives the board losing power, which is the whole point — the answer is read back on the next boot. Writes stay off the CAN path: nothing is written to flash while frames are arriving, only at a single checkpoint once the bus has been quiet for about 30 s (and, on the LilyGO, once more as it enters deep sleep), so a busy bus never loses a frame to a flash stall.
+
+> **🔴 USB defeats the test.** Plugging in the USB cable to watch the serial port also powers the board, so the car's feed can vanish without the module noticing — and a module kept alive by USB looks exactly like an always-on feed. Run the test on car power only. On the native-USB boards (LilyGO T-2CAN, Waveshare S3) the firmware notices an attached USB host and reports the always-on verdict as *inconclusive (USB powered)* instead; on the UART-bridge boards it cannot tell, so it is on you to leave USB unplugged.
+
 ### Capture fidelity — the two drop metrics
 
 A downloaded capture is only useful if you know whether it saw every frame. The
