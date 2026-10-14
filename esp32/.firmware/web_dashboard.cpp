@@ -22,6 +22,8 @@
 #include "prefs.h"
 #include "ota_verify.h"
 #include "captive_portal.h"
+#include "web_cmd.h"
+#include "web_origin.h"
 #include <WebServer.h>
 #include <WebSocketsServer.h>
 #include <WiFi.h>
@@ -49,8 +51,9 @@ static float    g_fps         = 0.0f;
 #define OTA_ESP32_IMAGE_MAGIC 0xE9u
 #define OTA_AUTH_USER "admin"
 // Longest command is wifi_cfg: ~90 bytes of JSON around two SSIDs (32) and two
-// passphrases (64) = ~282, more once JSON escaping or multi-byte UTF-8 kicks in.
-#define WEB_CMD_MAX_LEN 511u
+// passphrases (64) = ~282, up to ~480 when every character needs a backslash
+// (\" or \\). The parser works in place, so this only bounds the work.
+#define WEB_CMD_MAX_LEN 767u
 
 static void state_enter() {
     if (g_state_mux) portENTER_CRITICAL(g_state_mux);
@@ -840,6 +843,10 @@ R"rawliteral(
     <span class="lbl">Network Password</span>
     <input type="password" id="wifiStaPass" maxlength="64" style="width:140px;background:var(--card2);border:1px solid var(--border);color:var(--text);padding:4px;border-radius:4px;text-align:right">
   </div>
+  <div class="row">
+    <span class="lbl">Hostname<br><small style="color:var(--muted)">name shown on your router</small></span>
+    <input type="text" id="wifiHost" maxlength="31" placeholder="tesla-fsd" autocomplete="off" autocapitalize="off" spellcheck="false" style="width:140px;background:var(--card2);border:1px solid var(--border);color:var(--text);padding:4px;border-radius:4px;text-align:right">
+  </div>
   <button class="btn-main btn-stop" onclick="saveWifi(this)" style="margin-top:12px">SAVE & RESTART WIFI</button>
 </div>
 
@@ -991,6 +998,7 @@ function initWifi(d){
   document.getElementById('swWifiHid').checked=!!d.wifi_hidden;
   document.getElementById('wifiStaSsid').value=d.wifi_sta_ssid||'';
   document.getElementById('wifiStaPass').value=d.wifi_sta_pass||'';
+  document.getElementById('wifiHost').value=d.wifi_hostname||'';
 }
 
 function fmt(s){
@@ -1619,41 +1627,73 @@ function saveWifi(b){
   var h=document.getElementById('swWifiHid').checked;
   var ss=document.getElementById('wifiStaSsid').value;
   var sp=document.getElementById('wifiStaPass').value;
+  var hn=document.getElementById('wifiHost').value.trim();
   if(s.length<1){uiAlert('SSID required');return;}
   if(p!=='***' && p.length>0 && p.length<8){uiAlert('Password must be empty or 8+ chars');return;}
   if(sp!=='***' && ss.length>0 && sp.length>0 && sp.length<8){uiAlert('Network password must be empty or 8+ chars');return;}
+  if(hn && !/^[A-Za-z0-9]([A-Za-z0-9-]{0,29}[A-Za-z0-9])?$/.test(hn)){uiAlert(WIFI_ERR.host);return;}
   uiConfirm('WiFi settings will be updated and the device will restart.',function(){
     var t=b?b.textContent:'';
     if(b){b.disabled=true;b.textContent='SAVING...';}
-    cmd('wifi_cfg',{ssid:s,pass:p,hidden:h,sta_ssid:ss,sta_pass:sp},function(){
+    cmd('wifi_cfg',{ssid:s,pass:p,hidden:h,sta_ssid:ss,sta_pass:sp,host:hn},function(){
       if(b){b.disabled=false;b.textContent=t;}
     });
   });
 }
 // fetch() with a deadline, so a dead link fails in seconds instead of hanging.
-// Resolves with the body text; rejects on a network error, timeout or non-2xx.
+// Resolves with the body text; rejects on a network error, timeout or non-2xx
+// (with the reply body as .body).
 function fetchT(url,opt,ms){
   var ac=window.AbortController?new AbortController():null,t=0;
   if(ac){opt.signal=ac.signal;t=setTimeout(function(){ac.abort();},ms);}
   return fetch(url,opt).then(function(r){
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    return r.text();
+    return r.text().then(function(s){
+      if(!r.ok){var x=new Error('HTTP '+r.status);x.body=s;throw x;}
+      return s;
+    });
   }).then(function(s){clearTimeout(t);return s;},function(x){clearTimeout(t);throw x;});
 }
 // The WS only counts while it is delivering: the device pushes state at 1 Hz,
 // so an open socket that has gone quiet is treated like a closed one.
 function wsLive(){return !!ws&&ws.readyState===1&&Date.now()-wsRx<4000;}
 // Commands go over the WS when it is live, else as the same JSON over HTTP.
+// A command the device refuses is answered with {ok:false,err,cmd,field}: as
+// the HTTP reply, or as a WS frame of its own.
+var cmdFail={};
 function cmd(c,v,fail){
   var m=JSON.stringify({cmd:c,value:v});
   busy = Date.now() + 3000;
+  cmdFail[c]=fail;
   if(wsLive()){ws.send(m);return;}
   fetchT('/api/cmd',{method:'POST',headers:{'Content-Type':'application/json'},body:m},5000).catch(function(x){
     console.error('cmd '+c,x);
-    busy=0;
-    uiToast('Command failed — the device did not accept it. Check the connection and try again.');
-    if(fail)fail();
+    var d=null;
+    try{d=JSON.parse(x.body);}catch(e){}
+    cmdRefused(d&&d.ok===false?d:{cmd:c});
   });
+}
+var WIFI_BYTES='\nCharacters outside plain ASCII take 2 to 4 bytes each; control characters are not accepted.';
+var WIFI_ERR={
+  ssid:'SSID must be 1 to 32 bytes.'+WIFI_BYTES,
+  pass:'Password must be empty or 8 to 64 bytes.'+WIFI_BYTES,
+  sta_ssid:'Network name must be at most 32 bytes.'+WIFI_BYTES,
+  sta_pass:'Network password must be empty or 8 to 64 bytes.'+WIFI_BYTES,
+  host:'Hostname must be 1 to 31 letters, digits or hyphens, and cannot start or end with a hyphen.'};
+// A command that did not take, refused by the device (d.err) or never
+// delivered: say so and undo what the page did for it.
+function cmdRefused(d){
+  busy=0;
+  // Loaded under a name the device does not take commands from (renamed
+  // since): reload from the address it gives.
+  if(d.err==='origin'&&d.url){location.replace(d.url);return;}
+  var fail=cmdFail[d.cmd];
+  if(d.cmd==='wifi_cfg'&&d.err){
+    var why=WIFI_ERR[d.field];
+    uiAlert('WiFi settings were not saved.'+(why?'\n'+why:''));
+  }else{
+    uiToast('Command failed — the device did not accept it. Check the connection and try again.');
+  }
+  if(fail)fail();
 }
 function toggleMode(){ cmd('mode',null); }
 function gv(id){ var e=document.getElementById(id); return (e&&e.value.trim()!=='')?e.value.trim():'0'; }
@@ -1934,6 +1974,7 @@ function conn(){
     httpUp=false;   // polling stops while the WS delivers, so HTTP is unknown again
     var d;
     try{d=JSON.parse(e.data);}catch(x){console.error('ws frame',x);return;}
+    if(d&&d.ok===false){cmdRefused(d);return;}   // the answer to a command we sent
     applyState(d);
   };
   ws.onclose=function(){
@@ -2205,6 +2246,7 @@ static String build_json() {
     j += "\"wifi_hidden\":";  j += state.wifi_hidden                  ? "true" : "false"; j += ',';
     j += "\"wifi_sta_ssid\":\""; j += json_escape(state.wifi_sta_ssid); j += "\",";
     j += "\"wifi_sta_pass\":\""; j += state.wifi_sta_pass[0] ? "***" : ""; j += "\",";
+    j += "\"wifi_hostname\":\""; j += json_escape(state.wifi_hostname); j += "\",";
     j += "\"wifi_clients\":";  j += (int)WiFi.softAPgetStationNum();   j += ',';
     j += "\"http_can_stream\":{";
     j += "\"active\":";       j += http_can_stream_active()           ? "true" : "false"; j += ',';
@@ -2235,26 +2277,18 @@ static String build_aux_json() {
 
 // ── Command dispatcher ────────────────────────────────────────────────────────
 // Runs one dashboard command, {"cmd":"xxx","value":yyy}. The single command
-// table for both transports: WS TEXT frames and POST /api/cmd.
-static void web_command(const uint8_t *payload, size_t length)
+// table for both transports: WS TEXT frames and POST /api/cmd. The message is
+// parsed as JSON (web_cmd.h): a branch is picked by the value of "cmd" alone
+// and reads its value with cmd.boolean() / integer() / string(), which refuse
+// a value of the wrong type. The caller sends the reply and, for
+// WEB_CMD_RESTART, restarts the device afterwards.
+static WebCmdResult web_command(WebCmd &cmd, const uint8_t *payload, size_t length)
 {
-    if (g_state == nullptr || length == 0) return;
-    // Over-long input is dropped, never truncated: a cut-off wifi_cfg would
-    // save half its fields and then restart the device.
-    if (length > WEB_CMD_MAX_LEN) {
-        Serial.printf("[Web] command dropped: %u bytes\n", (unsigned)length);
-        return;
-    }
+    if (g_state == nullptr || length == 0) return WEB_CMD_BAD_JSON;
+    if (length > WEB_CMD_MAX_LEN) return WEB_CMD_TOO_LONG;
+    if (!web_cmd_parse((const char *)payload, length, &cmd)) return WEB_CMD_BAD_JSON;
 
-    // Use a slightly more robust way to find the value after the second colon
-    char buf[WEB_CMD_MAX_LEN + 1] = {};
-    memcpy(buf, payload, length);
-
-    // Find the "value" part of {"cmd":"xxx","value":yyy}
-    const char *vptr = strstr(buf, "\"value\":");
-    if (vptr) vptr = strstr(vptr, ":") + 1;
-
-    if (strstr(buf, "\"mode\"")) {
+    if (cmd.is("mode")) {
         FSDState saved;
         bool active = false;
         state_enter();
@@ -2272,11 +2306,10 @@ static void web_command(const uint8_t *payload, size_t length)
         http_can_stream_set_enabled(true);  // capture works in both modes now (#108)
         Serial.println(active ? "[Web] → Active mode" : "[Web] → Listen-Only mode");
         prefs_save(&saved);
-    } else if (strstr(buf, "\"hw_override\"")) {
+    } else if (cmd.is("hw_override")) {
         // Manual HW selection (#110): 0 = auto-detect, else pin the version.
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            int sel = atoi(vptr);
+        int sel;
+        if (cmd.integer(&sel)) {
             if (sel >= (int)TeslaHW_Unknown && sel <= (int)TeslaHW_HW4) {
                 TeslaHWVersion want = (TeslaHWVersion)sel;
                 FSDState saved;
@@ -2293,12 +2326,13 @@ static void web_command(const uint8_t *payload, size_t length)
                               (want == TeslaHW_HW3)    ? "HW3" :
                               (want == TeslaHW_Legacy) ? "Legacy" : "Auto");
                 prefs_save(&saved);
+            } else {
+                cmd.bad_value = true;
             }
         }
-    } else if (strstr(buf, "\"ignore_ota\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("ignore_ota")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->ignore_ota = enabled;
@@ -2307,10 +2341,9 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] Ignore OTA: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"fsd_unlock\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("fsd_unlock")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->fsd_unlock = enabled;
@@ -2319,10 +2352,9 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] FSD Unlock: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"hw3_speed_override\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("hw3_speed_override")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->hw3_speed_override = enabled;
@@ -2331,10 +2363,9 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] HW3 Speed Override: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"nag\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("nag")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->nag_killer = enabled;
@@ -2343,10 +2374,9 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] NAG Killer: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"continuous_ap\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("continuous_ap")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->continuous_ap = enabled;
@@ -2355,10 +2385,9 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] Continuous AP: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"ap_first\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("ap_first")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->ap_first = enabled;
@@ -2367,10 +2396,9 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] AP-First: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"ap_first_edge\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("ap_first_edge")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->ap_first_edge = enabled;
@@ -2379,10 +2407,9 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] Instant Engage: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"ap_first_minimal\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("ap_first_minimal")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->ap_first_minimal = enabled;
@@ -2391,10 +2418,9 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] Minimal Inject: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"nag_faithful\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("nag_faithful")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->nag_epas_faithful = enabled;
@@ -2403,10 +2429,9 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] Nag EPAS-faithful: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"soft_engage\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("soft_engage")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->soft_engage = enabled;
@@ -2415,10 +2440,9 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] Soft Engage: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"nag_burst\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("nag_burst")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->nag_burst = enabled;
@@ -2427,10 +2451,9 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] Nag Burst: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"abort_guard\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("abort_guard")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->abort_guard = enabled;
@@ -2440,15 +2463,11 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] Abort Guard: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"sig_cfg\"")) {
+    } else if (cmd.is("sig_cfg")) {
         // value is a 10-field CSV: das_id,apB,apS,apM,hoB,hoS,hoM,steer_id,sHi,sLo
         // ids accept 0x.. ; byte/shift 0-7, mask hex. (#122)
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':' || *vptr == '"') vptr++;
-            char csv[128] = {};
-            size_t ci = 0;
-            for (const char *p = vptr; *p && *p != '"' && *p != '}' && ci < sizeof(csv) - 1; p++)
-                csv[ci++] = *p;
+        char csv[128];
+        if (cmd.string(csv, sizeof(csv))) {
             long v[10]; int got = 0;
             char *tok = strtok(csv, ",");
             while (tok && got < 10) { v[got++] = strtol(tok, NULL, 0); tok = strtok(NULL, ","); }
@@ -2471,12 +2490,13 @@ static void web_command(const uint8_t *payload, size_t length)
                               (uint16_t)v[0], v[1], v[2], v[3], v[4], v[5], v[6],
                               (uint16_t)v[7], v[8], v[9]);
                 prefs_save(&saved);
+            } else {
+                cmd.bad_value = true;
             }
         }
-    } else if (strstr(buf, "\"blackbox_enable\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("blackbox_enable")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             blackbox_set_enabled(enabled);          // locks the state mux itself
             FSDState saved;
             state_enter();
@@ -2485,31 +2505,25 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] Black-box: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"capability_recheck\"")) {
+    } else if (cmd.is("capability_recheck")) {
         capability_start(millis());                 // re-run the tap check (#125)
         Serial.println("[Web] Capability: re-check");
-    } else if (strstr(buf, "\"blackbox_mark\"")) {
+    } else if (cmd.is("blackbox_mark")) {
         blackbox_mark(millis());                    // inject EVT_MANUAL + arm
         Serial.println("[Web] Black-box: manual mark");
-    } else if (strstr(buf, "\"blackbox_delete_all\"")) {
+    } else if (cmd.is("blackbox_delete_all")) {
         blackbox_delete_all();
         Serial.println("[Web] Black-box: delete all");
-    } else if (strstr(buf, "\"blackbox_delete\"")) {
-        const char *v = strstr(buf, "\"value\":\"");
-        if (v) {
-            v += 9;
-            char name[40];
-            size_t i = 0;
-            while (v[i] && v[i] != '\"' && i < sizeof(name) - 1) { name[i] = v[i]; i++; }
-            name[i] = '\0';
+    } else if (cmd.is("blackbox_delete")) {
+        char name[40];
+        if (cmd.string(name, sizeof(name))) {
             if (name[0]) { blackbox_delete(name); Serial.printf("[Web] Black-box: delete %s\n", name); }
         }
     }
 #if defined(BOARD_TTGO_DISPLAY)
-    else if (strstr(buf, "\"disp\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    else if (cmd.is("disp")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->display_enabled = enabled;
@@ -2518,10 +2532,10 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] Display: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"disp_br\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            uint8_t val = (uint8_t)atoi(vptr);
+    } else if (cmd.is("disp_br")) {
+        int n;
+        if (cmd.integer(&n)) {
+            uint8_t val = (uint8_t)n;
             if (val > 100) val = 100;
             FSDState saved;
             state_enter();
@@ -2531,10 +2545,10 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] Display Brightness: %u\n", val);
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"disp_to\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            uint32_t val = (uint32_t)atoi(vptr);
+    } else if (cmd.is("disp_to")) {
+        int n;
+        if (cmd.integer(&n)) {
+            uint32_t val = (uint32_t)n;
             FSDState saved;
             state_enter();
             g_state->display_timeout_s = val;
@@ -2545,10 +2559,9 @@ static void web_command(const uint8_t *payload, size_t length)
         }
     }
 #endif
-    else if (strstr(buf, "\"bms\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    else if (cmd.is("bms")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->bms_output = enabled;
@@ -2557,10 +2570,9 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] BMS output: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"tlssc_restore\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("tlssc_restore")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->tlssc_restore = enabled;
@@ -2569,10 +2581,9 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] TLSSC Restore: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"14x_warning\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("14x_warning")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->firmware_14x_warning = enabled;
@@ -2581,10 +2592,9 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] 14.x Warning: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"force_fsd\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("force_fsd")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->force_fsd = enabled;
@@ -2593,10 +2603,9 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] Force FSD: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"china_mode\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("china_mode")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->china_mode = enabled;
@@ -2605,10 +2614,9 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] China Mode: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"suppress_speed_chime\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("suppress_speed_chime")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->suppress_speed_chime = enabled;
@@ -2617,10 +2625,9 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] Suppress Speed Chime: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"precondition\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("precondition")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->precondition = enabled;
@@ -2629,10 +2636,9 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] Precondition: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"summon_unlock\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("summon_unlock")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->summon_unlock = enabled;
@@ -2641,10 +2647,9 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] Summon EU Unlock: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"continue_on_green\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("continue_on_green")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->continue_on_green = enabled;
@@ -2653,10 +2658,9 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] Continue on Green: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"assist_tlssc_bit38\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("assist_tlssc_bit38")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->assist_tlssc_bit38 = enabled;
@@ -2665,10 +2669,9 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] TLSSC bit38: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"assist_rhd_override\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("assist_rhd_override")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->assist_rhd_override = enabled;
@@ -2677,10 +2680,9 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] RHD Override: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"assist_telemetry_off\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("assist_telemetry_off")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->assist_telemetry_off = enabled;
@@ -2689,13 +2691,12 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] Telemetry Off: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"apmv3_branch\"")) {
+    } else if (cmd.is("apmv3_branch")) {
         // AP branch/tier selector (experimental, non-persistent): 0-5 select a
         // UI_apmv3Branch value, any other value (255 = Off) stores the 0xFF
         // sentinel so the handler leaves the frame untouched.
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            int sel = atoi(vptr);
+        int sel;
+        if (cmd.integer(&sel)) {
             uint8_t want = (sel >= 0 && sel <= 5) ? (uint8_t)sel : 0xFF;
             FSDState saved;
             state_enter();
@@ -2705,13 +2706,12 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] AP Branch/Tier: %d\n", want);
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"accel_mode\"")) {
+    } else if (cmd.is("accel_mode")) {
         // Acceleration Mode override (#211): 1 Chill / 2 Sport / 3 Performance,
         // anything else = Off (pass-through). The handler latches a new value
         // only at standstill; Off applies on the next 0x334.
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            int sel = atoi(vptr);
+        int sel;
+        if (cmd.integer(&sel)) {
             uint8_t want = (sel >= (int)ACCEL_MODE_CHILL && sel <= (int)ACCEL_MODE_PERFORMANCE)
                                ? (uint8_t)sel : (uint8_t)ACCEL_MODE_OFF;
             FSDState saved;
@@ -2722,10 +2722,9 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] Acceleration Mode: %u\n", (unsigned)want);
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"cp_type_eu_rewrite\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("cp_type_eu_rewrite")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->cp_type_eu_rewrite = enabled;
@@ -2734,10 +2733,9 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] EU CP Type rewrite: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"track_mode_inject\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("track_mode_inject")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->track_mode_inject = enabled;
@@ -2746,10 +2744,10 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] Track Mode inject: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"track_rotation_pct\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            uint8_t val = (uint8_t)atoi(vptr);
+    } else if (cmd.is("track_rotation_pct")) {
+        int n;
+        if (cmd.integer(&n)) {
+            uint8_t val = (uint8_t)n;
             if (val > 100) val = 100;
             FSDState saved;
             state_enter();
@@ -2759,10 +2757,10 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] Track Handling Balance: %u\n", val);
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"track_stability_pct\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            uint8_t val = (uint8_t)atoi(vptr);
+    } else if (cmd.is("track_stability_pct")) {
+        int n;
+        if (cmd.integer(&n)) {
+            uint8_t val = (uint8_t)n;
             if (val > 100) val = 100;
             FSDState saved;
             state_enter();
@@ -2772,10 +2770,9 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] Track Stability Assist: %u\n", val);
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"track_post_cooling\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("track_post_cooling")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->track_post_cooling = enabled;
@@ -2784,10 +2781,9 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] Track Post-drive Cooling: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"track_cmp_overclock\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("track_cmp_overclock")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->track_cmp_overclock = enabled;
@@ -2796,18 +2792,17 @@ static void web_command(const uint8_t *payload, size_t length)
             Serial.printf("[Web] Track Compressor Overclock: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"dump\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool want = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("dump")) {
+        bool want;
+        if (cmd.boolean(&want)) {
             if (want) can_dump_start();
             else      can_dump_stop();
             Serial.printf("[Web] CAN Dump: %s\n", want ? "START" : "STOP");
         }
-    } else if (strstr(buf, "\"sleep\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            uint32_t val = (uint32_t)atoi(vptr);
+    } else if (cmd.is("sleep")) {
+        int n;
+        if (cmd.integer(&n)) {
+            uint32_t val = (uint32_t)n;
             if (val >= 10000) { // minimum 10s
                 FSDState saved;
                 state_enter();
@@ -2816,86 +2811,104 @@ static void web_command(const uint8_t *payload, size_t length)
                 state_exit();
                 Serial.printf("[Web] Sleep timeout: %u ms\n", val);
                 prefs_save(&saved);
+            } else {
+                cmd.bad_value = true;
             }
         }
-    } else if (strstr(buf, "\"wifi_cfg\"")) {
-        // Find the "value":{ object start
-        const char *vobj = strstr(buf, "\"value\":");
-        if (vobj) {
-            FSDState saved;
-            state_enter();
-            char *s = strstr(vobj, "\"ssid\":\"");
-            char *p = strstr(vobj, "\"pass\":\"");
-            char *h = strstr(vobj, "\"hidden\":");
-            char *ss = strstr(vobj, "\"sta_ssid\":\"");
-            char *sp = strstr(vobj, "\"sta_pass\":\"");
-            if (s) {
-                s += 8;
-                char *end = strchr(s, '\"');
-                if (end) {
-                    int len = end - s;
-                    if (len > 32) len = 32;
-                    if (memchr(s, '\\', len) == nullptr) {
-                        memcpy(g_state->wifi_ssid, s, len);
-                        g_state->wifi_ssid[len] = '\0';
-                    }
-                }
-            }
-            if (p) {
-                p += 8;
-                char *end = strchr(p, '\"');
-                if (end) {
-                    int len = end - p;
-                    if (len > 64) len = 64;
-                    if (memchr(p, '\\', len) == nullptr &&
-                        !(len == 3 && memcmp(p, "***", 3) == 0)) {
-                        memcpy(g_state->wifi_pass, p, len);
-                        g_state->wifi_pass[len] = '\0';
-                    }
-                }
-            }
-            if (h) {
-                h += 9;
-                while (*h == ' ' || *h == ':') h++;
-                if (strncmp(h, "true", 4) == 0) g_state->wifi_hidden = true;
-                else if (strncmp(h, "false", 5) == 0) g_state->wifi_hidden = false;
-            }
-            if (ss) {
-                ss += 12;
-                char *end = strchr(ss, '\"');
-                if (end) {
-                    int len = end - ss;
-                    if (len > 32) len = 32;
-                    if (memchr(ss, '\\', len) == nullptr) {
-                        memcpy(g_state->wifi_sta_ssid, ss, len);
-                        g_state->wifi_sta_ssid[len] = '\0';
-                    }
-                }
-            }
-            if (sp) {
-                sp += 12;
-                char *end = strchr(sp, '\"');
-                if (end) {
-                    int len = end - sp;
-                    if (len > 64) len = 64;
-                    if (memchr(sp, '\\', len) == nullptr &&
-                        !(len == 3 && memcmp(sp, "***", 3) == 0)) {
-                        memcpy(g_state->wifi_sta_pass, sp, len);
-                        g_state->wifi_sta_pass[len] = '\0';
-                    }
-                }
-            }
-            saved = *g_state;
-            state_exit();
-            Serial.printf("[Web] WiFi config: AP=\"%s\" STA=\"%s\" PASS=*** HIDDEN=%d\n",
-                saved.wifi_ssid, saved.wifi_sta_ssid, saved.wifi_hidden);
-            prefs_save(&saved);
-            ota_verify_confirm("WiFi config restart");
-            can_shutdown_all(g_can_buses, g_can_count);
-            delay(500);
-            ESP.restart();
+    } else if (cmd.is("wifi_cfg")) {
+        // All or nothing: one field that does not validate rejects the whole
+        // message, nothing is saved and the device stays up. cmd.field names
+        // the field for the reply.
+        WebWifiCfg cfg;
+        cmd.field = web_wifi_parse(cmd.value, &cfg);
+        if (cmd.field) {
+            Serial.printf("[Web] WiFi config rejected: bad %s\n", cmd.field);
+            return WEB_CMD_BAD_VALUE;
         }
+        FSDState saved;
+        state_enter();
+        if (cfg.has_ssid)     strlcpy(g_state->wifi_ssid, cfg.ssid, sizeof(g_state->wifi_ssid));
+        if (cfg.has_pass)     strlcpy(g_state->wifi_pass, cfg.pass, sizeof(g_state->wifi_pass));
+        if (cfg.has_hidden)   g_state->wifi_hidden = cfg.hidden;
+        if (cfg.has_sta_ssid) strlcpy(g_state->wifi_sta_ssid, cfg.sta_ssid, sizeof(g_state->wifi_sta_ssid));
+        if (cfg.has_sta_pass) strlcpy(g_state->wifi_sta_pass, cfg.sta_pass, sizeof(g_state->wifi_sta_pass));
+        if (cfg.has_host)     strlcpy(g_state->wifi_hostname, cfg.host[0] ? cfg.host : WIFI_HOSTNAME_DEFAULT,
+                                      sizeof(g_state->wifi_hostname));
+        saved = *g_state;
+        state_exit();
+        Serial.printf("[Web] WiFi config: AP=\"%s\" STA=\"%s\" PASS=*** HIDDEN=%d HOST=%s\n",
+            saved.wifi_ssid, saved.wifi_sta_ssid, saved.wifi_hidden, saved.wifi_hostname);
+        prefs_save(&saved);
+        return WEB_CMD_RESTART;
+    } else {
+        return WEB_CMD_UNKNOWN;
     }
+    return cmd.bad_value ? WEB_CMD_BAD_VALUE : WEB_CMD_OK;
+}
+
+// The reply to a refused command, the same on both transports, e.g.
+// {"ok":false,"err":"bad_value","cmd":"wifi_cfg","field":"pass"}. "cmd" only
+// once the name matched one of the literals above, "field" only from
+// wifi_cfg; a value is never echoed, it may be a password.
+static String cmd_refusal(const WebCmd &cmd, WebCmdResult res) {
+    String j = "{\"ok\":false,\"err\":\"";
+    j += web_cmd_error(res);
+    j += '"';
+    if (res == WEB_CMD_BAD_VALUE) { j += ",\"cmd\":\""; j += cmd.name; j += '"'; }
+    if (cmd.field) { j += ",\"field\":\""; j += cmd.field; j += '"'; }
+    j += '}';
+    Serial.printf("[Web] command refused: %s\n", j.c_str());
+    return j;
+}
+
+// New WiFi settings are saved: restart to apply them. Called after the reply.
+static void restart_for_wifi() {
+    ota_verify_confirm("WiFi config restart");
+    can_shutdown_all(g_can_buses, g_can_count);
+    delay(500);
+    ESP.restart();
+}
+
+// ── Whose commands are taken (web_origin.h) ──────────────────────────────────
+// Text form of the names in WebOwnNames, filled in by own_names().
+struct OwnNamesText {
+    char ap[16];
+    char sta[16];
+    char host[sizeof(FSDState::wifi_hostname)];
+};
+
+// The addresses and hostname the device has right now.
+static WebOwnNames own_names(OwnNamesText &t) {
+    auto text = [](IPAddress ip, char *out) {
+        snprintf(out, 16, "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
+    };
+    t.ap[0] = t.sta[0] = '\0';
+    wifi_mode_t mode = WiFi.getMode();
+    if (mode == WIFI_MODE_AP || mode == WIFI_MODE_APSTA) text(WiFi.softAPIP(), t.ap);
+    if ((mode == WIFI_MODE_STA || mode == WIFI_MODE_APSTA) && WiFi.status() == WL_CONNECTED) {
+        text(WiFi.localIP(), t.sta);
+    }
+    state_enter();
+    memcpy(t.host, g_state->wifi_hostname, sizeof(t.host));
+    state_exit();
+    t.host[sizeof(t.host) - 1] = '\0';
+    return WebOwnNames{t.ap, t.sta, t.host};
+}
+
+// The dashboard at the address this client reached us on.
+static String home_url() {
+    return String("http://") + g_http.client().localIP().toString() + "/";
+}
+
+// WebSocket handshake, once for each request header the library does not
+// handle itself: a browser page that is not the dashboard is refused (the
+// library answers 400 and the page falls back to HTTP polling).
+static bool ws_header_ok(String name, String value) {
+    if (!name.equalsIgnoreCase("Origin")) return true;
+    OwnNamesText t;
+    if (web_ws_origin_ok(value.c_str(), own_names(t))) return true;
+    Serial.printf("[WS] connection refused: Origin %.64s\n", value.c_str());
+    return false;
 }
 
 // ── WebSocket event handler ───────────────────────────────────────────────────
@@ -2913,11 +2926,31 @@ static void ws_event(uint8_t num, WStype_t type,
         return;
     }
 
-    if (type == WStype_TEXT) web_command(payload, length);
+    if (type == WStype_TEXT) {
+        // A refusal goes back to the sender; success needs no reply, the next
+        // state push shows it.
+        WebCmd cmd;
+        WebCmdResult res = web_command(cmd, payload, length);
+        if (res == WEB_CMD_RESTART) {
+            restart_for_wifi();
+        } else if (res != WEB_CMD_OK) {
+            String reply = cmd_refusal(cmd, res);
+            g_ws.sendTXT(num, reply.c_str(), reply.length());
+        }
+    }
 }
 
 // ── HTTP handlers ─────────────────────────────────────────────────────────────
 static void handle_root() {
+    // The page is served under our own names only: its origin is what the
+    // WebSocket and /api/cmd check, and on the SoftAP every name resolves
+    // here (captive portal). Under any other name it is sent to our address.
+    OwnNamesText t;
+    if (!web_host_header_ours(g_http.hostHeader().c_str(), own_names(t))) {
+        g_http.sendHeader("Location", home_url(), true);
+        g_http.send(302, "text/plain", "");
+        return;
+    }
     captive_portal_note_dashboard(g_http);   // portal "login" for Apple's probe (SoftAP only)
     g_http.setContentLength(sizeof(WEB_HTML) - 1);
     g_http.send(200, "text/html", "");
@@ -2952,8 +2985,22 @@ static void handle_status() {
 // same JSON text a WS frame carries and goes through the same dispatcher.
 // Content-Type must be application/json: a cross-site form or no-cors fetch
 // cannot send that without a CORS preflight, which this server never grants.
+// The Origin has to be the dashboard's own page, as on the WebSocket
+// (web_origin.h); that also stops a rebound name, where the request is not
+// cross-site at all. A 403 names the address to load the dashboard from.
+// Otherwise the reply is {"ok":true}, or a 400 with the reason the command
+// was refused.
 static void handle_cmd() {
     if (g_state == nullptr) { g_http.send(503, "application/json", "{}"); return; }
+    String origin = g_http.header("Origin");
+    String host = g_http.hostHeader();
+    OwnNamesText t;
+    if (!web_post_origin_ok(origin.c_str(), host.c_str(), own_names(t))) {
+        Serial.printf("[Web] command refused: Origin %.64s Host %.64s\n", origin.c_str(), host.c_str());
+        g_http.send(403, "application/json",
+                    String("{\"ok\":false,\"err\":\"origin\",\"url\":\"") + home_url() + "\"}");
+        return;
+    }
     String ctype = g_http.header("Content-Type");
     ctype.toLowerCase();
     if (!ctype.startsWith("application/json")) {
@@ -2966,9 +3013,16 @@ static void handle_cmd() {
         g_http.send(413, "text/plain", "command too long");
         return;
     }
-    // Reply before running it: wifi_cfg restarts from inside the dispatcher.
+    // The reply carries the outcome, so the command runs first; a wifi_cfg
+    // restart waits until the reply has gone out.
+    WebCmd cmd;
+    WebCmdResult res = web_command(cmd, (const uint8_t *)body.c_str(), body.length());
+    if (res != WEB_CMD_OK && res != WEB_CMD_RESTART) {
+        g_http.send(400, "application/json", cmd_refusal(cmd, res));
+        return;
+    }
     g_http.send(200, "application/json", "{\"ok\":true}");
-    web_command((const uint8_t *)body.c_str(), body.length());
+    if (res == WEB_CMD_RESTART) restart_for_wifi();
 }
 
 // On-demand aux status (blackbox/capability/profile). Polled by the dashboard
@@ -3203,8 +3257,9 @@ void web_dashboard_init(FSDState *state,
     // WebServer keeps only the request headers named here (plus Authorization),
     // and collectHeaders() replaces the list instead of adding to it. This is
     // the last call before begin(), so it names every header a handler reads:
-    // Content-Type for /api/cmd, User-Agent for the captive portal's probes.
-    const char *collect[] = { "Content-Type", "User-Agent" };
+    // Content-Type and Origin for /api/cmd, User-Agent for the captive
+    // portal's probes.
+    const char *collect[] = { "Content-Type", "Origin", "User-Agent" };
     g_http.collectHeaders(collect, sizeof(collect) / sizeof(collect[0]));
     g_http.begin();
     captive_portal_begin();
@@ -3212,6 +3267,7 @@ void web_dashboard_init(FSDState *state,
 
     g_ws.begin();
     g_ws.onEvent(ws_event);
+    g_ws.onValidateHttpHeader(ws_header_ok, nullptr, 0);
 
     Serial.println("[Web] HTTP :80  WS :81 — ready");
 }

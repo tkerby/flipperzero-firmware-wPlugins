@@ -186,6 +186,7 @@
 #define FACTORY_RESET_WINDOW_MS 20000u  // Clean-boot window during which reset is possible
 #define STATUS_PRINT_MS       5000u   // Periodic status line when Active
 #define WIFI_STA_CONNECT_TIMEOUT_MS 10000u  // Try saved infrastructure WiFi before AP fallback
+#define WIFI_HOSTNAME_DEFAULT "tesla-fsd"  // Station hostname until the user sets one
 #ifndef GEAR_LEVER_CACHED_COUNTER_MAX_AGE_MS
 #define GEAR_LEVER_CACHED_COUNTER_MAX_AGE_MS 500u  // Immediate 0x229 TX only if latest live counter is fresh
 #endif

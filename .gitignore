@@ -16,5 +16,7 @@ test/test_esp32_core
 test/test_can_capture_filter
 test/test_captive_probe
 test/test_can_mcp2518fd
+test/test_web_cmd
+test/test_web_origin
 *.dSYM/
 /.vs
