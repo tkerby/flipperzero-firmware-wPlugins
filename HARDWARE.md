@@ -460,7 +460,9 @@ The T-2CAN has **two independent CAN controllers — one native ESP32-S3
 TWAI and one MCP2515 (SPI)** — plus dual screw terminals, 12–24V input,
 WiFi, BLE, QWIIC, and USB-C. The `lilygo-t2can` build drives both (the
 `CAN_DRIVER_T2CAN_DUAL` driver): frames from either channel are processed,
-and modified frames go back out on the bus they came from. Wire one channel
+and modified frames go back out on the bus they came from. The Continuous AP
+`0x229` press, which continues the car's own `0x229` counter, likewise goes
+out only on a bus where the car's `0x229` is live. Wire one channel
 to the pair carrying `0x3FD` and the other to a second X179 pair, e.g. Party
 CAN (pins 2/3) for the nag killer
 ([#100](https://github.com/hypery11/flipper-tesla-fsd/issues/100)). Check

@@ -141,7 +141,7 @@ Auto-detect picks the source. If it's wrong, pin the car with the Hardware selec
 | **HW Override** | — | Manual Auto-detect / Force HW4 / Force HW3 / Force Legacy selector |
 | **Battery Precondition** | `0x082` | Preheat trigger, re-sent every 500 ms while the dashboard **Precondition** switch is on (off by default) |
 | **TLSSC Restore** | `0x331` | Recovers stop sign / traffic light control on VIN-banned cars |
-| **Continuous AP** | `0x229` | HW3/Legacy, off by default: after AP drops during a turn-signal lane change, re-engages it with a right-stalk double press (brake or full stalk-up cancels) |
+| **Continuous AP** | `0x229` | HW3/Legacy, off by default: after AP drops during a turn-signal lane change, re-engages it with a right-stalk double press (brake or full stalk-up cancels), sent only on a bus that carries the car's own `0x229` |
 | **BMS Dashboard** | `0x132`/`0x292`/`0x312` | Model 3/Y frames; wrong values on S/X, not yet confirmed on the ESP32 |
 | **Tyre Pressure** | `0x219` | Read-only: four pressures (bar / psi), wheel order of the 7-byte form not confirmed; needs a tap carrying `0x219` (Vehicle CAN) |
 | **OTA Protection** | `0x318` | Auto-stops TX when OTA update detected unless Ignore OTA is enabled |
@@ -235,6 +235,8 @@ The dashboard's **Tap Check** card adds a **Bus hint** per bus from `0x3C2`: see
 > The official LILYGO T-2CAN V1.0 labels physical `CANA` as MCP2515/SPI and physical `CANB` as native TWAI.
 
 `can1` is one MCP2515 physical channel. It can be wired to Party CAN or Vehicle CAN for a given test/install, but one MCP2515 channel cannot be on both vehicle networks at the same time.
+
+The Continuous AP `0x229` press continues the counter of the car's own `0x229`, so it goes out only on a bus where that frame was seen in the last 500 ms: `can1` when both carry it, `can0` when only `can0` does, and not at all when neither does.
 
 #### T-2CAN FD (H784-A)
 

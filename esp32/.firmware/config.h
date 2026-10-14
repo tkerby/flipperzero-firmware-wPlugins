@@ -161,6 +161,8 @@
 
 // ── Generated TX routing ─────────────────────────────────────────────────────
 // Bus index: 0=can0, 1=can1. Single-CAN builds only have can0.
+// The Continuous AP 0x229 press only goes out on a bus where the car's own
+// 0x229 is live (gear_tx_route.h); this picks the bus when both carry it.
 #ifndef GEAR_LEVER_TX_BUS_INDEX
 #if defined(BOARD_LILYGO_T2CAN)
 #define GEAR_LEVER_TX_BUS_INDEX 1

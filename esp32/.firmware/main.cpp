@@ -31,6 +31,7 @@
 #include "blackbox.h"
 #include "capability.h"
 #include "profile_match.h"
+#include "gear_tx_route.h"
 #include "../../fsd_logic/fsd_events.h"
 #include "../../fsd_logic/fsd_can_ops.h"  // tesla_can_rx_accept
 #include "prefs.h"
@@ -209,9 +210,8 @@ static bool send_modified_frame(CanBusId bus, const CanFrame &frame) {
     return send_on_bus(bus, frame);
 }
 
-static uint8_t g_last_gear_counter = 0;
-static bool g_last_gear_counter_valid = false;
-static uint32_t g_last_gear_counter_ms = 0;
+// Last 0x229 counter per bus. A press goes out only on a bus fresh here.
+static GearCounterCache g_gear_counter[CAN_ACTIVE_BUS_COUNT] = {};
 
 enum ContinuousApFlowState : uint8_t {
     ContAp_Idle = 0,
@@ -237,6 +237,7 @@ static uint32_t g_gear_sequence_progress_ms = 0;
 static uint32_t g_gear_sequence_next_ms = 0;
 static bool g_gear_sequence_counter_valid = false;
 static uint8_t g_gear_sequence_counter = 0;
+static uint8_t g_gear_sequence_bus = 0;  // bus index the running press goes out on
 static uint32_t g_gear_sequence_send_fail_count = 0;
 
 enum GearSequenceSendResult : uint8_t {
@@ -248,12 +249,6 @@ enum GearSequenceSendResult : uint8_t {
     GearSeqSend_BuildFailed,
     GearSeqSend_TxFailed,
 };
-
-static CanBusId preferred_generated_bus(uint32_t frame_id) {
-    if (frame_id == CAN_ID_SCCM_RSTALK)
-        return configured_bus_from_index(GEAR_LEVER_TX_BUS_INDEX);
-    return CAN_BUS_PRIMARY;
-}
 
 static bool gear_sequence_active() {
     return g_gear_sequence_index < g_gear_sequence_len;
@@ -267,12 +262,6 @@ static void clear_gear_sequence() {
     g_gear_sequence_counter_valid = false;
     g_gear_sequence_counter = 0;
     g_gear_sequence_send_fail_count = 0;
-}
-
-static bool cached_gear_counter_is_fresh(uint32_t now) {
-    return g_last_gear_counter_valid &&
-           g_last_gear_counter_ms != 0u &&
-           (uint32_t)(now - g_last_gear_counter_ms) <= GEAR_LEVER_CACHED_COUNTER_MAX_AGE_MS;
 }
 
 static const char *gear_sequence_send_result_name(GearSequenceSendResult result) {
@@ -295,9 +284,11 @@ static GearSequenceSendResult send_gear_position_for_sequence(uint8_t gear_pos,
     FSDState s = state_snapshot();
     if (!fsd_can_transmit(&s)) return GearSeqSend_TxBlocked;
 
+    GearCounterCache &bus_counter = g_gear_counter[g_gear_sequence_bus];
     if (!g_gear_sequence_counter_valid) {
-        if (!cached_gear_counter_is_fresh(now)) return GearSeqSend_WaitCounter;
-        g_gear_sequence_counter = g_last_gear_counter;
+        if (!gear_counter_fresh(bus_counter, now, GEAR_LEVER_CACHED_COUNTER_MAX_AGE_MS))
+            return GearSeqSend_WaitCounter;
+        g_gear_sequence_counter = bus_counter.counter;
         g_gear_sequence_counter_valid = true;
     }
 
@@ -308,12 +299,12 @@ static GearSequenceSendResult send_gear_position_for_sequence(uint8_t gear_pos,
         return GearSeqSend_BuildFailed;
     }
 
-    bool sent = send_generated_frame(preferred_generated_bus(CAN_ID_SCCM_RSTALK), f);
+    bool sent = send_generated_frame(bus_id_from_index(g_gear_sequence_bus), f);
     if (sent) {
         g_gear_sequence_counter = next_counter;
-        g_last_gear_counter = next_counter;
-        g_last_gear_counter_ms = now;
-        g_last_gear_counter_valid = true;
+        bus_counter.counter = next_counter;
+        bus_counter.ms = now;
+        bus_counter.valid = true;
         return GearSeqSend_Sent;
     }
     return GearSeqSend_TxFailed;
@@ -350,7 +341,8 @@ static GearSequenceSendResult gear_sequence_tick(uint32_t now, const char *name)
     return send_next_gear_sequence_frame(name);
 }
 
-static GearSequenceSendResult arm_gear_ap_double_press_sequence(uint32_t now) {
+static GearSequenceSendResult arm_gear_ap_double_press_sequence(uint32_t now, uint8_t bus) {
+    g_gear_sequence_bus = bus;
     g_gear_sequence[0] = SIG_GEAR_LEVER_FULL_DOWN;
     g_gear_sequence[1] = SIG_GEAR_LEVER_CENTER;
     g_gear_sequence[2] = SIG_GEAR_LEVER_FULL_DOWN;
@@ -722,11 +714,15 @@ static bool continuous_ap_stalk_stop_allows(uint32_t now, const FSDState &s) {
 }
 
 static bool continuous_ap_hw3_legacy_try_start_attempt(uint32_t now) {
-    if (!cached_gear_counter_is_fresh(now)) {
+    // Only on a bus carrying the car's own 0x229 right now (#218): a press
+    // routed to a fixed bus could land on one that never carried it.
+    int bus = gear_tx_bus_index(g_gear_counter, CAN_ACTIVE_BUS_COUNT, GEAR_LEVER_TX_BUS_INDEX,
+                                now, GEAR_LEVER_CACHED_COUNTER_MAX_AGE_MS);
+    if (bus < 0) {
         return false;
     }
 
-    GearSequenceSendResult result = arm_gear_ap_double_press_sequence(now);
+    GearSequenceSendResult result = arm_gear_ap_double_press_sequence(now, (uint8_t)bus);
     if (result != GearSeqSend_Sent) {
         clear_gear_sequence();
         return false;
@@ -738,7 +734,7 @@ static bool continuous_ap_hw3_legacy_try_start_attempt(uint32_t now) {
     Serial.printf("[CONT-AP] attempt %u/%u: 0x229 full-down double press started on %s\n",
                   (unsigned)g_cont_ap_attempts,
                   (unsigned)CONT_AP_MAX_RETRIES,
-                  can_bus_name(preferred_generated_bus(CAN_ID_SCCM_RSTALK)));
+                  can_bus_name(bus_id_from_index((uint8_t)bus)));
     return true;
 }
 
@@ -1292,13 +1288,15 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
             g_cont_ap_last_stalk_full_up_ms = g_state.stalk_full_up_ms;
         }
         state_exit();
-        if (frame.dlc > SIG_GEAR_LEVER_COUNTER_BYTE) {
-            g_last_gear_counter =
+        uint8_t bi = bus_index(bus);
+        if (frame.dlc > SIG_GEAR_LEVER_COUNTER_BYTE && bi < CAN_ACTIVE_BUS_COUNT) {
+            g_gear_counter[bi].counter =
                 frame.data[SIG_GEAR_LEVER_COUNTER_BYTE] & SIG_GEAR_LEVER_COUNTER_MASK;
-            g_last_gear_counter_valid = true;
-            g_last_gear_counter_ms = now_ms;
+            g_gear_counter[bi].valid = true;
+            g_gear_counter[bi].ms = now_ms;
         }
-        if (frame.dlc > SIG_GEAR_LEVER_COUNTER_BYTE) {
+        // Only the car's 0x229 on the press's own bus paces the press.
+        if (frame.dlc > SIG_GEAR_LEVER_COUNTER_BYTE && bi == g_gear_sequence_bus) {
             if (gear_sequence_active() && fsd_can_transmit(&s)) gear_sequence_tick(now_ms, "CONT-AP");
         }
         return;
@@ -1687,8 +1685,8 @@ void setup() {
                   PIN_MCP_CS, PIN_MCP_SCK, PIN_MCP_MISO, PIN_MCP_MOSI);
     Serial.printf("[CFG] TX route: modified frames -> source bus, generated precondition -> %s\n",
                   can_bus_name(configured_bus_from_index(PRECONDITION_TX_BUS_INDEX)));
-    Serial.printf("[CFG] Continuous AP gear TX route: 0x229 -> %s\n",
-                  can_bus_name(preferred_generated_bus(CAN_ID_SCCM_RSTALK)));
+    Serial.printf("[CFG] Continuous AP gear TX route: 0x229 -> bus carrying the car's 0x229, %s first\n",
+                  can_bus_name(configured_bus_from_index(GEAR_LEVER_TX_BUS_INDEX)));
 #elif defined(CAN_DRIVER_TWAI)
     Serial.printf("[CFG] pins: LED=%d BUTTON=%d CAN_TX=%d CAN_RX=%d\n",
                   PIN_LED, PIN_BUTTON, PIN_CAN_TX, PIN_CAN_RX);

@@ -19,6 +19,7 @@
 #include "fsd_checksum.h" // tesla_additive_checksum (0x334 / 0x118 vectors)
 #include "fsd_cp_status.h" // 0x25D CP_status decode + plug guard + rewrite predicate (#228)
 #include "blackbox_flush.h" // black-box ring push, window search, save slices
+#include "gear_tx_route.h" // Continuous AP 0x229 press bus choice
 
 static int g_pass = 0;
 static int g_fail = 0;
@@ -1463,8 +1464,43 @@ static void test_blackbox_save_slices(void) {
     CHECK(ok, "slices cover the window in ceil(count / per_pass) passes");
 }
 
+// Continuous AP (#218): the 0x229 press may only go out on a bus where the
+// car's own 0x229 was stored recently, never on a configured bus by default.
+static void test_gear_tx_route(void) {
+    const uint32_t AGE = 500u;  // GEAR_LEVER_CACHED_COUNTER_MAX_AGE_MS
+    GearCounterCache one[1] = {};
+    CHECK(gear_tx_bus_index(one, 1, 0, 1000u, AGE) == -1, "single bus, nothing seen: no press");
+    one[0] = {7, true, 1000u};
+    CHECK(gear_tx_bus_index(one, 1, 0, 1500u, AGE) == 0, "single bus, 500 ms old: can0");
+    CHECK(gear_tx_bus_index(one, 1, 0, 1501u, AGE) == -1, "single bus, 501 ms old: no press");
+    CHECK(gear_tx_bus_index(one, 1, 1, 1200u, AGE) == 0, "single bus ignores an out-of-range preference");
+    one[0] = {7, true, 0u};
+    CHECK(gear_tx_bus_index(one, 1, 0, 100u, AGE) == -1, "ms 0 never counts as seen");
+    one[0] = {7, false, 1000u};
+    CHECK(gear_tx_bus_index(one, 1, 0, 1100u, AGE) == -1, "invalid counter: no press");
+    one[0] = {7, true, 0xFFFFFF00u};
+    CHECK(gear_tx_bus_index(one, 1, 0, 0x40u, AGE) == 0, "fresh across the millis() wrap");
+
+    // T-2CAN: can1 preferred (GEAR_LEVER_TX_BUS_INDEX 1).
+    GearCounterCache two[2] = {};
+    two[0] = {3, true, 2000u};
+    CHECK(gear_tx_bus_index(two, 2, 1, 2100u, AGE) == 0,
+          "0x229 only on can0: press on can0, not the configured can1");
+    two[1] = {9, true, 2050u};
+    CHECK(gear_tx_bus_index(two, 2, 1, 2100u, AGE) == 1, "0x229 on both: configured can1");
+    two[1].ms = 1500u;
+    CHECK(gear_tx_bus_index(two, 2, 1, 2100u, AGE) == 0, "can1 gone stale, can0 live: can0");
+    two[0] = {};
+    CHECK(gear_tx_bus_index(two, 2, 1, 2100u, AGE) == -1, "stale on can1, never on can0: no press");
+    two[1].ms = 2090u;
+    CHECK(gear_tx_bus_index(two, 2, 1, 2100u, AGE) == 1, "0x229 only on can1: can1");
+    CHECK(gear_tx_bus_index(two, 2, 0, 2100u, AGE) == 1, "can0 preferred but silent: can1");
+    CHECK(gear_tx_bus_index(two, 2, 1, 2591u, AGE) == -1, "everything stale: no press");
+}
+
 int main() {
     printf("test_esp32_core: ESP32 firmware handler host tests\n");
+    test_gear_tx_route();
     test_perf_accel_timer();
     test_perf_brake_timer();
     test_perf_g_estimate();
