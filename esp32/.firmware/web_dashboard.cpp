@@ -1637,8 +1637,10 @@ function sdFormatRun(){
     if(!d)return;
     if(d.err==='origin'&&d.url){location.replace(d.url);return;}
     out.style.display='block';
-    out.style.color=d.ok?'var(--accent)':'var(--red)';
-    out.textContent=d.msg+(d.ok?' \u2014 '+d.free_mb+' MB free':'');
+    var part=d.ok&&d.left>0;   // folders nested too deep, or deletes the card refused
+    out.style.color=part?'var(--yellow)':d.ok?'var(--accent)':'var(--red)';
+    out.textContent=(part?'Some files or folders could not be deleted (nested too deep, or refused by the card)':d.msg)
+      +(d.ok?' \u2014 '+d.free_mb+' MB free':'');
   }).catch(function(){
     out.style.display='block';out.style.color='var(--red)';out.textContent='Request failed';
   }).then(function(){

@@ -238,12 +238,12 @@ _CHAINS = [
      ["loop", "web_dashboard_update", "http_can_stream_update", "accept_client",
       "web_dashboard_stream_access"],
      ["Serial printf"]),
-    # rm_recursive() recurses once per directory level. Counted three deep, the
-    # layout can_dump.cpp writes (/dumps/<n>/<file>); each further level of a
-    # tree someone else put on the card adds 144 bytes.
+    # rm_recursive() recurses once per path level, at most RM_MAX_DEPTH (8)
+    # deep in can_dump.cpp; the layout it writes is three (/dumps/<n>/<file>),
+    # the rest is room for a tree someone else put on the card.
     ("SD format",
-     ["loop", "web_dashboard_update", "handle_sdformat", "sd_format_card",
-      "rm_recursive", "rm_recursive", "rm_recursive"],
+     ["loop", "web_dashboard_update", "handle_sdformat", "sd_format_card"]
+     + ["rm_recursive"] * 8,
      ["WebServer", "SD card"], "SD card"),
     ("CAN frame",
      ["loop", "drain_can_bus_index", "process_frame", "prefs_save"],
@@ -326,6 +326,16 @@ def loop_stack_size(main_cpp):
         sizes.append(size)
     # More than one (an #if per board): hold every env to the smallest.
     return min(sizes) if sizes else _DEFAULT_STACK
+
+
+def rm_max_depth(src_dir):
+    """RM_MAX_DEPTH from can_dump.cpp, or None when the file has none."""
+    try:
+        with open(os.path.join(src_dir, "can_dump.cpp"), encoding="utf-8", errors="replace") as f:
+            m = re.search(r"^#define\s+RM_MAX_DEPTH\s+(\d+)[uU]?\b", f.read(), re.M)
+    except OSError:
+        return None
+    return int(m.group(1)) if m else None
 
 
 def _bare_name(signature):
@@ -420,6 +430,13 @@ def check(build_dir, src_dir, allow_missing):
 
     errors = []
     notes = []
+    # The SD format chain counts one rm_recursive() frame per level it may go.
+    depth = rm_max_depth(src_dir)
+    counted = max(chain[1].count("rm_recursive") for chain in _CHAINS)
+    if depth is not None and depth != counted:
+        errors.append("RM_MAX_DEPTH is %d in can_dump.cpp but the SD format chain "
+                      "counts %d rm_recursive() frames: update _CHAINS in %s"
+                      % (depth, counted, os.path.basename(__file__)))
     markers = {m for found in _FEATURES.values() for m in found}
     gone = sorted(markers - _defined_in_sources(src_dir, markers))
     if gone:
