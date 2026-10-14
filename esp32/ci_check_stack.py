@@ -270,9 +270,20 @@ _CHAINS = [
      ["loop", "continuous_ap_tick", "continuous_ap_hw3_legacy_try_start_attempt",
       "gear_sequence_tick", "send_gear_position_for_sequence", "send_on_bus"],
      ["CAN send"]),
+    # 12V-feed / reset log (#218). power_log_tick() commits to NVS from the
+    # loop, but only once the bus has gone quiet; the write is as deep as any
+    # other NVS write.
+    ("power log",
+     ["loop", "power_log_tick", "power_log_commit"],
+     ["NVS write"]),
     ("deep sleep",
      ["loop", "sleep_tick", "ota_verify_confirm"],
      ["OTA confirm"], "deep sleep"),
+    # On the way into deep sleep the 12V checkpoint is flushed if it was not
+    # committed yet.
+    ("deep sleep, 12V log",
+     ["loop", "sleep_tick", "power_log_note_deep_sleep", "power_log_commit"],
+     ["NVS write"], "deep sleep"),
     # setup() runs on the loop task too, before the first loop().
     ("boot",
      ["setup"],

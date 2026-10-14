@@ -3242,6 +3242,113 @@ static void test_power_quiet_ms(void) {
           fsd_pwr_quiet_ms(20000u, 0xFFFFFF00u, true));
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Power / reset log — checkpoint schedule, deep-sleep and USB (#218 rework)
+//
+// The persistence has one hard rule: no flash write while the bus is active, so
+// a commit never drops a frame to the flash stall. The scheduler below is what
+// enforces it, as pure logic fed the current quiet duration, so the cadence is
+// decided here rather than on a board.
+// ─────────────────────────────────────────────────────────────────────────────
+static void test_power_checkpoint(void) {
+    printf("\n-- power: flash-checkpoint schedule --\n");
+    FsdPwrCheckpoint cp = {false, 0};
+
+    // Bus active: never written here, and it re-arms the next episode.
+    CHECK(!fsd_pwr_checkpoint_due(&cp, 0u), "bus active -> no commit");
+
+    // The trap: power lost before the first checkpoint. Quiet climbs toward the
+    // window but never reaches it, so nothing is ever committed, and the next
+    // boot reads a cleared record (NO_SLEEP), not a false SWITCHED.
+    CHECK(!fsd_pwr_checkpoint_due(&cp, FSD_PWR_QUIET_MS), "just quiet -> no commit yet");
+    CHECK(!fsd_pwr_checkpoint_due(&cp, FSD_PWR_CHECKPOINT_MS - 1u), "under the window -> no commit");
+    CHECK(cp.writes == 0, "nothing written before the window");
+
+    // Settled quiet: exactly one commit for the episode, however many ticks.
+    CHECK(fsd_pwr_checkpoint_due(&cp, FSD_PWR_CHECKPOINT_MS), "window reached -> commit");
+    CHECK(cp.writes == 1, "one write so far");
+    CHECK(!fsd_pwr_checkpoint_due(&cp, FSD_PWR_CHECKPOINT_MS + 60000u), "still quiet -> no second commit");
+    CHECK(!fsd_pwr_checkpoint_due(&cp, FSD_PWR_CHECKPOINT_MS + 600000u), "an hour later -> still one");
+    CHECK(cp.writes == 1, "a long sleep is still a single write");
+
+    // Bus wakes, then goes quiet again: a new episode, a new commit.
+    CHECK(!fsd_pwr_checkpoint_due(&cp, 0u), "bus busy again -> re-arm");
+    CHECK(fsd_pwr_checkpoint_due(&cp, FSD_PWR_CHECKPOINT_MS), "second quiet episode -> commit");
+    CHECK(cp.writes == 2, "two episodes -> two writes");
+
+    // The per-session cap bounds writes no matter how the bus flaps.
+    FsdPwrCheckpoint cap = {false, 0};
+    unsigned commits = 0;
+    for (int episode = 0; episode < (int)FSD_PWR_MAX_CHECKPOINTS + 5; episode++) {
+        fsd_pwr_checkpoint_due(&cap, 0u);                 // bus busy (re-arm)
+        if (fsd_pwr_checkpoint_due(&cap, FSD_PWR_CHECKPOINT_MS)) commits++;  // then quiet
+    }
+    CHECK(commits == FSD_PWR_MAX_CHECKPOINTS,
+          "writes capped at %u per session, got %u", FSD_PWR_MAX_CHECKPOINTS, commits);
+
+    CHECK(!fsd_pwr_checkpoint_due(NULL, FSD_PWR_CHECKPOINT_MS), "NULL checkpoint -> no commit");
+}
+
+static void test_power_deepsleep_usb(void) {
+    printf("\n-- power: deep-sleep wake and USB guard --\n");
+
+    // A board that woke from its own deep sleep kept its power through it: a
+    // switched feed would have cut power and booted POWERON instead.
+    CHECK(fsd_pwr_deepsleep_verdict(true) == FSD_PWR_ALWAYS_ON,
+          "deep-sleep wake on a quiet bus -> always-on");
+    CHECK(fsd_pwr_deepsleep_verdict(false) == FSD_PWR_UNKNOWN,
+          "deep-sleep wake but not on a quiet bus -> no claim");
+
+    // The trap: USB powered the board, so "still alive" proves nothing. An
+    // always-on claim becomes inconclusive; everything else stands, because it
+    // came from a reboot that happened whether or not USB was attached.
+    CHECK(fsd_pwr_apply_usb_guard(FSD_PWR_ALWAYS_ON, true) == FSD_PWR_USB,
+          "always-on + USB -> inconclusive (USB)");
+    CHECK(fsd_pwr_apply_usb_guard(FSD_PWR_ALWAYS_ON, false) == FSD_PWR_ALWAYS_ON,
+          "always-on without USB stands");
+    CHECK(fsd_pwr_apply_usb_guard(FSD_PWR_SWITCHED, true) == FSD_PWR_SWITCHED,
+          "switched is not masked by USB");
+    CHECK(fsd_pwr_apply_usb_guard(FSD_PWR_CRASH, true) == FSD_PWR_CRASH,
+          "crash is not masked by USB");
+    CHECK(fsd_pwr_apply_usb_guard(FSD_PWR_UNKNOWN, true) == FSD_PWR_UNKNOWN,
+          "no verdict stays no verdict");
+
+    // The two values added in the rework are printable, or the serial/dash line
+    // reports a number.
+    CHECK(fsd_pwr_reset_str(FSD_PWR_RESET_DEEPSLEEP)[0] != '\0', "deep-sleep reset has a name");
+    CHECK(fsd_pwr_verdict_str(FSD_PWR_USB)[0] != '\0', "USB verdict has a name");
+}
+
+static void test_power_restart_count(void) {
+    printf("\n-- power: restarts since power-on --\n");
+
+    // A power-on starts from zero, whatever RTC RAM held.
+    CHECK(fsd_pwr_restart_count(FSD_PWR_RESET_POWERON, false, 0u) == 0u, "power-on -> 0");
+    CHECK(fsd_pwr_restart_count(FSD_PWR_RESET_POWERON, true, 7u) == 0u, "power-on resets a count");
+
+    // Crashes, watchdogs, brownouts, software and pin resets each add one.
+    CHECK(fsd_pwr_restart_count(FSD_PWR_RESET_SOFTWARE, true, 2u) == 3u, "crash/software -> +1");
+    CHECK(fsd_pwr_restart_count(FSD_PWR_RESET_BROWNOUT, true, 2u) == 3u, "brownout -> +1");
+    CHECK(fsd_pwr_restart_count(FSD_PWR_RESET_EXTERNAL, true, 2u) == 3u, "reset pin -> +1");
+    CHECK(fsd_pwr_restart_count(FSD_PWR_RESET_UNKNOWN, true, 2u) == 3u, "unknown reset -> +1");
+
+    // A deep-sleep wake is a boot but not a restart: the count stays.
+    CHECK(fsd_pwr_restart_count(FSD_PWR_RESET_DEEPSLEEP, true, 2u) == 2u, "deep-sleep wake -> unchanged");
+
+    // RTC RAM lost without a power-on (a deep brownout): count from zero.
+    CHECK(fsd_pwr_restart_count(FSD_PWR_RESET_BROWNOUT, false, 99u) == 1u, "lost RTC + brownout -> 1");
+
+    // A LilyGO's night: power-on, ten CAN wakes, one crash, ten more wakes.
+    uint32_t n = fsd_pwr_restart_count(FSD_PWR_RESET_POWERON, false, 0u);
+    for (int i = 0; i < 10; i++) n = fsd_pwr_restart_count(FSD_PWR_RESET_DEEPSLEEP, true, n);
+    n = fsd_pwr_restart_count(FSD_PWR_RESET_SOFTWARE, true, n);
+    for (int i = 0; i < 10; i++) n = fsd_pwr_restart_count(FSD_PWR_RESET_DEEPSLEEP, true, n);
+    CHECK(n == 1u, "20 deep-sleep wakes and one crash -> 1 restart, got %u", n);
+
+    CHECK(fsd_pwr_restart_count(FSD_PWR_RESET_SOFTWARE, true, UINT32_MAX) == UINT32_MAX,
+          "the count saturates");
+}
+
 int main(void) {
     printf("test_fsd_core: Tesla FSD protocol core host tests\n");
     test_set_bit();
@@ -3303,6 +3410,9 @@ int main(void) {
 
     test_power_verdict();
     test_power_quiet_ms();
+    test_power_checkpoint();
+    test_power_deepsleep_usb();
+    test_power_restart_count();
 
     printf("\n%d passed, %d failed\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;

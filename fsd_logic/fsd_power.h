@@ -50,12 +50,38 @@ extern "C" {
  * Still running this long after the bus went quiet -> always-on.
  *
  * A judgement, not a measurement. The car takes 15-30 min to sleep, and a
- * switched feed dies at or shortly after that point. Surviving ten minutes of
- * silence is good evidence; it is not proof, which is why the reported verdict
- * is what the operator reads rather than what any code branches on.
+ * switched feed dies at or shortly after that point. This sits past that, so a
+ * board still alive here outlived the longest plausible sleep; a switched feed
+ * would already have dropped it and booted it as POWERON. It is evidence, not
+ * proof, which is why the reported verdict is what the operator reads rather
+ * than what any code branches on. (A board that deep-sleeps never reaches this
+ * live; its always-on evidence comes from fsd_pwr_deepsleep_verdict instead.)
  */
 #ifndef FSD_PWR_ALWAYS_ON_MS
-#define FSD_PWR_ALWAYS_ON_MS 600000u
+#define FSD_PWR_ALWAYS_ON_MS 2700000u  /* 45 min */
+#endif
+
+/**
+ * Bus quiet this long before a checkpoint is committed to flash.
+ *
+ * Longer than FSD_PWR_QUIET_MS so the mark means "settled quiet", and far
+ * shorter than the 15-30 min a car takes to sleep, so a switched feed is
+ * recorded well before it could drop us. The commit happens with the bus quiet
+ * by definition, so there are never frames to lose to the flash stall.
+ */
+#ifndef FSD_PWR_CHECKPOINT_MS
+#define FSD_PWR_CHECKPOINT_MS 30000u
+#endif
+
+/**
+ * Most checkpoints committed per power session.
+ *
+ * One per quiet episode; the cap stops a bus that flaps quiet/busy from wearing
+ * the flash. The SWITCHED evidence is in flash after the first commit, so the
+ * cap costs the verdict nothing.
+ */
+#ifndef FSD_PWR_MAX_CHECKPOINTS
+#define FSD_PWR_MAX_CHECKPOINTS 6u
 #endif
 
 /** Why we are running again. Mapped from esp_reset_reason() by the shim. */
@@ -65,6 +91,7 @@ typedef enum {
     FSD_PWR_RESET_BROWNOUT, /* supply sagged below the rail */
     FSD_PWR_RESET_SOFTWARE, /* panic, watchdog, esp_restart() */
     FSD_PWR_RESET_EXTERNAL, /* reset pin */
+    FSD_PWR_RESET_DEEPSLEEP,/* woke from our own deep sleep (board kept power) */
 } FsdPwrReset;
 
 typedef enum {
@@ -74,6 +101,7 @@ typedef enum {
     FSD_PWR_ALWAYS_ON,   /* bus quiet a long time and we are still running */
     FSD_PWR_BROWNOUT,    /* supply sagged -- a wiring verdict, not a switching one */
     FSD_PWR_CRASH,       /* we fell over; says nothing about the supply */
+    FSD_PWR_USB,         /* USB power masks the test -- no verdict possible */
 } FsdPwrVerdict;
 
 /**
@@ -114,6 +142,54 @@ FsdPwrVerdict fsd_pwr_live_verdict(uint32_t quiet_ms);
  * observed the bus going quiet -- it has observed nothing.
  */
 uint32_t fsd_pwr_quiet_ms(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any);
+
+/**
+ * Flash-checkpoint scheduler. Pure so the shim's write cadence is host-tested.
+ *
+ * Fed the current quiet duration each tick, it returns true exactly when the
+ * shim should commit one record to flash: the bus has been quiet for
+ * FSD_PWR_CHECKPOINT_MS, this quiet episode has not been committed yet, and the
+ * per-session cap is not reached. While the bus is active (quiet_ms == 0) it
+ * only re-arms and returns false, so a commit can never land on the CAN path.
+ */
+typedef struct {
+    bool    episode_committed; /* this quiet episode already produced a commit */
+    uint8_t writes;            /* commits this power session (for the cap) */
+} FsdPwrCheckpoint;
+
+bool fsd_pwr_checkpoint_due(FsdPwrCheckpoint* cp, uint32_t quiet_ms);
+
+/**
+ * The verdict after waking from the board's own deep sleep.
+ *
+ * Only a board that kept its power wakes this way: a switched feed would have
+ * cut power during the sleep and booted us as POWERON. So a deep-sleep wake
+ * that was entered on a quiet bus is ALWAYS_ON; anything else says nothing.
+ */
+FsdPwrVerdict fsd_pwr_deepsleep_verdict(bool slept_on_quiet_bus);
+
+/**
+ * Guard an ALWAYS_ON claim against USB power.
+ *
+ * A board fed over USB stays alive regardless of the car's feed, so "still
+ * running" proves nothing. When USB is present an ALWAYS_ON verdict becomes
+ * FSD_PWR_USB (inconclusive); every other verdict is left alone, since it comes
+ * from a reboot that happened whether or not USB was attached.
+ */
+FsdPwrVerdict fsd_pwr_apply_usb_guard(FsdPwrVerdict v, bool usb_present);
+
+/**
+ * Restarts since power-on, after a boot with this reset reason.
+ *
+ * A power-on starts the count at 0. A crash, watchdog, brownout, software or
+ * pin reset adds one. A deep-sleep wake leaves it alone: on a board that sleeps
+ * on a quiet bus that is a boot every time the car wakes, and counting it would
+ * turn a healthy board's counter into what reads like a crash counter.
+ *
+ * @param prev_valid  whether `prev` survived (RTC RAM intact); if not the count
+ *                    starts from 0
+ */
+uint32_t fsd_pwr_restart_count(FsdPwrReset reset, bool prev_valid, uint32_t prev);
 
 const char* fsd_pwr_reset_str(FsdPwrReset r);
 const char* fsd_pwr_verdict_str(FsdPwrVerdict v);

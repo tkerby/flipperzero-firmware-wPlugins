@@ -47,6 +47,43 @@ FsdPwrVerdict fsd_pwr_verdict(FsdPwrReset reset, const FsdPwrRecord* prev) {
     }
 }
 
+bool fsd_pwr_checkpoint_due(FsdPwrCheckpoint* cp, uint32_t quiet_ms) {
+    if (!cp) return false;
+
+    /* Bus active. Never written here -- frames are arriving and a flash stall
+     * would drop them. Just re-arm so the next quiet episode may commit. */
+    if (quiet_ms == 0u) {
+        cp->episode_committed = false;
+        return false;
+    }
+
+    if (cp->episode_committed) return false;           /* one commit per episode */
+    if (quiet_ms < FSD_PWR_CHECKPOINT_MS) return false; /* not settled quiet yet */
+    if (cp->writes >= FSD_PWR_MAX_CHECKPOINTS) return false;
+
+    cp->episode_committed = true;
+    cp->writes++;
+    return true;
+}
+
+FsdPwrVerdict fsd_pwr_deepsleep_verdict(bool slept_on_quiet_bus) {
+    return slept_on_quiet_bus ? FSD_PWR_ALWAYS_ON : FSD_PWR_UNKNOWN;
+}
+
+FsdPwrVerdict fsd_pwr_apply_usb_guard(FsdPwrVerdict v, bool usb_present) {
+    if (usb_present && v == FSD_PWR_ALWAYS_ON) return FSD_PWR_USB;
+    return v;
+}
+
+uint32_t fsd_pwr_restart_count(FsdPwrReset reset, bool prev_valid, uint32_t prev) {
+    uint32_t base = prev_valid ? prev : 0u;
+    switch(reset) {
+    case FSD_PWR_RESET_POWERON: return 0u;
+    case FSD_PWR_RESET_DEEPSLEEP: return base;
+    default: return (base == UINT32_MAX) ? base : base + 1u;
+    }
+}
+
 FsdPwrVerdict fsd_pwr_live_verdict(uint32_t quiet_ms) {
     /* The boot path can never reach ALWAYS_ON: a module that kept its power
      * never rebooted to report anything. So it is decided here, while running,
@@ -62,6 +99,7 @@ const char* fsd_pwr_reset_str(FsdPwrReset r) {
     case FSD_PWR_RESET_BROWNOUT: return "supply sagged (brownout)";
     case FSD_PWR_RESET_SOFTWARE: return "software reset";
     case FSD_PWR_RESET_EXTERNAL: return "reset pin";
+    case FSD_PWR_RESET_DEEPSLEEP: return "deep-sleep wake";
     case FSD_PWR_RESET_UNKNOWN:
     default: return "unknown";
     }
@@ -74,6 +112,7 @@ const char* fsd_pwr_verdict_str(FsdPwrVerdict v) {
     case FSD_PWR_ALWAYS_ON: return "ALWAYS-ON - the feed outlives the car";
     case FSD_PWR_BROWNOUT: return "BROWNOUT - check the wiring, not the switching";
     case FSD_PWR_CRASH: return "we crashed - says nothing about the supply";
+    case FSD_PWR_USB: return "inconclusive - the module is on USB power";
     case FSD_PWR_UNKNOWN:
     default: return "no verdict yet";
     }

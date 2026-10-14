@@ -36,6 +36,7 @@
 #include "../../fsd_logic/fsd_can_ops.h"  // tesla_can_rx_accept
 #include "prefs.h"
 #include "ota_verify.h"
+#include "power_log.h"
 #if defined(BOARD_TTGO_DISPLAY)
 #include "display.h"
 #endif
@@ -954,6 +955,11 @@ static uint32_t g_last_can_rx_ms = 0;
 static bool     g_sleep_warned   = false;
 #endif
 
+// Last CAN frame time + "seen anything yet", for the power/12V log on every
+// board (the LilyGO sleep timer above is a separate, board-only counter).
+static uint32_t g_power_last_rx_ms = 0;
+static bool     g_power_seen_any   = false;
+
 static void dispatch_clicks(int n) {
     if (n == 1) {
         // Toggle Listen-Only ↔ Active
@@ -1177,6 +1183,8 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
     g_last_can_rx_ms = millis();
     g_sleep_warned   = false;
 #endif
+    g_power_last_rx_ms = millis();
+    g_power_seen_any   = true;
 
     if (!usable) return;
 
@@ -1614,6 +1622,11 @@ static NOINLINE void sleep_tick(uint32_t now) {
         Serial.printf("[SLEEP] Entering deep sleep after %lu ms CAN silence\n",
                       (unsigned long)idle_ms);
         ota_verify_confirm("deep sleep");  // wake is a reset: don't roll back a running image
+        // Record "slept on a quiet bus" in RTC RAM and flush the 12V checkpoint
+        // before powering down: a deep-sleep wake then proves the feed is
+        // always-on, while a switched feed cuts power mid-sleep and boots as
+        // POWERON with the checkpoint already in flash (#218). Bus is quiet here.
+        power_log_note_deep_sleep(now, g_power_last_rx_ms, g_power_seen_any);
         can_dump_stop();
         sd_syslog_close();
         led_set(LED_SLEEP);
@@ -1737,6 +1750,11 @@ void setup() {
     g_state.blackbox_enabled      = BLACKBOX_DEFAULT_ENABLED;  // ON on LittleFS/SD, OFF on volatile RAM (#124)
 
     prefs_load(&g_state);
+    // Read why we rebooted and the 12V-feed record from the last session, print
+    // the verdict, and start a fresh session. Its own NVS namespace, so the
+    // order against prefs_load() does not matter; this sits here to land near
+    // the boot banner. (#218)
+    power_log_init();
     // Apply a saved manual HW selection immediately (#110) so the correct
     // handlers are live from the first frame, without waiting on detection.
     if (g_state.hw_override != TeslaHW_Unknown) {
@@ -2011,6 +2029,10 @@ void loop() {
     can_dump_tick(now);
     blackbox_tick(now);  // post-roll countdown + flush (#124)
     capability_tick(now);  // finalize the capability listen window (#125)
+    // 12V-feed / reset log (#218). Commits one NVS record per quiet episode,
+    // only once the bus has been silent past the checkpoint window, so no flash
+    // write ever lands while frames are arriving.
+    power_log_tick(now, g_power_last_rx_ms, g_power_seen_any);
 
 #if defined(BOARD_LILYGO)
     sleep_tick(now);
