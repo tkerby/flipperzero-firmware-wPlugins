@@ -48,10 +48,10 @@ int main(void) {
     id64[64] = '\0';
     CHECK(identity_is_64hex(id64), "identity 64 lowercase hex ok");
     CHECK(
-        identity_is_64hex("a63fa46f499ee2b78682053eb2913db8c9559f32b7dbc3f97c1c958d0844e550"),
-        "identity real fingerprint ok");
+        identity_is_64hex("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+        "identity varied lowercase hex ok");
     CHECK(
-        identity_is_64hex("A63FA46F499EE2B78682053EB2913DB8C9559F32B7DBC3F97C1C958D0844E550"),
+        identity_is_64hex("0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF"),
         "identity uppercase hex ok");
     CHECK(!identity_is_64hex("a63fa4wnd_run"), "identity non-hex rejected");
     CHECK(!identity_is_64hex("abcd"), "identity too short rejected");

@@ -7,15 +7,6 @@ with other pwnagotchis over the air, captures WPA/WPA2 handshakes & PMKIDs, ward
 GPS, and grows a little persona that levels up the more it sees — all driven from a native
 Flipper app, no PC or Raspberry Pi required.
 
-```
-         _    __/\_______  _______
-        / \  /  \_____   \/  ___  \
-       /   \/    /  _/  _/     /  /
-=-=-=-/         /   \   \     /  /=-=-=-
--=-=-/   /\  /\_\___/\   \____   \-=-=-=
-    (___/  \/  <mrq>  \___)   \___)
-```
-
 ## Screenshots
 
 <p>
@@ -50,7 +41,7 @@ Flipper app, no PC or Raspberry Pi required.
   counts, target/ignore/de-cloak markers, and a per-AP detail + map QR.
 - **Battery saver** — light/deep duty-cycling; auto-off on external power.
 - **Web export** — a static, offline page converts your captures to hashcat 22000 and maps
-  the wardrive: **https://mrq1911.github.io/pwnagotchi-flipper/**
+  the wardrive: **https://mrq1911.github.io/pwnpal/**
 
 ## Hardware
 
@@ -86,7 +77,7 @@ then launch **Apps → GPIO → Pwnpal**.
   decline to stay social-only.
 
 Loot lands in `/ext/apps_data/pwnpal/`: `handshakes/*.pcap`, `wardrive.csv`, plus dev
-telemetry CSVs. Feed the pcaps + wardrive.csv to the [web export tool](https://mrq1911.github.io/pwnagotchi-flipper/).
+telemetry CSVs. Feed the pcaps + wardrive.csv to the [web export tool](https://mrq1911.github.io/pwnpal/).
 
 ## Build from source
 
@@ -105,7 +96,7 @@ MIT. Built on the shoulders of:
 [pwnagotchi](https://github.com/evilsocket/pwnagotchi) & pwngrid (evilsocket),
 [ESP32 Marauder](https://github.com/justcallmekoko/ESP32Marauder) (justcallmekoko),
 the flipagotchi renderer and the original pwnagotchi-flipper (Matt London), and
-RogueMaster's pwnagotchi face art. `<mrq>` mark and pwnpal by mrq1911.
+RogueMaster's pwnagotchi face art. pwnpal by mrq1911.
 
 The repo also retains the original `flipagotchi/` + `pwnzero/` (wired-pwnagotchi screen
 mirror) from the upstream project; pwnpal is independent of them.

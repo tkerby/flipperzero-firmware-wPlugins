@@ -28,7 +28,7 @@
 #define PWNPAL_LINK_GRACE_SECS 10
 
 // setup link QR'd on the "no ESP32" screen; <=53 bytes so the QR stays version-3 (29x29) at 2px/module
-#define PWNPAL_SETUP_URL "https://github.com/mrq1911/pwnagotchi-flipper"
+#define PWNPAL_SETUP_URL "https://github.com/mrq1911/pwnpal"
 
 // serial-proto version this app expects (mirrors firmware PWNPAL_PROTO). firmware stamps
 // ver=N on each PWNPAL_ADV; non-zero but below this -> board too old, warn the user
