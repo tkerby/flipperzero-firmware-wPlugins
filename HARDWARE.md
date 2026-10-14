@@ -466,6 +466,13 @@ CAN (pins 2/3) for the nag killer
 ([#100](https://github.com/hypery11/flipper-tesla-fsd/issues/100)). Check
 **Service Mode → CAN Port** for which pair is which on your harness.
 
+The same product page also sells the **T-2CAN FD (H784-A)**, with an
+MCP2518FD in place of the MCP2515. It needs the `lilygo-t2can-fd` build,
+which runs that channel as classic CAN 2.0 at 500 kbps; the
+`lilygo-t2can` image boots on it but its SPI channel stays dead. The FD
+build has not been confirmed on real hardware yet
+([#206](https://github.com/hypery11/flipper-tesla-fsd/issues/206)).
+
 This is the recommended board for dual-bus setups.
 
 ### Setup D — LILYGO TTGO T-Display + MCP2515 (~$17-26)

@@ -205,6 +205,7 @@ ESP32 韌體會依偵測到的硬體版本對應 AP/DAS 狀態來源：
 | Waveshare ESP32-S3-RS485-CAN | ~$18 | `waveshare-s3-can` |
 | LilyGO TTGO T-Display + MCP2515 | ~$20 | `ttgo-tdisplay` |
 | LilyGO T-2CAN（雙 CAN） | ~$24 | `lilygo-t2can` |
+| LilyGO T-2CAN FD（雙 CAN，MCP2518FD） | ~$25 | `lilygo-t2can-fd` |
 | 通用 ESP32 + MCP2515 | ~$6 | `esp32-mcp2515` |
 
 設定見 [`esp32/README.md`](https://github.com/hypery11/flipper-tesla-fsd/tree/main/esp32)，完整對照＋接線圖＋X179 針腳見 [`HARDWARE.md`](HARDWARE.md)。
@@ -261,7 +262,7 @@ ufbt
 ```bash
 git clone https://github.com/hypery11/flipper-tesla-fsd.git
 cd flipper-tesla-fsd/esp32
-pio run -e m5stack-atom    # 或：esp32-lilygo、waveshare-s3-can、esp32-mcp2515、ttgo-tdisplay、lilygo-t2can
+pio run -e m5stack-atom    # 或：esp32-lilygo、waveshare-s3-can、esp32-mcp2515、ttgo-tdisplay、lilygo-t2can、lilygo-t2can-fd
 ```
 
 ---
