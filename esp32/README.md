@@ -141,7 +141,7 @@ Auto-detect picks the source. If it's wrong, pin the car with the Hardware selec
 | **HW Override** | — | Manual Auto-detect / Force HW4 / Force HW3 / Force Legacy selector |
 | **Battery Precondition** | `0x082` | Preheat trigger, re-sent every 500 ms while the dashboard **Precondition** switch is on (off by default) |
 | **TLSSC Restore** | `0x331` | Recovers stop sign / traffic light control on VIN-banned cars |
-| **Continuous AP** | `0x229` | HW3/Legacy, off by default: after AP drops during a turn-signal lane change, re-engages it with a right-stalk double press (brake or full stalk-up cancels) |
+| **Continuous AP** | `0x229` | HW3/Legacy, off by default: after AP drops during a turn-signal lane change, re-engages it with a right-stalk double press (brake or full stalk-up cancels), sent only on a bus that carries the car's own `0x229` |
 | **BMS Dashboard** | `0x132`/`0x292`/`0x312` | Model 3/Y frames; wrong values on S/X, not yet confirmed on the ESP32 |
 | **Tyre Pressure** | `0x219` | Read-only: four pressures (bar / psi), wheel order of the 7-byte form not confirmed; needs a tap carrying `0x219` (Vehicle CAN) |
 | **OTA Protection** | `0x318` | Auto-stops TX when OTA update detected unless Ignore OTA is enabled |
@@ -174,8 +174,8 @@ Any ESP32 board + CAN transceiver works. Pick the matching build env in `platfor
 | `esp32-mcp2515` | Generic ESP32 + MCP2515 module | MCP2515 SPI | SPI CS=5 | 8 MHz crystal |
 | `esp32-lilygo` | LilyGO T-CAN485 | TWAI | 27 / 26 | Built-in SN65HVD230 + SD slot |
 | `ttgo-tdisplay` | LilyGO/TTGO T-Display + MCP2515 | MCP2515 SPI (HSPI) | CS=26, SCK=33, MISO=32, MOSI=25 | Built-in ST7789 dashboard, MISO needs 5V→3.3V divider |
-| `lilygo-t2can` | LilyGO-T2CAN | TWAI/MCP2515 SPI | 7 / 6 | ESP32-S3-WROOM-1U (MCN16R8) with MCP2515 |
-| `lilygo-t2can-fd` | LilyGO T-2CAN FD (H784-A) | TWAI/MCP2518FD SPI | 7 / 6 | Same board with an MCP2518FD on `can1`, classic CAN 2.0 at 500 kbps; not yet confirmed on real hardware |
+| `lilygo-t2can` | LilyGO-T2CAN | TWAI/MCP2515 SPI | 7 / 6 | ESP32-S3-WROOM-1U (MCN16R8) with MCP2515; the 8 MB PSRAM holds the black-box ring (40000 frames) |
+| `lilygo-t2can-fd` | LilyGO T-2CAN FD (H784-A) | TWAI/MCP2518FD SPI | 7 / 6 | Same board with an MCP2518FD on `can1`, classic CAN 2.0 at 500 kbps; PSRAM as on `lilygo-t2can`; not yet confirmed on real hardware |
 | `waveshare-s3-can` | Waveshare ESP32-S3-RS485-CAN | TWAI | 15 / 16 | ESP32-S3, 8MB flash/PSRAM, USB-CDC |
 | `esp32-generic-twai` | Classic ESP32 DevKit + SN65HVD230 | TWAI | 21 / 22 | No LED; build from source (no prebuilt image) |
 | `esp32-generic-twai-sniffer` | Classic ESP32 DevKit + SN65HVD230 | TWAI (hardware Listen-Only) | 21 / 22 | `SNIFFER_ONLY`: can never transmit; build from source |
@@ -229,10 +229,14 @@ LILYGO's physical connector names are easy to confuse with this project's `can0`
 
 Pins shown are for one harness (`1933903-XX`). Confirm yours on **Service Mode → CAN Port** before wiring.
 
+The dashboard's **Tap Check** card adds a **Bus hint** per bus from `0x3C2`: seen there, the pair is likely Vehicle CAN; body frames without it point to the subset the gateway forwards. `0x3C2` showing only on Vehicle CAN is what contributors report and what the public DBCs say, not something confirmed on every car, so treat it as a hint and let the CAN Port page decide.
+
 > [!IMPORTANT]
 > The official LILYGO T-2CAN V1.0 labels physical `CANA` as MCP2515/SPI and physical `CANB` as native TWAI.
 
 `can1` is one MCP2515 physical channel. It can be wired to Party CAN or Vehicle CAN for a given test/install, but one MCP2515 channel cannot be on both vehicle networks at the same time.
+
+The Continuous AP `0x229` press continues the counter of the car's own `0x229`, so it goes out only on a bus where that frame was seen in the last 500 ms: `can1` when both carry it, `can0` when only `can0` does, and not at all when neither does.
 
 #### T-2CAN FD (H784-A)
 
@@ -354,6 +358,15 @@ pio device monitor -b 115200
 [WiFi] Dashboard: http://192.168.4.1
 [Web] HTTP :80  WS :81 — ready
 ```
+
+### Serial Commands
+
+Type these into the serial monitor:
+
+| Command | Prints |
+|---|---|
+| `ip` | WiFi status and dashboard URLs |
+| `canstat` | One line per CAN bus: RX/TX counts, rejected frames, hardware filter, then the controller's own state. TWAI: mode, controller state, TEC/REC, `rx_missed` (driver queue full), `rx_overrun` (controller FIFO full), `bus_err`, `tx_fail`, frames still waiting to be sent. MCP2515: mode, the EFLG error flags, TEC/REC and failed sends; the chip keeps no count of lost frames, so an overflow only shows as a flag. MCP2518FD (T-2CAN FD): mode, TEC/REC, bus-off / error-passive, RX FIFO overflow events, bus errors, failed sends and the measured crystal |
 
 ---
 

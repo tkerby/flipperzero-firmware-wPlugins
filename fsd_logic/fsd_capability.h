@@ -41,6 +41,16 @@ typedef enum {
     CAP_HINT_CHASSIS,   // steering present, no 0x370 -> looks Chassis/Vehicle-like
 } FSDCapBusHint;
 
+// Second bus hint, from 0x3C2 VCLEFT_switchStatus (just as unauthoritative).
+// 0x3C2 is reported on the Vehicle CAN pair and not on the gateway-forwarded
+// subset. That matches the public DBCs but has not been confirmed here, so it
+// only ever reads as a hint.
+typedef enum {
+    CAP_VEH_HINT_NONE = 0,   // no 0x3C2 and no body frame: nothing to go on
+    CAP_VEH_HINT_DIRECT,     // 0x3C2 seen -> looks like the Vehicle CAN pair
+    CAP_VEH_HINT_FORWARDED,  // body frames but no 0x3C2 -> looks like a forwarded subset
+} FSDCapVehicleHint;
+
 // The set of capability-relevant ids seen on one tap during the listen window.
 // Names match the config.h CAN_ID_* roles, not bus names.
 typedef struct {
@@ -58,6 +68,9 @@ typedef struct {
     bool body_door;    // 0x102 VCLEFT_doorStatus   — mirror state/tilt read-back
     bool body_window;  // 0x119 VCSEC_windowRequests — windows
     bool body_lights;  // 0x3E9 DAS_bodyControls    — lights/hazards/turn/wipers
+
+    // Steering-wheel switches. Only read for vehicle_hint, never actuated here.
+    bool vcleft_switch;  // 0x3C2 VCLEFT_switchStatus
 } FSDCapSeen;
 
 typedef struct {
@@ -77,8 +90,10 @@ typedef struct {
     bool body_door;     // 0x102 seen (mirror state read-back reachable)
     bool body_window;   // 0x119 seen (window writes reachable)
     bool body_lights;   // 0x3E9 seen (lights/hazards/turn/wiper writes reachable)
+    bool has_vcleft_switch;  // 0x3C2 seen
 
     FSDCapBusHint bus_hint;
+    FSDCapVehicleHint vehicle_hint;  // from 0x3C2, hint only
     bool          hw_unconfirmed;  // hw_version was Unknown -> inferred below
     TeslaHWVersion hw_effective;   // HW used for the 0x399 interpretation
 } FSDCapReport;
@@ -97,8 +112,8 @@ typedef struct {
 static inline FSDCapReport fsd_capability_eval(FSDCapSeen seen, TeslaHWVersion hw) {
     FSDCapReport r = {
         CAP_MISSING, CAP_MISSING, CAP_MISSING, CAP_MISSING, CAP_MISSING,
-        false, false, false, false, false, false, false, false, false,
-        CAP_HINT_NONE, false, hw,
+        false, false, false, false, false, false, false, false, false, false,
+        CAP_HINT_NONE, CAP_VEH_HINT_NONE, false, hw,
     };
 
     // Resolve HW for the 0x399 interpretation.
@@ -123,6 +138,7 @@ static inline FSDCapReport fsd_capability_eval(FSDCapSeen seen, TeslaHWVersion h
     r.body_window = seen.body_window;
     r.body_lights = seen.body_lights;
     r.has_body    = seen.body_ui || seen.body_door || seen.body_window || seen.body_lights;
+    r.has_vcleft_switch = seen.vcleft_switch;
 
     // Nag killer: needs both the 0x370 echo source AND DAS state to gate on.
     if (r.has_epas && r.has_das)       r.nag_killer = CAP_OK;
@@ -138,6 +154,12 @@ static inline FSDCapReport fsd_capability_eval(FSDCapSeen seen, TeslaHWVersion h
     if (r.has_epas && r.has_das)        r.bus_hint = CAP_HINT_PARTY;
     else if (r.has_steer && !r.has_epas) r.bus_hint = CAP_HINT_CHASSIS;
     else                                 r.bus_hint = CAP_HINT_NONE;
+
+    // Vehicle CAN hint (hint only): body frames that arrive without 0x3C2 look
+    // like the subset the gateway forwards rather than the Vehicle CAN pair.
+    if (r.has_vcleft_switch) r.vehicle_hint = CAP_VEH_HINT_DIRECT;
+    else if (r.has_body)     r.vehicle_hint = CAP_VEH_HINT_FORWARDED;
+    else                     r.vehicle_hint = CAP_VEH_HINT_NONE;
 
     return r;
 }

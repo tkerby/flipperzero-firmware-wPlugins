@@ -1177,6 +1177,16 @@ function capRow(name,key,v){
     +'<span style="flex:0 0 92px;font-size:.8em;color:var(--text)">'+name+'</span>'
     +'<span style="font-size:.73em;color:var(--text3);line-height:1.3">'+msg+'</span></div>';
 }
+// vehicle_hint (0x3C2) is a hint about the bus, not a pass/fail, so no ✓/✗.
+var CAP_VEH_HINT=['no 0x3C2 and no body frames — no hint',
+  '0x3C2 seen — likely the Vehicle CAN pair (a hint, not a verdict)',
+  'body frames without 0x3C2 — likely a forwarded subset, not the Vehicle CAN pair (a hint, not a verdict)'];
+function capHintRow(name,v){
+  return '<div style="display:flex;gap:8px;padding:5px 0;border-top:1px solid var(--border)">'
+    +'<span style="color:var(--text3);font-weight:700;flex:0 0 14px">i</span>'
+    +'<span style="flex:0 0 92px;font-size:.8em;color:var(--text)">'+name+'</span>'
+    +'<span style="font-size:.73em;color:var(--text3);line-height:1.3">'+(CAP_VEH_HINT[v]||'')+'</span></div>';
+}
 function capSync(d){
   var c=d.capability;if(!c)return;
   pill('capSt',c.state===2,c.state===1?'Listening…':(c.state===2?'Done':'Idle'));
@@ -1204,6 +1214,7 @@ function capSync(d){
       if(b.body_door)seen.push('mirror read-back');
       if(seen.length)h+='<div style="font-size:.7em;color:var(--text3);padding-top:3px">Reachable frames: '+seen.join(', ')+' (presence only — not proof injection actuates them).</div>';
     }
+    if(typeof b.vehicle_hint==='number')h+=capHintRow('Bus hint',b.vehicle_hint);
     var hint=b.hint?('Best guess: '+bbEsc(b.hint)+' — confirm in Service Mode → CAN Port'):'';
     if(hint)h+='<div style="font-size:.7em;color:var(--text3);padding-top:5px">'+hint+'</div>';
     if(b.hw_unconfirmed)h+='<div style="font-size:.7em;color:var(--yellow);padding-top:3px">HW unconfirmed — 0x399 reading assumed; verdict may change once HW is detected.</div>';

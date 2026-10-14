@@ -15,6 +15,7 @@
 #include "../../fsd_logic/fsd_events.h"            // fsd_events_inject
 #include "../../fsd_logic/fsd_blackbox_summary.h"  // fsd_blackbox_format_json
 #include "../../fsd_logic/fsd_blackbox_filter.h"   // fsd_blackbox_should_record
+#include "blackbox_flush.h"                         // ring push, window search, slices
 #include <stdlib.h>
 #include <string.h>
 
@@ -31,7 +32,7 @@
 // Ring capacity in frames @ 19 B/frame (BBFrame carries a 1-byte RX/TX tag).
 // PSRAM (runtime-detected) holds a full ~15 s window at a busy bus rate. The
 // internal-RAM fallback must cover the window on its own — PSRAM is never
-// required and no build enables it:
+// required, and lilygo-t2can is the only build that enables it:
 //   - S3-class (512 KB SRAM): 6000 frames ≈ 114 KB → ≥15 s even at ~400 f/s.
 //     Only paired with the persistent disk backends here, which stream the ring
 //     straight to file (no frozen copy), so the ring is the whole footprint.
@@ -53,6 +54,14 @@
 
 #define BLACKBOX_DIR        "/blackbox"
 #define BLACKBOX_RETAIN      5u      // keep newest N events (disk backends)
+#define BLACKBOX_LINE_MAX   48u      // bytes, upper bound of one .log line
+// Saving an event to disk runs a step per loop pass, this far apart: one file
+// operation or one slice of .log lines (~1.2 KB). The loop, CAN included, runs
+// in between. On LittleFS every 4 KB written also erases a flash sector (tens
+// of ms with the cache, and so the CAN interrupt, off); written back to back
+// that is most of the time, with the gap under a third of it, at ~24 KB/s.
+#define BLACKBOX_FLUSH_SLICE  32u    // .log lines per step
+#define BLACKBOX_FLUSH_GAP_MS 50u
 #define BLACKBOX_TL_MAX      16      // das_ap_state timeline depth
 #define BLACKBOX_TL_EMIT     12      // timeline entries written to the summary
 
@@ -175,30 +184,79 @@ static uint32_t bb_seq_from_name(const char* base) {
     return u ? (uint32_t)strtoul(u + 1, nullptr, 10) : 0u;
 }
 
+// Delete the oldest event (smallest <ms>) when more than `keep` are saved.
+// True only when its .json, which is what counts as an event, was removed,
+// so a caller looping on this stops on a delete the filesystem refuses.
+// Not inlined: ci_check_stack.py names it on the save chain.
+static __attribute__((noinline)) bool bb_drop_oldest(uint32_t keep) {
+    File dir = BB_FS.open(BLACKBOX_DIR);
+    if (!dir) return false;
+    uint32_t count = 0, oldest = 0xFFFFFFFFu;
+    char oldest_base[40] = {};
+    for (File e = dir.openNextFile(); e; e = dir.openNextFile()) {
+        const char* nm = e.name();
+        if (strstr(nm, ".json")) {
+            char base[40];
+            bb_basename(nm, base, sizeof(base));
+            uint32_t s = bb_seq_from_name(base);
+            count++;
+            if (s < oldest) { oldest = s; strncpy(oldest_base, base, sizeof(oldest_base) - 1); }
+        }
+        e.close();
+    }
+    dir.close();
+    if (count <= keep || oldest_base[0] == '\0') return false;
+    char p[64];
+    snprintf(p, sizeof(p), BLACKBOX_DIR "/%s.log", oldest_base);  BB_FS.remove(p);
+    snprintf(p, sizeof(p), BLACKBOX_DIR "/%s.json", oldest_base);
+    return BB_FS.remove(p);
+}
+
 // Keep only the newest BLACKBOX_RETAIN events (smallest <ms> deleted first).
 static void bb_enforce_retention() {
-    for (;;) {
-        File dir = BB_FS.open(BLACKBOX_DIR);
-        if (!dir) return;
-        uint32_t count = 0, oldest = 0xFFFFFFFFu;
-        char oldest_base[40] = {};
-        for (File e = dir.openNextFile(); e; e = dir.openNextFile()) {
-            const char* nm = e.name();
-            if (strstr(nm, ".json")) {
-                char base[40];
-                bb_basename(nm, base, sizeof(base));
-                uint32_t s = bb_seq_from_name(base);
-                count++;
-                if (s < oldest) { oldest = s; strncpy(oldest_base, base, sizeof(oldest_base) - 1); }
-            }
-            e.close();
-        }
-        dir.close();
-        if (count <= BLACKBOX_RETAIN || oldest_base[0] == '\0') return;
+    while (bb_drop_oldest(BLACKBOX_RETAIN)) {}
+}
+
+#if defined(BLACKBOX_BACKEND_LITTLEFS)
+// Left free after every save. Retention counts events, not bytes: five full
+// windows from the 40000-frame PSRAM ring (~1.7 MB of .log each) do not fit
+// the 3.4 MB partition, and a LittleFS volume with no free block can fail
+// even the delete that would make room.
+#define BLACKBOX_FS_RESERVE  (64u * 1024u)
+
+static size_t bb_fs_free() {
+    size_t total = LittleFS.totalBytes();
+    size_t used  = LittleFS.usedBytes();  // walks the filesystem: save path only
+    return used < total ? total - used : 0;
+}
+#endif
+
+// The save in progress (do_flush()), one step per loop pass.
+enum BBSaveStep : uint8_t { BB_SAVE_IDLE = 0, BB_SAVE_ROOM, BB_SAVE_LOG, BB_SAVE_JSON, BB_SAVE_TIDY };
+static struct {
+    BBSaveStep step;
+    uint32_t next;          // slot of the next frame to write
+    uint32_t left;          // frames still to write
+    uint32_t count, bus0, bus1, txc;
+    uint32_t window_start;  // timestamp of the window's first frame
+    uint32_t t0;            // when the save started
+    char     base[40];
+    File     log;
+} g_save;
+
+// The slot bb_record() must not evict: the next frame the save has to write.
+static uint32_t bb_keep_slot() { return g_save.left ? g_save.next : g_cap; }
+
+// Stop a save. Its .log goes too unless the .json already made it an event.
+static void bb_save_abort() {
+    if (g_save.log) g_save.log.close();
+    if (g_save.step == BB_SAVE_LOG || g_save.step == BB_SAVE_JSON) {
         char p[64];
-        snprintf(p, sizeof(p), BLACKBOX_DIR "/%s.log", oldest_base);  BB_FS.remove(p);
-        snprintf(p, sizeof(p), BLACKBOX_DIR "/%s.json", oldest_base); BB_FS.remove(p);
+        snprintf(p, sizeof(p), BLACKBOX_DIR "/%s.log", g_save.base);
+        BB_FS.remove(p);
     }
+    g_save.step = BB_SAVE_IDLE;
+    g_save.left = 0;
 }
 
 // Live directory scan → number of .json events. Only ever called from the
@@ -217,6 +275,32 @@ static int bb_scan_count() {
     return n;
 }
 
+// A save cut short by a reset leaves a .log without its .json. Nothing counts
+// that as an event, so neither retention nor the space check would ever remove
+// it: do it at boot. Not inlined, for the boot chain in ci_check_stack.py.
+static __attribute__((noinline)) void bb_drop_orphans() {
+    for (;;) {
+        File dir = BB_FS.open(BLACKBOX_DIR);
+        if (!dir) return;
+        char orphan[40] = {};
+        for (File e = dir.openNextFile(); e && !orphan[0]; e = dir.openNextFile()) {
+            if (strstr(e.name(), ".log")) {
+                char base[40], p[64];
+                bb_basename(e.name(), base, sizeof(base));
+                snprintf(p, sizeof(p), BLACKBOX_DIR "/%s.json", base);
+                if (!BB_FS.exists(p)) strncpy(orphan, base, sizeof(orphan) - 1);
+            }
+            e.close();
+        }
+        dir.close();
+        if (!orphan[0]) return;
+        char p[64];
+        snprintf(p, sizeof(p), BLACKBOX_DIR "/%s.log", orphan);
+        if (!BB_FS.remove(p)) return;
+        Serial.printf("[BB] removed %s.log, its save never finished\n", orphan);
+    }
+}
+
 static void backend_init() {
 #if defined(BLACKBOX_BACKEND_LITTLEFS)
     g_fs_ok = LittleFS.begin(true);  // format-on-fail: own the spiffs data partition
@@ -225,29 +309,10 @@ static void backend_init() {
     g_fs_ok = SD.cardType() != CARD_NONE;  // can_dump_init() already mounted SD
 #endif
     if (g_fs_ok && !BB_FS.exists(BLACKBOX_DIR)) BB_FS.mkdir(BLACKBOX_DIR);
+    if (g_fs_ok) bb_drop_orphans();
     g_event_count = g_fs_ok ? bb_scan_count() : 0;  // one boot-time scan
     Serial.printf("[BB] backend=%s ok=%d events=%d\n",
                   BLACKBOX_BACKEND_NAME, g_fs_ok, g_event_count);
-}
-
-// Persist one event. `frame_count`/per-bus counts already computed by the caller;
-// `write` is invoked to stream candump lines into the open .log.
-static void backend_store(const char* base, const char* json,
-                          void (*emit)(File&)) {
-    if (!g_fs_ok) return;
-    char p[64];
-    snprintf(p, sizeof(p), BLACKBOX_DIR "/%s.log", base);
-    File lf = BB_OPEN_W(p);
-    if (lf) { emit(lf); lf.flush(); lf.close(); }
-    else Serial.printf("[BB] .log open failed: %s\n", p);
-
-    snprintf(p, sizeof(p), BLACKBOX_DIR "/%s.json", base);
-    File jf = BB_OPEN_W(p);
-    if (jf) { jf.write((const uint8_t*)json, strlen(json)); jf.flush(); jf.close(); }
-    else Serial.printf("[BB] .json open failed: %s\n", p);
-
-    bb_enforce_retention();
-    g_event_count = bb_scan_count();  // reflects the new event + any retention drop
 }
 
 // Status/poll path: return the cache, never scan (see g_event_count).
@@ -345,6 +410,10 @@ static uint32_t  g_slot_window_start = 0;
 static void backend_init() {
     Serial.println("[BB] backend=ram (volatile, dashboard download only)");
 }
+
+// The RAM backend saves in one step (do_flush()), so nothing is ever kept.
+static uint32_t bb_keep_slot() { return g_cap; }
+static void bb_save_abort() {}
 
 static void backend_store_ram(const char* base, const char* json,
                               const BBFrame* frames, uint32_t n, uint32_t window_start) {
@@ -459,6 +528,7 @@ static bool blackbox_alloc_ring() {
 
 // Free the ring and drop any pre-roll / armed capture (on disable).
 static void blackbox_free_ring() {
+    bb_save_abort();
     if (g_ring) { free(g_ring); g_ring = nullptr; }
     g_cap = 0;
     g_head = g_tail = 0;
@@ -496,8 +566,10 @@ static void bb_record(CanBusId bus, const CanFrame& frame, uint32_t now_ms, uint
     // the 10 s pre / 5 s post window; the filter drops the stored rate ~15x so
     // the whole window survives. Define BLACKBOX_CAPTURE_ALL to keep every frame.
     if (!fsd_blackbox_should_record(frame.id)) return;
-    if (ring_next(g_head) == g_tail) g_tail = ring_next(g_tail);  // evict oldest
-    BBFrame& s = g_ring[g_head];
+    uint32_t slot;
+    // Evicts the oldest frame, or drops this one if that is still to be saved.
+    if (!bb_ring_push(g_cap, g_head, g_tail, bb_keep_slot(), &slot)) return;
+    BBFrame& s = g_ring[slot];
     s.ts_ms = now_ms;
     s.id    = frame.id;
     s.bus   = (uint8_t)bus;
@@ -505,7 +577,6 @@ static void bb_record(CanBusId bus, const CanFrame& frame, uint32_t now_ms, uint
     s.is_tx = is_tx;
     memcpy(s.data, frame.data, s.dlc);
     if (s.dlc < 8) memset(s.data + s.dlc, 0, 8 - s.dlc);
-    g_head = ring_next(g_head);
 }
 
 void blackbox_record(CanBusId bus, const CanFrame& frame, uint32_t now_ms) {
@@ -613,26 +684,124 @@ static void build_summary(char* out, int out_sz, uint32_t frame_count,
     fsd_blackbox_format_json(out, out_sz, &s);
 }
 
+// The event's .json: the shared summary plus a "tx_frames" count. The shared
+// summary formatter (fsd_logic, pure) is a per-event summary, not a per-frame
+// record list, so direction is reported here as a count: splice a "tx_frames"
+// field in before the closing brace so a decoded summary tells you how many of
+// the frames were ours. Per-frame direction lives in the .log via the
+// can0TX/can1TX interface tag.
+static void bb_event_json(char* json, int json_sz, uint32_t count, uint32_t window_start,
+                          uint32_t bus0, uint32_t bus1, uint32_t txc) {
+    build_summary(json, json_sz, count, window_start, bus0, bus1);
+    size_t jl = strlen(json);
+    if (jl > 0 && json[jl - 1] == '}' && jl + 24 < (size_t)json_sz)
+        snprintf(json + jl - 1, (size_t)json_sz - (jl - 1),
+                 ",\"tx_frames\":%lu}", (unsigned long)txc);
+}
+
 #if defined(BLACKBOX_BACKEND_LITTLEFS) || defined(BLACKBOX_BACKEND_SD)
-// Disk emit: walk the ring window and stream candump lines into the open file.
-static uint32_t g_emit_lo, g_emit_hi, g_emit_start;
-static void disk_emit(File& f) {
-    char line[72];
-    bool started = false;
-    for (uint32_t i = g_tail; i != g_head; i = ring_next(i)) {
-        const BBFrame& fr = g_ring[i];
-        if (fr.ts_ms < g_emit_lo) continue;
-        if (fr.ts_ms > g_emit_hi) break;
-        if (!started) { g_emit_start = fr.ts_ms; started = true; }
-        int n = tesla_format_candump_line(line, sizeof(line), fr.ts_ms - g_emit_start,
-                                          bb_iface_name(fr),
-                                          fr.id, fr.data, fr.dlc);
-        f.write((const uint8_t*)line, n);
+// One step of saving the armed event; true once the save is over. Each step
+// is one file operation or one slice of .log lines, and blackbox_tick() runs
+// them BLACKBOX_FLUSH_GAP_MS apart, so the loop never waits for a whole event
+// to reach the disk. The ring keeps recording; bb_keep_slot() protects the
+// frames not written yet.
+static bool do_flush(uint32_t now_ms) {
+    char p[64];
+    switch (g_save.step) {
+    case BB_SAVE_IDLE: {
+        if (!g_fs_ok) return true;
+        uint32_t lo = (g_trig_ms >= BLACKBOX_PRE_MS) ? g_trig_ms - BLACKBOX_PRE_MS : 0u;
+        uint32_t hi = g_trig_ms + BLACKBOX_POST_MS;
+        BBWindow w = bb_find_window(bb_ring_count(g_cap, g_head, g_tail), lo, hi,
+                                    [](uint32_t k) { return g_ring[(g_tail + k) % g_cap].ts_ms; });
+        g_save.next  = (g_tail + w.first) % g_cap;
+        g_save.left  = w.count;
+        g_save.count = w.count;
+        g_save.window_start = w.count ? g_ring[g_save.next].ts_ms : g_trig_ms;
+        g_save.bus0 = g_save.bus1 = g_save.txc = 0;
+        g_save.t0 = now_ms;
+        snprintf(g_save.base, sizeof(g_save.base), "evt_%lu_%s",
+                 (unsigned long)g_trig_ms, trig_name(g_trig));
+        g_save.step = BB_SAVE_ROOM;
+        return false;
+    }
+    case BB_SAVE_ROOM: {
+#if defined(BLACKBOX_BACKEND_LITTLEFS)
+        // Plus the .json (under 1 KB) and a block per file: LittleFS stores
+        // files in whole 4 KB blocks. One old event is dropped per step.
+        size_t need = (size_t)g_save.count * BLACKBOX_LINE_MAX + 1024u + 2u * 4096u;
+        if (bb_fs_free() < need + BLACKBOX_FS_RESERVE) {
+            if (bb_drop_oldest(0)) return false;
+            g_event_count = bb_scan_count();
+            Serial.printf("[BB] %s not saved: needs %lu KB + %lu KB reserve, %lu KB free\n",
+                          g_save.base, (unsigned long)(need / 1024u),
+                          (unsigned long)(BLACKBOX_FS_RESERVE / 1024u),
+                          (unsigned long)(bb_fs_free() / 1024u));
+            bb_save_abort();
+            return true;
+        }
+#endif
+        snprintf(p, sizeof(p), BLACKBOX_DIR "/%s.log", g_save.base);
+        g_save.log = BB_OPEN_W(p);
+        if (!g_save.log) {
+            Serial.printf("[BB] .log open failed: %s\n", p);
+            bb_save_abort();
+            return true;
+        }
+        g_save.step = BB_SAVE_LOG;
+        return false;
+    }
+    case BB_SAVE_LOG: {
+        if (g_save.left == 0) {  // every line written; closing is a step of its own
+            g_save.log.close();
+            g_save.step = BB_SAVE_JSON;
+            return false;
+        }
+        char line[72];
+        for (uint32_t n = bb_slice(g_save.left, BLACKBOX_FLUSH_SLICE); n > 0; n--) {
+            const BBFrame& fr = g_ring[g_save.next];
+            int len = tesla_format_candump_line(line, sizeof(line), fr.ts_ms - g_save.window_start,
+                                                bb_iface_name(fr), fr.id, fr.data, fr.dlc);
+            g_save.log.write((const uint8_t*)line, len);
+            if (fr.is_tx) g_save.txc++;
+            if (fr.bus == CAN_BUS_SECONDARY) g_save.bus1++; else g_save.bus0++;
+            g_save.next = ring_next(g_save.next);
+            g_save.left--;
+        }
+        return false;
+    }
+    case BB_SAVE_JSON: {
+        char json[640];
+        bb_event_json(json, sizeof(json), g_save.count, g_save.window_start,
+                      g_save.bus0, g_save.bus1, g_save.txc);
+        snprintf(p, sizeof(p), BLACKBOX_DIR "/%s.json", g_save.base);
+        File jf = BB_OPEN_W(p);
+        if (!jf) {
+            Serial.printf("[BB] .json open failed: %s\n", p);
+            bb_save_abort();
+            return true;
+        }
+        jf.write((const uint8_t*)json, strlen(json));
+        jf.close();
+        g_save.step = BB_SAVE_TIDY;
+        return false;
+    }
+    case BB_SAVE_TIDY:
+    default:
+        bb_enforce_retention();
+        g_event_count = bb_scan_count();  // the new event + any retention drop
+        g_captures++;
+        Serial.printf("[BB] flushed %s  frames=%lu (can0=%lu can1=%lu) in %lu ms\n",
+                      g_save.base, (unsigned long)g_save.count, (unsigned long)g_save.bus0,
+                      (unsigned long)g_save.bus1, (unsigned long)(now_ms - g_save.t0));
+        g_save.step = BB_SAVE_IDLE;
+        return true;
     }
 }
-#endif
-
-static void do_flush() {
+#else
+// RAM: freeze the windowed frames into a contiguous buffer for download, in
+// one step (a copy, no file).
+static bool do_flush(uint32_t now_ms) {
     uint32_t lo = (g_trig_ms >= BLACKBOX_PRE_MS) ? g_trig_ms - BLACKBOX_PRE_MS : 0u;
     uint32_t hi = g_trig_ms + BLACKBOX_POST_MS;
 
@@ -654,25 +823,8 @@ static void do_flush() {
     snprintf(base, sizeof(base), "evt_%lu_%s", (unsigned long)g_trig_ms, trig_name(g_trig));
 
     char json[640];
-    build_summary(json, sizeof(json), count, window_start, bus0, bus1);
+    bb_event_json(json, sizeof(json), count, window_start, bus0, bus1, txc);
 
-    // The shared summary formatter (fsd_logic, pure) is a per-event summary, not
-    // a per-frame record list, so direction is reported here as a count: splice a
-    // "tx_frames" field in before the closing brace so a decoded summary tells you
-    // how many of the frames were ours. Per-frame direction lives in the .log via
-    // the can0TX/can1TX interface tag.
-    {
-        size_t jl = strlen(json);
-        if (jl > 0 && json[jl - 1] == '}' && jl + 24 < sizeof(json))
-            snprintf(json + jl - 1, sizeof(json) - (jl - 1),
-                     ",\"tx_frames\":%lu}", (unsigned long)txc);
-    }
-
-#if defined(BLACKBOX_BACKEND_LITTLEFS) || defined(BLACKBOX_BACKEND_SD)
-    g_emit_lo = lo; g_emit_hi = hi;
-    backend_store(base, json, disk_emit);
-#else
-    // RAM: freeze the windowed frames into a contiguous buffer for download.
     BBFrame* frozen = (BBFrame*)malloc((size_t)(count ? count : 1) * sizeof(BBFrame));
     uint32_t fn = 0;
     if (frozen) {
@@ -687,17 +839,19 @@ static void do_flush() {
     } else {
         Serial.println("[BB] flush alloc failed");
     }
-#endif
     g_captures++;
-    Serial.printf("[BB] flushed %s  frames=%lu (can0=%lu can1=%lu)\n",
-                  base, (unsigned long)count, (unsigned long)bus0, (unsigned long)bus1);
+    Serial.printf("[BB] flushed %s  frames=%lu (can0=%lu can1=%lu) in %lu ms\n",
+                  base, (unsigned long)count, (unsigned long)bus0, (unsigned long)bus1,
+                  (unsigned long)(millis() - now_ms));
+    return true;
 }
+#endif
 
 void blackbox_tick(uint32_t now_ms) {
     if (!g_armed) return;
-    if ((int32_t)(now_ms - g_flush_at_ms) < 0) return;  // post-roll still running
-    do_flush();
-    g_armed = false;
+    if ((int32_t)(now_ms - g_flush_at_ms) < 0) return;  // post-roll, or between save steps
+    if (do_flush(now_ms)) g_armed = false;
+    else g_flush_at_ms = now_ms + BLACKBOX_FLUSH_GAP_MS;
 }
 
 void blackbox_set_enabled(bool enabled) {

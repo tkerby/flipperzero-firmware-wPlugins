@@ -33,6 +33,7 @@
 #define CAN_ID_CP_STATUS      0x25Du  // 605  - CP_status: charge-port type / plug state (Vehicle CAN, #228)
 // Same replacement list as fsd_logic/fsd_handler.h, so main.cpp seeing both is not a redefinition.
 #define CAN_ID_DI_SYS_STATUS  0x118  // 280  - DI_systemStatus: DI_gear (Acceleration Mode standstill gate)
+#define CAN_ID_VCLEFT_SWITCH  0x3C2  // 962  - VCLEFT_switchStatus: tap check bus hint (#218), RX only
 // Vehicle/body bus reachability probes (#128) — RX presence only, never actuated.
 #define CAN_ID_UI_VEHICLE_CTRL 0x273u // 627  - UI_vehicleControl: mirror fold/lock/wiper/horn/seat heat
 #define CAN_ID_VCLEFT_DOOR     0x102u // 258  - VCLEFT_doorStatus: mirror state/tilt read-back
@@ -160,6 +161,8 @@
 
 // ── Generated TX routing ─────────────────────────────────────────────────────
 // Bus index: 0=can0, 1=can1. Single-CAN builds only have can0.
+// The Continuous AP 0x229 press only goes out on a bus where the car's own
+// 0x229 is live (gear_tx_route.h); this picks the bus when both carry it.
 #ifndef GEAR_LEVER_TX_BUS_INDEX
 #if defined(BOARD_LILYGO_T2CAN)
 #define GEAR_LEVER_TX_BUS_INDEX 1

@@ -202,6 +202,27 @@ public:
         return info.tx_failed_count;
     }
 
+    // rx_overrun (the controller's own FIFO overflowing while the ISR is held
+    // off, e.g. during a flash write) is not part of errorCount(). tx_queued
+    // counts frames not yet sent; on a bus where nothing ACKs they stay there.
+    void describeState(char *out, size_t n) override {
+        static const char *const kState[] = {"stopped", "running", "bus-off", "recovering"};
+        twai_status_info_t info;
+        if (!installed_ || twai_get_status_info(&info) != ESP_OK) {
+            snprintf(out, n, "TWAI not installed");
+            return;
+        }
+        snprintf(out, n,
+                 "TWAI %s %s TEC=%lu REC=%lu rx_missed=%lu rx_overrun=%lu bus_err=%lu "
+                 "tx_fail=%lu tx_queued=%lu",
+                 listen_only_ ? "Listen-Only" : "Normal",
+                 info.state <= TWAI_STATE_RECOVERING ? kState[info.state] : "?",
+                 (unsigned long)info.tx_error_counter, (unsigned long)info.rx_error_counter,
+                 (unsigned long)info.rx_missed_count, (unsigned long)info.rx_overrun_count,
+                 (unsigned long)info.bus_error_count, (unsigned long)info.tx_failed_count,
+                 (unsigned long)info.msgs_to_tx);
+    }
+
     void setListenOnly(bool enable) override {
 #ifdef SNIFFER_ONLY
         (void)enable;   // sniffer build is permanently Listen-Only; ignore mode switches
@@ -451,6 +472,28 @@ public:
 
     // Every errorCount() event is a sendMessage() failure.
     uint32_t txFailedCount() override { return err_count_; }
+
+    // The chip keeps no count of lost or errored frames, only flags: an RXnOVR
+    // bit means a frame was lost at least once since the last reset, since
+    // nothing here clears it. So say that, rather than print a 0 that reads
+    // like a clean bus next to the TWAI's real counts.
+    void describeState(char *out, size_t n) override {
+        if (!installed_) {
+            snprintf(out, n, "MCP2515 %s", chip_detected_ ? "mode change failed"
+                                                          : "not detected on SPI");
+            return;
+        }
+        uint8_t eflg = mcp_.getErrorFlags();
+        snprintf(out, n,
+                 "MCP2515 %s EFLG=0x%02X%s%s%s TEC=%u REC=%u tx_fail=%lu "
+                 "(no rx_missed/bus_err counts on this chip)",
+                 listen_only_ ? "Listen-Only" : "Normal", (unsigned)eflg,
+                 (eflg & (MCP2515::EFLG_RX0OVR | MCP2515::EFLG_RX1OVR)) ? " rx-overflow-seen" : "",
+                 (eflg & MCP2515::EFLG_TXBO) ? " bus-off" : "",
+                 (eflg & (MCP2515::EFLG_TXEP | MCP2515::EFLG_RXEP)) ? " error-passive" : "",
+                 (unsigned)mcp_.errorCountTX(), (unsigned)mcp_.errorCountRX(),
+                 (unsigned long)err_count_);
+    }
 
     void setListenOnly(bool enable) override {
         if (!installed_ || listen_only_ == enable) return;
@@ -807,6 +850,28 @@ public:
     }
 
     uint32_t txFailedCount() override { return tx_failed_; }
+
+    // CiTREC: REC in bits 0-7, TEC in 8-15, bus-off in bit 21, error-passive
+    // in bits 19-20. rx_missed counts FIFO overflow events, each one or more
+    // frames.
+    void describeState(char *out, size_t n) override {
+        if (!installed_) {
+            snprintf(out, n, "MCP2518FD %s",
+                     crystal_wrong_ ? "crystal mismatch, kept off the bus"
+                                    : chip_detected_ ? "stopped" : "not detected on SPI");
+            return;
+        }
+        uint32_t trec = can_.errorCounters();
+        snprintf(out, n,
+                 "MCP2518FD %s TEC=%lu REC=%lu%s%s rx_missed=%lu bus_err=%lu tx_fail=%lu "
+                 "crystal=%lukHz",
+                 listen_only_ ? "Listen-Only" : "Normal",
+                 (unsigned long)((trec >> 8) & 0xFFu), (unsigned long)(trec & 0xFFu),
+                 (trec & (1u << 21)) ? " bus-off" : "",
+                 (trec & ((1u << 19) | (1u << 20))) ? " error-passive" : "",
+                 (unsigned long)rxMissedCount(), (unsigned long)busErrorCount(),
+                 (unsigned long)tx_failed_, (unsigned long)(crystal_hz_ / 1000u));
+    }
 
     void setListenOnly(bool enable) override {
         if (!begun_ || (installed_ && listen_only_ == enable)) return;

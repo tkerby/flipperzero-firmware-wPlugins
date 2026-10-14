@@ -1146,6 +1146,39 @@ static void test_capability(void) {
     CHECK(r.hw_effective == TeslaHW_Legacy, "0x3EE present -> inferred Legacy");
     CHECK(r.has_das, "inferred Legacy: 0x399 is DAS state");
 
+    // ── Vehicle CAN hint from 0x3C2 (a hint, never a verdict) ──
+    FSDCapSeen vehicle_pair = {0};
+    vehicle_pair.vcleft_switch = true; vehicle_pair.body_ui = true;
+    r = fsd_capability_eval(vehicle_pair, TeslaHW_HW3);
+    CHECK(r.has_vcleft_switch, "0x3C2 seen");
+    CHECK(r.vehicle_hint == CAP_VEH_HINT_DIRECT,
+          "0x3C2 seen: hint Vehicle CAN pair (%d)", r.vehicle_hint);
+
+    // Forwarded subset: body frames arrive, 0x3C2 does not.
+    FSDCapSeen forwarded = {0};
+    forwarded.epas = true; forwarded.das_hw3 = true; forwarded.ap_control = true;
+    forwarded.body_ui = true; forwarded.body_window = true;
+    r = fsd_capability_eval(forwarded, TeslaHW_HW3);
+    CHECK(!r.has_vcleft_switch, "forwarded subset: no 0x3C2");
+    CHECK(r.vehicle_hint == CAP_VEH_HINT_FORWARDED,
+          "body frames but no 0x3C2: hint forwarded subset (%d)", r.vehicle_hint);
+    CHECK(r.nag_killer == CAP_OK, "forwarded subset still fine for nag killer");
+
+    // 0x3C2 moves the hint and nothing else.
+    forwarded.vcleft_switch = true;
+    FSDCapReport with_switch = fsd_capability_eval(forwarded, TeslaHW_HW3);
+    CHECK(with_switch.vehicle_hint == CAP_VEH_HINT_DIRECT &&
+          with_switch.nag_killer == r.nag_killer && with_switch.ap_first == r.ap_first &&
+          with_switch.fsd_activation == r.fsd_activation &&
+          with_switch.soft_engage == r.soft_engage &&
+          with_switch.body_control == r.body_control && with_switch.bus_hint == r.bus_hint,
+          "0x3C2 changes only the vehicle hint");
+
+    // Neither 0x3C2 nor any body frame: nothing to go on.
+    r = fsd_capability_eval(hw3_das, TeslaHW_HW3);
+    CHECK(r.vehicle_hint == CAP_VEH_HINT_NONE,
+          "no body/0x3C2 frames: no vehicle hint (%d)", r.vehicle_hint);
+
     // ── bus hint: steering, no 0x370 -> Chassis/Vehicle-like ──
     FSDCapSeen chassis = {0};
     chassis.steer = true;
