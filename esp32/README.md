@@ -291,7 +291,7 @@ Bus speed: **500 kbps**
 
 ## Build & Flash
 
-No toolchain? Flash a prebuilt image from the [Web Flasher](https://hypery11.github.io/flipper-tesla-fsd/install/) (Chrome / Edge / Opera on a desktop).
+No toolchain? Flash a prebuilt image from the [Web Flasher](https://hypery11.github.io/flipper-tesla-fsd/install/) (Chrome / Edge / Opera on a desktop). It installs the newest stable release. When a newer test build is out, the page offers it as an opt-in link, and `…/install/#beta` selects it directly.
 
 ### Prerequisites
 - [PlatformIO](https://platformio.org/) (CLI or VSCode extension)
