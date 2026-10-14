@@ -1134,7 +1134,8 @@ function bbRefreshList(){
   fetch('/blackbox/list').then(function(r){return r.json()}).then(function(a){
     var el=document.getElementById('bbList');if(!el)return;
     if(!a||!a.length){el.innerHTML='<div style="font-size:.78em;color:var(--text3);padding:6px 0">No events recorded yet.</div>';return;}
-    a.sort(function(x,y){return (y.name||'').localeCompare(x.name||'')});
+    // Newest first: by event number (0 for names from before it existed).
+    a.sort(function(x,y){return ((y.seq||0)-(x.seq||0))||(y.name||'').localeCompare(x.name||'')});
     var h='';
     a.forEach(function(ev){
       var s=ev.summary||{},nm=encodeURIComponent(ev.name);

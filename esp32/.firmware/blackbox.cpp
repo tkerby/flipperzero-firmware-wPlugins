@@ -16,6 +16,7 @@
 #include "../../fsd_logic/fsd_blackbox_summary.h"  // fsd_blackbox_format_json
 #include "../../fsd_logic/fsd_blackbox_filter.h"   // fsd_blackbox_should_record
 #include "blackbox_flush.h"                         // ring push, window search, slices
+#include "blackbox_name.h"                          // event names, oldest first
 #include <stdlib.h>
 #include <string.h>
 
@@ -91,6 +92,7 @@ static uint32_t  g_trig_ms = 0;
 static uint32_t  g_flush_at_ms = 0;
 static FSDState  g_snap;            // FSDState at trigger time (toggles/hw/evt_last_*)
 static uint32_t  g_captures = 0;    // monotonic count since boot (badge source)
+static uint32_t  g_next_seq = 1;    // number of the next event (blackbox_name.h)
 
 // das_ap_state mini-timeline
 static uint32_t  g_tl_ts[BLACKBOX_TL_MAX];
@@ -178,29 +180,24 @@ static void bb_basename(const char* path, char* out, size_t n) {
     out[i] = '\0';
 }
 
-static uint32_t bb_seq_from_name(const char* base) {
-    // evt_<ms>_<trigger>  → parse <ms>
-    const char* u = strchr(base, '_');
-    return u ? (uint32_t)strtoul(u + 1, nullptr, 10) : 0u;
-}
-
-// Delete the oldest event (smallest <ms>) when more than `keep` are saved.
+// Delete the oldest event (bb_event_order()) when more than `keep` are saved.
 // True only when its .json, which is what counts as an event, was removed,
 // so a caller looping on this stops on a delete the filesystem refuses.
 // Not inlined: ci_check_stack.py names it on the save chain.
 static __attribute__((noinline)) bool bb_drop_oldest(uint32_t keep) {
     File dir = BB_FS.open(BLACKBOX_DIR);
     if (!dir) return false;
-    uint32_t count = 0, oldest = 0xFFFFFFFFu;
+    uint32_t count = 0;
+    uint64_t oldest = UINT64_MAX;
     char oldest_base[40] = {};
     for (File e = dir.openNextFile(); e; e = dir.openNextFile()) {
         const char* nm = e.name();
         if (strstr(nm, ".json")) {
             char base[40];
             bb_basename(nm, base, sizeof(base));
-            uint32_t s = bb_seq_from_name(base);
+            uint64_t o = bb_event_order(base);
             count++;
-            if (s < oldest) { oldest = s; strncpy(oldest_base, base, sizeof(oldest_base) - 1); }
+            if (o < oldest) { oldest = o; strncpy(oldest_base, base, sizeof(oldest_base) - 1); }
         }
         e.close();
     }
@@ -212,7 +209,7 @@ static __attribute__((noinline)) bool bb_drop_oldest(uint32_t keep) {
     return BB_FS.remove(p);
 }
 
-// Keep only the newest BLACKBOX_RETAIN events (smallest <ms> deleted first).
+// Keep only the newest BLACKBOX_RETAIN events (oldest deleted first).
 static void bb_enforce_retention() {
     while (bb_drop_oldest(BLACKBOX_RETAIN)) {}
 }
@@ -301,6 +298,23 @@ static __attribute__((noinline)) void bb_drop_orphans() {
     }
 }
 
+// Highest event number on disk, so numbering carries on across a reboot
+// (blackbox_name.h). Once, at boot.
+static uint32_t bb_scan_last_seq() {
+    File dir = BB_FS.open(BLACKBOX_DIR);
+    if (!dir) return 0;
+    uint32_t last = 0;
+    for (File e = dir.openNextFile(); e; e = dir.openNextFile()) {
+        char base[40];
+        bb_basename(e.name(), base, sizeof(base));
+        uint32_t s = bb_event_seq(base);
+        if (s > last) last = s;
+        e.close();
+    }
+    dir.close();
+    return last;
+}
+
 static void backend_init() {
 #if defined(BLACKBOX_BACKEND_LITTLEFS)
     g_fs_ok = LittleFS.begin(true);  // format-on-fail: own the spiffs data partition
@@ -311,8 +325,9 @@ static void backend_init() {
     if (g_fs_ok && !BB_FS.exists(BLACKBOX_DIR)) BB_FS.mkdir(BLACKBOX_DIR);
     if (g_fs_ok) bb_drop_orphans();
     g_event_count = g_fs_ok ? bb_scan_count() : 0;  // one boot-time scan
-    Serial.printf("[BB] backend=%s ok=%d events=%d\n",
-                  BLACKBOX_BACKEND_NAME, g_fs_ok, g_event_count);
+    if (g_fs_ok) g_next_seq = bb_scan_last_seq() + 1u;
+    Serial.printf("[BB] backend=%s ok=%d events=%d next=%lu\n",
+                  BLACKBOX_BACKEND_NAME, g_fs_ok, g_event_count, (unsigned long)g_next_seq);
 }
 
 // Status/poll path: return the cache, never scan (see g_event_count).
@@ -333,7 +348,9 @@ static String backend_list_json() {
             while (e.available()) summary += (char)e.read();
             if (!first) out += ',';
             first = false;
-            out += "{\"name\":\""; out += base; out += "\",\"summary\":";
+            out += "{\"name\":\""; out += base;
+            out += "\",\"seq\":"; out += bb_event_seq(base);
+            out += ",\"summary\":";
             out += summary.length() ? summary : String("null");
             out += '}';
         }
@@ -415,18 +432,20 @@ static void backend_init() {
 static uint32_t bb_keep_slot() { return g_cap; }
 static void bb_save_abort() {}
 
-static void backend_store_ram(const char* base, const char* json,
+// False when the copy could not be allocated: the event is not kept.
+static bool backend_store_ram(const char* base, const char* json,
                               const BBFrame* frames, uint32_t n, uint32_t window_start) {
     if (g_slot_frames) { free(g_slot_frames); g_slot_frames = nullptr; }
     g_slot_used = false;
-    g_slot_frames = (BBFrame*)malloc((size_t)n * sizeof(BBFrame));
-    if (!g_slot_frames) { Serial.println("[BB] RAM event alloc failed"); return; }
+    g_slot_frames = (BBFrame*)malloc((size_t)(n ? n : 1) * sizeof(BBFrame));
+    if (!g_slot_frames) { Serial.println("[BB] RAM event alloc failed"); return false; }
     memcpy(g_slot_frames, frames, (size_t)n * sizeof(BBFrame));
     g_slot_n = n;
     g_slot_window_start = window_start;
     g_slot_json = json;
     strncpy(g_slot_base, base, sizeof(g_slot_base) - 1);
     g_slot_used = true;
+    return true;
 }
 
 static int backend_count() { return g_slot_used ? 1 : 0; }
@@ -434,7 +453,9 @@ static int backend_count() { return g_slot_used ? 1 : 0; }
 static String backend_list_json() {
     String out = "[";
     if (g_slot_used) {
-        out += "{\"name\":\""; out += g_slot_base; out += "\",\"summary\":";
+        out += "{\"name\":\""; out += g_slot_base;
+        out += "\",\"seq\":"; out += bb_event_seq(g_slot_base);
+        out += ",\"summary\":";
         out += g_slot_json.length() ? g_slot_json : String("null");
         out += '}';
     }
@@ -720,8 +741,7 @@ static bool do_flush(uint32_t now_ms) {
         g_save.window_start = w.count ? g_ring[g_save.next].ts_ms : g_trig_ms;
         g_save.bus0 = g_save.bus1 = g_save.txc = 0;
         g_save.t0 = now_ms;
-        snprintf(g_save.base, sizeof(g_save.base), "evt_%lu_%s",
-                 (unsigned long)g_trig_ms, trig_name(g_trig));
+        bb_event_name(g_save.base, sizeof(g_save.base), g_next_seq++, trig_name(g_trig));
         g_save.step = BB_SAVE_ROOM;
         return false;
     }
@@ -820,13 +840,14 @@ static bool do_flush(uint32_t now_ms) {
     if (!started) window_start = g_trig_ms;
 
     char base[40];
-    snprintf(base, sizeof(base), "evt_%lu_%s", (unsigned long)g_trig_ms, trig_name(g_trig));
+    bb_event_name(base, sizeof(base), g_next_seq++, trig_name(g_trig));
 
     char json[640];
     bb_event_json(json, sizeof(json), count, window_start, bus0, bus1, txc);
 
     BBFrame* frozen = (BBFrame*)malloc((size_t)(count ? count : 1) * sizeof(BBFrame));
     uint32_t fn = 0;
+    bool kept = false;
     if (frozen) {
         for (uint32_t i = g_tail; i != g_head && fn < count; i = ring_next(i)) {
             const BBFrame& fr = g_ring[i];
@@ -834,11 +855,13 @@ static bool do_flush(uint32_t now_ms) {
             if (fr.ts_ms > hi) break;
             frozen[fn++] = fr;
         }
-        backend_store_ram(base, json, frozen, fn, window_start);
+        kept = backend_store_ram(base, json, frozen, fn, window_start);
         free(frozen);
     } else {
         Serial.println("[BB] flush alloc failed");
     }
+    // The dashboard's new-event badge counts captures: only one that was kept.
+    if (!kept) return true;
     g_captures++;
     Serial.printf("[BB] flushed %s  frames=%lu (can0=%lu can1=%lu) in %lu ms\n",
                   base, (unsigned long)count, (unsigned long)bus0, (unsigned long)bus1,

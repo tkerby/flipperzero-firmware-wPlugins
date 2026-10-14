@@ -19,6 +19,7 @@
 #include "fsd_checksum.h" // tesla_additive_checksum (0x334 / 0x118 vectors)
 #include "fsd_cp_status.h" // 0x25D CP_status decode + plug guard + rewrite predicate (#228)
 #include "blackbox_flush.h" // black-box ring push, window search, save slices
+#include "blackbox_name.h"  // black-box event names and their order across reboots
 #include "gear_tx_route.h" // Continuous AP 0x229 press bus choice
 
 static int g_pass = 0;
@@ -1531,6 +1532,62 @@ static void test_gear_tx_route(void) {
     CHECK(gear_tx_bus_index(two, 2, 1, 2591u, AGE) == -1, "everything stale: no press");
 }
 
+// ── Black-box event names ────────────────────────────────────────────────────
+// The name that retention drops first among `names`, as bb_drop_oldest() picks it.
+static const char* bb_oldest(const char* const* names, int n) {
+    const char* pick = nullptr;
+    uint64_t oldest = UINT64_MAX;
+    for (int i = 0; i < n; i++) {
+        uint64_t o = bb_event_order(names[i]);
+        if (o < oldest) { oldest = o; pick = names[i]; }
+    }
+    return pick;
+}
+
+static void test_blackbox_names(void) {
+    char nm[40];
+    bb_event_name(nm, sizeof(nm), 7u, "abort");
+    CHECK(strcmp(nm, "ev000007_abort") == 0, "name: %s", nm);
+    CHECK(bb_event_seq(nm) == 7u, "number read back (%u)", bb_event_seq(nm));
+    bb_event_name(nm, sizeof(nm), 1234567u, "busoff");
+    CHECK(strcmp(nm, "ev1234567_busoff") == 0 && bb_event_seq(nm) == 1234567u,
+          "past six digits: %s", nm);
+    bb_event_name(nm, sizeof(nm), 0xFFFFFFFFu, "manual");
+    CHECK(bb_event_seq(nm) == 0xFFFFFFFFu && strlen(nm) < 40, "largest number fits: %s", nm);
+
+    // Names without a number: the old evt_<millis>_ form and anything else.
+    CHECK(bb_event_seq("evt_123456_abort") == 0, "old name has no number");
+    CHECK(bb_event_seq("ev_12_abort") == 0 && bb_event_seq("ev12") == 0 &&
+          bb_event_seq("ev12x_abort") == 0 && bb_event_seq("ev99999999999_abort") == 0 &&
+          bb_event_seq("notes") == 0 && bb_event_seq("") == 0 && bb_event_seq(nullptr) == 0,
+          "malformed names have no number");
+
+    // Old names come before every numbered one, by <millis> among themselves.
+    CHECK(bb_event_order("evt_4000000000_abort") < bb_event_order("ev000001_abort"),
+          "a long-uptime old name is still older than event 1");
+    CHECK(bb_event_order("evt_100_abort") < bb_event_order("evt_200_abort"), "old names by millis");
+    CHECK(bb_event_order("ev000009_abort") < bb_event_order("ev000010_manual"), "numbers in order");
+    CHECK(bb_event_order("notes") == 0, "a stray file sorts first");
+
+    // The reported bug: five saved from a long session (evt_<big millis>), the
+    // device reboots, and an event early in the new uptime came out smallest
+    // and was deleted right after it was written. Numbered, it is the newest.
+    const char* disk[] = {"evt_3600000_abort", "evt_3700000_abort", "evt_3800000_busoff",
+                          "evt_3900000_abort", "evt_4000000_manual", "ev000001_abort"};
+    CHECK(strcmp(bb_oldest(disk, 6), "evt_3600000_abort") == 0,
+          "retention drops the oldest old name, not the new event (%s)", bb_oldest(disk, 6));
+    const char* later[] = {"ev000002_abort", "ev000006_abort", "ev000003_busoff",
+                           "ev000005_abort", "ev000004_manual", "ev000007_manual"};
+    CHECK(strcmp(bb_oldest(later, 6), "ev000002_abort") == 0, "then the lowest number (%s)",
+          bb_oldest(later, 6));
+
+    // Numbering carries on from the highest on disk, however the files are listed.
+    uint32_t last = 0;
+    for (const char* n : later) if (bb_event_seq(n) > last) last = bb_event_seq(n);
+    bb_event_name(nm, sizeof(nm), last + 1u, "abort");
+    CHECK(strcmp(nm, "ev000008_abort") == 0, "next after a reboot: %s", nm);
+}
+
 int main() {
     printf("test_esp32_core: ESP32 firmware handler host tests\n");
     test_gear_tx_route();
@@ -1570,6 +1627,7 @@ int main() {
     test_blackbox_window();
     test_blackbox_ring_push();
     test_blackbox_save_slices();
+    test_blackbox_names();
 
     printf("\n%d passed, %d failed\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;
