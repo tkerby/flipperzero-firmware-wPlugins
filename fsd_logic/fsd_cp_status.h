@@ -41,6 +41,16 @@ typedef enum {
     FSD_CP_PLUG_UNKNOWN   = 2,  // cable state SNA with nothing else set
 } FsdCpPlugState;
 
+// CP_status runs at about 10 Hz. With none for this long, what the last one
+// said is shown as stale.
+#define FSD_CP_STATUS_STALE_MS 3000u
+
+// True once a CP_status has been decoded and none has arrived for
+// FSD_CP_STATUS_STALE_MS. last_ms is when the last one arrived.
+static inline bool fsd_cp_status_stale(bool seen, uint32_t last_ms, uint32_t now_ms) {
+    return seen && (uint32_t)(now_ms - last_ms) > FSD_CP_STATUS_STALE_MS;
+}
+
 // CP_type the car reports (byte0 bits 0-1).
 static inline uint8_t fsd_cp_type_value(uint8_t byte0) {
     return (uint8_t)(byte0 & 0x03u);

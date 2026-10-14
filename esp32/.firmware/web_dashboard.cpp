@@ -24,6 +24,7 @@
 #include "captive_portal.h"
 #include "web_cmd.h"
 #include "web_origin.h"
+#include "../../fsd_logic/fsd_cp_status.h"  // CP_status stale read-out (#228)
 #include <WebServer.h>
 #include <WebSocketsServer.h>
 #include <WiFi.h>
@@ -419,7 +420,7 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
   </div>
   <div class="row">
     <span class="lbl">Charge Port<span class="hint">0x25D CP_status &mdash; Vehicle CAN only</span></span>
-    <span id="cpType" style="font-size:.8em;color:var(--text2)">--</span>
+    <span style="font-size:.8em;color:var(--text2)"><span id="cpStale" style="display:none;color:var(--yellow);margin-right:6px">Stale</span><span id="cpType">--</span></span>
   </div>
 </div>
 
@@ -1265,9 +1266,12 @@ function updStatus(d){
 
   pill('nagSt', d.nag_killer, d.nag_killer?'ON':'OFF');
   pill('canVeh', d.can_vehicle_detected, d.can_vehicle_detected?'Detected':'No CAN Traffic');
-  // Charge-port type read-out (0x25D, #228): the car's own type, -- until seen.
+  // Charge-port type read-out (0x25D, #228): the car's own type, -- until seen,
+  // marked stale once CP_status has stopped arriving.
   var cpEl=document.getElementById('cpType');
   if(cpEl) cpEl.textContent=(d.cp_type===undefined||d.cp_type<0)?'--':(CPT[d.cp_type]||('type '+d.cp_type));
+  var cpSx=document.getElementById('cpStale');
+  if(cpSx) cpSx.style.display=(d.cp_stale&&d.cp_type>=0)?'inline':'none';
   pill('bmsSt', d.bms && d.bms.seen, (d.bms && d.bms.seen)?'Live':'Waiting Frames');
   var bF=document.getElementById('bmsFrames');
   if(bF) bF.textContent='HV:'+(d.bms_hv_seen||0)+' SOC:'+(d.bms_soc_seen||0)+' TH:'+(d.bms_thermal_seen||0);
@@ -1351,6 +1355,7 @@ function updControls(d){
   if(cpSt){
     var ct;
     if(d.cp_type===undefined||d.cp_type<0) ct='no CP_status on this tap (the 8-byte 0x25D, Vehicle CAN only)';
+    else if(d.cp_stale) ct='Stale: no CP_status from the car for '+(d.cp_age_s||0)+' s';
     else{
       ct='Car '+(CPT[d.cp_type]||('type '+d.cp_type));
       if(d.cp_type_eu_rewrite){
@@ -2174,8 +2179,15 @@ static String build_json() {
     j += "\"accel_bad\":";      j += state.accel_bad_frames;              j += ',';
     // Charge-port type (0x25D, #228): what the car reports (-1 = no 0x25D on
     // this tap yet), the plug-guard read-out, the opt-in rewrite + copies sent.
+    // cp_stale: no CP_status for a few seconds, cp_type / cp_plug are its last.
     j += "\"cp_type\":";        j += state.cp_status_seen ? (int)state.cp_type : -1; j += ',';
     j += "\"cp_plug\":";        j += (int)state.cp_plug_state;            j += ',';
+    {
+        uint32_t now_ms = millis();
+        j += "\"cp_stale\":";   j += fsd_cp_status_stale(state.cp_status_seen, state.cp_status_ms, now_ms)
+                                     ? "true" : "false"; j += ',';
+        j += "\"cp_age_s\":";   j += state.cp_status_seen ? (now_ms - state.cp_status_ms) / 1000u : 0u; j += ',';
+    }
     j += "\"cp_type_eu_rewrite\":"; j += state.cp_type_eu_rewrite        ? "true" : "false"; j += ',';
     j += "\"cp_type_tx\":";     j += state.cp_type_tx_count;              j += ',';
     j += "\"tx_allowed\":";     j += fsd_can_transmit(&state)            ? "true" : "false"; j += ',';

@@ -1421,7 +1421,7 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
     if (frame.id == CAN_ID_CP_STATUS) {
         CanFrame f = frame;
         state_enter();
-        bool modified = fsd_handle_cp_type_rewrite(&g_state, &f);
+        bool modified = fsd_handle_cp_type_rewrite(&g_state, &f, now);
         bool cp_tx = fsd_can_transmit(&g_state);
         state_exit();
         // Counted only once the copy is out: a send refused by a full TX queue

@@ -1270,7 +1270,7 @@ bool fsd_build_gear_lever_frame(CanFrame *frame, uint8_t gear_pos, uint8_t count
 // car is unplugged (fail closed on an unknown plug state). The 6-byte 0x25D on
 // Party CAN decodes to nothing (dlc != 8). Idea + on-car validation:
 // @Tesla234987234sdf, discussion #228.
-bool fsd_handle_cp_type_rewrite(FSDState *state, CanFrame *frame) {
+bool fsd_handle_cp_type_rewrite(FSDState *state, CanFrame *frame, uint32_t now_ms) {
     if (frame->dlc != 8) return false;   // short / 6-byte 0x25D: not CP_status
 
     // Read-only decode (every mode, toggle-independent) so the dashboard shows
@@ -1278,6 +1278,7 @@ bool fsd_handle_cp_type_rewrite(FSDState *state, CanFrame *frame) {
     state->cp_type        = fsd_cp_type_value(frame->data[0]);
     state->cp_plug_state  = (uint8_t)fsd_cp_plug_state(frame->data);
     state->cp_status_seen = true;
+    state->cp_status_ms   = now_ms;
 
     if (!state->cp_type_eu_rewrite || !fsd_can_transmit(state)) return false;
     // Only a genuine US-type frame is eligible — never echo an already-EU frame
