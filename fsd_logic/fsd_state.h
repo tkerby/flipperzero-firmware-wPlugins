@@ -11,6 +11,7 @@
 
 #include "fsd_types.h"  // TeslaHWVersion, OpMode, CANFRAME
 #include "fsd_perf.h"   // FSDPerf — read-only performance read-out state (ESP32 dashboard)
+#include "fsd_tpms.h"   // FSDTpms — read-only tyre pressure state (0x219)
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -77,6 +78,9 @@ typedef struct FSDState {
     float wheel_speed_fr_kph;
     float wheel_speed_rl_kph;
     float wheel_speed_rr_kph;
+
+    // live tyre pressures (read-only sniff, 0x219 VCSEC_TPMSData — Vehicle CAN)
+    FSDTpms tpms;
 
     // Read-only performance read-out (ESP32 web dashboard). Derived only from
     // frames already received (0x257 speed, 0x175 wheels, 0x312 batt temp);

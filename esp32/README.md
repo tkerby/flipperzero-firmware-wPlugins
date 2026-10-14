@@ -60,6 +60,11 @@ Most CAN protocol handling from hypery11's Flipper Zero implementation (`fsd_han
   - Wheel slip % (rear avg − front avg) from the four wheel speeds `0x175` (Party CAN)
   - Pack temperature with normal / warm / hot banding plus cold and hot advisory lines, and instantaneous power (kW) — from the BMS frames (needs a Vehicle-CAN tap)
   - Speed and est. G work on any tap carrying `0x257`; wheel slip needs Party CAN (`0x175`); temperature and power need the BMS frames on a Vehicle-CAN tap. Motor / inverter / stator temperature is **not** shown — it is not broadcast on CAN in a verified DBC (the drive-inverter temperature frames are on the car's internal Ethernet)
+- **Tyre Pressure (read-only)** — the four pressures in bar and psi from `0x219` VCSEC_TPMSData, decoded on whichever bus carries it, in every mode, Listen-Only included; nothing is ever sent because of it ([#237](https://github.com/hypery11/flipper-tesla-fsd/issues/237), idea from [ukinora's fork](https://github.com/ukinora/flipper-tesla-fsd)):
+  - Only on a tap that carries `0x219`. It was seen on the Vehicle CAN pair of a 2024 Model Y; Party CAN most likely does not carry it. The card stays hidden until the frame shows up, shows `--` until it holds a value, and marks the values **Stale** when no reading has arrived for 30 s (car asleep, or a single-ID capture that leaves `0x219` out)
+  - Two forms of the frame are known. Newer cars send 7 bytes in six kinds: kind 5 carries all four pressures (0.025 bar each) and kind 4 the car's target pair (2.90 bar / 42 psi on a Model Y). Their four per-sensor kinds read `80 FF FF FF` when parked, and the byte the DBC calls pressure stayed at `0x80` through a drive, so they are not decoded. The 5-byte form from the public Model 3 DBC (one sensor per frame, with temperature and the wheel it sits on) is decoded as the DBC describes it, but no capture of it exists yet
+  - **The wheel order of the 7-byte form is not confirmed.** The dashboard shows the four values in the order the car sends them, numbered 1-4, and says so; wheel names (FL / FR / RL / RR) appear only when 5-byte frames give each sensor its own corner. If you can, note what the car's own tyre screen shows for each wheel next to a `/stream?ids=219` capture, ideally once with one tyre clearly different from the others
+  - `GET /api/status` carries it under `tpms`: `seen`, `src` (0 none, 1 per-sensor frames, 2 the kind-5 frame), `dlc` (length of the last `0x219`), `age_s`, `stale`, and per slot `mbar`, `temp` (°C) and `pos` (0 FL, 1 FR, 2 RL, 3 RR), plus `target` (mbar); `null` = not known
 - **CAN Bus Stats** — RX frame count, TX modified count, CAN errors, frames/second
 - **HTTP CAN Log Stream** — phone-friendly candump collection via dashboard button; device streams CAN frames over HTTP on port 82 and the browser saves the collected `.dump` file on Stop
 - **Web Controls** — toggle buttons and selectors for:
@@ -137,6 +142,7 @@ Auto-detect picks the source. If it's wrong, pin the car with the Hardware selec
 | **TLSSC Restore** | `0x331` | Recovers stop sign / traffic light control on VIN-banned cars |
 | **Continuous AP** | `0x229` | HW3/Legacy, off by default: after AP drops during a turn-signal lane change, re-engages it with a right-stalk double press (brake or full stalk-up cancels) |
 | **BMS Dashboard** | `0x132`/`0x292`/`0x312` | Model 3/Y frames; wrong values on S/X, not yet confirmed on the ESP32 |
+| **Tyre Pressure** | `0x219` | Read-only: four pressures (bar / psi), wheel order of the 7-byte form not confirmed; needs a tap carrying `0x219` (Vehicle CAN) |
 | **OTA Protection** | `0x318` | Auto-stops TX when OTA update detected unless Ignore OTA is enabled |
 | **HW Auto-Detect** | `0x398` | Reads GTW_carConfig for HW version |
 | **Listen-Only Mode** | — | Default on first boot, passive monitoring only; the chosen mode is saved and restored on the next boot |
@@ -260,6 +266,7 @@ Most IDs are common. The AP/DAS status and ISA-speed meaning depends on the dete
 | `0x045` | STW_ACTN_RQ | Steering stalk (Legacy follow distance) |
 | `0x082` | TRIP_PLANNING | Battery precondition trigger |
 | `0x132` | BMS_HV_BUS | Battery voltage / current |
+| `0x219` | VCSEC_TPMS | Tyre pressures (read-only) |
 | `0x292` | BMS_SOC | Battery state of charge |
 | `0x312` | BMS_THERMAL | Battery temperature |
 | `0x318` | GTW_CAR_STATE | Vehicle state (OTA detection) |

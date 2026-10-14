@@ -5,6 +5,7 @@
 #define CAN_ID_TRIP_PLANNING  0x082u  // 130  - UI_tripPlanning: precondition trigger
 #define CAN_ID_ESP_STATUS     0x145u  // 325  - ESP_status: driver brake pedal state
 #define CAN_ID_ESP_WHEELSPD   0x175u  // 373  - ESP_wheelSpeeds: 4 wheel speeds (Party CAN, read-only)
+#define CAN_ID_VCSEC_TPMS     0x219u  // 537  - VCSEC_TPMSData: tyre pressures (Vehicle CAN, read-only)
 #define CAN_ID_STEER_ANGLE    0x129u  // 297  - SCCM_steeringAngleSensor (Soft Engage gate, #108)
 #define CAN_ID_BMS_HV_BUS     0x132u  // 306  - BMS_hvBusStatus: pack voltage / current
 #define CAN_ID_BMS_SOC        0x292u  // 658  - BMS_socStatus:   state of charge

@@ -28,6 +28,7 @@
 #include "fsd_handler.h"
 #include "fsd_profile.h"
 #include "fsd_profile_db.h"
+#include "fsd_tpms.h"
 
 static int g_pass = 0;
 static int g_fail = 0;
@@ -2693,6 +2694,276 @@ static void test_readonly_parsers(void) {
     CHECK(s.energy_seen, "energy seen");
 }
 
+// ── tyre pressures, 0x219 (fsd_tpms.h) ───────────────────────────────────────
+// The 7-byte frames are copied from captures, not built from a table: the #211
+// dump (2024 Fremont Model Y, Vehicle CAN, parked), in capture order with its
+// timestamps, and the frames quoted in ukinora's fork from another car.
+static void tpms_zero(FSDTpms* t) {
+    memset(t, 0, sizeof(*t));
+}
+
+static void test_tpms_real_frames(void) {
+    static const struct {
+        uint32_t ms;
+        uint8_t d[7];
+    } k211[] = {
+        {1963, {0x02, 0x80, 0xFF, 0xFF, 0xFF, 0xF8, 0x0F}},
+        {2163, {0x04, 0x74, 0x74, 0x00, 0x00, 0x00, 0x00}},
+        {2476, {0x01, 0x80, 0xFF, 0xFF, 0xFF, 0xFB, 0x0F}},
+        {2663, {0x03, 0x80, 0xFF, 0xFF, 0xFF, 0xF9, 0x0F}},
+        {3063, {0x01, 0x80, 0xFF, 0xFF, 0xFF, 0xFB, 0x0F}},
+        {3563, {0x00, 0x80, 0xFF, 0xFF, 0xFF, 0xFA, 0x0F}},
+        {3663, {0x01, 0x80, 0xFF, 0xFF, 0xFF, 0xFB, 0x0F}},
+        {3763, {0x02, 0x80, 0xFF, 0xFF, 0xFF, 0xF8, 0x0F}},
+        {4063, {0x05, 0x00, 0x6F, 0x6E, 0x72, 0x70, 0x00}},
+    };
+    FSDTpms t;
+    tpms_zero(&t);
+    CHECK(!fsd_tpms_seen(&t) && !fsd_tpms_has_reading(&t), "tpms: zeroed state has seen nothing");
+
+    // The per-sensor frames carry 0x80 (3.2 bar) in byte 1 on every wheel: never a reading.
+    for (int i = 0; i < 8; i++) {
+        FSDTpmsRx rx = fsd_tpms_update(&t, k211[i].d, 7, k211[i].ms);
+        FSDTpmsRx want = k211[i].d[0] == 4 ? FSD_TPMS_RX_TARGET : FSD_TPMS_RX_IGNORED;
+        CHECK(rx == want, "tpms #211 frame %d (kind %u) got rx %d want %d", i, k211[i].d[0], rx, want);
+        CHECK(!fsd_tpms_has_reading(&t), "tpms #211 frame %d: no reading yet", i);
+    }
+    CHECK(fsd_tpms_seen(&t) && t.frame_dlc == 7, "tpms: seen, dlc %u", t.frame_dlc);
+    CHECK(t.target[0] == 0x74 && t.target[1] == 0x74, "tpms: target %02X %02X", t.target[0],
+          t.target[1]);
+    CHECK(fsd_tpms_mbar(t.target[0]) == 2900, "tpms: target 2900 mbar, got %u",
+          fsd_tpms_mbar(t.target[0]));
+
+    CHECK(fsd_tpms_update(&t, k211[8].d, 7, k211[8].ms) == FSD_TPMS_RX_READING,
+          "tpms: kind 5 is a reading");
+    CHECK(t.source == FSD_TPMS_SRC_ALL, "tpms: source ALL, got %u", t.source);
+    static const unsigned mbar[4] = {2775, 2750, 2850, 2800};
+    for (int i = 0; i < 4; i++) {
+        CHECK(fsd_tpms_mbar(t.pressure[i]) == mbar[i], "tpms slot %d %u mbar want %u", i,
+              fsd_tpms_mbar(t.pressure[i]), mbar[i]);
+        CHECK(t.temp[i] == FSD_TPMS_NA, "tpms slot %d: kind 5 has no temperature", i);
+        CHECK(t.pos[i] == FSD_TPMS_POS_UNKNOWN, "tpms slot %d: kind 5 names no corner", i);
+    }
+    CHECK(t.last_ms == 4063 && fsd_tpms_age_ms(&t, 4663) == 600, "tpms: age 600 ms, got %u",
+          (unsigned)fsd_tpms_age_ms(&t, 4663));
+    CHECK(!fsd_tpms_stale(&t, 4663), "tpms: fresh after one cycle");
+
+    // The next cycle's per-sensor frames leave the four values alone.
+    for (int i = 0; i < 8; i++) fsd_tpms_update(&t, k211[i].d, 7, 4163 + k211[i].ms);
+    CHECK(t.source == FSD_TPMS_SRC_ALL && t.pressure[0] == 0x6F && t.pressure[3] == 0x70,
+          "tpms: per-sensor frames do not overwrite kind 5");
+    for (int i = 0; i < 4; i++) CHECK(t.pressure[i] != 0x80, "tpms slot %d is not 0x80", i);
+
+    // ukinora's car: the same 80 FF FF FF with another byte-5 permutation, the
+    // same target, and kind 5 on three days. On the last one the driver's tyre
+    // had been let down and byte 2 alone moved.
+    static const uint8_t fork_sensor[4][7] = {
+        {0x00, 0x80, 0xFF, 0xFF, 0xFF, 0xF8, 0x0F},
+        {0x01, 0x80, 0xFF, 0xFF, 0xFF, 0xF9, 0x0F},
+        {0x02, 0x80, 0xFF, 0xFF, 0xFF, 0xFB, 0x0F},
+        {0x03, 0x80, 0xFF, 0xFF, 0xFF, 0xFA, 0x0F},
+    };
+    static const uint8_t fork_target[7] = {0x04, 0x74, 0x74, 0x00, 0x00, 0x00, 0x00};
+    static const uint8_t fork_0901[7] = {0x05, 0x00, 0x7A, 0x7A, 0x7A, 0x7A, 0x00};
+    static const uint8_t fork_0903[7] = {0x05, 0x00, 0x75, 0x76, 0x74, 0x75, 0x00};
+    static const uint8_t fork_0906[7] = {0x05, 0x00, 0x6D, 0x74, 0x73, 0x74, 0x00};
+    tpms_zero(&t);
+    for (int i = 0; i < 4; i++)
+        CHECK(fsd_tpms_update(&t, fork_sensor[i], 7, 100) == FSD_TPMS_RX_IGNORED,
+              "tpms fork kind %d ignored", i);
+    CHECK(fsd_tpms_update(&t, fork_target, 7, 200) == FSD_TPMS_RX_TARGET &&
+              t.target[0] == 0x74 && t.target[1] == 0x74,
+          "tpms fork target pair");
+    CHECK(fsd_tpms_update(&t, fork_0901, 7, 300) == FSD_TPMS_RX_READING &&
+              t.pressure[0] == 0x7A && t.pressure[3] == 0x7A,
+          "tpms fork 09-01 reads 0x7A x4");
+    CHECK(fsd_tpms_update(&t, fork_0903, 7, 400) == FSD_TPMS_RX_READING &&
+              t.pressure[0] == 0x75 && t.pressure[1] == 0x76 && t.pressure[2] == 0x74 &&
+              t.pressure[3] == 0x75,
+          "tpms fork 09-03 in byte order");
+    CHECK(fsd_tpms_update(&t, fork_0906, 7, 500) == FSD_TPMS_RX_READING && t.pressure[0] == 0x6D,
+          "tpms fork 09-06 slot 0 = byte 2, got %02X", t.pressure[0]);
+    CHECK(t.pressure[0] < t.pressure[1] && t.pressure[0] < t.pressure[2] &&
+              t.pressure[0] < t.pressure[3],
+          "tpms fork 09-06: the let-down tyre is the low slot");
+    for (int i = 0; i < 4; i++)
+        CHECK(fsd_tpms_update(&t, fork_sensor[i], 7, 600) == FSD_TPMS_RX_IGNORED &&
+                  t.pressure[i] != 0x80,
+              "tpms fork kind %d leaves slot %d alone", i, i);
+}
+
+// The 5-byte form exactly as the public DBC lays it out (no capture of it yet).
+static void tpms_dbc(uint8_t* d, uint8_t sensor, uint8_t p, uint8_t temp, uint8_t volt,
+                     uint8_t loc) {
+    d[0] = sensor;
+    d[1] = p;
+    d[2] = temp;
+    d[3] = volt;
+    d[4] = loc;
+}
+
+static void test_tpms_dbc_form(void) {
+    FSDTpms t;
+    uint8_t d[5];
+    tpms_zero(&t);
+
+    // Asleep before anything was read: nothing to show, source stays empty.
+    tpms_dbc(d, 0, 0x80, 0xFF, 0xFF, 0x02);
+    CHECK(fsd_tpms_update(&t, d, 5, 10) == FSD_TPMS_RX_EMPTY, "tpms dbc: placeholder is empty");
+    CHECK(!fsd_tpms_has_reading(&t) && t.source == FSD_TPMS_SRC_NONE,
+          "tpms dbc: placeholder starts no source");
+
+    // Four sensors, the car placing them RL RR FL FR. 0x3C = 20 C, 0x8C = 2.9 V.
+    static const uint8_t p[4] = {0x70, 0x71, 0x72, 0x73};
+    static const uint8_t loc[4] = {2, 3, 0, 1};
+    for (uint8_t k = 0; k < 4; k++) {
+        tpms_dbc(d, k, p[k], (uint8_t)(0x3C + k), 0x8C, loc[k]);
+        CHECK(fsd_tpms_update(&t, d, 5, 100 + k) == FSD_TPMS_RX_READING, "tpms dbc sensor %u", k);
+    }
+    CHECK(t.source == FSD_TPMS_SRC_SENSOR && t.frame_dlc == 5, "tpms dbc: source SENSOR");
+    for (int k = 0; k < 4; k++) {
+        CHECK(t.pressure[k] == p[k], "tpms dbc slot %d pressure %02X", k, t.pressure[k]);
+        CHECK(fsd_tpms_temp_c(t.temp[k]) == 20 + k, "tpms dbc slot %d temp %d", k,
+              fsd_tpms_temp_c(t.temp[k]));
+        CHECK(t.pos[k] == loc[k], "tpms dbc slot %d pos %u", k, t.pos[k]);
+    }
+    CHECK(t.last_ms == 103, "tpms dbc: last reading at 103, got %u", (unsigned)t.last_ms);
+
+    // The car loses sensor 1: its slot goes back to unknown, the rest stay.
+    tpms_dbc(d, 1, 0x80, 0xFF, 0xFF, 0x03);
+    CHECK(fsd_tpms_update(&t, d, 5, 200) == FSD_TPMS_RX_EMPTY, "tpms dbc: sensor 1 placeholder");
+    CHECK(t.pressure[1] == FSD_TPMS_NA && t.temp[1] == FSD_TPMS_NA, "tpms dbc: slot 1 cleared");
+    CHECK(t.pressure[0] == 0x70 && t.pressure[2] == 0x72 && t.pressure[3] == 0x73,
+          "tpms dbc: other slots kept");
+    CHECK(t.last_ms == 103, "tpms dbc: an empty frame is not a reading");
+    tpms_dbc(d, 2, 0xFF, 0x3C, 0x8C, 0x00);
+    CHECK(fsd_tpms_update(&t, d, 5, 210) == FSD_TPMS_RX_EMPTY && t.pressure[2] == FSD_TPMS_NA,
+          "tpms dbc: pressure FF is no reading");
+
+    // Temperature missing but battery there: still a reading.
+    tpms_dbc(d, 3, 0x74, 0xFF, 0x8C, 0x01);
+    CHECK(fsd_tpms_update(&t, d, 5, 220) == FSD_TPMS_RX_READING && t.pressure[3] == 0x74 &&
+              t.temp[3] == FSD_TPMS_NA,
+          "tpms dbc: no temperature, pressure kept");
+
+    // 0 bar from a live sensor is a flat tyre, not "unknown".
+    tpms_dbc(d, 0, 0x00, 0x3C, 0x8C, 0x02);
+    CHECK(fsd_tpms_update(&t, d, 5, 230) == FSD_TPMS_RX_READING && t.pressure[0] == 0x00,
+          "tpms dbc: 0 bar kept as 0");
+
+    // Location 4 is unknown in the DBC; 5..7 are not in it at all.
+    tpms_dbc(d, 0, 0x70, 0x3C, 0x8C, 0x04);
+    fsd_tpms_update(&t, d, 5, 240);
+    CHECK(t.pos[0] == FSD_TPMS_POS_UNKNOWN, "tpms dbc: location 4 unknown, got %u", t.pos[0]);
+    tpms_dbc(d, 0, 0x70, 0x3C, 0x8C, 0x07);
+    fsd_tpms_update(&t, d, 5, 250);
+    CHECK(t.pos[0] == FSD_TPMS_POS_UNKNOWN, "tpms dbc: location 7 unknown, got %u", t.pos[0]);
+    tpms_dbc(d, 0, 0x70, 0x3C, 0x8C, 0xF9);  // upper bits are not part of the location
+    fsd_tpms_update(&t, d, 5, 260);
+    CHECK(t.pos[0] == FSD_TPMS_POS_FR, "tpms dbc: location from bits 0-2, got %u", t.pos[0]);
+}
+
+static void test_tpms_malformed(void) {
+    FSDTpms t;
+    uint8_t d[8] = {0x05, 0x00, 0x6F, 0x6E, 0x72, 0x70, 0x00, 0x00};
+    tpms_zero(&t);
+
+    CHECK(fsd_tpms_update(&t, d, 0, 10) == FSD_TPMS_RX_IGNORED && !fsd_tpms_seen(&t),
+          "tpms: dlc 0 is not a frame");
+    CHECK(fsd_tpms_update(NULL, d, 7, 10) == FSD_TPMS_RX_IGNORED, "tpms: null state");
+    CHECK(fsd_tpms_update(&t, NULL, 7, 10) == FSD_TPMS_RX_IGNORED && !fsd_tpms_seen(&t),
+          "tpms: null data");
+
+    // Kind 5 bytes at every length but 7: nothing taken.
+    for (uint8_t dlc = 1; dlc <= 8; dlc++) {
+        if (dlc == 7) continue;
+        CHECK(fsd_tpms_update(&t, d, dlc, 20) == FSD_TPMS_RX_IGNORED, "tpms: dlc %u ignored", dlc);
+        CHECK(t.frame_dlc == dlc, "tpms: dlc %u recorded", dlc);
+    }
+    CHECK(!fsd_tpms_has_reading(&t), "tpms: no reading from odd lengths");
+    // The first frame turned every value into "not available", not 0.
+    CHECK(t.target[0] == FSD_TPMS_NA && t.target[1] == FSD_TPMS_NA && t.pressure[0] == FSD_TPMS_NA,
+          "tpms: unknown is FF, not 0");
+
+    // Kinds a form does not have.
+    static const uint8_t kinds[] = {0x06, 0x07, 0x45, 0x84, 0x85, 0xFF};
+    for (size_t i = 0; i < sizeof(kinds); i++) {
+        d[0] = kinds[i];
+        CHECK(fsd_tpms_update(&t, d, 7, 30) == FSD_TPMS_RX_IGNORED, "tpms: 7-byte kind %02X ignored",
+              kinds[i]);
+        CHECK(fsd_tpms_update(&t, d, 5, 30) == FSD_TPMS_RX_IGNORED, "tpms: 5-byte kind %02X ignored",
+              kinds[i]);
+    }
+    d[0] = 0x04;
+    CHECK(fsd_tpms_update(&t, d, 5, 40) == FSD_TPMS_RX_IGNORED, "tpms: no kind 4 in the 5-byte form");
+    d[0] = 0x05;
+    CHECK(fsd_tpms_update(&t, d, 5, 40) == FSD_TPMS_RX_IGNORED, "tpms: no kind 5 in the 5-byte form");
+    // A per-sensor kind in the 7-byte form, however live it looks.
+    static const uint8_t live_looking[7] = {0x00, 0x72, 0x3C, 0x8C, 0x00, 0xFA, 0x0F};
+    CHECK(fsd_tpms_update(&t, live_looking, 7, 50) == FSD_TPMS_RX_IGNORED,
+          "tpms: 7-byte kind 0 never decoded");
+    CHECK(!fsd_tpms_has_reading(&t) && t.target[0] == FSD_TPMS_NA, "tpms: still nothing");
+
+    // Kind 5 slots that say nothing, and kind 4 with nothing in it.
+    static const uint8_t gaps[7] = {0x05, 0x00, 0x6F, 0x00, 0xFF, 0x70, 0x00};
+    CHECK(fsd_tpms_update(&t, gaps, 7, 60) == FSD_TPMS_RX_READING, "tpms: partial kind 5");
+    CHECK(t.pressure[0] == 0x6F && t.pressure[1] == FSD_TPMS_NA && t.pressure[2] == FSD_TPMS_NA &&
+              t.pressure[3] == 0x70,
+          "tpms: 0 and FF slots unknown");
+    static const uint8_t none5[7] = {0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    CHECK(fsd_tpms_update(&t, none5, 7, 70) == FSD_TPMS_RX_EMPTY && !fsd_tpms_has_reading(&t),
+          "tpms: empty kind 5 clears kind 5 values");
+    static const uint8_t none4[7] = {0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    CHECK(fsd_tpms_update(&t, none4, 7, 80) == FSD_TPMS_RX_EMPTY && t.target[0] == FSD_TPMS_NA,
+          "tpms: empty kind 4");
+}
+
+static void test_tpms_sources_and_age(void) {
+    FSDTpms t;
+    uint8_t d[5];
+    static const uint8_t all[7] = {0x05, 0x00, 0x6F, 0x6E, 0x72, 0x70, 0x00};
+    tpms_zero(&t);
+
+    CHECK(fsd_tpms_update(&t, all, 7, 1000) == FSD_TPMS_RX_READING, "tpms src: kind 5 first");
+    // A live sensor reading replaces all four: kind 5 slots are in another order.
+    tpms_dbc(d, 2, 0x71, 0x3C, 0x8C, 0x00);
+    CHECK(fsd_tpms_update(&t, d, 5, 1100) == FSD_TPMS_RX_READING && t.source == FSD_TPMS_SRC_SENSOR,
+          "tpms src: sensor reading wins");
+    CHECK(t.pressure[0] == FSD_TPMS_NA && t.pressure[1] == FSD_TPMS_NA && t.pressure[2] == 0x71 &&
+              t.pressure[3] == FSD_TPMS_NA,
+          "tpms src: only the sensor's own slot is set");
+    CHECK(fsd_tpms_update(&t, all, 7, 1200) == FSD_TPMS_RX_IGNORED && t.pressure[2] == 0x71,
+          "tpms src: kind 5 waits while sensor readings are fresh");
+    CHECK(fsd_tpms_update(&t, all, 7, 1100 + FSD_TPMS_STALE_MS) == FSD_TPMS_RX_IGNORED,
+          "tpms src: still fresh at the limit");
+    CHECK(fsd_tpms_update(&t, all, 7, 1101 + FSD_TPMS_STALE_MS) == FSD_TPMS_RX_READING &&
+              t.source == FSD_TPMS_SRC_ALL && t.pressure[2] == 0x72,
+          "tpms src: kind 5 takes over from stale sensor readings");
+
+    // Sensor source with every slot cleared by the car: kind 5 at once.
+    tpms_dbc(d, 0, 0x71, 0x3C, 0x8C, 0x00);
+    fsd_tpms_update(&t, d, 5, 50000);
+    tpms_dbc(d, 0, 0x80, 0xFF, 0xFF, 0x00);
+    fsd_tpms_update(&t, d, 5, 50100);
+    CHECK(t.source == FSD_TPMS_SRC_SENSOR && !fsd_tpms_has_reading(&t),
+          "tpms src: sensor source with nothing left");
+    CHECK(fsd_tpms_update(&t, all, 7, 50200) == FSD_TPMS_RX_READING && t.source == FSD_TPMS_SRC_ALL,
+          "tpms src: kind 5 fills an empty sensor source");
+
+    // Age and staleness.
+    CHECK(fsd_tpms_age_ms(&t, 50200) == 0 && !fsd_tpms_stale(&t, 50200), "tpms age: 0 right away");
+    CHECK(!fsd_tpms_stale(&t, 50200 + FSD_TPMS_STALE_MS), "tpms age: not stale at the limit");
+    CHECK(fsd_tpms_stale(&t, 50201 + FSD_TPMS_STALE_MS), "tpms age: stale past the limit");
+    CHECK(fsd_tpms_age_ms(&t, 50200 + 312000) == 312000, "tpms age: 312 s");
+    t.last_ms = 0xFFFFF000u;
+    CHECK(fsd_tpms_age_ms(&t, 0x100u) == 0x1100u && !fsd_tpms_stale(&t, 0x100u),
+          "tpms age: across the millis wrap");
+    FSDTpms none;
+    tpms_zero(&none);
+    CHECK(fsd_tpms_age_ms(&none, 123456) == 0 && !fsd_tpms_stale(&none, 123456),
+          "tpms age: nothing read is never stale");
+}
+
 // ── extras write handlers (Service-gated) + frame builders ────────────────────
 static void test_extras_and_builders(void) {
     FSDState s;
@@ -2893,6 +3164,10 @@ int main(void) {
     test_scroll_press();
     test_misc_parsers();
     test_readonly_parsers();
+    test_tpms_real_frames();
+    test_tpms_dbc_form();
+    test_tpms_malformed();
+    test_tpms_sources_and_age();
     test_extras_and_builders();
     test_profile();
     test_state_init();
