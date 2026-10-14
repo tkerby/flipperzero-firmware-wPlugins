@@ -164,8 +164,9 @@ _FEATURES = {
 
 # (name, functions with a frame in the .su files, allowances[, feature]).
 # prefs_save() is the deepest call in process_frame(), short of the SD dump,
-# and in button_tick(). In web_command() the OTA confirm ahead of a Wi-Fi save
-# restart goes as deep, and deleting black-box files on disk deeper.
+# and in button_tick(). In web_command() deleting black-box files on disk goes
+# deeper. A Wi-Fi save restarts from the caller once the reply is out
+# (restart_for_wifi()), and the OTA confirm ahead of it goes as deep.
 _CHAINS = [
     ("dashboard connect",
      ["loop", "web_dashboard_update", "ws_event", "build_json"],
@@ -174,7 +175,7 @@ _CHAINS = [
      ["loop", "web_dashboard_update", "ws_event", "web_command", "prefs_save"],
      ["WebSockets message", "NVS write"]),
     ("dashboard Wi-Fi save",
-     ["loop", "web_dashboard_update", "ws_event", "web_command", "ota_verify_confirm"],
+     ["loop", "web_dashboard_update", "ws_event", "restart_for_wifi", "ota_verify_confirm"],
      ["WebSockets message", "OTA confirm"]),
     ("dashboard mark",
      ["loop", "web_dashboard_update", "ws_event", "web_command", "blackbox_mark",

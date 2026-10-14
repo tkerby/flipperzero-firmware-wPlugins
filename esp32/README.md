@@ -94,7 +94,7 @@ Most CAN protocol handling from hypery11's Flipper Zero implementation (`fsd_han
 - **CAN Errors** — combined controller error count with an RX missed / bus / TX fail split (mostly RX-queue drops on a busy bus, not failed sends)
 - **Connection Status** — green/red dot indicator with auto-reconnect on WebSocket disconnect; stays green while HTTP polling is working
 - **Device Info** — release version and build date, uptime counter, WiFi client count; the footer names the board the image was built for
-- **REST API** — `GET /api/status` returns full JSON state; `POST /api/cmd` takes the same `{"cmd":…,"value":…}` JSON as a WebSocket message (`Content-Type: application/json` required)
+- **REST API** — `GET /api/status` returns full JSON state; `POST /api/cmd` takes the same `{"cmd":…,"value":…}` JSON as a WebSocket message (`Content-Type: application/json` required). A command is picked by its `"cmd"` value and its value has to be the type the command takes (`true`/`false` for a switch, a whole number for a setting). One the device refuses changes nothing and gets `{"ok":false,"err":…}` back, as a 400 on `/api/cmd` and as a frame on the WebSocket; `wifi_cfg` names the field in `"field"` and is taken whole or not at all, without a restart when refused
 - **TTGO T-Display dashboard** — optional on-board ST7789 status display for the `ttgo-tdisplay` build
 - **Web firmware update** — the OTA Firmware Update card takes the app-only `tesla-fsd-<env>.bin` from a release (user `admin`, password = the WiFi AP password). The new image is confirmed after 15 s of runtime; a crash, watchdog reset, brownout or power cut before that boots the previous firmware, so just run the update again.
 
