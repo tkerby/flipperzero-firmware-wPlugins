@@ -32,7 +32,7 @@
 // Ring capacity in frames @ 19 B/frame (BBFrame carries a 1-byte RX/TX tag).
 // PSRAM (runtime-detected) holds a full ~15 s window at a busy bus rate. The
 // internal-RAM fallback must cover the window on its own — PSRAM is never
-// required and no build enables it:
+// required, and lilygo-t2can is the only build that enables it:
 //   - S3-class (512 KB SRAM): 6000 frames ≈ 114 KB → ≥15 s even at ~400 f/s.
 //     Only paired with the persistent disk backends here, which stream the ring
 //     straight to file (no frozen copy), so the ring is the whole footprint.

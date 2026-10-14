@@ -174,8 +174,8 @@ Any ESP32 board + CAN transceiver works. Pick the matching build env in `platfor
 | `esp32-mcp2515` | Generic ESP32 + MCP2515 module | MCP2515 SPI | SPI CS=5 | 8 MHz crystal |
 | `esp32-lilygo` | LilyGO T-CAN485 | TWAI | 27 / 26 | Built-in SN65HVD230 + SD slot |
 | `ttgo-tdisplay` | LilyGO/TTGO T-Display + MCP2515 | MCP2515 SPI (HSPI) | CS=26, SCK=33, MISO=32, MOSI=25 | Built-in ST7789 dashboard, MISO needs 5V→3.3V divider |
-| `lilygo-t2can` | LilyGO-T2CAN | TWAI/MCP2515 SPI | 7 / 6 | ESP32-S3-WROOM-1U (MCN16R8) with MCP2515 |
-| `lilygo-t2can-fd` | LilyGO T-2CAN FD (H784-A) | TWAI/MCP2518FD SPI | 7 / 6 | Same board with an MCP2518FD on `can1`, classic CAN 2.0 at 500 kbps; not yet confirmed on real hardware |
+| `lilygo-t2can` | LilyGO-T2CAN | TWAI/MCP2515 SPI | 7 / 6 | ESP32-S3-WROOM-1U (MCN16R8) with MCP2515; the 8 MB PSRAM holds the black-box ring (40000 frames) |
+| `lilygo-t2can-fd` | LilyGO T-2CAN FD (H784-A) | TWAI/MCP2518FD SPI | 7 / 6 | Same board with an MCP2518FD on `can1`, classic CAN 2.0 at 500 kbps; PSRAM as on `lilygo-t2can`; not yet confirmed on real hardware |
 | `waveshare-s3-can` | Waveshare ESP32-S3-RS485-CAN | TWAI | 15 / 16 | ESP32-S3, 8MB flash/PSRAM, USB-CDC |
 | `esp32-generic-twai` | Classic ESP32 DevKit + SN65HVD230 | TWAI | 21 / 22 | No LED; build from source (no prebuilt image) |
 | `esp32-generic-twai-sniffer` | Classic ESP32 DevKit + SN65HVD230 | TWAI (hardware Listen-Only) | 21 / 22 | `SNIFFER_ONLY`: can never transmit; build from source |
