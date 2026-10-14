@@ -2,7 +2,7 @@
 
 #include <gui/canvas.h>
 
-// Face indices match flipagotchi/include/pwnagotchi.h enum PwnagotchiFace and the
+// Face indices are the canonical pwnagotchi face order, matched by the
 // ESP32 side's FACE_GLYPHS table, so a single index selects the same face on the
 // Flipper screen and in the advertised pwngrid persona (-f on the wire).
 typedef enum {

@@ -1,5 +1,7 @@
 # pwnpal
 
+<p align="center"><img src="doc/screenshots/demo.gif" width="260" alt="pwnpal in action"/></p>
+
 **A full [pwnagotchi](https://pwnagotchi.org) on your Flipper Zero + ESP32 wifi board.**
 
 pwnpal turns the Flipper's ESP32 board into a self-contained pwnagotchi: it makes friends
@@ -14,13 +16,6 @@ Flipper app, no PC or Raspberry Pi required.
 <img src="doc/screenshots/list.png" width="256" alt="recent APs"/>
 <img src="doc/screenshots/detail.png" width="256" alt="AP detail"/>
 </p>
-
-<img src="doc/screenshots/demo.gif" width="256" alt="pwnpal in action"/>
-
-> ⚠️ **Authorized use only.** Association, deauthentication and handshake capture are active
-> radio attacks. Use pwnpal only on networks you own or are explicitly permitted to test.
-> The app ships capture/deauth **off** behind a one-time on-device consent gate. You are
-> responsible for complying with local law.
 
 ## What it does
 
@@ -97,6 +92,3 @@ MIT. Built on the shoulders of:
 [ESP32 Marauder](https://github.com/justcallmekoko/ESP32Marauder) (justcallmekoko),
 the flipagotchi renderer and the original pwnagotchi-flipper (Matt London), and
 RogueMaster's pwnagotchi face art. pwnpal by mrq1911.
-
-The repo also retains the original `flipagotchi/` + `pwnzero/` (wired-pwnagotchi screen
-mirror) from the upstream project; pwnpal is independent of them.

@@ -12,7 +12,7 @@ static const uint8_t PWNGRID_SIG_MAC[6] = {0xde, 0xad, 0xbe, 0xef, 0xde, 0xad};
 static const uint8_t HOP_CHANNELS[] = {1, 6, 11, 2, 7, 12, 3, 8, 13, 4, 9, 5, 10};
 static const uint8_t NUM_HOP_CHANNELS = sizeof(HOP_CHANNELS) / sizeof(HOP_CHANNELS[0]);
 
-// Face glyphs, indexed to match flipagotchi/include/pwnagotchi.h enum PwnagotchiFace.
+// Face glyphs, indexed to match pwnpal/include/face.h (the pwnagotchi face order).
 static const char* FACE_GLYPHS[] = {
     "",            // 0  NoFace
     "(◕‿‿◕)",     // 1  DefaultFace (Awake)

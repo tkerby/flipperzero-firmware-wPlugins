@@ -223,8 +223,7 @@ and garble.
 
 ## 3. Shared face table
 
-Both sides use the same ordering as `flipagotchi/include/pwnagotchi.h`
-(`enum PwnagotchiFace`), so a single `-f <index>` selects the same face on the Flipper's
+Both sides use the same ordering as `pwnpal/include/face.h`, so a single `-f <index>` selects the same face on the Flipper's
 own screen and in the advertised glyph:
 
 | idx | name         | glyph      |
