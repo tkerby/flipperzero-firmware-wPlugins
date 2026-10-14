@@ -1,6 +1,8 @@
 #include <furi.h>
 #include <furi_hal_subghz.h>
 #include <furi_hal_region.h>
+#include <furi_hal_power.h> // external module 5V (OTG) power
+#include <lib/subghz/devices/devices.h> // external radio (cc1101_ext) via the device abstraction
 #include <gui/gui.h>
 #include <gui/view_dispatcher.h>
 #include <gui/view.h>
@@ -58,10 +60,21 @@ static struct {
         },
 };
 
-// set the CC1101 to freq and the matching RF path WITHOUT furi_hal_subghz_set_frequency_and_path,
-// which furi_crash()es if the quantised real frequency lands in a band gap. Returns false
-// (caller marks the bin invalid) instead of crashing.
+// non-NULL => the external radio (cc1101_ext) is the active owner; NULL => internal furi_hal.
+// Set by radio_setup(), cleared by radio_teardown(). Only the single current worker touches the
+// radio (sweep and capture are strictly sequential), so this file-static has one owner at a time.
+static const SubGhzDevice* s_ext = NULL;
+
+// set the radio to freq + matching RF path for RX. Internal path avoids
+// furi_hal_subghz_set_frequency_and_path (furi_crash()es on a band-gap); the external device
+// folds the path into set_frequency. Returns false on an internal band-gap (caller skips the bin).
 static bool tune_rx(uint32_t f) {
+    if(s_ext) {
+        subghz_devices_idle(s_ext);
+        subghz_devices_set_frequency(s_ext, f);
+        subghz_devices_set_rx(s_ext);
+        return true;
+    }
     furi_hal_subghz_idle();
     uint32_t real = furi_hal_subghz_set_frequency(f);
     if(real >= 299999755 && real <= 348000335)
@@ -204,6 +217,7 @@ typedef struct {
     uint8_t settle_ms;
     volatile uint8_t preset_idx; // index into PRESETS[]; worker reloads the CC1101 on change
     volatile uint8_t gain; // 0 Auto(max) / 1 Mid / 2 Low -- caps the AGC's max usable gain
+    volatile uint8_t radio; // 0 internal CC1101 (furi_hal) / 1 external cc1101_ext (bigger antenna)
     uint8_t preset_buf[128]; // RAM copy of a preset with AGCCTRL2 patched (for Mid/Low gain)
     volatile bool reconfig; // config changed -> worker recomputes bins + resets buffers
 
@@ -511,12 +525,118 @@ static uint32_t selected_freq(const App* app) {
     return grp_freq(app, app->cursor);
 }
 
+// ---- radio abstraction (internal furi_hal vs external cc1101_ext) ----------
+// One worker owns the radio at a time (sweep and capture never run concurrently -- each is
+// joined before the other starts), so OTG power and the device session bracket that one owner.
+
+// bring the selected radio up for the worker that is starting. External: power the module's 5V
+// (OTG, retried like the stock subghz app), init + fetch + begin the device; if it's absent or
+// disconnected, fall back to internal so we never call a subghz_devices_* on NULL (that furi_checks).
+static void radio_setup(App* app) {
+    s_ext = NULL;
+    if(app->radio == 1) {
+        for(uint8_t i = 0; i < 5 && !furi_hal_power_is_otg_enabled(); i++) {
+            furi_hal_power_enable_otg();
+            furi_delay_ms(10);
+        }
+        subghz_devices_init();
+        const SubGhzDevice* d = subghz_devices_get_by_name("cc1101_ext");
+        if(d && subghz_devices_is_connect(d)) {
+            subghz_devices_begin(d);
+            subghz_devices_reset(d);
+            subghz_devices_idle(d);
+            s_ext = d;
+            FURI_LOG_I(TAG, "radio: external cc1101_ext up");
+            return;
+        }
+        subghz_devices_deinit(); // not found/connected -> undo and fall back to internal
+        if(furi_hal_power_is_otg_enabled()) furi_hal_power_disable_otg();
+        app->radio = 0;
+        FURI_LOG_W(TAG, "radio: external not found -> internal");
+    }
+    furi_hal_subghz_reset();
+}
+
+// true if an external cc1101_ext module is physically present (brief powered probe, then undone).
+// Used once at startup to auto-default the radio to External when the board is plugged in.
+static bool radio_external_present(void) {
+    for(uint8_t i = 0; i < 5 && !furi_hal_power_is_otg_enabled(); i++) {
+        furi_hal_power_enable_otg();
+        furi_delay_ms(10);
+    }
+    subghz_devices_init();
+    const SubGhzDevice* d = subghz_devices_get_by_name("cc1101_ext");
+    bool present = d && subghz_devices_is_connect(d);
+    subghz_devices_deinit();
+    if(furi_hal_power_is_otg_enabled()) furi_hal_power_disable_otg();
+    return present;
+}
+
+// tear the active radio down at the owning worker's exit (idempotent).
+static void radio_teardown(void) {
+    if(s_ext) {
+        subghz_devices_sleep(s_ext);
+        subghz_devices_end(s_ext);
+        subghz_devices_deinit();
+        s_ext = NULL;
+        if(furi_hal_power_is_otg_enabled()) furi_hal_power_disable_otg();
+    } else {
+        furi_hal_subghz_idle();
+        furi_hal_subghz_sleep();
+    }
+}
+
+static void radio_load_preset(const uint8_t* regs) {
+    if(s_ext) {
+        subghz_devices_idle(s_ext);
+        subghz_devices_load_preset(s_ext, FuriHalSubGhzPresetCustom, (uint8_t*)regs);
+    } else {
+        furi_hal_subghz_idle();
+        furi_hal_subghz_load_custom_preset((uint8_t*)regs);
+    }
+}
+
+static float radio_rssi(void) {
+    return s_ext ? subghz_devices_get_rssi(s_ext) : furi_hal_subghz_get_rssi();
+}
+
+// set a fixed RX frequency WITHOUT starting sync rx (for .sub async capture).
+static void radio_set_freq(uint32_t f) {
+    if(s_ext) {
+        subghz_devices_idle(s_ext);
+        subghz_devices_set_frequency(s_ext, f);
+        return;
+    }
+    furi_hal_subghz_idle();
+    furi_hal_subghz_set_frequency(f);
+    if(f >= 299999755 && f <= 348000335)
+        furi_hal_subghz_set_path(FuriHalSubGhzPath315);
+    else if(f >= 386999938 && f <= 464000000)
+        furi_hal_subghz_set_path(FuriHalSubGhzPath433);
+    else
+        furi_hal_subghz_set_path(FuriHalSubGhzPath868);
+}
+
+static void radio_async_start(void* cb, void* ctx) {
+    if(s_ext)
+        subghz_devices_start_async_rx(s_ext, cb, ctx);
+    else
+        furi_hal_subghz_start_async_rx(cb, ctx);
+}
+
+static void radio_async_stop(void) {
+    if(s_ext)
+        subghz_devices_stop_async_rx(s_ext);
+    else
+        furi_hal_subghz_stop_async_rx();
+}
+
 // ---- radio sweep worker ----------------------------------------------------
 
 static int32_t sweep_worker(void* ctx) {
     App* app = ctx;
-    FURI_LOG_I(TAG, "worker: start, reset");
-    furi_hal_subghz_reset();
+    FURI_LOG_I(TAG, "worker: start, radio setup");
+    radio_setup(app);
 
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* csv = NULL; // open while recording; owned entirely by this thread
@@ -533,8 +653,7 @@ static int32_t sweep_worker(void* ctx) {
         if(p >= PRESET_N) p = 0;
         uint8_t bwn = (app->zdepth > 0) ? bw_nibble(app->f_step) : 0xFF;
         if(cur_preset != p || cur_gain != g || cur_bw != bwn) {
-            furi_hal_subghz_idle();
-            furi_hal_subghz_load_custom_preset(preset_regs(app, p, g, bwn));
+            radio_load_preset(preset_regs(app, p, g, bwn));
             cur_preset = p;
             cur_gain = g;
             cur_bw = bwn;
@@ -602,7 +721,7 @@ static int32_t sweep_worker(void* ctx) {
             if(furi_hal_subghz_is_frequency_valid(f) && tune_rx(f)) {
                 valid++;
                 furi_delay_ms(app->settle_ms);
-                float rf = furi_hal_subghz_get_rssi();
+                float rf = radio_rssi();
                 int8_t r = (rf < -127.0f) ? (int8_t)-127 : (int8_t)rf; // keep -128 as the sentinel
                 app->rssi[i] = r;
                 if(r > app->peak[i]) app->peak[i] = r;
@@ -624,7 +743,7 @@ static int32_t sweep_worker(void* ctx) {
                     uint32_t sf = selected_freq(app);
                     if(furi_hal_subghz_is_frequency_valid(sf) && tune_rx(sf)) {
                         furi_delay_ms(app->settle_ms);
-                        float hrf = furi_hal_subghz_get_rssi();
+                        float hrf = radio_rssi();
                         haptic_sample(app, (hrf < -127.0f) ? (int8_t)-127 : (int8_t)hrf);
                     } else {
                         haptic_sample(
@@ -694,9 +813,8 @@ static int32_t sweep_worker(void* ctx) {
     }
     furi_record_close(RECORD_STORAGE);
     haptic_off(app); // never leave the locate motor latched on
-    FURI_LOG_I(TAG, "worker: exit, radio idle+sleep");
-    furi_hal_subghz_idle();
-    furi_hal_subghz_sleep();
+    FURI_LOG_I(TAG, "worker: exit, radio teardown");
+    radio_teardown();
     return 0;
 }
 
@@ -1476,17 +1594,10 @@ static int32_t capture_worker(void* ctx) {
     } else {
         FURI_LOG_I(
             TAG, "cap: recording %lu Hz %s -> %s", (unsigned long)app->cap_freq, ps->name, path);
-        furi_hal_subghz_reset();
-        furi_hal_subghz_load_custom_preset(ps->regs);
-        furi_hal_subghz_idle();
-        furi_hal_subghz_set_frequency(app->cap_freq);
-        if(app->cap_freq >= 299999755 && app->cap_freq <= 348000335)
-            furi_hal_subghz_set_path(FuriHalSubGhzPath315);
-        else if(app->cap_freq >= 386999938 && app->cap_freq <= 464000000)
-            furi_hal_subghz_set_path(FuriHalSubGhzPath433);
-        else
-            furi_hal_subghz_set_path(FuriHalSubGhzPath868);
-        furi_hal_subghz_start_async_rx(capture_isr_cb, app);
+        radio_setup(app); // internal reset, or external cc1101_ext up (5V/begin); may fall back
+        radio_load_preset(ps->regs);
+        radio_set_freq(app->cap_freq);
+        radio_async_start(capture_isr_cb, app);
 
         int ind = 0;
         bool werr = false;
@@ -1497,7 +1608,7 @@ static int32_t capture_worker(void* ctx) {
             // is on and we're below the Trigger (off by default -> record everything).
             uint32_t now = furi_get_tick();
             if(now - last_poll >= 20) {
-                float r = furi_hal_subghz_get_rssi();
+                float r = radio_rssi();
                 app->cap_rssi = (r < -127.0f) ? (int8_t)-127 : (int8_t)r;
                 app->cap_paused = app->cap_gate && (app->cap_rssi < app->trigger);
                 last_poll = now;
@@ -1523,7 +1634,7 @@ static int32_t capture_worker(void* ctx) {
         }
         // teardown order is non-negotiable: stop the ISR FIRST so no callback can fire into
         // the stream after we free it; then drain the tail, flush, close, free.
-        furi_hal_subghz_stop_async_rx();
+        radio_async_stop();
         int32_t d;
         while(furi_stream_buffer_receive(app->cap_stream, &d, sizeof(d), 0) == sizeof(d)) {
             buf[ind++] = d;
@@ -1534,8 +1645,7 @@ static int32_t capture_worker(void* ctx) {
             }
         }
         if(ind > 0) flipper_format_write_int32(ff, "RAW_Data", buf, (uint16_t)ind);
-        furi_hal_subghz_idle();
-        furi_hal_subghz_sleep();
+        radio_teardown();
         haptic_off(app); // release the locate motor when the capture stops
         FURI_LOG_I(
             TAG,
@@ -1760,6 +1870,27 @@ static void gain_cb(VariableItem* item) {
     variable_item_set_current_value_text(item, GAIN_TXT[idx]);
 }
 
+static const char* const RADIO_TXT[] = {"Internal", "External"};
+static void radio_cb(VariableItem* item) {
+    App* app = variable_item_get_context(item);
+    uint8_t idx = variable_item_get_current_value_index(item) ? 1 : 0;
+    variable_item_set_current_value_text(item, RADIO_TXT[idx]);
+    if(idx == app->radio || !app->worker) {
+        app->radio = idx;
+        return;
+    }
+    // restart the sweep worker so the new radio is brought up cleanly (external OTG/begin, or the
+    // internal reset). Safe here: in config view the sweep worker is the radio's sole owner.
+    app->running = false;
+    furi_thread_join(app->worker);
+    furi_thread_free(app->worker);
+    app->radio = idx;
+    app->running = true;
+    app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 3072, sweep_worker, app);
+    furi_thread_start(app->worker);
+    FURI_LOG_I(TAG, "radio: switched to %s (worker restarted)", RADIO_TXT[idx]);
+}
+
 static void conf_enter(void* ctx, uint32_t index) {
     App* app = ctx;
     if(index == 1) { // "Range MHz" row -> open the custom range editor
@@ -1812,6 +1943,9 @@ int32_t rf_survey_app(void* p) {
     app->trigger = -85; // default floor: above the CC1101 noise floor, below real signals
     app->haptic = false;
     app->hap_level = -127; // seed the locate filter at the noise floor (0 would false-trigger)
+    app->radio =
+        radio_external_present() ? 1 : 0; // auto-select External when the module is plugged in
+    FURI_LOG_I(TAG, "radio: default %s", app->radio ? "External (detected)" : "Internal");
     // defensive against bad config (future editable ranges): never div-by-zero,
     // never an inverted range, always 1..MAX_BINS bins, and keep f_end consistent
     // with the bins actually scanned so the axis labels can't lie.
@@ -1870,6 +2004,9 @@ int32_t rf_survey_app(void* p) {
     vi = variable_item_list_add(app->conf, "Gain", COUNT_OF(GAIN_TXT), gain_cb, app);
     variable_item_set_current_value_index(vi, app->gain);
     variable_item_set_current_value_text(vi, GAIN_TXT[app->gain]);
+    vi = variable_item_list_add(app->conf, "Radio", COUNT_OF(RADIO_TXT), radio_cb, app);
+    variable_item_set_current_value_index(vi, app->radio);
+    variable_item_set_current_value_text(vi, RADIO_TXT[app->radio]);
     variable_item_list_set_enter_callback(app->conf, conf_enter, app);
     view_set_previous_callback(variable_item_list_get_view(app->conf), view_exit);
     view_dispatcher_add_view(app->vd, VIEW_CONF, variable_item_list_get_view(app->conf));
