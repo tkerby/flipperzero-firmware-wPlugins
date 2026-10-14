@@ -33,12 +33,12 @@
 #define CAN_ID_CP_STATUS      0x25Du  // 605  - CP_status: charge-port type / plug state (Vehicle CAN, #228)
 // Same replacement list as fsd_logic/fsd_handler.h, so main.cpp seeing both is not a redefinition.
 #define CAN_ID_DI_SYS_STATUS  0x118  // 280  - DI_systemStatus: DI_gear (Acceleration Mode standstill gate)
+#define CAN_ID_VCLEFT_SWITCH  0x3C2  // 962  - VCLEFT_switchStatus: tap check bus hint (#218), RX only
 // Vehicle/body bus reachability probes (#128) — RX presence only, never actuated.
 #define CAN_ID_UI_VEHICLE_CTRL 0x273u // 627  - UI_vehicleControl: mirror fold/lock/wiper/horn/seat heat
 #define CAN_ID_VCLEFT_DOOR     0x102u // 258  - VCLEFT_doorStatus: mirror state/tilt read-back
 #define CAN_ID_VCSEC_WINDOW    0x119u // 281  - VCSEC_windowRequests: windows
 #define CAN_ID_DAS_BODY        0x3E9u // 1001 - DAS_bodyControls: lights/hazards/turn/wipers
-#define CAN_ID_VCLEFT_SWITCH   0x3C2u // 962  - VCLEFT_switchStatus: right scroll wheel (speed profile). Vehicle CAN only, NOT forwarded to Bus 6
 
 // ── Build identity ────────────────────────────────────────────────────────────
 // Board name for the boot banner and the dashboard — same wording as the board
