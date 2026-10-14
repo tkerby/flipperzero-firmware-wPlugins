@@ -2931,6 +2931,27 @@ static String home_url() {
     return String("http://") + g_http.client().localIP().toString() + "/";
 }
 
+WebStreamAccess web_dashboard_stream_access(const char *origin, const char *host) {
+    if (g_state == nullptr) return WEB_STREAM_REFUSE;
+    OwnNamesText t;
+    return web_stream_access(origin, host, own_names(t));
+}
+
+// GETs that hand out state (status, aux, black-box captures) answer only
+// under our own names: a page on a rebound name is same-origin with them and
+// could read them. The page itself is sent to our address under any other
+// name (handle_root()), so the dashboard never gets this 403; like the one
+// from /api/cmd it names the address to use.
+static bool host_ours(const char *what) {
+    String host = g_http.hostHeader();
+    OwnNamesText t;
+    if (web_host_header_ours(host.c_str(), own_names(t))) return true;
+    Serial.printf("[Web] %s refused: Host %.64s\n", what, host.c_str());
+    g_http.send(403, "application/json",
+                String("{\"ok\":false,\"err\":\"host\",\"url\":\"") + home_url() + "\"}");
+    return false;
+}
+
 // WebSocket handshake, once for each request header the library does not
 // handle itself: a browser page that is not the dashboard is refused (the
 // library answers 400 and the page falls back to HTTP polling).
@@ -3008,6 +3029,7 @@ static void handle_root() {
 
 static void handle_status() {
     if (g_state == nullptr) { g_http.send(503, "application/json", "{}"); return; }
+    if (!host_ours("status")) return;
     g_http.sendHeader("Cache-Control", "no-store");
     g_http.send(200, "application/json", build_json());
 }
@@ -3065,6 +3087,7 @@ static void handle_cmd() {
 // on a slow timer so these heavy blocks stay off the hot WS state push (#124).
 static void handle_aux() {
     if (g_state == nullptr) { g_http.send(503, "application/json", "{}"); return; }
+    if (!host_ours("aux")) return;
     g_http.sendHeader("Cache-Control", "no-store");
     g_http.send(200, "application/json", build_aux_json());
 }
@@ -3086,12 +3109,14 @@ static void handle_sdformat() {
 
 // ── Black-box (#124) ──────────────────────────────────────────────────────────
 static void handle_blackbox_list() {
+    if (!host_ours("black-box list")) return;
     if (!download_auth_ok()) return;
     g_http.sendHeader("Cache-Control", "no-store");
     g_http.send(200, "application/json", blackbox_list_json());
 }
 
 static void handle_blackbox_get() {
+    if (!host_ours("black-box download")) return;
     if (!download_auth_ok()) return;
     String name = g_http.arg("name");
     bool json = (g_http.arg("type") == "json");

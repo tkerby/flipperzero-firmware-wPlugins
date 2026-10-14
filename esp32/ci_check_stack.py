@@ -217,6 +217,11 @@ _CHAINS = [
     ("black-box auth",
      ["loop", "web_dashboard_update", "handle_blackbox_get", "download_auth_ok"],
      ["WebServer", "HTTP reply"]),
+    # The Host check ahead of /api/status, /api/aux and both /blackbox
+    # handlers, which answers a refusal; /blackbox/get has the largest frame.
+    ("HTTP Host check",
+     ["loop", "web_dashboard_update", "handle_blackbox_get", "host_ours"],
+     ["WebServer", "HTTP reply"]),
     ("OTA upload",
      ["loop", "web_dashboard_update", "handle_ota_upload"],
      ["WebServer upload", "OTA flash"]),
@@ -228,6 +233,11 @@ _CHAINS = [
     ("CAN stream accept",
      ["loop", "web_dashboard_update", "http_can_stream_update", "accept_client"],
      ["TCP socket"]),
+    # Whose request it is, from the device's names (own_names(): IP text).
+    ("CAN stream access",
+     ["loop", "web_dashboard_update", "http_can_stream_update", "accept_client",
+      "web_dashboard_stream_access"],
+     ["Serial printf"]),
     # rm_recursive() recurses once per directory level. Counted three deep, the
     # layout can_dump.cpp writes (/dumps/<n>/<file>); each further level of a
     # tree someone else put on the card adds 144 bytes.

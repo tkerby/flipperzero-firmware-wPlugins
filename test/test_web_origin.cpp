@@ -1,7 +1,8 @@
 /*
  * test_web_origin.cpp — host unit tests for esp32/.firmware/web_origin.h: which
  * Origin / Host combinations the WebSocket and POST /api/cmd take commands
- * from, and which Host gets the dashboard page rather than a redirect.
+ * from, which Host gets the dashboard page rather than a redirect, and who
+ * gets the CAN stream on :82.
  *
  * Build + run:  make -C test check
  */
@@ -198,6 +199,53 @@ static void test_local_domains() {
     CHECK(!web_ws_origin_ok("http://tesla-fsd.arpa", AP), ".arpa alone");
 }
 
+// The CAN stream on :82, read by the dashboard page from :80.
+static void test_stream() {
+    // The dashboard page, however it was opened: served with a grant.
+    for (const char *o : OWN_ORIGINS_AP) {
+        CHECK(web_stream_access(o, "192.168.4.1:82", AP) == WEB_STREAM_SERVE_GRANT,
+              "own page not granted: %s", o);
+    }
+    CHECK(web_stream_access("http://tesla-fsd.local", "tesla-fsd.local:82", AP) == WEB_STREAM_SERVE_GRANT,
+          "own page by hostname");
+    CHECK(web_stream_access("http://192.168.1.57", "192.168.1.57:82", STA) == WEB_STREAM_SERVE_GRANT,
+          "own page on the home network");
+
+    // curl, SavvyCAN, a capture script: no Origin, served without a grant.
+    CHECK(web_stream_access(nullptr, "192.168.4.1:82", AP) == WEB_STREAM_SERVE, "curl by address");
+    CHECK(web_stream_access("", "tesla-fsd.lan:82", AP) == WEB_STREAM_SERVE, "curl by hostname");
+    CHECK(web_stream_access(nullptr, "192.168.4.1", AP) == WEB_STREAM_SERVE, "Host without a port");
+    CHECK(web_stream_access(nullptr, nullptr, AP) == WEB_STREAM_SERVE, "HTTP/1.0, no Host");
+
+    // Any other page is refused, granted or not it could not read the stream.
+    for (const char *o : FOREIGN_ORIGINS) {
+        CHECK(web_stream_access(o, "192.168.4.1:82", AP) == WEB_STREAM_REFUSE, "foreign page: %s", o);
+    }
+    CHECK(web_stream_access("http://192.168.4.1:82", "192.168.4.1:82", AP) == WEB_STREAM_REFUSE,
+          "a page served from :82 is not the dashboard");
+
+    // Rebound name: same-origin to the attacker's page, which sends no Origin
+    // on that GET. Only Host gives it away.
+    const char *rebound[] = {"evil.example:82", "evil.example", "tesla-fsd.evil.example:82",
+                             "192.168.4.1.nip.io:82"};
+    for (const char *h : rebound) {
+        CHECK(web_stream_access(nullptr, h, AP) == WEB_STREAM_REFUSE, "rebound Host %s", h);
+        CHECK(web_stream_access("http://192.168.4.1", h, AP) == WEB_STREAM_REFUSE,
+              "own Origin, rebound Host %s", h);
+    }
+    // Other ports on our address: not the stream.
+    const char *ports[] = {"192.168.4.1:80", "192.168.4.1:81", "192.168.4.1:8082", "192.168.4.1:",
+                           "192.168.4.1:082"};
+    for (const char *h : ports) {
+        CHECK(web_stream_access(nullptr, h, AP) == WEB_STREAM_REFUSE, "Host %s", h);
+    }
+    // The :80 rule is unchanged for the page and its API.
+    CHECK(web_host_header_ours("192.168.4.1:80", AP) && !web_host_header_ours("192.168.4.1:82", AP),
+          ":82 is no Host for the page");
+    CHECK(web_host_header_ours("192.168.4.1:82", AP, ":82") && web_host_header_ours("tesla-fsd:82", AP, ":82"),
+          ":82 for the stream");
+}
+
 int main() {
     printf("test_web_origin: dashboard Origin / Host checks\n");
     test_ws_own_page();
@@ -207,6 +255,7 @@ int main() {
     test_post();
     test_host_header();
     test_local_domains();
+    test_stream();
 
     printf("\n%d passed, %d failed\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;

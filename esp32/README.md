@@ -407,7 +407,7 @@ Type these into the serial monitor:
 3. Monitor and control everything from the web UI
 4. Tap **STREAM LOG AND SAVE** to collect a CAN log on the phone; tap **STOP COLLECTING**, then **SAVE LOG FILE** to save it as a candump `.dump` file
 5. REST API available at `http://192.168.4.1/api/status`
-6. Raw CAN stream endpoint: `http://192.168.4.1:82/stream`
+6. Raw CAN stream endpoint: `http://192.168.4.1:82/stream`. Address it by the device's IP or hostname; in a browser, only the dashboard's own page can read it
 
 ### Capture fidelity — the two drop metrics
 
