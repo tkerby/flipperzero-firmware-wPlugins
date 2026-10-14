@@ -1,7 +1,6 @@
 /*
  * test_web_origin.cpp — host unit tests for esp32/.firmware/web_origin.h: which
- * Origin / Host combinations the WebSocket and POST /api/cmd take commands
- * from, which Host gets the dashboard page rather than a redirect, and who
+ * Origins the WebSocket and POST /api/cmd take commands from, which Host gets the dashboard page rather than a redirect, and who
  * gets the CAN stream on :82.
  *
  * Build + run:  make -C test check
@@ -128,40 +127,35 @@ static void test_rebinding() {
     for (const char *name : rebound) {
         snprintf(origin, sizeof(origin), "http://%s", name);
         CHECK(!web_ws_origin_ok(origin, AP), "WS, rebound %s", name);
-        CHECK(!web_post_origin_ok(origin, name, AP), "POST, rebound %s", name);
-        CHECK(!web_post_origin_ok(origin, name, STA), "POST (STA), rebound %s", name);
-        // The rebinding page hides its origin with a no-referrer policy:
-        // Origin: null, Host still the rebound name.
-        CHECK(!web_post_origin_ok("null", name, AP), "POST null, rebound %s", name);
+        CHECK(!web_post_origin_ok(origin, AP), "POST, rebound %s", name);
+        CHECK(!web_post_origin_ok(origin, STA), "POST (STA), rebound %s", name);
         CHECK(!web_host_header_ours(name, AP), "Host %s gets the redirect", name);
     }
 }
 
 static void test_post() {
     for (const char *o : OWN_ORIGINS_AP) {
-        CHECK(web_post_origin_ok(o, "192.168.4.1", AP), "AP: own page refused: %s", o);
+        CHECK(web_post_origin_ok(o, AP), "AP: own page refused: %s", o);
     }
     for (const char *o : FOREIGN_ORIGINS) {
-        if (strcmp(o, "null") == 0) continue;   // depends on Host, below
-        CHECK(!web_post_origin_ok(o, "192.168.4.1", AP), "AP: foreign page taken: %s", o);
+        CHECK(!web_post_origin_ok(o, AP), "AP: foreign page taken: %s", o);
     }
-    // curl, Home Assistant, a script: no Origin, any Host.
-    CHECK(web_post_origin_ok(nullptr, "192.168.1.57", STA), "no Origin, by address");
-    CHECK(web_post_origin_ok("", "tesla-fsd.fritz.box", STA), "no Origin, router DNS name");
-    CHECK(web_post_origin_ok(nullptr, nullptr, STA), "no Origin, no Host");
+    CHECK(web_post_origin_ok("http://192.168.1.57", STA), "STA address");
+    CHECK(web_post_origin_ok("http://tesla-fsd.lan", STA), "hostname on the home network");
+    // curl, Home Assistant, a script: no Origin.
+    CHECK(web_post_origin_ok(nullptr, STA), "no Origin header");
+    CHECK(web_post_origin_ok("", STA), "empty Origin");
+    CHECK(web_post_origin_ok(" \t", STA), "blank Origin");
 
-    // Origin: null is a browser that hides the page's origin.
-    CHECK(web_post_origin_ok("null", "192.168.4.1", AP), "null, our address");
-    CHECK(web_post_origin_ok(" null ", "tesla-fsd.lan", AP), "null, our name");
-    CHECK(web_post_origin_ok("null", "192.168.4.1:80", AP), "null, our address:80");
-    CHECK(!web_post_origin_ok("null", "evil.example", AP), "null, foreign Host");
-    CHECK(!web_post_origin_ok("null", "", AP), "null, empty Host");
-    CHECK(!web_post_origin_ok("null", nullptr, AP), "null, no Host");
-    CHECK(!web_post_origin_ok("NULL", "192.168.4.1", AP), "NULL is no null origin");
-    CHECK(!web_post_origin_ok("nullx", "192.168.4.1", AP), "nullx");
-
-    // An own-page Origin does not need Host to agree (names resolve either way).
-    CHECK(web_post_origin_ok("http://tesla-fsd.lan", "192.168.1.57", STA), "Origin name, Host address");
+    // Origin: null comes from sandboxed frames, data: URLs and file:// pages,
+    // aimed at whatever Host they like, ours included. The dashboard never
+    // sends it: refused, as on the WebSocket, in every spelling.
+    const char *nulls[] = {"null", " null ", "\tnull", "NULL", "Null", "nullx", "null,null"};
+    for (const char *o : nulls) {
+        CHECK(!web_post_origin_ok(o, AP), "POST, Origin %s", o);
+        CHECK(!web_post_origin_ok(o, STA), "POST (STA), Origin %s", o);
+        CHECK(web_post_origin_ok(o, AP) == web_ws_origin_ok(o, AP), "POST and WS agree on %s", o);
+    }
 }
 
 static void test_host_header() {

@@ -3043,7 +3043,7 @@ static bool post_from_dashboard(const char *what) {
     String origin = g_http.header("Origin");
     String host = g_http.hostHeader();
     OwnNamesText t;
-    if (web_post_origin_ok(origin.c_str(), host.c_str(), own_names(t))) return true;
+    if (web_post_origin_ok(origin.c_str(), own_names(t))) return true;
     Serial.printf("[Web] %s refused: Origin %.64s Host %.64s\n", what, origin.c_str(), host.c_str());
     g_http.send(403, "application/json",
                 String("{\"ok\":false,\"err\":\"origin\",\"url\":\"") + home_url() + "\"}");

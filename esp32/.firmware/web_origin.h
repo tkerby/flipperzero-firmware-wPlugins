@@ -128,20 +128,14 @@ inline bool web_ws_origin_ok(const char *origin, const WebOwnNames &own) {
     return !web_origin_trim(origin, &p, &n) || web_origin_ours(origin, own);
 }
 
-// POST /api/cmd. Browsers send Origin on every POST, so as on the WebSocket
-// no Origin is a client that is not a page. "null" is a browser hiding the
-// page's origin (a no-referrer policy, a sandboxed frame): taken only when
-// Host is one of our names, which a rebound name is not; from another site
-// such a request cannot get past the CORS preflight that the JSON
-// Content-Type forces. Any other Origin has to be our own page.
-inline bool web_post_origin_ok(const char *origin, const char *host, const WebOwnNames &own) {
-    const char *p, *h;
-    size_t n, hn;
-    if (!web_origin_trim(origin, &p, &n)) return true;
-    if (n == 4 && memcmp(p, "null", 4) == 0) {
-        return web_origin_trim(host, &h, &hn) && web_origin_host_ours(h, hn, own);
-    }
-    return web_origin_ours(origin, own);
+// POST /api/cmd and /sdformat, the same rule as the WebSocket. Browsers send
+// Origin on every POST, so no Origin is a client that is not a page; any
+// Origin has to be our own page. That refuses "null", which the dashboard
+// page never sends but sandboxed frames, data: URLs and file:// pages do,
+// with whatever Host they aim at: the CORS preflight that /api/cmd's JSON
+// Content-Type forces would be all that stood between them and a command.
+inline bool web_post_origin_ok(const char *origin, const WebOwnNames &own) {
+    return web_ws_origin_ok(origin, own);
 }
 
 // The CAN stream on :82 (http_can_stream.cpp). The dashboard's own page reads
