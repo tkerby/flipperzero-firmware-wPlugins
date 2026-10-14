@@ -1657,6 +1657,9 @@ function saveWifi(b){
   if(s.length<1){uiAlert('SSID required');return;}
   if(p!=='***' && p.length>0 && p.length<8){uiAlert('Password must be empty or 8+ chars');return;}
   if(sp!=='***' && ss.length>0 && sp.length>0 && sp.length<8){uiAlert('Network password must be empty or 8+ chars');return;}
+  // 64 characters are the key itself, in hex (web_wifi_pass_ok() in web_cmd.h).
+  if(p!=='***' && p.length===64 && !WIFI_HEX64.test(p)){uiAlert(WIFI_ERR.pass);return;}
+  if(sp!=='***' && ss.length>0 && sp.length===64 && !WIFI_HEX64.test(sp)){uiAlert(WIFI_ERR.sta_pass);return;}
   if(hn && !/^[A-Za-z0-9]([A-Za-z0-9-]{0,29}[A-Za-z0-9])?$/.test(hn)){uiAlert(WIFI_ERR.host);return;}
   uiConfirm('WiFi settings will be updated and the device will restart.',function(){
     var t=b?b.textContent:'';
@@ -1699,11 +1702,12 @@ function cmd(c,v,fail){
   });
 }
 var WIFI_BYTES='\nCharacters outside plain ASCII take 2 to 4 bytes each; control characters are not accepted.';
+var WIFI_HEX64=/^[0-9A-Fa-f]{64}$/;
 var WIFI_ERR={
   ssid:'SSID must be 1 to 32 bytes.'+WIFI_BYTES,
-  pass:'Password must be empty or 8 to 64 bytes.'+WIFI_BYTES,
+  pass:'Password must be empty, 8 to 63 bytes, or exactly 64 hex digits (0-9, a-f), which are the key itself.'+WIFI_BYTES,
   sta_ssid:'Network name must be at most 32 bytes.'+WIFI_BYTES,
-  sta_pass:'Network password must be empty or 8 to 64 bytes.'+WIFI_BYTES,
+  sta_pass:'Network password must be empty, 8 to 63 bytes, or exactly 64 hex digits (0-9, a-f), which are the key itself.'+WIFI_BYTES,
   host:'Hostname must be 1 to 31 letters, digits or hyphens, and cannot start or end with a hyphen.'};
 // A command that did not take, refused by the device (d.err) or never
 // delivered: say so and undo what the page did for it.

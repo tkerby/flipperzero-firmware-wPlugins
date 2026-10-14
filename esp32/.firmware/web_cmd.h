@@ -384,6 +384,24 @@ inline bool web_hostname_valid(const char *s) {
     return true;
 }
 
+// A WPA2 passphrase is 8 to 63 bytes; 64 is the 256-bit key itself, written
+// in hex. ESP-IDF (4.4, the pinned Arduino core) takes 64 characters as that
+// key on both interfaces: the SoftAP does not start on 64 that are not all hex
+// digits (ESP_ERR_WIFI_PASSWORD, so no AP and no dashboard), and the station
+// cannot make a key of them. Empty is an open network.
+inline bool web_wifi_pass_ok(const char *pass, size_t len) {
+    if (len == 0) return true;
+    if (len < WEB_WIFI_PASS_MIN) return false;
+    if (len < WEB_WIFI_PASS_MAX) return true;
+    if (len > WEB_WIFI_PASS_MAX) return false;
+    for (size_t i = 0; i < len; i++) {
+        char c = pass[i];
+        bool hex = (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+        if (!hex) return false;
+    }
+    return true;
+}
+
 struct WebWifiCfg {
     bool has_ssid, has_pass, has_hidden, has_sta_ssid, has_sta_pass, has_host;
     bool hidden;
@@ -402,11 +420,12 @@ struct WebWifiCfg {
 // whole or not at all.
 //
 //   ssid      1-32 bytes
-//   pass      empty (open AP) or 8-64 bytes
+//   pass      empty (open AP), 8-63 bytes or 64 hex digits, see
+//             web_wifi_pass_ok()
 //   hidden    true / false
 //   sta_ssid  0-32 bytes, empty = no network
-//   sta_pass  empty or 8-64 bytes; any length up to 64 while sta_ssid is
-//             sent empty (the page does not check it then)
+//   sta_pass  as pass; anything up to 64 bytes while sta_ssid is sent empty
+//             (the page does not check it then)
 //   host      empty (the default) or a hostname, see web_hostname_valid()
 //
 // Lengths are bytes after decoding, and nothing is cut to fit. Text may not
@@ -423,7 +442,6 @@ inline const char *web_wifi_parse(WebJson value, WebWifiCfg *cfg) {
         }
         return 1;
     };
-    auto short_pass = [](size_t len) { return len > 0 && len < WEB_WIFI_PASS_MIN; };
 
     if (!value.p || value.len < 2 || value.p[0] != '{') return "value";
     size_t len = 0;
@@ -436,7 +454,7 @@ inline const char *web_wifi_parse(WebJson value, WebWifiCfg *cfg) {
     got = text("pass", cfg->pass, sizeof(cfg->pass), &len);
     if (got < 0) return "pass";
     cfg->has_pass = got > 0 && strcmp(cfg->pass, WEB_WIFI_PASS_KEEP) != 0;
-    if (cfg->has_pass && short_pass(len)) return "pass";
+    if (cfg->has_pass && !web_wifi_pass_ok(cfg->pass, len)) return "pass";
 
     WebJson hidden;
     cfg->has_hidden = web_json_get(value, "hidden", &hidden);
@@ -450,7 +468,7 @@ inline const char *web_wifi_parse(WebJson value, WebWifiCfg *cfg) {
     if (got < 0) return "sta_pass";
     cfg->has_sta_pass = got > 0 && strcmp(cfg->sta_pass, WEB_WIFI_PASS_KEEP) != 0;
     bool no_network = cfg->has_sta_ssid && cfg->sta_ssid[0] == '\0';
-    if (cfg->has_sta_pass && short_pass(len) && !no_network) return "sta_pass";
+    if (cfg->has_sta_pass && !no_network && !web_wifi_pass_ok(cfg->sta_pass, len)) return "sta_pass";
 
     got = text("host", cfg->host, sizeof(cfg->host), &len);
     if (got < 0 || (got > 0 && len > 0 && !web_hostname_valid(cfg->host))) return "host";

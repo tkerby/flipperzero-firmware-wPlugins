@@ -383,12 +383,19 @@ static void test_wifi_quotes_and_backslashes() {
     CHECK(strcmp(cfg.sta_ssid, "Home \"5G\"") == 0, "sta_ssid decoded: %s", cfg.sta_ssid);
     CHECK(strcmp(cfg.sta_pass, "\\\\back\\slash\"quote\"") == 0, "sta_pass decoded: %s", cfg.sta_pass);
 
-    // 64 quote characters: 128 bytes of JSON, 64 once decoded.
+    // 64 quote characters: 128 bytes of JSON, 64 once decoded. They fit the
+    // buffer (a network password with no network is not checked further), but
+    // 64 characters that are not hex are no password (web_wifi_pass_ok()).
     std::string q64;
     for (int i = 0; i < 64; i++) q64 += "\\\"";
-    CHECK(wifi(wifi_value("\"a\"", "\"" + q64 + "\""), &cfg) == nullptr && strlen(cfg.pass) == 64,
-          "64 escaped quotes fit");
-    CHECK(wifi(wifi_value("\"a\"", "\"" + q64 + "\\\"\""), &cfg) != nullptr, "65 do not");
+    CHECK(wifi(wifi_value("\"a\"", "\"\"", "\"\"", "\"" + q64 + "\""), &cfg) == nullptr &&
+          strlen(cfg.sta_pass) == 64, "64 escaped quotes fit");
+    CHECK(wifi(wifi_value("\"a\"", "\"\"", "\"\"", "\"" + q64 + "\\\"\""), &cfg) != nullptr, "65 do not");
+    bad = wifi(wifi_value("\"a\"", "\"" + q64 + "\""), &cfg);
+    CHECK(bad && strcmp(bad, "pass") == 0, "64 quotes are no AP password: %s", bad ? bad : "null");
+    std::string q63 = q64.substr(2);
+    CHECK(wifi(wifi_value("\"a\"", "\"" + q63 + "\""), &cfg) == nullptr && strlen(cfg.pass) == 63,
+          "63 escaped quotes are");
 
     CHECK(wifi(wifi_value("\"\\u00e9t\\u00e9\"", "\"\\u5bc6\\u78bc\\u5bc6\\u78bc\\u5bc6\\u78bc\""), &cfg) == nullptr &&
           strcmp(cfg.ssid, "\xC3\xA9t\xC3\xA9") == 0 && strlen(cfg.pass) == 18, "escaped non-ASCII");
@@ -396,12 +403,32 @@ static void test_wifi_quotes_and_backslashes() {
 
 static void test_wifi_lengths() {
     WebWifiCfg cfg;
-    std::string s32(32, 's'), s33(33, 's'), p7(7, 'p'), p8(8, 'p'), p64(64, 'p'), p65(65, 'p');
+    std::string s32(32, 's'), s33(33, 's'), p7(7, 'p'), p8(8, 'p'), p63(63, 'p'), p64(64, 'p'),
+        p65(65, 'p');
+    std::string hex64 = "0123456789abcdefABCDEF0123456789abcdef0123456789ABCDEF0123456789";
     auto q = [](const std::string &s) { return "\"" + s + "\""; };
 
     CHECK(wifi(wifi_value(q(s32), q(p8)), &cfg) == nullptr, "32-byte SSID, 8-byte password");
-    CHECK(wifi(wifi_value(q("x"), q(p64)), &cfg) == nullptr, "64-byte password");
-    const char *bad = wifi(wifi_value(q(s33), q(p8)), &cfg);
+    CHECK(wifi(wifi_value(q("x"), q(p63)), &cfg) == nullptr, "63-byte password");
+    // 64 characters are the key in hex: the SoftAP does not start on any other.
+    CHECK(hex64.size() == 64, "hex64 is 64 long");
+    CHECK(wifi(wifi_value(q("x"), q(hex64)), &cfg) == nullptr && strcmp(cfg.pass, hex64.c_str()) == 0,
+          "64 hex digits");
+    const char *bad = wifi(wifi_value(q("x"), q(p64)), &cfg);
+    CHECK(bad && strcmp(bad, "pass") == 0, "64 characters, not hex: %s", bad ? bad : "null");
+    std::string hex63g = hex64.substr(0, 63) + "g";
+    bad = wifi(wifi_value(q("x"), q(hex63g)), &cfg);
+    CHECK(bad && strcmp(bad, "pass") == 0, "63 hex digits and a g: %s", bad ? bad : "null");
+    bad = wifi(wifi_value(q("x"), q(p8), q("Home"), q(p64)), &cfg);
+    CHECK(bad && strcmp(bad, "sta_pass") == 0, "64-character network password, not hex: %s",
+          bad ? bad : "null");
+    CHECK(wifi(wifi_value(q("x"), q(p8), q("Home"), q(hex64)), &cfg) == nullptr,
+          "64 hex digits for the network");
+    CHECK(wifi(wifi_value(q("x"), q(p8), q(""), q(p64)), &cfg) == nullptr,
+          "anything with no network (the page does not check it then)");
+    CHECK(web_wifi_pass_ok("", 0) && web_wifi_pass_ok("12345678", 8) && !web_wifi_pass_ok("1234567", 7),
+          "empty, 8, 7");
+    bad = wifi(wifi_value(q(s33), q(p8)), &cfg);
     CHECK(bad && strcmp(bad, "ssid") == 0, "33-byte SSID: %s", bad ? bad : "null");
     bad = wifi(wifi_value(q(""), q(p8)), &cfg);
     CHECK(bad && strcmp(bad, "ssid") == 0, "empty SSID: %s", bad ? bad : "null");
