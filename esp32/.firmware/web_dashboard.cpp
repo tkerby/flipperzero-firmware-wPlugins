@@ -1350,7 +1350,7 @@ function updControls(d){
   var cpSt=document.getElementById('cpTypeSt');
   if(cpSt){
     var ct;
-    if(d.cp_type===undefined||d.cp_type<0) ct='no 0x25D on this tap (Vehicle CAN only)';
+    if(d.cp_type===undefined||d.cp_type<0) ct='no CP_status on this tap (the 8-byte 0x25D, Vehicle CAN only)';
     else{
       ct='Car '+(CPT[d.cp_type]||('type '+d.cp_type));
       if(d.cp_type_eu_rewrite){
