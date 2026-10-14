@@ -1,6 +1,7 @@
 #include "http_can_stream.h"
 #include "can_capture_filter.h"
 #include <WiFi.h>
+#include <esp_heap_caps.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,7 +28,10 @@ static uint32_t   g_dropped = 0;
 static uint32_t   g_filtered = 0;
 static uint16_t   g_head = 0;
 static uint16_t   g_tail = 0;
-static StreamFrame g_ring[HTTP_CAN_STREAM_RING_SIZE];
+// On the heap, not in .bss: as a static array these 72 KB left the classic
+// ESP32 builds a few dozen bytes short of the static DRAM limit. Reserved once
+// at boot (http_can_stream_reserve) and never freed.
+static StreamFrame *g_ring = nullptr;
 static uint32_t   g_filter_ids[HTTP_CAN_STREAM_MAX_FILTER_IDS];
 static uint8_t    g_filter_count = 0;
 static bool       g_bus_filter_enabled = false;
@@ -316,6 +320,10 @@ static void accept_client() {
         send_response(incoming, 409, "Conflict", "HTTP CAN log disabled in Active mode\n");
         return;
     }
+    if (!g_ring) {
+        send_response(incoming, 503, "Service Unavailable", "No memory for the capture buffer\n");
+        return;
+    }
 
     char path[256];
     if (!parse_request_path(incoming, path, sizeof(path))) {
@@ -412,8 +420,18 @@ static void flush_stream() {
     }
 }
 
+bool http_can_stream_reserve() {
+    if (g_ring) return true;
+    g_ring = (StreamFrame *)heap_caps_malloc(
+        sizeof(StreamFrame) * HTTP_CAN_STREAM_RING_SIZE,
+        MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    if (!g_ring) Serial.println("[HTTP-CAN] No memory for the stream buffer, capture unavailable");
+    return g_ring != nullptr;
+}
+
 void http_can_stream_init() {
     if (g_started) return;
+    http_can_stream_reserve();
     g_server.begin();
     g_server.setNoDelay(true);
     g_started = true;

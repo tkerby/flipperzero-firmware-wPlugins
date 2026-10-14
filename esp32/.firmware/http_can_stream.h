@@ -12,6 +12,10 @@
  * a candump-compatible text file when the user stops collection.
  */
 
+/** Allocate the frame ring. Call early in setup(), before WiFi starts, so the
+ *  one large block is taken while the heap is still unfragmented. init() calls
+ *  it too; a stream request gets a 503 if the ring could not be allocated. */
+bool     http_can_stream_reserve();
 void     http_can_stream_init();
 void     http_can_stream_update();
 void     http_can_stream_record(CanBusId bus, const CanFrame &frame);
