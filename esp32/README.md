@@ -104,6 +104,7 @@ Dual CAN driver support (compile-time switch):
 - **ESP32 TWAI** — for M5Stack ATOM Lite + ATOMIC CAN Base (CA-IS3050G transceiver)
 - **MCP2515 SPI** — for generic ESP32 + MCP2515 CAN module setups
 - **LilyGO T-2CAN dual** — native TWAI as `can0` + onboard MCP2515 as `can1`
+- **LilyGO T-2CAN FD dual** — native TWAI as `can0` + onboard MCP2518FD as `can1`, run as classic CAN 2.0
 
 ### HW-Based AP/DAS Mapping
 
@@ -174,6 +175,7 @@ Any ESP32 board + CAN transceiver works. Pick the matching build env in `platfor
 | `esp32-lilygo` | LilyGO T-CAN485 | TWAI | 27 / 26 | Built-in SN65HVD230 + SD slot |
 | `ttgo-tdisplay` | LilyGO/TTGO T-Display + MCP2515 | MCP2515 SPI (HSPI) | CS=26, SCK=33, MISO=32, MOSI=25 | Built-in ST7789 dashboard, MISO needs 5V→3.3V divider |
 | `lilygo-t2can` | LilyGO-T2CAN | TWAI/MCP2515 SPI | 7 / 6 | ESP32-S3-WROOM-1U (MCN16R8) with MCP2515 |
+| `lilygo-t2can-fd` | LilyGO T-2CAN FD (H784-A) | TWAI/MCP2518FD SPI | 7 / 6 | Same board with an MCP2518FD on `can1`, classic CAN 2.0 at 500 kbps; not yet confirmed on real hardware |
 | `waveshare-s3-can` | Waveshare ESP32-S3-RS485-CAN | TWAI | 15 / 16 | ESP32-S3, 8MB flash/PSRAM, USB-CDC |
 | `esp32-generic-twai` | Classic ESP32 DevKit + SN65HVD230 | TWAI | 21 / 22 | No LED; build from source (no prebuilt image) |
 | `esp32-generic-twai-sniffer` | Classic ESP32 DevKit + SN65HVD230 | TWAI (hardware Listen-Only) | 21 / 22 | `SNIFFER_ONLY`: can never transmit; build from source |
@@ -231,6 +233,15 @@ Pins shown are for one harness (`1933903-XX`). Confirm yours on **Service Mode �
 > The official LILYGO T-2CAN V1.0 labels physical `CANA` as MCP2515/SPI and physical `CANB` as native TWAI.
 
 `can1` is one MCP2515 physical channel. It can be wired to Party CAN or Vehicle CAN for a given test/install, but one MCP2515 channel cannot be on both vehicle networks at the same time.
+
+#### T-2CAN FD (H784-A)
+
+The FD version has an MCP2518FD where the classic board has the MCP2515, on the same `CANA` terminals and the same SPI pins (CS 10, SCK 12, MOSI 11, MISO 13). Flash `lilygo-t2can-fd` on it: the `lilygo-t2can` image boots, but its `can1` stays dead. The bus mapping above is unchanged.
+
+- `can1` runs classic CAN 2.0 at 500 kbps, like the MCP2515: it never sends a CAN FD frame, drops any it sees in Listen-Only, and in Active treats one as a bus error, as any classic CAN node does.
+- At every boot the driver starts the MCP2518FD in Listen-Only and measures its crystal (40 MHz on LilyGO's schematic). If the measurement doesn't match, `can1` stays off the bus and the serial log says what it measured.
+- The MCP2518FD has no reset pin. GPIO 9 goes to its INT0/GPIO0 pin and GPIO 3 (through the DIP switch next to the chip) to INT1/GPIO1; the firmware drives neither.
+- Not yet confirmed on real hardware. Start in Listen-Only and check that `can1` receives before you switch to Active.
 
 ### OBD-II (Primary — Plug & Play)
 
@@ -474,7 +485,7 @@ esp32/
 │   ├── fsd_handler.cpp/h   — CAN protocol logic (ported from hypery11; also includes the shared ../fsd_logic headers such as fsd_ota.h and fsd_autopark.h)
 │   ├── can_signals.h       — Bit/byte positions for the parsed and written signals
 │   ├── http_can_stream.cpp/h — HTTP candump-compatible CAN stream
-│   ├── can_driver.cpp/h    — CAN driver abstraction (TWAI / MCP2515 / T-2CAN dual)
+│   ├── can_driver.cpp/h    — CAN driver abstraction (TWAI / MCP2515 / T-2CAN dual / T-2CAN FD)
 │   ├── can_dump.cpp/h      — SD-card CAN dump
 │   ├── blackbox.cpp/h      — Black-box incident recorder (#124)
 │   ├── capability.cpp/h    — Tap capability checker (#125)

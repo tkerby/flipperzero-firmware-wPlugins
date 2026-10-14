@@ -42,7 +42,9 @@
 // ── Build identity ────────────────────────────────────────────────────────────
 // Board name for the boot banner and the dashboard — same wording as the board
 // table in esp32/README.md. One entry per BOARD_* flag in platformio.ini.
-#if defined(BOARD_LILYGO_T2CAN)
+#if defined(BOARD_LILYGO_T2CAN_FD)
+  #define BOARD_NAME "LilyGO T-2CAN FD"
+#elif defined(BOARD_LILYGO_T2CAN)
   #define BOARD_NAME "LilyGO T-2CAN"
 #elif defined(BOARD_LILYGO)
   #define BOARD_NAME "LilyGO T-CAN485"
@@ -79,10 +81,21 @@
   #define PIN_MCP_SCK        12
   #define PIN_MCP_MOSI       11
   #define PIN_MCP_MISO       13
-  #define PIN_MCP_RST        9
   #define PIN_MCP_INT        8
-  #ifndef MCP_CRYSTAL_MHZ
-  #define MCP_CRYSTAL_MHZ    MCP_16MHZ
+  #if defined(BOARD_LILYGO_T2CAN_FD)
+    // T-2CAN FD (H784-A): an MCP2518FD on the same SPI pins. It has no reset
+    // pin; GPIO 9 goes to its INT0/GPIO0/XSTBY pin and GPIO 3 (through the DIP
+    // switch) to INT1/GPIO1. The driver polls over SPI and drives neither.
+    // Crystal: 40 MHz on LilyGO's T-2Can-Fd_V1.0 schematic. The driver
+    // measures it before the controller may leave Listen-Only.
+    #ifndef MCP2518FD_OSC_HZ
+    #define MCP2518FD_OSC_HZ   40000000u
+    #endif
+  #else
+    #define PIN_MCP_RST        9
+    #ifndef MCP_CRYSTAL_MHZ
+    #define MCP_CRYSTAL_MHZ    MCP_16MHZ
+    #endif
   #endif
   #define PRECONDITION_TX_BUS_INDEX 0
 #elif defined(BOARD_LILYGO)

@@ -2,6 +2,7 @@
 # Compiles fsd_logic/fsd_handler.c on the host — no Flipper SDK / SPI needed.
 # test_esp32_core does the same for esp32/.firmware/fsd_handler.cpp (no Arduino).
 # test_captive_probe covers esp32/.firmware/captive_probe.h (captive-portal logic).
+# test_can_mcp2518fd covers esp32/.firmware/can_mcp2518fd.h (T-2CAN FD driver logic).
 #
 #   make -C test check
 
@@ -28,13 +29,17 @@ test_can_capture_filter: test_can_capture_filter.cpp $(ESP32)/can_capture_filter
 test_captive_probe: test_captive_probe.cpp $(ESP32)/captive_probe.h
 	$(CXX) $(CXXFLAGS) -I$(ESP32) test_captive_probe.cpp -o $@
 
-check: test_fsd_core test_esp32_core test_can_capture_filter test_captive_probe
+test_can_mcp2518fd: test_can_mcp2518fd.cpp $(ESP32)/can_mcp2518fd.h $(ESP32)/can_capture_filter.h $(ESP32)/can_driver.h $(ESP32)/fsd_handler.h $(ESP32)/config.h $(ROOT)/fsd_logic/fsd_types.h $(ROOT)/fsd_logic/fsd_can_ops.h
+	$(CXX) $(CXXFLAGS) -I$(ESP32) -I$(ROOT)/fsd_logic test_can_mcp2518fd.cpp -o $@
+
+check: test_fsd_core test_esp32_core test_can_capture_filter test_captive_probe test_can_mcp2518fd
 	./test_fsd_core
 	./test_esp32_core
 	./test_can_capture_filter
 	./test_captive_probe
+	./test_can_mcp2518fd
 
 clean:
-	rm -rf test_fsd_core test_fsd_core.dSYM test_esp32_core test_esp32_core.dSYM test_can_capture_filter test_can_capture_filter.dSYM test_captive_probe test_captive_probe.dSYM
+	rm -rf test_fsd_core test_fsd_core.dSYM test_esp32_core test_esp32_core.dSYM test_can_capture_filter test_can_capture_filter.dSYM test_captive_probe test_captive_probe.dSYM test_can_mcp2518fd test_can_mcp2518fd.dSYM
 
 .PHONY: check clean

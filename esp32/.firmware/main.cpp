@@ -1643,7 +1643,9 @@ void setup() {
     }
     ota_verify_begin();  // a fresh OTA image stays rollback-able until it has run
 
-#if defined(CAN_DRIVER_T2CAN_DUAL)
+#if defined(CAN_DRIVER_T2CAN_DUAL) && defined(BOARD_LILYGO_T2CAN_FD)
+    Serial.println("[CAN] Driver: LilyGO T-2CAN FD dual CAN (TWAI can0 + MCP2518FD can1, classic CAN)");
+#elif defined(CAN_DRIVER_T2CAN_DUAL)
     Serial.println("[CAN] Driver: LilyGO T-2CAN dual CAN (TWAI can0 + MCP2515 can1)");
 #elif defined(CAN_DRIVER_TWAI)
   #if defined(BOARD_WAVESHARE_S3)
@@ -1833,7 +1835,9 @@ void loop() {
     ota_verify_tick(now);
 
     // Drain all available CAN frames in one shot. On LilyGO T-2CAN, can1 is the
-    // MCP2515 side with only two RX buffers, so poll it before and after can0.
+    // SPI controller, read only when polled (the MCP2515 has just two RX
+    // buffers, the T-2CAN FD's MCP2518FD a 32-frame FIFO), so poll it before
+    // and after can0.
 #if defined(CAN_DRIVER_T2CAN_DUAL) && defined(BOARD_LILYGO_T2CAN)
     drain_can_bus_index(1);
     drain_can_bus_index(0);
