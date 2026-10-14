@@ -14,6 +14,7 @@
 #include "../../fsd_logic/fsd_checksum.h"  // shared Tesla additive checksum (single impl, both platforms)
 #include "../../fsd_logic/fsd_can_ops.h"   // shared stateless frame primitives (set_bit / mux / fsd-selected)
 #include "../../fsd_logic/fsd_ota.h"       // shared 0x318 OTA-install detection (flag vs rolling counter)
+#include "../../fsd_logic/fsd_cp_status.h" // shared 0x25D CP_status decode + EU rewrite predicate (#228)
 #include <string.h>
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
@@ -1258,5 +1259,34 @@ bool fsd_build_gear_lever_frame(CanFrame *frame, uint8_t gear_pos, uint8_t count
     frame->data[1] = (uint8_t)((gear_pos << SIG_GEAR_LEVER_POS_SHIFT) | counter);
     frame->data[2] = 0x00u;
     frame->data[0] = NEUTRAL_CRC_BY_COUNTER[counter] ^ POSITION_CRC_XOR[gear_pos];
+    return true;
+}
+
+// ── Charge-port type (CP_status 0x25D, Vehicle CAN, #228) ────────────────────
+// Read-only decode is always on; the rewrite is opt-in and goes through the
+// standard transmit gate. The plug state comes out of the same frame we would
+// copy, so it is never stale, and the rewrite is held unless that frame says the
+// car is unplugged (fail closed on an unknown plug state). The 6-byte 0x25D on
+// Party CAN decodes to nothing (dlc != 8). Idea + on-car validation:
+// @Tesla234987234sdf, discussion #228.
+bool fsd_handle_cp_type_rewrite(FSDState *state, CanFrame *frame) {
+    if (frame->dlc != 8) return false;   // short / 6-byte 0x25D: not CP_status
+
+    // Read-only decode (every mode, toggle-independent) so the dashboard shows
+    // the car's own charge-port type and plug state.
+    state->cp_type        = fsd_cp_type_value(frame->data[0]);
+    state->cp_plug_state  = (uint8_t)fsd_cp_plug_state(frame->data);
+    state->cp_status_seen = true;
+
+    if (!state->cp_type_eu_rewrite || !fsd_can_transmit(state)) return false;
+    // Only a genuine US-type frame is eligible — never echo an already-EU frame
+    // or touch a non-US variant.
+    if (!fsd_cp_type_rewrite_eligible(frame->data, frame->dlc)) return false;
+    // Plug guard: no rewrite while a cable is present / charging, and fail closed
+    // when the plug state is unknown.
+    if (state->cp_plug_state != FSD_CP_PLUG_UNPLUGGED) return false;
+
+    frame->data[0] = fsd_cp_type_make_iec_ccs(frame->data[0]);
+    state->cp_type_tx_count++;
     return true;
 }

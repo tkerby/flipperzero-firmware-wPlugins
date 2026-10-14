@@ -19,7 +19,7 @@ test_fsd_core: $(SRC) $(ROOT)/fsd_logic/fsd_handler.h $(ROOT)/fsd_logic/fsd_type
 
 # esp32/.firmware goes first on the include path so "fsd_handler.h" is the
 # firmware header, not fsd_logic/fsd_handler.h.
-test_esp32_core: $(ESP32_SRC) $(ESP32)/fsd_handler.h $(ESP32)/config.h $(ESP32)/can_signals.h $(ROOT)/fsd_logic/fsd_types.h $(ROOT)/fsd_logic/fsd_state.h $(ROOT)/fsd_logic/fsd_checksum.h $(ROOT)/fsd_logic/fsd_can_ops.h $(ROOT)/fsd_logic/fsd_ota.h $(ROOT)/fsd_logic/fsd_autopark.h  $(ROOT)/fsd_logic/fsd_perf.h
+test_esp32_core: $(ESP32_SRC) $(ESP32)/fsd_handler.h $(ESP32)/config.h $(ESP32)/can_signals.h $(ROOT)/fsd_logic/fsd_types.h $(ROOT)/fsd_logic/fsd_state.h $(ROOT)/fsd_logic/fsd_checksum.h $(ROOT)/fsd_logic/fsd_can_ops.h $(ROOT)/fsd_logic/fsd_ota.h $(ROOT)/fsd_logic/fsd_autopark.h  $(ROOT)/fsd_logic/fsd_perf.h $(ROOT)/fsd_logic/fsd_cp_status.h
 	$(CXX) $(CXXFLAGS) -I$(ESP32) -I$(ROOT)/fsd_logic $(ESP32_SRC) -o $@
 
 test_can_capture_filter: test_can_capture_filter.cpp $(ESP32)/can_capture_filter.h $(ESP32)/can_driver.h $(ESP32)/fsd_handler.h $(ESP32)/config.h $(ROOT)/fsd_logic/fsd_types.h

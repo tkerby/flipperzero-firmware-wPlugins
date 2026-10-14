@@ -46,6 +46,7 @@ void prefs_load(FSDState *state) {
     state->track_cmp_overclock      = g_prefs.getBool("tmCO",   false);
     state->accel_mode               = g_prefs.getUChar("accel", ACCEL_MODE_OFF);  // Acceleration Mode (#211)
     if (state->accel_mode > ACCEL_MODE_PERFORMANCE) state->accel_mode = ACCEL_MODE_OFF;
+    state->cp_type_eu_rewrite       = g_prefs.getBool("cpeu",   false);  // EU CP Type rewrite (#228)
 #if defined(BOARD_TTGO_DISPLAY)
     state->display_enabled          = g_prefs.getBool("disp",   true);
     state->display_brightness       = g_prefs.getUChar("disp_br", 50);
@@ -130,6 +131,7 @@ void prefs_save(const FSDState *state) {
     g_prefs.putBool("tmPC",   state->track_post_cooling);
     g_prefs.putBool("tmCO",   state->track_cmp_overclock);
     g_prefs.putUChar("accel", state->accel_mode);   // Acceleration Mode (#211), 0 = Off
+    g_prefs.putBool("cpeu",   state->cp_type_eu_rewrite);  // EU CP Type rewrite (#228)
 #if defined(BOARD_TTGO_DISPLAY)
     g_prefs.putBool("disp",   state->display_enabled);
     g_prefs.putUChar("disp_br", state->display_brightness);

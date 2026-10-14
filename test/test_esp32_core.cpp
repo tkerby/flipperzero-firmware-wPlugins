@@ -17,6 +17,7 @@
 #include "fsd_ota.h"      // shared reference: fsd_ota_update()
 #include "fsd_can_ops.h"  // tesla_can_rx_accept / tesla_can_tx_valid (driver RX/TX filter)
 #include "fsd_checksum.h" // tesla_additive_checksum (0x334 / 0x118 vectors)
+#include "fsd_cp_status.h" // 0x25D CP_status decode + plug guard + rewrite predicate (#228)
 
 static int g_pass = 0;
 static int g_fail = 0;
@@ -1215,6 +1216,133 @@ static void test_perf_wheel_speeds_parse(void) {
     CHECK(!s2.wheel_speed_seen, "full-scale SNA field rejected");
 }
 
+// ── Charge-port type (0x25D CP_status, #228) ─────────────────────────────────
+// Real idle-US frames from the #211 Fremont dump and the discussion example:
+// CP_type US_TESLA(0), cable not present, cable state NOT_CONNECTED -> unplugged.
+static const uint8_t k_25d_us_unplugged[8]  = {0x34,0x41,0x01,0x00,0x04,0xF0,0xD4,0x03};
+static const uint8_t k_25d_us_unplugged2[8] = {0x34,0x41,0x01,0x16,0x44,0xF0,0xCF,0x03};
+
+static void cp_set(FSDState* s, bool on) {
+    memset(s, 0, sizeof(*s));
+    s->op_mode = OpMode_Active;
+    s->cp_type_eu_rewrite = on;
+}
+static CanFrame cp_frame(const uint8_t* d, uint8_t dlc) {
+    CanFrame f;
+    memset(&f, 0, sizeof(f));
+    f.id = CAN_ID_CP_STATUS;
+    f.dlc = dlc;
+    memcpy(f.data, d, dlc <= 8 ? dlc : 8);
+    return f;
+}
+
+static void test_cp_type_decode(void) {
+    // Decode is read-only and runs even in Listen-Only, toggle off.
+    FSDState s; cp_set(&s, false); s.op_mode = OpMode_ListenOnly;
+    CanFrame f = cp_frame(k_25d_us_unplugged, 8);
+    CHECK(!fsd_handle_cp_type_rewrite(&s, &f), "decode-only: no rewrite, toggle off");
+    CHECK(s.cp_status_seen && s.cp_type == FSD_CP_TYPE_US_TESLA &&
+          s.cp_plug_state == FSD_CP_PLUG_UNPLUGGED,
+          "idle US decoded: seen=%d type=%u plug=%u", s.cp_status_seen, s.cp_type, s.cp_plug_state);
+    CHECK(memcmp(f.data, k_25d_us_unplugged, 8) == 0, "decode does not touch the frame");
+
+    // The 6-byte Party-CAN 0x25D is not CP_status: decodes to nothing.
+    FSDState s6; cp_set(&s6, true);
+    CanFrame f6 = cp_frame(k_25d_us_unplugged, 6);
+    CHECK(!fsd_handle_cp_type_rewrite(&s6, &f6) && !s6.cp_status_seen, "6-byte 0x25D ignored");
+
+    // Plug-state table straight from the shared decoder.
+    uint8_t d[8]; memcpy(d, k_25d_us_unplugged, 8);
+    CHECK(fsd_cp_plug_state(d) == FSD_CP_PLUG_UNPLUGGED, "NOT_CONNECTED -> unplugged");
+    d[0] |= 0x08u;  // CP_chargeCablePresent
+    CHECK(fsd_cp_plug_state(d) == FSD_CP_PLUG_PLUGGED, "cable present -> plugged");
+    memcpy(d, k_25d_us_unplugged, 8); d[1] |= 0x04u;  // CP_chargeDoorOpen (bit10)
+    CHECK(fsd_cp_plug_state(d) == FSD_CP_PLUG_PLUGGED, "charge door open -> plugged");
+    memcpy(d, k_25d_us_unplugged, 8); d[7] |= 0x20u;  // CP_hvInletExposed (bit61)
+    CHECK(fsd_cp_plug_state(d) == FSD_CP_PLUG_PLUGGED, "HV inlet exposed -> plugged");
+    memcpy(d, k_25d_us_unplugged, 8);
+    d[0] = (uint8_t)((d[0] & ~0x60u) | (2u << 5));     // CP_latchState = ENGAGED
+    CHECK(fsd_cp_plug_state(d) == FSD_CP_PLUG_PLUGGED, "latch engaged -> plugged");
+    memcpy(d, k_25d_us_unplugged, 8);
+    d[1] = (uint8_t)((d[1] & ~0xC0u) | (2u << 6));     // CP_chargeCableState = CONNECTED
+    CHECK(fsd_cp_plug_state(d) == FSD_CP_PLUG_PLUGGED, "cable state CONNECTED -> plugged");
+    memcpy(d, k_25d_us_unplugged, 8);
+    d[1] = (uint8_t)(d[1] & ~0xC0u);                   // CP_chargeCableState = SNA, nothing else set
+    CHECK(fsd_cp_plug_state(d) == FSD_CP_PLUG_UNKNOWN, "cable state SNA -> unknown (fail closed)");
+}
+
+static void test_cp_type_rewrite(void) {
+    // US + unplugged + Active + toggle on -> one bit-preserving IEC_CCS copy.
+    FSDState s; cp_set(&s, true);
+    CanFrame f = cp_frame(k_25d_us_unplugged, 8);
+    CHECK(fsd_handle_cp_type_rewrite(&s, &f), "US unplugged -> rewritten");
+    CHECK(f.data[0] == 0x37 && memcmp(f.data + 1, k_25d_us_unplugged + 1, 7) == 0,
+          "only CP_type changed: byte0=0x%02X", f.data[0]);
+    CHECK(fsd_cp_type_value(f.data[0]) == FSD_CP_TYPE_IEC_CCS && s.cp_type_tx_count == 1,
+          "copy is IEC_CCS, tx counted (%u)", s.cp_type_tx_count);
+    CanFrame f2 = cp_frame(k_25d_us_unplugged2, 8);
+    CHECK(fsd_handle_cp_type_rewrite(&s, &f2) && f2.data[0] == 0x37 && s.cp_type_tx_count == 2,
+          "second US frame rewritten (tx=%u)", s.cp_type_tx_count);
+
+    // Already IEC_CCS -> never echoed (no self-trigger loop).
+    FSDState s3; cp_set(&s3, true);
+    uint8_t ccs[8]; memcpy(ccs, k_25d_us_unplugged, 8); ccs[0] = fsd_cp_type_make_iec_ccs(ccs[0]);
+    CanFrame f3 = cp_frame(ccs, 8);
+    CHECK(!fsd_handle_cp_type_rewrite(&s3, &f3) && s3.cp_type == FSD_CP_TYPE_IEC_CCS,
+          "already IEC_CCS -> not rewritten");
+
+    // CP_type 1 (EURO_IEC) and 2 (GB): not US, left alone.
+    for (uint8_t t = 1; t <= 2; t++) {
+        FSDState st; cp_set(&st, true);
+        uint8_t d[8]; memcpy(d, k_25d_us_unplugged, 8);
+        d[0] = (uint8_t)((d[0] & 0xFCu) | t);
+        CanFrame ft = cp_frame(d, 8);
+        CHECK(!fsd_handle_cp_type_rewrite(&st, &ft) && ft.data[0] == d[0],
+              "CP_type %u -> untouched", t);
+    }
+
+    // Plug guard: cable present -> held, even though US + Active + toggle on.
+    FSDState sp; cp_set(&sp, true);
+    uint8_t plugged[8]; memcpy(plugged, k_25d_us_unplugged, 8); plugged[0] |= 0x08u;
+    CanFrame fp = cp_frame(plugged, 8);
+    CHECK(!fsd_handle_cp_type_rewrite(&sp, &fp) && memcmp(fp.data, plugged, 8) == 0,
+          "cable present -> held (plug guard)");
+    CHECK(sp.cp_status_seen && sp.cp_plug_state == FSD_CP_PLUG_PLUGGED && sp.cp_type_tx_count == 0,
+          "plug guard: decoded but no copy");
+
+    // Unknown plug state (SNA) -> fail closed.
+    FSDState su; cp_set(&su, true);
+    uint8_t sna[8]; memcpy(sna, k_25d_us_unplugged, 8); sna[1] = (uint8_t)(sna[1] & ~0xC0u);
+    CanFrame fu = cp_frame(sna, 8);
+    CHECK(!fsd_handle_cp_type_rewrite(&su, &fu) && su.cp_plug_state == FSD_CP_PLUG_UNKNOWN,
+          "plug state unknown -> held (fail closed)");
+
+    // Wrong DLC -> no rewrite, no decode.
+    FSDState sd; cp_set(&sd, true);
+    CanFrame fd = cp_frame(k_25d_us_unplugged, 7);
+    CHECK(!fsd_handle_cp_type_rewrite(&sd, &fd) && !sd.cp_status_seen, "dlc7 -> untouched");
+
+    // Transmit gate closed: decode still runs, no copy.
+    FSDState sg; cp_set(&sg, true); sg.op_mode = OpMode_ListenOnly;
+    CanFrame fg = cp_frame(k_25d_us_unplugged, 8);
+    CHECK(!fsd_handle_cp_type_rewrite(&sg, &fg) && sg.cp_status_seen && sg.cp_type_tx_count == 0,
+          "Listen-Only -> decoded, no copy");
+    sg.op_mode = OpMode_Active; sg.tesla_ota_in_progress = true;
+    fg = cp_frame(k_25d_us_unplugged, 8);
+    CHECK(!fsd_handle_cp_type_rewrite(&sg, &fg), "OTA in progress -> no copy");
+    sg.tesla_ota_in_progress = false; sg.autopark_tx_block = true;
+    fg = cp_frame(k_25d_us_unplugged, 8);
+    CHECK(!fsd_handle_cp_type_rewrite(&sg, &fg), "Autopark pause -> no copy");
+
+    // The rewrite depends only on frame bytes + state, never on a bus id, so it
+    // behaves the same whichever bus delivers 0x25D (main.cpp re-sends on the
+    // arrival bus). Same frame, two independent states -> identical result.
+    FSDState ba, bb; cp_set(&ba, true); cp_set(&bb, true);
+    CanFrame fa = cp_frame(k_25d_us_unplugged, 8), fb = cp_frame(k_25d_us_unplugged, 8);
+    CHECK(fsd_handle_cp_type_rewrite(&ba, &fa) == fsd_handle_cp_type_rewrite(&bb, &fb) &&
+          memcmp(fa.data, fb.data, 8) == 0, "rewrite is bus-agnostic (pure in the frame)");
+}
+
 int main() {
     printf("test_esp32_core: ESP32 firmware handler host tests\n");
     test_perf_accel_timer();
@@ -1245,6 +1373,8 @@ int main() {
     test_autopark_176();
     test_signal_map();
     test_di_speed();
+    test_cp_type_decode();
+    test_cp_type_rewrite();
     test_state_init();
     test_can_frame_filter();
 

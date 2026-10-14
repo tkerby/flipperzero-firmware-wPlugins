@@ -409,6 +409,10 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
     <span class="lbl">CAN Vehicle</span>
     <span class="pill off" id="canVeh"><span class="pd"></span>--</span>
   </div>
+  <div class="row">
+    <span class="lbl">Charge Port<span class="hint">0x25D CP_status &mdash; Vehicle CAN only</span></span>
+    <span id="cpType" style="font-size:.8em;color:var(--text2)">--</span>
+  </div>
 </div>
 
 <!-- Battery -->
@@ -619,6 +623,13 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
       </select>
     </div>
     <div id="accelSt" style="font-size:12px;color:var(--muted);margin-top:4px">--</div>
+  </div>
+  <div class="row" style="display:block">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <span class="lbl">EU Charge-Port Type (experimental)<br><small style="color:var(--muted)">Re-sends 0x25D on the Vehicle bus with CP_type set to IEC CCS so EU Superchargers show in nav. Held while a cable is plugged in or charging. Experimental.</small></span>
+      <label class="sw"><input type="checkbox" id="swCpType" onchange="cmd('cp_type_eu_rewrite',this.checked)"><span class="sl2"></span></label>
+    </div>
+    <div id="cpTypeSt" style="font-size:12px;color:var(--muted);margin-top:4px">--</div>
   </div>
   <div class="row" style="display:block">
     <div style="display:flex;align-items:center;justify-content:space-between">
@@ -894,6 +905,7 @@ var httpLogAbort=null,httpLogReader=null,httpLogParts=[],httpLogBytes=0,httpLogS
 var httpLogName='',httpLogReady=false,httpLogSaveUrl='';
 var httpLogAllowed=true;
 var HW=['Unknown','Legacy','HW3','HW4'];
+var CPT=['US Tesla','EU IEC','GB','IEC CCS'];   // CP_type (0x25D, #228)
 var CIRC=326.73;
 document.getElementById('deviceHost').textContent=location.host||location.hostname||'192.168.4.1';
 
@@ -1060,6 +1072,7 @@ function updateControlsSummary(d){
   if(d.precondition)items.push('Precond');
   if(d.assist_tlssc_bit38)items.push('TLSSC bit38');
   if(d.accel_mode>0)items.push('Accel '+(['','Chill','Sport','Performance'][d.accel_mode]||'?'));
+  if(d.cp_type_eu_rewrite)items.push('EU CP Type');
   if(d.display_enabled)items.push('Display');
   if(d.can_dump)items.push('CAN Dump');
   e.textContent=items.length?items.join(', '):'Expand to setup';
@@ -1208,6 +1221,9 @@ function updStatus(d){
 
   pill('nagSt', d.nag_killer, d.nag_killer?'ON':'OFF');
   pill('canVeh', d.can_vehicle_detected, d.can_vehicle_detected?'Detected':'No CAN Traffic');
+  // Charge-port type read-out (0x25D, #228): the car's own type, -- until seen.
+  var cpEl=document.getElementById('cpType');
+  if(cpEl) cpEl.textContent=(d.cp_type===undefined||d.cp_type<0)?'--':(CPT[d.cp_type]||('type '+d.cp_type));
   pill('bmsSt', d.bms && d.bms.seen, (d.bms && d.bms.seen)?'Live':'Waiting Frames');
   var bF=document.getElementById('bmsFrames');
   if(bF) bF.textContent='HV:'+(d.bms_hv_seen||0)+' SOC:'+(d.bms_soc_seen||0)+' TH:'+(d.bms_thermal_seen||0);
@@ -1283,6 +1299,26 @@ function updControls(d){
     if(d.accel_pending) at+=' \u00b7 waiting for standstill';
     else if(d.accel_mode>0 && !d.tx_allowed) at+=' \u00b7 TX off';
     acSt.textContent=at;
+  }
+  // EU Charge-Port Type (0x25D, #228): toggle + what the car reports and whether
+  // the rewrite is active or held off (and by which guard).
+  if(document.getElementById('swCpType')) document.getElementById('swCpType').checked=d.cp_type_eu_rewrite;
+  var cpSt=document.getElementById('cpTypeSt');
+  if(cpSt){
+    var ct;
+    if(d.cp_type===undefined||d.cp_type<0) ct='no 0x25D on this tap (Vehicle CAN only)';
+    else{
+      ct='Car '+(CPT[d.cp_type]||('type '+d.cp_type));
+      if(d.cp_type_eu_rewrite){
+        if(d.cp_type!==0) ct+=' \u00b7 already EU, not rewritten';
+        else if(!d.tx_allowed) ct+=' \u00b7 TX off';
+        else if(d.cp_plug===1) ct+=' \u00b7 held \u2014 cable plugged in';
+        else if(d.cp_plug===2) ct+=' \u00b7 held \u2014 plug state unknown';
+        else ct+=' \u2192 IEC CCS';
+        if(d.cp_type_tx>0) ct+=' ('+d.cp_type_tx+' sent)';
+      }
+    }
+    cpSt.textContent=ct;
   }
   if(document.getElementById('swTrkMode')) document.getElementById('swTrkMode').checked=d.track_mode_inject;
   if(document.getElementById('trkRot')&&focusId()!=='trkRot'&&d.track_rotation_pct!==undefined){document.getElementById('trkRot').value=d.track_rotation_pct;var _tr=document.getElementById('trkRotV');if(_tr)_tr.textContent=d.track_rotation_pct;}
@@ -2019,6 +2055,12 @@ static String build_json() {
     j += "\"accel_sent_map\":"; j += fsd_accel_sent_map(&state);           j += ',';
     j += "\"accel_pending\":";  j += state.accel_mode_pending            ? "true" : "false"; j += ',';
     j += "\"accel_bad\":";      j += state.accel_bad_frames;              j += ',';
+    // Charge-port type (0x25D, #228): what the car reports (-1 = no 0x25D on
+    // this tap yet), the plug-guard read-out, the opt-in rewrite + copies sent.
+    j += "\"cp_type\":";        j += state.cp_status_seen ? (int)state.cp_type : -1; j += ',';
+    j += "\"cp_plug\":";        j += (int)state.cp_plug_state;            j += ',';
+    j += "\"cp_type_eu_rewrite\":"; j += state.cp_type_eu_rewrite        ? "true" : "false"; j += ',';
+    j += "\"cp_type_tx\":";     j += state.cp_type_tx_count;              j += ',';
     j += "\"tx_allowed\":";     j += fsd_can_transmit(&state)            ? "true" : "false"; j += ',';
     j += "\"firmware_14x_warning\":"; j += state.firmware_14x_warning  ? "true" : "false"; j += ',';
 #if defined(BOARD_TTGO_DISPLAY)
@@ -2573,6 +2615,18 @@ static void web_command(const uint8_t *payload, size_t length)
             saved = *g_state;
             state_exit();
             Serial.printf("[Web] Acceleration Mode: %u\n", (unsigned)want);
+            prefs_save(&saved);
+        }
+    } else if (strstr(buf, "\"cp_type_eu_rewrite\"")) {
+        if (vptr) {
+            while (*vptr == ' ' || *vptr == ':') vptr++;
+            bool enabled = (strncmp(vptr, "true", 4) == 0);
+            FSDState saved;
+            state_enter();
+            g_state->cp_type_eu_rewrite = enabled;
+            saved = *g_state;
+            state_exit();
+            Serial.printf("[Web] EU CP Type rewrite: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
     } else if (strstr(buf, "\"track_mode_inject\"")) {

@@ -1395,6 +1395,21 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
         return;
     }
 
+    // Charge-port type (0x25D CP_status, Vehicle CAN, #228). Read-only decode
+    // runs in every mode; the EU rewrite (opt-in) re-sends a US-type frame as
+    // IEC_CCS on the bus it arrived on, behind the plug guard inside the handler
+    // and the standard TX gate. Not placed in the TX-only block below so the
+    // dashboard shows the car's own type even in Listen-Only.
+    if (frame.id == CAN_ID_CP_STATUS) {
+        CanFrame f = frame;
+        state_enter();
+        bool modified = fsd_handle_cp_type_rewrite(&g_state, &f);
+        bool cp_tx = fsd_can_transmit(&g_state);
+        state_exit();
+        if (modified && cp_tx) send_on_bus(bus, f);
+        return;
+    }
+
     // ── Beyond here only run when TX is allowed ───────────────────────────────
     state_enter();
     bool tx = fsd_can_transmit(&g_state);
