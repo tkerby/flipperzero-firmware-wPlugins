@@ -273,7 +273,24 @@ var TABLES = {
  "Hostname must be 1 to 31 letters, digits or hyphens, and cannot start or end with a hyphen.": "主机名须为 1 到 31 个字母、数字或连字符，且不能以连字符开头或结尾。",
  "OTA writes to the next app partition when available. The new image is kept only after 15 s of runtime; a crash or power cut before that restores the previous firmware. Keep USB reflashing available as a recovery path.": "OTA 会在可用时写入下一个 app 分区；新固件需连续运行 15 秒后才会被保留，在此之前崩溃或断电会回滚到上一版固件。请保留 USB 线刷作为恢复手段。",
  "WiFi Clients": "WiFi 客户端",
- "Memory": "内存"
+ "Memory": "内存",
+ "Power": "电源",
+ "Unknown reset": "未知复位",
+ "Power-on": "上电",
+ "Brownout": "电压骤降",
+ "Panic": "崩溃",
+ "Watchdog": "看门狗",
+ "Software restart": "软件重启",
+ "Deep-sleep wake": "深度睡眠唤醒",
+ "External reset": "外部复位",
+ "restarts since power-on": "上电后重启次数",
+ "Not known yet": "尚无结果",
+ "Inconclusive (car never slept)": "无法判定（车辆未休眠）",
+ "Switched (dies with the car)": "随车断电（车辆休眠即断电）",
+ "Always-on (outlives the car)": "常供电（车辆休眠仍供电）",
+ "Brownout (check wiring)": "电压骤降（请检查接线）",
+ "Crash (supply not implicated)": "崩溃（与供电无关）",
+ "Inconclusive (USB powered)": "无法判定（USB 供电）"
 },
 "zh-Hant": {
  "Connection lost — retrying…": "連線已中斷 — 正在重試…",
@@ -538,7 +555,24 @@ var TABLES = {
  "Hostname must be 1 to 31 letters, digits or hyphens, and cannot start or end with a hyphen.": "主機名稱須為 1 到 31 個字母、數字或連字號，且不能以連字號開頭或結尾。",
  "OTA writes to the next app partition when available. The new image is kept only after 15 s of runtime; a crash or power cut before that restores the previous firmware. Keep USB reflashing available as a recovery path.": "OTA 會在可用時寫入下一個 app 分割區；新韌體需連續執行 15 秒後才會被保留，在此之前當機或斷電會還原到上一版韌體。請保留 USB 線刷作為還原手段。",
  "WiFi Clients": "WiFi 客戶端",
- "Memory": "記憶體"
+ "Memory": "記憶體",
+ "Power": "電源",
+ "Unknown reset": "未知重置",
+ "Power-on": "上電",
+ "Brownout": "電壓驟降",
+ "Panic": "當機",
+ "Watchdog": "看門狗",
+ "Software restart": "軟體重啟",
+ "Deep-sleep wake": "深層睡眠喚醒",
+ "External reset": "外部重置",
+ "restarts since power-on": "上電後重啟次數",
+ "Not known yet": "尚無結果",
+ "Inconclusive (car never slept)": "無法判定（車輛未休眠）",
+ "Switched (dies with the car)": "隨車斷電（車輛休眠即斷電）",
+ "Always-on (outlives the car)": "常供電（車輛休眠仍供電）",
+ "Brownout (check wiring)": "電壓驟降（請檢查接線）",
+ "Crash (supply not implicated)": "當機（與供電無關）",
+ "Inconclusive (USB powered)": "無法判定（USB 供電）"
 }
 };
 

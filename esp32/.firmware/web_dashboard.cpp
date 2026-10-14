@@ -21,6 +21,7 @@
 #include "profile_match.h"
 #include "prefs.h"
 #include "ota_verify.h"
+#include "power_log.h"
 #include "captive_portal.h"
 #include "web_cmd.h"
 #include "web_origin.h"
@@ -897,6 +898,10 @@ R"rawliteral(
     <span id="uptime" style="font-variant-numeric:tabular-nums">--</span>
   </div>
   <div class="row">
+    <span class="lbl">Power</span>
+    <span id="pwrInfo" style="font-size:.78em;color:var(--text2);text-align:right">--</span>
+  </div>
+  <div class="row">
     <span class="lbl">WiFi Clients</span>
     <span id="wifiCl">--</span>
   </div>
@@ -1484,6 +1489,19 @@ function updDevice(d){
     var kb=function(b){return ((b||0)/1024).toFixed(1)+' KB';};
     me.textContent='stack '+kb(d.stack_free)+' \u00b7 heap '+kb(d.heap_free)+' (min '+kb(d.heap_min)+')';
     me.style.color=d.stack_free<1024?'var(--red)':'var(--text2)';
+  }
+  // Power / reset log (#218). Codes mirror power_log.h (reset) and FsdPwrVerdict
+  // (12V). Each phrase sits in its own span so the i18n layer can translate it.
+  var pe=document.getElementById('pwrInfo');
+  if(pe && d.reset_reason!==undefined){
+    var RST=['Unknown reset','Power-on','Brownout','Panic','Watchdog','Software restart','Deep-sleep wake','External reset'];
+    var PV=['Not known yet','Inconclusive (car never slept)','Switched (dies with the car)','Always-on (outlives the car)','Brownout (check wiring)','Crash (supply not implicated)','Inconclusive (USB powered)'];
+    var PVCOL=['var(--text2)','var(--text2)','var(--accent)','var(--yellow)','var(--red)','var(--text2)','var(--text2)'];
+    var rc=d.reset_reason,vc=d.power_verdict;
+    var h='<span>'+(RST[rc]||'?')+'</span> · 12V: <span style="color:'
+      +(PVCOL[vc]||'var(--text2)')+'">'+(PV[vc]||'?')+'</span>';
+    if(d.restart_count!==undefined) h+=' · <span>restarts since power-on</span> '+d.restart_count;
+    pe.innerHTML=h;
   }
   var partEl=document.getElementById('otaPartInfo');
   if(partEl && d.ota_partition){
@@ -2266,6 +2284,11 @@ static String build_json() {
     }
     j += "\"perf\":";          j += perf;                              j += ',';
     j += "\"uptime_s\":";      j += uptime_s;                          j += ',';
+    // Power / reset log (#218): why the board last restarted, the 12V-feed
+    // verdict, and the restart count since power-on. Codes; the page maps them.
+    j += "\"reset_reason\":";  j += power_log_reset_code();            j += ',';
+    j += "\"power_verdict\":"; j += power_log_verdict_code();          j += ',';
+    j += "\"restart_count\":"; j += power_log_restart_count();         j += ',';
     // Loop-task stack low-water mark (this runs on it) and heap, for field reports.
     j += "\"stack_free\":";    j += (uint32_t)uxTaskGetStackHighWaterMark(nullptr); j += ',';
     j += "\"heap_free\":";     j += (uint32_t)ESP.getFreeHeap();       j += ',';
