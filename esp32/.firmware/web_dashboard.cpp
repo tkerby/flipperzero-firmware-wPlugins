@@ -237,6 +237,11 @@ details input.cgn{width:38px;margin-left:4px}
 .sb{background:var(--card2);border-radius:10px;padding:10px 12px}
 .sb .sv{font-size:1.15em;font-weight:700;font-variant-numeric:tabular-nums}
 .sb .sl{font-size:.64em;color:var(--text3);margin-top:2px}
+.tg{display:grid;grid-template-columns:auto repeat(4,1fr);gap:6px 10px;align-items:baseline;
+  text-align:right;font-variant-numeric:tabular-nums}
+.tg .tu,.tg .th{color:var(--text3);font-size:.72em}
+.tg .tu{text-align:left}
+.tg.stale{color:var(--text3)}
 
 /* ── Controls ── */
 .btn-main{width:100%;padding:14px;border:none;border-radius:12px;
@@ -444,6 +449,25 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
       <div><div class="hv" id="bTemp">--</div><div class="hl">Temp</div></div>
     </div>
   </div>
+</div>
+
+<!-- Tyre pressure (read-only, 0x219); shown once the frame reaches this tap -->
+<div class="card" id="tpmsCard" style="display:none">
+  <div class="card-head"><div class="icon ic-b">T</div><h2>Tyre Pressure</h2>
+    <span class="pill off" id="tpmsSt" style="margin-left:auto"><span class="pd"></span>--</span>
+  </div>
+  <div class="tg" id="tpGrid"></div>
+  <div class="row" id="rowTpAge" style="display:none">
+    <span class="lbl">Since last reading</span>
+    <span id="tpAge" style="font-variant-numeric:tabular-nums">--</span>
+  </div>
+  <div class="row" id="rowTpTgt" style="display:none">
+    <span class="lbl">Car's target</span>
+    <span id="tpTgt" style="font-size:.8em;color:var(--text2)">--</span>
+  </div>
+  <div class="log-info" id="tpOrder" style="display:none">Columns follow the order the car sends them. Which wheel each one belongs to is not confirmed yet.</div>
+  <div class="log-info" id="tpNone" style="display:none">0x219 is arriving on this tap, but the car is not reporting a pressure in it.</div>
+  <div class="log-info" id="tpForm" style="display:none">This 0x219 has a length this firmware does not read yet. A capture of it would help.</div>
 </div>
 
 <!-- Performance (read-only, opt-in) -->
@@ -1196,6 +1220,7 @@ function upd(d){
   sect('controls',updControls,d);
   sect('can',updCan,d);
   sect('battery',updBattery,d);
+  sect('tpms',updTpms,d);      // read-only
   sect('perf',renderPerf,d);   // read-only, opt-in
 }
 function updStatus(d){
@@ -1381,6 +1406,46 @@ function updBattery(d){
     }
     if(document.getElementById('bTemp')) document.getElementById('bTemp').textContent=d.bms.temp_min+'~'+d.bms.temp_max+'\u00b0C';
   }
+}
+// Tyre pressure (read-only, 0x219). Columns stay in the order the car sends
+// them; they are named as corners only when the car gives each its own corner.
+var TPOS=['FL','FR','RL','RR'];
+function updTpms(d){
+  var c=document.getElementById('tpmsCard'),t=d.tpms,i;
+  if(!c)return;
+  if(!t||!t.seen){c.style.display='none';return;}
+  c.style.display='';
+  var mb=t.mbar||[],tc=t.temp||[],ps=t.pos||[],have=false,anyT=false;
+  for(i=0;i<4;i++){if(mb[i]!=null)have=true;if(tc[i]!=null)anyT=true;}
+  var known=t.dlc===5||t.dlc===7,stale=have&&!!t.stale;
+  pill('tpmsSt',have&&!stale,!have?'No reading':stale?'Stale':'Receiving');
+  var ord=[],used={};
+  for(i=0;i<4;i++){var p=ps[i];if(p==null||p<0||p>3||used[p])break;used[p]=1;ord[p]=i;}
+  var named=i===4;
+  if(!named)ord=[0,1,2,3];
+  var bar=function(m){return m==null?'--':(Math.round(m/10)/100).toFixed(2);};
+  var psi=function(m){return m==null?'--':(m*0.0145038).toFixed(1);};
+  var h='<span></span>',rb='<span class="tu">bar</span>',rp='<span class="tu">psi</span>',rt='<span class="tu">\u00b0C</span>';
+  ord.forEach(function(k,n){
+    h+='<span class="th">'+(named?TPOS[n]:String(n+1))+'</span>';
+    rb+='<span>'+bar(mb[k])+'</span>';
+    rp+='<span>'+psi(mb[k])+'</span>';
+    rt+='<span>'+(tc[k]==null?'--':tc[k])+'</span>';
+  });
+  var g=document.getElementById('tpGrid');
+  if(g){g.innerHTML=h+rb+rp+(anyT?rt:'');g.className='tg'+(stale?' stale':'');}
+  var ar=document.getElementById('rowTpAge');
+  if(ar)ar.style.display=stale?'flex':'none';
+  if(stale)setTxt('tpAge',fmt(t.age_s||0));
+  var tg=(t.target||[]).filter(function(v){return v!=null;});
+  if(tg.length===2&&tg[0]===tg[1])tg=[tg[0]];
+  var tr=document.getElementById('rowTpTgt');
+  if(tr)tr.style.display=tg.length?'flex':'none';
+  if(tg.length)setTxt('tpTgt',tg.map(bar).join(' / ')+' bar \u00b7 '+tg.map(psi).join(' / ')+' psi');
+  var show=function(id,on){var e=document.getElementById(id);if(e)e.style.display=on?'':'none';};
+  show('tpOrder',have&&!named);
+  show('tpNone',!have&&known);
+  show('tpForm',!known);
 }
 function updDevice(d){
   // Device
@@ -1987,11 +2052,11 @@ static String build_json() {
         (state.hw_version == TeslaHW_HW3) ? "HW3: DAS 0x399" :
         (state.hw_version == TeslaHW_Legacy) ? "Legacy: DAS 0x399" :
         "Waiting for HW detection";
-    // Core payload runs ~1.3-1.5 KB of scalar fields plus small bms/ota/
-    // http_can_stream objects — back near the beta.11 shape now that the heavy
-    // blackbox/capability/profile blocks fetch from /api/aux (#124). 1.5 KB
-    // avoids per-call String reallocs; build_json() runs on every WS push.
-    j.reserve(2048);
+    // Core payload runs ~2.3-2.5 KB of scalar fields plus small bms/perf/tpms/
+    // ota/http_can_stream objects, now that the heavy blackbox/capability/
+    // profile blocks fetch from /api/aux (#124). Past the reserve the String
+    // reallocs every 16 bytes, and build_json() runs on every WS push.
+    j.reserve(3072);
     j  = "{";
     j += "\"fsd_enabled\":";   j += state.fsd_enabled                 ? "true" : "false"; j += ',';
     j += "\"ap_active\":";     j += state.ap_active                   ? "true" : "false"; j += ',';
@@ -2081,6 +2146,46 @@ static String build_json() {
     j += "\"tx_failed_count\":"; j += err.tx_failed_count;             j += ',';
     j += "\"fps\":";           j += fps_s;                             j += ',';
     j += "\"bms\":";           j += bms;                               j += ',';
+    // Tyre pressures (read-only 0x219, fsd_logic/fsd_tpms.h). Four slots in the
+    // order the car fills them: mbar, temp in deg C, pos 0 FL 1 FR 2 RL 3 RR;
+    // target = the car's own pair. null = not known.
+    {
+        const FSDTpms *t = &state.tpms;
+        j += "\"tpms\":{\"seen\":"; j += fsd_tpms_seen(t) ? "true" : "false";
+        if (fsd_tpms_seen(t)) {
+            uint32_t now_ms = millis();
+            j += ",\"src\":";   j += (int)t->source;
+            j += ",\"dlc\":";   j += (int)t->frame_dlc;
+            j += ",\"age_s\":"; j += fsd_tpms_age_ms(t, now_ms) / 1000u;
+            j += ",\"stale\":"; j += fsd_tpms_stale(t, now_ms) ? "true" : "false";
+            j += ",\"mbar\":[";
+            for (int i = 0; i < 4; i++) {
+                if (i) j += ',';
+                if (t->pressure[i] == FSD_TPMS_NA) j += "null";
+                else j += fsd_tpms_mbar(t->pressure[i]);
+            }
+            j += "],\"temp\":[";
+            for (int i = 0; i < 4; i++) {
+                if (i) j += ',';
+                if (t->temp[i] == FSD_TPMS_NA) j += "null";
+                else j += fsd_tpms_temp_c(t->temp[i]);
+            }
+            j += "],\"pos\":[";
+            for (int i = 0; i < 4; i++) {
+                if (i) j += ',';
+                if (t->pos[i] > FSD_TPMS_POS_RR) j += "null";
+                else j += (int)t->pos[i];
+            }
+            j += "],\"target\":[";
+            for (int i = 0; i < 2; i++) {
+                if (i) j += ',';
+                if (t->target[i] == FSD_TPMS_NA) j += "null";
+                else j += fsd_tpms_mbar(t->target[i]);
+            }
+            j += ']';
+        }
+        j += "},";
+    }
     j += "\"perf\":";          j += perf;                              j += ',';
     j += "\"uptime_s\":";      j += uptime_s;                          j += ',';
     // Loop-task stack low-water mark (this runs on it) and heap, for field reports.

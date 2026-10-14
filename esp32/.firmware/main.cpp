@@ -1387,6 +1387,13 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
         state_exit();
         return;
     }
+    // Tyre pressures (0x219) — read-only, whichever bus carries it, every mode.
+    if (frame.id == CAN_ID_VCSEC_TPMS) {
+        state_enter();
+        fsd_tpms_update(&g_state.tpms, frame.data, frame.dlc, now);
+        state_exit();
+        return;
+    }
     // Steering angle (0x129) — read-only, feeds the Soft Engage gate (#108).
     if (!steer_cfg && frame.id == CAN_ID_STEER_ANGLE) {
         state_enter();
