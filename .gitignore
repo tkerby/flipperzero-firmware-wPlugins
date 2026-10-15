@@ -21,6 +21,8 @@ dist/
 debug_test
 simple_key_test
 test_*
+!test_*.c
+!test_*.h
 *.test
 
 # IDE and OS files
