@@ -3,12 +3,13 @@ UFBT := .venv/bin/ufbt
 MOMENTUM_HOME := $(CURDIR)/.ufbt/momentum
 MOMENTUM_SDK := https://github.com/Next-Flip/Momentum-Firmware/releases/download/mntm-009/flipper-z-f7-sdk-mntm-009.zip
 FIRMWARE ?= official
+VERSION ?= 0.1
 TOOLCHAIN_HOME := $(HOME)/.ufbt
 SDK_HOME := $(if $(filter momentum,$(FIRMWARE)),$(MOMENTUM_HOME),$(TOOLCHAIN_HOME))
 SDK_ENV := UFBT_HOME="$(SDK_HOME)" FBT_TOOLCHAIN_PATH="$(TOOLCHAIN_HOME)"
 SDK_PYTHON := $(TOOLCHAIN_HOME)/toolchain/current/bin/python3
 
-.PHONY: all setup build songs sfx package test momentum-sdk momentum launch upload-songs upload-sfx
+.PHONY: all setup build songs sfx package release test momentum-sdk momentum launch upload-songs upload-sfx
 all: package
 
 setup:
@@ -30,6 +31,12 @@ sfx:
 package: build songs sfx
 	mkdir -p sdcard/apps/Media
 	cp dist/taiko_player.fap sdcard/apps/Media/taiko_player.fap
+
+# Build sequentially because uFBT variants share dist/taiko_player.fap.
+release: test
+	$(MAKE) build FIRMWARE=official
+	$(MAKE) build FIRMWARE=momentum
+	$(PYTHON) scripts/package_release.py --version $(VERSION)
 
 test:
 	$(PYTHON) scripts/test_core.py

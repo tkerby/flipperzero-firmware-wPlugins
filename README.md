@@ -26,6 +26,12 @@
 
 休止符与长音结束标记不切换左右手。连打与气球按当前 BPM 的 32 分音符间隔自动打咚，实际速率上限为每秒 24 下，音效、小鼓和 GPIO 共用击打时间表，并与普通音符一起左右交替。
 
+## 下载
+
+从 [GitHub Releases](https://github.com/ZeroNinx/flipper-zero-taiko-player/releases) 下载对应固件的安装包。v0.1 提供官方 1.5.1（API 88.2）和 Momentum mntm-009（API 79.2）两个版本；请选择与设备固件兼容的包。
+
+解压后将 `sdcard/` 内的内容复制到 SD 卡根目录。包内附带咚/咔音效、转码脚本和 `INSTALL.md`，不包含歌曲或用户设置；无需搭建编译环境，只需在电脑上用 Python 3 和 FFmpeg 转换自己的曲目。
+
 ## 构建
 
 需要 Python 3、Make、FFmpeg，以及用于下载 uFBT SDK 和工具链的网络连接。本地测试还需要支持 AddressSanitizer / UndefinedBehaviorSanitizer 的 C 编译器。以下命令以 Linux / macOS 为例。
@@ -53,6 +59,14 @@ make momentum-sdk MOMENTUM_SDK="<对应固件的 SDK ZIP URL>"
 ```
 
 后续的打包和上传命令也需要加上 `FIRMWARE=momentum`。构建操作不更新设备固件。
+
+两套 SDK 初始化后，可生成不含本地曲目和设置的双固件发布包：
+
+```sh
+make release VERSION=0.1
+```
+
+此命令运行测试、依次编译两个版本，并输出 `dist/releases/v0.1/` 下的两个 ZIP 和 SHA-256 校验文件。每个包记录源码提交、固件 SDK 版本及 FAP API。GitHub Release 工作流使用固定版本的 SDK；准备好对应的 `docs/releases/v<版本>.md` 并推送 `v<版本>` 标签后，会自动构建并发布。
 
 ## 准备曲目
 
