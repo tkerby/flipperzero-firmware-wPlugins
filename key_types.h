@@ -11,6 +11,14 @@ typedef enum {
     KeyCategoryIButton,
 } KeyCategory;
 
+typedef enum {
+    ScanModeAuto = 0,
+    ScanModeRFIDOnly,
+    ScanModeNFCOnly,
+    ScanModeIButtonOnly,
+    ScanModeMax,
+} ScanMode;
+
 typedef struct {
     KeyCategory category;
     char protocol_name[32];
@@ -26,3 +34,4 @@ typedef struct {
 const char* key_category_to_string(KeyCategory cat);
 const char* key_category_to_asset_dir(KeyCategory cat);
 const char* key_category_to_extension(KeyCategory cat);
+const char* scan_mode_to_string(ScanMode mode);
