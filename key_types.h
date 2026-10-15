@@ -27,6 +27,8 @@ typedef struct {
     char data_hex[128];
     char atqa[8];
     char sak[8];
+    uint8_t atqa_raw[2];
+    uint8_t sak_raw;
     bool valid;
     char saved_path[128];
 } DetectedKey;

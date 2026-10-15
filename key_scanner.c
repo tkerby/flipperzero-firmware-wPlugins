@@ -111,6 +111,9 @@ static void scanner_handle_nfc_detected(KeyScanner* scanner, const Iso14443_3aDa
         nfc_data->atqa[0],
         nfc_data->atqa[1]);
     snprintf(scanner->detected_key.sak, sizeof(scanner->detected_key.sak), "%02X", nfc_data->sak);
+    scanner->detected_key.atqa_raw[0] = nfc_data->atqa[0];
+    scanner->detected_key.atqa_raw[1] = nfc_data->atqa[1];
+    scanner->detected_key.sak_raw = nfc_data->sak;
 
     scanner->key_detected = true;
     scanner->is_scanning = false;
@@ -416,6 +419,9 @@ void key_scanner_simulate_detection(
         snprintf(out_key->data_hex, sizeof(out_key->data_hex), "DE AD BE EF");
         strncpy(out_key->atqa, "00 04", sizeof(out_key->atqa));
         strncpy(out_key->sak, "08", sizeof(out_key->sak));
+        out_key->atqa_raw[0] = 0x04;
+        out_key->atqa_raw[1] = 0x00;
+        out_key->sak_raw = 0x08;
     } else if(category == KeyCategoryIButton) {
         strncpy(out_key->protocol_name, "Dallas", sizeof(out_key->protocol_name) - 1);
         uint8_t rom[8] = {0x01, 0x00, 0xBE, 0x11, 0xAA, 0x00, 0x00, 0xFB};
