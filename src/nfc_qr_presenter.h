@@ -50,6 +50,18 @@ bool nfc_qr_storage_write_payload(
     const char* text,
     NfcQrPayload* out_payload);
 
+/** Create a uniquely named card without overwriting an existing card. */
+bool nfc_qr_storage_add_payload(
+    Storage* storage,
+    const char* name,
+    const char* text,
+    NfcQrPayload* out_payload);
+
+/** Preserve the source extension when editing an imported vCard. */
+bool nfc_qr_storage_update_payload(Storage* storage, const NfcQrPayload* payload, const char* text);
+
 bool nfc_qr_storage_delete_payload(Storage* storage, const NfcQrPayload* payload);
 
 size_t nfc_qr_build_ndef_message(const char* text, uint8_t* out, size_t out_size);
+
+void nfc_qr_normalize_text(const char* text, char* out, size_t out_size);

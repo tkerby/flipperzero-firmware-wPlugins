@@ -11,12 +11,8 @@
 #define NFC_QR_NTAG203_PAGES_TOTAL 42
 #define NFC_QR_NTAG203_USER_BYTES  144
 
-static size_t nfc_qr_tlv_len(size_t ndef_len) {
-    return (ndef_len < 0xFF) ? (ndef_len + 3) : (ndef_len + 5);
-}
-
-static bool nfc_qr_ndef_fits_ntag203(size_t ndef_len) {
-    return nfc_qr_tlv_len(ndef_len) <= NFC_QR_NTAG203_USER_BYTES;
+bool nfc_qr_nfc_ndef_fits(size_t ndef_len) {
+    return ndef_len > 0 && ndef_len <= NFC_QR_NTAG203_USER_BYTES - 3;
 }
 
 static void nfc_qr_generate_uid(uint8_t* uid) {
@@ -29,7 +25,7 @@ static void nfc_qr_generate_uid(uint8_t* uid) {
 
 static bool nfc_qr_build_ntag_data(MfUltralightData* data, const uint8_t* ndef, size_t ndef_len) {
     if(!data || !data->iso14443_3a_data || !ndef || (ndef_len == 0)) return false;
-    if(!nfc_qr_ndef_fits_ntag203(ndef_len)) return false;
+    if(!nfc_qr_nfc_ndef_fits(ndef_len)) return false;
 
     Iso14443_3aData* iso14443_3a_data = data->iso14443_3a_data;
     memset(data, 0, sizeof(MfUltralightData));
@@ -160,7 +156,7 @@ bool nfc_qr_nfc_worker_start(NfcQrNfcWorker* worker, const uint8_t* ndef, size_t
         return false;
     }
 
-    if(!nfc_qr_ndef_fits_ntag203(ndef_len)) {
+    if(!nfc_qr_nfc_ndef_fits(ndef_len)) {
         worker->status = NfcQrNfcStatusErrorPayload;
         return false;
     }
@@ -200,24 +196,24 @@ void nfc_qr_nfc_worker_stop(NfcQrNfcWorker* worker) {
 const char* nfc_qr_nfc_worker_status_text(NfcQrNfcStatus status) {
     switch(status) {
     case NfcQrNfcStatusIdle:
-        return "NFC inactivo";
+        return "NFC idle";
     case NfcQrNfcStatusDisabled:
-        return "NDEF listo";
+        return "NDEF ready";
     case NfcQrNfcStatusStarting:
-        return "NFC iniciando";
+        return "NFC starting";
     case NfcQrNfcStatusRunning:
-        return "NFC activo";
+        return "NFC active";
     case NfcQrNfcStatusErrorPayload:
-        return "NDEF excede tag";
+        return "Card too long";
     case NfcQrNfcStatusErrorNoMemory:
-        return "Memoria NFC insuf.";
+        return "NFC memory full";
     case NfcQrNfcStatusErrorTagBuild:
-        return "Tag NDEF invalido";
+        return "Invalid NFC tag";
     case NfcQrNfcStatusErrorNfc:
-        return "NFC no disponible";
+        return "NFC unavailable";
     case NfcQrNfcStatusErrorListener:
-        return "Listener NFC fallo";
+        return "NFC start failed";
     default:
-        return "Error NFC";
+        return "NFC error";
     }
 }
