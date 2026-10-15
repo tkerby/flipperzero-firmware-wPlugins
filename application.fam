@@ -8,5 +8,6 @@ App(
     fap_version="0.1",
     fap_description="Play TJA charts with PCM audio from the SD card",
     fap_author="TaikoPlayer",
+    fap_icon="assets/taiko_player_10px.png",
     sources=["src/*.c"],
 )

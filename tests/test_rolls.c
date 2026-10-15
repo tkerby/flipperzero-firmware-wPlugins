@@ -101,16 +101,27 @@ static void test_lane(void) {
     TaikoLaneRoll visible[16];
     TaikoLaneBalloon balloon;
     size_t count = taiko_lane_collect_rolls(&chart, 1300, 10, visible, 16, &balloon);
-    assert(count == 2 && visible[0].x == TAIKO_LANE_HIT_X && visible[1].kind == 7);
+    assert(count == 2 && visible[0].x < TAIKO_LANE_HIT_X && visible[1].kind == 7);
     assert(visible[0].tail_x > visible[0].x && balloon.remaining == 0);
-    /* The start is well outside the ordinary-note lookback window, but the tail stays. */
+    int head_before = visible[0].x, tail_before = visible[0].tail_x;
+    taiko_lane_collect_rolls(&chart, 1400, 10, visible, 16, &balloon);
+    assert(visible[0].x < head_before && visible[0].tail_x < tail_before);
+    /* Keep drawing after note 8 until the tail has drifted off the screen. */
+    count =
+        taiko_lane_collect_rolls(&chart, chart.rolls[0].end_ms + 50, 10, visible, 16, &balloon);
+    assert(count >= 1 && visible[0].kind == 5 && visible[0].tail_x < TAIKO_LANE_HIT_X);
     chart.rolls[0].time_ms = -100000;
-    assert(taiko_lane_collect_rolls(&chart, 1300, 10, visible, 16, &balloon) == 2);
+    count = taiko_lane_collect_rolls(&chart, 1300, 10, visible, 16, &balloon);
+    assert(count == 2 && visible[0].x < 0 && visible[0].tail_x > 0);
     chart.rolls[0].scroll_speed = -1;
     assert(taiko_lane_collect_rolls(&chart, 1300, 10, visible, 16, &balloon) == 2);
-    assert(visible[0].x == TAIKO_LANE_HIT_X && visible[0].tail_x < visible[0].x);
+    assert(visible[0].x > 127 && visible[0].tail_x < TAIKO_LANE_HIT_X);
+    /* Reverse-scroll balloons trail toward the left and may be partly clipped. */
+    chart.rolls[1].scroll_speed = -0.1f;
+    assert(taiko_lane_collect_rolls(&chart, 1300, 10, visible, 16, &balloon) == 2);
+    assert(visible[1].kind == 7 && visible[1].tail_x < visible[1].x);
     taiko_lane_collect_rolls(&chart, chart.rolls[1].time_ms, 10, visible, 16, &balloon);
-    assert(balloon.remaining == 2 && balloon.total == 3);
+    assert(balloon.remaining == 2 && balloon.total == 3 && balloon.direction == -1);
     taiko_lane_collect_rolls(&chart, chart.rolls[1].time_ms + 100, 10, visible, 16, &balloon);
     assert(balloon.remaining == 0);
     taiko_lane_collect_rolls(&chart, chart.rolls[1].time_ms, 10, visible, 0, &balloon);

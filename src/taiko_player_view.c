@@ -141,6 +141,79 @@ static void lane_disc(Canvas* canvas, int x, int radius, Color color) {
     }
 }
 
+/* A narrow neck opens into a rounded bulb, following the incoming side. */
+static void draw_balloon_tail(Canvas* canvas, int x, int direction, int radius) {
+    static const uint8_t extent[] = {2, 2, 2, 2, 2, 3, 3, 4, 4, 5, 5, 5, 5, 5, 5, 4, 4, 3, 2, 1};
+    if(!direction) direction = 1;
+    for(int pass = 0; pass < 3; pass++) {
+        canvas_set_color(canvas, pass == 1 ? ColorBlack : ColorWhite);
+        for(int i = pass; i < (int)sizeof(extent) - pass; i++) {
+            int height = extent[i];
+            for(int j = i - pass; j <= i + pass; j++)
+                if(extent[j] < height) height = extent[j];
+            height -= pass;
+            if(height < 0) continue;
+            int column = x + direction * (radius - 1 + i);
+            if(column < 0 || column > 127) continue;
+            canvas_draw_line(canvas, column, LANE_Y - height, column, LANE_Y + height);
+        }
+    }
+}
+
+static void draw_balloon_head(Canvas* canvas, int x) {
+    lane_disc(canvas, x, TAIKO_LANE_BIG_RADIUS, ColorWhite);
+    lane_disc(canvas, x, TAIKO_LANE_BIG_RADIUS - 1, ColorBlack);
+    lane_disc(canvas, x, TAIKO_LANE_BIG_RADIUS - 2, ColorWhite);
+}
+
+static void draw_balloon_note(Canvas* canvas, const TaikoLaneRoll* note) {
+    int direction = note->tail_x < note->x ? -1 : 1;
+    draw_balloon_tail(canvas, note->x, direction, TAIKO_LANE_BIG_RADIUS);
+    draw_balloon_head(canvas, note->x);
+}
+
+static void draw_balloon_counter(Canvas* canvas, const TaikoPlayerView* view) {
+    if(view->balloon.remaining && view->balloon.total) {
+        char count[12], total[12];
+        snprintf(count, sizeof(count), "%lu", view->balloon.remaining);
+        snprintf(total, sizeof(total), "%lu", view->balloon.total);
+        /* Size depends on the original count, so crossing a digit boundary never
+         * shrinks the tail. The bulb and neck inflate; the head stays fixed. */
+        const int inflation =
+            (view->balloon.total - view->balloon.remaining) * 6 / view->balloon.total;
+        int radius = canvas_string_width(canvas, total) / 2 + 2;
+        if(radius < 7) radius = 7;
+        radius += inflation;
+        if(radius > 18) radius = 18;
+        int direction = view->balloon.direction < 0 ? -1 : 1;
+        const int reach = TAIKO_LANE_BIG_RADIUS + 4 + 2 * radius + 1;
+        /* The counter must stay readable even for a reverse-scroll balloon. */
+        if(TAIKO_LANE_HIT_X + direction * reach < 0 || TAIKO_LANE_HIT_X + direction * reach > 127)
+            direction = -direction;
+        const int center = TAIKO_LANE_HIT_X + direction * (TAIKO_LANE_BIG_RADIUS + 4 + radius);
+        int neck_start = TAIKO_LANE_HIT_X + direction * (TAIKO_LANE_BIG_RADIUS - 1);
+        int neck_end = center - direction * (radius / 2);
+        int neck_length = direction * (neck_end - neck_start);
+        for(int pass = 0; pass < 3; pass++) {
+            canvas_set_color(canvas, pass == 1 ? ColorBlack : ColorWhite);
+            for(int step = 0; step <= neck_length; step++) {
+                int height =
+                    2 + inflation / 2 + (inflation - inflation / 2) * step / neck_length - pass;
+                int x = neck_start + direction * step;
+                canvas_draw_line(canvas, x, LANE_Y - height, x, LANE_Y + height);
+            }
+            /* Paint the neck and bulb as one shape in each border layer, so the
+             * join has no circular outline cutting through the white center. */
+            lane_disc(canvas, center, radius + 1 - pass, pass == 1 ? ColorBlack : ColorWhite);
+        }
+        canvas_set_color(canvas, ColorBlack);
+        canvas_draw_str(
+            canvas, center - canvas_string_width(canvas, count) / 2, LANE_Y + 3, count);
+        draw_balloon_head(canvas, TAIKO_LANE_HIT_X);
+    }
+    canvas_set_color(canvas, ColorBlack);
+}
+
 static void draw_lane(Canvas* canvas, const TaikoPlayerView* view) {
     canvas_draw_box(canvas, 0, LANE_TOP, 128, LANE_BOTTOM - LANE_TOP + 1);
     canvas_set_color(canvas, ColorWhite);
@@ -148,6 +221,10 @@ static void draw_lane(Canvas* canvas, const TaikoPlayerView* view) {
     canvas_draw_circle(canvas, TAIKO_LANE_HIT_X, LANE_Y, 5);
     for(size_t i = view->roll_count; i > 0; i--) {
         TaikoLaneRoll roll = view->lane_rolls[i - 1];
+        if(roll.kind == 7 || roll.kind == 9) {
+            draw_balloon_note(canvas, &roll);
+            continue;
+        }
         int radius = roll.kind == 5 ? TAIKO_LANE_SMALL_RADIUS : TAIKO_LANE_BIG_RADIUS;
         int left = roll.x < roll.tail_x ? roll.x : roll.tail_x;
         int right = roll.x > roll.tail_x ? roll.x : roll.tail_x;
@@ -175,22 +252,6 @@ static void draw_lane(Canvas* canvas, const TaikoPlayerView* view) {
         lane_disc(canvas, note.x, radius - (note.kind == 3 ? 2 : 1), ColorBlack);
         if(note.kind == 2 || note.kind == 4)
             lane_disc(canvas, note.x, radius - (note.kind == 4 ? 3 : 2), ColorWhite);
-    }
-    if(view->balloon.remaining && view->balloon.total) {
-        char count[12], total[12];
-        snprintf(count, sizeof(count), "%lu", view->balloon.remaining);
-        snprintf(total, sizeof(total), "%lu", view->balloon.total);
-        /* Size depends on the original count, so crossing a digit boundary never
-         * shrinks the balloon. Inflate by up to two pixels as hits accumulate. */
-        int radius = canvas_string_width(canvas, total) / 2 + 1;
-        if(radius < 6) radius = 6;
-        radius += (view->balloon.total - view->balloon.remaining) * 3 / view->balloon.total;
-        const int center = radius > TAIKO_LANE_HIT_X ? radius : TAIKO_LANE_HIT_X;
-        canvas_set_color(canvas, ColorWhite);
-        canvas_draw_disc(canvas, center, LANE_Y, radius);
-        canvas_set_color(canvas, ColorBlack);
-        canvas_draw_str(
-            canvas, center - canvas_string_width(canvas, count) / 2, LANE_Y + 3, count);
     }
     canvas_set_color(canvas, ColorBlack);
 }
@@ -226,18 +287,18 @@ void taiko_player_view_draw(Canvas* canvas, const TaikoPlayerView* view) {
         snprintf(status, sizeof(status), "BPM: %lu", view->bpm_tenths / 10);
     furi_string_set(text, status);
     elements_string_fit_width(canvas, text, 49);
-    canvas_draw_str(canvas, 36, 39, furi_string_get_cstr(text));
+    canvas_draw_str(canvas, 38, 39, furi_string_get_cstr(text));
     unsigned speed = taiko_menu_scroll_tenths(&view->menu);
     snprintf(status, sizeof(status), "Speed: %u.%u", speed / 10, speed % 10);
-    canvas_draw_str(canvas, 36, 49, status);
+    canvas_draw_str(canvas, 38, 49, status);
 
     char time[16];
     uint32_t seconds = view->position_ms / 1000;
     snprintf(time, sizeof(time), "%lu:%02lu", seconds / 60, seconds % 60);
-    canvas_draw_str(canvas, 87, 39, time);
+    canvas_draw_str(canvas, 89, 39, time);
     furi_string_set(text, view->course);
-    elements_string_fit_width(canvas, text, 33);
-    canvas_draw_str(canvas, 87, 49, furi_string_get_cstr(text));
+    elements_string_fit_width(canvas, text, 31);
+    canvas_draw_str(canvas, 89, 49, furi_string_get_cstr(text));
     furi_string_free(text);
     canvas_draw_frame(canvas, 123, 30, 5, 21);
     const int volume_height = (view->volume * 19 + 50) / 100;
@@ -250,4 +311,6 @@ void taiko_player_view_draw(Canvas* canvas, const TaikoPlayerView* view) {
                                          "Pause",
         AlignCenter);
     draw_control(canvas, "FWD", AlignRight);
+    /* The enlarged balloon is a popup above the lane and drum indicator. */
+    draw_balloon_counter(canvas, view);
 }

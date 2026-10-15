@@ -13,17 +13,16 @@ size_t taiko_lane_collect(
     size_t capacity) {
     if(!scroll_tenths || !capacity || !count) return 0;
     if(!isfinite(min_note_speed) || min_note_speed <= 0) return 0;
-    /* Bound both directions so reverse-scroll notes can enter from the left.
+    /* Reverse-scroll notes can enter from the left too; bound their lookahead.
      * Cap before casting: very small positive HS can produce an infinite window. */
     float window = (127 + TAIKO_LANE_BIG_RADIUS - TAIKO_LANE_HIT_X + 1) * 10000.0f /
                    (TAIKO_LANE_PIXELS_PER_SECOND * scroll_tenths * min_note_speed);
     int64_t span = window < UINT32_MAX ? (int64_t)window + 1 : (int64_t)UINT32_MAX;
-    const int64_t earliest = (int64_t)position_ms - span;
     const int64_t latest = (int64_t)position_ms + span;
     size_t low = 0, high = count;
     while(low < high) {
         size_t mid = low + (high - low) / 2;
-        if(notes[mid].time_ms < earliest)
+        if(notes[mid].time_ms <= (int64_t)position_ms)
             low = mid + 1;
         else
             high = mid;
@@ -66,18 +65,20 @@ size_t taiko_lane_collect_rolls(
     size_t count = 0;
     for(size_t i = 0; i < chart->roll_count; i++) {
         const TjaRoll* roll = &chart->rolls[i];
-        if((int64_t)position_ms >= roll->end_ms) continue;
         bool is_balloon = roll->balloon_count != 0;
+        if(is_balloon && (int64_t)position_ms >= roll->end_ms) continue;
         bool active = (int64_t)position_ms >= roll->time_ms;
         if(is_balloon && active) {
             balloon->remaining = taiko_balloon_remaining(chart, roll, position_ms);
             balloon->total = roll->balloon_count;
+            balloon->direction = roll->scroll_speed < 0 ? -1 : 1;
             continue;
         }
         float speed = roll->scroll_speed ? roll->scroll_speed : 1;
         float scale = speed * scroll_tenths * (TAIKO_LANE_PIXELS_PER_SECOND / 10000.0f);
-        float head = active ? 0 : ((int64_t)roll->time_ms - position_ms) * scale;
-        float tail = is_balloon ? head : ((int64_t)roll->end_ms - position_ms) * scale;
+        float head = ((int64_t)roll->time_ms - position_ms) * scale;
+        float tail = is_balloon ? head + (speed < 0 ? -18 : 18) :
+                                  ((int64_t)roll->end_ms - position_ms) * scale;
         if(!isfinite(head) || !isfinite(tail)) continue;
         float left = head < tail ? head : tail;
         float right = head > tail ? head : tail;
