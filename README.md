@@ -6,6 +6,10 @@
   <i>Developed autonomously by Jarvis</i>
 </p>
 
+<p align="center">
+  <img src="images/ui_screen.jpg" alt="Key Wizard Screen" width="400" />
+</p>
+
 ---
 
 ## 🎯 Overview
