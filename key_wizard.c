@@ -2,6 +2,7 @@
 #include <furi_hal.h>
 #include <gui/gui.h>
 #include <gui/view_port.h>
+#include <gui/elements.h>
 #include <input/input.h>
 #include <notification/notification.h>
 #include <notification/notification_messages.h>
@@ -25,6 +26,7 @@ typedef struct {
     DetectedKey current_key;
     size_t quick_key_idx;
     uint32_t anim_frame;
+    int32_t about_scroll;
 } WizardState;
 
 typedef struct {
@@ -239,9 +241,41 @@ static void draw_screen_quick_keys(Canvas* canvas, KeyWizardApp* app) {
     canvas_draw_str_aligned(canvas, 124, 63, AlignRight, AlignBottom, "[Back] Return");
 }
 
+static const char* const about_lines[] = {
+    "Key Wizard v1.2.0",
+    "Multi-Reader Sorter",
+    "-------------------",
+    "Supported Technologies:",
+    "• 125 kHz RFID",
+    "  EM4100, HID, Indala",
+    "• 13.56 MHz NFC",
+    "  Mifare, NTAG, ISO14443",
+    "• 1-Wire iButton",
+    "  Dallas, Cyfral, Metakom",
+    "-------------------",
+    "Direct Asset Saving:",
+    "• /ext/lfrfid/*.rfid",
+    "• /ext/nfc/*.nfc",
+    "• /ext/ibutton/*.ibtn",
+    "-------------------",
+    "Author:",
+    "Vazgen Grigoryan",
+    "AI Architecture: Jarvis",
+    "License: MIT",
+    "-------------------",
+    "Donate Bitcoin (BTC):",
+    "bc1q7fu5pck45x2v03e",
+    "6yyqzf2hexu598s58c8zczg",
+    "-------------------",
+    "GitHub Project:",
+    "vazgen3201/flipper-",
+    "key-wizard",
+};
+#define ABOUT_LINES_COUNT (sizeof(about_lines) / sizeof(about_lines[0]))
+#define ABOUT_VISIBLE_LINES 4
+
 static void draw_screen_about(Canvas* canvas, KeyWizardApp* app) {
-    UNUSED(app);
-    // Header
+    // 1. Inverted Header with Icons
     canvas_draw_box(canvas, 0, 0, 128, 12);
     canvas_invert_color(canvas);
     canvas_set_font(canvas, FontPrimary);
@@ -250,15 +284,35 @@ static void draw_screen_about(Canvas* canvas, KeyWizardApp* app) {
     canvas_draw_icon(canvas, 112, 1, &I_key_icon);
     canvas_invert_color(canvas);
 
+    // 2. Scrollable Content (y = 13 to 53)
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str(canvas, 4, 22, "Key Wizard v1.1");
-    canvas_draw_str(canvas, 4, 32, "Author: Vazgen Grigoryan");
-    canvas_draw_str(canvas, 4, 42, "BTC Donate:");
-    canvas_draw_str(canvas, 4, 52, "bc1q7fu5pck45x2v03e6yy...");
+    int32_t scroll = app->state.about_scroll;
+    if(scroll < 0) scroll = 0;
+    if(scroll > (int32_t)(ABOUT_LINES_COUNT - ABOUT_VISIBLE_LINES)) {
+        scroll = ABOUT_LINES_COUNT - ABOUT_VISIBLE_LINES;
+    }
 
-    // Footer
-    canvas_draw_line(canvas, 0, 55, 128, 55);
-    canvas_draw_str(canvas, 2, 63, "[Back/OK] Return");
+    for(int32_t i = 0; i < ABOUT_VISIBLE_LINES; i++) {
+        int32_t idx = scroll + i;
+        if(idx < (int32_t)ABOUT_LINES_COUNT) {
+            int32_t y = 22 + (i * 10);
+            canvas_draw_str(canvas, 4, y, about_lines[idx]);
+        }
+    }
+
+    // 3. Native Scrollbar on right edge
+    elements_scrollbar_pos(
+        canvas,
+        124,
+        13,
+        41,
+        (size_t)scroll,
+        (size_t)(ABOUT_LINES_COUNT - ABOUT_VISIBLE_LINES + 1));
+
+    // 4. Footer navigation
+    canvas_draw_line(canvas, 0, 54, 128, 54);
+    canvas_draw_str(canvas, 2, 62, "[<]Back");
+    canvas_draw_str_aligned(canvas, 122, 62, AlignRight, AlignBottom, "[^v]Scroll");
 }
 
 static void key_wizard_render_callback(Canvas* canvas, void* ctx) {
@@ -358,14 +412,19 @@ int32_t key_wizard_app(void* p) {
                         key_scanner_stop(app->scanner);
                     } else if(app->state.screen == ScreenQuickKeys && app->state.quick_key_idx > 0) {
                         app->state.quick_key_idx--;
+                    } else if(app->state.screen == ScreenAbout && app->state.about_scroll > 0) {
+                        app->state.about_scroll--;
                     }
                     break;
                 case InputKeyDown:
                     if(app->state.screen == ScreenScanning) {
                         app->state.screen = ScreenAbout;
+                        app->state.about_scroll = 0;
                         key_scanner_stop(app->scanner);
                     } else if(app->state.screen == ScreenQuickKeys && app->state.quick_key_idx + 1 < QUICK_KEYS_COUNT) {
                         app->state.quick_key_idx++;
+                    } else if(app->state.screen == ScreenAbout && app->state.about_scroll + ABOUT_VISIBLE_LINES < (int32_t)ABOUT_LINES_COUNT) {
+                        app->state.about_scroll++;
                     }
                     break;
                 case InputKeyOk:
