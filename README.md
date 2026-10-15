@@ -3,14 +3,15 @@
 Turns the Flipper into a USB NFC reader/writer for your PC, two ways. The card the PC sees is either one
 you hold to the Flipper, or **one you load from a dump / `.nfc` file** (see below):
 
-![Main Menu](screenshots/main_menu.png)
+<p align="center">
+  <img src="screenshots/main_menu.png" width="45%" />
+  <img src="screenshots/pn532_mode.png" width="45%" />
+</p>
 
 | Mode | PC sees | Use with |
 |---|---|---|
 | **PN532 serial** | a second COM port speaking the PN532 protocol | libnfc (`nfc-list`, `nfc-mfclassic`, `nfc-mfultralight`), libfreefare, nfcpy |
 | **PC/SC reader** | a USB CCID smart-card reader | `pcsc_scan`, `opensc`, Python `pyscard`, any PC/SC app |
-
-![PN532 Mode](screenshots/pn532_mode.png)
 
 ## Honest status
 
