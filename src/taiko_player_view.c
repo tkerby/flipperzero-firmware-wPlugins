@@ -158,9 +158,12 @@ void taiko_player_view_draw(Canvas* canvas, const TaikoPlayerView* view) {
     snprintf(time, sizeof(time), "%lu:%02lu", seconds / 60, seconds % 60);
     canvas_draw_str(canvas, 84, 39, time);
     furi_string_set(text, view->course);
-    elements_string_fit_width(canvas, text, 42);
+    elements_string_fit_width(canvas, text, 36);
     canvas_draw_str(canvas, 84, 49, furi_string_get_cstr(text));
     furi_string_free(text);
+    canvas_draw_frame(canvas, 123, 30, 5, 21);
+    const int volume_height = (view->volume * 19 + 50) / 100;
+    if(volume_height) canvas_draw_box(canvas, 124, 50 - volume_height, 3, volume_height);
     if(view->loading || view->finished)
         canvas_draw_str(canvas, 42, 45, view->loading ? "Load" : "End");
     draw_control(canvas, "BWD", AlignLeft);

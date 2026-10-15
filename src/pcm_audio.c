@@ -23,6 +23,7 @@ struct PcmAudio {
     uint32_t position_ms;
     uint32_t duration_ms;
     TaikoMixer mixer;
+    uint8_t volume;
     uint8_t samples[HALF_SAMPLES * 2];
 };
 
@@ -126,6 +127,10 @@ static bool
     memset(samples, 128, HALF_SAMPLES); /* unsigned PCM silence */
     if(count && storage_file_read(file, samples, count) != count) return false;
     taiko_mixer_mix(&audio->mixer, samples, count, info->sample_rate, *cursor);
+    furi_mutex_acquire(audio->mutex, FuriWaitForever);
+    uint8_t volume = audio->volume;
+    furi_mutex_release(audio->mutex);
+    taiko_mixer_apply_volume(samples, count, volume);
     *cursor += count;
     return true;
 }
@@ -218,7 +223,8 @@ PcmAudio* pcm_audio_start(
     Storage* storage,
     const char* path,
     uint32_t position_ms,
-    const TaikoMixer* mixer) {
+    const TaikoMixer* mixer,
+    uint8_t volume) {
     PcmAudio* audio = malloc(sizeof(PcmAudio));
     audio->storage = storage;
     audio->path = strdup(path);
@@ -229,9 +235,16 @@ PcmAudio* pcm_audio_start(
     audio->started_tick = 0;
     audio->position_ms = position_ms;
     audio->mixer = *mixer;
+    audio->volume = MIN(volume, 100);
     audio->thread = furi_thread_alloc_ex("TaikoAudio", 2048, audio_worker, audio);
     furi_thread_start(audio->thread);
     return audio;
+}
+
+void pcm_audio_set_volume(PcmAudio* audio, uint8_t volume) {
+    furi_mutex_acquire(audio->mutex, FuriWaitForever);
+    audio->volume = MIN(volume, 100);
+    furi_mutex_release(audio->mutex);
 }
 
 PcmAudioState pcm_audio_state(PcmAudio* audio) {

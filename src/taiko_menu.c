@@ -5,7 +5,7 @@ static const uint32_t intervals[] = {1000, 3000, 5000, 10000};
 
 void taiko_menu_init(TaikoMenu* menu) {
     *menu =
-        (TaikoMenu){.backward_index = 2, .forward_index = 2, .don_volume = 50, .ka_volume = 50};
+        (TaikoMenu){.backward_index = 2, .forward_index = 2, .don_volume = 70, .ka_volume = 70};
 }
 
 void taiko_menu_open(TaikoMenu* menu) {

@@ -82,7 +82,34 @@ static void test_independent_volume(void) {
     mixer.ka_volume = 0;
     memset(samples, 200, sizeof(samples));
     taiko_mixer_mix(&mixer, samples, sizeof(samples), 8000, 0);
-    assert(samples[0] == 182 && samples[1] == 182); /* Muting drums keeps the backing track. */
+    assert(samples[0] == 200 && samples[1] == 200); /* Muting drums keeps the backing track. */
+}
+
+static void test_master_volume(void) {
+    const uint8_t original[] = {0, 64, 128, 192, 255};
+    const uint8_t half[] = {64, 96, 128, 160, 191};
+    uint8_t samples[sizeof(original)];
+    memcpy(samples, original, sizeof(samples));
+    taiko_mixer_apply_volume(samples, sizeof(samples), 100);
+    assert(memcmp(samples, original, sizeof(samples)) == 0);
+    taiko_mixer_apply_volume(samples, sizeof(samples), 50);
+    assert(memcmp(samples, half, sizeof(samples)) == 0);
+    taiko_mixer_apply_volume(samples, sizeof(samples), 0);
+    for(size_t i = 0; i < sizeof(samples); i++)
+        assert(samples[i] == 128);
+
+    const uint8_t don[] = {228, 28};
+    const uint8_t ka[] = {88, 168};
+    const TjaNote notes[] = {{0, 1}, {0, 2}};
+    TaikoMixer mixer = {{don, 2, 8000}, {ka, 2, 8000}, notes, 2, 50, 25};
+    uint8_t mixed[] = {168, 88};
+    taiko_mixer_mix(&mixer, mixed, sizeof(mixed), 8000, 0);
+    /* Music and both drum channels are attenuated together after mixing. */
+    assert(mixed[0] == 208 && mixed[1] == 48);
+    taiko_mixer_apply_volume(mixed, sizeof(mixed), 50);
+    assert(mixed[0] == 168 && mixed[1] == 88);
+    taiko_mixer_apply_volume(mixed, sizeof(mixed), 0);
+    assert(mixed[0] == 128 && mixed[1] == 128);
 }
 
 int main(void) {
@@ -90,6 +117,7 @@ int main(void) {
     test_buffer_boundaries_and_seeking();
     test_missing_effects();
     test_independent_volume();
+    test_master_volume();
     puts(
         "Drum mixing, volume, overlap, clipping, resampling, DMA boundaries and seeking tests passed");
     return 0;

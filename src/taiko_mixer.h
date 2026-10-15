@@ -26,3 +26,7 @@ void taiko_mixer_mix(
     size_t count,
     uint32_t rate,
     uint32_t position);
+
+/* Final application gain for all PCM output, including music without effects.
+ * Unsigned PCM silence stays centered at 128. */
+void taiko_mixer_apply_volume(uint8_t* samples, size_t count, uint8_t volume);

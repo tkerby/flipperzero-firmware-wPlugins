@@ -1,6 +1,18 @@
 #include "taiko_mixer.h"
 
+#include <string.h>
+
 #define MIX_BLOCK 128U
+
+void taiko_mixer_apply_volume(uint8_t* samples, size_t count, uint8_t volume) {
+    if(volume >= 100) return;
+    if(!volume) {
+        memset(samples, 128, count);
+        return;
+    }
+    for(size_t i = 0; i < count; i++)
+        samples[i] = 128 + ((int32_t)samples[i] - 128) * volume / 100;
+}
 
 static uint32_t clip_duration(const TaikoPcmClip* clip) {
     if(!clip->samples || !clip->count || !clip->rate) return 0;
@@ -34,7 +46,7 @@ void taiko_mixer_mix(
         if(length > MIX_BLOCK) length = MIX_BLOCK;
         int32_t mixed[MIX_BLOCK];
         for(size_t j = 0; j < length; j++)
-            mixed[j] = ((int32_t)samples[base + j] - 128) * 3 / 4;
+            mixed[j] = (int32_t)samples[base + j] - 128;
         uint64_t start = (uint64_t)position + base;
         uint64_t end = start + length;
         for(size_t i = low; i < mixer->note_count; i++) {
