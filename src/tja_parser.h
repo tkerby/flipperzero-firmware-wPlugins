@@ -21,12 +21,20 @@ typedef struct {
 } TjaNote;
 
 typedef struct {
+    int32_t time_ms;
+    float bpm;
+} TjaBpmChange;
+
+typedef struct {
     char title[128];
     char wave[256];
     char course[24];
     TjaCourse course_id;
     TjaNote* notes;
     size_t note_count;
+    float initial_bpm;
+    TjaBpmChange* bpm_changes;
+    size_t bpm_change_count;
     int32_t end_ms;
 } TjaChart;
 
@@ -47,4 +55,6 @@ bool tja_parse_course(
 bool tja_list_courses(TjaReadLine reader, void* context, uint8_t* courses, const char** error);
 const char* tja_course_name(TjaCourse course);
 TjaCourse tja_default_course(uint8_t courses);
+/* Original chart BPM at an audio position, including changes before time zero. */
+float tja_chart_bpm_at(const TjaChart* chart, uint32_t position_ms);
 void tja_chart_free(TjaChart* chart);

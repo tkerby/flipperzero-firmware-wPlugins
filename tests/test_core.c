@@ -41,6 +41,12 @@ static void test_timing(void) {
     for(size_t i = 0; i < chart.note_count; i++)
         assert(chart.notes[i].time_ms == expected[i]);
     assert(chart.end_ms == 5250);
+    assert(chart.initial_bpm == 120);
+    assert(chart.bpm_change_count == 1);
+    assert(tja_chart_bpm_at(&chart, 2999) == 120);
+    assert(tja_chart_bpm_at(&chart, 3000) == 60);
+    assert(tja_chart_bpm_at(&chart, 5250) == 60);
+    assert(tja_chart_bpm_at(&chart, 0) == 120); /* Seeking backward restores BPM. */
     tja_chart_free(&chart);
 
     assert(parse("BPM:120\nWAVE:a.wav\n#START\n10\n#BPMCHANGE 240\n20,\n,\n18,\n#END\n", &chart));
@@ -48,10 +54,26 @@ static void test_timing(void) {
     assert(chart.notes[0].time_ms == 0);
     assert(chart.notes[1].time_ms == 1000);
     assert(chart.notes[2].time_ms == 2500);
+    assert(tja_chart_bpm_at(&chart, 999) == 120);
+    assert(tja_chart_bpm_at(&chart, 1000) == 240);
     tja_chart_free(&chart);
 
     assert(parse("BPM:120\nWAVE:a.wav\nOFFSET:0.5\n#START\n1,\n#END\n", &chart));
     assert(chart.notes[0].time_ms == -500);
+    tja_chart_free(&chart);
+
+    /* Tempo changes also matter in silent measures and before the audio starts.
+     * Multiple changes at one timestamp use the last command in file order. */
+    assert(parse(
+        "BPM:123.5\nWAVE:a.wav\nOFFSET:0.5\n#START\n"
+        "#BPMCHANGE 90\n#DELAY 0.25\n#BPMCHANGE 95\n#BPMCHANGE 96\n00,\n"
+        "#BPMCHANGE 150\n,\n#END\n",
+        &chart));
+    assert(chart.initial_bpm == 123.5f && chart.note_count == 0);
+    assert(chart.bpm_change_count == 4);
+    assert(tja_chart_bpm_at(&chart, 0) == 96);
+    assert(tja_chart_bpm_at(&chart, 2249) == 96);
+    assert(tja_chart_bpm_at(&chart, 2250) == 150);
     tja_chart_free(&chart);
 }
 
@@ -101,6 +123,7 @@ static void test_course_selection(void) {
     /* Timing commands in the skipped Easy body must not leak into Oni. */
     assert(chart.notes[0].time_ms == 1000 && chart.notes[1].time_ms == 2000);
     assert(chart.end_ms == 3000);
+    assert(chart.initial_bpm == 120 && chart.bpm_change_count == 0);
     tja_chart_free(&chart);
     rewind(file);
     assert(tja_parse_course(read_line, file, TjaCourseHard, &chart, &error));

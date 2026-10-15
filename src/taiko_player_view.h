@@ -8,6 +8,7 @@ typedef struct {
     char title[128];
     char course[24];
     uint32_t position_ms;
+    uint32_t bpm_tenths;
     uint32_t hit_until;
     bool hit_right;
     bool hit_rim;

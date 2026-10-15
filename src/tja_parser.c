@@ -27,6 +27,7 @@ typedef struct {
     MeasureCommand commands[MAX_COMMANDS];
     size_t command_count;
     size_t note_capacity;
+    size_t bpm_capacity;
     float bpm;
     float beats;
     float time_ms;
@@ -160,9 +161,22 @@ static bool finish_measure(Parser* p, TjaChart* chart, const char** error) {
     for(size_t i = 0; i <= slots; i++) {
         while(command < p->command_count && p->commands[command].slot == i) {
             MeasureCommand* c = &p->commands[command++];
-            if(c->kind == CommandBpm)
+            if(c->kind == CommandBpm) {
+                if(chart->bpm_change_count == p->bpm_capacity) {
+                    size_t capacity = p->bpm_capacity ? p->bpm_capacity * 2 : 16;
+                    TjaBpmChange* changes =
+                        realloc(chart->bpm_changes, capacity * sizeof(TjaBpmChange));
+                    if(!changes) {
+                        *error = "Not enough memory";
+                        return false;
+                    }
+                    chart->bpm_changes = changes;
+                    p->bpm_capacity = capacity;
+                }
+                chart->bpm_changes[chart->bpm_change_count++] =
+                    (TjaBpmChange){.time_ms = (int32_t)lroundf(p->time_ms), .bpm = c->value};
                 p->bpm = c->value;
-            else if(c->kind == CommandMeasure)
+            } else if(c->kind == CommandMeasure)
                 p->beats = c->value;
             else
                 p->time_ms += c->value * 1000.0f;
@@ -264,6 +278,7 @@ static bool parse_selected(
                     *error = "Missing WAVE in TJA";
                     break;
                 }
+                chart->initial_bpm = p->bpm;
                 started = true;
             } else {
                 char* colon = strchr(line, ':');
@@ -362,5 +377,18 @@ bool tja_parse_course(
 
 void tja_chart_free(TjaChart* chart) {
     free(chart->notes);
+    free(chart->bpm_changes);
     memset(chart, 0, sizeof(*chart));
+}
+
+float tja_chart_bpm_at(const TjaChart* chart, uint32_t position_ms) {
+    size_t low = 0, high = chart->bpm_change_count;
+    while(low < high) {
+        size_t mid = low + (high - low) / 2;
+        if(chart->bpm_changes[mid].time_ms <= (int64_t)position_ms)
+            low = mid + 1;
+        else
+            high = mid;
+    }
+    return low ? chart->bpm_changes[low - 1].bpm : chart->initial_bpm;
 }

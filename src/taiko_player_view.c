@@ -162,19 +162,32 @@ void taiko_player_view_draw(Canvas* canvas, const TaikoPlayerView* view) {
     canvas_draw_line(
         canvas, DRUM_X, DRUM_Y - DRUM_OUTER_RADIUS, DRUM_X, DRUM_Y + DRUM_OUTER_RADIUS);
 
+    char status[24];
+    if(!view->bpm_tenths)
+        snprintf(status, sizeof(status), "BPM: --");
+    else if(view->bpm_tenths % 10)
+        snprintf(
+            status, sizeof(status), "BPM: %lu.%lu", view->bpm_tenths / 10, view->bpm_tenths % 10);
+    else
+        snprintf(status, sizeof(status), "BPM: %lu", view->bpm_tenths / 10);
+    furi_string_set(text, status);
+    elements_string_fit_width(canvas, text, 49);
+    canvas_draw_str(canvas, 36, 39, furi_string_get_cstr(text));
+    unsigned speed = taiko_menu_scroll_tenths(&view->menu);
+    snprintf(status, sizeof(status), "Speed: %u.%u", speed / 10, speed % 10);
+    canvas_draw_str(canvas, 36, 49, status);
+
     char time[16];
     uint32_t seconds = view->position_ms / 1000;
     snprintf(time, sizeof(time), "%lu:%02lu", seconds / 60, seconds % 60);
-    canvas_draw_str(canvas, 84, 39, time);
+    canvas_draw_str(canvas, 87, 39, time);
     furi_string_set(text, view->course);
-    elements_string_fit_width(canvas, text, 36);
-    canvas_draw_str(canvas, 84, 49, furi_string_get_cstr(text));
+    elements_string_fit_width(canvas, text, 33);
+    canvas_draw_str(canvas, 87, 49, furi_string_get_cstr(text));
     furi_string_free(text);
     canvas_draw_frame(canvas, 123, 30, 5, 21);
     const int volume_height = (view->volume * 19 + 50) / 100;
     if(volume_height) canvas_draw_box(canvas, 124, 50 - volume_height, 3, volume_height);
-    if(view->loading || view->finished)
-        canvas_draw_str(canvas, 42, 45, view->loading ? "Load" : "End");
     draw_control(canvas, "BWD", AlignLeft);
     draw_control(
         canvas,
