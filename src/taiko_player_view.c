@@ -214,8 +214,31 @@ static void draw_balloon_counter(Canvas* canvas, const TaikoPlayerView* view) {
     canvas_set_color(canvas, ColorBlack);
 }
 
+static void draw_gogo_background(Canvas* canvas, const TaikoPlayerView* view) {
+    if(!view->gogo) return;
+    static const uint8_t bayer[4][4] = {
+        {0, 8, 2, 10}, {12, 4, 14, 6}, {3, 11, 1, 9}, {15, 7, 13, 5}};
+    static const uint8_t density[] = {7, 4, 2, 1};
+    static const int8_t jitter[] = {0, 1, 0, -1, 0, 0, 1, -1};
+    /* Source time keeps the animation still on pause and deterministic on seek.
+     * Four dithered rows jitter by one pixel, underneath the notes and target. */
+    const uint32_t phase = view->position_ms / 80;
+    canvas_set_color(canvas, ColorWhite);
+    for(int x = 0; x < 128; x++) {
+        const int offset = jitter[((x / 3) + phase) & 7];
+        for(int row = 0; row < 4; row++) {
+            const int y = LANE_TOP + row + offset;
+            if(y < LANE_TOP || y > LANE_TOP + 4) continue;
+            if(bayer[(row + phase / 2) & 3][(x + phase) & 3] < density[row])
+                canvas_draw_dot(canvas, x, y);
+        }
+    }
+    canvas_set_color(canvas, ColorBlack);
+}
+
 static void draw_lane(Canvas* canvas, const TaikoPlayerView* view) {
     canvas_draw_box(canvas, 0, LANE_TOP, 128, LANE_BOTTOM - LANE_TOP + 1);
+    draw_gogo_background(canvas, view);
     canvas_set_color(canvas, ColorWhite);
     canvas_draw_circle(canvas, TAIKO_LANE_HIT_X, LANE_Y, 7);
     canvas_draw_circle(canvas, TAIKO_LANE_HIT_X, LANE_Y, 5);

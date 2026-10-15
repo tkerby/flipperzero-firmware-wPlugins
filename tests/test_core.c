@@ -78,6 +78,48 @@ static void test_timing(void) {
     tja_chart_free(&chart);
 }
 
+static void test_gogo(void) {
+    TjaChart chart;
+    assert(parse(
+        "BPM:120\nWAVE:a.wav\nOFFSET:-1\n#START\n10\n#GOGOSTART\n"
+        "#BPMCHANGE 240\n#DELAY 0.125\n20,\n#GOGOEND\n#END\n",
+        &chart));
+    assert(chart.gogo_change_count == 2 && chart.end_ms == 2625);
+    assert(chart.gogo_changes[0].time_ms == 2000 && chart.gogo_changes[0].active);
+    assert(chart.gogo_changes[1].time_ms == 2625 && !chart.gogo_changes[1].active);
+    assert(chart.note_count == 2 && chart.notes[1].time_ms == 2125);
+    assert(!tja_chart_gogo_at(&chart, 1999));
+    assert(tja_chart_gogo_at(&chart, 2000));
+    assert(tja_chart_gogo_at(&chart, 2124));
+    assert(tja_chart_gogo_at(&chart, 2624));
+    assert(!tja_chart_gogo_at(&chart, 2625));
+    /* Seeking in either direction restores the state without replaying commands. */
+    assert(tja_chart_gogo_at(&chart, 2200));
+    assert(!tja_chart_gogo_at(&chart, 0));
+    tja_chart_free(&chart);
+
+    assert(parse(
+        "BPM:120\nWAVE:a.wav\nOFFSET:0.25\n#START\n#GOGOSTART\n#GOGOSTART\n"
+        "#DELAY 0.5\n#GOGOEND\n#GOGOSTART\n,\n#GOGOEND\n#DELAY 0.25\n#END\n",
+        &chart));
+    assert(chart.gogo_change_count == 4 && chart.end_ms == 2500);
+    assert(chart.gogo_changes[0].time_ms == -250);
+    assert(chart.gogo_changes[1].time_ms == 250 && chart.gogo_changes[2].time_ms == 250);
+    assert(tja_chart_gogo_at(&chart, 0));
+    assert(tja_chart_gogo_at(&chart, 250)); /* Last command at the same time wins. */
+    assert(tja_chart_gogo_at(&chart, 2249));
+    assert(!tja_chart_gogo_at(&chart, 2250));
+    tja_chart_free(&chart);
+
+    assert(parse("WAVE:a.wav\n#START\n#GOGOSTART\n1,\n#END\n", &chart));
+    assert(tja_chart_gogo_at(&chart, 0) && tja_chart_gogo_at(&chart, 1999));
+    assert(!tja_chart_gogo_at(&chart, 2000)); /* A missing GOGOEND stops at #END. */
+    tja_chart_free(&chart);
+    assert(parse("WAVE:a.wav\n#START\n#GOGOEND\n1,\n#END\n", &chart));
+    assert(chart.gogo_change_count == 0 && !tja_chart_gogo_at(&chart, 0));
+    tja_chart_free(&chart);
+}
+
 static void test_invalid_tja(void) {
     const char* invalid[] = {
         "BPM:0\nWAVE:a.wav\n#START\n1,\n#END\n",
@@ -135,7 +177,7 @@ static void test_scroll(void) {
 static void test_course_selection(void) {
     const char* text =
         "TITLE:Multi\nBPM:120\nWAVE:song.wav\nOFFSET:-1\n"
-        "COURSE:easy\n#START\n#BPMCHANGE 240\n#SCROLL 4\n#BRANCHSTART p,10,20\n1,\n#END\n"
+        "COURSE:easy\n#START\n#GOGOSTART\n#BPMCHANGE 240\n#SCROLL 4\n#BRANCHSTART p,10,20\n1,\n#END\n"
         "COURSE:2\n#START\n2,\n#END\n"
         "COURSE:ONI\n#START\n13,\n#END\n"
         "COURSE:Ura\n#START\n4,\n#END\n";
@@ -162,6 +204,7 @@ static void test_course_selection(void) {
     assert(chart.notes[0].time_ms == 1000 && chart.notes[1].time_ms == 2000);
     assert(chart.end_ms == 3000);
     assert(chart.initial_bpm == 120 && chart.bpm_change_count == 0);
+    assert(chart.gogo_change_count == 0 && !tja_chart_gogo_at(&chart, 1000));
     assert(fabsf(chart.notes[0].scroll_speed - 0.5f) < 0.00001f);
     assert(fabsf(chart.min_note_speed - 0.5f) < 0.00001f);
     tja_chart_free(&chart);
@@ -266,6 +309,7 @@ static void test_song(const char* path) {
 
 int main(int argc, char** argv) {
     test_timing();
+    test_gogo();
     test_invalid_tja();
     test_scroll();
     test_course_selection();

@@ -18,7 +18,8 @@ typedef struct {
         CommandBpm,
         CommandMeasure,
         CommandScroll,
-        CommandDelay
+        CommandDelay,
+        CommandGogo
     } kind;
 } MeasureCommand;
 
@@ -29,6 +30,7 @@ typedef struct {
     size_t command_count;
     size_t note_capacity;
     size_t bpm_capacity;
+    size_t gogo_capacity;
     size_t roll_capacity;
     size_t active_roll; /* index + 1, zero when inactive */
     char balloons[2048];
@@ -224,33 +226,64 @@ static bool add_note(Parser* p, TjaChart* chart, char kind, const char** error) 
     return true;
 }
 
+static bool
+    apply_measure_command(Parser* p, TjaChart* chart, const MeasureCommand* c, const char** error) {
+    if(c->kind == CommandBpm) {
+        if(chart->bpm_change_count == p->bpm_capacity) {
+            size_t capacity = p->bpm_capacity ? p->bpm_capacity * 2 : 16;
+            TjaBpmChange* changes = realloc(chart->bpm_changes, capacity * sizeof(TjaBpmChange));
+            if(!changes) {
+                *error = "Not enough memory";
+                return false;
+            }
+            chart->bpm_changes = changes;
+            p->bpm_capacity = capacity;
+        }
+        chart->bpm_changes[chart->bpm_change_count++] =
+            (TjaBpmChange){.time_ms = (int32_t)lroundf(p->time_ms), .bpm = c->value};
+        p->bpm = c->value;
+    } else if(c->kind == CommandGogo) {
+        bool active = c->value != 0;
+        bool previous = chart->gogo_change_count &&
+                        chart->gogo_changes[chart->gogo_change_count - 1].active;
+        if(active != previous) {
+            if(chart->gogo_change_count == p->gogo_capacity) {
+                if(p->gogo_capacity == MAX_NOTES) {
+                    *error = "Too many GOGO changes";
+                    return false;
+                }
+                size_t capacity = p->gogo_capacity ? p->gogo_capacity * 2 : 16;
+                TjaGogoChange* changes =
+                    realloc(chart->gogo_changes, capacity * sizeof(TjaGogoChange));
+                if(!changes) {
+                    *error = "Not enough memory";
+                    return false;
+                }
+                chart->gogo_changes = changes;
+                p->gogo_capacity = capacity;
+            }
+            chart->gogo_changes[chart->gogo_change_count++] =
+                (TjaGogoChange){.time_ms = (int32_t)lroundf(p->time_ms), .active = active};
+        }
+    } else if(c->kind == CommandMeasure)
+        p->beats = c->value;
+    else if(c->kind == CommandScroll)
+        p->scroll = c->value;
+    else
+        p->time_ms += c->value * 1000.0f;
+    if(fabsf(p->time_ms) > MAX_TIME_MS) {
+        *error = "Chart exceeds one hour";
+        return false;
+    }
+    return true;
+}
+
 static bool finish_measure(Parser* p, TjaChart* chart, const char** error) {
     size_t command = 0;
     size_t slots = p->slot_count ? p->slot_count : 1;
     for(size_t i = 0; i <= slots; i++) {
         while(command < p->command_count && p->commands[command].slot == i) {
-            MeasureCommand* c = &p->commands[command++];
-            if(c->kind == CommandBpm) {
-                if(chart->bpm_change_count == p->bpm_capacity) {
-                    size_t capacity = p->bpm_capacity ? p->bpm_capacity * 2 : 16;
-                    TjaBpmChange* changes =
-                        realloc(chart->bpm_changes, capacity * sizeof(TjaBpmChange));
-                    if(!changes) {
-                        *error = "Not enough memory";
-                        return false;
-                    }
-                    chart->bpm_changes = changes;
-                    p->bpm_capacity = capacity;
-                }
-                chart->bpm_changes[chart->bpm_change_count++] =
-                    (TjaBpmChange){.time_ms = (int32_t)lroundf(p->time_ms), .bpm = c->value};
-                p->bpm = c->value;
-            } else if(c->kind == CommandMeasure)
-                p->beats = c->value;
-            else if(c->kind == CommandScroll)
-                p->scroll = c->value;
-            else
-                p->time_ms += c->value * 1000.0f;
+            if(!apply_measure_command(p, chart, &p->commands[command++], error)) return false;
         }
         if(fabsf(p->time_ms) > MAX_TIME_MS) {
             *error = "Chart exceeds one hour";
@@ -296,11 +329,14 @@ static bool command(Parser* p, char* line, const char** error) {
         c.kind = CommandDelay;
         /* Negative delay would make the event list non-monotonic. */
         if(!number(argument, &c.value) || c.value < 0 || c.value > 3600) goto invalid;
+    } else if(strcmp(line, "#GOGOSTART") == 0 || strcmp(line, "#GOGOEND") == 0) {
+        c.kind = CommandGogo;
+        c.value = strcmp(line, "#GOGOSTART") == 0 ? 1 : 0;
     } else if(strcmp(line, "#BRANCHSTART") == 0 || strcmp(line, "#NEXTSONG") == 0) {
         *error = "Branches / medleys unsupported";
         return false;
     } else {
-        /* GOGO, BARLINE, etc. do not affect strike timing. */
+        /* BARLINE and other unsupported visual commands do not affect timing. */
         return true;
     }
     if(p->command_count == MAX_COMMANDS) {
@@ -314,13 +350,18 @@ invalid:
     return false;
 }
 
-static bool build_hit_runs(TjaChart* chart, const char** error) {
+static bool build_hit_runs(TjaChart* chart, uint8_t speed_tenths, const char** error) {
     size_t capacity = 0, change = 0;
     double bpm = chart->initial_bpm;
+    const double minimum = (double)1000 * speed_tenths / (TAIKO_ROLL_MAX_HZ * 10);
+    double last_hit = 0;
+    bool have_hit = false;
     for(size_t i = 0; i < chart->roll_count; i++) {
         TjaRoll* roll = &chart->rolls[i];
         double time = roll->time_ms, phase = 0;
         roll->first_run = chart->hit_run_count;
+        roll->run_count = 0;
+        roll->hit_count = 0;
         while(change < chart->bpm_change_count && chart->bpm_changes[change].time_ms <= time)
             bpm = chart->bpm_changes[change++].bpm;
         while(time < roll->end_ms) {
@@ -328,7 +369,10 @@ static bool build_hit_runs(TjaChart* chart, const char** error) {
             if(change < chart->bpm_change_count && chart->bpm_changes[change].time_ms < boundary)
                 boundary = chart->bpm_changes[change].time_ms;
             double interval = 7500 / bpm;
+            if(interval < minimum) interval = minimum;
             double first = time + phase * interval;
+            /* Also bound short gaps across tempo changes and adjacent rolls. */
+            if(have_hit && first < last_hit + minimum) first = last_hit + minimum;
             uint32_t count = first < boundary ?
                                  (uint32_t)ceil((boundary - first) / interval - (double)1e-7f) :
                                  0;
@@ -355,6 +399,8 @@ static bool build_hit_runs(TjaChart* chart, const char** error) {
                     (TjaHitRun){.first_ms = first, .interval_ms = interval, .count = count};
                 roll->run_count++;
                 roll->hit_count += count;
+                last_hit = first + (count - 1) * interval;
+                have_hit = true;
             }
             if(roll->balloon_count && roll->hit_count == roll->balloon_count) break;
             phase = (first + count * interval - boundary) / interval;
@@ -363,6 +409,39 @@ static bool build_hit_runs(TjaChart* chart, const char** error) {
                 bpm = chart->bpm_changes[change++].bpm;
         }
     }
+    return true;
+}
+
+bool tja_chart_set_roll_speed(TjaChart* chart, uint8_t speed_tenths, const char** error) {
+    *error = NULL;
+    if(speed_tenths < 5 || speed_tenths > 20) {
+        *error = "Invalid playback speed";
+        return false;
+    }
+    if(chart->roll_speed_tenths == speed_tenths) return true;
+    TjaChart replacement = *chart;
+    replacement.hit_runs = NULL;
+    replacement.hit_run_count = 0;
+    replacement.rolls = NULL;
+    if(chart->roll_count) {
+        replacement.rolls = malloc(chart->roll_count * sizeof(TjaRoll));
+        if(!replacement.rolls) {
+            *error = "Not enough memory";
+            return false;
+        }
+        memcpy(replacement.rolls, chart->rolls, chart->roll_count * sizeof(TjaRoll));
+    }
+    if(!build_hit_runs(&replacement, speed_tenths, error)) {
+        free(replacement.rolls);
+        free(replacement.hit_runs);
+        return false;
+    }
+    free(chart->rolls);
+    free(chart->hit_runs);
+    chart->rolls = replacement.rolls;
+    chart->hit_runs = replacement.hit_runs;
+    chart->hit_run_count = replacement.hit_run_count;
+    chart->roll_speed_tenths = speed_tenths;
     return true;
 }
 
@@ -383,6 +462,7 @@ static bool parse_selected(
         return false;
     }
     p->bpm = 120;
+    chart->roll_speed_tenths = 10;
     p->scroll = 1;
     chart->min_note_speed = 1;
     p->beats = 4;
@@ -459,9 +539,17 @@ static bool parse_selected(
                 *error = "Missing final measure comma";
                 break;
             }
+            bool valid = true;
+            for(size_t i = 0; i < p->command_count; i++) {
+                if(!apply_measure_command(p, chart, &p->commands[i], error)) {
+                    valid = false;
+                    break;
+                }
+            }
+            if(!valid) break;
             chart->end_ms = (int32_t)lroundf(p->time_ms);
             if(p->active_roll) chart->rolls[p->active_roll - 1].end_ms = chart->end_ms;
-            success = build_hit_runs(chart, error);
+            success = build_hit_runs(chart, 10, error);
             break;
         } else if(*line == '#') {
             if(!command(p, line, error)) break;
@@ -517,6 +605,7 @@ void tja_chart_free(TjaChart* chart) {
     free(chart->bpm_changes);
     free(chart->rolls);
     free(chart->hit_runs);
+    free(chart->gogo_changes);
     memset(chart, 0, sizeof(*chart));
 }
 
@@ -530,4 +619,17 @@ float tja_chart_bpm_at(const TjaChart* chart, uint32_t position_ms) {
             high = mid;
     }
     return low ? chart->bpm_changes[low - 1].bpm : chart->initial_bpm;
+}
+
+bool tja_chart_gogo_at(const TjaChart* chart, uint32_t position_ms) {
+    if((int64_t)position_ms >= chart->end_ms) return false;
+    size_t low = 0, high = chart->gogo_change_count;
+    while(low < high) {
+        size_t mid = low + (high - low) / 2;
+        if(chart->gogo_changes[mid].time_ms <= (int64_t)position_ms)
+            low = mid + 1;
+        else
+            high = mid;
+    }
+    return low && chart->gogo_changes[low - 1].active;
 }

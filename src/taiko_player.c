@@ -84,6 +84,8 @@ static bool load_chart(
         *error = "Cannot open TJA file";
     buffered_file_stream_close(stream);
     stream_free(stream);
+    if(loaded)
+        loaded = tja_chart_set_roll_speed(chart, taiko_menu_playback_tenths(&app->menu), error);
     return loaded;
 }
 
@@ -253,6 +255,8 @@ static bool play_song(TaikoPlayer* app, const char* path) {
             app->view.volume = app->volume;
             app->view.menu = app->menu;
             app->view.position_ms = position;
+            app->view.gogo = state != PcmAudioFinished && state != PcmAudioLoading &&
+                             tja_chart_gogo_at(&chart, position);
             app->view.bpm_tenths = (uint32_t)(tja_chart_bpm_at(&chart, position) * 10 + 0.5f);
             if(state == PcmAudioFinished) app->view.hit_until = 0;
             app->view.lane_count = taiko_lane_collect(
@@ -354,6 +358,22 @@ static bool play_song(TaikoPlayer* app, const char* path) {
                         paused = true;
                         outputs_finished = false;
                         set_chart_title(app, &chart);
+                    }
+                    if((action == TaikoMenuActionReturn || action == TaikoMenuActionRestart) &&
+                       taiko_menu_playback_tenths(&app->menu) != chart.roll_speed_tenths) {
+                        const char* rate_error = NULL;
+                        if(!tja_chart_set_roll_speed(
+                               &chart, taiko_menu_playback_tenths(&app->menu), &rate_error)) {
+                            taiko_menu_set_value(
+                                &app->menu, TaikoMenuPlaybackSpeed, chart.roll_speed_tenths);
+                            app->menu.open = true;
+                            app->menu.selected = TaikoMenuPlaybackSpeed;
+                            save_settings(app);
+                            show_error(app, rate_error);
+                            next_frame = furi_get_tick();
+                            continue;
+                        }
+                        taiko_hits_seek(&chart, &hits, paused_position);
                     }
                     if(action == TaikoMenuActionRestart) {
                         if(audio) pcm_audio_free(audio);

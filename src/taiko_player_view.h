@@ -15,6 +15,7 @@ typedef struct {
     bool loading;
     bool finished;
     bool paused;
+    bool gogo;
     uint8_t volume;
     size_t lane_count;
     TaikoLaneNote lane_notes[TAIKO_LANE_MAX_NOTES];
