@@ -17,6 +17,7 @@ typedef struct {
     enum {
         CommandBpm,
         CommandMeasure,
+        CommandScroll,
         CommandDelay
     } kind;
 } MeasureCommand;
@@ -29,6 +30,7 @@ typedef struct {
     size_t note_capacity;
     size_t bpm_capacity;
     float bpm;
+    float scroll;
     float beats;
     float time_ms;
 } Parser;
@@ -136,6 +138,11 @@ static bool number(const char* text, float* value) {
 
 static bool add_note(Parser* p, TjaChart* chart, char kind, const char** error) {
     if(kind == '0' || kind == '8') return true;
+    float speed = p->bpm / TAIKO_SCROLL_REFERENCE_BPM * p->scroll;
+    if(!isfinite(speed) || speed == 0) {
+        *error = "Scroll speed out of range";
+        return false;
+    }
     if(chart->note_count == MAX_NOTES) {
         *error = "Chart exceeds 8192 notes";
         return false;
@@ -150,8 +157,12 @@ static bool add_note(Parser* p, TjaChart* chart, char kind, const char** error) 
         chart->notes = notes;
         p->note_capacity = capacity;
     }
-    chart->notes[chart->note_count++] =
-        (TjaNote){.time_ms = (int32_t)lroundf(p->time_ms), .kind = (uint8_t)(kind - '0')};
+    chart->notes[chart->note_count++] = (TjaNote){
+        .time_ms = (int32_t)lroundf(p->time_ms),
+        .kind = (uint8_t)(kind - '0'),
+        .scroll_speed = speed};
+    if(kind >= '1' && kind <= '4' && fabsf(speed) < chart->min_note_speed)
+        chart->min_note_speed = fabsf(speed);
     return true;
 }
 
@@ -178,6 +189,8 @@ static bool finish_measure(Parser* p, TjaChart* chart, const char** error) {
                 p->bpm = c->value;
             } else if(c->kind == CommandMeasure)
                 p->beats = c->value;
+            else if(c->kind == CommandScroll)
+                p->scroll = c->value;
             else
                 p->time_ms += c->value * 1000.0f;
         }
@@ -204,6 +217,12 @@ static bool command(Parser* p, char* line, const char** error) {
     if(strcmp(line, "#BPMCHANGE") == 0) {
         c.kind = CommandBpm;
         if(!number(argument, &c.value) || c.value < 1 || c.value > 10000) goto invalid;
+    } else if(strcmp(line, "#SCROLL") == 0) {
+        c.kind = CommandScroll;
+        if(!number(argument, &c.value) || c.value == 0) {
+            *error = "Invalid SCROLL";
+            return false;
+        }
     } else if(strcmp(line, "#MEASURE") == 0) {
         c.kind = CommandMeasure;
         char* slash = strchr(argument, '/');
@@ -223,7 +242,7 @@ static bool command(Parser* p, char* line, const char** error) {
         *error = "Branches / medleys unsupported";
         return false;
     } else {
-        /* SCROLL, GOGO, BARLINE, etc. do not affect strike timing. */
+        /* GOGO, BARLINE, etc. do not affect strike timing. */
         return true;
     }
     if(p->command_count == MAX_COMMANDS) {
@@ -254,6 +273,8 @@ static bool parse_selected(
         return false;
     }
     p->bpm = 120;
+    p->scroll = 1;
+    chart->min_note_speed = 1;
     p->beats = 4;
     chart->course_id = TjaCourseOni;
     snprintf(chart->course, sizeof(chart->course), "%s", tja_course_name(chart->course_id));

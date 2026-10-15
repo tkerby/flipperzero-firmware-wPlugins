@@ -2,6 +2,7 @@
 #include "wav_reader.h"
 
 #include <assert.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -87,6 +88,10 @@ static void test_invalid_tja(void) {
         "WAVE:a.wav\n#START\n#MEASURE 4/0\n1,\n#END\n",
         "WAVE:a.wav\n#START\n#BRANCHSTART p,50,80\n1,\n#END\n",
         "WAVE:a.wav\n#START\n#DELAY -1\n1,\n#END\n",
+        "WAVE:a.wav\n#START\n#SCROLL 0\n1,\n#END\n",
+        "WAVE:a.wav\n#START\n#SCROLL nan\n1,\n#END\n",
+        "WAVE:a.wav\n#START\n#SCROLL inf\n1,\n#END\n",
+        "WAVE:a.wav\n#START\n#SCROLL 1+2i\n1,\n#END\n",
     };
     for(size_t i = 0; i < sizeof(invalid) / sizeof(*invalid); i++) {
         TjaChart chart;
@@ -95,12 +100,45 @@ static void test_invalid_tja(void) {
     }
 }
 
+static void test_scroll(void) {
+    TjaChart chart;
+    assert(parse(
+        "BPM:120\nWAVE:a.wav\nOFFSET:-1\n#START\n1\n#SCROLL 2\n2\n"
+        "#BPMCHANGE 60\n3\n#SCROLL -0.5\n4,\n1,\n#END\n",
+        &chart));
+    assert(chart.note_count == 5);
+    const int times[] = {1000, 1500, 2000, 3000, 4000};
+    const float speeds[] = {2.0f / 3, 4.0f / 3, 2.0f / 3, -1.0f / 6, -1.0f / 6};
+    for(size_t i = 0; i < chart.note_count; i++) {
+        assert(chart.notes[i].time_ms == times[i]);
+        assert(fabsf(chart.notes[i].scroll_speed - speeds[i]) < 0.00001f);
+    }
+    assert(chart.end_ms == 8000);
+    assert(fabsf(chart.min_note_speed - 1.0f / 6) < 0.00001f);
+    tja_chart_free(&chart);
+
+    /* A slow intro must not amplify the main section's visual speed.
+     * The same effective BPM has the same pixel speed across song headers. */
+    assert(parse("BPM:90\nWAVE:a.wav\n#START\n,\n#BPMCHANGE 220\n1,\n#END\n", &chart));
+    float slow_intro_speed = chart.notes[0].scroll_speed;
+    assert(fabsf(slow_intro_speed - 220.0f / 180) < 0.00001f);
+    tja_chart_free(&chart);
+    assert(parse("BPM:180\nWAVE:a.wav\n#START\n,\n#BPMCHANGE 220\n1,\n#END\n", &chart));
+    assert(chart.notes[0].scroll_speed == slow_intro_speed);
+    tja_chart_free(&chart);
+
+    assert(parse("BPM:90\nWAVE:a.wav\n#START\n#SCROLL 2\n1,\n#END\n", &chart));
+    assert(chart.notes[0].scroll_speed == 1);
+    tja_chart_free(&chart);
+}
+
 static void test_course_selection(void) {
-    const char* text = "TITLE:Multi\nBPM:120\nWAVE:song.wav\nOFFSET:-1\n"
-                       "COURSE:easy\n#START\n#BPMCHANGE 240\n#BRANCHSTART p,10,20\n1,\n#END\n"
-                       "COURSE:2\n#START\n2,\n#END\n"
-                       "COURSE:ONI\n#START\n13,\n#END\n"
-                       "COURSE:Ura\n#START\n4,\n#END\n";
+    const char* text =
+        "TITLE:Multi\nBPM:120\nWAVE:song.wav\nOFFSET:-1\n"
+        "COURSE:easy\n#START\n#BPMCHANGE 240\n#SCROLL 4\n#BRANCHSTART p,10,20\n1,\n#END\n"
+        "COURSE:2\n#START\n2,\n#END\n"
+        "COURSE:ONI\n#START\n13,\n#END\n"
+        "COURSE:Ura\n#START\n4,\n#END\n";
     FILE* file = tmpfile();
     assert(file);
     fputs(text, file);
@@ -124,6 +162,8 @@ static void test_course_selection(void) {
     assert(chart.notes[0].time_ms == 1000 && chart.notes[1].time_ms == 2000);
     assert(chart.end_ms == 3000);
     assert(chart.initial_bpm == 120 && chart.bpm_change_count == 0);
+    assert(fabsf(chart.notes[0].scroll_speed - 2.0f / 3) < 0.00001f);
+    assert(fabsf(chart.min_note_speed - 2.0f / 3) < 0.00001f);
     tja_chart_free(&chart);
     rewind(file);
     assert(tja_parse_course(read_line, file, TjaCourseHard, &chart, &error));
@@ -224,6 +264,7 @@ static void test_song(const char* path) {
 int main(int argc, char** argv) {
     test_timing();
     test_invalid_tja();
+    test_scroll();
     test_course_selection();
     test_wav();
     for(int i = 1; i < argc; i++)

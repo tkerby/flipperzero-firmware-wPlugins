@@ -13,11 +13,13 @@ typedef struct {
     uint8_t kind;
 } TaikoLaneNote;
 
-/* Collect only visible normal notes (1..4), using absolute playback time.
- * The chart is sorted by time. A binary search avoids scanning past notes. */
+/* Collect visible normal notes (1..4) with their individual HS multipliers.
+ * Notes are sorted by time, but may appear out of order at different speeds.
+ * min_note_speed bounds the time window without missing slower notes. */
 size_t taiko_lane_collect(
     const TjaNote* notes,
     size_t count,
+    float min_note_speed,
     uint32_t position_ms,
     uint8_t scroll_tenths,
     TaikoLaneNote* visible,

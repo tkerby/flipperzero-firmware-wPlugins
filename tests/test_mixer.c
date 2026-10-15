@@ -7,7 +7,13 @@
 static void test_notes_and_clipping(void) {
     const uint8_t don[] = {228, 28, 178};
     const uint8_t ka[] = {148, 108};
-    const TjaNote notes[] = {{-1, 1}, {1, 1}, {2, 2}, {3, 3}, {3, 4}, {4, 5}};
+    const TjaNote notes[] = {
+        {.time_ms = -1, .kind = 1},
+        {.time_ms = 1, .kind = 1, .scroll_speed = 4},
+        {.time_ms = 2, .kind = 2, .scroll_speed = -0.5f},
+        {.time_ms = 3, .kind = 3},
+        {.time_ms = 3, .kind = 4},
+        {.time_ms = 4, .kind = 5}};
     TaikoMixer mixer = {{don, 3, 8000}, {ka, 2, 8000}, notes, 6, 100, 100};
     uint8_t samples[48];
     memset(samples, 128, sizeof(samples));
@@ -19,7 +25,8 @@ static void test_notes_and_clipping(void) {
     assert(samples[32] == 128); /* Roll starts do not synthesize extra hits. */
 
     const uint8_t peak[] = {255, 0};
-    const TjaNote stacked[] = {{0, 1}, {0, 1}, {0, 1}};
+    const TjaNote stacked[] = {
+        {.time_ms = 0, .kind = 1}, {.time_ms = 0, .kind = 1}, {.time_ms = 0, .kind = 1}};
     mixer = (TaikoMixer){{peak, 2, 8000}, {0}, stacked, 3, 100, 100};
     memset(samples, 128, sizeof(samples));
     taiko_mixer_mix(&mixer, samples, sizeof(samples), 8000, 0);
@@ -34,7 +41,15 @@ static void test_buffer_boundaries_and_seeking(void) {
         ka[i] = 100 + i % 60;
     for(size_t i = 0; i < sizeof(original); i++)
         original[i] = 64 + i % 128;
-    const TjaNote notes[] = {{0, 1}, {1, 2}, {8, 3}, {9, 4}, {10, 1}, {87, 1}, {88, 2}, {89, 1}};
+    const TjaNote notes[] = {
+        {.time_ms = 0, .kind = 1},
+        {.time_ms = 1, .kind = 2},
+        {.time_ms = 8, .kind = 3},
+        {.time_ms = 9, .kind = 4},
+        {.time_ms = 10, .kind = 1},
+        {.time_ms = 87, .kind = 1},
+        {.time_ms = 88, .kind = 2},
+        {.time_ms = 89, .kind = 1}};
     TaikoMixer mixer = {{don, sizeof(don), 22050}, {ka, sizeof(ka), 48000}, notes, 8, 70, 30};
     const uint32_t rates[] = {8000, 22050, 44100, 48000};
     for(size_t r = 0; r < sizeof(rates) / sizeof(rates[0]); r++) {
@@ -54,7 +69,7 @@ static void test_buffer_boundaries_and_seeking(void) {
 }
 
 static void test_missing_effects(void) {
-    const TjaNote notes[] = {{0, 1}, {0, 2}};
+    const TjaNote notes[] = {{.time_ms = 0, .kind = 1}, {.time_ms = 0, .kind = 2}};
     uint8_t samples[] = {0, 64, 128, 192, 255};
     const uint8_t original[] = {0, 64, 128, 192, 255};
     TaikoMixer mixer = {.notes = notes, .note_count = 2};
@@ -65,7 +80,7 @@ static void test_missing_effects(void) {
 static void test_independent_volume(void) {
     const uint8_t don[] = {228, 28};
     const uint8_t ka[] = {88, 168};
-    const TjaNote notes[] = {{0, 1}, {0, 2}};
+    const TjaNote notes[] = {{.time_ms = 0, .kind = 1}, {.time_ms = 0, .kind = 2}};
     TaikoMixer mixer = {{don, 2, 8000}, {ka, 2, 8000}, notes, 2, 50, 25};
     uint8_t samples[] = {128, 128};
     taiko_mixer_mix(&mixer, samples, sizeof(samples), 8000, 0);
@@ -100,7 +115,7 @@ static void test_master_volume(void) {
 
     const uint8_t don[] = {228, 28};
     const uint8_t ka[] = {88, 168};
-    const TjaNote notes[] = {{0, 1}, {0, 2}};
+    const TjaNote notes[] = {{.time_ms = 0, .kind = 1}, {.time_ms = 0, .kind = 2}};
     TaikoMixer mixer = {{don, 2, 8000}, {ka, 2, 8000}, notes, 2, 50, 25};
     uint8_t mixed[] = {168, 88};
     taiko_mixer_mix(&mixer, mixed, sizeof(mixed), 8000, 0);

@@ -4,6 +4,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/* Player display calibration shared by all songs: 1x at 180 BPM.
+ * This is an application choice, not a TJA format default. */
+#define TAIKO_SCROLL_REFERENCE_BPM 180.0f
+
 typedef enum {
     TjaCourseEasy,
     TjaCourseNormal,
@@ -18,6 +22,8 @@ typedef enum {
 typedef struct {
     int32_t time_ms; /* relative to the beginning of the audio */
     uint8_t kind;
+    /* BPM / TAIKO_SCROLL_REFERENCE_BPM * #SCROLL. Zero means 1 for manually built notes. */
+    float scroll_speed;
 } TjaNote;
 
 typedef struct {
@@ -33,6 +39,7 @@ typedef struct {
     TjaNote* notes;
     size_t note_count;
     float initial_bpm;
+    float min_note_speed; /* Conservative lower bound on absolute note speed. */
     TjaBpmChange* bpm_changes;
     size_t bpm_change_count;
     int32_t end_ms;

@@ -34,7 +34,7 @@ def main():
         *shlex.split(os.environ.get("CC", "cc")),
         "-std=c11", "-Wall", "-Wextra", "-Werror", "-g",
         "-fsanitize=address,undefined", "-Isrc",
-        "src/taiko_lane.c", "tests/test_lane.c", "-o", str(lane_test),
+        "src/taiko_lane.c", "tests/test_lane.c", "-lm", "-o", str(lane_test),
     ], cwd=root, check=True)
     subprocess.run([str(lane_test)], cwd=root, check=True)
     menu_test = build / "test_menu"

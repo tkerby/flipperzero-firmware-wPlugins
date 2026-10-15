@@ -245,6 +245,7 @@ static bool play_song(TaikoPlayer* app, const char* path) {
             app->view.lane_count = taiko_lane_collect(
                 chart.notes,
                 chart.note_count,
+                chart.min_note_speed,
                 position,
                 taiko_menu_scroll_tenths(&app->menu),
                 app->view.lane_notes,
