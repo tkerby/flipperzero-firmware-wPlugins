@@ -1,5 +1,5 @@
 ## 1.1
-- External CC1101 (`cc1101_ext`) radio support: auto-selects the external module when one is
+- External CC1101 (cc1101_ext) radio support: auto-selects the external module when one is
   present, otherwise falls back to the built-in Sub-GHz radio.
 
 ## 1.0
