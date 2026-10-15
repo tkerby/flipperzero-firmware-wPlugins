@@ -9,14 +9,6 @@ with other pwnagotchis over the air, captures WPA/WPA2 handshakes & PMKIDs, ward
 GPS, and grows a little persona that levels up the more it sees — all driven from a native
 Flipper app, no PC or Raspberry Pi required.
 
-## Screenshots
-
-<p>
-<img src="doc/screenshots/home.png" width="256" alt="home / persona"/>
-<img src="doc/screenshots/list.png" width="256" alt="recent APs"/>
-<img src="doc/screenshots/detail.png" width="256" alt="AP detail"/>
-</p>
-
 ## What it does
 
 - **Social pwngrid peer** — broadcasts a pwnagotchi-compatible beacon so nearby units
@@ -37,6 +29,14 @@ Flipper app, no PC or Raspberry Pi required.
 - **Battery saver** — light/deep duty-cycling; auto-off on external power.
 - **Web export** — a static, offline page converts your captures to hashcat 22000 and maps
   the wardrive: **https://mrq1911.github.io/pwnpal/**
+
+## Screenshots
+
+<p>
+<img src="doc/screenshots/home.png" width="256" alt="home / persona"/>
+<img src="doc/screenshots/list.png" width="256" alt="recent APs"/>
+<img src="doc/screenshots/detail.png" width="256" alt="AP detail"/>
+</p>
 
 ## Hardware
 
