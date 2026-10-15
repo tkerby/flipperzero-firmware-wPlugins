@@ -10,6 +10,8 @@ you hold to the Flipper, or **one you load from a dump / `.nfc` file** (see belo
 | **PN532 serial** | a second COM port speaking the PN532 protocol | libnfc (`nfc-list`, `nfc-mfclassic`, `nfc-mfultralight`), libfreefare, nfcpy |
 | **PC/SC reader** | a USB CCID smart-card reader | `pcsc_scan`, `opensc`, Python `pyscard`, any PC/SC app |
 
+![PN532 Mode](screenshots/pn532_mode.png)
+
 ## Honest status
 
 - The protocol engines in `core/` (PN532 + CCID + PC/SC pseudo-APDUs) are portable C and are
