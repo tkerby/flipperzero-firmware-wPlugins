@@ -25,9 +25,6 @@ game sees characters, play sets and power discs without a physical base.
    4. Copy `flipbase.fap` to `SD:/apps/USB/` on the Flipper, using qFlipper's file manager
       (or the SD card in a reader). With the Flipper plugged in you can also run `ufbt launch`
       to build, install and start it in one step.
-
-   *Using a custom firmware (Momentum, Unleashed, etc.)?* Point uFBT at that firmware's SDK
-   instead, e.g. `ufbt update --index-url=https://up.momentum-fw.dev/firmware/directory.json`.
 2. Open **Apps → USB → FlipBase**, plug the Flipper into the console, start the game.
 3. Pick a row (Player 1/2, Play set, Disc slots). **OK** on an empty row: **File** (a 320-byte
    `.bin` from `SD:/apps_data/flipbase/`), **Fav** (favorites list) or **New** (a blank
