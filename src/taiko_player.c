@@ -284,8 +284,7 @@ static bool play_song(TaikoPlayer* app, const char* path) {
                 } else {
                     TaikoMenuAction action = TaikoMenuActionNone;
                     if(event.key == InputKeyBack) {
-                        app->menu.open = false;
-                        action = TaikoMenuActionReturn;
+                        action = taiko_menu_back(&app->menu);
                     } else if(event.key == InputKeyUp || event.key == InputKeyDown) {
                         taiko_menu_move(&app->menu, event.key == InputKeyDown);
                     } else if(event.key == InputKeyLeft || event.key == InputKeyRight) {
@@ -295,6 +294,7 @@ static bool play_song(TaikoPlayer* app, const char* path) {
                     }
                     mixer.don_volume = app->menu.don_volume;
                     mixer.ka_volume = app->menu.ka_volume;
+                    furi_check(taiko_gpio_configure(app->gpio, &app->menu.gpio));
                     if(action == TaikoMenuActionExit) break;
                     if(action == TaikoMenuActionNewSong) {
                         next_song = true;

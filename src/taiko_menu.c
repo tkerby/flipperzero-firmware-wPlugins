@@ -19,20 +19,36 @@ void taiko_menu_init(TaikoMenu* menu) {
         .course = TjaCourseOni,
         .playback_index = 5,
         .scroll_index = 5};
+    menu->gpio = taiko_gpio_default_config();
 }
 
 void taiko_menu_open(TaikoMenu* menu) {
     menu->selected = TaikoMenuReturn;
+    menu->gpio_settings = false;
     menu->open = true;
 }
 
 void taiko_menu_move(TaikoMenu* menu, bool down) {
     if(!menu->open) return;
+    if(menu->gpio_settings) {
+        menu->gpio_selected = (menu->gpio_selected + (down ? 1 : TaikoGpioMenuItemCount - 1)) %
+                              TaikoGpioMenuItemCount;
+        return;
+    }
     menu->selected = (menu->selected + (down ? 1 : TaikoMenuItemCount - 1)) % TaikoMenuItemCount;
 }
 
 void taiko_menu_adjust(TaikoMenu* menu, bool forward) {
     if(!menu->open) return;
+    if(menu->gpio_settings) {
+        if(menu->gpio_selected != TaikoGpioMenuReturn)
+            taiko_gpio_config_adjust(&menu->gpio, menu->gpio_selected - 1, forward);
+        return;
+    }
+    if(menu->selected == TaikoMenuGpioOutput) {
+        menu->gpio.enabled = !menu->gpio.enabled;
+        return;
+    }
     if(menu->selected == TaikoMenuDifficulty) {
         for(int i = 1; i <= TjaCourseCount; i++) {
             TjaCourse next = (menu->course + (forward ? i : TjaCourseCount - i)) % TjaCourseCount;
@@ -70,6 +86,16 @@ void taiko_menu_adjust(TaikoMenu* menu, bool forward) {
 
 TaikoMenuAction taiko_menu_activate(TaikoMenu* menu) {
     if(!menu->open) return TaikoMenuActionNone;
+    if(menu->gpio_settings) {
+        if(menu->gpio_selected == TaikoGpioMenuReturn) return taiko_menu_back(menu);
+        taiko_menu_adjust(menu, true);
+        return TaikoMenuActionNone;
+    }
+    if(menu->selected == TaikoMenuGpioSetting) {
+        menu->gpio_settings = true;
+        menu->gpio_selected = TaikoGpioMenuReturn;
+        return TaikoMenuActionNone;
+    }
     TaikoMenuAction action;
     switch(menu->selected) {
     case TaikoMenuReturn:
@@ -90,6 +116,17 @@ TaikoMenuAction taiko_menu_activate(TaikoMenu* menu) {
     }
     menu->open = false;
     return action;
+}
+
+TaikoMenuAction taiko_menu_back(TaikoMenu* menu) {
+    if(!menu->open) return TaikoMenuActionNone;
+    if(menu->gpio_settings) {
+        menu->gpio_settings = false;
+        menu->selected = TaikoMenuGpioSetting;
+        return TaikoMenuActionNone;
+    }
+    menu->open = false;
+    return TaikoMenuActionReturn;
 }
 
 uint32_t taiko_menu_backward_ms(const TaikoMenu* menu) {

@@ -26,7 +26,7 @@ def main():
         *shlex.split(os.environ.get("CC", "cc")),
         "-std=c11", "-Wall", "-Wextra", "-Werror", "-g",
         "-fsanitize=address,undefined", "-Itests/stubs", "-Isrc",
-        "src/taiko_gpio.c", "tests/test_gpio.c", "-o", str(gpio_test),
+        "src/taiko_gpio.c", "src/taiko_gpio_config.c", "tests/test_gpio.c", "-o", str(gpio_test),
     ], cwd=root, check=True)
     subprocess.run([str(gpio_test)], cwd=root, check=True)
     lane_test = build / "test_lane"
@@ -42,7 +42,7 @@ def main():
         *shlex.split(os.environ.get("CC", "cc")),
         "-std=c11", "-Wall", "-Wextra", "-Werror", "-g",
         "-fsanitize=address,undefined", "-Isrc",
-        "src/taiko_menu.c", "tests/test_menu.c", "-o", str(menu_test),
+        "src/taiko_menu.c", "src/taiko_gpio_config.c", "tests/test_menu.c", "-o", str(menu_test),
     ], cwd=root, check=True)
     subprocess.run([str(menu_test)], cwd=root, check=True)
     mixer_test = build / "test_mixer"

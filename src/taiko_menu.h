@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "tja_parser.h"
+#include "taiko_gpio_config.h"
 
 typedef enum {
     TaikoMenuReturn,
@@ -15,9 +16,20 @@ typedef enum {
     TaikoMenuForward,
     TaikoMenuDonVolume,
     TaikoMenuKaVolume,
+    TaikoMenuGpioOutput,
+    TaikoMenuGpioSetting,
     TaikoMenuExit,
     TaikoMenuItemCount,
 } TaikoMenuItem;
+
+typedef enum {
+    TaikoGpioMenuReturn,
+    TaikoGpioMenuLeftKa,
+    TaikoGpioMenuLeftDon,
+    TaikoGpioMenuRightDon,
+    TaikoGpioMenuRightKa,
+    TaikoGpioMenuItemCount,
+} TaikoGpioMenuItem;
 
 typedef enum {
     TaikoMenuActionNone,
@@ -30,6 +42,9 @@ typedef enum {
 typedef struct {
     bool open;
     TaikoMenuItem selected;
+    bool gpio_settings;
+    TaikoGpioMenuItem gpio_selected;
+    TaikoGpioConfig gpio;
     uint8_t backward_index;
     uint8_t forward_index;
     uint8_t don_volume;
@@ -45,6 +60,7 @@ void taiko_menu_open(TaikoMenu* menu);
 void taiko_menu_move(TaikoMenu* menu, bool down);
 void taiko_menu_adjust(TaikoMenu* menu, bool forward);
 TaikoMenuAction taiko_menu_activate(TaikoMenu* menu);
+TaikoMenuAction taiko_menu_back(TaikoMenu* menu);
 uint32_t taiko_menu_backward_ms(const TaikoMenu* menu);
 uint32_t taiko_menu_forward_ms(const TaikoMenu* menu);
 uint8_t taiko_menu_playback_tenths(const TaikoMenu* menu);

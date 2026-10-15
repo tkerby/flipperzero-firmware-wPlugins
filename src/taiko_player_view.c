@@ -13,7 +13,7 @@
 #define DRUM_OUTER_RADIUS 11
 
 static void draw_menu(Canvas* canvas, const TaikoMenu* menu) {
-    static const char* labels[] = {
+    static const char* main_labels[] = {
         "Return",
         "Restart",
         "Play New Song",
@@ -24,19 +24,35 @@ static void draw_menu(Canvas* canvas, const TaikoMenu* menu) {
         "Forward Interval",
         "Dong Volume",
         "Ka Volume",
+        "GPIO Output",
+        "GPIO Setting",
         "Exit"};
+    static const char* gpio_labels[] = {
+        "Return", "Left Ka", "Left Dong", "Right Dong", "Right Ka"};
+    const char* const* labels = menu->gpio_settings ? gpio_labels : main_labels;
+    const size_t count = menu->gpio_settings ? TaikoGpioMenuItemCount : TaikoMenuItemCount;
+    const size_t selection = menu->gpio_settings ? (size_t)menu->gpio_selected :
+                                                   (size_t)menu->selected;
     const size_t visible = 5;
-    const size_t first = menu->selected >= visible ? menu->selected - visible + 1 : 0;
-    for(size_t i = first; i < first + visible && i < TaikoMenuItemCount; i++) {
+    const size_t first = selection >= visible ? selection - visible + 1 : 0;
+    for(size_t i = first; i < first + visible && i < count; i++) {
         const int y = 10 + (i - first) * 12;
-        const bool selected = i == menu->selected;
+        const bool selected = i == selection;
         if(selected) {
             canvas_draw_rbox(canvas, 1, y - 9, 122, 12, 2);
             canvas_set_color(canvas, ColorWhite);
         }
         canvas_draw_str(canvas, 6, y, labels[i]);
-        if(i >= TaikoMenuDifficulty && i <= TaikoMenuKaVolume) {
-            char value[16];
+        char value[16] = "";
+        if(menu->gpio_settings) {
+            if(i != TaikoGpioMenuReturn)
+                snprintf(
+                    value, sizeof(value), "< %s >", taiko_gpio_pin_name(menu->gpio.pins[i - 1]));
+        } else if(i == TaikoMenuGpioOutput) {
+            snprintf(value, sizeof(value), "< %s >", menu->gpio.enabled ? "On" : "Off");
+        } else if(i == TaikoMenuGpioSetting) {
+            snprintf(value, sizeof(value), ">");
+        } else if(i >= TaikoMenuDifficulty && i <= TaikoMenuKaVolume) {
             if(i == TaikoMenuDifficulty) {
                 snprintf(value, sizeof(value), "< %s >", tja_course_name(menu->course));
             } else if(i == TaikoMenuPlaybackSpeed || i == TaikoMenuScrollSpeed) {
@@ -51,11 +67,11 @@ static void draw_menu(Canvas* canvas, const TaikoMenu* menu) {
                 unsigned volume = i == TaikoMenuDonVolume ? menu->don_volume : menu->ka_volume;
                 snprintf(value, sizeof(value), "< %u%% >", volume);
             }
-            canvas_draw_str(canvas, 120 - canvas_string_width(canvas, value), y, value);
         }
+        if(*value) canvas_draw_str(canvas, 120 - canvas_string_width(canvas, value), y, value);
         canvas_set_color(canvas, ColorBlack);
     }
-    elements_scrollbar(canvas, menu->selected, TaikoMenuItemCount);
+    elements_scrollbar(canvas, selection, count);
 }
 
 static void draw_control(Canvas* canvas, const char* text, Align align) {

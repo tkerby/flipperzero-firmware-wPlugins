@@ -12,6 +12,11 @@ int main(void) {
     assert(menu.don_volume == 70 && menu.ka_volume == 70);
     assert(taiko_menu_playback_tenths(&menu) == 10);
     assert(taiko_menu_scroll_tenths(&menu) == 10);
+    assert(!menu.gpio.enabled && taiko_gpio_config_valid(&menu.gpio));
+    assert(menu.gpio.pins[TaikoGpioLeftKa] == TaikoGpioPinA7);
+    assert(menu.gpio.pins[TaikoGpioLeftDon] == TaikoGpioPinA6);
+    assert(menu.gpio.pins[TaikoGpioRightDon] == TaikoGpioPinA4);
+    assert(menu.gpio.pins[TaikoGpioRightKa] == TaikoGpioPinB3);
     assert(taiko_menu_activate(&menu) == TaikoMenuActionNone);
 
     taiko_menu_open(&menu);
@@ -90,6 +95,47 @@ int main(void) {
     assert(taiko_menu_activate(&menu) == TaikoMenuActionNone);
     assert(menu.open && menu.ka_volume == 80 && menu.don_volume == 100);
     taiko_menu_move(&menu, true);
+    assert(menu.selected == TaikoMenuGpioOutput);
+    assert(!menu.gpio.enabled);
+    taiko_menu_adjust(&menu, true);
+    assert(menu.gpio.enabled);
+    taiko_menu_adjust(&menu, false);
+    assert(!menu.gpio.enabled);
+    assert(taiko_menu_activate(&menu) == TaikoMenuActionNone);
+    assert(menu.open && menu.gpio.enabled);
+    taiko_menu_move(&menu, true);
+    assert(menu.selected == TaikoMenuGpioSetting);
+    assert(taiko_menu_activate(&menu) == TaikoMenuActionNone);
+    assert(menu.open && menu.gpio_settings && menu.gpio_selected == TaikoGpioMenuReturn);
+    taiko_menu_adjust(&menu, true);
+    assert(menu.gpio_selected == TaikoGpioMenuReturn);
+    taiko_menu_move(&menu, true);
+    assert(menu.gpio_selected == TaikoGpioMenuLeftKa);
+    taiko_menu_adjust(&menu, true);
+    assert(menu.gpio.pins[TaikoGpioLeftKa] == TaikoGpioPinB2); /* Skip occupied pins. */
+    taiko_menu_adjust(&menu, false);
+    assert(menu.gpio.pins[TaikoGpioLeftKa] == TaikoGpioPinA7);
+    taiko_menu_adjust(&menu, false);
+    assert(menu.gpio.pins[TaikoGpioLeftKa] == TaikoGpioPinC0); /* Wrap backward. */
+    for(unsigned output = 0; output < TaikoGpioOutputCount; output++) {
+        TaikoGpioPin initial = menu.gpio.pins[output];
+        unsigned visited = 0;
+        for(unsigned i = 0; i < TaikoGpioPinCount - TaikoGpioOutputCount + 1; i++) {
+            unsigned bit = 1U << menu.gpio.pins[output];
+            assert(!(visited & bit));
+            visited |= bit;
+            assert(taiko_gpio_config_valid(&menu.gpio));
+            taiko_gpio_config_adjust(&menu.gpio, output, true);
+        }
+        assert(menu.gpio.pins[output] == initial);
+    }
+    assert(taiko_menu_back(&menu) == TaikoMenuActionNone);
+    assert(menu.open && !menu.gpio_settings && menu.selected == TaikoMenuGpioSetting);
+    assert(taiko_menu_activate(&menu) == TaikoMenuActionNone);
+    assert(menu.gpio_selected == TaikoGpioMenuReturn);
+    assert(taiko_menu_activate(&menu) == TaikoMenuActionNone); /* Return row stays in main menu. */
+    assert(menu.open && !menu.gpio_settings);
+    taiko_menu_move(&menu, true);
     assert(menu.selected == TaikoMenuExit);
     taiko_menu_adjust(&menu, true);
     assert(taiko_menu_forward_ms(&menu) == 1000);
@@ -116,6 +162,8 @@ int main(void) {
     assert(taiko_menu_forward_ms(&menu) == 1000);
     assert(menu.don_volume == 100 && menu.ka_volume == 80);
     taiko_menu_open(&menu);
+    assert(!menu.gpio_settings && menu.gpio.enabled);
+    assert(menu.gpio.pins[TaikoGpioLeftKa] == TaikoGpioPinC0);
     taiko_menu_move(&menu, false);
     assert(menu.selected == TaikoMenuExit);
     assert(taiko_menu_activate(&menu) == TaikoMenuActionExit);
@@ -124,6 +172,8 @@ int main(void) {
     assert(taiko_menu_backward_ms(&menu) == 5000);
     assert(taiko_menu_forward_ms(&menu) == 5000);
     assert(menu.don_volume == 70 && menu.ka_volume == 70);
+    assert(!menu.gpio.enabled && !menu.gpio_settings);
+    assert(menu.gpio.pins[TaikoGpioLeftKa] == TaikoGpioPinA7);
     assert(taiko_menu_playback_tenths(&menu) == 10 && taiko_menu_scroll_tenths(&menu) == 10);
     puts(
         "Menu actions, difficulty, independent speeds, intervals, volume limits and defaults tests passed");
