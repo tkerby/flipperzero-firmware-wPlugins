@@ -25,7 +25,7 @@ Keep the app open while you read. While it runs, the Flipper's own Bluetooth (fo
 Install
 -------
 
-Download `kindle_click.fap` from [Releases](https://github.com/zuyan9/Flipper-Zero-Kindle-Click/releases) and copy it to `apps/Bluetooth` on the Flipper's SD card, with qFlipper or the Flipper mobile app. The release is built for official firmware 1.4.3.
+Download `kindle_click.fap` from [Releases](https://github.com/zuyan9/Flipper-Zero-Kindle-Click/releases) and copy it to `apps/Bluetooth` on the Flipper's SD card, with qFlipper or the Flipper mobile app. The release is built for official firmware 1.5.1.
 
 To build it yourself, install [ufbt](https://github.com/flipperdevices/flipperzero-ufbt) (`pipx install ufbt`), connect the Flipper over USB and run `ufbt launch` in this folder. ufbt builds against the latest official firmware release by default.
 
@@ -36,7 +36,7 @@ Pairing
 
 Open the app, then on the Kindle open Settings › Wi-Fi & Bluetooth › Bluetooth devices and choose the Kindle Click. The Kindle and the Flipper show the same code: confirm it on both.
 
-To pair again, forget it on the Kindle (Bluetooth devices › the remote › Forget), then choose Forget Kindle in the app's menu.
+To pair again, forget it on the Kindle (Bluetooth devices › the remote › Forget) and choose it again. Forget Kindle in the app's menu removes the pairing from the Flipper; forget the remote on the Kindle too.
 
 Known limits
 ------------

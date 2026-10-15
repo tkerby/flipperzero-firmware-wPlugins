@@ -537,7 +537,8 @@ static void draw_battery(Canvas* canvas, int x, int y, uint8_t pct) {
         canvas_set_color(canvas, ColorWhite);
         canvas_draw_dot(canvas, x + 6, ty);
         canvas_draw_dot(canvas, x + 5, ty + 1);
-        for(int ry = 1; ry < 5; ry++) canvas_draw_dot(canvas, x + 6, ty + ry);
+        for(int ry = 1; ry < 5; ry++)
+            canvas_draw_dot(canvas, x + 6, ty + ry);
         draw_digit_3x5(canvas, x + 8, ty, 0, ColorWhite);
         draw_digit_3x5(canvas, x + 12, ty, 0, ColorWhite);
     } else if(pct >= 10) {
@@ -556,6 +557,7 @@ static const uint8_t ACT_BRI_UP[] = {
     0x40, 0x00, 0x42, 0x08, 0x04, 0x04, 0xE0, 0x00, 0x10, 0x01, 0x08, 0x02, 0x0B,
     0x1A, 0x08, 0x02, 0x10, 0x01, 0xE0, 0x00, 0x04, 0x04, 0x42, 0x08, 0x40, 0x00,
 }; // 13x13 (bright sun, 7x7 core, 2px rays)
+// clang-format off
 static const uint8_t ACT_BRI_DOWN[] = {
     0x10, 0x00, 0x82, 0x00, 0x38, 0x00, 0x44, 0x00, 0x45,
     0x01, 0x44, 0x00, 0x38, 0x00, 0x82, 0x00, 0x10, 0x00,
@@ -564,6 +566,7 @@ static const uint8_t ACT_SLEEP[] = {
     0x78, 0x00, 0x46, 0x00, 0x22, 0x00, 0x91, 0x00, 0x51,
     0x01, 0x91, 0x00, 0x22, 0x00, 0x46, 0x00, 0x78, 0x00,
 }; // 9x9 (moon + star)
+// clang-format on
 
 static void draw_ellipse(Canvas* canvas, int x0, int y0, int rx, int ry, bool fill) {
     int32_t rxrx2 = 2 * rx * rx, ryry2 = 2 * ry * ry;
@@ -722,7 +725,8 @@ static void remote_draw(Canvas* canvas, void* model_ptr) {
     canvas_draw_line(canvas, cx - 21, cy + 19, cx - 20, cy + 18);
     canvas_draw_line(canvas, cx + 20, cy + 18, cx + 21, cy + 19);
 
-    draw_sector_action(canvas, cx, cy - 20, model->map[BtnUp], (model->held & (1 << BtnUp)) ? 8 : 0);
+    draw_sector_action(
+        canvas, cx, cy - 20, model->map[BtnUp], (model->held & (1 << BtnUp)) ? 8 : 0);
     draw_sector_action(
         canvas, cx, cy + 20, model->map[BtnDown], (model->held & (1 << BtnDown)) ? 8 : 0);
     draw_sector_action(
@@ -730,9 +734,9 @@ static void remote_draw(Canvas* canvas, void* model_ptr) {
     draw_sector_action(
         canvas, cx + 21, cy, model->map[BtnRight], (model->held & (1 << BtnRight)) ? 8 : 0);
 
-    KeyId ok_k = (model->held & (1 << BtnOkHold))  ? model->map[BtnOkHold] :
-                 (model->map[BtnOk] < KeyCount)    ? model->map[BtnOk] :
-                                                     model->map[BtnOkHold];
+    KeyId ok_k = (model->held & (1 << BtnOkHold)) ? model->map[BtnOkHold] :
+                 (model->map[BtnOk] < KeyCount)   ? model->map[BtnOk] :
+                                                    model->map[BtnOkHold];
     draw_sector_action(canvas, cx, cy, ok_k, model->ok_r);
 }
 
