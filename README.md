@@ -3,6 +3,8 @@
 Turns the Flipper into a USB NFC reader/writer for your PC, two ways. The card the PC sees is either one
 you hold to the Flipper, or **one you load from a dump / `.nfc` file** (see below):
 
+![Main Menu](screenshots/main_menu.png)
+
 | Mode | PC sees | Use with |
 |---|---|---|
 | **PN532 serial** | a second COM port speaking the PN532 protocol | libnfc (`nfc-list`, `nfc-mfclassic`, `nfc-mfultralight`), libfreefare, nfcpy |
