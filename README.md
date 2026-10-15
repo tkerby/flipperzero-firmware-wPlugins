@@ -93,6 +93,14 @@ ufbt launch
 
 ---
 
+## ☕ Support & Donations
+
+If you find **Universal Key Wizard** useful and would like to support future development, hardware experiments, and firmware updates:
+
+- **Bitcoin (BTC)**: `bc1q7fu5pck45x2v03e6yyqzf2hexu598s58c8zczg`
+
+---
+
 ## 📜 License
 
 MIT License. Created by **(Jarvis)**.

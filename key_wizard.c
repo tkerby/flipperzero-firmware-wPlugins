@@ -15,6 +15,7 @@ typedef enum {
     ScreenKeyFound,
     ScreenSaved,
     ScreenQuickKeys,
+    ScreenAbout,
 } WizardScreen;
 
 typedef struct {
@@ -121,8 +122,9 @@ static void draw_screen_scanning(Canvas* canvas, KeyWizardApp* app) {
     // 4. Subtle Bottom Navigation Bar
     canvas_draw_line(canvas, 0, 55, 128, 55);
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str(canvas, 4, 63, "[< >] Mode");
-    canvas_draw_str_aligned(canvas, 124, 63, AlignRight, AlignBottom, "[^] Keys");
+    canvas_draw_str(canvas, 2, 63, "[<>]Mode");
+    canvas_draw_str_aligned(canvas, 64, 63, AlignCenter, AlignBottom, "[v]About");
+    canvas_draw_str_aligned(canvas, 126, 63, AlignRight, AlignBottom, "[^]Keys");
 }
 
 static void draw_screen_key_found(Canvas* canvas, KeyWizardApp* app) {
@@ -234,6 +236,26 @@ static void draw_screen_quick_keys(Canvas* canvas, KeyWizardApp* app) {
     canvas_draw_str_aligned(canvas, 124, 63, AlignRight, AlignBottom, "[Back] Return");
 }
 
+static void draw_screen_about(Canvas* canvas, KeyWizardApp* app) {
+    UNUSED(app);
+    // Header
+    canvas_draw_box(canvas, 0, 0, 128, 12);
+    canvas_invert_color(canvas);
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str_aligned(canvas, 64, 9, AlignCenter, AlignBottom, "ABOUT & SUPPORT");
+    canvas_invert_color(canvas);
+
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str(canvas, 4, 22, "Key Wizard v1.1");
+    canvas_draw_str(canvas, 4, 32, "Author: Vazgen Grigoryan");
+    canvas_draw_str(canvas, 4, 42, "BTC Donate:");
+    canvas_draw_str(canvas, 4, 52, "bc1q7fu5pck45x2v03e6yy...");
+
+    // Footer
+    canvas_draw_line(canvas, 0, 55, 128, 55);
+    canvas_draw_str(canvas, 2, 63, "[Back/OK] Return");
+}
+
 static void key_wizard_render_callback(Canvas* canvas, void* ctx) {
     KeyWizardApp* app = (KeyWizardApp*)ctx;
     if(!app) return;
@@ -250,6 +272,9 @@ static void key_wizard_render_callback(Canvas* canvas, void* ctx) {
         break;
     case ScreenQuickKeys:
         draw_screen_quick_keys(canvas, app);
+        break;
+    case ScreenAbout:
+        draw_screen_about(canvas, app);
         break;
     default:
         break;
@@ -299,7 +324,7 @@ int32_t key_wizard_app(void* p) {
                 case InputKeyBack:
                     if(app->state.screen == ScreenScanning) {
                         app->is_running = false;
-                    } else if(app->state.screen == ScreenQuickKeys || app->state.screen == ScreenKeyFound) {
+                    } else if(app->state.screen == ScreenAbout || app->state.screen == ScreenQuickKeys || app->state.screen == ScreenKeyFound) {
                         app->state.screen = ScreenScanning;
                         key_scanner_start(app->scanner);
                     } else if(app->state.screen == ScreenSaved) {
@@ -317,7 +342,7 @@ int32_t key_wizard_app(void* p) {
                     if(app->state.screen == ScreenScanning) {
                         app->state.scan_mode = (app->state.scan_mode == 0) ? (ScanModeMax - 1) : (app->state.scan_mode - 1);
                         key_scanner_set_mode(app->scanner, app->state.scan_mode);
-                    } else if(app->state.screen == ScreenQuickKeys) {
+                    } else if(app->state.screen == ScreenAbout || app->state.screen == ScreenQuickKeys) {
                         app->state.screen = ScreenScanning;
                         key_scanner_start(app->scanner);
                     }
@@ -331,12 +356,18 @@ int32_t key_wizard_app(void* p) {
                     }
                     break;
                 case InputKeyDown:
-                    if(app->state.screen == ScreenQuickKeys && app->state.quick_key_idx + 1 < QUICK_KEYS_COUNT) {
+                    if(app->state.screen == ScreenScanning) {
+                        app->state.screen = ScreenAbout;
+                        key_scanner_stop(app->scanner);
+                    } else if(app->state.screen == ScreenQuickKeys && app->state.quick_key_idx + 1 < QUICK_KEYS_COUNT) {
                         app->state.quick_key_idx++;
                     }
                     break;
                 case InputKeyOk:
-                    if(app->state.screen == ScreenKeyFound) {
+                    if(app->state.screen == ScreenAbout) {
+                        app->state.screen = ScreenScanning;
+                        key_scanner_start(app->scanner);
+                    } else if(app->state.screen == ScreenKeyFound) {
                         char saved_path[128];
                         if(key_saver_save_to_native_asset(&app->state.current_key, saved_path, sizeof(saved_path))) {
                             notification_message(app->notifications, &sequence_audiovisual_alert);
