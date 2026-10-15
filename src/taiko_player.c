@@ -13,6 +13,7 @@
 #include <string.h>
 
 #define SONGS_PATH EXT_PATH("apps_data/taiko_player/Songs")
+#define SEEK_MS    5000
 
 typedef struct {
     Storage* storage;
@@ -36,9 +37,23 @@ static void draw(Canvas* canvas, void* context) {
 static void input(InputEvent* event, void* context) {
     TaikoPlayer* app = context;
     if((event->key == InputKeyBack && event->type == InputTypeLong) ||
-       (event->key == InputKeyOk && event->type == InputTypeShort)) {
+       (event->type == InputTypeShort &&
+        (event->key == InputKeyOk || event->key == InputKeyLeft || event->key == InputKeyRight))) {
         furi_message_queue_put(app->input, event, 0);
     }
+}
+
+/* Keep the original note index (and therefore hand alternation) after a seek. */
+static size_t note_at(const TjaChart* chart, uint32_t position) {
+    size_t low = 0, high = chart->note_count;
+    while(low < high) {
+        size_t mid = low + (high - low) / 2;
+        if(chart->notes[mid].time_ms < (int64_t)position)
+            low = mid + 1;
+        else
+            high = mid;
+    }
+    return low;
 }
 
 static int read_tja_line(void* context, char* line, size_t capacity) {
@@ -114,8 +129,7 @@ static bool play_song(TaikoPlayer* app, const char* path) {
     }
 
     FuriString* wave = audio_path(path, chart.wave);
-    PcmAudio* audio = pcm_audio_start(app->storage, furi_string_get_cstr(wave));
-    furi_string_free(wave);
+    PcmAudio* audio = pcm_audio_start(app->storage, furi_string_get_cstr(wave), 0);
     furi_mutex_acquire(app->mutex, FuriWaitForever);
     snprintf(
         app->view.title,
@@ -127,10 +141,13 @@ static bool play_song(TaikoPlayer* app, const char* path) {
     size_t note = 0;
     bool next_song = false;
     bool outputs_finished = false;
+    bool paused = false;
+    uint32_t paused_position = 0;
+    uint32_t duration = 0;
     const uint32_t frame_ticks = furi_ms_to_ticks(20);
     uint32_t next_frame = furi_get_tick();
     while(true) {
-        PcmAudioState state = pcm_audio_state(audio);
+        PcmAudioState state = paused ? PcmAudioPaused : pcm_audio_state(audio);
         if(state == PcmAudioError) {
             error = pcm_audio_error(audio);
             next_song = true;
@@ -140,7 +157,8 @@ static bool play_song(TaikoPlayer* app, const char* path) {
             taiko_gpio_reset(app->gpio);
             outputs_finished = true;
         }
-        uint32_t position = pcm_audio_position_ms(audio);
+        uint32_t position = paused ? paused_position : pcm_audio_position_ms(audio);
+        if(audio) duration = pcm_audio_duration_ms(audio);
         if(state == PcmAudioPlaying) {
             while(note < chart.note_count && chart.notes[note].time_ms <= (int32_t)position) {
                 bool right = (note % 2) == 0;
@@ -160,6 +178,7 @@ static bool play_song(TaikoPlayer* app, const char* path) {
             furi_mutex_acquire(app->mutex, FuriWaitForever);
             app->view.loading = state == PcmAudioLoading;
             app->view.finished = state == PcmAudioFinished;
+            app->view.paused = paused;
             app->view.position_ms = position;
             if(state == PcmAudioFinished) app->view.hit_until = 0;
             app->view.lane_count = taiko_lane_collect(
@@ -178,14 +197,46 @@ static bool play_song(TaikoPlayer* app, const char* path) {
         InputEvent event;
         if(furi_message_queue_get(app->input, &event, furi_ms_to_ticks(2)) == FuriStatusOk) {
             if(event.key == InputKeyBack) break;
-            if(event.key == InputKeyOk && state == PcmAudioFinished) {
-                next_song = true;
-                break;
+            if(state == PcmAudioLoading) continue;
+            position = paused ? paused_position : pcm_audio_position_ms(audio);
+            taiko_gpio_reset(app->gpio);
+            furi_mutex_acquire(app->mutex, FuriWaitForever);
+            app->view.hit_until = 0;
+            furi_mutex_release(app->mutex);
+            if(event.key == InputKeyOk) {
+                if(paused) {
+                    audio = pcm_audio_start(app->storage, furi_string_get_cstr(wave), position);
+                    paused = false;
+                } else if(state == PcmAudioFinished) {
+                    pcm_audio_free(audio);
+                    audio = pcm_audio_start(app->storage, furi_string_get_cstr(wave), 0);
+                    note = 0;
+                } else {
+                    paused_position = position;
+                    pcm_audio_free(audio);
+                    audio = NULL;
+                    paused = true;
+                }
+            } else {
+                int64_t target =
+                    (int64_t)position + (event.key == InputKeyLeft ? -SEEK_MS : SEEK_MS);
+                if(target < 0) target = 0;
+                if(target > duration) target = duration;
+                if(audio) pcm_audio_free(audio);
+                audio = NULL;
+                paused_position = (uint32_t)target;
+                if(!paused)
+                    audio =
+                        pcm_audio_start(app->storage, furi_string_get_cstr(wave), paused_position);
+                note = note_at(&chart, paused_position);
             }
+            outputs_finished = false;
+            next_frame = furi_get_tick();
         }
     }
     taiko_gpio_reset(app->gpio);
-    pcm_audio_free(audio);
+    if(audio) pcm_audio_free(audio);
+    furi_string_free(wave);
     tja_chart_free(&chart);
     if(error) show_error(app, error);
     return next_song;

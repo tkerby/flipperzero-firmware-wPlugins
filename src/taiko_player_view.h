@@ -12,6 +12,7 @@ typedef struct {
     bool hit_rim;
     bool loading;
     bool finished;
+    bool paused;
     size_t lane_count;
     TaikoLaneNote lane_notes[TAIKO_LANE_MAX_NOTES];
 } TaikoPlayerView;

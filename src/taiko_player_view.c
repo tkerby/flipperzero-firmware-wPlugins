@@ -4,13 +4,41 @@
 #include <gui/elements.h>
 #include <stdio.h>
 
-#define LANE_TOP          12
-#define LANE_BOTTOM       28
-#define LANE_Y            20
+#define LANE_TOP          11
+#define LANE_BOTTOM       27
+#define LANE_Y            19
 #define DRUM_X            18
-#define DRUM_Y            43
+#define DRUM_Y            40
 #define DRUM_INNER_RADIUS 7
 #define DRUM_OUTER_RADIUS 11
+
+static void draw_control(Canvas* canvas, const char* text, Align align) {
+    static const uint8_t left[] = {0x08, 0x0c, 0x0e, 0x0f, 0x0e, 0x0c, 0x08};
+    static const uint8_t right[] = {0x01, 0x03, 0x07, 0x0f, 0x07, 0x03, 0x01};
+    static const uint8_t center[] = {0x1c, 0x22, 0x5d, 0x5d, 0x5d, 0x22, 0x1c};
+    const uint8_t* icon = align == AlignLeft ? left : align == AlignRight ? right : center;
+    const int padding = align == AlignCenter ? 1 : 3;
+    const int icon_width = align == AlignCenter ? 7 : 4;
+    const int width = canvas_string_width(canvas, text) + padding * 2 + icon_width + 3;
+    /* Native buttons are bottom-aligned; use a baseline one pixel lower. */
+    const int bottom = canvas_height(canvas) + 1;
+    const int top = bottom - 12;
+    const int x = align == AlignLeft  ? 0 :
+                  align == AlignRight ? (int)canvas_width(canvas) - width :
+                                        ((int)canvas_width(canvas) - width) / 2;
+    canvas_draw_box(canvas, x, top, width, 12);
+    for(int i = 0; i < 3; i++) {
+        if(align != AlignLeft) canvas_draw_line(canvas, x - 1 - i, top + i, x - 1 - i, bottom);
+        if(align != AlignRight)
+            canvas_draw_line(canvas, x + width + i, top + i, x + width + i, bottom);
+    }
+    canvas_invert_color(canvas);
+    const int icon_x = align == AlignRight ? x + width - padding - icon_width : x + padding;
+    const int text_x = align == AlignRight ? x + padding : x + padding + icon_width + 3;
+    canvas_draw_xbm(canvas, icon_x, bottom - 10, icon_width, 7, icon);
+    canvas_draw_str(canvas, text_x, bottom - 3, text);
+    canvas_invert_color(canvas);
+}
 
 static void draw_hit(Canvas* canvas, bool right, bool rim) {
     const int radius = rim ? DRUM_OUTER_RADIUS : DRUM_INNER_RADIUS;
@@ -90,15 +118,16 @@ void taiko_player_view_draw(Canvas* canvas, const TaikoPlayerView* view) {
     canvas_draw_str(canvas, 84, 39, time);
     furi_string_set(text, view->course);
     elements_string_fit_width(canvas, text, 42);
-    canvas_draw_str(canvas, 84, 51, furi_string_get_cstr(text));
+    canvas_draw_str(canvas, 84, 49, furi_string_get_cstr(text));
     furi_string_free(text);
     if(view->loading || view->finished)
         canvas_draw_str(canvas, 42, 45, view->loading ? "Load" : "End");
-    canvas_draw_str_aligned(
+    draw_control(canvas, "BWD", AlignLeft);
+    draw_control(
         canvas,
-        64,
-        63,
-        AlignCenter,
-        AlignBottom,
-        view->finished ? "OK: next   Hold Back: exit" : "Hold Back: exit");
+        view->loading                  ? "..." :
+        view->paused || view->finished ? "Play" :
+                                         "Pause",
+        AlignCenter);
+    draw_control(canvas, "FWD", AlignRight);
 }

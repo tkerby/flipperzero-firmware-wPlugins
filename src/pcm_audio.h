@@ -6,15 +6,18 @@
 typedef enum {
     PcmAudioLoading,
     PcmAudioPlaying,
+    PcmAudioPaused,
     PcmAudioFinished,
     PcmAudioError,
 } PcmAudioState;
 
 typedef struct PcmAudio PcmAudio;
 
-/* Worker owns speaker, file, timers and DMA; join before freeing. */
-PcmAudio* pcm_audio_start(Storage* storage, const char* path);
+/* Worker starts at the requested WAV position and owns speaker, file, timers
+ * and DMA. Freeing joins the worker and releases all hardware. */
+PcmAudio* pcm_audio_start(Storage* storage, const char* path, uint32_t position_ms);
 PcmAudioState pcm_audio_state(PcmAudio* audio);
 uint32_t pcm_audio_position_ms(PcmAudio* audio);
+uint32_t pcm_audio_duration_ms(PcmAudio* audio);
 const char* pcm_audio_error(PcmAudio* audio);
 void pcm_audio_free(PcmAudio* audio);

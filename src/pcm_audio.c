@@ -20,6 +20,7 @@ struct PcmAudio {
     PcmAudioState state;
     const char* error;
     uint32_t started_tick;
+    uint32_t position_ms;
     uint32_t duration_ms;
     uint8_t samples[HALF_SAMPLES * 2];
 };
@@ -141,11 +142,20 @@ static int32_t audio_worker(void* context) {
         error = "Use 8-bit mono PCM WAV\n(8000 - 48000 Hz).\nPrepare songs on PC.";
         goto cleanup;
     }
-    if(!storage_file_seek(file, info.data_offset, true)) {
+    uint32_t duration = (uint64_t)info.sample_count * 1000 / info.sample_rate;
+    uint32_t sample =
+        MIN((uint64_t)audio->position_ms * info.sample_rate / 1000, info.sample_count);
+    if(audio->position_ms && audio->position_ms >= duration) sample = info.sample_count;
+    furi_mutex_acquire(audio->mutex, FuriWaitForever);
+    audio->duration_ms = duration;
+    audio->position_ms = (uint64_t)sample * 1000 / info.sample_rate;
+    furi_mutex_release(audio->mutex);
+    if(sample == info.sample_count) goto cleanup;
+    if(!storage_file_seek(file, info.data_offset + sample, true)) {
         error = "Cannot seek WAV";
         goto cleanup;
     }
-    uint32_t remaining = info.sample_count;
+    uint32_t remaining = info.sample_count - sample;
     if(!fill_half(file, audio->samples, &remaining) ||
        !fill_half(file, audio->samples + HALF_SAMPLES, &remaining)) {
         error = "Cannot read WAV";
@@ -160,10 +170,9 @@ static int32_t audio_worker(void* context) {
         error = "Audio timer is busy";
         goto cleanup;
     }
-    audio->duration_ms = (uint64_t)info.sample_count * 1000 / info.sample_rate;
     hardware_start(audio, info.sample_rate);
     hardware_running = true;
-    uint32_t played = 0;
+    uint32_t played = sample;
     uint32_t expected = FLAG_HALF;
     while(true) {
         uint32_t flags = furi_thread_flags_wait(
@@ -202,7 +211,7 @@ cleanup:
     return 0;
 }
 
-PcmAudio* pcm_audio_start(Storage* storage, const char* path) {
+PcmAudio* pcm_audio_start(Storage* storage, const char* path, uint32_t position_ms) {
     PcmAudio* audio = malloc(sizeof(PcmAudio));
     audio->storage = storage;
     audio->path = strdup(path);
@@ -211,6 +220,7 @@ PcmAudio* pcm_audio_start(Storage* storage, const char* path) {
     audio->error = NULL;
     audio->duration_ms = 0;
     audio->started_tick = 0;
+    audio->position_ms = position_ms;
     audio->thread = furi_thread_alloc_ex("TaikoAudio", 2048, audio_worker, audio);
     furi_thread_start(audio->thread);
     return audio;
@@ -225,15 +235,22 @@ PcmAudioState pcm_audio_state(PcmAudio* audio) {
 
 uint32_t pcm_audio_position_ms(PcmAudio* audio) {
     furi_mutex_acquire(audio->mutex, FuriWaitForever);
-    uint32_t position = 0;
+    uint32_t position = audio->position_ms;
     if(audio->state == PcmAudioPlaying) {
-        position = (uint64_t)(furi_get_tick() - audio->started_tick) * 1000 /
-                   furi_kernel_get_tick_frequency();
+        position += (uint64_t)(furi_get_tick() - audio->started_tick) * 1000 /
+                    furi_kernel_get_tick_frequency();
         position = MIN(position, audio->duration_ms);
     } else if(audio->state == PcmAudioFinished)
         position = audio->duration_ms;
     furi_mutex_release(audio->mutex);
     return position;
+}
+
+uint32_t pcm_audio_duration_ms(PcmAudio* audio) {
+    furi_mutex_acquire(audio->mutex, FuriWaitForever);
+    uint32_t duration = audio->duration_ms;
+    furi_mutex_release(audio->mutex);
+    return duration;
 }
 
 const char* pcm_audio_error(PcmAudio* audio) {
