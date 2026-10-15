@@ -10,6 +10,7 @@ typedef struct {
     uint32_t position_ms;
     uint32_t bpm_tenths;
     uint32_t hit_until;
+    uint32_t target_hit_until;
     bool hit_right;
     bool hit_rim;
     bool loading;

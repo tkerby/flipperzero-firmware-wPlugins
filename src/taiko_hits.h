@@ -13,6 +13,7 @@ typedef struct {
     int32_t time_ms;
     bool rim;
     bool right;
+    bool roll; /* Automatic Don from a drumroll or balloon. */
 } TaikoHit;
 
 int32_t taiko_hit_run_time(const TjaHitRun* run, uint32_t index);

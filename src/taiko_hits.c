@@ -60,7 +60,8 @@ bool taiko_hits_peek(const TjaChart* chart, const TaikoHitCursor* cursor, TaikoH
                           chart->notes[cursor->note].time_ms,
         .rim = !roll &&
                (chart->notes[cursor->note].kind == 2 || chart->notes[cursor->note].kind == 4),
-        .right = (cursor->ordinal % 2) == 0};
+        .right = (cursor->ordinal % 2) == 0,
+        .roll = roll};
     return true;
 }
 

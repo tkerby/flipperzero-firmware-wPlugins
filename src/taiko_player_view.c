@@ -315,8 +315,9 @@ void taiko_player_view_draw(Canvas* canvas, const TaikoPlayerView* view) {
     uint32_t now = furi_get_tick();
     const bool hit_active = view->hit_until && (int32_t)(view->hit_until - now) > 0;
     draw_lane(canvas, view);
-    if(hit_active) {
+    if(view->target_hit_until && (int32_t)(view->target_hit_until - now) > 0)
         draw_target_flash(canvas);
+    if(hit_active) {
         draw_hit(canvas, view->hit_right, view->hit_rim);
     }
     canvas_draw_circle(canvas, DRUM_X, DRUM_Y, DRUM_INNER_RADIUS);

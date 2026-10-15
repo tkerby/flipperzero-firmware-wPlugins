@@ -241,6 +241,7 @@ static bool play_song(TaikoPlayer* app, const char* path) {
                 taiko_gpio_pulse(app->gpio, hit.right, hit.rim);
                 furi_mutex_acquire(app->mutex, FuriWaitForever);
                 app->view.hit_until = furi_get_tick() + furi_ms_to_ticks(TAIKO_HIT_MS);
+                if(!hit.roll) app->view.target_hit_until = app->view.hit_until;
                 app->view.hit_right = hit.right;
                 app->view.hit_rim = hit.rim;
                 furi_mutex_release(app->mutex);
@@ -258,7 +259,10 @@ static bool play_song(TaikoPlayer* app, const char* path) {
             app->view.gogo = state != PcmAudioFinished && state != PcmAudioLoading &&
                              tja_chart_gogo_at(&chart, position);
             app->view.bpm_tenths = (uint32_t)(tja_chart_bpm_at(&chart, position) * 10 + 0.5f);
-            if(state == PcmAudioFinished) app->view.hit_until = 0;
+            if(state == PcmAudioFinished) {
+                app->view.hit_until = 0;
+                app->view.target_hit_until = 0;
+            }
             app->view.lane_count = taiko_lane_collect(
                 chart.notes,
                 chart.note_count,
@@ -298,6 +302,7 @@ static bool play_song(TaikoPlayer* app, const char* path) {
                     taiko_gpio_reset(app->gpio);
                     furi_mutex_acquire(app->mutex, FuriWaitForever);
                     app->view.hit_until = 0;
+                    app->view.target_hit_until = 0;
                     furi_mutex_release(app->mutex);
                     if(resume_after_menu) {
                         paused_position = pcm_audio_position_ms(audio);
@@ -395,6 +400,7 @@ static bool play_song(TaikoPlayer* app, const char* path) {
             taiko_gpio_reset(app->gpio);
             furi_mutex_acquire(app->mutex, FuriWaitForever);
             app->view.hit_until = 0;
+            app->view.target_hit_until = 0;
             furi_mutex_release(app->mutex);
             if(event.key == InputKeyOk) {
                 if(paused) {
