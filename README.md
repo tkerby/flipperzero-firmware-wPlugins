@@ -4,6 +4,9 @@
 
 一个用于 Flipper Zero 的轻量 TJA 播放器。从 SD 卡选择谱面，使用内置扬声器播放配套音频，同时显示鼓点，并通过四路 GPIO 输出打击脉冲。
 
+<img width="512" height="256" alt="Screenshot-20261015-235515" src="https://github.com/user-attachments/assets/eeb9ab7a-9c96-4b82-ac06-68039bfc259f" />
+
+
 ## 功能
 
 - 浏览 SD 卡并选择 `.tja` 文件，扫描文件中的难度，优先选择 Oni，没有 Oni 时选择文件中的最高难度。
