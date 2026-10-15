@@ -19,5 +19,6 @@ size_t taiko_lane_collect(
     const TjaNote* notes,
     size_t count,
     uint32_t position_ms,
+    uint8_t scroll_tenths,
     TaikoLaneNote* visible,
     size_t capacity);

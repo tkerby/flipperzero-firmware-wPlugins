@@ -17,6 +17,9 @@ static void draw_menu(Canvas* canvas, const TaikoMenu* menu) {
         "Return",
         "Restart",
         "Play New Song",
+        "Difficulty",
+        "Playback Speed",
+        "Scroll Speed",
         "Backward Interval",
         "Forward Interval",
         "Dong Volume",
@@ -32,10 +35,15 @@ static void draw_menu(Canvas* canvas, const TaikoMenu* menu) {
             canvas_set_color(canvas, ColorWhite);
         }
         canvas_draw_str(canvas, 6, y, labels[i]);
-        if(i == TaikoMenuBackward || i == TaikoMenuForward || i == TaikoMenuDonVolume ||
-           i == TaikoMenuKaVolume) {
+        if(i >= TaikoMenuDifficulty && i <= TaikoMenuKaVolume) {
             char value[16];
-            if(i == TaikoMenuBackward || i == TaikoMenuForward) {
+            if(i == TaikoMenuDifficulty) {
+                snprintf(value, sizeof(value), "< %s >", tja_course_name(menu->course));
+            } else if(i == TaikoMenuPlaybackSpeed || i == TaikoMenuScrollSpeed) {
+                unsigned speed = i == TaikoMenuPlaybackSpeed ? taiko_menu_playback_tenths(menu) :
+                                                               taiko_menu_scroll_tenths(menu);
+                snprintf(value, sizeof(value), "< %u.%ux >", speed / 10, speed % 10);
+            } else if(i == TaikoMenuBackward || i == TaikoMenuForward) {
                 const uint32_t interval = i == TaikoMenuBackward ? taiko_menu_backward_ms(menu) :
                                                                    taiko_menu_forward_ms(menu);
                 snprintf(value, sizeof(value), "< %lus >", interval / 1000);

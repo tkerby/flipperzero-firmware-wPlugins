@@ -78,6 +78,48 @@ static int read_tja_line(void* context, char* line, size_t capacity) {
     return length ? 1 : 0;
 }
 
+static bool load_chart(
+    TaikoPlayer* app,
+    const char* path,
+    TjaCourse course,
+    TjaChart* chart,
+    const char** error) {
+    Stream* stream = buffered_file_stream_alloc(app->storage);
+    bool loaded = buffered_file_stream_open(stream, path, FSAM_READ, FSOM_OPEN_EXISTING);
+    if(loaded)
+        loaded = tja_parse_course(read_tja_line, stream, course, chart, error);
+    else
+        *error = "Cannot open TJA file";
+    buffered_file_stream_close(stream);
+    stream_free(stream);
+    return loaded;
+}
+
+static PcmAudio* start_audio(
+    TaikoPlayer* app,
+    const FuriString* wave,
+    uint32_t position,
+    const TaikoMixer* mixer) {
+    return pcm_audio_start(
+        app->storage,
+        furi_string_get_cstr(wave),
+        position,
+        mixer,
+        app->volume,
+        taiko_menu_playback_tenths(&app->menu));
+}
+
+static void set_chart_title(TaikoPlayer* app, const TjaChart* chart) {
+    furi_mutex_acquire(app->mutex, FuriWaitForever);
+    snprintf(
+        app->view.title,
+        sizeof(app->view.title),
+        "%s",
+        *chart->title ? chart->title : "Taiko Player");
+    snprintf(app->view.course, sizeof(app->view.course), "%s", chart->course);
+    furi_mutex_release(app->mutex);
+}
+
 static void show_error(TaikoPlayer* app, const char* message) {
     DialogMessage* dialog = dialog_message_alloc();
     dialog_message_set_header(dialog, "Cannot play", 64, 3, AlignCenter, AlignTop);
@@ -120,14 +162,20 @@ static bool play_song(TaikoPlayer* app, const char* path) {
 
     Stream* stream = buffered_file_stream_alloc(app->storage);
     TjaChart chart = {0};
+    uint8_t courses = 0;
     const char* error = NULL;
     bool loaded = buffered_file_stream_open(stream, path, FSAM_READ, FSOM_OPEN_EXISTING);
     if(loaded)
-        loaded = tja_parse(read_tja_line, stream, &chart, &error);
+        loaded = tja_list_courses(read_tja_line, stream, &courses, &error);
     else
         error = "Cannot open TJA file";
     buffered_file_stream_close(stream);
     stream_free(stream);
+    if(loaded) {
+        app->menu.courses = courses;
+        app->menu.course = tja_default_course(courses);
+        loaded = load_chart(app, path, app->menu.course, &chart, &error);
+    }
     if(!loaded) {
         show_error(app, error);
         tja_chart_free(&chart);
@@ -143,16 +191,8 @@ static bool play_song(TaikoPlayer* app, const char* path) {
         .don_volume = app->menu.don_volume,
         .ka_volume = app->menu.ka_volume,
     };
-    PcmAudio* audio =
-        pcm_audio_start(app->storage, furi_string_get_cstr(wave), 0, &mixer, app->volume);
-    furi_mutex_acquire(app->mutex, FuriWaitForever);
-    snprintf(
-        app->view.title,
-        sizeof(app->view.title),
-        "%s",
-        *chart.title ? chart.title : "Taiko Player");
-    snprintf(app->view.course, sizeof(app->view.course), "%s", chart.course);
-    furi_mutex_release(app->mutex);
+    PcmAudio* audio = start_audio(app, wave, 0, &mixer);
+    set_chart_title(app, &chart);
     size_t note = 0;
     bool next_song = false;
     bool outputs_finished = false;
@@ -203,6 +243,7 @@ static bool play_song(TaikoPlayer* app, const char* path) {
                 chart.notes,
                 chart.note_count,
                 position,
+                taiko_menu_scroll_tenths(&app->menu),
                 app->view.lane_notes,
                 TAIKO_LANE_MAX_NOTES);
             furi_mutex_release(app->mutex);
@@ -256,20 +297,42 @@ static bool play_song(TaikoPlayer* app, const char* path) {
                         next_song = true;
                         break;
                     }
+                    if((action == TaikoMenuActionReturn || action == TaikoMenuActionRestart) &&
+                       app->menu.course != chart.course_id) {
+                        TjaChart replacement = {0};
+                        const char* change_error = NULL;
+                        if(!load_chart(app, path, app->menu.course, &replacement, &change_error)) {
+                            tja_chart_free(&replacement);
+                            app->menu.course = chart.course_id;
+                            app->menu.open = true;
+                            app->menu.selected = TaikoMenuDifficulty;
+                            show_error(app, change_error);
+                            next_frame = furi_get_tick();
+                            continue;
+                        }
+                        if(state == PcmAudioFinished) resume_after_menu = true;
+                        if(audio) pcm_audio_free(audio);
+                        audio = NULL;
+                        tja_chart_free(&chart);
+                        chart = replacement;
+                        furi_string_free(wave);
+                        wave = audio_path(path, chart.wave);
+                        mixer.notes = chart.notes;
+                        mixer.note_count = chart.note_count;
+                        note = 0;
+                        paused_position = 0;
+                        paused = true;
+                        outputs_finished = false;
+                        set_chart_title(app, &chart);
+                    }
                     if(action == TaikoMenuActionRestart) {
                         if(audio) pcm_audio_free(audio);
-                        audio = pcm_audio_start(
-                            app->storage, furi_string_get_cstr(wave), 0, &mixer, app->volume);
+                        audio = start_audio(app, wave, 0, &mixer);
                         paused = false;
                         note = 0;
                         outputs_finished = false;
                     } else if(action == TaikoMenuActionReturn && resume_after_menu) {
-                        audio = pcm_audio_start(
-                            app->storage,
-                            furi_string_get_cstr(wave),
-                            paused_position,
-                            &mixer,
-                            app->volume);
+                        audio = start_audio(app, wave, paused_position, &mixer);
                         paused = false;
                     }
                 }
@@ -285,13 +348,11 @@ static bool play_song(TaikoPlayer* app, const char* path) {
             furi_mutex_release(app->mutex);
             if(event.key == InputKeyOk) {
                 if(paused) {
-                    audio = pcm_audio_start(
-                        app->storage, furi_string_get_cstr(wave), position, &mixer, app->volume);
+                    audio = start_audio(app, wave, position, &mixer);
                     paused = false;
                 } else if(state == PcmAudioFinished) {
                     pcm_audio_free(audio);
-                    audio = pcm_audio_start(
-                        app->storage, furi_string_get_cstr(wave), 0, &mixer, app->volume);
+                    audio = start_audio(app, wave, 0, &mixer);
                     note = 0;
                 } else {
                     paused_position = position;
@@ -309,13 +370,7 @@ static bool play_song(TaikoPlayer* app, const char* path) {
                 if(audio) pcm_audio_free(audio);
                 audio = NULL;
                 paused_position = (uint32_t)target;
-                if(!paused)
-                    audio = pcm_audio_start(
-                        app->storage,
-                        furi_string_get_cstr(wave),
-                        paused_position,
-                        &mixer,
-                        app->volume);
+                if(!paused) audio = start_audio(app, wave, paused_position, &mixer);
                 note = note_at(&chart, paused_position);
             }
             outputs_finished = false;

@@ -41,6 +41,90 @@ static char* trim(char* s) {
     return s;
 }
 
+const char* tja_course_name(TjaCourse course) {
+    static const char* names[] = {"Easy", "Normal", "Hard", "Oni", "Edit", "Tower", "Dan"};
+    return course < TjaCourseCount ? names[course] : "?";
+}
+
+static bool same_name(const char* a, const char* b) {
+    while(*a && *b) {
+        if(tolower((unsigned char)*a++) != tolower((unsigned char)*b++)) return false;
+    }
+    return *a == *b;
+}
+
+static bool read_course(const char* text, TjaCourse* course) {
+    for(int i = 0; i < TjaCourseCount; i++) {
+        if(same_name(text, tja_course_name(i)) || (text[0] == '0' + i && !text[1])) {
+            *course = i;
+            return true;
+        }
+    }
+    if(same_name(text, "Ura")) {
+        *course = TjaCourseEdit;
+        return true;
+    }
+    return false;
+}
+
+TjaCourse tja_default_course(uint8_t courses) {
+    if(courses & (1U << TjaCourseOni)) return TjaCourseOni;
+    for(int i = TjaCourseCount - 1; i >= 0; i--)
+        if(courses & (1U << i)) return i;
+    return TjaCourseOni;
+}
+
+static char* clean_line(char* buffer, bool* first_line) {
+    char* line = buffer;
+    if(*first_line && strncmp(line, "\xef\xbb\xbf", 3) == 0) line += 3;
+    *first_line = false;
+    char* comment = strstr(line, "//");
+    if(comment) *comment = '\0';
+    return trim(line);
+}
+
+static bool is_start(const char* line) {
+    return strcmp(line, "#START") == 0 || strncmp(line, "#START ", 7) == 0;
+}
+
+bool tja_list_courses(TjaReadLine reader, void* context, uint8_t* courses, const char** error) {
+    *courses = 0;
+    *error = "Missing #START or #END";
+    char* buffer = malloc(2048);
+    if(!buffer) {
+        *error = "Not enough memory";
+        return false;
+    }
+    TjaCourse course = TjaCourseOni;
+    bool inside = false, first_line = true, valid = true;
+    int result;
+    while((result = reader(context, buffer, 2048)) > 0) {
+        char* line = clean_line(buffer, &first_line);
+        if(inside) {
+            if(strcmp(line, "#END") == 0) inside = false;
+            continue;
+        }
+        if(is_start(line)) {
+            *courses |= 1U << course;
+            inside = true;
+        } else {
+            char* colon = strchr(line, ':');
+            if(!colon) continue;
+            *colon++ = '\0';
+            if(strcmp(trim(line), "COURSE") == 0 && !read_course(trim(colon), &course)) {
+                *error = "Unsupported COURSE";
+                valid = false;
+                break;
+            }
+        }
+    }
+    if(result < 0) *error = "TJA read error / line too long";
+    bool success = valid && result == 0 && !inside && *courses;
+    if(success) *error = NULL;
+    free(buffer);
+    return success;
+}
+
 static bool number(const char* text, float* value) {
     char* end;
     *value = strtof(text, &end);
@@ -139,7 +223,12 @@ invalid:
     return false;
 }
 
-bool tja_parse(TjaReadLine reader, void* context, TjaChart* chart, const char** error) {
+static bool parse_selected(
+    TjaReadLine reader,
+    void* context,
+    int requested,
+    TjaChart* chart,
+    const char** error) {
     memset(chart, 0, sizeof(*chart));
     *error = "Invalid TJA";
     Parser* p = calloc(1, sizeof(Parser));
@@ -152,19 +241,25 @@ bool tja_parse(TjaReadLine reader, void* context, TjaChart* chart, const char** 
     }
     p->bpm = 120;
     p->beats = 4;
+    chart->course_id = TjaCourseOni;
+    snprintf(chart->course, sizeof(chart->course), "%s", tja_course_name(chart->course_id));
     bool started = false, success = false;
+    bool skipping = false;
     bool first_line = true;
     int result;
     while((result = reader(context, buffer, 2048)) > 0) {
-        char* line = buffer;
-        if(first_line && strncmp(line, "\xef\xbb\xbf", 3) == 0) line += 3;
-        first_line = false;
-        char* comment = strstr(line, "//");
-        if(comment) *comment = '\0';
-        line = trim(line);
+        char* line = clean_line(buffer, &first_line);
         if(!*line) continue;
+        if(skipping) {
+            if(strcmp(line, "#END") == 0) skipping = false;
+            continue;
+        }
         if(!started) {
-            if(strcmp(line, "#START") == 0 || strncmp(line, "#START ", 7) == 0) {
+            if(is_start(line)) {
+                if(requested >= 0 && (int)chart->course_id != requested) {
+                    skipping = true;
+                    continue;
+                }
                 if(!*chart->wave) {
                     *error = "Missing WAVE in TJA";
                     break;
@@ -178,9 +273,17 @@ bool tja_parse(TjaReadLine reader, void* context, TjaChart* chart, const char** 
                 line = trim(line);
                 if(strcmp(line, "TITLE") == 0)
                     snprintf(chart->title, sizeof(chart->title), "%s", value);
-                else if(strcmp(line, "COURSE") == 0)
-                    snprintf(chart->course, sizeof(chart->course), "%s", value);
-                else if(strcmp(line, "WAVE") == 0) {
+                else if(strcmp(line, "COURSE") == 0) {
+                    if(!read_course(value, &chart->course_id)) {
+                        *error = "Unsupported COURSE";
+                        break;
+                    }
+                    snprintf(
+                        chart->course,
+                        sizeof(chart->course),
+                        "%s",
+                        tja_course_name(chart->course_id));
+                } else if(strcmp(line, "WAVE") == 0) {
                     if(strlen(value) >= sizeof(chart->wave)) {
                         *error = "WAVE path is too long";
                         break;
@@ -242,6 +345,19 @@ bool tja_parse(TjaReadLine reader, void* context, TjaChart* chart, const char** 
     free(p);
     if(success) *error = NULL;
     return success;
+}
+
+bool tja_parse(TjaReadLine reader, void* context, TjaChart* chart, const char** error) {
+    return parse_selected(reader, context, -1, chart, error);
+}
+
+bool tja_parse_course(
+    TjaReadLine reader,
+    void* context,
+    TjaCourse course,
+    TjaChart* chart,
+    const char** error) {
+    return parse_selected(reader, context, course, chart, error);
 }
 
 void tja_chart_free(TjaChart* chart) {

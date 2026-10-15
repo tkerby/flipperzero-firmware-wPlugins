@@ -10,6 +10,8 @@ int main(void) {
     assert(taiko_menu_backward_ms(&menu) == 5000);
     assert(taiko_menu_forward_ms(&menu) == 5000);
     assert(menu.don_volume == 70 && menu.ka_volume == 70);
+    assert(taiko_menu_playback_tenths(&menu) == 10);
+    assert(taiko_menu_scroll_tenths(&menu) == 10);
     assert(taiko_menu_activate(&menu) == TaikoMenuActionNone);
 
     taiko_menu_open(&menu);
@@ -18,6 +20,42 @@ int main(void) {
     assert(menu.selected == TaikoMenuRestart);
     taiko_menu_move(&menu, true);
     assert(menu.selected == TaikoMenuNewSong);
+    taiko_menu_move(&menu, true);
+    assert(menu.selected == TaikoMenuDifficulty);
+    menu.courses = (1U << TjaCourseEasy) | (1U << TjaCourseHard) | (1U << TjaCourseOni);
+    taiko_menu_adjust(&menu, false);
+    assert(menu.course == TjaCourseHard);
+    taiko_menu_adjust(&menu, false);
+    assert(menu.course == TjaCourseEasy);
+    taiko_menu_adjust(&menu, false);
+    assert(menu.course == TjaCourseOni);
+    taiko_menu_move(&menu, true);
+    assert(menu.selected == TaikoMenuPlaybackSpeed);
+    for(int i = 0; i < 5; i++)
+        taiko_menu_adjust(&menu, false);
+    for(uint8_t speed = 5; speed <= 20; speed++) {
+        assert(taiko_menu_playback_tenths(&menu) == speed);
+        assert(taiko_menu_scroll_tenths(&menu) == 10);
+        taiko_menu_adjust(&menu, true);
+    }
+    assert(taiko_menu_playback_tenths(&menu) == 5);
+    taiko_menu_adjust(&menu, false);
+    assert(taiko_menu_playback_tenths(&menu) == 20);
+    taiko_menu_move(&menu, true);
+    assert(menu.selected == TaikoMenuScrollSpeed);
+    for(int i = 0; i < 5; i++)
+        taiko_menu_adjust(&menu, false);
+    assert(taiko_menu_scroll_tenths(&menu) == 5);
+    const uint8_t scroll_expected[] = {5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16,
+                                       17, 18, 19, 20, 21, 22, 23, 24, 25, 30, 40};
+    for(size_t i = 0; i < sizeof(scroll_expected); i++) {
+        assert(taiko_menu_scroll_tenths(&menu) == scroll_expected[i]);
+        assert(taiko_menu_playback_tenths(&menu) == 20);
+        taiko_menu_adjust(&menu, true);
+    }
+    assert(taiko_menu_scroll_tenths(&menu) == 5);
+    taiko_menu_adjust(&menu, false);
+    assert(taiko_menu_scroll_tenths(&menu) == 40);
     taiko_menu_move(&menu, true);
     assert(menu.selected == TaikoMenuBackward);
     taiko_menu_adjust(&menu, false);
@@ -86,6 +124,8 @@ int main(void) {
     assert(taiko_menu_backward_ms(&menu) == 5000);
     assert(taiko_menu_forward_ms(&menu) == 5000);
     assert(menu.don_volume == 70 && menu.ka_volume == 70);
-    puts("Menu order, actions, independent intervals, volume limits and defaults tests passed");
+    assert(taiko_menu_playback_tenths(&menu) == 10 && taiko_menu_scroll_tenths(&menu) == 10);
+    puts(
+        "Menu actions, difficulty, independent speeds, intervals, volume limits and defaults tests passed");
     return 0;
 }

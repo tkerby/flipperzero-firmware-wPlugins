@@ -22,7 +22,8 @@ PcmAudio* pcm_audio_start(
     const char* path,
     uint32_t position_ms,
     const TaikoMixer* mixer,
-    uint8_t volume);
+    uint8_t volume,
+    uint8_t speed_tenths);
 PcmAudioState pcm_audio_state(PcmAudio* audio);
 uint32_t pcm_audio_position_ms(PcmAudio* audio);
 uint32_t pcm_audio_duration_ms(PcmAudio* audio);

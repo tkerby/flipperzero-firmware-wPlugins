@@ -73,6 +73,64 @@ static void test_invalid_tja(void) {
     }
 }
 
+static void test_course_selection(void) {
+    const char* text = "TITLE:Multi\nBPM:120\nWAVE:song.wav\nOFFSET:-1\n"
+                       "COURSE:easy\n#START\n#BPMCHANGE 240\n#BRANCHSTART p,10,20\n1,\n#END\n"
+                       "COURSE:2\n#START\n2,\n#END\n"
+                       "COURSE:ONI\n#START\n13,\n#END\n"
+                       "COURSE:Ura\n#START\n4,\n#END\n";
+    FILE* file = tmpfile();
+    assert(file);
+    fputs(text, file);
+    rewind(file);
+    uint8_t courses;
+    const char* error;
+    assert(tja_list_courses(read_line, file, &courses, &error));
+    assert(!error);
+    assert(
+        courses == ((1U << TjaCourseEasy) | (1U << TjaCourseHard) | (1U << TjaCourseOni) |
+                    (1U << TjaCourseEdit)));
+    assert(tja_default_course(courses) == TjaCourseOni);
+    assert(tja_default_course(courses & ~(1U << TjaCourseOni)) == TjaCourseEdit);
+    assert(tja_default_course(1U << TjaCourseNormal) == TjaCourseNormal);
+    TjaChart chart;
+    rewind(file);
+    assert(tja_parse_course(read_line, file, TjaCourseOni, &chart, &error));
+    assert(chart.course_id == TjaCourseOni && strcmp(chart.course, "Oni") == 0);
+    assert(chart.note_count == 2 && chart.notes[0].kind == 1 && chart.notes[1].kind == 3);
+    /* Timing commands in the skipped Easy body must not leak into Oni. */
+    assert(chart.notes[0].time_ms == 1000 && chart.notes[1].time_ms == 2000);
+    assert(chart.end_ms == 3000);
+    tja_chart_free(&chart);
+    rewind(file);
+    assert(tja_parse_course(read_line, file, TjaCourseHard, &chart, &error));
+    assert(chart.course_id == TjaCourseHard && chart.notes[0].kind == 2);
+    tja_chart_free(&chart);
+    rewind(file);
+    assert(tja_parse_course(read_line, file, TjaCourseEdit, &chart, &error));
+    assert(chart.notes[0].kind == 4);
+    tja_chart_free(&chart);
+    rewind(file);
+    assert(!tja_parse_course(read_line, file, TjaCourseNormal, &chart, &error));
+    tja_chart_free(&chart);
+    rewind(file);
+    assert(!tja_parse_course(read_line, file, TjaCourseEasy, &chart, &error));
+    tja_chart_free(&chart);
+    fclose(file);
+
+    const char* invalid[] = {
+        "COURSE:Hard\n#START\n1,\n", "COURSE:unknown\n#START\n1,\n#END\n", "TITLE:Empty\n"};
+    for(size_t i = 0; i < sizeof(invalid) / sizeof(invalid[0]); i++) {
+        file = tmpfile();
+        assert(file);
+        fputs(invalid[i], file);
+        rewind(file);
+        assert(!tja_list_courses(read_line, file, &courses, &error));
+        assert(error);
+        fclose(file);
+    }
+}
+
 typedef struct {
     const unsigned char* bytes;
     size_t size;
@@ -125,12 +183,25 @@ static void test_song(const char* path) {
         chart.notes[0].time_ms,
         chart.end_ms);
     tja_chart_free(&chart);
+    rewind(file);
+    uint8_t courses;
+    assert(tja_list_courses(read_line, file, &courses, &error));
+    for(int i = 0; i < TjaCourseCount; i++) {
+        if(!(courses & (1U << i))) continue;
+        rewind(file);
+        assert(tja_parse_course(read_line, file, i, &chart, &error));
+        assert(chart.course_id == (TjaCourse)i && chart.note_count);
+        for(size_t n = 1; n < chart.note_count; n++)
+            assert(chart.notes[n].time_ms >= chart.notes[n - 1].time_ms);
+        tja_chart_free(&chart);
+    }
     fclose(file);
 }
 
 int main(int argc, char** argv) {
     test_timing();
     test_invalid_tja();
+    test_course_selection();
     test_wav();
     for(int i = 1; i < argc; i++)
         test_song(argv[i]);

@@ -24,6 +24,7 @@ struct PcmAudio {
     uint32_t duration_ms;
     TaikoMixer mixer;
     uint8_t volume;
+    uint8_t speed_tenths;
     uint8_t samples[HALF_SAMPLES * 2];
 };
 
@@ -178,7 +179,8 @@ static int32_t audio_worker(void* context) {
         error = "Audio timer is busy";
         goto cleanup;
     }
-    hardware_start(audio, info.sample_rate);
+    uint32_t playback_rate = (uint64_t)info.sample_rate * audio->speed_tenths / 10;
+    hardware_start(audio, playback_rate);
     hardware_running = true;
     uint32_t played = sample;
     uint32_t expected = FLAG_HALF;
@@ -186,7 +188,7 @@ static int32_t audio_worker(void* context) {
         uint32_t flags = furi_thread_flags_wait(
             FLAG_STOP | FLAG_HALF | FLAG_FULL | FLAG_DMA_ERROR,
             FuriFlagWaitAny,
-            furi_ms_to_ticks(1000));
+            furi_ms_to_ticks((HALF_SAMPLES * 1000 + playback_rate - 1) / playback_rate + 1000));
         if(flags & FuriFlagError) {
             error = "Audio DMA timeout";
             break;
@@ -224,7 +226,8 @@ PcmAudio* pcm_audio_start(
     const char* path,
     uint32_t position_ms,
     const TaikoMixer* mixer,
-    uint8_t volume) {
+    uint8_t volume,
+    uint8_t speed_tenths) {
     PcmAudio* audio = malloc(sizeof(PcmAudio));
     audio->storage = storage;
     audio->path = strdup(path);
@@ -236,6 +239,7 @@ PcmAudio* pcm_audio_start(
     audio->position_ms = position_ms;
     audio->mixer = *mixer;
     audio->volume = MIN(volume, 100);
+    audio->speed_tenths = MAX(5, MIN(speed_tenths, 20));
     audio->thread = furi_thread_alloc_ex("TaikoAudio", 2048, audio_worker, audio);
     furi_thread_start(audio->thread);
     return audio;
@@ -258,8 +262,8 @@ uint32_t pcm_audio_position_ms(PcmAudio* audio) {
     furi_mutex_acquire(audio->mutex, FuriWaitForever);
     uint32_t position = audio->position_ms;
     if(audio->state == PcmAudioPlaying) {
-        position += (uint64_t)(furi_get_tick() - audio->started_tick) * 1000 /
-                    furi_kernel_get_tick_frequency();
+        position += (uint64_t)(furi_get_tick() - audio->started_tick) * 1000 *
+                    audio->speed_tenths / ((uint64_t)furi_kernel_get_tick_frequency() * 10);
         position = MIN(position, audio->duration_ms);
     } else if(audio->state == PcmAudioFinished)
         position = audio->duration_ms;
