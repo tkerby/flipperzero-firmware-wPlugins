@@ -12,6 +12,7 @@ struct KeyScanner {
     bool is_scanning;
     bool is_thread_running;
     bool key_detected;
+    bool mode_changed;
     ScanMode mode;
     KeyCategory current_phase;
     DetectedKey detected_key;
@@ -121,13 +122,13 @@ static int32_t key_scanner_worker(void* context) {
 
     while(scanner->is_thread_running) {
         if(!scanner->is_scanning) {
-            furi_delay_ms(50);
+            furi_delay_ms(30);
             continue;
         }
 
-        ScanMode current_mode;
         furi_mutex_acquire(scanner->mutex, FuriWaitForever);
-        current_mode = scanner->mode;
+        ScanMode current_mode = scanner->mode;
+        scanner->mode_changed = false;
         furi_mutex_release(scanner->mutex);
 
         // ==========================================
@@ -142,13 +143,13 @@ static int32_t key_scanner_worker(void* context) {
             if(scanner->rfid_worker) {
                 lfrfid_worker_read_start(scanner->rfid_worker, LFRFIDWorkerReadTypeAuto, rfid_read_callback, scanner);
 
-                int max_loops = (current_mode == ScanModeRFIDOnly) ? 200 : 18; // 18 * 80ms = 1440ms (gives 450ms AGC + 1000ms listening!)
-                for(int i = 0; i < max_loops && scanner->is_scanning && !scanner->rfid_raw_detected; i++) {
-                    furi_delay_ms(80);
+                int max_loops = (current_mode == ScanModeRFIDOnly) ? 200 : 25; // 25 * 50ms = 1250ms (450ms AGC + 800ms active frames)
+                for(int i = 0; i < max_loops && scanner->is_scanning && !scanner->rfid_raw_detected && !scanner->mode_changed; i++) {
+                    furi_delay_ms(50);
                 }
 
                 lfrfid_worker_stop(scanner->rfid_worker);
-                furi_delay_ms(150); // Guarantee worker mode loop exits to idle
+                furi_delay_ms(120); // Guarantee worker mode loop exits to idle
                 furi_hal_rfid_pins_reset(); // Free shared GPIO pins
             }
 
@@ -158,7 +159,7 @@ static int32_t key_scanner_worker(void* context) {
             }
         }
 
-        if(!scanner->is_scanning) continue;
+        if(!scanner->is_scanning || scanner->mode_changed) continue;
 
         // ==========================================
         // 2. NFC PHASE
@@ -169,8 +170,8 @@ static int32_t key_scanner_worker(void* context) {
             furi_mutex_release(scanner->mutex);
 
             if(scanner->nfc) {
-                int max_loops = (current_mode == ScanModeNFCOnly) ? 50 : 4;
-                for(int i = 0; i < max_loops && scanner->is_scanning; i++) {
+                int max_loops = (current_mode == ScanModeNFCOnly) ? 50 : 5; // 5 * 50ms = 250ms
+                for(int i = 0; i < max_loops && scanner->is_scanning && !scanner->mode_changed; i++) {
                     NfcPoller* poller = nfc_poller_alloc(scanner->nfc, NfcProtocolIso14443_3a);
                     if(poller) {
                         if(nfc_poller_detect(poller)) {
@@ -183,14 +184,14 @@ static int32_t key_scanner_worker(void* context) {
                         }
                         nfc_poller_free(poller);
                     }
-                    furi_delay_ms(80);
+                    furi_delay_ms(50);
                 }
             }
 
-            if(!scanner->is_scanning) continue;
+            if(!scanner->is_scanning || scanner->mode_changed) continue;
         }
 
-        if(!scanner->is_scanning) continue;
+        if(!scanner->is_scanning || scanner->mode_changed) continue;
 
         // ==========================================
         // 3. IBUTTON PHASE
@@ -201,13 +202,13 @@ static int32_t key_scanner_worker(void* context) {
             furi_mutex_release(scanner->mutex);
 
             if(scanner->ibutton_protocols && scanner->ibutton_key) {
-                int max_loops = (current_mode == ScanModeIButtonOnly) ? 50 : 3;
-                for(int i = 0; i < max_loops && scanner->is_scanning; i++) {
+                int max_loops = (current_mode == ScanModeIButtonOnly) ? 50 : 4; // 4 * 50ms = 200ms
+                for(int i = 0; i < max_loops && scanner->is_scanning && !scanner->mode_changed; i++) {
                     if(ibutton_protocols_read(scanner->ibutton_protocols, scanner->ibutton_key)) {
                         scanner_handle_ibutton_detected(scanner);
                         break;
                     }
-                    furi_delay_ms(80);
+                    furi_delay_ms(50);
                 }
             }
         }
@@ -224,6 +225,7 @@ KeyScanner* key_scanner_alloc(void) {
     scanner->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
     scanner->is_thread_running = true;
     scanner->mode = ScanModeAuto;
+    scanner->mode_changed = false;
     scanner->current_phase = KeyCategoryNone;
 
     // Allocate iButton
@@ -310,7 +312,13 @@ void key_scanner_stop(KeyScanner* scanner) {
 void key_scanner_set_mode(KeyScanner* scanner, ScanMode mode) {
     if(!scanner) return;
     furi_mutex_acquire(scanner->mutex, FuriWaitForever);
-    scanner->mode = mode;
+    if(scanner->mode != mode) {
+        scanner->mode = mode;
+        scanner->mode_changed = true;
+        if(mode == ScanModeRFIDOnly) scanner->current_phase = KeyCategoryLFRFID;
+        else if(mode == ScanModeNFCOnly) scanner->current_phase = KeyCategoryNFC;
+        else if(mode == ScanModeIButtonOnly) scanner->current_phase = KeyCategoryIButton;
+    }
     furi_mutex_release(scanner->mutex);
 }
 

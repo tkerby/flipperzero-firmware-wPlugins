@@ -19,6 +19,7 @@ typedef enum {
 
 typedef struct {
     WizardScreen screen;
+    ScanMode scan_mode;
     DetectedKey current_key;
     size_t quick_key_idx;
     uint32_t anim_frame;
@@ -61,19 +62,19 @@ static void draw_screen_scanning(Canvas* canvas, KeyWizardApp* app) {
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str(canvas, 2, 10, "UNIVERSAL KEY WIZARD");
 
-    ScanMode mode = key_scanner_get_mode(app->scanner);
+    ScanMode mode = app->state.scan_mode;
     KeyCategory phase = key_scanner_get_current_phase(app->scanner);
 
-    // Mode Selector Header
+    // Mode Selector Header (updates immediately)
     canvas_set_font(canvas, FontSecondary);
     char mode_str[48];
     snprintf(mode_str, sizeof(mode_str), "Mode: <%s>", scan_mode_to_string(mode));
     canvas_draw_str(canvas, 2, 21, mode_str);
 
     // Active Reader Indicators
-    bool rfid_active = (phase == KeyCategoryLFRFID);
-    bool nfc_active = (phase == KeyCategoryNFC);
-    bool ibutton_active = (phase == KeyCategoryIButton);
+    bool rfid_active = (mode == ScanModeRFIDOnly) || (mode == ScanModeAuto && phase == KeyCategoryLFRFID);
+    bool nfc_active = (mode == ScanModeNFCOnly) || (mode == ScanModeAuto && phase == KeyCategoryNFC);
+    bool ibutton_active = (mode == ScanModeIButtonOnly) || (mode == ScanModeAuto && phase == KeyCategoryIButton);
 
     char line[48];
     snprintf(line, sizeof(line), "%s 125 kHz RFID", rfid_active ? "[*]" : "[ ]");
@@ -87,7 +88,7 @@ static void draw_screen_scanning(Canvas* canvas, KeyWizardApp* app) {
 
     // Footer
     canvas_draw_line(canvas, 0, 53, 128, 53);
-    canvas_draw_str(canvas, 2, 62, "[< >] Mode  [^] Keys  [OK]");
+    canvas_draw_str(canvas, 2, 62, "[< >] Mode   [^] Keys List");
 }
 
 static void draw_screen_key_found(Canvas* canvas, KeyWizardApp* app) {
@@ -157,13 +158,15 @@ static void draw_screen_saved(Canvas* canvas, KeyWizardApp* app) {
 
 static void draw_screen_quick_keys(Canvas* canvas, KeyWizardApp* app) {
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str(canvas, 2, 10, "UNIVERSAL KEYS");
+    canvas_draw_str(canvas, 2, 10, "UNIVERSAL KEYS (LIST)");
 
     canvas_set_font(canvas, FontSecondary);
+    size_t sel = app->state.quick_key_idx;
+
     for(size_t i = 0; i < QUICK_KEYS_COUNT; i++) {
-        int y = 20 + (i * 9);
-        if(i == app->state.quick_key_idx) {
-            canvas_draw_box(canvas, 0, y - 7, 128, 9);
+        int y = 20 + (i * 8);
+        if(i == sel) {
+            canvas_draw_box(canvas, 0, y - 6, 128, 8);
             canvas_invert_color(canvas);
             canvas_draw_str(canvas, 2, y, QUICK_KEYS[i].title);
             canvas_invert_color(canvas);
@@ -172,9 +175,15 @@ static void draw_screen_quick_keys(Canvas* canvas, KeyWizardApp* app) {
         }
     }
 
-    // Footer
-    canvas_draw_line(canvas, 0, 53, 128, 53);
-    canvas_draw_str(canvas, 2, 62, "[^/v] Sel  [OK] Save [Back]");
+    // Details of selected item
+    canvas_draw_line(canvas, 0, 46, 128, 46);
+    char detail[64];
+    snprintf(detail, sizeof(detail), "%s: %s", QUICK_KEYS[sel].proto, QUICK_KEYS[sel].uid);
+    canvas_draw_str(canvas, 2, 53, detail);
+
+    // Footer (informational only, no save click)
+    canvas_draw_line(canvas, 0, 55, 128, 55);
+    canvas_draw_str(canvas, 2, 63, "[^/v] Scroll     [Back] Return");
 }
 
 static void key_wizard_render_callback(Canvas* canvas, void* ctx) {
@@ -217,6 +226,8 @@ int32_t key_wizard_app(void* p) {
     app->notifications = furi_record_open(RECORD_NOTIFICATION);
     app->scanner = key_scanner_alloc();
 
+    app->state.scan_mode = ScanModeAuto;
+
     // Setup GUI
     app->view_port = view_port_alloc();
     view_port_draw_callback_set(app->view_port, key_wizard_render_callback, app);
@@ -230,10 +241,8 @@ int32_t key_wizard_app(void* p) {
     app->is_running = true;
     WizardEvent event;
 
-    static uint8_t test_sim_cycle = 0;
-
     while(app->is_running) {
-        FuriStatus status = furi_message_queue_get(app->event_queue, &event, 80);
+        FuriStatus status = furi_message_queue_get(app->event_queue, &event, 60);
 
         // Process Input
         if(status == FuriStatusOk && event.type == EventTypeInput) {
@@ -252,16 +261,14 @@ int32_t key_wizard_app(void* p) {
                     break;
                 case InputKeyRight:
                     if(app->state.screen == ScreenScanning) {
-                        ScanMode m = key_scanner_get_mode(app->scanner);
-                        m = (m + 1) % ScanModeMax;
-                        key_scanner_set_mode(app->scanner, m);
+                        app->state.scan_mode = (app->state.scan_mode + 1) % ScanModeMax;
+                        key_scanner_set_mode(app->scanner, app->state.scan_mode);
                     }
                     break;
                 case InputKeyLeft:
                     if(app->state.screen == ScreenScanning) {
-                        ScanMode m = key_scanner_get_mode(app->scanner);
-                        m = (m == 0) ? (ScanModeMax - 1) : (m - 1);
-                        key_scanner_set_mode(app->scanner, m);
+                        app->state.scan_mode = (app->state.scan_mode == 0) ? (ScanModeMax - 1) : (app->state.scan_mode - 1);
+                        key_scanner_set_mode(app->scanner, app->state.scan_mode);
                     } else if(app->state.screen == ScreenQuickKeys) {
                         app->state.screen = ScreenScanning;
                         key_scanner_start(app->scanner);
@@ -281,17 +288,7 @@ int32_t key_wizard_app(void* p) {
                     }
                     break;
                 case InputKeyOk:
-                    if(app->state.screen == ScreenScanning) {
-                        // Test Simulation mode on [OK] button in scan screen
-                        key_scanner_stop(app->scanner);
-                        KeyCategory cat = (test_sim_cycle % 3 == 0) ? KeyCategoryLFRFID :
-                                          (test_sim_cycle % 3 == 1) ? KeyCategoryNFC : KeyCategoryIButton;
-                        test_sim_cycle++;
-                        key_scanner_simulate_detection(app->scanner, cat, &app->state.current_key);
-                        app->state.screen = ScreenKeyFound;
-                        notification_message(app->notifications, &sequence_success);
-                        notification_message(app->notifications, &sequence_single_vibro);
-                    } else if(app->state.screen == ScreenKeyFound) {
+                    if(app->state.screen == ScreenKeyFound) {
                         // Save directly into the native Flipper storage folder
                         char saved_path[128];
                         if(key_saver_save_to_native_asset(&app->state.current_key, saved_path, sizeof(saved_path))) {
@@ -302,14 +299,8 @@ int32_t key_wizard_app(void* p) {
                     } else if(app->state.screen == ScreenSaved) {
                         app->state.screen = ScreenScanning;
                         key_scanner_start(app->scanner);
-                    } else if(app->state.screen == ScreenQuickKeys) {
-                        // Load selected quick key and prompt to save
-                        size_t idx = app->state.quick_key_idx;
-                        key_scanner_simulate_detection(app->scanner, QUICK_KEYS[idx].cat, &app->state.current_key);
-                        strncpy(app->state.current_key.protocol_name, QUICK_KEYS[idx].proto, sizeof(app->state.current_key.protocol_name) - 1);
-                        app->state.screen = ScreenKeyFound;
-                        notification_message(app->notifications, &sequence_success);
                     }
+                    // Note: on ScreenQuickKeys and ScreenScanning, [OK] does NOT create or save anything!
                     break;
                 default:
                     break;
