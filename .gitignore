@@ -1,0 +1,9 @@
+.venv/
+.ufbt/
+dist/
+build/
+sdcard/
+__pycache__/
+*.pyc
+.vscode/
+/songs/
