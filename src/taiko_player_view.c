@@ -14,24 +14,39 @@
 
 static void draw_menu(Canvas* canvas, const TaikoMenu* menu) {
     static const char* labels[] = {
-        "Return", "Restart", "Backward Interval", "Forward Interval", "Exit"};
-    for(size_t i = 0; i < TaikoMenuItemCount; i++) {
-        const int y = 10 + i * 12;
+        "Return",
+        "Restart",
+        "Backward Interval",
+        "Forward Interval",
+        "Dong Volume",
+        "Ka Volume",
+        "Exit"};
+    const size_t visible = 5;
+    const size_t first = menu->selected >= visible ? menu->selected - visible + 1 : 0;
+    for(size_t i = first; i < first + visible && i < TaikoMenuItemCount; i++) {
+        const int y = 10 + (i - first) * 12;
         const bool selected = i == menu->selected;
         if(selected) {
-            canvas_draw_rbox(canvas, 1, y - 9, 126, 12, 2);
+            canvas_draw_rbox(canvas, 1, y - 9, 122, 12, 2);
             canvas_set_color(canvas, ColorWhite);
         }
         canvas_draw_str(canvas, 6, y, labels[i]);
-        if(i == TaikoMenuBackward || i == TaikoMenuForward) {
-            const uint32_t interval = i == TaikoMenuBackward ? taiko_menu_backward_ms(menu) :
-                                                               taiko_menu_forward_ms(menu);
+        if(i == TaikoMenuBackward || i == TaikoMenuForward || i == TaikoMenuDonVolume ||
+           i == TaikoMenuKaVolume) {
             char value[16];
-            snprintf(value, sizeof(value), "< %lus >", interval / 1000);
-            canvas_draw_str(canvas, 122 - canvas_string_width(canvas, value), y, value);
+            if(i == TaikoMenuBackward || i == TaikoMenuForward) {
+                const uint32_t interval = i == TaikoMenuBackward ? taiko_menu_backward_ms(menu) :
+                                                                   taiko_menu_forward_ms(menu);
+                snprintf(value, sizeof(value), "< %lus >", interval / 1000);
+            } else {
+                unsigned volume = i == TaikoMenuDonVolume ? menu->don_volume : menu->ka_volume;
+                snprintf(value, sizeof(value), "< %u%% >", volume);
+            }
+            canvas_draw_str(canvas, 120 - canvas_string_width(canvas, value), y, value);
         }
         canvas_set_color(canvas, ColorBlack);
     }
+    elements_scrollbar(canvas, menu->selected, TaikoMenuItemCount);
 }
 
 static void draw_control(Canvas* canvas, const char* text, Align align) {

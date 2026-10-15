@@ -1,6 +1,7 @@
 #include "pcm_audio.h"
 #include "taiko_gpio.h"
 #include "taiko_player_view.h"
+#include "taiko_sfx.h"
 #include "tja_parser.h"
 
 #include <dialogs/dialogs.h>
@@ -23,6 +24,7 @@ typedef struct {
     FuriMutex* mutex;
     TaikoGpio* gpio;
     TaikoMenu menu;
+    TaikoSfx sfx;
     TaikoPlayerView view;
 } TaikoPlayer;
 
@@ -128,7 +130,15 @@ static bool play_song(TaikoPlayer* app, const char* path) {
     }
 
     FuriString* wave = audio_path(path, chart.wave);
-    PcmAudio* audio = pcm_audio_start(app->storage, furi_string_get_cstr(wave), 0);
+    TaikoMixer mixer = {
+        .don = app->sfx.don,
+        .ka = app->sfx.ka,
+        .notes = chart.notes,
+        .note_count = chart.note_count,
+        .don_volume = app->menu.don_volume,
+        .ka_volume = app->menu.ka_volume,
+    };
+    PcmAudio* audio = pcm_audio_start(app->storage, furi_string_get_cstr(wave), 0, &mixer);
     furi_mutex_acquire(app->mutex, FuriWaitForever);
     snprintf(
         app->view.title,
@@ -225,16 +235,19 @@ static bool play_song(TaikoPlayer* app, const char* path) {
                     } else if(event.key == InputKeyOk) {
                         action = taiko_menu_activate(&app->menu);
                     }
+                    mixer.don_volume = app->menu.don_volume;
+                    mixer.ka_volume = app->menu.ka_volume;
                     if(action == TaikoMenuActionExit) break;
                     if(action == TaikoMenuActionRestart) {
                         if(audio) pcm_audio_free(audio);
-                        audio = pcm_audio_start(app->storage, furi_string_get_cstr(wave), 0);
+                        audio =
+                            pcm_audio_start(app->storage, furi_string_get_cstr(wave), 0, &mixer);
                         paused = false;
                         note = 0;
                         outputs_finished = false;
                     } else if(action == TaikoMenuActionReturn && resume_after_menu) {
                         audio = pcm_audio_start(
-                            app->storage, furi_string_get_cstr(wave), paused_position);
+                            app->storage, furi_string_get_cstr(wave), paused_position, &mixer);
                         paused = false;
                     }
                 }
@@ -250,11 +263,12 @@ static bool play_song(TaikoPlayer* app, const char* path) {
             furi_mutex_release(app->mutex);
             if(event.key == InputKeyOk) {
                 if(paused) {
-                    audio = pcm_audio_start(app->storage, furi_string_get_cstr(wave), position);
+                    audio = pcm_audio_start(
+                        app->storage, furi_string_get_cstr(wave), position, &mixer);
                     paused = false;
                 } else if(state == PcmAudioFinished) {
                     pcm_audio_free(audio);
-                    audio = pcm_audio_start(app->storage, furi_string_get_cstr(wave), 0);
+                    audio = pcm_audio_start(app->storage, furi_string_get_cstr(wave), 0, &mixer);
                     note = 0;
                 } else {
                     paused_position = position;
@@ -273,8 +287,8 @@ static bool play_song(TaikoPlayer* app, const char* path) {
                 audio = NULL;
                 paused_position = (uint32_t)target;
                 if(!paused)
-                    audio =
-                        pcm_audio_start(app->storage, furi_string_get_cstr(wave), paused_position);
+                    audio = pcm_audio_start(
+                        app->storage, furi_string_get_cstr(wave), paused_position, &mixer);
                 note = note_at(&chart, paused_position);
             }
             outputs_finished = false;
@@ -298,6 +312,7 @@ int32_t taiko_player_app(void* context) {
     app->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
     app->input = furi_message_queue_alloc(8, sizeof(InputEvent));
     app->gpio = taiko_gpio_alloc();
+    app->sfx = taiko_sfx_load(app->storage);
     taiko_menu_init(&app->menu);
     memset(&app->view, 0, sizeof(app->view));
     app->viewport = view_port_alloc();
@@ -322,6 +337,7 @@ int32_t taiko_player_app(void* context) {
     }
     furi_string_free(path);
     taiko_gpio_free(app->gpio);
+    taiko_sfx_free(&app->sfx);
     view_port_enabled_set(app->viewport, false);
     gui_remove_view_port(app->gui, app->viewport);
     view_port_free(app->viewport);

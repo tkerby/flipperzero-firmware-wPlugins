@@ -8,6 +8,8 @@ typedef enum {
     TaikoMenuRestart,
     TaikoMenuBackward,
     TaikoMenuForward,
+    TaikoMenuDonVolume,
+    TaikoMenuKaVolume,
     TaikoMenuExit,
     TaikoMenuItemCount,
 } TaikoMenuItem;
@@ -24,6 +26,8 @@ typedef struct {
     TaikoMenuItem selected;
     uint8_t backward_index;
     uint8_t forward_index;
+    uint8_t don_volume;
+    uint8_t ka_volume;
 } TaikoMenu;
 
 void taiko_menu_init(TaikoMenu* menu);

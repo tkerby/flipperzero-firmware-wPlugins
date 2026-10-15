@@ -8,7 +8,7 @@ SDK_HOME := $(if $(filter momentum,$(FIRMWARE)),$(MOMENTUM_HOME),$(TOOLCHAIN_HOM
 SDK_ENV := UFBT_HOME="$(SDK_HOME)" FBT_TOOLCHAIN_PATH="$(TOOLCHAIN_HOME)"
 SDK_PYTHON := $(TOOLCHAIN_HOME)/toolchain/current/bin/python3
 
-.PHONY: all setup build songs package test momentum-sdk momentum launch upload-songs
+.PHONY: all setup build songs sfx package test momentum-sdk momentum launch upload-songs upload-sfx
 all: package
 
 setup:
@@ -24,7 +24,10 @@ build:
 songs:
 	$(PYTHON) scripts/prepare_songs.py
 
-package: build songs
+sfx:
+	$(PYTHON) scripts/prepare_sfx.py
+
+package: build songs sfx
 	mkdir -p sdcard/apps/Media
 	cp dist/taiko_player.fap sdcard/apps/Media/taiko_player.fap
 
@@ -40,6 +43,9 @@ momentum:
 
 upload-songs: songs
 	$(SDK_PYTHON) $(TOOLCHAIN_HOME)/current/scripts/storage.py send sdcard/apps_data/taiko_player /ext/apps_data/taiko_player
+
+upload-sfx: sfx
+	$(SDK_PYTHON) $(TOOLCHAIN_HOME)/current/scripts/storage.py send sdcard/apps_data/taiko_player/Sfx /ext/apps_data/taiko_player/Sfx
 
 launch: build
 	$(SDK_PYTHON) $(TOOLCHAIN_HOME)/current/scripts/runfap.py --sources dist/taiko_player.fap --targets /ext/apps/Media/taiko_player.fap

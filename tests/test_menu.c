@@ -9,6 +9,7 @@ int main(void) {
     assert(!menu.open);
     assert(taiko_menu_backward_ms(&menu) == 5000);
     assert(taiko_menu_forward_ms(&menu) == 5000);
+    assert(menu.don_volume == 50 && menu.ka_volume == 50);
     assert(taiko_menu_activate(&menu) == TaikoMenuActionNone);
 
     taiko_menu_open(&menu);
@@ -35,9 +36,24 @@ int main(void) {
     assert(taiko_menu_backward_ms(&menu) == 10000);
 
     taiko_menu_move(&menu, true);
+    assert(menu.selected == TaikoMenuDonVolume);
+    taiko_menu_adjust(&menu, false);
+    assert(menu.don_volume == 40 && menu.ka_volume == 50);
+    for(int i = 0; i < 20; i++)
+        taiko_menu_adjust(&menu, false);
+    assert(menu.don_volume == 0);
+    for(int i = 0; i < 20; i++)
+        taiko_menu_adjust(&menu, true);
+    assert(menu.don_volume == 100);
+    taiko_menu_move(&menu, true);
+    assert(menu.selected == TaikoMenuKaVolume);
+    assert(taiko_menu_activate(&menu) == TaikoMenuActionNone);
+    assert(menu.open && menu.ka_volume == 60 && menu.don_volume == 100);
+    taiko_menu_move(&menu, true);
     assert(menu.selected == TaikoMenuExit);
     taiko_menu_adjust(&menu, true);
     assert(taiko_menu_forward_ms(&menu) == 1000);
+    assert(menu.don_volume == 100 && menu.ka_volume == 60);
     taiko_menu_move(&menu, true);
     assert(menu.selected == TaikoMenuReturn);
     assert(taiko_menu_activate(&menu) == TaikoMenuActionReturn);
@@ -58,6 +74,7 @@ int main(void) {
     taiko_menu_init(&menu);
     assert(taiko_menu_backward_ms(&menu) == 5000);
     assert(taiko_menu_forward_ms(&menu) == 5000);
-    puts("Menu order, actions, independent intervals and defaults tests passed");
+    assert(menu.don_volume == 50 && menu.ka_volume == 50);
+    puts("Menu order, actions, independent intervals, volume limits and defaults tests passed");
     return 0;
 }

@@ -4,7 +4,8 @@ static const uint32_t intervals[] = {1000, 3000, 5000, 10000};
 #define INTERVAL_COUNT (sizeof(intervals) / sizeof(intervals[0]))
 
 void taiko_menu_init(TaikoMenu* menu) {
-    *menu = (TaikoMenu){.backward_index = 2, .forward_index = 2};
+    *menu =
+        (TaikoMenu){.backward_index = 2, .forward_index = 2, .don_volume = 50, .ka_volume = 50};
 }
 
 void taiko_menu_open(TaikoMenu* menu) {
@@ -19,6 +20,13 @@ void taiko_menu_move(TaikoMenu* menu, bool down) {
 
 void taiko_menu_adjust(TaikoMenu* menu, bool forward) {
     if(!menu->open) return;
+    if(menu->selected == TaikoMenuDonVolume || menu->selected == TaikoMenuKaVolume) {
+        uint8_t* volume = menu->selected == TaikoMenuDonVolume ? &menu->don_volume :
+                                                                 &menu->ka_volume;
+        if(forward && *volume < 100) *volume += 10;
+        if(!forward && *volume > 0) *volume -= 10;
+        return;
+    }
     uint8_t* index;
     if(menu->selected == TaikoMenuBackward)
         index = &menu->backward_index;

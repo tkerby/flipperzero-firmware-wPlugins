@@ -22,6 +22,7 @@ struct PcmAudio {
     uint32_t started_tick;
     uint32_t position_ms;
     uint32_t duration_ms;
+    TaikoMixer mixer;
     uint8_t samples[HALF_SAMPLES * 2];
 };
 
@@ -119,11 +120,13 @@ static void hardware_stop(void) {
     furi_hal_bus_disable(FuriHalBusTIM2);
 }
 
-static bool fill_half(File* file, uint8_t* samples, uint32_t* remaining) {
-    size_t count = MIN(*remaining, HALF_SAMPLES);
+static bool
+    fill_half(PcmAudio* audio, File* file, uint8_t* samples, uint32_t* cursor, const WavInfo* info) {
+    size_t count = MIN(info->sample_count - *cursor, HALF_SAMPLES);
     memset(samples, 128, HALF_SAMPLES); /* unsigned PCM silence */
     if(count && storage_file_read(file, samples, count) != count) return false;
-    *remaining -= count;
+    taiko_mixer_mix(&audio->mixer, samples, count, info->sample_rate, *cursor);
+    *cursor += count;
     return true;
 }
 
@@ -155,9 +158,9 @@ static int32_t audio_worker(void* context) {
         error = "Cannot seek WAV";
         goto cleanup;
     }
-    uint32_t remaining = info.sample_count - sample;
-    if(!fill_half(file, audio->samples, &remaining) ||
-       !fill_half(file, audio->samples + HALF_SAMPLES, &remaining)) {
+    uint32_t cursor = sample;
+    if(!fill_half(audio, file, audio->samples, &cursor, &info) ||
+       !fill_half(audio, file, audio->samples + HALF_SAMPLES, &cursor, &info)) {
         error = "Cannot read WAV";
         goto cleanup;
     }
@@ -194,7 +197,7 @@ static int32_t audio_worker(void* context) {
         played += MIN((uint32_t)HALF_SAMPLES, info.sample_count - played);
         if(played == info.sample_count) break;
         size_t offset = (flags & FLAG_HALF) ? 0 : HALF_SAMPLES;
-        if(!fill_half(file, audio->samples + offset, &remaining)) {
+        if(!fill_half(audio, file, audio->samples + offset, &cursor, &info)) {
             error = "SD card audio read failed";
             break;
         }
@@ -211,7 +214,11 @@ cleanup:
     return 0;
 }
 
-PcmAudio* pcm_audio_start(Storage* storage, const char* path, uint32_t position_ms) {
+PcmAudio* pcm_audio_start(
+    Storage* storage,
+    const char* path,
+    uint32_t position_ms,
+    const TaikoMixer* mixer) {
     PcmAudio* audio = malloc(sizeof(PcmAudio));
     audio->storage = storage;
     audio->path = strdup(path);
@@ -221,6 +228,7 @@ PcmAudio* pcm_audio_start(Storage* storage, const char* path, uint32_t position_
     audio->duration_ms = 0;
     audio->started_tick = 0;
     audio->position_ms = position_ms;
+    audio->mixer = *mixer;
     audio->thread = furi_thread_alloc_ex("TaikoAudio", 2048, audio_worker, audio);
     furi_thread_start(audio->thread);
     return audio;

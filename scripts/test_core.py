@@ -45,6 +45,14 @@ def main():
         "src/taiko_menu.c", "tests/test_menu.c", "-o", str(menu_test),
     ], cwd=root, check=True)
     subprocess.run([str(menu_test)], cwd=root, check=True)
+    mixer_test = build / "test_mixer"
+    subprocess.run([
+        *shlex.split(os.environ.get("CC", "cc")),
+        "-std=c11", "-Wall", "-Wextra", "-Werror", "-g",
+        "-fsanitize=address,undefined", "-Isrc",
+        "src/taiko_mixer.c", "tests/test_mixer.c", "-o", str(mixer_test),
+    ], cwd=root, check=True)
+    subprocess.run([str(mixer_test)], cwd=root, check=True)
 
 
 if __name__ == "__main__":
