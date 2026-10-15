@@ -81,13 +81,17 @@ static void draw_screen_scanning(Canvas* canvas, KeyWizardApp* app) {
     canvas_draw_str_aligned(canvas, 64, 23, AlignCenter, AlignBottom, mode_str);
 
     // 3. Three Clean Antenna Rows with Radio Wave Animation
-    bool rfid_active = (mode == ScanModeRFIDOnly) || (mode == ScanModeAuto && phase == KeyCategoryLFRFID);
-    bool nfc_active = (mode == ScanModeNFCOnly) || (mode == ScanModeAuto && phase == KeyCategoryNFC);
-    bool ibutton_active = (mode == ScanModeIButtonOnly) || (mode == ScanModeAuto && phase == KeyCategoryIButton);
+    bool rfid_active = (mode == ScanModeRFIDOnly) ||
+                       (mode == ScanModeAuto && phase == KeyCategoryLFRFID);
+    bool nfc_active = (mode == ScanModeNFCOnly) ||
+                      (mode == ScanModeAuto && phase == KeyCategoryNFC);
+    bool ibutton_active = (mode == ScanModeIButtonOnly) ||
+                          (mode == ScanModeAuto && phase == KeyCategoryIButton);
 
     const char* wave = (app->state.anim_frame % 4 == 0) ? ")" :
                        (app->state.anim_frame % 4 == 1) ? "))" :
-                       (app->state.anim_frame % 4 == 2) ? ")))" : ")";
+                       (app->state.anim_frame % 4 == 2) ? ")))" :
+                                                          ")";
 
     // --- Row 1: RFID ---
     if(rfid_active) {
@@ -148,7 +152,8 @@ static void draw_screen_key_found(Canvas* canvas, KeyWizardApp* app) {
     // Badge: Category and Protocol
     canvas_set_font(canvas, FontPrimary);
     char badge[48];
-    snprintf(badge, sizeof(badge), "%s (%s)", key_category_to_string(key->category), key->protocol_name);
+    snprintf(
+        badge, sizeof(badge), "%s (%s)", key_category_to_string(key->category), key->protocol_name);
     canvas_draw_str_aligned(canvas, 64, 26, AlignCenter, AlignBottom, badge);
 
     canvas_draw_line(canvas, 8, 29, 120, 29);
@@ -164,7 +169,8 @@ static void draw_screen_key_found(Canvas* canvas, KeyWizardApp* app) {
     canvas_draw_rbox(canvas, 12, 54, 104, 10, 2);
     canvas_invert_color(canvas);
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str_aligned(canvas, 64, 62, AlignCenter, AlignBottom, "[OK] Save to native folder");
+    canvas_draw_str_aligned(
+        canvas, 64, 62, AlignCenter, AlignBottom, "[OK] Save to native folder");
     canvas_invert_color(canvas);
 }
 
@@ -260,7 +266,6 @@ static const char* const about_lines[] = {
     "-------------------",
     "Author:",
     "Vazgen Grigoryan",
-    "AI Architecture: Jarvis",
     "License: MIT",
     "-------------------",
     "Donate Bitcoin (BTC):",
@@ -271,7 +276,7 @@ static const char* const about_lines[] = {
     "vazgen3201/flipper-",
     "key-wizard",
 };
-#define ABOUT_LINES_COUNT (sizeof(about_lines) / sizeof(about_lines[0]))
+#define ABOUT_LINES_COUNT   (sizeof(about_lines) / sizeof(about_lines[0]))
 #define ABOUT_VISIBLE_LINES 4
 
 static void draw_screen_about(Canvas* canvas, KeyWizardApp* app) {
@@ -302,12 +307,7 @@ static void draw_screen_about(Canvas* canvas, KeyWizardApp* app) {
 
     // 3. Native Scrollbar on right edge
     elements_scrollbar_pos(
-        canvas,
-        124,
-        13,
-        41,
-        (size_t)scroll,
-        (size_t)(ABOUT_LINES_COUNT - ABOUT_VISIBLE_LINES + 1));
+        canvas, 124, 13, 41, (size_t)scroll, (size_t)(ABOUT_LINES_COUNT - ABOUT_VISIBLE_LINES + 1));
 
     // 4. Footer navigation
     canvas_draw_line(canvas, 0, 54, 128, 54);
@@ -383,7 +383,9 @@ int32_t key_wizard_app(void* p) {
                 case InputKeyBack:
                     if(app->state.screen == ScreenScanning) {
                         app->is_running = false;
-                    } else if(app->state.screen == ScreenAbout || app->state.screen == ScreenQuickKeys || app->state.screen == ScreenKeyFound) {
+                    } else if(
+                        app->state.screen == ScreenAbout || app->state.screen == ScreenQuickKeys ||
+                        app->state.screen == ScreenKeyFound) {
                         app->state.screen = ScreenScanning;
                         key_scanner_start(app->scanner);
                     } else if(app->state.screen == ScreenSaved) {
@@ -399,9 +401,12 @@ int32_t key_wizard_app(void* p) {
                     break;
                 case InputKeyLeft:
                     if(app->state.screen == ScreenScanning) {
-                        app->state.scan_mode = (app->state.scan_mode == 0) ? (ScanModeMax - 1) : (app->state.scan_mode - 1);
+                        app->state.scan_mode = (app->state.scan_mode == 0) ?
+                                                   (ScanModeMax - 1) :
+                                                   (app->state.scan_mode - 1);
                         key_scanner_set_mode(app->scanner, app->state.scan_mode);
-                    } else if(app->state.screen == ScreenAbout || app->state.screen == ScreenQuickKeys) {
+                    } else if(
+                        app->state.screen == ScreenAbout || app->state.screen == ScreenQuickKeys) {
                         app->state.screen = ScreenScanning;
                         key_scanner_start(app->scanner);
                     }
@@ -421,9 +426,14 @@ int32_t key_wizard_app(void* p) {
                         app->state.screen = ScreenAbout;
                         app->state.about_scroll = 0;
                         key_scanner_stop(app->scanner);
-                    } else if(app->state.screen == ScreenQuickKeys && app->state.quick_key_idx + 1 < QUICK_KEYS_COUNT) {
+                    } else if(
+                        app->state.screen == ScreenQuickKeys &&
+                        app->state.quick_key_idx + 1 < QUICK_KEYS_COUNT) {
                         app->state.quick_key_idx++;
-                    } else if(app->state.screen == ScreenAbout && app->state.about_scroll + ABOUT_VISIBLE_LINES < (int32_t)ABOUT_LINES_COUNT) {
+                    } else if(
+                        app->state.screen == ScreenAbout &&
+                        app->state.about_scroll + ABOUT_VISIBLE_LINES <
+                            (int32_t)ABOUT_LINES_COUNT) {
                         app->state.about_scroll++;
                     }
                     break;
@@ -433,7 +443,8 @@ int32_t key_wizard_app(void* p) {
                         key_scanner_start(app->scanner);
                     } else if(app->state.screen == ScreenKeyFound) {
                         char saved_path[128];
-                        if(key_saver_save_to_native_asset(&app->state.current_key, saved_path, sizeof(saved_path))) {
+                        if(key_saver_save_to_native_asset(
+                               &app->state.current_key, saved_path, sizeof(saved_path))) {
                             notification_message(app->notifications, &sequence_audiovisual_alert);
                             notification_message(app->notifications, &sequence_double_vibro);
                             app->state.screen = ScreenSaved;

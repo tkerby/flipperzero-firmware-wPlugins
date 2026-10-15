@@ -59,11 +59,13 @@ bool key_saver_save_to_native_asset(DetectedKey* key, char* out_path, size_t out
     if(key->category == KeyCategoryNFC) {
         base_name = "Card";
     } else if(key->category == KeyCategoryIButton) {
-        base_name = (strstr(key->protocol_name, "Cyfral") != NULL) ? "Cyfral" :
-                    (strstr(key->protocol_name, "Metakom") != NULL) ? "Metakom" : "Dallas";
+        base_name = (strstr(key->protocol_name, "Cyfral") != NULL)  ? "Cyfral" :
+                    (strstr(key->protocol_name, "Metakom") != NULL) ? "Metakom" :
+                                                                      "Dallas";
     } else if(key->category == KeyCategoryLFRFID) {
-        base_name = (strstr(key->protocol_name, "HID") != NULL) ? "HID" :
-                    (strstr(key->protocol_name, "Indala") != NULL) ? "Indala" : "EM4100";
+        base_name = (strstr(key->protocol_name, "HID") != NULL)    ? "HID" :
+                    (strstr(key->protocol_name, "Indala") != NULL) ? "Indala" :
+                                                                     "EM4100";
     }
 
     // Generate unique non-colliding file name in the native directory
@@ -71,7 +73,13 @@ bool key_saver_save_to_native_asset(DetectedKey* key, char* out_path, size_t out
     storage_get_next_filename(storage, asset_dir, base_name, ext, next_filename, 32);
 
     char full_path[128];
-    snprintf(full_path, sizeof(full_path), "%s/%s%s", asset_dir, furi_string_get_cstr(next_filename), ext);
+    snprintf(
+        full_path,
+        sizeof(full_path),
+        "%s/%s%s",
+        asset_dir,
+        furi_string_get_cstr(next_filename),
+        ext);
     furi_string_free(next_filename);
 
     FlipperFormat* file = flipper_format_file_alloc(storage);
