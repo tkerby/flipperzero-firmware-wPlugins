@@ -12,6 +12,28 @@
 #define DRUM_INNER_RADIUS 7
 #define DRUM_OUTER_RADIUS 11
 
+static void draw_menu(Canvas* canvas, const TaikoMenu* menu) {
+    static const char* labels[] = {
+        "Return", "Restart", "Backward Interval", "Forward Interval", "Exit"};
+    for(size_t i = 0; i < TaikoMenuItemCount; i++) {
+        const int y = 10 + i * 12;
+        const bool selected = i == menu->selected;
+        if(selected) {
+            canvas_draw_rbox(canvas, 1, y - 9, 126, 12, 2);
+            canvas_set_color(canvas, ColorWhite);
+        }
+        canvas_draw_str(canvas, 6, y, labels[i]);
+        if(i == TaikoMenuBackward || i == TaikoMenuForward) {
+            const uint32_t interval = i == TaikoMenuBackward ? taiko_menu_backward_ms(menu) :
+                                                               taiko_menu_forward_ms(menu);
+            char value[16];
+            snprintf(value, sizeof(value), "< %lus >", interval / 1000);
+            canvas_draw_str(canvas, 122 - canvas_string_width(canvas, value), y, value);
+        }
+        canvas_set_color(canvas, ColorBlack);
+    }
+}
+
 static void draw_control(Canvas* canvas, const char* text, Align align) {
     static const uint8_t left[] = {0x08, 0x0c, 0x0e, 0x0f, 0x0e, 0x0c, 0x08};
     static const uint8_t right[] = {0x01, 0x03, 0x07, 0x0f, 0x07, 0x03, 0x01};
@@ -99,6 +121,10 @@ void taiko_player_view_draw(Canvas* canvas, const TaikoPlayerView* view) {
     canvas_clear(canvas);
     canvas_set_color(canvas, ColorBlack);
     canvas_set_font(canvas, FontSecondary);
+    if(view->menu.open) {
+        draw_menu(canvas, &view->menu);
+        return;
+    }
     FuriString* text = furi_string_alloc_set(view->title);
     elements_string_fit_width(canvas, text, 124);
     canvas_draw_str(canvas, 2, 9, furi_string_get_cstr(text));

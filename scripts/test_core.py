@@ -37,6 +37,14 @@ def main():
         "src/taiko_lane.c", "tests/test_lane.c", "-o", str(lane_test),
     ], cwd=root, check=True)
     subprocess.run([str(lane_test)], cwd=root, check=True)
+    menu_test = build / "test_menu"
+    subprocess.run([
+        *shlex.split(os.environ.get("CC", "cc")),
+        "-std=c11", "-Wall", "-Wextra", "-Werror", "-g",
+        "-fsanitize=address,undefined", "-Isrc",
+        "src/taiko_menu.c", "tests/test_menu.c", "-o", str(menu_test),
+    ], cwd=root, check=True)
+    subprocess.run([str(menu_test)], cwd=root, check=True)
 
 
 if __name__ == "__main__":

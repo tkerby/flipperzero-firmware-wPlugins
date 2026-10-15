@@ -1,6 +1,7 @@
 #pragma once
 
 #include "taiko_lane.h"
+#include "taiko_menu.h"
 #include <gui/canvas.h>
 
 typedef struct {
@@ -15,6 +16,7 @@ typedef struct {
     bool paused;
     size_t lane_count;
     TaikoLaneNote lane_notes[TAIKO_LANE_MAX_NOTES];
+    TaikoMenu menu;
 } TaikoPlayerView;
 
 void taiko_player_view_draw(Canvas* canvas, const TaikoPlayerView* view);
