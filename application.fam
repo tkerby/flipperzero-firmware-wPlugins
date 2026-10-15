@@ -7,9 +7,9 @@ App(
     stack_size=12 * 1024,
     fap_category="NFC",
     fap_icon="icon_10x10.png",
-    fap_description="Enhanced UID brute-force with key management",
+    fap_description="NFC UID brute-force with pattern detection, reader hit detection and 7-byte UID support",
     fap_author="fbettag",
-    fap_version="1.0",
+    fap_version="1.1",
     fap_weburl="https://github.com/fbettag/uid_brute_smarter",
     sources=["uid_brute_smarter.c", "pattern_engine.c", "scenes/uid_brute_smarter_scene_about.c", "version.c"],
 )

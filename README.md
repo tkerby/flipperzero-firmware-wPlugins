@@ -1,25 +1,28 @@
 # UID Brute Smarter 🔐
 
-> An advanced NFC UID analysis and testing tool for the Flipper Zero.
+> NFC UID brute-force and access-control audit tool for the Flipper Zero — pattern detection, reader hit detection, 4- and 7-byte UID emulation.
 
 [![Build Status](https://github.com/fbettag/uid_brute_smarter/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/fbettag/uid_brute_smarter/actions/workflows/test.yml)
 [![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![Flipper Zero](https://img.shields.io/badge/Flipper%20Zero-Compatible-green.svg)](https://flipperzero.one/)
+[![Tests](https://img.shields.io/badge/tests-84%2F84%20passing-brightgreen.svg)](#-testing)
+
+**Keywords:** Flipper Zero app, NFC UID brute force, ISO14443-3A UID emulation, UID-only access control audit, MIFARE UID testing, card serial number pattern analysis, Momentum Firmware FAP, authorized security testing.
 
 ## 🎯 Overview
 
-UID Brute Smarter is a security research tool for authorized penetration testing and access control system auditing. It provides advanced NFC key management and intelligent pattern detection to build and execute comprehensive security assessments.
+UID Brute Smarter is a security research tool for **authorized penetration testing and access-control auditing** on systems that authenticate by card UID alone. It loads real `.nfc` card dumps, detects the numbering pattern across them (sequential batches, fixed-stride grids, counters, varying-bit envelopes), and emulates candidate UIDs through the Flipper Zero's NFC listener — watching the reader back so an accepted UID is reported instead of guessed.
 
 > ⚠️ **IMPORTANT**: This tool is intended for **authorized security testing only**. Users must obtain proper authorization before testing any systems they do not own or have explicit permission to test.
 
 ## ✨ Features
 
 ### 🔍 Key Management
-- **NFC File Loading**: Load NFC files with metadata extraction.
+- **NFC File Loading**: Load `.nfc` dumps with metadata extraction (UID, ATQA, SAK).
 - **Key Tracking**: Per-key metadata including filename, UID, and load time.
-- **Key Browser**: Browse and manage loaded keys with UID display.
+- **Key Browser**: Browse and manage loaded keys with full UID display.
 - **Bulk Operations**: Load multiple keys or unload all at once.
-- **Memory Safety**: Proper cleanup and memory management.
+- **Memory Safety**: Proper cleanup and memory management throughout.
 
 ### 🧠 Pattern Detection
 - **Advanced Algorithms**: Detects +1, +K, 16-bit counter, and bitmask patterns.
@@ -34,15 +37,10 @@ UID Brute Smarter is a security research tool for authorized penetration testing
 - **Live Feedback**: The brute-force screen shows reader command and HALT counters so audits on silent readers are still observable.
 
 ### ⚙️ Configuration
-- **Adjustable Timing**: Configurable delays between attempts (100ms-1000ms).
+- **Adjustable Timing**: Configurable delays between attempts (100–1000 ms).
 - **Pause Management**: Set pause intervals to prevent system overload.
 - **Progress Tracking**: Real-time progress display during testing.
 - **Safe Stopping**: Graceful interruption capabilities.
-
-### 🎛️ User Interface
-- **Intuitive Interface**: Clean GUI following Flipper design principles.
-- **Detailed Feedback**: Clear notifications for all operations.
-- **Error Handling**: Comprehensive validation and user feedback.
 
 ## 🚀 Quick Start
 
@@ -82,28 +80,80 @@ git clone https://github.com/fbettag/uid_brute_smarter.git applications_user/uid
 ## 📖 Usage Guide
 
 1. **Authorization**: Ensure you have **explicit written authorization** for target systems.
-2. **Key Collection**: Load authorized test cards (`.nfc` files) from the `/ext/nfc/` folder.
-3. **Configuration**: Adjust delay and pause settings as needed.
+2. **Key Collection**: Load authorized test cards (`.nfc` files) from the `/ext/nfc/` folder — 4-byte and 7-byte UID cards are both accepted.
+3. **Configuration**: Adjust delay, pause, and Stop-on-Hit settings as needed.
 4. **Key Management**: View, manage, or unload keys.
-5. **Testing**: Start the brute-force attack and monitor progress.
+5. **Testing**: Start the run and monitor progress; the reader's engagement counters update live and an accepted UID is reported as a **HIT**.
 
 ## 📊 Technical Specifications
 
-### Pattern Detection
-- **+1 Linear**: Sequential incrementing patterns.
-- **+K Linear**: Any uniform step, plus power-of-two GCD grids for mixed strides.
-- **16-bit Counter**: Upper-half counter incrementing with step 0x10000.
-- **Bitmask**: Patterns where only a few bits are changing (bounded enumeration).
-- **Unknown**: Safe range expansion around provided keys.
+### Runtime Limits
+
+| Parameter | Value |
+| --- | --- |
+| Maximum loaded keys / UIDs | 5 |
+| Maximum generated range size | 1000 UIDs |
+| Emulated protocol | ISO14443-3A (NFC-A listener) |
+| Supported UID lengths | 4 bytes, 7 bytes |
+| Default ATQA / SAK (no card loaded) | `00 04` / `08` (4-byte), `00 44` / `08` (7-byte) |
+| ATQA / SAK in audit | copied verbatim from the first loaded card |
+| 7-byte UID handling | 3-byte manufacturer prefix fixed, variable low 4 bytes searched |
+| Mixed UID-length key sets | rejected by the loader |
+| Attempt delay | 100–1000 ms in 100 ms steps (default 500 ms) |
+| Pause interval | every 0–100 attempts in steps of 10 (default off) |
+| Pause duration | 0–10 s (default 3 s) |
+| Stack size | 12 KB |
+
+### Pattern Engine
+
+| Pattern | Detection rule (deltas between consecutive UIDs) | Range generated |
+| --- | --- | --- |
+| **+1 Linear** | all deltas equal 1 | ±100 around the sequence, step 1 |
+| **+K Linear** | any uniform stride K > 1 with ≥3 samples | ±5·K around the sequence, step K |
+| **+K GCD grid** | mixed strides whose GCD is a power of two, ≥3 samples | grid with the GCD as step |
+| **16-bit counter** | all deltas exactly `0x10000` | ±500 around the upper-half counter, step `0x10000`, low half fixed |
+| **Bitmask** | varying bits fit a common envelope (preferred for 2-sample sets) | exhaustive enumeration of the varying bits, `2^popcount` capped at 1000 |
+| **Unknown** | none of the above | ±100 around min/max of the samples |
+
+All ranges are clamped to the 1000-UID maximum; `1 << popcount` overflow is guarded at high popcounts.
+
+### Hit Detection Semantics
+
+| Signal | Source | Strength | Effect |
+| --- | --- | --- | --- |
+| CRC-valid command addressed to the emulated UID (e.g. authentication) | `Iso14443_3aListenerEventTypeReceivedData` / `ReceivedStandardFrame` | strong (reader treats the UID as a real card) | marks the HIT; with Stop-on-Hit the run ends and the UID is reported |
+| HLTA after selection | `Iso14443_3aListenerEventTypeHalted` | weak (part of routine anti-collision) | counted on the progress screen only |
+
+Counters are written from the NFC worker thread and read by the brute timer; they are single-word lock-free volatiles.
 
 ### Supported Formats
-- **NFC Files**: Standard `.nfc` files with ISO14443-3a data.
-- **UID Length**: 4-byte and 7-byte UIDs (7-byte UIDs keep the 3-byte manufacturer prefix fixed and search the variable low 4 bytes; ATQA/SAK are copied from the loaded card).
+- **NFC Files**: standard `.nfc` files with ISO14443-3a data (loaded via `nfc_device`).
+- **UID Length**: 4-byte and 7-byte UIDs.
+
+## 🧪 Testing
+
+Host-side unit tests cover the pattern engine, NFC file parsing, key management, config callbacks, menu navigation, brute-force completion, and UI state management.
+
+```bash
+make -C tests NO_COVERAGE=1 test
+```
+
+7 suites, **84 tests, all passing**. The in-repo Unity harness runs `setUp`/`tearDown` around each test and provides upstream-compatibility macros (`TEST_ASSERT_EQUAL_UINT32`, `UNITY_BEGIN`, `*_MESSAGE` variants).
+
+## 🔧 Compatibility
+
+- **Firmware**: Momentum Firmware (dev), API version 87.1, fully compatible.
+- **Category**: `Apps → NFC`
+- Pure C application (no JS SDK dependency), uses the stable NFC C APIs (`nfc_listener`, `nfc_device`, `iso14443_3a`).
 
 ## 🤝 Support
 
 - **Issues**: [GitHub Issues](../../issues) for bug reports.
 - **Discussions**: [GitHub Discussions](../../discussions) for questions.
+
+## 🔖 Suggested repository topics
+
+`flipper-zero` `flipperzero-fap` `nfc` `uid` `iso14443-3a` `access-control` `security-audit` `momentum-firmware` `pentesting` `rfid`
 
 ## 🙏 Credits
 
@@ -113,4 +163,4 @@ git clone https://github.com/fbettag/uid_brute_smarter.git applications_user/uid
 
 ## 📄 License
 
-This project is licensed under the **BSD 3-Clause License**.
+This project is licensed under the **BSD 3-Clause License** — see [LICENSE](LICENSE).
