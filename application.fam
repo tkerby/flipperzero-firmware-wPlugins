@@ -9,6 +9,8 @@ App(
     # it twice -> "multiple definition" at link time. tests/ and pc/ are PC-only and must stay out.
     sources=["*.c", "!tests", "!pc"],
     fap_category="NFC",
+    fap_icon="icon.png",
+    fap_author="Space-Raler",
     fap_version="0.2",
     fap_description="Use the Flipper as a USB NFC reader (PN532 serial / PC/SC) for a real card or a loaded dump / .nfc file",
 )
