@@ -53,9 +53,9 @@ See [COMPATIBLE_HARDWARE.md](COMPATIBLE_HARDWARE.md) for the board matrix.
 
 ## Install
 
-**1. Flash the ESP32 firmware** (once): grab `pwnpal-firmware-<board>.bin` from
+**1. Flash the ESP32 firmware** (once): grab `pwnpal-<board>.bin` from
 [Releases](https://github.com/mrq1911/pwnpal/releases), copy it to the Flipper SD, then in
-**Apps → GPIO → ESP Flasher**: *Enter Bootloader* → *Manual Flash* → *Advanced Mode* →
+**Apps → GPIO → [ESP Flasher](https://github.com/0xchocolate/flipperzero-esp-flasher)**: *Enter Bootloader* → *Manual Flash* → *Advanced Mode* →
 *Custom* slot → the bin @ `0x0` → *FLASH* → *Reset Board*. (Rear switch on the Feberis set
 to ESP32.)
 
