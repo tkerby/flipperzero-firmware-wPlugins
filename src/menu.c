@@ -1864,14 +1864,14 @@ static bool ir_wait_for_reply(
 
     while(furi_get_tick() - start < timeout_ms) {
         furi_delay_ms(50);
-        if(!uart_copy_text_buffer_tail(state->uart_context, buffer, buffer_size, &len) || len == 0) {
+        if(!uart_copy_text_buffer_tail(state->uart_context, buffer, buffer_size, &len) ||
+           len == 0) {
             continue;
         }
 
-        const bool header = strstr(buffer, "Signals in ") ||
-                            strstr(buffer, "Unique buttons in ") ||
-                            strstr(buffer, "IR files in ") ||
-                            strstr(buffer, "Universal Files in ");
+        const bool header =
+            strstr(buffer, "Signals in ") || strstr(buffer, "Unique buttons in ") ||
+            strstr(buffer, "IR files in ") || strstr(buffer, "Universal Files in ");
         if(header) seen_header = true;
 
         if(expect_entry_list) {
