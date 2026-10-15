@@ -1,6 +1,7 @@
 # Universal Key Wizard for Flipper Zero
 
 <p align="center">
+  <img src="assets/key_wizard_logo.png" alt="Key Wizard Logo" width="120" /><br>
   <b>All-in-One Intercom & Access Key Auto-Detector & Native Asset Sorter</b><br>
   <i>125 kHz RFID • 13.56 MHz NFC • 1-Wire iButton (Dallas, Cyfral, Metakom)</i><br>
   <i>Developed autonomously by Jarvis</i>
