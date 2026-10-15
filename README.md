@@ -2,6 +2,11 @@
 
 A Flipper Zero app that a Kindle accepts as a Kindle Click remote: page forward and back, light up and down, and sleep. The Kindle also shows the Flipper's battery level.
 
+<p>
+  <img src="screenshots/ss0.png" width="256" alt="Remote screen">
+  <img src="screenshots/ss1.png" width="256" alt="Buttons configuration">
+</p>
+
 Keys
 ----
 
