@@ -565,6 +565,62 @@ static const uint8_t ACT_SLEEP[] = {
     0x01, 0x91, 0x00, 0x22, 0x00, 0x46, 0x00, 0x78, 0x00,
 }; // 9x9 (moon + star)
 
+static void draw_ellipse(Canvas* canvas, int x0, int y0, int rx, int ry, bool fill) {
+    int32_t rxrx2 = 2 * rx * rx, ryry2 = 2 * ry * ry;
+    int32_t x = rx, y = 0;
+    int32_t xchg = (1 - 2 * rx) * ry * ry, ychg = rx * rx, err = 0;
+    int32_t stopx = ryry2 * rx, stopy = 0;
+    while(stopx >= stopy) {
+        if(fill) {
+            canvas_draw_box(canvas, x0 - x, y0 - y, 2 * x + 1, 1);
+            canvas_draw_box(canvas, x0 - x, y0 + y, 2 * x + 1, 1);
+        } else {
+            canvas_draw_dot(canvas, x0 + x, y0 + y);
+            canvas_draw_dot(canvas, x0 - x, y0 + y);
+            canvas_draw_dot(canvas, x0 + x, y0 - y);
+            canvas_draw_dot(canvas, x0 - x, y0 - y);
+        }
+        y++;
+        stopy += rxrx2;
+        err += ychg;
+        ychg += rxrx2;
+        if(2 * err + xchg > 0) {
+            x--;
+            stopx -= ryry2;
+            err += xchg;
+            xchg += ryry2;
+        }
+    }
+    x = 0;
+    y = ry;
+    xchg = ry * ry;
+    ychg = (1 - 2 * ry) * rx * rx;
+    err = 0;
+    stopx = 0;
+    stopy = rxrx2 * ry;
+    while(stopx <= stopy) {
+        if(fill) {
+            canvas_draw_box(canvas, x0 - x, y0 - y, 2 * x + 1, 1);
+            canvas_draw_box(canvas, x0 - x, y0 + y, 2 * x + 1, 1);
+        } else {
+            canvas_draw_dot(canvas, x0 + x, y0 + y);
+            canvas_draw_dot(canvas, x0 - x, y0 + y);
+            canvas_draw_dot(canvas, x0 + x, y0 - y);
+            canvas_draw_dot(canvas, x0 - x, y0 - y);
+        }
+        x++;
+        stopx += ryry2;
+        err += xchg;
+        xchg += ryry2;
+        if(2 * err + ychg > 0) {
+            y--;
+            stopy -= rxrx2;
+            err += ychg;
+            ychg += rxrx2;
+        }
+    }
+}
+
 static void draw_sector_action(Canvas* canvas, int cx, int cy, KeyId k, uint8_t fill_r) {
     static const struct {
         const uint8_t* glyph;
@@ -577,7 +633,7 @@ static void draw_sector_action(Canvas* canvas, int cx, int cy, KeyId k, uint8_t 
         [KeySleep] = {ACT_SLEEP, 9, 9},
     };
     if(fill_r > 0) {
-        canvas_draw_disc(canvas, cx, cy, fill_r);
+        draw_ellipse(canvas, cx, cy, fill_r + (fill_r == 10 ? 1 : 0), fill_r, true);
     }
     if(k < KeyCount) {
         int w = ACT_GLYPH[k].w, h = ACT_GLYPH[k].h;
@@ -653,26 +709,26 @@ static void remote_draw(Canvas* canvas, void* model_ptr) {
         canvas_draw_str(canvas, 12, 61, HOLD_TEXT[hold_k]);
     }
 
-    // Right side: 61x61 D-pad wheel centered at (96, 31), R_outer=30, R_inner=10.
-    const int cx = 96, cy = 31;
-    canvas_draw_circle(canvas, cx, cy, 30);
-    canvas_draw_circle(canvas, cx, cy, 10);
-    canvas_draw_line(canvas, cx - 10, cy - 10, cx - 9, cy - 9);
-    canvas_draw_line(canvas, cx + 9, cy - 9, cx + 10, cy - 10);
-    canvas_draw_line(canvas, cx - 10, cy + 10, cx - 9, cy + 9);
-    canvas_draw_line(canvas, cx + 9, cy + 9, cx + 10, cy + 10);
-    canvas_draw_line(canvas, cx - 19, cy - 19, cx - 18, cy - 18);
-    canvas_draw_line(canvas, cx + 18, cy - 18, cx + 19, cy - 19);
-    canvas_draw_line(canvas, cx - 19, cy + 19, cx - 18, cy + 18);
-    canvas_draw_line(canvas, cx + 18, cy + 18, cx + 19, cy + 19);
+    // Right side: 65x61 D-pad wheel centered at (94, 31), rx=32, ry=30 (inner rx=11, ry=10).
+    const int cx = 94, cy = 31;
+    draw_ellipse(canvas, cx, cy, 32, 30, false);
+    draw_ellipse(canvas, cx, cy, 11, 10, false);
+    canvas_draw_line(canvas, cx - 11, cy - 10, cx - 10, cy - 9);
+    canvas_draw_line(canvas, cx + 10, cy - 9, cx + 11, cy - 10);
+    canvas_draw_line(canvas, cx - 11, cy + 10, cx - 10, cy + 9);
+    canvas_draw_line(canvas, cx + 10, cy + 9, cx + 11, cy + 10);
+    canvas_draw_line(canvas, cx - 21, cy - 19, cx - 20, cy - 18);
+    canvas_draw_line(canvas, cx + 20, cy - 18, cx + 21, cy - 19);
+    canvas_draw_line(canvas, cx - 21, cy + 19, cx - 20, cy + 18);
+    canvas_draw_line(canvas, cx + 20, cy + 18, cx + 21, cy + 19);
 
     draw_sector_action(canvas, cx, cy - 20, model->map[BtnUp], (model->held & (1 << BtnUp)) ? 8 : 0);
     draw_sector_action(
         canvas, cx, cy + 20, model->map[BtnDown], (model->held & (1 << BtnDown)) ? 8 : 0);
     draw_sector_action(
-        canvas, cx - 20, cy, model->map[BtnLeft], (model->held & (1 << BtnLeft)) ? 8 : 0);
+        canvas, cx - 21, cy, model->map[BtnLeft], (model->held & (1 << BtnLeft)) ? 8 : 0);
     draw_sector_action(
-        canvas, cx + 20, cy, model->map[BtnRight], (model->held & (1 << BtnRight)) ? 8 : 0);
+        canvas, cx + 21, cy, model->map[BtnRight], (model->held & (1 << BtnRight)) ? 8 : 0);
 
     KeyId ok_k = (model->held & (1 << BtnOkHold))  ? model->map[BtnOkHold] :
                  (model->map[BtnOk] < KeyCount)    ? model->map[BtnOk] :
