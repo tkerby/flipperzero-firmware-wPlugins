@@ -158,3 +158,9 @@ make test
 - [Flipper Zero uFBT](https://github.com/flipperdevices/flipperzero-ufbt)
 - [Flipper Zero 固件](https://github.com/flipperdevices/flipperzero-firmware)
 - [Momentum 固件与 SDK](https://github.com/Next-Flip/Momentum-Firmware)
+
+## AI 协作
+
+本项目由作者与 **GPT-6.1-sol** 协作完成。AI 参与了代码实现、测试与文档编写，作者负责提出需求、确认方案和提供实机体验反馈。
+
+让一份 TJA 谱面，在一只小海豚上响起来。
