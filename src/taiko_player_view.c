@@ -26,6 +26,7 @@ static void draw_menu(Canvas* canvas, const TaikoMenu* menu) {
         "Ka Volume",
         "GPIO Output",
         "GPIO Setting",
+        "Restore Defaults",
         "Exit"};
     static const char* gpio_labels[] = {
         "Return", "Left Ka", "Left Dong", "Right Dong", "Right Ka"};

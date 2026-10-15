@@ -110,6 +110,8 @@ TaikoMenuAction taiko_menu_activate(TaikoMenu* menu) {
     case TaikoMenuExit:
         action = TaikoMenuActionExit;
         break;
+    case TaikoMenuRestoreDefaults:
+        return TaikoMenuActionRestoreDefaults;
     default:
         taiko_menu_adjust(menu, true);
         return TaikoMenuActionNone;
@@ -143,4 +145,29 @@ uint8_t taiko_menu_playback_tenths(const TaikoMenu* menu) {
 
 uint8_t taiko_menu_scroll_tenths(const TaikoMenu* menu) {
     return scroll_speeds[menu->scroll_index];
+}
+
+bool taiko_menu_set_value(TaikoMenu* menu, TaikoMenuItem item, uint32_t value) {
+    if(item == TaikoMenuBackward || item == TaikoMenuForward) {
+        for(size_t i = 0; i < INTERVAL_COUNT; i++) {
+            if(intervals[i] != value) continue;
+            if(item == TaikoMenuBackward)
+                menu->backward_index = i;
+            else
+                menu->forward_index = i;
+            return true;
+        }
+    } else if(item == TaikoMenuPlaybackSpeed || item == TaikoMenuScrollSpeed) {
+        const uint8_t* values = item == TaikoMenuPlaybackSpeed ? playback_speeds : scroll_speeds;
+        size_t count = item == TaikoMenuPlaybackSpeed ? PLAYBACK_SPEED_COUNT : SCROLL_SPEED_COUNT;
+        for(size_t i = 0; i < count; i++) {
+            if(values[i] != value) continue;
+            if(item == TaikoMenuPlaybackSpeed)
+                menu->playback_index = i;
+            else
+                menu->scroll_index = i;
+            return true;
+        }
+    }
+    return false;
 }

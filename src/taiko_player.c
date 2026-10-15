@@ -2,6 +2,7 @@
 #include "taiko_gpio.h"
 #include "taiko_player_view.h"
 #include "taiko_sfx.h"
+#include "taiko_settings_storage.h"
 #include "tja_parser.h"
 
 #include <dialogs/dialogs.h>
@@ -27,6 +28,9 @@ typedef struct {
     TaikoMenu menu;
     TaikoSfx sfx;
     uint8_t volume;
+    TaikoSettings saved_settings;
+    bool settings_saved;
+    bool settings_save_failed;
     TaikoPlayerView view;
 } TaikoPlayer;
 
@@ -121,13 +125,35 @@ static void set_chart_title(TaikoPlayer* app, const TjaChart* chart) {
     furi_mutex_release(app->mutex);
 }
 
-static void show_error(TaikoPlayer* app, const char* message) {
+static void show_message(TaikoPlayer* app, const char* header, const char* message) {
     DialogMessage* dialog = dialog_message_alloc();
-    dialog_message_set_header(dialog, "Cannot play", 64, 3, AlignCenter, AlignTop);
+    dialog_message_set_header(dialog, header, 64, 3, AlignCenter, AlignTop);
     dialog_message_set_text(dialog, message, 64, 30, AlignCenter, AlignCenter);
     dialog_message_set_buttons(dialog, NULL, "OK", NULL);
     dialog_message_show(app->dialogs, dialog);
     dialog_message_free(dialog);
+}
+
+static void show_error(TaikoPlayer* app, const char* message) {
+    show_message(app, "Cannot play", message);
+}
+
+/* Called only while the audio worker is stopped/finished, or before playback. */
+static void save_settings(TaikoPlayer* app) {
+    TaikoSettings settings;
+    taiko_settings_capture(&settings, &app->menu, app->volume);
+    if(app->settings_saved && taiko_settings_equal(&settings, &app->saved_settings)) return;
+    if(taiko_settings_save(app->storage, &settings)) {
+        app->saved_settings = settings;
+        app->settings_saved = true;
+        app->settings_save_failed = false;
+    } else {
+        app->settings_saved = false;
+        if(!app->settings_save_failed) {
+            app->settings_save_failed = true;
+            show_message(app, "Cannot save", "Settings not saved.\nCheck the SD card.");
+        }
+    }
 }
 
 static FuriString* audio_path(const char* tja_path, const char* wave) {
@@ -282,6 +308,7 @@ static bool play_song(TaikoPlayer* app, const char* path) {
                         paused = true;
                     }
                     taiko_menu_open(&app->menu);
+                    save_settings(app);
                 } else {
                     TaikoMenuAction action = TaikoMenuActionNone;
                     if(event.key == InputKeyBack) {
@@ -293,9 +320,16 @@ static bool play_song(TaikoPlayer* app, const char* path) {
                     } else if(event.key == InputKeyOk) {
                         action = taiko_menu_activate(&app->menu);
                     }
+                    if(action == TaikoMenuActionRestoreDefaults) {
+                        TaikoSettings defaults;
+                        taiko_settings_defaults(&defaults);
+                        taiko_settings_apply(&defaults, &app->menu, &app->volume);
+                        app->settings_saved = false;
+                    }
                     mixer.don_volume = app->menu.don_volume;
                     mixer.ka_volume = app->menu.ka_volume;
                     furi_check(taiko_gpio_configure(app->gpio, &app->menu.gpio));
+                    if(action != TaikoMenuActionNone) save_settings(app);
                     if(action == TaikoMenuActionExit) break;
                     if(action == TaikoMenuActionNewSong) {
                         next_song = true;
@@ -385,6 +419,7 @@ static bool play_song(TaikoPlayer* app, const char* path) {
     if(audio) pcm_audio_free(audio);
     furi_string_free(wave);
     tja_chart_free(&chart);
+    save_settings(app);
     if(error) show_error(app, error);
     return next_song;
 }
@@ -400,7 +435,8 @@ int32_t taiko_player_app(void* context) {
     app->gpio = taiko_gpio_alloc();
     app->sfx = taiko_sfx_load(app->storage);
     taiko_menu_init(&app->menu);
-    app->volume = 70;
+    app->volume = TAIKO_DEFAULT_VOLUME;
+    app->settings_save_failed = false;
     memset(&app->view, 0, sizeof(app->view));
     app->viewport = view_port_alloc();
     view_port_draw_callback_set(app->viewport, draw, app);
@@ -409,6 +445,9 @@ int32_t taiko_player_app(void* context) {
     gui_add_view_port(app->gui, app->viewport, GuiLayerFullscreen);
     storage_simply_mkdir(app->storage, PLAYER_PATH);
     storage_simply_mkdir(app->storage, SONGS_PATH);
+    app->settings_saved = taiko_settings_load(app->storage, &app->saved_settings);
+    taiko_settings_apply(&app->saved_settings, &app->menu, &app->volume);
+    furi_check(taiko_gpio_configure(app->gpio, &app->menu.gpio));
 
     NotificationApp* notifications = furi_record_open(RECORD_NOTIFICATION);
     notification_message(notifications, &sequence_display_backlight_enforce_on);
@@ -424,6 +463,7 @@ int32_t taiko_player_app(void* context) {
         furi_string_set(path, SONGS_PATH);
     }
     furi_string_free(path);
+    save_settings(app);
     taiko_gpio_free(app->gpio);
     taiko_sfx_free(&app->sfx);
     view_port_enabled_set(app->viewport, false);

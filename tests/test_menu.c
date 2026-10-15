@@ -136,6 +136,10 @@ int main(void) {
     assert(taiko_menu_activate(&menu) == TaikoMenuActionNone); /* Return row stays in main menu. */
     assert(menu.open && !menu.gpio_settings);
     taiko_menu_move(&menu, true);
+    assert(menu.selected == TaikoMenuRestoreDefaults);
+    assert(taiko_menu_activate(&menu) == TaikoMenuActionRestoreDefaults);
+    assert(menu.open && menu.selected == TaikoMenuRestoreDefaults);
+    taiko_menu_move(&menu, true);
     assert(menu.selected == TaikoMenuExit);
     taiko_menu_adjust(&menu, true);
     assert(taiko_menu_forward_ms(&menu) == 1000);

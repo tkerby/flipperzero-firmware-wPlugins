@@ -18,6 +18,7 @@ typedef enum {
     TaikoMenuKaVolume,
     TaikoMenuGpioOutput,
     TaikoMenuGpioSetting,
+    TaikoMenuRestoreDefaults,
     TaikoMenuExit,
     TaikoMenuItemCount,
 } TaikoMenuItem;
@@ -36,6 +37,7 @@ typedef enum {
     TaikoMenuActionReturn,
     TaikoMenuActionRestart,
     TaikoMenuActionNewSong,
+    TaikoMenuActionRestoreDefaults,
     TaikoMenuActionExit,
 } TaikoMenuAction;
 
@@ -65,3 +67,5 @@ uint32_t taiko_menu_backward_ms(const TaikoMenu* menu);
 uint32_t taiko_menu_forward_ms(const TaikoMenu* menu);
 uint8_t taiko_menu_playback_tenths(const TaikoMenu* menu);
 uint8_t taiko_menu_scroll_tenths(const TaikoMenu* menu);
+/* Select by the persisted value rather than the menu table index. */
+bool taiko_menu_set_value(TaikoMenu* menu, TaikoMenuItem item, uint32_t value);
