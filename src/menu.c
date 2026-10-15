@@ -1814,6 +1814,83 @@ static char* next_line(char* buf, size_t* offset) {
     return start;
 }
 
+// Count reply lines that begin with an "[index]" entry marker.
+static size_t ir_count_entry_lines(const char* buf) {
+    size_t count = 0;
+    const char* p = buf;
+    while(p && *p) {
+        const char* nl = strchr(p, '\n');
+        const char* end = nl ? nl : p + strlen(p);
+        const char* s = p;
+        while(s < end && (*s == ' ' || *s == '\t'))
+            s++;
+        if(s < end && *s == '[') count++;
+        if(!nl) break;
+        p = nl + 1;
+    }
+    return count;
+}
+
+// Read the announced entry count from a "Signals in ... (N):" or
+// "Unique buttons in ... (N):" header. Returns -1 if not present.
+static int ir_header_entry_count(const char* buf) {
+    const char* header = strstr(buf, "Signals in ");
+    if(!header) header = strstr(buf, "Unique buttons in ");
+    if(!header) return -1;
+    const char* paren = strchr(header, '(');
+    if(!paren) return -1;
+    return atoi(paren + 1);
+}
+
+// Wait for an ESP IR reply to finish arriving before parsing it. Replies that
+// announce an entry count ("... (N):") are complete once N "[index]" lines have
+// arrived; other replies are considered complete after a short quiet period.
+// This prevents parsing a partially-received list (which showed only some IR
+// buttons until the view was reopened).
+static bool ir_wait_for_reply(
+    AppState* state,
+    char* buffer,
+    size_t buffer_size,
+    size_t* out_len,
+    bool expect_entry_list,
+    uint32_t timeout_ms) {
+    if(!state || !state->uart_context || !buffer || buffer_size == 0) return false;
+
+    size_t len = 0;
+    uint32_t start = furi_get_tick();
+    uint32_t last_change = start;
+    size_t last_len = 0;
+    bool seen_header = false;
+
+    while(furi_get_tick() - start < timeout_ms) {
+        furi_delay_ms(50);
+        if(!uart_copy_text_buffer_tail(state->uart_context, buffer, buffer_size, &len) || len == 0) {
+            continue;
+        }
+
+        const bool header = strstr(buffer, "Signals in ") ||
+                            strstr(buffer, "Unique buttons in ") ||
+                            strstr(buffer, "IR files in ") ||
+                            strstr(buffer, "Universal Files in ");
+        if(header) seen_header = true;
+
+        if(expect_entry_list) {
+            const int expected = ir_header_entry_count(buffer);
+            if(expected > 0 && ir_count_entry_lines(buffer) >= (size_t)expected) break;
+        }
+
+        if(len != last_len) {
+            last_len = len;
+            last_change = furi_get_tick();
+        } else if(seen_header && furi_get_tick() - last_change >= 300) {
+            break;
+        }
+    }
+
+    if(out_len) *out_len = len;
+    return len > 0;
+}
+
 static bool ir_query_and_parse_list(AppState* state) {
     if(!state || !state->uart_context) return false;
 
@@ -1822,21 +1899,7 @@ static bool ir_query_and_parse_list(AppState* state) {
 
     char buffer[IR_UART_PARSE_BUF_SIZE];
 
-    size_t len = 0;
-    uint32_t start = furi_get_tick();
-    const uint32_t timeout_ms = 2000;
-    while(furi_get_tick() - start < timeout_ms) {
-        furi_delay_ms(100);
-        if(uart_copy_text_buffer_tail(state->uart_context, buffer, IR_UART_PARSE_BUF_SIZE, &len) &&
-           len > 0) {
-            if(strstr(buffer, "IR files in ") || strstr(buffer, "(none)") ||
-               strstr(buffer, "(none).") || strchr(buffer, '[')) {
-                break;
-            }
-        }
-    }
-
-    if(len == 0) {
+    if(!ir_wait_for_reply(state, buffer, sizeof(buffer), NULL, false, 2000)) {
         return false;
     }
 
@@ -1883,21 +1946,7 @@ static bool ir_query_and_parse_show(AppState* state, uint32_t remote_index) {
 
     char buffer[IR_UART_PARSE_BUF_SIZE];
 
-    size_t len = 0;
-    uint32_t start = furi_get_tick();
-    const uint32_t timeout_ms = 3000;
-    while(furi_get_tick() - start < timeout_ms) {
-        furi_delay_ms(100);
-        if(uart_copy_text_buffer_tail(state->uart_context, buffer, IR_UART_PARSE_BUF_SIZE, &len) &&
-           len > 0) {
-            if(strstr(buffer, "Signals in ") || strstr(buffer, "Unique buttons in ") ||
-               strchr(buffer, '[')) {
-                break;
-            }
-        }
-    }
-
-    if(len == 0) {
+    if(!ir_wait_for_reply(state, buffer, sizeof(buffer), NULL, true, 3000)) {
         return false;
     }
 
@@ -2081,21 +2130,7 @@ static bool ir_query_and_parse_universals(AppState* state) {
 
     char buffer[IR_UART_PARSE_BUF_SIZE];
 
-    size_t len = 0;
-    uint32_t start = furi_get_tick();
-    const uint32_t timeout_ms = 3000;
-    while(furi_get_tick() - start < timeout_ms) {
-        furi_delay_ms(100);
-        if(uart_copy_text_buffer_tail(state->uart_context, buffer, IR_UART_PARSE_BUF_SIZE, &len) &&
-           len > 0) {
-            if(strstr(buffer, "Universal Files in ") || strstr(buffer, "Built-in") ||
-               strstr(buffer, "(none)") || strchr(buffer, '.')) {
-                break;
-            }
-        }
-    }
-
-    if(len == 0) {
+    if(!ir_wait_for_reply(state, buffer, sizeof(buffer), NULL, false, 3000)) {
         return false;
     }
 
@@ -2164,21 +2199,7 @@ static bool ir_query_and_parse_universal_buttons(AppState* state, const char* fi
 
     char buffer[IR_UART_PARSE_BUF_SIZE];
 
-    size_t len = 0;
-
-    uint32_t start = furi_get_tick();
-    const uint32_t timeout_ms = 5000;
-    while(furi_get_tick() - start < timeout_ms) {
-        furi_delay_ms(100);
-        if(uart_copy_text_buffer(state->uart_context, buffer, IR_UART_PARSE_BUF_SIZE, &len) &&
-           len > 0) {
-            if(strstr(buffer, "Unique buttons in ") || strstr(buffer, "Signals in ")) {
-                break;
-            }
-        }
-    }
-
-    if(len == 0) {
+    if(!ir_wait_for_reply(state, buffer, sizeof(buffer), NULL, true, 5000)) {
         return false;
     }
 
