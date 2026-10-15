@@ -13,13 +13,13 @@
 #define DRUM_OUTER_RADIUS 11
 
 static void draw_hit(Canvas* canvas, bool right, bool rim) {
-    const int radius = rim ? DRUM_OUTER_RADIUS - 1 : DRUM_INNER_RADIUS - 1;
-    const int inner_radius = rim ? DRUM_INNER_RADIUS + 1 : 0;
+    const int radius = rim ? DRUM_OUTER_RADIUS : DRUM_INNER_RADIUS;
+    const int inner_radius = rim ? DRUM_INNER_RADIUS : 0;
     for(int y = -radius; y <= radius; y++) {
         int end = radius;
         while(end * end + y * y > radius * radius)
             end--;
-        int start = 2;
+        int start = 1;
         while(start <= end && start * start + y * y < inner_radius * inner_radius)
             start++;
         if(start > end) continue;
@@ -53,14 +53,16 @@ static void lane_disc(Canvas* canvas, int x, int radius, Color color) {
 static void draw_lane(Canvas* canvas, const TaikoPlayerView* view) {
     canvas_draw_box(canvas, 0, LANE_TOP, 128, LANE_BOTTOM - LANE_TOP + 1);
     canvas_set_color(canvas, ColorWhite);
-    canvas_draw_line(canvas, TAIKO_LANE_HIT_X, LANE_TOP + 1, TAIKO_LANE_HIT_X, LANE_BOTTOM - 1);
     canvas_draw_circle(canvas, TAIKO_LANE_HIT_X, LANE_Y, 7);
+    canvas_draw_circle(canvas, TAIKO_LANE_HIT_X, LANE_Y, 5);
     for(size_t i = view->lane_count; i > 0; i--) {
         TaikoLaneNote note = view->lane_notes[i - 1];
         int radius = note.kind >= 3 ? TAIKO_LANE_BIG_RADIUS : TAIKO_LANE_SMALL_RADIUS;
         lane_disc(canvas, note.x, radius, ColorWhite);
-        lane_disc(canvas, note.x, radius - 1, ColorBlack);
-        if(note.kind == 2 || note.kind == 4) lane_disc(canvas, note.x, radius - 2, ColorWhite);
+        /* Thicken large-note borders inward without changing the outer radius. */
+        lane_disc(canvas, note.x, radius - (note.kind == 3 ? 2 : 1), ColorBlack);
+        if(note.kind == 2 || note.kind == 4)
+            lane_disc(canvas, note.x, radius - (note.kind == 4 ? 3 : 2), ColorWhite);
     }
     canvas_set_color(canvas, ColorBlack);
 }
