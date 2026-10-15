@@ -1,11 +1,11 @@
 #include "pcm_audio.h"
 #include "taiko_gpio.h"
+#include "taiko_player_view.h"
 #include "tja_parser.h"
 
 #include <dialogs/dialogs.h>
 #include <furi.h>
 #include <gui/gui.h>
-#include <gui/elements.h>
 #include <input/input.h>
 #include <notification/notification_messages.h>
 #include <toolbox/stream/buffered_file_stream.h>
@@ -15,17 +15,6 @@
 #define SONGS_PATH EXT_PATH("apps_data/taiko_player/Songs")
 
 typedef struct {
-    char title[128];
-    char course[24];
-    uint32_t position_ms;
-    uint32_t hit_until;
-    bool hit_right;
-    bool hit_rim;
-    bool loading;
-    bool finished;
-} PlayerView;
-
-typedef struct {
     Storage* storage;
     DialogsApp* dialogs;
     Gui* gui;
@@ -33,65 +22,15 @@ typedef struct {
     FuriMessageQueue* input;
     FuriMutex* mutex;
     TaikoGpio* gpio;
-    PlayerView view;
+    TaikoPlayerView view;
 } TaikoPlayer;
-
-/* Leave a pixel of space around the outlines and divider so that the two
- * note types and the active hand remain distinct on the monochrome screen. */
-static void draw_hit(Canvas* canvas, bool right, bool rim) {
-    const int radius = rim ? 19 : 13;
-    const int inner_radius = rim ? 15 : 0;
-    for(int y = -radius; y <= radius; y++) {
-        int end = radius;
-        while(end * end + y * y > radius * radius)
-            end--;
-        int start = 2;
-        while(start <= end && start * start + y * y < inner_radius * inner_radius)
-            start++;
-        if(start > end) continue;
-        int x1 = right ? 64 + start : 64 - end;
-        int x2 = right ? 64 + end : 64 - start;
-        canvas_draw_line(canvas, x1, 33 + y, x2, 33 + y);
-    }
-}
 
 static void draw(Canvas* canvas, void* context) {
     TaikoPlayer* app = context;
     furi_mutex_acquire(app->mutex, FuriWaitForever);
-    PlayerView view = app->view;
+    TaikoPlayerView view = app->view;
     furi_mutex_release(app->mutex);
-    canvas_clear(canvas);
-    canvas_set_font(canvas, FontSecondary);
-    FuriString* title = furi_string_alloc_set(view.title);
-    elements_string_fit_width(canvas, title, 124);
-    canvas_draw_str(canvas, 2, 9, furi_string_get_cstr(title));
-    furi_string_free(title);
-
-    uint32_t now = furi_get_tick();
-    if(view.hit_until && (int32_t)(view.hit_until - now) > 0)
-        draw_hit(canvas, view.hit_right, view.hit_rim);
-    canvas_draw_circle(canvas, 64, 33, 14);
-    canvas_draw_circle(canvas, 64, 33, 20);
-    canvas_draw_line(canvas, 64, 13, 64, 53);
-    char time[16];
-    uint32_t seconds = view.position_ms / 1000;
-    snprintf(time, sizeof(time), "%lu:%02lu", seconds / 60, seconds % 60);
-    canvas_draw_str(canvas, 1, 32, time);
-    FuriString* course = furi_string_alloc_set(view.course);
-    elements_string_fit_width(canvas, course, 40);
-    canvas_draw_str(canvas, 88, 32, furi_string_get_cstr(course));
-    furi_string_free(course);
-    if(view.loading || view.finished) {
-        canvas_draw_str_aligned(
-            canvas, 64, 36, AlignCenter, AlignBottom, view.loading ? "Load" : "End");
-    }
-    canvas_draw_str_aligned(
-        canvas,
-        64,
-        63,
-        AlignCenter,
-        AlignBottom,
-        view.finished ? "OK: next   Hold Back: exit" : "Hold Back: exit");
+    taiko_player_view_draw(canvas, &view);
 }
 
 static void input(InputEvent* event, void* context) {
@@ -188,6 +127,8 @@ static bool play_song(TaikoPlayer* app, const char* path) {
     size_t note = 0;
     bool next_song = false;
     bool outputs_finished = false;
+    const uint32_t frame_ticks = furi_ms_to_ticks(20);
+    uint32_t next_frame = furi_get_tick();
     while(true) {
         PcmAudioState state = pcm_audio_state(audio);
         if(state == PcmAudioError) {
@@ -200,29 +141,42 @@ static bool play_song(TaikoPlayer* app, const char* path) {
             outputs_finished = true;
         }
         uint32_t position = pcm_audio_position_ms(audio);
-        uint32_t now = furi_get_tick();
-        furi_mutex_acquire(app->mutex, FuriWaitForever);
-        app->view.loading = state == PcmAudioLoading;
-        app->view.finished = state == PcmAudioFinished;
-        app->view.position_ms = position;
-        if(state == PcmAudioFinished) app->view.hit_until = 0;
         if(state == PcmAudioPlaying) {
             while(note < chart.note_count && chart.notes[note].time_ms <= (int32_t)position) {
                 bool right = (note % 2) == 0;
                 TjaNote event = chart.notes[note++];
-                /* Do not flash events from before the audio, or stale events after a stall. */
                 if(event.time_ms < 0 || (int32_t)position - event.time_ms > 120) continue;
-                app->view.hit_until = now + furi_ms_to_ticks(TAIKO_HIT_MS);
+                bool rim = event.kind == 2 || event.kind == 4;
+                taiko_gpio_pulse(app->gpio, right, rim);
+                furi_mutex_acquire(app->mutex, FuriWaitForever);
+                app->view.hit_until = furi_get_tick() + furi_ms_to_ticks(TAIKO_HIT_MS);
                 app->view.hit_right = right;
-                app->view.hit_rim = event.kind == 2 || event.kind == 4;
-                taiko_gpio_pulse(app->gpio, app->view.hit_right, app->view.hit_rim);
+                app->view.hit_rim = rim;
+                furi_mutex_release(app->mutex);
             }
         }
-        furi_mutex_release(app->mutex);
-        view_port_update(app->viewport);
+        uint32_t now = furi_get_tick();
+        if((int32_t)(now - next_frame) >= 0) {
+            furi_mutex_acquire(app->mutex, FuriWaitForever);
+            app->view.loading = state == PcmAudioLoading;
+            app->view.finished = state == PcmAudioFinished;
+            app->view.position_ms = position;
+            if(state == PcmAudioFinished) app->view.hit_until = 0;
+            app->view.lane_count = taiko_lane_collect(
+                chart.notes,
+                chart.note_count,
+                position,
+                app->view.lane_notes,
+                TAIKO_LANE_MAX_NOTES);
+            furi_mutex_release(app->mutex);
+            view_port_update(app->viewport);
+            next_frame += frame_ticks;
+            /* Skip missed refresh slots instead of submitting a burst of old frames. */
+            if((int32_t)(now - next_frame) >= 0) next_frame = now + frame_ticks;
+        }
 
         InputEvent event;
-        if(furi_message_queue_get(app->input, &event, furi_ms_to_ticks(20)) == FuriStatusOk) {
+        if(furi_message_queue_get(app->input, &event, furi_ms_to_ticks(2)) == FuriStatusOk) {
             if(event.key == InputKeyBack) break;
             if(event.key == InputKeyOk && state == PcmAudioFinished) {
                 next_song = true;
