@@ -4,6 +4,7 @@
 
 Unity_t Unity = {0, 0, 0};
 static const char* current_test_name = NULL;
+static unsigned int test_start_failures = 0;
 
 void unity_begin(void) {
     Unity.tests = 0;
@@ -33,11 +34,12 @@ int unity_end(void) {
 void unity_test_start(const char* name) {
     current_test_name = name;
     Unity.tests++;
+    test_start_failures = Unity.failures;
     printf("📝 Running: %s\n", name);
 }
 
 void unity_test_finish(void) {
-    if (Unity.failures == 0 || current_test_name == NULL) {
+    if (Unity.failures == test_start_failures || current_test_name == NULL) {
         printf("   ✅ PASSED\n\n");
     } else {
         printf("   ❌ FAILED\n\n");

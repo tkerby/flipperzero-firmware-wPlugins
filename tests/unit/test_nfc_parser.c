@@ -147,6 +147,9 @@ static bool parse_nfc_file_for_uid(const char* file_path, uint32_t* uid) {
 }
 
 // Test 1: Parse valid NFC file with UID
+void setUp(void) {}
+void tearDown(void) {}
+
 static void test_parse_nfc_file_valid_uid(void) {
     const char* nfc_content = 
         "Filetype: Flipper NFC device\n"

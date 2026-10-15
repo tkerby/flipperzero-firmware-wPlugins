@@ -27,6 +27,17 @@ extern Unity_t Unity;
 #define TEST_ASSERT_EQUAL_INT(expected, actual) \
     _unity_assert_equal_int((int)(expected), (int)(actual), __LINE__, __FILE__)
 
+// Compatibility aliases for suites written against the upstream Unity API.
+// The message variants ignore their message argument.
+#define UNITY_BEGIN() unity_begin()
+#define UNITY_END() unity_end()
+#define TEST_ASSERT_EQUAL_UINT32(expected, actual) TEST_ASSERT_EQUAL_UINT(expected, actual)
+#define TEST_ASSERT_EQUAL_UINT8(expected, actual) TEST_ASSERT_EQUAL_UINT(expected, actual)
+#define TEST_ASSERT_NOT_NULL_MESSAGE(ptr, msg) TEST_ASSERT_NOT_NULL(ptr)
+#define TEST_ASSERT_NULL_MESSAGE(ptr, msg) TEST_ASSERT_NULL(ptr)
+#define TEST_ASSERT_TRUE_MESSAGE(condition, msg) TEST_ASSERT_TRUE(condition)
+#define TEST_ASSERT_FALSE_MESSAGE(condition, msg) TEST_ASSERT_FALSE(condition)
+
 #define TEST_ASSERT_EQUAL_UINT(expected, actual) \
     _unity_assert_equal_uint((unsigned int)(expected), (unsigned int)(actual), __LINE__, __FILE__)
 
@@ -73,10 +84,16 @@ void _unity_assert_equal_memory(const void* expected, const void* actual, size_t
 void _unity_test_fail(const char* message, int line, const char* file);
 
 // Test runner helpers
+// setUp/tearDown are provided by each test suite (Unity convention).
+void setUp(void);
+void tearDown(void);
+
 #define RUN_TEST(test_func) \
     do { \
         unity_test_start(#test_func); \
+        setUp(); \
         test_func(); \
+        tearDown(); \
         unity_test_finish(); \
     } while(0)
 

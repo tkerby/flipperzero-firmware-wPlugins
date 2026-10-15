@@ -136,6 +136,9 @@ static uint8_t key_manager_get_active_count(KeyManager* manager) {
 }
 
 // Test 1: Initialize key manager
+void setUp(void) {}
+void tearDown(void) {}
+
 static void test_key_manager_init(void) {
     KeyManager manager;
     key_manager_init(&manager);

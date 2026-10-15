@@ -23,9 +23,15 @@ UID Brute Smarter is a security research tool for authorized penetration testing
 
 ### 🧠 Pattern Detection
 - **Advanced Algorithms**: Detects +1, +K, 16-bit counter, and bitmask patterns.
+- **Generalized +K**: Any uniform stride is accepted (not just 16/32/64/100/256), and mixed power-of-two strides (16, 32, 16, ...) collapse to their GCD grid; non-power-of-two envelopes stay in the bounded bitmask branch.
 - **Range Generation**: Automatically creates test ranges based on detected patterns.
 - **Pattern Validation**: Ensures generated ranges are within safe bounds.
 - **Configurable Limits**: Prevents excessive range generation.
+
+### 📡 Hit Detection
+- **Reader Engagement Sensing**: While a candidate UID is emulated, the listener watches for readers that select the UID and issue a CRC-valid command (e.g. an authentication attempt) — the acceptance signal for UID-only access systems.
+- **Stop on Hit**: Optionally finishes the run as soon as a reader engages a candidate and reports the accepted UID (on by default, configurable).
+- **Live Feedback**: The brute-force screen shows reader command and HALT counters so audits on silent readers are still observable.
 
 ### ⚙️ Configuration
 - **Adjustable Timing**: Configurable delays between attempts (100ms-1000ms).
@@ -85,14 +91,14 @@ git clone https://github.com/fbettag/uid_brute_smarter.git applications_user/uid
 
 ### Pattern Detection
 - **+1 Linear**: Sequential incrementing patterns.
-- **+K Linear**: Fixed step patterns (16, 32, 64, 100, 256).
-- **16-bit Counter**: Little-endian counter patterns.
-- **Bitmask**: Patterns where only a few bits are changing.
+- **+K Linear**: Any uniform step, plus power-of-two GCD grids for mixed strides.
+- **16-bit Counter**: Upper-half counter incrementing with step 0x10000.
+- **Bitmask**: Patterns where only a few bits are changing (bounded enumeration).
 - **Unknown**: Safe range expansion around provided keys.
 
 ### Supported Formats
 - **NFC Files**: Standard `.nfc` files with ISO14443-3a data.
-- **UID Length**: 4-byte UIDs.
+- **UID Length**: 4-byte and 7-byte UIDs (7-byte UIDs keep the 3-byte manufacturer prefix fixed and search the variable low 4 bytes; ATQA/SAK are copied from the loaded card).
 
 ## 🤝 Support
 

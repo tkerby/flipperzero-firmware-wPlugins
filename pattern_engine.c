@@ -53,9 +53,18 @@
 #define TAG "PatternEngine"
 #define MAX_RANGE_SIZE 1000
 #define DEFAULT_RANGE_EXPANSION 256
+// Largest step the +K detector will accept; beyond this a step is almost
+// certainly noise and the search should fall through to bitmask/unknown.
+#define MAX_INCK_STEP 0x100000
 
-static const uint32_t common_k_values[] = {16, 32, 64, 100, 256};
-static const uint8_t common_k_count = 5;
+static uint32_t pattern_engine_gcd(uint32_t a, uint32_t b) {
+    while(b != 0) {
+        uint32_t t = a % b;
+        a = b;
+        b = t;
+    }
+    return a;
+}
 
 bool pattern_engine_detect_bitmask(const uint32_t* uids, uint8_t count, PatternResult* result) {
     uint32_t and_mask = 0xFFFFFFFF;
@@ -152,37 +161,8 @@ bool pattern_engine_detect(const uint32_t* uids, uint8_t count, PatternResult* r
         return true;
     }
     
-    // Check for +k linear pattern
-    for(uint8_t k_idx = 0; k_idx < common_k_count; k_idx++) {
-        uint32_t k = common_k_values[k_idx];
-        bool is_inc_k = true;
-        
-        for(uint8_t i = 0; i < count - 1; i++) {
-            if(deltas[i] != (int32_t)k) {
-                is_inc_k = false;
-                break;
-            }
-        }
-        
-        if(is_inc_k) {
-            result->type = PatternIncK;
-            // Expand range by 5 steps in each direction (reduced from 10)
-            uint32_t expand = 5 * k;
-            result->start_uid = (uids[0] > expand) ? uids[0] - expand : 0;
-            result->end_uid = (uids[count - 1] < (0xFFFFFFFF - expand)) ? uids[count - 1] + expand : 0xFFFFFFFF;
-            result->step = k;
-            result->range_size = ((result->end_uid - result->start_uid) / k) + 1;
-            
-            // Ensure range doesn't exceed MAX_RANGE_SIZE
-            if(result->range_size > MAX_RANGE_SIZE) {
-                result->range_size = MAX_RANGE_SIZE;
-                result->end_uid = result->start_uid + (MAX_RANGE_SIZE - 1) * k;
-            }
-            return true;
-        }
-    }
-    
-    // Check for 16-bit little-endian counter pattern
+    // Check for 16-bit little-endian counter pattern (must run before the
+    // generic +K branch, which would otherwise swallow uniform 0x10000 steps)
     bool is_le16 = true;
     for(uint8_t i = 0; i < count - 1; i++) {
         if(deltas[i] != 0x10000) {
@@ -190,7 +170,7 @@ bool pattern_engine_detect(const uint32_t* uids, uint8_t count, PatternResult* r
             break;
         }
     }
-    
+
     if(is_le16) {
         result->type = PatternLe16;
         // Observed deltas of exactly 0x10000 mean the upper 16 bits are the
@@ -214,6 +194,64 @@ bool pattern_engine_detect(const uint32_t* uids, uint8_t count, PatternResult* r
         return true;
     }
 
+    // Check for +k linear pattern. Instead of matching a fixed set of "common"
+    // steps, accept any uniform step, and for non-uniform (but strictly
+    // ascending) deltas fall back to the GCD of the deltas: card batches with
+    // mixed strides (16, 32, 16, ...) still lie on a common grid.
+    // Requires count >= 3: with only two samples every pair is trivially
+    // "uniform", and the bounded bitmask description is the safer answer.
+    if(count >= 3) {
+        int32_t uniform_k = deltas[0];
+        bool is_uniform = (uniform_k > 1);
+        for(uint8_t i = 0; i < count - 1; i++) {
+            if(deltas[i] != uniform_k) {
+                is_uniform = false;
+                break;
+            }
+        }
+
+        uint32_t k = 0;
+        if(is_uniform) {
+            k = (uint32_t)uniform_k;
+        } else {
+            uint32_t g = 0;
+            bool all_positive = true;
+            for(uint8_t i = 0; i < count - 1; i++) {
+                if(deltas[i] <= 0) {
+                    all_positive = false;
+                    break;
+                }
+                g = pattern_engine_gcd(g, (uint32_t)deltas[i]);
+            }
+            // A GCD of 1 means there is no common grid, and non-power-of-two
+            // GCDs (e.g. 5, 5, 10 -> 5) are more likely a varying-bit
+            // envelope, which the bounded bitmask branch describes better.
+            // Power-of-two strides match how batches are actually allocated.
+            if(all_positive && g > 1 && (g & (g - 1)) == 0) {
+                k = g;
+            }
+        }
+
+        if(k > 1 && k <= MAX_INCK_STEP) {
+            result->type = PatternIncK;
+            // Expand range by 5 steps in each direction (reduced from 10)
+            uint32_t expand = 5 * k;
+            result->start_uid = (uids[0] > expand) ? uids[0] - expand : 0;
+            result->end_uid =
+                (uids[count - 1] < (0xFFFFFFFF - expand)) ? uids[count - 1] + expand :
+                                                            0xFFFFFFFF;
+            result->step = k;
+            result->range_size = ((result->end_uid - result->start_uid) / k) + 1;
+
+            // Ensure range doesn't exceed MAX_RANGE_SIZE
+            if(result->range_size > MAX_RANGE_SIZE) {
+                result->range_size = MAX_RANGE_SIZE;
+                result->end_uid = result->start_uid + (MAX_RANGE_SIZE - 1) * k;
+            }
+            return true;
+        }
+    }
+    
     if(pattern_engine_detect_bitmask(uids, count, result)) {
         return true;
     }

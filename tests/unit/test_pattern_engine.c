@@ -5,6 +5,9 @@
 
 
 // Test 1: Pattern detection - single UID (unknown pattern)
+void setUp(void) {}
+void tearDown(void) {}
+
 static void test_pattern_engine_detect_single_uid(void) {
     uint32_t uids[] = {0x12345678};
     PatternResult result;
@@ -283,6 +286,45 @@ static void test_pattern_engine_build_range_bitmask(void) {
     TEST_ASSERT_EQUAL_HEX32(0x10000001, range[3]);
 }
 
+// Test 18: Pattern detection - uniform non-standard step (generalized +K)
+static void test_pattern_engine_detect_inck_decimal_stride(void) {
+    uint32_t uids[] = {0x2000, 0x200A, 0x2014, 0x201E}; // uniform stride of 10
+    PatternResult result;
+
+    TEST_ASSERT_TRUE(pattern_engine_detect(uids, 4, &result));
+    TEST_ASSERT_EQUAL_INT(PatternIncK, result.type);
+    TEST_ASSERT_EQUAL_UINT(10, result.step);
+    // 5 steps of expansion on each side: 0x2000-50 .. 0x201E+50
+    TEST_ASSERT_EQUAL_HEX32(0x2000 - 50, result.start_uid);
+    TEST_ASSERT_EQUAL_HEX32(0x201E + 50, result.end_uid);
+    TEST_ASSERT_TRUE(result.range_size >= 4); // covers all observed UIDs
+}
+
+// Test 19: Pattern detection - mixed power-of-two strides collapse to GCD grid
+static void test_pattern_engine_detect_inck_gcd_stride(void) {
+    uint32_t uids[] = {0x4000, 0x4010, 0x4030, 0x4040}; // deltas 16, 32, 16 -> GCD 16
+    PatternResult result;
+
+    TEST_ASSERT_TRUE(pattern_engine_detect(uids, 4, &result));
+    TEST_ASSERT_EQUAL_INT(PatternIncK, result.type);
+    TEST_ASSERT_EQUAL_UINT(16, result.step);
+    // Every observed UID must be reachable from start_uid with the step
+    for(uint8_t i = 0; i < 4; i++) {
+        TEST_ASSERT_EQUAL_UINT(0, (uids[i] - result.start_uid) % 16);
+    }
+    TEST_ASSERT_TRUE(result.range_size >= 4);
+}
+
+// Test 20: Pattern detection - two-sample sets stay bounded (bitmask, not grid)
+static void test_pattern_engine_detect_pair_prefers_bitmask(void) {
+    uint32_t uids[] = {0x8000, 0x8008}; // any pair is trivially "uniform"; single differing bit
+    PatternResult result;
+
+    TEST_ASSERT_TRUE(pattern_engine_detect(uids, 2, &result));
+    TEST_ASSERT_EQUAL_INT(PatternBitmask, result.type);
+    TEST_ASSERT_EQUAL_UINT(2, result.range_size);
+}
+
 // Test runner
 void test_pattern_engine_run_all(void) {
     printf("\n");
@@ -308,6 +350,9 @@ void test_pattern_engine_run_all(void) {
     RUN_TEST(test_pattern_engine_build_range_invalid);
     RUN_TEST(test_pattern_engine_detect_single_bit_pattern);
     RUN_TEST(test_pattern_engine_build_range_bitmask);
+    RUN_TEST(test_pattern_engine_detect_inck_decimal_stride);
+    RUN_TEST(test_pattern_engine_detect_inck_gcd_stride);
+    RUN_TEST(test_pattern_engine_detect_pair_prefers_bitmask);
 
     unity_end();
 }
