@@ -143,7 +143,7 @@ static int32_t key_scanner_worker(void* context) {
             if(scanner->rfid_worker) {
                 lfrfid_worker_read_start(scanner->rfid_worker, LFRFIDWorkerReadTypeAuto, rfid_read_callback, scanner);
 
-                int max_loops = (current_mode == ScanModeRFIDOnly) ? 200 : 25; // 25 * 50ms = 1250ms (450ms AGC + 800ms active frames)
+                int max_loops = (current_mode == ScanModeRFIDOnly) ? 500 : 35; // 25 * 50ms = 1250ms (450ms AGC + 800ms active frames)
                 for(int i = 0; i < max_loops && scanner->is_scanning && !scanner->rfid_raw_detected && !scanner->mode_changed; i++) {
                     furi_delay_ms(50);
                 }
