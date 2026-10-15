@@ -13,7 +13,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#define SONGS_PATH EXT_PATH("apps_data/taiko_player/Songs")
+#define PLAYER_PATH EXT_PATH("apps_data/taiko_player")
+#define SONGS_PATH  PLAYER_PATH "/songs"
 
 typedef struct {
     Storage* storage;
@@ -251,6 +252,10 @@ static bool play_song(TaikoPlayer* app, const char* path) {
                     mixer.don_volume = app->menu.don_volume;
                     mixer.ka_volume = app->menu.ka_volume;
                     if(action == TaikoMenuActionExit) break;
+                    if(action == TaikoMenuActionNewSong) {
+                        next_song = true;
+                        break;
+                    }
                     if(action == TaikoMenuActionRestart) {
                         if(audio) pcm_audio_free(audio);
                         audio = pcm_audio_start(
@@ -343,20 +348,21 @@ int32_t taiko_player_app(void* context) {
     view_port_input_callback_set(app->viewport, input, app);
     view_port_enabled_set(app->viewport, false);
     gui_add_view_port(app->gui, app->viewport, GuiLayerFullscreen);
-    storage_simply_mkdir(app->storage, EXT_PATH("apps_data/taiko_player"));
+    storage_simply_mkdir(app->storage, PLAYER_PATH);
     storage_simply_mkdir(app->storage, SONGS_PATH);
 
     NotificationApp* notifications = furi_record_open(RECORD_NOTIFICATION);
     notification_message(notifications, &sequence_display_backlight_enforce_on);
-    FuriString* path = furi_string_alloc_set(SONGS_PATH);
+    FuriString* path = furi_string_alloc_set(PLAYER_PATH);
     DialogsFileBrowserOptions options;
     dialog_file_browser_set_basic_options(&options, ".tja", NULL);
-    options.base_path = EXT_PATH("");
+    options.base_path = PLAYER_PATH;
     options.hide_ext = false;
     while(true) {
         view_port_enabled_set(app->viewport, false);
         if(!dialog_file_browser_show(app->dialogs, path, path, &options)) break;
         if(!play_song(app, furi_string_get_cstr(path))) break;
+        furi_string_set(path, PLAYER_PATH);
     }
     furi_string_free(path);
     taiko_gpio_free(app->gpio);

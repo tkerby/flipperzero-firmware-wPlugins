@@ -6,6 +6,7 @@
 typedef enum {
     TaikoMenuReturn,
     TaikoMenuRestart,
+    TaikoMenuNewSong,
     TaikoMenuBackward,
     TaikoMenuForward,
     TaikoMenuDonVolume,
@@ -18,6 +19,7 @@ typedef enum {
     TaikoMenuActionNone,
     TaikoMenuActionReturn,
     TaikoMenuActionRestart,
+    TaikoMenuActionNewSong,
     TaikoMenuActionExit,
 } TaikoMenuAction;
 

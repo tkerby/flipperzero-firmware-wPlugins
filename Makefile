@@ -45,7 +45,7 @@ upload-songs: songs
 	$(SDK_PYTHON) $(TOOLCHAIN_HOME)/current/scripts/storage.py send sdcard/apps_data/taiko_player /ext/apps_data/taiko_player
 
 upload-sfx: sfx
-	$(SDK_PYTHON) $(TOOLCHAIN_HOME)/current/scripts/storage.py send sdcard/apps_data/taiko_player/Sfx /ext/apps_data/taiko_player/Sfx
+	$(SDK_PYTHON) $(TOOLCHAIN_HOME)/current/scripts/storage.py send sdcard/apps_data/taiko_player/sfx /ext/apps_data/taiko_player/sfx
 
 launch: build
 	$(SDK_PYTHON) $(TOOLCHAIN_HOME)/current/scripts/runfap.py --sources dist/taiko_player.fap --targets /ext/apps/Media/taiko_player.fap

@@ -16,6 +16,7 @@ static void draw_menu(Canvas* canvas, const TaikoMenu* menu) {
     static const char* labels[] = {
         "Return",
         "Restart",
+        "Play New Song",
         "Backward Interval",
         "Forward Interval",
         "Dong Volume",

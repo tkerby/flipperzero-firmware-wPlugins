@@ -99,7 +99,7 @@ def prepare(source, output, rate=22050, force=False):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("source", nargs="?", type=Path, default=Path("songs"))
-    parser.add_argument("--output", type=Path, default=Path("sdcard/apps_data/taiko_player/Songs"))
+    parser.add_argument("--output", type=Path, default=Path("sdcard/apps_data/taiko_player/songs"))
     parser.add_argument("--sample-rate", type=int, choices=range(8000, 48001), metavar="8000..48000", default=22050)
     parser.add_argument("--force", action="store_true")
     args = parser.parse_args()

@@ -17,6 +17,8 @@ int main(void) {
     taiko_menu_move(&menu, true);
     assert(menu.selected == TaikoMenuRestart);
     taiko_menu_move(&menu, true);
+    assert(menu.selected == TaikoMenuNewSong);
+    taiko_menu_move(&menu, true);
     assert(menu.selected == TaikoMenuBackward);
     taiko_menu_adjust(&menu, false);
     assert(taiko_menu_backward_ms(&menu) == 3000);
@@ -66,6 +68,15 @@ int main(void) {
     taiko_menu_move(&menu, true);
     assert(taiko_menu_activate(&menu) == TaikoMenuActionRestart);
     assert(!menu.open);
+    taiko_menu_open(&menu);
+    taiko_menu_move(&menu, true);
+    taiko_menu_move(&menu, true);
+    assert(menu.selected == TaikoMenuNewSong);
+    assert(taiko_menu_activate(&menu) == TaikoMenuActionNewSong);
+    assert(!menu.open);
+    assert(taiko_menu_backward_ms(&menu) == 10000);
+    assert(taiko_menu_forward_ms(&menu) == 1000);
+    assert(menu.don_volume == 100 && menu.ka_volume == 80);
     taiko_menu_open(&menu);
     taiko_menu_move(&menu, false);
     assert(menu.selected == TaikoMenuExit);

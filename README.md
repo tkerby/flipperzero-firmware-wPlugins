@@ -13,7 +13,7 @@
 - 将左蓝、左红、右红、右蓝映射到四路 GPIO，输出 70 ms 高电平脉冲。
 - 底部提供 BWD、Play/Pause、FWD 控制，支持暂停和可调间隔的前后跳转；长按返回退出。
 - 上下键调节应用内总音量，播放界面最右侧的柱状条显示当前音量，不修改系统全局音量。
-- 短按返回打开菜单，可返回播放、重新播放、分别设置前后跳转间隔或退出。
+- 短按返回打开菜单，可返回播放、重新播放、播放新曲、分别设置前后跳转间隔和鼓声音量或退出。
 
 休止符与长音结束标记不切换左右手。长音和气球目前只在起点触发一次 GPIO，不叠加鼓声音效。
 
@@ -81,7 +81,7 @@ make sfx
 make upload-sfx
 ```
 
-转换结果为 `sdcard/apps_data/taiko_player/Sfx/dong.wav` 和 `ka.wav`，格式与默认歌曲音频相同。`make package` 也会准备音效。没有原始音效时转换脚本会跳过；设备缺少或无法加载音效时仍可播放伴奏。
+转换结果为 `sdcard/apps_data/taiko_player/sfx/dong.wav` 和 `ka.wav`，格式与默认歌曲音频相同。`make package` 也会准备音效。没有原始音效时转换脚本会跳过；设备缺少或无法加载音效时仍可播放伴奏。
 
 音效在应用启动时载入内存；每个 WAV 最多 32768 个 PCM 样本。播放器按音符时间在 DMA 缓冲中混音，支持音效重叠，并在歌曲采样率不同时重采样。暂停、跳转、重新播放沿用同一条音频时间轴。伴奏增益为 100%，咚、咔音量默认各为 70%，可在菜单中独立调节为 0–100%，每次调整 10%；0% 静音对应音效，返回播放后生效。超出范围的混合波形会限幅。1、3 号音符使用咚，2、4 号音符使用咔，连打与气球不生成音效。
 
@@ -111,11 +111,11 @@ make package
 
 ```text
 apps/Media/taiko_player.fap
-apps_data/taiko_player/Songs/
+apps_data/taiko_player/songs/
   Example Song/
     chart.tja
     song.wav
-apps_data/taiko_player/Sfx/
+apps_data/taiko_player/sfx/
   dong.wav
   ka.wav
 ```
@@ -131,7 +131,7 @@ make launch
 
 上传前退出设备上正在运行的应用，并关闭占用串口的程序。
 
-在 Flipper 的应用菜单中打开 **Media → Taiko Player**。默认曲目路径为 `/ext/apps_data/taiko_player/Songs`，也可浏览 SD 卡上的其他目录。播放器根据 `WAVE:` 查找对应 WAV，因此保留原始 TJA 时，也可以将同名 WAV 放到其指定位置。
+在 Flipper 的应用菜单中打开 **Media → Taiko Player**。选曲从 `/ext/apps_data/taiko_player` 目录开始，在其中的 `songs/` 选择谱面。播放器根据 `WAVE:` 查找对应 WAV，因此保留原始 TJA 时，也可以将同名 WAV 放到其指定位置。
 
 | 操作 | 按键 |
 | --- | --- |
@@ -149,7 +149,7 @@ make launch
 
 暂停时，音频、谱面与鼓点指示一起停止，并清空 GPIO 输出。暂停期间也可前后跳转，按 OK 后从当前位置继续播放。跳转会限制在曲目起止范围内，不补发跳过的鼓点；左右手交替仍按谱面中的原始音符顺序计算。恢复和跳转时需要重新读取音频缓冲，可能有短暂延迟。
 
-播放菜单从上到下为 **Return（返回）、Restart（重新播放）、Backward Interval（后退间隔）、Forward Interval（前进间隔）、Dong Volume（咚音量）、Ka Volume（咔音量）、Exit（退出应用）**。菜单每屏显示五行，上下选择时自动滚动。前后间隔分别支持 **1 / 3 / 5 / 10 秒**，默认均为 5 秒；音量默认各为 70%。修改在本次应用运行期间保留，退出后恢复默认。打开菜单会暂停音频并清空 GPIO，选择 Return 或短按返回时恢复进入菜单前的播放或暂停状态；Restart 从头开始播放。播放结束时进入菜单再返回，仍保留结束状态。
+播放菜单从上到下为 **Return（返回）、Restart（重新播放）、Play New Song（播放新曲）、Backward Interval（后退间隔）、Forward Interval（前进间隔）、Dong Volume（咚音量）、Ka Volume（咔音量）、Exit（退出应用）**。菜单每屏显示五行，上下选择时自动滚动。前后间隔分别支持 **1 / 3 / 5 / 10 秒**，默认均为 5 秒；音量默认各为 70%。修改在本次应用运行期间保留，退出后恢复默认。打开菜单会暂停音频并清空 GPIO，选择 Return 或短按返回时恢复进入菜单前的播放或暂停状态；Restart 从头开始播放；Play New Song 停止当前曲目并回到 `taiko_player/` 目录重新选曲，保留本次运行中的音量和跳转间隔设置，选定后从头播放。取消选曲会退出应用。播放结束时进入菜单再返回，仍保留结束状态。
 
 ## GPIO 输出
 

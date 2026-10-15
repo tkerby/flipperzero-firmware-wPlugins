@@ -61,12 +61,12 @@ def test_song(output):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("source", nargs="?", type=Path, default=Path("assets"))
-    parser.add_argument("--output", type=Path, default=Path("sdcard/apps_data/taiko_player/Sfx"))
+    parser.add_argument("--output", type=Path, default=Path("sdcard/apps_data/taiko_player/sfx"))
     parser.add_argument("--test-song", action="store_true")
     args = parser.parse_args()
     prepare(args.source, args.output)
     if args.test_song:
-        test_song(args.output.parent / "Songs" / "Drum Sound Test")
+        test_song(args.output.parent / "songs" / "Drum Sound Test")
 
 
 if __name__ == "__main__":

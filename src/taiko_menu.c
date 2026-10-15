@@ -47,6 +47,9 @@ TaikoMenuAction taiko_menu_activate(TaikoMenu* menu) {
     case TaikoMenuRestart:
         action = TaikoMenuActionRestart;
         break;
+    case TaikoMenuNewSong:
+        action = TaikoMenuActionNewSong;
+        break;
     case TaikoMenuExit:
         action = TaikoMenuActionExit;
         break;

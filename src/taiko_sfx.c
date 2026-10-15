@@ -4,7 +4,7 @@
 #include <furi.h>
 #include <stdlib.h>
 
-#define SFX_PATH        EXT_PATH("apps_data/taiko_player/Sfx")
+#define SFX_PATH        EXT_PATH("apps_data/taiko_player/sfx")
 #define SFX_MAX_SAMPLES 32768U
 
 static bool read_at(void* context, uint32_t offset, void* data, size_t size) {
