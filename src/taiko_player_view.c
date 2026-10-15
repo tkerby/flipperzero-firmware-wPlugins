@@ -236,6 +236,27 @@ static void draw_gogo_background(Canvas* canvas, const TaikoPlayerView* view) {
     canvas_set_color(canvas, ColorBlack);
 }
 
+static void draw_target_flash(Canvas* canvas) {
+    /* Row extents of the canvas midpoint circle at radius nine. Unlike flooring
+     * the circle equation, this gives the left/right tips five-pixel arcs. */
+    static const uint8_t outer_extent[] = {9, 9, 9, 8, 8, 7, 7, 6, 4, 2};
+    canvas_set_color(canvas, ColorWhite);
+    /* Add a continuous band outside radius seven, preserving every idle pixel
+     * inside it, including the black gap and any overlapping notes. */
+    for(int y = -9; y <= 9; y++) {
+        const int outer = outer_extent[y < 0 ? -y : y];
+        int inner = 0;
+        while(inner <= outer && inner * inner + y * y < 7 * 7)
+            inner++;
+        if(inner > outer) continue;
+        canvas_draw_line(
+            canvas, TAIKO_LANE_HIT_X - outer, LANE_Y + y, TAIKO_LANE_HIT_X - inner, LANE_Y + y);
+        canvas_draw_line(
+            canvas, TAIKO_LANE_HIT_X + inner, LANE_Y + y, TAIKO_LANE_HIT_X + outer, LANE_Y + y);
+    }
+    canvas_set_color(canvas, ColorBlack);
+}
+
 static void draw_lane(Canvas* canvas, const TaikoPlayerView* view) {
     canvas_draw_box(canvas, 0, LANE_TOP, 128, LANE_BOTTOM - LANE_TOP + 1);
     draw_gogo_background(canvas, view);
@@ -291,10 +312,13 @@ void taiko_player_view_draw(Canvas* canvas, const TaikoPlayerView* view) {
     elements_string_fit_width(canvas, text, 124);
     canvas_draw_str(canvas, 2, 9, furi_string_get_cstr(text));
 
-    draw_lane(canvas, view);
     uint32_t now = furi_get_tick();
-    if(view->hit_until && (int32_t)(view->hit_until - now) > 0)
+    const bool hit_active = view->hit_until && (int32_t)(view->hit_until - now) > 0;
+    draw_lane(canvas, view);
+    if(hit_active) {
+        draw_target_flash(canvas);
         draw_hit(canvas, view->hit_right, view->hit_rim);
+    }
     canvas_draw_circle(canvas, DRUM_X, DRUM_Y, DRUM_INNER_RADIUS);
     canvas_draw_circle(canvas, DRUM_X, DRUM_Y, DRUM_OUTER_RADIUS);
     canvas_draw_line(
