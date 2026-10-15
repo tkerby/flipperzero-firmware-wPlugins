@@ -11,11 +11,11 @@ static void test_pattern_engine_detect_single_uid(void) {
     
     TEST_ASSERT_TRUE(pattern_engine_detect(uids, 1, &result));
     TEST_ASSERT_EQUAL_INT(PatternUnknown, result.type);
-    // Dynamic calculation: start = uid - 256, end = uid + 256
+    // Actual calculation: start = uid - 100, end = uid + 100 (201 UIDs total)
     TEST_ASSERT_TRUE(result.start_uid <= 0x12345678);
     TEST_ASSERT_TRUE(result.end_uid >= 0x12345678);
     TEST_ASSERT_EQUAL_UINT(1, result.step);
-    TEST_ASSERT_TRUE(result.range_size >= 256); // At least 256 UIDs
+    TEST_ASSERT_EQUAL_UINT(201, result.range_size);
 }
 
 // Test 2: Pattern detection - +1 linear pattern
@@ -67,24 +67,29 @@ static void test_pattern_engine_detect_le16_pattern(void) {
     
     TEST_ASSERT_TRUE(pattern_engine_detect(uids, 3, &result));
     TEST_ASSERT_EQUAL_INT(PatternLe16, result.type);
-    // For 16-bit counter: base address with full 16-bit range
-    TEST_ASSERT_TRUE((result.start_uid & 0xFFFF0000) == (uids[0] & 0xFFFF0000));
-    TEST_ASSERT_TRUE((result.end_uid & 0xFFFF0000) == (uids[0] & 0xFFFF0000));
-    TEST_ASSERT_EQUAL_UINT(1, result.step);
-    TEST_ASSERT_EQUAL_UINT(65536, result.range_size); // Full 16-bit range
+    // Lower 16 bits are the fixed part; the upper 16 bits are the varying counter.
+    TEST_ASSERT_EQUAL_HEX32(0x0000, result.start_uid & 0x0000FFFF);
+    TEST_ASSERT_EQUAL_HEX32(0x0000, result.end_uid & 0x0000FFFF);
+    TEST_ASSERT_TRUE((result.start_uid >> 16) <= 1);
+    TEST_ASSERT_TRUE((result.end_uid >> 16) >= 3);
+    TEST_ASSERT_EQUAL_UINT(0x10000, result.step);
+    TEST_ASSERT_TRUE(result.range_size >= 3); // covers at least the observed counters
 }
 
-// Test 6: Pattern detection - unknown pattern (mixed deltas)
+// Test 6: Pattern detection - mixed deltas that still share a bit envelope
 static void test_pattern_engine_detect_unknown_pattern(void) {
     uint32_t uids[] = {0x1000, 0x1005, 0x100A, 0x1014}; // 5, 5, 10 deltas
     PatternResult result;
-    
+
     TEST_ASSERT_TRUE(pattern_engine_detect(uids, 4, &result));
-    TEST_ASSERT_EQUAL_INT(PatternUnknown, result.type);
-    // Unknown pattern: expanded around min/max
-    TEST_ASSERT_TRUE(result.start_uid <= 0x1000);
-    TEST_ASSERT_TRUE(result.end_uid >= 0x1014);
-    TEST_ASSERT_EQUAL_UINT(1, result.step);
+    // Deltas aren't constant, but all 4 UIDs share a common bit envelope
+    // (bits 0-4 vary, everything else is fixed at 0x1000), so this is
+    // correctly classified as a bitmask pattern, not a blind Unknown expansion.
+    TEST_ASSERT_EQUAL_INT(PatternBitmask, result.type);
+    TEST_ASSERT_EQUAL_HEX32(0x1000, result.start_uid);
+    TEST_ASSERT_EQUAL_HEX32(0x101F, result.end_uid);
+    TEST_ASSERT_EQUAL_HEX32(0x001F, result.bitmask);
+    TEST_ASSERT_EQUAL_UINT(32, result.range_size);
 }
 
 // Test 7: Pattern detection - boundary conditions
@@ -243,6 +248,41 @@ static void test_pattern_engine_build_range_invalid(void) {
     TEST_ASSERT_FALSE(pattern_engine_build_range(&pattern, range, 10, &actual_size));
 }
 
+// Test 16: Pattern detection - single differing bit (not in common_k_values)
+static void test_pattern_engine_detect_single_bit_pattern(void) {
+    uint32_t uids[] = {0x2000, 0x2008}; // only bit 3 differs
+    PatternResult result;
+
+    TEST_ASSERT_TRUE(pattern_engine_detect(uids, 2, &result));
+    TEST_ASSERT_EQUAL_INT(PatternBitmask, result.type);
+    TEST_ASSERT_EQUAL_HEX32(0x2000, result.start_uid);
+    TEST_ASSERT_EQUAL_HEX32(0x2008, result.end_uid);
+    TEST_ASSERT_EQUAL_HEX32(0x0008, result.bitmask);
+    TEST_ASSERT_EQUAL_UINT(2, result.range_size);
+}
+
+// Test 17: Range generation - bitmask pattern spanning a low and a high bit
+static void test_pattern_engine_build_range_bitmask(void) {
+    PatternResult pattern = {
+        .type = PatternBitmask,
+        .start_uid = 0x00000000,
+        .end_uid = 0x10000001,
+        .step = 1,
+        .bitmask = 0x10000001, // bit 0 and bit 28
+        .range_size = 4
+    };
+
+    uint32_t range[10];
+    uint16_t actual_size = 0;
+
+    TEST_ASSERT_TRUE(pattern_engine_build_range(&pattern, range, 10, &actual_size));
+    TEST_ASSERT_EQUAL_UINT(4, actual_size);
+    TEST_ASSERT_EQUAL_HEX32(0x00000000, range[0]);
+    TEST_ASSERT_EQUAL_HEX32(0x00000001, range[1]);
+    TEST_ASSERT_EQUAL_HEX32(0x10000000, range[2]);
+    TEST_ASSERT_EQUAL_HEX32(0x10000001, range[3]);
+}
+
 // Test runner
 void test_pattern_engine_run_all(void) {
     printf("\n");
@@ -266,7 +306,9 @@ void test_pattern_engine_run_all(void) {
     RUN_TEST(test_pattern_engine_edge_cases);
     RUN_TEST(test_pattern_engine_large_steps);
     RUN_TEST(test_pattern_engine_build_range_invalid);
-    
+    RUN_TEST(test_pattern_engine_detect_single_bit_pattern);
+    RUN_TEST(test_pattern_engine_build_range_bitmask);
+
     unity_end();
 }
 

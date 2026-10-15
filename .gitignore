@@ -83,3 +83,6 @@ tests/unit/debug_test
 tests/unit/test_*version.c
 version.h
 VERSION
+
+# Generated version file (created by CI / dev workflow)
+version.c

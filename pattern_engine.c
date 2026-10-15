@@ -68,19 +68,28 @@ bool pattern_engine_detect_bitmask(const uint32_t* uids, uint8_t count, PatternR
 
     uint32_t bitmask = and_mask ^ or_mask;
 
-    if(bitmask != 0 && (bitmask & (bitmask - 1)) != 0) {
+    if(bitmask != 0) {
         result->type = PatternBitmask;
         result->start_uid = and_mask;
         result->end_uid = or_mask;
         result->step = 1;
         result->bitmask = bitmask;
-        result->range_size = 0;
+
+        uint8_t popcount = 0;
         for(uint8_t i = 0; i < 32; i++) {
             if((bitmask >> i) & 1) {
-                result->range_size++;
+                popcount++;
             }
         }
-        result->range_size = 1 << result->range_size;
+        // 1 << popcount would be undefined behavior for popcount >= 32, and every
+        // other pattern type already caps range_size at MAX_RANGE_SIZE, so clamp
+        // the same way here instead of letting a noisy sample set queue up an
+        // unbounded (and uncapped-elsewhere, since build_range/validate_range are
+        // not used on the live bitmask iteration path) number of attempts.
+        result->range_size = (popcount >= 10) ? MAX_RANGE_SIZE : (1u << popcount);
+        if(result->range_size > MAX_RANGE_SIZE) {
+            result->range_size = MAX_RANGE_SIZE;
+        }
         return true;
     }
 
@@ -184,23 +193,24 @@ bool pattern_engine_detect(const uint32_t* uids, uint8_t count, PatternResult* r
     
     if(is_le16) {
         result->type = PatternLe16;
-        // For 16-bit counter, limit to MAX_RANGE_SIZE instead of full range
-        uint32_t base = uids[0] & 0xFFFF0000;
-        uint32_t offset = uids[0] & 0x0000FFFF;
-        
-        // Create a limited range around the detected offset
-        uint32_t start_offset = (offset > 500) ? offset - 500 : 0;
-        uint32_t end_offset = (offset < 65035) ? offset + 500 : 0xFFFF;
-        
+        // Observed deltas of exactly 0x10000 mean the upper 16 bits are the
+        // counter that increments; the lower 16 bits are the fixed part.
+        uint32_t fixed_low = uids[0] & 0x0000FFFF;
+        uint32_t counter_high = (uids[0] >> 16) & 0xFFFF;
+
+        // Create a limited range around the detected counter
+        uint32_t start_high = (counter_high > 500) ? counter_high - 500 : 0;
+        uint32_t end_high = (counter_high < 65035) ? counter_high + 500 : 0xFFFF;
+
         // Ensure range doesn't exceed MAX_RANGE_SIZE
-        if((end_offset - start_offset + 1) > MAX_RANGE_SIZE) {
-            end_offset = start_offset + MAX_RANGE_SIZE - 1;
+        if((end_high - start_high + 1) > MAX_RANGE_SIZE) {
+            end_high = start_high + MAX_RANGE_SIZE - 1;
         }
-        
-        result->start_uid = base | start_offset;
-        result->end_uid = base | end_offset;
-        result->step = 1;
-        result->range_size = (result->end_uid - result->start_uid) + 1;
+
+        result->start_uid = (start_high << 16) | fixed_low;
+        result->end_uid = (end_high << 16) | fixed_low;
+        result->step = 0x10000;
+        result->range_size = ((result->end_uid - result->start_uid) / result->step) + 1;
         return true;
     }
 
@@ -276,8 +286,16 @@ bool pattern_engine_build_range(
         return false;
     }
     
-    if(!pattern_engine_validate_range(result->start_uid, result->end_uid, result->step)) {
-        FURI_LOG_E(TAG, "Invalid range: start=%lu, end=%lu, step=%lu", 
+    // Bitmask range_size is popcount-based (2^bits), not (end-start)/step like
+    // every other pattern type, so validate_range's generic formula doesn't apply.
+    if(result->type == PatternBitmask) {
+        if(result->range_size > MAX_RANGE_SIZE) {
+            FURI_LOG_E(TAG, "[BUILD_RANGE] Bitmask range too large: %lu > %d",
+                       result->range_size, MAX_RANGE_SIZE);
+            return false;
+        }
+    } else if(!pattern_engine_validate_range(result->start_uid, result->end_uid, result->step)) {
+        FURI_LOG_E(TAG, "Invalid range: start=%lu, end=%lu, step=%lu",
                    result->start_uid, result->end_uid, result->step);
         return false;
     }

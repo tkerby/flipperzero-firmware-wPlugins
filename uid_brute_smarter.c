@@ -113,6 +113,7 @@ typedef struct {
     uint32_t total_attempts;
     uint32_t pause_counter;
     uint32_t total_range_size;  // Total UIDs in the range (for progress display)
+    bool timer_period_elevated;  // true while brute_timer runs at the elongated pause period
 } UidBruteSmartApp;
 
 typedef enum {
@@ -187,16 +188,9 @@ static uint32_t uid_brute_smarter_calculate_uid(UidBruteSmarter* instance, uint3
             return app->start_uid + iteration;
 
         case PatternIncK:
-            // Linear increment by step (K)
-            return app->start_uid + (iteration * app->step);
-
         case PatternLe16:
-            // 16-bit little-endian counter (lower 16 bits increment)
-            {
-                uint32_t base = app->start_uid & 0xFFFF0000;
-                uint32_t offset = (app->start_uid & 0x0000FFFF) + iteration;
-                return base | (offset & 0xFFFF);
-            }
+            // Linear increment by step (K, or 0x10000 for the 16-bit counter pattern)
+            return app->start_uid + (iteration * app->step);
 
         case PatternBitmask:
             // Bitmask pattern - iterate through bit combinations
@@ -828,6 +822,14 @@ static void uid_brute_smarter_timer_callback(void* context) {
               instance->current_iteration,
               instance->app->total_range_size);
 
+    // This tick is the one firing after a pause: restore the normal cadence
+    // before doing anything else, otherwise the periodic timer stays at the
+    // elongated pause period for the rest of the run.
+    if(instance->app->timer_period_elevated) {
+        instance->app->timer_period_elevated = false;
+        furi_timer_start(instance->brute_timer, instance->app->delay_ms);
+    }
+
     // Additional safety: Check if we're still in brute force view
     if(!instance->app->is_running) {
         DEBUG_LOG("[TIMER] App not running, stopping timer");
@@ -917,9 +919,10 @@ static void uid_brute_smarter_timer_callback(void* context) {
             snprintf(pause_text, sizeof(pause_text), "Pausing for %lu seconds...", instance->app->pause_duration_s);
             dialog_ex_set_text(instance->dialog_ex, pause_text, 64, 32, AlignCenter, AlignCenter);
             
-            // Restart timer after pause
+            // Restart timer after pause; restored to the normal cadence on the next tick above
+            instance->app->timer_period_elevated = true;
             furi_timer_start(instance->brute_timer, instance->app->pause_duration_s * 1000 + instance->app->delay_ms);
-            
+
             instance->app->pause_counter = 0;
             return;
         }
@@ -1073,6 +1076,7 @@ static void uid_brute_smarter_start_brute_force(UidBruteSmarter* instance) {
     instance->app->should_stop = false;
     instance->app->total_attempts = 0;
     instance->app->pause_counter = 0;
+    instance->app->timer_period_elevated = false;
 
     // Set header with pattern name
     snprintf(instance->brute_header, sizeof(instance->brute_header), "BF: %s", pattern_engine_get_name(result.type));
