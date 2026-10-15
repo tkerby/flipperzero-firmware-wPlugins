@@ -158,7 +158,7 @@ make launch
 
 播放速度支持 **0.5～2.0 倍，每档 0.1**；谱面流速支持 **0.5～2.5 倍（每档 0.1），以及 3.0、4.0 倍**。两者默认均为 1.0 倍，独立设置并保存到 SD 卡。播放速度同步改变音频、鼓声与 GPIO 的节奏，音高随速度变化，播放时间显示原曲位置；修改速度保留当前位置。菜单流速叠加在谱面自带的 HS 上，只改变音符显示距离，不改变音频或 GPIO。换曲时重新选择默认难度，速度设置保留。
 
-谱面中的 `#SCROLL` 只影响该指令之后的音符，也支持放在小节内部。每个音符保留自身的流速，快慢音符可同时在屏幕中出现；不会在经过变速点时将所有在途音符一起变速。音符速度同时受该位置的 BPM 影响，播放器统一以 180 BPM、HS 1.0 时每谱面秒 128 像素为显示基准，实际移动速度为 **128 × 音符 BPM / 180 × #SCROLL × 菜单流速 × 播放速度**。各曲共用这个基准，因此同样的 BPM 与 HS 对应相同速度，慢速前奏也不会额外放大后续主段的流速。界面 `Speed` 继续显示菜单的全局流速倍率。HS 不改变打击时间、鼓声音效或 GPIO 触发时刻，暂停、跳转与换难度后会按当前位置重新计算画面。普通流速计算参考 [OpenTaiko NotesManager](https://github.com/0auBSQ/OpenTaiko/blob/main/OpenTaiko/src/Stages/07.Game/Taiko/NotesManager.cs)。
+谱面中的 `#SCROLL` 只影响该指令之后的音符，也支持放在小节内部。每个音符保留自身的流速，快慢音符可同时在屏幕中出现；不会在经过变速点时将所有在途音符一起变速。音符速度同时受该位置的 BPM 影响，播放器统一以 240 BPM、HS 1.0 时每谱面秒 128 像素为显示基准，实际移动速度为 **128 × 音符 BPM / 240 × #SCROLL × 菜单流速 × 播放速度**。各曲共用这个基准，因此同样的 BPM 与 HS 对应相同速度，慢速前奏也不会额外放大后续主段的流速。界面 `Speed` 继续显示菜单的全局流速倍率。HS 不改变打击时间、鼓声音效或 GPIO 触发时刻，暂停、跳转与换难度后会按当前位置重新计算画面。
 
 ## GPIO 输出
 
@@ -173,7 +173,7 @@ make launch
 | 右红（咚） | A4 / PA4 | 4 |
 | 右蓝（咔） | B3 / PB3 | 5 |
 
-输出为 **3.3 V 逻辑信号**，接收端应与 Flipper 的 GND 共地。引脚定义见[官方 GPIO 文档](https://docs.flipper.net/zero/gpio-and-modules)。
+输出为 **3.3 V 逻辑信号**，接收端应与 Flipper 的 GND 共地。
 
 每个音符输出一个 **70 ms 高电平脉冲**，空闲为低电平。四路独立计时，不同路的脉冲可以重叠；同一路重复触发时，先拉低再拉高，并重新计时。软件定时器的实际脉宽会有少量调度抖动。
 
@@ -207,7 +207,9 @@ RightDongPin: A4
 RightKaPin: B3
 ```
 
-5、6 号音符分别为普通、大连打，以白色填充、黑色轮廓及一像素白色外沿的圆头和拖尾显示，持续到 8 号结束标记；进入判定点后头部固定，拖尾逐渐缩短。7、9 号音符按气球处理，到达判定点后用圆形弹窗显示剩余次数，随击打逐渐增大，完成后立即消失；若未打完，则在结束标记处消失。弹窗初始尺寸由总次数确定，不会因剩余数字位数减少而缩小。次数按当前难度的 `BALLOON:` 列表顺序读取，格式参考 [TJA 格式说明](https://gist.github.com/KatieFrogs/e000f406bbc70a12f3c34a07303eec8b)。暂不区分 9 号音符的特殊计分规则。
+## 连打与气球
+
+5、6 号音符分别为普通、大连打，以白色填充、黑色轮廓及一像素白色外沿的圆头和拖尾显示，持续到 8 号结束标记；进入判定点后头部固定，拖尾逐渐缩短。7、9 号音符按气球处理，到达判定点后用圆形弹窗显示剩余次数，随击打逐渐增大，完成后立即消失；若未打完，则在结束标记处消失。弹窗初始尺寸由总次数确定，不会因剩余数字位数减少而缩小。次数按当前难度的 `BALLOON:` 列表顺序读取。暂不区分 9 号音符的特殊计分规则。
 
 两者从起点开始按 **7500 / 当前 BPM 毫秒**的间隔自动打咚，不在结束标记处继续打击；气球达到指定次数即停止。若下一个音符先到达判定点，则立即放弃当前连打或气球、关闭弹窗，并停止它的后续自动击打，优先播放新音符。BPM 变化时保留已走过的节拍比例，再按新间隔继续。播放速度同步改变实际击打速度，谱面流速不影响击打。暂停、前后跳转、Restart 和换难度均根据歌曲时间重新计算剩余次数与左右手，不会在跳转后补打跳过的音符。自动连打按连续时间段保存，不为每一下分配音符内存。
 
@@ -220,7 +222,7 @@ RightKaPin: B3
 - 单谱最多 8192 个事件，单小节最多 2048 格，单行最多 2047 字节，时长最多一小时。
 - 支持 8000–48000 Hz、8 位无符号、单声道 PCM WAV；不在设备上直接解码 OGG。
 - 音频流式读取，使用 8 KiB 循环缓冲。
-- 谱面轨道固定占用 17 像素高度，180 BPM、HS 1.0 下基准流速为每谱面秒 128 像素，目标刷新率为 50 FPS；位置按播放时间计算，只收集可见音符，每帧最多显示 64 个普通音符及 16 个长音。视觉刷新与鼓点检查分开调度。
+- 谱面轨道固定占用 17 像素高度，240 BPM、HS 1.0 下基准流速为每谱面秒 128 像素，目标刷新率为 50 FPS；位置按播放时间计算，只收集可见音符，每帧最多显示 64 个普通音符及 16 个长音。视觉刷新与鼓点检查分开调度。
 - 轨道支持普通/大咚咔、连打拖尾和气球计数，不绘制 GOGO 或小节线。
 - 暂不支持打击判定和精准同步；不提供保持音高的时间伸缩。
 - 曲名显示取决于固件字体支持，音乐音质受内置扬声器限制。
@@ -253,11 +255,15 @@ make test
 
 该工具依赖 pyserial 和 Pillow（uFBT 工具链的 Python 环境中已包含），只读取画面，不发送按键或修改 GPIO。截图保存在 `build/`；统计的是 USB 帧缓冲流速率，不是 LCD 像素响应速度。
 
-## 参考
+## 参考资料与项目
 
-- [Flipper Zero uFBT](https://github.com/flipperdevices/flipperzero-ufbt)
-- [Flipper Zero 固件](https://github.com/flipperdevices/flipperzero-firmware)
-- [Momentum 固件与 SDK](https://github.com/Next-Flip/Momentum-Firmware)
+- [TJA 格式说明](https://gist.github.com/KatieFrogs/e000f406bbc70a12f3c34a07303eec8b)：音符、气球次数与谱面指令。
+- [OpenTaiko NotesManager](https://github.com/0auBSQ/OpenTaiko/blob/main/OpenTaiko/src/Stages/07.Game/Taiko/NotesManager.cs)：谱面流速计算参考。
+- [flipper-zero-video-player](https://github.com/LTVA1/flipper-zero-video-player)：最初调研的播放器参考项目。
+- [Flipper Zero GPIO 文档](https://docs.flipper.net/zero/gpio-and-modules)：引脚定义与外部模块接口。
+- [Flipper Zero uFBT](https://github.com/flipperdevices/flipperzero-ufbt)：应用构建工具。
+- [Flipper Zero 固件](https://github.com/flipperdevices/flipperzero-firmware)：官方固件与开发接口。
+- [Momentum 固件与 SDK](https://github.com/Next-Flip/Momentum-Firmware)：Momentum 兼容构建。
 
 ## AI 协作
 

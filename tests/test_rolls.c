@@ -101,13 +101,13 @@ static void test_lane(void) {
     TaikoLaneRoll visible[16];
     TaikoLaneBalloon balloon;
     size_t count = taiko_lane_collect_rolls(&chart, 1300, 10, visible, 16, &balloon);
-    assert(count == 1 && visible[0].x == TAIKO_LANE_HIT_X);
+    assert(count == 2 && visible[0].x == TAIKO_LANE_HIT_X && visible[1].kind == 7);
     assert(visible[0].tail_x > visible[0].x && balloon.remaining == 0);
     /* The start is well outside the ordinary-note lookback window, but the tail stays. */
     chart.rolls[0].time_ms = -100000;
-    assert(taiko_lane_collect_rolls(&chart, 1300, 10, visible, 16, &balloon) == 1);
+    assert(taiko_lane_collect_rolls(&chart, 1300, 10, visible, 16, &balloon) == 2);
     chart.rolls[0].scroll_speed = -1;
-    assert(taiko_lane_collect_rolls(&chart, 1300, 10, visible, 16, &balloon) == 1);
+    assert(taiko_lane_collect_rolls(&chart, 1300, 10, visible, 16, &balloon) == 2);
     assert(visible[0].x == TAIKO_LANE_HIT_X && visible[0].tail_x < visible[0].x);
     taiko_lane_collect_rolls(&chart, chart.rolls[1].time_ms, 10, visible, 16, &balloon);
     assert(balloon.remaining == 2 && balloon.total == 3);

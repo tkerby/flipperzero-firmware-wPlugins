@@ -4,9 +4,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
-/* Player display calibration shared by all songs: 1x at 180 BPM.
+/* Player display calibration shared by all songs: 1x at 240 BPM.
  * This is an application choice, not a TJA format default. */
-#define TAIKO_SCROLL_REFERENCE_BPM 180.0f
+#define TAIKO_SCROLL_REFERENCE_BPM 240.0f
 
 typedef enum {
     TjaCourseEasy,

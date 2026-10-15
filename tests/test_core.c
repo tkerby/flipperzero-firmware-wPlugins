@@ -108,27 +108,27 @@ static void test_scroll(void) {
         &chart));
     assert(chart.note_count == 5);
     const int times[] = {1000, 1500, 2000, 3000, 4000};
-    const float speeds[] = {2.0f / 3, 4.0f / 3, 2.0f / 3, -1.0f / 6, -1.0f / 6};
+    const float speeds[] = {0.5f, 1.0f, 0.5f, -0.125f, -0.125f};
     for(size_t i = 0; i < chart.note_count; i++) {
         assert(chart.notes[i].time_ms == times[i]);
         assert(fabsf(chart.notes[i].scroll_speed - speeds[i]) < 0.00001f);
     }
     assert(chart.end_ms == 8000);
-    assert(fabsf(chart.min_note_speed - 1.0f / 6) < 0.00001f);
+    assert(fabsf(chart.min_note_speed - 0.125f) < 0.00001f);
     tja_chart_free(&chart);
 
     /* A slow intro must not amplify the main section's visual speed.
      * The same effective BPM has the same pixel speed across song headers. */
     assert(parse("BPM:90\nWAVE:a.wav\n#START\n,\n#BPMCHANGE 220\n1,\n#END\n", &chart));
     float slow_intro_speed = chart.notes[0].scroll_speed;
-    assert(fabsf(slow_intro_speed - 220.0f / 180) < 0.00001f);
+    assert(fabsf(slow_intro_speed - 220.0f / 240) < 0.00001f);
     tja_chart_free(&chart);
     assert(parse("BPM:180\nWAVE:a.wav\n#START\n,\n#BPMCHANGE 220\n1,\n#END\n", &chart));
     assert(chart.notes[0].scroll_speed == slow_intro_speed);
     tja_chart_free(&chart);
 
     assert(parse("BPM:90\nWAVE:a.wav\n#START\n#SCROLL 2\n1,\n#END\n", &chart));
-    assert(chart.notes[0].scroll_speed == 1);
+    assert(chart.notes[0].scroll_speed == 0.75f);
     tja_chart_free(&chart);
 }
 
@@ -162,8 +162,8 @@ static void test_course_selection(void) {
     assert(chart.notes[0].time_ms == 1000 && chart.notes[1].time_ms == 2000);
     assert(chart.end_ms == 3000);
     assert(chart.initial_bpm == 120 && chart.bpm_change_count == 0);
-    assert(fabsf(chart.notes[0].scroll_speed - 2.0f / 3) < 0.00001f);
-    assert(fabsf(chart.min_note_speed - 2.0f / 3) < 0.00001f);
+    assert(fabsf(chart.notes[0].scroll_speed - 0.5f) < 0.00001f);
+    assert(fabsf(chart.min_note_speed - 0.5f) < 0.00001f);
     tja_chart_free(&chart);
     rewind(file);
     assert(tja_parse_course(read_line, file, TjaCourseHard, &chart, &error));
