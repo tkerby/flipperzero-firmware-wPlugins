@@ -146,6 +146,27 @@ static void draw_lane(Canvas* canvas, const TaikoPlayerView* view) {
     canvas_set_color(canvas, ColorWhite);
     canvas_draw_circle(canvas, TAIKO_LANE_HIT_X, LANE_Y, 7);
     canvas_draw_circle(canvas, TAIKO_LANE_HIT_X, LANE_Y, 5);
+    for(size_t i = view->roll_count; i > 0; i--) {
+        TaikoLaneRoll roll = view->lane_rolls[i - 1];
+        int radius = roll.kind == 5 ? TAIKO_LANE_SMALL_RADIUS : TAIKO_LANE_BIG_RADIUS;
+        int left = roll.x < roll.tail_x ? roll.x : roll.tail_x;
+        int right = roll.x > roll.tail_x ? roll.x : roll.tail_x;
+        /* White center with a black outline and a one-pixel white outer halo. */
+        for(int pass = 0; pass < 3; pass++) {
+            int r = radius - pass;
+            canvas_set_color(canvas, pass == 1 ? ColorBlack : ColorWhite);
+            for(int y = -r; y <= r; y++) {
+                int extent = r;
+                while(extent * extent + y * y > r * r)
+                    extent--;
+                int x1 = left - extent, x2 = right + extent;
+                if(x2 < 0 || x1 > 127) continue;
+                if(x1 < 0) x1 = 0;
+                if(x2 > 127) x2 = 127;
+                canvas_draw_line(canvas, x1, LANE_Y + y, x2, LANE_Y + y);
+            }
+        }
+    }
     for(size_t i = view->lane_count; i > 0; i--) {
         TaikoLaneNote note = view->lane_notes[i - 1];
         int radius = note.kind >= 3 ? TAIKO_LANE_BIG_RADIUS : TAIKO_LANE_SMALL_RADIUS;
@@ -154,6 +175,22 @@ static void draw_lane(Canvas* canvas, const TaikoPlayerView* view) {
         lane_disc(canvas, note.x, radius - (note.kind == 3 ? 2 : 1), ColorBlack);
         if(note.kind == 2 || note.kind == 4)
             lane_disc(canvas, note.x, radius - (note.kind == 4 ? 3 : 2), ColorWhite);
+    }
+    if(view->balloon.remaining && view->balloon.total) {
+        char count[12], total[12];
+        snprintf(count, sizeof(count), "%lu", view->balloon.remaining);
+        snprintf(total, sizeof(total), "%lu", view->balloon.total);
+        /* Size depends on the original count, so crossing a digit boundary never
+         * shrinks the balloon. Inflate by up to two pixels as hits accumulate. */
+        int radius = canvas_string_width(canvas, total) / 2 + 1;
+        if(radius < 6) radius = 6;
+        radius += (view->balloon.total - view->balloon.remaining) * 3 / view->balloon.total;
+        const int center = radius > TAIKO_LANE_HIT_X ? radius : TAIKO_LANE_HIT_X;
+        canvas_set_color(canvas, ColorWhite);
+        canvas_draw_disc(canvas, center, LANE_Y, radius);
+        canvas_set_color(canvas, ColorBlack);
+        canvas_draw_str(
+            canvas, center - canvas_string_width(canvas, count) / 2, LANE_Y + 3, count);
     }
     canvas_set_color(canvas, ColorBlack);
 }

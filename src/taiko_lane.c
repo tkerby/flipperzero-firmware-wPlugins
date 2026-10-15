@@ -1,4 +1,5 @@
 #include "taiko_lane.h"
+#include "taiko_hits.h"
 
 #include <math.h>
 
@@ -45,4 +46,47 @@ size_t taiko_lane_collect(
         visible[result++] = (TaikoLaneNote){.x = (int16_t)x, .kind = kind};
     }
     return result;
+}
+
+static int16_t clipped_x(float offset) {
+    /* Long tails may extend far beyond the display; clip before integer conversion. */
+    if(offset < -256) return -256;
+    if(offset > 256) return 256;
+    return TAIKO_LANE_HIT_X + (int16_t)offset;
+}
+
+size_t taiko_lane_collect_rolls(
+    const TjaChart* chart,
+    uint32_t position_ms,
+    uint8_t scroll_tenths,
+    TaikoLaneRoll* visible,
+    size_t capacity,
+    TaikoLaneBalloon* balloon) {
+    *balloon = (TaikoLaneBalloon){0};
+    size_t count = 0;
+    for(size_t i = 0; i < chart->roll_count; i++) {
+        const TjaRoll* roll = &chart->rolls[i];
+        if((int64_t)position_ms >= roll->end_ms) continue;
+        bool is_balloon = roll->balloon_count != 0;
+        bool active = (int64_t)position_ms >= roll->time_ms;
+        if(is_balloon && active) {
+            balloon->remaining = taiko_balloon_remaining(chart, roll, position_ms);
+            balloon->total = roll->balloon_count;
+            continue;
+        }
+        float speed = roll->scroll_speed ? roll->scroll_speed : 1;
+        float scale = speed * scroll_tenths * (TAIKO_LANE_PIXELS_PER_SECOND / 10000.0f);
+        float head = active ? 0 : ((int64_t)roll->time_ms - position_ms) * scale;
+        float tail = is_balloon ? head : ((int64_t)roll->end_ms - position_ms) * scale;
+        if(!isfinite(head) || !isfinite(tail)) continue;
+        float left = head < tail ? head : tail;
+        float right = head > tail ? head : tail;
+        if(left > 127 + TAIKO_LANE_BIG_RADIUS - TAIKO_LANE_HIT_X ||
+           right < -TAIKO_LANE_HIT_X - TAIKO_LANE_BIG_RADIUS)
+            continue;
+        if(count < capacity)
+            visible[count++] = (TaikoLaneRoll){
+                .x = clipped_x(head), .tail_x = clipped_x(tail), .kind = roll->kind};
+    }
+    return count;
 }

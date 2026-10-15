@@ -12,8 +12,7 @@ typedef struct {
 typedef struct {
     TaikoPcmClip don;
     TaikoPcmClip ka;
-    const TjaNote* notes;
-    size_t note_count;
+    const TjaChart* chart;
     uint8_t don_volume; /* 0..100 percent, applied independently before summing. */
     uint8_t ka_volume;
 } TaikoMixer;

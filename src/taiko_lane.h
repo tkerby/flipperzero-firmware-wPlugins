@@ -3,6 +3,7 @@
 #include "tja_parser.h"
 
 #define TAIKO_LANE_MAX_NOTES         64U
+#define TAIKO_LANE_MAX_ROLLS         16U
 #define TAIKO_LANE_HIT_X             18
 #define TAIKO_LANE_PIXELS_PER_SECOND 128
 #define TAIKO_LANE_SMALL_RADIUS      4
@@ -12,6 +13,17 @@ typedef struct {
     int16_t x;
     uint8_t kind;
 } TaikoLaneNote;
+
+typedef struct {
+    int16_t x;
+    int16_t tail_x;
+    uint8_t kind;
+} TaikoLaneRoll;
+
+typedef struct {
+    uint32_t remaining;
+    uint32_t total;
+} TaikoLaneBalloon;
 
 /* Collect visible normal notes (1..4) with their individual HS multipliers.
  * Notes are sorted by time, but may appear out of order at different speeds.
@@ -24,3 +36,11 @@ size_t taiko_lane_collect(
     uint8_t scroll_tenths,
     TaikoLaneNote* visible,
     size_t capacity);
+
+size_t taiko_lane_collect_rolls(
+    const TjaChart* chart,
+    uint32_t position_ms,
+    uint8_t scroll_tenths,
+    TaikoLaneRoll* visible,
+    size_t capacity,
+    TaikoLaneBalloon* balloon);

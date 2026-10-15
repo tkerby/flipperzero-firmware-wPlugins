@@ -252,7 +252,10 @@ static void test_song(const char* path) {
     for(int i = 0; i < TjaCourseCount; i++) {
         if(!(courses & (1U << i))) continue;
         rewind(file);
-        assert(tja_parse_course(read_line, file, i, &chart, &error));
+        if(!tja_parse_course(read_line, file, i, &chart, &error)) {
+            fprintf(stderr, "%s (%s): %s\n", path, tja_course_name(i), error);
+            abort();
+        }
         assert(chart.course_id == (TjaCourse)i && chart.note_count);
         for(size_t n = 1; n < chart.note_count; n++)
             assert(chart.notes[n].time_ms >= chart.notes[n - 1].time_ms);

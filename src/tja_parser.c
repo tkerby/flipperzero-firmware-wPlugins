@@ -29,6 +29,10 @@ typedef struct {
     size_t command_count;
     size_t note_capacity;
     size_t bpm_capacity;
+    size_t roll_capacity;
+    size_t active_roll; /* index + 1, zero when inactive */
+    char balloons[2048];
+    char* next_balloon;
     float bpm;
     float scroll;
     float beats;
@@ -137,15 +141,69 @@ static bool number(const char* text, float* value) {
 }
 
 static bool add_note(Parser* p, TjaChart* chart, char kind, const char** error) {
-    if(kind == '0' || kind == '8') return true;
+    if(kind == '0') return true;
+    if(kind == '8') {
+        if(p->active_roll) {
+            chart->rolls[p->active_roll - 1].end_ms = (int32_t)lroundf(p->time_ms);
+            p->active_roll = 0;
+        }
+        return true;
+    }
+    if(p->active_roll) {
+        TjaRoll* active = &chart->rolls[p->active_roll - 1];
+        /* A repeated kusudama 9 changes scoring, rather than starting a note. */
+        if(kind == '9' && active->kind == 9) return true;
+        /* The next playable note takes priority, even if 8 is missing or late.
+         * The exclusive end also prevents an extra automatic hit at this time. */
+        active->end_ms = (int32_t)lroundf(p->time_ms);
+        p->active_roll = 0;
+    }
     float speed = p->bpm / TAIKO_SCROLL_REFERENCE_BPM * p->scroll;
     if(!isfinite(speed) || speed == 0) {
         *error = "Scroll speed out of range";
         return false;
     }
-    if(chart->note_count == MAX_NOTES) {
+    if(chart->note_count + chart->roll_count == MAX_NOTES) {
         *error = "Chart exceeds 8192 notes";
         return false;
+    }
+    if(kind >= '5') {
+        unsigned long balloon = 0;
+        if(kind == '7' || kind == '9') {
+            char* start = p->next_balloon ? trim(p->next_balloon) : p->balloons;
+            char* end;
+            if(!*start) {
+                /* Match incomplete legacy charts without rejecting the whole song. */
+                balloon = 5;
+            } else {
+                balloon = strtoul(start, &end, 10);
+                while(isspace((unsigned char)*end))
+                    end++;
+                if(!isdigit((unsigned char)*start) || end == start || !balloon ||
+                   balloon > UINT16_MAX || (*end && *end != ',')) {
+                    *error = "Missing / invalid BALLOON count";
+                    return false;
+                }
+                p->next_balloon = *end ? end + 1 : end;
+            }
+        }
+        if(chart->roll_count == p->roll_capacity) {
+            size_t capacity = p->roll_capacity ? p->roll_capacity * 2 : 16;
+            TjaRoll* rolls = realloc(chart->rolls, capacity * sizeof(TjaRoll));
+            if(!rolls) {
+                *error = "Not enough memory";
+                return false;
+            }
+            chart->rolls = rolls;
+            p->roll_capacity = capacity;
+        }
+        chart->rolls[chart->roll_count++] = (TjaRoll){
+            .time_ms = (int32_t)lroundf(p->time_ms),
+            .scroll_speed = speed,
+            .balloon_count = (uint16_t)balloon,
+            .kind = (uint8_t)(kind - '0')};
+        p->active_roll = chart->roll_count;
+        return true;
     }
     if(chart->note_count == p->note_capacity) {
         size_t capacity = p->note_capacity ? p->note_capacity * 2 : 256;
@@ -256,6 +314,58 @@ invalid:
     return false;
 }
 
+static bool build_hit_runs(TjaChart* chart, const char** error) {
+    size_t capacity = 0, change = 0;
+    double bpm = chart->initial_bpm;
+    for(size_t i = 0; i < chart->roll_count; i++) {
+        TjaRoll* roll = &chart->rolls[i];
+        double time = roll->time_ms, phase = 0;
+        roll->first_run = chart->hit_run_count;
+        while(change < chart->bpm_change_count && chart->bpm_changes[change].time_ms <= time)
+            bpm = chart->bpm_changes[change++].bpm;
+        while(time < roll->end_ms) {
+            double boundary = roll->end_ms;
+            if(change < chart->bpm_change_count && chart->bpm_changes[change].time_ms < boundary)
+                boundary = chart->bpm_changes[change].time_ms;
+            double interval = 7500 / bpm;
+            double first = time + phase * interval;
+            uint32_t count = first < boundary ?
+                                 (uint32_t)ceil((boundary - first) / interval - (double)1e-7f) :
+                                 0;
+            if(roll->balloon_count && count > roll->balloon_count - roll->hit_count)
+                count = roll->balloon_count - roll->hit_count;
+            /* Onsets use integer milliseconds everywhere; never strike at note 8. */
+            while(count && lround(first + (count - 1) * interval) >= roll->end_ms)
+                count--;
+            if(count) {
+                if(chart->hit_run_count == capacity) {
+                    if(capacity == MAX_NOTES) {
+                        *error = "Too many roll tempo segments";
+                        return false;
+                    }
+                    capacity = capacity ? capacity * 2 : 16;
+                    TjaHitRun* runs = realloc(chart->hit_runs, capacity * sizeof(TjaHitRun));
+                    if(!runs) {
+                        *error = "Not enough memory";
+                        return false;
+                    }
+                    chart->hit_runs = runs;
+                }
+                chart->hit_runs[chart->hit_run_count++] =
+                    (TjaHitRun){.first_ms = first, .interval_ms = interval, .count = count};
+                roll->run_count++;
+                roll->hit_count += count;
+            }
+            if(roll->balloon_count && roll->hit_count == roll->balloon_count) break;
+            phase = (first + count * interval - boundary) / interval;
+            time = boundary;
+            while(change < chart->bpm_change_count && chart->bpm_changes[change].time_ms <= time)
+                bpm = chart->bpm_changes[change++].bpm;
+        }
+    }
+    return true;
+}
+
 static bool parse_selected(
     TjaReadLine reader,
     void* context,
@@ -310,6 +420,8 @@ static bool parse_selected(
                 if(strcmp(line, "TITLE") == 0)
                     snprintf(chart->title, sizeof(chart->title), "%s", value);
                 else if(strcmp(line, "COURSE") == 0) {
+                    p->balloons[0] = '\0';
+                    p->next_balloon = p->balloons;
                     if(!read_course(value, &chart->course_id)) {
                         *error = "Unsupported COURSE";
                         break;
@@ -319,6 +431,9 @@ static bool parse_selected(
                         sizeof(chart->course),
                         "%s",
                         tja_course_name(chart->course_id));
+                } else if(strcmp(line, "BALLOON") == 0) {
+                    strcpy(p->balloons, value); /* Bounded by the line reader. */
+                    p->next_balloon = p->balloons;
                 } else if(strcmp(line, "WAVE") == 0) {
                     if(strlen(value) >= sizeof(chart->wave)) {
                         *error = "WAVE path is too long";
@@ -345,7 +460,8 @@ static bool parse_selected(
                 break;
             }
             chart->end_ms = (int32_t)lroundf(p->time_ms);
-            success = true;
+            if(p->active_roll) chart->rolls[p->active_roll - 1].end_ms = chart->end_ms;
+            success = build_hit_runs(chart, error);
             break;
         } else if(*line == '#') {
             if(!command(p, line, error)) break;
@@ -399,6 +515,8 @@ bool tja_parse_course(
 void tja_chart_free(TjaChart* chart) {
     free(chart->notes);
     free(chart->bpm_changes);
+    free(chart->rolls);
+    free(chart->hit_runs);
     memset(chart, 0, sizeof(*chart));
 }
 

@@ -34,7 +34,7 @@ def main():
         *shlex.split(os.environ.get("CC", "cc")),
         "-std=c11", "-Wall", "-Wextra", "-Werror", "-g",
         "-fsanitize=address,undefined", "-Isrc",
-        "src/taiko_lane.c", "tests/test_lane.c", "-lm", "-o", str(lane_test),
+        "src/taiko_lane.c", "src/taiko_hits.c", "tests/test_lane.c", "-lm", "-o", str(lane_test),
     ], cwd=root, check=True)
     subprocess.run([str(lane_test)], cwd=root, check=True)
     menu_test = build / "test_menu"
@@ -59,9 +59,18 @@ def main():
         *shlex.split(os.environ.get("CC", "cc")),
         "-std=c11", "-Wall", "-Wextra", "-Werror", "-g",
         "-fsanitize=address,undefined", "-Isrc",
-        "src/taiko_mixer.c", "tests/test_mixer.c", "-o", str(mixer_test),
+        "src/taiko_mixer.c", "src/taiko_hits.c", "tests/test_mixer.c", "-lm", "-o", str(mixer_test),
     ], cwd=root, check=True)
     subprocess.run([str(mixer_test)], cwd=root, check=True)
+    rolls_test = build / "test_rolls"
+    subprocess.run([
+        *shlex.split(os.environ.get("CC", "cc")),
+        "-std=c11", "-Wall", "-Wextra", "-Werror", "-g",
+        "-fsanitize=address,undefined", "-Isrc",
+        "src/tja_parser.c", "src/taiko_hits.c", "src/taiko_lane.c", "src/taiko_mixer.c",
+        "tests/test_rolls.c", "-lm", "-o", str(rolls_test),
+    ], cwd=root, check=True)
+    subprocess.run([str(rolls_test)], cwd=root, check=True)
 
 
 if __name__ == "__main__":

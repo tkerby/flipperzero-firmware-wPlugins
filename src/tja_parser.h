@@ -32,6 +32,24 @@ typedef struct {
 } TjaBpmChange;
 
 typedef struct {
+    int32_t time_ms;
+    int32_t end_ms; /* Note 8, exclusive. */
+    float scroll_speed;
+    uint16_t balloon_count; /* Zero for drumrolls. */
+    uint8_t kind; /* 5/6: small/big roll; 7/9: balloon. */
+    size_t first_run;
+    size_t run_count;
+    uint32_t hit_count;
+} TjaRoll;
+
+/* Compact runs avoid allocating a note for every automatic 32nd-note hit. */
+typedef struct {
+    double first_ms;
+    double interval_ms;
+    uint32_t count;
+} TjaHitRun;
+
+typedef struct {
     char title[128];
     char wave[256];
     char course[24];
@@ -42,6 +60,10 @@ typedef struct {
     float min_note_speed; /* Conservative lower bound on absolute note speed. */
     TjaBpmChange* bpm_changes;
     size_t bpm_change_count;
+    TjaRoll* rolls;
+    size_t roll_count;
+    TjaHitRun* hit_runs;
+    size_t hit_run_count;
     int32_t end_ms;
 } TjaChart;
 
