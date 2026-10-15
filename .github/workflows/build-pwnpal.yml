@@ -221,5 +221,3 @@ jobs:
             ### Install
             1. Flash your board's `pwnpal-<board>.bin` with **ESP Flasher** → Custom slot @ `0x0`. Reference board: **Feberis Pro** (classic ESP32).
             2. Copy `pwnpal.fap` to `/ext/apps/GPIO/`, launch **Apps → GPIO → Pwnpal**.
-
-            > ⚠️ **Authorized use only.** Deauth + handshake capture are active radio attacks; they ship **off** behind a one-time on-device consent gate. You are responsible for complying with local law.

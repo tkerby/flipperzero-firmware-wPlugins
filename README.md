@@ -1,6 +1,6 @@
 # pwnpal
 
-<p align="center"><img src="doc/screenshots/demo.gif" width="260" alt="pwnpal in action"/></p>
+<p align="center"><img src="doc/screenshots/demo.gif" width="440" alt="pwnpal in action"/></p>
 
 **A full [pwnagotchi](https://pwnagotchi.org) on your Flipper Zero + ESP32 wifi board.**
 
