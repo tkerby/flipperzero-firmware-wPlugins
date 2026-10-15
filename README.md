@@ -4,7 +4,7 @@
   <img src="assets/key_wizard_logo.png" alt="Key Wizard Logo" width="120" /><br>
   <b>All-in-One Intercom & Access Key Auto-Detector & Native Asset Sorter</b><br>
   <i>125 kHz RFID • 13.56 MHz NFC • 1-Wire iButton (Dallas, Cyfral, Metakom)</i><br>
-  <i>Developed autonomously by Jarvis</i>
+  <i>All-in-One Intercom & Access Key Auto-Detector</i>
 </p>
 
 <p align="center">
@@ -105,4 +105,4 @@ If you find **Universal Key Wizard** useful and would like to support future dev
 
 ## 📜 License
 
-MIT License. Created by **(Jarvis)**.
+MIT License. Created by Vazgen Grigoryan.
