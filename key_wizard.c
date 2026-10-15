@@ -22,7 +22,6 @@ typedef struct {
     DetectedKey current_key;
     size_t quick_key_idx;
     uint32_t anim_frame;
-    char saved_message[64];
 } WizardState;
 
 typedef struct {
@@ -62,29 +61,33 @@ static void draw_screen_scanning(Canvas* canvas, KeyWizardApp* app) {
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str(canvas, 2, 10, "UNIVERSAL KEY WIZARD");
 
+    ScanMode mode = key_scanner_get_mode(app->scanner);
+    KeyCategory phase = key_scanner_get_current_phase(app->scanner);
+
+    // Mode Selector Header
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str(canvas, 2, 21, "Touch ANY key, fob or card:");
+    char mode_str[48];
+    snprintf(mode_str, sizeof(mode_str), "Mode: <%s>", scan_mode_to_string(mode));
+    canvas_draw_str(canvas, 2, 21, mode_str);
 
-    uint32_t frame = app->state.anim_frame;
-
-    // 3 Reader indicators
-    const char* dot1 = (frame % 3 == 0) ? "[*]" : "[ ]";
-    const char* dot2 = (frame % 3 == 1) ? "[*]" : "[ ]";
-    const char* dot3 = (frame % 3 == 2) ? "[*]" : "[ ]";
+    // Active Reader Indicators
+    bool rfid_active = (phase == KeyCategoryLFRFID);
+    bool nfc_active = (phase == KeyCategoryNFC);
+    bool ibutton_active = (phase == KeyCategoryIButton);
 
     char line[48];
-    snprintf(line, sizeof(line), "%s 125 kHz RFID (EM/HID)", dot1);
+    snprintf(line, sizeof(line), "%s 125 kHz RFID", rfid_active ? "[*]" : "[ ]");
     canvas_draw_str(canvas, 4, 32, line);
 
-    snprintf(line, sizeof(line), "%s 13.56 MHz NFC (Mifare)", dot2);
+    snprintf(line, sizeof(line), "%s 13.56 MHz NFC", nfc_active ? "[*]" : "[ ]");
     canvas_draw_str(canvas, 4, 41, line);
 
-    snprintf(line, sizeof(line), "%s 1-Wire iButton (Dallas)", dot3);
+    snprintf(line, sizeof(line), "%s 1-Wire iButton", ibutton_active ? "[*]" : "[ ]");
     canvas_draw_str(canvas, 4, 50, line);
 
     // Footer
     canvas_draw_line(canvas, 0, 53, 128, 53);
-    canvas_draw_str(canvas, 2, 62, "[OK] Test  [>] Quick Keys");
+    canvas_draw_str(canvas, 2, 62, "[< >] Mode  [^] Keys  [OK]");
 }
 
 static void draw_screen_key_found(Canvas* canvas, KeyWizardApp* app) {
@@ -249,18 +252,26 @@ int32_t key_wizard_app(void* p) {
                     break;
                 case InputKeyRight:
                     if(app->state.screen == ScreenScanning) {
-                        app->state.screen = ScreenQuickKeys;
-                        key_scanner_stop(app->scanner);
+                        ScanMode m = key_scanner_get_mode(app->scanner);
+                        m = (m + 1) % ScanModeMax;
+                        key_scanner_set_mode(app->scanner, m);
                     }
                     break;
                 case InputKeyLeft:
-                    if(app->state.screen == ScreenQuickKeys) {
+                    if(app->state.screen == ScreenScanning) {
+                        ScanMode m = key_scanner_get_mode(app->scanner);
+                        m = (m == 0) ? (ScanModeMax - 1) : (m - 1);
+                        key_scanner_set_mode(app->scanner, m);
+                    } else if(app->state.screen == ScreenQuickKeys) {
                         app->state.screen = ScreenScanning;
                         key_scanner_start(app->scanner);
                     }
                     break;
                 case InputKeyUp:
-                    if(app->state.screen == ScreenQuickKeys && app->state.quick_key_idx > 0) {
+                    if(app->state.screen == ScreenScanning) {
+                        app->state.screen = ScreenQuickKeys;
+                        key_scanner_stop(app->scanner);
+                    } else if(app->state.screen == ScreenQuickKeys && app->state.quick_key_idx > 0) {
                         app->state.quick_key_idx--;
                     }
                     break;

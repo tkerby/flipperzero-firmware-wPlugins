@@ -1,6 +1,6 @@
 #include "key_scanner.h"
-#include <lib/nfc/nfc_poller.h>
 #include <furi_hal_rfid.h>
+#include <lib/nfc/nfc_poller.h>
 #include <lib/nfc/nfc_device.h>
 #include <lib/nfc/protocols/iso14443_3a/iso14443_3a.h>
 #include <stdio.h>
@@ -12,6 +12,8 @@ struct KeyScanner {
     bool is_scanning;
     bool is_thread_running;
     bool key_detected;
+    ScanMode mode;
+    KeyCategory current_phase;
     DetectedKey detected_key;
 
     // iButton
@@ -36,6 +38,84 @@ static void rfid_read_callback(LFRFIDWorkerReadResult result, ProtocolId protoco
     }
 }
 
+static void scanner_handle_rfid_detected(KeyScanner* scanner) {
+    furi_mutex_acquire(scanner->mutex, FuriWaitForever);
+    memset(&scanner->detected_key, 0, sizeof(DetectedKey));
+    scanner->detected_key.category = KeyCategoryLFRFID;
+    scanner->detected_key.valid = true;
+
+    const char* name = protocol_dict_get_name(scanner->rfid_dict, scanner->rfid_protocol);
+    strncpy(scanner->detected_key.protocol_name, name ? name : "EM4100", sizeof(scanner->detected_key.protocol_name) - 1);
+
+    size_t size = protocol_dict_get_data_size(scanner->rfid_dict, scanner->rfid_protocol);
+    if(size > sizeof(scanner->detected_key.data)) size = sizeof(scanner->detected_key.data);
+    scanner->detected_key.data_len = size;
+    protocol_dict_get_data(scanner->rfid_dict, scanner->rfid_protocol, scanner->detected_key.data, size);
+
+    FuriString* uid_str = furi_string_alloc();
+    protocol_dict_render_uid(scanner->rfid_dict, uid_str, scanner->rfid_protocol);
+    strncpy(scanner->detected_key.data_hex, furi_string_get_cstr(uid_str), sizeof(scanner->detected_key.data_hex) - 1);
+    furi_string_free(uid_str);
+
+    scanner->key_detected = true;
+    scanner->is_scanning = false;
+    furi_mutex_release(scanner->mutex);
+}
+
+static void scanner_handle_nfc_detected(KeyScanner* scanner, const Iso14443_3aData* nfc_data) {
+    furi_mutex_acquire(scanner->mutex, FuriWaitForever);
+    memset(&scanner->detected_key, 0, sizeof(DetectedKey));
+    scanner->detected_key.category = KeyCategoryNFC;
+    scanner->detected_key.valid = true;
+
+    const char* card_name = "Mifare Classic";
+    if(nfc_data->sak == 0x00) {
+        card_name = "Mifare Ultralight";
+    } else if(nfc_data->sak == 0x20) {
+        card_name = "Mifare Plus";
+    }
+    strncpy(scanner->detected_key.protocol_name, card_name, sizeof(scanner->detected_key.protocol_name) - 1);
+
+    size_t uid_len = nfc_data->uid_len;
+    if(uid_len > sizeof(scanner->detected_key.data)) uid_len = sizeof(scanner->detected_key.data);
+    scanner->detected_key.data_len = uid_len;
+    memcpy(scanner->detected_key.data, nfc_data->uid, uid_len);
+
+    char hex_buf[64] = "";
+    int offset = 0;
+    for(size_t u = 0; u < uid_len && offset < (int)sizeof(hex_buf) - 4; u++) {
+        offset += snprintf(hex_buf + offset, sizeof(hex_buf) - offset, "%s%02X", (u > 0 ? " " : ""), nfc_data->uid[u]);
+    }
+    strncpy(scanner->detected_key.data_hex, hex_buf, sizeof(scanner->detected_key.data_hex) - 1);
+
+    snprintf(scanner->detected_key.atqa, sizeof(scanner->detected_key.atqa), "%02X %02X", nfc_data->atqa[0], nfc_data->atqa[1]);
+    snprintf(scanner->detected_key.sak, sizeof(scanner->detected_key.sak), "%02X", nfc_data->sak);
+
+    scanner->key_detected = true;
+    scanner->is_scanning = false;
+    furi_mutex_release(scanner->mutex);
+}
+
+static void scanner_handle_ibutton_detected(KeyScanner* scanner) {
+    furi_mutex_acquire(scanner->mutex, FuriWaitForever);
+    memset(&scanner->detected_key, 0, sizeof(DetectedKey));
+    scanner->detected_key.category = KeyCategoryIButton;
+    scanner->detected_key.valid = true;
+
+    iButtonProtocolId proto_id = ibutton_key_get_protocol_id(scanner->ibutton_key);
+    const char* name = ibutton_protocols_get_name(scanner->ibutton_protocols, proto_id);
+    strncpy(scanner->detected_key.protocol_name, name ? name : "Dallas", sizeof(scanner->detected_key.protocol_name) - 1);
+
+    FuriString* uid_str = furi_string_alloc();
+    ibutton_protocols_render_uid(scanner->ibutton_protocols, scanner->ibutton_key, uid_str);
+    strncpy(scanner->detected_key.data_hex, furi_string_get_cstr(uid_str), sizeof(scanner->detected_key.data_hex) - 1);
+    furi_string_free(uid_str);
+
+    scanner->key_detected = true;
+    scanner->is_scanning = false;
+    furi_mutex_release(scanner->mutex);
+}
+
 static int32_t key_scanner_worker(void* context) {
     KeyScanner* scanner = (KeyScanner*)context;
 
@@ -45,130 +125,90 @@ static int32_t key_scanner_worker(void* context) {
             continue;
         }
 
-        // ==========================================
-        // PHASE 1: 125 kHz LFRFID
-        // ==========================================
-        scanner->rfid_raw_detected = false;
-        if(scanner->rfid_worker) {
-            lfrfid_worker_read_start(scanner->rfid_worker, LFRFIDWorkerReadTypeAuto, rfid_read_callback, scanner);
-            
-            for(int i = 0; i < 5 && scanner->is_scanning && !scanner->rfid_raw_detected; i++) {
-                furi_delay_ms(80);
-            }
+        ScanMode current_mode;
+        furi_mutex_acquire(scanner->mutex, FuriWaitForever);
+        current_mode = scanner->mode;
+        furi_mutex_release(scanner->mutex);
 
-            lfrfid_worker_stop(scanner->rfid_worker);
-            furi_delay_ms(120); // Guarantee worker mode loop exits to idle
-            furi_hal_rfid_pins_reset(); // Free shared GPIOs
-        }
-
-        if(scanner->rfid_raw_detected) {
+        // ==========================================
+        // 1. RFID PHASE
+        // ==========================================
+        if(current_mode == ScanModeAuto || current_mode == ScanModeRFIDOnly) {
             furi_mutex_acquire(scanner->mutex, FuriWaitForever);
-            memset(&scanner->detected_key, 0, sizeof(DetectedKey));
-            scanner->detected_key.category = KeyCategoryLFRFID;
-            scanner->detected_key.valid = true;
-
-            const char* name = protocol_dict_get_name(scanner->rfid_dict, scanner->rfid_protocol);
-            strncpy(scanner->detected_key.protocol_name, name ? name : "EM4100", sizeof(scanner->detected_key.protocol_name) - 1);
-
-            size_t size = protocol_dict_get_data_size(scanner->rfid_dict, scanner->rfid_protocol);
-            if(size > sizeof(scanner->detected_key.data)) size = sizeof(scanner->detected_key.data);
-            scanner->detected_key.data_len = size;
-            protocol_dict_get_data(scanner->rfid_dict, scanner->rfid_protocol, scanner->detected_key.data, size);
-
-            FuriString* uid_str = furi_string_alloc();
-            protocol_dict_render_uid(scanner->rfid_dict, uid_str, scanner->rfid_protocol);
-            strncpy(scanner->detected_key.data_hex, furi_string_get_cstr(uid_str), sizeof(scanner->detected_key.data_hex) - 1);
-            furi_string_free(uid_str);
-
-            scanner->key_detected = true;
-            scanner->is_scanning = false;
+            scanner->current_phase = KeyCategoryLFRFID;
             furi_mutex_release(scanner->mutex);
-            continue;
-        }
 
-        if(!scanner->is_scanning) continue;
+            scanner->rfid_raw_detected = false;
+            if(scanner->rfid_worker) {
+                lfrfid_worker_read_start(scanner->rfid_worker, LFRFIDWorkerReadTypeAuto, rfid_read_callback, scanner);
 
-        // ==========================================
-        // PHASE 2: 13.56 MHz NFC
-        // ==========================================
-        if(scanner->nfc) {
-            for(int i = 0; i < 4 && scanner->is_scanning; i++) {
-                NfcPoller* poller = nfc_poller_alloc(scanner->nfc, NfcProtocolIso14443_3a);
-                if(poller) {
-                    if(nfc_poller_detect(poller)) {
-                        const Iso14443_3aData* nfc_data = (const Iso14443_3aData*)nfc_poller_get_data(poller);
-                        if(nfc_data && nfc_data->uid_len > 0) {
-                            furi_mutex_acquire(scanner->mutex, FuriWaitForever);
-                            memset(&scanner->detected_key, 0, sizeof(DetectedKey));
-                            scanner->detected_key.category = KeyCategoryNFC;
-                            scanner->detected_key.valid = true;
-
-                            // Determine type (Mifare Classic, Ultralight, NTAG)
-                            const char* card_name = "Mifare Classic";
-                            if(nfc_data->sak == 0x00) {
-                                card_name = "Mifare Ultralight";
-                            } else if(nfc_data->sak == 0x20) {
-                                card_name = "Mifare Plus";
-                            }
-                            strncpy(scanner->detected_key.protocol_name, card_name, sizeof(scanner->detected_key.protocol_name) - 1);
-
-                            size_t uid_len = nfc_data->uid_len;
-                            if(uid_len > sizeof(scanner->detected_key.data)) uid_len = sizeof(scanner->detected_key.data);
-                            scanner->detected_key.data_len = uid_len;
-                            memcpy(scanner->detected_key.data, nfc_data->uid, uid_len);
-
-                            // Format HEX UID
-                            char hex_buf[64] = "";
-                            int offset = 0;
-                            for(size_t u = 0; u < uid_len && offset < (int)sizeof(hex_buf) - 4; u++) {
-                                offset += snprintf(hex_buf + offset, sizeof(hex_buf) - offset, "%s%02X", (u > 0 ? " " : ""), nfc_data->uid[u]);
-                            }
-                            strncpy(scanner->detected_key.data_hex, hex_buf, sizeof(scanner->detected_key.data_hex) - 1);
-
-                            snprintf(scanner->detected_key.atqa, sizeof(scanner->detected_key.atqa), "%02X %02X", nfc_data->atqa[0], nfc_data->atqa[1]);
-                            snprintf(scanner->detected_key.sak, sizeof(scanner->detected_key.sak), "%02X", nfc_data->sak);
-
-                            scanner->key_detected = true;
-                            scanner->is_scanning = false;
-                            furi_mutex_release(scanner->mutex);
-                            nfc_poller_free(poller);
-                            break;
-                        }
-                    }
-                    nfc_poller_free(poller);
+                int max_loops = (current_mode == ScanModeRFIDOnly) ? 200 : 18; // 18 * 80ms = 1440ms (gives 450ms AGC + 1000ms listening!)
+                for(int i = 0; i < max_loops && scanner->is_scanning && !scanner->rfid_raw_detected; i++) {
+                    furi_delay_ms(80);
                 }
-                furi_delay_ms(80);
+
+                lfrfid_worker_stop(scanner->rfid_worker);
+                furi_delay_ms(150); // Guarantee worker mode loop exits to idle
+                furi_hal_rfid_pins_reset(); // Free shared GPIO pins
+            }
+
+            if(scanner->rfid_raw_detected) {
+                scanner_handle_rfid_detected(scanner);
+                continue;
             }
         }
 
         if(!scanner->is_scanning) continue;
 
         // ==========================================
-        // PHASE 3: 1-Wire iButton
+        // 2. NFC PHASE
         // ==========================================
-        if(scanner->ibutton_protocols && scanner->ibutton_key) {
-            for(int i = 0; i < 3 && scanner->is_scanning; i++) {
-                if(ibutton_protocols_read(scanner->ibutton_protocols, scanner->ibutton_key)) {
-                    furi_mutex_acquire(scanner->mutex, FuriWaitForever);
-                    memset(&scanner->detected_key, 0, sizeof(DetectedKey));
-                    scanner->detected_key.category = KeyCategoryIButton;
-                    scanner->detected_key.valid = true;
+        if(current_mode == ScanModeAuto || current_mode == ScanModeNFCOnly) {
+            furi_mutex_acquire(scanner->mutex, FuriWaitForever);
+            scanner->current_phase = KeyCategoryNFC;
+            furi_mutex_release(scanner->mutex);
 
-                    iButtonProtocolId proto_id = ibutton_key_get_protocol_id(scanner->ibutton_key);
-                    const char* name = ibutton_protocols_get_name(scanner->ibutton_protocols, proto_id);
-                    strncpy(scanner->detected_key.protocol_name, name ? name : "Dallas", sizeof(scanner->detected_key.protocol_name) - 1);
-
-                    FuriString* uid_str = furi_string_alloc();
-                    ibutton_protocols_render_uid(scanner->ibutton_protocols, scanner->ibutton_key, uid_str);
-                    strncpy(scanner->detected_key.data_hex, furi_string_get_cstr(uid_str), sizeof(scanner->detected_key.data_hex) - 1);
-                    furi_string_free(uid_str);
-
-                    scanner->key_detected = true;
-                    scanner->is_scanning = false;
-                    furi_mutex_release(scanner->mutex);
-                    break;
+            if(scanner->nfc) {
+                int max_loops = (current_mode == ScanModeNFCOnly) ? 50 : 4;
+                for(int i = 0; i < max_loops && scanner->is_scanning; i++) {
+                    NfcPoller* poller = nfc_poller_alloc(scanner->nfc, NfcProtocolIso14443_3a);
+                    if(poller) {
+                        if(nfc_poller_detect(poller)) {
+                            const Iso14443_3aData* nfc_data = (const Iso14443_3aData*)nfc_poller_get_data(poller);
+                            if(nfc_data && nfc_data->uid_len > 0) {
+                                scanner_handle_nfc_detected(scanner, nfc_data);
+                                nfc_poller_free(poller);
+                                break;
+                            }
+                        }
+                        nfc_poller_free(poller);
+                    }
+                    furi_delay_ms(80);
                 }
-                furi_delay_ms(80);
+            }
+
+            if(!scanner->is_scanning) continue;
+        }
+
+        if(!scanner->is_scanning) continue;
+
+        // ==========================================
+        // 3. IBUTTON PHASE
+        // ==========================================
+        if(current_mode == ScanModeAuto || current_mode == ScanModeIButtonOnly) {
+            furi_mutex_acquire(scanner->mutex, FuriWaitForever);
+            scanner->current_phase = KeyCategoryIButton;
+            furi_mutex_release(scanner->mutex);
+
+            if(scanner->ibutton_protocols && scanner->ibutton_key) {
+                int max_loops = (current_mode == ScanModeIButtonOnly) ? 50 : 3;
+                for(int i = 0; i < max_loops && scanner->is_scanning; i++) {
+                    if(ibutton_protocols_read(scanner->ibutton_protocols, scanner->ibutton_key)) {
+                        scanner_handle_ibutton_detected(scanner);
+                        break;
+                    }
+                    furi_delay_ms(80);
+                }
             }
         }
     }
@@ -183,6 +223,8 @@ KeyScanner* key_scanner_alloc(void) {
 
     scanner->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
     scanner->is_thread_running = true;
+    scanner->mode = ScanModeAuto;
+    scanner->current_phase = KeyCategoryNone;
 
     // Allocate iButton
     scanner->ibutton_protocols = ibutton_protocols_alloc();
@@ -219,7 +261,6 @@ void key_scanner_free(KeyScanner* scanner) {
     scanner->is_scanning = false;
     scanner->is_thread_running = false;
     if(scanner->thread) {
-        // Stop worker thread
         furi_thread_join(scanner->thread);
         furi_thread_free(scanner->thread);
     }
@@ -264,6 +305,29 @@ void key_scanner_stop(KeyScanner* scanner) {
     furi_mutex_acquire(scanner->mutex, FuriWaitForever);
     scanner->is_scanning = false;
     furi_mutex_release(scanner->mutex);
+}
+
+void key_scanner_set_mode(KeyScanner* scanner, ScanMode mode) {
+    if(!scanner) return;
+    furi_mutex_acquire(scanner->mutex, FuriWaitForever);
+    scanner->mode = mode;
+    furi_mutex_release(scanner->mutex);
+}
+
+ScanMode key_scanner_get_mode(KeyScanner* scanner) {
+    if(!scanner) return ScanModeAuto;
+    furi_mutex_acquire(scanner->mutex, FuriWaitForever);
+    ScanMode m = scanner->mode;
+    furi_mutex_release(scanner->mutex);
+    return m;
+}
+
+KeyCategory key_scanner_get_current_phase(KeyScanner* scanner) {
+    if(!scanner) return KeyCategoryNone;
+    furi_mutex_acquire(scanner->mutex, FuriWaitForever);
+    KeyCategory phase = scanner->current_phase;
+    furi_mutex_release(scanner->mutex);
+    return phase;
 }
 
 bool key_scanner_poll_step(KeyScanner* scanner, DetectedKey* out_key) {

@@ -121,3 +121,18 @@ bool key_saver_save_to_native_asset(DetectedKey* key, char* out_path, size_t out
 
     return success;
 }
+
+const char* scan_mode_to_string(ScanMode mode) {
+    switch(mode) {
+    case ScanModeAuto:
+        return "AUTO 3-in-1";
+    case ScanModeRFIDOnly:
+        return "RFID 125kHz";
+    case ScanModeNFCOnly:
+        return "NFC 13.56MHz";
+    case ScanModeIButtonOnly:
+        return "iButton 1-Wire";
+    default:
+        return "Unknown";
+    }
+}
