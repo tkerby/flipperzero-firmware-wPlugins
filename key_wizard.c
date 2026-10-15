@@ -441,6 +441,50 @@ int32_t key_wizard_app(void* p) {
                     if(app->state.screen == ScreenAbout) {
                         app->state.screen = ScreenScanning;
                         key_scanner_start(app->scanner);
+                    } else if(app->state.screen == ScreenQuickKeys) {
+                        size_t sel = app->state.quick_key_idx;
+                        memset(&app->state.current_key, 0, sizeof(DetectedKey));
+                        app->state.current_key.category = QUICK_KEYS[sel].cat;
+                        app->state.current_key.valid = true;
+                        strncpy(
+                            app->state.current_key.protocol_name,
+                            QUICK_KEYS[sel].proto,
+                            sizeof(app->state.current_key.protocol_name) - 1);
+                        strncpy(
+                            app->state.current_key.data_hex,
+                            QUICK_KEYS[sel].uid,
+                            sizeof(app->state.current_key.data_hex) - 1);
+                        if(QUICK_KEYS[sel].cat == KeyCategoryNFC) {
+                            uint8_t uid[4] = {0xDE, 0xAD, 0xBE, 0xEF};
+                            memcpy(app->state.current_key.data, uid, 4);
+                            app->state.current_key.data_len = 4;
+                            strncpy(
+                                app->state.current_key.atqa,
+                                "00 04",
+                                sizeof(app->state.current_key.atqa));
+                            strncpy(
+                                app->state.current_key.sak,
+                                "08",
+                                sizeof(app->state.current_key.sak));
+                            app->state.current_key.atqa_raw[0] = 0x04;
+                            app->state.current_key.atqa_raw[1] = 0x00;
+                            app->state.current_key.sak_raw = 0x08;
+                        } else if(QUICK_KEYS[sel].cat == KeyCategoryLFRFID) {
+                            uint8_t uid[5] = {0x00, 0x00, 0x00, 0x00, 0x00};
+                            memcpy(app->state.current_key.data, uid, 5);
+                            app->state.current_key.data_len = 5;
+                        } else if(QUICK_KEYS[sel].cat == KeyCategoryIButton) {
+                            if(strstr(QUICK_KEYS[sel].proto, "Cyfral") != NULL) {
+                                uint8_t rom[8] = {0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF};
+                                memcpy(app->state.current_key.data, rom, 8);
+                                app->state.current_key.data_len = 8;
+                            } else {
+                                uint8_t rom[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01};
+                                memcpy(app->state.current_key.data, rom, 8);
+                                app->state.current_key.data_len = 8;
+                            }
+                        }
+                        app->state.screen = ScreenKeyFound;
                     } else if(app->state.screen == ScreenKeyFound) {
                         char saved_path[128];
                         if(key_saver_save_to_native_asset(

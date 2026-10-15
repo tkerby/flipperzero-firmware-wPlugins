@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.3
+
+- Fix saved NFC file compatibility with Flipper Zero native NFC application
+- Use official NfcDevice ISO14443-3A serialization with standard ATQA and SAK parameters
+- Allow selecting preloaded universal master keys from Quick Keys menu
+
 ## v1.2
 
 - Added scrollable About screen with native scrollbar
