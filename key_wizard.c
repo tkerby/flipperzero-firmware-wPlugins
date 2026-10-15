@@ -9,6 +9,7 @@
 #include "key_types.h"
 #include "key_saver.h"
 #include "key_scanner.h"
+#include "key_wizard_icons.h"
 
 typedef enum {
     ScreenScanning = 0,
@@ -134,7 +135,9 @@ static void draw_screen_key_found(Canvas* canvas, KeyWizardApp* app) {
     canvas_draw_rbox(canvas, 0, 0, 128, 13, 2);
     canvas_invert_color(canvas);
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignBottom, "* KEY DETECTED! *");
+    canvas_draw_icon(canvas, 8, 1, &I_key_icon);
+    canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignBottom, "KEY DETECTED!");
+    canvas_draw_icon(canvas, 110, 1, &I_key_icon);
     canvas_invert_color(canvas);
 
     // Rounded Card Background
@@ -242,7 +245,9 @@ static void draw_screen_about(Canvas* canvas, KeyWizardApp* app) {
     canvas_draw_box(canvas, 0, 0, 128, 12);
     canvas_invert_color(canvas);
     canvas_set_font(canvas, FontPrimary);
+    canvas_draw_icon(canvas, 6, 1, &I_key_icon);
     canvas_draw_str_aligned(canvas, 64, 9, AlignCenter, AlignBottom, "ABOUT & SUPPORT");
+    canvas_draw_icon(canvas, 112, 1, &I_key_icon);
     canvas_invert_color(canvas);
 
     canvas_set_font(canvas, FontSecondary);
