@@ -8,7 +8,8 @@
 </p>
 
 <p align="center">
-  <img src="images/ui_screen.jpg" alt="Key Wizard Screen" width="400" />
+  <img src="images/ui_screen.png" alt="Key Wizard Scanning Screen" width="380" />
+  <img src="images/about_screen.png" alt="Key Wizard Scrollable About Screen" width="380" />
 </p>
 
 ---
