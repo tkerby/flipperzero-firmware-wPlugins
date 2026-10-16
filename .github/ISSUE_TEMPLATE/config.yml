@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security problem
+    url: https://github.com/vladpereverzyev/flipper-staff-time-clock/security/policy
+    about: Report it privately, not in a public issue.
+  - name: Install from Flipper Lab
+    url: https://lab.flipper.net/apps/timeclock
+    about: The app in the official Flipper catalog.
+  - name: Questions and ideas
+    url: https://github.com/vladpereverzyev/flipper-staff-time-clock/discussions
+    about: Ask how something works or share how your team uses it.

@@ -18,9 +18,14 @@ it with badges and systems you are authorized to use.
 
 **Please do not open a public issue for security vulnerabilities.**
 
-Instead, contact the maintainer privately through GitHub (**@vladpereverzyev**)
-- for example via a GitHub Security Advisory on the repository, or a private
-message. Please include:
+Instead, report it privately:
+
+- Preferred: use GitHub's private vulnerability reporting on this repository
+  (the "Report a vulnerability" button in the
+  [Security tab](https://github.com/vladpereverzyev/flipper-staff-time-clock/security)).
+- Otherwise: write to <info@vladpereverzyev.com>.
+
+Please include:
 
 - a description of the issue and its impact,
 - steps to reproduce,

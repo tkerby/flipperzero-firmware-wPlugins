@@ -1,0 +1,16 @@
+name: Feature request
+description: An idea to make Staff Time Clock better
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: What should the app do?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: The work it would help with, for example how your team clocks in.

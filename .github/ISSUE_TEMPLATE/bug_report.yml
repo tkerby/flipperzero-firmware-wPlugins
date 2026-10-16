@@ -1,0 +1,55 @@
+name: Bug report
+description: Something in Staff Time Clock does not work as it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. For a security problem do not open an issue. Follow the
+        [security policy](https://github.com/vladpereverzyev/flipper-staff-time-clock/security/policy) instead.
+        Do not attach a real timesheet or the names of your staff.
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: The release you installed, as shown in Flipper Lab or on the releases page, for example 2.16.
+    validations:
+      required: true
+  - type: dropdown
+    id: firmware
+    attributes:
+      label: Firmware
+      options:
+        - Official
+        - Momentum
+        - Unleashed
+        - RogueMaster
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: firmware-version
+    attributes:
+      label: Firmware version
+      description: For example 1.3.4 or mntm-010.
+  - type: dropdown
+    id: badge
+    attributes:
+      label: Badge type
+      options:
+        - NFC
+        - RFID 125 kHz
+        - iButton
+        - Not about a badge
+  - type: textarea
+    id: what
+    attributes:
+      label: What happens
+      description: What you did, what you expected and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: more
+    attributes:
+      label: Screenshots
+      description: A screenshot from qFlipper or a photo of the screen, if it helps.

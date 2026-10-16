@@ -1,0 +1,24 @@
+name: Add a language
+description: Translate the app into a new language (translation only, a good first pull request)
+title: "i18n: add <language>"
+labels: [good first issue, i18n]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The app ships in English, Italian, Spanish, French and German. A new language is a
+        new entry in `TcLang` in `timeclock_i18n.h` and one more string per row in `timeclock_i18n.c`.
+        Keep the strings short, the Flipper screen is 128 x 64 pixels.
+  - type: input
+    id: language
+    attributes:
+      label: Language
+      description: For example Portuguese.
+    validations:
+      required: true
+  - type: checkboxes
+    id: self
+    attributes:
+      label: Who translates
+      options:
+        - label: I would like to do the translation myself
