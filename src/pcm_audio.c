@@ -128,12 +128,17 @@ static void hardware_stop(void) {
     furi_hal_bus_disable(FuriHalBusTIM2);
 }
 
-static bool
-    fill_half(PcmAudio* audio, File* file, uint8_t* samples, uint32_t* cursor, const WavInfo* info) {
+static bool fill_half(
+    PcmAudio* audio,
+    File* file,
+    uint8_t* samples,
+    uint32_t* cursor,
+    const WavInfo* info,
+    uint32_t playback_rate) {
     size_t count = MIN(info->sample_count - *cursor, HALF_SAMPLES);
     memset(samples, 128, HALF_SAMPLES); /* unsigned PCM silence */
     if(count && storage_file_read(file, samples, count) != count) return false;
-    taiko_mixer_mix(&audio->mixer, samples, count, info->sample_rate, *cursor);
+    taiko_mixer_mix(&audio->mixer, samples, count, info->sample_rate, playback_rate, *cursor);
     furi_mutex_acquire(audio->mutex, FuriWaitForever);
     uint8_t volume = audio->volume;
     furi_mutex_release(audio->mutex);
@@ -171,8 +176,9 @@ static int32_t audio_worker(void* context) {
         goto cleanup;
     }
     uint32_t cursor = sample;
-    if(!fill_half(audio, file, audio->samples, &cursor, &info) ||
-       !fill_half(audio, file, audio->samples + HALF_SAMPLES, &cursor, &info)) {
+    uint32_t playback_rate = (uint64_t)info.sample_rate * audio->speed_tenths / 10;
+    if(!fill_half(audio, file, audio->samples, &cursor, &info, playback_rate) ||
+       !fill_half(audio, file, audio->samples + HALF_SAMPLES, &cursor, &info, playback_rate)) {
         error = "Cannot read WAV";
         goto cleanup;
     }
@@ -185,7 +191,6 @@ static int32_t audio_worker(void* context) {
         error = "Audio timer is busy";
         goto cleanup;
     }
-    uint32_t playback_rate = (uint64_t)info.sample_rate * audio->speed_tenths / 10;
     hardware_start(audio, playback_rate);
     hardware_running = true;
     uint32_t played = sample;
@@ -210,7 +215,7 @@ static int32_t audio_worker(void* context) {
         played += MIN((uint32_t)HALF_SAMPLES, info.sample_count - played);
         if(played == info.sample_count) break;
         size_t offset = (flags & FLAG_HALF) ? 0 : HALF_SAMPLES;
-        if(!fill_half(audio, file, audio->samples + offset, &cursor, &info)) {
+        if(!fill_half(audio, file, audio->samples + offset, &cursor, &info, playback_rate)) {
             error = "SD card audio read failed";
             break;
         }

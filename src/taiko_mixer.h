@@ -24,12 +24,15 @@ typedef struct {
 
 /* Mix one Don voice and one Ka voice into unsigned 8-bit mono backing audio.
  * Same-sound hits retrigger with a 3 ms fade; automatic hits share Don.
+ * Chart rate maps hit times to backing samples; output rate determines drum
+ * resampling and fade duration, preserving drum pitch at any playback speed.
  * Position is an absolute sample offset in the backing WAV, including after a seek. */
 void taiko_mixer_mix(
     const TaikoMixer* mixer,
     uint8_t* samples,
     size_t count,
-    uint32_t rate,
+    uint32_t chart_rate,
+    uint32_t output_rate,
     uint32_t position);
 
 /* Final application gain for all PCM output, including music without effects.

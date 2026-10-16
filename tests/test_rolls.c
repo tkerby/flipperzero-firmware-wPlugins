@@ -132,7 +132,7 @@ static void test_rate_cap(void) {
     TaikoMixer mixer = {{don, 1, 8000}, {0}, &chart, 100, 100};
     uint8_t mixed[4800];
     memset(mixed, 128, sizeof(mixed));
-    taiko_mixer_mix(&mixer, mixed, sizeof(mixed), 8000, 0);
+    taiko_mixer_mix(&mixer, mixed, sizeof(mixed), 8000, 8000, 0);
     assert(mixed[0] == 228 && mixed[400] == 128 && mixed[504] == 228 && mixed[1000] == 228);
     tja_chart_free(&chart);
 
@@ -233,7 +233,7 @@ static void test_next_note_interrupts(void) {
     TaikoMixer mixer = {{don, 1, 8000}, {ka, 1, 8000}, &chart, 100, 100};
     uint8_t mixed[8000];
     memset(mixed, 128, sizeof(mixed));
-    taiko_mixer_mix(&mixer, mixed, sizeof(mixed), 8000, 0);
+    taiko_mixer_mix(&mixer, mixed, sizeof(mixed), 8000, 8000, 0);
     assert(mixed[3504] == 228 && mixed[4000] == 88 && mixed[4504] == 128);
     tja_chart_free(&chart);
 
@@ -287,18 +287,18 @@ static void test_mix_boundaries(void) {
     uint8_t full[60000], streamed[60000], seeked[700];
     memset(full, 128, sizeof(full));
     memset(streamed, 128, sizeof(streamed));
-    taiko_mixer_mix(&mixer, full, sizeof(full), 8000, 0);
+    taiko_mixer_mix(&mixer, full, sizeof(full), 8000, 8000, 0);
     for(size_t pos = 0; pos < sizeof(streamed); pos += 4096) {
         size_t count = sizeof(streamed) - pos;
         if(count > 4096) count = 4096;
-        taiko_mixer_mix(&mixer, streamed + pos, count, 8000, pos);
+        taiko_mixer_mix(&mixer, streamed + pos, count, 8000, 8000, pos);
     }
     assert(memcmp(full, streamed, sizeof(full)) == 0);
     assert(full[109] > 128 && full[16000 + 109] > 128);
     assert(full[18000] == 128); /* Balloon already popped: stop mixing its hits. */
     for(size_t pos = 0; pos + sizeof(seeked) < sizeof(full); pos += 137) {
         memset(seeked, 128, sizeof(seeked));
-        taiko_mixer_mix(&mixer, seeked, sizeof(seeked), 8000, pos);
+        taiko_mixer_mix(&mixer, seeked, sizeof(seeked), 8000, 8000, pos);
         assert(memcmp(seeked, full + pos, sizeof(seeked)) == 0);
     }
     tja_chart_free(&chart);

@@ -67,7 +67,7 @@ App master volume ranges from **0 to 200%**, with **70%** as the default. Above 
 
 In the menu, use Up/Down to select, Left/Right to adjust, and OK to activate. Opening the menu pauses playback. **Return** resumes the previous state; **Restart** starts over; **Play New Song** opens the song browser.
 
-Difficulty defaults to Oni, or the highest available course when Oni is absent. Playback speed ranges from **0.5× to 2.0×** in 0.1 steps and changes pitch. Scroll speed is independent: **0.5× to 2.5×** in 0.1 steps, plus **3.0× and 4.0×**. **Frame Rate**, below Scroll Speed, sets the target display refresh rate from **15 to 60 FPS** in 1 FPS steps (default: **50 FPS**), without changing audio or hit scheduling. Volume, speeds, frame rate, seek intervals, and GPIO pin mappings are saved in `/ext/apps_data/taiko_player/settings.ff`; GPIO output starts disabled each time.
+Difficulty defaults to Oni, or the highest available course when Oni is absent. Playback speed ranges from **0.5× to 2.0×** in 0.1 steps and changes the backing track's pitch. Don/Ka sounds keep their original pitch and duration; their trigger timing follows the chart speed. Scroll speed is independent: **0.5× to 2.5×** in 0.1 steps, plus **3.0× and 4.0×**. **Frame Rate**, below Scroll Speed, sets the target display refresh rate from **15 to 60 FPS** in 1 FPS steps (default: **50 FPS**), without changing audio or hit scheduling. Volume, speeds, frame rate, seek intervals, and GPIO pin mappings are saved in `/ext/apps_data/taiko_player/settings.ff`; GPIO output starts disabled each time.
 
 GPIO uses 3.3 V logic and 70 ms high pulses; connect the receiver to Flipper's GND. The default mapping is **Left Ka → A7, Left Don → A6, Right Don → A4, Right Ka → B3**. Configure it under **GPIO Setting** and enable it with **GPIO Output**.
 
@@ -81,7 +81,7 @@ Detailed guides are currently in Chinese:
 - [Release history](https://github.com/ZeroNinx/flipper-zero-taiko-player/releases): downloads and release notes.
 - [Catalog submission](docs/catalog-submission.md): catalog metadata, validation, and submission steps (Chinese).
 
-Branching charts, Dan courses, pitch-preserving playback speed changes, and precise synchronization are not supported. Audio must be unsigned 8-bit mono PCM WAV at 8000–48000 Hz; the device does not decode OGG directly.
+Branching charts, Dan courses, pitch-preserving speed changes for backing tracks, and precise synchronization are not supported. Audio must be unsigned 8-bit mono PCM WAV at 8000–48000 Hz; the device does not decode OGG directly.
 
 ## Build from source
 
