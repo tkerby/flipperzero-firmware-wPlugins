@@ -22,7 +22,6 @@ typedef enum {
 
 typedef enum {
     ScanSpeedFast = 0,
-    ScanSpeedBalanced,
     ScanSpeedAccurate
 } ScanSpeedMode;
 
