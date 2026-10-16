@@ -32,14 +32,49 @@ static void test_notes_and_clipping(void) {
     assert(samples[24] == 248 && samples[25] == 8 && samples[26] == 178);
     assert(samples[32] == 128); /* Roll starts do not synthesize extra hits. */
 
-    const uint8_t peak[] = {255, 0};
+    const uint8_t peak[] = {168, 88};
     const TjaNote stacked[] = {
         {.time_ms = 0, .kind = 1}, {.time_ms = 0, .kind = 1}, {.time_ms = 0, .kind = 1}};
     mixer = (TaikoMixer){
         {peak, 2, 8000}, {0}, &(TjaChart){.notes = (TjaNote*)stacked, .note_count = 3}, 100, 100};
     memset(samples, 128, sizeof(samples));
     taiko_mixer_mix(&mixer, samples, sizeof(samples), 8000, 0);
-    assert(samples[0] == 255 && samples[1] == 0); /* Saturate rather than wrap. */
+    assert(samples[0] == 168 && samples[1] == 88); /* Same-sound hits never stack. */
+    memset(samples, 228, sizeof(samples));
+    taiko_mixer_mix(&mixer, samples, sizeof(samples), 8000, 0);
+    assert(samples[0] == 255); /* Music plus one voice still saturates, never wraps. */
+    memset(samples, 28, sizeof(samples));
+    taiko_mixer_mix(&mixer, samples, sizeof(samples), 8000, 0);
+    assert(samples[1] == 0);
+}
+
+static void test_channel_retrigger(void) {
+    uint8_t don[400], ka[400], samples[600];
+    memset(don, 168, sizeof(don));
+    memset(ka, 148, sizeof(ka));
+    TjaNote notes[] = {
+        {.time_ms = 0, .kind = 1},
+        {.time_ms = 5, .kind = 2},
+        {.time_ms = 10, .kind = 3},
+        {.time_ms = 15, .kind = 4},
+        {.time_ms = 16, .kind = 5}};
+    TaikoMixer mixer = {
+        .don = {don, sizeof(don), 8000},
+        .ka = {ka, sizeof(ka), 8000},
+        .chart = &(TjaChart){.notes = notes, .note_count = 5},
+        .don_volume = 100,
+        .ka_volume = 100};
+    memset(samples, 128, sizeof(samples));
+    taiko_mixer_mix(&mixer, samples, sizeof(samples), 8000, 0);
+    assert(samples[39] == 168 && samples[40] == 188); /* Ka does not stop Don. */
+    assert(samples[55] == 188 && samples[56] < 188 && samples[56] > 148);
+    assert(samples[79] == 148 && samples[80] == 188); /* Only Don restarts. */
+    assert(samples[95] == 188 && samples[96] < 188 && samples[96] > 168);
+    assert(samples[119] == 168 && samples[120] == 188); /* Only Ka restarts. */
+    assert(samples[479] == 188 && samples[480] == 148);
+    assert(samples[519] == 148 && samples[520] == 128); /* Final tails end naturally. */
+    for(size_t i = 0; i < sizeof(samples); i++)
+        assert(samples[i] <= 188);
 }
 
 static void test_buffer_boundaries_and_seeking(void) {
@@ -119,10 +154,10 @@ static void test_auto_retrigger(void) {
     mixer.ka_volume = 100;
     memset(samples, 128, sizeof(samples));
     taiko_mixer_mix(&mixer, samples, sizeof(samples), 8000, 0);
-    assert(samples[40] == 208); /* Normal Don overlaps the automatic voice. */
-    assert(samples[79] == 168); /* Only the auto tail fades. */
-    assert(samples[80] == 228 && samples[81] == 188); /* Normal Ka is independent. */
-    assert(samples[319] == 168 && samples[320] == 208);
+    assert(samples[39] == 128 && samples[40] == 168); /* Normal Don replaces auto Don. */
+    assert(samples[79] == 128); /* The next auto Don replaces the normal Don. */
+    assert(samples[80] == 188 && samples[81] == 148); /* Normal Ka is independent. */
+    assert(samples[319] == 128 && samples[320] == 168);
 
     /* Short clips finish naturally, without a fade caused by a later hit. */
     mixer.don.count = 16;
@@ -182,10 +217,10 @@ static void test_long_note_with_shorter_hits(void) {
         .ka_volume = 100};
     memset(samples, 128, sizeof(samples));
     taiko_mixer_mix(&mixer, samples, sizeof(samples), 8000, 0);
-    /* Retiring short auto voices must not discard an earlier, still-playing
-     * normal note, or the final automatic tail after that normal note ends. */
-    assert(samples[960] == 228 && samples[961] == 208);
-    assert(samples[8039] == 208 && samples[8040] == 168);
+    /* A short Ka must not discard the long Don tail, and replaced normal Don
+     * must never resume after a later automatic Don. */
+    assert(samples[960] == 188 && samples[961] == 168);
+    assert(samples[8039] == 168 && samples[8040] == 168);
     assert(samples[8159] == 168 && samples[8160] == 128);
 
     mixer.don_volume = 0;
@@ -295,6 +330,7 @@ static void test_master_volume_boost(void) {
 
 int main(void) {
     test_notes_and_clipping();
+    test_channel_retrigger();
     test_buffer_boundaries_and_seeking();
     test_missing_effects();
     test_auto_retrigger();
@@ -304,6 +340,6 @@ int main(void) {
     test_master_volume();
     test_master_volume_boost();
     puts(
-        "Drum mixing, volume, overlap, clipping, resampling, DMA boundaries and seeking tests passed");
+        "Drum mixing, independent retrigger, volume, clipping, resampling, DMA boundaries and seeking tests passed");
     return 0;
 }

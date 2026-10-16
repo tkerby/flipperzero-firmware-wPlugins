@@ -22,8 +22,9 @@ typedef struct {
     uint8_t ka_volume;
 } TaikoMixer;
 
-/* Mix scheduled drum sounds into unsigned 8-bit mono backing audio. Position
- * is an absolute sample offset in the backing WAV, including after a seek. */
+/* Mix one Don voice and one Ka voice into unsigned 8-bit mono backing audio.
+ * Same-sound hits retrigger with a 3 ms fade; automatic hits share Don.
+ * Position is an absolute sample offset in the backing WAV, including after a seek. */
 void taiko_mixer_mix(
     const TaikoMixer* mixer,
     uint8_t* samples,

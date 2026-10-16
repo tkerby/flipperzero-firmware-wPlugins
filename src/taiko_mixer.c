@@ -6,8 +6,8 @@
 
 #include <string.h>
 
-#define MIX_BLOCK              128U
-#define AUTO_RETRIGGER_FADE_MS 3U
+#define MIX_BLOCK         128U
+#define RETRIGGER_FADE_MS 3U
 
 void taiko_mixer_apply_volume(uint8_t* samples, size_t count, uint8_t volume) {
     if(volume > TAIKO_MASTER_VOLUME_MAX) volume = TAIKO_MASTER_VOLUME_MAX;
@@ -27,6 +27,34 @@ void taiko_mixer_apply_volume(uint8_t* samples, size_t count, uint8_t volume) {
 static uint32_t clip_duration(const TaikoPcmClip* clip) {
     if(!clip->samples || !clip->count || !clip->rate) return 0;
     return ((uint64_t)clip->count * 1000 + clip->rate - 1) / clip->rate;
+}
+
+/* The cursor is already past the current hit. Each sound has its own voice;
+ * automatic hits share Don, and Ka never interrupts it. Inspect the next run
+ * directly so looking for Ka need not iterate over automatic Don hits. */
+static uint64_t channel_end(
+    const TjaChart* chart,
+    const TaikoHitCursor* cursor,
+    bool rim,
+    uint32_t rate,
+    uint64_t end) {
+    if(!rim && cursor->run < chart->hit_run_count) {
+        uint64_t next =
+            (uint64_t)taiko_hit_run_time(&chart->hit_runs[cursor->run], cursor->repeat) * rate /
+            1000;
+        if(next < end) end = next;
+    }
+    for(size_t i = cursor->note; i < chart->note_count; i++) {
+        const TjaNote* note = &chart->notes[i];
+        uint64_t next = (uint64_t)note->time_ms * rate / 1000;
+        if(next >= end) break;
+        if((rim && (note->kind == 2 || note->kind == 4)) ||
+           (!rim && (note->kind == 1 || note->kind == 3))) {
+            end = next;
+            break;
+        }
+    }
+    return end;
 }
 
 void taiko_mixer_mix(
@@ -54,7 +82,7 @@ void taiko_mixer_mix(
     int64_t earliest = (int64_t)((uint64_t)position * 1000 / rate) - duration - 1;
     TaikoHitCursor cursor;
     taiko_hits_seek(mixer->chart, &cursor, earliest > 0 ? earliest : 0);
-    const uint32_t retrigger_fade = ((uint64_t)rate * AUTO_RETRIGGER_FADE_MS + 999) / 1000;
+    const uint32_t retrigger_fade = ((uint64_t)rate * RETRIGGER_FADE_MS + 999) / 1000;
 
     for(size_t base = 0; base < count; base += MIX_BLOCK) {
         size_t length = count - base;
@@ -78,26 +106,19 @@ void taiko_mixer_mix(
                 if(expired_prefix) cursor = block;
                 continue;
             }
-            uint64_t clip_end = onset + lengths[channel];
+            uint64_t natural_end = onset + lengths[channel];
+            uint64_t clip_end = channel_end(mixer->chart, &block, hit.rim, rate, natural_end);
             uint32_t fade_samples = 0;
-            if(hit.roll && block.run < mixer->chart->hit_run_count) {
-                /* The advanced cursor identifies the next automatic hit even across
-                 * run boundaries and intervening normal notes. Look ahead beyond
-                 * this buffer so fades are identical after a split or seek. */
-                uint64_t next = (uint64_t)taiko_hit_run_time(
-                                    &mixer->chart->hit_runs[block.run], block.repeat) *
-                                rate / 1000;
-                if(next < clip_end) {
-                    clip_end = next;
-                    fade_samples = retrigger_fade;
-                    if(fade_samples > clip_end - onset) fade_samples = clip_end - onset;
-                }
+            if(clip_end < natural_end) {
+                /* Look beyond this buffer so fades match after a split or seek. */
+                fade_samples = retrigger_fade;
+                if(fade_samples > clip_end - onset) fade_samples = clip_end - onset;
             }
             if(clip_end <= start) {
                 if(expired_prefix) cursor = block;
                 continue;
             }
-            /* Retain every potentially overlapping voice, but never rescan a
+            /* Retain both potentially active voices, but never rescan a
              * prefix that has finished (or is muted) in later mix blocks. */
             expired_prefix = false;
             uint64_t first = onset > start ? onset : start;
