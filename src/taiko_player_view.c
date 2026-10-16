@@ -182,16 +182,37 @@ static void draw_balloon_tail(Canvas* canvas, int x, int direction, int radius) 
     }
 }
 
-static void draw_balloon_head(Canvas* canvas, int x) {
-    lane_disc(canvas, x, TAIKO_LANE_BIG_RADIUS, ColorWhite);
-    lane_disc(canvas, x, TAIKO_LANE_BIG_RADIUS - 1, ColorBlack);
-    lane_disc(canvas, x, TAIKO_LANE_BIG_RADIUS - 2, ColorWhite);
+static void draw_balloon_head_layer(Canvas* canvas, int x, bool hit, int layer) {
+    const int radius = TAIKO_LANE_SMALL_RADIUS + (hit ? 1 : 0);
+    const Color color = layer == 1 ? ColorBlack : ColorWhite;
+    if(!hit || layer != 2) {
+        lane_disc(canvas, x, radius - layer, color);
+        return;
+    }
+    /* Inset the actual black contour by one pixel instead of drawing a smaller
+     * circle, which leaves a heavy two-pixel border around the diagonals. */
+    canvas_set_color(canvas, color);
+    const int rim = radius - 1;
+    for(int dx = -rim; dx <= rim; dx++) {
+        const int offset = dx < 0 ? -dx : dx;
+        int height = circle_extent(rim, offset) - 1;
+        const int adjacent = circle_extent(rim, offset + 1);
+        if(height > adjacent) height = adjacent;
+        const int column = x + dx;
+        if(height < 0 || column < 0 || column > 127) continue;
+        canvas_draw_line(canvas, column, LANE_Y - height, column, LANE_Y + height);
+    }
+}
+
+static void draw_balloon_head(Canvas* canvas, int x, bool hit) {
+    for(int layer = 0; layer < 3; layer++)
+        draw_balloon_head_layer(canvas, x, hit, layer);
 }
 
 static void draw_balloon_note(Canvas* canvas, const TaikoLaneRoll* note) {
     int direction = note->tail_x < note->x ? -1 : 1;
-    draw_balloon_tail(canvas, note->x, direction, TAIKO_LANE_BIG_RADIUS);
-    draw_balloon_head(canvas, note->x);
+    draw_balloon_tail(canvas, note->x, direction, TAIKO_LANE_SMALL_RADIUS);
+    draw_balloon_head(canvas, note->x, false);
 }
 
 static void balloon_neck_profile(uint8_t* profile, int length, int start, int end) {
@@ -213,12 +234,39 @@ static void balloon_neck_profile(uint8_t* profile, int length, int start, int en
 }
 
 static int balloon_bulb_extent(int radius, int column) {
-    int height = circle_extent(radius, column);
-    if(column > 0 && column < radius) {
-        const int before = circle_extent(radius, column - 1) - height;
-        const int after = height - circle_extent(radius, column + 1);
-        /* Avoid a long vertical stair followed by a shorter one near the tip. */
-        if(before >= 2 && before > after) height++;
+    /* Pixel-art quarter circles, radii 6..19. Balance the short/long stair
+     * runs in the shallow octant and mirror them into the steep octant. */
+    static const uint8_t profiles[][BALLOON_MAX_RADIUS + 2] = {
+        {6, 6, 6, 5, 5, 4, 2},
+        {7, 7, 7, 6, 6, 5, 4, 2},
+        {8, 8, 8, 7, 7, 6, 6, 4, 2},
+        {9, 9, 9, 8, 8, 8, 7, 6, 5, 2},
+        {10, 10, 10, 10, 9, 9, 9, 8, 7, 6, 3},
+        {11, 11, 11, 10, 10, 10, 9, 9, 8, 7, 5, 2},
+        {12, 12, 12, 11, 11, 11, 10, 10, 9, 8, 7, 5, 2},
+        {13, 13, 13, 13, 12, 12, 12, 11, 11, 10, 9, 8, 6, 3},
+        {14, 14, 14, 14, 13, 13, 13, 12, 12, 11, 10, 9, 8, 6, 3},
+        {15, 15, 15, 15, 14, 14, 14, 13, 13, 12, 11, 10, 9, 8, 6, 3},
+        {16, 16, 16, 16, 15, 15, 15, 14, 14, 13, 13, 12, 11, 10, 8, 6, 3},
+        {17, 17, 17, 17, 17, 16, 16, 16, 15, 15, 14, 13, 12, 11, 10, 9, 7, 4},
+        {18, 18, 18, 18, 17, 17, 17, 16, 16, 16, 15, 15, 14, 13, 12, 11, 9, 6, 3},
+        {19, 19, 19, 19, 18, 18, 18, 17, 17, 17, 16, 16, 15, 14, 13, 12, 11, 9, 6, 3}};
+    if(radius >= 6 && radius <= BALLOON_MAX_RADIUS + 1 && column <= radius)
+        return profiles[radius - 6][column];
+    return circle_extent(radius, column);
+}
+
+static int balloon_tail_inset(const uint8_t* profile, int count, int column, int inset) {
+    int height = profile[column] - inset;
+    /* Derive both border layers from one contour, instead of rounding three
+     * separate curves. Four-neighbor insets keep diagonal strokes even. */
+    for(int offset = 1; offset <= inset; offset++) {
+        int left = column >= offset ? column - offset : 0;
+        int right = column + offset;
+        int adjacent = profile[left] - (inset - offset);
+        if(height > adjacent) height = adjacent;
+        adjacent = right < count ? profile[right] - (inset - offset) : -1;
+        if(height > adjacent) height = adjacent;
     }
     return height;
 }
@@ -229,7 +277,7 @@ static void draw_balloon_counter(Canvas* canvas, const TaikoPlayerView* view) {
         snprintf(count, sizeof(count), "%lu", view->balloon.remaining);
         snprintf(total, sizeof(total), "%lu", view->balloon.total);
         /* Size depends on the original count, so crossing a digit boundary never
-         * shrinks the tail. The bulb and neck inflate; the head stays fixed. */
+         * shrinks the tail. The bulb and neck inflate; the head grows once. */
         const int inflation =
             (view->balloon.total - view->balloon.remaining) * 6 / view->balloon.total;
         int radius = canvas_string_width(canvas, total) / 2 + 2;
@@ -237,29 +285,32 @@ static void draw_balloon_counter(Canvas* canvas, const TaikoPlayerView* view) {
         radius += inflation;
         if(radius > BALLOON_MAX_RADIUS) radius = BALLOON_MAX_RADIUS;
         int direction = view->balloon.direction < 0 ? -1 : 1;
-        const int reach = TAIKO_LANE_BIG_RADIUS + 4 + 2 * radius + 1;
+        const int reach = TAIKO_LANE_SMALL_RADIUS + 4 + 2 * radius + 1;
         /* The counter must stay readable even for a reverse-scroll balloon. */
         if(TAIKO_LANE_HIT_X + direction * reach < 0 || TAIKO_LANE_HIT_X + direction * reach > 127)
             direction = -direction;
-        const int center = TAIKO_LANE_HIT_X + direction * (TAIKO_LANE_BIG_RADIUS + 4 + radius);
-        const int neck_start = TAIKO_LANE_HIT_X + direction * (TAIKO_LANE_BIG_RADIUS - 1);
+        const int center = TAIKO_LANE_HIT_X + direction * (TAIKO_LANE_SMALL_RADIUS + 4 + radius);
+        const int neck_start = TAIKO_LANE_HIT_X + direction * (TAIKO_LANE_SMALL_RADIUS - 1);
         const int neck_length = direction * (center - neck_start);
-        const int neck_height = 2 + inflation / 2;
-        uint8_t neck[BALLOON_MAX_RADIUS + 6];
-        balloon_neck_profile(neck, neck_length, neck_height, radius + 1);
+        int neck_height = 2 + inflation / 2;
+        /* Keep the swelling neck tucked into the smaller head's edge. */
+        if(neck_height > TAIKO_LANE_SMALL_RADIUS - 1) neck_height = TAIKO_LANE_SMALL_RADIUS - 1;
+        uint8_t tail[BALLOON_MAX_RADIUS * 2 + 7];
+        balloon_neck_profile(tail, neck_length, neck_height, radius + 1);
+        const int tail_count = neck_length + radius + 2;
+        for(int step = neck_length; step < tail_count; step++)
+            tail[step] = balloon_bulb_extent(radius + 1, step - neck_length);
+        const bool hit = view->balloon.remaining < view->balloon.total;
         for(int pass = 0; pass < 3; pass++) {
-            canvas_set_color(canvas, pass == 1 ? ColorBlack : ColorWhite);
-            const int bulb_radius = radius + 1 - pass;
+            /* Paint head and tail together in each layer, leaving the joining
+             * white interior open rather than outlining a separate head. */
+            draw_balloon_head_layer(canvas, TAIKO_LANE_HIT_X, hit, pass);
             /* A cubic taper meets the bulb at its widest column with a flat
              * tangent at both ends. Draw only the bulb's far half, so no
              * separate circle edge can protrude through the curved neck. */
-            for(int step = 0; step <= neck_length + bulb_radius; step++) {
-                int height;
-                if(step < neck_length) {
-                    height = neck[step] - pass;
-                } else {
-                    height = balloon_bulb_extent(bulb_radius, step - neck_length);
-                }
+            for(int step = 0; step < tail_count; step++) {
+                const int height = balloon_tail_inset(tail, tail_count, step, pass);
+                if(height < 0) continue;
                 int x = neck_start + direction * step;
                 canvas_draw_line(canvas, x, LANE_Y - height, x, LANE_Y + height);
             }
@@ -267,7 +318,9 @@ static void draw_balloon_counter(Canvas* canvas, const TaikoPlayerView* view) {
         canvas_set_color(canvas, ColorBlack);
         canvas_draw_str(
             canvas, center - canvas_string_width(canvas, count) / 2, LANE_Y + 3, count);
-        draw_balloon_head(canvas, TAIKO_LANE_HIT_X);
+        /* Close only the thin black ring over the joined fill; do not repaint
+         * a white halo through the neck. */
+        if(hit) draw_circle_outline(canvas, TAIKO_LANE_HIT_X, LANE_Y, TAIKO_LANE_SMALL_RADIUS);
     }
     canvas_set_color(canvas, ColorBlack);
 }
